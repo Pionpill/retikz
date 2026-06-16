@@ -1,4 +1,4 @@
-import type { ArrowEndSpec, PaintValue, ScenePrimitive } from '@retikz/core';
+import type { ArrowEndSpec, BlendModeValue, DropShadow, PaintValue, ScenePrimitive } from '@retikz/core';
 import type { SvgNode, SvgStyle } from '../types';
 import { buildPathD } from '../path-d-builder';
 import { buildTransform } from '../transform-builder';
@@ -18,6 +18,8 @@ export type BuildContext = {
   paintRefUrl?: (id: string) => string;
   /** clip 资源 id → `url(#...)` 引用（GroupPrim.clipRef 物化用）；缺省 `url(#id)` */
   clipRefUrl?: (id: string) => string;
+  /** 按已解析 DropShadow 查去重注册的 `<filter>` id（emit `filter="url(#id)"`）；缺省裸 hash id */
+  shadowIdFor?: (shadow: DropShadow) => string;
   /** 动画装饰回调（document builder 在动画启用时注入）：给带 `animations` 的 prim 挂 CSS / WAAPI；缺省不装饰 */
   decorate?: (node: SvgNode, prim: ScenePrimitive) => SvgNode;
 };
@@ -83,6 +85,25 @@ const withStyle = (node: SvgNode, style: SvgStyle | undefined): SvgNode =>
   style ? { ...node, style } : node;
 
 /**
+ * 把可选 blendMode 合进（可能已含 fill/stroke 的）几何图元 style
+ * @description `normal` / 省略不出 `mix-blend-mode`（逐字不变）；其余 emit CSS `mix-blend-mode`，与 var() 颜色共存。
+ */
+const mergeBlendStyle = (
+  style: SvgStyle | undefined,
+  blendMode: BlendModeValue | undefined,
+): SvgStyle | undefined => {
+  if (blendMode === undefined || blendMode === 'normal') return style;
+  return { ...(style ?? {}), 'mix-blend-mode': blendMode };
+};
+
+/** DropShadow → `filter="url(#id)"` 值（缺省 shadowIdFor 时回退裸 hash id） */
+const shadowFilterRef = (
+  shadow: DropShadow | undefined,
+  shadowIdFor: ((shadow: DropShadow) => string) | undefined,
+): string | undefined =>
+  shadow ? `url(#${shadowIdFor ? shadowIdFor(shadow) : 'retikz-shadow'})` : undefined;
+
+/**
  * Scene primitive → `SvgNode`
  * @description 不读 IR，只读 Scene。属性名一律 SVG 真名（呈现属性 kebab、结构属性规范拼写）；含 `var()` 的
  *   颜色值落 `style`、其余落 `attrs`。group 递归并跳过 undefined 子槽位（防御非法 Scene）。
@@ -110,9 +131,10 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
             rx: p.cornerRadius,
             ry: p.cornerRadius,
             opacity: p.opacity,
+            filter: shadowFilterRef(p.shadow, context.shadowIdFor),
           }),
         },
-        mergeFillStrokeStyle(f.styleFill, p.stroke),
+        mergeBlendStyle(mergeFillStrokeStyle(f.styleFill, p.stroke), p.blendMode),
       );
     }
     case 'ellipse': {
@@ -135,9 +157,10 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
             'stroke-width': p.strokeWidth,
             'stroke-dasharray': p.dashPattern?.join(' '),
             opacity: p.opacity,
+            filter: shadowFilterRef(p.shadow, context.shadowIdFor),
           }),
         },
-        mergeFillStrokeStyle(f.styleFill, p.stroke),
+        mergeBlendStyle(mergeFillStrokeStyle(f.styleFill, p.stroke), p.blendMode),
       );
     }
     case 'text': {
@@ -208,9 +231,10 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
             'marker-start': startId ? `url(#${startId})` : undefined,
             'marker-end': endId ? `url(#${endId})` : undefined,
             opacity: p.opacity,
+            filter: shadowFilterRef(p.shadow, context.shadowIdFor),
           }),
         },
-        mergeFillStrokeStyle(f.styleFill, p.stroke),
+        mergeBlendStyle(mergeFillStrokeStyle(f.styleFill, p.stroke), p.blendMode),
       );
     }
     case 'group': {

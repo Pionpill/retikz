@@ -1,5 +1,7 @@
 import type {
   ArrowEndSpec,
+  BlendModeValue,
+  DropShadow,
   IRPaintSpec,
   MarkerFill,
   MarkerPrimitive,
@@ -97,6 +99,53 @@ const bakeAlpha = (color: string, opacity: number): string | undefined => {
     return `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, ${a * opacity})`;
   }
   return undefined;
+};
+
+/** shadow color 缺省（半透明黑）；compile 通常已补，渲染端再兜一层 */
+const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';
+
+/**
+ * 用已解析 DropShadow 包裹一段绘制：set `ctx.shadow*`、draw、restore
+ * @description `shadowBlur = blur`（renderer 近似对齐口径）；`opacity`（若给）经 bakeAlpha 相乘到 color 有效 alpha。
+ *   无 shadow → 直接 draw（逐字不变）。
+ */
+const withShadow = (
+  ctx: CanvasRenderingContext2D,
+  shadow: DropShadow | undefined,
+  draw: () => void,
+): void => {
+  if (shadow === undefined) {
+    draw();
+    return;
+  }
+  ctx.save();
+  ctx.shadowOffsetX = shadow.offsetX ?? 0;
+  ctx.shadowOffsetY = shadow.offsetY ?? 0;
+  ctx.shadowBlur = shadow.blur ?? 0;
+  const color = shadow.color ?? DEFAULT_SHADOW_COLOR;
+  ctx.shadowColor =
+    shadow.opacity !== undefined ? (bakeAlpha(color, shadow.opacity) ?? color) : color;
+  draw();
+  ctx.restore();
+};
+
+/**
+ * 用 blendMode 包裹一段绘制：set `globalCompositeOperation`、draw、restore（回 `source-over`）
+ * @description `normal` / 省略 → 直接 draw（逐字不变）；其余 W3C 分离模式名直接是 canvas GCO 值。
+ */
+const withBlend = (
+  ctx: CanvasRenderingContext2D,
+  blendMode: BlendModeValue | undefined,
+  draw: () => void,
+): void => {
+  if (blendMode === undefined || blendMode === 'normal') {
+    draw();
+    return;
+  }
+  ctx.save();
+  ctx.globalCompositeOperation = blendMode;
+  draw();
+  ctx.restore();
 };
 
 /**
@@ -597,20 +646,26 @@ const drawPrim = (
   }
   switch (p.type) {
     case 'rect':
-      withOpacity(ctx, p.opacity, () => {
-        roundedRectPath(ctx, p.x, p.y, p.width, p.height, p.cornerRadius);
-        fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, undefined, options, resources, {
-          x: p.x,
-          y: p.y,
-          w: p.width,
-          h: p.height,
-        });
-        strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
-      });
+      withBlend(ctx, p.blendMode, () =>
+        withShadow(ctx, p.shadow, () =>
+          withOpacity(ctx, p.opacity, () => {
+            roundedRectPath(ctx, p.x, p.y, p.width, p.height, p.cornerRadius);
+            fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, undefined, options, resources, {
+              x: p.x,
+              y: p.y,
+              w: p.width,
+              h: p.height,
+            });
+            strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
+          }),
+        ),
+      );
       break;
     case 'ellipse':
-      withOpacity(ctx, p.opacity, () => {
-        const shouldRestore = p.rotate !== undefined;
+      withBlend(ctx, p.blendMode, () =>
+        withShadow(ctx, p.shadow, () =>
+          withOpacity(ctx, p.opacity, () => {
+            const shouldRestore = p.rotate !== undefined;
         if (shouldRestore) ctx.save();
         if (p.rotate) {
           ctx.translate(p.cx, p.cy);
@@ -625,30 +680,36 @@ const drawPrim = (
           w: 2 * p.rx,
           h: 2 * p.ry,
         });
-        strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
-        if (shouldRestore) ctx.restore();
-      });
+            strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
+            if (shouldRestore) ctx.restore();
+          }),
+        ),
+      );
       break;
     case 'path':
-      withOpacity(ctx, p.opacity, () => {
-        buildPath(ctx, p.commands);
-        if (p.strokeLinecap !== undefined) ctx.lineCap = p.strokeLinecap;
-        if (p.strokeLinejoin !== undefined) ctx.lineJoin = p.strokeLinejoin;
-        fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, p.fillRule, options, resources, pathBBox(p.commands));
-        strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
-        if (p.arrowStart || p.arrowEnd) {
-          const strokeWidth = p.strokeWidth ?? 1;
-          const pathStroke = resolveColor(p.stroke, options);
-          if (p.arrowStart) {
-            const placement = startArrowPlacement(p.commands);
-            if (placement) drawArrowMarker(ctx, p.arrowStart, placement.vertex, placement.angle, strokeWidth, pathStroke, options);
-          }
-          if (p.arrowEnd) {
-            const placement = endArrowPlacement(p.commands);
-            if (placement) drawArrowMarker(ctx, p.arrowEnd, placement.vertex, placement.angle, strokeWidth, pathStroke, options);
-          }
-        }
-      });
+      withBlend(ctx, p.blendMode, () =>
+        withShadow(ctx, p.shadow, () =>
+          withOpacity(ctx, p.opacity, () => {
+            buildPath(ctx, p.commands);
+            if (p.strokeLinecap !== undefined) ctx.lineCap = p.strokeLinecap;
+            if (p.strokeLinejoin !== undefined) ctx.lineJoin = p.strokeLinejoin;
+            fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, p.fillRule, options, resources, pathBBox(p.commands));
+            strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
+            if (p.arrowStart || p.arrowEnd) {
+              const strokeWidth = p.strokeWidth ?? 1;
+              const pathStroke = resolveColor(p.stroke, options);
+              if (p.arrowStart) {
+                const placement = startArrowPlacement(p.commands);
+                if (placement) drawArrowMarker(ctx, p.arrowStart, placement.vertex, placement.angle, strokeWidth, pathStroke, options);
+              }
+              if (p.arrowEnd) {
+                const placement = endArrowPlacement(p.commands);
+                if (placement) drawArrowMarker(ctx, p.arrowEnd, placement.vertex, placement.angle, strokeWidth, pathStroke, options);
+              }
+            }
+          }),
+        ),
+      );
       break;
     case 'text':
       withOpacity(ctx, p.opacity, () => drawText(ctx, p, options));
