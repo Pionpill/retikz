@@ -107,6 +107,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.5',
+            date: '2026-06-17',
+            summary: {
+              zh: '新增 node 公式内容 `math`（与 text 平行）+ `CompileOptions.lowerMath` 注入点：LaTeX 公式经注入能力渲染成字形路径，三端一致；core 不依赖 MathJax。',
+              en: 'Adds node math content `math` (parallel to text) + a `CompileOptions.lowerMath` injection: LaTeX renders to glyph paths via the injected capability, consistent across backends; core does not depend on MathJax.',
+            },
+            items: [
+              {
+                label: { zh: 'node.math 公式内容', en: 'node.math content' },
+                content: {
+                  zh: '`IRNode` 新增 `math`（`{ tex, displayMode? }`，与 `text` 互斥、`math` 优先）；compile 经注入 `lowerMath` 渲染字形 + bbox 定尺寸——无 shape = 独立公式块、配 shape = 带框公式。字形 emit 成 `PathPrim`（renderer 零改动），可连线 / compass anchor / 叠加 shadow·blend。',
+                  en: '`IRNode` gains `math` (`{ tex, displayMode? }`, mutually exclusive with `text`, `math` wins); compile renders glyphs + bbox via the injected `lowerMath`, sizing the node — no shape = standalone block, with a shape = framed formula. Glyphs emit as `PathPrim` (no renderer change), connectable / compass-anchored / stackable with shadow·blend.',
+                },
+              },
+              {
+                label: { zh: 'lowerMath 注入点', en: 'lowerMath injection' },
+                content: {
+                  zh: '`CompileOptions.lowerMath`（`LowerMath` / `LoweredMath` 类型）+ warn code `MATH_LOWERER_MISSING` / `MATH_TEX_INVALID`；能力由 `@retikz/tex` 提供，缺注入 / 非法 tex 降级 + 警告、不崩。',
+                  en: '`CompileOptions.lowerMath` (`LowerMath` / `LoweredMath` types) + warn codes `MATH_LOWERER_MISSING` / `MATH_TEX_INVALID`; the capability is provided by `@retikz/tex` — missing injection / invalid tex degrade with a warning, never crash.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.4',
             date: '2026-06-16',
             summary: {
@@ -256,6 +280,23 @@ export const changelog: Array<Release> = [
         highlights: [],
         subVersions: [
           {
+            version: 'alpha.5',
+            date: '2026-06-17',
+            summary: {
+              zh: '`<Node math>` 公式内容透传 + `<Layout lowerMath>` 公式渲染注入通道。',
+              en: '`<Node math>` formula content passthrough + a `<Layout lowerMath>` injection channel for math rendering.',
+            },
+            items: [
+              {
+                label: { zh: '<Node math> + Layout lowerMath', en: '<Node math> + Layout lowerMath' },
+                content: {
+                  zh: '`<Node math={{ tex, displayMode? }}>` 把公式作节点内容；`<Layout lowerMath>` 把 `@retikz/tex` 的渲染能力透传给 `compileToScene`（补齐注入通道）。',
+                  en: '`<Node math={{ tex, displayMode? }}>` sets a formula as node content; `<Layout lowerMath>` forwards the `@retikz/tex` rendering capability to `compileToScene` (completing the injection channel).',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.4',
             date: '2026-06-16',
             summary: {
@@ -325,6 +366,23 @@ export const changelog: Array<Release> = [
         highlights: [],
         subVersions: [
           {
+            version: 'alpha.5',
+            date: '2026-06-17',
+            summary: {
+              zh: '`toScene` / `renderToString` 等经 `lowerMath` 选项渲染节点公式（`@retikz/tex` 提供能力）。',
+              en: '`toScene` / `renderToString` render node math via the `lowerMath` option (capability provided by `@retikz/tex`).',
+            },
+            items: [
+              {
+                label: { zh: 'lowerMath 选项', en: 'lowerMath option' },
+                content: {
+                  zh: '`CommonOptions` 经 `& CompileOptions` 已含 `lowerMath`；`node(id, { math: { tex } })` 配 `createLowerMath(await createMathJaxEngine())` 即渲染公式，零新 API。',
+                  en: '`CommonOptions` already includes `lowerMath` via `& CompileOptions`; `node(id, { math: { tex } })` with `createLowerMath(await createMathJaxEngine())` renders formulas — no new API.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.4',
             date: '2026-06-16',
             summary: {
@@ -337,6 +395,69 @@ export const changelog: Array<Release> = [
                 content: {
                   zh: '`shadow`（如 `md` 预设）/ `blendMode`（如 `multiply`）经 `Omit<IRNode>` / `Omit<IRPath>` 从 `@retikz/core` 透传，开箱即用，零新代码。',
                   en: '`shadow` (e.g. the `md` preset) / `blendMode` (e.g. `multiply`) flow from `@retikz/core` via `Omit<IRNode>` / `Omit<IRPath>` — out of the box, zero new code.',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        pkg: '@retikz/tex',
+        version: 'v0.4',
+        description: {
+          zh: '新包：LaTeX 数学公式经 MathJax SVG 降解成 renderer-agnostic 字形路径，接入 core 的 lowerMath 注入。',
+          en: 'New package: LaTeX math lowered via MathJax SVG into renderer-agnostic glyph paths, plugging into core’s lowerMath injection.',
+        },
+        highlights: [],
+        subVersions: [
+          {
+            version: 'alpha.5',
+            date: '2026-06-17',
+            summary: {
+              zh: '首切：MathJax→字形路径引擎 + `createLowerMath` 注入。',
+              en: 'First cut: a MathJax→glyph-path engine + `createLowerMath` injection.',
+            },
+            items: [
+              {
+                label: { zh: 'createMathJaxEngine / createLowerMath', en: 'createMathJaxEngine / createLowerMath' },
+                content: {
+                  zh: '`createMathJaxEngine`（`mathjax-full` optional peer，内联字形、纯 Node liteAdaptor）+ `createLowerMath`（引擎 → core `lowerMath`，按 fontSize / display / tex 缓存，失败降级 null）。',
+                  en: '`createMathJaxEngine` (`mathjax-full` optional peer, inline glyphs, DOM-free liteAdaptor) + `createLowerMath` (engine → core `lowerMath`, cached by fontSize / display / tex, degrading to null on failure).',
+                },
+              },
+              {
+                label: { zh: 'SVG 字形解析', en: 'SVG glyph parsing' },
+                content: {
+                  zh: '解析 MathJax SVG：path d（M/L/H/V/C/S/Q/T/Z）+ 嵌套 `g transform` 累积 + 全局 y 翻转 + 分数线 rect → 左上原点、y-down、user 单位字形 + bbox / depth（行内对齐预留）。',
+                  en: 'Parses MathJax SVG: path d (M/L/H/V/C/S/Q/T/Z) + nested `g transform` accumulation + global y-flip + fraction-bar rects → top-left-origin, y-down, user-unit glyphs + bbox / depth (reserved for inline alignment).',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        pkg: '@retikz/tex-react',
+        version: 'v0.4',
+        description: {
+          zh: '新包：LaTeX 公式的 React 接入——`<Math>` sugar + `useLowerMath`（MathJax startup）。',
+          en: 'New package: React bindings for LaTeX math — a `<Math>` sugar + `useLowerMath` (MathJax startup).',
+        },
+        highlights: [],
+        subVersions: [
+          {
+            version: 'alpha.5',
+            date: '2026-06-17',
+            summary: {
+              zh: '`<Math>` 公式节点 + `useLowerMath` 注入钩子。',
+              en: 'A `<Math>` formula node + a `useLowerMath` injection hook.',
+            },
+            items: [
+              {
+                label: { zh: '<Math> / useLowerMath', en: '<Math> / useLowerMath' },
+                content: {
+                  zh: '`<Math tex displayMode>` = `<Node math>` sugar（透传全部 Node props，无 shape = 独立块 / 配 shape = 带框）；`useLowerMath` 进程级单例启动 MathJax，返回 core `lowerMath` 注入函数（未就绪 = undefined）。',
+                  en: '`<Math tex displayMode>` = `<Node math>` sugar (forwards all Node props; no shape = standalone / with a shape = framed); `useLowerMath` starts MathJax as a process-level singleton, returning the core `lowerMath` injection (undefined until ready).',
                 },
               },
             ],
