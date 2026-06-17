@@ -232,8 +232,9 @@ export type LayoutProps = ScopeStyleProps & {
   composites?: Array<CompositeDefinition>;
   /**
    * 运行时注入的公式渲染能力（透传给 `compileToScene` 的 `CompileOptions.lowerMath`）
-   * @description `<Node math>` / 行内 `$...$` 公式编译时调它把 LaTeX → 字形路径 + bbox；由 `@retikz/tex` 的
-   *   `createLowerMath(mathjax)` 提供（`<TexProvider>` 注入）。缺省时带公式的节点降级 + 警告，不崩。
+   * @description `<Node math>` / `<Node>{{ tex }}</Node>` 公式编译时调它把 LaTeX → 字形路径 + bbox；由 `@retikz/tex`
+   *   的 `createLowerMath(await createMathJaxEngine())` 提供，应用自行在 effect 里启动 MathJax 后传入。缺省时带公式
+   *   的节点降级 + 警告，不崩。
    */
   lowerMath?: LowerMath;
   /**
