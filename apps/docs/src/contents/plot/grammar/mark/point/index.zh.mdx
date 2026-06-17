@@ -1,6 +1,6 @@
 ---
 title: PointMark
-description: PointMark 是坐标元组上的 0D glyph：可以画散点、气泡、形状编码，也可以承载无宿主文本点。
+description: PointMark 是坐标元组上的 0D glyph：可以画散点、气泡、形状编码，也可以承载文本点。
 ---
 
 `<PointMark>` 为每行数据生成一个 0D glyph。默认 glyph 是点；给 `size` / `shape` / `opacity` / `color` 后，它仍是同一个点图元，只是视觉通道不同。给 `text` 后，它会改为无边框文本 glyph。
@@ -21,13 +21,59 @@ import { Plot, PointMark } from '@retikz/plot-react';
 
 PointMark 常和 PathMark 叠加——同一份数据先画 `<PathMark>` 再叠 `<PointMark>` 标出每个观测点。
 
+## 表现层
+
+PointMark 是底层点 mark：它只负责把每行数据投影成一个 0D 锚点，并把样式、文本等通道写到这个锚点对应的 Node 上。表现层看到的“散点图”“气泡图”“文本点”不是不同的底层 mark，而是同一个 PointMark 在不同通道配置下的显示形态。
+
+这也是 PointMark 通常不需要按坐标系单独适配的原因：坐标系只负责把位置角色投影成屏幕点，表现层再决定这个点画成什么。
+
+| 表现形态 | 关键属性 | 说明 |
+| --- | --- | --- |
+| 散点 | `x` / `y` | 默认形态，每行数据绘制一个点；`color` / `shape` 继续装饰这组点 |
+| 气泡图 | `size` | 点半径由数值字段驱动，位置投影不变 |
+| 文本点 | `text` / `dx` / `dy` | 单独使用 `text` 时绘制文本 Node，可理解为表现层的 TextMark |
+
 ## 例子
 
-### 基础散点
+### 位置属性
 
-`x` / `y` 绑字段，每行一个点。
+`x` / `y` 决定每行数据的锚点。左侧是笛卡尔二维坐标系，右侧是极坐标二维坐标系；同一组字段在不同坐标系下会被解释成不同的几何位置。
 
-<ComponentPreview name="point-basic" sourceFiles={['point-scatter.data.ts']} />
+<ComponentPreview name="point-position" sourceFiles={['point-api.data.ts']} />
+
+### 样式属性
+
+`color` / `size` / `opacity` / `shape` 都是点的视觉通道。它们只改变 glyph 的显示方式，不改变点的坐标锚点。
+
+<ComponentPreview name="point-style" sourceFiles={['point-api.data.ts']} />
+
+### 文本属性
+
+`text` 会让这一层 PointMark 生成无边框文本 Node；需要同时保留圆点时，可以再叠加一层普通 PointMark。`dx` / `dy` 用来做屏幕方向的微调。
+
+<ComponentPreview name="point-text" sourceFiles={['point-api.data.ts']} />
+
+### 不同坐标系
+
+下面只看位置角色如何被坐标系解释：PointMark 自身不变，变的是 `x` / `y` / `z` 被投影到直线、圆环、平面或三角形中的方式。
+
+#### 一维：直线和极坐标
+
+一维坐标系只消费 `x`。在直线坐标里它落到一条轴上，在极坐标里同一组值落到圆环上。
+
+<ComponentPreview name="point-coordinate-1d" sourceFiles={['point-coordinates.data.ts']} />
+
+#### 二维：笛卡尔和极坐标
+
+二维坐标系消费 `x` / `y`。笛卡尔坐标把它解释成平面位置，极坐标把它解释成角向 / 径向位置。
+
+<ComponentPreview name="point-coordinate-2d" sourceFiles={['point-coordinates.data.ts']} />
+
+#### 三元：三元图
+
+三元坐标系消费 `x` / `y` / `z` 三个分量，并把每行数据归一化后投影到三角形内。
+
+<ComponentPreview name="point-coordinate-ternary" sourceFiles={['point-coordinates.data.ts']} />
 
 ## 技术原理
 
@@ -96,66 +142,6 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
 | 样式分层 | 无颜色编码时通过外层 `nodeDefault` 共享默认样式；有 `color` 时按颜色分组，减少重复 IR |
 | 点专属通道 | `size` / `opacity` / `shape` 只作用在 `PointMark`，会写到每个 datum Node 上 |
 | 文本变体 | 设置 `text` 后不再画圆点，而是生成无边框文本 Node，并复用同一套位置投影 |
-
-## 视觉通道
-
-### 气泡图
-
-给 `size` 一个数值字段，点半径按值映射。半径走平方根 scale，让点的**面积**正比于数据——小值不会缩到看不见、大值也不会过分夸张。
-
-<ComponentPreview name="point-bubble" sourceFiles={['point-scatter.data.ts']} />
-
-<p className="text-sm text-muted-foreground">点的大小编码 pop 字段，面积正比于值。</p>
-
-### 分类着色
-
-给 `color` 一个分类字段，每个点按类别取色（按 datum 着色）。
-
-<ComponentPreview name="point-color" sourceFiles={['point-scatter.data.ts']} />
-
-<p className="text-sm text-muted-foreground">按 region 给每个点上色。</p>
-
-### 连续着色
-
-给 `color` 一个连续数值字段，点按值取色——自动套上 sequential 色阶（默认 viridis），小值到大值连成一道色带。和分类着色一样按 datum 着色。
-
-连续字段要靠 `model` 声明字段类型；不声明时 `color` 一律当分类处理，连续字段会报错——要么用 `model` 声明该字段为 `continuous`，要么换一个分类字段。
-
-<ComponentPreview name="point-color-continuous" sourceFiles={['point-scatter.data.ts']} />
-
-<p className="text-sm text-muted-foreground">按 pop 连续值取色，自动 viridis 色带。</p>
-
-### 透明度
-
-给 `opacity` 一个连续字段，不透明度按值线性映射到 `[最小值, 1]`（最小值有下界，避免全透明看不见）。叠点密集时低值更淡。
-
-<ComponentPreview name="point-opacity" sourceFiles={['point-scatter.data.ts']} />
-
-<p className="text-sm text-muted-foreground">不透明度编码 pop 字段。</p>
-
-### 形状
-
-给 `shape` 一个分类字段，每个类别取一种 glyph（默认调色板 circle / rectangle / diamond 循环）。黑白打印或已用掉颜色时，用形状区分类别。
-
-<ComponentPreview name="point-shape" sourceFiles={['point-scatter.data.ts']} />
-
-<p className="text-sm text-muted-foreground">按 region 给每类一种形状。</p>
-
-### 宿主标签
-
-给 `<IntervalMark>` / `<PointMark>` / `<PathMark>` / `<RegionMark>` 一个 `label` 字段，标签会挂到该图元生成的 datum Node 上，不需要再新建文本图元。
-
-<ComponentPreview name="text-label" sourceFiles={['text-label.data.ts']} />
-
-<p className="text-sm text-muted-foreground">label="revenue" 挂在宿主区间 Node 上；labelFormat=",.0f" 输出千分位整数。</p>
-
-### 自由文本
-
-没有宿主的文字用 `<PointMark text>`。它和散点共用同一套位置投影，只是 glyph 内容是文本；`dx` / `dy` 用来做小幅偏移。
-
-<ComponentPreview name="text-free" sourceFiles={['text-free.data.ts']} />
-
-<p className="text-sm text-muted-foreground">text="label" 取字段值，dy=-12 上移避免压住散点。</p>
 
 ## API
 
