@@ -46,16 +46,16 @@ const { halfWidth, halfHeight } = shapeDef.circumscribe(contentSize.halfW + padd
 react：
 
 ```tsx
-import { TexProvider } from '@retikz/tex/react';
-<TexProvider>
-  <Layout>
-    {/* 带框公式：rectangle 容器 + 公式内容，框填色描边 + alpha.4 效果 */}
-    <Node id="box" position={[0, 0]} shape="rectangle" fill="#eef" stroke="#33f" math={{ tex: 'E = mc^2' }} shadow="sm" />
-    {/* 圆形容器 */}
-    <Node id="circ" position={[80, 0]} shape="circle" fill="white" math={{ tex: '\\oint_C' }} />
-    <Path><Step kind="move" to="box" /><Step kind="line" to="circ" /></Path>
-  </Layout>
-</TexProvider>
+import { Layout } from '@retikz/react';
+import { useLowerMath } from '@retikz/tex-react';
+// 组件内：const lowerMath = useLowerMath();
+<Layout lowerMath={lowerMath}>
+  {/* 带框公式：rectangle 容器 + 公式内容，框填色描边 + alpha.4 效果 */}
+  <Node id="box" position={[0, 0]} shape="rectangle" fill="#eef" stroke="#33f" math={{ tex: 'E = mc^2' }} shadow="sm" />
+  {/* 圆形容器 */}
+  <Node id="circ" position={[80, 0]} shape="circle" fill="white" math={{ tex: '\\oint_C' }} />
+  <Path><Step kind="move" to="box" /><Step kind="line" to="circ" /></Path>
+</Layout>
 ```
 
 vanilla：
@@ -75,7 +75,7 @@ figure([node('box', { position: [0, 0], shape: 'rectangle', fill: '#eef', math: 
 ## 影响
 
 - **core**：`compile/node.ts`——「内容尺寸来源」按 text/math 分派后喂任意 shape `circumscribe`；emit 容器 + 居中字形。**无新 IR 字段 / 无新注入点**（全复用 ADR-01）。
-- **`@retikz/tex/react` / `@retikz/vanilla`**：`<Node shape math>` / `node(...,{shape,math})` 透传（schema 已支持，无新 API）。
+- **`@retikz/tex-react` / `@retikz/vanilla`**：`<Node shape math>` / `node(...,{shape,math})` 透传（schema 已支持，无新 API）。
 - **对外 API**：无新增（ADR-01 的 `node.math` 即够）；纯能力扩展。
 - **renderer**：零改动。
 - **文档站**：带框公式双语页 + demo（任意容器、fill/效果叠加）。

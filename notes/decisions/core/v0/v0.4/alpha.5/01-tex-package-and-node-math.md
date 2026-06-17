@@ -68,23 +68,24 @@ export const createLowerMath = (mathjax: MathJaxSvgEngine): LowerMath => { /* te
 - **bbox → user 单位换算口径**：MathJax SVG 以 `ex` 计（`width` / `height` / `verticalAlign`=depth）。倾向 `1ex = fontSize × exFactor`（`exFactor≈0.45`），`fontSize` 取 node style 字号；displayMode 仅改 MathJax 排版度量。常量「可诊断近似」按快照微调（同 shadow blur）。
 - **字形产物粒度**：MathJax SVG 用 `<use>` 引共享 glyph + `<rect>`（分数线等）。倾向解析期 `<use>` 解引用 + transform 展平成**一个** `PathPrim`（多 subpath，`fillRule='evenodd'`），`<rect>` 转矩形 subpath 并入。保真优先。
 - **颜色继承**：倾向字形 `PathPrim.fill` 取 node text/stroke 色（缺省 `currentColor`），跟随主题。
-- **MathJax 生命周期**：倾向 `@retikz/tex` 只吃「已初始化的同步 `tex2svg`」（`createLowerMath(mathjax)`），异步 startup 由 adapter（`@retikz/tex/react` / 用户）await 后再 compile；core `compileToScene` 保持纯同步。
+- **MathJax 生命周期**：倾向 `@retikz/tex` 只吃「已初始化的同步 `tex2svg`」（`createLowerMath(engine)`），异步 startup 由 adapter（`@retikz/tex-react` 的 `useLowerMath` / 用户）await 后再 compile；core `compileToScene` 保持纯同步。
 - **无 shape node 的 math 内容定位**：倾向 node bbox = math bbox（AABB），anchor / boundaryPoint 走 AABB（同纯 text node 无 shape 时）。
 
 ## DSL 表面
 
-react（`@retikz/tex/react` 提供 `<Math>` sugar = `<Node math>`；`<TexProvider>` await MathJax startup 并把 `lowerMath` 经 `<Layout lowerMath>` 注入）：
+react（`@retikz/tex-react` 提供 `<Math>` sugar = `<Node math>` + `useLowerMath` 钩子：启动 MathJax 并把 `lowerMath` 经 `<Layout lowerMath>` 注入）：
 
 ```tsx
-import { TexProvider, Math } from '@retikz/tex/react';
-<TexProvider>
-  <Layout>
-    {/* 独立公式块（无 shape）：复用 Node 几何，可连线、可加 alpha.4 效果 */}
-    <Math id="eq" position={[0, 0]} tex="\frac{a}{b} = c" />
-    <Math id="big" position={[0, -40]} tex="\sum_{i=1}^n i^2" displayMode shadow="sm" />
-    <Path><Step kind="move" to="eq" /><Step kind="line" to="big" /></Path>
-  </Layout>
-</TexProvider>
+import { Layout } from '@retikz/react';
+import { Math, useLowerMath } from '@retikz/tex-react';
+// 组件内：
+const lowerMath = useLowerMath(); // 启动 MathJax，startup 完成后返回注入函数
+<Layout lowerMath={lowerMath}>
+  {/* 独立公式块（无 shape）：复用 Node 几何，可连线、可加 alpha.4 效果 */}
+  <Math id="eq" position={[0, 0]} tex="\frac{a}{b} = c" />
+  <Math id="big" position={[0, -40]} tex="\sum_{i=1}^n i^2" displayMode shadow="sm" />
+  <Path><Step kind="move" to="eq" /><Step kind="line" to="big" /></Path>
+</Layout>
 ```
 
 vanilla（注入 `lowerMath` 到 `toScene` options；node 用 `math` 内容）：
@@ -106,7 +107,7 @@ toScene(fig, { lowerMath });
 - **core**：`ir/math.ts`（新建）、`ir/node.ts`（加 `math`）、`compile/compile.ts`（加 `options.lowerMath` 注入 + 透传）、`compile/node.ts`（math 内容分支：测量 + emit 字形）、`compile/constant.ts`（新 warn code）、`src/index.ts`（导出 `IRMathContent` / `LowerMath`）。**red 级 core 变更**（additive / optional，缺省零回归）。
 - **`@retikz/react`**：`Layout.tsx` 加 `lowerMath` prop → 透传 `compileToScene`（解评审 BLOCKING 3：现有 Layout 只传 shapes/arrows/patterns/pathGenerators/composites，无 lowerMath 通道）。
 - **`@retikz/vanilla`**：`toScene` 透传 `lowerMath`。
-- **新包 `@retikz/tex`**：独立包（非 core 组 lockstep），`dependencies` 含 `@retikz/core`，`mathjax` 走 optional peer；含 `@retikz/tex/react`（`<Math>` + `<TexProvider>`）。
+- **新包 `@retikz/tex`**：独立包（非 core 组 lockstep），`dependencies` 含 `@retikz/core`，`mathjax-full` 走 optional peer（catalog）；另立 `@retikz/tex-react`（`<Math>` + `useLowerMath`）。
 - **renderer**：**零改动**（字形是普通 `PathPrim`）。
 - **对外 API**：core 新增 `IRNode.math` + `LowerMath` + `IRMathContent`（additive）；新包公开 API；无 breaking。
 - **文档站**：公式双语页 + demo（独立公式块、连线、与 shadow/blend 叠加；MathJax 安装说明）。
@@ -144,7 +145,7 @@ toScene(fig, { lowerMath });
 - `@retikz/react`：`src/kernel/Layout.tsx`（加 `lowerMath` prop + 传 `compileToScene`）+ 测试
 - `@retikz/vanilla`：`src/to-scene.ts`（透传 `lowerMath`）+ 测试
 - `@retikz/tex`（新建包）：`src/index.ts`、`src/lower/lower-math.ts`（`createLowerMath`）、`src/mathjax/load.ts`（optional peer 动态 import + 缺失诊断）、`src/svg-path/parse.ts`（SVG `path d` → `PathCommand`；`<use>` 解引用 + transform 展平）、`src/measure/bbox.ts`（ex→user）、`package.json` / `tsconfig*` / 包配置、`tests/**`
-- `@retikz/tex/react`（新建包）：`src/index.ts`、`src/Math.tsx`（`<Math>` = `<Node math>`）、`src/TexProvider.tsx`（MathJax startup + 经 `<Layout lowerMath>` 注入）、`package.json`、`tests/**`
+- `@retikz/tex-react`（新建包）：`src/index.ts`、`src/Math.tsx`（`<Math>` = `<Node math>`）、`src/useLowerMath.ts`（MathJax startup 单例 + 经 `<Layout lowerMath>` 注入）、`package.json`、`tests/**`
 - `pnpm-workspace.yaml`（catalog 加 `mathjax`）
 - **不动**：`render/src/**`（零改动验证点）
 - `apps/docs/**`（stage 4）

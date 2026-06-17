@@ -26,7 +26,7 @@ alpha.5 给 retikz 补上**数学排版**——一个 TikZ-inspired 库的旗舰
 - **A 独立公式块（ADR-01）** = 无 shape 的 `node.math`：bbox = 公式 bbox，复用 Node 全套几何（position / compass anchor / boundaryPoint 连线 / zIndex / opacity / alpha.4 shadow·blend）。react `<Math tex>` = `<Node math>` sugar。
 - **B 带框公式（ADR-02）** = 有 shape 的 `node.math`：任意 shape（rectangle / circle / star…）容器据公式 bbox 自动尺寸（+ padding），框走 node 常规 `fill` / `stroke` / `cornerRadius`。几乎零增量（复用 ADR-01 内容路径 + 既有「shape 包住内容」链路）。
 - **C 行内混排（ADR-03）** = `IRLineSpec` 增 run 序列（`TextRunSchema`（含 opacity）/ `MathRunSchema`）+ `$...$` 解析糖（**gated on `lowerMath` 存在**——未接 tex 时 `$` 字面，现有含 `$` 文本零回归）+ 混排布局（公式 run 按 depth 贴文字基线），emit `GroupPrim(TextPrim + glyph PathPrim)`。新增 `TEXT_MATH_PARSE_ERROR` warn code。
-- **React/vanilla 注入通道（ADR-01 补齐，评审 BLOCKING 3）**：`@retikz/react` `Layout.tsx` 现仅传 shapes/arrows/patterns/pathGenerators/composites，**无 lowerMath 通道**——ADR-01 给 `Layout` 加 `lowerMath` prop 透传 `compileToScene`；vanilla `toScene` 同步透传。`<TexProvider>` await MathJax startup 并经此注入。
+- **React/vanilla 注入通道（ADR-01 补齐，评审 BLOCKING 3）**：`@retikz/react` `Layout.tsx` 现仅传 shapes/arrows/patterns/pathGenerators/composites，**无 lowerMath 通道**——ADR-01 给 `Layout` 加 `lowerMath` prop 透传 `compileToScene`；vanilla `toScene` 同步透传。`@retikz/tex-react` 的 `useLowerMath` 启动 MathJax 并经此注入。
 - **MathJax = optional peerDependency**：照搬 `@napi-rs/canvas`（`peerDependenciesMeta.optional` + 动态 import + 缺失诊断），用户自装、掌控版本 / macro。
 
 **三端 renderer 全零改动**——公式都 emit 成既有 `PathPrim` / `TextPrim` / `GroupPrim`。
