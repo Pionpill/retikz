@@ -59,7 +59,7 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
   });
 
   // ADR-01（alpha.9）：x / y 从必填转可选——必填性下放到 coordinate 级校验（cartesian2D 需 x+y、
-  // cartesian1D 仅需单维、ternary2D 需 a/b/c）。schema 层放宽，缺角色由 lowering fail-loud（见 coordinate-frame.test.ts）。
+  // cartesian1D 仅需单维、ternary2D 需 x/y/z）。schema 层放宽，缺角色由 lowering fail-loud（见 coordinate-frame.test.ts）。
   it('encoding_missing_x_accepted', () => {
     expect(EncodingSchema.parse({ y: { field: 'value' } })).toEqual({ y: { field: 'value' } });
   });
@@ -78,19 +78,19 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
     expect(EncodingSchema.parse(JSON.parse(JSON.stringify(e)))).toEqual(e);
   });
 
-  // alpha.9 ADR-03：ternary 的 a/b/c 位置角色通道（可选；ternary 必填由 lowering 校验）
-  it('encoding_abc_channels_valid', () => {
-    const e = { a: { field: 'sand' }, b: { field: 'silt' }, c: { field: 'clay' } };
+  // alpha.9 ADR-03：ternary 的 x/y/z 位置角色通道（可选；ternary 必填由 lowering 校验）
+  it('encoding_xyz_channels_valid', () => {
+    const e = { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' } };
     expect(EncodingSchema.parse(e)).toEqual(e);
   });
 
-  it('encoding_abc_with_color_valid', () => {
-    const e = { a: { field: 'sand' }, b: { field: 'silt' }, c: { field: 'clay' }, color: { field: 'region', scale: 'col' } };
+  it('encoding_xyz_with_color_valid', () => {
+    const e = { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' }, color: { field: 'region', scale: 'col' } };
     expect(EncodingSchema.parse(e)).toEqual(e);
   });
 
-  it('encoding_abc_json_round_trip', () => {
-    const e = EncodingSchema.parse({ a: { field: 'sand' }, b: { field: 'silt' }, c: { field: 'clay' } });
+  it('encoding_xyz_json_round_trip', () => {
+    const e = EncodingSchema.parse({ x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' } });
     expect(EncodingSchema.parse(JSON.parse(JSON.stringify(e)))).toEqual(e);
   });
 });

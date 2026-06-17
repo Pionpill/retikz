@@ -5,7 +5,7 @@ description: "PointMark is a 0D glyph at a coordinate tuple: scatter, bubbles, s
 
 `<PointMark>` produces one 0D glyph per data row. The default glyph is a dot; `size` / `shape` / `opacity` / `color` change visual channels without changing the mark. Set `text` and the glyph becomes a borderless text node.
 
-Which position channels you bind depends on the [coordinate system](/plot/grammar/coordinate): 2D cartesian / polar use `x` / `y`, 1D (cartesian1D / polar1D) bind only `x`, and ternary (ternary2D) uses `a` / `b` / `c`. That's why `x` / `y` are optional — which ones are required, and whether a/b/c apply, is validated by the coordinate at compile time.
+Which position channels you bind depends on the [coordinate system](/plot/grammar/coordinate): 1D uses `x`, 2D uses `x` / `y`, and ternary uses `x` / `y` / `z`. The props are optional at the component level; the active coordinate validates the required dimensions at compile time.
 
 ## Usage
 
@@ -28,6 +28,76 @@ PointMark often overlays PathMark — draw `<PathMark>` first, then layer `<Poin
 Bind `x` / `y`; one dot per row.
 
 <ComponentPreview name="point-basic" sourceFiles={['point-scatter.data.ts']} />
+
+## How It Works
+
+`PointMark` is a built-in registered mark. The React `<PointMark>` component does not render DOM or draw points by itself; `<Plot>` collects it into mark IR with `type: 'point'` and records field channels such as `x` / `y` / `z`.
+
+At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `PointMark` resolves to the `PlotMark.Point` entry, which calls `lowerPoint`. For each row, `lowerPoint` reads the position-channel values, asks the current coordinate frame to `projectRoles(...)`, then lowers the projected point into a core `Node`.
+
+For registration, focus on the `PointMark` registry entry and the `lowerPoint` function that performs the lowering:
+
+```ts
+[PlotMark.Point]: { type: PlotMark.Point, lower: lowerPoint },
+
+const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+  if (mark.type !== PlotMark.Point) return null;
+  const { colorOf, defaultColor = DEFAULT_FILL, sizeOf, opacityOf, shapeOf, labelOf } = channels;
+  const isText = mark.encoding.text !== undefined;
+  const dx = mark.dx ?? 0;
+  const dy = mark.dy ?? 0;
+  const placed: Array<{ color: string | undefined; node: IRNode }> = [];
+  for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
+    const row = rows[transformedIndex];
+    if (isText) {
+      // 文本 glyph：投影同 point（roleValues + projectRoles，坐标系无关）；内容缺失跳过；dx/dy 锚点像素微调
+      const point = frame.projectRoles(roleValues(mark, row, frame));
+      if (!point) continue;
+      const text = labelOf?.(row);
+      if (text === undefined) continue;
+      const position: [number, number] = dx === 0 && dy === 0 ? point : [point[0] + dx, point[1] + dy];
+      const base: IRNode = { type: 'node', position, text };
+      placed.push({ color: colorOf?.(row), node: decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined) });
+      continue;
+    }
+    // 散点 glyph：锚点与 locator 共享同一 datumAnchor（point → frame.projectRoles），杜绝两套投影漂移
+    const point = datumAnchor(mark, row, frame);
+    if (!point) continue;
+    const base: IRNode = { type: 'node', position: point };
+    const radius = sizeOf?.(row);
+    if (radius !== undefined) base.minimumSize = radius * Math.SQRT2;
+    const opacity = opacityOf?.(row);
+    if (opacity !== undefined) base.opacity = opacity;
+    const shape = shapeOf?.(row);
+    if (shape !== undefined) base.shape = shape;
+    const node = attachDatumLabel(decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined), mark, row, labelOf);
+    placed.push({ color: colorOf?.(row), node });
+  }
+  if (placed.length === 0) return null;
+  const styleFor = isText ? textStyle : pointStyle;
+  const layer: IRScope = !colorOf
+    ? { type: 'scope', nodeDefault: styleFor(defaultColor), children: placed.map(p => p.node) }
+    : colorGroupedScope(placed, styleFor);
+  return attachMarkLayer(layer, mark, markProvenance);
+};
+```
+
+The function runs in four steps:
+
+1. Check that the mark is `PlotMark.Point`; otherwise return `null`.
+2. For each row, project the position through `datumAnchor` or `frame.projectRoles(...)`; rows that cannot be projected are skipped.
+3. Regular points become core `Node`s with optional `size`, `opacity`, and `shape`; text points become text Nodes.
+4. Finally, choose the layer structure from the `color` channel: without color encoding, all nodes share one `nodeDefault`; with color encoding, nodes are split into child `Scope`s by color before mark-layer metadata is attached.
+
+| Trait | Behavior |
+| --- | --- |
+| Coordinate-agnostic | The mark only consumes position roles; cartesian, polar, ternary, or custom coordinates decide how those roles are interpreted |
+| One Node per row | A regular scatter point becomes one datum Node; rows whose position cannot project to a screen point are skipped |
+| Shared styling | Without color encoding, an outer `nodeDefault` shares default style; with `color`, nodes are grouped by color to keep IR compact |
+| Point-only channels | `size` / `opacity` / `shape` only apply to `PointMark`, and are written onto each datum Node |
+| Text variant | Set `text` and the mark produces borderless text Nodes instead of dot glyphs, while reusing the same position projection |
+
+## Visual Channels
 
 ### Bubbles
 
@@ -89,24 +159,24 @@ For hostless text, use `<PointMark text>`. It shares the same position projectio
 
 ## API
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `x` | `string?` | — | Field bound to the x position channel (cartesian horizontal / polar angular / 1D single axis); required by cartesian·polar, unused by ternary |
-| `y` | `string?` | — | Field bound to the y position channel (cartesian vertical / polar radial); required by cartesian·polar, omitted by 1D / ternary |
-| `a` | `string?` | — | ternary2D a component field (top vertex); used with b / c for ternary scatter, auto-normalized |
-| `b` | `string?` | — | ternary2D b component field (bottom-right vertex) |
-| `c` | `string?` | — | ternary2D c component field (bottom-left vertex) |
-| `size` | `string?` | — | Numeric field: mapped to dot radius via a square-root scale (area-perceptual); negative values error |
-| `opacity` | `string?` | — | Continuous field: mapped to opacity via a clamped linear scale to `[min, 1]`; temporal / categorical fields error |
-| `shape` | `string?` | — | Categorical field: mapped to a glyph palette (circle / rectangle / diamond, cycled); continuous / temporal fields error |
-| `text` | `string?` | — | Text-content field; when set, the mark lowers to a borderless text glyph instead of a dot glyph |
-| `format` | `string?` | — | Text format string; only used with `text` |
-| `dx` / `dy` | `number?` | `0` | Fine offset from the projected anchor for text points |
-| `label` | `string?` | — | Host datum-label field; attaches to the Node produced by this mark |
-| `labelFormat` | `string?` | — | Format string for the host label |
-| `resolveLabel` | `(row) => string?` | — | Runtime label-template escape hatch; not in IR, requires `id` |
-| `color` | `string?` | — | Color field, colored per datum: categorical → auto ordinal color scale; continuous / temporal needs a `model` declaration → auto sequential color scale (viridis) |
-| `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
+Most `PointMark` props are data channels: position props decide where each row is projected, while style props decide how the point is displayed. Text, labels, and general props such as `id` are grouped separately. `FieldName` means a data field name or field path, such as `region` / `user.age`.
+
+| Category | Prop | Type | Default | Description |
+| --- | --- | --- | --- | --- |
+| Position | `x` | `FieldName?` | — | Field bound to the x position channel |
+| | `y` | `FieldName?` | — | Field bound to the y position channel |
+| | `z` | `FieldName?` | — | Field bound to the third ternary component |
+| Style | `color` | `FieldName?` | — | Field bound to the color channel |
+| | `size` | `FieldName?` | — | Field bound to the size channel |
+| | `opacity` | `FieldName?` | — | Field bound to the opacity channel |
+| | `shape` | `FieldName?` | — | Field bound to the shape channel |
+| Text | `text` | `FieldName?` | — | Field bound to text content |
+| | `format` | `string?` | — | Format string for `text` |
+| | `dx` / `dy` | `number?` | `0` | Fine offset from the projected anchor for text points |
+| | `label` | `FieldName?` | — | Field bound to the host label |
+| | `labelFormat` | `string?` | — | Format string for `label` |
+| | `resolveLabel` | `(row) => string?` | — | Runtime label resolver; not in IR, requires `id` |
+| General | `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
 
 ## Related
 

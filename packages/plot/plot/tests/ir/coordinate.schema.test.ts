@@ -190,10 +190,10 @@ describe('CoordinateSchema ternary2D (alpha.9 ADR-03)', () => {
     expect(CoordinateSchema.parse({ type: 'ternary2D' })).toEqual({ type: 'ternary2D' });
   });
 
-  // ternary2D 本轮无几何配置字段：分量绑定走 mark 的 a/b/c 通道，coordinate 内自动归一化。
-  // 多余的 a/b/c key（per-component scale 未来才做）被 zod 剥离（同 polar2D 剥离 cartesian x/y）。
+  // ternary2D 本轮无几何配置字段：分量绑定走 mark 的 x/y/z 通道，coordinate 内自动归一化。
+  // 多余的 x/y/z key（per-component scale 未来才做）被 zod 剥离（同 polar2D 剥离 cartesian x/y）。
   it('ternary2d_strips_unsupported_scale_keys', () => {
-    expect(CoordinateSchema.parse({ type: 'ternary2D', a: 'as', b: 'bs', c: 'cs' })).toEqual({ type: 'ternary2D' });
+    expect(CoordinateSchema.parse({ type: 'ternary2D', x: 'xs', y: 'ys', z: 'zs' })).toEqual({ type: 'ternary2D' });
   });
 
   // 回归 + round-trip
@@ -203,7 +203,7 @@ describe('CoordinateSchema ternary2D (alpha.9 ADR-03)', () => {
   });
 
   it('ternary2d_json_round_trip', () => {
-    const ir = CoordinateSchema.parse({ type: 'ternary2D', a: 'as', b: 'bs', c: 'cs' });
+    const ir = CoordinateSchema.parse({ type: 'ternary2D', x: 'xs', y: 'ys', z: 'zs' });
     expect(CoordinateSchema.parse(JSON.parse(JSON.stringify(ir)))).toEqual(ir);
   });
 });

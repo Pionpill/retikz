@@ -64,7 +64,7 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 
 ## 类型驱动的比例尺
 
-声明了字段类型后，位置通道（x / y，以及 ternary 的 a / b / c）**不必再手写比例尺**：retikz 按类型自动选，`continuous`→线性、`temporal`→时间轴、`categorical`→分类带。颜色通道同样受字段类型影响：连续 / 时间字段派生连续色阶，分类字段派生离散颜色。详细映射与覆盖规则见[比例尺](/plot/grammar/scale)。
+声明了字段类型后，位置通道（x / y，以及 ternary 的 x / y / z）**不必再手写比例尺**：retikz 按类型自动选，`continuous`→线性、`temporal`→时间轴、`categorical`→分类带。颜色通道同样受字段类型影响：连续 / 时间字段派生连续色阶，分类字段派生离散颜色。详细映射与覆盖规则见[比例尺](/plot/grammar/scale)。
 
 下面三张图都没有写任何比例尺配置：`continuous` 字段派生线性轴，`temporal` 字段派生时间轴，`categorical` 字段派生分类带轴。
 

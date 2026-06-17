@@ -3,13 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
 
-/**
- * ADR-03（alpha.9）ternary2D 三元坐标系 lowering 测试。
- * 经公开 lowerPlots 断言 core IR node position：
- *   三连续通道 a/b/c 自动归一化 → 重心坐标投影到等边三角内；纯分量落顶点、(1/3,1/3,1/3) 落重心；
- *   和≤0 / 含负 fail-loud；缺 a/b/c 任一 fail-loud；interval/sector fail-loud；三角轴 guide；色编码。
- */
-
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
 const expandOf = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
@@ -32,99 +25,86 @@ const ternarySpec = (extra: Record<string, unknown> = {}): PlotSpec =>
     data: { reference: 'd' },
     scales: [],
     coordinate: { type: 'ternary2D' },
-    marks: [{ type: 'point', encoding: { a: { field: 'a' }, b: { field: 'b' }, c: { field: 'c' } } }],
+    marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' } } }],
     ...extra,
   });
 
-/** 取三个纯分量顶点（a/b/c 各 100%）的投影点，作几何参照 */
-const pureVertices = (): { va: [number, number]; vb: [number, number]; vc: [number, number] } => {
-  const positions = positionsOf(firstLayer(ternarySpec(), { d: [{ a: 1, b: 0, c: 0 }, { a: 0, b: 1, c: 0 }, { a: 0, b: 0, c: 1 }] }, opts));
-  return { va: positions[0], vb: positions[1], vc: positions[2] };
+const pureVertices = (): { vx: [number, number]; vy: [number, number]; vz: [number, number] } => {
+  const positions = positionsOf(firstLayer(ternarySpec(), { d: [{ x: 1, y: 0, z: 0 }, { x: 0, y: 1, z: 0 }, { x: 0, y: 0, z: 1 }] }, opts));
+  return { vx: positions[0], vy: positions[1], vz: positions[2] };
 };
 
-describe('ternary2D 重心投影 (ADR-03)', () => {
-  // Happy path：纯分量落三角顶点（a=顶点朝上、b=右下、c=左下）
+describe('ternary2D barycentric projection', () => {
   it('pure_components_land_on_vertices', () => {
-    const { va, vb, vc } = pureVertices();
-    // a 顶点最高（屏幕 y 最小）；b 在右（x 最大）；c 在左（x 最小）
-    expect(va[1]).toBeLessThan(vb[1]);
-    expect(va[1]).toBeLessThan(vc[1]);
-    expect(vb[0]).toBeGreaterThan(va[0]);
-    expect(vc[0]).toBeLessThan(va[0]);
+    const { vx, vy, vz } = pureVertices();
+    expect(vx[1]).toBeLessThan(vy[1]);
+    expect(vx[1]).toBeLessThan(vz[1]);
+    expect(vy[0]).toBeGreaterThan(vx[0]);
+    expect(vz[0]).toBeLessThan(vx[0]);
   });
 
-  // Happy path：(1/3,1/3,1/3) 落三角重心（三顶点平均）
   it('balanced_lands_on_centroid', () => {
-    const { va, vb, vc } = pureVertices();
-    const centroid: [number, number] = [(va[0] + vb[0] + vc[0]) / 3, (va[1] + vb[1] + vc[1]) / 3];
-    const [p] = positionsOf(firstLayer(ternarySpec(), { d: [{ a: 1, b: 1, c: 1 }] }, opts));
+    const { vx, vy, vz } = pureVertices();
+    const centroid: [number, number] = [(vx[0] + vy[0] + vz[0]) / 3, (vx[1] + vy[1] + vz[1]) / 3];
+    const [p] = positionsOf(firstLayer(ternarySpec(), { d: [{ x: 1, y: 1, z: 1 }] }, opts));
     expect(p[0]).toBeCloseTo(centroid[0], 4);
     expect(p[1]).toBeCloseTo(centroid[1], 4);
   });
 
-  // Happy path：自动归一化 — (1,1,1) 与 (10,10,10) 投影到同一点
   it('auto_normalization_scale_invariant', () => {
-    const [p1] = positionsOf(firstLayer(ternarySpec(), { d: [{ a: 1, b: 1, c: 1 }] }, opts));
-    const [p10] = positionsOf(firstLayer(ternarySpec(), { d: [{ a: 10, b: 10, c: 10 }] }, opts));
+    const [p1] = positionsOf(firstLayer(ternarySpec(), { d: [{ x: 1, y: 1, z: 1 }] }, opts));
+    const [p10] = positionsOf(firstLayer(ternarySpec(), { d: [{ x: 10, y: 10, z: 10 }] }, opts));
     expect(p10[0]).toBeCloseTo(p1[0], 6);
     expect(p10[1]).toBeCloseTo(p1[1], 6);
   });
 
-  // 边界：非归一三元组 (50,30,20) → 归一化 (0.5,0.3,0.2)
   it('non_normalized_triple_normalized', () => {
-    const { va, vb, vc } = pureVertices();
-    const expected: [number, number] = [0.5 * va[0] + 0.3 * vb[0] + 0.2 * vc[0], 0.5 * va[1] + 0.3 * vb[1] + 0.2 * vc[1]];
-    const [p] = positionsOf(firstLayer(ternarySpec(), { d: [{ a: 50, b: 30, c: 20 }] }, opts));
+    const { vx, vy, vz } = pureVertices();
+    const expected: [number, number] = [0.5 * vx[0] + 0.3 * vy[0] + 0.2 * vz[0], 0.5 * vx[1] + 0.3 * vy[1] + 0.2 * vz[1]];
+    const [p] = positionsOf(firstLayer(ternarySpec(), { d: [{ x: 50, y: 30, z: 20 }] }, opts));
     expect(p[0]).toBeCloseTo(expected[0], 4);
     expect(p[1]).toBeCloseTo(expected[1], 4);
   });
 
-  // 边界：单分量为 0 — (0,1,1) 落 bc 边中点
   it('zero_component_on_edge', () => {
-    const { vb, vc } = pureVertices();
-    const mid: [number, number] = [(vb[0] + vc[0]) / 2, (vb[1] + vc[1]) / 2];
-    const [p] = positionsOf(firstLayer(ternarySpec(), { d: [{ a: 0, b: 1, c: 1 }] }, opts));
+    const { vy, vz } = pureVertices();
+    const mid: [number, number] = [(vy[0] + vz[0]) / 2, (vy[1] + vz[1]) / 2];
+    const [p] = positionsOf(firstLayer(ternarySpec(), { d: [{ x: 0, y: 1, z: 1 }] }, opts));
     expect(p[0]).toBeCloseTo(mid[0], 4);
     expect(p[1]).toBeCloseTo(mid[1], 4);
   });
 
-  // 多行散点
   it('multiple_points_placed', () => {
-    const rows = [{ a: 1, b: 1, c: 1 }, { a: 2, b: 1, c: 1 }, { a: 1, b: 2, c: 1 }];
+    const rows = [{ x: 1, y: 1, z: 1 }, { x: 2, y: 1, z: 1 }, { x: 1, y: 2, z: 1 }];
     expect(positionsOf(firstLayer(ternarySpec(), { d: rows }, opts))).toHaveLength(3);
   });
 });
 
-describe('ternary2D fail-loud (ADR-03)', () => {
-  // 错误路径：和为 0 → fail-loud
+describe('ternary2D fail-loud', () => {
   it('sum_zero_fails_loud', () => {
-    expect(() => expandOf(ternarySpec(), { d: [{ a: 0, b: 0, c: 0 }] }, opts)).toThrow(/ternary|a\+b\+c|> 0/i);
+    expect(() => expandOf(ternarySpec(), { d: [{ x: 0, y: 0, z: 0 }] }, opts)).toThrow(/ternary|x\+y\+z|> 0/i);
   });
 
-  // 错误路径：含负 → fail-loud
   it('negative_component_fails_loud', () => {
-    expect(() => expandOf(ternarySpec(), { d: [{ a: -1, b: 1, c: 1 }] }, opts)).toThrow(/ternary|non-negative|negative/i);
+    expect(() => expandOf(ternarySpec(), { d: [{ x: -1, y: 1, z: 1 }] }, opts)).toThrow(/ternary|non-negative|negative/i);
   });
 
-  // 错误路径：各分量有限但和上溢 Infinity → fail-loud（adversarial B1：曾静默投到原点 [0,0]）
   it('sum_overflow_fails_loud', () => {
-    expect(() => expandOf(ternarySpec(), { d: [{ a: 1e308, b: 1e308, c: 1e308 }] }, opts)).toThrow(/ternary|overflow/i);
+    expect(() => expandOf(ternarySpec(), { d: [{ x: 1e308, y: 1e308, z: 1e308 }] }, opts)).toThrow(/ternary|overflow/i);
   });
 
-  // 错误路径：缺 c 角色 → fail-loud（ADR-01 必填角色校验，ternary 需 a/b/c）
-  it('missing_c_channel_fails_loud', () => {
+  it('missing_z_channel_fails_loud', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'ternary2D' },
-      marks: [{ type: 'point', encoding: { a: { field: 'a' }, b: { field: 'b' } } }],
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     });
-    expect(() => expandOf(spec, { d: [{ a: 1, b: 1 }] }, opts)).toThrow(/ternary2D|requires|c/i);
+    expect(() => expandOf(spec, { d: [{ x: 1, y: 1 }] }, opts)).toThrow(/ternary2D|requires|z/i);
   });
 
-  // 错误路径：interval 在 ternary 无几何意义 → fail-loud
   it('interval_fails_loud', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
@@ -137,23 +117,21 @@ describe('ternary2D fail-loud (ADR-03)', () => {
     expect(() => expandOf(spec, { d: [{ cat: 'A', v: 1 }] }, opts)).toThrow(/ternary2D|not supported|interval/i);
   });
 
-  // 错误路径：非法维度（ternary 合法集 {a,b,c}）→ fail-loud
-  it('x_dimension_fails_loud', () => {
+  it('angle_dimension_fails_loud', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'ternary2D' },
-      marks: [{ type: 'point', encoding: { a: { field: 'a' }, b: { field: 'b' }, c: { field: 'c' } } }],
-      guides: [{ type: 'axis', dimension: 'x' }],
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' } } }],
+      guides: [{ type: 'axis', dimension: 'angle' }],
     });
-    expect(() => expandOf(spec, { d: [{ a: 1, b: 1, c: 1 }] }, opts)).toThrow(/ternary2D|not support|dimension|x/i);
+    expect(() => expandOf(spec, { d: [{ x: 1, y: 1, z: 1 }] }, opts)).toThrow(/ternary2D|not support|dimension|angle/i);
   });
 });
 
-describe('ternary2D 数据契约 — a/b/c 进数据契约 (P1)', () => {
-  // a/b/c 现作为用户源字段：data.model strict 下漏声明 b/c → fail-loud（曾绕过契约）
+describe('ternary2D data contract', () => {
   it('model_omitting_component_fails_loud', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
@@ -161,12 +139,11 @@ describe('ternary2D 数据契约 — a/b/c 进数据契约 (P1)', () => {
       data: { reference: 'd', model: [{ name: 'sand', type: 'continuous' }] },
       scales: [],
       coordinate: { type: 'ternary2D' },
-      marks: [{ type: 'point', encoding: { a: { field: 'sand' }, b: { field: 'silt' }, c: { field: 'clay' } } }],
+      marks: [{ type: 'point', encoding: { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' } } }],
     });
     expect(() => expandOf(spec, { d: [{ sand: 1, silt: 1, clay: 1 }] }, opts)).toThrow(/unknown field|silt|clay/i);
   });
 
-  // a/b/c 现过 normalizeRows：字符串数值（model 声明 continuous）被强制为数 → 正常投影，不再静默跳过
   it('string_numeric_components_coerced_not_skipped', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
@@ -174,22 +151,21 @@ describe('ternary2D 数据契约 — a/b/c 进数据契约 (P1)', () => {
       data: {
         reference: 'd',
         model: [
-          { name: 'a', type: 'continuous' },
-          { name: 'b', type: 'continuous' },
-          { name: 'c', type: 'continuous' },
+          { name: 'x', type: 'continuous' },
+          { name: 'y', type: 'continuous' },
+          { name: 'z', type: 'continuous' },
         ],
       },
       scales: [],
       coordinate: { type: 'ternary2D' },
-      marks: [{ type: 'point', encoding: { a: { field: 'a' }, b: { field: 'b' }, c: { field: 'c' } } }],
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' } } }],
     });
-    const layer = firstLayer(spec, { d: [{ a: '1', b: '1', c: '1' }] }, opts);
+    const layer = firstLayer(spec, { d: [{ x: '1', y: '1', z: '1' }] }, opts);
     expect(positionsOf(layer)).toHaveLength(1);
   });
 });
 
-describe('ternary2D guide + color (ADR-03)', () => {
-  // 交互：三角轴 guide（a/b/c 三条边）下沉
+describe('ternary2D guide + color', () => {
   it('triangle_axis_guides_lower', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
@@ -197,19 +173,17 @@ describe('ternary2D guide + color (ADR-03)', () => {
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'ternary2D' },
-      marks: [{ type: 'point', encoding: { a: { field: 'a' }, b: { field: 'b' }, c: { field: 'c' } } }],
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' } } }],
       guides: [
-        { type: 'axis', dimension: 'a' },
-        { type: 'axis', dimension: 'b' },
-        { type: 'axis', dimension: 'c' },
+        { type: 'axis', dimension: 'x' },
+        { type: 'axis', dimension: 'y' },
+        { type: 'axis', dimension: 'z' },
       ],
     });
-    const root = expandOf(spec, { d: [{ a: 1, b: 1, c: 1 }, { a: 2, b: 1, c: 1 }] }, opts);
-    // mark 层 + 3 条三角轴层
+    const root = expandOf(spec, { d: [{ x: 1, y: 1, z: 1 }, { x: 2, y: 1, z: 1 }] }, opts);
     expect(root.children.length).toBeGreaterThanOrEqual(4);
   });
 
-  // 交互：ternary × categorical color → 分色子 Scope
   it('ternary_with_color_groups_into_subscopes', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
@@ -217,9 +191,9 @@ describe('ternary2D guide + color (ADR-03)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'ordinal', name: 'col', range: ['#aa', '#bb'] }],
       coordinate: { type: 'ternary2D' },
-      marks: [{ type: 'point', encoding: { a: { field: 'a' }, b: { field: 'b' }, c: { field: 'c' }, color: { field: 'region', scale: 'col' } } }],
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' }, color: { field: 'region', scale: 'col' } } }],
     });
-    const layer = firstLayer(spec, { d: [{ a: 1, b: 1, c: 1, region: 'X' }, { a: 2, b: 1, c: 1, region: 'Y' }] }, opts);
+    const layer = firstLayer(spec, { d: [{ x: 1, y: 1, z: 1, region: 'X' }, { x: 2, y: 1, z: 1, region: 'Y' }] }, opts);
     expect(layer.children).toHaveLength(2);
   });
 });

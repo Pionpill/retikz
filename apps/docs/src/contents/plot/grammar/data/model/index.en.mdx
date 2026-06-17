@@ -64,7 +64,7 @@ Fields with `type` omitted need the data at lowering to determine their type. Fi
 
 ## Type-driven scales
 
-Once field types are declared, positional channels (x / y, and ternary a / b / c) **no longer need an explicit scale**: retikz picks one from the field type, `continuous` → linear, `temporal` → time axis, `categorical` → band. Color channels follow the same field types: continuous / temporal fields derive continuous color ramps, while categorical fields derive discrete color. See [Scales](/plot/grammar/scale) for the full mapping and override rules.
+Once field types are declared, positional channels (x / y, and ternary x / y / z) **no longer need an explicit scale**: retikz picks one from the field type, `continuous` → linear, `temporal` → time axis, `categorical` → band. Color channels follow the same field types: continuous / temporal fields derive continuous color ramps, while categorical fields derive discrete color. See [Scales](/plot/grammar/scale) for the full mapping and override rules.
 
 The three charts below declare no scale config at all: `continuous` fields derive linear axes, `temporal` fields derive time axes, and `categorical` fields derive band axes.
 

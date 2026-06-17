@@ -18,7 +18,7 @@ import { collectUserSourceFields, resolveFieldTypes } from './validate';
 /** 空刻度集（某维度无 axis 时给 GuideContext 的占位；实际不会被该维度的 guide 触达） */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
 
-/** 三角轴共享刻度集（占比 0..1，标签为百分数）；三条 a/b/c 轴同域、本轮固定 5 档 */
+/** 三角轴共享刻度集（占比 0..1，标签为百分数）；三条 x/y/z 轴同域、本轮固定 5 档 */
 const TERNARY_TICKS: TickSet = { values: [0, 0.25, 0.5, 0.75, 1], labels: ['0', '25', '50', '75', '100'] };
 
 /**
@@ -106,7 +106,7 @@ const validGuideDimensionsOf = (coordinate: Coordinate): ReadonlyArray<string> =
   coordinate.type === PlotCoordinate.Custom ? coordinate.roles : VALID_GUIDE_DIMENSIONS[coordinate.type];
 
 /** 该坐标系必填位置角色集：custom 取声明的 roles，内建查 coordinate-meta */
-const requiredPositionChannelsOf = (coordinate: Coordinate): ReadonlyArray<'x' | 'y' | 'a' | 'b' | 'c'> =>
+const requiredPositionChannelsOf = (coordinate: Coordinate): ReadonlyArray<'x' | 'y' | 'z'> =>
   coordinate.type === PlotCoordinate.Custom ? coordinate.roles : REQUIRED_POSITION_CHANNELS[coordinate.type];
 
 const assertValidGuideDimensions = (coordinate: Coordinate, axisGuides: Array<AxisGuide>): void => {
@@ -546,7 +546,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
       if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
     }
   } else if (coordinate.type === PlotCoordinate.Ternary2D) {
-    // ternary2D：三连续分量 a/b/c 在 coordinate 内自动归一化 + 重心投影（无独立位置 scale）
+    // ternary2D：三连续分量 x/y/z 在 coordinate 内自动归一化 + 重心投影（无独立位置 scale）
     const guides = node.guides ?? [];
     const axisGuides = guides.filter(isAxisGuide);
     assertUniqueAxisDimension(axisGuides, coordinate.type);
@@ -578,7 +578,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     if (!factory) {
       throw new Error(`lowerPlots: custom coordinate "${coordinate.name}" has no registered factory; pass it via lowerPlots options.coordinates (or <Plot coordinates>)`);
     }
-    // 按角色取通道值的 picker（custom roles ∈ {x,y,a,b,c}）；供工厂建线性位置 scale
+    // 按角色取通道值的 picker（custom roles ∈ {x,y,z}）；供工厂建线性位置 scale
     const pickRole = (role: DimensionRole) => (mark: Mark): Channel | undefined => (mark.type === PlotMark.Link ? undefined : (mark.encoding as Record<string, Channel | undefined>)[role]);
     const linearScaleFor = (role: DimensionRole, range: [number, number]) =>
       resolvePositionScale({ type: PlotScale.Linear, name: `__custom_${role}` }, collectValues(undefined, pickRole(role), false), range);

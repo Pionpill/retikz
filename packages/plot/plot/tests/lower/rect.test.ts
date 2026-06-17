@@ -303,7 +303,7 @@ describe('rect fail-loud', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      coordinate: { type: 'ternary2D', a: 'a', b: 'b', c: 'c' },
+      coordinate: { type: 'ternary2D' },
       scales: [
         { type: 'linear', name: 'a' },
         { type: 'linear', name: 'b' },

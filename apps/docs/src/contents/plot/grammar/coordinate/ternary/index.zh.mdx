@@ -1,23 +1,22 @@
 ---
 title: 三元坐标系
-description: ternary2D 把 a / b / c 三个连续分量自动归一化后投影到等边三角形，适合成分配比和三方此消彼长的数据。
+description: ternary2D 把 x / y / z 三个连续分量自动归一化后投影到等边三角形，适合成分配比和三方此消彼长的数据。
 ---
 
-`coordinate="ternary2D"` 把满足 `a + b + c = 常量` 的三个分量投影到等边三角形内。三个顶点各代表一个分量占 100%，点越靠近某个顶点，该分量占比越高。
+`coordinate="ternary2D"` 把满足 `x + y + z = 常量` 的三个分量投影到等边三角形内。三个顶点各代表一个分量占 100%，点越靠近某个顶点，该分量占比越高。
 
 ## 字段绑定
 
-三元坐标系不用 `x` / `y`，而是绑定 `a` / `b` / `c` 三个通道。各行会自动归一化，所以你可以直接喂任意正值三元组，例如砂 60、粉 30、黏 10；含负值或三者和为 0 会报错。
+三元坐标系绑定 `x` / `y` / `z` 三个通道，传几个维度就对应几个坐标分量。各行会自动归一化，所以你可以直接喂任意正值三元组，例如砂 60、粉 30、黏 10；含负值或三者和为 0 会报错。
 
 <ComponentPreview name="coordinate-ternary" sourceFiles={['coordinate-ternary.data.ts']} />
 
 ## 轴与维度
 
-加 `<Axis dimension="a" />` / `"b"` / `"c"` 可以画出三条边的刻度轴；三条一起就是完整三角外框。三元坐标系本轮以 `<PointMark>` 为主，用来画三角内散点。
+加 `<Axis dimension="x" />` / `"y"` / `"z"` 可以画出三条边的刻度轴；三条一起就是完整三角外框。三元坐标系本轮以 `<PointMark>` 为主，用来画三角内散点。
 
-<ComponentAlert type="tip" title="guide 维度要匹配坐标系" description="每个坐标系只认自己的维度：cartesian 用 x / y，polar 用 angle / radius，ternary 用 a / b / c。给错维度（如 cartesian 下写 <Axis dimension='angle'>）会直接报错，不会静默画出空轴。" />
+<ComponentAlert type="tip" title="guide 维度要匹配坐标系" description="每个坐标系只认自己的维度：cartesian 用 x / y，polar 用 angle / radius，ternary 用 x / y / z。给错维度（如 cartesian 下写 <Axis dimension='angle'>）会直接报错，不会静默画出空轴。" />
 
 ## 适合场景
 
-三元坐标系适合三者总量固定、彼此此消彼长的数据，例如土壤成分、三方投票比例、配方占比。它不适合普通三维数据：`a` / `b` / `c` 不是三个独立空间轴，而是一个三角形里的组成比例。
-
+三元坐标系适合三者总量固定、彼此此消彼长的数据，例如土壤成分、三方投票比例、配方占比。它不适合普通三维数据：这里的 `x` / `y` / `z` 不是三个独立空间轴，而是一个三角形里的组成比例。

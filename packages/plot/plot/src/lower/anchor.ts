@@ -5,7 +5,7 @@ import { type PositionScale, inferCategoryDomain } from './scale';
 
 /**
  * 取某 mark 在某位置角色下的 encoding 通道（投影时按 frame.roles 序逐角色取值）
- * @description polar 的 angle/radius 复用 x/y 别名（encoding 只有 x/y）；ternary 的 a/b/c 各自取。
+ * @description polar 的 angle/radius 复用 x/y 别名；ternary 直接消费 x/y/z。
  *   link 无位置通道（端点来自 source/target 字段对）→ undefined。
  */
 export const channelForRole = (mark: Mark, role: DimensionRole): Channel | undefined => {
@@ -18,11 +18,8 @@ export const channelForRole = (mark: Mark, role: DimensionRole): Channel | undef
     case 'y':
     case 'radius':
       return mark.encoding.y;
-    case 'a':
-    case 'b':
-    case 'c':
-      // ternary a/b/c 通道仅 PointEncoding 含；在此前的坐标系不产生这些角色
-      return 'a' in mark.encoding ? (mark.encoding as Record<'a' | 'b' | 'c', Channel | undefined>)[role] : undefined;
+    case 'z':
+      return 'z' in mark.encoding ? mark.encoding.z : undefined;
   }
 };
 

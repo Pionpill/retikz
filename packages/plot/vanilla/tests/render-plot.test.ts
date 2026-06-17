@@ -185,11 +185,11 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       data: { reference: 'soils' },
       scales: [{ type: 'ordinal', name: 'col' }],
       coordinate: { type: 'ternary2D' },
-      marks: [{ type: 'point', encoding: { a: { field: 'sand' }, b: { field: 'silt' }, c: { field: 'clay' }, color: { field: 'region', scale: 'col' } } }],
+      marks: [{ type: 'point', encoding: { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' }, color: { field: 'region', scale: 'col' } } }],
       guides: [
-        { type: 'axis', dimension: 'a' },
-        { type: 'axis', dimension: 'b' },
-        { type: 'axis', dimension: 'c' },
+        { type: 'axis', dimension: 'x' },
+        { type: 'axis', dimension: 'y' },
+        { type: 'axis', dimension: 'z' },
       ],
     };
     const soils: ExternalDatasets = {

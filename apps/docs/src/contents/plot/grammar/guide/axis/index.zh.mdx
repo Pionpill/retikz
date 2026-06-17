@@ -41,7 +41,7 @@ polar 下用 `dimension="angle"`（角向刻度标签）和 `dimension="radius"`
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `dimension` | `'x' \| 'y' \| 'angle' \| 'radius' \| 'a' \| 'b' \| 'c'` | — | 装饰哪个维度：cartesian 的 x / y，polar 的 angle / radius，ternary 的 a / b / c（三角三边）；须匹配坐标系合法集、否则报错 |
+| `dimension` | `'x' \| 'y' \| 'z' \| 'angle' \| 'radius'` | — | 装饰哪个维度：cartesian 的 x / y，polar 的 angle / radius，ternary 的 x / y / z（三角三边）；须匹配坐标系合法集、否则报错 |
 | `scale` | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt'` | 自动派生 | 位置 scale 快捷类型；等价于同维度的 `<Scale dimension="..." type="..." />`，仅适用于 x / y / angle / radius |
 | `tickCount` | `number?` | 默认刻度数 | 目标刻度数；网格线复用同刻度 |
 | `tickLabels` | `boolean?` | `true` | 是否出刻度标签 |

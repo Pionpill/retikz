@@ -306,22 +306,22 @@ const lerp2 = (from: readonly [number, number], to: readonly [number, number], t
 
 /**
  * 某 ternary 分量轴的三角角色：顶点 + 该分量 0 边的两端
- * @description a：顶点 Va、0 边 = Vb–Vc；b：顶点 Vb、0 边 = Va–Vc；c：顶点 Vc、0 边 = Va–Vb。
+ * @description x：顶点 Vx、0 边 = Vy–Vz；y：顶点 Vy、0 边 = Vx–Vz；z：顶点 Vz、0 边 = Vx–Vy。
  *   刻度沿 baseP→apex 边（= 三角一条边）；等值线（iso）= lerp(baseP,apex,t)–lerp(baseQ,apex,t)，平行 0 边。
  */
 const ternaryAxisRoles = (
   dimension: string,
   vertices: TernaryVertices,
 ): { apex: readonly [number, number]; baseP: readonly [number, number]; baseQ: readonly [number, number] } => {
-  const [va, vb, vc] = vertices;
-  if (dimension === 'a') return { apex: va, baseP: vc, baseQ: vb };
-  if (dimension === 'b') return { apex: vb, baseP: va, baseQ: vc };
-  return { apex: vc, baseP: vb, baseQ: va }; // 'c'
+  const [vx, vy, vz] = vertices;
+  if (dimension === 'x') return { apex: vx, baseP: vz, baseQ: vy };
+  if (dimension === 'y') return { apex: vy, baseP: vx, baseQ: vz };
+  return { apex: vz, baseP: vy, baseQ: vx }; // 'z'
 };
 
 /**
  * ternary 三角轴：沿一条边的刻度轴（0→100%）+ 平行对边的等值网格线
- * @description 轴线 = baseP→apex 三角边（三条 a/b/c 轴合起来 = 完整三角外框）；刻度沿该边、标签外法向偏移；
+ * @description 轴线 = baseP→apex 三角边（三条 x/y/z 轴合起来 = 完整三角外框）；刻度沿该边、标签外法向偏移；
  *   grid:true → 内部刻度处画平行 0 边的等值线（lerp(baseP,apex,t)–lerp(baseQ,apex,t)）。
  */
 const lowerTernaryGuide = (guide: AxisGuide, ctx: GuideContext, vertices: TernaryVertices, context: ProvenanceContext | undefined): LoweredGuide => {
@@ -329,8 +329,8 @@ const lowerTernaryGuide = (guide: AxisGuide, ctx: GuideContext, vertices: Ternar
   const ticks = ctx.ternaryTicks ?? { values: [], labels: [] };
   const showLabels = guide.tickLabels !== false;
   const { apex, baseP, baseQ } = ternaryAxisRoles(guide.dimension, vertices);
-  const [va, vb, vc] = vertices;
-  const centroid: [number, number] = [(va[0] + vb[0] + vc[0]) / 3, (va[1] + vb[1] + vc[1]) / 3];
+  const [vx, vy, vz] = vertices;
+  const centroid: [number, number] = [(vx[0] + vy[0] + vz[0]) / 3, (vx[1] + vy[1] + vz[1]) / 3];
 
   // 外法向单位向量（远离重心）：刻度短线 / 标签朝外摆
   const outwardAt = (point: [number, number]): [number, number] => {

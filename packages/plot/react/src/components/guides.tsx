@@ -5,9 +5,9 @@ import type { PositionScaleType } from './scales';
 export type AxisProps = {
   /**
    * 装饰哪个定位维度：cartesian 的 x（水平）/ y（垂直）；polar 的 angle（角向）/ radius（径向）；
-   * ternary 的 a / b / c（三角三边）。维度须匹配坐标系合法集，否则 lowering fail-loud。
+   * ternary 的 x / y / z（三角三边）。维度须匹配坐标系合法集，否则 lowering fail-loud。
    */
-  dimension: 'x' | 'y' | 'angle' | 'radius' | 'a' | 'b' | 'c';
+  dimension: 'x' | 'y' | 'z' | 'angle' | 'radius';
   /** 位置 scale 快捷配置；对可缩放维度等价于同维度的 <Scale dimension={dimension} type={scale} /> */
   scale?: PositionScaleType;
   /** 目标刻度数（缺省用默认刻度数）；网格线复用同刻度 */

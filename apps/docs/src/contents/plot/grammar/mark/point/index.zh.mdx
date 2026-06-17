@@ -5,7 +5,7 @@ description: PointMark 是坐标元组上的 0D glyph：可以画散点、气泡
 
 `<PointMark>` 为每行数据生成一个 0D glyph。默认 glyph 是点；给 `size` / `shape` / `opacity` / `color` 后，它仍是同一个点图元，只是视觉通道不同。给 `text` 后，它会改为无边框文本 glyph。
 
-绑哪些位置通道由[坐标系](/plot/grammar/coordinate)决定：cartesian / polar 二维用 `x` / `y`，一维（cartesian1D / polar1D）只绑 `x`，三元（ternary2D）改用 `a` / `b` / `c`。所以 `x` / `y` 都是可选的——缺哪个、要不要 a/b/c，由坐标系在编译期校验。
+绑哪些位置通道由[坐标系](/plot/grammar/coordinate)决定：一维用 `x`，二维用 `x` / `y`，三元（ternary2D）用 `x` / `y` / `z`。这些属性在组件层都是可选的；当前坐标系会在编译期校验需要哪些维度。
 
 ## 用法
 
@@ -28,6 +28,76 @@ PointMark 常和 PathMark 叠加——同一份数据先画 `<PathMark>` 再叠 
 `x` / `y` 绑字段，每行一个点。
 
 <ComponentPreview name="point-basic" sourceFiles={['point-scatter.data.ts']} />
+
+## 技术原理
+
+`PointMark` 是一个内置注册图元。React 里的 `<PointMark>` 本身不渲染 DOM，也不直接画点；`<Plot>` 会在构造 `PlotSpec` 时把它收集成 `type: 'point'` 的 mark IR，并记录 `x` / `y` / `z` 等字段通道。
+
+编译时，`lowerMark` 按 `mark.type` 查询 `MARK_REGISTRY`，`PointMark` 命中 `PlotMark.Point` 对应的 `lowerPoint`。`lowerPoint` 对每行数据取出位置通道值，再交给当前坐标系的 `frame.projectRoles(...)` 投影成屏幕点，最后下沉为 core `Node`。
+
+注册部分只需要看 `PointMark` 对应的注册行，以及真正执行下沉的 `lowerPoint`：
+
+```ts
+[PlotMark.Point]: { type: PlotMark.Point, lower: lowerPoint },
+
+const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+  if (mark.type !== PlotMark.Point) return null;
+  const { colorOf, defaultColor = DEFAULT_FILL, sizeOf, opacityOf, shapeOf, labelOf } = channels;
+  const isText = mark.encoding.text !== undefined;
+  const dx = mark.dx ?? 0;
+  const dy = mark.dy ?? 0;
+  const placed: Array<{ color: string | undefined; node: IRNode }> = [];
+  for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
+    const row = rows[transformedIndex];
+    if (isText) {
+      // 文本 glyph：投影同 point（roleValues + projectRoles，坐标系无关）；内容缺失跳过；dx/dy 锚点像素微调
+      const point = frame.projectRoles(roleValues(mark, row, frame));
+      if (!point) continue;
+      const text = labelOf?.(row);
+      if (text === undefined) continue;
+      const position: [number, number] = dx === 0 && dy === 0 ? point : [point[0] + dx, point[1] + dy];
+      const base: IRNode = { type: 'node', position, text };
+      placed.push({ color: colorOf?.(row), node: decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined) });
+      continue;
+    }
+    // 散点 glyph：锚点与 locator 共享同一 datumAnchor（point → frame.projectRoles），杜绝两套投影漂移
+    const point = datumAnchor(mark, row, frame);
+    if (!point) continue;
+    const base: IRNode = { type: 'node', position: point };
+    const radius = sizeOf?.(row);
+    if (radius !== undefined) base.minimumSize = radius * Math.SQRT2;
+    const opacity = opacityOf?.(row);
+    if (opacity !== undefined) base.opacity = opacity;
+    const shape = shapeOf?.(row);
+    if (shape !== undefined) base.shape = shape;
+    const node = attachDatumLabel(decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined), mark, row, labelOf);
+    placed.push({ color: colorOf?.(row), node });
+  }
+  if (placed.length === 0) return null;
+  const styleFor = isText ? textStyle : pointStyle;
+  const layer: IRScope = !colorOf
+    ? { type: 'scope', nodeDefault: styleFor(defaultColor), children: placed.map(p => p.node) }
+    : colorGroupedScope(placed, styleFor);
+  return attachMarkLayer(layer, mark, markProvenance);
+};
+```
+
+这段代码的执行顺序很直接：
+
+1. 先确认当前 mark 是 `PlotMark.Point`，否则不处理。
+2. 每行数据通过 `datumAnchor` 或 `frame.projectRoles(...)` 投影到屏幕坐标；投影失败的行直接跳过。
+3. 普通散点生成 core `Node`，并把 `size`、`opacity`、`shape` 等通道写到该 Node 上；文本点则生成文本 Node。
+4. 最后按是否有 `color` 通道决定分层方式：没有颜色编码时共用一层 `nodeDefault`，有颜色编码时按颜色拆分子 `Scope`，再挂上图层元信息。
+
+| 特性 | 说明 |
+| --- | --- |
+| 坐标系无关 | 点只关心“位置角色”，不关心这些角色在 cartesian、polar、ternary 或 custom 坐标系里怎么解释 |
+| 每行一个 Node | 普通散点会生成一个 datum Node；无效位置投影不到屏幕点时跳过该行 |
+| 样式分层 | 无颜色编码时通过外层 `nodeDefault` 共享默认样式；有 `color` 时按颜色分组，减少重复 IR |
+| 点专属通道 | `size` / `opacity` / `shape` 只作用在 `PointMark`，会写到每个 datum Node 上 |
+| 文本变体 | 设置 `text` 后不再画圆点，而是生成无边框文本 Node，并复用同一套位置投影 |
+
+## 视觉通道
 
 ### 气泡图
 
@@ -89,24 +159,24 @@ PointMark 常和 PathMark 叠加——同一份数据先画 `<PathMark>` 再叠 
 
 ## API
 
-| 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `x` | `string?` | — | 绑 x 位置通道字段（cartesian 水平 / polar 角向 / 一维单维）；cartesian·polar 必填，ternary 不用 |
-| `y` | `string?` | — | 绑 y 位置通道字段（cartesian 垂直 / polar 径向）；cartesian·polar 必填，一维 / ternary 省略 |
-| `a` | `string?` | — | ternary2D 的 a 分量字段（顶点）；与 b / c 一起画三元散点，自动归一化 |
-| `b` | `string?` | — | ternary2D 的 b 分量字段（右下顶点） |
-| `c` | `string?` | — | ternary2D 的 c 分量字段（左下顶点） |
-| `size` | `string?` | — | 尺寸字段（数值）：经平方根 scale 映射成点半径（面积感知）；负值会报错 |
-| `opacity` | `string?` | — | 不透明度字段（连续）：经 clamp linear scale 映射到 `[最小值, 1]`；时间 / 分类字段会报错 |
-| `shape` | `string?` | — | 形状字段（分类）：按类别映射到 glyph 调色板（circle / rectangle / diamond 循环）；连续 / 时间字段会报错 |
-| `text` | `string?` | — | 文本内容字段；给定后下沉为无边框文本 glyph，而不是散点 glyph |
-| `format` | `string?` | — | 文本格式串，仅与 `text` 同用 |
-| `dx` / `dy` | `number?` | `0` | 文本点相对锚点的微调 |
-| `label` | `string?` | — | 宿主 datum 标签字段；挂到当前图元生成的 Node 上 |
-| `labelFormat` | `string?` | — | 宿主标签格式串 |
-| `resolveLabel` | `(row) => string?` | — | 运行时标签模板逃生舱；不进 IR，需配 `id` |
-| `color` | `string?` | — | 颜色字段，按 datum 着色：分类字段 → 自动 ordinal 色 scale；连续 / 时间字段需 `model` 声明 → 自动 sequential 色阶（viridis） |
-| `id` | `string?` | — | 可选句柄（预留，暂不解析） |
+`PointMark` 的大部分属性都是数据通道：位置属性决定每行数据投影到哪里，样式属性决定点如何显示；文本、标签和 `id` 这类属性单独看。表里的 `FieldName` 表示数据字段名或字段路径，例如 `region` / `user.age`。
+
+| 分类 | 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- | --- |
+| 位置 | `x` | `FieldName?` | — | 绑定 x 位置通道字段 |
+| | `y` | `FieldName?` | — | 绑定 y 位置通道字段 |
+| | `z` | `FieldName?` | — | 绑定三元坐标第三分量字段 |
+| 样式 | `color` | `FieldName?` | — | 绑定颜色通道字段 |
+| | `size` | `FieldName?` | — | 绑定尺寸通道字段 |
+| | `opacity` | `FieldName?` | — | 绑定不透明度通道字段 |
+| | `shape` | `FieldName?` | — | 绑定形状通道字段 |
+| 文本 | `text` | `FieldName?` | — | 绑定文本内容字段 |
+| | `format` | `string?` | — | 设置 `text` 的格式 |
+| | `dx` / `dy` | `number?` | `0` | 文本点相对锚点的微调 |
+| | `label` | `FieldName?` | — | 绑定宿主标签字段 |
+| | `labelFormat` | `string?` | — | 设置 `label` 的格式 |
+| | `resolveLabel` | `(row) => string?` | — | 运行时生成标签；不进 IR，需配 `id` |
+| 通用 | `id` | `string?` | — | 可选句柄（预留，暂不解析） |
 
 ## 相关
 

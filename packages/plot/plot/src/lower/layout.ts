@@ -187,13 +187,13 @@ export type TernaryFrameInput = {
 
 /** computeTernaryFrame 结果：三角顶点（屏幕坐标）[Va 顶点, Vb 右下, Vc 左下] */
 export type TernaryLayout = {
-  /** 三角顶点：[Va(a=100% 顶), Vb(b=100% 右下), Vc(c=100% 左下)] */
+  /** 三角顶点：[Vx(x=100% 顶), Vy(y=100% 右下), Vz(z=100% 左下)] */
   vertices: [[number, number], [number, number], [number, number]];
 };
 
 /**
  * 由整图尺寸估算三元三角布局：朝上等边三角内接于 plot area（减三边标签留白）
- * @description 顶点朝上、a=顶 / b=右下 / c=左下（python-ternary 惯例）。side = min(可用宽, 可用高·2/√3)、
+ * @description 顶点朝上、x=顶 / y=右下 / z=左下。side = min(可用宽, 可用高·2/√3)、
  *   三角高 = side·√3/2，水平 / 垂直居中。有三角轴时为三边刻度标签预留一圈留白；ADR-04 只消费、不回写。
  *   留白过大 → 边长 ≤ 0 → 抛清晰错误，不静默出退化坏图。
  */
@@ -232,9 +232,9 @@ export const computeTernaryFrame = (
   const baseY = top + triangleHeight;
   return {
     vertices: [
-      [centerX, top], // Va：顶点（a=100%）
-      [centerX + side / 2, baseY], // Vb：右下（b=100%）
-      [centerX - side / 2, baseY], // Vc：左下（c=100%）
+      [centerX, top], // Vx：顶点（x=100%）
+      [centerX + side / 2, baseY], // Vy：右下（y=100%）
+      [centerX - side / 2, baseY], // Vz：左下（z=100%）
     ],
   };
 };

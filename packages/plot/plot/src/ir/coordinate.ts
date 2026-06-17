@@ -14,7 +14,7 @@ export const PlotCoordinate = {
   Cartesian1D: 'cartesian1D',
   /** 1D 极坐标圆周（单角向维落固定半径圆周；周期 / 循环数据） */
   Polar1D: 'polar1D',
-  /** 2D 三元坐标（a+b+c 归一化的重心坐标，投影到等边三角内；成分 / 配比 / 得票） */
+  /** 2D 三元坐标（三个位置通道 x/y/z 归一化的重心坐标，投影到等边三角内；成分 / 配比 / 得票） */
   Ternary2D: 'ternary2D',
   /** 自定义坐标系：投影函数由运行时工厂提供（不进 JSON IR），IR 只留 name + roles + 数值参数引用 */
   Custom: 'custom',
@@ -99,18 +99,18 @@ export const Polar1DSchema = z
 
 export const Ternary2DSchema = z
   .object({
-    type: z.literal(PlotCoordinate.Ternary2D).describe('Discriminator: 2D ternary space; three components a + b + c normalized to barycentric coordinates inside an equilateral triangle'),
+    type: z.literal(PlotCoordinate.Ternary2D).describe('Discriminator: 2D ternary space; three components x + y + z normalized to barycentric coordinates inside an equilateral triangle'),
   })
-  .describe('2D ternary coordinate system: three continuous components (bound via the mark a / b / c channels) projected by barycentric coordinates into an equilateral triangle (composition / mixture / vote share); each row is auto-normalized by a+b+c at lowering. No geometry options this round (per-component scales not yet supported)');
+  .describe('2D ternary coordinate system: three continuous components (bound via the mark x / y / z channels) projected by barycentric coordinates into an equilateral triangle (composition / mixture / vote share); each row is auto-normalized by x+y+z at lowering. No geometry options this round (per-component scales not yet supported)');
 
 export const CustomCoordinateSchema = z
   .object({
     type: z.literal(PlotCoordinate.Custom).describe('Discriminator: a user-defined coordinate system; its projection is supplied at lowering via the runtime customCoordinates factory map, kept out of the JSON IR'),
     name: z.string().min(1).describe('Custom coordinate name; resolved against the runtime factory map (lowerPlots options.coordinates / <Plot coordinates>). An unknown name fails loud at lowering'),
     roles: z
-      .array(z.enum(['x', 'y', 'a', 'b', 'c']))
+      .array(z.enum(['x', 'y', 'z']))
       .min(1)
-      .describe('Position roles this coordinate consumes — which mark channels (x / y / a / b / c) it projects, in order; drives required-channel and guide-dimension validation'),
+      .describe('Position roles this coordinate consumes — which mark channels (x / y / z) it projects, in order; drives required-channel and guide-dimension validation'),
     params: z
       .record(z.string(), z.number().finite())
       .optional()

@@ -10,6 +10,7 @@ export type {
   LinkMarkProps,
   ReferenceMarkProps,
   DatumLabelProps,
+  FieldName,
   AxisProps,
   LegendProps,
   ScaleProps,

@@ -10,7 +10,7 @@ export const VALID_GUIDE_DIMENSIONS: Record<Exclude<PlotCoordinateValue, 'custom
   [PlotCoordinate.Polar2D]: ['angle', 'radius', 'x', 'y'],
   [PlotCoordinate.Cartesian1D]: ['x'],
   [PlotCoordinate.Polar1D]: ['angle', 'x'],
-  [PlotCoordinate.Ternary2D]: ['a', 'b', 'c'],
+  [PlotCoordinate.Ternary2D]: ['x', 'y', 'z'],
 };
 
 /**
@@ -18,10 +18,10 @@ export const VALID_GUIDE_DIMENSIONS: Record<Exclude<PlotCoordinateValue, 'custom
  * @description encoding 的 x/y 在 schema 转可选后，必填性下放到这里按坐标系校验、缺角色 fail-loud。
  *   sector mark 例外（角度来自累积界、无位置通道），由调用方排除。新坐标系按自身角色登记。
  */
-export const REQUIRED_POSITION_CHANNELS: Record<Exclude<PlotCoordinateValue, 'custom'>, ReadonlyArray<'x' | 'y' | 'a' | 'b' | 'c'>> = {
+export const REQUIRED_POSITION_CHANNELS: Record<Exclude<PlotCoordinateValue, 'custom'>, ReadonlyArray<'x' | 'y' | 'z'>> = {
   [PlotCoordinate.Cartesian2D]: ['x', 'y'],
   [PlotCoordinate.Polar2D]: ['x', 'y'],
   [PlotCoordinate.Cartesian1D]: ['x'],
   [PlotCoordinate.Polar1D]: ['x'],
-  [PlotCoordinate.Ternary2D]: ['a', 'b', 'c'],
+  [PlotCoordinate.Ternary2D]: ['x', 'y', 'z'],
 };

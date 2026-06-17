@@ -93,8 +93,8 @@ export type CoordinateInput =
       type: 'custom';
       /** 工厂名（对应 <Plot coordinates> 表的键） */
       name: string;
-      /** 该坐标系消费的位置角色序（mark 的 x / y / a / b / c 通道） */
-      roles: Array<'x' | 'y' | 'a' | 'b' | 'c'>;
+      /** 该坐标系消费的位置角色序（mark 的 x / y / z 通道） */
+      roles: Array<'x' | 'y' | 'z'>;
       /** 透传给工厂的数值参数（如 archHeight）；JSON 安全 */
       params?: Record<string, number>;
     };
@@ -205,7 +205,7 @@ const recordResolveLabel = (into: Collected, id: string | undefined, resolveLabe
   into.resolveLabels[id] = resolveLabel;
 };
 
-/** Axis.scale 只适用于真实位置 scale 维度；ternary a/b/c 没有独立 Scale 声明 */
+/** Axis.scale 只适用于真实位置 scale 维度；ternary x/y/z 没有独立 Scale 声明 */
 const isScaleDimension = (dimension: AxisProps['dimension']): dimension is ScaleDimension =>
   dimension === 'x' || dimension === 'y' || dimension === 'angle' || dimension === 'radius';
 
@@ -290,10 +290,10 @@ const collectInto = (children: ReactNode, into: Collected): void => {
       if (closed) into.hasClosedLine = true;
     } else if (child.type === PointMark) {
       const props = child.props as PointMarkProps;
-      const { x, y, a, b, c, color, size, opacity, shape, text, format, dx, dy, id } = props;
+      const { x, y, z, color, size, opacity, shape, text, format, dx, dy, id } = props;
       const colorEnc = colorChannel(color, undefined);
       const markLabel = buildMarkLabel(props);
-      // text 设 → point 下沉为无边框文本 Node（内容走 encoding.text）；否则散点 glyph。位置通道按坐标系角色（x/y 或 a/b/c）
+      // text 设 → point 下沉为无边框文本 Node（内容走 encoding.text）；否则散点 glyph。位置通道按坐标系角色（x / x/y / x/y/z）
       const textEnc: { text: TextChannel } | undefined = text !== undefined ? { text: { field: text, ...(format !== undefined ? { format } : {}) } } : undefined;
       into.marks.push({
         type: PlotMark.Point,
@@ -304,9 +304,7 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         encoding: {
           ...(x !== undefined ? { x: { field: x } } : {}),
           ...(y !== undefined ? { y: { field: y } } : {}),
-          ...(a !== undefined ? { a: { field: a } } : {}),
-          ...(b !== undefined ? { b: { field: b } } : {}),
-          ...(c !== undefined ? { c: { field: c } } : {}),
+          ...(z !== undefined ? { z: { field: z } } : {}),
           ...colorEnc,
           ...(size !== undefined ? { size: { field: size } } : {}),
           ...(opacity !== undefined ? { opacity: { field: opacity } } : {}),

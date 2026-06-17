@@ -189,7 +189,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
       <>
         <PathMark x="m" y="r" />
         {/* @ts-expect-error 故意传非法 dimension，验证装配产物被 schema 拒 */}
-        <Axis dimension="z" />
+        <Axis dimension="q" />
       </>,
       '__plot',
     );
@@ -262,12 +262,12 @@ describe('buildPlotSpec Axis scale shortcut', () => {
     expect(spec.guides).toEqual([{ type: 'axis', dimension: 'y' }]);
   });
 
-  it('does not apply to ternary a/b/c axes', () => {
+  it('does not apply to ternary z axes', () => {
     expect(() =>
       buildPlotSpec(
         <>
-          <PointMark a="a" b="b" c="c" />
-          <Axis dimension="a" scale="linear" />
+          <PointMark x="x" y="y" z="z" />
+          <Axis dimension="z" scale="linear" />
         </>,
         '__plot',
         { coordinate: 'ternary2D' },
@@ -608,13 +608,13 @@ describe('buildPlotSpec 坐标系族 cartesian1D / polar1D / ternary2D（alpha.9
     expect(half.coordinate).toEqual({ type: 'polar1D', angle: '__angle', radius: 0.8, startAngle: 180, endAngle: 360 });
   });
 
-  it('ternary_coordinate_input：ternary2D + PointMark a/b/c → IR a/b/c encoding', () => {
-    const spec = buildPlotSpec(<PointMark a="sand" b="silt" c="clay" color="region" />, '__plot', { coordinate: 'ternary2D' });
+  it('ternary_coordinate_input：ternary2D + PointMark x/y/z → IR x/y/z encoding', () => {
+    const spec = buildPlotSpec(<PointMark x="sand" y="silt" z="clay" color="region" />, '__plot', { coordinate: 'ternary2D' });
     expect(spec.coordinate).toEqual({ type: 'ternary2D' });
     expect(spec.scales).toEqual([{ type: 'ordinal', name: '__color' }]);
     expect(spec.marks[0]).toEqual({
       type: 'point',
-      encoding: { a: { field: 'sand' }, b: { field: 'silt' }, c: { field: 'clay' }, color: { field: 'region', scale: '__color' } },
+      encoding: { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' }, color: { field: 'region', scale: '__color' } },
     });
   });
 
@@ -627,7 +627,7 @@ describe('buildPlotSpec 坐标系族 cartesian1D / polar1D / ternary2D（alpha.9
   it('all_family_products_pass_schema：1D / ternary 装配产物全过 PlotSpecSchema', () => {
     expect(() => PlotSpecSchema.parse(buildPlotSpec(<PointMark x="v" />, '__plot', { coordinate: 'cartesian1D' }))).not.toThrow();
     expect(() => PlotSpecSchema.parse(buildPlotSpec(<PointMark x="h" />, '__plot', { coordinate: 'polar1D' }))).not.toThrow();
-    expect(() => PlotSpecSchema.parse(buildPlotSpec(<PointMark a="x" b="y" c="z" />, '__plot', { coordinate: 'ternary2D' }))).not.toThrow();
+    expect(() => PlotSpecSchema.parse(buildPlotSpec(<PointMark x="x" y="y" z="z" />, '__plot', { coordinate: 'ternary2D' }))).not.toThrow();
   });
 });
 
@@ -648,11 +648,11 @@ describe('buildPlotSpec 自定义坐标系 custom（实验性，alpha.9 设计�
   });
 
   it('custom_coordinate_pass_schema：装配产物过 PlotSpecSchema', () => {
-    const spec = buildPlotSpec(<PointMark a="sa" b="si" c="cl" />, '__plot', {
-      coordinate: { type: 'custom', name: 'tri', roles: ['a', 'b', 'c'] },
+    const spec = buildPlotSpec(<PointMark x="sa" y="si" z="cl" />, '__plot', {
+      coordinate: { type: 'custom', name: 'tri', roles: ['x', 'y', 'z'] },
     });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
-    expect(spec.marks[0]).toEqual({ type: 'point', encoding: { a: { field: 'sa' }, b: { field: 'si' }, c: { field: 'cl' } } });
+    expect(spec.marks[0]).toEqual({ type: 'point', encoding: { x: { field: 'sa' }, y: { field: 'si' }, z: { field: 'cl' } } });
   });
 });
 

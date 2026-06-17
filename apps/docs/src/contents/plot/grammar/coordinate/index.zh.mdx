@@ -13,7 +13,7 @@ description: 坐标系决定数据值如何投影到画布：二维负责平面�
 | --- | --- | --- | --- |
 | 二维坐标系 | `cartesian2D` / `polar2D` | 处理常规 x/y 图与极坐标图 | 柱、折线、面积、饼图、环图、雷达 |
 | 一维坐标系 | `cartesian1D` / `polar1D` | 只投影一个位置通道 | rug、timeline、周期事件点 |
-| 三元坐标系 | `ternary2D` | 把 a/b/c 三分量投影到三角形 | 成分比例、三方此消彼长的数据 |
+| 三元坐标系 | `ternary2D` | 把 x/y/z 三分量投影到三角形 | 成分比例、三方此消彼长的数据 |
 | 自定义坐标系 | `{ type: 'custom', name }` | 用运行时工厂接入自己的投影 | 曲线轴、特殊空间、实验性投影 |
 
 ## 章节内容
@@ -29,7 +29,7 @@ description: 坐标系决定数据值如何投影到画布：二维负责平面�
   </LinkedCard>
   <LinkedCard href="/plot/grammar/coordinate/ternary">
     <span className="font-semibold">三元坐标系</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">a / b / c 三通道自动归一化后投影到三角形</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">x / y / z 三通道自动归一化后投影到三角形</span>
   </LinkedCard>
   <LinkedCard href="/plot/grammar/coordinate/custom">
     <span className="font-semibold">自定义坐标系</span>

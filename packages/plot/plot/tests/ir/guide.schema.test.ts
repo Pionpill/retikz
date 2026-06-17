@@ -36,12 +36,12 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
   });
 
   it('guide_bad_dimension_rejected', () => {
-    expect(() => GuideSchema.parse({ type: 'axis', dimension: 'z' })).toThrow();
+    expect(() => GuideSchema.parse({ type: 'axis', dimension: 'q' })).toThrow();
   });
 
-  // alpha.9 ADR-03：ternary 三角轴维度 a / b / c
-  it('axis_ternary_abc_dimensions_valid', () => {
-    for (const dimension of ['a', 'b', 'c']) {
+  // alpha.9 ADR-03：ternary 三角轴维度 x / y / z
+  it('axis_ternary_xyz_dimensions_valid', () => {
+    for (const dimension of ['x', 'y', 'z']) {
       expect(AxisGuideSchema.parse({ type: 'axis', dimension })).toEqual({ type: 'axis', dimension });
     }
   });
