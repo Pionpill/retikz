@@ -13,21 +13,14 @@ description: 用 LaTeX 写数学公式——经 MathJax SVG 降解成 renderer-a
 pnpm add @retikz/tex mathjax-full
 ```
 
-公式渲染能力经 `lowerMath` 注入 compile。React 里应用自行启动 MathJax（`createMathJaxEngine`）+ `createLowerMath`，经 `<Layout lowerMath>` 注入；公式写进 `<Node>` children：
+公式渲染能力经 `lowerMath` 注入 compile。React 用 `useLowerMath`（`@retikz/tex/react` 子入口）一行启动 MathJax 并注入，公式写进 `<Node>` children：
 
 ```tsx
-import { useEffect, useState } from 'react';
-import type { LowerMath } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
-import { createLowerMath, createMathJaxEngine } from '@retikz/tex';
+import { useLowerMath } from '@retikz/tex/react';
 
 const Diagram = () => {
-  const [lowerMath, setLowerMath] = useState<LowerMath>();
-  useEffect(() => {
-    createMathJaxEngine()
-      .then(engine => setLowerMath(() => createLowerMath(engine)))
-      .catch(() => {}); // mathjax-full 未装时保持 undefined，公式节点降级 + 警告
-  }, []);
+  const lowerMath = useLowerMath(); // 进程级单例启动 MathJax，startup 完成后返回注入函数
 
   return (
     <Layout lowerMath={lowerMath}>
@@ -38,6 +31,8 @@ const Diagram = () => {
   );
 };
 ```
+
+> `@retikz/tex/react` 是 tex 的可选子入口，仅它依赖 React（optional peer）——主入口 `@retikz/tex` 仍是无 React 的纯引擎，`@retikz/react` 也不会因此依赖 tex。想自己掌控启动时机，也可手写 `createMathJaxEngine` + `createLowerMath`（见下 Vanilla）后传 `<Layout lowerMath>`。
 
 <ComponentAlert title="需注入 lowerMath" description="带 math 的节点必须经 Layout lowerMath（React）或 toScene/compileToScene 的 lowerMath（vanilla）注入渲染能力；未注入时该节点降级（不渲染公式）并发出可诊断警告 MATH_LOWERER_MISSING，不会崩。" />
 
@@ -85,6 +80,7 @@ const svg = renderToString(fig, { lowerMath });
 
 | 名称 | 签名 | 描述 |
 | --- | --- | --- |
+| `useLowerMath`（`@retikz/tex/react`） | `() => LowerMath \| undefined` | React 钩子：进程级单例启动 MathJax，返回注入函数（未就绪 = `undefined`）。把手写 startup effect 收进一行 |
 | `createMathJaxEngine` | `(opts?) => Promise<MathJaxSvgEngine>` | 基于 `mathjax-full`（optional peer）构造同步 tex→SVG 引擎；startup 异步。也可自备等价 `MathJaxSvgEngine` |
 | `createLowerMath` | `(engine) => LowerMath` | 引擎 → core 的 `lowerMath` 注入函数，按 `fontSize\|display\|tex` 缓存 |
 
@@ -92,6 +88,6 @@ const svg = renderToString(fig, { lowerMath });
 
 - **未注入 `lowerMath`** → 节点降级（不渲染公式）+ 警告 `MATH_LOWERER_MISSING`，不崩。
 - **非法 tex / 渲染失败** → 警告 `MATH_TEX_INVALID` + 占位，不崩。
-- **未装 `mathjax-full`** → `createMathJaxEngine` 抛带安装提示的错误（上例 `.catch` 后 `lowerMath` 保持 `undefined`，公式节点降级）。
+- **未装 `mathjax-full`** → `createMathJaxEngine` 抛带安装提示的错误；`useLowerMath` 内部已捕获 → `lowerMath` 保持 `undefined`，公式节点降级。
 
 <ComponentAlert title="行内文本 + 公式混排" description="一行文字里夹公式（如「当 $v=d/t$ 时」）的行内混排为后续版本（需扩展文本 run 模型），本版先支持独立公式块与带框公式。" />

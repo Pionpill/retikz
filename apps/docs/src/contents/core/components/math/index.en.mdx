@@ -13,21 +13,14 @@ description: Write math in LaTeX — lowered via MathJax SVG into renderer-agnos
 pnpm add @retikz/tex mathjax-full
 ```
 
-The rendering capability is injected into compile via `lowerMath`. In React, your app starts MathJax itself (`createMathJaxEngine`) + `createLowerMath`, injected through `<Layout lowerMath>`; write the formula into `<Node>` children:
+The rendering capability is injected into compile via `lowerMath`. In React, `useLowerMath` (the `@retikz/tex/react` subpath) starts MathJax and injects it in one line; write the formula into `<Node>` children:
 
 ```tsx
-import { useEffect, useState } from 'react';
-import type { LowerMath } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
-import { createLowerMath, createMathJaxEngine } from '@retikz/tex';
+import { useLowerMath } from '@retikz/tex/react';
 
 const Diagram = () => {
-  const [lowerMath, setLowerMath] = useState<LowerMath>();
-  useEffect(() => {
-    createMathJaxEngine()
-      .then(engine => setLowerMath(() => createLowerMath(engine)))
-      .catch(() => {}); // mathjax-full missing → stays undefined, math nodes degrade + warn
-  }, []);
+  const lowerMath = useLowerMath(); // starts MathJax (process-level singleton); returns the injection once ready
 
   return (
     <Layout lowerMath={lowerMath}>
@@ -38,6 +31,8 @@ const Diagram = () => {
   );
 };
 ```
+
+> `@retikz/tex/react` is tex's optional subpath — only it depends on React (optional peer); the main `@retikz/tex` entry stays React-free, and `@retikz/react` never depends on tex. For manual control over startup timing, wire `createMathJaxEngine` + `createLowerMath` yourself (see Vanilla) and pass `<Layout lowerMath>`.
 
 <ComponentAlert title="lowerMath must be injected" description="A node with math requires the rendering capability injected via Layout lowerMath (React) or the lowerMath option of toScene/compileToScene (vanilla); without it the node degrades (no formula) and emits a diagnosable warning MATH_LOWERER_MISSING — it never crashes." />
 
@@ -85,6 +80,7 @@ Math is node content, two equivalent forms: the object written into `<Node>` chi
 
 | Name | Signature | Description |
 | --- | --- | --- |
+| `useLowerMath` (`@retikz/tex/react`) | `() => LowerMath \| undefined` | React hook: starts MathJax as a process-level singleton, returns the injection (`undefined` until ready). Collapses the manual startup effect into one line |
 | `createMathJaxEngine` | `(opts?) => Promise<MathJaxSvgEngine>` | Builds a synchronous tex→SVG engine on top of `mathjax-full` (optional peer); startup is async. You may also supply your own `MathJaxSvgEngine` |
 | `createLowerMath` | `(engine) => LowerMath` | Engine → the core `lowerMath` injection, cached by `fontSize\|display\|tex` |
 
@@ -92,6 +88,6 @@ Math is node content, two equivalent forms: the object written into `<Node>` chi
 
 - **`lowerMath` not injected** → the node degrades (no formula) + warning `MATH_LOWERER_MISSING`; no crash.
 - **Invalid tex / render failure** → warning `MATH_TEX_INVALID` + placeholder; no crash.
-- **`mathjax-full` not installed** → `createMathJaxEngine` throws with an install hint (after the `.catch` above, `lowerMath` stays `undefined` and math nodes degrade).
+- **`mathjax-full` not installed** → `createMathJaxEngine` throws with an install hint; `useLowerMath` catches it internally → `lowerMath` stays `undefined` and math nodes degrade.
 
 <ComponentAlert title="Inline text + math" description="Inline mixing of text and math within one line (e.g. “when $v=d/t$”) is planned for a later release (it needs an extended text-run model); this release supports standalone and framed formulas." />

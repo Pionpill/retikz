@@ -73,12 +73,12 @@ export const createLowerMath = (mathjax: MathJaxSvgEngine): LowerMath => { /* te
 
 ## DSL 表面
 
-react（公式作 `<Node>` children 对象内容；应用自行启动 MathJax 并把 `lowerMath` 经 `<Layout lowerMath>` 注入，无独立 react-tex 包 / 无 `<Math>` sugar）：
+react（公式作 `<Node>` children 对象内容；`useLowerMath`（`@retikz/tex/react` 子入口）一行启动 MathJax 并经 `<Layout lowerMath>` 注入，无独立 react-tex 包 / 无 `<Math>` sugar）：
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
-import { createLowerMath, createMathJaxEngine } from '@retikz/tex';
-// 组件内：用 useState/useEffect 启动 MathJax 后 setLowerMath(() => createLowerMath(engine))
+import { useLowerMath } from '@retikz/tex/react';
+// 组件内：const lowerMath = useLowerMath();（也可手写 createMathJaxEngine + createLowerMath 自控启动时机）
 <Layout lowerMath={lowerMath}>
   {/* 独立公式块（无 shape）：复用 Node 几何，可连线、可加 alpha.4 效果 */}
   <Node id="eq" position={[0, 0]}>{{ tex: '\\frac{a}{b} = c' }}</Node>
@@ -106,7 +106,7 @@ toScene(fig, { lowerMath });
 - **core**：`ir/math.ts`（新建）、`ir/node.ts`（加 `math`）、`compile/compile.ts`（加 `options.lowerMath` 注入 + 透传）、`compile/node.ts`（math 内容分支：测量 + emit 字形）、`compile/constant.ts`（新 warn code）、`src/index.ts`（导出 `IRMathContent` / `LowerMath`）。**red 级 core 变更**（additive / optional，缺省零回归）。
 - **`@retikz/react`**：`Layout.tsx` 加 `lowerMath` prop → 透传 `compileToScene`（解评审 BLOCKING 3：现有 Layout 只传 shapes/arrows/patterns/pathGenerators/composites，无 lowerMath 通道）；builder 支持 `<Node>` children 写公式对象 `{ tex, displayMode? }` → `node.math`（与 text-via-children 对称）。
 - **`@retikz/vanilla`**：`toScene` 透传 `lowerMath`。
-- **新包 `@retikz/tex`**：归 **core 分组**（`packages/core/tex`，与 math/core/render/react/vanilla 同 lockstep），`dependencies` 含 `@retikz/core`，`mathjax-full` 走 optional peer（catalog）；引擎以字面量 specifier 动态 import MathJax（打包器可解析、按需懒加载）。**不另立 react-tex 包**——React 公式作 `<Node>` children 对象，应用自行用 `createMathJaxEngine` + `createLowerMath` 注入。
+- **新包 `@retikz/tex`**：归 **core 分组**（`packages/core/tex`，与 math/core/render/react/vanilla 同 lockstep），`dependencies` 含 `@retikz/core`，`mathjax-full` 走 optional peer（catalog）；引擎以字面量 specifier 动态 import MathJax（打包器可解析、按需懒加载）。**不另立 react-tex 包**——React 公式作 `<Node>` children 对象；便捷注入由可选子入口 **`@retikz/tex/react`** 的 `useLowerMath` 提供（`react`/`react-dom` 作 tex 的 optional peer，仅此子入口依赖 React；主入口仍无 React，`@retikz/react` 不依赖 tex），亦可手写 `createMathJaxEngine` + `createLowerMath`。
 - **renderer**：**零改动**（字形是普通 `PathPrim`）。
 - **对外 API**：core 新增 `IRNode.math` + `LowerMath` + `IRMathContent`（additive）；新包公开 API；无 breaking。
 - **文档站**：公式双语页 + demo（独立公式块、连线、与 shadow/blend 叠加；MathJax 安装说明）。
@@ -143,7 +143,7 @@ toScene(fig, { lowerMath });
 - core：`ir/math.ts`（新建）、`ir/node.ts`、`ir/index.ts`、`compile/compile.ts`（`lowerMath` 注入 + 透传）、`compile/node.ts`（math 内容测量 + emit；无 shape → bbox=math bbox）、`compile/constant.ts`（warn code）、`src/index.ts`
 - `@retikz/react`：`src/kernel/Layout.tsx`（加 `lowerMath` prop + 传 `compileToScene`）、`src/kernel/builder.ts`（children 对象 `{ tex }` → `node.math`）、`src/kernel/Node.tsx`（children 类型 + math prop）+ 测试
 - `@retikz/vanilla`：`src/to-scene.ts`（透传 `lowerMath`）+ 测试
-- `@retikz/tex`（新建包，`packages/core/tex`）：`src/index.ts`、`src/lower/lower-math.ts`（`createLowerMath`）、`src/mathjax/engine.ts`（optional peer 字面量动态 import + 缺失诊断）、`src/svg/parse-svg.ts`（SVG `path d` → `PathCommand`；`<use>` 解引用 + transform 展平）、`package.json` / `tsconfig*` / 包配置、`tests/**`
+- `@retikz/tex`（新建包，`packages/core/tex`）：`src/index.ts`、`src/lower/lower-math.ts`（`createLowerMath`）、`src/mathjax/engine.ts`（optional peer 字面量动态 import + 缺失诊断）、`src/svg/parse-svg.ts`（SVG `path d` → `PathCommand`；`<use>` 解引用 + transform 展平）、`src/react/{index,useLowerMath}.ts`（`./react` 子入口 hook，`react`/`react-dom` optional peer）、`package.json`（`./react` 子导出）/ `tsconfig*` / `vite.config.ts`（双入口）、`tests/**`
 - `pnpm-workspace.yaml`（catalog 加 `mathjax-full`）
 - **不动**：`render/src/**`（零改动验证点）
 - `apps/docs/**`（stage 4）

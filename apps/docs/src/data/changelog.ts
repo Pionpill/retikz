@@ -414,8 +414,8 @@ export const changelog: Array<Release> = [
             version: 'alpha.5',
             date: '2026-06-17',
             summary: {
-              zh: '首切：MathJax→字形路径引擎 + `createLowerMath` 注入。',
-              en: 'First cut: a MathJax→glyph-path engine + `createLowerMath` injection.',
+              zh: '首切：MathJax→字形路径引擎 + `createLowerMath` 注入 + `./react` 子入口 `useLowerMath`。',
+              en: 'First cut: a MathJax→glyph-path engine + `createLowerMath` injection + a `./react` subpath `useLowerMath`.',
             },
             items: [
               {
@@ -423,6 +423,13 @@ export const changelog: Array<Release> = [
                 content: {
                   zh: '`createMathJaxEngine`（`mathjax-full` optional peer，内联字形、纯 Node liteAdaptor）+ `createLowerMath`（引擎 → core `lowerMath`，按 fontSize / display / tex 缓存，失败降级 null）。',
                   en: '`createMathJaxEngine` (`mathjax-full` optional peer, inline glyphs, DOM-free liteAdaptor) + `createLowerMath` (engine → core `lowerMath`, cached by fontSize / display / tex, degrading to null on failure).',
+                },
+              },
+              {
+                label: { zh: '@retikz/tex/react · useLowerMath', en: '@retikz/tex/react · useLowerMath' },
+                content: {
+                  zh: '可选子入口 `@retikz/tex/react` 出 `useLowerMath` 钩子：一行启动 MathJax（进程级单例）并返回 `lowerMath` 注入函数；`react`/`react-dom` 作 tex 的 optional peer，仅此子入口依赖 React，主入口 `@retikz/tex` 仍无 React、`@retikz/react` 不依赖 tex。',
+                  en: 'Optional subpath `@retikz/tex/react` exports the `useLowerMath` hook: starts MathJax (process-level singleton) and returns the `lowerMath` injection in one line; `react`/`react-dom` are optional peers — only this subpath needs React, the main `@retikz/tex` entry stays React-free and `@retikz/react` never depends on tex.',
                 },
               },
               {
