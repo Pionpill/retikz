@@ -283,15 +283,15 @@ export const changelog: Array<Release> = [
             version: 'alpha.5',
             date: '2026-06-17',
             summary: {
-              zh: '`<Node math>` 公式内容透传 + `<Layout lowerMath>` 公式渲染注入通道。',
-              en: '`<Node math>` formula content passthrough + a `<Layout lowerMath>` injection channel for math rendering.',
+              zh: '`<Node>` 公式内容（`math` prop 或 children 对象）+ `<Layout lowerMath>` 公式渲染注入通道。',
+              en: '`<Node>` math content (`math` prop or children object) + a `<Layout lowerMath>` injection channel for math rendering.',
             },
             items: [
               {
-                label: { zh: '<Node math> + Layout lowerMath', en: '<Node math> + Layout lowerMath' },
+                label: { zh: 'Node 公式内容 + Layout lowerMath', en: 'Node math content + Layout lowerMath' },
                 content: {
-                  zh: '`<Node math={{ tex, displayMode? }}>` 把公式作节点内容；`<Layout lowerMath>` 把 `@retikz/tex` 的渲染能力透传给 `compileToScene`（补齐注入通道）。',
-                  en: '`<Node math={{ tex, displayMode? }}>` sets a formula as node content; `<Layout lowerMath>` forwards the `@retikz/tex` rendering capability to `compileToScene` (completing the injection channel).',
+                  zh: '`<Node math={{ tex, displayMode? }}>` 或直接写进 children `<Node>{{ tex }}</Node>` 把公式作节点内容；`<Layout lowerMath>` 把 `@retikz/tex` 的渲染能力透传给 `compileToScene`（补齐注入通道）。',
+                  en: '`<Node math={{ tex, displayMode? }}>` — or written straight into children `<Node>{{ tex }}</Node>` — sets a formula as node content; `<Layout lowerMath>` forwards the `@retikz/tex` rendering capability to `compileToScene` (completing the injection channel).',
                 },
               },
             ],
@@ -430,34 +430,6 @@ export const changelog: Array<Release> = [
                 content: {
                   zh: '解析 MathJax SVG：path d（M/L/H/V/C/S/Q/T/Z）+ 嵌套 `g transform` 累积 + 全局 y 翻转 + 分数线 rect → 左上原点、y-down、user 单位字形 + bbox / depth（行内对齐预留）。',
                   en: 'Parses MathJax SVG: path d (M/L/H/V/C/S/Q/T/Z) + nested `g transform` accumulation + global y-flip + fraction-bar rects → top-left-origin, y-down, user-unit glyphs + bbox / depth (reserved for inline alignment).',
-                },
-              },
-            ],
-          },
-        ],
-      },
-      {
-        pkg: '@retikz/tex-react',
-        version: 'v0.4',
-        description: {
-          zh: '新包：LaTeX 公式的 React 接入——`<Math>` sugar + `useLowerMath`（MathJax startup）。',
-          en: 'New package: React bindings for LaTeX math — a `<Math>` sugar + `useLowerMath` (MathJax startup).',
-        },
-        highlights: [],
-        subVersions: [
-          {
-            version: 'alpha.5',
-            date: '2026-06-17',
-            summary: {
-              zh: '`<Math>` 公式节点 + `useLowerMath` 注入钩子。',
-              en: 'A `<Math>` formula node + a `useLowerMath` injection hook.',
-            },
-            items: [
-              {
-                label: { zh: '<Math> / useLowerMath', en: '<Math> / useLowerMath' },
-                content: {
-                  zh: '`<Math tex displayMode>` = `<Node math>` sugar（透传全部 Node props，无 shape = 独立块 / 配 shape = 带框）；`useLowerMath` 进程级单例启动 MathJax，返回 core `lowerMath` 注入函数（未就绪 = undefined）。',
-                  en: '`<Math tex displayMode>` = `<Node math>` sugar (forwards all Node props; no shape = standalone / with a shape = framed); `useLowerMath` starts MathJax as a process-level singleton, returning the core `lowerMath` injection (undefined until ready).',
                 },
               },
             ],

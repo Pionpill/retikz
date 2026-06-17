@@ -72,9 +72,9 @@ export const MixedLineSchema = z.object({
 react（文本直接写 `$...$`，或显式 runs）：
 
 ```tsx
-import { Layout } from '@retikz/react';
-import { useLowerMath } from '@retikz/tex-react';
-// 组件内：const lowerMath = useLowerMath();
+import { Layout, Node } from '@retikz/react';
+import { createLowerMath, createMathJaxEngine } from '@retikz/tex';
+// 组件内：useState/useEffect 启动 MathJax → setLowerMath(() => createLowerMath(engine))
 <Layout lowerMath={lowerMath}>
   {/* $...$ 糖（lowerMath 已注入时启用）：文字里夹公式 */}
   <Node id="a" position={[0, 0]} shape="rectangle">当 $v = d/t$ 时，位移 $s = v t$</Node>
@@ -98,7 +98,7 @@ figure([
 
 ## 测试设计
 
-`packages/core/core/tests/{ir/text-runs.test.ts, compile/inline-math.test.ts, parsers/inline-math.test.ts}` + `packages/tex/tex/tests/**` 覆盖：`$...$` 解析（含 gating / 转义 / 不闭合 / `$$`）、混排布局 + 基线、行高撑开、emit group、降级、opacity 保留、round-trip。具体见「实现契约 § 测试象限」。
+`packages/core/core/tests/{ir/text-runs.test.ts, compile/inline-math.test.ts, parsers/inline-math.test.ts}` + `packages/core/tex/tests/**` 覆盖：`$...$` 解析（含 gating / 转义 / 不闭合 / `$$`）、混排布局 + 基线、行高撑开、emit group、降级、opacity 保留、round-trip。具体见「实现契约 § 测试象限」。
 
 ## 影响
 
@@ -136,7 +136,7 @@ figure([
 ### 文件 scope
 
 - core：`ir/text.ts`（run schema + union 扩展，`TextRunSchema` 含 opacity）、`ir/index.ts`、`parsers/inline-math.ts`（新建：`$...$` → runs，gated on `lowerMath` 存在）、`parsers/index.ts`、`compile/text-layout.ts`（新建：混排行布局 + emit group）或扩 `compile/node.ts`、`compile/constant.ts`（`TEXT_MATH_PARSE_ERROR`）、`src/index.ts`（导出 run 类型）
-- `@retikz/tex`：无新增（复用 ADR-01 `createLowerMath`）；`@retikz/tex-react` 文本透传 `$...$` 自然可用
+- `@retikz/tex`：无新增（复用 ADR-01 `createLowerMath`）；`@retikz/react` 文本 children 透传 `$...$` 自然可用
 - 测试：`packages/core/core/tests/ir/text-runs.test.ts`、`tests/compile/inline-math.test.ts`、`tests/parsers/inline-math.test.ts`
 - **不动**：`render/src/**`、`primitive/text.ts`（TextPrim 不变）
 - `apps/docs/**`（stage 4）

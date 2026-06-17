@@ -80,7 +80,7 @@ core 0.4 只做**纵向底座深化（机制 / 引擎 / 契约）**；**横向�
 
 - **守 renderer-agnostic**：用 **MathJax SVG 模式**（glyph = SVG path、非字体）→ 解析成 retikz `GroupPrim(PathPrim)`，全后端（SVG / Canvas / Node）一致、无字体注入。KaTeX / temml / MathML 因 font / DOM 绑定走不通 Canvas/Node，淘汰。
 - **机制 = lowering**：IR 只存 `{ type: 'math', tex }`（可序列化）；胶水包提供 `lowerMath`（MathJax tex2svg → SVG `path d` 解析成 `PathPrim` + transform 展平 + bbox 测量 + 按 tex 缓存），经 `lowerComposites` 注入；**core 不碰**。
-- **独立包 `@retikz/tex`**（不并进 `@retikz/extension`）：它是自带 path-d 解析 + 坐标映射 + 引擎集成的小子系统，比单个 extension 定义重；且拖一个重的 MathJax optional peer，不该和轻量几何 extension 纠缠；还单独 version「耦合 MathJax SVG 结构」这层。
+- **独立包 `@retikz/tex`**（不并进 `@retikz/extension`）：它是自带 path-d 解析 + 坐标映射 + 引擎集成的小子系统，比单个 extension 定义重；且拖一个重的 MathJax optional peer，不该和轻量几何 extension 纠缠。落地时归 **core 分组**（`packages/core/tex`，与 math/core/render/react/vanilla 同 lockstep），不再单独 version——详见 [alpha.5 roadmap](./alpha.5/roadmap.md) 与 [ADR-01](./alpha.5/01-tex-package-and-node-math.md)。
 - **MathJax = optional peerDependency**（用户自装、掌控版本 / macro），同 `@napi-rs/canvas` 先例。
 - 实现 snag：MathJax init 异步、但 `tex2svg` init 后同步确定，可塞进纯 `compileToScene` + 按 tex 缓存。
 - 落地**靠后**（E 非 0.4 首切）。

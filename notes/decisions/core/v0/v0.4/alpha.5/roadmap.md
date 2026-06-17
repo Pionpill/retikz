@@ -14,7 +14,7 @@ alpha.5 给 retikz 补上**数学排版**——一个 TikZ-inspired 库的旗舰
 
 | # | 子项 | 代号 | ADR | 状态 |
 |---|---|---|---|---|
-| E1 | `@retikz/tex` 包 + `lowerMath` 引擎 + `node.math` 内容（独立公式 A） | E | [ADR-01](./01-tex-package-and-node-math.md) | ✅ Accepted（已实现 + 文档 + changelog；core schema/compile + `@retikz/tex`(+react) 引擎，真实 mathjax-full 集成验证） |
+| E1 | `@retikz/tex` 包（core 分组）+ `lowerMath` 引擎 + `node.math` 内容（独立公式 A） | E | [ADR-01](./01-tex-package-and-node-math.md) | ✅ Accepted（已实现 + 文档 + changelog；core schema/compile + `packages/core/tex` 引擎，真实 mathjax-full 集成验证；React 公式走 `<Node>` children 对象） |
 | E2 | 带框公式（B）——`node.math` + 任意 shape 容器 | E | [ADR-02](./02-node-embedded-math.md) | ✅ Accepted（经 E1 统一内容路径落地，几乎零增量；B 行为由 `node-math` 测试覆盖） |
 | E3 | 行内 text+math 混排（C）——`IRLineSpec` run 序列 + `$...$` | E | [ADR-03](./03-inline-math-runs.md) | ⏸ Proposed（**延后**：最重，扩 core text-run 模型 + `$...$` parser + 混排布局；留下一里程碑单独做，文档已标注「行内混排待后续」） |
 
@@ -23,11 +23,11 @@ alpha.5 给 retikz 补上**数学排版**——一个 TikZ-inspired 库的旗舰
 **统一为「公式作 node 内容」模型**（不引入 `shape:'math'` 平行模型——避免两套公开公式节点模型，见多 LLM 评审 BLOCKING 2）。公式始终是 node 内容（`node.math`，与 `text` 平行）/ 行内 math run，经 `options.lowerMath` 注入渲染。**alpha.5 接受 red-level core schema 变更**（多 LLM 评审 BLOCKING 1：B/C 确需改 core，roadmap 据实承认，不再声称「core 零改动」）：
 
 - **共享地基（ADR-01）**：`@retikz/tex` 提供 MathJax→PathPrim 引擎 `createLowerMath(mathjax): LowerMath`（`tex2svg` → 解析 SVG `path d`（`<use>` 解引用 + transform 展平）→ `PathCommand[]` + bbox/depth（ex→user），按 tex 缓存，非法 tex → null）。core 新增 `IRNode.math`（`{tex, displayMode?}`）+ `CompileOptions.lowerMath` 注入 + `compile/node.ts` 内容路径（内容尺寸来源按 text/math 分派）。错误走既有 `CompileWarningCode` / `onWarn`（`MATH_LOWERER_MISSING` / `MATH_TEX_INVALID`），不扩 shape API、不抛。
-- **A 独立公式块（ADR-01）** = 无 shape 的 `node.math`：bbox = 公式 bbox，复用 Node 全套几何（position / compass anchor / boundaryPoint 连线 / zIndex / opacity / alpha.4 shadow·blend）。react `<Math tex>` = `<Node math>` sugar。
+- **A 独立公式块（ADR-01）** = 无 shape 的 `node.math`：bbox = 公式 bbox，复用 Node 全套几何（position / compass anchor / boundaryPoint 连线 / zIndex / opacity / alpha.4 shadow·blend）。react 公式作 `<Node>` children 对象 `<Node>{{ tex }}</Node>`（或 `math` prop），无 `<Math>` sugar。
 - **B 带框公式（ADR-02）** = 有 shape 的 `node.math`：任意 shape（rectangle / circle / star…）容器据公式 bbox 自动尺寸（+ padding），框走 node 常规 `fill` / `stroke` / `cornerRadius`。几乎零增量（复用 ADR-01 内容路径 + 既有「shape 包住内容」链路）。
 - **C 行内混排（ADR-03）** = `IRLineSpec` 增 run 序列（`TextRunSchema`（含 opacity）/ `MathRunSchema`）+ `$...$` 解析糖（**gated on `lowerMath` 存在**——未接 tex 时 `$` 字面，现有含 `$` 文本零回归）+ 混排布局（公式 run 按 depth 贴文字基线），emit `GroupPrim(TextPrim + glyph PathPrim)`。新增 `TEXT_MATH_PARSE_ERROR` warn code。
-- **React/vanilla 注入通道（ADR-01 补齐，评审 BLOCKING 3）**：`@retikz/react` `Layout.tsx` 现仅传 shapes/arrows/patterns/pathGenerators/composites，**无 lowerMath 通道**——ADR-01 给 `Layout` 加 `lowerMath` prop 透传 `compileToScene`；vanilla `toScene` 同步透传。`@retikz/tex-react` 的 `useLowerMath` 启动 MathJax 并经此注入。
-- **MathJax = optional peerDependency**：照搬 `@napi-rs/canvas`（`peerDependenciesMeta.optional` + 动态 import + 缺失诊断），用户自装、掌控版本 / macro。
+- **React/vanilla 注入通道（ADR-01 补齐，评审 BLOCKING 3）**：`@retikz/react` `Layout.tsx` 现仅传 shapes/arrows/patterns/pathGenerators/composites，**无 lowerMath 通道**——ADR-01 给 `Layout` 加 `lowerMath` prop 透传 `compileToScene`；vanilla `toScene` 同步透传；react builder 支持 `<Node>` children 写公式对象。**不另立 react-tex 包**——应用自行用 `@retikz/tex` 的 `createMathJaxEngine` + `createLowerMath`（effect 里 await startup）取得 `lowerMath` 传入 `<Layout>`。
+- **MathJax = optional peerDependency**：照搬 `@napi-rs/canvas`（`peerDependenciesMeta.optional` + 动态 import + 缺失诊断），用户自装、掌控版本 / macro；引擎以**字面量** specifier 动态 import，打包器可解析 + 按需懒加载。
 
 **三端 renderer 全零改动**——公式都 emit 成既有 `PathPrim` / `TextPrim` / `GroupPrim`。
 
