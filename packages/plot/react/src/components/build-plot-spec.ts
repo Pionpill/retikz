@@ -620,10 +620,15 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   const collected: Collected = { marks: [], guides: [], transforms: [], autoStacks: [], scales: [], resolveLabels: {}, colored: false, colorFields: [], hasBar: false, hasRect: false, hasSector: false, hasClosedLine: false };
   collectInto(children, collected);
 
-  // transform 装配序：<Plot transforms> 直传 → <Transform> 收集 → auto-stack（仅当无显式 stack 时补，B4 去重）
+  // transform 装配序：<Plot transforms> 直传 → <Transform> 收集 → auto-stack（B4 去重）
+  // B4 按 stack 签名（x / y / groupBy）去重：仅抑制与某条显式 stack 完全同签名的 auto-stack（那条会二次堆叠），
+  // 不同签名的 auto-stack 保留——否则该 mark 仍是 arrangement='stack' 却没有对应 y0/y1，lower 阶段读空累积界出错。
   const explicitTransforms: Array<Transform> = [...(options.transforms ?? []), ...collected.transforms];
-  const hasExplicitStack = explicitTransforms.some(transform => transform.kind === PlotTransform.Stack);
-  const transforms: Array<Transform> = hasExplicitStack ? explicitTransforms : [...explicitTransforms, ...collected.autoStacks];
+  const stackSignature = (transform: Transform): string =>
+    transform.kind === PlotTransform.Stack ? JSON.stringify([transform.x ?? null, transform.y, transform.groupBy ?? null]) : '';
+  const explicitStackSignatures = new Set(explicitTransforms.filter(transform => transform.kind === PlotTransform.Stack).map(stackSignature));
+  const dedupedAutoStacks = collected.autoStacks.filter(autoStack => !explicitStackSignatures.has(stackSignature(autoStack)));
+  const transforms: Array<Transform> = [...explicitTransforms, ...dedupedAutoStacks];
 
   const coordKind = coordinateTypeOf(options.coordinate);
   if (collected.hasSector && coordKind !== 'polar2D') {

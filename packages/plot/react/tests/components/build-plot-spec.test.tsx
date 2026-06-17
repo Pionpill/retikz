@@ -920,12 +920,13 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x
 
 describe('buildPlotSpec alpha.12 ADR-02（normalize / derive-interval / jitter 经同一 <Transform> 透传）', () => {
   it('normalize_then_stack_percentage_via_transform', () => {
-    // 百分比堆叠：显式 [normalize, stack] 两步链；显式 stack 抑制 mark auto-stack（不二次堆叠）
+    // 百分比堆叠：显式 [normalize, stack] 两步链 + <BarMark stack>（柱读累积界 y0/y1）；
+    // 显式 stack 与 mark auto-stack 同签名 → auto-stack 被去重抑制（最终只一条 stack，不二次堆叠）
     const spec = buildPlotSpec(
       <>
         <Transform kind="normalize" field="amount" groupBy={['quarter']} basis="percent" as="share" />
         <Transform kind="stack" x="quarter" y="share" groupBy="product" />
-        <BarMark x="quarter" y="share" series="product" />
+        <BarMark x="quarter" y="share" series="product" stack />
       </>,
       '__plot',
     );
@@ -933,7 +934,30 @@ describe('buildPlotSpec alpha.12 ADR-02（normalize / derive-interval / jitter �
       { kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' },
       { kind: 'stack', x: 'quarter', y: 'share', groupBy: 'product' },
     ]);
+    // 只剩一条 stack（auto-stack 被同签名去重），且 mark 确为 stacked interval（lower 会读 y0/y1）
     expect((spec.transform ?? []).filter(t => t.kind === 'stack')).toHaveLength(1);
+    expect(spec.marks[0]).toMatchObject({ type: 'interval', arrangement: 'stack' });
+  });
+
+  it('auto_stack_with_different_signature_is_kept', () => {
+    // P1 回归：显式 stack 只去重「同签名」的 auto-stack；签名不同的 <BarMark series stack> 的 auto-stack 必须保留，
+    // 否则该 mark 仍 arrangement='stack' 却无对应 y0/y1，lower 阶段读空累积界出错
+    const spec = buildPlotSpec(
+      <>
+        <Transform kind="stack" x="quarter" y="share" groupBy="product" />
+        <BarMark x="quarter" y="share" series="product" stack />
+        {/* 不同 y/groupBy 签名的另一组堆叠柱：其 auto-stack 不能被误删 */}
+        <BarMark x="month" y="revenue" series="region" stack />
+      </>,
+      '__plot',
+    );
+    const stacks = (spec.transform ?? []).filter(t => t.kind === 'stack');
+    // 显式 stack(quarter/share/product) 去重了第一根柱的同签名 auto-stack；第二根柱(month/revenue/region)的 auto-stack 保留 → 共两条
+    expect(stacks).toHaveLength(2);
+    expect(stacks).toContainEqual({ kind: 'stack', x: 'quarter', y: 'share', groupBy: 'product' });
+    expect(stacks).toContainEqual({ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'region' });
+    // 两根柱都为 stacked interval
+    expect(spec.marks.every(m => m.type === 'interval' && m.arrangement === 'stack')).toBe(true);
   });
 
   it('derive_interval_declared_to_ir', () => {
