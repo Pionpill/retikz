@@ -61,6 +61,7 @@
     "effectsShadow": "Shadow",
     "effectsBlend": "Blend",
     "effectsAnimation": "Animation",
+    "math": "Math",
     "basicConcepts": "Basic Concepts",
     "coreConcepts": "Core Concepts",
     "design": "Design Philosophy",

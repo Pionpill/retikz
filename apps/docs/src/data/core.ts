@@ -97,6 +97,7 @@ export const coreSection: Array<Section> = [
           { id: 'animation', label: 'core.effectsAnimation' },
         ],
       },
+      { id: 'math', label: 'core.math' },
     ],
   },
   {

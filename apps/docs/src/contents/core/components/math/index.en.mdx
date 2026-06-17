@@ -1,0 +1,106 @@
+---
+title: Math
+description: Write math in LaTeX — lowered via MathJax SVG into renderer-agnostic glyph paths, consistent across backends with no font injection; standalone or framed formulas.
+---
+
+`@retikz/tex` brings math typesetting to retikz: write formulas in LaTeX, lowered via **MathJax SVG mode** (glyphs as SVG paths, not fonts) into `@retikz/core` glyph `PathPrim`s — consistent across SVG / browser Canvas / Node bitmap with no font injection. Math is **node content** (`node.math`, parallel to `text`): no shape = a standalone formula block, with a shape = a framed formula.
+
+## Install & enable
+
+MathJax is an **optional peerDependency** (you install it, controlling version & macros):
+
+```bash
+pnpm add @retikz/tex @retikz/tex-react mathjax-full
+```
+
+The rendering capability is injected into compile via `lowerMath`. In React, use `useLowerMath` (starts MathJax automatically) + `<Layout lowerMath>`:
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Math, useLowerMath } from '@retikz/tex-react';
+
+const Diagram = () => {
+  const lowerMath = useLowerMath(); // starts MathJax; returns lowerMath once startup finishes
+  return (
+    <Layout lowerMath={lowerMath}>
+      <Math id="eq" position={[0, 0]} tex="\frac{a}{b} = c" />
+    </Layout>
+  );
+};
+```
+
+<ComponentAlert title="lowerMath must be injected" description="A node with math requires the rendering capability injected via Layout lowerMath (React) or the lowerMath option of toScene/compileToScene (vanilla); without it the node degrades (no formula) and emits a diagnosable warning MATH_LOWERER_MISSING — it never crashes." />
+
+## Standalone formula
+
+`<Math>` without a `shape` is a standalone formula block, reusing the node's full geometry — positionable, connectable via `<Path>`, and able to take [visual effects](/core/components/effects/shadow) `shadow` / `blendMode`:
+
+```tsx
+<Layout lowerMath={lowerMath}>
+  <Math id="a" position={[0, 0]} tex="\sum_{i=1}^n i^2" displayMode />
+  <Math id="b" position={[0, -40]} tex="E = mc^2" shadow="sm" />
+  <Path><Step kind="move" to="a" /><Step kind="line" to="b" /></Path>
+</Layout>
+```
+
+`displayMode` uses display (block) metrics (larger fractions / sums); omitted = inline metrics.
+
+## Framed formula
+
+Add a `shape` for a framed formula: any shape (`rectangle` / `circle` / `ellipse` / `star`…) becomes the container, auto-sized to wrap the formula, with the node's regular `fill` / `stroke` / `cornerRadius`:
+
+```tsx
+<Layout lowerMath={lowerMath}>
+  <Math position={[0, 0]} shape="rectangle" fill="#eef" stroke="#33f" tex="E = mc^2" />
+  <Math position={[80, 0]} shape="circle" fill="white" tex="\oint_C" />
+</Layout>
+```
+
+## Vanilla
+
+`createMathJaxEngine` (await startup) → `createLowerMath` → inject as the `lowerMath` option of `toScene`; nodes use `math` content:
+
+```ts
+import { figure, node, renderToString } from '@retikz/vanilla';
+import { createMathJaxEngine, createLowerMath } from '@retikz/tex';
+
+const lowerMath = createLowerMath(await createMathJaxEngine());
+const fig = figure([
+  node('eq', { position: [0, 0], math: { tex: '\\frac{a}{b} = c' } }),
+]);
+const svg = renderToString(fig, { lowerMath });
+```
+
+## API reference
+
+### `<Node math>` / `node(..., { math })`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `math` | `{ tex: string; displayMode?: boolean }` | — | Node math content (mutually exclusive with `text`, `math` wins). `tex` = LaTeX source; `displayMode` = block metrics (default inline). Rendered to glyph paths via the injected `lowerMath`; the node is sized by the formula bbox. |
+
+### `<Math>` (`@retikz/tex-react`)
+
+Sugar for `<Node math>`; inherits all `<Node>` props except `text` / `children` / `math`.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `tex` | `string` | — | LaTeX math source, e.g. `\frac{a}{b}` |
+| `displayMode` | `boolean` | `false` | Display (block) metrics |
+| `position` / `shape` / `fill` / `shadow` … | same as `<Node>` | — | Forwarded to the underlying `<Node>` |
+
+### Injection API (`@retikz/tex`)
+
+| Name | Signature | Description |
+| --- | --- | --- |
+| `createMathJaxEngine` | `(opts?) => Promise<MathJaxSvgEngine>` | Builds a synchronous tex→SVG engine on top of `mathjax-full` (optional peer); startup is async |
+| `createLowerMath` | `(engine) => LowerMath` | Engine → the core `lowerMath` injection, cached by `fontSize\|display\|tex` |
+| `useLowerMath` (`@retikz/tex-react`) | `() => LowerMath \| undefined` | React hook: starts MathJax as a process-level singleton, returns the injection (`undefined` until ready) |
+
+## Degradation & diagnostics
+
+- **`lowerMath` not injected** → the node degrades (no formula) + warning `MATH_LOWERER_MISSING`; no crash.
+- **Invalid tex / render failure** → warning `MATH_TEX_INVALID` + placeholder; no crash.
+- **`mathjax-full` not installed** → `createMathJaxEngine` / `useLowerMath` degrade (`useLowerMath` returns `undefined`).
+
+<ComponentAlert title="Inline text + math" description="Inline mixing of text and math within one line (e.g. “when $v=d/t$”) is planned for a later release (it needs an extended text-run model); this release supports standalone and framed formulas." />
