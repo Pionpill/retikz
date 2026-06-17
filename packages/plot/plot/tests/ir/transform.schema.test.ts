@@ -167,3 +167,77 @@ describe('AggregateTransformSchema (alpha.12 ADR-01)', () => {
     expect(round).toEqual(t);
   });
 });
+
+describe('NormalizeTransformSchema (alpha.12 ADR-02)', () => {
+  it('normalize_full_form_valid', () => {
+    const t = { kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' };
+    expect(TransformSchema.parse(t)).toEqual(t);
+  });
+
+  it('normalize_minimal_valid', () => {
+    const t = { kind: 'normalize', field: 'amount' };
+    expect(TransformSchema.parse(t)).toEqual(t);
+  });
+
+  it('normalize_missing_field_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'normalize', groupBy: ['q'] })).toThrow();
+  });
+
+  it('normalize_groupby_non_array_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'normalize', field: 'amount', groupBy: 'quarter' })).toThrow();
+  });
+
+  it('normalize_bad_basis_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'normalize', field: 'amount', basis: 'ratio' })).toThrow();
+  });
+});
+
+describe('DeriveIntervalTransformSchema (alpha.12 ADR-02)', () => {
+  it('derive_interval_two_field_valid', () => {
+    const t = { kind: 'derive-interval', startFrom: 'start', endFrom: 'end' };
+    expect(TransformSchema.parse(t)).toEqual(t);
+  });
+
+  it('derive_interval_from_baseline_valid', () => {
+    const t = { kind: 'derive-interval', from: 'value', baseline: 10, startField: 'lo', endField: 'hi' };
+    expect(TransformSchema.parse(t)).toEqual(t);
+  });
+
+  it('derive_interval_non_finite_baseline_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'derive-interval', from: 'v', baseline: Infinity })).toThrow();
+  });
+
+  it('derive_interval_json_roundtrip_equivalent', () => {
+    const t = { kind: 'derive-interval', startFrom: 's', endFrom: 'e', startField: 'a', endField: 'b' };
+    expect(TransformSchema.parse(JSON.parse(JSON.stringify(t)))).toEqual(t);
+  });
+});
+
+describe('JitterTransformSchema (alpha.12 ADR-02)', () => {
+  it('jitter_full_form_valid', () => {
+    const t = { kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 42 };
+    expect(TransformSchema.parse(t)).toEqual(t);
+  });
+
+  it('jitter_minimal_valid', () => {
+    const t = { kind: 'jitter' };
+    expect(TransformSchema.parse(t)).toEqual(t);
+  });
+
+  it('jitter_seed_non_integer_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'jitter', seed: 1.5 })).toThrow();
+  });
+
+  it('jitter_negative_amount_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'jitter', amount: -1 })).toThrow();
+  });
+
+  it('jitter_bad_axis_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'jitter', axis: 'z' })).toThrow();
+  });
+
+  it('jitter_json_roundtrip_equivalent', () => {
+    const t = { kind: 'jitter', axis: 'both', xField: 'dx', yField: 'dy', amount: 2, seed: 7 };
+    expect(TransformSchema.parse(JSON.parse(JSON.stringify(t)))).toEqual(t);
+  });
+});

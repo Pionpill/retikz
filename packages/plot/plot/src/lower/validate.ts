@@ -62,27 +62,52 @@ export const collectUserSourceFields = (spec: PlotSpec): Set<string> => {
   // transform 输入字段进 strict 集；派生输出字段名先收集，最后统一剔除（即便被 mark encoding 引用）
   const derivedOutputs = new Set<string>();
   for (const transform of spec.transform ?? []) {
-    if (transform.kind === PlotTransform.Sort) {
-      fields.add(transform.field);
-    } else if (transform.kind === PlotTransform.Stack) {
-      fields.add(transform.y);
-      if (transform.x !== undefined) fields.add(transform.x);
-      if (transform.groupBy !== undefined) fields.add(transform.groupBy);
-      derivedOutputs.add(transform.startField ?? 'y0');
-      derivedOutputs.add(transform.endField ?? 'y1');
-    } else if (transform.kind === PlotTransform.Bin) {
-      // 输入：被分箱字段 + 被规约字段；输出（start/end/value）剔除
-      fields.add(transform.field);
-      if (transform.reduceField !== undefined) fields.add(transform.reduceField);
-      const out = binOutputFields(transform);
-      derivedOutputs.add(out.startField);
-      derivedOutputs.add(out.endField);
-      derivedOutputs.add(out.valueField);
-    } else {
-      // aggregate —— 输入：groupBy 各键 + 被规约字段；输出（as）剔除
-      for (const key of transform.groupBy) fields.add(key);
-      if (transform.field !== undefined) fields.add(transform.field);
-      derivedOutputs.add(aggregateOutputField(transform));
+    switch (transform.kind) {
+      case PlotTransform.Sort:
+        fields.add(transform.field);
+        break;
+      case PlotTransform.Stack:
+        fields.add(transform.y);
+        if (transform.x !== undefined) fields.add(transform.x);
+        if (transform.groupBy !== undefined) fields.add(transform.groupBy);
+        derivedOutputs.add(transform.startField ?? 'y0');
+        derivedOutputs.add(transform.endField ?? 'y1');
+        break;
+      case PlotTransform.Bin: {
+        // 输入：被分箱字段 + 被规约字段；输出（start/end/value）剔除
+        fields.add(transform.field);
+        if (transform.reduceField !== undefined) fields.add(transform.reduceField);
+        const out = binOutputFields(transform);
+        derivedOutputs.add(out.startField);
+        derivedOutputs.add(out.endField);
+        derivedOutputs.add(out.valueField);
+        break;
+      }
+      case PlotTransform.Aggregate:
+        // 输入：groupBy 各键 + 被规约字段；输出（as）剔除
+        for (const key of transform.groupBy) fields.add(key);
+        if (transform.field !== undefined) fields.add(transform.field);
+        derivedOutputs.add(aggregateOutputField(transform));
+        break;
+      case PlotTransform.Normalize:
+        // 输入：被归一字段 + groupBy 各键；as 设则为派生输出（剔除），缺省原位覆盖 field（field 仍是用户源、不剔除）
+        fields.add(transform.field);
+        if (transform.groupBy !== undefined) for (const key of transform.groupBy) fields.add(key);
+        if (transform.as !== undefined) derivedOutputs.add(transform.as);
+        break;
+      case PlotTransform.DeriveInterval:
+        // 输入：from / startFrom / endFrom（被读取的源字段）；输出（startField/endField）剔除
+        if (transform.from !== undefined) fields.add(transform.from);
+        if (transform.startFrom !== undefined) fields.add(transform.startFrom);
+        if (transform.endFrom !== undefined) fields.add(transform.endFrom);
+        derivedOutputs.add(transform.startField ?? 'y0');
+        derivedOutputs.add(transform.endField ?? 'y1');
+        break;
+      case PlotTransform.Jitter:
+        // 被抖动的连续数值字段（原位覆盖、读+写同字段）是用户源字段，须进 strict 集；无派生新字段
+        if (transform.axis === undefined || transform.axis === 'x' || transform.axis === 'both') fields.add(transform.xField ?? 'x');
+        if (transform.axis === 'y' || transform.axis === 'both') fields.add(transform.yField ?? 'y');
+        break;
     }
   }
   // 派生输出字段（transform 产出、用户 model 不会声明）不进 strict 集——即便被 mark encoding / x0Field 等引用

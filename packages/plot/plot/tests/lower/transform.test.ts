@@ -270,3 +270,139 @@ describe('applyAggregate (alpha.12 ADR-01)', () => {
     expect(nb).toMatchObject({ y0: 3, y1: 8 });
   });
 });
+
+// alpha.12 ADR-02：normalize（组内百分比归一化，保行数）
+describe('applyNormalize (alpha.12 ADR-02)', () => {
+  const REVENUE: Array<ExternalRow> = [
+    { quarter: 'Q1', product: 'A', amount: 3 },
+    { quarter: 'Q1', product: 'B', amount: 1 },
+    { quarter: 'Q2', product: 'A', amount: 5 },
+    { quarter: 'Q2', product: 'B', amount: 5 },
+  ];
+
+  it('normalize_group_share_percent', () => {
+    const out = applyTransforms(REVENUE, [{ kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' }]);
+    // Q1 总 4 → A 75, B 25；Q2 总 10 → A 50, B 50；原 amount 保留
+    expect(out[0]).toMatchObject({ amount: 3, share: 75 });
+    expect(out[1]).toMatchObject({ amount: 1, share: 25 });
+    expect(out[2]).toMatchObject({ share: 50 });
+    expect(out[3]).toMatchObject({ share: 50 });
+    // 每组 share 之和 = 100
+    expect(out.filter(r => r.quarter === 'Q1').reduce((a, r) => a + (r.share as number), 0)).toBe(100);
+  });
+
+  it('normalize_fraction_default', () => {
+    const out = applyTransforms(REVENUE, [{ kind: 'normalize', field: 'amount', groupBy: ['quarter'], as: 'frac' }]);
+    expect(out[0].frac).toBeCloseTo(0.75, 9);
+  });
+
+  it('normalize_overwrite_in_place', () => {
+    const out = applyTransforms([{ g: 'x', v: 2 }, { g: 'x', v: 2 }], [{ kind: 'normalize', field: 'v', groupBy: ['g'] }]);
+    // as 缺省 → 原位覆盖 v
+    expect(out[0].v).toBeCloseTo(0.5, 9);
+  });
+
+  it('normalize_global_when_no_groupby', () => {
+    const out = applyTransforms([{ v: 1 }, { v: 3 }], [{ kind: 'normalize', field: 'v', basis: 'percent', as: 's' }]);
+    // 全行单组：总 4 → 25, 75
+    expect(out.map(r => r.s)).toEqual([25, 75]);
+  });
+
+  it('normalize_zero_group_sum_no_nan', () => {
+    const out = applyTransforms([{ g: 'z', v: 0 }, { g: 'z', v: 0 }], [{ kind: 'normalize', field: 'v', groupBy: ['g'], as: 's' }]);
+    // 组和为 0 → share 0（不产 NaN / Infinity）
+    expect(out.every(r => r.s === 0)).toBe(true);
+  });
+
+  // 交互：normalize → stack = 百分比堆叠（每组 y1 上界 = 100）
+  it('normalize_then_stack_percentage_stacking', () => {
+    const out = applyTransforms(REVENUE, [
+      { kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' },
+      { kind: 'stack', x: 'quarter', y: 'share', groupBy: 'product' },
+    ]);
+    // 每个 quarter 组最终 y1 上界 = 100
+    for (const q of ['Q1', 'Q2']) {
+      const top = Math.max(...out.filter(r => r.quarter === q).map(r => r.y1 as number));
+      expect(top).toBeCloseTo(100, 9);
+    }
+  });
+});
+
+// alpha.12 ADR-02：derive-interval（单行派生区间，保行数）
+describe('applyDeriveInterval (alpha.12 ADR-02)', () => {
+  it('derive_interval_two_field', () => {
+    const tasks = [{ task: 'A', start: 1, end: 5 }, { task: 'B', start: 3, end: 9 }];
+    const out = applyTransforms(tasks, [{ kind: 'derive-interval', startFrom: 'start', endFrom: 'end' }]);
+    expect(out.length).toBe(2);
+    expect(out[0]).toMatchObject({ y0: 1, y1: 5 });
+    expect(out[1]).toMatchObject({ y0: 3, y1: 9 });
+  });
+
+  it('derive_interval_from_baseline', () => {
+    const out = applyTransforms([{ v: 8 }], [{ kind: 'derive-interval', from: 'v', baseline: 2 }]);
+    expect(out[0]).toMatchObject({ y0: 2, y1: 8 });
+  });
+
+  it('derive_interval_custom_fields', () => {
+    const out = applyTransforms([{ s: 1, e: 4 }], [{ kind: 'derive-interval', startFrom: 's', endFrom: 'e', startField: 'lo', endField: 'hi' }]);
+    expect(out[0]).toMatchObject({ lo: 1, hi: 4 });
+  });
+
+  it('derive_interval_no_source_fail_loud', () => {
+    expect(() => applyTransforms([{ v: 1 }], [{ kind: 'derive-interval' }])).toThrow(/from|startFrom|endFrom/);
+  });
+
+  // derive-interval（单行）vs stack（跨行累积）产不同 y0/y1
+  it('derive_interval_vs_stack_distinct', () => {
+    const rows = [{ x: 'a', v: 3 }, { x: 'a', v: 5 }];
+    const derived = applyTransforms(rows, [{ kind: 'derive-interval', from: 'v' }]);
+    const stacked = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v' }]);
+    // derive：每行独立 [0,v]；stack：跨行累积 [0,3],[3,8]
+    expect(derived.map(r => [r.y0, r.y1])).toEqual([[0, 3], [0, 5]]);
+    expect(stacked.map(r => [r.y0, r.y1])).toEqual([[0, 3], [3, 8]]);
+  });
+});
+
+// alpha.12 ADR-02：jitter（确定性位置抖动，保行数）
+describe('applyJitter (alpha.12 ADR-02)', () => {
+  const SAMPLES: Array<ExternalRow> = [{ dose: 1, r: 10 }, { dose: 1, r: 12 }, { dose: 2, r: 8 }];
+
+  it('jitter_deterministic_same_seed', () => {
+    const op = { kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 42 } as const;
+    const a = applyTransforms(SAMPLES, [op]);
+    const b = applyTransforms(SAMPLES, [op]);
+    expect(a.map(r => r.dose)).toEqual(b.map(r => r.dose));
+    // 偏移在 ±amount 内
+    a.forEach((r, i) => expect(Math.abs((r.dose as number) - (SAMPLES[i].dose as number))).toBeLessThanOrEqual(0.3 + 1e-9));
+  });
+
+  it('jitter_different_seed_differs', () => {
+    const a = applyTransforms(SAMPLES, [{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 1 }]);
+    const b = applyTransforms(SAMPLES, [{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 2 }]);
+    expect(a.map(r => r.dose)).not.toEqual(b.map(r => r.dose));
+  });
+
+  it('jitter_preserves_row_count_and_other_fields', () => {
+    const out = applyTransforms(SAMPLES, [{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 5 }]);
+    expect(out.length).toBe(SAMPLES.length);
+    // 非抖字段 r 不变
+    expect(out.map(r => r.r)).toEqual(SAMPLES.map(r => r.r));
+  });
+
+  it('jitter_amount_zero_is_identity', () => {
+    const out = applyTransforms(SAMPLES, [{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 0, seed: 9 }]);
+    expect(out.map(r => r.dose)).toEqual(SAMPLES.map(r => r.dose));
+  });
+
+  it('jitter_both_axes', () => {
+    const out = applyTransforms([{ x: 0, y: 0 }], [{ kind: 'jitter', axis: 'both', amount: 1, seed: 3 }]);
+    expect(typeof out[0].x).toBe('number');
+    expect(typeof out[0].y).toBe('number');
+  });
+
+  it('jitter_non_finite_value_skipped', () => {
+    const out = applyTransforms([{ dose: 'NA', r: 1 }], [{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 1, seed: 0 }]);
+    // 非有限值保持原值（不产 NaN）
+    expect(out[0].dose).toBe('NA');
+  });
+});

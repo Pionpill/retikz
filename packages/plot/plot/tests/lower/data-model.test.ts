@@ -213,6 +213,48 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
     const fields = collectUserSourceFields(spec);
     expect(fields.has('sumRevenue')).toBe(false);
   });
+
+  // alpha.12 ADR-02：normalize / derive-interval / jitter 输入字段进、派生输出不进
+  it('normalize_inputs_in_as_out', () => {
+    const spec = buildSpec({
+      transform: [{ kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' }],
+      marks: [{ type: 'interval', encoding: { x: { field: 'quarter' }, y: { field: 'share' } } }],
+    });
+    const fields = collectUserSourceFields(spec);
+    expect(fields.has('amount')).toBe(true);
+    expect(fields.has('quarter')).toBe(true);
+    expect(fields.has('share')).toBe(false); // 派生输出
+  });
+
+  it('normalize_overwrite_keeps_field', () => {
+    // as 缺省（原位覆盖）→ field 仍是用户源字段（被读取）
+    const spec = buildSpec({
+      transform: [{ kind: 'normalize', field: 'amount', groupBy: ['quarter'] }],
+      marks: [{ type: 'interval', encoding: { x: { field: 'quarter' }, y: { field: 'amount' } } }],
+    });
+    expect(collectUserSourceFields(spec).has('amount')).toBe(true);
+  });
+
+  it('derive_interval_inputs_in_outputs_out', () => {
+    const spec = buildSpec({
+      transform: [{ kind: 'derive-interval', startFrom: 'start', endFrom: 'end', startField: 'lo', endField: 'hi' }],
+      marks: [{ type: 'interval', y0Field: 'lo', y1Field: 'hi', encoding: { x: { field: 'task' }, y: { field: 'end' } } }],
+    });
+    const fields = collectUserSourceFields(spec);
+    expect(fields.has('start')).toBe(true);
+    expect(fields.has('end')).toBe(true);
+    expect(fields.has('lo')).toBe(false);
+    expect(fields.has('hi')).toBe(false);
+  });
+
+  it('jitter_field_enters_source_set', () => {
+    // jitter 原位覆盖被抖连续数值字段（读+写同字段）→ 是用户源字段，须进 strict 集
+    const spec = buildSpec({
+      transform: [{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 1 }],
+      marks: [{ type: 'point', encoding: { x: { field: 'dose' }, y: { field: 'response' } } }],
+    });
+    expect(collectUserSourceFields(spec).has('dose')).toBe(true);
+  });
 });
 
 describe('resolveFieldTypes — 类型解析 + strict 校验（ADR-01）', () => {

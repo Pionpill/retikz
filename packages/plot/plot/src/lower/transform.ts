@@ -1,5 +1,16 @@
 import { scaleLinear } from 'd3-scale';
-import { type AggregateTransform, type BinTransform, type ExternalRow, PlotTransform, type SortTransform, type StackTransform, type Transform } from '../ir';
+import {
+  type AggregateTransform,
+  type BinTransform,
+  type DeriveIntervalTransform,
+  type ExternalRow,
+  type JitterTransform,
+  type NormalizeTransform,
+  PlotTransform,
+  type SortTransform,
+  type StackTransform,
+  type Transform,
+} from '../ir';
 import { compareByPath, isFiniteNumber, resolveFieldPath } from './field';
 import { SOURCE_INDICES, readSourceIndex } from './provenance';
 import { inferCategoryDomain } from './scale';
@@ -236,9 +247,111 @@ const applyAggregate = (rows: Array<ExternalRow>, op: AggregateTransform): Array
   });
 };
 
+/** derive-interval 默认输出字段名（对齐 interval y0Field / y1Field、sector startField / endField 消费方） */
+const DEFAULT_DERIVE_START_FIELD = 'y0';
+const DEFAULT_DERIVE_END_FIELD = 'y1';
+/** jitter 默认被抖字段名（连续数值位置字段） */
+const DEFAULT_JITTER_X_FIELD = 'x';
+const DEFAULT_JITTER_Y_FIELD = 'y';
+
+/**
+ * 确定性 PRNG：mulberry32（32 位、无依赖、单整数 seed 完全决定输出序列）
+ * @description 同 seed 复现同序列 → vanilla SSR 与浏览器 hydration 抖出逐字节相同坐标（守 locator parity / 确定性）。
+ */
+const mulberry32 = (seed: number): (() => number) => {
+  let state = seed | 0;
+  return () => {
+    state = (state + 0x6d2b79f5) | 0;
+    let t = Math.imul(state ^ (state >>> 15), state | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+};
+
+/**
+ * normalize：同组内各行 field / 组总和 → 组内占比（保行数）
+ * @description groupBy 缺省 → 全行单组（对全局总和归一化）；basis percent → ×100；组和为 0 → 该组输出 0（不产 NaN）。
+ *   as 缺省原位覆盖 field、否则写新字段。先 normalize 再 stack 即百分比堆叠（链顺序组合）。
+ */
+const applyNormalize = (rows: Array<ExternalRow>, op: NormalizeTransform): Array<ExternalRow> => {
+  const outField = op.as ?? op.field;
+  const scale = op.basis === 'percent' ? 100 : 1;
+  // groupBy 复合键分组求和（缺省全行一组）
+  const sums = new Map<string, number>();
+  const keyOf = (row: ExternalRow): string =>
+    op.groupBy === undefined ? '' : JSON.stringify(op.groupBy.map(field => resolveFieldPath(row, field) ?? null));
+  for (const row of rows) {
+    const value = resolveFieldPath(row, op.field);
+    const segment = isFiniteNumber(value) ? value : 0;
+    const key = keyOf(row);
+    sums.set(key, (sums.get(key) ?? 0) + segment);
+  }
+  return rows.map(row => {
+    const value = resolveFieldPath(row, op.field);
+    const segment = isFiniteNumber(value) ? value : 0;
+    const sum = sums.get(keyOf(row)) ?? 0;
+    const share = sum === 0 ? 0 : (segment / sum) * scale;
+    return { ...row, [outField]: share };
+  });
+};
+
+/**
+ * derive-interval：每行独立算 [start, end]（保行数；与 stack 跨行累积语义正交）
+ * @description 两字段模式（startFrom + endFrom 皆设）优先；否则 from 模式 [baseline, from 值]（baseline 缺省 0）。
+ *   皆无来源 → fail-loud。非有限值回退 baseline（同 stack 的非有限按 0 计口径）。输出 startField/endField 缺省 y0/y1。
+ */
+const applyDeriveInterval = (rows: Array<ExternalRow>, op: DeriveIntervalTransform): Array<ExternalRow> => {
+  const startField = op.startField ?? DEFAULT_DERIVE_START_FIELD;
+  const endField = op.endField ?? DEFAULT_DERIVE_END_FIELD;
+  const baseline = op.baseline ?? 0;
+  const twoField = op.startFrom !== undefined && op.endFrom !== undefined;
+  if (!twoField && op.from === undefined) {
+    throw new Error('lowerPlots: derive-interval transform requires either `from` (baseline→value) or both `startFrom` and `endFrom`');
+  }
+  const finiteOr = (value: unknown, fallback: number): number => (isFiniteNumber(value) ? value : fallback);
+  return rows.map(row => {
+    if (twoField) {
+      const start = finiteOr(resolveFieldPath(row, op.startFrom as string), baseline);
+      const end = finiteOr(resolveFieldPath(row, op.endFrom as string), baseline);
+      return { ...row, [startField]: start, [endField]: end };
+    }
+    const end = finiteOr(resolveFieldPath(row, op.from as string), baseline);
+    return { ...row, [startField]: baseline, [endField]: end };
+  });
+};
+
+/**
+ * jitter：给连续数值位置字段加确定性伪随机偏移（v1 仅数据空间 pre-scale；保行数）
+ * @description 偏移 = (rng()·2−1)·amount（均匀 [-amount,+amount]）加在字段值上；rng 由 seed + mulberry32 重建、按行序推进
+ *   → 同 spec + 同数据 → 同抖动序列（SSR / hydration 同坐标）。axis 决定抖 xField / yField / 两者；非有限值跳过偏移（仍消耗一次抽样保序）。
+ */
+const applyJitter = (rows: Array<ExternalRow>, op: JitterTransform): Array<ExternalRow> => {
+  const axis = op.axis ?? 'x';
+  const amount = op.amount ?? 1;
+  const seed = op.seed ?? 0;
+  const xField = op.xField ?? DEFAULT_JITTER_X_FIELD;
+  const yField = op.yField ?? DEFAULT_JITTER_Y_FIELD;
+  const jitterX = axis === 'x' || axis === 'both';
+  const jitterY = axis === 'y' || axis === 'both';
+  const rng = mulberry32(seed);
+  const offset = (): number => (rng() * 2 - 1) * amount;
+  // 抖字段值：非有限保持原值（仍消耗一次抽样以维持行序驱动的确定性）
+  const perturb = (row: ExternalRow, field: string): unknown => {
+    const delta = offset();
+    const value = resolveFieldPath(row, field);
+    return isFiniteNumber(value) ? value + delta : value;
+  };
+  return rows.map(row => {
+    const next: ExternalRow = { ...row };
+    if (jitterX) next[xField] = perturb(row, xField);
+    if (jitterY) next[yField] = perturb(row, yField);
+    return next;
+  });
+};
+
 /**
  * 按声明顺序折叠应用一串 transform（rows → rows）
- * @description 纯函数：sort / stack 保行数（仅追加标量字段），bin / aggregate 改行数（N → M）；数据值不进 IR。空 / 省略 → 原样返回。
+ * @description 纯函数：sort / stack / normalize / derive-interval / jitter 保行数，bin / aggregate 改行数（N → M）；数据值不进 IR。空 / 省略 → 原样返回。
  */
 export const applyTransforms = (rows: Array<ExternalRow>, ops?: Array<Transform>): Array<ExternalRow> => {
   if (!ops || ops.length === 0) return rows;
@@ -252,6 +365,12 @@ export const applyTransforms = (rows: Array<ExternalRow>, ops?: Array<Transform>
         return applyBin(acc, op);
       case PlotTransform.Aggregate:
         return applyAggregate(acc, op);
+      case PlotTransform.Normalize:
+        return applyNormalize(acc, op);
+      case PlotTransform.DeriveInterval:
+        return applyDeriveInterval(acc, op);
+      case PlotTransform.Jitter:
+        return applyJitter(acc, op);
     }
   }, rows);
 };
