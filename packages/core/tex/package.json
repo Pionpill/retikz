@@ -1,7 +1,7 @@
 {
-  "name": "@retikz/tex-react",
+  "name": "@retikz/tex",
   "version": "0.4.0-alpha.5",
-  "description": "React bindings for @retikz/tex: <Math> sugar + useLowerMath hook (MathJax startup) for LaTeX math in @retikz/react.",
+  "description": "retikz tex: LaTeX math via MathJax SVG, lowered to renderer-agnostic glyph paths for @retikz/core.",
   "type": "module",
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",
@@ -9,13 +9,14 @@
     "tikz",
     "latex",
     "math",
-    "react"
+    "mathjax",
+    "svg"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Pionpill/retikz.git",
-    "directory": "packages/tex/react"
+    "directory": "packages/core/tex"
   },
   "bugs": {
     "url": "https://github.com/Pionpill/retikz/issues"
@@ -56,22 +57,20 @@
     "test": "vitest",
     "test:run": "vitest run"
   },
-  "peerDependencies": {
-    "react": ">=18",
-    "react-dom": ">=18"
-  },
   "dependencies": {
-    "@retikz/core": "workspace:*",
-    "@retikz/react": "workspace:*",
-    "@retikz/tex": "workspace:*"
+    "@retikz/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "mathjax-full": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "mathjax-full": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "@vitejs/plugin-react": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:",
+    "mathjax-full": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",

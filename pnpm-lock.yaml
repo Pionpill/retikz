@@ -248,6 +248,9 @@ importers:
       '@retikz/react':
         specifier: workspace:*
         version: link:../../packages/core/react
+      '@retikz/tex':
+        specifier: workspace:*
+        version: link:../../packages/core/tex
       acorn:
         specifier: ^8.16.0
         version: 8.16.0
@@ -281,6 +284,9 @@ importers:
       lucide-react:
         specifier: 'catalog:'
         version: 1.11.0(react@18.2.0)
+      mathjax-full:
+        specifier: 'catalog:'
+        version: 3.2.2
       radix-ui:
         specifier: 'catalog:'
         version: 1.4.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -518,6 +524,31 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
 
+  packages/core/tex:
+    dependencies:
+      '@retikz/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.6.0
+      mathjax-full:
+        specifier: 'catalog:'
+        version: 3.2.2
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4)
+      vite-plugin-dts:
+        specifier: 'catalog:'
+        version: 4.5.4(@types/node@25.6.0)(rollup@4.60.2)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+
   packages/core/vanilla:
     dependencies:
       '@retikz/core':
@@ -674,74 +705,6 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 4.4.3
-
-  packages/tex/react:
-    dependencies:
-      '@retikz/core':
-        specifier: workspace:*
-        version: link:../../core/core
-      '@retikz/react':
-        specifier: workspace:*
-        version: link:../../core/react
-      '@retikz/tex':
-        specifier: workspace:*
-        version: link:../tex
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 25.6.0
-      '@types/react':
-        specifier: 'catalog:'
-        version: 18.2.79
-      '@types/react-dom':
-        specifier: 'catalog:'
-        version: 18.2.25
-      '@vitejs/plugin-react':
-        specifier: 'catalog:'
-        version: 6.0.1(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
-      react:
-        specifier: 'catalog:'
-        version: 18.2.0
-      react-dom:
-        specifier: 'catalog:'
-        version: 18.2.0(react@18.2.0)
-      typescript:
-        specifier: 'catalog:'
-        version: 6.0.3
-      vite:
-        specifier: 'catalog:'
-        version: 8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4)
-      vite-plugin-dts:
-        specifier: 'catalog:'
-        version: 4.5.4(@types/node@25.6.0)(rollup@4.60.2)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
-
-  packages/tex/tex:
-    dependencies:
-      '@retikz/core':
-        specifier: workspace:*
-        version: link:../../core/core
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 25.6.0
-      mathjax-full:
-        specifier: 'catalog:'
-        version: 3.2.2
-      typescript:
-        specifier: 'catalog:'
-        version: 6.0.3
-      vite:
-        specifier: 'catalog:'
-        version: 8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4)
-      vite-plugin-dts:
-        specifier: 'catalog:'
-        version: 4.5.4(@types/node@25.6.0)(rollup@4.60.2)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
 
 packages:
 
