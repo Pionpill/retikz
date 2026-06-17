@@ -233,6 +233,8 @@ export type {
   CompileOptions,
   CompileWarning,
   CompileWarningCodeValue,
+  LowerMath,
+  LoweredMath,
 } from './compile';
 export { computeLayout, fallbackMeasurer, compileToScene, CompileWarningCode, formatCompileWarning } from './compile';
 
