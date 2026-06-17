@@ -112,6 +112,7 @@
     "dataProcessing": "Processing",
     "dataChannel": "Data Channels",
     "grammar": "Grammar",
+    "grammarTransform": "Transforms",
     "grammarScale": "Scales",
     "grammarCoordinate": "Coordinates",
     "grammarCoordinate2d": "2D Coordinates",

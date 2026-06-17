@@ -112,6 +112,7 @@
     "dataProcessing": "数据处理",
     "dataChannel": "数据通道",
     "grammar": "图形语法",
+    "grammarTransform": "数据变换",
     "grammarScale": "比例尺",
     "grammarCoordinate": "坐标系",
     "grammarCoordinate2d": "二维坐标系",
