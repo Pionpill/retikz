@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { type ExternalDatasets, type PlotSpec } from '@retikz/plot';
-import { BarMark, Plot } from '../src';
+import { IntervalMark, Plot } from '../src';
 
 /**
  * ADR-01 P1 评审回归：<Plot> 必须把新增的 provenance / datumProvenance / datumIdField
@@ -71,7 +71,7 @@ describe('<Plot dataTransforms> 快捷数据变换直传 (alpha.12)', () => {
         height={300}
         dataTransforms={[{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }]}
       >
-        <BarMark x="region" y="total" />
+        <IntervalMark x="region" y="total" />
       </Plot>,
     );
     expect((svg.match(/<rect/g) ?? []).length).toBe(2);
@@ -81,7 +81,7 @@ describe('<Plot dataTransforms> 快捷数据变换直传 (alpha.12)', () => {
     // dataTransforms（直传）拼在 <Transform> 子组件之前；与子组件混用同一管线（此处仅直传一条 aggregate）
     const svg = renderToStaticMarkup(
       <Plot data={orders} width={480} height={300} dataTransforms={[{ kind: 'aggregate', groupBy: ['region'], reduce: 'count', as: 'n' }]}>
-        <BarMark x="region" y="n" />
+        <IntervalMark x="region" y="n" />
       </Plot>,
     );
     // count：N=2、S=1 → 仍 2 组 2 柱

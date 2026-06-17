@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '@retikz/plot';
 import { buildPlotSpec, decorateDefaultGuides } from '../../src/components/build-plot-spec';
 import { Axis, Legend } from '../../src/components/guides';
-import { AreaMark, BarMark, LineMark, PointMark, RectMark, RuleMark } from '../../src/components/marks';
+import { IntervalMark, PathMark, PointMark, ReferenceMark, RegionMark } from '../../src/components/marks';
 import { Scale } from '../../src/components/scales';
 import { Transform } from '../../src/components/transform';
 
 describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P1）', () => {
   it('有 model 时省略 AUTO 位置 scale 绑定（交给 expand 派生）', () => {
-    const spec = buildPlotSpec(<LineMark x="month" y="revenue" />, '__plot', {
+    const spec = buildPlotSpec(<PathMark x="month" y="revenue" />, '__plot', {
       model: [{ name: 'month', type: 'temporal' }, { name: 'revenue', type: 'continuous' }],
     });
     expect(spec.scales).toEqual([]);
@@ -17,13 +17,13 @@ describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P
   });
 
   it('无 model 时沿用 AUTO 绑定（向后兼容）', () => {
-    const spec = buildPlotSpec(<LineMark x="month" y="revenue" />, '__plot');
+    const spec = buildPlotSpec(<PathMark x="month" y="revenue" />, '__plot');
     expect(spec.coordinate).toEqual({ type: 'cartesian2D', x: '__x', y: '__y' });
     expect(spec.scales.length).toBeGreaterThan(0);
   });
 
   it('延迟位置 scale 推断时省略 AUTO 绑定（交给 lower 按数据派生）', () => {
-    const spec = buildPlotSpec(<LineMark x="month" y="revenue" />, '__plot', {
+    const spec = buildPlotSpec(<PathMark x="month" y="revenue" />, '__plot', {
       deferPositionScaleInference: true,
     });
     expect(spec.coordinate).toEqual({ type: 'cartesian2D' });
@@ -32,7 +32,7 @@ describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P
   });
 
   it('可写入 plot id 与自描述尺寸（组合 anchor / 面板尺寸）', () => {
-    const spec = buildPlotSpec(<LineMark x="month" y="revenue" />, 'panelA', {
+    const spec = buildPlotSpec(<PathMark x="month" y="revenue" />, 'panelA', {
       id: 'panelA',
       width: 320,
       height: 180,
@@ -42,7 +42,7 @@ describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P
   });
 
   it('有 model（nominal x）端到端 spec 合法', () => {
-    const spec = buildPlotSpec(<LineMark x="cat" y="revenue" />, '__plot', {
+    const spec = buildPlotSpec(<PathMark x="cat" y="revenue" />, '__plot', {
       model: [{ name: 'cat', type: 'categorical' }, { name: 'revenue', type: 'continuous' }],
     });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
@@ -51,7 +51,7 @@ describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P
   it('显式 <Scale> 可覆盖 model 的单个位置维度，其余维度继续派生', () => {
     const spec = buildPlotSpec(
       <>
-        <LineMark x="month" y="revenue" />
+        <PathMark x="month" y="revenue" />
         <Scale dimension="x" type="time" />
       </>,
       '__plot',
@@ -66,7 +66,7 @@ describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P
 
 describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
   it('单 line：装配出等价手写 PlotSpec（薄 Plot：无默认 guides）', () => {
-    const spec = buildPlotSpec(<LineMark x="month" y="revenue" order="month" />, '__plot');
+    const spec = buildPlotSpec(<PathMark x="month" y="revenue" order="month" />, '__plot');
     const expected: PlotSpec = {
       namespace: 'plot',
       type: 'plot',
@@ -76,7 +76,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
         { type: 'linear', name: '__y' },
       ],
       coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
-      marks: [{ type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
       guides: [],
     };
     expect(spec).toEqual(expected);
@@ -105,19 +105,19 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
   it('line + point 叠加：marks 两项、共享 scales/coordinate', () => {
     const spec = buildPlotSpec(
       <>
-        <LineMark x="m" y="r" />
+        <PathMark x="m" y="r" />
         <PointMark x="m" y="r" />
       </>,
       '__plot',
     );
     expect(spec.marks).toHaveLength(2);
-    expect(spec.marks[0]?.type).toBe('line');
+    expect(spec.marks[0]?.type).toBe('path');
     expect(spec.marks[1]?.type).toBe('point');
     expect(spec.coordinate).toEqual({ type: 'cartesian2D', x: '__x', y: '__y' });
   });
 
   it('装配产物是合法 IR（过 PlotSpecSchema）', () => {
-    const spec = buildPlotSpec(<LineMark x="m" y="r" />, '__plot');
+    const spec = buildPlotSpec(<PathMark x="m" y="r" />, '__plot');
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
@@ -125,7 +125,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     const spec = buildPlotSpec(
       <>
         hello
-        <LineMark x="m" y="r" />
+        <PathMark x="m" y="r" />
       </>,
       '__plot',
     );
@@ -140,14 +140,14 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
 
   // alpha.10：薄 Plot guide 装配（无默认 / 显式）
   it('dsl_no_axis_no_guides：无 <Axis> → guides 为空（薄 Plot 不补默认轴）', () => {
-    const spec = buildPlotSpec(<LineMark x="m" y="r" />, '__plot');
+    const spec = buildPlotSpec(<PathMark x="m" y="r" />, '__plot');
     expect(spec.guides).toEqual([]);
   });
 
   it('dsl_explicit_axis_only：写 <Axis dimension="x"/> → 仅该轴（显式所得、无默认）', () => {
     const spec = buildPlotSpec(
       <>
-        <LineMark x="m" y="r" />
+        <PathMark x="m" y="r" />
         <Axis dimension="x" />
       </>,
       '__plot',
@@ -158,7 +158,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
   it('dsl_axis_fields：<Axis> 字段逐一落位（含 grid）', () => {
     const spec = buildPlotSpec(
       <>
-        <LineMark x="m" y="r" />
+        <PathMark x="m" y="r" />
         <Axis dimension="y" tickCount={5} tickLabels={false} grid id="yA" />
       </>,
       '__plot',
@@ -171,7 +171,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
   it('dsl_axis_with_grid：<Axis dimension="y" grid/> → grid:true', () => {
     const spec = buildPlotSpec(
       <>
-        <LineMark x="m" y="r" />
+        <PathMark x="m" y="r" />
         <Axis dimension="y" grid />
       </>,
       '__plot',
@@ -180,14 +180,14 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
   });
 
   it('dsl_built_guides_pass_schema：默认装配产物过 PlotSpecSchema', () => {
-    const spec = buildPlotSpec(<LineMark x="m" y="r" />, '__plot');
+    const spec = buildPlotSpec(<PathMark x="m" y="r" />, '__plot');
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
   it('dsl_axis_bad_dim_type：非法 dimension 经 PlotSpecSchema 被拒', () => {
     const spec = buildPlotSpec(
       <>
-        <LineMark x="m" y="r" />
+        <PathMark x="m" y="r" />
         {/* @ts-expect-error 故意传非法 dimension，验证装配产物被 schema 拒 */}
         <Axis dimension="z" />
       </>,
@@ -253,7 +253,7 @@ describe('buildPlotSpec Axis scale shortcut', () => {
   it('builds the same dimension scale as <Scale>', () => {
     const spec = buildPlotSpec(
       <>
-        <LineMark x="m" y="r" />
+        <PathMark x="m" y="r" />
         <Axis dimension="y" scale="log" />
       </>,
       '__plot',
@@ -276,9 +276,9 @@ describe('buildPlotSpec Axis scale shortcut', () => {
   });
 });
 
-describe('buildPlotSpec ADR-07（BarMark / color / series / stack / Scale）', () => {
+describe('buildPlotSpec ADR-07（IntervalMark / color / series / stack / Scale）', () => {
   it('barmark_equivalence_band_x', () => {
-    const spec = buildPlotSpec(<BarMark x="month" y="revenue" />, '__plot');
+    const spec = buildPlotSpec(<IntervalMark x="month" y="revenue" />, '__plot');
     const expected: PlotSpec = {
       namespace: 'plot',
       type: 'plot',
@@ -313,24 +313,24 @@ describe('buildPlotSpec ADR-07（BarMark / color / series / stack / Scale）', (
   });
 
   it('bar_series_dodge_default_and_color_eq_series', () => {
-    const spec = buildPlotSpec(<BarMark x="month" y="revenue" series="product" />, '__plot');
+    const spec = buildPlotSpec(<IntervalMark x="month" y="revenue" series="product" />, '__plot');
     const mark = spec.marks[0];
-    expect(mark).toMatchObject({ type: 'interval', series: 'product', arrangement: 'dodge' });
+    expect(mark).toMatchObject({ type: 'interval', series: 'product', bounds: { x: { kind: 'band', group: 'product' } } });
     // color 缺省取 series
     expect(mark.encoding.color).toEqual({ field: 'product', scale: '__color' });
     expect(spec.transform).toBeUndefined();
   });
 
   it('bar_stack_assembles_transform', () => {
-    const spec = buildPlotSpec(<BarMark x="month" y="revenue" series="product" stack />, '__plot');
-    expect(spec.marks[0]).toMatchObject({ type: 'interval', series: 'product', arrangement: 'stack' });
+    const spec = buildPlotSpec(<IntervalMark x="month" y="revenue" series="product" stack />, '__plot');
+    expect(spec.marks[0]).toMatchObject({ type: 'interval', series: 'product', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } } });
     expect(spec.transform).toEqual([{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }]);
   });
 
   it('scale_x_time', () => {
     const spec = buildPlotSpec(
       <>
-        <LineMark x="date" y="v" />
+        <PathMark x="date" y="v" />
         <Scale dimension="x" type="time" />
       </>,
       '__plot',
@@ -342,7 +342,7 @@ describe('buildPlotSpec ADR-07（BarMark / color / series / stack / Scale）', (
     expect(
       buildPlotSpec(
         <>
-          <LineMark x="d" y="v" />
+          <PathMark x="d" y="v" />
           <Scale dimension="x" type="log" />
         </>,
         '__plot',
@@ -351,7 +351,7 @@ describe('buildPlotSpec ADR-07（BarMark / color / series / stack / Scale）', (
     expect(
       buildPlotSpec(
         <>
-          <LineMark x="d" y="v" />
+          <PathMark x="d" y="v" />
           <Scale dimension="x" type="sqrt" />
         </>,
         '__plot',
@@ -361,11 +361,11 @@ describe('buildPlotSpec ADR-07（BarMark / color / series / stack / Scale）', (
 
   it('scale_y_log_sqrt_on_value_axis', () => {
     // <Scale dimension="y"> 作用于值轴（__y，scales[1]）；缺省 linear
-    expect(buildPlotSpec(<LineMark x="d" y="v" />, '__plot').scales[1]).toEqual({ type: 'linear', name: '__y' });
+    expect(buildPlotSpec(<PathMark x="d" y="v" />, '__plot').scales[1]).toEqual({ type: 'linear', name: '__y' });
     expect(
       buildPlotSpec(
         <>
-          <LineMark x="d" y="v" />
+          <PathMark x="d" y="v" />
           <Scale dimension="y" type="log" />
         </>,
         '__plot',
@@ -386,7 +386,7 @@ describe('buildPlotSpec ADR-07（BarMark / color / series / stack / Scale）', (
     expect(() =>
       buildPlotSpec(
         <>
-          <LineMark x="d" y="v" />
+          <PathMark x="d" y="v" />
           <Scale dimension="x" type="time" />
           <Scale dimension="x" type="linear" />
         </>,
@@ -396,22 +396,22 @@ describe('buildPlotSpec ADR-07（BarMark / color / series / stack / Scale）', (
   });
 
   it('line_series_color_eq_series', () => {
-    const spec = buildPlotSpec(<LineMark x="t" y="v" series="city" order="t" />, '__plot');
-    expect(spec.marks[0]).toMatchObject({ type: 'line', series: 'city', order: 't' });
+    const spec = buildPlotSpec(<PathMark x="t" y="v" series="city" order="t" />, '__plot');
+    expect(spec.marks[0]).toMatchObject({ type: 'path', series: 'city', order: 't' });
     expect(spec.marks[0]?.encoding.color).toEqual({ field: 'city', scale: '__color' });
   });
 
   it('all_dsl_products_pass_schema', () => {
-    expect(() => PlotSpecSchema.parse(buildPlotSpec(<BarMark x="m" y="r" series="p" stack />, '__plot'))).not.toThrow();
+    expect(() => PlotSpecSchema.parse(buildPlotSpec(<IntervalMark x="m" y="r" series="p" stack />, '__plot'))).not.toThrow();
     expect(() => PlotSpecSchema.parse(buildPlotSpec(<PointMark x="m" y="r" color="c" />, '__plot'))).not.toThrow();
   });
 
   it('mixed_bar_line_band_x', () => {
-    // 混合 BarMark + LineMark → x band（BarMark 优先）
+    // 混合 IntervalMark + PathMark → x band（IntervalMark 优先）
     const spec = buildPlotSpec(
       <>
-        <BarMark x="month" y="revenue" />
-        <LineMark x="month" y="revenue" />
+        <IntervalMark x="month" y="revenue" />
+        <PathMark x="month" y="revenue" />
       </>,
       '__plot',
     );
@@ -421,8 +421,8 @@ describe('buildPlotSpec ADR-07（BarMark / color / series / stack / Scale）', (
 });
 
 describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / angle·radius）', () => {
-  it('radial_bar_equivalence：coordinate="polar2D" + <BarMark> → polar2D + band 角向 + interval mark', () => {
-    const spec = buildPlotSpec(<BarMark x="month" y="amount" color="month" />, '__plot', { coordinate: 'polar2D' });
+  it('radial_bar_equivalence：coordinate="polar2D" + <IntervalMark> → polar2D + band 角向 + interval mark', () => {
+    const spec = buildPlotSpec(<IntervalMark x="month" y="amount" color="month" />, '__plot', { coordinate: 'polar2D' });
     const expected: PlotSpec = {
       namespace: 'plot',
       type: 'plot',
@@ -439,8 +439,8 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
     expect(spec).toEqual(expected);
   });
 
-  it('pie_equivalence：coordinate="polar2D" + <BarMark angle> → polar2D + linear 角向 + stack transform + sector mark', () => {
-    const spec = buildPlotSpec(<BarMark angle="value" color="label" />, '__plot', { coordinate: 'polar2D' });
+  it('pie_equivalence：coordinate="polar2D" + <IntervalMark angle> → polar2D + linear 角向 + stack transform + interval mark', () => {
+    const spec = buildPlotSpec(<IntervalMark angle="value" color="label" />, '__plot', { coordinate: 'polar2D' });
     const expected: PlotSpec = {
       namespace: 'plot',
       type: 'plot',
@@ -452,26 +452,26 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
         { type: 'ordinal', name: '__color' },
       ],
       coordinate: { type: 'polar2D', angle: '__angle', radius: '__radius', startAngle: 0, endAngle: 360, innerRadius: 0 },
-      marks: [{ type: 'sector', encoding: { color: { field: 'label', scale: '__color' } } }],
+      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label', scale: '__color' } } }],
       guides: [],
     };
     expect(spec).toEqual(expected);
   });
 
   it('pie_color_defaults_to_angle_field：未给 color → 按 angle 值字段分类上色', () => {
-    const spec = buildPlotSpec(<BarMark angle="value" />, '__plot', { coordinate: 'polar2D' });
-    expect(spec.marks[0]).toEqual({ type: 'sector', encoding: { color: { field: 'value', scale: '__color' } } });
+    const spec = buildPlotSpec(<IntervalMark angle="value" />, '__plot', { coordinate: 'polar2D' });
+    expect(spec.marks[0]).toEqual({ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'value', scale: '__color' } } });
     expect(spec.transform).toEqual([{ kind: 'stack', y: 'value' }]);
   });
 
-  it('sector_series_orders_stack：<BarMark angle series> → stack transform 带 groupBy', () => {
-    const spec = buildPlotSpec(<BarMark angle="value" series="label" />, '__plot', { coordinate: 'polar2D' });
+  it('sector_series_orders_stack：<IntervalMark angle series> → stack transform 带 groupBy', () => {
+    const spec = buildPlotSpec(<IntervalMark angle="value" series="label" />, '__plot', { coordinate: 'polar2D' });
     expect(spec.transform).toEqual([{ kind: 'stack', y: 'value', groupBy: 'label' }]);
-    expect(spec.marks[0]).toEqual({ type: 'sector', encoding: { color: { field: 'label', scale: '__color' } } });
+    expect(spec.marks[0]).toEqual({ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label', scale: '__color' } } });
   });
 
   it('donut_inner_radius：coordinate 对象 innerRadius → 进 IR', () => {
-    const spec = buildPlotSpec(<BarMark angle="value" color="label" />, '__plot', {
+    const spec = buildPlotSpec(<IntervalMark angle="value" color="label" />, '__plot', {
       coordinate: { type: 'polar2D', innerRadius: 0.5 },
     });
     expect(spec.coordinate).toEqual({
@@ -485,7 +485,7 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
   });
 
   it('polar_angle_range_object：startAngle / endAngle 进 IR（半圆等）', () => {
-    const spec = buildPlotSpec(<BarMark angle="value" />, '__plot', {
+    const spec = buildPlotSpec(<IntervalMark angle="value" />, '__plot', {
       coordinate: { type: 'polar2D', startAngle: -90, endAngle: 90 },
     });
     expect(spec.coordinate).toMatchObject({ type: 'polar2D', startAngle: -90, endAngle: 90, innerRadius: 0 });
@@ -494,7 +494,7 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
   it('polar_explicit_scale_dimensions：angle / radius 维度分别落到 __angle / __radius', () => {
     const spec = buildPlotSpec(
       <>
-        <LineMark x="theta" y="r" order="theta" />
+        <PathMark x="theta" y="r" order="theta" />
         <Scale dimension="angle" type="point" />
         <Scale dimension="radius" type="log" />
       </>,
@@ -506,8 +506,8 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
     expect(spec.coordinate).toMatchObject({ type: 'polar2D', angle: '__angle', radius: '__radius' });
   });
 
-  it('radar_equivalence：<LineMark closed> + polar → closed line + point 角向', () => {
-    const spec = buildPlotSpec(<LineMark x="dim" y="value" closed />, '__plot', { coordinate: 'polar2D' });
+  it('radar_equivalence：<PathMark closed> + polar → closed line + point 角向', () => {
+    const spec = buildPlotSpec(<PathMark x="dim" y="value" closed />, '__plot', { coordinate: 'polar2D' });
     const expected: PlotSpec = {
       namespace: 'plot',
       type: 'plot',
@@ -517,28 +517,28 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
         { type: 'linear', name: '__radius' },
       ],
       coordinate: { type: 'polar2D', angle: '__angle', radius: '__radius', startAngle: 0, endAngle: 360, innerRadius: 0 },
-      marks: [{ type: 'line', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } } }],
+      marks: [{ type: 'path', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } } }],
       guides: [],
     };
     expect(spec).toEqual(expected);
   });
 
-  it('polar_line_equivalence：<LineMark> + polar（不闭合）→ linear 角向', () => {
-    const spec = buildPlotSpec(<LineMark x="theta" y="r" order="theta" />, '__plot', { coordinate: 'polar2D' });
+  it('polar_line_equivalence：<PathMark> + polar（不闭合）→ linear 角向', () => {
+    const spec = buildPlotSpec(<PathMark x="theta" y="r" order="theta" />, '__plot', { coordinate: 'polar2D' });
     expect(spec.scales[0]).toEqual({ type: 'linear', name: '__angle' });
-    expect(spec.marks[0]).toEqual({ type: 'line', order: 'theta', encoding: { x: { field: 'theta' }, y: { field: 'r' } } });
+    expect(spec.marks[0]).toEqual({ type: 'path', order: 'theta', encoding: { x: { field: 'theta' }, y: { field: 'r' } } });
     expect(spec.coordinate).toMatchObject({ type: 'polar2D', angle: '__angle', radius: '__radius' });
   });
 
-  it('area_mark_equivalence：<AreaMark> → area mark IR（baseline / closed 落位）', () => {
-    const spec = buildPlotSpec(<AreaMark x="t" y="v" baseline={2} closed />, '__plot', { coordinate: 'polar2D' });
-    expect(spec.marks[0]).toEqual({ type: 'area', baseline: 2, closed: true, encoding: { x: { field: 't' }, y: { field: 'v' } } });
+  it('area_mark_equivalence：<RegionMark> → area mark IR（baseline / closed 落位）', () => {
+    const spec = buildPlotSpec(<RegionMark x="t" y="v" baseline={2} closed />, '__plot', { coordinate: 'polar2D' });
+    expect(spec.marks[0]).toEqual({ type: 'region', baseline: 2, closed: true, encoding: { x: { field: 't' }, y: { field: 'v' } } });
   });
 
   it('polar_explicit_axis：写 <Axis dimension="angle"/> → guides 含该轴', () => {
     const spec = buildPlotSpec(
       <>
-        <BarMark angle="value" />
+        <IntervalMark angle="value" />
         <Axis dimension="angle" />
       </>,
       '__plot',
@@ -550,7 +550,7 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
   it('polar_radius_axis_grid：<Axis dimension="radius" grid/> 落位', () => {
     const spec = buildPlotSpec(
       <>
-        <LineMark x="dim" y="value" closed />
+        <PathMark x="dim" y="value" closed />
         <Axis dimension="angle" />
         <Axis dimension="radius" grid />
       </>,
@@ -564,22 +564,22 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
   });
 
   it('polar_default_no_guides：polar 缺省不画轴（与 cartesian 默认全套相对）', () => {
-    const spec = buildPlotSpec(<BarMark angle="value" />, '__plot', { coordinate: 'polar2D' });
+    const spec = buildPlotSpec(<IntervalMark angle="value" />, '__plot', { coordinate: 'polar2D' });
     expect(spec.guides).toEqual([]);
   });
 
   it('cartesian_regression_no_coordinate：不传 coordinate → cartesian（向后兼容）', () => {
-    const spec = buildPlotSpec(<BarMark x="month" y="revenue" />, '__plot');
+    const spec = buildPlotSpec(<IntervalMark x="month" y="revenue" />, '__plot');
     expect(spec.coordinate).toEqual({ type: 'cartesian2D', x: '__x', y: '__y' });
     expect(spec.scales[0]).toEqual({ type: 'band', name: '__x' });
   });
 
   it('all_polar_products_pass_schema：polar 装配产物全过 PlotSpecSchema', () => {
-    expect(() => PlotSpecSchema.parse(buildPlotSpec(<BarMark angle="v" color="l" />, '__plot', { coordinate: 'polar2D' }))).not.toThrow();
-    expect(() => PlotSpecSchema.parse(buildPlotSpec(<BarMark x="m" y="a" color="m" />, '__plot', { coordinate: 'polar2D' }))).not.toThrow();
-    expect(() => PlotSpecSchema.parse(buildPlotSpec(<LineMark x="d" y="v" closed />, '__plot', { coordinate: 'polar2D' }))).not.toThrow();
+    expect(() => PlotSpecSchema.parse(buildPlotSpec(<IntervalMark angle="v" color="l" />, '__plot', { coordinate: 'polar2D' }))).not.toThrow();
+    expect(() => PlotSpecSchema.parse(buildPlotSpec(<IntervalMark x="m" y="a" color="m" />, '__plot', { coordinate: 'polar2D' }))).not.toThrow();
+    expect(() => PlotSpecSchema.parse(buildPlotSpec(<PathMark x="d" y="v" closed />, '__plot', { coordinate: 'polar2D' }))).not.toThrow();
     expect(() =>
-      PlotSpecSchema.parse(buildPlotSpec(<AreaMark x="t" y="v" closed />, '__plot', { coordinate: { type: 'polar2D', innerRadius: 0.3 } })),
+      PlotSpecSchema.parse(buildPlotSpec(<RegionMark x="t" y="v" closed />, '__plot', { coordinate: { type: 'polar2D', innerRadius: 0.3 } })),
     ).not.toThrow();
   });
 });
@@ -659,7 +659,7 @@ describe('buildPlotSpec 自定义坐标系 custom（实验性，alpha.9 设计�
 // alpha.10：薄 Plot 退化 + 装饰函数抽出（供 v0.2 chart 复用）
 describe('decorateDefaultGuides（薄 Plot 装饰函数，PlotSpec 进出、框架无关）', () => {
   it('decorate_adds_cartesian_axes：cartesian2D 无 axis → 前置 x 轴 + y 轴(网格)', () => {
-    const thin = buildPlotSpec(<LineMark x="m" y="r" />, '__plot');
+    const thin = buildPlotSpec(<PathMark x="m" y="r" />, '__plot');
     expect(thin.guides).toEqual([]);
     expect(decorateDefaultGuides(thin).guides).toEqual([
       { type: 'axis', dimension: 'x' },
@@ -668,7 +668,7 @@ describe('decorateDefaultGuides（薄 Plot 装饰函数，PlotSpec 进出、框�
   });
 
   it('decorate_equivalent_to_old_default：装饰产物 = 退化前默认轴行为', () => {
-    const decorated = decorateDefaultGuides(buildPlotSpec(<BarMark x="m" y="r" />, '__plot'));
+    const decorated = decorateDefaultGuides(buildPlotSpec(<IntervalMark x="m" y="r" />, '__plot'));
     expect(decorated.guides).toEqual([
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y', grid: true },
@@ -678,7 +678,7 @@ describe('decorateDefaultGuides（薄 Plot 装饰函数，PlotSpec 进出、框�
   it('decorate_keeps_explicit_axis：已有显式 <Axis> → 原样不补', () => {
     const withAxis = buildPlotSpec(
       <>
-        <LineMark x="m" y="r" />
+        <PathMark x="m" y="r" />
         <Axis dimension="x" />
       </>,
       '__plot',
@@ -702,40 +702,42 @@ describe('decorateDefaultGuides（薄 Plot 装饰函数，PlotSpec 进出、框�
   });
 
   it('decorate_noop_polar：非 cartesian2D（polar）→ 原样返回，不补轴', () => {
-    const polar = buildPlotSpec(<BarMark angle="value" />, '__plot', { coordinate: 'polar2D' });
+    const polar = buildPlotSpec(<IntervalMark angle="value" />, '__plot', { coordinate: 'polar2D' });
     expect(decorateDefaultGuides(polar).guides).toEqual([]);
   });
 
   it('decorate_pass_schema：装饰产物过 PlotSpecSchema', () => {
-    const decorated = decorateDefaultGuides(buildPlotSpec(<LineMark x="m" y="r" />, '__plot'));
+    const decorated = decorateDefaultGuides(buildPlotSpec(<PathMark x="m" y="r" />, '__plot'));
     expect(() => PlotSpecSchema.parse(decorated)).not.toThrow();
   });
 });
 
-describe('buildPlotSpec rect mark（ADR-02 heatmap 双 band）', () => {
-  it('rect-react-build-plot-spec：扁平 props → rect IR + 双 band 推断', () => {
-    const spec = buildPlotSpec(<RectMark x="rowKey" y="colKey" color="value" />, '__plot');
+describe('buildPlotSpec heatmap interval mark（ADR-02 双 band，显式 bounds）', () => {
+  const bandBounds = { x: { kind: 'band' }, y: { kind: 'band' } } as const;
+
+  it('heatmap-react-build-plot-spec：显式双 band bounds → interval IR + 双 band 推断', () => {
+    const spec = buildPlotSpec(<IntervalMark x="rowKey" y="colKey" color="value" bounds={bandBounds} />, '__plot');
     expect(spec.marks).toEqual([
-      { type: 'rect', encoding: { x: { field: 'rowKey' }, y: { field: 'colKey' }, color: { field: 'value', scale: '__color' } } },
+      { type: 'interval', bounds: { x: { kind: 'band' }, y: { kind: 'band' } }, encoding: { x: { field: 'rowKey' }, y: { field: 'colKey' }, color: { field: 'value', scale: '__color' } } },
     ]);
-    // hasRect → x / y 双轴强制 band scale
+    // band×band bounds → x / y 双轴强制 band scale
     expect(spec.scales).toContainEqual({ type: 'band', name: '__x' });
     expect(spec.scales).toContainEqual({ type: 'band', name: '__y' });
     expect(spec.coordinate).toEqual({ type: 'cartesian2D', x: '__x', y: '__y' });
   });
 
-  it('rect 缺 color → 纯网格（无 color 编码），仍双 band', () => {
-    const spec = buildPlotSpec(<RectMark x="day" y="hour" />, '__plot');
-    expect(spec.marks[0]).toEqual({ type: 'rect', encoding: { x: { field: 'day' }, y: { field: 'hour' } } });
+  it('heatmap 缺 color → 纯网格（无 color 编码），仍双 band', () => {
+    const spec = buildPlotSpec(<IntervalMark x="day" y="hour" bounds={bandBounds} />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'interval', bounds: { x: { kind: 'band' }, y: { kind: 'band' } }, encoding: { x: { field: 'day' }, y: { field: 'hour' } } });
     expect(spec.scales).toContainEqual({ type: 'band', name: '__x' });
     expect(spec.scales).toContainEqual({ type: 'band', name: '__y' });
   });
 
-  it('rect + 显式 <Scale dimension="y"> → fail-loud（y 由 heatmap 强制 band）', () => {
+  it('heatmap + 显式 <Scale dimension="y"> → fail-loud（y 由 band bounds 强制 band）', () => {
     expect(() =>
       buildPlotSpec(
         <>
-          <RectMark x="rowKey" y="colKey" color="value" />
+          <IntervalMark x="rowKey" y="colKey" color="value" bounds={bandBounds} />
           <Scale dimension="y" type="linear" />
         </>,
         '__plot',
@@ -743,76 +745,76 @@ describe('buildPlotSpec rect mark（ADR-02 heatmap 双 band）', () => {
     ).toThrow(/band y scale/i);
   });
 
-  it('rect 装配产物过 PlotSpecSchema', () => {
-    const spec = buildPlotSpec(<RectMark x="rowKey" y="colKey" color="value" />, '__plot');
+  it('heatmap 装配产物过 PlotSpecSchema', () => {
+    const spec = buildPlotSpec(<IntervalMark x="rowKey" y="colKey" color="value" bounds={bandBounds} />, '__plot');
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 });
 
 describe('buildPlotSpec rule 装配（alpha.11 ADR-03）', () => {
   it('rulemark-constant：数字 → value（line），常量 color → value', () => {
-    const spec = buildPlotSpec(<RuleMark y={80} color="crimson" />, '__plot');
-    expect(spec.marks[0]).toEqual({ type: 'rule', encoding: { y: { value: 80 }, color: { value: 'crimson' } } });
+    const spec = buildPlotSpec(<ReferenceMark y={80} color="crimson" />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'reference', encoding: { y: { value: 80 }, color: { value: 'crimson' } } });
   });
 
   it('rulemark-field：字符串 → field（per-datum line），color field → AUTO_COLOR', () => {
-    const spec = buildPlotSpec(<RuleMark y="threshold" color="category" />, '__plot');
-    expect(spec.marks[0]).toEqual({ type: 'rule', encoding: { y: { field: 'threshold' }, color: { field: 'category', scale: '__color' } } });
+    const spec = buildPlotSpec(<ReferenceMark y="threshold" color="category" />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'reference', encoding: { y: { field: 'threshold' }, color: { field: 'category', scale: '__color' } } });
     // per-datum color field → 自动色 scale
     expect(spec.scales.some(scale => scale.name === '__color')).toBe(true);
   });
 
   it('rulemark-band：给 yTo → band（数字常量上界）', () => {
-    const spec = buildPlotSpec(<RuleMark y={70} yTo={90} color="amber" />, '__plot');
-    expect(spec.marks[0]).toEqual({ type: 'rule', yTo: 90, encoding: { y: { value: 70 }, color: { value: 'amber' } } });
+    const spec = buildPlotSpec(<ReferenceMark y={70} yTo={90} color="amber" />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'reference', yTo: 90, encoding: { y: { value: 70 }, color: { value: 'amber' } } });
   });
 
   it('rulemark-band-field：字符串上界 → field band', () => {
-    const spec = buildPlotSpec(<RuleMark y="lo" yTo="hi" />, '__plot');
-    expect(spec.marks[0]).toEqual({ type: 'rule', yTo: 'hi', encoding: { y: { field: 'lo' } } });
+    const spec = buildPlotSpec(<ReferenceMark y="lo" yTo="hi" />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'reference', yTo: 'hi', encoding: { y: { field: 'lo' } } });
   });
 
   it('rulemark-orientation-vertical：绑 x → 竖直 rule（encoding.x）', () => {
-    const spec = buildPlotSpec(<RuleMark x={5} />, '__plot');
-    expect(spec.marks[0]).toEqual({ type: 'rule', encoding: { x: { value: 5 } } });
+    const spec = buildPlotSpec(<ReferenceMark x={5} />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'reference', encoding: { x: { value: 5 } } });
   });
 
   it('rulemark-extent：透传 extent 字段', () => {
-    const spec = buildPlotSpec(<RuleMark x="date" extentField="rowLo" extentToField="rowHi" />, '__plot');
-    expect(spec.marks[0]).toEqual({ type: 'rule', extentField: 'rowLo', extentToField: 'rowHi', encoding: { x: { field: 'date' } } });
+    const spec = buildPlotSpec(<ReferenceMark x="date" extentField="rowLo" extentToField="rowHi" />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'reference', extentField: 'rowLo', extentToField: 'rowHi', encoding: { x: { field: 'date' } } });
   });
 
   it('rulemark-vertical-band-xTo：绑 x + xTo → band', () => {
-    const spec = buildPlotSpec(<RuleMark x={2} xTo={5} />, '__plot');
-    expect(spec.marks[0]).toEqual({ type: 'rule', xTo: 5, encoding: { x: { value: 2 } } });
+    const spec = buildPlotSpec(<ReferenceMark x={2} xTo={5} />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'reference', xTo: 5, encoding: { x: { value: 2 } } });
   });
 
   it('rulemark-orientation-conflict：x 与 y 皆给 → fail-loud', () => {
-    expect(() => buildPlotSpec(<RuleMark x={1} y={2} />, '__plot')).toThrow(/exactly one of x|both|neither/i);
+    expect(() => buildPlotSpec(<ReferenceMark x={1} y={2} />, '__plot')).toThrow(/exactly one of x|both|neither/i);
   });
 
   it('rulemark-orientation-missing：x 与 y 皆缺 → fail-loud', () => {
-    expect(() => buildPlotSpec(<RuleMark />, '__plot')).toThrow(/exactly one of x|both|neither/i);
+    expect(() => buildPlotSpec(<ReferenceMark />, '__plot')).toThrow(/exactly one of x|both|neither/i);
   });
 
   it('rulemark-bound-mismatch：绑 x 却给 yTo → fail-loud', () => {
-    expect(() => buildPlotSpec(<RuleMark x={5} yTo={10} />, '__plot')).toThrow(/yTo|match the bound dimension|xTo/i);
+    expect(() => buildPlotSpec(<ReferenceMark x={5} yTo={10} />, '__plot')).toThrow(/yTo|match the bound dimension|xTo/i);
   });
 
   it('rulemark-bound-mismatch-y：绑 y 却给 xTo → fail-loud', () => {
-    expect(() => buildPlotSpec(<RuleMark y={5} xTo={10} />, '__plot')).toThrow(/xTo|match the bound dimension|yTo/i);
+    expect(() => buildPlotSpec(<ReferenceMark y={5} xTo={10} />, '__plot')).toThrow(/xTo|match the bound dimension|yTo/i);
   });
 
   it('rulemark-extent-unpaired：仅 extentField → fail-loud', () => {
-    expect(() => buildPlotSpec(<RuleMark x="date" extentField="lo" />, '__plot')).toThrow(/extentField|extentToField|together/i);
+    expect(() => buildPlotSpec(<ReferenceMark x="date" extentField="lo" />, '__plot')).toThrow(/extentField|extentToField|together/i);
   });
 
   it('rule 装配产物过 PlotSpecSchema', () => {
     const spec = buildPlotSpec(
       <>
-        <RuleMark y={80} color="crimson" />
-        <RuleMark y={70} yTo={90} color="amber" />
-        <RuleMark x="date" extentField="a" extentToField="b" />
+        <ReferenceMark y={80} color="crimson" />
+        <ReferenceMark y={70} yTo={90} color="amber" />
+        <ReferenceMark x="date" extentField="a" extentToField="b" />
       </>,
       '__plot',
     );
@@ -825,7 +827,7 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x
     const spec = buildPlotSpec(
       <>
         <Transform kind="bin" field="measurement" count={20} />
-        <BarMark x0="binStart" x1="binEnd" y="binValue" />
+        <IntervalMark x0="binStart" x1="binEnd" y="binValue" />
       </>,
       '__plot',
     );
@@ -836,12 +838,12 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x
     const spec = buildPlotSpec(
       <>
         <Transform kind="bin" field="m" step={5} />
-        <BarMark x0="binStart" x1="binEnd" y="binValue" />
+        <IntervalMark x0="binStart" x1="binEnd" y="binValue" />
       </>,
       '__plot',
     );
     const mark = spec.marks[0];
-    expect(mark).toMatchObject({ type: 'interval', x0Field: 'binStart', x1Field: 'binEnd' });
+    expect(mark).toMatchObject({ type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } } });
     if (mark.type !== 'interval') throw new Error('expected interval mark');
     // histogram：仅 y 高度通道、无 encoding.x
     expect(mark.encoding.y).toEqual({ field: 'binValue' });
@@ -855,7 +857,7 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x
     const spec = buildPlotSpec(
       <>
         <Transform kind="aggregate" groupBy={['region']} reduce="sum" field="revenue" as="totalRevenue" />
-        <BarMark x="region" y="totalRevenue" />
+        <IntervalMark x="region" y="totalRevenue" />
       </>,
       '__plot',
     );
@@ -865,29 +867,29 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x
   });
 
   it('plot_transforms_option_direct_pass', () => {
-    const spec = buildPlotSpec(<BarMark x="region" y="total" />, '__plot', {
+    const spec = buildPlotSpec(<IntervalMark x="region" y="total" />, '__plot', {
       transforms: [{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }],
     });
     expect(spec.transform).toEqual([{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }]);
   });
 
   it('explicit_stack_suppresses_auto_stack_no_double', () => {
-    // 显式 <Transform kind="stack"> 存在时，<BarMark stack> 的 auto-stack 不再注入（B4 去重）
+    // 显式 <Transform kind="stack"> 存在时，<IntervalMark stack> 的 auto-stack 不再注入（B4 去重）
     const spec = buildPlotSpec(
       <>
         <Transform kind="stack" x="month" y="revenue" groupBy="product" />
-        <BarMark x="month" y="revenue" series="product" stack />
+        <IntervalMark x="month" y="revenue" series="product" stack />
       </>,
       '__plot',
     );
     const stacks = (spec.transform ?? []).filter(t => t.kind === 'stack');
     expect(stacks).toHaveLength(1);
-    // mark 仍标记为 stack 排布（读 y0/y1）
-    expect(spec.marks[0]).toMatchObject({ type: 'interval', arrangement: 'stack' });
+    // mark 仍标记为 stack 排布（bounds.y extent 读 y0/y1）
+    expect(spec.marks[0]).toMatchObject({ type: 'interval', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } } });
   });
 
   it('options_transforms_with_stack_suppresses_auto_stack', () => {
-    const spec = buildPlotSpec(<BarMark x="month" y="revenue" series="product" stack />, '__plot', {
+    const spec = buildPlotSpec(<IntervalMark x="month" y="revenue" series="product" stack />, '__plot', {
       transforms: [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
     });
     expect((spec.transform ?? []).filter(t => t.kind === 'stack')).toHaveLength(1);
@@ -898,7 +900,7 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x
     const spec = buildPlotSpec(
       <>
         <Transform kind="aggregate" groupBy={['month', 'product']} reduce="sum" field="revenue" as="total" />
-        <BarMark x="month" y="total" series="product" stack />
+        <IntervalMark x="month" y="total" series="product" stack />
       </>,
       '__plot',
     );
@@ -910,7 +912,7 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x
     const spec = buildPlotSpec(
       <>
         <Transform kind="bin" field="m" count={10} />
-        <BarMark x0="binStart" x1="binEnd" y="binValue" />
+        <IntervalMark x0="binStart" x1="binEnd" y="binValue" />
       </>,
       '__plot',
     );
@@ -920,13 +922,13 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x
 
 describe('buildPlotSpec alpha.12 ADR-02（normalize / derive-interval / jitter 经同一 <Transform> 透传）', () => {
   it('normalize_then_stack_percentage_via_transform', () => {
-    // 百分比堆叠：显式 [normalize, stack] 两步链 + <BarMark stack>（柱读累积界 y0/y1）；
+    // 百分比堆叠：显式 [normalize, stack] 两步链 + <IntervalMark stack>（柱读累积界 y0/y1）；
     // 显式 stack 与 mark auto-stack 同签名 → auto-stack 被去重抑制（最终只一条 stack，不二次堆叠）
     const spec = buildPlotSpec(
       <>
         <Transform kind="normalize" field="amount" groupBy={['quarter']} basis="percent" as="share" />
         <Transform kind="stack" x="quarter" y="share" groupBy="product" />
-        <BarMark x="quarter" y="share" series="product" stack />
+        <IntervalMark x="quarter" y="share" series="product" stack />
       </>,
       '__plot',
     );
@@ -936,18 +938,18 @@ describe('buildPlotSpec alpha.12 ADR-02（normalize / derive-interval / jitter �
     ]);
     // 只剩一条 stack（auto-stack 被同签名去重），且 mark 确为 stacked interval（lower 会读 y0/y1）
     expect((spec.transform ?? []).filter(t => t.kind === 'stack')).toHaveLength(1);
-    expect(spec.marks[0]).toMatchObject({ type: 'interval', arrangement: 'stack' });
+    expect(spec.marks[0]).toMatchObject({ type: 'interval', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } } });
   });
 
   it('auto_stack_with_different_signature_is_kept', () => {
-    // P1 回归：显式 stack 只去重「同签名」的 auto-stack；签名不同的 <BarMark series stack> 的 auto-stack 必须保留，
-    // 否则该 mark 仍 arrangement='stack' 却无对应 y0/y1，lower 阶段读空累积界出错
+    // P1 回归：显式 stack 只去重「同签名」的 auto-stack；签名不同的 <IntervalMark series stack> 的 auto-stack 必须保留，
+    // 否则该 mark 仍是 stacked interval 却无对应 y0/y1，lower 阶段读空累积界出错
     const spec = buildPlotSpec(
       <>
         <Transform kind="stack" x="quarter" y="share" groupBy="product" />
-        <BarMark x="quarter" y="share" series="product" stack />
+        <IntervalMark x="quarter" y="share" series="product" stack />
         {/* 不同 y/groupBy 签名的另一组堆叠柱：其 auto-stack 不能被误删 */}
-        <BarMark x="month" y="revenue" series="region" stack />
+        <IntervalMark x="month" y="revenue" series="region" stack />
       </>,
       '__plot',
     );
@@ -956,15 +958,15 @@ describe('buildPlotSpec alpha.12 ADR-02（normalize / derive-interval / jitter �
     expect(stacks).toHaveLength(2);
     expect(stacks).toContainEqual({ kind: 'stack', x: 'quarter', y: 'share', groupBy: 'product' });
     expect(stacks).toContainEqual({ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'region' });
-    // 两根柱都为 stacked interval
-    expect(spec.marks.every(m => m.type === 'interval' && m.arrangement === 'stack')).toBe(true);
+    // 两根柱都为 stacked interval（bounds.y extent 读 y0/y1）
+    expect(spec.marks.every(m => m.type === 'interval' && m.bounds?.y?.kind === 'extent')).toBe(true);
   });
 
   it('derive_interval_declared_to_ir', () => {
     const spec = buildPlotSpec(
       <>
         <Transform kind="derive-interval" startFrom="start" endFrom="end" />
-        <BarMark x="task" y="end" />
+        <IntervalMark x="task" y="end" />
       </>,
       '__plot',
     );

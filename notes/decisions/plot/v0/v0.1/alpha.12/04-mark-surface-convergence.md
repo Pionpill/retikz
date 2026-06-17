@@ -25,25 +25,27 @@ v0.1「三包 lockstep」硬原则要求 plot 本体、react、vanilla、docs �
 | `<PointMark>` | `PointMark` + **`<TextMark>`** | 加 `text` / `format` / `dx` / `dy` props：给了 `text` → 无边框文本 glyph、否则散点 |
 | `<PathMark>` | `<LineMark>` | 1D 轨迹（props 不变：x/y/order/series/closed/color/label…） |
 | `<RegionMark>` | `<AreaMark>` | 2D 区域（props 不变：x/y/order/series/baseline/closed/color/label…） |
-| `<IntervalMark>` | **`<BarMark>` + `<RectMark>`** | 统一区间：`x/y`（柱）、双 band（heatmap）、`series`（dodge 子带）、显式 `bounds` props；堆叠 / 饼累积 / histogram 经 `<Transform>` + `extent` bounds 表达，**不自动装配 transform**（一字开关归 chart） |
+| `<IntervalMark>` | **`<BarMark>` + `<RectMark>`** | 统一区间：`x/y`（柱）、`angle`（饼 / 环）、`x0/x1`（histogram）、`series`/`stack`（分组 / 堆叠）、双 band（heatmap）、显式 `bounds`；便捷 props 是 Sugar，自动拼 `transform` + `bounds`、产物仍是抽象 PlotSpec |
 | `<LinkMark>` | `<RibbonMark>` | source→target 关系（props 不变：sourceX/Y、targetX/Y、value…） |
 | `<ReferenceMark>` | `<RuleMark>` | 参考标注（props 不变：x/y/xTo/yTo/extent…） |
 
 删 `<TextMark>`（并入 `<PointMark>`）、`<RectMark>`（并入 `<IntervalMark>`）；`<BarMark>` 改名 `<IntervalMark>`。
 
-### (2) build-plot-spec：便捷 props → 抽象 IR（纯几何糖，不自动装配 transform）
+### (2) build-plot-spec：便捷 props → 抽象 IR（authoring 糖，可装配 transform；产物仍是抽象 PlotSpec）
 
-`build-plot-spec` 把 react 便捷 props **1:1 映射到 ADR-03 抽象 IR**，**不产生数据 transform 副作用**——这是 plot-react「底层 grammar authoring」与 chart「friendly preset」的硬分界，也消除 ADR-03「arrangement 不进 plot」与本 ADR 的潜在矛盾：凡是要**自动注入 transform** 的便捷开关（`stack` 自动加 stack transform、`angle` 自动累积、`percent` 归一化）一律归 v0.2 chart，**不进 plot-react**。
+`build-plot-spec` 把 react 便捷 props 映射到 ADR-03 抽象 IR（`bounds` + 必要 `transform`）。**边界落在「平行能力」而非「transform 副作用」上**：react 便捷 props 是 **Sugar**——展开后是 `bounds` + 标准 `<Transform>` 组成的抽象 PlotSpec、与手写等价、不引入底层无法表达的能力，故**允许自动装配 transform**（同 core Sugar=Kernel 立场）。与 ADR-03「`arrangement` 不进 plot」**一致**：IR 层确无 `arrangement` 字段，stack 由 `bounds.y=extent` + stack transform 表达——react 糖只是替用户把这两样拼好。
 
-plot-react 保留的便捷 props（皆为纯几何 / 编码糖，无 transform 副作用）：
+react 便捷 props → 抽象 IR：
 
-- `<IntervalMark x y>` → `bounds` 省略（引擎推断 band×span）。
-- `<IntervalMark x y color>` 双 band → `bounds: { x: band, y: band }`（heatmap，取代旧 `<RectMark>`）。
-- dodge：`<IntervalMark series>` → `bounds.x: band{group:series}`（band 切子带，纯几何、无 transform）。
-- 显式区间：直接传 `bounds` prop，或扁平糖指向**已存在字段**的 `extent`——堆叠 `bounds.y=extent('y0','y1')`、histogram `bounds.x=extent('binStart','binEnd')`、饼 `bounds.x=extent('y0','y1')`+`bounds.y=full`。这些字段须由用户先用 `<Transform>`（stack / bin / normalize / derive-interval）产出，plot-react 不替用户加 transform。
+- `<IntervalMark x y>` → `bounds` 省略（引擎推断 band×span，普通柱）。
+- 双 band（heatmap，取代旧 `<RectMark>`）：`bounds.y=band` → 触发 y band scale 推断，产 cell。
+- dodge：`<IntervalMark series>`（无 stack）→ `bounds.x: band{group:series}`（band 切子带，纯几何）。
+- stack：`<IntervalMark series stack>` → 自动装 stack transform（产 y0/y1）+ `bounds.y=extent('y0','y1')`。
+- pie/donut：`<IntervalMark angle>`（polar）→ 自动装累积 stack transform + `bounds: { x: extent('y0','y1'), y: full }`。
+- histogram：`<IntervalMark x0 x1>` → `bounds.x=extent(x0,x1)`。
 - `<PointMark text format dx dy>` → `encoding.text`（+ Node 微调）。
 
-> 由此，v0.1 用 plot-react 画堆叠柱 / 饼 / histogram = 显式 `<Transform>` + interval `bounds` props；一字开关（`stacked` / `grouped` / `percent`）的开箱即用体验由 v0.2 `<Chart>` 提供。**与 ADR-03「arrangement 不进 plot」严格一致**——plot-react 是底层 grammar authoring，无 transform 魔法。
+> 由此 v0.1 用 plot-react 仍可一行出饼 / 堆叠 / histogram（authoring 糖自动拼 transform + bounds）。**v0.2 `<Chart>` 的增量不是「补 stack 开关」，而是开箱即用的默认轴 / 图例 / 网格 / 主题 / 布局**；`percent` 等更高层语义预设亦归 chart。两层都编译到唯一抽象 PlotSpec，物理上不造平行 IR。
 
 ### (3) vanilla + 文档
 
@@ -58,7 +60,7 @@ plot-react 保留的便捷 props（皆为纯几何 / 编码糖，无 transform �
 
 ## 待决策点 🔻
 
-- **扁平 bounds 糖形态**：显式 `bounds` 用嵌套对象 prop（`bounds={{x,y}}`，与 IR 1:1）还是扁平糖（`xExtent={['y0','y1']}` 等）？倾向先支持嵌套 `bounds` prop（最少糖、与 IR 同形），扁平糖按需补。（注：transform-coupled 开关 `stack`/`angle`/`percent` **不在 plot-react**、归 chart——此点已定、非待决策。）
+- **heatmap 双 band 的 authoring 形态**：用显式 `bounds={{x:'band',y:'band'}}` 还是给 `<IntervalMark>` 一个 `cell` 简写 / 自动推断（x、y 皆分类）？倾向先支持显式 `bounds` prop（与 IR 同形、最少糖），简写按需补。（`stack`/`angle`/`x0/x1` 便捷 props 保留为 authoring 糖、自动拼 transform + bounds——此点已定。`percent` 等高层预设归 chart。）
 - **heatmap authoring**：`<IntervalMark>` 双 band 由 `build-plot-spec` 自动推断（同旧 `<RectMark>`），还是需显式 `bounds` props？倾向**自动推断**（x/y 皆 band scale → 双 band），与旧 `<RectMark>` 行为等价。
 - **docs grammar 分组落点**：interval 页是否含子页（bar / radial / pie / heatmap 各 SubPage），还是单页多 demo？倾向**单页多 demo 起步**（受 `data/plot.ts` 两层结构约束），增长后再升组。
 - **`<TextMark>` 删除 vs 保留薄壳**：倾向**删除**、并入 `<PointMark text>`（0.x 不留别名；标注他 mark datum 仍首选宿主 `label` 通道）。
@@ -76,11 +78,11 @@ plot-react 保留的便捷 props（皆为纯几何 / 编码糖，无 transform �
   <IntervalMark x="day" y="hour" color="v" />              {/* heatmap：双 band 自动推断 */}
 </Plot>
 
-// 饼 / 堆叠 = 底层 grammar：显式 <Transform> + interval extent/full bounds（一字 angle/stack 归 v0.2 chart）
+// 饼图：一行 authoring 糖（自动累积 stack + interval extent/full bounds）
 <Plot data={rows} coordinate={{ type: 'polar2D' }}>
-  <Transform type="normalize" /* 产 y0/y1 累积角界字段 */ />
-  <IntervalMark color="region" bounds={{ x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }} />
+  <IntervalMark angle="share" color="region" />
 </Plot>
+// 堆叠柱：<IntervalMark series stack />；并排：<IntervalMark series />（dodge）
 
 // point 吸收 text
 <PointMark x="q" y="sales" text="sales" format=".0f" />
@@ -102,7 +104,7 @@ plot-react 保留的便捷 props（皆为纯几何 / 编码糖，无 transform �
 
 - **`@retikz/plot-react`**：`marks.tsx` 6 组件改名 / 合并；`build-plot-spec.ts` 便捷 props → 抽象 `bounds` IR 映射；`components/index.ts` + `src/index.ts` 导出调整（⚠️ 公开 API breaking）。
 - **`@retikz/plot-vanilla`**：`renderPlot` 随 IR 跟随；测试更新。
-- **`apps/docs`**：grammar 段按抽象数据几何重组；图表形态示例解释改写；**现有用 `<BarMark angle>` / `<BarMark stack>` 的饼 / 堆叠 demo 迁移为显式 `<Transform>` + `<IntervalMark bounds>`**；zh / en + contents + data + i18n 同步。
+- **`apps/docs`**：grammar 段按抽象数据几何重组；图表形态示例解释改写；现有 demo 把 `<BarMark>`→`<IntervalMark>`、`<RectMark>`→`<IntervalMark>`、`<LineMark>`→`<PathMark>` 等改名（`angle`/`stack` 等便捷 props 不变）；zh / en + contents + data + i18n 同步。
 - **core**：无影响。
 - **⚠️ BREAKING（公开 API）**：`<BarMark>`/`<RectMark>`/`<TextMark>`/`<LineMark>`/`<AreaMark>`/`<RuleMark>`/`<RibbonMark>` 改名 / 删除。未发布、不留别名（0.x）。
 
@@ -147,18 +149,19 @@ plot-react 保留的便捷 props（皆为纯几何 / 编码糖，无 transform �
 **Happy path（≥ 3）**：
 
 - `interval_bar_props_to_spec`：`<IntervalMark x y>` → 抽象 interval IR（bounds 省略 / band×span）
-- `interval_pie_bounds_to_ir`：`<IntervalMark bounds={{x:extent,y:full}}>` polar → 对应 interval IR，**不附带任何 transform**
+- `interval_pie_angle_to_ir`：`<IntervalMark angle>` polar → 自动累积 stack transform + `bounds:{x:extent('y0','y1'),y:full}` interval IR
+- `interval_stack_to_extent`：`<IntervalMark series stack>` → 自动 stack transform + `bounds.y=extent('y0','y1')`
 - `point_text_prop_to_encoding`：`<PointMark text format>` → `encoding.text` + format
 
 **边界（≥ 2）**：
 
-- `interval_heatmap_double_band`：`<IntervalMark x y color>` 双 band → heatmap cell IR（取代旧 RectMark）
-- `interval_dodge_series_subband`：`<IntervalMark series>` → `bounds.x=band{group:series}`（纯几何、无 transform）
+- `interval_heatmap_double_band`：`<IntervalMark>` 双 band → heatmap cell IR（取代旧 RectMark）
+- `interval_dodge_series_subband`：`<IntervalMark series>`（无 stack）→ `bounds.x=band{group:series}`（纯几何、无 transform）
 
 **错误路径（≥ 2）**：
 
 - `legacy_components_removed`：import 旧 `BarMark`/`RectMark`/`TextMark` → 不存在（编译 / 类型失败）
-- `interval_no_auto_transform`：`<IntervalMark bounds={extent}>` 引用的字段无 `<Transform>` 产出 → plot-react 不自动补 transform，lowering 对缺字段 fail-loud（不静默装配）
+- `interval_extent_missing_field_fails`：显式 `bounds={{y:extent}}` 引用的字段在数据 / transform 中不存在 → lowering 对缺字段 fail-loud（不静默）
 
 **交互（≥ 2）**：
 
@@ -168,7 +171,7 @@ plot-react 保留的便捷 props（皆为纯几何 / 编码糖，无 transform �
 ### 依赖的现有元素
 
 - `BarMark` / `RectMark` / `TextMark` / `LineMark` / `AreaMark` / `RuleMark` / `RibbonMark` / `PointMark`（`react/src/components/marks.tsx`）—— 修改：改名 / 合并为 6 抽象组件
-- `build-plot-spec`（`react/src/components/build-plot-spec.ts`）—— 修改：便捷 props → 抽象 `bounds` IR；**移除现 `<BarMark angle>` 累积 / `<BarMark stack>` 自动 transform 装配**（这些转 chart 层），plot-react 不再产 transform 副作用
+- `build-plot-spec`（`react/src/components/build-plot-spec.ts`）—— 修改：便捷 props → 抽象 `bounds` IR；**保留 `<IntervalMark angle>` 累积 / `<IntervalMark stack>` 自动 stack transform 装配**（Sugar，产物为抽象 PlotSpec），仅把目标 IR 从旧 sector/arrangement/x0Field 改为 interval `bounds`
 - `renderPlot`（`vanilla/src/render-plot.ts`）—— 仅引用：纯 spec 驱动、随 IR 跟随
 - ADR-03 的抽象 IR（`@retikz/plot` `point`/`path`/`region`/`interval`/`link`/`reference` schema + `bounds`）—— 仅消费：表面装配产物目标
 - `apps/docs` grammar contents / `data/plot.ts` / i18n —— 修改：按抽象数据几何重组 + 图表示例改写
