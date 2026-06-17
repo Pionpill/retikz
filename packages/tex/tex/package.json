@@ -1,0 +1,79 @@
+{
+  "name": "@retikz/tex",
+  "version": "0.4.0-alpha.5",
+  "description": "retikz tex: LaTeX math via MathJax SVG, lowered to renderer-agnostic glyph paths for @retikz/core.",
+  "type": "module",
+  "author": "Pionpill",
+  "homepage": "https://pionpill.github.io/retikz/",
+  "keywords": [
+    "tikz",
+    "latex",
+    "math",
+    "mathjax",
+    "svg"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pionpill/retikz.git",
+    "directory": "packages/tex/tex"
+  },
+  "bugs": {
+    "url": "https://github.com/Pionpill/retikz/issues"
+  },
+  "sideEffects": false,
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "publishConfig": {
+    "main": "dist/lib/index.cjs",
+    "module": "dist/es/index.js",
+    "types": "dist/lib/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/lib/index.d.ts",
+        "import": "./dist/es/index.js",
+        "require": "./dist/lib/index.cjs",
+        "default": "./dist/es/index.js"
+      }
+    }
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist/**/*"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "dependencies": {
+    "@retikz/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "mathjax-full": "^3.2.2"
+  },
+  "peerDependenciesMeta": {
+    "mathjax-full": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "mathjax-full": "^3.2.2",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vitest": "catalog:"
+  }
+}
