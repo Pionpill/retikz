@@ -1,4 +1,4 @@
-import { Axis, Plot, PointMark, RuleMark } from '@retikz/plot-react';
+import { Axis, Plot, PointMark, ReferenceMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { scores } from './rule-threshold.data';
@@ -16,7 +16,7 @@ const Demo: FC = () => (
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <PointMark x="name" y="score" />
-    <RuleMark y={60} color="crimson" />
+    <ReferenceMark y={60} color="crimson" />
     <Axis dimension="x" />
     <Axis dimension="y" grid />
   </Plot>

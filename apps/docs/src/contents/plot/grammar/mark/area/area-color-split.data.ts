@@ -1,4 +1,4 @@
-/** demo 自造数据集：两个站点的日访问量（site 分类 + day + visits），喂多系列面积（不进 IR） */
+/** demo 自造数据集：两个站点的日访问量（site 分类 + day + visits），喂多系列区域（不进 IR） */
 export const traffic: Array<Record<string, string | number>> = [
   { site: 'A', day: 0, visits: 3 },
   { site: 'A', day: 1, visits: 6 },

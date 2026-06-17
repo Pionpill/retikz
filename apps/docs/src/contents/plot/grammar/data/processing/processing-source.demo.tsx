@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { Layout } from '@retikz/react';
 import type { DataModel } from '@retikz/plot';
-import { Axis, LineMark, Plot, PointMark } from '@retikz/plot-react';
+import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
 
 import { financeFeed, sales } from './processing-source.data';
 
@@ -22,13 +22,13 @@ const Demo: FC = () => (
       x={320}
       y={20}
     >
-      <LineMark x="month" y="revenue" order="month" />
+      <PathMark x="month" y="revenue" order="month" />
       <PointMark x="month" y="revenue" />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>
     <Plot data={sales} model={model} width={300} height={220} x={0} y={20}>
-      <LineMark x="month" y="revenue" order="month" />
+      <PathMark x="month" y="revenue" order="month" />
       <PointMark x="month" y="revenue" />
       <Axis dimension="x" />
       <Axis dimension="y" grid />

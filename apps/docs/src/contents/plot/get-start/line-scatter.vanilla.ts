@@ -14,7 +14,7 @@ const spec: PlotSpec = {
   ],
   coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
   marks: [
-    { type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+    { type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
     { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
   ],
   // x/y 轴 + y 网格：vanilla 在 spec 里显式列出（React 端薄 <Plot> 同样需显式 <Axis>，不自动补）

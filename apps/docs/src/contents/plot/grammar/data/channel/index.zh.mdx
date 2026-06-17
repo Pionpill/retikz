@@ -7,7 +7,7 @@ description: 数据通道描述字段或常量如何进入 x、y、color、size�
 
 ```tsx
 <PointMark x="gdp" y="life" color="region" size="population" />
-<TextMark x="gdp" y="life" text="abbr" />
+<PointMark x="gdp" y="life" text="abbr" />
 ```
 
 上面的写法会在内部形成 mark 的 `encoding`：`x`、`y` 走位置通道，`color`、`size` 走视觉通道，`text` 走文本内容通道。
@@ -25,7 +25,7 @@ description: 数据通道描述字段或常量如何进入 x、y、color、size�
 | 位置 | `x` / `y` | 二维与一维坐标系的主位置通道；在 polar 下会被坐标系重解释为角向 / 径向 |
 | 三元位置 | `a` / `b` / `c` | 三元坐标系的三个分量，lowering 时按总和归一化 |
 | 视觉 | `color` / `size` / `opacity` / `shape` | 控制颜色、点半径、透明度或点形状，通常由字段类型决定默认 scale |
-| 文本 | `text` / `label` | `TextMark` 的文本内容，或挂在其它 mark datum 上的标签 |
+| 文本 | `text` / `label` | `PointMark` 的文本内容，或挂在其它 mark datum 上的标签 |
 | 顺序与系列 | `order` / `series` | 不属于 `encoding` 对象，但同样读取字段；用于连线顺序、多系列拆分或分组 |
 
 ## 字段与常量
@@ -36,10 +36,10 @@ React DSL 里字符串通常表示字段名：
 <PointMark x="gdp" y="life" color="region" />
 ```
 
-少数通道也接受常量。最典型的是 `RuleMark`：
+少数通道也接受常量。最典型的是 `ReferenceMark`：
 
 ```tsx
-<RuleMark y={80} color="crimson" />
+<ReferenceMark y={80} color="crimson" />
 ```
 
 在 IR 里，字段会变成 `{ field: 'gdp' }`，常量会变成 `{ value: 80 }`。一个通道只能二选一：要么来自字段，要么来自常量。

@@ -7,7 +7,7 @@ description: 2D coordinates cover the default cartesian2D and polar2D: the same 
 
 ## Switching Coordinates
 
-The two charts below use the same monthly temperature data and the same `<BarMark>`. The right chart only adds `coordinate="polar2D"`, turning flat bars into radial bars.
+The two charts below use the same monthly temperature data and the same `<IntervalMark>`. The right chart only adds `coordinate="polar2D"`, turning flat bars into radial bars.
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <ComponentPreview name="coordinate-cartesian" sourceFiles={['coordinate-cartesian.data.ts']} size="sm" />
@@ -47,13 +47,13 @@ The same polar coordinate system pairs with different marks to cover common roun
 
 ### Radial Bars
 
-`<BarMark>` becomes a radial bar under polar: the angular axis is categorical, the radial axis is the value. Just switch the coordinate; no new component.
+`<IntervalMark>` becomes a radial bar under polar: the angular axis is categorical, the radial axis is the value. Just switch the coordinate; no new component.
 
 <ComponentPreview name="coordinate-polar-bar" sourceFiles={['coordinate-cartesian.data.ts']} />
 
 ### Pie And Donut
 
-`<BarMark angle="value" />` accumulates the `angle` value field into sector angular bounds. Add `innerRadius` to turn a pie into a donut.
+`<IntervalMark angle="value" />` accumulates the `angle` value field into sector angular bounds. Add `innerRadius` to turn a pie into a donut.
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <ComponentPreview name="coordinate-pie" sourceFiles={['coordinate-pie.data.ts']} size="sm" />
@@ -64,13 +64,13 @@ The same polar coordinate system pairs with different marks to cover common roun
 
 ### Radar
 
-`<LineMark closed />` connects the last point back to the first, closing into a polygon outline. In polar this is a radar chart: dimensions spread along the angular axis, values map to radius.
+`<PathMark closed />` connects the last point back to the first, closing into a polygon outline. In polar this is a radar chart: dimensions spread along the angular axis, values map to radius.
 
 <ComponentPreview name="coordinate-radar" sourceFiles={['coordinate-radar.data.ts']} />
 
 ### Polar Line
 
-An open `<LineMark>` under polar is a polar line plot: `x` as angle, `y` as radius, connected by `order`. It fits wind direction and cyclic data.
+An open `<PathMark>` under polar is a polar line plot: `x` as angle, `y` as radius, connected by `order`. It fits wind direction and cyclic data.
 
 <ComponentPreview name="coordinate-polar-line" sourceFiles={['coordinate-polar-line.data.ts']} />
 

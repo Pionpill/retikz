@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { Layout } from '@retikz/react';
-import { Axis, BarMark, Plot } from '@retikz/plot-react';
+import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 
 import { sizeSales } from './data-model-order.data';
 
@@ -8,7 +8,7 @@ import { sizeSales } from './data-model-order.data';
 const Demo: FC = () => (
   <Layout width={620} height={250} style={{ maxWidth: '100%', height: 'auto' }}>
     <Plot data={sizeSales} width={300} height={220} x={0} y={20}>
-      <BarMark x="size" y="value" color="size" />
+      <IntervalMark x="size" y="value" color="size" />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>
@@ -23,7 +23,7 @@ const Demo: FC = () => (
       x={320}
       y={20}
     >
-      <BarMark x="size" y="value" color="size" />
+      <IntervalMark x="size" y="value" color="size" />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>

@@ -3,17 +3,17 @@ title: Plot
 description: "<Plot> is the chart container: it takes raw data and a size, assembles mark / guide / scale children, and lowers to core primitives at compile time."
 ---
 
-`<Plot>` is the container component for the plot layer. It takes `data` (an array of raw rows) and a display size, collects `<LineMark>` / `<BarMark>` / `<AreaMark>` / `<Axis>` / `<Scale>` children, then assembles a PlotSpec and lowers it to core at compile time. Data never enters the IR; it is injected during lowering. `<Plot>` does not draw axes, grids, or legends by itself. Declare those guides explicitly. Scales are inferred unless overridden with `<Scale>`; the coordinate system defaults to `cartesian2D` and can be switched with `coordinate`.
+`<Plot>` is the container component for the plot layer. It takes `data` (an array of raw rows) and a display size, collects `<PathMark>` / `<IntervalMark>` / `<RegionMark>` / `<Axis>` / `<Scale>` children, then assembles a PlotSpec and lowers it to core at compile time. Data never enters the IR; it is injected during lowering. `<Plot>` does not draw axes, grids, or legends by itself. Declare those guides explicitly. Scales are inferred unless overridden with `<Scale>`; the coordinate system defaults to `cartesian2D` and can be switched with `coordinate`.
 
 ## Usage
 
 ```tsx
-import { Axis, BarMark, Plot } from '@retikz/plot-react';
+import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 ```
 
 ```tsx
 <Plot data={revenue} width={360} height={220}>
-  <BarMark x="quarter" y="value" />
+  <IntervalMark x="quarter" y="value" />
   <Axis dimension="x" />
   <Axis dimension="y" grid />
 </Plot>
@@ -108,7 +108,7 @@ Data enters lowering alongside the PlotSpec and becomes Tier 1 step by step:
 | --- | --- | --- |
 | Resolve data | dataset via `data.reference` + `model` / `fieldMap` | normalized rows (type inference, renaming, transforms) |
 | Infer scales | fields bound to each channel + coordinate | band / linear / time / log… scales and the projection frame |
-| Mark → layer | each `<LineMark>` / `<BarMark>` … | one core `<Scope>` layer (of `<Node>` / `<Path>`) |
+| Mark → layer | each `<PathMark>` / `<IntervalMark>` … | one core `<Scope>` layer (of `<Node>` / `<Path>`) |
 | Axis / grid / legend → layer | explicit `<Axis>` / `<Legend>` | grid, axis, and legend layers (each a `<Scope>`) |
 | Order z-index | all layers above | grid at the bottom → marks → axes → legend |
 

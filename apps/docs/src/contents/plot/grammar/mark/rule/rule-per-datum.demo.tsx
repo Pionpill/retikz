@@ -1,4 +1,4 @@
-import { Axis, Legend, Plot, RuleMark } from '@retikz/plot-react';
+import { Axis, Legend, Plot, ReferenceMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { thresholds } from './rule-per-datum.data';
@@ -15,7 +15,7 @@ const Demo: FC = () => (
     height={240}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <RuleMark y="threshold" color="tier" />
+    <ReferenceMark y="threshold" color="tier" />
     <Axis dimension="y" grid />
     <Legend channel="color" />
   </Plot>

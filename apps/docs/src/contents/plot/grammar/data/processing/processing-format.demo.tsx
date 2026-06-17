@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { Layout } from '@retikz/react';
-import { Axis, LineMark, Plot, PointMark } from '@retikz/plot-react';
+import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
 
 import { defaultRows, reportRows } from './processing-format.data';
 
@@ -18,7 +18,7 @@ const Demo: FC = () => (
       x={0}
       y={20}
     >
-      <LineMark x="date" y="retention" order="date" />
+      <PathMark x="date" y="retention" order="date" />
       <PointMark x="date" y="retention" />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
@@ -34,7 +34,7 @@ const Demo: FC = () => (
       x={320}
       y={20}
     >
-      <LineMark x="date" y="retention" order="date" />
+      <PathMark x="date" y="retention" order="date" />
       <PointMark x="date" y="retention" />
       <Axis dimension="x" />
       <Axis dimension="y" grid />

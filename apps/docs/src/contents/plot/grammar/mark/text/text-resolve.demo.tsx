@@ -1,4 +1,4 @@
-import { Axis, BarMark, Plot } from '@retikz/plot-react';
+import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { revenue } from './text-label.data';
@@ -15,7 +15,7 @@ const Demo: FC = () => (
     height={240}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <BarMark id="bars" x="month" y="revenue" label="revenue" resolveLabel={row => `${row.month}: ${row.revenue}`} labelPosition="above" labelDistance={6} />
+    <IntervalMark id="bars" x="month" y="revenue" label="revenue" resolveLabel={row => `${row.month}: ${row.revenue}`} labelPosition="above" labelDistance={6} />
     <Axis dimension="x" />
     <Axis dimension="y" grid />
   </Plot>

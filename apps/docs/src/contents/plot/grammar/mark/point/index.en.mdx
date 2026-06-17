@@ -19,7 +19,7 @@ import { Plot, PointMark } from '@retikz/plot-react';
 </Plot>
 ```
 
-Scatter often overlays a line — draw `<LineMark>` first, then layer `<PointMark>` on the same data to mark each observation.
+Scatter often overlays a line — draw `<PathMark>` first, then layer `<PointMark>` on the same data to mark each observation.
 
 ## Examples
 
@@ -88,6 +88,6 @@ Give `shape` a categorical field and each category gets a glyph (default palette
 
 ## Related
 
-- [LineMark](/plot/grammar/mark/line) — a trend line under the dots
+- [PathMark](/plot/grammar/mark/line) — a trend line under the dots
 - [Coordinates](/plot/grammar/coordinate) — how PointMark draws a rug (cartesian1D) / ring (polar1D) / ternary scatter (ternary2D)
 - [Scales](/plot/grammar/scale) — the square-root scale size uses, and the continuous scale family

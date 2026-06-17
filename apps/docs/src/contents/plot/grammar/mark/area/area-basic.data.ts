@@ -1,4 +1,4 @@
-/** demo 自造数据集：日活跃用户（day 数值 x + users 值），喂 <AreaMark>（不进 IR） */
+/** demo 自造数据集：日活跃用户（day 数值 x + users 值），喂 <RegionMark>（不进 IR） */
 export const activity: Array<Record<string, string | number>> = [
   { day: 0, users: 12 },
   { day: 1, users: 19 },

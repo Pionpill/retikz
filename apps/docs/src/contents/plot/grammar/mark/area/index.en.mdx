@@ -1,19 +1,19 @@
 ---
-title: AreaMark
-description: "Draw area charts with <AreaMark>: a top line and a baseline enclose a filled region; under polar with baseline 0 that's a filled radar."
+title: RegionMark
+description: "Draw area charts with <RegionMark>: a top line and a baseline enclose a filled region; under polar with baseline 0 that's a filled radar."
 ---
 
-`<AreaMark>` adds a return edge to a line: the top edge is the line connecting `x` / `y`, the bottom edge sticks to `baseline` (default `0`), and the two enclose a fillable region (always closed by the return edge). Switch to a polar coordinate system with `baseline` `0`, and the return edge collapses to the center, so the region fills from the center out to the outline — a filled radar.
+`<RegionMark>` is the two-dimensional region mark: it adds a return edge to a line — the top edge is the line connecting `x` / `y`, the bottom edge sticks to `baseline` (default `0`), and the two enclose a fillable region (always closed by the return edge). Switch to a polar coordinate system with `baseline` `0`, and the return edge collapses to the center, so the region fills from the center out to the outline — a filled radar.
 
 ## Usage
 
 ```tsx
-import { Plot, AreaMark } from '@retikz/plot-react';
+import { Plot, RegionMark } from '@retikz/plot-react';
 ```
 
 ```tsx
 <Plot data={activity}>
-  <AreaMark x="day" y="users" order="day" />
+  <RegionMark x="day" y="users" order="day" />
 </Plot>
 ```
 
@@ -29,7 +29,7 @@ The top line and a baseline of `0` enclose a filled region — good for emphasiz
 
 ### Filled radar
 
-`<Plot coordinate="polar2D">` with `<AreaMark closed />`: dimensions spread evenly along the angular axis and values map to the radius to form the top edge; the return edge sticks to `baseline`. With the default `baseline` of `0` the return edge collapses to the center, so the area fills from the center out to the outline — a filled radar. `closed` makes the top edge walk chords (no arc sampling on a continuous angular axis, a straight outline). For a plain wireframe outline use [`<LineMark closed />`](/plot/grammar/mark/line); add `fill` to it for a filled radar too.
+`<Plot coordinate="polar2D">` with `<RegionMark closed />`: dimensions spread evenly along the angular axis and values map to the radius to form the top edge; the return edge sticks to `baseline`. With the default `baseline` of `0` the return edge collapses to the center, so the area fills from the center out to the outline — a filled radar. `closed` makes the top edge walk chords (no arc sampling on a continuous angular axis, a straight outline). For a plain wireframe outline use [`<PathMark closed />`](/plot/grammar/mark/line); add `fill` to it for a filled radar too.
 
 <ComponentPreview name="area-radar" sourceFiles={['area-radar.data.ts']} />
 
@@ -58,6 +58,6 @@ Set `series` to a field and the data splits into multiple areas. With no `series
 
 ## Related
 
-- [LineMark](/plot/grammar/mark/line) — `<LineMark closed />` is a wireframe radar
+- [PathMark](/plot/grammar/mark/line) — `<PathMark closed />` is a wireframe radar
 - [Coordinates](/plot/grammar/coordinate) — the polar switch and channel roles
-- [BarMark](/plot/grammar/mark/bar) — bars, radial bars, pie / donut charts
+- [IntervalMark](/plot/grammar/mark/bar) — bars, radial bars, pie / donut charts

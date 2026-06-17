@@ -7,7 +7,7 @@ description: 二维坐标系覆盖默认 cartesian2D 与 polar2D：同一份 x/y
 
 ## 坐标切换
 
-下面两张图喂的是同一份月度温度数据、同一个 `<BarMark>`。右图只多了 `coordinate="polar2D"`，柱就从平面柱变成径向柱。
+下面两张图喂的是同一份月度温度数据、同一个 `<IntervalMark>`。右图只多了 `coordinate="polar2D"`，柱就从平面柱变成径向柱。
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <ComponentPreview name="coordinate-cartesian" sourceFiles={['coordinate-cartesian.data.ts']} size="sm" />
@@ -47,13 +47,13 @@ cartesian 下 `x` 是水平、`y` 是垂直。polar 下这两个通道改成几�
 
 ### 径向柱
 
-`<BarMark>` 在 polar 下自动成径向柱：角向是类别，径向是值。换坐标系即可，无需新组件。
+`<IntervalMark>` 在 polar 下自动成径向柱：角向是类别，径向是值。换坐标系即可，无需新组件。
 
 <ComponentPreview name="coordinate-polar-bar" sourceFiles={['coordinate-cartesian.data.ts']} />
 
 ### 饼图与环图
 
-`<BarMark angle="value" />` 按 `angle` 值字段自动累积成扇区角界。加 `innerRadius` 就从饼图变环图。
+`<IntervalMark angle="value" />` 按 `angle` 值字段自动累积成扇区角界。加 `innerRadius` 就从饼图变环图。
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <ComponentPreview name="coordinate-pie" sourceFiles={['coordinate-pie.data.ts']} size="sm" />
@@ -64,13 +64,13 @@ cartesian 下 `x` 是水平、`y` 是垂直。polar 下这两个通道改成几�
 
 ### 雷达
 
-`<LineMark closed />` 把末点回连首点，闭合成多边形轮廓。在 polar 下这就是雷达图：维度沿角向均布，值映射到半径。
+`<PathMark closed />` 把末点回连首点，闭合成多边形轮廓。在 polar 下这就是雷达图：维度沿角向均布，值映射到半径。
 
 <ComponentPreview name="coordinate-radar" sourceFiles={['coordinate-radar.data.ts']} />
 
 ### 极坐标折线
 
-不闭合的 `<LineMark>` 在 polar 下就是极坐标折线：`x` 当角向、`y` 当径向，按 `order` 连点。适合风向、周期类数据。
+不闭合的 `<PathMark>` 在 polar 下就是极坐标折线：`x` 当角向、`y` 当径向，按 `order` 连点。适合风向、周期类数据。
 
 <ComponentPreview name="coordinate-polar-line" sourceFiles={['coordinate-polar-line.data.ts']} />
 

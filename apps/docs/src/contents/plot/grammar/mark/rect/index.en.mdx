@@ -1,22 +1,22 @@
 ---
-title: RectMark
-description: "Draw heatmaps with <RectMark>: a fixed grid of cells from two categorical axes (both band), each cell's value mapped to its fill color."
+title: Heatmap
+description: "A heatmap is <IntervalMark> with double band: a fixed grid of cells from two categorical axes (both band), each cell's value mapped to its fill color."
 ---
 
-`<RectMark>` draws one rectangular cell per data row: `x` and `y` **both bind categorical fields** (`<Plot>` automatically uses a band scale on both axes), and each cell is sized `bandwidth_x × bandwidth_y`. The data value does not drive position — instead it maps through the `color` channel to the cell's fill. This is the basis for heatmaps, confusion matrices, and calendar heatmaps.
+A heatmap is `<IntervalMark>` with a double band: it draws one rectangular cell per data row, `x` and `y` **both bind categorical fields**, and `bounds={{ x: { kind: 'band' }, y: { kind: 'band' } }}` explicitly declares both dimensions as band, sizing each cell `bandwidth_x × bandwidth_y`. The data value does not drive position — instead it maps through the `color` channel to the cell's fill. This is the basis for heatmaps, confusion matrices, and calendar heatmaps.
 
 <ComponentPreview name="rect-heatmap" sourceFiles={['rect-heatmap.data.ts']} />
 
 <p className="text-sm text-muted-foreground">x = column, y = row — a fixed grid of categories; value maps through a sequential (viridis) scale to the fill.</p>
 
-## Difference from bars (interval)
+## Difference from ordinary interval bars
 
 A heatmap and a bar differ in "what the second dimension is":
 
-- **Bar** (`<BarMark>`): `x` comes from a band scale (its `bandwidth` is the bar width), `y` is a **continuous value** — the bar height scales with the data, so the cell is "one band × one continuous interval".
-- **Rect** (`<RectMark>`): `x` **and** `y` **both come from band scales**, so the cell is a fixed `bandwidth_x × bandwidth_y` grid; the value maps through the `color` channel to the fill, not to position.
+- **Bar** (`<IntervalMark x y>`): `x` comes from a band scale (its `bandwidth` is the bar width), `y` is a **continuous value** — the bar height scales with the data, so the cell is "one band × one continuous interval".
+- **Rect** (`<IntervalMark>` double band): `bounds` declares `x` **and** `y` **both as band scales**, so the cell is a fixed `bandwidth_x × bandwidth_y` grid; the value maps through the `color` channel to the fill, not to position.
 
-Because of this, `<RectMark>` forces **both** the x and y axes to be band scales — declaring a continuous `<Scale dimension="y">` that conflicts with it raises an error.
+Because of this, the double-band `<IntervalMark>` forces **both** the x and y axes to be band scales — declaring a continuous `<Scale dimension="y">` that conflicts with it raises an error.
 
 ## Without color: a plain grid
 
@@ -32,7 +32,8 @@ Omit `color` and each cell falls back to a single default fill — a plain grid 
 | --- | --- | --- |
 | `x` | `string` | Field path for the x channel (categorical, auto band scale, sizes the cell width) |
 | `y` | `string` | Field path for the y channel (categorical, auto band scale, sizes the cell height) |
+| `bounds` | `IntervalBounds?` | Explicit interval-bounds escape hatch; for a double-band heatmap write `{ x: { kind: 'band' }, y: { kind: 'band' } }` to force both dimensions to band |
 | `color` | `string?` | Color field: maps the value to the cell fill. A continuous field needs a `model` declaration → auto sequential color scale (viridis), colored per datum; omit for a plain grid (single default fill) |
 | `id` | `string?` | Optional handle (reserved, not yet resolved) |
 
-<ComponentAlert title="Both x and y must be categorical" description="A heatmap is fixed by two categorical dimensions, so <RectMark> forces both the x and y axes to band scales. Only cartesian2D is supported this round; polar / 1D / ternary raise an error." />
+<ComponentAlert title="Both x and y must be categorical" description="A heatmap is fixed by two categorical dimensions, so the double-band <IntervalMark> forces both the x and y axes to band scales. Only cartesian2D is supported this round; polar / 1D / ternary raise an error." />

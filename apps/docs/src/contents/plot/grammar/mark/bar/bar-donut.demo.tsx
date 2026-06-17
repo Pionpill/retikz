@@ -1,4 +1,4 @@
-import { BarMark, Plot } from '@retikz/plot-react';
+import { IntervalMark, Plot } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { traffic } from './bar-pie.data';
@@ -12,7 +12,7 @@ const Demo: FC = () => (
     coordinate={{ type: 'polar2D', innerRadius: 0.6 }}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <BarMark angle="value" color="source" />
+    <IntervalMark angle="value" color="source" />
   </Plot>
 );
 

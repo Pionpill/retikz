@@ -1,4 +1,4 @@
-import { BarMark, Plot, Transform } from '@retikz/plot-react';
+import { IntervalMark, Plot, Transform } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { orders } from './transform-aggregate.data';
@@ -7,7 +7,7 @@ import { orders } from './transform-aggregate.data';
 const Demo: FC = () => (
   <Plot data={orders} width={420} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
     <Transform kind="aggregate" groupBy={['region']} reduce="sum" field="revenue" as="total" />
-    <BarMark x="region" y="total" color="region" />
+    <IntervalMark x="region" y="total" color="region" />
   </Plot>
 );
 

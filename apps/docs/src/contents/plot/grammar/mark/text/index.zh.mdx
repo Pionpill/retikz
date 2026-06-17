@@ -1,13 +1,13 @@
 ---
 title: 数据标签
-description: 给图加文本标签：柱顶数值、散点品类名走宿主 mark 的 label；无宿主的自由文本用 <TextMark>。
+description: 给图加文本标签：柱顶数值、散点品类名走宿主 mark 的 label；无宿主的自由文本用 <PointMark> 的 text 通道。
 ---
 
-把数据值或任意文字直接写在图上有两条路：标注**另一个 mark 的数据点**（柱顶数值、散点品类名）优先给那个 mark 加 `label`；标注**无宿主的自由文本**（注解、说明）才用独立 `<TextMark>`。两者都走与散点相同的投影，坐标系无关。
+文本是 `<PointMark>` 的 text 通道（无边框文本 glyph）。把数据值或任意文字直接写在图上有两条路：标注**另一个 mark 的数据点**（柱顶数值、散点品类名）优先给那个 mark 加 `label`；标注**无宿主的自由文本**（注解、说明）才用独立 `<PointMark>` 的 text 通道。两者都走与散点相同的投影，坐标系无关。
 
 ## 柱顶数值标签
 
-给 `<BarMark>`（或 `<PointMark>` / `<LineMark>` / `<AreaMark>`）一个 `label` 字段，标签就挂在每根柱的边框上方，位置由 `labelPosition` / `labelDistance` 控制——无需第二个 mark。`labelFormat` 按数值格式串输出（千分位、小数位等）。
+给 `<IntervalMark>`（或 `<PointMark>` / `<PathMark>` / `<RegionMark>`）一个 `label` 字段，标签就挂在每根柱的边框上方，位置由 `labelPosition` / `labelDistance` 控制——无需第二个 mark。`labelFormat` 按数值格式串输出（千分位、小数位等）。
 
 <ComponentPreview name="text-label" sourceFiles={['text-label.data.ts']} />
 
@@ -17,11 +17,11 @@ description: 给图加文本标签：柱顶数值、散点品类名走宿主 mar
 
 ## 自由文本
 
-没有宿主的浮动文本用 `<TextMark>`：它在投影点新建一个带文本的节点，几何与散点完全一致。`dx` / `dy` 是相对锚点的像素级微调。
+没有宿主的浮动文本用 `<PointMark>` 的 text 通道：它在投影点新建一个带文本的节点，几何与散点完全一致。`dx` / `dy` 是相对锚点的像素级微调。
 
 <ComponentPreview name="text-free" sourceFiles={['text-free.data.ts']} />
 
-<p className="text-sm text-muted-foreground">TextMark x/y 投影同 point，text="label" 取字段值；dy=-12 上移避免压住散点。</p>
+<p className="text-sm text-muted-foreground">PointMark x/y 投影同 point，text="label" 取字段值；dy=-12 上移避免压住散点。</p>
 
 ## 自定义内容
 
@@ -42,7 +42,7 @@ description: 给图加文本标签：柱顶数值、散点品类名走宿主 mar
 
 ## API
 
-宿主 label（加在 `<BarMark>` / `<PointMark>` / `<LineMark>` / `<AreaMark>` 上）：
+宿主 label（加在 `<IntervalMark>` / `<PointMark>` / `<PathMark>` / `<RegionMark>` 上）：
 
 | prop | 类型 | 说明 |
 | --- | --- | --- |
@@ -53,7 +53,7 @@ description: 给图加文本标签：柱顶数值、散点品类名走宿主 mar
 | `labelPin` | `boolean?` | 从边框拉引线到标签；缺省 false |
 | `resolveLabel` | `(row) => string?` | 运行时模板逃生舱（不进 IR，需配 `id`）；覆盖 `label` / `labelFormat` |
 
-独立 `<TextMark>`（自由文本）：
+独立 `<PointMark>` 的 text 通道（自由文本）：
 
 | prop | 类型 | 说明 |
 | --- | --- | --- |
@@ -66,4 +66,4 @@ description: 给图加文本标签：柱顶数值、散点品类名走宿主 mar
 | `resolveLabel` | `(row) => string?` | 运行时模板逃生舱（不进 IR，需配 `id`）；覆盖 `text` / `format` |
 | `id` | `string?` | 可选句柄；`resolveLabel` 注入也按此 id 命中 |
 
-<ComponentAlert title="优先挂宿主、无宿主才新建" description="标注另一个 mark 的数据点请优先给那个 mark 加 label（标签是宿主图元的一部分，复用边框定位与引线，IR 不随标签增长）。<TextMark> 只用于无宿主的自由浮动文本。两套别混。" />
+<ComponentAlert title="优先挂宿主、无宿主才新建" description="标注另一个 mark 的数据点请优先给那个 mark 加 label（标签是宿主图元的一部分，复用边框定位与引线，IR 不随标签增长）。<PointMark> 的 text 通道只用于无宿主的自由浮动文本。两套别混。" />

@@ -1,18 +1,18 @@
 import type { FC } from 'react';
 import { Layout } from '@retikz/react';
-import { Axis, BarMark, Plot } from '@retikz/plot-react';
+import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 
 import { revenue } from './plot-cartesian.data';
 
 const Demo: FC = () => (
   <Layout width={580} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
     <Plot data={revenue} width={300} height={220} x={0} y={20}>
-      <BarMark x="quarter" y="value" color="quarter" />
+      <IntervalMark x="quarter" y="value" color="quarter" />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>
     <Plot data={revenue} width={260} height={260} coordinate="polar2D" x={320} y={0}>
-      <BarMark x="quarter" y="value" color="quarter" />
+      <IntervalMark x="quarter" y="value" color="quarter" />
       <Axis dimension="angle" />
       <Axis dimension="radius" grid />
     </Plot>

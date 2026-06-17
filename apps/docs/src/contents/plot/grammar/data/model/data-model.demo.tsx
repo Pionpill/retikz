@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { Layout } from '@retikz/react';
-import { Axis, BarMark, LineMark, Plot, PointMark } from '@retikz/plot-react';
+import { Axis, IntervalMark, PathMark, Plot, PointMark } from '@retikz/plot-react';
 
 import { acquisition, sales, segments } from './data-model.data';
 
@@ -33,7 +33,7 @@ const Demo: FC = () => (
       x={10}
       y={205}
     >
-      <LineMark x="month" y="revenue" order="month" />
+      <PathMark x="month" y="revenue" order="month" />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>
@@ -48,7 +48,7 @@ const Demo: FC = () => (
       x={10}
       y={410}
     >
-      <BarMark x="segment" y="revenue" color="segment" />
+      <IntervalMark x="segment" y="revenue" color="segment" />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>

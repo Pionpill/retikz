@@ -15,7 +15,7 @@ import { Plot, Axis } from '@retikz/plot-react';
 
 ```tsx
 <Plot data={revenue}>
-  <LineMark x="month" y="revenue" order="month" />
+  <PathMark x="month" y="revenue" order="month" />
   <Axis dimension="x" />
   <Axis dimension="y" scale="log" grid tickCount={5} />
 </Plot>
@@ -53,4 +53,4 @@ Under polar, use `dimension="angle"` (angular tick labels) and `dimension="radiu
 - [Coordinates](/plot/grammar/coordinate) — the polar switch and channel roles
 - [Plot](/plot/components/plot) — `<Plot>` draws no axes by default
 
-<ComponentAlert title="Reference lines / bands are not axes" description="To draw a threshold line, mean line, or tolerance band at a value / interval, use <RuleMark> (a data-driven annotation that joins mark draw order), not <Axis>. <Axis> only renders the tick body of a scale." />
+<ComponentAlert title="Reference lines / bands are not axes" description="To draw a threshold line, mean line, or tolerance band at a value / interval, use <ReferenceMark> (a data-driven annotation that joins mark draw order), not <Axis>. <Axis> only renders the tick body of a scale." />

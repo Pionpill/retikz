@@ -1,9 +1,9 @@
 ---
 title: 参考标注
-description: 用 <RuleMark> 画参考线 / 阈值线与容差带：沿一个维度取常量、跨满对侧轴域。
+description: 用 <ReferenceMark> 画参考线 / 阈值线与容差带：沿一个维度取常量、跨满对侧轴域。
 ---
 
-`<RuleMark>` 在数据空间的某个常量位置画一条参考标注：绑 `y` 得到一条**水平线**（`y=const`，跨满 x 域），绑 `x` 得到一条**竖直线**（`x=const`，跨满 y 域）。给数字得到常量单条、给字段名得到每行一条（per-datum）。它和 `<BarMark>` / `<PointMark>` 并列，参与同一坐标系内的叠放顺序。
+`<ReferenceMark>` 参考标注：在数据空间的某个常量位置画一条参考标注——绑 `y` 得到一条**水平线**（`y=const`，跨满 x 域），绑 `x` 得到一条**竖直线**（`x=const`，跨满 y 域）。给数字得到常量单条、给字段名得到每行一条（per-datum）。它和 `<IntervalMark>` / `<PointMark>` 并列，参与同一坐标系内的叠放顺序。
 
 ## 阈值线
 
@@ -66,4 +66,4 @@ description: 用 <RuleMark> 画参考线 / 阈值线与容差带：沿一个维�
 | `color` | `string?` | 常量 rule → 颜色串（线描边 / 带填充）；per-datum → 字段名按类别上色 |
 | `id` | `string?` | 可选句柄（预留，暂不解析） |
 
-<ComponentAlert title="取向二选一" description="<RuleMark> 必须恰好绑 x 或 y 之一；两者皆给或皆缺、或上界与所绑维度不匹配（绑 x 却给 yTo）都会报错。本轮线支持 cartesian2D / polar2D，带支持有 projectCell 的坐标系（cartesian2D / polar2D）；其余坐标系下报错。" />
+<ComponentAlert title="取向二选一" description="<ReferenceMark> 必须恰好绑 x 或 y 之一；两者皆给或皆缺、或上界与所绑维度不匹配（绑 x 却给 yTo）都会报错。本轮线支持 cartesian2D / polar2D，带支持有 projectCell 的坐标系（cartesian2D / polar2D）；其余坐标系下报错。" />

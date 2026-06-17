@@ -1,19 +1,19 @@
 ---
-title: LineMark
-description: "Draw line charts with <LineMark>: connect points in order, support multiple series; add closed under polar for a radar."
+title: PathMark
+description: "Draw line charts with <PathMark>: connect points in order, support multiple series; add closed under polar for a radar."
 ---
 
-`<LineMark>` connects data points into a line in order. `x` / `y` bind the position fields, `order` decides the connection order (defaults to data array order). Set `series` to split into multiple lines, set `closed` to join ends — under polar that's a radar.
+`<PathMark>` is the one-dimensional trajectory mark; under cartesian it is a line/polyline. It connects data points into a line in order. `x` / `y` bind the position fields, `order` decides the connection order (defaults to data array order). Set `series` to split into multiple lines, set `closed` to join ends — under polar that's a radar.
 
 ## Usage
 
 ```tsx
-import { Plot, LineMark } from '@retikz/plot-react';
+import { PathMark, Plot } from '@retikz/plot-react';
 ```
 
 ```tsx
 <Plot data={revenue}>
-  <LineMark x="month" y="revenue" order="month" />
+  <PathMark x="month" y="revenue" order="month" />
 </Plot>
 ```
 
@@ -45,7 +45,7 @@ With no `series`, giving `color` a categorical field also splits the line into o
 
 ### Radar
 
-`<Plot coordinate="polar2D">` with `<LineMark closed />`: the last point connects back to the first into a wireframe polygon, dimensions spread evenly along the angular axis and values map to the radius — a wireframe radar. For a filled radar use [`<AreaMark closed />`](/plot/grammar/mark/area).
+`<Plot coordinate="polar2D">` with `<PathMark closed />`: the last point connects back to the first into a wireframe polygon, dimensions spread evenly along the angular axis and values map to the radius — a wireframe radar. For a filled radar use [`<RegionMark closed />`](/plot/grammar/mark/area).
 
 <ComponentPreview name="line-radar" sourceFiles={['line-radar.data.ts']} />
 
@@ -66,5 +66,5 @@ With no `series`, giving `color` a categorical field also splits the line into o
 ## Related
 
 - [PointMark](/plot/grammar/mark/point) — overlay markers on each observation
-- [AreaMark](/plot/grammar/mark/area) — filled lines / filled radar
+- [RegionMark](/plot/grammar/mark/area) — filled lines / filled radar
 - [Coordinates](/plot/grammar/coordinate) — the polar switch and channel roles

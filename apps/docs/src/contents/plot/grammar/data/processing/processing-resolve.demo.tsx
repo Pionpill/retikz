@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { Axis, LineMark, Plot, PointMark } from '@retikz/plot-react';
+import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
 
 import { quarterlyRows } from './processing-resolve.data';
 
@@ -24,7 +24,7 @@ const Demo: FC = () => (
     height={260}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <LineMark x="quarter" y="revenue" order="quarter" />
+    <PathMark x="quarter" y="revenue" order="quarter" />
     <PointMark x="quarter" y="revenue" />
     <Axis dimension="x" />
     <Axis dimension="y" grid />

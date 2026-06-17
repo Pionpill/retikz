@@ -27,7 +27,7 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 // 数据里叫 period / amount，配置里仍用 month / revenue
 <Plot data={rows} model={[{ name: 'month', type: 'temporal' }, { name: 'revenue', type: 'continuous' }]}
       fieldMap={{ month: 'period', revenue: 'amount' }}>
-  <LineMark x="month" y="revenue" order="month" />
+  <PathMark x="month" y="revenue" order="month" />
 </Plot>
 ```
 

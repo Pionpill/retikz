@@ -31,15 +31,15 @@ const sales = [
 ];
 ```
 
-### 2. Draw the trend with `<Plot>` and `<LineMark>`
+### 2. Draw the trend with `<Plot>` and `<PathMark>`
 
-`<Plot>` receives the data and display size; `<LineMark>` declares which fields feed the x and y channels. `order="month"` connects points by month, so the line stays stable if row order changes.
+`<Plot>` receives the data and display size; `<PathMark>` declares which fields feed the x and y channels. `order="month"` connects points by month, so the line stays stable if row order changes.
 
 `<Plot>` is a thin container and draws no axes itself: to see axes you add `<Axis>` explicitly — `dimension` picks the x / y dimension, and `grid` adds gridlines for that dimension. Below, the y axis carries a grid and the x axis does not.
 
 ```tsx
 <Plot data={sales} width={360} height={200}>
-  <LineMark x="month" y="revenue" order="month" />
+  <PathMark x="month" y="revenue" order="month" />
   <Axis dimension="x" />
   <Axis dimension="y" grid />
 </Plot>
@@ -51,7 +51,7 @@ Marks inside the same `<Plot>` share the same coordinate system and scales. Add 
 
 ```tsx
 <Plot data={sales} width={360} height={200}>
-  <LineMark x="month" y="revenue" order="month" />
+  <PathMark x="month" y="revenue" order="month" />
   <PointMark x="month" y="revenue" />
   <Axis dimension="x" />
   <Axis dimension="y" grid />
@@ -61,7 +61,7 @@ Marks inside the same `<Plot>` share the same coordinate system and scales. Add 
 Keep these 4 rules in mind:
 
 - `data` is a plain row array, and mapped field values must become finite numbers.
-- `<LineMark>` / `<PointMark>` declare field mappings, not pixel coordinates.
+- `<PathMark>` / `<PointMark>` declare field mappings, not pixel coordinates.
 - `<Plot>` is a thin container and draws no axes on its own — the `<Axis dimension="x" />` and `<Axis dimension="y" grid />` above declare the x/y axes and y grid explicitly.
 - The IR tab in the code panel shows the Plot IR assembled by `<Plot>`; data is still supplied separately.
 
@@ -71,7 +71,7 @@ Keep these 4 rules in mind:
 
 ```tsx
 <Plot data={sales} width={360} height={200}>
-  <LineMark x="month" y="revenue" order="month" />
+  <PathMark x="month" y="revenue" order="month" />
   <Axis dimension="y" grid tickCount={5} />
 </Plot>
 ```
@@ -80,7 +80,7 @@ Omit `<Axis>` when you only want the data marks, with no axes or grid:
 
 ```tsx
 <Plot data={sales} width={360} height={200}>
-  <LineMark x="month" y="revenue" order="month" />
+  <PathMark x="month" y="revenue" order="month" />
 </Plot>
 ```
 
@@ -88,7 +88,7 @@ Omit `<Axis>` when you only want the data marks, with no axes or grid:
 
 ```tsx
 <Plot data={sales} width={360} height={200} fontSize={12} margin={{ left: 48 }}>
-  <LineMark x="month" y="revenue" order="month" />
+  <PathMark x="month" y="revenue" order="month" />
 </Plot>
 ```
 

@@ -1,22 +1,22 @@
 ---
 title: 矩形格
-description: 用 <RectMark> 画热图：x / y 双分类（双 band）围成的固定网格，每格的值映射成填充色。
+description: heatmap 是 <IntervalMark> 双 band 的实现：x / y 双分类（双 band）围成的固定网格，每格的值映射成填充色。
 ---
 
-`<RectMark>` 把每行数据画成一个矩形格：`x` 和 `y` **都绑分类字段**（`<Plot>` 自动给两条轴都用 band 比例尺），每格大小固定为 `bandwidth_x × bandwidth_y`；数据的值不进位置，而是经 `color` 通道映射成格子的填充色。这是画热图、混淆矩阵、日历热图的基础。
+heatmap 是 `<IntervalMark>` 双 band 的实现：把每行数据画成一个矩形格，`x` 和 `y` **都绑分类字段**，并通过 `bounds={{ x: { kind: 'band' }, y: { kind: 'band' } }}` 显式声明两维都取 band，每格大小固定为 `bandwidth_x × bandwidth_y`；数据的值不进位置，而是经 `color` 通道映射成格子的填充色。这是画热图、混淆矩阵、日历热图的基础。
 
 <ComponentPreview name="rect-heatmap" sourceFiles={['rect-heatmap.data.ts']} />
 
 <p className="text-sm text-muted-foreground">x = 列、y = 行 双分类定格，value 经 sequential 色阶（viridis）映射成填充。</p>
 
-## 与柱（interval）的区别
+## 与普通区间柱的区别
 
 热图和柱的本质区别在「第二维是什么」：
 
-- **柱**（`<BarMark>`）：`x` 来自 band 比例尺（取 `bandwidth` 当柱宽），`y` 是**连续值**——柱高随数据伸缩，格子是「一段带 × 一段连续区间」。
-- **矩形格**（`<RectMark>`）：`x` **和** `y` **都来自 band 比例尺**，格子是 `bandwidth_x × bandwidth_y` 的固定网格；值经 `color` 通道映射成填充色，不进位置。
+- **柱**（`<IntervalMark x y>`）：`x` 来自 band 比例尺（取 `bandwidth` 当柱宽），`y` 是**连续值**——柱高随数据伸缩，格子是「一段带 × 一段连续区间」。
+- **矩形格**（`<IntervalMark>` 双 band）：通过 `bounds` 把 `x` **和** `y` **都声明为 band 比例尺**，格子是 `bandwidth_x × bandwidth_y` 的固定网格；值经 `color` 通道映射成填充色，不进位置。
 
-因此 `<RectMark>` 同时把 x 轴和 y 轴都强制成 band 比例尺——若你显式声明了连续的 `<Scale dimension="y">` 与之冲突，会直接报错。
+因此双 band 的 `<IntervalMark>` 同时把 x 轴和 y 轴都强制成 band 比例尺——若你显式声明了连续的 `<Scale dimension="y">` 与之冲突，会直接报错。
 
 ## 缺 color：纯网格
 
@@ -32,7 +32,8 @@ description: 用 <RectMark> 画热图：x / y 双分类（双 band）围成的�
 | --- | --- | --- |
 | `x` | `string` | 绑 x 通道的字段路径（分类，自动 band 比例尺，定格宽） |
 | `y` | `string` | 绑 y 通道的字段路径（分类，自动 band 比例尺，定格高） |
+| `bounds` | `IntervalBounds?` | 区间界显式逃生舱；双 band heatmap 写 `{ x: { kind: 'band' }, y: { kind: 'band' } }` 把两维都强制 band |
 | `color` | `string?` | 颜色字段：值映射成格子填充。连续字段需 `model` 声明 → 自动 sequential 色阶（viridis），按 datum 着色；缺省时为纯网格（统一默认填充） |
 | `id` | `string?` | 可选句柄（预留，暂不解析） |
 
-<ComponentAlert title="x / y 双轴都得是分类" description="热图按双维分类定格，<RectMark> 会把 x 和 y 两条轴都强制成 band 比例尺。本轮仅支持 cartesian2D 坐标系；polar / 1D / ternary 下会报错。" />
+<ComponentAlert title="x / y 双轴都得是分类" description="热图按双维分类定格，双 band 的 <IntervalMark> 会把 x 和 y 两条轴都强制成 band 比例尺。本轮仅支持 cartesian2D 坐标系；polar / 1D / ternary 下会报错。" />

@@ -1,19 +1,19 @@
 ---
-title: 面积
-description: 用 <AreaMark> 画面积图：上沿折线与 baseline 围成填充区域；在 polar 下 baseline 取 0 即填充雷达。
+title: 区域
+description: 用 <RegionMark> 画区域图：上沿折线与 baseline 围成填充区域；在 polar 下 baseline 取 0 即填充雷达。
 ---
 
-`<AreaMark>` 在折线的基础上多了一条回边：上沿是 `x` / `y` 连成的折线，下沿贴附 `baseline`（缺省 `0`），两者围成一块可填充的区域（始终经回边闭合）。切到 polar 坐标系、`baseline` 取 `0` 时，回边收到圆心，区域便从圆心填到外沿——填充版雷达。
+`<RegionMark>` 是二维区域 mark：在折线的基础上多了一条回边——上沿是 `x` / `y` 连成的折线，下沿贴附 `baseline`（缺省 `0`），两者围成一块可填充的区域（始终经回边闭合）。切到 polar 坐标系、`baseline` 取 `0` 时，回边收到圆心，区域便从圆心填到外沿——填充版雷达。
 
 ## 用法
 
 ```tsx
-import { Plot, AreaMark } from '@retikz/plot-react';
+import { Plot, RegionMark } from '@retikz/plot-react';
 ```
 
 ```tsx
 <Plot data={activity}>
-  <AreaMark x="day" y="users" order="day" />
+  <RegionMark x="day" y="users" order="day" />
 </Plot>
 ```
 
@@ -29,7 +29,7 @@ import { Plot, AreaMark } from '@retikz/plot-react';
 
 ### 填充雷达
 
-`<Plot coordinate="polar2D">` 下的 `<AreaMark closed />`：各维度沿角向均布、值映射到半径连成上沿，回边贴 `baseline`；`baseline` 缺省 `0` 时回边收到圆心，区域从圆心填到外沿即填充雷达。`closed` 让上沿走弦（连续角轴下不采样弯弧、保持直边轮廓）。想要纯线框轮廓用 [`<LineMark closed />`](/plot/grammar/mark/line)，给它叠 `fill` 也能得到填充雷达。
+`<Plot coordinate="polar2D">` 下的 `<RegionMark closed />`：各维度沿角向均布、值映射到半径连成上沿，回边贴 `baseline`；`baseline` 缺省 `0` 时回边收到圆心，区域从圆心填到外沿即填充雷达。`closed` 让上沿走弦（连续角轴下不采样弯弧、保持直边轮廓）。想要纯线框轮廓用 [`<PathMark closed />`](/plot/grammar/mark/line)，给它叠 `fill` 也能得到填充雷达。
 
 <ComponentPreview name="area-radar" sourceFiles={['area-radar.data.ts']} />
 
@@ -58,6 +58,6 @@ import { Plot, AreaMark } from '@retikz/plot-react';
 
 ## 相关
 
-- [折线](/plot/grammar/mark/line) —— `<LineMark closed />` 是线框雷达
+- [折线](/plot/grammar/mark/line) —— `<PathMark closed />` 是线框雷达
 - [坐标系](/plot/grammar/coordinate) —— polar 开关与角色映射
 - [柱](/plot/grammar/mark/bar) —— 柱、径向柱、饼图 / 环图

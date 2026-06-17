@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { Axis, LineMark, Plot } from '@retikz/plot-react';
+import { Axis, PathMark, Plot } from '@retikz/plot-react';
 
 import { renamedVisits } from './plot-field-map.data';
 
@@ -15,7 +15,7 @@ const Demo: FC = () => (
     height={220}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <LineMark x="date" y="visits" order="date" />
+    <PathMark x="date" y="visits" order="date" />
     <Axis dimension="x" />
     <Axis dimension="y" grid />
   </Plot>

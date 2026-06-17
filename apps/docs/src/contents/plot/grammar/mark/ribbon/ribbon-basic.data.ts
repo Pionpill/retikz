@@ -1,7 +1,7 @@
 /**
  * demo 自造数据集：两列 alluvial 流带（左侧来源 → 右侧去向），喂 ribbon-basic.demo.tsx 的 <Plot data>（不进 IR）。
  * 布局（节点排在哪、流量怎么堆叠）由这里预先算好写回每行：sourceX/Y 左列、targetX/Y 右列、value 流量。
- * <RibbonMark> 只消费这些已算好的位置 + 宽度，不自带 sankey 布局算法。
+ * <LinkMark> 只消费这些已算好的位置 + 宽度，不自带 sankey 布局算法。
  */
 export const flows: Array<Record<string, string | number>> = [
   { source: 'Desktop', target: 'Signup', sourceX: 0, sourceY: 80, targetX: 160, targetY: 78, value: 50, channel: 'Desktop' },

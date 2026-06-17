@@ -1,4 +1,4 @@
-import { Axis, Plot, RectMark } from '@retikz/plot-react';
+import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { matrix } from './rect-heatmap.data';
@@ -16,7 +16,7 @@ const Demo: FC = () => (
     height={260}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <RectMark x="col" y="row" color="value" />
+    <IntervalMark x="col" y="row" color="value" bounds={{ x: { kind: 'band' }, y: { kind: 'band' } }} />
     <Axis dimension="x" />
     <Axis dimension="y" />
   </Plot>

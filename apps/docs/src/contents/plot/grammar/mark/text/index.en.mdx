@@ -1,13 +1,13 @@
 ---
 title: Data Labels
-description: Add text labels to a chart: bar-top values and scatter category names go on the host mark's label; free-floating text uses <TextMark>.
+description: Add text labels to a chart: bar-top values and scatter category names go on the host mark's label; free-floating text uses the <PointMark> text channel.
 ---
 
-There are two ways to write data values or arbitrary text onto a chart. To label **another mark's datum** (a bar-top value, a scatter category name) prefer giving that mark a `label`; to place **free-floating text with no host** (annotations, notes) use a standalone `<TextMark>`. Both project exactly like a point and are coordinate-system agnostic.
+Text is the `<PointMark>` text channel (a borderless text glyph). There are two ways to write data values or arbitrary text onto a chart. To label **another mark's datum** (a bar-top value, a scatter category name) prefer giving that mark a `label`; to place **free-floating text with no host** (annotations, notes) use a standalone `<PointMark>` text channel. Both project exactly like a point and are coordinate-system agnostic.
 
 ## Bar-top value labels
 
-Give `<BarMark>` (or `<PointMark>` / `<LineMark>` / `<AreaMark>`) a `label` field and the label sits above each bar's border, placed by `labelPosition` / `labelDistance` — no second mark needed. `labelFormat` formats the value (thousands separator, decimals, etc.).
+Give `<IntervalMark>` (or `<PointMark>` / `<PathMark>` / `<RegionMark>`) a `label` field and the label sits above each bar's border, placed by `labelPosition` / `labelDistance` — no second mark needed. `labelFormat` formats the value (thousands separator, decimals, etc.).
 
 <ComponentPreview name="text-label" sourceFiles={['text-label.data.ts']} />
 
@@ -17,11 +17,11 @@ Give `<BarMark>` (or `<PointMark>` / `<LineMark>` / `<AreaMark>`) a `label` fiel
 
 ## Free text
 
-For floating text with no host, use `<TextMark>`: it creates a text-bearing node at the projected point, with geometry identical to a scatter point. `dx` / `dy` are pixel-level offsets from the anchor.
+For floating text with no host, use the `<PointMark>` text channel: it creates a text-bearing node at the projected point, with geometry identical to a scatter point. `dx` / `dy` are pixel-level offsets from the anchor.
 
 <ComponentPreview name="text-free" sourceFiles={['text-free.data.ts']} />
 
-<p className="text-sm text-muted-foreground">TextMark x/y project like a point, text="label" reads the field value; dy=-12 nudges the label up so it does not cover the dot.</p>
+<p className="text-sm text-muted-foreground">PointMark x/y project like a point, text="label" reads the field value; dy=-12 nudges the label up so it does not cover the dot.</p>
 
 ## Custom content
 
@@ -42,7 +42,7 @@ Label content has four priority tiers, highest first:
 
 ## API
 
-Host label (set on `<BarMark>` / `<PointMark>` / `<LineMark>` / `<AreaMark>`):
+Host label (set on `<IntervalMark>` / `<PointMark>` / `<PathMark>` / `<RegionMark>`):
 
 | prop | type | notes |
 | --- | --- | --- |
@@ -53,7 +53,7 @@ Host label (set on `<BarMark>` / `<PointMark>` / `<LineMark>` / `<AreaMark>`):
 | `labelPin` | `boolean?` | Draw a leader line from the border to the label; default false |
 | `resolveLabel` | `(row) => string?` | Runtime template escape hatch (not in IR, needs `id`); overrides `label` / `labelFormat` |
 
-Standalone `<TextMark>` (free text):
+Standalone `<PointMark>` text channel (free text):
 
 | prop | type | notes |
 | --- | --- | --- |
@@ -66,4 +66,4 @@ Standalone `<TextMark>` (free text):
 | `resolveLabel` | `(row) => string?` | Runtime template escape hatch (not in IR, needs `id`); overrides `text` / `format` |
 | `id` | `string?` | Optional handle; `resolveLabel` injection matches on this id |
 
-<ComponentAlert title="Prefer the host, create only without one" description="To label another mark's datum, prefer giving that mark a label (the label is part of the host glyph, reusing border placement and leaders, and the IR does not grow with labels). <TextMark> is only for free-floating text with no host. Do not mix the two." />
+<ComponentAlert title="Prefer the host, create only without one" description="To label another mark's datum, prefer giving that mark a label (the label is part of the host glyph, reusing border placement and leaders, and the IR does not grow with labels). The <PointMark> text channel is only for free-floating text with no host. Do not mix the two." />

@@ -3,17 +3,17 @@ title: 图表容器
 description: <Plot> 是图表容器：接收裸数据与尺寸，装配 mark / guide / scale 子组件，并在编译期下沉到 core 图元。
 ---
 
-`<Plot>` 是 plot 体系的容器组件：它接收 `data`（裸数据行数组）和显示尺寸，收集内部的 `<LineMark>` / `<BarMark>` / `<AreaMark>` / `<Axis>` / `<Scale>` 等子组件，编译期再装配成 PlotSpec 并下沉到 core。数据不写进 IR，只在 lowering 时注入。`<Plot>` 自己不画坐标轴、网格或图例；这些 guide 由你显式声明，scale 会自动推断，也可以用 `<Scale>` 覆盖；坐标系默认 `cartesian2D`，可用 `coordinate` 切换。
+`<Plot>` 是 plot 体系的容器组件：它接收 `data`（裸数据行数组）和显示尺寸，收集内部的 `<PathMark>` / `<IntervalMark>` / `<RegionMark>` / `<Axis>` / `<Scale>` 等子组件，编译期再装配成 PlotSpec 并下沉到 core。数据不写进 IR，只在 lowering 时注入。`<Plot>` 自己不画坐标轴、网格或图例；这些 guide 由你显式声明，scale 会自动推断，也可以用 `<Scale>` 覆盖；坐标系默认 `cartesian2D`，可用 `coordinate` 切换。
 
 ## 用法
 
 ```tsx
-import { Axis, BarMark, Plot } from '@retikz/plot-react';
+import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 ```
 
 ```tsx
 <Plot data={revenue} width={360} height={220}>
-  <BarMark x="quarter" y="value" />
+  <IntervalMark x="quarter" y="value" />
   <Axis dimension="x" />
   <Axis dimension="y" grid />
 </Plot>
@@ -108,7 +108,7 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 | --- | --- | --- |
 | 解析数据 | `data.reference` 取数据集 + `model` / `fieldMap` | 归一化数据行（类型推断、改名、transform） |
 | 推断 scale | 各通道绑定字段 + 坐标系 | band / linear / time / log… scale 与投影帧 |
-| 逐 mark 成层 | 每个 `<LineMark>` / `<BarMark>` … | 一个 core `<Scope>` 图层（内含 `<Node>` / `<Path>`） |
+| 逐 mark 成层 | 每个 `<PathMark>` / `<IntervalMark>` … | 一个 core `<Scope>` 图层（内含 `<Node>` / `<Path>`） |
 | 轴 / 网格 / 图例成层 | 显式 `<Axis>` / `<Legend>` | 网格层、轴层、图例层（各是 `<Scope>`） |
 | 编排 z-order | 上面所有层 | 网格垫底 → mark → 轴 → 图例 |
 

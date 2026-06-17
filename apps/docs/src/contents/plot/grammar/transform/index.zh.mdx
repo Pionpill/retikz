@@ -19,7 +19,7 @@ description: transform 是图形语法的统计层：在比例尺和图元之前
 ```tsx
 <Plot data={rows} model={model}>
   <Transform kind="aggregate" groupBy={['region']} reduce="sum" field="revenue" as="total" />
-  <BarMark x="region" y="total" />
+  <IntervalMark x="region" y="total" />
 </Plot>
 ```
 
@@ -29,19 +29,19 @@ description: transform 是图形语法的统计层：在比例尺和图元之前
 
 ```tsx
 <Plot data={rows} dataTransforms={[{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }]}>
-  <BarMark x="region" y="total" />
+  <IntervalMark x="region" y="total" />
 </Plot>
 ```
 
 > 用 `dataTransforms` 而非 `transforms`，是为了和 core 容器的几何 `transforms`（平移 / 旋转）区分开。
 
-> `<BarMark stack>` / `<BarMark angle>` 的自动堆叠是历史便利写法；当管线里已经显式存在一个**同款**（相同 `x` / `y` / `groupBy`）的 `stack` 时，那条自动堆叠会被抑制，不会对同一组数据堆叠两次（签名不同的堆叠柱不受影响）。
+> `<IntervalMark stack>` / `<IntervalMark angle>` 的自动堆叠是历史便利写法；当管线里已经显式存在一个**同款**（相同 `x` / `y` / `groupBy`）的 `stack` 时，那条自动堆叠会被抑制，不会对同一组数据堆叠两次（签名不同的堆叠柱不受影响）。
 
 ## bin：连续分箱（直方图）
 
 `bin` 把一个连续字段切成若干区间，每个区间产出一行——携带箱的下界 `binStart`、上界 `binEnd`，以及箱内规约值 `binValue`（默认是频数 `count`）。这是直方图的底座。
 
-`<BarMark>` 用 `x0` / `x1` 读箱边，画出**连续 x 轴上紧贴排列、宽度随箱边变化**的直方柱（区别于分类柱的等宽 band），`y` 读 `binValue` 作高度：
+`<IntervalMark>` 用 `x0` / `x1` 读箱边，画出**连续 x 轴上紧贴排列、宽度随箱边变化**的直方柱（区别于分类柱的等宽 band），`y` 读 `binValue` 作高度：
 
 <ComponentPreview name="transform-histogram" sourceFiles={['transform-histogram.data.ts']} />
 
@@ -79,7 +79,7 @@ normalize 本身保持行数，和 `stack` 正交组合即得**百分比堆叠**
 
 ## derive-interval：单行派生区间
 
-`derive-interval` 给每行独立算出一个 `[start, end]` 区间，写进 `startField` / `endField`（缺省 `y0` / `y1`，对接 interval / sector 的区间消费方）。两种模式：
+`derive-interval` 给每行独立算出一个 `[start, end]` 区间，写进 `startField` / `endField`（缺省 `y0` / `y1`，对接 interval 的区间消费方）。两种模式：
 
 - **baseline→value**：给 `from` 字段，区间为 `[baseline, from 值]`（`baseline` 缺省 0）——画基线不为 0 的柱、误差棒底座。
 - **两字段**：给 `startFrom` + `endFrom`，区间为 `[startFrom 值, endFrom 值]`——画甘特条、显式区间。

@@ -7,7 +7,7 @@ The data model says what fields are. Data processing says how real data gets in.
 
 ```tsx
 <PointMark x="gdp" y="life" color="region" size="population" />
-<TextMark x="gdp" y="life" text="abbr" />
+<PointMark x="gdp" y="life" text="abbr" />
 ```
 
 Internally, that becomes the mark's `encoding`: `x` and `y` are positional channels, `color` and `size` are visual channels, and `text` is the text-content channel.
@@ -25,7 +25,7 @@ One row can feed several channels at once: `gdp` controls horizontal position, `
 | Position | `x` / `y` | Main position channels for one- and two-dimensional coordinates; polar coordinates reinterpret them as angle / radius |
 | Ternary position | `a` / `b` / `c` | The three components of a ternary coordinate, normalized by their sum during lowering |
 | Visual | `color` / `size` / `opacity` / `shape` | Control color, point radius, opacity, or point shape; field types usually derive the default scale |
-| Text | `text` / `label` | Text content for `TextMark`, or datum labels attached to another mark |
+| Text | `text` / `label` | Text content for `PointMark`, or datum labels attached to another mark |
 | Order and series | `order` / `series` | Not part of the `encoding` object, but still field-driven; used for line order, multi-series splitting, or grouping |
 
 ## Fields And Constants
@@ -36,10 +36,10 @@ In the React DSL, strings usually mean field names:
 <PointMark x="gdp" y="life" color="region" />
 ```
 
-Some channels also accept constants. `RuleMark` is the clearest example:
+Some channels also accept constants. `ReferenceMark` is the clearest example:
 
 ```tsx
-<RuleMark y={80} color="crimson" />
+<ReferenceMark y={80} color="crimson" />
 ```
 
 In IR, fields become `{ field: 'gdp' }`, while constants become `{ value: 80 }`. A channel must choose exactly one: field-driven or constant.

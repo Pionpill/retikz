@@ -106,7 +106,7 @@ sequential 是**连续**色带（平滑渐变）。但很多场景要把连续�
 
 ```tsx
 <Plot data={rows}>
-  <LineMark x="date" y="value" order="date" />
+  <PathMark x="date" y="value" order="date" />
   <Scale dimension="x" type="time" />
   <Axis dimension="x" />
 </Plot>
@@ -118,7 +118,7 @@ polar 图里用 `dimension="angle"` / `dimension="radius"`，也可用 `x` / `y`
 
 ```tsx
 <Plot data={rows}>
-  <LineMark x="date" y="value" order="date" />
+  <PathMark x="date" y="value" order="date" />
   <Axis dimension="x" scale="time" />
 </Plot>
 ```

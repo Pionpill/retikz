@@ -1,4 +1,4 @@
-/** demo 自造数据集：流量来源占比（source 分类 + value 值），喂 <BarMark angle>（不进 IR） */
+/** demo 自造数据集：流量来源占比（source 分类 + value 值），喂 <IntervalMark angle>（不进 IR） */
 export const traffic: Array<Record<string, string | number>> = [
   { source: 'Direct', value: 35 },
   { source: 'Search', value: 28 },

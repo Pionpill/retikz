@@ -1,4 +1,4 @@
-/** demo 自造数据集：月度降水（分类 month + 值），喂径向柱 polar BarMark（不进 IR） */
+/** demo 自造数据集：月度降水（分类 month + 值），喂径向柱 polar IntervalMark（不进 IR） */
 export const rainfall: Array<Record<string, string | number>> = [
   { month: 'Jan', value: 8 },
   { month: 'Feb', value: 5 },

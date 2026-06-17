@@ -1,9 +1,11 @@
 ---
-title: RibbonMark
-description: Use <RibbonMark> to draw sankey / alluvial flow bands — one fillable curved band per record from a source to a target endpoint, width driven by the flow value.
+title: LinkMark
+description: Use <LinkMark> to draw sankey / alluvial flow bands — one fillable curved band per record from a source to a target endpoint, width driven by the flow value.
 ---
 
-`<RibbonMark>` draws each record as a **band with width**: it curves from a source endpoint (`sourceX` / `sourceY`) to a target endpoint (`targetX` / `targetY`), with two cubic-curve long edges and straight end caps enclosing a fillable region. The `value` field maps through a built-in width scale to the band width. This is the primitive for sankey and alluvial flow diagrams.
+`<LinkMark>` relational flow band.
+
+`<LinkMark>` draws each record as a **band with width**: it curves from a source endpoint (`sourceX` / `sourceY`) to a target endpoint (`targetX` / `targetY`), with two cubic-curve long edges and straight end caps enclosing a fillable region. The `value` field maps through a built-in width scale to the band width. This is the primitive for sankey and alluvial flow diagrams.
 
 The band defaults to `orientation="horizontal"`: the entry / exit tangents run along the horizontal axis and the half-width along the vertical axis, giving a clean left-to-right flow (vertical end caps). The width gradates smoothly from the source end to the target end (`value` at the source, `endWidth` at the target). Set `orientation="vertical"` to flow top-down with half-width along the horizontal axis.
 
@@ -13,7 +15,7 @@ The band defaults to `orientation="horizontal"`: the entry / exit tangents run a
 
 ## Endpoints are field pairs
 
-Both ends of the band are **field pairs** — `sourceX` / `sourceY` for the source, `targetX` / `targetY` for the target — projected through the coordinate system into screen points just like `<LineMark>` / `<PointMark>`. The width, the four corners, and the curve control points are all derived from these two projected endpoints.
+Both ends of the band are **field pairs** — `sourceX` / `sourceY` for the source, `targetX` / `targetY` for the target — projected through the coordinate system into screen points just like `<PathMark>` / `<PointMark>`. The width, the four corners, and the curve control points are all derived from these two projected endpoints.
 
 | prop | type | description |
 | --- | --- | --- |
@@ -38,6 +40,6 @@ Give `endWidth` to let the target end use an independent width — the band **gr
 
 ## Layout is a preprocessing step
 
-<ComponentAlert title="Ribbon only draws the band, not the layout" description="Where nodes sit, how multiple flows stack, how crossings are minimized — those are sankey layout algorithms, not part of <RibbonMark>. Each record's sourceX/Y, targetX/Y, and value must be computed ahead of time (or produced by a later layout transform) and written back into the data; <RibbonMark> only consumes those pre-computed positions and widths." />
+<ComponentAlert title="Ribbon only draws the band, not the layout" description="Where nodes sit, how multiple flows stack, how crossings are minimized — those are sankey layout algorithms, not part of <LinkMark>. Each record's sourceX/Y, targetX/Y, and value must be computed ahead of time (or produced by a later layout transform) and written back into the data; <LinkMark> only consumes those pre-computed positions and widths." />
 
 This round endpoints are always field pairs within the same coordinate system; connecting named nodes across different sub-plots (facet / inset) is a later capability. Ribbon supports the `cartesian2D` coordinate system only this round.

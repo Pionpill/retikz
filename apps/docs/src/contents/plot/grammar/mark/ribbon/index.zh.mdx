@@ -1,9 +1,11 @@
 ---
 title: 流带
-description: 用 <RibbonMark> 画 sankey / alluvial 流带：每行一条从源端到目标端的可填充曲带，宽度随流量变化。
+description: 用 <LinkMark> 画 sankey / alluvial 流带：每行一条从源端到目标端的可填充曲带，宽度随流量变化。
 ---
 
-`<RibbonMark>` 把每行数据画成一条**有宽度的流带**：从源端点（`sourceX` / `sourceY`）弯到目标端点（`targetX` / `targetY`），两条长边是 cubic 曲线、两端是直线封口，围成一个可填充区域。`value` 字段经内建宽度比例尺映射成带宽。这是画 sankey、alluvial 流量图的基础图元。
+`<LinkMark>` 关系流带。
+
+`<LinkMark>` 把每行数据画成一条**有宽度的流带**：从源端点（`sourceX` / `sourceY`）弯到目标端点（`targetX` / `targetY`），两条长边是 cubic 曲线、两端是直线封口，围成一个可填充区域。`value` 字段经内建宽度比例尺映射成带宽。这是画 sankey、alluvial 流量图的基础图元。
 
 流带默认 `orientation="horizontal"`：出 / 入切向沿水平轴、半宽沿垂直轴，得到干净的左右流（封口竖直）。带宽从源端到目标端沿程平滑渐变（源端 `value`、目标端 `endWidth`）。设 `orientation="vertical"` 则流向自上而下、半宽沿水平。
 
@@ -13,7 +15,7 @@ description: 用 <RibbonMark> 画 sankey / alluvial 流带：每行一条从源�
 
 ## 端点是字段对
 
-流带的两端都是**字段对**——`sourceX` / `sourceY` 给源端、`targetX` / `targetY` 给目标端，和 `<LineMark>` / `<PointMark>` 一样经坐标系投影成屏幕点。带宽、四角、曲线控制点都由这两个已投影的端点算出。
+流带的两端都是**字段对**——`sourceX` / `sourceY` 给源端、`targetX` / `targetY` 给目标端，和 `<PathMark>` / `<PointMark>` 一样经坐标系投影成屏幕点。带宽、四角、曲线控制点都由这两个已投影的端点算出。
 
 | prop | 类型 | 说明 |
 | --- | --- | --- |
@@ -38,6 +40,6 @@ description: 用 <RibbonMark> 画 sankey / alluvial 流带：每行一条从源�
 
 ## 布局需预处理
 
-<ComponentAlert title="流带只画带，不算布局" description="节点排在哪、多条流怎么堆叠、交叉怎么最小化——这些是 sankey 布局算法，不在 <RibbonMark> 里。每行的 sourceX/Y、targetX/Y、value 须由你预先算好（或后续的布局 transform 产出）写回数据，<RibbonMark> 只消费这些已算好的位置 + 宽度。" />
+<ComponentAlert title="流带只画带，不算布局" description="节点排在哪、多条流怎么堆叠、交叉怎么最小化——这些是 sankey 布局算法，不在 <LinkMark> 里。每行的 sourceX/Y、targetX/Y、value 须由你预先算好（或后续的布局 transform 产出）写回数据，<LinkMark> 只消费这些已算好的位置 + 宽度。" />
 
 本轮端点统一是同一坐标系内的字段对；连接不同子图（facet / inset）的具名 node、跨 scope 连线属于后续能力。流带本轮仅支持 `cartesian2D` 坐标系。

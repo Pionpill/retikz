@@ -19,7 +19,7 @@ Declare a transform with `<Transform kind="...">`; `kind` is the discriminator a
 ```tsx
 <Plot data={rows} model={model}>
   <Transform kind="aggregate" groupBy={['region']} reduce="sum" field="revenue" as="total" />
-  <BarMark x="region" y="total" />
+  <IntervalMark x="region" y="total" />
 </Plot>
 ```
 
@@ -29,19 +29,19 @@ For programmatic pipelines you can also pass an IR array directly via `<Plot dat
 
 ```tsx
 <Plot data={rows} dataTransforms={[{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }]}>
-  <BarMark x="region" y="total" />
+  <IntervalMark x="region" y="total" />
 </Plot>
 ```
 
 > It is named `dataTransforms` (not `transforms`) to distinguish it from the core container's geometric `transforms` (translate / rotate).
 
-> The auto-stacking of `<BarMark stack>` / `<BarMark angle>` is a legacy convenience. When a **matching** `stack` (same `x` / `y` / `groupBy`) already exists explicitly in the pipeline, that auto-stack is suppressed so the same data is never stacked twice (stacks with a different signature are unaffected).
+> The auto-stacking of `<IntervalMark stack>` / `<IntervalMark angle>` is a legacy convenience. When a **matching** `stack` (same `x` / `y` / `groupBy`) already exists explicitly in the pipeline, that auto-stack is suppressed so the same data is never stacked twice (stacks with a different signature are unaffected).
 
 ## bin: continuous binning (histogram)
 
 `bin` slices a continuous field into intervals, emitting one row per bin — carrying the lower edge `binStart`, the upper edge `binEnd`, and a per-bin reduced value `binValue` (frequency `count` by default). This is the foundation of a histogram.
 
-`<BarMark>` reads the bin edges via `x0` / `x1` to draw **contiguous bars on a continuous x axis whose width follows the bin edges** (unlike the equal-width band of categorical bars), with `y` reading `binValue` as the height:
+`<IntervalMark>` reads the bin edges via `x0` / `x1` to draw **contiguous bars on a continuous x axis whose width follows the bin edges** (unlike the equal-width band of categorical bars), with `y` reading `binValue` as the height:
 
 <ComponentPreview name="transform-histogram" sourceFiles={['transform-histogram.data.ts']} />
 
@@ -79,7 +79,7 @@ When a group sum is 0, that group's share is 0 — no `NaN`.
 
 ## derive-interval: per-row interval
 
-`derive-interval` computes an independent `[start, end]` interval for each row, written to `startField` / `endField` (default `y0` / `y1`, matching the interval / sector bound consumers). Two modes:
+`derive-interval` computes an independent `[start, end]` interval for each row, written to `startField` / `endField` (default `y0` / `y1`, matching the interval bound consumers). Two modes:
 
 - **baseline→value**: give `from`; the interval is `[baseline, from value]` (`baseline` defaults to 0) — bars with a non-zero baseline, error-bar bases.
 - **two-field**: give `startFrom` + `endFrom`; the interval is `[startFrom value, endFrom value]` — gantt bars, explicit intervals.

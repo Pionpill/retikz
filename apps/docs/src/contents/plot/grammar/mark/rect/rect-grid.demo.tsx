@@ -1,4 +1,4 @@
-import { Axis, Plot, RectMark } from '@retikz/plot-react';
+import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { slots } from './rect-grid.data';
@@ -15,7 +15,7 @@ const Demo: FC = () => (
     height={200}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <RectMark x="day" y="slot" />
+    <IntervalMark x="day" y="slot" bounds={{ x: { kind: 'band' }, y: { kind: 'band' } }} />
     <Axis dimension="x" />
     <Axis dimension="y" />
   </Plot>

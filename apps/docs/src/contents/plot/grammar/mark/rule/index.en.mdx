@@ -1,9 +1,9 @@
 ---
-title: RuleMark
-description: Draw reference / threshold lines and tolerance bands with <RuleMark> — a constant along one axis, spanning the opposite axis domain.
+title: ReferenceMark
+description: Draw reference / threshold lines and tolerance bands with <ReferenceMark> — a constant along one axis, spanning the opposite axis domain.
 ---
 
-`<RuleMark>` draws a reference annotation at a constant position in data space: bind `y` for a **horizontal line** (`y=const`, spanning the x domain), bind `x` for a **vertical line** (`x=const`, spanning the y domain). A number gives a single constant; a field name gives one per row (per-datum). It sits alongside `<BarMark>` / `<PointMark>` and joins the draw order within the same coordinate system.
+`<ReferenceMark>` reference annotation: it draws a reference annotation at a constant position in data space — bind `y` for a **horizontal line** (`y=const`, spanning the x domain), bind `x` for a **vertical line** (`x=const`, spanning the y domain). A number gives a single constant; a field name gives one per row (per-datum). It sits alongside `<IntervalMark>` / `<PointMark>` and joins the draw order within the same coordinate system.
 
 ## Threshold line
 
@@ -66,4 +66,4 @@ Under `coordinate="polar2D"` the orientation is reinterpreted:
 | `color` | `string?` | Constant rule → a color string (line stroke / band fill); per-datum → a field name colored by category |
 | `id` | `string?` | Optional handle (reserved, not resolved yet) |
 
-<ComponentAlert title="Bind exactly one orientation" description="<RuleMark> must bind exactly one of x or y; giving both / neither, or an upper bound that does not match the bound dimension (binding x but setting yTo), throws. This round lines support cartesian2D / polar2D, and bands support coordinate systems that provide projectCell (cartesian2D / polar2D); other coordinate systems throw." />
+<ComponentAlert title="Bind exactly one orientation" description="<ReferenceMark> must bind exactly one of x or y; giving both / neither, or an upper bound that does not match the bound dimension (binding x but setting yTo), throws. This round lines support cartesian2D / polar2D, and bands support coordinate systems that provide projectCell (cartesian2D / polar2D); other coordinate systems throw." />
