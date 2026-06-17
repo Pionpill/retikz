@@ -142,21 +142,19 @@ const binEdges = (op: BinTransform, values: Array<number>): Array<number> => {
   const [observedMin, observedMax] = values.length > 0 ? [Math.min(...values), Math.max(...values)] : [0, 0];
   const [domainMin, domainMax] = op.extent ?? [observedMin, observedMax];
 
-  // thresholds：显式内部边界 + extent 端点补齐 → K+1 箱
+  // thresholds：显式内部边界 + extent 端点补齐 → K+1 箱（仅保留严格落在 (domainMin, domainMax) 内的边界，
+  //   域外阈值会产生倒退 / 空箱、且让观测落空被丢，剔除之）
   if (op.thresholds !== undefined) {
-    const interior = [...op.thresholds].sort((a, b) => a - b);
+    const interior = [...op.thresholds].sort((a, b) => a - b).filter(threshold => threshold > domainMin && threshold < domainMax);
     return [domainMin, ...interior, domainMax];
   }
-  // step：从下界按固定箱宽平铺到覆盖上界
+  // step：从下界按固定箱宽平铺；箱数 = ceil(span / step)，边界用乘法（避免 += 累积漂移），末边顶到 domainMax（避免漂移丢上界观测）
   if (op.step !== undefined) {
-    const edges = [domainMin];
-    let edge = domainMin;
-    // 退化（min===max）→ 单箱 [min, min+step]
-    while (edge < domainMax - 1e-9) {
-      edge += op.step;
-      edges.push(edge);
-    }
-    if (edges.length < 2) edges.push(domainMin + op.step);
+    const step = op.step;
+    const span = domainMax - domainMin;
+    const binCount = Math.max(1, Math.ceil(span / step - 1e-9));
+    const edges = Array.from({ length: binCount + 1 }, (_, i) => domainMin + i * step);
+    if (edges[binCount] < domainMax) edges[binCount] = domainMax;
     return edges;
   }
   // count（默认）：nice 域后等分成 count 箱
@@ -168,7 +166,9 @@ const binEdges = (op: BinTransform, values: Array<number>): Array<number> => {
   }
   if (hi - lo < 1e-12) hi = lo + 1; // 退化域（单值 / 全等）→ 给一个单位宽，避免零宽箱
   const width = (hi - lo) / count;
-  return Array.from({ length: count + 1 }, (_, i) => lo + i * width);
+  const edges = Array.from({ length: count + 1 }, (_, i) => lo + i * width);
+  edges[count] = hi; // 末边钉到 hi（乘法漂移可能让末边略短于 hi，导致 hi 处观测落空被丢）
+  return edges;
 };
 
 /**

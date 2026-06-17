@@ -180,6 +180,30 @@ describe('applyBin (alpha.12 ADR-01)', () => {
     expect(() => applyTransforms([{ m: 1 }], [{ kind: 'bin', field: 'm', count: 5, step: 2 }])).toThrow(/mutually exclusive|strateg/i);
   });
 
+  it('bin_step_float_drift_keeps_domain_max', () => {
+    // 浮点箱宽（0.1）+ extent 上界观测：末边乘法/钉值须覆盖 domainMax，否则 1.0 落空被丢（bug hunt 回归）
+    const rows: Array<ExternalRow> = Array.from({ length: 11 }, (_, i) => ({ v: i * 0.1 }));
+    const out = applyTransforms(rows, [{ kind: 'bin', field: 'v', step: 0.1, extent: [0, 1] }]);
+    // 11 个观测一个不丢
+    expect(out.reduce((acc, r) => acc + (r.binValue as number), 0)).toBe(11);
+  });
+
+  it('bin_count_float_drift_keeps_domain_max', () => {
+    // count 策略下末边钉到 hi：非整除域不丢上界观测
+    const rows: Array<ExternalRow> = Array.from({ length: 8 }, (_, i) => ({ v: i }));
+    const out = applyTransforms(rows, [{ kind: 'bin', field: 'v', count: 3, extent: [0, 7] }]);
+    expect(out.reduce((acc, r) => acc + (r.binValue as number), 0)).toBe(8);
+  });
+
+  it('bin_thresholds_outside_extent_filtered', () => {
+    // 域外阈值剔除：thresholds [3,100] + 观测域 [1,9] → 内部仅 3 → [1,3,9] 两箱，无倒退/丢数
+    const rows: Array<ExternalRow> = [{ m: 1 }, { m: 5 }, { m: 9 }];
+    const out = applyTransforms(rows, [{ kind: 'bin', field: 'm', thresholds: [3, 100] }]);
+    expect(out.length).toBe(2);
+    expect(out.map(r => [r.binStart, r.binEnd])).toEqual([[1, 3], [3, 9]]);
+    expect(out.reduce((acc, r) => acc + (r.binValue as number), 0)).toBe(3);
+  });
+
   it('bin_group_level_provenance_source_indices', () => {
     // 分箱产 datum 的 provenance 指向源行集合（组级），而非单 sourceIndex
     const tagged = tagSourceIndex([{ m: 0 }, { m: 1 }, { m: 8 }]); // source idx 0,1,2
