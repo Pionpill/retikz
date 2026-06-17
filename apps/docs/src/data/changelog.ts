@@ -1940,8 +1940,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'BarMark x0 / x1 + auto-stack 去重', en: 'BarMark x0 / x1 + auto-stack dedup' },
                 content: {
-                  zh: '`<BarMark>` 加 `x0` / `x1`（→ interval `x0Field` / `x1Field`）：设了走连续 x linear scale 的 histogram 区间柱（不强制 band、无需 `x`），配 `<Transform kind="bin">` 即直方图。当管线已显式存在 `stack`（经 `<Transform kind="stack">`）时，抑制 `<BarMark stack>` / `<BarMark angle>` 的自动 stack 注入，避免对同一组数据二次堆叠（百分比堆叠 = 显式 `[normalize, stack]`） [柱](/plot/grammar/mark/bar)',
-                  en: '`<BarMark>` gains `x0` / `x1` (→ interval `x0Field` / `x1Field`): when set, continuous-x histogram bars on a linear scale (no forced band, no `x` needed), pairing with `<Transform kind="bin">` for histograms. When a `stack` already exists explicitly (via `<Transform kind="stack">`), the auto-stack injection of `<BarMark stack>` / `<BarMark angle>` is suppressed to avoid double-stacking the same data (percentage stacking = explicit `[normalize, stack]`) [Bar](/plot/grammar/mark/bar)',
+                  zh: '`<BarMark>` 加 `x0` / `x1`（→ interval `x0Field` / `x1Field`）：设了走连续 x linear scale 的 histogram 区间柱（不强制 band、无需 `x`），配 `<Transform kind="bin">` 即直方图。当管线已显式存在 `stack`（经 `<Transform kind="stack">`）时，抑制 `<BarMark stack>` / `<BarMark angle>` 的自动 stack 注入，避免对同一组数据二次堆叠（百分比堆叠 = 显式 `[normalize, stack]`） [柱](/plot/grammar/mark/interval)',
+                  en: '`<BarMark>` gains `x0` / `x1` (→ interval `x0Field` / `x1Field`): when set, continuous-x histogram bars on a linear scale (no forced band, no `x` needed), pairing with `<Transform kind="bin">` for histograms. When a `stack` already exists explicitly (via `<Transform kind="stack">`), the auto-stack injection of `<BarMark stack>` / `<BarMark angle>` is suppressed to avoid double-stacking the same data (percentage stacking = explicit `[normalize, stack]`) [Bar](/plot/grammar/mark/interval)',
                 },
               },
             ],

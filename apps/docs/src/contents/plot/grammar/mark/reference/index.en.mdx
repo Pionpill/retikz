@@ -1,9 +1,9 @@
 ---
 title: ReferenceMark
-description: Draw reference / threshold lines and tolerance bands with <ReferenceMark> — a constant along one axis, spanning the opposite axis domain.
+description: ReferenceMark expresses axis-constrained references: a constant on one role, expanded into a line or band along the opposite role.
 ---
 
-`<ReferenceMark>` reference annotation: it draws a reference annotation at a constant position in data space — bind `y` for a **horizontal line** (`y=const`, spanning the x domain), bind `x` for a **vertical line** (`x=const`, spanning the y domain). A number gives a single constant; a field name gives one per row (per-datum). It sits alongside `<IntervalMark>` / `<PointMark>` and joins the draw order within the same coordinate system.
+`<ReferenceMark>` is a special mark: instead of starting from point / path / region dimensions, it declares an axis constraint in data space. Bind `y` for a horizontal reference, bind `x` for a vertical reference; a lower bound alone becomes a line, while `xTo` / `yTo` turns it into a band. A number gives a single constant; a field name gives one per row (per-datum). It sits alongside `<IntervalMark>` / `<PointMark>` and joins the draw order within the same coordinate system.
 
 ## Threshold line
 

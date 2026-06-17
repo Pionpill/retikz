@@ -1,19 +1,33 @@
 ---
 title: Marks
-description: Marks decide which shapes a datum or data group creates; field encodings, scales, and coordinates decide where those shapes finally land.
+description: Marks are the registered layer from data to geometry: each mark declares a data geometry, while scales and coordinates decide its final shape.
 ---
 
-Marks are the geometry layer of the graphic grammar. They declare which shape represents the data, without hard-coding pixel positions; visual channels such as position, color, and size are driven by fields, then interpreted by scales and coordinates.
+Marks are the geometry layer of the graphic grammar. They do not hard-code pixel positions; they declare which kind of geometry the data should produce: point, path, region, interval, reference, or link.
 
-## Mark Types
+Each built-in mark is a registered entry. During compilation, field mappings become channels and are then lowered by the matching mark; the coordinate system interprets those channels, so the same mark can produce different shapes in different coordinates.
+
+## Mechanism
+
+| Mark | Type | Mechanism | Common forms |
+| --- | --- | --- | --- |
+| `PointMark` | dimensional | A 0D glyph at a coordinate tuple | Scatter, bubbles, text points |
+| `PathMark` | dimensional | Ordered points connected into a 1D trajectory | Lines, paths, radar outlines |
+| `RegionMark` | dimensional | A 2D region enclosed by a boundary | Areas, filled radar |
+| `IntervalMark` | dimensional | Orthogonal interval products across position roles | Bars, histograms, heatmaps, radial bars, pies / donuts |
+| `ReferenceMark` | special | Reference constraints at fixed positions or intervals | Threshold lines, reference rings, tolerance bands |
+| `LinkMark` | special | Relational geometry from source to target | Ribbons, alluvial bands |
+
+Chart forms are not separate low-level marks. A heatmap is a double-band `IntervalMark`, a pie is an angular `IntervalMark` under polar coordinates, and data labels are either `PointMark` text glyphs or the host mark's `label`.
+
+## Registered Marks
 
 <div className="grid gap-3 sm:grid-cols-2">
-  <LinkedCard href="/plot/grammar/mark/line"><strong>Line</strong><span>Connect data points in order for trends, paths, and radar outlines.</span></LinkedCard>
-  <LinkedCard href="/plot/grammar/mark/point"><strong>Point</strong><span>Draw each row as a point, with color, size, opacity, and shape channels.</span></LinkedCard>
-  <LinkedCard href="/plot/grammar/mark/bar"><strong>Bar</strong><span>Extend from a baseline to a value, including grouped, stacked, radial, pie, and donut views.</span></LinkedCard>
-  <LinkedCard href="/plot/grammar/mark/area"><strong>Area</strong><span>Fill between a line and a baseline, including filled radar charts.</span></LinkedCard>
-  <LinkedCard href="/plot/grammar/mark/rect"><strong>Rect</strong><span>Use categorical or continuous two-dimensional bins for grids and heatmaps.</span></LinkedCard>
-  <LinkedCard href="/plot/grammar/mark/rule"><strong>Rule</strong><span>Draw thresholds, reference lines, and interval boundaries.</span></LinkedCard>
-  <LinkedCard href="/plot/grammar/mark/text"><strong>Text</strong><span>Place field values or fixed labels as annotations in the plot.</span></LinkedCard>
-  <LinkedCard href="/plot/grammar/mark/ribbon"><strong>Ribbon</strong><span>Represent bands between two boundaries or flow-like regions.</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/point"><strong>PointMark</strong><span>0D glyphs: scatter, bubbles, shape encoding, and hostless text points.</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/path"><strong>PathMark</strong><span>1D trajectories: connect data points in order for trends, paths, and radar outlines.</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/region"><strong>RegionMark</strong><span>2D regions: filled areas enclosed by a path, baseline, or boundary.</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/interval"><strong>IntervalMark</strong><span>Interval products: bars, histograms, heatmaps, radial bars, pies, and donuts.</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/reference"><strong>ReferenceMark</strong><span>Reference constraints: lines, rings, sectors, and tolerance bands at fixed positions.</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/link"><strong>LinkMark</strong><span>Relational geometry: fillable bands between source and target endpoints.</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/registry"><strong>Registry</strong><span>How marks are registered, how lowering dispatches, and where custom marks fit.</span></LinkedCard>
 </div>

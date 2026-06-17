@@ -1,19 +1,33 @@
 ---
 title: 图元
-description: 图元决定每条数据记录或记录集合生成什么形状；字段映射、比例尺和坐标系共同决定这些形状最终落在哪里。
+description: 图元是数据到几何的注册层；每个图元声明一种数据几何，再由比例尺和坐标系决定最终形状。
 ---
 
-Mark 是图形语法里的几何层。它只声明“用什么图形表达数据”，不直接写像素坐标；位置、颜色、大小等视觉通道由字段映射驱动，再交给 scale 和 coordinate 解释。
+Mark 是图形语法里的几何层。它不直接写像素坐标，而是声明“这批数据应生成哪类几何”：点、路径、区域、区间、参考或链接。
 
-## 图元类型
+每个内置图元都是一个注册项。编译时先把字段映射解析成通道，再交给对应图元的 lowering；坐标系只负责解释这些通道，所以同一个图元在不同坐标系下可以生成不同形态。
+
+## 机制
+
+| 图元 | 类型 | 机制 | 常见形态 |
+| --- | --- | --- | --- |
+| `PointMark` | 维度图元 | 坐标元组上的 0D glyph | 散点、气泡、文本点 |
+| `PathMark` | 维度图元 | 有序点连成 1D 轨迹 | 折线、路径、雷达线框 |
+| `RegionMark` | 维度图元 | 边界围成 2D 区域 | 面积、填充雷达 |
+| `IntervalMark` | 维度图元 | 各位置维度的正交区间积 | 柱、直方、热图、径向柱、饼 / 环 |
+| `ReferenceMark` | 特殊图元 | 固定位置或固定区间的参考约束 | 阈值线、参考环、容差带 |
+| `LinkMark` | 特殊图元 | source → target 的关系几何 | 流带、alluvial 带 |
+
+图表形态不是新的底层图元。比如热图是 `IntervalMark` 的双 band 区间，饼图是 `IntervalMark` 在极坐标下的角向区间，数据标签是 `PointMark` 的文本 glyph 或宿主图元的 `label`。
+
+## 注册图元
 
 <div className="grid gap-3 sm:grid-cols-2">
-  <LinkedCard href="/plot/grammar/mark/line"><strong>折线</strong><span>按顺序连接数据点，适合趋势、路径和雷达线框。</span></LinkedCard>
-  <LinkedCard href="/plot/grammar/mark/point"><strong>散点</strong><span>把每条记录画成点，可映射颜色、大小、透明度和形状。</span></LinkedCard>
-  <LinkedCard href="/plot/grammar/mark/bar"><strong>柱</strong><span>从基线延伸到数值，支持分组、堆叠、径向柱、饼图和环图。</span></LinkedCard>
-  <LinkedCard href="/plot/grammar/mark/area"><strong>面积</strong><span>在折线与基线之间填充区域，也可表达填充雷达。</span></LinkedCard>
-  <LinkedCard href="/plot/grammar/mark/rect"><strong>矩形</strong><span>用二维分类或连续区间组成网格、热力图。</span></LinkedCard>
-  <LinkedCard href="/plot/grammar/mark/rule"><strong>规则线</strong><span>绘制阈值线、参考线、区间边界。</span></LinkedCard>
-  <LinkedCard href="/plot/grammar/mark/text"><strong>文本</strong><span>把字段值或固定文案作为数据标注放进图中。</span></LinkedCard>
-  <LinkedCard href="/plot/grammar/mark/ribbon"><strong>带状图元</strong><span>表达两条边界之间的带状区域或流向。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/point"><strong>PointMark</strong><span>0D glyph：散点、气泡、形状编码，也承载无宿主文本点。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/path"><strong>PathMark</strong><span>1D 轨迹：按顺序连接数据点，表达趋势、路径和雷达线框。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/region"><strong>RegionMark</strong><span>2D 区域：路径与基线或边界围出的填充区域。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/interval"><strong>IntervalMark</strong><span>区间积：统一柱、直方、热图、径向柱、饼图和环图。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/reference"><strong>ReferenceMark</strong><span>参考约束：常量位置上的线、环、扇区或容差带。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/link"><strong>LinkMark</strong><span>关系几何：连接 source 和 target 的可填充流带。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/registry"><strong>注册机制</strong><span>了解 mark 如何注册、lowering 如何分发，以及自定义 mark 的边界。</span></LinkedCard>
 </div>

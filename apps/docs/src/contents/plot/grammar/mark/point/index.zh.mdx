@@ -1,9 +1,9 @@
 ---
-title: 散点
-description: 用 <PointMark> 画散点图：每行一个点；size 通道按数值映射半径成气泡图，color 按分类字段着色。
+title: PointMark
+description: PointMark 是坐标元组上的 0D glyph：可以画散点、气泡、形状编码，也可以承载无宿主文本点。
 ---
 
-`<PointMark>` 为每行数据画一个点。`x` / `y` 绑位置字段。给 `size` 一个数值字段，点半径按值映射成气泡图；给 `color` 一个分类字段，点按类别着色。
+`<PointMark>` 为每行数据生成一个 0D glyph。默认 glyph 是点；给 `size` / `shape` / `opacity` / `color` 后，它仍是同一个点图元，只是视觉通道不同。给 `text` 后，它会改为无边框文本 glyph。
 
 绑哪些位置通道由[坐标系](/plot/grammar/coordinate)决定：cartesian / polar 二维用 `x` / `y`，一维（cartesian1D / polar1D）只绑 `x`，三元（ternary2D）改用 `a` / `b` / `c`。所以 `x` / `y` 都是可选的——缺哪个、要不要 a/b/c，由坐标系在编译期校验。
 
@@ -19,7 +19,7 @@ import { Plot, PointMark } from '@retikz/plot-react';
 </Plot>
 ```
 
-散点常和折线叠加——同一份数据先画 `<PathMark>` 再叠 `<PointMark>` 标出每个观测点。
+PointMark 常和 PathMark 叠加——同一份数据先画 `<PathMark>` 再叠 `<PointMark>` 标出每个观测点。
 
 ## 例子
 
@@ -71,6 +71,22 @@ import { Plot, PointMark } from '@retikz/plot-react';
 
 <p className="text-sm text-muted-foreground">按 region 给每类一种形状。</p>
 
+### 宿主标签
+
+给 `<IntervalMark>` / `<PointMark>` / `<PathMark>` / `<RegionMark>` 一个 `label` 字段，标签会挂到该图元生成的 datum Node 上，不需要再新建文本图元。
+
+<ComponentPreview name="text-label" sourceFiles={['text-label.data.ts']} />
+
+<p className="text-sm text-muted-foreground">label="revenue" 挂在宿主区间 Node 上；labelFormat=",.0f" 输出千分位整数。</p>
+
+### 自由文本
+
+没有宿主的文字用 `<PointMark text>`。它和散点共用同一套位置投影，只是 glyph 内容是文本；`dx` / `dy` 用来做小幅偏移。
+
+<ComponentPreview name="text-free" sourceFiles={['text-free.data.ts']} />
+
+<p className="text-sm text-muted-foreground">text="label" 取字段值，dy=-12 上移避免压住散点。</p>
+
 ## API
 
 | 属性 | 类型 | 默认值 | 描述 |
@@ -83,11 +99,17 @@ import { Plot, PointMark } from '@retikz/plot-react';
 | `size` | `string?` | — | 尺寸字段（数值）：经平方根 scale 映射成点半径（面积感知）；负值会报错 |
 | `opacity` | `string?` | — | 不透明度字段（连续）：经 clamp linear scale 映射到 `[最小值, 1]`；时间 / 分类字段会报错 |
 | `shape` | `string?` | — | 形状字段（分类）：按类别映射到 glyph 调色板（circle / rectangle / diamond 循环）；连续 / 时间字段会报错 |
+| `text` | `string?` | — | 文本内容字段；给定后下沉为无边框文本 glyph，而不是散点 glyph |
+| `format` | `string?` | — | 文本格式串，仅与 `text` 同用 |
+| `dx` / `dy` | `number?` | `0` | 文本点相对锚点的微调 |
+| `label` | `string?` | — | 宿主 datum 标签字段；挂到当前图元生成的 Node 上 |
+| `labelFormat` | `string?` | — | 宿主标签格式串 |
+| `resolveLabel` | `(row) => string?` | — | 运行时标签模板逃生舱；不进 IR，需配 `id` |
 | `color` | `string?` | — | 颜色字段，按 datum 着色：分类字段 → 自动 ordinal 色 scale；连续 / 时间字段需 `model` 声明 → 自动 sequential 色阶（viridis） |
 | `id` | `string?` | — | 可选句柄（预留，暂不解析） |
 
 ## 相关
 
-- [折线](/plot/grammar/mark/line) —— 叠在散点下连成趋势线
+- [PathMark](/plot/grammar/mark/path) —— 叠在散点下连成趋势线
 - [坐标系](/plot/grammar/coordinate) —— rug（cartesian1D）/ 环形（polar1D）/ 三元散点（ternary2D）用 PointMark 的写法
 - [比例尺](/plot/grammar/scale) —— size 用的平方根 scale 与连续 scale 家族

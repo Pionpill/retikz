@@ -1,11 +1,9 @@
 ---
-title: 流带
-description: 用 <LinkMark> 画 sankey / alluvial 流带：每行一条从源端到目标端的可填充曲带，宽度随流量变化。
+title: LinkMark
+description: LinkMark 表达关系几何：每行连接一个 source 和 target，形成带宽可编码的可填充曲带。
 ---
 
-`<LinkMark>` 关系流带。
-
-`<LinkMark>` 把每行数据画成一条**有宽度的流带**：从源端点（`sourceX` / `sourceY`）弯到目标端点（`targetX` / `targetY`），两条长边是 cubic 曲线、两端是直线封口，围成一个可填充区域。`value` 字段经内建宽度比例尺映射成带宽。这是画 sankey、alluvial 流量图的基础图元。
+`<LinkMark>` 是特殊图元：它不描述单个位置上的点、路径或区间，而是描述两组投影端点之间的关系。每行数据会从源端点（`sourceX` / `sourceY`）弯到目标端点（`targetX` / `targetY`），两条长边是 cubic 曲线、两端是直线封口，围成一个可填充区域。`value` 字段经内建宽度比例尺映射成带宽；sankey、alluvial 流量图只是它的常见形态。
 
 流带默认 `orientation="horizontal"`：出 / 入切向沿水平轴、半宽沿垂直轴，得到干净的左右流（封口竖直）。带宽从源端到目标端沿程平滑渐变（源端 `value`、目标端 `endWidth`）。设 `orientation="vertical"` 则流向自上而下、半宽沿水平。
 

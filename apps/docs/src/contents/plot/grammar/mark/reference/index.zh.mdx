@@ -1,9 +1,9 @@
 ---
-title: 参考标注
-description: 用 <ReferenceMark> 画参考线 / 阈值线与容差带：沿一个维度取常量、跨满对侧轴域。
+title: ReferenceMark
+description: ReferenceMark 表达轴约束参考：在一个维度上取常量，在对侧维度上展开成线或带。
 ---
 
-`<ReferenceMark>` 参考标注：在数据空间的某个常量位置画一条参考标注——绑 `y` 得到一条**水平线**（`y=const`，跨满 x 域），绑 `x` 得到一条**竖直线**（`x=const`，跨满 y 域）。给数字得到常量单条、给字段名得到每行一条（per-datum）。它和 `<IntervalMark>` / `<PointMark>` 并列，参与同一坐标系内的叠放顺序。
+`<ReferenceMark>` 是特殊图元：它不从点、线、面维度出发，而是在数据空间声明一个轴向约束。绑 `y` 得到水平参考，绑 `x` 得到竖直参考；只给下界是线，给 `xTo` / `yTo` 是带。数字表示常量，字段名表示每行一条（per-datum）。它和 `<IntervalMark>` / `<PointMark>` 并列，参与同一坐标系内的叠放顺序。
 
 ## 阈值线
 

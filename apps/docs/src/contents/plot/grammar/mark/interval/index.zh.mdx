@@ -1,0 +1,83 @@
+---
+title: IntervalMark
+description: IntervalMark 表达各位置维度上的区间积；柱、直方、热图、径向柱、饼图和环图都是它的不同投影。
+---
+
+`<IntervalMark>` 不是“柱图元”，而是区间图元。它为每条数据构造一个或多个位置维度上的区间，再交给坐标系投影：cartesian 下常是矩形，polar 下可以是径向柱或扇区。
+
+默认写 `x` / `y` 时，`x` 走 band 区间、`y` 从 baseline `0` 延伸到数值；显式写 `bounds` 时，可以把任一维声明为 `band` / `span` / `extent` / `full`。
+
+## 区间规则
+
+| 形态 | x bounds | y bounds | 说明 |
+| --- | --- | --- | --- |
+| 柱 | `band` | `span` | 分类槽 × 数值高度 |
+| 分组柱 | `band{group}` | `span` | 同一分类槽内按系列切子带 |
+| 堆叠柱 | `band` | `extent(y0,y1)` | stack transform 产出上下界 |
+| 直方 | `extent(x0,x1)` | `span` | 连续 x 区间 × 频数 / 聚合值 |
+| 热图 | `band` | `band` | 双分类槽 × 颜色值 |
+| 饼 / 环 | `extent(start,end)` | `full` | 极坐标角区间 × 满半径 |
+
+## 基础区间
+
+普通柱是最常见的区间：x 轴分类槽给宽度，y 值给高度。
+
+<ComponentPreview name="bar-basic" sourceFiles={['bar-basic.data.ts']} />
+
+## 分组与堆叠
+
+给 `series` 指定一个字段，数据按系列拆分。默认是分组区间：同一分类槽内横向切子带。
+
+<ComponentPreview name="bar-grouped" sourceFiles={['bar-grouped.data.ts']} />
+
+加上 `stack` 后，系列改为堆叠。`<Plot>` 自动插入 stack transform，`IntervalMark` 读取派生出的 `y0` / `y1` 区间。
+
+<ComponentPreview name="bar-stacked" sourceFiles={['bar-stacked.data.ts']} />
+
+## 连续区间
+
+直方图不是 band 柱，而是显式的连续 x 区间：`x0` / `x1` 组成 `bounds.x=extent(x0,x1)`，`y` 仍是区间高度。
+
+<ComponentPreview name="interval-histogram" sourceFiles={['interval-histogram.data.ts']} />
+
+## 双 band 区间
+
+热图也是 `IntervalMark`：`x` 和 `y` 都是 band 区间，格子的值通过 `color` 映射成填充色。
+
+<ComponentPreview name="rect-heatmap" sourceFiles={['rect-heatmap.data.ts']} />
+
+<p className="text-sm text-muted-foreground">双 band 写法：<code>{'bounds={{ x: { kind: "band" }, y: { kind: "band" } }}'}</code>。</p>
+
+缺 `color` 时，双 band 区间可以只画固定网格。
+
+<ComponentPreview name="rect-grid" sourceFiles={['rect-grid.data.ts']} />
+
+## 极坐标区间
+
+同一个 `IntervalMark x/y` 切到 `coordinate="polar2D"` 后，x 分类槽变成角向 band，y span 变成半径方向长度，即径向柱。
+
+<ComponentPreview name="bar-radial" sourceFiles={['bar-radial.data.ts']} />
+
+`angle` 是饼图 / 环图的 React 便捷入口：它会自动累积份额值，生成角向 extent；半径方向使用 full。
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ComponentPreview name="bar-pie" sourceFiles={['bar-pie.data.ts']} size="sm" />
+  <ComponentPreview name="bar-donut" sourceFiles={['bar-pie.data.ts']} size="sm" />
+</div>
+
+## API
+
+| prop | 类型 | 说明 |
+| --- | --- | --- |
+| `x` | `string?` | x 位置字段；普通柱 / 热图 / 径向柱使用 |
+| `y` | `string?` | y 位置字段；普通柱 / 热图 / 径向柱使用 |
+| `x0` / `x1` | `string?` | 连续 x 区间上下界；用于直方图等显式区间 |
+| `angle` | `string?` | polar 饼图 / 环图入口：份额值字段，自动累积成角区间 |
+| `bounds` | `IntervalBounds?` | 高级区间来源；热图写 `{ x: { kind: 'band' }, y: { kind: 'band' } }` |
+| `series` | `string?` | 系列字段：拆多系列；省略为单系列 |
+| `stack` | `boolean?` | 多系列时改为堆叠；省略时多系列并排 |
+| `color` | `string?` | 颜色字段；省略时取 `series` |
+| `label` | `string?` | 宿主 datum 标签字段 |
+| `id` | `string?` | 可选句柄 |
+
+<ComponentAlert title="图表名只是形态" description="Bar / histogram / heatmap / pie 不是独立注册图元；它们都是 IntervalMark 在不同 bounds、transform 和 coordinate 下的形态。" />

@@ -1,0 +1,141 @@
+---
+title: 注册机制
+description: mark 的注册机制把 JSON-safe 的 IR schema 和运行时 lowering 行为分开；内置图元也都是通过这套机制下沉到 core IR。
+---
+
+mark 的职责分成两层：IR schema 描述“这类图元有哪些可序列化字段”，lowering 注册项描述“这类图元如何用当前数据、比例尺和坐标系生成 core IR”。内置的 `PointMark` / `PathMark` / `RegionMark` / `IntervalMark` / `ReferenceMark` / `LinkMark` 都是这套机制里的注册项。
+
+这也是自定义 mark 的基本方向：先定义一个稳定的 `type` 和字段契约，再写一个 lowering 函数，把数据行转换成 `Scope`、`Node`、`Path` 等 core 图元。
+
+## 两层契约
+
+| 层 | 放什么 | 是否进 IR | 作用 |
+| --- | --- | --- | --- |
+| schema | `type`、`encoding`、`bounds`、`series` 等字段 | 是 | 持久化、校验、AI 生成和跨端传输 |
+| registry | `lower(mark, rows, frame, channels)` 行为 | 否 | 编译时把 mark 下沉成 core IR |
+
+IR 里不能保存函数，所以自定义图元不能把绘制逻辑塞进 JSON。函数只存在于运行时注册项中；JSON 只保存足够重建语义的字段。
+
+## 注册项
+
+当前内置注册项形态可以理解为：
+
+```ts
+type MarkDefinition<T extends Mark = Mark> = {
+  type: PlotMarkValue;
+  requiredRoles?: (frame: CoordinateFrame) => ReadonlyArray<DimensionRole>;
+  buildCell?: (mark: T, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
+  lower: (mark: T, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, prov?: MarkProvenance) => IRChild | null;
+};
+```
+
+`lowerMark` 不再写一长串 `if (mark.type === ...)`，而是按 `mark.type` 查 `MARK_REGISTRY`，再调用对应的 `lower`。这让新增内置图元时只需要补一个注册项，分发逻辑保持稳定。
+
+## 自定义步骤
+
+自定义一个新 mark 时，按这条顺序处理：
+
+1. 选择一个抽象语义，而不是选择一个图表名字。例如优先考虑“投影区间”“关系带”“轴约束”，不要直接注册“饼图”“热图”。
+2. 给它定义 JSON-safe schema：字段、通道、默认值和 fail-loud 规则都要能序列化。
+3. 写 lowering 注册项：消费 `rows`、`frame` 和通道 resolver，返回一个 core `Scope`，无可绘制内容时返回 `null`。
+4. 如果图元依赖坐标系 cell，把 per-row 数据先转成 `Cell`，再交给 `frame.projectCell`。这样 cartesian 可以得到矩形，polar 可以得到扇区，曲线坐标系也有机会返回 contour。
+5. 在 React / Vanilla 入口补声明层：React 组件只负责把扁平 props 装配成 IR；真正绘制仍由 registry 的 lowering 负责。
+
+## 示例
+
+下面用 `CrossMark` 演示“新增内置式 mark”需要补哪些位置。它的语义很简单：每行数据投影出一个点，然后在该点上画两条交叉线。真实落地时这些代码会分散在 IR schema、lowering 和 React 声明层里；这里放在一起，只看机制。
+
+下面的预览展示的是源码扩展接入后的声明形态：`CrossMark` 放在 `<Plot>` 下面，和内置 mark 一样只声明字段通道；渲染效果来自注册表里的 `lowerCross`。当前公开 API 还不能动态注册 mark，所以 demo 里用透明的 `PointMark` 作为 scale anchor，并用 core `Draw` 叠出 lowering 后的交叉线。
+
+<ComponentPreview name="cross-mark-lowering" sourceFiles={['cross-mark-lowering.data.ts']} size="md" />
+
+第一步是给 IR 增加一个可序列化 schema。`type` 是判别字段，`encoding` 仍然只描述字段到通道的绑定，`size` 是 JSON-safe 的绘制参数：
+
+```ts
+export const PlotMark = {
+  // ...
+  Cross: 'cross',
+} as const;
+
+export const CrossMarkSchema = z.object({
+  type: z.literal(PlotMark.Cross),
+  encoding: EncodingSchema,
+  size: z.number().positive().optional(),
+});
+
+export const MarkSchema = z.discriminatedUnion('type', [
+  PointMarkSchema,
+  PathMarkSchema,
+  RegionMarkSchema,
+  IntervalMarkSchema,
+  ReferenceMarkSchema,
+  LinkMarkSchema,
+  CrossMarkSchema,
+]);
+```
+
+第二步是写 lowering。它消费数据行和坐标系 frame，返回 core `Path` 图层；没有可投影的点时返回 `null`：
+
+```ts
+const lowerCross = (mark: CrossMark, rows: Array<ExternalRow>, frame: CoordinateFrame): IRChild | null => {
+  const size = mark.size ?? 6;
+  const children: Array<IRChild> = [];
+
+  for (const row of rows) {
+    const point = frame.projectRoles([channelValue(mark.encoding.x, row), channelValue(mark.encoding.y, row)]);
+    if (!point) continue;
+
+    const [x, y] = point;
+    children.push({
+      type: 'path',
+      children: [
+        { action: 'move', to: [x - size, y - size] },
+        { action: 'line', to: [x + size, y + size] },
+        { action: 'move', to: [x - size, y + size] },
+        { action: 'line', to: [x + size, y - size] },
+      ],
+    });
+  }
+
+  return children.length === 0 ? null : { type: 'scope', children };
+};
+```
+
+最后把它挂进注册表，并给 React 侧补一个只负责装配 IR 的声明组件：
+
+```ts
+export const MARK_REGISTRY = {
+  // ...
+  [PlotMark.Cross]: { type: PlotMark.Cross, lower: lowerCross },
+};
+
+export type CrossMarkProps = {
+  x: string;
+  y: string;
+  size?: number;
+  id?: string;
+};
+
+export const CrossMark: FC<CrossMarkProps> = () => null;
+```
+
+这个例子里，`CrossMark` 没有自己理解“笛卡尔”或“极坐标”，只向 `frame.projectRoles` 要投影点。坐标系如何解释 `x` / `y`，仍然由 coordinate 层决定。
+
+## 当前边界
+
+<ComponentAlert type="warn" title="运行时注册尚未开放" description="当前版本已经把内置 mark 整理成注册表，但还没有公开 registerMark API，也没有动态扩展 MarkSchema 的 schema registry。应用层若要新增全新的 mark，需要走源码扩展 / 贡献路径；普通业务优先组合现有六个注册图元。" />
+
+这和自定义坐标系不同：坐标系的投影函数可以通过 `<Plot coordinates>` 注入，因为 IR 只需要保存工厂名和参数；mark 的 `type` 还要进入 `MarkSchema` 判别 union，所以公开运行时注册需要同时解决 schema 扩展、React 装配和 lowering 分发。
+
+## 内置图元
+
+| 图元 | 注册行为 |
+| --- | --- |
+| `PointMark` | 每行下沉成一个 glyph 或文本 Node |
+| `PathMark` | 按顺序把点下沉成 Path |
+| `RegionMark` | 把上沿和基线围成可填充 Path |
+| `IntervalMark` | 先构造 Cell，再投影成矩形、扇区或 contour |
+| `ReferenceMark` | 把轴向常量下沉成线或带 |
+| `LinkMark` | 把 source / target 端点下沉成可填充 cubic 曲带 |
+
+图表形态只是这些注册图元在不同坐标系、比例尺和 transform 下的结果。新增 mark 前，先确认现有图元是否已经能表达该几何。

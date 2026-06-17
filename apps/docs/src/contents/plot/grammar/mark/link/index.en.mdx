@@ -1,11 +1,9 @@
 ---
 title: LinkMark
-description: Use <LinkMark> to draw sankey / alluvial flow bands — one fillable curved band per record from a source to a target endpoint, width driven by the flow value.
+description: LinkMark expresses relational geometry: each row connects a source and target into a fillable band whose width can be encoded.
 ---
 
-`<LinkMark>` relational flow band.
-
-`<LinkMark>` draws each record as a **band with width**: it curves from a source endpoint (`sourceX` / `sourceY`) to a target endpoint (`targetX` / `targetY`), with two cubic-curve long edges and straight end caps enclosing a fillable region. The `value` field maps through a built-in width scale to the band width. This is the primitive for sankey and alluvial flow diagrams.
+`<LinkMark>` is a special mark: instead of describing a point, path, or interval at one position, it describes the relation between two projected endpoint tuples. Each record curves from a source endpoint (`sourceX` / `sourceY`) to a target endpoint (`targetX` / `targetY`), with two cubic-curve long edges and straight end caps enclosing a fillable region. The `value` field maps through a built-in width scale to the band width; sankey and alluvial flow diagrams are common forms of the same mark.
 
 The band defaults to `orientation="horizontal"`: the entry / exit tangents run along the horizontal axis and the half-width along the vertical axis, giving a clean left-to-right flow (vertical end caps). The width gradates smoothly from the source end to the target end (`value` at the source, `endWidth` at the target). Set `orientation="vertical"` to flow top-down with half-width along the horizontal axis.
 

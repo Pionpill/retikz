@@ -1,9 +1,9 @@
 ---
-title: 折线
-description: 用 <PathMark> 画折线图：按 order 连点，支持多系列；polar 下加 closed 即雷达。
+title: PathMark
+description: PathMark 是有序点形成的一维轨迹；折线、路径和雷达线框都是它在不同坐标系下的形态。
 ---
 
-`<PathMark>` 是一维轨迹 mark；cartesian 下即折线。它把数据点按顺序连成一条折线。`x` / `y` 绑位置字段，`order` 决定连线顺序（缺省按数据数组顺序）。给 `series` 拆成多条线，给 `closed` 首尾相接闭合——在 polar 下就是雷达。
+`<PathMark>` 是一维轨迹 mark；cartesian 下常表现为折线。它把数据点按顺序连成一条路径。`x` / `y` 绑位置字段，`order` 决定连接顺序（缺省按数据数组顺序）。给 `series` 拆成多条路径，给 `closed` 首尾相接闭合。
 
 ## 用法
 
@@ -45,7 +45,7 @@ import { PathMark, Plot } from '@retikz/plot-react';
 
 ### 雷达
 
-`<Plot coordinate="polar2D">` 加 `<PathMark closed />`：末点回连首点闭合成线框多边形，各维度沿角向均布、值映射到半径——线框版雷达。想要带填充的雷达用 [`<RegionMark closed />`](/plot/grammar/mark/area)。
+`<Plot coordinate="polar2D">` 加 `<PathMark closed />`：末点回连首点闭合成线框多边形，各维度沿角向均布、值映射到半径——线框版雷达。想要带填充的雷达用 [`<RegionMark closed />`](/plot/grammar/mark/region)。
 
 <ComponentPreview name="line-radar" sourceFiles={['line-radar.data.ts']} />
 
@@ -65,6 +65,6 @@ import { PathMark, Plot } from '@retikz/plot-react';
 
 ## 相关
 
-- [散点](/plot/grammar/mark/point) —— 叠在折线上标出每个观测点
-- [面积](/plot/grammar/mark/area) —— 带填充的折线 / 填充雷达
+- [PointMark](/plot/grammar/mark/point) —— 叠在路径上标出每个观测点
+- [RegionMark](/plot/grammar/mark/region) —— 带填充的路径 / 填充雷达
 - [坐标系](/plot/grammar/coordinate) —— polar 开关与角色映射

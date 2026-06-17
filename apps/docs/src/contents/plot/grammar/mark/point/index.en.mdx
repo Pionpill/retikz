@@ -1,9 +1,9 @@
 ---
 title: PointMark
-description: "Draw a scatter plot with <PointMark>: one dot per row; the size channel maps a number to radius for bubbles, color tints by a categorical field."
+description: "PointMark is a 0D glyph at a coordinate tuple: scatter, bubbles, shape encoding, and hostless text points all use the same registered mark."
 ---
 
-`<PointMark>` draws one dot per data row. Bind `x` / `y` to position fields. Give `size` a numeric field and the dot radius maps to the value as a bubble chart; give `color` a categorical field and dots are tinted by category.
+`<PointMark>` produces one 0D glyph per data row. The default glyph is a dot; `size` / `shape` / `opacity` / `color` change visual channels without changing the mark. Set `text` and the glyph becomes a borderless text node.
 
 Which position channels you bind depends on the [coordinate system](/plot/grammar/coordinate): 2D cartesian / polar use `x` / `y`, 1D (cartesian1D / polar1D) bind only `x`, and ternary (ternary2D) uses `a` / `b` / `c`. That's why `x` / `y` are optional — which ones are required, and whether a/b/c apply, is validated by the coordinate at compile time.
 
@@ -19,7 +19,7 @@ import { Plot, PointMark } from '@retikz/plot-react';
 </Plot>
 ```
 
-Scatter often overlays a line — draw `<PathMark>` first, then layer `<PointMark>` on the same data to mark each observation.
+PointMark often overlays PathMark — draw `<PathMark>` first, then layer `<PointMark>` on the same data to mark each observation.
 
 ## Examples
 
@@ -71,6 +71,22 @@ Give `shape` a categorical field and each category gets a glyph (default palette
 
 <p className="text-sm text-muted-foreground">One glyph per region.</p>
 
+### Host Labels
+
+Give `<IntervalMark>` / `<PointMark>` / `<PathMark>` / `<RegionMark>` a `label` field and the label attaches to the datum Node produced by that host mark. No separate text mark is needed.
+
+<ComponentPreview name="text-label" sourceFiles={['text-label.data.ts']} />
+
+<p className="text-sm text-muted-foreground">label="revenue" attaches to the host interval Node; labelFormat=",.0f" prints grouped integers.</p>
+
+### Free Text
+
+For hostless text, use `<PointMark text>`. It shares the same position projection as scatter points; only the glyph content changes. `dx` / `dy` make small offsets.
+
+<ComponentPreview name="text-free" sourceFiles={['text-free.data.ts']} />
+
+<p className="text-sm text-muted-foreground">text="label" reads the field value; dy=-12 nudges the text above the dot.</p>
+
 ## API
 
 | Prop | Type | Default | Description |
@@ -83,11 +99,17 @@ Give `shape` a categorical field and each category gets a glyph (default palette
 | `size` | `string?` | — | Numeric field: mapped to dot radius via a square-root scale (area-perceptual); negative values error |
 | `opacity` | `string?` | — | Continuous field: mapped to opacity via a clamped linear scale to `[min, 1]`; temporal / categorical fields error |
 | `shape` | `string?` | — | Categorical field: mapped to a glyph palette (circle / rectangle / diamond, cycled); continuous / temporal fields error |
+| `text` | `string?` | — | Text-content field; when set, the mark lowers to a borderless text glyph instead of a dot glyph |
+| `format` | `string?` | — | Text format string; only used with `text` |
+| `dx` / `dy` | `number?` | `0` | Fine offset from the projected anchor for text points |
+| `label` | `string?` | — | Host datum-label field; attaches to the Node produced by this mark |
+| `labelFormat` | `string?` | — | Format string for the host label |
+| `resolveLabel` | `(row) => string?` | — | Runtime label-template escape hatch; not in IR, requires `id` |
 | `color` | `string?` | — | Color field, colored per datum: categorical → auto ordinal color scale; continuous / temporal needs a `model` declaration → auto sequential color scale (viridis) |
 | `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
 
 ## Related
 
-- [PathMark](/plot/grammar/mark/line) — a trend line under the dots
+- [PathMark](/plot/grammar/mark/path) — a trend line under the dots
 - [Coordinates](/plot/grammar/coordinate) — how PointMark draws a rug (cartesian1D) / ring (polar1D) / ternary scatter (ternary2D)
 - [Scales](/plot/grammar/scale) — the square-root scale size uses, and the continuous scale family

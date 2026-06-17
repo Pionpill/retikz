@@ -1,9 +1,9 @@
 ---
 title: PathMark
-description: "Draw line charts with <PathMark>: connect points in order, support multiple series; add closed under polar for a radar."
+description: "PathMark is a one-dimensional trajectory made from ordered points; lines, paths, and radar outlines are coordinate-specific forms of it."
 ---
 
-`<PathMark>` is the one-dimensional trajectory mark; under cartesian it is a line/polyline. It connects data points into a line in order. `x` / `y` bind the position fields, `order` decides the connection order (defaults to data array order). Set `series` to split into multiple lines, set `closed` to join ends — under polar that's a radar.
+`<PathMark>` is the one-dimensional trajectory mark; under cartesian it is usually a line/polyline. It connects data points into a path in order. `x` / `y` bind the position fields, `order` decides the connection order (defaults to data array order). Set `series` to split into multiple paths, and set `closed` to join the ends.
 
 ## Usage
 
@@ -45,7 +45,7 @@ With no `series`, giving `color` a categorical field also splits the line into o
 
 ### Radar
 
-`<Plot coordinate="polar2D">` with `<PathMark closed />`: the last point connects back to the first into a wireframe polygon, dimensions spread evenly along the angular axis and values map to the radius — a wireframe radar. For a filled radar use [`<RegionMark closed />`](/plot/grammar/mark/area).
+`<Plot coordinate="polar2D">` with `<PathMark closed />`: the last point connects back to the first into a wireframe polygon, dimensions spread evenly along the angular axis and values map to the radius — a wireframe radar. For a filled radar use [`<RegionMark closed />`](/plot/grammar/mark/region).
 
 <ComponentPreview name="line-radar" sourceFiles={['line-radar.data.ts']} />
 
@@ -66,5 +66,5 @@ With no `series`, giving `color` a categorical field also splits the line into o
 ## Related
 
 - [PointMark](/plot/grammar/mark/point) — overlay markers on each observation
-- [RegionMark](/plot/grammar/mark/area) — filled lines / filled radar
+- [RegionMark](/plot/grammar/mark/region) — filled paths / filled radar
 - [Coordinates](/plot/grammar/coordinate) — the polar switch and channel roles
