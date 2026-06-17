@@ -1,9 +1,11 @@
 ---
 title: PathMark
-description: PathMark 是有序点形成的一维轨迹；折线、路径和雷达线框都是它在不同坐标系下的形态。
+description: PathMark 是有序点形成的一维轨迹；折线、多系列线和雷达线框都是它在不同配置下的表现形态。
 ---
 
-`<PathMark>` 是一维轨迹 mark；cartesian 下常表现为折线。它把数据点按顺序连成一条路径。`x` / `y` 绑位置字段，`order` 决定连接顺序（缺省按数据数组顺序）。给 `series` 拆成多条路径，给 `closed` 首尾相接闭合。
+`<PathMark>` 为一组数据行生成一条 1D 轨迹。它先把每行数据投影成点，再按 `order` 排序并连接成 core `Path`；在 cartesian2D 下常表现为折线，在 polar2D 下可以表现为极坐标路径或雷达线框。
+
+`x` / `y` 绑定位置通道，`order` 决定连接顺序，`series` 决定是否拆成多条路径，`closed` 决定末点是否回连首点。当前 PathMark 支持二维笛卡尔坐标系和二维极坐标系。
 
 ## 用法
 
@@ -17,54 +19,111 @@ import { PathMark, Plot } from '@retikz/plot-react';
 </Plot>
 ```
 
-`order` 推荐显式写——否则折线按数据行顺序连，数据顺序一变折线就乱跳。
+`order` 推荐显式写。否则 PathMark 会按数据数组顺序连点，只要数据排序变化，路径形状也会变化。
+
+## 表现层
+
+PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D 轨迹。它不关心这条轨迹最终被命名为折线图、趋势线、轮廓线还是雷达线框；这些都是表现层对同一个 PathMark 的解释。
+
+表现层的差异主要来自三类配置：位置通道决定点从哪里来，系列通道决定拆成几条线，几何属性决定是否闭合。PathMark 不负责填充面积；需要有填充的面积图或雷达图时，使用 [RegionMark](/plot/grammar/mark/region)。
+
+| 表现形态 | 关键属性 | 说明 |
+| --- | --- | --- |
+| 折线 | `x` / `y` / `order` | 每行投影成点，按顺序连接成一条轨迹 |
+| 多系列线 | `series` / `color` | 先按系列拆分数据，再分别生成多条路径 |
+| 雷达线框 | `closed` + `polar2D` | 在极坐标下首尾相接，形成闭合线框 |
 
 ## 例子
 
-### 基础折线
+### 位置属性
 
-最朴素的单线：`x` / `y` 绑字段、`order` 指定连线顺序。
+`x` / `y` 决定路径经过哪些点，`order` 决定这些点的连接顺序。这个例子对应 API 里的位置属性，是最小的单线折线。
 
 <ComponentPreview name="line-basic" sourceFiles={['line-basic.data.ts']} />
 
-### 多系列
+### 系列属性
 
-给 `series` 一个字段，数据按它拆成多条线，每条自动取一种颜色。
+给 `series` 一个字段，数据会先按该字段拆成多组，每组下沉为一条 core Path。颜色没有显式指定时，每个系列会按默认颜色序列取色。
 
 <ComponentPreview name="line-series" sourceFiles={['line-series.data.ts']} />
 
-<p className="text-sm text-muted-foreground">按城市拆两条线，系列自动着色。</p>
-
-#### 按颜色字段隐式拆
-
-不写 `series`、只给 `color` 一个分类字段时，折线也会按该字段拆成多条——等价于显式写 `series`。`color` 字段必须是分类的（连续 / 时间字段会报错）。
+不写 `series`、只给 `color` 一个分类字段时，PathMark 也会按该字段隐式拆系列。这个写法对应 API 里的 `color`，适合“颜色就是系列”的场景。
 
 <ComponentPreview name="line-color-split" sourceFiles={['line-series.data.ts']} />
 
-<p className="text-sm text-muted-foreground">只给 <code>color="city"</code>、无 <code>series</code>，照样拆两条线。</p>
+### 几何属性
 
-### 雷达
-
-`<Plot coordinate="polar2D">` 加 `<PathMark closed />`：末点回连首点闭合成线框多边形，各维度沿角向均布、值映射到半径——线框版雷达。想要带填充的雷达用 [`<RegionMark closed />`](/plot/grammar/mark/region)。
+`closed` 是 PathMark 当前最重要的几何属性：它会让末点回连首点。在 `polar2D` 下，分类维度沿角向分布，数值维度映射到半径，闭合后就是线框雷达。
 
 <ComponentPreview name="line-radar" sourceFiles={['line-radar.data.ts']} />
 
-<p className="text-sm text-muted-foreground">closed 让首尾相接；polar 下即线框雷达。</p>
+## 技术原理
+
+`PathMark` 是一个内置注册图元。React 里的 `<PathMark>` 本身不渲染 DOM；`<Plot>` 会在构造 `PlotSpec` 时把它收集成 `type: 'path'` 的 mark IR，并记录 `x` / `y` / `order` / `series` / `closed` 等配置。
+
+编译时，`lowerMark` 按 `mark.type` 查询 `MARK_REGISTRY`，`PathMark` 命中 `PlotMark.Path` 对应的 `lowerPathLayer`。`lowerPathLayer` 只接受 cartesian2D / polar2D，然后调用 `lowerPath`：它按系列拆分数据、排序、投影点，最后把点序列下沉为 core `Path`。
+
+注册部分只需要看 `PathMark` 对应的注册行，以及真正执行下沉的 `lowerPathLayer` / `lowerPath`：
+
+```ts
+[PlotMark.Path]: { type: PlotMark.Path, lower: lowerPathLayer },
+
+const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+  if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
+    throw new Error(failLoudMessage(mark.type, frame.type));
+  }
+  const layer = lowerPath(mark, rows, frame, channels.colorOf, channels.defaultColor, markProvenance);
+  return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
+};
+
+const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+  if (mark.type !== PlotMark.Path) return null;
+  const closed = mark.closed ?? false;
+  const seriesField = pathSeriesField(mark, rows);
+  if (seriesField) {
+    const paths = buildSeriesPaths(
+      mark,
+      rows,
+      seriesField,
+      seriesRows => buildLineSteps(mark, seriesRows, frame, closed),
+      seriesRows => ({ stroke: colorOf?.(seriesRows[0]) ?? DEFAULT_FILL }),
+      markProvenance,
+    );
+    return paths.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
+  }
+  const steps = buildLineSteps(mark, rows, frame, closed);
+  if (!steps) return null;
+  const colorValue = mark.encoding.color?.value;
+  const stroke = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
+  return { type: 'scope', pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH }, children: [{ type: 'path', children: steps }] };
+};
+```
+
+这段逻辑可以拆成四步：
+
+| 步骤 | 说明 |
+| --- | --- |
+| 坐标系校验 | PathMark 需要二维轨迹几何；当前只在 cartesian2D / polar2D 下下沉 |
+| 排序与投影 | `orderRows` 决定连接顺序，`frame.project(...)` 把位置通道投影成屏幕点 |
+| 系列拆分 | `series` 显式优先；没有 `series` 但有分类 `color` 时，按 `color` 隐式拆系列 |
+| core 下沉 | 每个系列生成一个 core `Path`；`closed` 会在 step 序列末尾补闭合段 |
 
 ## API
 
-| 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `x` | `string` | — | 绑 x 通道的字段路径（polar 下作角向） |
-| `y` | `string` | — | 绑 y 通道的字段路径（polar 下作径向） |
-| `order` | `string?` | 数据顺序 | 驱动连接顺序的字段 |
-| `series` | `string?` | — | 系列字段：拆成多条折线；缺省单线 |
-| `closed` | `boolean?` | `false` | 末点回连首点闭合成多边形（polar 下即雷达轮廓） |
-| `color` | `string?` | `series` | 颜色字段（categorical，自动 ordinal 色 scale）；无显式 `series` 时按此字段隐式拆系列；缺省取 `series`。连续 / 时间字段会报错（连续色阶待后续） |
-| `id` | `string?` | — | 可选句柄（预留，暂不解析） |
+`PathMark` 的主要属性都是数据通道：位置属性决定轨迹经过哪些点，系列属性决定是否拆成多条路径。表里的 `FieldName` 表示数据字段名或字段路径，例如 `month` / `city`。
+
+| 分类 | 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- | --- |
+| 位置 | `x` | `FieldName` | — | 绑定 x 位置通道字段 |
+| | `y` | `FieldName` | — | 绑定 y 位置通道字段 |
+| | `order` | `FieldName?` | 数据顺序 | 绑定连接顺序字段 |
+| 系列 | `series` | `FieldName?` | — | 按字段拆成多条路径 |
+| | `color` | `FieldName?` | `series` | 绑定颜色通道；无显式 `series` 时可隐式拆系列 |
+| 几何 | `closed` | `boolean?` | `false` | 末点回连首点，形成闭合路径 |
+| 通用 | `id` | `string?` | — | 可选句柄（预留，暂不解析） |
 
 ## 相关
 
 - [PointMark](/plot/grammar/mark/point) —— 叠在路径上标出每个观测点
 - [RegionMark](/plot/grammar/mark/region) —— 带填充的路径 / 填充雷达
-- [坐标系](/plot/grammar/coordinate) —— polar 开关与角色映射
+- [坐标系](/plot/grammar/coordinate) —— cartesian2D / polar2D 如何解释位置角色
