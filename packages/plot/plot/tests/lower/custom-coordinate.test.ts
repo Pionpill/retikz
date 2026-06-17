@@ -180,7 +180,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'custom', name: 'sine', roles: ['x'] },
-      marks: [{ type: 'line', encoding: { x: { field: 'v' }, y: { field: 'v' } } }],
+      marks: [{ type: 'path', encoding: { x: { field: 'v' }, y: { field: 'v' } } }],
     });
     expect(() => expandOf(spec, { d: [{ v: 1 }, { v: 2 }] }, opts({ sine: sineCoordinate }))).toThrow(/custom coordinate|point only|not supported/i);
   });

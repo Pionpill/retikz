@@ -8,14 +8,14 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_line_with_order_valid', () => {
-    const m = { type: 'line', id: 'trend', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } };
+  it('mark_path_with_order_valid', () => {
+    const m = { type: 'path', id: 'trend', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
   // 边界
-  it('mark_line_omits_order_valid', () => {
-    const m = { type: 'line', encoding: { x: { field: 'x' }, y: { field: 'y' } } };
+  it('mark_path_omits_order_valid', () => {
+    const m = { type: 'path', encoding: { x: { field: 'x' }, y: { field: 'y' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
@@ -37,9 +37,9 @@ describe('MarkSchema (ADR-05)', () => {
 
   // 交互：两 mark 各自 encoding 互不依赖
   it('marks_distinct_encoding_valid', () => {
-    const line = { type: 'line', encoding: { x: { field: 'a' }, y: { field: 'b' } } };
+    const path = { type: 'path', encoding: { x: { field: 'a' }, y: { field: 'b' } } };
     const point = { type: 'point', encoding: { x: { field: 'c' }, y: { value: 0 } } };
-    expect(MarkSchema.parse(line)).toEqual(line);
+    expect(MarkSchema.parse(path)).toEqual(path);
     expect(MarkSchema.parse(point)).toEqual(point);
   });
 
@@ -58,74 +58,65 @@ describe('MarkSchema (ADR-05)', () => {
     expect(() => MarkSchema.parse({ type: 'interval' })).toThrow();
   });
 
-  // ADR-05：relation（series / arrangement）
+  // ADR-05：relation（series / bounds）
   it('mark_interval_series_dodge_valid', () => {
-    const m = { type: 'interval', series: 'product', arrangement: 'dodge', encoding: { x: { field: 'm' }, y: { field: 'r' } } };
+    const m = { type: 'interval', series: 'product', bounds: { x: { kind: 'band', group: 'product' } }, encoding: { x: { field: 'm' }, y: { field: 'r' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
   it('mark_interval_stack_valid', () => {
-    const m = { type: 'interval', series: 'product', arrangement: 'stack', y0Field: 'lo', y1Field: 'hi', encoding: { x: { field: 'm' }, y: { field: 'r' } } };
+    const m = { type: 'interval', series: 'product', bounds: { y: { kind: 'extent', from: 'lo', to: 'hi' } }, encoding: { x: { field: 'm' }, y: { field: 'r' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_interval_arrangement_bad_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'interval', arrangement: 'pile', encoding: { x: { field: 'm' }, y: { field: 'r' } } })).toThrow();
+  it('mark_interval_bounds_bad_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'interval', bounds: { x: { kind: 'pile' } }, encoding: { x: { field: 'm' }, y: { field: 'r' } } })).toThrow();
   });
 
-  // alpha.12 ADR-01：histogram 连续 x 区间柱（x0Field / x1Field）
-  it('mark_interval_x0x1_histogram_valid', () => {
-    const m = { type: 'interval', x0Field: 'binStart', x1Field: 'binEnd', encoding: { x: { field: 'binStart' }, y: { field: 'binValue' } } };
+  // alpha.12 ADR-01：histogram 连续 x 区间柱（extent bound）
+  it('mark_interval_extent_histogram_valid', () => {
+    const m = { type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } }, encoding: { x: { field: 'binStart' }, y: { field: 'binValue' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_interval_x0field_empty_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'interval', x0Field: '', encoding: { x: { field: 'm' }, y: { field: 'r' } } })).toThrow();
+  it('mark_interval_extent_empty_from_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'interval', bounds: { x: { kind: 'extent', from: '', to: 'binEnd' } }, encoding: { x: { field: 'm' }, y: { field: 'r' } } })).toThrow();
   });
 
-  it('mark_line_series_valid', () => {
-    const m = { type: 'line', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' } } };
+  it('mark_path_series_valid', () => {
+    const m = { type: 'path', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  // ADR-02：sector(pie / donut) mark
+  // ADR-02：sector(pie / donut) → interval (extent×full)
   it('mark_sector_valid', () => {
-    const m = { type: 'sector', encoding: { color: { field: 'label' } } };
+    const m = { type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
-  it('mark_sector_omits_fields_uses_defaults', () => {
-    // startField / endField 可选：缺省语义 y0 / y1（schema 不写入默认值，仅解析通过）
-    const m = { type: 'sector', encoding: { color: { field: 'label' } } };
-    const parsed = MarkSchema.parse(m);
-    expect(parsed).not.toHaveProperty('startField');
-    expect(parsed).not.toHaveProperty('endField');
   });
 
   it('mark_sector_custom_bound_fields_valid', () => {
-    const m = { type: 'sector', startField: 'lo', endField: 'hi', encoding: { color: { field: 'label' } } };
+    const m = { type: 'interval', bounds: { x: { kind: 'extent', from: 'lo', to: 'hi' }, y: { kind: 'full' } }, encoding: { color: { field: 'label' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
   it('mark_sector_with_id_valid', () => {
-    const m = { type: 'sector', id: 'pie', encoding: { color: { field: 'label' } } };
+    const m = { type: 'interval', id: 'pie', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
   it('mark_sector_union_discriminates', () => {
-    // discriminated union 按 type 判别到 sector 分支（保留 startField，不与 interval 字段混淆）
-    const parsed = MarkSchema.parse({ type: 'sector', startField: 'lo', encoding: { color: { value: '#333' } } });
-    expect(parsed.type).toBe('sector');
-    expect((parsed as { startField?: string }).startField).toBe('lo');
+    const parsed = MarkSchema.parse({ type: 'interval', bounds: { x: { kind: 'extent', from: 'lo', to: 'hi' }, y: { kind: 'full' } }, encoding: { color: { value: '#333' } } });
+    expect(parsed.type).toBe('interval');
+    expect((parsed as { bounds?: { x?: { from?: string } } }).bounds?.x?.from).toBe('lo');
   });
 
   it('mark_sector_json_round_trip', () => {
-    const m = { type: 'sector', startField: 'y0', endField: 'y1', encoding: { color: { field: 'label' } } };
+    const m = { type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label' } } };
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
   it('mark_sector_missing_encoding_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'sector' })).toThrow();
+    expect(() => MarkSchema.parse({ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } } })).toThrow();
   });
 
   it('mark_sector_typo_type_rejected', () => {
@@ -133,90 +124,90 @@ describe('MarkSchema (ADR-05)', () => {
   });
 
   it('mark_sector_empty_start_field_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'sector', startField: '', encoding: { color: { field: 'label' } } })).toThrow();
+    expect(() => MarkSchema.parse({ type: 'interval', bounds: { x: { kind: 'extent', from: '', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label' } } })).toThrow();
   });
 
-  // ADR-03：area mark
-  it('mark_area_minimal_valid', () => {
+  // ADR-03：region mark
+  it('mark_region_minimal_valid', () => {
     // baseline / closed 省略：schema 不写入默认值，仅解析通过
-    const m = { type: 'area', encoding: { x: { field: 'date' }, y: { field: 'val' } } };
+    const m = { type: 'region', encoding: { x: { field: 'date' }, y: { field: 'val' } } };
     const parsed = MarkSchema.parse(m);
     expect(parsed).toEqual(m);
     expect(parsed).not.toHaveProperty('baseline');
     expect(parsed).not.toHaveProperty('closed');
   });
 
-  it('mark_area_explicit_baseline_closed_valid', () => {
-    const m = { type: 'area', order: 'date', baseline: 5, closed: true, encoding: { x: { field: 'date' }, y: { field: 'val' } } };
+  it('mark_region_explicit_baseline_closed_valid', () => {
+    const m = { type: 'region', order: 'date', baseline: 5, closed: true, encoding: { x: { field: 'date' }, y: { field: 'val' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_area_baseline_zero_valid', () => {
-    const m = { type: 'area', baseline: 0, encoding: { x: { field: 'date' }, y: { field: 'val' } } };
+  it('mark_region_baseline_zero_valid', () => {
+    const m = { type: 'region', baseline: 0, encoding: { x: { field: 'date' }, y: { field: 'val' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_area_series_valid', () => {
-    const m = { type: 'area', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' } } };
+  it('mark_region_series_valid', () => {
+    const m = { type: 'region', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_area_with_id_valid', () => {
-    const m = { type: 'area', id: 'band', encoding: { x: { field: 'x' }, y: { field: 'y' } } };
+  it('mark_region_with_id_valid', () => {
+    const m = { type: 'region', id: 'band', encoding: { x: { field: 'x' }, y: { field: 'y' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
   // 错误路径：baseline 必须有限（.finite 防 Infinity 破坏 JSON round-trip）
-  it('mark_area_baseline_infinity_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'area', baseline: Number.POSITIVE_INFINITY, encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
+  it('mark_region_baseline_infinity_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'region', baseline: Number.POSITIVE_INFINITY, encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
   });
 
-  it('mark_area_baseline_nan_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'area', baseline: Number.NaN, encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
+  it('mark_region_baseline_nan_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'region', baseline: Number.NaN, encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
   });
 
-  it('mark_area_missing_encoding_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'area' })).toThrow();
+  it('mark_region_missing_encoding_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'region' })).toThrow();
   });
 
-  it('mark_area_typo_type_rejected', () => {
+  it('mark_region_typo_type_rejected', () => {
     expect(() => MarkSchema.parse({ type: 'aria', encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
   });
 
-  it('mark_area_empty_order_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'area', order: '', encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
+  it('mark_region_empty_order_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'region', order: '', encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
   });
 
-  // union 判别到 area 分支（保留 area 专属 baseline，不与别的成员混淆）
-  it('mark_area_union_discriminates', () => {
-    const parsed = MarkSchema.parse({ type: 'area', baseline: 2, encoding: { x: { field: 'x' }, y: { field: 'y' } } });
-    expect(parsed.type).toBe('area');
+  // union 判别到 region 分支（保留 region 专属 baseline，不与别的成员混淆）
+  it('mark_region_union_discriminates', () => {
+    const parsed = MarkSchema.parse({ type: 'region', baseline: 2, encoding: { x: { field: 'x' }, y: { field: 'y' } } });
+    expect(parsed.type).toBe('region');
     expect((parsed as { baseline?: number }).baseline).toBe(2);
   });
 
-  it('mark_area_json_round_trip', () => {
-    const m = { type: 'area', order: 'date', series: 'city', baseline: 0, closed: false, encoding: { x: { field: 'date' }, y: { field: 'val' } } };
+  it('mark_region_json_round_trip', () => {
+    const m = { type: 'region', order: 'date', series: 'city', baseline: 0, closed: false, encoding: { x: { field: 'date' }, y: { field: 'val' } } };
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
-  // ADR-03：line 加 closed（雷达多边形）
-  it('mark_line_closed_valid', () => {
-    const m = { type: 'line', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } } };
+  // ADR-03：path 加 closed（雷达多边形）
+  it('mark_path_closed_valid', () => {
+    const m = { type: 'path', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_line_closed_omitted_valid', () => {
-    const m = { type: 'line', encoding: { x: { field: 'x' }, y: { field: 'y' } } };
+  it('mark_path_closed_omitted_valid', () => {
+    const m = { type: 'path', encoding: { x: { field: 'x' }, y: { field: 'y' } } };
     const parsed = MarkSchema.parse(m);
     expect(parsed).not.toHaveProperty('closed');
   });
 
-  it('mark_line_closed_bad_type_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'line', closed: 'yes', encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
+  it('mark_path_closed_bad_type_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'path', closed: 'yes', encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
   });
 
-  it('mark_line_closed_json_round_trip', () => {
-    const m = { type: 'line', order: 'dim', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } } };
+  it('mark_path_closed_json_round_trip', () => {
+    const m = { type: 'path', order: 'dim', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } } };
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
@@ -259,25 +250,25 @@ describe('MarkSchema (ADR-05)', () => {
     expect((parsed.encoding as { shape?: unknown }).shape).toBeUndefined();
   });
 
-  // alpha.11 ADR-02：rect(heatmap) mark
+  // alpha.11 ADR-02：rect(heatmap) → interval (band×band)
   it('mark_rect_with_color_valid', () => {
-    const m = { type: 'rect', encoding: { x: { field: 'rowKey' }, y: { field: 'colKey' }, color: { field: 'value', scale: 'heat' } } };
+    const m = { type: 'interval', bounds: { x: { kind: 'band' }, y: { kind: 'band' } }, encoding: { x: { field: 'rowKey' }, y: { field: 'colKey' }, color: { field: 'value', scale: 'heat' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
   it('mark_rect_without_color_valid', () => {
     // 缺 color → 纯网格（值映射可选）；x / y 必填性 + band 约束下放 lowering，schema 仅解析通过
-    const m = { type: 'rect', encoding: { x: { field: 'day' }, y: { field: 'hour' } } };
+    const m = { type: 'interval', bounds: { x: { kind: 'band' }, y: { kind: 'band' } }, encoding: { x: { field: 'day' }, y: { field: 'hour' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
   it('mark_rect_with_id_valid', () => {
-    const m = { type: 'rect', id: 'heat', encoding: { x: { field: 'r' }, y: { field: 'c' } } };
+    const m = { type: 'interval', id: 'heat', bounds: { x: { kind: 'band' }, y: { kind: 'band' } }, encoding: { x: { field: 'r' }, y: { field: 'c' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
   it('mark_rect_missing_encoding_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'rect' })).toThrow();
+    expect(() => MarkSchema.parse({ type: 'interval', bounds: { x: { kind: 'band' }, y: { kind: 'band' } } })).toThrow();
   });
 
   it('mark_rect_typo_type_rejected', () => {
@@ -285,118 +276,114 @@ describe('MarkSchema (ADR-05)', () => {
   });
 
   it('mark_rect_union_discriminates', () => {
-    const parsed = MarkSchema.parse({ type: 'rect', encoding: { x: { field: 'r' }, y: { field: 'c' } } });
-    expect(parsed.type).toBe('rect');
+    const parsed = MarkSchema.parse({ type: 'interval', bounds: { x: { kind: 'band' }, y: { kind: 'band' } }, encoding: { x: { field: 'r' }, y: { field: 'c' } } });
+    expect(parsed.type).toBe('interval');
   });
 
   it('mark_rect_strips_size', () => {
-    // size 仅 PointMark：rect encoding 非 strict zod 剥离
-    const parsed = MarkSchema.parse({ type: 'rect', encoding: { x: { field: 'r' }, y: { field: 'c' }, size: { field: 'p' } } });
+    // size 仅 PointMark：interval encoding 非 strict zod 剥离
+    const parsed = MarkSchema.parse({ type: 'interval', bounds: { x: { kind: 'band' }, y: { kind: 'band' } }, encoding: { x: { field: 'r' }, y: { field: 'c' }, size: { field: 'p' } } });
     expect((parsed.encoding as { size?: unknown }).size).toBeUndefined();
   });
 
   it('mark_rect_json_round_trip', () => {
-    const m = { type: 'rect', id: 'heat', encoding: { x: { field: 'r' }, y: { field: 'c' }, color: { field: 'v', scale: 'heat' } } };
+    const m = { type: 'interval', id: 'heat', bounds: { x: { kind: 'band' }, y: { kind: 'band' } }, encoding: { x: { field: 'r' }, y: { field: 'c' }, color: { field: 'v', scale: 'heat' } } };
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
-  // alpha.11 ADR-03：rule(参考线 / 阈值带) mark
-  it('mark_rule_horizontal_constant_valid', () => {
-    const m = { type: 'rule', encoding: { y: { value: 80 }, color: { value: 'crimson' } } };
+  // alpha.11 ADR-03：reference(参考线 / 阈值带) mark
+  it('mark_reference_horizontal_constant_valid', () => {
+    const m = { type: 'reference', encoding: { y: { value: 80 }, color: { value: 'crimson' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_rule_vertical_field_valid', () => {
-    const m = { type: 'rule', encoding: { x: { field: 'date' } } };
+  it('mark_reference_vertical_field_valid', () => {
+    const m = { type: 'reference', encoding: { x: { field: 'date' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_rule_per_datum_field_color_valid', () => {
-    const m = { type: 'rule', encoding: { y: { field: 'threshold' }, color: { field: 'category', scale: 'c' } } };
+  it('mark_reference_per_datum_field_color_valid', () => {
+    const m = { type: 'reference', encoding: { y: { field: 'threshold' }, color: { field: 'category', scale: 'c' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_rule_extent_pair_valid', () => {
-    const m = { type: 'rule', extentField: 'rowLo', extentToField: 'rowHi', encoding: { x: { field: 'date' } } };
+  it('mark_reference_extent_pair_valid', () => {
+    const m = { type: 'reference', extentField: 'rowLo', extentToField: 'rowHi', encoding: { x: { field: 'date' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_rule_band_constant_yTo_valid', () => {
-    const m = { type: 'rule', yTo: 90, encoding: { y: { value: 70 }, color: { value: 'amber' } } };
+  it('mark_reference_band_constant_yTo_valid', () => {
+    const m = { type: 'reference', yTo: 90, encoding: { y: { value: 70 }, color: { value: 'amber' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_rule_band_field_yTo_valid', () => {
-    const m = { type: 'rule', yTo: 'hi', encoding: { y: { field: 'lo' } } };
+  it('mark_reference_band_field_yTo_valid', () => {
+    const m = { type: 'reference', yTo: 'hi', encoding: { y: { field: 'lo' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_rule_band_xTo_valid', () => {
-    const m = { type: 'rule', xTo: 5, encoding: { x: { value: 2 } } };
+  it('mark_reference_band_xTo_valid', () => {
+    const m = { type: 'reference', xTo: 5, encoding: { x: { value: 2 } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_rule_minimal_omits_optionals', () => {
+  it('mark_reference_minimal_omits_optionals', () => {
     // xTo / yTo / extent 省略：schema 不写入默认值，仅解析通过（line 形态由 lowering 判别）
-    const m = { type: 'rule', encoding: { y: { value: 50 } } };
+    const m = { type: 'reference', encoding: { y: { value: 50 } } };
     const parsed = MarkSchema.parse(m);
     expect(parsed).not.toHaveProperty('yTo');
     expect(parsed).not.toHaveProperty('xTo');
     expect(parsed).not.toHaveProperty('extentField');
   });
 
-  it('mark_rule_with_id_valid', () => {
-    const m = { type: 'rule', id: 'avg', encoding: { y: { value: 80 } } };
+  it('mark_reference_with_id_valid', () => {
+    const m = { type: 'reference', id: 'avg', encoding: { y: { value: 80 } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_rule_union_discriminates', () => {
-    const parsed = MarkSchema.parse({ type: 'rule', yTo: 90, encoding: { y: { value: 70 } } });
-    expect(parsed.type).toBe('rule');
+  it('mark_reference_union_discriminates', () => {
+    const parsed = MarkSchema.parse({ type: 'reference', yTo: 90, encoding: { y: { value: 70 } } });
+    expect(parsed.type).toBe('reference');
     expect((parsed as { yTo?: number }).yTo).toBe(90);
   });
 
-  it('mark_rule_empty_extent_field_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'rule', extentField: '', encoding: { x: { value: 5 } } })).toThrow();
+  it('mark_reference_empty_extent_field_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'reference', extentField: '', encoding: { x: { value: 5 } } })).toThrow();
   });
 
-  it('mark_rule_empty_string_yTo_rejected', () => {
+  it('mark_reference_empty_string_yTo_rejected', () => {
     // yTo string 须 min(1)：空串非法
-    expect(() => MarkSchema.parse({ type: 'rule', yTo: '', encoding: { y: { value: 70 } } })).toThrow();
+    expect(() => MarkSchema.parse({ type: 'reference', yTo: '', encoding: { y: { value: 70 } } })).toThrow();
   });
 
-  it('mark_rule_typo_type_rejected', () => {
+  it('mark_reference_typo_type_rejected', () => {
     expect(() => MarkSchema.parse({ type: 'rul', encoding: { y: { value: 80 } } })).toThrow();
   });
 
-  it('mark_rule_strips_size', () => {
-    // size 仅 PointMark：rule encoding 非 strict zod 剥离
-    const parsed = MarkSchema.parse({ type: 'rule', encoding: { y: { value: 80 }, size: { field: 'p' } } });
+  it('mark_reference_strips_size', () => {
+    // size 仅 PointMark：reference encoding 非 strict zod 剥离
+    const parsed = MarkSchema.parse({ type: 'reference', encoding: { y: { value: 80 }, size: { field: 'p' } } });
     expect((parsed.encoding as { size?: unknown }).size).toBeUndefined();
   });
 
-  it('mark_rule_json_round_trip', () => {
-    const m = { type: 'rule', id: 'tol', yTo: 'hi', extentField: 'a', extentToField: 'b', encoding: { y: { field: 'lo' }, color: { field: 'cat', scale: 'c' } } };
+  it('mark_reference_json_round_trip', () => {
+    const m = { type: 'reference', id: 'tol', yTo: 'hi', extentField: 'a', extentToField: 'b', encoding: { y: { field: 'lo' }, color: { field: 'cat', scale: 'c' } } };
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
-  // alpha.11 ADR-04：text mark + 位置 mark label
+  // alpha.11 ADR-04：text → point (encoding.text) + 位置 mark label
   it('mark_text_union_discriminates', () => {
-    const parsed = MarkSchema.parse({ type: 'text', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label' } } });
-    expect(parsed.type).toBe('text');
+    const parsed = MarkSchema.parse({ type: 'point', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label' } } });
+    expect(parsed.type).toBe('point');
   });
 
   it('mark_text_dx_dy_valid', () => {
-    const m = { type: 'text', dx: 4, dy: -8, encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { value: 'lbl' } } };
+    const m = { type: 'point', dx: 4, dy: -8, encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { value: 'lbl' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_text_missing_text_channel_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'text', encoding: { x: { field: 'px' }, y: { field: 'py' } } })).toThrow();
-  });
-
   it('mark_text_channel_both_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'text', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'a', value: 'b' } } })).toThrow();
+    expect(() => MarkSchema.parse({ type: 'point', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'a', value: 'b' } } })).toThrow();
   });
 
   it('mark_text_typo_type_rejected', () => {
@@ -404,7 +391,7 @@ describe('MarkSchema (ADR-05)', () => {
   });
 
   it('mark_text_json_round_trip', () => {
-    const m = { type: 'text', id: 't', dx: 2, dy: 3, encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label', format: ',.0f' }, color: { value: '#333' } } };
+    const m = { type: 'point', id: 't', dx: 2, dy: 3, encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label', format: ',.0f' }, color: { value: '#333' } } };
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
@@ -422,21 +409,21 @@ describe('MarkSchema (ADR-05)', () => {
     expect(() => MarkSchema.parse({ type: 'interval', label: { content: {} }, encoding: { x: { field: 'm' }, y: { field: 'r' } } })).toThrow();
   });
 
-  it('mark_sector_strips_label', () => {
-    // label 仅位置 mark（point/line/interval/area）；sector 非 strict zod 剥离
-    const parsed = MarkSchema.parse({ type: 'sector', label: { content: { value: 'x' } }, encoding: { color: { field: 'label' } } });
+  it('mark_reference_strips_label', () => {
+    // label 仅位置 mark（point/path/region/interval）；reference 非 strict zod 剥离
+    const parsed = MarkSchema.parse({ type: 'reference', label: { content: { value: 'x' } }, encoding: { y: { value: 80 } } });
     expect((parsed as { label?: unknown }).label).toBeUndefined();
   });
 
-  // alpha.11 ADR-05：ribbon(sankey / alluvial 流带) mark
-  it('mark_ribbon_minimal_valid', () => {
-    const m = { type: 'ribbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} };
+  // alpha.11 ADR-05：link(sankey / alluvial 流带) mark
+  it('mark_link_minimal_valid', () => {
+    const m = { type: 'link', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_ribbon_full_options_valid', () => {
+  it('mark_link_full_options_valid', () => {
     const m = {
-      type: 'ribbon',
+      type: 'link',
       id: 'flow',
       source: { x: { field: 'sx' }, y: { field: 'sy' } },
       target: { x: { field: 'tx' }, y: { field: 'ty' } },
@@ -450,52 +437,52 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_ribbon_orientation_default_undefined', () => {
+  it('mark_link_orientation_default_undefined', () => {
     // orientation 可选；缺省解析为 undefined（lowering 兜底 horizontal）
-    const parsed = MarkSchema.parse({ type: 'ribbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} });
+    const parsed = MarkSchema.parse({ type: 'link', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} });
     expect((parsed as { orientation?: string }).orientation).toBeUndefined();
   });
 
-  it('mark_ribbon_orientation_invalid_rejected', () => {
+  it('mark_link_orientation_invalid_rejected', () => {
     expect(() =>
-      MarkSchema.parse({ type: 'ribbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', orientation: 'diagonal', encoding: {} }),
+      MarkSchema.parse({ type: 'link', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', orientation: 'diagonal', encoding: {} }),
     ).toThrow();
   });
 
-  it('mark_ribbon_union_discriminates', () => {
-    const parsed = MarkSchema.parse({ type: 'ribbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', endWidth: 'e', encoding: {} });
-    expect(parsed.type).toBe('ribbon');
+  it('mark_link_union_discriminates', () => {
+    const parsed = MarkSchema.parse({ type: 'link', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', endWidth: 'e', encoding: {} });
+    expect(parsed.type).toBe('link');
     expect((parsed as { endWidth?: string }).endWidth).toBe('e');
   });
 
-  it('mark_ribbon_endpoint_missing_y_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'ribbon', source: { x: { field: 'sx' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} })).toThrow();
+  it('mark_link_endpoint_missing_y_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'link', source: { x: { field: 'sx' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} })).toThrow();
   });
 
-  it('mark_ribbon_missing_value_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'ribbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, encoding: {} })).toThrow();
+  it('mark_link_missing_value_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'link', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, encoding: {} })).toThrow();
   });
 
-  it('mark_ribbon_empty_value_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'ribbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: '', encoding: {} })).toThrow();
+  it('mark_link_empty_value_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'link', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: '', encoding: {} })).toThrow();
   });
 
-  it('mark_ribbon_curvature_out_of_range_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'ribbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', curvature: 1.5, encoding: {} })).toThrow();
+  it('mark_link_curvature_out_of_range_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'link', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', curvature: 1.5, encoding: {} })).toThrow();
   });
 
-  it('mark_ribbon_typo_type_rejected', () => {
+  it('mark_link_typo_type_rejected', () => {
     expect(() => MarkSchema.parse({ type: 'rbbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} })).toThrow();
   });
 
-  it('mark_ribbon_strips_label', () => {
-    // label 仅位置 mark；ribbon 非 strict zod 剥离
-    const parsed = MarkSchema.parse({ type: 'ribbon', label: { content: { value: 'x' } }, source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} });
+  it('mark_link_strips_label', () => {
+    // label 仅位置 mark；link 非 strict zod 剥离
+    const parsed = MarkSchema.parse({ type: 'link', label: { content: { value: 'x' } }, source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} });
     expect((parsed as { label?: unknown }).label).toBeUndefined();
   });
 
-  it('mark_ribbon_json_round_trip', () => {
-    const m = { type: 'ribbon', id: 'f', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', endWidth: 'end', curvature: 0.5, encoding: { color: { field: 'cat', scale: 'c' } } };
+  it('mark_link_json_round_trip', () => {
+    const m = { type: 'link', id: 'f', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', endWidth: 'end', curvature: 0.5, encoding: { color: { field: 'cat', scale: 'c' } } };
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 });

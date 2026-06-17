@@ -1,7 +1,7 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema, type RuleMark } from '../../src/ir';
+import { type PlotSpec, PlotSpecSchema, type ReferenceMark } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
 import { lowerMark } from '../../src/lower/mark';
 import { createCartesianFrame, createPolarFrame } from '../../src/lower/project';
@@ -87,7 +87,7 @@ const cartFrame = () => createCartesianFrame(linearStub([0, 10], [0, 400]), line
 describe('rule cartesian line 几何', () => {
   it('rule-horizontal-fullspan', () => {
     // y=80 水平 rule，跨满 x 域 [0,400]；y 像素 = 400 - 80/100*400 = 80
-    const mark: RuleMark = { type: 'rule', encoding: { y: { value: 80 } } };
+    const mark: ReferenceMark = { type: 'reference', encoding: { y: { value: 80 } } };
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
     const paths = pathsOf(layer);
     expect(paths).toHaveLength(1);
@@ -98,7 +98,7 @@ describe('rule cartesian line 几何', () => {
 
   it('rule-vertical-fullspan', () => {
     // x=5 竖直 rule，跨满 y 域 [400,0]；x 像素 = 5/10*400 = 200
-    const mark: RuleMark = { type: 'rule', encoding: { x: { value: 5 } } };
+    const mark: ReferenceMark = { type: 'reference', encoding: { x: { value: 5 } } };
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
     const [a, b] = endpointsOf(pathsOf(layer)[0]);
     expect(a).toEqual([200, 400]);
@@ -107,7 +107,7 @@ describe('rule cartesian line 几何', () => {
 
   it('rule-per-datum-field', () => {
     // 每行一条水平 rule（y=limit field）；3 行 → 3 条 path
-    const mark: RuleMark = { type: 'rule', encoding: { y: { field: 'limit' } } };
+    const mark: ReferenceMark = { type: 'reference', encoding: { y: { field: 'limit' } } };
     const rows = [{ limit: 20 }, { limit: 50 }, { limit: 90 }];
     const layer = lowerMark(mark, rows, cartFrame()) as IRScope;
     expect(pathsOf(layer)).toHaveLength(3);
@@ -124,7 +124,7 @@ describe('rule cartesian line 几何', () => {
         { type: 'linear', name: '__y' },
         { type: 'ordinal', name: '__color' },
       ],
-      marks: [{ type: 'rule', encoding: { y: { field: 'limit' }, color: { field: 'cat', scale: '__color' } } }],
+      marks: [{ type: 'reference', encoding: { y: { field: 'limit' }, color: { field: 'cat', scale: '__color' } } }],
     });
     const layer = expandOf(spec, { d: [{ limit: 20, cat: 'a' }, { limit: 50, cat: 'b' }, { limit: 90, cat: 'a' }] }, cartOpts).children[0] as IRScope;
     // 2 色 → 2 个分色子 Scope（各带 pathDefault.stroke）
@@ -134,14 +134,14 @@ describe('rule cartesian line 几何', () => {
   });
 
   it('rule-single-line-color-value', () => {
-    const mark: RuleMark = { type: 'rule', encoding: { y: { value: 80 }, color: { value: 'crimson' } } };
+    const mark: ReferenceMark = { type: 'reference', encoding: { y: { value: 80 }, color: { value: 'crimson' } } };
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
     expect((layer.pathDefault as { stroke?: string }).stroke).toBe('crimson');
   });
 
   it('constant-rule-with-color-field-fail-loud', () => {
     // 常量 rule（单条 full-span）+ color 字段 = 一条线配 N 色，语义矛盾 → fail-loud（不静默塌成 row0 色）
-    const mark: RuleMark = { type: 'rule', encoding: { y: { value: 80 }, color: { field: 'cat', scale: '__color' } } };
+    const mark: ReferenceMark = { type: 'reference', encoding: { y: { value: 80 }, color: { field: 'cat', scale: '__color' } } };
     expect(() => lowerMark(mark, [{ cat: 'a' }, { cat: 'b' }], cartFrame())).toThrow(/constant rule|color field/i);
   });
 });
@@ -150,7 +150,7 @@ describe('rule cartesian line 几何', () => {
 describe('rule cartesian band 几何（projectCell rect）', () => {
   it('rule-band-cartesian-rect', () => {
     // 水平 band y∈[70,90]，跨满 x 域 → rect Node。y 像素：70→120、90→40 → 高 80、中心 80；x 满铺 [0,400] → 宽 400、中心 200
-    const mark: RuleMark = { type: 'rule', encoding: { y: { value: 70 } }, yTo: 90 };
+    const mark: ReferenceMark = { type: 'reference', encoding: { y: { value: 70 } }, yTo: 90 };
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
     const nodes = nodesOf(layer);
     expect(nodes).toHaveLength(1);
@@ -161,7 +161,7 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
 
   it('rule-band-vertical-rect', () => {
     // 竖直 band x∈[2,5]，跨满 y 域 → rect。x 像素 80..200 → 宽 120、中心 140；y 满铺 [400,0] → 高 400、中心 200
-    const mark: RuleMark = { type: 'rule', encoding: { x: { value: 2 } }, xTo: 5 };
+    const mark: ReferenceMark = { type: 'reference', encoding: { x: { value: 2 } }, xTo: 5 };
     const nodes = nodesOf(lowerMark(mark, [{}], cartFrame()) as IRScope);
     expect(nodes[0].minimumWidth).toBe(120);
     expect(nodes[0].minimumHeight).toBe(400);
@@ -170,20 +170,20 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
 
   it('rule-band-per-datum-field', () => {
     // per-datum band y∈[lo,hi]，多行 → 每行一个 band Node
-    const mark: RuleMark = { type: 'rule', encoding: { y: { field: 'lo' } }, yTo: 'hi' };
+    const mark: ReferenceMark = { type: 'reference', encoding: { y: { field: 'lo' } }, yTo: 'hi' };
     const rows = [{ lo: 10, hi: 30 }, { lo: 60, hi: 80 }];
     const nodes = nodesOf(lowerMark(mark, rows, cartFrame()) as IRScope);
     expect(nodes).toHaveLength(2);
   });
 
   it('rule-band-color-value-fill', () => {
-    const mark: RuleMark = { type: 'rule', encoding: { y: { value: 70 }, color: { value: 'amber' } }, yTo: 90 };
+    const mark: ReferenceMark = { type: 'reference', encoding: { y: { value: 70 }, color: { value: 'amber' } }, yTo: 90 };
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
     expect((layer.nodeDefault as { fill?: string }).fill).toBe('amber');
   });
 
   it('rule-band-compiles-to-scene', () => {
-    const mark: RuleMark = { type: 'rule', encoding: { y: { value: 70 } }, yTo: 90 };
+    const mark: ReferenceMark = { type: 'reference', encoding: { y: { value: 70 } }, yTo: 90 };
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
     expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] })).not.toThrow();
   });
@@ -193,7 +193,7 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
 describe('rule 边界', () => {
   it('rule-extent-partial', () => {
     // 竖直 rule x=5，y 从 extent [20,60] 截断（非满铺）；y 像素 20→320、60→160
-    const mark: RuleMark = { type: 'rule', extentField: 'lo', extentToField: 'hi', encoding: { x: { value: 5 } } };
+    const mark: ReferenceMark = { type: 'reference', extentField: 'lo', extentToField: 'hi', encoding: { x: { value: 5 } } };
     const layer = lowerMark(mark, [{ lo: 20, hi: 60 }], cartFrame()) as IRScope;
     const [a, b] = endpointsOf(pathsOf(layer)[0]);
     expect(a).toEqual([200, 320]);
@@ -202,25 +202,25 @@ describe('rule 边界', () => {
 
   it('rule-band-extent-partial', () => {
     // 水平 band y∈[70,90]，x 从 extent [2,8] 截断；x 像素 80..320 → 宽 240、中心 200
-    const mark: RuleMark = { type: 'rule', extentField: 'a', extentToField: 'b', encoding: { y: { value: 70 } }, yTo: 90 };
+    const mark: ReferenceMark = { type: 'reference', extentField: 'a', extentToField: 'b', encoding: { y: { value: 70 } }, yTo: 90 };
     const nodes = nodesOf(lowerMark(mark, [{ a: 2, b: 8 }], cartFrame()) as IRScope);
     expect(nodes[0].minimumWidth).toBe(240);
     expect(nodes[0].position).toEqual([200, 80]);
   });
 
   it('rule-single-row', () => {
-    const mark: RuleMark = { type: 'rule', encoding: { y: { field: 'v' } } };
+    const mark: ReferenceMark = { type: 'reference', encoding: { y: { field: 'v' } } };
     const layer = lowerMark(mark, [{ v: 42 }], cartFrame()) as IRScope;
     expect(pathsOf(layer)).toHaveLength(1);
   });
 
   it('rule-empty-rows-null', () => {
-    const mark: RuleMark = { type: 'rule', encoding: { y: { field: 'v' } } };
+    const mark: ReferenceMark = { type: 'reference', encoding: { y: { field: 'v' } } };
     expect(lowerMark(mark, [], cartFrame())).toBeNull();
   });
 
   it('rule-nonfinite-extent-skipped', () => {
-    const mark: RuleMark = { type: 'rule', extentField: 'lo', extentToField: 'hi', encoding: { x: { value: 5 } } };
+    const mark: ReferenceMark = { type: 'reference', extentField: 'lo', extentToField: 'hi', encoding: { x: { value: 5 } } };
     // 缺 extent 字段 → coordinate NaN → 跳过 → null
     expect(lowerMark(mark, [{}], cartFrame())).toBeNull();
   });
@@ -229,27 +229,27 @@ describe('rule 边界', () => {
 // ── 错误路径：取向 / extent / band 上界 / 坐标系矩阵 fail-loud ─────────────────────────────
 describe('rule fail-loud', () => {
   it('rule-orientation-conflict-both', () => {
-    const mark = { type: 'rule', encoding: { x: { value: 5 }, y: { value: 80 } } } as RuleMark;
+    const mark = { type: 'reference', encoding: { x: { value: 5 }, y: { value: 80 } } } as ReferenceMark;
     expect(() => lowerMark(mark, [{}], cartFrame())).toThrow(/exactly one of encoding\.x|orientation|both/i);
   });
 
   it('rule-orientation-conflict-neither', () => {
-    const mark = { type: 'rule', encoding: {} } as RuleMark;
+    const mark = { type: 'reference', encoding: {} } as ReferenceMark;
     expect(() => lowerMark(mark, [{}], cartFrame())).toThrow(/exactly one of encoding\.x|orientation|neither/i);
   });
 
   it('rule-extent-unpaired', () => {
-    const mark = { type: 'rule', extentField: 'lo', encoding: { x: { value: 5 } } } as RuleMark;
+    const mark = { type: 'reference', extentField: 'lo', encoding: { x: { value: 5 } } } as ReferenceMark;
     expect(() => lowerMark(mark, [{ lo: 1 }], cartFrame())).toThrow(/extentField|extentToField|together/i);
   });
 
   it('rule-band-bound-mismatch-x-with-yTo', () => {
-    const mark = { type: 'rule', yTo: 90, encoding: { x: { value: 5 } } } as RuleMark;
+    const mark = { type: 'reference', yTo: 90, encoding: { x: { value: 5 } } } as ReferenceMark;
     expect(() => lowerMark(mark, [{}], cartFrame())).toThrow(/yTo|match the bound dimension|xTo/i);
   });
 
   it('rule-band-bound-mismatch-y-with-xTo', () => {
-    const mark = { type: 'rule', xTo: 5, encoding: { y: { value: 80 } } } as RuleMark;
+    const mark = { type: 'reference', xTo: 5, encoding: { y: { value: 80 } } } as ReferenceMark;
     expect(() => lowerMark(mark, [{}], cartFrame())).toThrow(/xTo|match the bound dimension|yTo/i);
   });
 
@@ -260,7 +260,7 @@ describe('rule fail-loud', () => {
       data: { reference: 'd' },
       coordinate: { type: 'cartesian1D', x: '__x' },
       scales: [{ type: 'linear', name: '__x' }],
-      marks: [{ type: 'rule', encoding: { x: { value: 5 } } }],
+      marks: [{ type: 'reference', encoding: { x: { value: 5 } } }],
     });
     expect(() => expandOf(spec, { d: [{}] }, cartOpts)).toThrow(/cartesian1D|not supported|rule/i);
   });
@@ -272,7 +272,7 @@ describe('rule fail-loud', () => {
       data: { reference: 'd' },
       coordinate: { type: 'ternary2D' },
       scales: [],
-      marks: [{ type: 'rule', encoding: { x: { value: 5 } } }],
+      marks: [{ type: 'reference', encoding: { x: { value: 5 } } }],
     });
     expect(() => expandOf(spec, { d: [{}] }, cartOpts)).toThrow(/ternary2D|not supported|rule/i);
   });
@@ -294,7 +294,7 @@ describe('rule polar', () => {
 
   it('rule-polar-radial-line', () => {
     // 竖直 rule x=90（常量角度）→ 径向线 inner(r=0)→outer(r=150)，单 line step
-    const mark: RuleMark = { type: 'rule', encoding: { x: { value: 90 } } };
+    const mark: ReferenceMark = { type: 'reference', encoding: { x: { value: 90 } } };
     const layer = lowerMark(mark, [{}], polarFrame()) as IRScope;
     const paths = pathsOf(layer);
     expect(paths).toHaveLength(1);
@@ -303,14 +303,14 @@ describe('rule polar', () => {
 
   it('rule-polar-constant-radius-ring', () => {
     // 水平 rule y=50（常量半径）→ 常半径环，沿角向 [0,360] 段采样（多 line step 弯成弧）
-    const mark: RuleMark = { type: 'rule', encoding: { y: { value: 50 } } };
+    const mark: ReferenceMark = { type: 'reference', encoding: { y: { value: 50 } } };
     const layer = lowerMark(mark, [{}], polarFrame(true)) as IRScope;
     expect(pathsOf(layer)[0].children.filter(s => s.kind === 'line').length).toBeGreaterThan(1);
   });
 
   it('rule-band-polar-ring-sector', () => {
     // 水平 band y∈[40,60]（半径区间）→ projectCell 环带 sector（innerRadius=coord(40)=60、outerRadius=coord(60)=90）
-    const mark: RuleMark = { type: 'rule', encoding: { y: { value: 40 } }, yTo: 60 };
+    const mark: ReferenceMark = { type: 'reference', encoding: { y: { value: 40 } }, yTo: 60 };
     const layer = lowerMark(mark, [{}], polarFrame()) as IRScope;
     const node = nodesOf(layer)[0];
     const shape = node.shape as { type: string; params: { innerRadius: number; outerRadius: number } };
@@ -322,7 +322,7 @@ describe('rule polar', () => {
   it('rule-band-polar-connectable', () => {
     // band sector Node 可被另一 core Path 指向式连接（守 §8.1，与 ADR-01 cell Node connectable 同断言）：
     //   line step 指向 Node id → compile 自动 clip 到边界、不抛
-    const mark: RuleMark = { type: 'rule', encoding: { y: { value: 40 } }, yTo: 60 };
+    const mark: ReferenceMark = { type: 'reference', encoding: { y: { value: 40 } }, yTo: 60 };
     const node: IRNode = { ...nodesOf(lowerMark(mark, [{}], polarFrame()) as IRScope)[0], id: 'ring' };
     const scene = {
       version: 1 as const,
@@ -350,7 +350,7 @@ describe('rule + bar z-order', () => {
       ],
       marks: [
         { type: 'interval', encoding: { x: { field: 'cat' }, y: { field: 'v' } } },
-        { type: 'rule', encoding: { y: { value: 5 } } },
+        { type: 'reference', encoding: { y: { value: 5 } } },
       ],
     });
     const expanded = expandOf(spec, { d: [{ cat: 'a', v: 3 }, { cat: 'b', v: 8 }] }, cartOpts);

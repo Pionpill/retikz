@@ -19,7 +19,7 @@ const specWithModel = (): PlotSpec =>
     data: { reference: 'd', model: [{ name: 'month', type: 'temporal' }, { name: 'revenue', type: 'continuous' }] },
     scales: [{ type: 'time', name: 'x' }, { type: 'linear', name: 'y' }],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'line', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
   });
 
 const specNoModel = (): PlotSpec =>

@@ -76,7 +76,7 @@ const polarSpec = (guides: Array<Record<string, unknown>>, extra: Record<string,
       { type: 'linear', name: 'r', domain: [0, 10] },
     ],
     coordinate: { type: 'polar2D', angle: 'a', radius: 'r', ...extra },
-    marks: [{ type: 'line', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+    marks: [{ type: 'path', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
     guides,
   });
 
@@ -284,7 +284,7 @@ describe('lowerPlots polar guide — grid (ADR-04)', () => {
       { type: 'linear', name: 'r', domain: [0, 10] },
     ],
     coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-    marks: [{ type: 'line', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+    marks: [{ type: 'path', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
     guides: [{ type: 'axis', dimension: 'angle', grid: true }],
   });
 
@@ -320,7 +320,7 @@ describe('lowerPlots polar guide — z-order (ADR-04)', () => {
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'line', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+      marks: [{ type: 'path', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
       guides: [
         { type: 'axis', dimension: 'angle' },
         { type: 'axis', dimension: 'radius', grid: true },
@@ -349,7 +349,7 @@ describe('lowerPlots polar guide — 错误路径 (ADR-04)', () => {
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'line', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+      marks: [{ type: 'path', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
       guides: [
         { type: 'axis', dimension: 'angle' },
         { type: 'axis', dimension: 'angle' },
@@ -369,7 +369,7 @@ describe('lowerPlots polar guide — 错误路径 (ADR-04)', () => {
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'line', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+      marks: [{ type: 'path', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
       guides: [
         { type: 'axis', dimension: 'x' },
         { type: 'axis', dimension: 'angle' },
@@ -390,7 +390,7 @@ describe('lowerPlots cartesian guide 回归 (ADR-04)', () => {
       { type: 'linear', name: 'yRevenue' },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     guides: [
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y', grid: true },

@@ -18,15 +18,15 @@ const addChannelField = (fields: Set<string>, channel: Channel | undefined): voi
 export const collectUserSourceFields = (spec: PlotSpec): Set<string> => {
   const fields = new Set<string>();
   for (const mark of spec.marks) {
-    // ribbon 位置来自 source / target 字段对 + value 流量字段（非 encoding.x/y）：均为用户源字段
-    if (mark.type === PlotMark.Ribbon) {
+    // link 位置来自 source / target 字段对 + value 流量字段（非 encoding.x/y）：均为用户源字段
+    if (mark.type === PlotMark.Link) {
       addChannelField(fields, mark.source.x);
       addChannelField(fields, mark.source.y);
       addChannelField(fields, mark.target.x);
       addChannelField(fields, mark.target.y);
       fields.add(mark.value);
       if (mark.endWidth !== undefined) fields.add(mark.endWidth);
-    } else if (mark.type !== PlotMark.Sector) {
+    } else {
       addChannelField(fields, mark.encoding.x);
       addChannelField(fields, mark.encoding.y);
       // ternary a/b/c 位置角色通道同样是用户源字段：须进 model strict 校验 + 归一化 coerce（不漏过数据契约）
@@ -41,18 +41,18 @@ export const collectUserSourceFields = (spec: PlotSpec): Set<string> => {
       addChannelField(fields, mark.encoding.opacity);
       addChannelField(fields, mark.encoding.shape);
     }
-    if (mark.type === PlotMark.Line || mark.type === PlotMark.Area) {
+    if (mark.type === PlotMark.Path || mark.type === PlotMark.Region) {
       if (mark.order !== undefined) fields.add(mark.order);
     }
-    if (mark.type === PlotMark.Line || mark.type === PlotMark.Interval || mark.type === PlotMark.Area) {
+    if (mark.type === PlotMark.Path || mark.type === PlotMark.Interval || mark.type === PlotMark.Region) {
       if (mark.series !== undefined) fields.add(mark.series);
     }
-    // alpha.11：priority-1 datum label 的内容字段（位置 mark 的 label.content）+ TextMark 的 text 内容字段——
+    // priority-1 datum label 的内容字段（位置 mark 的 label.content）+ point 的 text 内容字段——
     //   均引用外部数据、须进 model strict 校验 + fieldMap / format / 归一化（否则静默读原始路径、空文本）
     if ('label' in mark && mark.label?.content.field !== undefined) fields.add(mark.label.content.field);
-    if (mark.type === PlotMark.Text && mark.encoding.text.field !== undefined) fields.add(mark.encoding.text.field);
-    // alpha.11：rule band 上界（string = field）+ extent 部分长度字段——同样是用户源字段
-    if (mark.type === PlotMark.Rule) {
+    if (mark.type === PlotMark.Point && mark.encoding.text?.field !== undefined) fields.add(mark.encoding.text.field);
+    // reference band 上界（string = field）+ extent 部分长度字段——同样是用户源字段
+    if (mark.type === PlotMark.Reference) {
       if (typeof mark.xTo === 'string') fields.add(mark.xTo);
       if (typeof mark.yTo === 'string') fields.add(mark.yTo);
       if (mark.extentField !== undefined) fields.add(mark.extentField);

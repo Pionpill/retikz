@@ -14,7 +14,7 @@ const buildSpec = (overrides: Record<string, unknown>): PlotSpec =>
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'line', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     ...overrides,
   });
 
@@ -86,7 +86,7 @@ describe('isIsoDateString — 严格 ISO guard（ADR-01）', () => {
 describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
   it('collect_encoding_order_series', () => {
     const spec = buildSpec({
-      marks: [{ type: 'line', order: 'idx', series: 'cat', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'cat' } } }],
+      marks: [{ type: 'path', order: 'idx', series: 'cat', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'cat' } } }],
     });
     const fields = collectUserSourceFields(spec);
     expect(fields.has('month')).toBe(true);
@@ -112,7 +112,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
     // stack 输出 startField/endField、interval y0Field/y1Field 是派生字段，不应进用户源集
     const spec = buildSpec({
       transform: [{ kind: 'stack', x: 'month', y: 'revenue', startField: 'lo', endField: 'hi' }],
-      marks: [{ type: 'interval', y0Field: 'lo', y1Field: 'hi', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      marks: [{ type: 'interval', bounds: { y: { kind: 'extent', from: 'lo', to: 'hi' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     });
     const fields = collectUserSourceFields(spec);
     expect(fields.has('lo')).toBe(false);
@@ -121,7 +121,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
 
   it('constant_value_channel_not_collected', () => {
     const spec = buildSpec({
-      marks: [{ type: 'line', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { value: 'red' } } }],
+      marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { value: 'red' } } }],
     });
     expect(collectUserSourceFields(spec).has('red')).toBe(false);
   });
@@ -131,7 +131,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
     const spec = buildSpec({
       marks: [
         { type: 'interval', label: { content: { field: 'lbl' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
-        { type: 'text', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, text: { field: 'note' } } },
+        { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, text: { field: 'note' } } },
       ],
     });
     const fields = collectUserSourceFields(spec);
@@ -143,8 +143,8 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
     // rule band 上界 string（field）+ extent 字段进用户源集；数字常量上界不作字段
     const spec = buildSpec({
       marks: [
-        { type: 'rule', encoding: { y: { field: 'lo' } }, yTo: 'hi', extentField: 'a', extentToField: 'b' },
-        { type: 'rule', encoding: { y: { value: 70 } }, yTo: 90 },
+        { type: 'reference', encoding: { y: { field: 'lo' } }, yTo: 'hi', extentField: 'a', extentToField: 'b' },
+        { type: 'reference', encoding: { y: { value: 70 } }, yTo: 90 },
       ],
     });
     const fields = collectUserSourceFields(spec);
@@ -158,7 +158,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
   it('text_field_enters_strict_model_alpha11', () => {
     // 声明 model 时，TextMark text 引用的字段必须列入 model，否则 fail-loud（P1：之前被绕过、静默空文本）
     const spec = buildSpec({
-      marks: [{ type: 'text', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, text: { field: 'note' } } }],
+      marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, text: { field: 'note' } } }],
     });
     const userFields = collectUserSourceFields(spec);
     expect(() => resolveFieldTypes([{ name: 'month' }, { name: 'revenue' }], [{ month: 1, revenue: 2, note: 'x' }], userFields)).toThrow(/unknown field/i);
@@ -168,7 +168,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
   it('bin_inputs_in_outputs_out', () => {
     const spec = buildSpec({
       transform: [{ kind: 'bin', field: 'measurement', reduce: 'sum', reduceField: 'weight' }],
-      marks: [{ type: 'interval', x0Field: 'binStart', x1Field: 'binEnd', encoding: { y: { field: 'binValue' } } }],
+      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } }, encoding: { y: { field: 'binValue' } } }],
     });
     const fields = collectUserSourceFields(spec);
     // 输入字段进
@@ -183,7 +183,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
   it('bin_custom_output_fields_not_collected', () => {
     const spec = buildSpec({
       transform: [{ kind: 'bin', field: 'm', startField: 'lo', endField: 'hi', valueField: 'n' }],
-      marks: [{ type: 'interval', x0Field: 'lo', x1Field: 'hi', encoding: { y: { field: 'n' } } }],
+      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'lo', to: 'hi' } }, encoding: { y: { field: 'n' } } }],
     });
     const fields = collectUserSourceFields(spec);
     expect(fields.has('m')).toBe(true);
@@ -238,7 +238,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
   it('derive_interval_inputs_in_outputs_out', () => {
     const spec = buildSpec({
       transform: [{ kind: 'derive-interval', startFrom: 'start', endFrom: 'end', startField: 'lo', endField: 'hi' }],
-      marks: [{ type: 'interval', y0Field: 'lo', y1Field: 'hi', encoding: { x: { field: 'task' }, y: { field: 'end' } } }],
+      marks: [{ type: 'interval', bounds: { y: { kind: 'extent', from: 'lo', to: 'hi' } }, encoding: { x: { field: 'task' }, y: { field: 'end' } } }],
     });
     const fields = collectUserSourceFields(spec);
     expect(fields.has('start')).toBe(true);

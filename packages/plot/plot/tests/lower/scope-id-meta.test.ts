@@ -149,7 +149,7 @@ describe('ADR-01 id/meta — happy path', () => {
         { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'line', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } }],
+      marks: [{ type: 'path', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } }],
     });
     const layer = firstLayer(spec, { t: TREND }, { ...opts, provenance: true });
     const [pathX, pathY] = layer.children as Array<IRPath>;
@@ -208,7 +208,7 @@ describe('ADR-01 id/meta — 边界', () => {
         { type: 'linear', name: 'r' },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'sector', encoding: { color: { field: 'k' } } }],
+      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'k' } } }],
     });
     const rows = [
       { k: 'A', v: 3 },
@@ -251,7 +251,7 @@ describe('ADR-01 id/meta — 边界', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'line', series: 'region', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
+      marks: [{ type: 'path', series: 'region', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
     });
     const layer = firstLayer(spec, { t: TREND }, { ...opts, provenance: true });
     const paths = layer.children as Array<IRPath>;
@@ -287,7 +287,7 @@ describe('ADR-01 id/meta — 边界', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'line', series: 'region', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
+      marks: [{ type: 'path', series: 'region', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
     });
     expect(() => expandOf(spec, { t: TREND }, { ...opts, provenance: true })).toThrow();
   });
@@ -390,7 +390,7 @@ describe('ADR-01 id/meta — 交互', () => {
         { type: 'linear', name: 'r' },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'sector', encoding: { color: { field: 'k' } } }],
+      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'k' } } }],
     });
     const rows = [
       { k: 'A', v: 3 },
@@ -402,7 +402,7 @@ describe('ADR-01 id/meta — 交互', () => {
     expect(metas.length).toBe(2);
     for (const { meta } of metas) {
       expect((meta as { source?: string }).source).toBe('plot');
-      expect((meta as { mark?: string }).mark).toBe('sector');
+      expect((meta as { mark?: string }).mark).toBe('interval');
       expect(typeof (meta as { transformedIndex?: number }).transformedIndex).toBe('number');
     }
   });

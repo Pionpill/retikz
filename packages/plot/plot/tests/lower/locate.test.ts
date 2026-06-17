@@ -105,7 +105,7 @@ const pieSpec = (over: { id?: string } = {}): PlotSpec =>
       { type: 'linear', name: 'a' },
       { type: 'linear', name: 'r' },
     ],
-    marks: [{ type: 'sector', encoding: { color: { field: 'k' } } }],
+    marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'k' } } }],
   });
 
 const PIE_ROWS = [
@@ -191,7 +191,7 @@ describe('ADR-02 locator — happy path', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       // series-bearing mark：point 无 series 字段（schema 会剥离），改用 line（含 series）以承载多系列拆分
-      marks: [{ type: 'line', series: 'city', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
+      marks: [{ type: 'path', series: 'city', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
     });
     const datasets: Datasets = { t: TREND };
     const locator = createPlotLocator(spec, datasets, opts);
@@ -239,7 +239,7 @@ describe('ADR-02 locator — 边界', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       // series-bearing mark：point 无 series 字段（schema 会剥离），改用 line（含 series）
-      marks: [{ type: 'line', series: 'city', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      marks: [{ type: 'path', series: 'city', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     });
     const locator = createPlotLocator(spec, { sales: rows }, opts);
     // 被跳过的中间行（transformedIndex 1）→ null；存活行 0 / 2 仍可解析
@@ -272,7 +272,7 @@ describe('ADR-02 locator — 边界', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       // series-bearing mark：point 无 series 字段（schema 会剥离），改用 line（含 series）
-      marks: [{ type: 'line', series: 'city', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      marks: [{ type: 'path', series: 'city', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     });
     const locator = createPlotLocator(spec, { sales: rows }, opts);
     expect(locator.series('does-not-exist')).toBeNull();
@@ -490,7 +490,7 @@ describe('ADR-02 locator — anchor parity & fail-loud (cross-review)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', series: 'g', encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
+      marks: [{ type: 'interval', series: 'g', bounds: { x: { kind: 'band', group: 'g' } }, encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
     });
   const DODGE_ROWS = [
     { cat: 'A', g: 'p', v: 3 },
@@ -512,7 +512,7 @@ describe('ADR-02 locator — anchor parity & fail-loud (cross-review)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', series: 'g', arrangement: 'stack', encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
+      marks: [{ type: 'interval', series: 'g', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } }, encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
     });
   const STACK_ROWS = [
     { cat: 'A', g: 'p', v: 3 },
@@ -533,7 +533,7 @@ describe('ADR-02 locator — anchor parity & fail-loud (cross-review)', () => {
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'interval', series: 'g', encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
+      marks: [{ type: 'interval', series: 'g', bounds: { x: { kind: 'band', group: 'g' } }, encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
     });
   const POLAR_DODGE_ROWS = [
     { cat: 'A', g: 'p', v: 4 },
@@ -653,7 +653,7 @@ describe('ADR-02 locator — anchor parity & fail-loud (cross-review)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'line', series: 'g', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
+      marks: [{ type: 'path', series: 'g', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
     });
     const locator = createPlotLocator(spec, { t: TREND }, opts);
     const viaAddress = locator.resolve('p.series.5');

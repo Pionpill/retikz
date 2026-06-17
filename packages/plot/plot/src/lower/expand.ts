@@ -1,5 +1,6 @@
 import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, defineComposite } from '@retikz/core';
-import { type AxisGuide, Cartesian1DOrientation, type Channel, type Coordinate, type ExternalDatasets, type ExternalRow, type Guide, type LegendChannelValue, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotScaleValue, type PlotSpec, PlotSpecSchema, type QuantileColorScale, type QuantizeColorScale, type Scale, type ThresholdColorScale } from '../ir';
+import { type AxisGuide, Cartesian1DOrientation, type Channel, type Coordinate, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotScaleValue, type PlotSpec, PlotSpecSchema, type QuantileColorScale, type QuantizeColorScale, type Scale, type ThresholdColorScale } from '../ir';
+import { resolveIntervalBound } from './anchor';
 import { type ResolveLabel, channelValue, isFiniteNumber, labelOf, resolveFieldPath } from './field';
 import { type GuideContext, type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from './guide';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarFrame, computeTernaryFrame } from './layout';
@@ -33,17 +34,35 @@ const axisRole = (dimension: string, coordinateType: string): string => {
 };
 
 /**
- * 取 mark 的 x / y 位置通道；sector 无位置通道（角度来自累积界、半径常量）→ undefined
- * @description schema 已保证位置 mark 必填 x/y、sector 用样式-only 编码，故此处仅按 type 区分取值。
+ * 取 mark 的 x / y 位置通道；link 的位置来自 source / target 字段对（取 source 端）
+ * @description interval 用 encoding.x/y 作 band / span 的位置通道（extent / full bounds 不读 encoding，取 undefined 时由 collectValues 走 bounds 字段）。
  */
-const xChannelOf = (mark: Mark): Channel | undefined =>
-  mark.type === PlotMark.Sector ? undefined : mark.type === PlotMark.Ribbon ? mark.source.x : mark.encoding.x;
-const yChannelOf = (mark: Mark): Channel | undefined =>
-  mark.type === PlotMark.Sector ? undefined : mark.type === PlotMark.Ribbon ? mark.source.y : mark.encoding.y;
+const xChannelOf = (mark: Mark): Channel | undefined => (mark.type === PlotMark.Link ? mark.source.x : mark.encoding.x);
+const yChannelOf = (mark: Mark): Channel | undefined => (mark.type === PlotMark.Link ? mark.source.y : mark.encoding.y);
 
-/** ribbon 的 target 端通道（source 端走 x/yChannelOf；两端都须纳入位置 scale 域，否则 target 投影越界） */
-const ribbonTargetChannelOf = (mark: Mark, role: 'x' | 'y'): Channel | undefined =>
-  mark.type === PlotMark.Ribbon ? (role === 'x' ? mark.target.x : mark.target.y) : undefined;
+/** link 的 target 端通道（source 端走 x/yChannelOf；两端都须纳入位置 scale 域，否则 target 投影越界） */
+const linkTargetChannelOf = (mark: Mark, role: 'x' | 'y'): Channel | undefined =>
+  mark.type === PlotMark.Link ? (role === 'x' ? mark.target.x : mark.target.y) : undefined;
+
+/**
+ * interval mark 在某位置 role 对 scale 域的贡献值（按 bounds 来源）
+ * @description band / span → 取 encoding 位置通道值（band 为类别、span 为值，baseline 由 includeBaseline 纳入）；
+ *   extent → 取两字段（histogram 箱边 / 堆叠 y0,y1 / 累积饼角 start,end）；full → 不贡献（满铺坐标域）。
+ */
+const intervalRoleValues = (mark: IntervalMark, axis: 'primary' | 'secondary', pick: (mark: Mark) => Channel | undefined, rows: Array<ExternalRow>): Array<unknown> => {
+  const bound = resolveIntervalBound(mark, axis === 'primary' ? 'x' : 'y');
+  if (bound.kind === IntervalBoundKind.Extent) return rows.flatMap(row => [resolveFieldPath(row, bound.from), resolveFieldPath(row, bound.to)]);
+  if (bound.kind === IntervalBoundKind.Full) return [];
+  const channel = pick(mark);
+  if (channel === undefined) return [];
+  return rows.map(row => channelValue(channel, row));
+};
+
+/** interval mark 在某 role 是否需把 baseline 0 纳入连续域（span / extent 值轴含 0；band / full 不需） */
+const intervalContributesBaseline = (mark: IntervalMark, axis: 'primary' | 'secondary'): boolean => {
+  const bound = resolveIntervalBound(mark, axis === 'primary' ? 'x' : 'y');
+  return bound.kind === IntervalBoundKind.Span || bound.kind === IntervalBoundKind.Extent;
+};
 
 const defaultColorOf = (node: PlotSpec, markIndex: number): string => {
   const colors = node.colors ?? DEFAULT_PLOT_COLORS;
@@ -106,21 +125,28 @@ const assertValidGuideDimensions = (coordinate: Coordinate, axisGuides: Array<Ax
 const assertRequiredPositionChannels = (coordinate: Coordinate, marks: ReadonlyArray<Mark>): void => {
   const required = requiredPositionChannelsOf(coordinate);
   for (const mark of marks) {
-    if (mark.type === PlotMark.Sector) continue;
-    // rule 取向由 encoding.x XOR y 决定（绑一个、缺一个），不满足坐标系的「x+y 全必填」；其取向校验在 lowerRule fail-loud
-    if (mark.type === PlotMark.Rule) continue;
-    // ribbon 位置来自 source / target 字段对（非 encoding.x/y）；端点缺失校验在 lowerRibbon fail-loud
-    if (mark.type === PlotMark.Ribbon) continue;
-    // histogram 连续 x 区间柱：x 位置来自 x0Field / x1Field（非 encoding.x），故豁免 'x' 必填（仍要 y 作高度）
-    const histogramInterval = mark.type === PlotMark.Interval && mark.x0Field !== undefined && mark.x1Field !== undefined;
-    // 读可选位置通道（x/y/a/b/c）；encoding 是 zod object，按名读为 Channel | undefined（纯 JSON 字段，非 any 逃逸）
+    // reference 取向由 encoding.x XOR y 决定（绑一个、缺一个）；其取向校验在 lowerReference fail-loud
+    if (mark.type === PlotMark.Reference) continue;
+    // link 位置来自 source / target 字段对（非 encoding.x/y）；端点缺失校验在 lowerLink fail-loud
+    if (mark.type === PlotMark.Link) continue;
+    // interval：band / span bounds 需对应 encoding 位置通道；extent（字段区间）/ full（满域）从字段 / 坐标系取位置，豁免该角色
+    if (mark.type === PlotMark.Interval) {
+      const encoding = mark.encoding as Record<string, Channel | undefined>;
+      for (const channel of required) {
+        if (channel !== 'x' && channel !== 'y') continue;
+        const bound = resolveIntervalBound(mark, channel);
+        if (bound.kind === IntervalBoundKind.Extent || bound.kind === IntervalBoundKind.Full) continue;
+        if (encoding[channel] === undefined) {
+          throw new Error(`lowerPlots: ${coordinateLabel(coordinate)} requires the "${channel}" position channel on ${mark.type} marks, but it is missing`);
+        }
+      }
+      continue;
+    }
+    // point / path / region：所有必填位置角色都要对应 encoding 通道
     const encoding = mark.encoding as Record<string, Channel | undefined>;
     for (const channel of required) {
-      if (histogramInterval && channel === 'x') continue;
       if (encoding[channel] === undefined) {
-        throw new Error(
-          `lowerPlots: ${coordinateLabel(coordinate)} requires the "${channel}" position channel on ${mark.type} marks, but it is missing`,
-        );
+        throw new Error(`lowerPlots: ${coordinateLabel(coordinate)} requires the "${channel}" position channel on ${mark.type} marks, but it is missing`);
       }
     }
   }
@@ -223,47 +249,25 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
   //   连续 scale 内部过滤为有限数求 extent、分类 scale 按数据序去重推断 domain。
   // role 决定从哪个通道取值：cartesian 用 x/y；polar 用 angle??x / radius??y（mark 不写死笛卡尔）。
   const collectValues = (
+    axis: 'primary' | 'secondary' | undefined,
     pick: (mark: Mark) => Channel | undefined,
     includeBaseline: boolean,
-    stackAxis: boolean,
-    sectorAngle = false,
     ribbonRole?: 'x' | 'y',
-    intervalXInterval = false,
   ): Array<unknown> => {
     const out: Array<unknown> = [];
     for (const mark of node.marks) {
-      // histogram 连续 x 区间柱：x 域取 x0Field / x1Field 的箱边（无 encoding.x），否则域漏掉末箱上界
-      if (intervalXInterval && mark.type === PlotMark.Interval && mark.x0Field !== undefined && mark.x1Field !== undefined) {
-        for (const row of rows) {
-          out.push(resolveFieldPath(row, mark.x0Field), resolveFieldPath(row, mark.x1Field));
-        }
+      // interval：域贡献按 bounds 来源（band/span → 位置通道值、extent → 两字段、full → 不贡献），统一替代旧 histogram / stack / sector 特判
+      if (mark.type === PlotMark.Interval && axis !== undefined) {
+        out.push(...intervalRoleValues(mark, axis, pick, rows));
         continue;
       }
-      // ribbon 两端都进位置 scale 域：source 端走 pick（= source.x/y），target 端单独收（否则 target 投影越界）
-      if (ribbonRole !== undefined && mark.type === PlotMark.Ribbon) {
+      // link 两端都进位置 scale 域：source 端走 pick（= source.x/y），target 端单独收（否则 target 投影越界）
+      if (ribbonRole !== undefined && mark.type === PlotMark.Link) {
         const sourceChannel = pick(mark);
-        const targetChannel = ribbonTargetChannelOf(mark, ribbonRole);
+        const targetChannel = linkTargetChannelOf(mark, ribbonRole);
         for (const row of rows) {
           if (sourceChannel !== undefined) out.push(channelValue(sourceChannel, row));
           if (targetChannel !== undefined) out.push(channelValue(targetChannel, row));
-        }
-        continue;
-      }
-      // 堆叠柱的 y 域取累积上 / 下界（来自 stack transform），而非每段原值
-      if (stackAxis && mark.type === PlotMark.Interval && mark.arrangement === 'stack') {
-        const y0Field = mark.y0Field ?? 'y0';
-        const y1Field = mark.y1Field ?? 'y1';
-        for (const row of rows) {
-          out.push(resolveFieldPath(row, y0Field), resolveFieldPath(row, y1Field));
-        }
-        continue;
-      }
-      // sector mark 的角向域取累积界（来自 stack transform）：[0, total] → [startAngle, endAngle]
-      if (sectorAngle && mark.type === PlotMark.Sector) {
-        const startField = mark.startField ?? 'y0';
-        const endField = mark.endField ?? 'y1';
-        for (const row of rows) {
-          out.push(resolveFieldPath(row, startField), resolveFieldPath(row, endField));
         }
         continue;
       }
@@ -273,12 +277,11 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
         out.push(channelValue(channel, row));
       }
     }
-    // 柱 / 面积从 baseline 起：把 baseline 纳入域，保证连续域容得下 baseline（即便所有值同号）
+    // 值轴从 baseline 起：interval span / extent + region 把 baseline 纳入连续域（即便所有值同号）
     if (includeBaseline) {
-      if (node.marks.some(mark => mark.type === PlotMark.Interval)) out.push(0);
-      // area 的回边贴 baseline（默认 0），把各 area 的 baseline 纳入值域，使 baseline 投影落在 range 内
+      if (axis !== undefined && node.marks.some(mark => mark.type === PlotMark.Interval && intervalContributesBaseline(mark, axis))) out.push(0);
       for (const mark of node.marks) {
-        if (mark.type === PlotMark.Area) out.push(mark.baseline ?? 0);
+        if (mark.type === PlotMark.Region) out.push(mark.baseline ?? 0);
       }
     }
     return out;
@@ -368,8 +371,8 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
 
   if (coordinate.type === PlotCoordinate.Polar2D) {
     // 角向值 ← x、径向值 ← y（坐标系把 x/y 重解释为 angle/radius，正中 (i) 投影整形）
-    const angleValues = collectValues(xChannelOf, false, false, true);
-    const radiusValues = collectValues(yChannelOf, true, true);
+    const angleValues = collectValues('primary', xChannelOf, false);
+    const radiusValues = collectValues('secondary', yChannelOf, true);
     // 笛卡尔下出现 angle/radius 通道才是误用；polar 下复用 x/y 合法。此处构造极坐标帧。
     const angleScaleDef = resolveScaleForRole('angle', coordinate.angle, xChannelOf, angleValues);
     const radiusScaleDef = resolveScaleForRole('radius', coordinate.radius, yChannelOf, radiusValues);
@@ -438,7 +441,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     // cartesian1D：单维（x 角色）落直线，塌缩维取固定基线（horizontal=底、vertical=左）
     const orientation = coordinate.orientation ?? Cartesian1DOrientation.Horizontal;
     const horizontal = orientation === Cartesian1DOrientation.Horizontal;
-    const values = collectValues(xChannelOf, false, false);
+    const values = collectValues('primary', xChannelOf, false);
     const scaleDef = resolveScaleForRole('x', coordinate.x, xChannelOf, values);
 
     const guides = node.guides ?? [];
@@ -489,7 +492,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     const radiusFraction = coordinate.radius ?? 1;
     const startAngle = coordinate.startAngle ?? 0;
     const endAngle = coordinate.endAngle ?? 360;
-    const angleValues = collectValues(xChannelOf, false, false);
+    const angleValues = collectValues('primary', xChannelOf, false);
     const angleScaleDef = resolveScaleForRole('angle', coordinate.angle, xChannelOf, angleValues);
 
     const guides = node.guides ?? [];
@@ -576,9 +579,9 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
       throw new Error(`lowerPlots: custom coordinate "${coordinate.name}" has no registered factory; pass it via lowerPlots options.coordinates (or <Plot coordinates>)`);
     }
     // 按角色取通道值的 picker（custom roles ∈ {x,y,a,b,c}）；供工厂建线性位置 scale
-    const pickRole = (role: DimensionRole) => (mark: Mark): Channel | undefined => (mark.type === PlotMark.Sector ? undefined : (mark.encoding as Record<string, Channel | undefined>)[role]);
+    const pickRole = (role: DimensionRole) => (mark: Mark): Channel | undefined => (mark.type === PlotMark.Link ? undefined : (mark.encoding as Record<string, Channel | undefined>)[role]);
     const linearScaleFor = (role: DimensionRole, range: [number, number]) =>
-      resolvePositionScale({ type: PlotScale.Linear, name: `__custom_${role}` }, collectValues(pickRole(role), false, false), range);
+      resolvePositionScale({ type: PlotScale.Linear, name: `__custom_${role}` }, collectValues(undefined, pickRole(role), false), range);
     frame = factory({ width, height, plotArea: { x: 0, y: 0, width, height }, fontSize, params: coordinate.params ?? {}, roles: coordinate.roles, linearScaleFor });
     // 曲线轴：工厂回传 roleScales 时按维度画 path-aware 轴（沿投影采样）；无 roleScales 则不画
     if (frame.type === PlotCoordinate.Custom) {
@@ -592,8 +595,8 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     }
   } else {
     // cartesian2D：x/y 角色绑 x/y scale（ribbon 两端字段对都进域；histogram interval 取 x0/x1 箱边进域）
-    const xValues = collectValues(xChannelOf, false, false, false, 'x', true);
-    const yValues = collectValues(yChannelOf, true, true, false, 'y');
+    const xValues = collectValues('primary', xChannelOf, false, 'x');
+    const yValues = collectValues('secondary', yChannelOf, true, 'y');
     const xScaleDef = resolveScaleForRole('x', coordinate.x, xChannelOf, xValues);
     const yScaleDef = resolveScaleForRole('y', coordinate.y, yChannelOf, yValues);
     // L1：y 是 cartesian 的值轴；非线性连续 scale + interval/area（baseline 0）→ fail-loud
@@ -680,9 +683,9 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes:
     //   按 datum 取色仅 point / bar(interval) / sector / rect(heatmap) 成立；line / area 是 path 级整体图元，
     //   一条线沿程渐变 / 分箱不做 → fail-loud（守 mark 边界，承 alpha.7 ADR-03）。
     if (colorFieldType === PlotFieldType.Continuous || colorFieldType === PlotFieldType.Temporal) {
-      if (mark.type === PlotMark.Line || mark.type === PlotMark.Area) {
+      if (mark.type === PlotMark.Path || mark.type === PlotMark.Region) {
         throw new Error(
-          `lowerPlots: continuous/temporal color field "${field}" is not supported on ${mark.type} marks (path-level glyph colored per series); continuous color applies to point / bar / sector / rect only`,
+          `lowerPlots: continuous/temporal color field "${field}" is not supported on ${mark.type} marks (path-level glyph colored per series); continuous color applies to point / interval only`,
         );
       }
       if (channel.scale === undefined) {
@@ -757,7 +760,7 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes:
  */
 const makeLabelResolver = (fieldTypes: Map<string, PlotFieldTypeValue>, resolveLabel: Record<string, ResolveLabel> | undefined): ((mark: Mark) => LabelOf | undefined) => {
   return (mark: Mark): LabelOf | undefined => {
-    const content = mark.type === PlotMark.Text ? mark.encoding.text : 'label' in mark ? mark.label?.content : undefined;
+    const content = mark.type === PlotMark.Point && mark.encoding.text !== undefined ? mark.encoding.text : 'label' in mark ? mark.label?.content : undefined;
     const runtime = mark.id !== undefined ? resolveLabel?.[mark.id] : undefined;
     if (content === undefined && runtime === undefined) return undefined;
     const fieldType = content?.field !== undefined ? fieldTypes.get(content.field) : undefined;

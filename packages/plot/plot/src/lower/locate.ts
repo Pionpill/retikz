@@ -48,12 +48,12 @@ export type PlotLocator = {
   resolve: (address: string) => ResolvedAnchor | null;
 };
 
-/** 取某 mark 的 series 字段名（无则 undefined）；只有 line / interval / area 含 series */
+/** 取某 mark 的 series 字段名（无则 undefined）；只有 path / interval / region 含 series */
 const seriesFieldOf = (mark: Mark): string | undefined =>
-  mark.type === PlotMark.Line || mark.type === PlotMark.Interval || mark.type === PlotMark.Area ? mark.series : undefined;
+  mark.type === PlotMark.Path || mark.type === PlotMark.Interval || mark.type === PlotMark.Region ? mark.series : undefined;
 
-/** datum-bearing mark（展成独立可见 Node 的 mark）：point / interval / sector */
-const isDatumBearing = (mark: Mark): boolean => mark.type === PlotMark.Point || mark.type === PlotMark.Interval || mark.type === PlotMark.Sector;
+/** datum-bearing mark（展成独立可见 Node 的 mark）：point / interval（含 heatmap cell / sector，皆 interval） */
+const isDatumBearing = (mark: Mark): boolean => mark.type === PlotMark.Point || mark.type === PlotMark.Interval;
 
 /**
  * 用与 lowerPlots 同一份 spec + datasets + options 建 locator（复用 ADR-01 resolveFrame，投影单一真源）

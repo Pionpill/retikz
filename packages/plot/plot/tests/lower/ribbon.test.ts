@@ -1,6 +1,6 @@
 import type { IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema, type RibbonMark } from '../../src/ir';
+import { type LinkMark, type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
 import { lowerMark } from '../../src/lower/mark';
 import { datumAnchor } from '../../src/lower/anchor';
@@ -68,8 +68,8 @@ const identityScale = (): PositionScale => {
 const identityFrame = () => createCartesianFrame(identityScale(), identityScale());
 
 /** ribbon mark 工厂：一条流，source/target 字段对 + value（可选 endWidth / curvature / color） */
-const ribbonMark = (over: Partial<RibbonMark> = {}): RibbonMark => ({
-  type: 'ribbon',
+const ribbonMark = (over: Partial<LinkMark> = {}): LinkMark => ({
+  type: 'link',
   source: { x: { field: 'sx' }, y: { field: 'sy' } },
   target: { x: { field: 'tx' }, y: { field: 'ty' } },
   value: 'amount',
@@ -276,7 +276,7 @@ describe('lowerRibbon field endpoints (ADR-05)', () => {
 });
 
 describe('lowerRibbon integration + schema (ADR-05)', () => {
-  const flowSpec = (over: Partial<RibbonMark> = {}): PlotSpec =>
+  const flowSpec = (over: Partial<LinkMark> = {}): PlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -317,7 +317,7 @@ describe('lowerRibbon integration + schema (ADR-05)', () => {
         data: { reference: 'd' },
         coordinate: { type: 'cartesian2D' },
         scales: [],
-        marks: [{ type: 'ribbon', source: { x: { field: 'sx' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} }],
+        marks: [{ type: 'link', source: { x: { field: 'sx' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} }],
       }),
     ).toThrow();
   });
@@ -330,7 +330,7 @@ describe('lowerRibbon integration + schema (ADR-05)', () => {
         data: { reference: 'd' },
         coordinate: { type: 'cartesian2D' },
         scales: [],
-        marks: [{ type: 'ribbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, encoding: {} }],
+        marks: [{ type: 'link', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, encoding: {} }],
       }),
     ).toThrow();
   });
@@ -350,7 +350,7 @@ describe('lowerRibbon integration + schema (ADR-05)', () => {
 
   it('ribbon-json-round-trip', () => {
     const m = ribbonMark({ id: 'flow', endWidth: 'end', curvature: 0.3, encoding: { color: { field: 'cat', scale: 'c' } } });
-    expect(PlotSpecSchema.parse(JSON.parse(JSON.stringify(flowSpec()))).marks[0].type).toBe('ribbon');
+    expect(PlotSpecSchema.parse(JSON.parse(JSON.stringify(flowSpec()))).marks[0].type).toBe('link');
     // 直接 mark round trip
     const parsed = JSON.parse(JSON.stringify(m));
     expect(parsed).toEqual(m);

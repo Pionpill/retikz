@@ -654,7 +654,7 @@ export const assertScaleFieldCompatible = (role: string, scaleType: PlotScaleVal
 export const assertBaselineScaleCompatible = (valueScaleType: PlotScaleValue, marks: ReadonlyArray<Pick<Mark, 'type'>>): void => {
   const nonlinear = valueScaleType === PlotScale.Log || valueScaleType === PlotScale.Pow || valueScaleType === PlotScale.Sqrt;
   if (!nonlinear) return;
-  if (marks.some(mark => mark.type === PlotMark.Interval || mark.type === PlotMark.Area)) {
+  if (marks.some(mark => mark.type === PlotMark.Interval || mark.type === PlotMark.Region)) {
     throw new Error(
       'nonlinear continuous scale (log/pow/sqrt) cannot be used with interval/area because their baseline includes 0; use point/line or wait for explicit positive baseline support',
     );

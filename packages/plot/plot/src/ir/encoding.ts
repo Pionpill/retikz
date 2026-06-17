@@ -89,12 +89,6 @@ export const ShapeChannelSchema = z
   .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'shape channel must set exactly one of `field` or `value`' })
   .describe('Shape channel (PointMark only): field → glyph shape via the built-in shape palette; value → a constant core shape name. No explicit scale ref this round');
 
-export const PointEncodingSchema = EncodingSchema.extend({
-  size: SizeChannelSchema.optional().describe('Optional size channel: data-driven glyph radius via a sqrt scale, or a constant radius'),
-  opacity: OpacityChannelSchema.optional().describe('Optional opacity channel: data-driven glyph opacity via a clamped linear scale, or a constant opacity'),
-  shape: ShapeChannelSchema.optional().describe('Optional shape channel: categorical field → glyph shape via the built-in palette, or a constant shape name'),
-}).describe('PointMark encoding: positional + color + optional size / opacity / shape (PointMark-only channels, not in the shared style encoding)');
-
 export const TextChannelSchema = z
   .object({
     field: z.string().min(1).optional().describe('Data path whose row value becomes the label string; mutually exclusive with value'),
@@ -110,6 +104,15 @@ export const TextChannelSchema = z
   .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'text channel must set exactly one of `field` or `value`' })
   .describe('Text content channel: field → per-datum label string / value → a constant label / format → format string for a numeric or temporal field');
 
+export const PointEncodingSchema = EncodingSchema.extend({
+  size: SizeChannelSchema.optional().describe('Optional size channel: data-driven glyph radius via a sqrt scale, or a constant radius'),
+  opacity: OpacityChannelSchema.optional().describe('Optional opacity channel: data-driven glyph opacity via a clamped linear scale, or a constant opacity'),
+  shape: ShapeChannelSchema.optional().describe('Optional shape channel: categorical field → glyph shape via the built-in palette, or a constant shape name'),
+  text: TextChannelSchema.optional().describe(
+    'Optional text content channel: when set the point lowers to a borderless core Node carrying text (free-text / datum label) instead of a glyph; field → per-datum string, value → constant, format → numeric / temporal format',
+  ),
+}).describe('PointMark encoding: positional + color + optional size / opacity / shape glyph channels + optional text (text set → borderless text Node, absorbing the former standalone text mark)');
+
 export const MarkLabelSchema = z
   .object({
     content: TextChannelSchema.describe('Label content channel (field / value / format)'),
@@ -121,10 +124,6 @@ export const MarkLabelSchema = z
     pin: z.boolean().optional().describe('Draw a leader line from the host node border to the label (core NodeLabelSchema.pin). Default false'),
   })
   .describe('Datum label attached to a positional mark: lowered onto each datum Node.label (core border-relative placement), the preferred path over a standalone TextMark');
-
-export const TextEncodingSchema = EncodingSchema.extend({
-  text: TextChannelSchema.describe('Required label content channel for the standalone TextMark fallback: field / value / format'),
-}).describe('TextMark encoding: positional + color + the required text content channel (standalone free-text fallback)');
 
 /** 通道绑定：field（数据驱动）/ value（常量）二选一 */
 export type Channel = z.infer<typeof ChannelSchema>;
@@ -140,11 +139,9 @@ export type SizeChannel = z.infer<typeof SizeChannelSchema>;
 export type OpacityChannel = z.infer<typeof OpacityChannelSchema>;
 /** shape 通道绑定（PointMark 专属；field 分类映射到 glyph 调色板 / value 常量 shape 名） */
 export type ShapeChannel = z.infer<typeof ShapeChannelSchema>;
-/** PointMark 专属通道绑定（位置 + 样式 + 可选 size / opacity / shape） */
+/** PointMark 专属通道绑定（位置 + 样式 + 可选 size / opacity / shape / text） */
 export type PointEncoding = z.infer<typeof PointEncodingSchema>;
 /** text 内容通道绑定（field 字段值转串 / value 常量串 / format 格式串） */
 export type TextChannel = z.infer<typeof TextChannelSchema>;
 /** 宿主 datum label 配置（对齐 core NodeLabelSchema 的 position / distance / pin + 内容通道） */
 export type MarkLabel = z.infer<typeof MarkLabelSchema>;
-/** TextMark 专属通道绑定（位置 + 样式 + 必填 text 内容通道；兜底自由文本） */
-export type TextEncoding = z.infer<typeof TextEncodingSchema>;

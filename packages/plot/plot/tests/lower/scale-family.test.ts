@@ -37,7 +37,7 @@ const lineSpec = (yScale: Record<string, unknown>): PlotSpec =>
     data: { reference: 'd' },
     scales: [{ type: 'linear', name: 'x' }, { ...yScale, name: 'y' }],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'line', order: 'i', encoding: { x: { field: 'i' }, y: { field: 'v' } } }],
+    marks: [{ type: 'path', order: 'i', encoding: { x: { field: 'i' }, y: { field: 'v' } } }],
   });
 
 describe('scale family · log (alpha.7 ADR-01)', () => {
@@ -119,7 +119,7 @@ describe('scale family · L1 baseline guard (alpha.7 ADR-01)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { ...yScale, name: 'y' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'area', order: 'i', encoding: { x: { field: 'i' }, y: { field: 'v' } } }],
+      marks: [{ type: 'region', order: 'i', encoding: { x: { field: 'i' }, y: { field: 'v' } } }],
     });
 
   const MSG = /nonlinear continuous scale \(log\/pow\/sqrt\) cannot be used with interval\/area/;

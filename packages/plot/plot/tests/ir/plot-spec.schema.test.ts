@@ -10,7 +10,7 @@ const baseLine = {
     { type: 'linear', name: 'yRevenue', nice: true },
   ],
   coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-  marks: [{ type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+  marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
 };
 
 describe('PlotSpecSchema (ADR-01)', () => {
@@ -76,7 +76,7 @@ describe('PlotSpecSchema (ADR-01)', () => {
     const spec = {
       ...baseLine,
       marks: [
-        { type: 'line', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        { type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
         { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
       ],
     };
@@ -115,7 +115,7 @@ describe('PlotSpecSchema (ADR-01)', () => {
     const spec = {
       ...baseLine,
       marks: [
-        { type: 'line', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        { type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
         { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
       ],
       guides: [{ type: 'axis', dimension: 'x' }],

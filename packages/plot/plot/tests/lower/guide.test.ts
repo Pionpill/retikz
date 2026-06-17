@@ -127,7 +127,7 @@ const guidedSpec = (guides: Array<unknown>): PlotSpec =>
       { type: 'linear', name: 'yRevenue' },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     guides,
   });
 
@@ -171,7 +171,7 @@ describe('lowerPlots guide orchestration (ADR-04)', () => {
         { type: 'linear', name: 'yRevenue', range: [200, 0] },
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-      marks: [{ type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
     });
     const outer = expandOf(spec);

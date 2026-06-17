@@ -199,9 +199,9 @@ describe('polar1D 圆周坐标系 (ADR-02)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'a' }],
       coordinate: { type: 'polar1D', angle: 'a' },
-      marks: [{ type: 'sector', encoding: { color: { field: 'label' } } }],
+      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label' } } }],
     });
-    expect(() => expandOf(spec, { d: [{ label: 'A', v: 1 }] }, opts)).toThrow(/polar1D|not supported|sector/i);
+    expect(() => expandOf(spec, { d: [{ label: 'A', v: 1 }] }, opts)).toThrow(/polar1D|not supported|interval/i);
   });
 
   // 错误路径：非法维度（polar1D 合法集 {angle, x}）→ fail-loud

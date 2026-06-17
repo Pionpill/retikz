@@ -61,7 +61,7 @@ describe('lowerPlots area cartesian (ADR-03)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'area', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, ...extra }],
+      marks: [{ type: 'region', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, ...extra }],
     });
 
   it('area_produces_single_fillable_path', () => {
@@ -147,7 +147,7 @@ describe('lowerPlots area cartesian (ADR-03)', () => {
         { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'area', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } }],
+      marks: [{ type: 'region', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } }],
     });
     const paths = collectPaths(firstLayer(spec, { t: TREND }, cartOpts));
     expect(paths).toHaveLength(2);
@@ -171,7 +171,7 @@ describe('lowerPlots line cartesian regression (ADR-03)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, ...extra }],
+      marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, ...extra }],
     });
 
   it('line_unchanged_no_sampling', () => {
@@ -214,7 +214,7 @@ describe('lowerPlots line polar sampling (ADR-03)', () => {
         { type: 'linear', name: 'a' },
         { type: 'linear', name: 'r' },
       ],
-      marks: [{ type: 'line', order: 'a', encoding: { x: { field: 'a' }, y: { field: 'r' } }, ...extra }],
+      marks: [{ type: 'path', order: 'a', encoding: { x: { field: 'a' }, y: { field: 'r' } }, ...extra }],
     });
 
   it('polar_continuous_axis_densifies_segment', () => {
@@ -259,7 +259,7 @@ describe('lowerPlots line polar sampling (ADR-03)', () => {
         { type: 'band', name: 'a' },
         { type: 'linear', name: 'r' },
       ],
-      marks: [{ type: 'line', encoding: { x: { field: 'dim' }, y: { field: 'v' } } }],
+      marks: [{ type: 'path', encoding: { x: { field: 'dim' }, y: { field: 'v' } } }],
     });
     const path = collectPaths(firstLayer(spec, { d: CAT }, polarOpts))[0];
     const points = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
@@ -294,7 +294,7 @@ describe('lowerPlots radar (ADR-03)', () => {
         { type: 'point', name: 'a' },
         { type: 'linear', name: 'r' },
       ],
-      marks: [{ type: 'line', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } } }],
+      marks: [{ type: 'path', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } } }],
     });
 
   it('radar_is_closed_polygon', () => {
@@ -342,7 +342,7 @@ describe('lowerPlots area polar (ADR-03)', () => {
         { type: 'point', name: 'a' },
         { type: 'linear', name: 'r' },
       ],
-      marks: [{ type: 'area', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } }, ...extra }],
+      marks: [{ type: 'region', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } }, ...extra }],
     });
 
   it('polar_area_is_fillable_closed_path', () => {

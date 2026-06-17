@@ -189,7 +189,7 @@ const sectorColorLegendSpec = (): PlotSpec =>
       { type: 'linear', name: 'r' },
       { type: 'ordinal', name: 'sliceColor' },
     ],
-    marks: [{ type: 'sector', encoding: { color: { field: 'label', scale: 'sliceColor' } } }],
+    marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label', scale: 'sliceColor' } } }],
     guides: [{ type: 'legend', channel: 'color', scale: 'sliceColor' }],
   });
 

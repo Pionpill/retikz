@@ -20,7 +20,7 @@ const lineSpec: PlotSpec = PlotSpecSchema.parse({
     { type: 'linear', name: 'yRevenue' },
   ],
   coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-  marks: [{ type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+  marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
 });
 
 const pointSpec = (): PlotSpec =>
@@ -181,7 +181,7 @@ describe('lowerPlots (ADR-06)', () => {
       { type: 'linear', name: 'yRevenue' },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     guides: [
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y' },
@@ -437,7 +437,7 @@ describe('lowerPlots color (ADR-04)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'line', order: 'gdp', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { value: 'tomato' } } }],
+      marks: [{ type: 'path', order: 'gdp', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { value: 'tomato' } } }],
     });
     expect(firstLayer(spec, { c: COUNTRIES }, opts).pathDefault?.stroke).toBe('tomato');
   });
@@ -488,7 +488,7 @@ describe('lowerPlots relation (ADR-05)', () => {
         { type: 'ordinal', name: 'col' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', series: 'product', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
+      marks: [{ type: 'interval', series: 'product', bounds: { x: { kind: 'band', group: 'product' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
     });
     const layer = firstLayer(spec, { s: SALES2 }, opts);
     // 2 系列 → 2 子 Scope（按颜色），共 4 柱
@@ -518,7 +518,7 @@ describe('lowerPlots relation (ADR-05)', () => {
         { type: 'ordinal', name: 'col' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', series: 'product', arrangement: 'stack', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
+      marks: [{ type: 'interval', series: 'product', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
     });
     const layer = firstLayer(spec, { s: SALES2 }, opts);
     const nodes = allNodes(layer);
@@ -542,9 +542,9 @@ describe('lowerPlots relation (ADR-05)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', series: 'product', arrangement: 'stack', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      marks: [{ type: 'interval', series: 'product', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     });
-    expect(() => expandOf(spec, { s: SALES2 }, opts)).toThrow(/stack transform/);
+    expect(() => expandOf(spec, { s: SALES2 }, opts)).toThrow(/stack/);
   });
 
   it('line_series_multi_paths', () => {
@@ -564,7 +564,7 @@ describe('lowerPlots relation (ADR-05)', () => {
         { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'line', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } }],
+      marks: [{ type: 'path', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } }],
     });
     const layer = firstLayer(spec, { t: TREND }, opts);
     // 2 系列 → 2 条 Path，各自一色
@@ -603,7 +603,7 @@ describe('lowerPlots relation (ADR-05)', () => {
         { type: 'ordinal', name: 'col' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', series: 'product', arrangement: 'stack', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
+      marks: [{ type: 'interval', series: 'product', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
       guides: [{ type: 'axis', dimension: 'x' }, { type: 'axis', dimension: 'y', grid: true }],
     });
     const scene = compileToScene(

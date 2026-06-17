@@ -102,7 +102,21 @@ const cartesianBarSpec = (arrangement?: 'stack', series?: string): PlotSpec =>
       { type: 'band', name: 'cat' },
       { type: 'linear', name: 'val' },
     ],
-    marks: [{ type: 'interval', encoding: { x: { field: 'm' }, y: { field: 'v' } }, ...(arrangement ? { arrangement } : {}), ...(series ? { series } : {}) }],
+    marks: [
+      {
+        type: 'interval',
+        encoding: { x: { field: 'm' }, y: { field: 'v' } },
+        ...(arrangement === 'stack' || series
+          ? {
+              bounds: {
+                ...(series ? { x: { kind: 'band', group: series } } : {}),
+                ...(arrangement === 'stack' ? { y: { kind: 'extent', from: 'y0', to: 'y1' } } : {}),
+              },
+            }
+          : {}),
+        ...(series ? { series } : {}),
+      },
+    ],
   });
 
 describe('cartesian interval → rect 产物（byte-equal 回归基线）', () => {
@@ -168,7 +182,7 @@ const pieSpec = (): PlotSpec =>
       { type: 'linear', name: 'a' },
       { type: 'linear', name: 'r' },
     ],
-    marks: [{ type: 'sector', encoding: { color: { field: 'label' } } }],
+    marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label' } } }],
   });
 
 describe('polar interval / sector → sector 产物（byte-equal 回归基线）', () => {
@@ -367,8 +381,7 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
 describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () => {
   const histogramMark = (): IntervalMark => ({
     type: 'interval',
-    x0Field: 'binStart',
-    x1Field: 'binEnd',
+    bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } },
     encoding: { y: { field: 'binValue' } },
   });
 
@@ -412,7 +425,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
       ],
-      marks: [{ type: 'interval', x0Field: 'binStart', x1Field: 'binEnd', encoding: { y: { field: 'binValue' } } }],
+      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } }, encoding: { y: { field: 'binValue' } } }],
     });
     const rows = [{ m: 0 }, { m: 1 }, { m: 3 }, { m: 5 }];
     const layer = firstLayer(spec, { d: rows }, cartOpts);

@@ -46,7 +46,7 @@ const specTemporalNoModel = (): PlotSpec =>
     data: { reference: 'd' },
     scales: [{ type: 'time', name: 'x' }, { type: 'linear', name: 'y' }],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'line', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
+    marks: [{ type: 'path', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
   });
 
 /** stack transform spec：分组 m + 量 v（x continuous，验证非法值被 skip 但整行仍参与 stack） */
@@ -58,7 +58,7 @@ const specStack = (): PlotSpec =>
     scales: [{ type: 'band', name: 'x' }, { type: 'linear', name: 'y' }],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     transform: [{ kind: 'stack', x: 'm', y: 'v' }],
-    marks: [{ type: 'interval', arrangement: 'stack', encoding: { x: { field: 'm' }, y: { field: 'v' } } }],
+    marks: [{ type: 'interval', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } }, encoding: { x: { field: 'm' }, y: { field: 'v' } } }],
   });
 
 /** 直接驱动 prepareRows（绕过 transform），取 normalized 行断言归一化产物 */

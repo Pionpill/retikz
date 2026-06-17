@@ -60,7 +60,7 @@ const SERIES_DATA = [
 describe('color × series · B/C 收口（alpha.7 ADR-03）', () => {
   // Happy path：多系列 line 显式 series → 每系列一条着色线
   it('explicit_series_line_splits_and_colors', () => {
-    const spec = specOf({ type: 'line', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
+    const spec = specOf({ type: 'path', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
     const paths = collectPaths(firstLayer(spec, { d: SERIES_DATA }));
     expect(paths).toHaveLength(2);
     expect(paths[0].stroke).not.toEqual(paths[1].stroke);
@@ -68,21 +68,21 @@ describe('color × series · B/C 收口（alpha.7 ADR-03）', () => {
 
   // Happy path：单 line + categorical color 字段（无 series）→ 隐式拆系列（修「静默丢弃」）
   it('single_line_categorical_color_implicitly_splits', () => {
-    const spec = specOf({ type: 'line', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
+    const spec = specOf({ type: 'path', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
     const paths = collectPaths(firstLayer(spec, { d: SERIES_DATA }));
     expect(paths).toHaveLength(2); // 旧行为是 1 条 currentColor 线；现按 city 拆 2 条
   });
 
   // 关键：隐式拆产物等价于显式 series（locator parity）
   it('implicit_split_equals_explicit_series', () => {
-    const implicit = specOf({ type: 'line', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
-    const explicit = specOf({ type: 'line', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
+    const implicit = specOf({ type: 'path', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
+    const explicit = specOf({ type: 'path', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
     expect(firstLayer(implicit, { d: SERIES_DATA })).toEqual(firstLayer(explicit, { d: SERIES_DATA }));
   });
 
   // Happy path：area 同理隐式拆
   it('single_area_categorical_color_implicitly_splits', () => {
-    const spec = specOf({ type: 'area', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
+    const spec = specOf({ type: 'region', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
     const paths = collectPaths(firstLayer(spec, { d: SERIES_DATA }));
     expect(paths).toHaveLength(2);
   });
@@ -107,7 +107,7 @@ describe('plot colors default palette', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        { type: 'line', order: 'x', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+        { type: 'path', order: 'x', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
         { type: 'interval', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
       ],
     });
@@ -129,7 +129,7 @@ describe('plot colors default palette', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        { type: 'line', order: 'x', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+        { type: 'path', order: 'x', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
         { type: 'interval', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
         { type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
       ],
@@ -183,7 +183,7 @@ describe('color 类型兼容校验（alpha.7 ADR-03）', () => {
 describe('series + color 冲突（alpha.7 ADR-03）', () => {
   it('color_not_constant_within_series_fails_loud', () => {
     // series=city 但 color=shade 在同一 city 内多值 → fail-loud
-    const spec = specOf({ type: 'line', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'shade', scale: 'col' } } });
+    const spec = specOf({ type: 'path', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'shade', scale: 'col' } } });
     const data = [
       { t: 0, v: 1, city: 'X', shade: 'a' },
       { t: 1, v: 3, city: 'X', shade: 'b' },
@@ -192,7 +192,7 @@ describe('series + color 冲突（alpha.7 ADR-03）', () => {
   });
 
   it('color_equals_series_field_ok', () => {
-    const spec = specOf({ type: 'line', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
+    const spec = specOf({ type: 'path', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
     expect(() => expandOf(spec, { d: SERIES_DATA })).not.toThrow();
   });
 });
