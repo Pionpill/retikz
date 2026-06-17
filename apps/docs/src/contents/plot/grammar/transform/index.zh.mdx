@@ -25,7 +25,17 @@ description: transform 是图形语法的统计层：在比例尺和图元之前
 
 变换的产出字段（如 bin 的 `binStart` / `binEnd` / `binValue`、aggregate 的 `total`）是**派生字段**——它们由变换生成、不需要在 `model` 里声明，图元直接按名引用即可。被变换**消费**的输入字段（`aggregate` 的 `region` / `revenue`）仍然要在 `model` 里声明、参与严格校验。
 
-> `<BarMark stack>` / `<BarMark angle>` 的自动堆叠是历史便利写法；当管线里已经显式存在一个 `stack`（经 `<Transform kind="stack">`）时，自动堆叠会被抑制，不会对同一组数据堆叠两次。
+程序化构造变换链时，也可以用 `<Plot dataTransforms={[...]}>` 直传一个 IR 数组——它和 `<Transform>` 子组件共用同一管线、可混用，直传的拼在子组件之前：
+
+```tsx
+<Plot data={rows} dataTransforms={[{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }]}>
+  <BarMark x="region" y="total" />
+</Plot>
+```
+
+> 用 `dataTransforms` 而非 `transforms`，是为了和 core 容器的几何 `transforms`（平移 / 旋转）区分开。
+
+> `<BarMark stack>` / `<BarMark angle>` 的自动堆叠是历史便利写法；当管线里已经显式存在一个**同款**（相同 `x` / `y` / `groupBy`）的 `stack` 时，那条自动堆叠会被抑制，不会对同一组数据堆叠两次（签名不同的堆叠柱不受影响）。
 
 ## bin：连续分箱（直方图）
 

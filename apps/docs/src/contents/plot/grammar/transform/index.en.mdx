@@ -25,7 +25,17 @@ Declare a transform with `<Transform kind="...">`; `kind` is the discriminator a
 
 A transform's output fields (e.g. bin's `binStart` / `binEnd` / `binValue`, aggregate's `total`) are **derived fields** — produced by the transform, not declared in `model`; marks reference them by name. The input fields a transform **consumes** (`aggregate`'s `region` / `revenue`) must still be declared in `model` and go through strict validation.
 
-> The auto-stacking of `<BarMark stack>` / `<BarMark angle>` is a legacy convenience. When a `stack` already exists explicitly in the pipeline (via `<Transform kind="stack">`), the auto-stack is suppressed so the same data is never stacked twice.
+For programmatic pipelines you can also pass an IR array directly via `<Plot dataTransforms={[...]}>` — it shares the same pipeline as `<Transform>` children and may be mixed with them; the direct-pass entries come before the children:
+
+```tsx
+<Plot data={rows} dataTransforms={[{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }]}>
+  <BarMark x="region" y="total" />
+</Plot>
+```
+
+> It is named `dataTransforms` (not `transforms`) to distinguish it from the core container's geometric `transforms` (translate / rotate).
+
+> The auto-stacking of `<BarMark stack>` / `<BarMark angle>` is a legacy convenience. When a **matching** `stack` (same `x` / `y` / `groupBy`) already exists explicitly in the pipeline, that auto-stack is suppressed so the same data is never stacked twice (stacks with a different signature are unaffected).
 
 ## bin: continuous binning (histogram)
 

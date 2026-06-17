@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { type ExternalDatasets, type PlotSpec } from '@retikz/plot';
-import { Plot } from '../src';
+import { BarMark, Plot } from '../src';
 
 /**
  * ADR-01 P1 评审回归：<Plot> 必须把新增的 provenance / datumProvenance / datumIdField
@@ -52,5 +52,39 @@ describe('<Plot> lowerPlots option 转发 (ADR-01)', () => {
       <Plot spec={spec} data={data} width={480} height={300} provenance datumProvenance datumIdField="q" />,
     );
     expect(svg).toContain('data-retikz-id="sales.datum.Q1"');
+  });
+});
+
+describe('<Plot dataTransforms> 快捷数据变换直传 (alpha.12)', () => {
+  const orders = [
+    { region: 'N', revenue: 3 },
+    { region: 'N', revenue: 5 },
+    { region: 'S', revenue: 2 },
+  ];
+
+  it('data_transforms_reach_pipeline — aggregate 折叠行数', () => {
+    // dataTransforms 直传 aggregate：3 笔明细 → 2 组（N/S）→ 恰 2 根柱（interval 渲染为 <rect>）
+    const svg = renderToStaticMarkup(
+      <Plot
+        data={orders}
+        width={480}
+        height={300}
+        dataTransforms={[{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }]}
+      >
+        <BarMark x="region" y="total" />
+      </Plot>,
+    );
+    expect((svg.match(/<rect/g) ?? []).length).toBe(2);
+  });
+
+  it('data_transforms_compose_with_transform_children', () => {
+    // dataTransforms（直传）拼在 <Transform> 子组件之前；与子组件混用同一管线（此处仅直传一条 aggregate）
+    const svg = renderToStaticMarkup(
+      <Plot data={orders} width={480} height={300} dataTransforms={[{ kind: 'aggregate', groupBy: ['region'], reduce: 'count', as: 'n' }]}>
+        <BarMark x="region" y="n" />
+      </Plot>,
+    );
+    // count：N=2、S=1 → 仍 2 组 2 柱
+    expect((svg.match(/<rect/g) ?? []).length).toBe(2);
   });
 });
