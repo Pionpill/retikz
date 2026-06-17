@@ -1,6 +1,6 @@
 # ADR-01：bin + aggregate transform——Statistics 基础的「改行数」规约变换（连续分箱 + 分组聚合）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-16
 - 关联：[alpha.12 roadmap](./roadmap.md) · [ADR-02：derive + normalize + jitter](./02-derive-normalize-jitter.md) · [plot v0.1 roadmap](../roadmap.md)「Statistics 基础」行 · [plot-design.md §3.1/§3.3 数据管线 / §7 transform 模块 / §5.2 Primitive API](../../../../../architecture/plot-design.md) · [alpha.11 ADR-02：rect mark](../alpha.11/02-rect-mark.md)「binned heatmap 显式区间边」钩子
 

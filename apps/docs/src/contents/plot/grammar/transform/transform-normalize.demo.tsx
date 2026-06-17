@@ -5,7 +5,8 @@ import { revenue } from './transform-normalize.data';
 
 /**
  * 百分比堆叠：显式 [normalize, stack] 两步链——normalize 把每季度内各产品 amount 归一成占比（percent），
- * stack 再累积归一化后的 share。显式 stack 已抑制 <BarMark> 的自动堆叠（不二次堆叠）。
+ * stack 再累积归一化后的 share 成 y0/y1。<BarMark stack> 让柱读这对累积界（arrangement=stack）；因管线已显式
+ * 含一个 stack transform，自动装配的那个 stack 被抑制（B4 去重），不会对同一组数据二次堆叠。
  */
 const Demo: FC = () => (
   <Plot data={revenue} width={420} height={260} style={{ maxWidth: '100%', height: 'auto' }}>

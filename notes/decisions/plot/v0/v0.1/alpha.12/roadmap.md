@@ -7,8 +7,8 @@
 
 | ADR | 主题 | 状态 |
 | --- | --- | --- |
-| [01](./01-bin-aggregate.md) | **bin + aggregate**：连续分箱（histogram 底座 + rect binned cell 边界来源）+ 分组聚合（sum/mean/count/min/max）；**改变行数**的规约 transform | Proposed |
-| [02](./02-derive-normalize-jitter.md) | **normalize + derive-interval + jitter**：组内百分比归一化（接 stack）+ 字段算区间 start/end（喂 interval/rect/sector）+ 位置抖动（确定性 seed）；**保行数**的逐行派生 / 调整 | Proposed |
+| [01](./01-bin-aggregate.md) | **bin + aggregate**：连续分箱（histogram 底座 + rect binned cell 边界来源）+ 分组聚合（sum/mean/count/min/max）；**改变行数**的规约 transform | Accepted |
+| [02](./02-derive-normalize-jitter.md) | **normalize + derive-interval + jitter**：组内百分比归一化（接 stack）+ 字段算区间 start/end（喂 interval/rect/sector）+ 位置抖动（确定性 seed）；**保行数**的逐行派生 / 调整 | Accepted |
 
 ## 排序与依赖
 

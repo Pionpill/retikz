@@ -1,6 +1,6 @@
 # ADR-02：normalize + derive-interval + jitter——保行数的逐行派生 / 调整 transform，jitter 用可序列化 seed + 确定性 PRNG（v1 仅连续数值数据空间偏移）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-16
 - 关联：[plot v0.1 roadmap](../roadmap.md)「Statistics 基础」行 · [alpha.12 roadmap](./roadmap.md) · [alpha.12 ADR-01 bin + aggregate](./01-bin-aggregate.md) · [plot-design.md §3.3 Transform / §3.1 数据不进 IR / §10 流水线顺序](../../../../../architecture/plot-design.md) · [alpha.11 ADR-01 区间几何投影](../alpha.11/01-cell-geometry-projection.md)
 
