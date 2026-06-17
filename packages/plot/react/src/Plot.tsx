@@ -28,7 +28,7 @@ export type PlotSpecProps = PlotCommonProps & PlotColorProps & {
   children?: never;
 };
 
-/** 组合 DSL 入口：给裸数据行 + <LineMark>/<PointMark>/<Axis> 子组件 */
+/** 组合 DSL 入口：给裸数据行 + <PathMark>/<PointMark>/<Axis> 子组件 */
 export type PlotDslProps = PlotCommonProps & PlotColorProps & {
   spec?: never;
   /** 面板 id：写入 PlotSpec.id，作为外部 anchor 句柄；嵌入态未显式 dataRef 时也作为默认数据集引用 */
@@ -37,7 +37,7 @@ export type PlotDslProps = PlotCommonProps & PlotColorProps & {
   dataRef?: string;
   /** 裸数据行数组；内部包成单数据集注入，不进 IR */
   data: Array<ExternalRow>;
-  /** mark / guide 子组件（<LineMark> / <PointMark> / <BarMark> / <AreaMark> / <Axis>） */
+  /** mark / guide 子组件（<PathMark> / <PointMark> / <IntervalMark> / <RegionMark> / <Axis>） */
   children: ReactNode;
   /** 数据模型（字段名 + 类型）：声明则 strict 校验 + type-driven scale/guide；注入构造 spec 的 data.model */
   model?: DataModel;
@@ -77,7 +77,7 @@ const lowerPlotOptionsOf = (
   collectedResolveLabel: ResolveLabelMap | undefined,
 ): LowerPlotsOptions => {
   const { width, height, fontSize, margin, provenance, datumProvenance, datumIdField, validateData, resolveField, resolveLabel, invalid, coordinates } = props;
-  // DSL 入口 <TextMark resolveLabel> / <BarMark resolveLabel> 收集的 per-mark 函数，与显式 props.resolveLabel 合并（显式优先）
+  // DSL 入口 <PointMark resolveLabel> / <IntervalMark resolveLabel> 收集的 per-mark 函数，与显式 props.resolveLabel 合并（显式优先）
   const mergedResolveLabel = collectedResolveLabel !== undefined || resolveLabel !== undefined ? { ...collectedResolveLabel, ...resolveLabel } : undefined;
   return {
     width,

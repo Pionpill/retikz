@@ -146,7 +146,7 @@ type Collected = {
   guides: Array<Guide>;
   /** 显式 transform（<Transform> 声明组件收集，按声明序） */
   transforms: Array<Transform>;
-  /** mark-prop 自动装配的 stack（<BarMark stack> / <BarMark angle>）；显式 stack 存在时抑制（B4 去重） */
+  /** mark-prop 自动装配的 stack（<IntervalMark stack> / <IntervalMark angle>）；显式 stack 存在时抑制（B4 去重） */
   autoStacks: Array<Transform>;
   /** 显式声明的位置 scale */
   scales: Array<ScaleProps>;
@@ -156,13 +156,13 @@ type Collected = {
   colored: boolean;
   /** 用到的 color 字段名集合（→ 配 model 时按字段类型派生 sequential / ordinal） */
   colorFields: Array<string>;
-  /** 是否有 <BarMark>（→ 角向轴强制 band scale） */
+  /** 是否有 <IntervalMark>（→ 角向轴强制 band scale） */
   hasBar: boolean;
-  /** 是否有 <RectMark>（heatmap → x / y 双轴强制 band scale） */
+  /** 是否有 <IntervalMark>（heatmap → x / y 双轴强制 band scale） */
   hasRect: boolean;
-  /** 是否有 <BarMark angle> 饼/环图入口（→ 角向 linear scale） */
+  /** 是否有 <IntervalMark angle> 饼/环图入口（→ 角向 linear scale） */
   hasSector: boolean;
-  /** 是否有闭合 <LineMark>（雷达 → 角向 point scale） */
+  /** 是否有闭合 <PathMark>（雷达 → 角向 point scale） */
   hasClosedLine: boolean;
 };
 
@@ -219,7 +219,7 @@ const positionEncoding = (x: string, y: string): Pick<Encoding, 'x' | 'y'> => ({
 const ruleChannel = (value: number | string): { value: number } | { field: string } => (typeof value === 'number' ? { value } : { field: value });
 
 /**
- * 把 <RuleMark> 扁平 props 装配进 rule IR（取向 / band 上界 / extent / color 校验 fail-loud）
+ * 把 <ReferenceMark> 扁平 props 装配进 rule IR（取向 / band 上界 / extent / color 校验 fail-loud）
  * @description 取向由给 x（竖直）还是 y（水平）决定，二选一（皆给 / 皆缺 → fail-loud）；
  *   band 上界 xTo 须配 x、yTo 须配 y（不匹配 / 单飞 → fail-loud）；extent 须成对（单设 → fail-loud）。
  *   常量 rule（x/y 为数字）→ color 作 value 常量；per-datum rule（x/y 为字段串）→ color 作 field（AUTO_COLOR）。
@@ -487,7 +487,7 @@ const buildPositionScale = (name: string, type: PositionScaleType): PlotScaleSpe
   return { type: PlotScale.Linear, name };
 };
 
-/** cartesian x scale 类型：含 <BarMark> 或 <RectMark> → band；否则按 <Scale dimension="x"> 或缺省 linear */
+/** cartesian x scale 类型：含 <IntervalMark> 或 <IntervalMark> → band；否则按 <Scale dimension="x"> 或缺省 linear */
 const buildCartesianXScale = (forceBand: boolean, explicit: PositionScaleType | undefined): PlotScaleSpec => {
   if (forceBand && explicit !== undefined) {
     throw new Error('buildPlotSpec: <IntervalMark> (bar / heatmap) requires a band x scale; omit <Scale dimension="x" /> for automatic band inference');
@@ -496,7 +496,7 @@ const buildCartesianXScale = (forceBand: boolean, explicit: PositionScaleType | 
   return buildPositionScale(AUTO_X, explicit ?? 'linear');
 };
 
-/** cartesian y（值轴）scale 类型：含 <RectMark>（heatmap 双 band）→ band；否则按 <Scale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
+/** cartesian y（值轴）scale 类型：含 <IntervalMark>（heatmap 双 band）→ band；否则按 <Scale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
 const buildCartesianYScale = (hasRect: boolean, explicit: PositionScaleType | undefined): PlotScaleSpec => {
   if (hasRect && explicit !== undefined) {
     throw new Error('buildPlotSpec: <IntervalMark> (heatmap) requires a band y scale; omit <Scale dimension="y" /> for automatic band inference');
@@ -506,7 +506,7 @@ const buildCartesianYScale = (hasRect: boolean, explicit: PositionScaleType | un
 };
 
 /**
- * polar 角向 scale 类型推断：BarMark angle → linear（连续累积角界）；BarMark x/y → band（径向柱分类）；
+ * polar 角向 scale 类型推断：IntervalMark angle → linear（连续累积角界）；IntervalMark x/y → band（径向柱分类）；
  *   闭合 line（雷达）→ point（类别落等距点）；否则 linear（极坐标折线）
  */
 const buildAngleScale = (collected: Collected, explicit: PositionScaleType | undefined): PlotScaleSpec => {

@@ -10,10 +10,10 @@ It declares "a chart" as a **Plot IR** (coordinate system, scales, which field b
 `@retikz/plot-react` wraps it into a single `<Plot>` component:
 
 ```tsx
-import { LineMark, Plot, PointMark } from '@retikz/plot-react';
+import { PathMark, Plot, PointMark } from '@retikz/plot-react';
 
 <Plot data={sales} width={360} height={200}>
-  <LineMark x="month" y="revenue" order="month" />
+  <PathMark x="month" y="revenue" order="month" />
   <PointMark x="month" y="revenue" />
 </Plot>;
 ```

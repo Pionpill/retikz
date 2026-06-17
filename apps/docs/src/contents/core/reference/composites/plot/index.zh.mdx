@@ -10,10 +10,10 @@ description: "@retikz/plot 是基于 composite 机制做出的第一个 Tier 2 �
 `@retikz/plot-react` 把这套包成一个 `<Plot>` 组件:
 
 ```tsx
-import { LineMark, Plot, PointMark } from '@retikz/plot-react';
+import { PathMark, Plot, PointMark } from '@retikz/plot-react';
 
 <Plot data={sales} width={360} height={200}>
-  <LineMark x="month" y="revenue" order="month" />
+  <PathMark x="month" y="revenue" order="month" />
   <PointMark x="month" y="revenue" />
 </Plot>;
 ```
