@@ -15,7 +15,7 @@
 | `@retikz/render` | Scene → 渲染后端，子路径 `./svg` / `./canvas` |
 | `@retikz/react` | React adapter：Kernel + Sugar JSX，对接 render |
 | `@retikz/vanilla` | framework-free runtime / SSR 入口 |
-| `@retikz/tex` | LaTeX 数学公式：MathJax SVG → renderer-agnostic 字形路径，经 core 的 `lowerMath` 注入接入；`mathjax-full` 是 optional peer，core 不依赖它 |
+| `@retikz/tex` | LaTeX 数学公式：MathJax SVG → renderer-agnostic 字形路径，经 core 的 `lowerMath` 注入接入；`mathjax-full` 是 optional peer，core 不依赖它。可选子入口 `@retikz/tex/react` 出 `useLowerMath`（`react`/`react-dom` 作 optional peer，仅此子入口依赖 React） |
 
 `core` / `render` / `react` / `vanilla` 构成 **Tier 1 底座**；`math` 是其下的**零依赖纯计算底座**（依赖方向 `core → math`，math 不反依赖任何包）；`tex` 是可选的 LaTeX 公式接入包（依赖 `core`，经 `lowerMath` 注入，`mathjax-full` 走 optional peer）。六包同属 **core 分组**、共用同一 lockstep。Tier 2（`@retikz/plot` / `@retikz/chart` 等）是**另外的分组**，通过 core 的 `lowerComposites` 钩子接入、不进 core——分层契约见根 [`AGENTS.md` 的「抽象分层：Kernel / Sugar / Tier 2」](../../AGENTS.md)。
 

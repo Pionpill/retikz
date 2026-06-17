@@ -29,6 +29,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./react": {
+      "types": "./src/react/index.ts",
+      "default": "./src/react/index.ts"
     }
   },
   "publishConfig": {
@@ -41,6 +45,12 @@
         "import": "./dist/es/index.js",
         "require": "./dist/lib/index.cjs",
         "default": "./dist/es/index.js"
+      },
+      "./react": {
+        "types": "./dist/lib/react/index.d.ts",
+        "import": "./dist/es/react/index.js",
+        "require": "./dist/lib/react/index.cjs",
+        "default": "./dist/es/react/index.js"
       }
     }
   },
@@ -61,16 +71,28 @@
     "@retikz/core": "workspace:*"
   },
   "peerDependencies": {
-    "mathjax-full": "catalog:"
+    "mathjax-full": "catalog:",
+    "react": ">=18",
+    "react-dom": ">=18"
   },
   "peerDependenciesMeta": {
     "mathjax-full": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
       "optional": true
     }
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "mathjax-full": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
