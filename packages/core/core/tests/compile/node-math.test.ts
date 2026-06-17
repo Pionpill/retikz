@@ -98,11 +98,12 @@ describe('[node-math] 边界', () => {
     expect(display.layout.height).toBeGreaterThan(inline.layout.height);
   });
 
-  it('math-vs-text-precedence：同给 text + math → math 优先（emit 字形、无 TextPrim）', () => {
-    const { primitives } = compileMath({ math: { tex: 'x' }, text: 'hello' });
+  it('math-vs-text-precedence：同给 text + math → math 优先（emit 字形、无 TextPrim）+ MATH_TEXT_CONFLICT warn', () => {
+    const { primitives, warnings } = compileMath({ math: { tex: 'x' }, text: 'hello' });
     const flat = flattenPrims(primitives);
     expect(flat.some(p => p.type === 'path' && p.fillRule === 'evenodd')).toBe(true);
     expect(flat.some(p => p.type === 'text')).toBe(false);
+    expect(warnings.some(w => w.code === CompileWarningCode.MathTextConflict)).toBe(true);
   });
 });
 

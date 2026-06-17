@@ -107,6 +107,19 @@ describe('[parse-svg] parseMathJaxSvg', () => {
     expect(r.commands.some(c => c.kind === 'close')).toBe(true);
   });
 
+  it('<defs>/<use> 解引用（fontCache local）：defs path 不直接 emit，use 引用 + 偏移', () => {
+    const s =
+      '<svg viewBox="0 0 100 100" xmlns:xlink="http://www.w3.org/1999/xlink">' +
+      '<defs><path id="g1" d="M0 0 L10 0"></path></defs>' +
+      '<g><use data-c="67" xlink:href="#g1" x="5" y="20"></use></g></svg>';
+    const r = parseMathJaxSvg(s, 1000)!;
+    // defs 内的 path 不直接 emit；仅经 use 解引用一次（+ x/y 偏移）
+    expect(r.commands).toEqual([
+      { kind: 'move', to: [5, 20] },
+      { kind: 'line', to: [15, 20] },
+    ]);
+  });
+
   it('无 viewBox → null', () => {
     expect(parseMathJaxSvg('<svg><path d="M0 0"></path></svg>', 14)).toBeNull();
   });

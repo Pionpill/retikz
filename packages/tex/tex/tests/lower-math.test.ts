@@ -62,6 +62,13 @@ describe('[lower-math] createLowerMath（fake engine）', () => {
     const lower = createLowerMath({ convert: () => '<svg><path d="M0 0"/></svg>' });
     expect(lower({ tex: 'x' }, { fontSize: 14 })).toBeNull();
   });
+
+  it('MathJax merror（语法错误标记）→ null（让 compile 发 MATH_TEX_INVALID）', () => {
+    const lower = createLowerMath({
+      convert: () => '<svg viewBox="0 0 100 100"><g data-mml-node="merror"><path d="M0 0 L1 1"/></g></svg>',
+    });
+    expect(lower({ tex: '{', displayMode: false }, { fontSize: 14 })).toBeNull();
+  });
 });
 
 describe('[lower-math] 真实 mathjax-full 集成', () => {
@@ -79,11 +86,18 @@ describe('[lower-math] 真实 mathjax-full 集成', () => {
     expect(frac!.commands.length).toBeGreaterThan(x!.commands.length);
   });
 
-  it('非法 tex → 不抛（MathJax 出 merror 字形，仍解析为非空）', async () => {
+  it('真实语法错误（括号不配对）→ merror → null', async () => {
     const engine = await createMathJaxEngine();
     const lower = createLowerMath(engine);
-    // MathJax 对非法控制序列产 merror 节点（仍是合法 SVG），故 lowerMath 不返回 null —— 不崩即达标
-    expect(() => lower({ tex: '\\nonexistentcmd', displayMode: false }, { fontSize: 14 })).not.toThrow();
+    // 不配对的 `{` → MathJax 产 merror 节点 → lowerMath 返回 null（core 据此发 MATH_TEX_INVALID）
+    expect(lower({ tex: '{', displayMode: false }, { fontSize: 14 })).toBeNull();
+  });
+
+  it('未定义命令 → merror（undefined control sequence）→ null', async () => {
+    const engine = await createMathJaxEngine();
+    const lower = createLowerMath(engine);
+    // MathJax 对未定义 \cmd 产「Undefined control sequence」merror → lowerMath 返回 null（core 发 MATH_TEX_INVALID）
+    expect(lower({ tex: '\\nonexistentcmd', displayMode: false }, { fontSize: 14 })).toBeNull();
   });
 
   it('e2e：node.math + 真实 lowerMath → compileToScene 产字形 path（端到端）', async () => {

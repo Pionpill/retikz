@@ -61,7 +61,7 @@
     "@retikz/core": "workspace:*"
   },
   "peerDependencies": {
-    "mathjax-full": "^3.2.2"
+    "mathjax-full": "catalog:"
   },
   "peerDependenciesMeta": {
     "mathjax-full": {
@@ -70,7 +70,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "mathjax-full": "^3.2.2",
+    "mathjax-full": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",

@@ -18,6 +18,7 @@ export const CompileWarningCode = {
   PartialArcClosedInvalid: 'PARTIAL_ARC_CLOSED_INVALID',
   MathLowererMissing: 'MATH_LOWERER_MISSING',
   MathTexInvalid: 'MATH_TEX_INVALID',
+  MathTextConflict: 'MATH_TEXT_CONFLICT',
   TextMathParseError: 'TEXT_MATH_PARSE_ERROR',
 } as const;
 

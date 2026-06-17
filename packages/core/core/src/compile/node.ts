@@ -581,6 +581,13 @@ export const layoutNode = (
   // 公式内容（node.math）优先于 text（互斥）：渲染字形 + bbox，bbox 直接当内容尺寸喂下方内框计算
   let mathGlyphs: LoweredMath | undefined;
   if (node.math !== undefined) {
+    // math 与 text 互斥：同给时 math 优先、text 静默丢弃易误导，发可诊断 warn
+    if (node.text !== undefined) {
+      mathLowering?.warn(
+        CompileWarningCode.MathTextConflict,
+        'Node has both text and math; math wins and text is ignored.',
+      );
+    }
     mathGlyphs = resolveMathGlyphs(node.math, fontSize, node.textColor, mathLowering);
     textWidth = mathGlyphs?.width ?? 0;
     textHeight = mathGlyphs?.height ?? 0;
