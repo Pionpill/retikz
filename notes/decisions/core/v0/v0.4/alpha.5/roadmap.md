@@ -14,9 +14,9 @@ alpha.5 给 retikz 补上**数学排版**——一个 TikZ-inspired 库的旗舰
 
 | # | 子项 | 代号 | ADR | 状态 |
 |---|---|---|---|---|
-| E1 | `@retikz/tex` 包 + `lowerMath` 引擎 + `node.math` 内容（独立公式 A） | E | [ADR-01](./01-tex-package-and-node-math.md) | Proposed（route 2 定稿；引入 `IRNode.math` + `CompileOptions.lowerMath` + Layout 通道，统一内容模型） |
-| E2 | 带框公式（B）——`node.math` + 任意 shape 容器 | E | [ADR-02](./02-node-embedded-math.md) | Proposed（依赖 E1；复用内容路径，几乎零增量，黄级） |
-| E3 | 行内 text+math 混排（C）——`IRLineSpec` run 序列 + `$...$` | E | [ADR-03](./03-inline-math-runs.md) | Proposed（最重；扩 text-run 模型 + gated `$...$`，依赖 E1 注入） |
+| E1 | `@retikz/tex` 包 + `lowerMath` 引擎 + `node.math` 内容（独立公式 A） | E | [ADR-01](./01-tex-package-and-node-math.md) | ✅ Accepted（已实现 + 文档 + changelog；core schema/compile + `@retikz/tex`(+react) 引擎，真实 mathjax-full 集成验证） |
+| E2 | 带框公式（B）——`node.math` + 任意 shape 容器 | E | [ADR-02](./02-node-embedded-math.md) | ✅ Accepted（经 E1 统一内容路径落地，几乎零增量；B 行为由 `node-math` 测试覆盖） |
+| E3 | 行内 text+math 混排（C）——`IRLineSpec` run 序列 + `$...$` | E | [ADR-03](./03-inline-math-runs.md) | ⏸ Proposed（**延后**：最重，扩 core text-run 模型 + `$...$` parser + 混排布局；留下一里程碑单独做，文档已标注「行内混排待后续」） |
 
 ## 接入机制（2026-06-16 拍板；route 2 激进 + 多 LLM 评审后定稿）
 

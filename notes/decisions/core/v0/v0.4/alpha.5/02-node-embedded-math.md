@@ -1,6 +1,6 @@
 # ADR-02：带框公式（B）—— `node.math` 内容 + 任意 shape 容器
 
-- 状态：Proposed
+- 状态：Accepted（2026-06-17 完工；带框公式经 ADR-01 统一内容路径落地，B 行为由 `node-math` 测试覆盖）
 - 决策日期：2026-06-16
 - 关联：[v0.4-alpha.5 roadmap](./roadmap.md) · [ADR-01 tex 包 + node.math 内容](./01-tex-package-and-node-math.md)（地基：`node.math` + `lowerMath`）· [ADR-03 行内混排](./03-inline-math-runs.md) · `compile/node.ts`（内容→shape circumscribe→emit）· `shapes/types.ts`（`ShapeDefinition`）
 

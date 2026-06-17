@@ -1,6 +1,6 @@
 # ADR-01：`@retikz/tex` 包 + MathJax→PathPrim 引擎 + `node.math` 内容（独立公式 A）
 
-- 状态：Proposed
+- 状态：Accepted（2026-06-17 完工）
 - 决策日期：2026-06-16
 - 关联：[v0.4-alpha.5 roadmap](./roadmap.md) · [v0.4 roadmap 候选 E](../roadmap.md) · [core-design.md §7 AI 一等公民](../../../../../architecture/core-design.md) · [ADR-02 带框公式](./02-node-embedded-math.md) · [ADR-03 行内混排](./03-inline-math-runs.md) · `compile/compile.ts`（`CompileOptions` 注入）· `compile/node.ts`（内容→尺寸→emit）· `compile/text-metrics.ts`（measurer 注入先例）· `compile/constant.ts`（`CompileWarningCode` / `onWarn`）· `render/canvas-node`（`@napi-rs/canvas` optional peer 先例）
 
