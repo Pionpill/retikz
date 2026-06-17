@@ -50,6 +50,8 @@ export type NodeProps = HydrationEventProps & {
   lineHeight?: number;
   /** 折行阈值（user units）：超过才折行、短文本盒收缩（非固定段落宽）；西文按词、CJK 按字。不填 = 不自动折行 */
   maxTextWidth?: number;
+  /** 公式内容（LaTeX 源 `{ tex, displayMode? }`），经注入 `lowerMath`（`@retikz/tex`）渲染成字形；与 `text` 互斥，`math` 优先。需 `<TexProvider>` 或 `<Layout lowerMath>` */
+  math?: IRNode['math'];
   /** 字体规格：family / size / weight / style 全部可选；不填走渲染端默认值 */
   font?: IRFont;
   /** 横向内边距（text → 左右 border）；不填走 `padding` 兜底，再走默认 */

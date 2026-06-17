@@ -18,6 +18,7 @@ import {
   type IR,
   type IRAnimationTrack,
   type IRViewBox,
+  type LowerMath,
   type PathGeneratorDefinition,
   type PatternDefinition,
   type ShapeDefinition,
@@ -230,6 +231,12 @@ export type LayoutProps = ScopeStyleProps & {
    */
   composites?: Array<CompositeDefinition>;
   /**
+   * 运行时注入的公式渲染能力（透传给 `compileToScene` 的 `CompileOptions.lowerMath`）
+   * @description `<Node math>` / 行内 `$...$` 公式编译时调它把 LaTeX → 字形路径 + bbox；由 `@retikz/tex` 的
+   *   `createLowerMath(mathjax)` 提供（`<TexProvider>` 注入）。缺省时带公式的节点降级 + 警告，不崩。
+   */
+  lowerMath?: LowerMath;
+  /**
    * 可选：显式注入的可嵌入 Tier2 适配器列表（逃生舱）
    * @description 主路径是子组件静态属性（Component.isTier2Embeddable + embeddableAdapter）自动识别；
    *   本 prop 用于测试注入 / 显式控制 / 未挂静态属性的 domain。按 adapter.displayName 匹配子组件，覆盖静态属性。
@@ -291,7 +298,7 @@ const useSvgRootBinding = (
  *   `@retikz/render/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, animate: animateProp, snapshotAt, animationRef, animations: rootAnimations, easings, animationProperties, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites, embeddables, handlers } = props;
+  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, animate: animateProp, snapshotAt, animationRef, animations: rootAnimations, easings, animationProperties, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites, lowerMath, embeddables, handlers } = props;
   const animate = animateProp !== false;
   const { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault } = props;
   // 渲染目标：显式 prop > 祖先 RendererModeProvider 注入的 context > 默认 svg（hook 必须无条件调用）
@@ -340,8 +347,8 @@ export const Layout: FC<LayoutProps> = props => {
     [defaultFontFamily],
   );
   const scene = useMemo(
-    () => compileToScene(ir, { measureText, nodeDistance, shapes, arrows, patterns, pathGenerators, composites: aggregatedComposites }),
-    [ir, measureText, nodeDistance, shapes, arrows, patterns, pathGenerators, aggregatedComposites],
+    () => compileToScene(ir, { measureText, nodeDistance, shapes, arrows, patterns, pathGenerators, composites: aggregatedComposites, lowerMath }),
+    [ir, measureText, nodeDistance, shapes, arrows, patterns, pathGenerators, aggregatedComposites, lowerMath],
   );
 
   // useId 返回 ":r0:" 含冒号；SVG `url(#id)` 对冒号兼容性差，剥成纯字母数字。caller 显式 idPrefix 优先（SSR 水合对齐）
