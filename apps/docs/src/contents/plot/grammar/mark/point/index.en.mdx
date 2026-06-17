@@ -43,7 +43,9 @@ This is why PointMark usually does not need coordinate-specific adapters. The co
 
 ### Style Props
 
-`color` / `size` / `opacity` / `shape` are visual channels for the point glyph. They change how the glyph is drawn without changing the projected anchor.
+`color` / `size` / `opacity` / `shape` / `strokeField` / `strokeWidthField` are visual channels for the point glyph. They change how the glyph is drawn without changing the projected anchor.
+
+Use constant Node style props when the whole layer should share one visual treatment, such as `fill`, `stroke`, `strokeWidth`, `fillOpacity`, or `rotate`. `strokeField` / `strokeWidthField` are per-datum channels and override the corresponding constant stroke defaults; the full size, layering, and opacity split is listed in the API table.
 
 <ComponentPreview name="point-style" sourceFiles={['point-api.data.ts']} />
 
@@ -88,7 +90,7 @@ For registration, focus on the `PointMark` registry entry and the `lowerPoint` f
 
 const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (mark.type !== PlotMark.Point) return null;
-  const { colorOf, defaultColor = DEFAULT_FILL, sizeOf, opacityOf, shapeOf, labelOf } = channels;
+  const { colorOf, defaultColor = DEFAULT_FILL, sizeOf, opacityOf, shapeOf, strokeOf, strokeWidthOf, labelOf } = channels;
   const isText = mark.encoding.text !== undefined;
   const dx = mark.dx ?? 0;
   const dy = mark.dy ?? 0;
@@ -103,6 +105,7 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
       if (text === undefined) continue;
       const position: [number, number] = dx === 0 && dy === 0 ? point : [point[0] + dx, point[1] + dy];
       const base: IRNode = { type: 'node', position, text };
+      if (mark.zIndex !== undefined) base.zIndex = mark.zIndex;
       placed.push({ color: colorOf?.(row), node: decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined) });
       continue;
     }
@@ -110,20 +113,28 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
     const point = datumAnchor(mark, row, frame);
     if (!point) continue;
     const base: IRNode = { type: 'node', position: point };
+    if (mark.zIndex !== undefined) base.zIndex = mark.zIndex;
     const radius = sizeOf?.(row);
     if (radius !== undefined) base.minimumSize = radius * Math.SQRT2;
     const opacity = opacityOf?.(row);
     if (opacity !== undefined) base.opacity = opacity;
     const shape = shapeOf?.(row);
     if (shape !== undefined) base.shape = shape;
+    const stroke = strokeOf?.(row);
+    if (stroke !== undefined) base.stroke = stroke;
+    const strokeWidth = strokeWidthOf?.(row);
+    if (strokeWidth !== undefined) base.strokeWidth = strokeWidth;
     const node = attachDatumLabel(decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined), mark, row, labelOf);
     placed.push({ color: colorOf?.(row), node });
   }
   if (placed.length === 0) return null;
-  const styleFor = isText ? textStyle : pointStyle;
   const layer: IRScope = !colorOf
-    ? { type: 'scope', nodeDefault: styleFor(defaultColor), children: placed.map(p => p.node) }
-    : colorGroupedScope(placed, styleFor);
+    ? {
+        type: 'scope',
+        nodeDefault: isText ? textStyle(typeof mark.fill === 'string' ? mark.fill : defaultColor, mark) : pointStyle(mark.fill ?? defaultColor, mark),
+        children: placed.map(p => p.node),
+      }
+    : colorGroupedScope(placed, fill => (isText ? textStyle(fill, mark) : pointStyle(fill, mark)));
   return attachMarkLayer(layer, mark, markProvenance);
 };
 ```
@@ -132,7 +143,7 @@ The function runs in four steps:
 
 1. Check that the mark is `PlotMark.Point`; otherwise return `null`.
 2. For each row, project the position through `datumAnchor` or `frame.projectRoles(...)`; rows that cannot be projected are skipped.
-3. Regular points become core `Node`s with optional `size`, `opacity`, and `shape`; text points become text Nodes.
+3. Regular points become core `Node`s with optional `size`, `opacity`, `shape`, `strokeField`, `strokeWidthField`, or constant Node style; text points become text Nodes.
 4. Finally, choose the layer structure from the `color` channel: without color encoding, all nodes share one `nodeDefault`; with color encoding, nodes are split into child `Scope`s by color before mark-layer metadata is attached.
 
 | Trait | Behavior |
@@ -140,7 +151,7 @@ The function runs in four steps:
 | Coordinate-agnostic | The mark only consumes position roles; cartesian, polar, ternary, or custom coordinates decide how those roles are interpreted |
 | One Node per row | A regular scatter point becomes one datum Node; rows whose position cannot project to a screen point are skipped |
 | Shared styling | Without color encoding, an outer `nodeDefault` shares default style; with `color`, nodes are grouped by color to keep IR compact |
-| Point-only channels | `size` / `opacity` / `shape` only apply to `PointMark`, and are written onto each datum Node |
+| Point-only channels | `size` / `opacity` / `shape` / `strokeField` / `strokeWidthField` only apply to `PointMark`, and are written onto each datum Node |
 | Text variant | Set `text` and the mark produces borderless text Nodes instead of dot glyphs, while reusing the same position projection |
 
 ## API
@@ -152,10 +163,22 @@ Most `PointMark` props are data channels: position props decide where each row i
 | Position | `x` | `FieldName?` | — | Field bound to the x position channel |
 | | `y` | `FieldName?` | — | Field bound to the y position channel |
 | | `z` | `FieldName?` | — | Field bound to the third ternary component |
-| Style | `color` | `FieldName?` | — | Field bound to the color channel |
-| | `size` | `FieldName?` | — | Field bound to the size channel |
-| | `opacity` | `FieldName?` | — | Field bound to the opacity channel |
+| Style channel | `color` | `FieldName?` | — | Field bound to the color channel; overrides constant `fill` |
+| | `size` | `FieldName?` | — | Field bound to the size channel; overrides `minimumSize` per datum |
+| | `opacity` | `FieldName \| number?` | — | String means an opacity field; number means constant whole-node opacity |
 | | `shape` | `FieldName?` | — | Field bound to the shape channel |
+| | `strokeField` | `FieldName?` | — | Field bound to the stroke color channel; overrides constant `stroke` per datum |
+| | `strokeWidthField` | `FieldName?` | — | Field bound to the stroke-width channel; overrides constant `strokeWidth` per datum |
+| Constant style | `fill` | `string \| IRPaintSpec?` | `currentColor` | Constant fill; ignored when `color` is bound |
+| | `stroke` | `string?` | — | Constant stroke color |
+| | `strokeWidth` | `number?` | — | Constant stroke width |
+| | `fillOpacity` | `number?` | — | Constant fill opacity, 0..1 |
+| | `drawOpacity` | `number?` | — | Constant stroke opacity, 0..1 |
+| | `rotate` | `number?` | — | Glyph rotation in degrees |
+| | `padding` | `number?` | `0` | Core Node padding |
+| | `minimumSize` | `number?` | point default | Constant minimum visual size |
+| | `minimumWidth` / `minimumHeight` | `number?` | — | Constant minimum visual width / height |
+| | `zIndex` | `number?` | — | Drawing order hint |
 | Text | `text` | `FieldName?` | — | Field bound to text content |
 | | `format` | `string?` | — | Format string for `text` |
 | | `dx` / `dy` | `number?` | `0` | Fine offset from the projected anchor for text points |

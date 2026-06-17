@@ -3,41 +3,136 @@ title: LinkMark
 description: LinkMark expresses relational geometry: each row connects a source and target into a fillable band whose width can be encoded.
 ---
 
-`<LinkMark>` is a special mark: instead of describing a point, path, or interval at one position, it describes the relation between two projected endpoint tuples. Each record curves from a source endpoint (`sourceX` / `sourceY`) to a target endpoint (`targetX` / `targetY`), with two cubic-curve long edges and straight end caps enclosing a fillable region. The `value` field maps through a built-in width scale to the band width; sankey and alluvial flow diagrams are common forms of the same mark.
+`<LinkMark>` describes the relation between two projected endpoint tuples. Each row curves from a source endpoint (`sourceX` / `sourceY`) to a target endpoint (`targetX` / `targetY`), with two cubic-curve long edges and straight end caps enclosing a fillable region.
 
-The band defaults to `orientation="horizontal"`: the entry / exit tangents run along the horizontal axis and the half-width along the vertical axis, giving a clean left-to-right flow (vertical end caps). The width gradates smoothly from the source end to the target end (`value` at the source, `endWidth` at the target). Set `orientation="vertical"` to flow top-down with half-width along the horizontal axis.
+`value` is the width channel, mapped through a built-in linear width scale to the source-end band width; `endWidth` can provide an independent target-end width. Sankey and alluvial flow diagrams are common presentation forms, but LinkMark itself only consumes already-computed endpoint positions and width fields.
+
+## Usage
+
+```tsx
+import { LinkMark, Plot } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={flows}>
+  <LinkMark sourceX="sourceX" sourceY="sourceY" targetX="targetX" targetY="targetY" value="value" color="channel" />
+</Plot>
+```
+
+Endpoints must be field pairs in the same coordinate system. LinkMark currently supports `cartesian2D` only; named-node links across facet / inset / scope are a later capability.
+
+## Presentation Layer
+
+LinkMark is a low-level relation mark: it only lowers each row into one fillable curved band. What the presentation layer calls a sankey, alluvial, or flow migration diagram is not a new low-level mark; it is the same LinkMark after external layout and grouping.
+
+The band defaults to `orientation="horizontal"`: entry / exit tangents run along the horizontal axis and half-width runs along the vertical axis, giving left-to-right flow with vertical end caps. Set `orientation="vertical"` for top-to-bottom flow with half-width along the horizontal axis. Width can gradually change from source to target.
+
+| Presentation form | Key props | Description |
+| --- | --- | --- |
+| Equal-width band | `sourceX` / `sourceY` / `targetX` / `targetY` / `value` | Each row connects one endpoint pair, with equal source and target widths |
+| Flared band | `value` / `endWidth` | Source and target widths differ, with a smooth transition along the band |
+| Grouped band | `color` | Group by field for fill color; geometry stays unchanged |
+
+<ComponentAlert title="Ribbon only draws the band, not the layout" description="Where nodes sit, how multiple flows stack, and how crossings are minimized are sankey / alluvial layout concerns, not part of <LinkMark>. Each record's sourceX/Y, targetX/Y, and value must be computed ahead of time (or produced by a later layout transform) and written back into the data; <LinkMark> only consumes those pre-computed positions and widths." />
+
+## Examples
+
+### Endpoint Pairs and Width
+
+`sourceX` / `sourceY` provide the source endpoint fields, while `targetX` / `targetY` provide the target endpoint fields. `value` controls band width, and `color` controls fill grouping.
 
 <ComponentPreview name="ribbon-basic" sourceFiles={['ribbon-basic.data.ts']} />
 
-<p className="text-sm text-muted-foreground">Two-column alluvial: left sources → right destinations, width by value, colored by channel.</p>
+### Target-End Width
 
-## Endpoints are field pairs
-
-Both ends of the band are **field pairs** — `sourceX` / `sourceY` for the source, `targetX` / `targetY` for the target — projected through the coordinate system into screen points just like `<PathMark>` / `<PointMark>`. The width, the four corners, and the curve control points are all derived from these two projected endpoints.
-
-| prop | type | description |
-| --- | --- | --- |
-| `sourceX` | `string` | Source x field (projected through the coordinate system) |
-| `sourceY` | `string` | Source y field |
-| `targetX` | `string` | Target x field |
-| `targetY` | `string` | Target y field |
-| `value` | `string` | Flow field: mapped through a synthesized linear scale to the source-end width |
-| `endWidth` | `string?` | Target-end width field; omitted → equal width to the source end |
-| `curvature` | `number?` | Curve tension 0..1 (0 = near-straight, larger = more S-shaped); default 0.5 |
-| `orientation` | `'horizontal' \| 'vertical'?` | Main axis: entry / exit tangents run along it, half-width along the perpendicular; default `horizontal` |
-| `color` | `string?` | Color field (→ color channel + automatic ordinal color scale) |
-| `id` | `string?` | Optional handle (reserved, not yet resolved) |
-
-## Flared bands and curvature
-
-Give `endWidth` to let the target end use an independent width — the band **gradates smoothly** from the source width to the target width along its length, forming a flared shape (common when a sankey node's inbound width differs from its outbound width). `curvature` tunes the S-shape tension of the two long edges:
+Add `endWidth` and the target end uses an independent width field. The source half-width comes from `value`, the target half-width comes from `endWidth`, and the band geometry transitions smoothly between them.
 
 <ComponentPreview name="ribbon-flared" sourceFiles={['ribbon-flared.data.ts']} />
 
-<p className="text-sm text-muted-foreground">endWidth gives the target end an independent width (flared band), curvature=0.6 deepens the bend.</p>
+### Geometry Props
 
-## Layout is a preprocessing step
+`curvature` tunes the S-shape tension of the two cubic long edges. It ranges from `0..1` and defaults to `0.5`. `orientation` chooses the main axis: `horizontal` flows left-to-right, while `vertical` flows top-to-bottom.
 
-<ComponentAlert title="Ribbon only draws the band, not the layout" description="Where nodes sit, how multiple flows stack, how crossings are minimized — those are sankey layout algorithms, not part of <LinkMark>. Each record's sourceX/Y, targetX/Y, and value must be computed ahead of time (or produced by a later layout transform) and written back into the data; <LinkMark> only consumes those pre-computed positions and widths." />
+The example above reuses the flared band: `curvature={0.6}` makes the bend more visible. `orientation` does not require new data; it changes the half-width direction and control-point direction for the same endpoint fields.
 
-This round endpoints are always field pairs within the same coordinate system; connecting named nodes across different sub-plots (facet / inset) is a later capability. Ribbon supports the `cartesian2D` coordinate system only this round.
+## How It Works
+
+`LinkMark` is a built-in registered mark. The React `<LinkMark>` component does not render DOM; `<Plot>` assembles the flat props into mark IR with `type: 'link'`, turns `sourceX` / `sourceY` and `targetX` / `targetY` into nested `source` / `target` field pairs, and keeps `value` / `endWidth` / `curvature` / `orientation` on the mark itself.
+
+At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `LinkMark` resolves to the `PlotMark.Link` entry, which calls `lowerLinkLayer`. `lowerLinkLayer` accepts only cartesian2D, then calls `lowerLink`: it projects source and target endpoints for each row, computes source / target half-widths, and emits one closed cubic core `Path`.
+
+For registration, focus on the `LinkMark` registry entry and the `lowerLinkLayer` / `lowerLink` functions that perform the lowering:
+
+```ts
+[PlotMark.Link]: { type: PlotMark.Link, lower: lowerLinkLayer },
+
+const lowerLinkLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+  if (mark.type !== PlotMark.Link) return null;
+  if (frame.type !== PlotCoordinate.Cartesian2D) {
+    throw new Error(failLoudMessage(mark.type, frame.type));
+  }
+  const layer = lowerLink(mark, rows, frame, channels.colorOf, channels.defaultColor);
+  return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
+};
+
+const lowerLink = (mark: LinkMark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined): IRScope | null => {
+  const halfWidthOf = linkHalfWidthOf(mark, rows);
+  const curvature = mark.curvature ?? LINK_DEFAULT_CURVATURE;
+  const placed: Array<{ color: string | undefined; steps: Array<IRStep> }> = [];
+  for (const row of rows) {
+    const value = linkValueOf(row, mark.value);
+    if (value === null) continue;
+    const endValue = mark.endWidth !== undefined ? linkValueOf(row, mark.endWidth) : value;
+    if (endValue === null) continue;
+    const halfSource = halfWidthOf(value);
+    const halfTarget = halfWidthOf(endValue);
+    const endpoints = linkEndpoints(mark, row, frame);
+    if (endpoints === null) continue;
+    const geometry = linkBandGeometry(endpoints.source, endpoints.target, halfSource, halfTarget, curvature, mark.orientation ?? 'horizontal');
+    if (geometry === null) continue;
+    placed.push({
+      color: colorOf?.(row),
+      steps: [
+        { type: 'step', kind: 'move', to: geometry.sourceTop },
+        { type: 'step', kind: 'cubic', to: geometry.targetTop, control1: geometry.topControl1, control2: geometry.topControl2 },
+        { type: 'step', kind: 'line', to: geometry.targetBottom },
+        { type: 'step', kind: 'cubic', to: geometry.sourceBottom, control1: geometry.bottomControl1, control2: geometry.bottomControl2 },
+        { type: 'step', kind: 'cycle' },
+      ],
+    });
+  }
+  // no color channel: one scope; color channel: group paths by fill
+};
+```
+
+The logic breaks down into four steps:
+
+| Step | Description |
+| --- | --- |
+| Coordinate check | This round lowers only under cartesian2D; other coordinate systems fail loud |
+| Width mapping | `linkHalfWidthOf` synthesizes a linear width mapping from the maximum `value` / `endWidth` |
+| Endpoint projection | `linkEndpoints` projects source / target field pairs into screen points |
+| Core lowering | `linkBandGeometry` computes corners and control points, then lowers the band into a closed core `Path` |
+
+## API
+
+LinkMark position and width props are data channels. `FieldName` means a field name or field path, such as `source.x` / `amount`; `curvature` / `orientation` are constant geometry settings.
+
+| Category | Prop | Type | Default | Description |
+| --- | --- | --- | --- | --- |
+| Source endpoint | `sourceX` | `FieldName` | — | Source x position field, projected through the coordinate system |
+| | `sourceY` | `FieldName` | — | Source y position field, projected through the coordinate system |
+| Target endpoint | `targetX` | `FieldName` | — | Target x position field, projected through the coordinate system |
+| | `targetY` | `FieldName` | — | Target y position field, projected through the coordinate system |
+| Width | `value` | `FieldName` | — | Source-end flow field, mapped through a synthesized linear scale to band width |
+| | `endWidth` | `FieldName?` | `value` | Target-end width field; omitted means equal target and source widths |
+| Geometry | `curvature` | `number?` | `0.5` | Cubic control-point extrapolation ratio along the main axis, range `0..1` |
+| | `orientation` | `'horizontal' \| 'vertical'?` | `'horizontal'` | Main-axis orientation: horizontal left-right flow or vertical top-bottom flow |
+| Style | `color` | `FieldName?` | default layer color | Field bound to color; groups fills by field value |
+| General | `id` | `string?` | — | Optional handle (reserved, not resolved yet) |
+
+## Related
+
+- [ReferenceMark](/plot/grammar/mark/reference) — another special mark that does not start from ordinary point / line / region dimensions
+- [PathMark](/plot/grammar/mark/path) — LinkMark also lowers into core Path, but endpoint and width semantics differ
+- [Coordinates](/plot/grammar/coordinate) — LinkMark currently projects endpoint pairs under cartesian2D only

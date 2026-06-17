@@ -1,69 +1,138 @@
 ---
 title: ReferenceMark
-description: ReferenceMark 表达轴约束参考：在一个维度上取常量，在对侧维度上展开成线或带。
+description: ReferenceMark 表达轴约束参考：在一个维度上取常量或字段值，在对侧维度上展开成线或带。
 ---
 
-`<ReferenceMark>` 是特殊图元：它不从点、线、面维度出发，而是在数据空间声明一个轴向约束。绑 `y` 得到水平参考，绑 `x` 得到竖直参考；只给下界是线，给 `xTo` / `yTo` 是带。数字表示常量，字段名表示每行一条（per-datum）。它和 `<IntervalMark>` / `<PointMark>` 并列，参与同一坐标系内的叠放顺序。
+`<ReferenceMark>` 在数据空间声明一个轴向约束。绑 `y` 得到水平参考，绑 `x` 得到竖直参考；只给下界是线，配 `xTo` / `yTo` 是带。`number` 表示常量，`FieldName` 表示字段名或字段路径，并按每行数据生成一条参考。
 
-## 阈值线
+它和 `<PointMark>` / `<IntervalMark>` 一样参与同一坐标系内的叠放顺序，但不从点、线、面维度出发，而是先确定一个固定轴值，再沿对侧轴域展开。
 
-最常见用法：在散点 / 柱图上叠一条阈值线。`y={60}` 是数字常量，画一条跨满 x 域的水平线。
+## 用法
+
+```tsx
+import { Plot, ReferenceMark } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={scores}>
+  <ReferenceMark y={60} color="crimson" />
+  <ReferenceMark y={60} yTo={80} color="#fde68a" />
+</Plot>
+```
+
+`x` 和 `y` 必须二选一。`xTo` 只能和 `x` 配对，`yTo` 只能和 `y` 配对；对侧部分长度则用 `extentField` / `extentToField` 成对声明。
+
+## 表现层
+
+ReferenceMark 是底层参考 mark：它只负责把一个固定轴值解释成 line，或把两个固定轴值解释成 band。表现层看到的“阈值线”“容差带”“参考环”“扇形楔”不是不同 mark，而是同一个 ReferenceMark 在不同坐标系和边界配置下的显示形态。
+
+取向由绑定的轴决定，形态由是否给上界决定：
+
+| 表现形态 | 关键属性 | 说明 |
+| --- | --- | --- |
+| 水平参考线 | `y` | 固定 y 值，跨满 x 域 |
+| 竖直参考线 | `x` | 固定 x 值，跨满 y 域 |
+| 水平参考带 | `y` / `yTo` | 固定 y 区间，填充 `y∈[y,yTo]` |
+| 竖直参考带 | `x` / `xTo` | 固定 x 区间，填充 `x∈[x,xTo]` |
+
+在 `polar2D` 下，同一组属性会被坐标系重解释：`y` 是常半径参考环，`y` / `yTo` 是环带；`x` 是径向参考线，`x` / `xTo` 是扇形楔。
+
+## 例子
+
+### 常量轴值
+
+`y={60}` 是常量轴值，生成一条跨满 x 域的水平阈值线。这个例子对应 API 里的 `x` / `y` 常量写法。
 
 <ComponentPreview name="rule-threshold" sourceFiles={['rule-threshold.data.ts']} />
 
-<p className="text-sm text-muted-foreground">y=60 及格线，跨满 x 域；数字常量 → 单条线。</p>
+### 上界属性
 
-## 容差带
-
-给上界 `yTo` 就从线变成**填充带** `y∈[y, yTo]`——画容差区间、合格范围、高亮区段。带是一块可填充区域，先声明它再叠数据，让数据点画在带之上。
+给 `yTo` 后，ReferenceMark 从线变成填充带。带通常先声明，再叠加数据图元，让点、柱或路径画在带之上。
 
 <ComponentPreview name="rule-band" sourceFiles={['rule-threshold.data.ts']} />
 
-<p className="text-sm text-muted-foreground">水平容差带 y∈[60,80]，跨满 x 域；给 yTo → 填充区域。</p>
+`xTo` 与 `yTo` 对称：绑 `x` 时用 `xTo` 得到竖直带。上界必须匹配绑定轴，否则会在构造或 lowering 阶段报错。
 
-`xTo` 与 `yTo` 同理：绑 `x` 时用 `xTo` 得到竖直带。上界要与所绑维度匹配——绑 `x` 却给 `yTo`（或反之）会直接报错。
+### 字段轴值与颜色
 
-## 每行一条
-
-`y` 给**字段名**而非数字时，按行驱动：每行一条水平 rule。配 `color` 字段按类别分别上色。
+`y="threshold"` 是字段轴值，表示每行数据各生成一条参考线。此时 `color="tier"` 会被当作颜色字段，按类别分组上色。
 
 <ComponentPreview name="rule-per-datum" sourceFiles={['rule-per-datum.data.ts']} />
 
-<p className="text-sm text-muted-foreground">y 绑 threshold 字段 → 每行一条线；color 绑 tier 字段分类上色。</p>
+常量参考使用 `color="crimson"` 这类颜色字符串；字段参考使用 `color="tier"` 这类字段名。两者在 React props 层都是字符串，装配时会根据 `x` / `y` 是数字还是字段来落成常量颜色或颜色通道。
 
-## 取向与形态
+## 技术原理
 
-| 给了什么 | 取向 | 形态 |
-| --- | --- | --- |
-| `y`（数字 / 字段） | 水平（跨满 x 域） | 线 |
-| `x`（数字 / 字段） | 竖直（跨满 y 域） | 线 |
-| `y` + `yTo` | 水平 | 带 `y∈[y,yTo]` |
-| `x` + `xTo` | 竖直 | 带 `x∈[x,xTo]` |
+`ReferenceMark` 是一个内置注册图元。React 里的 `<ReferenceMark>` 本身不渲染 DOM；`<Plot>` 会把扁平 props 装配成 `type: 'reference'` 的 mark IR，把 `x` / `y` 放进 `encoding`，并把 `xTo` / `yTo` / `extentField` / `extentToField` 保留在 mark 顶层。
 
-数字 → 常量、字符串 → 字段。`x` 和 `y` 必须二选一：两个都给或都不给会报错。
+编译时，`lowerMark` 按 `mark.type` 查询 `MARK_REGISTRY`，`ReferenceMark` 命中 `PlotMark.Reference` 对应的 `lowerReferenceLayer`。`lowerReferenceLayer` 只接受 cartesian2D / polar2D，然后调用 `lowerReference`：line 下沉成 core `Path`，band 通过 `frame.projectCell(...)` 下沉成 core `Node` 几何。
 
-## 部分长度
+注册部分只需要看 `ReferenceMark` 对应的注册行，以及真正执行下沉的 `lowerReferenceLayer` / `lowerReference`：
 
-默认线 / 带跨满对侧轴域。给一对 `extentField` / `extentToField`（对侧维的起止字段）把它截成线段 / 局部带——如甘特图里的时间游标段。两者须成对出现，只给一个会报错。
+```ts
+[PlotMark.Reference]: { type: PlotMark.Reference, lower: lowerReferenceLayer },
 
-## 极坐标
+const lowerReferenceLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+  if (mark.type !== PlotMark.Reference) return null;
+  if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
+    throw new Error(failLoudMessage(mark.type, frame.type));
+  }
+  const layer = lowerReference(mark, rows, frame, channels.colorOf, channels.defaultColor, markProvenance);
+  return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
+};
 
-`coordinate="polar2D"` 下取向被重解释：
+const lowerReference = (mark: ReferenceMark, rows: Array<ExternalRow>, frame: CartesianFrame | PolarFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+  const orientation = referenceOrientation(mark);
+  const band = isReferenceBand(mark, orientation);
+  const effectiveRows = referenceRows(mark, rows, orientation);
 
-- 绑 `y`（常量半径）→ 常半径**参考环**（弧 / 整圆，按角域）；配 `yTo` → **环带**。
-- 绑 `x`（常量角度）→ **径向参考线**（从内到外）；配 `xTo` → **扇形楔**。
+  if (band) {
+    for (const row of effectiveRows) {
+      const cell = referenceBandCell(mark, row, frame, orientation);
+      if (!cell) continue;
+      const geometry = frame.projectCell(cell);
+      // band: cell geometry -> core Node layer
+    }
+    return bandLayer;
+  }
+
+  for (const row of effectiveRows) {
+    const steps = referenceLineSteps(mark, row, frame, orientation);
+    if (!steps) continue;
+    // line: reference steps -> core Path layer
+  }
+  return lineLayer;
+};
+```
+
+这段逻辑可以拆成四步：
+
+| 步骤 | 说明 |
+| --- | --- |
+| 取向校验 | `referenceOrientation` 要求 `encoding.x` / `encoding.y` 恰好存在一个 |
+| 形态判断 | `isReferenceBand` 检查上界是否和绑定轴匹配；有上界走 band，无上界走 line |
+| 行迭代 | 完全常量参考只生成一条；字段轴值、字段上界或 extent 字段按数据行生成 |
+| core 下沉 | line 生成 core `Path`；band 通过坐标系 `projectCell` 生成可填充几何 Node |
 
 ## API
 
-| prop | 类型 | 说明 |
-| --- | --- | --- |
-| `y` | `number \| string?` | 水平 rule 的常量轴：数字 → 常量、字符串 → 字段（每行一条）。与 `x` 二选一 |
-| `x` | `number \| string?` | 竖直 rule 的常量轴：数字 → 常量、字符串 → 字段（每行一条）。与 `y` 二选一 |
-| `yTo` | `number \| string?` | 水平 band 上界（与 `y` 配对 → `y∈[y,yTo]`）；缺省为线 |
-| `xTo` | `number \| string?` | 竖直 band 上界（与 `x` 配对 → `x∈[x,xTo]`）；缺省为线 |
-| `extentField` | `string?` | 对侧维部分长度起点字段（与 `extentToField` 成对）；缺省满铺对侧轴域 |
-| `extentToField` | `string?` | 对侧维部分长度终点字段（与 `extentField` 成对）；缺省满铺对侧轴域 |
-| `color` | `string?` | 常量 rule → 颜色串（线描边 / 带填充）；per-datum → 字段名按类别上色 |
-| `id` | `string?` | 可选句柄（预留，暂不解析） |
+`ReferenceMark` 同时有常量轴值和数据通道。表里的 `FieldName` 表示字段名或字段路径，例如 `threshold` / `limits.lo`；`number` 表示直接写入的常量轴值。
+
+| 分类 | 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- | --- |
+| 取向 | `y` | `number \| FieldName?` | — | 绑定水平参考的常量轴；数字为常量，字段为 per-datum 参考 |
+| | `x` | `number \| FieldName?` | — | 绑定竖直参考的常量轴；数字为常量，字段为 per-datum 参考 |
+| 上界 | `yTo` | `number \| FieldName?` | — | 水平 band 上界；与 `y` 配对生成 `y∈[y,yTo]` |
+| | `xTo` | `number \| FieldName?` | — | 竖直 band 上界；与 `x` 配对生成 `x∈[x,xTo]` |
+| 部分长度 | `extentField` | `FieldName?` | 对侧轴满域 | 对侧维部分长度起点字段，必须与 `extentToField` 成对 |
+| | `extentToField` | `FieldName?` | 对侧轴满域 | 对侧维部分长度终点字段，必须与 `extentField` 成对 |
+| 样式 | `color` | `string?` | 默认图层色 | 常量参考时是颜色字符串；per-datum 参考时是颜色字段名 |
+| 通用 | `id` | `string?` | — | 可选句柄（预留，暂不解析） |
 
 <ComponentAlert title="取向二选一" description="<ReferenceMark> 必须恰好绑 x 或 y 之一；两者皆给或皆缺、或上界与所绑维度不匹配（绑 x 却给 yTo）都会报错。本轮线支持 cartesian2D / polar2D，带支持有 projectCell 的坐标系（cartesian2D / polar2D）；其余坐标系下报错。" />
+
+## 相关
+
+- [IntervalMark](/plot/grammar/mark/interval) —— 柱、热图和连续区间图元
+- [PointMark](/plot/grammar/mark/point) —— 叠在参考线或参考带上的观测点
+- [坐标系](/plot/grammar/coordinate) —— cartesian2D / polar2D 如何解释轴向参考

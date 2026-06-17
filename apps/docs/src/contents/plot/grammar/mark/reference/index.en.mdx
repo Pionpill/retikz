@@ -1,69 +1,138 @@
 ---
 title: ReferenceMark
-description: ReferenceMark expresses axis-constrained references: a constant on one role, expanded into a line or band along the opposite role.
+description: ReferenceMark expresses axis-constrained references: a constant or field value on one role, expanded into a line or band along the opposite role.
 ---
 
-`<ReferenceMark>` is a special mark: instead of starting from point / path / region dimensions, it declares an axis constraint in data space. Bind `y` for a horizontal reference, bind `x` for a vertical reference; a lower bound alone becomes a line, while `xTo` / `yTo` turns it into a band. A number gives a single constant; a field name gives one per row (per-datum). It sits alongside `<IntervalMark>` / `<PointMark>` and joins the draw order within the same coordinate system.
+`<ReferenceMark>` declares an axis constraint in data space. Bind `y` for a horizontal reference, bind `x` for a vertical reference; a lower bound alone becomes a line, while `xTo` / `yTo` turns it into a band. `number` means a constant, while `FieldName` means a data field name or field path and produces one reference per row.
 
-## Threshold line
+It joins the same draw order as `<PointMark>` / `<IntervalMark>`, but it does not start from point, line, or region dimensions. It first fixes one axis value, then expands along the opposite axis domain.
 
-The most common use: overlay a threshold line on a scatter / bar chart. `y={60}` is a numeric constant, drawing a horizontal line across the full x domain.
+## Usage
+
+```tsx
+import { Plot, ReferenceMark } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={scores}>
+  <ReferenceMark y={60} color="crimson" />
+  <ReferenceMark y={60} yTo={80} color="#fde68a" />
+</Plot>
+```
+
+Exactly one of `x` / `y` is required. `xTo` only pairs with `x`, and `yTo` only pairs with `y`; partial spans along the opposite axis use `extentField` / `extentToField` together.
+
+## Presentation Layer
+
+ReferenceMark is a low-level reference mark: it only turns one fixed axis value into a line, or two fixed axis values into a band. What the presentation layer calls a threshold line, tolerance band, reference ring, or sector wedge is not a different mark; it is the same ReferenceMark under different coordinate and bound settings.
+
+The bound axis decides orientation, and the optional upper bound decides the form:
+
+| Presentation form | Key props | Description |
+| --- | --- | --- |
+| Horizontal reference line | `y` | Fixed y value, spanning the x domain |
+| Vertical reference line | `x` | Fixed x value, spanning the y domain |
+| Horizontal reference band | `y` / `yTo` | Fixed y interval, filling `y∈[y,yTo]` |
+| Vertical reference band | `x` / `xTo` | Fixed x interval, filling `x∈[x,xTo]` |
+
+Under `polar2D`, the coordinate system reinterprets the same props: `y` is a constant-radius reference ring, `y` / `yTo` is an annular band, `x` is a radial reference line, and `x` / `xTo` is a sector wedge.
+
+## Examples
+
+### Constant Axis Value
+
+`y={60}` is a constant axis value, producing one horizontal threshold line across the full x domain. This example maps to the constant form of `x` / `y` in the API table.
 
 <ComponentPreview name="rule-threshold" sourceFiles={['rule-threshold.data.ts']} />
 
-<p className="text-sm text-muted-foreground">y=60 pass line, spanning the x domain; a numeric constant → a single line.</p>
+### Upper Bound Props
 
-## Tolerance band
-
-Add an upper bound `yTo` to turn the line into a **filled band** `y∈[y, yTo]` — for tolerance ranges, acceptance bands, highlighted regions. A band is a fillable region; declare it first then overlay the data so the points sit on top.
+Add `yTo` and ReferenceMark turns from a line into a filled band. Bands are usually declared before data marks, so points, bars, or paths are drawn on top.
 
 <ComponentPreview name="rule-band" sourceFiles={['rule-threshold.data.ts']} />
 
-<p className="text-sm text-muted-foreground">Horizontal tolerance band y∈[60,80], spanning the x domain; an upper bound yTo → a filled region.</p>
+`xTo` mirrors `yTo`: with `x` bound, use `xTo` for a vertical band. The upper bound must match the bound axis, otherwise construction or lowering throws.
 
-`xTo` mirrors `yTo`: with `x` bound, use `xTo` for a vertical band. The upper bound must match the bound dimension — binding `x` but setting `yTo` (or vice versa) throws.
+### Field Axis Value and Color
 
-## One per row
-
-When `y` is a **field name** rather than a number, it is data-driven: one horizontal rule per row. Add a `color` field to color them by category.
+`y="threshold"` is a field axis value, so each data row produces one reference line. In that form, `color="tier"` is interpreted as a color field and grouped by category.
 
 <ComponentPreview name="rule-per-datum" sourceFiles={['rule-per-datum.data.ts']} />
 
-<p className="text-sm text-muted-foreground">y bound to the threshold field → one line per row; color bound to tier categorizes them.</p>
+Constant references use color strings such as `color="crimson"`; field references use field names such as `color="tier"`. Both are strings at the React props layer, and assembly decides whether they become a constant color value or a color channel from whether `x` / `y` is a number or field.
 
-## Orientation and form
+## How It Works
 
-| What you give | Orientation | Form |
-| --- | --- | --- |
-| `y` (number / field) | horizontal (spans x domain) | line |
-| `x` (number / field) | vertical (spans y domain) | line |
-| `y` + `yTo` | horizontal | band `y∈[y,yTo]` |
-| `x` + `xTo` | vertical | band `x∈[x,xTo]` |
+`ReferenceMark` is a built-in registered mark. The React `<ReferenceMark>` component does not render DOM; `<Plot>` assembles the flat props into mark IR with `type: 'reference'`, puts `x` / `y` under `encoding`, and keeps `xTo` / `yTo` / `extentField` / `extentToField` on the mark itself.
 
-Number → constant, string → field. Exactly one of `x` / `y` is required: giving both or neither throws.
+At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `ReferenceMark` resolves to the `PlotMark.Reference` entry, which calls `lowerReferenceLayer`. `lowerReferenceLayer` accepts only cartesian2D / polar2D, then calls `lowerReference`: lines lower into core `Path`, while bands use `frame.projectCell(...)` and lower into core `Node` geometry.
 
-## Partial length
+For registration, focus on the `ReferenceMark` registry entry and the `lowerReferenceLayer` / `lowerReference` functions that perform the lowering:
 
-By default a line / band spans the full opposite axis domain. Give a pair `extentField` / `extentToField` (start / end fields along the opposite axis) to clip it to a segment / partial band — like a time cursor in a Gantt chart. Both must be set together; setting only one throws.
+```ts
+[PlotMark.Reference]: { type: PlotMark.Reference, lower: lowerReferenceLayer },
 
-## Polar
+const lowerReferenceLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+  if (mark.type !== PlotMark.Reference) return null;
+  if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
+    throw new Error(failLoudMessage(mark.type, frame.type));
+  }
+  const layer = lowerReference(mark, rows, frame, channels.colorOf, channels.defaultColor, markProvenance);
+  return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
+};
 
-Under `coordinate="polar2D"` the orientation is reinterpreted:
+const lowerReference = (mark: ReferenceMark, rows: Array<ExternalRow>, frame: CartesianFrame | PolarFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+  const orientation = referenceOrientation(mark);
+  const band = isReferenceBand(mark, orientation);
+  const effectiveRows = referenceRows(mark, rows, orientation);
 
-- Bind `y` (constant radius) → a constant-radius **reference ring** (arc / full circle, by angular domain); add `yTo` → an **annular band**.
-- Bind `x` (constant angle) → a **radial reference line** (inner to outer); add `xTo` → a **sector wedge**.
+  if (band) {
+    for (const row of effectiveRows) {
+      const cell = referenceBandCell(mark, row, frame, orientation);
+      if (!cell) continue;
+      const geometry = frame.projectCell(cell);
+      // band: cell geometry -> core Node layer
+    }
+    return bandLayer;
+  }
+
+  for (const row of effectiveRows) {
+    const steps = referenceLineSteps(mark, row, frame, orientation);
+    if (!steps) continue;
+    // line: reference steps -> core Path layer
+  }
+  return lineLayer;
+};
+```
+
+The logic breaks down into four steps:
+
+| Step | Description |
+| --- | --- |
+| Orientation check | `referenceOrientation` requires exactly one of `encoding.x` / `encoding.y` |
+| Form check | `isReferenceBand` checks whether the upper bound matches the bound axis; upper bound means band, otherwise line |
+| Row iteration | A fully constant reference produces one item; field axis values, field upper bounds, or extent fields produce one item per row |
+| Core lowering | A line becomes a core `Path`; a band uses coordinate `projectCell` to become fillable geometry in a Node |
 
 ## API
 
-| prop | type | description |
-| --- | --- | --- |
-| `y` | `number \| string?` | Constant axis of a horizontal rule: number → constant, string → field (one per row). Exclusive with `x` |
-| `x` | `number \| string?` | Constant axis of a vertical rule: number → constant, string → field (one per row). Exclusive with `y` |
-| `yTo` | `number \| string?` | Horizontal band upper bound (paired with `y` → `y∈[y,yTo]`); omit for a line |
-| `xTo` | `number \| string?` | Vertical band upper bound (paired with `x` → `x∈[x,xTo]`); omit for a line |
-| `extentField` | `string?` | Partial-length span start field along the opposite axis (paired with `extentToField`); omit to span the full domain |
-| `extentToField` | `string?` | Partial-length span end field along the opposite axis (paired with `extentField`); omit to span the full domain |
-| `color` | `string?` | Constant rule → a color string (line stroke / band fill); per-datum → a field name colored by category |
-| `id` | `string?` | Optional handle (reserved, not resolved yet) |
+`ReferenceMark` mixes constant axis values and data channels. `FieldName` means a field name or field path, such as `threshold` / `limits.lo`; `number` means an inline constant axis value.
+
+| Category | Prop | Type | Default | Description |
+| --- | --- | --- | --- | --- |
+| Orientation | `y` | `number \| FieldName?` | — | Axis bound for a horizontal reference; number is constant, field is per-datum |
+| | `x` | `number \| FieldName?` | — | Axis bound for a vertical reference; number is constant, field is per-datum |
+| Upper bound | `yTo` | `number \| FieldName?` | — | Horizontal band upper bound; pairs with `y` to create `y∈[y,yTo]` |
+| | `xTo` | `number \| FieldName?` | — | Vertical band upper bound; pairs with `x` to create `x∈[x,xTo]` |
+| Partial span | `extentField` | `FieldName?` | full opposite domain | Start field for a partial span along the opposite axis; must pair with `extentToField` |
+| | `extentToField` | `FieldName?` | full opposite domain | End field for a partial span along the opposite axis; must pair with `extentField` |
+| Style | `color` | `string?` | default layer color | Constant reference: color string; per-datum reference: color field name |
+| General | `id` | `string?` | — | Optional handle (reserved, not resolved yet) |
 
 <ComponentAlert title="Bind exactly one orientation" description="<ReferenceMark> must bind exactly one of x or y; giving both / neither, or an upper bound that does not match the bound dimension (binding x but setting yTo), throws. This round lines support cartesian2D / polar2D, and bands support coordinate systems that provide projectCell (cartesian2D / polar2D); other coordinate systems throw." />
+
+## Related
+
+- [IntervalMark](/plot/grammar/mark/interval) — bars, heatmaps, and continuous interval marks
+- [PointMark](/plot/grammar/mark/point) — observations layered on top of reference lines or bands
+- [Coordinates](/plot/grammar/coordinate) — how cartesian2D / polar2D interpret axis references

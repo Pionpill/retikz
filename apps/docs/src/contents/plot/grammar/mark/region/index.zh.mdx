@@ -1,9 +1,11 @@
 ---
 title: RegionMark
-description: RegionMark 是二维填充区域：由边界、路径或基线围合；面积图和填充雷达都是它的常见形态。
+description: RegionMark 是二维填充区域：由上沿路径和 baseline 回边围合；面积图和填充雷达都是它的常见形态。
 ---
 
-`<RegionMark>` 是二维区域 mark：在路径基础上多了一条回边。上沿是 `x` / `y` 连成的路径，下沿贴附 `baseline`（缺省 `0`），两者围成一块可填充区域。切到 polar 坐标系、`baseline` 取 `0` 时，回边收到圆心，区域便从圆心填到外沿。
+`<RegionMark>` 是二维区域 mark：它先把每行数据投影成上沿点，再用 `baseline` 生成一条回边，最后把上沿和回边围成可填充 Path。切到 polar 坐标系、`baseline` 取 `0` 时，回边收到圆心，区域便从圆心填到外沿。
+
+`x` / `y` 绑定位置字段，`order` 决定上沿连接顺序，`series` 或分类 `color` 决定是否拆成多块区域。表里的 `FieldName` 表示数据字段名或字段路径，例如 `day` / `traffic.site`。
 
 ## 用法
 
@@ -17,47 +19,126 @@ import { Plot, RegionMark } from '@retikz/plot-react';
 </Plot>
 ```
 
-`x` / `y` 绑位置字段，`order` 决定上沿的连接顺序。默认下沿是 `0`，需要别的基线时给 `baseline`。
+默认下沿是 `0`。需要把区域填到另一个常量基线时给 `baseline`；需要多块区域时给 `series`，或直接用分类 `color` 字段隐式拆分。
+
+## 表现层
+
+RegionMark 是带填充的路径 mark：它关心“上沿怎么连”和“回边贴到哪里”，但不把“面积图”“填充雷达”注册成不同图元。表现形态主要由坐标系、`closed` 和系列拆分方式决定。
+
+| 表现形态 | 关键属性 | 说明 |
+| --- | --- | --- |
+| 面积图 | `x` / `y` / `order` | 上沿按顺序连点，下沿沿 `baseline` 回边 |
+| 填充雷达 | `closed` + `polar2D` | 上沿首尾相接，`baseline: 0` 时回边收到圆心 |
+| 多系列面积 | `series` / `color` | 按系列字段或分类颜色字段拆成多块填充区域 |
+
+RegionMark 和 [PathMark](/plot/grammar/mark/path) 共用上沿投影与排序逻辑；区别是 RegionMark 会额外生成 baseline 回边并填充区域。需要柱、热图、饼图这类正交 cell 时，使用 [IntervalMark](/plot/grammar/mark/interval)。
 
 ## 例子
 
-### 基础面积
+### 位置属性
 
-上沿折线与基线 `0` 围成填充区域，适合强调累计量或趋势的“体量”。
+`x` / `y` 决定上沿经过哪些点，`order` 决定这些点的连接顺序。默认 `baseline` 为 `0`，所以下面示例会从折线填充到 y=0。
 
 <ComponentPreview name="area-basic" sourceFiles={['area-basic.data.ts']} />
 
-### 填充雷达
+### 几何属性
 
-`<Plot coordinate="polar2D">` 下的 `<RegionMark closed />`：各维度沿角向均布、值映射到半径连成上沿，回边贴 `baseline`；`baseline` 缺省 `0` 时回边收到圆心，区域从圆心填到外沿即填充雷达。`closed` 让上沿走弦（连续角轴下不采样弯弧、保持直边轮廓）。想要纯线框轮廓用 [`<PathMark closed />`](/plot/grammar/mark/path)。
+`closed` 只影响上沿：它让末点回连首点。面积本身始终靠 baseline 回边闭合；在 `polar2D` 且 `baseline` 为 `0` 时，这条回边收到圆心，于是形成填充雷达。
 
 <ComponentPreview name="area-radar" sourceFiles={['area-radar.data.ts']} />
 
-<p className="text-sm text-muted-foreground">baseline 取 0 时回边收到圆心，从圆心填到外沿即填充雷达。</p>
+### 系列属性
 
-### 多系列（按颜色拆）
-
-给 `series` 一个字段，数据按它拆成多块面积。不写 `series`、只给 `color` 一个分类字段时同样会拆——等价于显式写 `series`；`color` 字段须是分类的（连续 / 时间字段会报错）。
+`series` 会显式拆成多块区域。不写 `series`、只给 `color` 一个分类字段时，也会按该字段隐式拆系列，适合“颜色就是系列”的面积图。
 
 <ComponentPreview name="area-color-split" sourceFiles={['area-color-split.data.ts']} />
 
-<p className="text-sm text-muted-foreground">只给 <code>color="site"</code>、无 <code>series</code>，按站点拆两块面积。</p>
+## 技术原理
+
+`RegionMark` 是一个内置注册图元。React 里的 `<RegionMark>` 本身不渲染 DOM；`<Plot>` 会在构造 `PlotSpec` 时把它收集成 `type: 'region'` 的 mark IR，并记录 `x` / `y` / `order` / `baseline` / `closed` / `series` 等配置。
+
+编译时，`lowerMark` 按 `mark.type` 查询 `MARK_REGISTRY`。`RegionMark` 命中 `PlotMark.Region` 对应的 `lowerRegionLayer`；它只接受 cartesian2D / polar2D，然后调用 `lowerRegion`。`lowerRegion` 决定单块还是多系列，核心几何由 `buildAreaSteps` 完成：先构造上沿点，再按相同 primary 值构造 baseline 回边，最后追加 `cycle` 生成可填充 Path。
+
+注册行和核心下沉函数的关键部分如下：
+
+```ts
+[PlotMark.Region]: { type: PlotMark.Region, lower: lowerRegionLayer },
+
+const lowerRegionLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+  if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
+    throw new Error(failLoudMessage(mark.type, frame.type));
+  }
+  const layer = lowerRegion(mark, rows, frame, channels.colorOf, channels.defaultColor, markProvenance);
+  return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
+};
+
+const buildAreaSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, baseline: number): Array<IRStep> | null => {
+  const ordered = orderRows(rows, mark.type === PlotMark.Region ? mark.order : undefined);
+  const closed = mark.type === PlotMark.Region ? (mark.closed ?? false) : false;
+  const top = buildOutlinePoints(mark, ordered, frame, closed);
+  if (top.length < 2) return null;
+  const bottom = buildBaselinePoints(mark, ordered, frame, baseline);
+  const outline = [...top, ...bottom];
+  return [
+    { type: 'step', kind: 'move', to: outline[0] },
+    ...outline.slice(1).map((point): IRStep => ({ type: 'step', kind: 'line', to: point })),
+    { type: 'step', kind: 'cycle' },
+  ];
+};
+
+const lowerRegion = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+  if (mark.type !== PlotMark.Region) return null;
+  const baseline = mark.baseline ?? AREA_BASELINE;
+  const seriesField = pathSeriesField(mark, rows);
+  if (seriesField) {
+    const paths = buildSeriesPaths(
+      mark,
+      rows,
+      seriesField,
+      seriesRows => buildAreaSteps(mark, seriesRows, frame, baseline),
+      seriesRows => ({ fill: colorOf?.(seriesRows[0]) ?? DEFAULT_FILL }),
+      markProvenance,
+    );
+    return paths.length === 0 ? null : { type: 'scope', children: paths };
+  }
+  const steps = buildAreaSteps(mark, rows, frame, baseline);
+  if (!steps) return null;
+  const colorValue = mark.encoding.color?.value;
+  const fill = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
+  return { type: 'scope', pathDefault: { fill }, children: [{ type: 'path', children: steps }] };
+};
+```
+
+| 步骤 | 说明 |
+| --- | --- |
+| 坐标系守卫 | RegionMark 需要二维上沿和 baseline 回边；当前只在 cartesian2D / polar2D 下下沉 |
+| 排序与投影 | `orderRows` 和 `buildOutlinePoints` 复用 PathMark 的上沿逻辑 |
+| 回边闭合 | `buildBaselinePoints` 用同一 primary 值和固定 `baseline` 生成反向回边 |
+| 系列与填充 | `series` 或分类 `color` 会拆成多条 Path；单块区域通过 `pathDefault.fill` 设置填充 |
 
 ## API
 
-| 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `x` | `string` | — | 绑 x 通道的字段路径（polar 下作角向） |
-| `y` | `string` | — | 绑 y 通道的字段路径（polar 下作径向） |
-| `order` | `string?` | 数据顺序 | 驱动上沿连接顺序的字段 |
-| `baseline` | `number?` | `0` | 回边贴附的基线值 |
-| `closed` | `boolean?` | `false` | 上沿走弦、连续角轴下不采样弯弧（直边轮廓）；面积始终由 baseline 回边闭合填充 |
-| `series` | `string?` | — | 系列字段：拆成多块面积；缺省单块 |
-| `color` | `string?` | `series` | 颜色字段（categorical，自动 ordinal 色 scale）；无显式 `series` 时按此字段隐式拆系列；缺省取 `series`。连续 / 时间字段会报错（连续色阶待后续） |
-| `id` | `string?` | — | 可选句柄（预留，暂不解析） |
+`RegionMark` 的位置、系列和颜色属性都是数据通道。表里的 `FieldName` 表示数据字段名或字段路径，例如 `day` / `traffic.site`。
+
+| 分类 | 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- | --- |
+| 位置 | `x` | `FieldName` | — | x 位置字段；polar 下作角向 |
+| | `y` | `FieldName` | — | y 位置字段；polar 下作径向 |
+| | `order` | `FieldName?` | 数据顺序 | 驱动上沿连接顺序的字段 |
+| 几何 | `baseline` | `number?` | `0` | 回边贴附的基线值 |
+| | `closed` | `boolean?` | `false` | 末点回连首点，只影响上沿；区域仍由 baseline 回边闭合 |
+| 系列 | `series` | `FieldName?` | — | 系列字段；拆成多块面积 |
+| 样式通道 | `color` | `FieldName?` | `series` | 颜色字段；无显式 `series` 时按分类颜色字段隐式拆系列 |
+| 标签 | `label` | `FieldName?` | — | 宿主 datum 标签字段 |
+| | `labelFormat` | `string?` | — | 标签格式串 |
+| | `labelPosition` | `CompassAnchor \| number?` | `above` | 标签相对宿主 Node 的方位 |
+| | `labelDistance` | `number?` | `12` | 标签与宿主边框的距离 |
+| | `labelPin` | `boolean?` | `false` | 是否从宿主边框拉引线到标签 |
+| | `resolveLabel` | `(row) => string?` | — | 运行时生成标签；不进 IR，需要配 `id` |
+| 通用 | `id` | `string?` | — | 可选句柄 |
 
 ## 相关
 
 - [PathMark](/plot/grammar/mark/path) —— `<PathMark closed />` 是线框雷达
-- [坐标系](/plot/grammar/coordinate) —— polar 开关与角色映射
-- [IntervalMark](/plot/grammar/mark/interval) —— 柱、径向柱、饼图 / 环图
+- [IntervalMark](/plot/grammar/mark/interval) —— 柱、径向柱、饼图 / 环图这类正交 cell
+- [坐标系](/plot/grammar/coordinate) —— polar 开关与位置角色映射

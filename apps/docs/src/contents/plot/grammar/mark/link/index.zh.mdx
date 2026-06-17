@@ -3,41 +3,136 @@ title: LinkMark
 description: LinkMark 表达关系几何：每行连接一个 source 和 target，形成带宽可编码的可填充曲带。
 ---
 
-`<LinkMark>` 是特殊图元：它不描述单个位置上的点、路径或区间，而是描述两组投影端点之间的关系。每行数据会从源端点（`sourceX` / `sourceY`）弯到目标端点（`targetX` / `targetY`），两条长边是 cubic 曲线、两端是直线封口，围成一个可填充区域。`value` 字段经内建宽度比例尺映射成带宽；sankey、alluvial 流量图只是它的常见形态。
+`<LinkMark>` 描述两组投影端点之间的关系。每行数据会从源端点（`sourceX` / `sourceY`）弯到目标端点（`targetX` / `targetY`），两条长边是 cubic 曲线、两端是直线封口，围成一个可填充区域。
 
-流带默认 `orientation="horizontal"`：出 / 入切向沿水平轴、半宽沿垂直轴，得到干净的左右流（封口竖直）。带宽从源端到目标端沿程平滑渐变（源端 `value`、目标端 `endWidth`）。设 `orientation="vertical"` 则流向自上而下、半宽沿水平。
+`value` 是宽度通道，经内建线性宽度比例尺映射成源端带宽；`endWidth` 可给目标端独立宽度。sankey、alluvial 流量图只是它的常见表现形态，LinkMark 本身只消费已经算好的端点位置和宽度字段。
+
+## 用法
+
+```tsx
+import { LinkMark, Plot } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={flows}>
+  <LinkMark sourceX="sourceX" sourceY="sourceY" targetX="targetX" targetY="targetY" value="value" color="channel" />
+</Plot>
+```
+
+端点必须是同一坐标系里的字段对。当前 LinkMark 只支持 `cartesian2D`；跨 facet / inset / scope 的具名节点连线属于后续能力。
+
+## 表现层
+
+LinkMark 是底层关系 mark：它只负责把每行数据下沉成一条可填充曲带。表现层看到的 sankey、alluvial、流量迁移图，不是新的底层 mark，而是同一个 LinkMark 配合外部布局和分组后的显示形态。
+
+流带默认 `orientation="horizontal"`：出 / 入切向沿水平轴、半宽沿垂直轴，得到左右流（封口竖直）。设 `orientation="vertical"` 时，流向自上而下，半宽沿水平轴。带宽可以从源端到目标端平滑渐变。
+
+| 表现形态 | 关键属性 | 说明 |
+| --- | --- | --- |
+| 等宽流带 | `sourceX` / `sourceY` / `targetX` / `targetY` / `value` | 每行连接一对端点，源端和目标端等宽 |
+| 喇叭流带 | `value` / `endWidth` | 源端宽度和目标端宽度不同，沿程平滑渐变 |
+| 分组流带 | `color` | 按字段分组上色；不改变几何，只改变填充层 |
+
+<ComponentAlert title="流带只画带，不算布局" description="节点排在哪、多条流怎么堆叠、交叉怎么最小化，这些是 sankey / alluvial 布局算法，不在 <LinkMark> 里。每行的 sourceX/Y、targetX/Y、value 须由你预先算好（或后续的布局 transform 产出）写回数据，<LinkMark> 只消费这些已算好的位置和宽度。" />
+
+## 例子
+
+### 端点字段对与宽度
+
+`sourceX` / `sourceY` 给源端字段对，`targetX` / `targetY` 给目标端字段对。`value` 决定带宽，`color` 决定填充颜色分组。
 
 <ComponentPreview name="ribbon-basic" sourceFiles={['ribbon-basic.data.ts']} />
 
-<p className="text-sm text-muted-foreground">两列 alluvial：左侧来源 → 右侧去向，带宽随 value，channel 分组上色。</p>
+### 目标端宽度
 
-## 端点是字段对
-
-流带的两端都是**字段对**——`sourceX` / `sourceY` 给源端、`targetX` / `targetY` 给目标端，和 `<PathMark>` / `<PointMark>` 一样经坐标系投影成屏幕点。带宽、四角、曲线控制点都由这两个已投影的端点算出。
-
-| prop | 类型 | 说明 |
-| --- | --- | --- |
-| `sourceX` | `string` | 源端 x 字段（经坐标系投影） |
-| `sourceY` | `string` | 源端 y 字段 |
-| `targetX` | `string` | 目标端 x 字段 |
-| `targetY` | `string` | 目标端 y 字段 |
-| `value` | `string` | 流量字段：经合成线性比例尺映射成源端带宽 |
-| `endWidth` | `string?` | 目标端宽度字段；缺省 = 与源端等宽 |
-| `curvature` | `number?` | 曲线张力 0..1（0 = 准直、大 = 更 S）；缺省 0.5 |
-| `orientation` | `'horizontal' \| 'vertical'?` | 主轴取向：出 / 入切向沿该轴、半宽沿垂向；缺省 `horizontal` |
-| `color` | `string?` | 颜色字段（→ color 通道 + 自动序数色阶） |
-| `id` | `string?` | 可选句柄（预留，暂不解析） |
-
-## 喇叭带与曲率
-
-给 `endWidth` 让目标端用独立宽度——带子从源宽**沿程平滑渐变**到目标宽，呈喇叭形（sankey 节点入边宽 ≠ 出边宽的常见情形）。`curvature` 调两条长边的 S 形张力：
+给 `endWidth` 后，目标端使用独立宽度字段。源端半宽来自 `value`，目标端半宽来自 `endWidth`，中间由曲带几何平滑过渡。
 
 <ComponentPreview name="ribbon-flared" sourceFiles={['ribbon-flared.data.ts']} />
 
-<p className="text-sm text-muted-foreground">endWidth 给目标端独立宽度（喇叭带），curvature=0.6 加大弯曲。</p>
+### 几何属性
 
-## 布局需预处理
+`curvature` 调两条 cubic 长边的 S 形张力，范围是 `0..1`，缺省 `0.5`。`orientation` 决定主轴：`horizontal` 是左右流，`vertical` 是上下流。
 
-<ComponentAlert title="流带只画带，不算布局" description="节点排在哪、多条流怎么堆叠、交叉怎么最小化——这些是 sankey 布局算法，不在 <LinkMark> 里。每行的 sourceX/Y、targetX/Y、value 须由你预先算好（或后续的布局 transform 产出）写回数据，<LinkMark> 只消费这些已算好的位置 + 宽度。" />
+当前 demo 复用上面的喇叭带：`curvature={0.6}` 让弯曲更明显。`orientation` 不需要新数据，只是在同样的端点字段上改变半宽方向和控制点方向。
 
-本轮端点统一是同一坐标系内的字段对；连接不同子图（facet / inset）的具名 node、跨 scope 连线属于后续能力。流带本轮仅支持 `cartesian2D` 坐标系。
+## 技术原理
+
+`LinkMark` 是一个内置注册图元。React 里的 `<LinkMark>` 本身不渲染 DOM；`<Plot>` 会把扁平 props 装配成 `type: 'link'` 的 mark IR，把 `sourceX` / `sourceY` 和 `targetX` / `targetY` 变成嵌套的 `source` / `target` 字段对，并把 `value` / `endWidth` / `curvature` / `orientation` 保留在 mark 顶层。
+
+编译时，`lowerMark` 按 `mark.type` 查询 `MARK_REGISTRY`，`LinkMark` 命中 `PlotMark.Link` 对应的 `lowerLinkLayer`。`lowerLinkLayer` 只接受 cartesian2D，然后调用 `lowerLink`：它为每行数据投影源端和目标端，计算源 / 目标半宽，再生成一条闭合 cubic core `Path`。
+
+注册部分只需要看 `LinkMark` 对应的注册行，以及真正执行下沉的 `lowerLinkLayer` / `lowerLink`：
+
+```ts
+[PlotMark.Link]: { type: PlotMark.Link, lower: lowerLinkLayer },
+
+const lowerLinkLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+  if (mark.type !== PlotMark.Link) return null;
+  if (frame.type !== PlotCoordinate.Cartesian2D) {
+    throw new Error(failLoudMessage(mark.type, frame.type));
+  }
+  const layer = lowerLink(mark, rows, frame, channels.colorOf, channels.defaultColor);
+  return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
+};
+
+const lowerLink = (mark: LinkMark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined): IRScope | null => {
+  const halfWidthOf = linkHalfWidthOf(mark, rows);
+  const curvature = mark.curvature ?? LINK_DEFAULT_CURVATURE;
+  const placed: Array<{ color: string | undefined; steps: Array<IRStep> }> = [];
+  for (const row of rows) {
+    const value = linkValueOf(row, mark.value);
+    if (value === null) continue;
+    const endValue = mark.endWidth !== undefined ? linkValueOf(row, mark.endWidth) : value;
+    if (endValue === null) continue;
+    const halfSource = halfWidthOf(value);
+    const halfTarget = halfWidthOf(endValue);
+    const endpoints = linkEndpoints(mark, row, frame);
+    if (endpoints === null) continue;
+    const geometry = linkBandGeometry(endpoints.source, endpoints.target, halfSource, halfTarget, curvature, mark.orientation ?? 'horizontal');
+    if (geometry === null) continue;
+    placed.push({
+      color: colorOf?.(row),
+      steps: [
+        { type: 'step', kind: 'move', to: geometry.sourceTop },
+        { type: 'step', kind: 'cubic', to: geometry.targetTop, control1: geometry.topControl1, control2: geometry.topControl2 },
+        { type: 'step', kind: 'line', to: geometry.targetBottom },
+        { type: 'step', kind: 'cubic', to: geometry.sourceBottom, control1: geometry.bottomControl1, control2: geometry.bottomControl2 },
+        { type: 'step', kind: 'cycle' },
+      ],
+    });
+  }
+  // no color channel: one scope; color channel: group paths by fill
+};
+```
+
+这段逻辑可以拆成四步：
+
+| 步骤 | 说明 |
+| --- | --- |
+| 坐标系校验 | 本轮只在 cartesian2D 下下沉；其他坐标系 fail-loud |
+| 宽度映射 | `linkHalfWidthOf` 用 `value` / `endWidth` 的最大值合成线性宽度映射 |
+| 端点投影 | `linkEndpoints` 把 source / target 字段对投影成屏幕点 |
+| core 下沉 | `linkBandGeometry` 生成四角和控制点，最后下沉为闭合 core `Path` |
+
+## API
+
+`LinkMark` 的位置和宽度都是数据通道。表里的 `FieldName` 表示字段名或字段路径，例如 `source.x` / `amount`；`curvature` / `orientation` 是常量几何配置。
+
+| 分类 | 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- | --- |
+| 源端点 | `sourceX` | `FieldName` | — | 源端 x 位置字段，经坐标系投影 |
+| | `sourceY` | `FieldName` | — | 源端 y 位置字段，经坐标系投影 |
+| 目标端点 | `targetX` | `FieldName` | — | 目标端 x 位置字段，经坐标系投影 |
+| | `targetY` | `FieldName` | — | 目标端 y 位置字段，经坐标系投影 |
+| 宽度 | `value` | `FieldName` | — | 源端流量字段，经合成线性比例尺映射为带宽 |
+| | `endWidth` | `FieldName?` | `value` | 目标端宽度字段；缺省时目标端与源端等宽 |
+| 几何 | `curvature` | `number?` | `0.5` | cubic 控制点沿主轴外推比例，范围 `0..1` |
+| | `orientation` | `'horizontal' \| 'vertical'?` | `'horizontal'` | 主轴取向：水平左右流或垂直上下流 |
+| 样式 | `color` | `FieldName?` | 默认图层色 | 绑定颜色通道字段，按字段值分组填充 |
+| 通用 | `id` | `string?` | — | 可选句柄（预留，暂不解析） |
+
+## 相关
+
+- [ReferenceMark](/plot/grammar/mark/reference) —— 同样属于不从普通点线面维度出发的特殊图元
+- [PathMark](/plot/grammar/mark/path) —— LinkMark 下沉后也生成 core Path，但端点和宽度语义不同
+- [坐标系](/plot/grammar/coordinate) —— 当前 LinkMark 只在 cartesian2D 下投影字段对

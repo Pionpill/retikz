@@ -1,9 +1,11 @@
 ---
 title: RegionMark
-description: "RegionMark is a two-dimensional filled region enclosed by a boundary, path, or baseline; area charts and filled radar are common forms."
+description: "RegionMark is a two-dimensional filled region enclosed by an upper outline and a baseline return edge; area charts and filled radar are common forms."
 ---
 
-`<RegionMark>` is the two-dimensional region mark: it adds a return edge to a path. The top edge connects `x` / `y`, the bottom edge sticks to `baseline` (default `0`), and the two enclose a fillable region. Switch to polar coordinates with `baseline` `0`, and the return edge collapses to the center, so the region fills from the center out.
+`<RegionMark>` is the two-dimensional region mark: it projects each data row into an upper-outline point, builds a return edge along `baseline`, then encloses the two into a fillable Path. Switch to polar coordinates with `baseline` `0`, and the return edge collapses to the center, so the region fills from the center out.
+
+`x` / `y` bind position fields, `order` decides the upper outline's connection order, and `series` or a categorical `color` decides whether the data splits into multiple regions. In the tables below, `FieldName` means a data field name or field path, such as `day` / `traffic.site`.
 
 ## Usage
 
@@ -17,47 +19,126 @@ import { Plot, RegionMark } from '@retikz/plot-react';
 </Plot>
 ```
 
-`x` / `y` bind the position fields, `order` decides the top edge's connection order. The bottom defaults to `0`; set `baseline` for a different floor.
+The bottom edge defaults to `0`. Set `baseline` when the region should fill to another constant floor; set `series`, or just a categorical `color` field, when the data should split into multiple regions.
+
+## Presentation Layer
+
+RegionMark is a filled path mark: it cares about how the upper outline is connected and where the return edge lands, but it does not register "area chart" and "filled radar" as separate marks. The presentation form mainly comes from the coordinate system, `closed`, and the series split.
+
+| Form | Key props | Meaning |
+| --- | --- | --- |
+| Area chart | `x` / `y` / `order` | Connect the upper outline in order, then return along `baseline` |
+| Filled radar | `closed` + `polar2D` | Close the upper outline; with `baseline: 0`, the return edge collapses to the center |
+| Multiple areas | `series` / `color` | Split into multiple filled regions by series or categorical color field |
+
+RegionMark shares upper-outline projection and ordering with [PathMark](/plot/grammar/mark/path). The difference is that RegionMark also builds the baseline return edge and fills the enclosed area. For orthogonal cells such as bars, heatmaps, and pies, use [IntervalMark](/plot/grammar/mark/interval).
 
 ## Examples
 
-### Basic area
+### Position Props
 
-The top line and a baseline of `0` enclose a filled region — good for emphasizing the "volume" of a cumulative quantity or trend.
+`x` / `y` decide which points the upper outline visits, and `order` decides their connection order. The default `baseline` is `0`, so the example below fills from the line down to y=0.
 
 <ComponentPreview name="area-basic" sourceFiles={['area-basic.data.ts']} />
 
-### Filled radar
+### Geometry Props
 
-`<Plot coordinate="polar2D">` with `<RegionMark closed />`: dimensions spread evenly along the angular axis and values map to the radius to form the top edge; the return edge sticks to `baseline`. With the default `baseline` of `0` the return edge collapses to the center, so the area fills from the center out to the outline — a filled radar. `closed` makes the top edge walk chords (no arc sampling on a continuous angular axis, a straight outline). For a plain wireframe outline use [`<PathMark closed />`](/plot/grammar/mark/path).
+`closed` only affects the upper outline: it connects the last point back to the first. The area itself is always closed by the baseline return edge; under `polar2D` with `baseline` `0`, that return edge collapses to the center and forms a filled radar.
 
 <ComponentPreview name="area-radar" sourceFiles={['area-radar.data.ts']} />
 
-<p className="text-sm text-muted-foreground">With baseline 0 the return edge collapses to the center; the area fills outward into a filled radar.</p>
+### Series Props
 
-### Multiple series (split by color)
-
-Set `series` to a field and the data splits into multiple areas. With no `series`, giving `color` a categorical field also splits — equivalent to writing `series`; the `color` field must be categorical (continuous / temporal fields error).
+`series` explicitly splits the data into multiple regions. With no `series`, giving `color` a categorical field also splits implicitly, which is useful when "color is the series."
 
 <ComponentPreview name="area-color-split" sourceFiles={['area-color-split.data.ts']} />
 
-<p className="text-sm text-muted-foreground">Just <code>color="site"</code>, no <code>series</code>, splits into two areas by site.</p>
+## How It Works
+
+`RegionMark` is a built-in registered mark. The React `<RegionMark>` does not render DOM by itself; `<Plot>` collects it into a `type: 'region'` mark IR and records `x` / `y` / `order` / `baseline` / `closed` / `series` configuration.
+
+At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `RegionMark` hits the `PlotMark.Region` entry and calls `lowerRegionLayer`; it only accepts cartesian2D / polar2D, then calls `lowerRegion`. `lowerRegion` decides single-region vs multi-series output, while `buildAreaSteps` does the core geometry: build upper-outline points, build baseline return points with the same primary values, and append `cycle` to create a fillable Path.
+
+The important registration line and lowering excerpt are:
+
+```ts
+[PlotMark.Region]: { type: PlotMark.Region, lower: lowerRegionLayer },
+
+const lowerRegionLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+  if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
+    throw new Error(failLoudMessage(mark.type, frame.type));
+  }
+  const layer = lowerRegion(mark, rows, frame, channels.colorOf, channels.defaultColor, markProvenance);
+  return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
+};
+
+const buildAreaSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, baseline: number): Array<IRStep> | null => {
+  const ordered = orderRows(rows, mark.type === PlotMark.Region ? mark.order : undefined);
+  const closed = mark.type === PlotMark.Region ? (mark.closed ?? false) : false;
+  const top = buildOutlinePoints(mark, ordered, frame, closed);
+  if (top.length < 2) return null;
+  const bottom = buildBaselinePoints(mark, ordered, frame, baseline);
+  const outline = [...top, ...bottom];
+  return [
+    { type: 'step', kind: 'move', to: outline[0] },
+    ...outline.slice(1).map((point): IRStep => ({ type: 'step', kind: 'line', to: point })),
+    { type: 'step', kind: 'cycle' },
+  ];
+};
+
+const lowerRegion = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+  if (mark.type !== PlotMark.Region) return null;
+  const baseline = mark.baseline ?? AREA_BASELINE;
+  const seriesField = pathSeriesField(mark, rows);
+  if (seriesField) {
+    const paths = buildSeriesPaths(
+      mark,
+      rows,
+      seriesField,
+      seriesRows => buildAreaSteps(mark, seriesRows, frame, baseline),
+      seriesRows => ({ fill: colorOf?.(seriesRows[0]) ?? DEFAULT_FILL }),
+      markProvenance,
+    );
+    return paths.length === 0 ? null : { type: 'scope', children: paths };
+  }
+  const steps = buildAreaSteps(mark, rows, frame, baseline);
+  if (!steps) return null;
+  const colorValue = mark.encoding.color?.value;
+  const fill = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
+  return { type: 'scope', pathDefault: { fill }, children: [{ type: 'path', children: steps }] };
+};
+```
+
+| Step | Meaning |
+| --- | --- |
+| Coordinate guard | RegionMark needs a two-dimensional upper outline and baseline return edge; it currently lowers only under cartesian2D / polar2D |
+| Ordering and projection | `orderRows` and `buildOutlinePoints` reuse PathMark's upper-outline logic |
+| Return edge | `buildBaselinePoints` uses the same primary values and a fixed `baseline`, then reverses them |
+| Series and fill | `series` or categorical `color` splits into multiple Paths; a single region uses `pathDefault.fill` |
 
 ## API
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `x` | `string` | — | Field path for the x channel (angular under polar) |
-| `y` | `string` | — | Field path for the y channel (radial under polar) |
-| `order` | `string?` | data order | Field driving the top edge's connection order |
-| `baseline` | `number?` | `0` | Baseline value the return edge sticks to |
-| `closed` | `boolean?` | `false` | Top edge walks chords, no arc sampling on a continuous angular axis (straight outline); the area is always closed and filled by the baseline return edge |
-| `series` | `string?` | — | Series field: split into multiple areas; omit for a single area |
-| `color` | `string?` | `series` | Color field (categorical, auto ordinal color scale); with no explicit `series` it implicitly splits into one area per category; falls back to `series`. Continuous / temporal fields error (sequential color scales come later) |
-| `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
+RegionMark's position, series, and color props are data channels. `FieldName` means a data field name or field path, such as `day` / `traffic.site`.
+
+| Category | Prop | Type | Default | Description |
+| --- | --- | --- | --- | --- |
+| Position | `x` | `FieldName` | — | x position field; angular under polar |
+| | `y` | `FieldName` | — | y position field; radial under polar |
+| | `order` | `FieldName?` | data order | Field driving the upper outline's connection order |
+| Geometry | `baseline` | `number?` | `0` | Baseline value the return edge sticks to |
+| | `closed` | `boolean?` | `false` | Connect the last point to the first on the upper outline only; the region is still closed by the baseline return edge |
+| Series | `series` | `FieldName?` | — | Series field; split into multiple areas |
+| Style Channel | `color` | `FieldName?` | `series` | Color field; with no explicit `series`, a categorical color field implicitly splits series |
+| Label | `label` | `FieldName?` | — | Host datum-label field |
+| | `labelFormat` | `string?` | — | Label format string |
+| | `labelPosition` | `CompassAnchor \| number?` | `above` | Label position relative to the host Node |
+| | `labelDistance` | `number?` | `12` | Distance from the host border to the label |
+| | `labelPin` | `boolean?` | `false` | Whether to draw a leader from the host border to the label |
+| | `resolveLabel` | `(row) => string?` | — | Runtime label resolver; not stored in IR, requires `id` |
+| Common | `id` | `string?` | — | Optional handle |
 
 ## Related
 
 - [PathMark](/plot/grammar/mark/path) — `<PathMark closed />` is a wireframe radar
-- [Coordinates](/plot/grammar/coordinate) — the polar switch and channel roles
-- [IntervalMark](/plot/grammar/mark/interval) — bars, radial bars, pie / donut charts
+- [IntervalMark](/plot/grammar/mark/interval) — orthogonal cells such as bars, radial bars, pies, and donuts
+- [Coordinates](/plot/grammar/coordinate) — the polar switch and position-role mapping
