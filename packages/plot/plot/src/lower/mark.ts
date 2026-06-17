@@ -822,7 +822,7 @@ const lowerReferenceLayer = (mark: Mark, rows: Array<ExternalRow>, frame: Coordi
 /**
  * mark lowering 行为注册项（按 type 查找分发；行为函数不进 IR）
  * @description IR schema 仍是 ir/mark.ts 静态单一真源；本接口只承载「某 mark type 怎么下沉成 core IR」的行为，
- *   对齐仓库已有的 composite / coordinate 工厂注册范式。文档化 re-export 见 mark-registry.ts。
+ *   对齐仓库已有的 composite / coordinate 工厂注册范式。
  */
 export type MarkDefinition<T extends Mark = Mark> = {
   /** 注册键（= IR 判别串，对应 ir/mark.ts 静态 schema 的成员） */
