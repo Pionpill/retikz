@@ -917,3 +917,55 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 });
+
+describe('buildPlotSpec alpha.12 ADR-02（normalize / derive-interval / jitter 经同一 <Transform> 透传）', () => {
+  it('normalize_then_stack_percentage_via_transform', () => {
+    // 百分比堆叠：显式 [normalize, stack] 两步链；显式 stack 抑制 mark auto-stack（不二次堆叠）
+    const spec = buildPlotSpec(
+      <>
+        <Transform kind="normalize" field="amount" groupBy={['quarter']} basis="percent" as="share" />
+        <Transform kind="stack" x="quarter" y="share" groupBy="product" />
+        <BarMark x="quarter" y="share" series="product" />
+      </>,
+      '__plot',
+    );
+    expect(spec.transform).toEqual([
+      { kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' },
+      { kind: 'stack', x: 'quarter', y: 'share', groupBy: 'product' },
+    ]);
+    expect((spec.transform ?? []).filter(t => t.kind === 'stack')).toHaveLength(1);
+  });
+
+  it('derive_interval_declared_to_ir', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Transform kind="derive-interval" startFrom="start" endFrom="end" />
+        <BarMark x="task" y="end" />
+      </>,
+      '__plot',
+    );
+    expect(spec.transform).toEqual([{ kind: 'derive-interval', startFrom: 'start', endFrom: 'end' }]);
+  });
+
+  it('jitter_declared_to_ir', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Transform kind="jitter" axis="x" xField="dose" amount={0.3} seed={42} />
+        <PointMark x="dose" y="response" />
+      </>,
+      '__plot',
+    );
+    expect(spec.transform).toEqual([{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 42 }]);
+  });
+
+  it('adr02 装配产物过 PlotSpecSchema', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Transform kind="jitter" axis="both" amount={1} seed={7} />
+        <PointMark x="x" y="y" />
+      </>,
+      '__plot',
+    );
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+});
