@@ -12,6 +12,12 @@ const addStyleField = (fields: Set<string>, channel: { kind: 'field' | 'constant
   if (channel?.kind === 'field') fields.add(String(channel.value));
 };
 
+const addIntervalBoundFields = (fields: Set<string>, bound: { kind: string; from?: string; to?: string } | undefined): void => {
+  if (bound?.kind !== 'extent') return;
+  if (bound.from !== undefined) fields.add(bound.from);
+  if (bound.to !== undefined) fields.add(bound.to);
+};
+
 /**
  * 收集 plot spec 里所有「用户源字段」（引用外部数据集的逻辑字段）
  * @description 含 encoding `x`/`y`/`z`/`color` 的 field + mark `order`/`series` + ribbon source/target/value/endWidth
@@ -62,6 +68,11 @@ export const collectUserSourceFields = (spec: PlotSpec): Set<string> => {
     }
     if (mark.type === PlotMark.Path || mark.type === PlotMark.Interval || mark.type === PlotMark.Region) {
       if (mark.series !== undefined) fields.add(mark.series);
+    }
+    if (mark.type === PlotMark.Interval) {
+      addIntervalBoundFields(fields, mark.bounds?.x);
+      addIntervalBoundFields(fields, mark.bounds?.y);
+      addIntervalBoundFields(fields, mark.bounds?.z);
     }
     // priority-1 datum label 的内容字段（位置 mark 的 label.content）+ point 的 text 内容字段——
     //   均引用外部数据、须进 model strict 校验 + fieldMap / format / 归一化（否则静默读原始路径、空文本）

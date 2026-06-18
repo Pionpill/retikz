@@ -311,7 +311,7 @@ describe('rect fail-loud', () => {
       ],
       marks: [{ type: 'interval', encoding: { x: { field: 'rk' }, y: { field: 'ck' } }, bounds: { x: { kind: 'band' }, y: { kind: 'band' } } }],
     });
-    expect(() => expandOf(spec, { d: [{ rk: 'r0', ck: 'c0' }] }, cartOpts)).toThrow(/ternary2D|not supported|rect/i);
+    expect(() => expandOf(spec, { d: [{ rk: 'r0', ck: 'c0' }] }, cartOpts)).toThrow(/ternary2D|requires|z/i);
   });
 });
 

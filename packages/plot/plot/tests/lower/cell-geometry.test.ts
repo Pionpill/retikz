@@ -65,7 +65,7 @@ describe('projectCell 闭式快路（rect / sector）', () => {
   it('cartesian_projectcell_returns_rect', () => {
     const frame = createCartesianFrame(linearStub([0, 10], [0, 100], 20), linearStub([0, 10], [200, 0]));
     // primary 像素带 [40,60]、secondary 像素 [200,120] → rect 中心 [50,160]、width 20、height 80
-    const cell: Cell = { primary: [40, 60], secondary: [200, 120] };
+    const cell: Cell = { intervals: { x: [40, 60], y: [200, 120] } };
     const geometry = frame.projectCell(cell);
     expect(geometry).toEqual({ kind: 'rect', position: [50, 160], width: 20, height: 80 });
   });
@@ -81,7 +81,7 @@ describe('projectCell 闭式快路（rect / sector）', () => {
       primary: linearStub([0, 1], [0, 360]),
       secondary: linearStub([0, 1], [0, 150]),
     });
-    const cell: Cell = { primary: [30, 90], secondary: [40, 120] };
+    const cell: Cell = { intervals: { angle: [30, 90], radius: [40, 120] } };
     const geometry = frame.projectCell(cell);
     expect(geometry).toEqual({ kind: 'sector', center: [200, 200], innerRadius: 40, outerRadius: 120, startAngle: 30, endAngle: 90 });
   });
@@ -242,7 +242,7 @@ const firstIntervalMark = (spec: PlotSpec): IntervalMark => {
 
 describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
   it('densify_cell_contour_dense_and_closed', () => {
-    const cell: Cell = { primary: [0, 200], secondary: [200, 100] };
+    const cell: Cell = { intervals: { x: [0, 200], y: [200, 100] } };
     const projectFn = (px: number, py: number): [number, number] => [px, py + 20 * Math.sin((px / 200) * Math.PI)];
     const points = densifyCellContour(cell, projectFn, { curvedPrimary: true, curvedSecondary: false });
     // 曲边两条各 N+1 段、直边两条各 1 段 → 2·(N+1) + 2·1 顶点（每边产「终点 + 中间点」、不含起点）
@@ -436,7 +436,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
   });
 });
 
-// ── fail-loud：无 2D 正交 cell 概念的坐标系（1D / ternary / 无 projectCell 的 custom）─────
+// ── fail-loud：无 projectCell 的坐标系 / 不支持的 cell bound ──────────────────────────────
 describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
   it('interval_1d_fails_loud', () => {
     const spec = PlotSpecSchema.parse({
@@ -450,20 +450,16 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
     expect(() => expandOf(spec, { d: [{ m: 'A', v: 3 }] }, cartOpts)).toThrow(/cartesian1D|not supported|interval/i);
   });
 
-  it('interval_ternary_fails_loud', () => {
+  it('interval_ternary_default_band_bound_fails_loud', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
       coordinate: { type: 'ternary2D' },
-      scales: [
-        { type: 'linear', name: 'a' },
-        { type: 'linear', name: 'b' },
-        { type: 'linear', name: 'c' },
-      ],
-      marks: [{ type: 'interval', encoding: { x: { field: 'm' }, y: { field: 'v' } } }],
+      scales: [],
+      marks: [{ type: 'interval', encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' } } }],
     });
-    expect(() => expandOf(spec, { d: [{ m: 'A', v: 3 }] }, cartOpts)).toThrow(/ternary2D|not supported|interval/i);
+    expect(() => expandOf(spec, { d: [{ x: 1, y: 1, z: 1 }] }, cartOpts)).toThrow(/ternary|band bounds/i);
   });
 
   it('interval_custom_without_projectcell_fails_loud', () => {

@@ -378,6 +378,7 @@ const lowerCells = (
     const cell = markCell(mark, row, frame, ctx);
     if (!cell) continue;
     const geometry = projectCell(cell);
+    if (geometry.kind === 'contour' && geometry.points.length < 3) continue;
     kind = geometry.kind;
     const node = attachDatumLabel(
       decorateDatum(cellGeometryNode(geometry), row, transformedIndex, mark.type, markProvenance, cellSeriesValue(mark, row)),
@@ -393,11 +394,11 @@ const lowerCells = (
 /** interval mark 图层下沉：坐标系守卫 + IntervalContext + lowerCells（cell 类单路径） */
 const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (mark.type !== PlotMark.Interval) return null;
-  // interval 需正交 cell：cartesian2D / polar2D 有 IntervalContext + projectCell；其余坐标系 fail-loud
-  if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
+  // interval 需内建正交 cell：cartesian2D / polar2D / ternary2D；其余坐标系 fail-loud
+  if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D && frame.type !== PlotCoordinate.Ternary2D) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
-  const ctx = buildIntervalContext(mark, frame, rows);
+  const ctx = frame.type === PlotCoordinate.Cartesian2D || frame.type === PlotCoordinate.Polar2D ? buildIntervalContext(mark, frame, rows) : undefined;
   const layer = lowerCells(mark, rows, frame, frame.projectCell, ctx, channels.colorOf, channels.defaultColor, markProvenance, channels.labelOf);
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
@@ -786,7 +787,7 @@ const referenceBandCell = (mark: ReferenceMark, row: ExternalRow, frame: Cartesi
     const opposite = orientation === 'x' ? frame.secondary : frame.primary;
     const span = referenceSpanInterval(mark, row, opposite.coordinate, opposite.range());
     if (span === null) return null;
-    return orientation === 'x' ? { primary: [c0, c1], secondary: span } : { primary: span, secondary: [c0, c1] };
+    return { intervals: orientation === 'x' ? { x: [c0, c1], y: span } : { x: span, y: [c0, c1] } };
   }
   if (orientation === 'y') {
     const r0 = frame.secondary.coordinate(lo);
@@ -794,14 +795,14 @@ const referenceBandCell = (mark: ReferenceMark, row: ExternalRow, frame: Cartesi
     if (!Number.isFinite(r0) || !Number.isFinite(r1)) return null;
     const angleSpan = referenceSpanInterval(mark, row, frame.primary.coordinate, [frame.startAngle, frame.endAngle]);
     if (angleSpan === null) return null;
-    return { primary: angleSpan, secondary: [r0, r1] };
+    return { intervals: { angle: angleSpan, radius: [r0, r1] } };
   }
   const a0 = frame.primary.coordinate(lo);
   const a1 = frame.primary.coordinate(hi);
   if (!Number.isFinite(a0) || !Number.isFinite(a1)) return null;
   const radiusSpan = referenceSpanInterval(mark, row, frame.secondary.coordinate, [frame.innerRadius, frame.outerRadius]);
   if (radiusSpan === null) return null;
-  return { primary: [a0, a1], secondary: radiusSpan };
+  return { intervals: { angle: [a0, a1], radius: radiusSpan } };
 };
 
 /**

@@ -13,10 +13,8 @@ export const RETIKZ_POLAR_SEGMENT_SAMPLES = 16;
  *   frame.projectCell 把它投影成 CellGeometry。区间端点不要求有序（投影方各自处理方向 / swap）。
  */
 export type Cell = {
-  /** primary 输出区间（cartesian=x 像素带 [lo,hi]；polar=角度带 [start°,end°]） */
-  primary: [number, number];
-  /** secondary 输出区间（cartesian=y 像素 [base,value]；polar=半径 [inner,outer]） */
-  secondary: [number, number];
+  /** 按位置角色记录的输出区间；各坐标系只读取自己声明的 roles */
+  intervals: Partial<Record<DimensionRole, [number, number]>>;
 };
 
 /**
@@ -36,6 +34,20 @@ export type CellGeometry =
  *   值对齐 IR GuideDimension 字面量，但位置角色是 frame 内部类型、guide dimension 是 IR 字段（各自管类型）。
  */
 export type DimensionRole = 'x' | 'y' | 'z' | 'angle' | 'radius';
+
+const cellInterval = (cell: Cell, role: DimensionRole): [number, number] => {
+  const interval = cell.intervals[role];
+  if (interval === undefined) throw new Error(`lowerPlots: cell is missing "${role}" interval`);
+  return interval;
+};
+
+const firstCellInterval = (cell: Cell, roles: ReadonlyArray<DimensionRole>): [number, number] => {
+  for (const role of roles) {
+    const interval = cell.intervals[role];
+    if (interval !== undefined) return interval;
+  }
+  throw new Error(`lowerPlots: cell is missing interval for roles [${roles.join(', ')}]`);
+};
 
 /**
  * 某角色轴曲线在某参数点的局部标架（alpha.9 ADR-05）：原点 + 切向，均在屏幕空间
@@ -128,8 +140,8 @@ export const createCartesianFrame = (primary: PositionScale, secondary: Position
     project,
     projectRoles: values => project(values[0], values[1]),
     projectCell: cell => {
-      const [px0, px1] = cell.primary;
-      const [sy0, sy1] = cell.secondary;
+      const [px0, px1] = cellInterval(cell, 'x');
+      const [sy0, sy1] = cellInterval(cell, 'y');
       return {
         kind: 'rect',
         position: [(px0 + px1) / 2, (sy0 + sy1) / 2],
@@ -194,10 +206,10 @@ export const createPolarFrame = (input: PolarFrameSpec): PolarFrame => {
     projectCell: cell => ({
       kind: 'sector',
       center: input.center,
-      innerRadius: cell.secondary[0],
-      outerRadius: cell.secondary[1],
-      startAngle: cell.primary[0],
-      endAngle: cell.primary[1],
+      innerRadius: cellInterval(cell, 'radius')[0],
+      outerRadius: cellInterval(cell, 'radius')[1],
+      startAngle: cellInterval(cell, 'angle')[0],
+      endAngle: cellInterval(cell, 'angle')[1],
     }),
   };
 };
@@ -327,8 +339,63 @@ export type Ternary2DFrame = {
   project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
   /** N 通道投影：roles 长度 3，传 [x, y, z] → 归一化 + 重心坐标屏幕点；非有限 → null（跳过）、含负 / 和≤0 → throw（fail-loud） */
   projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
-  /** 三元坐标无 2D 正交 cell 概念，不实现 projectCell（cell 类 mark fail-loud；声明可选以统一 union 访问） */
-  projectCell?: undefined;
+  /** 三轴 cell → 三元 simplex 裁剪后的 contour */
+  projectCell: (cell: Cell) => CellGeometry;
+};
+
+type BarycentricPoint = [number, number, number];
+
+const TERNARY_EPSILON = 1e-9;
+
+const sortedInterval = (interval: [number, number]): [number, number] =>
+  interval[0] <= interval[1] ? interval : [interval[1], interval[0]];
+
+const interpolateBarycentric = (a: BarycentricPoint, b: BarycentricPoint, roleIndex: number, boundary: number): BarycentricPoint => {
+  const delta = b[roleIndex] - a[roleIndex];
+  if (Math.abs(delta) < TERNARY_EPSILON) return a;
+  const t = (boundary - a[roleIndex]) / delta;
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+};
+
+const clipBarycentricPolygon = (
+  polygon: Array<BarycentricPoint>,
+  roleIndex: number,
+  boundary: number,
+  keep: (value: number, boundary: number) => boolean,
+): Array<BarycentricPoint> => {
+  if (polygon.length === 0) return [];
+  const clipped: Array<BarycentricPoint> = [];
+  for (let i = 0; i < polygon.length; i += 1) {
+    const current = polygon[i];
+    const previous = polygon[(i + polygon.length - 1) % polygon.length];
+    const currentInside = keep(current[roleIndex], boundary);
+    const previousInside = keep(previous[roleIndex], boundary);
+    if (currentInside !== previousInside) clipped.push(interpolateBarycentric(previous, current, roleIndex, boundary));
+    if (currentInside) clipped.push(current);
+  }
+  return clipped;
+};
+
+const clampUnitInterval = (interval: [number, number]): [number, number] => {
+  const [lo, hi] = sortedInterval(interval);
+  return [Math.max(0, lo), Math.min(1, hi)];
+};
+
+const ternaryCellContour = (cell: Cell, vertices: TernaryVertices): Array<[number, number]> => {
+  const intervals = [clampUnitInterval(cellInterval(cell, 'x')), clampUnitInterval(cellInterval(cell, 'y')), clampUnitInterval(cellInterval(cell, 'z'))];
+  if (intervals.some(([lo, hi]) => lo > hi)) return [];
+  let polygon: Array<BarycentricPoint> = [
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1],
+  ];
+  for (let roleIndex = 0; roleIndex < intervals.length; roleIndex += 1) {
+    const [lo, hi] = intervals[roleIndex];
+    polygon = clipBarycentricPolygon(polygon, roleIndex, lo, (value, boundary) => value >= boundary - TERNARY_EPSILON);
+    polygon = clipBarycentricPolygon(polygon, roleIndex, hi, (value, boundary) => value <= boundary + TERNARY_EPSILON);
+  }
+  const [vx, vy, vz] = vertices;
+  return polygon.map(([x, y, z]) => [x * vx[0] + y * vy[0] + z * vz[0], x * vx[1] + y * vy[1] + z * vz[1]]);
 };
 
 /**
@@ -365,6 +432,7 @@ export const createTernary2DFrame = (vertices: TernaryVertices): Ternary2DFrame 
     vertices,
     project: () => null,
     projectRoles,
+    projectCell: cell => ({ kind: 'contour', points: ternaryCellContour(cell, vertices) }),
   };
 };
 
@@ -512,8 +580,8 @@ export const densifyCellContour = (
   projectFn: (primary: number, secondary: number) => [number, number] | null,
   options?: DensifyCellContourOptions,
 ): Array<[number, number]> => {
-  const [p0, p1] = cell.primary;
-  const [s0, s1] = cell.secondary;
+  const [p0, p1] = firstCellInterval(cell, ['x', 'angle']);
+  const [s0, s1] = firstCellInterval(cell, ['y', 'radius']);
   const primarySegments = options?.curvedPrimary ? RETIKZ_POLAR_SEGMENT_SAMPLES + 1 : 1;
   const secondarySegments = options?.curvedSecondary ? RETIKZ_POLAR_SEGMENT_SAMPLES + 1 : 1;
   const points: Array<[number, number]> = [];

@@ -35,8 +35,8 @@ const DEG_TO_RAD = Math.PI / 180;
  * @description 显式 bounds 优先；省略时按惯例推断——primary（x）band、secondary（y）span(baseline 0)。
  *   lowering 与 scale 推断共用此单一真源，杜绝两处各推各的漂移。
  */
-export const resolveIntervalBound = (mark: IntervalMark, role: 'x' | 'y'): IntervalBound => {
-  const explicit = role === 'x' ? mark.bounds?.x : mark.bounds?.y;
+export const resolveIntervalBound = (mark: IntervalMark, role: 'x' | 'y' | 'z'): IntervalBound => {
+  const explicit = role === 'x' ? mark.bounds?.x : role === 'y' ? mark.bounds?.y : mark.bounds?.z;
   if (explicit !== undefined) return explicit;
   return role === 'x' ? { kind: IntervalBoundKind.Band } : { kind: IntervalBoundKind.Span };
 };
@@ -144,7 +144,64 @@ export const intervalCell = (mark: IntervalMark, row: ExternalRow, frame: Cartes
     if (Math.abs(primary[1] - primary[0]) < 1e-9) return null;
     if (Math.abs(secondary[1] - secondary[0]) < 1e-9) return null;
   }
-  return { primary, secondary };
+  return {
+    intervals:
+      frame.type === PlotCoordinate.Polar2D
+        ? { angle: primary, radius: secondary }
+        : { x: primary, y: secondary },
+  };
+};
+
+const normalizedTernaryComponents = (mark: IntervalMark, row: ExternalRow): Record<'x' | 'y' | 'z', number> | null => {
+  if (mark.encoding.x === undefined || mark.encoding.y === undefined || mark.encoding.z === undefined) {
+    throw new Error('lowerPlots: ternary2D interval requires x, y, and z position channels');
+  }
+  const x = channelValue(mark.encoding.x, row);
+  const y = channelValue(mark.encoding.y, row);
+  const z = channelValue(mark.encoding.z, row);
+  if (!isFiniteNumber(x) || !isFiniteNumber(y) || !isFiniteNumber(z)) return null;
+  if (x < 0 || y < 0 || z < 0) {
+    throw new Error(`lowerPlots: ternary interval requires non-negative components (got x=${x}, y=${y}, z=${z})`);
+  }
+  const sum = x + y + z;
+  if (sum <= 0) {
+    throw new Error(`lowerPlots: ternary interval requires x+y+z > 0 (got x=${x}, y=${y}, z=${z})`);
+  }
+  if (!Number.isFinite(sum)) {
+    throw new Error(`lowerPlots: ternary interval components overflow when summed (got x=${x}, y=${y}, z=${z}); use proportions or smaller magnitudes`);
+  }
+  return { x: x / sum, y: y / sum, z: z / sum };
+};
+
+const ternaryBoundOutputInterval = (bound: IntervalBound, role: 'x' | 'y' | 'z', mark: IntervalMark, row: ExternalRow, components: Record<'x' | 'y' | 'z', number>): [number, number] | null => {
+  switch (bound.kind) {
+    case IntervalBoundKind.Band:
+      throw new Error(`lowerPlots: ternary interval does not support band bounds on ${role}; use span, extent, or full`);
+    case IntervalBoundKind.Span:
+      return [bound.baseline ?? 0, components[role]];
+    case IntervalBoundKind.Extent: {
+      const lo = resolveFieldPath(row, bound.from);
+      const hi = resolveFieldPath(row, bound.to);
+      if (!isFiniteNumber(lo) || !isFiniteNumber(hi)) {
+        throw new Error(`lowerPlots: ternary interval extent bound requires numeric ${bound.from} / ${bound.to} fields`);
+      }
+      return [lo, hi];
+    }
+    case IntervalBoundKind.Full:
+      return [0, 1];
+  }
+};
+
+export const ternaryIntervalCell = (mark: IntervalMark, row: ExternalRow): Cell | null => {
+  const components = normalizedTernaryComponents(mark, row);
+  if (components === null) return null;
+  return {
+    intervals: {
+      x: ternaryBoundOutputInterval(resolveIntervalBound(mark, 'x'), 'x', mark, row, components) ?? [0, 0],
+      y: ternaryBoundOutputInterval(resolveIntervalBound(mark, 'y'), 'y', mark, row, components) ?? [0, 0],
+      z: ternaryBoundOutputInterval(resolveIntervalBound(mark, 'z'), 'z', mark, row, components) ?? [0, 0],
+    },
+  };
 };
 
 /** 点集 AABB 中心（contour 锚点 = 顶点环 AABB 中心，与 core contour shape 自动居中同源） */
@@ -179,11 +236,12 @@ export const cellGeometryAnchor = (geometry: CellGeometry): [number, number] => 
 
 /**
  * 某 mark 的某行 → cell（坐标系相关）；非 interval mark / 退化行 → null
- * @description interval → intervalCell（cartesian / polar）；其余 mark → null（非 cell 类）。
- *   interval 在无对应正交 cell 的坐标系（1D / ternary / 无 projectCell 的 custom）返回 null，由 mark.ts fail-loud。
+ * @description interval → intervalCell（cartesian / polar）或 ternaryIntervalCell；其余 mark → null（非 cell 类）。
+ *   interval 在无对应正交 cell 的坐标系（1D / 无 projectCell 的 custom）返回 null，由 mark.ts fail-loud。
  */
 export const markCell = (mark: Mark, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext): Cell | null => {
   if (mark.type !== PlotMark.Interval) return null;
+  if (frame.type === PlotCoordinate.Ternary2D) return ternaryIntervalCell(mark, row);
   if (ctx === undefined) return null;
   if (frame.type === PlotCoordinate.Cartesian2D || frame.type === PlotCoordinate.Polar2D) return intervalCell(mark, row, frame, ctx);
   return null;

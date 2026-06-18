@@ -105,16 +105,31 @@ describe('ternary2D fail-loud', () => {
     expect(() => expandOf(spec, { d: [{ x: 1, y: 1 }] }, opts)).toThrow(/ternary2D|requires|z/i);
   });
 
-  it('interval_fails_loud', () => {
+  it('interval_extent_bounds_lower_to_contour', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'band', name: 'xs' }],
+      scales: [],
       coordinate: { type: 'ternary2D' },
-      marks: [{ type: 'interval', encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
+      marks: [
+        {
+          type: 'interval',
+          encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' } },
+          bounds: {
+            x: { kind: 'extent', from: 'x0', to: 'x1' },
+            y: { kind: 'extent', from: 'y0', to: 'y1' },
+            z: { kind: 'extent', from: 'z0', to: 'z1' },
+          },
+        },
+      ],
     });
-    expect(() => expandOf(spec, { d: [{ cat: 'A', v: 1 }] }, opts)).toThrow(/ternary2D|not supported|interval/i);
+    const layer = firstLayer(spec, { d: [{ x: 1, y: 1, z: 1, x0: 0.2, x1: 0.8, y0: 0.1, y1: 0.7, z0: 0.1, z1: 0.7 }] }, opts);
+    const [node] = layer.children as Array<IRNode>;
+    expect(typeof node.shape).toBe('object');
+    if (typeof node.shape !== 'object') throw new Error('expected contour shape object');
+    expect(node.shape.type).toBe('contour');
+    expect((node.shape.params as { points?: Array<[number, number]> }).points?.length).toBeGreaterThan(2);
   });
 
   it('angle_dimension_fails_loud', () => {

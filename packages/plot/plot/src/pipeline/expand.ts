@@ -7,7 +7,7 @@ import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, compute
 import { type ColorOf, type LabelOf, lowerMark } from '../mark/mark';
 import { type ChannelResolution, type ScaleDescriptor, makeNumericStyleResolver, makeOpacityResolver, makeShapeResolver, makeSizeResolver, makeStrokeWidthResolver } from '../scale/channel';
 import { type CoordinateFrame, type CustomCoordinateFactory, type DimensionRole, createCartesian1DFrame, createCartesianFrame, createPolar1DFrame, createPolarFrame, createTernary2DFrame } from '../coordinate/project';
-import { REQUIRED_POSITION_CHANNELS, VALID_GUIDE_DIMENSIONS } from '../coordinate/coordinate-meta';
+import { REQUIRED_POSITION_CHANNELS, VALID_GUIDE_DIMENSIONS } from '../coordinate/meta';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, inferCategoryDomain, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks, toTimestamp } from '../scale/scale';
 import { assertAllValuesValid, collectFormatFields, normalizeRows, validateBoundData } from '../data/coerce';
@@ -121,11 +121,11 @@ const isLegendGuide = (guide: Guide): guide is LegendGuide => guide.type === Plo
 const coordinateLabel = (coordinate: Coordinate): string =>
   coordinate.type === PlotCoordinate.Custom ? `custom coordinate "${coordinate.name}"` : `${coordinate.type} coordinate system`;
 
-/** 该坐标系合法 guide dimension 集：custom 取声明的 roles，内建查 coordinate-meta */
+/** 该坐标系合法 guide dimension 集：custom 取声明的 roles，内建查 coordinate meta */
 const validGuideDimensionsOf = (coordinate: Coordinate): ReadonlyArray<string> =>
   coordinate.type === PlotCoordinate.Custom ? coordinate.roles : VALID_GUIDE_DIMENSIONS[coordinate.type];
 
-/** 该坐标系必填位置角色集：custom 取声明的 roles，内建查 coordinate-meta */
+/** 该坐标系必填位置角色集：custom 取声明的 roles，内建查 coordinate meta */
 const requiredPositionChannelsOf = (coordinate: Coordinate): ReadonlyArray<'x' | 'y' | 'z'> =>
   coordinate.type === PlotCoordinate.Custom ? coordinate.roles : REQUIRED_POSITION_CHANNELS[coordinate.type];
 

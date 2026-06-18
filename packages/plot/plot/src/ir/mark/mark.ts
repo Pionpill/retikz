@@ -239,8 +239,11 @@ export const IntervalBoundsSchema = z
     y: IntervalBoundSchema.optional().describe(
       'Secondary-role interval bound (coordinate maps y→secondary: cartesian2D vertical, polar2D radius); omit to infer (continuous scale → span from 0)',
     ),
+    z: IntervalBoundSchema.optional().describe(
+      'z-role interval bound for ternary2D; omit to infer a span from 0 to the z component when the coordinate consumes z',
+    ),
   })
-  .describe('Per-role interval bounds (x→primary, y→secondary); v0.1 supports two roles, generalizes to an nD role map once 3D coordinates land');
+  .describe('Per-role interval bounds keyed by coordinate role (x / y / z)');
 
 export const IntervalMarkSchema = z
   .object({
@@ -248,7 +251,7 @@ export const IntervalMarkSchema = z
       .literal(PlotMark.Interval)
       .describe('Discriminator: an orthogonal interval product projected to a segment / rectangle / sector / cell by the coordinate system'),
     series: z.string().min(1).optional().describe('Series field: split records into multiple interval series (color grouping; sub-band grouping when bounds.x is a band with group)'),
-    bounds: IntervalBoundsSchema.optional().describe('Per-role interval bounds (x→primary, y→secondary); omit to infer band×span from the scales'),
+    bounds: IntervalBoundsSchema.optional().describe('Per-role interval bounds keyed by coordinate role; omit to infer from the coordinate role'),
     ...markBase,
     ...positionalLabel,
     ...positionalEncoding,
