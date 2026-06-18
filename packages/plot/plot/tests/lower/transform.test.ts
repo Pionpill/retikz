@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ExternalRow } from '../../src/ir';
-import { applyTransforms } from '../../src/lower/transform';
-import { readSourceIndices, tagSourceIndex } from '../../src/lower/provenance';
+import { applyTransforms } from '../../src/compile/transform';
+import { readSourceIndices, tagSourceIndex } from '../../src/compile/provenance';
 
 const SALES: Array<ExternalRow> = [
   { month: 'Jan', product: 'A', revenue: 3 },

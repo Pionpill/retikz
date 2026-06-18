@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { PlotFieldType } from '../../src/ir/data';
-import { inferFieldType, isIsoDateString } from '../../src/lower/infer';
-import { toTimestamp } from '../../src/lower/scale';
-import { type LowerPlotsOptions, prepareRows } from '../../src/lower/expand';
-import { tagSourceIndex } from '../../src/lower/provenance';
+import { inferFieldType, isIsoDateString } from '../../src/compile/infer';
+import { toTimestamp } from '../../src/compile/scale';
+import { type LowerPlotsOptions, prepareRows } from '../../src/compile/expand';
+import { tagSourceIndex } from '../../src/compile/provenance';
 
 /** 单字段行 → 推断类型（无 model，纯抽样推断） */
 const inferOne = (values: Array<unknown>): string => inferFieldType(values.map(v => ({ v })), 'v');

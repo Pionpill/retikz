@@ -1,8 +1,8 @@
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { lowerPlots } from '../../src/lower/expand';
-import { assertScaleFieldCompatible, deriveScale } from '../../src/lower/scale';
+import { lowerPlots } from '../../src/compile/expand';
+import { assertScaleFieldCompatible, deriveScale } from '../../src/compile/scale';
 
 const compile = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>) =>
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) });

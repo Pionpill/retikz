@@ -1,7 +1,7 @@
 import { ChildSchema, type IRChild, type IRNode, type IRScope, compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/compile/expand';
 
 /**
  * ADR-03 legend guide 对抗测试（Adversarial Bug Hunter）。

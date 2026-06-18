@@ -1,10 +1,10 @@
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { normalizeRows } from '../../src/lower/coerce';
-import { lowerPlots, prepareRows } from '../../src/lower/expand';
-import { createPlotLocator } from '../../src/lower/locate';
-import { type ParsedFieldValue, type ResolveField, applyFieldResolver } from '../../src/lower/resolve';
+import { normalizeRows } from '../../src/compile/coerce';
+import { lowerPlots, prepareRows } from '../../src/compile/expand';
+import { createPlotLocator } from '../../src/compile/locate';
+import { type ParsedFieldValue, type ResolveField, applyFieldResolver } from '../../src/compile/resolve';
 
 /** cartesian point spec，model 可选（部分声明走 ADR-05），无 scales → 走 type-driven 派生 */
 const pointSpec = (model?: Array<{ name: string; type?: string }>): PlotSpec =>

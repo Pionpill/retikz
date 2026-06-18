@@ -2,9 +2,9 @@ import { compileToScene } from '@retikz/core';
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { lowerPlots } from '../../src/lower/expand';
-import { type GuideContext, lowerGuide } from '../../src/lower/guide';
-import type { PositionScale } from '../../src/lower/scale';
+import { lowerPlots } from '../../src/compile/expand';
+import { type GuideContext, lowerGuide } from '../../src/compile/guide';
+import type { PositionScale } from '../../src/compile/scale';
 
 /** 测试用最小 PositionScale：guide 只调 coordinate，其余成员给占位 */
 const fakeScale = (coordinate: (value: number) => number): PositionScale => ({

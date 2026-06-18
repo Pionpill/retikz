@@ -1,8 +1,8 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { OPACITY_MIN } from '../../src/lower/channel';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { OPACITY_MIN } from '../../src/compile/channel';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/compile/expand';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 

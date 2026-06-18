@@ -1,9 +1,9 @@
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema, ScalarValueSchema } from '../../src/ir';
-import { coerceValue, normalizeRows, validateBoundData } from '../../src/lower/coerce';
-import { inferFieldType } from '../../src/lower/infer';
-import { type LowerPlotsOptions, lowerPlots, prepareRows } from '../../src/lower/expand';
+import { coerceValue, normalizeRows, validateBoundData } from '../../src/compile/coerce';
+import { inferFieldType } from '../../src/compile/infer';
+import { type LowerPlotsOptions, lowerPlots, prepareRows } from '../../src/compile/expand';
 
 /**
  * ADR-08 待实现字段的本地类型扩展：`LowerPlotsOptions.invalid` 现在还不存在（实现 Agent 的活），

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { PaintSpecSchema, type ValueOf } from '@retikz/core';
-import { ChannelSchema, EncodingSchema, MarkLabelSchema, PointEncodingSchema, StyleEncodingSchema } from './encoding';
+import { ChannelSchema, EncodingSchema, MarkLabelSchema, PointEncodingSchema, StyleEncodingSchema } from '../encoding';
 
 /**
  * mark 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'point'` 同样可用）

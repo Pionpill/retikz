@@ -1,7 +1,7 @@
 import type { IRChild, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/compile/expand';
 
 /**
  * ADR-04 polar guide lowering 测试。

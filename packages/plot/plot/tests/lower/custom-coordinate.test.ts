@@ -2,8 +2,8 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
-import { type AxisFrame, type CustomCoordinateFactory, type CustomFrame, type DimensionRole, createCustomFrame } from '../../src/lower/project';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/compile/expand';
+import { type AxisFrame, type CustomCoordinateFactory, type CustomFrame, type DimensionRole, createCustomFrame } from '../../src/compile/project';
 
 /**
  * 自定义坐标系（custom coordinate，实验性）lowering 测试。
