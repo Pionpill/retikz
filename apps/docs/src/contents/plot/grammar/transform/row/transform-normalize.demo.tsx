@@ -1,4 +1,4 @@
-import { IntervalMark, Plot, Transform } from '@retikz/plot-react';
+import { Axis, IntervalMark, Plot, Transform } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { revenue } from './transform-normalize.data';
@@ -13,6 +13,8 @@ const Demo: FC = () => (
     <Transform kind="normalize" field="amount" groupBy={['quarter']} basis="percent" as="share" />
     <Transform kind="stack" x="quarter" y="share" groupBy="product" />
     <IntervalMark x="quarter" y="share" series="product" stack />
+    <Axis dimension="x" />
+    <Axis dimension="y" grid />
   </Plot>
 );
 

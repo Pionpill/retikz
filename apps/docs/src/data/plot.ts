@@ -31,7 +31,14 @@ export const plotSection: Array<Section> = [
           { id: 'channel', label: 'plot.dataChannel' },
         ],
       },
-      { id: 'transform', label: 'plot.grammarTransform' },
+      {
+        id: 'transform',
+        label: 'plot.grammarTransform',
+        children: [
+          { id: 'row', label: 'plot.grammarTransformRow' },
+          { id: 'group', label: 'plot.grammarTransformGroup' },
+        ],
+      },
       {
         id: 'mark',
         label: 'plot.grammarMark',

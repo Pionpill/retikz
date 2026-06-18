@@ -1,0 +1,70 @@
+---
+title: Group Transforms
+description: Group transforms change row count by reducing detail rows into statistical rows per continuous interval or grouping key.
+---
+
+Group transforms turn detail data into summaries. They change row count: `bin` slices a continuous field into bins, while `aggregate` reduces detail rows into one row per group.
+
+Each transform section below contains its behavior, example, and configuration.
+
+| kind | Input | Output | Common Chart |
+| --- | --- | --- | --- |
+| `bin` | continuous observations | one row per interval | histogram |
+| `aggregate` | detail rows | one row per group | grouped bars, summary lines, rankings |
+
+## bin
+
+`bin` slices a continuous field into intervals and emits one row per interval. Each output row carries the lower edge, upper edge, and reduced value; the default field names are `binStart` / `binEnd` / `binValue`.
+
+`IntervalMark` reads bin edges through `x0` / `x1` to draw contiguous bars on a continuous x axis whose width follows the interval; `y` reads `binValue` as the height.
+
+<ComponentPreview name="transform-histogram" sourceFiles={['transform-histogram.data.ts']} />
+
+<p className="text-sm text-muted-foreground">A continuous measurement binned into 8 equal-width bins; empty bins (count 0) keep their slot.</p>
+
+Pick one boundary strategy; they are mutually exclusive:
+
+- `count`: target number of bins, default 10; `nice` is on by default and rounds boundaries to friendly values.
+- `step`: fixed bin width in data units.
+- `thresholds`: explicit interior boundaries; K thresholds yield K+1 bins.
+
+`reduce` defaults to `count`. `sum` / `mean` / `min` / `max` require `reduceField` to name the numeric field being reduced. Empty bins reduce to `0`.
+
+Configuration:
+
+| prop | type | default | description |
+| --- | --- | --- | --- |
+| `field` | `string` | — | Continuous source field to bin |
+| `count` | `number?` | `10` | Target bin count; mutually exclusive with `step` / `thresholds` |
+| `step` | `number?` | — | Fixed bin width; mutually exclusive with `count` / `thresholds` |
+| `thresholds` | `Array<number>?` | — | Explicit interior boundaries; mutually exclusive with `count` / `step` |
+| `extent` | `[number, number]?` | observed min/max | Override binning domain |
+| `nice` | `boolean?` | `true` | Round boundaries to friendly values, count strategy only |
+| `reduce` | `'count' \| 'sum' \| 'mean' \| 'min' \| 'max'?` | `'count'` | Per-bin reducer |
+| `reduceField` | `string?` | — | Reduced field; required for `sum` / `mean` / `min` / `max` |
+| `startField` / `endField` / `valueField` | `string?` | `binStart` / `binEnd` / `binValue` | Output field names |
+
+## aggregate
+
+`aggregate` groups by `groupBy` and reduces each group into one row with `reduce`. The output row keeps the group keys and writes the reduced value to `as`; when `as` is omitted, the default is a name such as `sumRevenue` or `count`.
+
+<ComponentPreview name="transform-aggregate" sourceFiles={['transform-aggregate.data.ts']} />
+
+<p className="text-sm text-muted-foreground">8 order rows summed by region, yielding one bar per region.</p>
+
+`count` needs no `field`; `sum` / `mean` / `min` / `max` require `field`. `groupBy` supports multiple fields, forming a composite grouping key.
+
+Configuration:
+
+| prop | type | default | description |
+| --- | --- | --- | --- |
+| `groupBy` | `Array<string>` | — | Grouping key fields; composite keys are supported |
+| `reduce` | `'sum' \| 'mean' \| 'count' \| 'min' \| 'max'` | — | Per-group reducer |
+| `field` | `string?` | — | Reduced field; required except for `count` |
+| `as` | `string?` | `reduce`+capitalized`field` | Output field for the reduced value |
+
+## How It Works
+
+The output row from a group transform is no longer a raw detail row. When provenance is enabled, Plot records which source rows contributed to each output group. A locator hit can then report group-level source information instead of pretending one detail row owns the result.
+
+`bin` keeps empty bins, which makes histogram structure stable: an empty interval does not collapse and pull neighboring bars together. `aggregate` preserves group order by first appearance in the data.

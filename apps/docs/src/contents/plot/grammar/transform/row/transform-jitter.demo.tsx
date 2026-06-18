@@ -1,4 +1,4 @@
-import { Plot, PointMark, Transform } from '@retikz/plot-react';
+import { Axis, Plot, PointMark, Transform } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { samples } from './transform-jitter.data';
@@ -11,6 +11,8 @@ const Demo: FC = () => (
   <Plot data={samples} width={420} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
     <Transform kind="jitter" axis="x" xField="dose" amount={0.18} seed={42} />
     <PointMark x="dose" y="response" />
+    <Axis dimension="x" />
+    <Axis dimension="y" grid />
   </Plot>
 );
 

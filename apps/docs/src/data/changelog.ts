@@ -1493,14 +1493,14 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'bin / aggregate：改行数规约变换', en: 'bin / aggregate: row-changing reduce transforms' },
                 content: {
-                  zh: '`bin` 把连续字段分箱（边界策略 count / step / thresholds 三选一互斥，nice 对齐，含空箱产行），每箱产出 `binStart` / `binEnd` / `binValue`（count / sum / mean / min / max 规约）。`aggregate` 按 `groupBy`（复合键）分组规约成每组一行（携组键 + `as` 值）。二者打破「行数不变」隐式不变量，输出行带组级 provenance（`sourceIndices` 指向源行集合，datum locator 组级降级） [数据变换](/plot/grammar/transform)',
+                  zh: '`bin` 把连续字段分箱（边界策略 count / step / thresholds 三选一互斥，nice 对齐，含空箱产行），每箱产出 `binStart` / `binEnd` / `binValue`（count / sum / mean / min / max 规约）。`aggregate` 按 `groupBy`（复合键）分组规约成每组一行（携组键 + `as` 值）。二者打破「行数不变」隐式不变量，输出行带组级 provenance（`sourceIndices` 指向源行集合，datum locator 组级降级） [变换](/plot/grammar/transform)',
                   en: '`bin` partitions a continuous field (count / step / thresholds strategies, mutually exclusive; nice alignment; empty bins still emit rows), each bin emitting `binStart` / `binEnd` / `binValue` (count / sum / mean / min / max). `aggregate` groups by `groupBy` (composite key) into one row per group (carrying keys + the `as` value). Both break the implicit row-count invariant; output rows carry group-level provenance (`sourceIndices` pointing to the source-row set, datum locators degrading to group level) [Transforms](/plot/grammar/transform)',
                 },
               },
               {
                 label: { zh: 'normalize / derive-interval / jitter：保行数派生', en: 'normalize / derive-interval / jitter: row-preserving derive' },
                 content: {
-                  zh: '`normalize` 组内占比归一化（`groupBy` 数组、fraction / percent、组和 0 不产 NaN），接 `stack` 即百分比堆叠。`derive-interval` 单行算 `[start, end]`（baseline→value 或两字段），与 stack 跨行累积语义正交。`jitter` 给连续数值字段加 pre-scale 偏移，用整数 `seed` + mulberry32 确定性 PRNG——SSR 与 hydration 抖出逐字节相同坐标 [数据变换](/plot/grammar/transform)',
+                  zh: '`normalize` 组内占比归一化（`groupBy` 数组、fraction / percent、组和 0 不产 NaN），接 `stack` 即百分比堆叠。`derive-interval` 单行算 `[start, end]`（baseline→value 或两字段），与 stack 跨行累积语义正交。`jitter` 给连续数值字段加 pre-scale 偏移，用整数 `seed` + mulberry32 确定性 PRNG——SSR 与 hydration 抖出逐字节相同坐标 [变换](/plot/grammar/transform)',
                   en: '`normalize` computes within-group shares (`groupBy` array, fraction / percent, zero group sum → 0, no NaN); compose before `stack` for percentage stacking. `derive-interval` computes a per-row `[start, end]` (baseline→value or two fields), orthogonal to stack’s cross-row accumulation. `jitter` adds a pre-scale offset to a continuous numeric field using an integer `seed` + mulberry32 deterministic PRNG — byte-identical coordinates across SSR and hydration [Transforms](/plot/grammar/transform)',
                 },
               },
@@ -1933,7 +1933,7 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '<Transform> 声明组件', en: '<Transform> declaration component' },
                 content: {
-                  zh: '新增 `<Transform kind="...">`（返回 null 的配置载体，props 即 IR transform op、按 `kind` 判别扁平字段），由 `<Plot>` 同步内省、按声明序折叠进 `spec.transform`。服务全部七种 transform，是显式、可排序、可复用的数据管线节点——新 transform 一律走它，不再扩张 mark-prop 自动装配 [数据变换](/plot/grammar/transform)',
+                  zh: '新增 `<Transform kind="...">`（返回 null 的配置载体，props 即 IR transform op、按 `kind` 判别扁平字段），由 `<Plot>` 同步内省、按声明序折叠进 `spec.transform`。服务全部七种 transform，是显式、可排序、可复用的数据管线节点——新 transform 一律走它，不再扩张 mark-prop 自动装配 [变换](/plot/grammar/transform)',
                   en: 'Adds `<Transform kind="...">` (a config carrier returning null; props are the IR transform op, flat fields discriminated by `kind`), introspected by `<Plot>` and folded into `spec.transform` in declaration order. It serves all seven transforms as an explicit, orderable, reusable pipeline node — new transforms always go through it rather than expanding mark-prop auto-assembly [Transforms](/plot/grammar/transform)',
                 },
               },
@@ -2261,7 +2261,7 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'transform 纯 spec 驱动 SSR', en: 'transform purely spec-driven SSR' },
                 content: {
-                  zh: 'bin / aggregate / normalize / derive-interval / jitter 全经 Plot IR + lowering 自动生效，vanilla 侧零代码改动。新增 SSR 渲染测试覆盖直方图（连续 x 区间柱）、分组聚合柱，以及 jitter 同 seed 两次渲染逐字节相同（确定性 PRNG 守 SSR / hydration parity） [数据变换](/plot/grammar/transform)',
+                  zh: 'bin / aggregate / normalize / derive-interval / jitter 全经 Plot IR + lowering 自动生效，vanilla 侧零代码改动。新增 SSR 渲染测试覆盖直方图（连续 x 区间柱）、分组聚合柱，以及 jitter 同 seed 两次渲染逐字节相同（确定性 PRNG 守 SSR / hydration parity） [变换](/plot/grammar/transform)',
                   en: 'bin / aggregate / normalize / derive-interval / jitter all take effect automatically through the Plot IR + lowering, with zero code change on the vanilla side. New SSR tests cover histograms (continuous-x bars), grouped aggregate bars, and jitter rendering byte-identically across two runs with the same seed (the deterministic PRNG preserving SSR / hydration parity) [Transforms](/plot/grammar/transform)',
                 },
               },

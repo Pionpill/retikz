@@ -113,6 +113,8 @@
     "dataChannel": "Data Channels",
     "grammar": "Grammar",
     "grammarTransform": "Transforms",
+    "grammarTransformRow": "Row Transforms",
+    "grammarTransformGroup": "Group Transforms",
     "grammarScale": "Scales",
     "grammarCoordinate": "Coordinates",
     "grammarCoordinate2d": "2D Coordinates",

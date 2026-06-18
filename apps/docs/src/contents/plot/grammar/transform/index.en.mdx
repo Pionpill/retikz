@@ -1,20 +1,20 @@
 ---
 title: Transforms
-description: Transforms are the Statistics layer of the grammar of graphics — they rewrite data rows before scales and marks. bin and aggregate change the row count; normalize, derive-interval and jitter preserve it. Declare them with <Transform>; they fold into an ordered pipeline.
+description: Transforms are the statistics layer of the grammar: they rewrite rows before scales and marks. A transform pipeline can preserve row count or emit new rows per bin or group.
 ---
 
-`transform` is the **Statistics** layer of the grammar of graphics: after data comes in and before it feeds scales and marks, the rows are rewritten by statistical rules. It is orthogonal to marks — the same transformed data can feed bars, lines and points alike.
+`transform` runs after data preparation and before scales and marks. It is independent of the final mark type: the same transformed rows can feed bars, lines, points, or regions.
 
-Transforms come in two kinds:
+## Responsibilities
 
-| Kind | Members | Row count |
-| --- | --- | --- |
-| **Row-changing** | `bin` (continuous binning), `aggregate` (group reduce) | N rows → M bins / groups |
-| **Row-preserving** | `sort`, `stack`, `normalize`, `derive-interval`, `jitter` | N rows → N rows (reorder / add fields only) |
+| Category | Members | Row Count | Use It When |
+| --- | --- | --- | --- |
+| Row transforms | `sort` / `stack` / `normalize` / `derive-interval` / `jitter` | N rows → N rows | Reorder, derive fields, stack, compute shares, or spread overlapping points |
+| Group transforms | `bin` / `aggregate` | N rows → M bins / groups | Build histograms, grouped summaries, or detail-to-summary views |
 
-## Declaring: `<Transform>`
+## Declaration
 
-Declare a transform with `<Transform kind="...">`; `kind` is the discriminator and the remaining props map directly to that transform's fields. Multiple `<Transform>` fold into a pipeline in **declaration order**:
+Declare a transform with `<Transform kind="...">`; `kind` is the discriminator and the remaining props map to that transform's fields. Multiple `<Transform>` children fold into a pipeline in **declaration order**:
 
 ```tsx
 <Plot data={rows} model={model}>
@@ -23,140 +23,27 @@ Declare a transform with `<Transform kind="...">`; `kind` is the discriminator a
 </Plot>
 ```
 
-A transform's output fields (e.g. bin's `binStart` / `binEnd` / `binValue`, aggregate's `total`) are **derived fields** — produced by the transform, not declared in `model`; marks reference them by name. The input fields a transform **consumes** (`aggregate`'s `region` / `revenue`) must still be declared in `model` and go through strict validation.
+Transform outputs are **derived fields**, such as `binStart` / `binEnd` / `binValue`, `total`, or `y0` / `y1`. They are produced by the transform and do not need to appear in `model`; fields consumed by transforms still go through model and data validation.
 
-For programmatic pipelines you can also pass an IR array directly via `<Plot dataTransforms={[...]}>` — it shares the same pipeline as `<Transform>` children and may be mixed with them; the direct-pass entries come before the children:
+For programmatic construction, `<Plot dataTransforms={[...]}>` can pass a transform array directly. It shares the same pipeline as `<Transform>` children; direct-pass entries come before child transforms.
 
-```tsx
-<Plot data={rows} dataTransforms={[{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }]}>
-  <IntervalMark x="region" y="total" />
-</Plot>
-```
+> The prop is named `dataTransforms`, not `transforms`, to avoid colliding with core container geometric transforms such as translate / rotate.
 
-> It is named `dataTransforms` (not `transforms`) to distinguish it from the core container's geometric `transforms` (translate / rotate).
+## How It Works
 
-> The auto-stacking of `<IntervalMark stack>` / `<IntervalMark angle>` is a legacy convenience. When a **matching** `stack` (same `x` / `y` / `groupBy`) already exists explicitly in the pipeline, that auto-stack is suppressed so the same data is never stacked twice (stacks with a different signature are unaffected).
+During lowering, Plot collects source fields read by transforms and records output fields derived by transforms. Strict model validation then checks only real input fields and does not require derived fields to be declared ahead of time.
 
-## bin: continuous binning (histogram)
+Transforms are applied in declaration order: the output rows from one transform become the input rows for the next. The final row set then feeds scale inference, mark lowering, and locators.
 
-`bin` slices a continuous field into intervals, emitting one row per bin — carrying the lower edge `binStart`, the upper edge `binEnd`, and a per-bin reduced value `binValue` (frequency `count` by default). This is the foundation of a histogram.
+## Topics
 
-`<IntervalMark>` reads the bin edges via `x0` / `x1` to draw **contiguous bars on a continuous x axis whose width follows the bin edges** (unlike the equal-width band of categorical bars), with `y` reading `binValue` as the height:
-
-<ComponentPreview name="transform-histogram" sourceFiles={['transform-histogram.data.ts']} />
-
-<p className="text-sm text-muted-foreground">A continuous measurement binned into 8 equal-width bins; empty bins (count 0) keep their slot.</p>
-
-Pick one of three boundary strategies (mutually exclusive):
-
-- `count`: target number of bins (default 10); `nice` rounds boundaries to friendly values (on by default).
-- `step`: fixed bin width (data units), tiling from the lower bound.
-- `thresholds`: explicit interior boundaries — K thresholds yield K+1 bins.
-
-The reducer `reduce` defaults to `count` (frequency); `sum` / `mean` / `min` / `max` need a `reduceField`. Empty bins reduce to `0`.
-
-## aggregate: group reduce
-
-`aggregate` groups the detail rows by `groupBy` (one or more fields) and reduces each group to a single row with `reduce` (`sum` / `mean` / `count` / `min` / `max`) — the output row carries the group keys plus the reduced value (named by `as`, defaulting to e.g. `sumRevenue`). N detail rows → M groups.
-
-<ComponentPreview name="transform-aggregate" sourceFiles={['transform-aggregate.data.ts']} />
-
-<p className="text-sm text-muted-foreground">8 order rows summed by region → one bar per region.</p>
-
-`count` needs no `field`; `sum` / `mean` / `min` / `max` error without one. Multi-key `groupBy` forms a composite key.
-
-## normalize: within-group normalization
-
-`normalize` divides each row's value by its group sum to get a within-group share. `basis` is `fraction` ([0,1]) or `percent` ([0,100]); `groupBy` sets the groups (omit for the global sum); `as` names the output field (omit to overwrite in place).
-
-normalize preserves row count, and composing it with `stack` gives **percentage stacking** — normalize first, then stack the normalized values:
-
-<ComponentPreview name="transform-normalize" sourceFiles={['transform-normalize.data.ts']} />
-
-<p className="text-sm text-muted-foreground">Each quarter's products stacked by share; the bar top is always 100%.</p>
-
-When a group sum is 0, that group's share is 0 — no `NaN`.
-
-## derive-interval: per-row interval
-
-`derive-interval` computes an independent `[start, end]` interval for each row, written to `startField` / `endField` (default `y0` / `y1`, matching the interval bound consumers). Two modes:
-
-- **baseline→value**: give `from`; the interval is `[baseline, from value]` (`baseline` defaults to 0) — bars with a non-zero baseline, error-bar bases.
-- **two-field**: give `startFrom` + `endFrom`; the interval is `[startFrom value, endFrom value]` — gantt bars, explicit intervals.
-
-```tsx
-// Gantt: derive each task's interval from its start / end fields
-<Transform kind="derive-interval" startFrom="start" endFrom="end" />
-```
-
-It differs from `stack`: `stack` accumulates **across rows** (rows in a group chain head-to-tail into a cumulative chain), while `derive-interval` is **per-row independent** (no inter-row dependency). Both emit `y0` / `y1`, but the semantics are orthogonal — use `stack` for accumulation, `derive-interval` for per-row intervals; don't use one to do the other's job.
-
-## jitter: deterministic jitter
-
-`jitter` adds a pseudo-random offset to a continuous numeric positional field to de-overlap scatter points. `axis` is `x` / `y` / `both`; `amount` is the maximum offset (data units, uniform over `[-amount, +amount]`).
-
-Key constraint: the IR must be JSON-serializable and cannot store functions, so randomness is rebuilt at runtime from an **integer `seed` + a fixed PRNG** (mulberry32) — the same seed produces **byte-identical** coordinates across server-side rendering (SSR) and browser hydration, preserving determinism.
-
-<ComponentPreview name="transform-jitter" sourceFiles={['transform-jitter.data.ts']} />
-
-<p className="text-sm text-muted-foreground">Four overlapping points at each of three doses, spread out along x.</p>
-
-v1 jitter operates only on **continuous numeric fields** (offsetting the value before the scale); it is meaningless for string / categorical fields. Spreading scatter within a categorical band is a screen-space mechanism and is out of scope this version.
-
-## API
-
-### `<Transform>`
-
-| prop | type | description |
-| --- | --- | --- |
-| `kind` | `'sort' \| 'stack' \| 'bin' \| 'aggregate' \| 'normalize' \| 'derive-interval' \| 'jitter'` | Transform discriminator; the remaining props depend on `kind` |
-
-### `kind="bin"`
-
-| prop | type | default | description |
-| --- | --- | --- | --- |
-| `field` | `string` | — | Continuous source field to bin |
-| `count` | `number?` | `10` | Target number of bins; mutually exclusive with `step` / `thresholds` |
-| `step` | `number?` | — | Fixed bin width; mutually exclusive with `count` / `thresholds` |
-| `thresholds` | `Array<number>?` | — | Explicit interior boundaries (ascending); mutually exclusive with `count` / `step` |
-| `extent` | `[number, number]?` | observed min/max | Override binning domain |
-| `nice` | `boolean?` | `true` | Round boundaries to friendly values (`count` strategy only) |
-| `reduce` | `'count' \| 'sum' \| 'mean' \| 'min' \| 'max'?` | `'count'` | Per-bin reducer |
-| `reduceField` | `string?` | — | Reduced field (required for `sum` / `mean` / `min` / `max`) |
-| `startField` / `endField` / `valueField` | `string?` | `binStart` / `binEnd` / `binValue` | Output field names |
-
-### `kind="aggregate"`
-
-| prop | type | default | description |
-| --- | --- | --- | --- |
-| `groupBy` | `Array<string>` | — | Grouping key fields (multi-key = composite key) |
-| `reduce` | `'sum' \| 'mean' \| 'count' \| 'min' \| 'max'` | — | Per-group reducer |
-| `field` | `string?` | — | Reduced field (required except for `count`) |
-| `as` | `string?` | `reduce`+capitalized`field` | Output field for the reduced value |
-
-### `kind="normalize"`
-
-| prop | type | default | description |
-| --- | --- | --- | --- |
-| `field` | `string` | — | Numeric field whose within-group share is computed |
-| `groupBy` | `Array<string>?` | all rows, one group | Grouping keys (composite); omit for the global sum |
-| `basis` | `'fraction' \| 'percent'?` | `'fraction'` | Output scale |
-| `as` | `string?` | overwrite in place | Output field name |
-
-### `kind="derive-interval"`
-
-| prop | type | default | description |
-| --- | --- | --- | --- |
-| `from` | `string?` | — | Value field for baseline→value mode |
-| `baseline` | `number?` | `0` | Interval start for `from` mode |
-| `startFrom` / `endFrom` | `string?` | — | Start / end fields for two-field mode (paired) |
-| `startField` / `endField` | `string?` | `y0` / `y1` | Output field names |
-
-### `kind="jitter"`
-
-| prop | type | default | description |
-| --- | --- | --- | --- |
-| `axis` | `'x' \| 'y' \| 'both'?` | `'x'` | Axis to perturb (the jittered field must be continuous numeric) |
-| `xField` / `yField` | `string?` | `x` / `y` | Continuous numeric field to jitter |
-| `amount` | `number?` | `1` | Maximum absolute offset (data units, uniform `[-amount,+amount]`) |
-| `seed` | `number?` | `0` | Deterministic PRNG integer seed (same seed reproduces the same offsets) |
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/plot/grammar/transform/row">
+    <span className="font-semibold">Row Transforms</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Preserve row count for sorting, stacking, normalization, per-row intervals, and deterministic jitter.</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/transform/group">
+    <span className="font-semibold">Group Transforms</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Change row count by reducing details into bins or grouped summary rows.</span>
+  </LinkedCard>
+</div>
