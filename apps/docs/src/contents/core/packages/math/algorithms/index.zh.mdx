@@ -1,4 +1,4 @@
----
+﻿---
 title: 几何算法
 description: 求交、三角形内 / 外接圆、点在多边形、凸包、样条曲线的完整签名——core 未转出，直接从 @retikz/math 导入。
 ---
@@ -9,7 +9,7 @@ description: 求交、三角形内 / 外接圆、点在多边形、凸包、样�
 import { intersect, triangle, polygon, convexHull, curve } from '@retikz/math';
 ```
 
-退化输入不抛错：求交返回 `null` / `[]`，三角形圆退化返回 `null`。容差为朴素 `DEFAULT_EPSILON = 1e-9`（类型见[几何原语](/core/reference/math/primitives)）。
+退化输入不抛错：求交返回 `null` / `[]`，三角形圆退化返回 `null`。容差为朴素 `DEFAULT_EPSILON = 1e-9`（类型见[几何原语](/core/packages/math/primitives)）。
 
 ## 类型
 
@@ -43,7 +43,7 @@ intersect.circleCircle(cA: Position, rA: number, cB: Position, rB: number): Arra
 | `lineCircle` | 0 个（相离）或 2 个交点；相切时返回 2 个重合点 |
 | `circleCircle` | 2 个交点；相离 / 内含 / 重合 → `[]`；相切时返回 2 个重合点 |
 
-射线 ∩ 圆弧用 [`rayArc`](/core/reference/math/primitives)（在原语页，返回参数而非点）。
+射线 ∩ 圆弧用 [`rayArc`](/core/packages/math/primitives)（在原语页，返回参数而非点）。
 
 ## triangle 三角形圆
 

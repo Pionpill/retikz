@@ -3,7 +3,7 @@ title: Hydration
 description: Render the figure statically first, then bind event handlers back to elements on the client — functions stay out of the IR and live only at runtime, with the same binding semantics for SVG and Canvas.
 ---
 
-> This is the reference layer, not component docs; learn to draw first (start from [Components](/core/components/layout)), then come back to add interactivity.
+> This is @retikz/render package documentation, not component docs; learn to draw first (start from [Components](/core/components/layout)), then come back to add interactivity.
 
 A retikz figure is drawn first and made interactive second: the server (or a static build) renders a complete figure (SSR / string output), and once the client has that figure it binds your event handlers back to the elements by their id. That binding step is called **hydration**. It does not rebuild the component tree or take over application state — it does exactly one thing: pair "element ↔ user function".
 

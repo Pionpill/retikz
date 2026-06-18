@@ -1,9 +1,9 @@
----
+﻿---
 title: SVG
 description: retikz's default renderer — paints the Scene as a vector DOM where every primitive is a real SVG node; also offers SSR / build-time string output.
 ---
 
-> This is the reference layer, not component docs; to draw, start from [Components](/core/components/layout).
+> This is @retikz/render package documentation, not component docs; to draw, start from [Components](/core/components/layout).
 
 SVG is retikz's default renderer. It paints the compiled figure as a real `<svg>` DOM: every node and path is an element on the page, hit-testable by CSS, grabbable by selectors, readable by accessibility tools. Vector output stays crisp at any zoom and suits the vast majority of charts and diagrams — use it unless you have hundreds of primitives or need frequent repaints.
 
@@ -40,7 +40,7 @@ All three entries accept a compiled `Scene`, an `IR` to compile, or a `Figure` f
 
 ## Adding interaction to an SVG figure
 
-SVG primitives carry the element `id` when rendered (as a `data-retikz-id` attribute), so the client can bind event handlers back to them — see [Hydration](/core/reference/renderer/hydration).
+SVG primitives carry the element `id` when rendered (as a `data-retikz-id` attribute), so the client can bind event handlers back to them — see [Hydration](/core/packages/render/hydration).
 
 <ComponentAlert title="Low-level descriptor layer (for custom integrations)" description="@retikz/render/svg exposes a renderer-agnostic descriptor layer: buildSvgDocument / buildSvgFragment produce an SvgNode tree, and renderToSvgString serializes it. Reach for this when wiring SVG descriptors into another framework or controlling serialization yourself; ordinary usage only needs the three entries above." />
 
@@ -54,4 +54,4 @@ SVG primitives carry the element `id` when rendered (as a `data-retikz-id` attri
 | Many primitives | Slows as nodes pile up | Immediate mode stays steady |
 | Default | Yes | Explicit `renderer="canvas"` |
 
-Use SVG (the default) for a modest number of primitives, crisp vectors, or CSS interaction; switch to [Canvas](/core/reference/renderer/canvas) for hundreds of primitives or frequent repaints. Both render the same Scene, look identical, and share the exact same hydration code — switch any time.
+Use SVG (the default) for a modest number of primitives, crisp vectors, or CSS interaction; switch to [Canvas](/core/packages/render/canvas) for hundreds of primitives or frequent repaints. Both render the same Scene, look identical, and share the exact same hydration code — switch any time.

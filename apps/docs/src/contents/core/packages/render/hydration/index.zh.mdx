@@ -3,7 +3,7 @@ title: 水合
 description: 先静态渲染出图，客户端再把事件 handler 绑回图元——函数不进 IR、只在 runtime，SVG 与 Canvas 同一套绑定语义。
 ---
 
-> 这里是参考层，不是组件文档；先会画图（从 [组件](/core/components/layout) 开始）再回来给图加交互。
+> 这里是 @retikz/render 包文档，不是组件教程；先会画图（从 [组件](/core/components/layout) 开始）再回来给图加交互。
 
 retikz 的图是先画出来、再加交互的：服务端或静态先渲染出一张完整的图（SSR / 字符串输出），客户端拿到这张图后，按图元 id 把你的事件 handler 绑回去。这个绑定步骤叫**水合（hydration）**。它不重建组件树、不接管应用状态，只做一件事：把「图元 ↔ 用户函数」对应起来。
 

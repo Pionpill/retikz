@@ -1,9 +1,9 @@
----
+﻿---
 title: Canvas
 description: 把同一份 Scene 画成像素位图——即时模式绘制 + 坐标命中查询;图元很多或高频重绘时优于 SVG。
 ---
 
-> 这里是参考层,不是组件文档;写图请从 [组件](/core/components/layout) 开始。
+> 这里是 @retikz/render 包文档，不是组件教程；写图请从 [组件](/core/components/layout) 开始。
 
 Canvas 后端把图画成像素位图,而不是 DOM。它和 SVG 渲染同一份 Scene、视觉一致,区别在于整张图是一块画布而非一棵元素树:没有逐图元的 DOM 节点,因此图元成百上千、或要高频重绘 / 动画时,它比 SVG 更稳。代价是失去了 CSS 命中和无障碍可读性——这两件事 retikz 用坐标命中查询和统一的水合语义来补。
 
@@ -42,7 +42,7 @@ const handle = view.hydrate({
 // handle.dispose() 解绑
 ```
 
-同一张 `handlers` 表在 SVG 与 Canvas 下行为完全一致——详见 [水合](/core/reference/renderer/hydration)。
+同一张 `handlers` 表在 SVG 与 Canvas 下行为完全一致——详见 [水合](/core/packages/render/hydration)。
 
 <ComponentAlert title="底层绘制 / 命中(自定义集成用)" description="@retikz/render/canvas 暴露 renderToCanvas(canvas, scene)（直接画进 HTMLCanvasElement）、drawScene（往 2D context 画）、hitTest(scene, point)（坐标 → 图元 id）。自己管理画布 / 离屏渲染 / 命中逻辑时用这层;普通用法用上面的 mountCanvas 即可。" />
 
@@ -80,4 +80,4 @@ const png = await renderSceneToImage(scene, {
 | CSS / 选择器 | 整块画布 | 每个图元可命中 |
 | 默认 | 显式 `renderer="canvas"` | 是 |
 
-图元成百上千或要高频重绘 / 动画时用 Canvas;图元不多、要清晰矢量或 CSS 交互时用默认的 [SVG](/core/reference/renderer/svg)。两者渲染同一份 Scene、水合写法也一样,可以随时切换。
+图元成百上千或要高频重绘 / 动画时用 Canvas;图元不多、要清晰矢量或 CSS 交互时用默认的 [SVG](/core/packages/render/svg)。两者渲染同一份 Scene、水合写法也一样,可以随时切换。

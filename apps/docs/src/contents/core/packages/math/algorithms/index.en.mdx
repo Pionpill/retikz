@@ -1,4 +1,4 @@
----
+﻿---
 title: Algorithms
 description: Full signatures for intersections, triangle in/circumcircles, point-in-polygon, convex hull, and splines — not re-exported by core; import from @retikz/math.
 ---
@@ -9,7 +9,7 @@ These are higher-level computations `@retikz/core` does **not** re-export; impor
 import { intersect, triangle, polygon, convexHull, curve } from '@retikz/math';
 ```
 
-Degenerate inputs do not throw: intersections return `null` / `[]`, triangle circles return `null` on degeneracy. Tolerance is the naive `DEFAULT_EPSILON = 1e-9` (types in [Primitives](/core/reference/math/primitives)).
+Degenerate inputs do not throw: intersections return `null` / `[]`, triangle circles return `null` on degeneracy. Tolerance is the naive `DEFAULT_EPSILON = 1e-9` (types in [Primitives](/core/packages/math/primitives)).
 
 ## Types
 
@@ -43,7 +43,7 @@ intersect.circleCircle(cA: Position, rA: number, cB: Position, rB: number): Arra
 | `lineCircle` | 0 (disjoint) or 2 hits; tangency returns 2 coincident points |
 | `circleCircle` | 2 hits; disjoint / contained / coincident → `[]`; tangency returns 2 coincident points |
 
-For ray ∩ arc use [`rayArc`](/core/reference/math/primitives) (in Primitives; returns parameters, not points).
+For ray ∩ arc use [`rayArc`](/core/packages/math/primitives) (in Primitives; returns parameters, not points).
 
 ## triangle
 

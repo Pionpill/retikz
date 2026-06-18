@@ -97,7 +97,30 @@ export const coreSection: Array<Section> = [
           { id: 'animation', label: 'core.effectsAnimation' },
         ],
       },
-      { id: 'math', label: 'core.math' },
+    ],
+  },
+  {
+    id: 'packages',
+    label: 'core.packages',
+    pages: [
+      { id: 'tex', label: 'core.pkgTex' },
+      {
+        id: 'math',
+        label: 'core.pkgMath',
+        children: [
+          { id: 'primitives', label: 'core.pkgMathPrimitives' },
+          { id: 'algorithms', label: 'core.pkgMathAlgorithms' },
+        ],
+      },
+      {
+        id: 'render',
+        label: 'core.pkgRender',
+        children: [
+          { id: 'svg', label: 'core.pkgRenderSvg' },
+          { id: 'canvas', label: 'core.pkgRenderCanvas' },
+          { id: 'hydration', label: 'core.pkgHydration' },
+        ],
+      },
     ],
   },
   {
@@ -133,29 +156,12 @@ export const coreSection: Array<Section> = [
         ],
       },
       {
-        id: 'renderer',
-        label: 'core.refRenderer',
-        children: [
-          { id: 'svg', label: 'core.refRendererSvg' },
-          { id: 'canvas', label: 'core.refRendererCanvas' },
-          { id: 'hydration', label: 'core.refHydration' },
-        ],
-      },
-      {
         id: 'runtime',
         label: 'core.refRuntime',
         children: [
           { id: 'compile', label: 'core.refCompile' },
           { id: 'scene-primitive', label: 'core.refScenePrimitive' },
           { id: 'parser', label: 'core.refParser' },
-        ],
-      },
-      {
-        id: 'math',
-        label: 'core.refMath',
-        children: [
-          { id: 'primitives', label: 'core.refMathPrimitives' },
-          { id: 'algorithms', label: 'core.refMathAlgorithms' },
         ],
       },
     ],

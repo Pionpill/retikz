@@ -1,9 +1,9 @@
----
+﻿---
 title: SVG
 description: retikz 的默认渲染器,把 Scene 画成矢量 DOM——每个图元都是真实 SVG 节点;另有 SSR / 构建期的字符串输出。
 ---
 
-> 这里是参考层,不是组件文档;写图请从 [组件](/core/components/layout) 开始。
+> 这里是 @retikz/render 包文档，不是组件教程；写图请从 [组件](/core/components/layout) 开始。
 
 SVG 是 retikz 的默认渲染器。它把编译好的图画成一棵真实的 `<svg>` DOM:每个节点、每条路径都是页面上的元素,能被 CSS 命中、被选择器抓取、被无障碍工具读取。矢量输出在任意缩放下都清晰,适合绝大多数图表和示意图——除非图元成百上千或要高频重绘,否则就用它。
 
@@ -40,7 +40,7 @@ const svg = renderToSvgString(ir);   // '<svg ...>...</svg>',塞进 HTML 即可
 
 ## 给 SVG 图加交互
 
-SVG 图元渲染时会带上元素 `id`(写成 `data-retikz-id` 属性),客户端据此把事件 handler 绑回去——见 [水合](/core/reference/renderer/hydration)。
+SVG 图元渲染时会带上元素 `id`(写成 `data-retikz-id` 属性),客户端据此把事件 handler 绑回去——见 [水合](/core/packages/render/hydration)。
 
 <ComponentAlert title="底层描述层(自定义集成用)" description="@retikz/render/svg 暴露 renderer 无关的描述层:buildSvgDocument / buildSvgFragment 产 SvgNode 描述树,renderToSvgString 序列化成字符串。把 SVG 描述接进其它框架、或自己控制序列化时用这层;普通用法用上面三个入口即可。" />
 
@@ -54,4 +54,4 @@ SVG 图元渲染时会带上元素 `id`(写成 `data-retikz-id` 属性),客户�
 | 大量图元 | 节点多时变慢 | 即时模式更稳 |
 | 默认 | 是 | 显式 `renderer="canvas"` |
 
-图元不多、要清晰矢量或 CSS 交互时用 SVG(默认);图元成百上千或高频重绘时换 [Canvas](/core/reference/renderer/canvas)。两者渲染同一份 Scene、视觉一致,水合写法也完全一样,可以随时切换。
+图元不多、要清晰矢量或 CSS 交互时用 SVG(默认);图元成百上千或高频重绘时换 [Canvas](/core/packages/render/canvas)。两者渲染同一份 Scene、视觉一致,水合写法也完全一样,可以随时切换。
