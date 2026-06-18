@@ -20,6 +20,19 @@ Mark 是图形语法里的几何层。它不直接写像素坐标，而是声明
 
 图表形态不是新的底层图元。比如热图是 `IntervalMark` 的双 band 区间，饼图是 `IntervalMark` 在极坐标下的角向区间，散点 / 气泡 / 文本点都是 `PointMark` 的不同表现层配置。
 
+## 下沉到 core
+
+plot 的 mark 不直接拥有渲染 primitive；lowering 之后都会变成 [@retikz/core](/core/introduction) 的 Kernel IR。几何本体通常落到 [Node](/core/components/node/overview) 或 [Path](/core/components/draw/path)，颜色分组、series 分组和默认样式则由 [Scope](/core/components/layout/scope) 承载。
+
+| Mark | 最终使用的 core 实现 | 说明 |
+| --- | --- | --- |
+| `PointMark` | [Node](/core/components/node/overview) | 每行数据生成一个点 Node；文本点也是无边框文本 Node |
+| `PathMark` | [Path](/core/components/draw/path) | 有序投影点生成 move / line 等 step，再组成一条或多条 Path |
+| `RegionMark` | [Path](/core/components/draw/path) | 上沿与 baseline 回边生成闭合 Path，通过 fill 表达面积 / 区域 |
+| `IntervalMark` | [Node](/core/components/node/overview) | 坐标系把 cell 投影为 rect / sector / contour，再装配成带尺寸或 shape 的 Node |
+| `ReferenceMark` | [Path](/core/components/draw/path) / [Node](/core/components/node/overview) | 参考线下沉为 Path；参考带下沉为区间 Node |
+| `LinkMark` | [Path](/core/components/draw/path) | source / target 两端生成闭合 cubic Path，fill 后形成流带 |
+
 ## 注册图元
 
 <div className="grid gap-3 sm:grid-cols-2">
