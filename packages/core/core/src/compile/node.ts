@@ -2,13 +2,13 @@ import type { Position } from '../geometry/point';
 import { arcEndPoint } from '@retikz/math';
 import { normalizeCompassAnchor } from '../geometry/anchor';
 import type { Rect } from '../geometry/rect';
-import type { AtDirectionValue, IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRMathContent, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../ir';
+import type { AtDirectionValue, IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, IRTexContent, JsonValue } from '../ir';
 import { JsonObjectSchema } from '../ir';
 import type { BlendModeValue, DropShadow } from '../ir/effects';
 import { resolveShadow } from './effects';
 import { CompileWarningCode } from './constant';
 import type { CompileWarningCodeValue } from './constant';
-import type { LowerMath, LoweredMath } from './lower-math';
+import type { LowerTex, LoweredTex } from './lower-tex';
 import type { PaintResolver } from './paint';
 import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
@@ -143,25 +143,25 @@ const resolveDashPattern = (
 };
 
 /**
- * 经注入 lowerMath 把公式内容渲染成字形 + bbox；缺 lowerMath / 非法 tex → 发 warn 并降级返回 undefined
+ * 经注入 lowerTex 把公式内容渲染成字形 + bbox；缺 lowerTex / 非法 tex → 发 warn 并降级返回 undefined
  * @description fontSize 已含 node fontScale，故 lowered 结果直接是 user 单位。
  */
-const resolveMathGlyphs = (
-  math: IRMathContent,
+const resolveTexGlyphs = (
+  content: IRTexContent,
   fontSize: number,
   color: string | undefined,
-  ctx: MathLoweringContext | undefined,
-): LoweredMath | undefined => {
-  if (ctx?.lowerMath === undefined) {
+  ctx: TexLoweringContext | undefined,
+): LoweredTex | undefined => {
+  if (ctx?.lowerTex === undefined) {
     ctx?.warn(
-      CompileWarningCode.MathLowererMissing,
-      'Node has math content but no lowerMath was injected; provide CompileOptions.lowerMath (from @retikz/tex). Math is skipped.',
+      CompileWarningCode.TexLowererMissing,
+      'Node has tex content but no lowerTex was injected; provide CompileOptions.lowerTex (from @retikz/tex). TeX is skipped.',
     );
     return undefined;
   }
-  const lowered = ctx.lowerMath(math, { fontSize, color });
+  const lowered = ctx.lowerTex(content, { fontSize, color });
   if (lowered === null) {
-    ctx.warn(CompileWarningCode.MathTexInvalid, `Failed to render math tex: ${math.tex}`);
+    ctx.warn(CompileWarningCode.TexInvalid, `Failed to render tex source: ${content.tex}`);
     return undefined;
   }
   return lowered;
@@ -217,10 +217,10 @@ export type NodeLayout = {
   /** 字形 */
   fontStyle?: 'normal' | 'italic' | 'oblique';
   /**
-   * 已渲染的公式字形（来自注入 lowerMath；node.math 内容时存在，与 lines 互斥）
+   * 已渲染的公式字形（来自注入 lowerTex；node.tex 内容时存在，与 lines 互斥）
    * @description commands 包围盒约定 `[0,0]..[width,height]`（屏幕 y-down），emit 时经 translate group 居中到 rect 中心。
    */
-  mathGlyphs?: LoweredMath;
+  texGlyphs?: LoweredTex;
   /** 节点背景填充（纯色 / PaintSpec gradient），emit 时经 resolveFill → PaintValue、'transparent' 兜底 */
   fill?: string | IRPaintSpec;
   /** 填充透明度 0~1 */
@@ -487,11 +487,11 @@ export const angleBoundaryOf = (
  *   笛卡尔字面量 `Position` 已在 scope 局部度量，保持局部坐标语义。
  */
 /**
- * 公式渲染上下文：注入的 lowerMath + 预绑路径的 warn 发射器
+ * 公式渲染上下文：注入的 lowerTex + 预绑路径的 warn 发射器
  * @description compile 调用点把 onWarn + IR locator 预绑成 warn 闭包传入，使 layoutNode 不必背 onWarn / path。
  */
-export type MathLoweringContext = {
-  lowerMath?: LowerMath;
+export type TexLoweringContext = {
+  lowerTex?: LowerTex;
   warn: (code: CompileWarningCodeValue, message: string) => void;
 };
 
@@ -504,7 +504,7 @@ export const layoutNode = (
   labelDefault?: IRLabelDefault,
   shapes: Record<string, ShapeDefinition> = BUILTIN_SHAPES,
   resolveBetweenGlobal?: ResolveBetweenGlobal,
-  mathLowering?: MathLoweringContext,
+  texLowering?: TexLoweringContext,
 ): NodeLayout => {
   // shape 解析（入口 fail-fast）：裸 string → { type, params:{} }，对象原样；按 type 查表，未注册抛错列出可用名
   const { type: shapeName, params: rawShapeParams } = normalizeShape(node.shape);
@@ -578,19 +578,19 @@ export const layoutNode = (
   let textWidth = 0;
   let textHeight = 0;
   let lines: Array<TextLine> | undefined;
-  // 公式内容（node.math）优先于 text（互斥）：渲染字形 + bbox，bbox 直接当内容尺寸喂下方内框计算
-  let mathGlyphs: LoweredMath | undefined;
-  if (node.math !== undefined) {
-    // math 与 text 互斥：同给时 math 优先、text 静默丢弃易误导，发可诊断 warn
+  // 公式内容（node.tex）优先于 text（互斥）：渲染字形 + bbox，bbox 直接当内容尺寸喂下方内框计算
+  let texGlyphs: LoweredTex | undefined;
+  if (node.tex !== undefined) {
+    // tex 与 text 互斥：同给时 tex 优先、text 静默丢弃易误导，发可诊断 warn
     if (node.text !== undefined) {
-      mathLowering?.warn(
-        CompileWarningCode.MathTextConflict,
-        'Node has both text and math; math wins and text is ignored.',
+      texLowering?.warn(
+        CompileWarningCode.TexTextConflict,
+        'Node has both text and tex content; tex wins and text is ignored.',
       );
     }
-    mathGlyphs = resolveMathGlyphs(node.math, fontSize, node.textColor, mathLowering);
-    textWidth = mathGlyphs?.width ?? 0;
-    textHeight = mathGlyphs?.height ?? 0;
+    texGlyphs = resolveTexGlyphs(node.tex, fontSize, node.textColor, texLowering);
+    textWidth = texGlyphs?.width ?? 0;
+    textHeight = texGlyphs?.height ?? 0;
   } else if (rawLines) {
     lines = [];
     for (const spec of rawLines) {
@@ -710,7 +710,7 @@ export const layoutNode = (
     rotateDeg,
     margin: outerSep,
     lines,
-    mathGlyphs,
+    texGlyphs,
     textWidth,
     textHeight,
     align,
@@ -836,10 +836,10 @@ export const emitNodePrimitives = (
       measuredWidth: round(layout.textWidth),
       measuredHeight: round(layout.textHeight),
     });
-  } else if (layout.mathGlyphs) {
+  } else if (layout.texGlyphs) {
     // 公式字形：commands 包围盒在 [0,0]..[w,h]，用 translate group 居中到 rect 中心；
     // 效果（opacity / shadow / blend）落到字形 path（公式即此 node 的主内容几何）
-    const g = layout.mathGlyphs;
+    const g = layout.texGlyphs;
     const glyphPath: ScenePrimitive = {
       type: 'path',
       commands: g.commands,
@@ -924,7 +924,7 @@ export const emitNodePrimitives = (
   // 带文本（layout.lines 非空）或有旋转的 Node 包进单层 GroupPrim：给"语义化节点"一个稳定 DOM /
   // stacking 单位边界；纯几何装饰 Node 维持平铺、零额外 DOM 层。无旋转时 group 不带 transforms。
   const needsGroup =
-    layout.rotateDeg !== 0 || layout.lines !== undefined || layout.mathGlyphs !== undefined;
+    layout.rotateDeg !== 0 || layout.lines !== undefined || layout.texGlyphs !== undefined;
   if (!needsGroup) {
     // 纯几何 Node（不包 group）：把 user id stamp 到每个平铺 shape 图元（多 shape emit 时共享同一 id）；
     // label / pin 等附属图元不 stamp。无 user id 时保持 undefined。

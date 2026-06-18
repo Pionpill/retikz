@@ -28,7 +28,7 @@ export default defineConfig({
     outDir: 'dist',
     minify: false,
     lib: {
-      // 两个入口：主引擎（无 React）+ ./react 子入口（useLowerMath，React optional peer）
+      // 两个入口：主引擎（无 React）+ ./react 子入口（useLowerTex / TexNode，React optional peer）
       entry: ['src/index.ts', 'src/react/index.ts'],
       name: 'retikz-tex',
       fileName: '[name]',

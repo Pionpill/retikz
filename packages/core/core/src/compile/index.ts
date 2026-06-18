@@ -1,6 +1,6 @@
 export * from './compile';
 export * from './constant';
-export * from './lower-math';
+export * from './lower-tex';
 export * from './node';
 export * from './path';
 export * from './position';

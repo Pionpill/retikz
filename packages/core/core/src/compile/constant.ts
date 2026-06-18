@@ -16,10 +16,10 @@ export const CompileWarningCode = {
   ArcMissingRadius: 'ARC_MISSING_RADIUS',
   PartialArcNeedsBothAngles: 'PARTIAL_ARC_NEEDS_BOTH_ANGLES',
   PartialArcClosedInvalid: 'PARTIAL_ARC_CLOSED_INVALID',
-  MathLowererMissing: 'MATH_LOWERER_MISSING',
-  MathTexInvalid: 'MATH_TEX_INVALID',
-  MathTextConflict: 'MATH_TEXT_CONFLICT',
-  TextMathParseError: 'TEXT_MATH_PARSE_ERROR',
+  TexLowererMissing: 'TEX_LOWERER_MISSING',
+  TexInvalid: 'TEX_INVALID',
+  TexTextConflict: 'TEX_TEXT_CONFLICT',
+  TextTexParseError: 'TEXT_TEX_PARSE_ERROR',
 } as const;
 
 export type CompileWarningCodeValue =

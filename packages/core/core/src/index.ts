@@ -58,7 +58,7 @@ export {
   PaintSpecSchema,
   GradientStopSchema,
   DropShadowSchema,
-  MathContentSchema,
+  TexContentSchema,
   JsonValueSchema,
   JsonObjectSchema,
   ClipSpecSchema,
@@ -136,7 +136,7 @@ export type {
   DropShadow,
   ShadowPresetValue,
   BlendModeValue,
-  IRMathContent,
+  IRTexContent,
   JsonValue,
   IRJsonObject,
   IRClipSpec,
@@ -233,8 +233,8 @@ export type {
   CompileOptions,
   CompileWarning,
   CompileWarningCodeValue,
-  LowerMath,
-  LoweredMath,
+  LowerTex,
+  LoweredTex,
 } from './compile';
 export { computeLayout, fallbackMeasurer, compileToScene, CompileWarningCode, formatCompileWarning } from './compile';
 

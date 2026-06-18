@@ -14,7 +14,7 @@ export const NODE_FIELDS = [
   'align',
   'lineHeight',
   'maxTextWidth',
-  'math',
+  'tex',
   'color',
   'fill',
   'fillOpacity',

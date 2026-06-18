@@ -5,7 +5,7 @@ import { BoundarySchema } from './boundary';
 import { BlendMode, DropShadowSchema, ShadowPreset } from './effects';
 import { FontSchema } from './font';
 import { JsonObjectSchema } from './json';
-import { MathContentSchema } from './math';
+import { TexContentSchema } from './tex';
 import { PaintSpecSchema } from './paint';
 import { AtDirection, AtPositionSchema, BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from './position';
 import { ShapeRefSchema } from './shape';
@@ -164,8 +164,8 @@ export const NodeSchema = z
     text: TextBlockSchema.optional().describe(
       'Optional node text content; accepts a string, an array of lines, or styled text line objects. A literal newline ("\\n") inside any string is a hard line break, so one string with newlines renders as multiple lines. When omitted the node emits only its shape primitive; when present it participates in text measurement, node box sizing, and TextPrim emission.',
     ),
-    math: MathContentSchema.optional().describe(
-      'Optional math formula as node content (parallel to text). When set, the node is sized by the formula bbox (via the injected lowerMath capability) and emits glyph paths instead of TextPrim; mutually exclusive with text (math wins if both are set). Requires CompileOptions.lowerMath (from @retikz/tex) to render; otherwise degrades with a diagnosable warning.',
+    tex: TexContentSchema.optional().describe(
+      'Optional TeX formula as node content (parallel to text). When set, the node is sized by the formula bbox (via the injected lowerTex capability) and emits glyph paths instead of TextPrim; mutually exclusive with text (tex wins if both are set). Requires CompileOptions.lowerTex (from @retikz/tex) to render; otherwise degrades with a diagnosable warning.',
     ),
     align: z
       .enum(NodeTextAlign)

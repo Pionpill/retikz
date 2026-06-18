@@ -10,12 +10,12 @@ import type {
   IR,
   IRChild,
   IRLineSpec,
-  IRMathContent,
   IRNode,
   IRScope,
   IRStep,
   IRStepLabel,
   IRTarget,
+  IRTexContent,
 } from '@retikz/core';
 import { CURRENT_IR_VERSION, parseTargetSugar } from '@retikz/core';
 import type { CoordinateProps } from './Coordinate';
@@ -177,7 +177,7 @@ const readNodeText = (props: NodeProps): IRNode['text'] => {
  * 判定一个 child 是否「公式内容对象」——即 `{ tex: string, displayMode? }`（区别于 React 元素 / 字符串）
  * @description React 元素本身也是对象，故先排除 `isValidElement`；plain object 且 `tex` 为字符串才算公式内容
  */
-const isMathContentNode = (node: unknown): node is IRMathContent =>
+const isTexContentNode = (node: unknown): node is IRTexContent =>
   typeof node === 'object' &&
   node !== null &&
   !Array.isArray(node) &&
@@ -186,12 +186,12 @@ const isMathContentNode = (node: unknown): node is IRMathContent =>
 
 /**
  * Node 公式读取顺序
- * @description `props.math` 显式优先；否则扫描 `props.children` 取首个公式内容对象（`<Node>{{ tex }}</Node>` 便捷写法，
+ * @description `props.tex` 显式优先；否则扫描 `props.children` 取首个公式内容对象（`<Node>{{ tex }}</Node>` 便捷写法，
  *   与「文本走 children」对称）。数组 / `React.Fragment` 透明展开后递归。归一化为 `{ tex, displayMode? }`，丢弃多余键
  */
-const readNodeMath = (props: NodeProps): IRNode['math'] => {
-  if (props.math !== undefined) return props.math;
-  let found: IRMathContent | undefined;
+const readNodeTex = (props: NodeProps): IRNode['tex'] => {
+  if (props.tex !== undefined) return props.tex;
+  let found: IRTexContent | undefined;
   const visit = (node: unknown): void => {
     if (found !== undefined) return;
     if (Array.isArray(node)) {
@@ -202,7 +202,7 @@ const readNodeMath = (props: NodeProps): IRNode['math'] => {
       visit((node.props as { children?: ReactNode }).children);
       return;
     }
-    if (isMathContentNode(node)) {
+    if (isTexContentNode(node)) {
       found = node.displayMode === undefined ? { tex: node.tex } : { tex: node.tex, displayMode: node.displayMode };
     }
   };
@@ -212,18 +212,18 @@ const readNodeMath = (props: NodeProps): IRNode['math'] => {
 
 /**
  * `<Node>` props → IRChild
- * @description NODE_FIELDS 字段表透传纯字段；text / math / position / label 特化字段独立处理
+ * @description NODE_FIELDS 字段表透传纯字段；text / tex / position / label 特化字段独立处理
  */
 const buildNodeFromProps = (props: NodeProps): IRChild => {
   const text = readNodeText(props);
-  const math = readNodeMath(props);
+  const tex = readNodeTex(props);
   const ir: IRChild = {
     type: 'node',
     position: props.position,
     ...pickDefined(props, NODE_FIELDS),
   };
   if (text !== undefined) ir.text = text;
-  if (math !== undefined) ir.math = math;
+  if (tex !== undefined) ir.tex = tex;
   if (props.label !== undefined) ir.label = props.label;
   return ir;
 };

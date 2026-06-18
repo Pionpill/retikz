@@ -5,11 +5,11 @@ import type {
   IRBoundary,
   IRFont,
   IRLineSpec,
-  IRMathContent,
   IRNode,
   IRNodeLabel,
   IROffsetPosition,
   IRPosition,
+  IRTexContent,
   NodeTextAlignValue,
   PolarPosition,
 } from '@retikz/core';
@@ -39,9 +39,9 @@ export type NodeProps = HydrationEventProps & {
    * children 内容：文本 或 公式对象
    * @description 文本（与 `text` 二选一、`text` 优先）支持四种写法：字符串内嵌 `\n` / 模板字面量 / 字符串数组 /
    *   混 `<Text>` 带样式行。公式则写成对象 `{ tex, displayMode? }`（如 `<Node>{{ tex: 'E=mc^2' }}</Node>`），
-   *   等价于 `math` prop、与 `text` 互斥（同写 `math` 优先），需 `<Layout lowerMath>` 注入渲染能力
+   *   等价于 `tex` prop、与 `text` 互斥（同写 `tex` 优先），需 `<Layout lowerTex>` 注入渲染能力
    */
-  children?: ReactNode | IRMathContent;
+  children?: ReactNode | IRTexContent;
   /**
    * 显式 text，优先级高于 children
    * @description `string` 单行 / `Array<string>` 多行无样式 / `Array<string | LineSpec>` 多行可对单行覆盖 fill / opacity / font
@@ -53,8 +53,8 @@ export type NodeProps = HydrationEventProps & {
   lineHeight?: number;
   /** 折行阈值（user units）：超过才折行、短文本盒收缩（非固定段落宽）；西文按词、CJK 按字。不填 = 不自动折行 */
   maxTextWidth?: number;
-  /** 公式内容（LaTeX 源 `{ tex, displayMode? }`），经注入 `lowerMath`（`@retikz/tex`）渲染成字形；与 `text` 互斥，`math` 优先。也可直接写进 children（`<Node>{{ tex }}</Node>`）。需 `<Layout lowerMath>` 注入（`createLowerMath(await createMathJaxEngine())`） */
-  math?: IRNode['math'];
+  /** TeX 公式内容（LaTeX 源 `{ tex, displayMode? }`），经注入 `lowerTex`（`@retikz/tex`）渲染成字形；与 `text` 互斥，`tex` 优先。也可直接写进 children（`<Node>{{ tex }}</Node>`）。需 `<Layout lowerTex>` 注入（`createLowerTex(await createMathJaxEngine())`） */
+  tex?: IRNode['tex'];
   /** 字体规格：family / size / weight / style 全部可选；不填走渲染端默认值 */
   font?: IRFont;
   /** 横向内边距（text → 左右 border）；不填走 `padding` 兜底，再走默认 */

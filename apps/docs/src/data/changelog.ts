@@ -110,22 +110,22 @@ export const changelog: Array<Release> = [
             version: 'alpha.5',
             date: '2026-06-17',
             summary: {
-              zh: '新增 node 公式内容 `math`（与 text 平行）+ `CompileOptions.lowerMath` 注入点：LaTeX 公式经注入能力渲染成字形路径，三端一致；core 不依赖 MathJax。',
-              en: 'Adds node math content `math` (parallel to text) + a `CompileOptions.lowerMath` injection: LaTeX renders to glyph paths via the injected capability, consistent across backends; core does not depend on MathJax.',
+              zh: '新增 node 公式内容 `tex`（与 text 平行）+ `CompileOptions.lowerTex` 注入点：LaTeX 公式经注入能力渲染成字形路径，三端一致；core 不依赖 MathJax。',
+              en: 'Adds node tex content `tex` (parallel to text) + a `CompileOptions.lowerTex` injection: LaTeX renders to glyph paths via the injected capability, consistent across backends; core does not depend on MathJax.',
             },
             items: [
               {
-                label: { zh: 'node.math 公式内容', en: 'node.math content' },
+                label: { zh: 'node.tex 公式内容', en: 'node.tex content' },
                 content: {
-                  zh: '`IRNode` 新增 `math`（`{ tex, displayMode? }`，与 `text` 互斥、`math` 优先）；compile 经注入 `lowerMath` 渲染字形 + bbox 定尺寸——无 shape = 独立公式块、配 shape = 带框公式。字形 emit 成 `PathPrim`（renderer 零改动），可连线 / compass anchor / 叠加 shadow·blend。',
-                  en: '`IRNode` gains `math` (`{ tex, displayMode? }`, mutually exclusive with `text`, `math` wins); compile renders glyphs + bbox via the injected `lowerMath`, sizing the node — no shape = standalone block, with a shape = framed formula. Glyphs emit as `PathPrim` (no renderer change), connectable / compass-anchored / stackable with shadow·blend.',
+                  zh: '`IRNode` 新增 `tex`（`{ tex, displayMode? }`，与 `text` 互斥、`tex` 优先）；compile 经注入 `lowerTex` 渲染字形 + bbox 定尺寸——无 shape = 独立公式块、配 shape = 带框公式。字形 emit 成 `PathPrim`（renderer 零改动），可连线 / compass anchor / 叠加 shadow·blend。',
+                  en: '`IRNode` gains `tex` (`{ tex, displayMode? }`, mutually exclusive with `text`, `tex` wins); compile renders glyphs + bbox via the injected `lowerTex`, sizing the node — no shape = standalone block, with a shape = framed formula. Glyphs emit as `PathPrim` (no renderer change), connectable / compass-anchored / stackable with shadow·blend.',
                 },
               },
               {
-                label: { zh: 'lowerMath 注入点', en: 'lowerMath injection' },
+                label: { zh: 'lowerTex 注入点', en: 'lowerTex injection' },
                 content: {
-                  zh: '`CompileOptions.lowerMath`（`LowerMath` / `LoweredMath` 类型）+ warn code `MATH_LOWERER_MISSING` / `MATH_TEX_INVALID`；能力由 `@retikz/tex` 提供，缺注入 / 非法 tex 降级 + 警告、不崩。',
-                  en: '`CompileOptions.lowerMath` (`LowerMath` / `LoweredMath` types) + warn codes `MATH_LOWERER_MISSING` / `MATH_TEX_INVALID`; the capability is provided by `@retikz/tex` — missing injection / invalid tex degrade with a warning, never crash.',
+                  zh: '`CompileOptions.lowerTex`（`LowerTex` / `LoweredTex` 类型）+ warn code `TEX_LOWERER_MISSING` / `TEX_INVALID`；能力由 `@retikz/tex` 提供，缺注入 / 非法 tex 降级 + 警告、不崩。',
+                  en: '`CompileOptions.lowerTex` (`LowerTex` / `LoweredTex` types) + warn codes `TEX_LOWERER_MISSING` / `TEX_INVALID`; the capability is provided by `@retikz/tex` — missing injection / invalid tex degrade with a warning, never crash.',
                 },
               },
             ],
@@ -283,15 +283,15 @@ export const changelog: Array<Release> = [
             version: 'alpha.5',
             date: '2026-06-17',
             summary: {
-              zh: '`<Node>` 公式内容（`math` prop 或 children 对象）+ `<Layout lowerMath>` 公式渲染注入通道。',
-              en: '`<Node>` math content (`math` prop or children object) + a `<Layout lowerMath>` injection channel for math rendering.',
+              zh: '`<Node>` 公式内容（`tex` prop 或 children 对象）+ `<Layout lowerTex>` 公式渲染注入通道。',
+              en: '`<Node>` tex content (`tex` prop or children object) + a `<Layout lowerTex>` injection channel for formula rendering.',
             },
             items: [
               {
-                label: { zh: 'Node 公式内容 + Layout lowerMath', en: 'Node math content + Layout lowerMath' },
+                label: { zh: 'Node 公式内容 + Layout lowerTex', en: 'Node tex content + Layout lowerTex' },
                 content: {
-                  zh: '`<Node math={{ tex, displayMode? }}>` 或直接写进 children `<Node>{{ tex }}</Node>` 把公式作节点内容；`<Layout lowerMath>` 把 `@retikz/tex` 的渲染能力透传给 `compileToScene`（补齐注入通道）。',
-                  en: '`<Node math={{ tex, displayMode? }}>` — or written straight into children `<Node>{{ tex }}</Node>` — sets a formula as node content; `<Layout lowerMath>` forwards the `@retikz/tex` rendering capability to `compileToScene` (completing the injection channel).',
+                  zh: '`<Node tex={{ tex, displayMode? }}>` 或直接写进 children `<Node>{{ tex }}</Node>` 把公式作节点内容；`<Layout lowerTex>` 把 `@retikz/tex` 的渲染能力透传给 `compileToScene`（补齐注入通道）。',
+                  en: '`<Node tex={{ tex, displayMode? }}>` — or written straight into children `<Node>{{ tex }}</Node>` — sets a formula as node content; `<Layout lowerTex>` forwards the `@retikz/tex` rendering capability to `compileToScene` (completing the injection channel).',
                 },
               },
             ],
@@ -369,15 +369,15 @@ export const changelog: Array<Release> = [
             version: 'alpha.5',
             date: '2026-06-17',
             summary: {
-              zh: '`toScene` / `renderToString` 等经 `lowerMath` 选项渲染节点公式（`@retikz/tex` 提供能力）。',
-              en: '`toScene` / `renderToString` render node math via the `lowerMath` option (capability provided by `@retikz/tex`).',
+              zh: '`toScene` / `renderToString` 等经 `lowerTex` 选项渲染节点公式（`@retikz/tex` 提供能力）。',
+              en: '`toScene` / `renderToString` render node tex via the `lowerTex` option (capability provided by `@retikz/tex`).',
             },
             items: [
               {
-                label: { zh: 'lowerMath 选项', en: 'lowerMath option' },
+                label: { zh: 'lowerTex 选项', en: 'lowerTex option' },
                 content: {
-                  zh: '`CommonOptions` 经 `& CompileOptions` 已含 `lowerMath`；`node(id, { math: { tex } })` 配 `createLowerMath(await createMathJaxEngine())` 即渲染公式，零新 API。',
-                  en: '`CommonOptions` already includes `lowerMath` via `& CompileOptions`; `node(id, { math: { tex } })` with `createLowerMath(await createMathJaxEngine())` renders formulas — no new API.',
+                  zh: '`CommonOptions` 经 `& CompileOptions` 已含 `lowerTex`；`node(id, { tex: { tex } })` 配 `createLowerTex(await createMathJaxEngine())` 即渲染公式，零新 API。',
+                  en: '`CommonOptions` already includes `lowerTex` via `& CompileOptions`; `node(id, { tex: { tex } })` with `createLowerTex(await createMathJaxEngine())` renders formulas — no new API.',
                 },
               },
             ],
@@ -405,8 +405,8 @@ export const changelog: Array<Release> = [
         pkg: '@retikz/tex',
         version: 'v0.4',
         description: {
-          zh: '新包：LaTeX 数学公式经 MathJax SVG 降解成 renderer-agnostic 字形路径，接入 core 的 lowerMath 注入。',
-          en: 'New package: LaTeX math lowered via MathJax SVG into renderer-agnostic glyph paths, plugging into core’s lowerMath injection.',
+          zh: '新包：LaTeX 数学公式经 MathJax SVG 降解成 renderer-agnostic 字形路径，接入 core 的 lowerTex 注入。',
+          en: 'New package: LaTeX formulas lowered via MathJax SVG into renderer-agnostic glyph paths, plugging into core’s lowerTex injection.',
         },
         highlights: [],
         subVersions: [
@@ -414,22 +414,22 @@ export const changelog: Array<Release> = [
             version: 'alpha.5',
             date: '2026-06-17',
             summary: {
-              zh: '首切：MathJax→字形路径引擎 + `createLowerMath` 注入 + `./react` 子入口 `useLowerMath`。',
-              en: 'First cut: a MathJax→glyph-path engine + `createLowerMath` injection + a `./react` subpath `useLowerMath`.',
+              zh: '首切：MathJax→字形路径引擎 + `createLowerTex` 注入 + `./react` 子入口 `useLowerTex`。',
+              en: 'First cut: a MathJax→glyph-path engine + `createLowerTex` injection + a `./react` subpath `useLowerTex`.',
             },
             items: [
               {
-                label: { zh: 'createMathJaxEngine / createLowerMath', en: 'createMathJaxEngine / createLowerMath' },
+                label: { zh: 'createMathJaxEngine / createLowerTex', en: 'createMathJaxEngine / createLowerTex' },
                 content: {
-                  zh: '`createMathJaxEngine`（`mathjax-full` optional peer，内联字形、纯 Node liteAdaptor）+ `createLowerMath`（引擎 → core `lowerMath`，按 fontSize / display / tex 缓存，失败降级 null）。',
-                  en: '`createMathJaxEngine` (`mathjax-full` optional peer, inline glyphs, DOM-free liteAdaptor) + `createLowerMath` (engine → core `lowerMath`, cached by fontSize / display / tex, degrading to null on failure).',
+                  zh: '`createMathJaxEngine`（`mathjax-full` optional peer，内联字形、纯 Node liteAdaptor）+ `createLowerTex`（引擎 → core `lowerTex`，按 fontSize / display / tex 缓存，失败降级 null）。',
+                  en: '`createMathJaxEngine` (`mathjax-full` optional peer, inline glyphs, DOM-free liteAdaptor) + `createLowerTex` (engine → core `lowerTex`, cached by fontSize / display / tex, degrading to null on failure).',
                 },
               },
               {
-                label: { zh: '@retikz/tex/react · useLowerMath', en: '@retikz/tex/react · useLowerMath' },
+                label: { zh: '@retikz/tex/react · useLowerTex', en: '@retikz/tex/react · useLowerTex' },
                 content: {
-                  zh: '可选子入口 `@retikz/tex/react` 出 `useLowerMath` 钩子：一行启动 MathJax（进程级单例）并返回 `lowerMath` 注入函数；`react`/`react-dom` 作 tex 的 optional peer，仅此子入口依赖 React，主入口 `@retikz/tex` 仍无 React、`@retikz/react` 不依赖 tex。',
-                  en: 'Optional subpath `@retikz/tex/react` exports the `useLowerMath` hook: starts MathJax (process-level singleton) and returns the `lowerMath` injection in one line; `react`/`react-dom` are optional peers — only this subpath needs React, the main `@retikz/tex` entry stays React-free and `@retikz/react` never depends on tex.',
+                  zh: '可选子入口 `@retikz/tex/react` 出 `useLowerTex` 钩子：一行启动 MathJax（进程级单例）并返回 `lowerTex` 注入函数；`react`/`react-dom` 作 tex 的 optional peer，仅此子入口依赖 React，主入口 `@retikz/tex` 仍无 React、`@retikz/react` 不依赖 tex。',
+                  en: 'Optional subpath `@retikz/tex/react` exports the `useLowerTex` hook: starts MathJax (process-level singleton) and returns the `lowerTex` injection in one line; `react`/`react-dom` are optional peers — only this subpath needs React, the main `@retikz/tex` entry stays React-free and `@retikz/react` never depends on tex.',
                 },
               },
               {
