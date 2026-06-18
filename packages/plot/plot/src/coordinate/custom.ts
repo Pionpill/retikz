@@ -4,7 +4,12 @@ import type { PositionScale } from '../scale/scale';
 import type { Cell, CellGeometry } from './cell';
 import type { AxisFrame, DimensionRole, ResolvedCoordinate } from './types';
 
-export type CustomCoordinate = {
+/**
+ * 自定义运行时坐标帧。
+ * @description 投影函数由注册工厂提供，不进入 JSON IR；内建 mark / guide 只通过 roles、projectRoles、
+ *   可选 roleScales / frameAlong / projectCell 与其交互。
+ */
+export type ResolvedCustomCoordinate = {
   /** 判别字段：自定义（运行时工厂产出，非内建坐标系） */
   type: 'custom';
   /** 位置角色序（工厂消费哪些 mark 通道，按序喂 projectRoles） */
@@ -19,19 +24,19 @@ export type CustomCoordinate = {
    */
   roleScales?: Partial<Record<DimensionRole, PositionScale>>;
   /**
-   * 某角色轴曲线在某点的局部标架（工厂可选回传，alpha.9 ADR-05）：origin + 切向 ∂γ/∂role。
+   * 某角色轴曲线在某点的局部标架（工厂可选回传）：origin + 切向 ∂γ/∂role。
    * 曲线轴优先用它取精确切向；不回传 → guide 对 projectRoles 数值差分回落（现状行为）。
    */
   frameAlong?: (role: DimensionRole, values: ReadonlyArray<unknown>) => AxisFrame | null;
   /**
-   * 正交 cell → CellGeometry（工厂可选回传，alpha.11 ADR-01）：实现了才支持 cell 类 mark（interval / sector / rect）。
+   * 正交 cell → CellGeometry（工厂可选回传）：实现了才支持 cell 类 mark（interval / sector / rect）。
    * @description 曲线 / 自定义 frame 自行把 cell 四边经自身几何投影密采样成 contour（用引擎 helper densifyCellContour）；
    *   不回传 → cell 类 mark 在该坐标系 fail-loud（无引擎自动兜底——「输出空间→屏幕」后段映射只有 frame 自己有）。
    */
   projectCell?: (cell: Cell) => CellGeometry;
 };
 
-/** createCustomCoordinate 选项（alpha.9 ADR-05）：roleScales 让 guide 画曲线轴、frameAlong 给精确切向；均可选 */
+/** createCustomCoordinate 选项：roleScales 让 guide 画曲线轴、frameAlong 给精确切向、projectCell 支持 cell 类 mark；均可选。 */
 export type CreateCustomCoordinateOptions = {
   /** 各角色位置 scale；供 guide 画轴。省略 → 该坐标系无轴 */
   roleScales?: Partial<Record<DimensionRole, PositionScale>>;
@@ -43,13 +48,13 @@ export type CreateCustomCoordinateOptions = {
 
 /**
  * 建自定义坐标帧：把工厂给的 roles + projectRoles 包成 ResolvedCoordinate（point mark 经此投影）
- * @description 第三参 options（alpha.9 ADR-05）：roleScales 让 guide 画曲线轴、frameAlong 给精确轴切向；均可选。
+ * @description 第三参 options 补充 guide 轴线、精确轴切向和 cell 几何投影能力；未提供的能力保持不可用。
  */
 export const createCustomCoordinate = (
   roles: ReadonlyArray<DimensionRole>,
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null,
   options?: CreateCustomCoordinateOptions,
-): CustomCoordinate => ({
+): ResolvedCustomCoordinate => ({
   type: 'custom',
   roles,
   project: () => null,
@@ -83,5 +88,3 @@ export type CustomCoordinateContext = {
 
 /** 自定义坐标系工厂：上下文 → ResolvedCoordinate（通常 createCustomCoordinate(roles, projectRoles)） */
 export type CustomCoordinateFactory = (context: CustomCoordinateContext) => ResolvedCoordinate;
-
-/** 一行的极坐标映射结果：θ（度）+ r（user units），均经 scale 映射后；任一非有限 → null（跳过该顶点） */

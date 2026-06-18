@@ -10,7 +10,7 @@ import type { DimensionRole } from './types';
  * @description 由 IR 坐标配置和 x/y scale 解析得到，lowering 阶段通过它把数据通道值投影成屏幕坐标。
  *   该类型描述可执行的投影能力，不等同于 `ir/coordinate` 中的 JSON schema 类型。
  */
-export type CartesianCoordinate = {
+export type ResolvedCartesianCoordinate = {
   /** 判别字段：2D 笛卡尔 */
   type: typeof PlotCoordinate.Cartesian2D;
   /** 位置角色序（[x, y]）；mark 按此序取 encoding 通道值 */
@@ -28,7 +28,7 @@ export type CartesianCoordinate = {
 };
 
 /** 建二维笛卡尔运行时坐标帧：primary = x scale、secondary = y scale。 */
-export const createCartesianCoordinate = (primary: PositionScale, secondary: PositionScale): CartesianCoordinate => {
+export const createCartesianCoordinate = (primary: PositionScale, secondary: PositionScale): ResolvedCartesianCoordinate => {
   const project = (primaryValue: unknown, secondaryValue: unknown): Position | null => {
     const x = primary.coordinate(primaryValue);
     const y = secondary.coordinate(secondaryValue);
@@ -60,7 +60,7 @@ export const createCartesianCoordinate = (primary: PositionScale, secondary: Pos
  * @description 用单一位置 scale 沿 horizontal/vertical 方向投影，另一屏幕维度固定在 baseline。
  *   适用于单轴图形或 1D 坐标语法解析后的 lowering；它仍然产出二维屏幕坐标。
  */
-export type Cartesian1DCoordinate = {
+export type ResolvedCartesian1DCoordinate = {
   /** 判别字段：1D 笛卡尔直线 */
   type: typeof PlotCoordinate.Cartesian1D;
   /** 位置角色序（[x]，单通道） */
@@ -78,7 +78,7 @@ export type Cartesian1DCoordinate = {
 };
 
 /** 建一维笛卡尔帧：单 scale + 轴向 + 塌缩维基线（horizontal → [scale(v), baseline]、vertical → [baseline, scale(v)]） */
-export const createCartesian1DCoordinate = (scale: PositionScale, orientation: Cartesian1DOrientationType, baseline: number): Cartesian1DCoordinate => {
+export const createCartesian1DCoordinate = (scale: PositionScale, orientation: Cartesian1DOrientationType, baseline: number): ResolvedCartesian1DCoordinate => {
   const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
     const position = scale.coordinate(values[0]);
     if (!Number.isFinite(position)) return null;

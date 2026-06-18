@@ -1,14 +1,14 @@
 import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../ir';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from '../pipeline/layout';
-import type { CustomCoordinate, DimensionRole, PolarCoordinate, TernaryVertices } from '../coordinate';
+import type { DimensionRole, ResolvedCustomCoordinate, ResolvedPolarCoordinate, TernaryVertices } from '../coordinate';
 import { type ProvenanceContext, guideLayerId, guideLayerMeta } from '../pipeline/provenance';
 import type { PositionScale, TickSet } from '../scale/scale';
 
 /**
  * lowerGuide 上下文：cartesian 直线 guide 用 plotArea + 两维投影 + ticks；polar 经 `frame` 走弧 / 辐条几何
  * @description cartesian 沿用 alpha.2 形态（projectX/projectY/plotArea/xTicks/yTicks），产物逐字不变；
- *   polar 由 `frame`（ADR-01 的 PolarCoordinate）驱动：圆心 / 内外半径 / 起止角 + primary(angle)/secondary(radius) 投影。
+ *   polar 由 `frame`（ADR-01 的 ResolvedPolarCoordinate）驱动：圆心 / 内外半径 / 起止角 + primary(angle)/secondary(radius) 投影。
  *   存在 `frame.type === polar2D` 即走极坐标分支，guide 与 mark 同帧严格对齐。
  */
 export type GuideContext = {
@@ -30,7 +30,7 @@ export type GuideContext = {
    */
   axisOrientation?: 'horizontal' | 'vertical';
   /** polar 坐标帧（仅 polar2D / polar1D 时给）：存在即按维度角色走 angular / radial 几何 */
-  frame?: PolarCoordinate;
+  frame?: ResolvedPolarCoordinate;
   /** angular 维刻度集（polar；angle / x 维 axis 与同维 grid 复用） */
   angularTicks?: TickSet;
   /** radial 维刻度集（polar；radius / y 维） */
@@ -155,7 +155,7 @@ const polarPoint = (center: readonly [number, number], angleDeg: number, radius:
 };
 
 /** 一条弧 Path（move 到弧起点 + arc step 扫 startAngle→endAngle，圆心 = frame.center、给定半径）；轴线与同心环复用 */
-const arcPath = (frame: PolarCoordinate, radius: number): IRPath => {
+const arcPath = (frame: ResolvedPolarCoordinate, radius: number): IRPath => {
   const start = polarPoint(frame.center, frame.startAngle, radius);
   return {
     type: 'path',
@@ -178,7 +178,7 @@ const arcPath = (frame: PolarCoordinate, radius: number): IRPath => {
  * @description 轴线 = arc step（半径 outerRadius）；刻度 = 圆周点向外 AXIS_TICK_LENGTH 短线；
  *   标签 = center + (outerRadius+gap)·(cosθ,sinθ) 处 Node text。grid:true → 每刻度一条圆心→外圆辐条。
  */
-const lowerAngularAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarCoordinate, context: ProvenanceContext | undefined): LoweredGuide => {
+const lowerAngularAxis = (guide: AxisGuide, ctx: GuideContext, frame: ResolvedPolarCoordinate, context: ProvenanceContext | undefined): LoweredGuide => {
   const { fontSize } = ctx;
   const ticks = ctx.angularTicks ?? { values: [], labels: [] };
   const scale = frame.primary;
@@ -235,7 +235,7 @@ const lowerAngularAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarCoord
  * @description 轴线 = center→外圆 直段（基准角 = startAngle）；刻度 = 辐条上每径向刻度短切向横线；
  *   标签 = 刻度点旁 Node text。grid:true → 每径向刻度一个同心圆环（arc step）。
  */
-const lowerRadialAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarCoordinate, context: ProvenanceContext | undefined): LoweredGuide => {
+const lowerRadialAxis = (guide: AxisGuide, ctx: GuideContext, frame: ResolvedPolarCoordinate, context: ProvenanceContext | undefined): LoweredGuide => {
   const { fontSize } = ctx;
   const ticks = ctx.radialTicks ?? { values: [], labels: [] };
   const scale = frame.secondary;
@@ -407,7 +407,7 @@ const CUSTOM_AXIS_SAMPLES = 40;
  *   得轴线（任意曲线）与刻度点；刻度短线 / 标签沿局部切向的法线摆。frame 无 roleScales[dimension] → 不画（返回空）。
  *   通用性即「轴 = 参数路径」：直线 / 拱 / 圆 / 螺旋同一套画法。无网格（自定义网格几何因投影而异，留后续）。
  */
-export const lowerCustomAxis = (frame: CustomCoordinate, guide: AxisGuide, fontSize: number, context: ProvenanceContext | undefined): LoweredGuide => {
+export const lowerCustomAxis = (frame: ResolvedCustomCoordinate, guide: AxisGuide, fontSize: number, context: ProvenanceContext | undefined): LoweredGuide => {
   const scale = frame.roleScales?.[guide.dimension];
   if (!scale) return { gridLayer: null, axisLayer: null };
   const ticks = scale.ticks(guide.tickCount);

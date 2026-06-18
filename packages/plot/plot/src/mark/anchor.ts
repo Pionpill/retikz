@@ -1,6 +1,6 @@
 import { type Channel, type ExternalRow, type IntervalBound, IntervalBoundKind, type IntervalMark, type LinkMark, type LinkOrientationValue, type Mark, PlotCoordinate, PlotMark } from '../ir';
 import { channelValue, isFiniteNumber, resolveFieldPath } from '../data/field';
-import { type CartesianCoordinate, type Cell, type CellGeometry, type DimensionRole, type PolarCoordinate, type ResolvedCoordinate, hasProjectCell } from '../coordinate';
+import { type Cell, type CellGeometry, type DimensionRole, type ResolvedCartesianCoordinate, type ResolvedCoordinate, type ResolvedPolarCoordinate, hasProjectCell } from '../coordinate';
 import { type PositionScale, inferCategoryDomain } from '../scale/scale';
 
 /**
@@ -60,7 +60,7 @@ export type IntervalContext = {
  * @description group 取自 bounds.x band 的 group 字段；据其切等分子带（dodge）。seriesRank / subWidth 走
  *   inferCategoryDomain（按数据序去重），与旧 dodge 同算法。
  */
-export const buildIntervalContext = (mark: IntervalMark, frame: CartesianCoordinate | PolarCoordinate, rows: Array<ExternalRow>): IntervalContext => {
+export const buildIntervalContext = (mark: IntervalMark, frame: ResolvedCartesianCoordinate | ResolvedPolarCoordinate, rows: Array<ExternalRow>): IntervalContext => {
   const bandwidth = frame.primary.bandwidth;
   const xBound = resolveIntervalBound(mark, 'x');
   const group = xBound.kind === IntervalBoundKind.Band ? xBound.group : undefined;
@@ -89,7 +89,7 @@ const boundOutputInterval = (
   scale: PositionScale,
   mark: IntervalMark,
   row: ExternalRow,
-  frame: CartesianCoordinate | PolarCoordinate,
+  frame: ResolvedCartesianCoordinate | ResolvedPolarCoordinate,
   ctx: IntervalContext,
 ): [number, number] | null => {
   const channel = axis === 'primary' ? mark.encoding.x : mark.encoding.y;
@@ -133,7 +133,7 @@ const boundOutputInterval = (
  * @description primary = bounds.x、secondary = bounds.y 各经 boundOutputInterval 解析。任一非有限 → null（跳过该行）；
  *   polar 下 primary（角度）或 secondary（半径）跨度退化（< 1e-9）→ null（与旧 sector / radial bar 守卫一致）。
  */
-export const intervalCell = (mark: IntervalMark, row: ExternalRow, frame: CartesianCoordinate | PolarCoordinate, ctx: IntervalContext): Cell | null => {
+export const intervalCell = (mark: IntervalMark, row: ExternalRow, frame: ResolvedCartesianCoordinate | ResolvedPolarCoordinate, ctx: IntervalContext): Cell | null => {
   const primary = boundOutputInterval(resolveIntervalBound(mark, 'x'), 'primary', frame.primary, mark, row, frame, ctx);
   if (primary === null) return null;
   const secondary = boundOutputInterval(resolveIntervalBound(mark, 'y'), 'secondary', frame.secondary, mark, row, frame, ctx);

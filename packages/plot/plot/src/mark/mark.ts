@@ -3,7 +3,7 @@ import { type ExternalRow, type LinkMark, type Mark, PlotCoordinate, PlotMark, t
 import { type IntervalContext, LINK_DEFAULT_CURVATURE, buildIntervalContext, datumAnchor, linkBandGeometry, linkEndpoints, markCell, roleValues } from './anchor';
 import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from '../data/field';
 import { inferCategoryDomain } from '../scale/scale';
-import { type CartesianCoordinate, type Cell, type CellGeometry, type DimensionRole, type PolarCoordinate, type PolarVertex, type ResolvedCoordinate, densifyPolarSegments, toPolarVertex } from '../coordinate';
+import { type Cell, type CellGeometry, type DimensionRole, type PolarVertex, type ResolvedCartesianCoordinate, type ResolvedCoordinate, type ResolvedPolarCoordinate, densifyPolarSegments, toPolarVertex } from '../coordinate';
 import {
   type DatumIdRegistrar,
   type ProvenanceContext,
@@ -743,7 +743,7 @@ const referenceRows = (mark: ReferenceMark, rows: Array<ExternalRow>, orientatio
   isReferenceConstant(mark, orientation) ? [rows[0] ?? {}] : rows;
 
 /** reference line 某行 → core Path steps（cartesian 直连两端点；polar 竖直径向线直连、水平常半径环段采样）；退化 → null */
-const referenceLineSteps = (mark: ReferenceMark, row: ExternalRow, frame: CartesianCoordinate | PolarCoordinate, orientation: 'x' | 'y'): Array<IRStep> | null => {
+const referenceLineSteps = (mark: ReferenceMark, row: ExternalRow, frame: ResolvedCartesianCoordinate | ResolvedPolarCoordinate, orientation: 'x' | 'y'): Array<IRStep> | null => {
   const constantValue = referenceConstantValue(mark, row, orientation);
   if (frame.type === PlotCoordinate.Cartesian2D) {
     const constant = frame[orientation === 'x' ? 'primary' : 'secondary'].coordinate(constantValue);
@@ -776,7 +776,7 @@ const referenceLineSteps = (mark: ReferenceMark, row: ExternalRow, frame: Cartes
 };
 
 /** reference band 某行 → 正交 Cell（cartesian primary/secondary 为像素带、polar primary 为角度带 / secondary 为半径带）；退化 → null */
-const referenceBandCell = (mark: ReferenceMark, row: ExternalRow, frame: CartesianCoordinate | PolarCoordinate, orientation: 'x' | 'y'): Cell | null => {
+const referenceBandCell = (mark: ReferenceMark, row: ExternalRow, frame: ResolvedCartesianCoordinate | ResolvedPolarCoordinate, orientation: 'x' | 'y'): Cell | null => {
   const lo = referenceConstantValue(mark, row, orientation);
   const hi = referenceUpperValue(mark, row, orientation);
   if (frame.type === PlotCoordinate.Cartesian2D) {
@@ -811,7 +811,7 @@ const referenceBandCell = (mark: ReferenceMark, row: ExternalRow, frame: Cartesi
 const lowerReference = (
   mark: ReferenceMark,
   rows: Array<ExternalRow>,
-  frame: CartesianCoordinate | PolarCoordinate,
+  frame: ResolvedCartesianCoordinate | ResolvedPolarCoordinate,
   colorOf: ColorOf | undefined,
   defaultColor: string | undefined,
   markProvenance: MarkProvenance | undefined,

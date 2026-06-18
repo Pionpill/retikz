@@ -7,7 +7,7 @@ import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, compute
 import { type ColorOf, type LabelOf, lowerMark } from '../mark/mark';
 import { type ChannelResolution, type ScaleDescriptor, makeNumericStyleResolver, makeOpacityResolver, makeShapeResolver, makeSizeResolver, makeStrokeWidthResolver } from '../scale/channel';
 import { type CustomCoordinateFactory, type DimensionRole, type ResolvedCoordinate, createCartesian1DCoordinate, createCartesianCoordinate, createPolar1DCoordinate, createPolarCoordinate, createTernary2DCoordinate } from '../coordinate';
-import { REQUIRED_POSITION_CHANNELS, VALID_GUIDE_DIMENSIONS } from '../coordinate/meta';
+import { REQUIRED_POSITION_CHANNELS, VALID_GUIDE_DIMENSIONS } from '../coordinate/constants';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, inferCategoryDomain, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks, toTimestamp } from '../scale/scale';
 import { assertAllValuesValid, collectFormatFields, normalizeRows, validateBoundData } from '../data/coerce';
@@ -538,7 +538,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
       angleScaleDef.type === PlotScale.Sqrt;
     frame = createPolar1DCoordinate({ center: layout.center, radius, startAngle, endAngle, continuousAngle, primary: angleScale });
 
-    // guide：构造 PolarCoordinate（outerRadius=radius、innerRadius=0）复用 alpha.4 角向轴；secondary 角向轴不用、占位
+    // guide：构造 ResolvedPolarCoordinate（outerRadius=radius、innerRadius=0）复用 alpha.4 角向轴；secondary 角向轴不用、占位
     const guidePolarCoordinate = createPolarCoordinate({
       center: layout.center,
       innerRadius: 0,

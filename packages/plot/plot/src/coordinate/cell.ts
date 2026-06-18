@@ -24,75 +24,20 @@ export type CellGeometry =
   | { kind: 'sector'; center: Position; innerRadius: number; outerRadius: number; startAngle: number; endAngle: number }
   | { kind: 'contour'; points: Array<Position> };
 
+/** 读取 cell 在指定位置角色上的输出空间区间；缺失时 fail-loud。 */
 export const cellInterval = (cell: Cell, role: DimensionRole): [number, number] => {
   const interval = cell.intervals[role];
   if (interval === undefined) throw new Error(`lowerPlots: cell is missing "${role}" interval`);
   return interval;
 };
 
+/** 按候选角色顺序读取第一个存在的区间，用于二维正交 cell 的 primary / secondary 兜底取值。 */
 const firstCellInterval = (cell: Cell, roles: ReadonlyArray<DimensionRole>): [number, number] => {
   for (const role of roles) {
     const interval = cell.intervals[role];
     if (interval !== undefined) return interval;
   }
   throw new Error(`lowerPlots: cell is missing interval for roles [${roles.join(', ')}]`);
-};
-
-type BarycentricPoint = [number, number, number];
-
-type CellTernaryVertices = [Position, Position, Position];
-
-const TERNARY_EPSILON = 1e-9;
-
-const sortedInterval = (interval: [number, number]): [number, number] =>
-  interval[0] <= interval[1] ? interval : [interval[1], interval[0]];
-
-const interpolateBarycentric = (a: BarycentricPoint, b: BarycentricPoint, roleIndex: number, boundary: number): BarycentricPoint => {
-  const delta = b[roleIndex] - a[roleIndex];
-  if (Math.abs(delta) < TERNARY_EPSILON) return a;
-  const t = (boundary - a[roleIndex]) / delta;
-  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
-};
-
-const clipBarycentricPolygon = (
-  polygon: Array<BarycentricPoint>,
-  roleIndex: number,
-  boundary: number,
-  keep: (value: number, boundary: number) => boolean,
-): Array<BarycentricPoint> => {
-  if (polygon.length === 0) return [];
-  const clipped: Array<BarycentricPoint> = [];
-  for (let i = 0; i < polygon.length; i += 1) {
-    const current = polygon[i];
-    const previous = polygon[(i + polygon.length - 1) % polygon.length];
-    const currentInside = keep(current[roleIndex], boundary);
-    const previousInside = keep(previous[roleIndex], boundary);
-    if (currentInside !== previousInside) clipped.push(interpolateBarycentric(previous, current, roleIndex, boundary));
-    if (currentInside) clipped.push(current);
-  }
-  return clipped;
-};
-
-const clampUnitInterval = (interval: [number, number]): [number, number] => {
-  const [lo, hi] = sortedInterval(interval);
-  return [Math.max(0, lo), Math.min(1, hi)];
-};
-
-export const ternaryCellContour = (cell: Cell, vertices: CellTernaryVertices): Array<Position> => {
-  const intervals = [clampUnitInterval(cellInterval(cell, 'x')), clampUnitInterval(cellInterval(cell, 'y')), clampUnitInterval(cellInterval(cell, 'z'))];
-  if (intervals.some(([lo, hi]) => lo > hi)) return [];
-  let polygon: Array<BarycentricPoint> = [
-    [1, 0, 0],
-    [0, 1, 0],
-    [0, 0, 1],
-  ];
-  for (let roleIndex = 0; roleIndex < intervals.length; roleIndex += 1) {
-    const [lo, hi] = intervals[roleIndex];
-    polygon = clipBarycentricPolygon(polygon, roleIndex, lo, (value, boundary) => value >= boundary - TERNARY_EPSILON);
-    polygon = clipBarycentricPolygon(polygon, roleIndex, hi, (value, boundary) => value <= boundary + TERNARY_EPSILON);
-  }
-  const [vx, vy, vz] = vertices;
-  return polygon.map(([x, y, z]) => [x * vx[0] + y * vy[0] + z * vz[0], x * vx[1] + y * vy[1] + z * vz[1]]);
 };
 
 /** densifyCellContour 选项：标记哪条位置轴是曲线（曲边每边 N 段，直边每边 1 段） */

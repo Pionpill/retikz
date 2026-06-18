@@ -1,14 +1,78 @@
 import type { Position } from '@retikz/math';
 import { PlotCoordinate } from '../ir';
 import { isFiniteNumber } from '../data/field';
-import { ternaryCellContour } from './cell';
-import type { Cell, CellGeometry } from './cell';
+import { type Cell, type CellGeometry, cellInterval } from './cell';
 import type { DimensionRole } from './types';
 
+/** 三元坐标三角顶点序（屏幕坐标）：[Vx(x=100%), Vy(y=100%), Vz(z=100%)]。 */
 export type TernaryVertices = [Position, Position, Position];
 
-/** 三元帧（重心坐标）：三连续分量 x/y/z 归一化后按重心坐标投影到等边三角内 */
-export type Ternary2DCoordinate = {
+type BarycentricPoint = [number, number, number];
+
+/** 三元 cell 裁剪的浮点容差，用于边界包含判断和近似平行边处理。 */
+const TERNARY_EPSILON = 1e-9;
+
+/** 把区间端点整理为升序，便于后续裁剪统一处理反向区间。 */
+const sortedInterval = (interval: [number, number]): [number, number] =>
+  interval[0] <= interval[1] ? interval : [interval[1], interval[0]];
+
+/** 在 barycentric 多边形边上求与某个分量边界的交点。 */
+const interpolateBarycentric = (a: BarycentricPoint, b: BarycentricPoint, roleIndex: number, boundary: number): BarycentricPoint => {
+  const delta = b[roleIndex] - a[roleIndex];
+  if (Math.abs(delta) < TERNARY_EPSILON) return a;
+  const t = (boundary - a[roleIndex]) / delta;
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+};
+
+/** 用半平面裁剪 barycentric 多边形，保留满足当前分量边界的一侧。 */
+const clipBarycentricPolygon = (
+  polygon: Array<BarycentricPoint>,
+  roleIndex: number,
+  boundary: number,
+  keep: (value: number, boundary: number) => boolean,
+): Array<BarycentricPoint> => {
+  if (polygon.length === 0) return [];
+  const clipped: Array<BarycentricPoint> = [];
+  for (let i = 0; i < polygon.length; i += 1) {
+    const current = polygon[i];
+    const previous = polygon[(i + polygon.length - 1) % polygon.length];
+    const currentInside = keep(current[roleIndex], boundary);
+    const previousInside = keep(previous[roleIndex], boundary);
+    if (currentInside !== previousInside) clipped.push(interpolateBarycentric(previous, current, roleIndex, boundary));
+    if (currentInside) clipped.push(current);
+  }
+  return clipped;
+};
+
+/** 把分量区间归一到 simplex 的合法 [0, 1] 范围内。 */
+const clampUnitInterval = (interval: [number, number]): [number, number] => {
+  const [lo, hi] = sortedInterval(interval);
+  return [Math.max(0, lo), Math.min(1, hi)];
+};
+
+/**
+ * 三元 cell 裁剪：把 x/y/z 三个分量区间裁到标准 simplex，再映射到屏幕顶点空间。
+ * @description 这是三元坐标专属的 barycentric clipping；通用 cell 模块只保存 cell 数据结构。
+ */
+const ternaryCellContour = (cell: Cell, vertices: TernaryVertices): Array<Position> => {
+  const intervals = [clampUnitInterval(cellInterval(cell, 'x')), clampUnitInterval(cellInterval(cell, 'y')), clampUnitInterval(cellInterval(cell, 'z'))];
+  if (intervals.some(([lo, hi]) => lo > hi)) return [];
+  let polygon: Array<BarycentricPoint> = [
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1],
+  ];
+  for (let roleIndex = 0; roleIndex < intervals.length; roleIndex += 1) {
+    const [lo, hi] = intervals[roleIndex];
+    polygon = clipBarycentricPolygon(polygon, roleIndex, lo, (value, boundary) => value >= boundary - TERNARY_EPSILON);
+    polygon = clipBarycentricPolygon(polygon, roleIndex, hi, (value, boundary) => value <= boundary + TERNARY_EPSILON);
+  }
+  const [vx, vy, vz] = vertices;
+  return polygon.map(([x, y, z]) => [x * vx[0] + y * vy[0] + z * vz[0], x * vx[1] + y * vy[1] + z * vz[1]]);
+};
+
+/** 三元运行时坐标帧：三连续分量 x/y/z 归一化后按重心坐标投影到三角形内。 */
+export type ResolvedTernary2DCoordinate = {
   /** 判别字段：2D 三元 */
   type: typeof PlotCoordinate.Ternary2D;
   /** 位置角色序（[x, y, z]，3 通道） */
@@ -28,7 +92,7 @@ export type Ternary2DCoordinate = {
  * @description 每行 (x,y,z) 先归一化 s=x+y+z、(x/s,y/s,z/s)，再 nx·Vx + ny·Vy + nz·Vz 得屏幕点。
  *   非有限值（缺字段 / NaN）→ null 跳过该点（与其它坐标系一致）；含负分量 / 和≤0 → fail-loud（数据错误、不静默归一）。
  */
-export const createTernary2DCoordinate = (vertices: TernaryVertices): Ternary2DCoordinate => {
+export const createTernary2DCoordinate = (vertices: TernaryVertices): ResolvedTernary2DCoordinate => {
   const [vx, vy, vz] = vertices;
   const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
     const x = values[0];
@@ -60,10 +124,3 @@ export const createTernary2DCoordinate = (vertices: TernaryVertices): Ternary2DC
     projectCell: cell => ({ kind: 'contour', points: ternaryCellContour(cell, vertices) }),
   };
 };
-
-// ── 自定义坐标系（实验性；alpha.9 设计探讨产物）──────────────────────────────────────────
-// 证明并落地：`projectRoles` 足以表达任意坐标系几何，无需「轴」抽象。投影函数（不可序列化）由运行时工厂
-// 提供、不进 IR；IR 只留 `{type:'custom', name, roles, params}` 的 JSON 引用（见 ir/coordinate.ts）。
-// 这是「一个通用扩展点」而非给枚举塞 exotic 成员——用户自定义曲线一维 / 拱形 x 轴等都走这条。
-
-/** 自定义坐标帧：投影完全由工厂给出的 projectRoles 决定（任意几何） */

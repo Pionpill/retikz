@@ -1,4 +1,3 @@
-export * from './meta';
 export * from './cartesian';
 export * from './cell';
 export * from './constants';

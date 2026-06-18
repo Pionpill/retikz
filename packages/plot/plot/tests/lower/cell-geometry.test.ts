@@ -6,9 +6,9 @@ import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { buildIntervalContext, cellGeometryAnchor, datumAnchor } from '../../src/mark/anchor';
 import { lowerMark } from '../../src/mark/mark';
 import {
-  type CartesianCoordinate,
   type Cell,
   RETIKZ_POLAR_SEGMENT_SAMPLES,
+  type ResolvedCartesianCoordinate,
   createCartesianCoordinate,
   createCustomCoordinate,
   createPolarCoordinate,
@@ -210,7 +210,7 @@ describe('polar interval / sector → sector 产物（byte-equal 回归基线）
 
 // ── densifyCellContour + 测试专用曲线 frame：interval 走 contour ────────────────────────
 /** 测试专用曲线 frame：cartesian 帧（cell 计算同 cartesian），projectCell 改返回 contour（上沿弯成抛物） */
-const curvedFrame = (): CartesianCoordinate => {
+const curvedFrame = (): ResolvedCartesianCoordinate => {
   const base = createCartesianCoordinate(linearStub([0, 10], [0, 200], 40), linearStub([0, 10], [200, 0]));
   // 输出空间 (px, py) → 屏幕：x 原样、y 加一段随 px 变化的弯曲（使顶 / 底边非直线 → 必须密采样）
   const projectFn = (px: number, py: number): [number, number] => [px, py + 20 * Math.sin((px / 200) * Math.PI)];
