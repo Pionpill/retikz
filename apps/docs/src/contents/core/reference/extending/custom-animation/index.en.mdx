@@ -3,7 +3,7 @@ title: Custom Animation
 description: Both the easing curve and the property channel of animations are open — register custom easings (spring, …) and custom property channels (blur, …) beyond the built-ins.
 ---
 
-An [animation](/core/components/effects/animation)'s `easing` and `property` are both **open strings**: beyond the built-ins you can register your own easing curves and property channels. The two injection points are two `<Layout>` props — the same idea as the [shape](/core/reference/extending/shape-registry) / [arrow](/core/reference/extending/custom-arrow) extensions: the IR / preset only carries a name, the definition is injected at `<Layout>`.
+An [animation](/core/components/effects/animation)'s `easing` and `property` are both **open strings**: beyond the built-ins you can register your own easing curves and property channels. The two injection points are two `<Layout>` props — same as the [shape](/core/reference/extending/shape-registry) / [arrow](/core/reference/extending/custom-arrow) extensions: the IR / preset only carries a name, the definition is injected at `<Layout>`. The difference is that these two are lightweight [registry extensions](/core/reference/extending#three-extension-models) applied at runtime inside the renderer, not compile-time `xxxDefinition`s.
 
 ## Custom easing (`easings`)
 
@@ -24,11 +24,11 @@ Two registered-value forms:
 | cubic-bezier tuple | `[x1, y1, x2, y2]` | SVG (becomes CSS `cubic-bezier()`) + Canvas |
 | easing function | `(t: number) => number` | **Canvas only**; can't enter CSS → falls back to `linear` with a warning |
 
-`y` may exceed `[0, 1]` (e.g. `1.56`) for overshoot / spring effects. An unregistered easing name → falls back to `linear` (SVG warns, Canvas degrades silently); either way the track still plays — only the easing degrades to linear, it does not fall back to the resting state.
+There is **no** `EasingDefinition` — a cubic-bezier tuple or a function value is already simple enough to register directly as a registry value. `y` may exceed `[0, 1]` (e.g. `1.56`) for overshoot / spring effects. An unregistered easing name → falls back to `linear` (SVG warns, Canvas degrades silently); either way the track still plays — only the easing degrades to linear, it does not fall back to the resting state.
 
 ## Custom property channel (`animationProperties`)
 
-`property` is open too: register a channel name plus its interpolator and how to apply it, and you can animate properties beyond the built-ins (e.g. a `blur` filter). Below registers `blur` and runs a focus-in entrance (click ↺ at the top-left to replay):
+`property` is open too: register a channel name plus its interpolator and how to apply it, and you can animate properties beyond the built-ins (e.g. a `blur` filter). Unlike easing, a custom property channel uses `AnimationPropertyDefinition` — it must define both interpolation and backend application, which a single value can't express. Below registers `blur` and runs a focus-in entrance (click ↺ at the top-left to replay):
 
 <ComponentPreview name="custom-property" size="xs" />
 

@@ -15,7 +15,17 @@ description: 扩展 retikz——为内置能力之外的需求注册新形状等
 | 自定义箭头 | 注册新的箭头样式（`defineArrow` / `ArrowDefinition` + `CompileOptions.arrows`） | 需要 bracket / 业务箭头等新端点样式 |
 | 自定义图案 | 注册新的填充图案（`definePattern` / `PatternDefinition` + `CompileOptions.patterns`） | 需要 cross / 条纹 / 特殊 motif |
 | 路径生成器 | 注册新的曲线生成器（`PathGeneratorDefinition` + `CompileOptions.pathGenerators`） | 需要 parabola / 波形 / 自定义曲线 |
-| 自定义动画 | 注册新的缓动曲线 / 动画属性通道（`<Layout>` 的 `easings` / `animationProperties`） | 需要 spring 缓动、blur 等内置之外的动画属性 |
+| 复合（Tier 2） | 注册 Tier 2 高层节点（`CompositeDefinition` + `CompileOptions.composites`） | domain 包把高层节点 lowering 成 Tier 1 基础图元，详见 [复合](/core/reference/composites) |
+| 自定义缓动 | 注册新的缓动曲线（`EasingRegistry` + `<Layout easings>`） | 需要 spring 等内置之外的缓动曲线 |
+| 自定义动画属性 | 注册新的动画属性通道（`AnimationPropertyDefinition` + `<Layout animationProperties>`） | 需要 blur 等内置之外的动画属性 |
+
+## 三类扩展模型
+
+扩展点按机制分三类；判断一个能力属于哪类，就知道它怎么定义、何时生效：
+
+- **Definition 扩展**（形状 / 箭头 / 图案 / 路径生成器 / 复合）：用 `xxxDefinition` 定义，经 `CompileOptions` / `<Layout>` 注入，编译期生效，IR 里只留名字。形状 / 箭头 / 图案 / 路径生成器按名注入（`Record<string, …>`，内置同名被覆盖并告警）；复合是 `Array<CompositeDefinition>`，按 `namespace` + `type` 判别，重名直接报错。
+- **Registry 扩展**（缓动 / 动画属性）：注入面是 `<Layout>` 的轻量 registry，运行时在渲染器内生效，不进 compile。缓动没有 `EasingDefinition`——值就是 cubic-bezier 元组或函数；动画属性要同时定义插值与后端落地，才用 `AnimationPropertyDefinition`。
+- **Host lowerer**（TeX 公式）：`CompileOptions.lowerTex` 是可选宿主能力，把公式在编译期降成基础 path，不属于通用图元扩展；缺失时可诊断降级。
 
 ## 章节内容
 
@@ -35,6 +45,10 @@ description: 扩展 retikz——为内置能力之外的需求注册新形状等
   <LinkedCard href="/core/reference/extending/path-generator">
     <span className="font-semibold">路径生成器</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">注册 / 注入自定义曲线生成器的 PathGeneratorDefinition</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/composites">
+    <span className="font-semibold">复合（Tier 2）</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">注册 Tier 2 高层节点的 CompositeDefinition，经 lowering 下沉到 Tier 1</span>
   </LinkedCard>
   <LinkedCard href="/core/reference/extending/custom-animation">
     <span className="font-semibold">自定义动画</span>
