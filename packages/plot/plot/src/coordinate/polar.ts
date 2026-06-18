@@ -1,3 +1,4 @@
+import type { Position } from '@retikz/math';
 import { PlotCoordinate } from '../ir';
 import { isFiniteNumber } from '../data/field';
 import { cellInterval } from './cell';
@@ -12,7 +13,7 @@ export type PolarCoordinate = {
   /** 位置角色序（[angle, radius]）；mark 按此序取 encoding 通道值（x→angle、y→radius 别名） */
   roles: ReadonlyArray<DimensionRole>;
   /** 圆心（屏幕坐标） */
-  center: [number, number];
+  center: Position;
   /** 内半径（user units，环图内半径，0 = 实心） */
   innerRadius: number;
   /** 外半径（user units，可用外半径） */
@@ -28,11 +29,11 @@ export type PolarCoordinate = {
   /** radius 位置 scale（range = [innerRadius, outerRadius]） */
   secondary: PositionScale;
   /** 投影：θ=primary.coordinate(angle)°、r=secondary.coordinate(radius)，[cx + r·cosθ, cy + r·sinθ]；任一非有限 → null */
-  project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
+  project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：按 roles 序传值（[angle, radius]），内部委托 project；任一非有限 → null */
-  projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
+  projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
   /** 把已映射的极坐标对 (θ 度, r user units) 换算成屏幕点（段内采样反投影用；非有限 → null） */
-  projectPolar: (thetaDeg: number, radius: number) => [number, number] | null;
+  projectPolar: (thetaDeg: number, radius: number) => Position | null;
   /** 正交 cell → 环楔（闭式快路）：center = frame.center、角度带 = primary、半径带 = secondary */
   projectCell: (cell: Cell) => CellGeometry;
 };
@@ -43,7 +44,7 @@ const DEG_TO_RAD = Math.PI / 180;
 
 export type PolarCoordinateSpec = {
   /** 圆心（屏幕坐标） */
-  center: [number, number];
+  center: Position;
   /** 内半径（user units） */
   innerRadius: number;
   /** 外半径（user units） */
@@ -67,12 +68,12 @@ export type PolarCoordinateSpec = {
  */
 export const createPolarCoordinate = (input: PolarCoordinateSpec): PolarCoordinate => {
   const [cx, cy] = input.center;
-  const projectPolar = (thetaDeg: number, radius: number): [number, number] | null => {
+  const projectPolar = (thetaDeg: number, radius: number): Position | null => {
     if (!Number.isFinite(thetaDeg) || !Number.isFinite(radius)) return null;
     const radians = thetaDeg * DEG_TO_RAD;
     return [cx + radius * Math.cos(radians), cy + radius * Math.sin(radians)];
   };
-  const project = (angleValue: unknown, radiusValue: unknown): [number, number] | null => {
+  const project = (angleValue: unknown, radiusValue: unknown): Position | null => {
     const theta = input.primary.coordinate(angleValue);
     const radius = input.secondary.coordinate(radiusValue);
     return projectPolar(theta, radius);
@@ -110,7 +111,7 @@ export type ResolvedPolar1DCoordinate = {
   /** 位置角色序（[angle]，单通道；x→angle 别名取值） */
   roles: ReadonlyArray<DimensionRole>;
   /** 圆心（屏幕坐标） */
-  center: [number, number];
+  center: Position;
   /** 固定圆周半径（user units，= radius 占比 × outerRadius） */
   radius: number;
   /** 角向起始角（度，角向 range 起） */
@@ -122,11 +123,11 @@ export type ResolvedPolar1DCoordinate = {
   /** angle 位置 scale（range = [startAngle, endAngle] 度） */
   primary: PositionScale;
   /** 把已映射的极坐标对 (θ 度, r user units) 换算成屏幕点（非有限 → null） */
-  projectPolar: (thetaDeg: number, radius: number) => [number, number] | null;
+  projectPolar: (thetaDeg: number, radius: number) => Position | null;
   /** 投影别名（2 入参形态，secondary 忽略）：等价 projectRoles([angleValue]) */
-  project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
+  project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：roles 长度 1，传 [angleValue] → projectPolar(angleScale(angleValue), radius)；非有限 → null */
-  projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
+  projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
   /** 1D 坐标系无 2D 正交 cell 概念，不实现 projectCell（cell 类 mark fail-loud；声明可选以统一 union 访问） */
   projectCell?: undefined;
 };
@@ -135,7 +136,7 @@ export type ResolvedPolar1DCoordinate = {
 
 export type Polar1DCoordinateSpec = {
   /** 圆心（屏幕坐标） */
-  center: [number, number];
+  center: Position;
   /** 固定圆周半径（user units） */
   radius: number;
   /** 角向起始角（度） */
@@ -151,12 +152,12 @@ export type Polar1DCoordinateSpec = {
 /** 建一维极坐标帧：角向投影固定在半径 radius 的圆周（复用极坐标→笛卡尔换算） */
 export const createPolar1DCoordinate = (input: Polar1DCoordinateSpec): ResolvedPolar1DCoordinate => {
   const [cx, cy] = input.center;
-  const projectPolar = (thetaDeg: number, radius: number): [number, number] | null => {
+  const projectPolar = (thetaDeg: number, radius: number): Position | null => {
     if (!Number.isFinite(thetaDeg) || !Number.isFinite(radius)) return null;
     const radians = thetaDeg * DEG_TO_RAD;
     return [cx + radius * Math.cos(radians), cy + radius * Math.sin(radians)];
   };
-  const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
+  const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
     const theta = input.primary.coordinate(values[0]);
     return projectPolar(theta, input.radius);
   };
@@ -192,11 +193,11 @@ export const toPolarVertex = (frame: PolarCoordinate, angleValue: unknown, radiu
  * @description 相邻顶点间插 RETIKZ_POLAR_SEGMENT_SAMPLES 个中间点（在度 + 半径空间线性，非原始数据空间），
  *   使数据空间「常半径变角」的直边在屏幕弯成弧。顶点数 < 2 时直接返回各顶点投影点（不采样）。
  */
-export const densifyPolarSegments = (frame: PolarCoordinate, vertices: ReadonlyArray<PolarVertex>): Array<[number, number]> => {
+export const densifyPolarSegments = (frame: PolarCoordinate, vertices: ReadonlyArray<PolarVertex>): Array<Position> => {
   if (vertices.length < 2) {
-    return vertices.map(v => frame.projectPolar(v.theta, v.radius)).filter((p): p is [number, number] => p !== null);
+    return vertices.map(v => frame.projectPolar(v.theta, v.radius)).filter((p): p is Position => p !== null);
   }
-  const points: Array<[number, number]> = [];
+  const points: Array<Position> = [];
   const first = frame.projectPolar(vertices[0].theta, vertices[0].radius);
   if (first) points.push(first);
   for (let i = 1; i < vertices.length; i += 1) {

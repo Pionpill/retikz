@@ -1,3 +1,4 @@
+import type { Position } from '@retikz/math';
 import type { Rect } from '../pipeline/layout';
 import type { PositionScale } from '../scale/scale';
 import type { Cell, CellGeometry } from './cell';
@@ -9,9 +10,9 @@ export type ResolvedCustomCoordinate = {
   /** 位置角色序（工厂消费哪些 mark 通道，按序喂 projectRoles） */
   roles: ReadonlyArray<DimensionRole>;
   /** 投影别名：自定义须走 projectRoles（2 入参形态对任意角色数无意义），恒 null */
-  project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
+  project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：按 roles 序传值 → 屏幕点；非有限 → null（跳过） */
-  projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
+  projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
   /**
    * 各角色的位置 scale（工厂可选回传）：供 guide 画轴用——取该角色刻度、其余角色锚在各自 domain 起点，
    * 沿 projectRoles 密采样得曲线轴线 + 刻度点。不回传 → 该坐标系不画轴。
@@ -46,7 +47,7 @@ export type CreateCustomCoordinateOptions = {
  */
 export const createCustomCoordinate = (
   roles: ReadonlyArray<DimensionRole>,
-  projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null,
+  projectRoles: (values: ReadonlyArray<unknown>) => Position | null,
   options?: CreateCustomCoordinateOptions,
 ): ResolvedCustomCoordinate => ({
   type: 'custom',

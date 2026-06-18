@@ -1,3 +1,4 @@
+import type { Position } from '@retikz/math';
 import { RETIKZ_POLAR_SEGMENT_SAMPLES } from './constants';
 import type { DimensionRole } from './types';
 
@@ -19,9 +20,9 @@ export type Cell = {
  *   contour→contour shape），不再按坐标系分叉。
  */
 export type CellGeometry =
-  | { kind: 'rect'; position: [number, number]; width: number; height: number }
-  | { kind: 'sector'; center: [number, number]; innerRadius: number; outerRadius: number; startAngle: number; endAngle: number }
-  | { kind: 'contour'; points: Array<[number, number]> };
+  | { kind: 'rect'; position: Position; width: number; height: number }
+  | { kind: 'sector'; center: Position; innerRadius: number; outerRadius: number; startAngle: number; endAngle: number }
+  | { kind: 'contour'; points: Array<Position> };
 
 export const cellInterval = (cell: Cell, role: DimensionRole): [number, number] => {
   const interval = cell.intervals[role];
@@ -39,7 +40,7 @@ const firstCellInterval = (cell: Cell, roles: ReadonlyArray<DimensionRole>): [nu
 
 type BarycentricPoint = [number, number, number];
 
-type CellTernaryVertices = [[number, number], [number, number], [number, number]];
+type CellTernaryVertices = [Position, Position, Position];
 
 const TERNARY_EPSILON = 1e-9;
 
@@ -77,7 +78,7 @@ const clampUnitInterval = (interval: [number, number]): [number, number] => {
   return [Math.max(0, lo), Math.min(1, hi)];
 };
 
-export const ternaryCellContour = (cell: Cell, vertices: CellTernaryVertices): Array<[number, number]> => {
+export const ternaryCellContour = (cell: Cell, vertices: CellTernaryVertices): Array<Position> => {
   const intervals = [clampUnitInterval(cellInterval(cell, 'x')), clampUnitInterval(cellInterval(cell, 'y')), clampUnitInterval(cellInterval(cell, 'z'))];
   if (intervals.some(([lo, hi]) => lo > hi)) return [];
   let polygon: Array<BarycentricPoint> = [
@@ -111,14 +112,14 @@ export type DensifyCellContourOptions = {
  */
 export const densifyCellContour = (
   cell: Cell,
-  projectFn: (primary: number, secondary: number) => [number, number] | null,
+  projectFn: (primary: number, secondary: number) => Position | null,
   options?: DensifyCellContourOptions,
-): Array<[number, number]> => {
+): Array<Position> => {
   const [p0, p1] = firstCellInterval(cell, ['x']);
   const [s0, s1] = firstCellInterval(cell, ['y']);
   const primarySegments = options?.curvedPrimary ? RETIKZ_POLAR_SEGMENT_SAMPLES + 1 : 1;
   const secondarySegments = options?.curvedSecondary ? RETIKZ_POLAR_SEGMENT_SAMPLES + 1 : 1;
-  const points: Array<[number, number]> = [];
+  const points: Array<Position> = [];
   // 沿某条边在 (primary, secondary) 输出空间线性走，逐点投影；只推「不含起点」的中间点 + 终点
   const walk = (from: [number, number], to: [number, number], segments: number): void => {
     for (let step = 1; step <= segments; step += 1) {

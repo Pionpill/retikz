@@ -1,3 +1,4 @@
+import type { Position } from '@retikz/math';
 import { Cartesian1DOrientation, type Cartesian1DOrientationType, PlotCoordinate } from '../ir';
 import { cellInterval } from './cell';
 import type { Cell, CellGeometry } from './cell';
@@ -14,9 +15,9 @@ export type CartesianCoordinate = {
   /** y（垂直）位置 scale */
   secondary: PositionScale;
   /** 投影：[primary.coordinate(x), secondary.coordinate(y)]；任一非有限 → null */
-  project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
+  project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：按 roles 序传值（[x, y]），内部委托 project；任一非有限 → null */
-  projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
+  projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
   /** 正交 cell → 轴对齐矩形（闭式快路）：position = 两区间中点、width/height = 区间跨度 */
   projectCell: (cell: Cell) => CellGeometry;
 };
@@ -24,7 +25,7 @@ export type CartesianCoordinate = {
 /** 极坐标帧：primary = angle（度，range = [startAngle, endAngle]）、secondary = radius（user units，range = [innerRadius, outerRadius]） */
 
 export const createCartesianCoordinate = (primary: PositionScale, secondary: PositionScale): CartesianCoordinate => {
-  const project = (primaryValue: unknown, secondaryValue: unknown): [number, number] | null => {
+  const project = (primaryValue: unknown, secondaryValue: unknown): Position | null => {
     const x = primary.coordinate(primaryValue);
     const y = secondary.coordinate(secondaryValue);
     if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
@@ -62,16 +63,16 @@ export type ResolvedCartesian1DCoordinate = {
   /** 单一位置 scale */
   primary: PositionScale;
   /** 投影别名（2 入参形态，secondary 忽略）：等价 projectRoles([primaryValue]) */
-  project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
+  project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：roles 长度 1，传 [value] → horizontal [scale(v), baseline] / vertical [baseline, scale(v)]；非有限 → null */
-  projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
+  projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
   /** 1D 坐标系无 2D 正交 cell 概念，不实现 projectCell（cell 类 mark fail-loud；声明可选以统一 union 访问） */
   projectCell?: undefined;
 };
 
 /** 建一维笛卡尔帧：单 scale + 轴向 + 塌缩维基线（horizontal → [scale(v), baseline]、vertical → [baseline, scale(v)]） */
 export const createCartesian1DCoordinate = (scale: PositionScale, orientation: Cartesian1DOrientationType, baseline: number): ResolvedCartesian1DCoordinate => {
-  const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
+  const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
     const position = scale.coordinate(values[0]);
     if (!Number.isFinite(position)) return null;
     // horizontal：数据沿 x、塌缩 y=baseline（底边）；vertical：数据沿 y、塌缩 x=baseline（左边）

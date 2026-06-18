@@ -1,3 +1,4 @@
+import type { Position } from '@retikz/math';
 import type { CartesianCoordinate, ResolvedCartesian1DCoordinate } from './cartesian';
 import type { ResolvedCustomCoordinate } from './custom';
 import type { PolarCoordinate, ResolvedPolar1DCoordinate } from './polar';
@@ -25,7 +26,7 @@ export type ResolvedCoordinate = CartesianCoordinate | PolarCoordinate | Resolve
  */
 export type AxisFrame = {
   /** 该点屏幕坐标。 */
-  origin: [number, number];
+  origin: Position;
   /** 沿该角色轴曲线的切向。 */
   tangent: [number, number];
 };

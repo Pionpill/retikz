@@ -1,10 +1,11 @@
+import type { Position } from '@retikz/math';
 import { PlotCoordinate } from '../ir';
 import { isFiniteNumber } from '../data/field';
 import { ternaryCellContour } from './cell';
 import type { Cell, CellGeometry } from './cell';
 import type { DimensionRole } from './types';
 
-export type TernaryVertices = [[number, number], [number, number], [number, number]];
+export type TernaryVertices = [Position, Position, Position];
 
 /** 三元帧（重心坐标）：三连续分量 x/y/z 归一化后按重心坐标投影到等边三角内 */
 export type ResolvedTernary2DCoordinate = {
@@ -15,9 +16,9 @@ export type ResolvedTernary2DCoordinate = {
   /** 三角顶点（屏幕坐标）：[Vx, Vy, Vz] */
   vertices: TernaryVertices;
   /** 投影别名（2 入参形态对三元无意义，恒返回 null）：三元须走 projectRoles */
-  project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
+  project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：roles 长度 3，传 [x, y, z] → 归一化 + 重心坐标屏幕点；非有限 → null（跳过）、含负 / 和≤0 → throw（fail-loud） */
-  projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
+  projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
   /** 三轴 cell → 三元 simplex 裁剪后的 contour */
   projectCell: (cell: Cell) => CellGeometry;
 };
@@ -29,7 +30,7 @@ export type ResolvedTernary2DCoordinate = {
  */
 export const createTernary2DCoordinate = (vertices: TernaryVertices): ResolvedTernary2DCoordinate => {
   const [vx, vy, vz] = vertices;
-  const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
+  const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
     const x = values[0];
     const y = values[1];
     const z = values[2];
