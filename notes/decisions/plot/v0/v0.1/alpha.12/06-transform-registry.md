@@ -1,8 +1,10 @@
-# ADR-05：transform registry —— IR transform ops 与 runtime transform definitions 分层；两处 switch 收敛为 registry；公开 `defineTransform` + `options.transformDefinitions` 扩展点
+# ADR-06：transform registry —— IR transform ops 与 runtime transform definitions 分层；两处 switch 收敛为 registry；公开 `defineTransform` + `options.transformDefinitions` 扩展点
 
 - 状态：Proposed
 - 决策日期：2026-06-18
-- 关联：[plot v0.1-alpha.12 roadmap](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [同里程碑 ADR-01 bin/aggregate（`<Transform>` 表面源头）](./01-bin-aggregate.md) · [ADR-02 derive/normalize/jitter](./02-derive-normalize-jitter.md) · [ADR-03 mark registry](./03-mark-abstraction-registry.md) · [plot-design.md §8.3](../../../../../architecture/plot-design.md)
+- 关联：[plot v0.1-alpha.12 roadmap](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [同里程碑 ADR-01 bin/aggregate（`<Transform>` 表面源头）](./01-bin-aggregate.md) · [ADR-02 derive/normalize/jitter](./02-derive-normalize-jitter.md) · [ADR-03 mark registry](./03-mark-abstraction-registry.md) · [ADR-05 coordinate registry（同范式样板·三联首篇）](./05-coordinate-registry.md) · [ADR-07 scale registry（同范式样板）](./07-scale-registry.md) · [plot-design.md §8.3](../../../../../architecture/plot-design.md)
+
+> 本 ADR 是「开放扩展 registry 三联」（coordinate 05 / transform 06 / scale 07）的第二篇：ADR-05 收敛 coordinate、本 ADR 收敛 transform、ADR-07 收敛 scale，均开放公开扩展（ADR-03 mark 仅内部收敛不开放）。下方「分名分层 / CustomSchema 排除内置 / 闭合 union + lowering 校验 / options 注入」诸硬规则为三联共享。
 
 > ⚠️ 草案：本 ADR 由 2026-06-18 设计讨论产出、并据同日多 LLM 评审反馈修订一轮（分名分层 / schema 收口 / provenance 契约 / 字段契约 / React 表面对齐 ADR-01）。实现契约为 AI 起草建议稿，待人工 review 后定稿。
 > 本 ADR 同时动引擎层（`transform/` + `pipeline/` + `interaction/`）、IR schema（`ir/transform/` + `ir/plot.ts`）与公开表面（`@retikz/plot` 导出 + react `<Plot transformDefinitions>` + docs）。与 ADR-03 不同——ADR-03 只立内部 mark registry、**不开放**公开 `registerMark`；本 ADR 在 registry 收敛之外**一并开放**公开扩展点，理由见「背景」末段。
@@ -17,7 +19,7 @@
 | **transform definition** | `TransformDefinition` | `{ schema, inputFields?, outputFields?, apply }` 运行时对象（含函数） | **否** | `lowerPlots options.transformDefinitions` / `<Plot transformDefinitions={[...]}>` | **本 ADR 新增** |
 | core 几何 transform | `scope.transforms` | translate / rotate（`@retikz/core` ScopeProps） | 是（core IR） | `<Plot transforms>`（`PlotPanelProps`，`Plot.tsx:7`） | core 既有，**不占用** |
 
-- **op 的 React authoring 表面已由 ADR-01 拍定，本 ADR 不改、不新增、不延后**：自定义 kind 的 op 经**同一个** `<Transform kind="regression" x="year" y="value" />` 或 `dataTransforms` 直传（见「影响」对 build-plot-spec 的小扩展）。
+- **op 的 React authoring 表面已由 ADR-01 拍定，本 ADR 不新增组件、不延后**：自定义 kind 的 op 经**同一个** `<Transform kind="regression" x="year" y="value" />` 或 `dataTransforms` 直传（见「影响」对 build-plot-spec 的小扩展）。为让类型层与 schema 放宽一致，React 的 `TransformProps` 与 `dataTransforms` 从内置 `Transform` 放宽为 `TransformOp`；导出的 `Transform` 类型仍保留为内置 7-union，供内部穷尽处理使用。
 - **本 ADR 只新增 definition 注入口**，命名 `transformDefinitions`——与 `transforms`（几何）、`dataTransforms`（op 直传）三者全程不撞名。
 
 ## 背景
@@ -214,8 +216,8 @@ renderPlot(spec, { sales: rows }, { transformDefinitions: [regression] });
 - **`pipeline/source-fields.ts`**：`collectSourceFields` 加 registry 入参，透传给 `collectTransformFields`。
 - **`interaction/locate.ts`**：用 `prepareRows` 回传的同一 registry 跑 `applyTransforms`（parity）。
 - **`@retikz/plot` 导出**：`defineTransform` / `TransformDefinition` / `TransformContext` / `TransformOp`。
-- **react `Plot.tsx`**：`PlotCommonProps`（经 `LowerPlotsOptions`）自动获得 `transformDefinitions`，`lowerPlotOptionsOf`（`Plot.tsx:74`）透传——与 `coordinates` 同处、同写法；**不**新增 / 改动 `transforms`（几何）或 `dataTransforms`（op 直传）。
-- **build-plot-spec（react）**：ADR-01 的 `<Transform kind="...">` 组件扩展为接受**非内置 kind**——按「kind + 扁平 props 透传成 op」装配（不为每个自定义 kind 写映射）；op 校验延到 lowering。**op authoring 表面不新增、不延后**（纠正首版「本轮只 `<Plot transforms>` 透传、`<Transform>` 后续」与 ADR-01/02 已定决策的冲突）。
+- **react `Plot.tsx`**：`PlotCommonProps`（经 `LowerPlotsOptions`）自动获得 `transformDefinitions`，`lowerPlotOptionsOf`（`Plot.tsx:74`）透传——与 `coordinates` 同处、同写法；**不**改动 `transforms`（几何）。`dataTransforms` 的元素类型从 `Transform` 放宽为 `TransformOp`，以便程序化直传自定义 kind。
+- **react `components/transform.tsx` + `build-plot-spec.ts`**：ADR-01 的 `<Transform kind="...">` 组件扩展为接受**非内置 kind**，`TransformProps` 从 `Transform` 改为 `TransformOp`；build-plot-spec 按「kind + 扁平 props 透传成 op」装配（不为每个自定义 kind 写映射）；op 校验延到 lowering。**op authoring 表面不新增、不延后**（纠正首版「本轮只 `<Plot transforms>` 透传、`<Transform>` 后续」与 ADR-01/02 已定决策的冲突）。
 - **vanilla**：`renderPlot` 第三参即 `LowerPlotsOptions`，加 `transformDefinitions` 后自动生效（仅类型 / 测试）。
 - **文档站**：transform 章节加「自定义 transform / `defineTransform`」小节 + provenance 支持等级说明 + 一个回归 demo；双语同步。
 - **⚠️ 注意（非 BREAKING）**：`Transform` 导出类型不变；`PlotSpec['transform']` 元素类型从精确 7-union 放宽为 `TransformOp`（含 `{ kind: string; ... }`，kind 排除内置）。检查对 `PlotSpec.transform` 元素做穷尽 `switch` 的消费方，确保有 default 或改用 `Transform` 窄化。core 无新依赖、不触 core IR 契约。
@@ -250,6 +252,8 @@ renderPlot(spec, { sales: rows }, { transformDefinitions: [regression] });
 | `ir/transform/transform.ts` | 加 | `TransformOp` | `z.infer<typeof TransformOpSchema>` | — | transform op 类型（内置 ∪ 自定义） |
 | `ir/transform/transform.ts` | 不变 | `TransformSchema` / `Transform` | `z.discriminatedUnion('kind', [7])` | — | 内置 7-union 保持闭合、类型精确（内部穷尽处理用它） |
 | `ir/plot.ts` | 改 | `PlotSpecSchema.transform` | `z.array(TransformOpSchema).optional()` | — | transform 管线接受自定义 kind（原 `z.array(TransformSchema)`） |
+| `react/components/transform.tsx` | 改 | `TransformProps` | `TransformOp` | — | React `<Transform>` 接受内置与自定义 kind；内置 kind 仍由 lowering / schema 精确校验 |
+| `react/Plot.tsx` | 改 | `PlotDslProps.dataTransforms` | `Array<TransformOp>` | — | 程序化 op 直传接受自定义 kind，与 `<Transform>` 同一表面 |
 
 > 运行时 `TransformDefinition` / `TransformContext` / `defineTransform` / `LowerPlotsOptions.transformDefinitions` 是**行为对象、不进 IR**，故不在 zod schema 表，见「文件 scope」。
 > 字段名一旦写死，下游不允许改；需改回本 ADR 加条或开新 ADR。
@@ -268,7 +272,7 @@ renderPlot(spec, { sales: rows }, { transformDefinitions: [regression] });
 - `packages/plot/plot/src/pipeline/source-fields.ts`（改：`collectSourceFields` 加 registry 入参）
 - `packages/plot/plot/src/interaction/locate.ts`（改：用 `prepareRows` 回传 registry 跑 `applyTransforms`）
 - `packages/plot/plot/src/index.ts`（改：re-export `defineTransform` / `TransformDefinition` / `TransformContext` / `TransformOp`）
-- `packages/plot/react/src/Plot.tsx` + `components/build-plot-spec.ts`（改：`transformDefinitions` 经 `LowerPlotsOptions` 透传；`<Transform>` 接受非内置 kind 扁平透传）
+- `packages/plot/react/src/Plot.tsx` + `components/transform.tsx` + `components/build-plot-spec.ts`（改：`transformDefinitions` 经 `LowerPlotsOptions` 透传；`dataTransforms` / `<Transform>` 接受 `TransformOp`；非内置 kind 扁平透传）
 - `packages/plot/plot/tests/transform/registry.test.ts`（新建）· `tests/lower/transform.test.ts`（改）· `tests/lower/data-portability.test.ts`（改）· `tests/interaction/*`（改 / 新建）
 - `apps/docs/src/contents/.../transform/*.mdx` + `*.demo.tsx`（改 / 新建：`defineTransform` 章节 + provenance 等级 + demo，双语）
 
@@ -316,4 +320,4 @@ renderPlot(spec, { sales: rows }, { transformDefinitions: [regression] });
 - `LowerPlotsOptions` / `prepareRows` / `collectSourceFields` / `resolveFrame`（`pipeline/`）—— 修改：加 `transformDefinitions`、registry 解析 + 回传
 - `createPlotLocator`（`interaction/locate.ts`）—— 修改：用同一 registry 保 parity
 - `defineComposite`（`core composites/define.ts`）· `lowerComposites` / `extractKey`（`core compile/composite.ts`）· `options.coordinates`（`pipeline/expand.ts`）—— 参照：`defineTransform` / registry 范式、键提取、dup（throw）/ 未注册（throw）策略
-- `PlotPanelProps`（`Pick<ScopeProps,'transforms'>`，`Plot.tsx:7`）· `dataTransforms`（`Plot.tsx:53`）· `<Transform>`（ADR-01，`build-plot-spec`）—— **避让 / 复用**：几何 `transforms` 与 op `dataTransforms` 不占用，op authoring 复用 ADR-01 `<Transform>`，definition 注入用新 `transformDefinitions`
+- `PlotPanelProps`（`Pick<ScopeProps,'transforms'>`，`Plot.tsx:7`）· `dataTransforms`（`Plot.tsx:53`，改 `Array<TransformOp>`）· `<Transform>`（ADR-01，`TransformProps` 改 `TransformOp`）· `build-plot-spec`—— **避让 / 复用**：几何 `transforms` 与 op `dataTransforms` 不占用，op authoring 复用 ADR-01 `<Transform>`，definition 注入用新 `transformDefinitions`

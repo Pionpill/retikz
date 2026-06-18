@@ -1,15 +1,15 @@
-# ADR-06：scale registry —— IR scale ops 与 runtime scale definitions 分层；position / channel 两族分派收敛为 registry；公开 `defineScale` + `options.scaleDefinitions` 扩展点
+# ADR-07：scale registry —— IR scale ops 与 runtime scale definitions 分层；position / channel 两族分派收敛为 registry；公开 `defineScale` + `options.scaleDefinitions` 扩展点
 
 - 状态：Proposed
 - 决策日期：2026-06-18
-- 关联：[plot v0.1-alpha.12 roadmap](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [ADR-03 mark registry](./03-mark-abstraction-registry.md) · [ADR-05 transform registry（同范式样板）](./05-transform-registry.md) · [plot-design.md §8.3](../../../../../architecture/plot-design.md)
+- 关联：[plot v0.1-alpha.12 roadmap](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [ADR-03 mark registry](./03-mark-abstraction-registry.md) · [ADR-05 coordinate registry（同范式样板·三联首篇）](./05-coordinate-registry.md) · [ADR-06 transform registry（同范式样板）](./06-transform-registry.md) · [plot-design.md §8.3](../../../../../architecture/plot-design.md)
 
-> ⚠️ 草案：本 ADR 由 2026-06-18 设计讨论产出，复用 ADR-05 多 LLM 评审沉淀的硬规则（分名分层 / CustomSchema 排除内置 type / 闭合 union + lowering 期校验 / options 注入保 parity）。实现契约为 AI 起草建议稿，待人工 review + 多 LLM 评审后定稿。
-> 本 ADR 是 alpha.12「registry 收敛三联」的第三篇：ADR-03 收敛 mark 分派、ADR-05 收敛 transform 分派并开放公开扩展、本 ADR 收敛 scale 分派并开放公开扩展。scale 集成面（coordinate 投影 / guide 刻度 / legend 形态 / 类型派生 / compat）比 transform 广，故公开契约比 ADR-05 多一层（legend + compat）。
+> ⚠️ 草案：本 ADR 由 2026-06-18 设计讨论产出，复用 ADR-06 transform 多 LLM 评审沉淀的硬规则（分名分层 / CustomSchema 排除内置 type / 闭合 union + lowering 期校验 / options 注入保 parity）。实现契约为 AI 起草建议稿，待人工 review + 多 LLM 评审后定稿。
+> 本 ADR 是「开放扩展 registry 三联」（coordinate 05 / transform 06 / scale 07）的第三篇（末篇）：ADR-05 收敛 coordinate、ADR-06 收敛 transform、本 ADR 收敛 scale，均开放公开扩展（ADR-03 mark 仅内部收敛不开放）。scale 集成面（coordinate 投影 / guide 刻度 / legend 形态 / 类型派生 / compat）比 transform 广，故公开契约比 ADR-06 多一层（legend + compat）。
 
 ## 名词分层（贯穿全文，先立后用）
 
-沿用 ADR-05 的核心纠正：**「scale op」与「scale definition」是两层不同的东西，必须分名分层**，否则公开 API 一落地就和现有 `spec.scales` / `<Scale>` 组件撞名。
+沿用 ADR-06 的核心纠正：**「scale op」与「scale definition」是两层不同的东西，必须分名分层**，否则公开 API 一落地就和现有 `spec.scales` / `<Scale>` 组件撞名。
 
 | 层 | 名称 | 形态 | 进 IR？ | 投递方式 | 谁定义的 |
 | --- | --- | --- | --- | --- | --- |
@@ -18,7 +18,7 @@
 | **color scheme** | `options.colorSchemes` | `Record<name, (t:number)=>string>` interpolator | **否**（IR 只存 scheme 名串） | `options.colorSchemes` / `<Plot colorSchemes>` | **本 ADR 新增（color 子轴）** |
 
 - **op 的 React authoring 表面复用既有 `<Scale>` 组件**（扩展为接受自定义 `type` 扁平透传，见「影响」），本 ADR 不新增 op 组件。
-- **definition 注入口命名 `scaleDefinitions`**——与 `spec.scales`（op 数组）、`<Scale>`（op 组件）、core scope 几何 prop 全程不撞名（ADR-05 命名冲突教训）。
+- **definition 注入口命名 `scaleDefinitions`**——与 `spec.scales`（op 数组）、`<Scale>`（op 组件）、core scope 几何 prop 全程不撞名（ADR-06 命名冲突教训）。
 
 ## 背景
 
@@ -39,17 +39,17 @@
 两个结构问题（与 transform 同构）：
 
 - **内置 scale / 配色是长尾，写不完。** symlog / 双对数 / 自定义分箱 / 雷达半径 scale、品牌色阶 / 自定义 interpolator scheme……专业可视化的 scale / 配色诉求无穷。全塞内置既膨胀又覆盖不全。
-- **分派写死、与仓库注册范式不一致。** core composite 经 `defineComposite` + options 注册、plot 坐标系经 `options.coordinates` 注册、transform 经 ADR-05 `options.transformDefinitions` 注册——scale 没有等价接口，「加一个 scale 要同时改 5 处 switch / 硬编码集」，且无法被用户扩展。
+- **分派写死、与仓库注册范式不一致。** core composite 经 `defineComposite` + options 注册、plot 坐标系经 `options.coordinates` 注册、transform 经 ADR-06 `options.transformDefinitions` 注册——scale 没有等价接口，「加一个 scale 要同时改 5 处 switch / 硬编码集」，且无法被用户扩展。
 
 GoG 与同类库都把 scale 当可扩展轴：Vega scale 类型 + scheme 开放、Observable Plot scale options 丰富、d3-scale 本身是开放函数族。
 
-**为什么本轮开公开扩展（而 ADR-03 mark 没开）：** mark 是封闭几何基元集、缺明确长尾；scale / 配色长尾是明确现实需求（symlog / 品牌色阶等）。与 ADR-05 transform 同理由开放。项目处 0.x、本里程碑未发布，按最优设计推进、不留别名。
+**为什么本轮开公开扩展（而 ADR-03 mark 没开）：** mark 是封闭几何基元集、缺明确长尾；scale / 配色长尾是明确现实需求（symlog / 品牌色阶等）。与 ADR-06 transform 同理由开放。项目处 0.x、本里程碑未发布，按最优设计推进、不留别名。
 
 ## 决策：position / channel 两族分派收敛为 registry；内置 13 个降为注册项；公开 `defineScale`（family 判别）+ `options.scaleDefinitions` + `options.colorSchemes`（对齐 composite / coordinate / transform）
 
 ### (1) `ScaleDefinition`：family 判别（position vs channel），承载各族异构契约
 
-scale 不是单一 `apply`——position 产坐标数值、channel 产颜色，**产出契约不同**，故 definition 按 `family` 判别（这是本 ADR 与 ADR-05 单一 `apply` 的本质差异）：
+scale 不是单一 `apply`——position 产坐标数值、channel 产颜色，**产出契约不同**，故 definition 按 `family` 判别（这是本 ADR 与 ADR-06 单一 `apply` 的本质差异）：
 
 ```ts
 // scale/registry.ts（示意；definition 是运行时对象、含函数，永不进 IR）
@@ -118,16 +118,16 @@ const defineScale = <Def extends ScaleOp>(def: ScaleDefinition<Def>): ScaleDefin
 - **channel `resolve` 单次产出 evaluator + descriptor + legendForm（评审 BLOCKING）**：不拆 `resolve()` / `legend()` 两函数——现有约束是「resolver 与 legend 共读同一 descriptor」（`channel.ts:24`），拆开会让 custom scale 重算 domain/range/scheme、legend 与实绘漂移。legend form 由 `legendForm` 显式给（不再按 `scaleType` 闭集判）。
 - **compat 降为 per-definition 谓词 / 标志（评审 BLOCKING）**：`isFieldCompatible(fieldType)` 谓词替代 assertScaleFieldCompatible 的拒绝规则集（单值表达不了「连续 scale 接 continuous + temporal、仅拒 categorical」）；`allowsBaseline` 标志替代 assertBaselineScaleCompatible 的非线性集。registry 据此校验，不再硬编码类型枚举。
 - **`ChannelResolveContext` 固定为公开契约（评审 BLOCKING）**：`fieldType` + `toNumber` / `toTimestamp` 强转 helper + `resolveColorScheme(name)`；values 一律 raw、definition 自转。**不留待决策**——它是 public runtime API。
-- **`ScaleDescriptor.scaleType` 放宽为 string + 加 `legendForm`（评审 BLOCKING）**：现 `scaleType: PlotScaleValue` 闭合（`channel.ts:30`），custom type 无法合法返回 descriptor。改 `scaleType: string`（descriptor 是 lowering 内部类型、不进 IR，放宽无 IR 影响）+ legend 改读 `ChannelResolution.legendForm`，form 判别职责移出 scaleType。
+- **`ScaleDescriptor.scaleType` 放宽为 string，legend form 只读 `ChannelResolution.legendForm`（评审 BLOCKING）**：现 `scaleType: PlotScaleValue` 闭合（`channel.ts:30`），custom type 无法合法返回 descriptor。改 `scaleType: string`（descriptor 是 lowering 内部类型、不进 IR，放宽无 IR 影响）；legend form 不写进 descriptor，统一由 `ChannelResolution.legendForm` 给出，form 判别职责移出 scaleType。
 - **`type` 提取 + 形态校验**：从 `schema.shape.type`（z.literal）提取注册键，首次 resolve 期校验「ZodObject + type literal」否则 throw（mirror composite `extractKey`、transform `extractKind`）。
-- **`ScaleDefinition` 泛型自洽（评审 WARNING）**：`type ScaleDefinition<Def extends ScaleOp = ScaleOp> = PositionScaleDefinition<Def> | ChannelScaleDefinition<Def>`（与 ADR-05 `TransformDefinition<Op>` 同形）。
+- **`ScaleDefinition` 泛型自洽（评审 WARNING）**：`type ScaleDefinition<Def extends ScaleOp = ScaleOp> = PositionScaleDefinition<Def> | ChannelScaleDefinition<Def>`（与 ADR-06 `TransformDefinition<Op>` 同形）。
 - **`resolve` 纯且确定**：scale 天然纯（value→输出），无随机；与现有 `resolve*` 函数同性质，无新约束。
 
 内置 13 个直接复用 `ir/scale/scale.ts` 现有 schema + `scale.ts` 现有 `resolve*` 函数，零重写——仅包成 `defineScale({ family, schema, resolve, ... })` 注册项。
 
 ### (2) registry 解析：内置为底 + definition 注入合并，冲突 / 未注册一律 throw
 
-照 `lowerComposites` / ADR-05 `resolveTransformRegistry` 每次 lowering 现建一张 `type → ScaleDefinition` 表：
+照 `lowerComposites` / ADR-06 `resolveTransformRegistry` 每次 lowering 现建一张 `type → ScaleDefinition` 表：
 
 ```ts
 const resolveScaleRegistry = (custom?: Array<ScaleDefinition>): Map<string, ScaleDefinition> => {
@@ -149,7 +149,7 @@ const resolveScaleRegistry = (custom?: Array<ScaleDefinition>): Map<string, Scal
 
 ### (3) IR schema：闭合 union 静态精确校验内置 + 仅未知 type passthrough
 
-`ir/scale/scale.ts` 仍是 schema 静态单一真源，**不**由 registry 动态组装。内置 `ScaleSchema` 保持闭合 13-`discriminatedUnion`；自定义 type 经**排除全部内置 type** 的 passthrough 占位接纳，精确校验延到 lowering（mirror ADR-05 评审 BLOCKING——passthrough 必须排除内置，否则吞掉内置 scale 的非法配置、退化静态校验）：
+`ir/scale/scale.ts` 仍是 schema 静态单一真源，**不**由 registry 动态组装。内置 `ScaleSchema` 保持闭合 13-`discriminatedUnion`；自定义 type 经**排除全部内置 type** 的 passthrough 占位接纳，精确校验延到 lowering（mirror ADR-06 评审 BLOCKING——passthrough 必须排除内置，否则吞掉内置 scale 的非法配置、退化静态校验）：
 
 ```ts
 const BUILTIN_SCALE_TYPES = new Set<string>(Object.values(PlotScale));
@@ -167,13 +167,13 @@ type ScaleOp = z.infer<typeof ScaleOpSchema>;
 
 ### (4) 自定义命名配色 scheme（color 子轴）
 
-`PlotColorScheme` 闭枚举 + `SCHEME_INTERPOLATORS` 闭表是独立小长尾——用户想要品牌色阶 / d3 之外的 interpolator。开 `options.colorSchemes?: Record<string, (t: number) => string>`（mirror `options.coordinates` 的 Record 注入；interpolator 函数不进 IR，IR 只存 scheme 名串）。lowering 解析 `scheme` 名时：先查内置 `SCHEME_INTERPOLATORS`、再查 `options.colorSchemes`，未命中 throw。sequential / diverging / quantize / threshold / quantile 与自定义 channel scale 均可引用自定义 scheme 名。
+`PlotColorScheme` 闭枚举 + `SCHEME_INTERPOLATORS` 闭表是独立小长尾——用户想要品牌色阶 / d3 之外的 interpolator。开 `options.colorSchemes?: Record<string, (t: number) => string>`（name→interpolator 纯函数表，无 schema / type 提取，故用 `Record` 而非 Array<Definition>——区别于 coordinate/transform/scale 的 typed-op 注册；详见 ADR-05「Record/Array 边界」；interpolator 函数不进 IR，IR 只存 scheme 名串）。为避免自定义 scheme 在静态 `PlotSpecSchema.parse` 阶段被 `z.enum(PlotColorScheme)` 拦住，IR 的各 `scheme` 字段从闭合 enum 改为 `ColorSchemeNameSchema = z.string().min(1)`；`PlotColorScheme` 与 `SCHEME_INTERPOLATORS` 仍保留为内置 scheme 名单。lowering 解析 `scheme` 名时：先查内置 `SCHEME_INTERPOLATORS`、再查 `options.colorSchemes`，未命中 throw。sequential / diverging / quantize / threshold / quantile 与自定义 channel scale 均可引用自定义 scheme 名。
 
 理由：
 
 1. **options 注入是仓库既有范式**（composite / coordinate / transform），不另造全局单例；locator parity 经 `resolveFrame` 复用天然成立。
 2. **family 判别准确切分异构产出**：position（坐标 + ticks，喂 coordinate/guide）vs channel（颜色 + legend）契约不同，强行统一成单一 `resolve` 会丢信息；family 让两族各自完整、registry 单表。
-3. **闭合 union（排除内置 type）+ lowering 期精确校验 + per-definition compat 标志**复用 ADR-05 已评审范式，内置静态精确性零损失、硬编码类型集消解为 registry 元数据。
+3. **闭合 union（排除内置 type）+ lowering 期精确校验 + per-definition compat 标志**复用 ADR-06 已评审范式，内置静态精确性零损失、硬编码类型集消解为 registry 元数据。
 
 ## 待决策点 🔻
 
@@ -181,7 +181,7 @@ type ScaleOp = z.infer<typeof ScaleOpSchema>;
 - **自定义 scale 是否参与 type-driven `deriveScale` 默认派生**：倾向**否**——`deriveScale`（field type → 默认 scale）保持内置（continuous→linear、temporal→time、categorical→band）。自定义 scale 仅显式 `<Scale type="...">` / spec 引用，不自动派生（避免「两个自定义 scale 都声称 continuous 默认」的歧义）。需求出现再加「派生优先级」元数据。
 - **position 族 fallbackRange / setRange 契约**：自定义 position scale 必须实现 `setRange`（expand 在 plotArea 定后收敛 range，`expand.ts:649`）。倾向把 `PositionScale` 接口原样作契约（已是 coordinate/guide 唯一消费面），文档强调五个成员全实现，缺一 fail（运行时 duck-typing 或类型层强约束）。
 - **channel 族覆盖 size/opacity/shape 隐式通道 scale 否**：`channel.ts` 的 size（sqrt）/ opacity（linear）/ shape（ordinal 调色板）是**通道编码逻辑**、内部合成 scale，不经 `spec.scales`。倾向**不纳入本轮**——本 ADR 开「具名 scale（coordinate + color 通道引用）」registry；隐式通道 scale 保持内置（见「不在范围」）。
-- **type 冲突放宽 / extractType 时机**：与 ADR-05 同——本轮冲突 throw、`extractType` 首次 resolve 期校验。
+- **type 冲突放宽 / extractType 时机**：与 ADR-06 同——本轮冲突 throw、`extractType` 首次 resolve 期校验。
 
 ## DSL 表面
 
@@ -193,7 +193,7 @@ import { defineScale, renderPlot, type PositionScale } from '@retikz/plot';
 const symlog = defineScale({
   family: 'position',
   schema: z.object({ type: z.literal('symlog'), name: z.string().min(1), constant: z.number().positive().optional(), domain: z.tuple([z.number(), z.number()]).optional() }),
-  fieldKind: 'continuous',
+  isFieldCompatible: fieldType => fieldType !== 'categorical',
   allowsBaseline: true,                                   // symlog 过 0，可作值轴
   resolve: (def, values, fallbackRange): PositionScale => buildSymlogPositionScale(def, values, fallbackRange),
 });
@@ -230,7 +230,7 @@ renderPlot(spec, { series: rows }, {
 - 自定义 position scale 注入后 coordinate 投影 + guide ticks 生效；自定义 channel scale 取色 + legend（ramp/swatch）生效
 - 未注册 / type 冲突 / 自定义 config 不合 schema / schema 形态非法 → 各自清晰 throw
 - 内置 type 字段非法在静态 `PlotSpecSchema.parse` 即抛（CustomScaleSchema 不接住）；未知 type 过静态、lowering 校验
-- `fieldKind` / `allowsBaseline` 驱动 compat：自定义 scale 配错字段类型 / 作非法值轴 → fail-loud
+- `isFieldCompatible` / `allowsBaseline` 驱动 compat：自定义 scale 配错字段类型 / 作非法值轴 → fail-loud
 - 自定义 colorScheme 名解析；未注册 scheme 名 → throw
 - locator 与 lowering 用同一 `scaleDefinitions` → 投影落点 parity
 
@@ -239,11 +239,11 @@ renderPlot(spec, { series: rows }, {
 ## 影响
 
 - **`scale/registry.ts`（新建）**：`ScaleDefinition`（position | channel 判别）/ `ChannelResolveContext` / `defineScale` / `extractType` / `resolveScaleRegistry` / `BUILTIN_SCALES`（13 内置注册项）。
-- **`scale/scale.ts`**：`resolvePositionScale` switch → registry 查表（按 family='position' 路由）；`resolve*` 函数体不变（包成注册项）；`deriveScale` 保持内置；`assertScaleFieldCompatible` / `assertBaselineScaleCompatible` 改读 registry 的 `fieldKind` / `allowsBaseline`；`SCHEME_INTERPOLATORS` 解析加 `options.colorSchemes` 回退。
-- **`scale/channel.ts`**：size/opacity/shape 隐式通道 scale **不变**（不纳入本轮）。`ScaleDescriptor` 改动（评审 BLOCKING）：`scaleType: PlotScaleValue` → `scaleType: string`（放宽接纳自定义 type；descriptor 是 lowering 内部类型、不进 IR），并加 `legendForm: 'ramp' | 'swatch'`——legend form 判别从 scaleType 移到此字段。内置 size/shape 等 descriptor 同步补 `legendForm`（size/opacity→swatch、shape→swatch）。
-- **`pipeline/expand.ts`**：`makeColorResolver` channel switch → registry 查表（family='channel'，调 def.resolve + def.legend）；`LowerPlotsOptions` 加 `scaleDefinitions?: Array<ScaleDefinition>` + `colorSchemes?: Record<string, (t:number)=>string>`；`prepareRows` / `resolveFrame` 解析 registry 并贯穿。
-- **`guide/guide.ts`**：legend form 选择从「据 `scaleType` 闭集判」改为「据 `ScaleDescriptor.legendForm`（channel definition `resolve()` 单次产出）判」——内置 13 个行为等价，自定义 channel scale 据此可渲染 legend，且 descriptor 与实绘同源（不重算）。
-- **`ir/scale/scale.ts`**：加 `BUILTIN_SCALE_TYPES` / `CustomScaleSchema`（type 排除内置）/ `ScaleOpSchema` / `ScaleOp`；`ScaleSchema` / `Scale`（内置 13-union）不变。
+- **`scale/scale.ts`**：`resolvePositionScale` switch → registry 查表（按 family='position' 路由）；`resolve*` 函数体不变（包成注册项）；`deriveScale` 保持内置；`assertScaleFieldCompatible` / `assertBaselineScaleCompatible` 改读 registry 的 `isFieldCompatible` / `allowsBaseline`；`SCHEME_INTERPOLATORS` 解析加 `options.colorSchemes` 回退。
+- **`scale/channel.ts`**：size/opacity/shape 隐式通道 scale **不变**（不纳入本轮）。`ScaleDescriptor` 改动（评审 BLOCKING）：`scaleType: PlotScaleValue` → `scaleType: string`（放宽接纳自定义 type；descriptor 是 lowering 内部类型、不进 IR）；legend form 不进 descriptor，统一由 `ChannelResolution.legendForm` 提供。
+- **`pipeline/expand.ts`**：`makeColorResolver` channel switch → registry 查表（family='channel'，调 `def.resolve` 单次产出 evaluator + descriptor + legendForm）；`LowerPlotsOptions` 加 `scaleDefinitions?: Array<ScaleDefinition>` + `colorSchemes?: Record<string, (t:number)=>string>`；`prepareRows` / `resolveFrame` 解析 registry 并贯穿。
+- **`guide/guide.ts`**：legend form 选择从「据 `scaleType` 闭集判」改为「据 `ChannelResolution.legendForm` 判」——内置 13 个行为等价，自定义 channel scale 据此可渲染 legend，且 descriptor 与实绘同源（不重算）。
+- **`ir/scale/scale.ts`**：加 `BUILTIN_SCALE_TYPES` / `CustomScaleSchema`（type 排除内置）/ `ScaleOpSchema` / `ScaleOp`；`scheme` 字段改读 `ColorSchemeNameSchema = z.string().min(1)` 以允许自定义 scheme 名；`ScaleSchema` / `Scale`（内置 13-union）不变。
 - **`ir/plot.ts`**：`scales` 字段 `ScaleSchema` → `ScaleOpSchema`。
 - **`interaction/locate.ts`**：经 `resolveFrame` 复用同一 registry（parity），多数情况无需直接改（registry 已贯穿 resolveFrame 入参）。
 - **`@retikz/plot` 导出**：`defineScale` / `ScaleDefinition` / `PositionScaleDefinition` / `ChannelScaleDefinition` / `ChannelResolveContext` / `ScaleOp`（`PositionScale` 已导出）。
@@ -278,6 +278,8 @@ renderPlot(spec, { series: rows }, {
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
 | `ir/scale/scale.ts` | 加 | `BUILTIN_SCALE_TYPES` | `Set<string>`（= `Object.values(PlotScale)`） | — | 内置 scale type 集，供 CustomScaleSchema 排除（非 zod、模块常量） |
+| `ir/scale/scale.ts` | 加 | `ColorSchemeNameSchema` | `z.string().min(1)` | — | scheme 名称字段：内置 scheme 与自定义 `options.colorSchemes` 名称都可静态通过；未注册名 lowering 期 fail-loud |
+| `ir/scale/scale.ts` | 改 | `*.scheme` | `ColorSchemeNameSchema.optional()`（替代 `z.enum(PlotColorScheme).optional()`） | 各 scale 现有默认不变 | color scheme 字段从闭合内置枚举放宽为非空字符串，支持自定义命名配色 |
 | `ir/scale/scale.ts` | 加 | `CustomScaleSchema` | `z.object({ type: z.string().min(1).refine(非内置), name: z.string().min(1) }).passthrough()` | — | 自定义 scale 占位：type 为非内置标识 + name；config 透传；lowering 期按 definition.schema 精确校验 |
 | `ir/scale/scale.ts` | 加 | `ScaleOpSchema` | `z.union([ScaleSchema, CustomScaleSchema])` | — | spec 层 scale op：内置精确 13-union ∪ 自定义占位 |
 | `ir/scale/scale.ts` | 加 | `ScaleOp` | `z.infer<typeof ScaleOpSchema>` | — | scale op 类型（内置 ∪ 自定义） |
@@ -289,14 +291,14 @@ renderPlot(spec, { series: rows }, {
 
 ### 文件 scope
 
-- `packages/plot/plot/src/ir/scale/scale.ts`（改：加 Custom/Op schema + 内置 type 集 + 类型；`ScaleSchema` 不动）
+- `packages/plot/plot/src/ir/scale/scale.ts`（改：加 Custom/Op schema + 内置 type 集 + 类型；`scheme` 字段放宽为 `ColorSchemeNameSchema`；`ScaleSchema` union 成员不变）
 - `packages/plot/plot/src/ir/plot.ts`（改：`scales` 字段换 `ScaleOpSchema`）
 - `packages/plot/plot/src/scale/registry.ts`（新建：`ScaleDefinition` / `ChannelResolveContext` / `defineScale` / `extractType` / `resolveScaleRegistry` / `BUILTIN_SCALES`）
 - `packages/plot/plot/src/scale/scale.ts`（改：`resolvePositionScale` → registry 查表；compat assert 读 registry 元数据；scheme 解析加 colorSchemes 回退；`resolve*` 包成注册项）
-- `packages/plot/plot/src/scale/channel.ts`（改：仅 `ScaleDescriptor` 按需加 `legendForm`；隐式通道 scale 不动）
+- `packages/plot/plot/src/scale/channel.ts`（改：`ScaleDescriptor.scaleType` 放宽为 string；隐式通道 scale 不动）
 - `packages/plot/plot/src/scale/index.ts`（改：导出 `defineScale` / 类型）
 - `packages/plot/plot/src/pipeline/expand.ts`（改：`makeColorResolver` → registry 查表；`LowerPlotsOptions.{scaleDefinitions,colorSchemes}`；`prepareRows` / `resolveFrame` 解析 + 贯穿 registry）
-- `packages/plot/plot/src/guide/guide.ts`（改：legend form 据 channel definition `legend()` 选，非 scaleType 闭集）
+- `packages/plot/plot/src/guide/guide.ts`（改：legend form 据 `ChannelResolution.legendForm` 选，非 scaleType 闭集）
 - `packages/plot/plot/src/interaction/locate.ts`（改 / 验证：经 resolveFrame 用同一 registry 保 parity）
 - `packages/plot/plot/src/index.ts`（改：re-export `defineScale` / 类型）
 - `packages/plot/react/src/Plot.tsx` + `components/scales.tsx` + `components/build-plot-spec.ts`（改：`scaleDefinitions` / `colorSchemes` 透传；`<Scale>` 接受自定义 type 扁平透传；build*Scale 透传自定义 type）
@@ -325,7 +327,7 @@ renderPlot(spec, { series: rows }, {
 - `unknown_scale_type_throws`：spec 引用未注册 type → lowering throw 清晰错（非静默）
 - `duplicate_scale_type_throws`：`scaleDefinitions` 与内置同 type / 两自定义同 type → throw
 - `builtin_bad_field_static_reject`：`{ type:'linear', name:'y', domain:['a','b'] }` → 静态 `PlotSpecSchema.parse` 即抛（CustomScaleSchema 不接住）
-- `custom_fieldkind_incompatible_fails`：自定义 position scale `fieldKind:'continuous'` 配 categorical 字段 → fail-loud
+- `custom_field_compatible_predicate_fails`：自定义 position scale `isFieldCompatible` 拒绝 categorical 字段 → fail-loud
 - `custom_baseline_incompatible_fails`：`allowsBaseline:false` 的自定义 scale 作 interval 值轴 → fail-loud
 - `unknown_color_scheme_throws`：引用未注册 scheme 名 → throw
 - `malformed_scale_schema_throws`：definition.schema 非 ZodObject / `type` 非 literal → `resolveScaleRegistry` throw
@@ -343,10 +345,10 @@ renderPlot(spec, { series: rows }, {
 - `resolveLinearScale` / `resolveBandScale` / `resolvePointScale` / `resolveTimeScale` / `resolveLogScale` / `resolvePowScale` / `resolveSqrtScale` / `linearPositionScale` / `bandPositionScale` / `pointPositionScale` / `timePositionScale` / `continuousPositionScale`（`scale/scale.ts`）—— 引用：position 内置 definition 的 `resolve`
 - `resolveOrdinalScale` / `resolveSequentialColorScale` / `resolveDivergingColorScale` / `resolveQuantizeColorScale` / `resolveThresholdColorScale` / `resolveQuantileColorScale` / `sampleSchemeColors`（`scale/scale.ts`）—— 引用：channel 内置 definition 的 `resolve`（单次产 evaluator + descriptor + legendForm）
 - `PositionScale` / `TickSet` / `ColorScaleEvaluator`（`scale/scale.ts`）· `ScaleDescriptor`（`scale/channel.ts`）—— 引用：position / channel definition 的产出契约
-- `deriveScale` / `assertScaleFieldCompatible` / `assertBaselineScaleCompatible`（`scale/scale.ts`）—— 修改：compat 改读 registry `fieldKind` / `allowsBaseline`；deriveScale 保持内置
-- `SCHEME_INTERPOLATORS` / `PlotColorScheme`（`scale/scale.ts` / `ir/scale/scale.ts`）—— 修改 / 引用：scheme 解析加 colorSchemes 回退；`BUILTIN_SCALE_TYPES` 来源 `PlotScale`
+- `deriveScale` / `assertScaleFieldCompatible` / `assertBaselineScaleCompatible`（`scale/scale.ts`）—— 修改：compat 改读 registry `isFieldCompatible` / `allowsBaseline`；deriveScale 保持内置
+- `SCHEME_INTERPOLATORS` / `PlotColorScheme` / `ColorSchemeNameSchema`（`scale/scale.ts` / `ir/scale/scale.ts`）—— 修改 / 引用：scheme schema 放宽为非空字符串，解析加 colorSchemes 回退；`BUILTIN_SCALE_TYPES` 来源 `PlotScale`
 - `ScaleSchema` + 13 子 schema（`ir/scale/scale.ts`）—— 引用：内置 definition 的 schema 直接复用
-- `LegendInput.form` / `lowerLegend`（`guide/guide.ts:544`）· `ScaleDescriptor`（`channel.ts:26`，`scaleType` 放宽 string + 加 `legendForm`）—— 修改：form 据 `ScaleDescriptor.legendForm` 选，descriptor 实绘 / legend 同源
+- `LegendInput.form` / `lowerLegend`（`guide/guide.ts:544`）· `ScaleDescriptor`（`channel.ts:26`，`scaleType` 放宽 string）—— 修改：form 据 `ChannelResolution.legendForm` 选，descriptor 实绘 / legend 同源
 - `LowerPlotsOptions` / `prepareRows` / `resolveFrame` / `createPlotLocator`（`pipeline/` / `interaction/`）—— 修改：加 options + registry 贯穿，parity
 - `<Scale>` / `ScaleProps` / `buildPositionScale` / `buildColorScale`（react `components/scales.tsx` / `build-plot-spec.ts`）—— 修改：接受自定义 type 透传
-- `defineComposite`（core）· ADR-05 `defineTransform` / `resolveTransformRegistry` · `options.coordinates`（`expand.ts`）—— 参照：`defineScale` / registry / options 注入范式、键提取、dup / 未注册策略
+- `defineComposite`（core）· ADR-06 `defineTransform` / `resolveTransformRegistry` · `options.coordinates`（`expand.ts`）—— 参照：`defineScale` / registry / options 注入范式、键提取、dup / 未注册策略
