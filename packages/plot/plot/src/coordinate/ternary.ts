@@ -1,6 +1,5 @@
-import type { Position } from '@retikz/math';
+import { type Position, isFiniteNumber } from '@retikz/math';
 import { PlotCoordinate } from '../ir';
-import { isFiniteNumber } from '../data/field';
 import { type Cell, type CellGeometry, cellInterval } from './cell';
 import type { DimensionRole } from './types';
 

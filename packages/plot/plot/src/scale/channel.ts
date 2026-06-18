@@ -1,3 +1,4 @@
+import { isFiniteNumber } from '@retikz/math';
 import {
   type ExternalRow,
   type LegendChannelValue,
@@ -14,7 +15,7 @@ import {
   type ScaledMarkValueType,
   type SqrtScale,
 } from '../ir';
-import { isFiniteNumber, resolveFieldPath } from '../data/field';
+import { resolveFieldPath } from '../data/field';
 import { inferCategoryDomain, resolveLinearScale, resolveSqrtScale } from './scale';
 
 /**

@@ -1,6 +1,5 @@
-import type { Position } from '@retikz/math';
+import { type Position, isFiniteNumber } from '@retikz/math';
 import { PlotCoordinate } from '../ir';
-import { isFiniteNumber } from '../data/field';
 import { cellInterval } from './cell';
 import { RETIKZ_POLAR_SEGMENT_SAMPLES } from './constants';
 import type { Cell, CellGeometry } from './cell';

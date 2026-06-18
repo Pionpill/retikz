@@ -1,5 +1,6 @@
 import { format as d3Format } from 'd3-format';
 import { utcFormat } from 'd3-time-format';
+import { isFiniteNumber } from '@retikz/math';
 import { type Channel, type DataModel, type ExternalRow, PlotFieldType, type PlotFieldTypeValue, type TextChannel } from '../ir';
 
 /**
@@ -24,10 +25,6 @@ export const channelValue = (channel: Channel | undefined, row: ExternalRow): un
   if (channel.field !== undefined) return resolveFieldPath(row, channel.field);
   return undefined;
 };
-
-/** 有限数守卫：scale 映射 / 投影只接受有限数值 */
-export const isFiniteNumber = (value: unknown): value is number =>
-  typeof value === 'number' && Number.isFinite(value);
 
 /** 按字段路径比较两行（数值升序，否则字符串序）——line 的连接顺序 */
 export const compareByPath = (a: ExternalRow, b: ExternalRow, path: string): number => {
@@ -122,7 +119,7 @@ export const isIsoDateString = (value: string): boolean => ISO_DATE_RE.test(valu
 const classifyFieldValue = (value: unknown): PlotFieldTypeValue | undefined => {
   if (value instanceof Date) return PlotFieldType.Temporal;
   if (typeof value === 'bigint') return PlotFieldType.Continuous;
-  if (typeof value === 'number') return Number.isFinite(value) ? PlotFieldType.Continuous : undefined;
+  if (typeof value === 'number') return isFiniteNumber(value) ? PlotFieldType.Continuous : undefined;
   if (typeof value === 'string') return isIsoDateString(value) ? PlotFieldType.Temporal : PlotFieldType.Categorical;
   if (typeof value === 'boolean') return PlotFieldType.Categorical;
   return undefined;

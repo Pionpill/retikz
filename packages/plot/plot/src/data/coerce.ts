@@ -1,3 +1,4 @@
+import { isFiniteNumber } from '@retikz/math';
 import { type DataModel, type ExternalRow, PlotFieldFormat, type PlotFieldFormatValue, PlotFieldType, type PlotFieldTypeValue } from '../ir';
 import { resolveFieldPath } from './field';
 import { toTimestamp } from '../scale/scale';
@@ -7,7 +8,7 @@ const NUMERIC_RE = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
 
 /** 数值强制：number 原样（非有限 → NaN）；safe-integer bigint → number；严格数字串 → number；其余 → NaN（下游按非有限跳过） */
 const coerceNumber = (value: unknown): number => {
-  if (typeof value === 'number') return Number.isFinite(value) ? value : NaN;
+  if (typeof value === 'number') return isFiniteNumber(value) ? value : NaN;
   // bigint（DB int64 / JSON reviver）：仅 safe-integer 区间转 number；超出转 number 会静默丢精度，按非法值处理
   if (typeof value === 'bigint') {
     const numeric = Number(value);
@@ -23,7 +24,7 @@ const coerceNumber = (value: unknown): number => {
 /** 分类强制：string / 有限 number 原样；boolean → 串；其余（对象 / 数组 / null）→ undefined（下游跳过，绝不 String(obj)） */
 const coerceCategory = (value: unknown): string | number | undefined => {
   if (typeof value === 'string') return value;
-  if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
+  if (typeof value === 'number') return isFiniteNumber(value) ? value : undefined;
   if (typeof value === 'boolean') return String(value);
   return undefined;
 };
@@ -48,7 +49,7 @@ export const coerceValue = (value: unknown, type: PlotFieldTypeValue): string | 
 /** 某规范值对其类型是否有效（数值类要有限、分类类非 undefined/null） */
 const isCoercedValid = (value: unknown, type: PlotFieldTypeValue): boolean => {
   if (type === PlotFieldType.Categorical) return value !== undefined && value !== null;
-  return typeof value === 'number' && Number.isFinite(value);
+  return isFiniteNumber(value);
 };
 
 /** 运行时 canonical 值（≠ IR 的 ScalarValue：不含 boolean / null）；coerceValue 与自定义 parse 的输出域 */
@@ -86,36 +87,36 @@ const parseSlashDate = (raw: unknown): number => {
 
 /** 数值 / 数值串 → number（非有限 → NaN）；epoch 秒 / 毫秒缩放共用 */
 const toEpochNumber = (raw: unknown): number => {
-  if (typeof raw === 'number') return Number.isFinite(raw) ? raw : NaN;
+  if (typeof raw === 'number') return isFiniteNumber(raw) ? raw : NaN;
   if (typeof raw === 'string') {
     const trimmed = raw.trim();
     if (trimmed === '') return NaN;
     const parsed = Number(trimmed);
-    return Number.isFinite(parsed) ? parsed : NaN;
+    return isFiniteNumber(parsed) ? parsed : NaN;
   }
   return NaN;
 };
 
 /** 宽松数字串：去前后空白 + 去千分位逗号后 Number；空串 / 非数字 → NaN */
 const parseNumberString = (raw: unknown): number => {
-  if (typeof raw === 'number') return Number.isFinite(raw) ? raw : NaN;
+  if (typeof raw === 'number') return isFiniteNumber(raw) ? raw : NaN;
   if (typeof raw !== 'string') return NaN;
   const cleaned = raw.trim().replace(/,/g, '');
   if (cleaned === '') return NaN;
   const parsed = Number(cleaned);
-  return Number.isFinite(parsed) ? parsed : NaN;
+  return isFiniteNumber(parsed) ? parsed : NaN;
 };
 
 /** 百分比串 '50%' → 0.5（去 `%`、Number/100）；非法 → NaN */
 const parsePercent = (raw: unknown): number => {
-  if (typeof raw === 'number') return Number.isFinite(raw) ? raw / 100 : NaN;
+  if (typeof raw === 'number') return isFiniteNumber(raw) ? raw / 100 : NaN;
   if (typeof raw !== 'string') return NaN;
   const trimmed = raw.trim();
   if (!trimmed.endsWith('%')) return NaN;
   const numeric = trimmed.slice(0, -1).trim();
   if (numeric === '') return NaN;
   const parsed = Number(numeric);
-  return Number.isFinite(parsed) ? parsed / 100 : NaN;
+  return isFiniteNumber(parsed) ? parsed / 100 : NaN;
 };
 
 /**

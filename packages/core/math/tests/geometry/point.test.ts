@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { type Position, lerp, point } from '../../src/geometry/point';
+import { type Position, isFiniteNumber, isInfiniteNumber, lerp, point } from '../../src/geometry/point';
 
 describe('point 向量运算', () => {
+  it('区分 finite / infinite number', () => {
+    expect(isFiniteNumber(1)).toBe(true);
+    expect(isFiniteNumber(0)).toBe(true);
+    expect(isFiniteNumber(Infinity)).toBe(false);
+    expect(isFiniteNumber(NaN)).toBe(false);
+    expect(isFiniteNumber('1')).toBe(false);
+
+    expect(isInfiniteNumber(Infinity)).toBe(true);
+    expect(isInfiniteNumber(-Infinity)).toBe(true);
+    expect(isInfiniteNumber(NaN)).toBe(false);
+    expect(isInfiniteNumber(1)).toBe(false);
+  });
+
   it('add / sub / scale', () => {
     expect(point.add([1, 2], [3, 4])).toEqual([4, 6]);
     expect(point.sub([3, 4], [1, 2])).toEqual([2, 2]);

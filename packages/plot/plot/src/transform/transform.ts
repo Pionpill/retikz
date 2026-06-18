@@ -1,4 +1,5 @@
 import { scaleLinear } from 'd3-scale';
+import { isFiniteNumber } from '@retikz/math';
 import {
   type AggregateTransform,
   type BinTransform,
@@ -12,7 +13,7 @@ import {
   type Transform,
 } from '../ir';
 import type { FieldCollector } from '../data';
-import { compareByPath, isFiniteNumber, resolveFieldPath } from '../data/field';
+import { compareByPath, resolveFieldPath } from '../data/field';
 import { SOURCE_INDICES, readSourceIndex } from '../pipeline/provenance';
 import { inferCategoryDomain } from '../scale/scale';
 

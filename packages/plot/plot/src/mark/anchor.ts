@@ -1,5 +1,6 @@
+import { isFiniteNumber } from '@retikz/math';
 import { type Channel, type ExternalRow, type IntervalBound, IntervalBoundKind, type IntervalMark, type LinkMark, type LinkOrientationValue, type Mark, PlotCoordinate, PlotMark } from '../ir';
-import { channelValue, isFiniteNumber, resolveFieldPath } from '../data/field';
+import { channelValue, resolveFieldPath } from '../data/field';
 import { type Cell, type CellGeometry, type DimensionRole, type ResolvedCartesianCoordinate, type ResolvedCoordinate, type ResolvedPolarCoordinate, hasProjectCell } from '../coordinate';
 import { type PositionScale, inferCategoryDomain } from '../scale/scale';
 
