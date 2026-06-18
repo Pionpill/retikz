@@ -80,6 +80,8 @@ The two charts below use the same size data. The left chart follows data appeara
 
 <ComponentPreview name="data-model-order" sourceFiles={['data-model-order.data.ts']} />
 
+This `order` sorts the **category domain**: axis ticks, legends, and categorical colors follow it. It does not reorder data rows or change the connection order of a line. To reorder rows, use [row sort](/plot/grammar/transform/row#sort).
+
 | `order` | Effect |
 | --- | --- |
 | omitted / `'data'` | data appearance order (default) |

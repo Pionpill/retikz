@@ -19,6 +19,8 @@ description: 行级变换保持输入行数不变，用于排序、堆叠、组�
 
 `sort` 按一个字段重排行，等值时保持原始相对顺序。它常用于在 line/path 前控制连接顺序，或在 stack 前固定输入顺序。
 
+它排的是**数据行**，不会改变分类轴、图例或分类颜色的类别顺序。要固定这些类别顺序，用数据模型里的[分类顺序](/plot/grammar/data/model#分类顺序)。
+
 <ComponentPreview name="transform-sort" sourceFiles={['transform-sort.data.ts']} />
 
 <p className="text-sm text-muted-foreground">输入行故意按 3、1、4、2、6、5 月乱序，sort 后折线按月份顺序连接。</p>

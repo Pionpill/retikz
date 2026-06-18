@@ -72,13 +72,15 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 
 <ComponentPreview name="data-model" size="xxxl" sourceFiles={['data-model.data.ts']} />
 
-## 分类顺序：`order`
+## 分类顺序
 
 `categorical` 字段默认按**数据出现顺序**排类别，轴和图例都会跟着这个顺序。想控制顺序——比如尺码该按 `S → M → L → XL`，而不是数据里碰巧出现的次序——给字段一个 `order`：
 
 下面两张图使用同一份尺码数据：左图按数据出现序显示，右图通过 `order` 固定为业务顺序 `S → M → L → XL`。
 
 <ComponentPreview name="data-model-order" sourceFiles={['data-model-order.data.ts']} />
+
+这里的 `order` 排的是**分类域**：轴刻度、图例和分类颜色会按它走；它不会重排数据行，也不会改变折线连接顺序。要重排行，用[行级变换里的排序](/plot/grammar/transform/row#排序-sort)。
 
 | `order` | 效果 |
 | --- | --- |

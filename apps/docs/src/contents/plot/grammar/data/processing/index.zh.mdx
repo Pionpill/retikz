@@ -19,7 +19,7 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 
 如果字段名换了，进入下一节用 `fieldMap`；如果字段名没换但存储格式变了（例如 ISO 日期变成 `YYYY/MM/DD`），看后面的「解析格式」。
 
-### 字段名不同：`fieldMap`
+### 字段名不同
 
 数据里字段名和配置里的逻辑名对不上时，给一份 `fieldMap`（逻辑名 → 数据里的实际路径），配置不动：
 
@@ -55,7 +55,7 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 | 常见非默认格式 | 在 `model` 字段上写 `format` | 是 |
 | 任意运行时逻辑 | 给 `<Plot>` 写 `resolveField` | 否，函数只在运行时使用 |
 
-### format
+### 声明式解析格式
 
 碰上 `'2024/01/01'`、epoch 秒、`'50%'` 这类常见的非默认格式，不必动用函数——给字段一个声明式 `format`，它**进 IR、可序列化、LLM 也能生成**：
 
@@ -91,7 +91,7 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 
 解析和归一化发生在 transform、scale、mark 之前。Plot 会把解析后的值写入 canonical 行的逻辑字段名上；后续所有环节都读这份值。因此 `fieldMap={{ revenue: 'finance.amount' }}`、`format: 'percent'` 和 `resolveField` 都只影响数据准备阶段，mark 里仍然写 `y="revenue"`。
 
-### resolveField
+### 自定义解析函数
 
 碰上词表外的**任意格式**（如 `'2024Q1'` 季度串、自定义分隔符）或想**强制某字段当某类型**（数值枚举当 `categorical`）时，给 `resolveField` 一个函数——它**不进 IR**（是运行时选项，和 `fieldMap` 同层），按字段名返回「类型覆盖 + 可选自定义解析器」：
 
