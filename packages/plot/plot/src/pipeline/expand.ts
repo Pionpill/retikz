@@ -7,7 +7,7 @@ import { type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerL
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect } from './layout';
 import { type ColorOf, type LabelOf, lowerMark } from '../mark/mark';
 import { type ChannelResolution, type ScaleDescriptor, makeNumericStyleResolver, makeOpacityResolver, makeShapeResolver, makeSizeResolver, makeStrokeWidthResolver } from '../scale/channel';
-import { type AnyCoordinateDefinition, type ResolvedCoordinate, resolveCoordinateRegistry } from '../coordinate';
+import { type AnyCoordinateDefinition, type CoordinateFrame, resolveCoordinateRegistry } from '../coordinate';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks } from '../scale/scale';
 import { applyTransforms } from '../transform/transform';
@@ -164,9 +164,9 @@ export type LowerPlotsOptions = {
 };
 
 /** resolveFrame 产物：mark / guide 共用的投影帧 + 已下沉的网格 / 轴层（z-order 由 expand 编排） */
-export type ResolvedFrame = {
+export type CoordinateFrameResolution = {
   /** mark 与 guide 共用的坐标投影帧（cartesian / polar） */
-  frame: ResolvedCoordinate;
+  frame: CoordinateFrame;
   /** 网格层（垫底；grid:true 的 guide 产出） */
   gridLayers: Array<IRScope>;
   /** 轴层（压顶；每根 axis guide 产出） */
@@ -202,7 +202,7 @@ export type ResolveFrameParams = {
  * @description cartesian：x/y 角色绑 x/y scale、走 plotArea + 直线轴；polar：angle/radius 角色、走 polar layout + 弧 / 辐条轴。
  *   抽成纯函数使 mark 下沉与 ADR-02 locator 共用同一投影（杜绝两套投影漂移）；产物与内联版等价。
  */
-export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
+export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolution => {
   const { node, rows, fieldTypes, width, height, fontSize, margin, provenance, coordinates } = params;
   const coordinateOp = node.coordinate;
   const coordinateRegistry = resolveCoordinateRegistry(coordinates);

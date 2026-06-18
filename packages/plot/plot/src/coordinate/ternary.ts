@@ -94,7 +94,7 @@ const ternaryCellContour = (cell: Cell, vertices: TernaryVertices): Array<Positi
 };
 
 /** 三元运行时坐标帧：三连续分量 x/y/z 归一化后按重心坐标投影到三角形内。 */
-export type ResolvedTernary2DCoordinate = {
+export type Ternary2DCoordinateFrame = {
   /** 判别字段：2D 三元 */
   type: typeof PlotCoordinate.Ternary2D;
   /** 位置角色序（[x, y, z]，3 通道） */
@@ -114,7 +114,7 @@ export type ResolvedTernary2DCoordinate = {
  * @description 每行 (x,y,z) 先归一化 s=x+y+z、(x/s,y/s,z/s)，再 nx·Vx + ny·Vy + nz·Vz 得屏幕点。
  *   非有限值（缺字段 / NaN）→ null 跳过该点（与其它坐标系一致）；含负分量 / 和≤0 → fail-loud（数据错误、不静默归一）。
  */
-export const createTernary2DCoordinate = (vertices: TernaryVertices): ResolvedTernary2DCoordinate => {
+export const createTernary2DCoordinate = (vertices: TernaryVertices): Ternary2DCoordinateFrame => {
   const [vx, vy, vz] = vertices;
   const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
     const x = values[0];

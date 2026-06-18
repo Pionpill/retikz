@@ -1,10 +1,10 @@
 import type { IRJsonObject } from '@retikz/core';
-import { type ExternalDatasets, type ExternalRow, type Mark, PlotCoordinate, PlotMark, type PlotSpec } from '../ir';
+import { type ExternalDatasets, type ExternalRow, type Mark, PlotMark, type PlotSpec } from '../ir';
 import { type IntervalContext, buildIntervalContext, datumAnchor } from '../mark/anchor';
 import { type LowerPlotsOptions, prepareRows, resolveFrame } from '../pipeline/expand';
 import { resolveFieldPath } from '../data';
 import { DEFAULT_FONT_SIZE } from '../pipeline/layout';
-import type { ResolvedCoordinate } from '../coordinate';
+import { type CoordinateFrame, isCartesianCoordinateFrame, isPolarCoordinateFrame } from '../coordinate';
 import { type ProvenanceContext, createDatumIdRegistrar, datumMeta, readSourceIndex, tagSourceIndex } from '../pipeline/provenance';
 import { applyTransforms } from '../transform/transform';
 
@@ -84,7 +84,7 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
   const rows = applyTransforms(normalized, spec.transform);
 
   // frame 复用 resolveFrame：投影几何与 provenance 无关（provenance 只影响 guide 层 id/meta），故传 undefined。
-  const { frame }: { frame: ResolvedCoordinate } = resolveFrame({
+  const { frame }: { frame: CoordinateFrame } = resolveFrame({
     node: spec,
     rows,
     fieldTypes,
@@ -108,8 +108,8 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
   const intervalContexts = new Map<number, IntervalContext>();
   const intervalContextOf = (markIndex: number, mark: Mark): IntervalContext | undefined => {
     if (mark.type !== PlotMark.Interval) return undefined;
-    // interval 仅在 cartesian2D / polar2D 有几何（1D / ternary 已在 lowering fail-loud）；其它帧无 IntervalContext
-    if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) return undefined;
+    // interval 仅在 cartesian2D / polar2D 需要 IntervalContext；其它帧无 IntervalContext
+    if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) return undefined;
     const cached = intervalContexts.get(markIndex);
     if (cached) return cached;
     const ctx = buildIntervalContext(mark, frame, rows);

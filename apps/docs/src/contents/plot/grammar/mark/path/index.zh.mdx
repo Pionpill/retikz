@@ -68,7 +68,7 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 ```ts
 [PlotMark.Path]: { type: PlotMark.Path, lower: lowerPathLayer },
 
-const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
@@ -76,7 +76,7 @@ const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoo
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
 
-const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
   if (mark.type !== PlotMark.Path) return null;
   const closed = mark.closed ?? false;
   const seriesField = pathSeriesField(mark, rows);

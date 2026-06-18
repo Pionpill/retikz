@@ -1,4 +1,4 @@
-import { createCustomCoordinate, defineCoordinate } from '@retikz/plot';
+import { createCoordinateFrame, defineCoordinate } from '@retikz/plot';
 import { Axis, Plot, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 import { z } from 'zod';
@@ -29,7 +29,7 @@ const bridge = defineCoordinate({
       const t = screenX / context.width;
       return [screenX, screenY - archHeight * (1 - (2 * t - 1) ** 2)];
     };
-    const frame = createCustomCoordinate(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
+    const frame = createCoordinateFrame('bridge', ['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
     const axisLayers = context.axisGuides.flatMap(guide => {
       const lowered = context.lowerCustomAxis(frame, guide, context.fontSize, context.provenance);
       return lowered.axisLayer ? [lowered.axisLayer] : [];

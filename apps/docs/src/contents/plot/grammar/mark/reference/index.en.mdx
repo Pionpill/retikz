@@ -72,7 +72,7 @@ For registration, focus on the `ReferenceMark` registry entry and the `lowerRefe
 ```ts
 [PlotMark.Reference]: { type: PlotMark.Reference, lower: lowerReferenceLayer },
 
-const lowerReferenceLayer = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+const lowerReferenceLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (mark.type !== PlotMark.Reference) return null;
   if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
     throw new Error(failLoudMessage(mark.type, frame.type));
@@ -81,7 +81,7 @@ const lowerReferenceLayer = (mark: Mark, rows: Array<ExternalRow>, frame: Resolv
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
 
-const lowerReference = (mark: ReferenceMark, rows: Array<ExternalRow>, frame: Extract<ResolvedCoordinate, { type: typeof PlotCoordinate.Cartesian2D | typeof PlotCoordinate.Polar2D }>, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+const lowerReference = (mark: ReferenceMark, rows: Array<ExternalRow>, frame: Extract<CoordinateFrame, { type: typeof PlotCoordinate.Cartesian2D | typeof PlotCoordinate.Polar2D }>, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
   const orientation = referenceOrientation(mark);
   const band = isReferenceBand(mark, orientation);
   const effectiveRows = referenceRows(mark, rows, orientation);

@@ -12,7 +12,7 @@ The custom coordinate op is still pure JSON. `coordinate={{ type: 'bridge', arch
 The "bridge" coordinate below arches the x-axis into a parabola while y stays vertical. The same regular grid gets its x-axis shape entirely from the definition's `resolve`; set `archHeight` to 0 and it falls back to plain cartesian.
 
 ```tsx
-import { createCustomCoordinate, defineCoordinate } from '@retikz/plot';
+import { createCoordinateFrame, defineCoordinate } from '@retikz/plot';
 import { z } from 'zod';
 
 const bridge = defineCoordinate({
@@ -34,7 +34,7 @@ const bridge = defineCoordinate({
       const t = screenX / context.width;
       return [screenX, screenY - archHeight * (1 - (2 * t - 1) ** 2)];
     };
-    const frame = createCustomCoordinate(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
+    const frame = createCoordinateFrame('bridge', ['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
     const axisLayers = context.axisGuides.flatMap(guide => {
       const lowered = context.lowerCustomAxis(frame, guide, context.fontSize, context.provenance);
       return lowered.axisLayer ? [lowered.axisLayer] : [];

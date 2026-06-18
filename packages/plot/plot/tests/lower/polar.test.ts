@@ -5,7 +5,7 @@ import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 /**
  * ADR-01 polar 投影 lowering 测试。
- * 断言 lowerPlots 产出的 core IR（node position / 结构），不碰内部 ResolvedCoordinate 方法。
+ * 断言 lowerPlots 产出的 core IR（node position / 结构），不碰内部 CoordinateFrame 方法。
  * 投影约定（ADR §2）：θ=angleScale(angleValue) 度、r=radiusScale(radiusValue)，
  *   返回 [cx + r·cos(θ°), cy + r·sin(θ°)]；0°=+x、90°=+y（屏幕 y 向下）。
  */

@@ -12,7 +12,7 @@ description: 自定义坐标系把投影函数留在运行时：IR 只保存自�
 下面的「桥」坐标系把 x 轴拱成抛物线，y 仍竖直。同一份规则网格，x 轴形态完全由 definition 的 `resolve` 决定；把 `archHeight` 改成 0 就退回普通直角。
 
 ```tsx
-import { createCustomCoordinate, defineCoordinate } from '@retikz/plot';
+import { createCoordinateFrame, defineCoordinate } from '@retikz/plot';
 import { z } from 'zod';
 
 const bridge = defineCoordinate({
@@ -34,7 +34,7 @@ const bridge = defineCoordinate({
       const t = screenX / context.width;
       return [screenX, screenY - archHeight * (1 - (2 * t - 1) ** 2)];
     };
-    const frame = createCustomCoordinate(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
+    const frame = createCoordinateFrame('bridge', ['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
     const axisLayers = context.axisGuides.flatMap(guide => {
       const lowered = context.lowerCustomAxis(frame, guide, context.fontSize, context.provenance);
       return lowered.axisLayer ? [lowered.axisLayer] : [];

@@ -1,8 +1,9 @@
 import type { Position } from '@retikz/math';
-import type { ResolvedCartesian1DCoordinate, ResolvedCartesianCoordinate } from './cartesian';
+import type { Cartesian1DCoordinateFrame, CartesianCoordinateFrame } from './cartesian';
 import type { Cell, CellGeometry } from './cell';
-import type { ResolvedPolar1DCoordinate, ResolvedPolarCoordinate } from './polar';
-import type { ResolvedTernary2DCoordinate } from './ternary';
+import type { Polar1DCoordinateFrame, PolarCoordinateFrame } from './polar';
+import type { Ternary2DCoordinateFrame } from './ternary';
+import { PlotCoordinate } from '../ir';
 import type { PositionScale } from '../scale';
 
 /**
@@ -12,16 +13,16 @@ import type { PositionScale } from '../scale';
 export type DimensionRole = 'x' | 'y' | 'z';
 
 /**
- * 自定义运行时坐标帧。
- * @description 投影函数由注册定义提供，不进入 JSON IR；内建 mark / guide 只通过 roles、projectRoles、
- *   可选 roleScales / frameAlong / projectCell 与其交互。
+ * 通用运行时坐标帧。
+ * @description 非内置坐标系和内置坐标系共用这一能力契约；`type` 必须保持 definition 注册的真实 type，
+ *   不再压成统一的 custom 判别值。投影函数由注册 definition 提供，不进入 JSON IR。
  */
-export type ResolvedCustomCoordinate = {
-  /** 判别字段：自定义（运行时 definition 产出，非内建坐标系） */
-  type: 'custom';
+export type GenericCoordinateFrame = {
+  /** 坐标系注册 type；非内置坐标系使用自己的 type，例如 `bridge` / `sine`。 */
+  type: string;
   /** 位置角色序（definition 消费哪些 mark 通道，按序喂 projectRoles） */
   roles: ReadonlyArray<DimensionRole>;
-  /** 投影别名：自定义须走 projectRoles（2 入参形态对任意角色数无意义），恒 null */
+  /** 投影别名：任意角色数坐标系可让它委托 projectRoles；不适用时返回 null。 */
   project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：按 roles 序传值 → 屏幕点；非有限 → null（跳过） */
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
@@ -50,21 +51,33 @@ export type ResolvedCustomCoordinate = {
  *   2 通道的 `project(primary, secondary)` 保留为便捷别名（cartesian/polar 内部 + line/area 复用）。
  *   非有限值返回 null（跳过该点）。
  */
-export type ResolvedCoordinate =
-  | ResolvedCartesianCoordinate
-  | ResolvedPolarCoordinate
-  | ResolvedCartesian1DCoordinate
-  | ResolvedPolar1DCoordinate
-  | ResolvedTernary2DCoordinate
-  | ResolvedCustomCoordinate;
+export type CoordinateFrame =
+  | CartesianCoordinateFrame
+  | PolarCoordinateFrame
+  | Cartesian1DCoordinateFrame
+  | Polar1DCoordinateFrame
+  | Ternary2DCoordinateFrame
+  | GenericCoordinateFrame;
+
+/** 判断运行时坐标帧是否为内置二维笛卡尔帧。 */
+export const isCartesianCoordinateFrame = (coordinate: CoordinateFrame): coordinate is CartesianCoordinateFrame =>
+  coordinate.type === PlotCoordinate.Cartesian2D;
+
+/** 判断运行时坐标帧是否为内置二维极坐标帧。 */
+export const isPolarCoordinateFrame = (coordinate: CoordinateFrame): coordinate is PolarCoordinateFrame =>
+  coordinate.type === PlotCoordinate.Polar2D;
+
+/** 判断运行时坐标帧是否为内置三元坐标帧。 */
+export const isTernary2DCoordinateFrame = (coordinate: CoordinateFrame): coordinate is Ternary2DCoordinateFrame =>
+  coordinate.type === PlotCoordinate.Ternary2D;
 
 /** 具备 cell 几何投影能力的运行时坐标帧。 */
-export type CellProjectableCoordinate = ResolvedCoordinate & {
+export type CellProjectableCoordinate = CoordinateFrame & {
   projectCell: (cell: Cell) => CellGeometry;
 };
 
 /** 判断坐标帧是否支持 interval/reference band 等 cell 类几何投影。 */
-export const hasProjectCell = (coordinate: ResolvedCoordinate): coordinate is CellProjectableCoordinate => {
+export const hasProjectCell = (coordinate: CoordinateFrame): coordinate is CellProjectableCoordinate => {
   const candidate = coordinate as { projectCell?: unknown };
   return typeof candidate.projectCell === 'function';
 };

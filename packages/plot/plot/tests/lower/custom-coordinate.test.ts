@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
-import { type AnyCoordinateDefinition, type AxisFrame, type DimensionRole, type ResolvedCustomCoordinate, createCustomCoordinate, defineCoordinate } from '../../src/coordinate';
+import { type AnyCoordinateDefinition, type AxisFrame, type DimensionRole, type GenericCoordinateFrame, createCoordinateFrame, defineCoordinate } from '../../src/coordinate';
 
 /**
  * 自定义坐标系（custom coordinate）lowering 测试。
@@ -47,7 +47,7 @@ const sineCoordinate = defineCoordinate({
     const amplitude = op.amplitude ?? AMPLITUDE;
     const cycles = op.cycles ?? CYCLES;
     return {
-      frame: createCustomCoordinate(['x'], roleValues => {
+      frame: createCoordinateFrame('sine', ['x'], roleValues => {
         const screenX = scale.coordinate(roleValues[0]);
         if (!Number.isFinite(screenX)) return null;
         return [screenX, MID_Y - amplitude * Math.sin((screenX / context.width) * 2 * Math.PI * cycles)];
@@ -90,7 +90,7 @@ const bridgeCoordinate = defineCoordinate({
       const u = (2 * screenX) / context.width - 1;
       return { origin, tangent: [xSlope, (4 * archHeight * u * xSlope) / context.width] };
     };
-    const frame = createCustomCoordinate(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale }, frameAlong });
+    const frame = createCoordinateFrame('bridge', ['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale }, frameAlong });
     const gridLayers: Array<IRScope> = [];
     const axisLayers: Array<IRScope> = [];
     for (const guide of context.axisGuides) {
@@ -176,6 +176,11 @@ describe('custom coordinate — 二维桥（x 沿拱、y 竖直）', () => {
 });
 
 describe('custom coordinate — 契约 / fail-loud', () => {
+  it('coordinate_frame_preserves_registered_coordinate_type', () => {
+    const frame = createCoordinateFrame('bridge', ['x', 'y'], values => [Number(values[0]), Number(values[1])]);
+    expect(frame.type).toBe('bridge');
+  });
+
   // 未注册工厂 → fail-loud
   it('unknown_factory_fails_loud', () => {
     expect(() => expandOf(sineSpec(), { d: [{ v: 1 }] }, opts([bridgeCoordinate]))).toThrow(/coordinate type "sine" is not registered/i);
@@ -269,7 +274,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
 
 /** 线性对角坐标系（projectRoles=[10x,10x]）：解析切向为常量 [10,10]，frame 级断言用（不依赖 context） */
 const DIAGONAL_K = 10;
-const diagonalFrame = (): ResolvedCustomCoordinate => {
+const diagonalFrame = (): GenericCoordinateFrame => {
   const project = (values: ReadonlyArray<unknown>): [number, number] | null => {
     const x = Number(values[0]);
     return Number.isFinite(x) ? [x * DIAGONAL_K, x * DIAGONAL_K] : null;
@@ -278,7 +283,7 @@ const diagonalFrame = (): ResolvedCustomCoordinate => {
     const origin = project(values);
     return origin ? { origin, tangent: [DIAGONAL_K, DIAGONAL_K] } : null;
   };
-  return createCustomCoordinate(['x'], project, { frameAlong });
+  return createCoordinateFrame('diagonal', ['x'], project, { frameAlong });
 };
 
 const defineSineCoordinate = (
@@ -298,7 +303,7 @@ const defineSineCoordinate = (
         return flat ? [sx, MID_Y] : [sx, MID_Y - AMPLITUDE * Math.sin((sx / context.width) * 2 * Math.PI * CYCLES)];
       };
       const frameAlong = frameAlongOf?.(projectRoles);
-      const frame = createCustomCoordinate(['x'], projectRoles, { roleScales: { x: scale }, ...(frameAlong !== undefined ? { frameAlong } : {}) });
+      const frame = createCoordinateFrame(type, ['x'], projectRoles, { roleScales: { x: scale }, ...(frameAlong !== undefined ? { frameAlong } : {}) });
       const gridLayers: Array<IRScope> = [];
       const axisLayers: Array<IRScope> = [];
       for (const guide of context.axisGuides) {

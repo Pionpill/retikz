@@ -90,7 +90,7 @@ The important registration line and lowering excerpt are:
 ```ts
 [PlotMark.Interval]: { type: PlotMark.Interval, buildCell: (mark, row, frame, ctx) => markCell(mark, row, frame, ctx), lower: lowerIntervalLayer },
 
-const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (mark.type !== PlotMark.Interval) return null;
   if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
     throw new Error(failLoudMessage(mark.type, frame.type));
@@ -103,7 +103,7 @@ const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: Resolve
 const lowerCells = (
   mark: Mark,
   rows: Array<ExternalRow>,
-  frame: ResolvedCoordinate,
+  frame: CoordinateFrame,
   projectCell: (cell: Cell) => CellGeometry,
   ctx: IntervalContext | undefined,
   colorOf: ColorOf | undefined,

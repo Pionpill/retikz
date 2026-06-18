@@ -1,9 +1,9 @@
 // @retikz/plot public API barrel.
-// Built-in resolved coordinate frames are internal lowering objects; expose
-// CoordinateDefinition/custom helpers here, not concrete frame constructors.
+// Built-in concrete coordinate frames are internal lowering objects; expose
+// CoordinateDefinition/frame helpers here, not built-in frame constructors.
 export {
   cellInterval,
-  createCustomCoordinate,
+  createCoordinateFrame,
   defineCoordinate,
   densifyCellContour,
   extractCoordinateType,
@@ -17,11 +17,10 @@ export type {
   CoordinateDefinition,
   CoordinateResolution,
   CoordinateResolveContext,
-  ResolvedCustomCoordinate,
   DimensionRole,
-  CreateCustomCoordinateOptions,
+  CreateCoordinateFrameOptions,
   DensifyCellContourOptions,
-  ResolvedCoordinate,
+  CoordinateFrame,
 } from './coordinate';
 export * from './data/resolve';
 export * from './interaction/locate';

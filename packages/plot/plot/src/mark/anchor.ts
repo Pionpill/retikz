@@ -1,7 +1,18 @@
 import { isFiniteNumber } from '@retikz/math';
 import { type Channel, type ExternalRow, type IntervalBound, IntervalBoundKind, type IntervalMark, type LinkMark, type LinkOrientationValue, type Mark, PlotCoordinate, PlotMark } from '../ir';
 import { channelValue, inferCategoryDomain, resolveFieldPath } from '../data';
-import { type Cell, type CellGeometry, type DimensionRole, type ResolvedCartesianCoordinate, type ResolvedCoordinate, type ResolvedPolarCoordinate, hasProjectCell } from '../coordinate';
+import {
+  type CartesianCoordinateFrame,
+  type Cell,
+  type CellGeometry,
+  type CoordinateFrame,
+  type DimensionRole,
+  type PolarCoordinateFrame,
+  hasProjectCell,
+  isCartesianCoordinateFrame,
+  isPolarCoordinateFrame,
+  isTernary2DCoordinateFrame,
+} from '../coordinate';
 import type { PositionScale } from '../scale/scale';
 
 /**
@@ -23,7 +34,7 @@ export const channelForRole = (mark: Mark, role: DimensionRole): Channel | undef
 };
 
 /** 按 frame.roles 序取某 mark 某行的位置值数组（喂 frame.projectRoles；坐标系无关） */
-export const roleValues = (mark: Mark, row: ExternalRow, frame: ResolvedCoordinate): Array<unknown> =>
+export const roleValues = (mark: Mark, row: ExternalRow, frame: CoordinateFrame): Array<unknown> =>
   frame.roles.map(role => channelValue(channelForRole(mark, role), row));
 
 /** 度 → 弧度 */
@@ -61,7 +72,7 @@ export type IntervalContext = {
  * @description group 取自 bounds.x band 的 group 字段；据其切等分子带（dodge）。seriesRank / subWidth 走
  *   inferCategoryDomain（按数据序去重），与旧 dodge 同算法。
  */
-export const buildIntervalContext = (mark: IntervalMark, frame: ResolvedCartesianCoordinate | ResolvedPolarCoordinate, rows: Array<ExternalRow>): IntervalContext => {
+export const buildIntervalContext = (mark: IntervalMark, frame: CartesianCoordinateFrame | PolarCoordinateFrame, rows: Array<ExternalRow>): IntervalContext => {
   const bandwidth = frame.primary.bandwidth;
   const xBound = resolveIntervalBound(mark, 'x');
   const group = xBound.kind === IntervalBoundKind.Band ? xBound.group : undefined;
@@ -90,7 +101,7 @@ const boundOutputInterval = (
   scale: PositionScale,
   mark: IntervalMark,
   row: ExternalRow,
-  frame: ResolvedCartesianCoordinate | ResolvedPolarCoordinate,
+  frame: CartesianCoordinateFrame | PolarCoordinateFrame,
   ctx: IntervalContext,
 ): [number, number] | null => {
   const channel = axis === 'primary' ? mark.encoding.x : mark.encoding.y;
@@ -134,7 +145,7 @@ const boundOutputInterval = (
  * @description primary = bounds.x、secondary = bounds.y 各经 boundOutputInterval 解析。任一非有限 → null（跳过该行）；
  *   polar 下 primary（角度）或 secondary（半径）跨度退化（< 1e-9）→ null（与旧 sector / radial bar 守卫一致）。
  */
-export const intervalCell = (mark: IntervalMark, row: ExternalRow, frame: ResolvedCartesianCoordinate | ResolvedPolarCoordinate, ctx: IntervalContext): Cell | null => {
+export const intervalCell = (mark: IntervalMark, row: ExternalRow, frame: CartesianCoordinateFrame | PolarCoordinateFrame, ctx: IntervalContext): Cell | null => {
   const primary = boundOutputInterval(resolveIntervalBound(mark, 'x'), 'primary', frame.primary, mark, row, frame, ctx);
   if (primary === null) return null;
   const secondary = boundOutputInterval(resolveIntervalBound(mark, 'y'), 'secondary', frame.secondary, mark, row, frame, ctx);
@@ -233,11 +244,11 @@ export const cellGeometryAnchor = (geometry: CellGeometry): [number, number] => 
  * @description interval → intervalCell（cartesian / polar）或 ternaryIntervalCell；其余 mark → null（非 cell 类）。
  *   interval 在无对应正交 cell 的坐标系（1D / 无 projectCell 的 custom）返回 null，由 mark.ts fail-loud。
  */
-export const markCell = (mark: Mark, row: ExternalRow, frame: ResolvedCoordinate, ctx?: IntervalContext): Cell | null => {
+export const markCell = (mark: Mark, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext): Cell | null => {
   if (mark.type !== PlotMark.Interval) return null;
-  if (frame.type === PlotCoordinate.Ternary2D) return ternaryIntervalCell(mark, row);
+  if (isTernary2DCoordinateFrame(frame)) return ternaryIntervalCell(mark, row);
   if (ctx === undefined) return null;
-  if (frame.type === PlotCoordinate.Cartesian2D || frame.type === PlotCoordinate.Polar2D) return intervalCell(mark, row, frame, ctx);
+  if (isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame)) return intervalCell(mark, row, frame, ctx);
   return null;
 };
 
@@ -268,11 +279,11 @@ export type LinkBandGeometry = {
 };
 
 /** 取 link 一行某端点（source / target 字段对）经 frame.projectRoles 投影出的屏幕中心点；非有限 → null */
-export const linkEndpointPoint = (endpoint: { x: Channel; y: Channel }, row: ExternalRow, frame: ResolvedCoordinate): [number, number] | null =>
+export const linkEndpointPoint = (endpoint: { x: Channel; y: Channel }, row: ExternalRow, frame: CoordinateFrame): [number, number] | null =>
   frame.projectRoles([channelValue(endpoint.x, row), channelValue(endpoint.y, row)]);
 
 /** 取 link 一行源 / 目标两端中心点（任一端非有限 → null，整行跳过） */
-export const linkEndpoints = (mark: LinkMark, row: ExternalRow, frame: ResolvedCoordinate): LinkEndpoints | null => {
+export const linkEndpoints = (mark: LinkMark, row: ExternalRow, frame: CoordinateFrame): LinkEndpoints | null => {
   const source = linkEndpointPoint(mark.source, row, frame);
   const target = linkEndpointPoint(mark.target, row, frame);
   if (source === null || target === null) return null;
@@ -324,7 +335,7 @@ export const linkBandGeometry = (
  *   interval → markCell → frame.projectCell → cellGeometryAnchor；link → 两端中点；point / path / region → frame.projectRoles。
  *   `ctx` 为 IntervalContext（interval mark 必传；其余 mark 传 undefined）。
  */
-export const datumAnchor = (mark: Mark, row: ExternalRow, frame: ResolvedCoordinate, ctx?: IntervalContext): [number, number] | null => {
+export const datumAnchor = (mark: Mark, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext): [number, number] | null => {
   if (mark.type === PlotMark.Interval) {
     if (!hasProjectCell(frame)) return null;
     const cell = markCell(mark, row, frame, ctx);

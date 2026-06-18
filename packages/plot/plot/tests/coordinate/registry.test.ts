@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 import * as plot from '../../src';
 import { PlotCoordinate } from '../../src/ir';
-import { type AnyCoordinateDefinition, BUILTIN_COORDINATES, createCustomCoordinate, defineCoordinate, extractCoordinateType, resolveCoordinateRegistry } from '../../src/coordinate';
+import { type AnyCoordinateDefinition, BUILTIN_COORDINATES, createCoordinateFrame, defineCoordinate, extractCoordinateType, resolveCoordinateRegistry } from '../../src/coordinate';
 
 const archDefinition = defineCoordinate({
   schema: z
@@ -17,7 +17,7 @@ const archDefinition = defineCoordinate({
     const scaleDef = ctx.resolveScaleForRole('x', undefined, values);
     const scale = ctx.buildPositionScale(scaleDef, values, [0, ctx.width]);
     return {
-      frame: createCustomCoordinate(['x'], ([value]) => {
+      frame: createCoordinateFrame('arch', ['x'], ([value]) => {
         const x = scale.coordinate(value);
         return Number.isFinite(x) ? [x, ctx.height - op.archHeight] : null;
       }),
@@ -36,6 +36,8 @@ describe('coordinate registry（alpha.12 ADR-05 spec）', () => {
 
   it('public_barrel_exports_coordinate_definition_helpers', () => {
     expect(plot.defineCoordinate).toBe(defineCoordinate);
+    expect(plot.createCoordinateFrame).toBe(createCoordinateFrame);
+    expect('createCustomCoordinate' in plot).toBe(false);
     expect(plot.extractCoordinateType).toBe(extractCoordinateType);
     expect(plot.resolveCoordinateRegistry).toBe(resolveCoordinateRegistry);
   });

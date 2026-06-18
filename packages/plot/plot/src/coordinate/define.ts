@@ -7,7 +7,7 @@ import type { ProvenanceContext } from '../pipeline/provenance';
 import type { LegendReserve, Margins } from '../pipeline/layout';
 import type { PositionScale } from '../scale';
 import { CARTESIAN_COORDINATES } from './cartesian';
-import type { AxisFrame, DimensionRole, ResolvedCoordinate, ResolvedCustomCoordinate } from './types';
+import type { AxisFrame, CoordinateFrame, DimensionRole, GenericCoordinateFrame } from './types';
 import type { Cell, CellGeometry } from './cell';
 import { POLAR_COORDINATES } from './polar';
 import { TERNARY_COORDINATES } from './ternary';
@@ -31,7 +31,7 @@ export type CoordinatePlotArea = {
  */
 export type CoordinateResolution = {
   /** mark / guide / locator 共用的运行时坐标帧。 */
-  frame: ResolvedCoordinate;
+  frame: CoordinateFrame;
   /** 当前坐标系计算出的绘图区。 */
   plotArea: CoordinatePlotArea;
   /** guide grid 下沉后的 IR scope 列表。 */
@@ -75,8 +75,8 @@ export type CoordinateResolveContext = {
   axisGuides: ReadonlyArray<AxisGuide>;
   /** 下沉直线 / 内置 guide 的通用入口。 */
   lowerGuide: (guide: AxisGuide, ctx: GuideContext, provenance?: ProvenanceContext) => LoweredGuide;
-  /** 下沉曲线 / 自定义坐标轴的入口，依赖 frame.roleScales 与 frame.projectRoles。 */
-  lowerCustomAxis: (frame: ResolvedCustomCoordinate, guide: AxisGuide, fontSize: number, provenance?: ProvenanceContext) => LoweredGuide;
+  /** 下沉曲线坐标轴的入口，依赖 frame.roleScales 与 frame.projectRoles。 */
+  lowerCustomAxis: (frame: GenericCoordinateFrame, guide: AxisGuide, fontSize: number, provenance?: ProvenanceContext) => LoweredGuide;
   /** 已解析的外部数据行；高级坐标系可按需读取完整数据。 */
   rows: Array<ExternalRow>;
   /** 当前 plot 的 mark 列表；主要用于 scale 兼容性与坐标系特定校验。 */
@@ -99,8 +99,8 @@ export type CoordinateDefinition<TCoordinateOp extends CoordinateOp = Coordinate
 /** 定义一个坐标系 definition，并保留 schema 与 resolve 之间的泛型关联。 */
 export const defineCoordinate = <TCoordinateOp extends CoordinateOp>(def: CoordinateDefinition<TCoordinateOp>): CoordinateDefinition<TCoordinateOp> => def;
 
-/** createCustomCoordinate 选项：roleScales 让 guide 画曲线轴、frameAlong 给精确切向、projectCell 支持 cell 类 mark；均可选。 */
-export type CreateCustomCoordinateOptions = {
+/** createCoordinateFrame 选项：roleScales 让 guide 画曲线轴、frameAlong 给精确切向、projectCell 支持 cell 类 mark；均可选。 */
+export type CreateCoordinateFrameOptions = {
   /** 各角色位置 scale；供 guide 画轴。省略 → 该坐标系无轴 */
   roleScales?: Partial<Record<DimensionRole, PositionScale>>;
   /** 某角色轴曲线局部标架；曲线轴优先用其切向，省略 → guide 数值差分回落 */
@@ -110,15 +110,16 @@ export type CreateCustomCoordinateOptions = {
 };
 
 /**
- * 建自定义坐标帧：把 definition 给的 roles + projectRoles 包成 ResolvedCoordinate（point mark 经此投影）
+ * 建通用坐标帧：把 definition 注册 type、roles 与 projectRoles 包成 CoordinateFrame（point mark 经此投影）
  * @description 第三参 options 补充 guide 轴线、精确轴切向和 cell 几何投影能力；未提供的能力保持不可用。
  */
-export const createCustomCoordinate = (
+export const createCoordinateFrame = (
+  type: string,
   roles: ReadonlyArray<DimensionRole>,
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null,
-  options?: CreateCustomCoordinateOptions,
-): ResolvedCustomCoordinate => ({
-  type: 'custom',
+  options?: CreateCoordinateFrameOptions,
+): GenericCoordinateFrame => ({
+  type,
   roles,
   project: () => null,
   projectRoles,
