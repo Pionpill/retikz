@@ -1,6 +1,6 @@
 import { Children, Fragment, type ReactNode, isValidElement } from 'react';
 import {
-  type Coordinate,
+  type CoordinateOp,
   type DataModel,
   type Encoding,
   type ExternalRow,
@@ -99,16 +99,9 @@ export type CoordinateInput =
       /** 2D 三元（重心坐标） */
       type: 'ternary2D';
     }
-  | {
-      /** 自定义坐标系（实验性）：投影由 <Plot coordinates={{ [name]: factory }}> 提供，IR 只存 name + roles + 数值参数 */
-      type: 'custom';
-      /** 工厂名（对应 <Plot coordinates> 表的键） */
-      name: string;
-      /** 该坐标系消费的位置角色序（mark 的 x / y / z 通道） */
-      roles: Array<'x' | 'y' | 'z'>;
-      /** 透传给工厂的数值参数（如 archHeight）；JSON 安全 */
-      params?: Record<string, number>;
-    };
+  | ({ type: string } & Record<string, unknown>);
+
+type Polar2DCoordinateInput = Extract<CoordinateInput, { type: 'polar2D' }>;
 
 /** buildPlotSpec 选项：坐标系选择 + 数据模型 */
 export type BuildPlotSpecOptions = {
@@ -742,8 +735,13 @@ const POLAR_DEFAULT_END_ANGLE = 360;
 const POLAR_DEFAULT_INNER_RADIUS = 0;
 
 /** coordinate 入口判别串（缺省 cartesian2D）；字符串简写与对象 .type 统一取值 */
-const coordinateTypeOf = (input: CoordinateInput | undefined): 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'ternary2D' | 'custom' =>
-  input === undefined ? 'cartesian2D' : typeof input === 'string' ? input : input.type;
+const BUILTIN_COORDINATE_INPUT_TYPES = new Set(['cartesian2D', 'polar2D', 'cartesian1D', 'polar1D', 'ternary2D']);
+
+const coordinateTypeOf = (input: CoordinateInput | undefined): 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'ternary2D' | 'custom' => {
+  if (input === undefined) return 'cartesian2D';
+  const type = typeof input === 'string' ? input : input.type;
+  return BUILTIN_COORDINATE_INPUT_TYPES.has(type) ? (type as 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'ternary2D') : 'custom';
+};
 
 /** 归一化 polar2D coordinate 选项为配置（非 polar2D 返回 undefined），缺省字段填 schema 默认值 */
 type PolarConfig = { innerRadius: number; startAngle: number; endAngle: number };
@@ -752,10 +750,11 @@ const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | u
     return { innerRadius: POLAR_DEFAULT_INNER_RADIUS, startAngle: POLAR_DEFAULT_START_ANGLE, endAngle: POLAR_DEFAULT_END_ANGLE };
   }
   if (typeof coordinate === 'object' && coordinate.type === 'polar2D') {
+    const polar = coordinate as Polar2DCoordinateInput;
     return {
-      innerRadius: coordinate.innerRadius ?? POLAR_DEFAULT_INNER_RADIUS,
-      startAngle: coordinate.startAngle ?? POLAR_DEFAULT_START_ANGLE,
-      endAngle: coordinate.endAngle ?? POLAR_DEFAULT_END_ANGLE,
+      innerRadius: polar.innerRadius ?? POLAR_DEFAULT_INNER_RADIUS,
+      startAngle: polar.startAngle ?? POLAR_DEFAULT_START_ANGLE,
+      endAngle: polar.endAngle ?? POLAR_DEFAULT_END_ANGLE,
     };
   }
   return undefined;
@@ -792,7 +791,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   // 有 model 或 Plot 入口要求延迟推断时，未显式声明 <Scale> 的维度省略 AUTO 绑定，交给 expand 按字段类型派生。
   // 直接调用 buildPlotSpec 且无 model 时，沿用 AUTO 绑定 + 默认推断（向后兼容）。
   const shouldDeferPositionScales = options.model !== undefined || options.deferPositionScaleInference === true;
-  let coordinate: Coordinate;
+  let coordinate: CoordinateOp;
   let scales: Array<PlotScaleSpec>;
   if (coordKind === 'polar2D') {
     const polar = toPolarConfig(options.coordinate) as PolarConfig;
@@ -836,10 +835,11 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     coordinate = { type: PlotCoordinate.Ternary2D };
     scales = [];
   } else if (coordKind === 'custom') {
-    // 自定义坐标系：IR 只存 name + roles + 数值参数；投影工厂经 <Plot coordinates> 单独传（运行时函数、不进 IR）。
-    // coordKind 'custom' 必来自对象形态（无字符串简写），故 options.coordinate 是 custom 对象。
-    const custom = options.coordinate as Extract<CoordinateInput, { type: 'custom' }>;
-    coordinate = { type: PlotCoordinate.Custom, name: custom.name, roles: custom.roles, ...(custom.params !== undefined ? { params: custom.params } : {}) };
+    // 自定义坐标系：IR 直接存 { type:<customType>, ...config }；roles / 投影函数来自运行时 CoordinateDefinition。
+    if (typeof options.coordinate !== 'object' || BUILTIN_COORDINATE_INPUT_TYPES.has(options.coordinate.type) || options.coordinate.type === 'custom') {
+      throw new Error('buildPlotSpec: custom coordinates must use a non-built-in type string, for example { type: "arch", archHeight: 30 }');
+    }
+    coordinate = { ...options.coordinate };
     scales = [];
   } else {
     const xScale = buildCartesianXScale(collected.hasBar || collected.hasRect, explicitScales.x);

@@ -1,8 +1,7 @@
 import type { Position } from '@retikz/math';
-import type { Rect } from '../pipeline/layout';
 import type { PositionScale } from '../scale';
 import type { Cell, CellGeometry } from './cell';
-import type { AxisFrame, DimensionRole, ResolvedCoordinate } from './types';
+import type { AxisFrame, DimensionRole } from './types';
 
 /**
  * 自定义运行时坐标帧。
@@ -63,28 +62,3 @@ export const createCustomCoordinate = (
   ...(options?.frameAlong !== undefined ? { frameAlong: options.frameAlong } : {}),
   ...(options?.projectCell !== undefined ? { projectCell: options.projectCell } : {}),
 });
-
-/**
- * 自定义坐标系工厂的上下文：画布尺寸 + 数值参数 + 角色序 + 按角色建线性位置 scale 的工具
- * @description 工厂据此组装任意投影几何（曲线、拱、螺旋…）。`linearScaleFor(role, range)` 按该角色绑定字段的
- *   数据 extent 建一条线性 scale 映到给定屏幕 range，供工厂拼装；要更复杂 scale 工厂可自行处理。
- */
-export type CustomCoordinateContext = {
-  /** 整图宽（user units） */
-  width: number;
-  /** 整图高（user units） */
-  height: number;
-  /** 绘图区矩形（本轮自定义坐标系给整画布、不自动收窄） */
-  plotArea: Rect;
-  /** label 字号 */
-  fontSize: number;
-  /** IR 传入的数值参数（如 archHeight），JSON 安全；键可缺省（工厂自带默认值），故值可能 undefined */
-  params: Record<string, number | undefined>;
-  /** 该坐标系消费的位置角色序（= IR coordinate.roles） */
-  roles: ReadonlyArray<DimensionRole>;
-  /** 按角色建线性位置 scale（数据 extent → 给定屏幕 range），供工厂拼装投影 */
-  linearScaleFor: (role: DimensionRole, range: [number, number]) => PositionScale;
-};
-
-/** 自定义坐标系工厂：上下文 → ResolvedCoordinate（通常 createCustomCoordinate(roles, projectRoles)） */
-export type CustomCoordinateFactory = (context: CustomCoordinateContext) => ResolvedCoordinate;

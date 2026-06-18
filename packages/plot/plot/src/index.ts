@@ -1,8 +1,6 @@
 // @retikz/plot public API barrel.
 export {
-  REQUIRED_POSITION_CHANNELS,
   RETIKZ_POLAR_SEGMENT_SAMPLES,
-  VALID_GUIDE_DIMENSIONS,
   cellInterval,
   createCartesian1DCoordinate,
   createCartesianCoordinate,
@@ -20,8 +18,6 @@ export type {
   Cell,
   CellGeometry,
   ResolvedCustomCoordinate,
-  CustomCoordinateContext,
-  CustomCoordinateFactory,
   DimensionRole,
   CreateCustomCoordinateOptions,
   DensifyCellContourOptions,

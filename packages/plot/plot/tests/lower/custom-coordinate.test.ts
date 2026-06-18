@@ -1,9 +1,10 @@
-import type { IRNode, IRScope } from '@retikz/core';
+﻿import type { IRNode, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
+import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
-import { type AxisFrame, type CustomCoordinateFactory, type DimensionRole, type ResolvedCustomCoordinate, createCustomCoordinate } from '../../src/coordinate';
+import { type AnyCoordinateDefinition, type AxisFrame, type DimensionRole, type ResolvedCustomCoordinate, createCustomCoordinate, defineCoordinate } from '../../src/coordinate';
 
 /**
  * 自定义坐标系（custom coordinate，实验性）lowering 测试。
@@ -26,50 +27,85 @@ const positionsOf = (layer: IRScope): Array<[number, number]> =>
 
 const WIDTH = 480;
 const HEIGHT = 240;
-const opts = (coordinates: Record<string, CustomCoordinateFactory>): LowerPlotsOptions => ({ width: WIDTH, height: HEIGHT, coordinates });
+const opts = (coordinates: Array<AnyCoordinateDefinition>): LowerPlotsOptions => ({ width: WIDTH, height: HEIGHT, coordinates });
 
 const MID_Y = HEIGHT / 2;
 const AMPLITUDE = 50;
 const CYCLES = 1.5;
 /** 示例工厂：一维曲线坐标系——单值沿正弦曲线落点（curve = 屏幕x → 屏幕y） */
-const sineCoordinate: CustomCoordinateFactory = context => {
-  const scale = context.linearScaleFor('x', [0, context.width]);
-  const amplitude = context.params.amplitude ?? AMPLITUDE;
-  const cycles = context.params.cycles ?? CYCLES;
-  return createCustomCoordinate(['x'], values => {
-    const screenX = scale.coordinate(values[0]);
-    if (!Number.isFinite(screenX)) return null;
-    return [screenX, MID_Y - amplitude * Math.sin((screenX / context.width) * 2 * Math.PI * cycles)];
-  });
-};
+const sineCoordinate = defineCoordinate({
+  schema: z.object({
+    type: z.literal('sine').describe('Discriminator: sine custom coordinate op'),
+    amplitude: z.number().finite().optional().describe('Sine amplitude in user units'),
+    cycles: z.number().finite().optional().describe('Number of sine cycles across the canvas'),
+  }),
+  roles: ['x'],
+  resolve: (op, context) => {
+    const values = context.collectRoleValues('x');
+    const scaleDef = context.resolveScaleForRole('x', undefined, values);
+    const scale = context.buildPositionScale(scaleDef, values, [0, context.width]);
+    const amplitude = op.amplitude ?? AMPLITUDE;
+    const cycles = op.cycles ?? CYCLES;
+    return {
+      frame: createCustomCoordinate(['x'], roleValues => {
+        const screenX = scale.coordinate(roleValues[0]);
+        if (!Number.isFinite(screenX)) return null;
+        return [screenX, MID_Y - amplitude * Math.sin((screenX / context.width) * 2 * Math.PI * cycles)];
+      }),
+      plotArea: { x: 0, y: 0, width: context.width, height: context.height },
+      gridLayers: [],
+      axisLayers: [],
+    };
+  },
+});
 
 const ARCH_HEIGHT = 70;
 /** 示例工厂：二维桥坐标系——x 沿拱、y 竖直偏移（加性可分离）；回传解析 frameAlong 让曲线轴精确 */
-const bridgeCoordinate: CustomCoordinateFactory = context => {
-  const xScale = context.linearScaleFor('x', [0, context.width]);
-  const yScale = context.linearScaleFor('y', [context.height - 40, 40]);
-  const archHeight = context.params.archHeight ?? ARCH_HEIGHT;
-  const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
-    const screenX = xScale.coordinate(values[0]);
-    const yOffset = yScale.coordinate(values[1]);
-    if (!Number.isFinite(screenX) || !Number.isFinite(yOffset)) return null;
-    const t = screenX / context.width;
-    return [screenX, yOffset - archHeight * (1 - (2 * t - 1) ** 2)];
-  };
-  // 解析切向：线性 scale 斜率为常量；∂γ/∂x 沿拱（dY/dx = 4·archHeight·u·xSlope/width，u=2sx/width−1）、∂γ/∂y 竖直
-  const xSlope = xScale.coordinate(1) - xScale.coordinate(0);
-  const ySlope = yScale.coordinate(1) - yScale.coordinate(0);
-  const frameAlong = (role: DimensionRole, values: ReadonlyArray<unknown>): AxisFrame | null => {
-    const origin = projectRoles(values);
-    if (!origin) return null;
-    if (role === 'y') return { origin, tangent: [0, ySlope] };
-    const screenX = xScale.coordinate(values[0]);
-    const u = (2 * screenX) / context.width - 1;
-    return { origin, tangent: [xSlope, (4 * archHeight * u * xSlope) / context.width] };
-  };
-  // options 对象（ADR-05 定稿）：roleScales → guide 画曲线轴；frameAlong → 轴切向精确
-  return createCustomCoordinate(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale }, frameAlong });
-};
+const bridgeCoordinate = defineCoordinate({
+  schema: z.object({
+    type: z.literal('bridge').describe('Discriminator: bridge custom coordinate op'),
+    archHeight: z.number().finite().optional().describe('Arch height in user units'),
+  }),
+  roles: ['x', 'y'],
+  resolve: (op, context) => {
+    const xValues = context.collectRoleValues('x');
+    const yValues = context.collectRoleValues('y');
+    const xScale = context.buildPositionScale(context.resolveScaleForRole('x', undefined, xValues), xValues, [0, context.width]);
+    const yScale = context.buildPositionScale(context.resolveScaleForRole('y', undefined, yValues), yValues, [context.height - 40, 40]);
+    const archHeight = op.archHeight ?? ARCH_HEIGHT;
+    const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
+      const screenX = xScale.coordinate(values[0]);
+      const yOffset = yScale.coordinate(values[1]);
+      if (!Number.isFinite(screenX) || !Number.isFinite(yOffset)) return null;
+      const t = screenX / context.width;
+      return [screenX, yOffset - archHeight * (1 - (2 * t - 1) ** 2)];
+    };
+    const xSlope = xScale.coordinate(1) - xScale.coordinate(0);
+    const ySlope = yScale.coordinate(1) - yScale.coordinate(0);
+    const frameAlong = (role: DimensionRole, values: ReadonlyArray<unknown>): AxisFrame | null => {
+      const origin = projectRoles(values);
+      if (!origin) return null;
+      if (role === 'y') return { origin, tangent: [0, ySlope] };
+      const screenX = xScale.coordinate(values[0]);
+      const u = (2 * screenX) / context.width - 1;
+      return { origin, tangent: [xSlope, (4 * archHeight * u * xSlope) / context.width] };
+    };
+    const frame = createCustomCoordinate(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale }, frameAlong });
+    const gridLayers: Array<IRScope> = [];
+    const axisLayers: Array<IRScope> = [];
+    for (const guide of context.axisGuides) {
+      const lowered = context.lowerCustomAxis(frame, guide, context.fontSize, context.provenance);
+      if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
+      if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
+    }
+    return {
+      frame,
+      plotArea: { x: 0, y: 0, width: context.width, height: context.height },
+      gridLayers,
+      axisLayers,
+    };
+  },
+});
 
 const sineSpec = (): PlotSpec =>
   PlotSpecSchema.parse({
@@ -77,7 +113,7 @@ const sineSpec = (): PlotSpec =>
     type: 'plot',
     data: { reference: 'd' },
     scales: [],
-    coordinate: { type: 'custom', name: 'sine', roles: ['x'] },
+    coordinate: { type: 'sine' },
     marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
   });
 
@@ -87,7 +123,7 @@ const bridgeSpec = (): PlotSpec =>
     type: 'plot',
     data: { reference: 'd' },
     scales: [],
-    coordinate: { type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: ARCH_HEIGHT } },
+    coordinate: { type: 'bridge', archHeight: ARCH_HEIGHT },
     marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
   });
 
@@ -95,7 +131,7 @@ describe('custom coordinate — 一维曲线（projectRoles 沿正弦）', () =>
   it('点落在正弦曲线上（一维坐标系不止直线）', () => {
     const rows = Array.from({ length: 13 }, (_unused, i) => ({ v: i }));
     const scaleAt = (v: number): number => (v / 12) * WIDTH; // 线性 domain[0,12]→[0,WIDTH]
-    const positions = positionsOf(firstLayer(sineSpec(), { d: rows }, opts({ sine: sineCoordinate })));
+    const positions = positionsOf(firstLayer(sineSpec(), { d: rows }, opts([sineCoordinate])));
     expect(positions).toHaveLength(13);
     for (const row of rows) {
       const sx = scaleAt(row.v);
@@ -108,13 +144,13 @@ describe('custom coordinate — 一维曲线（projectRoles 沿正弦）', () =>
   });
 
   it('下沉产物是合法 core IR（compileToScene 不抛）', () => {
-    const layer = firstLayer(sineSpec(), { d: [{ v: 0 }, { v: 6 }, { v: 12 }] }, opts({ sine: sineCoordinate }));
+    const layer = firstLayer(sineSpec(), { d: [{ v: 0 }, { v: 6 }, { v: 12 }] }, opts([sineCoordinate]));
     expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] })).not.toThrow();
   });
 
   it('custom 坐标系 IR JSON round-trip（投影函数不在 IR）', () => {
     const ir = sineSpec().coordinate;
-    expect(JSON.parse(JSON.stringify(ir))).toEqual({ type: 'custom', name: 'sine', roles: ['x'] });
+    expect(JSON.parse(JSON.stringify(ir))).toEqual({ type: 'sine' });
   });
 });
 
@@ -124,7 +160,7 @@ describe('custom coordinate — 二维桥（x 沿拱、y 竖直）', () => {
     for (const x of [0, 5, 10]) for (const y of [0, 10]) rows.push({ x, y });
     const xAt = (x: number): number => (x / 10) * WIDTH;
     const yAt = (y: number): number => HEIGHT - 40 + (y / 10) * (40 - (HEIGHT - 40));
-    const positions = positionsOf(firstLayer(bridgeSpec(), { d: rows }, opts({ bridge: bridgeCoordinate })));
+    const positions = positionsOf(firstLayer(bridgeSpec(), { d: rows }, opts([bridgeCoordinate])));
     expect(positions).toHaveLength(6);
     rows.forEach((row, index) => {
       const sx = xAt(row.x);
@@ -142,7 +178,7 @@ describe('custom coordinate — 二维桥（x 沿拱、y 竖直）', () => {
 describe('custom coordinate — 契约 / fail-loud', () => {
   // 未注册工厂 → fail-loud
   it('unknown_factory_fails_loud', () => {
-    expect(() => expandOf(sineSpec(), { d: [{ v: 1 }] }, opts({ bridge: bridgeCoordinate }))).toThrow(/custom coordinate "sine"|no registered factory/i);
+    expect(() => expandOf(sineSpec(), { d: [{ v: 1 }] }, opts([bridgeCoordinate]))).toThrow(/coordinate type "sine" is not registered/i);
   });
 
   // 缺必填角色（roles 含 y、mark 缺 y）→ fail-loud（必填角色取 coordinate.roles）
@@ -152,10 +188,10 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [],
-      coordinate: { type: 'custom', name: 'bridge', roles: ['x', 'y'] },
+      coordinate: { type: 'bridge' },
       marks: [{ type: 'point', encoding: { x: { field: 'x' } } }],
     });
-    expect(() => expandOf(spec, { d: [{ x: 1 }] }, opts({ bridge: bridgeCoordinate }))).toThrow(/custom coordinate "bridge"|requires|y/i);
+    expect(() => expandOf(spec, { d: [{ x: 1 }] }, opts([bridgeCoordinate]))).toThrow(/bridge coordinate system requires the "y" position channel/i);
   });
 
   // 非法 guide 维度（plot 层只接受 x / y / z）→ schema 层拒绝
@@ -166,7 +202,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
         type: 'plot',
         data: { reference: 'd' },
         scales: [],
-        coordinate: { type: 'custom', name: 'bridge', roles: ['x', 'y'] },
+        coordinate: { type: 'bridge' },
         marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
         guides: [{ type: 'axis', dimension: 'angle' }],
       }),
@@ -180,10 +216,10 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [],
-      coordinate: { type: 'custom', name: 'sine', roles: ['x'] },
+      coordinate: { type: 'sine' },
       marks: [{ type: 'path', encoding: { x: { field: 'v' }, y: { field: 'v' } } }],
     });
-    expect(() => expandOf(spec, { d: [{ v: 1 }, { v: 2 }] }, opts({ sine: sineCoordinate }))).toThrow(/custom coordinate|point only|not supported/i);
+    expect(() => expandOf(spec, { d: [{ v: 1 }, { v: 2 }] }, opts([sineCoordinate]))).toThrow(/custom coordinate|point only|not supported/i);
   });
 
   // 曲线轴：工厂回传 roleScales → <Axis> 沿投影画弯曲轴线（产出轴层 + 至少一条 path）
@@ -193,14 +229,14 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [],
-      coordinate: { type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: ARCH_HEIGHT } },
+      coordinate: { type: 'bridge', archHeight: ARCH_HEIGHT },
       marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
       guides: [
         { type: 'axis', dimension: 'x' },
         { type: 'axis', dimension: 'y' },
       ],
     });
-    const root = expandOf(spec, { d: [{ x: 0, y: 0 }, { x: 10, y: 10 }] }, opts({ bridge: bridgeCoordinate }));
+    const root = expandOf(spec, { d: [{ x: 0, y: 0 }, { x: 10, y: 10 }] }, opts([bridgeCoordinate]));
     // mark 层 + 2 条轴层
     expect(root.children.length).toBeGreaterThanOrEqual(3);
     // x 轴层含一条多点折线（弯曲轴线）：找到带 ≥4 个 step 的 path（密采样）
@@ -219,10 +255,10 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [{ type: 'ordinal', name: 'col', range: ['#aa', '#bb'] }],
-      coordinate: { type: 'custom', name: 'sine', roles: ['x'] },
+      coordinate: { type: 'sine' },
       marks: [{ type: 'point', color: { kind: 'field', value: 'g', scale: 'col' }, encoding: { x: { field: 'v' } } }],
     });
-    const layer = firstLayer(spec, { d: [{ v: 1, g: 'X' }, { v: 9, g: 'Y' }] }, opts({ sine: sineCoordinate }));
+    const layer = firstLayer(spec, { d: [{ v: 1, g: 'X' }, { v: 9, g: 'Y' }] }, opts([sineCoordinate]));
     expect(layer.children).toHaveLength(2);
   });
 });
@@ -245,53 +281,66 @@ const diagonalFrame = (): ResolvedCustomCoordinate => {
   return createCustomCoordinate(['x'], project, { frameAlong });
 };
 
+const defineSineCoordinate = (
+  type: string,
+  frameAlongOf?: (projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null) => (role: DimensionRole, values: ReadonlyArray<unknown>) => AxisFrame | null,
+  flat = false,
+): AnyCoordinateDefinition =>
+  defineCoordinate({
+    schema: z.object({ type: z.literal(type).describe('Discriminator: sine axis test coordinate op') }),
+    roles: ['x'],
+    resolve: (_op, context) => {
+      const values = context.collectRoleValues('x');
+      const scale = context.buildPositionScale(context.resolveScaleForRole('x', undefined, values), values, [0, context.width]);
+      const projectRoles = (roleValues: ReadonlyArray<unknown>): [number, number] | null => {
+        const sx = scale.coordinate(roleValues[0]);
+        if (!Number.isFinite(sx)) return null;
+        return flat ? [sx, MID_Y] : [sx, MID_Y - AMPLITUDE * Math.sin((sx / context.width) * 2 * Math.PI * CYCLES)];
+      };
+      const frameAlong = frameAlongOf?.(projectRoles);
+      const frame = createCustomCoordinate(['x'], projectRoles, { roleScales: { x: scale }, ...(frameAlong !== undefined ? { frameAlong } : {}) });
+      const gridLayers: Array<IRScope> = [];
+      const axisLayers: Array<IRScope> = [];
+      for (const guide of context.axisGuides) {
+        const lowered = context.lowerCustomAxis(frame, guide, context.fontSize, context.provenance);
+        if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
+        if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
+      }
+      return {
+        frame,
+        plotArea: { x: 0, y: 0, width: context.width, height: context.height },
+        gridLayers,
+        axisLayers,
+      };
+    },
+  });
+
 /** 一维正弦坐标系 + roleScales；frameAlong 回传常量切向 [1,0]（法向恒 [0,1]，刻度短线竖直，证明被消费） */
-const sineFramedTangentX: CustomCoordinateFactory = context => {
-  const scale = context.linearScaleFor('x', [0, context.width]);
-  const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
-    const sx = scale.coordinate(values[0]);
-    if (!Number.isFinite(sx)) return null;
-    return [sx, MID_Y - AMPLITUDE * Math.sin((sx / context.width) * 2 * Math.PI * CYCLES)];
-  };
-  const frameAlong = (_role: DimensionRole, values: ReadonlyArray<unknown>): AxisFrame | null => {
-    const origin = projectRoles(values);
-    return origin ? { origin, tangent: [1, 0] } : null;
-  };
-  return createCustomCoordinate(['x'], projectRoles, { roleScales: { x: scale }, frameAlong });
-};
+const sineFramedTangentX = defineSineCoordinate('sineFramed', projectRoles => (_role, values) => {
+  const origin = projectRoles(values);
+  return origin ? { origin, tangent: [1, 0] } : null;
+});
 
 /** 同上但不回传 frameAlong → 曲线轴走数值差分回落 */
-const sineNumeric: CustomCoordinateFactory = context => {
-  const scale = context.linearScaleFor('x', [0, context.width]);
-  const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
-    const sx = scale.coordinate(values[0]);
-    if (!Number.isFinite(sx)) return null;
-    return [sx, MID_Y - AMPLITUDE * Math.sin((sx / context.width) * 2 * Math.PI * CYCLES)];
-  };
-  return createCustomCoordinate(['x'], projectRoles, { roleScales: { x: scale } });
-};
+const sineNumeric = defineSineCoordinate('sineNumeric');
 
 /** 退化坐标系：frameAlong 回传零切向 [0,0]，验证法向导出 guard 不产生 NaN */
-const degenerateFramed: CustomCoordinateFactory = context => {
-  const scale = context.linearScaleFor('x', [0, context.width]);
-  const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
-    const sx = scale.coordinate(values[0]);
-    return Number.isFinite(sx) ? [sx, MID_Y] : null;
-  };
-  const frameAlong = (_role: DimensionRole, values: ReadonlyArray<unknown>): AxisFrame | null => {
+const degenerateFramed = defineSineCoordinate(
+  'degenerate',
+  projectRoles => (_role, values) => {
     const origin = projectRoles(values);
     return origin ? { origin, tangent: [0, 0] } : null;
-  };
-  return createCustomCoordinate(['x'], projectRoles, { roleScales: { x: scale }, frameAlong });
-};
+  },
+  true,
+);
 
-const sineAxisSpec = (): PlotSpec =>
+const sineAxisSpec = (type = 'sineFramed'): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
     scales: [],
-    coordinate: { type: 'custom', name: 'sine', roles: ['x'] },
+    coordinate: { type },
     marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
     guides: [{ type: 'axis', dimension: 'x' }],
   });
@@ -355,7 +404,7 @@ describe('custom coordinate — frameAlong 局部标架契约（ADR-05）', () =
   it('curved_axis_consumes_framealong_tangent', () => {
     // frameAlong 回传常量切向 [1,0] → 法向恒 [0,1] → 所有刻度短线竖直（Δx≈0）；数值差分在正弦上做不到
     const rows = Array.from({ length: 13 }, (_unused, i) => ({ v: i }));
-    const root = expandOf(sineAxisSpec(), { d: rows }, opts({ sine: sineFramedTangentX }));
+    const root = expandOf(sineAxisSpec('sineFramed'), { d: rows }, opts([sineFramedTangentX]));
     const axisLayer = axisLayersOf(root)[0];
     const segments = tickSegmentsOf(axisLayer);
     expect(segments.length).toBeGreaterThan(0);
@@ -365,7 +414,7 @@ describe('custom coordinate — frameAlong 局部标架契约（ADR-05）', () =
   it('framealong_absent_falls_back_to_numeric_sampling', () => {
     // 不回传 frameAlong → 仍画弯曲轴线（polyline ≥ 4 步）；法向随正弦斜率变化、刻度短线非全竖直
     const rows = Array.from({ length: 13 }, (_unused, i) => ({ v: i }));
-    const root = expandOf(sineAxisSpec(), { d: rows }, opts({ sine: sineNumeric }));
+    const root = expandOf(sineAxisSpec('sineNumeric'), { d: rows }, opts([sineNumeric]));
     const axisLayer = axisLayersOf(root)[0];
     expect(polylineStepsOf(axisLayer)).toBeGreaterThanOrEqual(4);
     const segments = tickSegmentsOf(axisLayer);
@@ -375,7 +424,7 @@ describe('custom coordinate — frameAlong 局部标架契约（ADR-05）', () =
   it('degenerate_tangent_guarded_no_nan', () => {
     // 零切向 [0,0] → 法向导出有 guard，标签位置仍有限（不出 NaN）
     const rows = Array.from({ length: 5 }, (_unused, i) => ({ v: i }));
-    const root = expandOf(sineAxisSpec(), { d: rows }, opts({ sine: degenerateFramed }));
+    const root = expandOf(sineAxisSpec('degenerate'), { d: rows }, opts([degenerateFramed]));
     const labels = labelNodesOf(axisLayersOf(root)[0]);
     expect(labels.length).toBeGreaterThan(0);
     for (const node of labels) {
@@ -392,13 +441,13 @@ describe('custom coordinate — frameAlong 局部标架契约（ADR-05）', () =
       type: 'plot',
       data: { reference: 'd' },
       scales: [],
-      coordinate: { type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: ARCH_HEIGHT } },
+      coordinate: { type: 'bridge', archHeight: ARCH_HEIGHT },
       marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
     });
     const rows: Array<Record<string, number>> = [];
     for (const x of [0, 5, 10]) for (const y of [0, 10]) rows.push({ x, y });
-    const root = expandOf(spec, { d: rows }, opts({ bridge: bridgeCoordinate }));
+    const root = expandOf(spec, { d: rows }, opts([bridgeCoordinate]));
     const axisLayer = axisLayersOf(root)[0];
     expect(polylineStepsOf(axisLayer)).toBeGreaterThanOrEqual(4);
     const labels = labelNodesOf(axisLayer);

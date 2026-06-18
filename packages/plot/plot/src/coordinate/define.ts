@@ -1,6 +1,7 @@
 import type { IRScope } from '@retikz/core';
 import { z } from 'zod';
 import type { AxisGuide, CoordinateOp, ExternalRow, Mark, Scale } from '../ir';
+import { Cartesian1DSchema, Cartesian2DSchema, Polar1DSchema, Polar2DSchema, Ternary2DSchema } from '../ir/coordinate';
 import type { GuideContext, LoweredGuide } from '../guide';
 import type { ProvenanceContext } from '../pipeline/provenance';
 import type { LegendReserve, Margins } from '../pipeline/layout';
@@ -32,7 +33,7 @@ export type CoordinateResolveContext = {
   collectRoleValues: (role: DimensionRole, opts?: { includeBaseline?: boolean }) => Array<unknown>;
   resolveScaleForRole: (role: DimensionRole, scaleName: string | undefined, values: Array<unknown>) => Scale;
   buildPositionScale: (def: Scale, values: Array<unknown>, range: readonly [number, number]) => PositionScale;
-  assertBaselineScaleCompatible: (scaleType: string, marks: ReadonlyArray<Mark>) => void;
+  assertBaselineScaleCompatible: (scaleType: Scale['type'], marks: ReadonlyArray<Mark>) => void;
   axisGuides: ReadonlyArray<AxisGuide>;
   lowerGuide: (guide: AxisGuide, ctx: GuideContext, provenance?: ProvenanceContext) => LoweredGuide;
   lowerCustomAxis: (frame: ResolvedCustomCoordinate, guide: AxisGuide, fontSize: number, provenance?: ProvenanceContext) => LoweredGuide;
@@ -53,7 +54,17 @@ export type AnyCoordinateDefinition = Omit<CoordinateDefinition<CoordinateOp>, '
   resolve: (op: never, ctx: CoordinateResolveContext) => CoordinateResolution;
 };
 
-export const BUILTIN_COORDINATES: ReadonlyArray<AnyCoordinateDefinition> = [];
+const unsupportedBuiltinResolve = (): CoordinateResolution => {
+  throw new Error('lowerPlots: built-in coordinate definitions are resolved by the pipeline registry adapter');
+};
+
+export const BUILTIN_COORDINATES: ReadonlyArray<AnyCoordinateDefinition> = [
+  { schema: Cartesian2DSchema, roles: ['x', 'y'], resolve: unsupportedBuiltinResolve },
+  { schema: Polar2DSchema, roles: ['x', 'y'], resolve: unsupportedBuiltinResolve },
+  { schema: Cartesian1DSchema, roles: ['x'], resolve: unsupportedBuiltinResolve },
+  { schema: Polar1DSchema, roles: ['x'], resolve: unsupportedBuiltinResolve },
+  { schema: Ternary2DSchema, roles: ['x', 'y', 'z'], resolve: unsupportedBuiltinResolve },
+];
 
 export const extractCoordinateType = (schema: z.ZodType): string => {
   if (!(schema instanceof z.ZodObject)) {
@@ -65,6 +76,10 @@ export const extractCoordinateType = (schema: z.ZodType): string => {
   }
   return typeSchema.value;
 };
+
+export const BUILTIN_COORDINATE_DEFINITIONS_BY_TYPE: ReadonlyMap<string, AnyCoordinateDefinition> = new Map(
+  BUILTIN_COORDINATES.map(def => [extractCoordinateType(def.schema), def] as const),
+);
 
 export const resolveCoordinateRegistry = (custom?: ReadonlyArray<AnyCoordinateDefinition>): Map<string, AnyCoordinateDefinition> => {
   const registry = new Map<string, AnyCoordinateDefinition>();

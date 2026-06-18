@@ -1,5 +1,6 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
+import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 import { type IntervalMark, type Mark, type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
@@ -12,6 +13,7 @@ import {
   createCartesianCoordinate,
   createCustomCoordinate,
   createPolarCoordinate,
+  defineCoordinate,
   densifyCellContour,
 } from '../../src/coordinate';
 import type { PositionScale } from '../../src/scale/scale';
@@ -468,29 +470,40 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [],
-      coordinate: { type: 'custom', name: 'noproj', roles: ['x', 'y'] },
+      coordinate: { type: 'noproj' },
       marks: [{ type: 'interval', encoding: { x: { field: 'm' }, y: { field: 'v' } } }],
     });
     // custom 工厂返回无 projectCell 的 frame → interval fail-loud（指明缺 projectCell）
     const options: LowerPlotsOptions = {
       width: WIDTH,
       height: HEIGHT,
-      coordinates: {
-        noproj: ctx => {
-          const xScale = ctx.linearScaleFor('x', [0, ctx.width]);
-          const yScale = ctx.linearScaleFor('y', [ctx.height, 0]);
+      coordinates: [
+        defineCoordinate({
+          schema: z.object({ type: z.literal('noproj').describe('Discriminator: no-project-cell custom coordinate op') }),
+          roles: ['x', 'y'],
+          resolve: (_op, ctx) => {
+          const xValues = ctx.collectRoleValues('x');
+          const yValues = ctx.collectRoleValues('y');
+          const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [0, ctx.width]);
+          const yScale = ctx.buildPositionScale(ctx.resolveScaleForRole('y', undefined, yValues), yValues, [ctx.height, 0]);
           return {
-            type: 'custom',
-            roles: ['x', 'y'],
-            project: () => null,
-            projectRoles: values => {
-              const x = xScale.coordinate(values[0]);
-              const y = yScale.coordinate(values[1]);
-              return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
+            frame: {
+              type: 'custom',
+              roles: ['x', 'y'],
+              project: () => null,
+              projectRoles: values => {
+                const x = xScale.coordinate(values[0]);
+                const y = yScale.coordinate(values[1]);
+                return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
+              },
             },
+            plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
+            gridLayers: [],
+            axisLayers: [],
           };
         },
-      },
+        }),
+      ],
     };
     expect(() => expandOf(spec, { d: [{ m: 1, v: 3 }] }, options)).toThrow(/custom coordinate|projectCell|not supported/i);
   });

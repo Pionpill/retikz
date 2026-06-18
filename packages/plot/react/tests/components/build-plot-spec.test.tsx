@@ -683,28 +683,32 @@ describe('buildPlotSpec 坐标系族 cartesian1D / polar1D / ternary2D（alpha.9
   });
 });
 
-describe('buildPlotSpec 自定义坐标系 custom（实验性，alpha.9 设计探讨）', () => {
-  it('custom_coordinate_input：对象形态 → IR {type:custom, name, roles, params}', () => {
+describe('buildPlotSpec 自定义坐标系（alpha.12 ADR-05）', () => {
+  it('custom_coordinate_input：对象形态 → IR {type:<customType>, ...config}', () => {
     const spec = buildPlotSpec(<PointMark x="hx" y="vy" />, '__plot', {
-      coordinate: { type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: 70 } },
+      coordinate: { type: 'bridge', archHeight: 70 },
     });
-    expect(spec.coordinate).toEqual({ type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: 70 } });
+    expect(spec.coordinate).toEqual({ type: 'bridge', archHeight: 70 });
     expect(spec.scales).toEqual([]); // 自定义坐标系自建几何，无 AUTO 位置 scale
     expect(spec.guides).toEqual([]); // 非 cartesian2D，无默认轴
   });
 
-  it('custom_coordinate_no_params：params 可省', () => {
-    const spec = buildPlotSpec(<PointMark x="v" />, '__plot', { coordinate: { type: 'custom', name: 'sine', roles: ['x'] } });
-    expect(spec.coordinate).toEqual({ type: 'custom', name: 'sine', roles: ['x'] });
+  it('custom_coordinate_no_config：仅 type 可用', () => {
+    const spec = buildPlotSpec(<PointMark x="v" />, '__plot', { coordinate: { type: 'sine' } });
+    expect(spec.coordinate).toEqual({ type: 'sine' });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
   it('custom_coordinate_pass_schema：装配产物过 PlotSpecSchema', () => {
     const spec = buildPlotSpec(<PointMark x="sa" y="si" z="cl" />, '__plot', {
-      coordinate: { type: 'custom', name: 'tri', roles: ['x', 'y', 'z'] },
+      coordinate: { type: 'tri' },
     });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
     expect(spec.marks[0]).toEqual({ type: 'point', encoding: { x: { field: 'sa' }, y: { field: 'si' }, z: { field: 'cl' } } });
+  });
+
+  it('legacy_custom_coordinate_rejected', () => {
+    expect(() => buildPlotSpec(<PointMark x="v" />, '__plot', { coordinate: { type: 'custom', name: 'sine', roles: ['x'] } })).toThrow(/custom coordinates must use a non-built-in type/i);
   });
 });
 
