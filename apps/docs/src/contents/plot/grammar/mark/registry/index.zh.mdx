@@ -159,7 +159,7 @@ export const CrossMark: FC<CrossMarkProps> = () => null;
 
 <ComponentAlert type="warn" title="运行时注册尚未开放" description="当前版本已经把内置 mark 整理成注册表，但还没有公开 registerMark API，也没有动态扩展 MarkSchema 的 schema registry。应用层若要新增全新的 mark，需要走源码扩展 / 贡献路径；普通业务优先组合现有六个注册图元。" />
 
-这和自定义坐标系不同：坐标系的投影函数可以通过 `<Plot coordinates>` 注入，因为 IR 只需要保存工厂名和参数；mark 的 `type` 还要进入 `MarkSchema` 判别 union。公开运行时注册需要同时解决 schema 扩展、React / Vanilla 装配和 lowering 分发。
+这和自定义坐标系不同：坐标系的投影可以通过 `<Plot coordinates>` 注入，因为 IR 只保存 `{ type: <customType>, ...config }`，角色和函数都在 `defineCoordinate` 定义里；mark 的 `type` 还要进入 `MarkSchema` 判别 union。公开运行时注册需要同时解决 schema 扩展、React / Vanilla 装配和 lowering 分发。
 
 ## 内置图元
 

@@ -159,7 +159,7 @@ Declaration props are not the registry interface. Props face users and are usual
 
 <ComponentAlert type="warn" title="Runtime registration is not public yet" description="The built-in marks already use a registry table, but this version does not expose a registerMark API or a dynamic MarkSchema registry. Adding a brand-new mark is currently a source-extension / contribution path; application code should compose the six registered marks first." />
 
-This differs from custom coordinates. A coordinate projection can be injected through `<Plot coordinates>` because the IR only stores a factory name and params. A mark `type` must also enter the `MarkSchema` discriminated union, so public runtime registration needs schema extension, React / Vanilla assembly, and lowering dispatch to be solved together.
+This differs from custom coordinates. A coordinate projection can be injected through `<Plot coordinates>` because the IR only stores `{ type: <customType>, ...config }`, while roles and functions live in the `defineCoordinate` definition. A mark `type` must also enter the `MarkSchema` discriminated union, so public runtime registration needs schema extension, React / Vanilla assembly, and lowering dispatch to be solved together.
 
 ## Built-Ins
 

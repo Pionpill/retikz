@@ -1,32 +1,54 @@
 ---
 title: Custom Coordinates
-description: Custom coordinates keep projection functions at runtime: the IR stores only the factory name, roles, and params, while lowering injects the actual projection through coordinates options.
+description: Custom coordinates keep projection functions at runtime: the IR stores only the custom type and JSON config, while roles and projection functions come from defineCoordinate.
 ---
 
-Every built-in coordinate is a projection: it maps position values to screen points. When the built-ins are not enough, write your own projection function: pass `<Plot>` a `coordinates` factory map, then reference it from `coordinate` as `{ type: 'custom', name }`.
+Every built-in coordinate is a projection: it maps position values to screen points. When the built-ins are not enough, define your own runtime coordinate with `defineCoordinate`, then pass it through `<Plot coordinates={[...]}>`.
 
-The projection function is runtime logic. It never enters the IR and cannot be serialized as JSON. The IR stores only `name`, `roles`, and numeric params; the actual function is injected through React props or vanilla `renderPlot` options.
+The custom coordinate op is still pure JSON. `coordinate={{ type: 'bridge', archHeight: 60 }}` enters the Plot IR; `roles`, scale construction, and the projection function live in the `bridge` definition and are never serialized.
 
 ## Bridge Coordinate
 
-The "bridge" coordinate below arches the x-axis into a parabola while y stays vertical. The same regular grid gets its x-axis shape entirely from the projection function; set `archHeight` to 0 and it falls back to plain cartesian.
+The "bridge" coordinate below arches the x-axis into a parabola while y stays vertical. The same regular grid gets its x-axis shape entirely from the definition's `resolve`; set `archHeight` to 0 and it falls back to plain cartesian.
 
 ```tsx
-import { createCustomCoordinate, type CustomCoordinateFactory } from '@retikz/plot';
+import { createCustomCoordinate, defineCoordinate } from '@retikz/plot';
+import { z } from 'zod';
 
-const bridge: CustomCoordinateFactory = ctx => {
-  const xScale = ctx.linearScaleFor('x', [0, ctx.width]);
-  const yScale = ctx.linearScaleFor('y', [ctx.height - 30, 30]);
-  const archHeight = ctx.params.archHeight ?? 60;
-  const projectRoles = ([x, y]) => {
-    const sx = xScale.coordinate(x);
-    const t = sx / ctx.width;
-    return [sx, yScale.coordinate(y) - archHeight * (1 - (2 * t - 1) ** 2)];
-  };
-  return createCustomCoordinate(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
-};
+const bridge = defineCoordinate({
+  schema: z.object({
+    type: z.literal('bridge'),
+    archHeight: z.number().finite().optional(),
+  }),
+  roles: ['x', 'y'],
+  resolve: (op, context) => {
+    const xValues = context.collectRoleValues('x');
+    const yValues = context.collectRoleValues('y');
+    const xScale = context.buildPositionScale(context.resolveScaleForRole('x', undefined, xValues), xValues, [0, context.width]);
+    const yScale = context.buildPositionScale(context.resolveScaleForRole('y', undefined, yValues), yValues, [context.height - 30, 30]);
+    const archHeight = op.archHeight ?? 60;
+    const projectRoles = ([x, y]) => {
+      const screenX = xScale.coordinate(x);
+      const screenY = yScale.coordinate(y);
+      if (!Number.isFinite(screenX) || !Number.isFinite(screenY)) return null;
+      const t = screenX / context.width;
+      return [screenX, screenY - archHeight * (1 - (2 * t - 1) ** 2)];
+    };
+    const frame = createCustomCoordinate(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
+    const axisLayers = context.axisGuides.flatMap(guide => {
+      const lowered = context.lowerCustomAxis(frame, guide, context.fontSize, context.provenance);
+      return lowered.axisLayer ? [lowered.axisLayer] : [];
+    });
+    return {
+      frame,
+      plotArea: { x: 0, y: 0, width: context.width, height: context.height },
+      gridLayers: [],
+      axisLayers,
+    };
+  },
+});
 
-<Plot data={grid} coordinate={{ type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: 60 } }} coordinates={{ bridge }}>
+<Plot data={grid} coordinate={{ type: 'bridge', archHeight: 60 }} coordinates={[bridge]}>
   <PointMark x="x" y="y" />
   <Axis dimension="x" />
   <Axis dimension="y" />
@@ -35,11 +57,26 @@ const bridge: CustomCoordinateFactory = ctx => {
 
 <ComponentPreview name="coordinate-custom-bridge" sourceFiles={['coordinate-custom-bridge.data.ts']} hideCode />
 
-## Axes And Local Frames
+## Definition Contract
 
-Axes are generic. Once the factory returns `roleScales`, `<Axis dimension="x" />` samples the projection densely to draw the curved x-axis, with ticks landing at scale tick positions. The factory may also return `frameAlong`, reporting the origin and tangent of a role axis at a point, so ticks / labels can use the exact tangent; without it, the tangent is estimated by sampling.
+| Field | Role |
+| --- | --- |
+| `schema` | Validates the custom op that enters IR. `type` must be a non-built-in `z.literal(...)`, and all other fields must stay JSON-serializable. |
+| `roles` | Declares the positional channels this coordinate needs. `roles: ['x', 'y']` makes a mark without `y` fail loudly during lowering. |
+| `resolve` | Builds the `frame` from domains, scales, and canvas size, then returns `plotArea` / guide layers. The function stays at runtime and never enters IR. |
+
+`CoordinateResolveContext` provides `collectRoleValues`, `resolveScaleForRole`, `buildPositionScale`, `axisGuides`, `lowerGuide`, and `lowerCustomAxis`. Custom coordinates v1 default to the whole canvas as `plotArea`; they do not automatically get cartesian-style margin / legend reservation.
+
+## Migration
+
+The old `{ type: 'custom', name, roles, params }` shape has been removed. Promote `name` into the real `type`, move `roles` into the definition, and flatten `params` into JSON config fields:
+
+| Old | New |
+| --- | --- |
+| `coordinate={{ type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: 60 } }}` | `coordinate={{ type: 'bridge', archHeight: 60 }}` |
+| `coordinates={{ bridge }}` | `coordinates={[bridge]}` |
+| `CustomCoordinateFactory` | `defineCoordinate({ schema, roles, resolve })` |
 
 ## Limits
 
-<ComponentAlert type="warn" title="Advanced extension" description="Custom coordinates support PointMark by default; if the factory returns projectCell (projecting an orthogonal cell into geometry), interval and other cell-shaped marks can also work. Curved axes can be drawn, but grids are not available yet. 3D coordinates, multi-plot composition, and offset-along-normal are left for later." />
-
+<ComponentAlert type="warn" title="Advanced extension" description="Custom coordinates support PointMark by default; if the frame provides projectCell, interval and other cell-shaped marks can also work. Curved axes can be drawn, but grids, automatic margin/legend reservation, 3D coordinates, and multi-plot composition are left for later." />

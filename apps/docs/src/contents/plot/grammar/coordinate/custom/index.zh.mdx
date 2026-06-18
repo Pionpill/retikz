@@ -1,32 +1,54 @@
 ---
 title: 自定义坐标系
-description: 自定义坐标系把投影函数留在运行时：IR 只保存工厂名、角色和参数，lowering 时通过 coordinates 选项注入实际投影。
+description: 自定义坐标系把投影函数留在运行时：IR 只保存自定义 type 与 JSON 配置，roles 和投影函数由 defineCoordinate 提供。
 ---
 
-内建坐标系本质都是投影：把位置值映射成屏幕点。内建形态不够时，可以自己写投影函数：`<Plot>` 接一个 `coordinates` 工厂表，`coordinate` 用 `{ type: 'custom', name }` 引用它。
+内建坐标系本质都是投影：把位置值映射成屏幕点。内建形态不够时，可以用 `defineCoordinate` 写一个运行时定义，再把它放进 `<Plot coordinates={[...]}>`。
 
-投影函数是运行时逻辑，不进 IR，也不可 JSON 序列化。IR 只保存 `name`、`roles` 和数值参数；真正的函数在 React props 或 vanilla `renderPlot` options 里注入。
+自定义 coordinate op 仍然是纯 JSON。`coordinate={{ type: 'bridge', archHeight: 60 }}` 会进入 Plot IR；`roles`、scale 构建和投影函数都在 `bridge` definition 里，不会被序列化。
 
 ## 桥坐标系
 
-下面的「桥」坐标系把 x 轴拱成抛物线，y 仍竖直。同一份规则网格，x 轴形态完全由投影函数决定；把 `archHeight` 改成 0 就退回普通直角。
+下面的「桥」坐标系把 x 轴拱成抛物线，y 仍竖直。同一份规则网格，x 轴形态完全由 definition 的 `resolve` 决定；把 `archHeight` 改成 0 就退回普通直角。
 
 ```tsx
-import { createCustomCoordinate, type CustomCoordinateFactory } from '@retikz/plot';
+import { createCustomCoordinate, defineCoordinate } from '@retikz/plot';
+import { z } from 'zod';
 
-const bridge: CustomCoordinateFactory = ctx => {
-  const xScale = ctx.linearScaleFor('x', [0, ctx.width]);
-  const yScale = ctx.linearScaleFor('y', [ctx.height - 30, 30]);
-  const archHeight = ctx.params.archHeight ?? 60;
-  const projectRoles = ([x, y]) => {
-    const sx = xScale.coordinate(x);
-    const t = sx / ctx.width;
-    return [sx, yScale.coordinate(y) - archHeight * (1 - (2 * t - 1) ** 2)];
-  };
-  return createCustomCoordinate(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
-};
+const bridge = defineCoordinate({
+  schema: z.object({
+    type: z.literal('bridge'),
+    archHeight: z.number().finite().optional(),
+  }),
+  roles: ['x', 'y'],
+  resolve: (op, context) => {
+    const xValues = context.collectRoleValues('x');
+    const yValues = context.collectRoleValues('y');
+    const xScale = context.buildPositionScale(context.resolveScaleForRole('x', undefined, xValues), xValues, [0, context.width]);
+    const yScale = context.buildPositionScale(context.resolveScaleForRole('y', undefined, yValues), yValues, [context.height - 30, 30]);
+    const archHeight = op.archHeight ?? 60;
+    const projectRoles = ([x, y]) => {
+      const screenX = xScale.coordinate(x);
+      const screenY = yScale.coordinate(y);
+      if (!Number.isFinite(screenX) || !Number.isFinite(screenY)) return null;
+      const t = screenX / context.width;
+      return [screenX, screenY - archHeight * (1 - (2 * t - 1) ** 2)];
+    };
+    const frame = createCustomCoordinate(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
+    const axisLayers = context.axisGuides.flatMap(guide => {
+      const lowered = context.lowerCustomAxis(frame, guide, context.fontSize, context.provenance);
+      return lowered.axisLayer ? [lowered.axisLayer] : [];
+    });
+    return {
+      frame,
+      plotArea: { x: 0, y: 0, width: context.width, height: context.height },
+      gridLayers: [],
+      axisLayers,
+    };
+  },
+});
 
-<Plot data={grid} coordinate={{ type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: 60 } }} coordinates={{ bridge }}>
+<Plot data={grid} coordinate={{ type: 'bridge', archHeight: 60 }} coordinates={[bridge]}>
   <PointMark x="x" y="y" />
   <Axis dimension="x" />
   <Axis dimension="y" />
@@ -35,11 +57,26 @@ const bridge: CustomCoordinateFactory = ctx => {
 
 <ComponentPreview name="coordinate-custom-bridge" sourceFiles={['coordinate-custom-bridge.data.ts']} hideCode />
 
-## 轴与局部标架
+## 定义契约
 
-坐标轴是通用的。工厂回传 `roleScales` 后，`<Axis dimension="x" />` 会沿投影密采样画出弯曲的 x 轴，刻度自动落在 scale 刻度处。工厂还可选回传 `frameAlong`，给某个角色轴在某点的原点和切向，让刻度 / 标签按精确切向摆放；不回传时会按采样估算。
+| 字段 | 作用 |
+| --- | --- |
+| `schema` | 校验进入 IR 的自定义 op。`type` 必须是非内置的 `z.literal(...)`，其余字段必须保持 JSON 可序列化。 |
+| `roles` | 声明这个坐标系需要哪些位置通道。`roles: ['x', 'y']` 会让缺少 `y` 的 mark 在 lowering 时 fail-loud。 |
+| `resolve` | 用数据域、scale 和画布尺寸构造 `frame`，并返回 `plotArea` / guide 层。函数留在运行时，不进 IR。 |
+
+`CoordinateResolveContext` 提供 `collectRoleValues`、`resolveScaleForRole`、`buildPositionScale`、`axisGuides`、`lowerGuide` 和 `lowerCustomAxis`。自定义坐标系 v1 默认使用整张画布作为 `plotArea`；它不会自动获得 cartesian 那种 margin / legend 预留收窄。
+
+## 迁移
+
+旧的 `{ type: 'custom', name, roles, params }` 写法已经移除。把 `name` 提升为真正的 `type`，把 `roles` 移进 definition，把 `params` 拆成扁平 JSON 配置：
+
+| 旧写法 | 新写法 |
+| --- | --- |
+| `coordinate={{ type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: 60 } }}` | `coordinate={{ type: 'bridge', archHeight: 60 }}` |
+| `coordinates={{ bridge }}` | `coordinates={[bridge]}` |
+| `CustomCoordinateFactory` | `defineCoordinate({ schema, roles, resolve })` |
 
 ## 限制
 
-<ComponentAlert type="warn" title="进阶扩展" description="自定义坐标系默认只支持 PointMark；若工厂回传 projectCell（把一个正交 cell 投影成几何），interval 等区间类 mark 也能落地。曲线轴可画，但暂无网格。三维坐标系、多 plot 组合、沿法向偏移留作后续。" />
-
+<ComponentAlert type="warn" title="进阶扩展" description="自定义坐标系默认支持 PointMark；若 frame 提供 projectCell，interval 等区间类 mark 也能落地。曲线轴可画，但网格、自动 margin/legend 收窄、三维坐标系、多 plot 组合仍留作后续。" />

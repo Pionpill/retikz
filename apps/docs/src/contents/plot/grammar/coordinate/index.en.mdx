@@ -14,7 +14,7 @@ If you only need ticks, labels, or grid lines, see [Axis](/plot/grammar/guide/ax
 | 2D coordinates | `cartesian2D` / `polar2D` | Regular x/y charts and polar charts | Bars, lines, areas, pies, donuts, radar |
 | 1D coordinates | `cartesian1D` / `polar1D` | Project one position channel | Rug plots, timelines, cyclic event dots |
 | Ternary coordinates | `ternary2D` | Project three components into a triangle | Compositions and three-way trade-offs |
-| Custom coordinates | `{ type: 'custom', name }` | Inject your own runtime projection | Curved axes, special spaces, experimental projections |
+| Custom coordinates | `{ type: 'bridge', ...config }` | Inject your own runtime definition | Curved axes, special spaces, experimental projections |
 
 ## In This Section
 
@@ -33,6 +33,6 @@ If you only need ticks, labels, or grid lines, see [Axis](/plot/grammar/guide/ax
   </LinkedCard>
   <LinkedCard href="/plot/grammar/coordinate/custom">
     <span className="font-semibold">Custom Coordinates</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Inject runtime projection functions through a coordinates factory map</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Inject runtime projection definitions with defineCoordinate</span>
   </LinkedCard>
 </div>
