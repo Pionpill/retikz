@@ -64,7 +64,7 @@ The important registration line and lowering excerpt are:
 ```ts
 [PlotMark.Region]: { type: PlotMark.Region, lower: lowerRegionLayer },
 
-const lowerRegionLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+const lowerRegionLayer = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
@@ -72,7 +72,7 @@ const lowerRegionLayer = (mark: Mark, rows: Array<ExternalRow>, frame: Coordinat
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
 
-const buildAreaSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, baseline: number): Array<IRStep> | null => {
+const buildAreaSteps = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, baseline: number): Array<IRStep> | null => {
   const ordered = orderRows(rows, mark.type === PlotMark.Region ? mark.order : undefined);
   const closed = mark.type === PlotMark.Region ? (mark.closed ?? false) : false;
   const top = buildOutlinePoints(mark, ordered, frame, closed);
@@ -86,7 +86,7 @@ const buildAreaSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
   ];
 };
 
-const lowerRegion = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+const lowerRegion = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
   if (mark.type !== PlotMark.Region) return null;
   const baseline = mark.baseline ?? AREA_BASELINE;
   const seriesField = pathSeriesField(mark, rows);

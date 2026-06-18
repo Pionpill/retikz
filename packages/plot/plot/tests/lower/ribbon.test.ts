@@ -4,7 +4,7 @@ import { type LinkMark, type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { lowerMark } from '../../src/mark/mark';
 import { datumAnchor } from '../../src/mark/anchor';
-import { createCartesianFrame } from '../../src/coordinate';
+import { createCartesianCoordinate } from '../../src/coordinate';
 import type { PositionScale } from '../../src/scale/scale';
 
 /**
@@ -65,7 +65,7 @@ const identityScale = (): PositionScale => {
   };
 };
 
-const identityFrame = () => createCartesianFrame(identityScale(), identityScale());
+const identityFrame = () => createCartesianCoordinate(identityScale(), identityScale());
 
 /** ribbon mark 工厂：一条流，source/target 字段对 + value（可选 endWidth / curvature / color） */
 const ribbonMark = (over: Partial<LinkMark> = {}): LinkMark => ({

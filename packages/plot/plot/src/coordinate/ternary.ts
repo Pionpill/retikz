@@ -7,7 +7,7 @@ import type { DimensionRole } from './types';
 export type TernaryVertices = [[number, number], [number, number], [number, number]];
 
 /** 三元帧（重心坐标）：三连续分量 x/y/z 归一化后按重心坐标投影到等边三角内 */
-export type Ternary2DFrame = {
+export type ResolvedTernary2DCoordinate = {
   /** 判别字段：2D 三元 */
   type: typeof PlotCoordinate.Ternary2D;
   /** 位置角色序（[x, y, z]，3 通道） */
@@ -27,7 +27,7 @@ export type Ternary2DFrame = {
  * @description 每行 (x,y,z) 先归一化 s=x+y+z、(x/s,y/s,z/s)，再 nx·Vx + ny·Vy + nz·Vz 得屏幕点。
  *   非有限值（缺字段 / NaN）→ null 跳过该点（与其它坐标系一致）；含负分量 / 和≤0 → fail-loud（数据错误、不静默归一）。
  */
-export const createTernary2DFrame = (vertices: TernaryVertices): Ternary2DFrame => {
+export const createTernary2DCoordinate = (vertices: TernaryVertices): ResolvedTernary2DCoordinate => {
   const [vx, vy, vz] = vertices;
   const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
     const x = values[0];

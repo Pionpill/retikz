@@ -90,7 +90,7 @@ For registration, focus on the `PointMark` registry entry and the `lowerPoint` f
 ```ts
 [PlotMark.Point]: { type: PlotMark.Point, lower: lowerPoint },
 
-const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (mark.type !== PlotMark.Point) return null;
   const { colorOf, defaultColor = DEFAULT_FILL, sizeOf, opacityOf, shapeOf, strokeOf, strokeWidthOf, labelOf } = channels;
   const isText = mark.encoding.text !== undefined;

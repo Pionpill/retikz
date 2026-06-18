@@ -3,7 +3,7 @@ import { type ExternalRow, type LinkMark, type Mark, PlotCoordinate, PlotMark, t
 import { type IntervalContext, LINK_DEFAULT_CURVATURE, buildIntervalContext, datumAnchor, linkBandGeometry, linkEndpoints, markCell, roleValues } from './anchor';
 import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from '../data/field';
 import { inferCategoryDomain } from '../scale/scale';
-import { type CartesianFrame, type Cell, type CellGeometry, type CoordinateFrame, type DimensionRole, type PolarFrame, type PolarVertex, densifyPolarSegments, toPolarVertex } from '../coordinate';
+import { type CartesianCoordinate, type Cell, type CellGeometry, type DimensionRole, type PolarCoordinate, type PolarVertex, type ResolvedCoordinate, densifyPolarSegments, toPolarVertex } from '../coordinate';
 import {
   type DatumIdRegistrar,
   type ProvenanceContext,
@@ -201,7 +201,7 @@ const attachMarkLayer = (layer: IRScope, mark: Mark, markProvenance: MarkProvena
  * @description encoding.text 设 → 无边框带 text 的 Node（内容走 labelOf、缺失跳过、dx/dy 微调），样式走 textStyle（textColor）；
  *   否则 → circle glyph（size / opacity / shape 通道 per-datum、datum label 经 attachDatumLabel），样式走 pointStyle（fill）。
  */
-const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (mark.type !== PlotMark.Point) return null;
   const {
     colorOf,
@@ -363,7 +363,7 @@ const cellSeriesValue = (mark: Mark, row: ExternalRow): unknown =>
 const lowerCells = (
   mark: Mark,
   rows: Array<ExternalRow>,
-  frame: CoordinateFrame,
+  frame: ResolvedCoordinate,
   projectCell: (cell: Cell) => CellGeometry,
   ctx: IntervalContext | undefined,
   colorOf: ColorOf | undefined,
@@ -392,7 +392,7 @@ const lowerCells = (
 };
 
 /** interval mark 图层下沉：坐标系守卫 + IntervalContext + lowerCells（cell 类单路径） */
-const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (mark.type !== PlotMark.Interval) return null;
   // interval 需内建正交 cell：cartesian2D / polar2D / ternary2D；其余坐标系 fail-loud
   if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D && frame.type !== PlotCoordinate.Ternary2D) {
@@ -425,7 +425,7 @@ const orderRows = (rows: Array<ExternalRow>, order: string | undefined): Array<E
  * 把一组有序行投影成上沿屏幕点（坐标系无关）
  * @description cartesian / polar 分类角轴 / closed 走弦（顶点直连）；polar 连续角轴段内采样弯弧。
  */
-const buildOutlinePoints = (mark: Mark, ordered: Array<ExternalRow>, frame: CoordinateFrame, closed: boolean): Array<[number, number]> => {
+const buildOutlinePoints = (mark: Mark, ordered: Array<ExternalRow>, frame: ResolvedCoordinate, closed: boolean): Array<[number, number]> => {
   if (frame.type === PlotCoordinate.Polar2D && frame.continuousAngle && !closed) {
     const vertices = ordered
       .map(row => {
@@ -444,7 +444,7 @@ const buildOutlinePoints = (mark: Mark, ordered: Array<ExternalRow>, frame: Coor
 };
 
 /** 把一组行连成一条折线的 steps（上沿投影 + 可选闭合）；<2 点返回 null */
-const buildLineSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, closed: boolean): Array<IRStep> | null =>
+const buildLineSteps = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, closed: boolean): Array<IRStep> | null =>
   pointsToSteps(buildOutlinePoints(mark, orderRows(rows, mark.type === PlotMark.Path || mark.type === PlotMark.Region ? mark.order : undefined), frame, closed), closed);
 
 /** 多系列 series 拆分通用：每条 series 一条 Path，provenance 开时绑 `<plotId>.series.<slug>` + Path.meta（series 原值） */
@@ -524,7 +524,7 @@ const pathSeriesField = (mark: Mark, rows: Array<ExternalRow>): string | undefin
 };
 
 /** 折线（path mark）：单线（常量 color → stroke）或多系列（series 拆多线、各取系列色）（坐标系无关） */
-const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
   if (mark.type !== PlotMark.Path) return null;
   const closed = mark.closed ?? false;
   const seriesField = pathSeriesField(mark, rows);
@@ -549,7 +549,7 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 /**
  * 把一组有序行投影成 baseline 回边屏幕点（沿同 primary 序，secondary 固定为 baseline，逆序）
  */
-const buildBaselinePoints = (mark: Mark, ordered: Array<ExternalRow>, frame: CoordinateFrame, baseline: number): Array<[number, number]> => {
+const buildBaselinePoints = (mark: Mark, ordered: Array<ExternalRow>, frame: ResolvedCoordinate, baseline: number): Array<[number, number]> => {
   const points: Array<[number, number]> = [];
   for (const row of ordered) {
     const [primaryValue] = resolveRolePosition(mark, row);
@@ -560,7 +560,7 @@ const buildBaselinePoints = (mark: Mark, ordered: Array<ExternalRow>, frame: Coo
 };
 
 /** 把一个 region 的上沿 + baseline 回边连成可填充 Path 的 steps；上沿 < 2 点返回 null */
-const buildAreaSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, baseline: number): Array<IRStep> | null => {
+const buildAreaSteps = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, baseline: number): Array<IRStep> | null => {
   const ordered = orderRows(rows, mark.type === PlotMark.Region ? mark.order : undefined);
   const closed = mark.type === PlotMark.Region ? (mark.closed ?? false) : false;
   const top = buildOutlinePoints(mark, ordered, frame, closed);
@@ -575,7 +575,7 @@ const buildAreaSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
 };
 
 /** 区域（region mark）：上沿折线 + baseline 回边闭合的可填充 Path（坐标系无关）；单系列或多系列 */
-const lowerRegion = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+const lowerRegion = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
   if (mark.type !== PlotMark.Region) return null;
   const baseline = mark.baseline ?? AREA_BASELINE;
   const seriesField = pathSeriesField(mark, rows);
@@ -629,7 +629,7 @@ const linkValueOf = (row: ExternalRow, field: string): number | null => {
 /**
  * 流带（link mark）下沉：每行 → 一条可填充 cubic 曲带 Path（坐标系无关端点投影 + 屏幕空间几何）
  */
-const lowerLink = (mark: LinkMark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined): IRScope | null => {
+const lowerLink = (mark: LinkMark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, colorOf: ColorOf | undefined, defaultColor: string | undefined): IRScope | null => {
   if (mark.width !== undefined) {
     throw new Error(`lowerPlots: link mark named width scale "${mark.width}" is not supported this round; omit width for a synthesized linear scale`);
   }
@@ -743,7 +743,7 @@ const referenceRows = (mark: ReferenceMark, rows: Array<ExternalRow>, orientatio
   isReferenceConstant(mark, orientation) ? [rows[0] ?? {}] : rows;
 
 /** reference line 某行 → core Path steps（cartesian 直连两端点；polar 竖直径向线直连、水平常半径环段采样）；退化 → null */
-const referenceLineSteps = (mark: ReferenceMark, row: ExternalRow, frame: CartesianFrame | PolarFrame, orientation: 'x' | 'y'): Array<IRStep> | null => {
+const referenceLineSteps = (mark: ReferenceMark, row: ExternalRow, frame: CartesianCoordinate | PolarCoordinate, orientation: 'x' | 'y'): Array<IRStep> | null => {
   const constantValue = referenceConstantValue(mark, row, orientation);
   if (frame.type === PlotCoordinate.Cartesian2D) {
     const constant = frame[orientation === 'x' ? 'primary' : 'secondary'].coordinate(constantValue);
@@ -776,7 +776,7 @@ const referenceLineSteps = (mark: ReferenceMark, row: ExternalRow, frame: Cartes
 };
 
 /** reference band 某行 → 正交 Cell（cartesian primary/secondary 为像素带、polar primary 为角度带 / secondary 为半径带）；退化 → null */
-const referenceBandCell = (mark: ReferenceMark, row: ExternalRow, frame: CartesianFrame | PolarFrame, orientation: 'x' | 'y'): Cell | null => {
+const referenceBandCell = (mark: ReferenceMark, row: ExternalRow, frame: CartesianCoordinate | PolarCoordinate, orientation: 'x' | 'y'): Cell | null => {
   const lo = referenceConstantValue(mark, row, orientation);
   const hi = referenceUpperValue(mark, row, orientation);
   if (frame.type === PlotCoordinate.Cartesian2D) {
@@ -811,7 +811,7 @@ const referenceBandCell = (mark: ReferenceMark, row: ExternalRow, frame: Cartesi
 const lowerReference = (
   mark: ReferenceMark,
   rows: Array<ExternalRow>,
-  frame: CartesianFrame | PolarFrame,
+  frame: CartesianCoordinate | PolarCoordinate,
   colorOf: ColorOf | undefined,
   defaultColor: string | undefined,
   markProvenance: MarkProvenance | undefined,
@@ -878,7 +878,7 @@ const failLoudMessage = (markType: string, frameType: string): string =>
   `lowerPlots: ${markType} mark is not supported under the ${frameType} coordinate system (this coordinate system does not provide the geometry for ${markType} marks this round)`;
 
 /** path / region 图层下沉：仅 cartesian2D / polar2D 有上沿 / 回边几何；其余坐标系 fail-loud + attachMarkLayer */
-const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
@@ -886,7 +886,7 @@ const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
 
-const lowerRegionLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+const lowerRegionLayer = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
@@ -895,7 +895,7 @@ const lowerRegionLayer = (mark: Mark, rows: Array<ExternalRow>, frame: Coordinat
 };
 
 /** link 图层下沉：本轮仅 cartesian2D（非笛卡尔曲带形态顺延），其余坐标系 fail-loud + attachMarkLayer */
-const lowerLinkLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+const lowerLinkLayer = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (mark.type !== PlotMark.Link) return null;
   if (frame.type !== PlotCoordinate.Cartesian2D) {
     throw new Error(failLoudMessage(mark.type, frame.type));
@@ -905,7 +905,7 @@ const lowerLinkLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
 };
 
 /** reference 图层下沉：line 走 core Path、band 走 projectCell；本轮仅 cartesian2D / polar2D，其余坐标系 fail-loud + attachMarkLayer */
-const lowerReferenceLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+const lowerReferenceLayer = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (mark.type !== PlotMark.Reference) return null;
   if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
     throw new Error(failLoudMessage(mark.type, frame.type));
@@ -923,11 +923,11 @@ export type MarkDefinition<T extends Mark = Mark> = {
   /** 注册键（= IR 判别串，对应 ir/mark.ts 静态 schema 的成员） */
   type: PlotMarkValue;
   /** 位置通道必填性：坐标系级校验（省略 → 由各 lower 自行 fail-loud） */
-  requiredRoles?: (frame: CoordinateFrame) => ReadonlyArray<DimensionRole>;
+  requiredRoles?: (frame: ResolvedCoordinate) => ReadonlyArray<DimensionRole>;
   /** 区间类 mark：某行 → 正交 Cell（interval 用；非区间类省略） */
-  buildCell?: (mark: T, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
+  buildCell?: (mark: T, row: ExternalRow, frame: ResolvedCoordinate, ctx?: IntervalContext) => Cell | null;
   /** 下沉到 core IR 图层（无可绘制图元返回 null；不支持的 mark × coordinate 由实现 fail-loud） */
-  lower: (mark: T, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, prov?: MarkProvenance) => IRChild | null;
+  lower: (mark: T, rows: Array<ExternalRow>, frame: ResolvedCoordinate, channels: MarkChannels, prov?: MarkProvenance) => IRChild | null;
 };
 
 /**
@@ -950,5 +950,5 @@ export const MARK_REGISTRY: Record<PlotMarkValue, MarkDefinition> = {
  *   color 编码时按颜色分子 Scope；series 把记录拆成多系列（多线 / 分组 / 堆叠柱）。无可绘制图元返回 null。
  *   markProvenance 给定（provenance 开）→ 给图层 / series Path / datum Node 绑 id + 来源 meta。
  */
-export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels = {}, markProvenance?: MarkProvenance): IRChild | null =>
+export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, channels: MarkChannels = {}, markProvenance?: MarkProvenance): IRChild | null =>
   MARK_REGISTRY[mark.type].lower(mark, rows, frame, channels, markProvenance);

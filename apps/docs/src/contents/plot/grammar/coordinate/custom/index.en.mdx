@@ -12,7 +12,7 @@ The projection function is runtime logic. It never enters the IR and cannot be s
 The "bridge" coordinate below arches the x-axis into a parabola while y stays vertical. The same regular grid gets its x-axis shape entirely from the projection function; set `archHeight` to 0 and it falls back to plain cartesian.
 
 ```tsx
-import { createCustomFrame, type CustomCoordinateFactory } from '@retikz/plot';
+import { createCustomCoordinate, type CustomCoordinateFactory } from '@retikz/plot';
 
 const bridge: CustomCoordinateFactory = ctx => {
   const xScale = ctx.linearScaleFor('x', [0, ctx.width]);
@@ -23,7 +23,7 @@ const bridge: CustomCoordinateFactory = ctx => {
     const t = sx / ctx.width;
     return [sx, yScale.coordinate(y) - archHeight * (1 - (2 * t - 1) ** 2)];
   };
-  return createCustomFrame(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
+  return createCustomCoordinate(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
 };
 
 <Plot data={grid} coordinate={{ type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: 60 } }} coordinates={{ bridge }}>

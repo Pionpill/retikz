@@ -4,7 +4,7 @@ import type { Cell, CellGeometry } from './cell';
 import type { DimensionRole } from './types';
 import type { PositionScale } from '../scale/scale';
 
-export type CartesianFrame = {
+export type CartesianCoordinate = {
   /** 判别字段：2D 笛卡尔 */
   type: typeof PlotCoordinate.Cartesian2D;
   /** 位置角色序（[x, y]）；mark 按此序取 encoding 通道值 */
@@ -23,7 +23,7 @@ export type CartesianFrame = {
 
 /** 极坐标帧：primary = angle（度，range = [startAngle, endAngle]）、secondary = radius（user units，range = [innerRadius, outerRadius]） */
 
-export const createCartesianFrame = (primary: PositionScale, secondary: PositionScale): CartesianFrame => {
+export const createCartesianCoordinate = (primary: PositionScale, secondary: PositionScale): CartesianCoordinate => {
   const project = (primaryValue: unknown, secondaryValue: unknown): [number, number] | null => {
     const x = primary.coordinate(primaryValue);
     const y = secondary.coordinate(secondaryValue);
@@ -50,7 +50,7 @@ export const createCartesianFrame = (primary: PositionScale, secondary: Position
   };
 };
 
-export type Cartesian1DFrame = {
+export type ResolvedCartesian1DCoordinate = {
   /** 判别字段：1D 笛卡尔直线 */
   type: typeof PlotCoordinate.Cartesian1D;
   /** 位置角色序（[x]，单通道） */
@@ -70,7 +70,7 @@ export type Cartesian1DFrame = {
 };
 
 /** 建一维笛卡尔帧：单 scale + 轴向 + 塌缩维基线（horizontal → [scale(v), baseline]、vertical → [baseline, scale(v)]） */
-export const createCartesian1DFrame = (scale: PositionScale, orientation: Cartesian1DOrientationType, baseline: number): Cartesian1DFrame => {
+export const createCartesian1DCoordinate = (scale: PositionScale, orientation: Cartesian1DOrientationType, baseline: number): ResolvedCartesian1DCoordinate => {
   const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
     const position = scale.coordinate(values[0]);
     if (!Number.isFinite(position)) return null;

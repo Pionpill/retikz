@@ -6,7 +6,7 @@ import type { Cell, CellGeometry } from './cell';
 import type { DimensionRole } from './types';
 import type { PositionScale } from '../scale/scale';
 
-export type PolarFrame = {
+export type PolarCoordinate = {
   /** 判别字段：2D 极坐标 */
   type: typeof PlotCoordinate.Polar2D;
   /** 位置角色序（[angle, radius]）；mark 按此序取 encoding 通道值（x→angle、y→radius 别名） */
@@ -41,7 +41,7 @@ export type PolarFrame = {
 
 const DEG_TO_RAD = Math.PI / 180;
 
-export type PolarFrameSpec = {
+export type PolarCoordinateSpec = {
   /** 圆心（屏幕坐标） */
   center: [number, number];
   /** 内半径（user units） */
@@ -65,7 +65,7 @@ export type PolarFrameSpec = {
  * @description θ=primary.coordinate(angleValue)（度）、r=secondary.coordinate(radiusValue)；
  *   返回 [cx + r·cos(θ°), cy + r·sin(θ°)]，屏幕 y 向下、0°=+x、90°=+y（与 core polar 约定一致）。
  */
-export const createPolarFrame = (input: PolarFrameSpec): PolarFrame => {
+export const createPolarCoordinate = (input: PolarCoordinateSpec): PolarCoordinate => {
   const [cx, cy] = input.center;
   const projectPolar = (thetaDeg: number, radius: number): [number, number] | null => {
     if (!Number.isFinite(thetaDeg) || !Number.isFinite(radius)) return null;
@@ -104,7 +104,7 @@ export const createPolarFrame = (input: PolarFrameSpec): PolarFrame => {
 
 /** 一维笛卡尔帧（直线）：单一位置 scale 落一条轴线，塌缩的第二屏幕维取固定基线 */
 
-export type Polar1DFrame = {
+export type ResolvedPolar1DCoordinate = {
   /** 判别字段：1D 极坐标圆周 */
   type: typeof PlotCoordinate.Polar1D;
   /** 位置角色序（[angle]，单通道；x→angle 别名取值） */
@@ -133,7 +133,7 @@ export type Polar1DFrame = {
 
 /** 建一维笛卡尔帧：单 scale + 轴向 + 塌缩维基线（horizontal → [scale(v), baseline]、vertical → [baseline, scale(v)]） */
 
-export type Polar1DFrameSpec = {
+export type Polar1DCoordinateSpec = {
   /** 圆心（屏幕坐标） */
   center: [number, number];
   /** 固定圆周半径（user units） */
@@ -149,7 +149,7 @@ export type Polar1DFrameSpec = {
 };
 
 /** 建一维极坐标帧：角向投影固定在半径 radius 的圆周（复用极坐标→笛卡尔换算） */
-export const createPolar1DFrame = (input: Polar1DFrameSpec): Polar1DFrame => {
+export const createPolar1DCoordinate = (input: Polar1DCoordinateSpec): ResolvedPolar1DCoordinate => {
   const [cx, cy] = input.center;
   const projectPolar = (thetaDeg: number, radius: number): [number, number] | null => {
     if (!Number.isFinite(thetaDeg) || !Number.isFinite(radius)) return null;
@@ -180,7 +180,7 @@ export const createPolar1DFrame = (input: Polar1DFrameSpec): Polar1DFrame => {
 export type PolarVertex = { theta: number; radius: number };
 
 /** 把一行的角向 / 径向原始值映射成 PolarVertex（非有限 → null，跳过） */
-export const toPolarVertex = (frame: PolarFrame, angleValue: unknown, radiusValue: unknown): PolarVertex | null => {
+export const toPolarVertex = (frame: PolarCoordinate, angleValue: unknown, radiusValue: unknown): PolarVertex | null => {
   const theta = frame.primary.coordinate(angleValue);
   const radius = frame.secondary.coordinate(radiusValue);
   if (!isFiniteNumber(theta) || !isFiniteNumber(radius)) return null;
@@ -192,7 +192,7 @@ export const toPolarVertex = (frame: PolarFrame, angleValue: unknown, radiusValu
  * @description 相邻顶点间插 RETIKZ_POLAR_SEGMENT_SAMPLES 个中间点（在度 + 半径空间线性，非原始数据空间），
  *   使数据空间「常半径变角」的直边在屏幕弯成弧。顶点数 < 2 时直接返回各顶点投影点（不采样）。
  */
-export const densifyPolarSegments = (frame: PolarFrame, vertices: ReadonlyArray<PolarVertex>): Array<[number, number]> => {
+export const densifyPolarSegments = (frame: PolarCoordinate, vertices: ReadonlyArray<PolarVertex>): Array<[number, number]> => {
   if (vertices.length < 2) {
     return vertices.map(v => frame.projectPolar(v.theta, v.radius)).filter((p): p is [number, number] => p !== null);
   }

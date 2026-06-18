@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema, type ReferenceMark } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { lowerMark } from '../../src/mark/mark';
-import { createCartesianFrame, createPolarFrame } from '../../src/coordinate';
+import { createCartesianCoordinate, createPolarCoordinate } from '../../src/coordinate';
 import type { PositionScale } from '../../src/scale/scale';
 
 /** core Path 的最小形态（鸭子类型断言端点；避免引入 core 内部 IRPath 类型耦合） */
@@ -81,7 +81,7 @@ const endpointsOf = (path: RulePath): [[number, number], [number, number]] => {
 };
 
 /** cartesian2D 帧：x 域 [0,10]→像素 [0,400]，y 域 [0,100]→像素 [400,0]（y 倒置） */
-const cartFrame = () => createCartesianFrame(linearStub([0, 10], [0, 400]), linearStub([0, 100], [400, 0]));
+const cartFrame = () => createCartesianCoordinate(linearStub([0, 10], [0, 400]), linearStub([0, 100], [400, 0]));
 
 // ── happy path：cartesian line ──────────────────────────────────────────────────────────
 describe('rule cartesian line 几何', () => {
@@ -281,7 +281,7 @@ describe('rule fail-loud', () => {
 // ── 交互：polar line / band + z-order ────────────────────────────────────────────────────
 describe('rule polar', () => {
   const polarFrame = (continuousAngle = true) =>
-    createPolarFrame({
+    createPolarCoordinate({
       center: [200, 200],
       innerRadius: 0,
       outerRadius: 150,

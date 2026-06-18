@@ -1,7 +1,7 @@
-import type { Cartesian1DFrame, CartesianFrame } from './cartesian';
-import type { CustomFrame } from './custom';
-import type { Polar1DFrame, PolarFrame } from './polar';
-import type { Ternary2DFrame } from './ternary';
+import type { CartesianCoordinate, ResolvedCartesian1DCoordinate } from './cartesian';
+import type { ResolvedCustomCoordinate } from './custom';
+import type { PolarCoordinate, ResolvedPolar1DCoordinate } from './polar';
+import type { ResolvedTernary2DCoordinate } from './ternary';
 
 /**
  * 坐标系位置角色：mark 按 frame.roles 序从 encoding 取对应通道值喂 projectRoles。
@@ -16,7 +16,7 @@ export type DimensionRole = 'x' | 'y' | 'z';
  *   2 通道的 `project(primary, secondary)` 保留为便捷别名（cartesian/polar 内部 + line/area 复用）。
  *   非有限值返回 null（跳过该点）。
  */
-export type CoordinateFrame = CartesianFrame | PolarFrame | Cartesian1DFrame | Polar1DFrame | Ternary2DFrame | CustomFrame;
+export type ResolvedCoordinate = CartesianCoordinate | PolarCoordinate | ResolvedCartesian1DCoordinate | ResolvedPolar1DCoordinate | ResolvedTernary2DCoordinate | ResolvedCustomCoordinate;
 
 /**
  * 某角色轴曲线在某参数点的局部标架：原点 + 切向，均在屏幕空间。

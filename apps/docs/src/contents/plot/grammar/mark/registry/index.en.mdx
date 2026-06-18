@@ -46,9 +46,9 @@ The current built-in registry entry shape can be read as:
 ```ts
 type MarkDefinition<T extends Mark = Mark> = {
   type: PlotMarkValue;
-  requiredRoles?: (frame: CoordinateFrame) => ReadonlyArray<DimensionRole>;
-  buildCell?: (mark: T, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
-  lower: (mark: T, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, prov?: MarkProvenance) => IRChild | null;
+  requiredRoles?: (frame: ResolvedCoordinate) => ReadonlyArray<DimensionRole>;
+  buildCell?: (mark: T, row: ExternalRow, frame: ResolvedCoordinate, ctx?: IntervalContext) => Cell | null;
+  lower: (mark: T, rows: Array<ExternalRow>, frame: ResolvedCoordinate, channels: MarkChannels, prov?: MarkProvenance) => IRChild | null;
 };
 ```
 
@@ -100,7 +100,7 @@ export const MarkSchema = z.discriminatedUnion('type', [
 Then implement lowering. It consumes data rows and the coordinate frame, returns a core `Path` layer, and returns `null` when no point can be projected:
 
 ```ts
-const lowerCross = (mark: CrossMark, rows: Array<ExternalRow>, frame: CoordinateFrame): IRChild | null => {
+const lowerCross = (mark: CrossMark, rows: Array<ExternalRow>, frame: ResolvedCoordinate): IRChild | null => {
   const size = mark.size ?? 6;
   const children: Array<IRChild> = [];
 

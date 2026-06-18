@@ -119,15 +119,15 @@ export const computePlotArea = (
   return { margins, plotArea };
 };
 
-/** computePolarFrame 输入：哪个维度有角向轴 + 角向刻度标签（估算外圈标签留白用） */
-export type PolarFrameInput = {
+/** computePolarCoordinate 输入：哪个维度有角向轴 + 角向刻度标签（估算外圈标签留白用） */
+export type PolarCoordinateInput = {
   /** 是否有角向坐标轴（决定是否为外圈角向标签预留留白） */
   hasAngularAxis: boolean;
   /** 角向刻度标签（估算最宽标签、为外圈留白） */
   angularLabels: ReadonlyArray<string>;
 };
 
-/** computePolarFrame 结果：圆心（屏幕坐标）+ 外半径（user units，整圆 bbox 内接） */
+/** computePolarCoordinate 结果：圆心（屏幕坐标）+ 外半径（user units，整圆 bbox 内接） */
 export type PolarLayout = {
   /** 圆心（plot area 中心，屏幕坐标） */
   center: [number, number];
@@ -141,10 +141,10 @@ export type PolarLayout = {
  *   有角向轴时为外圈刻度标签预留一圈留白（按最宽标签估），让标签不溢出画布；ADR-04 只消费本 frame、不回写 layout。
  *   margin 之大 → 外半径 ≤ 0 → 抛清晰错误，不静默出退化坏图。
  */
-export const computePolarFrame = (
+export const computePolarCoordinate = (
   width: number,
   height: number,
-  input: PolarFrameInput,
+  input: PolarCoordinateInput,
   options: PlotAreaOptions = {},
 ): PolarLayout => {
   const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;

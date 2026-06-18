@@ -4,7 +4,7 @@ import { type IntervalContext, buildIntervalContext, datumAnchor } from '../mark
 import { type LowerPlotsOptions, prepareRows, resolveFrame } from '../pipeline/expand';
 import { resolveFieldPath } from '../data/field';
 import { DEFAULT_FONT_SIZE } from '../pipeline/layout';
-import type { CoordinateFrame } from '../coordinate';
+import type { ResolvedCoordinate } from '../coordinate';
 import { type ProvenanceContext, createDatumIdRegistrar, datumMeta, readSourceIndex, tagSourceIndex } from '../pipeline/provenance';
 import { applyTransforms } from '../transform/transform';
 
@@ -84,7 +84,7 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
   const rows = applyTransforms(normalized, spec.transform);
 
   // frame 复用 resolveFrame：投影几何与 provenance 无关（provenance 只影响 guide 层 id/meta），故传 undefined。
-  const { frame }: { frame: CoordinateFrame } = resolveFrame({
+  const { frame }: { frame: ResolvedCoordinate } = resolveFrame({
     node: spec,
     rows,
     fieldTypes,

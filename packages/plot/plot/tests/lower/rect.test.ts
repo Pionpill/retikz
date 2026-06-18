@@ -5,7 +5,7 @@ import { type IntervalMark, type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { buildIntervalContext, datumAnchor, intervalCell } from '../../src/mark/anchor';
 import { lowerMark } from '../../src/mark/mark';
-import { type Cell, createCartesianFrame, createPolarFrame } from '../../src/coordinate';
+import { type Cell, createCartesianCoordinate, createPolarCoordinate } from '../../src/coordinate';
 import type { PositionScale } from '../../src/scale/scale';
 
 /**
@@ -99,7 +99,7 @@ const heatmapSpec = (color?: string): PlotSpec =>
 describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () => {
   it('rect-cartesian-cell-geometry', () => {
     // 2 行类 × 2 列类 band 帧：bw_x = 200/2 = 100、bw_y = 200/2 = 100
-    const frame = createCartesianFrame(bandStub(['r0', 'r1'], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
+    const frame = createCartesianCoordinate(bandStub(['r0', 'r1'], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
     const mark = rectMark();
     const ctx = buildIntervalContext(mark, frame, [{ rk: 'r0', ck: 'c0' }]);
     const cell = intervalCell(mark, { rk: 'r0', ck: 'c0' }, frame, ctx);
@@ -115,7 +115,7 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
   });
 
   it('rect-cell-nodes-via-lower-mark', () => {
-    const frame = createCartesianFrame(bandStub(['r0', 'r1'], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
+    const frame = createCartesianCoordinate(bandStub(['r0', 'r1'], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
     const rows = [
       { rk: 'r0', ck: 'c0' },
       { rk: 'r1', ck: 'c1' },
@@ -130,7 +130,7 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
   });
 
   it('rect-single-cell', () => {
-    const frame = createCartesianFrame(bandStub(['r0'], [0, 120]), bandStub(['c0'], [120, 0]));
+    const frame = createCartesianCoordinate(bandStub(['r0'], [0, 120]), bandStub(['c0'], [120, 0]));
     const nodes = nodesOf(lowerMark(rectMark(), [{ rk: 'r0', ck: 'c0' }], frame) as IRScope);
     expect(nodes).toHaveLength(1);
     expect(nodes[0].minimumWidth).toBe(120);
@@ -138,7 +138,7 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
   });
 
   it('rect-missing-category-skipped', () => {
-    const frame = createCartesianFrame(bandStub(['r0', 'r1'], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
+    const frame = createCartesianCoordinate(bandStub(['r0', 'r1'], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
     const rows = [
       { rk: 'r0', ck: 'c0' },
       { rk: 'ZZZ', ck: 'c1' }, // 缺类别 → coordinate NaN → 跳过
@@ -148,7 +148,7 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
   });
 
   it('rect-datum-anchor-matches-node-position', () => {
-    const frame = createCartesianFrame(bandStub(['r0', 'r1'], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
+    const frame = createCartesianCoordinate(bandStub(['r0', 'r1'], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
     const rows = [{ rk: 'r1', ck: 'c0' }];
     const node = nodesOf(lowerMark(rectMark(), rows, frame) as IRScope)[0];
     const mark = rectMark();
@@ -243,14 +243,14 @@ describe('rect 缺 color', () => {
 describe('rect fail-loud', () => {
   // 重构后 band bound 直接取 scale.bandwidth（linear scale = 0），不再单独要求 band scale → 退化 cell（高 0），不再 throw。
   it('rect-secondary-not-band-degenerate-cell', () => {
-    const frame = createCartesianFrame(bandStub(['r0', 'r1'], [0, 200]), linearStub([0, 10], [200, 0]));
+    const frame = createCartesianCoordinate(bandStub(['r0', 'r1'], [0, 200]), linearStub([0, 10], [200, 0]));
     const nodes = nodesOf(lowerMark(rectMark(), [{ rk: 'r0', ck: 5 }], frame) as IRScope);
     expect(nodes).toHaveLength(1);
     expect(nodes[0].minimumHeight).toBe(0);
   });
 
   it('rect-primary-not-band-degenerate-cell', () => {
-    const frame = createCartesianFrame(linearStub([0, 10], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
+    const frame = createCartesianCoordinate(linearStub([0, 10], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
     const nodes = nodesOf(lowerMark(rectMark(), [{ rk: 5, ck: 'c0' }], frame) as IRScope);
     expect(nodes).toHaveLength(1);
     expect(nodes[0].minimumWidth).toBe(0);
@@ -273,7 +273,7 @@ describe('rect fail-loud', () => {
 
   // 重构后 interval（band×band）在 polar2D 下受支持（→ sector），不再 fail-loud。
   it('rect-polar-supported-as-sector', () => {
-    const frame = createPolarFrame({
+    const frame = createPolarCoordinate({
       center: [200, 200],
       innerRadius: 0,
       outerRadius: 150,

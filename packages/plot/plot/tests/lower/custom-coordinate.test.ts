@@ -3,7 +3,7 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
-import { type AxisFrame, type CustomCoordinateFactory, type CustomFrame, type DimensionRole, createCustomFrame } from '../../src/coordinate';
+import { type AxisFrame, type CustomCoordinateFactory, type DimensionRole, type ResolvedCustomCoordinate, createCustomCoordinate } from '../../src/coordinate';
 
 /**
  * 自定义坐标系（custom coordinate，实验性）lowering 测试。
@@ -36,7 +36,7 @@ const sineCoordinate: CustomCoordinateFactory = context => {
   const scale = context.linearScaleFor('x', [0, context.width]);
   const amplitude = context.params.amplitude ?? AMPLITUDE;
   const cycles = context.params.cycles ?? CYCLES;
-  return createCustomFrame(['x'], values => {
+  return createCustomCoordinate(['x'], values => {
     const screenX = scale.coordinate(values[0]);
     if (!Number.isFinite(screenX)) return null;
     return [screenX, MID_Y - amplitude * Math.sin((screenX / context.width) * 2 * Math.PI * cycles)];
@@ -68,7 +68,7 @@ const bridgeCoordinate: CustomCoordinateFactory = context => {
     return { origin, tangent: [xSlope, (4 * archHeight * u * xSlope) / context.width] };
   };
   // options 对象（ADR-05 定稿）：roleScales → guide 画曲线轴；frameAlong → 轴切向精确
-  return createCustomFrame(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale }, frameAlong });
+  return createCustomCoordinate(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale }, frameAlong });
 };
 
 const sineSpec = (): PlotSpec =>
@@ -233,7 +233,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
 
 /** 线性对角坐标系（projectRoles=[10x,10x]）：解析切向为常量 [10,10]，frame 级断言用（不依赖 context） */
 const DIAGONAL_K = 10;
-const diagonalFrame = (): CustomFrame => {
+const diagonalFrame = (): ResolvedCustomCoordinate => {
   const project = (values: ReadonlyArray<unknown>): [number, number] | null => {
     const x = Number(values[0]);
     return Number.isFinite(x) ? [x * DIAGONAL_K, x * DIAGONAL_K] : null;
@@ -242,7 +242,7 @@ const diagonalFrame = (): CustomFrame => {
     const origin = project(values);
     return origin ? { origin, tangent: [DIAGONAL_K, DIAGONAL_K] } : null;
   };
-  return createCustomFrame(['x'], project, { frameAlong });
+  return createCustomCoordinate(['x'], project, { frameAlong });
 };
 
 /** 一维正弦坐标系 + roleScales；frameAlong 回传常量切向 [1,0]（法向恒 [0,1]，刻度短线竖直，证明被消费） */
@@ -257,7 +257,7 @@ const sineFramedTangentX: CustomCoordinateFactory = context => {
     const origin = projectRoles(values);
     return origin ? { origin, tangent: [1, 0] } : null;
   };
-  return createCustomFrame(['x'], projectRoles, { roleScales: { x: scale }, frameAlong });
+  return createCustomCoordinate(['x'], projectRoles, { roleScales: { x: scale }, frameAlong });
 };
 
 /** 同上但不回传 frameAlong → 曲线轴走数值差分回落 */
@@ -268,7 +268,7 @@ const sineNumeric: CustomCoordinateFactory = context => {
     if (!Number.isFinite(sx)) return null;
     return [sx, MID_Y - AMPLITUDE * Math.sin((sx / context.width) * 2 * Math.PI * CYCLES)];
   };
-  return createCustomFrame(['x'], projectRoles, { roleScales: { x: scale } });
+  return createCustomCoordinate(['x'], projectRoles, { roleScales: { x: scale } });
 };
 
 /** 退化坐标系：frameAlong 回传零切向 [0,0]，验证法向导出 guard 不产生 NaN */
@@ -282,7 +282,7 @@ const degenerateFramed: CustomCoordinateFactory = context => {
     const origin = projectRoles(values);
     return origin ? { origin, tangent: [0, 0] } : null;
   };
-  return createCustomFrame(['x'], projectRoles, { roleScales: { x: scale }, frameAlong });
+  return createCustomCoordinate(['x'], projectRoles, { roleScales: { x: scale }, frameAlong });
 };
 
 const sineAxisSpec = (): PlotSpec =>

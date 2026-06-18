@@ -3,10 +3,10 @@ import { type AxisGuide, Cartesian1DOrientation, type Channel, type Coordinate, 
 import { resolveIntervalBound } from '../mark/anchor';
 import { type ResolveLabel, channelValue, isFiniteNumber, labelOf, resolveFieldPath } from '../data/field';
 import { type GuideContext, type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../guide/guide';
-import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarFrame, computeTernaryFrame } from './layout';
+import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarCoordinate, computeTernaryFrame } from './layout';
 import { type ColorOf, type LabelOf, lowerMark } from '../mark/mark';
 import { type ChannelResolution, type ScaleDescriptor, makeNumericStyleResolver, makeOpacityResolver, makeShapeResolver, makeSizeResolver, makeStrokeWidthResolver } from '../scale/channel';
-import { type CoordinateFrame, type CustomCoordinateFactory, type DimensionRole, createCartesian1DFrame, createCartesianFrame, createPolar1DFrame, createPolarFrame, createTernary2DFrame } from '../coordinate';
+import { type CustomCoordinateFactory, type DimensionRole, type ResolvedCoordinate, createCartesian1DCoordinate, createCartesianCoordinate, createPolar1DCoordinate, createPolarCoordinate, createTernary2DCoordinate } from '../coordinate';
 import { REQUIRED_POSITION_CHANNELS, VALID_GUIDE_DIMENSIONS } from '../coordinate/meta';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, inferCategoryDomain, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks, toTimestamp } from '../scale/scale';
@@ -220,7 +220,7 @@ export type LowerPlotsOptions = {
 /** resolveFrame 产物：mark / guide 共用的投影帧 + 已下沉的网格 / 轴层（z-order 由 expand 编排） */
 export type ResolvedFrame = {
   /** mark 与 guide 共用的坐标投影帧（cartesian / polar） */
-  frame: CoordinateFrame;
+  frame: ResolvedCoordinate;
   /** 网格层（垫底；grid:true 的 guide 产出） */
   gridLayers: Array<IRScope>;
   /** 轴层（压顶；每根 axis guide 产出） */
@@ -379,9 +379,9 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     return def;
   };
 
-  // 按坐标系解析出 CoordinateFrame（一次性、mark / guide 共用）+ guide 层。
+  // 按坐标系解析出 ResolvedCoordinate（一次性、mark / guide 共用）+ guide 层。
   // cartesian：x/y 角色绑 x/y scale、走 plotArea + axis guide；polar：angle/radius 角色、走 polar layout（ADR-01 不画 guide）。
-  let frame: CoordinateFrame;
+  let frame: ResolvedCoordinate;
   const gridLayers: Array<IRScope> = [];
   const axisLayers: Array<IRScope> = [];
   // legend 预留：按 position 在对应边让出带宽，plotArea 据此收窄（决策 ⑩）
@@ -411,8 +411,8 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     const angleScale = resolvePositionScale(angleScaleDef, angleValues, [coordinate.startAngle, coordinate.endAngle]);
     const angularTicks: TickSet | undefined = angularAxis ? angleScale.ticks(angularAxis.tickCount) : undefined;
 
-    // polar layout：圆心 + outerRadius；有角向轴时为外圈标签预留留白（ADR-01 computePolarFrame，评审 P1）
-    const layout = computePolarFrame(
+    // polar layout：圆心 + outerRadius；有角向轴时为外圈标签预留留白（ADR-01 computePolarCoordinate，评审 P1）
+    const layout = computePolarCoordinate(
       width,
       height,
       { hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false), angularLabels: angularTicks?.labels ?? [] },
@@ -422,7 +422,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     // 径向 range = [innerRadius, outerRadius] user units（依赖最终 outerRadius，故在 layout 之后建）
     const radiusScale = resolvePositionScale(radiusScaleDef, radiusValues, [innerRadiusUnits, layout.outerRadius]);
     const radialTicks: TickSet | undefined = radialAxis ? radiusScale.ticks(radialAxis.tickCount) : undefined;
-    const polarFrame = createPolarFrame({
+    const polarFrame = createPolarCoordinate({
       center: layout.center,
       innerRadius: innerRadiusUnits,
       outerRadius: layout.outerRadius,
@@ -490,7 +490,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     else scale.setRange([plotArea.y + plotArea.height, plotArea.y]);
     // 塌缩维基线：水平贴底边、垂直贴左边（rug 沿轴边缘惯例）
     const baseline = horizontal ? plotArea.y + plotArea.height : plotArea.x;
-    frame = createCartesian1DFrame(scale, orientation, baseline);
+    frame = createCartesian1DCoordinate(scale, orientation, baseline);
 
     // guide：单维直线轴（axisOrientation 覆盖屏幕方向；scale 同时放 projectX/projectY，未用侧忽略）
     const guideContext: GuideContext = {
@@ -523,7 +523,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     // 角向 scale range = [startAngle, endAngle]，与最终半径无关 → 先建取角向标签供 layout 留白
     const angleScale = resolvePositionScale(angleScaleDef, angleValues, [startAngle, endAngle]);
     const angularTicks: TickSet | undefined = angularAxis ? angleScale.ticks(angularAxis.tickCount) : undefined;
-    const layout = computePolarFrame(
+    const layout = computePolarCoordinate(
       width,
       height,
       { hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false), angularLabels: angularTicks?.labels ?? [] },
@@ -536,10 +536,10 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
       angleScaleDef.type === PlotScale.Log ||
       angleScaleDef.type === PlotScale.Pow ||
       angleScaleDef.type === PlotScale.Sqrt;
-    frame = createPolar1DFrame({ center: layout.center, radius, startAngle, endAngle, continuousAngle, primary: angleScale });
+    frame = createPolar1DCoordinate({ center: layout.center, radius, startAngle, endAngle, continuousAngle, primary: angleScale });
 
-    // guide：构造 PolarFrame（outerRadius=radius、innerRadius=0）复用 alpha.4 角向轴；secondary 角向轴不用、占位
-    const guidePolarFrame = createPolarFrame({
+    // guide：构造 PolarCoordinate（outerRadius=radius、innerRadius=0）复用 alpha.4 角向轴；secondary 角向轴不用、占位
+    const guidePolarCoordinate = createPolarCoordinate({
       center: layout.center,
       innerRadius: 0,
       outerRadius: radius,
@@ -556,7 +556,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
       xTicks: angularTicks ?? EMPTY_TICKS,
       yTicks: EMPTY_TICKS,
       fontSize,
-      frame: guidePolarFrame,
+      frame: guidePolarCoordinate,
       angularTicks: angularTicks ?? EMPTY_TICKS,
       radialTicks: EMPTY_TICKS,
     };
@@ -573,7 +573,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     const hasAxis = axisGuides.length > 0;
     const showAnyLabels = axisGuides.some(guide => guide.tickLabels !== false);
     const layout = computeTernaryFrame(width, height, { hasAxis, labels: hasAxis && showAnyLabels ? TERNARY_TICKS.labels : [] }, { fontSize, margin });
-    frame = createTernary2DFrame(layout.vertices);
+    frame = createTernary2DCoordinate(layout.vertices);
 
     // 三角轴 guide：projectX/Y 用占位 position scale（三角轴几何走 ternaryVertices、不读位置 scale）
     const placeholderScale = resolvePositionScale({ type: PlotScale.Linear, name: '__ternary', domain: [0, 1] }, [], [0, 1]);
@@ -650,7 +650,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     const yHasExplicitRange = hasExplicitContinuousRange(yScaleDef);
     if (!xHasExplicitRange) xScale.setRange([plotArea.x, plotArea.x + plotArea.width]);
     if (!yHasExplicitRange) yScale.setRange([plotArea.y + plotArea.height, plotArea.y]);
-    frame = createCartesianFrame(xScale, yScale);
+    frame = createCartesianCoordinate(xScale, yScale);
 
     // guide 的轴线/网格框取 scale 的实际 range（而非 margin 算的 plotArea）：无显式 range 时两者相同，
     // 有显式 range 时轴线/网格随实际绘制区走，与刻度/mark 严格对齐（不因显式 range 而错位）

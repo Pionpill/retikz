@@ -72,7 +72,7 @@ ReferenceMark 是底层参考 mark：它只负责把一个固定轴值解释成 
 ```ts
 [PlotMark.Reference]: { type: PlotMark.Reference, lower: lowerReferenceLayer },
 
-const lowerReferenceLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+const lowerReferenceLayer = (mark: Mark, rows: Array<ExternalRow>, frame: ResolvedCoordinate, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (mark.type !== PlotMark.Reference) return null;
   if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
     throw new Error(failLoudMessage(mark.type, frame.type));
@@ -81,7 +81,7 @@ const lowerReferenceLayer = (mark: Mark, rows: Array<ExternalRow>, frame: Coordi
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
 
-const lowerReference = (mark: ReferenceMark, rows: Array<ExternalRow>, frame: CartesianFrame | PolarFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+const lowerReference = (mark: ReferenceMark, rows: Array<ExternalRow>, frame: CartesianCoordinate | PolarCoordinate, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
   const orientation = referenceOrientation(mark);
   const band = isReferenceBand(mark, orientation);
   const effectiveRows = referenceRows(mark, rows, orientation);

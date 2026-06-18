@@ -1,9 +1,9 @@
 import type { Rect } from '../pipeline/layout';
 import type { PositionScale } from '../scale/scale';
 import type { Cell, CellGeometry } from './cell';
-import type { AxisFrame, CoordinateFrame, DimensionRole } from './types';
+import type { AxisFrame, DimensionRole, ResolvedCoordinate } from './types';
 
-export type CustomFrame = {
+export type ResolvedCustomCoordinate = {
   /** 判别字段：自定义（运行时工厂产出，非内建坐标系） */
   type: 'custom';
   /** 位置角色序（工厂消费哪些 mark 通道，按序喂 projectRoles） */
@@ -30,8 +30,8 @@ export type CustomFrame = {
   projectCell?: (cell: Cell) => CellGeometry;
 };
 
-/** createCustomFrame 选项（alpha.9 ADR-05）：roleScales 让 guide 画曲线轴、frameAlong 给精确切向；均可选 */
-export type CreateCustomFrameOptions = {
+/** createCustomCoordinate 选项（alpha.9 ADR-05）：roleScales 让 guide 画曲线轴、frameAlong 给精确切向；均可选 */
+export type CreateCustomCoordinateOptions = {
   /** 各角色位置 scale；供 guide 画轴。省略 → 该坐标系无轴 */
   roleScales?: Partial<Record<DimensionRole, PositionScale>>;
   /** 某角色轴曲线局部标架；曲线轴优先用其切向，省略 → guide 数值差分回落 */
@@ -41,14 +41,14 @@ export type CreateCustomFrameOptions = {
 };
 
 /**
- * 建自定义坐标帧：把工厂给的 roles + projectRoles 包成 CoordinateFrame（point mark 经此投影）
+ * 建自定义坐标帧：把工厂给的 roles + projectRoles 包成 ResolvedCoordinate（point mark 经此投影）
  * @description 第三参 options（alpha.9 ADR-05）：roleScales 让 guide 画曲线轴、frameAlong 给精确轴切向；均可选。
  */
-export const createCustomFrame = (
+export const createCustomCoordinate = (
   roles: ReadonlyArray<DimensionRole>,
   projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null,
-  options?: CreateCustomFrameOptions,
-): CustomFrame => ({
+  options?: CreateCustomCoordinateOptions,
+): ResolvedCustomCoordinate => ({
   type: 'custom',
   roles,
   project: () => null,
@@ -80,7 +80,7 @@ export type CustomCoordinateContext = {
   linearScaleFor: (role: DimensionRole, range: [number, number]) => PositionScale;
 };
 
-/** 自定义坐标系工厂：上下文 → CoordinateFrame（通常 createCustomFrame(roles, projectRoles)） */
-export type CustomCoordinateFactory = (context: CustomCoordinateContext) => CoordinateFrame;
+/** 自定义坐标系工厂：上下文 → ResolvedCoordinate（通常 createCustomCoordinate(roles, projectRoles)） */
+export type CustomCoordinateFactory = (context: CustomCoordinateContext) => ResolvedCoordinate;
 
 /** 一行的极坐标映射结果：θ（度）+ r（user units），均经 scale 映射后；任一非有限 → null（跳过该顶点） */

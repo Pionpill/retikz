@@ -46,9 +46,9 @@ React 组件本身不画 DOM；`<Plot>` 收集它，生成 `type: 'cross'` 这�
 ```ts
 type MarkDefinition<T extends Mark = Mark> = {
   type: PlotMarkValue;
-  requiredRoles?: (frame: CoordinateFrame) => ReadonlyArray<DimensionRole>;
-  buildCell?: (mark: T, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
-  lower: (mark: T, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, prov?: MarkProvenance) => IRChild | null;
+  requiredRoles?: (frame: ResolvedCoordinate) => ReadonlyArray<DimensionRole>;
+  buildCell?: (mark: T, row: ExternalRow, frame: ResolvedCoordinate, ctx?: IntervalContext) => Cell | null;
+  lower: (mark: T, rows: Array<ExternalRow>, frame: ResolvedCoordinate, channels: MarkChannels, prov?: MarkProvenance) => IRChild | null;
 };
 ```
 
@@ -100,7 +100,7 @@ export const MarkSchema = z.discriminatedUnion('type', [
 第二步是写 lowering。它消费数据行和坐标系 frame，返回 core `Path` 图层；没有可投影的点时返回 `null`：
 
 ```ts
-const lowerCross = (mark: CrossMark, rows: Array<ExternalRow>, frame: CoordinateFrame): IRChild | null => {
+const lowerCross = (mark: CrossMark, rows: Array<ExternalRow>, frame: ResolvedCoordinate): IRChild | null => {
   const size = mark.size ?? 6;
   const children: Array<IRChild> = [];
 

@@ -6,12 +6,12 @@ import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { buildIntervalContext, cellGeometryAnchor, datumAnchor } from '../../src/mark/anchor';
 import { lowerMark } from '../../src/mark/mark';
 import {
-  type CartesianFrame,
+  type CartesianCoordinate,
   type Cell,
   RETIKZ_POLAR_SEGMENT_SAMPLES,
-  createCartesianFrame,
-  createCustomFrame,
-  createPolarFrame,
+  createCartesianCoordinate,
+  createCustomCoordinate,
+  createPolarCoordinate,
   densifyCellContour,
 } from '../../src/coordinate';
 import type { PositionScale } from '../../src/scale/scale';
@@ -63,7 +63,7 @@ const linearStub = (domain: [number, number], range: [number, number], bandwidth
 // ── projectCell 闭式快路：cartesian → rect、polar → sector ──────────────────────────────
 describe('projectCell 闭式快路（rect / sector）', () => {
   it('cartesian_projectcell_returns_rect', () => {
-    const frame = createCartesianFrame(linearStub([0, 10], [0, 100], 20), linearStub([0, 10], [200, 0]));
+    const frame = createCartesianCoordinate(linearStub([0, 10], [0, 100], 20), linearStub([0, 10], [200, 0]));
     // primary 像素带 [40,60]、secondary 像素 [200,120] → rect 中心 [50,160]、width 20、height 80
     const cell: Cell = { intervals: { x: [40, 60], y: [200, 120] } };
     const geometry = frame.projectCell(cell);
@@ -71,7 +71,7 @@ describe('projectCell 闭式快路（rect / sector）', () => {
   });
 
   it('polar_projectcell_returns_sector', () => {
-    const frame = createPolarFrame({
+    const frame = createPolarCoordinate({
       center: [200, 200],
       innerRadius: 0,
       outerRadius: 150,
@@ -210,8 +210,8 @@ describe('polar interval / sector → sector 产物（byte-equal 回归基线）
 
 // ── densifyCellContour + 测试专用曲线 frame：interval 走 contour ────────────────────────
 /** 测试专用曲线 frame：cartesian 帧（cell 计算同 cartesian），projectCell 改返回 contour（上沿弯成抛物） */
-const curvedFrame = (): CartesianFrame => {
-  const base = createCartesianFrame(linearStub([0, 10], [0, 200], 40), linearStub([0, 10], [200, 0]));
+const curvedFrame = (): CartesianCoordinate => {
+  const base = createCartesianCoordinate(linearStub([0, 10], [0, 200], 40), linearStub([0, 10], [200, 0]));
   // 输出空间 (px, py) → 屏幕：x 原样、y 加一段随 px 变化的弯曲（使顶 / 底边非直线 → 必须密采样）
   const projectFn = (px: number, py: number): [number, number] => [px, py + 20 * Math.sin((px / 200) * Math.PI)];
   return {
@@ -257,7 +257,7 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
   it('interval_on_real_custom_frame_fail_loud', () => {
     // 真 type:'custom' frame（即便带 projectCell）无 primary band scale 构建 IntervalContext →
     //   fail-loud，不静默产空层（守「无 cell 构造即 fail-loud、无引擎自动兜底」）
-    const custom = createCustomFrame(['x', 'y'], values => [Number(values[0]), Number(values[1])], {
+    const custom = createCustomCoordinate(['x', 'y'], values => [Number(values[0]), Number(values[1])], {
       projectCell: (cell: Cell) => ({ kind: 'contour', points: densifyCellContour(cell, (p, s) => [p, s], { curvedPrimary: false, curvedSecondary: false }) }),
     });
     const mark = firstIntervalMark(intervalMarkSpec());
@@ -350,7 +350,7 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
     // datumAnchor（locator）= lowerMark 摆放的柱 Node.position（同一 frame、同源不漂移）
     const mark = firstIntervalMark(intervalMarkSpec());
     const rows = [{ m: 2, v: 3 }, { m: 6, v: 6 }];
-    const frame = createCartesianFrame(linearStub([0, 10], [0, 200], 40), linearStub([0, 10], [200, 0]));
+    const frame = createCartesianCoordinate(linearStub([0, 10], [0, 200], 40), linearStub([0, 10], [200, 0]));
     const ctx = buildIntervalContext(mark, frame, rows);
     const nodes = nodesOf(lowerMark(mark, rows, frame) as IRScope);
     rows.forEach((row, index) => {
@@ -389,7 +389,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
     // 连续 x scale（bandwidth 0）：primary cell = [coord(binStart), coord(binEnd)]、紧贴排列、宽随箱边
     const mark = histogramMark();
     const rows = [{ binStart: 0, binEnd: 2, binValue: 5 }, { binStart: 2, binEnd: 4, binValue: 3 }];
-    const frame = createCartesianFrame(linearStub([0, 10], [0, 200], 0), linearStub([0, 10], [200, 0]));
+    const frame = createCartesianCoordinate(linearStub([0, 10], [0, 200], 0), linearStub([0, 10], [200, 0]));
     const nodes = nodesOf(lowerMark(mark, rows, frame) as IRScope);
     expect(nodes).toHaveLength(2);
     // coord(0)=0, coord(2)=40, coord(4)=80 → 宽 40 各；中心 20 / 60；紧贴（node0 右 = node1 左）
@@ -406,7 +406,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
     // 不等宽箱（thresholds 派生）：宽随各自箱边
     const mark = histogramMark();
     const rows = [{ binStart: 0, binEnd: 1, binValue: 2 }, { binStart: 1, binEnd: 5, binValue: 4 }];
-    const frame = createCartesianFrame(linearStub([0, 10], [0, 200], 0), linearStub([0, 10], [200, 0]));
+    const frame = createCartesianCoordinate(linearStub([0, 10], [0, 200], 0), linearStub([0, 10], [200, 0]));
     const nodes = nodesOf(lowerMark(mark, rows, frame) as IRScope);
     // coord(1)-coord(0)=20、coord(5)-coord(1)=80
     expect(nodes[0].minimumWidth).toBeCloseTo(20, 9);
