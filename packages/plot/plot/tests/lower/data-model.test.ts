@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { inferFieldType, isIsoDateString } from '../../src/data/infer';
-import { collectUserSourceFields, resolveFieldTypes } from '../../src/data/validate';
+import { inferFieldType, isIsoDateString, resolveFieldTypes } from '../../src/data';
+import { collectSourceFields } from '../../src/pipeline/source-fields';
 
 /** 构造最小可解析 PlotSpec（cartesian + 给定 marks / transform / model） */
 const buildSpec = (overrides: Record<string, unknown>): PlotSpec =>
@@ -83,12 +83,12 @@ describe('isIsoDateString — 严格 ISO guard（ADR-01）', () => {
   });
 });
 
-describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
+describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
   it('collect_encoding_order_series', () => {
     const spec = buildSpec({
       marks: [{ type: 'path', order: 'idx', series: 'cat', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'cat' } } }],
     });
-    const fields = collectUserSourceFields(spec);
+    const fields = collectSourceFields(spec);
     expect(fields.has('month')).toBe(true);
     expect(fields.has('revenue')).toBe(true);
     expect(fields.has('idx')).toBe(true);
@@ -102,7 +102,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
         { kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' },
       ],
     });
-    const fields = collectUserSourceFields(spec);
+    const fields = collectSourceFields(spec);
     expect(fields.has('month')).toBe(true);
     expect(fields.has('revenue')).toBe(true);
     expect(fields.has('product')).toBe(true);
@@ -114,7 +114,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
       transform: [{ kind: 'stack', x: 'month', y: 'revenue', startField: 'lo', endField: 'hi' }],
       marks: [{ type: 'interval', bounds: { y: { kind: 'extent', from: 'lo', to: 'hi' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     });
-    const fields = collectUserSourceFields(spec);
+    const fields = collectSourceFields(spec);
     expect(fields.has('lo')).toBe(false);
     expect(fields.has('hi')).toBe(false);
   });
@@ -123,7 +123,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
     const spec = buildSpec({
       marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { value: 'red' } } }],
     });
-    expect(collectUserSourceFields(spec).has('red')).toBe(false);
+    expect(collectSourceFields(spec).has('red')).toBe(false);
   });
 
   it('collect_label_and_text_content_fields_alpha11', () => {
@@ -134,7 +134,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
         { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, text: { field: 'note' } } },
       ],
     });
-    const fields = collectUserSourceFields(spec);
+    const fields = collectSourceFields(spec);
     expect(fields.has('lbl')).toBe(true);
     expect(fields.has('note')).toBe(true);
   });
@@ -147,7 +147,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
         { type: 'reference', encoding: { y: { value: 70 } }, yTo: 90 },
       ],
     });
-    const fields = collectUserSourceFields(spec);
+    const fields = collectSourceFields(spec);
     expect(fields.has('lo')).toBe(true);
     expect(fields.has('hi')).toBe(true);
     expect(fields.has('a')).toBe(true);
@@ -160,7 +160,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
     const spec = buildSpec({
       marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, text: { field: 'note' } } }],
     });
-    const userFields = collectUserSourceFields(spec);
+    const userFields = collectSourceFields(spec);
     expect(() => resolveFieldTypes([{ name: 'month' }, { name: 'revenue' }], [{ month: 1, revenue: 2, note: 'x' }], userFields)).toThrow(/unknown field/i);
   });
 
@@ -170,7 +170,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
       transform: [{ kind: 'bin', field: 'measurement', reduce: 'sum', reduceField: 'weight' }],
       marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } }, encoding: { y: { field: 'binValue' } } }],
     });
-    const fields = collectUserSourceFields(spec);
+    const fields = collectSourceFields(spec);
     // 输入字段进
     expect(fields.has('measurement')).toBe(true);
     expect(fields.has('weight')).toBe(true);
@@ -185,7 +185,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
       transform: [{ kind: 'bin', field: 'm', startField: 'lo', endField: 'hi', valueField: 'n' }],
       marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'lo', to: 'hi' } }, encoding: { y: { field: 'n' } } }],
     });
-    const fields = collectUserSourceFields(spec);
+    const fields = collectSourceFields(spec);
     expect(fields.has('m')).toBe(true);
     expect(fields.has('lo')).toBe(false);
     expect(fields.has('hi')).toBe(false);
@@ -197,7 +197,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
       transform: [{ kind: 'aggregate', groupBy: ['region', 'product'], reduce: 'sum', field: 'revenue', as: 'total' }],
       marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'total' } } }],
     });
-    const fields = collectUserSourceFields(spec);
+    const fields = collectSourceFields(spec);
     expect(fields.has('region')).toBe(true);
     expect(fields.has('product')).toBe(true);
     expect(fields.has('revenue')).toBe(true);
@@ -210,7 +210,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
       transform: [{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue' }],
       marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'sumRevenue' } } }],
     });
-    const fields = collectUserSourceFields(spec);
+    const fields = collectSourceFields(spec);
     expect(fields.has('sumRevenue')).toBe(false);
   });
 
@@ -220,7 +220,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
       transform: [{ kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' }],
       marks: [{ type: 'interval', encoding: { x: { field: 'quarter' }, y: { field: 'share' } } }],
     });
-    const fields = collectUserSourceFields(spec);
+    const fields = collectSourceFields(spec);
     expect(fields.has('amount')).toBe(true);
     expect(fields.has('quarter')).toBe(true);
     expect(fields.has('share')).toBe(false); // 派生输出
@@ -232,7 +232,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
       transform: [{ kind: 'normalize', field: 'amount', groupBy: ['quarter'] }],
       marks: [{ type: 'interval', encoding: { x: { field: 'quarter' }, y: { field: 'amount' } } }],
     });
-    expect(collectUserSourceFields(spec).has('amount')).toBe(true);
+    expect(collectSourceFields(spec).has('amount')).toBe(true);
   });
 
   it('derive_interval_inputs_in_outputs_out', () => {
@@ -240,7 +240,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
       transform: [{ kind: 'derive-interval', startFrom: 'start', endFrom: 'end', startField: 'lo', endField: 'hi' }],
       marks: [{ type: 'interval', bounds: { y: { kind: 'extent', from: 'lo', to: 'hi' } }, encoding: { x: { field: 'task' }, y: { field: 'end' } } }],
     });
-    const fields = collectUserSourceFields(spec);
+    const fields = collectSourceFields(spec);
     expect(fields.has('start')).toBe(true);
     expect(fields.has('end')).toBe(true);
     expect(fields.has('lo')).toBe(false);
@@ -253,7 +253,7 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
       transform: [{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 1 }],
       marks: [{ type: 'point', encoding: { x: { field: 'dose' }, y: { field: 'response' } } }],
     });
-    expect(collectUserSourceFields(spec).has('dose')).toBe(true);
+    expect(collectSourceFields(spec).has('dose')).toBe(true);
   });
 });
 

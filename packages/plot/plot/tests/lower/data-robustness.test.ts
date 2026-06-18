@@ -2,7 +2,7 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema, ScalarValueSchema } from '../../src/ir';
 import { coerceValue, normalizeRows, validateBoundData } from '../../src/data/coerce';
-import { inferFieldType } from '../../src/data/infer';
+import { inferFieldType } from '../../src/data';
 import { type LowerPlotsOptions, lowerPlots, prepareRows } from '../../src/pipeline/expand';
 
 /**
@@ -123,7 +123,7 @@ describe('ADR-08 数据健壮性 — invalid 策略（skip / error）', () => {
   });
 
   it('invalid_error_scope_is_participating_fields：error 只校验 spec 参与字段，未引用脏字段不触发（cross-review #5）', () => {
-    // spec 只参与 a / b；额外的脏字段 junk 不在 collectUserSourceFields 内 → invalid:error 不应因 junk 报错
+    // spec 只参与 a / b；额外的脏字段 junk 不在 collectSourceFields 内 → invalid:error 不应因 junk 报错
     expect(() => compile(specWithModel(), { d: [{ a: 1, b: 2, junk: 'garbage' }, { a: 3, b: 4, junk: {} }] }, { invalid: 'error' })).not.toThrow();
   });
 

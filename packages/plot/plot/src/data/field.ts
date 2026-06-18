@@ -1,7 +1,6 @@
 import { format as d3Format } from 'd3-format';
 import { utcFormat } from 'd3-time-format';
-import { type ExternalRow, PlotFieldType, type PlotFieldTypeValue, type TextChannel } from '../ir';
-import type { Channel } from '../ir';
+import { type Channel, type DataModel, type ExternalRow, PlotFieldType, type PlotFieldTypeValue, type TextChannel } from '../ir';
 
 /**
  * 解析字段路径 a.b.c，返回叶子值（任一段缺失返回 undefined）
@@ -79,4 +78,100 @@ export const labelOf = (
   }
   if (content.value !== undefined) return content.value;
   return undefined;
+};
+
+type FieldChannel = Channel | { kind: 'field' | 'constant'; value: unknown };
+
+/** 字段收集器：把 mark / transform 声明中引用外部数据源的字段加入集合。 */
+export type FieldCollector = {
+  /** 加入一个字段名；undefined 表示该位置没有字段引用。 */
+  addField: (field?: string) => void;
+  /** 一次加入多个字段名；undefined 会被跳过。 */
+  addFields: (...fields: Array<string | undefined>) => void;
+  /** 加入普通 channel 或 MarkValueType 的字段引用；常量值不引用数据源。 */
+  addChannel: (channel?: FieldChannel) => void;
+};
+
+/** 创建字段收集器，所有写入直接落到传入 Set。 */
+export const createFieldCollector = (fields: Set<string>): FieldCollector => ({
+  addField: field => {
+    if (field !== undefined) fields.add(field);
+  },
+  addFields: (...sourceFields) => {
+    for (const field of sourceFields) {
+      if (field !== undefined) fields.add(field);
+    }
+  },
+  addChannel: channel => {
+    if (channel === undefined) return;
+    if ('kind' in channel) {
+      if (channel.kind === 'field') fields.add(String(channel.value));
+      return;
+    }
+    if (channel.field !== undefined) fields.add(channel.field);
+  },
+});
+
+const MAX_SCAN_ROWS = 1000;
+const MAX_SAMPLE_VALUES = 100;
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const ISO_DATETIME_RE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
+
+export const isIsoDateString = (value: string): boolean => ISO_DATE_RE.test(value) || ISO_DATETIME_RE.test(value);
+
+const classifyFieldValue = (value: unknown): PlotFieldTypeValue | undefined => {
+  if (value instanceof Date) return PlotFieldType.Temporal;
+  if (typeof value === 'bigint') return PlotFieldType.Continuous;
+  if (typeof value === 'number') return Number.isFinite(value) ? PlotFieldType.Continuous : undefined;
+  if (typeof value === 'string') return isIsoDateString(value) ? PlotFieldType.Temporal : PlotFieldType.Categorical;
+  if (typeof value === 'boolean') return PlotFieldType.Categorical;
+  return undefined;
+};
+
+/** 从绑定数据推断某字段的测量类型；仅在没有 data.model 或 model 缺省 type 时使用。 */
+export const inferFieldType = (rows: Array<ExternalRow>, path: string): PlotFieldTypeValue => {
+  const sample: Array<PlotFieldTypeValue> = [];
+  const scanLimit = Math.min(rows.length, MAX_SCAN_ROWS);
+  for (let index = 0; index < scanLimit && sample.length < MAX_SAMPLE_VALUES; index++) {
+    const value = resolveFieldPath(rows[index], path);
+    if (value === null || value === undefined) continue;
+    const type = classifyFieldValue(value);
+    if (type === undefined) continue;
+    sample.push(type);
+  }
+  if (sample.length === 0) return PlotFieldType.Categorical;
+  if (sample.every(type => type === PlotFieldType.Temporal)) return PlotFieldType.Temporal;
+  if (sample.every(type => type === PlotFieldType.Continuous)) return PlotFieldType.Continuous;
+  return PlotFieldType.Categorical;
+};
+
+/** 把源字段解析成字段名到类型的映射，供 type-driven scale / coercion 消费。 */
+export const resolveFieldTypes = (
+  model: DataModel | undefined,
+  rows: Array<ExternalRow>,
+  sourceFields: Set<string>,
+): Map<string, PlotFieldTypeValue> => {
+  const map = new Map<string, PlotFieldTypeValue>();
+  if (model !== undefined) {
+    const declaredNames = new Set<string>();
+    const declaredTypes = new Map<string, PlotFieldTypeValue>();
+    for (const field of model) {
+      if (declaredNames.has(field.name)) {
+        throw new Error(`lowerPlots: duplicate field "${field.name}" in data.model`);
+      }
+      declaredNames.add(field.name);
+      if (field.type !== undefined) declaredTypes.set(field.name, field.type);
+    }
+    for (const field of sourceFields) {
+      if (!declaredNames.has(field)) {
+        throw new Error(`lowerPlots: unknown field "${field}" (data.model is declared; all referenced source fields must be listed)`);
+      }
+      map.set(field, declaredTypes.get(field) ?? inferFieldType(rows, field));
+    }
+  } else {
+    for (const field of sourceFields) {
+      map.set(field, inferFieldType(rows, field));
+    }
+  }
+  return map;
 };

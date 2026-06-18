@@ -13,7 +13,8 @@ import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_PLOT_COLORS, DEFA
 import { assertAllValuesValid, collectFormatFields, normalizeRows, validateBoundData } from '../data/coerce';
 import { applyTransforms } from '../transform/transform';
 import { type ResolveField, applyFieldResolver } from '../data/resolve';
-import { collectUserSourceFields, resolveFieldTypes } from '../data/validate';
+import { resolveFieldTypes } from '../data';
+import { collectSourceFields } from './source-fields';
 
 /** 空刻度集（某维度无 axis 时给 GuideContext 的占位；实际不会被该维度的 guide 触达） */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
@@ -1137,7 +1138,7 @@ export const prepareRows = (
   ingested: Array<ExternalRow>,
 ): { fieldTypes: Map<string, PlotFieldTypeValue>; normalized: Array<ExternalRow> } => {
   validateFieldMaps(spec, datasets, options.fieldMaps);
-  const userSourceFields = collectUserSourceFields(spec);
+  const userSourceFields = collectSourceFields(spec);
   // strict + 声明/推断（ADR-01/05）；strict 在 applyFieldResolver 之前先校验，resolver 不绕过（ADR-04）
   const baseTypes = resolveFieldTypes(spec.data.model, ingested, userSourceFields);
   const fieldMap = options.fieldMaps?.[spec.data.reference];

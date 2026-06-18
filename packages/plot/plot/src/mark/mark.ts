@@ -1,7 +1,8 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope, type IRStep } from '@retikz/core';
-import { type ExternalRow, type LinkMark, type Mark, PlotCoordinate, PlotMark, type PlotMarkValue, type PointMark, type ReferenceMark } from '../ir';
+import { type ExternalRow, type IntervalMark, type LinkMark, type Mark, type PathMark, PlotCoordinate, PlotMark, type PlotMarkValue, type PointMark, type ReferenceMark, type RegionMark } from '../ir';
 import { type IntervalContext, LINK_DEFAULT_CURVATURE, buildIntervalContext, datumAnchor, linkBandGeometry, linkEndpoints, markCell, roleValues } from './anchor';
 import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from '../data/field';
+import type { FieldCollector } from '../data';
 import { inferCategoryDomain } from '../scale/scale';
 import { type Cell, type CellGeometry, type DimensionRole, type PolarVertex, type ResolvedCartesianCoordinate, type ResolvedCoordinate, type ResolvedPolarCoordinate, densifyPolarSegments, toPolarVertex } from '../coordinate';
 import {
@@ -922,6 +923,8 @@ const lowerReferenceLayer = (mark: Mark, rows: Array<ExternalRow>, frame: Resolv
 export type MarkDefinition<T extends Mark = Mark> = {
   /** 注册键（= IR 判别串，对应 ir/mark.ts 静态 schema 的成员） */
   type: PlotMarkValue;
+  /** 收集该 mark 额外引用的用户源字段；通用 encoding / label 字段由 data 层统一处理 */
+  collectFields?: (mark: T, fields: FieldCollector) => void;
   /** 位置通道必填性：坐标系级校验（省略 → 由各 lower 自行 fail-loud） */
   requiredRoles?: (frame: ResolvedCoordinate) => ReadonlyArray<DimensionRole>;
   /** 区间类 mark：某行 → 正交 Cell（interval 用；非区间类省略） */
@@ -930,18 +933,104 @@ export type MarkDefinition<T extends Mark = Mark> = {
   lower: (mark: T, rows: Array<ExternalRow>, frame: ResolvedCoordinate, channels: MarkChannels, prov?: MarkProvenance) => IRChild | null;
 };
 
+const collectPositionalFields = (mark: PointMark | PathMark | RegionMark | IntervalMark, fields: FieldCollector): void => {
+  fields.addChannel(mark.encoding.x);
+  fields.addChannel(mark.encoding.y);
+  fields.addChannel(mark.encoding.z);
+  if ('color' in mark.encoding) fields.addChannel(mark.encoding.color);
+  fields.addChannel(mark.label?.content);
+};
+
 /**
  * mark lowering 行为注册表：内置 6 个 mark = 6 个内置注册项（lowerMark 按 type 查表分发）
  * @description 对齐仓库已有 composite / coordinate 工厂注册范式；新增内置 mark = 加一条注册项，不改 lowerMark。
  *   IR schema 仍是 ir/mark.ts 静态单一真源（不由此表组装）。
  */
 export const MARK_REGISTRY: Record<PlotMarkValue, MarkDefinition> = {
-  [PlotMark.Point]: { type: PlotMark.Point, lower: lowerPoint },
-  [PlotMark.Path]: { type: PlotMark.Path, lower: lowerPathLayer },
-  [PlotMark.Region]: { type: PlotMark.Region, lower: lowerRegionLayer },
-  [PlotMark.Interval]: { type: PlotMark.Interval, buildCell: (mark, row, frame, ctx) => markCell(mark, row, frame, ctx), lower: lowerIntervalLayer },
-  [PlotMark.Link]: { type: PlotMark.Link, lower: lowerLinkLayer },
-  [PlotMark.Reference]: { type: PlotMark.Reference, lower: lowerReferenceLayer },
+  [PlotMark.Point]: {
+    type: PlotMark.Point,
+    collectFields: (mark, fields) => {
+      if (mark.type !== PlotMark.Point) return;
+      collectPositionalFields(mark, fields);
+      fields.addChannel(mark.color);
+      fields.addChannel(mark.size);
+      fields.addChannel(mark.shape);
+      fields.addChannel(mark.fill);
+      fields.addChannel(mark.stroke);
+      fields.addChannel(mark.strokeWidth);
+      fields.addChannel(mark.fillOpacity);
+      fields.addChannel(mark.drawOpacity);
+      fields.addChannel(mark.opacity);
+      fields.addChannel(mark.rotate);
+      fields.addChannel(mark.padding);
+      fields.addChannel(mark.minimumSize);
+      fields.addChannel(mark.minimumWidth);
+      fields.addChannel(mark.minimumHeight);
+      fields.addChannel(mark.zIndex);
+      fields.addChannel(mark.encoding.text);
+    },
+    lower: lowerPoint,
+  },
+  [PlotMark.Path]: {
+    type: PlotMark.Path,
+    collectFields: (mark, fields) => {
+      if (mark.type !== PlotMark.Path) return;
+      collectPositionalFields(mark, fields);
+      fields.addFields(mark.order, mark.series);
+    },
+    lower: lowerPathLayer,
+  },
+  [PlotMark.Region]: {
+    type: PlotMark.Region,
+    collectFields: (mark, fields) => {
+      if (mark.type !== PlotMark.Region) return;
+      collectPositionalFields(mark, fields);
+      fields.addFields(mark.order, mark.series);
+    },
+    lower: lowerRegionLayer,
+  },
+  [PlotMark.Interval]: {
+    type: PlotMark.Interval,
+    collectFields: (mark, fields) => {
+      if (mark.type !== PlotMark.Interval) return;
+      collectPositionalFields(mark, fields);
+      fields.addField(mark.series);
+      const bounds = [mark.bounds?.x, mark.bounds?.y, mark.bounds?.z];
+      for (const bound of bounds) {
+        if (bound?.kind === 'extent') fields.addFields(bound.from, bound.to);
+      }
+    },
+    buildCell: (mark, row, frame, ctx) => markCell(mark, row, frame, ctx),
+    lower: lowerIntervalLayer,
+  },
+  [PlotMark.Link]: {
+    type: PlotMark.Link,
+    collectFields: (mark, fields) => {
+      if (mark.type !== PlotMark.Link) return;
+      fields.addChannel(mark.source.x);
+      fields.addChannel(mark.source.y);
+      fields.addChannel(mark.target.x);
+      fields.addChannel(mark.target.y);
+      fields.addFields(mark.value, mark.endWidth);
+    },
+    lower: lowerLinkLayer,
+  },
+  [PlotMark.Reference]: {
+    type: PlotMark.Reference,
+    collectFields: (mark, fields) => {
+      if (mark.type !== PlotMark.Reference) return;
+      fields.addChannel(mark.encoding.x);
+      fields.addChannel(mark.encoding.y);
+      fields.addChannel(mark.encoding.z);
+      if ('color' in mark.encoding) fields.addChannel(mark.encoding.color);
+      fields.addFields(typeof mark.xTo === 'string' ? mark.xTo : undefined, typeof mark.yTo === 'string' ? mark.yTo : undefined, mark.extentField, mark.extentToField);
+    },
+    lower: lowerReferenceLayer,
+  },
+};
+
+export const collectMarkFields = (mark: Mark, fields: FieldCollector): void => {
+  MARK_REGISTRY[mark.type].collectFields?.(mark, fields);
 };
 
 /**
