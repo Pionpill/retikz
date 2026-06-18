@@ -1,8 +1,9 @@
 import type { Position } from '@retikz/math';
-import type { CartesianCoordinate, ResolvedCartesian1DCoordinate } from './cartesian';
-import type { ResolvedCustomCoordinate } from './custom';
-import type { PolarCoordinate, ResolvedPolar1DCoordinate } from './polar';
-import type { ResolvedTernary2DCoordinate } from './ternary';
+import type { Cartesian1DCoordinate, CartesianCoordinate } from './cartesian';
+import type { Cell, CellGeometry } from './cell';
+import type { CustomCoordinate } from './custom';
+import type { Polar1DCoordinate, PolarCoordinate } from './polar';
+import type { Ternary2DCoordinate } from './ternary';
 
 /**
  * 坐标系位置角色：mark 按 frame.roles 序从 encoding 取对应通道值喂 projectRoles。
@@ -17,7 +18,18 @@ export type DimensionRole = 'x' | 'y' | 'z';
  *   2 通道的 `project(primary, secondary)` 保留为便捷别名（cartesian/polar 内部 + line/area 复用）。
  *   非有限值返回 null（跳过该点）。
  */
-export type ResolvedCoordinate = CartesianCoordinate | PolarCoordinate | ResolvedCartesian1DCoordinate | ResolvedPolar1DCoordinate | ResolvedTernary2DCoordinate | ResolvedCustomCoordinate;
+export type ResolvedCoordinate = CartesianCoordinate | PolarCoordinate | Cartesian1DCoordinate | Polar1DCoordinate | Ternary2DCoordinate | CustomCoordinate;
+
+/** 具备 cell 几何投影能力的运行时坐标帧。 */
+export type CellProjectableCoordinate = ResolvedCoordinate & {
+  projectCell: (cell: Cell) => CellGeometry;
+};
+
+/** 判断坐标帧是否支持 interval/reference band 等 cell 类几何投影。 */
+export const hasProjectCell = (coordinate: ResolvedCoordinate): coordinate is CellProjectableCoordinate => {
+  const candidate = coordinate as { projectCell?: unknown };
+  return typeof candidate.projectCell === 'function';
+};
 
 /**
  * 某角色轴曲线在某参数点的局部标架：原点 + 切向，均在屏幕空间。

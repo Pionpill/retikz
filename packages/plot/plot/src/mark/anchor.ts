@@ -1,6 +1,6 @@
 import { type Channel, type ExternalRow, type IntervalBound, IntervalBoundKind, type IntervalMark, type LinkMark, type LinkOrientationValue, type Mark, PlotCoordinate, PlotMark } from '../ir';
 import { channelValue, isFiniteNumber, resolveFieldPath } from '../data/field';
-import type { CartesianCoordinate, Cell, CellGeometry, DimensionRole, PolarCoordinate, ResolvedCoordinate } from '../coordinate';
+import { type CartesianCoordinate, type Cell, type CellGeometry, type DimensionRole, type PolarCoordinate, type ResolvedCoordinate, hasProjectCell } from '../coordinate';
 import { type PositionScale, inferCategoryDomain } from '../scale/scale';
 
 /**
@@ -325,7 +325,7 @@ export const linkBandGeometry = (
  */
 export const datumAnchor = (mark: Mark, row: ExternalRow, frame: ResolvedCoordinate, ctx?: IntervalContext): [number, number] | null => {
   if (mark.type === PlotMark.Interval) {
-    if (frame.projectCell === undefined) return null;
+    if (!hasProjectCell(frame)) return null;
     const cell = markCell(mark, row, frame, ctx);
     return cell ? cellGeometryAnchor(frame.projectCell(cell)) : null;
   }

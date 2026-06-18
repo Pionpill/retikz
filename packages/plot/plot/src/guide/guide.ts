@@ -1,7 +1,7 @@
 import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../ir';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from '../pipeline/layout';
-import type { DimensionRole, PolarCoordinate, ResolvedCustomCoordinate, TernaryVertices } from '../coordinate';
+import type { CustomCoordinate, DimensionRole, PolarCoordinate, TernaryVertices } from '../coordinate';
 import { type ProvenanceContext, guideLayerId, guideLayerMeta } from '../pipeline/provenance';
 import type { PositionScale, TickSet } from '../scale/scale';
 
@@ -407,7 +407,7 @@ const CUSTOM_AXIS_SAMPLES = 40;
  *   得轴线（任意曲线）与刻度点；刻度短线 / 标签沿局部切向的法线摆。frame 无 roleScales[dimension] → 不画（返回空）。
  *   通用性即「轴 = 参数路径」：直线 / 拱 / 圆 / 螺旋同一套画法。无网格（自定义网格几何因投影而异，留后续）。
  */
-export const lowerCustomAxis = (frame: ResolvedCustomCoordinate, guide: AxisGuide, fontSize: number, context: ProvenanceContext | undefined): LoweredGuide => {
+export const lowerCustomAxis = (frame: CustomCoordinate, guide: AxisGuide, fontSize: number, context: ProvenanceContext | undefined): LoweredGuide => {
   const scale = frame.roleScales?.[guide.dimension];
   if (!scale) return { gridLayer: null, axisLayer: null };
   const ticks = scale.ticks(guide.tickCount);

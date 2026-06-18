@@ -3,7 +3,7 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
-import { type AxisFrame, type CustomCoordinateFactory, type DimensionRole, type ResolvedCustomCoordinate, createCustomCoordinate } from '../../src/coordinate';
+import { type AxisFrame, type CustomCoordinate, type CustomCoordinateFactory, type DimensionRole, createCustomCoordinate } from '../../src/coordinate';
 
 /**
  * 自定义坐标系（custom coordinate，实验性）lowering 测试。
@@ -233,7 +233,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
 
 /** 线性对角坐标系（projectRoles=[10x,10x]）：解析切向为常量 [10,10]，frame 级断言用（不依赖 context） */
 const DIAGONAL_K = 10;
-const diagonalFrame = (): ResolvedCustomCoordinate => {
+const diagonalFrame = (): CustomCoordinate => {
   const project = (values: ReadonlyArray<unknown>): [number, number] | null => {
     const x = Number(values[0]);
     return Number.isFinite(x) ? [x * DIAGONAL_K, x * DIAGONAL_K] : null;

@@ -4,7 +4,7 @@ import type { PositionScale } from '../scale/scale';
 import type { Cell, CellGeometry } from './cell';
 import type { AxisFrame, DimensionRole, ResolvedCoordinate } from './types';
 
-export type ResolvedCustomCoordinate = {
+export type CustomCoordinate = {
   /** 判别字段：自定义（运行时工厂产出，非内建坐标系） */
   type: 'custom';
   /** 位置角色序（工厂消费哪些 mark 通道，按序喂 projectRoles） */
@@ -49,7 +49,7 @@ export const createCustomCoordinate = (
   roles: ReadonlyArray<DimensionRole>,
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null,
   options?: CreateCustomCoordinateOptions,
-): ResolvedCustomCoordinate => ({
+): CustomCoordinate => ({
   type: 'custom',
   roles,
   project: () => null,

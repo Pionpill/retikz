@@ -105,7 +105,7 @@ export const createPolarCoordinate = (input: PolarCoordinateSpec): PolarCoordina
 
 /** 一维笛卡尔帧（直线）：单一位置 scale 落一条轴线，塌缩的第二屏幕维取固定基线 */
 
-export type ResolvedPolar1DCoordinate = {
+export type Polar1DCoordinate = {
   /** 判别字段：1D 极坐标圆周 */
   type: typeof PlotCoordinate.Polar1D;
   /** 位置角色序（[angle]，单通道；x→angle 别名取值） */
@@ -128,8 +128,6 @@ export type ResolvedPolar1DCoordinate = {
   project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：roles 长度 1，传 [angleValue] → projectPolar(angleScale(angleValue), radius)；非有限 → null */
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
-  /** 1D 坐标系无 2D 正交 cell 概念，不实现 projectCell（cell 类 mark fail-loud；声明可选以统一 union 访问） */
-  projectCell?: undefined;
 };
 
 /** 建一维笛卡尔帧：单 scale + 轴向 + 塌缩维基线（horizontal → [scale(v), baseline]、vertical → [baseline, scale(v)]） */
@@ -150,7 +148,7 @@ export type Polar1DCoordinateSpec = {
 };
 
 /** 建一维极坐标帧：角向投影固定在半径 radius 的圆周（复用极坐标→笛卡尔换算） */
-export const createPolar1DCoordinate = (input: Polar1DCoordinateSpec): ResolvedPolar1DCoordinate => {
+export const createPolar1DCoordinate = (input: Polar1DCoordinateSpec): Polar1DCoordinate => {
   const [cx, cy] = input.center;
   const projectPolar = (thetaDeg: number, radius: number): Position | null => {
     if (!Number.isFinite(thetaDeg) || !Number.isFinite(radius)) return null;

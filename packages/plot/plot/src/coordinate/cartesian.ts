@@ -1,10 +1,15 @@
 import type { Position } from '@retikz/math';
 import { Cartesian1DOrientation, type Cartesian1DOrientationType, PlotCoordinate } from '../ir';
-import { cellInterval } from './cell';
-import type { Cell, CellGeometry } from './cell';
-import type { DimensionRole } from './types';
 import type { PositionScale } from '../scale/scale';
+import type { Cell, CellGeometry } from './cell';
+import { cellInterval } from './cell';
+import type { DimensionRole } from './types';
 
+/**
+ * 二维笛卡尔运行时坐标帧。
+ * @description 由 IR 坐标配置和 x/y scale 解析得到，lowering 阶段通过它把数据通道值投影成屏幕坐标。
+ *   该类型描述可执行的投影能力，不等同于 `ir/coordinate` 中的 JSON schema 类型。
+ */
 export type CartesianCoordinate = {
   /** 判别字段：2D 笛卡尔 */
   type: typeof PlotCoordinate.Cartesian2D;
@@ -22,8 +27,7 @@ export type CartesianCoordinate = {
   projectCell: (cell: Cell) => CellGeometry;
 };
 
-/** 极坐标帧：primary = angle（度，range = [startAngle, endAngle]）、secondary = radius（user units，range = [innerRadius, outerRadius]） */
-
+/** 建二维笛卡尔运行时坐标帧：primary = x scale、secondary = y scale。 */
 export const createCartesianCoordinate = (primary: PositionScale, secondary: PositionScale): CartesianCoordinate => {
   const project = (primaryValue: unknown, secondaryValue: unknown): Position | null => {
     const x = primary.coordinate(primaryValue);
@@ -51,7 +55,12 @@ export const createCartesianCoordinate = (primary: PositionScale, secondary: Pos
   };
 };
 
-export type ResolvedCartesian1DCoordinate = {
+/**
+ * 一维笛卡尔运行时坐标帧。
+ * @description 用单一位置 scale 沿 horizontal/vertical 方向投影，另一屏幕维度固定在 baseline。
+ *   适用于单轴图形或 1D 坐标语法解析后的 lowering；它仍然产出二维屏幕坐标。
+ */
+export type Cartesian1DCoordinate = {
   /** 判别字段：1D 笛卡尔直线 */
   type: typeof PlotCoordinate.Cartesian1D;
   /** 位置角色序（[x]，单通道） */
@@ -66,12 +75,10 @@ export type ResolvedCartesian1DCoordinate = {
   project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：roles 长度 1，传 [value] → horizontal [scale(v), baseline] / vertical [baseline, scale(v)]；非有限 → null */
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
-  /** 1D 坐标系无 2D 正交 cell 概念，不实现 projectCell（cell 类 mark fail-loud；声明可选以统一 union 访问） */
-  projectCell?: undefined;
 };
 
 /** 建一维笛卡尔帧：单 scale + 轴向 + 塌缩维基线（horizontal → [scale(v), baseline]、vertical → [baseline, scale(v)]） */
-export const createCartesian1DCoordinate = (scale: PositionScale, orientation: Cartesian1DOrientationType, baseline: number): ResolvedCartesian1DCoordinate => {
+export const createCartesian1DCoordinate = (scale: PositionScale, orientation: Cartesian1DOrientationType, baseline: number): Cartesian1DCoordinate => {
   const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
     const position = scale.coordinate(values[0]);
     if (!Number.isFinite(position)) return null;
@@ -88,5 +95,3 @@ export const createCartesian1DCoordinate = (scale: PositionScale, orientation: C
     projectRoles,
   };
 };
-
-/** 建一维极坐标帧的参数（圆心 + 固定半径 + 角向区间 + angle scale） */
