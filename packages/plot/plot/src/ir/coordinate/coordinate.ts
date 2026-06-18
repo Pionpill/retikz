@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ValueOf } from '@retikz/core';
+import { JsonObjectSchema, type ValueOf } from '@retikz/core';
 
 /**
  * 坐标系类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'cartesian2D'` 同样可用）
@@ -117,6 +117,15 @@ export const CustomCoordinateSchema = z
       .describe('Discriminator: custom coordinate op type; must be a non-empty, non-built-in identifier registered through options.coordinates'),
   })
   .passthrough()
+  .superRefine((op, ctx) => {
+    const result = JsonObjectSchema.safeParse(op);
+    if (!result.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'custom coordinate op must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
+      });
+    }
+  })
   .describe('Custom coordinate op: type is any non-built-in identifier; its config is validated at lowering time against the matching CoordinateDefinition supplied via options.coordinates. Position roles come from the definition, not the op.');
 
 export const CoordinateSchema = z

@@ -1,4 +1,4 @@
-import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, defineComposite } from '@retikz/core';
+import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, JsonObjectSchema, defineComposite } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
 import { type AxisGuide, BUILTIN_COORDINATE_TYPES, Cartesian1DOrientation, type Channel, CoordinateSchema, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotScaleValue, type PlotSpec, PlotSpecSchema, type QuantileColorScale, type QuantizeColorScale, type Scale, type ThresholdColorScale } from '../ir';
 import { resolveIntervalBound } from '../mark/anchor';
@@ -389,7 +389,9 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
   let plotArea: Rect = { x: 0, y: 0, width, height };
 
   if (!BUILTIN_COORDINATE_TYPES.has(coordinateOp.type)) {
+    JsonObjectSchema.parse(coordinateOp);
     const customOp = coordinateDefinition.schema.parse(coordinateOp) as never;
+    JsonObjectSchema.parse(customOp);
     const resolution = coordinateDefinition.resolve(customOp, {
       width,
       height,

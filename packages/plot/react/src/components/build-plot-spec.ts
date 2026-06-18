@@ -1,6 +1,7 @@
 import { Children, Fragment, type ReactNode, isValidElement } from 'react';
 import {
   type CoordinateOp,
+  CoordinateOpSchema,
   type DataModel,
   type Encoding,
   type ExternalRow,
@@ -839,7 +840,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     if (typeof options.coordinate !== 'object' || BUILTIN_COORDINATE_INPUT_TYPES.has(options.coordinate.type) || options.coordinate.type === 'custom') {
       throw new Error('buildPlotSpec: custom coordinates must use a non-built-in type string, for example { type: "arch", archHeight: 30 }');
     }
-    coordinate = { ...options.coordinate };
+    coordinate = CoordinateOpSchema.parse({ ...options.coordinate });
     scales = [];
   } else {
     const xScale = buildCartesianXScale(collected.hasBar || collected.hasRect, explicitScales.x);

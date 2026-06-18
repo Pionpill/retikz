@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { type AnyCoordinateDefinition, createCustomCoordinate, defineCoordinate, extractCoordinateType, resolveCoordinateRegistry } from '../../src/coordinate';
+import * as plot from '../../src';
+import { PlotCoordinate } from '../../src/ir';
+import { type AnyCoordinateDefinition, BUILTIN_COORDINATES, createCustomCoordinate, defineCoordinate, extractCoordinateType, resolveCoordinateRegistry } from '../../src/coordinate';
 
 const archDefinition = defineCoordinate({
   schema: z
@@ -32,13 +34,32 @@ describe('coordinate registry（alpha.12 ADR-05 spec）', () => {
     expect(archDefinition.roles).toEqual(['x']);
   });
 
+  it('public_barrel_exports_coordinate_definition_helpers', () => {
+    expect(plot.defineCoordinate).toBe(defineCoordinate);
+    expect(plot.extractCoordinateType).toBe(extractCoordinateType);
+    expect(plot.resolveCoordinateRegistry).toBe(resolveCoordinateRegistry);
+  });
+
   it('resolveCoordinateRegistry 接受自定义 definition 数组并按 type 注册', () => {
     const registry = resolveCoordinateRegistry([archDefinition]);
     expect(registry.get('arch')).toBe(archDefinition);
   });
 
+  it('builtin_coordinate_definitions_cover_public_builtin_types', () => {
+    expect(BUILTIN_COORDINATES.map(def => extractCoordinateType(def.schema)).sort()).toEqual(Object.values(PlotCoordinate).sort());
+  });
+
   it('duplicate_coordinate_type_throws', () => {
     expect(() => resolveCoordinateRegistry([archDefinition, archDefinition])).toThrow(/duplicate coordinate registration: "arch"/);
+  });
+
+  it('duplicate_builtin_coordinate_type_throws', () => {
+    const malformed: AnyCoordinateDefinition = {
+      schema: z.object({ type: z.literal(PlotCoordinate.Cartesian2D).describe('Collides with a built-in coordinate') }),
+      roles: ['x'],
+      resolve: archDefinition.resolve,
+    };
+    expect(() => resolveCoordinateRegistry([malformed])).toThrow(/duplicate coordinate registration: "cartesian2D"/);
   });
 
   it('malformed_coordinate_schema_non_object_throws', () => {
@@ -57,6 +78,15 @@ describe('coordinate registry（alpha.12 ADR-05 spec）', () => {
       resolve: archDefinition.resolve,
     };
     expect(() => resolveCoordinateRegistry([malformed])).toThrow(/z\.literal/);
+  });
+
+  it('malformed_coordinate_schema_empty_literal_type_throws', () => {
+    const malformed: AnyCoordinateDefinition = {
+      schema: z.object({ type: z.literal('').describe('Empty custom coordinate type') }),
+      roles: ['x'],
+      resolve: archDefinition.resolve,
+    };
+    expect(() => resolveCoordinateRegistry([malformed])).toThrow(/non-empty z\.literal string/);
   });
 
   it('custom_schema_rejects_invalid_config', () => {

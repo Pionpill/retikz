@@ -234,4 +234,11 @@ describe('CoordinateOpSchema coordinate registry 占位（alpha.12 ADR-05）', (
     const op = { type: 'arch', x: 'xScale', archHeight: 30, nested: { curve: 'sine' } };
     expect(CoordinateOpSchema.parse(JSON.parse(JSON.stringify(op)))).toEqual(op);
   });
+
+  it('[adversarial] 自定义 coordinate op 拒绝非 JSON 配置值', () => {
+    expect(() => CoordinateOpSchema.parse({ type: 'arch', project: () => [0, 0] })).toThrow(/JSON-serializable/);
+    expect(() => CoordinateOpSchema.parse({ type: 'arch', extra: undefined })).toThrow(/JSON-serializable/);
+    expect(() => CoordinateOpSchema.parse({ type: 'arch', archHeight: Number.NaN })).toThrow(/JSON-serializable/);
+    expect(() => CoordinateOpSchema.parse({ type: 'arch', archHeight: Infinity })).toThrow(/JSON-serializable/);
+  });
 });
