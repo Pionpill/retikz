@@ -1,5 +1,5 @@
-import { extent } from 'd3-array';
 import { isFiniteNumber } from '@retikz/math';
+import { extent } from 'd3-array';
 import {
   type ScaleBand,
   type ScaleContinuousNumeric,
@@ -41,8 +41,8 @@ import {
   interpolateViridis,
   schemeCategory10,
 } from 'd3-scale-chromatic';
-import { type BandScale, type DivergingColorScale, type FieldDef, type LogScale, type Mark, type OrdinalScale, PlotColorScheme, type PlotColorSchemeValue, PlotFieldType, type PlotFieldTypeValue, PlotMark, PlotScale, type PlotScaleValue, type PointScale, type PowScale, type QuantileColorScale, type QuantizeColorScale, type ScalarValue, type Scale, type SequentialColorScale, type SqrtScale, type ThresholdColorScale, type TimeScale } from '../ir';
 import { inferCategoryDomain, toTimestamp } from '../data';
+import { type BandScale, type DivergingColorScale, type FieldDef, type LogScale, type Mark, type OrdinalScale, PlotColorScheme, type PlotColorSchemeValue, PlotFieldType, type PlotFieldTypeValue, PlotMark, PlotScale, type PlotScaleValue, type PointScale, type PowScale, type QuantileColorScale, type QuantizeColorScale, type ScalarValue, type Scale, type SequentialColorScale, type SqrtScale, type ThresholdColorScale, type TimeScale } from '../ir';
 
 /** 默认目标刻度数（d3 ticks 的提示值，非硬约束——实际数量按 nice 区间取整定） */
 export const DEFAULT_TICK_COUNT = 5;

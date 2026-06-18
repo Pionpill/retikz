@@ -1,4 +1,5 @@
 import { isFiniteNumber } from '@retikz/math';
+import { inferCategoryDomain, resolveFieldPath } from '../data';
 import {
   type ExternalRow,
   type LegendChannelValue,
@@ -15,14 +16,7 @@ import {
   type ScaledMarkValueType,
   type SqrtScale,
 } from '../ir';
-import { inferCategoryDomain, resolveFieldPath } from '../data';
 import { resolveLinearScale, resolveSqrtScale } from './scale';
-
-/**
- * 通道 → 视觉量 resolver 的接缝（alpha.7）
- * @description 把「channel（field/value/scale）→ 行→视觉量」的解析收成可复用形态：size 是首个新消费者，
- *   color（ADR-03）后续迁入，opacity / shape（ADR-04 / ADR-05）复用。将来 ChannelDefinition 注册表即在此参数化。
- */
 
 /**
  * 通道 scale 描述符：legend 据此画 swatch / ramp / 分箱 / 梯度符号
