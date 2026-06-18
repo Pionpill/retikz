@@ -7,8 +7,8 @@ import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { type AnyCoordinateDefinition, type AxisFrame, type DimensionRole, type ResolvedCustomCoordinate, createCustomCoordinate, defineCoordinate } from '../../src/coordinate';
 
 /**
- * 自定义坐标系（custom coordinate，实验性）lowering 测试。
- * IR 只存 `{type:'custom', name, roles, params}`（JSON 安全）；投影函数由运行时 options.coordinates 工厂提供。
+ * 自定义坐标系（custom coordinate）lowering 测试。
+ * IR 只存 `{type:<customType>, ...config}`（JSON 安全）；roles / 投影函数由运行时 CoordinateDefinition 提供。
  * 证明 projectRoles 足以表达任意坐标系几何（曲线一维 / 拱形 x 轴），无需「轴」抽象、不破坏 IR 序列化。
  */
 

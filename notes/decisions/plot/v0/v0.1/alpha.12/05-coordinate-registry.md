@@ -48,7 +48,7 @@ GoG 与同类库都把坐标系当可扩展轴：Vega projection 开放、Observ
 coordinate 不像 scale 需要 family 判别——六路虽布局策略不同，但**产出契约一致**（都产 `frame + plotArea + gridLayers + axisLayers`），差异在「resolve 内部调哪些 ctx helper」，故单一 `resolve` 即可：
 
 ```ts
-// coordinate/registry.ts（示意；definition 是运行时对象、含函数，永不进 IR）
+// coordinate/define.ts（示意；definition 是运行时对象、含函数，永不进 IR）
 
 /** resolve 上下文：六路 bespoke 共享的全部能力，registry 适配层从 resolveFrame 现有闭包组装 */
 type CoordinateResolveContext = {
@@ -110,7 +110,7 @@ const defineCoordinate = <Op extends CoordinateOp>(def: CoordinateDefinition<Op>
 - **单一 `resolve`、无 family**：六路产出同形，不需 scale（ADR-07）那样的 position/channel 判别。布局差异（矩形 plotArea vs 极坐标满画布 vs 三角）由各 definition 在 `resolve` 体内自行编排（内置 definition 在包内直接 import `computePlotArea` / `computePolarCoordinate` / `computeTernaryFrame`，不污染公开 context——见「context 表面」待决策点）。
 - **`roles` 上移 definition**：`constants.ts` 三张内置表 + custom 行内 `roles` 统一为 `definition.roles`。`assertRequiredPositionChannels` / `assertValidGuideDimensions` 改读已解析 definition 的 `roles`（registry 先解析、再校验）。
 - **`resolve` 拥有 guide 下沉**：guide 构造是坐标系特定的（cartesian 填 projectX/Y + ticks；polar 加 angularTicks/radialTicks/frame；ternary 加 ternaryVertices；custom 走 lowerCustomAxis），故 definition 自建 `GuideContext` 并调 `ctx.lowerGuide` / `ctx.lowerCustomAxis`，返回 gridLayers/axisLayers。
-- **`type` 提取 + 形态校验**：从 `schema.shape.type`（z.literal）提取注册键，首次 resolve 期校验「ZodObject + type literal」否则 throw（mirror composite `extractKey`、transform `extractKind`、scale `extractType`）。
+- **`type` 提取 + 形态校验**：从 `schema.shape.type`（z.literal）提取注册键，首次 resolve 期校验「ZodObject + type literal」否则 throw（mirror composite `extractKey`、transform `extractKind`、scale `extractType`；实现 helper 命名为 `extractCoordinateType`）。
 - **`resolve` 纯且确定**：坐标系投影天然纯（无随机）；与现有 bespoke 分支同性质，无新约束。
 
 内置 5 个直接复用 `ir/coordinate/coordinate.ts` 现有 schema + 现有 `create*Coordinate` 构造器（`coordinate/cartesian.ts` / `polar.ts` / `ternary.ts`），零重写——`resolve` 体即把对应 `resolveFrame` 分支**逐行搬入**（行为保持，parity 守恒）。
@@ -124,9 +124,9 @@ const BUILTIN_COORDINATES: ReadonlyArray<CoordinateDefinition> = [cartesian2DDef
 
 const resolveCoordinateRegistry = (custom?: Array<CoordinateDefinition>): Map<string, CoordinateDefinition> => {
   const registry = new Map<string, CoordinateDefinition>();
-  for (const def of BUILTIN_COORDINATES) registry.set(extractType(def.schema), def);
+  for (const def of BUILTIN_COORDINATES) registry.set(extractCoordinateType(def.schema), def);
   for (const def of custom ?? []) {
-    const type = extractType(def.schema);
+    const type = extractCoordinateType(def.schema);
     if (registry.has(type)) throw new Error(`lowerPlots: duplicate coordinate registration: '${type}'`);
     registry.set(type, def);
   }
@@ -179,9 +179,9 @@ type CoordinateOp = z.infer<typeof CoordinateOpSchema>;
 
 ## 待决策点 🔻
 
-- **`CoordinateResolveContext` 公开表面大小**：内置 definition 在包内可直接 import 布局 helper（`computePlotArea` 等），无需进 context；但自定义 definition 只能用 context 暴露的。倾向**公开 context 只暴露坐标系无关的共享能力**（canvas/style + `collectRoleValues` + `resolveScaleForRole` + `buildPositionScale` + `linearScaleFor` + guide 下沉），**不**把 `computePlotArea`/`computePolarCoordinate`/`computeTernaryFrame` 列入公开契约。结论：本轮自定义 coordinate v1 明确沿用**满画布 plotArea + 自拼投影**（与现 `CustomCoordinateContext` 能力对齐），不会自动获得 cartesian 那种 margin / legend reserve 收窄；需要这类布局能力时后续另开高级 layout helper。内置 definition 用同一 context 接口、但在包内 import 布局函数（parity by construction，公开面更小）。
+- **`CoordinateResolveContext` 公开表面大小**：内置 definition 在包内可直接 import 布局 helper（`computePlotArea` 等），无需进 context；但自定义 definition 只能用 context 暴露的。倾向**公开 context 只暴露坐标系无关的共享能力**（canvas/style + `collectRoleValues` + `resolveScaleForRole` + `buildPositionScale` + guide 下沉），**不**把 `computePlotArea`/`computePolarCoordinate`/`computeTernaryFrame` 列入公开契约。结论：本轮自定义 coordinate v1 明确沿用**满画布 plotArea + 自拼投影**，不会自动获得 cartesian 那种 margin / legend reserve 收窄；需要这类布局能力时后续另开高级 layout helper。
 - **`roles` 静态 vs 数据相关**：内置 roles 全静态（cartesian2D=[x,y]、ternary2D=[x,y,z]…），故放 `definition.roles` 字段足够。若未来某坐标系 roles 依赖 op config（如可配维数的平行坐标），升为 `roles: (op) => DimensionRole[]`（mirror ADR-06 `inputFields(op)`）。倾向**先静态字段**、需求出现再升函数。
-- **type 冲突放宽 / extractType 时机**：与 ADR-06/07 同——本轮冲突 throw、`extractType` 首次 resolve 期校验。
+- **type 冲突放宽 / extractCoordinateType 时机**：与 ADR-06/07 同——本轮冲突 throw、`extractCoordinateType` 首次 resolve 期校验。
 - **自定义坐标系 cell 类 mark 支持**：现状 custom 经 `ResolvedCustomCoordinate.projectCell`（`coordinate/custom.ts:36`）可选支持 interval/sector；保留该可选契约不变，definition.resolve 产 `ResolvedCustomCoordinate` 时按需带 `projectCell`。不在本 ADR 扩展（沿用 alpha.5 既定）。
 
 ## DSL 表面
@@ -247,7 +247,7 @@ renderPlot(spec, { series: rows }, { coordinates: [arch] });
 
 ## 影响
 
-- **`coordinate/registry.ts`（新建）**：`CoordinateDefinition` / `CoordinateResolveContext` / `CoordinateResolution` / `defineCoordinate` / `extractType` / `resolveCoordinateRegistry` / `BUILTIN_COORDINATES`（5 内置注册项）。
+- **`coordinate/define.ts`（新建）**：`CoordinateDefinition` / `CoordinateResolveContext` / `CoordinateResolution` / `defineCoordinate` / `extractCoordinateType` / `resolveCoordinateRegistry` / `BUILTIN_COORDINATES`（5 内置注册项）。
 - **`coordinate/cartesian.ts` / `polar.ts` / `ternary.ts`**：各加对应 `defineCoordinate({...})` 注册项；`resolve` 体把现 `resolveFrame` 对应分支逐行搬入（行为保持）；`create*Coordinate` 构造器不变。
 - **`coordinate/custom.ts`**：`createCustomCoordinate` / `ResolvedCustomCoordinate` / `projectCell` 等不变（仍是自定义 definition 的 resolve 内构造帧的助手）；删 `CustomCoordinateFactory` / `CustomCoordinateContext`（其能力并入 `CoordinateResolveContext`）。
 - **`coordinate/constants.ts`**：删 `POSITION_ROLES` / `REQUIRED_POSITION_CHANNELS` / `VALID_GUIDE_DIMENSIONS` 三张内置硬编码表（roles 上移 `definition.roles`）；校验改读已解析 registry。
@@ -302,7 +302,7 @@ renderPlot(spec, { series: rows }, { coordinates: [arch] });
 
 - `packages/plot/plot/src/ir/coordinate/coordinate.ts`（改：删 Custom 成员/旧 schema，加 Custom/Op schema + 内置 type 集 + 类型；`CoordinateSchema` 收 5-union）
 - `packages/plot/plot/src/ir/plot.ts`（改：`coordinate` 字段换 `CoordinateOpSchema`）
-- `packages/plot/plot/src/coordinate/registry.ts`（新建：`CoordinateDefinition` / `CoordinateResolveContext` / `CoordinateResolution` / `defineCoordinate` / `extractType` / `resolveCoordinateRegistry` / `BUILTIN_COORDINATES`）
+- `packages/plot/plot/src/coordinate/define.ts`（新建：`CoordinateDefinition` / `CoordinateResolveContext` / `CoordinateResolution` / `defineCoordinate` / `extractCoordinateType` / `resolveCoordinateRegistry` / `BUILTIN_COORDINATES`）
 - `packages/plot/plot/src/coordinate/cartesian.ts` / `polar.ts` / `ternary.ts`（改：各加 `defineCoordinate` 注册项，resolve 搬入对应分支；构造器不变）
 - `packages/plot/plot/src/coordinate/custom.ts`（改：删 `CustomCoordinateFactory` / `CustomCoordinateContext`；`createCustomCoordinate` / `ResolvedCustomCoordinate` 保留）
 - `packages/plot/plot/src/coordinate/constants.ts`（改：删三张内置 roles/guide-dim 表）
