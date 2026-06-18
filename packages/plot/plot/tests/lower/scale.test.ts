@@ -6,7 +6,7 @@ import {
   resolvePositionScale,
   scaleTicks,
   toTimestamp,
-} from '../../src/compile/scale';
+} from '../../src/scale/scale';
 
 describe('resolveLinearScale (ADR-02 d3-scale)', () => {
   // Happy path

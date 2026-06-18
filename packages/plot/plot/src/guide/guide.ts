@@ -1,9 +1,9 @@
 import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../ir';
-import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from './layout';
-import type { CustomFrame, DimensionRole, PolarFrame, TernaryVertices } from './project';
-import { type ProvenanceContext, guideLayerId, guideLayerMeta } from './provenance';
-import type { PositionScale, TickSet } from './scale';
+import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from '../pipeline/layout';
+import type { CustomFrame, DimensionRole, PolarFrame, TernaryVertices } from '../coordinate/project';
+import { type ProvenanceContext, guideLayerId, guideLayerMeta } from '../pipeline/provenance';
+import type { PositionScale, TickSet } from '../scale/scale';
 
 /**
  * lowerGuide 上下文：cartesian 直线 guide 用 plotArea + 两维投影 + ticks；polar 经 `frame` 走弧 / 辐条几何

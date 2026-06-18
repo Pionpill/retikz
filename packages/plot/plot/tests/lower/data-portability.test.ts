@@ -1,12 +1,12 @@
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { coerceValue, normalizeRows } from '../../src/compile/coerce';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/compile/expand';
-import { resolveFieldPath } from '../../src/compile/field';
-import { createPlotLocator } from '../../src/compile/locate';
-import { readSourceIndex, tagSourceIndex } from '../../src/compile/provenance';
-import { applyTransforms } from '../../src/compile/transform';
+import { coerceValue, normalizeRows } from '../../src/data/coerce';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { resolveFieldPath } from '../../src/data/field';
+import { createPlotLocator } from '../../src/interaction/locate';
+import { readSourceIndex, tagSourceIndex } from '../../src/pipeline/provenance';
+import { applyTransforms } from '../../src/transform/transform';
 
 /** 跑一次完整下沉（抛错路径用 expect(fn).toThrow） */
 const compile = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options?: LowerPlotsOptions) =>

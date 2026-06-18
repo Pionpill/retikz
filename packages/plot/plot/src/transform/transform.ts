@@ -11,9 +11,9 @@ import {
   type StackTransform,
   type Transform,
 } from '../ir';
-import { compareByPath, isFiniteNumber, resolveFieldPath } from './field';
-import { SOURCE_INDICES, readSourceIndex } from './provenance';
-import { inferCategoryDomain } from './scale';
+import { compareByPath, isFiniteNumber, resolveFieldPath } from '../data/field';
+import { SOURCE_INDICES, readSourceIndex } from '../pipeline/provenance';
+import { inferCategoryDomain } from '../scale/scale';
 
 /** 默认堆叠下 / 上界输出字段名（与 IntervalMark 的 y0Field / y1Field 默认对齐） */
 const DEFAULT_START_FIELD = 'y0';

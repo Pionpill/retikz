@@ -1,7 +1,7 @@
 import { type Channel, type ExternalRow, type IntervalBound, IntervalBoundKind, type IntervalMark, type LinkMark, type LinkOrientationValue, type Mark, PlotCoordinate, PlotMark } from '../ir';
-import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
-import type { CartesianFrame, Cell, CellGeometry, CoordinateFrame, DimensionRole, PolarFrame } from './project';
-import { type PositionScale, inferCategoryDomain } from './scale';
+import { channelValue, isFiniteNumber, resolveFieldPath } from '../data/field';
+import type { CartesianFrame, Cell, CellGeometry, CoordinateFrame, DimensionRole, PolarFrame } from '../coordinate/project';
+import { type PositionScale, inferCategoryDomain } from '../scale/scale';
 
 /**
  * 取某 mark 在某位置角色下的 encoding 通道（投影时按 frame.roles 序逐角色取值）

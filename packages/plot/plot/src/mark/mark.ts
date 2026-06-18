@@ -1,9 +1,9 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope, type IRStep } from '@retikz/core';
 import { type ExternalRow, type LinkMark, type Mark, PlotCoordinate, PlotMark, type PlotMarkValue, type PointMark, type ReferenceMark } from '../ir';
 import { type IntervalContext, LINK_DEFAULT_CURVATURE, buildIntervalContext, datumAnchor, linkBandGeometry, linkEndpoints, markCell, roleValues } from './anchor';
-import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from './field';
-import { inferCategoryDomain } from './scale';
-import { type CartesianFrame, type Cell, type CellGeometry, type CoordinateFrame, type DimensionRole, type PolarFrame, type PolarVertex, densifyPolarSegments, toPolarVertex } from './project';
+import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from '../data/field';
+import { inferCategoryDomain } from '../scale/scale';
+import { type CartesianFrame, type Cell, type CellGeometry, type CoordinateFrame, type DimensionRole, type PolarFrame, type PolarVertex, densifyPolarSegments, toPolarVertex } from '../coordinate/project';
 import {
   type DatumIdRegistrar,
   type ProvenanceContext,
@@ -14,8 +14,8 @@ import {
   readSourceIndices,
   seriesPathMeta,
   slug,
-} from './provenance';
-import { type NumberStyleOf, type OpacityOf, type ShapeOf, type SizeOf, type StrokeWidthOf } from './channel';
+} from '../pipeline/provenance';
+import { type NumberStyleOf, type OpacityOf, type ShapeOf, type SizeOf, type StrokeWidthOf } from '../scale/channel';
 
 /**
  * 一个 mark 下沉时消费的通道解析器集合

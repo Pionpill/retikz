@@ -2,10 +2,10 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema, type ReferenceMark } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/compile/expand';
-import { lowerMark } from '../../src/compile/mark';
-import { createCartesianFrame, createPolarFrame } from '../../src/compile/project';
-import type { PositionScale } from '../../src/compile/scale';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { lowerMark } from '../../src/mark/mark';
+import { createCartesianFrame, createPolarFrame } from '../../src/coordinate/project';
+import type { PositionScale } from '../../src/scale/scale';
 
 /** core Path 的最小形态（鸭子类型断言端点；避免引入 core 内部 IRPath 类型耦合） */
 type RulePath = { type: 'path'; children: Array<{ kind: string; to: [number, number] }>; pathDefault?: unknown };

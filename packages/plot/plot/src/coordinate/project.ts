@@ -1,7 +1,7 @@
 import { Cartesian1DOrientation, type Cartesian1DOrientationType, PlotCoordinate } from '../ir';
-import { isFiniteNumber } from './field';
-import type { Rect } from './layout';
-import type { PositionScale } from './scale';
+import { isFiniteNumber } from '../data/field';
+import type { Rect } from '../pipeline/layout';
+import type { PositionScale } from '../scale/scale';
 
 /** polar 段内采样：相邻顶点间在 [θ, r] 空间插入的固定中间点数（每段定额，连续角轴弯弧） */
 export const RETIKZ_POLAR_SEGMENT_SAMPLES = 16;

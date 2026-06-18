@@ -1,6 +1,6 @@
 import { type Channel, type DataModel, type ExternalRow, type PlotFieldTypeValue, PlotMark, type PlotSpec, PlotTransform } from '../ir';
 import { inferFieldType } from './infer';
-import { aggregateOutputField, binOutputFields } from './transform';
+import { aggregateOutputField, binOutputFields } from '../transform/transform';
 
 /** 把一个通道的 field 路径（若有）加入集合（常量 value 通道无 field，跳过） */
 const addChannelField = (fields: Set<string>, channel: Channel | undefined): void => {

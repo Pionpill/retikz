@@ -1,6 +1,6 @@
 import { type DataModel, type ExternalRow, PlotFieldFormat, type PlotFieldFormatValue, PlotFieldType, type PlotFieldTypeValue } from '../ir';
 import { resolveFieldPath } from './field';
-import { toTimestamp } from './scale';
+import { toTimestamp } from '../scale/scale';
 
 /** 严格数字串：trimmed 十进制 / 科学计数；拒空串、Infinity、NaN、hex、带单位串 */
 const NUMERIC_RE = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;

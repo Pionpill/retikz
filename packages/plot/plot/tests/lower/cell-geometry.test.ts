@@ -2,9 +2,9 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type IntervalMark, type Mark, type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/compile/expand';
-import { buildIntervalContext, cellGeometryAnchor, datumAnchor } from '../../src/compile/anchor';
-import { lowerMark } from '../../src/compile/mark';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { buildIntervalContext, cellGeometryAnchor, datumAnchor } from '../../src/mark/anchor';
+import { lowerMark } from '../../src/mark/mark';
 import {
   type CartesianFrame,
   type Cell,
@@ -13,8 +13,8 @@ import {
   createCustomFrame,
   createPolarFrame,
   densifyCellContour,
-} from '../../src/compile/project';
-import type { PositionScale } from '../../src/compile/scale';
+} from '../../src/coordinate/project';
+import type { PositionScale } from '../../src/scale/scale';
 
 /**
  * ADR-01（alpha.11）：区间几何投影契约测试——frame.projectCell 统一 interval / sector / 曲线轴下沉。

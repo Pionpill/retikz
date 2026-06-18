@@ -2,11 +2,11 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type IntervalMark, type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/compile/expand';
-import { buildIntervalContext, datumAnchor, intervalCell } from '../../src/compile/anchor';
-import { lowerMark } from '../../src/compile/mark';
-import { type Cell, createCartesianFrame, createPolarFrame } from '../../src/compile/project';
-import type { PositionScale } from '../../src/compile/scale';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { buildIntervalContext, datumAnchor, intervalCell } from '../../src/mark/anchor';
+import { lowerMark } from '../../src/mark/mark';
+import { type Cell, createCartesianFrame, createPolarFrame } from '../../src/coordinate/project';
+import type { PositionScale } from '../../src/scale/scale';
 
 /**
  * ADR-02（alpha.11）：rect mark（heatmap 双 band 正交 cell）下沉契约测试。

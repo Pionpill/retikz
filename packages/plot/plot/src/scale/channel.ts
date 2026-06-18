@@ -13,7 +13,7 @@ import {
   type ScaledMarkValueType,
   type SqrtScale,
 } from '../ir';
-import { isFiniteNumber, resolveFieldPath } from './field';
+import { isFiniteNumber, resolveFieldPath } from '../data/field';
 import { inferCategoryDomain, resolveLinearScale, resolveSqrtScale } from './scale';
 
 /**

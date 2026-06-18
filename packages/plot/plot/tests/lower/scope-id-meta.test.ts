@@ -2,8 +2,8 @@ import { compileToScene } from '@retikz/core';
 import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/compile/expand';
-import { SOURCE_INDEX } from '../../src/compile/provenance';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { SOURCE_INDEX } from '../../src/pipeline/provenance';
 
 /**
  * ADR-01：scope-aware id 绑定 + meta 透传。
