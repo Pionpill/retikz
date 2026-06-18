@@ -276,9 +276,10 @@ mdx：`<ComponentPreview name="hourglass" hideCode />`（用默认 md 档位）�
 
 ## 验证
 
-加完插图之后跑：
+加完插图之后按 [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 的分级验证规则选择命令。只改正文中插图说明时可走轻量验证；新增 / 修改 `.demo.tsx` 插图文件时需要跑 docs 类型检查，再打开页面做视觉检查：
 
 ```bash
+pnpm --filter @retikz/docs exec tsc --noEmit
 pnpm --filter @retikz/docs dev
 ```
 

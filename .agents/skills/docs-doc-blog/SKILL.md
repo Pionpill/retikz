@@ -227,14 +227,14 @@ blog 文章预期会被作者**手抄到掘金 / 公众号 / 其它平台**。�
 
 写完一篇 blog 文章后：
 
-```bash
-pnpm --filter @retikz/docs exec tsc --noEmit
-pnpm --filter @retikz/docs dev     # 浏览器开 /blog/<section>/<slug>，确认：
-                                   #  - title / description / date / tags 元数据条都出
-                                   #  - TOC 抓到所有 H2 / H3
-                                   #  - 切英文：有 en 时切到 en；缺 en 时显示「暂无英文版」并回退 zh
-                                   #  - 切中英文阅读时间显示合理（≤ 15 分钟为优）
-```
+按 [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 的分级验证规则选择命令：纯 MDX 文案只需 `git diff --check` + 页面 / 链接检查；新增或修改 demo / data / import 时再跑 `pnpm --filter @retikz/docs exec tsc --noEmit`。
+
+浏览器开 `/blog/<section>/<slug>`，确认：
+
+- title / description / date / tags 元数据条都出
+- TOC 抓到所有 H2 / H3
+- 切英文：有 en 时切到 en；缺 en 时显示「暂无英文版」并回退 zh
+- 切中英文阅读时间显示合理（≤ 15 分钟为优）
 
 ### 跨平台预演
 

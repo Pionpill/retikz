@@ -207,10 +207,7 @@ principle 规定普通用法页**隐藏内部表示**；**概念 / 设计页是�
 
 ## 验证
 
-```bash
-pnpm --filter @retikz/docs exec tsc --noEmit
-pnpm --filter @retikz/docs dev     # 浏览器开页，确认中英、插图、TOC、菜单都对
-```
+按 [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 的分级验证规则选择命令：纯 MDX 文案只需 `git diff --check` + 页面 / 链接检查；新增或修改 demo / data / import 时再跑 `pnpm --filter @retikz/docs exec tsc --noEmit`。概念页有插图时仍要用浏览器打开页面，确认中英、插图、TOC、菜单都对。
 
 逐项核：
 

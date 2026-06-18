@@ -43,7 +43,13 @@ pnpm --filter <pkg> exec tsc --noEmit
 pnpm lint
 ```
 
-改完**任何文件**（含 AI / subagent 用 Write / Edit 直接写入的 `.ts` / `.json` / 配置等）都要先跑 `eslint --fix` 规范化再提交：手写 / 工具写入的内容常不符合仓库格式（缩进、import 排序、对象多行展开等），**禁止提交未经 eslint 格式化的文件**。
+验证按改动类型选择：
+
+- 改 `*.ts` / `*.tsx` / `*.json` / 配置文件等结构化文件：先跑受影响包的 `eslint --fix`，再跑对应 `tsc --noEmit` / 测试。
+- 只改纯文档正文（例如 `index.zh.mdx` / `index.en.mdx` 的段落、表格、站内链接，不改 import、demo、data、i18n、sidebar、schema registry）：不强制跑 eslint / tsc；至少跑 `git diff --check`，并验证新增或修改的关键链接 / 页面可访问。
+- 改 docs demo / data / i18n / sidebar / schema registry / MDX import：按 `apps/docs/AGENTS.md` 和 `docs-doc-principle` 的分级规则验证，通常需要 docs 包类型检查。
+
+改完**结构化文件**（含 AI / subagent 用 Write / Edit 直接写入的 `.ts` / `.tsx` / `.json` / 配置等）要先跑 `eslint --fix` 规范化再提交：手写 / 工具写入的内容常不符合仓库格式（缩进、import 排序、对象多行展开等），**禁止提交未经 eslint 格式化的结构化文件**。纯 MDX 正文文案以 `git diff --check` 和页面 / 链接验证为主。
 
 类型检查只用 `tsc --noEmit`。不要运行会 emit 的 `tsc` / `tsc -b`，根 tsconfig 会把 `.js` / `.d.ts` / `.d.ts.map` 洒进 `src/`。若已污染，清掉源码树下生成物后再继续。
 
