@@ -1,13 +1,13 @@
 import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, defineComposite } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
-import { type AxisGuide, Cartesian1DOrientation, type Channel, type Coordinate, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotScaleValue, type PlotSpec, PlotSpecSchema, type QuantileColorScale, type QuantizeColorScale, type Scale, type ThresholdColorScale } from '../ir';
+import { type AxisGuide, BUILTIN_COORDINATE_TYPES, Cartesian1DOrientation, type Channel, type Coordinate, CoordinateSchema, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotScaleValue, type PlotSpec, PlotSpecSchema, type QuantileColorScale, type QuantizeColorScale, type Scale, type ThresholdColorScale } from '../ir';
 import { resolveIntervalBound } from '../mark/anchor';
 import { type ResolveField, type ResolveLabel, applyFieldResolver, assertAllValuesValid, channelValue, collectFormatFields, inferCategoryDomain, labelOf, normalizeRows, resolveFieldPath, resolveFieldTypes, toTimestamp, validateBoundData } from '../data';
-import { type GuideContext, type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../guide/guide';
+import { type GuideContext, type LegendEntry, type LegendInput, lowerGuide, lowerLegend } from '../guide/guide';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarCoordinate, computeTernaryFrame } from './layout';
 import { type ColorOf, type LabelOf, lowerMark } from '../mark/mark';
 import { type ChannelResolution, type ScaleDescriptor, makeNumericStyleResolver, makeOpacityResolver, makeShapeResolver, makeSizeResolver, makeStrokeWidthResolver } from '../scale/channel';
-import { type CustomCoordinateFactory, type DimensionRole, REQUIRED_POSITION_CHANNELS, type ResolvedCoordinate, VALID_GUIDE_DIMENSIONS, createCartesian1DCoordinate, createCartesianCoordinate, createPolar1DCoordinate, createPolarCoordinate, createTernary2DCoordinate } from '../coordinate';
+import { type CustomCoordinateFactory, REQUIRED_POSITION_CHANNELS, type ResolvedCoordinate, VALID_GUIDE_DIMENSIONS, createCartesian1DCoordinate, createCartesianCoordinate, createPolar1DCoordinate, createPolarCoordinate, createTernary2DCoordinate } from '../coordinate';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks } from '../scale/scale';
 import { applyTransforms } from '../transform/transform';
@@ -115,17 +115,14 @@ const isLegendGuide = (guide: Guide): guide is LegendGuide => guide.type === Plo
  * 按坐标系合法集校验每根 axis guide 的 dimension（ADR-01，修 cross-review P2）
  * @description 非法 dimension（如 cartesian 下 'angle'）从「静默丢弃 / 渲杂散轴线」改 fail-loud，给清晰错误。
  */
-/** 坐标系标签（错误信息用）：custom 用 name，内建用 type */
-const coordinateLabel = (coordinate: Coordinate): string =>
-  coordinate.type === PlotCoordinate.Custom ? `custom coordinate "${coordinate.name}"` : `${coordinate.type} coordinate system`;
+/** 坐标系标签（错误信息用） */
+const coordinateLabel = (coordinate: Coordinate): string => `${coordinate.type} coordinate system`;
 
-/** 该坐标系合法 guide dimension 集：custom 取声明的 roles，内建查 coordinate meta */
-const validGuideDimensionsOf = (coordinate: Coordinate): ReadonlyArray<string> =>
-  coordinate.type === PlotCoordinate.Custom ? coordinate.roles : VALID_GUIDE_DIMENSIONS[coordinate.type];
+/** 该坐标系合法 guide dimension 集 */
+const validGuideDimensionsOf = (coordinate: Coordinate): ReadonlyArray<string> => VALID_GUIDE_DIMENSIONS[coordinate.type];
 
-/** 该坐标系必填位置角色集：custom 取声明的 roles，内建查 coordinate meta */
-const requiredPositionChannelsOf = (coordinate: Coordinate): ReadonlyArray<'x' | 'y' | 'z'> =>
-  coordinate.type === PlotCoordinate.Custom ? coordinate.roles : REQUIRED_POSITION_CHANNELS[coordinate.type];
+/** 该坐标系必填位置角色集 */
+const requiredPositionChannelsOf = (coordinate: Coordinate): ReadonlyArray<'x' | 'y' | 'z'> => REQUIRED_POSITION_CHANNELS[coordinate.type];
 
 const assertValidGuideDimensions = (coordinate: Coordinate, axisGuides: Array<AxisGuide>): void => {
   const valid = validGuideDimensionsOf(coordinate);
@@ -255,8 +252,12 @@ export type ResolveFrameParams = {
  *   抽成纯函数使 mark 下沉与 ADR-02 locator 共用同一投影（杜绝两套投影漂移）；产物与内联版等价。
  */
 export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
-  const { node, rows, fieldTypes, width, height, fontSize, margin, provenance, coordinates } = params;
-  const coordinate = node.coordinate;
+  const { node, rows, fieldTypes, width, height, fontSize, margin, provenance } = params;
+  const coordinateOp = node.coordinate;
+  if (!BUILTIN_COORDINATE_TYPES.has(coordinateOp.type)) {
+    throw new Error(`lowerPlots: coordinate type "${coordinateOp.type}" is not registered yet; pass a CoordinateDefinition via options.coordinates`);
+  }
+  const coordinate = CoordinateSchema.parse(coordinateOp);
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
 
   // ADR-01 校验（建 frame 前）：guide 维度按坐标系合法集校验 + mark 必填位置角色校验，均 fail-loud。
@@ -589,27 +590,6 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
       const lowered = lowerGuide(guide, guideContext, provenance);
       if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
       if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
-    }
-  } else if (coordinate.type === PlotCoordinate.Custom) {
-    // 自定义坐标系：投影由运行时工厂提供（IR 只有 name + roles + 数值参数）。本轮仅 point、无自动 guide。
-    const factory = coordinates?.[coordinate.name];
-    if (!factory) {
-      throw new Error(`lowerPlots: custom coordinate "${coordinate.name}" has no registered factory; pass it via lowerPlots options.coordinates (or <Plot coordinates>)`);
-    }
-    // 按角色取通道值的 picker（custom roles ∈ {x,y,z}）；供工厂建线性位置 scale
-    const pickRole = (role: DimensionRole) => (mark: Mark): Channel | undefined => (mark.type === PlotMark.Link ? undefined : (mark.encoding as Record<string, Channel | undefined>)[role]);
-    const linearScaleFor = (role: DimensionRole, range: [number, number]) =>
-      resolvePositionScale({ type: PlotScale.Linear, name: `__custom_${role}` }, collectValues(undefined, pickRole(role), false), range);
-    frame = factory({ width, height, plotArea: { x: 0, y: 0, width, height }, fontSize, params: coordinate.params ?? {}, roles: coordinate.roles, linearScaleFor });
-    // 曲线轴：工厂回传 roleScales 时按维度画 path-aware 轴（沿投影采样）；无 roleScales 则不画
-    if (frame.type === PlotCoordinate.Custom) {
-      const axisGuides = (node.guides ?? []).filter(isAxisGuide);
-      assertUniqueAxisDimension(axisGuides, coordinate.type);
-      for (const guide of axisGuides) {
-        const lowered = lowerCustomAxis(frame, guide, fontSize, provenance);
-        if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
-        if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
-      }
     }
   } else {
     // cartesian2D：x/y 角色绑 x/y scale（ribbon 两端字段对都进域；histogram interval 取 x0/x1 箱边进域）

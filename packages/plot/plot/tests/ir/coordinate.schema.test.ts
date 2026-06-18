@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CoordinateSchema } from '../../src/ir/coordinate';
+import { BUILTIN_COORDINATE_TYPES, CoordinateOpSchema, CoordinateSchema, PlotCoordinate } from '../../src/ir/coordinate';
 
 describe('CoordinateSchema (ADR-04)', () => {
   // Happy path
@@ -205,5 +205,33 @@ describe('CoordinateSchema ternary2D (alpha.9 ADR-03)', () => {
   it('ternary2d_json_round_trip', () => {
     const ir = CoordinateSchema.parse({ type: 'ternary2D', x: 'xs', y: 'ys', z: 'zs' });
     expect(CoordinateSchema.parse(JSON.parse(JSON.stringify(ir)))).toEqual(ir);
+  });
+});
+
+describe('CoordinateOpSchema coordinate registry 占位（alpha.12 ADR-05）', () => {
+  it('CoordinateSchema 保持内置 5-union，不接收旧 custom 判别', () => {
+    expect(Object.values(PlotCoordinate)).toEqual(['cartesian2D', 'polar2D', 'cartesian1D', 'polar1D', 'ternary2D']);
+    expect([...BUILTIN_COORDINATE_TYPES].sort()).toEqual(['cartesian1D', 'cartesian2D', 'polar1D', 'polar2D', 'ternary2D'].sort());
+    expect(() => CoordinateSchema.parse({ type: 'custom', name: 'arch', roles: ['x'] })).toThrow();
+  });
+
+  it('自定义 coordinate op 直接用自有 type 串并透传配置', () => {
+    const op = { type: 'arch', x: 'xScale', archHeight: 30, label: 'bridge' };
+    expect(CoordinateOpSchema.parse(op)).toEqual(op);
+  });
+
+  it('CoordinateOpSchema 内置 type 仍走精确 schema 校验，不被自定义 passthrough 吞掉', () => {
+    expect(() => CoordinateOpSchema.parse({ type: 'cartesian2D', x: 1, y: 'ys' })).toThrow();
+    expect(() => CoordinateOpSchema.parse({ type: 'polar2D', angle: 'a', radius: 'r', innerRadius: 2 })).toThrow();
+  });
+
+  it('自定义 coordinate type 不能撞内置或旧 custom 保留字', () => {
+    expect(() => CoordinateOpSchema.parse({ type: 'custom', name: 'arch', roles: ['x'] })).toThrow();
+    expect(() => CoordinateOpSchema.parse({ type: '' })).toThrow();
+  });
+
+  it('自定义 coordinate op JSON round-trip 不丢字段', () => {
+    const op = { type: 'arch', x: 'xScale', archHeight: 30, nested: { curve: 'sine' } };
+    expect(CoordinateOpSchema.parse(JSON.parse(JSON.stringify(op)))).toEqual(op);
   });
 });

@@ -16,8 +16,6 @@ export const PlotCoordinate = {
   Polar1D: 'polar1D',
   /** 2D 三元坐标（三个位置通道 x/y/z 归一化的重心坐标，投影到等边三角内；成分 / 配比 / 得票） */
   Ternary2D: 'ternary2D',
-  /** 自定义坐标系：投影函数由运行时工厂提供（不进 JSON IR），IR 只留 name + roles + 数值参数引用 */
-  Custom: 'custom',
 } as const;
 
 /** 坐标系类型 */
@@ -103,32 +101,41 @@ export const Ternary2DSchema = z
   })
   .describe('2D ternary coordinate system: three continuous components (bound via the mark x / y / z channels) projected by barycentric coordinates into an equilateral triangle (composition / mixture / vote share); each row is auto-normalized by x+y+z at lowering. No geometry options this round (per-component scales not yet supported)');
 
+/** 内置坐标系 type 集：供自定义 coordinate op 排除内置判别串。 */
+export const BUILTIN_COORDINATE_TYPES = new Set<string>(Object.values(PlotCoordinate));
+
+const RESERVED_CUSTOM_COORDINATE_TYPES = new Set<string>([...BUILTIN_COORDINATE_TYPES, 'custom']);
+
 export const CustomCoordinateSchema = z
   .object({
-    type: z.literal(PlotCoordinate.Custom).describe('Discriminator: a user-defined coordinate system; its projection is supplied at lowering via the runtime customCoordinates factory map, kept out of the JSON IR'),
-    name: z.string().min(1).describe('Custom coordinate name; resolved against the runtime factory map (lowerPlots options.coordinates / <Plot coordinates>). An unknown name fails loud at lowering'),
-    roles: z
-      .array(z.enum(['x', 'y', 'z']))
+    type: z
+      .string()
       .min(1)
-      .describe('Position roles this coordinate consumes — which mark channels (x / y / z) it projects, in order; drives required-channel and guide-dimension validation'),
-    params: z
-      .record(z.string(), z.number().finite())
-      .optional()
-      .describe('JSON numeric parameters passed verbatim to the factory (e.g. archHeight); the projection function lives in the runtime factory, not here, keeping the IR serializable'),
+      .refine(type => !RESERVED_CUSTOM_COORDINATE_TYPES.has(type), {
+        message: 'custom coordinate type must not collide with a built-in or reserved coordinate type',
+      })
+      .describe('Discriminator: custom coordinate op type; must be a non-empty, non-built-in identifier registered through options.coordinates'),
   })
-  .describe('Custom coordinate system: a JSON-safe reference (name + roles + numeric params) into a runtime-supplied projection factory; lets users plug in arbitrary coordinate geometry without bloating the coordinate enum or breaking IR serializability');
+  .passthrough()
+  .describe('Custom coordinate op: type is any non-built-in identifier; its config is validated at lowering time against the matching CoordinateDefinition supplied via options.coordinates. Position roles come from the definition, not the op.');
 
 export const CoordinateSchema = z
-  .discriminatedUnion('type', [Cartesian2DSchema, Polar2DSchema, Cartesian1DSchema, Polar1DSchema, Ternary2DSchema, CustomCoordinateSchema])
-  .describe('Coordinate-system union: cartesian2D | polar2D | cartesian1D | polar1D | ternary2D | custom (runtime-supplied projection)');
+  .discriminatedUnion('type', [Cartesian2DSchema, Polar2DSchema, Cartesian1DSchema, Polar1DSchema, Ternary2DSchema])
+  .describe('Built-in coordinate-system union: cartesian2D | polar2D | cartesian1D | polar1D | ternary2D');
 
-/** 坐标系（cartesian2D | polar2D | cartesian1D | polar1D | ternary2D | custom） */
+export const CoordinateOpSchema = z
+  .union([CoordinateSchema, CustomCoordinateSchema])
+  .describe('Coordinate op union: built-in coordinate configs plus custom type passthrough ops validated by a runtime CoordinateDefinition');
+
+/** 内置坐标系（cartesian2D | polar2D | cartesian1D | polar1D | ternary2D） */
 export type Coordinate = z.infer<typeof CoordinateSchema>;
+/** 坐标系 op（内置 ∪ 自定义 type passthrough） */
+export type CoordinateOp = z.infer<typeof CoordinateOpSchema>;
 /** 一维直线坐标系（cartesian1D） */
 export type Cartesian1DCoordinate = z.infer<typeof Cartesian1DSchema>;
 /** 一维圆周坐标系（polar1D） */
 export type Polar1DCoordinate = z.infer<typeof Polar1DSchema>;
 /** 三元坐标系（ternary2D） */
 export type Ternary2DCoordinate = z.infer<typeof Ternary2DSchema>;
-/** 自定义坐标系（custom；投影由运行时工厂提供） */
+/** 自定义坐标系 op（投影由运行时 CoordinateDefinition 提供） */
 export type CustomCoordinate = z.infer<typeof CustomCoordinateSchema>;

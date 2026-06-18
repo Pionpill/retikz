@@ -89,6 +89,16 @@ describe('PlotSpecSchema (ADR-01)', () => {
     expect(PlotSpecSchema.parse(spec)).toEqual(spec);
   });
 
+  it('custom_coordinate_op_type_schema_passes_and_round_trips', () => {
+    const spec = { ...baseLine, coordinate: { type: 'arch', x: 'xMonth', archHeight: 30 } };
+    expect(PlotSpecSchema.parse(JSON.parse(JSON.stringify(spec)))).toEqual(spec);
+  });
+
+  it('legacy_custom_coordinate_shape_rejected', () => {
+    const spec = { ...baseLine, coordinate: { type: 'custom', name: 'arch', roles: ['x'], params: { archHeight: 30 } } };
+    expect(() => PlotSpecSchema.parse(spec)).toThrow();
+  });
+
   // guides 槽位（ADR-01 alpha.2）
   it('plot_with_guides_valid', () => {
     const spec = {
