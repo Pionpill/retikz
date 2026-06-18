@@ -1,4 +1,6 @@
 // @retikz/plot public API barrel.
+// Built-in resolved coordinate frames are internal lowering objects; expose
+// CoordinateDefinition/custom helpers here, not concrete frame constructors.
 export {
   cellInterval,
   createCustomCoordinate,
