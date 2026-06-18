@@ -66,7 +66,7 @@ const pointSpec = (colorScale: Record<string, unknown>): PlotSpec =>
     data: { reference: 'd' },
     scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { ...colorScale, name: 'col' }],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'v', scale: 'col' } } }],
+    marks: [{ type: 'point', color: { kind: 'field', value: 'v', scale: 'col' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
   });
 
 describe('连续色 · sequential 求值（alpha.8 ADR-01）', () => {
@@ -198,7 +198,7 @@ describe('连续色 · fail-loud 守卫（alpha.8 ADR-01）', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'diverging', name: 'col' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'date', scale: 'col' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'date', scale: 'col' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     });
     const data = [{ x: 0, y: 0, date: '2024-01-01' }, { x: 1, y: 1, date: '2024-06-01' }];
     expect(() => expandOf(spec, { d: data })).toThrow();
@@ -214,7 +214,7 @@ describe('连续色 · temporal sequential（alpha.8 ADR-01）', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'sequential', name: 'col' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'date', scale: 'col' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'date', scale: 'col' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     });
     const data = [{ x: 0, y: 0, date: '2024-01-01' }, { x: 1, y: 1, date: '2024-06-01' }, { x: 2, y: 2, date: '2024-12-01' }];
     const layer = firstLayer(spec, { d: data });
@@ -232,7 +232,7 @@ describe('连续色 · 非有限 domain 端点 fail-loud（ADR-01 越界一致�
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { ...colorScale, name: 'col' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'v', scale: 'col' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'v', scale: 'col' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     });
   const data = [{ x: 0, y: 0, v: 1 }, { x: 1, y: 1, v: 1e9 }, { x: 2, y: 2, v: 1e18 }];
 
@@ -256,7 +256,7 @@ describe('连续色 · 回归：categorical 仍走 ordinal（alpha.8 ADR-01）',
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'col' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'city', scale: 'col' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'city', scale: 'col' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     });
     const data = [{ x: 0, y: 0, city: 'A' }, { x: 1, y: 1, city: 'B' }];
     const fills = nodeFills(firstLayer(spec, { d: data }));

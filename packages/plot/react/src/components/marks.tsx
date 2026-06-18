@@ -1,8 +1,25 @@
 import type { FC } from 'react';
-import type { ExternalRow, IntervalBounds } from '@retikz/plot';
+import type {
+  ExternalRow,
+  IRPaintSpec,
+  IntervalBounds,
+  MarkValueType,
+  PointColorStyle,
+  PointFillStyle,
+  PointNonnegativeNumberStyle,
+  PointNumberStyle,
+  PointOpacityStyle,
+  PointShapeStyle,
+  PointSizeStyle,
+  PointStrokeStyle,
+  PointStrokeWidthStyle,
+  PointZIndexStyle,
+} from '@retikz/plot';
 
 /** 数据字段名或字段路径；例如 `month` / `user.age`，用于 React DSL 的数据通道 props。 */
 export type FieldName = string;
+
+export type MarkValueProp<T> = FieldName | T | MarkValueType<T>;
 
 /**
  * priority-1 宿主 datum label 扁平 props：给位置 mark（point / interval / path / region）加 datum 标签
@@ -54,13 +71,35 @@ export type PointMarkProps = DatumLabelProps & {
   /** 三元坐标第三分量字段；ternary2D 下与 x / y 一起使用 */
   z?: FieldName;
   /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale） */
-  color?: FieldName;
+  color?: FieldName | PointColorStyle;
+  /** 填充：字符串优先按数据字段解析；需要强制常量时用 `{ kind: 'constant', value }` */
+  fill?: FieldName | IRPaintSpec | PointFillStyle;
+  /** 描边颜色：字符串优先按数据字段解析；需要强制常量时用 `{ kind: 'constant', value }` */
+  stroke?: FieldName | PointStrokeStyle;
+  /** 描边宽度：字符串优先按数据字段解析，数字为常量糖；需要显式控制时用 `{ kind, value }` */
+  strokeWidth?: FieldName | number | PointStrokeWidthStyle;
+  /** 填充透明度：字符串按字段解析，数字为常量糖 */
+  fillOpacity?: MarkValueProp<number> | PointOpacityStyle;
+  /** 描边透明度：字符串按字段解析，数字为常量糖 */
+  drawOpacity?: MarkValueProp<number> | PointOpacityStyle;
+  /** 旋转角度：字符串按字段解析，数字为常量糖 */
+  rotate?: MarkValueProp<number> | PointNumberStyle;
+  /** node padding：字符串按字段解析，数字为常量糖 */
+  padding?: MarkValueProp<number> | PointNonnegativeNumberStyle;
+  /** 最小视觉尺寸；size 通道逐 datum 优先 */
+  minimumSize?: MarkValueProp<number> | PointNonnegativeNumberStyle;
+  /** 最小视觉宽度 */
+  minimumWidth?: MarkValueProp<number> | PointNonnegativeNumberStyle;
+  /** 最小视觉高度 */
+  minimumHeight?: MarkValueProp<number> | PointNonnegativeNumberStyle;
+  /** 绘制顺序提示 */
+  zIndex?: MarkValueProp<number> | PointZIndexStyle;
   /** 尺寸字段（数值）：→ size 通道，经 sqrt 半径 scale 映射成 glyph 半径（面积感知正确）；负值报错 */
-  size?: FieldName;
-  /** 不透明度字段（连续）：→ opacity 通道，经 clamp linear scale 映射到 [minOpacity, 1]；时间/分类字段报错 */
-  opacity?: FieldName;
+  size?: FieldName | number | PointSizeStyle;
+  /** 不透明度：字符串按字段解析，数字为常量糖 */
+  opacity?: MarkValueProp<number> | PointOpacityStyle;
   /** 形状字段（分类）：→ shape 通道，按类别映射到 glyph 调色板（circle/rectangle/diamond）；连续/时间字段报错 */
-  shape?: FieldName;
+  shape?: FieldName | PointShapeStyle;
   /** 文本内容字段名：给定则该 point 下沉为无边框带文本的 Node（吸收旧 text mark），否则散点 glyph */
   text?: FieldName;
   /** 文本格式串（d3-format 数值 / d3-time-format 时间，进 IR）；仅与 text 字段同用 */

@@ -9,6 +9,7 @@ import {
   type IntervalBounds,
   type Mark,
   type MarkLabel,
+  type MarkValueType,
   PLOT_NAMESPACE,
   PlotComposite,
   PlotCoordinate,
@@ -19,6 +20,16 @@ import {
   type Scale as PlotScaleSpec,
   type PlotSpec,
   PlotTransform,
+  type PointColorStyle,
+  type PointFillStyle,
+  type PointNonnegativeNumberStyle,
+  type PointNumberStyle,
+  type PointOpacityStyle,
+  type PointShapeStyle,
+  type PointSizeStyle,
+  type PointStrokeStyle,
+  type PointStrokeWidthStyle,
+  type PointZIndexStyle,
   type TextChannel,
   type Transform,
 } from '@retikz/plot';
@@ -118,6 +129,8 @@ export type BuildPlotSpecOptions = {
   transforms?: Array<Transform>;
   /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
   colors?: Array<string>;
+  /** 当前数据集可见字段名集合；用于把样式字符串糖优先解析成字段通道 */
+  dataFieldNames?: ReadonlySet<string>;
   /**
    * 延迟位置 scale 推断：省略未显式声明的位置 scale 绑定，让 lowering 按实际数据字段类型派生。
    * @description 供 `<Plot data>` 入口使用；直接调用 buildPlotSpec 时缺省保持旧的 AUTO linear/band 行为。
@@ -172,11 +185,131 @@ const colorChannel = (color: string | undefined, series: string | undefined): { 
   return field ? { color: { field, scale: AUTO_COLOR } } : undefined;
 };
 
+const CSS_COLOR_KEYWORDS = new Set([
+  'black',
+  'silver',
+  'gray',
+  'grey',
+  'white',
+  'maroon',
+  'red',
+  'purple',
+  'fuchsia',
+  'green',
+  'lime',
+  'olive',
+  'yellow',
+  'navy',
+  'blue',
+  'teal',
+  'aqua',
+  'orange',
+  'transparent',
+  'currentcolor',
+  'rebeccapurple',
+  'crimson',
+  'steelblue',
+  'darkorange',
+  'lightblue',
+]);
+
+const canUseCssColor = (value: string): boolean => {
+  const css = globalThis.CSS as { supports?: (property: string, value: string) => boolean } | undefined;
+  if (css?.supports?.('color', value)) return true;
+  const normalized = value.trim().toLowerCase();
+  return (
+    /^#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/i.test(value) ||
+    /^(?:rgb|rgba|hsl|hsla|hwb|lab|lch|oklab|oklch|color)\(/i.test(normalized) ||
+    /^var\(--[\w-]+\)$/i.test(normalized) ||
+    CSS_COLOR_KEYWORDS.has(normalized)
+  );
+};
+
+const warnSkippedStyle = (prop: string, value: string): void => {
+  console.warn(`buildPlotSpec: <PointMark ${prop}="${value}"> is neither a known data field nor a valid constant for ${prop}; skipped`);
+};
+
+type StyleSugarContext = {
+  fieldNames: ReadonlySet<string>;
+};
+
+const styleSugarContext = (options: BuildPlotSpecOptions): StyleSugarContext => {
+  const fieldNames = new Set<string>(options.dataFieldNames);
+  for (const field of options.model ?? []) fieldNames.add(field.name);
+  return { fieldNames };
+};
+
+const isMarkValue = (value: unknown): value is MarkValueType<unknown> =>
+  value !== null && typeof value === 'object' && 'kind' in value && ((value as { kind?: unknown }).kind === 'field' || (value as { kind?: unknown }).kind === 'constant');
+
+const paintStyleOf = (value: PointMarkProps['fill'], context: StyleSugarContext): PointFillStyle | undefined => {
+  if (value === undefined) return undefined;
+  if (isMarkValue(value)) return value;
+  if (typeof value !== 'string') return { kind: 'constant', value };
+  if (context.fieldNames.has(value)) return { kind: 'field', value };
+  if (canUseCssColor(value)) return { kind: 'constant', value };
+  warnSkippedStyle('fill', value);
+  return undefined;
+};
+
+const pointColorStyleOf = (value: PointMarkProps['color'], context: StyleSugarContext): PointColorStyle | undefined => {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string') return value.kind === 'field' ? { ...value, scale: value.scale ?? AUTO_COLOR } : value;
+  if (context.fieldNames.has(value)) return { kind: 'field', value, scale: AUTO_COLOR };
+  if (canUseCssColor(value)) return { kind: 'constant', value };
+  warnSkippedStyle('color', value);
+  return undefined;
+};
+
+const strokeStyleOf = (stroke: PointMarkProps['stroke'], context: StyleSugarContext): PointStrokeStyle | undefined => {
+  if (stroke === undefined) return undefined;
+  if (isMarkValue(stroke)) return stroke;
+  if (context.fieldNames.has(stroke)) return { kind: 'field', value: stroke };
+  if (canUseCssColor(stroke)) return { kind: 'constant', value: stroke };
+  warnSkippedStyle('stroke', stroke);
+  return undefined;
+};
+
+const strokeWidthStyleOf = (strokeWidth: PointMarkProps['strokeWidth'], context: StyleSugarContext): PointStrokeWidthStyle | undefined => {
+  if (strokeWidth === undefined) return undefined;
+  if (isMarkValue(strokeWidth)) return strokeWidth;
+  if (typeof strokeWidth === 'number') return { kind: 'constant', value: strokeWidth };
+  if (context.fieldNames.has(strokeWidth)) return { kind: 'field', value: strokeWidth };
+  warnSkippedStyle('strokeWidth', strokeWidth);
+  return undefined;
+};
+
+const numberStyleOf = <T extends PointNumberStyle | PointNonnegativeNumberStyle | PointOpacityStyle | PointSizeStyle | PointZIndexStyle>(
+  value: string | number | MarkValueType<number> | undefined,
+  prop: string,
+  context: StyleSugarContext,
+): T | undefined => {
+  if (value === undefined) return undefined;
+  if (isMarkValue(value)) return value as T;
+  if (typeof value === 'number') return { kind: 'constant', value } as T;
+  if (context.fieldNames.has(value)) return { kind: 'field', value } as T;
+  warnSkippedStyle(prop, value);
+  return undefined;
+};
+
 /** 记录某 mark 的 color 编码：置 colored 并收集 color 字段名（供 model 派生 sequential / ordinal） */
+const shapeStyleOf = (value: PointMarkProps['shape'], context: StyleSugarContext): PointShapeStyle | undefined => {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string') return value;
+  if (context.fieldNames.has(value)) return { kind: 'field', value };
+  return { kind: 'constant', value };
+};
+
 const recordColor = (into: Collected, colorEnc: { color: { field: string; scale: string } } | undefined): void => {
   if (!colorEnc) return;
   into.colored = true;
   into.colorFields.push(colorEnc.color.field);
+};
+
+const recordMarkColor = (into: Collected, color: PointColorStyle | undefined): void => {
+  if (color?.kind !== 'field') return;
+  into.colored = true;
+  into.colorFields.push(color.value);
 };
 
 /**
@@ -264,11 +397,11 @@ const collectReference = (props: ReferenceMarkProps, into: Collected): void => {
 };
 
 /** 递归收集 mark / guide / transform：认 mark/guide 组件，穿透 Fragment，忽略其它节点 */
-const collectInto = (children: ReactNode, into: Collected): void => {
+const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSugarContext): void => {
   Children.forEach(children, child => {
     if (!isValidElement(child)) return;
     if (child.type === Fragment) {
-      collectInto((child.props as { children?: ReactNode }).children, into);
+      collectInto((child.props as { children?: ReactNode }).children, into, styleContext);
       return;
     }
     if (child.type === PathMark) {
@@ -290,14 +423,67 @@ const collectInto = (children: ReactNode, into: Collected): void => {
       if (closed) into.hasClosedLine = true;
     } else if (child.type === PointMark) {
       const props = child.props as PointMarkProps;
-      const { x, y, z, color, size, opacity, shape, text, format, dx, dy, id } = props;
-      const colorEnc = colorChannel(color, undefined);
+      const {
+        x,
+        y,
+        z,
+        color,
+        fill,
+        stroke,
+        strokeWidth,
+        fillOpacity,
+        drawOpacity,
+        rotate,
+        padding,
+        minimumSize,
+        minimumWidth,
+        minimumHeight,
+        zIndex,
+        size,
+        opacity,
+        shape,
+        text,
+        format,
+        dx,
+        dy,
+        id,
+      } = props;
       const markLabel = buildMarkLabel(props);
+      const colorStyle = pointColorStyleOf(color, styleContext);
+      const sizeStyle = numberStyleOf<PointSizeStyle>(size, 'size', styleContext);
+      const shapeStyle = shapeStyleOf(shape, styleContext);
+      const fillStyle = paintStyleOf(fill, styleContext);
+      const strokeStyle = strokeStyleOf(stroke, styleContext);
+      const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
+      const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
+      const drawOpacityStyle = numberStyleOf<PointOpacityStyle>(drawOpacity, 'drawOpacity', styleContext);
+      const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
+      const rotateStyle = numberStyleOf<PointNumberStyle>(rotate, 'rotate', styleContext);
+      const paddingStyle = numberStyleOf<PointNonnegativeNumberStyle>(padding, 'padding', styleContext);
+      const minimumSizeStyle = numberStyleOf<PointNonnegativeNumberStyle>(minimumSize, 'minimumSize', styleContext);
+      const minimumWidthStyle = numberStyleOf<PointNonnegativeNumberStyle>(minimumWidth, 'minimumWidth', styleContext);
+      const minimumHeightStyle = numberStyleOf<PointNonnegativeNumberStyle>(minimumHeight, 'minimumHeight', styleContext);
+      const zIndexStyle = numberStyleOf<PointZIndexStyle>(zIndex, 'zIndex', styleContext);
       // text 设 → point 下沉为无边框文本 Node（内容走 encoding.text）；否则散点 glyph。位置通道按坐标系角色（x / x/y / x/y/z）
       const textEnc: { text: TextChannel } | undefined = text !== undefined ? { text: { field: text, ...(format !== undefined ? { format } : {}) } } : undefined;
       into.marks.push({
         type: PlotMark.Point,
         ...(id !== undefined ? { id } : {}),
+        ...(colorStyle !== undefined ? { color: colorStyle } : {}),
+        ...(sizeStyle !== undefined ? { size: sizeStyle } : {}),
+        ...(shapeStyle !== undefined ? { shape: shapeStyle } : {}),
+        ...(fillStyle !== undefined ? { fill: fillStyle } : {}),
+        ...(strokeStyle !== undefined ? { stroke: strokeStyle } : {}),
+        ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
+        ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
+        ...(drawOpacityStyle !== undefined ? { drawOpacity: drawOpacityStyle } : {}),
+        ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
+        ...(rotateStyle !== undefined ? { rotate: rotateStyle } : {}),
+        ...(paddingStyle !== undefined ? { padding: paddingStyle } : {}),
+        ...(minimumSizeStyle !== undefined ? { minimumSize: minimumSizeStyle } : {}),
+        ...(minimumWidthStyle !== undefined ? { minimumWidth: minimumWidthStyle } : {}),
+        ...(minimumHeightStyle !== undefined ? { minimumHeight: minimumHeightStyle } : {}),
+        ...(zIndexStyle !== undefined ? { zIndex: zIndexStyle } : {}),
         ...(dx !== undefined ? { dx } : {}),
         ...(dy !== undefined ? { dy } : {}),
         ...(markLabel !== undefined ? { label: markLabel } : {}),
@@ -305,14 +491,10 @@ const collectInto = (children: ReactNode, into: Collected): void => {
           ...(x !== undefined ? { x: { field: x } } : {}),
           ...(y !== undefined ? { y: { field: y } } : {}),
           ...(z !== undefined ? { z: { field: z } } : {}),
-          ...colorEnc,
-          ...(size !== undefined ? { size: { field: size } } : {}),
-          ...(opacity !== undefined ? { opacity: { field: opacity } } : {}),
-          ...(shape !== undefined ? { shape: { field: shape } } : {}),
           ...textEnc,
         },
       });
-      recordColor(into, colorEnc);
+      recordMarkColor(into, colorStyle);
       recordResolveLabel(into, id, props.resolveLabel);
     } else if (child.type === IntervalMark) {
       const props = child.props as IntervalMarkProps;
@@ -595,7 +777,7 @@ const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | u
  */
 export const buildPlotSpec = (children: ReactNode, dataRef: string, options: BuildPlotSpecOptions = {}): PlotSpec => {
   const collected: Collected = { marks: [], guides: [], transforms: [], autoStacks: [], scales: [], resolveLabels: {}, colored: false, colorFields: [], hasBar: false, hasRect: false, hasSector: false, hasClosedLine: false };
-  collectInto(children, collected);
+  collectInto(children, collected, styleSugarContext(options));
 
   // transform 装配序：<Plot transforms> 直传 → <Transform> 收集 → auto-stack（B4 去重）
   // B4 按 stack 签名（x / y / groupBy）去重：仅抑制与某条显式 stack 完全同签名的 auto-stack（那条会二次堆叠），

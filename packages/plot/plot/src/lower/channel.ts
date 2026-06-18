@@ -1,4 +1,18 @@
-import { type ExternalRow, type LegendChannelValue, type Mark, PlotFieldType, type PlotFieldTypeValue, PlotMark, PlotScale, type PlotScaleValue, type PlotSpec, type ScalarValue, type SqrtScale } from '../ir';
+import {
+  type ExternalRow,
+  type LegendChannelValue,
+  type LinearScale,
+  type Mark,
+  PlotFieldType,
+  type PlotFieldTypeValue,
+  PlotMark,
+  PlotScale,
+  type PlotScaleValue,
+  type PlotSpec,
+  type ScalarValue,
+  type ScaledMarkValueType,
+  type SqrtScale,
+} from '../ir';
 import { isFiniteNumber, resolveFieldPath } from './field';
 import { inferCategoryDomain, resolveLinearScale, resolveSqrtScale } from './scale';
 
@@ -53,14 +67,13 @@ export const makeSizeResolver = (node: PlotSpec, rows: Array<ExternalRow>, field
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   return (mark: Mark): ChannelResolution<number> | undefined => {
     if (mark.type !== PlotMark.Point) return undefined;
-    const channel = mark.encoding.size;
+    const channel = mark.size;
     if (!channel) return undefined;
-    if (channel.value !== undefined) {
+    if (channel.kind === 'constant') {
       const radius = channel.value;
       return { of: () => radius };
     }
-    if (channel.field === undefined) return undefined;
-    const field = channel.field;
+    const field = channel.value;
     const numeric = rows.map(row => resolveFieldPath(row, field)).filter(isFiniteNumber);
     if (numeric.some(value => value < 0)) {
       throw new Error(`lowerPlots: size channel field "${field}" has negative values; size requires non-negative magnitudes`);
@@ -98,43 +111,83 @@ export const makeSizeResolver = (node: PlotSpec, rows: Array<ExternalRow>, field
 /** opacity 通道连续映射的最小不透明度（range 下界，避免最小值全透明不可见）；契约常量，测试 import 断言 */
 export const OPACITY_MIN = 0.2;
 
-/** 行 → 不透明度（0..1）；undefined = 该行无有效 opacity。由 makeOpacityResolver 据 encoding.opacity 构造 */
-export type OpacityOf = (row: ExternalRow) => number | undefined;
+/** 行 → 数值样式；undefined = 该行无有效字段值。 */
+export type NumberStyleOf = (row: ExternalRow) => number | undefined;
+
+export type NumericStyleResolverOptions = {
+  range?: readonly [number, number];
+  clamp?: boolean;
+  integer?: boolean;
+};
 
 /**
- * 解析某 mark 的 opacity 编码 → 行→不透明度（0..1）
- * @description 仅 PointMark。常量 value 直用（schema 已限 [0,1]）；continuous 字段过 clamp linear scale 映射到
- *   [OPACITY_MIN, 1]——任意值（含负/超域）clamp、不 fail-loud（opacity 无面积语义，与 size 负值 fail-loud 不同）。
- *   非 continuous 字段（temporal / categorical）fail-loud（opacity 是连续编码）。
+ * 解析 PointMark 的数值样式字段 → 行→数值
+ * @description field 变体若给 scale 或默认 range，则过 linear scale；否则直接使用字段原始有限数。
+ *   非 continuous 字段（temporal / categorical）fail-loud；constant 变体由 nodeDefault / node 本身处理，不在这里产 resolver。
  */
-export const makeOpacityResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): ((mark: Mark) => ChannelResolution<number> | undefined) => {
+export const makeNumericStyleResolver = (
+  node: PlotSpec,
+  rows: Array<ExternalRow>,
+  fieldTypes: Map<string, PlotFieldTypeValue>,
+  pick: (mark: Mark) => ScaledMarkValueType<number> | undefined,
+  channelName: string,
+  options: NumericStyleResolverOptions = {},
+): ((mark: Mark) => ChannelResolution<number> | undefined) => {
+  const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   return (mark: Mark): ChannelResolution<number> | undefined => {
     if (mark.type !== PlotMark.Point) return undefined;
-    const channel = mark.encoding.opacity;
+    const channel = pick(mark);
     if (!channel) return undefined;
-    if (channel.value !== undefined) {
-      const opacity = channel.value;
-      return { of: () => opacity };
-    }
-    if (channel.field === undefined) return undefined;
-    const field = channel.field;
+    if (channel.kind === 'constant') return undefined;
+    const field = channel.value;
     const fieldType = fieldTypes.get(field);
     if (fieldType !== undefined && fieldType !== PlotFieldType.Continuous) {
-      throw new Error(`lowerPlots: opacity channel field "${field}" is ${fieldType}; opacity requires a continuous field`);
+      throw new Error(`lowerPlots: ${channelName} style field "${field}" is ${fieldType}; ${channelName} requires a continuous field`);
     }
     const numeric = rows.map(row => resolveFieldPath(row, field)).filter(isFiniteNumber);
-    const scale = resolveLinearScale({ range: [OPACITY_MIN, 1], clamp: true }, numeric, [OPACITY_MIN, 1]);
-    // descriptor domain = 数据 extent（空集退化 [0,1]，与 resolveLinearScale safeExtent 同源）
+    let scale: ((value: number) => number) | undefined;
+    if (channel.scale !== undefined || options.range !== undefined) {
+      let def: LinearScale = { type: PlotScale.Linear, name: channel.scale ?? `__${channelName}_${field}`, ...(options.range !== undefined ? { range: [options.range[0], options.range[1]] as [number, number] } : {}), ...(options.clamp !== undefined ? { clamp: options.clamp } : {}) };
+      if (channel.scale !== undefined) {
+        const found = scaleByName.get(channel.scale);
+        if (!found) throw new Error(`lowerPlots: ${channelName} style references unknown scale "${channel.scale}"`);
+        if (found.type !== PlotScale.Linear) throw new Error(`lowerPlots: ${channelName} style scale "${channel.scale}" must be a linear scale`);
+        def = { ...found, range: found.range ?? def.range, clamp: found.clamp ?? def.clamp };
+      }
+      scale = resolveLinearScale(def, numeric, options.range ?? [0, 1]);
+    }
     const domain: [number, number] = numeric.length === 0 ? [0, 1] : [Math.min(...numeric), Math.max(...numeric)];
+    const descriptor =
+      channelName === 'opacity' && options.range !== undefined
+        ? { channel: 'opacity' as const, scaleType: PlotScale.Linear, domain, range: [options.range[0], options.range[1]], field, fieldType }
+        : undefined;
     return {
       of: row => {
         const value = resolveFieldPath(row, field);
-        return isFiniteNumber(value) ? scale(value) : undefined;
+        if (!isFiniteNumber(value)) return undefined;
+        const next = scale ? scale(value) : value;
+        return options.integer ? Math.trunc(next) : next;
       },
-      descriptor: { channel: 'opacity', scaleType: PlotScale.Linear, domain, range: [OPACITY_MIN, 1], field, fieldType },
+      descriptor,
     };
   };
 };
+
+/** 行 → 不透明度（0..1）；undefined = 该行无有效 opacity。 */
+export type OpacityOf = NumberStyleOf;
+
+/** strokeWidth 通道连续映射的最小 / 最大描边宽度（user units）；避免最小值落成不可见边框 */
+export const STROKE_WIDTH_MIN = 0.5;
+export const STROKE_WIDTH_MAX = 4;
+
+/** 行 → 描边宽度（user units）；undefined = 该行无有效 strokeWidth。由 makeStrokeWidthResolver 据 PointMark.strokeWidth 构造 */
+export type StrokeWidthOf = NumberStyleOf;
+
+export const makeOpacityResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): ((mark: Mark) => ChannelResolution<number> | undefined) =>
+  makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.opacity : undefined), 'opacity', { range: [OPACITY_MIN, 1], clamp: true });
+
+export const makeStrokeWidthResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): ((mark: Mark) => ChannelResolution<number> | undefined) =>
+  makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.strokeWidth : undefined), 'strokeWidth', { range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true });
 
 /** shape 通道默认 glyph 调色板（直用 core 内置 shape 名，无 plot-only 别名）；循环复用 */
 export const PLOT_SHAPE_PALETTE = ['circle', 'rectangle', 'diamond'] as const;
@@ -150,14 +203,13 @@ export type ShapeOf = (row: ExternalRow) => string | undefined;
 export const makeShapeResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): ((mark: Mark) => ChannelResolution<string> | undefined) => {
   return (mark: Mark): ChannelResolution<string> | undefined => {
     if (mark.type !== PlotMark.Point) return undefined;
-    const channel = mark.encoding.shape;
+    const channel = mark.shape;
     if (!channel) return undefined;
-    if (channel.value !== undefined) {
+    if (channel.kind === 'constant') {
       const shape = channel.value;
       return { of: () => shape };
     }
-    if (channel.field === undefined) return undefined;
-    const field = channel.field;
+    const field = channel.value;
     const fieldType = fieldTypes.get(field);
     if (fieldType !== undefined && fieldType !== PlotFieldType.Categorical) {
       throw new Error(`lowerPlots: shape channel field "${field}" is ${fieldType}; shape requires a categorical field`);

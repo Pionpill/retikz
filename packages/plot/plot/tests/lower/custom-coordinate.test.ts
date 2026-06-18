@@ -219,7 +219,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       data: { reference: 'd' },
       scales: [{ type: 'ordinal', name: 'col', range: ['#aa', '#bb'] }],
       coordinate: { type: 'custom', name: 'sine', roles: ['x'] },
-      marks: [{ type: 'point', encoding: { x: { field: 'v' }, color: { field: 'g', scale: 'col' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'g', scale: 'col' }, encoding: { x: { field: 'v' } } }],
     });
     const layer = firstLayer(spec, { d: [{ v: 1, g: 'X' }, { v: 9, g: 'Y' }] }, opts({ sine: sineCoordinate }));
     expect(layer.children).toHaveLength(2);

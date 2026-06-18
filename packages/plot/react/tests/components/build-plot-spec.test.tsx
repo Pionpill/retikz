@@ -88,18 +88,69 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
   });
 
   it('point size 字段 → size 通道（alpha.7 ADR-02）', () => {
-    const spec = buildPlotSpec(<PointMark x="lng" y="lat" size="pop" />, '__plot');
-    expect(spec.marks[0]).toEqual({ type: 'point', encoding: { x: { field: 'lng' }, y: { field: 'lat' }, size: { field: 'pop' } } });
+    const spec = buildPlotSpec(<PointMark x="lng" y="lat" size="pop" />, '__plot', { dataFieldNames: new Set(['pop']) });
+    expect(spec.marks[0]).toEqual({ type: 'point', size: { kind: 'field', value: 'pop' }, encoding: { x: { field: 'lng' }, y: { field: 'lat' } } });
   });
 
   it('point opacity 字段 → opacity 通道（alpha.7 ADR-04）', () => {
-    const spec = buildPlotSpec(<PointMark x="x" y="y" opacity="density" />, '__plot');
-    expect(spec.marks[0]).toEqual({ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, opacity: { field: 'density' } } });
+    const spec = buildPlotSpec(<PointMark x="x" y="y" opacity="density" />, '__plot', { dataFieldNames: new Set(['density']) });
+    expect(spec.marks[0]).toEqual({ type: 'point', opacity: { kind: 'field', value: 'density' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } });
   });
 
   it('point shape 字段 → shape 通道（alpha.7 ADR-05）', () => {
-    const spec = buildPlotSpec(<PointMark x="x" y="y" shape="category" />, '__plot');
-    expect(spec.marks[0]).toEqual({ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, shape: { field: 'category' } } });
+    const spec = buildPlotSpec(<PointMark x="x" y="y" shape="category" />, '__plot', { dataFieldNames: new Set(['category']) });
+    expect(spec.marks[0]).toEqual({ type: 'point', shape: { kind: 'field', value: 'category' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } });
+  });
+
+  it('point stroke 字段 → stroke / strokeWidth 通道', () => {
+    const spec = buildPlotSpec(<PointMark x="x" y="y" stroke="region" strokeWidth="density" />, '__plot', { dataFieldNames: new Set(['region', 'density']) });
+    expect(spec.marks[0]).toEqual({
+      type: 'point',
+      stroke: { kind: 'field', value: 'region' },
+      strokeWidth: { kind: 'field', value: 'density' },
+      encoding: {
+        x: { field: 'x' },
+        y: { field: 'y' },
+      },
+    });
+  });
+
+  it('point node style props pass through to mark IR', () => {
+    const spec = buildPlotSpec(
+      <PointMark
+        x="x"
+        y="y"
+        fill="#f8fafc"
+        stroke="#0f172a"
+        strokeWidth={1.5}
+        fillOpacity={0.7}
+        drawOpacity={0.9}
+        opacity={0.8}
+        rotate={45}
+        padding={2}
+        minimumSize={14}
+        minimumWidth={16}
+        minimumHeight={12}
+        zIndex={3}
+      />,
+      '__plot',
+    );
+    expect(spec.marks[0]).toEqual({
+      type: 'point',
+      fill: { kind: 'constant', value: '#f8fafc' },
+      stroke: { kind: 'constant', value: '#0f172a' },
+      strokeWidth: { kind: 'constant', value: 1.5 },
+      fillOpacity: { kind: 'constant', value: 0.7 },
+      drawOpacity: { kind: 'constant', value: 0.9 },
+      opacity: { kind: 'constant', value: 0.8 },
+      rotate: { kind: 'constant', value: 45 },
+      padding: { kind: 'constant', value: 2 },
+      minimumSize: { kind: 'constant', value: 14 },
+      minimumWidth: { kind: 'constant', value: 16 },
+      minimumHeight: { kind: 'constant', value: 12 },
+      zIndex: { kind: 'constant', value: 3 },
+      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+    });
   });
 
   it('line + point 叠加：marks 两项、共享 scales/coordinate', () => {
@@ -295,14 +346,14 @@ describe('buildPlotSpec ADR-07（IntervalMark / color / series / stack / Scale�
   });
 
   it('point_color_builds_ordinal_scale_and_ref', () => {
-    const spec = buildPlotSpec(<PointMark x="gdp" y="life" color="continent" />, '__plot');
+    const spec = buildPlotSpec(<PointMark x="gdp" y="life" color="continent" />, '__plot', { dataFieldNames: new Set(['continent']) });
     expect(spec.scales).toContainEqual({ type: 'ordinal', name: '__color' });
-    expect(spec.marks[0]?.encoding.color).toEqual({ field: 'continent', scale: '__color' });
+    expect(spec.marks[0]).toMatchObject({ color: { kind: 'field', value: 'continent', scale: '__color' } });
   });
 
   it('plot_colors_builds_palette_and_ordinal_range', () => {
     const colors = ['#2563eb', '#f97316', 'currentColor'];
-    const spec = buildPlotSpec(<PointMark x="gdp" y="life" color="continent" />, '__plot', { colors });
+    const spec = buildPlotSpec(<PointMark x="gdp" y="life" color="continent" />, '__plot', { colors, dataFieldNames: new Set(['continent']) });
     expect(spec.colors).toEqual(colors);
     expect(spec.scales).toContainEqual({ type: 'ordinal', name: '__color', range: colors });
   });
@@ -317,7 +368,7 @@ describe('buildPlotSpec ADR-07（IntervalMark / color / series / stack / Scale�
     const mark = spec.marks[0];
     expect(mark).toMatchObject({ type: 'interval', series: 'product', bounds: { x: { kind: 'band', group: 'product' } } });
     // color 缺省取 series
-    expect(mark.encoding.color).toEqual({ field: 'product', scale: '__color' });
+    expect(mark).toMatchObject({ encoding: { color: { field: 'product', scale: '__color' } } });
     expect(spec.transform).toBeUndefined();
   });
 
@@ -398,12 +449,12 @@ describe('buildPlotSpec ADR-07（IntervalMark / color / series / stack / Scale�
   it('line_series_color_eq_series', () => {
     const spec = buildPlotSpec(<PathMark x="t" y="v" series="city" order="t" />, '__plot');
     expect(spec.marks[0]).toMatchObject({ type: 'path', series: 'city', order: 't' });
-    expect(spec.marks[0]?.encoding.color).toEqual({ field: 'city', scale: '__color' });
+    expect(spec.marks[0]).toMatchObject({ encoding: { color: { field: 'city', scale: '__color' } } });
   });
 
   it('all_dsl_products_pass_schema', () => {
     expect(() => PlotSpecSchema.parse(buildPlotSpec(<IntervalMark x="m" y="r" series="p" stack />, '__plot'))).not.toThrow();
-    expect(() => PlotSpecSchema.parse(buildPlotSpec(<PointMark x="m" y="r" color="c" />, '__plot'))).not.toThrow();
+    expect(() => PlotSpecSchema.parse(buildPlotSpec(<PointMark x="m" y="r" color="c" />, '__plot', { dataFieldNames: new Set(['c']) }))).not.toThrow();
   });
 
   it('mixed_bar_line_band_x', () => {
@@ -609,12 +660,13 @@ describe('buildPlotSpec 坐标系族 cartesian1D / polar1D / ternary2D（alpha.9
   });
 
   it('ternary_coordinate_input：ternary2D + PointMark x/y/z → IR x/y/z encoding', () => {
-    const spec = buildPlotSpec(<PointMark x="sand" y="silt" z="clay" color="region" />, '__plot', { coordinate: 'ternary2D' });
+    const spec = buildPlotSpec(<PointMark x="sand" y="silt" z="clay" color="region" />, '__plot', { coordinate: 'ternary2D', dataFieldNames: new Set(['region']) });
     expect(spec.coordinate).toEqual({ type: 'ternary2D' });
     expect(spec.scales).toEqual([{ type: 'ordinal', name: '__color' }]);
     expect(spec.marks[0]).toEqual({
       type: 'point',
-      encoding: { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' }, color: { field: 'region', scale: '__color' } },
+      color: { kind: 'field', value: 'region', scale: '__color' },
+      encoding: { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' } },
     });
   });
 

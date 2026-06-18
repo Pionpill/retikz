@@ -28,17 +28,17 @@ export const ChannelSchema = z
 export const PositionEncodingSchema = z
   .object({
     x: ChannelSchema.optional().describe(
-      'Primary position role channel; optional at the schema level — whether it is required is decided per coordinate system (cartesian2D / polar2D need x, cartesian1D needs its single dimension), validated fail-loud during lowering. The coordinate maps it to its first role — cartesian2D horizontal, polar2D angle. Its scale comes from the coordinate system',
+      'Primary position role channel; optional at the schema level. Whether it is required is decided per coordinate system (cartesian2D / polar2D need x, cartesian1D needs its single dimension), validated fail-loud during lowering. The coordinate maps it to its first role: cartesian2D horizontal, polar2D angle. Its scale comes from the coordinate system',
     ),
     y: ChannelSchema.optional().describe(
-      'Secondary position role channel; optional at the schema level — required by cartesian2D / polar2D, omitted by 1D coordinates, validated during lowering. The coordinate maps it to its second role — cartesian2D vertical, polar2D radius. Its scale comes from the coordinate system',
+      'Secondary position role channel; optional at the schema level. Required by cartesian2D / polar2D, omitted by 1D coordinates, validated during lowering. The coordinate maps it to its second role: cartesian2D vertical, polar2D radius. Its scale comes from the coordinate system',
     ),
     z: ChannelSchema.optional().describe(
       'Third position role channel; optional at the schema level, required with x / y under ternary2D and validated during lowering. Auto-normalized with x+y+z at the coordinate',
     ),
   })
   .describe(
-    'Positional channel bindings (x for 1D, x / y for 2D, x / y / z for ternary2D); all optional at the schema level — the coordinate system decides which position roles are required and validates fail-loud during lowering. cartesian2D maps x→horizontal / y→vertical, polar2D maps x→angle / y→radius',
+    'Positional channel bindings (x for 1D, x / y for 2D, x / y / z for ternary2D); all optional at the schema level. The coordinate system decides which position roles are required and validates fail-loud during lowering. cartesian2D maps x to horizontal / y to vertical, polar2D maps x to angle / y to radius',
   );
 
 export const StyleEncodingSchema = z
@@ -47,7 +47,7 @@ export const StyleEncodingSchema = z
       'Color channel (non-positional): maps a field through an ordinal / color scale to the mark fill / stroke',
     ),
   })
-  .describe('Non-positional style channel bindings fed to mark visuals (color today; opacity / size / shape later)');
+  .describe('Non-positional style channel bindings fed to mark visuals (color today)');
 
 export const EncodingSchema = PositionEncodingSchema.merge(StyleEncodingSchema).describe(
   'Channel bindings for a mark: positional channels (consumed by the coordinate system) composed with non-positional style channels (fed to mark visuals)',
@@ -61,27 +61,27 @@ export const SizeChannelSchema = z
       .optional()
       .describe('Data path bound to the size channel; resolves to a numeric magnitude mapped through a radius (sqrt) scale'),
     value: z.number().finite().nonnegative().optional().describe('Constant final radius in px, bypassing the scale entirely (mutually exclusive with field)'),
-    scale: z.string().min(1).optional().describe('Optional sqrt-scale name (only meaningful with field); omitted → a default radius (sqrt) scale is synthesized'),
+    scale: z.string().min(1).optional().describe('Optional sqrt-scale name (only meaningful with field); omitted means a default radius (sqrt) scale is synthesized'),
   })
   .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'size channel must set exactly one of `field` or `value`' })
-  .describe('Size channel (PointMark only): field → glyph radius via a sqrt scale; value → a constant final radius (px) that bypasses the scale');
+  .describe('Size channel (PointMark legacy helper): field maps glyph radius via a sqrt scale; value is a constant final radius (px) that bypasses the scale');
 
 export const OpacityChannelSchema = z
   .object({
     field: z.string().min(1).optional().describe('Data path bound to opacity; continuous, mapped through a clamped linear scale to [minOpacity, 1]'),
     value: z.number().min(0).max(1).optional().describe('Constant opacity 0..1, bypassing the scale (mutually exclusive with field)'),
-    scale: z.string().min(1).optional().describe('Optional linear-scale name (only meaningful with field); omitted → a default opacity scale is synthesized'),
+    scale: z.string().min(1).optional().describe('Optional linear-scale name (only meaningful with field); omitted means a default opacity scale is synthesized'),
   })
   .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'opacity channel must set exactly one of `field` or `value`' })
-  .describe('Opacity channel (PointMark only): field → glyph opacity via a clamped linear scale; value → a constant opacity that bypasses the scale');
+  .describe('Opacity channel (PointMark legacy helper): field maps glyph opacity via a clamped linear scale; value is a constant opacity that bypasses the scale');
 
 export const ShapeChannelSchema = z
   .object({
     field: z.string().min(1).optional().describe('Data path bound to shape; categorical, mapped to a built-in glyph palette'),
-    value: z.string().min(1).optional().describe('Constant glyph shape name — a core / registered node shape (mutually exclusive with field)'),
+    value: z.string().min(1).optional().describe('Constant glyph shape name: a core / registered node shape (mutually exclusive with field)'),
   })
   .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'shape channel must set exactly one of `field` or `value`' })
-  .describe('Shape channel (PointMark only): field → glyph shape via the built-in shape palette; value → a constant core shape name. No explicit scale ref this round');
+  .describe('Shape channel (PointMark legacy helper): field maps glyph shape via the built-in shape palette; value is a constant core shape name. No explicit scale ref this round');
 
 export const TextChannelSchema = z
   .object({
@@ -96,16 +96,13 @@ export const TextChannelSchema = z
       ),
   })
   .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'text channel must set exactly one of `field` or `value`' })
-  .describe('Text content channel: field → per-datum label string / value → a constant label / format → format string for a numeric or temporal field');
+  .describe('Text content channel: field is a per-datum label string, value is a constant label, format is a format string for a numeric or temporal field');
 
-export const PointEncodingSchema = EncodingSchema.extend({
-  size: SizeChannelSchema.optional().describe('Optional size channel: data-driven glyph radius via a sqrt scale, or a constant radius'),
-  opacity: OpacityChannelSchema.optional().describe('Optional opacity channel: data-driven glyph opacity via a clamped linear scale, or a constant opacity'),
-  shape: ShapeChannelSchema.optional().describe('Optional shape channel: categorical field → glyph shape via the built-in palette, or a constant shape name'),
+export const PointEncodingSchema = PositionEncodingSchema.extend({
   text: TextChannelSchema.optional().describe(
-    'Optional text content channel: when set the point lowers to a borderless core Node carrying text (free-text / datum label) instead of a glyph; field → per-datum string, value → constant, format → numeric / temporal format',
+    'Optional text content channel: when set the point lowers to a borderless core Node carrying text (free-text / datum label) instead of a glyph; field is a per-datum string, value is constant, format handles numeric / temporal format',
   ),
-}).describe('PointMark encoding: positional + color + optional size / opacity / shape glyph channels + optional text (text set → borderless text Node, absorbing the former standalone text mark)');
+}).describe('PointMark encoding: positional channels plus optional text; visual properties live on the mark as MarkValueType fields');
 
 export const MarkLabelSchema = z
   .object({
@@ -119,23 +116,23 @@ export const MarkLabelSchema = z
   })
   .describe('Datum label attached to a positional mark: lowered onto each datum Node.label (core border-relative placement), the preferred path over a standalone TextMark');
 
-/** 通道绑定：field（数据驱动）/ value（常量）二选一 */
+/** Channel binding: exactly one of field (data-driven) or value (constant). */
 export type Channel = z.infer<typeof ChannelSchema>;
-/** 位置通道绑定（x / y / z；按坐标系角色解析，必填性下放 lowering） */
+/** Positional channel bindings (x / y / z); coordinate systems decide required roles during lowering. */
 export type PositionEncoding = z.infer<typeof PositionEncodingSchema>;
-/** 样式通道绑定（非位置视觉属性；当前仅 color） */
+/** Style channel bindings for non-position visual channels. */
 export type StyleEncoding = z.infer<typeof StyleEncodingSchema>;
-/** mark 的通道绑定（位置 + 样式复合） */
+/** Mark channel bindings: positional channels plus shared style channels. */
 export type Encoding = z.infer<typeof EncodingSchema>;
-/** size 通道绑定（PointMark 专属；field 过 sqrt 半径 scale / value 常量半径 px） */
+/** Legacy size channel helper schema type. PointMark canonical size is top-level MarkValueType. */
 export type SizeChannel = z.infer<typeof SizeChannelSchema>;
-/** opacity 通道绑定（PointMark 专属；field 过 clamp linear scale / value 常量 0..1） */
+/** Legacy opacity channel helper schema type. PointMark canonical opacity is top-level MarkValueType. */
 export type OpacityChannel = z.infer<typeof OpacityChannelSchema>;
-/** shape 通道绑定（PointMark 专属；field 分类映射到 glyph 调色板 / value 常量 shape 名） */
+/** Legacy shape channel helper schema type. PointMark canonical shape is top-level MarkValueType. */
 export type ShapeChannel = z.infer<typeof ShapeChannelSchema>;
-/** PointMark 专属通道绑定（位置 + 样式 + 可选 size / opacity / shape / text） */
+/** PointMark encoding: positional channels plus optional text only. */
 export type PointEncoding = z.infer<typeof PointEncodingSchema>;
-/** text 内容通道绑定（field 字段值转串 / value 常量串 / format 格式串） */
+/** Text content channel binding. */
 export type TextChannel = z.infer<typeof TextChannelSchema>;
-/** 宿主 datum label 配置（对齐 core NodeLabelSchema 的 position / distance / pin + 内容通道） */
+/** Host datum label config aligned with core NodeLabelSchema position / distance / pin. */
 export type MarkLabel = z.infer<typeof MarkLabelSchema>;

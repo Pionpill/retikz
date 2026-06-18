@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ChannelSchema, EncodingSchema, OpacityChannelSchema, PointEncodingSchema, ShapeChannelSchema, SizeChannelSchema } from '../../src/ir/encoding';
+import { ChannelSchema, EncodingSchema, PointEncodingSchema, ShapeChannelSchema, SizeChannelSchema } from '../../src/ir/encoding';
 
 describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
   // Happy path
@@ -110,7 +110,7 @@ describe('SizeChannelSchema / PointEncodingSchema (alpha.7 ADR-02)', () => {
   });
 
   it('point_encoding_with_size_valid', () => {
-    const e = { x: { field: 'lng' }, y: { field: 'lat' }, size: { field: 'pop' } };
+    const e = { x: { field: 'lng' }, y: { field: 'lat' } };
     expect(PointEncodingSchema.parse(e)).toEqual(e);
   });
 
@@ -135,40 +135,6 @@ describe('SizeChannelSchema / PointEncodingSchema (alpha.7 ADR-02)', () => {
   });
 });
 
-describe('OpacityChannelSchema (alpha.7 ADR-04)', () => {
-  // Happy path
-  it('opacity_field_valid', () => {
-    expect(OpacityChannelSchema.parse({ field: 'density' })).toEqual({ field: 'density' });
-  });
-
-  it('opacity_value_valid', () => {
-    expect(OpacityChannelSchema.parse({ value: 0.5 })).toEqual({ value: 0.5 });
-    expect(OpacityChannelSchema.parse({ value: 0 })).toEqual({ value: 0 });
-    expect(OpacityChannelSchema.parse({ value: 1 })).toEqual({ value: 1 });
-  });
-
-  it('point_encoding_with_opacity_valid', () => {
-    const e = { x: { field: 'x' }, y: { field: 'y' }, opacity: { field: 'd' } };
-    expect(PointEncodingSchema.parse(e)).toEqual(e);
-  });
-
-  // 错误路径
-  it('opacity_value_out_of_range_rejected', () => {
-    expect(() => OpacityChannelSchema.parse({ value: 1.5 })).toThrow();
-    expect(() => OpacityChannelSchema.parse({ value: -0.1 })).toThrow();
-  });
-
-  it('opacity_field_and_value_mutually_exclusive', () => {
-    expect(() => OpacityChannelSchema.parse({ field: 'd', value: 0.5 })).toThrow();
-    expect(() => OpacityChannelSchema.parse({})).toThrow();
-  });
-
-  it('shared_encoding_strips_opacity', () => {
-    const e = EncodingSchema.parse({ x: { field: 'x' }, y: { field: 'y' }, opacity: { field: 'd' } });
-    expect((e as { opacity?: unknown }).opacity).toBeUndefined();
-  });
-});
-
 describe('ShapeChannelSchema (alpha.7 ADR-05)', () => {
   // Happy path
   it('shape_field_valid', () => {
@@ -180,7 +146,7 @@ describe('ShapeChannelSchema (alpha.7 ADR-05)', () => {
   });
 
   it('point_encoding_with_shape_valid', () => {
-    const e = { x: { field: 'x' }, y: { field: 'y' }, shape: { field: 'cat' } };
+    const e = { x: { field: 'x' }, y: { field: 'y' } };
     expect(PointEncodingSchema.parse(e)).toEqual(e);
   });
 

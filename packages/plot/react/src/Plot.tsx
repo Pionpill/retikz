@@ -107,6 +107,21 @@ const withPlotColors = (spec: PlotSpec, colors: Array<string> | undefined): Plot
   ...(colors !== undefined ? { colors } : {}),
 });
 
+const collectRowFields = (value: unknown, into: Set<string>, prefix = ''): void => {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return;
+  for (const [key, child] of Object.entries(value)) {
+    const path = prefix ? `${prefix}.${key}` : key;
+    into.add(path);
+    collectRowFields(child, into, path);
+  }
+};
+
+const dataFieldNamesOf = (rows: Array<ExternalRow>): ReadonlySet<string> => {
+  const fields = new Set<string>();
+  for (const row of rows) collectRowFields(row, fields);
+  return fields;
+};
+
 const wrapPanelScope = (node: PlotSpec, props: PlotPanelProps): EmbeddableContribution['node'] => {
   const { x, y, transforms, zIndex, clip } = props;
   const panelTransforms =
@@ -146,6 +161,7 @@ const resolvePlotRuntime = (
       height: props.height,
       coordinate: props.coordinate,
       model: props.model,
+      dataFieldNames: dataFieldNamesOf(props.data),
       colors: props.colors,
       transforms: props.dataTransforms,
       deferPositionScaleInference: props.model === undefined,

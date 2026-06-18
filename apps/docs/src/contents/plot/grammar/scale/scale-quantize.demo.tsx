@@ -15,7 +15,7 @@ const spec: PlotSpec = {
     { type: 'quantize', name: 'col', domain: [0, 100], count: 5, scheme: 'blues' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'point', encoding: { x: { field: 'lng' }, y: { field: 'lat' }, color: { field: 'density', scale: 'col' } } }],
+  marks: [{ type: 'point', color: { kind: 'field', value: 'density', scale: 'col' }, encoding: { x: { field: 'lng' }, y: { field: 'lat' } } }],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },

@@ -5,7 +5,7 @@ import { type ResolveLabel, channelValue, isFiniteNumber, labelOf, resolveFieldP
 import { type GuideContext, type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from './guide';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarFrame, computeTernaryFrame } from './layout';
 import { type ColorOf, type LabelOf, lowerMark } from './mark';
-import { type ChannelResolution, type ScaleDescriptor, makeOpacityResolver, makeShapeResolver, makeSizeResolver } from './channel';
+import { type ChannelResolution, type ScaleDescriptor, makeNumericStyleResolver, makeOpacityResolver, makeShapeResolver, makeSizeResolver, makeStrokeWidthResolver } from './channel';
 import { type CoordinateFrame, type CustomCoordinateFactory, type DimensionRole, createCartesian1DFrame, createCartesianFrame, createPolar1DFrame, createPolarFrame, createTernary2DFrame } from './project';
 import { REQUIRED_POSITION_CHANNELS, VALID_GUIDE_DIMENSIONS } from './coordinate-meta';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
@@ -72,6 +72,26 @@ const defaultColorOf = (node: PlotSpec, markIndex: number): string => {
 const withPlotColorRange = (def: OrdinalScale | undefined, colors: ReadonlyArray<string> | undefined, name: string): OrdinalScale | undefined => {
   if (colors === undefined || def?.range !== undefined) return def;
   return { ...(def ?? { type: PlotScale.Ordinal, name }), range: [...colors] };
+};
+
+const pointMarkValueChannel = (value: { kind: 'field' | 'constant'; value: unknown; scale?: string } | undefined): Channel | undefined => {
+  if (value === undefined) return undefined;
+  return value.kind === 'field' ? { field: String(value.value), ...(value.scale !== undefined ? { scale: value.scale } : {}) } : { value: value.value as Channel['value'] };
+};
+
+const markColorChannel = (mark: Mark): Channel | undefined => {
+  if (mark.type === PlotMark.Point) return pointMarkValueChannel(mark.color);
+  return mark.encoding.color;
+};
+
+const pointStrokeChannel = (mark: Mark): Channel | undefined => {
+  if (mark.type !== PlotMark.Point || mark.stroke === undefined) return undefined;
+  return mark.stroke.kind === 'field' ? { field: mark.stroke.value, ...(mark.stroke.scale !== undefined ? { scale: mark.stroke.scale } : {}) } : { value: mark.stroke.value };
+};
+
+const pointFillChannel = (mark: Mark): Channel | undefined => {
+  if (mark.type !== PlotMark.Point || mark.fill === undefined || mark.fill.kind !== 'field') return undefined;
+  return { field: mark.fill.value, ...(mark.fill.scale !== undefined ? { scale: mark.fill.scale } : {}) };
 };
 
 /**
@@ -661,8 +681,14 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
   return { frame, gridLayers, axisLayers, plotArea };
 };
 
-/** 解析某 mark 的 color 编码 → 行→颜色串：常量 value 直用；字段过 ordinal scale（显式引用或自动合成默认配色） */
-const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): ((mark: Mark) => ColorOf | undefined) => {
+/** 解析某 mark 的 color-like 编码 → 行→颜色串：常量 value 直用；字段过 ordinal / color scale（显式引用或自动合成默认配色） */
+const makeColorResolver = (
+  node: PlotSpec,
+  rows: Array<ExternalRow>,
+  fieldTypes: Map<string, PlotFieldTypeValue>,
+  pickChannel: (mark: Mark) => Channel | undefined = markColorChannel,
+  channelName = 'color',
+): ((mark: Mark) => ColorOf | undefined) => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   // 字段名 → order（与位置通道同源 data.model）：颜色 ordinal 域按字段 order 排，保证位置 / 颜色同序
   const fieldOrders = new Map<string, CategoryOrder>();
@@ -670,7 +696,7 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes:
     if (field.order !== undefined) fieldOrders.set(field.name, field.order);
   }
   return (mark: Mark): ColorOf | undefined => {
-    const channel = mark.encoding.color;
+    const channel = pickChannel(mark);
     if (!channel) return undefined;
     if (channel.value !== undefined) {
       const constant = String(channel.value);
@@ -689,18 +715,18 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes:
         );
       }
       if (channel.scale === undefined) {
-        throw new Error(`lowerPlots: continuous/temporal color field "${field}" requires an explicit sequential/diverging/quantize/threshold/quantile color scale reference`);
+        throw new Error(`lowerPlots: continuous/temporal ${channelName} field "${field}" requires an explicit sequential/diverging/quantize/threshold/quantile color scale reference`);
       }
       const def = scaleByName.get(channel.scale);
-      if (!def) throw new Error(`lowerPlots: color channel references unknown scale "${channel.scale}"`);
+      if (!def) throw new Error(`lowerPlots: ${channelName} channel references unknown scale "${channel.scale}"`);
       const isContinuousColorScale = def.type === PlotScale.Sequential || def.type === PlotScale.Diverging;
       const isDiscretizedColorScale = def.type === PlotScale.Quantize || def.type === PlotScale.Threshold || def.type === PlotScale.Quantile;
       if (!isContinuousColorScale && !isDiscretizedColorScale) {
-        throw new Error(`lowerPlots: continuous/temporal color field "${field}" requires a sequential/diverging/quantize/threshold/quantile color scale, but "${channel.scale}" is ${def.type}`);
+        throw new Error(`lowerPlots: continuous/temporal ${channelName} field "${field}" requires a sequential/diverging/quantize/threshold/quantile color scale, but "${channel.scale}" is ${def.type}`);
       }
       // temporal + diverging 无意义（时间无自然中点）→ fail-loud；temporal + sequential 合法（时间戳当连续量）
       if (colorFieldType === PlotFieldType.Temporal && def.type === PlotScale.Diverging) {
-        throw new Error(`lowerPlots: temporal color field "${field}" cannot use a diverging color scale (no meaningful midpoint for time); use a sequential color scale`);
+        throw new Error(`lowerPlots: temporal ${channelName} field "${field}" cannot use a diverging color scale (no meaningful midpoint for time); use a sequential color scale`);
       }
       // 取连续数值：temporal 字段过 toTimestamp 转 epoch ms（时间戳当连续量），其余直取有限数
       const toNumber = colorFieldType === PlotFieldType.Temporal ? toTimestamp : (value: unknown): number | null => (isFiniteNumber(value) ? value : null);
@@ -732,9 +758,9 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes:
     let ordinalDef: OrdinalScale | undefined;
     if (channel.scale !== undefined) {
       const def = scaleByName.get(channel.scale);
-      if (!def) throw new Error(`lowerPlots: color channel references unknown scale "${channel.scale}"`);
+      if (!def) throw new Error(`lowerPlots: ${channelName} channel references unknown scale "${channel.scale}"`);
       if (def.type !== PlotScale.Ordinal) {
-        throw new Error(`lowerPlots: color channel scale "${channel.scale}" must be an ordinal scale`);
+        throw new Error(`lowerPlots: ${channelName} channel scale "${channel.scale}" must be an ordinal scale`);
       }
       ordinalDef = def;
     }
@@ -742,9 +768,9 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes:
     // 字段有非默认 order 且 ordinal 域未显式给 → 按 order 排 ordinal 域（位置 / 颜色同序）
     const order = fieldOrders.get(field);
     if (order !== undefined && order !== 'data' && ordinalDef?.domain === undefined) {
-      ordinalDef = { ...(ordinalDef ?? { type: PlotScale.Ordinal, name: `__color_${field}` }), domain: orderedCategoryDomain(colorValues, order) };
+      ordinalDef = { ...(ordinalDef ?? { type: PlotScale.Ordinal, name: `__${channelName}_${field}` }), domain: orderedCategoryDomain(colorValues, order) };
     }
-    const ordinal = resolveOrdinalScale(withPlotColorRange(ordinalDef, node.colors, `__color_${field}`), colorValues);
+    const ordinal = resolveOrdinalScale(withPlotColorRange(ordinalDef, node.colors, `__${channelName}_${field}`), colorValues);
     return row => {
       const value = resolveFieldPath(row, field);
       return typeof value === 'string' || typeof value === 'number' ? ordinal(value) : undefined;
@@ -886,7 +912,7 @@ const resolveColorLegend = (
   //   scale + field 守卫已兜底无 color 编码的 mark，无需按 mark 类型排除。
   const colorBindings: Array<{ scaleName: string; field: string }> = [];
   for (const mark of node.marks) {
-    const channel = mark.encoding.color;
+    const channel = markColorChannel(mark);
     if (channel?.scale !== undefined && channel.field !== undefined) {
       colorBindings.push({ scaleName: channel.scale, field: channel.field });
     }
@@ -1198,9 +1224,26 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   });
 
   const resolveColor = makeColorResolver(node, rows, fieldTypes);
+  const resolveFill = makeColorResolver(node, rows, fieldTypes, pointFillChannel, 'fill');
+  const resolveStroke = makeColorResolver(
+    node,
+    rows,
+    fieldTypes,
+    pointStrokeChannel,
+    'stroke',
+  );
   const resolveSize = makeSizeResolver(node, rows, fieldTypes);
   const resolveOpacity = makeOpacityResolver(node, rows, fieldTypes);
   const resolveShape = makeShapeResolver(node, rows, fieldTypes);
+  const resolveStrokeWidth = makeStrokeWidthResolver(node, rows, fieldTypes);
+  const resolveFillOpacity = makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.fillOpacity : undefined), 'fillOpacity', { range: [0.2, 1], clamp: true });
+  const resolveDrawOpacity = makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.drawOpacity : undefined), 'drawOpacity', { range: [0.2, 1], clamp: true });
+  const resolveRotate = makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.rotate : undefined), 'rotate');
+  const resolvePadding = makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.padding : undefined), 'padding');
+  const resolveMinimumSize = makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.minimumSize : undefined), 'minimumSize');
+  const resolveMinimumWidth = makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.minimumWidth : undefined), 'minimumWidth');
+  const resolveMinimumHeight = makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.minimumHeight : undefined), 'minimumHeight');
+  const resolveZIndex = makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.zIndex : undefined), 'zIndex', { integer: true });
   const resolveLabelOf = makeLabelResolver(fieldTypes, options.resolveLabel);
 
   // plot 级 datum id 登记器：datumIdField + plotId 在时建一份，线穿全 mark——跨 mark 共享 seen，
@@ -1219,11 +1262,21 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         rows,
         frame,
         {
-          colorOf: resolveColor(mark),
+          colorOf: resolveColor(mark) ?? resolveFill(mark),
           defaultColor: defaultColorOf(node, markIndex),
           sizeOf: resolveSize(mark)?.of,
           opacityOf: resolveOpacity(mark)?.of,
           shapeOf: resolveShape(mark)?.of,
+          strokeOf: resolveStroke(mark),
+          strokeWidthOf: resolveStrokeWidth(mark)?.of,
+          fillOpacityOf: resolveFillOpacity(mark)?.of,
+          drawOpacityOf: resolveDrawOpacity(mark)?.of,
+          rotateOf: resolveRotate(mark)?.of,
+          paddingOf: resolvePadding(mark)?.of,
+          minimumSizeOf: resolveMinimumSize(mark)?.of,
+          minimumWidthOf: resolveMinimumWidth(mark)?.of,
+          minimumHeightOf: resolveMinimumHeight(mark)?.of,
+          zIndexOf: resolveZIndex(mark)?.of,
           labelOf: resolveLabelOf(mark),
         },
         provenance ? { context: provenance, markIndex, registerDatumId } : undefined,

@@ -73,7 +73,7 @@ describe('cartesian1D 直线坐标系 (ADR-02)', () => {
         { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
       ],
       coordinate: { type: 'cartesian1D', x: 'xs' },
-      marks: [{ type: 'point', encoding: { x: { field: 'v' }, color: { field: 'g', scale: 'col' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'g', scale: 'col' }, encoding: { x: { field: 'v' } } }],
     });
     const layer = firstLayer(spec, { d: [{ v: 1, g: 'X' }, { v: 9, g: 'Y' }] }, opts);
     expect(layer.children).toHaveLength(2);
@@ -100,7 +100,7 @@ describe('cartesian1D 直线坐标系 (ADR-02)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'xs' }],
       coordinate: { type: 'cartesian1D', x: 'xs' },
-      marks: [{ type: 'point', encoding: { color: { value: '#333' } } }],
+      marks: [{ type: 'point', color: { kind: 'constant', value: '#333' }, encoding: {  } }],
     });
     expect(() => expandOf(spec, { d: [{ v: 1 }] }, opts)).toThrow(/cartesian1D|requires|x/i);
   });

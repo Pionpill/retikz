@@ -6,3 +6,4 @@ export * from './mark';
 export * from './plot';
 export * from './scale';
 export * from './transform';
+export type { IRPaintSpec } from '@retikz/core';

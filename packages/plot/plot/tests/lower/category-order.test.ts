@@ -268,7 +268,7 @@ describe('FieldDef.order — 交互（ADR-07）', () => {
       },
       scales: [{ type: 'linear', name: 'yv' }],
       coordinate: { type: 'cartesian2D', y: 'yv' },
-      marks: [{ type: 'point', encoding: { x: { field: 'cat' }, y: { field: 'val' }, color: { field: 'cat' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'cat' }, encoding: { x: { field: 'cat' }, y: { field: 'val' } } }],
     });
     const rows = [
       { cat: 'L', val: 1 },

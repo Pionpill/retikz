@@ -1,5 +1,5 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope, type IRStep } from '@retikz/core';
-import { type ExternalRow, type LinkMark, type Mark, PlotCoordinate, PlotMark, type PlotMarkValue, type ReferenceMark } from '../ir';
+import { type ExternalRow, type LinkMark, type Mark, PlotCoordinate, PlotMark, type PlotMarkValue, type PointMark, type ReferenceMark } from '../ir';
 import { type IntervalContext, LINK_DEFAULT_CURVATURE, buildIntervalContext, datumAnchor, linkBandGeometry, linkEndpoints, markCell, roleValues } from './anchor';
 import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from './field';
 import { inferCategoryDomain } from './scale';
@@ -15,14 +15,31 @@ import {
   seriesPathMeta,
   slug,
 } from './provenance';
-import { type OpacityOf, type ShapeOf, type SizeOf } from './channel';
+import { type NumberStyleOf, type OpacityOf, type ShapeOf, type SizeOf, type StrokeWidthOf } from './channel';
 
 /**
  * 一个 mark 下沉时消费的通道解析器集合
  * @description color 适用所有 mark；size / opacity / shape 仅 PointMark（per-datum node 属性）。
  *   由 expand 据各通道 resolver 构造、整包传入，避免逐个位置参数（易错序）。
  */
-export type MarkChannels = { colorOf?: ColorOf; defaultColor?: string; sizeOf?: SizeOf; opacityOf?: OpacityOf; shapeOf?: ShapeOf; labelOf?: LabelOf };
+export type MarkChannels = {
+  colorOf?: ColorOf;
+  defaultColor?: string;
+  sizeOf?: SizeOf;
+  opacityOf?: OpacityOf;
+  shapeOf?: ShapeOf;
+  strokeOf?: ColorOf;
+  strokeWidthOf?: StrokeWidthOf;
+  fillOpacityOf?: NumberStyleOf;
+  drawOpacityOf?: NumberStyleOf;
+  rotateOf?: NumberStyleOf;
+  paddingOf?: NumberStyleOf;
+  minimumSizeOf?: NumberStyleOf;
+  minimumWidthOf?: NumberStyleOf;
+  minimumHeightOf?: NumberStyleOf;
+  zIndexOf?: NumberStyleOf;
+  labelOf?: LabelOf;
+};
 
 /** 行 → 标签串（text 内容通道 + 可选 format + 运行时 resolveLabel 解析结果；undefined = 该行无内容、跳过 / 不挂 label）。由 expand 据 content/fieldTypes/resolveLabel 构造 */
 export type LabelOf = (row: ExternalRow) => string | undefined;
@@ -74,15 +91,46 @@ const colorGroupedScope = (
 };
 
 /** 散点 node 样式（circle + padding0 + minimumSize；÷√2 补 circle 外接，使 POINT_SIZE 即真实直径） */
-const pointStyle = (fill: string): IRNodeDefault => ({
-  shape: 'circle',
-  padding: 0,
-  minimumSize: POINT_SIZE / Math.SQRT2,
-  fill,
-});
+const pointStyle = (fill: IRNodeDefault['fill'], mark: PointMark): IRNodeDefault => {
+  const padding = mark.padding?.kind === 'constant' ? mark.padding.value : undefined;
+  const minimumSize = mark.minimumSize?.kind === 'constant' ? mark.minimumSize.value : undefined;
+  const minimumWidth = mark.minimumWidth?.kind === 'constant' ? mark.minimumWidth.value : undefined;
+  const minimumHeight = mark.minimumHeight?.kind === 'constant' ? mark.minimumHeight.value : undefined;
+  const stroke = mark.stroke?.kind === 'constant' ? mark.stroke.value : undefined;
+  const strokeWidth = mark.strokeWidth?.kind === 'constant' ? mark.strokeWidth.value : undefined;
+  const fillOpacity = mark.fillOpacity?.kind === 'constant' ? mark.fillOpacity.value : undefined;
+  const drawOpacity = mark.drawOpacity?.kind === 'constant' ? mark.drawOpacity.value : undefined;
+  const opacity = mark.opacity?.kind === 'constant' ? mark.opacity.value : undefined;
+  const rotate = mark.rotate?.kind === 'constant' ? mark.rotate.value : undefined;
+  return {
+    shape: 'circle',
+    padding: padding ?? 0,
+    minimumSize: minimumSize ?? POINT_SIZE / Math.SQRT2,
+    ...(minimumWidth !== undefined ? { minimumWidth } : {}),
+    ...(minimumHeight !== undefined ? { minimumHeight } : {}),
+    fill,
+    ...(stroke !== undefined ? { stroke } : {}),
+    ...(strokeWidth !== undefined ? { strokeWidth } : {}),
+    ...(fillOpacity !== undefined ? { fillOpacity } : {}),
+    ...(drawOpacity !== undefined ? { drawOpacity } : {}),
+    ...(opacity !== undefined ? { opacity } : {}),
+    ...(rotate !== undefined ? { rotate } : {}),
+  };
+};
 
 /** 自由文本 node 样式（无 shape 边框：padding0 + 无描边 + textColor 上提到子 Scope；色走文本而非 fill） */
-const textStyle = (textColor: string): IRNodeDefault => ({ padding: 0, strokeWidth: 0, textColor });
+const textStyle = (textColor: string, mark: PointMark): IRNodeDefault => {
+  const padding = mark.padding?.kind === 'constant' ? mark.padding.value : undefined;
+  const opacity = mark.opacity?.kind === 'constant' ? mark.opacity.value : undefined;
+  const rotate = mark.rotate?.kind === 'constant' ? mark.rotate.value : undefined;
+  return {
+    padding: padding ?? 0,
+    strokeWidth: 0,
+    textColor,
+    ...(opacity !== undefined ? { opacity } : {}),
+    ...(rotate !== undefined ? { rotate } : {}),
+  };
+};
 
 /**
  * 取一行的位置通道值 → [xValue, yValue]（坐标系无关；投影交给 frame.project，frame 把 x/y 重解释为对应角色）
@@ -155,13 +203,51 @@ const attachMarkLayer = (layer: IRScope, mark: Mark, markProvenance: MarkProvena
  */
 const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (mark.type !== PlotMark.Point) return null;
-  const { colorOf, defaultColor = DEFAULT_FILL, sizeOf, opacityOf, shapeOf, labelOf } = channels;
+  const {
+    colorOf,
+    defaultColor = DEFAULT_FILL,
+    sizeOf,
+    opacityOf,
+    shapeOf,
+    strokeOf,
+    strokeWidthOf,
+    fillOpacityOf,
+    drawOpacityOf,
+    rotateOf,
+    paddingOf,
+    minimumSizeOf,
+    minimumWidthOf,
+    minimumHeightOf,
+    zIndexOf,
+    labelOf,
+  } = channels;
   const isText = mark.encoding.text !== undefined;
   const dx = mark.dx ?? 0;
   const dy = mark.dy ?? 0;
+  const constantZIndex = mark.zIndex?.kind === 'constant' ? mark.zIndex.value : undefined;
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
+    const applyDynamicNodeStyle = (node: IRNode): void => {
+      const padding = paddingOf?.(row);
+      if (padding !== undefined) node.padding = padding;
+      const minimumSize = minimumSizeOf?.(row);
+      if (minimumSize !== undefined) node.minimumSize = minimumSize;
+      const minimumWidth = minimumWidthOf?.(row);
+      if (minimumWidth !== undefined) node.minimumWidth = minimumWidth;
+      const minimumHeight = minimumHeightOf?.(row);
+      if (minimumHeight !== undefined) node.minimumHeight = minimumHeight;
+      const fillOpacity = fillOpacityOf?.(row);
+      if (fillOpacity !== undefined) node.fillOpacity = fillOpacity;
+      const drawOpacity = drawOpacityOf?.(row);
+      if (drawOpacity !== undefined) node.drawOpacity = drawOpacity;
+      const opacity = opacityOf?.(row);
+      if (opacity !== undefined) node.opacity = opacity;
+      const rotate = rotateOf?.(row);
+      if (rotate !== undefined) node.rotate = rotate;
+      const zIndex = zIndexOf?.(row) ?? constantZIndex;
+      if (zIndex !== undefined) node.zIndex = zIndex;
+    };
     if (isText) {
       // 文本 glyph：投影同 point（roleValues + projectRoles，坐标系无关）；内容缺失跳过；dx/dy 锚点像素微调
       const point = frame.projectRoles(roleValues(mark, row, frame));
@@ -170,6 +256,7 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
       if (text === undefined) continue;
       const position: [number, number] = dx === 0 && dy === 0 ? point : [point[0] + dx, point[1] + dy];
       const base: IRNode = { type: 'node', position, text };
+      applyDynamicNodeStyle(base);
       placed.push({ color: colorOf?.(row), node: decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined) });
       continue;
     }
@@ -177,20 +264,27 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
     const point = datumAnchor(mark, row, frame);
     if (!point) continue;
     const base: IRNode = { type: 'node', position: point };
+    applyDynamicNodeStyle(base);
     const radius = sizeOf?.(row);
     if (radius !== undefined) base.minimumSize = radius * Math.SQRT2;
-    const opacity = opacityOf?.(row);
-    if (opacity !== undefined) base.opacity = opacity;
     const shape = shapeOf?.(row);
     if (shape !== undefined) base.shape = shape;
+    const stroke = strokeOf?.(row);
+    if (stroke !== undefined) base.stroke = stroke;
+    const strokeWidth = strokeWidthOf?.(row);
+    if (strokeWidth !== undefined) base.strokeWidth = strokeWidth;
     const node = attachDatumLabel(decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined), mark, row, labelOf);
     placed.push({ color: colorOf?.(row), node });
   }
   if (placed.length === 0) return null;
-  const styleFor = isText ? textStyle : pointStyle;
+  const fillConstant = mark.fill?.kind === 'constant' ? mark.fill.value : undefined;
   const layer: IRScope = !colorOf
-    ? { type: 'scope', nodeDefault: styleFor(defaultColor), children: placed.map(p => p.node) }
-    : colorGroupedScope(placed, styleFor);
+    ? {
+        type: 'scope',
+        nodeDefault: isText ? textStyle(typeof fillConstant === 'string' ? fillConstant : defaultColor, mark) : pointStyle(fillConstant ?? defaultColor, mark),
+        children: placed.map(p => p.node),
+      }
+    : colorGroupedScope(placed, fill => (isText ? textStyle(fill, mark) : pointStyle(fill, mark)));
   return attachMarkLayer(layer, mark, markProvenance);
 };
 

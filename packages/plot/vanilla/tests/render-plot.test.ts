@@ -185,7 +185,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       data: { reference: 'soils' },
       scales: [{ type: 'ordinal', name: 'col' }],
       coordinate: { type: 'ternary2D' },
-      marks: [{ type: 'point', encoding: { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' }, color: { field: 'region', scale: 'col' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'region', scale: 'col' }, encoding: { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' } } }],
       guides: [
         { type: 'axis', dimension: 'x' },
         { type: 'axis', dimension: 'y' },

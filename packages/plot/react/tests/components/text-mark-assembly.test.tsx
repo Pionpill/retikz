@@ -43,13 +43,13 @@ describe('priority-1 宿主 mark label 扁平 props → IR mark.label', () => {
 
 describe('priority-2 PointMark text 扁平 props → IR point mark', () => {
   it('react-textmark-encoding-assembly：PointMark text → type point、encoding.text、x/y/color、dx/dy 落顶层', () => {
-    const spec = buildPlotSpec(<PointMark x="month" y="revenue" text="revenue" color="cat" dy={-8} />, '__plot');
-    const mark = spec.marks[0] as { type: string; dx?: number; dy?: number; encoding: Record<string, unknown> };
+    const spec = buildPlotSpec(<PointMark x="month" y="revenue" text="revenue" color="cat" dy={-8} />, '__plot', { dataFieldNames: new Set(['cat']) });
+    const mark = spec.marks[0] as { type: string; dx?: number; dy?: number; color?: unknown; encoding: Record<string, unknown> };
     expect(mark.type).toBe('point');
     expect(mark.encoding.text).toEqual({ field: 'revenue' });
     expect(mark.encoding.x).toEqual({ field: 'month' });
     expect(mark.encoding.y).toEqual({ field: 'revenue' });
-    expect(mark.encoding.color).toEqual({ field: 'cat', scale: '__color' });
+    expect(mark.color).toEqual({ kind: 'field', value: 'cat', scale: '__color' });
     expect(mark.dy).toBe(-8);
     expect(mark).not.toHaveProperty('dx');
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();

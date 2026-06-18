@@ -191,7 +191,7 @@ describe('ternary2D guide + color', () => {
       data: { reference: 'd' },
       scales: [{ type: 'ordinal', name: 'col', range: ['#aa', '#bb'] }],
       coordinate: { type: 'ternary2D' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' }, color: { field: 'region', scale: 'col' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'region', scale: 'col' }, encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' } } }],
     });
     const layer = firstLayer(spec, { d: [{ x: 1, y: 1, z: 1, region: 'X' }, { x: 2, y: 1, z: 1, region: 'Y' }] }, opts);
     expect(layer.children).toHaveLength(2);

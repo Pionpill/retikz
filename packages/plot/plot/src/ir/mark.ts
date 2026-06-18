@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ValueOf } from '@retikz/core';
+import { PaintSpecSchema, type ValueOf } from '@retikz/core';
 import { ChannelSchema, EncodingSchema, MarkLabelSchema, PointEncodingSchema, StyleEncodingSchema } from './encoding';
 
 /**
@@ -71,9 +71,71 @@ const positionalLabel = {
   label: MarkLabelSchema.optional().describe('priority-1 datum label: lowered onto each datum Node.label (core border-relative placement)'),
 };
 
+export const MarkValueKind = {
+  /** 从数据字段解析视觉值 */
+  Field: 'field',
+  /** 直接使用常量视觉值 */
+  Constant: 'constant',
+} as const;
+
+const markValueFieldVariant = (description: string): z.ZodObject<{ kind: z.ZodLiteral<'field'>; value: z.ZodString; scale: z.ZodOptional<z.ZodString> }> =>
+  z.object({
+    kind: z.literal(MarkValueKind.Field).describe('Field binding variant'),
+    value: z.string().min(1).describe(description),
+    scale: z.string().min(1).optional().describe('Optional scale name for this field-bound style value'),
+  });
+
+const markValueSchema = <T extends z.ZodTypeAny>(constantValue: T, fieldDescription: string, constantDescription: string, schemaDescription: string) =>
+  z
+    .discriminatedUnion('kind', [
+      markValueFieldVariant(fieldDescription).describe(`Field-bound ${schemaDescription}`),
+      z
+        .object({
+          kind: z.literal(MarkValueKind.Constant).describe('Constant value variant'),
+          value: constantValue.describe(constantDescription),
+        })
+        .describe(`Constant ${schemaDescription}`),
+    ])
+    .describe(`${schemaDescription}: field-bound datum value or constant value`);
+
+const StylePaintSchema = z.union([z.string(), PaintSpecSchema]);
+const StyleNumberSchema = z.number().finite();
+const StyleNonnegativeNumberSchema = z.number().finite().nonnegative();
+const StyleOpacitySchema = z.number().min(0).max(1);
+
+export const PointFillStyleSchema = markValueSchema(StylePaintSchema, 'Data field path bound to point fill paint', 'Constant core Node fill paint', 'point fill style value');
+export const PointColorStyleSchema = markValueSchema(z.string().min(1), 'Data field path bound to point color', 'Constant point color', 'point color value');
+export const PointSizeStyleSchema = markValueSchema(StyleNonnegativeNumberSchema, 'Data field path bound to point size', 'Constant final glyph radius', 'point size value');
+export const PointShapeStyleSchema = markValueSchema(z.string().min(1), 'Data field path bound to point shape', 'Constant core Node shape name', 'point shape value');
+export const PointStrokeStyleSchema = markValueSchema(z.string().min(1), 'Data field path bound to point stroke color', 'Constant core Node stroke color', 'point stroke style value');
+export const PointNumberStyleSchema = markValueSchema(StyleNumberSchema, 'Data field path bound to a numeric point style value', 'Constant numeric style value', 'point numeric style value');
+export const PointNonnegativeNumberStyleSchema = markValueSchema(
+  StyleNonnegativeNumberSchema,
+  'Data field path bound to a non-negative point style value',
+  'Constant non-negative style value',
+  'point non-negative numeric style value',
+);
+export const PointOpacityStyleSchema = markValueSchema(StyleOpacitySchema, 'Data field path bound to an opacity style value', 'Constant opacity value 0..1', 'point opacity style value');
+export const PointZIndexStyleSchema = markValueSchema(z.number().int().finite(), 'Data field path bound to zIndex', 'Constant integer zIndex value', 'point zIndex style value');
+
 export const PointMarkSchema = z
   .object({
     type: z.literal(PlotMark.Point).describe('Discriminator: one glyph or text label per record'),
+    color: PointColorStyleSchema.optional().describe('Glyph color: field-bound datum channel or constant color; overrides constant fill'),
+    size: PointSizeStyleSchema.optional().describe('Glyph size: field-bound datum channel via a sqrt radius scale or constant final radius'),
+    shape: PointShapeStyleSchema.optional().describe('Glyph shape: field-bound categorical channel or constant core Node shape name'),
+    fill: PointFillStyleSchema.optional().describe('Glyph fill: field-bound datum channel or constant core Node fill paint'),
+    stroke: PointStrokeStyleSchema.optional().describe('Glyph stroke color: field-bound datum channel or constant core Node stroke color'),
+    strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe('Glyph stroke width: field-bound datum channel or constant core Node stroke width'),
+    fillOpacity: PointOpacityStyleSchema.optional().describe('Glyph fill opacity: field-bound datum channel or constant opacity 0..1'),
+    drawOpacity: PointOpacityStyleSchema.optional().describe('Glyph stroke opacity: field-bound datum channel or constant opacity 0..1'),
+    opacity: PointOpacityStyleSchema.optional().describe('Glyph whole-node opacity: field-bound datum channel or constant opacity 0..1'),
+    rotate: PointNumberStyleSchema.optional().describe('Glyph rotation in degrees: field-bound datum channel or constant angle'),
+    padding: PointNonnegativeNumberStyleSchema.optional().describe('Node padding in user units: field-bound datum channel or constant padding; default 0 for point glyphs'),
+    minimumSize: PointNonnegativeNumberStyleSchema.optional().describe('Minimum visual size: field-bound datum channel or constant size; overridden per datum by size'),
+    minimumWidth: PointNonnegativeNumberStyleSchema.optional().describe('Minimum visual width: field-bound datum channel or constant width'),
+    minimumHeight: PointNonnegativeNumberStyleSchema.optional().describe('Minimum visual height: field-bound datum channel or constant height'),
+    zIndex: PointZIndexStyleSchema.optional().describe('Drawing order hint: field-bound datum channel or constant zIndex'),
     dx: z
       .number()
       .finite()
@@ -265,6 +327,32 @@ export const MarkSchema = z
 
 /** point mark（散点 + 文本标签） */
 export type PointMark = z.infer<typeof PointMarkSchema>;
+/** mark 值来源变体 */
+export type MarkValueKindValue = ValueOf<typeof MarkValueKind>;
+/** mark 样式值；需要 scale 的属性在此基础上交叉 `{ scale?: string }` */
+export type MarkValueType<T> = { kind: 'field'; value: string } | { kind: 'constant'; value: T };
+/** mark 样式值，字段变体可绑定 scale */
+export type ScaledMarkValueType<T> = MarkValueType<T> & { scale?: string };
+/** PointMark 颜色样式值（field / constant） */
+export type PointColorStyle = z.infer<typeof PointColorStyleSchema>;
+/** PointMark 尺寸样式值（field / constant） */
+export type PointSizeStyle = z.infer<typeof PointSizeStyleSchema>;
+/** PointMark 形状样式值（field / constant） */
+export type PointShapeStyle = z.infer<typeof PointShapeStyleSchema>;
+/** PointMark 填充样式值（field / constant） */
+export type PointFillStyle = z.infer<typeof PointFillStyleSchema>;
+/** PointMark 描边颜色样式值（field / constant） */
+export type PointStrokeStyle = z.infer<typeof PointStrokeStyleSchema>;
+/** PointMark 描边宽度样式值（field / constant） */
+export type PointStrokeWidthStyle = z.infer<typeof PointNonnegativeNumberStyleSchema>;
+/** PointMark 数值样式值（field / constant） */
+export type PointNumberStyle = z.infer<typeof PointNumberStyleSchema>;
+/** PointMark 非负数值样式值（field / constant） */
+export type PointNonnegativeNumberStyle = z.infer<typeof PointNonnegativeNumberStyleSchema>;
+/** PointMark 透明度样式值（field / constant） */
+export type PointOpacityStyle = z.infer<typeof PointOpacityStyleSchema>;
+/** PointMark zIndex 样式值（field / constant） */
+export type PointZIndexStyle = z.infer<typeof PointZIndexStyleSchema>;
 /** path mark（折线 / 轮廓） */
 export type PathMark = z.infer<typeof PathMarkSchema>;
 /** region mark（面积 / 填充雷达） */

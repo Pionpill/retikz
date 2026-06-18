@@ -53,7 +53,7 @@ const pointSpec = (colorScale: Record<string, unknown>): PlotSpec =>
     data: { reference: 'd' },
     scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { ...colorScale, name: 'col' }],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'v', scale: 'col' } } }],
+    marks: [{ type: 'point', color: { kind: 'field', value: 'v', scale: 'col' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
   });
 
 describe('离散色 · quantize 等宽切档求值（alpha.8 ADR-02）', () => {

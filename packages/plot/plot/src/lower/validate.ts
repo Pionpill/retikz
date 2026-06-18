@@ -7,6 +7,11 @@ const addChannelField = (fields: Set<string>, channel: Channel | undefined): voi
   if (channel?.field !== undefined) fields.add(channel.field);
 };
 
+/** 把 field/constant 样式通道的字段路径加入集合；常量样式不引用外部数据 */
+const addStyleField = (fields: Set<string>, channel: { kind: 'field' | 'constant'; value: unknown } | undefined): void => {
+  if (channel?.kind === 'field') fields.add(String(channel.value));
+};
+
 /**
  * 收集 plot spec 里所有「用户源字段」（引用外部数据集的逻辑字段）
  * @description 含 encoding `x`/`y`/`z`/`color` 的 field + mark `order`/`series` + ribbon source/target/value/endWidth
@@ -32,12 +37,25 @@ export const collectUserSourceFields = (spec: PlotSpec): Set<string> => {
       // ternary 的 z 位置角色通道同样是用户源字段：须进 model strict 校验 + 归一化 coerce（不漏过数据契约）
       addChannelField(fields, mark.encoding.z);
     }
-    addChannelField(fields, mark.encoding.color);
-    // PointMark 专属非位置通道（size / opacity）的字段也是用户源字段（参与 strict 校验 + 类型推断）
+    // PointMark 专属非位置通道与 Node 样式字段也是用户源字段（参与 strict 校验 + 类型推断）
     if (mark.type === PlotMark.Point) {
-      addChannelField(fields, mark.encoding.size);
-      addChannelField(fields, mark.encoding.opacity);
-      addChannelField(fields, mark.encoding.shape);
+      addStyleField(fields, mark.color);
+      addStyleField(fields, mark.size);
+      addStyleField(fields, mark.shape);
+      addStyleField(fields, mark.fill);
+      addStyleField(fields, mark.stroke);
+      addStyleField(fields, mark.strokeWidth);
+      addStyleField(fields, mark.fillOpacity);
+      addStyleField(fields, mark.drawOpacity);
+      addStyleField(fields, mark.opacity);
+      addStyleField(fields, mark.rotate);
+      addStyleField(fields, mark.padding);
+      addStyleField(fields, mark.minimumSize);
+      addStyleField(fields, mark.minimumWidth);
+      addStyleField(fields, mark.minimumHeight);
+      addStyleField(fields, mark.zIndex);
+    } else {
+      addChannelField(fields, mark.encoding.color);
     }
     if (mark.type === PlotMark.Path || mark.type === PlotMark.Region) {
       if (mark.order !== undefined) fields.add(mark.order);

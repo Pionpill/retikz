@@ -82,6 +82,88 @@ describe('lowerPlots (ADR-06)', () => {
     expect((layer.children[0] as IRNode).position).toEqual([0, 240]);
   });
 
+  it('lower_point_applies_constant_node_style', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'xMonth' },
+        { type: 'linear', name: 'yRevenue' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+      marks: [
+        {
+          type: 'point',
+          fill: { kind: 'constant', value: '#f8fafc' },
+          stroke: { kind: 'constant', value: '#0f172a' },
+          strokeWidth: { kind: 'constant', value: 1.5 },
+          fillOpacity: { kind: 'constant', value: 0.7 },
+          drawOpacity: { kind: 'constant', value: 0.9 },
+          opacity: { kind: 'constant', value: 0.8 },
+          rotate: { kind: 'constant', value: 45 },
+          padding: { kind: 'constant', value: 2 },
+          minimumSize: { kind: 'constant', value: 14 },
+          minimumWidth: { kind: 'constant', value: 16 },
+          minimumHeight: { kind: 'constant', value: 12 },
+          zIndex: { kind: 'constant', value: 3 },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+      ],
+    });
+    const layer = firstLayer(spec, { sales: SALES }, opts);
+    expect(layer.nodeDefault).toMatchObject({
+      shape: 'circle',
+      fill: '#f8fafc',
+      stroke: '#0f172a',
+      strokeWidth: 1.5,
+      fillOpacity: 0.7,
+      drawOpacity: 0.9,
+      opacity: 0.8,
+      rotate: 45,
+      padding: 2,
+      minimumSize: 14,
+      minimumWidth: 16,
+      minimumHeight: 12,
+    });
+    expect((layer.children[0] as IRNode).zIndex).toBe(3);
+  });
+
+  it('lower_point_applies_stroke_channels_per_datum', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'xMonth' },
+        { type: 'linear', name: 'yRevenue' },
+        { type: 'ordinal', name: 'strokeRegion', domain: ['north', 'south'], range: ['#0f172a', '#dc2626'] },
+        { type: 'linear', name: 'strokeWeight', domain: [10, 30], range: [1, 3], clamp: true },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+      marks: [
+        {
+          type: 'point',
+          stroke: { kind: 'field', value: 'region', scale: 'strokeRegion' },
+          strokeWidth: { kind: 'field', value: 'density', scale: 'strokeWeight' },
+          encoding: {
+            x: { field: 'month' },
+            y: { field: 'revenue' },
+          },
+        },
+      ],
+    });
+    const data = [
+      { month: 0, revenue: 10, region: 'north', density: 10 },
+      { month: 1, revenue: 14, region: 'south', density: 30 },
+    ];
+    const layer = firstLayer(spec, { sales: data }, opts);
+    expect(layer.nodeDefault?.stroke).toBeUndefined();
+    expect(layer.nodeDefault?.strokeWidth).toBeUndefined();
+    expect(layer.children[0]).toMatchObject({ stroke: '#0f172a', strokeWidth: 1 });
+    expect(layer.children[1]).toMatchObject({ stroke: '#dc2626', strokeWidth: 3 });
+  });
+
   it('compile_line_to_scene_ok', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [lineSpec] },
@@ -336,7 +418,7 @@ describe('lowerPlots color (ADR-04)', () => {
       data: { reference:'c' },
       scales,
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { field: 'continent', scale: 'col' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'continent', scale: 'col' }, encoding: { x: { field: 'gdp' }, y: { field: 'life' } } }],
     });
 
   it('point_color_groups_into_subscopes', () => {
@@ -385,7 +467,7 @@ describe('lowerPlots color (ADR-04)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { field: 'continent' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'continent' }, encoding: { x: { field: 'gdp' }, y: { field: 'life' } } }],
     });
     const layer = firstLayer(spec, { c: COUNTRIES }, opts);
     expect(layer.children).toHaveLength(2);
@@ -402,7 +484,7 @@ describe('lowerPlots color (ADR-04)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { value: '#333' } } }],
+      marks: [{ type: 'point', color: { kind: 'constant', value: '#333' }, encoding: { x: { field: 'gdp' }, y: { field: 'life' } } }],
     });
     const layer = firstLayer(spec, { c: COUNTRIES }, opts);
     expect(layer.children).toHaveLength(1);

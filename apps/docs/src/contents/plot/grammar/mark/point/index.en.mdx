@@ -43,15 +43,15 @@ This is why PointMark usually does not need coordinate-specific adapters. The co
 
 ### Style Props
 
-`color` / `size` / `opacity` / `shape` / `strokeField` / `strokeWidthField` are visual channels for the point glyph. They change how the glyph is drawn without changing the projected anchor.
+`color` / `size` / `opacity` / `shape` / `stroke` / `strokeWidth` can all act as visual channels for the point glyph. They change how the glyph is drawn without changing the projected anchor.
 
-Use constant Node style props when the whole layer should share one visual treatment, such as `fill`, `stroke`, `strokeWidth`, `fillOpacity`, or `rotate`. `strokeField` / `strokeWidthField` are per-datum channels and override the corresponding constant stroke defaults; the full size, layering, and opacity split is listed in the API table.
+Node style props such as `stroke`, `strokeWidth`, `opacity`, `fillOpacity`, and `rotate` can all bind to data fields. At the component layer, strings and numbers are syntax sugar: a string becomes `{ kind: 'field', value: FieldName }` when it matches a data field; if it does not match a field but is a valid constant, it becomes `{ kind: 'constant', value }`; otherwise it is skipped with a warning. Use the explicit form when you need to remove ambiguity.
 
 <ComponentPreview name="point-style" sourceFiles={['point-api.data.ts']} />
 
 ### Text Props
 
-`text` makes that PointMark layer produce a borderless text Node. To keep the dot visible, layer a normal PointMark next to it. `dx` / `dy` apply a small screen-space offset.
+For text attached to dots, prefer `label`: it writes to the core `Node.label` on each point, so a single `PointMark` can draw the dot and its label. `labelPosition`, `labelDistance`, and `labelPin` mirror core Node label placement, spacing, and leader lines. `text` is a different mode: it replaces the point glyph with a borderless text Node, useful when the mark itself should be text. `dx` / `dy` apply a small screen-space offset.
 
 <ComponentPreview name="point-text" sourceFiles={['point-api.data.ts']} />
 
@@ -82,6 +82,8 @@ Ternary coordinates consume `x` / `y` / `z`, normalize each row, and project the
 `PointMark` is a built-in registered mark. The React `<PointMark>` component does not render DOM or draw points by itself; `<Plot>` collects it into mark IR with `type: 'point'` and records field channels such as `x` / `y` / `z`.
 
 At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `PointMark` resolves to the `PlotMark.Point` entry, which calls `lowerPoint`. For each row, `lowerPoint` reads the position-channel values, asks the current coordinate frame to `projectRoles(...)`, then lowers the projected point into a core `Node`.
+
+This means scatter points ultimately reuse [@retikz/core Node](/core/components/node/overview); `PointMark` only computes positions from data and coordinates, while shape, size, fill, and text still come from core Node.
 
 For registration, focus on the `PointMark` registry entry and the `lowerPoint` function that performs the lowering:
 
@@ -143,7 +145,7 @@ The function runs in four steps:
 
 1. Check that the mark is `PlotMark.Point`; otherwise return `null`.
 2. For each row, project the position through `datumAnchor` or `frame.projectRoles(...)`; rows that cannot be projected are skipped.
-3. Regular points become core `Node`s with optional `size`, `opacity`, `shape`, `strokeField`, `strokeWidthField`, or constant Node style; text points become text Nodes.
+3. Regular points become core `Node`s with optional `size`, `opacity`, `shape`, `stroke`, `strokeWidth`, or constant Node style; points with `label` fill `Node.label`, while text points become text Nodes.
 4. Finally, choose the layer structure from the `color` channel: without color encoding, all nodes share one `nodeDefault`; with color encoding, nodes are split into child `Scope`s by color before mark-layer metadata is attached.
 
 | Trait | Behavior |
@@ -151,40 +153,40 @@ The function runs in four steps:
 | Coordinate-agnostic | The mark only consumes position roles; cartesian, polar, ternary, or custom coordinates decide how those roles are interpreted |
 | One Node per row | A regular scatter point becomes one datum Node; rows whose position cannot project to a screen point are skipped |
 | Shared styling | Without color encoding, an outer `nodeDefault` shares default style; with `color`, nodes are grouped by color to keep IR compact |
-| Point-only channels | `size` / `opacity` / `shape` / `strokeField` / `strokeWidthField` only apply to `PointMark`, and are written onto each datum Node |
+| Point-only channels | `size` / `opacity` / `shape` / `stroke` / `strokeWidth` only apply to `PointMark`, and are written onto each datum Node |
 | Text variant | Set `text` and the mark produces borderless text Nodes instead of dot glyphs, while reusing the same position projection |
 
 ## API
 
 Most `PointMark` props are data channels: position props decide where each row is projected, while style props decide how the point is displayed. Text, labels, and general props such as `id` are grouped separately. `FieldName` means a data field name or field path, such as `region` / `user.age`.
 
+Style bindings use one shared `MarkValueType<T>` type: `{ kind: 'field', value: FieldName } | { kind: 'constant', value: T }`. When a binding needs an explicit scale, use `MarkValueType<T> & { scale?: string }`. Single values such as `FieldName`, `number`, or `string` are component-level sugar that lowers into this structure.
+
 | Category | Prop | Type | Default | Description |
 | --- | --- | --- | --- | --- |
 | Position | `x` | `FieldName?` | — | Field bound to the x position channel |
 | | `y` | `FieldName?` | — | Field bound to the y position channel |
 | | `z` | `FieldName?` | — | Field bound to the third ternary component |
-| Style channel | `color` | `FieldName?` | — | Field bound to the color channel; overrides constant `fill` |
-| | `size` | `FieldName?` | — | Field bound to the size channel; overrides `minimumSize` per datum |
-| | `opacity` | `FieldName \| number?` | — | String means an opacity field; number means constant whole-node opacity |
-| | `shape` | `FieldName?` | — | Field bound to the shape channel |
-| | `strokeField` | `FieldName?` | — | Field bound to the stroke color channel; overrides constant `stroke` per datum |
-| | `strokeWidthField` | `FieldName?` | — | Field bound to the stroke-width channel; overrides constant `strokeWidth` per datum |
-| Constant style | `fill` | `string \| IRPaintSpec?` | `currentColor` | Constant fill; ignored when `color` is bound |
-| | `stroke` | `string?` | — | Constant stroke color |
-| | `strokeWidth` | `number?` | — | Constant stroke width |
-| | `fillOpacity` | `number?` | — | Constant fill opacity, 0..1 |
-| | `drawOpacity` | `number?` | — | Constant stroke opacity, 0..1 |
-| | `rotate` | `number?` | — | Glyph rotation in degrees |
-| | `padding` | `number?` | `0` | Core Node padding |
-| | `minimumSize` | `number?` | point default | Constant minimum visual size |
-| | `minimumWidth` / `minimumHeight` | `number?` | — | Constant minimum visual width / height |
-| | `zIndex` | `number?` | — | Drawing order hint |
-| Text | `text` | `FieldName?` | — | Field bound to text content |
-| | `format` | `string?` | — | Format string for `text` |
-| | `dx` / `dy` | `number?` | `0` | Fine offset from the projected anchor for text points |
-| | `label` | `FieldName?` | — | Field bound to the host label |
+| Style channel | `color` | `FieldName \| MarkValueType<string>?` | - | Field-bound color channel; valid CSS strings can be constant colors; overrides constant `fill` |
+| | `size` | `FieldName \| number \| MarkValueType<number>?` | - | Field-bound values map through a sqrt radius scale; numbers or explicit constants are final radius values |
+| | `opacity` | `FieldName \| number \| MarkValueType<number>?` | — | String means an opacity field; number means constant whole-node opacity |
+| | `shape` | `FieldName \| MarkValueType<string>?` | - | Field-bound categories map to glyph shapes; non-field strings can be constant core Node shape names |
+| | `stroke` | `FieldName \| MarkValueType<string>?` | — | String resolves as a field first; when no field exists and the value is a color, it becomes constant; explicit constants use `{ kind: 'constant', value }` |
+| | `strokeWidth` | `FieldName \| number \| MarkValueType<number>?` | — | String means a field; number means constant width; explicit form supports field / constant |
+| Node style | `fill` | `FieldName \| MarkValueType<string \| IRPaintSpec>?` | `currentColor` | Fill style; ignored when `color` is bound |
+| | `fillOpacity` | `FieldName \| number \| MarkValueType<number>?` | — | Fill opacity, 0..1 |
+| | `drawOpacity` | `FieldName \| number \| MarkValueType<number>?` | — | Stroke opacity, 0..1 |
+| | `rotate` | `FieldName \| number \| MarkValueType<number>?` | — | Glyph rotation in degrees |
+| | `padding` | `FieldName \| number \| MarkValueType<number>?` | `0` | Core Node padding |
+| | `minimumSize` | `FieldName \| number \| MarkValueType<number>?` | point default | Minimum visual size |
+| | `minimumWidth` / `minimumHeight` | `FieldName \| number \| MarkValueType<number>?` | — | Minimum visual width / height |
+| | `zIndex` | `FieldName \| number \| MarkValueType<number>?` | — | Drawing order hint |
+| Label | `label` | `FieldName?` | — | Field bound to host `Node.label`; keeps the point glyph |
 | | `labelFormat` | `string?` | — | Format string for `label` |
 | | `resolveLabel` | `(row) => string?` | — | Runtime label resolver; not in IR, requires `id` |
+| Text point | `text` | `FieldName?` | — | Field bound to text content; replaces the point glyph with a text Node |
+| | `format` | `string?` | — | Format string for `text` |
+| | `dx` / `dy` | `number?` | `0` | Fine offset from the projected anchor for text points |
 | General | `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
 
 ## Related

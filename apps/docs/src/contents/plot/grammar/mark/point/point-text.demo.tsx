@@ -7,14 +7,12 @@ import { points } from './point-api.data';
 const Demo: FC = () => (
   <Layout width={620} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
     <Plot data={points} width={300} height={220} x={0} y={20}>
-      <PointMark x="x" y="y" color="region" />
-      <PointMark x="x" y="y" text="label" dy={-12} />
+      <PointMark x="x" y="y" color="region" label="label" labelPosition="above" labelDistance={8} />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>
     <Plot data={points} width={260} height={260} coordinate="polar2D" x={340} y={0}>
-      <PointMark x="x" y="y" color="region" />
-      <PointMark x="x" y="y" text="label" dy={-12} />
+      <PointMark x="x" y="y" color="region" label="label" labelPosition="right" labelDistance={8} />
       <Axis dimension="angle" />
       <Axis dimension="radius" grid />
     </Plot>

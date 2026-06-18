@@ -89,7 +89,7 @@ describe('color × series · B/C 收口（alpha.7 ADR-03）', () => {
 
   // point 按 datum 着色，不拆系列（B/C：非 path mark 不引入 series）
   it('point_colors_per_datum_no_series', () => {
-    const spec = specOf({ type: 'point', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
+    const spec = specOf({ type: 'point', color: { kind: 'field', value: 'city', scale: 'col' }, encoding: { x: { field: 't' }, y: { field: 'v' } } });
     const nodes = collectNodes(firstLayer(spec, { d: SERIES_DATA }));
     expect(nodes).toHaveLength(4); // 每行一点，按 city 分色（子 Scope），不拆 path
   });
@@ -153,7 +153,7 @@ describe('plot colors default palette', () => {
         { type: 'ordinal', name: 'col' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'city', scale: 'col' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'city', scale: 'col' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     });
     const layer = firstLayer(spec, {
       d: [
@@ -170,12 +170,12 @@ describe('plot colors default palette', () => {
 
 describe('color 类型兼容校验（alpha.7 ADR-03）', () => {
   it('continuous_color_field_fails_loud', () => {
-    const spec = specOf({ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'v' } } });
+    const spec = specOf({ type: 'point', color: { kind: 'field', value: 'v' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } });
     expect(() => expandOf(spec, { d: [{ x: 0, y: 0, v: 1.5 }, { x: 1, y: 1, v: 2.5 }] })).toThrow(/continuous\/temporal color/);
   });
 
   it('temporal_color_field_fails_loud', () => {
-    const spec = specOf({ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'date' } } });
+    const spec = specOf({ type: 'point', color: { kind: 'field', value: 'date' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } });
     expect(() => expandOf(spec, { d: [{ x: 0, y: 0, date: '2024-01-01' }, { x: 1, y: 1, date: '2024-02-01' }] })).toThrow(/continuous\/temporal color/);
   });
 });

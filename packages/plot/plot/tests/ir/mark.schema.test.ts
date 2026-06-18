@@ -213,12 +213,12 @@ describe('MarkSchema (ADR-05)', () => {
 
   // alpha.7 ADR-02：size 通道仅 PointMark
   it('mark_point_with_size_field_valid', () => {
-    const m = { type: 'point', encoding: { x: { field: 'lng' }, y: { field: 'lat' }, size: { field: 'pop' } } };
+    const m = { type: 'point', size: { kind: 'field', value: 'pop' }, encoding: { x: { field: 'lng' }, y: { field: 'lat' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
   it('mark_point_with_size_value_valid', () => {
-    const m = { type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, size: { value: 6 } } };
+    const m = { type: 'point', size: { kind: 'constant', value: 6 }, encoding: { x: { field: 'x' }, y: { field: 'y' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
@@ -230,7 +230,7 @@ describe('MarkSchema (ADR-05)', () => {
 
   // alpha.7 ADR-04：opacity 通道仅 PointMark
   it('mark_point_with_opacity_valid', () => {
-    const m = { type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, opacity: { field: 'd' } } };
+    const m = { type: 'point', opacity: { kind: 'field', value: 'd' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
@@ -241,8 +241,52 @@ describe('MarkSchema (ADR-05)', () => {
 
   // alpha.7 ADR-05：shape 通道仅 PointMark
   it('mark_point_with_shape_valid', () => {
-    const m = { type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, shape: { field: 'cat' } } };
+    const m = { type: 'point', shape: { kind: 'field', value: 'cat' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_point_with_constant_node_style_valid', () => {
+    const m = {
+      type: 'point',
+      fill: { kind: 'constant', value: '#f8fafc' },
+      stroke: { kind: 'constant', value: '#0f172a' },
+      strokeWidth: { kind: 'constant', value: 1.5 },
+      fillOpacity: { kind: 'constant', value: 0.7 },
+      drawOpacity: { kind: 'constant', value: 0.9 },
+      opacity: { kind: 'constant', value: 0.8 },
+      rotate: { kind: 'constant', value: 45 },
+      padding: { kind: 'constant', value: 2 },
+      minimumSize: { kind: 'constant', value: 14 },
+      minimumWidth: { kind: 'constant', value: 16 },
+      minimumHeight: { kind: 'constant', value: 12 },
+      zIndex: { kind: 'constant', value: 3 },
+      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+    };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_point_with_stroke_channels_valid', () => {
+    const m = {
+      type: 'point',
+      encoding: {
+        x: { field: 'x' },
+        y: { field: 'y' },
+      },
+      stroke: { kind: 'field', value: 'region' },
+      strokeWidth: { kind: 'field', value: 'density' },
+      opacity: { kind: 'field', value: 'density' },
+    };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_interval_strips_stroke_channels', () => {
+    const parsed = MarkSchema.parse({
+      type: 'interval',
+      stroke: { kind: 'field', value: 'region' },
+      strokeWidth: { kind: 'field', value: 'density' },
+      encoding: { x: { field: 'c' }, y: { field: 'v' } },
+    });
+    expect(parsed).toEqual({ type: 'interval', encoding: { x: { field: 'c' }, y: { field: 'v' } } });
   });
 
   it('mark_interval_strips_shape', () => {
@@ -391,7 +435,7 @@ describe('MarkSchema (ADR-05)', () => {
   });
 
   it('mark_text_json_round_trip', () => {
-    const m = { type: 'point', id: 't', dx: 2, dy: 3, encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label', format: ',.0f' }, color: { value: '#333' } } };
+    const m = { type: 'point', id: 't', dx: 2, dy: 3, color: { kind: 'constant', value: '#333' }, encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label', format: ',.0f' } } };
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 

@@ -185,7 +185,7 @@ describe('ADR-04 priority-2 兜底自由 TextMark（新建带 text 的 Node）',
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'c' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label' }, color: { field: 'cat', scale: 'c' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'cat', scale: 'c' }, encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label' } } }],
       guides: [],
     });
     const layer = expandOf(spec, POINT_ROWS);
