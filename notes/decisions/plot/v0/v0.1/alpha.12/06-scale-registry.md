@@ -88,7 +88,7 @@ type PositionScaleDefinition<Def extends ScaleOp = ScaleOp> = {
   isFieldCompatible: (fieldType: PlotFieldTypeValue) => boolean;
   /**
    * 能否作 interval / area 的值轴（baseline 含 0）；替代 assertBaselineScaleCompatible。默认 true，log/pow/sqrt → false。
-   * ⚠️ v0.1 最小契约：现行 baseline guard 仅按 mark 类型 + 假设 interval/area baseline 含 0；后续若需按 def/domain/baseline/mark role 精判，升为 predicate（AGENTS.md 临时设计备注，已写入 roadmap）。
+   * ⚠️ v0.1 最小契约：现行 baseline guard 仅按 mark 类型 + 假设 interval/area baseline 含 0；后续若需按 def/domain/baseline/mark role 精判，升为 predicate（AGENTS.md 临时设计——本 ADR Accepted 封板前把此项同步进版本 roadmap）。
    */
   allowsBaseline?: boolean;
   /** 建 PositionScale（coordinate / bandwidth / ticks / range / setRange 全实现）；guide 经 ticks() 自动适配，无需额外 guide 契约 */
