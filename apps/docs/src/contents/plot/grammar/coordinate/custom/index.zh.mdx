@@ -67,6 +67,8 @@ const bridge = defineCoordinate({
 
 `CoordinateResolveContext` 提供 `collectRoleValues`、`resolveScaleForRole`、`buildPositionScale`、`axisGuides`、`lowerGuide` 和 `lowerCustomAxis`。自定义坐标系 v1 默认使用整张画布作为 `plotArea`；它不会自动获得 cartesian 那种 margin / legend 预留收窄。
 
+`createCoordinateFrame` 的第四个参数可以补充坐标能力。`roleScales` 让自定义轴和 interval 的逻辑 cell 构造能读到每个 role 的 scale；`projectCell` 把这个逻辑 cell 投影成 `rect` / `sector` / `contour`。若缺少 `projectCell`，cell 类 mark 会 fail-loud；若有 `projectCell` 但缺少对应 `roleScales`，IntervalMark 也会 fail-loud，因为 mark 层无法凭空把字段值变成输出区间。
+
 ## 迁移
 
 旧的 `{ type: 'custom', name, roles, params }` 写法已经移除。把 `name` 提升为真正的 `type`，把 `roles` 移进 definition，把 `params` 拆成扁平 JSON 配置：
@@ -79,4 +81,4 @@ const bridge = defineCoordinate({
 
 ## 限制
 
-<ComponentAlert type="warn" title="进阶扩展" description="自定义坐标系默认支持 PointMark；若 frame 提供 projectCell，interval 等区间类 mark 也能落地。曲线轴可画，但网格、自动 margin/legend 收窄、三维坐标系、多 plot 组合仍留作后续。" />
+<ComponentAlert type="warn" title="进阶扩展" description="自定义坐标系默认支持 PointMark；若 frame 同时提供 roleScales 和 projectCell，IntervalMark 等区间类 mark 也能落地。曲线轴可画，但网格、自动 margin/legend 收窄、三维坐标系、多 plot 组合仍留作后续。" />

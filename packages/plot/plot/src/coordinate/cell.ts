@@ -24,6 +24,9 @@ export type CellGeometry =
   | { kind: 'sector'; center: Position; innerRadius: number; outerRadius: number; startAngle: number; endAngle: number }
   | { kind: 'contour'; points: Array<Position> };
 
+/** 度 → 弧度；cell 几何锚点与极坐标 frame 使用同一角度约定。 */
+const DEG_TO_RAD = Math.PI / 180;
+
 /** 读取 cell 在指定位置角色上的输出空间区间；缺失时 fail-loud。 */
 export const cellInterval = (cell: Cell, role: DimensionRole): [number, number] => {
   const interval = cell.intervals[role];
@@ -31,17 +34,47 @@ export const cellInterval = (cell: Cell, role: DimensionRole): [number, number] 
   return interval;
 };
 
-/** 按候选角色顺序读取第一个存在的区间，用于二维正交 cell 的 primary / secondary 兜底取值。 */
-const firstCellInterval = (cell: Cell, roles: ReadonlyArray<DimensionRole>): [number, number] => {
-  for (const role of roles) {
-    const interval = cell.intervals[role];
-    if (interval !== undefined) return interval;
+/** 点集 AABB 中心；空点集 / 少于 3 点的 contour 不是可渲染区域，返回 null。 */
+export const contourAabbCenter = (points: ReadonlyArray<Position>): Position | null => {
+  if (points.length < 3) return null;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const [x, y] of points) {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
   }
-  throw new Error(`lowerPlots: cell is missing interval for roles [${roles.join(', ')}]`);
+  return [(minX + maxX) / 2, (minY + maxY) / 2];
 };
 
-/** densifyCellContour 选项：标记哪条位置轴是曲线（曲边每边 N 段，直边每边 1 段） */
+/**
+ * CellGeometry → 锚点屏幕位置；不可渲染的 contour 返回 null。
+ * @description lowering 与 locator 共用这一判断，避免空 contour 在渲染侧被跳过、locator 侧却返回 NaN。
+ */
+export const cellGeometryAnchor = (geometry: CellGeometry): Position | null => {
+  if (geometry.kind === 'rect') return geometry.position;
+  if (geometry.kind === 'sector') {
+    const midAngle = ((geometry.startAngle + geometry.endAngle) / 2) * DEG_TO_RAD;
+    const midRadius = (Math.min(geometry.innerRadius, geometry.outerRadius) + Math.max(geometry.innerRadius, geometry.outerRadius)) / 2;
+    return [geometry.center[0] + midRadius * Math.cos(midAngle), geometry.center[1] + midRadius * Math.sin(midAngle)];
+  }
+  return contourAabbCenter(geometry.points);
+};
+
+/** 判断 CellGeometry 是否能产出实际图元；contour 少于 3 点时与 core contour 语义一致地跳过。 */
+export const isRenderableCellGeometry = (geometry: CellGeometry): boolean => geometry.kind !== 'contour' || contourAabbCenter(geometry.points) !== null;
+
+/**
+ * densifyCellContour 选项：标记哪条位置轴是曲线（曲边每边 N 段，直边每边 1 段），并声明 cell 中的 primary / secondary 角色。
+ */
 export type DensifyCellContourOptions = {
+  /** primary 输出区间所在角色；默认 x。 */
+  primaryRole?: DimensionRole;
+  /** secondary 输出区间所在角色；默认 y。 */
+  secondaryRole?: DimensionRole;
   /** primary 轴是否曲线（沿 primary 走的两条边按 N 段密采样；false → 每边 1 段） */
   curvedPrimary?: boolean;
   /** secondary 轴是否曲线（沿 secondary 走的两条边按 N 段密采样；false → 每边 1 段） */
@@ -60,8 +93,8 @@ export const densifyCellContour = (
   projectFn: (primary: number, secondary: number) => Position | null,
   options?: DensifyCellContourOptions,
 ): Array<Position> => {
-  const [p0, p1] = firstCellInterval(cell, ['x']);
-  const [s0, s1] = firstCellInterval(cell, ['y']);
+  const [p0, p1] = cellInterval(cell, options?.primaryRole ?? 'x');
+  const [s0, s1] = cellInterval(cell, options?.secondaryRole ?? 'y');
   const primarySegments = options?.curvedPrimary ? RETIKZ_POLAR_SEGMENT_SAMPLES + 1 : 1;
   const secondarySegments = options?.curvedSecondary ? RETIKZ_POLAR_SEGMENT_SAMPLES + 1 : 1;
   const points: Array<Position> = [];

@@ -1,7 +1,7 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope, type IRStep } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
 import { type ExternalRow, type IntervalMark, type LinkMark, type Mark, type PathMark, PlotMark, type PlotMarkValue, type PointMark, type ReferenceMark, type RegionMark } from '../ir';
-import { type IntervalContext, LINK_DEFAULT_CURVATURE, buildIntervalContext, datumAnchor, linkBandGeometry, linkEndpoints, markCell, roleValues } from './anchor';
+import { type IntervalContext, LINK_DEFAULT_CURVATURE, buildGenericIntervalContext, buildIntervalContext, datumAnchor, linkBandGeometry, linkEndpoints, markCell, roleValues } from './anchor';
 import { type FieldCollector, channelValue, compareByPath, inferCategoryDomain, resolveFieldPath } from '../data';
 import {
   type CartesianCoordinateFrame,
@@ -11,10 +11,13 @@ import {
   type DimensionRole,
   type PolarCoordinateFrame,
   type PolarVertex,
+  cellGeometryAnchor,
   densifyPolarSegments,
+  hasProjectCell,
   isCartesianCoordinateFrame,
+  isGenericCoordinateFrame,
   isPolarCoordinateFrame,
-  isTernary2DCoordinateFrame,
+  isRenderableCellGeometry,
   toPolarVertex,
 } from '../coordinate';
 import {
@@ -318,27 +321,12 @@ const cellLayer = (
   return colorOf ? colorGroupedScope(placed, styleFor) : { type: 'scope', nodeDefault: styleFor(defaultColor), children: placed.map(p => p.node) };
 };
 
-/** 点集 AABB 中心（contour Node.position = 顶点环 AABB 中心，与 core contour shape 自动居中同源） */
-const aabbCenterOf = (points: Array<[number, number]>): [number, number] => {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const [x, y] of points) {
-    if (x < minX) minX = x;
-    if (y < minY) minY = y;
-    if (x > maxX) maxX = x;
-    if (y > maxY) maxY = y;
-  }
-  return [(minX + maxX) / 2, (minY + maxY) / 2];
-};
-
 /**
  * CellGeometry → core Node（统一装配）
  * @description rect → Node{position, minimumWidth, minimumHeight}；sector → Node{position:center, shape:sector}
- *   （半径 swap 保 outer>inner）；contour → Node{position: 顶点 AABB 中心, shape:contour{points}}。
+ *   （半径 swap 保 outer>inner）；contour → Node{position: 顶点 AABB 中心, shape:contour{points}}；不可锚定 contour 返回 null。
  */
-const cellGeometryNode = (geometry: CellGeometry): IRNode => {
+const cellGeometryNode = (geometry: CellGeometry): IRNode | null => {
   if (geometry.kind === 'rect') {
     return { type: 'node', position: geometry.position, minimumWidth: geometry.width, minimumHeight: geometry.height };
   }
@@ -357,9 +345,11 @@ const cellGeometryNode = (geometry: CellGeometry): IRNode => {
       },
     };
   }
+  const position = cellGeometryAnchor(geometry);
+  if (position === null) return null;
   return {
     type: 'node',
-    position: aabbCenterOf(geometry.points),
+    position,
     shape: { type: 'contour', params: { points: geometry.points } },
   };
 };
@@ -391,10 +381,12 @@ const lowerCells = (
     const cell = markCell(mark, row, frame, ctx);
     if (!cell) continue;
     const geometry = projectCell(cell);
-    if (geometry.kind === 'contour' && geometry.points.length < 3) continue;
+    if (!isRenderableCellGeometry(geometry)) continue;
     kind = geometry.kind;
+    const cellNode = cellGeometryNode(geometry);
+    if (cellNode === null) continue;
     const node = attachDatumLabel(
-      decorateDatum(cellGeometryNode(geometry), row, transformedIndex, mark.type, markProvenance, cellSeriesValue(mark, row)),
+      decorateDatum(cellNode, row, transformedIndex, mark.type, markProvenance, cellSeriesValue(mark, row)),
       mark,
       row,
       labelOf,
@@ -407,11 +399,11 @@ const lowerCells = (
 /** interval mark 图层下沉：坐标系守卫 + IntervalContext + lowerCells（cell 类单路径） */
 const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (mark.type !== PlotMark.Interval) return null;
-  // interval 需内建正交 cell：cartesian2D / polar2D / ternary2D；其余坐标系 fail-loud
-  if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame) && !isTernary2DCoordinateFrame(frame)) {
+  // interval 需要坐标帧提供 cell 几何投影；内置和自定义帧都走同一 projectCell 契约。
+  if (!hasProjectCell(frame)) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
-  const ctx = isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame) ? buildIntervalContext(mark, frame, rows) : undefined;
+  const ctx = isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame) ? buildIntervalContext(mark, frame, rows) : isGenericCoordinateFrame(frame) ? buildGenericIntervalContext(mark, frame, rows) : undefined;
   const layer = lowerCells(mark, rows, frame, frame.projectCell, ctx, channels.colorOf, channels.defaultColor, markProvenance, channels.labelOf);
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
@@ -846,8 +838,11 @@ const lowerReference = (
       const cell = referenceBandCell(mark, row, frame, orientation);
       if (!cell) continue;
       const geometry = frame.projectCell(cell);
+      if (!isRenderableCellGeometry(geometry)) continue;
       kind = geometry.kind;
-      const node = decorateDatum(cellGeometryNode(geometry), row, transformedIndex, mark.type, markProvenance, undefined);
+      const cellNode = cellGeometryNode(geometry);
+      if (cellNode === null) continue;
+      const node = decorateDatum(cellNode, row, transformedIndex, mark.type, markProvenance, undefined);
       placed.push({ color: colorOf?.(row), node });
     }
     if (placed.length === 0 || kind === undefined) return null;

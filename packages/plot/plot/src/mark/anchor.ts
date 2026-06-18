@@ -4,12 +4,14 @@ import { channelValue, inferCategoryDomain, resolveFieldPath } from '../data';
 import {
   type CartesianCoordinateFrame,
   type Cell,
-  type CellGeometry,
   type CoordinateFrame,
   type DimensionRole,
+  type GenericCoordinateFrame,
   type PolarCoordinateFrame,
+  cellGeometryAnchor,
   hasProjectCell,
   isCartesianCoordinateFrame,
+  isGenericCoordinateFrame,
   isPolarCoordinateFrame,
   isTernary2DCoordinateFrame,
 } from '../coordinate';
@@ -36,9 +38,6 @@ export const channelForRole = (mark: Mark, role: DimensionRole): Channel | undef
 /** 按 frame.roles 序取某 mark 某行的位置值数组（喂 frame.projectRoles；坐标系无关） */
 export const roleValues = (mark: Mark, row: ExternalRow, frame: CoordinateFrame): Array<unknown> =>
   frame.roles.map(role => channelValue(channelForRole(mark, role), row));
-
-/** 度 → 弧度 */
-const DEG_TO_RAD = Math.PI / 180;
 
 /**
  * 解析某 interval mark 在某位置 role 的有效区间来源（缺省推断）
@@ -81,6 +80,26 @@ export const buildIntervalContext = (mark: IntervalMark, frame: CartesianCoordin
   const subCount = seriesValues.length || 1;
   const subWidth = bandwidth / subCount;
   return { bandwidth, group, seriesRank, subWidth };
+};
+
+/**
+ * 建通用 frame 的 interval 摆放上下文；仅 `bounds.x=band{group}` 需要。
+ * @description 自定义坐标系没有内置 primary scale 别名，group 子带宽从 `roleScales.x` 读取；
+ *   不使用 group 时无需上下文，仍由各 role 的 scale 直接构造 cell。
+ */
+export const buildGenericIntervalContext = (mark: IntervalMark, frame: GenericCoordinateFrame, rows: Array<ExternalRow>): IntervalContext | undefined => {
+  const xBound = resolveIntervalBound(mark, 'x');
+  const group = xBound.kind === IntervalBoundKind.Band ? xBound.group : undefined;
+  if (group === undefined) return undefined;
+  const scale = frame.roleScales?.x;
+  if (!scale) {
+    throw new Error(`lowerPlots: interval mark under the ${frame.type} coordinate system requires roleScales.x to build grouped band cells`);
+  }
+  const seriesValues = inferCategoryDomain(rows.map(row => resolveFieldPath(row, group)));
+  const seriesRank = new Map(seriesValues.map((series, index) => [series, index] as const));
+  const subCount = seriesValues.length || 1;
+  const subWidth = scale.bandwidth / subCount;
+  return { bandwidth: scale.bandwidth, group, seriesRank, subWidth };
 };
 
 /** 取某行的 group 子带序号（值不在 rank 表 / 非标量 → 0，与 lowering 兜底一致） */
@@ -197,6 +216,64 @@ const ternaryBoundOutputInterval = (bound: IntervalBound, role: 'x' | 'y' | 'z',
   }
 };
 
+/**
+ * 通用坐标帧的 interval bound → role 输出空间区间。
+ * @description 自定义 frame 若要支持 interval，必须同时提供 projectCell 与 roleScales；
+ *   mark 侧只负责把 encoding/bounds 解析成正交 cell，最终几何仍交给 frame.projectCell。
+ */
+const genericBoundOutputInterval = (bound: IntervalBound, role: DimensionRole, mark: IntervalMark, row: ExternalRow, frame: GenericCoordinateFrame, ctx?: IntervalContext): [number, number] | null => {
+  const scale = frame.roleScales?.[role];
+  if (!scale) {
+    throw new Error(`lowerPlots: interval mark under the ${frame.type} coordinate system requires roleScales.${role} to build cells`);
+  }
+  const channel = channelForRole(mark, role);
+  switch (bound.kind) {
+    case IntervalBoundKind.Band: {
+      const center = scale.coordinate(channelValue(channel, row));
+      if (!Number.isFinite(center)) return null;
+      if (role === 'x' && bound.group !== undefined) {
+        if (ctx === undefined) {
+          throw new Error(`lowerPlots: interval mark under the ${frame.type} coordinate system requires grouped band context for bounds.x.group`);
+        }
+        const index = subBandIndexOf(ctx, row);
+        const start = center - ctx.bandwidth / 2 + index * ctx.subWidth;
+        return [start, start + ctx.subWidth];
+      }
+      return [center - scale.bandwidth / 2, center + scale.bandwidth / 2];
+    }
+    case IntervalBoundKind.Span: {
+      const base = scale.coordinate(bound.baseline ?? 0);
+      const value = scale.coordinate(channelValue(channel, row));
+      if (!Number.isFinite(base) || !Number.isFinite(value)) return null;
+      return [base, value];
+    }
+    case IntervalBoundKind.Extent: {
+      const rawLo = resolveFieldPath(row, bound.from);
+      const rawHi = resolveFieldPath(row, bound.to);
+      if (!isFiniteNumber(rawLo) || !isFiniteNumber(rawHi)) {
+        throw new Error(`lowerPlots: interval extent bound requires numeric ${bound.from} / ${bound.to} fields`);
+      }
+      const lo = scale.coordinate(rawLo);
+      const hi = scale.coordinate(rawHi);
+      if (!Number.isFinite(lo) || !Number.isFinite(hi)) return null;
+      return [lo, hi];
+    }
+    case IntervalBoundKind.Full:
+      return scale.range();
+  }
+};
+
+/** 带 projectCell 的通用坐标帧：按 frame.roles 和各 role scale 构造正交 cell。 */
+const genericIntervalCell = (mark: IntervalMark, row: ExternalRow, frame: GenericCoordinateFrame, ctx?: IntervalContext): Cell | null => {
+  const intervals: Cell['intervals'] = {};
+  for (const role of frame.roles) {
+    const interval = genericBoundOutputInterval(resolveIntervalBound(mark, role), role, mark, row, frame, ctx);
+    if (interval === null) return null;
+    intervals[role] = interval;
+  }
+  return { intervals };
+};
+
 export const ternaryIntervalCell = (mark: IntervalMark, row: ExternalRow): Cell | null => {
   const components = normalizedTernaryComponents(mark, row);
   if (components === null) return null;
@@ -209,36 +286,6 @@ export const ternaryIntervalCell = (mark: IntervalMark, row: ExternalRow): Cell 
   };
 };
 
-/** 点集 AABB 中心（contour 锚点 = 顶点环 AABB 中心，与 core contour shape 自动居中同源） */
-const aabbCenterOf = (points: Array<[number, number]>): [number, number] => {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const [x, y] of points) {
-    if (x < minX) minX = x;
-    if (y < minY) minY = y;
-    if (x > maxX) maxX = x;
-    if (y > maxY) maxY = y;
-  }
-  return [(minX + maxX) / 2, (minY + maxY) / 2];
-};
-
-/**
- * CellGeometry → 锚点屏幕位置（rect→position、sector→centroid、contour→顶点 AABB 中心）
- * @description locator 与 lowering 摆放同源：rect 锚点 = 矩形中心、sector 锚点 = 环楔几何 centroid
- *   （mid-angle × mid-radius，扇片几何中心 ≠ 圆心）、contour 锚点 = 顶点环 AABB 中心（= core contour Node.position）。
- */
-export const cellGeometryAnchor = (geometry: CellGeometry): [number, number] => {
-  if (geometry.kind === 'rect') return geometry.position;
-  if (geometry.kind === 'sector') {
-    const midAngle = ((geometry.startAngle + geometry.endAngle) / 2) * DEG_TO_RAD;
-    const midRadius = (Math.min(geometry.innerRadius, geometry.outerRadius) + Math.max(geometry.innerRadius, geometry.outerRadius)) / 2;
-    return [geometry.center[0] + midRadius * Math.cos(midAngle), geometry.center[1] + midRadius * Math.sin(midAngle)];
-  }
-  return aabbCenterOf(geometry.points);
-};
-
 /**
  * 某 mark 的某行 → cell（坐标系相关）；非 interval mark / 退化行 → null
  * @description interval → intervalCell（cartesian / polar）或 ternaryIntervalCell；其余 mark → null（非 cell 类）。
@@ -247,10 +294,12 @@ export const cellGeometryAnchor = (geometry: CellGeometry): [number, number] => 
 export const markCell = (mark: Mark, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext): Cell | null => {
   if (mark.type !== PlotMark.Interval) return null;
   if (isTernary2DCoordinateFrame(frame)) return ternaryIntervalCell(mark, row);
-  if (ctx === undefined) return null;
-  if (isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame)) return intervalCell(mark, row, frame, ctx);
+  if (isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame)) return ctx ? intervalCell(mark, row, frame, ctx) : null;
+  if (isGenericCoordinateFrame(frame) && hasProjectCell(frame)) return genericIntervalCell(mark, row, frame, ctx);
   return null;
 };
+
+export { cellGeometryAnchor };
 
 /** link 默认 cubic 控制点沿主轴外推比例（curvature 缺省；0=准直、1=最 S）；与 d3 sankeyLinkHorizontal 0.5 同序 */
 export const LINK_DEFAULT_CURVATURE = 0.5;

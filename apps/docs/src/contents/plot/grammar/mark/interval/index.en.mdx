@@ -83,7 +83,7 @@ The same `x` / `y` interval under `coordinate="polar2D"` maps the `x` band to an
 
 `IntervalMark` is a built-in registered mark. The React `<IntervalMark>` does not render DOM by itself; `<Plot>` collects it into a `type: 'interval'` mark IR while filling in `bounds`, automatic stack transforms, and color scales from the shortcut props.
 
-At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `IntervalMark` hits the `PlotMark.Interval` entry and calls `lowerIntervalLayer`; that function only accepts cartesian2D / polar2D, builds an `IntervalContext`, then calls `markCell` and the current coordinate frame's `projectCell` for each row. The coordinate frame decides whether the cell becomes a rectangle, sector, or contour; IntervalMark itself does not branch by chart form.
+At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `IntervalMark` hits the `PlotMark.Interval` entry and calls `lowerIntervalLayer`; that function requires the current coordinate frame to provide `projectCell`, then calls `markCell` and the frame's `projectCell` for each row. cartesian2D / polar2D also build an `IntervalContext` for bands and grouped sub-bands; a custom coordinate that wants interval support must provide both `roleScales` and `projectCell` on its frame. The coordinate frame decides whether the cell becomes a rectangle, sector, or contour; IntervalMark itself does not branch by chart form.
 
 The important registration line and lowering excerpt are:
 
@@ -92,10 +92,10 @@ The important registration line and lowering excerpt are:
 
 const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (mark.type !== PlotMark.Interval) return null;
-  if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
+  if (!hasProjectCell(frame)) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
-  const ctx = buildIntervalContext(mark, frame, rows);
+  const ctx = isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame) ? buildIntervalContext(mark, frame, rows) : isGenericCoordinateFrame(frame) ? buildGenericIntervalContext(mark, frame, rows) : undefined;
   const layer = lowerCells(mark, rows, frame, frame.projectCell, ctx, channels.colorOf, channels.defaultColor, markProvenance, channels.labelOf);
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
@@ -118,6 +118,7 @@ const lowerCells = (
     const cell = markCell(mark, row, frame, ctx);
     if (!cell) continue;
     const geometry = projectCell(cell);
+    if (!isRenderableCellGeometry(geometry)) continue;
     kind = geometry.kind;
     const node = attachDatumLabel(
       decorateDatum(cellGeometryNode(geometry), row, transformedIndex, mark.type, markProvenance, cellSeriesValue(mark, row)),
@@ -133,10 +134,10 @@ const lowerCells = (
 
 | Step | Meaning |
 | --- | --- |
-| Coordinate guard | IntervalMark needs two-dimensional orthogonal cells; it currently lowers only under cartesian2D / polar2D |
-| Interval construction | `markCell` builds the logical cell from `bounds`, `x` / `y`, `series`, and stack-derived fields |
+| Coordinate guard | IntervalMark needs the coordinate frame to provide `projectCell`; frames without cell projection fail loudly |
+| Interval construction | `markCell` builds the logical cell from `bounds`, position channels, `series`, and stack-derived fields; custom frames also need `roleScales` |
 | Projection | `frame.projectCell` projects the logical cell into `rect`, `sector`, or `contour` geometry |
-| Core lowering | `cellGeometryNode` turns geometry into a core Node, and color channels are grouped upward into Scopes |
+| Core lowering | `cellGeometryNode` turns renderable geometry into a core Node, skips empty contours, and groups color channels upward into Scopes |
 
 ## API
 
@@ -164,5 +165,5 @@ Most `IntervalMark` props are data channels. `FieldName` means a data field name
 
 - [RegionMark](/plot/grammar/mark/region) — filled regions with an upper outline and baseline
 - [PathMark](/plot/grammar/mark/path) — ordered points connected into a line, without cell or area fill
-- [Coordinates](/plot/grammar/coordinate) — how cartesian2D / polar2D interpret interval roles
+- [Coordinates](/plot/grammar/coordinate) — how coordinates interpret interval roles and `projectCell`
 - [Scales](/plot/grammar/scale) — how band, linear, sequential, and ordinal scales affect intervals and colors

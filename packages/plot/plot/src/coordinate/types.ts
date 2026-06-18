@@ -71,6 +71,14 @@ export const isPolarCoordinateFrame = (coordinate: CoordinateFrame): coordinate 
 export const isTernary2DCoordinateFrame = (coordinate: CoordinateFrame): coordinate is Ternary2DCoordinateFrame =>
   coordinate.type === PlotCoordinate.Ternary2D;
 
+/** 判断运行时坐标帧是否为注册 definition 返回的通用坐标帧。 */
+export const isGenericCoordinateFrame = (coordinate: CoordinateFrame): coordinate is GenericCoordinateFrame =>
+  coordinate.type !== PlotCoordinate.Cartesian2D &&
+  coordinate.type !== PlotCoordinate.Polar2D &&
+  coordinate.type !== PlotCoordinate.Cartesian1D &&
+  coordinate.type !== PlotCoordinate.Polar1D &&
+  coordinate.type !== PlotCoordinate.Ternary2D;
+
 /** 具备 cell 几何投影能力的运行时坐标帧。 */
 export type CellProjectableCoordinate = CoordinateFrame & {
   projectCell: (cell: Cell) => CellGeometry;

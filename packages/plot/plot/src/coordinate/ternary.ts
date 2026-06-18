@@ -1,9 +1,10 @@
 import { type Position, isFiniteNumber } from '@retikz/math';
-import { type AxisGuide, PlotCoordinate, PlotScale, type Ternary2DCoordinate } from '../ir';
+import { PlotCoordinate, PlotScale, type Ternary2DCoordinate } from '../ir';
 import { Ternary2DSchema } from '../ir/coordinate';
 import type { GuideContext } from '../guide';
 import { computeTernaryFrame } from '../pipeline/layout';
 import { type TickSet, resolvePositionScale } from '../scale';
+import { assertUniqueAxisDimension } from './axis';
 import { type Cell, type CellGeometry, cellInterval } from './cell';
 import type { AnyCoordinateDefinition, CoordinateDefinition } from './define';
 import type { DimensionRole } from './types';
@@ -13,17 +14,6 @@ const EMPTY_TICKS: TickSet = { values: [], labels: [] };
 
 /** 三角轴共享刻度集（占比 0..1，标签为百分数）。 */
 const TERNARY_TICKS: TickSet = { values: [0, 0.25, 0.5, 0.75, 1], labels: ['0', '25', '50', '75', '100'] };
-
-/** 三元坐标一根定位角色只画一根轴：重复同角色的 axis → 抛清晰错误。 */
-const assertUniqueAxisDimension = (guides: ReadonlyArray<AxisGuide>): void => {
-  const seen = new Set<string>();
-  for (const guide of guides) {
-    if (seen.has(guide.dimension)) {
-      throw new Error(`lowerPlots: duplicate axis for "${guide.dimension}" role (dimension "${guide.dimension}"); one axis per positional role`);
-    }
-    seen.add(guide.dimension);
-  }
-};
 
 /** 三元坐标三角顶点序（屏幕坐标）：[Vx(x=100%), Vy(y=100%), Vz(z=100%)]。 */
 export type TernaryVertices = [Position, Position, Position];

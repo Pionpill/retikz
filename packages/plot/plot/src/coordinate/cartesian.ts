@@ -1,9 +1,10 @@
 import type { Position } from '@retikz/math';
-import { type AxisGuide, type Cartesian1DCoordinate, Cartesian1DOrientation, type Cartesian1DOrientationType, type Coordinate, PlotCoordinate, PlotScale, type Scale } from '../ir';
+import { type Cartesian1DCoordinate, Cartesian1DOrientation, type Cartesian1DOrientationType, type Coordinate, PlotCoordinate, PlotScale, type Scale } from '../ir';
 import { Cartesian1DSchema, Cartesian2DSchema } from '../ir/coordinate';
 import type { GuideContext } from '../guide';
 import { type Rect, computePlotArea } from '../pipeline/layout';
 import type { PositionScale, TickSet } from '../scale';
+import { assertUniqueAxisDimension } from './axis';
 import type { Cell, CellGeometry } from './cell';
 import { cellInterval } from './cell';
 import type { AnyCoordinateDefinition, CoordinateDefinition } from './define';
@@ -13,17 +14,6 @@ type Cartesian2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.C
 
 /** 空刻度集：某维度无 axis 时给 GuideContext 的占位。 */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
-
-/** 一根定位角色只画一根轴：重复同角色的 axis → 抛清晰错误。 */
-const assertUniqueAxisDimension = (guides: ReadonlyArray<AxisGuide>): void => {
-  const seen = new Set<string>();
-  for (const guide of guides) {
-    if (seen.has(guide.dimension)) {
-      throw new Error(`lowerPlots: duplicate axis for "${guide.dimension}" role (dimension "${guide.dimension}"); one axis per positional role`);
-    }
-    seen.add(guide.dimension);
-  }
-};
 
 /** 仅连续数值 scale 的显式 range 会阻止坐标系把 range 收敛到 plotArea。 */
 const hasExplicitContinuousRange = (def: Scale): boolean =>

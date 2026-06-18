@@ -1,10 +1,10 @@
 import type { IRJsonObject } from '@retikz/core';
 import { type ExternalDatasets, type ExternalRow, type Mark, PlotMark, type PlotSpec } from '../ir';
-import { type IntervalContext, buildIntervalContext, datumAnchor } from '../mark/anchor';
+import { type IntervalContext, buildGenericIntervalContext, buildIntervalContext, datumAnchor } from '../mark/anchor';
 import { type LowerPlotsOptions, prepareRows, resolveFrame } from '../pipeline/expand';
 import { resolveFieldPath } from '../data';
 import { DEFAULT_FONT_SIZE } from '../pipeline/layout';
-import { type CoordinateFrame, isCartesianCoordinateFrame, isPolarCoordinateFrame } from '../coordinate';
+import { type CoordinateFrame, isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame } from '../coordinate';
 import { type ProvenanceContext, createDatumIdRegistrar, datumMeta, readSourceIndex, tagSourceIndex } from '../pipeline/provenance';
 import { applyTransforms } from '../transform/transform';
 
@@ -108,8 +108,15 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
   const intervalContexts = new Map<number, IntervalContext>();
   const intervalContextOf = (markIndex: number, mark: Mark): IntervalContext | undefined => {
     if (mark.type !== PlotMark.Interval) return undefined;
-    // interval 仅在 cartesian2D / polar2D 需要 IntervalContext；其它帧无 IntervalContext
-    if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) return undefined;
+    // interval 在 cartesian2D / polar2D 需要内置 IntervalContext；自定义 frame 仅在 grouped band 时需要 generic context。
+    if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
+      if (!isGenericCoordinateFrame(frame)) return undefined;
+      const cached = intervalContexts.get(markIndex);
+      if (cached) return cached;
+      const ctx = buildGenericIntervalContext(mark, frame, rows);
+      if (ctx) intervalContexts.set(markIndex, ctx);
+      return ctx;
+    }
     const cached = intervalContexts.get(markIndex);
     if (cached) return cached;
     const ctx = buildIntervalContext(mark, frame, rows);

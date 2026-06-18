@@ -2,6 +2,7 @@ import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/co
 import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../ir';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from '../pipeline/layout';
 import type { DimensionRole, GenericCoordinateFrame, PolarCoordinateFrame, TernaryVertices } from '../coordinate';
+import { DEG_TO_RAD, finitePolarPoint } from '../coordinate/polar-point';
 import { type ProvenanceContext, guideLayerId, guideLayerMeta } from '../pipeline/provenance';
 import type { PositionScale, TickSet } from '../scale/scale';
 
@@ -51,9 +52,6 @@ export type LoweredGuide = {
 
 /** 一段直线（首尾两点） */
 type Segment = [readonly [number, number], readonly [number, number]];
-
-/** 度 → 弧度 */
-const DEG_TO_RAD = Math.PI / 180;
 
 /** 把若干直线段拼成一条多子路径 Path（每段一对 move/line）；空段返回 null */
 const segmentsToPath = (segments: Array<Segment>): IRPath | null => {
@@ -148,15 +146,9 @@ const lowerCartesianGuide = (guide: AxisGuide, ctx: GuideContext, context: Prove
   return { gridLayer, axisLayer };
 };
 
-/** 圆心 + 角(度) + 半径 → 屏幕点（0°=+x、90°=+y，屏幕 y 向下，与 frame.project 约定一致） */
-const polarPoint = (center: readonly [number, number], angleDeg: number, radius: number): [number, number] => {
-  const radians = angleDeg * DEG_TO_RAD;
-  return [center[0] + radius * Math.cos(radians), center[1] + radius * Math.sin(radians)];
-};
-
 /** 一条弧 Path（move 到弧起点 + arc step 扫 startAngle→endAngle，圆心 = frame.center、给定半径）；轴线与同心环复用 */
 const arcPath = (frame: PolarCoordinateFrame, radius: number): IRPath => {
-  const start = polarPoint(frame.center, frame.startAngle, radius);
+  const start = finitePolarPoint(frame.center, frame.startAngle, radius);
   return {
     type: 'path',
     children: [
@@ -188,7 +180,7 @@ const lowerAngularAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarCoord
   // ---- 轴层 ----
   const tickSegments: Array<Segment> = ticks.values.map(value => {
     const theta = scale.coordinate(value);
-    return [polarPoint(frame.center, theta, outer), polarPoint(frame.center, theta, outer + AXIS_TICK_LENGTH)];
+    return [finitePolarPoint(frame.center, theta, outer), finitePolarPoint(frame.center, theta, outer + AXIS_TICK_LENGTH)];
   });
   const tickPath = segmentsToPath(tickSegments);
   const axisChildren: Array<IRPath | IRNode> = [arcPath(frame, outer)];
@@ -196,7 +188,7 @@ const lowerAngularAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarCoord
   const labels: Array<IRNode> = showLabels
     ? ticks.values.map((value, index): IRNode => {
         const theta = scale.coordinate(value);
-        const position = polarPoint(frame.center, theta, outer + AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2);
+        const position = finitePolarPoint(frame.center, theta, outer + AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2);
         return { type: 'node', position, text: ticks.labels[index] };
       })
     : [];
@@ -214,7 +206,7 @@ const lowerAngularAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarCoord
   if (guide.grid) {
     const spokes: Array<Segment> = ticks.values.map(value => {
       const theta = scale.coordinate(value);
-      return [polarPoint(frame.center, theta, frame.innerRadius), polarPoint(frame.center, theta, outer)];
+      return [finitePolarPoint(frame.center, theta, frame.innerRadius), finitePolarPoint(frame.center, theta, outer)];
     });
     const gridPath = segmentsToPath(spokes);
     if (gridPath) {
@@ -247,19 +239,19 @@ const lowerRadialAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarCoordi
 
   // ---- 轴层 ----
   const axisLine: Segment = [
-    polarPoint(frame.center, baseAngle, frame.innerRadius),
-    polarPoint(frame.center, baseAngle, frame.outerRadius),
+    finitePolarPoint(frame.center, baseAngle, frame.innerRadius),
+    finitePolarPoint(frame.center, baseAngle, frame.outerRadius),
   ];
   const tickSegments: Array<Segment> = ticks.values.map(value => {
     const radius = scale.coordinate(value);
-    const point = polarPoint(frame.center, baseAngle, radius);
+    const point = finitePolarPoint(frame.center, baseAngle, radius);
     return [point, [point[0] - tangent[0] * AXIS_TICK_LENGTH, point[1] - tangent[1] * AXIS_TICK_LENGTH]];
   });
   const linePath = segmentsToPath([axisLine, ...tickSegments]);
   const labels: Array<IRNode> = showLabels
     ? ticks.values.map((value, index): IRNode => {
         const radius = scale.coordinate(value);
-        const point = polarPoint(frame.center, baseAngle, radius);
+        const point = finitePolarPoint(frame.center, baseAngle, radius);
         const text = ticks.labels[index];
         // 标签在刻度外侧（与刻度同侧、沿 -tangent），偏移 = 刻度长 + gap + 半字高
         const offset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2;

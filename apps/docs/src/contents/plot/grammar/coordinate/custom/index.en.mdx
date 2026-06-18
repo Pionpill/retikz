@@ -67,6 +67,8 @@ const bridge = defineCoordinate({
 
 `CoordinateResolveContext` provides `collectRoleValues`, `resolveScaleForRole`, `buildPositionScale`, `axisGuides`, `lowerGuide`, and `lowerCustomAxis`. Custom coordinates v1 default to the whole canvas as `plotArea`; they do not automatically get cartesian-style margin / legend reservation.
 
+The fourth argument to `createCoordinateFrame` can add coordinate capabilities. `roleScales` lets custom axes and interval cell construction read each role's scale; `projectCell` projects that logical cell into `rect` / `sector` / `contour` geometry. Without `projectCell`, cell-shaped marks fail loudly. With `projectCell` but without the required `roleScales`, IntervalMark also fails loudly because the mark layer cannot invent output intervals from field values by itself.
+
 ## Migration
 
 The old `{ type: 'custom', name, roles, params }` shape has been removed. Promote `name` into the real `type`, move `roles` into the definition, and flatten `params` into JSON config fields:
@@ -79,4 +81,4 @@ The old `{ type: 'custom', name, roles, params }` shape has been removed. Promot
 
 ## Limits
 
-<ComponentAlert type="warn" title="Advanced extension" description="Custom coordinates support PointMark by default; if the frame provides projectCell, interval and other cell-shaped marks can also work. Curved axes can be drawn, but grids, automatic margin/legend reservation, 3D coordinates, and multi-plot composition are left for later." />
+<ComponentAlert type="warn" title="Advanced extension" description="Custom coordinates support PointMark by default; if the frame provides both roleScales and projectCell, IntervalMark and other cell-shaped marks can also work. Curved axes can be drawn, but grids, automatic margin/legend reservation, 3D coordinates, and multi-plot composition are left for later." />

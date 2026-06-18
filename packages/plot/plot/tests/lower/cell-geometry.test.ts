@@ -13,6 +13,7 @@ import {
   createCartesianCoordinate,
   createCoordinateFrame,
   createPolarCoordinate,
+  createTernary2DCoordinate,
   defineCoordinate,
   densifyCellContour,
 } from '../../src/coordinate';
@@ -256,8 +257,8 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
     expect(Math.abs(mid[1] - 200)).toBeGreaterThan(1e-6);
   });
 
-  it('interval_on_real_custom_frame_fail_loud', () => {
-    // 真 type:'custom' frame（即便带 projectCell）无 primary band scale 构建 IntervalContext →
+  it('interval_custom_without_rolescales_fails_loud', () => {
+    // 注册 frame 即便带 projectCell，缺少 roleScales 时也无法从 encoding/bounds 构造 cell →
     //   fail-loud，不静默产空层（守「无 cell 构造即 fail-loud、无引擎自动兜底」）
     const custom = createCoordinateFrame('curved-cell', ['x', 'y'], values => [Number(values[0]), Number(values[1])], {
       projectCell: (cell: Cell) => ({ kind: 'contour', points: densifyCellContour(cell, (p, s) => [p, s], { curvedPrimary: false, curvedSecondary: false }) }),
@@ -339,13 +340,19 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
     // mid-angle 90°、mid-radius 80 → [center + 80·cos90, center + 80·sin90] = [200, 280]
     const geometry = { kind: 'sector' as const, center: [200, 200] as [number, number], innerRadius: 60, outerRadius: 100, startAngle: 60, endAngle: 120 };
     const anchor = cellGeometryAnchor(geometry);
-    expect(anchor[0]).toBeCloseTo(200, 6);
-    expect(anchor[1]).toBeCloseTo(280, 6);
+    expect(anchor).not.toBeNull();
+    expect(anchor![0]).toBeCloseTo(200, 6);
+    expect(anchor![1]).toBeCloseTo(280, 6);
   });
 
   it('anchor_contour_is_aabb_center', () => {
     const geometry = { kind: 'contour' as const, points: [[0, 0], [10, 0], [10, 20], [0, 20]] as Array<[number, number]> };
     expect(cellGeometryAnchor(geometry)).toEqual([5, 10]);
+  });
+
+  it('anchor_contour_with_too_few_points_is_null', () => {
+    const geometry = { kind: 'contour' as const, points: [[0, 0], [10, 0]] as Array<[number, number]> };
+    expect(cellGeometryAnchor(geometry)).toBeNull();
   });
 
   it('datum_anchor_cartesian_interval_matches_node_position', () => {
@@ -376,6 +383,31 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
     expect(anchor).not.toBeNull();
     expect(anchor![0]).toBeCloseTo(position[0], 9);
     expect(anchor![1]).toBeCloseTo(position[1], 9);
+  });
+
+  it('datum_anchor_ternary_empty_contour_is_null', () => {
+    const mark: IntervalMark = {
+      type: 'interval',
+      bounds: { x: { kind: 'extent', from: 'x0', to: 'x1' }, y: { kind: 'extent', from: 'y0', to: 'y1' }, z: { kind: 'full' } },
+      encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' } },
+    };
+    const rows = [{ x: 0.2, y: 0.3, z: 0.5, x0: 0.8, x1: 0.9, y0: 0.8, y1: 0.9 }];
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      coordinate: { type: 'ternary2D' },
+      scales: [],
+      marks: [mark],
+    });
+    const root = expandOf(spec, { d: rows }, cartOpts);
+    expect(nodesOf(root)).toHaveLength(0);
+    const frame = createTernary2DCoordinate([
+      [200, 0],
+      [0, 200],
+      [400, 200],
+    ]);
+    expect(datumAnchor(mark, rows[0], frame)).toBeNull();
   });
 });
 
@@ -482,29 +514,128 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
           schema: z.object({ type: z.literal('noproj').describe('Discriminator: no-project-cell custom coordinate op') }),
           roles: ['x', 'y'],
           resolve: (_op, ctx) => {
-          const xValues = ctx.collectRoleValues('x');
-          const yValues = ctx.collectRoleValues('y');
-          const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [0, ctx.width]);
-          const yScale = ctx.buildPositionScale(ctx.resolveScaleForRole('y', undefined, yValues), yValues, [ctx.height, 0]);
-          return {
-            frame: {
-              type: 'custom',
-              roles: ['x', 'y'],
-              project: () => null,
-              projectRoles: values => {
+            const xValues = ctx.collectRoleValues('x');
+            const yValues = ctx.collectRoleValues('y');
+            const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [0, ctx.width]);
+            const yScale = ctx.buildPositionScale(ctx.resolveScaleForRole('y', undefined, yValues), yValues, [ctx.height, 0]);
+            return {
+              frame: createCoordinateFrame('noproj', ['x', 'y'], values => {
                 const x = xScale.coordinate(values[0]);
                 const y = yScale.coordinate(values[1]);
                 return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
-              },
-            },
-            plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
-            gridLayers: [],
-            axisLayers: [],
-          };
-        },
+              }),
+              plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
+              gridLayers: [],
+              axisLayers: [],
+            };
+          },
         }),
       ],
     };
-    expect(() => expandOf(spec, { d: [{ m: 1, v: 3 }] }, options)).toThrow(/custom coordinate|projectCell|not supported/i);
+    expect(() => expandOf(spec, { d: [{ m: 1, v: 3 }] }, options)).toThrow(/noproj|projectCell|not supported/i);
+  });
+
+  it('interval_custom_with_projectcell_lowers_to_contour', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [],
+      coordinate: { type: 'curved-cell' },
+      marks: [{ type: 'interval', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+    });
+    const options: LowerPlotsOptions = {
+      width: WIDTH,
+      height: HEIGHT,
+      coordinates: [
+        defineCoordinate({
+          schema: z.object({ type: z.literal('curved-cell').describe('Discriminator: project-cell custom coordinate op') }),
+          roles: ['x', 'y'],
+          resolve: (_op, ctx) => {
+            const xValues = ctx.collectRoleValues('x');
+            const yValues = ctx.collectRoleValues('y');
+            const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [0, ctx.width]);
+            const yScale = ctx.buildPositionScale(ctx.resolveScaleForRole('y', undefined, yValues), yValues, [ctx.height, 0]);
+            const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
+              const x = xScale.coordinate(values[0]);
+              const y = yScale.coordinate(values[1]);
+              return Number.isFinite(x) && Number.isFinite(y) ? [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)] : null;
+            };
+            return {
+              frame: createCoordinateFrame('curved-cell', ['x', 'y'], projectRoles, {
+                roleScales: { x: xScale, y: yScale },
+                projectCell: cell => ({ kind: 'contour', points: densifyCellContour(cell, (x, y) => [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)], { curvedPrimary: true }) }),
+              }),
+              plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
+              gridLayers: [],
+              axisLayers: [],
+            };
+          },
+        }),
+      ],
+    };
+    const layer = firstLayer(spec, { d: [{ x: 3, y: 4 }] }, options);
+    const node = nodesOf(layer)[0];
+    const shape = node.shape as { type?: string; params?: { points?: Array<[number, number]> } } | undefined;
+    expect(shape?.type).toBe('contour');
+    expect(shape?.params?.points?.length ?? 0).toBeGreaterThanOrEqual(4);
+  });
+
+  it('interval_custom_grouped_band_uses_subbands', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [],
+      coordinate: { type: 'curved-cell' },
+      marks: [
+        {
+          type: 'interval',
+          series: 'series',
+          bounds: { x: { kind: 'band', group: 'series' } },
+          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        },
+      ],
+    });
+    const options: LowerPlotsOptions = {
+      width: WIDTH,
+      height: HEIGHT,
+      coordinates: [
+        defineCoordinate({
+          schema: z.object({ type: z.literal('curved-cell').describe('Discriminator: project-cell custom coordinate op') }),
+          roles: ['x', 'y'],
+          resolve: (_op, ctx) => {
+            const xValues = ctx.collectRoleValues('x');
+            const yValues = ctx.collectRoleValues('y');
+            const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [0, ctx.width]);
+            const yScale = ctx.buildPositionScale(ctx.resolveScaleForRole('y', undefined, yValues), yValues, [ctx.height, 0]);
+            const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
+              const x = xScale.coordinate(values[0]);
+              const y = yScale.coordinate(values[1]);
+              return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
+            };
+            return {
+              frame: createCoordinateFrame('curved-cell', ['x', 'y'], projectRoles, {
+                roleScales: { x: xScale, y: yScale },
+                projectCell: cell => ({ kind: 'contour', points: densifyCellContour(cell, (x, y) => [x, y]) }),
+              }),
+              plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
+              gridLayers: [],
+              axisLayers: [],
+            };
+          },
+        }),
+      ],
+    };
+    const rows = [
+      { x: 'A', y: 4, series: 'left' },
+      { x: 'A', y: 6, series: 'right' },
+    ];
+    const layer = firstLayer(spec, { d: rows }, options);
+    const nodes = nodesOf(layer);
+    expect(nodes).toHaveLength(2);
+    const left = nodes[0].position as [number, number];
+    const right = nodes[1].position as [number, number];
+    expect(left[0]).toBeLessThan(right[0]);
   });
 });

@@ -1,5 +1,5 @@
 import { type Position, isFiniteNumber } from '@retikz/math';
-import { type AxisGuide, type Coordinate, PlotCoordinate, PlotScale, type Polar1DCoordinate, type Scale } from '../ir';
+import { type Coordinate, PlotCoordinate, PlotScale, type Polar1DCoordinate, type Scale } from '../ir';
 import { Polar1DSchema, Polar2DSchema } from '../ir/coordinate';
 import type { GuideContext } from '../guide';
 import { computePolarCoordinate } from '../pipeline/layout';
@@ -8,6 +8,8 @@ import type { Cell, CellGeometry } from './cell';
 import { cellInterval } from './cell';
 import { RETIKZ_POLAR_SEGMENT_SAMPLES } from './constants';
 import type { AnyCoordinateDefinition, CoordinateDefinition } from './define';
+import { assertUniqueAxisDimension } from './axis';
+import { polarPoint } from './polar-point';
 import type { DimensionRole } from './types';
 
 type Polar2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Polar2D }>;
@@ -20,18 +22,6 @@ const axisRole = (dimension: string): string => {
   if (dimension === 'x') return 'angular';
   if (dimension === 'y') return 'radial';
   return dimension;
-};
-
-/** 极坐标一根定位角色只画一根轴：重复同角色的 axis → 抛清晰错误。 */
-const assertUniqueAxisDimension = (guides: ReadonlyArray<AxisGuide>): void => {
-  const seen = new Set<string>();
-  for (const guide of guides) {
-    const role = axisRole(guide.dimension);
-    if (seen.has(role)) {
-      throw new Error(`lowerPlots: duplicate axis for "${role}" role (dimension "${guide.dimension}"); one axis per positional role`);
-    }
-    seen.add(role);
-  }
 };
 
 /** 连续角轴需要段内采样弯弧；分类角轴类别间无中间值，走弦。 */
@@ -74,9 +64,6 @@ export type PolarCoordinateFrame = {
   projectCell: (cell: Cell) => CellGeometry;
 };
 
-/** 度 → 弧度 */
-const DEG_TO_RAD = Math.PI / 180;
-
 /** 创建二维极坐标运行时坐标帧所需的已解析参数。 */
 export type PolarCoordinateSpec = {
   /** 圆心（屏幕坐标） */
@@ -103,12 +90,7 @@ export type PolarCoordinateSpec = {
  *   返回 [cx + r·cos(θ°), cy + r·sin(θ°)]，屏幕 y 向下、0°=+x、90°=+y（与 core polar 约定一致）。
  */
 export const createPolarCoordinate = (input: PolarCoordinateSpec): PolarCoordinateFrame => {
-  const [cx, cy] = input.center;
-  const projectPolar = (thetaDeg: number, radius: number): Position | null => {
-    if (!Number.isFinite(thetaDeg) || !Number.isFinite(radius)) return null;
-    const radians = thetaDeg * DEG_TO_RAD;
-    return [cx + radius * Math.cos(radians), cy + radius * Math.sin(radians)];
-  };
+  const projectPolar = (thetaDeg: number, radius: number): Position | null => polarPoint(input.center, thetaDeg, radius);
   const project = (angleValue: unknown, radiusValue: unknown): Position | null => {
     const theta = input.primary.coordinate(angleValue);
     const radius = input.secondary.coordinate(radiusValue);
@@ -186,12 +168,7 @@ export type Polar1DCoordinateSpec = {
 
 /** 建一维极坐标帧：角向投影固定在半径 radius 的圆周（复用极坐标→笛卡尔换算） */
 export const createPolar1DCoordinate = (input: Polar1DCoordinateSpec): Polar1DCoordinateFrame => {
-  const [cx, cy] = input.center;
-  const projectPolar = (thetaDeg: number, radius: number): Position | null => {
-    if (!Number.isFinite(thetaDeg) || !Number.isFinite(radius)) return null;
-    const radians = thetaDeg * DEG_TO_RAD;
-    return [cx + radius * Math.cos(radians), cy + radius * Math.sin(radians)];
-  };
+  const projectPolar = (thetaDeg: number, radius: number): Position | null => polarPoint(input.center, thetaDeg, radius);
   const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
     const theta = input.primary.coordinate(values[0]);
     return projectPolar(theta, input.radius);
@@ -259,7 +236,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     const radiusScaleDef = ctx.resolveScaleForRole('y', coordinate.radius, radiusValues, { includeLinkSource: true });
     ctx.assertBaselineScaleCompatible(radiusScaleDef.type, ctx.marks);
 
-    assertUniqueAxisDimension(ctx.axisGuides);
+    assertUniqueAxisDimension(ctx.axisGuides, axisRole);
     const angularAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
     const radialAxis = ctx.axisGuides.find(guide => guide.dimension === 'y');
 
@@ -316,7 +293,7 @@ const polar1DCoordinateDefinition: CoordinateDefinition<Polar1DCoordinate> = {
     const angleValues = ctx.collectPositionValues('x', { axis: 'primary', includeLinkSource: true });
     const angleScaleDef = ctx.resolveScaleForRole('x', coordinate.angle, angleValues, { includeLinkSource: true });
 
-    assertUniqueAxisDimension(ctx.axisGuides);
+    assertUniqueAxisDimension(ctx.axisGuides, axisRole);
     const angularAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
 
     const angleScale = ctx.buildPositionScale(angleScaleDef, angleValues, [startAngle, endAngle]);
