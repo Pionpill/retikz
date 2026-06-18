@@ -16,14 +16,14 @@ Internally, that becomes the mark's `encoding`: `x` and `y` are positional chann
 
 <ComponentPreview name="data-channel" sourceFiles={['data-channel.data.ts']} />
 
-One row can feed several channels at once: `gdp` controls horizontal position, `life` controls vertical position, `region` controls color, `population` controls point radius, and `abbr` controls the text label. Plot first resolves field values, then derives scales from field types and explicit scale configuration.
+One row can feed several channels at once: `gdp` controls horizontal position, `life` controls vertical position, `region` controls color, `population` controls point radius, and `abbr` controls the text label. Channels read canonical values prepared by the data pipeline: `fieldMap`, `format`, and `resolveField` have already been applied, then Plot derives scales from field types and explicit scale configuration.
 
 ## Channel Types
 
 | Type | Channels | Meaning |
 | --- | --- | --- |
 | Position | `x` / `y` | Main position channels for one- and two-dimensional coordinates; polar coordinates reinterpret them as angle / radius |
-| Ternary position | `a` / `b` / `c` | The three components of a ternary coordinate, normalized by their sum during lowering |
+| Ternary position | `x` / `y` / `z` | The three components of a ternary coordinate, normalized by their sum during lowering |
 | Visual | `color` / `size` / `opacity` / `shape` | Control color, point radius, opacity, or point shape; field types usually derive the default scale |
 | Text | `text` / `label` | Text content for `PointMark`, or datum labels attached to another mark |
 | Order and series | `order` / `series` | Not part of the `encoding` object, but still field-driven; used for line order, multi-series splitting, or grouping |
@@ -44,9 +44,23 @@ Some channels also accept constants. `ReferenceMark` is the clearest example:
 
 In IR, fields become `{ field: 'gdp' }`, while constants become `{ value: 80 }`. A channel must choose exactly one: field-driven or constant.
 
+Field lookup follows the same rule as the model: first check whether the whole field name is a direct key on the row, then fall back to `.` traversal. Because canonical rows write normalized values back under logical field names, marks only reference logical fields and do not need to know the physical source name or storage format.
+
+## How It Works
+
+In React, mark props are converted into channel configuration while building the Plot spec. Field channels enter `encoding`, constant channels stay as fixed values, and lowering later reads field values from canonical rows.
+
+| Form | Internal Meaning |
+| --- | --- |
+| `<PointMark x="gdp" />` | `x` is a field channel that reads `gdp` from the canonical row |
+| `<PointMark color="region" />` | `color` is a field channel, and its field type derives the color scale |
+| `<ReferenceMark y={80} />` | `y` is a constant channel and does not read data rows |
+| `<PathMark order="month" />` | `order` is not inside the `encoding` object, but still reads a field to sort datums |
+
+Channels only answer "which value to read". Field types derive default scales, and coordinates decide how positional channels are interpreted. That is why the same `x` / `y` can have different geometry in Cartesian and polar coordinates while keeping the same data lookup rule.
+
 ## Scale And Coordinate
 
 Channels only say “which value to read”. Scales map values into drawing space or visual attributes. Coordinates interpret the roles of positional channels. For example, the same `x="quarter"` and `y="value"` means horizontal category + vertical value under `cartesian2D`, but angular category + radial value under `polar2D`.
 
 Continue with [Scales](/plot/grammar/scale) to see how field types derive scales, or [Coordinates](/plot/grammar/coordinate) to see how position channels are reinterpreted.
-

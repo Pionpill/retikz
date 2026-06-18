@@ -3,11 +3,11 @@ title: 数据处理
 description: 把真实数据接进来并信得过：字段不同名给 fieldMap，特殊格式用 format 或 resolveField 解析，脏数据用 validateData / invalid 校验。
 ---
 
-[数据模型](/plot/grammar/data/model)声明了字段**是什么**；这页讲怎么把真实世界的数据**接进来**——换源、解析、校验。三件事都以声明了 model 为前提。
+[数据模型](/plot/grammar/data/model)声明了字段**是什么**；这页讲怎么把真实世界的数据**接进来**——换源、解析、校验。`fieldMap` 与声明式 `format` 依赖 model 提供逻辑字段契约；`resolveField`、`validateData`、`invalid` 也能配合自动推断使用。实践中，想让配置稳定复用到多份数据源时，仍建议先声明 model。
 
 ## 换数据源
 
-数据不进配置（IR），所以同一份 `<Plot>` 配置能换着数据源用。前提是声明了 model——model 就是「可移植」的开关。换数据源有三种对接方式：
+数据不进配置（IR），所以同一份 `<Plot>` 配置能换着数据源用。字段完全同名时，不写 model 也能快速试画；但要跨接口、跨文件长期复用，声明 model 才有明确的逻辑字段契约。换数据源有三种对接方式：
 
 ### 同名同类型
 
@@ -31,7 +31,7 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 </Plot>
 ```
 
-`fieldMap` 只做改名（值不变换，计算交给 transform）；它必须配合 model 使用——没有 model 就没有「逻辑字段」可映射。
+`fieldMap` 只做改名（值不变换，计算交给 transform）；它必须配合 model 使用——没有 model 就没有「逻辑字段」可映射。右侧可以是嵌套路径，如 `pricing.amount`。Plot 会先从真实路径取值，再把解析后的值写回 `revenue` 这样的逻辑字段名，所以后续 transform / scale / mark 仍然只写逻辑字段。
 
 下面两张图共用同一份逻辑配置：左图数据字段已经叫 `month` / `revenue`，右图数据来自另一套接口，实际字段叫 `period` / `amount`，用 `fieldMap` 接回同一个 model。
 
@@ -39,7 +39,7 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 
 ### 存储格式不同但类型相同
 
-同一个 `temporal` 字段，数据里是 `Date` 对象、ISO 字符串还是毫秒时间戳，都能正确读；`continuous` 字段是数字还是规范的数字串（`"120"`）也都认。无需任何额外配置。非默认的存储格式（如 `'2024/01/01'`、epoch 秒、`'50%'`）走下面的解析。
+同一个 `temporal` 字段，数据里是 `Date` 对象、ISO 字符串还是毫秒时间戳，都能正确读；`continuous` 字段是数字、bigint 安全整数还是严格数字串（`"120"`）也都认。无需任何额外配置。非默认的存储格式（如 `'2024/01/01'`、epoch 秒、`'50%'`、带千分位的数字串）走下面的解析。
 
 下面右图故意混用了 `Date`、epoch 毫秒、ISO 字符串，以及数字 / 数字串。因为字段类型仍然是 `temporal` + `continuous`，同一份 model 就能完成规范化。
 
@@ -89,6 +89,8 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 - `slashDate` 只认严格 `YYYY/MM/DD`；`DD/MM/YYYY`、`MM/DD/YYYY` 这类有地区歧义的布局不收（避免同一串在不同环境解析成不同日期）。
 - 解析优先级：`resolveField` 的 `parse` > 声明式 `format` > 内置默认。
 
+解析和归一化发生在 transform、scale、mark 之前。Plot 会把解析后的值写入 canonical 行的逻辑字段名上；后续所有环节都读这份值。因此 `fieldMap={{ revenue: 'finance.amount' }}`、`format: 'percent'` 和 `resolveField` 都只影响数据准备阶段，mark 里仍然写 `y="revenue"`。
+
 ### resolveField
 
 碰上词表外的**任意格式**（如 `'2024Q1'` 季度串、自定义分隔符）或想**强制某字段当某类型**（数值枚举当 `categorical`）时，给 `resolveField` 一个函数——它**不进 IR**（是运行时选项，和 `fieldMap` 同层），按字段名返回「类型覆盖 + 可选自定义解析器」：
@@ -115,7 +117,7 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 规则：
 
 - 返回 `{ type }` 覆盖该字段类型（优先级高于 model 与推断）；返回 `{ parse }` 用自定义解析器把原始值转成规范值（`temporal`/`continuous` 返数字、`categorical` 返字符串/数字），返 `undefined` 跳过该值。
-- **只给 `parse` 不给 `type`** 时，类型沿用 model 声明——所以 `parse` 单独出现**必须有 model**（无 model 时类型来源不清，会报错）。
+- **只给 `parse` 不给 `type`** 时，类型沿用 model 声明——所以无 model 时必须同时返回 `type`，否则类型来源不清会报错。
 - `resolveField` **不绕过 strict**：声明了 model，引用未列出的字段照样报错——它只覆盖类型/解析，不能把拼错字段洗成合法字段。
 - 第二参提供 `{ dataReference, physicalPath, declaredType }`，同名字段接不同数据源、或配合 `fieldMap` 时，可以按数据源和实际路径分支。
 - 因为是函数、不可序列化，`resolveField` 适合手写代码的逃生舱；要 spec 完全可移植 / LLM 友好，优先用 model 的声明式 `type` / `format`。
@@ -144,7 +146,7 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 | `validateData` | 抽样检查绑定字段 | 开发期排查空图 / 字段映射错误 |
 | `invalid="error"` | 全量检查参与字段 | 数据准入、测试、需要 fail-loud 的图 |
 
-默认「跳过」可能让你对着一张空图摸不着头脑。打开 `validateData` 让 retikz **抽样**校验、有问题直接报错，并指出**哪个字段、多少非法 / 缺失**（如 `field "x": 3/100 invalid`），把「为什么图是空的」变成明确提示：
+校验发生在解析 / 归一化之后，只检查当前图真正参与的字段。默认「跳过」可能让你对着一张空图摸不着头脑。打开 `validateData` 让 retikz **抽样**校验、有问题直接报错，并指出**哪个字段、多少非法 / 缺失**（如 `field "x": 3/100 invalid`），把「为什么图是空的」变成明确提示：
 
 ```tsx
 <Plot data={rows} model={[...]} validateData>
@@ -161,3 +163,18 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 ```
 
 `invalid` 默认是 `'skip'`（上表的「跳过」行为）：非法点跳过、但**整行仍保留**，照常参与 stack / 排序等数据变换；`'error'` 只检查图里实际引用的字段，不波及其它脏列。
+
+## 技术原理
+
+数据处理发生在 mark lowering 之前，目标是把不同来源、不同存储格式的外部行变成统一的 canonical 行。后续 transform、scale、mark 和 locator 都只读这份结果。
+
+| 顺序 | 处理 |
+| --- | --- |
+| 1 | 收集当前配置引用的字段，得到本次真正需要处理的字段集合 |
+| 2 | 用 `fieldMap` 把逻辑字段对齐到真实数据路径；没有映射时，真实路径等于逻辑字段名 |
+| 3 | 解析字段类型：`resolveField.type` 优先，其次 model / format / 自动推断 |
+| 4 | 解析字段值：`resolveField.parse` 优先，其次声明式 `format`，最后走内置转换 |
+| 5 | 把解析后的值写回 canonical 行的逻辑字段名，供后续阶段统一读取 |
+| 6 | 按 `validateData` / `invalid` 对参与字段做抽样或全量校验 |
+
+`model` 和 `format` 会进入 PlotSpec，适合随图形配置持久化。`fieldMap` 虽然是可序列化映射，但属于 lowering 选项，按数据集 reference 注入，不写进 PlotSpec；`resolveField` 是函数，只在运行时参与编译。如果要复用 `resolveField` 这类逻辑，需要在应用代码里复用同一个 resolver，而不是期待它被写进 IR。

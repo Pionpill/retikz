@@ -16,7 +16,7 @@ description: 数据通道描述字段或常量如何进入 x、y、color、size�
 
 <ComponentPreview name="data-channel" sourceFiles={['data-channel.data.ts']} />
 
-同一行数据可以同时绑定到多个通道：`gdp` 决定横向位置，`life` 决定纵向位置，`region` 决定颜色，`population` 决定点半径，`abbr` 决定文字标注。Plot 会先按字段名取值，再按字段类型和显式 scale 配置派生比例尺。
+同一行数据可以同时绑定到多个通道：`gdp` 决定横向位置，`life` 决定纵向位置，`region` 决定颜色，`population` 决定点半径，`abbr` 决定文字标注。通道读取的是数据准备阶段得到的 canonical 值：`fieldMap`、`format`、`resolveField` 都已经生效，然后 Plot 再按字段类型和显式 scale 配置派生比例尺。
 
 ## 通道类型
 
@@ -43,6 +43,21 @@ React DSL 里字符串通常表示字段名：
 ```
 
 在 IR 里，字段会变成 `{ field: 'gdp' }`，常量会变成 `{ value: 80 }`。一个通道只能二选一：要么来自字段，要么来自常量。
+
+字段名解析遵循和 model 相同的规则：先查整段字段名是否是行上的直接 key，再按 `.` 下钻。因为 canonical 行会把规范化值写回逻辑字段名，所以 mark 只需要引用逻辑字段，不需要关心真实数据字段名或存储格式。
+
+## 技术原理
+
+React 写法里的 mark props 会在构建 Plot spec 时转成通道配置。字段通道进入 `encoding`，常量通道保留为固定值；lowering 时再从 canonical 行读取字段值。
+
+| 写法 | 内部含义 |
+| --- | --- |
+| `<PointMark x="gdp" />` | `x` 是字段通道，读取 canonical 行里的 `gdp` |
+| `<PointMark color="region" />` | `color` 是字段通道，会按字段类型派生颜色比例尺 |
+| `<ReferenceMark y={80} />` | `y` 是常量通道，不读取数据行 |
+| `<PathMark order="month" />` | `order` 不在 `encoding` 对象里，但仍按字段读取，用于 datum 排序 |
+
+通道本身只回答“读哪个值”。字段类型决定默认比例尺，坐标系决定位置通道如何解释。因此同样的 `x` / `y` 在笛卡尔和极坐标下会有不同几何含义，但数据读取规则保持一致。
 
 ## 与 scale / coordinate 的关系
 

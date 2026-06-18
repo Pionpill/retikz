@@ -5,6 +5,21 @@ description: Data grammar aligns external datasets with the fields Plot consumes
 
 Plot data does not enter IR. The configuration describes which fields to read, what types they have, how they should be parsed, and which visual channels they bind to; the actual dataset is passed at compile time. That keeps one grammar reusable across multiple data sources.
 
+## Pipeline
+
+During compilation, Plot first collects the fields actually referenced by the current configuration, then normalizes external rows into canonical rows. Transforms, scales, marks, and locators all read that normalized result instead of repeatedly reading raw input rows.
+
+| Step | What Happens | Main Configuration |
+| --- | --- | --- |
+| Data reference | Select the external dataset for this plot; rows themselves stay out of IR | `<Plot data>` / `data.reference` |
+| Field contract | Decide logical field names, types, category order, and declarative formats; otherwise infer from samples | `model` |
+| Source alignment | Map logical fields to physical data paths, including renamed fields and nested paths | `fieldMap` / `fieldMaps` |
+| Parse and normalize | Parse values with `resolveField`, `format`, or built-in coercion, then write canonical values back under logical names | `resolveField` / `format` / field type |
+| Validation | Sample-check or fully check participating fields, and decide whether invalid values skip or throw | `validateData` / `invalid` |
+| Channel consumption | Mark channels such as `x`, `y`, `color`, `size`, and `text` read canonical values | mark props / `encoding` |
+
+`model` and `format` are persisted with the PlotSpec. `fieldMap` is a serializable lowering option injected by dataset reference. Function options such as `resolveField` participate only at runtime and do not enter IR.
+
 ## Topics
 
 <div className="grid gap-3 sm:grid-cols-2">
@@ -21,4 +36,3 @@ Plot data does not enter IR. The configuration describes which fields to read, w
     <span>Bind fields or constants to visual channels such as x, y, color, size, and text.</span>
   </LinkedCard>
 </div>
-

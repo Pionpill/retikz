@@ -3,11 +3,11 @@ title: Processing
 description: Get real-world data in and trusted — use fieldMap for renamed fields, format or resolveField for custom parsing, and validateData / invalid for dirty data.
 ---
 
-[Data Model](/plot/grammar/data/model) declares what the fields **are**; this page is about getting real-world data **in** — swapping sources, parsing, and validating. All three assume a model is declared.
+[Data Model](/plot/grammar/data/model) declares what the fields **are**; this page is about getting real-world data **in** — swapping sources, parsing, and validating. `fieldMap` and declarative `format` rely on a model for the logical field contract; `resolveField`, `validateData`, and `invalid` can also work with inferred fields. In practice, declare a model when you want one config to stay reusable across several data sources.
 
 ## Swapping data sources
 
-Data stays out of the config (the IR), so one `<Plot>` config can run against different sources — as long as a model is declared (the model is the "portable" switch). There are three ways to bind a new source:
+Data stays out of the config (the IR), so one `<Plot>` config can run against different sources. If all field names match, you can draft without a model; for long-lived reuse across APIs or files, a model gives the config an explicit logical field contract. There are three ways to bind a new source:
 
 ### Same names, same types
 
@@ -31,7 +31,7 @@ When the data's field names don't line up with the config's logical names, suppl
 </Plot>
 ```
 
-`fieldMap` only renames (it doesn't transform values — computation belongs to transforms); it must be used with a model — without one there are no "logical fields" to map.
+`fieldMap` only renames (it doesn't transform values — computation belongs to transforms); it must be used with a model — without one there are no "logical fields" to map. The right-hand side can be a nested path such as `pricing.amount`. Plot reads from that physical path, then writes the parsed value back under the logical name such as `revenue`, so later transforms / scales / marks still reference only logical fields.
 
 Both charts below use the same logical config. The left data already has `month` / `revenue`; the right data comes from another feed where the fields are `period` / `amount`, so `fieldMap` binds it back to the same model.
 
@@ -39,7 +39,7 @@ Both charts below use the same logical config. The left data already has `month`
 
 ### Different storage formats, same type
 
-A single `temporal` field reads correctly whether the data stores it as a `Date`, an ISO string, or an epoch number; a `continuous` field accepts a number or a well-formed numeric string (`"120"`). No extra config. Non-default storage formats (`'2024/01/01'`, epoch seconds, `'50%'`) go through the parsing below.
+A single `temporal` field reads correctly whether the data stores it as a `Date`, an ISO string, or an epoch-millisecond number; a `continuous` field accepts numbers, safe-integer bigints, or strict numeric strings (`"120"`). No extra config. Non-default storage formats (`'2024/01/01'`, epoch seconds, `'50%'`, numeric strings with thousands commas) go through the parsing below.
 
 The right-hand chart below deliberately mixes `Date`, epoch milliseconds, ISO strings, and numbers / numeric strings. Because the field types are still `temporal` + `continuous`, the same model normalizes them.
 
@@ -89,6 +89,8 @@ Rules:
 - `slashDate` accepts only strict `YYYY/MM/DD`; ambiguous layouts like `DD/MM/YYYY` / `MM/DD/YYYY` are not accepted (so the same string can't parse to different dates in different environments).
 - Parsing priority: `resolveField`'s `parse` > declarative `format` > built-in default.
 
+Parsing and normalization happen before transforms, scales, and marks. Plot writes parsed values into the canonical row under the logical field name; every later stage reads that value. So `fieldMap={{ revenue: 'finance.amount' }}`, `format: 'percent'`, and `resolveField` only affect preparation; the mark still says `y="revenue"`.
+
 ### resolveField
 
 For **arbitrary formats** outside the table (a `'2024Q1'` quarter string, a custom separator) or to **force a field to a type** (a numeric enum as `categorical`), pass `resolveField` a function — it **does not enter the IR** (a runtime option, alongside `fieldMap`) and returns, per field name, a "type override + optional custom parser":
@@ -115,7 +117,7 @@ The example below parses quarter strings like `'2026Q1'` into the first day of t
 Rules:
 
 - Returning `{ type }` overrides the field's type (higher priority than the model and inference); returning `{ parse }` uses a custom parser to turn the raw value into a canonical one (`temporal`/`continuous` return a number, `categorical` a string/number), and returning `undefined` skips that value.
-- With **only `parse` and no `type`**, the type comes from the model declaration — so a bare `parse` **requires a model** (without one the type source is unclear, and it errors).
+- With **only `parse` and no `type`**, the type comes from the model declaration — so without a model you must return `type` as well, otherwise the type source is unclear and Plot errors.
 - `resolveField` **does not bypass strict mode**: with a model declared, referencing an unlisted field still errors — it only overrides type/parsing, it cannot turn a misspelled field into a valid one.
 - The second argument provides `{ dataReference, physicalPath, declaredType }`, so the same logical field can branch by data source or by the actual path after `fieldMap`.
 - Being a function, it is not serializable, so `resolveField` is the escape hatch for hand-written code; for a fully portable / LLM-friendly spec, prefer the model's declarative `type` / `format`.
@@ -144,7 +146,7 @@ Choose validation by how strict you want the chart to be:
 | `validateData` | sample-checks bound fields | debugging blank charts / bad field maps |
 | `invalid="error"` | full check of participating fields | data intake, tests, fail-loud charts |
 
-The default "skip" can leave you staring at a blank chart. Turn on `validateData` to have retikz **sample-check** the binding and throw on problems, pointing at **which field and how many invalid / missing** (e.g. `field "x": 3/100 invalid`), turning "why is it empty" into a clear message:
+Validation happens after parsing / normalization and only checks fields used by the current plot. The default "skip" can leave you staring at a blank chart. Turn on `validateData` to have retikz **sample-check** the binding and throw on problems, pointing at **which field and how many invalid / missing** (e.g. `field "x": 3/100 invalid`), turning "why is it empty" into a clear message:
 
 ```tsx
 <Plot data={rows} model={[...]} validateData>
@@ -161,3 +163,18 @@ For a stricter **full** check, pass `invalid="error"` — any invalid value (a m
 ```
 
 `invalid` defaults to `'skip'` (the table's "skip" behavior): invalid points are dropped but the **whole row is kept**, still participating in stacking / sorting transforms; `'error'` only checks the fields the chart references, leaving other dirty columns alone.
+
+## How It Works
+
+Data processing runs before mark lowering. Its job is to turn external rows from different sources and storage formats into one canonical row shape. Later transforms, scales, marks, and locators all read that result.
+
+| Order | Processing |
+| --- | --- |
+| 1 | Collect fields referenced by the current config, producing the field set that actually needs work |
+| 2 | Use `fieldMap` to align logical fields with physical data paths; without a mapping, the physical path is the logical field name |
+| 3 | Resolve field types: `resolveField.type` first, then model / format / inference |
+| 4 | Parse field values: `resolveField.parse` first, then declarative `format`, then built-in coercion |
+| 5 | Write parsed values back into the canonical row under logical field names |
+| 6 | Use `validateData` / `invalid` to sample-check or fully check participating fields |
+
+`model` and `format` enter the PlotSpec and are suitable for persistence with the chart config. `fieldMap` is a serializable mapping, but it is a lowering option injected by dataset reference and is not written into the PlotSpec; `resolveField` is a function and participates only at runtime. To reuse `resolveField` logic, reuse the same resolver in application code rather than expecting it to be written into IR.

@@ -17,6 +17,8 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 
 字段名是**路径**，所以嵌套数据（如 MongoDB 文档 / 接口返回的 JSON）也能直接用：`x="user.address.city"` 会逐级取到叶子值。叶子必须是标量（字符串 / 数字 / 布尔 / 时间），不能是对象或数组。
 
+字段解析会先查整段字段名是否是行上的直接 key，再按 `.` 下钻。因此 `user.age` 既可以指嵌套路径，也可以作为规范化后的逻辑字段名存在。编译准备阶段会把字段解析成 canonical 值并写回逻辑字段名，后续 transform、scale、mark 都读取这份结果。
+
 ## 声明字段类型
 
 字段类型通过 `<Plot model>` 声明。`model` 是字段契约：`month` 是时间还是普通字符串、`revenue` 是连续数值还是分类，都会影响比例尺选择、坐标轴格式、图例派生和数据校验。未声明 `model` 时，retikz 会按数据样本**自动推断字段类型**。
@@ -25,9 +27,9 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 
 | 类型 | 含义 | 例子 | 默认推断与显式声明场景 |
 | --- | --- | --- | --- |
-| `continuous` | 连续可度量数值 | 销量、价格、温度 | 默认：样本值是 number<br />显式：数值枚举、编号、状态码要当分类处理 |
+| `continuous` | 连续可度量数值 | 销量、价格、温度 | 默认：样本值是有限 number 或 bigint<br />显式：数字串、数值枚举、编号、状态码要改成连续或分类 |
 | `temporal` | 日期 / 时间 | 日期、时间戳 | 默认：`Date` 或无歧义 ISO 日期 / 时间字符串<br />显式：非默认日期格式、无时区时间 |
-| `categorical` | 离散类别 | 国家、颜色名、评级 | 默认：其余字符串 / 布尔值等离散值<br />显式：需要固定分类顺序或控制轴与图例顺序 |
+| `categorical` | 离散类别 | 国家、颜色名、评级 | 默认：其余字符串、布尔值、混合类型或无法判断字段<br />显式：需要固定分类顺序或控制轴与图例顺序 |
 
 想覆盖默认推断、解析非默认格式，或让配置脱离数据也能自描述时，就自定义 `model`。每个字段声明可以包含这些配置：
 
@@ -42,7 +44,7 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 
 <ComponentPreview name="data-model-custom" sourceFiles={['data-model-custom.data.ts']} />
 
-**声明 model = 严格模式**：mark / transform 引用的每个数据字段都必须在 model 里列出，拼错字段名会**立刻报错**，而不是画出一张空图。这里的引用不只包括 `x` / `y`，也包括 `a` / `b` / `c`、`color`、`series`、mark 的 `order`、点图的 `size` / `opacity` / `shape`，以及 transform 输入字段。
+**声明 model = 严格模式**：mark / transform 引用的每个数据字段都必须在 model 里列出，拼错字段名会**立刻报错**，而不是画出一张空图。这里的引用不只包括 `x` / `y` / `z`，也包括 `color`、`series`、mark 的 `order`、点图的 `size` / `opacity` / `shape`，以及 transform 输入字段。model 中字段名不能重复，重复声明同样会报错。
 
 不声明 `model` 时，字段类型走上面的默认推断，适合快速试画。
 
@@ -60,7 +62,7 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 
 省略 `type` 的字段要到 lowering 时看数据才能定类型；写了 `format` 的字段由格式蕴含类型，例如 `format: 'percent'` 会把字段当作 `continuous`。如果要让 spec 不看数据也完全自描述（LLM 友好 / 完全可移植），就把 `type` 或 `format` 填清楚。
 
-<ComponentAlert title="推断是尽力而为，model 才是契约" description="不声明 model（或字段省略 type / format）时类型靠抽样猜测：时间只认无歧义的 ISO 格式（YYYY-MM-DD、带时区的 ISO datetime，含空格分隔的 SQL 时间戳如 '2024-01-01 12:00:00Z'），'2024/01/01'、无时区时间、裸数字串不会被当成时间。要精确、要校验、要让 LLM 不看数据就懂字段，就声明 model；非默认存储格式再加 format 或 resolveField。" />
+<ComponentAlert title="推断是尽力而为，model 才是契约" description="不声明 model（或字段省略 type / format）时类型靠抽样猜测：时间只认无歧义的 ISO 格式（YYYY-MM-DD、带时区的 ISO datetime，含空格分隔的 SQL 时间戳如 '2024-01-01 12:00:00Z'），'2024/01/01'、无时区时间不会被当成时间；裸数字串也不会被自动当成 continuous。bigint 会推断为 continuous，但只有安全整数能归一化。要精确、要校验、要让 LLM 不看数据就懂字段，就声明 model；非默认存储格式再加 format 或 resolveField。" />
 
 ## 类型驱动的比例尺
 
@@ -90,6 +92,19 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 - **只对 categorical 有效**：给 `continuous` / `temporal` 字段写 `order` 会**报错**（顺序对连续值 / 时间没有意义）。
 - **显式比例尺 domain 优先**：若比例尺自己写了 `domain`，以它为准，`order` 被忽略。
 - 写了**非默认** `order`（排序或显式数组）就表示「这个分类有序」——retikz 三类字段里没有「有序类别」专门类型，有序性靠这个参数表达。
+
+## 技术原理
+
+`model` 不保存数据行，只保存字段契约。lowering 前，Plot 会先从 mark、transform、axis、legend 等配置里收集实际引用的字段，再用 `model` 或数据样本确定每个字段的类型。
+
+| 阶段 | 作用 |
+| --- | --- |
+| 收集字段 | 找出当前图真正使用的逻辑字段，包括位置、样式、文本、排序和 transform 输入 |
+| 校验契约 | 声明了 `model` 时，引用字段必须都在 model 里，model 字段名也不能重复 |
+| 确定类型 | 字段写了 `type` 就直接使用；写了 `format` 就由格式蕴含类型；否则从数据样本推断 |
+| 保存顺序 | `categorical` 字段的 `order` 会进入字段元信息，供比例尺、坐标轴和图例共用 |
+
+类型确定后，比例尺、坐标轴、图例和数据校验都读同一份字段元信息。真实数据仍在编译时传入，不会写进 IR；这也是同一份配置能换数据源复用的基础。
 
 ## 下一步
 

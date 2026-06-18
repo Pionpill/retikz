@@ -17,6 +17,8 @@ The simplest form: hand a row array to `<Plot data>` and have marks reference co
 
 A field name is a **path**, so nested data (MongoDB documents, JSON from an API) works directly: `x="user.address.city"` drills to the leaf. The leaf must be a scalar (string / number / boolean / time) — not an object or array.
 
+Field resolution first checks whether the whole field name exists as a direct key on the row, then falls back to `.` traversal. That means `user.age` can be either a nested path or a normalized logical field name. During preparation, Plot parses fields into canonical values and writes them back under logical names; later transforms, scales, and marks read that result.
+
 ## Declaring field types
 
 Declare field types through `<Plot model>`. The `model` is the field contract: whether `month` is time or a plain string, and whether `revenue` is continuous or categorical, affects scale selection, axis formatting, legend derivation, and validation. When `model` is omitted, retikz **infers field types** from data samples.
@@ -25,9 +27,9 @@ Field types and default inference:
 
 | Type | Meaning | Examples | Default inference and explicit declarations |
 | --- | --- | --- | --- |
-| `continuous` | continuous measurable numbers | sales, price, temperature | Default: sample values are numbers<br />Declare: numeric enums, ids, or status codes should behave as categories |
+| `continuous` | continuous measurable numbers | sales, price, temperature | Default: sample values are finite numbers or bigints<br />Declare: numeric strings, numeric enums, ids, or status codes should behave as continuous values or categories |
 | `temporal` | date / time values | dates, timestamps | Default: `Date` or unambiguous ISO date / datetime strings<br />Declare: non-default date formats or timezone-less times |
-| `categorical` | discrete categories | countries, color names, ratings | Default: other strings / booleans and discrete values<br />Declare: category order, axes, or legends need fixed ordering |
+| `categorical` | discrete categories | countries, color names, ratings | Default: other strings, booleans, mixed values, or unknown fields<br />Declare: category order, axes, or legends need fixed ordering |
 
 Customize `model` when you need to override inference, parse non-default storage formats, or make the config self-describing without the data. Each field declaration can contain:
 
@@ -42,7 +44,7 @@ The side-by-side demo below uses one funnel dataset. The left chart has no `mode
 
 <ComponentPreview name="data-model-custom" sourceFiles={['data-model-custom.data.ts']} />
 
-**Declaring a model = strict mode**: every data field referenced by a mark / transform must be listed in the model; a misspelled field name **fails immediately** instead of drawing an empty chart. References include not only `x` / `y`, but also `a` / `b` / `c`, `color`, `series`, a mark's `order`, point `size` / `opacity` / `shape`, and transform input fields.
+**Declaring a model = strict mode**: every data field referenced by a mark / transform must be listed in the model; a misspelled field name **fails immediately** instead of drawing an empty chart. References include not only `x` / `y` / `z`, but also `color`, `series`, a mark's `order`, point `size` / `opacity` / `shape`, and transform input fields. Field names inside one model must be unique; duplicate declarations also throw.
 
 With no `model`, field types follow the default inference rules above, which is handy for quick drafts.
 
@@ -60,7 +62,7 @@ With no `model`, field types follow the default inference rules above, which is 
 
 Fields with `type` omitted need the data at lowering to determine their type. Fields with `format` get their type from the format, so `format: 'percent'` is treated as `continuous`. To keep a spec fully self-describing without the data (LLM-friendly / fully portable), fill in `type` or `format`.
 
-<ComponentAlert title="Inference is best-effort; the model is the contract" description="Without a model (or with a field's type / format omitted), types are guessed from samples: time is only recognized in unambiguous ISO form (YYYY-MM-DD, an ISO datetime with a timezone, including the space-separated SQL form like '2024-01-01 12:00:00Z') — '2024/01/01', timezone-less times, and bare numeric strings are not treated as time. Declare a model when you want precision, validation, or for an LLM to understand the fields without seeing the data; add format or resolveField for non-default storage formats." />
+<ComponentAlert title="Inference is best-effort; the model is the contract" description="Without a model (or with a field's type / format omitted), types are guessed from samples: time is only recognized in unambiguous ISO form (YYYY-MM-DD, an ISO datetime with a timezone, including the space-separated SQL form like '2024-01-01 12:00:00Z') — '2024/01/01' and timezone-less times are not treated as time; bare numeric strings are not inferred as continuous either. Bigints infer as continuous, but only safe integers can be normalized. Declare a model when you want precision, validation, or for an LLM to understand the fields without seeing the data; add format or resolveField for non-default storage formats." />
 
 ## Type-driven scales
 
@@ -90,6 +92,19 @@ Rules:
 - **Only valid on `categorical`**: an `order` on a `continuous` / `temporal` field **throws** (order is meaningless for continuous values / time).
 - **An explicit scale `domain` wins**: if the scale declares its own `domain`, that takes precedence and `order` is ignored.
 - A **non-default** `order` (a sort or an explicit array) marks the field as ordered — retikz's three field types have no dedicated "ordered category" type; orderedness is expressed through this parameter.
+
+## How It Works
+
+`model` stores the field contract, not the data rows. Before lowering, Plot collects the fields referenced by marks, transforms, axes, and legends, then determines each field type from the model or from data samples.
+
+| Phase | Purpose |
+| --- | --- |
+| Collect fields | Find the logical fields actually used by position, style, text, order, and transform inputs |
+| Validate contract | With a `model`, every referenced field must be listed, and model field names must be unique |
+| Resolve types | Use explicit `type`; derive type from `format`; otherwise infer from data samples |
+| Store order | Keep categorical `order` in field metadata so scales, axes, and legends share it |
+
+After types are resolved, scales, axes, legends, and validation all read the same field metadata. Real rows are still supplied at compile time and are not written into IR; that is what keeps one config reusable across data sources.
 
 ## Next Step
 
