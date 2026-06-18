@@ -1,9 +1,33 @@
 import type { Position } from '@retikz/math';
-import { Cartesian1DOrientation, type Cartesian1DOrientationType, PlotCoordinate } from '../ir';
-import type { PositionScale } from '../scale';
+import { type AxisGuide, type Cartesian1DCoordinate, Cartesian1DOrientation, type Cartesian1DOrientationType, type Coordinate, PlotCoordinate, PlotScale, type Scale } from '../ir';
+import { Cartesian1DSchema, Cartesian2DSchema } from '../ir/coordinate';
+import type { GuideContext } from '../guide';
+import { type Rect, computePlotArea } from '../pipeline/layout';
+import type { PositionScale, TickSet } from '../scale';
 import type { Cell, CellGeometry } from './cell';
 import { cellInterval } from './cell';
+import type { AnyCoordinateDefinition, CoordinateDefinition } from './define';
 import type { DimensionRole } from './types';
+
+type Cartesian2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Cartesian2D }>;
+
+/** 空刻度集：某维度无 axis 时给 GuideContext 的占位。 */
+const EMPTY_TICKS: TickSet = { values: [], labels: [] };
+
+/** 一根定位角色只画一根轴：重复同角色的 axis → 抛清晰错误。 */
+const assertUniqueAxisDimension = (guides: ReadonlyArray<AxisGuide>): void => {
+  const seen = new Set<string>();
+  for (const guide of guides) {
+    if (seen.has(guide.dimension)) {
+      throw new Error(`lowerPlots: duplicate axis for "${guide.dimension}" role (dimension "${guide.dimension}"); one axis per positional role`);
+    }
+    seen.add(guide.dimension);
+  }
+};
+
+/** 仅连续数值 scale 的显式 range 会阻止坐标系把 range 收敛到 plotArea。 */
+const hasExplicitContinuousRange = (def: Scale): boolean =>
+  (def.type === PlotScale.Linear || def.type === PlotScale.Log || def.type === PlotScale.Pow || def.type === PlotScale.Sqrt) && def.range !== undefined;
 
 /**
  * 二维笛卡尔运行时坐标帧。
@@ -95,3 +119,115 @@ export const createCartesian1DCoordinate = (scale: PositionScale, orientation: C
     projectRoles,
   };
 };
+
+const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinate> = {
+  schema: Cartesian2DSchema,
+  roles: ['x', 'y'],
+  resolve: (coordinate, ctx) => {
+    const xValues = ctx.collectPositionValues('x', { axis: 'primary', includeLinkSource: true, includeLinkTargets: true });
+    const yValues = ctx.collectPositionValues('y', { axis: 'secondary', includeBaseline: true, includeLinkSource: true, includeLinkTargets: true });
+    const xScaleDef = ctx.resolveScaleForRole('x', coordinate.x, xValues, { includeLinkSource: true });
+    const yScaleDef = ctx.resolveScaleForRole('y', coordinate.y, yValues, { includeLinkSource: true });
+    ctx.assertBaselineScaleCompatible(yScaleDef.type, ctx.marks);
+
+    const xScale = ctx.buildPositionScale(xScaleDef, xValues, [0, ctx.width]);
+    const yScale = ctx.buildPositionScale(yScaleDef, yValues, [ctx.height, 0]);
+
+    assertUniqueAxisDimension(ctx.axisGuides);
+    const xAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
+    const yAxis = ctx.axisGuides.find(guide => guide.dimension === 'y');
+    const xTicks: TickSet | undefined = xAxis ? xScale.ticks(xAxis.tickCount) : undefined;
+    const yTicks: TickSet | undefined = yAxis ? yScale.ticks(yAxis.tickCount) : undefined;
+
+    const computed = computePlotArea(
+      ctx.width,
+      ctx.height,
+      { hasXAxis: !!xAxis, hasYAxis: !!yAxis, xLabels: xTicks?.labels ?? [], yLabels: yTicks?.labels ?? [], legendReserve: ctx.legendReserve },
+      { fontSize: ctx.fontSize, margin: ctx.margin },
+    );
+    const plotArea = computed.plotArea;
+
+    if (!hasExplicitContinuousRange(xScaleDef)) xScale.setRange([plotArea.x, plotArea.x + plotArea.width]);
+    if (!hasExplicitContinuousRange(yScaleDef)) yScale.setRange([plotArea.y + plotArea.height, plotArea.y]);
+    const frame = createCartesianCoordinate(xScale, yScale);
+
+    const [xRangeStart, xRangeEnd] = xScale.range();
+    const [yRangeStart, yRangeEnd] = yScale.range();
+    const guideFrame: Rect = {
+      x: Math.min(xRangeStart, xRangeEnd),
+      y: Math.min(yRangeStart, yRangeEnd),
+      width: Math.abs(xRangeEnd - xRangeStart),
+      height: Math.abs(yRangeEnd - yRangeStart),
+    };
+    const guideContext: GuideContext = {
+      plotArea: guideFrame,
+      projectX: xScale,
+      projectY: yScale,
+      xTicks: xTicks ?? EMPTY_TICKS,
+      yTicks: yTicks ?? EMPTY_TICKS,
+      fontSize: ctx.fontSize,
+    };
+    const lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));
+    return {
+      frame,
+      plotArea,
+      gridLayers: lowered.flatMap(layer => (layer.gridLayer ? [layer.gridLayer] : [])),
+      axisLayers: lowered.flatMap(layer => (layer.axisLayer ? [layer.axisLayer] : [])),
+    };
+  },
+};
+
+const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinate> = {
+  schema: Cartesian1DSchema,
+  roles: ['x'],
+  resolve: (coordinate, ctx) => {
+    const orientation = coordinate.orientation ?? Cartesian1DOrientation.Horizontal;
+    const horizontal = orientation === Cartesian1DOrientation.Horizontal;
+    const values = ctx.collectPositionValues('x', { axis: 'primary', includeLinkSource: true });
+    const scaleDef = ctx.resolveScaleForRole('x', coordinate.x, values, { includeLinkSource: true });
+
+    assertUniqueAxisDimension(ctx.axisGuides);
+    const axis = ctx.axisGuides.find(guide => guide.dimension === 'x');
+
+    const provisional: [number, number] = horizontal ? [0, ctx.width] : [ctx.height, 0];
+    const scale = ctx.buildPositionScale(scaleDef, values, provisional);
+    const ticks: TickSet | undefined = axis ? scale.ticks(axis.tickCount) : undefined;
+    const computed = computePlotArea(
+      ctx.width,
+      ctx.height,
+      {
+        hasXAxis: horizontal ? !!axis : false,
+        hasYAxis: horizontal ? false : !!axis,
+        xLabels: horizontal ? ticks?.labels ?? [] : [],
+        yLabels: horizontal ? [] : ticks?.labels ?? [],
+        legendReserve: ctx.legendReserve,
+      },
+      { fontSize: ctx.fontSize, margin: ctx.margin },
+    );
+    const plotArea = computed.plotArea;
+    if (horizontal) scale.setRange([plotArea.x, plotArea.x + plotArea.width]);
+    else scale.setRange([plotArea.y + plotArea.height, plotArea.y]);
+    const baseline = horizontal ? plotArea.y + plotArea.height : plotArea.x;
+    const frame = createCartesian1DCoordinate(scale, orientation, baseline);
+
+    const guideContext: GuideContext = {
+      plotArea,
+      projectX: scale,
+      projectY: scale,
+      xTicks: horizontal ? ticks ?? EMPTY_TICKS : EMPTY_TICKS,
+      yTicks: horizontal ? EMPTY_TICKS : ticks ?? EMPTY_TICKS,
+      fontSize: ctx.fontSize,
+      axisOrientation: horizontal ? 'horizontal' : 'vertical',
+    };
+    const lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));
+    return {
+      frame,
+      plotArea,
+      gridLayers: lowered.flatMap(layer => (layer.gridLayer ? [layer.gridLayer] : [])),
+      axisLayers: lowered.flatMap(layer => (layer.axisLayer ? [layer.axisLayer] : [])),
+    };
+  },
+};
+
+/** 笛卡尔内置坐标系 definitions。 */
+export const CARTESIAN_COORDINATES: ReadonlyArray<AnyCoordinateDefinition> = [cartesian2DCoordinateDefinition, cartesian1DCoordinateDefinition] as ReadonlyArray<AnyCoordinateDefinition>;

@@ -248,7 +248,7 @@ renderPlot(spec, { series: rows }, { coordinates: [arch] });
 ## 影响
 
 - **`coordinate/define.ts`（新建）**：`CoordinateDefinition` / `CoordinateResolveContext` / `CoordinateResolution` / `defineCoordinate` / `extractCoordinateType` / `resolveCoordinateRegistry` / `BUILTIN_COORDINATES`（5 内置注册项）。
-- **`coordinate/cartesian.ts` / `polar.ts` / `ternary.ts`**：各加对应 `defineCoordinate({...})` 注册项；`resolve` 体把现 `resolveFrame` 对应分支逐行搬入（行为保持）；`create*Coordinate` 构造器不变。
+- **`coordinate/cartesian.ts` / `polar.ts` / `ternary.ts`**：各加对应内置 `CoordinateDefinition` 注册项；`resolve` 体把现 `resolveFrame` 对应分支逐行搬入（行为保持）；`create*Coordinate` 构造器不变。
 - **`coordinate/define.ts` / `coordinate/types.ts`**：`createCustomCoordinate` 随 definition 入口收敛到 `define.ts`；`ResolvedCustomCoordinate` / `projectCell` 作为运行时帧契约收敛到 `types.ts`；删 `CustomCoordinateFactory` / `CustomCoordinateContext`（其能力并入 `CoordinateResolveContext`）。
 - **`coordinate/constants.ts`**：删 `POSITION_ROLES` / `REQUIRED_POSITION_CHANNELS` / `VALID_GUIDE_DIMENSIONS` 三张内置硬编码表（roles 上移 `definition.roles`）；校验改读已解析 registry。
 - **`pipeline/expand.ts`**：`resolveFrame` 六路 `if/else`（`:390-648`）→ registry 查表 + `definition.resolve(op, ctx)`；组装 `CoordinateResolveContext`（把现 `collectValues` / `resolveScaleForRole` 闭包 + 布局/guide 能力包进 ctx）；`assertValidGuideDimensions` / `assertRequiredPositionChannels` 改读 registry `roles`；`LowerPlotsOptions.coordinates` 类型 `Record<string, CustomCoordinateFactory>` → `Array<CoordinateDefinition>`；`ResolveFrameParams.coordinates` 同改；registry 解析一次贯穿 expand + locator。
@@ -303,7 +303,7 @@ renderPlot(spec, { series: rows }, { coordinates: [arch] });
 - `packages/plot/plot/src/ir/coordinate/coordinate.ts`（改：删 Custom 成员/旧 schema，加 Custom/Op schema + 内置 type 集 + 类型；`CoordinateSchema` 收 5-union）
 - `packages/plot/plot/src/ir/plot.ts`（改：`coordinate` 字段换 `CoordinateOpSchema`）
 - `packages/plot/plot/src/coordinate/define.ts`（新建：`CoordinateDefinition` / `CoordinateResolveContext` / `CoordinateResolution` / `defineCoordinate` / `createCustomCoordinate` / `extractCoordinateType` / `resolveCoordinateRegistry` / `BUILTIN_COORDINATES`）
-- `packages/plot/plot/src/coordinate/cartesian.ts` / `polar.ts` / `ternary.ts`（改：各加 `defineCoordinate` 注册项，resolve 搬入对应分支；构造器不变）
+- `packages/plot/plot/src/coordinate/cartesian.ts` / `polar.ts` / `ternary.ts`（改：各加内置 `CoordinateDefinition` 注册项，resolve 搬入对应分支；构造器不变）
 - `packages/plot/plot/src/coordinate/types.ts`（改：收纳 `ResolvedCustomCoordinate` 运行时帧契约；`ResolvedCoordinate` union 保留自定义分支）
 - `packages/plot/plot/src/coordinate/constants.ts`（改：删三张内置 roles/guide-dim 表）
 - `packages/plot/plot/src/coordinate/index.ts`（改：导出 `defineCoordinate` / 类型）

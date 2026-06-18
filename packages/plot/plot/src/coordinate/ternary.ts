@@ -1,7 +1,29 @@
 import { type Position, isFiniteNumber } from '@retikz/math';
-import { PlotCoordinate } from '../ir';
+import { type AxisGuide, PlotCoordinate, PlotScale, type Ternary2DCoordinate } from '../ir';
+import { Ternary2DSchema } from '../ir/coordinate';
+import type { GuideContext } from '../guide';
+import { computeTernaryFrame } from '../pipeline/layout';
+import { type TickSet, resolvePositionScale } from '../scale';
 import { type Cell, type CellGeometry, cellInterval } from './cell';
+import type { AnyCoordinateDefinition, CoordinateDefinition } from './define';
 import type { DimensionRole } from './types';
+
+/** 空刻度集：三角 guide 的 x/y 位置 scale 占位不会被实际读取。 */
+const EMPTY_TICKS: TickSet = { values: [], labels: [] };
+
+/** 三角轴共享刻度集（占比 0..1，标签为百分数）。 */
+const TERNARY_TICKS: TickSet = { values: [0, 0.25, 0.5, 0.75, 1], labels: ['0', '25', '50', '75', '100'] };
+
+/** 三元坐标一根定位角色只画一根轴：重复同角色的 axis → 抛清晰错误。 */
+const assertUniqueAxisDimension = (guides: ReadonlyArray<AxisGuide>): void => {
+  const seen = new Set<string>();
+  for (const guide of guides) {
+    if (seen.has(guide.dimension)) {
+      throw new Error(`lowerPlots: duplicate axis for "${guide.dimension}" role (dimension "${guide.dimension}"); one axis per positional role`);
+    }
+    seen.add(guide.dimension);
+  }
+};
 
 /** 三元坐标三角顶点序（屏幕坐标）：[Vx(x=100%), Vy(y=100%), Vz(z=100%)]。 */
 export type TernaryVertices = [Position, Position, Position];
@@ -124,3 +146,36 @@ export const createTernary2DCoordinate = (vertices: TernaryVertices): ResolvedTe
     projectCell: cell => ({ kind: 'contour', points: ternaryCellContour(cell, vertices) }),
   };
 };
+
+const ternary2DCoordinateDefinition: CoordinateDefinition<Ternary2DCoordinate> = {
+  schema: Ternary2DSchema,
+  roles: ['x', 'y', 'z'],
+  resolve: (coordinate, ctx) => {
+    assertUniqueAxisDimension(ctx.axisGuides);
+    const hasAxis = ctx.axisGuides.length > 0;
+    const showAnyLabels = ctx.axisGuides.some(guide => guide.tickLabels !== false);
+    const layout = computeTernaryFrame(ctx.width, ctx.height, { hasAxis, labels: hasAxis && showAnyLabels ? TERNARY_TICKS.labels : [] }, { fontSize: ctx.fontSize, margin: ctx.margin });
+    const frame = createTernary2DCoordinate(layout.vertices);
+    const placeholderScale = resolvePositionScale({ type: PlotScale.Linear, name: '__ternary', domain: [0, 1] }, [], [0, 1]);
+    const guideContext: GuideContext = {
+      plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
+      projectX: placeholderScale,
+      projectY: placeholderScale,
+      xTicks: EMPTY_TICKS,
+      yTicks: EMPTY_TICKS,
+      fontSize: ctx.fontSize,
+      ternaryVertices: layout.vertices,
+      ternaryTicks: TERNARY_TICKS,
+    };
+    const lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));
+    return {
+      frame,
+      plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
+      gridLayers: lowered.flatMap(layer => (layer.gridLayer ? [layer.gridLayer] : [])),
+      axisLayers: lowered.flatMap(layer => (layer.axisLayer ? [layer.axisLayer] : [])),
+    };
+  },
+};
+
+/** 三元内置坐标系 definitions。 */
+export const TERNARY_COORDINATES: ReadonlyArray<AnyCoordinateDefinition> = [ternary2DCoordinateDefinition] as ReadonlyArray<AnyCoordinateDefinition>;

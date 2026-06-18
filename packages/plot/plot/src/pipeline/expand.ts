@@ -1,42 +1,17 @@
 import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, JsonObjectSchema, defineComposite } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
-import { type AxisGuide, BUILTIN_COORDINATE_TYPES, Cartesian1DOrientation, type Channel, CoordinateSchema, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotScaleValue, type PlotSpec, PlotSpecSchema, type QuantileColorScale, type QuantizeColorScale, type Scale, type ThresholdColorScale } from '../ir';
+import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type OrdinalScale, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotScaleValue, type PlotSpec, PlotSpecSchema, type QuantileColorScale, type QuantizeColorScale, type Scale, type ThresholdColorScale } from '../ir';
 import { resolveIntervalBound } from '../mark/anchor';
 import { type ResolveField, type ResolveLabel, applyFieldResolver, assertAllValuesValid, channelValue, collectFormatFields, inferCategoryDomain, labelOf, normalizeRows, resolveFieldPath, resolveFieldTypes, toTimestamp, validateBoundData } from '../data';
-import { type GuideContext, type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../guide/guide';
-import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarCoordinate, computeTernaryFrame } from './layout';
+import { type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../guide/guide';
+import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect } from './layout';
 import { type ColorOf, type LabelOf, lowerMark } from '../mark/mark';
 import { type ChannelResolution, type ScaleDescriptor, makeNumericStyleResolver, makeOpacityResolver, makeShapeResolver, makeSizeResolver, makeStrokeWidthResolver } from '../scale/channel';
-import { type AnyCoordinateDefinition, type ResolvedCoordinate, createCartesian1DCoordinate, createCartesianCoordinate, createPolar1DCoordinate, createPolarCoordinate, createTernary2DCoordinate, resolveCoordinateRegistry } from '../coordinate';
+import { type AnyCoordinateDefinition, type ResolvedCoordinate, resolveCoordinateRegistry } from '../coordinate';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
-import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks } from '../scale/scale';
+import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks } from '../scale/scale';
 import { applyTransforms } from '../transform/transform';
 import { collectSourceFields } from './source-fields';
-
-/** 空刻度集（某维度无 axis 时给 GuideContext 的占位；实际不会被该维度的 guide 触达） */
-const EMPTY_TICKS: TickSet = { values: [], labels: [] };
-
-/** 三角轴共享刻度集（占比 0..1，标签为百分数）；三条 x/y/z 轴同域、本轮固定 5 档 */
-const TERNARY_TICKS: TickSet = { values: [0, 0.25, 0.5, 0.75, 1], labels: ['0', '25', '50', '75', '100'] };
-
-/**
- * guide 维度 → 定位角色：polar 下 x / angle 都归 angular、y / radius 都归 radial（hybrid 别名）；cartesian 下原样。
- * @description 唯一性检查须按角色（而非裸 dimension 串）判，否则 `dimension:'x'` 与 `'angle'` 会被当成两根轴静默叠画。
- */
-const axisRole = (dimension: string, coordinateType: string): string => {
-  if (coordinateType === PlotCoordinate.Polar2D || coordinateType === PlotCoordinate.Polar1D) {
-    if (dimension === 'x') return 'angular';
-    if (dimension === 'y') return 'radial';
-  }
-  return dimension;
-};
-
-/**
- * 取 mark 的 x / y 位置通道；link 的位置来自 source / target 字段对（取 source 端）
- * @description interval 用 encoding.x/y 作 band / span 的位置通道（extent / full bounds 不读 encoding，取 undefined 时由 collectValues 走 bounds 字段）。
- */
-const xChannelOf = (mark: Mark): Channel | undefined => (mark.type === PlotMark.Link ? mark.source.x : mark.encoding.x);
-const yChannelOf = (mark: Mark): Channel | undefined => (mark.type === PlotMark.Link ? mark.source.y : mark.encoding.y);
 
 /** link 的 target 端通道（source 端走 x/yChannelOf；两端都须纳入位置 scale 域，否则 target 投影越界） */
 const linkTargetChannelOf = (mark: Mark, role: 'x' | 'y'): Channel | undefined =>
@@ -90,21 +65,6 @@ const pointStrokeChannel = (mark: Mark): Channel | undefined => {
 const pointFillChannel = (mark: Mark): Channel | undefined => {
   if (mark.type !== PlotMark.Point || mark.fill === undefined || mark.fill.kind !== 'field') return undefined;
   return { field: mark.fill.value, ...(mark.fill.scale !== undefined ? { scale: mark.fill.scale } : {}) };
-};
-
-/**
- * 一根定位角色只画一根轴：重复同角色的 axis（含 hybrid 别名 x≡angle / y≡radius）→ 抛清晰错误。
- * @description 多轴（dual-axis / 上下双轴，靠 placement 区分、副轴可绑不同 scale）是后续非破坏放宽，目前不支持。
- */
-const assertUniqueAxisDimension = (guides: Array<AxisGuide>, coordinateType: string): void => {
-  const seen = new Set<string>();
-  for (const guide of guides) {
-    const role = axisRole(guide.dimension, coordinateType);
-    if (seen.has(role)) {
-      throw new Error(`lowerPlots: duplicate axis for "${role}" role (dimension "${guide.dimension}"); one axis per positional role`);
-    }
-    seen.add(role);
-  }
 };
 
 /** guide 谓词：按 type 判别串收窄成 axis / legend 子集 */
@@ -372,309 +332,48 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     return def;
   };
 
-  const roleChannelOf = (role: 'x' | 'y' | 'z') => (mark: Mark): Channel | undefined =>
-    mark.type === PlotMark.Link ? undefined : (mark.encoding as Record<string, Channel | undefined>)[role];
+  const roleChannelOf = (role: 'x' | 'y' | 'z', includeLinkSource = false) => (mark: Mark): Channel | undefined =>
+    mark.type === PlotMark.Link ? (includeLinkSource ? (role === 'x' ? mark.source.x : mark.source.y) : undefined) : (mark.encoding as Record<string, Channel | undefined>)[role];
 
-  const resolveScaleForDefinitionRole = (role: 'x' | 'y' | 'z', scaleName: string | undefined, values: Array<unknown>): Scale =>
-    resolveScaleForRole(role, scaleName, roleChannelOf(role), values);
+  const resolveScaleForDefinitionRole = (role: 'x' | 'y' | 'z', scaleName: string | undefined, values: Array<unknown>, opts?: { includeLinkSource?: boolean }): Scale =>
+    resolveScaleForRole(role, scaleName, roleChannelOf(role, opts?.includeLinkSource ?? false), values);
 
-  // 按坐标系解析出 ResolvedCoordinate（一次性、mark / guide 共用）+ guide 层。
-  // cartesian：x/y 角色绑 x/y scale、走 plotArea + axis guide；polar：angle/radius 角色、走 polar layout（ADR-01 不画 guide）。
-  let frame: ResolvedCoordinate;
-  const gridLayers: Array<IRScope> = [];
-  const axisLayers: Array<IRScope> = [];
   // legend 预留：按 position 在对应边让出带宽，plotArea 据此收窄（决策 ⑩）
   const legendReserve = legendReserveOf((node.guides ?? []).filter(isLegendGuide));
-  // 默认 plotArea = 全画布（polar 用整圆 bbox、不走 plotArea 收窄，legend 占位退化为不收窄）
-  let plotArea: Rect = { x: 0, y: 0, width, height };
 
-  if (!BUILTIN_COORDINATE_TYPES.has(coordinateOp.type)) {
-    JsonObjectSchema.parse(coordinateOp);
-    const customOp = coordinateDefinition.schema.parse(coordinateOp) as never;
-    JsonObjectSchema.parse(customOp);
-    const resolution = coordinateDefinition.resolve(customOp, {
-      width,
-      height,
-      fontSize,
-      ...(margin !== undefined ? { margin } : {}),
-      legendReserve,
-      ...(provenance !== undefined ? { provenance } : {}),
-      collectRoleValues: (role, opts) => collectValues(undefined, roleChannelOf(role), opts?.includeBaseline ?? false),
-      resolveScaleForRole: resolveScaleForDefinitionRole,
-      buildPositionScale: (def, values, range) => resolvePositionScale(def, values, [range[0], range[1]]),
-      assertBaselineScaleCompatible: (scaleType, marks) => assertBaselineScaleCompatible(scaleType, marks),
-      axisGuides,
-      lowerGuide,
-      lowerCustomAxis,
-      rows,
-      marks: node.marks,
-    });
-    frame = resolution.frame;
-    plotArea = resolution.plotArea;
-    gridLayers.push(...resolution.gridLayers);
-    axisLayers.push(...resolution.axisLayers);
-  } else {
-    const coordinate = CoordinateSchema.parse(coordinateOp);
-    if (coordinate.type === PlotCoordinate.Polar2D) {
-    // 角向值 ← x、径向值 ← y（坐标系把 x/y 重解释为 angle/radius，正中 (i) 投影整形）
-    const angleValues = collectValues('primary', xChannelOf, false);
-    const radiusValues = collectValues('secondary', yChannelOf, true);
-    // 笛卡尔下出现 angle/radius 通道才是误用；polar 下复用 x/y 合法。此处构造极坐标帧。
-    const angleScaleDef = resolveScaleForRole('x', coordinate.angle, xChannelOf, angleValues);
-    const radiusScaleDef = resolveScaleForRole('y', coordinate.radius, yChannelOf, radiusValues);
-    // L1：radius 是 polar 的值轴；非线性连续 scale + interval/area（baseline 0）→ fail-loud
-    assertBaselineScaleCompatible(radiusScaleDef.type, node.marks);
-
-    // guide 维度角色化：angle / x → angular（primary）、radius / y → radial（secondary）；一维一轴
-    assertUniqueAxisDimension(axisGuides, coordinate.type);
-    const angularAxis = axisGuides.find(guide => guide.dimension === 'x');
-    const radialAxis = axisGuides.find(guide => guide.dimension === 'y');
-
-    // 角向 scale 的 range = [startAngle, endAngle]，与 outerRadius 无关 → 可先建以取角向标签，供 layout 留白估算。
-    // band / point 角向刻度即类别（域驱动、不依赖最终半径），故此处取的标签即最终标签。
-    const angleScale = resolvePositionScale(angleScaleDef, angleValues, [coordinate.startAngle, coordinate.endAngle]);
-    const angularTicks: TickSet | undefined = angularAxis ? angleScale.ticks(angularAxis.tickCount) : undefined;
-
-    // polar layout：圆心 + outerRadius；有角向轴时为外圈标签预留留白（ADR-01 computePolarCoordinate，评审 P1）
-    const layout = computePolarCoordinate(
-      width,
-      height,
-      { hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false), angularLabels: angularTicks?.labels ?? [] },
-      { fontSize, margin },
-    );
-    const innerRadiusUnits = coordinate.innerRadius * layout.outerRadius;
-    // 径向 range = [innerRadius, outerRadius] user units（依赖最终 outerRadius，故在 layout 之后建）
-    const radiusScale = resolvePositionScale(radiusScaleDef, radiusValues, [innerRadiusUnits, layout.outerRadius]);
-    const radialTicks: TickSet | undefined = radialAxis ? radiusScale.ticks(radialAxis.tickCount) : undefined;
-    const polarFrame = createPolarCoordinate({
-      center: layout.center,
-      innerRadius: innerRadiusUnits,
-      outerRadius: layout.outerRadius,
-      startAngle: coordinate.startAngle,
-      endAngle: coordinate.endAngle,
-      // 连续角轴（linear / time / log / pow / sqrt）才段内采样弯弧；分类（band / point）类别间无中间值，走弦
-      continuousAngle:
-        angleScaleDef.type === PlotScale.Linear ||
-        angleScaleDef.type === PlotScale.Time ||
-        angleScaleDef.type === PlotScale.Log ||
-        angleScaleDef.type === PlotScale.Pow ||
-        angleScaleDef.type === PlotScale.Sqrt,
-      primary: angleScale,
-      secondary: radiusScale,
-    });
-    frame = polarFrame;
-
-    // guide 下沉：angular（外圆弧 + 圆周刻度 / 标签 + 角向辐条 grid）/ radial（辐条轴 + 同心环 grid），与 mark 同帧
-    const guideContext: GuideContext = {
-      plotArea: { x: 0, y: 0, width, height },
-      projectX: angleScale,
-      projectY: radiusScale,
-      xTicks: angularTicks ?? EMPTY_TICKS,
-      yTicks: radialTicks ?? EMPTY_TICKS,
-      fontSize,
-      frame: polarFrame,
-      angularTicks: angularTicks ?? EMPTY_TICKS,
-      radialTicks: radialTicks ?? EMPTY_TICKS,
-    };
-    for (const guide of axisGuides) {
-      const lowered = lowerGuide(guide, guideContext, provenance);
-      if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
-      if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
-    }
-  } else if (coordinate.type === PlotCoordinate.Cartesian1D) {
-    // cartesian1D：单维（x 角色）落直线，塌缩维取固定基线（horizontal=底、vertical=左）
-    const orientation = coordinate.orientation ?? Cartesian1DOrientation.Horizontal;
-    const horizontal = orientation === Cartesian1DOrientation.Horizontal;
-    const values = collectValues('primary', xChannelOf, false);
-    const scaleDef = resolveScaleForRole('x', coordinate.x, xChannelOf, values);
-
-    assertUniqueAxisDimension(axisGuides, coordinate.type);
-    const axis = axisGuides.find(guide => guide.dimension === 'x');
-
-    // provisional range（满画布）求刻度 → 估 plotArea → setRange 收敛到绘图区
-    const provisional: [number, number] = horizontal ? [0, width] : [height, 0];
-    const scale = resolvePositionScale(scaleDef, values, provisional);
-    const ticks: TickSet | undefined = axis ? scale.ticks(axis.tickCount) : undefined;
-    const computed = computePlotArea(
-      width,
-      height,
-      {
-        hasXAxis: horizontal ? !!axis : false,
-        hasYAxis: horizontal ? false : !!axis,
-        xLabels: horizontal ? ticks?.labels ?? [] : [],
-        yLabels: horizontal ? [] : ticks?.labels ?? [],
-        legendReserve,
-      },
-      { fontSize, margin },
-    );
-    plotArea = computed.plotArea;
-    if (horizontal) scale.setRange([plotArea.x, plotArea.x + plotArea.width]);
-    else scale.setRange([plotArea.y + plotArea.height, plotArea.y]);
-    // 塌缩维基线：水平贴底边、垂直贴左边（rug 沿轴边缘惯例）
-    const baseline = horizontal ? plotArea.y + plotArea.height : plotArea.x;
-    frame = createCartesian1DCoordinate(scale, orientation, baseline);
-
-    // guide：单维直线轴（axisOrientation 覆盖屏幕方向；scale 同时放 projectX/projectY，未用侧忽略）
-    const guideContext: GuideContext = {
-      plotArea,
-      projectX: scale,
-      projectY: scale,
-      xTicks: horizontal ? ticks ?? EMPTY_TICKS : EMPTY_TICKS,
-      yTicks: horizontal ? EMPTY_TICKS : ticks ?? EMPTY_TICKS,
-      fontSize,
-      axisOrientation: horizontal ? 'horizontal' : 'vertical',
-    };
-    for (const guide of axisGuides) {
-      const lowered = lowerGuide(guide, guideContext, provenance);
-      if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
-      if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
-    }
-  } else if (coordinate.type === PlotCoordinate.Polar1D) {
-    // polar1D：单角向（angle 角色，x 别名）落固定半径圆周，复用 alpha.4 角向投影 + 角向轴
-    const radiusFraction = coordinate.radius ?? 1;
-    const startAngle = coordinate.startAngle ?? 0;
-    const endAngle = coordinate.endAngle ?? 360;
-    const angleValues = collectValues('primary', xChannelOf, false);
-    const angleScaleDef = resolveScaleForRole('x', coordinate.angle, xChannelOf, angleValues);
-
-    assertUniqueAxisDimension(axisGuides, coordinate.type);
-    const angularAxis = axisGuides.find(guide => guide.dimension === 'x');
-
-    // 角向 scale range = [startAngle, endAngle]，与最终半径无关 → 先建取角向标签供 layout 留白
-    const angleScale = resolvePositionScale(angleScaleDef, angleValues, [startAngle, endAngle]);
-    const angularTicks: TickSet | undefined = angularAxis ? angleScale.ticks(angularAxis.tickCount) : undefined;
-    const layout = computePolarCoordinate(
-      width,
-      height,
-      { hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false), angularLabels: angularTicks?.labels ?? [] },
-      { fontSize, margin },
-    );
-    const radius = radiusFraction * layout.outerRadius;
-    const continuousAngle =
-      angleScaleDef.type === PlotScale.Linear ||
-      angleScaleDef.type === PlotScale.Time ||
-      angleScaleDef.type === PlotScale.Log ||
-      angleScaleDef.type === PlotScale.Pow ||
-      angleScaleDef.type === PlotScale.Sqrt;
-    frame = createPolar1DCoordinate({ center: layout.center, radius, startAngle, endAngle, continuousAngle, primary: angleScale });
-
-    // guide：构造 ResolvedPolarCoordinate（outerRadius=radius、innerRadius=0）复用 alpha.4 角向轴；secondary 角向轴不用、占位
-    const guidePolarCoordinate = createPolarCoordinate({
-      center: layout.center,
-      innerRadius: 0,
-      outerRadius: radius,
-      startAngle,
-      endAngle,
-      continuousAngle,
-      primary: angleScale,
-      secondary: angleScale,
-    });
-    const guideContext: GuideContext = {
-      plotArea: { x: 0, y: 0, width, height },
-      projectX: angleScale,
-      projectY: angleScale,
-      xTicks: angularTicks ?? EMPTY_TICKS,
-      yTicks: EMPTY_TICKS,
-      fontSize,
-      frame: guidePolarCoordinate,
-      angularTicks: angularTicks ?? EMPTY_TICKS,
-      radialTicks: EMPTY_TICKS,
-    };
-    for (const guide of axisGuides) {
-      const lowered = lowerGuide(guide, guideContext, provenance);
-      if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
-      if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
-    }
-  } else if (coordinate.type === PlotCoordinate.Ternary2D) {
-    // ternary2D：三连续分量 x/y/z 在 coordinate 内自动归一化 + 重心投影（无独立位置 scale）
-    assertUniqueAxisDimension(axisGuides, coordinate.type);
-    const hasAxis = axisGuides.length > 0;
-    const showAnyLabels = axisGuides.some(guide => guide.tickLabels !== false);
-    const layout = computeTernaryFrame(width, height, { hasAxis, labels: hasAxis && showAnyLabels ? TERNARY_TICKS.labels : [] }, { fontSize, margin });
-    frame = createTernary2DCoordinate(layout.vertices);
-
-    // 三角轴 guide：projectX/Y 用占位 position scale（三角轴几何走 ternaryVertices、不读位置 scale）
-    const placeholderScale = resolvePositionScale({ type: PlotScale.Linear, name: '__ternary', domain: [0, 1] }, [], [0, 1]);
-    const guideContext: GuideContext = {
-      plotArea: { x: 0, y: 0, width, height },
-      projectX: placeholderScale,
-      projectY: placeholderScale,
-      xTicks: EMPTY_TICKS,
-      yTicks: EMPTY_TICKS,
-      fontSize,
-      ternaryVertices: layout.vertices,
-      ternaryTicks: TERNARY_TICKS,
-    };
-    for (const guide of axisGuides) {
-      const lowered = lowerGuide(guide, guideContext, provenance);
-      if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
-      if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
-    }
-  } else {
-    // cartesian2D：x/y 角色绑 x/y scale（ribbon 两端字段对都进域；histogram interval 取 x0/x1 箱边进域）
-    const xValues = collectValues('primary', xChannelOf, false, 'x');
-    const yValues = collectValues('secondary', yChannelOf, true, 'y');
-    const xScaleDef = resolveScaleForRole('x', coordinate.x, xChannelOf, xValues);
-    const yScaleDef = resolveScaleForRole('y', coordinate.y, yChannelOf, yValues);
-    // L1：y 是 cartesian 的值轴；非线性连续 scale + interval/area（baseline 0）→ fail-loud
-    assertBaselineScaleCompatible(yScaleDef.type, node.marks);
-    const xScale = resolvePositionScale(xScaleDef, xValues, [0, width]);
-    const yScale = resolvePositionScale(yScaleDef, yValues, [height, 0]);
-
-    // 哪些维度有坐标轴（决定 margin / 是否算 ticks）；按 type 收窄出 axis 子集，legend 单独走 lowerLegend
-    assertUniqueAxisDimension(axisGuides, coordinate.type);
-    const xAxis = axisGuides.find(guide => guide.dimension === 'x');
-    const yAxis = axisGuides.find(guide => guide.dimension === 'y');
-    const xTicks: TickSet | undefined = xAxis ? xScale.ticks(xAxis.tickCount) : undefined;
-    const yTicks: TickSet | undefined = yAxis ? yScale.ticks(yAxis.tickCount) : undefined;
-
-    // 由整图尺寸 + axis 占位 + legend 预留缩出 plot area（无 axis 且无 legend → margin 全 0 → plot area = 整图，向后兼容）
-    const computed = computePlotArea(
-      width,
-      height,
-      { hasXAxis: !!xAxis, hasYAxis: !!yAxis, xLabels: xTicks?.labels ?? [], yLabels: yTicks?.labels ?? [], legendReserve },
-      { fontSize, margin },
-    );
-    plotArea = computed.plotArea;
-
-    // range 收敛到 plot area（y 屏幕向下，故倒置）；显式 range 的 scale 不覆盖——尊重用户手设
-    // 仅连续 scale 可带显式 range（band / point 的 range 始终派生；time 的 range 仍派生）
-    const hasExplicitContinuousRange = (def: Scale): boolean =>
-      (def.type === PlotScale.Linear || def.type === PlotScale.Log || def.type === PlotScale.Pow || def.type === PlotScale.Sqrt) && def.range !== undefined;
-    const xHasExplicitRange = hasExplicitContinuousRange(xScaleDef);
-    const yHasExplicitRange = hasExplicitContinuousRange(yScaleDef);
-    if (!xHasExplicitRange) xScale.setRange([plotArea.x, plotArea.x + plotArea.width]);
-    if (!yHasExplicitRange) yScale.setRange([plotArea.y + plotArea.height, plotArea.y]);
-    frame = createCartesianCoordinate(xScale, yScale);
-
-    // guide 的轴线/网格框取 scale 的实际 range（而非 margin 算的 plotArea）：无显式 range 时两者相同，
-    // 有显式 range 时轴线/网格随实际绘制区走，与刻度/mark 严格对齐（不因显式 range 而错位）
-    const [xRangeStart, xRangeEnd] = xScale.range();
-    const [yRangeStart, yRangeEnd] = yScale.range();
-    const guideFrame: Rect = {
-      x: Math.min(xRangeStart, xRangeEnd),
-      y: Math.min(yRangeStart, yRangeEnd),
-      width: Math.abs(xRangeEnd - xRangeStart),
-      height: Math.abs(yRangeEnd - yRangeStart),
-    };
-
-    const guideContext: GuideContext = {
-      plotArea: guideFrame,
-      projectX: xScale,
-      projectY: yScale,
-      xTicks: xTicks ?? EMPTY_TICKS,
-      yTicks: yTicks ?? EMPTY_TICKS,
-      fontSize,
-    };
-    const lowered = axisGuides.map(guide => lowerGuide(guide, guideContext, provenance));
-    for (const layer of lowered) {
-      if (layer.gridLayer) gridLayers.push(layer.gridLayer);
-      if (layer.axisLayer) axisLayers.push(layer.axisLayer);
-    }
-  }
-  }
-
-  return { frame, gridLayers, axisLayers, plotArea };
+  JsonObjectSchema.parse(coordinateOp);
+  const parsedCoordinateOp = coordinateDefinition.schema.parse(coordinateOp) as never;
+  JsonObjectSchema.parse(parsedCoordinateOp);
+  const resolution = coordinateDefinition.resolve(parsedCoordinateOp, {
+    width,
+    height,
+    fontSize,
+    ...(margin !== undefined ? { margin } : {}),
+    legendReserve,
+    ...(provenance !== undefined ? { provenance } : {}),
+    collectRoleValues: (role, opts) => collectValues(undefined, roleChannelOf(role), opts?.includeBaseline ?? false),
+    collectPositionValues: (role, opts) =>
+      collectValues(
+        opts?.axis,
+        roleChannelOf(role, opts?.includeLinkSource ?? false),
+        opts?.includeBaseline ?? false,
+        opts?.includeLinkTargets === true && (role === 'x' || role === 'y') ? role : undefined,
+      ),
+    resolveScaleForRole: resolveScaleForDefinitionRole,
+    buildPositionScale: (def, values, range) => resolvePositionScale(def, values, [range[0], range[1]]),
+    assertBaselineScaleCompatible: (scaleType, marks) => assertBaselineScaleCompatible(scaleType, marks),
+    axisGuides,
+    lowerGuide,
+    lowerCustomAxis,
+    rows,
+    marks: node.marks,
+  });
+  return {
+    frame: resolution.frame,
+    gridLayers: resolution.gridLayers,
+    axisLayers: resolution.axisLayers,
+    plotArea: resolution.plotArea,
+  };
 };
 
 /** 解析某 mark 的 color-like 编码 → 行→颜色串：常量 value 直用；字段过 ordinal / color scale（显式引用或自动合成默认配色） */

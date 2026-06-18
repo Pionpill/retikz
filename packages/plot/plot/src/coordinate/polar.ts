@@ -1,10 +1,42 @@
 import { type Position, isFiniteNumber } from '@retikz/math';
-import { PlotCoordinate } from '../ir';
-import type { PositionScale } from '../scale';
+import { type AxisGuide, type Coordinate, PlotCoordinate, PlotScale, type Polar1DCoordinate, type Scale } from '../ir';
+import { Polar1DSchema, Polar2DSchema } from '../ir/coordinate';
+import type { GuideContext } from '../guide';
+import { computePolarCoordinate } from '../pipeline/layout';
+import type { PositionScale, TickSet } from '../scale';
 import type { Cell, CellGeometry } from './cell';
 import { cellInterval } from './cell';
 import { RETIKZ_POLAR_SEGMENT_SAMPLES } from './constants';
+import type { AnyCoordinateDefinition, CoordinateDefinition } from './define';
 import type { DimensionRole } from './types';
+
+type Polar2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Polar2D }>;
+
+/** 空刻度集：某维度无 axis 时给 GuideContext 的占位。 */
+const EMPTY_TICKS: TickSet = { values: [], labels: [] };
+
+/** guide 维度 → 极坐标定位角色。 */
+const axisRole = (dimension: string): string => {
+  if (dimension === 'x') return 'angular';
+  if (dimension === 'y') return 'radial';
+  return dimension;
+};
+
+/** 极坐标一根定位角色只画一根轴：重复同角色的 axis → 抛清晰错误。 */
+const assertUniqueAxisDimension = (guides: ReadonlyArray<AxisGuide>): void => {
+  const seen = new Set<string>();
+  for (const guide of guides) {
+    const role = axisRole(guide.dimension);
+    if (seen.has(role)) {
+      throw new Error(`lowerPlots: duplicate axis for "${role}" role (dimension "${guide.dimension}"); one axis per positional role`);
+    }
+    seen.add(role);
+  }
+};
+
+/** 连续角轴需要段内采样弯弧；分类角轴类别间无中间值，走弦。 */
+const isContinuousAngleScale = (scaleType: Scale['type']): boolean =>
+  scaleType === PlotScale.Linear || scaleType === PlotScale.Time || scaleType === PlotScale.Log || scaleType === PlotScale.Pow || scaleType === PlotScale.Sqrt;
 
 /**
  * 二维极坐标运行时坐标帧。
@@ -216,3 +248,119 @@ export const densifyPolarSegments = (frame: ResolvedPolarCoordinate, vertices: R
   }
   return points;
 };
+
+const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
+  schema: Polar2DSchema,
+  roles: ['x', 'y'],
+  resolve: (coordinate, ctx) => {
+    const angleValues = ctx.collectPositionValues('x', { axis: 'primary', includeLinkSource: true });
+    const radiusValues = ctx.collectPositionValues('y', { axis: 'secondary', includeBaseline: true, includeLinkSource: true });
+    const angleScaleDef = ctx.resolveScaleForRole('x', coordinate.angle, angleValues, { includeLinkSource: true });
+    const radiusScaleDef = ctx.resolveScaleForRole('y', coordinate.radius, radiusValues, { includeLinkSource: true });
+    ctx.assertBaselineScaleCompatible(radiusScaleDef.type, ctx.marks);
+
+    assertUniqueAxisDimension(ctx.axisGuides);
+    const angularAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
+    const radialAxis = ctx.axisGuides.find(guide => guide.dimension === 'y');
+
+    const angleScale = ctx.buildPositionScale(angleScaleDef, angleValues, [coordinate.startAngle, coordinate.endAngle]);
+    const angularTicks: TickSet | undefined = angularAxis ? angleScale.ticks(angularAxis.tickCount) : undefined;
+    const layout = computePolarCoordinate(
+      ctx.width,
+      ctx.height,
+      { hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false), angularLabels: angularTicks?.labels ?? [] },
+      { fontSize: ctx.fontSize, margin: ctx.margin },
+    );
+    const innerRadiusUnits = coordinate.innerRadius * layout.outerRadius;
+    const radiusScale = ctx.buildPositionScale(radiusScaleDef, radiusValues, [innerRadiusUnits, layout.outerRadius]);
+    const radialTicks: TickSet | undefined = radialAxis ? radiusScale.ticks(radialAxis.tickCount) : undefined;
+    const frame = createPolarCoordinate({
+      center: layout.center,
+      innerRadius: innerRadiusUnits,
+      outerRadius: layout.outerRadius,
+      startAngle: coordinate.startAngle,
+      endAngle: coordinate.endAngle,
+      continuousAngle: isContinuousAngleScale(angleScaleDef.type),
+      primary: angleScale,
+      secondary: radiusScale,
+    });
+
+    const guideContext: GuideContext = {
+      plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
+      projectX: angleScale,
+      projectY: radiusScale,
+      xTicks: angularTicks ?? EMPTY_TICKS,
+      yTicks: radialTicks ?? EMPTY_TICKS,
+      fontSize: ctx.fontSize,
+      frame,
+      angularTicks: angularTicks ?? EMPTY_TICKS,
+      radialTicks: radialTicks ?? EMPTY_TICKS,
+    };
+    const lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));
+    return {
+      frame,
+      plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
+      gridLayers: lowered.flatMap(layer => (layer.gridLayer ? [layer.gridLayer] : [])),
+      axisLayers: lowered.flatMap(layer => (layer.axisLayer ? [layer.axisLayer] : [])),
+    };
+  },
+};
+
+const polar1DCoordinateDefinition: CoordinateDefinition<Polar1DCoordinate> = {
+  schema: Polar1DSchema,
+  roles: ['x'],
+  resolve: (coordinate, ctx) => {
+    const radiusFraction = coordinate.radius ?? 1;
+    const startAngle = coordinate.startAngle ?? 0;
+    const endAngle = coordinate.endAngle ?? 360;
+    const angleValues = ctx.collectPositionValues('x', { axis: 'primary', includeLinkSource: true });
+    const angleScaleDef = ctx.resolveScaleForRole('x', coordinate.angle, angleValues, { includeLinkSource: true });
+
+    assertUniqueAxisDimension(ctx.axisGuides);
+    const angularAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
+
+    const angleScale = ctx.buildPositionScale(angleScaleDef, angleValues, [startAngle, endAngle]);
+    const angularTicks: TickSet | undefined = angularAxis ? angleScale.ticks(angularAxis.tickCount) : undefined;
+    const layout = computePolarCoordinate(
+      ctx.width,
+      ctx.height,
+      { hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false), angularLabels: angularTicks?.labels ?? [] },
+      { fontSize: ctx.fontSize, margin: ctx.margin },
+    );
+    const radius = radiusFraction * layout.outerRadius;
+    const continuousAngle = isContinuousAngleScale(angleScaleDef.type);
+    const frame = createPolar1DCoordinate({ center: layout.center, radius, startAngle, endAngle, continuousAngle, primary: angleScale });
+
+    const guidePolarCoordinate = createPolarCoordinate({
+      center: layout.center,
+      innerRadius: 0,
+      outerRadius: radius,
+      startAngle,
+      endAngle,
+      continuousAngle,
+      primary: angleScale,
+      secondary: angleScale,
+    });
+    const guideContext: GuideContext = {
+      plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
+      projectX: angleScale,
+      projectY: angleScale,
+      xTicks: angularTicks ?? EMPTY_TICKS,
+      yTicks: EMPTY_TICKS,
+      fontSize: ctx.fontSize,
+      frame: guidePolarCoordinate,
+      angularTicks: angularTicks ?? EMPTY_TICKS,
+      radialTicks: EMPTY_TICKS,
+    };
+    const lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));
+    return {
+      frame,
+      plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
+      gridLayers: lowered.flatMap(layer => (layer.gridLayer ? [layer.gridLayer] : [])),
+      axisLayers: lowered.flatMap(layer => (layer.axisLayer ? [layer.axisLayer] : [])),
+    };
+  },
+};
+
+/** 极坐标内置坐标系 definitions。 */
+export const POLAR_COORDINATES: ReadonlyArray<AnyCoordinateDefinition> = [polar2DCoordinateDefinition, polar1DCoordinateDefinition] as ReadonlyArray<AnyCoordinateDefinition>;

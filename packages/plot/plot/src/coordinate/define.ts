@@ -2,13 +2,15 @@ import type { Position } from '@retikz/math';
 import type { IRScope } from '@retikz/core';
 import { z } from 'zod';
 import type { AxisGuide, CoordinateOp, ExternalRow, Mark, Scale } from '../ir';
-import { Cartesian1DSchema, Cartesian2DSchema, Polar1DSchema, Polar2DSchema, Ternary2DSchema } from '../ir/coordinate';
 import type { GuideContext, LoweredGuide } from '../guide';
 import type { ProvenanceContext } from '../pipeline/provenance';
 import type { LegendReserve, Margins } from '../pipeline/layout';
 import type { PositionScale } from '../scale';
+import { CARTESIAN_COORDINATES } from './cartesian';
 import type { AxisFrame, DimensionRole, ResolvedCoordinate, ResolvedCustomCoordinate } from './types';
 import type { Cell, CellGeometry } from './cell';
+import { POLAR_COORDINATES } from './polar';
+import { TERNARY_COORDINATES } from './ternary';
 
 /** 坐标系解析后可用的绘图区矩形，单位是最终画布坐标。 */
 export type CoordinatePlotArea = {
@@ -58,8 +60,13 @@ export type CoordinateResolveContext = {
   provenance?: ProvenanceContext;
   /** 按定位角色收集 mark 通道原始值；includeBaseline 用于需要把 baseline 纳入连续域的值轴。 */
   collectRoleValues: (role: DimensionRole, opts?: { includeBaseline?: boolean }) => Array<unknown>;
+  /** 按内置坐标系语义收集定位值；会保留 interval bounds / link endpoint / baseline 的既有特殊域贡献。 */
+  collectPositionValues: (
+    role: DimensionRole,
+    opts?: { axis?: 'primary' | 'secondary'; includeBaseline?: boolean; includeLinkSource?: boolean; includeLinkTargets?: boolean },
+  ) => Array<unknown>;
   /** 解析某个定位角色的 scale 定义；未指定 scaleName 时按数据推导默认 scale。 */
-  resolveScaleForRole: (role: DimensionRole, scaleName: string | undefined, values: Array<unknown>) => Scale;
+  resolveScaleForRole: (role: DimensionRole, scaleName: string | undefined, values: Array<unknown>, opts?: { includeLinkSource?: boolean }) => Scale;
   /** 把 scale 定义与数据域、屏幕 range 组合成可投影的位置 scale。 */
   buildPositionScale: (def: Scale, values: Array<unknown>, range: readonly [number, number]) => PositionScale;
   /** 校验 interval / area 等依赖 baseline 的 mark 是否可安全使用当前 scale 类型。 */
@@ -131,21 +138,14 @@ export type AnyCoordinateDefinition = Omit<CoordinateDefinition<CoordinateOp>, '
   resolve: (op: never, ctx: CoordinateResolveContext) => CoordinateResolution;
 };
 
-const unsupportedBuiltinResolve = (): CoordinateResolution => {
-  throw new Error('lowerPlots: built-in coordinate definitions are resolved by the pipeline registry adapter');
-};
-
 /**
  * 内置坐标系的 registry 元数据。
- * @description 当前 ADR-05 实现中，内置坐标系仍由 pipeline 的既有分支解析；这里先提供 schema / roles
- *   给 registry 做 type 提取、重复检测、required-channel 与 guide-dimension 校验。
+ * @description 内置坐标系与自定义坐标系走同一个 CoordinateDefinition.resolve 入口。
  */
 export const BUILTIN_COORDINATES: ReadonlyArray<AnyCoordinateDefinition> = [
-  { schema: Cartesian2DSchema, roles: ['x', 'y'], resolve: unsupportedBuiltinResolve },
-  { schema: Polar2DSchema, roles: ['x', 'y'], resolve: unsupportedBuiltinResolve },
-  { schema: Cartesian1DSchema, roles: ['x'], resolve: unsupportedBuiltinResolve },
-  { schema: Polar1DSchema, roles: ['x'], resolve: unsupportedBuiltinResolve },
-  { schema: Ternary2DSchema, roles: ['x', 'y', 'z'], resolve: unsupportedBuiltinResolve },
+  ...CARTESIAN_COORDINATES,
+  ...POLAR_COORDINATES,
+  ...TERNARY_COORDINATES,
 ];
 
 /** 从 coordinate definition schema 的 `type: z.literal(...)` 中提取 registry key。 */
