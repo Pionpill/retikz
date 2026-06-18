@@ -1,5 +1,5 @@
 // @retikz/plot public API barrel.
-export * from './coordinate/project';
+export * from './coordinate';
 export * from './data/resolve';
 export * from './interaction/locate';
 export * from './ir';

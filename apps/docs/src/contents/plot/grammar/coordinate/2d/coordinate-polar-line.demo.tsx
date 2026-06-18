@@ -7,8 +7,8 @@ import { wind } from './coordinate-polar-line.data';
 const Demo: FC = () => (
   <Plot data={wind} width={320} height={320} coordinate="polar2D" style={{ maxWidth: '100%', height: 'auto' }}>
     <PathMark x="angle" y="speed" order="angle" />
-    <Axis dimension="angle" />
-    <Axis dimension="radius" grid />
+    <Axis dimension="x" />
+    <Axis dimension="y" grid />
   </Plot>
 );
 

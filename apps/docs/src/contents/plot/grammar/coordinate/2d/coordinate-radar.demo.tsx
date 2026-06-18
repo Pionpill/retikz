@@ -7,8 +7,8 @@ import { skills } from './coordinate-radar.data';
 const Demo: FC = () => (
   <Plot data={skills} width={320} height={320} coordinate="polar2D" style={{ maxWidth: '100%', height: 'auto' }}>
     <PathMark x="dim" y="value" closed />
-    <Axis dimension="angle" />
-    <Axis dimension="radius" grid />
+    <Axis dimension="x" />
+    <Axis dimension="y" grid />
   </Plot>
 );
 

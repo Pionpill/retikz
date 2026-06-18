@@ -4,7 +4,7 @@ import { type LinkMark, type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { lowerMark } from '../../src/mark/mark';
 import { datumAnchor } from '../../src/mark/anchor';
-import { createCartesianFrame } from '../../src/coordinate/project';
+import { createCartesianFrame } from '../../src/coordinate';
 import type { PositionScale } from '../../src/scale/scale';
 
 /**

@@ -5,7 +5,7 @@ import { type IntervalMark, type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { buildIntervalContext, datumAnchor, intervalCell } from '../../src/mark/anchor';
 import { lowerMark } from '../../src/mark/mark';
-import { type Cell, createCartesianFrame, createPolarFrame } from '../../src/coordinate/project';
+import { type Cell, createCartesianFrame, createPolarFrame } from '../../src/coordinate';
 import type { PositionScale } from '../../src/scale/scale';
 
 /**

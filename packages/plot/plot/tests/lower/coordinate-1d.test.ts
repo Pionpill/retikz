@@ -106,17 +106,18 @@ describe('cartesian1D 直线坐标系 (ADR-02)', () => {
   });
 
   // 错误路径：非法维度（cartesian1D 合法集 {x}）→ fail-loud
-  it('cartesian1d_angle_dimension_fails_loud', () => {
-    const spec = PlotSpecSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'xs', domain: [0, 10] }],
-      coordinate: { type: 'cartesian1D', x: 'xs' },
-      marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
-      guides: [{ type: 'axis', dimension: 'angle' }],
-    });
-    expect(() => expandOf(spec, { d: [{ v: 1 }] }, opts)).toThrow(/cartesian1D|not support|dimension|angle/i);
+  it('cartesian1d_angle_dimension_rejected_by_schema', () => {
+    expect(() =>
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [{ type: 'linear', name: 'xs', domain: [0, 10] }],
+        coordinate: { type: 'cartesian1D', x: 'xs' },
+        marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
+        guides: [{ type: 'axis', dimension: 'angle' }],
+      }),
+    ).toThrow();
   });
 
   // 交互：1D 直线轴 guide 下沉（dimension x 合法、产出轴层）
@@ -185,7 +186,7 @@ describe('polar1D 圆周坐标系 (ADR-02)', () => {
       scales: [{ type: 'linear', name: 'a', domain: [0, 360] }],
       coordinate: { type: 'polar1D', angle: 'a' },
       marks: [{ type: 'point', encoding: { x: { field: 'deg' } } }],
-      guides: [{ type: 'axis', dimension: 'angle' }],
+      guides: [{ type: 'axis', dimension: 'x' }],
     });
     const root = expandOf(spec, { d: [{ deg: 0 }, { deg: 120 }, { deg: 240 }] }, opts);
     expect(root.children.length).toBeGreaterThanOrEqual(2);
@@ -205,16 +206,17 @@ describe('polar1D 圆周坐标系 (ADR-02)', () => {
   });
 
   // 错误路径：非法维度（polar1D 合法集 {angle, x}）→ fail-loud
-  it('polar1d_radius_dimension_fails_loud', () => {
-    const spec = PlotSpecSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'a', domain: [0, 360] }],
-      coordinate: { type: 'polar1D', angle: 'a' },
-      marks: [{ type: 'point', encoding: { x: { field: 'deg' } } }],
-      guides: [{ type: 'axis', dimension: 'radius' }],
-    });
-    expect(() => expandOf(spec, { d: [{ deg: 0 }] }, opts)).toThrow(/polar1D|not support|dimension|radius/i);
+  it('polar1d_radius_dimension_rejected_by_schema', () => {
+    expect(() =>
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [{ type: 'linear', name: 'a', domain: [0, 360] }],
+        coordinate: { type: 'polar1D', angle: 'a' },
+        marks: [{ type: 'point', encoding: { x: { field: 'deg' } } }],
+        guides: [{ type: 'axis', dimension: 'radius' }],
+      }),
+    ).toThrow();
   });
 });

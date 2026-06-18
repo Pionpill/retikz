@@ -13,8 +13,8 @@ const Demo: FC = () => (
     </Plot>
     <Plot data={points} width={260} height={260} coordinate="polar2D" x={340} y={0}>
       <PointMark x="x" y="y" color="region" label="label" labelPosition="right" labelDistance={8} />
-      <Axis dimension="angle" />
-      <Axis dimension="radius" grid />
+      <Axis dimension="x" />
+      <Axis dimension="y" grid />
     </Plot>
   </Layout>
 );

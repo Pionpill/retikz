@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema, type ReferenceMark } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { lowerMark } from '../../src/mark/mark';
-import { createCartesianFrame, createPolarFrame } from '../../src/coordinate/project';
+import { createCartesianFrame, createPolarFrame } from '../../src/coordinate';
 import type { PositionScale } from '../../src/scale/scale';
 
 /** core Path 的最小形态（鸭子类型断言端点；避免引入 core 内部 IRPath 类型耦合） */

@@ -172,7 +172,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       scales: [{ type: 'linear', name: 'a' }],
       coordinate: { type: 'polar1D', angle: 'a', radius: 1, startAngle: 0, endAngle: 360 },
       marks: [{ type: 'point', encoding: { x: { field: 'h' } } }],
-      guides: [{ type: 'axis', dimension: 'angle' }],
+      guides: [{ type: 'axis', dimension: 'x' }],
     };
     const svg = renderPlot(ringSpec, { hours: [{ h: 0 }, { h: 90 }, { h: 180 }, { h: 270 }] }, { width: 320, height: 320 });
     expect(svg).toContain('<ellipse');

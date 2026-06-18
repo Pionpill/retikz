@@ -13,7 +13,7 @@ import {
   createCustomFrame,
   createPolarFrame,
   densifyCellContour,
-} from '../../src/coordinate/project';
+} from '../../src/coordinate';
 import type { PositionScale } from '../../src/scale/scale';
 
 /**
@@ -81,7 +81,7 @@ describe('projectCell 闭式快路（rect / sector）', () => {
       primary: linearStub([0, 1], [0, 360]),
       secondary: linearStub([0, 1], [0, 150]),
     });
-    const cell: Cell = { intervals: { angle: [30, 90], radius: [40, 120] } };
+    const cell: Cell = { intervals: { x: [30, 90], y: [40, 120] } };
     const geometry = frame.projectCell(cell);
     expect(geometry).toEqual({ kind: 'sector', center: [200, 200], innerRadius: 40, outerRadius: 120, startAngle: 30, endAngle: 90 });
   });

@@ -188,8 +188,8 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     const svg = renderToStaticMarkup(
       <Plot data={metrics} coordinate="polar2D" width={360} height={360}>
         <PathMark x="dim" y="value" closed />
-        <Axis dimension="angle" />
-        <Axis dimension="radius" grid />
+        <Axis dimension="x" />
+        <Axis dimension="y" grid />
       </Plot>,
     );
     expect(svg).toContain('<path');

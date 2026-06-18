@@ -7,7 +7,7 @@ import { events } from './coordinate-polar1d.data';
 const Demo: FC = () => (
   <Plot data={events} width={300} height={300} coordinate="polar1D" style={{ maxWidth: '100%', height: 'auto' }}>
     <PointMark x="hour" />
-    <Axis dimension="angle" grid />
+    <Axis dimension="x" grid />
   </Plot>
 );
 

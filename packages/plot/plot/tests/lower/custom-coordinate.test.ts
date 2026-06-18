@@ -3,7 +3,7 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
-import { type AxisFrame, type CustomCoordinateFactory, type CustomFrame, type DimensionRole, createCustomFrame } from '../../src/coordinate/project';
+import { type AxisFrame, type CustomCoordinateFactory, type CustomFrame, type DimensionRole, createCustomFrame } from '../../src/coordinate';
 
 /**
  * 自定义坐标系（custom coordinate，实验性）lowering 测试。
@@ -158,18 +158,19 @@ describe('custom coordinate — 契约 / fail-loud', () => {
     expect(() => expandOf(spec, { d: [{ x: 1 }] }, opts({ bridge: bridgeCoordinate }))).toThrow(/custom coordinate "bridge"|requires|y/i);
   });
 
-  // 非法 guide 维度（roles=['x','y']、axis dimension 'angle'）→ fail-loud（合法集取 roles）
-  it('invalid_guide_dimension_fails_loud', () => {
-    const spec = PlotSpecSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'd' },
-      scales: [],
-      coordinate: { type: 'custom', name: 'bridge', roles: ['x', 'y'] },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
-      guides: [{ type: 'axis', dimension: 'angle' }],
-    });
-    expect(() => expandOf(spec, { d: [{ x: 1, y: 2 }] }, opts({ bridge: bridgeCoordinate }))).toThrow(/custom coordinate "bridge"|not support|angle/i);
+  // 非法 guide 维度（plot 层只接受 x / y / z）→ schema 层拒绝
+  it('invalid_guide_dimension_rejected_by_schema', () => {
+    expect(() =>
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [],
+        coordinate: { type: 'custom', name: 'bridge', roles: ['x', 'y'] },
+        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+        guides: [{ type: 'axis', dimension: 'angle' }],
+      }),
+    ).toThrow();
   });
 
   // 非 point mark（line）→ fail-loud（custom 本轮仅 point）

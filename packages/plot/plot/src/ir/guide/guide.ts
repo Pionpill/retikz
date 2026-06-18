@@ -75,10 +75,6 @@ export const GuideDimension = {
   X: 'x',
   /** cartesian2D 垂直定位维度 */
   Y: 'y',
-  /** polar 角向定位维度（绕圆周；亦可由别名 x 复用） */
-  Angle: 'angle',
-  /** polar 径向定位维度（沿辐条；亦可由别名 y 复用） */
-  Radius: 'radius',
   /** 三元坐标第三分量轴（左下顶点）；x / y / z 三轴共同构成三角外框 */
   Z: 'z',
 } as const;

@@ -1,11 +1,11 @@
 import { type Channel, type ExternalRow, type IntervalBound, IntervalBoundKind, type IntervalMark, type LinkMark, type LinkOrientationValue, type Mark, PlotCoordinate, PlotMark } from '../ir';
 import { channelValue, isFiniteNumber, resolveFieldPath } from '../data/field';
-import type { CartesianFrame, Cell, CellGeometry, CoordinateFrame, DimensionRole, PolarFrame } from '../coordinate/project';
+import type { CartesianFrame, Cell, CellGeometry, CoordinateFrame, DimensionRole, PolarFrame } from '../coordinate';
 import { type PositionScale, inferCategoryDomain } from '../scale/scale';
 
 /**
  * 取某 mark 在某位置角色下的 encoding 通道（投影时按 frame.roles 序逐角色取值）
- * @description polar 的 angle/radius 复用 x/y 别名；ternary 直接消费 x/y/z。
+ * @description polar 在坐标系内部把 x/y 解释为角向/径向；ternary 直接消费 x/y/z。
  *   link 无位置通道（端点来自 source/target 字段对）→ undefined。
  */
 export const channelForRole = (mark: Mark, role: DimensionRole): Channel | undefined => {
@@ -13,10 +13,8 @@ export const channelForRole = (mark: Mark, role: DimensionRole): Channel | undef
   if (mark.type === PlotMark.Link) return undefined;
   switch (role) {
     case 'x':
-    case 'angle':
       return mark.encoding.x;
     case 'y':
-    case 'radius':
       return mark.encoding.y;
     case 'z':
       return 'z' in mark.encoding ? mark.encoding.z : undefined;
@@ -144,12 +142,7 @@ export const intervalCell = (mark: IntervalMark, row: ExternalRow, frame: Cartes
     if (Math.abs(primary[1] - primary[0]) < 1e-9) return null;
     if (Math.abs(secondary[1] - secondary[0]) < 1e-9) return null;
   }
-  return {
-    intervals:
-      frame.type === PlotCoordinate.Polar2D
-        ? { angle: primary, radius: secondary }
-        : { x: primary, y: secondary },
-  };
+  return { intervals: { x: primary, y: secondary } };
 };
 
 const normalizedTernaryComponents = (mark: IntervalMark, row: ExternalRow): Record<'x' | 'y' | 'z', number> | null => {

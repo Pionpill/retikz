@@ -1,7 +1,7 @@
 import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../ir';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from '../pipeline/layout';
-import type { CustomFrame, DimensionRole, PolarFrame, TernaryVertices } from '../coordinate/project';
+import type { CustomFrame, DimensionRole, PolarFrame, TernaryVertices } from '../coordinate';
 import { type ProvenanceContext, guideLayerId, guideLayerMeta } from '../pipeline/provenance';
 import type { PositionScale, TickSet } from '../scale/scale';
 
@@ -66,7 +66,7 @@ const segmentsToPath = (segments: Array<Segment>): IRPath | null => {
 };
 
 /** 某 dimension 是否为 primary 角色（cartesian x / polar angle）；否则 secondary（y / radius） */
-const isPrimaryDimension = (dimension: string): boolean => dimension === 'x' || dimension === 'angle';
+const isPrimaryDimension = (dimension: string): boolean => dimension === 'x';
 
 /**
  * 轴 / 网格 scope 的 id + meta props（provenance 开时合成 `<plotId>.` 前缀 id + layer 来源 meta）

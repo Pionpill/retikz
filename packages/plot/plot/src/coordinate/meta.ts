@@ -7,9 +7,9 @@ import { PlotCoordinate, type PlotCoordinateValue } from '../ir';
  */
 export const VALID_GUIDE_DIMENSIONS: Record<Exclude<PlotCoordinateValue, 'custom'>, ReadonlyArray<string>> = {
   [PlotCoordinate.Cartesian2D]: ['x', 'y'],
-  [PlotCoordinate.Polar2D]: ['angle', 'radius', 'x', 'y'],
+  [PlotCoordinate.Polar2D]: ['x', 'y'],
   [PlotCoordinate.Cartesian1D]: ['x'],
-  [PlotCoordinate.Polar1D]: ['angle', 'x'],
+  [PlotCoordinate.Polar1D]: ['x'],
   [PlotCoordinate.Ternary2D]: ['x', 'y', 'z'],
 };
 

@@ -323,7 +323,7 @@ describe('buildPlotSpec Axis scale shortcut', () => {
         '__plot',
         { coordinate: 'ternary2D' },
       ),
-    ).toThrow(/axis scale shortcuts|x\/y\/angle\/radius/i);
+    ).toThrow(/ternary2D coordinate system does not support scale dimension "z"/i);
   });
 });
 
@@ -542,12 +542,12 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
     expect(spec.coordinate).toMatchObject({ type: 'polar2D', startAngle: -90, endAngle: 90, innerRadius: 0 });
   });
 
-  it('polar_explicit_scale_dimensions：angle / radius 维度分别落到 __angle / __radius', () => {
+  it('polar_explicit_scale_dimensions：x / y 维度分别落到 __angle / __radius', () => {
     const spec = buildPlotSpec(
       <>
         <PathMark x="theta" y="r" order="theta" />
-        <Scale dimension="angle" type="point" />
-        <Scale dimension="radius" type="log" />
+        <Scale dimension="x" type="point" />
+        <Scale dimension="y" type="log" />
       </>,
       '__plot',
       { coordinate: 'polar2D' },
@@ -586,31 +586,31 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
     expect(spec.marks[0]).toEqual({ type: 'region', baseline: 2, closed: true, encoding: { x: { field: 't' }, y: { field: 'v' } } });
   });
 
-  it('polar_explicit_axis：写 <Axis dimension="angle"/> → guides 含该轴', () => {
+  it('polar_explicit_axis：写 <Axis dimension="x"/> → guides 含该轴', () => {
     const spec = buildPlotSpec(
       <>
         <IntervalMark angle="value" />
-        <Axis dimension="angle" />
+        <Axis dimension="x" />
       </>,
       '__plot',
       { coordinate: 'polar2D' },
     );
-    expect(spec.guides).toEqual([{ type: 'axis', dimension: 'angle' }]);
+    expect(spec.guides).toEqual([{ type: 'axis', dimension: 'x' }]);
   });
 
-  it('polar_radius_axis_grid：<Axis dimension="radius" grid/> 落位', () => {
+  it('polar_radius_axis_grid：<Axis dimension="y" grid/> 落位', () => {
     const spec = buildPlotSpec(
       <>
         <PathMark x="dim" y="value" closed />
-        <Axis dimension="angle" />
-        <Axis dimension="radius" grid />
+        <Axis dimension="x" />
+        <Axis dimension="y" grid />
       </>,
       '__plot',
       { coordinate: 'polar2D' },
     );
     expect(spec.guides).toEqual([
-      { type: 'axis', dimension: 'angle' },
-      { type: 'axis', dimension: 'radius', grid: true },
+      { type: 'axis', dimension: 'x' },
+      { type: 'axis', dimension: 'y', grid: true },
     ]);
   });
 

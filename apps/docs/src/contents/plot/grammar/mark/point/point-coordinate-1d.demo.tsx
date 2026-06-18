@@ -12,7 +12,7 @@ const Demo: FC = () => (
     </Plot>
     <Plot data={samples} width={230} height={230} coordinate="polar1D" x={360} y={0}>
       <PointMark x="value" color="group" />
-      <Axis dimension="angle" />
+      <Axis dimension="x" />
     </Plot>
   </Layout>
 );

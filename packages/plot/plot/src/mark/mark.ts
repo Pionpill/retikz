@@ -3,7 +3,7 @@ import { type ExternalRow, type LinkMark, type Mark, PlotCoordinate, PlotMark, t
 import { type IntervalContext, LINK_DEFAULT_CURVATURE, buildIntervalContext, datumAnchor, linkBandGeometry, linkEndpoints, markCell, roleValues } from './anchor';
 import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from '../data/field';
 import { inferCategoryDomain } from '../scale/scale';
-import { type CartesianFrame, type Cell, type CellGeometry, type CoordinateFrame, type DimensionRole, type PolarFrame, type PolarVertex, densifyPolarSegments, toPolarVertex } from '../coordinate/project';
+import { type CartesianFrame, type Cell, type CellGeometry, type CoordinateFrame, type DimensionRole, type PolarFrame, type PolarVertex, densifyPolarSegments, toPolarVertex } from '../coordinate';
 import {
   type DatumIdRegistrar,
   type ProvenanceContext,
@@ -795,14 +795,14 @@ const referenceBandCell = (mark: ReferenceMark, row: ExternalRow, frame: Cartesi
     if (!Number.isFinite(r0) || !Number.isFinite(r1)) return null;
     const angleSpan = referenceSpanInterval(mark, row, frame.primary.coordinate, [frame.startAngle, frame.endAngle]);
     if (angleSpan === null) return null;
-    return { intervals: { angle: angleSpan, radius: [r0, r1] } };
+    return { intervals: { x: angleSpan, y: [r0, r1] } };
   }
   const a0 = frame.primary.coordinate(lo);
   const a1 = frame.primary.coordinate(hi);
   if (!Number.isFinite(a0) || !Number.isFinite(a1)) return null;
   const radiusSpan = referenceSpanInterval(mark, row, frame.secondary.coordinate, [frame.innerRadius, frame.outerRadius]);
   if (radiusSpan === null) return null;
-  return { intervals: { angle: [a0, a1], radius: radiusSpan } };
+  return { intervals: { x: [a0, a1], y: radiusSpan } };
 };
 
 /**

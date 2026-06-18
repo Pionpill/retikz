@@ -13,8 +13,8 @@ const Demo: FC = () => (
     </Plot>
     <Plot data={revenue} width={260} height={260} coordinate="polar2D" x={320} y={0}>
       <IntervalMark x="quarter" y="value" color="quarter" />
-      <Axis dimension="angle" />
-      <Axis dimension="radius" grid />
+      <Axis dimension="x" />
+      <Axis dimension="y" grid />
     </Plot>
   </Layout>
 );

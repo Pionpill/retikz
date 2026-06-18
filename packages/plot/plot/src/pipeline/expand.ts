@@ -6,7 +6,7 @@ import { type GuideContext, type LegendEntry, type LegendInput, lowerCustomAxis,
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarFrame, computeTernaryFrame } from './layout';
 import { type ColorOf, type LabelOf, lowerMark } from '../mark/mark';
 import { type ChannelResolution, type ScaleDescriptor, makeNumericStyleResolver, makeOpacityResolver, makeShapeResolver, makeSizeResolver, makeStrokeWidthResolver } from '../scale/channel';
-import { type CoordinateFrame, type CustomCoordinateFactory, type DimensionRole, createCartesian1DFrame, createCartesianFrame, createPolar1DFrame, createPolarFrame, createTernary2DFrame } from '../coordinate/project';
+import { type CoordinateFrame, type CustomCoordinateFactory, type DimensionRole, createCartesian1DFrame, createCartesianFrame, createPolar1DFrame, createPolarFrame, createTernary2DFrame } from '../coordinate';
 import { REQUIRED_POSITION_CHANNELS, VALID_GUIDE_DIMENSIONS } from '../coordinate/meta';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, inferCategoryDomain, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks, toTimestamp } from '../scale/scale';
@@ -27,8 +27,8 @@ const TERNARY_TICKS: TickSet = { values: [0, 0.25, 0.5, 0.75, 1], labels: ['0', 
  */
 const axisRole = (dimension: string, coordinateType: string): string => {
   if (coordinateType === PlotCoordinate.Polar2D || coordinateType === PlotCoordinate.Polar1D) {
-    if (dimension === 'angle' || dimension === 'x') return 'angular';
-    if (dimension === 'radius' || dimension === 'y') return 'radial';
+    if (dimension === 'x') return 'angular';
+    if (dimension === 'y') return 'radial';
   }
   return dimension;
 };
@@ -353,7 +353,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
 
   // 解析角色 scale（ADR-03）：显式绑定 → 查表（未声明仍抛，typo 守卫）+ 对该 role **全部**字段做兼容校验；
   //   省略 → 按字段类型派生（要求该 role 字段类型一致，混类型 fail-loud）。兼容校验只对「声明 model 的类型」生效。
-  const resolveScaleForRole = (role: 'x' | 'y' | 'angle' | 'radius', scaleName: string | undefined, pick: (mark: Mark) => Channel | undefined, values: Array<unknown>): Scale => {
+  const resolveScaleForRole = (role: 'x' | 'y' | 'z', scaleName: string | undefined, pick: (mark: Mark) => Channel | undefined, values: Array<unknown>): Scale => {
     const types = roleFieldTypes(pick);
     // 解析该 role 有效 order（含「非分类配 order」「冲突 order」两道 fail-loud），无论 scale 显式与否都先校验
     const order = resolveRoleOrder(role, pick);
@@ -394,8 +394,8 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     const angleValues = collectValues('primary', xChannelOf, false);
     const radiusValues = collectValues('secondary', yChannelOf, true);
     // 笛卡尔下出现 angle/radius 通道才是误用；polar 下复用 x/y 合法。此处构造极坐标帧。
-    const angleScaleDef = resolveScaleForRole('angle', coordinate.angle, xChannelOf, angleValues);
-    const radiusScaleDef = resolveScaleForRole('radius', coordinate.radius, yChannelOf, radiusValues);
+    const angleScaleDef = resolveScaleForRole('x', coordinate.angle, xChannelOf, angleValues);
+    const radiusScaleDef = resolveScaleForRole('y', coordinate.radius, yChannelOf, radiusValues);
     // L1：radius 是 polar 的值轴；非线性连续 scale + interval/area（baseline 0）→ fail-loud
     assertBaselineScaleCompatible(radiusScaleDef.type, node.marks);
 
@@ -403,8 +403,8 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     const guides = node.guides ?? [];
     const axisGuides = guides.filter(isAxisGuide);
     assertUniqueAxisDimension(axisGuides, coordinate.type);
-    const angularAxis = axisGuides.find(guide => guide.dimension === 'angle' || guide.dimension === 'x');
-    const radialAxis = axisGuides.find(guide => guide.dimension === 'radius' || guide.dimension === 'y');
+    const angularAxis = axisGuides.find(guide => guide.dimension === 'x');
+    const radialAxis = axisGuides.find(guide => guide.dimension === 'y');
 
     // 角向 scale 的 range = [startAngle, endAngle]，与 outerRadius 无关 → 可先建以取角向标签，供 layout 留白估算。
     // band / point 角向刻度即类别（域驱动、不依赖最终半径），故此处取的标签即最终标签。
@@ -513,12 +513,12 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     const startAngle = coordinate.startAngle ?? 0;
     const endAngle = coordinate.endAngle ?? 360;
     const angleValues = collectValues('primary', xChannelOf, false);
-    const angleScaleDef = resolveScaleForRole('angle', coordinate.angle, xChannelOf, angleValues);
+    const angleScaleDef = resolveScaleForRole('x', coordinate.angle, xChannelOf, angleValues);
 
     const guides = node.guides ?? [];
     const axisGuides = guides.filter(isAxisGuide);
     assertUniqueAxisDimension(axisGuides, coordinate.type);
-    const angularAxis = axisGuides.find(guide => guide.dimension === 'angle' || guide.dimension === 'x');
+    const angularAxis = axisGuides.find(guide => guide.dimension === 'x');
 
     // 角向 scale range = [startAngle, endAngle]，与最终半径无关 → 先建取角向标签供 layout 留白
     const angleScale = resolvePositionScale(angleScaleDef, angleValues, [startAngle, endAngle]);

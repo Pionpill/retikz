@@ -15,7 +15,7 @@ description: ternary2D 把 x / y / z 三个连续分量自动归一化后投影�
 
 加 `<Axis dimension="x" />` / `"y"` / `"z"` 可以画出三条边的刻度轴；三条一起就是完整三角外框。三元坐标系本轮以 `<PointMark>` 为主，用来画三角内散点。
 
-<ComponentAlert type="tip" title="guide 维度要匹配坐标系" description="每个坐标系只认自己的维度：cartesian 用 x / y，polar 用 angle / radius，ternary 用 x / y / z。给错维度（如 cartesian 下写 <Axis dimension='angle'>）会直接报错，不会静默画出空轴。" />
+<ComponentAlert type="tip" title="guide 维度要匹配坐标系" description="每个坐标系只认自己的维度：cartesian 用 x / y，polar 用 x / y（x 为角向，y 为径向），ternary 用 x / y / z。给错维度（如写 <Axis dimension='angle'>）会直接报错，不会静默画出空轴。" />
 
 ## 适合场景
 

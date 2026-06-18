@@ -4,7 +4,7 @@ import { type IntervalContext, buildIntervalContext, datumAnchor } from '../mark
 import { type LowerPlotsOptions, prepareRows, resolveFrame } from '../pipeline/expand';
 import { resolveFieldPath } from '../data/field';
 import { DEFAULT_FONT_SIZE } from '../pipeline/layout';
-import type { CoordinateFrame } from '../coordinate/project';
+import type { CoordinateFrame } from '../coordinate';
 import { type ProvenanceContext, createDatumIdRegistrar, datumMeta, readSourceIndex, tagSourceIndex } from '../pipeline/provenance';
 import { applyTransforms } from '../transform/transform';
 
