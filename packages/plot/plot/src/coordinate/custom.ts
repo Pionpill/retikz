@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 import type { Rect } from '../pipeline/layout';
-import type { PositionScale } from '../scale/scale';
+import type { PositionScale } from '../scale';
 import type { Cell, CellGeometry } from './cell';
 import type { AxisFrame, DimensionRole, ResolvedCoordinate } from './types';
 

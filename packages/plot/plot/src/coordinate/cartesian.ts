@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 import { Cartesian1DOrientation, type Cartesian1DOrientationType, PlotCoordinate } from '../ir';
-import type { PositionScale } from '../scale/scale';
+import type { PositionScale } from '../scale';
 import type { Cell, CellGeometry } from './cell';
 import { cellInterval } from './cell';
 import type { DimensionRole } from './types';

@@ -1,10 +1,10 @@
 import { type Position, isFiniteNumber } from '@retikz/math';
 import { PlotCoordinate } from '../ir';
+import type { PositionScale } from '../scale';
+import type { Cell, CellGeometry } from './cell';
 import { cellInterval } from './cell';
 import { RETIKZ_POLAR_SEGMENT_SAMPLES } from './constants';
-import type { Cell, CellGeometry } from './cell';
 import type { DimensionRole } from './types';
-import type { PositionScale } from '../scale/scale';
 
 /**
  * 二维极坐标运行时坐标帧。
