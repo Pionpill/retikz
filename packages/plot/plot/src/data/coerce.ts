@@ -1,7 +1,6 @@
 import { isFiniteNumber } from '@retikz/math';
 import { type DataModel, type ExternalRow, PlotFieldFormat, type PlotFieldFormatValue, PlotFieldType, type PlotFieldTypeValue } from '../ir';
-import { resolveFieldPath } from './field';
-import { toTimestamp } from '../scale/scale';
+import { isIsoDateString, resolveFieldPath } from './field';
 
 /** 严格数字串：trimmed 十进制 / 科学计数；拒空串、Infinity、NaN、hex、带单位串 */
 const NUMERIC_RE = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
@@ -50,6 +49,21 @@ export const coerceValue = (value: unknown, type: PlotFieldTypeValue): string | 
 const isCoercedValid = (value: unknown, type: PlotFieldTypeValue): boolean => {
   if (type === PlotFieldType.Categorical) return value !== undefined && value !== null;
   return isFiniteNumber(value);
+};
+
+/** 字段值转 epoch ms：Date / finite number / ISO string 可解析，其余返回 null。 */
+export const toTimestamp = (value: unknown): number | null => {
+  if (value instanceof Date) {
+    const stamp = value.getTime();
+    return Number.isNaN(stamp) ? null : stamp;
+  }
+  if (typeof value === 'number') return isFiniteNumber(value) ? value : null;
+  if (typeof value === 'string') {
+    if (!isIsoDateString(value)) return null;
+    const parsed = Date.parse(value.replace(' ', 'T'));
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
 };
 
 /** 运行时 canonical 值（≠ IR 的 ScalarValue：不含 boolean / null）；coerceValue 与自定义 parse 的输出域 */

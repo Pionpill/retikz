@@ -2,9 +2,7 @@ import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type I
 import { isFiniteNumber } from '@retikz/math';
 import { type ExternalRow, type IntervalMark, type LinkMark, type Mark, type PathMark, PlotCoordinate, PlotMark, type PlotMarkValue, type PointMark, type ReferenceMark, type RegionMark } from '../ir';
 import { type IntervalContext, LINK_DEFAULT_CURVATURE, buildIntervalContext, datumAnchor, linkBandGeometry, linkEndpoints, markCell, roleValues } from './anchor';
-import { channelValue, compareByPath, resolveFieldPath } from '../data/field';
-import type { FieldCollector } from '../data';
-import { inferCategoryDomain } from '../scale/scale';
+import { type FieldCollector, channelValue, compareByPath, inferCategoryDomain, resolveFieldPath } from '../data';
 import { type Cell, type CellGeometry, type DimensionRole, type PolarVertex, type ResolvedCartesianCoordinate, type ResolvedCoordinate, type ResolvedPolarCoordinate, densifyPolarSegments, toPolarVertex } from '../coordinate';
 import {
   type DatumIdRegistrar,

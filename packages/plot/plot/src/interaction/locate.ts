@@ -2,7 +2,7 @@ import type { IRJsonObject } from '@retikz/core';
 import { type ExternalDatasets, type ExternalRow, type Mark, PlotCoordinate, PlotMark, type PlotSpec } from '../ir';
 import { type IntervalContext, buildIntervalContext, datumAnchor } from '../mark/anchor';
 import { type LowerPlotsOptions, prepareRows, resolveFrame } from '../pipeline/expand';
-import { resolveFieldPath } from '../data/field';
+import { resolveFieldPath } from '../data';
 import { DEFAULT_FONT_SIZE } from '../pipeline/layout';
 import type { ResolvedCoordinate } from '../coordinate';
 import { type ProvenanceContext, createDatumIdRegistrar, datumMeta, readSourceIndex, tagSourceIndex } from '../pipeline/provenance';

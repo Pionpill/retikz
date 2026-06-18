@@ -1,9 +1,8 @@
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { coerceValue, normalizeRows } from '../../src/data/coerce';
+import { coerceValue, normalizeRows, resolveFieldPath } from '../../src/data';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
-import { resolveFieldPath } from '../../src/data/field';
 import { createPlotLocator } from '../../src/interaction/locate';
 import { readSourceIndex, tagSourceIndex } from '../../src/pipeline/provenance';
 import { applyTransforms } from '../../src/transform/transform';

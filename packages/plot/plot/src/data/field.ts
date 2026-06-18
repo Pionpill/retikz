@@ -116,6 +116,24 @@ const ISO_DATETIME_RE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+
 
 export const isIsoDateString = (value: string): boolean => ISO_DATE_RE.test(value) || ISO_DATETIME_RE.test(value);
 
+/**
+ * 分类域推断：按数据出现顺序去重（非排序、非 extent）。
+ * @description band / point / ordinal 共用。分类顺序属于 data domain 语义；排序是 transform 的显式职责。
+ */
+export const inferCategoryDomain = (values: Array<unknown>): Array<string | number> => {
+  const seen = new Set<string | number>();
+  const out: Array<string | number> = [];
+  for (const value of values) {
+    if (typeof value !== 'string' && typeof value !== 'number') continue;
+    if (!seen.has(value)) {
+      seen.add(value);
+      out.push(value);
+    }
+  }
+  return out;
+};
+
+/** 单个字段样本值的测量类型推断策略：Date/string ISO -> temporal，bigint/finite number -> continuous，boolean/string -> categorical。 */
 const classifyFieldValue = (value: unknown): PlotFieldTypeValue | undefined => {
   if (value instanceof Date) return PlotFieldType.Temporal;
   if (typeof value === 'bigint') return PlotFieldType.Continuous;

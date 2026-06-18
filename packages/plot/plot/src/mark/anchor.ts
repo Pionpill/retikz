@@ -1,8 +1,8 @@
 import { isFiniteNumber } from '@retikz/math';
 import { type Channel, type ExternalRow, type IntervalBound, IntervalBoundKind, type IntervalMark, type LinkMark, type LinkOrientationValue, type Mark, PlotCoordinate, PlotMark } from '../ir';
-import { channelValue, resolveFieldPath } from '../data/field';
+import { channelValue, inferCategoryDomain, resolveFieldPath } from '../data';
 import { type Cell, type CellGeometry, type DimensionRole, type ResolvedCartesianCoordinate, type ResolvedCoordinate, type ResolvedPolarCoordinate, hasProjectCell } from '../coordinate';
-import { type PositionScale, inferCategoryDomain } from '../scale/scale';
+import type { PositionScale } from '../scale/scale';
 
 /**
  * 取某 mark 在某位置角色下的 encoding 通道（投影时按 frame.roles 序逐角色取值）

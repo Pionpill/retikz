@@ -42,7 +42,7 @@ import {
   schemeCategory10,
 } from 'd3-scale-chromatic';
 import { type BandScale, type DivergingColorScale, type FieldDef, type LogScale, type Mark, type OrdinalScale, PlotColorScheme, type PlotColorSchemeValue, PlotFieldType, type PlotFieldTypeValue, PlotMark, PlotScale, type PlotScaleValue, type PointScale, type PowScale, type QuantileColorScale, type QuantizeColorScale, type ScalarValue, type Scale, type SequentialColorScale, type SqrtScale, type ThresholdColorScale, type TimeScale } from '../ir';
-import { isIsoDateString } from '../data';
+import { inferCategoryDomain, toTimestamp } from '../data';
 
 /** 默认目标刻度数（d3 ticks 的提示值，非硬约束——实际数量按 nice 区间取整定） */
 export const DEFAULT_TICK_COUNT = 5;
@@ -119,19 +119,6 @@ export const scaleTicks = (scale: ScaleContinuousNumeric<number, number>, count:
  * 分类域推断：按数据出现顺序去重（非排序、非 extent）
  * @description band / point / ordinal 共用——保证图上类别顺序 = 数据顺序；排序是 transform 的显式职责。
  */
-export const inferCategoryDomain = (values: Array<unknown>): Array<string | number> => {
-  const seen = new Set<string | number>();
-  const out: Array<string | number> = [];
-  for (const value of values) {
-    if (typeof value !== 'string' && typeof value !== 'number') continue;
-    if (!seen.has(value)) {
-      seen.add(value);
-      out.push(value);
-    }
-  }
-  return out;
-};
-
 /** FieldDef.order 的取值类型（单一真源派生自 schema，避免手写第二份） */
 export type CategoryOrder = NonNullable<FieldDef['order']>;
 
@@ -453,23 +440,6 @@ export const pointPositionScale = (scale: ScalePoint<string | number>): Position
     scale.range([range[0], range[1]]);
   },
 });
-
-/** 字段值 → epoch ms（Date 实例 / 数值原样 / ISO 字符串走 Date.parse；其余 → null） */
-export const toTimestamp = (value: unknown): number | null => {
-  if (value instanceof Date) {
-    const stamp = value.getTime();
-    return Number.isNaN(stamp) ? null : stamp;
-  }
-  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
-  if (typeof value === 'string') {
-    // ISO guard（与推断同一套）：拒 YYYY/MM/DD、无时区 datetime、裸数字串，避免误解析
-    if (!isIsoDateString(value)) return null;
-    // 空格分隔（SQL 时间戳）归一化成 T：ECMAScript 只保证 T 分隔的跨引擎一致解析
-    const parsed = Date.parse(value.replace(' ', 'T'));
-    return Number.isNaN(parsed) ? null : parsed;
-  }
-  return null;
-};
 
 /** 时间 scale 的刻度：值用 epoch ms（供 coordinate 再投影）、标签走 UTC tickFormat */
 export const timeTicks = (scale: ScaleTime<number, number>, count: number = DEFAULT_TICK_COUNT): TickSet => {

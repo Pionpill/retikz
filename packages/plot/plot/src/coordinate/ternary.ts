@@ -6,6 +6,7 @@ import type { DimensionRole } from './types';
 /** 三元坐标三角顶点序（屏幕坐标）：[Vx(x=100%), Vy(y=100%), Vz(z=100%)]。 */
 export type TernaryVertices = [Position, Position, Position];
 
+/** 三元坐标的重心分量 [x, y, z]，三个分量按 coordinate roles 顺序相加为 1。 */
 type BarycentricPoint = [number, number, number];
 
 /** 三元 cell 裁剪的浮点容差，用于边界包含判断和近似平行边处理。 */

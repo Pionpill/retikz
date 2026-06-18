@@ -15,8 +15,8 @@ import {
   type ScaledMarkValueType,
   type SqrtScale,
 } from '../ir';
-import { resolveFieldPath } from '../data/field';
-import { inferCategoryDomain, resolveLinearScale, resolveSqrtScale } from './scale';
+import { inferCategoryDomain, resolveFieldPath } from '../data';
+import { resolveLinearScale, resolveSqrtScale } from './scale';
 
 /**
  * 通道 → 视觉量 resolver 的接缝（alpha.7）

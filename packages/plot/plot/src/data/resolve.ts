@@ -1,8 +1,6 @@
 import type { DataModel, PlotFieldTypeValue } from '../ir';
 import type { ParsedFieldValue } from './coerce';
 
-export type { ParsedFieldValue } from './coerce';
-
 /**
  * 单字段解析结果（运行时，不进 IR）
  * @description type 覆盖最终类型（省略 → 用 model/推断）；parse 覆盖内置 coercion（返回 undefined 跳过该值）。

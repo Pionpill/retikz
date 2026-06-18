@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_TICK_COUNT,
-  inferCategoryDomain,
   resolveLinearScale,
   resolvePositionScale,
   scaleTicks,
-  toTimestamp,
 } from '../../src/scale/scale';
+import { inferCategoryDomain, toTimestamp } from '../../src/data';
 
 describe('resolveLinearScale (ADR-02 d3-scale)', () => {
   // Happy path

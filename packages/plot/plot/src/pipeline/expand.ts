@@ -2,19 +2,15 @@ import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, defi
 import { isFiniteNumber } from '@retikz/math';
 import { type AxisGuide, Cartesian1DOrientation, type Channel, type Coordinate, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotScaleValue, type PlotSpec, PlotSpecSchema, type QuantileColorScale, type QuantizeColorScale, type Scale, type ThresholdColorScale } from '../ir';
 import { resolveIntervalBound } from '../mark/anchor';
-import { type ResolveLabel, channelValue, labelOf, resolveFieldPath } from '../data/field';
+import { type ResolveField, type ResolveLabel, applyFieldResolver, assertAllValuesValid, channelValue, collectFormatFields, inferCategoryDomain, labelOf, normalizeRows, resolveFieldPath, resolveFieldTypes, toTimestamp, validateBoundData } from '../data';
 import { type GuideContext, type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../guide/guide';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarCoordinate, computeTernaryFrame } from './layout';
 import { type ColorOf, type LabelOf, lowerMark } from '../mark/mark';
 import { type ChannelResolution, type ScaleDescriptor, makeNumericStyleResolver, makeOpacityResolver, makeShapeResolver, makeSizeResolver, makeStrokeWidthResolver } from '../scale/channel';
-import { type CustomCoordinateFactory, type DimensionRole, type ResolvedCoordinate, createCartesian1DCoordinate, createCartesianCoordinate, createPolar1DCoordinate, createPolarCoordinate, createTernary2DCoordinate } from '../coordinate';
-import { REQUIRED_POSITION_CHANNELS, VALID_GUIDE_DIMENSIONS } from '../coordinate/constants';
+import { type CustomCoordinateFactory, type DimensionRole, REQUIRED_POSITION_CHANNELS, type ResolvedCoordinate, VALID_GUIDE_DIMENSIONS, createCartesian1DCoordinate, createCartesianCoordinate, createPolar1DCoordinate, createPolarCoordinate, createTernary2DCoordinate } from '../coordinate';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
-import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, inferCategoryDomain, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks, toTimestamp } from '../scale/scale';
-import { assertAllValuesValid, collectFormatFields, normalizeRows, validateBoundData } from '../data/coerce';
+import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks } from '../scale/scale';
 import { applyTransforms } from '../transform/transform';
-import { type ResolveField, applyFieldResolver } from '../data/resolve';
-import { resolveFieldTypes } from '../data';
 import { collectSourceFields } from './source-fields';
 
 /** 空刻度集（某维度无 axis 时给 GuideContext 的占位；实际不会被该维度的 guide 触达） */
