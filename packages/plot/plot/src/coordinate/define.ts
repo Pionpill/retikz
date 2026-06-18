@@ -1,3 +1,4 @@
+import type { Position } from '@retikz/math';
 import type { IRScope } from '@retikz/core';
 import { z } from 'zod';
 import type { AxisGuide, CoordinateOp, ExternalRow, Mark, Scale } from '../ir';
@@ -6,8 +7,8 @@ import type { GuideContext, LoweredGuide } from '../guide';
 import type { ProvenanceContext } from '../pipeline/provenance';
 import type { LegendReserve, Margins } from '../pipeline/layout';
 import type { PositionScale } from '../scale';
-import type { DimensionRole, ResolvedCoordinate } from './types';
-import type { ResolvedCustomCoordinate } from './custom';
+import type { AxisFrame, DimensionRole, ResolvedCoordinate, ResolvedCustomCoordinate } from './types';
+import type { Cell, CellGeometry } from './cell';
 
 export type CoordinatePlotArea = {
   x: number;
@@ -48,6 +49,34 @@ export type CoordinateDefinition<TCoordinateOp extends CoordinateOp = Coordinate
 };
 
 export const defineCoordinate = <TCoordinateOp extends CoordinateOp>(def: CoordinateDefinition<TCoordinateOp>): CoordinateDefinition<TCoordinateOp> => def;
+
+/** createCustomCoordinate 选项：roleScales 让 guide 画曲线轴、frameAlong 给精确切向、projectCell 支持 cell 类 mark；均可选。 */
+export type CreateCustomCoordinateOptions = {
+  /** 各角色位置 scale；供 guide 画轴。省略 → 该坐标系无轴 */
+  roleScales?: Partial<Record<DimensionRole, PositionScale>>;
+  /** 某角色轴曲线局部标架；曲线轴优先用其切向，省略 → guide 数值差分回落 */
+  frameAlong?: (role: DimensionRole, values: ReadonlyArray<unknown>) => AxisFrame | null;
+  /** 正交 cell → CellGeometry；实现了才支持 cell 类 mark（interval / sector），省略 → cell 类 mark fail-loud */
+  projectCell?: (cell: Cell) => CellGeometry;
+};
+
+/**
+ * 建自定义坐标帧：把 definition 给的 roles + projectRoles 包成 ResolvedCoordinate（point mark 经此投影）
+ * @description 第三参 options 补充 guide 轴线、精确轴切向和 cell 几何投影能力；未提供的能力保持不可用。
+ */
+export const createCustomCoordinate = (
+  roles: ReadonlyArray<DimensionRole>,
+  projectRoles: (values: ReadonlyArray<unknown>) => Position | null,
+  options?: CreateCustomCoordinateOptions,
+): ResolvedCustomCoordinate => ({
+  type: 'custom',
+  roles,
+  project: () => null,
+  projectRoles,
+  ...(options?.roleScales !== undefined ? { roleScales: options.roleScales } : {}),
+  ...(options?.frameAlong !== undefined ? { frameAlong: options.frameAlong } : {}),
+  ...(options?.projectCell !== undefined ? { projectCell: options.projectCell } : {}),
+});
 
 export type AnyCoordinateDefinition = Omit<CoordinateDefinition<CoordinateOp>, 'schema' | 'resolve'> & {
   schema: z.ZodType;

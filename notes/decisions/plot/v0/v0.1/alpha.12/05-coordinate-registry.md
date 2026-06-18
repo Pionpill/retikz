@@ -182,7 +182,7 @@ type CoordinateOp = z.infer<typeof CoordinateOpSchema>;
 - **`CoordinateResolveContext` 公开表面大小**：内置 definition 在包内可直接 import 布局 helper（`computePlotArea` 等），无需进 context；但自定义 definition 只能用 context 暴露的。倾向**公开 context 只暴露坐标系无关的共享能力**（canvas/style + `collectRoleValues` + `resolveScaleForRole` + `buildPositionScale` + guide 下沉），**不**把 `computePlotArea`/`computePolarCoordinate`/`computeTernaryFrame` 列入公开契约。结论：本轮自定义 coordinate v1 明确沿用**满画布 plotArea + 自拼投影**，不会自动获得 cartesian 那种 margin / legend reserve 收窄；需要这类布局能力时后续另开高级 layout helper。
 - **`roles` 静态 vs 数据相关**：内置 roles 全静态（cartesian2D=[x,y]、ternary2D=[x,y,z]…），故放 `definition.roles` 字段足够。若未来某坐标系 roles 依赖 op config（如可配维数的平行坐标），升为 `roles: (op) => DimensionRole[]`（mirror ADR-06 `inputFields(op)`）。倾向**先静态字段**、需求出现再升函数。
 - **type 冲突放宽 / extractCoordinateType 时机**：与 ADR-06/07 同——本轮冲突 throw、`extractCoordinateType` 首次 resolve 期校验。
-- **自定义坐标系 cell 类 mark 支持**：现状 custom 经 `ResolvedCustomCoordinate.projectCell`（`coordinate/custom.ts:36`）可选支持 interval/sector；保留该可选契约不变，definition.resolve 产 `ResolvedCustomCoordinate` 时按需带 `projectCell`。不在本 ADR 扩展（沿用 alpha.5 既定）。
+- **自定义坐标系 cell 类 mark 支持**：现状 custom 经 `ResolvedCustomCoordinate.projectCell`（`coordinate/types.ts`）可选支持 interval/sector；保留该可选契约不变，definition.resolve 产 `ResolvedCustomCoordinate` 时按需带 `projectCell`。不在本 ADR 扩展（沿用 alpha.5 既定）。
 
 ## DSL 表面
 
@@ -249,7 +249,7 @@ renderPlot(spec, { series: rows }, { coordinates: [arch] });
 
 - **`coordinate/define.ts`（新建）**：`CoordinateDefinition` / `CoordinateResolveContext` / `CoordinateResolution` / `defineCoordinate` / `extractCoordinateType` / `resolveCoordinateRegistry` / `BUILTIN_COORDINATES`（5 内置注册项）。
 - **`coordinate/cartesian.ts` / `polar.ts` / `ternary.ts`**：各加对应 `defineCoordinate({...})` 注册项；`resolve` 体把现 `resolveFrame` 对应分支逐行搬入（行为保持）；`create*Coordinate` 构造器不变。
-- **`coordinate/custom.ts`**：`createCustomCoordinate` / `ResolvedCustomCoordinate` / `projectCell` 等不变（仍是自定义 definition 的 resolve 内构造帧的助手）；删 `CustomCoordinateFactory` / `CustomCoordinateContext`（其能力并入 `CoordinateResolveContext`）。
+- **`coordinate/define.ts` / `coordinate/types.ts`**：`createCustomCoordinate` 随 definition 入口收敛到 `define.ts`；`ResolvedCustomCoordinate` / `projectCell` 作为运行时帧契约收敛到 `types.ts`；删 `CustomCoordinateFactory` / `CustomCoordinateContext`（其能力并入 `CoordinateResolveContext`）。
 - **`coordinate/constants.ts`**：删 `POSITION_ROLES` / `REQUIRED_POSITION_CHANNELS` / `VALID_GUIDE_DIMENSIONS` 三张内置硬编码表（roles 上移 `definition.roles`）；校验改读已解析 registry。
 - **`pipeline/expand.ts`**：`resolveFrame` 六路 `if/else`（`:390-648`）→ registry 查表 + `definition.resolve(op, ctx)`；组装 `CoordinateResolveContext`（把现 `collectValues` / `resolveScaleForRole` 闭包 + 布局/guide 能力包进 ctx）；`assertValidGuideDimensions` / `assertRequiredPositionChannels` 改读 registry `roles`；`LowerPlotsOptions.coordinates` 类型 `Record<string, CustomCoordinateFactory>` → `Array<CoordinateDefinition>`；`ResolveFrameParams.coordinates` 同改；registry 解析一次贯穿 expand + locator。
 - **`ir/coordinate/coordinate.ts`**：`PlotCoordinate` 删 `Custom` 成员；删 `CustomCoordinateSchema`（旧 name/roles/params 形态）；`CoordinateSchema` 收为 5-union；加 `BUILTIN_COORDINATE_TYPES` / 新 `CustomCoordinateSchema`（type 排除内置 passthrough）/ `CoordinateOpSchema` / `CoordinateOp`；`Coordinate`（内置 5-union）不变。
@@ -302,9 +302,9 @@ renderPlot(spec, { series: rows }, { coordinates: [arch] });
 
 - `packages/plot/plot/src/ir/coordinate/coordinate.ts`（改：删 Custom 成员/旧 schema，加 Custom/Op schema + 内置 type 集 + 类型；`CoordinateSchema` 收 5-union）
 - `packages/plot/plot/src/ir/plot.ts`（改：`coordinate` 字段换 `CoordinateOpSchema`）
-- `packages/plot/plot/src/coordinate/define.ts`（新建：`CoordinateDefinition` / `CoordinateResolveContext` / `CoordinateResolution` / `defineCoordinate` / `extractCoordinateType` / `resolveCoordinateRegistry` / `BUILTIN_COORDINATES`）
+- `packages/plot/plot/src/coordinate/define.ts`（新建：`CoordinateDefinition` / `CoordinateResolveContext` / `CoordinateResolution` / `defineCoordinate` / `createCustomCoordinate` / `extractCoordinateType` / `resolveCoordinateRegistry` / `BUILTIN_COORDINATES`）
 - `packages/plot/plot/src/coordinate/cartesian.ts` / `polar.ts` / `ternary.ts`（改：各加 `defineCoordinate` 注册项，resolve 搬入对应分支；构造器不变）
-- `packages/plot/plot/src/coordinate/custom.ts`（改：删 `CustomCoordinateFactory` / `CustomCoordinateContext`；`createCustomCoordinate` / `ResolvedCustomCoordinate` 保留）
+- `packages/plot/plot/src/coordinate/types.ts`（改：收纳 `ResolvedCustomCoordinate` 运行时帧契约；`ResolvedCoordinate` union 保留自定义分支）
 - `packages/plot/plot/src/coordinate/constants.ts`（改：删三张内置 roles/guide-dim 表）
 - `packages/plot/plot/src/coordinate/index.ts`（改：导出 `defineCoordinate` / 类型）
 - `packages/plot/plot/src/pipeline/expand.ts`（改：`resolveFrame` 六路 → registry 查表 + `resolve`；组装 `CoordinateResolveContext`；校验改读 registry roles；`LowerPlotsOptions.coordinates` / `ResolveFrameParams.coordinates` 改 Array；registry 解析贯穿）
@@ -355,6 +355,6 @@ renderPlot(spec, { series: rows }, { coordinates: [arch] });
 - `lowerGuide` / `lowerCustomAxis`（`guide/`）· `GuideContext` / `EMPTY_TICKS` / `TickSet`—— 引用：definition resolve 内 guide 下沉
 - `POSITION_ROLES` / `REQUIRED_POSITION_CHANNELS` / `VALID_GUIDE_DIMENSIONS`（`coordinate/constants.ts`）· `assertRequiredPositionChannels` / `assertValidGuideDimensions`（`expand.ts:124/128`）—— 修改：三表删除，校验改读 `definition.roles`
 - `CoordinateSchema` + 5 子 schema · `PlotCoordinate`（`ir/coordinate/coordinate.ts`）—— 引用 / 修改：内置 definition 的 schema 直接复用、`BUILTIN_COORDINATE_TYPES` 来源；删 Custom 成员
-- `ResolvedCoordinate` / `ResolvedCustomCoordinate` / `DimensionRole` / `AxisFrame`（`coordinate/types.ts` / `custom.ts`）—— 引用：resolve 产出契约
+- `ResolvedCoordinate` / `ResolvedCustomCoordinate` / `DimensionRole` / `AxisFrame`（`coordinate/types.ts`）—— 引用：resolve 产出契约
 - `LowerPlotsOptions` / `ResolveFrameParams` / `ResolvedFrame` / `createPlotLocator`（`pipeline/` / `interaction/`）—— 修改：`coordinates` 改 Array、registry 贯穿、parity
 - `defineComposite`（core）· ADR-06 `defineTransform` / `resolveTransformRegistry` · ADR-07 `defineScale` / `resolveScaleRegistry`—— 参照：`defineCoordinate` / registry / options 注入范式、键提取、dup / 未注册策略

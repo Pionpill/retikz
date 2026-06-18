@@ -1,15 +1,47 @@
 import type { Position } from '@retikz/math';
 import type { ResolvedCartesian1DCoordinate, ResolvedCartesianCoordinate } from './cartesian';
 import type { Cell, CellGeometry } from './cell';
-import type { ResolvedCustomCoordinate } from './custom';
 import type { ResolvedPolar1DCoordinate, ResolvedPolarCoordinate } from './polar';
 import type { ResolvedTernary2DCoordinate } from './ternary';
+import type { PositionScale } from '../scale';
 
 /**
  * 坐标系位置角色：mark 按 frame.roles 序从 encoding 取对应通道值喂 projectRoles。
  * @description plot 层只保留 x/y/z 定位角色；polar 内部把 x 解释为角向、y 解释为径向。
  */
 export type DimensionRole = 'x' | 'y' | 'z';
+
+/**
+ * 自定义运行时坐标帧。
+ * @description 投影函数由注册定义提供，不进入 JSON IR；内建 mark / guide 只通过 roles、projectRoles、
+ *   可选 roleScales / frameAlong / projectCell 与其交互。
+ */
+export type ResolvedCustomCoordinate = {
+  /** 判别字段：自定义（运行时 definition 产出，非内建坐标系） */
+  type: 'custom';
+  /** 位置角色序（definition 消费哪些 mark 通道，按序喂 projectRoles） */
+  roles: ReadonlyArray<DimensionRole>;
+  /** 投影别名：自定义须走 projectRoles（2 入参形态对任意角色数无意义），恒 null */
+  project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
+  /** N 通道投影：按 roles 序传值 → 屏幕点；非有限 → null（跳过） */
+  projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
+  /**
+   * 各角色的位置 scale（definition 可选回传）：供 guide 画轴用——取该角色刻度、其余角色锚在各自 domain 起点，
+   * 沿 projectRoles 密采样得曲线轴线 + 刻度点。不回传 → 该坐标系不画轴。
+   */
+  roleScales?: Partial<Record<DimensionRole, PositionScale>>;
+  /**
+   * 某角色轴曲线在某点的局部标架（definition 可选回传）：origin + 切向 ∂γ/∂role。
+   * 曲线轴优先用它取精确切向；不回传 → guide 对 projectRoles 数值差分回落（现状行为）。
+   */
+  frameAlong?: (role: DimensionRole, values: ReadonlyArray<unknown>) => AxisFrame | null;
+  /**
+   * 正交 cell → CellGeometry（definition 可选回传）：实现了才支持 cell 类 mark（interval / sector / rect）。
+   * @description 曲线 / 自定义 frame 自行把 cell 四边经自身几何投影密采样成 contour（用引擎 helper densifyCellContour）；
+   *   不回传 → cell 类 mark 在该坐标系 fail-loud（无引擎自动兜底——「输出空间→屏幕」后段映射只有 frame 自己有）。
+   */
+  projectCell?: (cell: Cell) => CellGeometry;
+};
 
 /**
  * 运行时坐标帧：lowering 算一次，mark / guide 共享同一帧（不各造临时投影框架）
