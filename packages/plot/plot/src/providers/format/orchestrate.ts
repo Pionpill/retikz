@@ -1,5 +1,5 @@
 import type { FieldFormatDefinition } from '../../contract';
-import type { ParsedFieldValue } from '../../data';
+import type { ParsedFieldValue } from '../../features';
 import type { DataModel, PlotFieldTypeValue } from '../../schemas';
 import { resolveFormatRegistry } from './definitions';
 

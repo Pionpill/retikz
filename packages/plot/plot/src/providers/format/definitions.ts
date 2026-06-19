@@ -1,6 +1,6 @@
 import { isFiniteNumber } from '@retikz/math';
 import { type FieldFormatDefinition, defineFieldFormat } from '../../contract';
-import { coerceValue } from '../../data';
+import { coerceValue } from '../../features';
 import { PlotFieldFormat, PlotFieldType } from '../../schemas';
 
 /** 严格 YYYY/MM/DD 斜杠日期：四位年 / 两位月 / 两位日，分隔符必须是 `/`。 */

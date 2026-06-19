@@ -1,4 +1,4 @@
-import { createFieldCollector } from '../data';
+import { createFieldCollector } from '../features';
 import { type PlotSpec } from '../schemas';
 import { collectMarkFields, resolveMarkRegistry } from '../providers';
 import { type AnyMarkDefinition, type AnyTransformDefinition } from '../contract';

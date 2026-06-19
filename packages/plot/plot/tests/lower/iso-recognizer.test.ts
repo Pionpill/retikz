@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
 import { PlotFieldType } from '../../src/schemas/data';
-import { inferFieldType, isIsoDateString, toTimestamp } from '../../src/data';
+import { inferFieldType, isIsoDateString, toTimestamp } from '../../src/features';
 import { type LowerPlotsOptions, prepareRows } from '../../src/pipeline/expand';
 import { tagSourceIndex } from '../../src/pipeline/provenance';
 

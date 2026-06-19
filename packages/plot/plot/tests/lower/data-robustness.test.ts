@@ -1,7 +1,7 @@
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema, ScalarValueSchema } from '../../src/schemas';
-import { coerceValue, inferFieldType, normalizeRows, validateBoundData } from '../../src/data';
+import { coerceValue, inferFieldType, normalizeRows, validateBoundData } from '../../src/features';
 import { type LowerPlotsOptions, lowerPlots, prepareRows } from '../../src/pipeline/expand';
 
 /**

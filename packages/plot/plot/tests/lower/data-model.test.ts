@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { inferFieldType, isIsoDateString, resolveFieldTypes } from '../../src/data';
+import { inferFieldType, isIsoDateString, resolveFieldTypes } from '../../src/features';
 import { collectSourceFields } from '../../src/pipeline/source-fields';
 
 /** 构造最小可解析 PlotSpec（cartesian + 给定 marks / transform / model） */

@@ -2,8 +2,8 @@ import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, Json
 import { isFiniteNumber } from '@retikz/math';
 import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type MarkOperation, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
 import { resolveIntervalBound } from '../providers';
-import { type ResolveField, type ResolveLabel, applyFieldResolver, assertAllValuesValid, channelValue, labelOf, normalizeRows, resolveFieldPath, resolveFieldTypes, toTimestamp, validateBoundData } from '../data';
-import { type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../guide/guide';
+import { type ResolveField, type ResolveLabel, applyFieldResolver, assertAllValuesValid, channelValue, labelOf, normalizeRows, resolveFieldPath, resolveFieldTypes, toTimestamp, validateBoundData } from '../features';
+import { type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../features';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect } from './layout';
 import { type ColorOf, type LabelOf, lowerMark } from '../providers';
 import { type ChannelResolution, type ScaleDescriptor, makeNumericStyleResolver, makeOpacityResolver, makeShapeResolver, makeSizeResolver, makeStrokeWidthResolver } from '../providers';

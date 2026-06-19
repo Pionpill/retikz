@@ -1,7 +1,7 @@
 import type { Position } from '@retikz/math';
 import { type Cartesian1DCoordinate, Cartesian1DOrientation, type Cartesian1DOrientationType, type Coordinate, PlotCoordinate, PlotScale, type ScaleOperation } from '../../schemas';
 import { Cartesian1DSchema, Cartesian2DSchema } from '../../schemas/coordinate';
-import type { GuideContext } from '../../guide';
+import type { GuideContext } from '../../features';
 import { type Rect, computePlotArea } from '../../pipeline/layout';
 import type { PositionScale, TickSet } from '../../providers/scale';
 import { assertUniqueAxisDimension } from './axis';

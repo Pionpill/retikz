@@ -12,25 +12,24 @@
 内置与自定义 definition 经同一 `resolveXxxRegistry` 分派，杜绝「内置白名单 + 扩展补丁接口」分叉。依赖方向 **`contract` ← `providers` ← `pipeline`**（providers 依赖 contract，pipeline 编排 providers）。
 
 ```text
-schemas       Zod schema / 类型真源（Plot IR 形状），所有模块可依赖
-data          字段对齐 / 解析 / 归一化（type 驱动 coercion + 校验）
-contract/*    coordinate / scale / transform / mark / format 的扩展契约
-providers/*   上述五层的内置实现，依赖 contract（format 内置 def 复用 data 的 coerce 工具）
-guide         axis / legend 下沉
-pipeline      Tier 2 → Kernel IR 下沉编排，调 providers + contract
-interaction   locator / hit-test，复用 pipeline
+schemas         Zod schema / 类型真源（Plot IR 形状），所有模块可依赖
+contract/*      coordinate / scale / transform / mark / format 的扩展契约
+providers/*     上述五层的内置实现，依赖 contract（format 内置 def 复用 features/data 的 coerce 工具）
+features/*      内置、不可扩展的特性子系统：data（字段对齐 / 解析 / 归一化）、guide（axis / legend 下沉）、interaction（locator / hit-test）
+pipeline        Tier 2 → Kernel IR 下沉编排，调 providers + contract + features
 ```
 
-- `contract` / `providers` 各有顶层 `index.ts` barrel；**模块外 import 一律走 `../contract` / `../providers`，不深入到子模块**（如 `../contract/scale`）。
+- **`features/*`**：不属于 contract（抽象）/ providers（可扩展内置）/ schemas / pipeline 的核心特性逻辑各自成块——`data` / `guide` / `interaction`。它们是必须但**还没有 define 扩展机制**的内置子系统（见下）。
+- `contract` / `providers` / `features` 各有顶层 `index.ts` barrel；**模块外 import 一律走 `../contract` / `../providers` / `../features`，不深入到子模块**（如 `../contract/scale`、`../features/guide/guide`）。`features` 内部子系统之间可直接相邻 import（如 `interaction/locate` 读 `../data`），不绕自身 barrel。例外：包**公共 API barrel**（`src/index.ts`）按需 deep-import 子路径做表面裁剪（如只暴露 `./features/data/resolve` / `./features/interaction/locate`，不整桶导出 features 内部），与它对 `pipeline` 的处理一致。
 - `schemas` 是 Zod schema / 类型真源，所有模块都可以依赖 `schemas`。下游可依赖上游；上游不要反向读取下游实现。
 - `pipeline` 是编排层（Tier 2 → Kernel IR 下沉），调用各层 `resolveXxxRegistry` + dispatch 函数；具体规则应放回拥有该概念的层。
 - 新增共享逻辑先放到最小合理归属层；多个语法层都需要时优先抽到更底层或 `@retikz/math` / `@retikz/core`。
 
-### data 的可扩展缝是 format（ADR-09）；guide / interaction 暂无 define 机制
+### features/* 暂无 define 机制；data 的可扩展缝 format 已抽走（ADR-09）
 
-`data` 层整体不是 registry 形状（`DataModel`/`FieldDef` 是声明式配置、infer→coerce→normalize→validate 是固定管线、`resolveField`/`resolveLabel` 是运行时函数逃生舱）。其中**唯一**的具名解析枚举——字段解析格式 `format`——已按 ADR-09 抽成 `contract/format` + `providers/format` 的 `defineFieldFormat` + `resolveFormatRegistry` 可扩展层（与 coordinate / scale / transform / mark 对齐）。`fieldType`（横切概念轴）与 `resolveField`/`resolveLabel`（任意函数 hook）**刻意不做 registry 化**。
+`features/data` / `features/guide` / `features/interaction` 是必须但**还没有 `defineXxx` / `resolveXxxRegistry` 扩展机制**的内置子系统——它们不是 contract/providers 那种「内置 ∪ 自定义同表分派」的可扩展语法层，早期设计未细化到这一层，先作为内部实现归在 `features/`。后续某层确认值得开放扩展时，再把它从 `features/` 抽成 contract/providers 对（补 `defineXxx` + registry + `lowerPlots` 选项 + React 透传四件套）。
 
-`guide` / `interaction` 目前**还没有 `defineXxx` / `resolveXxxRegistry` 扩展机制**——早期设计未细化到这一层，按当前需要先保留为内部实现，不进 `contract` / `providers`。后续按需逐步抽象成 contract/providers 对的可扩展层。新增这类抽象前先评估是否值得开放给用户扩展，再补 `defineXxx` + registry + `lowerPlots` 选项 + React 透传四件套。
+已有先例：`features/data` 里唯一的具名解析枚举——字段解析格式 `format`——已按 ADR-09 抽成 `contract/format` + `providers/format`（与 coordinate / scale / transform / mark 对齐）；`data` 余下部分（`DataModel`/`FieldDef` 声明式配置、infer→coerce→normalize→validate 固定管线、`resolveField`/`resolveLabel` 函数逃生舱、`fieldType` 横切概念轴）都不是 registry 形状，**刻意留在 `features/data`**。
 
 ## 公共能力复用
 

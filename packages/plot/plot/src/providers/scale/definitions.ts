@@ -1,6 +1,6 @@
 import { JsonObjectSchema } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
-import { inferCategoryDomain } from '../../data';
+import { inferCategoryDomain } from '../../features';
 import {
   type BandScale,
   BandScaleSchema,

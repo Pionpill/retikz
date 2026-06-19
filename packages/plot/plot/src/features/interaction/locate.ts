@@ -1,12 +1,12 @@
 import type { IRJsonObject } from '@retikz/core';
-import { type ExternalDatasets, type ExternalRow, type Mark, type MarkOperation, PlotMark, type PlotSpec, isBuiltinMark } from '../schemas';
-import { type IntervalContext, buildGenericIntervalContext, buildIntervalContext, datumAnchor } from '../providers';
-import { type LowerPlotsOptions, prepareRows, resolveFrame } from '../pipeline/expand';
+import { type ExternalDatasets, type ExternalRow, type Mark, type MarkOperation, PlotMark, type PlotSpec, isBuiltinMark } from '../../schemas';
+import { type IntervalContext, buildGenericIntervalContext, buildIntervalContext, datumAnchor } from '../../providers';
+import { type LowerPlotsOptions, prepareRows, resolveFrame } from '../../pipeline/expand';
 import { resolveFieldPath } from '../data';
-import { DEFAULT_FONT_SIZE } from '../pipeline/layout';
-import { type CoordinateFrame, isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame } from '../contract';
-import { type ProvenanceContext, createDatumIdRegistrar, datumMeta, readSourceIndex, readSourceIndices, tagSourceIndex } from '../pipeline/provenance';
-import { applyTransforms } from '../providers';
+import { DEFAULT_FONT_SIZE } from '../../pipeline/layout';
+import { type CoordinateFrame, isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame } from '../../contract';
+import { type ProvenanceContext, createDatumIdRegistrar, datumMeta, readSourceIndex, readSourceIndices, tagSourceIndex } from '../../pipeline/provenance';
+import { applyTransforms } from '../../providers';
 
 /** 默认整图尺寸（与 expand.ts 对齐，保 locator 投影与 lowering 一致） */
 const DEFAULT_WIDTH = 480;

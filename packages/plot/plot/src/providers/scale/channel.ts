@@ -1,5 +1,5 @@
 import { isFiniteNumber } from '@retikz/math';
-import { inferCategoryDomain, resolveFieldPath } from '../../data';
+import { inferCategoryDomain, resolveFieldPath } from '../../features';
 import {
   type ExternalRow,
   type LegendChannelValue,

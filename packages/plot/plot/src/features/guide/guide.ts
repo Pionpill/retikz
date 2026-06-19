@@ -1,11 +1,11 @@
 import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 import { type Position, arcEndPoint } from '@retikz/math';
-import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../schemas';
-import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from '../pipeline/layout';
-import type { DimensionRole, GenericCoordinateFrame } from '../contract';
-import type { PolarCoordinateFrame, TernaryVertices } from '../providers';
-import { type ProvenanceContext, guideLayerId, guideLayerMeta } from '../pipeline/provenance';
-import type { PositionScale, TickSet } from '../providers';
+import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../../schemas';
+import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from '../../pipeline/layout';
+import type { DimensionRole, GenericCoordinateFrame } from '../../contract';
+import type { PolarCoordinateFrame, TernaryVertices } from '../../providers';
+import { type ProvenanceContext, guideLayerId, guideLayerMeta } from '../../pipeline/provenance';
+import type { PositionScale, TickSet } from '../../providers';
 
 /** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 arcEndPoint。 */
 const DEG_TO_RAD = Math.PI / 180;

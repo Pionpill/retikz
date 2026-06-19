@@ -1,4 +1,4 @@
-import type { ParsedFieldValue } from '../data';
+import type { ParsedFieldValue } from '../features';
 import type { PlotFieldTypeValue } from '../schemas';
 
 /**

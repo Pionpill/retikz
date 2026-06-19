@@ -22,8 +22,8 @@ export type {
   DensifyCellContourOptions,
   CoordinateFrame,
 } from './contract';
-export * from './data/resolve';
-export * from './interaction/locate';
+export * from './features/data/resolve';
+export * from './features/interaction/locate';
 export * from './schemas';
 export * from './pipeline/expand';
 export * from './pipeline/layout';

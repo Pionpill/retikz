@@ -1,7 +1,7 @@
 import type { IRScope } from '@retikz/core';
 import type { Position } from '@retikz/math';
 import type { z } from 'zod';
-import type { GuideContext, LoweredGuide } from '../../guide';
+import type { GuideContext, LoweredGuide } from '../../features';
 import type { AxisGuide, CoordinateOperation, ExternalRow, MarkOperation, ScaleOperation } from '../../schemas';
 import type { LegendReserve, Margins } from '../../pipeline/layout';
 import type { ProvenanceContext } from '../../pipeline/provenance';

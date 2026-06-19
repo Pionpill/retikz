@@ -1,7 +1,7 @@
 import { type Position, isFiniteNumber } from '@retikz/math';
 import { PlotCoordinate, PlotScale, type Ternary2DCoordinate } from '../../schemas';
 import { Ternary2DSchema } from '../../schemas/coordinate';
-import type { GuideContext } from '../../guide';
+import type { GuideContext } from '../../features';
 import { computeTernaryFrame } from '../../pipeline/layout';
 import type { TickSet } from '../../providers/scale';
 import { assertUniqueAxisDimension } from './axis';

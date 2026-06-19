@@ -1,7 +1,7 @@
 import { format as d3Format } from 'd3-format';
 import { utcFormat } from 'd3-time-format';
 import { isFiniteNumber } from '@retikz/math';
-import { type Channel, type DataModel, type ExternalRow, PlotFieldType, type PlotFieldTypeValue, type TextChannel } from '../schemas';
+import { type Channel, type DataModel, type ExternalRow, PlotFieldType, type PlotFieldTypeValue, type TextChannel } from '../../schemas';
 
 /**
  * 解析字段路径 a.b.c，返回叶子值（任一段缺失返回 undefined）

@@ -1,6 +1,6 @@
 import type { IRChild } from '@retikz/core';
 import type { ExternalRow, Mark, MarkOperation } from '../schemas';
-import type { FieldCollector } from '../data';
+import type { FieldCollector } from '../features';
 import type { Cell, CoordinateFrame, DimensionRole } from './coordinate';
 import type { IntervalContext, MarkChannels, MarkProvenance } from '../providers/mark';
 
