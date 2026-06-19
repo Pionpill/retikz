@@ -171,4 +171,4 @@ A few constraints:
 - Custom scales **do not participate in React field-type auto-derivation** (to avoid ambiguity); they only apply when referenced in a spec.
 - The scale `type` field excludes the built-in discriminators: a spec with a custom type still passes `PlotSpecSchema.parse` and round-trips through JSON without losing fields, with precise config validation deferred to lowering (against the definition's schema).
 
-<ComponentAlert title="The declarative <Scale> does not yet take a custom type" description="Custom scales are fully usable through the programmatic path — <Plot spec={...} scaleDefinitions={[...]} colorSchemes={{...}} /> or vanilla renderPlot(spec, data, options). The declarative <Scale type=\"...\"> sugar passthrough of a custom type + flat config is staged per ADR-07." />
+<ComponentAlert title="The declarative Scale does not yet take a custom type" description="Custom scales are fully usable through the programmatic path — the Plot spec / scaleDefinitions / colorSchemes props, or vanilla renderPlot(spec, data, options). The declarative Scale component passthrough of a custom type + flat config is staged per ADR-07." />
