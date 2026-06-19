@@ -115,6 +115,7 @@
     "grammarTransform": "Transforms",
     "grammarTransformRow": "Row Transforms",
     "grammarTransformGroup": "Group Transforms",
+    "grammarTransformCustom": "Custom Transforms",
     "grammarScale": "Scales",
     "grammarCoordinate": "Coordinates",
     "grammarCoordinate2d": "2D Coordinates",

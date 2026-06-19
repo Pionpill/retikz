@@ -115,6 +115,7 @@
     "grammarTransform": "变换",
     "grammarTransformRow": "行级变换",
     "grammarTransformGroup": "分组规约",
+    "grammarTransformCustom": "自定义变换",
     "grammarScale": "比例尺",
     "grammarCoordinate": "坐标系",
     "grammarCoordinate2d": "二维坐标系",

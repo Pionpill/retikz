@@ -37,6 +37,7 @@ export const plotSection: Array<Section> = [
         children: [
           { id: 'row', label: 'plot.grammarTransformRow' },
           { id: 'group', label: 'plot.grammarTransformGroup' },
+          { id: 'custom', label: 'plot.grammarTransformCustom' },
         ],
       },
       {

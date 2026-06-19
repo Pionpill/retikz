@@ -33,23 +33,6 @@ For programmatic construction, `<Plot dataTransforms={[...]}>` can pass a transf
 
 > The prop is named `dataTransforms`, not `transforms`, to avoid colliding with core container geometric transforms such as translate / rotate.
 
-## Custom Transforms
-
-Beyond the built-in transforms, define your own data processor with `defineTransform`. The spec still stores only the JSON operation, such as `{ kind: 'double-x', field: 'x', as: 'x2' }`; the schema, field collection, and runtime function live in the definition passed through `<Plot transformDefinitions={[...]}>`.
-
-<ComponentPreview name="transform-custom" sourceFiles={['transform-custom.data.ts']} />
-
-`x2` is not declared in `model`, because it is derived by `double-x`. `outputFields` registers it as a transform output, so strict model validation checks only the real input fields `x` and `y`.
-
-| Definition Field | Purpose |
-| --- | --- |
-| `schema` | Validates the `{ kind, ...config }` operation. `kind` must be a non-built-in `z.literal(...)`; all other fields must stay JSON-serializable. |
-| `inputFields` | Returns the source fields read by the transform; these fields enter model validation and field resolution. |
-| `outputFields` | Returns derived fields produced by the transform; downstream marks or transforms can consume them without declaring them in `model`. |
-| `apply` | Runs the transform in pipeline order and returns the next row set. It must be deterministic so rendering and locators stay aligned. |
-
-The third `apply` argument is a transform context. Row-preserving transforms usually keep row provenance by returning `{ ...row, newField }`; when a row-count-changing transform emits one row for a group of source rows, it must call `context.groupProvenance(out, members)` to attach `sourceIndices`. If a transform generates rows with no source rows, provenance naturally degrades to `transformedIndex` only.
-
 ## How It Works
 
 During lowering, Plot collects source fields read by transforms and records output fields derived by transforms. Strict model validation then checks only real input fields and does not require derived fields to be declared ahead of time.
@@ -66,5 +49,9 @@ Transforms are applied in declaration order: the output rows from one transform 
   <LinkedCard href="/plot/grammar/transform/group">
     <span className="font-semibold">Group Transforms</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Change row count by reducing details into bins or grouped summary rows.</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/transform/custom">
+    <span className="font-semibold">Custom Transforms</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Register your own data processor with defineTransform; the op enters IR, the executor stays at runtime.</span>
   </LinkedCard>
 </div>
