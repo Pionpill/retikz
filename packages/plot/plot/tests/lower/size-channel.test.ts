@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { SIZE_MAX_RADIUS, SIZE_MIN_RADIUS } from '../../src/scale/channel';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 

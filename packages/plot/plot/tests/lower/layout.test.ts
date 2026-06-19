@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computePlotArea } from '../../src/pipeline/layout';
+import { computePlotArea } from '../../src/lower/layout';
 
 const noAxis = { hasXAxis: false, hasYAxis: false, xLabels: [], yLabels: [] };
 

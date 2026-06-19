@@ -2,7 +2,7 @@ import type { Position } from '@retikz/math';
 import { type Cartesian1DCoordinate, Cartesian1DOrientation, type Cartesian1DOrientationType, type Coordinate, PlotCoordinate, PlotScale, type ScaleOperation } from '../ir';
 import { Cartesian1DSchema, Cartesian2DSchema } from '../ir/coordinate';
 import type { GuideContext } from '../guide';
-import { type Rect, computePlotArea } from '../pipeline/layout';
+import { type Rect, computePlotArea } from '../lower/layout';
 import type { PositionScale, TickSet } from '../scale';
 import { assertUniqueAxisDimension } from './axis';
 import type { Cell, CellGeometry } from './cell';

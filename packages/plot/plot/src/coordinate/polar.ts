@@ -1,7 +1,7 @@
 import { type Position, arcEndPoint, isFiniteNumber } from '@retikz/math';
 import type { GuideContext } from '../guide';
 import { type Coordinate, PlotCoordinate, PlotScale, type Polar1DCoordinate, Polar1DSchema, Polar2DSchema } from '../ir';
-import { computePolarCoordinate } from '../pipeline';
+import { computePolarCoordinate } from '../lower';
 import type { PositionScale, TickSet } from '../scale';
 import { assertUniqueAxisDimension } from './axis';
 import type { Cell, CellGeometry } from './cell';

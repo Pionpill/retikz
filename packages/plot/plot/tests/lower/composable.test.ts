@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '@retikz/core';
 import type { IR, IRNode, IRScope, IRTarget, ScenePrimitive } from '@retikz/core';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
 
 // ADR-02：plot 可被组合 —— 自描述尺寸（L1-a）+ 外部可见面板 anchor（L1-b）
 

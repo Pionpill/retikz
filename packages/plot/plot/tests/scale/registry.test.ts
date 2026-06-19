@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { IRNode, IRScope } from '@retikz/core';
 import * as plot from '../../src';
 import { BUILTIN_SCALE_TYPES, PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
 import {
   type AnyScaleDefinition,
   BUILTIN_SCALES,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { inferFieldType, isIsoDateString, resolveFieldTypes } from '../../src/data';
-import { collectSourceFields } from '../../src/pipeline/source-fields';
+import { collectSourceFields } from '../../src/lower/source-fields';
 
 /** 构造最小可解析 PlotSpec（cartesian + 给定 marks / transform / model） */
 const buildSpec = (overrides: Record<string, unknown>): PlotSpec =>

@@ -1,11 +1,11 @@
 import { JsonObjectSchema } from '@retikz/core';
 import { type ExternalRow, type TransformOperation } from '../ir';
 import type { FieldCollector } from '../data';
-import { type AnyTransformDefinition, DEFAULT_TRANSFORM_CONTEXT, type TransformContext, resolveTransformRegistry } from './registry';
+import { type AnyTransformDefinition, DEFAULT_TRANSFORM_CONTEXT, type TransformContext, resolveTransformRegistry } from './define';
 
 export { aggregateOutputField, binOutputFields } from './group';
-export type { AnyTransformDefinition, TransformContext, TransformDefinition } from './registry';
-export { BUILTIN_TRANSFORMS, BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND, DEFAULT_TRANSFORM_CONTEXT, defineTransform, extractTransformKind, resolveTransformRegistry } from './registry';
+export type { AnyTransformDefinition, TransformContext, TransformDefinition } from './define';
+export { BUILTIN_TRANSFORMS, BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND, DEFAULT_TRANSFORM_CONTEXT, defineTransform, extractTransformKind, resolveTransformRegistry } from './define';
 
 /** 解析并校验单个 transform operation；返回可安全喂给 definition 的宽类型。 */
 const parseTransformOperation = (definition: AnyTransformDefinition, operation: TransformOperation): never => {

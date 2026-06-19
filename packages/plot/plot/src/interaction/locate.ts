@@ -1,11 +1,11 @@
 import type { IRJsonObject } from '@retikz/core';
 import { type ExternalDatasets, type ExternalRow, type Mark, PlotMark, type PlotSpec } from '../ir';
 import { type IntervalContext, buildGenericIntervalContext, buildIntervalContext, datumAnchor } from '../mark/anchor';
-import { type LowerPlotsOptions, prepareRows, resolveFrame } from '../pipeline/expand';
+import { type LowerPlotsOptions, prepareRows, resolveFrame } from '../lower/expand';
 import { resolveFieldPath } from '../data';
-import { DEFAULT_FONT_SIZE } from '../pipeline/layout';
+import { DEFAULT_FONT_SIZE } from '../lower/layout';
 import { type CoordinateFrame, isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame } from '../coordinate';
-import { type ProvenanceContext, createDatumIdRegistrar, datumMeta, readSourceIndex, readSourceIndices, tagSourceIndex } from '../pipeline/provenance';
+import { type ProvenanceContext, createDatumIdRegistrar, datumMeta, readSourceIndex, readSourceIndices, tagSourceIndex } from '../lower/provenance';
 import { applyTransforms } from '../transform/transform';
 
 /** 默认整图尺寸（与 expand.ts 对齐，保 locator 投影与 lowering 一致） */

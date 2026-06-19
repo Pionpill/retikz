@@ -2,7 +2,7 @@ import { type Position, isFiniteNumber } from '@retikz/math';
 import { PlotCoordinate, PlotScale, type Ternary2DCoordinate } from '../ir';
 import { Ternary2DSchema } from '../ir/coordinate';
 import type { GuideContext } from '../guide';
-import { computeTernaryFrame } from '../pipeline/layout';
+import { computeTernaryFrame } from '../lower/layout';
 import type { TickSet } from '../scale';
 import { assertUniqueAxisDimension } from './axis';
 import { type Cell, type CellGeometry, cellInterval } from './cell';

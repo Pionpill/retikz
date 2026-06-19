@@ -1,7 +1,7 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
 
 /**
  * ADR-01（alpha.9）coordinate frame N 通道泛化 + 位置 encoding 角色化 + 维度校验测试。

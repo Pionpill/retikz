@@ -3,7 +3,7 @@ import { compileToScene } from '@retikz/core';
 import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 import { type IntervalMark, type Mark, type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
 import { buildIntervalContext, cellGeometryAnchor, datumAnchor } from '../../src/mark/anchor';
 import { lowerMark } from '../../src/mark/mark';
 import {

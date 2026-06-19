@@ -2,7 +2,7 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type IntervalMark, type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
 import { buildIntervalContext, datumAnchor, intervalCell } from '../../src/mark/anchor';
 import { lowerMark } from '../../src/mark/mark';
 import { type Cell, createCartesianCoordinate, createPolarCoordinate } from '../../src/coordinate';

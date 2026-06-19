@@ -13,13 +13,13 @@ ir
   -> scale
   -> coordinate
   -> mark / guide
-  -> pipeline
+  -> lower
   -> interaction
 ```
 
 - `ir` 是 schema / 类型真源，所有模块都可以依赖 `ir`。
 - 下游模块可以依赖上游模块；上游模块不要反向读取下游模块实现。
-- `pipeline` 是编排层，可以调用各模块提供的公开函数；具体规则应放回拥有该概念的模块。
+- `lower` 是编排层（Tier 2 → Kernel IR 下沉），可以调用各模块提供的公开函数；具体规则应放回拥有该概念的模块。
 - 跨模块引用走目录 barrel，例如 `../data`、`../mark`、`../scale`；同目录内部才使用具体文件路径。
 - 新增共享逻辑先放到最小合理归属模块；若多个语法层都需要，优先抽到更底层模块或 `@retikz/math` / `@retikz/core`。
 

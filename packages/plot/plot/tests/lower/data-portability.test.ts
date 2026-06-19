@@ -3,9 +3,9 @@ import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { coerceValue, normalizeRows, resolveFieldPath } from '../../src/data';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
 import { createPlotLocator } from '../../src/interaction/locate';
-import { readSourceIndex, tagSourceIndex } from '../../src/pipeline/provenance';
+import { readSourceIndex, tagSourceIndex } from '../../src/lower/provenance';
 import { applyTransforms } from '../../src/transform/transform';
 import { defineTransform } from '../../src/transform';
 

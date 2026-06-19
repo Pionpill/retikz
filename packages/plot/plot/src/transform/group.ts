@@ -2,7 +2,7 @@ import { scaleLinear } from 'd3-scale';
 import { isFiniteNumber } from '@retikz/math';
 import { type AggregateTransform, type BinTransform, type ExternalRow } from '../ir';
 import { resolveFieldPath } from '../data';
-import type { TransformContext } from './registry';
+import type { TransformContext } from './define';
 
 /** bin 默认输出字段名，对齐 IntervalMark 的 x0Field / x1Field 消费方。 */
 const DEFAULT_BIN_START_FIELD = 'binStart';

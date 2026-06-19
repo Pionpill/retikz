@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { PLOT_SHAPE_PALETTE } from '../../src/scale/channel';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 

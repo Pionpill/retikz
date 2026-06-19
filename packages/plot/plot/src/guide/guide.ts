@@ -1,9 +1,9 @@
 import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 import { type Position, arcEndPoint } from '@retikz/math';
 import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../ir';
-import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from '../pipeline/layout';
+import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from '../lower/layout';
 import type { DimensionRole, GenericCoordinateFrame, PolarCoordinateFrame, TernaryVertices } from '../coordinate';
-import { type ProvenanceContext, guideLayerId, guideLayerMeta } from '../pipeline/provenance';
+import { type ProvenanceContext, guideLayerId, guideLayerMeta } from '../lower/provenance';
 import type { PositionScale, TickSet } from '../scale/scale';
 
 /** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 arcEndPoint。 */

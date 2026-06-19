@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { PlotFieldType } from '../../src/ir/data';
 import { inferFieldType, isIsoDateString, toTimestamp } from '../../src/data';
-import { type LowerPlotsOptions, prepareRows } from '../../src/pipeline/expand';
-import { tagSourceIndex } from '../../src/pipeline/provenance';
+import { type LowerPlotsOptions, prepareRows } from '../../src/lower/expand';
+import { tagSourceIndex } from '../../src/lower/provenance';
 
 /** 单字段行 → 推断类型（无 model，纯抽样推断） */
 const inferOne = (values: Array<unknown>): string => inferFieldType(values.map(v => ({ v })), 'v');

@@ -2,7 +2,7 @@ import { compileToScene } from '@retikz/core';
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { lowerPlots } from '../../src/pipeline/expand';
+import { lowerPlots } from '../../src/lower/expand';
 import { type GuideContext, lowerGuide } from '../../src/guide/guide';
 import type { PositionScale } from '../../src/scale/scale';
 

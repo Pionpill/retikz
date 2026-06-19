@@ -2,7 +2,7 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema, type ReferenceMark } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
 import { lowerMark } from '../../src/mark/mark';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../src/coordinate';
 import type { PositionScale } from '../../src/scale/scale';

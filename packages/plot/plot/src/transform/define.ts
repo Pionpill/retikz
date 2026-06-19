@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ExternalRow, TransformOperation } from '../ir';
-import { readSourceIndex, readSourceIndices, withGroupProvenance } from '../pipeline/provenance';
+import { readSourceIndex, readSourceIndices, withGroupProvenance } from '../lower/provenance';
 import { type AggregateTransform, AggregateTransformSchema, type BinTransform, BinTransformSchema, type DeriveIntervalTransform, DeriveIntervalTransformSchema, type JitterTransform, JitterTransformSchema, type NormalizeTransform, NormalizeTransformSchema, type SortTransform, SortTransformSchema, type StackTransform, StackTransformSchema } from '../ir/transform';
 import { aggregateOutputField, applyAggregate, applyBin, binOutputFields } from './group';
 import { DEFAULT_DERIVE_END_FIELD, DEFAULT_DERIVE_START_FIELD, DEFAULT_END_FIELD, DEFAULT_JITTER_X_FIELD, DEFAULT_JITTER_Y_FIELD, DEFAULT_START_FIELD, applyDeriveInterval, applyJitter, applyNormalize, applySort, applyStack } from './row';

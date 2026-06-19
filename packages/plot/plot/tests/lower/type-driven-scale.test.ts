@@ -1,7 +1,7 @@
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { lowerPlots } from '../../src/pipeline/expand';
+import { lowerPlots } from '../../src/lower/expand';
 import { deriveScale } from '../../src/scale/scale';
 import { assertScaleFieldCompatible as assertScaleFieldCompatibleOp, resolveScaleRegistry } from '../../src/scale/registry';
 import type { PlotFieldTypeValue } from '../../src/ir';

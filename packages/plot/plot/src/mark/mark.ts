@@ -30,7 +30,7 @@ import {
   readSourceIndices,
   seriesPathMeta,
   slug,
-} from '../pipeline/provenance';
+} from '../lower/provenance';
 import { type NumberStyleOf, type OpacityOf, type ShapeOf, type SizeOf, type StrokeWidthOf } from '../scale/channel';
 
 /**
