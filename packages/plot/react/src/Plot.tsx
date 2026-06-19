@@ -76,7 +76,7 @@ const lowerPlotOptionsOf = (
   effectiveFieldMaps: LowerPlotsOptions['fieldMaps'],
   collectedResolveLabel: ResolveLabelMap | undefined,
 ): LowerPlotsOptions => {
-  const { width, height, fontSize, margin, provenance, datumProvenance, datumIdField, validateData, resolveField, resolveLabel, invalid, coordinates, transformDefinitions, scaleDefinitions, colorSchemes } = props;
+  const { width, height, fontSize, margin, provenance, datumProvenance, datumIdField, validateData, resolveField, resolveLabel, invalid, coordinates, transformDefinitions, scaleDefinitions, colorSchemes, markDefinitions } = props;
   // DSL 入口 <PointMark resolveLabel> / <IntervalMark resolveLabel> 收集的 per-mark 函数，与显式 props.resolveLabel 合并（显式优先）
   const mergedResolveLabel = collectedResolveLabel !== undefined || resolveLabel !== undefined ? { ...collectedResolveLabel, ...resolveLabel } : undefined;
   return {
@@ -96,6 +96,7 @@ const lowerPlotOptionsOf = (
     transformDefinitions,
     scaleDefinitions,
     colorSchemes,
+    markDefinitions,
   };
 };
 
