@@ -29,6 +29,48 @@ For programmatic construction, `<Plot dataTransforms={[...]}>` can pass a transf
 
 > The prop is named `dataTransforms`, not `transforms`, to avoid colliding with core container geometric transforms such as translate / rotate.
 
+## Custom Transforms
+
+Beyond the built-in transforms, define your own data processor with `defineTransform`. The spec still stores only the JSON operation, such as `{ kind: 'double-x', field: 'x', as: 'x2' }`; the schema, field collection, and runtime function live in the definition passed through `<Plot transformDefinitions={[...]}>`.
+
+```tsx
+import { defineTransform } from '@retikz/plot';
+import { z } from 'zod';
+
+const doubleX = defineTransform({
+  schema: z.object({
+    kind: z.literal('double-x').describe('Discriminator: double one numeric field'),
+    field: z.string().min(1).describe('Input field read from each row'),
+    as: z.string().min(1).describe('Output field written to each row'),
+  }),
+  inputFields: operation => [operation.field],
+  outputFields: operation => [operation.as],
+  apply: (rows, operation) =>
+    rows.map(row => ({
+      ...row,
+      [operation.as]: Number(row[operation.field]) * 2,
+    })),
+});
+
+<Plot data={rows} model={model} transformDefinitions={[doubleX]}>
+  <Transform kind="double-x" field="x" as="x2" />
+  <PointMark x="x2" y="y" />
+</Plot>;
+```
+
+<ComponentPreview name="transform-custom" sourceFiles={['transform-custom.data.ts']} />
+
+`x2` is not declared in `model`, because it is derived by `double-x`. `outputFields` registers it as a transform output, so strict model validation checks only the real input fields `x` and `y`.
+
+| Definition Field | Purpose |
+| --- | --- |
+| `schema` | Validates the `{ kind, ...config }` operation. `kind` must be a non-built-in `z.literal(...)`; all other fields must stay JSON-serializable. |
+| `inputFields` | Returns the source fields read by the transform; these fields enter model validation and field resolution. |
+| `outputFields` | Returns derived fields produced by the transform; downstream marks or transforms can consume them without declaring them in `model`. |
+| `apply` | Runs the transform in pipeline order and returns the next row set. It must be deterministic so rendering and locators stay aligned. |
+
+The third `apply` argument is a transform context. Row-preserving transforms usually keep row provenance by returning `{ ...row, newField }`; row-count-changing transforms can call `context.groupProvenance(out, members)` to attach `sourceIndices`. If a transform generates rows with no source rows, provenance naturally degrades to `transformedIndex` only.
+
 ## How It Works
 
 During lowering, Plot collects source fields read by transforms and records output fields derived by transforms. Strict model validation then checks only real input fields and does not require derived fields to be declared ahead of time.

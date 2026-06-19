@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { TransformSchema } from '../../src/ir/transform';
+import { PlotSpecSchema } from '../../src/ir';
+import { TransformOperationSchema, TransformSchema } from '../../src/ir/transform';
 
 describe('TransformSchema (ADR-03)', () => {
   // Happy path
@@ -71,6 +72,49 @@ describe('TransformSchema (ADR-03)', () => {
   it('stack_omitting_y_still_rejected', () => {
     // y 仍必填（累积的值字段）
     expect(() => TransformSchema.parse({ kind: 'stack' })).toThrow();
+  });
+});
+
+describe('TransformOperationSchema (alpha.12 ADR-06)', () => {
+  it('builtin_bad_shape_static_rejected', () => {
+    expect(() => TransformOperationSchema.parse({ kind: 'bin' })).toThrow();
+  });
+
+  it('custom_kind_passthrough_valid', () => {
+    const operation = { kind: 'regression', x: 'year', y: 'value', degree: 1 };
+    expect(TransformOperationSchema.parse(operation)).toEqual(operation);
+  });
+
+  it('custom_kind_cannot_collide_with_builtin', () => {
+    expect(() => TransformOperationSchema.parse({ kind: 'bin', custom: true })).toThrow(/built-in/i);
+  });
+
+  it('custom_operation_json_roundtrip_equivalent', () => {
+    const operation = { kind: 'regression', x: 'year', y: 'value', options: { robust: false, weights: [1, 2, 3] } };
+    expect(TransformOperationSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
+  });
+
+  it('custom_operation_rejects_non_json_values', () => {
+    expect(() => TransformOperationSchema.parse({ kind: 'regression', fn: () => 1 })).toThrow(/JSON-serializable/i);
+    expect(() => TransformOperationSchema.parse({ kind: 'regression', value: undefined })).toThrow(/JSON-serializable/i);
+    expect(() => TransformOperationSchema.parse({ kind: 'regression', value: Number.NaN })).toThrow(/JSON-serializable/i);
+    expect(() => TransformOperationSchema.parse({ kind: 'regression', value: Infinity })).toThrow(/JSON-serializable/i);
+  });
+
+  it('plot_spec_transform_accepts_custom_operation', () => {
+    const spec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      transform: [{ kind: 'regression', x: 'year', y: 'value' }],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      marks: [{ type: 'point', encoding: { x: { field: 'year' }, y: { field: 'value' } } }],
+    };
+    expect(PlotSpecSchema.parse(spec).transform).toEqual(spec.transform);
   });
 });
 

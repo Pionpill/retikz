@@ -28,6 +28,25 @@ export const readSourceIndices = (row: ExternalRow): Array<number> | undefined =
   return Array.isArray(value) && value.every((v): v is number => typeof v === 'number') ? value : undefined;
 };
 
+/** 取一组行的源行索引集合；仅 provenance 开启且源行已 tagSourceIndex 时非空。 */
+export const readSourceIndicesOf = (rows: Array<ExternalRow>): Array<number> => {
+  const out: Array<number> = [];
+  for (const row of rows) {
+    const index = readSourceIndex(row);
+    if (index !== undefined) out.push(index);
+  }
+  return out;
+};
+
+/**
+ * 给改行数 transform 的输出行打组级源序标记。
+ * @description 成员行没有 sourceIndex（provenance 未开或生成行）时原样返回；Symbol 键不会进入 JSON IR。
+ */
+export const withGroupProvenance = (row: ExternalRow, members: Array<ExternalRow>): ExternalRow => {
+  const indices = readSourceIndicesOf(members);
+  return indices.length > 0 ? { ...row, [SOURCE_INDICES]: indices } : row;
+};
+
 /**
  * 给每行打源序标记（仅 provenance 开时调用，避免默认产物/行为变化）
  * @description object spread 拷贝可枚举 symbol 属性，故 transform 管线后标记仍在；resolveFieldPath / JSON 都忽略它。

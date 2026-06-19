@@ -1,4 +1,4 @@
-# ADR-06：transform registry —— IR transform ops 与 runtime transform definitions 分层；两处 switch 收敛为 registry；公开 `defineTransform` + `options.transformDefinitions` 扩展点
+# ADR-06：transform registry —— IR transform operations 与 runtime transform definitions 分层；两处 switch 收敛为 registry；公开 `defineTransform` + `options.transformDefinitions` 扩展点
 
 - 状态：Proposed
 - 决策日期：2026-06-18
@@ -11,16 +11,16 @@
 
 ## 名词分层（贯穿全文，先立后用）
 
-本 ADR 最核心的纠正：**「数据变换 op」与「变换处理器 definition」是两层不同的东西，必须分名分层**，否则公开 API 一落地就和现有 `core scope.transforms`（几何变换）/ `dataTransforms`（ADR-01 数据管线直传）/ `<Transform>`（ADR-01 声明组件）互相踩。
+本 ADR 最核心的纠正：**「数据变换 operation」与「变换处理器 definition」是两层不同的东西，必须分名分层**，否则公开 API 一落地就和现有 `core scope.transforms`（几何变换）/ `dataTransforms`（ADR-01 数据管线直传）/ `<Transform>`（ADR-01 声明组件）互相踩。
 
 | 层 | 名称 | 形态 | 进 IR？ | 投递方式 | 谁定义的 |
 | --- | --- | --- | --- | --- | --- |
-| **transform op** | `spec.transform[i]` | `{ kind, ...config }` 纯 JSON | **是** | `<Transform kind="...">`（ADR-01 组件）/ `dataTransforms` 直传（ADR-01）/ 手写 spec | ADR-01/02 已落地 |
+| **transform operation** | `spec.transform[i]` | `{ kind, ...config }` 纯 JSON | **是** | `<Transform kind="...">`（ADR-01 组件）/ `dataTransforms` 直传（ADR-01）/ 手写 spec | ADR-01/02 已落地 |
 | **transform definition** | `TransformDefinition` | `{ schema, inputFields?, outputFields?, apply }` 运行时对象（含函数） | **否** | `lowerPlots options.transformDefinitions` / `<Plot transformDefinitions={[...]}>` | **本 ADR 新增** |
 | core 几何 transform | `scope.transforms` | translate / rotate（`@retikz/core` ScopeProps） | 是（core IR） | `<Plot transforms>`（`PlotPanelProps`，`Plot.tsx:7`） | core 既有，**不占用** |
 
-- **op 的 React authoring 表面已由 ADR-01 拍定，本 ADR 不新增组件、不延后**：自定义 kind 的 op 经**同一个** `<Transform kind="regression" x="year" y="value" />` 或 `dataTransforms` 直传（见「影响」对 build-plot-spec 的小扩展）。为让类型层与 schema 放宽一致，React 的 `TransformProps` 与 `dataTransforms` 从内置 `Transform` 放宽为 `TransformOp`；导出的 `Transform` 类型仍保留为内置 7-union，供内部穷尽处理使用。
-- **本 ADR 只新增 definition 注入口**，命名 `transformDefinitions`——与 `transforms`（几何）、`dataTransforms`（op 直传）三者全程不撞名。
+- **operation 的 React authoring 表面已由 ADR-01 拍定，本 ADR 不新增组件、不延后**：自定义 kind 的 operation 经**同一个** `<Transform kind="regression" x="year" y="value" />` 或 `dataTransforms` 直传（见「影响」对 build-plot-spec 的小扩展）。为让类型层与 schema 放宽一致，React 的 `TransformProps` 与 `dataTransforms` 从内置 `Transform` 放宽为 `TransformOperation`；导出的 `Transform` 类型仍保留为内置 7-union，供内部穷尽处理使用。
+- **本 ADR 只新增 definition 注入口**，命名 `transformDefinitions`——与 `transforms`（几何）、`dataTransforms`（operation 直传）三者全程不撞名。
 
 ## 背景
 
@@ -39,7 +39,7 @@ GoG 与同类库都不把统计当封闭集合：Vega/Vega-Lite 开放 transform
 
 **为什么 transform 开放公开扩展点、而 ADR-03 mark registry 不开放（有意的不对称）：** mark 是相对**封闭**的几何基元集（6 个已覆盖数据几何全谱），自定义 mark 注入契约体量大且缺明确长尾需求，故 ADR-03 只立内部 registry。transform 相反——统计长尾是**当下明确的现实需求**（驱动本 ADR 的原始诉求即「内置永远写不完」）。两个 registry 的开放节奏按「是否存在长尾扩展需求」分别判。项目处 0.x、本里程碑未发布，按最优设计推进、不为旧写法保留别名。
 
-## 决策：两 switch 收敛为 registry；内置 7 个降为内置注册项；公开 `defineTransform` + `options.transformDefinitions` 注入（对齐 composite/coordinate），IR ops 与 runtime definitions 分层
+## 决策：两 switch 收敛为 registry；内置 7 个降为内置注册项；公开 `defineTransform` + `options.transformDefinitions` 注入（对齐 composite/coordinate），IR operations 与 runtime definitions 分层
 
 ### (1) `TransformDefinition` + `defineTransform`：对齐 `defineComposite`，含 provenance 上下文与字段契约
 
@@ -56,23 +56,23 @@ type TransformContext = {
   groupProvenance: (out: ExternalRow, members: Array<ExternalRow>) => ExternalRow;
 };
 
-type TransformDefinition<Op extends TransformOp = TransformOp> = {
-  /** 完整 op schema：必须是 ZodObject 且 `kind` 为 z.literal（registry 据此提取注册键，运行时校验形态） */
-  schema: ZodType<Op>;
-  /** 该 op 消费的源字段名 → 纳入 strict model 校验集（必须存在于 data.model） */
-  inputFields?: (op: Op) => Array<string>;
+type TransformDefinition<TOperation extends TransformOperation = TransformOperation> = {
+  /** 完整 operation schema：必须是 ZodObject 且 `kind` 为 z.literal（registry 据此提取注册键，运行时校验形态） */
+  schema: ZodType<TOperation>;
+  /** 该 operation 消费的源字段名 → 纳入 strict model 校验集（必须存在于 data.model） */
+  inputFields?: (operation: TOperation) => Array<string>;
   /**
-   * 该 op 产出的派生字段名 → 从 strict model 校验集排除。
+   * 该 operation 产出的派生字段名 → 从 strict model 校验集排除。
    * **硬契约**：凡产出、且会被下游 mark / 后续 transform 消费的字段，在声明 data.model 时**必须**在此登记，
    * 否则该字段被 strict model 当未知源字段提前 fail-loud（与内置 stack 的 startField/endField、bin 的 binStart 等同理）。
    */
-  outputFields?: (op: Op) => Array<string>;
+  outputFields?: (operation: TOperation) => Array<string>;
   /** 真正执行；**必须纯且确定**（同输入恒同输出）——否则破坏 SSR / locator parity。ctx 提供 provenance helper */
-  apply: (rows: Array<ExternalRow>, op: Op, ctx: TransformContext) => Array<ExternalRow>;
+  apply: (rows: Array<ExternalRow>, operation: TOperation, context: TransformContext) => Array<ExternalRow>;
 };
 
-/** 注册一个 transform，保留 apply / fields 对 Op 的强类型（对齐 core defineComposite） */
-const defineTransform = <Op extends TransformOp>(def: TransformDefinition<Op>): TransformDefinition =>
+/** 注册一个 transform，保留 apply / fields 对 operation 的强类型（对齐 core defineComposite） */
+const defineTransform = <TOperation extends TransformOperation>(def: TransformDefinition<TOperation>): TransformDefinition =>
   def as TransformDefinition;
 ```
 
@@ -83,7 +83,7 @@ const defineTransform = <Op extends TransformOp>(def: TransformDefinition<Op>): 
   - **改行数（reduce / 分箱）**：用 `ctx.groupProvenance(out, members)` 给每个输出行挂组级来源，与内置 bin / aggregate 等价。
   - **生成行（如回归拟合线，无 1:1 源行）**：无源行可挂，provenance 天然降级为「仅 transformedIndex 可定位、无 sourceIndex」——这是固有语义、文档显式说明，非缺陷。
 - **`collectFields` 拆为 `inputFields` / `outputFields`（纯函数返数组）**：不向用户暴露内部 `FieldCollector` 类型；输入 / 输出双向语义显式。`outputFields` 的「产出且被消费必须登记」是硬契约（见上 JSDoc），registry 适配层把 `inputFields` 写进 collector、`outputFields` 写进 derived 集。
-- **`schema` 运行时形态校验**：类型层留 `ZodType<Op>`（对齐 composite 的 `CompositeDefinition['schema']` 同款宽类型），首次 `resolveTransformRegistry` 时 `extractKind` 校验「`ZodObject` 且 `kind` 为 `z.literal`」，否则注册期 throw 清晰错（mirror `compile/composite.ts:20` 的 `extractKey`）。
+- **`schema` 运行时形态校验**：类型层留 `ZodType<TOperation>`（对齐 composite 的 `CompositeDefinition['schema']` 同款宽类型），首次 `resolveTransformRegistry` 时 `extractKind` 校验「`ZodObject` 且 `kind` 为 `z.literal`」，否则注册期 throw 清晰错（mirror `compile/composite.ts:20` 的 `extractKey`）。
 
 内置 7 个的 schema 已满足（均 `z.object({ kind: z.literal(PlotTransform.x), ... })`），直接复用 `ir/transform/transform.ts` 现有 schema，零重写；`apply*`（`group.ts` / `row.ts`）函数体不变，仅把现散在 `collectTransformFields` 大 switch 里的字段收集逻辑拆成各 definition 的 `inputFields` / `outputFields`。
 
@@ -109,7 +109,7 @@ const resolveTransformRegistry = (custom?: Array<TransformDefinition>): Map<stri
 - **kind 冲突 → throw**（含自定义撞内置、两自定义互撞）：mirror composite「Array 注入、撞名是调用方错误」。plot lowering 当前无 `onWarn` 通道，静默 last-wins 覆盖危险；放宽到「覆盖内置 = last-wins」是后续非破坏动作（待决策点）。
 - **未注册 kind → throw**（**不是** composite 的 warn + skip）：transform 是**结构性**算子——改下游所有 mark / scale / guide 读的数据。未知 kind 静默跳过会产出「能渲染但语义错误」的图、且破坏 locator parity。复用 `compile/composite.ts:40` 自身论证的分界：**结构 / 定位类基元 fail-fast、可选高层节点 warn+skip**。transform 属前者。
 
-`applyTransforms` / `collectTransformFields` 改为：查表 → 命中则 `definition.schema.parse(op)` 精确校验（含 default 填充）→ 调 `apply` / `inputFields` / `outputFields`；未命中 throw。registry 在 `prepareRows`（expand + locator 共享入口）从 `options.transformDefinitions` 解析一次并回传，保证两条路用同一张表（parity by construction）。
+`applyTransforms` / `collectTransformFields` 改为：查表 → 命中则 `definition.schema.parse(operation)` 精确校验（含 default 填充）→ 调 `apply` / `inputFields` / `outputFields`；未命中 throw。registry 在 `prepareRows`（expand + locator 共享入口）从 `options.transformDefinitions` 解析一次并回传，保证两条路用同一张表（parity by construction）。
 
 ### (3) IR schema：闭合 union 静态精确校验内置 + 仅未知 kind passthrough
 
@@ -127,15 +127,15 @@ const CustomTransformSchema = z
       .refine(k => !BUILTIN_TRANSFORM_KINDS.has(k), { message: 'custom transform kind must not collide with a built-in transform kind' }),
   })
   .passthrough()
-  .describe('Custom transform op: kind is any non-built-in identifier; its config is validated at lowering time against the matching TransformDefinition supplied via options.transformDefinitions');
+  .describe('Custom transform operation: kind is any non-built-in identifier; its config is validated at lowering time against the matching TransformDefinition supplied via options.transformDefinitions');
 
-const TransformOpSchema = z.union([TransformSchema, CustomTransformSchema]);
-type TransformOp = z.infer<typeof TransformOpSchema>;
+const TransformOperationSchema = z.union([TransformSchema, CustomTransformSchema]);
+type TransformOperation = z.infer<typeof TransformOperationSchema>;
 ```
 
 **为什么 `kind` 必须排除内置**（评审 BLOCKING）：若 passthrough 不排除内置 kind，`{ kind:'bin' }`（内置 kind 但字段非法）会先被闭合 `TransformSchema` 拒、再被 passthrough 接住、通过**静态** `PlotSpecSchema.parse`，把「zod 是单一真源」退化为「静态合法但 lowering 必炸」。排除后：内置 kind 恒由闭合 union 静态精确校验（字段非法即在 parse 抛），**只有真正未知的 kind 才 passthrough** 到 lowering 期 registry 校验。
 
-`PlotSpecSchema.transform`（`ir/plot.ts:42`）从 `z.array(TransformSchema)` 改 `z.array(TransformOpSchema)`。导出的 `Transform`（= 内置 7-union）**不变**——内部 7 个 apply / 穷尽处理仍用精确 `Transform`；registry 分派与 spec 字段用 `TransformOp`。含自定义 kind 的 spec 因此能过 `PlotSpecSchema.parse` 且 JSON round-trip 不丢字段。
+`PlotSpecSchema.transform`（`ir/plot.ts:42`）从 `z.array(TransformSchema)` 改 `z.array(TransformOperationSchema)`。导出的 `Transform`（= 内置 7-union）**不变**——内部 7 个 apply / 穷尽处理仍用精确 `Transform`；registry 分派与 spec 字段用 `TransformOperation`。含自定义 kind 的 spec 因此能过 `PlotSpecSchema.parse` 且 JSON round-trip 不丢字段。
 
 理由：
 
@@ -145,9 +145,9 @@ type TransformOp = z.infer<typeof TransformOpSchema>;
 
 ## 待决策点 🔻
 
-- **`inputFields` / `outputFields` 合一 vs 拆分（已按评审定为拆分）**：评审指出首版「单 `collectFields` + 可选 + 测 `不报错`」会误导实现。**已定拆分**为两个纯函数返数组，并把「产出且被消费必须登记 `outputFields`」立为硬契约。留待决策的只剩：是否提供一个 `deriveFields(op)` 便捷糖（输入输出一把出）——倾向**不提供**（两函数已够、YAGNI）。
+- **`inputFields` / `outputFields` 合一 vs 拆分（已按评审定为拆分）**：评审指出首版「单 `collectFields` + 可选 + 测 `不报错`」会误导实现。**已定拆分**为两个纯函数返数组，并把「产出且被消费必须登记 `outputFields`」立为硬契约。留待决策的只剩：是否提供一个 `deriveFields(operation)` 便捷糖（输入输出一把出）——倾向**不提供**（两函数已够、YAGNI）。
 - **kind 冲突放宽**：本轮全 throw（含覆盖内置）。是否放宽「自定义覆盖内置 = last-wins」以替换内置 `bin`？倾向**先全 throw**；override 需求出现再放宽，届时先给 plot lowering 引入 `onWarn`（覆盖应 warn、非静默），属非破坏增量。
-- **自定义 kind 经 `<Transform>` 的 build-plot-spec 透传形态**：`<Transform kind="regression" x="year" y="value" />` 的非内置 kind，build-plot-spec 按「kind + 扁平剩余 props 原样拼成 op config」透传（lowering 期 definition.schema 校验）。倾向**扁平透传**（与内置 `<Transform>` 同形、无需为每个自定义 kind 写映射）；是否需要 props 白名单 / 保留字（如 `key`）后续按需。
+- **自定义 kind 经 `<Transform>` 的 build-plot-spec 透传形态**：`<Transform kind="regression" x="year" y="value" />` 的非内置 kind，build-plot-spec 按「kind + 扁平剩余 props 原样拼成 operation config」透传（lowering 期 definition.schema 校验）。倾向**扁平透传**（与内置 `<Transform>` 同形、无需为每个自定义 kind 写映射）；是否需要 props 白名单 / 保留字（如 `key`）后续按需。
 - **`extractKind` 形态校验时机**：在首次 `resolveTransformRegistry` 期 throw（mirror composite `extractKey` 在 `lowerComposites` 内），`defineTransform` 仅类型层 helper、不运行时校验。
 
 ## DSL 表面
@@ -165,16 +165,16 @@ const regression = defineTransform({
     asX: z.string().min(1).optional(),
     asY: z.string().min(1).optional(),
   }),
-  inputFields: op => [op.x, op.y],                       // 消费的源字段 → 进 strict model 校验
-  outputFields: op => [op.asX ?? 'x', op.asY ?? 'y'],    // 产出 → 从校验排除（被 mark 消费且声明 model 时必填）
-  apply: (rows, op, ctx) => linearFit(rows, op, ctx),    // 纯 + 确定；生成拟合行 → 无 1:1 源行、provenance 降级
+  inputFields: operation => [operation.x, operation.y],                       // 消费的源字段 → 进 strict model 校验
+  outputFields: operation => [operation.asX ?? 'x', operation.asY ?? 'y'],    // 产出 → 从校验排除（被 mark 消费且声明 model 时必填）
+  apply: (rows, operation, context) => linearFit(rows, operation, context),    // 纯 + 确定；生成拟合行 → 无 1:1 源行、provenance 降级
 });
 
-// op：纯 JSON，进 spec.transform——只有数据、无函数
+// operation：纯 JSON，进 spec.transform——只有数据、无函数
 const spec = {
   namespace: 'plot', type: 'plot',
   data: { reference: 'sales' },
-  transform: [{ kind: 'regression', x: 'year', y: 'value' }], // 自定义 op，与内置 sort/bin… 同形
+  transform: [{ kind: 'regression', x: 'year', y: 'value' }], // 自定义 operation，与内置 sort/bin… 同形
   // ...scales / coordinate / marks
 };
 
@@ -183,7 +183,7 @@ renderPlot(spec, { sales: rows }, { transformDefinitions: [regression] });
 ```
 
 ```tsx
-// React：op 走 ADR-01 既有 <Transform>（含自定义 kind）；definition 走新 transformDefinitions（不撞 transforms / dataTransforms）
+// React：operation 走 ADR-01 既有 <Transform>（含自定义 kind）；definition 走新 transformDefinitions（不撞 transforms / dataTransforms）
 <Plot data={rows} transformDefinitions={[regression]}>
   <Transform kind="regression" x="year" y="value" />
   <PointMark x="year" y="value" />
@@ -210,22 +210,22 @@ renderPlot(spec, { sales: rows }, { transformDefinitions: [regression] });
 - **`transform/transform.ts`**：`applyTransforms` / `collectTransformFields` 两 switch → registry 查表（入参加已解析 registry）；未注册 throw。
 - **新增 `transform/registry.ts`**：`TransformDefinition` / `TransformContext` / `defineTransform` / `extractKind` / `resolveTransformRegistry` / `BUILTIN_TRANSFORMS`（7 内置注册项）。
 - **`transform/group.ts` / `transform/row.ts`**：`apply*` 函数体不变（bin/aggregate 内部 `withGroupProvenance` 改由 `ctx.groupProvenance` 复用同逻辑）；现散在 `collectTransformFields` 的字段收集逻辑拆成各 definition 的 `inputFields` / `outputFields`。
-- **`ir/transform/transform.ts`**：加 `BUILTIN_TRANSFORM_KINDS` / `CustomTransformSchema`（kind 排除内置）/ `TransformOpSchema` / `TransformOp`；`Transform`（内置 7-union）不变。
-- **`ir/plot.ts:42`**：`transform` 字段 `TransformSchema` → `TransformOpSchema`。
+- **`ir/transform/transform.ts`**：加 `BUILTIN_TRANSFORM_KINDS` / `CustomTransformSchema`（kind 排除内置）/ `TransformOperationSchema` / `TransformOperation`；`Transform`（内置 7-union）不变。
+- **`ir/plot.ts:42`**：`transform` 字段 `TransformSchema` → `TransformOperationSchema`。
 - **`pipeline/expand.ts`**：`LowerPlotsOptions` 加 `transformDefinitions?: Array<TransformDefinition>`；`prepareRows` 解析 registry 一次并回传，传给 `collectSourceFields` + 回传给 `applyTransforms` 调用方。
 - **`pipeline/source-fields.ts`**：`collectSourceFields` 加 registry 入参，透传给 `collectTransformFields`。
 - **`interaction/locate.ts`**：用 `prepareRows` 回传的同一 registry 跑 `applyTransforms`（parity）。
-- **`@retikz/plot` 导出**：`defineTransform` / `TransformDefinition` / `TransformContext` / `TransformOp`。
-- **react `Plot.tsx`**：`PlotCommonProps`（经 `LowerPlotsOptions`）自动获得 `transformDefinitions`，`lowerPlotOptionsOf`（`Plot.tsx:74`）透传——与 `coordinates` 同处、同写法；**不**改动 `transforms`（几何）。`dataTransforms` 的元素类型从 `Transform` 放宽为 `TransformOp`，以便程序化直传自定义 kind。
-- **react `components/transform.tsx` + `build-plot-spec.ts`**：ADR-01 的 `<Transform kind="...">` 组件扩展为接受**非内置 kind**，`TransformProps` 从 `Transform` 改为 `TransformOp`；build-plot-spec 按「kind + 扁平 props 透传成 op」装配（不为每个自定义 kind 写映射）；op 校验延到 lowering。**op authoring 表面不新增、不延后**（纠正首版「本轮只 `<Plot transforms>` 透传、`<Transform>` 后续」与 ADR-01/02 已定决策的冲突）。
+- **`@retikz/plot` 导出**：`defineTransform` / `TransformDefinition` / `TransformContext` / `TransformOperation`。
+- **react `Plot.tsx`**：`PlotCommonProps`（经 `LowerPlotsOptions`）自动获得 `transformDefinitions`，`lowerPlotOptionsOf`（`Plot.tsx:74`）透传——与 `coordinates` 同处、同写法；**不**改动 `transforms`（几何）。`dataTransforms` 的元素类型从 `Transform` 放宽为 `TransformOperation`，以便程序化直传自定义 kind。
+- **react `components/transform.tsx` + `build-plot-spec.ts`**：ADR-01 的 `<Transform kind="...">` 组件扩展为接受**非内置 kind**，`TransformProps` 从 `Transform` 改为 `TransformOperation`；build-plot-spec 按「kind + 扁平 props 透传成 operation」装配（不为每个自定义 kind 写映射）；operation 校验延到 lowering。**operation authoring 表面不新增、不延后**（纠正首版「本轮只 `<Plot transforms>` 透传、`<Transform>` 后续」与 ADR-01/02 已定决策的冲突）。
 - **vanilla**：`renderPlot` 第三参即 `LowerPlotsOptions`，加 `transformDefinitions` 后自动生效（仅类型 / 测试）。
 - **文档站**：transform 章节加「自定义 transform / `defineTransform`」小节 + provenance 支持等级说明 + 一个回归 demo；双语同步。
-- **⚠️ 注意（非 BREAKING）**：`Transform` 导出类型不变；`PlotSpec['transform']` 元素类型从精确 7-union 放宽为 `TransformOp`（含 `{ kind: string; ... }`，kind 排除内置）。检查对 `PlotSpec.transform` 元素做穷尽 `switch` 的消费方，确保有 default 或改用 `Transform` 窄化。core 无新依赖、不触 core IR 契约。
+- **⚠️ 注意（非 BREAKING）**：`Transform` 导出类型不变；`PlotSpec['transform']` 元素类型从精确 7-union 放宽为 `TransformOperation`（含 `{ kind: string; ... }`，kind 排除内置）。检查对 `PlotSpec.transform` 元素做穷尽 `switch` 的消费方，确保有 default 或改用 `Transform` 窄化。core 无新依赖、不触 core IR 契约。
 
 ## 不在本 ADR 范围
 
 - **具体新增统计 transform**（regression / kde / boxplot / loess…）：本轮只立扩展点，不补长尾内置。alpha.13 stat 项**作为 registry 注册项**接入、不再堆 switch。
-- **op authoring 新表面**：op 走 ADR-01 既有 `<Transform>` / `dataTransforms`，本 ADR 不引入新 op 组件，仅扩 build-plot-spec 接受自定义 kind。
+- **operation authoring 新表面**：operation 走 ADR-01 既有 `<Transform>` / `dataTransforms`，本 ADR 不引入新 operation 组件，仅扩 build-plot-spec 接受自定义 kind。
 - **跨运行时 portable definition schema 注册中心**：本轮自定义 schema 经 `options.transformDefinitions` 在 lowering 期校验，足够；跨进程纯 JSON 端独立校验中心后续。
 - **override 内置 = last-wins**：本轮冲突 throw。
 - **mark registry 公开 `registerMark`**：ADR-03 范围、按其节奏。
@@ -248,20 +248,20 @@ renderPlot(spec, { sales: rows }, { transformDefinitions: [regression] });
 |---|---|---|---|---|---|
 | `ir/transform/transform.ts` | 加 | `BUILTIN_TRANSFORM_KINDS` | `Set<string>`（= `Object.values(PlotTransform)`） | — | 内置 kind 集，供 CustomTransformSchema 排除（非 zod、模块常量） |
 | `ir/transform/transform.ts` | 加 | `CustomTransformSchema` | `z.object({ kind: z.string().min(1).refine(非内置) }).passthrough()` | — | 自定义 transform 占位：kind 为非内置标识、config 透传；lowering 期按 definition.schema 精确校验 |
-| `ir/transform/transform.ts` | 加 | `TransformOpSchema` | `z.union([TransformSchema, CustomTransformSchema])` | — | spec 层 transform op：内置精确 7-union ∪ 自定义占位 |
-| `ir/transform/transform.ts` | 加 | `TransformOp` | `z.infer<typeof TransformOpSchema>` | — | transform op 类型（内置 ∪ 自定义） |
+| `ir/transform/transform.ts` | 加 | `TransformOperationSchema` | `z.union([TransformSchema, CustomTransformSchema])` | — | spec 层 transform operation：内置精确 7-union ∪ 自定义占位 |
+| `ir/transform/transform.ts` | 加 | `TransformOperation` | `z.infer<typeof TransformOperationSchema>` | — | transform operation 类型（内置 ∪ 自定义） |
 | `ir/transform/transform.ts` | 不变 | `TransformSchema` / `Transform` | `z.discriminatedUnion('kind', [7])` | — | 内置 7-union 保持闭合、类型精确（内部穷尽处理用它） |
-| `ir/plot.ts` | 改 | `PlotSpecSchema.transform` | `z.array(TransformOpSchema).optional()` | — | transform 管线接受自定义 kind（原 `z.array(TransformSchema)`） |
-| `react/components/transform.tsx` | 改 | `TransformProps` | `TransformOp` | — | React `<Transform>` 接受内置与自定义 kind；内置 kind 仍由 lowering / schema 精确校验 |
-| `react/Plot.tsx` | 改 | `PlotDslProps.dataTransforms` | `Array<TransformOp>` | — | 程序化 op 直传接受自定义 kind，与 `<Transform>` 同一表面 |
+| `ir/plot.ts` | 改 | `PlotSpecSchema.transform` | `z.array(TransformOperationSchema).optional()` | — | transform 管线接受自定义 kind（原 `z.array(TransformSchema)`） |
+| `react/components/transform.tsx` | 改 | `TransformProps` | `TransformOperation` | — | React `<Transform>` 接受内置与自定义 kind；内置 kind 仍由 lowering / schema 精确校验 |
+| `react/Plot.tsx` | 改 | `PlotDslProps.dataTransforms` | `Array<TransformOperation>` | — | 程序化 operation 直传接受自定义 kind，与 `<Transform>` 同一表面 |
 
 > 运行时 `TransformDefinition` / `TransformContext` / `defineTransform` / `LowerPlotsOptions.transformDefinitions` 是**行为对象、不进 IR**，故不在 zod schema 表，见「文件 scope」。
 > 字段名一旦写死，下游不允许改；需改回本 ADR 加条或开新 ADR。
 
 ### 文件 scope
 
-- `packages/plot/plot/src/ir/transform/transform.ts`（改：加 Custom/Op schema + 内置 kind 集 + 类型；`TransformSchema` 不动）
-- `packages/plot/plot/src/ir/plot.ts`（改：`transform` 字段换 `TransformOpSchema`）
+- `packages/plot/plot/src/ir/transform/transform.ts`（改：加 Custom/Operation schema + 内置 kind 集 + 类型；`TransformSchema` 不动）
+- `packages/plot/plot/src/ir/plot.ts`（改：`transform` 字段换 `TransformOperationSchema`）
 - `packages/plot/plot/src/transform/registry.ts`（新建：`TransformDefinition` / `TransformContext` / `defineTransform` / `extractKind` / `resolveTransformRegistry` / `BUILTIN_TRANSFORMS`）
 - `packages/plot/plot/src/transform/transform.ts`（改：两 switch → registry 查表；未注册 throw）
 - `packages/plot/plot/src/transform/group.ts`（改：bin / aggregate 的 `inputFields` / `outputFields` 下沉为 definition；`apply*` 经 `ctx.groupProvenance` 复用现 `withGroupProvenance` 逻辑）
@@ -271,8 +271,8 @@ renderPlot(spec, { sales: rows }, { transformDefinitions: [regression] });
 - `packages/plot/plot/src/pipeline/expand.ts`（改：`LowerPlotsOptions.transformDefinitions`、`prepareRows` 解析并回传 registry、传参）
 - `packages/plot/plot/src/pipeline/source-fields.ts`（改：`collectSourceFields` 加 registry 入参）
 - `packages/plot/plot/src/interaction/locate.ts`（改：用 `prepareRows` 回传 registry 跑 `applyTransforms`）
-- `packages/plot/plot/src/index.ts`（改：re-export `defineTransform` / `TransformDefinition` / `TransformContext` / `TransformOp`）
-- `packages/plot/react/src/Plot.tsx` + `components/transform.tsx` + `components/build-plot-spec.ts`（改：`transformDefinitions` 经 `LowerPlotsOptions` 透传；`dataTransforms` / `<Transform>` 接受 `TransformOp`；非内置 kind 扁平透传）
+- `packages/plot/plot/src/index.ts`（改：re-export `defineTransform` / `TransformDefinition` / `TransformContext` / `TransformOperation`）
+- `packages/plot/react/src/Plot.tsx` + `components/transform.tsx` + `components/build-plot-spec.ts`（改：`transformDefinitions` 经 `LowerPlotsOptions` 透传；`dataTransforms` / `<Transform>` 接受 `TransformOperation`；非内置 kind 扁平透传）
 - `packages/plot/plot/tests/transform/registry.test.ts`（新建）· `tests/lower/transform.test.ts`（改）· `tests/lower/data-portability.test.ts`（改）· `tests/interaction/*`（改 / 新建）
 - `apps/docs/src/contents/.../transform/*.mdx` + `*.demo.tsx`（改 / 新建：`defineTransform` 章节 + provenance 等级 + demo，双语）
 
@@ -320,4 +320,4 @@ renderPlot(spec, { sales: rows }, { transformDefinitions: [regression] });
 - `LowerPlotsOptions` / `prepareRows` / `collectSourceFields` / `resolveFrame`（`pipeline/`）—— 修改：加 `transformDefinitions`、registry 解析 + 回传
 - `createPlotLocator`（`interaction/locate.ts`）—— 修改：用同一 registry 保 parity
 - `defineComposite`（`core composites/define.ts`）· `lowerComposites` / `extractKey`（`core compile/composite.ts`）· `options.coordinates`（`pipeline/expand.ts`）—— 参照：`defineTransform` / registry 范式、键提取、dup（throw）/ 未注册（throw）策略
-- `PlotPanelProps`（`Pick<ScopeProps,'transforms'>`，`Plot.tsx:7`）· `dataTransforms`（`Plot.tsx:53`，改 `Array<TransformOp>`）· `<Transform>`（ADR-01，`TransformProps` 改 `TransformOp`）· `build-plot-spec`—— **避让 / 复用**：几何 `transforms` 与 op `dataTransforms` 不占用，op authoring 复用 ADR-01 `<Transform>`，definition 注入用新 `transformDefinitions`
+- `PlotPanelProps`（`Pick<ScopeProps,'transforms'>`，`Plot.tsx:7`）· `dataTransforms`（`Plot.tsx:53`，改 `Array<TransformOperation>`）· `<Transform>`（ADR-01，`TransformProps` 改 `TransformOperation`）· `build-plot-spec`—— **避让 / 复用**：几何 `transforms` 与 operation `dataTransforms` 不占用，operation authoring 复用 ADR-01 `<Transform>`，definition 注入用新 `transformDefinitions`

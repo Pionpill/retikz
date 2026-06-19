@@ -10,7 +10,7 @@ import { type ChannelResolution, type ScaleDescriptor, makeNumericStyleResolver,
 import { type AnyCoordinateDefinition, type CoordinateFrame, resolveCoordinateRegistry } from '../coordinate';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks } from '../scale/scale';
-import { applyTransforms } from '../transform/transform';
+import { type AnyTransformDefinition, applyTransforms, resolveTransformRegistry } from '../transform/transform';
 import { collectSourceFields } from './source-fields';
 
 /** link 的 target 端通道（source 端走 x/yChannelOf；两端都须纳入位置 scale 域，否则 target 投影越界） */
@@ -161,6 +161,11 @@ export type LowerPlotsOptions = {
    * @description 让用户插入任意坐标系几何（曲线一维 / 拱形 x 轴等），无需给坐标系枚举塞成员、也不破坏 IR JSON 化。未注册 type → fail-loud。
    */
   coordinates?: Array<AnyCoordinateDefinition>;
+  /**
+   * 自定义 transform definition 数组（运行时函数，不进 IR）：spec.transform 的 `{kind:<customKind>, ...config}` 据此校验并执行。
+   * @description 内置 transform 恒可用；自定义 kind 未注册 / kind 冲突会 fail-loud，避免静默跳过结构性数据变换。
+   */
+  transformDefinitions?: Array<AnyTransformDefinition>;
 };
 
 /** resolveFrame 产物：mark / guide 共用的投影帧 + 已下沉的网格 / 轴层（z-order 由 expand 编排） */
@@ -830,9 +835,10 @@ export const prepareRows = (
   datasets: ExternalDatasets,
   options: LowerPlotsOptions,
   ingested: Array<ExternalRow>,
-): { fieldTypes: Map<string, PlotFieldTypeValue>; normalized: Array<ExternalRow> } => {
+): { fieldTypes: Map<string, PlotFieldTypeValue>; normalized: Array<ExternalRow>; transformRegistry: Map<string, AnyTransformDefinition> } => {
   validateFieldMaps(spec, datasets, options.fieldMaps);
-  const userSourceFields = collectSourceFields(spec);
+  const transformRegistry = resolveTransformRegistry(options.transformDefinitions);
+  const userSourceFields = collectSourceFields(spec, transformRegistry);
   // strict + 声明/推断（ADR-01/05）；strict 在 applyFieldResolver 之前先校验，resolver 不绕过（ADR-04）
   const baseTypes = resolveFieldTypes(spec.data.model, ingested, userSourceFields);
   const fieldMap = options.fieldMaps?.[spec.data.reference];
@@ -852,7 +858,7 @@ export const prepareRows = (
   // 恒归一化（ADR-08 去门控）：无论有无 model / resolver 命中，总按解析出的 fieldTypes 跑 normalizeRows
   //   →下游统一读 canonical、无第二处 coerce。干净数据产物与旧门控路径逐字段等价。
   const normalized = normalizeRows(ingested, fieldTypes, fieldMap, parsers);
-  return { fieldTypes, normalized };
+  return { fieldTypes, normalized, transformRegistry };
 };
 
 /**
@@ -893,7 +899,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
   // ADR-01/02/08：fieldMaps 校验 + 用户源字段类型解析（strict）+ ingest 恒归一化。与 locator 共用 prepareRows 保 parity。
   // 类型 Map 是 type-driven scale（ADR-03）/ coercion 的单一真源；归一化置于 transform 前、无论有无 model 都跑（恒 canonical）。
-  const { fieldTypes, normalized } = prepareRows(node, datasets, options, ingested);
+  const { fieldTypes, normalized, transformRegistry } = prepareRows(node, datasets, options, ingested);
   if (options.validateData) {
     const sampleRows = typeof options.validateData === 'object' ? options.validateData.sampleRows ?? 100 : 100;
     validateBoundData(normalized, fieldTypes, sampleRows);
@@ -904,7 +910,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     assertAllValuesValid(normalized, fieldTypes);
   }
 
-  const rows = applyTransforms(normalized, node.transform);
+  const rows = applyTransforms(normalized, node.transform, transformRegistry);
 
   const { frame, gridLayers, axisLayers, plotArea } = resolveFrame({
     node,

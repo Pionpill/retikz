@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import type { ValueOf } from '@retikz/core';
+import { JsonObjectSchema, type ValueOf } from '@retikz/core';
 
 /**
  * transform 类型关键字（暴露给用户；裸 `'sort'` / `'stack'` 同样可用）
- * @description 数据变换 op 的判别字段，成员里写 z.literal(PlotTransform.x)；后续加 filter / aggregate / bin…
+ * @description 数据变换 operation 的判别字段，成员里写 z.literal(PlotTransform.x)；后续加 filter / aggregate / bin…
  */
 export const PlotTransform = {
   /** 按字段排序 */
@@ -24,6 +24,9 @@ export const PlotTransform = {
 
 /** transform 类型 */
 export type PlotTransformValue = ValueOf<typeof PlotTransform>;
+
+/** 内置 transform kind 集：供自定义 transform operation 排除内置判别串。 */
+export const BUILTIN_TRANSFORM_KINDS = new Set<string>(Object.values(PlotTransform));
 
 export const SortTransformSchema = z
   .object({
@@ -150,7 +153,33 @@ export const JitterTransformSchema = z
 
 export const TransformSchema = z
   .discriminatedUnion('kind', [SortTransformSchema, StackTransformSchema, BinTransformSchema, AggregateTransformSchema, NormalizeTransformSchema, DeriveIntervalTransformSchema, JitterTransformSchema])
-  .describe('Data transform op applied before scale / mark; ordered pipeline. sort / stack / normalize / derive-interval / jitter preserve row count; bin / aggregate reduce it');
+  .describe('Data transform operation applied before scale / mark; ordered pipeline. sort / stack / normalize / derive-interval / jitter preserve row count; bin / aggregate reduce it');
+
+export const CustomTransformSchema = z
+  .object({
+    kind: z
+      .string()
+      .min(1)
+      .refine(kind => !BUILTIN_TRANSFORM_KINDS.has(kind), {
+        message: 'custom transform kind must not collide with a built-in transform kind',
+      })
+      .describe('Discriminator: custom transform operation kind; must be a non-empty, non-built-in identifier registered through options.transformDefinitions'),
+  })
+  .passthrough()
+  .superRefine((operation, ctx) => {
+    const result = JsonObjectSchema.safeParse(operation);
+    if (!result.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'custom transform operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
+      });
+    }
+  })
+  .describe('Custom transform operation: kind is any non-built-in identifier; its config is validated at lowering time against the matching TransformDefinition supplied via options.transformDefinitions');
+
+export const TransformOperationSchema = z
+  .union([TransformSchema, CustomTransformSchema])
+  .describe('Transform operation union: built-in transform configs plus custom kind passthrough operations validated by a runtime TransformDefinition');
 
 /** sort transform */
 export type SortTransform = z.infer<typeof SortTransformSchema>;
@@ -166,5 +195,9 @@ export type NormalizeTransform = z.infer<typeof NormalizeTransformSchema>;
 export type DeriveIntervalTransform = z.infer<typeof DeriveIntervalTransformSchema>;
 /** jitter transform（确定性位置抖动，保行数） */
 export type JitterTransform = z.infer<typeof JitterTransformSchema>;
-/** transform op（sort / stack / bin / aggregate / normalize / derive-interval / jitter） */
+/** 内置 transform operation（sort / stack / bin / aggregate / normalize / derive-interval / jitter） */
 export type Transform = z.infer<typeof TransformSchema>;
+/** transform operation（内置 ∪ 自定义 kind passthrough） */
+export type TransformOperation = z.infer<typeof TransformOperationSchema>;
+/** 自定义 transform operation（运行时由 TransformDefinition 精确校验并执行） */
+export type CustomTransform = z.infer<typeof CustomTransformSchema>;

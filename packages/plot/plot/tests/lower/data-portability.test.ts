@@ -1,4 +1,5 @@
 import { compileToScene } from '@retikz/core';
+import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { coerceValue, normalizeRows, resolveFieldPath } from '../../src/data';
@@ -6,6 +7,7 @@ import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { createPlotLocator } from '../../src/interaction/locate';
 import { readSourceIndex, tagSourceIndex } from '../../src/pipeline/provenance';
 import { applyTransforms } from '../../src/transform/transform';
+import { defineTransform } from '../../src/transform';
 
 /** 跑一次完整下沉（抛错路径用 expect(fn).toThrow） */
 const compile = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options?: LowerPlotsOptions) =>
@@ -30,6 +32,21 @@ const specNoModel = (): PlotSpec =>
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
   });
+
+const doubleDefinition = defineTransform({
+  schema: z.object({
+    kind: z.literal('double'),
+    field: z.string().min(1),
+    as: z.string().min(1),
+  }),
+  inputFields: operation => [operation.field],
+  outputFields: operation => [operation.as],
+  apply: (rows, operation) =>
+    rows.map(row => ({
+      ...row,
+      [operation.as]: Number(row[operation.field]) * 2,
+    })),
+});
 
 describe('coerceValue — 按 PlotFieldType 值强制（ADR-02）', () => {
   it('continuous_number_and_strict_string', () => {
@@ -159,5 +176,40 @@ describe('locator fieldMaps parity（评审 P2）', () => {
 
   it('locator_build_throws_fieldmap_without_model', () => {
     expect(() => createPlotLocator(specNoModel(), { d: [{ a: 1, b: 2 }] }, { fieldMaps: { d: { a: 'x' } } })).toThrow(/requires data\.model/i);
+  });
+});
+
+describe('custom transform data portability（alpha.12 ADR-06）', () => {
+  const customSpec = (): PlotSpec =>
+    PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'x', type: 'continuous' },
+          { name: 'y', type: 'continuous' },
+        ],
+      },
+      transform: [{ kind: 'double', field: 'x', as: 'x2' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'x2' }, y: { field: 'y' } } }],
+    });
+
+  it('strict_model_accepts_registered_custom_output_field', () => {
+    expect(() => compile(customSpec(), { d: [{ x: 2, y: 5 }] }, { transformDefinitions: [doubleDefinition] })).not.toThrow();
+  });
+
+  it('strict_model_rejects_unregistered_custom_output_field', () => {
+    const missingOutputDefinition = defineTransform({
+      schema: doubleDefinition.schema,
+      inputFields: operation => [operation.field],
+      apply: doubleDefinition.apply,
+    });
+    expect(() => compile(customSpec(), { d: [{ x: 2, y: 5 }] }, { transformDefinitions: [missingOutputDefinition] })).toThrow(/x2/);
   });
 });

@@ -1,6 +1,6 @@
 import type { FC, ReactNode } from 'react';
 import { type EmbeddableContribution, type EmbeddableTier2Adapter, Layout, type LayoutProps, type ScopeProps } from '@retikz/react';
-import { type DataModel, type ExternalDatasets, type ExternalRow, type LowerPlotsOptions, type PlotSpec, PlotSpecSchema, type Transform, lowerPlots } from '@retikz/plot';
+import { type DataModel, type ExternalDatasets, type ExternalRow, type LowerPlotsOptions, type PlotSpec, PlotSpecSchema, type TransformOperation, lowerPlots } from '@retikz/plot';
 import { type CoordinateInput, type ResolveLabelMap, buildPlotSpec, resolveLabelOf } from './components';
 
 /** <Plot> 作为 Layout 子面板时可直接承接的 core scope 属性 */
@@ -50,7 +50,7 @@ export type PlotDslProps = PlotCommonProps & PlotColorProps & {
    * @description 与 `<Transform kind="...">` 声明组件共用同一管线、可混用；程序化构造变换链时的便捷入口。
    *   命名 `dataTransforms` 以区别于 core scope 的几何 `transforms`（translate / rotate）。含 stack 时按签名抑制同款 mark auto-stack。
    */
-  dataTransforms?: Array<Transform>;
+  dataTransforms?: Array<TransformOperation>;
 };
 
 /** <Plot> props：spec 入口与组合 DSL 入口二选一（按 spec/children 分流） */
@@ -76,7 +76,7 @@ const lowerPlotOptionsOf = (
   effectiveFieldMaps: LowerPlotsOptions['fieldMaps'],
   collectedResolveLabel: ResolveLabelMap | undefined,
 ): LowerPlotsOptions => {
-  const { width, height, fontSize, margin, provenance, datumProvenance, datumIdField, validateData, resolveField, resolveLabel, invalid, coordinates } = props;
+  const { width, height, fontSize, margin, provenance, datumProvenance, datumIdField, validateData, resolveField, resolveLabel, invalid, coordinates, transformDefinitions } = props;
   // DSL 入口 <PointMark resolveLabel> / <IntervalMark resolveLabel> 收集的 per-mark 函数，与显式 props.resolveLabel 合并（显式优先）
   const mergedResolveLabel = collectedResolveLabel !== undefined || resolveLabel !== undefined ? { ...collectedResolveLabel, ...resolveLabel } : undefined;
   return {
@@ -93,6 +93,7 @@ const lowerPlotOptionsOf = (
     resolveLabel: mergedResolveLabel,
     invalid,
     coordinates,
+    transformDefinitions,
   };
 };
 

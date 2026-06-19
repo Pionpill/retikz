@@ -1,7 +1,7 @@
 import { Children, Fragment, type ReactNode, isValidElement } from 'react';
 import {
-  type CoordinateOp,
-  CoordinateOpSchema,
+  type CoordinateOperation,
+  CoordinateOperationSchema,
   type DataModel,
   type Encoding,
   type ExternalRow,
@@ -33,6 +33,7 @@ import {
   type PointZIndexStyle,
   type TextChannel,
   type Transform,
+  type TransformOperation,
 } from '@retikz/plot';
 import { Axis, type AxisProps, Legend, type LegendProps } from './guides';
 import {
@@ -120,7 +121,7 @@ export type BuildPlotSpecOptions = {
    * 直传数据 transform IR（拼到 <Transform> 收集结果之前、自动装配 stack 之前）；与 <Transform> 声明组件共用同一管线。
    * @description 程序化构造 spec 时完全掌控 transform 顺序的入口；含 stack 时同样抑制 mark auto-stack（B4 去重）。
    */
-  transforms?: Array<Transform>;
+  transforms?: Array<TransformOperation>;
   /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
   colors?: Array<string>;
   /** 当前数据集可见字段名集合；用于把样式字符串糖优先解析成字段通道 */
@@ -152,7 +153,7 @@ type Collected = {
   marks: Array<Mark>;
   guides: Array<Guide>;
   /** 显式 transform（<Transform> 声明组件收集，按声明序） */
-  transforms: Array<Transform>;
+  transforms: Array<TransformOperation>;
   /** mark-prop 自动装配的 stack（<IntervalMark stack> / <IntervalMark angle>）；显式 stack 存在时抑制（B4 去重） */
   autoStacks: Array<Transform>;
   /** 显式声明的位置 scale */
@@ -622,7 +623,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       const { dimension, type } = child.props as ScaleProps;
       into.scales.push({ dimension, type });
     } else if (child.type === TransformComponent) {
-      // 通用 <Transform kind="..."> 声明：props 即 IR transform op（按声明序进 spec.transform）
+      // 通用 <Transform kind="..."> 声明：props 即 IR transform operation（按声明序进 spec.transform）
       into.transforms.push(child.props as TransformProps);
     }
   });
@@ -776,12 +777,12 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   // transform 装配序：<Plot transforms> 直传 → <Transform> 收集 → auto-stack（B4 去重）
   // B4 按 stack 签名（x / y / groupBy）去重：仅抑制与某条显式 stack 完全同签名的 auto-stack（那条会二次堆叠），
   // 不同签名的 auto-stack 保留——否则该 mark 仍是 arrangement='stack' 却没有对应 y0/y1，lower 阶段读空累积界出错。
-  const explicitTransforms: Array<Transform> = [...(options.transforms ?? []), ...collected.transforms];
-  const stackSignature = (transform: Transform): string =>
+  const explicitTransforms: Array<TransformOperation> = [...(options.transforms ?? []), ...collected.transforms];
+  const stackSignature = (transform: TransformOperation): string =>
     transform.kind === PlotTransform.Stack ? JSON.stringify([transform.x ?? null, transform.y, transform.groupBy ?? null]) : '';
   const explicitStackSignatures = new Set(explicitTransforms.filter(transform => transform.kind === PlotTransform.Stack).map(stackSignature));
   const dedupedAutoStacks = collected.autoStacks.filter(autoStack => !explicitStackSignatures.has(stackSignature(autoStack)));
-  const transforms: Array<Transform> = [...explicitTransforms, ...dedupedAutoStacks];
+  const transforms: Array<TransformOperation> = [...explicitTransforms, ...dedupedAutoStacks];
 
   const coordKind = coordinateTypeOf(options.coordinate);
   if (collected.hasSector && coordKind !== 'polar2D') {
@@ -792,7 +793,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   // 有 model 或 Plot 入口要求延迟推断时，未显式声明 <Scale> 的维度省略 AUTO 绑定，交给 expand 按字段类型派生。
   // 直接调用 buildPlotSpec 且无 model 时，沿用 AUTO 绑定 + 默认推断（向后兼容）。
   const shouldDeferPositionScales = options.model !== undefined || options.deferPositionScaleInference === true;
-  let coordinate: CoordinateOp;
+  let coordinate: CoordinateOperation;
   let scales: Array<PlotScaleSpec>;
   if (coordKind === 'polar2D') {
     const polar = toPolarConfig(options.coordinate) as PolarConfig;
@@ -840,7 +841,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     if (typeof options.coordinate !== 'object' || BUILTIN_COORDINATE_INPUT_TYPES.has(options.coordinate.type) || options.coordinate.type === 'custom') {
       throw new Error('buildPlotSpec: custom coordinates must use a non-built-in type string, for example { type: "arch", archHeight: 30 }');
     }
-    coordinate = CoordinateOpSchema.parse({ ...options.coordinate });
+    coordinate = CoordinateOperationSchema.parse({ ...options.coordinate });
     scales = [];
   } else {
     const xScale = buildCartesianXScale(collected.hasBar || collected.hasRect, explicitScales.x);

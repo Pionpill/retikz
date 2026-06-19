@@ -27,3 +27,4 @@ export * from './interaction/locate';
 export * from './ir';
 export * from './pipeline/expand';
 export * from './pipeline/layout';
+export * from './transform';

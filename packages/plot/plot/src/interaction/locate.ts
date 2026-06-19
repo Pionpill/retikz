@@ -5,7 +5,7 @@ import { type LowerPlotsOptions, prepareRows, resolveFrame } from '../pipeline/e
 import { resolveFieldPath } from '../data';
 import { DEFAULT_FONT_SIZE } from '../pipeline/layout';
 import { type CoordinateFrame, isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame } from '../coordinate';
-import { type ProvenanceContext, createDatumIdRegistrar, datumMeta, readSourceIndex, tagSourceIndex } from '../pipeline/provenance';
+import { type ProvenanceContext, createDatumIdRegistrar, datumMeta, readSourceIndex, readSourceIndices, tagSourceIndex } from '../pipeline/provenance';
 import { applyTransforms } from '../transform/transform';
 
 /** 默认整图尺寸（与 expand.ts 对齐，保 locator 投影与 lowering 一致） */
@@ -80,8 +80,8 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
   // 与 expandPlot 共用 prepareRows（fieldMaps 校验 + 类型解析 + 归一化），保证 render 抛错 ⟺ locator 抛错（评审 P2 parity）。
   // tagSourceIndex（clone，不动入参）→ prepareRows → applyTransforms，与 lowering 完全同序，否则 locator 落点漂移。
   const ingested = tagSourceIndex(dataset);
-  const { fieldTypes, normalized } = prepareRows(spec, datasets, options, ingested);
-  const rows = applyTransforms(normalized, spec.transform);
+  const { fieldTypes, normalized, transformRegistry } = prepareRows(spec, datasets, options, ingested);
+  const rows = applyTransforms(normalized, spec.transform, transformRegistry);
 
   // frame 复用 resolveFrame：投影几何与 provenance 无关（provenance 只影响 guide 层 id/meta），故传 undefined。
   const { frame }: { frame: CoordinateFrame } = resolveFrame({
@@ -167,7 +167,7 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
     if (!hit) return null;
     const seriesField = seriesFieldOf(hit.mark);
     const seriesValue = seriesField ? resolveFieldPath(hit.row, seriesField) : undefined;
-    const meta = datumMeta(metaContext, hit.mark.type, markIndex, transformedIndex, readSourceIndex(hit.row), seriesValue);
+    const meta = datumMeta(metaContext, hit.mark.type, markIndex, transformedIndex, readSourceIndex(hit.row), seriesValue, readSourceIndices(hit.row));
     const id = datumIdOf(markIndex, transformedIndex);
     return id !== undefined ? { position: hit.position, meta, id } : { position: hit.position, meta };
   };

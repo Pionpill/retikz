@@ -11,23 +11,23 @@ export const DEFAULT_DERIVE_START_FIELD = 'y0';
 export const DEFAULT_DERIVE_END_FIELD = 'y1';
 
 /** jitter 默认被扰动字段名：连续数值位置字段。 */
-const DEFAULT_JITTER_X_FIELD = 'x';
-const DEFAULT_JITTER_Y_FIELD = 'y';
+export const DEFAULT_JITTER_X_FIELD = 'x';
+export const DEFAULT_JITTER_Y_FIELD = 'y';
 
 /** 稳定排序：按字段升 / 降序；等键保持原序。 */
-export const applySort = (rows: Array<ExternalRow>, op: SortTransform): Array<ExternalRow> => {
-  const direction = op.order === 'descending' ? -1 : 1;
-  return [...rows].sort((a, b) => direction * compareByPath(a, b, op.field));
+export const applySort = (rows: Array<ExternalRow>, operation: SortTransform): Array<ExternalRow> => {
+  const direction = operation.order === 'descending' ? -1 : 1;
+  return [...rows].sort((a, b) => direction * compareByPath(a, b, operation.field));
 };
 
 /**
  * 堆叠：每个 x 分组内按系列顺序累加 y，给每行派生 [y0, y1]。
  * @description 系列顺序取 groupBy 值的全局出现序；缺 y / 非有限值按 0 计入，避免后续累计错位。
  */
-export const applyStack = (rows: Array<ExternalRow>, op: StackTransform): Array<ExternalRow> => {
-  const startField = op.startField ?? DEFAULT_START_FIELD;
-  const endField = op.endField ?? DEFAULT_END_FIELD;
-  const groupByField = op.groupBy;
+export const applyStack = (rows: Array<ExternalRow>, operation: StackTransform): Array<ExternalRow> => {
+  const startField = operation.startField ?? DEFAULT_START_FIELD;
+  const endField = operation.endField ?? DEFAULT_END_FIELD;
+  const groupByField = operation.groupBy;
   const seriesOrder = groupByField === undefined ? [] : inferCategoryDomain(rows.map(row => resolveFieldPath(row, groupByField)));
   const seriesRank = new Map(seriesOrder.map((series, index) => [series, index] as const));
   const rankOf = (row: ExternalRow): number => {
@@ -40,7 +40,7 @@ export const applyStack = (rows: Array<ExternalRow>, op: StackTransform): Array<
   const groups = new Map<unknown, Array<ExternalRow>>();
   const SINGLE_CHAIN_KEY = Symbol('single-chain');
   for (const row of rows) {
-    const key = op.x === undefined ? SINGLE_CHAIN_KEY : resolveFieldPath(row, op.x);
+    const key = operation.x === undefined ? SINGLE_CHAIN_KEY : resolveFieldPath(row, operation.x);
     const bucket = groups.get(key);
     if (bucket) bucket.push(row);
     else groups.set(key, [row]);
@@ -51,7 +51,7 @@ export const applyStack = (rows: Array<ExternalRow>, op: StackTransform): Array<
     const ordered = [...groupRows].sort((a, b) => rankOf(a) - rankOf(b));
     let cumulative = 0;
     for (const row of ordered) {
-      const value = resolveFieldPath(row, op.y);
+      const value = resolveFieldPath(row, operation.y);
       const segment = isFiniteNumber(value) ? value : 0;
       const y0 = cumulative;
       const y1 = cumulative + segment;
@@ -70,20 +70,20 @@ export const applyStack = (rows: Array<ExternalRow>, op: StackTransform): Array<
  * normalize：同组内各行 field / 组总和 -> 组内占比，保持行数。
  * @description groupBy 缺省时全行单组；basis percent 输出 0..100，组和为 0 时输出 0。
  */
-export const applyNormalize = (rows: Array<ExternalRow>, op: NormalizeTransform): Array<ExternalRow> => {
-  const outField = op.as ?? op.field;
-  const scale = op.basis === 'percent' ? 100 : 1;
+export const applyNormalize = (rows: Array<ExternalRow>, operation: NormalizeTransform): Array<ExternalRow> => {
+  const outField = operation.as ?? operation.field;
+  const scale = operation.basis === 'percent' ? 100 : 1;
   const sums = new Map<string, number>();
   const keyOf = (row: ExternalRow): string =>
-    op.groupBy === undefined ? '' : JSON.stringify(op.groupBy.map(field => resolveFieldPath(row, field) ?? null));
+    operation.groupBy === undefined ? '' : JSON.stringify(operation.groupBy.map(field => resolveFieldPath(row, field) ?? null));
   for (const row of rows) {
-    const value = resolveFieldPath(row, op.field);
+    const value = resolveFieldPath(row, operation.field);
     const segment = isFiniteNumber(value) ? value : 0;
     const key = keyOf(row);
     sums.set(key, (sums.get(key) ?? 0) + segment);
   }
   return rows.map(row => {
-    const value = resolveFieldPath(row, op.field);
+    const value = resolveFieldPath(row, operation.field);
     const segment = isFiniteNumber(value) ? value : 0;
     const sum = sums.get(keyOf(row)) ?? 0;
     const share = sum === 0 ? 0 : (segment / sum) * scale;
@@ -95,22 +95,22 @@ export const applyNormalize = (rows: Array<ExternalRow>, op: NormalizeTransform)
  * derive-interval：每行独立算 [start, end]，保持行数。
  * @description 两字段模式 startFrom + endFrom 优先；否则 from 模式派生 [baseline, fromValue]。
  */
-export const applyDeriveInterval = (rows: Array<ExternalRow>, op: DeriveIntervalTransform): Array<ExternalRow> => {
-  const startField = op.startField ?? DEFAULT_DERIVE_START_FIELD;
-  const endField = op.endField ?? DEFAULT_DERIVE_END_FIELD;
-  const baseline = op.baseline ?? 0;
-  const twoField = op.startFrom !== undefined && op.endFrom !== undefined;
-  if (!twoField && op.from === undefined) {
+export const applyDeriveInterval = (rows: Array<ExternalRow>, operation: DeriveIntervalTransform): Array<ExternalRow> => {
+  const startField = operation.startField ?? DEFAULT_DERIVE_START_FIELD;
+  const endField = operation.endField ?? DEFAULT_DERIVE_END_FIELD;
+  const baseline = operation.baseline ?? 0;
+  const twoField = operation.startFrom !== undefined && operation.endFrom !== undefined;
+  if (!twoField && operation.from === undefined) {
     throw new Error('lowerPlots: derive-interval transform requires either `from` (baseline->value) or both `startFrom` and `endFrom`');
   }
   const finiteOr = (value: unknown, fallback: number): number => (isFiniteNumber(value) ? value : fallback);
   return rows.map(row => {
     if (twoField) {
-      const start = finiteOr(resolveFieldPath(row, op.startFrom as string), baseline);
-      const end = finiteOr(resolveFieldPath(row, op.endFrom as string), baseline);
+      const start = finiteOr(resolveFieldPath(row, operation.startFrom as string), baseline);
+      const end = finiteOr(resolveFieldPath(row, operation.endFrom as string), baseline);
       return { ...row, [startField]: start, [endField]: end };
     }
-    const end = finiteOr(resolveFieldPath(row, op.from as string), baseline);
+    const end = finiteOr(resolveFieldPath(row, operation.from as string), baseline);
     return { ...row, [startField]: baseline, [endField]: end };
   });
 };
@@ -132,12 +132,12 @@ const mulberry32 = (seed: number): (() => number) => {
  * jitter：给连续数值位置字段加确定性伪随机偏移，保持行数。
  * @description 偏移发生在数据空间 pre-scale；非有限值保留原值，但仍消耗一次随机数保持行序确定性。
  */
-export const applyJitter = (rows: Array<ExternalRow>, op: JitterTransform): Array<ExternalRow> => {
-  const axis = op.axis ?? 'x';
-  const amount = op.amount ?? 1;
-  const seed = op.seed ?? 0;
-  const xField = op.xField ?? DEFAULT_JITTER_X_FIELD;
-  const yField = op.yField ?? DEFAULT_JITTER_Y_FIELD;
+export const applyJitter = (rows: Array<ExternalRow>, operation: JitterTransform): Array<ExternalRow> => {
+  const axis = operation.axis ?? 'x';
+  const amount = operation.amount ?? 1;
+  const seed = operation.seed ?? 0;
+  const xField = operation.xField ?? DEFAULT_JITTER_X_FIELD;
+  const yField = operation.yField ?? DEFAULT_JITTER_Y_FIELD;
   const jitterX = axis === 'x' || axis === 'both';
   const jitterY = axis === 'y' || axis === 'both';
   const rng = mulberry32(seed);

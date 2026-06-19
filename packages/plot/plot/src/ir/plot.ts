@@ -5,7 +5,7 @@ import { DataRefSchema } from './data';
 import { GuideSchema } from './guide';
 import { MarkSchema } from './mark';
 import { ScaleSchema } from './scale';
-import { TransformSchema } from './transform';
+import { TransformOperationSchema } from './transform';
 
 /** plot 域 namespace（单一固定值，作 Tier 2 路由键的单一真源） */
 export const PLOT_NAMESPACE = 'plot';
@@ -40,11 +40,9 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
     'Data binding: a named reference to an externally-supplied dataset plus an optional data model. The dataset values never enter the IR; they are injected at compile time via lowerPlots(datasets).',
   ),
   transform: z
-    .array(TransformSchema)
+    .array(TransformOperationSchema)
     .optional()
-    .describe(
-      'Ordered data-transform pipeline applied to the bound dataset before scale inference and mark lowering; omit for no transform',
-    ),
+    .describe('Ordered data-transform operation pipeline applied to the bound dataset before scale inference and mark lowering; omit for no transform'),
   scales: z
     .array(ScaleSchema)
     .describe('Named scales; referenced by coordinate (and by non-positional channels in later versions)'),

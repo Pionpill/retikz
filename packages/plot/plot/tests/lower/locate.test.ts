@@ -1,4 +1,5 @@
 import type { IRNode, IRScope } from '@retikz/core';
+import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
@@ -6,6 +7,7 @@ import { SOURCE_INDEX } from '../../src/pipeline/provenance';
 // ADR-02 未来 API：locator 在实现落地前不存在，整文件 import 即会失败（预期）。
 // 解析路径取 ADR file-scope 指明的新模块 src/interaction/locate.ts（同时 re-export 自 src/index）。
 import { createPlotLocator } from '../../src/interaction/locate';
+import { defineTransform } from '../../src/transform';
 
 /**
  * ADR-02：datum locator 命中预演——逻辑地址 → 位置/元素的确定性正向解析纯函数。
@@ -20,6 +22,48 @@ import { createPlotLocator } from '../../src/interaction/locate';
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
+
+const doubleDefinition = defineTransform({
+  schema: z.object({
+    kind: z.literal('double'),
+    field: z.string().min(1),
+    as: z.string().min(1),
+  }),
+  inputFields: operation => [operation.field],
+  outputFields: operation => [operation.as],
+  apply: (rows, operation) =>
+    rows.map(row => ({
+      ...row,
+      [operation.as]: Number(row[operation.field]) * 2,
+    })),
+});
+
+const groupSumDefinition = defineTransform({
+  schema: z.object({
+    kind: z.literal('group-sum'),
+    groupBy: z.string().min(1),
+    field: z.string().min(1),
+    as: z.string().min(1),
+  }),
+  inputFields: operation => [operation.groupBy, operation.field],
+  outputFields: operation => [operation.as],
+  apply: (rows, operation, context) => {
+    const groups = new Map<string, Array<Record<string, unknown>>>();
+    for (const row of rows) {
+      const key = String(row[operation.groupBy]);
+      groups.set(key, [...(groups.get(key) ?? []), row]);
+    }
+    return [...groups.entries()].map(([key, members]) =>
+      context.groupProvenance(
+        {
+          [operation.groupBy]: key,
+          [operation.as]: members.reduce((sum, row) => sum + Number(row[operation.field] ?? 0), 0),
+        },
+        members,
+      ),
+    );
+  },
+});
 
 const SALES = [
   { month: 0, revenue: 10 },
@@ -471,6 +515,58 @@ describe('ADR-02 locator — Bug Hunter 回归', () => {
     for (const row of rows) {
       expect(Object.getOwnPropertySymbols(row)).not.toContain(SOURCE_INDEX);
     }
+  });
+});
+
+describe('ADR-06 locator transform registry parity', () => {
+  it('custom_transform_locator_matches_lowering', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      id: 'custom',
+      data: { reference: 'd' },
+      transform: [{ kind: 'double', field: 'x', as: 'x2' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'x2' }, y: { field: 'y' } } }],
+    });
+    const datasets = { d: [{ x: 1, y: 2 }, { x: 3, y: 4 }] };
+    const options: LowerPlotsOptions = { ...opts, transformDefinitions: [doubleDefinition] };
+    const nodes = datumNodes(firstLayer(spec, datasets, options));
+    const locator = createPlotLocator(spec, datasets, options);
+    expect(nodes).toHaveLength(2);
+    for (let index = 0; index < nodes.length; index++) {
+      expect(locator.datum(index)!.position).toEqual(nodes[index].position);
+    }
+  });
+
+  it('custom_group_transform_locator_meta_carries_source_indices', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      id: 'grouped',
+      data: { reference: 'd' },
+      transform: [{ kind: 'group-sum', groupBy: 'group', field: 'value', as: 'total' }],
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'interval', encoding: { x: { field: 'group' }, y: { field: 'total' } } }],
+    });
+    const datasets = {
+      d: [
+        { group: 'A', value: 2 },
+        { group: 'A', value: 3 },
+        { group: 'B', value: 5 },
+      ],
+    };
+    const locator = createPlotLocator(spec, datasets, { ...opts, transformDefinitions: [groupSumDefinition] });
+    expect((locator.datum(0)!.meta as { sourceIndices?: Array<number> }).sourceIndices).toEqual([0, 1]);
+    expect((locator.datum(1)!.meta as { sourceIndices?: Array<number> }).sourceIndices).toEqual([2]);
   });
 });
 

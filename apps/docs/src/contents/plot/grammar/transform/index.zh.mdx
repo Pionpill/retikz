@@ -29,6 +29,48 @@ description: transform 是图形语法的统计层：在比例尺和图元之前
 
 > 用 `dataTransforms` 而不是 `transforms`，是为了和 core 容器的几何 `transforms`（平移 / 旋转）区分。
 
+## 自定义 transform
+
+内置 transform 之外，可以用 `defineTransform` 注册自己的数据处理器。写进 spec 的仍然只是 JSON operation，例如 `{ kind: 'double-x', field: 'x', as: 'x2' }`；真正的 schema、字段收集和执行函数放在 runtime definition 里，再通过 `<Plot transformDefinitions={[...]}>` 注入。
+
+```tsx
+import { defineTransform } from '@retikz/plot';
+import { z } from 'zod';
+
+const doubleX = defineTransform({
+  schema: z.object({
+    kind: z.literal('double-x').describe('Discriminator: double one numeric field'),
+    field: z.string().min(1).describe('Input field read from each row'),
+    as: z.string().min(1).describe('Output field written to each row'),
+  }),
+  inputFields: operation => [operation.field],
+  outputFields: operation => [operation.as],
+  apply: (rows, operation) =>
+    rows.map(row => ({
+      ...row,
+      [operation.as]: Number(row[operation.field]) * 2,
+    })),
+});
+
+<Plot data={rows} model={model} transformDefinitions={[doubleX]}>
+  <Transform kind="double-x" field="x" as="x2" />
+  <PointMark x="x2" y="y" />
+</Plot>;
+```
+
+<ComponentPreview name="transform-custom" sourceFiles={['transform-custom.data.ts']} />
+
+`x2` 没有写进 `model`，因为它是 `double-x` 产生的派生字段。`outputFields` 会把它登记为 transform 输出，strict model 只校验真正来自输入数据的 `x` 和 `y`。
+
+| definition 字段 | 作用 |
+| --- | --- |
+| `schema` | 校验 `{ kind, ...config }` operation。`kind` 必须是非内置的 `z.literal(...)`，其它字段保持 JSON 可序列化。 |
+| `inputFields` | 返回这个 transform 会读取的源字段；这些字段会进入数据模型和字段解析流程。 |
+| `outputFields` | 返回这个 transform 会产出的派生字段；被下游 mark 或 transform 消费时，不需要提前写进 `model`。 |
+| `apply` | 按顺序执行 transform，返回下一步要消费的行集。它必须是确定性的，避免渲染和 locator 结果不一致。 |
+
+`apply` 的第三个参数是 transform context。保行数 transform 通常 `{ ...row, newField }` 就能保留行级来源；改行数 transform 可以用 `context.groupProvenance(out, members)` 给输出行挂上 `sourceIndices`。如果 transform 生成了没有对应源行的新数据，provenance 会自然降级为只有 `transformedIndex`。
+
 ## 技术原理
 
 lowering 时，Plot 先收集 transform 读取的源字段，同时登记 transform 派生出来的输出字段。这样 strict model 只校验真实输入字段，不要求你把派生字段提前声明。
