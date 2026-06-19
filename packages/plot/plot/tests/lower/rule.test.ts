@@ -5,7 +5,7 @@ import { type PlotSpec, PlotSpecSchema, type ReferenceMark } from '../../src/sch
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { lowerMark } from '../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../src/providers';
-import type { PositionScale } from '../../src/providers';
+import type { PositionScale } from '../../src/contract';
 
 /** core Path 的最小形态（鸭子类型断言端点；避免引入 core 内部 IRPath 类型耦合） */
 type RulePath = { type: 'path'; children: Array<{ kind: string; to: [number, number] }>; pathDefault?: unknown };

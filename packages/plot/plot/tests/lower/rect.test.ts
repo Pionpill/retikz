@@ -7,7 +7,7 @@ import { buildIntervalContext, datumAnchor, intervalCell } from '../../src/provi
 import { lowerMark } from '../../src/providers';
 import { type Cell } from '../../src/contract';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../src/providers';
-import type { PositionScale } from '../../src/providers';
+import type { PositionScale } from '../../src/contract';
 
 /**
  * ADR-02（alpha.11）：rect mark（heatmap 双 band 正交 cell）下沉契约测试。

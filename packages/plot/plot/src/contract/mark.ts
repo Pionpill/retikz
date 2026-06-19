@@ -1,8 +1,25 @@
 import type { IRChild } from '@retikz/core';
 import type { ExternalRow, Mark, MarkOperation } from '../schemas';
-import type { FieldCollector } from '../features';
+import type { FieldCollector, MarkChannels } from './channel';
 import type { Cell, CoordinateFrame, DimensionRole } from './coordinate';
-import type { IntervalContext, MarkChannels, MarkProvenance } from '../providers/mark';
+// MarkProvenance 仍依赖 pipeline 的 ProvenanceContext / DatumIdRegistrar（infra，待 ③ 评估），暂从 providers 引入
+import type { MarkProvenance } from '../providers/mark';
+
+/**
+ * 区间柱（interval mark）摆放上下文：lowering 与 locator 共享的一次性派生量
+ * @description 每 mark 构造一次（buildIntervalContext），随后逐行复用——把 band group 的子带划分
+ *   （seriesRank / subWidth）收进一处，杜绝两处各算各的漂移。堆叠经 extent bounds 表达、不再走 ctx。
+ */
+export type IntervalContext = {
+  /** 类别带宽（primary.bandwidth；group 切子带、plain 直接用） */
+  bandwidth: number;
+  /** band group 子带字段（bounds.x = band{group} 时有值；否则 undefined = 整带） */
+  group?: string;
+  /** group 值 → 子带序号（按数据序去重推断，与 lowering 一致） */
+  seriesRank: Map<string | number, number>;
+  /** 单子带宽（bandwidth / 子带数；无 group 下 = bandwidth） */
+  subWidth: number;
+};
 
 /**
  * mark lowering 行为注册项（按 type 查找分发；行为函数不进 IR）

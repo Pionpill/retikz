@@ -2,12 +2,12 @@ import type { IRScope } from '@retikz/core';
 import type { Position } from '@retikz/math';
 import type { z } from 'zod';
 import type { GuideContext, LoweredGuide } from '../../features';
-import type { AxisGuide, CoordinateOperation, ExternalRow, MarkOperation, ScaleOperation } from '../../schemas';
 import type { LegendReserve, Margins } from '../../pipeline/layout';
 import type { ProvenanceContext } from '../../pipeline/provenance';
-import type { PositionScale } from '../../providers/scale';
+import type { AxisGuide, CoordinateOperation, ExternalRow, MarkOperation, ScaleOperation } from '../../schemas';
+import type { PositionScale } from '../scale';
 import type { Cell, CellGeometry } from './cell';
-import type { AxisFrame, CoordinateFrame, DimensionRole, GenericCoordinateFrame } from './types';
+import type { AxisFrame, CoordinateFrame, DimensionRole } from './types';
 
 /** 坐标系解析后可用的绘图区矩形，单位是最终画布坐标。 */
 export type CoordinatePlotArea = {
@@ -73,7 +73,7 @@ export type CoordinateResolveContext = {
   /** 下沉直线 / 内置 guide 的通用入口。 */
   lowerGuide: (guide: AxisGuide, ctx: GuideContext, provenance?: ProvenanceContext) => LoweredGuide;
   /** 下沉曲线坐标轴的入口，依赖 frame.roleScales 与 frame.projectRoles。 */
-  lowerCustomAxis: (frame: GenericCoordinateFrame, guide: AxisGuide, fontSize: number, provenance?: ProvenanceContext) => LoweredGuide;
+  lowerCustomAxis: (frame: CoordinateFrame, guide: AxisGuide, fontSize: number, provenance?: ProvenanceContext) => LoweredGuide;
   /** 已解析的外部数据行；高级坐标系可按需读取完整数据。 */
   rows: Array<ExternalRow>;
   /** 当前 plot 的 mark 列表；主要用于 scale 兼容性与坐标系特定校验。 */
@@ -125,7 +125,7 @@ export const createCoordinateFrame = (
   roles: ReadonlyArray<DimensionRole>,
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null,
   options?: CreateCoordinateFrameOptions,
-): GenericCoordinateFrame => ({
+): CoordinateFrame => ({
   type,
   roles,
   project: () => null,

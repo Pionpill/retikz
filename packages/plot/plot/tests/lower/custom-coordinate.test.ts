@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
-import { type AnyCoordinateDefinition, type AxisFrame, type DimensionRole, type GenericCoordinateFrame, createCoordinateFrame, defineCoordinate } from '../../src/contract';
+import { type AnyCoordinateDefinition, type AxisFrame, type CoordinateFrame, type DimensionRole, createCoordinateFrame, defineCoordinate } from '../../src/contract';
 
 /**
  * 自定义坐标系（custom coordinate）lowering 测试。
@@ -274,7 +274,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
 
 /** 线性对角坐标系（projectRoles=[10x,10x]）：解析切向为常量 [10,10]，frame 级断言用（不依赖 context） */
 const DIAGONAL_K = 10;
-const diagonalFrame = (): GenericCoordinateFrame => {
+const diagonalFrame = (): CoordinateFrame => {
   const project = (values: ReadonlyArray<unknown>): [number, number] | null => {
     const x = Number(values[0]);
     return Number.isFinite(x) ? [x * DIAGONAL_K, x * DIAGONAL_K] : null;

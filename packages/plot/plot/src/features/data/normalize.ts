@@ -1,6 +1,7 @@
 import { isFiniteNumber } from '@retikz/math';
 import { type ExternalRow, PlotFieldType, type PlotFieldTypeValue } from '../../schemas';
-import { type ParsedFieldValue, coerceValue } from './coerce';
+import { coerceValue } from './coerce';
+import type { ParsedFieldValue } from '../../contract';
 import { resolveFieldPath } from './field';
 
 const asParsedValue = (value: ParsedFieldValue): ParsedFieldValue =>

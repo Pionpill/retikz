@@ -5,7 +5,7 @@ import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { lowerMark } from '../../src/providers';
 import { datumAnchor } from '../../src/providers';
 import { createCartesianCoordinate } from '../../src/providers';
-import type { PositionScale } from '../../src/providers';
+import type { PositionScale } from '../../src/contract';
 
 /**
  * ADR-05（alpha.11）：ribbon mark（sankey / alluvial 流带）下沉契约测试。

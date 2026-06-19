@@ -42,7 +42,8 @@ import {
   schemeCategory10,
 } from 'd3-scale-chromatic';
 import { inferCategoryDomain, toTimestamp } from '../../features';
-import { BUILTIN_COLOR_SCHEMES, type BandScale, type DivergingColorScale, type FieldDef, type LogScale, type OrdinalScale, PlotColorScheme, type PlotColorSchemeValue, PlotFieldType, type PlotFieldTypeValue, PlotScale, type PointScale, type PowScale, type QuantileColorScale, type QuantizeColorScale, type ScalarValue, type Scale, type SequentialColorScale, type SqrtScale, type ThresholdColorScale, type TimeScale } from '../../schemas';
+import type { PositionScale, TickSet } from '../../contract';
+import { BUILTIN_COLOR_SCHEMES, type BandScale, type DivergingColorScale, type FieldDef, type LogScale, type OrdinalScale, PlotColorScheme, type PlotColorSchemeValue, PlotFieldType, type PlotFieldTypeValue, PlotScale, type PointScale, type PowScale, type QuantileColorScale, type QuantizeColorScale, type Scale, type SequentialColorScale, type SqrtScale, type ThresholdColorScale, type TimeScale } from '../../schemas';
 
 /** 默认目标刻度数（d3 ticks 的提示值，非硬约束——实际数量按 nice 区间取整定） */
 export const DEFAULT_TICK_COUNT = 5;
@@ -55,28 +56,6 @@ const DEFAULT_BAND_PADDING_INNER = 0.1;
 
 /** point scale 默认外缝（占 step 比例）；对齐 d3 scalePoint 默认，首尾各留半步 */
 const DEFAULT_POINT_PADDING = 0.5;
-
-/** 一组刻度：值（连续=number / 分类=类别）+ 对应格式化标签 */
-export type TickSet = { values: Array<ScalarValue>; labels: Array<string> };
-
-/**
- * 归一化位置 scale：连续 / band / point 对 projector & guide 暴露同一形态
- * @description 把「band 起点 vs 中心」「bandwidth 是否为 0」「类别 vs 数值刻度」收进一层；
- *   下游（projector / guide / bar）只认 coordinate + bandwidth + ticks，不各自分支 scale 类型。
- *   连续走 bandwidth=0 + coordinate=scale(value)，逐字守住 alpha.1/alpha.2 投影与刻度。
- */
-export type PositionScale = {
-  /** 数据值 → 坐标（连续=scale(value)；band=band 中心；point=点位）；非法值返回 NaN，调用方据此跳过 */
-  coordinate: (value: unknown) => number;
-  /** band 宽（连续 / point = 0；band = scale.bandwidth()）；getter 反映 setRange 后的最新值 */
-  readonly bandwidth: number;
-  /** 刻度 + 标签（连续走 scaleTicks；band / point = 每类别一刻度，落 band 中心 / 点位） */
-  ticks: (count?: number) => TickSet;
-  /** 当前 range [start, end]（屏幕坐标，y 可能倒置） */
-  range: () => [number, number];
-  /** 设置 range（显式 range 的 scale 由 expand 决定是否调用） */
-  setRange: (range: readonly [number, number]) => void;
-};
 
 /** 从一组数值求 [min, max]；空集 / 全非有限回退 [0, 1]（d3 extent 对空集返回 [undefined, undefined]） */
 const safeExtent = (values: Array<number>): [number, number] => {

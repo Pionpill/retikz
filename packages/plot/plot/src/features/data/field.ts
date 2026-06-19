@@ -2,6 +2,7 @@ import { format as d3Format } from 'd3-format';
 import { utcFormat } from 'd3-time-format';
 import { isFiniteNumber } from '@retikz/math';
 import { type Channel, type DataModel, type ExternalRow, PlotFieldType, type PlotFieldTypeValue, type TextChannel } from '../../schemas';
+import type { FieldCollector } from '../../contract';
 
 /**
  * 解析字段路径 a.b.c，返回叶子值（任一段缺失返回 undefined）
@@ -75,18 +76,6 @@ export const labelOf = (
   }
   if (content.value !== undefined) return content.value;
   return undefined;
-};
-
-type FieldChannel = Channel | { kind: 'field' | 'constant'; value: unknown };
-
-/** 字段收集器：把 mark / transform 声明中引用外部数据源的字段加入集合。 */
-export type FieldCollector = {
-  /** 加入一个字段名；undefined 表示该位置没有字段引用。 */
-  addField: (field?: string) => void;
-  /** 一次加入多个字段名；undefined 会被跳过。 */
-  addFields: (...fields: Array<string | undefined>) => void;
-  /** 加入普通 channel 或 MarkValueType 的字段引用；常量值不引用数据源。 */
-  addChannel: (channel?: FieldChannel) => void;
 };
 
 /** 创建字段收集器，所有写入直接落到传入 Set。 */

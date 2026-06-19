@@ -1,3 +1,4 @@
+export * from './channel';
 export * from './coordinate';
 export * from './format';
 export * from './mark';

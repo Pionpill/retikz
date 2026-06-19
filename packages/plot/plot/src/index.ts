@@ -39,7 +39,8 @@ export type {
   PositionScaleDefinition,
   ScaleDefinition,
 } from './contract';
-export type { ColorSchemeResolver, PositionScale } from './providers';
+export type { ColorSchemeResolver } from './providers';
+export type { PositionScale } from './contract';
 // Transform / mark extension surface: factory + types from contract; registry helpers from providers.
 export { defineFieldFormat, defineMark, defineTransform, extractTransformKind } from './contract';
 export type { AnyMarkDefinition, AnyTransformDefinition, FieldFormatDefinition, MarkDefinition, TransformContext, TransformDefinition } from './contract';

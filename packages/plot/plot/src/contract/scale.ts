@@ -1,6 +1,27 @@
 import { z } from 'zod';
 import { BUILTIN_SCALE_TYPES, type PlotFieldTypeValue, type ScalarValue, type Scale, type ScaleOperation } from '../schemas';
-import type { PositionScale } from '../providers/scale';
+
+/** 刻度值 + 标签集（axis 与同维 grid 复用同一份）。 */
+export type TickSet = { values: Array<ScalarValue>; labels: Array<string> };
+
+/**
+ * 归一化位置 scale：连续 / band / point 对 projector & guide 暴露同一形态
+ * @description 把「band 起点 vs 中心」「bandwidth 是否为 0」「类别 vs 数值刻度」收进一层；
+ *   下游（projector / guide / bar）只认 coordinate + bandwidth + ticks，不各自分支 scale 类型。
+ *   连续走 bandwidth=0 + coordinate=scale(value)，逐字守住 alpha.1/alpha.2 投影与刻度。
+ */
+export type PositionScale = {
+  /** 数据值 → 坐标（连续=scale(value)；band=band 中心；point=点位）；非法值返回 NaN，调用方据此跳过 */
+  coordinate: (value: unknown) => number;
+  /** band 宽（连续 / point = 0；band = scale.bandwidth()）；getter 反映 setRange 后的最新值 */
+  readonly bandwidth: number;
+  /** 刻度 + 标签（连续走 scaleTicks；band / point = 每类别一刻度，落 band 中心 / 点位） */
+  ticks: (count?: number) => TickSet;
+  /** 当前 range [start, end]（屏幕坐标，y 可能倒置） */
+  range: () => [number, number];
+  /** 设置 range（显式 range 的 scale 由 expand 决定是否调用） */
+  setRange: (range: readonly [number, number]) => void;
+};
 
 /**
  * channel scale 解析上下文（公开运行时契约）。

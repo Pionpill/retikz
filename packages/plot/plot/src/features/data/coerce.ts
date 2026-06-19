@@ -56,6 +56,3 @@ export const toTimestamp = (value: unknown): number | null => {
   }
   return null;
 };
-
-/** 运行时 canonical 值，不含 boolean / null；coerceValue 与自定义 parse 的输出域。 */
-export type ParsedFieldValue = string | number | undefined;

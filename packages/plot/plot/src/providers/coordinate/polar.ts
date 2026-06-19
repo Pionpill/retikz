@@ -2,7 +2,7 @@ import { type Position, arcEndPoint, isFiniteNumber } from '@retikz/math';
 import type { GuideContext } from '../../features';
 import { type Coordinate, PlotCoordinate, PlotScale, type Polar1DCoordinate, Polar1DSchema, Polar2DSchema } from '../../schemas';
 import { computePolarCoordinate } from '../../pipeline';
-import type { PositionScale, TickSet } from '../../providers/scale';
+import type { PositionScale, TickSet } from '../../contract';
 import { assertUniqueAxisDimension } from './axis';
 import type { Cell, CellGeometry } from '../../contract/coordinate';
 import { RETIKZ_POLAR_SEGMENT_SAMPLES, cellInterval } from '../../contract/coordinate';

@@ -1,8 +1,8 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope, type IRStep } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
 import { type ExternalRow, type IntervalMark, type LinkMark, type Mark, type MarkOperation, type PathMark, PlotMark, type PlotMarkValue, type PointMark, type ReferenceMark, type RegionMark } from '../../schemas';
-import { type IntervalContext, LINK_DEFAULT_CURVATURE, buildGenericIntervalContext, buildIntervalContext, datumAnchor, linkBandGeometry, linkEndpoints, markCell, roleValues } from './anchor';
-import { type FieldCollector, channelValue, compareByPath, inferCategoryDomain, resolveFieldPath } from '../../features';
+import { LINK_DEFAULT_CURVATURE, buildGenericIntervalContext, buildIntervalContext, datumAnchor, linkBandGeometry, linkEndpoints, markCell, roleValues } from './anchor';
+import { channelValue, compareByPath, inferCategoryDomain, resolveFieldPath } from '../../features';
 import type { AnyMarkDefinition, MarkDefinition } from '../../contract/mark';
 import {
   type Cell,
@@ -10,12 +10,9 @@ import {
   type CoordinateFrame,
   cellGeometryAnchor,
   hasProjectCell,
-  isCartesianCoordinateFrame,
-  isGenericCoordinateFrame,
-  isPolarCoordinateFrame,
   isRenderableCellGeometry,
 } from '../../contract/coordinate';
-import { type CartesianCoordinateFrame, type PolarCoordinateFrame, type PolarVertex, densifyPolarSegments, toPolarVertex } from '../../providers/coordinate';
+import { type CartesianCoordinateFrame, type PolarCoordinateFrame, type PolarVertex, densifyPolarSegments, isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame, toPolarVertex } from '../../providers/coordinate';
 import {
   type DatumIdRegistrar,
   type ProvenanceContext,
@@ -27,34 +24,7 @@ import {
   seriesPathMeta,
   slug,
 } from '../../pipeline/provenance';
-import { type NumberStyleOf, type OpacityOf, type ShapeOf, type SizeOf, type StrokeWidthOf } from '../../providers/scale';
-
-/**
- * 一个 mark 下沉时消费的通道解析器集合
- * @description color 适用所有 mark；size / opacity / shape 仅 PointMark（per-datum node 属性）。
- *   由 expand 据各通道 resolver 构造、整包传入，避免逐个位置参数（易错序）。
- */
-export type MarkChannels = {
-  colorOf?: ColorOf;
-  defaultColor?: string;
-  sizeOf?: SizeOf;
-  opacityOf?: OpacityOf;
-  shapeOf?: ShapeOf;
-  strokeOf?: ColorOf;
-  strokeWidthOf?: StrokeWidthOf;
-  fillOpacityOf?: NumberStyleOf;
-  drawOpacityOf?: NumberStyleOf;
-  rotateOf?: NumberStyleOf;
-  paddingOf?: NumberStyleOf;
-  minimumSizeOf?: NumberStyleOf;
-  minimumWidthOf?: NumberStyleOf;
-  minimumHeightOf?: NumberStyleOf;
-  zIndexOf?: NumberStyleOf;
-  labelOf?: LabelOf;
-};
-
-/** 行 → 标签串（text 内容通道 + 可选 format + 运行时 resolveLabel 解析结果；undefined = 该行无内容、跳过 / 不挂 label）。由 expand 据 content/fieldTypes/resolveLabel 构造 */
-export type LabelOf = (row: ExternalRow) => string | undefined;
+import type { ColorOf, FieldCollector, IntervalContext, LabelOf, MarkChannels } from '../../contract';
 
 /** 散点 glyph 默认直径（user units，已补偿 circle 外接） */
 const POINT_SIZE = 10;
@@ -62,9 +32,6 @@ const POINT_SIZE = 10;
 const LINE_STROKE_WIDTH = 2;
 /** 无 color 编码时的回退填充 */
 const DEFAULT_FILL = 'currentColor';
-
-/** 行 → 颜色串（color 编码解析结果；undefined = 回退默认色）。由 expand 据 encoding.color 构造 */
-export type ColorOf = (row: ExternalRow) => string | undefined;
 
 /**
  * 单个 mark 下沉时的 provenance 上下文（provenance 开时由 expand 注入；关 → undefined）

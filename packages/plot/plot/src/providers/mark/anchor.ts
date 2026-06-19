@@ -5,16 +5,18 @@ import {
   type Cell,
   type CoordinateFrame,
   type DimensionRole,
-  type GenericCoordinateFrame,
   cellGeometryAnchor,
   hasProjectCell,
+} from '../../contract/coordinate';
+import type { IntervalContext, PositionScale } from '../../contract';
+import {
+  type CartesianCoordinateFrame,
+  type PolarCoordinateFrame,
   isCartesianCoordinateFrame,
   isGenericCoordinateFrame,
   isPolarCoordinateFrame,
   isTernary2DCoordinateFrame,
-} from '../../contract/coordinate';
-import { type CartesianCoordinateFrame, type PolarCoordinateFrame } from '../../providers/coordinate';
-import type { PositionScale } from '../../providers/scale';
+} from '../../providers/coordinate';
 
 /**
  * 取某 mark 在某位置角色下的 encoding 通道（投影时按 frame.roles 序逐角色取值）
@@ -50,22 +52,6 @@ export const resolveIntervalBound = (mark: IntervalMark, role: 'x' | 'y' | 'z'):
 };
 
 /**
- * 区间柱（interval mark）摆放上下文：lowering 与 locator 共享的一次性派生量
- * @description 每 mark 构造一次（buildIntervalContext），随后逐行复用——把 band group 的子带划分
- *   （seriesRank / subWidth）收进一处，杜绝两处各算各的漂移。堆叠经 extent bounds 表达、不再走 ctx。
- */
-export type IntervalContext = {
-  /** 类别带宽（primary.bandwidth；group 切子带、plain 直接用） */
-  bandwidth: number;
-  /** band group 子带字段（bounds.x = band{group} 时有值；否则 undefined = 整带） */
-  group?: string;
-  /** group 值 → 子带序号（按数据序去重推断，与 lowering 一致） */
-  seriesRank: Map<string | number, number>;
-  /** 单子带宽（bandwidth / 子带数；无 group 下 = bandwidth） */
-  subWidth: number;
-};
-
-/**
  * 建某 interval mark 的摆放上下文（每 mark 一次；lowering 与 locator 同源）
  * @description group 取自 bounds.x band 的 group 字段；据其切等分子带（dodge）。seriesRank / subWidth 走
  *   inferCategoryDomain（按数据序去重），与旧 dodge 同算法。
@@ -86,7 +72,7 @@ export const buildIntervalContext = (mark: IntervalMark, frame: CartesianCoordin
  * @description 自定义坐标系没有内置 primary scale 别名，group 子带宽从 `roleScales.x` 读取；
  *   不使用 group 时无需上下文，仍由各 role 的 scale 直接构造 cell。
  */
-export const buildGenericIntervalContext = (mark: IntervalMark, frame: GenericCoordinateFrame, rows: Array<ExternalRow>): IntervalContext | undefined => {
+export const buildGenericIntervalContext = (mark: IntervalMark, frame: CoordinateFrame, rows: Array<ExternalRow>): IntervalContext | undefined => {
   const xBound = resolveIntervalBound(mark, 'x');
   const group = xBound.kind === IntervalBoundKind.Band ? xBound.group : undefined;
   if (group === undefined) return undefined;
@@ -220,7 +206,7 @@ const ternaryBoundOutputInterval = (bound: IntervalBound, role: 'x' | 'y' | 'z',
  * @description 自定义 frame 若要支持 interval，必须同时提供 projectCell 与 roleScales；
  *   mark 侧只负责把 encoding/bounds 解析成正交 cell，最终几何仍交给 frame.projectCell。
  */
-const genericBoundOutputInterval = (bound: IntervalBound, role: DimensionRole, mark: IntervalMark, row: ExternalRow, frame: GenericCoordinateFrame, ctx?: IntervalContext): [number, number] | null => {
+const genericBoundOutputInterval = (bound: IntervalBound, role: DimensionRole, mark: IntervalMark, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext): [number, number] | null => {
   const scale = frame.roleScales?.[role];
   if (!scale) {
     throw new Error(`lowerPlots: interval mark under the ${frame.type} coordinate system requires roleScales.${role} to build cells`);
@@ -263,7 +249,7 @@ const genericBoundOutputInterval = (bound: IntervalBound, role: DimensionRole, m
 };
 
 /** 带 projectCell 的通用坐标帧：按 frame.roles 和各 role scale 构造正交 cell。 */
-const genericIntervalCell = (mark: IntervalMark, row: ExternalRow, frame: GenericCoordinateFrame, ctx?: IntervalContext): Cell | null => {
+const genericIntervalCell = (mark: IntervalMark, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext): Cell | null => {
   const intervals: Cell['intervals'] = {};
   for (const role of frame.roles) {
     const interval = genericBoundOutputInterval(resolveIntervalBound(mark, role), role, mark, row, frame, ctx);

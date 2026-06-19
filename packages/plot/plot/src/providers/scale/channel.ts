@@ -91,9 +91,6 @@ export const makeMarkValueResolver = <T>(
 export const SIZE_MIN_RADIUS = 2;
 export const SIZE_MAX_RADIUS = 20;
 
-/** 行 → 半径（px）；undefined = 该行无有效 size（跳过 / 回退默认尺寸）。由 makeSizeResolver 据 encoding.size 构造 */
-export type SizeOf = (row: ExternalRow) => number | undefined;
-
 /**
  * 解析某 mark 的 size 编码 → 行→半径（px）
  * @description 仅 PointMark 有 size。常量 value 直接作最终半径（绕过 scale）；字段过 sqrt 半径 scale
@@ -147,9 +144,6 @@ export const makeSizeResolver = (node: PlotSpec, rows: Array<ExternalRow>, field
 
 /** opacity 通道连续映射的最小不透明度（range 下界，避免最小值全透明不可见）；契约常量，测试 import 断言 */
 export const OPACITY_MIN = 0.2;
-
-/** 行 → 数值样式；undefined = 该行无有效字段值。 */
-export type NumberStyleOf = (row: ExternalRow) => number | undefined;
 
 export type NumericStyleResolverOptions = {
   range?: readonly [number, number];
@@ -213,15 +207,9 @@ export const makeNumericStyleResolver = (
   };
 };
 
-/** 行 → 不透明度（0..1）；undefined = 该行无有效 opacity。 */
-export type OpacityOf = NumberStyleOf;
-
 /** strokeWidth 通道连续映射的最小 / 最大描边宽度（user units）；避免最小值落成不可见边框 */
 export const STROKE_WIDTH_MIN = 0.5;
 export const STROKE_WIDTH_MAX = 4;
-
-/** 行 → 描边宽度（user units）；undefined = 该行无有效 strokeWidth。由 makeStrokeWidthResolver 据 PointMark.strokeWidth 构造 */
-export type StrokeWidthOf = NumberStyleOf;
 
 export const makeOpacityResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): ((mark: Mark) => ChannelResolution<number> | undefined) =>
   makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.opacity : undefined), 'opacity', { range: [OPACITY_MIN, 1], clamp: true });
@@ -231,9 +219,6 @@ export const makeStrokeWidthResolver = (node: PlotSpec, rows: Array<ExternalRow>
 
 /** shape 通道默认 glyph 调色板（直用 core 内置 shape 名，无 plot-only 别名）；循环复用 */
 export const PLOT_SHAPE_PALETTE = ['circle', 'rectangle', 'diamond'] as const;
-
-/** 行 → glyph shape 名；undefined = 该行无有效 shape。由 makeShapeResolver 据 encoding.shape 构造 */
-export type ShapeOf = (row: ExternalRow) => string | undefined;
 
 /**
  * 解析某 mark 的 shape 编码 → 行→shape 名

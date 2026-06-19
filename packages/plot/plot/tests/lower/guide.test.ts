@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
 import { lowerPlots } from '../../src/pipeline/expand';
 import { type GuideContext, lowerGuide } from '../../src/features';
-import type { PositionScale } from '../../src/providers';
+import type { PositionScale } from '../../src/contract';
 
 /** 测试用最小 PositionScale：guide 只调 coordinate，其余成员给占位 */
 const fakeScale = (coordinate: (value: number) => number): PositionScale => ({

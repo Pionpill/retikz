@@ -3,7 +3,7 @@ import { PlotCoordinate, PlotScale, type Ternary2DCoordinate } from '../../schem
 import { Ternary2DSchema } from '../../schemas/coordinate';
 import type { GuideContext } from '../../features';
 import { computeTernaryFrame } from '../../pipeline/layout';
-import type { TickSet } from '../../providers/scale';
+import type { TickSet } from '../../contract';
 import { assertUniqueAxisDimension } from './axis';
 import { type Cell, type CellGeometry, cellInterval } from '../../contract/coordinate';
 import type { AnyCoordinateDefinition, CoordinateDefinition } from '../../contract/coordinate';

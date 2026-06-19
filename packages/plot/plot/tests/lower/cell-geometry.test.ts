@@ -8,7 +8,7 @@ import { buildIntervalContext, cellGeometryAnchor, datumAnchor } from '../../src
 import { lowerMark } from '../../src/providers';
 import { type Cell, RETIKZ_POLAR_SEGMENT_SAMPLES, createCoordinateFrame, defineCoordinate, densifyCellContour } from '../../src/contract';
 import { type CartesianCoordinateFrame, createCartesianCoordinate, createPolarCoordinate, createTernary2DCoordinate } from '../../src/providers';
-import type { PositionScale } from '../../src/providers';
+import type { PositionScale } from '../../src/contract';
 
 /**
  * ADR-01（alpha.11）：区间几何投影契约测试——frame.projectCell 统一 interval / sector / 曲线轴下沉。

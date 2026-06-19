@@ -34,10 +34,9 @@ import {
   type TimeScale,
   TimeScaleSchema,
 } from '../../schemas';
-import { type AnyScaleDefinition, type ChannelResolveContext, type ChannelScaleResolution, defineScale, extractScaleType, isBuiltinScaleOperation } from '../../contract/scale';
+import { type AnyScaleDefinition, type ChannelResolveContext, type ChannelScaleResolution, type PositionScale, defineScale, extractScaleType, isBuiltinScaleOperation } from '../../contract/scale';
 import {
   type ColorScaleEvaluator,
-  type PositionScale,
   bandPositionScale,
   continuousPositionScale,
   discretizedBins,

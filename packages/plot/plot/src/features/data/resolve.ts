@@ -1,5 +1,5 @@
 import type { DataModel, PlotFieldTypeValue } from '../../schemas';
-import type { ParsedFieldValue } from './coerce';
+import type { ParsedFieldValue } from '../../contract';
 
 /**
  * 单字段解析结果（运行时，不进 IR）

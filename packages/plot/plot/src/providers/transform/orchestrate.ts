@@ -1,6 +1,6 @@
 import { JsonObjectSchema } from '@retikz/core';
 import { type ExternalRow, type TransformOperation } from '../../schemas';
-import type { FieldCollector } from '../../features';
+import type { FieldCollector } from '../../contract';
 import { type AnyTransformDefinition, type TransformContext } from '../../contract/transform';
 import { DEFAULT_TRANSFORM_CONTEXT, resolveTransformRegistry } from './definitions';
 

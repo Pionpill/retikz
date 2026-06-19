@@ -1,5 +1,7 @@
-import type { ParsedFieldValue } from '../features';
 import type { PlotFieldTypeValue } from '../schemas';
+
+/** 运行时 canonical 值，不含 boolean / null；coerceValue 与自定义 parse 的输出域。 */
+export type ParsedFieldValue = string | number | undefined;
 
 /**
  * 字段解析格式 runtime definition。

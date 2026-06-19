@@ -11,6 +11,9 @@
 
 内置与自定义 definition 经同一 `resolveXxxRegistry` 分派，杜绝「内置白名单 + 扩展补丁接口」分叉。依赖方向 **`contract` ← `providers` ← `pipeline`**（providers 依赖 contract，pipeline 编排 providers）。
 
+- **`contract` 是最底层抽象，不得 import `providers` / `features`**：层共享接口类型（`PositionScale` / `TickSet` / channel resolver 函数类型 / `MarkChannels` / `IntervalContext` / `FieldCollector` / `ParsedFieldValue` 等）都定义在 `contract`，由 `providers` / `features` 反向 import；concrete 实现（如 `CartesianCoordinateFrame`）与按 type 收窄的 `isXxxCoordinateFrame` 守卫归 `providers`。`CoordinateFrame` 是抽象能力契约（基座），内置帧是它的结构子类型。
+- **已知残留反向边（infra，待下沉评估）**：`CoordinateResolveContext`（`contract/coordinate/define.ts`）与 `MarkProvenance`（经 `contract/mark.ts` 引用）仍引用 pipeline 注入的基础设施 `Margins` / `LegendReserve` / `ProvenanceContext` / `DatumIdRegistrar` 及 guide 下沉的 `GuideContext` / `LoweredGuide`。这些是 pipeline/feature 注入给 definition 的上下文，不是语法层契约，暂保留为带注释的残留边，不强行搬进 contract。
+
 ```text
 schemas         Zod schema / 类型真源（Plot IR 形状），所有模块可依赖
 contract/*      coordinate / scale / transform / mark / format 的扩展契约

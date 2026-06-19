@@ -3,7 +3,7 @@ import { type Cartesian1DCoordinate, Cartesian1DOrientation, type Cartesian1DOri
 import { Cartesian1DSchema, Cartesian2DSchema } from '../../schemas/coordinate';
 import type { GuideContext } from '../../features';
 import { type Rect, computePlotArea } from '../../pipeline/layout';
-import type { PositionScale, TickSet } from '../../providers/scale';
+import type { PositionScale, TickSet } from '../../contract';
 import { assertUniqueAxisDimension } from './axis';
 import type { Cell, CellGeometry } from '../../contract/coordinate';
 import { cellInterval } from '../../contract/coordinate';
