@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BUILTIN_COORDINATE_TYPES, CoordinateOpSchema, CoordinateSchema, PlotCoordinate } from '../../src/ir/coordinate';
+import { BUILTIN_COORDINATE_TYPES, CoordinateOperationSchema, CoordinateSchema, PlotCoordinate } from '../../src/ir/coordinate';
 
 describe('CoordinateSchema (ADR-04)', () => {
   // Happy path
@@ -208,37 +208,37 @@ describe('CoordinateSchema ternary2D (alpha.9 ADR-03)', () => {
   });
 });
 
-describe('CoordinateOpSchema coordinate registry 占位（alpha.12 ADR-05）', () => {
+describe('CoordinateOperationSchema coordinate registry 占位（alpha.12 ADR-05）', () => {
   it('CoordinateSchema 保持内置 5-union，不接收旧 custom 判别', () => {
     expect(Object.values(PlotCoordinate)).toEqual(['cartesian2D', 'polar2D', 'cartesian1D', 'polar1D', 'ternary2D']);
     expect([...BUILTIN_COORDINATE_TYPES].sort()).toEqual(['cartesian1D', 'cartesian2D', 'polar1D', 'polar2D', 'ternary2D'].sort());
     expect(() => CoordinateSchema.parse({ type: 'custom', name: 'arch', roles: ['x'] })).toThrow();
   });
 
-  it('自定义 coordinate op 直接用自有 type 串并透传配置', () => {
-    const op = { type: 'arch', x: 'xScale', archHeight: 30, label: 'bridge' };
-    expect(CoordinateOpSchema.parse(op)).toEqual(op);
+  it('自定义 coordinate operation 直接用自有 type 串并透传配置', () => {
+    const operation = { type: 'arch', x: 'xScale', archHeight: 30, label: 'bridge' };
+    expect(CoordinateOperationSchema.parse(operation)).toEqual(operation);
   });
 
-  it('CoordinateOpSchema 内置 type 仍走精确 schema 校验，不被自定义 passthrough 吞掉', () => {
-    expect(() => CoordinateOpSchema.parse({ type: 'cartesian2D', x: 1, y: 'ys' })).toThrow();
-    expect(() => CoordinateOpSchema.parse({ type: 'polar2D', angle: 'a', radius: 'r', innerRadius: 2 })).toThrow();
+  it('CoordinateOperationSchema 内置 type 仍走精确 schema 校验，不被自定义 passthrough 吞掉', () => {
+    expect(() => CoordinateOperationSchema.parse({ type: 'cartesian2D', x: 1, y: 'ys' })).toThrow();
+    expect(() => CoordinateOperationSchema.parse({ type: 'polar2D', angle: 'a', radius: 'r', innerRadius: 2 })).toThrow();
   });
 
   it('自定义 coordinate type 不能撞内置或旧 custom 保留字', () => {
-    expect(() => CoordinateOpSchema.parse({ type: 'custom', name: 'arch', roles: ['x'] })).toThrow();
-    expect(() => CoordinateOpSchema.parse({ type: '' })).toThrow();
+    expect(() => CoordinateOperationSchema.parse({ type: 'custom', name: 'arch', roles: ['x'] })).toThrow();
+    expect(() => CoordinateOperationSchema.parse({ type: '' })).toThrow();
   });
 
-  it('自定义 coordinate op JSON round-trip 不丢字段', () => {
-    const op = { type: 'arch', x: 'xScale', archHeight: 30, nested: { curve: 'sine' } };
-    expect(CoordinateOpSchema.parse(JSON.parse(JSON.stringify(op)))).toEqual(op);
+  it('自定义 coordinate operation JSON round-trip 不丢字段', () => {
+    const operation = { type: 'arch', x: 'xScale', archHeight: 30, nested: { curve: 'sine' } };
+    expect(CoordinateOperationSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 
-  it('[adversarial] 自定义 coordinate op 拒绝非 JSON 配置值', () => {
-    expect(() => CoordinateOpSchema.parse({ type: 'arch', project: () => [0, 0] })).toThrow(/JSON-serializable/);
-    expect(() => CoordinateOpSchema.parse({ type: 'arch', extra: undefined })).toThrow(/JSON-serializable/);
-    expect(() => CoordinateOpSchema.parse({ type: 'arch', archHeight: Number.NaN })).toThrow(/JSON-serializable/);
-    expect(() => CoordinateOpSchema.parse({ type: 'arch', archHeight: Infinity })).toThrow(/JSON-serializable/);
+  it('[adversarial] 自定义 coordinate operation 拒绝非 JSON 配置值', () => {
+    expect(() => CoordinateOperationSchema.parse({ type: 'arch', project: () => [0, 0] })).toThrow(/JSON-serializable/);
+    expect(() => CoordinateOperationSchema.parse({ type: 'arch', extra: undefined })).toThrow(/JSON-serializable/);
+    expect(() => CoordinateOperationSchema.parse({ type: 'arch', archHeight: Number.NaN })).toThrow(/JSON-serializable/);
+    expect(() => CoordinateOperationSchema.parse({ type: 'arch', archHeight: Infinity })).toThrow(/JSON-serializable/);
   });
 });

@@ -511,9 +511,9 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       height: HEIGHT,
       coordinates: [
         defineCoordinate({
-          schema: z.object({ type: z.literal('noproj').describe('Discriminator: no-project-cell custom coordinate op') }),
+          schema: z.object({ type: z.literal('noproj').describe('Discriminator: no-project-cell custom coordinate operation') }),
           roles: ['x', 'y'],
-          resolve: (_op, ctx) => {
+          resolve: (_operation, ctx) => {
             const xValues = ctx.collectRoleValues('x');
             const yValues = ctx.collectRoleValues('y');
             const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [0, ctx.width]);
@@ -549,9 +549,9 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       height: HEIGHT,
       coordinates: [
         defineCoordinate({
-          schema: z.object({ type: z.literal('curved-cell').describe('Discriminator: project-cell custom coordinate op') }),
+          schema: z.object({ type: z.literal('curved-cell').describe('Discriminator: project-cell custom coordinate operation') }),
           roles: ['x', 'y'],
-          resolve: (_op, ctx) => {
+          resolve: (_operation, ctx) => {
             const xValues = ctx.collectRoleValues('x');
             const yValues = ctx.collectRoleValues('y');
             const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [0, ctx.width]);
@@ -602,9 +602,9 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       height: HEIGHT,
       coordinates: [
         defineCoordinate({
-          schema: z.object({ type: z.literal('curved-cell').describe('Discriminator: project-cell custom coordinate op') }),
+          schema: z.object({ type: z.literal('curved-cell').describe('Discriminator: project-cell custom coordinate operation') }),
           roles: ['x', 'y'],
-          resolve: (_op, ctx) => {
+          resolve: (_operation, ctx) => {
             const xValues = ctx.collectRoleValues('x');
             const yValues = ctx.collectRoleValues('y');
             const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [0, ctx.width]);

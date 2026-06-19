@@ -101,7 +101,7 @@ export const Ternary2DSchema = z
   })
   .describe('2D ternary coordinate system: three continuous components (bound via the mark x / y / z channels) projected by barycentric coordinates into an equilateral triangle (composition / mixture / vote share); each row is auto-normalized by x+y+z at lowering. No geometry options this round (per-component scales not yet supported)');
 
-/** 内置坐标系 type 集：供自定义 coordinate op 排除内置判别串。 */
+/** 内置坐标系 type 集：供自定义 coordinate operation 排除内置判别串。 */
 export const BUILTIN_COORDINATE_TYPES = new Set<string>(Object.values(PlotCoordinate));
 
 const RESERVED_CUSTOM_COORDINATE_TYPES = new Set<string>([...BUILTIN_COORDINATE_TYPES, 'custom']);
@@ -114,37 +114,37 @@ export const CustomCoordinateSchema = z
       .refine(type => !RESERVED_CUSTOM_COORDINATE_TYPES.has(type), {
         message: 'custom coordinate type must not collide with a built-in or reserved coordinate type',
       })
-      .describe('Discriminator: custom coordinate op type; must be a non-empty, non-built-in identifier registered through options.coordinates'),
+      .describe('Discriminator: custom coordinate operation type; must be a non-empty, non-built-in identifier registered through options.coordinates'),
   })
   .passthrough()
-  .superRefine((op, ctx) => {
-    const result = JsonObjectSchema.safeParse(op);
+  .superRefine((operation, ctx) => {
+    const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'custom coordinate op must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
+        message: 'custom coordinate operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
       });
     }
   })
-  .describe('Custom coordinate op: type is any non-built-in identifier; its config is validated at lowering time against the matching CoordinateDefinition supplied via options.coordinates. Position roles come from the definition, not the op.');
+  .describe('Custom coordinate operation: type is any non-built-in identifier; its config is validated at lowering time against the matching CoordinateDefinition supplied via options.coordinates. Position roles come from the definition, not the operation.');
 
 export const CoordinateSchema = z
   .discriminatedUnion('type', [Cartesian2DSchema, Polar2DSchema, Cartesian1DSchema, Polar1DSchema, Ternary2DSchema])
   .describe('Built-in coordinate-system union: cartesian2D | polar2D | cartesian1D | polar1D | ternary2D');
 
-export const CoordinateOpSchema = z
+export const CoordinateOperationSchema = z
   .union([CoordinateSchema, CustomCoordinateSchema])
-  .describe('Coordinate op union: built-in coordinate configs plus custom type passthrough ops validated by a runtime CoordinateDefinition');
+  .describe('Coordinate operation union: built-in coordinate configs plus custom type passthrough operations validated by a runtime CoordinateDefinition');
 
 /** 内置坐标系（cartesian2D | polar2D | cartesian1D | polar1D | ternary2D） */
 export type Coordinate = z.infer<typeof CoordinateSchema>;
-/** 坐标系 op（内置 ∪ 自定义 type passthrough） */
-export type CoordinateOp = z.infer<typeof CoordinateOpSchema>;
+/** 坐标系 operation（内置 ∪ 自定义 type passthrough） */
+export type CoordinateOperation = z.infer<typeof CoordinateOperationSchema>;
 /** 一维直线坐标系（cartesian1D） */
 export type Cartesian1DCoordinate = z.infer<typeof Cartesian1DSchema>;
 /** 一维圆周坐标系（polar1D） */
 export type Polar1DCoordinate = z.infer<typeof Polar1DSchema>;
 /** 三元坐标系（ternary2D） */
 export type Ternary2DCoordinate = z.infer<typeof Ternary2DSchema>;
-/** 自定义坐标系 op（投影由运行时 CoordinateDefinition 提供） */
+/** 自定义坐标系 operation（投影由运行时 CoordinateDefinition 提供） */
 export type CustomCoordinate = z.infer<typeof CustomCoordinateSchema>;

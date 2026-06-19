@@ -1,16 +1,15 @@
-import type { Position } from '@retikz/math';
 import type { IRScope } from '@retikz/core';
-import { z } from 'zod';
-import type { AxisGuide, CoordinateOp, ExternalRow, Mark, Scale } from '../ir';
+import type { Position } from '@retikz/math';
+import type { z } from 'zod';
 import type { GuideContext, LoweredGuide } from '../guide';
-import type { ProvenanceContext } from '../pipeline/provenance';
+import type { AxisGuide, CoordinateOperation, ExternalRow, Mark, Scale } from '../ir';
 import type { LegendReserve, Margins } from '../pipeline/layout';
+import type { ProvenanceContext } from '../pipeline/provenance';
 import type { PositionScale } from '../scale';
-import { CARTESIAN_COORDINATES } from './cartesian';
-import type { AxisFrame, CoordinateFrame, DimensionRole, GenericCoordinateFrame } from './types';
 import type { Cell, CellGeometry } from './cell';
-import { POLAR_COORDINATES } from './polar';
-import { TERNARY_COORDINATES } from './ternary';
+import { BUILTIN_COORDINATES } from './constants';
+import type { AxisFrame, CoordinateFrame, DimensionRole, GenericCoordinateFrame } from './types';
+import { extractCoordinateType } from './utils';
 
 /** 坐标系解析后可用的绘图区矩形，单位是最终画布坐标。 */
 export type CoordinatePlotArea = {
@@ -85,19 +84,26 @@ export type CoordinateResolveContext = {
 
 /**
  * 坐标系运行时定义。
- * @description definition 是含函数的运行时对象，不进入 JSON IR；IR 只保存 `{ type, ...config }` 形态的 coordinate op。
+ * @description definition 是含函数的运行时对象，不进入 JSON IR；IR 只保存 `{ type, ...config }` 形态的 coordinate operation。
  */
-export type CoordinateDefinition<TCoordinateOp extends CoordinateOp = CoordinateOp> = {
-  /** 完整 coordinate op schema；必须含非空 z.literal('type') 供 registry 提取注册键。 */
-  schema: z.ZodType<TCoordinateOp>;
+export type CoordinateDefinition<TCoordinateOperation extends CoordinateOperation = CoordinateOperation> = {
+  /** 完整 coordinate operation schema；必须含非空 z.literal('type') 供 registry 提取注册键。 */
+  schema: z.ZodType<TCoordinateOperation>;
   /** 该坐标系消费的定位角色序，用于 required-channel 与 guide-dimension 校验。 */
   roles: ReadonlyArray<DimensionRole>;
-  /** 将 coordinate op 解析成运行时 frame 与 guide 层。 */
-  resolve: (op: TCoordinateOp, ctx: CoordinateResolveContext) => CoordinateResolution;
+  /** 将 coordinate operation 解析成运行时 frame 与 guide 层。 */
+  resolve: (operation: TCoordinateOperation, ctx: CoordinateResolveContext) => CoordinateResolution;
 };
 
-/** 定义一个坐标系 definition，并保留 schema 与 resolve 之间的泛型关联。 */
-export const defineCoordinate = <TCoordinateOp extends CoordinateOp>(def: CoordinateDefinition<TCoordinateOp>): CoordinateDefinition<TCoordinateOp> => def;
+/**
+ * 定义一个坐标系 definition。
+ * @description 这是坐标系扩展的唯一注册单元：schema 决定 IR 中允许的 coordinate operation，
+ *   roles 决定 mark 必填位置通道，resolve 把 JSON operation 解析成运行时 frame 与 guide 层。内置坐标系和
+ *   自定义坐标系都应通过这个对象进入 registry，避免内置白名单与扩展补丁接口分叉。
+ */
+export const defineCoordinate = <TCoordinateOperation extends CoordinateOperation>(
+  def: CoordinateDefinition<TCoordinateOperation>,
+): CoordinateDefinition<TCoordinateOperation> => def;
 
 /** createCoordinateFrame 选项：roleScales 让 guide 画曲线轴、frameAlong 给精确切向、projectCell 支持 cell 类 mark；均可选。 */
 export type CreateCoordinateFrameOptions = {
@@ -110,8 +116,11 @@ export type CreateCoordinateFrameOptions = {
 };
 
 /**
- * 建通用坐标帧：把 definition 注册 type、roles 与 projectRoles 包成 CoordinateFrame（point mark 经此投影）
- * @description 第三参 options 补充 guide 轴线、精确轴切向和 cell 几何投影能力；未提供的能力保持不可用。
+ * 建通用坐标帧。
+ * @description 把 definition 注册 type、roles 与 projectRoles 包成 CoordinateFrame。`type` 会保留调用方注册的真实判别值，
+ *   不会压成 `custom`；point/path/region 等按 `projectRoles` 投影。第三参 options 逐项声明额外能力：
+ *   roleScales 允许 guide / interval 构造读取 scale，frameAlong 提供曲线轴精确切向，projectCell 开启 cell 类 mark。
+ *   未声明的能力保持不可用并由消费方 fail-loud。
  */
 export const createCoordinateFrame = (
   type: string,
@@ -130,45 +139,20 @@ export const createCoordinateFrame = (
 
 /**
  * registry 内部使用的宽类型。
- * @description registry 需要存放不同 op 泛型的 definition；取出后由具体 schema parse 收窄，因此 resolve 入参在表内用 never 防止误调。
+ * @description registry 需要存放不同 operation 泛型的 definition；取出后由具体 schema parse 收窄，因此 resolve 入参在表内用 never 防止误调。
  */
-export type AnyCoordinateDefinition = Omit<CoordinateDefinition<CoordinateOp>, 'schema' | 'resolve'> & {
+export type AnyCoordinateDefinition = Omit<CoordinateDefinition<CoordinateOperation>, 'schema' | 'resolve'> & {
   /** 不同 definition 的 schema 泛型不同，registry 只关心能从中提取 type 并执行 parse。 */
   schema: z.ZodType;
-  /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 op。 */
-  resolve: (op: never, ctx: CoordinateResolveContext) => CoordinateResolution;
+  /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation。 */
+  resolve: (operation: never, ctx: CoordinateResolveContext) => CoordinateResolution;
 };
-
-/**
- * 内置坐标系的 registry 元数据。
- * @description 内置坐标系与自定义坐标系走同一个 CoordinateDefinition.resolve 入口。
- */
-export const BUILTIN_COORDINATES: ReadonlyArray<AnyCoordinateDefinition> = [
-  ...CARTESIAN_COORDINATES,
-  ...POLAR_COORDINATES,
-  ...TERNARY_COORDINATES,
-];
-
-/** 从 coordinate definition schema 的 `type: z.literal(...)` 中提取 registry key。 */
-export const extractCoordinateType = (schema: z.ZodType): string => {
-  if (!(schema instanceof z.ZodObject)) {
-    throw new Error('lowerPlots: coordinate registration schema must be a ZodObject with a literal type field');
-  }
-  const typeSchema = schema.shape.type;
-  if (!(typeSchema instanceof z.ZodLiteral) || typeof typeSchema.value !== 'string' || typeSchema.value.length === 0) {
-    throw new Error('lowerPlots: coordinate registration schema must declare type as a non-empty z.literal string');
-  }
-  return typeSchema.value;
-};
-
-/** 按 type 索引的内置坐标系元数据，供 lowering 快速判断内置 / 自定义分派。 */
-export const BUILTIN_COORDINATE_DEFINITIONS_BY_TYPE: ReadonlyMap<string, AnyCoordinateDefinition> = new Map(
-  BUILTIN_COORDINATES.map(def => [extractCoordinateType(def.schema), def] as const),
-);
 
 /**
  * 解析坐标系 registry。
  * @description 内置坐标系总是先注册；用户自定义 definition 不能覆盖内置 type，也不能彼此重复。
+ *   返回值是一次 lowering 使用的完整 registry，后续通过 coordinate.type 找到 definition，再由该 definition.schema parse
+ *   operation，并调用 definition.resolve 得到运行时 frame。
  */
 export const resolveCoordinateRegistry = (custom?: ReadonlyArray<AnyCoordinateDefinition>): Map<string, AnyCoordinateDefinition> => {
   const registry = new Map<string, AnyCoordinateDefinition>();

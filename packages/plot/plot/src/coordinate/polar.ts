@@ -1,15 +1,13 @@
-import { type Position, isFiniteNumber } from '@retikz/math';
-import { type Coordinate, PlotCoordinate, PlotScale, type Polar1DCoordinate, type Scale } from '../ir';
-import { Polar1DSchema, Polar2DSchema } from '../ir/coordinate';
+import { type Position, arcEndPoint, isFiniteNumber } from '@retikz/math';
 import type { GuideContext } from '../guide';
-import { computePolarCoordinate } from '../pipeline/layout';
+import { type Coordinate, PlotCoordinate, PlotScale, type Polar1DCoordinate, Polar1DSchema, Polar2DSchema, type Scale } from '../ir';
+import { computePolarCoordinate } from '../pipeline';
 import type { PositionScale, TickSet } from '../scale';
+import { assertUniqueAxisDimension } from './axis';
 import type { Cell, CellGeometry } from './cell';
 import { cellInterval } from './cell';
-import { RETIKZ_POLAR_SEGMENT_SAMPLES } from './constants';
 import type { AnyCoordinateDefinition, CoordinateDefinition } from './define';
-import { assertUniqueAxisDimension } from './axis';
-import { polarPoint } from './polar-point';
+import { RETIKZ_POLAR_SEGMENT_SAMPLES } from './sampling';
 import type { DimensionRole } from './types';
 
 type Polar2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Polar2D }>;
@@ -27,6 +25,14 @@ const axisRole = (dimension: string): string => {
 /** 连续角轴需要段内采样弯弧；分类角轴类别间无中间值，走弦。 */
 const isContinuousAngleScale = (scaleType: Scale['type']): boolean =>
   scaleType === PlotScale.Linear || scaleType === PlotScale.Time || scaleType === PlotScale.Log || scaleType === PlotScale.Pow || scaleType === PlotScale.Sqrt;
+
+/**
+ * 极坐标输出空间点 → 屏幕点。
+ * @description 角度约定由 `@retikz/math` 的 arcEndPoint 统一维护；plot 侧只保留坐标帧的 nullable 契约，
+ *   让 mark lowering 可以跳过非有限输入点。
+ */
+const polarPoint = (center: Position, angleDeg: number, radius: number): Position | null =>
+  isFiniteNumber(angleDeg) && isFiniteNumber(radius) ? arcEndPoint(center, radius, angleDeg) : null;
 
 /**
  * 二维极坐标运行时坐标帧。
@@ -85,9 +91,10 @@ export type PolarCoordinateSpec = {
 };
 
 /**
- * 建极坐标帧：投影只在 PositionScale 之上加一步极坐标→笛卡尔
+ * 建二维极坐标运行时坐标帧。
  * @description θ=primary.coordinate(angleValue)（度）、r=secondary.coordinate(radiusValue)；
  *   返回 [cx + r·cos(θ°), cy + r·sin(θ°)]，屏幕 y 向下、0°=+x、90°=+y（与 core polar 约定一致）。
+ *   frame 同时提供 projectCell，将 x/y 输出区间闭式投影为 sector，供 interval / reference band 使用。
  */
 export const createPolarCoordinate = (input: PolarCoordinateSpec): PolarCoordinateFrame => {
   const projectPolar = (thetaDeg: number, radius: number): Position | null => polarPoint(input.center, thetaDeg, radius);
@@ -166,7 +173,11 @@ export type Polar1DCoordinateSpec = {
   primary: PositionScale;
 };
 
-/** 建一维极坐标帧：角向投影固定在半径 radius 的圆周（复用极坐标→笛卡尔换算） */
+/**
+ * 建一维极坐标运行时坐标帧。
+ * @description 单一 x 角色被解释为角向值，并投影到固定 radius 的圆周上。该 frame 只表达点/路径位置，
+ *   不提供 projectCell；需要面积 cell 时必须使用 polar2D 或自定义带 projectCell 的 frame。
+ */
 export const createPolar1DCoordinate = (input: Polar1DCoordinateSpec): Polar1DCoordinateFrame => {
   const projectPolar = (thetaDeg: number, radius: number): Position | null => polarPoint(input.center, thetaDeg, radius);
   const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
@@ -191,7 +202,11 @@ export const createPolar1DCoordinate = (input: Polar1DCoordinateSpec): Polar1DCo
 /** 一行数据在极坐标 scale 输出空间中的顶点：θ（度）+ r（user units）。 */
 export type PolarVertex = { theta: number; radius: number };
 
-/** 把一行的角向 / 径向原始值映射成 PolarVertex（非有限 → null，跳过） */
+/**
+ * 把一行的角向 / 径向原始值映射成 PolarVertex。
+ * @description PolarVertex 保留的是 scale 输出空间的 θ（度）和 r（user units），还不是屏幕点；
+ *   path / region 会先收集顶点，再决定是否按连续角轴 densify 成弧线。非有限值返回 null。
+ */
 export const toPolarVertex = (frame: PolarCoordinateFrame, angleValue: unknown, radiusValue: unknown): PolarVertex | null => {
   const theta = frame.primary.coordinate(angleValue);
   const radius = frame.secondary.coordinate(radiusValue);
@@ -203,6 +218,7 @@ export const toPolarVertex = (frame: PolarCoordinateFrame, angleValue: unknown, 
  * 连续角轴段内采样：在 [θ, r] scale 输出空间线性插值，逐点反投影成屏幕弧点
  * @description 相邻顶点间插 RETIKZ_POLAR_SEGMENT_SAMPLES 个中间点（在度 + 半径空间线性，非原始数据空间），
  *   使数据空间「常半径变角」的直边在屏幕弯成弧。顶点数 < 2 时直接返回各顶点投影点（不采样）。
+ *   调用方只应在 frame.continuousAngle 为 true 时使用；分类角轴的相邻类别应保持弦连接。
  */
 export const densifyPolarSegments = (frame: PolarCoordinateFrame, vertices: ReadonlyArray<PolarVertex>): Array<Position> => {
   if (vertices.length < 2) {

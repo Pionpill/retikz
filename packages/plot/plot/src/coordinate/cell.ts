@@ -1,5 +1,5 @@
-import type { Position } from '@retikz/math';
-import { RETIKZ_POLAR_SEGMENT_SAMPLES } from './constants';
+import { type Position, arcEndPoint } from '@retikz/math';
+import { RETIKZ_POLAR_SEGMENT_SAMPLES } from './sampling';
 import type { DimensionRole } from './types';
 
 /**
@@ -24,17 +24,22 @@ export type CellGeometry =
   | { kind: 'sector'; center: Position; innerRadius: number; outerRadius: number; startAngle: number; endAngle: number }
   | { kind: 'contour'; points: Array<Position> };
 
-/** 度 → 弧度；cell 几何锚点与极坐标 frame 使用同一角度约定。 */
-const DEG_TO_RAD = Math.PI / 180;
-
-/** 读取 cell 在指定位置角色上的输出空间区间；缺失时 fail-loud。 */
+/**
+ * 读取 cell 在指定位置角色上的输出空间区间。
+ * @description Cell 是按 coordinate role 存区间的稀疏对象；坐标帧只能读取自己声明的 roles。
+ *   缺少对应 role 说明 mark 侧 cell 构造和 frame.projectCell 契约不一致，必须 fail-loud。
+ */
 export const cellInterval = (cell: Cell, role: DimensionRole): [number, number] => {
   const interval = cell.intervals[role];
   if (interval === undefined) throw new Error(`lowerPlots: cell is missing "${role}" interval`);
   return interval;
 };
 
-/** 点集 AABB 中心；空点集 / 少于 3 点的 contour 不是可渲染区域，返回 null。 */
+/**
+ * 计算 contour 顶点集的 AABB 中心。
+ * @description core contour Node 使用 position + 相对点集装配；plot 侧用同一个 AABB 中心作为 Node.position 与 locator anchor。
+ *   少于 3 点无法形成可填充轮廓，返回 null，让 lowering 和 locator 走同一条跳过规则。
+ */
 export const contourAabbCenter = (points: ReadonlyArray<Position>): Position | null => {
   if (points.length < 3) return null;
   let minX = Infinity;
@@ -57,14 +62,18 @@ export const contourAabbCenter = (points: ReadonlyArray<Position>): Position | n
 export const cellGeometryAnchor = (geometry: CellGeometry): Position | null => {
   if (geometry.kind === 'rect') return geometry.position;
   if (geometry.kind === 'sector') {
-    const midAngle = ((geometry.startAngle + geometry.endAngle) / 2) * DEG_TO_RAD;
+    const midAngle = (geometry.startAngle + geometry.endAngle) / 2;
     const midRadius = (Math.min(geometry.innerRadius, geometry.outerRadius) + Math.max(geometry.innerRadius, geometry.outerRadius)) / 2;
-    return [geometry.center[0] + midRadius * Math.cos(midAngle), geometry.center[1] + midRadius * Math.sin(midAngle)];
+    return arcEndPoint(geometry.center, midRadius, midAngle);
   }
   return contourAabbCenter(geometry.points);
 };
 
-/** 判断 CellGeometry 是否能产出实际图元；contour 少于 3 点时与 core contour 语义一致地跳过。 */
+/**
+ * 判断 CellGeometry 是否能产出实际图元。
+ * @description rect / sector 总能装配成 Node；contour 必须至少有 3 个点。所有 cell lowering 入口都应复用该判断，
+ *   避免渲染侧跳过退化 contour、locator 或 reference 侧仍返回锚点。
+ */
 export const isRenderableCellGeometry = (geometry: CellGeometry): boolean => geometry.kind !== 'contour' || contourAabbCenter(geometry.points) !== null;
 
 /**
@@ -86,6 +95,7 @@ export type DensifyCellContourOptions = {
  * @description 四角 = (p0,s0)→(p1,s0)→(p1,s1)→(p0,s1) 逆/顺时针绕一圈。沿 primary 走的边（底 / 顶）与沿
  *   secondary 走的边（右 / 左）各按对应轴是否曲线选段数：曲边 RETIKZ_POLAR_SEGMENT_SAMPLES 段、直边 1 段。
  *   projectFn 把「输出空间 (primary, secondary)」映成屏幕点（只有 frame 自己知道后段映射）；非有限点跳过。
+ *   primaryRole / secondaryRole 默认 x/y，非 x/y 的二维自定义坐标系必须显式传入，避免 helper 误读 cell 区间。
  *   每条边只产「不含起点的中间点 + 终点」，避免相邻边重复顶点；首尾天然闭合（contour shape 隐式闭合，不重复首点）。
  */
 export const densifyCellContour = (

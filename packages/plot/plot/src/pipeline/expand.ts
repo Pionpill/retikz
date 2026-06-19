@@ -204,19 +204,19 @@ export type ResolveFrameParams = {
  */
 export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolution => {
   const { node, rows, fieldTypes, width, height, fontSize, margin, provenance, coordinates } = params;
-  const coordinateOp = node.coordinate;
+  const coordinateOperation = node.coordinate;
   const coordinateRegistry = resolveCoordinateRegistry(coordinates);
-  const coordinateDefinition = coordinateRegistry.get(coordinateOp.type);
+  const coordinateDefinition = coordinateRegistry.get(coordinateOperation.type);
   if (coordinateDefinition === undefined) {
-    throw new Error(`lowerPlots: coordinate type "${coordinateOp.type}" is not registered; pass a CoordinateDefinition via options.coordinates`);
+    throw new Error(`lowerPlots: coordinate type "${coordinateOperation.type}" is not registered; pass a CoordinateDefinition via options.coordinates`);
   }
   const roles = coordinateDefinition.roles as ReadonlyArray<'x' | 'y' | 'z'>;
   const axisGuides = (node.guides ?? []).filter(isAxisGuide);
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
 
   // ADR-01 校验（建 frame 前）：guide 维度按坐标系合法集校验 + mark 必填位置角色校验，均 fail-loud。
-  assertValidGuideDimensions(coordinateOp.type, roles, axisGuides);
-  assertRequiredPositionChannels(coordinateOp.type, roles, node.marks);
+  assertValidGuideDimensions(coordinateOperation.type, roles, axisGuides);
+  assertRequiredPositionChannels(coordinateOperation.type, roles, node.marks);
 
   // 收集某角色（位置 scale 名 + 通道角色）下所有 mark 的通道原始值（不预过滤）：
   //   连续 scale 内部过滤为有限数求 extent、分类 scale 按数据序去重推断 domain。
@@ -341,10 +341,10 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   // legend 预留：按 position 在对应边让出带宽，plotArea 据此收窄（决策 ⑩）
   const legendReserve = legendReserveOf((node.guides ?? []).filter(isLegendGuide));
 
-  JsonObjectSchema.parse(coordinateOp);
-  const parsedCoordinateOp = coordinateDefinition.schema.parse(coordinateOp) as never;
-  JsonObjectSchema.parse(parsedCoordinateOp);
-  const resolution = coordinateDefinition.resolve(parsedCoordinateOp, {
+  JsonObjectSchema.parse(coordinateOperation);
+  const parsedCoordinateOperation = coordinateDefinition.schema.parse(coordinateOperation) as never;
+  JsonObjectSchema.parse(parsedCoordinateOperation);
+  const resolution = coordinateDefinition.resolve(parsedCoordinateOperation, {
     width,
     height,
     fontSize,

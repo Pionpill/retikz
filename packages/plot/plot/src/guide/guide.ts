@@ -1,10 +1,13 @@
 import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
+import { type Position, arcEndPoint } from '@retikz/math';
 import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../ir';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from '../pipeline/layout';
 import type { DimensionRole, GenericCoordinateFrame, PolarCoordinateFrame, TernaryVertices } from '../coordinate';
-import { DEG_TO_RAD, finitePolarPoint } from '../coordinate/polar-point';
 import { type ProvenanceContext, guideLayerId, guideLayerMeta } from '../pipeline/provenance';
 import type { PositionScale, TickSet } from '../scale/scale';
+
+/** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 arcEndPoint。 */
+const DEG_TO_RAD = Math.PI / 180;
 
 /**
  * lowerGuide 上下文：cartesian 直线 guide 用 plotArea + 两维投影 + ticks；polar 经 `frame` 走弧 / 辐条几何
@@ -65,6 +68,13 @@ const segmentsToPath = (segments: Array<Segment>): IRPath | null => {
 
 /** 某 dimension 是否为 primary 角色（cartesian x / polar angle）；否则 secondary（y / radius） */
 const isPrimaryDimension = (dimension: string): boolean => dimension === 'x';
+
+/**
+ * 极坐标点投影的窄返回值 helper。
+ * @description guide lowering 的 IR step 需要确定 Position；若上游 scale/tick 契约被破坏，则返回 [NaN, NaN] 让问题显性暴露。
+ */
+const finitePolarPoint = (center: Position, angleDeg: number, radius: number): Position =>
+  Number.isFinite(angleDeg) && Number.isFinite(radius) ? arcEndPoint(center, radius, angleDeg) : [NaN, NaN];
 
 /**
  * 轴 / 网格 scope 的 id + meta props（provenance 开时合成 `<plotId>.` 前缀 id + layer 来源 meta）

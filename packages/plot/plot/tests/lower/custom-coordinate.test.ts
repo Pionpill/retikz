@@ -35,17 +35,17 @@ const CYCLES = 1.5;
 /** 示例工厂：一维曲线坐标系——单值沿正弦曲线落点（curve = 屏幕x → 屏幕y） */
 const sineCoordinate = defineCoordinate({
   schema: z.object({
-    type: z.literal('sine').describe('Discriminator: sine custom coordinate op'),
+    type: z.literal('sine').describe('Discriminator: sine custom coordinate operation'),
     amplitude: z.number().finite().optional().describe('Sine amplitude in user units'),
     cycles: z.number().finite().optional().describe('Number of sine cycles across the canvas'),
   }),
   roles: ['x'],
-  resolve: (op, context) => {
+  resolve: (operation, context) => {
     const values = context.collectRoleValues('x');
     const scaleDef = context.resolveScaleForRole('x', undefined, values);
     const scale = context.buildPositionScale(scaleDef, values, [0, context.width]);
-    const amplitude = op.amplitude ?? AMPLITUDE;
-    const cycles = op.cycles ?? CYCLES;
+    const amplitude = operation.amplitude ?? AMPLITUDE;
+    const cycles = operation.cycles ?? CYCLES;
     return {
       frame: createCoordinateFrame('sine', ['x'], roleValues => {
         const screenX = scale.coordinate(roleValues[0]);
@@ -63,16 +63,16 @@ const ARCH_HEIGHT = 70;
 /** 示例工厂：二维桥坐标系——x 沿拱、y 竖直偏移（加性可分离）；回传解析 frameAlong 让曲线轴精确 */
 const bridgeCoordinate = defineCoordinate({
   schema: z.object({
-    type: z.literal('bridge').describe('Discriminator: bridge custom coordinate op'),
+    type: z.literal('bridge').describe('Discriminator: bridge custom coordinate operation'),
     archHeight: z.number().finite().optional().describe('Arch height in user units'),
   }),
   roles: ['x', 'y'],
-  resolve: (op, context) => {
+  resolve: (operation, context) => {
     const xValues = context.collectRoleValues('x');
     const yValues = context.collectRoleValues('y');
     const xScale = context.buildPositionScale(context.resolveScaleForRole('x', undefined, xValues), xValues, [0, context.width]);
     const yScale = context.buildPositionScale(context.resolveScaleForRole('y', undefined, yValues), yValues, [context.height - 40, 40]);
-    const archHeight = op.archHeight ?? ARCH_HEIGHT;
+    const archHeight = operation.archHeight ?? ARCH_HEIGHT;
     const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
       const screenX = xScale.coordinate(values[0]);
       const yOffset = yScale.coordinate(values[1]);
@@ -292,9 +292,9 @@ const defineSineCoordinate = (
   flat = false,
 ): AnyCoordinateDefinition =>
   defineCoordinate({
-    schema: z.object({ type: z.literal(type).describe('Discriminator: sine axis test coordinate op') }),
+    schema: z.object({ type: z.literal(type).describe('Discriminator: sine axis test coordinate operation') }),
     roles: ['x'],
-    resolve: (_op, context) => {
+    resolve: (_operation, context) => {
       const values = context.collectRoleValues('x');
       const scale = context.buildPositionScale(context.resolveScaleForRole('x', undefined, values), values, [0, context.width]);
       const projectRoles = (roleValues: ReadonlyArray<unknown>): [number, number] | null => {

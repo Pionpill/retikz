@@ -103,6 +103,7 @@ export type Ternary2DCoordinateFrame = {
  * 建三元帧：重心投影 + 自动归一化（容忍任意正三元组）
  * @description 每行 (x,y,z) 先归一化 s=x+y+z、(x/s,y/s,z/s)，再 nx·Vx + ny·Vy + nz·Vz 得屏幕点。
  *   非有限值（缺字段 / NaN）→ null 跳过该点（与其它坐标系一致）；含负分量 / 和≤0 → fail-loud（数据错误、不静默归一）。
+ *   projectCell 使用 simplex clipping 把三个分量区间投影为 contour；退化为空的 contour 会由 cell 几何层统一跳过。
  */
 export const createTernary2DCoordinate = (vertices: TernaryVertices): Ternary2DCoordinateFrame => {
   const [vx, vy, vz] = vertices;

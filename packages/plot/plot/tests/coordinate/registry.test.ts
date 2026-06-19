@@ -7,19 +7,19 @@ import { type AnyCoordinateDefinition, BUILTIN_COORDINATES, createCoordinateFram
 const archDefinition = defineCoordinate({
   schema: z
     .object({
-      type: z.literal('arch').describe('Discriminator: custom arch coordinate op'),
+      type: z.literal('arch').describe('Discriminator: custom arch coordinate operation'),
       archHeight: z.number().finite().positive().describe('Arch height in user units'),
     })
-    .describe('Arch coordinate op'),
+    .describe('Arch coordinate operation'),
   roles: ['x'],
-  resolve: (op, ctx) => {
+  resolve: (operation, ctx) => {
     const values = ctx.collectRoleValues('x');
     const scaleDef = ctx.resolveScaleForRole('x', undefined, values);
     const scale = ctx.buildPositionScale(scaleDef, values, [0, ctx.width]);
     return {
       frame: createCoordinateFrame('arch', ['x'], ([value]) => {
         const x = scale.coordinate(value);
-        return Number.isFinite(x) ? [x, ctx.height - op.archHeight] : null;
+        return Number.isFinite(x) ? [x, ctx.height - operation.archHeight] : null;
       }),
       plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
       gridLayers: [],
@@ -75,7 +75,7 @@ describe('coordinate registry（alpha.12 ADR-05 spec）', () => {
 
   it('malformed_coordinate_schema_without_literal_type_throws', () => {
     const malformed: AnyCoordinateDefinition = {
-      schema: z.object({ type: z.string().describe('Not a literal type') }).describe('Malformed coordinate op'),
+      schema: z.object({ type: z.string().describe('Not a literal type') }).describe('Malformed coordinate operation'),
       roles: ['x'],
       resolve: archDefinition.resolve,
     };
@@ -96,8 +96,8 @@ describe('coordinate registry（alpha.12 ADR-05 spec）', () => {
     expect(archDefinition.schema.parse({ type: 'arch', archHeight: 30 })).toEqual({ type: 'arch', archHeight: 30 });
   });
 
-  it('definition_op_json_round_trip', () => {
-    const op = { type: 'arch', archHeight: 30 };
-    expect(archDefinition.schema.parse(JSON.parse(JSON.stringify(op)))).toEqual(op);
+  it('definition_operation_json_round_trip', () => {
+    const operation = { type: 'arch', archHeight: 30 };
+    expect(archDefinition.schema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 });

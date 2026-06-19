@@ -41,7 +41,11 @@ export type CartesianCoordinateFrame = {
   projectCell: (cell: Cell) => CellGeometry;
 };
 
-/** 建二维笛卡尔运行时坐标帧：primary = x scale、secondary = y scale。 */
+/**
+ * 建二维笛卡尔运行时坐标帧。
+ * @description primary 是 x 角色位置 scale，secondary 是 y 角色位置 scale；返回的 frame 同时提供点投影与 rect cell 快路。
+ *   这是 lowering 内部的运行时对象，不进入 JSON IR，也不从根入口暴露给用户作为构造公共坐标系的主路径。
+ */
 export const createCartesianCoordinate = (primary: PositionScale, secondary: PositionScale): CartesianCoordinateFrame => {
   const project = (primaryValue: unknown, secondaryValue: unknown): Position | null => {
     const x = primary.coordinate(primaryValue);
@@ -91,7 +95,11 @@ export type Cartesian1DCoordinateFrame = {
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
 };
 
-/** 建一维笛卡尔帧：单 scale + 轴向 + 塌缩维基线（horizontal → [scale(v), baseline]、vertical → [baseline, scale(v)]） */
+/**
+ * 建一维笛卡尔运行时坐标帧。
+ * @description 单 scale 沿 orientation 指定的轴投影，另一屏幕维度固定在 baseline。
+ *   1D 坐标没有面积 cell 语义，因此不提供 projectCell，interval / reference band 等 cell 类 mark 会 fail-loud。
+ */
 export const createCartesian1DCoordinate = (scale: PositionScale, orientation: Cartesian1DOrientationType, baseline: number): Cartesian1DCoordinateFrame => {
   const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
     const position = scale.coordinate(values[0]);

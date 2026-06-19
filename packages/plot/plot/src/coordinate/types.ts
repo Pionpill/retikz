@@ -3,7 +3,6 @@ import type { Cartesian1DCoordinateFrame, CartesianCoordinateFrame } from './car
 import type { Cell, CellGeometry } from './cell';
 import type { Polar1DCoordinateFrame, PolarCoordinateFrame } from './polar';
 import type { Ternary2DCoordinateFrame } from './ternary';
-import { PlotCoordinate } from '../ir';
 import type { PositionScale } from '../scale';
 
 /**
@@ -59,35 +58,9 @@ export type CoordinateFrame =
   | Ternary2DCoordinateFrame
   | GenericCoordinateFrame;
 
-/** 判断运行时坐标帧是否为内置二维笛卡尔帧。 */
-export const isCartesianCoordinateFrame = (coordinate: CoordinateFrame): coordinate is CartesianCoordinateFrame =>
-  coordinate.type === PlotCoordinate.Cartesian2D;
-
-/** 判断运行时坐标帧是否为内置二维极坐标帧。 */
-export const isPolarCoordinateFrame = (coordinate: CoordinateFrame): coordinate is PolarCoordinateFrame =>
-  coordinate.type === PlotCoordinate.Polar2D;
-
-/** 判断运行时坐标帧是否为内置三元坐标帧。 */
-export const isTernary2DCoordinateFrame = (coordinate: CoordinateFrame): coordinate is Ternary2DCoordinateFrame =>
-  coordinate.type === PlotCoordinate.Ternary2D;
-
-/** 判断运行时坐标帧是否为注册 definition 返回的通用坐标帧。 */
-export const isGenericCoordinateFrame = (coordinate: CoordinateFrame): coordinate is GenericCoordinateFrame =>
-  coordinate.type !== PlotCoordinate.Cartesian2D &&
-  coordinate.type !== PlotCoordinate.Polar2D &&
-  coordinate.type !== PlotCoordinate.Cartesian1D &&
-  coordinate.type !== PlotCoordinate.Polar1D &&
-  coordinate.type !== PlotCoordinate.Ternary2D;
-
 /** 具备 cell 几何投影能力的运行时坐标帧。 */
 export type CellProjectableCoordinate = CoordinateFrame & {
   projectCell: (cell: Cell) => CellGeometry;
-};
-
-/** 判断坐标帧是否支持 interval/reference band 等 cell 类几何投影。 */
-export const hasProjectCell = (coordinate: CoordinateFrame): coordinate is CellProjectableCoordinate => {
-  const candidate = coordinate as { projectCell?: unknown };
-  return typeof candidate.projectCell === 'function';
 };
 
 /**
