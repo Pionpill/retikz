@@ -1,16 +1,24 @@
 import { Fragment } from 'react';
 import type { FC } from 'react';
-import { Circle, Coordinate, Draw, Grid, Layout, Sector } from '@retikz/react';
+import { Circle, Coordinate, Draw, Grid, Layout, Node, Sector } from '@retikz/react';
 import { TexNode, useLowerTex } from '@retikz/tex/react';
 
 const COS30 = Math.cos((30 * Math.PI) / 180);
 const SIN30 = Math.sin((30 * Math.PI) / 180);
 const TAN30 = SIN30 / COS30;
 
+/** 右侧图例：每行一个独立 TexNode——一个 TexNode 只能单色（\color 不生效），故按行拆开各自 textColor */
+const INFO_ROWS = [
+  { y: -44, color: 'green', tex: '\\alpha = 30^\\circ = \\frac{\\pi}{6}' },
+  { y: -8, color: 'red', tex: '\\sin\\alpha = \\frac{1}{2}' },
+  { y: 28, color: 'dodgerblue', tex: '\\cos\\alpha = \\frac{\\sqrt{3}}{2}' },
+  { y: 64, color: 'darkorange', tex: '\\tan\\alpha = \\frac{1}{\\sqrt{3}}' },
+];
+
 const Demo: FC = () => {
   const lowerTex = useLowerTex();
   return (
-    <Layout width={600} height={360} lowerTex={lowerTex}>
+    <Layout width={720} height={360} lowerTex={lowerTex}>
       {/* 背景网格 */}
       <Grid corner1={[-100, -100]} corner2={[100, 100]} step={50} stroke="lightgray" strokeWidth={0.5} />
 
@@ -62,7 +70,7 @@ const Demo: FC = () => {
         {'\\alpha'}
       </TexNode>
 
-      {/* sin α / cos α（边标注仍是纯文本） */}
+      {/* sin α / cos α / tan α（边标注仍是纯文本） */}
       <Draw
         way={[{ angle: -30, radius: 100 }, { label: { text: 'sin α', side: 'left' } }, [COS30 * 100, 0]]}
         stroke="red"
@@ -73,19 +81,30 @@ const Demo: FC = () => {
         stroke="dodgerblue"
         thickness="thick"
       />
-
-      {/* tan α 橙色竖线 + 辅助射线
-          原 TikZ 用 name path + name intersections 求交点；IR 没建模，几何上
-          x=100 竖线与原点 30° 射线交于 (100, -TAN30·100)（screen y），直接喂坐标。
-          Coordinate t 命名供下方 ray 引用 */}
       <Draw
         way={[[100, 0], { label: { text: 'tan α = sin α / cos α', side: 'right' } }, [100, -TAN30 * 100]]}
         stroke="darkorange"
         thickness="thick"
       />
       <Coordinate id="t" position={[100, -TAN30 * 100]} />
-      {/* 原点 → t 的辅助射线 */}
       <Draw way={[[0, 0], 't']} />
+
+      {/* 右侧图例：浅灰虚线框（无填充，light/dark 都看得见）+ 逐行彩色 TexNode 真公式。
+          每行单色对应各自函数线的颜色；框走单独 rectangle Node 垫底，rows 在其上层 */}
+      <Node
+        position={[400, 10]}
+        shape="rectangle"
+        stroke="lightgray"
+        dashed
+        cornerRadius={6}
+        minimumWidth={180}
+        minimumHeight={165}
+      />
+      {INFO_ROWS.map(({ y, color, tex }) => (
+        <TexNode key={color} position={[400, y]} stroke="none" textColor={color} displayMode>
+          {tex}
+        </TexNode>
+      ))}
     </Layout>
   );
 };
