@@ -80,10 +80,11 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
   // 与 expandPlot 共用 prepareRows（fieldMaps 校验 + 类型解析 + 归一化），保证 render 抛错 ⟺ locator 抛错（评审 P2 parity）。
   // tagSourceIndex（clone，不动入参）→ prepareRows → applyTransforms，与 lowering 完全同序，否则 locator 落点漂移。
   const ingested = tagSourceIndex(dataset);
-  const { fieldTypes, normalized, transformRegistry } = prepareRows(spec, datasets, options, ingested);
+  const { fieldTypes, normalized, transformRegistry, scaleRegistry } = prepareRows(spec, datasets, options, ingested);
   const rows = applyTransforms(normalized, spec.transform, transformRegistry);
 
   // frame 复用 resolveFrame：投影几何与 provenance 无关（provenance 只影响 guide 层 id/meta），故传 undefined。
+  // scaleRegistry 与 lowering 同源（prepareRows 解析），保证 position 投影 parity。
   const { frame }: { frame: CoordinateFrame } = resolveFrame({
     node: spec,
     rows,
@@ -94,6 +95,7 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
     margin: options.margin,
     provenance: undefined,
     coordinates: options.coordinates,
+    scaleRegistry,
   });
 
   // 合成 meta 用的上下文（locator 始终按需合成同构 meta，与 lowering 是否开 datumProvenance 无关）

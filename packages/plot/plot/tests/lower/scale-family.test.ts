@@ -122,7 +122,8 @@ describe('scale family · L1 baseline guard (alpha.7 ADR-01)', () => {
       marks: [{ type: 'region', order: 'i', encoding: { x: { field: 'i' }, y: { field: 'v' } } }],
     });
 
-  const MSG = /nonlinear continuous scale \(log\/pow\/sqrt\) cannot be used with interval\/area/;
+  // baseline guard 现按具体 scale type 报错（log / pow / sqrt 各自命名；承自定义 allowsBaseline=false 的 scale）
+  const MSG = /nonlinear continuous scale \((log|pow|sqrt)\) cannot be used with interval\/area/;
 
   it('interval_plus_log_fails_loud', () => {
     const data = [{ cat: 'a', v: 1 }, { cat: 'b', v: 10 }];

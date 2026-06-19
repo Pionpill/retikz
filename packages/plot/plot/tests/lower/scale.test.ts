@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import {
-  DEFAULT_TICK_COUNT,
-  resolveLinearScale,
-  resolvePositionScale,
-  scaleTicks,
-} from '../../src/scale/scale';
+import { DEFAULT_TICK_COUNT, resolveLinearScale, scaleTicks } from '../../src/scale/scale';
+import { type ScaleOperation } from '../../src/ir';
+import { resolvePositionScale as resolvePositionScaleOp, resolveScaleRegistry } from '../../src/scale/registry';
 import { inferCategoryDomain, toTimestamp } from '../../src/data';
+
+// 内置 scale registry：position 分派经 registry，测试包一层省去逐处传参。
+const scaleRegistry = resolveScaleRegistry();
+const resolvePositionScale = (operation: ScaleOperation, values: Array<unknown>, range: readonly [number, number]) => resolvePositionScaleOp(operation, values, range, scaleRegistry);
 
 describe('resolveLinearScale (ADR-02 d3-scale)', () => {
   // Happy path

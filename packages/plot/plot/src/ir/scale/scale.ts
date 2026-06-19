@@ -90,6 +90,16 @@ export const PlotColorScheme = {
 /** 配色方案名 */
 export type PlotColorSchemeValue = ValueOf<typeof PlotColorScheme>;
 
+/** 内置配色方案名集；供 scheme 字段静态识别与 lowering 期内置/自定义分流（模块常量，非 zod） */
+export const BUILTIN_COLOR_SCHEMES = new Set<string>(Object.values(PlotColorScheme));
+
+export const ColorSchemeNameSchema = z
+  .string()
+  .min(1)
+  .describe(
+    'Color scheme name: a built-in scheme (e.g. viridis / rdbu) or a custom name registered via options.colorSchemes. Validated as a non-empty string here; an unknown name fails loud at lowering. Interpolator functions never enter the IR — only the name string',
+  );
+
 /** 分类标量：类别取值（字符串或数值；不含 boolean / null） */
 export const CategoryValueSchema = z
   .union([z.string(), z.number()])
@@ -253,10 +263,9 @@ export const SequentialColorScaleSchema = z
       .tuple([z.number().finite(), z.number().finite()])
       .optional()
       .describe('[min, max] input extent; omit to infer from the bound color field at lowering. Endpoints must be finite; min must be < max (rejected at lowering otherwise); temporal fields use a timestamp extent'),
-    scheme: z
-      .enum(PlotColorScheme)
-      .optional()
-      .describe('Named color scheme to interpolate across the domain; omit to default to viridis at lowering. Overridden by range when both are given'),
+    scheme: ColorSchemeNameSchema.optional().describe(
+      'Named color scheme to interpolate across the domain; a built-in name or a custom one registered via options.colorSchemes; omit to default to viridis at lowering. Overridden by range when both are given',
+    ),
     range: z
       .tuple([z.string(), z.string()])
       .optional()
@@ -274,10 +283,9 @@ export const DivergingColorScaleSchema = z
       .tuple([z.number().finite(), z.number().finite(), z.number().finite()])
       .optional()
       .describe('[low, mid, high] input extent around a meaningful midpoint; omit to infer [min, (min+max)/2, max] from the bound field at lowering. Endpoints must be finite; must satisfy low < mid < high (rejected at lowering otherwise)'),
-    scheme: z
-      .enum(PlotColorScheme)
-      .optional()
-      .describe('Named diverging color scheme to interpolate around the midpoint; omit to default to rdbu at lowering. Overridden by range when both are given'),
+    scheme: ColorSchemeNameSchema.optional().describe(
+      'Named diverging color scheme to interpolate around the midpoint; a built-in name or a custom one registered via options.colorSchemes; omit to default to rdbu at lowering. Overridden by range when both are given',
+    ),
     range: z
       .tuple([z.string(), z.string(), z.string()])
       .optional()
@@ -301,10 +309,9 @@ export const QuantizeColorScaleSchema = z
       .min(2)
       .optional()
       .describe('Number of equal-width bins; omit to default to 5 at lowering. When range is given, the bin count is range.length; if count is also given it must equal range.length, otherwise lowering fails loud'),
-    scheme: z
-      .enum(PlotColorScheme)
-      .optional()
-      .describe('Named color scheme sampled at count evenly spaced points to produce the discrete bin colors; omit to default to viridis at lowering. Overridden by range when both are given'),
+    scheme: ColorSchemeNameSchema.optional().describe(
+      'Named color scheme sampled at count evenly spaced points to produce the discrete bin colors; a built-in name or a custom one registered via options.colorSchemes; omit to default to viridis at lowering. Overridden by range when both are given',
+    ),
     range: z
       .array(z.string())
       .min(2)
@@ -321,10 +328,9 @@ export const ThresholdColorScaleSchema = z
       .array(z.number().finite())
       .min(1)
       .describe('Strictly ascending finite breakpoints cutting the value range into breakpoints.length + 1 bins; required (a threshold scale has no default cut points). Ascending order is enforced at lowering'),
-    scheme: z
-      .enum(PlotColorScheme)
-      .optional()
-      .describe('Named color scheme sampled at breakpoints.length + 1 evenly spaced points to produce the discrete bin colors; omit to default to viridis at lowering. Overridden by range when both are given'),
+    scheme: ColorSchemeNameSchema.optional().describe(
+      'Named color scheme sampled at breakpoints.length + 1 evenly spaced points to produce the discrete bin colors; a built-in name or a custom one registered via options.colorSchemes; omit to default to viridis at lowering. Overridden by range when both are given',
+    ),
     range: z
       .array(z.string())
       .min(2)
@@ -343,10 +349,9 @@ export const QuantileColorScaleSchema = z
       .min(2)
       .optional()
       .describe('Number of quantile bins; omit to default to 5 at lowering. When range is given, the bin count is range.length; if count is also given it must equal range.length, otherwise lowering fails loud'),
-    scheme: z
-      .enum(PlotColorScheme)
-      .optional()
-      .describe('Named color scheme sampled at count evenly spaced points to produce the discrete bin colors; omit to default to viridis at lowering. Overridden by range when both are given'),
+    scheme: ColorSchemeNameSchema.optional().describe(
+      'Named color scheme sampled at count evenly spaced points to produce the discrete bin colors; a built-in name or a custom one registered via options.colorSchemes; omit to default to viridis at lowering. Overridden by range when both are given',
+    ),
     range: z
       .array(z.string())
       .min(2)
@@ -372,6 +377,27 @@ export const ScaleSchema = z
     QuantileColorScaleSchema,
   ])
   .describe('Scale union: linear / band / point / ordinal / time / log / pow / sqrt / sequential / diverging / quantize / threshold / quantile');
+
+/** 内置 scale type 集；供 CustomScaleSchema 排除内置判别串（模块常量，非 zod） */
+export const BUILTIN_SCALE_TYPES = new Set<string>(Object.values(PlotScale));
+
+export const CustomScaleSchema = z
+  .object({
+    type: z
+      .string()
+      .min(1)
+      .refine(type => !BUILTIN_SCALE_TYPES.has(type), {
+        message: 'custom scale type must not collide with a built-in scale type',
+      })
+      .describe('Discriminator: custom scale op type; any non-empty, non-built-in identifier registered through options.scaleDefinitions'),
+    name: z.string().min(1).describe('Scale name; referenced by a coordinate role or a non-positional channel scale ref'),
+  })
+  .passthrough()
+  .describe('Custom scale op: type is any non-built-in identifier plus a name; its config is validated at lowering time against the matching ScaleDefinition supplied via options.scaleDefinitions');
+
+export const ScaleOperationSchema = z
+  .union([ScaleSchema, CustomScaleSchema])
+  .describe('Scale operation union: built-in scale configs plus custom type passthrough operations validated by a runtime ScaleDefinition at lowering');
 
 /** 分类标量：类别取值 */
 export type CategoryValue = z.infer<typeof CategoryValueSchema>;
@@ -403,3 +429,7 @@ export type ThresholdColorScale = z.infer<typeof ThresholdColorScaleSchema>;
 export type QuantileColorScale = z.infer<typeof QuantileColorScaleSchema>;
 /** scale（linear / band / point / ordinal / time / log / pow / sqrt / sequential / diverging / quantize / threshold / quantile） */
 export type Scale = z.infer<typeof ScaleSchema>;
+/** 自定义 scale operation（运行时由 ScaleDefinition 精确校验并解析；type 排除内置） */
+export type CustomScale = z.infer<typeof CustomScaleSchema>;
+/** scale operation（内置精确 13-union ∪ 自定义 type passthrough） */
+export type ScaleOperation = z.infer<typeof ScaleOperationSchema>;

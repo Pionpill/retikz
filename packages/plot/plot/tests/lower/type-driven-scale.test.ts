@@ -2,7 +2,14 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { lowerPlots } from '../../src/pipeline/expand';
-import { assertScaleFieldCompatible, deriveScale } from '../../src/scale/scale';
+import { deriveScale } from '../../src/scale/scale';
+import { assertScaleFieldCompatible as assertScaleFieldCompatibleOp, resolveScaleRegistry } from '../../src/scale/registry';
+import type { PlotFieldTypeValue } from '../../src/ir';
+
+// 内置 scale registry：compat 校验经 registry isFieldCompatible 谓词，测试包一层省去逐处传参。
+const scaleRegistry = resolveScaleRegistry();
+const assertScaleFieldCompatible = (role: string, scaleType: string, fieldType: PlotFieldTypeValue, scaleName: string) =>
+  assertScaleFieldCompatibleOp(role, scaleType, fieldType, scaleName, scaleRegistry);
 
 const compile = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>) =>
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) });

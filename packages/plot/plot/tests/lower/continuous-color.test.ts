@@ -225,15 +225,16 @@ describe('连续色 · temporal sequential（alpha.8 ADR-01）', () => {
 });
 
 describe('连续色 · 非有限 domain 端点 fail-loud（ADR-01 越界一致性，自 adversarial B1 提升）', () => {
+  // 非有限 domain 端点会被 scale schema 的 .finite() 静态拦截；此处刻意绕过静态校验，验证 lowering 期的纵深防御（resolve* finite 守卫）。
   const infinitySpec = (colorScale: Record<string, unknown>): PlotSpec =>
-    PlotSpecSchema.parse({
+    ({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { ...colorScale, name: 'col' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', color: { kind: 'field', value: 'v', scale: 'col' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
-    });
+    }) as unknown as PlotSpec;
   const data = [{ x: 0, y: 0, v: 1 }, { x: 1, y: 1, v: 1e9 }, { x: 2, y: 2, v: 1e18 }];
 
   // 此前 [0, Infinity] 会让 span=Infinity、每点 t=0，所有点静默压成端点色（信息全丢、不报错）

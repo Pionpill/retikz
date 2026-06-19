@@ -4,7 +4,7 @@ import { CoordinateOperationSchema } from './coordinate';
 import { DataRefSchema } from './data';
 import { GuideSchema } from './guide';
 import { MarkSchema } from './mark';
-import { ScaleSchema } from './scale';
+import { ScaleOperationSchema } from './scale';
 import { TransformOperationSchema } from './transform';
 
 /** plot 域 namespace（单一固定值，作 Tier 2 路由键的单一真源） */
@@ -44,8 +44,8 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
     .optional()
     .describe('Ordered data-transform operation pipeline applied to the bound dataset before scale inference and mark lowering; omit for no transform'),
   scales: z
-    .array(ScaleSchema)
-    .describe('Named scales; referenced by coordinate (and by non-positional channels in later versions)'),
+    .array(ScaleOperationSchema)
+    .describe('Named scale ops; built-ins are statically validated, custom types are validated at lowering against runtime scale definitions. Referenced by coordinate roles and non-positional channels by name'),
   colors: z
     .array(z.string().min(1))
     .min(1)

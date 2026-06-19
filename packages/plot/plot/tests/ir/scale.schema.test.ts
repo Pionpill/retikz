@@ -190,8 +190,12 @@ describe('ScaleSchema sequential 连续顺序色阶（alpha.8 ADR-01）', () => 
     expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', domain: [0, 1, 2] })).toThrow();
   });
 
-  it('未知 scheme 被拒', () => {
-    expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', scheme: 'bogus' })).toThrow();
+  it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud，ADR-07）', () => {
+    expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', scheme: 'brand' })).not.toThrow();
+  });
+
+  it('空 scheme 名被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', scheme: '' })).toThrow();
   });
 
   it('range 非字符串被拒', () => {
@@ -250,8 +254,12 @@ describe('ScaleSchema diverging 连续发散色阶（alpha.8 ADR-01）', () => {
     expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', range: ['#f00', '#00f'] })).toThrow();
   });
 
-  it('未知 scheme 被拒', () => {
-    expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', scheme: 'nope' })).toThrow();
+  it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud，ADR-07）', () => {
+    expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', scheme: 'brand' })).not.toThrow();
+  });
+
+  it('空 scheme 名被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', scheme: '' })).toThrow();
   });
 
   // JSON round-trip
@@ -312,8 +320,12 @@ describe('ScaleSchema quantize 等宽离散化（alpha.8 ADR-02）', () => {
     expect(() => ScaleSchema.parse({ type: 'quantize', name: 'col', domain: [0, 1, 2] })).toThrow();
   });
 
-  it('未知 scheme 被拒', () => {
-    expect(() => ScaleSchema.parse({ type: 'quantize', name: 'col', scheme: 'bogus' })).toThrow();
+  it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud，ADR-07）', () => {
+    expect(() => ScaleSchema.parse({ type: 'quantize', name: 'col', scheme: 'brand' })).not.toThrow();
+  });
+
+  it('空 scheme 名被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'quantize', name: 'col', scheme: '' })).toThrow();
   });
 
   // 边界：domain 乱序结构上合法（序校验留 lowering）
@@ -434,8 +446,12 @@ describe('ScaleSchema quantile 分位离散化（alpha.8 ADR-02）', () => {
     expect(() => ScaleSchema.parse({ type: 'quantile', name: 'col', range: ['#fff'] })).toThrow();
   });
 
-  it('未知 scheme 被拒', () => {
-    expect(() => ScaleSchema.parse({ type: 'quantile', name: 'col', scheme: 'nope' })).toThrow();
+  it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud，ADR-07）', () => {
+    expect(() => ScaleSchema.parse({ type: 'quantile', name: 'col', scheme: 'brand' })).not.toThrow();
+  });
+
+  it('空 scheme 名被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'quantile', name: 'col', scheme: '' })).toThrow();
   });
 
   // JSON round-trip

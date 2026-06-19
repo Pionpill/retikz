@@ -1,5 +1,5 @@
 import type { Position } from '@retikz/math';
-import { type Cartesian1DCoordinate, Cartesian1DOrientation, type Cartesian1DOrientationType, type Coordinate, PlotCoordinate, PlotScale, type Scale } from '../ir';
+import { type Cartesian1DCoordinate, Cartesian1DOrientation, type Cartesian1DOrientationType, type Coordinate, PlotCoordinate, PlotScale, type ScaleOperation } from '../ir';
 import { Cartesian1DSchema, Cartesian2DSchema } from '../ir/coordinate';
 import type { GuideContext } from '../guide';
 import { type Rect, computePlotArea } from '../pipeline/layout';
@@ -15,9 +15,9 @@ type Cartesian2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.C
 /** 空刻度集：某维度无 axis 时给 GuideContext 的占位。 */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
 
-/** 仅连续数值 scale 的显式 range 会阻止坐标系把 range 收敛到 plotArea。 */
-const hasExplicitContinuousRange = (def: Scale): boolean =>
-  (def.type === PlotScale.Linear || def.type === PlotScale.Log || def.type === PlotScale.Pow || def.type === PlotScale.Sqrt) && def.range !== undefined;
+/** 仅连续数值 scale 的显式 range 会阻止坐标系把 range 收敛到 plotArea（自定义 type 无内置 range 语义、按可收敛处理）。 */
+const hasExplicitContinuousRange = (def: ScaleOperation): boolean =>
+  (def.type === PlotScale.Linear || def.type === PlotScale.Log || def.type === PlotScale.Pow || def.type === PlotScale.Sqrt) && 'range' in def && def.range !== undefined;
 
 /**
  * 二维笛卡尔运行时坐标帧。

@@ -2,7 +2,7 @@ import type { IRScope } from '@retikz/core';
 import type { Position } from '@retikz/math';
 import type { z } from 'zod';
 import type { GuideContext, LoweredGuide } from '../guide';
-import type { AxisGuide, CoordinateOperation, ExternalRow, Mark, Scale } from '../ir';
+import type { AxisGuide, CoordinateOperation, ExternalRow, Mark, ScaleOperation } from '../ir';
 import type { LegendReserve, Margins } from '../pipeline/layout';
 import type { ProvenanceContext } from '../pipeline/provenance';
 import type { PositionScale } from '../scale';
@@ -64,12 +64,12 @@ export type CoordinateResolveContext = {
     role: DimensionRole,
     opts?: { axis?: 'primary' | 'secondary'; includeBaseline?: boolean; includeLinkSource?: boolean; includeLinkTargets?: boolean },
   ) => Array<unknown>;
-  /** 解析某个定位角色的 scale 定义；未指定 scaleName 时按数据推导默认 scale。 */
-  resolveScaleForRole: (role: DimensionRole, scaleName: string | undefined, values: Array<unknown>, opts?: { includeLinkSource?: boolean }) => Scale;
-  /** 把 scale 定义与数据域、屏幕 range 组合成可投影的位置 scale。 */
-  buildPositionScale: (def: Scale, values: Array<unknown>, range: readonly [number, number]) => PositionScale;
-  /** 校验 interval / area 等依赖 baseline 的 mark 是否可安全使用当前 scale 类型。 */
-  assertBaselineScaleCompatible: (scaleType: Scale['type'], marks: ReadonlyArray<Mark>) => void;
+  /** 解析某个定位角色的 scale operation；未指定 scaleName 时按数据推导默认 scale（含自定义 type）。 */
+  resolveScaleForRole: (role: DimensionRole, scaleName: string | undefined, values: Array<unknown>, opts?: { includeLinkSource?: boolean }) => ScaleOperation;
+  /** 把 scale operation 与数据域、屏幕 range 组合成可投影的位置 scale。 */
+  buildPositionScale: (def: ScaleOperation, values: Array<unknown>, range: readonly [number, number]) => PositionScale;
+  /** 校验 interval / area 等依赖 baseline 的 mark 是否可安全使用当前 scale 类型（type 串，含自定义）。 */
+  assertBaselineScaleCompatible: (scaleType: string, marks: ReadonlyArray<Mark>) => void;
   /** 当前 plot 内所有 axis guide；definition 决定如何将其下沉到 grid / axis 层。 */
   axisGuides: ReadonlyArray<AxisGuide>;
   /** 下沉直线 / 内置 guide 的通用入口。 */

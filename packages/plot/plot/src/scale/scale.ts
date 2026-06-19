@@ -42,7 +42,7 @@ import {
   schemeCategory10,
 } from 'd3-scale-chromatic';
 import { inferCategoryDomain, toTimestamp } from '../data';
-import { type BandScale, type DivergingColorScale, type FieldDef, type LogScale, type Mark, type OrdinalScale, PlotColorScheme, type PlotColorSchemeValue, PlotFieldType, type PlotFieldTypeValue, PlotMark, PlotScale, type PlotScaleValue, type PointScale, type PowScale, type QuantileColorScale, type QuantizeColorScale, type ScalarValue, type Scale, type SequentialColorScale, type SqrtScale, type ThresholdColorScale, type TimeScale } from '../ir';
+import { BUILTIN_COLOR_SCHEMES, type BandScale, type DivergingColorScale, type FieldDef, type LogScale, type OrdinalScale, PlotColorScheme, type PlotColorSchemeValue, PlotFieldType, type PlotFieldTypeValue, PlotScale, type PointScale, type PowScale, type QuantileColorScale, type QuantizeColorScale, type ScalarValue, type Scale, type SequentialColorScale, type SqrtScale, type ThresholdColorScale, type TimeScale } from '../ir';
 
 /** 默认目标刻度数（d3 ticks 的提示值，非硬约束——实际数量按 nice 区间取整定） */
 export const DEFAULT_TICK_COUNT = 5;
@@ -185,8 +185,11 @@ export const resolveOrdinalScale = (
   return value => scale(value);
 };
 
+/** scheme 名 → interpolator（t∈[0,1] → 颜色串）；先查内置、再查自定义；未注册 throw。 */
+export type ColorSchemeResolver = (name: string) => (t: number) => string;
+
 /** 配色方案名 → d3-scale-chromatic interpolator（t∈[0,1] → 颜色串）；命名 scheme 进 IR、求值期映射到函数（函数不进 IR） */
-const SCHEME_INTERPOLATORS: Record<PlotColorSchemeValue, (t: number) => string> = {
+export const SCHEME_INTERPOLATORS: Record<PlotColorSchemeValue, (t: number) => string> = {
   [PlotColorScheme.Blues]: interpolateBlues,
   [PlotColorScheme.Greens]: interpolateGreens,
   [PlotColorScheme.Greys]: interpolateGreys,
@@ -208,6 +211,25 @@ const SCHEME_INTERPOLATORS: Record<PlotColorSchemeValue, (t: number) => string> 
   [PlotColorScheme.RdYlBu]: interpolateRdYlBu,
   [PlotColorScheme.RdYlGn]: interpolateRdYlGn,
   [PlotColorScheme.Spectral]: interpolateSpectral,
+};
+
+/** 内置 scheme 名 → interpolator；未知名 throw（提示经 options.colorSchemes 注册）。自定义解析由调用方在外层叠加。 */
+export const builtinColorSchemeInterpolator: ColorSchemeResolver = name => {
+  if (!BUILTIN_COLOR_SCHEMES.has(name)) {
+    throw new Error(`lowerPlots: unknown color scheme "${name}"; register it via options.colorSchemes`);
+  }
+  return SCHEME_INTERPOLATORS[name as PlotColorSchemeValue];
+};
+
+/**
+ * 建 scheme 解析器：先查内置 SCHEME_INTERPOLATORS、再查自定义 options.colorSchemes，未命中 throw。
+ * @description interpolator 函数不进 IR；IR 只存 scheme 名串，求值期经此解析为函数（含自定义命名配色）。
+ */
+export const makeColorSchemeResolver = (custom?: Record<string, (t: number) => string>): ColorSchemeResolver => name => {
+  if (BUILTIN_COLOR_SCHEMES.has(name)) return SCHEME_INTERPOLATORS[name as PlotColorSchemeValue];
+  const customInterpolator = custom?.[name];
+  if (customInterpolator !== undefined) return customInterpolator;
+  throw new Error(`lowerPlots: unknown color scheme "${name}"; register it via options.colorSchemes`);
 };
 
 /** sequential 缺省配色（感知均匀、色盲友好） */
@@ -238,8 +260,8 @@ const DEFAULT_DISCRETE_SCHEME = PlotColorScheme.Viridis;
  * @description 离散化 scale（quantize / threshold / quantile）的档色单一来源：count 档 → count 个色。
  *   count==1 取 scheme 中点（0.5）；count≥2 端点含 0 与 1（首末档取 scheme 两端）。与 sequential 连续采样同源 interpolator。
  */
-export const sampleSchemeColors = (scheme: PlotColorSchemeValue | undefined, count: number): Array<string> => {
-  const interpolator = SCHEME_INTERPOLATORS[scheme ?? DEFAULT_DISCRETE_SCHEME];
+export const sampleSchemeColors = (scheme: string | undefined, count: number, resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator): Array<string> => {
+  const interpolator = resolveScheme(scheme ?? DEFAULT_DISCRETE_SCHEME);
   if (count <= 1) return [toHexColor(interpolator(0.5))];
   return Array.from({ length: count }, (_unused, index) => toHexColor(interpolator(index / (count - 1))));
 };
@@ -253,7 +275,7 @@ export type ColorScaleEvaluator = (value: number) => string;
  *   range 给定（两端颜色）→ 经 scaleLinear 颜色插值覆盖 scheme；否则用命名 scheme interpolator（缺省 viridis）。
  *   单值数据（min == max 推断）退化为常量取色（端点），不崩。
  */
-export const resolveSequentialColorScale = (def: SequentialColorScale, values: Array<number>): ColorScaleEvaluator => {
+export const resolveSequentialColorScale = (def: SequentialColorScale, values: Array<number>, resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator): ColorScaleEvaluator => {
   const [lo, hi] = def.domain ?? safeExtent(values);
   if (def.domain && !(isFiniteNumber(def.domain[0]) && isFiniteNumber(def.domain[1]))) {
     throw new Error(`lowerPlots: sequential color scale "${def.name}" domain endpoints must be finite numbers (got [${def.domain[0]}, ${def.domain[1]}])`);
@@ -268,7 +290,7 @@ export const resolveSequentialColorScale = (def: SequentialColorScale, values: A
       .clamp(true);
     return value => toHexColor(scale(value));
   }
-  const interpolator = SCHEME_INTERPOLATORS[def.scheme ?? DEFAULT_SEQUENTIAL_SCHEME];
+  const interpolator = resolveScheme(def.scheme ?? DEFAULT_SEQUENTIAL_SCHEME);
   // 退化 domain（min == max）→ position 恒 0.5；正常 domain 线性归一化到 [0, 1] 再喂 interpolator
   const span = hi - lo;
   return value => {
@@ -283,7 +305,7 @@ export const resolveSequentialColorScale = (def: SequentialColorScale, values: A
  *   range 给定（三端点）→ 经三段 scaleLinear 颜色插值覆盖 scheme；否则用命名 diverging scheme（缺省 rdbu），
  *   把 [low, mid, high] 映射到 interpolator 的 [0, 0.5, 1]。
  */
-export const resolveDivergingColorScale = (def: DivergingColorScale, values: Array<number>): ColorScaleEvaluator => {
+export const resolveDivergingColorScale = (def: DivergingColorScale, values: Array<number>, resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator): ColorScaleEvaluator => {
   let low: number;
   let mid: number;
   let high: number;
@@ -308,7 +330,7 @@ export const resolveDivergingColorScale = (def: DivergingColorScale, values: Arr
       .clamp(true);
     return value => toHexColor(scale(value));
   }
-  const interpolator = SCHEME_INTERPOLATORS[def.scheme ?? DEFAULT_DIVERGING_SCHEME];
+  const interpolator = resolveScheme(def.scheme ?? DEFAULT_DIVERGING_SCHEME);
   // [low, mid, high] → interpolator 的 [0, 0.5, 1]：两段线性，退化段（low==mid 等）由分支守住不除零
   return value => {
     let t: number;
@@ -324,20 +346,20 @@ export const resolveDivergingColorScale = (def: DivergingColorScale, values: Arr
 const DEFAULT_DISCRETE_BIN_COUNT = 5;
 
 /** 离散化档色：range 显式给则直用、否则从 scheme 采 binCount 档（range 长度即档数） */
-const discreteBinColors = (range: ReadonlyArray<string> | undefined, scheme: PlotColorSchemeValue | undefined, binCount: number): Array<string> =>
-  range ? [...range] : sampleSchemeColors(scheme, binCount);
+const discreteBinColors = (range: ReadonlyArray<string> | undefined, scheme: string | undefined, binCount: number, resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator): Array<string> =>
+  range ? [...range] : sampleSchemeColors(scheme, binCount, resolveScheme);
 
 /**
  * quantize 颜色 scale 求值：连续 domain [min, max] 等宽切 count 段 → 离散色档（d3 scaleQuantize）
  * @description domain 缺省从数据 [min, max] 推断；count 缺省 5（range 给定时档数 = range.length，覆盖 count）。
  *   range 显式给颜色数组、否则从 scheme 采 count 档。超出 domain 的值落首 / 末档（d3 clamp 语义）。
  */
-export const resolveQuantizeColorScale = (def: QuantizeColorScale, values: Array<number>): ColorScaleEvaluator => {
+export const resolveQuantizeColorScale = (def: QuantizeColorScale, values: Array<number>, resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator): ColorScaleEvaluator => {
   if (def.range && def.count !== undefined && def.range.length !== def.count) {
     throw new Error(`lowerPlots: quantize color scale "${def.name}" range length (${def.range.length}) must equal count (${def.count}) when both are given`);
   }
   const binCount = def.range ? def.range.length : def.count ?? DEFAULT_DISCRETE_BIN_COUNT;
-  const colors = discreteBinColors(def.range, def.scheme, binCount);
+  const colors = discreteBinColors(def.range, def.scheme, binCount, resolveScheme);
   const [lo, hi] = def.domain ?? safeExtent(values);
   const scale = scaleQuantize<string>().domain([lo, hi]).range(colors);
   return value => scale(value);
@@ -349,7 +371,7 @@ export const resolveQuantizeColorScale = (def: QuantizeColorScale, values: Array
  *   range 显式给时长度须 = breakpoints.length + 1（违反 fail-loud）、否则从 scheme 采 breakpoints.length + 1 档。
  *   < 首断点落第 0 档、≥ 末断点落末档（d3 默认语义）。
  */
-export const resolveThresholdColorScale = (def: ThresholdColorScale): ColorScaleEvaluator => {
+export const resolveThresholdColorScale = (def: ThresholdColorScale, resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator): ColorScaleEvaluator => {
   for (let index = 1; index < def.breakpoints.length; index++) {
     if (!(def.breakpoints[index - 1] < def.breakpoints[index])) {
       throw new Error(`lowerPlots: threshold color scale "${def.name}" breakpoints must be strictly ascending (got [${def.breakpoints.join(', ')}])`);
@@ -359,7 +381,7 @@ export const resolveThresholdColorScale = (def: ThresholdColorScale): ColorScale
   if (def.range && def.range.length !== binCount) {
     throw new Error(`lowerPlots: threshold color scale "${def.name}" range length (${def.range.length}) must equal breakpoints.length + 1 (${binCount})`);
   }
-  const colors = discreteBinColors(def.range, def.scheme, binCount);
+  const colors = discreteBinColors(def.range, def.scheme, binCount, resolveScheme);
   const scale = scaleThreshold<number, string>().domain([...def.breakpoints]).range(colors);
   return value => scale(value);
 };
@@ -369,14 +391,57 @@ export const resolveThresholdColorScale = (def: ThresholdColorScale): ColorScale
  * @description count 缺省 5（range 给定时档数 = range.length，覆盖 count）；分位边界纯由数据定（schema 已 strip 显式 domain，此处不读）。
  *   range 显式给颜色数组、否则从 scheme 采 count 档。
  */
-export const resolveQuantileColorScale = (def: QuantileColorScale, values: Array<number>): ColorScaleEvaluator => {
+export const resolveQuantileColorScale = (def: QuantileColorScale, values: Array<number>, resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator): ColorScaleEvaluator => {
   if (def.range && def.count !== undefined && def.range.length !== def.count) {
     throw new Error(`lowerPlots: quantile color scale "${def.name}" range length (${def.range.length}) must equal count (${def.count}) when both are given`);
   }
   const binCount = def.range ? def.range.length : def.count ?? DEFAULT_DISCRETE_BIN_COUNT;
-  const colors = discreteBinColors(def.range, def.scheme, binCount);
+  const colors = discreteBinColors(def.range, def.scheme, binCount, resolveScheme);
   const scale = scaleQuantile<string>().domain([...values]).range(colors);
   return value => scale(value);
+};
+
+/** p 分位（线性插值法）：sortedAscending 已升序，p∈[0,1]（legend 分箱边界用） */
+const quantileAt = (sortedAscending: ReadonlyArray<number>, p: number): number => {
+  if (sortedAscending.length === 0) return 0;
+  if (sortedAscending.length === 1) return sortedAscending[0];
+  const position = p * (sortedAscending.length - 1);
+  const lowerIndex = Math.floor(position);
+  const fraction = position - lowerIndex;
+  const lower = sortedAscending[lowerIndex];
+  const upper = sortedAscending[Math.min(lowerIndex + 1, sortedAscending.length - 1)];
+  return lower + (upper - lower) * fraction;
+};
+
+/**
+ * 离散化色阶 → 档色 + 内部边界（legend 分箱 + channel 解析共用单一来源）
+ * @description quantize：domain 等宽切；threshold：用户断点；quantile：数据分位。
+ *   edges 是档间内部边界（长度 = binCount - 1）；colors 是各档色（range 显式则用、否则从 scheme 采）。
+ */
+export const discretizedBins = (
+  def: QuantizeColorScale | ThresholdColorScale | QuantileColorScale,
+  values: ReadonlyArray<number>,
+  resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
+): { colors: Array<string>; edges: Array<number> } => {
+  if (def.type === PlotScale.Threshold) {
+    const edges = [...def.breakpoints];
+    const binCount = edges.length + 1;
+    const colors = def.range ? [...def.range] : sampleSchemeColors(def.scheme, binCount, resolveScheme);
+    return { colors, edges };
+  }
+  const sorted = [...values].sort((a, b) => a - b);
+  const binCount = def.range ? def.range.length : def.count ?? DEFAULT_DISCRETE_BIN_COUNT;
+  if (def.type === PlotScale.Quantile) {
+    const edges = Array.from({ length: Math.max(0, binCount - 1) }, (_unused, index) => quantileAt(sorted, (index + 1) / binCount));
+    const colors = def.range ? [...def.range] : sampleSchemeColors(def.scheme, binCount, resolveScheme);
+    return { colors, edges };
+  }
+  // quantize：domain 等宽切
+  const lo = def.domain ? def.domain[0] : sorted.length > 0 ? sorted[0] : 0;
+  const hi = def.domain ? def.domain[1] : sorted.length > 0 ? sorted[sorted.length - 1] : 1;
+  const edges = Array.from({ length: Math.max(0, binCount - 1) }, (_unused, index) => lo + ((index + 1) * (hi - lo)) / binCount);
+  const colors = def.range ? [...def.range] : sampleSchemeColors(def.scheme, binCount, resolveScheme);
+  return { colors, edges };
 };
 
 /** 分类 scale 的刻度 = 每类别一刻度（值 = 类别、标签 = 类别串） */
@@ -594,77 +659,6 @@ export const deriveScale = (fieldType: PlotFieldTypeValue | undefined, name: str
   }
 };
 
-/**
- * 类型 ↔ scale 兼容校验（fail-loud，不强转）
- * @description 仅拒明确错配：连续 scale（linear/time）配分类字段（categorical）、分类 scale（band/point）配 temporal。
- *   continuous 灵活（可作连续亦可作分类带），不拦。
- */
-export const assertScaleFieldCompatible = (role: string, scaleType: PlotScaleValue, fieldType: PlotFieldTypeValue, scaleName: string): void => {
-  const continuous =
-    scaleType === PlotScale.Linear ||
-    scaleType === PlotScale.Time ||
-    scaleType === PlotScale.Log ||
-    scaleType === PlotScale.Pow ||
-    scaleType === PlotScale.Sqrt;
-  const categorical = scaleType === PlotScale.Band || scaleType === PlotScale.Point;
-  const fieldCategorical = fieldType === PlotFieldType.Categorical;
-  if (continuous && fieldCategorical) {
-    throw new Error(`lowerPlots: coordinate.${role} scale "${scaleName}" (${scaleType}) incompatible with ${fieldType} field; use band/point`);
-  }
-  if (categorical && fieldType === PlotFieldType.Temporal) {
-    throw new Error(`lowerPlots: coordinate.${role} scale "${scaleName}" (${scaleType}) incompatible with temporal field; use time`);
-  }
-};
-
-/**
- * L1 守卫：非线性连续 scale（log / pow / sqrt）不能作 interval / area 的值轴
- * @description 柱 / 面积的 baseline 含 0，与对数 / 幂的结构冲突（log(0)=-∞）。命中即 fail-loud，
- *   提示改用 point / line（或将来的显式正 baseline 支持）。仅查值轴（cartesian=y、polar=radius）。
- */
-export const assertBaselineScaleCompatible = (valueScaleType: PlotScaleValue, marks: ReadonlyArray<Pick<Mark, 'type'>>): void => {
-  const nonlinear = valueScaleType === PlotScale.Log || valueScaleType === PlotScale.Pow || valueScaleType === PlotScale.Sqrt;
-  if (!nonlinear) return;
-  if (marks.some(mark => mark.type === PlotMark.Interval || mark.type === PlotMark.Region)) {
-    throw new Error(
-      'nonlinear continuous scale (log/pow/sqrt) cannot be used with interval/area because their baseline includes 0; use point/line or wait for explicit positive baseline support',
-    );
-  }
-};
-
-/**
- * 按 scale 定义建对应 PositionScale
- * @description linear / time → 连续；band / point → 分类（按数据序去重推断 domain）。ordinal 不可作位置通道。
- */
-export const resolvePositionScale = (
-  def: Scale,
-  values: Array<unknown>,
-  fallbackRange: readonly [number, number],
-): PositionScale => {
-  switch (def.type) {
-    case PlotScale.Band:
-      return bandPositionScale(resolveBandScale(def, values, fallbackRange));
-    case PlotScale.Point:
-      return pointPositionScale(resolvePointScale(def, values, fallbackRange));
-    case PlotScale.Linear:
-      return linearPositionScale(resolveLinearScale(def, values.filter(isFiniteNumber), fallbackRange));
-    case PlotScale.Time:
-      return timePositionScale(resolveTimeScale(def, values, fallbackRange));
-    case PlotScale.Log:
-      return continuousPositionScale(resolveLogScale(def, values.filter(isFiniteNumber), fallbackRange), value => isFiniteNumber(value) && value > 0);
-    case PlotScale.Sqrt:
-      return continuousPositionScale(resolveSqrtScale(def, values.filter(isFiniteNumber), fallbackRange), value => isFiniteNumber(value) && value >= 0);
-    case PlotScale.Pow: {
-      const integerExponent = Number.isInteger(def.exponent ?? 2);
-      const isValidInput = integerExponent ? isFiniteNumber : (value: unknown) => isFiniteNumber(value) && value >= 0;
-      return continuousPositionScale(resolvePowScale(def, values.filter(isFiniteNumber), fallbackRange), isValidInput);
-    }
-    case PlotScale.Ordinal:
-      throw new Error(`resolvePositionScale: ordinal scale "${def.name}" cannot drive a positional (x/y) channel`);
-    case PlotScale.Sequential:
-    case PlotScale.Diverging:
-    case PlotScale.Quantize:
-    case PlotScale.Threshold:
-    case PlotScale.Quantile:
-      throw new Error(`resolvePositionScale: ${def.type} color scale "${def.name}" cannot drive a positional (x/y) channel; color scales bind the color channel only`);
-  }
-};
+// position 族分派（resolvePositionScale）与 type↔scale / baseline 兼容校验（assertScaleFieldCompatible /
+// assertBaselineScaleCompatible）已迁至 scale/registry.ts，按 ScaleDefinition.family / isFieldCompatible /
+// allowsBaseline 经 registry 分派；本文件保留各 scale 的纯解析 builder（resolve* / *PositionScale）。

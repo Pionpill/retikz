@@ -10,13 +10,13 @@ import {
   type PlotFieldTypeValue,
   PlotMark,
   PlotScale,
-  type PlotScaleValue,
   type PlotSpec,
   type ScalarValue,
   type ScaledMarkValueType,
   type SqrtScale,
 } from '../ir';
 import { resolveLinearScale, resolveSqrtScale } from './scale';
+import { isBuiltinScaleOperation } from './registry';
 
 /**
  * 通道 scale 描述符：legend 据此画 swatch / ramp / 分箱 / 梯度符号
@@ -26,8 +26,8 @@ import { resolveLinearScale, resolveSqrtScale } from './scale';
 export type ScaleDescriptor = {
   /** 描述的非位置通道（color / size / opacity / shape） */
   channel: LegendChannelValue;
-  /** 绑定 scale 的类型（决定 legend 形态：ordinal→swatch、sequential→ramp、quantize→分箱…） */
-  scaleType: PlotScaleValue;
+  /** 绑定 scale 的 type 串（放宽接纳自定义 type；legend 形态改由 ChannelScaleResolution.legendForm 决定，不再据此闭集判） */
+  scaleType: string;
   /** 域：连续 = [min, max]、分类 = 类别序、离散化 = 边界 / 类别 */
   domain: ReadonlyArray<ScalarValue>;
   /** 值域：色串 / 半径 / 不透明度 / shape 名（与 domain 同序或连续端点） */
@@ -128,7 +128,7 @@ export const makeSizeResolver = (node: PlotSpec, rows: Array<ExternalRow>, field
     if (channel.scale !== undefined) {
       const found = scaleByName.get(channel.scale);
       if (!found) throw new Error(`lowerPlots: size channel references unknown scale "${channel.scale}"`);
-      if (found.type !== PlotScale.Sqrt) throw new Error(`lowerPlots: size channel scale "${channel.scale}" must be a sqrt scale (size is a radius / area-perceptual channel)`);
+      if (!isBuiltinScaleOperation(found) || found.type !== PlotScale.Sqrt) throw new Error(`lowerPlots: size channel scale "${channel.scale}" must be a sqrt scale (size is a radius / area-perceptual channel)`);
       def = { ...found, domain: found.domain ?? [0, maxPositive], range: found.range ?? [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS] };
     }
     const scale = resolveSqrtScale(def, numeric, [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS]);
@@ -191,7 +191,7 @@ export const makeNumericStyleResolver = (
       if (channel.scale !== undefined) {
         const found = scaleByName.get(channel.scale);
         if (!found) throw new Error(`lowerPlots: ${channelName} style references unknown scale "${channel.scale}"`);
-        if (found.type !== PlotScale.Linear) throw new Error(`lowerPlots: ${channelName} style scale "${channel.scale}" must be a linear scale`);
+        if (!isBuiltinScaleOperation(found) || found.type !== PlotScale.Linear) throw new Error(`lowerPlots: ${channelName} style scale "${channel.scale}" must be a linear scale`);
         def = { ...found, range: found.range ?? def.range, clamp: found.clamp ?? def.clamp };
       }
       scale = resolveLinearScale(def, numeric, options.range ?? [0, 1]);

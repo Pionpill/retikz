@@ -1,11 +1,21 @@
 # ADR-07：scale registry —— IR scale ops 与 runtime scale definitions 分层；position / channel 两族分派收敛为 registry；公开 `defineScale` + `options.scaleDefinitions` 扩展点
 
-- 状态：Proposed
+- 状态：Accepted（核心已实现，2026-06-19；一处 React 糖与一处通道实现细节按 staged 处理，见下）
 - 决策日期：2026-06-18
 - 关联：[plot v0.1-alpha.12 roadmap](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [ADR-03 mark registry](./03-mark-abstraction-registry.md) · [ADR-05 coordinate registry（同范式样板·三联首篇）](./05-coordinate-registry.md) · [ADR-06 transform registry（同范式样板）](./06-transform-registry.md) · [plot-design.md §8.3](../../../../../architecture/plot-design.md)
 
 > ⚠️ 草案：本 ADR 由 2026-06-18 设计讨论产出，复用 ADR-06 transform 多 LLM 评审沉淀的硬规则（分名分层 / CustomSchema 排除内置 type / 闭合 union + lowering 期校验 / options 注入保 parity）。实现契约为 AI 起草建议稿，待人工 review + 多 LLM 评审后定稿。
 > 本 ADR 是「开放扩展 registry 三联」（coordinate 05 / transform 06 / scale 07）的第三篇（末篇）：ADR-05 收敛 coordinate、ADR-06 收敛 transform、本 ADR 收敛 scale，均开放公开扩展（ADR-03 mark 仅内部收敛不开放）。scale 集成面（coordinate 投影 / guide 刻度 / legend 形态 / 类型派生 / compat）比 transform 广，故公开契约比 ADR-06 多一层（legend + compat）。
+
+## 实现状态（2026-06-19，alpha.12）
+
+落地内容与本文设计一致，**两处与草案的偏差需备注**：
+
+1. **命名：`ScaleOp` → `ScaleOperation`。** 与 ADR-05 `CoordinateOperation` / ADR-06 `TransformOperation` 对齐（不用 `Op` 缩写）：schema 名 `ScaleOperationSchema`、类型 `ScaleOperation`、泛型参数 `TScaleOperation`、本地变量 `operation`。本文正文为草案期写法，以代码命名为准。
+2. **channel 单一来源的实现取「同 definition 确定性重算」而非「共享单实例」。** mark 取色（`makeColorResolver`）与 legend（`resolveColorLegend`）各自调用同一 `resolveChannelScale(operation, values, ctx, registry)`：definition 纯且确定，相同入参产相同 `ChannelScaleResolution`（`of` / `legendForm` / `domain` / `range` / `edges`），故「实绘 / legend 同源、不漂移」由 definition 纯性保证，代价是各算一次（非共享实例）。原因：共享单实例需把每 (scaleName, field) 的解析缓存穿过 expand → legend 两段，改动面与回归风险更大；当前实现以更低风险达成同源契约。后续若出现性能或多绑定歧义诉求，再引入 per-spec 解析缓存。
+3. **builtin scale operation 在 `parseScaleOperation` 直接透传、不再二次 schema parse。** 内置 op 已是精确 `Scale`（`PlotSpecSchema` 静态校验 + `resolve*` 运行时深校验，如 finite domain / 升序断点 / 正 log 域），透传以保留信息化错误消息；仅自定义 op 走 `definition.schema` 深解析 + JSON 双校验。与 ADR-05/06 对内置也 reparse 略有差异，原因是 scale 的 `resolve*` 携带丰富运行时校验、reparse 会以泛化 ZodError 抢先吞掉。
+
+**staged（未随本次落地，已记入版本 roadmap）：** React `<Scale type={customType} ...config>` 糖的自定义 type + 扁平 config 透传。现状：自定义 scale 经**程序化路径**全可用——`<Plot spec={...} scaleDefinitions={[...]} colorSchemes={{...}}>`、`renderPlot(spec, data, { scaleDefinitions, colorSchemes })`、`buildPlotSpec` options 直传；React **声明式 `<Scale>` 糖**仍只接受内置 `PositionScaleType`。原因：`build-plot-spec` 的 scale 装配（`collectExplicitScales` / `buildCartesianXScale` / `buildAngleScale` / band 冲突校验）按内置类型枚举编排，放宽为携带 config 的自定义 op 透传需改动其多函数并补等价性测试，风险高于其余部分，按「channel last + flagged」原则单列。
 
 ## 名词分层（贯穿全文，先立后用）
 
