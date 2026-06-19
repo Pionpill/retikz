@@ -19,11 +19,19 @@ Each transform section below contains its behavior, example, and configuration.
 
 `sort` reorders rows by one field while preserving the original relative order for ties. It is useful before path/line marks, or before stack when input order matters.
 
-It sorts **data rows**. It does not change category order for axes, legends, or categorical colors; use [category order](/plot/grammar/data/model#category-order-order) in the data model for that.
+Keep it distinct from the data model's [`order`](/plot/grammar/data/model#category-order-order): `sort` reorders **data rows**, while `order` reorders the **categorical domain**; they do not affect each other.
+
+| Dimension | `sort` transform | model `order` |
+| --- | --- | --- |
+| Reorders | data row order | categorical domain |
+| Affects | connection order, stack input | axis ticks, legend, colors |
+| Applies to | any field | `categorical` only |
+
+Use `order` to fix axis or legend category order; use `sort` to control row order (connection order, stack input).
 
 <ComponentPreview name="transform-sort" sourceFiles={['transform-sort.data.ts']} />
 
-<p className="text-sm text-muted-foreground">The input rows are intentionally ordered as months 3, 1, 4, 2, 6, 5; sort makes the path connect by month.</p>
+<p className="text-sm text-muted-foreground">Left: the path follows the raw row order (months 3, 1, 4, 2, 6, 5) and folds back on itself; right: sort makes it connect by month.</p>
 
 Configuration:
 
@@ -95,7 +103,7 @@ Configuration:
 
 <ComponentPreview name="transform-jitter" sourceFiles={['transform-jitter.data.ts']} />
 
-<p className="text-sm text-muted-foreground">Four overlapping points at each of three doses, spread out along x.</p>
+<p className="text-sm text-muted-foreground">Left: four points overlap at the same x for each of three doses; right: jitter spreads them along x to reveal the distribution.</p>
 
 v1 jitter only applies to continuous numeric fields. Screen-space spreading inside a categorical band is not handled by this transform layer.
 

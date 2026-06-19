@@ -19,11 +19,19 @@ description: 行级变换保持输入行数不变，用于排序、堆叠、组�
 
 `sort` 按一个字段重排行，等值时保持原始相对顺序。它常用于在 line/path 前控制连接顺序，或在 stack 前固定输入顺序。
 
-它排的是**数据行**，不会改变分类轴、图例或分类颜色的类别顺序。要固定这些类别顺序，用数据模型里的[分类顺序](/plot/grammar/data/model#分类顺序)。
+注意把它和数据模型里的 [`order`](/plot/grammar/data/model#分类顺序) 分开：`sort` 重排**数据行**，`order` 重排**分类域**，两者互不影响。
+
+| 维度 | `sort` 变换 | model 的 `order` |
+| --- | --- | --- |
+| 排的是 | 数据行顺序 | 分类域顺序 |
+| 影响 | 连接顺序、stack 输入 | 轴刻度、图例、颜色 |
+| 适用字段 | 任意字段 | 仅 `categorical` |
+
+想固定轴或图例的类别顺序用 `order`；想控制行序（连接顺序、stack 输入）才用 `sort`。
 
 <ComponentPreview name="transform-sort" sourceFiles={['transform-sort.data.ts']} />
 
-<p className="text-sm text-muted-foreground">输入行故意按 3、1、4、2、6、5 月乱序，sort 后折线按月份顺序连接。</p>
+<p className="text-sm text-muted-foreground">左：按原始乱序行序（3、1、4、2、6、5 月）连线，折线来回折返；右：sort 后按月份顺序连接。</p>
 
 配置项：
 
@@ -95,7 +103,7 @@ normalize 和 stack 组合就是百分比堆叠：先把每组转成占比，再
 
 <ComponentPreview name="transform-jitter" sourceFiles={['transform-jitter.data.ts']} />
 
-<p className="text-sm text-muted-foreground">三个剂量上各 4 个重叠点，沿 x 抖开后可见分布。</p>
+<p className="text-sm text-muted-foreground">左：三个剂量上各 4 个点挤在同一 x 上重叠；右：jitter 沿 x 抖开后分布可见。</p>
 
 v1 的 jitter 只作用于连续数值字段。分类 band 内部的屏幕空间抖动不是这层 transform 处理的事情。
 

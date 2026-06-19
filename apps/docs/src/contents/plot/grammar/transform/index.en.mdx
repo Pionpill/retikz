@@ -3,7 +3,11 @@ title: Transforms
 description: Transforms are the statistics layer of the grammar: they rewrite rows before scales and marks. A transform pipeline can preserve row count or emit new rows per bin or group.
 ---
 
-`transform` runs after data preparation and before scales and marks. It is independent of the final mark type: the same transformed rows can feed bars, lines, points, or regions.
+`transform` is the **statistics layer** of the grammar: after data is aligned into a field model and before scales and marks, it rewrites data rows into a shape that marks consume more easily. It is independent of the final mark type — sorting, deriving fields, stacking, binning, and grouped summaries all happen here.
+
+In the pipeline, transforms sit **downstream of the canonical rows produced by the [data layer](/plot/grammar/data) and upstream of scale inference, mark lowering, and locators**. Multiple `<Transform>` children fold into a pipeline in declaration order: the output rows of one transform are the input rows of the next. Each transform either preserves the row count or changes it per bin or group, and the derived fields it produces do not need to appear in `model`.
+
+<ComponentPreview name="transform-pipeline" size="sm" hideCode />
 
 ## Responsibilities
 
@@ -32,31 +36,6 @@ For programmatic construction, `<Plot dataTransforms={[...]}>` can pass a transf
 ## Custom Transforms
 
 Beyond the built-in transforms, define your own data processor with `defineTransform`. The spec still stores only the JSON operation, such as `{ kind: 'double-x', field: 'x', as: 'x2' }`; the schema, field collection, and runtime function live in the definition passed through `<Plot transformDefinitions={[...]}>`.
-
-```tsx
-import { defineTransform } from '@retikz/plot';
-import { z } from 'zod';
-
-const doubleX = defineTransform({
-  schema: z.object({
-    kind: z.literal('double-x').describe('Discriminator: double one numeric field'),
-    field: z.string().min(1).describe('Input field read from each row'),
-    as: z.string().min(1).describe('Output field written to each row'),
-  }),
-  inputFields: operation => [operation.field],
-  outputFields: operation => [operation.as],
-  apply: (rows, operation) =>
-    rows.map(row => ({
-      ...row,
-      [operation.as]: Number(row[operation.field]) * 2,
-    })),
-});
-
-<Plot data={rows} model={model} transformDefinitions={[doubleX]}>
-  <Transform kind="double-x" field="x" as="x2" />
-  <PointMark x="x2" y="y" />
-</Plot>;
-```
 
 <ComponentPreview name="transform-custom" sourceFiles={['transform-custom.data.ts']} />
 

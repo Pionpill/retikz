@@ -3,7 +3,11 @@ title: 变换
 description: transform 是图形语法的统计层：在比例尺和图元之前重写数据行。变换按声明顺序组成管线，可以保持行数，也可以按箱或分组生成新行。
 ---
 
-`transform` 发生在数据准备之后、比例尺和图元之前。它不关心最后画成柱、线还是点，只负责把输入行改写成图元更容易消费的行。
+`transform` 是图形语法的**统计层**：在数据对齐成字段模型之后、比例尺和图元之前，把数据行重写成图元更容易消费的形态。它不关心最后画成柱、线还是点，只负责改写行——排序、派生字段、堆叠、分箱、分组统计都发生在这一层。
+
+变换在管线里**上接[数据层](/plot/grammar/data)产出的 canonical 行，下接 scale 推断、mark lowering 和 locator**。多个 `<Transform>` 按声明顺序折叠成一条管线：前一个变换的输出行就是后一个的输入行。每个变换要么保持行数，要么按箱或分组改变行数，产出的派生字段不必写进 `model`。
+
+<ComponentPreview name="transform-pipeline" size="sm" hideCode />
 
 ## 职责一览
 
@@ -32,31 +36,6 @@ description: transform 是图形语法的统计层：在比例尺和图元之前
 ## 自定义 transform
 
 内置 transform 之外，可以用 `defineTransform` 注册自己的数据处理器。写进 spec 的仍然只是 JSON operation，例如 `{ kind: 'double-x', field: 'x', as: 'x2' }`；真正的 schema、字段收集和执行函数放在 runtime definition 里，再通过 `<Plot transformDefinitions={[...]}>` 注入。
-
-```tsx
-import { defineTransform } from '@retikz/plot';
-import { z } from 'zod';
-
-const doubleX = defineTransform({
-  schema: z.object({
-    kind: z.literal('double-x').describe('Discriminator: double one numeric field'),
-    field: z.string().min(1).describe('Input field read from each row'),
-    as: z.string().min(1).describe('Output field written to each row'),
-  }),
-  inputFields: operation => [operation.field],
-  outputFields: operation => [operation.as],
-  apply: (rows, operation) =>
-    rows.map(row => ({
-      ...row,
-      [operation.as]: Number(row[operation.field]) * 2,
-    })),
-});
-
-<Plot data={rows} model={model} transformDefinitions={[doubleX]}>
-  <Transform kind="double-x" field="x" as="x2" />
-  <PointMark x="x2" y="y" />
-</Plot>;
-```
 
 <ComponentPreview name="transform-custom" sourceFiles={['transform-custom.data.ts']} />
 
