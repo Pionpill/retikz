@@ -1,5 +1,5 @@
 import type { IRJsonObject } from '@retikz/core';
-import { type ExternalDatasets, type ExternalRow, type Mark, PlotMark, type PlotSpec } from '../schemas';
+import { type ExternalDatasets, type ExternalRow, type Mark, type MarkOperation, PlotMark, type PlotSpec, isBuiltinMark } from '../schemas';
 import { type IntervalContext, buildGenericIntervalContext, buildIntervalContext, datumAnchor } from '../providers';
 import { type LowerPlotsOptions, prepareRows, resolveFrame } from '../pipeline/expand';
 import { resolveFieldPath } from '../data';
@@ -52,8 +52,8 @@ export type PlotLocator = {
 const seriesFieldOf = (mark: Mark): string | undefined =>
   mark.type === PlotMark.Path || mark.type === PlotMark.Interval || mark.type === PlotMark.Region ? mark.series : undefined;
 
-/** datum-bearing mark（展成独立可见 Node 的 mark）：point / interval（含 heatmap cell / sector，皆 interval） */
-const isDatumBearing = (mark: Mark): boolean => mark.type === PlotMark.Point || mark.type === PlotMark.Interval;
+/** datum-bearing mark（展成独立可见 Node 的 mark）：point / interval（含 heatmap cell / sector，皆 interval）；自定义 mark 非 datum-bearing。 */
+const isDatumBearing = (mark: MarkOperation): mark is Mark => isBuiltinMark(mark) && (mark.type === PlotMark.Point || mark.type === PlotMark.Interval);
 
 /**
  * 用与 lowerPlots 同一份 spec + datasets + options 建 locator（复用 ADR-01 resolveFrame，投影单一真源）
@@ -108,8 +108,8 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
 
   // 每 mark 的 IntervalContext 一次性建（interval mark 锚点需要；其余 mark undefined）——与 lowering 同源（#1）。
   const intervalContexts = new Map<number, IntervalContext>();
-  const intervalContextOf = (markIndex: number, mark: Mark): IntervalContext | undefined => {
-    if (mark.type !== PlotMark.Interval) return undefined;
+  const intervalContextOf = (markIndex: number, mark: MarkOperation): IntervalContext | undefined => {
+    if (!isBuiltinMark(mark) || mark.type !== PlotMark.Interval) return undefined;
     // interval 在 cartesian2D / polar2D 需要内置 IntervalContext；自定义 frame 仅在 grouped band 时需要 generic context。
     if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
       if (!isGenericCoordinateFrame(frame)) return undefined;
@@ -126,7 +126,7 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
     return ctx;
   };
 
-  const markOf = (markIndex: number): Mark | undefined => spec.marks[markIndex];
+  const markOf = (markIndex: number): MarkOperation | undefined => spec.marks[markIndex];
   const defaultMarkIndex = 0;
 
   // #3：datumIdField 设时构建期跑 plot 级 registrar（与 lowering 同序：mark 序 × transformedIndex 序、
@@ -155,7 +155,7 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
   /** 算某 (markIndex, transformedIndex) 的锚点（越界 / 未渲染 → null） */
   const anchorAt = (markIndex: number, transformedIndex: number): { position: [number, number]; row: ExternalRow; mark: Mark } | null => {
     const mark = markOf(markIndex);
-    if (!mark) return null;
+    if (!mark || !isBuiltinMark(mark)) return null; // 自定义 mark 非 datum-bearing，locator 跳过
     if (!Number.isInteger(transformedIndex) || transformedIndex < 0 || transformedIndex >= rows.length) return null;
     const row = rows[transformedIndex];
     const position = datumAnchor(mark, row, frame, intervalContextOf(markIndex, mark));
@@ -177,7 +177,7 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
   const series: PlotLocator['series'] = (value, opts) => {
     const markIndex = opts?.markIndex ?? defaultMarkIndex;
     const mark = markOf(markIndex);
-    if (!mark) return null;
+    if (!mark || !isBuiltinMark(mark)) return null; // 自定义 mark 无内置 series 语义，locator 跳过
     const seriesField = seriesFieldOf(mark);
     if (seriesField === undefined) return null;
     const ctx = intervalContextOf(markIndex, mark);

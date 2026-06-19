@@ -2,7 +2,7 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { type IntervalMark, type Mark, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { type IntervalMark, type PlotSpec, PlotSpecSchema, isBuiltinMark } from '../../src/schemas';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { buildIntervalContext, cellGeometryAnchor, datumAnchor } from '../../src/providers';
 import { lowerMark } from '../../src/providers';
@@ -229,8 +229,8 @@ const intervalMarkSpec = (): PlotSpec =>
 
 /** 取首个 interval mark（窄化为 IntervalMark，供需 IntervalMark 的 buildIntervalContext 用） */
 const firstIntervalMark = (spec: PlotSpec): IntervalMark => {
-  const mark: Mark = spec.marks[0];
-  if (mark.type !== 'interval') throw new Error('expected interval mark');
+  const mark = spec.marks[0];
+  if (!isBuiltinMark(mark) || mark.type !== 'interval') throw new Error('expected interval mark');
   return mark;
 };
 

@@ -1,6 +1,6 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope, type IRStep } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
-import { type ExternalRow, type IntervalMark, type LinkMark, type Mark, type PathMark, PlotMark, type PlotMarkValue, type PointMark, type ReferenceMark, type RegionMark } from '../../schemas';
+import { type ExternalRow, type IntervalMark, type LinkMark, type Mark, type MarkOperation, type PathMark, PlotMark, type PlotMarkValue, type PointMark, type ReferenceMark, type RegionMark } from '../../schemas';
 import { type IntervalContext, LINK_DEFAULT_CURVATURE, buildGenericIntervalContext, buildIntervalContext, datumAnchor, linkBandGeometry, linkEndpoints, markCell, roleValues } from './anchor';
 import { type FieldCollector, channelValue, compareByPath, inferCategoryDomain, resolveFieldPath } from '../../data';
 import type { AnyMarkDefinition, MarkDefinition } from '../../contract/mark';
@@ -1036,7 +1036,7 @@ export const resolveMarkRegistry = (custom?: ReadonlyArray<AnyMarkDefinition>): 
 };
 
 /** 查找 mark definition；未知 type 必须 fail-loud，避免静默跳过图元下沉。 */
-const markDefinitionOf = (mark: Mark, registry: ReadonlyMap<string, AnyMarkDefinition>): AnyMarkDefinition => {
+const markDefinitionOf = (mark: MarkOperation, registry: ReadonlyMap<string, AnyMarkDefinition>): AnyMarkDefinition => {
   const def = registry.get(mark.type);
   if (def === undefined) {
     throw new Error(`lowerPlots: mark type "${mark.type}" is not registered; pass a MarkDefinition via options.markDefinitions`);
@@ -1044,7 +1044,7 @@ const markDefinitionOf = (mark: Mark, registry: ReadonlyMap<string, AnyMarkDefin
   return def;
 };
 
-export const collectMarkFields = (mark: Mark, fields: FieldCollector, registry: ReadonlyMap<string, AnyMarkDefinition> = BUILTIN_MARK_REGISTRY): void => {
+export const collectMarkFields = (mark: MarkOperation, fields: FieldCollector, registry: ReadonlyMap<string, AnyMarkDefinition> = BUILTIN_MARK_REGISTRY): void => {
   markDefinitionOf(mark, registry).collectFields?.(mark as never, fields);
 };
 
@@ -1055,7 +1055,7 @@ export const collectMarkFields = (mark: Mark, fields: FieldCollector, registry: 
  *   markProvenance 给定（provenance 开）→ 给图层 / series Path / datum Node 绑 id + 来源 meta。
  */
 export const lowerMark = (
-  mark: Mark,
+  mark: MarkOperation,
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   channels: MarkChannels = {},

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PaintSpecSchema, type ValueOf } from '@retikz/core';
+import { JsonObjectSchema, PaintSpecSchema, type ValueOf } from '@retikz/core';
 import { ChannelSchema, EncodingSchema, MarkLabelSchema, PointEncodingSchema, StyleEncodingSchema } from './encoding';
 
 /**
@@ -328,6 +328,36 @@ export const MarkSchema = z
   .discriminatedUnion('type', [PointMarkSchema, PathMarkSchema, RegionMarkSchema, IntervalMarkSchema, ReferenceMarkSchema, LinkMarkSchema])
   .describe('Mark union: 4 dimensional marks (point / path / region / interval) + 2 special marks (link / reference)');
 
+/** 内置 mark type 集合；自定义 mark 的 type 不能与之冲突。 */
+export const BUILTIN_MARK_TYPES = new Set<string>(Object.values(PlotMark));
+
+export const CustomMarkSchema = z
+  .object({
+    type: z
+      .string()
+      .min(1)
+      .refine(type => !BUILTIN_MARK_TYPES.has(type), {
+        message: 'custom mark type must not collide with a built-in mark type',
+      })
+      .describe('Discriminator: custom mark type; must be a non-empty, non-built-in identifier registered through options.markDefinitions'),
+    encoding: EncodingSchema.optional().describe('Position / visual channels; reuses the shared encoding so a custom mark contributes to scale inference like built-in marks'),
+  })
+  .passthrough()
+  .superRefine((operation, ctx) => {
+    const result = JsonObjectSchema.safeParse(operation);
+    if (!result.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'custom mark operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
+      });
+    }
+  })
+  .describe('Custom mark operation: type is any non-built-in identifier; its config is validated at lowering time against the matching MarkDefinition supplied via options.markDefinitions');
+
+export const MarkOperationSchema = z
+  .union([MarkSchema, CustomMarkSchema])
+  .describe('Mark operation union: built-in mark configs plus custom type passthrough operations validated by a runtime MarkDefinition');
+
 /** point mark（散点 + 文本标签） */
 export type PointMark = z.infer<typeof PointMarkSchema>;
 /** mark 值来源变体 */
@@ -374,3 +404,10 @@ export type LinkEndpoint = z.infer<typeof LinkEndpointSchema>;
 export type LinkMark = z.infer<typeof LinkMarkSchema>;
 /** mark（point / path / region / interval / reference / link） */
 export type Mark = z.infer<typeof MarkSchema>;
+/** custom mark operation（自定义 type passthrough，由 runtime MarkDefinition 解释） */
+export type CustomMark = z.infer<typeof CustomMarkSchema>;
+/** mark operation（内置 ∪ 自定义 type passthrough） */
+export type MarkOperation = z.infer<typeof MarkOperationSchema>;
+
+/** mark operation 是否内置；把放宽后的 union 收窄回精确内置 Mark，供 lowering 内置专属几何分支门控。 */
+export const isBuiltinMark = (mark: MarkOperation): mark is Mark => BUILTIN_MARK_TYPES.has(mark.type);

@@ -3,7 +3,7 @@ import { CompositeBaseSchema, JsonObjectSchema, type ValueOf } from '@retikz/cor
 import { CoordinateOperationSchema } from './coordinate';
 import { DataRefSchema } from './data';
 import { GuideSchema } from './guide';
-import { MarkSchema } from './mark';
+import { MarkOperationSchema } from './mark';
 import { ScaleOperationSchema } from './scale';
 import { TransformOperationSchema } from './transform';
 
@@ -68,7 +68,7 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
       "The panel's intrinsic height in user units, used as the plot area sizing basis when this node is composed alongside others. Omit to fall back to the lowerPlots global height, then the built-in default.",
     ),
   coordinate: CoordinateOperationSchema.describe('The coordinate system operation; built-ins are statically validated, custom types are validated against runtime coordinate definitions'),
-  marks: z.array(MarkSchema).min(1).describe('Mark layers, drawn in array order (stable z-order)'),
+  marks: z.array(MarkOperationSchema).min(1).describe('Mark layers, drawn in array order (stable z-order); built-in mark configs or custom type passthrough validated by a runtime MarkDefinition'),
   guides: z
     .array(GuideSchema)
     .optional()

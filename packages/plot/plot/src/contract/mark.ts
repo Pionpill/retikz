@@ -1,5 +1,5 @@
 import type { IRChild } from '@retikz/core';
-import type { ExternalRow, Mark } from '../schemas';
+import type { ExternalRow, Mark, MarkOperation } from '../schemas';
 import type { FieldCollector } from '../data';
 import type { Cell, CoordinateFrame, DimensionRole } from './coordinate';
 import type { IntervalContext, MarkChannels, MarkProvenance } from '../providers/mark';
@@ -9,7 +9,7 @@ import type { IntervalContext, MarkChannels, MarkProvenance } from '../providers
  * @description IR schema 仍是 ir/mark.ts 静态单一真源；本接口只承载「某 mark type 怎么下沉成 core IR」的行为，
  *   对齐仓库已有的 composite / coordinate / transform / scale 工厂注册范式。内置与自定义 mark 都经同一 registry 分派。
  */
-export type MarkDefinition<T extends Mark = Mark> = {
+export type MarkDefinition<T extends MarkOperation = Mark> = {
   /** 注册键（= IR 判别串；内置对应 ir/mark.ts 静态 schema 的成员，自定义为任意非内置串） */
   type: string;
   /** 收集该 mark 额外引用的用户源字段；通用 encoding / label 字段由 data 层统一处理 */
@@ -26,7 +26,7 @@ export type MarkDefinition<T extends Mark = Mark> = {
  * 定义一个 mark definition。
  * @description 保留 collectFields / buildCell / lower 之间对 mark 子类型的强类型关联；内置与自定义 mark 都经同一 registry 入口分派。
  */
-export const defineMark = <T extends Mark>(def: MarkDefinition<T>): MarkDefinition<T> => def;
+export const defineMark = <T extends MarkOperation = Mark>(def: MarkDefinition<T>): MarkDefinition<T> => def;
 
 /**
  * registry 内部使用的宽类型。

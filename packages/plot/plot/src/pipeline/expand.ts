@@ -1,6 +1,6 @@
 import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, JsonObjectSchema, defineComposite } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
-import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation } from '../schemas';
+import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type MarkOperation, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
 import { resolveIntervalBound } from '../providers';
 import { type ResolveField, type ResolveLabel, applyFieldResolver, assertAllValuesValid, channelValue, collectFormatFields, labelOf, normalizeRows, resolveFieldPath, resolveFieldTypes, toTimestamp, validateBoundData } from '../data';
 import { type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../guide/guide';
@@ -26,7 +26,7 @@ const linkTargetChannelOf = (mark: Mark, role: 'x' | 'y'): Channel | undefined =
  * @description band / span → 取 encoding 位置通道值（band 为类别、span 为值，baseline 由 includeBaseline 纳入）；
  *   extent → 取两字段（histogram 箱边 / 堆叠 y0,y1 / 累积饼角 start,end）；full → 不贡献（满铺坐标域）。
  */
-const intervalRoleValues = (mark: IntervalMark, axis: 'primary' | 'secondary', pick: (mark: Mark) => Channel | undefined, rows: Array<ExternalRow>): Array<unknown> => {
+const intervalRoleValues = (mark: IntervalMark, axis: 'primary' | 'secondary', pick: (mark: MarkOperation) => Channel | undefined, rows: Array<ExternalRow>): Array<unknown> => {
   const bound = resolveIntervalBound(mark, axis === 'primary' ? 'x' : 'y');
   if (bound.kind === IntervalBoundKind.Extent) return rows.flatMap(row => [resolveFieldPath(row, bound.from), resolveFieldPath(row, bound.to)]);
   if (bound.kind === IntervalBoundKind.Full) return [];
@@ -51,18 +51,21 @@ const pointMarkValueChannel =(value: { kind: 'field' | 'constant'; value: unknow
   return value.kind === 'field' ? { field: String(value.value), ...(value.scale !== undefined ? { scale: value.scale } : {}) } : { value: value.value as Channel['value'] };
 };
 
-const markColorChannel = (mark: Mark): Channel | undefined => {
-  if (mark.type === PlotMark.Point) return pointMarkValueChannel(mark.color);
-  return mark.encoding.color;
+/** 读 mark 的 encoding（内置与自定义共享 EncodingSchema 形态）；自定义 mark 缺 encoding 时 undefined。 */
+const markEncoding = (mark: MarkOperation): Record<string, Channel | undefined> | undefined => (mark as { encoding?: Record<string, Channel | undefined> }).encoding;
+
+const markColorChannel = (mark: MarkOperation): Channel | undefined => {
+  if (isBuiltinMark(mark) && mark.type === PlotMark.Point) return pointMarkValueChannel(mark.color);
+  return markEncoding(mark)?.color;
 };
 
-const pointStrokeChannel = (mark: Mark): Channel | undefined => {
-  if (mark.type !== PlotMark.Point || mark.stroke === undefined) return undefined;
+const pointStrokeChannel = (mark: MarkOperation): Channel | undefined => {
+  if (!isBuiltinMark(mark) || mark.type !== PlotMark.Point || mark.stroke === undefined) return undefined;
   return mark.stroke.kind === 'field' ? { field: mark.stroke.value, ...(mark.stroke.scale !== undefined ? { scale: mark.stroke.scale } : {}) } : { value: mark.stroke.value };
 };
 
-const pointFillChannel = (mark: Mark): Channel | undefined => {
-  if (mark.type !== PlotMark.Point || mark.fill === undefined || mark.fill.kind !== 'field') return undefined;
+const pointFillChannel = (mark: MarkOperation): Channel | undefined => {
+  if (!isBuiltinMark(mark) || mark.type !== PlotMark.Point || mark.fill === undefined || mark.fill.kind !== 'field') return undefined;
   return { field: mark.fill.value, ...(mark.fill.scale !== undefined ? { scale: mark.fill.scale } : {}) };
 };
 
@@ -87,9 +90,11 @@ const assertValidGuideDimensions = (coordinateType: string, roles: ReadonlyArray
  * 按坐标系必填角色集校验每个位置 mark 的 encoding（ADR-01；x/y 转可选后必填性下放此处）
  * @description sector 无位置通道（角度来自累积界）→ 跳过；其余 mark 缺任一必填角色通道 → fail-loud。
  */
-const assertRequiredPositionChannels = (coordinateType: string, roles: ReadonlyArray<'x' | 'y' | 'z'>, marks: ReadonlyArray<Mark>): void => {
+const assertRequiredPositionChannels = (coordinateType: string, roles: ReadonlyArray<'x' | 'y' | 'z'>, marks: ReadonlyArray<MarkOperation>): void => {
   const required = roles;
   for (const mark of marks) {
+    // 自定义 mark：必填位置通道由其 MarkDefinition.lower 自行 fail-loud，不在通用校验内强制
+    if (!isBuiltinMark(mark)) continue;
     // reference 取向由 encoding.x XOR y 决定（绑一个、缺一个）；其取向校验在 lowerReference fail-loud
     if (mark.type === PlotMark.Reference) continue;
     // link 位置来自 source / target 字段对（非 encoding.x/y）；端点缺失校验在 lowerLink fail-loud
@@ -244,19 +249,19 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   // role 决定从哪个通道取值：cartesian 用 x/y；polar 用 angle??x / radius??y（mark 不写死笛卡尔）。
   const collectValues = (
     axis: 'primary' | 'secondary' | undefined,
-    pick: (mark: Mark) => Channel | undefined,
+    pick: (mark: MarkOperation) => Channel | undefined,
     includeBaseline: boolean,
     ribbonRole?: 'x' | 'y',
   ): Array<unknown> => {
     const out: Array<unknown> = [];
     for (const mark of node.marks) {
       // interval：域贡献按 bounds 来源（band/span → 位置通道值、extent → 两字段、full → 不贡献），统一替代旧 histogram / stack / sector 特判
-      if (mark.type === PlotMark.Interval && axis !== undefined) {
+      if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && axis !== undefined) {
         out.push(...intervalRoleValues(mark, axis, pick, rows));
         continue;
       }
       // link 两端都进位置 scale 域：source 端走 pick（= source.x/y），target 端单独收（否则 target 投影越界）
-      if (ribbonRole !== undefined && mark.type === PlotMark.Link) {
+      if (ribbonRole !== undefined && isBuiltinMark(mark) && mark.type === PlotMark.Link) {
         const sourceChannel = pick(mark);
         const targetChannel = linkTargetChannelOf(mark, ribbonRole);
         for (const row of rows) {
@@ -273,16 +278,16 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     }
     // 值轴从 baseline 起：interval span / extent + region 把 baseline 纳入连续域（即便所有值同号）
     if (includeBaseline) {
-      if (axis !== undefined && node.marks.some(mark => mark.type === PlotMark.Interval && intervalContributesBaseline(mark, axis))) out.push(0);
+      if (axis !== undefined && node.marks.some(mark => isBuiltinMark(mark) && mark.type === PlotMark.Interval && intervalContributesBaseline(mark, axis))) out.push(0);
       for (const mark of node.marks) {
-        if (mark.type === PlotMark.Region) out.push(mark.baseline ?? 0);
+        if (isBuiltinMark(mark) && mark.type === PlotMark.Region) out.push(mark.baseline ?? 0);
       }
     }
     return out;
   };
 
   // 某角色（跨所有 mark）绑定字段的全部类型——多 mark 共用一角色时须校验 / 派生全部，不能只看首个
-  const roleFieldTypes = (pick: (mark: Mark) => Channel | undefined): Array<PlotFieldTypeValue> => {
+  const roleFieldTypes = (pick: (mark: MarkOperation) => Channel | undefined): Array<PlotFieldTypeValue> => {
     const types: Array<PlotFieldTypeValue> = [];
     for (const mark of node.marks) {
       const channel = pick(mark);
@@ -304,7 +309,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
    * @description 收集该 role 各绑定字段的非默认 order（!=='data'）：非分类字段配 order → throw；
    *   ≥2 个不同非默认 order → throw；恰好 1 个 → 返回它；0 个 → undefined（保持现状出现序）。
    */
-  const resolveRoleOrder = (role: string, pick: (mark: Mark) => Channel | undefined): CategoryOrder | undefined => {
+  const resolveRoleOrder = (role: string, pick: (mark: MarkOperation) => Channel | undefined): CategoryOrder | undefined => {
     const found: Array<CategoryOrder> = [];
     for (const mark of node.marks) {
       const channel = pick(mark);
@@ -327,7 +332,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
 
   // 解析角色 scale（ADR-03）：显式绑定 → 查表（未声明仍抛，typo 守卫）+ 对该 role **全部**字段做兼容校验；
   //   省略 → 按字段类型派生（要求该 role 字段类型一致，混类型 fail-loud）。兼容校验只对「声明 model 的类型」生效。
-  const resolveScaleForRole = (role: 'x' | 'y' | 'z', scaleName: string | undefined, pick: (mark: Mark) => Channel | undefined, values: Array<unknown>): ScaleOperation => {
+  const resolveScaleForRole = (role: 'x' | 'y' | 'z', scaleName: string | undefined, pick: (mark: MarkOperation) => Channel | undefined, values: Array<unknown>): ScaleOperation => {
     const types = roleFieldTypes(pick);
     // 解析该 role 有效 order（含「非分类配 order」「冲突 order」两道 fail-loud），无论 scale 显式与否都先校验
     const order = resolveRoleOrder(role, pick);
@@ -353,8 +358,10 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     return def;
   };
 
-  const roleChannelOf = (role: 'x' | 'y' | 'z', includeLinkSource = false) => (mark: Mark): Channel | undefined =>
-    mark.type === PlotMark.Link ? (includeLinkSource ? (role === 'x' ? mark.source.x : mark.source.y) : undefined) : (mark.encoding as Record<string, Channel | undefined>)[role];
+  const roleChannelOf = (role: 'x' | 'y' | 'z', includeLinkSource = false) => (mark: MarkOperation): Channel | undefined => {
+    if (isBuiltinMark(mark) && mark.type === PlotMark.Link) return includeLinkSource ? (role === 'x' ? mark.source.x : mark.source.y) : undefined;
+    return markEncoding(mark)?.[role];
+  };
 
   const resolveScaleForDefinitionRole = (role: 'x' | 'y' | 'z', scaleName: string | undefined, values: Array<unknown>, opts?: { includeLinkSource?: boolean }): ScaleOperation =>
     resolveScaleForRole(role, scaleName, roleChannelOf(role, opts?.includeLinkSource ?? false), values);
@@ -409,16 +416,16 @@ const makeColorResolver = (
   fieldTypes: Map<string, PlotFieldTypeValue>,
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
   resolveColorScheme: (name: string) => (t: number) => string,
-  pickChannel: (mark: Mark) => Channel | undefined = markColorChannel,
+  pickChannel: (mark: MarkOperation) => Channel | undefined = markColorChannel,
   channelName = 'color',
-): ((mark: Mark) => ColorOf | undefined) => {
+): ((mark: MarkOperation) => ColorOf | undefined) => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   // 字段名 → order（与位置通道同源 data.model）：颜色 ordinal 域按字段 order 排，保证位置 / 颜色同序
   const fieldOrders = new Map<string, CategoryOrder>();
   for (const field of node.data.model ?? []) {
     if (field.order !== undefined) fieldOrders.set(field.name, field.order);
   }
-  return (mark: Mark): ColorOf | undefined => {
+  return (mark: MarkOperation): ColorOf | undefined => {
     const channel = pickChannel(mark);
     if (!channel) return undefined;
     if (channel.value !== undefined) {
@@ -500,6 +507,7 @@ const collectChannelDescriptors = (
     if (descriptor && !out.has(descriptor.channel)) out.set(descriptor.channel, descriptor);
   };
   for (const mark of node.marks) {
+    if (!isBuiltinMark(mark)) continue;
     register(resolveSize(mark)?.descriptor);
     register(resolveOpacity(mark)?.descriptor);
     register(resolveShape(mark)?.descriptor);
@@ -896,33 +904,36 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   // 每个 mark 下沉成一个图层 Scope（样式上提到 nodeDefault/pathDefault）；空图层（无可绘制点）丢弃
   // provenance 开 → 传 markProvenance（plotId / markIndex / datum 开关 + 共享 registerDatumId），各层 / datum 绑 id + 来源 meta
   const markLayers: Array<IRChild> = node.marks
-    .map((mark, markIndex) =>
-      lowerMark(
+    .map((mark, markIndex) => {
+      // 通用通道（color / fill / stroke）对自定义 mark 也有效（走共享 encoding）；
+      // 散点专属样式通道（size / opacity / shape / 数值样式 / label）仅内置 mark，自定义 mark 在其 lower 内自理。
+      const builtinMark: Mark | undefined = isBuiltinMark(mark) ? mark : undefined;
+      return lowerMark(
         mark,
         rows,
         frame,
         {
           colorOf: resolveColor(mark) ?? resolveFill(mark),
           defaultColor: defaultColorOf(node, markIndex),
-          sizeOf: resolveSize(mark)?.of,
-          opacityOf: resolveOpacity(mark)?.of,
-          shapeOf: resolveShape(mark)?.of,
+          sizeOf: builtinMark ? resolveSize(builtinMark)?.of : undefined,
+          opacityOf: builtinMark ? resolveOpacity(builtinMark)?.of : undefined,
+          shapeOf: builtinMark ? resolveShape(builtinMark)?.of : undefined,
           strokeOf: resolveStroke(mark),
-          strokeWidthOf: resolveStrokeWidth(mark)?.of,
-          fillOpacityOf: resolveFillOpacity(mark)?.of,
-          drawOpacityOf: resolveDrawOpacity(mark)?.of,
-          rotateOf: resolveRotate(mark)?.of,
-          paddingOf: resolvePadding(mark)?.of,
-          minimumSizeOf: resolveMinimumSize(mark)?.of,
-          minimumWidthOf: resolveMinimumWidth(mark)?.of,
-          minimumHeightOf: resolveMinimumHeight(mark)?.of,
-          zIndexOf: resolveZIndex(mark)?.of,
-          labelOf: resolveLabelOf(mark),
+          strokeWidthOf: builtinMark ? resolveStrokeWidth(builtinMark)?.of : undefined,
+          fillOpacityOf: builtinMark ? resolveFillOpacity(builtinMark)?.of : undefined,
+          drawOpacityOf: builtinMark ? resolveDrawOpacity(builtinMark)?.of : undefined,
+          rotateOf: builtinMark ? resolveRotate(builtinMark)?.of : undefined,
+          paddingOf: builtinMark ? resolvePadding(builtinMark)?.of : undefined,
+          minimumSizeOf: builtinMark ? resolveMinimumSize(builtinMark)?.of : undefined,
+          minimumWidthOf: builtinMark ? resolveMinimumWidth(builtinMark)?.of : undefined,
+          minimumHeightOf: builtinMark ? resolveMinimumHeight(builtinMark)?.of : undefined,
+          zIndexOf: builtinMark ? resolveZIndex(builtinMark)?.of : undefined,
+          labelOf: builtinMark ? resolveLabelOf(builtinMark) : undefined,
         },
         provenance ? { context: provenance, markIndex, registerDatumId } : undefined,
         markRegistry,
-      ),
-    )
+      );
+    })
     .filter((layer): layer is IRChild => layer !== null);
 
   // legend（ADR-03）：收 legend guide → 据通道 + scale 类型选形态下沉成独立 scope，落 position 预留带。

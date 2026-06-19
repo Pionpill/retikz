@@ -2,7 +2,7 @@ import type { IRScope } from '@retikz/core';
 import type { Position } from '@retikz/math';
 import type { z } from 'zod';
 import type { GuideContext, LoweredGuide } from '../../guide';
-import type { AxisGuide, CoordinateOperation, ExternalRow, Mark, ScaleOperation } from '../../schemas';
+import type { AxisGuide, CoordinateOperation, ExternalRow, MarkOperation, ScaleOperation } from '../../schemas';
 import type { LegendReserve, Margins } from '../../pipeline/layout';
 import type { ProvenanceContext } from '../../pipeline/provenance';
 import type { PositionScale } from '../../providers/scale';
@@ -67,7 +67,7 @@ export type CoordinateResolveContext = {
   /** 把 scale operation 与数据域、屏幕 range 组合成可投影的位置 scale。 */
   buildPositionScale: (def: ScaleOperation, values: Array<unknown>, range: readonly [number, number]) => PositionScale;
   /** 校验 interval / area 等依赖 baseline 的 mark 是否可安全使用当前 scale 类型（type 串，含自定义）。 */
-  assertBaselineScaleCompatible: (scaleType: string, marks: ReadonlyArray<Mark>) => void;
+  assertBaselineScaleCompatible: (scaleType: string, marks: ReadonlyArray<MarkOperation>) => void;
   /** 当前 plot 内所有 axis guide；definition 决定如何将其下沉到 grid / axis 层。 */
   axisGuides: ReadonlyArray<AxisGuide>;
   /** 下沉直线 / 内置 guide 的通用入口。 */
@@ -77,7 +77,7 @@ export type CoordinateResolveContext = {
   /** 已解析的外部数据行；高级坐标系可按需读取完整数据。 */
   rows: Array<ExternalRow>;
   /** 当前 plot 的 mark 列表；主要用于 scale 兼容性与坐标系特定校验。 */
-  marks: ReadonlyArray<Mark>;
+  marks: ReadonlyArray<MarkOperation>;
 };
 
 /**
