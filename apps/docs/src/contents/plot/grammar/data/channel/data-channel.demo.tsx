@@ -3,7 +3,7 @@ import type { FC } from 'react';
 
 import { cities } from './data-channel.data';
 
-/** Bind the same rows to position, style, size, and text channels. */
+/** Bind the same rows to position, color, size, and label channels on one mark. */
 const Demo: FC = () => (
   <Plot
     data={cities}
@@ -18,8 +18,7 @@ const Demo: FC = () => (
     height={300}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <PointMark x="gdp" y="life" color="region" size="population" />
-    <PointMark x="gdp" y="life" text="abbr" dy={-13} />
+    <PointMark x="gdp" y="life" color="region" size="population" label="abbr" labelPosition="above" />
     <Axis dimension="x" />
     <Axis dimension="y" grid />
     <Legend channel="color" position="bottom" />

@@ -89,7 +89,7 @@ Rules:
 - `slashDate` accepts only strict `YYYY/MM/DD`; ambiguous layouts like `DD/MM/YYYY` / `MM/DD/YYYY` are not accepted (so the same string can't parse to different dates in different environments).
 - Parsing priority: `resolveField`'s `parse` > declarative `format` > built-in default.
 
-Parsing and normalization happen before transforms, scales, and marks. Plot writes parsed values into the canonical row under the logical field name; every later stage reads that value. So `fieldMap={{ revenue: 'finance.amount' }}`, `format: 'percent'`, and `resolveField` only affect preparation; the mark still says `y="revenue"`.
+Parsing and normalization happen before transforms, scales, and marks. Plot writes parsed values back under logical field names into the canonical row (the standardized row after parsing and coercion); every later stage reads that value. So `fieldMap={{ revenue: 'finance.amount' }}`, `format: 'percent'`, and `resolveField` only affect preparation; the mark still says `y="revenue"`.
 
 ### resolveField
 

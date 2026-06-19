@@ -89,7 +89,7 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 - `slashDate` 只认严格 `YYYY/MM/DD`；`DD/MM/YYYY`、`MM/DD/YYYY` 这类有地区歧义的布局不收（避免同一串在不同环境解析成不同日期）。
 - 解析优先级：`resolveField` 的 `parse` > 声明式 `format` > 内置默认。
 
-解析和归一化发生在 transform、scale、mark 之前。Plot 会把解析后的值写入 canonical 行的逻辑字段名上；后续所有环节都读这份值。因此 `fieldMap={{ revenue: 'finance.amount' }}`、`format: 'percent'` 和 `resolveField` 都只影响数据准备阶段，mark 里仍然写 `y="revenue"`。
+解析和归一化发生在 transform、scale、mark 之前。Plot 会把解析后的值按逻辑字段名写入 canonical 行（规范化行：解析、归一后写回逻辑字段名的标准行）；后续所有环节都读这份值。因此 `fieldMap={{ revenue: 'finance.amount' }}`、`format: 'percent'` 和 `resolveField` 都只影响数据准备阶段，mark 里仍然写 `y="revenue"`。
 
 ### 自定义解析函数
 

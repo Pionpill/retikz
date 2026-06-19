@@ -17,7 +17,7 @@ The simplest form: hand a row array to `<Plot data>` and have marks reference co
 
 A field name is a **path**, so nested data (MongoDB documents, JSON from an API) works directly: `x="user.address.city"` drills to the leaf. The leaf must be a scalar (string / number / boolean / time) — not an object or array.
 
-Field resolution first checks whether the whole field name exists as a direct key on the row, then falls back to `.` traversal. That means `user.age` can be either a nested path or a normalized logical field name. During preparation, Plot parses fields into canonical values and writes them back under logical names; later transforms, scales, and marks read that result.
+Field resolution first checks whether the whole field name exists as a direct key on the row, then falls back to `.` traversal. That means `user.age` can be either a nested path or a normalized logical field name. During preparation, Plot parses fields into canonical values (the standardized values after parsing and coercion) and writes them back under logical names; later transforms, scales, and marks read that result.
 
 ## Declaring field types
 
@@ -97,16 +97,52 @@ Rules:
 
 ## How It Works
 
-`model` stores the field contract, not the data rows. Before lowering, Plot collects the fields referenced by marks, transforms, axes, and legends, then determines each field type from the model or from data samples.
+`model` stores the field contract, not the data rows. Before lowering, Plot **collects, validates, and types** the fields actually referenced by the config, assembling one set of field metadata shared by scales, axes, legends, and validation.
 
-| Phase | Purpose |
+<ComponentPreview name="data-model-pipeline" size="sm" hideCode />
+
+Type resolution follows the priority "explicit `type` > type implied by `format` > inference from data", and a `categorical` field's `order` is stored alongside. Real rows are still supplied at compile time and never written into IR — that is what keeps one config reusable across data sources.
+
+### Automatic field-type inference
+
+When a field has neither `type` nor `format`, retikz infers it from data samples in two steps.
+
+**Step 1, classify each value**: scan the field's sample values; each value is classified on its own first.
+
+| Sample value | Classified as |
 | --- | --- |
-| Collect fields | Find the logical fields actually used by position, style, text, order, and transform inputs |
-| Validate contract | With a `model`, every referenced field must be listed, and model field names must be unique |
-| Resolve types | Use explicit `type`; derive type from `format`; otherwise infer from data samples |
-| Store order | Keep categorical `order` in field metadata so scales, axes, and legends share it |
+| `Date` instance | `temporal` |
+| ISO date / datetime string | `temporal` |
+| Finite `number`, `bigint` | `continuous` |
+| Other strings, booleans | `categorical` |
+| `null` / `undefined`, `NaN` / `Infinity`, object / array | Skipped, not counted as a sample |
 
-After types are resolved, scales, axes, legends, and validation all read the same field metadata. Real rows are still supplied at compile time and are not written into IR; that is what keeps one config reusable across data sources.
+ISO only accepts unambiguous formats: `YYYY-MM-DD`, and a datetime with a timezone (`T` or space separated, and a required `Z` or `±HH:MM`, e.g. `2024-01-01 12:00:00Z`). `2024/01/01`, timezone-less times, and bare number strings do not count.
+
+**Step 2, classify the whole field**: scan at most the first 1000 rows, take up to 100 valid samples, then resolve the field type from them.
+
+- **Every** sample is temporal → field is `temporal`
+- **Every** sample is continuous → field is `continuous`
+- Otherwise (mixed types, all categorical, or no valid samples) → `categorical`
+
+In other words: a single non-time, non-numeric value drops the whole field back to `categorical`; an empty field, or one with only empty values, also defaults to `categorical`. A field declared in `model` uses its `type` first, then a type implied by `format`, and only then this inference.
+
+### Deriving scales from types
+
+Once a field type is resolved, channels that **omit scale configuration** derive a default scale from it.
+
+**Position channels** (x / y / z, when the coordinate system gives no explicit scale for that channel):
+
+| Field type | Derived scale |
+| --- | --- |
+| `continuous` | `linear` |
+| `temporal` | `time` |
+| `categorical` | `band` |
+| No bound field (e.g. an all-constant channel) | `linear` (fallback) |
+
+The fields bound to one position channel must share a single type; omitting the scale while mixing types throws and asks for an explicit scale. If a field has a non-default `order` and derives `band` / `point`, the category domain follows that `order`.
+
+**Color channel**: a categorical field synthesizes `ordinal` (discrete, one color per category) when no scale is given; a continuous / temporal field is not auto-derived — it must explicitly reference a `sequential` / `diverging` / `quantize` / `threshold` / `quantile` color scale, and applies only to per-datum marks (point / bar / sector), erroring on line / area. See [Scales](/plot/grammar/scale) for the full color derivation and schemes.
 
 ## Next Step
 

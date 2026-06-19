@@ -16,17 +16,18 @@ Internally, that becomes the mark's `encoding`: `x` and `y` are positional chann
 
 <ComponentPreview name="data-channel" sourceFiles={['data-channel.data.ts']} />
 
-One row can feed several channels at once: `gdp` controls horizontal position, `life` controls vertical position, `region` controls color, `population` controls point radius, and `abbr` controls the text label. Channels read canonical values prepared by the data pipeline: `fieldMap`, `format`, and `resolveField` have already been applied, then Plot derives scales from field types and explicit scale configuration.
+One row can feed several channels at once: `gdp` controls horizontal position, `life` controls vertical position, `region` controls color, `population` controls point radius, and `abbr` controls the text label. Channels read canonical values prepared by the data pipeline (the standardized values after `fieldMap`, `format`, and `resolveField` have been applied and written back under logical field names), then Plot derives scales from field types and explicit scale configuration.
 
 ## Channel Types
 
 | Type | Channels | Meaning |
 | --- | --- | --- |
-| Position | `x` / `y` | Main position channels for one- and two-dimensional coordinates; polar coordinates reinterpret them as angle / radius |
-| Ternary position | `x` / `y` / `z` | The three components of a ternary coordinate, normalized by their sum during lowering |
+| Position | `x` / `y` / `z` | Used per coordinate dimension: `x` for 1D, `x` / `y` for 2D, `x` / `y` / `z` for ternary; polar reinterprets them as angle / radius, ternary normalizes by component sum |
 | Visual | `color` / `size` / `opacity` / `shape` | Control color, point radius, opacity, or point shape; field types usually derive the default scale |
 | Text | `text` / `label` | Text content for `PointMark`, or datum labels attached to another mark |
 | Order and series | `order` / `series` | Not part of the `encoding` object, but still field-driven; used for line order, multi-series splitting, or grouping |
+
+Here "dimension" means degree, not spatial dimension — how many positional components determine a single glyph. So a 2D plane can still host a three-dimension chart: a ternary plot, for instance, places each point by three components `x` / `y` / `z`. See [Coordinates](/plot/grammar/coordinate).
 
 ## Fields And Constants
 
@@ -57,7 +58,7 @@ In React, mark props are converted into channel configuration while building the
 | `<ReferenceMark y={80} />` | `y` is a constant channel and does not read data rows |
 | `<PathMark order="month" />` | `order` is not inside the `encoding` object, but still reads a field to sort datums |
 
-Channels only answer "which value to read". Field types derive default scales, and coordinates decide how positional channels are interpreted. That is why the same `x` / `y` can have different geometry in Cartesian and polar coordinates while keeping the same data lookup rule.
+A channel only answers "which value to read"; how that value maps into drawing space and how position channels are reinterpreted by the coordinate system is the next section's job.
 
 ## Scale And Coordinate
 
