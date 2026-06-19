@@ -3,10 +3,28 @@ import type { FC } from 'react';
 import { Circle, Coordinate, Draw, Grid, Layout, Node, Sector } from '@retikz/react';
 import { useLowerTex } from '@retikz/tex/react';
 
+const COS30 = Math.cos((30 * Math.PI) / 180);
+const SIN30 = Math.sin((30 * Math.PI) / 180);
+const TAN30 = SIN30 / COS30;
+
+/** 右侧说明框：每行常规文字 + `$...$` 公式混排，线名按颜色着色（对照 tikz.dev/tutorial 的 information text） */
+const LEGEND = [
+  { runs: [{ text: '角 ' }, { tex: '\\alpha = 30^\\circ = \\frac{\\pi}{6}' }] },
+  { runs: [{ text: '红线', fill: 'red' }, { text: ' ' }, { tex: '\\sin\\alpha = \\frac{1}{2}' }] },
+  { runs: [{ text: '蓝线', fill: 'dodgerblue' }, { text: ' ' }, { tex: '\\cos\\alpha = \\frac{\\sqrt{3}}{2}' }] },
+  {
+    runs: [
+      { text: '橙线', fill: 'darkorange' },
+      { text: ' ' },
+      { tex: '\\tan\\alpha = \\frac{\\sin\\alpha}{\\cos\\alpha} = \\frac{1}{\\sqrt{3}}' },
+    ],
+  },
+];
+
 const Demo: FC = () => {
   const lowerTex = useLowerTex();
   return (
-    <Layout width={600} height={360} lowerTex={lowerTex}>
+    <Layout width={720} height={360} lowerTex={lowerTex}>
       {/* 背景网格 */}
       <Grid corner1={[-100, -100]} corner2={[100, 100]} step={50} stroke="lightgray" strokeWidth={0.5} />
 
@@ -52,13 +70,47 @@ const Demo: FC = () => {
         </Fragment>
       ))}
 
-      {/* 30° 扇形：直接用 Sector sugar，圆心闭合更贴近“画一个扇形”的直觉 */}
+      {/* 30° 扇形 + α */}
       <Sector center={[0, 0]} radius={30} startAngle={0} endAngle={-30} fill="lightgray" stroke="green" />
-
-      {/* α 标签：极坐标定位（screen 角 -15°、距原点 22px）+ `$\alpha$` 行内公式，textColor 给字形上色 */}
       <Node position={{ angle: -15, radius: 22 }} stroke="none" textColor="green" padding={1}>
         {'$\\alpha$'}
       </Node>
+
+      {/* sin α / cos α / tan α —— 边标注用 `$...$` 行内公式 */}
+      <Draw
+        way={[{ angle: -30, radius: 100 }, { label: { text: '$\\sin\\alpha$', side: 'left' } }, [COS30 * 100, 0]]}
+        stroke="red"
+        thickness="thick"
+      />
+      <Draw
+        way={[[COS30 * 100, 0], { label: { text: '$\\cos\\alpha$', side: 'below' } }, [0, 0]]}
+        stroke="dodgerblue"
+        thickness="thick"
+      />
+      <Draw
+        way={[
+          [100, 0],
+          { label: { text: '$\\tan\\alpha = \\frac{\\sin\\alpha}{\\cos\\alpha}$', side: 'right' } },
+          [100, -TAN30 * 100],
+        ]}
+        stroke="darkorange"
+        thickness="thick"
+      />
+      <Coordinate id="t" position={[100, -TAN30 * 100]} />
+      <Draw way={[[0, 0], 't']} />
+
+      {/* 右侧说明框：浅灰虚线框 + 文字与公式混排，每行一个 `{ runs }` */}
+      <Node
+        position={[400, 0]}
+        shape="rectangle"
+        stroke="lightgray"
+        dashed
+        cornerRadius={6}
+        innerXSep={12}
+        innerYSep={8}
+        align="left"
+        text={LEGEND}
+      />
     </Layout>
   );
 };

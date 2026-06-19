@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import type { FC } from 'react';
-import { Circle, Coordinate, Draw, Grid, Layout, Sector } from '@retikz/react';
-import { TexNode, useLowerTex } from '@retikz/tex/react';
+import { Circle, Coordinate, Draw, Grid, Layout, Node, Sector } from '@retikz/react';
+import { useLowerTex } from '@retikz/tex/react';
 
 const COS30 = Math.cos((30 * Math.PI) / 180);
 const SIN30 = Math.sin((30 * Math.PI) / 180);
@@ -19,57 +19,57 @@ const Demo: FC = () => {
 
       {/* 坐标轴 */}
       <Draw way={[[-150, 0], [150, 0]]} arrow="->" />
-      <TexNode position={[162, 0]} stroke="none" padding={0}>
-        {'x'}
-      </TexNode>
+      <Node position={[162, 0]} stroke="none" padding={0}>
+        {'$x$'}
+      </Node>
       <Coordinate id="x-axis" position={[150, 0]} />
       <Draw way={[[0, 150], [0, -150]]} arrow="->" />
-      <TexNode position={[0, -162]} stroke="none" padding={0}>
-        {'y'}
-      </TexNode>
+      <Node position={[0, -162]} stroke="none" padding={0}>
+        {'$y$'}
+      </Node>
       <Coordinate id="y-axis" position={[0, -150]} />
 
       {/* 刻度 */}
       {[
-        { x: -100, tex: '-1' },
-        { x: -50, tex: '-\\frac{1}{2}' },
-        { x: 100, tex: '1' },
+        { x: -100, tex: '$-1$' },
+        { x: -50, tex: '$-\\frac{1}{2}$' },
+        { x: 100, tex: '$1$' },
       ].map(({ x, tex }) => (
         <Fragment key={`tx-${x}`}>
           <Draw way={[[x, -3], [x, 3]]} />
-          <TexNode position={[x - 10, 14]} stroke="none" padding={1}>
+          <Node position={[x - 10, 14]} stroke="none" padding={1}>
             {tex}
-          </TexNode>
+          </Node>
         </Fragment>
       ))}
       {[
-        { y: 100, tex: '-1' },
-        { y: 50, tex: '-\\frac{1}{2}' },
-        { y: -50, tex: '\\frac{1}{2}' },
-        { y: -100, tex: '1' },
+        { y: 100, tex: '$-1$' },
+        { y: 50, tex: '$-\\frac{1}{2}$' },
+        { y: -50, tex: '$\\frac{1}{2}$' },
+        { y: -100, tex: '$1$' },
       ].map(({ y, tex }) => (
         <Fragment key={`ty-${y}`}>
           <Draw way={[[-3, y], [3, y]]} />
-          <TexNode position={[-18, y + 10]} stroke="none" padding={1}>
+          <Node position={[-18, y + 10]} stroke="none" padding={1}>
             {tex}
-          </TexNode>
+          </Node>
         </Fragment>
       ))}
 
       {/* 30° 扇形 + α */}
       <Sector center={[0, 0]} radius={30} startAngle={0} endAngle={-30} fill="lightgray" stroke="green" />
-      <TexNode position={{ angle: -15, radius: 22 }} stroke="none" textColor="green" padding={1}>
-        {'\\alpha'}
-      </TexNode>
+      <Node position={{ angle: -15, radius: 22 }} stroke="none" textColor="green" padding={1}>
+        {'$\\alpha$'}
+      </Node>
 
-      {/* sin α / cos α（边标注仍是纯文本） */}
+      {/* sin α / cos α（边标注用 `$...$` 行内公式） */}
       <Draw
-        way={[{ angle: -30, radius: 100 }, { label: { text: 'sin α', side: 'left' } }, [COS30 * 100, 0]]}
+        way={[{ angle: -30, radius: 100 }, { label: { text: '$\\sin\\alpha$', side: 'left' } }, [COS30 * 100, 0]]}
         stroke="red"
         thickness="thick"
       />
       <Draw
-        way={[[COS30 * 100, 0], { label: { text: 'cos α', side: 'below' } }, [0, 0]]}
+        way={[[COS30 * 100, 0], { label: { text: '$\\cos\\alpha$', side: 'below' } }, [0, 0]]}
         stroke="dodgerblue"
         thickness="thick"
       />
@@ -79,7 +79,11 @@ const Demo: FC = () => {
           x=100 竖线与原点 30° 射线交于 (100, -TAN30·100)（screen y），直接喂坐标。
           Coordinate t 命名供下方 ray 引用 */}
       <Draw
-        way={[[100, 0], { label: { text: 'tan α = sin α / cos α', side: 'right' } }, [100, -TAN30 * 100]]}
+        way={[
+          [100, 0],
+          { label: { text: '$\\tan\\alpha = \\frac{\\sin\\alpha}{\\cos\\alpha}$', side: 'right' } },
+          [100, -TAN30 * 100],
+        ]}
         stroke="darkorange"
         thickness="thick"
       />

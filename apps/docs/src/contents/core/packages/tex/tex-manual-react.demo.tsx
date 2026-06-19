@@ -3,7 +3,7 @@ import type { LowerTex } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
 import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
 
-const formula = String.raw`\int_0^1 x^2\,dx = \frac{1}{3}`;
+const formula = String.raw`$$\int_0^1 x^2\,dx = \frac{1}{3}$$`;
 
 const Demo: FC = () => {
   const [lowerTex, setLowerTex] = useState<LowerTex>();
@@ -20,15 +20,9 @@ const Demo: FC = () => {
 
   return (
     <Layout width={460} height={160} lowerTex={lowerTex}>
-      <Node
-        id="manual"
-        position={[0, 0]}
-        shape="rectangle"
-        fill="#f8fafc"
-        stroke="#475569"
-        padding={14}
-        tex={{ tex: formula, displayMode: true }}
-      />
+      <Node id="manual" position={[0, 0]} shape="rectangle" fill="#f8fafc" stroke="#475569" padding={14}>
+        {formula}
+      </Node>
     </Layout>
   );
 };

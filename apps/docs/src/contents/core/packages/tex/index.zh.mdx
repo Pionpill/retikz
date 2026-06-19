@@ -1,9 +1,9 @@
 ---
 title: TeX 公式
-description: 用 LaTeX 写公式，经 MathJax SVG 降解成 renderer-agnostic 字形路径；React 可用 TexNode，底层经 lowerTex 注入 core。
+description: 用 LaTeX 写公式，经 MathJax SVG 降解成 renderer-agnostic 字形路径；文本里用 $...$ / $$...$$ 行内混排，底层经 lowerTex 注入 core。
 ---
 
-`@retikz/tex` 负责把 LaTeX 公式降解成 `@retikz/core` 可渲染的 glyph `PathPrim`。公式在 IR 里是节点内容 `node.tex`，和 `text` 平行：没有 `shape` 时是独立公式块，配 `shape` 时就是带框公式。React 侧推荐直接使用 `@retikz/tex/react` 的 `<TexNode>`。
+`@retikz/tex` 负责把 LaTeX 公式降解成 `@retikz/core` 可渲染的 glyph `PathPrim`。公式不是独立内容字段，而是**文本的一部分**：任意文本字符串里的 `$...$`（行内）/ `$$...$$`（display）在编译期解析成公式段；也可显式写 `{ runs: [...] }` 做文字 + 公式混排。降解能力经 `lowerTex` 注入，**core 不依赖 MathJax**。
 
 ## 安装与启用
 
@@ -13,56 +13,70 @@ description: 用 LaTeX 写公式，经 MathJax SVG 降解成 renderer-agnostic �
 pnpm add @retikz/tex mathjax-full
 ```
 
-React 里用 `useLowerTex` 启动 MathJax 并把能力注入 `<Layout lowerTex>`。公式可以直接写在 `<TexNode>` 的 children 里：
+React 里用 `useLowerTex` 启动 MathJax 并把能力注入 `<Layout lowerTex>`，然后在任意 `<Node>` 文本里写 `$...$`：
 
 ```tsx
-import { Layout } from '@retikz/react';
-import { TexNode, useLowerTex } from '@retikz/tex/react';
+import { Layout, Node } from '@retikz/react';
+import { useLowerTex } from '@retikz/tex/react';
 
 const Diagram = () => {
   const lowerTex = useLowerTex();
 
   return (
     <Layout lowerTex={lowerTex}>
-      <TexNode id="eq" position={[0, 0]}>
-        {'\\frac{a}{b} = c'}
-      </TexNode>
+      <Node position={[0, 0]}>{'$\\frac{a}{b} = c$'}</Node>
     </Layout>
   );
 };
 ```
 
-<ComponentAlert title="需要注入 lowerTex" description="带 tex 内容的节点需要经 Layout lowerTex（React）或 toScene/compileToScene 的 lowerTex（vanilla）注入渲染能力；未注入时该节点降级（不渲染公式）并发出 TEX_LOWERER_MISSING，不会崩。" />
+<ComponentAlert title="需要注入 lowerTex" description="$...$ 仅在注入了 lowerTex（React 经 Layout，vanilla 经 toScene/renderToString）时解析；未注入时 $ 一律字面（现有含 $ 的文本零行为变化），含公式的内容降级不渲染并发出诊断 warn，不会崩。" />
 
-## 独立公式块
+## 行内与 display 公式
 
-无 `shape` 的 `<TexNode>` 是独立公式块，仍然复用节点的定位、连线、label、shadow 和 hydration 事件能力：
+`$...$` 用 inline 度量，贴着文字基线；`$$...$$` 用 display 度量（分式 / 求和 / 积分等更舒展）。一个 node 的内容整体就是一个 `$$...$$` 时，它等价于一块独立公式，按字形 bbox 定尺寸：
 
 <ComponentPreview name="tex-standalone" interactive />
 
+## 行内混排
+
+最自然的数学叙述是文字夹公式。直接在字符串里混写即可——`$...$` 外是文字、内是公式，同一行共基线：
+
+```tsx
+<Node>{'当 $v = d/t$ 时，位移 $s = v t$'}</Node>
+```
+
+需要**逐段单独着色 / 样式**时，写显式 `runs`：每个 run 是 `{ text, fill?, font? }` 或 `{ tex, displayMode?, fill? }`：
+
+```tsx
+<Node
+  text={[{ runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: '（红线长度）' }] }]}
+/>
+```
+
+<ComponentAlert title="中文注释建议走 text run" description="彩色公式 + 中文注释同一行时，把中文写成 text run（经 measureText 正确度量 CJK），不要塞进 \text{}——MathJax 的 \text 排中文依赖字体、易出豆腐块。" />
+
 ## 多行公式
 
-`TexNode` 是一个节点，而不是多行文本容器。多行公式建议写成一个 LaTeX 环境，并作为同一个 children 或 `tex` prop 传入；这样公式块仍然只有一个 bbox、一个连接目标：
+一个 node 可以承载一个多行 LaTeX 环境（写在一个 `$$...$$` 里），仍然只有一个 bbox、一个连接目标：
 
 <ComponentPreview name="tex-multiline" interactive />
 
-## 封装与手写
-
-`<TexNode>` 只是 `@retikz/tex/react` 提供的封装组件。它把 `tex` prop 或字符串 children 变成 `<Node tex={{ tex }} />`，同时透传 `<Node>` 的定位、shape、样式、label 和 hydration 事件字段。
-
-不想引入 `@retikz/tex/react` 时，也可以只用 `@retikz/tex` 主入口手动创建 `lowerTex`，再直接写 `<Node tex={{ tex }}>`：
-
-<ComponentPreview name="tex-manual-react" interactive />
-
 ## 带框公式
 
-给 `<TexNode>` 配 `shape` 即可得到带框公式。容器尺寸由公式 bbox、padding 和 minimum size 共同决定，框走节点常规的 `fill` / `stroke` / `cornerRadius`：
+给含公式的 `<Node>` 配 `shape` 即得带框公式。容器尺寸由公式 bbox、padding 和 minimum size 共同决定，框走节点常规的 `fill` / `stroke` / `cornerRadius`：
 
 <ComponentPreview name="tex-framed" interactive />
 
+## 手动注入
+
+不想用 `useLowerTex` hook 时，可以只用 `@retikz/tex` 主入口手动创建 `lowerTex`（`createMathJaxEngine` + `createLowerTex`），再传给 `<Layout lowerTex>`：
+
+<ComponentPreview name="tex-manual-react" interactive />
+
 ## Vanilla
 
-`createMathJaxEngine`（await 启动）→ `createLowerTex` → 注入 `toScene` / `renderToString` 的 `lowerTex`；IR 或 vanilla 节点使用 `tex` 内容：
+`createMathJaxEngine`（await 启动）→ `createLowerTex` → 注入 `toScene` / `renderToString` 的 `lowerTex`；节点文本照常写 `$...$`：
 
 ```ts
 import { figure, node, renderToString } from '@retikz/vanilla';
@@ -70,30 +84,26 @@ import { createMathJaxEngine, createLowerTex } from '@retikz/tex';
 
 const lowerTex = createLowerTex(await createMathJaxEngine());
 const fig = figure([
-  node('eq', { position: [0, 0], tex: { tex: '\\frac{a}{b} = c' } }),
+  node('eq', { position: [0, 0], text: '$\\frac{a}{b} = c$' }),
 ]);
 
 const svg = renderToString(fig, { lowerTex });
 ```
 
+## 语法
+
+| 写法 | 含义 |
+| --- | --- |
+| `$...$` | 行内公式（inline 度量，贴文字基线） |
+| `$$...$$` | display 公式（block 度量；独占一个 node 时 = 独立 / 带框公式） |
+| `\$` | 字面美元符号（不作分隔符） |
+| `{ runs: [...] }` | 显式 run 序列（canonical）；每 run 可单独 `fill` / `font` |
+
 ## API 参考
-
-### TexNode
-
-| 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `tex` | `string` | - | LaTeX 源。若同时传入字符串 children，`tex` prop 优先。 |
-| `children` | `string` | - | 直接把公式写成 children 的便捷写法。 |
-| `displayMode` | `boolean` | `false` | 使用 display 度量，适合分式、求和、积分等块级公式。 |
-| 其它 Node 字段 | `Omit<IRNode, 'type' \| 'tex' \| 'text'>` + hydration 事件 | - | 透传定位、`shape`、`fill`、`stroke`、`padding`、`label`、事件等节点能力。 |
-
-### 底层接口
 
 | API | 类型 | 描述 |
 | --- | --- | --- |
 | `useLowerTex`（`@retikz/tex/react`） | `() => LowerTex \| undefined` | React hook：启动 MathJax，返回可注入 `<Layout lowerTex>` 的函数；未就绪时为 `undefined`。 |
 | `createMathJaxEngine` | `() => Promise<MathJaxSvgEngine>` | 创建 MathJax SVG 引擎。 |
-| `createLowerTex` | `(engine) => LowerTex` | 把引擎转换成 core 的 `lowerTex` 注入函数，按 `fontSize|display|tex` 缓存。 |
+| `createLowerTex` | `(engine) => LowerTex` | 把引擎转换成 core 的 `lowerTex` 注入函数，按 `fontSize\|display\|tex` 缓存。 |
 | `LowerTex`（`@retikz/core`） | `(content, style) => LoweredTex \| null` | core 注入点类型；失败返回 `null`，compile 发出 `TEX_INVALID`。 |
-
-<ComponentAlert title="行内混排" description="一行文本里混入公式片段（例如 when $v=d/t$）需要扩展 text-run 模型，后续版本再做；当前版本支持独立公式块、带框公式和 LaTeX 环境内的多行公式。" />

@@ -4,18 +4,34 @@ import { Circle, Coordinate, Draw, Grid, Layout, Node, Sector } from '@retikz/re
 import { useLowerTex } from '@retikz/tex/react';
 
 const COS30 = Math.cos((30 * Math.PI) / 180);
+const SIN30 = Math.sin((30 * Math.PI) / 180);
+const TAN30 = SIN30 / COS30;
+
+/** Right-hand info box: regular text + `$...$` formulas on each line, line names colored (mirrors tikz.dev/tutorial's information text) */
+const LEGEND = [
+  { runs: [{ text: 'angle ' }, { tex: '\\alpha = 30^\\circ = \\frac{\\pi}{6}' }] },
+  { runs: [{ text: 'red line', fill: 'red' }, { text: ' ' }, { tex: '\\sin\\alpha = \\frac{1}{2}' }] },
+  { runs: [{ text: 'blue line', fill: 'dodgerblue' }, { text: ' ' }, { tex: '\\cos\\alpha = \\frac{\\sqrt{3}}{2}' }] },
+  {
+    runs: [
+      { text: 'orange line', fill: 'darkorange' },
+      { text: ' ' },
+      { tex: '\\tan\\alpha = \\frac{\\sin\\alpha}{\\cos\\alpha} = \\frac{1}{\\sqrt{3}}' },
+    ],
+  },
+];
 
 const Demo: FC = () => {
   const lowerTex = useLowerTex();
   return (
-    <Layout width={600} height={360} lowerTex={lowerTex}>
-      {/* 背景网格 */}
+    <Layout width={720} height={360} lowerTex={lowerTex}>
+      {/* background grid */}
       <Grid corner1={[-100, -100]} corner2={[100, 100]} step={50} stroke="lightgray" strokeWidth={0.5} />
 
-      {/* 单位圆 */}
+      {/* unit circle */}
       <Circle center={[0, 0]} radius={100} lineCap="round" />
 
-      {/* 坐标轴 */}
+      {/* axes */}
       <Draw way={[[-150, 0], [150, 0]]} arrow="->" />
       <Node position={[162, 0]} stroke="none" padding={0}>
         {'$x$'}
@@ -27,7 +43,7 @@ const Demo: FC = () => {
       </Node>
       <Coordinate id="y-axis" position={[0, -150]} />
 
-      {/* 刻度 */}
+      {/* ticks */}
       {[
         { x: -100, tex: '$-1$' },
         { x: -50, tex: '$-\\frac{1}{2}$' },
@@ -54,25 +70,46 @@ const Demo: FC = () => {
         </Fragment>
       ))}
 
-      {/* 30° 扇形 + α */}
+      {/* 30° wedge + α */}
       <Sector center={[0, 0]} radius={30} startAngle={0} endAngle={-30} fill="lightgray" stroke="green" />
       <Node position={{ angle: -15, radius: 22 }} stroke="none" textColor="green" padding={1}>
         {'$\\alpha$'}
       </Node>
 
-      {/* sin α 红色竖线：从圆周 (30°, 100px) 垂直落到 x 轴投影点 (cos30·100, 0)
-          IR 还没投影 target，手算投影坐标兜底；边标注的 text 也支持 `$...$` 行内公式 */}
+      {/* sin α / cos α / tan α —— edge labels use `$...$` inline formulas */}
       <Draw
         way={[{ angle: -30, radius: 100 }, { label: { text: '$\\sin\\alpha$', side: 'left' } }, [COS30 * 100, 0]]}
         stroke="red"
         thickness="thick"
       />
-
-      {/* cos α 蓝色横线：投影点 → 原点 */}
       <Draw
         way={[[COS30 * 100, 0], { label: { text: '$\\cos\\alpha$', side: 'below' } }, [0, 0]]}
         stroke="dodgerblue"
         thickness="thick"
+      />
+      <Draw
+        way={[
+          [100, 0],
+          { label: { text: '$\\tan\\alpha = \\frac{\\sin\\alpha}{\\cos\\alpha}$', side: 'right' } },
+          [100, -TAN30 * 100],
+        ]}
+        stroke="darkorange"
+        thickness="thick"
+      />
+      <Coordinate id="t" position={[100, -TAN30 * 100]} />
+      <Draw way={[[0, 0], 't']} />
+
+      {/* right-hand info box: light dashed frame + mixed text/formula, one `{ runs }` per line */}
+      <Node
+        position={[400, 0]}
+        shape="rectangle"
+        stroke="lightgray"
+        dashed
+        cornerRadius={6}
+        innerXSep={12}
+        innerYSep={8}
+        align="left"
+        text={LEGEND}
       />
     </Layout>
   );

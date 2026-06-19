@@ -508,6 +508,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           resolveFill: paint.resolve,
           effectiveArrows,
           effectivePathGenerators,
+          lowerTex: options.lowerTex,
         });
         if (item.slot) {
           // 原位回填：按引用定位占位再 splice 替换为真 primitive（result 为 null 时替换成 0 个 = 删占位）
@@ -577,7 +578,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           effectiveShapes,
           // between 端点世界坐标解析器（refPointOfTarget 处理 NodeTarget anchor / Cartesian / Polar / Offset / 嵌套 between）
           refPointOfTarget,
-          // 公式渲染注入 + 预绑路径的 warn（node.tex 内容编译用）
+          // 公式渲染注入 + 预绑路径的 warn（文本里的 `$...$` 行内公式编译用）
           {
             lowerTex: options.lowerTex,
             warn: (code, message) =>

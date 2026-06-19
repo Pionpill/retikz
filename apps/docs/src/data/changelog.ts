@@ -107,6 +107,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.6',
+            date: '2026-06-19',
+            summary: {
+              zh: '行内 text+math 混排：任意文本里写 `$...$`（行内）/ `$$...$$`（display）或显式 `{ runs }` 逐 run 着色，node 文本 / node label / 边标注全支持；同时移除 `node.tex` 字段与 `<TexNode>`（公式统一为文本里的 math run）。',
+              en: 'Inline text+math mixing: write `$...$` (inline) / `$$...$$` (display) or explicit `{ runs }` with per-run color in any text — node text, node labels, and edge labels alike; and removes the `node.tex` field and `<TexNode>` (formulas are unified as math runs in text).',
+            },
+            items: [
+              {
+                label: { zh: '行内 `$...$` / `$$...$$` 混排', en: 'Inline `$...$` / `$$...$$`' },
+                content: {
+                  zh: '`IRLineSpec` 新增 `{ runs }` 第三支（`TextRun` / `MathRun`，每 run 可 `fill` / `font`）；纯字符串里的 `$...$`（inline）/ `$$...$$`（display）在编译期、**注入 lowerTex 时**解析（未注入则 `$` 字面，含 `$` 旧文本零回归）；`\\$` 字面、不闭合 `$` 容错 + `TEXT_TEX_PARSE_ERROR`。Node text / `NodeLabel.text` / `StepLabel.text` 全接受。混排行 emit 成 `GroupPrim(TextPrim + 字形 PathPrim)`，公式按 depth 贴文字基线，renderer 零改动。',
+                  en: '`IRLineSpec` gains a third `{ runs }` branch (`TextRun` / `MathRun`, each with `fill` / `font`); `$...$` (inline) / `$$...$$` (display) in plain strings are parsed at compile time **when lowerTex is injected** (otherwise `$` is literal, existing `$` text unchanged); `\\$` is literal, an unbalanced `$` is tolerated with `TEXT_TEX_PARSE_ERROR`. Accepted in node text, `NodeLabel.text`, and `StepLabel.text`. A mixed line emits `GroupPrim(TextPrim + glyph PathPrim)` with the formula baseline-aligned by depth; no renderer change.',
+                },
+              },
+              {
+                label: { zh: '移除 node.tex / TexNode（破坏性）', en: 'Removed node.tex / TexNode (breaking)' },
+                content: {
+                  zh: '`IRNode.tex`、`<TexNode>`、tex 内容的 `displayMode` 字段移除；独立公式 = 内容为一个 `$$...$$` 的 node（按字形 bbox 定尺寸），带框公式 = 该 node 配 `shape`。`useLowerTex` / `createLowerTex` / `createMathJaxEngine` / `<Layout lowerTex>` 保留。0.x 不留别名：旧 `node.tex` / `<TexNode>` 直接迁到 `$$...$$`。',
+                  en: 'Removes `IRNode.tex`, `<TexNode>`, and the tex `displayMode` field; a standalone formula is a node whose content is one `$$...$$` (sized by the glyph bbox), a framed formula is that node plus a `shape`. `useLowerTex` / `createLowerTex` / `createMathJaxEngine` / `<Layout lowerTex>` stay. No 0.x aliases: migrate old `node.tex` / `<TexNode>` to `$$...$$`.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.5',
             date: '2026-06-17',
             summary: {

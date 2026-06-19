@@ -15,7 +15,6 @@ import type {
   IRStep,
   IRStepLabel,
   IRTarget,
-  IRTexContent,
 } from '@retikz/core';
 import { CURRENT_IR_VERSION, parseTargetSugar } from '@retikz/core';
 import type { CoordinateProps } from './Coordinate';
@@ -174,56 +173,18 @@ const readNodeText = (props: NodeProps): IRNode['text'] => {
 };
 
 /**
- * 判定一个 child 是否「公式内容对象」——即 `{ tex: string, displayMode? }`（区别于 React 元素 / 字符串）
- * @description React 元素本身也是对象，故先排除 `isValidElement`；plain object 且 `tex` 为字符串才算公式内容
- */
-const isTexContentNode = (node: unknown): node is IRTexContent =>
-  typeof node === 'object' &&
-  node !== null &&
-  !Array.isArray(node) &&
-  !isValidElement(node) &&
-  typeof (node as { tex?: unknown }).tex === 'string';
-
-/**
- * Node 公式读取顺序
- * @description `props.tex` 显式优先；否则扫描 `props.children` 取首个公式内容对象（`<Node>{{ tex }}</Node>` 便捷写法，
- *   与「文本走 children」对称）。数组 / `React.Fragment` 透明展开后递归。归一化为 `{ tex, displayMode? }`，丢弃多余键
- */
-const readNodeTex = (props: NodeProps): IRNode['tex'] => {
-  if (props.tex !== undefined) return props.tex;
-  let found: IRTexContent | undefined;
-  const visit = (node: unknown): void => {
-    if (found !== undefined) return;
-    if (Array.isArray(node)) {
-      for (const c of node) visit(c);
-      return;
-    }
-    if (isValidElement(node) && node.type === Fragment) {
-      visit((node.props as { children?: ReactNode }).children);
-      return;
-    }
-    if (isTexContentNode(node)) {
-      found = node.displayMode === undefined ? { tex: node.tex } : { tex: node.tex, displayMode: node.displayMode };
-    }
-  };
-  visit(props.children);
-  return found;
-};
-
-/**
  * `<Node>` props → IRChild
- * @description NODE_FIELDS 字段表透传纯字段；text / tex / position / label 特化字段独立处理
+ * @description NODE_FIELDS 字段表透传纯字段；text / position / label 特化字段独立处理。
+ *   公式经文本里的 `$...$` / `$$...$$`（注入 lowerTex 时编译期解析）或显式 `text={[{ runs }]}`，不再有独立 tex 字段
  */
 const buildNodeFromProps = (props: NodeProps): IRChild => {
   const text = readNodeText(props);
-  const tex = readNodeTex(props);
   const ir: IRChild = {
     type: 'node',
     position: props.position,
     ...pickDefined(props, NODE_FIELDS),
   };
   if (text !== undefined) ir.text = text;
-  if (tex !== undefined) ir.tex = tex;
   if (props.label !== undefined) ir.label = props.label;
   return ir;
 };

@@ -87,7 +87,7 @@ describe('[lower-tex] MathJax integration', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'eq', position: [0, 0], tex: { tex: '\\frac{a}{b}', displayMode: true } },
+        { type: 'node', id: 'eq', position: [0, 0], text: '$$\\frac{a}{b}$$' },
       ],
     };
     const scene = compileToScene(ir, { lowerTex });
