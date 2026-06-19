@@ -2,22 +2,13 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { type IntervalMark, type Mark, type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
-import { buildIntervalContext, cellGeometryAnchor, datumAnchor } from '../../src/mark/anchor';
-import { lowerMark } from '../../src/mark/mark';
-import {
-  type CartesianCoordinateFrame,
-  type Cell,
-  RETIKZ_POLAR_SEGMENT_SAMPLES,
-  createCartesianCoordinate,
-  createCoordinateFrame,
-  createPolarCoordinate,
-  createTernary2DCoordinate,
-  defineCoordinate,
-  densifyCellContour,
-} from '../../src/coordinate';
-import type { PositionScale } from '../../src/scale/scale';
+import { type IntervalMark, type Mark, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { buildIntervalContext, cellGeometryAnchor, datumAnchor } from '../../src/providers';
+import { lowerMark } from '../../src/providers';
+import { type Cell, RETIKZ_POLAR_SEGMENT_SAMPLES, createCoordinateFrame, defineCoordinate, densifyCellContour } from '../../src/contract';
+import { type CartesianCoordinateFrame, createCartesianCoordinate, createPolarCoordinate, createTernary2DCoordinate } from '../../src/providers';
+import type { PositionScale } from '../../src/providers';
 
 /**
  * ADR-01（alpha.11）：区间几何投影契约测试——frame.projectCell 统一 interval / sector / 曲线轴下沉。

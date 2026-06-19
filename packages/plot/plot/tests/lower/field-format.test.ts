@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { DataModelSchema, type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { FieldDefSchema, PlotFieldFormat } from '../../src/ir/data';
-import { type LowerPlotsOptions, prepareRows } from '../../src/lower/expand';
-import { tagSourceIndex } from '../../src/lower/provenance';
+import { DataModelSchema, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { FieldDefSchema, PlotFieldFormat } from '../../src/schemas/data';
+import { type LowerPlotsOptions, prepareRows } from '../../src/pipeline/expand';
+import { tagSourceIndex } from '../../src/pipeline/provenance';
 
 /**
  * 构造一个引用单个逻辑字段 `v`（绑 x 通道）的最小 spec

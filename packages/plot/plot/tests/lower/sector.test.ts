@@ -1,7 +1,7 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 /** 正方形画布 → outerRadius = min(w,h)/2 = 200、center = [200,200]（无角向轴 → margin 0） */
 const opts: LowerPlotsOptions = { width: 400, height: 400 };

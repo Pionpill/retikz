@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ScaleSchema } from '../../src/ir/scale';
+import { ScaleSchema } from '../../src/schemas/scale';
 
 describe('ScaleSchema (ADR-03)', () => {
   // Happy path

@@ -1,8 +1,8 @@
 import { compileToScene } from '@retikz/core';
 import type { IRPath, IRScope, IRStep } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 /** 笛卡尔默认画布；polar 用正方形 → outerRadius = min(w,h)/2 = 200、center = [200,200] */
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };

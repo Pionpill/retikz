@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BUILTIN_COORDINATE_TYPES, CoordinateOperationSchema, CoordinateSchema, PlotCoordinate } from '../../src/ir/coordinate';
+import { BUILTIN_COORDINATE_TYPES, CoordinateOperationSchema, CoordinateSchema, PlotCoordinate } from '../../src/schemas/coordinate';
 
 describe('CoordinateSchema (ADR-04)', () => {
   // Happy path

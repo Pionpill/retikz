@@ -2,9 +2,9 @@
 import { compileToScene } from '@retikz/core';
 import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
-import { type AnyCoordinateDefinition, type AxisFrame, type DimensionRole, type GenericCoordinateFrame, createCoordinateFrame, defineCoordinate } from '../../src/coordinate';
+import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { type AnyCoordinateDefinition, type AxisFrame, type DimensionRole, type GenericCoordinateFrame, createCoordinateFrame, defineCoordinate } from '../../src/contract';
 
 /**
  * 自定义坐标系（custom coordinate）lowering 测试。

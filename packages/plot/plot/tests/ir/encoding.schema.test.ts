@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ChannelSchema, EncodingSchema, PointEncodingSchema, ShapeChannelSchema, SizeChannelSchema } from '../../src/ir/encoding';
+import { ChannelSchema, EncodingSchema, PointEncodingSchema, ShapeChannelSchema, SizeChannelSchema } from '../../src/schemas/encoding';
 
 describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
   // Happy path

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PlotSpecSchema } from '../../src/ir/plot';
+import { PlotSpecSchema } from '../../src/schemas/plot';
 
 const baseLine = {
   namespace: 'plot',

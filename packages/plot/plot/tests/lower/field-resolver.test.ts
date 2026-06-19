@@ -1,7 +1,7 @@
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { lowerPlots, prepareRows } from '../../src/lower/expand';
+import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { lowerPlots, prepareRows } from '../../src/pipeline/expand';
 import { createPlotLocator } from '../../src/interaction/locate';
 import { type ParsedFieldValue, type ResolveField, applyFieldResolver, normalizeRows } from '../../src/data';
 

@@ -2,26 +2,33 @@
 
 `@retikz/plot` 是 plot 分组的核心包：定义 Plot IR，处理 data / transform / scale / coordinate / mark / guide，并通过 composite lowering 接入 `@retikz/core`。
 
-## 模块依赖方向
+## 目录结构与模块依赖
 
-新增代码按图形语法的单向顺序依赖：
+可扩展的图形语法层（coordinate / scale / transform / mark）按「抽象 vs 实现」拆成两处顶层目录：
+
+- `contract/<层>`：扩展契约（核心抽象）——`XxxDefinition` 类型、`defineXxx` 工厂、`AnyXxxDefinition` 宽类型、`extractXxxKey`、层共享接口类型。不依赖具体内置（运行时零依赖 providers）。
+- `providers/<层>`：内置实现——各内置 definition、`BUILTIN_*` 清单、`resolveXxxRegistry`（先注册内置、再合并自定义）、dispatch / apply / resolve 编排与 impl builder。
+
+内置与自定义 definition 经同一 `resolveXxxRegistry` 分派，杜绝「内置白名单 + 扩展补丁接口」分叉。依赖方向 **`contract` ← `providers` ← `pipeline`**（providers 依赖 contract，pipeline 编排 providers）。
 
 ```text
-ir
-  -> data
-  -> transform
-  -> scale
-  -> coordinate
-  -> mark / guide
-  -> lower
-  -> interaction
+schemas       Zod schema / 类型真源（Plot IR 形状），所有模块可依赖
+data          字段对齐 / 解析 / 归一化
+contract/*    coordinate / scale / transform / mark 的扩展契约
+providers/*   上述四层的内置实现，依赖 contract
+guide         axis / legend 下沉
+pipeline      Tier 2 → Kernel IR 下沉编排，调 providers + contract
+interaction   locator / hit-test，复用 pipeline
 ```
 
-- `ir` 是 schema / 类型真源，所有模块都可以依赖 `ir`。
-- 下游模块可以依赖上游模块；上游模块不要反向读取下游模块实现。
-- `lower` 是编排层（Tier 2 → Kernel IR 下沉），可以调用各模块提供的公开函数；具体规则应放回拥有该概念的模块。
-- 跨模块引用走目录 barrel，例如 `../data`、`../mark`、`../scale`；同目录内部才使用具体文件路径。
-- 新增共享逻辑先放到最小合理归属模块；若多个语法层都需要，优先抽到更底层模块或 `@retikz/math` / `@retikz/core`。
+- `contract` / `providers` 各有顶层 `index.ts` barrel；**模块外 import 一律走 `../contract` / `../providers`，不深入到子模块**（如 `../contract/scale`）。
+- `schemas` 是 Zod schema / 类型真源，所有模块都可以依赖 `schemas`。下游可依赖上游；上游不要反向读取下游实现。
+- `pipeline` 是编排层（Tier 2 → Kernel IR 下沉），调用各层 `resolveXxxRegistry` + dispatch 函数；具体规则应放回拥有该概念的层。
+- 新增共享逻辑先放到最小合理归属层；多个语法层都需要时优先抽到更底层或 `@retikz/math` / `@retikz/core`。
+
+### data / guide / interaction 暂无 define 机制
+
+`data` / `guide` / `interaction` 目前**还没有 `defineXxx` / `resolveXxxRegistry` 扩展机制**——早期设计未细化到这一层，按当前需要先保留为内部实现，不进 `contract` / `providers`。后续按需逐步把它们抽象成 contract/providers 对的可扩展层（与 coordinate / scale / transform / mark 对齐）。新增这类抽象前先评估是否值得开放给用户扩展，再补 `defineXxx` + registry + `lowerPlots` 选项 + React 透传四件套。
 
 ## 公共能力复用
 

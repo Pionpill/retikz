@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MarkSchema } from '../../src/ir/mark';
+import { MarkSchema } from '../../src/schemas/mark';
 
 describe('MarkSchema (ADR-05)', () => {
   // Happy path

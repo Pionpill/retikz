@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_TICK_COUNT, resolveLinearScale, scaleTicks } from '../../src/scale/scale';
-import { type ScaleOperation } from '../../src/ir';
-import { resolvePositionScale as resolvePositionScaleOp, resolveScaleRegistry } from '../../src/scale/registry';
+import { DEFAULT_TICK_COUNT, resolveLinearScale, scaleTicks } from '../../src/providers';
+import { type ScaleOperation } from '../../src/schemas';
+import { resolvePositionScale as resolvePositionScaleOp, resolveScaleRegistry } from '../../src/providers';
 import { inferCategoryDomain, toTimestamp } from '../../src/data';
 
 // 内置 scale registry：position 分派经 registry，测试包一层省去逐处传参。

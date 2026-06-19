@@ -1,5 +1,5 @@
 import { isFiniteNumber } from '@retikz/math';
-import { type DataModel, type ExternalRow, PlotFieldType, type PlotFieldTypeValue } from '../ir';
+import { type DataModel, type ExternalRow, PlotFieldType, type PlotFieldTypeValue } from '../schemas';
 import { type ParsedFieldValue, coerceValue, formatImpliedType, formatParser } from './coerce';
 import { resolveFieldPath } from './field';
 

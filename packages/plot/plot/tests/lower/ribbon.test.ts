@@ -1,11 +1,11 @@
 import type { IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type LinkMark, type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
-import { lowerMark } from '../../src/mark/mark';
-import { datumAnchor } from '../../src/mark/anchor';
-import { createCartesianCoordinate } from '../../src/coordinate';
-import type { PositionScale } from '../../src/scale/scale';
+import { type LinkMark, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { lowerMark } from '../../src/providers';
+import { datumAnchor } from '../../src/providers';
+import { createCartesianCoordinate } from '../../src/providers';
+import type { PositionScale } from '../../src/providers';
 
 /**
  * ADR-05（alpha.11）：ribbon mark（sankey / alluvial 流带）下沉契约测试。

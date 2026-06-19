@@ -1,9 +1,9 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { describe, expect, it } from 'vitest';
-import { FieldDefSchema, type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { DataModelSchema } from '../../src/ir/data';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { FieldDefSchema, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { DataModelSchema } from '../../src/schemas/data';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 

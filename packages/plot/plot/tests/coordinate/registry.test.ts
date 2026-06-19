@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 import * as plot from '../../src';
-import { PlotCoordinate } from '../../src/ir';
-import { type AnyCoordinateDefinition, BUILTIN_COORDINATES, createCoordinateFrame, defineCoordinate, extractCoordinateType, resolveCoordinateRegistry } from '../../src/coordinate';
+import { PlotCoordinate } from '../../src/schemas';
+import { type AnyCoordinateDefinition, createCoordinateFrame, defineCoordinate, extractCoordinateType } from '../../src/contract';
+import { BUILTIN_COORDINATES, resolveCoordinateRegistry } from '../../src/providers';
 
 const archDefinition = defineCoordinate({
   schema: z

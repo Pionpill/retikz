@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { PlotSpecSchema } from '../../src/ir';
-import { TransformOperationSchema, TransformSchema } from '../../src/ir/transform';
+import { PlotSpecSchema } from '../../src/schemas';
+import { TransformOperationSchema, TransformSchema } from '../../src/schemas/transform';
 
 describe('TransformSchema (ADR-03)', () => {
   // Happy path

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AxisGuideSchema, GuideSchema, LegendGuideSchema } from '../../src/ir/guide';
+import { AxisGuideSchema, GuideSchema, LegendGuideSchema } from '../../src/schemas/guide';
 
 describe('GuideSchema (ADR-01 alpha.2)', () => {
   // Happy path

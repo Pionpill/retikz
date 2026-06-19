@@ -1,10 +1,10 @@
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { lowerPlots } from '../../src/lower/expand';
-import { deriveScale } from '../../src/scale/scale';
-import { assertScaleFieldCompatible as assertScaleFieldCompatibleOp, resolveScaleRegistry } from '../../src/scale/registry';
-import type { PlotFieldTypeValue } from '../../src/ir';
+import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { lowerPlots } from '../../src/pipeline/expand';
+import { deriveScale } from '../../src/providers';
+import { assertScaleFieldCompatible as assertScaleFieldCompatibleOp, resolveScaleRegistry } from '../../src/providers';
+import type { PlotFieldTypeValue } from '../../src/schemas';
 
 // 内置 scale registry：compat 校验经 registry isFieldCompatible 谓词，测试包一层省去逐处传参。
 const scaleRegistry = resolveScaleRegistry();

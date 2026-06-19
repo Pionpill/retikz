@@ -1,11 +1,11 @@
 import { compileToScene } from '@retikz/core';
 import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { type ExternalRow, type PlotSpec, PlotSpecSchema, PlotTransform } from '../../src/ir';
-import { collectSourceFields } from '../../src/lower/source-fields';
-import { readSourceIndices, tagSourceIndex } from '../../src/lower/provenance';
-import { type AnyTransformDefinition, applyTransforms, defineTransform, extractTransformKind, resolveTransformRegistry } from '../../src/transform';
-import { lowerPlots } from '../../src/lower/expand';
+import { type ExternalRow, type PlotSpec, PlotSpecSchema, PlotTransform } from '../../src/schemas';
+import { collectSourceFields } from '../../src/pipeline/source-fields';
+import { readSourceIndices, tagSourceIndex } from '../../src/pipeline/provenance';
+import { type AnyTransformDefinition, applyTransforms, defineTransform, extractTransformKind, resolveTransformRegistry } from '../../src';
+import { lowerPlots } from '../../src/pipeline/expand';
 
 const doubleDefinition = defineTransform({
   schema: z.object({

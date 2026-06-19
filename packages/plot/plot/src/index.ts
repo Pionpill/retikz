@@ -7,8 +7,8 @@ export {
   defineCoordinate,
   densifyCellContour,
   extractCoordinateType,
-  resolveCoordinateRegistry,
-} from './coordinate';
+} from './contract';
+export { resolveCoordinateRegistry } from './providers';
 export type {
   AxisFrame,
   AnyCoordinateDefinition,
@@ -21,23 +21,26 @@ export type {
   CreateCoordinateFrameOptions,
   DensifyCellContourOptions,
   CoordinateFrame,
-} from './coordinate';
+} from './contract';
 export * from './data/resolve';
 export * from './interaction/locate';
-export * from './ir';
-export * from './lower/expand';
-export * from './lower/layout';
+export * from './schemas';
+export * from './pipeline/expand';
+export * from './pipeline/layout';
 // Built-in scale resolve* builders are internal lowering helpers; expose the
 // ScaleDefinition / registry extension surface here, not the d3 wrappers.
-export { defineScale, extractScaleType, isBuiltinScaleOperation, resolveScaleRegistry } from './scale';
+export { defineScale, extractScaleType, isBuiltinScaleOperation } from './contract';
+export { resolveScaleRegistry } from './providers';
 export type {
   AnyScaleDefinition,
   ChannelResolveContext,
   ChannelScaleDefinition,
   ChannelScaleResolution,
-  ColorSchemeResolver,
-  PositionScale,
   PositionScaleDefinition,
   ScaleDefinition,
-} from './scale';
-export * from './transform';
+} from './contract';
+export type { ColorSchemeResolver, PositionScale } from './providers';
+// Transform / mark extension surface: factory + types from contract; registry helpers from providers.
+export { defineMark, defineTransform, extractTransformKind } from './contract';
+export type { AnyMarkDefinition, AnyTransformDefinition, MarkDefinition, TransformContext, TransformDefinition } from './contract';
+export { BUILTIN_TRANSFORMS, BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND, DEFAULT_TRANSFORM_CONTEXT, aggregateOutputField, applyTransforms, binOutputFields, collectTransformFields, resolveMarkRegistry, resolveTransformRegistry } from './providers';

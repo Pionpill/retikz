@@ -2,8 +2,8 @@ import { compileToScene } from '@retikz/core';
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 const SALES = [
   { month: 0, revenue: 10 },

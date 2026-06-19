@@ -1,4 +1,4 @@
-import type { DataModel, PlotFieldTypeValue } from '../ir';
+import type { DataModel, PlotFieldTypeValue } from '../schemas';
 import type { ParsedFieldValue } from './coerce';
 
 /**

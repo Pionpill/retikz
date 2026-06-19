@@ -1,8 +1,8 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
-import { DEFAULT_PLOT_COLORS } from '../../src/scale/scale';
+import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { DEFAULT_PLOT_COLORS } from '../../src/providers';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 

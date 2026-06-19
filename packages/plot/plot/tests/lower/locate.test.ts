@@ -1,13 +1,13 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
-import { SOURCE_INDEX } from '../../src/lower/provenance';
+import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { SOURCE_INDEX } from '../../src/pipeline/provenance';
 // ADR-02 未来 API：locator 在实现落地前不存在，整文件 import 即会失败（预期）。
 // 解析路径取 ADR file-scope 指明的新模块 src/interaction/locate.ts（同时 re-export 自 src/index）。
 import { createPlotLocator } from '../../src/interaction/locate';
-import { defineTransform } from '../../src/transform';
+import { defineTransform } from '../../src';
 
 /**
  * ADR-02：datum locator 命中预演——逻辑地址 → 位置/元素的确定性正向解析纯函数。
