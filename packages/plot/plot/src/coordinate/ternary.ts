@@ -3,7 +3,7 @@ import { PlotCoordinate, PlotScale, type Ternary2DCoordinate } from '../ir';
 import { Ternary2DSchema } from '../ir/coordinate';
 import type { GuideContext } from '../guide';
 import { computeTernaryFrame } from '../pipeline/layout';
-import { type TickSet, resolvePositionScale } from '../scale';
+import type { TickSet } from '../scale';
 import { assertUniqueAxisDimension } from './axis';
 import { type Cell, type CellGeometry, cellInterval } from './cell';
 import type { AnyCoordinateDefinition, CoordinateDefinition } from './define';
@@ -147,7 +147,7 @@ const ternary2DCoordinateDefinition: CoordinateDefinition<Ternary2DCoordinate> =
     const showAnyLabels = ctx.axisGuides.some(guide => guide.tickLabels !== false);
     const layout = computeTernaryFrame(ctx.width, ctx.height, { hasAxis, labels: hasAxis && showAnyLabels ? TERNARY_TICKS.labels : [] }, { fontSize: ctx.fontSize, margin: ctx.margin });
     const frame = createTernary2DCoordinate(layout.vertices);
-    const placeholderScale = resolvePositionScale({ type: PlotScale.Linear, name: '__ternary', domain: [0, 1] }, [], [0, 1]);
+    const placeholderScale = ctx.buildPositionScale({ type: PlotScale.Linear, name: '__ternary', domain: [0, 1] }, [], [0, 1]);
     const guideContext: GuideContext = {
       plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
       projectX: placeholderScale,
