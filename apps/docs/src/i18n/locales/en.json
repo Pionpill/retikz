@@ -134,7 +134,7 @@
     "compRegionMark": "RegionMark",
     "compReferenceMark": "ReferenceMark",
     "compLinkMark": "LinkMark",
-    "compMarkRegistry": "Registry",
+    "grammarMarkCustom": "Custom Marks",
     "compAxis": "Axis",
     "compLegend": "Legend",
     "examples": "Charts",

@@ -134,7 +134,7 @@
     "compRegionMark": "区域",
     "compReferenceMark": "参考",
     "compLinkMark": "链接",
-    "compMarkRegistry": "注册机制",
+    "grammarMarkCustom": "自定义图元",
     "compAxis": "坐标轴",
     "compLegend": "图例",
     "examples": "图表",
