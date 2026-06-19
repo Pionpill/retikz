@@ -1,9 +1,9 @@
 # ADR-03：行内 text+math 混排（C）—— 文本行升级为 run 序列，公式与文字共基线
 
-- 状态：Accepted（2026-06-19 落地于 v0.4.0-alpha.6）
+- 状态：Accepted（2026-06-19 落地于 v0.4.0-alpha.5；E3 与 E1/E2 同处 alpha.5 未发布周期，故合入 alpha.5 而非另起 alpha.6）
 - 决策日期：2026-06-16（实现 2026-06-19）
 
-> **落地与两处偏离草稿**：(1) `$$...$$` = **display 公式**（不是草稿里的「空 math 跳过」）；独占一个 node 时 = 旧的独立 / 带框公式。(2) **全统一**：同时移除 `node.tex` 字段 + `<TexNode>` + tex 内容 `displayMode` 字段（公式统一为文本里的 math run），ADR-01（独立公式 A）/ ADR-02（带框公式 B）被「内容为单个 `$$...$$` math run + 可选 shape」吸收。命名按 shipped 的 `tex`（非草稿的 `math`/`lowerMath`）：`MathRunSchema.tex`、`options.lowerTex`、warn `TEXT_TEX_PARSE_ERROR` / `TEX_LOWERER_MISSING` / `TEX_INVALID`。解析在 **compile 期**（gated on `lowerTex` 注入），原始字符串留在 IR；新增共享 `compile/text-layout.ts` 混排布局，被 node text / node label / edge label 复用。
+> **落地与两处偏离草稿**：(1) `$$...$$` = **display 公式**（不是草稿里的「空 math 跳过」）；独占一个 node 时 = 独立 / 带框公式。(2) **全统一**：alpha.5 同周期内 E1/E2 曾引入的 `node.tex` 字段 + `<TexNode>` + tex 内容 `displayMode` 一并移除（公式统一为文本里的 math run，node.tex 未随任何 release 发布），ADR-01（独立公式 A）/ ADR-02（带框公式 B）被「内容为单个 `$$...$$` math run + 可选 shape」吸收。命名按 shipped 的 `tex`（非草稿的 `math`/`lowerMath`）：`MathRunSchema.tex`、`options.lowerTex`、warn `TEXT_TEX_PARSE_ERROR` / `TEX_LOWERER_MISSING` / `TEX_INVALID`。解析在 **compile 期**（gated on `lowerTex` 注入），原始字符串留在 IR；新增共享 `compile/text-layout.ts` 混排布局，被 node text / node label / edge label 复用。
 - 关联：[v0.4-alpha.5 roadmap](./roadmap.md) · [ADR-01 tex 包 + node.math](./01-tex-package-and-node-math.md)（共享 `lowerMath` + `IRMathContent`）· [ADR-02 带框公式](./02-node-embedded-math.md) · `ir/text.ts`（行内容模型）· `compile/node.ts` / `compile/text-metrics.ts`（文本测量 / 布局）· `compile/constant.ts`（`CompileWarningCode` / `onWarn`）· `parsers/`（IR 构造期 sugar）
 
 > **范围**：E3「行内 text+math 混排（C）」——一行文字里夹公式，文字与公式左右排在同一基线（TikZ `节点 {当 $v=d/t$ 时}`）。独立公式块（A）见 [ADR-01](./01-tex-package-and-node-math.md)、带框公式（B）见 [ADR-02](./02-node-embedded-math.md)。**本轮最重**——动 core 文本内容模型。

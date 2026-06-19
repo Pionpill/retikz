@@ -4,6 +4,12 @@
 >
 > 关联：[`v0.4 roadmap`](../roadmap.md) · [`core-design.md §7 AI 一等公民`](../../../../../architecture/core-design.md) · `compile/compile.ts`（`options.lowerMath` 注入）· `compile/node.ts`（内容路径）· `ir/text.ts`（行内容模型）· `primitive/{group,path}.ts`
 
+> **✅ 完工对账（2026-06-19）**：alpha.5（E1 + E2 + E3）全部落地。**最终实现形态以 [ADR-03](./03-inline-math-runs.md) 为真源**，与本设计稿有两处偏离，对账如下：
+> 1. **命名**：本稿草拟的 `node.math` / `lowerMath` / `MATH_*` 最终落地为 `tex` 命名——文本里的 `$...$`（inline）/ `$$...$$`（display）/ 显式 `{ runs }`、`options.lowerTex`、warn `TEX_LOWERER_MISSING` / `TEX_INVALID` / `TEXT_TEX_PARSE_ERROR`。
+> 2. **统一模型**：E1/E2 曾引入「公式作 node 内容」`node.tex` + `<TexNode>`，E3（ADR-03）在**同一未发布周期内**将其收敛为「公式 = 文本里的 math run」，`node.tex` / `<TexNode>` / 内容 `displayMode` 一并移除（未随任何 release 发布）。独立公式 = 内容为单个 `$$...$$` 的 node、带框公式 = 该 node 配 shape，A/B 由 C 吸收。
+> 3. 解析在 **compile 期**（gated on `lowerTex` 注入），原始字符串留 IR；新增共享 `compile/text-layout.ts` 混排布局，node text / node label / edge label 复用。
+> 下方 §接入机制 / §子项 是**设计阶段记录**，`node.math` / `lowerMath` 等措辞保留原貌、不回改，以本对账 + ADR-03 为最终口径。验收（见文末）全过：core/tex/react/vanilla `tsc` + 全仓 lint + 全测试绿、三端一致、文档（tex 包页 + karl-circle）同步。
+
 ## 定位
 
 alpha.5 给 retikz 补上**数学排版**——一个 TikZ-inspired 库的旗舰刚需：节点 / 标签里写 LaTeX 公式。守 renderer-agnostic 红线：用 **MathJax SVG 模式**（glyph = SVG path，非字体），lower 成 `PathPrim`，三端（SVG / 浏览器 Canvas / Node 位图）一致、无字体注入。能力落在新独立包 **`@retikz/tex`**，MathJax 走 optional peerDependency；**core 不依赖 MathJax / tex 包**（经 `lowerMath` 注入接入），但本轮 core 新增内容 schema（`IRNode.math` / 行内 math run）+ `lowerMath` 注入点——**alpha.5 是 red-level core 变更**（additive / optional，缺省零回归）。
@@ -16,7 +22,7 @@ alpha.5 给 retikz 补上**数学排版**——一个 TikZ-inspired 库的旗舰
 |---|---|---|---|---|
 | E1 | `@retikz/tex` 包（core 分组）+ `lowerMath` 引擎 + `node.math` 内容（独立公式 A） | E | [ADR-01](./01-tex-package-and-node-math.md) | ✅ Accepted（已实现 + 文档 + changelog；core schema/compile + `packages/core/tex` 引擎，真实 mathjax-full 集成验证；React 公式走 `<Node>` children 对象） |
 | E2 | 带框公式（B）——`node.math` + 任意 shape 容器 | E | [ADR-02](./02-node-embedded-math.md) | ✅ Accepted（经 E1 统一内容路径落地，几乎零增量；B 行为由 `node-math` 测试覆盖） |
-| E3 | 行内 text+math 混排（C）——`IRLineSpec` run 序列 + `$...$` | E | [ADR-03](./03-inline-math-runs.md) | ✅ Accepted（v0.4.0-alpha.6，2026-06-19：`{ runs }` + `$...$`/`$$...$$`（compile 期 gated）+ 共享 `compile/text-layout.ts`；node text / node label / edge label 全覆盖。两处偏离：`$$..$$`=display、同时移除 `node.tex`/`<TexNode>` 全统一） |
+| E3 | 行内 text+math 混排（C）——`IRLineSpec` run 序列 + `$...$` | E | [ADR-03](./03-inline-math-runs.md) | ✅ Accepted（v0.4.0-alpha.5，2026-06-19：`{ runs }` + `$...$`/`$$...$$`（compile 期 gated）+ 共享 `compile/text-layout.ts`；node text / node label / edge label 全覆盖。两处偏离：`$$..$$`=display、并把 E1/E2 的 `node.tex`/`<TexNode>` 收敛进文本 runs 全统一） |
 
 ## 接入机制（2026-06-16 拍板；route 2 激进 + 多 LLM 评审后定稿）
 
@@ -42,9 +48,9 @@ alpha.5 给 retikz 补上**数学排版**——一个 TikZ-inspired 库的旗舰
   - **化学式 / 乐谱等非数学 LaTeX 包**：MathJax 扩展由用户配 macro，core 不内置。
   - **公式内嵌入 retikz 图元 / 交互**：超出排版范围。
 
-## 验收（alpha.5 整体）
+## 验收（alpha.5 整体）✅ 2026-06-19 全过
 
-- E1 / E2 / E3 各自 ADR 验收条款全过；core + tex + 下游 `tsc --noEmit` + 全仓 `pnpm lint` 全绿。
-- core 新增 `IRNode.math` / 行内 math run / `CompileOptions.lowerMath` 均 optional / additive，缺省（无公式、纯文本含 `$`）逐字不变、零回归；`$...$` 解析 gated on `lowerMath` 注入，未接 tex 时 `$` 字面。
-- 三端（SVG / 浏览器 Canvas / Node 位图）公式视觉一致性测试（几何断言 / 字形 path 数量与 bbox）；MathJax 缺失 / 非法 tex 有可诊断降级。
-- `apps/docs` 同步：公式双语文档 + demo（独立公式块 / 节点内嵌 / 行内混排 + MathJax 安装说明）。
+- [x] E1 / E2 / E3 各自 ADR 验收条款全过；core + tex + react + vanilla `tsc --noEmit` + 全仓 `pnpm lint` 全绿；全测试套件绿（core 2176 / react 415 / tex 24 / vanilla 85，含新增 `tests/{parsers/inline-tex,compile/inline-tex,ir/text-runs}`，并迁移删除 node-tex 测试）。
+- [x] core 新增 `IRLineSpec.{ runs }`（`TextRun` / `MathRun`）+ `CompileOptions.lowerTex` 均 optional / additive，缺省（无公式、纯文本含 `$`）逐字不变、零回归；`$...$` 解析 gated on `lowerTex` 注入，未接 tex 时 `$` 字面。
+- [x] 公式统一 emit 成既有 `PathPrim` / `TextPrim` / `GroupPrim`——**renderer 三端零改动**（沿用既有 prim 的三端一致性覆盖），含 `@retikz/tex` 真实 mathjax-full 经 `compileToScene` 端到端用例；MathJax 缺失 / 非法 tex / 不闭合 `$` 可诊断降级（`TEX_LOWERER_MISSING` / `TEX_INVALID` / `TEXT_TEX_PARSE_ERROR`）、不崩。
+- [x] `apps/docs` 同步：tex 包页双语（`$...$` / `$$...$$` / `{ runs }` / 带框 / 多行 / 手动注入）+ karl-circle 七步示例（边标注、刻度、α、右侧文字 + 公式混排说明框）；changelog alpha.5 + ADR-03 + 本 roadmap 对账。

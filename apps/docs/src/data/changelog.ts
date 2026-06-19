@@ -107,49 +107,25 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
-            version: 'alpha.6',
+            version: 'alpha.5',
             date: '2026-06-19',
             summary: {
-              zh: '行内 text+math 混排：任意文本里写 `$...$`（行内）/ `$$...$$`（display）或显式 `{ runs }` 逐 run 着色，node 文本 / node label / 边标注全支持；同时移除 `node.tex` 字段与 `<TexNode>`（公式统一为文本里的 math run）。',
-              en: 'Inline text+math mixing: write `$...$` (inline) / `$$...$$` (display) or explicit `{ runs }` with per-run color in any text — node text, node labels, and edge labels alike; and removes the `node.tex` field and `<TexNode>` (formulas are unified as math runs in text).',
+              zh: '新增 `@retikz/tex` 包 + `CompileOptions.lowerTex` 注入：任意文本里用 `$...$`（行内）/ `$$...$$`（display）或显式 `{ runs }` 写 LaTeX 公式，行内 text+math 混排（node 文本 / node label / 边标注全支持），经注入能力渲染成字形路径、三端一致；core 不依赖 MathJax。',
+              en: 'New `@retikz/tex` package + `CompileOptions.lowerTex` injection: write LaTeX with `$...$` (inline) / `$$...$$` (display) or explicit `{ runs }` in any text — inline text+math mixing across node text, node labels, and edge labels — rendered to glyph paths via the injected capability, consistent across backends; core does not depend on MathJax.',
             },
             items: [
               {
-                label: { zh: '行内 `$...$` / `$$...$$` 混排', en: 'Inline `$...$` / `$$...$$`' },
+                label: { zh: '行内 `$...$` / `$$...$$` text+math 混排', en: 'Inline `$...$` / `$$...$$` text+math' },
                 content: {
-                  zh: '`IRLineSpec` 新增 `{ runs }` 第三支（`TextRun` / `MathRun`，每 run 可 `fill` / `font`）；纯字符串里的 `$...$`（inline）/ `$$...$$`（display）在编译期、**注入 lowerTex 时**解析（未注入则 `$` 字面，含 `$` 旧文本零回归）；`\\$` 字面、不闭合 `$` 容错 + `TEXT_TEX_PARSE_ERROR`。Node text / `NodeLabel.text` / `StepLabel.text` 全接受。混排行 emit 成 `GroupPrim(TextPrim + 字形 PathPrim)`，公式按 depth 贴文字基线，renderer 零改动。',
-                  en: '`IRLineSpec` gains a third `{ runs }` branch (`TextRun` / `MathRun`, each with `fill` / `font`); `$...$` (inline) / `$$...$$` (display) in plain strings are parsed at compile time **when lowerTex is injected** (otherwise `$` is literal, existing `$` text unchanged); `\\$` is literal, an unbalanced `$` is tolerated with `TEXT_TEX_PARSE_ERROR`. Accepted in node text, `NodeLabel.text`, and `StepLabel.text`. A mixed line emits `GroupPrim(TextPrim + glyph PathPrim)` with the formula baseline-aligned by depth; no renderer change.',
+                  zh: '`IRLineSpec` 增 `{ runs }` 第三支（`TextRun` / `MathRun`，每 run 可 `fill` / `font`）；纯字符串里的 `$...$`（inline）/ `$$...$$`（display）在编译期、**注入 lowerTex 时**解析（未注入则 `$` 字面、含 `$` 旧文本零回归），`\\$` 字面、不闭合 `$` 容错 `TEXT_TEX_PARSE_ERROR`。node 文本 / `NodeLabel.text` / `StepLabel.text` 全接受。混排行 emit 成 `GroupPrim(TextPrim + 字形 PathPrim)`，公式按 depth 贴文字基线、renderer 零改动。独立公式 = 内容为单个 `$$...$$` 的 node（按字形 bbox 定尺寸），带框公式 = 该 node 配 `shape`。',
+                  en: '`IRLineSpec` gains a third `{ runs }` branch (`TextRun` / `MathRun`, each with `fill` / `font`); `$...$` (inline) / `$$...$$` (display) in plain strings are parsed at compile time **when lowerTex is injected** (otherwise `$` is literal, existing `$` text unchanged), `\\$` literal, an unbalanced `$` tolerated with `TEXT_TEX_PARSE_ERROR`. Accepted in node text, `NodeLabel.text`, and `StepLabel.text`. A mixed line emits `GroupPrim(TextPrim + glyph PathPrim)` with the formula baseline-aligned by depth; no renderer change. A standalone formula is a node whose content is one `$$...$$` (sized by the glyph bbox); a framed formula is that node plus a `shape`.',
                 },
               },
               {
-                label: { zh: '移除 node.tex / TexNode（破坏性）', en: 'Removed node.tex / TexNode (breaking)' },
+                label: { zh: 'lowerTex 注入 + `@retikz/tex`', en: 'lowerTex injection + `@retikz/tex`' },
                 content: {
-                  zh: '`IRNode.tex`、`<TexNode>`、tex 内容的 `displayMode` 字段移除；独立公式 = 内容为一个 `$$...$$` 的 node（按字形 bbox 定尺寸），带框公式 = 该 node 配 `shape`。`useLowerTex` / `createLowerTex` / `createMathJaxEngine` / `<Layout lowerTex>` 保留。0.x 不留别名：旧 `node.tex` / `<TexNode>` 直接迁到 `$$...$$`。',
-                  en: 'Removes `IRNode.tex`, `<TexNode>`, and the tex `displayMode` field; a standalone formula is a node whose content is one `$$...$$` (sized by the glyph bbox), a framed formula is that node plus a `shape`. `useLowerTex` / `createLowerTex` / `createMathJaxEngine` / `<Layout lowerTex>` stay. No 0.x aliases: migrate old `node.tex` / `<TexNode>` to `$$...$$`.',
-                },
-              },
-            ],
-          },
-          {
-            version: 'alpha.5',
-            date: '2026-06-17',
-            summary: {
-              zh: '新增 node 公式内容 `tex`（与 text 平行）+ `CompileOptions.lowerTex` 注入点：LaTeX 公式经注入能力渲染成字形路径，三端一致；core 不依赖 MathJax。',
-              en: 'Adds node tex content `tex` (parallel to text) + a `CompileOptions.lowerTex` injection: LaTeX renders to glyph paths via the injected capability, consistent across backends; core does not depend on MathJax.',
-            },
-            items: [
-              {
-                label: { zh: 'node.tex 公式内容', en: 'node.tex content' },
-                content: {
-                  zh: '`IRNode` 新增 `tex`（`{ tex, displayMode? }`，与 `text` 互斥、`tex` 优先）；compile 经注入 `lowerTex` 渲染字形 + bbox 定尺寸——无 shape = 独立公式块、配 shape = 带框公式。字形 emit 成 `PathPrim`（renderer 零改动），可连线 / compass anchor / 叠加 shadow·blend。',
-                  en: '`IRNode` gains `tex` (`{ tex, displayMode? }`, mutually exclusive with `text`, `tex` wins); compile renders glyphs + bbox via the injected `lowerTex`, sizing the node — no shape = standalone block, with a shape = framed formula. Glyphs emit as `PathPrim` (no renderer change), connectable / compass-anchored / stackable with shadow·blend.',
-                },
-              },
-              {
-                label: { zh: 'lowerTex 注入点', en: 'lowerTex injection' },
-                content: {
-                  zh: '`CompileOptions.lowerTex`（`LowerTex` / `LoweredTex` 类型）+ warn code `TEX_LOWERER_MISSING` / `TEX_INVALID`；能力由 `@retikz/tex` 提供，缺注入 / 非法 tex 降级 + 警告、不崩。',
-                  en: '`CompileOptions.lowerTex` (`LowerTex` / `LoweredTex` types) + warn codes `TEX_LOWERER_MISSING` / `TEX_INVALID`; the capability is provided by `@retikz/tex` — missing injection / invalid tex degrade with a warning, never crash.',
+                  zh: '`CompileOptions.lowerTex`（`LowerTex` / `LoweredTex` 类型）+ warn code `TEX_LOWERER_MISSING` / `TEX_INVALID` / `TEXT_TEX_PARSE_ERROR`；能力由 `@retikz/tex` 提供（MathJax SVG → 字形 path、MathJax optional peer、React `useLowerTex` + `<Layout lowerTex>`），缺注入 / 非法 tex 降级 + 警告、不崩。',
+                  en: '`CompileOptions.lowerTex` (`LowerTex` / `LoweredTex` types) + warn codes `TEX_LOWERER_MISSING` / `TEX_INVALID` / `TEXT_TEX_PARSE_ERROR`; the capability is provided by `@retikz/tex` (MathJax SVG → glyph paths, MathJax as an optional peer, React `useLowerTex` + `<Layout lowerTex>`) — missing injection / invalid tex degrade with a warning, never crash.',
                 },
               },
             ],
@@ -305,17 +281,17 @@ export const changelog: Array<Release> = [
         subVersions: [
           {
             version: 'alpha.5',
-            date: '2026-06-17',
+            date: '2026-06-19',
             summary: {
-              zh: '`<Node>` 公式内容（`tex` prop 或 children 对象）+ `<Layout lowerTex>` 公式渲染注入通道。',
-              en: '`<Node>` tex content (`tex` prop or children object) + a `<Layout lowerTex>` injection channel for formula rendering.',
+              zh: '`<Layout lowerTex>` 公式渲染注入通道 + `<Node>` 文本里写 `$...$` / `$$...$$` 行内公式。',
+              en: '`<Layout lowerTex>` injection channel for formula rendering + `$...$` / `$$...$$` inline formulas in `<Node>` text.',
             },
             items: [
               {
-                label: { zh: 'Node 公式内容 + Layout lowerTex', en: 'Node tex content + Layout lowerTex' },
+                label: { zh: 'Layout lowerTex + Node 文本公式', en: 'Layout lowerTex + formulas in Node text' },
                 content: {
-                  zh: '`<Node tex={{ tex, displayMode? }}>` 或直接写进 children `<Node>{{ tex }}</Node>` 把公式作节点内容；`<Layout lowerTex>` 把 `@retikz/tex` 的渲染能力透传给 `compileToScene`（补齐注入通道）。',
-                  en: '`<Node tex={{ tex, displayMode? }}>` — or written straight into children `<Node>{{ tex }}</Node>` — sets a formula as node content; `<Layout lowerTex>` forwards the `@retikz/tex` rendering capability to `compileToScene` (completing the injection channel).',
+                  zh: '`<Layout lowerTex>` 把 `@retikz/tex` 的渲染能力透传给 `compileToScene`；`<Node>` 文本（children / `text` prop）里直接写 `$...$`（行内）/ `$$...$$`（display），或显式 `text={[{ runs }]}` 做文字 + 公式混排。',
+                  en: '`<Layout lowerTex>` forwards the `@retikz/tex` rendering capability to `compileToScene`; write `$...$` (inline) / `$$...$$` (display) straight in `<Node>` text (children / `text` prop), or explicit `text={[{ runs }]}` to mix text and formulas.',
                 },
               },
             ],
@@ -459,8 +435,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'SVG 字形解析', en: 'SVG glyph parsing' },
                 content: {
-                  zh: '解析 MathJax SVG：path d（M/L/H/V/C/S/Q/T/Z）+ 嵌套 `g transform` 累积 + 全局 y 翻转 + 分数线 rect → 左上原点、y-down、user 单位字形 + bbox / depth（行内对齐预留）。',
-                  en: 'Parses MathJax SVG: path d (M/L/H/V/C/S/Q/T/Z) + nested `g transform` accumulation + global y-flip + fraction-bar rects → top-left-origin, y-down, user-unit glyphs + bbox / depth (reserved for inline alignment).',
+                  zh: '解析 MathJax SVG：path d（M/L/H/V/C/S/Q/T/Z）+ 嵌套 `g transform` 累积 + 全局 y 翻转 + 分数线 rect → 左上原点、y-down、user 单位字形 + bbox / depth（depth 供行内 text+math 混排按基线对齐）。',
+                  en: 'Parses MathJax SVG: path d (M/L/H/V/C/S/Q/T/Z) + nested `g transform` accumulation + global y-flip + fraction-bar rects → top-left-origin, y-down, user-unit glyphs + bbox / depth (depth used to baseline-align inline text+math).',
                 },
               },
             ],
