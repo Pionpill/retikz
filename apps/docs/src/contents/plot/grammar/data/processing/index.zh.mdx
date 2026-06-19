@@ -52,7 +52,8 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 | 场景 | 写法 | 进 IR |
 | --- | --- | --- |
 | 默认格式 | 只写 `type` / 省略解析 | 是 |
-| 常见非默认格式 | 在 `model` 字段上写 `format` | 是 |
+| 常见非默认格式 | 在 `model` 字段上写内置 `format` | 是 |
+| 可复用的自定义格式 | `defineFieldFormat` + `<Plot formatDefinitions>`，`model` 写格式名 | 是，IR 只存格式名串 |
 | 任意运行时逻辑 | 给 `<Plot>` 写 `resolveField` | 否，函数只在运行时使用 |
 
 ### 声明式解析格式
@@ -87,7 +88,39 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 - **format 蕴含 type**：写了 `format` 就可省略 `type`——`{ name: 'ratio', format: 'percent' }` 自动当 continuous，不会被推断成分类。
 - **必须与 type 兼容**：format 绑定的类型与你写的 `type` 冲突（如 `{ type: 'continuous', format: 'slashDate' }`）会**报清晰错误**，不静默。
 - `slashDate` 只认严格 `YYYY/MM/DD`；`DD/MM/YYYY`、`MM/DD/YYYY` 这类有地区歧义的布局不收（避免同一串在不同环境解析成不同日期）。
-- 解析优先级：`resolveField` 的 `parse` > 声明式 `format` > 内置默认。
+- 解析优先级：`resolveField` 的 `parse` > 声明式 `format`（内置或自定义）> 内置默认。
+
+### 自定义具名格式
+
+内置 `format` 词表之外，常见的「自定义但可复用」格式（货币串、地区日期、`'1.2万'` 这类带单位的数）可以用 `defineFieldFormat` 注册成自己的具名格式。它和坐标系 `defineCoordinate`、变换 `defineTransform`、图元 `defineMark` 同一套范式：写进 `model` 的仍然只是一个格式名串，**进 IR、可序列化**；真正的解析函数放在 runtime definition 里，经 `<Plot formatDefinitions={[...]}>` 注入。
+
+```tsx
+// 把 '1.2万' 解析成 12000：name 即写进 model 的格式名，impliedType 让省略 type 的字段当 continuous
+const wan = defineFieldFormat({
+  name: 'wan',
+  impliedType: 'continuous',
+  parse: raw => (typeof raw === 'string' && raw.endsWith('万') ? Number(raw.slice(0, -1)) * 10000 : Number(raw)),
+});
+
+<Plot data={rows} model={[{ name: 'month', type: 'temporal' }, { name: 'revenue', format: 'wan' }]}
+      formatDefinitions={[wan]}>{/* … */}</Plot>
+```
+
+<ComponentPreview name="processing-custom-format" sourceFiles={['processing-custom-format.data.ts']} />
+
+定义契约：
+
+| 字段 | 作用 |
+| --- | --- |
+| `name` | 注册键 = 写进 `model` 的 `format` 串；必须非空、且不与内置格式名（`iso` / `percent` / …）冲突。 |
+| `impliedType` | 这个格式唯一蕴含的测量类型。省略 `type` 的字段由它覆盖推断；显式 `type` 与之冲突会报清晰错误（和内置 format 同规则）。 |
+| `parse` | 原始值 → canonical 值（continuous / temporal 返数字，categorical 返字符串 / 数字）；返回 `undefined` / `NaN` 表示非法，下游按非有限值跳过。必须确定性。 |
+
+规则：
+
+- 自定义格式与内置经**同一注册表**分派：内置 6 个恒可用，自定义 `name` 撞内置名或两个自定义同名会 fail-loud；`model` 写了未注册的格式名也在编译期报错，不静默。
+- 解析优先级与内置 `format` 相同（`resolveField.parse` 仍可对同字段覆盖它）。
+- 适合「格式可枚举、想随 spec 持久化、想跨图复用」的场景；真正一次性、按数据源动态决定的解析仍用下面的 `resolveField`。
 
 解析和归一化发生在 transform、scale、mark 之前。Plot 会把解析后的值按逻辑字段名写入 canonical 行（规范化行：解析、归一后写回逻辑字段名的标准行）；后续所有环节都读这份值。因此 `fieldMap={{ revenue: 'finance.amount' }}`、`format: 'percent'` 和 `resolveField` 都只影响数据准备阶段，mark 里仍然写 `y="revenue"`。
 
@@ -173,7 +206,7 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 | 1 | 收集当前配置引用的字段，得到本次真正需要处理的字段集合 |
 | 2 | 用 `fieldMap` 把逻辑字段对齐到真实数据路径；没有映射时，真实路径等于逻辑字段名 |
 | 3 | 解析字段类型：`resolveField.type` 优先，其次 model / format / 自动推断 |
-| 4 | 解析字段值：`resolveField.parse` 优先，其次声明式 `format`，最后走内置转换 |
+| 4 | 解析字段值：`resolveField.parse` 优先，其次声明式 `format`（内置或 `formatDefinitions` 注册的自定义），最后走内置转换 |
 | 5 | 把解析后的值写回 canonical 行的逻辑字段名，供后续阶段统一读取 |
 | 6 | 按 `validateData` / `invalid` 对参与字段做抽样或全量校验 |
 

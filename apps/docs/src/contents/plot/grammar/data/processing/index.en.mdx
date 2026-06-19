@@ -52,7 +52,8 @@ Built-in parsing only accepts fixed shapes: `temporal` takes `Date` / epoch-ms /
 | Case | Write | Enters IR |
 | --- | --- | --- |
 | Default formats | declare `type`, or omit parsing | Yes |
-| Common non-default formats | add `format` on a model field | Yes |
+| Common non-default formats | add a built-in `format` on a model field | Yes |
+| Reusable custom format | `defineFieldFormat` + `<Plot formatDefinitions>`, `model` names the format | Yes, the IR stores only the format name |
 | Arbitrary runtime logic | pass `resolveField` to `<Plot>` | No, the function is runtime-only |
 
 ### format
@@ -87,7 +88,39 @@ Rules:
 - **`format` implies `type`**: with a `format` you can omit `type` — `{ name: 'ratio', format: 'percent' }` is continuous automatically, never inferred as categorical.
 - **Must be compatible with `type`**: if the format's bound type conflicts with the `type` you wrote (e.g. `{ type: 'continuous', format: 'slashDate' }`), retikz **throws a clear error** rather than going silent.
 - `slashDate` accepts only strict `YYYY/MM/DD`; ambiguous layouts like `DD/MM/YYYY` / `MM/DD/YYYY` are not accepted (so the same string can't parse to different dates in different environments).
-- Parsing priority: `resolveField`'s `parse` > declarative `format` > built-in default.
+- Parsing priority: `resolveField`'s `parse` > declarative `format` (built-in or custom) > built-in default.
+
+### Custom named formats
+
+Beyond the built-in `format` vocabulary, common "custom but reusable" formats (currency strings, regional dates, unit-suffixed numbers like `'1.2万'`) can be registered as your own named format with `defineFieldFormat`. It follows the same pattern as `defineCoordinate`, `defineTransform`, and `defineMark`: what goes into `model` is still just a format-name string that **enters the IR and is serializable**; the actual parser lives in a runtime definition injected via `<Plot formatDefinitions={[...]}>`.
+
+```tsx
+// Parse '1.2万' to 12000: name is the format string in model; impliedType makes a type-less field continuous
+const wan = defineFieldFormat({
+  name: 'wan',
+  impliedType: 'continuous',
+  parse: raw => (typeof raw === 'string' && raw.endsWith('万') ? Number(raw.slice(0, -1)) * 10000 : Number(raw)),
+});
+
+<Plot data={rows} model={[{ name: 'month', type: 'temporal' }, { name: 'revenue', format: 'wan' }]}
+      formatDefinitions={[wan]}>{/* … */}</Plot>
+```
+
+<ComponentPreview name="processing-custom-format" sourceFiles={['processing-custom-format.data.ts']} />
+
+Definition contract:
+
+| Field | Purpose |
+| --- | --- |
+| `name` | Registration key = the `format` string in `model`; must be non-empty and must not collide with a built-in format name (`iso` / `percent` / …). |
+| `impliedType` | The single measurement type this format implies. A type-less field gets it as an override; a conflicting explicit `type` throws a clear error (same rule as built-in formats). |
+| `parse` | Raw value → canonical value (numbers for continuous / temporal, string / number for categorical); return `undefined` / `NaN` to mark a value invalid, skipped downstream as non-finite. Must be deterministic. |
+
+Rules:
+
+- Custom and built-in formats dispatch through **one registry**: the 6 built-ins are always available; a custom `name` that collides with a built-in or another custom throws fail-loud, and a `model` that names an unregistered format errors at compile time rather than going silent.
+- Parsing priority matches built-in `format` (`resolveField.parse` can still override it on the same field).
+- Use it when the format is enumerable, should persist with the spec, and is reused across charts; truly one-off, per-source parsing still goes through `resolveField` below.
 
 Parsing and normalization happen before transforms, scales, and marks. Plot writes parsed values back under logical field names into the canonical row (the standardized row after parsing and coercion); every later stage reads that value. So `fieldMap={{ revenue: 'finance.amount' }}`, `format: 'percent'`, and `resolveField` only affect preparation; the mark still says `y="revenue"`.
 
@@ -173,7 +206,7 @@ Data processing runs before mark lowering. Its job is to turn external rows from
 | 1 | Collect fields referenced by the current config, producing the field set that actually needs work |
 | 2 | Use `fieldMap` to align logical fields with physical data paths; without a mapping, the physical path is the logical field name |
 | 3 | Resolve field types: `resolveField.type` first, then model / format / inference |
-| 4 | Parse field values: `resolveField.parse` first, then declarative `format`, then built-in coercion |
+| 4 | Parse field values: `resolveField.parse` first, then declarative `format` (built-in or custom registered via `formatDefinitions`), then built-in coercion |
 | 5 | Write parsed values back into the canonical row under logical field names |
 | 6 | Use `validateData` / `invalid` to sample-check or fully check participating fields |
 
