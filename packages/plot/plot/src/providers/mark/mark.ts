@@ -1,18 +1,7 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope, type IRStep } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
-import { type ExternalRow, type IntervalMark, type LinkMark, type Mark, type MarkOperation, type PathMark, PlotMark, type PlotMarkValue, type PointMark, type ReferenceMark, type RegionMark } from '../../schemas';
-import { LINK_DEFAULT_CURVATURE, buildGenericIntervalContext, buildIntervalContext, datumAnchor, linkBandGeometry, linkEndpoints, markCell, roleValues } from './anchor';
+import { type AnyMarkDefinition, type Cell, type CellGeometry, type ColorOf, type CoordinateFrame, type FieldCollector, type IntervalContext, type LabelOf, type MarkChannels, type MarkDefinition, cellGeometryAnchor, hasProjectCell, isRenderableCellGeometry } from '../../contract';
 import { channelValue, compareByPath, inferCategoryDomain, resolveFieldPath } from '../../features';
-import type { AnyMarkDefinition, MarkDefinition } from '../../contract/mark';
-import {
-  type Cell,
-  type CellGeometry,
-  type CoordinateFrame,
-  cellGeometryAnchor,
-  hasProjectCell,
-  isRenderableCellGeometry,
-} from '../../contract/coordinate';
-import { type CartesianCoordinateFrame, type PolarCoordinateFrame, type PolarVertex, densifyPolarSegments, isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame, toPolarVertex } from '../../providers/coordinate';
 import {
   type DatumIdRegistrar,
   type ProvenanceContext,
@@ -23,8 +12,10 @@ import {
   readSourceIndices,
   seriesPathMeta,
   slug,
-} from '../../pipeline/provenance';
-import type { ColorOf, FieldCollector, IntervalContext, LabelOf, MarkChannels } from '../../contract';
+} from '../../pipeline';
+import { type ExternalRow, type IntervalMark, type LinkMark, type Mark, type MarkOperation, type PathMark, PlotMark, type PlotMarkValue, type PointMark, type ReferenceMark, type RegionMark } from '../../schemas';
+import { type CartesianCoordinateFrame, type PolarCoordinateFrame, type PolarVertex, densifyPolarSegments, isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame, toPolarVertex } from '../coordinate';
+import { LINK_DEFAULT_CURVATURE, buildGenericIntervalContext, buildIntervalContext, datumAnchor, linkBandGeometry, linkEndpoints, markCell, roleValues } from './anchor';
 
 /** 散点 glyph 默认直径（user units，已补偿 circle 外接） */
 const POINT_SIZE = 10;

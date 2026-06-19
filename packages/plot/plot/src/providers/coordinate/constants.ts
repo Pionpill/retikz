@@ -1,8 +1,7 @@
+import { type AnyCoordinateDefinition, extractCoordinateType } from '../../contract';
 import { CARTESIAN_COORDINATES } from './cartesian';
 import { POLAR_COORDINATES } from './polar';
 import { TERNARY_COORDINATES } from './ternary';
-import type { AnyCoordinateDefinition } from '../../contract/coordinate';
-import { extractCoordinateType } from '../../contract/coordinate';
 
 /**
  * 内置坐标系的 registry 元数据。

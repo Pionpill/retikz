@@ -1,5 +1,5 @@
-import { type AnyTransformDefinition, type TransformContext, defineTransform, extractTransformKind } from '../../contract/transform';
-import { readSourceIndex, readSourceIndices, withGroupProvenance } from '../../pipeline/provenance';
+import { type AnyTransformDefinition, type TransformContext, defineTransform, extractTransformKind } from '../../contract';
+import { readSourceIndex, readSourceIndices, withGroupProvenance } from '../../pipeline';
 import {
   type AggregateTransform,
   AggregateTransformSchema,
@@ -15,7 +15,7 @@ import {
   SortTransformSchema,
   type StackTransform,
   StackTransformSchema,
-} from '../../schemas/transform';
+} from '../../schemas';
 import { aggregateOutputField, applyAggregate, applyBin, binOutputFields } from './group';
 import { DEFAULT_DERIVE_END_FIELD, DEFAULT_DERIVE_START_FIELD, DEFAULT_END_FIELD, DEFAULT_JITTER_X_FIELD, DEFAULT_JITTER_Y_FIELD, DEFAULT_START_FIELD, applyDeriveInterval, applyJitter, applyNormalize, applySort, applyStack } from './row';
 

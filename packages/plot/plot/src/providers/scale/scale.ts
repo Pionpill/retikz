@@ -41,8 +41,8 @@ import {
   interpolateViridis,
   schemeCategory10,
 } from 'd3-scale-chromatic';
-import { inferCategoryDomain, toTimestamp } from '../../features';
 import type { PositionScale, TickSet } from '../../contract';
+import { inferCategoryDomain, toTimestamp } from '../../features';
 import { BUILTIN_COLOR_SCHEMES, type BandScale, type DivergingColorScale, type FieldDef, type LogScale, type OrdinalScale, PlotColorScheme, type PlotColorSchemeValue, PlotFieldType, type PlotFieldTypeValue, PlotScale, type PointScale, type PowScale, type QuantileColorScale, type QuantizeColorScale, type Scale, type SequentialColorScale, type SqrtScale, type ThresholdColorScale, type TimeScale } from '../../schemas';
 
 /** 默认目标刻度数（d3 ticks 的提示值，非硬约束——实际数量按 nice 区间取整定） */

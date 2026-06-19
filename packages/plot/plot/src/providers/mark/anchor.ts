@@ -1,14 +1,7 @@
 import { isFiniteNumber } from '@retikz/math';
-import { type Channel, type ExternalRow, type IntervalBound, IntervalBoundKind, type IntervalMark, type LinkMark, type LinkOrientationValue, type Mark, PlotCoordinate, PlotMark } from '../../schemas';
+import { type Cell, type CoordinateFrame, type DimensionRole, type IntervalContext, type PositionScale, cellGeometryAnchor, hasProjectCell } from '../../contract';
 import { channelValue, inferCategoryDomain, resolveFieldPath } from '../../features';
-import {
-  type Cell,
-  type CoordinateFrame,
-  type DimensionRole,
-  cellGeometryAnchor,
-  hasProjectCell,
-} from '../../contract/coordinate';
-import type { IntervalContext, PositionScale } from '../../contract';
+import { type Channel, type ExternalRow, type IntervalBound, IntervalBoundKind, type IntervalMark, type LinkMark, type LinkOrientationValue, type Mark, PlotCoordinate, PlotMark } from '../../schemas';
 import {
   type CartesianCoordinateFrame,
   type PolarCoordinateFrame,
@@ -16,7 +9,7 @@ import {
   isGenericCoordinateFrame,
   isPolarCoordinateFrame,
   isTernary2DCoordinateFrame,
-} from '../../providers/coordinate';
+} from '../coordinate';
 
 /**
  * 取某 mark 在某位置角色下的 encoding 通道（投影时按 frame.roles 序逐角色取值）

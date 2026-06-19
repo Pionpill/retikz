@@ -1,7 +1,6 @@
 import { JsonObjectSchema } from '@retikz/core';
+import { type AnyTransformDefinition, type FieldCollector, type TransformContext } from '../../contract';
 import { type ExternalRow, type TransformOperation } from '../../schemas';
-import type { FieldCollector } from '../../contract';
-import { type AnyTransformDefinition, type TransformContext } from '../../contract/transform';
 import { DEFAULT_TRANSFORM_CONTEXT, resolveTransformRegistry } from './definitions';
 
 /** 解析并校验单个 transform operation；返回可安全喂给 definition 的宽类型。 */

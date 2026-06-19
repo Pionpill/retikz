@@ -1,4 +1,4 @@
-import { type AnyCoordinateDefinition, extractCoordinateType } from '../../contract/coordinate';
+import { type AnyCoordinateDefinition, extractCoordinateType } from '../../contract';
 import { BUILTIN_COORDINATES } from './constants';
 
 /**

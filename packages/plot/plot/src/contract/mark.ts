@@ -3,7 +3,7 @@ import type { ExternalRow, Mark, MarkOperation } from '../schemas';
 import type { FieldCollector, MarkChannels } from './channel';
 import type { Cell, CoordinateFrame, DimensionRole } from './coordinate';
 // MarkProvenance 仍依赖 pipeline 的 ProvenanceContext / DatumIdRegistrar（infra，待 ③ 评估），暂从 providers 引入
-import type { MarkProvenance } from '../providers/mark';
+import type { MarkProvenance } from '../providers';
 
 /**
  * 区间柱（interval mark）摆放上下文：lowering 与 locator 共享的一次性派生量

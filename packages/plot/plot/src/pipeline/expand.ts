@@ -1,21 +1,11 @@
 import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, JsonObjectSchema, defineComposite } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
 import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type MarkOperation, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
-import { resolveIntervalBound } from '../providers';
-import { type ResolveField, type ResolveLabel, applyFieldResolver, assertAllValuesValid, channelValue, labelOf, normalizeRows, resolveFieldPath, resolveFieldTypes, toTimestamp, validateBoundData } from '../features';
-import { type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../features';
+import { type CategoryOrder, type ChannelResolution, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyTransforms, assertBaselineScaleCompatible, assertScaleFieldCompatible, collectFormatFields, deriveScale, lowerMark, makeColorSchemeResolver, makeNumericStyleResolver, makeOpacityResolver, makeShapeResolver, makeSizeResolver, makeStrokeWidthResolver, orderedCategoryDomain, resolveChannelScale, resolveCoordinateRegistry, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, scaleTicks } from '../providers';
+import { type LegendEntry, type LegendInput, type ResolveField, type ResolveLabel, applyFieldResolver, assertAllValuesValid, channelValue, labelOf, lowerCustomAxis, lowerGuide, lowerLegend, normalizeRows, resolveFieldPath, resolveFieldTypes, toTimestamp, validateBoundData } from '../features';
+import { type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type ChannelResolveContext, type ColorOf, type CoordinateFrame, type FieldFormatDefinition, type LabelOf, isBuiltinScaleOperation } from '../contract';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect } from './layout';
-import { lowerMark } from '../providers';
-import type { ColorOf, LabelOf } from '../contract';
-import { type ChannelResolution, type ScaleDescriptor, makeNumericStyleResolver, makeOpacityResolver, makeShapeResolver, makeSizeResolver, makeStrokeWidthResolver } from '../providers';
-import { type AnyCoordinateDefinition, type CoordinateFrame } from '../contract';
-import { resolveCoordinateRegistry } from '../providers';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
-import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, deriveScale, makeColorSchemeResolver, orderedCategoryDomain, resolveLinearScale, resolveSqrtScale, scaleTicks } from '../providers';
-import { type AnyScaleDefinition, type ChannelResolveContext, isBuiltinScaleOperation } from '../contract';
-import { assertBaselineScaleCompatible, assertScaleFieldCompatible, resolveChannelScale, resolvePositionScale, resolveScaleRegistry } from '../providers';
-import { type AnyMarkDefinition, type AnyTransformDefinition, type FieldFormatDefinition } from '../contract';
-import { applyTransforms, collectFormatFields, resolveFormatRegistry, resolveMarkRegistry, resolveTransformRegistry } from '../providers';
 import { collectSourceFields } from './source-fields';
 
 /** link 的 target 端通道（source 端走 x/yChannelOf；两端都须纳入位置 scale 域，否则 target 投影越界） */

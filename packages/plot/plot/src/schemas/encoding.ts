@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import { AtDirection } from '@retikz/core';
+import { z } from 'zod';
 import { ScalarValueSchema } from './data';
 
 export const ChannelSchema = z

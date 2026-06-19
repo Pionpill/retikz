@@ -1,5 +1,6 @@
 import { JsonObjectSchema } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
+import { type AnyScaleDefinition, type ChannelResolveContext, type ChannelScaleResolution, type PositionScale, defineScale, extractScaleType, isBuiltinScaleOperation } from '../../contract';
 import { inferCategoryDomain } from '../../features';
 import {
   type BandScale,
@@ -34,7 +35,6 @@ import {
   type TimeScale,
   TimeScaleSchema,
 } from '../../schemas';
-import { type AnyScaleDefinition, type ChannelResolveContext, type ChannelScaleResolution, type PositionScale, defineScale, extractScaleType, isBuiltinScaleOperation } from '../../contract/scale';
 import {
   type ColorScaleEvaluator,
   bandPositionScale,

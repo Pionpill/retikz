@@ -1,8 +1,7 @@
 import { createFieldCollector } from '../features';
 import { type PlotSpec } from '../schemas';
-import { collectMarkFields, resolveMarkRegistry } from '../providers';
 import { type AnyMarkDefinition, type AnyTransformDefinition } from '../contract';
-import { collectTransformFields, resolveTransformRegistry } from '../providers';
+import { collectMarkFields, collectTransformFields, resolveMarkRegistry, resolveTransformRegistry } from '../providers';
 
 /** 收集 plot spec 引用的外部源字段；派生字段会被排除，不参与 data.model strict 校验。 */
 export const collectSourceFields = (
