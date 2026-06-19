@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '@retikz/plot';
+import { type PlotSpec, PlotSpecSchema, isBuiltinMark } from '@retikz/plot';
 import { buildPlotSpec, decorateDefaultGuides } from '../../src/components/build-plot-spec';
 import { Axis, Legend } from '../../src/components/guides';
 import { IntervalMark, PathMark, PointMark, ReferenceMark, RegionMark } from '../../src/components/marks';
@@ -908,7 +908,7 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x
     );
     const mark = spec.marks[0];
     expect(mark).toMatchObject({ type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } } });
-    if (mark.type !== 'interval') throw new Error('expected interval mark');
+    if (!isBuiltinMark(mark) || mark.type !== 'interval') throw new Error('expected interval mark');
     // histogram：仅 y 高度通道、无 encoding.x
     expect(mark.encoding.y).toEqual({ field: 'binValue' });
     expect(mark.encoding.x).toBeUndefined();
@@ -1023,7 +1023,7 @@ describe('buildPlotSpec alpha.12 ADR-02（normalize / derive-interval / jitter �
     expect(stacks).toContainEqual({ kind: 'stack', x: 'quarter', y: 'share', groupBy: 'product' });
     expect(stacks).toContainEqual({ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'region' });
     // 两根柱都为 stacked interval（bounds.y extent 读 y0/y1）
-    expect(spec.marks.every(m => m.type === 'interval' && m.bounds?.y?.kind === 'extent')).toBe(true);
+    expect(spec.marks.every(m => isBuiltinMark(m) && m.type === 'interval' && m.bounds?.y?.kind === 'extent')).toBe(true);
   });
 
   it('derive_interval_declared_to_ir', () => {
