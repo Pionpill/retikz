@@ -2,15 +2,7 @@ import { scaleLinear } from 'd3-scale';
 import { isFiniteNumber } from '@retikz/math';
 import { type AggregateTransform, type BinTransform, type ExternalRow } from '../ir';
 import { resolveFieldPath } from '../data';
-import { withGroupProvenance } from '../pipeline/provenance';
-
-type GroupProvenanceContext = {
-  groupProvenance: (out: ExternalRow, members: Array<ExternalRow>) => ExternalRow;
-};
-
-const DEFAULT_GROUP_PROVENANCE_CONTEXT: GroupProvenanceContext = {
-  groupProvenance: withGroupProvenance,
-};
+import type { TransformContext } from './registry';
 
 /** bin 默认输出字段名，对齐 IntervalMark 的 x0Field / x1Field 消费方。 */
 const DEFAULT_BIN_START_FIELD = 'binStart';
@@ -91,7 +83,7 @@ const binEdges = (operation: BinTransform, values: Array<number>): Array<number>
  * bin：连续 field 分箱，输出每箱一行，包含空箱。
  * @description 半开区间 [edge_i, edge_{i+1})，末箱包含上界；reduce=count 输出频数。
  */
-export const applyBin = (rows: Array<ExternalRow>, operation: BinTransform, context: GroupProvenanceContext = DEFAULT_GROUP_PROVENANCE_CONTEXT): Array<ExternalRow> => {
+export const applyBin = (rows: Array<ExternalRow>, operation: BinTransform, context: Pick<TransformContext, 'groupProvenance'>): Array<ExternalRow> => {
   if (operation.reduce !== undefined && operation.reduce !== 'count' && operation.reduceField === undefined) {
     throw new Error(`lowerPlots: bin transform reduce "${operation.reduce}" requires reduceField (the numeric field reduced per bin)`);
   }
@@ -129,7 +121,7 @@ export const applyBin = (rows: Array<ExternalRow>, operation: BinTransform, cont
  * aggregate：按 groupBy 全键分组并规约，每组输出一行。
  * @description 输出行携带 groupBy 键原值与规约值；provenance 开启时打组级源序标记。
  */
-export const applyAggregate = (rows: Array<ExternalRow>, operation: AggregateTransform, context: GroupProvenanceContext = DEFAULT_GROUP_PROVENANCE_CONTEXT): Array<ExternalRow> => {
+export const applyAggregate = (rows: Array<ExternalRow>, operation: AggregateTransform, context: Pick<TransformContext, 'groupProvenance'>): Array<ExternalRow> => {
   if (operation.reduce !== 'count' && operation.field === undefined) {
     throw new Error(`lowerPlots: aggregate transform reduce "${operation.reduce}" requires field (the numeric field reduced per group)`);
   }

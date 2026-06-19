@@ -69,7 +69,7 @@ const doubleX = defineTransform({
 | `outputFields` | Returns derived fields produced by the transform; downstream marks or transforms can consume them without declaring them in `model`. |
 | `apply` | Runs the transform in pipeline order and returns the next row set. It must be deterministic so rendering and locators stay aligned. |
 
-The third `apply` argument is a transform context. Row-preserving transforms usually keep row provenance by returning `{ ...row, newField }`; row-count-changing transforms can call `context.groupProvenance(out, members)` to attach `sourceIndices`. If a transform generates rows with no source rows, provenance naturally degrades to `transformedIndex` only.
+The third `apply` argument is a transform context. Row-preserving transforms usually keep row provenance by returning `{ ...row, newField }`; when a row-count-changing transform emits one row for a group of source rows, it must call `context.groupProvenance(out, members)` to attach `sourceIndices`. If a transform generates rows with no source rows, provenance naturally degrades to `transformedIndex` only.
 
 ## How It Works
 

@@ -8,7 +8,8 @@ import { DEFAULT_DERIVE_END_FIELD, DEFAULT_DERIVE_START_FIELD, DEFAULT_END_FIELD
 /**
  * transform apply 上下文。
  * @description 自定义 transform 用它读取 / 写入数据来源标记：保行数 transform 通常透传行对象即可保留 sourceIndex；
- *   改行数 transform 可用 groupProvenance 给输出行挂 sourceIndices；生成行没有源行时可自然降级。
+ *   改行数 transform 若输出行代表一组源行，必须用 groupProvenance 给输出行挂 sourceIndices，避免 locator / datum meta 丢失组级来源；
+ *   生成行没有源行时可自然降级。
  */
 export type TransformContext = {
   /** 读单行源序标记；未开启 provenance 或行未打标记时返回 undefined。 */
@@ -37,7 +38,7 @@ export type TransformDefinition<TTransformOperation extends TransformOperation =
   inputFields?: (operation: TTransformOperation) => Array<string>;
   /** 该 transform 产出的派生字段名；从 data.model strict 校验的源字段集中排除。 */
   outputFields?: (operation: TTransformOperation) => Array<string>;
-  /** 执行 transform；必须纯且确定，避免破坏 SSR / locator parity。 */
+  /** 执行 transform；必须纯且确定；改行数且代表源行集合时要用 context.groupProvenance 保留 provenance。 */
   apply: (rows: Array<ExternalRow>, operation: TTransformOperation, context: TransformContext) => Array<ExternalRow>;
 };
 
