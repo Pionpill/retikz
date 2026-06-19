@@ -40,6 +40,27 @@ export const PlotFieldFormat = {
 /** 字段值解析格式 */
 export type PlotFieldFormatValue = ValueOf<typeof PlotFieldFormat>;
 
+/** 内置格式名集合；自定义格式不得与之重名，内置与自定义经同一 resolveFormatRegistry 分派。 */
+export const BUILTIN_FIELD_FORMATS: ReadonlySet<string> = new Set<string>(Object.values(PlotFieldFormat));
+
+/** 是否内置格式名（收窄到 PlotFieldFormatValue，供按内置 / 自定义分支处理）。 */
+export const isBuiltinFieldFormat = (format: string): format is PlotFieldFormatValue => BUILTIN_FIELD_FORMATS.has(format);
+
+export const CustomFieldFormatSchema = z
+  .string()
+  .min(1)
+  .refine(name => !BUILTIN_FIELD_FORMATS.has(name), { message: 'Custom field format name must not collide with a built-in format' })
+  .describe('Discriminator: custom field format name; must be a non-empty, non-built-in identifier registered through options.formatDefinitions');
+
+export const FieldFormatSchema = z
+  .union([z.enum(PlotFieldFormat), CustomFieldFormatSchema])
+  .describe(
+    'Field value-parsing format: a built-in format keyword, or a custom format name validated at lowering time against the matching FieldFormatDefinition supplied via options.formatDefinitions',
+  );
+
+/** 字段解析格式：内置关键字或自定义注册名（求值期解析为 parser）。 */
+export type FieldFormatValue = z.infer<typeof FieldFormatSchema>;
+
 export const FieldDefSchema = z
   .object({
     name: z
@@ -50,10 +71,9 @@ export const FieldDefSchema = z
       .enum(PlotFieldType)
       .optional()
       .describe('Field measurement type; omit to infer from the bound dataset at lowering. When given, drives type-driven scale selection and guide formatting without seeing the data'),
-    format: z
-      .enum(PlotFieldFormat)
-      .optional()
-      .describe('Declarative built-in value-parsing format; each format binds to one measurement type and must be compatible with type (it also implies type when type is omitted). Omit for the built-in default coercion'),
+    format: FieldFormatSchema.optional().describe(
+      'Declarative value-parsing format; each format binds to one measurement type and must be compatible with type (it also implies type when type is omitted). A built-in keyword or a custom name registered via options.formatDefinitions. Omit for the built-in default coercion',
+    ),
     order: z
       .union([z.enum(['data', 'ascending', 'descending']), z.array(z.union([z.string(), z.number()])).min(1)])
       .optional()

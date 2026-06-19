@@ -1,37 +1,10 @@
 import { isFiniteNumber } from '@retikz/math';
-import { type DataModel, type ExternalRow, PlotFieldType, type PlotFieldTypeValue } from '../schemas';
-import { type ParsedFieldValue, coerceValue, formatImpliedType, formatParser } from './coerce';
+import { type ExternalRow, PlotFieldType, type PlotFieldTypeValue } from '../schemas';
+import { type ParsedFieldValue, coerceValue } from './coerce';
 import { resolveFieldPath } from './field';
 
 const asParsedValue = (value: ParsedFieldValue): ParsedFieldValue =>
   typeof value === 'string' || typeof value === 'number' ? value : undefined;
-
-/**
- * 收集 model 里的 format 声明，校验 format 与 type 的兼容性，并产出 per-field parser。
- * @description format 蕴含字段测量类型；当字段省略 type 时，format 的蕴含类型覆盖基础推断。
- */
-export const collectFormatFields = (
-  model: DataModel | undefined,
-  baseTypes: Map<string, PlotFieldTypeValue>,
-  userSourceFields: Set<string>,
-): { fieldTypes: Map<string, PlotFieldTypeValue>; parsers: Map<string, (raw: unknown) => ParsedFieldValue> } => {
-  const fieldTypes = new Map(baseTypes);
-  const parsers = new Map<string, (raw: unknown) => ParsedFieldValue>();
-  if (model === undefined) return { fieldTypes, parsers };
-  for (const field of model) {
-    if (field.format === undefined) continue;
-    if (!userSourceFields.has(field.name)) continue;
-    const impliedType = formatImpliedType(field.format);
-    if (field.type !== undefined && field.type !== impliedType) {
-      throw new Error(
-        `lowerPlots: field "${field.name}" declares type "${field.type}" but format "${field.format}" implies "${impliedType}" (incompatible)`,
-      );
-    }
-    fieldTypes.set(field.name, impliedType);
-    parsers.set(field.name, formatParser(impliedType, field.format));
-  }
-  return { fieldTypes, parsers };
-};
 
 /**
  * ingest 归一化：把每行用户源字段按 fieldMap 解析，再按 PlotFieldTypeValue coerce 成 canonical 行。

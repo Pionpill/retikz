@@ -2,7 +2,7 @@ import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, Json
 import { isFiniteNumber } from '@retikz/math';
 import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type MarkOperation, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
 import { resolveIntervalBound } from '../providers';
-import { type ResolveField, type ResolveLabel, applyFieldResolver, assertAllValuesValid, channelValue, collectFormatFields, labelOf, normalizeRows, resolveFieldPath, resolveFieldTypes, toTimestamp, validateBoundData } from '../data';
+import { type ResolveField, type ResolveLabel, applyFieldResolver, assertAllValuesValid, channelValue, labelOf, normalizeRows, resolveFieldPath, resolveFieldTypes, toTimestamp, validateBoundData } from '../data';
 import { type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../guide/guide';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect } from './layout';
 import { type ColorOf, type LabelOf, lowerMark } from '../providers';
@@ -13,8 +13,8 @@ import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, 
 import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, deriveScale, makeColorSchemeResolver, orderedCategoryDomain, resolveLinearScale, resolveSqrtScale, scaleTicks } from '../providers';
 import { type AnyScaleDefinition, type ChannelResolveContext, isBuiltinScaleOperation } from '../contract';
 import { assertBaselineScaleCompatible, assertScaleFieldCompatible, resolveChannelScale, resolvePositionScale, resolveScaleRegistry } from '../providers';
-import { type AnyMarkDefinition, type AnyTransformDefinition } from '../contract';
-import { applyTransforms, resolveMarkRegistry, resolveTransformRegistry } from '../providers';
+import { type AnyMarkDefinition, type AnyTransformDefinition, type FieldFormatDefinition } from '../contract';
+import { applyTransforms, collectFormatFields, resolveFormatRegistry, resolveMarkRegistry, resolveTransformRegistry } from '../providers';
 import { collectSourceFields } from './source-fields';
 
 /** link 的 target 端通道（source 端走 x/yChannelOf；两端都须纳入位置 scale 域，否则 target 投影越界） */
@@ -185,6 +185,11 @@ export type LowerPlotsOptions = {
    * @description 内置 mark 恒可用；自定义 type 未注册 / type 冲突会 fail-loud，避免静默跳过图元下沉。
    */
   markDefinitions?: Array<AnyMarkDefinition>;
+  /**
+   * 自定义字段解析格式 definition 数组（运行时函数，不进 IR）：data.model 的 `{name, format:<customName>}` 据此解析。
+   * @description 内置 6 个 format 恒可用；自定义 name 未注册 / name 冲突会 fail-loud。definition 给出 impliedType（覆盖推断 / 冲突校验）与 parse（原始值 → canonical）。
+   */
+  formatDefinitions?: Array<FieldFormatDefinition>;
 };
 
 /** resolveFrame 产物：mark / guide 共用的投影帧 + 已下沉的网格 / 轴层（z-order 由 expand 编排） */
@@ -792,8 +797,10 @@ export const prepareRows = (
   // strict + 声明/推断（ADR-01/05）；strict 在 applyFieldResolver 之前先校验，resolver 不绕过（ADR-04）
   const baseTypes = resolveFieldTypes(spec.data.model, ingested, userSourceFields);
   const fieldMap = options.fieldMaps?.[spec.data.reference];
-  // 声明式 format（ADR-06）：format 蕴含 type 覆盖推断 + 冲突 fail-loud + 收集 format parser；置于 resolveField 之前，使 resolveField 仍胜出
-  const { fieldTypes: formatTypes, parsers: formatParsers } = collectFormatFields(spec.data.model, baseTypes, userSourceFields);
+  // 声明式 format（ADR-06 内置 + ADR-09 自定义 registry）：format 经 registry 解析出 definition，蕴含 type 覆盖推断 + 冲突 / 未注册 fail-loud + 收集 parser；
+  //   置于 resolveField 之前，使 resolveField 仍胜出
+  const formatRegistry = resolveFormatRegistry(options.formatDefinitions);
+  const { fieldTypes: formatTypes, parsers: formatParsers } = collectFormatFields(spec.data.model, baseTypes, userSourceFields, formatRegistry);
   // resolveField 叠加：类型覆盖 + 收集 per-field parser（ADR-04）；优先级 resolveField.type > format 蕴含 / 显式 type
   const { fieldTypes, parsers: resolverParsers } = applyFieldResolver(
     formatTypes,

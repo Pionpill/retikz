@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import * as PlotPublic from '../../src';
+import { type FieldFormatDefinition, defineFieldFormat, resolveFormatRegistry } from '../../src';
 import { DataModelSchema, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
 import { FieldDefSchema, PlotFieldFormat } from '../../src/schemas/data';
 import { type LowerPlotsOptions, prepareRows } from '../../src/pipeline/expand';
@@ -86,9 +88,92 @@ describe('FieldDef.format（ADR-06）— 错误路径', () => {
     expect(() => parseFirst(spec, { d: [{ v: 1700000000, y: 1 }] }, 'v')).toThrow();
   });
 
-  it('unknown_format_rejected', () => {
-    // schema 拒未知 format 字面量
-    expect(() => FieldDefSchema.parse({ name: 'v', type: 'continuous', format: 'comma' })).toThrow();
+  it('unregistered_format_fails_at_lowering', () => {
+    // 开放后 schema 接受任意非内置格式串（视作自定义名）；未注册的格式在 lowering fail-loud
+    expect(() => FieldDefSchema.parse({ name: 'v', type: 'continuous', format: 'comma' })).not.toThrow();
+    const spec = specWithField({ name: 'v', type: 'continuous', format: 'comma' });
+    expect(() => parseFirst(spec, { d: [{ v: '1,500', y: 1 }] }, 'v')).toThrow(/not registered/);
+  });
+
+  it('empty_format_rejected_by_schema', () => {
+    // 空串既非内置、也不是合法自定义名 → schema 拒
+    expect(() => FieldDefSchema.parse({ name: 'v', type: 'continuous', format: '' })).toThrow();
+  });
+});
+
+describe('FieldDef.format 自定义格式（ADR-09）', () => {
+  /** 千分位分隔的金额串：'1.234,56' → 1234.56（欧式小数逗号），演示自定义 continuous 解析。 */
+  const currencyFormat: FieldFormatDefinition = defineFieldFormat({
+    name: 'currency',
+    impliedType: 'continuous',
+    parse: raw => {
+      if (typeof raw !== 'string') return undefined;
+      const cleaned = raw.trim().replace(/\./g, '').replace(',', '.');
+      const parsed = Number(cleaned);
+      return Number.isFinite(parsed) ? parsed : NaN;
+    },
+  });
+
+  it('custom_format_parses_via_options', () => {
+    // data.model 写自定义 format 名；options.formatDefinitions 注入 definition → 按 parse 解析
+    const spec = specWithField({ name: 'v', type: 'continuous', format: 'currency' });
+    const value = parseFirst(spec, { d: [{ v: '1.234,56', y: 1 }] }, 'v', { formatDefinitions: [currencyFormat] });
+    expect(value).toBe(1234.56);
+  });
+
+  it('custom_format_implies_type_when_omitted', () => {
+    // 省略 type → 由 definition.impliedType 覆盖推断（continuous），不被推断成 categorical
+    const spec = specWithField({ name: 'v', format: 'currency' });
+    const value = parseFirst(spec, { d: [{ v: '2.000,00', y: 1 }] }, 'v', { formatDefinitions: [currencyFormat] });
+    expect(value).toBe(2000);
+  });
+
+  it('custom_format_type_mismatch_throws', () => {
+    // 显式 temporal + 自定义 impliedType continuous 冲突 → lowering fail-loud
+    const spec = specWithField({ name: 'v', type: 'temporal', format: 'currency' });
+    expect(() => parseFirst(spec, { d: [{ v: '1.234,56', y: 1 }] }, 'v', { formatDefinitions: [currencyFormat] })).toThrow(/incompatible/);
+  });
+
+  it('builtin_and_custom_share_registry', () => {
+    // 同一 model 内内置 percent 与自定义 currency 并存，各按各自 definition 解析
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd', model: [{ name: 'v', type: 'continuous', format: PlotFieldFormat.Percent }, { name: 'y', type: 'continuous', format: 'currency' }] },
+      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'v' }, y: { field: 'y' } } }],
+    });
+    const ingested = tagSourceIndex([{ v: '50%', y: '1.000,50' }]);
+    const { normalized } = prepareRows(spec, { d: [{ v: '50%', y: '1.000,50' }] }, { formatDefinitions: [currencyFormat] }, ingested);
+    expect(normalized[0].v).toBe(0.5);
+    expect(normalized[0].y).toBe(1000.5);
+  });
+
+  it('duplicate_custom_registration_throws', () => {
+    // 同名自定义 format 重复注册 → fail-loud
+    expect(() => resolveFormatRegistry([currencyFormat, { ...currencyFormat }])).toThrow(/duplicate/);
+  });
+
+  it('custom_cannot_shadow_builtin', () => {
+    // 自定义 name 撞内置 → resolveFormatRegistry fail-loud（内置先占位）
+    expect(() => resolveFormatRegistry([{ name: 'percent', impliedType: 'continuous', parse: () => 0 }])).toThrow(/duplicate/);
+  });
+
+  it('resolveFormatRegistry_has_six_builtins', () => {
+    // 无自定义时 registry 恰为 6 个内置
+    const registry = resolveFormatRegistry();
+    expect(registry.size).toBe(6);
+    expect(registry.has('percent')).toBe(true);
+  });
+
+  it('public_barrel_exposes_format_surface', () => {
+    // 扩展面经公共 barrel 暴露：工厂 + registry helper + 内置表
+    expect(typeof PlotPublic.defineFieldFormat).toBe('function');
+    expect(typeof PlotPublic.resolveFormatRegistry).toBe('function');
+    expect(typeof PlotPublic.collectFormatFields).toBe('function');
+    expect(PlotPublic.BUILTIN_FORMATS.length).toBe(6);
+    expect(PlotPublic.BUILTIN_FORMAT_DEFINITIONS_BY_NAME.get('iso')?.impliedType).toBe('temporal');
   });
 });
 

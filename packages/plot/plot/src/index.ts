@@ -41,6 +41,6 @@ export type {
 } from './contract';
 export type { ColorSchemeResolver, PositionScale } from './providers';
 // Transform / mark extension surface: factory + types from contract; registry helpers from providers.
-export { defineMark, defineTransform, extractTransformKind } from './contract';
-export type { AnyMarkDefinition, AnyTransformDefinition, MarkDefinition, TransformContext, TransformDefinition } from './contract';
-export { BUILTIN_TRANSFORMS, BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND, DEFAULT_TRANSFORM_CONTEXT, aggregateOutputField, applyTransforms, binOutputFields, collectTransformFields, resolveMarkRegistry, resolveTransformRegistry } from './providers';
+export { defineFieldFormat, defineMark, defineTransform, extractTransformKind } from './contract';
+export type { AnyMarkDefinition, AnyTransformDefinition, FieldFormatDefinition, MarkDefinition, TransformContext, TransformDefinition } from './contract';
+export { BUILTIN_FORMATS, BUILTIN_FORMAT_DEFINITIONS_BY_NAME, BUILTIN_TRANSFORMS, BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND, DEFAULT_TRANSFORM_CONTEXT, aggregateOutputField, applyTransforms, binOutputFields, collectFormatFields, collectTransformFields, resolveFormatRegistry, resolveMarkRegistry, resolveTransformRegistry } from './providers';

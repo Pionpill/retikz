@@ -13,9 +13,9 @@
 
 ```text
 schemas       Zod schema / 类型真源（Plot IR 形状），所有模块可依赖
-data          字段对齐 / 解析 / 归一化
-contract/*    coordinate / scale / transform / mark 的扩展契约
-providers/*   上述四层的内置实现，依赖 contract
+data          字段对齐 / 解析 / 归一化（type 驱动 coercion + 校验）
+contract/*    coordinate / scale / transform / mark / format 的扩展契约
+providers/*   上述五层的内置实现，依赖 contract（format 内置 def 复用 data 的 coerce 工具）
 guide         axis / legend 下沉
 pipeline      Tier 2 → Kernel IR 下沉编排，调 providers + contract
 interaction   locator / hit-test，复用 pipeline
@@ -26,9 +26,11 @@ interaction   locator / hit-test，复用 pipeline
 - `pipeline` 是编排层（Tier 2 → Kernel IR 下沉），调用各层 `resolveXxxRegistry` + dispatch 函数；具体规则应放回拥有该概念的层。
 - 新增共享逻辑先放到最小合理归属层；多个语法层都需要时优先抽到更底层或 `@retikz/math` / `@retikz/core`。
 
-### data / guide / interaction 暂无 define 机制
+### data 的可扩展缝是 format（ADR-09）；guide / interaction 暂无 define 机制
 
-`data` / `guide` / `interaction` 目前**还没有 `defineXxx` / `resolveXxxRegistry` 扩展机制**——早期设计未细化到这一层，按当前需要先保留为内部实现，不进 `contract` / `providers`。后续按需逐步把它们抽象成 contract/providers 对的可扩展层（与 coordinate / scale / transform / mark 对齐）。新增这类抽象前先评估是否值得开放给用户扩展，再补 `defineXxx` + registry + `lowerPlots` 选项 + React 透传四件套。
+`data` 层整体不是 registry 形状（`DataModel`/`FieldDef` 是声明式配置、infer→coerce→normalize→validate 是固定管线、`resolveField`/`resolveLabel` 是运行时函数逃生舱）。其中**唯一**的具名解析枚举——字段解析格式 `format`——已按 ADR-09 抽成 `contract/format` + `providers/format` 的 `defineFieldFormat` + `resolveFormatRegistry` 可扩展层（与 coordinate / scale / transform / mark 对齐）。`fieldType`（横切概念轴）与 `resolveField`/`resolveLabel`（任意函数 hook）**刻意不做 registry 化**。
+
+`guide` / `interaction` 目前**还没有 `defineXxx` / `resolveXxxRegistry` 扩展机制**——早期设计未细化到这一层，按当前需要先保留为内部实现，不进 `contract` / `providers`。后续按需逐步抽象成 contract/providers 对的可扩展层。新增这类抽象前先评估是否值得开放给用户扩展，再补 `defineXxx` + registry + `lowerPlots` 选项 + React 透传四件套。
 
 ## 公共能力复用
 
