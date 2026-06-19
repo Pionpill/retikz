@@ -4,7 +4,6 @@ export * from './cell';
 export * from './constants';
 export * from './define';
 export * from './polar';
-export * from './sampling';
 export * from './ternary';
 export * from './types';
 export * from './utils';
