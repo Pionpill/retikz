@@ -1,0 +1,33 @@
+---
+title: Temporal scales
+description: A temporal field defaults to the time scale — projecting dates / times onto a positional channel, with ticks landing on human-readable time boundaries and labels formatted as time.
+---
+
+A temporal field (`temporal`) defaults to `time` on positional channels. It is a continuous mapping at heart, but ticks land on **human-readable time boundaries** (month starts, quarters, whole hours…) rather than evenly-spaced numbers, and labels are formatted as time instead of treating dates as raw numbers.
+
+## The time scale
+
+Declare the field as `temporal` in the model and x goes through the time scale automatically — no `<Scale>` by hand:
+
+<ComponentPreview name="scale-time" sourceFiles={['scale-time.data.ts']} />
+
+<p className="text-sm text-muted-foreground">date declared as temporal → x goes through time; ticks land on quarter boundaries, labels are formatted as time.</p>
+
+You can also skip the field type and override the dimension's scale type explicitly:
+
+```tsx
+<Plot data={visits}>
+  <PathMark x="date" y="value" order="date" />
+  <Scale dimension="x" type="time" />
+  {/* or the shortcut: <Axis dimension="x" scale="time" /> */}
+  <Axis dimension="x" />
+</Plot>
+```
+
+Date values can be ISO strings (e.g. `'2024-01-01'`) or timestamps; the time scale parses them into positions on the axis. See [Data processing](/plot/grammar/data/processing) for date field parsing details.
+
+## Mapping temporal values to color
+
+Time is continuous too, so binding `color` to a temporal field derives `sequential` (a continuous band) — the same path as a continuous numeric field, with color from a named scheme. See [Continuous scales](/plot/grammar/scale/continuous#mapping-continuous-values-to-color) for the full continuous color rules.
+
+<ComponentAlert title="Continuous color needs a declared field type" description="In React continuous color (temporal fields included) needs a declared field type via model to derive a sequential scale; without it color is treated as categorical." />

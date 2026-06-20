@@ -1,0 +1,78 @@
+---
+title: Continuous scales
+description: Positional scales for continuous fields (linear / log / sqrt / pow) and color scales (sequential / diverging, plus quantize / threshold / quantile binning).
+---
+
+A continuous field (`continuous`) defaults to `linear` on positional channels — an evenly-spaced linear mapping. Swap in `log` / `sqrt` / `pow` to compress magnitudes, tame large values, or use a custom power; map a continuous quantity to color with `sequential` / `diverging` or a binned color scale.
+
+## Positional scale types
+
+| Type | For | Notes |
+| --- | --- | --- |
+| `linear` | Continuous numbers | Evenly-spaced linear mapping (default) |
+| `log` | Positive values across magnitudes | Logarithmic; point / line only |
+| `sqrt` | Area-perceptual | Square-root; point / line only (the `size` channel's default) |
+| `pow` | Custom power | Power mapping (needs `exponent`; via a full spec) |
+
+## Linear vs log
+
+When data spans several orders of magnitude, a linear axis crushes the small values against the bottom. A log axis (`<Scale dimension="y" type="log" />`) gives every magnitude equal height, so small values stay legible. Both charts use the same yearly user counts.
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ComponentPreview name="scale-linear" sourceFiles={['scale-continuous.data.ts']} size="sm" />
+  <ComponentPreview name="scale-log" sourceFiles={['scale-continuous.data.ts']} size="sm" />
+</div>
+
+<p className="text-sm text-muted-foreground">Left: default linear, early years hug the floor; right: just add <code>{'<Scale dimension="y" type="log" />'}</code> and the range spreads out.</p>
+
+## Square root
+
+`<Scale dimension="y" type="sqrt" />` maps by square root, taming the visual exaggeration of large values; it is also the default scale for the `size` channel (point radius), so a dot's **area** stays proportional to the data.
+
+<ComponentPreview name="scale-sqrt" sourceFiles={['scale-continuous.data.ts']} />
+
+## Point / line only
+
+`log` / `pow` / `sqrt` apply only to points and lines. Bars and areas start from a 0 baseline, and 0 is undefined on a log / power axis — pairing a non-linear scale with a bar / area errors out and tells you to use point / line instead.
+
+<ComponentAlert type="warn" title="Domain of non-linear scales" description="log requires all-positive data, sqrt requires non-negative; out-of-range values cannot be projected. An explicit domain with illegal bounds errors at compile time." />
+
+## Mapping continuous values to color
+
+The scales above map values to **position / length / radius**; color is a different kind of output, consumed by the `color` channel. Bind `color` to a continuous numeric field and `<Plot>` derives a `sequential` scale (viridis by default).
+
+| Type | For | Output |
+| --- | --- | --- |
+| `sequential` | Continuous / temporal field | A one-directional band: low→high along one gradient (the workhorse for continuous color) |
+| `diverging` | Quantity with a meaningful midpoint | Two-sided hues, pale center: profit/loss, deviation from mean |
+
+Sequential and diverging color comes from a **named scheme** — a preset set of color band names that is serializable and AI-generatable. Sequential schemes include `viridis` (default), `blues`, `greens`, `magma`; diverging schemes include `rdbu` (default), `brbg`, `spectral`. Use `range` to override a scheme with custom endpoint colors.
+
+Continuous color encoding works only on per-datum marks (point / bar / sector); a line or area colors the whole path at once, so its color is not constant along the path and binding a continuous `color` errors.
+
+<ComponentAlert title="Continuous color needs a declared field type" description="In React a continuous color field must be declared as continuous via model to derive a sequential scale; without it color is treated as categorical and a continuous field errors. Diverging and custom schemes are configured through the full spec scales for now." />
+
+## Discretization / binned color
+
+A sequential scale is a **continuous** band (smooth gradient). But many cases want a continuous quantity cut into **a few discrete bins, one color each** — graded maps, threshold alerts, skew-resistant binning. These three needs map to three discretization scales, differing only in **how the bins are cut**:
+
+| Type | Cut by | For |
+| --- | --- | --- |
+| `quantize` | domain split into `count` equal-width bins | choropleth / evenly-distributed continuous values |
+| `threshold` | user-given breakpoints (`breakpoints`) | business thresholds / alerts (`<60` red, `60–80` yellow, `≥80` green) |
+| `quantile` | data quantiles, roughly equal sample count per bin | skewed data / outlier resistance |
+
+Each bin's color reuses the named schemes above — N discrete colors are sampled at evenly spaced points along one continuous band (e.g. `scheme: 'blues'` sampled into 5 bins); or give a `range` array to override the scheme, where the array length is the bin count.
+
+<ComponentPreview name="scale-quantize" sourceFiles={['scale-discretization.data.ts']} />
+
+<p className="text-sm text-muted-foreground">quantize, 5 bins: continuous density cut into 5 equal-width bins, each taking one sampled color off blues.</p>
+
+A few constraints to keep in mind:
+
+- **threshold breakpoints must be strictly ascending**; bin count = breakpoints + 1, so a `range` must have length `breakpoints.length + 1` (e.g. `[60, 80]` pairs with 3 colors).
+- **`count` defaults to 5** for quantize / quantile; giving only a `range` (omitting `count`) makes the bin count the range length; giving both `count` and `range` with mismatched lengths errors.
+- **quantile reads no explicit numeric domain** — the bin boundaries come purely from the data, so a `domain`, if written, is silently ignored (no error).
+- Like continuous color, discretized color works **only on per-datum marks** (point / bar / sector); a line or area colors the whole path at once, so binding a discretization color errors.
+
+<ComponentAlert title="No automatic React entry for discretization scales" description="This round quantize / threshold / quantile are not auto-derived from a field type — they are explicit advanced usage, configured through the full spec scales (<Plot spec={...} />) or written directly in vanilla IR. React auto-derivation does continuous sequential only for now." />

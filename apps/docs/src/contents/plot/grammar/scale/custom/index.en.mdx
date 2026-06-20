@@ -1,0 +1,39 @@
+---
+title: Custom scales
+description: For the long tail the 13 built-ins don't cover (symlog, brand ramps, custom binning…), register a runtime definition with defineScale and inject it via scaleDefinitions; custom palettes go through colorSchemes.
+---
+
+For the long tail the built-in continuous / temporal / categorical scales don't cover (symlog, brand color ramps, custom binning…), register a runtime definition with `defineScale` and inject it via `scaleDefinitions`. It is the same pattern as `defineCoordinate` for coordinates and `defineTransform` for transforms: the IR stores only the plain-JSON op `{ type, name, ...config }`; the functions live in the runtime definition and never enter the IR.
+
+## Two families
+
+Scales are discriminated by **two families** with different output contracts:
+
+- **`position`**: value → coordinate, feeding coordinate projection and axes. `resolve(def, values, range)` returns a `PositionScale` (implementing `coordinate` / `bandwidth` / `ticks` / `range` / `setRange`); `isFieldCompatible(fieldType)` decides which field types may bind, and `allowsBaseline` decides whether it can serve as an interval / area value axis.
+- **`channel`**: value → visual quantity (color), feeding the color channel and legend. `resolve(def, values, ctx)` returns `{ of, legendForm, domain, range, edges? }` in a **single call** — `of` colors each value, `legendForm` (`'ramp'` / `'swatch'`) picks the legend shape, and rendering and legend stay in sync with no drift. `ctx` provides `toNumber` / `toTimestamp` coercion and `resolveColorScheme`.
+
+The demo below defines a `brand` channel scale: `defineScale` declares the schema and `resolve`, the custom `type` goes into `spec.scales`, and the definition is injected via `scaleDefinitions`. Expand the demo to read the full source.
+
+<ComponentPreview name="scale-custom" sourceFiles={['scale-custom.data.ts']} />
+
+<p className="text-sm text-muted-foreground">A custom `brand` channel scale: categorical `tier` → a fixed brand palette; the legend renders swatches per `legendForm: 'swatch'`.</p>
+
+## Custom color schemes
+
+Custom named color schemes go through `colorSchemes` (a `name → interpolator` map of pure functions; never in the IR — the IR only stores the scheme name string). Built-in and discretizing color scales can reference a custom scheme name; resolution checks built-ins first, then `colorSchemes`, and fails loud on an unknown name:
+
+```tsx
+<Plot
+  spec={spec}
+  data={datasets}
+  colorSchemes={{ brand: t => `hsl(210, 80%, ${100 - t * 60}%)` }}
+/>;
+```
+
+A few constraints:
+
+- **Unknown type / scheme name → fail loud at lowering**; a custom type colliding with a built-in, or two custom definitions with the same type, throws.
+- Custom scales **do not participate in React field-type auto-derivation** (to avoid ambiguity); they only apply when referenced in a spec.
+- The scale `type` field excludes the built-in discriminators: a spec with a custom type still passes `PlotSpecSchema.parse` and round-trips through JSON without losing fields, with precise config validation deferred to lowering (against the definition's schema).
+
+<ComponentAlert title="The declarative Scale does not yet take a custom type" description="Custom scales are fully usable through the programmatic path — the Plot spec / scaleDefinitions / colorSchemes props, or vanilla renderPlot(spec, data, options). The declarative Scale component passthrough of a custom type + flat config is staged per ADR-07." />
