@@ -648,11 +648,27 @@ const buildColorScale = (colorFields: Array<string>, model: DataModel | undefine
 };
 
 const buildPositionScale = (name: string, type: PositionScaleType): PlotScaleSpec => {
-  if (type === 'time') return { type: PlotScale.Time, name };
-  if (type === 'point') return { type: PlotScale.Point, name };
-  if (type === 'log') return { type: PlotScale.Log, name };
-  if (type === 'sqrt') return { type: PlotScale.Sqrt, name };
-  return { type: PlotScale.Linear, name };
+  switch (type) {
+    case 'linear':
+      return { type: PlotScale.Linear, name };
+    case 'time':
+      return { type: PlotScale.Time, name };
+    case 'point':
+      return { type: PlotScale.Point, name };
+    case 'log':
+      return { type: PlotScale.Log, name };
+    case 'sqrt':
+      return { type: PlotScale.Sqrt, name };
+    case 'symlog':
+      return { type: PlotScale.Symlog, name };
+    case 'radial':
+      return { type: PlotScale.Radial, name };
+    default: {
+      // 穷尽守卫：新增 PositionScaleType 未在此映射时 never 编译报错，杜绝静默回退 linear
+      const exhaustive: never = type;
+      throw new Error(`buildPlotSpec: unsupported position scale type "${String(exhaustive)}"`);
+    }
+  }
 };
 
 /** cartesian x scale 类型：含 <IntervalMark> 或 <IntervalMark> → band；否则按 <Scale dimension="x"> 或缺省 linear */

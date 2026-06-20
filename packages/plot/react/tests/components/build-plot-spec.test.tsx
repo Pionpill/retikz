@@ -433,6 +433,28 @@ describe('buildPlotSpec ADR-07（IntervalMark / color / series / stack / Scale�
     ).toEqual({ type: 'sqrt', name: '__y' });
   });
 
+  it('scale_y_symlog_radial_map_to_own_type_not_linear', () => {
+    // 回归：symlog / radial 曾因 buildPositionScale 缺 case 静默回退 linear，导致 demo 与 linear 无差别
+    expect(
+      buildPlotSpec(
+        <>
+          <PathMark x="d" y="v" />
+          <Scale dimension="y" type="symlog" />
+        </>,
+        '__plot',
+      ).scales[1],
+    ).toEqual({ type: 'symlog', name: '__y' });
+    expect(
+      buildPlotSpec(
+        <>
+          <PointMark x="d" y="v" />
+          <Scale dimension="y" type="radial" />
+        </>,
+        '__plot',
+      ).scales[1],
+    ).toEqual({ type: 'radial', name: '__y' });
+  });
+
   it('scale_duplicate_alias_rejected', () => {
     expect(() =>
       buildPlotSpec(
