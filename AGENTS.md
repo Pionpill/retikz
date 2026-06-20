@@ -134,6 +134,13 @@ Refs: module=core; packages=@retikz/react,@retikz/render; version=v0.3; adr=core
 
 功能改动不从 `next-core` / `next-plot` 直接进 `main`，必须先合 `next`。创建 / 切换 / 合并 / 删除分支前确认任务确实需要分支操作。
 
+分支同步由 GitHub Actions 自动开 PR，不手动静默合并：
+
+- `main` push 后自动创建 `main -> next` 同步 PR
+- `next` push 后自动创建 `next -> next-core` 与 `next -> next-plot` 同步 PR
+- 已有同向开放 PR 或源分支无新增提交时跳过
+- 冲突、CI 失败、是否合并均在 PR 中处理，不由 automation 直接强推目标分支
+
 ## 代码风格
 
 - TypeScript ESM；命名：组件 PascalCase、hook `useXxx`、其余 camelCase
