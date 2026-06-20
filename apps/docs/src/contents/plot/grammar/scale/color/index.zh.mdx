@@ -1,45 +1,27 @@
 ---
-title: 连续比例尺
-description: 连续字段的位置 scale（linear / log / sqrt / pow）与颜色 scale（sequential / diverging 及 quantize / threshold / quantile 离散化分箱）。
+title: 颜色比例尺
+description: 颜色比例尺把数据值映射成颜色——分类一类一色（ordinal）、连续值映射连续色带（sequential / diverging）、连续量切档着色（quantize / threshold / quantile）。
 ---
 
-连续字段（`continuous`）的位置通道默认走 `linear`——等距线性映射。需要压缩数量级、弱化大值或自定义幂时换 `log` / `sqrt` / `pow`；把连续量映射成颜色时走 `sequential` / `diverging` 或离散化分箱色阶。
+颜色比例尺把数据值映射成颜色，由 `color` 通道消费。按输入字段分三路：分类字段一类一色（`ordinal`），连续 / 时间字段映射成连续色带（`sequential` / `diverging`），或把连续量切成有限几档、每档一色（`quantize` / `threshold` / `quantile`）。颜色 scale 解释给读者看是[图例](/plot/grammar/guide/legend)的活。
 
-## 位置 scale 类型
+## ordinal 离散着色
 
-| 类型 | 用于 | 说明 |
+把 `color` 绑一个分类字段，`<Plot>` 自动派生 `ordinal`——每个类别离散取一色。它也是多系列的着色方式：没有显式 series 时，分类 color 字段会隐式把数据拆成多条系列。
+
+<ComponentPreview name="scale-ordinal" sourceFiles={['scale-ordinal.data.ts']} />
+
+<p className="text-sm text-muted-foreground">color 绑分类 city → ordinal；两城各取一色，隐式拆成两条折线。</p>
+
+| 类型 | 用于 | 输出 |
 | --- | --- | --- |
-| `linear` | 连续数值 | 等距线性映射（默认） |
-| `log` | 跨数量级的正数 | 对数映射；仅 point / line |
-| `sqrt` | 面积感知 | 平方根映射；仅 point / line（`size` 通道默认用它） |
-| `pow` | 自定义幂 | 幂映射（需 `exponent`，写完整 spec 用） |
+| `ordinal` | 分类字段 | 每个类别离散取一色（多系列、分类着色） |
 
-## 线性 vs 对数
+ordinal 是**离散**着色——一类一色，互不渐变。连续 / 时间字段要的是连续色带，走下面的 `sequential`，别套到分类上。
 
-数据跨多个数量级时，线性轴把小值全压在底部。换成对数轴（`<Scale dimension="y" type="log" />`），每个数量级占等高，小值也看得清。两张图喂的是同一份逐年用户量。
+## 连续着色：sequential / diverging
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <ComponentPreview name="scale-linear" sourceFiles={['scale-continuous.data.ts']} size="sm" />
-  <ComponentPreview name="scale-log" sourceFiles={['scale-continuous.data.ts']} size="sm" />
-</div>
-
-<p className="text-sm text-muted-foreground">左：缺省 linear，前几年贴底；右：仅加 <code>{'<Scale dimension="y" type="log" />'}</code>，跨度铺开。</p>
-
-## 平方根
-
-`<Scale dimension="y" type="sqrt" />` 按平方根映射，弱化大值的视觉夸张；它也是 `size` 通道（散点半径）的默认 scale，让半径的**面积**正比于数据。
-
-<ComponentPreview name="scale-sqrt" sourceFiles={['scale-continuous.data.ts']} />
-
-## 只作用 point / line
-
-`log` / `pow` / `sqrt` 只能用在散点和折线上。柱状图、面积图从 0 基线起算，而 0 在对数 / 幂轴上没有定义——给柱 / 面积配非线性 scale 会直接报错，提示改用 point / line。
-
-<ComponentAlert type="warn" title="非线性 scale 的取值范围" description="log 要求数据全为正、sqrt 要求非负；越界的值无法投影。显式写了含非法边界的 domain 会在编译期报错。" />
-
-## 连续值映射颜色
-
-上面的 scale 把值映射成**位置 / 长度 / 半径**；颜色是另一类输出，由 `color` 通道消费。把 `color` 绑一个连续数值字段，`<Plot>` 自动派生 `sequential`（默认 viridis）。
+把 `color` 绑一个连续数值（或时间）字段，`<Plot>` 自动派生 `sequential`（默认 viridis）——沿一条渐变取色。
 
 | 类型 | 用于 | 输出 |
 | --- | --- | --- |
@@ -50,9 +32,9 @@ description: 连续字段的位置 scale（linear / log / sqrt / pow）与颜色
 
 连续色编码只对按 datum 着色的图元成立（散点 / 柱 / 扇形）；折线、面积是整条 path 着色，同一条线沿程颜色不恒定，绑连续 color 会报错。
 
-<ComponentAlert title="连续色需声明字段类型" description="React 下连续 color 字段要靠 model 声明为 continuous 才会派生 sequential；不声明时 color 一律当分类，连续字段会报错。diverging 与自定义 scheme 目前经完整 spec 的 scales 配置。" />
+<ComponentAlert title="连续色需声明字段类型" description="React 下连续 color 字段（含时间字段）要靠 model 声明为 continuous / temporal 才会派生 sequential；不声明时 color 一律当分类，连续字段会报错。diverging 与自定义 scheme 目前经完整 spec 的 scales 配置。" />
 
-## 离散化 / 分箱色阶
+## 离散化 / 分箱
 
 sequential 是**连续**色带（平滑渐变）。但很多场景要把连续量切成**有限几档、每档一色**——分级地图、阈值告警、抗偏斜分箱。这三种需求对应三种离散化色阶，区别只在「按什么切档」：
 

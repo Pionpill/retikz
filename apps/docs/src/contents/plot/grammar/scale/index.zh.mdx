@@ -1,23 +1,28 @@
 ---
 title: 比例尺
-description: 比例尺（scale）把数据值映射成视觉量——位置、长度、半径、颜色。每个通道都过一个 scale，类型按字段自动选；本组按作用的字段类型分连续 / 时间 / 分类三页，外加自定义比例尺。
+description: 比例尺（scale）把数据值映射成视觉量。按产出分两族——位置比例尺产坐标 / 长度 / 半径，颜色比例尺产颜色，外加自定义比例尺。
 ---
 
 比例尺决定「数据值 → 视觉量」怎么算。位置通道（`x` / `y`，polar 下对应 `angle` / `radius`）的值要变成画布坐标、`size` 通道要变成半径、`color` 通道要变成颜色——中间都隔着一个 scale。`<Plot>` 会按字段的测量类型自动选 scale，常见图表不用手写。
 
 坐标轴是位置比例尺最常见的配置入口，但 scale 与 axis 分层：scale 负责映射，axis 负责显示刻度。把颜色 scale 解释给读者看则是[图例](/plot/grammar/guide/legend)的活。
 
-## 按字段类型派生
+## 两族：位置与颜色
 
-声明字段测量类型后，默认 scale 直接由类型决定——这也是本组分页的依据：
+比例尺按**产出**分两族，也是本组的分页依据：
 
-| 字段类型 | 位置默认 | 颜色（按 datum 着色） | 子页 |
-| --- | --- | --- | --- |
-| `continuous` | `linear`（可换 `log` / `sqrt` / `pow`） | `sequential` / `diverging` + 离散化色阶 | [连续比例尺](/plot/grammar/scale/continuous) |
-| `temporal` | `time` | `sequential`（时间也是连续量） | [时间比例尺](/plot/grammar/scale/temporal) |
-| `categorical` | `band`（折线用 `point`） | `ordinal` | [分类比例尺](/plot/grammar/scale/categorical) |
+- [位置比例尺](/plot/grammar/scale/position)产**坐标 / 长度 / 半径**，喂坐标投影与 `size` 通道——数值轴（`linear` / `log` / `sqrt` / `pow` / `symlog` / `radial`）、时间轴（`time`）、分类轴（`band` / `point`）。
+- [颜色比例尺](/plot/grammar/scale/color)产**颜色**，喂 `color` 通道与图例——分类一类一色（`ordinal`）、连续色带（`sequential` / `diverging`）、离散化分箱（`quantize` / `threshold` / `quantile`）。
 
-字段类型怎么声明见[数据模型](/plot/grammar/data/model)。内置 13 个 scale 之外的长尾（symlog、品牌色阶……）走[自定义比例尺](/plot/grammar/scale/custom)。
+两族下具体选哪种，`<Plot>` 按字段的测量类型自动决定：
+
+| 字段类型 | 位置默认 | 颜色（按 datum 着色） |
+| --- | --- | --- |
+| `continuous` | `linear`（可换 `log` / `sqrt` / `pow` / `symlog` / `radial`） | `sequential` / `diverging` + 离散化色阶 |
+| `temporal` | `time` | `sequential`（时间也是连续量） |
+| `categorical` | `band`（折线用 `point`） | `ordinal` |
+
+字段类型怎么声明见[数据模型](/plot/grammar/data/model)。内置 15 个 scale 之外的长尾（品牌色阶、领域专用映射……）走[自定义比例尺](/plot/grammar/scale/custom)。
 
 ## 显式覆盖
 
@@ -32,22 +37,18 @@ description: 比例尺（scale）把数据值映射成视觉量——位置、�
 </Plot>
 ```
 
-polar 图里用 `dimension="angle"` / `dimension="radius"`，也可用 `x` / `y` 作为别名。`Axis.scale` 只支持 `linear` / `time` / `point` / `log` / `sqrt` 这类位置 scale 快捷类型；要调对数底、幂指数等更细参数时，写完整 spec 的 `scales`。
+polar 图里用 `dimension="angle"` / `dimension="radius"`，也可用 `x` / `y` 作为别名。`Axis.scale` 支持 `linear` / `time` / `point` / `log` / `sqrt` / `symlog` / `radial` 这类位置 scale 快捷类型；要调对数底、幂指数、symlog 常数等更细参数时，写完整 spec 的 `scales`。
 
 ## 章节内容
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/plot/grammar/scale/continuous">
-    <span className="font-semibold">连续比例尺</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">linear / log / sqrt / pow，以及连续值映射颜色与离散化分箱色阶</span>
+  <LinkedCard href="/plot/grammar/scale/position">
+    <span className="font-semibold">位置比例尺</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">数值轴 linear / log / sqrt / pow / symlog / radial、时间轴 time、分类轴 band / point</span>
   </LinkedCard>
-  <LinkedCard href="/plot/grammar/scale/temporal">
-    <span className="font-semibold">时间比例尺</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">time scale 把日期落到人类可读的刻度边界</span>
-  </LinkedCard>
-  <LinkedCard href="/plot/grammar/scale/categorical">
-    <span className="font-semibold">分类比例尺</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">band / point 摆位置，ordinal 给分类离散着色</span>
+  <LinkedCard href="/plot/grammar/scale/color">
+    <span className="font-semibold">颜色比例尺</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">ordinal 一类一色、sequential / diverging 连续色带、quantize / threshold / quantile 离散化分箱</span>
   </LinkedCard>
   <LinkedCard href="/plot/grammar/scale/custom">
     <span className="font-semibold">自定义比例尺</span>

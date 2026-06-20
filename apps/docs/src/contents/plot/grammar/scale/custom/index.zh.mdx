@@ -1,9 +1,9 @@
 ---
 title: 自定义比例尺
-description: 内置 13 个 scale 覆盖不了的长尾（symlog、品牌色阶、自定义离散化…）用 defineScale 注册运行时定义，经 scaleDefinitions 注入；自定义配色走 colorSchemes。
+description: 内置 15 个 scale 覆盖不了的长尾（品牌色阶、领域专用映射、自定义离散化…）用 defineScale 注册运行时定义，经 scaleDefinitions 注入；自定义配色走 colorSchemes。
 ---
 
-内置的连续 / 时间 / 分类 scale 覆盖不了的长尾（symlog、品牌色阶、自定义离散化…）用 `defineScale` 注册运行时 definition，经 `scaleDefinitions` 注入。它和坐标系的 `defineCoordinate`、变换的 `defineTransform` 同一套范式：IR 只存 `{ type, name, ...config }` 的纯 JSON op，函数留在运行时 definition 里、不进 IR。
+内置的位置 / 颜色 scale 覆盖不了的长尾（品牌色阶、领域专用映射、自定义离散化…）用 `defineScale` 注册运行时 definition，经 `scaleDefinitions` 注入。它和坐标系的 `defineCoordinate`、变换的 `defineTransform` 同一套范式：IR 只存 `{ type, name, ...config }` 的纯 JSON op，函数留在运行时 definition 里、不进 IR。
 
 ## 两族判别
 

@@ -57,9 +57,8 @@ export const plotSection: Array<Section> = [
         id: 'scale',
         label: 'plot.grammarScale',
         children: [
-          { id: 'continuous', label: 'plot.grammarScaleContinuous' },
-          { id: 'temporal', label: 'plot.grammarScaleTemporal' },
-          { id: 'categorical', label: 'plot.grammarScaleCategorical' },
+          { id: 'position', label: 'plot.grammarScalePosition' },
+          { id: 'color', label: 'plot.grammarScaleColor' },
           { id: 'custom', label: 'plot.grammarScaleCustom' },
         ],
       },
