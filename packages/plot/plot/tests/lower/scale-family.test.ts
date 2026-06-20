@@ -101,6 +101,72 @@ describe('scale family · pow (alpha.7 ADR-01)', () => {
   });
 });
 
+describe('scale family · symlog', () => {
+  // Happy path：对称对数，domain 缺省 [-10, 10] 对称、range [300,0]：v=0 → symlog(0)=0 落几何中点 → y≈150
+  it('symlog_maps_zero_to_midpoint', () => {
+    const data = [{ i: 0, v: -10 }, { i: 1, v: 0 }, { i: 2, v: 10 }];
+    const path = collectPaths(firstLayer(lineSpec({ type: 'symlog' }), { d: data }, cartOpts))[0];
+    expect(stepPoint(path.children[1])[1]).toBeCloseTo(150, 6); // 对称 domain 下 0 落中点
+  });
+
+  // 边界：含零 / 负值合法（log 不能），全部成顶点不跳过
+  it('symlog_admits_zero_and_negative', () => {
+    const data = [{ i: 0, v: -5 }, { i: 1, v: 0 }, { i: 2, v: 5 }];
+    const path = collectPaths(firstLayer(lineSpec({ type: 'symlog' }), { d: data }, cartOpts))[0];
+    const points = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
+    expect(points.length).toBe(3);
+  });
+});
+
+describe('scale family · radial', () => {
+  // Happy path：面积感知半径。domain [0,4] range [300,0]：x=1 → unsquare(linear) = sqrt(67500)≈259.81
+  it('radial_maps_by_area_true_radius', () => {
+    const data = [{ i: 0, v: 0 }, { i: 1, v: 1 }, { i: 2, v: 4 }];
+    const path = collectPaths(firstLayer(lineSpec({ type: 'radial' }), { d: data }, cartOpts))[0];
+    expect(stepPoint(path.children[1])[1]).toBeCloseTo(Math.sqrt(67500), 4);
+  });
+
+  // 端到端：polar2D 玫瑰图（角向 band 类别 + 径向 radial 值）整体 lower 产出每类别一扇区，半径随值单调增
+  it('radial_drives_polar_rose_radius', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [{ type: 'band', name: 'a' }, { type: 'radial', name: 'r' }],
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+      marks: [{ type: 'interval', encoding: { x: { field: 'cat' }, y: { field: 'val' } } }],
+    });
+    const data = [{ cat: 'A', val: 1 }, { cat: 'B', val: 4 }, { cat: 'C', val: 9 }];
+    const nodes: Array<{ shape?: { type?: string; params?: Record<string, number> } }> = [];
+    const walk = (children: ReadonlyArray<unknown>): void => {
+      for (const child of children) {
+        const node = child as { type?: string; shape?: { type?: string; params?: Record<string, number> }; children?: ReadonlyArray<unknown> };
+        if (node.type === 'node') nodes.push(node);
+        else if (node.type === 'scope' && node.children) walk(node.children);
+      }
+    };
+    walk(firstLayer(spec, { d: data }, cartOpts).children);
+    expect(nodes).toHaveLength(3); // 每类别一扇区
+    const radii = nodes.map(node => node.shape?.params?.outerRadius ?? NaN);
+    expect(nodes.every(node => node.shape?.type === 'sector')).toBe(true);
+    expect(radii).toEqual([...radii].sort((a, b) => a - b)); // val 升序 → 外半径单调增
+  });
+
+  // radial allowsBaseline=true：可作 interval / area 值轴（面积编码值，玫瑰图扇区）
+  it('radial_allows_interval_baseline', () => {
+    const barSpec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [{ type: 'band', name: 'x' }, { type: 'radial', name: 'y' }],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'interval', encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
+    });
+    const data = [{ cat: 'a', v: 1 }, { cat: 'b', v: 4 }];
+    expect(() => expandOf(barSpec, { d: data }, cartOpts)).not.toThrow();
+  });
+});
+
 describe('scale family · L1 baseline guard (alpha.7 ADR-01)', () => {
   const barSpec = (yScale: Record<string, unknown>): PlotSpec =>
     PlotSpecSchema.parse({
@@ -122,8 +188,8 @@ describe('scale family · L1 baseline guard (alpha.7 ADR-01)', () => {
       marks: [{ type: 'region', order: 'i', encoding: { x: { field: 'i' }, y: { field: 'v' } } }],
     });
 
-  // baseline guard 现按具体 scale type 报错（log / pow / sqrt 各自命名；承自定义 allowsBaseline=false 的 scale）
-  const MSG = /nonlinear continuous scale \((log|pow|sqrt)\) cannot be used with interval\/area/;
+  // baseline guard 现按具体 scale type 报错（log / pow / sqrt / symlog 各自命名；承自定义 allowsBaseline=false 的 scale）
+  const MSG = /nonlinear continuous scale \((log|pow|sqrt|symlog)\) cannot be used with interval\/area/;
 
   it('interval_plus_log_fails_loud', () => {
     const data = [{ cat: 'a', v: 1 }, { cat: 'b', v: 10 }];
@@ -138,6 +204,11 @@ describe('scale family · L1 baseline guard (alpha.7 ADR-01)', () => {
   it('interval_plus_pow_fails_loud', () => {
     const data = [{ cat: 'a', v: 1 }, { cat: 'b', v: 4 }];
     expect(() => expandOf(barSpec({ type: 'pow', exponent: 2 }), { d: data }, cartOpts)).toThrow(MSG);
+  });
+
+  it('interval_plus_symlog_fails_loud', () => {
+    const data = [{ cat: 'a', v: -4 }, { cat: 'b', v: 4 }];
+    expect(() => expandOf(barSpec({ type: 'symlog' }), { d: data }, cartOpts)).toThrow(MSG);
   });
 
   // 交互：line（非 baseline mark）+ log 不被守卫拦

@@ -78,6 +78,37 @@ describe('ScaleSchema log / pow / sqrt (alpha.7 ADR-01)', () => {
   });
 });
 
+describe('ScaleSchema symlog / radial', () => {
+  it('symlog_omits_optionals_valid', () => {
+    expect(ScaleSchema.parse({ type: 'symlog', name: 'y' })).toEqual({ type: 'symlog', name: 'y' });
+  });
+
+  it('symlog_full_fields_valid', () => {
+    const s = { type: 'symlog', name: 'y', domain: [-100, 100], range: [0, 480], constant: 2, nice: true, clamp: true };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  it('symlog_negative_domain_accepted_by_schema', () => {
+    // symlog 全域有定义（含零 / 负），schema 不拦负 domain
+    const s = { type: 'symlog', name: 'y', domain: [-50, 50] };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  it('symlog_constant_must_be_positive', () => {
+    expect(() => ScaleSchema.parse({ type: 'symlog', name: 'y', constant: 0 })).toThrow();
+    expect(() => ScaleSchema.parse({ type: 'symlog', name: 'y', constant: -1 })).toThrow();
+  });
+
+  it('radial_omits_optionals_valid', () => {
+    expect(ScaleSchema.parse({ type: 'radial', name: 'r' })).toEqual({ type: 'radial', name: 'r' });
+  });
+
+  it('radial_full_fields_valid', () => {
+    const s = { type: 'radial', name: 'r', domain: [0, 50], range: [0, 120], nice: true, clamp: false };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+});
+
 describe('ScaleSchema band / point (ADR-01)', () => {
   // Happy path
   it('band_schema_valid', () => {

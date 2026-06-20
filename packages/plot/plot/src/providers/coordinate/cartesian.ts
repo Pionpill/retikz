@@ -12,7 +12,9 @@ const EMPTY_TICKS: TickSet = { values: [], labels: [] };
 
 /** 仅连续数值 scale 的显式 range 会阻止坐标系把 range 收敛到 plotArea（自定义 type 无内置 range 语义、按可收敛处理）。 */
 const hasExplicitContinuousRange = (def: ScaleOperation): boolean =>
-  (def.type === PlotScale.Linear || def.type === PlotScale.Log || def.type === PlotScale.Pow || def.type === PlotScale.Sqrt) && 'range' in def && def.range !== undefined;
+  (def.type === PlotScale.Linear || def.type === PlotScale.Log || def.type === PlotScale.Pow || def.type === PlotScale.Sqrt || def.type === PlotScale.Symlog || def.type === PlotScale.Radial) &&
+  'range' in def &&
+  def.range !== undefined;
 
 /**
  * 二维笛卡尔运行时坐标帧。

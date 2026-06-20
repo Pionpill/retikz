@@ -15,8 +15,8 @@ import {
   type ScaledMarkValueType,
   type SqrtScale,
 } from '../../schemas';
-import { resolveLinearScale, resolveSqrtScale } from './scale';
 import { isBuiltinScaleOperation } from '../../contract';
+import { resolveLinearScale, resolveSqrtScale } from './position';
 
 /**
  * 通道 scale 描述符：legend 据此画 swatch / ramp / 分箱 / 梯度符号

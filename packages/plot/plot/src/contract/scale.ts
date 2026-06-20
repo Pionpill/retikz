@@ -95,7 +95,7 @@ export type ScaleDefinition<TScaleOperation extends ScaleOperation = ScaleOperat
 
 /**
  * 定义一个 scale definition，保留 resolve 对 scale operation 的强类型（对齐 core defineComposite / defineTransform / defineCoordinate）。
- * @description 内置 13 个与自定义 scale 都经同一 registry 入口分派；family 决定 position / channel 解析通路。
+ * @description 内置 15 个与自定义 scale 都经同一 registry 入口分派；family 决定 position / channel 解析通路。
  */
 export const defineScale = <TScaleOperation extends ScaleOperation>(def: ScaleDefinition<TScaleOperation>): ScaleDefinition => def as ScaleDefinition;
 

@@ -19,7 +19,13 @@ const axisRole = (dimension: string): string => {
 
 /** 连续角轴需要段内采样弯弧；分类角轴类别间无中间值，走弦。 */
 const isContinuousAngleScale = (scaleType: string): boolean =>
-  scaleType === PlotScale.Linear || scaleType === PlotScale.Time || scaleType === PlotScale.Log || scaleType === PlotScale.Pow || scaleType === PlotScale.Sqrt;
+  scaleType === PlotScale.Linear ||
+  scaleType === PlotScale.Time ||
+  scaleType === PlotScale.Log ||
+  scaleType === PlotScale.Pow ||
+  scaleType === PlotScale.Sqrt ||
+  scaleType === PlotScale.Symlog ||
+  scaleType === PlotScale.Radial;
 
 /**
  * 极坐标输出空间点 → 屏幕点。

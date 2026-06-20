@@ -22,6 +22,10 @@ export const PlotScale = {
   Pow: 'pow',
   /** 平方根：pow exponent 0.5 的常用别名（面积感知正确；size 通道默认派生到此）；domain / value 必须 ≥ 0 */
   Sqrt: 'sqrt',
+  /** 对称对数：近零线性、尾部对数，能处理跨零 / 含负的宽幅数据（log 不能）；仅 point / line */
+  Symlog: 'symlog',
+  /** 径向：输出半径使「编码面积」正比于值（开方映射）；极坐标 / 玫瑰图（南丁格尔）的天然值 scale */
+  Radial: 'radial',
   /** 连续顺序色阶：单调量 domain → 单方向色带（低→高），continuous / temporal color 主力 */
   Sequential: 'sequential',
   /** 连续发散色阶：有中点的量 domain → 两侧异色色带（中点淡），盈亏 / 偏离均值 */
@@ -255,6 +259,45 @@ export const SqrtScaleSchema = z
   })
   .describe('Sqrt scale: continuous square-root mapping (area-perceptual); valid only on point / line marks; also the default derivation target for the size channel');
 
+export const SymlogScaleSchema = z
+  .object({
+    type: z.literal(PlotScale.Symlog).describe('Discriminator: continuous symmetric-log scale (linear near zero, logarithmic in the tails; admits zero and negative values)'),
+    name: z.string().min(1).describe('Scale name; referenced by coordinate.x / coordinate.y'),
+    domain: z
+      .tuple([z.number(), z.number()])
+      .optional()
+      .describe('[min, max] input extent; may cross zero or be negative; omit to infer from the field values at lowering'),
+    range: z
+      .tuple([z.number(), z.number()])
+      .optional()
+      .describe('[start, end] output extent in plot-area units; omit to derive from the coordinate extent at lowering'),
+    constant: z
+      .number()
+      .gt(0)
+      .optional()
+      .describe('Width of the linear region around zero (the symlog constant); larger flattens more of the center toward linear; default 1'),
+    nice: z.boolean().optional().describe('Round the domain to nice numbers; default false'),
+    clamp: z.boolean().optional().describe('Clamp out-of-domain inputs to the range ends; default false'),
+  })
+  .describe('Symlog scale: continuous bi-symmetric-log mapping, linear near zero and logarithmic in the tails, so it handles wide-range data that crosses or includes zero (unlike log); valid only on point / line marks');
+
+export const RadialScaleSchema = z
+  .object({
+    type: z.literal(PlotScale.Radial).describe('Discriminator: continuous radial scale whose output radius is area-true (the square-root mapping that makes encoded area proportional to value)'),
+    name: z.string().min(1).describe('Scale name; referenced by coordinate.x / coordinate.y or a polar radius role'),
+    domain: z
+      .tuple([z.number(), z.number()])
+      .optional()
+      .describe('[min, max] input extent; omit to infer from the field values at lowering'),
+    range: z
+      .tuple([z.number(), z.number()])
+      .optional()
+      .describe('[innerRadius, outerRadius] output extent in plot-area units; omit to derive from the coordinate extent at lowering'),
+    nice: z.boolean().optional().describe('Round the domain to nice numbers; default false'),
+    clamp: z.boolean().optional().describe('Clamp out-of-domain inputs to the range ends; default false'),
+  })
+  .describe('Radial scale: continuous mapping whose output radius is area-true (encoded area is proportional to value); the natural value scale for polar / rose (Nightingale) charts');
+
 export const SequentialColorScaleSchema = z
   .object({
     type: z.literal(PlotScale.Sequential).describe('Discriminator: continuous sequential color scale (monotone quantity to a one-directional color band)'),
@@ -370,13 +413,15 @@ export const ScaleSchema = z
     LogScaleSchema,
     PowScaleSchema,
     SqrtScaleSchema,
+    SymlogScaleSchema,
+    RadialScaleSchema,
     SequentialColorScaleSchema,
     DivergingColorScaleSchema,
     QuantizeColorScaleSchema,
     ThresholdColorScaleSchema,
     QuantileColorScaleSchema,
   ])
-  .describe('Scale union: linear / band / point / ordinal / time / log / pow / sqrt / sequential / diverging / quantize / threshold / quantile');
+  .describe('Scale union: linear / band / point / ordinal / time / log / pow / sqrt / symlog / radial / sequential / diverging / quantize / threshold / quantile');
 
 /** 内置 scale type 集；供 CustomScaleSchema 排除内置判别串（模块常量，非 zod） */
 export const BUILTIN_SCALE_TYPES = new Set<string>(Object.values(PlotScale));
@@ -417,6 +462,10 @@ export type LogScale = z.infer<typeof LogScaleSchema>;
 export type PowScale = z.infer<typeof PowScaleSchema>;
 /** sqrt scale（连续平方根，面积感知；size 通道默认派生目标） */
 export type SqrtScale = z.infer<typeof SqrtScaleSchema>;
+/** symlog scale（对称对数，近零线性、尾部对数；跨零 / 含负的宽幅数据） */
+export type SymlogScale = z.infer<typeof SymlogScaleSchema>;
+/** radial scale（径向，面积感知半径；极坐标 / 玫瑰图值轴） */
+export type RadialScale = z.infer<typeof RadialScaleSchema>;
 /** sequential color scale（连续顺序色阶；continuous / temporal color 主力） */
 export type SequentialColorScale = z.infer<typeof SequentialColorScaleSchema>;
 /** diverging color scale（连续发散色阶；有中点的量两侧异色） */
@@ -427,7 +476,7 @@ export type QuantizeColorScale = z.infer<typeof QuantizeColorScaleSchema>;
 export type ThresholdColorScale = z.infer<typeof ThresholdColorScaleSchema>;
 /** quantile color scale（分位离散化；按数据分位切档 → 离散色，无显式数值 domain） */
 export type QuantileColorScale = z.infer<typeof QuantileColorScaleSchema>;
-/** scale（linear / band / point / ordinal / time / log / pow / sqrt / sequential / diverging / quantize / threshold / quantile） */
+/** scale（linear / band / point / ordinal / time / log / pow / sqrt / symlog / radial / sequential / diverging / quantize / threshold / quantile） */
 export type Scale = z.infer<typeof ScaleSchema>;
 /** 自定义 scale operation（运行时由 ScaleDefinition 精确校验并解析；type 排除内置） */
 export type CustomScale = z.infer<typeof CustomScaleSchema>;
