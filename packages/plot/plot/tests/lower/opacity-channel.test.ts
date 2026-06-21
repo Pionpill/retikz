@@ -1,8 +1,8 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { OPACITY_MIN } from '../../src/lower/channel';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { OPACITY_MIN } from '../../src/providers';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
@@ -35,14 +35,14 @@ const pointSpec = (opacity: Record<string, unknown> | undefined): PlotSpec =>
     data: { reference: 'd' },
     scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, ...(opacity ? { opacity } : {}) } }],
+    marks: [{ type: 'point', ...(opacity ? { opacity } : {}), encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
   });
 
 describe('opacity channel (alpha.7 ADR-04)', () => {
   // Happy path：linear 映射到 [OPACITY_MIN, 1]。domain [0,10]：v=0→min、v=10→1、v=5→中点
   it('opacity_field_maps_to_min_one', () => {
     const data = [{ x: 0, y: 0, d: 0 }, { x: 1, y: 1, d: 5 }, { x: 2, y: 2, d: 10 }];
-    const nodes = collectNodes(firstLayer(pointSpec({ field: 'd' }), { d: data }));
+    const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'd' }), { d: data }));
     const ops = nodes.map(opacityOf);
     expect(ops[0]).toBeCloseTo(OPACITY_MIN, 6);
     expect(ops[2]).toBeCloseTo(1, 6);
@@ -51,15 +51,16 @@ describe('opacity channel (alpha.7 ADR-04)', () => {
 
   it('opacity_value_constant', () => {
     const data = [{ x: 0, y: 0 }, { x: 1, y: 1 }];
-    const nodes = collectNodes(firstLayer(pointSpec({ value: 0.4 }), { d: data }));
-    expect(nodes.every(n => Math.abs(opacityOf(n)! - 0.4) < 1e-6)).toBe(true);
+    const layer = firstLayer(pointSpec({ kind: 'constant', value: 0.4 }), { d: data });
+    expect(layer.nodeDefault?.opacity).toBeCloseTo(0.4, 6);
+    expect(collectNodes(layer).every(n => opacityOf(n) === undefined)).toBe(true);
   });
 
   // 边界：field 越界 clamp 不报错（负值 → OPACITY_MIN）
   it('opacity_field_out_of_range_clamps', () => {
     // domain 推断为 [-5, 5]；但加一个远离点测 clamp 不直观，这里验证不抛 + 落在 [min,1]
     const data = [{ x: 0, y: 0, d: -5 }, { x: 1, y: 1, d: 5 }];
-    const nodes = collectNodes(firstLayer(pointSpec({ field: 'd' }), { d: data }));
+    const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'd' }), { d: data }));
     expect(nodes.every(n => opacityOf(n)! >= OPACITY_MIN - 1e-9 && opacityOf(n)! <= 1 + 1e-9)).toBe(true);
   });
 
@@ -72,7 +73,7 @@ describe('opacity channel (alpha.7 ADR-04)', () => {
   // 错误路径：temporal 字段 fail-loud
   it('opacity_temporal_field_fails_loud', () => {
     const data = [{ x: 0, y: 0, t: '2024-01-01' }, { x: 1, y: 1, t: '2024-02-01' }];
-    expect(() => expandOf(pointSpec({ field: 't' }), { d: data })).toThrow(/opacity requires a continuous field/);
+    expect(() => expandOf(pointSpec({ kind: 'field', value: 't' }), { d: data })).toThrow(/opacity requires a continuous field/);
   });
 
   // 交互：size + opacity 共存，各自 per-node
@@ -83,7 +84,7 @@ describe('opacity channel (alpha.7 ADR-04)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, size: { field: 'p' }, opacity: { field: 'd' } } }],
+      marks: [{ type: 'point', size: { kind: 'field', value: 'p' }, opacity: { kind: 'field', value: 'd' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     });
     const data = [{ x: 0, y: 0, p: 1, d: 2 }, { x: 1, y: 1, p: 4, d: 8 }];
     const nodes = collectNodes(firstLayer(spec, { d: data }));

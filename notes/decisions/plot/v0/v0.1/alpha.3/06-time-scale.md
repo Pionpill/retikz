@@ -47,7 +47,7 @@ export const PlotScale = { Linear:'linear', Band:'band', Point:'point', Ordinal:
 ---
 
 > **实现指针**：level `red`（动 `plot/src/ir/**` scale schema + `src/lower/**`）、非 breaking（time 是新增 union 成员，旧 scale 不变）。对外 API：`@retikz/plot` 公开 `TimeScaleSchema`、`PlotScale` 增 `Time`；对 core 无影响（IR domain 是 ms number，`Date` 不进 IR）。
-> - 真源以代码为准：`TimeScaleSchema` / `ScaleSchema`（`plot/src/ir/scale.ts`）、`resolveTimeScale` / `toTimestamp` / `timeTicks`（`plot/src/lower/scale.ts`，基于 `d3-scale` `scaleUtc` + `d3-array` `extent`）；time 域推断走时间戳 extent 见 `plot/src/lower/expand.ts`。复用 [ADR-01](./01-band-scale.md) `PositionScale`（time 作连续 scale、bandwidth=0）。
+> - 真源以代码为准：`TimeScaleSchema` / `ScaleSchema`（`plot/src/ir/scale.ts`）、`resolveTimeScale` / `coerceTimestamp` / `timeTicks`（`plot/src/lower/scale.ts`，基于 `d3-scale` `scaleUtc` + `d3-array` `extent`）；time 域推断走时间戳 extent 见 `plot/src/lower/expand.ts`。复用 [ADR-01](./01-band-scale.md) `PositionScale`（time 作连续 scale、bandwidth=0）。
 > - 测试见 `plot/tests/ir/scale.schema.test.ts`（time schema accept/reject、domain 非 number 拒）与 `plot/tests/lower/scale.test.ts`（ISO / ms 解析、月边界刻度 UTC 确定性、时间标签、domain 推断、nice 开关、非法串跳过、bandwidth=0、经 PositionScale 与 linear 同形、time 折线端到端）。
 > - 完整施工契约（Schema 改动表 / 测试象限 / 文件 scope / DSL 表面）见本 ADR git 历史。
 

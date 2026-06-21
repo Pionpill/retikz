@@ -27,7 +27,7 @@ All functions are pure and side-effect-free; degenerate inputs return `null` (`t
 
 ## Exports
 
-- `Position` / `DEFAULT_EPSILON` / `point` (add / sub / scale / dot / cross / length / normalize / shiftToward / equal) / `lerp`
+- `Position` / `DEFAULT_EPSILON` / `isFiniteNumber` / `isInfiniteNumber` / `point` (add / sub / scale / dot / cross / length / normalize / shiftToward / equal) / `lerp`
 - `localToWorld` / `worldToLocal` / `CenteredShape` — affine transforms (center + optional rotate)
 - `arcEndPoint` / `arcAngleInRange` / `rayArc` / `ellipseArcPoint` / `arcBoundingPoints` / `ellipseArcBoundingPoints` — arc primitives (SVG y-down angle convention)
 - `intersect` — `lineLine` / `lineCircle` / `circleCircle` / `segmentSegment` (point-returning; `rayArc` lives on the arc module, returns ray-parameter scalars)

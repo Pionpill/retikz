@@ -3,17 +3,17 @@ title: Plot
 description: "<Plot> is the chart container: it takes raw data and a size, assembles mark / guide / scale children, and lowers to core primitives at compile time."
 ---
 
-`<Plot>` is the container component for the plot layer. It takes `data` (an array of raw rows) and a display size, collects `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` / `<Scale>` children, then assembles a PlotSpec and lowers it to core at compile time. Data never enters the IR; it is injected during lowering. `<Plot>` does not draw axes, grids, or legends by itself. Declare those guides explicitly. Scales are inferred unless overridden with `<Scale>`; the coordinate system defaults to `cartesian2D` and can be switched with `coordinate`.
+`<Plot>` is the container component for the plot layer. It takes `data` (an array of raw rows) and a display size, collects `<PathMark>` / `<IntervalMark>` / `<RegionMark>` / `<Axis>` / `<Scale>` children, then assembles a PlotSpec and lowers it to core at compile time. Data never enters the IR; it is injected during lowering. `<Plot>` does not draw axes, grids, or legends by itself. Declare those guides explicitly. Scales are inferred unless overridden with `<Scale>`; the coordinate system defaults to `cartesian2D` and can be switched with `coordinate`.
 
 ## Usage
 
 ```tsx
-import { Axis, BarMark, Plot } from '@retikz/plot-react';
+import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 ```
 
 ```tsx
 <Plot data={revenue} width={360} height={220}>
-  <BarMark x="quarter" y="value" />
+  <IntervalMark x="quarter" y="value" />
   <Axis dimension="x" />
   <Axis dimension="y" grid />
 </Plot>
@@ -108,7 +108,7 @@ Data enters lowering alongside the PlotSpec and becomes Tier 1 step by step:
 | --- | --- | --- |
 | Resolve data | dataset via `data.reference` + `model` / `fieldMap` | normalized rows (type inference, renaming, transforms) |
 | Infer scales | fields bound to each channel + coordinate | band / linear / time / log… scales and the projection frame |
-| Mark → layer | each `<LineMark>` / `<BarMark>` … | one core `<Scope>` layer (of `<Node>` / `<Path>`) |
+| Mark → layer | each `<PathMark>` / `<IntervalMark>` … | one core `<Scope>` layer (of `<Node>` / `<Path>`) |
 | Axis / grid / legend → layer | explicit `<Axis>` / `<Legend>` | grid, axis, and legend layers (each a `<Scope>`) |
 | Order z-index | all layers above | grid at the bottom → marks → axes → legend |
 
@@ -124,8 +124,8 @@ When the PlotSpec carries an `id` (spec entry or generated IR), lowering wraps a
 | --- | --- | --- | --- |
 | `data` | `Array<Row>` | — | Raw data rows (composition DSL entry); data never enters the IR |
 | `children` | `ReactNode` | — | Mark / guide / scale children (composition DSL entry) |
-| `model` | `DataModel` | — | Data model (field names + types): enables strict validation and type-driven scale / guide derivation; see [Data Model](/plot/data/model) |
-| `fieldMap` | `Record<string, string>` | — | Logical field name → actual path in the data (requires `model`); renames only, no value transform; see [Processing](/plot/data/processing) |
+| `model` | `DataModel` | — | Data model (field names + types): enables strict validation and type-driven scale / guide derivation; see [Data Model](/plot/grammar/data/model) |
+| `fieldMap` | `Record<string, string>` | — | Logical field name → actual path in the data (requires `model`); renames only, no value transform; see [Processing](/plot/grammar/data/processing) |
 | `coordinate` | see [Coordinates](/plot/grammar/coordinate) | cartesian2D | Coordinate system: `"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` shorthand or the matching object; cartesian2D by default |
 | `colors` | `Array<string>` | `schemeCategory10` | Default palette. Categorical color scales use it as their range; marks without a color encoding use it by layer order and cycle when needed. Use `'currentColor'` to keep the inherited core color |
 | `id` | `string` | — | Panel id: written to PlotSpec.id as an external anchor handle; in embedded DSL mode it is also the default dataset reference when `dataRef` is omitted |
@@ -138,6 +138,7 @@ When the PlotSpec carries an `id` (spec entry or generated IR), lowering wraps a
 | `clip` | `IRClipSpec` | — | Panel-level clipping region |
 | `fontSize` | `number?` | — | Tick label font size |
 | `margin` | `{ top?; right?; bottom?; left? }` | — | Override the surrounding padding |
+| `visualChannelDefinitions` | `Array<AnyVisualChannelDefinition>` | — | Runtime definitions for custom visual channels; used together with `encoding.channels` in a spec. See [Custom Data](/plot/grammar/data/custom#custom-visual-channels) |
 | `spec` | `PlotSpec` | — | Spec entry: a prebuilt Plot IR root (mutually exclusive with `children`) |
 
 In addition, `renderer` / `className` / `style` pass through to the underlying `<Layout>` — picking the render backend, an extra class name, and inline styles respectively.
@@ -145,7 +146,8 @@ In addition, `renderer` / `className` / `style` pass through to the underlying `
 ## Related
 
 - [Coordinates](/plot/grammar/coordinate) — the polar switch and channel roles
-- [Marks](/plot/components/mark) — line / point / bar / sector / area
-- [Axis](/plot/components/axis) — ticks, labels, grid, polar dimensions
-- [Data Model](/plot/data/model) — `model` field types and type-driven derivation
-- [Processing](/plot/data/processing) — `fieldMap`, validation, custom parsing
+- [Marks](/plot/grammar/mark) — line / point / bar / sector / area
+- [Axis](/plot/grammar/guide/axis) — ticks, labels, grid, polar dimensions
+- [Data Model](/plot/grammar/data/model) — `model` field types and type-driven derivation
+- [Processing](/plot/grammar/data/processing) — `fieldMap`, validation, custom parsing
+- [Custom Data](/plot/grammar/data/custom#custom-visual-channels) — `visualChannelDefinitions` and `encoding.channels`

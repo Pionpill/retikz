@@ -1,0 +1,129 @@
+---
+title: PathMark
+description: "PathMark is a one-dimensional trajectory made from ordered points; lines, multi-series lines, and radar outlines are presentation forms of the same mark."
+---
+
+`<PathMark>` produces one 1D trajectory from a set of data rows. It projects each row into a point, sorts the points by `order`, and lowers the result into a core `Path`. Under cartesian2D it is usually a line; under polar2D it can become a polar path or a radar outline.
+
+`x` / `y` bind position channels, `order` decides connection order, `series` decides whether to split into multiple paths, and `closed` decides whether the last point connects back to the first. PathMark currently supports cartesian2D and polar2D.
+
+## Usage
+
+```tsx
+import { PathMark, Plot } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={revenue}>
+  <PathMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+Set `order` explicitly. Otherwise PathMark follows data array order, so a different row order changes the path shape.
+
+## Presentation Layer
+
+PathMark is a low-level line mark: it only connects a set of ordered anchors into one 1D trajectory. It does not care whether the presentation layer calls that trajectory a line chart, trend line, outline, or radar outline; those are interpretations of the same PathMark.
+
+The presentation form mainly changes through three groups of props: position channels decide where points come from, series channels decide how many paths are produced, and geometry props decide whether the path closes. PathMark does not fill an area. Use [RegionMark](/plot/grammar/mark/region) for filled area charts or filled radar charts.
+
+| Presentation form | Key props | Behavior |
+| --- | --- | --- |
+| Line | `x` / `y` / `order` | Project each row into a point, then connect the points in order |
+| Multi-series line | `series` / `color` | Split rows by series first, then produce one path per group |
+| Radar outline | `closed` + `polar2D` | Join the ends under polar coordinates to form a closed wireframe |
+
+## Examples
+
+### Position Props
+
+`x` / `y` decide which points the path visits, and `order` decides how those points connect. This example maps to the position props in the API table and shows the smallest single line.
+
+<ComponentPreview name="line-basic" sourceFiles={['line-basic.data.ts']} />
+
+### Series Props
+
+Set `series` to a field and rows split into groups first; each group lowers into one core Path. Without an explicit color, each series uses the default color sequence.
+
+<ComponentPreview name="line-series" sourceFiles={['line-series.data.ts']} />
+
+With no `series`, giving `color` a categorical field also splits PathMark implicitly. This maps to the `color` prop in the API table and is the compact form for “color is the series.”
+
+<ComponentPreview name="line-color-split" sourceFiles={['line-series.data.ts']} />
+
+### Geometry Props
+
+`closed` is PathMark's main geometry prop today: it connects the last point back to the first. Under `polar2D`, categories spread along the angular role and values map to radius, so the closed path becomes a radar outline.
+
+<ComponentPreview name="line-radar" sourceFiles={['line-radar.data.ts']} />
+
+## How It Works
+
+`PathMark` is a built-in registered mark. The React `<PathMark>` component does not render DOM; `<Plot>` collects it into mark IR with `type: 'path'` and records settings such as `x` / `y` / `order` / `series` / `closed`.
+
+At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `PathMark` resolves to the `PlotMark.Path` entry, which calls `lowerPathLayer`. `lowerPathLayer` accepts only cartesian2D / polar2D, then calls `lowerPath`: it splits rows into series, sorts them, projects points, and lowers the point sequence into a core `Path`.
+
+For registration, focus on the `PathMark` registry entry and the `lowerPathLayer` / `lowerPath` functions that perform the lowering:
+
+```ts
+[PlotMark.Path]: { type: PlotMark.Path, lower: lowerPathLayer },
+
+const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+  if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
+    throw new Error(failLoudMessage(mark.type, frame.type));
+  }
+  const layer = lowerPath(mark, rows, frame, channels.colorOf, channels.defaultColor, markProvenance);
+  return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
+};
+
+const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+  if (mark.type !== PlotMark.Path) return null;
+  const closed = mark.closed ?? false;
+  const seriesField = pathSeriesField(mark, rows);
+  if (seriesField) {
+    const paths = buildSeriesPaths(
+      mark,
+      rows,
+      seriesField,
+      seriesRows => buildLineSteps(mark, seriesRows, frame, closed),
+      seriesRows => ({ stroke: colorOf?.(seriesRows[0]) ?? DEFAULT_FILL }),
+      markProvenance,
+    );
+    return paths.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
+  }
+  const steps = buildLineSteps(mark, rows, frame, closed);
+  if (!steps) return null;
+  const colorValue = mark.encoding.color?.value;
+  const stroke = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
+  return { type: 'scope', pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH }, children: [{ type: 'path', children: steps }] };
+};
+```
+
+The logic has four parts:
+
+| Step | Behavior |
+| --- | --- |
+| Coordinate check | PathMark needs 2D trajectory geometry; this release lowers it only under cartesian2D / polar2D |
+| Sort and project | `orderRows` decides connection order, and `frame.project(...)` maps position channels into screen points |
+| Series split | Explicit `series` wins; without `series`, categorical `color` can implicitly split the rows |
+| Core lowering | Each series becomes one core `Path`; `closed` appends the closing segment to the step sequence |
+
+## API
+
+Most `PathMark` props are data channels: position props decide which points the trajectory visits, and series props decide whether it splits into multiple paths. `FieldName` means a data field name or field path, such as `month` / `city`.
+
+| Category | Prop | Type | Default | Description |
+| --- | --- | --- | --- | --- |
+| Position | `x` | `FieldName` | — | Field bound to the x position channel |
+| | `y` | `FieldName` | — | Field bound to the y position channel |
+| | `order` | `FieldName?` | data order | Field bound to connection order |
+| Series | `series` | `FieldName?` | — | Split rows into multiple paths |
+| | `color` | `FieldName?` | `series` | Field bound to color; can implicitly split series when `series` is omitted |
+| Geometry | `closed` | `boolean?` | `false` | Connect the last point back to the first |
+| General | `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
+
+## Related
+
+- [PointMark](/plot/grammar/mark/point) — overlay markers on each observation
+- [RegionMark](/plot/grammar/mark/region) — filled paths / filled radar
+- [Coordinates](/plot/grammar/coordinate) — how cartesian2D / polar2D interpret position roles

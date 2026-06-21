@@ -8,7 +8,7 @@
 
 plot 的数据层把「用户外部数据 → canonical 行」分两段：① `resolveFieldTypes`（`packages/plot/plot/src/lower/expand.ts`）定每个字段的测量类型——有 `model` 用声明、无 `model` 走 `inferFieldType` 抽样推断；② `normalizeRows` / `coerceValue`（`packages/plot/plot/src/lower/coerce.ts`）按类型把原始值强制成 canonical 值（temporal→epoch ms、continuous→number、categorical→string|number）。类型与解析都**只认内置规则**，用户无从介入。三类真实需求因此落空：
 
-- **非 ISO 日期 / 自定义日期格式**：`temporal` 的 `toTimestamp` 只接受 `Date` / epoch ms / 严格 ISO（`YYYY-MM-DD` 或带时区 ISO datetime）。`'2024/01/01'`、epoch 秒、`'2024Q1'` 一律 NaN→静默跳过。用户没有挂自定义 parser 的口子。
+- **非 ISO 日期 / 自定义日期格式**：`temporal` 的 `coerceTimestamp` 只接受 `Date` / epoch ms / 严格 ISO（`YYYY-MM-DD` 或带时区 ISO datetime）。`'2024/01/01'`、epoch 秒、`'2024Q1'` 一律 NaN→静默跳过。用户没有挂自定义 parser 的口子。
 - **数值枚举想当类别**：`status: 0/1/2` 这种数值编码的类别。声明 `model` 的 `type: 'categorical'` 已能解决（`coerceCategory` 原样保留有限 number），但**无 model 时**（推断模式）数值一律 `continuous`，没有不写整份 model 就单点纠偏的手段。
 - **`bigint` 静默丢弃**：`classify` / `coerceNumber` 都不认 `bigint`（DB int64、JSON reviver 可能产出）→ 推断与 ingest 两处无声蒸发。
 

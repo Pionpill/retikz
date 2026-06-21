@@ -15,7 +15,7 @@ plot 的本质是 **core + 图形语法**。core 提供最终能渲染的节点�
 
 | 部分 | 实现里对应什么 | 作用 |
 | --- | --- | --- |
-| **图形语法** | `marks`、`encoding`、`scales`、`coordinate`、`guides`；React 侧是 `<LineMark>` / `<PointMark>` / `<Axis>` | 绘图指导思想：先声明“哪个字段映射到哪个视觉通道”，再由 scale、coordinate 和 guide 决定如何落到画布 |
+| **图形语法** | `marks`、`encoding`、`scales`、`coordinate`、`guides`；React 侧是 `<PathMark>` / `<PointMark>` / `<Axis>` | 绘图指导思想：先声明“哪个字段映射到哪个视觉通道”，再由 scale、coordinate 和 guide 决定如何落到画布 |
 | **数据** | `data.reference` + 可选 `model` 指向外部数据集；lowering 时把每一行解析成 `x` / `y` 数据通道 | 保存真实数据和字段模型；数据值不进入 IR，字段路径通过 `field` 解析，常量通过 `value` 进入通道 |
 | **`@retikz/plot`** | `PlotSpecSchema`、`buildPlotSpec`、`lowerPlots`、`renderPlot`、`<Plot>` | 逻辑封装：校验 PlotSpec、补默认 linear scale / cartesian2D / Axis、计算 domain / ticks / projector，并把结果下沉成 core IR |
 
@@ -35,7 +35,7 @@ Plot 的中心不是一份巨大的数据表，而是一份描述图表语义的
 | **数据** | 外部数据集 | 提供具体数值；不进入 IR，避免配置随数据量膨胀 |
 | **lowerPlots** | 下沉函数 | 把 Plot IR + 数据转成 core 能渲染的节点和路径 |
 
-React 用户通常不需要手写整份 IR。`@retikz/plot-react` 的 `<Plot>` 会从 `<LineMark>`、`<PointMark>`、`<Axis>` 这些子组件同步装配出 Plot IR；想直接从程序或 AI 生成 IR 时，也可以用 `<Plot spec={spec} data={{ sales }} />`。
+React 用户通常不需要手写整份 IR。`@retikz/plot-react` 的 `<Plot>` 会从 `<PathMark>`、`<PointMark>`、`<Axis>` 这些子组件同步装配出 Plot IR；想直接从程序或 AI 生成 IR 时，也可以用 `<Plot spec={spec} data={{ sales }} />`。
 
 ## 包职责
 
@@ -51,6 +51,6 @@ plot 拆成三包，是为了让「图表语义」和「框架入口」分开：
 
 ## 当前能力
 
-<ComponentAlert title="v0.1 alpha.4" description="当前 plot 支持 linear / band / point / time / ordinal(颜色) scale，cartesian2D 与 polar2D 两套坐标系，PointMark / LineMark / BarMark / SectorMark / AreaMark（含 dodge / stack 多系列与 closed 雷达），Axis 坐标轴（x / y / angle / radius）+ 网格，以及 sort / stack transform——React 与 Vanilla 两套包都覆盖。位置通道只有 x / y、由坐标系重解释；legend、tooltip 与事件交互仍在后续版本。" />
+<ComponentAlert title="v0.1 alpha.4" description="当前 plot 支持 linear / band / point / time / ordinal(颜色) scale，cartesian2D 与 polar2D 两套坐标系，PointMark / PathMark / IntervalMark / RegionMark（含 dodge / stack 多系列、饼图 / 环图与 closed 雷达），Axis 坐标轴（x / y / z，polar 下 x/y 解释为角向/径向）+ 网格，以及 sort / stack transform——React 与 Vanilla 两套包都覆盖。位置通道只有 x / y、由坐标系重解释；legend、tooltip 与事件交互仍在后续版本。" />
 
 如果你是第一次使用 plot，先从快速开始走一遍本地数据的折线 + 散点图，再回来看这里的 IR / 数据 / lowering 分工会更顺。

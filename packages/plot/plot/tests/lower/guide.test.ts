@@ -1,10 +1,10 @@
 import { compileToScene } from '@retikz/core';
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { lowerPlots } from '../../src/lower/expand';
-import { type GuideContext, lowerGuide } from '../../src/lower/guide';
-import type { PositionScale } from '../../src/lower/scale';
+import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { lowerPlots } from '../../src/pipeline/expand';
+import { type GuideContext, lowerGuide } from '../../src/features';
+import type { PositionScale } from '../../src/contract';
 
 /** 测试用最小 PositionScale：guide 只调 coordinate，其余成员给占位 */
 const fakeScale = (coordinate: (value: number) => number): PositionScale => ({
@@ -127,7 +127,7 @@ const guidedSpec = (guides: Array<unknown>): PlotSpec =>
       { type: 'linear', name: 'yRevenue' },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     guides,
   });
 
@@ -171,7 +171,7 @@ describe('lowerPlots guide orchestration (ADR-04)', () => {
         { type: 'linear', name: 'yRevenue', range: [200, 0] },
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-      marks: [{ type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
     });
     const outer = expandOf(spec);

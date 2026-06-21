@@ -1,7 +1,7 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 /**
  * ADR-01 polar 投影 lowering 测试。
@@ -247,7 +247,7 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
         { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' }, color: { field: 'g', scale: 'col' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'g', scale: 'col' }, encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
     });
     const rows = [
       { theta: 0, value: 5, g: 'X' },

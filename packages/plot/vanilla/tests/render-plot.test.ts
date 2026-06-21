@@ -15,7 +15,7 @@ const spec: PlotSpec = {
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [
-    { type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+    { type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
     { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
   ],
 };
@@ -103,7 +103,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { type: 'ordinal', name: 'color' },
       ],
       coordinate: { type: 'polar2D', angle: 'angle', radius: 'radius', startAngle: 0, endAngle: 360, innerRadius: 0 },
-      marks: [{ type: 'sector', encoding: { color: { field: 'label', scale: 'color' } } }],
+      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label', scale: 'color' } } }],
     };
     const svg = renderPlot(pieSpec, share, { width: 360, height: 360 });
     expect(svg).toContain('<svg');
@@ -124,7 +124,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { type: 'ordinal', name: 'color' },
       ],
       coordinate: { type: 'polar2D', angle: 'angle', radius: 'radius', startAngle: 0, endAngle: 360, innerRadius: 0.5 },
-      marks: [{ type: 'sector', encoding: { color: { field: 'label', scale: 'color' } } }],
+      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label', scale: 'color' } } }],
     };
     expect(renderPlot(donutSpec, share, { width: 360, height: 360 })).toContain('<path');
   });
@@ -172,7 +172,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       scales: [{ type: 'linear', name: 'a' }],
       coordinate: { type: 'polar1D', angle: 'a', radius: 1, startAngle: 0, endAngle: 360 },
       marks: [{ type: 'point', encoding: { x: { field: 'h' } } }],
-      guides: [{ type: 'axis', dimension: 'angle' }],
+      guides: [{ type: 'axis', dimension: 'x' }],
     };
     const svg = renderPlot(ringSpec, { hours: [{ h: 0 }, { h: 90 }, { h: 180 }, { h: 270 }] }, { width: 320, height: 320 });
     expect(svg).toContain('<ellipse');
@@ -185,11 +185,11 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       data: { reference: 'soils' },
       scales: [{ type: 'ordinal', name: 'col' }],
       coordinate: { type: 'ternary2D' },
-      marks: [{ type: 'point', encoding: { a: { field: 'sand' }, b: { field: 'silt' }, c: { field: 'clay' }, color: { field: 'region', scale: 'col' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'region', scale: 'col' }, encoding: { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' } } }],
       guides: [
-        { type: 'axis', dimension: 'a' },
-        { type: 'axis', dimension: 'b' },
-        { type: 'axis', dimension: 'c' },
+        { type: 'axis', dimension: 'x' },
+        { type: 'axis', dimension: 'y' },
+        { type: 'axis', dimension: 'z' },
       ],
     };
     const soils: ExternalDatasets = {
@@ -223,7 +223,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { type: 'sequential', name: 'heat', domain: [0, 9] },
       ],
       coordinate: { type: 'cartesian2D', x: 'rk', y: 'ck' },
-      marks: [{ type: 'rect', encoding: { x: { field: 'rk' }, y: { field: 'ck' }, color: { field: 'v', scale: 'heat' } } }],
+      marks: [{ type: 'interval', bounds: { x: { kind: 'band' }, y: { kind: 'band' } }, encoding: { x: { field: 'rk' }, y: { field: 'ck' }, color: { field: 'v', scale: 'heat' } } }],
     };
     const svg = renderPlot(heatmapSpec, heatmap, { width: 360, height: 360 });
     expect(svg).toContain('<svg');
@@ -249,7 +249,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { type: 'band', name: 'hour' },
       ],
       coordinate: { type: 'cartesian2D', x: 'day', y: 'hour' },
-      marks: [{ type: 'rect', encoding: { x: { field: 'day' }, y: { field: 'hour' } } }],
+      marks: [{ type: 'interval', bounds: { x: { kind: 'band' }, y: { kind: 'band' } }, encoding: { x: { field: 'day' }, y: { field: 'hour' } } }],
     };
     expect(renderPlot(gridSpec, grid, { width: 320, height: 320 })).toMatch(/<rect/);
   });
@@ -275,9 +275,9 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       marks: [
         { type: 'interval', encoding: { x: { field: 'name' }, y: { field: 'score' } } },
         // 容差带 y∈[70,90]（band → projectCell rect，amber 填充）
-        { type: 'rule', yTo: 90, encoding: { y: { value: 70 }, color: { value: 'amber' } } },
+        { type: 'reference', yTo: 90, encoding: { y: { value: 70 }, color: { value: 'amber' } } },
         // 及格线 y=60（line → core Path，crimson 描边）
-        { type: 'rule', encoding: { y: { value: 60 }, color: { value: 'crimson' } } },
+        { type: 'reference', encoding: { y: { value: 60 }, color: { value: 'crimson' } } },
       ],
     };
     const svg = renderPlot(ruleSpec, scores, { width: 480, height: 300 });
@@ -304,7 +304,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { type: 'ordinal', name: 'c' },
       ],
       coordinate: { type: 'cartesian2D', y: 'y' },
-      marks: [{ type: 'rule', encoding: { y: { field: 'threshold' }, color: { field: 'category', scale: 'c' } } }],
+      marks: [{ type: 'reference', encoding: { y: { field: 'threshold' }, color: { field: 'category', scale: 'c' } } }],
     };
     const svg = renderPlot(perDatumSpec, limits, { width: 480, height: 300 });
     // 3 行 → 3 条参考线（per-datum field）
@@ -325,7 +325,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       marks: [
         {
           type: 'interval',
-          label: { content: { field: 'revenue', format: ',.0f' }, position: 'above', distance: 6 },
+          label: { content: { field: 'revenue', displayFormat: ',.0f' }, position: 'above', distance: 6 },
           encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
         },
       ],
@@ -348,7 +348,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'text', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label' } } }],
+      marks: [{ type: 'point', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label' } } }],
     };
     const labels: ExternalDatasets = {
       labels: [
@@ -382,7 +382,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       coordinate: { type: 'cartesian2D', x: 'xs', y: 'ys' },
       marks: [
         {
-          type: 'ribbon',
+          type: 'link',
           source: { x: { field: 'sx' }, y: { field: 'sy' } },
           target: { x: { field: 'tx' }, y: { field: 'ty' } },
           value: 'amount',
@@ -414,7 +414,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       coordinate: { type: 'cartesian2D', x: 'xs', y: 'ys' },
       marks: [
         {
-          type: 'ribbon',
+          type: 'link',
           source: { x: { field: 'sx' }, y: { field: 'sy' } },
           target: { x: { field: 'tx' }, y: { field: 'ty' } },
           value: 'amount',
@@ -425,5 +425,82 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       ],
     };
     expect(renderPlot(flaredSpec, flows, { width: 480, height: 300 })).toContain('<path');
+  });
+
+  // alpha.12 ADR-01：histogram（bin transform + interval x0/x1 连续 x 区间柱）SSR
+  it('histogram bin + interval x0/x1 → SSR 出连续 x 直方柱（<path）', () => {
+    const histData: ExternalDatasets = { s: [{ m: 0 }, { m: 1 }, { m: 3 }, { m: 5 }, { m: 8 }, { m: 9 }] };
+    const histogramSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 's' },
+      transform: [{ kind: 'bin', field: 'm', step: 2, reduce: 'count' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } }, encoding: { y: { field: 'binValue' } } }],
+    };
+    const svg = renderPlot(histogramSpec, histData, { width: 480, height: 300 });
+    expect(svg).toContain('<svg');
+    // 连续 x 区间柱为矩形 Node → <rect>；紧贴排列（相邻柱 x 接续）
+    expect(svg).toContain('<rect');
+    expect((svg.match(/<rect/g) ?? []).length).toBeGreaterThanOrEqual(2);
+  });
+
+  // alpha.12 ADR-01：分组聚合柱（aggregate transform → band 柱）SSR
+  it('aggregate groupBy sum → SSR 出聚合柱（<path）', () => {
+    const orders: ExternalDatasets = {
+      o: [
+        { region: 'N', revenue: 3 },
+        { region: 'N', revenue: 5 },
+        { region: 'S', revenue: 2 },
+      ],
+    };
+    const aggSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'o' },
+      transform: [{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }],
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'total' } } }],
+    };
+    // 聚合柱（band 矩形 Node）→ <rect>；两组（N/S）两根柱
+    const svg = renderPlot(aggSpec, orders, { width: 480, height: 300 });
+    expect(svg).toContain('<rect');
+    expect((svg.match(/<rect/g) ?? []).length).toBe(2);
+  });
+
+  // alpha.12 ADR-02：jitter 确定性——同 seed 两次 SSR 渲染逐字节相同（locator parity / 确定性快照）
+  it('jitter 同 seed 两次 SSR 渲染逐字节相同（确定性 PRNG）', () => {
+    const scatterPts: ExternalDatasets = {
+      pts: [
+        { dose: 1, response: 10 },
+        { dose: 1, response: 12 },
+        { dose: 2, response: 8 },
+        { dose: 2, response: 9 },
+      ],
+    };
+    const jitterSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'pts' },
+      transform: [{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 42 }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'dose' }, y: { field: 'response' } } }],
+    };
+    const a = renderPlot(jitterSpec, scatterPts, { width: 480, height: 300 });
+    const b = renderPlot(jitterSpec, scatterPts, { width: 480, height: 300 });
+    expect(a).toBe(b);
+    expect(a).toContain('<ellipse');
   });
 });

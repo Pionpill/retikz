@@ -30,7 +30,7 @@
 
 **单条串行**：每 ADR 走 5 阶段（设计 → 实现 → 自测 → 文档 → 收尾），人工 review 后开下一条。三 ADR 01/02/03 均已起草为 `Proposed`；多 LLM 评审已合入；逐条进实现（沿用 alpha.5）。
 
-**设计阶段多 LLM 评估（已完成）**：三条 ADR 均 red，按 [`develop-design`](../../../../../.agents/skills/develop-design/SKILL.md) 跑「挑刺 / 替代方案」。**两轮评审结论已全部合入**——第一轮（P1 contract 收口：model strict、fieldMaps 需 model、统一 ingest 归一化、字段分类、React API、toTimestamp）+ 第二轮（决策建议：字段集含 transform 输入、temporal guard、抽样双阈值、quantitative 严格数字串、proportion 越界原样、validateData、类型↔scale fail-loud、默认映射）。见各 ADR「决策」/「头号设计决策」段。
+**设计阶段多 LLM 评估（已完成）**：三条 ADR 均 red，按 [`develop-design`](../../../../../.agents/skills/develop-design/SKILL.md) 跑「挑刺 / 替代方案」。**两轮评审结论已全部合入**——第一轮（P1 contract 收口：model strict、fieldMaps 需 model、统一 ingest 归一化、字段分类、React API、coerceTimestamp）+ 第二轮（决策建议：字段集含 transform 输入、temporal guard、抽样双阈值、quantitative 严格数字串、proportion 越界原样、validateData、类型↔scale fail-loud、默认映射）。见各 ADR「决策」/「头号设计决策」段。
 
 ## 实现顺序（编号 ≠ 依赖，叶子优先）
 
@@ -74,7 +74,7 @@
 - **用户源字段集**：encoding `field` + mark `order`/`series` + transform 输入（`Sort.field`/`Stack.x/y/groupBy`）；排除派生输出（`startField`/`endField`、`y0Field`/`y1Field`）。（ADR-01）
 - **temporal 推断**：`Date` 实例 + 严格 ISO（`YYYY-MM-DD` / 带 Z·offset datetime），拒 `YYYY/MM/DD`·`'5'`·模糊 datetime；抽样双阈值（≤1000 行/≤100 标量）；其余标量/字符串归 categorical（有序性走 ADR-07 `order`，不靠类型）。（ADR-01）
 - **fieldMaps**：放 `LowerPlotsOptions.fieldMaps`（不进 datasets）；**需 model**；值只允许路径串（无函数/展开/计算）；逻辑名∈model、ref∈datasets，否则 fail-loud。（ADR-02）
-- **coercion**：ingest 一次性归一化成 canonical rows（transform 前）；continuous 收严格数字串（拒空串/Infinity/NaN/hex/带单位）；扩展 `toTimestamp` 收 Date + 严格 ISO。（ADR-02）
+- **coercion**：ingest 一次性归一化成 canonical rows（transform 前）；continuous 收严格数字串（拒空串/Infinity/NaN/hex/带单位）；扩展 `coerceTimestamp` 收 Date + 严格 ISO。（ADR-02）
 - **数据一致性校验**：`validateData?: boolean | { sampleRows?: number }`，默认关、开启抽样 fail-loud、**不 warn**。（ADR-02）
 - **type-driven scale**：显式 scale 永远优先，缺省按 FieldType 派生（continuous→linear、temporal→time、categorical→band(位置)/ordinal(色)）；类型↔scale 不兼容 **fail-loud 不强转**；guide 按类型选 tick formatter。（ADR-03）
 

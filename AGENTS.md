@@ -17,6 +17,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件 / JSON IR �
 以下原则优先级高于局部实现偏好、短期开发便利和单个功能的临时诉求；设计 / review / 实现时必须先满足这些原则，再讨论具体代码形态。
 
 - 上层包的底层能力必须源自 `@retikz/core`。React / Vanilla / Plot / Docs demo 等可以通过 adapter、sugar、composite、lowering、renderer 扩展来增强表达力，但不要绕开 core 另造一套平行能力、平行 IR 或平行渲染语义。
+- 功能设计的首要路径是先抽象 Definition / registry / capability contract，再实现内置能力，并让扩展能力复用同一套注册、解析和消费逻辑。不要让内置实现享有一套私有白名单或特殊入口、扩展实现再走另一套补丁接口；应由 `XxxDefinition` 这类定义对象声明 schema、能力和解析结果，内置与自定义只是在同一机制下注册的不同 definition。
 - 框架与功能设计优先做抽象设计，而不是只补当前单一场景。遇到具体需求时，先识别它背后的通用模型、边界和可扩展点；若确实只能局部处理，必须说明为什么不抽象。
 - 后续发现既有设计有问题或需要架构调整时，以当前能判断的最优方案为准，先修正设计与架构方向，再评估兼容性、迁移成本和版本节奏；兼容性是重要约束，但不应压过正确设计。
 - `0.x` 版本代表早期开发版，公开 API / schema / 命名 / 架构仍处于设计收敛期；本阶段调整以正确设计为准，不为兼容旧写法保留别名、桥接或迁移负担，除非当次版本设计文档明确要求。
@@ -43,7 +44,13 @@ pnpm --filter <pkg> exec tsc --noEmit
 pnpm lint
 ```
 
-改完**任何文件**（含 AI / subagent 用 Write / Edit 直接写入的 `.ts` / `.json` / 配置等）都要先跑 `eslint --fix` 规范化再提交：手写 / 工具写入的内容常不符合仓库格式（缩进、import 排序、对象多行展开等），**禁止提交未经 eslint 格式化的文件**。
+验证按改动类型选择：
+
+- 改 `*.ts` / `*.tsx` / `*.json` / 配置文件等结构化文件：先跑受影响包的 `eslint --fix`，再跑对应 `tsc --noEmit` / 测试。
+- 只改纯文档正文（例如 `index.zh.mdx` / `index.en.mdx` 的段落、表格、站内链接，不改 import、demo、data、i18n、sidebar、schema registry）：不强制跑 eslint / tsc；至少跑 `git diff --check`，并验证新增或修改的关键链接 / 页面可访问。
+- 改 docs demo / data / i18n / sidebar / schema registry / MDX import：按 `apps/docs/AGENTS.md` 和 `docs-doc-principle` 的分级规则验证，通常需要 docs 包类型检查。
+
+改完**结构化文件**（含 AI / subagent 用 Write / Edit 直接写入的 `.ts` / `.tsx` / `.json` / 配置等）要先跑 `eslint --fix` 规范化再提交：手写 / 工具写入的内容常不符合仓库格式（缩进、import 排序、对象多行展开等），**禁止提交未经 eslint 格式化的结构化文件**。纯 MDX 正文文案以 `git diff --check` 和页面 / 链接验证为主。
 
 类型检查只用 `tsc --noEmit`。不要运行会 emit 的 `tsc` / `tsc -b`，根 tsconfig 会把 `.js` / `.d.ts` / `.d.ts.map` 洒进 `src/`。若已污染，清掉源码树下生成物后再继续。
 
@@ -89,9 +96,12 @@ AI 执行 `git commit` / `git push` / `git tag` / `npm publish` 前，必须在�
 可选 body：为什么改、行为/API/兼容性/测试文档同步。
 
 Refs: module=<module>; packages=<pkg...>; version=<version>; adr=<adr|->
+Control: <human-directed|llm-autonomous>
 ```
 
 subject 只写改动内容，不写 `alpha.1` / `beta` / `v0.3` / `ADR-xx` / “按 ADR 实现”。这些追溯信息放 footer。release / tag commit 例外，可以写版本：`🔖 core: 发布 v0.3.0`。
+
+`Control` 用于区分提交控制方式：`human-directed` 表示人工 review 后指定具体修改，LLM 按精确指令修改并在授权后提交；`llm-autonomous` 表示 LLM 在已获批准的批量 / 流程 / 自动执行中自行推进、拆分、修改并提交。不要用它替代 Git author / committer。
 
 scope 取包或分组名，不带 `@retikz/`：`core` / `render` / `react` / `vanilla` / `plot` / `docs`。纯仓库工程改动可省略 scope。
 
@@ -122,6 +132,7 @@ scope 取包或分组名，不带 `@retikz/`：`core` / `render` / `react` / `va
 - SVG 走 WAAPI，Canvas 走 per-id 虚拟时钟
 
 Refs: module=core; packages=@retikz/react,@retikz/render; version=v0.3; adr=core-12
+Control: human-directed
 ```
 
 ## 分支策略

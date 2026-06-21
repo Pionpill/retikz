@@ -1583,6 +1583,37 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.12',
+            date: '2026-06-17',
+            summary: {
+              zh: 'Statistics 基础（IR / lowering 视角）：transform 层补统计变换——`bin` / `aggregate` 改变行数（N 观测 → M 箱 / 组），`normalize` / `derive-interval` / `jitter` 保持行数（逐行派生 / 调整）；并给 interval 加 `x0Field` / `x1Field` 解锁 histogram 连续 x 区间柱。',
+              en: 'Statistics foundation (IR / lowering view): the transform layer gains statistical ops — `bin` / `aggregate` change the row count (N observations → M bins / groups), while `normalize` / `derive-interval` / `jitter` preserve it (per-row derive / adjust); interval also gains `x0Field` / `x1Field` to unlock continuous-x histogram bars.',
+            },
+            items: [
+              {
+                label: { zh: 'bin / aggregate：改行数规约变换', en: 'bin / aggregate: row-changing reduce transforms' },
+                content: {
+                  zh: '`bin` 把连续字段分箱（边界策略 count / step / thresholds 三选一互斥，nice 对齐，含空箱产行），每箱产出 `binStart` / `binEnd` / `binValue`（count / sum / mean / min / max 规约）。`aggregate` 按 `groupBy`（复合键）分组规约成每组一行（携组键 + `as` 值）。二者打破「行数不变」隐式不变量，输出行带组级 provenance（`sourceIndices` 指向源行集合，datum locator 组级降级） [变换](/plot/grammar/transform)',
+                  en: '`bin` partitions a continuous field (count / step / thresholds strategies, mutually exclusive; nice alignment; empty bins still emit rows), each bin emitting `binStart` / `binEnd` / `binValue` (count / sum / mean / min / max). `aggregate` groups by `groupBy` (composite key) into one row per group (carrying keys + the `as` value). Both break the implicit row-count invariant; output rows carry group-level provenance (`sourceIndices` pointing to the source-row set, datum locators degrading to group level) [Transforms](/plot/grammar/transform)',
+                },
+              },
+              {
+                label: { zh: 'normalize / derive-interval / jitter：保行数派生', en: 'normalize / derive-interval / jitter: row-preserving derive' },
+                content: {
+                  zh: '`normalize` 组内占比归一化（`groupBy` 数组、fraction / percent、组和 0 不产 NaN），接 `stack` 即百分比堆叠。`derive-interval` 单行算 `[start, end]`（baseline→value 或两字段），与 stack 跨行累积语义正交。`jitter` 给连续数值字段加 pre-scale 偏移，用整数 `seed` + mulberry32 确定性 PRNG——SSR 与 hydration 抖出逐字节相同坐标 [变换](/plot/grammar/transform)',
+                  en: '`normalize` computes within-group shares (`groupBy` array, fraction / percent, zero group sum → 0, no NaN); compose before `stack` for percentage stacking. `derive-interval` computes a per-row `[start, end]` (baseline→value or two fields), orthogonal to stack’s cross-row accumulation. `jitter` adds a pre-scale offset to a continuous numeric field using an integer `seed` + mulberry32 deterministic PRNG — byte-identical coordinates across SSR and hydration [Transforms](/plot/grammar/transform)',
+                },
+              },
+              {
+                label: { zh: 'histogram 连续 x 区间柱 + 派生字段校验', en: 'histogram continuous-x bars + derived-field validation' },
+                content: {
+                  zh: 'interval 加 `x0Field` / `x1Field`：设了则 primary 取 `[coord(x0), coord(x1)]` 连续区间（紧贴排列、宽随箱边）而非 band，配 bin 的 `binStart` / `binEnd` 画直方图（x 走连续 linear scale），未设则 band 行为不变。`collectUserSourceFields` 统一剔除 transform 派生输出字段（即便被 mark encoding 引用），输入字段仍进严格校验 [图元](/plot/grammar/mark)',
+                  en: 'interval gains `x0Field` / `x1Field`: when set, the primary spans `[coord(x0), coord(x1)]` (contiguous, width following the bin edges) instead of a band, pairing with bin’s `binStart` / `binEnd` to draw histograms (continuous linear x); unset, band behavior is unchanged. `collectUserSourceFields` uniformly subtracts transform-derived output fields (even when referenced by mark encodings), while input fields still go through strict validation [Marks](/plot/grammar/mark)',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.11',
             date: '2026-06-16',
             summary: {
@@ -1721,8 +1752,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'legend guide', en: 'legend guide' },
                 content: {
-                  zh: '`GuideSchema` 升 `discriminatedUnion`（`PlotGuide` 加 `Legend`），legend 按 `channel` + 可选 `scale` 绑定，由对应非位置 scale 派生形态——ordinal/shape → 离散 swatch、sequential/diverging → 连续色带 ramp、quantize/threshold/quantile → 分箱 swatch、size → 梯度符号、opacity → 梯度透明度;纯函数估算布局（受无文字度量约束）+ 先估尺寸再决定 plotArea;显式 `Legend` 不抑制默认坐标轴 [图例](/plot/components/legend)',
-                  en: '`GuideSchema` becomes a `discriminatedUnion` (`PlotGuide` gains `Legend`), with legends bound by `channel` + optional `scale` and their form derived from the bound non-position scale — ordinal/shape → discrete swatches, sequential/diverging → a continuous ramp, quantize/threshold/quantile → binned swatches, size → graduated symbols, opacity → graduated transparency; pure-function estimated layout (under the no-text-measurement constraint) + sizing estimated before deciding the plot area; an explicit `Legend` does not suppress default axes [Legend](/plot/components/legend)',
+                  zh: '`GuideSchema` 升 `discriminatedUnion`（`PlotGuide` 加 `Legend`），legend 按 `channel` + 可选 `scale` 绑定，由对应非位置 scale 派生形态——ordinal/shape → 离散 swatch、sequential/diverging → 连续色带 ramp、quantize/threshold/quantile → 分箱 swatch、size → 梯度符号、opacity → 梯度透明度;纯函数估算布局（受无文字度量约束）+ 先估尺寸再决定 plotArea;显式 `Legend` 不抑制默认坐标轴 [图例](/plot/grammar/guide/legend)',
+                  en: '`GuideSchema` becomes a `discriminatedUnion` (`PlotGuide` gains `Legend`), with legends bound by `channel` + optional `scale` and their form derived from the bound non-position scale — ordinal/shape → discrete swatches, sequential/diverging → a continuous ramp, quantize/threshold/quantile → binned swatches, size → graduated symbols, opacity → graduated transparency; pure-function estimated layout (under the no-text-measurement constraint) + sizing estimated before deciding the plot area; an explicit `Legend` does not suppress default axes [Legend](/plot/grammar/guide/legend)',
                 },
               },
             ],
@@ -1992,6 +2023,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.12',
+            date: '2026-06-17',
+            summary: {
+              zh: 'Statistics 基础（React 组件视角）：新增通用 `<Transform kind="...">` 声明组件，统一承载全部七种 transform（sort / stack / bin / aggregate / normalize / derive-interval / jitter）；`<BarMark>` 加 `x0` / `x1` 画 histogram 连续 x 区间柱。',
+              en: 'Statistics foundation (React component view): adds a generic `<Transform kind="...">` declaration component carrying all seven transforms (sort / stack / bin / aggregate / normalize / derive-interval / jitter); `<BarMark>` gains `x0` / `x1` for continuous-x histogram bars.',
+            },
+            items: [
+              {
+                label: { zh: '<Transform> 声明组件', en: '<Transform> declaration component' },
+                content: {
+                  zh: '新增 `<Transform kind="...">`（返回 null 的配置载体，props 即 IR transform op、按 `kind` 判别扁平字段），由 `<Plot>` 同步内省、按声明序折叠进 `spec.transform`。服务全部七种 transform，是显式、可排序、可复用的数据管线节点——新 transform 一律走它，不再扩张 mark-prop 自动装配 [变换](/plot/grammar/transform)',
+                  en: 'Adds `<Transform kind="...">` (a config carrier returning null; props are the IR transform op, flat fields discriminated by `kind`), introspected by `<Plot>` and folded into `spec.transform` in declaration order. It serves all seven transforms as an explicit, orderable, reusable pipeline node — new transforms always go through it rather than expanding mark-prop auto-assembly [Transforms](/plot/grammar/transform)',
+                },
+              },
+              {
+                label: { zh: 'BarMark x0 / x1 + auto-stack 去重', en: 'BarMark x0 / x1 + auto-stack dedup' },
+                content: {
+                  zh: '`<BarMark>` 加 `x0` / `x1`（→ interval `x0Field` / `x1Field`）：设了走连续 x linear scale 的 histogram 区间柱（不强制 band、无需 `x`），配 `<Transform kind="bin">` 即直方图。当管线已显式存在 `stack`（经 `<Transform kind="stack">`）时，抑制 `<BarMark stack>` / `<BarMark angle>` 的自动 stack 注入，避免对同一组数据二次堆叠（百分比堆叠 = 显式 `[normalize, stack]`） [柱](/plot/grammar/mark/interval)',
+                  en: '`<BarMark>` gains `x0` / `x1` (→ interval `x0Field` / `x1Field`): when set, continuous-x histogram bars on a linear scale (no forced band, no `x` needed), pairing with `<Transform kind="bin">` for histograms. When a `stack` already exists explicitly (via `<Transform kind="stack">`), the auto-stack injection of `<BarMark stack>` / `<BarMark angle>` is suppressed to avoid double-stacking the same data (percentage stacking = explicit `[normalize, stack]`) [Bar](/plot/grammar/mark/interval)',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.11',
             date: '2026-06-16',
             summary: {
@@ -2040,8 +2095,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '薄 <Plot>：移除默认轴注入（BREAKING）', en: 'Thin `<Plot>`: default-axis injection removed (BREAKING)' },
                 content: {
-                  zh: 'cartesian2D 组合 DSL 不再自动补 x/y 轴 + y 网格——`<Plot>` 只画你显式列出的 `<Axis>` / `<Legend>`；scale / coordinate 推断不变，`bare` 删除。迁移：补 `<Axis dimension="x" />` / `<Axis dimension="y" grid />`，并移除 `bare` [坐标轴](/plot/components/axis)',
-                  en: 'The cartesian2D composition DSL no longer auto-adds x/y axes + y grid — `<Plot>` draws only the `<Axis>` / `<Legend>` you list; scale / coordinate inference is unchanged, and `bare` is removed. Migration: add `<Axis dimension="x" />` / `<Axis dimension="y" grid />`, and remove `bare` [Axis](/plot/components/axis)',
+                  zh: 'cartesian2D 组合 DSL 不再自动补 x/y 轴 + y 网格——`<Plot>` 只画你显式列出的 `<Axis>` / `<Legend>`；scale / coordinate 推断不变，`bare` 删除。迁移：补 `<Axis dimension="x" />` / `<Axis dimension="y" grid />`，并移除 `bare` [坐标轴](/plot/grammar/guide/axis)',
+                  en: 'The cartesian2D composition DSL no longer auto-adds x/y axes + y grid — `<Plot>` draws only the `<Axis>` / `<Legend>` you list; scale / coordinate inference is unchanged, and `bare` is removed. Migration: add `<Axis dimension="x" />` / `<Axis dimension="y" grid />`, and remove `bare` [Axis](/plot/grammar/guide/axis)',
                 },
               },
               {
@@ -2116,8 +2171,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '<Legend> 组件', en: '`<Legend>` component' },
                 content: {
-                  zh: '`<Legend channel scale title position orient tickCount tickLabels>` 声明图例，形态（swatch / 色带 / 分箱 / 梯度符号）据绑定 scale 类型自动选;`<Legend>` 不抑制默认坐标轴（与 `<Axis>` 区分），修复此前「有任何 guide 即清空默认轴」导致加图例丢 x/y 轴的 bug [图例](/plot/components/legend)',
-                  en: '`<Legend channel scale title position orient tickCount tickLabels>` declares a legend whose form (swatch / ramp / bins / graduated symbols) is auto-picked from the bound scale type; `<Legend>` does not suppress default axes (unlike `<Axis>`), fixing the prior bug where any guide cleared the default x/y axes when a legend was added [Legend](/plot/components/legend)',
+                  zh: '`<Legend channel scale title position orient tickCount tickLabels>` 声明图例，形态（swatch / 色带 / 分箱 / 梯度符号）据绑定 scale 类型自动选;`<Legend>` 不抑制默认坐标轴（与 `<Axis>` 区分），修复此前「有任何 guide 即清空默认轴」导致加图例丢 x/y 轴的 bug [图例](/plot/grammar/guide/legend)',
+                  en: '`<Legend channel scale title position orient tickCount tickLabels>` declares a legend whose form (swatch / ramp / bins / graduated symbols) is auto-picked from the bound scale type; `<Legend>` does not suppress default axes (unlike `<Axis>`), fixing the prior bug where any guide cleared the default x/y axes when a legend was added [Legend](/plot/grammar/guide/legend)',
                 },
               },
               {
@@ -2198,15 +2253,15 @@ export const changelog: Array<Release> = [
             version: 'alpha.4',
             date: '2026-06-06',
             summary: {
-              zh: 'polar authoring 面：`<Plot coordinate="polar2D">`（或对象配 innerRadius/startAngle/endAngle）、新增 `<SectorMark>`（饼/环，自动累积）/ `<AreaMark>`、`<LineMark closed>`（雷达）、`<Axis dimension="angle"/"radius">`;全用扁平 prop。',
-              en: 'Polar authoring surface: `<Plot coordinate="polar2D">` (or an object with innerRadius/startAngle/endAngle), new `<SectorMark>` (pie/donut, auto-accumulate) / `<AreaMark>`, `<LineMark closed>` (radar), and `<Axis dimension="angle"/"radius">` — all via flat props.',
+              zh: 'polar authoring 面：`<Plot coordinate="polar2D">`（或对象配 innerRadius/startAngle/endAngle）、`<BarMark angle>`（饼/环，自动累积）/ `<AreaMark>`、`<LineMark closed>`（雷达）、`<Axis dimension="angle"/"radius">`;全用扁平 prop。',
+              en: 'Polar authoring surface: `<Plot coordinate="polar2D">` (or an object with innerRadius/startAngle/endAngle), `<BarMark angle>` (pie/donut, auto-accumulate) / `<AreaMark>`, `<LineMark closed>` (radar), and `<Axis dimension="angle"/"radius">` — all via flat props.',
             },
             items: [
               {
                 label: { zh: '<Plot coordinate> + 新 mark 组件', en: '`<Plot coordinate>` + new mark components' },
                 content: {
-                  zh: '`<Plot coordinate="polar2D">` 一键切极坐标（缺省 cartesian 不变）;`<SectorMark angle color>` 写饼/环（DSL 自动装配累积 transform）、`<AreaMark>` 写面积、`<LineMark closed>` 写雷达，`buildPlotSpec` 据 mark 推断角向/径向 scale。',
-                  en: '`<Plot coordinate="polar2D">` switches to polar in one prop (cartesian unchanged by default); `<SectorMark angle color>` draws pie/donut (the DSL auto-wires the cumulative transform), `<AreaMark>` draws areas, `<LineMark closed>` draws radar, and `buildPlotSpec` infers angular/radial scales from the marks.',
+                  zh: '`<Plot coordinate="polar2D">` 一键切极坐标（缺省 cartesian 不变）;`<BarMark angle color>` 写饼/环（DSL 自动装配累积 transform）、`<AreaMark>` 写面积、`<LineMark closed>` 写雷达，`buildPlotSpec` 据 mark 推断角向/径向 scale。',
+                  en: '`<Plot coordinate="polar2D">` switches to polar in one prop (cartesian unchanged by default); `<BarMark angle color>` draws pie/donut (the DSL auto-wires the cumulative transform), `<AreaMark>` draws areas, `<LineMark closed>` draws radar, and `buildPlotSpec` infers angular/radial scales from the marks.',
                 },
               },
               {
@@ -2296,6 +2351,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.12',
+            date: '2026-06-17',
+            summary: {
+              zh: 'Statistics 基础（SSR 视角）：`renderPlot` 透过 Plot IR 自动渲染统计变换——零额外代码，纯 spec 驱动，SSR 出直方图（bin + 连续 x 区间柱）、分组聚合柱、百分比堆叠与 jitter 散点。',
+              en: 'Statistics foundation (SSR view): `renderPlot` automatically renders statistical transforms through the Plot IR — zero extra code, purely spec-driven, SSR-emitting histograms (bin + continuous-x bars), grouped aggregate bars, percentage stacks, and jittered scatter.',
+            },
+            items: [
+              {
+                label: { zh: 'transform 纯 spec 驱动 SSR', en: 'transform purely spec-driven SSR' },
+                content: {
+                  zh: 'bin / aggregate / normalize / derive-interval / jitter 全经 Plot IR + lowering 自动生效，vanilla 侧零代码改动。新增 SSR 渲染测试覆盖直方图（连续 x 区间柱）、分组聚合柱，以及 jitter 同 seed 两次渲染逐字节相同（确定性 PRNG 守 SSR / hydration parity） [变换](/plot/grammar/transform)',
+                  en: 'bin / aggregate / normalize / derive-interval / jitter all take effect automatically through the Plot IR + lowering, with zero code change on the vanilla side. New SSR tests cover histograms (continuous-x bars), grouped aggregate bars, and jitter rendering byte-identically across two runs with the same seed (the deterministic PRNG preserving SSR / hydration parity) [Transforms](/plot/grammar/transform)',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.11',
             date: '2026-06-16',
             summary: {
@@ -2354,8 +2426,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'Scales + Legend SSR', en: 'Scales + Legend SSR' },
                 content: {
-                  zh: '`renderPlot` 消费含连续色阶（sequential / diverging）/ 离散化 scale（quantize / threshold / quantile）/ `Legend` guide 的 PlotSpec，估算布局后 SSR 出带色带 / 分箱 / 符号图例的 SVG 字符串，与 react 面视觉一致、vanilla 侧零额外代码 [图例](/plot/components/legend)',
-                  en: '`renderPlot` consumes a PlotSpec with continuous (sequential / diverging) / discretization (quantize / threshold / quantile) color scales and a `Legend` guide, SSR-emitting an SVG string with ramp / binned / symbol legends after estimated layout, visually matching the React surface with zero extra code on the vanilla side [Legend](/plot/components/legend)',
+                  zh: '`renderPlot` 消费含连续色阶（sequential / diverging）/ 离散化 scale（quantize / threshold / quantile）/ `Legend` guide 的 PlotSpec，估算布局后 SSR 出带色带 / 分箱 / 符号图例的 SVG 字符串，与 react 面视觉一致、vanilla 侧零额外代码 [图例](/plot/grammar/guide/legend)',
+                  en: '`renderPlot` consumes a PlotSpec with continuous (sequential / diverging) / discretization (quantize / threshold / quantile) color scales and a `Legend` guide, SSR-emitting an SVG string with ramp / binned / symbol legends after estimated layout, visually matching the React surface with zero extra code on the vanilla side [Legend](/plot/grammar/guide/legend)',
                 },
               },
             ],

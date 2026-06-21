@@ -7,12 +7,15 @@
     "source.fixAll.sortJSON": "explicit"
   },
   "cSpell.words": [
+    "Aabb",
     "clsx",
     "deepseek",
     "frontmatter",
     "languagedetector",
     "lucide",
+    "Projectable",
     "rehype",
+    "Renderable",
     "rollup",
     "vitejs",
     "vitest"

@@ -6,7 +6,7 @@ React bindings for [`@retikz/plot`](../plot) — the Tier 2 grammar-of-graphics 
 through [`@retikz/react`](../../core/react)'s `<Layout>`. Two authoring surfaces share one component:
 
 - **spec wrapper** — `<Plot spec={plotSpec} data={datasets} />` for a hand-written / generated `PlotSpec`.
-- **composition DSL** — `<Plot data={rows}><LineMark x y /><PointMark x y /></Plot>`; mark children are
+- **composition DSL** — `<Plot data={rows}><PathMark x y /><PointMark x y /></Plot>`; mark children are
   assembled into a normalized `PlotSpec` (linear scales + cartesian2D inferred) by a pure builder.
 
 Data never enters the IR — it is injected at compile time via `lowerPlots`.

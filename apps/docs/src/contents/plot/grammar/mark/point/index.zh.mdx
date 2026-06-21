@@ -1,0 +1,196 @@
+---
+title: PointMark
+description: PointMark 是坐标元组上的 0D glyph：可以画散点、气泡、形状编码，也可以承载文本点。
+---
+
+`<PointMark>` 为每行数据生成一个 0D glyph。默认 glyph 是点；给 `size` / `shape` / `opacity` / `color` 后，它仍是同一个点图元，只是视觉通道不同。给 `text` 后，它会改为无边框文本 glyph。
+
+绑哪些位置通道由[坐标系](/plot/grammar/coordinate)决定：一维用 `x`，二维用 `x` / `y`，三元（ternary2D）用 `x` / `y` / `z`。这些属性在组件层都是可选的；当前坐标系会在编译期校验需要哪些维度。
+
+## 用法
+
+```tsx
+import { Plot, PointMark } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={cities}>
+  <PointMark x="lng" y="lat" />
+</Plot>
+```
+
+PointMark 常和 PathMark 叠加——同一份数据先画 `<PathMark>` 再叠 `<PointMark>` 标出每个观测点。
+
+## 表现层
+
+PointMark 是底层点 mark：它只负责把每行数据投影成一个 0D 锚点，并把样式、文本等通道写到这个锚点对应的 Node 上。表现层看到的“散点图”“气泡图”“文本点”不是不同的底层 mark，而是同一个 PointMark 在不同通道配置下的显示形态。
+
+这也是 PointMark 通常不需要按坐标系单独适配的原因：坐标系只负责把位置角色投影成屏幕点，表现层再决定这个点画成什么。
+
+| 表现形态 | 关键属性 | 说明 |
+| --- | --- | --- |
+| 散点 | `x` / `y` | 默认形态，每行数据绘制一个点；`color` / `shape` 继续装饰这组点 |
+| 气泡图 | `size` | 点半径由数值字段驱动，位置投影不变 |
+| 文本点 | `text` / `dx` / `dy` | 单独使用 `text` 时绘制文本 Node，可理解为表现层的 TextMark |
+
+## 例子
+
+### 位置属性
+
+`x` / `y` 决定每行数据的锚点。左侧是笛卡尔二维坐标系，右侧是极坐标二维坐标系；同一组字段在不同坐标系下会被解释成不同的几何位置。
+
+<ComponentPreview name="point-position" sourceFiles={['point-api.data.ts']} />
+
+### 样式属性
+
+`color` / `size` / `opacity` / `shape` / `stroke` / `strokeWidth` 都可以作为点的视觉通道。它们只改变 glyph 的显示方式，不改变点的坐标锚点。
+
+`stroke`、`strokeWidth`、`opacity`、`fillOpacity`、`rotate` 等 Node 样式都支持字段绑定。组件层的字符串 / 数字是语法糖：如果有同名数据字段，字符串会变成 `{ kind: 'field', value: FieldName }`；如果没有字段但能作为合法常量使用，就变成 `{ kind: 'constant', value }`；否则会跳过并给出 warning。需要消除歧义时可以直接写显式形式。
+
+<ComponentPreview name="point-style" sourceFiles={['point-api.data.ts']} />
+
+### 文本属性
+
+点上的文字优先使用 `label`：它会把文本挂到每个散点对应的 core `Node.label` 上，因此一层 `PointMark` 就能同时画点和显示标签。`labelPosition`、`labelDistance`、`labelPin` 对齐 core Node label 的方位、距离和引线能力。`text` 是另一种模式：它把点本身替换成无边框文本 Node，适合只画文字点而不画圆点的场景；`dx` / `dy` 用来做屏幕方向的微调。
+
+<ComponentPreview name="point-text" sourceFiles={['point-api.data.ts']} />
+
+### 不同坐标系
+
+下面只看位置角色如何被坐标系解释：PointMark 自身不变，变的是 `x` / `y` / `z` 被投影到直线、圆环、平面或三角形中的方式。
+
+#### 一维：直线和极坐标
+
+一维坐标系只消费 `x`。在直线坐标里它落到一条轴上，在极坐标里同一组值落到圆环上。
+
+<ComponentPreview name="point-coordinate-1d" sourceFiles={['point-coordinates.data.ts']} />
+
+#### 二维：笛卡尔和极坐标
+
+二维坐标系消费 `x` / `y`。笛卡尔坐标把它解释成平面位置，极坐标把它解释成角向 / 径向位置。
+
+<ComponentPreview name="point-coordinate-2d" sourceFiles={['point-coordinates.data.ts']} />
+
+#### 三元：三元图
+
+三元坐标系消费 `x` / `y` / `z` 三个分量，并把每行数据归一化后投影到三角形内。
+
+<ComponentPreview name="point-coordinate-ternary" sourceFiles={['point-coordinates.data.ts']} />
+
+## 技术原理
+
+`PointMark` 是一个内置注册图元。React 里的 `<PointMark>` 本身不渲染 DOM，也不直接画点；`<Plot>` 会在构造 `PlotSpec` 时把它收集成 `type: 'point'` 的 mark IR，并记录 `x` / `y` / `z` 等字段通道。
+
+编译时，`lowerMark` 按 `mark.type` 查询 `MARK_REGISTRY`，`PointMark` 命中 `PlotMark.Point` 对应的 `lowerPoint`。`lowerPoint` 对每行数据取出位置通道值，再交给当前坐标系的 `frame.projectRoles(...)` 投影成屏幕点，最后下沉为 core `Node`。
+
+这意味着散点最终复用 [@retikz/core 的 Node](/core/components/node/overview) 实现；`PointMark` 只负责从数据和坐标系计算位置，节点的形状、尺寸、填充、文本等视觉细节仍由 core Node 处理。
+
+注册部分只需要看 `PointMark` 对应的注册行，以及真正执行下沉的 `lowerPoint`：
+
+```ts
+[PlotMark.Point]: { type: PlotMark.Point, lower: lowerPoint },
+
+const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+  if (mark.type !== PlotMark.Point) return null;
+  const { colorOf, defaultColor = DEFAULT_FILL, sizeOf, opacityOf, shapeOf, strokeOf, strokeWidthOf, labelOf } = channels;
+  const isText = mark.encoding.text !== undefined;
+  const dx = mark.dx ?? 0;
+  const dy = mark.dy ?? 0;
+  const placed: Array<{ color: string | undefined; node: IRNode }> = [];
+  for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
+    const row = rows[transformedIndex];
+    if (isText) {
+      // 文本 glyph：投影同 point（roleValues + projectRoles，坐标系无关）；内容缺失跳过；dx/dy 锚点像素微调
+      const point = frame.projectRoles(roleValues(mark, row, frame));
+      if (!point) continue;
+      const text = labelOf?.(row);
+      if (text === undefined) continue;
+      const position: [number, number] = dx === 0 && dy === 0 ? point : [point[0] + dx, point[1] + dy];
+      const base: IRNode = { type: 'node', position, text };
+      if (mark.zIndex !== undefined) base.zIndex = mark.zIndex;
+      placed.push({ color: colorOf?.(row), node: decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined) });
+      continue;
+    }
+    // 散点 glyph：锚点与 locator 共享同一 datumAnchor（point → frame.projectRoles），杜绝两套投影漂移
+    const point = datumAnchor(mark, row, frame);
+    if (!point) continue;
+    const base: IRNode = { type: 'node', position: point };
+    if (mark.zIndex !== undefined) base.zIndex = mark.zIndex;
+    const radius = sizeOf?.(row);
+    if (radius !== undefined) base.minimumSize = radius * Math.SQRT2;
+    const opacity = opacityOf?.(row);
+    if (opacity !== undefined) base.opacity = opacity;
+    const shape = shapeOf?.(row);
+    if (shape !== undefined) base.shape = shape;
+    const stroke = strokeOf?.(row);
+    if (stroke !== undefined) base.stroke = stroke;
+    const strokeWidth = strokeWidthOf?.(row);
+    if (strokeWidth !== undefined) base.strokeWidth = strokeWidth;
+    const node = attachDatumLabel(decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined), mark, row, labelOf);
+    placed.push({ color: colorOf?.(row), node });
+  }
+  if (placed.length === 0) return null;
+  const layer: IRScope = !colorOf
+    ? {
+        type: 'scope',
+        nodeDefault: isText ? textStyle(typeof mark.fill === 'string' ? mark.fill : defaultColor, mark) : pointStyle(mark.fill ?? defaultColor, mark),
+        children: placed.map(p => p.node),
+      }
+    : colorGroupedScope(placed, fill => (isText ? textStyle(fill, mark) : pointStyle(fill, mark)));
+  return attachMarkLayer(layer, mark, markProvenance);
+};
+```
+
+这段代码的执行顺序很直接：
+
+1. 先确认当前 mark 是 `PlotMark.Point`，否则不处理。
+2. 每行数据通过 `datumAnchor` 或 `frame.projectRoles(...)` 投影到屏幕坐标；投影失败的行直接跳过。
+3. 普通散点生成 core `Node`，并把 `size`、`opacity`、`shape`、`stroke`、`strokeWidth` 等通道或常量 Node 样式写到该 Node / `nodeDefault` 上；带 `label` 的点会填充 `Node.label`，文本点则生成文本 Node。
+4. 最后按是否有 `color` 通道决定分层方式：没有颜色编码时共用一层 `nodeDefault`，有颜色编码时按颜色拆分子 `Scope`，再挂上图层元信息。
+
+| 特性 | 说明 |
+| --- | --- |
+| 坐标系无关 | 点只关心“位置角色”，不关心这些角色在 cartesian、polar、ternary 或 custom 坐标系里怎么解释 |
+| 每行一个 Node | 普通散点会生成一个 datum Node；无效位置投影不到屏幕点时跳过该行 |
+| 样式分层 | 无颜色编码时通过外层 `nodeDefault` 共享默认样式；有 `color` 时按颜色分组，减少重复 IR |
+| 点专属通道 | `size` / `opacity` / `shape` / `stroke` / `strokeWidth` 只作用在 `PointMark`，会写到每个 datum Node 上 |
+| 文本变体 | 设置 `text` 后不再画圆点，而是生成无边框文本 Node，并复用同一套位置投影 |
+
+## API
+
+`PointMark` 的大部分属性都是数据通道：位置属性决定每行数据投影到哪里，样式属性决定点如何显示；文本、标签和 `id` 这类属性单独看。表里的 `FieldName` 表示数据字段名或字段路径，例如 `region` / `user.age`。
+
+样式绑定统一使用 `MarkValueType<T>`：`{ kind: 'field', value: FieldName } | { kind: 'constant', value: T }`。需要指定 scale 时使用 `MarkValueType<T> & { scale?: string }`。组件层的 `FieldName`、`number`、`string` 等单值写法只是语法糖，最终都会落到这个统一结构。
+
+| 分类 | 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- | --- |
+| 位置 | `x` | `FieldName?` | — | 绑定 x 位置通道字段 |
+| | `y` | `FieldName?` | — | 绑定 y 位置通道字段 |
+| | `z` | `FieldName?` | — | 绑定三元坐标第三分量字段 |
+| 样式通道 | `color` | `FieldName \| MarkValueType<string>?` | - | 字段绑定时进入颜色通道；有效 CSS 字符串可作为常量颜色；会覆盖常量 `fill` |
+| | `size` | `FieldName \| number \| MarkValueType<number>?` | - | 字段绑定时经 sqrt scale 得到半径；数字或显式 constant 表示常量最终半径 |
+| | `opacity` | `FieldName \| number \| MarkValueType<number>?` | — | 字符串表示不透明度字段；数字表示常量整体透明度 |
+| | `shape` | `FieldName \| MarkValueType<string>?` | - | 字段绑定时按分类映射 glyph shape；非字段字符串可作为常量 core Node shape 名 |
+| | `stroke` | `FieldName \| MarkValueType<string>?` | — | 字符串优先按字段解析；无字段且是颜色时作为常量；显式常量用 `{ kind: 'constant', value }` |
+| | `strokeWidth` | `FieldName \| number \| MarkValueType<number>?` | — | 字符串表示字段；数字表示常量宽度；显式形式支持 field / constant |
+| Node 样式 | `fill` | `FieldName \| MarkValueType<string \| IRPaintSpec>?` | `currentColor` | 填充样式；有 `color` 通道时由通道颜色接管 |
+| | `fillOpacity` | `FieldName \| number \| MarkValueType<number>?` | — | 填充透明度，范围 0..1 |
+| | `drawOpacity` | `FieldName \| number \| MarkValueType<number>?` | — | 描边透明度，范围 0..1 |
+| | `rotate` | `FieldName \| number \| MarkValueType<number>?` | — | glyph 旋转角度，单位为度 |
+| | `padding` | `FieldName \| number \| MarkValueType<number>?` | `0` | core Node padding |
+| | `minimumSize` | `FieldName \| number \| MarkValueType<number>?` | 点默认尺寸 | 最小视觉尺寸 |
+| | `minimumWidth` / `minimumHeight` | `FieldName \| number \| MarkValueType<number>?` | — | 最小视觉宽 / 高 |
+| | `zIndex` | `FieldName \| number \| MarkValueType<number>?` | — | 绘制顺序提示 |
+| 标签 | `label` | `FieldName?` | — | 绑定宿主 `Node.label` 文本字段；保留点 glyph |
+| | `labelDisplayFormat` | `string?` | — | 设置 `label` 的展示格式 |
+| | `resolveLabel` | `(row) => string?` | — | 运行时生成标签；不进 IR，需配 `id` |
+| 文本点 | `text` | `FieldName?` | — | 绑定文本内容字段；设置后点 glyph 会变成文本 Node |
+| | `format` | `string?` | — | 设置 `text` 的格式 |
+| | `dx` / `dy` | `number?` | `0` | 文本点相对锚点的微调 |
+| 通用 | `id` | `string?` | — | 可选句柄（预留，暂不解析） |
+
+## 相关
+
+- [PathMark](/plot/grammar/mark/path) —— 叠在散点下连成趋势线
+- [坐标系](/plot/grammar/coordinate) —— rug（cartesian1D）/ 环形（polar1D）/ 三元散点（ternary2D）用 PointMark 的写法
+- [比例尺](/plot/grammar/scale) —— size 用的平方根 scale 与连续 scale 家族

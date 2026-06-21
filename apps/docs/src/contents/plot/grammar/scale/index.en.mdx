@@ -1,113 +1,57 @@
 ---
 title: Scales
-description: A scale maps a data value to a visual quantity — position, length, radius. Every channel goes through a scale; the type is auto-picked from the field, or set explicitly to linear / log / sqrt and friends.
+description: A scale maps a data value to a visual quantity. They split into two families — positional scales produce coordinate / length / radius, color scales produce color — plus custom scales.
 ---
 
-A scale decides how a data value becomes a visual quantity. Position channels (`x` / `y`, or `angle` / `radius` under polar) turn into canvas coordinates, the `size` channel turns into a radius — each goes through a scale. `<Plot>` auto-picks a scale from the field type, so common charts need none by hand; add `<Scale dimension="..." type="..." />` when you want a log, square-root, or time axis.
+A scale decides how a data value becomes a visual quantity. Position channels (`x` / `y`, or `angle` / `radius` under polar) turn into canvas coordinates, the `size` channel into a radius, the `color` channel into a color — each goes through a scale. `<Plot>` auto-picks a scale from the field's measurement type, so common charts need none by hand.
 
-## Derived from the field type
+Axes are the most common place to configure positional scales, but scales and axes stay layered: scales map values, axes display ticks. Explaining a color scale to the reader is the job of the [legend](/plot/grammar/guide/legend).
 
-Once a field's measurement type is declared, the default scale for a positional channel (x / y) follows directly from it:
+## Two families: position and color
 
-| Field type | Positional default scale |
-| --- | --- |
-| `continuous` | `linear` |
-| `temporal` | `time` |
-| `categorical` | `band` |
+Scales split by **what they produce**, which is also how this group is paged:
 
-An explicit `<Scale>` wins over auto-derivation; if it clearly conflicts with the field type (a `categorical` field on a linear axis, a `temporal` field on a band) retikz throws a clear error rather than drawing something meaningless. See [Data Model](/plot/data/model) for how to declare field types.
+- [Positional scales](/plot/grammar/scale/position) produce a **coordinate / length / radius**, feeding coordinate projection and the `size` channel — numeric axes (`linear` / `log` / `sqrt` / `pow` / `symlog` / `radial`), the time axis (`time`), and categorical axes (`band` / `point`).
+- [Color scales](/plot/grammar/scale/color) produce a **color**, feeding the `color` channel and the legend — one color per category (`ordinal`), a continuous band (`sequential` / `diverging`), and binned coloring (`quantize` / `threshold` / `quantile`).
 
-## Scale types
+Which scale within each family is auto-picked by `<Plot>` from the field's measurement type:
 
-| Type | For | Notes |
+| Field type | Positional default | Color (per-datum marks) |
 | --- | --- | --- |
-| `linear` | Continuous numbers | Evenly-spaced linear mapping (default) |
-| `log` | Positive values across magnitudes | Logarithmic; point / line only |
-| `sqrt` | Area-perceptual | Square-root; point / line only (the `size` channel's default) |
-| `pow` | Custom power | Power mapping (needs `exponent`; via a full spec) |
-| `time` | Dates / time | Time axis with human-readable tick boundaries |
-| `band` / `point` | Categories | Equal bands (bars) / evenly-spaced points (categorical lines) |
-| `ordinal` | Category → color | One discrete color per category (multi-series coloring) |
-| `sequential` | Continuous value → color | One-directional color band (low→high), for continuous / temporal fields |
-| `diverging` | Quantity with a midpoint → color | Two-sided hues, pale center; profit/loss or deviation-from-mean |
-| `quantize` | Continuous value → discrete bins | Equal-width bins, one color each (choropleth) |
-| `threshold` | Continuous value → discrete bins | Custom breakpoints (business thresholds / alerts) |
-| `quantile` | Continuous value → discrete bins | Data-quantile bins, skew-resistant |
+| `continuous` | `linear` (swap for `log` / `sqrt` / `pow` / `symlog` / `radial`) | `sequential` / `diverging` + binned scales |
+| `temporal` | `time` | `sequential` (time is continuous too) |
+| `categorical` | `band` (`point` for lines) | `ordinal` |
 
-## Linear vs log
+See [Data Model](/plot/grammar/data/model) for how to declare field types. The long tail beyond the 15 built-ins (brand ramps, domain-specific mappings…) goes through [Custom scales](/plot/grammar/scale/custom).
 
-When data spans several orders of magnitude, a linear axis crushes the small values against the bottom. A log axis (`<Scale dimension="y" type="log" />`) gives every magnitude equal height, so small values stay legible. Both charts use the same yearly user counts.
+## Overriding explicitly
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <ComponentPreview name="scale-linear" sourceFiles={['scale-continuous.data.ts']} size="sm" />
-  <ComponentPreview name="scale-log" sourceFiles={['scale-continuous.data.ts']} size="sm" />
-</div>
-
-<p className="text-sm text-muted-foreground">Left: default linear, early years hug the floor; right: just add <code>{'<Scale dimension="y" type="log" />'}</code> and the range spreads out.</p>
-
-## Square root
-
-`<Scale dimension="y" type="sqrt" />` maps by square root, taming the visual exaggeration of large values; it is also the default scale for the `size` channel (point radius), so a dot's **area** stays proportional to the data.
-
-<ComponentPreview name="scale-sqrt" sourceFiles={['scale-continuous.data.ts']} />
-
-## Point / line only
-
-`log` / `pow` / `sqrt` apply only to points and lines. Bars and areas start from a 0 baseline, and 0 is undefined on a log / power axis — pairing a non-linear scale with a bar / area errors out and tells you to use point / line instead.
-
-<ComponentAlert type="warn" title="Domain of non-linear scales" description="log requires all-positive data, sqrt requires non-negative; out-of-range values cannot be projected. An explicit domain with illegal bounds errors at compile time." />
-
-## Color scales
-
-The scales above map values to **position / length / radius**; color is a different kind of output. Position scales are consumed by the `x` / `y` channels, color scales by the `color` channel — the two never interfere. Explaining a color scale to the reader is the job of the [legend](/plot/components/legend).
-
-| Type | For | Output |
-| --- | --- | --- |
-| `ordinal` | Categorical field | One discrete color per category (multi-series, categorical coloring) |
-| `sequential` | Continuous / temporal field | A one-directional band: low→high along one gradient (the workhorse for continuous color) |
-| `diverging` | Quantity with a meaningful midpoint | Two-sided hues, pale center: profit/loss, deviation from mean |
-
-Sequential and diverging color comes from a **named scheme** — a preset set of color band names that is serializable and AI-generatable. Sequential schemes include `viridis` (default), `blues`, `greens`, `magma`; diverging schemes include `rdbu` (default), `brbg`, `spectral`. Use `range` to override a scheme with custom endpoint colors.
-
-Bind `color` to a continuous numeric field and `<Plot>` derives a sequential scale (viridis by default); a categorical field gets an ordinal scale. Continuous color encoding works only on per-datum marks (point / bar / sector); a line or area colors the whole path at once, so its color is not constant along the path and binding a continuous `color` errors.
-
-<ComponentAlert title="Continuous color needs a declared field type" description="In React a continuous color field must be declared as continuous via model to derive a sequential scale; without it color is treated as categorical and a continuous field errors. Diverging and custom schemes are configured through the full spec scales for now." />
-
-## Discretization / binned color
-
-A sequential scale is a **continuous** band (smooth gradient). But many cases want a continuous quantity cut into **a few discrete bins, one color each** — graded maps, threshold alerts, skew-resistant binning. These three needs map to three discretization scales, differing only in **how the bins are cut**:
-
-| Type | Cut by | For |
-| --- | --- | --- |
-| `quantize` | domain split into `count` equal-width bins | choropleth / evenly-distributed continuous values |
-| `threshold` | user-given breakpoints (`breakpoints`) | business thresholds / alerts (`<60` red, `60–80` yellow, `≥80` green) |
-| `quantile` | data quantiles, roughly equal sample count per bin | skewed data / outlier resistance |
-
-Each bin's color reuses the named schemes above — N discrete colors are sampled at evenly spaced points along one continuous band (e.g. `scheme: 'blues'` sampled into 5 bins); or give a `range` array to override the scheme, where the array length is the bin count.
-
-<ComponentPreview name="scale-quantize" sourceFiles={['scale-discretization.data.ts']} />
-
-<p className="text-sm text-muted-foreground">quantize, 5 bins: continuous density cut into 5 equal-width bins, each taking one sampled color off blues.</p>
-
-A few constraints to keep in mind:
-
-- **threshold breakpoints must be strictly ascending**; bin count = breakpoints + 1, so a `range` must have length `breakpoints.length + 1` (e.g. `[60, 80]` pairs with 3 colors).
-- **`count` defaults to 5** for quantize / quantile; giving only a `range` (omitting `count`) makes the bin count the range length; giving both `count` and `range` with mismatched lengths errors.
-- **quantile reads no explicit numeric domain** — the bin boundaries come purely from the data, so a `domain`, if written, is silently ignored (no error).
-- Like continuous color, discretized color works **only on per-datum marks** (point / bar / sector); a line or area colors the whole path at once, so binding a discretization color errors.
-
-<ComponentAlert title="No automatic React entry for discretization scales" description="This round quantize / threshold / quantile are not auto-derived from a field type — they are explicit advanced usage, configured through the full spec scales (<Plot spec={...} />) or written directly in vanilla IR. React auto-derivation does continuous sequential only for now." />
-
-## Setting it explicitly
-
-`<Scale>` is a declarative child of `<Plot>` that overrides the default for one coordinate dimension:
+`<Scale>` is a declarative child of `<Plot>` that overrides the default for one coordinate dimension; you can also put the common positional scale directly on the axis:
 
 ```tsx
 <Plot data={rows}>
-  <LineMark x="date" y="value" order="date" />
+  <PathMark x="date" y="value" order="date" />
   <Scale dimension="x" type="time" />
+  {/* or the shortcut: <Axis dimension="x" scale="time" /> */}
   <Axis dimension="x" />
 </Plot>
 ```
 
-Under polar, use `dimension="angle"` / `dimension="radius"`; `x` / `y` aliases are also accepted. For finer control — log base, power exponent — write the full spec `scales` (see Reference).
+Under polar, use `dimension="angle"` / `dimension="radius"`; `x` / `y` aliases are accepted. `Axis.scale` supports the positional shortcuts `linear` / `time` / `point` / `log` / `sqrt` / `symlog` / `radial`. For finer control — log base, power exponent, symlog constant — write the full spec `scales`.
+
+## In this section
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/plot/grammar/scale/position">
+    <span className="font-semibold">Positional scales</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">numeric axes linear / log / sqrt / pow / symlog / radial, the time axis, band / point categorical axes</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/scale/color">
+    <span className="font-semibold">Color scales</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">ordinal one-color-per-category, sequential / diverging continuous bands, quantize / threshold / quantile binning</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/scale/custom">
+    <span className="font-semibold">Custom scales</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">defineScale injects runtime position / channel definitions; colorSchemes adds custom palettes</span>
+  </LinkedCard>
+</div>

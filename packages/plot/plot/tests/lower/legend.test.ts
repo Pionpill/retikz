@@ -1,7 +1,7 @@
 import { ChildSchema, type IRChild, type IRNode, type IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 /**
  * ADR-03 legend guide lowering 测试（alpha.8）。
@@ -114,7 +114,7 @@ const ordinalColorLegendSpec = (legend: Record<string, unknown> = {}): PlotSpec 
       { type: 'ordinal', name: 'kindColor' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'kind', scale: 'kindColor' } } }],
+    marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kindColor' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
     guides: [{ type: 'legend', channel: 'color', scale: 'kindColor', ...legend }],
   });
 
@@ -137,7 +137,7 @@ const sequentialColorLegendSpec = (): PlotSpec =>
       { type: 'sequential', name: 'tempColor' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'temperature', scale: 'tempColor' } } }],
+    marks: [{ type: 'point', color: { kind: 'field', value: 'temperature', scale: 'tempColor' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
     guides: [{ type: 'legend', channel: 'color', scale: 'tempColor', tickCount: 4 }],
   });
 
@@ -152,7 +152,7 @@ const sizeLegendSpec = (legend: Record<string, unknown> = {}): PlotSpec =>
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, size: { field: 'population' } } }],
+    marks: [{ type: 'point', size: { kind: 'field', value: 'population' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
     guides: [{ type: 'legend', channel: 'size', ...legend }],
   });
 
@@ -167,7 +167,7 @@ const shapeLegendSpec = (): PlotSpec =>
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, shape: { field: 'kind' } } }],
+    marks: [{ type: 'point', shape: { kind: 'field', value: 'kind' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
     guides: [{ type: 'legend', channel: 'shape' }],
   });
 
@@ -189,7 +189,7 @@ const sectorColorLegendSpec = (): PlotSpec =>
       { type: 'linear', name: 'r' },
       { type: 'ordinal', name: 'sliceColor' },
     ],
-    marks: [{ type: 'sector', encoding: { color: { field: 'label', scale: 'sliceColor' } } }],
+    marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label', scale: 'sliceColor' } } }],
     guides: [{ type: 'legend', channel: 'color', scale: 'sliceColor' }],
   });
 
@@ -286,7 +286,7 @@ describe('lowerPlots legend — 边界（ADR-03）', () => {
         { type: 'quantile', name: 'densColor' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'density', scale: 'densColor' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'density', scale: 'densColor' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'color', scale: 'densColor' }],
     });
     const outer = expandOf(spec, { d: QUANTILE_ROWS });
@@ -318,8 +318,8 @@ describe('lowerPlots legend — 错误路径（ADR-03）', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        { type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'kind', scale: 'colorA' } } },
-        { type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'kind', scale: 'colorB' } } },
+        { type: 'point', color: { kind: 'field', value: 'kind', scale: 'colorA' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } },
+        { type: 'point', color: { kind: 'field', value: 'kind', scale: 'colorB' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } },
       ],
       // channel=color 无 scale → 两个 color scale 歧义
       guides: [{ type: 'legend', channel: 'color' }],
@@ -339,7 +339,7 @@ describe('lowerPlots legend — 错误路径（ADR-03）', () => {
         { type: 'ordinal', name: 'kindColor' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'kind', scale: 'kindColor' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kindColor' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'color', scale: 'doesNotExist' }],
     });
     expect(() => expandOf(spec, { d: ORDINAL_ROWS })).toThrow();
@@ -360,7 +360,7 @@ describe('lowerPlots legend — 交互（ADR-03 修 P1 ⑦ / P2 ⑩ / P1 ⑥）'
         { type: 'ordinal', name: 'kindColor' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'kind', scale: 'kindColor' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kindColor' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [
         { type: 'axis', dimension: 'x' },
         { type: 'axis', dimension: 'y' },
@@ -385,7 +385,7 @@ describe('lowerPlots legend — 交互（ADR-03 修 P1 ⑦ / P2 ⑩ / P1 ⑥）'
         { type: 'ordinal', name: 'kindColor' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'kind', scale: 'kindColor' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kindColor' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [
         { type: 'axis', dimension: 'x', grid: true },
         { type: 'legend', channel: 'color', scale: 'kindColor' },
@@ -463,7 +463,7 @@ const quantileColorLegendSpec = (): PlotSpec =>
       { type: 'quantile', name: 'densColor' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'density', scale: 'densColor' } } }],
+    marks: [{ type: 'point', color: { kind: 'field', value: 'density', scale: 'densColor' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
     guides: [{ type: 'legend', channel: 'color', scale: 'densColor' }],
   });
 
@@ -476,7 +476,7 @@ describe('lowerPlots legend — ramp 刻度域取配置 domain（修 contract-au
       data: { reference: 'd', model: [{ name: 'lon', type: 'continuous' }, { name: 'lat', type: 'continuous' }, { name: 'temperature', type: 'continuous' }] },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'sequential', name: 'tempColor', domain: [0, 100] }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'temperature', scale: 'tempColor' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'temperature', scale: 'tempColor' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'color', scale: 'tempColor', tickCount: 4 }],
     });
 

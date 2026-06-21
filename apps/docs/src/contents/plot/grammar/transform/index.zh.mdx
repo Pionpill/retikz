@@ -1,0 +1,57 @@
+---
+title: 变换
+description: transform 是图形语法的统计层：在比例尺和图元之前重写数据行。变换按声明顺序组成管线，可以保持行数，也可以按箱或分组生成新行。
+---
+
+`transform` 是图形语法的**统计层**：在数据对齐成字段模型之后、比例尺和图元之前，把数据行重写成图元更容易消费的形态。它不关心最后画成柱、线还是点，只负责改写行——排序、派生字段、堆叠、分箱、分组统计都发生在这一层。
+
+变换在管线里**上接[数据层](/plot/grammar/data)产出的 canonical 行，下接 scale 推断、mark lowering 和 locator**。多个 `<Transform>` 按声明顺序折叠成一条管线：前一个变换的输出行就是后一个的输入行。每个变换要么保持行数，要么按箱或分组改变行数，产出的派生字段不必写进 `model`。
+
+<ComponentPreview name="transform-pipeline" size="sm" hideCode />
+
+## 职责一览
+
+| 分类 | 成员 | 行数 | 适合场景 |
+| --- | --- | --- | --- |
+| 行级变换 | `sort` / `stack` / `normalize` / `derive-interval` / `jitter` | N 行 → N 行 | 重排、派生字段、堆叠、占比、抖散点 |
+| 分组规约 | `bin` / `aggregate` | N 行 → M 箱 / 组 | 直方图、分组统计、明细汇总 |
+
+## 声明方式
+
+用 `<Transform kind="...">` 声明一个变换，`kind` 判别类型，其余 props 对应该变换字段。多个 `<Transform>` 按**声明顺序**折叠成管线：
+
+```tsx
+<Plot data={rows} model={model}>
+  <Transform kind="aggregate" groupBy={['region']} reduce="sum" field="revenue" as="total" />
+  <IntervalMark x="region" y="total" />
+</Plot>
+```
+
+变换的产出字段是**派生字段**，例如 `binStart` / `binEnd` / `binValue`、`total`、`y0` / `y1`。它们由 transform 生成，不需要写进 `model`；被 transform 消费的输入字段仍然要走 model 和数据校验。
+
+程序化构造时，也可以用 `<Plot dataTransforms={[...]}>` 直传 transform 数组。它和 `<Transform>` 子组件共用同一管线；直传数组排在子组件之前。
+
+> 用 `dataTransforms` 而不是 `transforms`，是为了和 core 容器的几何 `transforms`（平移 / 旋转）区分。
+
+## 技术原理
+
+lowering 时，Plot 先收集 transform 读取的源字段，同时登记 transform 派生出来的输出字段。这样 strict model 只校验真实输入字段，不要求你把派生字段提前声明。
+
+然后 transform 按声明顺序折叠应用：前一个 transform 的输出行会成为下一个 transform 的输入行。最后的行集再进入 scale 推断、mark lowering 和 locator。
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/plot/grammar/transform/row">
+    <span className="font-semibold">行级变换</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">保持行数，适合排序、堆叠、占比归一化、单行区间和确定性抖动。</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/transform/group">
+    <span className="font-semibold">分组规约</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">改变行数，按连续区间或分组键把明细规约成统计行。</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/transform/custom">
+    <span className="font-semibold">自定义变换</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">用 defineTransform 注册自己的数据处理器，op 进 IR、执行函数留在运行时。</span>
+  </LinkedCard>
+</div>
