@@ -1,62 +1,7 @@
+import { JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
 import { z } from 'zod';
-import { JsonObjectSchema, PaintSpecSchema, type ValueOf } from '@retikz/core';
-import { ChannelSchema, EncodingSchema, MarkLabelSchema, PointEncodingSchema, StyleEncodingSchema } from './encoding';
-
-/**
- * mark 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'point'` 同样可用）
- * @description discriminated union 判别字段，成员里写 z.literal(PlotMark.x)（不用 z.enum）。
- *   6 个抽象 mark = 4 个维度 mark（point / path / region / interval，描述数据在坐标空间的 k 维几何）
- *   + 2 个特殊 mark（link / reference，复用维度 mark 投影但语义不等同）。
- */
-export const PlotMark = {
-  /** 维度 mark / 0D：坐标元组上的实体 / glyph / 文本 anchor（散点 + 文本标签） */
-  Point: 'point',
-  /** 维度 mark / 1D：有序点连成的一维轨迹（折线 / 闭合轮廓） */
-  Path: 'path',
-  /** 维度 mark / 2D：边界围出的可填充区域（面积 / 填充雷达 / 置信带） */
-  Region: 'region',
-  /** 维度 mark / 区间积：各位置 role 正交区间积，经坐标系投影成段 / 矩形 / 扇区 / cell（柱 / histogram / heatmap / 径向柱 / 饼环） */
-  Interval: 'interval',
-  /** 特殊 mark / relation：source→target 关系几何（sankey / alluvial 流带） */
-  Link: 'link',
-  /** 特殊 mark / reference：固定位置 / 区间的参考约束（阈值线 / 容差带） */
-  Reference: 'reference',
-} as const;
-
-/** mark 类型 */
-export type PlotMarkValue = ValueOf<typeof PlotMark>;
-
-/**
- * 流带主轴取向关键字（暴露给用户；裸 `'horizontal'` / `'vertical'` 同样可用）
- * @description 决定 link 的出 / 入切向与四角半宽方向：horizontal 出入沿 x（半宽沿 y），vertical 出入沿 y（半宽沿 x）。
- */
-export const LinkOrientation = {
-  /** 水平流：出 / 入切向沿 x，半宽沿 y（sankey 左右流） */
-  Horizontal: 'horizontal',
-  /** 竖直流：出 / 入切向沿 y，半宽沿 x（自上而下流） */
-  Vertical: 'vertical',
-} as const;
-
-/** 流带主轴取向 */
-export type LinkOrientationValue = ValueOf<typeof LinkOrientation>;
-
-/**
- * interval 单维区间来源关键字（暴露给用户；裸 `'band'` 等同样可用）
- * @description interval 各位置 role 的区间 [lo,hi] 怎么来：band（band 宽）/ span（baseline→值）/ extent（两字段区间）/ full（满域）。
- */
-export const IntervalBoundKind = {
-  /** 中心取位置通道、宽取 band scale bandwidth；可选 group 字段把 band 切等分子带（分组柱 / dodge） */
-  Band: 'band',
-  /** baseline（默认 0）→ 位置通道值；经典柱高 / 径向柱 */
-  Span: 'span',
-  /** 两字段显式区间：histogram 箱边 / 堆叠 y0,y1 / 累积饼角 start,end */
-  Extent: 'extent',
-  /** 满铺该 role 的坐标域（极坐标 inner→outer 半径；饼 / 环半径方向） */
-  Full: 'full',
-} as const;
-
-/** interval 单维区间来源 */
-export type IntervalBoundKindValue = ValueOf<typeof IntervalBoundKind>;
+import { ChannelSchema, EncodingSchema, MarkLabelSchema, PointEncodingSchema, StyleEncodingSchema } from '../encoding';
+import { BUILTIN_MARK_TYPES, IntervalBoundKind, LinkOrientation, MarkValueKind, PlotMark } from './constants';
 
 /** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema、link / reference 用专属） */
 const markBase = {
@@ -70,13 +15,6 @@ const positionalEncoding = { encoding: EncodingSchema };
 const positionalLabel = {
   label: MarkLabelSchema.optional().describe('priority-1 datum label: lowered onto each datum Node.label (core border-relative placement)'),
 };
-
-export const MarkValueKind = {
-  /** 从数据字段解析视觉值 */
-  Field: 'field',
-  /** 直接使用常量视觉值 */
-  Constant: 'constant',
-} as const;
 
 const markValueFieldVariant = (description: string): z.ZodObject<{ kind: z.ZodLiteral<'field'>; value: z.ZodString; scale: z.ZodOptional<z.ZodString> }> =>
   z.object({
@@ -328,9 +266,6 @@ export const MarkSchema = z
   .discriminatedUnion('type', [PointMarkSchema, PathMarkSchema, RegionMarkSchema, IntervalMarkSchema, ReferenceMarkSchema, LinkMarkSchema])
   .describe('Mark union: 4 dimensional marks (point / path / region / interval) + 2 special marks (link / reference)');
 
-/** 内置 mark type 集合；自定义 mark 的 type 不能与之冲突。 */
-export const BUILTIN_MARK_TYPES = new Set<string>(Object.values(PlotMark));
-
 export const CustomMarkSchema = z
   .object({
     type: z
@@ -357,57 +292,3 @@ export const CustomMarkSchema = z
 export const MarkOperationSchema = z
   .union([MarkSchema, CustomMarkSchema])
   .describe('Mark operation union: built-in mark configs plus custom type passthrough operations validated by a runtime MarkDefinition');
-
-/** point mark（散点 + 文本标签） */
-export type PointMark = z.infer<typeof PointMarkSchema>;
-/** mark 值来源变体 */
-export type MarkValueKindValue = ValueOf<typeof MarkValueKind>;
-/** mark 样式值；需要 scale 的属性在此基础上交叉 `{ scale?: string }` */
-export type MarkValueType<T> = { kind: 'field'; value: string } | { kind: 'constant'; value: T };
-/** mark 样式值，字段变体可绑定 scale */
-export type ScaledMarkValueType<T> = MarkValueType<T> & { scale?: string };
-/** PointMark 颜色样式值（field / constant） */
-export type PointColorStyle = z.infer<typeof PointColorStyleSchema>;
-/** PointMark 尺寸样式值（field / constant） */
-export type PointSizeStyle = z.infer<typeof PointSizeStyleSchema>;
-/** PointMark 形状样式值（field / constant） */
-export type PointShapeStyle = z.infer<typeof PointShapeStyleSchema>;
-/** PointMark 填充样式值（field / constant） */
-export type PointFillStyle = z.infer<typeof PointFillStyleSchema>;
-/** PointMark 描边颜色样式值（field / constant） */
-export type PointStrokeStyle = z.infer<typeof PointStrokeStyleSchema>;
-/** PointMark 描边宽度样式值（field / constant） */
-export type PointStrokeWidthStyle = z.infer<typeof PointNonnegativeNumberStyleSchema>;
-/** PointMark 数值样式值（field / constant） */
-export type PointNumberStyle = z.infer<typeof PointNumberStyleSchema>;
-/** PointMark 非负数值样式值（field / constant） */
-export type PointNonnegativeNumberStyle = z.infer<typeof PointNonnegativeNumberStyleSchema>;
-/** PointMark 透明度样式值（field / constant） */
-export type PointOpacityStyle = z.infer<typeof PointOpacityStyleSchema>;
-/** PointMark zIndex 样式值（field / constant） */
-export type PointZIndexStyle = z.infer<typeof PointZIndexStyleSchema>;
-/** path mark（折线 / 轮廓） */
-export type PathMark = z.infer<typeof PathMarkSchema>;
-/** region mark（面积 / 填充雷达） */
-export type RegionMark = z.infer<typeof RegionMarkSchema>;
-/** interval 单维区间来源 */
-export type IntervalBound = z.infer<typeof IntervalBoundSchema>;
-/** interval per-role 区间来源 */
-export type IntervalBounds = z.infer<typeof IntervalBoundsSchema>;
-/** interval mark（柱 / histogram / heatmap / 径向柱 / 饼环） */
-export type IntervalMark = z.infer<typeof IntervalMarkSchema>;
-/** reference mark（参考线 / 阈值线 / 容差带） */
-export type ReferenceMark = z.infer<typeof ReferenceMarkSchema>;
-/** link 一端：字段对端点（经坐标系投影成屏幕点） */
-export type LinkEndpoint = z.infer<typeof LinkEndpointSchema>;
-/** link mark（sankey / alluvial 流带） */
-export type LinkMark = z.infer<typeof LinkMarkSchema>;
-/** mark（point / path / region / interval / reference / link） */
-export type Mark = z.infer<typeof MarkSchema>;
-/** custom mark operation（自定义 type passthrough，由 runtime MarkDefinition 解释） */
-export type CustomMark = z.infer<typeof CustomMarkSchema>;
-/** mark operation（内置 ∪ 自定义 type passthrough） */
-export type MarkOperation = z.infer<typeof MarkOperationSchema>;
-
-/** mark operation 是否内置；把放宽后的 union 收窄回精确内置 Mark，供 lowering 内置专属几何分支门控。 */
-export const isBuiltinMark = (mark: MarkOperation): mark is Mark => BUILTIN_MARK_TYPES.has(mark.type);

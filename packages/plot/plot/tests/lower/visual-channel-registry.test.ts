@@ -50,7 +50,7 @@ describe('visual channel registry（ADR-10 内置视觉通道收敛）', () => {
       rows: [],
       fieldTypes: new Map(),
     });
-    const resolution = resolve({ type: 'point', size: { kind: 'constant', value: 7 }, encoding: {} } as never);
+    const resolution = resolve({ type: 'point', size: { kind: 'constant', value: 7 }, encoding: {} });
     expect(resolution?.of({})).toBe(7);
     expect(resolution?.descriptor).toBeUndefined();
   });

@@ -99,7 +99,7 @@ export const BUILTIN_FORMATS: ReadonlyArray<FieldFormatDefinition> = [
 
 /**
  * 按 name 索引的内置格式 definition。
- * @description 主要供诊断与测试确认内置覆盖；自定义 definition 不写入此表，而是在每次 lowering 时合并。
+ * @description 作为 format registry 的内置初始化来源，也供诊断与测试确认内置覆盖；自定义 definition 不写入此表，而是在每次 lowering 时合并。
  */
 export const BUILTIN_FORMAT_DEFINITIONS_BY_NAME: ReadonlyMap<string, FieldFormatDefinition> = new Map(BUILTIN_FORMATS.map(def => [def.name, def] as const));
 
@@ -108,10 +108,7 @@ export const BUILTIN_FORMAT_DEFINITIONS_BY_NAME: ReadonlyMap<string, FieldFormat
  * @description 内置格式总是先注册；用户自定义 definition 不能覆盖内置格式名，也不能彼此重复。
  */
 export const resolveFormatRegistry = (custom?: ReadonlyArray<FieldFormatDefinition>): Map<string, FieldFormatDefinition> => {
-  const registry = new Map<string, FieldFormatDefinition>();
-  for (const def of BUILTIN_FORMATS) {
-    registry.set(def.name, def);
-  }
+  const registry = new Map(BUILTIN_FORMAT_DEFINITIONS_BY_NAME);
   for (const def of custom ?? []) {
     if (def.name.length === 0) {
       throw new Error('lowerPlots: field format name must be a non-empty string');

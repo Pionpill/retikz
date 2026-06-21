@@ -1,6 +1,6 @@
 import { AtDirection } from '@retikz/core';
 import { z } from 'zod';
-import { ScalarValueSchema } from './data';
+import { ScalarValueSchema } from '../data';
 
 export const ChannelSchema = z
   .object({
@@ -122,24 +122,3 @@ export const MarkLabelSchema = z
     pin: z.boolean().optional().describe('Draw a leader line from the host node border to the label (core NodeLabelSchema.pin). Default false'),
   })
   .describe('Datum label attached to a positional mark: lowered onto each datum Node.label (core border-relative placement), the preferred path over a standalone TextMark');
-
-/** Channel binding: exactly one of field (data-driven) or value (constant). */
-export type Channel = z.infer<typeof ChannelSchema>;
-/** Positional channel bindings (x / y / z); coordinate systems decide required roles during lowering. */
-export type PositionEncoding = z.infer<typeof PositionEncodingSchema>;
-/** Style channel bindings for non-position visual channels. */
-export type StyleEncoding = z.infer<typeof StyleEncodingSchema>;
-/** Mark channel bindings: positional channels plus shared style channels. */
-export type Encoding = z.infer<typeof EncodingSchema>;
-/** Legacy size channel helper schema type. PointMark canonical size is top-level MarkValueType. */
-export type SizeChannel = z.infer<typeof SizeChannelSchema>;
-/** Legacy opacity channel helper schema type. PointMark canonical opacity is top-level MarkValueType. */
-export type OpacityChannel = z.infer<typeof OpacityChannelSchema>;
-/** Legacy shape channel helper schema type. PointMark canonical shape is top-level MarkValueType. */
-export type ShapeChannel = z.infer<typeof ShapeChannelSchema>;
-/** PointMark encoding: positional channels plus optional text only. */
-export type PointEncoding = z.infer<typeof PointEncodingSchema>;
-/** Text content channel binding. */
-export type TextChannel = z.infer<typeof TextChannelSchema>;
-/** Host datum label config aligned with core NodeLabelSchema position / distance / pin. */
-export type MarkLabel = z.infer<typeof MarkLabelSchema>;
