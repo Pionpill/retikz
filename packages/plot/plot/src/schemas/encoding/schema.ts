@@ -114,7 +114,7 @@ export const PointEncodingSchema = PositionEncodingSchema.extend({
     .record(z.string(), ChannelSchema)
     .optional()
     .describe(
-      'Extension visual channel bindings: a map of registered channel name to field / constant binding, resolved and delivered to a core node style property by a VisualChannelDefinition supplied via options.visualChannelDefinitions. Built-in point channels such as size / opacity / shape / strokeWidth keep their named props. A key colliding with a built-in channel name fails loud at lowering',
+      'Extension channel bindings: a map of registered channel name to field / constant binding, resolved by a ChannelDefinition supplied via options.channelDefinitions. Built-in point channels such as size / opacity / shape / strokeWidth keep their named props. A key colliding with a built-in channel name fails loud at lowering',
     ),
 }).describe('PointMark encoding: positional channels plus optional text and extension visual channel bindings; built-in visual properties live on the mark as MarkValueType fields');
 

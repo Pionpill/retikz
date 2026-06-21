@@ -1,8 +1,7 @@
 import type { IRJsonObject } from '@retikz/core';
 import { type ExternalDatasets, type ExternalRow, type Mark, type MarkOperation, PlotMark, type PlotSpec, isBuiltinMark } from '../../schemas';
-import { applyTransforms, buildGenericIntervalContext, buildIntervalContext, datumAnchor, isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame } from '../../providers';
+import { applyTransforms, buildGenericIntervalContext, buildIntervalContext, datumAnchor, isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame, resolveFieldPath } from '../../providers';
 import { type LowerPlotsOptions, prepareRows, resolveFrame } from '../../pipeline/expand';
-import { resolveFieldPath } from '../data';
 import { DEFAULT_FONT_SIZE } from '../../pipeline/layout';
 import type { CoordinateFrame, IntervalContext } from '../../contract';
 import { type ProvenanceContext, createDatumIdRegistrar, datumMeta, readSourceIndex, readSourceIndices, tagSourceIndex } from '../../pipeline/provenance';

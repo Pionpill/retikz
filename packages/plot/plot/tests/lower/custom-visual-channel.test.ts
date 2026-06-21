@@ -1,12 +1,12 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type AnyVisualChannelDefinition, defineVisualChannel } from '../../src/contract';
+import { type AnyChannelDefinition, type AnyVisualChannelDefinition, defineVisualChannel } from '../../src/contract';
 import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 /**
- * 自定义 `intensity`（→ node.opacity）经 options.visualChannelDefinitions 注册，
- * 与内置通道共享 visual channel registry / delivery。
+ * 自定义 `intensity`（→ node.opacity）经 options.channelDefinitions 注册，
+ * 与内置通道共享 channel registry / delivery。
  */
 
 /** 自定义 intensity 通道：score 字段线性映射到 [0.3, 1]，落到 node.opacity */
@@ -36,7 +36,8 @@ const intensityChannel = defineVisualChannel<number>({
   },
 });
 
-const opts = (defs?: Array<AnyVisualChannelDefinition>): LowerPlotsOptions => ({ width: 480, height: 300, visualChannelDefinitions: defs });
+const opts = (defs?: Array<AnyChannelDefinition>): LowerPlotsOptions => ({ width: 480, height: 300, channelDefinitions: defs });
+const legacyVisualOpts = (defs?: Array<AnyVisualChannelDefinition>): LowerPlotsOptions => ({ width: 480, height: 300, visualChannelDefinitions: defs });
 
 const scatterSpec = (channels?: Record<string, unknown>): PlotSpec =>
   PlotSpecSchema.parse({
@@ -106,7 +107,7 @@ describe('custom visual channel registry', () => {
   // 错误路径：encoding.channels 写了通道名，但没有对应 definition → fail-loud
   it('channels_binding_without_registered_def_fails_loud', () => {
     const spec = scatterSpec({ intensity: { field: 'score' } });
-    expect(() => firstLayer(spec, { d: rows }, opts())).toThrow(/visual channel "intensity" is not registered/);
+    expect(() => firstLayer(spec, { d: rows }, opts())).toThrow(/channel "intensity" is not registered/);
   });
 
   // 错误路径：自定义通道撞内置名 → fail-loud
@@ -124,6 +125,12 @@ describe('custom visual channel registry', () => {
   // 错误路径：两个自定义通道同名 → fail-loud
   it('duplicate_custom_channel_fails_loud', () => {
     expect(() => lowerPlots({ d: rows }, opts([intensityChannel, intensityChannel]))[0].expand(scatterSpec())).toThrow(/duplicate custom visual channel/);
+  });
+
+  it('legacy_visual_channel_definitions_alias_still_works', () => {
+    const spec = scatterSpec({ intensity: { field: 'score' } });
+    const nodes = nodesOf(firstLayer(spec, { d: rows }, legacyVisualOpts([intensityChannel])));
+    expect(nodes.some(n => (n as { opacity?: number }).opacity !== undefined)).toBe(true);
   });
 
   // 交互：自定义通道 + 内置 size 同图各自生效（size→radius、intensity→opacity）

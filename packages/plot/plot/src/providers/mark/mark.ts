@@ -1,7 +1,7 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope, type IRStep } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
 import { type AnyMarkDefinition, type Cell, type CellGeometry, type ChannelValueResolver, type CoordinateFrame, type FieldCollector, type IntervalContext, type MarkChannels, type MarkDefinition, cellGeometryAnchor, hasProjectCell, isRenderableCellGeometry } from '../../contract';
-import { channelValue, compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../../features';
+import { channelValue, compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../data';
 import {
   type DatumIdRegistrar,
   type ProvenanceContext,

@@ -1,6 +1,6 @@
 import type { IRJsonObject, JsonValue } from '@retikz/core';
 import type { ExternalRow } from '../schemas';
-import { resolveFieldPath } from '../features';
+import { resolveFieldPath } from '../providers';
 
 /**
  * 行级源序标记：ingest 时给每行打 `row[SOURCE_INDEX]=i`，跨 transform（object spread / sort）存活

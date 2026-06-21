@@ -1,5 +1,8 @@
 import type { IRNode } from '@retikz/core';
-import type { Channel, ExternalRow, LegendChannelValue, Mark, PlotFieldTypeMap, PlotFieldTypeValue, PlotSpec, ScalarValue } from '../schemas';
+import type { DimensionRole } from './coordinate';
+import type { AnyScaleDefinition } from './scale';
+import type { ChannelScaleResolution } from './scale';
+import type { Channel, ExternalRow, LegendChannelValue, Mark, MarkOperation, PlotFieldTypeMap, PlotFieldTypeValue, PlotSpec, ScalarValue } from '../schemas';
 
 /**
  * 通道解析器（行 → 求值结果）的运行时契约。
@@ -38,6 +41,7 @@ export type MarkChannels = {
   values?: Readonly<Record<string, ChannelValueResolver>>;
   defaults?: Readonly<Record<string, ScalarValue>>;
   deliveries?: ReadonlyArray<ChannelDelivery>;
+  descriptors?: ReadonlyArray<ScaleDescriptor>;
 };
 
 /** addChannel 接受的通道形态：普通 channel 或 MarkValueType 的字段 / 常量引用。 */
@@ -71,6 +75,10 @@ export type ScaleDescriptor = {
   field?: string;
   /** 绑定字段类型（标签 formatter 选型：数字 / 时间 / 分类）；常量 / 类型未知时省略 */
   fieldType?: PlotFieldTypeValue;
+  /** 绑定 scale 名；legend.scale 据此在同通道多 scale 时消歧。 */
+  scaleName?: string;
+  /** color scale 的 legend 解析结果；仅 color-like mark 通道需要，保证实绘 / legend 同源。 */
+  colorScale?: ChannelScaleResolution;
 };
 
 /** 单视觉通道解析结果：逐行视觉量函数 + 供 legend 的可复用 descriptor（字段编码才有 descriptor；常量编码无） */
@@ -90,11 +98,51 @@ export type ChannelOutputSpace =
   | { outputKind: 'number'; range: readonly [number, number]; clamp?: boolean }
   | { outputKind: 'symbol'; palette: ReadonlyArray<string> };
 
-/** 视觉通道解析上下文：spec + 规整后的数据行 + 字段类型表（resolve 据此建逐 mark 解析器）。 */
-export type VisualChannelContext = {
+/** 通道解析上下文：spec + 规整后的数据行 + 字段类型表（resolve 据此建逐 mark 解析器）。 */
+export type ChannelContext = {
   node: PlotSpec;
   rows: Array<ExternalRow>;
   fieldTypes: PlotFieldTypeMap;
+  scaleRegistry?: ReadonlyMap<string, AnyScaleDefinition>;
+  resolveColorScheme?: (name: string) => (t: number) => string;
+};
+
+/** 视觉通道解析上下文：保留旧名，实际与通用 ChannelContext 同构。 */
+export type VisualChannelContext = ChannelContext;
+
+/** mark 专用命名通道解析结果：塞入 MarkChannels.values，由 mark definition 自行消费。 */
+export type MarkChannelResolution<T extends VisualChannelValue = VisualChannelValue> = {
+  /** 逐行通道值。 */
+  of: ChannelValueResolver<T>;
+  /** 默认值，供 mark 在无字段编码时上提到 nodeDefault / pathDefault。 */
+  defaultValue?: ScalarValue;
+  /** 可选 legend descriptor。 */
+  descriptor?: ScaleDescriptor;
+};
+
+/** 读取某 mark 上某通道绑定的统一入口。 */
+export type ChannelBindingResolver = (mark: MarkOperation) => Channel | undefined;
+
+/** 通道 definition 的公共基座。 */
+export type BaseChannelDefinition<TKind extends string> = {
+  /** 通道注册键。 */
+  channel: string;
+  /** 通道类型：position 由坐标系 role 声明；mark 交给 mark lowering 消费；visual 直接交付到 core node 样式属性。 */
+  kind: TKind;
+};
+
+/** 位置通道定义：角色由 CoordinateDefinition.roles 提供，本 definition 只承接统一命名和绑定读取。 */
+export type PositionChannelDefinition = BaseChannelDefinition<'position'> & {
+  /** 坐标系 role 名。 */
+  role: DimensionRole;
+  /** 从 mark 上读取该位置角色的 channel 绑定。 */
+  pick: ChannelBindingResolver;
+};
+
+/** mark 命名通道定义：解析成 MarkChannels.values/defaults，供 mark definition 消费。 */
+export type MarkChannelDefinition<T extends VisualChannelValue = VisualChannelValue> = BaseChannelDefinition<'mark'> & {
+  /** 建逐 mark 解析器（行→通道值 + 可选 legend descriptor）。 */
+  resolve: (ctx: ChannelContext) => (mark: MarkOperation) => MarkChannelResolution<T> | undefined;
 };
 
 /**
@@ -103,9 +151,7 @@ export type VisualChannelContext = {
  *   挑一个 scale（连续 builder / ordinal）解析后投到本通道输出空间。内置与自定义通道都经同一 registry 解析和交付。
  *   注意与 contract/scale.ts 的 `ChannelScaleDefinition`（scale 的 channel family）区分：那是「产视觉量的 scale」，这是「视觉通道本身」。
  */
-export type VisualChannelDefinition<T extends VisualChannelValue = VisualChannelValue> = {
-  /** 通道注册键。 */
-  channel: string;
+export type VisualChannelDefinition<T extends VisualChannelValue = VisualChannelValue> = BaseChannelDefinition<'visual'> & {
   /** 输出空间 + 默认范围 / 调色板（判别 union） */
   output: ChannelOutputSpace;
   /** legend 形态（size→梯度气泡 / opacity→ramp / shape→symbol）；无 legend 的通道（如 strokeWidth）省略 */
@@ -119,8 +165,19 @@ export type VisualChannelDefinition<T extends VisualChannelValue = VisualChannel
   deliver: (node: IRNode, value: T, context: ChannelDeliveryContext) => void;
 };
 
+/** 通道定义：所有通道类型共用的 registry 元素。 */
+export type ChannelDefinition<T extends VisualChannelValue = VisualChannelValue> =
+  | PositionChannelDefinition
+  | MarkChannelDefinition<T>
+  | VisualChannelDefinition<T>;
+
+/** 定义一个通道（统一入口）；具体 kind 决定解析后进入 position / mark / visual 哪条消费路径。 */
+export const defineChannel = <T extends ChannelDefinition>(def: T): T => def;
+
 /** 定义一个视觉通道（对齐 defineScale / defineCoordinate / defineTransform；保留 resolve / deliver 的输出强类型）。 */
-export const defineVisualChannel = <T extends VisualChannelValue>(def: VisualChannelDefinition<T>): VisualChannelDefinition<T> => def;
+export const defineVisualChannel = <T extends VisualChannelValue>(
+  def: Omit<VisualChannelDefinition<T>, 'kind'> & { kind?: 'visual' },
+): VisualChannelDefinition<T> => ({ ...def, kind: 'visual' });
 
 /**
  * registry / options 注入用的宽类型（擦除输出泛型，承异构 T 的 VisualChannelDefinition）。
@@ -129,8 +186,19 @@ export const defineVisualChannel = <T extends VisualChannelValue>(def: VisualCha
  */
 export type AnyVisualChannelDefinition = {
   channel: string;
+  kind: 'visual';
   output: ChannelOutputSpace;
   legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
   resolve: (ctx: VisualChannelContext) => (mark: Mark) => ChannelResolution<VisualChannelValue> | undefined;
   deliver: (node: IRNode, value: never, context: ChannelDeliveryContext) => void;
 };
+
+/** registry / options 注入用的通用宽类型。 */
+export type AnyChannelDefinition =
+  | PositionChannelDefinition
+  | {
+      channel: string;
+      kind: 'mark';
+      resolve: (ctx: ChannelContext) => (mark: MarkOperation) => MarkChannelResolution<VisualChannelValue> | undefined;
+    }
+  | AnyVisualChannelDefinition;

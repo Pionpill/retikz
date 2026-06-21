@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
 import { lowerPlots, prepareRows } from '../../src/pipeline/expand';
 import { createPlotLocator } from '../../src/features';
-import { type ResolveField, applyFieldResolver, normalizeRows } from '../../src/features';
-import type { ParsedFieldValue } from '../../src/contract';
+import type { ParsedFieldValue, ResolveField } from '../../src/contract';
+import { applyFieldResolver, normalizeRows } from '../../src/providers';
 
 /** cartesian point spec，model 可选（部分声明走 ADR-05），无 scales → 走 type-driven 派生 */
 const pointSpec = (model?: Array<{ name: string; type?: string }>): PlotSpec =>

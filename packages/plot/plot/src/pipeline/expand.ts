@@ -1,9 +1,8 @@
 import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, JsonObjectSchema, defineComposite } from '@retikz/core';
-import { isFiniteNumber } from '@retikz/math';
 import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type MarkOperation, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
-import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyTransforms, assertBaselineScaleCompatible, assertScaleFieldCompatible, collectFormatFields, deriveScale, lowerMark, makeColorSchemeResolver, orderedCategoryDomain, resolveChannelScale, resolveCoordinateRegistry, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, resolveVisualChannelDeliveries, resolveVisualChannelRegistry, scaleTicks } from '../providers';
-import { type LegendEntry, type LegendInput, type ResolveField, type ResolveLabel, applyFieldResolver, assertAllValuesValid, channelValue, coerceTimestamp, labelOf, lowerCustomAxis, lowerGuide, lowerLegend, normalizeRows, resolveFieldPath, resolveFieldTypes, validateBoundData } from '../features';
-import { type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type AnyVisualChannelDefinition, type ChannelResolveContext, type ChannelValueResolver, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, isBuiltinScaleOperation } from '../contract';
+import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyFieldResolver, applyTransforms, assertAllValuesValid, assertBaselineScaleCompatible, assertScaleFieldCompatible, channelValue, collectFormatFields, createPositionChannelDefinitions, deriveScale, lowerMark, makeColorSchemeResolver, normalizeRows, orderedCategoryDomain, resolveChannelRegistry, resolveCoordinateRegistry, resolveFieldPath, resolveFieldTypes, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkChannels, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, scaleTicks, validateBoundData } from '../providers';
+import { type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../features';
+import { type AnyChannelDefinition, type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type AnyVisualChannelDefinition, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, type ResolveField, type ResolveLabel, isBuiltinScaleOperation } from '../contract';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect } from './layout';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { collectSourceFields } from './source-fields';
@@ -37,28 +36,8 @@ const defaultColorOf = (node: PlotSpec, markIndex: number): string => {
   return colors[markIndex % colors.length];
 };
 
-const pointMarkValueChannel =(value: { kind: 'field' | 'constant'; value: unknown; scale?: string } | undefined): Channel | undefined => {
-  if (value === undefined) return undefined;
-  return value.kind === 'field' ? { field: String(value.value), ...(value.scale !== undefined ? { scale: value.scale } : {}) } : { value: value.value as Channel['value'] };
-};
-
 /** 读 mark 的 encoding（内置与自定义共享 EncodingSchema 形态）；自定义 mark 缺 encoding 时 undefined。 */
 const markEncoding = (mark: MarkOperation): Record<string, Channel | undefined> | undefined => (mark as { encoding?: Record<string, Channel | undefined> }).encoding;
-
-const markColorChannel = (mark: MarkOperation): Channel | undefined => {
-  if (isBuiltinMark(mark) && mark.type === PlotMark.Point) return pointMarkValueChannel(mark.color);
-  return markEncoding(mark)?.color;
-};
-
-const pointStrokeChannel = (mark: MarkOperation): Channel | undefined => {
-  if (!isBuiltinMark(mark) || mark.type !== PlotMark.Point || mark.stroke === undefined) return undefined;
-  return mark.stroke.kind === 'field' ? { field: mark.stroke.value, ...(mark.stroke.scale !== undefined ? { scale: mark.stroke.scale } : {}) } : { value: mark.stroke.value };
-};
-
-const pointFillChannel = (mark: MarkOperation): Channel | undefined => {
-  if (!isBuiltinMark(mark) || mark.type !== PlotMark.Point || mark.fill === undefined || mark.fill.kind !== 'field') return undefined;
-  return { field: mark.fill.value, ...(mark.fill.scale !== undefined ? { scale: mark.fill.scale } : {}) };
-};
 
 /** guide 谓词：按 type 判别串收窄成 axis / legend 子集 */
 const isAxisGuide = (guide: Guide): guide is AxisGuide => guide.type === PlotGuide.Axis;
@@ -189,10 +168,15 @@ export type LowerPlotsOptions = {
    */
   scaleDefinitions?: Array<AnyScaleDefinition>;
   /**
-   * 扩展视觉通道 definition 数组（运行时函数，不进 IR）：mark 的 `encoding.channels.<name>` 据此解析并落到 core node 样式属性。
-   * @description 内置通道（color/size/opacity/shape/strokeWidth…）恒可用；自定义 `channel` 撞内置名 / 互撞 / 缺 deliver → fail-loud。
+   * 扩展视觉通道 definition 数组（旧入口，运行时函数，不进 IR）。
+   * @deprecated 新扩展统一使用 channelDefinitions，让 mark / visual / position 通道共用一套 registry。
    */
   visualChannelDefinitions?: Array<AnyVisualChannelDefinition>;
+  /**
+   * 自定义通道 definition 数组（运行时函数，不进 IR）：所有通道类型共用 registry。
+   * @description 内置通道（position / mark / visual）恒可用；自定义 `channel` 撞内置名 / 互撞 / 缺必要行为 → fail-loud。
+   */
+  channelDefinitions?: Array<AnyChannelDefinition>;
   /**
    * 自定义命名配色 scheme（name → interpolator 纯函数，不进 IR）：IR 只存 scheme 名串，求值期解析为函数。
    * @description 先查内置 scheme、再查此表；sequential / diverging / quantize / threshold / quantile 与自定义 channel scale 均可引用自定义 scheme 名。未命中 fail-loud。
@@ -262,6 +246,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   const roles = coordinateDefinition.roles;
   const axisGuides = (node.guides ?? []).filter(isAxisGuide);
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
+  const positionChannels = createPositionChannelDefinitions(roles);
 
   // ADR-01 校验（建 frame 前）：guide 维度按坐标系合法集校验 + mark 必填位置角色校验，均 fail-loud。
   assertValidGuideDimensions(coordinateOperation.type, roles, axisGuides);
@@ -382,9 +367,12 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     return def;
   };
 
-  const roleChannelOf = (role: DimensionRole, includeLinkSource = false) => (mark: MarkOperation): Channel | undefined => {
-    if (isBuiltinMark(mark) && mark.type === PlotMark.Link) return includeLinkSource && (role === 'x' || role === 'y') ? (role === 'x' ? mark.source.x : mark.source.y) : undefined;
-    return markEncoding(mark)?.[role];
+  const roleChannelOf = (role: DimensionRole, includeLinkSource = false) => {
+    const def = positionChannels.get(role);
+    if (def === undefined) {
+      throw new Error(`lowerPlots: ${coordinateOperation.type} coordinate system does not support encoding role "${role}" (valid roles: ${roles.join(', ')})`);
+    }
+    return def.pickWithOptions({ includeLinkSource });
   };
 
   const resolveScaleForDefinitionRole = (role: DimensionRole, scaleName: string | undefined, values: Array<unknown>, opts?: { includeLinkSource?: boolean }): ScaleOperation =>
@@ -429,114 +417,51 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
 };
 
 /**
- * 解析某 mark 的 color-like 编码 → 行→颜色串：常量 value 直用；字段经 registry channel scale 取色。
- * @description 显式引用色阶 → 查 scaleByName；缺省（分类 / 未知字段）→ 合成默认 ordinal。
- *   连续 / temporal 字段须显式引用连续 / 离散化色阶（path / area 整体图元按 datum 取色无意义 → fail-loud）。
- *   内置与自定义 channel scale 经同一 resolveChannelScale 分派，evaluator 与 legend 同源。
- */
-const makeColorResolver = (
-  node: PlotSpec,
-  rows: Array<ExternalRow>,
-  fieldTypes: PlotFieldTypeMap,
-  scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
-  resolveColorScheme: (name: string) => (t: number) => string,
-  pickChannel: (mark: MarkOperation) => Channel | undefined = markColorChannel,
-  channelName = 'color',
-): ((mark: MarkOperation) => ChannelValueResolver<string> | undefined) => {
-  const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
-  // 字段名 → order（与位置通道同源 data.model）：颜色 ordinal 域按字段 order 排，保证位置 / 颜色同序
-  const fieldOrders = new Map<string, CategoryOrder>();
-  for (const field of node.data.model ?? []) {
-    if (field.order !== undefined) fieldOrders.set(field.name, field.order);
-  }
-  return (mark: MarkOperation): ChannelValueResolver<string> | undefined => {
-    const channel = pickChannel(mark);
-    if (!channel) return undefined;
-    if (channel.value !== undefined) {
-      const constant = String(channel.value);
-      return () => constant;
-    }
-    if (channel.field === undefined) return undefined;
-    const field = channel.field;
-    const colorFieldType = fieldTypes.get(field);
-    // 连续 / temporal color：line / area 是 path 级整体图元、按 datum 取色无意义 → fail-loud；且必须显式引用色阶。
-    if (colorFieldType === PlotFieldType.Continuous || colorFieldType === PlotFieldType.Temporal) {
-      if (mark.type === PlotMark.Path || mark.type === PlotMark.Region) {
-        throw new Error(
-          `lowerPlots: continuous/temporal color field "${field}" is not supported on ${mark.type} marks (path-level glyph colored per series); continuous color applies to point / interval only`,
-        );
-      }
-      if (channel.scale === undefined) {
-        throw new Error(`lowerPlots: continuous/temporal ${channelName} field "${field}" requires an explicit sequential/diverging/quantize/threshold/quantile color scale reference`);
-      }
-    }
-    // 解析 color scale operation：显式引用查表；缺省（分类 / 未知字段）合成默认 ordinal
-    let scaleOperation: ScaleOperation;
-    if (channel.scale !== undefined) {
-      const found = scaleByName.get(channel.scale);
-      if (!found) throw new Error(`lowerPlots: ${channelName} channel references unknown scale "${channel.scale}"`);
-      scaleOperation = found;
-    } else {
-      scaleOperation = { type: PlotScale.Ordinal, name: `__${channelName}_${field}` };
-    }
-    const rawValues = rows.map(row => resolveFieldPath(row, field));
-    // ordinal 域 order 注入：内置 ordinal 且未显式给 domain 且字段有非默认 order（位置 / 颜色同序）
-    if (isBuiltinScaleOperation(scaleOperation) && scaleOperation.type === PlotScale.Ordinal && scaleOperation.domain === undefined) {
-      const order = fieldOrders.get(field);
-      if (order !== undefined && order !== 'data') scaleOperation = { ...scaleOperation, domain: orderedCategoryDomain(rawValues, order) };
-    }
-    const ctx: ChannelResolveContext = {
-      fieldType: colorFieldType,
-      toNumber: value => (isFiniteNumber(value) ? value : null),
-      coerceTimestamp,
-      resolveColorScheme,
-      defaultColors: node.colors,
-    };
-    const resolution = resolveChannelScale(scaleOperation, rawValues, ctx, scaleRegistry);
-    return row => resolution.of(resolveFieldPath(row, field));
-  };
-};
-
-/**
- * 解析某 mark 的 label / text 内容 → 行→标签串（ADR-04）
- * @description 内容来源：位置 mark 的 `label.content`（priority-1）或 TextMark 的 `encoding.text`（priority-2）；
- *   无内容声明的 mark → undefined（不挂 label / 不产文本）。format 分派按 content.field 的 fieldType（temporal 走时间格式、数值走 d3-format）。
- *   运行时 resolveLabel[markId] 注入（最高优先、不进 IR）；mark 无 id 时无法命中 resolveLabel，仅走声明层。
- */
-const makeLabelResolver = (fieldTypes: PlotFieldTypeMap, resolveLabel: Record<string, ResolveLabel> | undefined): ((mark: Mark) => ChannelValueResolver<string> | undefined) => {
-  return (mark: Mark): ChannelValueResolver<string> | undefined => {
-    const content = mark.type === PlotMark.Point && mark.encoding.text !== undefined ? mark.encoding.text : 'label' in mark ? mark.label?.content : undefined;
-    const runtime = mark.id !== undefined ? resolveLabel?.[mark.id] : undefined;
-    if (content === undefined && runtime === undefined) return undefined;
-    const fieldType = content?.field !== undefined ? fieldTypes.get(content.field) : undefined;
-    // content 缺省（仅 resolveLabel 命中）时用空内容占位通道：labelOf 内 resolveLabel 优先生效
-    const effectiveContent = content ?? { value: '' };
-    return (row: ExternalRow) => labelOf(effectiveContent, row, fieldType, runtime);
-  };
-};
-
-/**
  * 收集所有 mark 在某非位置通道上的字段 descriptor（size / opacity / shape）
  * @description resolver 双产出的 descriptor 注册到 channel → descriptor 表；同通道多 mark 取首个有 descriptor 的
  *   （legend 据 scale name 消歧留待多 scale 场景，alpha.8 这三通道用合成默认 scale，不暴露具名）。
  */
 const collectChannelDescriptors = (
   node: PlotSpec,
-  visualChannelCtx: { node: PlotSpec; rows: Array<ExternalRow>; fieldTypes: PlotFieldTypeMap },
-  visualChannelRegistry: ReadonlyMap<string, AnyVisualChannelDefinition>,
-): Map<LegendChannelValue, ScaleDescriptor> => {
-  const out = new Map<LegendChannelValue, ScaleDescriptor>();
+  channelCtx: { node: PlotSpec; rows: Array<ExternalRow>; fieldTypes: PlotFieldTypeMap; scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>; resolveColorScheme: (name: string) => (t: number) => string },
+  channelRegistry: ReadonlyMap<string, AnyChannelDefinition>,
+): Array<ScaleDescriptor> => {
+  const out: Array<ScaleDescriptor> = [];
   const register = (descriptor: ScaleDescriptor | undefined): void => {
-    if (descriptor && !out.has(descriptor.channel)) out.set(descriptor.channel, descriptor);
+    if (descriptor) out.push(descriptor);
   };
   for (const mark of node.marks) {
     if (!isBuiltinMark(mark)) continue;
-    for (const def of visualChannelRegistry.values()) {
-      if (def.legend === undefined) continue;
-      register(def.resolve(visualChannelCtx)(mark)?.descriptor);
-    }
+    const markChannels = resolveMarkChannels(mark, channelCtx, channelRegistry, DEFAULT_PLOT_COLORS[0]);
+    for (const descriptor of markChannels.descriptors ?? []) register(descriptor);
   }
   return out;
+};
+
+const selectLegendDescriptor = (
+  guide: LegendGuide,
+  descriptors: ReadonlyArray<ScaleDescriptor>,
+  scaleByName: ReadonlyMap<string, ScaleOperation>,
+  scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
+): ScaleDescriptor | undefined => {
+  const matched = descriptors.filter(descriptor => descriptor.channel === guide.channel && (guide.scale === undefined || descriptor.scaleName === guide.scale));
+  if (guide.scale !== undefined) {
+    if (matched.length === 0) {
+      const scale = scaleByName.get(guide.scale);
+      if (scale === undefined) throw new Error(`lowerPlots: legend references unknown scale "${guide.scale}"`);
+      const scaleDefinition = scaleRegistry.get(scale.type);
+      if (scaleDefinition?.family !== 'channel') {
+        throw new Error(`lowerPlots: scale "${guide.scale}" is not a color scale (legend channel "${guide.channel}" can only bind channel scales)`);
+      }
+      throw new Error(`lowerPlots: legend channel "${guide.channel}" has no bound scale named "${guide.scale}"`);
+    }
+    return matched[0];
+  }
+  const signatures = new Set(matched.map(descriptor => descriptor.scaleName ?? `${descriptor.channel}:${descriptor.field ?? ''}:${descriptor.scaleType}`));
+  if (signatures.size > 1) {
+    throw new Error(`lowerPlots: legend channel "${guide.channel}" is driven by multiple scales [${[...signatures].join(', ')}]; specify which via the legend "scale" field`);
+  }
+  return matched[0];
 };
 
 /** 数值刻度 nice 化 + 格式化：复用 axis 的 scaleTicks 链（决策 ⑨），domain → {value, offset 0..1, label} */
@@ -569,64 +494,23 @@ type LegendBaseInput = {
 };
 
 /**
- * color legend 解析：定位 color scale（消歧 + fail-loud）→ 经 registry channel 解析 → 按 legendForm 选 swatch / ramp / 分箱
+ * color legend 解析：消费 channel definition 产出的 colorScale descriptor → 按 legendForm 选 swatch / ramp / 分箱
  * @description legendForm='ramp'（sequential / diverging）→ core linearGradient 连续色带 + nice 刻度；
  *   legendForm='swatch' + edges（quantize/threshold/quantile）→ 每档区间 swatch（区间标签闭开口契约）；
- *   legendForm='swatch' 无 edges（ordinal）→ 逐类别色块 swatch。evaluator / domain / range 与实绘同源（resolveChannelScale）。
+ *   legendForm='swatch' 无 edges（ordinal）→ 逐类别色块 swatch。evaluator / domain / range 来自实绘解析结果。
  */
 const resolveColorLegend = (
-  node: PlotSpec,
-  rows: Array<ExternalRow>,
-  fieldTypes: PlotFieldTypeMap,
-  scaleByName: Map<string, ScaleOperation>,
-  scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
-  resolveColorScheme: (name: string) => (t: number) => string,
+  descriptor: ScaleDescriptor,
   guide: LegendGuide,
   baseInput: LegendBaseInput,
   showLabels: boolean,
 ): LegendInput => {
-  // 收集被 color 通道引用的 scale 名 + 字段（具名 color scale 已物化进 scales）。
-  //   point / bar / sector 都按 datum 着色（ADR-01 B/C），sector（饼 / 环）的 color.field 同样要喂 legend——
-  //   scale + field 守卫已兜底无 color 编码的 mark，无需按 mark 类型排除。
-  const colorBindings: Array<{ scaleName: string; field: string }> = [];
-  for (const mark of node.marks) {
-    const channel = markColorChannel(mark);
-    if (channel?.scale !== undefined && channel.field !== undefined) {
-      colorBindings.push({ scaleName: channel.scale, field: channel.field });
-    }
-  }
-  let scaleName: string;
-  if (guide.scale !== undefined) {
-    if (!scaleByName.has(guide.scale)) {
-      throw new Error(`lowerPlots: legend references unknown scale "${guide.scale}"`);
-    }
-    scaleName = guide.scale;
-  } else {
-    const distinct = [...new Set(colorBindings.map(binding => binding.scaleName))];
-    if (distinct.length === 0) {
-      throw new Error('lowerPlots: legend channel "color" has no bound color scale; bind a color encoding with a scale or give the legend an explicit scale');
-    }
-    if (distinct.length > 1) {
-      throw new Error(`lowerPlots: legend channel "color" is driven by multiple color scales [${distinct.join(', ')}]; specify which via the legend "scale" field`);
-    }
-    scaleName = distinct[0];
-  }
-  const scaleOperation = scaleByName.get(scaleName);
-  if (!scaleOperation) throw new Error(`lowerPlots: legend references unknown scale "${scaleName}"`);
-  const field = colorBindings.find(binding => binding.scaleName === scaleName)?.field;
   // 标题只在用户显式给时渲染（field 名仅作占位 fallback 的语义来源，不自动生成标题 Node，避免与条目标签混淆）
   const title = guide.title;
-  const colorFieldType = field !== undefined ? fieldTypes.get(field) : undefined;
-  const rawValues = field !== undefined ? rows.map(row => resolveFieldPath(row, field)) : [];
-  const ctx: ChannelResolveContext = {
-    fieldType: colorFieldType,
-    toNumber: value => (isFiniteNumber(value) ? value : null),
-    coerceTimestamp,
-    resolveColorScheme,
-    defaultColors: node.colors,
-  };
-  // legend 只渲 scale 外观、不绑字段 → 跳过 fieldType 兼容校验；位置 scale（非 channel 族）仍 fail-loud。
-  const resolution = resolveChannelScale(scaleOperation, rawValues, ctx, scaleRegistry, { checkFieldCompatible: false });
+  const resolution = descriptor.colorScale;
+  if (resolution === undefined) {
+    throw new Error(`lowerPlots: legend channel "${guide.channel}" has no color scale descriptor; cannot derive a color legend`);
+  }
 
   // 连续色带 ramp：sequential / diverging（沿带等距采样色 + nice 刻度；domain = resolution.domain [lo, hi]）
   if (resolution.legendForm === 'ramp') {
@@ -719,14 +603,11 @@ const reserveLegendBands = (legendGuides: Array<LegendGuide>, width: number, hei
  */
 const buildLegendLayers = (
   node: PlotSpec,
-  rows: Array<ExternalRow>,
-  fieldTypes: PlotFieldTypeMap,
-  channelDescriptors: Map<LegendChannelValue, ScaleDescriptor>,
+  channelDescriptors: ReadonlyArray<ScaleDescriptor>,
   legendGuides: Array<LegendGuide>,
   fontSize: number,
   bands: Array<Rect>,
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
-  resolveColorScheme: (name: string) => (t: number) => string,
 ): Array<IRScope> => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   return legendGuides.map((guide, legendIndex): IRScope => {
@@ -735,13 +616,16 @@ const buildLegendLayers = (
     const id = legendGuides.length > 1 ? `legend.${guide.channel}.${legendIndex}` : `legend.${guide.channel}`;
     const baseInput: LegendBaseInput = { channel: guide.channel, position: guide.position ?? 'right', orient, fontSize, band, id };
     const showLabels = guide.tickLabels !== false;
+    const descriptor = selectLegendDescriptor(guide, channelDescriptors, scaleByName, scaleRegistry);
 
-    if (guide.channel === 'color') {
-      const input = resolveColorLegend(node, rows, fieldTypes, scaleByName, scaleRegistry, resolveColorScheme, guide, baseInput, showLabels);
+    if (descriptor?.colorScale !== undefined) {
+      const input = resolveColorLegend(descriptor, guide, baseInput, showLabels);
       return lowerLegend(input);
     }
+    if (guide.channel === 'color') {
+      throw new Error('lowerPlots: legend channel "color" has no bound color scale; bind a color encoding with a scale or give the legend an explicit scale');
+    }
     // size / opacity / shape：从 resolver descriptor 取
-    const descriptor = channelDescriptors.get(guide.channel);
     if (!descriptor) {
       throw new Error(`lowerPlots: legend channel "${guide.channel}" has no bound scale (no mark encodes ${guide.channel} by field); cannot derive a legend`);
     }
@@ -903,13 +787,13 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     scaleRegistry,
   });
 
-  const resolveColor = makeColorResolver(node, rows, fieldTypes, scaleRegistry, resolveColorScheme);
-  const resolveFill = makeColorResolver(node, rows, fieldTypes, scaleRegistry, resolveColorScheme, pointFillChannel, 'fill');
-  const resolveStroke = makeColorResolver(node, rows, fieldTypes, scaleRegistry, resolveColorScheme, pointStrokeChannel, 'stroke');
-  const visualChannelCtx = { node, rows, fieldTypes };
-  // 视觉通道 registry：内置 definition 先注册，自定义 definition 再合并；后续统一生成 delivery。
-  const visualChannelRegistry = resolveVisualChannelRegistry(options.visualChannelDefinitions);
-  const resolveLabelOf = makeLabelResolver(fieldTypes, options.resolveLabel);
+  const channelCtx = { node, rows, fieldTypes, scaleRegistry, resolveColorScheme };
+  // 通道 registry：内置 definition 先注册，自定义 definition 再合并；mark / visual 通道统一解析。
+  const channelRegistry = resolveChannelRegistry({
+    custom: options.channelDefinitions,
+    legacyVisual: options.visualChannelDefinitions,
+    resolveLabel: options.resolveLabel,
+  });
 
   // plot 级 datum id 登记器：datumIdField + plotId 在时建一份，线穿全 mark——跨 mark 共享 seen，
   // 两 datum-bearing mark（point + bar）撞同 `<plotId>.datum.<value>` 即 fail loud（#2）。
@@ -922,24 +806,11 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   // provenance 开 → 传 markProvenance（plotId / markIndex / datum 开关 + 共享 registerDatumId），各层 / datum 绑 id + 来源 meta
   const markLayers: Array<IRChild> = node.marks
     .map((mark, markIndex) => {
-      // 通用颜色通道对自定义 mark 也有效；point 视觉通道经同一 visual channel registry 生成 delivery。
-      const builtinMark: Mark | undefined = isBuiltinMark(mark) ? mark : undefined;
-      const colorOf = resolveColor(mark) ?? resolveFill(mark);
-      const strokeOf = resolveStroke(mark);
-      const labelResolver = builtinMark ? resolveLabelOf(builtinMark) : undefined;
       return lowerMark(
         mark,
         rows,
         frame,
-        {
-          values: {
-            ...(colorOf !== undefined ? { color: colorOf } : {}),
-            ...(strokeOf !== undefined ? { stroke: strokeOf } : {}),
-            ...(labelResolver !== undefined ? { label: labelResolver } : {}),
-          },
-          defaults: { color: defaultColorOf(node, markIndex) },
-          deliveries: builtinMark ? resolveVisualChannelDeliveries(builtinMark, visualChannelCtx, visualChannelRegistry) : undefined,
-        },
+        resolveMarkChannels(mark, channelCtx, channelRegistry, defaultColorOf(node, markIndex)),
         provenance ? { context: provenance, markIndex, registerDatumId } : undefined,
         markRegistry,
       );
@@ -951,9 +822,9 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   const legendGuides = (node.guides ?? []).filter(isLegendGuide);
   const legendLayers: Array<IRScope> = [];
   if (legendGuides.length > 0) {
-    const channelDescriptors = collectChannelDescriptors(node, visualChannelCtx, visualChannelRegistry);
+    const channelDescriptors = collectChannelDescriptors(node, channelCtx, channelRegistry);
     const bands = reserveLegendBands(legendGuides, width, height, plotArea);
-    legendLayers.push(...buildLegendLayers(node, rows, fieldTypes, channelDescriptors, legendGuides, options.fontSize ?? DEFAULT_FONT_SIZE, bands, scaleRegistry, resolveColorScheme));
+    legendLayers.push(...buildLegendLayers(node, channelDescriptors, legendGuides, options.fontSize ?? DEFAULT_FONT_SIZE, bands, scaleRegistry));
   }
 
   // z-order：所有网格层 → marks → 所有轴层 → legend（网格垫底、坐标轴压顶不被数据盖、legend 在预留带最上）

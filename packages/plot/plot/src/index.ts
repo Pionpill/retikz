@@ -22,7 +22,8 @@ export type {
   DensifyCellContourOptions,
   CoordinateFrame,
 } from './contract';
-export * from './features/data/resolve';
+export { applyFieldResolver } from './providers';
+export type { FieldResolution, ResolveField } from './contract';
 export * from './features/interaction/locate';
 export * from './schemas';
 export * from './pipeline/expand';
@@ -39,9 +40,22 @@ export type {
   PositionScaleDefinition,
   ScaleDefinition,
 } from './contract';
-// Visual channel extension surface: factory + types; channels bind via encoding.channels and deliver to a core node property.
-export { defineVisualChannel } from './contract';
-export type { AnyVisualChannelDefinition, ChannelOutputSpace, VisualChannelContext, VisualChannelDefinition } from './contract';
+// Channel extension surface: all channel kinds share one registry; visual channels keep a typed convenience factory.
+export { defineChannel, defineVisualChannel } from './contract';
+export type {
+  AnyChannelDefinition,
+  AnyVisualChannelDefinition,
+  BaseChannelDefinition,
+  ChannelBindingResolver,
+  ChannelContext,
+  ChannelDefinition,
+  ChannelOutputSpace,
+  MarkChannelDefinition,
+  MarkChannelResolution,
+  PositionChannelDefinition,
+  VisualChannelContext,
+  VisualChannelDefinition,
+} from './contract';
 export { BUILTIN_COLOR_SCHEMES, PlotColorScheme } from './providers';
 export type { ColorSchemeResolver, PlotColorSchemeValue } from './providers';
 export type { PositionScale } from './contract';

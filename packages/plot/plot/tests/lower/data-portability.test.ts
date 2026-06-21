@@ -2,7 +2,7 @@ import { compileToScene } from '@retikz/core';
 import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { coerceValue, normalizeRows, resolveFieldPath } from '../../src/features';
+import { coerceValue, normalizeRows, resolveFieldPath } from '../../src/providers';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { createPlotLocator } from '../../src/features';
 import { readSourceIndex, tagSourceIndex } from '../../src/pipeline/provenance';
