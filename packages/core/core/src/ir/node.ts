@@ -8,7 +8,7 @@ import { JsonObjectSchema } from './json';
 import { PaintSpecSchema } from './paint';
 import { AtDirection, AtPositionSchema, BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from './position';
 import { ShapeRefSchema } from './shape';
-import { TextBlockSchema } from './text';
+import { MixedLineSchema, TextBlockSchema } from './text';
 
 /**
  * 节点形状常量（用 const + ValueOf 派生，不用 TS enum）
@@ -51,8 +51,10 @@ export type NodeTextAlignValue = ValueOf<typeof NodeTextAlign>;
 export const NodeLabelSchema = z
   .object({
     text: z
-      .string()
-      .describe('Label text content; rendered as a single line.'),
+      .union([z.string(), MixedLineSchema])
+      .describe(
+        'Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ runs }` mixed text+math line. Rendered as a single line.',
+      ),
     position: z
       .union([z.enum(AtDirection), z.number()])
       .optional()
@@ -161,7 +163,7 @@ export const NodeSchema = z
         'Rotation in degrees around the node center; positive = clockwise (matches TikZ rotate=...)',
       ),
     text: TextBlockSchema.optional().describe(
-      'Optional node text content; accepts a string, an array of lines, or styled text line objects. A literal newline ("\\n") inside any string is a hard line break, so one string with newlines renders as multiple lines. When omitted the node emits only its shape primitive; when present it participates in text measurement, node box sizing, and TextPrim emission.',
+      'Optional node text content; accepts a string, an array of lines, or styled text line objects. A literal newline ("\\n") inside any string is a hard line break, so one string with newlines renders as multiple lines. Strings may carry inline math via `$...$` (inline) and `$$...$$` (display) when a lowerTex capability is injected (from @retikz/tex); a node whose entire content is one `$$...$$` formula is sized by the glyph bbox. When omitted the node emits only its shape primitive.',
     ),
     align: z
       .enum(NodeTextAlign)

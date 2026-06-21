@@ -40,6 +40,7 @@ import {
   resolveNodeStyle,
 } from './style';
 import { type TextMeasurer, fallbackMeasurer } from './text-metrics';
+import type { LowerTex } from './lower-tex';
 import { computeLayout } from './layout';
 import { resolveShadow } from './effects';
 
@@ -198,6 +199,13 @@ export type CompileOptions = {
    * @description 默认 32；composite 展开出 composite 时累加，超限或环 throw。
    */
   maxCompositeDepth?: number;
+  /**
+   * 运行时注入的公式渲染能力（不进 IR；由 `@retikz/tex` 提供）
+   * @description node `tex` 内容编译时调本函数把 LaTeX → 字形路径 + bbox。core 不依赖
+   *   MathJax，仅声明注入类型。带 tex 内容但未注入 → `onWarn(TEX_LOWERER_MISSING)` + 降级；返回 null
+   *   （非法 tex）→ `onWarn(TEX_INVALID)` + 降级。均不抛、不丢节点。
+   */
+  lowerTex?: LowerTex;
 };
 
 /**
@@ -500,6 +508,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           resolveFill: paint.resolve,
           effectiveArrows,
           effectivePathGenerators,
+          lowerTex: options.lowerTex,
         });
         if (item.slot) {
           // 原位回填：按引用定位占位再 splice 替换为真 primitive（result 为 null 时替换成 0 个 = 删占位）
@@ -569,6 +578,12 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           effectiveShapes,
           // between 端点世界坐标解析器（refPointOfTarget 处理 NodeTarget anchor / Cartesian / Polar / Offset / 嵌套 between）
           refPointOfTarget,
+          // 公式渲染注入 + 预绑路径的 warn（文本里的 `$...$` 行内公式编译用）
+          {
+            lowerTex: options.lowerTex,
+            warn: (code, message) =>
+              onWarn({ code, message, path: `${locatorPrefix}children[${i}].node` }),
+          },
         );
         const globalLayout = chain.length === 0 ? layout : projectLayoutToGlobal(layout, chain);
         if (child.id) {

@@ -1,14 +1,26 @@
 import type { SegmentSample } from '../../geometry/segment';
 import type { IRPosition, IRStepLabel } from '../../ir';
-import type { ScenePrimitive, TextPrim } from '../../primitive';
+import type { GroupPrim, ScenePrimitive, TextPrim } from '../../primitive';
+import { CompileWarningCode } from '../constant';
+import type { CompileWarningCodeValue } from '../constant';
+import type { LowerTex } from '../lower-tex';
 import { toAlphabeticBaselineY } from '../text-baseline';
-import type { TextMeasurer } from '../text-metrics';
+import { type LineLayoutContext, layoutInlineLine, resolveLineRuns } from '../text-layout';
+import type { FontSpec, TextMeasurer } from '../text-metrics';
 
 /** 边标注默认字号 / 偏移量 */
 const LABEL_FONT_SIZE = 14;
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
 const LABEL_SIDE_OFFSET = 4;
 const RAD_TO_DEG = 180 / Math.PI;
+
+/** 边标注公式上下文（注入的 lowerTex + gating + warn）；缺省 = 无 tex 能力 */
+export type LabelTexContext = {
+  lowerTex?: LowerTex;
+  /** `$...$` 解析门控（= lowerTex 已注入） */
+  gatingOn: boolean;
+  warn: (code: CompileWarningCodeValue, message: string) => void;
+};
 
 /** keyword → t 数值映射；含旧 3 keyword（midway/near-start/near-end）+ 新 4 keyword */
 const KEYWORD_TO_T: Record<string, number> = {
@@ -31,9 +43,18 @@ export const tForLabelPosition = (pos: IRStepLabel['position']): number => {
   return 0.5;
 };
 
+/** label-only opacity 与宿主 path opacity 相乘（元素内轴）；label 缺省则跟随宿主 */
+const resolveLabelOpacity = (labelOpacity?: number, hostOpacity?: number): number | undefined =>
+  labelOpacity !== undefined
+    ? hostOpacity !== undefined
+      ? labelOpacity * hostOpacity
+      : labelOpacity
+    : hostOpacity;
+
 /**
- * step.label + 段采样 → TextPrim（sloped 时裹一层 group 旋转）
- * @description 默认 side='above'/position='midway'：above/below 锚点 y±offset、align=middle、baseline=bottom/top；left/right x±offset、align=end/start、baseline=middle；sloped 不偏移裹 group rotate(angle, cx, cy) 由切线 atan2 算（SVG y-down CW 正）。返回 primitive + layout 外接点
+ * step.label + 段采样 → 单行 primitive（纯文本走 TextPrim、含公式走 GroupPrim；sloped 时再裹一层 group 旋转）
+ * @description side 偏移 + align/baseline：above/below 锚点 y±offset 横向居中；left/right x±offset 纵向居中；sloped 不偏移、裹 rotate(切线角)。
+ *   `$...$` 行内公式仅在注入 lowerTex（texCtx.gatingOn）时解析。返回 primitive + bbox 外接点
  */
 export const emitLabelPrimitive = (
   label: IRStepLabel,
@@ -41,29 +62,98 @@ export const emitLabelPrimitive = (
   measureText: TextMeasurer,
   round: (n: number) => number,
   hostOpacity?: number,
+  texCtx?: LabelTexContext,
 ): { primitive: ScenePrimitive; points: Array<IRPosition> } => {
   // label.font / textColor / opacity 已由 compile/style 解析（fold scope labelDefault + 宿主 path 主色）
   const fontSize = label.font?.size ?? LABEL_FONT_SIZE;
   const fontFamily = label.font?.family;
   const fontWeight = label.font?.weight;
   const fontStyle = label.font?.style;
+  const font: FontSpec = { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle };
+  const side = label.side ?? 'above';
+  const labelOpacity = resolveLabelOpacity(label.opacity, hostOpacity);
+
+  const gatingOn = texCtx?.gatingOn ?? false;
+  const resolved = resolveLineRuns(label.text, gatingOn);
+  if (resolved.warn) {
+    texCtx?.warn(
+      CompileWarningCode.TextTexParseError,
+      'Unbalanced `$` in edge label; the trailing fragment is kept literal.',
+    );
+  }
+  const isMixed = resolved.hasMath || typeof label.text === 'object';
+
+  // 含公式：走混排布局（逐 run TextPrim / glyph group），按 side 求行起点与基线
+  if (isMixed) {
+    const ctx: LineLayoutContext = {
+      measureText,
+      lowerTex: texCtx?.lowerTex,
+      font,
+      color: label.textColor,
+      opacity: labelOpacity,
+      warn: texCtx?.warn ?? ((): void => {}),
+    };
+    const laid = layoutInlineLine(resolved.runs, ctx);
+    const ax = sample.point[0];
+    const ay = sample.point[1];
+    let originX: number;
+    let baselineY: number;
+    if (side === 'below') {
+      originX = ax - laid.width / 2;
+      baselineY = ay + LABEL_SIDE_OFFSET + laid.ascent;
+    } else if (side === 'left') {
+      originX = ax - LABEL_SIDE_OFFSET - laid.width;
+      baselineY = ay + (laid.ascent - laid.descent) / 2;
+    } else if (side === 'right') {
+      originX = ax + LABEL_SIDE_OFFSET;
+      baselineY = ay + (laid.ascent - laid.descent) / 2;
+    } else {
+      // above / sloped：横向居中、坐在线上方（above 偏移 offset，sloped 锚点不偏移）
+      originX = ax - laid.width / 2;
+      baselineY = (side === 'sloped' ? ay : ay - LABEL_SIDE_OFFSET) - laid.descent;
+    }
+    const children = laid.emit(originX, baselineY, round);
+    const group: GroupPrim = { type: 'group', children };
+
+    if (side === 'sloped') {
+      const angleDeg = Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG;
+      const rotated: GroupPrim = {
+        type: 'group',
+        transforms: [{ kind: 'rotate', degrees: round(angleDeg), cx: round(ax), cy: round(ay) }],
+        children: [group],
+      };
+      const r = Math.max(laid.width / 2, (laid.ascent + laid.descent) / 2);
+      return {
+        primitive: rotated,
+        points: [
+          [ax - r, ay - r],
+          [ax + r, ay - r],
+          [ax - r, ay + r],
+          [ax + r, ay + r],
+        ],
+      };
+    }
+    const left = originX;
+    const right = originX + laid.width;
+    const top = baselineY - laid.ascent;
+    const bottom = baselineY + laid.descent;
+    return {
+      primitive: group,
+      points: [
+        [left, top],
+        [right, top],
+        [left, bottom],
+        [right, bottom],
+      ],
+    };
+  }
+
+  // 纯文本：维持既有 TextPrim 路径（gating 时用反转义后的文字，否则原字符串、零回归）
+  const text = resolved.runs.map(r => ('text' in r ? r.text : '')).join('');
   const lineHeight = fontSize * LABEL_LINE_HEIGHT_FACTOR;
-  const m = measureText(label.text, {
-    size: fontSize,
-    family: fontFamily,
-    weight: fontWeight,
-    style: fontStyle,
-  });
+  const m = measureText(text, font);
   const measuredWidth = m.width;
   const measuredHeight = m.height || lineHeight;
-  const side = label.side ?? 'above';
-  // label-only opacity 与宿主 path opacity 相乘（元素内轴）；label 缺省则跟随宿主 opacity
-  const labelOpacity =
-    label.opacity !== undefined
-      ? hostOpacity !== undefined
-        ? label.opacity * hostOpacity
-        : label.opacity
-      : hostOpacity;
 
   let x = sample.point[0];
   let y = sample.point[1];
@@ -88,11 +178,11 @@ export const emitLabelPrimitive = (
   }
 
   const emittedLineHeight = round(lineHeight);
-  const text: TextPrim = {
+  const textPrim: TextPrim = {
     type: 'text',
     x: round(x),
     y: round(toAlphabeticBaselineY(y, baseline, 1, emittedLineHeight, fontSize)),
-    lines: [{ text: label.text }],
+    lines: [{ text }],
     fontSize,
     align,
     baseline: 'alphabetic',
@@ -101,19 +191,17 @@ export const emitLabelPrimitive = (
     measuredHeight: round(measuredHeight),
     fill: label.textColor ?? 'currentColor',
   };
-  if (fontFamily !== undefined) text.fontFamily = fontFamily;
-  if (fontWeight !== undefined) text.fontWeight = fontWeight;
-  if (fontStyle !== undefined) text.fontStyle = fontStyle;
-  if (labelOpacity !== undefined) text.opacity = labelOpacity;
+  if (fontFamily !== undefined) textPrim.fontFamily = fontFamily;
+  if (fontWeight !== undefined) textPrim.fontWeight = fontWeight;
+  if (fontStyle !== undefined) textPrim.fontStyle = fontStyle;
+  if (labelOpacity !== undefined) textPrim.opacity = labelOpacity;
 
   if (side === 'sloped') {
     const angleDeg = Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG;
     const groupPrim: ScenePrimitive = {
       type: 'group',
-      transforms: [
-        { kind: 'rotate', degrees: round(angleDeg), cx: round(x), cy: round(y) },
-      ],
-      children: [text],
+      transforms: [{ kind: 'rotate', degrees: round(angleDeg), cx: round(x), cy: round(y) }],
+      children: [textPrim],
     };
     // sloped 旋转后用半径外接近似四角点
     const r = Math.max(measuredWidth / 2, measuredHeight / 2);
@@ -138,7 +226,7 @@ export const emitLabelPrimitive = (
   const top = baseline === 'top' ? y : baseline === 'bottom' ? y - measuredHeight : y - halfH;
   const bottom = baseline === 'top' ? y + measuredHeight : baseline === 'bottom' ? y : y + halfH;
   return {
-    primitive: text,
+    primitive: textPrim,
     points: [
       [left, top],
       [right, top],

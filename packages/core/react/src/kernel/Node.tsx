@@ -35,13 +35,15 @@ export type NodeProps = HydrationEventProps & {
   /** 旋转角度（度数，与 TikZ 一致），绕节点中心；正值顺时针 */
   rotate?: number;
   /**
-   * 文本内容（也可以用 children 写）；与 `text` 二选一，`text` 优先
-   * @description 多行支持四种写法：字符串内嵌 `\n` / 模板字面量 / 字符串数组 / 混 `<Text>` 带样式行
+   * children 内容：文本
+   * @description 与 `text` 二选一、`text` 优先；支持字符串内嵌 `\n` / 模板字面量 / 字符串数组 / 混 `<Text>` 带样式行。
+   *   字符串里可写行内公式 `$...$`（inline）/ `$$...$$`（display），编译期在注入 `<Layout lowerTex>` 时解析；未注入则字面渲染
    */
   children?: ReactNode;
   /**
    * 显式 text，优先级高于 children
-   * @description `string` 单行 / `Array<string>` 多行无样式 / `Array<string | LineSpec>` 多行可对单行覆盖 fill / opacity / font
+   * @description `string` 单行（可含 `$...$` 公式）/ `Array<string | LineSpec>` 多行可对单行覆盖 fill / opacity / font，
+   *   或行内混排 `{ runs: [{ text }, { tex }] }`（每 run 可单独着色）
    */
   text?: string | Array<IRLineSpec>;
   /** 多行文本对齐：left / center（默认）/ right；只影响多行块内各行的水平对齐 */

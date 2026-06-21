@@ -3,7 +3,7 @@ title: 自定义动画
 description: 动画的缓动曲线与属性通道都开放——注册自定义 easing（spring 等）与自定义属性通道（blur 等），内置之外按需扩展。
 ---
 
-[动画](/core/components/effects/animation) 的 `easing` 与 `property` 都是**开放字符串**：内置之外，可注册自己的缓动曲线和属性通道。两个注入面对应 `<Layout>` 的两个 prop，与 [形状](/core/reference/extending/shape-registry) / [箭头](/core/reference/extending/custom-arrow) 等扩展同一套思路——IR / preset 里只写名字，定义在 `<Layout>` 注入。
+[动画](/core/components/effects/animation) 的 `easing` 与 `property` 都是**开放字符串**：内置之外，可注册自己的缓动曲线和属性通道。两个注入面对应 `<Layout>` 的两个 prop，和 [形状](/core/reference/extending/shape-registry) / [箭头](/core/reference/extending/custom-arrow) 等扩展一样——IR / preset 里只写名字，定义在 `<Layout>` 注入。区别在于这两个面走的是轻量 [registry 扩展](/core/reference/extending#三类扩展模型)，运行时在渲染器内生效，不是编译期的 `xxxDefinition`。
 
 ## 自定义缓动（`easings`）
 
@@ -24,11 +24,11 @@ description: 动画的缓动曲线与属性通道都开放——注册自定义 
 | cubic-bezier 四元组 | `[x1, y1, x2, y2]` | SVG（进 CSS `cubic-bezier()`）+ Canvas |
 | 缓动函数 | `(t: number) => number` | **仅 Canvas**；SVG 进不了 CSS → 退 `linear` 并告警 |
 
-`y` 可超出 `[0, 1]`（如 `1.56`）做回弹 / 越界效果。未注册的 easing 名 → 退 `linear`（SVG 会告警，Canvas 静默退化）；无论哪种情况 track 照常播放，只是缓动退化为线性，不会退回静止态。
+缓动**没有** `EasingDefinition`——cubic-bezier 元组和函数值本身已经够简单，直接当 registry value 注册即可。`y` 可超出 `[0, 1]`（如 `1.56`）做回弹 / 越界效果。未注册的 easing 名 → 退 `linear`（SVG 会告警，Canvas 静默退化）；无论哪种情况 track 照常播放，只是缓动退化为线性，不会退回静止态。
 
 ## 自定义属性通道（`animationProperties`）
 
-`property` 也开放：注册一个通道名 + 它的插值器与应用方式，就能动内置之外的属性（如 `blur` 滤镜）。下面注册 `blur` 并做一个入场去焦（点左上角 ↺ 重播）：
+`property` 也开放：注册一个通道名 + 它的插值器与应用方式，就能动内置之外的属性（如 `blur` 滤镜）。与缓动不同，自定义属性通道用 `AnimationPropertyDefinition`——它要同时定义插值与后端落地，单个值表达不了。下面注册 `blur` 并做一个入场去焦（点左上角 ↺ 重播）：
 
 <ComponentPreview name="custom-property" size="xs" />
 
