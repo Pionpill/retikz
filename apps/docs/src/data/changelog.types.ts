@@ -48,6 +48,7 @@ export const PACKAGE_IDS = [
   '@retikz/render',
   '@retikz/react',
   '@retikz/vanilla',
+  '@retikz/tex',
   '@retikz/plot',
   '@retikz/plot-react',
   '@retikz/plot-vanilla',
@@ -62,6 +63,7 @@ export const PACKAGE_LABEL: Record<PackageId, Localized> = {
   '@retikz/render': { zh: '@retikz/render', en: '@retikz/render' },
   '@retikz/react': { zh: '@retikz/react', en: '@retikz/react' },
   '@retikz/vanilla': { zh: '@retikz/vanilla', en: '@retikz/vanilla' },
+  '@retikz/tex': { zh: '@retikz/tex', en: '@retikz/tex' },
   '@retikz/plot': { zh: '@retikz/plot', en: '@retikz/plot' },
   '@retikz/plot-react': { zh: '@retikz/plot-react', en: '@retikz/plot-react' },
   '@retikz/plot-vanilla': { zh: '@retikz/plot-vanilla', en: '@retikz/plot-vanilla' },
@@ -75,7 +77,7 @@ export type PackageGroup = {
   members: ReadonlyArray<PackageId>;
 };
 export const PACKAGE_GROUPS: ReadonlyArray<PackageGroup> = [
-  { id: 'core', members: ['@retikz/math', '@retikz/core', '@retikz/render', '@retikz/react', '@retikz/vanilla'] },
+  { id: 'core', members: ['@retikz/math', '@retikz/core', '@retikz/render', '@retikz/react', '@retikz/vanilla', '@retikz/tex'] },
   { id: 'plot', members: ['@retikz/plot', '@retikz/plot-react', '@retikz/plot-vanilla'] },
   { id: 'other', members: ['docs'] },
 ];

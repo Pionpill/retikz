@@ -174,7 +174,8 @@ const readNodeText = (props: NodeProps): IRNode['text'] => {
 
 /**
  * `<Node>` props → IRChild
- * @description NODE_FIELDS 字段表透传纯字段；text / position / label 特化字段独立处理
+ * @description NODE_FIELDS 字段表透传纯字段；text / position / label 特化字段独立处理。
+ *   公式经文本里的 `$...$` / `$$...$$`（注入 lowerTex 时编译期解析）或显式 `text={[{ runs }]}`，不再有独立 tex 字段
  */
 const buildNodeFromProps = (props: NodeProps): IRChild => {
   const text = readNodeText(props);

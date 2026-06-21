@@ -1,4 +1,4 @@
----
+﻿---
 title: Layout
 description: Top-level container — accepts a component tree or IR, compiles to Scene, and produces rendered output.
 ---
@@ -154,7 +154,7 @@ If a diagram looks clipped or has too much empty space, inspect **View Code → 
 | `animationRef` | `Ref<AnimationControls \| null>` | — | Imperative animation handle out-port: receives `play` / `pause` / `seek` after mount (svg=WAAPI, canvas=rAF clock); `null` when there's no animation |
 | `easings` | `EasingRegistry` | — | Custom easing registry (name → cubic-bezier tuple / function). See [Custom Animation](/core/reference/extending/custom-animation) |
 | `animationProperties` | `AnimationPropertyRegistry` | — | Custom animation property-channel interpolators (e.g. `blur`); Canvas-only for now. See [Custom Animation](/core/reference/extending/custom-animation) |
-| `handlers` | `HydrationHandlers` | — | Hydration handler registry keyed by id for `ir` mode (JSX mode uses component `on<Event>` props). See [Hydration](/core/reference/renderer/hydration) |
+| `handlers` | `HydrationHandlers` | — | Hydration handler registry keyed by id for `ir` mode (JSX mode uses component `on<Event>` props). See [Hydration](/core/packages/render/hydration) |
 
 ## Related
 

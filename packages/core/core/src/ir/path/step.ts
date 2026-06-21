@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { FontSchema } from '../font';
 import { JsonObjectSchema } from '../json';
 import { PositionSchema } from '../position';
+import { MixedLineSchema } from '../text';
 import type { ValueOf } from '../../types';
 import { TargetSchema } from './target';
 
@@ -12,8 +13,10 @@ import { TargetSchema } from './target';
 export const StepLabelSchema = z
   .object({
     text: z
-      .string()
-      .describe('Label text content. Single-line; for multi-line use \\n.'),
+      .union([z.string(), MixedLineSchema])
+      .describe(
+        'Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ runs }` mixed text+math line. Single-line.',
+      ),
     position: z
       .union([
         z.enum([

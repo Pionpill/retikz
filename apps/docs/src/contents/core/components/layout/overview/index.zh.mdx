@@ -1,4 +1,4 @@
----
+﻿---
 title: Layout
 description: 顶层容器：接收组件树或 IR，编译 Scene，并输出渲染结果。
 ---
@@ -154,7 +154,7 @@ import { Layout, RendererModeProvider } from '@retikz/react';
 | `animationRef` | `Ref<AnimationControls \| null>` | — | 命令式动画句柄出口：挂载后写入 `play` / `pause` / `seek`（svg=WAAPI、canvas=rAF 时钟），无动画为 `null` |
 | `easings` | `EasingRegistry` | — | 自定义缓动注册表（名 → cubic-bezier 四元组 / 函数）。见 [自定义动画](/core/reference/extending/custom-animation) |
 | `animationProperties` | `AnimationPropertyRegistry` | — | 自定义动画属性通道插值器（如 `blur`）；当前仅 Canvas。见 [自定义动画](/core/reference/extending/custom-animation) |
-| `handlers` | `HydrationHandlers` | — | `ir` 模式按 id 提供的水合 handler 注册表（JSX 模式用组件 `on<Event>` props）。见 [水合](/core/reference/renderer/hydration) |
+| `handlers` | `HydrationHandlers` | — | `ir` 模式按 id 提供的水合 handler 注册表（JSX 模式用组件 `on<Event>` props）。见 [水合](/core/packages/render/hydration) |
 
 ## 相关
 

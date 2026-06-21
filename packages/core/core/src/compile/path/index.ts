@@ -39,6 +39,7 @@ import type {
 } from '../../primitive';
 import type { AssertEqual } from '../../types';
 import type { PathGeneratorDefinition } from '../../path-generators';
+import type { LowerTex } from '../lower-tex';
 import { CompileWarningCode } from '../constant';
 import type { CompileWarning } from '../constant';
 import type { NameStack } from '../name-stack';
@@ -181,6 +182,11 @@ export type EmitPathWarnHook = {
    *   解析逻辑由后续实现落地（此处仅声明 hook 入口）。
    */
   effectivePathGenerators?: Record<string, PathGeneratorDefinition>;
+  /**
+   * 注入的 TeX 降解能力（来自 @retikz/tex）；供边标注里的 `$...$` 行内公式降解
+   * @description 缺省 = 无 tex 能力，边标注 `$...$` 字面（gating off）；注入后边标注可写行内公式
+   */
+  lowerTex?: LowerTex;
 };
 
 /** 一组点的 axis-aligned 包围盒中心 */
@@ -338,7 +344,11 @@ export const emitPathPrimitive = (
     }
     const t = tForLabelPosition(step.label.position);
     const sample = sampleAt(t);
-    const r = emitLabelPrimitive(step.label, sample, measureText, round, path.opacity);
+    const r = emitLabelPrimitive(step.label, sample, measureText, round, path.opacity, {
+      lowerTex: warnHook.lowerTex,
+      gatingOn: warnHook.lowerTex !== undefined,
+      warn: (code, message) => warn(code, message, 'label'),
+    });
     labelPrims.push(r.primitive);
     for (const p of r.points) points.push(p);
   };

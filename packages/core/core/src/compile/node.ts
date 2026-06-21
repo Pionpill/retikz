@@ -6,6 +6,10 @@ import type { AtDirectionValue, IRAnimationTrack, IRBoundary, IRJsonObject, IRLa
 import { JsonObjectSchema } from '../ir';
 import type { BlendModeValue, DropShadow } from '../ir/effects';
 import { resolveShadow } from './effects';
+import { CompileWarningCode } from './constant';
+import type { CompileWarningCodeValue } from './constant';
+import type { LowerTex } from './lower-tex';
+import { type LaidLine, type LineLayoutContext, layoutInlineLine, resolveLineRuns } from './text-layout';
 import type { PaintResolver } from './paint';
 import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
@@ -172,6 +176,11 @@ export type NodeLayout = {
    * @description 每行可带覆盖样式（fill/opacity/fontSize/fontFamily/fontWeight/fontStyle），未覆盖字段 emit 阶段不写出由下游走块级默认
    */
   lines?: Array<TextLine>;
+  /**
+   * 含 math run 的混排块（与 lines 互斥）：逐行 emit TextPrim / glyph group
+   * @description 每行 laid 携带度量 + emit；baselineOffset 是该行 alphabetic 基线相对块顶的距离
+   */
+  inlineBlock?: { lines: Array<{ laid: LaidLine; baselineOffset: number }> };
   /** 文本块宽度 = max(per-line measureText.width) */
   textWidth: number;
   /** 文本块高度 ≈ lines × lineHeight */
@@ -227,7 +236,10 @@ export type NodeLayout = {
 
 /** 节点附属标签 layout（layoutNode 已合并默认值与样式继承） */
 export type NodeLabelLayout = {
+  /** 纯文本内容（混排时是各 text run 拼接，仅作 fallback / 测量） */
   text: string;
+  /** 含公式时的混排行布局（emit 走 laid）；纯文本时 undefined */
+  laid?: LaidLine;
   /** 8 方向枚举或数字角度 */
   position: AtDirectionValue | number;
   /** 已应用默认值 */
@@ -453,6 +465,15 @@ export const angleBoundaryOf = (
  *   scope 局部度量），调用方负责后续 `projectLayoutToGlobal` / `applyTransformChain` 投回全局；
  *   笛卡尔字面量 `Position` 已在 scope 局部度量，保持局部坐标语义。
  */
+/**
+ * 公式渲染上下文：注入的 lowerTex + 预绑路径的 warn 发射器
+ * @description compile 调用点把 onWarn + IR locator 预绑成 warn 闭包传入，使 layoutNode 不必背 onWarn / path。
+ */
+export type TexLoweringContext = {
+  lowerTex?: LowerTex;
+  warn: (code: CompileWarningCodeValue, message: string) => void;
+};
+
 export const layoutNode = (
   node: IRNode,
   measureText: TextMeasurer,
@@ -462,6 +483,7 @@ export const layoutNode = (
   labelDefault?: IRLabelDefault,
   shapes: Record<string, ShapeDefinition> = BUILTIN_SHAPES,
   resolveBetweenGlobal?: ResolveBetweenGlobal,
+  texLowering?: TexLoweringContext,
 ): NodeLayout => {
   // shape 解析（入口 fail-fast）：裸 string → { type, params:{} }，对象原样；按 type 查表，未注册抛错列出可用名
   const { type: shapeName, params: rawShapeParams } = normalizeShape(node.shape);
@@ -535,42 +557,84 @@ export const layoutNode = (
   let textWidth = 0;
   let textHeight = 0;
   let lines: Array<TextLine> | undefined;
+  // 含 math run 的混排块（取代 lines；逐行 emit TextPrim / glyph group）
+  let inlineBlock: { lines: Array<{ laid: LaidLine; baselineOffset: number }> } | undefined;
+  // `$...$` 行内公式糖仅在注入 lowerTex 时解析（未注入 → 字符串字面，含 `$` 旧文本零回归）
+  const texGatingOn = texLowering?.lowerTex !== undefined;
+  const inlineWarn = texLowering?.warn ?? ((): void => {});
   if (rawLines) {
-    lines = [];
-    for (const spec of rawLines) {
-      const isObj = typeof spec !== 'string';
-      const text = isObj ? spec.text : spec;
-      // 行级 font 与块级合并：行级优先，没有走块级（透传 undefined）
-      const lineFont = isObj ? spec.font : undefined;
-      const font: FontSpec = {
-        size: lineFont?.size !== undefined ? lineFont.size * fontScale : fontSize,
-        family: lineFont?.family ?? fontFamily,
-        weight: lineFont?.weight ?? fontWeight,
-        style: lineFont?.style ?? fontStyle,
-      };
-      // '\n' 是硬换行：先把本逻辑行里的 '\n' 拆成多行（对齐 react children 拆行与直写 IR），
-      // 硬拆出的物理行继承本逻辑行样式，再各自按 maxTextWidth 折行
-      const hardLines = text.split('\n');
-      const physical = hardLines.flatMap(hardLine =>
-        maxTextWidth !== undefined ? wrapText(hardLine, font, maxTextWidth, measureText) : [hardLine],
-      );
-      for (const ptext of physical) {
-        const m = measureText(ptext, font);
-        if (m.width > textWidth) textWidth = m.width;
-        const out: TextLine = { text: ptext };
-        // 行级与块级不同时才写出（精简 emit JSON，明确下游 fallback）
-        if (isObj) {
-          if (spec.fill !== undefined) out.fill = spec.fill;
-          if (spec.opacity !== undefined) out.opacity = spec.opacity;
-          if (lineFont?.size !== undefined) out.fontSize = lineFont.size * fontScale;
-          if (lineFont?.family !== undefined) out.fontFamily = lineFont.family;
-          if (lineFont?.weight !== undefined) out.fontWeight = lineFont.weight;
-          if (lineFont?.style !== undefined) out.fontStyle = lineFont.style;
-        }
-        lines.push(out);
+    const resolved = rawLines.map(spec => resolveLineRuns(spec, texGatingOn));
+    resolved.forEach(r => {
+      if (r.warn) {
+        inlineWarn(
+          CompileWarningCode.TextTexParseError,
+          'Unbalanced `$` in node text; the trailing fragment is kept literal.',
+        );
       }
+    });
+    const anyMixed = rawLines.some(spec => typeof spec === 'object' && 'runs' in spec);
+    const anyMath = resolved.some(r => r.hasMath);
+    if (anyMath || anyMixed) {
+      // 混排路径：逐行布局；node 尺寸由各行盒撑出（单 `$$..$$` 行即按公式 glyph bbox 定尺寸）
+      const blockFont: FontSpec = { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle };
+      const ctx: LineLayoutContext = {
+        measureText,
+        lowerTex: texLowering?.lowerTex,
+        font: blockFont,
+        color: node.textColor,
+        opacity: node.opacity,
+        warn: inlineWarn,
+      };
+      let cursor = 0;
+      const blockLines = resolved.map(r => {
+        const laid = layoutInlineLine(r.runs, ctx);
+        const slot = Math.max(lineHeight, laid.ascent + laid.descent);
+        const baselineOffset = cursor + (slot - (laid.ascent + laid.descent)) / 2 + laid.ascent;
+        cursor += slot;
+        if (laid.width > textWidth) textWidth = laid.width;
+        return { laid, baselineOffset };
+      });
+      inlineBlock = { lines: blockLines };
+      textHeight = cursor;
+    } else {
+      lines = [];
+      for (let li = 0; li < rawLines.length; li++) {
+        const spec = rawLines[li];
+        // 有效文字：注入 lowerTex 时用解析结果（`\$` 已反转义）；否则原字符串（零回归）
+        const text = resolved[li].runs.map(r => ('text' in r ? r.text : '')).join('');
+        // 行对象（非字符串、非 MixedLine）才有行级样式；MixedLine 不会落到本分支
+        const lineObj = typeof spec === 'object' && !('runs' in spec) ? spec : undefined;
+        const lineFont = lineObj?.font;
+        const font: FontSpec = {
+          size: lineFont?.size !== undefined ? lineFont.size * fontScale : fontSize,
+          family: lineFont?.family ?? fontFamily,
+          weight: lineFont?.weight ?? fontWeight,
+          style: lineFont?.style ?? fontStyle,
+        };
+        // '\n' 是硬换行：先把本逻辑行里的 '\n' 拆成多行（对齐 react children 拆行与直写 IR），
+        // 硬拆出的物理行继承本逻辑行样式，再各自按 maxTextWidth 折行
+        const hardLines = text.split('\n');
+        const physical = hardLines.flatMap(hardLine =>
+          maxTextWidth !== undefined ? wrapText(hardLine, font, maxTextWidth, measureText) : [hardLine],
+        );
+        for (const ptext of physical) {
+          const m = measureText(ptext, font);
+          if (m.width > textWidth) textWidth = m.width;
+          const out: TextLine = { text: ptext };
+          // 行级与块级不同时才写出（精简 emit JSON，明确下游 fallback）
+          if (lineObj) {
+            if (lineObj.fill !== undefined) out.fill = lineObj.fill;
+            if (lineObj.opacity !== undefined) out.opacity = lineObj.opacity;
+            if (lineFont?.size !== undefined) out.fontSize = lineFont.size * fontScale;
+            if (lineFont?.family !== undefined) out.fontFamily = lineFont.family;
+            if (lineFont?.weight !== undefined) out.fontWeight = lineFont.weight;
+            if (lineFont?.style !== undefined) out.fontStyle = lineFont.style;
+          }
+          lines.push(out);
+        }
+      }
+      textHeight = lines.length * lineHeight;
     }
-    textHeight = lines.length * lineHeight;
   }
 
   // 内框半轴：text 半宽 + sep（保证至少 sep 大小，空文本节点也有最小尺寸）。minimum 不进内框——见下方对外接框 floor。
@@ -614,25 +678,44 @@ export const layoutNode = (
     const labFamily = labFont?.family ?? labelDefault?.font?.family ?? fontFamily;
     const labWeight = labFont?.weight ?? labelDefault?.font?.weight ?? fontWeight;
     const labStyle = labFont?.style ?? labelDefault?.font?.style ?? fontStyle;
+    // 继承顺序：label 显式 > scope.labelDefault (textColor → color) > 宿主 node 主色（已解析进 node.textColor） > currentColor
+    const labTextColor = lab.textColor ?? labelDefault?.textColor ?? labelDefault?.color ?? node.textColor;
+    const labOpacity = lab.opacity ?? labelDefault?.opacity;
+    const labFontSpec: FontSpec = { size: labFontSize, family: labFamily, weight: labWeight, style: labStyle };
+    // 解析 `$...$`（gating on）/ 显式 runs；含公式 → 混排布局，纯文本 → 既有 TextPrim
+    const resolved = resolveLineRuns(lab.text, texGatingOn);
+    if (resolved.warn) {
+      inlineWarn(
+        CompileWarningCode.TextTexParseError,
+        'Unbalanced `$` in node label; the trailing fragment is kept literal.',
+      );
+    }
+    const plainText = resolved.runs.map(r => ('text' in r ? r.text : '')).join('');
+    const isMixed = resolved.hasMath || typeof lab.text === 'object';
+    const laid = isMixed
+      ? layoutInlineLine(resolved.runs, {
+          measureText,
+          lowerTex: texLowering?.lowerTex,
+          font: labFontSpec,
+          color: labTextColor,
+          opacity: labOpacity,
+          warn: inlineWarn,
+        })
+      : undefined;
     return {
-      text: lab.text,
+      text: plainText,
+      laid,
       position: lab.position ?? 'above',
       distance: lab.distance ?? DEFAULT_LABEL_DISTANCE,
-      // 继承顺序：label 显式 > scope.labelDefault (textColor → color) > 宿主 node 主色（已解析进 node.textColor） > currentColor
-      textColor: lab.textColor ?? labelDefault?.textColor ?? labelDefault?.color ?? node.textColor,
-      opacity: lab.opacity ?? labelDefault?.opacity,
+      textColor: labTextColor,
+      opacity: labOpacity,
       fontSize: labFontSize,
       fontFamily: labFamily,
       fontWeight: labWeight,
       fontStyle: labStyle,
       rotate: lab.rotate,
       keepUpright: lab.keepUpright,
-      measuredWidth: measureText(lab.text, {
-        size: labFontSize,
-        family: labFamily,
-        weight: labWeight,
-        style: labStyle,
-      }).width,
+      measuredWidth: laid ? laid.width : measureText(plainText, labFontSpec).width,
       pin: lab.pin,
     };
   });
@@ -654,6 +737,7 @@ export const layoutNode = (
     rotateDeg,
     margin: outerSep,
     lines,
+    inlineBlock,
     textWidth,
     textHeight,
     align,
@@ -754,7 +838,20 @@ export const emitNodePrimitives = (
     ),
   ].map(cloneScenePrimitive);
   const inner: Array<ScenePrimitive> = [...shapePrims];
-  if (layout.lines) {
+  if (layout.inlineBlock) {
+    // 混排块：逐行按 align 求行起点 originX、按 baselineOffset 求基线 y，委托 laid.emit 产 TextPrim / glyph group
+    const blockTop = layout.rect.y - layout.textHeight / 2;
+    const halfBlockW = layout.textWidth / 2;
+    for (const { laid, baselineOffset } of layout.inlineBlock.lines) {
+      const originX =
+        layout.align === 'start'
+          ? layout.rect.x - halfBlockW
+          : layout.align === 'end'
+            ? layout.rect.x + halfBlockW - laid.width
+            : layout.rect.x - laid.width / 2;
+      inner.push(...laid.emit(originX, blockTop + baselineOffset, round));
+    }
+  } else if (layout.lines) {
     // align=start: x=中心-块半宽; align=end: x=中心+块半宽; align=middle: x=中心
     const halfBlockW = layout.textWidth / 2;
     const xOffset =
@@ -809,40 +906,50 @@ export const emitNodePrimitives = (
           opacity: lab.opacity ?? layout.opacity,
         });
       }
-      const labLineHeight = round(lab.fontSize * DEFAULT_LINE_HEIGHT_FACTOR);
-      const textPrim: ScenePrimitive = {
-        type: 'text',
-        x: round(lx),
-        y: round(toAlphabeticBaselineY(ly, 'middle', 1, labLineHeight, lab.fontSize)),
-        lines: [{ text: lab.text }],
-        fontSize: lab.fontSize,
-        fontFamily: lab.fontFamily,
-        fontWeight: lab.fontWeight,
-        fontStyle: lab.fontStyle,
-        align: 'middle',
-        baseline: 'alphabetic',
-        lineHeight: labLineHeight,
-        fill: lab.textColor ?? 'currentColor',
-        opacity: lab.opacity ?? layout.opacity,
-        measuredWidth: round(lab.measuredWidth),
-        measuredHeight: round(lab.fontSize),
-      };
+      let labelContent: ScenePrimitive;
+      if (lab.laid) {
+        // 混排 label：以 label 中心 (lx,ly) 横向居中、纵向居中放置 run 序列
+        const laid = lab.laid;
+        const originX = lx - laid.width / 2;
+        const baselineY = ly + (laid.ascent - laid.descent) / 2;
+        labelContent = { type: 'group', children: laid.emit(originX, baselineY, round) };
+      } else {
+        const labLineHeight = round(lab.fontSize * DEFAULT_LINE_HEIGHT_FACTOR);
+        labelContent = {
+          type: 'text',
+          x: round(lx),
+          y: round(toAlphabeticBaselineY(ly, 'middle', 1, labLineHeight, lab.fontSize)),
+          lines: [{ text: lab.text }],
+          fontSize: lab.fontSize,
+          fontFamily: lab.fontFamily,
+          fontWeight: lab.fontWeight,
+          fontStyle: lab.fontStyle,
+          align: 'middle',
+          baseline: 'alphabetic',
+          lineHeight: labLineHeight,
+          fill: lab.textColor ?? 'currentColor',
+          opacity: lab.opacity ?? layout.opacity,
+          measuredWidth: round(lab.measuredWidth),
+          measuredHeight: round(lab.fontSize),
+        };
+      }
       const deg = resolveLabelRotateDeg(lab, lx, ly, cx, cy);
       if (deg === 0) {
-        inner.push(textPrim);
+        inner.push(labelContent);
       } else {
         // 绕 label 自身中心自旋——位置仍由 position / distance 决定，rotate 只改朝向
         inner.push({
           type: 'group',
           transforms: [{ kind: 'rotate', degrees: round(deg), cx: round(lx), cy: round(ly) }],
-          children: [textPrim],
+          children: [labelContent],
         });
       }
     }
   }
   // 带文本（layout.lines 非空）或有旋转的 Node 包进单层 GroupPrim：给"语义化节点"一个稳定 DOM /
   // stacking 单位边界；纯几何装饰 Node 维持平铺、零额外 DOM 层。无旋转时 group 不带 transforms。
-  const needsGroup = layout.rotateDeg !== 0 || layout.lines !== undefined;
+  const needsGroup =
+    layout.rotateDeg !== 0 || layout.lines !== undefined || layout.inlineBlock !== undefined;
   if (!needsGroup) {
     // 纯几何 Node（不包 group）：把 user id stamp 到每个平铺 shape 图元（多 shape emit 时共享同一 id）；
     // label / pin 等附属图元不 stamp。无 user id 时保持 undefined。

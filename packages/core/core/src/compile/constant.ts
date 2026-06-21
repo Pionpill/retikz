@@ -16,6 +16,10 @@ export const CompileWarningCode = {
   ArcMissingRadius: 'ARC_MISSING_RADIUS',
   PartialArcNeedsBothAngles: 'PARTIAL_ARC_NEEDS_BOTH_ANGLES',
   PartialArcClosedInvalid: 'PARTIAL_ARC_CLOSED_INVALID',
+  TexLowererMissing: 'TEX_LOWERER_MISSING',
+  TexInvalid: 'TEX_INVALID',
+  TexTextConflict: 'TEX_TEXT_CONFLICT',
+  TextTexParseError: 'TEXT_TEX_PARSE_ERROR',
 } as const;
 
 export type CompileWarningCodeValue =

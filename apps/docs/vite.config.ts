@@ -24,13 +24,30 @@ const llmsTxtPlugin = (): Plugin => ({
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/retikz/' : '/',
   plugins: [react(), tailwindcss(), llmsTxtPlugin()],
+  build: {
+    rollupOptions: {
+      output: {
+        // mathjax-full 仅经 @retikz/tex 引擎的动态 import() 触达——单独成块，让它按需懒加载（只在数学公式 demo 挂载时下载），
+        // 不被打进每页都加载的主 chunk
+        manualChunks: (id: string) => (id.includes('mathjax-full') ? 'mathjax' : undefined),
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
   },
   optimizeDeps: {
-    exclude: ['@retikz/core', '@retikz/react'],
+    exclude: ['@retikz/core', '@retikz/react', '@retikz/tex'],
+    // mathjax-full 是 CJS（tex 引擎运行时动态 import 其 SVG 输出栈）——预打包成 ESM，让浏览器侧动态 import 可解析
+    include: [
+      'mathjax-full/js/mathjax.js',
+      'mathjax-full/js/input/tex.js',
+      'mathjax-full/js/output/svg.js',
+      'mathjax-full/js/adaptors/liteAdaptor.js',
+      'mathjax-full/js/handlers/html.js',
+    ],
   },
   server: {
     port: 5173,
