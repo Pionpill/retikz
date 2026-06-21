@@ -62,7 +62,7 @@ const bridge = defineCoordinate({
 | Field | Role |
 | --- | --- |
 | `schema` | Validates the custom op that enters IR. `type` must be a non-built-in `z.literal(...)`, and all other fields must stay JSON-serializable. |
-| `roles` | Declares the positional channels this coordinate needs. `roles: ['x', 'y']` makes a mark without `y` fail loudly during lowering. |
+| `roles` | Declares the positional channels this coordinate needs. Built-ins use `x` / `y` / `z`, while custom coordinates may declare role names such as `u` / `v`. Missing required roles, or encoding keys not supported by the active coordinate, fail loudly during lowering. |
 | `resolve` | Builds the `frame` from domains, scales, and canvas size, then returns `plotArea` / guide layers. The function stays at runtime and never enters IR. |
 
 `CoordinateResolveContext` provides `collectRoleValues`, `resolveScaleForRole`, `buildPositionScale`, `axisGuides`, `lowerGuide`, and `lowerCustomAxis`. Custom coordinates v1 default to the whole canvas as `plotArea`; they do not automatically get cartesian-style margin / legend reservation.

@@ -62,7 +62,7 @@ const bridge = defineCoordinate({
 | 字段 | 作用 |
 | --- | --- |
 | `schema` | 校验进入 IR 的自定义 op。`type` 必须是非内置的 `z.literal(...)`，其余字段必须保持 JSON 可序列化。 |
-| `roles` | 声明这个坐标系需要哪些位置通道。`roles: ['x', 'y']` 会让缺少 `y` 的 mark 在 lowering 时 fail-loud。 |
+| `roles` | 声明这个坐标系需要哪些位置通道。内置坐标系使用 `x` / `y` / `z`，自定义坐标系也可以声明 `u` / `v` 这类自己的 role；缺少必填 role，或写了当前坐标系不支持的 encoding key，都会在 lowering 时 fail-loud。 |
 | `resolve` | 用数据域、scale 和画布尺寸构造 `frame`，并返回 `plotArea` / guide 层。函数留在运行时，不进 IR。 |
 
 `CoordinateResolveContext` 提供 `collectRoleValues`、`resolveScaleForRole`、`buildPositionScale`、`axisGuides`、`lowerGuide` 和 `lowerCustomAxis`。自定义坐标系 v1 默认使用整张画布作为 `plotArea`；它不会自动获得 cartesian 那种 margin / legend 预留收窄。

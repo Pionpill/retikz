@@ -120,9 +120,8 @@ describe('coordinate 必填角色校验 fail-loud (ADR-01)', () => {
 
 describe('guide 维度校验 fail-loud (ADR-01, 修 cross-review P2)', () => {
   // 错误路径：cartesian 下 dimension 'angle' 非法 → fail-loud（曾静默丢弃 / 杂散轴线）
-  it('angle_dimension_rejected_by_schema', () => {
-    expect(() =>
-      PlotSpecSchema.parse({
+  it('angle_dimension_rejected_by_coordinate_definition_roles', () => {
+    const spec = PlotSpecSchema.parse({
         namespace: 'plot',
         type: 'plot',
         data: { reference: 'd' },
@@ -133,14 +132,13 @@ describe('guide 维度校验 fail-loud (ADR-01, 修 cross-review P2)', () => {
         coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
         marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
         guides: [{ type: 'axis', dimension: 'angle' }],
-      }),
-    ).toThrow();
+    });
+    expect(() => expandOf(spec, { d: [{ a: 0, b: 0 }] }, opts)).toThrow(/does not support axis dimension "angle"/);
   });
 
   // 错误路径：cartesian 下 dimension 'radius'（polar 维度）非法 → fail-loud
-  it('radius_dimension_rejected_by_schema', () => {
-    expect(() =>
-      PlotSpecSchema.parse({
+  it('radius_dimension_rejected_by_coordinate_definition_roles', () => {
+    const spec = PlotSpecSchema.parse({
         namespace: 'plot',
         type: 'plot',
         data: { reference: 'd' },
@@ -151,8 +149,23 @@ describe('guide 维度校验 fail-loud (ADR-01, 修 cross-review P2)', () => {
         coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
         marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
         guides: [{ type: 'axis', dimension: 'radius' }],
-      }),
-    ).toThrow();
+    });
+    expect(() => expandOf(spec, { d: [{ a: 0, b: 0 }] }, opts)).toThrow(/does not support axis dimension "radius"/);
+  });
+
+  it('unknown_encoding_role_rejected_by_coordinate_definition_roles', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' }, size: { field: 's' } } }],
+    });
+    expect(() => expandOf(spec, { d: [{ a: 0, b: 0, s: 1 }] }, opts)).toThrow(/does not support encoding role "size"/);
   });
 
   // 边界：polar 下 x / y 合法；x 是角向，y 是径向

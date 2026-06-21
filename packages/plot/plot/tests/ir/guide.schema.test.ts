@@ -35,8 +35,9 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
     expect(() => GuideSchema.parse({ type: 'axis' })).toThrow();
   });
 
-  it('guide_bad_dimension_rejected', () => {
-    expect(() => GuideSchema.parse({ type: 'axis', dimension: 'q' })).toThrow();
+  it('axis_custom_dimension_name_valid', () => {
+    const guide = { type: 'axis', dimension: 'angle' };
+    expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
   // alpha.9 ADR-03：ternary 三角轴维度 x / y / z
@@ -64,16 +65,16 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
 });
 
 describe('GuideSchema plot dimensions', () => {
-  it('axis_angle_dimension_rejected', () => {
-    expect(() => GuideSchema.parse({ type: 'axis', dimension: 'angle' })).toThrow();
+  it('axis_angle_dimension_valid_at_schema_layer', () => {
+    expect(GuideSchema.parse({ type: 'axis', dimension: 'angle' })).toEqual({ type: 'axis', dimension: 'angle' });
   });
 
-  it('axis_radius_dimension_rejected', () => {
-    expect(() => GuideSchema.parse({ type: 'axis', dimension: 'radius' })).toThrow();
+  it('axis_radius_dimension_valid_at_schema_layer', () => {
+    expect(GuideSchema.parse({ type: 'axis', dimension: 'radius' })).toEqual({ type: 'axis', dimension: 'radius' });
   });
 
-  it('axis_theta_dimension_rejected', () => {
-    expect(() => GuideSchema.parse({ type: 'axis', dimension: 'theta' })).toThrow();
+  it('axis_theta_dimension_valid_at_schema_layer', () => {
+    expect(GuideSchema.parse({ type: 'axis', dimension: 'theta' })).toEqual({ type: 'axis', dimension: 'theta' });
   });
 
   it('axis_xyz_roundtrip', () => {
@@ -128,8 +129,13 @@ describe('LegendGuideSchema (ADR-03 alpha.8)', () => {
     expect(() => LegendGuideSchema.parse({ type: 'legend' })).toThrow();
   });
 
-  it('legend_bad_channel_rejected', () => {
-    expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'x' })).toThrow();
+  it('legend_custom_channel_name_valid', () => {
+    const guide = { type: 'legend', channel: 'intensity' };
+    expect(LegendGuideSchema.parse(guide)).toEqual(guide);
+  });
+
+  it('legend_empty_channel_rejected', () => {
+    expect(() => LegendGuideSchema.parse({ type: 'legend', channel: '' })).toThrow();
   });
 
   it('legend_bad_position_rejected', () => {

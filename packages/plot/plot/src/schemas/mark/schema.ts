@@ -181,7 +181,8 @@ export const IntervalBoundsSchema = z
       'z-role interval bound for ternary2D; omit to infer a span from 0 to the z component when the coordinate consumes z',
     ),
   })
-  .describe('Per-role interval bounds keyed by coordinate role (x / y / z)');
+  .catchall(IntervalBoundSchema)
+  .describe('Per-role interval bounds keyed by coordinate role; built-ins use x / y / z, custom coordinates may add role keys');
 
 export const IntervalMarkSchema = z
   .object({

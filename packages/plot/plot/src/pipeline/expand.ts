@@ -3,7 +3,7 @@ import { isFiniteNumber } from '@retikz/math';
 import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type MarkOperation, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
 import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyTransforms, assertBaselineScaleCompatible, assertScaleFieldCompatible, collectFormatFields, deriveScale, lowerMark, makeColorSchemeResolver, orderedCategoryDomain, resolveChannelScale, resolveCoordinateRegistry, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, resolveVisualChannelDeliveries, resolveVisualChannelRegistry, scaleTicks } from '../providers';
 import { type LegendEntry, type LegendInput, type ResolveField, type ResolveLabel, applyFieldResolver, assertAllValuesValid, channelValue, coerceTimestamp, labelOf, lowerCustomAxis, lowerGuide, lowerLegend, normalizeRows, resolveFieldPath, resolveFieldTypes, validateBoundData } from '../features';
-import { type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type AnyVisualChannelDefinition, type ChannelResolveContext, type ChannelValueResolver, type CoordinateFrame, type FieldFormatDefinition, isBuiltinScaleOperation } from '../contract';
+import { type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type AnyVisualChannelDefinition, type ChannelResolveContext, type ChannelValueResolver, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, isBuiltinScaleOperation } from '../contract';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect } from './layout';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { collectSourceFields } from './source-fields';
@@ -64,11 +64,34 @@ const pointFillChannel = (mark: MarkOperation): Channel | undefined => {
 const isAxisGuide = (guide: Guide): guide is AxisGuide => guide.type === PlotGuide.Axis;
 const isLegendGuide = (guide: Guide): guide is LegendGuide => guide.type === PlotGuide.Legend;
 
+/** 非位置 encoding key：这些键有专属语义，不参与 CoordinateDefinition.roles 校验。 */
+const NON_POSITION_ENCODING_KEYS = new Set<string>(['color', 'text', 'channels']);
+
+/**
+ * 校验内置 mark 的 encoding key 是否属于当前坐标系角色。
+ * @description schema 允许未知 key 承载自定义坐标系位置角色；lowering 必须按 active CoordinateDefinition.roles
+ *   fail-loud，避免把 `size` / `opacity` 这类拼错或误放进 encoding 的字段静默当成无效位置角色。
+ */
+const assertKnownPositionEncodingRoles = (coordinateType: string, roles: ReadonlyArray<DimensionRole>, marks: ReadonlyArray<MarkOperation>): void => {
+  const roleSet = new Set<string>(roles);
+  for (const mark of marks) {
+    if (!isBuiltinMark(mark) || mark.type === PlotMark.Link) continue;
+    const encoding = markEncoding(mark);
+    if (encoding === undefined) continue;
+    for (const key of Object.keys(encoding)) {
+      if (NON_POSITION_ENCODING_KEYS.has(key)) continue;
+      if (!roleSet.has(key)) {
+        throw new Error(`lowerPlots: ${coordinateType} coordinate system does not support encoding role "${key}" on ${mark.type} marks (valid roles: ${roles.join(', ')})`);
+      }
+    }
+  }
+};
+
 /**
  * 按坐标系合法集校验每根 axis guide 的 dimension（ADR-01，修 cross-review P2）
  * @description 非法 dimension（如 cartesian 下 'angle'）从「静默丢弃 / 渲杂散轴线」改 fail-loud，给清晰错误。
  */
-const assertValidGuideDimensions = (coordinateType: string, roles: ReadonlyArray<'x' | 'y' | 'z'>, axisGuides: Array<AxisGuide>): void => {
+const assertValidGuideDimensions = (coordinateType: string, roles: ReadonlyArray<DimensionRole>, axisGuides: Array<AxisGuide>): void => {
   const valid = roles;
   for (const guide of axisGuides) {
     if (!valid.includes(guide.dimension)) {
@@ -81,7 +104,7 @@ const assertValidGuideDimensions = (coordinateType: string, roles: ReadonlyArray
  * 按坐标系必填角色集校验每个位置 mark 的 encoding（ADR-01；x/y 转可选后必填性下放此处）
  * @description sector 无位置通道（角度来自累积界）→ 跳过；其余 mark 缺任一必填角色通道 → fail-loud。
  */
-const assertRequiredPositionChannels = (coordinateType: string, roles: ReadonlyArray<'x' | 'y' | 'z'>, marks: ReadonlyArray<MarkOperation>): void => {
+const assertRequiredPositionChannels = (coordinateType: string, roles: ReadonlyArray<DimensionRole>, marks: ReadonlyArray<MarkOperation>): void => {
   const required = roles;
   for (const mark of marks) {
     // 自定义 mark：必填位置通道由其 MarkDefinition.lower 自行 fail-loud，不在通用校验内强制
@@ -94,7 +117,6 @@ const assertRequiredPositionChannels = (coordinateType: string, roles: ReadonlyA
     if (mark.type === PlotMark.Interval) {
       const encoding = mark.encoding as Record<string, Channel | undefined>;
       for (const channel of required) {
-        if (channel !== 'x' && channel !== 'y') continue;
         const bound = resolveIntervalBound(mark, channel);
         if (bound.kind === IntervalBoundKind.Extent || bound.kind === IntervalBoundKind.Full) continue;
         if (encoding[channel] === undefined) {
@@ -237,12 +259,13 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   if (coordinateDefinition === undefined) {
     throw new Error(`lowerPlots: coordinate type "${coordinateOperation.type}" is not registered; pass a CoordinateDefinition via options.coordinates`);
   }
-  const roles = coordinateDefinition.roles as ReadonlyArray<'x' | 'y' | 'z'>;
+  const roles = coordinateDefinition.roles;
   const axisGuides = (node.guides ?? []).filter(isAxisGuide);
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
 
   // ADR-01 校验（建 frame 前）：guide 维度按坐标系合法集校验 + mark 必填位置角色校验，均 fail-loud。
   assertValidGuideDimensions(coordinateOperation.type, roles, axisGuides);
+  assertKnownPositionEncodingRoles(coordinateOperation.type, roles, node.marks);
   assertRequiredPositionChannels(coordinateOperation.type, roles, node.marks);
 
   // 收集某角色（位置 scale 名 + 通道角色）下所有 mark 的通道原始值（不预过滤）：
@@ -333,7 +356,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
 
   // 解析角色 scale（ADR-03）：显式绑定 → 查表（未声明仍抛，typo 守卫）+ 对该 role **全部**字段做兼容校验；
   //   省略 → 按字段类型派生（要求该 role 字段类型一致，混类型 fail-loud）。兼容校验只对「声明 model 的类型」生效。
-  const resolveScaleForRole = (role: 'x' | 'y' | 'z', scaleName: string | undefined, pick: (mark: MarkOperation) => Channel | undefined, values: Array<unknown>): ScaleOperation => {
+  const resolveScaleForRole = (role: DimensionRole, scaleName: string | undefined, pick: (mark: MarkOperation) => Channel | undefined, values: Array<unknown>): ScaleOperation => {
     const types = roleFieldTypes(pick);
     // 解析该 role 有效 order（含「非分类配 order」「冲突 order」两道 fail-loud），无论 scale 显式与否都先校验
     const order = resolveRoleOrder(role, pick);
@@ -359,12 +382,12 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     return def;
   };
 
-  const roleChannelOf = (role: 'x' | 'y' | 'z', includeLinkSource = false) => (mark: MarkOperation): Channel | undefined => {
-    if (isBuiltinMark(mark) && mark.type === PlotMark.Link) return includeLinkSource ? (role === 'x' ? mark.source.x : mark.source.y) : undefined;
+  const roleChannelOf = (role: DimensionRole, includeLinkSource = false) => (mark: MarkOperation): Channel | undefined => {
+    if (isBuiltinMark(mark) && mark.type === PlotMark.Link) return includeLinkSource && (role === 'x' || role === 'y') ? (role === 'x' ? mark.source.x : mark.source.y) : undefined;
     return markEncoding(mark)?.[role];
   };
 
-  const resolveScaleForDefinitionRole = (role: 'x' | 'y' | 'z', scaleName: string | undefined, values: Array<unknown>, opts?: { includeLinkSource?: boolean }): ScaleOperation =>
+  const resolveScaleForDefinitionRole = (role: DimensionRole, scaleName: string | undefined, values: Array<unknown>, opts?: { includeLinkSource?: boolean }): ScaleOperation =>
     resolveScaleForRole(role, scaleName, roleChannelOf(role, opts?.includeLinkSource ?? false), values);
 
   // legend 预留：按 position 在对应边让出带宽，plotArea 据此收窄（决策 ⑩）

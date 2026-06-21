@@ -7,7 +7,6 @@ import {
   DivergingColorScaleSchema,
   type OrdinalScale,
   OrdinalScaleSchema,
-  PlotColorScheme,
   PlotFieldType,
   PlotScale,
   type QuantileColorScale,
@@ -19,6 +18,7 @@ import {
   type ThresholdColorScale,
   ThresholdColorScaleSchema,
 } from '../../schemas';
+import { PlotColorScheme } from './constants';
 import { type ColorScaleEvaluator, type ColorSchemeResolver, DEFAULT_PLOT_COLORS, builtinColorSchemeInterpolator, safeExtent, sampleSchemeColors, toHexColor } from './shared';
 
 /** sequential 缺省配色（感知均匀、色盲友好） */

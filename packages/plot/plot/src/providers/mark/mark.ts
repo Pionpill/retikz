@@ -849,9 +849,10 @@ const lowerReferenceLayer = (mark: Mark, rows: Array<ExternalRow>, frame: Coordi
 };
 
 const collectPositionalFields = (mark: PointMark | PathMark | RegionMark | IntervalMark, fields: FieldCollector): void => {
-  fields.addChannel(mark.encoding.x);
-  fields.addChannel(mark.encoding.y);
-  fields.addChannel(mark.encoding.z);
+  for (const [key, channel] of Object.entries(mark.encoding)) {
+    if (key === 'color' || key === 'text' || key === 'channels') continue;
+    fields.addChannel(channel);
+  }
   if ('color' in mark.encoding) fields.addChannel(mark.encoding.color);
   fields.addChannel(mark.label?.content);
 };
@@ -913,9 +914,10 @@ export const MARK_REGISTRY: Record<PlotMarkValue, MarkDefinition> = {
       if (mark.type !== PlotMark.Interval) return;
       collectPositionalFields(mark, fields);
       fields.addField(mark.series);
-      const bounds = [mark.bounds?.x, mark.bounds?.y, mark.bounds?.z];
-      for (const bound of bounds) {
-        if (bound?.kind === 'extent') fields.addFields(bound.from, bound.to);
+      if (mark.bounds !== undefined) {
+        for (const bound of Object.values(mark.bounds)) {
+          if (bound.kind === 'extent') fields.addFields(bound.from, bound.to);
+        }
       }
     },
     buildCell: (mark, row, frame, ctx) => markCell(mark, row, frame, ctx),

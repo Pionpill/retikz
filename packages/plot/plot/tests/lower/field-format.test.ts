@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import * as PlotPublic from '../../src';
-import { type FieldFormatDefinition, defineFieldFormat, resolveFormatRegistry } from '../../src';
+import { type FieldFormatDefinition, PlotFieldFormat, defineFieldFormat, resolveFormatRegistry } from '../../src';
 import { DataModelSchema, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { FieldDefSchema, PlotFieldFormat } from '../../src/schemas/data';
+import { FieldDefSchema } from '../../src/schemas/data';
 import { type LowerPlotsOptions, prepareRows } from '../../src/pipeline/expand';
 import { tagSourceIndex } from '../../src/pipeline/provenance';
 
@@ -172,6 +172,7 @@ describe('FieldDef.format 自定义格式（ADR-09）', () => {
     expect(typeof PlotPublic.defineFieldFormat).toBe('function');
     expect(typeof PlotPublic.resolveFormatRegistry).toBe('function');
     expect(typeof PlotPublic.collectFormatFields).toBe('function');
+    expect(PlotPublic.PlotFieldFormat.Percent).toBe('percent');
     expect(PlotPublic.BUILTIN_FORMATS.length).toBe(6);
     expect(PlotPublic.BUILTIN_FORMAT_DEFINITIONS_BY_NAME.get('iso')?.impliedType).toBe('temporal');
   });

@@ -106,9 +106,8 @@ describe('cartesian1D 直线坐标系 (ADR-02)', () => {
   });
 
   // 错误路径：非法维度（cartesian1D 合法集 {x}）→ fail-loud
-  it('cartesian1d_angle_dimension_rejected_by_schema', () => {
-    expect(() =>
-      PlotSpecSchema.parse({
+  it('cartesian1d_angle_dimension_rejected_by_coordinate_definition_roles', () => {
+    const spec = PlotSpecSchema.parse({
         namespace: 'plot',
         type: 'plot',
         data: { reference: 'd' },
@@ -116,8 +115,8 @@ describe('cartesian1D 直线坐标系 (ADR-02)', () => {
         coordinate: { type: 'cartesian1D', x: 'xs' },
         marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
         guides: [{ type: 'axis', dimension: 'angle' }],
-      }),
-    ).toThrow();
+    });
+    expect(() => expandOf(spec, { d: [{ v: 1 }] }, opts)).toThrow(/does not support axis dimension "angle"/);
   });
 
   // 交互：1D 直线轴 guide 下沉（dimension x 合法、产出轴层）
@@ -206,9 +205,8 @@ describe('polar1D 圆周坐标系 (ADR-02)', () => {
   });
 
   // 错误路径：非法维度（polar1D 合法集 {angle, x}）→ fail-loud
-  it('polar1d_radius_dimension_rejected_by_schema', () => {
-    expect(() =>
-      PlotSpecSchema.parse({
+  it('polar1d_radius_dimension_rejected_by_coordinate_definition_roles', () => {
+    const spec = PlotSpecSchema.parse({
         namespace: 'plot',
         type: 'plot',
         data: { reference: 'd' },
@@ -216,7 +214,7 @@ describe('polar1D 圆周坐标系 (ADR-02)', () => {
         coordinate: { type: 'polar1D', angle: 'a' },
         marks: [{ type: 'point', encoding: { x: { field: 'deg' } } }],
         guides: [{ type: 'axis', dimension: 'radius' }],
-      }),
-    ).toThrow();
+    });
+    expect(() => expandOf(spec, { d: [{ deg: 0 }] }, opts)).toThrow(/does not support axis dimension "radius"/);
   });
 });

@@ -1,16 +1,11 @@
 import { z } from 'zod';
-import { BUILTIN_FIELD_FORMATS, PlotFieldFormat, PlotFieldType } from './constants';
-
-export const CustomFieldFormatSchema = z
-  .string()
-  .min(1)
-  .refine(name => !BUILTIN_FIELD_FORMATS.has(name), { message: 'Custom field format name must not collide with a built-in format' })
-  .describe('Discriminator: custom field format name; must be a non-empty, non-built-in identifier registered through options.formatDefinitions');
+import { PlotFieldType } from './constants';
 
 export const FieldFormatSchema = z
-  .union([z.enum(PlotFieldFormat), CustomFieldFormatSchema])
+  .string()
+  .min(1)
   .describe(
-    'Field value-parsing format: a built-in format keyword, or a custom format name validated at lowering time against the matching FieldFormatDefinition supplied via options.formatDefinitions',
+    'Field value-parsing format name. It is resolved against the FieldFormatDefinition registry at lowering time; built-in and custom formats share the same lookup path',
   );
 
 export const FieldDefSchema = z
@@ -24,7 +19,7 @@ export const FieldDefSchema = z
       .optional()
       .describe('Field measurement type; omit to infer from the bound dataset at lowering. When given, drives type-driven scale selection and guide formatting without seeing the data'),
     format: FieldFormatSchema.optional().describe(
-      'Declarative value-parsing format; each format binds to one measurement type and must be compatible with type (it also implies type when type is omitted). A built-in keyword or a custom name registered via options.formatDefinitions. Omit for the built-in default coercion',
+      'Declarative value-parsing format name; each resolved definition binds to one measurement type and must be compatible with type (it also implies type when type is omitted). Omit for the built-in default coercion',
     ),
     order: z
       .union([z.enum(['data', 'ascending', 'descending']), z.array(z.union([z.string(), z.number()])).min(1)])

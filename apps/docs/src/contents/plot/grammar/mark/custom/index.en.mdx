@@ -5,7 +5,7 @@ description: A custom mark keeps its lowering function at runtime — the IR sto
 
 Beyond the 6 built-in marks, define your own glyph with `defineMark`. It follows the same paradigm as `defineCoordinate`, `defineScale`, and `defineTransform`: the spec still stores only a JSON operation, such as `{ type: 'diamond', encoding: { x: { field: 'month' }, y: { field: 'sales' } } }`; the field collection and lowering function live in a runtime definition injected through `<Plot markDefinitions={[...]}>`.
 
-A custom mark's `type` is any non-built-in discriminator; its `encoding` reuses the same channels (`x` / `y` / `color`) as built-in marks, so **a custom mark's position channels also feed scale inference** — it shares the same coordinate system and scales as built-in marks.
+A custom mark's `type` is any non-built-in discriminator; its `encoding` reuses the same channel shape as built-in marks. Common coordinates use `x` / `y` / `color`, and custom coordinates may declare their own position roles. Position channels feed scale inference, so the custom mark shares the same coordinate system and scales as built-in marks.
 
 ## Diamond glyph
 
@@ -41,7 +41,7 @@ Built-in and custom marks dispatch through the same `resolveMarkRegistry`: built
 
 ## Current boundaries
 
-<ComponentAlert type="tip" title="Custom marks are authored via the spec entry" description="v0.1 has no generic <Mark type=...> component; custom marks are written into the marks array via <Plot spec={...} markDefinitions={[...]}>. A custom mark contributes its position domain through the shared x / y channels; cases needing custom bounds / special domain contribution (e.g. a custom interval-like mark) are left for later." />
+<ComponentAlert type="tip" title="Custom marks are authored via the spec entry" description="v0.1 has no generic <Mark type=...> component; custom marks are written into the marks array via <Plot spec={...} markDefinitions={[...]}>. Position domains are contributed through the active coordinate roles; an encoding key unsupported by that coordinate fails loudly. Cases needing custom bounds / special domain contribution (e.g. a custom interval-like mark) are left for later." />
 
 ## Related
 

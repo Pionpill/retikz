@@ -4,9 +4,10 @@ import type { Cell, CellGeometry } from './cell';
 
 /**
  * 坐标系位置角色：mark 按 frame.roles 序从 encoding 取对应通道值喂 projectRoles。
- * @description plot 层只保留 x/y/z 定位角色；polar 内部把 x 解释为角向、y 解释为径向。
+ * @description 内置坐标系使用 x / y / z；自定义 CoordinateDefinition 可声明任意非空字符串角色。
+ *   schema 只保留 JSON 形状，角色是否被坐标系支持由 definition.roles 在 lowering 阶段校验。
  */
-export type DimensionRole = 'x' | 'y' | 'z';
+export type DimensionRole = string;
 
 /**
  * 运行时坐标帧的能力契约（抽象基座）。

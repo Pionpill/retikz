@@ -28,6 +28,7 @@ const intensityChannel = defineVisualChannel<number>({
         const v = valueOf(row);
         return Number.isFinite(v) ? map(v) : undefined;
       },
+      descriptor: { channel: 'intensity', scaleType: 'linear', domain: [lo, hi], range: [0.3, 1], field, fieldType: ctx.fieldTypes.get(field) },
     };
   },
   deliver: (node, value) => {
@@ -60,9 +61,26 @@ const nodesOf = (scope: IRScope): Array<IRNode> => {
   return out;
 };
 
+const scopesOf = (scope: IRScope): Array<IRScope> => {
+  const out: Array<IRScope> = [];
+  const walk = (node: IRScope): void => {
+    out.push(node);
+    for (const child of node.children) {
+      if ((child as { type?: string }).type === 'scope') walk(child as IRScope);
+    }
+  };
+  walk(scope);
+  return out;
+};
+
 const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return (def.expand(spec) as IRScope).children[0] as IRScope;
+};
+
+const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options: LowerPlotsOptions): IRScope => {
+  const [def] = lowerPlots(datasets, options);
+  return def.expand(spec) as IRScope;
 };
 
 describe('custom visual channel registry', () => {
@@ -121,6 +139,22 @@ describe('custom visual channel registry', () => {
     const nodes = nodesOf(firstLayer(spec, { d: rows }, opts([intensityChannel])));
     expect(nodes.every(n => (n as { opacity?: number }).opacity !== undefined)).toBe(true);
     expect(nodes.some(n => (n as { minimumSize?: number }).minimumSize !== undefined)).toBe(true);
+  });
+
+  // 交互：自定义视觉通道也可被 legend guide 引用；schema 不再把 channel 限死在内置 color/size/opacity/shape。
+  it('custom_channel_legend_lowers_from_registry_descriptor', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, channels: { intensity: { field: 'score' } } } }],
+      guides: [{ type: 'legend', channel: 'intensity' }],
+    });
+    const root = expandOf(spec, { d: rows }, opts([intensityChannel]));
+    const legend = scopesOf(root).find(scope => scope.id === 'legend.intensity');
+    expect(legend).toBeDefined();
   });
 
   // JSON round-trip：encoding.channels 进 IR 不丢

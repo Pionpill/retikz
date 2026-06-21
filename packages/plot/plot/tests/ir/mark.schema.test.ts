@@ -222,10 +222,10 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_interval_strips_size', () => {
-    // size 不在 interval 的 encoding 契约里：非 strict zod 剥离（TS 层禁止作者写入）
+  it('mark_interval_preserves_unknown_role_key_size', () => {
+    // 未知 encoding key 在 schema 层保留；是否是合法位置角色交给 active CoordinateDefinition.roles 在 lowering 校验。
     const parsed = MarkSchema.parse({ type: 'interval', encoding: { x: { field: 'c' }, y: { field: 'v' }, size: { field: 'p' } } });
-    expect((parsed.encoding as { size?: unknown }).size).toBeUndefined();
+    expect((parsed.encoding as { size?: unknown }).size).toEqual({ field: 'p' });
   });
 
   // alpha.7 ADR-04：opacity 通道仅 PointMark
@@ -234,9 +234,9 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_interval_strips_opacity', () => {
+  it('mark_interval_preserves_unknown_role_key_opacity', () => {
     const parsed = MarkSchema.parse({ type: 'interval', encoding: { x: { field: 'c' }, y: { field: 'v' }, opacity: { field: 'd' } } });
-    expect((parsed.encoding as { opacity?: unknown }).opacity).toBeUndefined();
+    expect((parsed.encoding as { opacity?: unknown }).opacity).toEqual({ field: 'd' });
   });
 
   // alpha.7 ADR-05：shape 通道仅 PointMark
@@ -289,9 +289,9 @@ describe('MarkSchema (ADR-05)', () => {
     expect(parsed).toEqual({ type: 'interval', encoding: { x: { field: 'c' }, y: { field: 'v' } } });
   });
 
-  it('mark_interval_strips_shape', () => {
+  it('mark_interval_preserves_unknown_role_key_shape', () => {
     const parsed = MarkSchema.parse({ type: 'interval', encoding: { x: { field: 'c' }, y: { field: 'v' }, shape: { field: 'cat' } } });
-    expect((parsed.encoding as { shape?: unknown }).shape).toBeUndefined();
+    expect((parsed.encoding as { shape?: unknown }).shape).toEqual({ field: 'cat' });
   });
 
   // alpha.11 ADR-02：rect(heatmap) → interval (band×band)
@@ -324,10 +324,10 @@ describe('MarkSchema (ADR-05)', () => {
     expect(parsed.type).toBe('interval');
   });
 
-  it('mark_rect_strips_size', () => {
-    // size 仅 PointMark：interval encoding 非 strict zod 剥离
+  it('mark_rect_preserves_unknown_role_key_size', () => {
+    // 未知 encoding key 在 schema 层保留；lowering 按坐标系 roles fail-loud。
     const parsed = MarkSchema.parse({ type: 'interval', bounds: { x: { kind: 'band' }, y: { kind: 'band' } }, encoding: { x: { field: 'r' }, y: { field: 'c' }, size: { field: 'p' } } });
-    expect((parsed.encoding as { size?: unknown }).size).toBeUndefined();
+    expect((parsed.encoding as { size?: unknown }).size).toEqual({ field: 'p' });
   });
 
   it('mark_rect_json_round_trip', () => {
@@ -404,10 +404,10 @@ describe('MarkSchema (ADR-05)', () => {
     expect(() => MarkSchema.parse({ type: 'rul', encoding: { y: { value: 80 } } })).toThrow();
   });
 
-  it('mark_reference_strips_size', () => {
-    // size 仅 PointMark：reference encoding 非 strict zod 剥离
+  it('mark_reference_preserves_unknown_role_key_size', () => {
+    // 未知 encoding key 在 schema 层保留；lowering 按坐标系 roles fail-loud。
     const parsed = MarkSchema.parse({ type: 'reference', encoding: { y: { value: 80 }, size: { field: 'p' } } });
-    expect((parsed.encoding as { size?: unknown }).size).toBeUndefined();
+    expect((parsed.encoding as { size?: unknown }).size).toEqual({ field: 'p' });
   });
 
   it('mark_reference_json_round_trip', () => {

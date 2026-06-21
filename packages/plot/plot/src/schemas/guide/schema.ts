@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { GuideDimension, LegendChannel, LegendOrient, LegendPosition, PlotGuide } from './constants';
+import { LegendOrient, LegendPosition, PlotGuide } from './constants';
 
 export const AxisGuideSchema = z
   .object({
@@ -7,9 +7,10 @@ export const AxisGuideSchema = z
       .literal(PlotGuide.Axis)
       .describe('Discriminator: a coordinate axis (axis line + ticks + tick labels, with optional aligned grid lines)'),
     dimension: z
-      .enum(GuideDimension)
+      .string()
+      .min(1)
       .describe(
-        "Which positional dimension of the bound coordinate system this axis visualizes — not a fixed screen orientation. cartesian2D dimensions are 'x' (horizontal) / 'y' (vertical); other coordinate systems extend the set with their own (e.g. polar: radius / angle).",
+        'Coordinate position role this axis visualizes; resolved against the active CoordinateDefinition.roles at lowering time, not a fixed screen orientation',
       ),
     id: z
       .string()
@@ -49,9 +50,10 @@ export const LegendGuideSchema = z
       .literal(PlotGuide.Legend)
       .describe('Discriminator: a legend that visualizes a non-positional scale (color / size / opacity / shape) as swatches, a continuous color ramp, binned classes, or graduated symbols'),
     channel: z
-      .enum(LegendChannel)
+      .string()
+      .min(1)
       .describe(
-        'Which non-positional encoding channel this legend visualizes; the legend form (swatches / continuous ramp / binned classes / graduated symbols) is chosen automatically from the type of the bound scale',
+        'Non-positional visual channel name this legend visualizes; resolved against the visual channel registry at lowering time',
       ),
     scale: z
       .string()

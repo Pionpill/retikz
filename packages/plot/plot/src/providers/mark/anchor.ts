@@ -19,14 +19,7 @@ import {
 export const channelForRole = (mark: Mark, role: DimensionRole): Channel | undefined => {
   // link 无 encoding.x/y 位置通道（端点来自 source/target 字段对）→ undefined
   if (mark.type === PlotMark.Link) return undefined;
-  switch (role) {
-    case 'x':
-      return mark.encoding.x;
-    case 'y':
-      return mark.encoding.y;
-    case 'z':
-      return 'z' in mark.encoding ? mark.encoding.z : undefined;
-  }
+  return (mark.encoding as Record<string, Channel | undefined>)[role];
 };
 
 /** 按 frame.roles 序取某 mark 某行的位置值数组（喂 frame.projectRoles；坐标系无关） */
@@ -38,8 +31,8 @@ export const roleValues = (mark: Mark, row: ExternalRow, frame: CoordinateFrame)
  * @description 显式 bounds 优先；省略时按惯例推断——primary（x）band、secondary（y）span(baseline 0)。
  *   lowering 与 scale 推断共用此单一真源，杜绝两处各推各的漂移。
  */
-export const resolveIntervalBound = (mark: IntervalMark, role: 'x' | 'y' | 'z'): IntervalBound => {
-  const explicit = role === 'x' ? mark.bounds?.x : role === 'y' ? mark.bounds?.y : mark.bounds?.z;
+export const resolveIntervalBound = (mark: IntervalMark, role: DimensionRole): IntervalBound => {
+  const explicit = (mark.bounds as Record<string, IntervalBound | undefined> | undefined)?.[role];
   if (explicit !== undefined) return explicit;
   return role === 'x' ? { kind: IntervalBoundKind.Band } : { kind: IntervalBoundKind.Span };
 };

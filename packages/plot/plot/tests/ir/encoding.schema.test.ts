@@ -93,6 +93,11 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
     const e = EncodingSchema.parse({ x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' } });
     expect(EncodingSchema.parse(JSON.parse(JSON.stringify(e)))).toEqual(e);
   });
+
+  it('custom_role_channels_preserved_for_coordinate_definition', () => {
+    const e = { u: { field: 'longitude' }, v: { field: 'latitude' } };
+    expect(EncodingSchema.parse(e)).toEqual(e);
+  });
 });
 
 describe('SizeChannelSchema / PointEncodingSchema (alpha.7 ADR-02)', () => {
@@ -128,10 +133,10 @@ describe('SizeChannelSchema / PointEncodingSchema (alpha.7 ADR-02)', () => {
     expect(() => SizeChannelSchema.parse({ value: 'big' })).toThrow();
   });
 
-  // size 不进共享 EncodingSchema：非 point mark 的 encoding 会剥离 size（非 strict，类型层由 TS 守）
-  it('shared_encoding_strips_size', () => {
+  // 未知 encoding key 在 schema 层保留，是否是合法位置角色由 active CoordinateDefinition.roles 在 lowering 校验。
+  it('shared_encoding_preserves_unknown_role_key', () => {
     const e = EncodingSchema.parse({ x: { field: 'x' }, y: { field: 'y' }, size: { field: 'p' } });
-    expect((e as { size?: unknown }).size).toBeUndefined();
+    expect((e as { size?: unknown }).size).toEqual({ field: 'p' });
   });
 });
 
@@ -162,8 +167,8 @@ describe('ShapeChannelSchema (alpha.7 ADR-05)', () => {
     expect((parsed as { scale?: unknown }).scale).toBeUndefined();
   });
 
-  it('shared_encoding_strips_shape', () => {
+  it('shared_encoding_preserves_unknown_role_key_shape', () => {
     const e = EncodingSchema.parse({ x: { field: 'x' }, y: { field: 'y' }, shape: { field: 'c' } });
-    expect((e as { shape?: unknown }).shape).toBeUndefined();
+    expect((e as { shape?: unknown }).shape).toEqual({ field: 'c' });
   });
 });

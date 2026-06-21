@@ -37,8 +37,9 @@ export const PositionEncodingSchema = z
       'Third position role channel; optional at the schema level, required with x / y under ternary2D and validated during lowering. Auto-normalized with x+y+z at the coordinate',
     ),
   })
+  .catchall(ChannelSchema)
   .describe(
-    'Positional channel bindings (x for 1D, x / y for 2D, x / y / z for ternary2D); all optional at the schema level. The coordinate system decides which position roles are required and validates fail-loud during lowering. cartesian2D maps x to horizontal / y to vertical, polar2D maps x to angle / y to radius',
+    'Positional channel bindings. Built-ins use x for 1D, x / y for 2D, and x / y / z for ternary2D; custom CoordinateDefinition roles may add arbitrary non-empty role keys. All are optional at the schema level, and the coordinate system decides which roles are required during lowering',
   );
 
 export const StyleEncodingSchema = z
@@ -49,9 +50,15 @@ export const StyleEncodingSchema = z
   })
   .describe('Non-positional style channel bindings fed to mark visuals (color today)');
 
-export const EncodingSchema = PositionEncodingSchema.merge(StyleEncodingSchema).describe(
-  'Channel bindings for a mark: positional channels (consumed by the coordinate system) composed with non-positional style channels (fed to mark visuals)',
-);
+export const EncodingSchema = z
+  .object({
+    ...PositionEncodingSchema.shape,
+    ...StyleEncodingSchema.shape,
+  })
+  .catchall(ChannelSchema)
+  .describe(
+    'Channel bindings for a mark: built-in keys cover x / y / z and shared style channels; unknown non-empty keys are treated as custom coordinate position roles',
+  );
 
 export const SizeChannelSchema = z
   .object({

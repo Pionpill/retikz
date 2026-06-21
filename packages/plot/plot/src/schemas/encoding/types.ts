@@ -3,7 +3,7 @@ import type { ChannelSchema, EncodingSchema, MarkLabelSchema, OpacityChannelSche
 
 /** Channel binding: exactly one of field (data-driven) or value (constant). */
 export type Channel = z.infer<typeof ChannelSchema>;
-/** Positional channel bindings (x / y / z); coordinate systems decide required roles during lowering. */
+/** Positional channel bindings; built-ins use x / y / z, custom coordinates may add role keys. */
 export type PositionEncoding = z.infer<typeof PositionEncodingSchema>;
 /** Style channel bindings for non-position visual channels. */
 export type StyleEncoding = z.infer<typeof StyleEncodingSchema>;

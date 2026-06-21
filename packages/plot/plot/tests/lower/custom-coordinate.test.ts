@@ -127,6 +127,38 @@ const bridgeSpec = (): PlotSpec =>
     marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
   });
 
+const uvCoordinate = defineCoordinate({
+  schema: z.object({
+    type: z.literal('uv').describe('Discriminator: uv custom coordinate operation'),
+  }),
+  roles: ['u', 'v'],
+  resolve: (_operation, context) => {
+    const uValues = context.collectRoleValues('u');
+    const vValues = context.collectRoleValues('v');
+    const uScale = context.buildPositionScale(context.resolveScaleForRole('u', undefined, uValues), uValues, [0, context.width]);
+    const vScale = context.buildPositionScale(context.resolveScaleForRole('v', undefined, vValues), vValues, [context.height, 0]);
+    const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
+      const u = uScale.coordinate(values[0]);
+      const v = vScale.coordinate(values[1]);
+      return Number.isFinite(u) && Number.isFinite(v) ? [u, v] : null;
+    };
+    const frame = createCoordinateFrame('uv', ['u', 'v'], projectRoles, { roleScales: { u: uScale, v: vScale } });
+    const gridLayers: Array<IRScope> = [];
+    const axisLayers: Array<IRScope> = [];
+    for (const guide of context.axisGuides) {
+      const lowered = context.lowerCustomAxis(frame, guide, context.fontSize, context.provenance);
+      if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
+      if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
+    }
+    return {
+      frame,
+      plotArea: { x: 0, y: 0, width: context.width, height: context.height },
+      gridLayers,
+      axisLayers,
+    };
+  },
+});
+
 describe('custom coordinate — 一维曲线（projectRoles 沿正弦）', () => {
   it('点落在正弦曲线上（一维坐标系不止直线）', () => {
     const rows = Array.from({ length: 13 }, (_unused, i) => ({ v: i }));
@@ -173,6 +205,24 @@ describe('custom coordinate — 二维桥（x 沿拱、y 竖直）', () => {
     const base = rows.map((row, index) => ({ x: row.x, y: row.y, p: positions[index] })).filter(entry => entry.y === 0);
     expect(base.find(entry => entry.x === 5)!.p[1]).toBeLessThan(base.find(entry => entry.x === 0)!.p[1]);
   });
+
+  it('custom_role_names_survive_schema_and_drive_projection_and_axis', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [],
+      coordinate: { type: 'uv' },
+      marks: [{ type: 'point', encoding: { u: { field: 'u' }, v: { field: 'v' } } }],
+      guides: [{ type: 'axis', dimension: 'u' }],
+    });
+    const root = expandOf(spec, { d: [{ u: 0, v: 0 }, { u: 10, v: 10 }] }, opts([uvCoordinate]));
+    const points = positionsOf(root.children[0] as IRScope);
+    expect(points).toHaveLength(2);
+    expect(points[0]).toEqual([0, HEIGHT]);
+    expect(points[1]).toEqual([WIDTH, 0]);
+    expect(axisLayersOf(root)).toHaveLength(1);
+  });
 });
 
 describe('custom coordinate — 契约 / fail-loud', () => {
@@ -199,10 +249,9 @@ describe('custom coordinate — 契约 / fail-loud', () => {
     expect(() => expandOf(spec, { d: [{ x: 1 }] }, opts([bridgeCoordinate]))).toThrow(/bridge coordinate system requires the "y" position channel/i);
   });
 
-  // 非法 guide 维度（plot 层只接受 x / y / z）→ schema 层拒绝
-  it('invalid_guide_dimension_rejected_by_schema', () => {
-    expect(() =>
-      PlotSpecSchema.parse({
+  // 非法 guide 维度：schema 接受任意非空 role 名，坐标系 definition.roles 在 lowering 阶段 fail-loud
+  it('invalid_guide_dimension_rejected_by_coordinate_definition_roles', () => {
+    const spec = PlotSpecSchema.parse({
         namespace: 'plot',
         type: 'plot',
         data: { reference: 'd' },
@@ -210,8 +259,8 @@ describe('custom coordinate — 契约 / fail-loud', () => {
         coordinate: { type: 'bridge' },
         marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
         guides: [{ type: 'axis', dimension: 'angle' }],
-      }),
-    ).toThrow();
+    });
+    expect(() => expandOf(spec, { d: [{ x: 0, y: 0 }] }, opts([bridgeCoordinate]))).toThrow(/does not support axis dimension "angle"/);
   });
 
   // 非 point mark（line）→ fail-loud（custom 本轮仅 point）
@@ -222,7 +271,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       data: { reference: 'd' },
       scales: [],
       coordinate: { type: 'sine' },
-      marks: [{ type: 'path', encoding: { x: { field: 'v' }, y: { field: 'v' } } }],
+      marks: [{ type: 'path', encoding: { x: { field: 'v' } } }],
     });
     expect(() => expandOf(spec, { d: [{ v: 1 }, { v: 2 }] }, opts([sineCoordinate]))).toThrow(/custom coordinate|point only|not supported/i);
   });

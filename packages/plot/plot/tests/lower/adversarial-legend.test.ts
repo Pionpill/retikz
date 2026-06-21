@@ -198,7 +198,7 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
     expect(parsed.success).toBe(false);
   });
 
-  it('[adversarial] 拼错 channel 被 schema 拒绝', () => {
+  it('[adversarial] 拼错 channel 在 lowering 阶段 fail-loud', () => {
     const bad = {
       namespace: 'plot', type: 'plot', data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
@@ -206,7 +206,8 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
       marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'colour' }],
     };
-    expect(PlotSpecSchema.safeParse(bad).success).toBe(false);
+    const parsed = PlotSpecSchema.parse(bad);
+    expect(() => expandOf(parsed, { d: ORDINAL_ROWS })).toThrow(/legend channel "colour" has no bound scale/);
   });
 
   it('[adversarial] legend 缺 channel 被 schema 拒绝', () => {

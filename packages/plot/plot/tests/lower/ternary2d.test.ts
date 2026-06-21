@@ -132,9 +132,8 @@ describe('ternary2D fail-loud', () => {
     expect((node.shape.params as { points?: Array<[number, number]> }).points?.length).toBeGreaterThan(2);
   });
 
-  it('angle_dimension_rejected_by_schema', () => {
-    expect(() =>
-      PlotSpecSchema.parse({
+  it('angle_dimension_rejected_by_coordinate_definition_roles', () => {
+    const spec = PlotSpecSchema.parse({
         namespace: 'plot',
         type: 'plot',
         data: { reference: 'd' },
@@ -142,8 +141,8 @@ describe('ternary2D fail-loud', () => {
         coordinate: { type: 'ternary2D' },
         marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' } } }],
         guides: [{ type: 'axis', dimension: 'angle' }],
-      }),
-    ).toThrow();
+    });
+    expect(() => expandOf(spec, { d: [{ x: 1, y: 1, z: 1 }] }, opts)).toThrow(/does not support axis dimension "angle"/);
   });
 });
 

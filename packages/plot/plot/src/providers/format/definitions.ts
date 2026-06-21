@@ -1,7 +1,8 @@
 import { isFiniteNumber } from '@retikz/math';
 import { type FieldFormatDefinition, defineFieldFormat } from '../../contract';
 import { coerceValue } from '../../features';
-import { PlotFieldFormat, PlotFieldType } from '../../schemas';
+import { PlotFieldType } from '../../schemas';
+import { PlotFieldFormat } from './constants';
 
 /** 严格 YYYY/MM/DD 斜杠日期：四位年 / 两位月 / 两位日，分隔符必须是 `/`。 */
 const SLASH_DATE_RE = /^(\d{4})\/(\d{2})\/(\d{2})$/;

@@ -15,22 +15,10 @@ export const PlotGuide = {
 export type PlotGuideValue = ValueOf<typeof PlotGuide>;
 
 /**
- * 图例可视化的非位置通道关键字（暴露给用户；成员值即判别串，裸字面量 `'color'` 同样可用）
- * @description 与 encoding 的非位置通道一一对应；legend 据绑定该通道的 scale 类型自动选 swatch / ramp / 分箱 / 梯度符号形态
+ * 图例绑定的非位置通道名。
+ * @description schema 只要求非空字符串；该通道是否存在、是否产出 legend descriptor，由 visual channel registry 在 lowering 时解析。
  */
-export const LegendChannel = {
-  /** 颜色通道（ordinal → swatch；sequential/diverging → 色带 ramp；quantize/threshold/quantile → 分箱） */
-  Color: 'color',
-  /** 尺寸通道（sqrt 半径 → 梯度符号：几档代表性大小圈 + 值） */
-  Size: 'size',
-  /** 透明度通道（连续 linear → 梯度透明度条） */
-  Opacity: 'opacity',
-  /** 形状通道（categorical → 形状 swatch + 标签） */
-  Shape: 'shape',
-} as const;
-
-/** 图例绑定的非位置通道 */
-export type LegendChannelValue = ValueOf<typeof LegendChannel>;
+export type LegendChannelValue = string;
 
 /**
  * 图例摆放位置关键字（暴露给用户；裸字面量 `'right'` 同样可用）
@@ -65,18 +53,7 @@ export const LegendOrient = {
 export type LegendOrientValue = ValueOf<typeof LegendOrient>;
 
 /**
- * guide 绑定的坐标系定位维度关键字（暴露给用户；裸字面量 `'x'` / `'y'` 同样可用）
- * @description 指这根轴可视化坐标系的哪个定位维度，不是固定的屏幕「水平/垂直」方向。
- *   cartesian2D 的定位维度是 x / y；其它坐标系按自身定位维度扩展成员（如 polar 的 radius / angle），属非破坏新增。
+ * guide 绑定的坐标系定位维度名。
+ * @description schema 只要求非空字符串；该维度是否被坐标系支持，由 CoordinateDefinition.roles 在 lowering 时校验。
  */
-export const GuideDimension = {
-  /** cartesian2D 水平定位维度 */
-  X: 'x',
-  /** cartesian2D 垂直定位维度 */
-  Y: 'y',
-  /** 三元坐标第三分量轴（左下顶点）；x / y / z 三轴共同构成三角外框 */
-  Z: 'z',
-} as const;
-
-/** guide 维度 */
-export type GuideDimensionValue = ValueOf<typeof GuideDimension>;
+export type GuideDimensionValue = string;
