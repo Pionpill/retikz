@@ -10,7 +10,7 @@ For the long tail the built-in positional / color scales don't cover (brand colo
 Scales are discriminated by **two families** with different output contracts:
 
 - **`position`**: value → coordinate, feeding coordinate projection and axes. `resolve(def, values, range)` returns a `PositionScale` (implementing `coordinate` / `bandwidth` / `ticks` / `range` / `setRange`); `isFieldCompatible(fieldType)` decides which field types may bind, and `allowsBaseline` decides whether it can serve as an interval / area value axis.
-- **`channel`**: value → visual quantity (color), feeding the color channel and legend. `resolve(def, values, ctx)` returns `{ of, legendForm, domain, range, edges? }` in a **single call** — `of` colors each value, `legendForm` (`'ramp'` / `'swatch'`) picks the legend shape, and rendering and legend stay in sync with no drift. `ctx` provides `toNumber` / `toTimestamp` coercion and `resolveColorScheme`.
+- **`channel`**: value → visual quantity (color), feeding the color channel and legend. `resolve(def, values, ctx)` returns `{ of, legendForm, domain, range, edges? }` in a **single call** — `of` colors each value, `legendForm` (`'ramp'` / `'swatch'`) picks the legend shape, and rendering and legend stay in sync with no drift. `ctx` provides `toNumber` / `coerceTimestamp` coercion and `resolveColorScheme`.
 
 The demo below defines a `brand` channel scale: `defineScale` declares the schema and `resolve`, the custom `type` goes into `spec.scales`, and the definition is injected via `scaleDefinitions`. Expand the demo to read the full source.
 

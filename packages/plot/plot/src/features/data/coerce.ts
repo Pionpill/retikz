@@ -6,7 +6,7 @@ import { isIsoDateString } from './field';
 const NUMERIC_RE = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
 
 /** 数值强制：number 原样，safe-integer bigint 转 number，严格数字串转 number，其余转 NaN。 */
-const coerceNumber = (value: unknown): number => {
+export const coerceNumber = (value: unknown): number => {
   if (typeof value === 'number') return isFiniteNumber(value) ? value : NaN;
   if (typeof value === 'bigint') {
     const numeric = Number(value);
@@ -20,30 +20,15 @@ const coerceNumber = (value: unknown): number => {
 };
 
 /** 分类强制：string / finite number 原样，boolean 转字符串，其余跳过。 */
-const coerceCategory = (value: unknown): string | number | undefined => {
+export const coerceCategory = (value: unknown): string | number | undefined => {
   if (typeof value === 'string') return value;
   if (typeof value === 'number') return isFiniteNumber(value) ? value : undefined;
   if (typeof value === 'boolean') return String(value);
   return undefined;
 };
 
-/**
- * 按 PlotFieldType 把原始 JS 值强制成规范值。
- * @description continuous -> number；temporal -> epoch ms；categorical -> string|number。非法值返回 NaN / undefined。
- */
-export const coerceValue = (value: unknown, type: PlotFieldTypeValue): string | number | undefined => {
-  if (type === PlotFieldType.Temporal) {
-    const stamp = toTimestamp(value);
-    return stamp === null ? NaN : stamp;
-  }
-  if (type === PlotFieldType.Categorical) {
-    return coerceCategory(value);
-  }
-  return coerceNumber(value);
-};
-
 /** 字段值转 epoch ms：Date / finite number / ISO string 可解析，其余返回 null。 */
-export const toTimestamp = (value: unknown): number | null => {
+export const coerceTimestamp = (value: unknown): number | null => {
   if (value instanceof Date) {
     const stamp = value.getTime();
     return Number.isNaN(stamp) ? null : stamp;
@@ -55,4 +40,19 @@ export const toTimestamp = (value: unknown): number | null => {
     return Number.isNaN(parsed) ? null : parsed;
   }
   return null;
+};
+
+/**
+ * 按 PlotFieldType 把原始 JS 值强制成规范值。
+ * @description continuous -> number；temporal -> epoch ms；categorical -> string|number。非法值返回 NaN / undefined。
+ */
+export const coerceValue = (value: unknown, type: PlotFieldTypeValue): string | number | undefined => {
+  if (type === PlotFieldType.Temporal) {
+    const stamp = coerceTimestamp(value);
+    return stamp === null ? NaN : stamp;
+  }
+  if (type === PlotFieldType.Categorical) {
+    return coerceCategory(value);
+  }
+  return coerceNumber(value);
 };

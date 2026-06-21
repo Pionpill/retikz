@@ -2,7 +2,7 @@ import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, Json
 import { isFiniteNumber } from '@retikz/math';
 import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type MarkOperation, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
 import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyTransforms, assertBaselineScaleCompatible, assertScaleFieldCompatible, collectFormatFields, deriveScale, lowerMark, makeColorSchemeResolver, orderedCategoryDomain, resolveChannelScale, resolveCoordinateRegistry, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, resolveVisualChannelDeliveries, resolveVisualChannelRegistry, scaleTicks } from '../providers';
-import { type LegendEntry, type LegendInput, type ResolveField, type ResolveLabel, applyFieldResolver, assertAllValuesValid, channelValue, labelOf, lowerCustomAxis, lowerGuide, lowerLegend, normalizeRows, resolveFieldPath, resolveFieldTypes, toTimestamp, validateBoundData } from '../features';
+import { type LegendEntry, type LegendInput, type ResolveField, type ResolveLabel, applyFieldResolver, assertAllValuesValid, channelValue, coerceTimestamp, labelOf, lowerCustomAxis, lowerGuide, lowerLegend, normalizeRows, resolveFieldPath, resolveFieldTypes, validateBoundData } from '../features';
 import { type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type AnyVisualChannelDefinition, type ChannelResolveContext, type ChannelValueResolver, type CoordinateFrame, type FieldFormatDefinition, isBuiltinScaleOperation } from '../contract';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect } from './layout';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
@@ -465,7 +465,7 @@ const makeColorResolver = (
     const ctx: ChannelResolveContext = {
       fieldType: colorFieldType,
       toNumber: value => (isFiniteNumber(value) ? value : null),
-      toTimestamp,
+      coerceTimestamp,
       resolveColorScheme,
       defaultColors: node.colors,
     };
@@ -598,7 +598,7 @@ const resolveColorLegend = (
   const ctx: ChannelResolveContext = {
     fieldType: colorFieldType,
     toNumber: value => (isFiniteNumber(value) ? value : null),
-    toTimestamp,
+    coerceTimestamp,
     resolveColorScheme,
     defaultColors: node.colors,
   };

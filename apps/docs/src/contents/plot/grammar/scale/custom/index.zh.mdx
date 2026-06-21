@@ -10,7 +10,7 @@ description: 内置 15 个 scale 覆盖不了的长尾（品牌色阶、领域�
 scale 按 **family 两族**判别，产出契约不同：
 
 - **`position`**：值 → 坐标，喂坐标投影与坐标轴。`resolve(def, values, range)` 返回一个 `PositionScale`（实现 `coordinate` / `bandwidth` / `ticks` / `range` / `setRange`）；`isFieldCompatible(fieldType)` 决定可绑字段类型、`allowsBaseline` 决定能否作 interval / area 值轴。
-- **`channel`**：值 → 视觉量（颜色），喂 color 通道与图例。`resolve(def, values, ctx)` **单次**返回 `{ of, legendForm, domain, range, edges? }`——`of` 逐值取色、`legendForm`（`'ramp'` / `'swatch'`）决定图例形态，实绘与图例同源不漂移。`ctx` 提供 `toNumber` / `toTimestamp` 强转与 `resolveColorScheme` 配色解析。
+- **`channel`**：值 → 视觉量（颜色），喂 color 通道与图例。`resolve(def, values, ctx)` **单次**返回 `{ of, legendForm, domain, range, edges? }`——`of` 逐值取色、`legendForm`（`'ramp'` / `'swatch'`）决定图例形态，实绘与图例同源不漂移。`ctx` 提供 `toNumber` / `coerceTimestamp` 强转与 `resolveColorScheme` 配色解析。
 
 下面的 demo 自定义一个 `brand` channel scale：`defineScale` 声明 schema 与 `resolve`，自定义 `type` 写进 `spec.scales`、definition 经 `scaleDefinitions` 注入。完整源码展开 demo 即可查看。
 

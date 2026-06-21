@@ -46,7 +46,7 @@ lowerPlots(datasets, { fieldMaps: { sales: { quarter: 'period', share: 'ratio' }
 |---|---|---|---|
 | quantitative | `number` / **严格数字串**（trimmed 十进制 / 科学计数；**拒** 空串·`Infinity`·`NaN`·hex·带单位串） | `number` | → NaN，跳过 |
 | proportion | 同 quantitative；**越界 [0,1] 原样保留**（不 clamp、不跳过；clamp 交 ADR-03 scale option） | `number` | → NaN，跳过 |
-| temporal | `Date` / epoch `number` / 严格 ISO 串 | epoch ms（**扩展** `toTimestamp`：现实现不收 `Date`、裸 `Date.parse` 过宽，需加 `Date` 分支 + 与 ADR-01 一致的严格 ISO guard） | → null，跳过 |
+| temporal | `Date` / epoch `number` / 严格 ISO 串 | epoch ms（**扩展** `coerceTimestamp`：现实现不收 `Date`、裸 `Date.parse` 过宽，需加 `Date` 分支 + 与 ADR-01 一致的严格 ISO guard） | → null，跳过 |
 | nominal / ordinal | `string` / `number` | string key（`String(v)`） | 其余跳过 |
 
 非法值沿用 alpha.1「→ NaN/null 跳过该 datum」语义，不报错。
@@ -62,7 +62,7 @@ lowerPlots(datasets, { fieldMaps: { sales: { quarter: 'period', share: 'ratio' }
 3. **适配层在数据世界、不进 IR**：`fieldMaps` / coercion 都在 `lowerPlots` 绑定期，IR 仍 100% JSON-safe、源无关。
 4. **coercion 让 PlotFieldType 成真正的类型契约**：类型定义「接受哪些表示」，而非绑死单一 JS 类型——这正是需求 3 的本质。
 5. **统一访问器，杜绝半 coerce**：ingest 归一化是**唯一** coerce 点，transform / scale / mark / locator 全读 canonical rows——根治「数字串在 stack 被当 0」类 bug（评审 P1）。
-6. **temporal 收口**：扩展现有 `toTimestamp`（加 `Date` 分支 + 严格 ISO guard）成统一 temporal coercion，与 ADR-01 推断 guard **同一套正则**，不打架（评审 P2）。
+6. **temporal 收口**：扩展现有 `coerceTimestamp`（加 `Date` 分支 + 严格 ISO guard）成统一 temporal coercion，与 ADR-01 推断 guard **同一套正则**，不打架（评审 P2）。
 
 ## 文档型 / 嵌套数据支持与错误处理
 
@@ -118,7 +118,7 @@ React / vanilla 具体 API（评审 P1，当前 `Plot.tsx` 只显式转发列举
 ## 影响
 
 - **IR**：无（`fieldMaps` / coercion 都不进 IR）。
-- **lowering**：`LowerPlotsOptions` 增 `fieldMaps`（TS 类型，非 IR schema）；新建 `coerce.ts`（按类型强制）+ ingest **归一化步**（resolve fieldMap + coerce → canonical rows）；扩展 `toTimestamp`（加 `Date` 分支 + 严格 ISO guard）。**关键：归一化在 transform 之前**，全下游（transform / scale / mark / anchor / locator / provenance）读 canonical rows。归一化须保留 `SOURCE_INDEX` 标记。现有无 fieldMaps 的 spec 行为不变（恒等 + coercion 对已支持表示等价；数字串进 stack 等场景从「被当 0」修正为正确）。
+- **lowering**：`LowerPlotsOptions` 增 `fieldMaps`（TS 类型，非 IR schema）；新建 `coerce.ts`（按类型强制）+ ingest **归一化步**（resolve fieldMap + coerce → canonical rows）；扩展 `coerceTimestamp`（加 `Date` 分支 + 严格 ISO guard）。**关键：归一化在 transform 之前**，全下游（transform / scale / mark / anchor / locator / provenance）读 canonical rows。归一化须保留 `SOURCE_INDEX` 标记。现有无 fieldMaps 的 spec 行为不变（恒等 + coercion 对已支持表示等价；数字串进 stack 等场景从「被当 0」修正为正确）。
 - **core**：无。
 - **文档站**：data 概念页加「可移植契约 / 换源 / fieldMaps / 类型容错」一节 + demo（三源同 spec）。
 - **对外 API**：`lowerPlots` options 增 `fieldMaps`（可选、additive，需 model）；`@retikz/plot-react` `Plot.tsx` 转发 `fieldMaps` + DSL 入口加 `model`/`fieldMap` props；`-vanilla` 对等。coercion 让此前因 JS 类型不符被跳过的值现在能渲染（行为放宽、非 breaking）。

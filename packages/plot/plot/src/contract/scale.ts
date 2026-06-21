@@ -33,8 +33,8 @@ export type ChannelResolveContext = {
   fieldType?: PlotFieldTypeValue;
   /** 原始值 → 有限数（非有限 → null）；复用内置数值强转 */
   toNumber: (value: unknown) => number | null;
-  /** 原始值 → epoch ms（temporal 字段；非法 → null）；复用内置 toTimestamp */
-  toTimestamp: (value: unknown) => number | null;
+  /** 原始值 → epoch ms（temporal 字段；非法 → null）；复用内置 coerceTimestamp */
+  coerceTimestamp: (value: unknown) => number | null;
   /** scheme 名 → interpolator（先查内置、再查 options.colorSchemes；未注册 throw） */
   resolveColorScheme: (name: string) => (t: number) => string;
   /** plot 级默认分类调色板（ordinal range 缺省取此；= PlotSpec.colors） */

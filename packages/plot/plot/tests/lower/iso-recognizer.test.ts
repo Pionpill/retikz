@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
 import { PlotFieldType } from '../../src/schemas/data';
-import { inferFieldType, isIsoDateString, toTimestamp } from '../../src/features';
+import { coerceTimestamp, inferFieldType, isIsoDateString } from '../../src/features';
 import { type LowerPlotsOptions, prepareRows } from '../../src/pipeline/expand';
 import { tagSourceIndex } from '../../src/pipeline/provenance';
 
@@ -42,8 +42,8 @@ describe('ISO 识别器扩宽（ADR-09）— happy path', () => {
 
   it('space_form_parses_equal_to_T', () => {
     // 空格形与等价 T 形解析出同一 epoch ms
-    expect(toTimestamp('2024-01-01 12:00:00Z')).toBe(toTimestamp('2024-01-01T12:00:00Z'));
-    expect(toTimestamp('2024-01-01 12:00:00Z')).toBe(Date.UTC(2024, 0, 1, 12, 0, 0));
+    expect(coerceTimestamp('2024-01-01 12:00:00Z')).toBe(coerceTimestamp('2024-01-01T12:00:00Z'));
+    expect(coerceTimestamp('2024-01-01 12:00:00Z')).toBe(Date.UTC(2024, 0, 1, 12, 0, 0));
   });
 });
 
@@ -57,13 +57,13 @@ describe('ISO 识别器扩宽（ADR-09）— 边界', () => {
   it('strict_T_datetime_unchanged', () => {
     // 既有 T 分隔带时区行为不变
     expect(isIsoDateString('2024-01-01T12:00:00Z')).toBe(true);
-    expect(toTimestamp('2024-01-01T12:00:00Z')).toBe(Date.UTC(2024, 0, 1, 12, 0, 0));
+    expect(coerceTimestamp('2024-01-01T12:00:00Z')).toBe(Date.UTC(2024, 0, 1, 12, 0, 0));
   });
 
   it('fractional_seconds_space', () => {
     // 空格 + 小数秒 + Z → 正确解析
     expect(isIsoDateString('2024-01-01 12:00:00.123Z')).toBe(true);
-    expect(toTimestamp('2024-01-01 12:00:00.123Z')).toBe(Date.UTC(2024, 0, 1, 12, 0, 0, 123));
+    expect(coerceTimestamp('2024-01-01 12:00:00.123Z')).toBe(Date.UTC(2024, 0, 1, 12, 0, 0, 123));
   });
 });
 
@@ -71,7 +71,7 @@ describe('ISO 识别器扩宽（ADR-09）— 错误路径（歧义形态仍拒�
   it('no_timezone_space_rejected', () => {
     // 无时区（本地歧义）→ 非 temporal、不解析
     expect(isIsoDateString('2024-01-01 12:00:00')).toBe(false);
-    expect(toTimestamp('2024-01-01 12:00:00')).toBe(null);
+    expect(coerceTimestamp('2024-01-01 12:00:00')).toBe(null);
     expect(inferOne(['2024-01-01 12:00:00'])).toBe(PlotFieldType.Categorical);
   });
 
@@ -96,7 +96,7 @@ describe('ISO 识别器扩宽（ADR-09）— 交互（经 lowering / format）',
   });
 
   it('format_iso_accepts_space', () => {
-    // format:'iso' 经 toTimestamp，自动继承空格分隔
+    // format:'iso' 经 coerceTimestamp，自动继承空格分隔
     const spec = specWithField({ name: 'v', type: 'temporal', format: 'iso' });
     expect(parseFirst(spec, { d: [{ v: '2024-01-01 12:00:00Z', y: 1 }] })).toBe(Date.UTC(2024, 0, 1, 12, 0, 0));
   });

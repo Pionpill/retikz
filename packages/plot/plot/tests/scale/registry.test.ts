@@ -46,7 +46,7 @@ const monoScale = defineScale({
 
 const channelCtx = (over: Partial<ChannelResolveContext> = {}): ChannelResolveContext => ({
   toNumber: value => (typeof value === 'number' && Number.isFinite(value) ? value : null),
-  toTimestamp: () => null,
+  coerceTimestamp: () => null,
   resolveColorScheme: () => () => '#000000',
   ...over,
 });

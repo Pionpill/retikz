@@ -221,14 +221,14 @@ export const discretizedBins = (
 
 // ── channel 族 scale definition ───────────────────────────────────────────────────
 
-/** 建 channel 取值用的数值序列：temporal 字段过 toTimestamp，其余取有限数。 */
+/** 建 channel 取值用的数值序列：temporal 字段过 coerceTimestamp，其余取有限数。 */
 const numericValuesOf = (values: Array<unknown>, ctx: ChannelResolveContext): Array<number> => {
-  const toNumber = ctx.fieldType === PlotFieldType.Temporal ? ctx.toTimestamp : ctx.toNumber;
+  const toNumber = ctx.fieldType === PlotFieldType.Temporal ? ctx.coerceTimestamp : ctx.toNumber;
   return values.map(toNumber).filter((value): value is number => value !== null);
 };
 
 const continuousColorOf = (ctx: ChannelResolveContext, evaluate: ColorScaleEvaluator): ((value: unknown) => string | undefined) => {
-  const toNumber = ctx.fieldType === PlotFieldType.Temporal ? ctx.toTimestamp : ctx.toNumber;
+  const toNumber = ctx.fieldType === PlotFieldType.Temporal ? ctx.coerceTimestamp : ctx.toNumber;
   return value => {
     const numeric = toNumber(value);
     return numeric === null ? undefined : evaluate(numeric);

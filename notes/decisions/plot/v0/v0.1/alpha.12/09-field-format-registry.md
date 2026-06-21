@@ -84,7 +84,7 @@ const currency = defineFieldFormat({
 - **`schemas/data.ts`**：加 `BUILTIN_FIELD_FORMATS` / `isBuiltinFieldFormat` / `CustomFieldFormatSchema` / `FieldFormatSchema` / `FieldFormatValue`；`FieldDef.format` 从 `z.enum(PlotFieldFormat)` 改 `FieldFormatSchema`（`PlotFieldFormat` 枚举保留，仍是内置名来源）。
 - **`contract/format.ts`**（新建）：`FieldFormatDefinition` + `defineFieldFormat`；`contract/index.ts` barrel 加 `./format`。
 - **`providers/format/`**（新建）：`definitions.ts`（6 内置 def + `BUILTIN_FORMATS` + `BUILTIN_FORMAT_DEFINITIONS_BY_NAME` + `resolveFormatRegistry`，从 coerce.ts 迁入 4 个 parser 辅助函数）+ `orchestrate.ts`（`collectFormatFields` 改走 registry 入参）；`providers/index.ts` barrel 加 `./format`。
-- **`data/coerce.ts`**：删 `FORMAT_IMPLIED_TYPE` / `formatImpliedType` / `formatParser` / 4 个 parser 辅助（迁 providers/format）；保留 `coerceValue` / `toTimestamp` / `ParsedFieldValue`（默认 type 驱动 coercion，与 format 无关）。
+- **`data/coerce.ts`**：删 `FORMAT_IMPLIED_TYPE` / `formatImpliedType` / `formatParser` / 4 个 parser 辅助（迁 providers/format）；保留 `coerceValue` / `coerceTimestamp` / `ParsedFieldValue`（默认 type 驱动 coercion，与 format 无关）。
 - **`data/normalize.ts`**：删 `collectFormatFields`（迁 providers/format/orchestrate）。
 - **`pipeline/expand.ts`**：`LowerPlotsOptions` 加 `formatDefinitions?: Array<FieldFormatDefinition>`；`prepareRows` 解析 `formatRegistry` 并喂 `collectFormatFields`；`collectFormatFields` 改从 `../providers` 引入。
 - **`react/Plot.tsx`**：`lowerPlotOptionsOf` 透传 `formatDefinitions`（经 `LowerPlotsOptions` 自动到达）。

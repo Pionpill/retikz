@@ -2,7 +2,7 @@ import { isFiniteNumber } from '@retikz/math';
 import { extent } from 'd3-array';
 import { type ScaleBand, type ScaleContinuousNumeric, type ScaleLinear, type ScalePoint, type ScaleTime, scaleBand, scaleLinear, scaleLog, scalePoint, scalePow, scaleRadial, scaleSymlog, scaleUtc } from 'd3-scale';
 import { type AnyScaleDefinition, type PositionScale, type TickSet, defineScale } from '../../contract';
-import { inferCategoryDomain, toTimestamp } from '../../features';
+import { coerceTimestamp, inferCategoryDomain } from '../../features';
 import {
   type BandScale,
   BandScaleSchema,
@@ -211,7 +211,7 @@ export const resolveTimeScale = (
   values: Array<unknown>,
   fallbackRange: readonly [number, number],
 ): ScaleTime<number, number> => {
-  const stamps = values.map(toTimestamp).filter((stamp): stamp is number => stamp !== null);
+  const stamps = values.map(coerceTimestamp).filter((stamp): stamp is number => stamp !== null);
   const [lo, hi] = def.domain ?? safeExtent(stamps);
   const scale = scaleUtc()
     .domain([new Date(lo), new Date(hi)])
@@ -224,7 +224,7 @@ export const resolveTimeScale = (
 /** time scale → PositionScale（连续语义，bandwidth=0；coordinate 解析时间戳后投影） */
 export const timePositionScale = (scale: ScaleTime<number, number>): PositionScale => ({
   coordinate: value => {
-    const stamp = toTimestamp(value);
+    const stamp = coerceTimestamp(value);
     return stamp === null ? NaN : scale(new Date(stamp));
   },
   get bandwidth() {

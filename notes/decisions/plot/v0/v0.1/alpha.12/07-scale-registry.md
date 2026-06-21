@@ -70,8 +70,8 @@ type ChannelResolveContext = {
   fieldType?: PlotFieldTypeValue;
   /** 原始值 → 有限数（非有限 → null）；复用内置数值强转 */
   toNumber: (value: unknown) => number | null;
-  /** 原始值 → epoch ms（temporal 字段；非法 → null）；复用内置 toTimestamp */
-  toTimestamp: (value: unknown) => number | null;
+  /** 原始值 → epoch ms（temporal 字段；非法 → null）；复用内置 coerceTimestamp */
+  coerceTimestamp: (value: unknown) => number | null;
   /** scheme 名 → interpolator（先查内置 SCHEME_INTERPOLATORS、再查 options.colorSchemes；未注册 throw） */
   resolveColorScheme: (name: string) => (t: number) => string;
 };
@@ -127,7 +127,7 @@ const defineScale = <Def extends ScaleOp>(def: ScaleDefinition<Def>): ScaleDefin
 - **position 族无 legend 契约**：position scale 喂 guide / axis，而 guide 经 `PositionScale.ticks()` 已完全抽象——自定义 position scale 实现 ticks() 即被 guide 渲染，无需额外 guide 契约。这是 scale 集成面里唯一已被现有接口吸收的部分。
 - **channel `resolve` 单次产出 evaluator + descriptor + legendForm（评审 BLOCKING）**：不拆 `resolve()` / `legend()` 两函数——现有约束是「resolver 与 legend 共读同一 descriptor」（`channel.ts:24`），拆开会让 custom scale 重算 domain/range/scheme、legend 与实绘漂移。legend form 由 `legendForm` 显式给（不再按 `scaleType` 闭集判）。
 - **compat 降为 per-definition 谓词 / 标志（评审 BLOCKING）**：`isFieldCompatible(fieldType)` 谓词替代 assertScaleFieldCompatible 的拒绝规则集（单值表达不了「连续 scale 接 continuous + temporal、仅拒 categorical」）；`allowsBaseline` 标志替代 assertBaselineScaleCompatible 的非线性集。registry 据此校验，不再硬编码类型枚举。
-- **`ChannelResolveContext` 固定为公开契约（评审 BLOCKING）**：`fieldType` + `toNumber` / `toTimestamp` 强转 helper + `resolveColorScheme(name)`；values 一律 raw、definition 自转。**不留待决策**——它是 public runtime API。
+- **`ChannelResolveContext` 固定为公开契约（评审 BLOCKING）**：`fieldType` + `toNumber` / `coerceTimestamp` 强转 helper + `resolveColorScheme(name)`；values 一律 raw、definition 自转。**不留待决策**——它是 public runtime API。
 - **`ScaleDescriptor.scaleType` 放宽为 string，legend form 只读 `ChannelResolution.legendForm`（评审 BLOCKING）**：现 `scaleType: PlotScaleValue` 闭合（`channel.ts:30`），custom type 无法合法返回 descriptor。改 `scaleType: string`（descriptor 是 lowering 内部类型、不进 IR，放宽无 IR 影响）；legend form 不写进 descriptor，统一由 `ChannelResolution.legendForm` 给出，form 判别职责移出 scaleType。
 - **`type` 提取 + 形态校验**：从 `schema.shape.type`（z.literal）提取注册键，首次 resolve 期校验「ZodObject + type literal」否则 throw（mirror composite `extractKey`、transform `extractKind`）。
 - **`ScaleDefinition` 泛型自洽（评审 WARNING）**：`type ScaleDefinition<Def extends ScaleOp = ScaleOp> = PositionScaleDefinition<Def> | ChannelScaleDefinition<Def>`（与 ADR-06 `TransformDefinition<Op>` 同形）。
@@ -187,7 +187,7 @@ type ScaleOp = z.infer<typeof ScaleOpSchema>;
 
 ## 待决策点 🔻
 
-- **（已定，移出待决策）channel value 强转 + scheme 上下文**：固定为 `ChannelResolveContext`（`fieldType` + `toNumber` / `toTimestamp` + `resolveColorScheme`），values 一律 raw、definition 自转。详见「决策 (1)」——它是 public runtime API，不悬空。
+- **（已定，移出待决策）channel value 强转 + scheme 上下文**：固定为 `ChannelResolveContext`（`fieldType` + `toNumber` / `coerceTimestamp` + `resolveColorScheme`），values 一律 raw、definition 自转。详见「决策 (1)」——它是 public runtime API，不悬空。
 - **自定义 scale 是否参与 type-driven `deriveScale` 默认派生**：倾向**否**——`deriveScale`（field type → 默认 scale）保持内置（continuous→linear、temporal→time、categorical→band）。自定义 scale 仅显式 `<Scale type="...">` / spec 引用，不自动派生（避免「两个自定义 scale 都声称 continuous 默认」的歧义）。需求出现再加「派生优先级」元数据。
 - **position 族 fallbackRange / setRange 契约**：自定义 position scale 必须实现 `setRange`（expand 在 plotArea 定后收敛 range，`expand.ts:649`）。倾向把 `PositionScale` 接口原样作契约（已是 coordinate/guide 唯一消费面），文档强调五个成员全实现，缺一 fail（运行时 duck-typing 或类型层强约束）。
 - **channel 族覆盖 size/opacity/shape 隐式通道 scale 否**：`channel.ts` 的 size（sqrt）/ opacity（linear）/ shape（ordinal 调色板）是**通道编码逻辑**、内部合成 scale，不经 `spec.scales`。倾向**不纳入本轮**——本 ADR 开「具名 scale（coordinate + color 通道引用）」registry；隐式通道 scale 保持内置（见「不在范围」）。

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_TICK_COUNT, resolveLinearScale, scaleTicks } from '../../src/providers';
 import { type ScaleOperation } from '../../src/schemas';
 import { resolvePositionScale as resolvePositionScaleOp, resolveScaleRegistry } from '../../src/providers';
-import { inferCategoryDomain, toTimestamp } from '../../src/features';
+import { coerceTimestamp, inferCategoryDomain } from '../../src/features';
 
 // 内置 scale registry：position 分派经 registry，测试包一层省去逐处传参。
 const scaleRegistry = resolveScaleRegistry();
@@ -180,12 +180,12 @@ describe('resolvePositionScale linear back-compat (ADR-01)', () => {
   });
 });
 
-describe('resolveTimeScale / toTimestamp (ADR-06, UTC)', () => {
+describe('resolveTimeScale / coerceTimestamp (ADR-06, UTC)', () => {
   it('to_timestamp_number_iso_invalid', () => {
-    expect(toTimestamp(1000)).toBe(1000);
-    expect(toTimestamp('2024-03-01')).toBe(Date.parse('2024-03-01'));
-    expect(toTimestamp('not-a-date')).toBeNull();
-    expect(toTimestamp({})).toBeNull();
+    expect(coerceTimestamp(1000)).toBe(1000);
+    expect(coerceTimestamp('2024-03-01')).toBe(Date.parse('2024-03-01'));
+    expect(coerceTimestamp('not-a-date')).toBeNull();
+    expect(coerceTimestamp({})).toBeNull();
   });
 
   it('time_coordinate_endpoints', () => {
