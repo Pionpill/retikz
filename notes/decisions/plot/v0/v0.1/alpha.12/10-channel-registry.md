@@ -1,6 +1,6 @@
 # ADR-10：visual channel registry —— 内置视觉通道（color / size / opacity / shape / strokeWidth…）收敛为 `defineVisualChannel` + 内部 registry；scale 管数学、channel 管约定
 
-- 状态：Proposed
+- 状态：Accepted（实现 2026-06-20；2026-06-21 随 ADR-11 收敛为统一 visual channel registry / delivery；实现期偏差见「实现状态」）
 - 决策日期：2026-06-20
 - 关联：[plot v0.1-alpha.12 roadmap](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [ADR-03 mark registry（内部收敛、不开放公开扩展的先例）](./03-mark-abstraction-registry.md) · [ADR-07 scale registry（本 ADR 的直接前置·收口了 scale 的 channel family，但 channel 实绘仍 = color）](./07-scale-registry.md) · [plot-design.md §8.3](../../../../../architecture/plot-design.md)
 
@@ -14,6 +14,16 @@
 - **不做（单列后续 ADR）**：公开 `options.visualChannelDefinitions`、全新视觉通道（blur / texture…）的 IR encoding passthrough（`EncodingSchema` 加任意 channel map）+ mark 消费 + legend channel schema、React 声明式糖。这些一旦纳入即触 `ir/**` 下沉契约、升 red。
 
 这样判级稳定：**仅内部 registry 化内置通道 → 不加新 channel、不开放扩展 → 无 IR schema 改动 → Level `yellow` 成立**（与评审第 2 条 BLOCKING 对齐）。
+
+## 实现状态（2026-06-21 修订）
+
+落地与设计一致（size/opacity/strokeWidth/shape 等收敛为 `VisualChannelDefinition`，shape 复用 ordinal，legend 仍 descriptor 同源）。ADR-11 开放自定义视觉通道后，本 ADR 的最终实现形态同步修订为**内置与自定义共享同一 visual channel registry / delivery**：
+
+1. **决策 (2)「`ChannelScaleResolution.of` 放宽 string→ScalarValue」未应用——发现对本轮无必要。** size/opacity/shape 的逐行实绘走 `contract/channel.ts` 的**已泛型** `ChannelResolution<T>`（size/opacity 产 `number`、shape 产 `string`），**不经** `ChannelScaleResolution`——后者（`contract/scale.ts`）仅 color scale family 用、保持产颜色串。故无需放宽；且 `ScalarValue` 实为 `string|number|boolean|null`（裸数据标量），放宽反而把 `null/boolean` 漏进视觉输出、破坏 color 消费方。`ChannelScaleResolution` 的泛化要等「color-family scale（quantize/sequential…）驱动非 color 通道」的跨通道解耦（已划「不在本 ADR 范围」）才需要。
+2. **registry 最终取 `Map<string, AnyVisualChannelDefinition>`，内置先注册、自定义再合并。** 早期实现曾用 `{size,opacity,strokeWidth,shape}` typed record 并在 `expand.ts` 逐个点名；这会让自定义通道落到第二条 `custom` 路径。修订后 `resolveVisualChannelRegistry(options.visualChannelDefinitions)` 返回内置 + 自定义共享的唯一 registry，`resolveVisualChannelDeliveries(...)` 统一生成 `ChannelDelivery[]`。
+3. **`MarkChannels` 不再内置 `ColorOf` / `SizeOf` / `ShapeOf` 等类型字段。** contract 只保留通用的 `ChannelValueResolver`、`ChannelDelivery`、`values/defaults/deliveries` 容器；mark lowering 内部如需特殊消费 color / label，通过字符串 key 从通用容器读取。
+
+实现文件：`contract/channel.ts`（新增 `VisualChannelDefinition` / `ChannelOutputSpace` / `ChannelDelivery` / `ChannelValueResolver`，上移 `ChannelResolution` / `ScaleDescriptor`）、`providers/scale/channel.ts`（内置 visual channel definitions + `resolveVisualChannelRegistry` + `resolveVisualChannelDeliveries`）、`pipeline/expand.ts`（统一 registry / delivery 分派）、`providers/mark/mark.ts`（按 delivery 落点）。新增 `tests/lower/visual-channel-registry.test.ts`。`contract/scale.ts` 未改（决策 2 撤回）。
 
 ## 名词分层（先立后用，明确两个易混 channel）
 
@@ -127,7 +137,7 @@ const defineVisualChannel = (def: VisualChannelDefinition): VisualChannelDefinit
 
 - **`contract/channel.ts`**：新增 `VisualChannelDefinition` / `ChannelOutputSpace` / `defineVisualChannel`；把现位于 `providers/scale/channel.ts` 的 `ChannelResolution` / `ScaleDescriptor` 类型上移至此（属运行时契约，且避免 contract 反依赖 providers）。
 - **`contract/scale.ts`**：`ChannelScaleResolution.of` 放宽 `string → ScalarValue`（唯一改动）。
-- **`providers/scale/channel.ts`**：`makeXxxResolver` → `defineVisualChannel(...)` + 内部 `VISUAL_CHANNELS` registry + `resolveVisualChannel`。
+- **`providers/scale/channel.ts`**：`makeXxxResolver` → `defineVisualChannel(...)` + 内置 / 自定义共享的 visual channel registry + `resolveVisualChannelDeliveries`。
 - **`providers/scale/color.ts`**：`resolveOrdinalScale` 调色板泛型化。
 - **`providers/scale/registry.ts` / `index.ts`**：internal barrel 重导出 visual-channel 解析（仅内部，不进 `src/index.ts`）。
 - **`pipeline/expand.ts`**：通道解析改 registry 分派；legend 按 channel def 形态分派，删 size 特判。

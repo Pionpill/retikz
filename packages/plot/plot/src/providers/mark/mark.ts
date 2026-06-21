@@ -1,6 +1,6 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope, type IRStep } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
-import { type AnyMarkDefinition, type Cell, type CellGeometry, type ColorOf, type CoordinateFrame, type FieldCollector, type IntervalContext, type LabelOf, type MarkChannels, type MarkDefinition, cellGeometryAnchor, hasProjectCell, isRenderableCellGeometry } from '../../contract';
+import { type AnyMarkDefinition, type Cell, type CellGeometry, type ChannelValueResolver, type CoordinateFrame, type FieldCollector, type IntervalContext, type MarkChannels, type MarkDefinition, cellGeometryAnchor, hasProjectCell, isRenderableCellGeometry } from '../../contract';
 import { channelValue, compareByPath, inferCategoryDomain, resolveFieldPath } from '../../features';
 import {
   type DatumIdRegistrar,
@@ -23,6 +23,11 @@ const POINT_SIZE = 10;
 const LINE_STROKE_WIDTH = 2;
 /** 无 color 编码时的回退填充 */
 const DEFAULT_FILL = 'currentColor';
+
+const channelValueOf = <T extends string | number>(channels: MarkChannels, channel: string): ChannelValueResolver<T> | undefined =>
+  channels.values?.[channel] as ChannelValueResolver<T> | undefined;
+
+const channelDefaultOf = <T extends string | number>(channels: MarkChannels, channel: string): T | undefined => channels.defaults?.[channel] as T | undefined;
 
 /**
  * 单个 mark 下沉时的 provenance 上下文（provenance 开时由 expand 注入；关 → undefined）
@@ -139,7 +144,7 @@ const decorateDatum = (
  * priority-1 宿主 label：若位置 mark 带 `label` 且该行解析出内容，给 datum Node 填 core NodeLabelSchema
  * @description 零新建 Node：position / distance / pin 直接落 core label（边框相对定位 + 引线由 core 负责）。
  */
-const attachDatumLabel = (node: IRNode, mark: Mark, row: ExternalRow, labelOf: LabelOf | undefined): IRNode => {
+const attachDatumLabel = (node: IRNode, mark: Mark, row: ExternalRow, labelOf: ChannelValueResolver<string> | undefined): IRNode => {
   if (labelOf === undefined || !('label' in mark) || mark.label === undefined) return node;
   const text = labelOf(row);
   if (text === undefined) return node;
@@ -173,24 +178,10 @@ const attachMarkLayer = (layer: IRScope, mark: Mark, markProvenance: MarkProvena
  */
 const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (mark.type !== PlotMark.Point) return null;
-  const {
-    colorOf,
-    defaultColor = DEFAULT_FILL,
-    sizeOf,
-    opacityOf,
-    shapeOf,
-    strokeOf,
-    strokeWidthOf,
-    fillOpacityOf,
-    drawOpacityOf,
-    rotateOf,
-    paddingOf,
-    minimumSizeOf,
-    minimumWidthOf,
-    minimumHeightOf,
-    zIndexOf,
-    labelOf,
-  } = channels;
+  const colorOf = channelValueOf<string>(channels, 'color');
+  const strokeOf = channelValueOf<string>(channels, 'stroke');
+  const labelOf = channelValueOf<string>(channels, 'label');
+  const defaultColor = channelDefaultOf<string>(channels, 'color') ?? DEFAULT_FILL;
   const isText = mark.encoding.text !== undefined;
   const dx = mark.dx ?? 0;
   const dy = mark.dy ?? 0;
@@ -198,25 +189,12 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
-    const applyDynamicNodeStyle = (node: IRNode): void => {
-      const padding = paddingOf?.(row);
-      if (padding !== undefined) node.padding = padding;
-      const minimumSize = minimumSizeOf?.(row);
-      if (minimumSize !== undefined) node.minimumSize = minimumSize;
-      const minimumWidth = minimumWidthOf?.(row);
-      if (minimumWidth !== undefined) node.minimumWidth = minimumWidth;
-      const minimumHeight = minimumHeightOf?.(row);
-      if (minimumHeight !== undefined) node.minimumHeight = minimumHeight;
-      const fillOpacity = fillOpacityOf?.(row);
-      if (fillOpacity !== undefined) node.fillOpacity = fillOpacity;
-      const drawOpacity = drawOpacityOf?.(row);
-      if (drawOpacity !== undefined) node.drawOpacity = drawOpacity;
-      const opacity = opacityOf?.(row);
-      if (opacity !== undefined) node.opacity = opacity;
-      const rotate = rotateOf?.(row);
-      if (rotate !== undefined) node.rotate = rotate;
-      const zIndex = zIndexOf?.(row) ?? constantZIndex;
-      if (zIndex !== undefined) node.zIndex = zIndex;
+    const applyChannelDeliveries = (node: IRNode, nodeKind: 'pointGlyph' | 'pointText'): void => {
+      if (constantZIndex !== undefined) node.zIndex = constantZIndex;
+      for (const entry of channels.deliveries ?? []) {
+        const value = entry.of(row);
+        if (value !== undefined) entry.deliver(node, value, { mark, row, nodeKind });
+      }
     };
     if (isText) {
       // 文本 glyph：投影同 point（roleValues + projectRoles，坐标系无关）；内容缺失跳过；dx/dy 锚点像素微调
@@ -226,7 +204,7 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
       if (text === undefined) continue;
       const position: [number, number] = dx === 0 && dy === 0 ? point : [point[0] + dx, point[1] + dy];
       const base: IRNode = { type: 'node', position, text };
-      applyDynamicNodeStyle(base);
+      applyChannelDeliveries(base, 'pointText');
       placed.push({ color: colorOf?.(row), node: decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined) });
       continue;
     }
@@ -234,15 +212,9 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
     const point = datumAnchor(mark, row, frame);
     if (!point) continue;
     const base: IRNode = { type: 'node', position: point };
-    applyDynamicNodeStyle(base);
-    const radius = sizeOf?.(row);
-    if (radius !== undefined) base.minimumSize = radius * Math.SQRT2;
-    const shape = shapeOf?.(row);
-    if (shape !== undefined) base.shape = shape;
     const stroke = strokeOf?.(row);
     if (stroke !== undefined) base.stroke = stroke;
-    const strokeWidth = strokeWidthOf?.(row);
-    if (strokeWidth !== undefined) base.strokeWidth = strokeWidth;
+    applyChannelDeliveries(base, 'pointGlyph');
     const node = attachDatumLabel(decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined), mark, row, labelOf);
     placed.push({ color: colorOf?.(row), node });
   }
@@ -268,7 +240,7 @@ const styleForGeometry = (kind: CellGeometry['kind']): ((fill: string) => IRNode
 const cellLayer = (
   placed: Array<{ color: string | undefined; node: IRNode }>,
   kind: CellGeometry['kind'],
-  colorOf: ColorOf | undefined,
+  colorOf: ChannelValueResolver<string> | undefined,
   defaultColor = DEFAULT_FILL,
 ): IRScope => {
   const styleFor = styleForGeometry(kind);
@@ -323,10 +295,10 @@ const lowerCells = (
   frame: CoordinateFrame,
   projectCell: (cell: Cell) => CellGeometry,
   ctx: IntervalContext | undefined,
-  colorOf: ColorOf | undefined,
+  colorOf: ChannelValueResolver<string> | undefined,
   defaultColor: string | undefined,
   markProvenance: MarkProvenance | undefined,
-  labelOf: LabelOf | undefined,
+  labelOf: ChannelValueResolver<string> | undefined,
 ): IRScope | null => {
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   let kind: CellGeometry['kind'] | undefined;
@@ -358,7 +330,7 @@ const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: Coordin
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
   const ctx = isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame) ? buildIntervalContext(mark, frame, rows) : isGenericCoordinateFrame(frame) ? buildGenericIntervalContext(mark, frame, rows) : undefined;
-  const layer = lowerCells(mark, rows, frame, frame.projectCell, ctx, channels.colorOf, channels.defaultColor, markProvenance, channels.labelOf);
+  const layer = lowerCells(mark, rows, frame, frame.projectCell, ctx, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'), markProvenance, channelValueOf<string>(channels, 'label'));
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
 
@@ -483,7 +455,7 @@ const pathSeriesField = (mark: Mark, rows: Array<ExternalRow>): string | undefin
 };
 
 /** 折线（path mark）：单线（常量 color → stroke）或多系列（series 拆多线、各取系列色）（坐标系无关） */
-const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ChannelValueResolver<string> | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
   if (mark.type !== PlotMark.Path) return null;
   const closed = mark.closed ?? false;
   const seriesField = pathSeriesField(mark, rows);
@@ -534,7 +506,7 @@ const buildAreaSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
 };
 
 /** 区域（region mark）：上沿折线 + baseline 回边闭合的可填充 Path（坐标系无关）；单系列或多系列 */
-const lowerRegion = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+const lowerRegion = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ChannelValueResolver<string> | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
   if (mark.type !== PlotMark.Region) return null;
   const baseline = mark.baseline ?? AREA_BASELINE;
   const seriesField = pathSeriesField(mark, rows);
@@ -588,7 +560,7 @@ const linkValueOf = (row: ExternalRow, field: string): number | null => {
 /**
  * 流带（link mark）下沉：每行 → 一条可填充 cubic 曲带 Path（坐标系无关端点投影 + 屏幕空间几何）
  */
-const lowerLink = (mark: LinkMark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined): IRScope | null => {
+const lowerLink = (mark: LinkMark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ChannelValueResolver<string> | undefined, defaultColor: string | undefined): IRScope | null => {
   if (mark.width !== undefined) {
     throw new Error(`lowerPlots: link mark named width scale "${mark.width}" is not supported this round; omit width for a synthesized linear scale`);
   }
@@ -771,7 +743,7 @@ const lowerReference = (
   mark: ReferenceMark,
   rows: Array<ExternalRow>,
   frame: CartesianCoordinateFrame | PolarCoordinateFrame,
-  colorOf: ColorOf | undefined,
+  colorOf: ChannelValueResolver<string> | undefined,
   defaultColor: string | undefined,
   markProvenance: MarkProvenance | undefined,
 ): IRScope | null => {
@@ -844,7 +816,7 @@ const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
-  const layer = lowerPath(mark, rows, frame, channels.colorOf, channels.defaultColor, markProvenance);
+  const layer = lowerPath(mark, rows, frame, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'), markProvenance);
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
 
@@ -852,7 +824,7 @@ const lowerRegionLayer = (mark: Mark, rows: Array<ExternalRow>, frame: Coordinat
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
-  const layer = lowerRegion(mark, rows, frame, channels.colorOf, channels.defaultColor, markProvenance);
+  const layer = lowerRegion(mark, rows, frame, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'), markProvenance);
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
 
@@ -862,7 +834,7 @@ const lowerLinkLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
   if (!isCartesianCoordinateFrame(frame)) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
-  const layer = lowerLink(mark, rows, frame, channels.colorOf, channels.defaultColor);
+  const layer = lowerLink(mark, rows, frame, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'));
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
 
@@ -872,7 +844,7 @@ const lowerReferenceLayer = (mark: Mark, rows: Array<ExternalRow>, frame: Coordi
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
-  const layer = lowerReference(mark, rows, frame, channels.colorOf, channels.defaultColor, markProvenance);
+  const layer = lowerReference(mark, rows, frame, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'), markProvenance);
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
 
@@ -911,6 +883,9 @@ export const MARK_REGISTRY: Record<PlotMarkValue, MarkDefinition> = {
       fields.addChannel(mark.minimumHeight);
       fields.addChannel(mark.zIndex);
       fields.addChannel(mark.encoding.text);
+      for (const channel of Object.values(mark.encoding.channels ?? {})) {
+        fields.addChannel(channel);
+      }
     },
     lower: lowerPoint,
   },

@@ -22,7 +22,7 @@ During compilation, Plot first collects the fields actually referenced by the cu
 | Validation | Sample-check or fully check participating fields, and decide whether invalid values skip or throw | `validateData` / `invalid` |
 | Channel consumption | Mark channels such as `x`, `y`, `color`, `size`, and `text` read canonical values | mark props / `encoding` |
 
-`model` and `format` are persisted with the PlotSpec. `fieldMap` is a serializable lowering option injected by dataset reference. Function options such as `resolveField` participate only at runtime and do not enter IR.
+`model` and `format` are persisted with the PlotSpec. `fieldMap` is a serializable lowering option injected by dataset reference. Function options such as `resolveField` and `defineVisualChannel` participate only at runtime and do not enter IR. See [Custom Data](/plot/grammar/data/custom) when you need those runtime extension points.
 
 ## Data channels
 
@@ -42,5 +42,9 @@ A data channel is the interface through which a field (or constant) reaches a vi
   <LinkedCard href="/plot/grammar/data/channel">
     <strong>Data Channels</strong>
     <span>Bind fields or constants to visual channels such as x, y, color, size, and text.</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/data/custom">
+    <strong>Custom Data</strong>
+    <span>Centralize custom field formats, runtime field parsing, and custom visual channels.</span>
   </LinkedCard>
 </div>

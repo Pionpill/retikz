@@ -53,8 +53,8 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 | --- | --- | --- |
 | 默认格式 | 只写 `type` / 省略解析 | 是 |
 | 常见非默认格式 | 在 `model` 字段上写内置 `format` | 是 |
-| 可复用的自定义格式 | `defineFieldFormat` + `<Plot formatDefinitions>`，`model` 写格式名 | 是，IR 只存格式名串 |
-| 任意运行时逻辑 | 给 `<Plot>` 写 `resolveField` | 否，函数只在运行时使用 |
+| 可复用的自定义格式 | `defineFieldFormat` + `formatDefinitions` | 是，IR 只存格式名串 |
+| 任意运行时逻辑 | `resolveField` | 否，函数只在运行时使用 |
 
 ### 声明式解析格式
 
@@ -90,70 +90,11 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 - `slashDate` 只认严格 `YYYY/MM/DD`；`DD/MM/YYYY`、`MM/DD/YYYY` 这类有地区歧义的布局不收（避免同一串在不同环境解析成不同日期）。
 - 解析优先级：`resolveField` 的 `parse` > 声明式 `format`（内置或自定义）> 内置默认。
 
-### 自定义具名格式
+### 自定义解析
 
-内置 `format` 词表之外，常见的「自定义但可复用」格式（货币串、地区日期、`'1.2万'` 这类带单位的数）可以用 `defineFieldFormat` 注册成自己的具名格式。它和坐标系 `defineCoordinate`、变换 `defineTransform`、图元 `defineMark` 同一套范式：写进 `model` 的仍然只是一个格式名串，**进 IR、可序列化**；真正的解析函数放在 runtime definition 里，经 `<Plot formatDefinitions={[...]}>` 注入。
+内置 `format` 词表之外，常见且可复用的格式用 `defineFieldFormat` 注册成具名格式；一次性、按数据源分支的任意解析用 `resolveField`。两者的完整定义契约、示例和选择建议见[自定义数据](/plot/grammar/data/custom)。
 
-```tsx
-// 把 '1.2万' 解析成 12000：name 即写进 model 的格式名，impliedType 让省略 type 的字段当 continuous
-const wan = defineFieldFormat({
-  name: 'wan',
-  impliedType: 'continuous',
-  parse: raw => (typeof raw === 'string' && raw.endsWith('万') ? Number(raw.slice(0, -1)) * 10000 : Number(raw)),
-});
-
-<Plot data={rows} model={[{ name: 'month', type: 'temporal' }, { name: 'revenue', format: 'wan' }]}
-      formatDefinitions={[wan]}>{/* … */}</Plot>
-```
-
-<ComponentPreview name="processing-custom-format" sourceFiles={['processing-custom-format.data.ts']} />
-
-定义契约：
-
-| 字段 | 作用 |
-| --- | --- |
-| `name` | 注册键 = 写进 `model` 的 `format` 串；必须非空、且不与内置格式名（`iso` / `percent` / …）冲突。 |
-| `impliedType` | 这个格式唯一蕴含的测量类型。省略 `type` 的字段由它覆盖推断；显式 `type` 与之冲突会报清晰错误（和内置 format 同规则）。 |
-| `parse` | 原始值 → canonical 值（continuous / temporal 返数字，categorical 返字符串 / 数字）；返回 `undefined` / `NaN` 表示非法，下游按非有限值跳过。必须确定性。 |
-
-规则：
-
-- 自定义格式与内置经**同一注册表**分派：内置 6 个恒可用，自定义 `name` 撞内置名或两个自定义同名会 fail-loud；`model` 写了未注册的格式名也在编译期报错，不静默。
-- 解析优先级与内置 `format` 相同（`resolveField.parse` 仍可对同字段覆盖它）。
-- 适合「格式可枚举、想随 spec 持久化、想跨图复用」的场景；真正一次性、按数据源动态决定的解析仍用下面的 `resolveField`。
-
-解析和归一化发生在 transform、scale、mark 之前。Plot 会把解析后的值按逻辑字段名写入 canonical 行（规范化行：解析、归一后写回逻辑字段名的标准行）；后续所有环节都读这份值。因此 `fieldMap={{ revenue: 'finance.amount' }}`、`format: 'percent'` 和 `resolveField` 都只影响数据准备阶段，mark 里仍然写 `y="revenue"`。
-
-### 自定义解析函数
-
-碰上词表外的**任意格式**（如 `'2024Q1'` 季度串、自定义分隔符）或想**强制某字段当某类型**（数值枚举当 `categorical`）时，给 `resolveField` 一个函数——它**不进 IR**（是运行时选项，和 `fieldMap` 同层），按字段名返回「类型覆盖 + 可选自定义解析器」：
-
-```tsx
-<Plot data={rows} model={[{ name: 'quarter', type: 'temporal' }]}
-  resolveField={(field) => {
-    // 词表外的格式：类型 + 解析一起给（'2024Q1' → 季度首日）
-    if (field === 'quarter') return { type: 'temporal', parse: raw => {
-      const [year, q] = String(raw).split('Q');
-      return Date.UTC(Number(year), (Number(q) - 1) * 3, 1);
-    } };
-    if (field === 'statusCode') return { type: 'categorical' }; // 数值枚举当类别（值原样）
-    return undefined;                                            // 其余走 model/推断 + 内置解析
-  }}>
-  {/* … */}
-</Plot>
-```
-
-下面这个例子把 `'2026Q1'` 这样的季度字符串解析成季度首日时间戳。它不属于内置 `format` 词表，所以用 `resolveField` 给 `quarter` 字段补一段运行时解析逻辑。
-
-<ComponentPreview name="processing-resolve" sourceFiles={['processing-resolve.data.ts']} />
-
-规则：
-
-- 返回 `{ type }` 覆盖该字段类型（优先级高于 model 与推断）；返回 `{ parse }` 用自定义解析器把原始值转成规范值（`temporal`/`continuous` 返数字、`categorical` 返字符串/数字），返 `undefined` 跳过该值。
-- **只给 `parse` 不给 `type`** 时，类型沿用 model 声明——所以无 model 时必须同时返回 `type`，否则类型来源不清会报错。
-- `resolveField` **不绕过 strict**：声明了 model，引用未列出的字段照样报错——它只覆盖类型/解析，不能把拼错字段洗成合法字段。
-- 第二参提供 `{ dataReference, physicalPath, declaredType }`，同名字段接不同数据源、或配合 `fieldMap` 时，可以按数据源和实际路径分支。
-- 因为是函数、不可序列化，`resolveField` 适合手写代码的逃生舱；要 spec 完全可移植 / LLM 友好，优先用 model 的声明式 `type` / `format`。
+解析和归一化发生在 transform、scale、mark 之前。Plot 会把解析后的值按逻辑字段名写入 canonical 行（规范化行：解析、归一后写回逻辑字段名的标准行）；后续所有环节都读这份值。因此 `fieldMap={{ revenue: 'finance.amount' }}`、`format: 'percent'` 和自定义解析都只影响数据准备阶段，mark 里仍然写 `y="revenue"`。
 
 ## 校验脏数据
 

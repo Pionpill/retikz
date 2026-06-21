@@ -64,7 +64,7 @@ export const SizeChannelSchema = z
     scale: z.string().min(1).optional().describe('Optional sqrt-scale name (only meaningful with field); omitted means a default radius (sqrt) scale is synthesized'),
   })
   .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'size channel must set exactly one of `field` or `value`' })
-  .describe('Size channel (PointMark legacy helper): field maps glyph radius via a sqrt scale; value is a constant final radius (px) that bypasses the scale');
+  .describe('Size channel (PointMark): field maps glyph radius via a sqrt scale; value is a constant final radius (px) that bypasses the scale');
 
 export const OpacityChannelSchema = z
   .object({
@@ -73,7 +73,7 @@ export const OpacityChannelSchema = z
     scale: z.string().min(1).optional().describe('Optional linear-scale name (only meaningful with field); omitted means a default opacity scale is synthesized'),
   })
   .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'opacity channel must set exactly one of `field` or `value`' })
-  .describe('Opacity channel (PointMark legacy helper): field maps glyph opacity via a clamped linear scale; value is a constant opacity that bypasses the scale');
+  .describe('Opacity channel (PointMark): field maps glyph opacity via a clamped linear scale; value is a constant opacity that bypasses the scale');
 
 export const ShapeChannelSchema = z
   .object({
@@ -81,7 +81,7 @@ export const ShapeChannelSchema = z
     value: z.string().min(1).optional().describe('Constant glyph shape name: a core / registered node shape (mutually exclusive with field)'),
   })
   .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'shape channel must set exactly one of `field` or `value`' })
-  .describe('Shape channel (PointMark legacy helper): field maps glyph shape via the built-in shape palette; value is a constant core shape name. No explicit scale ref this round');
+  .describe('Shape channel (PointMark): field maps glyph shape via the built-in shape palette; value is a constant core shape name');
 
 export const TextChannelSchema = z
   .object({
@@ -102,7 +102,13 @@ export const PointEncodingSchema = PositionEncodingSchema.extend({
   text: TextChannelSchema.optional().describe(
     'Optional text content channel: when set the point lowers to a borderless core Node carrying text (free-text / datum label) instead of a glyph; field is a per-datum string, value is constant, format handles numeric / temporal format',
   ),
-}).describe('PointMark encoding: positional channels plus optional text; visual properties live on the mark as MarkValueType fields');
+  channels: z
+    .record(z.string(), ChannelSchema)
+    .optional()
+    .describe(
+      'Extension visual channel bindings: a map of registered channel name to field / constant binding, resolved and delivered to a core node style property by a VisualChannelDefinition supplied via options.visualChannelDefinitions. Built-in point channels such as size / opacity / shape / strokeWidth keep their named props. A key colliding with a built-in channel name fails loud at lowering',
+    ),
+}).describe('PointMark encoding: positional channels plus optional text and extension visual channel bindings; built-in visual properties live on the mark as MarkValueType fields');
 
 export const MarkLabelSchema = z
   .object({

@@ -22,7 +22,7 @@ description: 数据是图形语法的首要成员。数据层把外部数据源�
 | 数据校验 | 对参与字段做抽样或全量校验，决定非法值跳过还是报错 | `validateData` / `invalid` |
 | 通道消费 | mark 的 `x` / `y` / `color` / `size` / `text` 等通道读取 canonical 值 | mark props / `encoding` |
 
-`model`、`format` 会随 PlotSpec 持久化；`fieldMap` 是可序列化的 lowering 选项，按数据集 reference 注入；`resolveField` 这类函数只在运行时参与编译，不进入 IR。
+`model`、`format` 会随 PlotSpec 持久化；`fieldMap` 是可序列化的 lowering 选项，按数据集 reference 注入；`resolveField` 和 `defineVisualChannel` 这类函数只在运行时参与编译，不进入 IR。需要自定义这些运行时能力时，见[自定义数据](/plot/grammar/data/custom)。
 
 ## 数据通道
 
@@ -42,5 +42,9 @@ description: 数据是图形语法的首要成员。数据层把外部数据源�
   <LinkedCard href="/plot/grammar/data/channel">
     <strong>数据通道</strong>
     <span>把字段或常量绑定到 x、y、color、size、text 等视觉通道。</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/data/custom">
+    <strong>自定义数据</strong>
+    <span>集中说明自定义字段格式、运行时字段解析和自定义视觉通道。</span>
   </LinkedCard>
 </div>

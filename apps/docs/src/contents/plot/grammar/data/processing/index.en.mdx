@@ -53,8 +53,8 @@ Built-in parsing only accepts fixed shapes: `temporal` takes `Date` / epoch-ms /
 | --- | --- | --- |
 | Default formats | declare `type`, or omit parsing | Yes |
 | Common non-default formats | add a built-in `format` on a model field | Yes |
-| Reusable custom format | `defineFieldFormat` + `<Plot formatDefinitions>`, `model` names the format | Yes, the IR stores only the format name |
-| Arbitrary runtime logic | pass `resolveField` to `<Plot>` | No, the function is runtime-only |
+| Reusable custom format | `defineFieldFormat` + `formatDefinitions` | Yes, only the format name |
+| Arbitrary runtime logic | `resolveField` | No, runtime function only |
 
 ### format
 
@@ -90,70 +90,11 @@ Rules:
 - `slashDate` accepts only strict `YYYY/MM/DD`; ambiguous layouts like `DD/MM/YYYY` / `MM/DD/YYYY` are not accepted (so the same string can't parse to different dates in different environments).
 - Parsing priority: `resolveField`'s `parse` > declarative `format` (built-in or custom) > built-in default.
 
-### Custom named formats
+### Custom Parsing
 
-Beyond the built-in `format` vocabulary, common "custom but reusable" formats (currency strings, regional dates, unit-suffixed numbers like `'1.2万'`) can be registered as your own named format with `defineFieldFormat`. It follows the same pattern as `defineCoordinate`, `defineTransform`, and `defineMark`: what goes into `model` is still just a format-name string that **enters the IR and is serializable**; the actual parser lives in a runtime definition injected via `<Plot formatDefinitions={[...]}>`.
+Beyond the built-in `format` vocabulary, common reusable formats can be registered with `defineFieldFormat`; one-off parsing or data-source branching goes through `resolveField`. See [Custom Data](/plot/grammar/data/custom) for the full contracts, examples, and choosing guide.
 
-```tsx
-// Parse '1.2万' to 12000: name is the format string in model; impliedType makes a type-less field continuous
-const wan = defineFieldFormat({
-  name: 'wan',
-  impliedType: 'continuous',
-  parse: raw => (typeof raw === 'string' && raw.endsWith('万') ? Number(raw.slice(0, -1)) * 10000 : Number(raw)),
-});
-
-<Plot data={rows} model={[{ name: 'month', type: 'temporal' }, { name: 'revenue', format: 'wan' }]}
-      formatDefinitions={[wan]}>{/* … */}</Plot>
-```
-
-<ComponentPreview name="processing-custom-format" sourceFiles={['processing-custom-format.data.ts']} />
-
-Definition contract:
-
-| Field | Purpose |
-| --- | --- |
-| `name` | Registration key = the `format` string in `model`; must be non-empty and must not collide with a built-in format name (`iso` / `percent` / …). |
-| `impliedType` | The single measurement type this format implies. A type-less field gets it as an override; a conflicting explicit `type` throws a clear error (same rule as built-in formats). |
-| `parse` | Raw value → canonical value (numbers for continuous / temporal, string / number for categorical); return `undefined` / `NaN` to mark a value invalid, skipped downstream as non-finite. Must be deterministic. |
-
-Rules:
-
-- Custom and built-in formats dispatch through **one registry**: the 6 built-ins are always available; a custom `name` that collides with a built-in or another custom throws fail-loud, and a `model` that names an unregistered format errors at compile time rather than going silent.
-- Parsing priority matches built-in `format` (`resolveField.parse` can still override it on the same field).
-- Use it when the format is enumerable, should persist with the spec, and is reused across charts; truly one-off, per-source parsing still goes through `resolveField` below.
-
-Parsing and normalization happen before transforms, scales, and marks. Plot writes parsed values back under logical field names into the canonical row (the standardized row after parsing and coercion); every later stage reads that value. So `fieldMap={{ revenue: 'finance.amount' }}`, `format: 'percent'`, and `resolveField` only affect preparation; the mark still says `y="revenue"`.
-
-### resolveField
-
-For **arbitrary formats** outside the table (a `'2024Q1'` quarter string, a custom separator) or to **force a field to a type** (a numeric enum as `categorical`), pass `resolveField` a function — it **does not enter the IR** (a runtime option, alongside `fieldMap`) and returns, per field name, a "type override + optional custom parser":
-
-```tsx
-<Plot data={rows} model={[{ name: 'quarter', type: 'temporal' }]}
-  resolveField={(field) => {
-    // a format outside the table: give type and parser together ('2024Q1' → first day of the quarter)
-    if (field === 'quarter') return { type: 'temporal', parse: raw => {
-      const [year, q] = String(raw).split('Q');
-      return Date.UTC(Number(year), (Number(q) - 1) * 3, 1);
-    } };
-    if (field === 'statusCode') return { type: 'categorical' }; // numeric enum as a category (value kept)
-    return undefined;                                            // everything else: model/inference + built-in parsing
-  }}>
-  {/* … */}
-</Plot>
-```
-
-The example below parses quarter strings like `'2026Q1'` into the first day of the quarter. That shape is outside the built-in `format` table, so `resolveField` supplies runtime parsing for the `quarter` field.
-
-<ComponentPreview name="processing-resolve" sourceFiles={['processing-resolve.data.ts']} />
-
-Rules:
-
-- Returning `{ type }` overrides the field's type (higher priority than the model and inference); returning `{ parse }` uses a custom parser to turn the raw value into a canonical one (`temporal`/`continuous` return a number, `categorical` a string/number), and returning `undefined` skips that value.
-- With **only `parse` and no `type`**, the type comes from the model declaration — so without a model you must return `type` as well, otherwise the type source is unclear and Plot errors.
-- `resolveField` **does not bypass strict mode**: with a model declared, referencing an unlisted field still errors — it only overrides type/parsing, it cannot turn a misspelled field into a valid one.
-- The second argument provides `{ dataReference, physicalPath, declaredType }`, so the same logical field can branch by data source or by the actual path after `fieldMap`.
-- Being a function, it is not serializable, so `resolveField` is the escape hatch for hand-written code; for a fully portable / LLM-friendly spec, prefer the model's declarative `type` / `format`.
+Parsing and normalization happen before transforms, scales, and marks. Plot writes parsed values back under logical field names into the canonical row (the standardized row after parsing and coercion); every later stage reads that value. So `fieldMap={{ revenue: 'finance.amount' }}`, `format: 'percent'`, and custom parsing only affect preparation; the mark still says `y="revenue"`.
 
 ## Validating dirty data
 

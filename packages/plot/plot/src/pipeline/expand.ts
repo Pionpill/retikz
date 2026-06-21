@@ -1,9 +1,9 @@
 import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, JsonObjectSchema, defineComposite } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
 import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type MarkOperation, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
-import { type CategoryOrder, type ChannelResolution, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyTransforms, assertBaselineScaleCompatible, assertScaleFieldCompatible, collectFormatFields, deriveScale, lowerMark, makeColorSchemeResolver, makeNumericStyleResolver, makeOpacityResolver, makeShapeResolver, makeSizeResolver, makeStrokeWidthResolver, orderedCategoryDomain, resolveChannelScale, resolveCoordinateRegistry, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, scaleTicks } from '../providers';
+import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyTransforms, assertBaselineScaleCompatible, assertScaleFieldCompatible, collectFormatFields, deriveScale, lowerMark, makeColorSchemeResolver, orderedCategoryDomain, resolveChannelScale, resolveCoordinateRegistry, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, resolveVisualChannelDeliveries, resolveVisualChannelRegistry, scaleTicks } from '../providers';
 import { type LegendEntry, type LegendInput, type ResolveField, type ResolveLabel, applyFieldResolver, assertAllValuesValid, channelValue, labelOf, lowerCustomAxis, lowerGuide, lowerLegend, normalizeRows, resolveFieldPath, resolveFieldTypes, toTimestamp, validateBoundData } from '../features';
-import { type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type ChannelResolveContext, type ColorOf, type CoordinateFrame, type FieldFormatDefinition, type LabelOf, isBuiltinScaleOperation } from '../contract';
+import { type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type AnyVisualChannelDefinition, type ChannelResolveContext, type ChannelValueResolver, type CoordinateFrame, type FieldFormatDefinition, isBuiltinScaleOperation } from '../contract';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect } from './layout';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { collectSourceFields } from './source-fields';
@@ -166,6 +166,11 @@ export type LowerPlotsOptions = {
    * @description 内置 13 个 scale 恒可用；自定义 type 未注册 / type 冲突会 fail-loud。position 族喂 coordinate 投影 + guide，channel 族喂 color 通道 + legend。
    */
   scaleDefinitions?: Array<AnyScaleDefinition>;
+  /**
+   * 扩展视觉通道 definition 数组（运行时函数，不进 IR）：mark 的 `encoding.channels.<name>` 据此解析并落到 core node 样式属性。
+   * @description 内置通道（color/size/opacity/shape/strokeWidth…）恒可用；自定义 `channel` 撞内置名 / 互撞 / 缺 deliver → fail-loud。
+   */
+  visualChannelDefinitions?: Array<AnyVisualChannelDefinition>;
   /**
    * 自定义命名配色 scheme（name → interpolator 纯函数，不进 IR）：IR 只存 scheme 名串，求值期解析为函数。
    * @description 先查内置 scheme、再查此表；sequential / diverging / quantize / threshold / quantile 与自定义 channel scale 均可引用自定义 scheme 名。未命中 fail-loud。
@@ -414,14 +419,14 @@ const makeColorResolver = (
   resolveColorScheme: (name: string) => (t: number) => string,
   pickChannel: (mark: MarkOperation) => Channel | undefined = markColorChannel,
   channelName = 'color',
-): ((mark: MarkOperation) => ColorOf | undefined) => {
+): ((mark: MarkOperation) => ChannelValueResolver<string> | undefined) => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   // 字段名 → order（与位置通道同源 data.model）：颜色 ordinal 域按字段 order 排，保证位置 / 颜色同序
   const fieldOrders = new Map<string, CategoryOrder>();
   for (const field of node.data.model ?? []) {
     if (field.order !== undefined) fieldOrders.set(field.name, field.order);
   }
-  return (mark: MarkOperation): ColorOf | undefined => {
+  return (mark: MarkOperation): ChannelValueResolver<string> | undefined => {
     const channel = pickChannel(mark);
     if (!channel) return undefined;
     if (channel.value !== undefined) {
@@ -475,8 +480,8 @@ const makeColorResolver = (
  *   无内容声明的 mark → undefined（不挂 label / 不产文本）。format 分派按 content.field 的 fieldType（temporal 走时间格式、数值走 d3-format）。
  *   运行时 resolveLabel[markId] 注入（最高优先、不进 IR）；mark 无 id 时无法命中 resolveLabel，仅走声明层。
  */
-const makeLabelResolver = (fieldTypes: Map<string, PlotFieldTypeValue>, resolveLabel: Record<string, ResolveLabel> | undefined): ((mark: Mark) => LabelOf | undefined) => {
-  return (mark: Mark): LabelOf | undefined => {
+const makeLabelResolver = (fieldTypes: Map<string, PlotFieldTypeValue>, resolveLabel: Record<string, ResolveLabel> | undefined): ((mark: Mark) => ChannelValueResolver<string> | undefined) => {
+  return (mark: Mark): ChannelValueResolver<string> | undefined => {
     const content = mark.type === PlotMark.Point && mark.encoding.text !== undefined ? mark.encoding.text : 'label' in mark ? mark.label?.content : undefined;
     const runtime = mark.id !== undefined ? resolveLabel?.[mark.id] : undefined;
     if (content === undefined && runtime === undefined) return undefined;
@@ -494,9 +499,8 @@ const makeLabelResolver = (fieldTypes: Map<string, PlotFieldTypeValue>, resolveL
  */
 const collectChannelDescriptors = (
   node: PlotSpec,
-  resolveSize: (mark: Mark) => ChannelResolution<number> | undefined,
-  resolveOpacity: (mark: Mark) => ChannelResolution<number> | undefined,
-  resolveShape: (mark: Mark) => ChannelResolution<string> | undefined,
+  visualChannelCtx: { node: PlotSpec; rows: Array<ExternalRow>; fieldTypes: Map<string, PlotFieldTypeValue> },
+  visualChannelRegistry: ReadonlyMap<string, AnyVisualChannelDefinition>,
 ): Map<LegendChannelValue, ScaleDescriptor> => {
   const out = new Map<LegendChannelValue, ScaleDescriptor>();
   const register = (descriptor: ScaleDescriptor | undefined): void => {
@@ -504,9 +508,10 @@ const collectChannelDescriptors = (
   };
   for (const mark of node.marks) {
     if (!isBuiltinMark(mark)) continue;
-    register(resolveSize(mark)?.descriptor);
-    register(resolveOpacity(mark)?.descriptor);
-    register(resolveShape(mark)?.descriptor);
+    for (const def of visualChannelRegistry.values()) {
+      if (def.legend === undefined) continue;
+      register(def.resolve(visualChannelCtx)(mark)?.descriptor);
+    }
   }
   return out;
 };
@@ -878,18 +883,9 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   const resolveColor = makeColorResolver(node, rows, fieldTypes, scaleRegistry, resolveColorScheme);
   const resolveFill = makeColorResolver(node, rows, fieldTypes, scaleRegistry, resolveColorScheme, pointFillChannel, 'fill');
   const resolveStroke = makeColorResolver(node, rows, fieldTypes, scaleRegistry, resolveColorScheme, pointStrokeChannel, 'stroke');
-  const resolveSize = makeSizeResolver(node, rows, fieldTypes);
-  const resolveOpacity = makeOpacityResolver(node, rows, fieldTypes);
-  const resolveShape = makeShapeResolver(node, rows, fieldTypes);
-  const resolveStrokeWidth = makeStrokeWidthResolver(node, rows, fieldTypes);
-  const resolveFillOpacity = makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.fillOpacity : undefined), 'fillOpacity', { range: [0.2, 1], clamp: true });
-  const resolveDrawOpacity = makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.drawOpacity : undefined), 'drawOpacity', { range: [0.2, 1], clamp: true });
-  const resolveRotate = makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.rotate : undefined), 'rotate');
-  const resolvePadding = makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.padding : undefined), 'padding');
-  const resolveMinimumSize = makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.minimumSize : undefined), 'minimumSize');
-  const resolveMinimumWidth = makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.minimumWidth : undefined), 'minimumWidth');
-  const resolveMinimumHeight = makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.minimumHeight : undefined), 'minimumHeight');
-  const resolveZIndex = makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.zIndex : undefined), 'zIndex', { integer: true });
+  const visualChannelCtx = { node, rows, fieldTypes };
+  // 视觉通道 registry：内置 definition 先注册，自定义 definition 再合并；后续统一生成 delivery。
+  const visualChannelRegistry = resolveVisualChannelRegistry(options.visualChannelDefinitions);
   const resolveLabelOf = makeLabelResolver(fieldTypes, options.resolveLabel);
 
   // plot 级 datum id 登记器：datumIdField + plotId 在时建一份，线穿全 mark——跨 mark 共享 seen，
@@ -903,30 +899,23 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   // provenance 开 → 传 markProvenance（plotId / markIndex / datum 开关 + 共享 registerDatumId），各层 / datum 绑 id + 来源 meta
   const markLayers: Array<IRChild> = node.marks
     .map((mark, markIndex) => {
-      // 通用通道（color / fill / stroke）对自定义 mark 也有效（走共享 encoding）；
-      // 散点专属样式通道（size / opacity / shape / 数值样式 / label）仅内置 mark，自定义 mark 在其 lower 内自理。
+      // 通用颜色通道对自定义 mark 也有效；point 视觉通道经同一 visual channel registry 生成 delivery。
       const builtinMark: Mark | undefined = isBuiltinMark(mark) ? mark : undefined;
+      const colorOf = resolveColor(mark) ?? resolveFill(mark);
+      const strokeOf = resolveStroke(mark);
+      const labelResolver = builtinMark ? resolveLabelOf(builtinMark) : undefined;
       return lowerMark(
         mark,
         rows,
         frame,
         {
-          colorOf: resolveColor(mark) ?? resolveFill(mark),
-          defaultColor: defaultColorOf(node, markIndex),
-          sizeOf: builtinMark ? resolveSize(builtinMark)?.of : undefined,
-          opacityOf: builtinMark ? resolveOpacity(builtinMark)?.of : undefined,
-          shapeOf: builtinMark ? resolveShape(builtinMark)?.of : undefined,
-          strokeOf: resolveStroke(mark),
-          strokeWidthOf: builtinMark ? resolveStrokeWidth(builtinMark)?.of : undefined,
-          fillOpacityOf: builtinMark ? resolveFillOpacity(builtinMark)?.of : undefined,
-          drawOpacityOf: builtinMark ? resolveDrawOpacity(builtinMark)?.of : undefined,
-          rotateOf: builtinMark ? resolveRotate(builtinMark)?.of : undefined,
-          paddingOf: builtinMark ? resolvePadding(builtinMark)?.of : undefined,
-          minimumSizeOf: builtinMark ? resolveMinimumSize(builtinMark)?.of : undefined,
-          minimumWidthOf: builtinMark ? resolveMinimumWidth(builtinMark)?.of : undefined,
-          minimumHeightOf: builtinMark ? resolveMinimumHeight(builtinMark)?.of : undefined,
-          zIndexOf: builtinMark ? resolveZIndex(builtinMark)?.of : undefined,
-          labelOf: builtinMark ? resolveLabelOf(builtinMark) : undefined,
+          values: {
+            ...(colorOf !== undefined ? { color: colorOf } : {}),
+            ...(strokeOf !== undefined ? { stroke: strokeOf } : {}),
+            ...(labelResolver !== undefined ? { label: labelResolver } : {}),
+          },
+          defaults: { color: defaultColorOf(node, markIndex) },
+          deliveries: builtinMark ? resolveVisualChannelDeliveries(builtinMark, visualChannelCtx, visualChannelRegistry) : undefined,
         },
         provenance ? { context: provenance, markIndex, registerDatumId } : undefined,
         markRegistry,
@@ -939,7 +928,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   const legendGuides = (node.guides ?? []).filter(isLegendGuide);
   const legendLayers: Array<IRScope> = [];
   if (legendGuides.length > 0) {
-    const channelDescriptors = collectChannelDescriptors(node, resolveSize, resolveOpacity, resolveShape);
+    const channelDescriptors = collectChannelDescriptors(node, visualChannelCtx, visualChannelRegistry);
     const bands = reserveLegendBands(legendGuides, width, height, plotArea);
     legendLayers.push(...buildLegendLayers(node, rows, fieldTypes, channelDescriptors, legendGuides, options.fontSize ?? DEFAULT_FONT_SIZE, bands, scaleRegistry, resolveColorScheme));
   }

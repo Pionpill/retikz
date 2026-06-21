@@ -111,6 +111,7 @@
     "dataModel": "数据模型",
     "dataProcessing": "数据处理",
     "dataChannel": "数据通道",
+    "dataCustom": "自定义数据",
     "grammar": "图形语法",
     "grammarTransform": "变换",
     "grammarTransformRow": "行级变换",

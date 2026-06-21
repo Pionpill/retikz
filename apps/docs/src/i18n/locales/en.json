@@ -111,6 +111,7 @@
     "dataModel": "Data Model",
     "dataProcessing": "Processing",
     "dataChannel": "Data Channels",
+    "dataCustom": "Custom Data",
     "grammar": "Grammar",
     "grammarTransform": "Transforms",
     "grammarTransformRow": "Row Transforms",

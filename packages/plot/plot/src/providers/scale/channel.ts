@@ -1,50 +1,25 @@
 import { isFiniteNumber } from '@retikz/math';
+import { type AnyVisualChannelDefinition, type ChannelDelivery, type ChannelResolution, type VisualChannelContext, type VisualChannelDefinition, defineVisualChannel, isBuiltinScaleOperation } from '../../contract';
 import { inferCategoryDomain, resolveFieldPath } from '../../features';
 import {
   type ExternalRow,
-  type LegendChannelValue,
   type LinearScale,
   type Mark,
   type MarkValueType,
+  type OrdinalScale,
   PlotFieldType,
   type PlotFieldTypeValue,
   PlotMark,
   PlotScale,
   type PlotSpec,
-  type ScalarValue,
   type ScaledMarkValueType,
   type SqrtScale,
 } from '../../schemas';
-import { isBuiltinScaleOperation } from '../../contract';
+import { resolveOrdinalScale } from './color';
 import { resolveLinearScale, resolveSqrtScale } from './position';
 
-/**
- * 通道 scale 描述符：legend 据此画 swatch / ramp / 分箱 / 梯度符号
- * @description lowering 内部类型、**不进 IR**（domain/range 是裸值数组，绝不含函数 / d3 对象）。
- *   resolver 与 legend 共读同一 descriptor，保证图例与实绘同源（评审 P1 ⑥）。
- */
-export type ScaleDescriptor = {
-  /** 描述的非位置通道（color / size / opacity / shape） */
-  channel: LegendChannelValue;
-  /** 绑定 scale 的 type 串（放宽接纳自定义 type；legend 形态改由 ChannelScaleResolution.legendForm 决定，不再据此闭集判） */
-  scaleType: string;
-  /** 域：连续 = [min, max]、分类 = 类别序、离散化 = 边界 / 类别 */
-  domain: ReadonlyArray<ScalarValue>;
-  /** 值域：色串 / 半径 / 不透明度 / shape 名（与 domain 同序或连续端点） */
-  range: ReadonlyArray<ScalarValue>;
-  /** 绑定字段名（legend 标题缺省 + 标签 formatter 选型用）；常量通道无字段 */
-  field?: string;
-  /** 绑定字段类型（标签 formatter 选型：数字 / 时间 / 分类，决策 ⑨）；常量 / 类型未知时省略 */
-  fieldType?: PlotFieldTypeValue;
-};
-
-/** 单通道解析结果：逐行视觉量函数 + 供 legend 的可复用 descriptor（字段编码才有 descriptor；常量编码无） */
-export type ChannelResolution<T> = {
-  /** 逐行视觉量函数（mark 实绘用） */
-  of: (row: ExternalRow) => T | undefined;
-  /** scale descriptor（字段编码 + 经 scale 才产；常量 value 编码 → undefined，不入 legend） */
-  descriptor?: ScaleDescriptor;
-};
+// ScaleDescriptor / ChannelResolution 已上移 contract/channel.ts（属运行时契约、且 VisualChannelDefinition 依赖之）；此处再导出保 providers barrel 表面稳定。
+export type { ChannelResolution, ScaleDescriptor } from '../../contract';
 
 export type MarkValueResolution<T> = ChannelResolution<T> & {
   /** 绑定的数据字段名；常量值没有字段名。 */
@@ -92,12 +67,13 @@ export const SIZE_MIN_RADIUS = 2;
 export const SIZE_MAX_RADIUS = 20;
 
 /**
- * 解析某 mark 的 size 编码 → 行→半径（px）
+ * size 通道解析：行 → 半径（px）
  * @description 仅 PointMark 有 size。常量 value 直接作最终半径（绕过 scale）；字段过 sqrt 半径 scale
  *   （显式 sqrt scale 引用或自动合成），domain 默认 [0, maxPositive]、range [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS]。
- *   边界（ADR-02 ③）：无正值 → 全 SIZE_MIN_RADIUS；单正值 → range 上界；负值 fail-loud。
+ *   边界：无正值 → 全 SIZE_MIN_RADIUS；单正值 → range 上界；负值 fail-loud。
  */
-export const makeSizeResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): ((mark: Mark) => ChannelResolution<number> | undefined) => {
+const resolveSizeChannel = (ctx: VisualChannelContext): ((mark: Mark) => ChannelResolution<number> | undefined) => {
+  const { node, rows, fieldTypes } = ctx;
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   return (mark: Mark): ChannelResolution<number> | undefined => {
     if (mark.type !== PlotMark.Point) return undefined;
@@ -152,7 +128,7 @@ export type NumericStyleResolverOptions = {
 };
 
 /**
- * 解析 PointMark 的数值样式字段 → 行→数值
+ * 解析 PointMark 的数值样式字段 → 行→数值（opacity / strokeWidth / fillOpacity / rotate / padding / zIndex… 共享基型）
  * @description field 变体若给 scale 或默认 range，则过 linear scale；否则直接使用字段原始有限数。
  *   非 continuous 字段（temporal / categorical）fail-loud；constant 变体由 nodeDefault / node 本身处理，不在这里产 resolver。
  */
@@ -211,21 +187,16 @@ export const makeNumericStyleResolver = (
 export const STROKE_WIDTH_MIN = 0.5;
 export const STROKE_WIDTH_MAX = 4;
 
-export const makeOpacityResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): ((mark: Mark) => ChannelResolution<number> | undefined) =>
-  makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.opacity : undefined), 'opacity', { range: [OPACITY_MIN, 1], clamp: true });
-
-export const makeStrokeWidthResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): ((mark: Mark) => ChannelResolution<number> | undefined) =>
-  makeNumericStyleResolver(node, rows, fieldTypes, mark => (mark.type === PlotMark.Point ? mark.strokeWidth : undefined), 'strokeWidth', { range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true });
-
 /** shape 通道默认 glyph 调色板（直用 core 内置 shape 名，无 plot-only 别名）；循环复用 */
 export const PLOT_SHAPE_PALETTE = ['circle', 'rectangle', 'diamond'] as const;
 
 /**
- * 解析某 mark 的 shape 编码 → 行→shape 名
- * @description 仅 PointMark。常量 value 直用（core / 注册 shape 名）；categorical 字段按出现序映射到
- *   `PLOT_SHAPE_PALETTE`（循环复用）。非 categorical 字段（continuous / temporal）fail-loud（形状是分类编码）。
+ * shape 通道解析：行 → shape 名
+ * @description 仅 PointMark。常量 value 直用（core / 注册 shape 名）；categorical 字段经 ordinal 映射到
+ *   `PLOT_SHAPE_PALETTE`（复用 ordinal 数学：调色板换成 glyph 名，循环复用）。非 categorical 字段 fail-loud（形状是分类编码）。
  */
-export const makeShapeResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): ((mark: Mark) => ChannelResolution<string> | undefined) => {
+const resolveShapeChannel = (ctx: VisualChannelContext): ((mark: Mark) => ChannelResolution<string> | undefined) => {
+  const { rows, fieldTypes } = ctx;
   return (mark: Mark): ChannelResolution<string> | undefined => {
     if (mark.type !== PlotMark.Point) return undefined;
     const channel = mark.shape;
@@ -239,17 +210,216 @@ export const makeShapeResolver = (node: PlotSpec, rows: Array<ExternalRow>, fiel
     if (fieldType !== undefined && fieldType !== PlotFieldType.Categorical) {
       throw new Error(`lowerPlots: shape channel field "${field}" is ${fieldType}; shape requires a categorical field`);
     }
-    const domain = inferCategoryDomain(rows.map(row => resolveFieldPath(row, field)));
-    const shapes = domain.map((_category, index) => PLOT_SHAPE_PALETTE[index % PLOT_SHAPE_PALETTE.length]);
-    const shapeByCategory = new Map<string | number, string>();
-    domain.forEach((category, index) => shapeByCategory.set(category, shapes[index]));
+    const values = rows.map(row => resolveFieldPath(row, field));
+    const domain = inferCategoryDomain(values);
+    // 复用 ordinal scale：调色板 = glyph 名（非颜色），category → glyph[index % len]（与旧手写映射等价）
+    const def: OrdinalScale = { type: PlotScale.Ordinal, name: `__shape_${field}`, range: [...PLOT_SHAPE_PALETTE] };
+    const ordinal = resolveOrdinalScale(def, values);
+    const shapes = domain.map(category => ordinal(category));
     return {
       of: row => {
         const value = resolveFieldPath(row, field);
-        return typeof value === 'string' || typeof value === 'number' ? shapeByCategory.get(value) : undefined;
+        return typeof value === 'string' || typeof value === 'number' ? ordinal(value) : undefined;
       },
       // shape legend：每类别一形状 swatch，domain = 类别序、range = 对应形状名
       descriptor: { channel: 'shape', scaleType: PlotScale.Ordinal, domain, range: shapes, field, fieldType },
     };
   };
+};
+
+/**
+ * 内置视觉通道定义（size / opacity / strokeWidth / shape 及 point 数值样式）：scale 管数学、visual channel 管输出空间 + 默认范围 + legend 形态。
+ * @description 内置和自定义通道在 lowering 前合并进同一个 registry；差别只在 definition 来源。
+ */
+export const BUILTIN_VISUAL_CHANNELS: {
+  opacity: VisualChannelDefinition<number>;
+  fillOpacity: VisualChannelDefinition<number>;
+  drawOpacity: VisualChannelDefinition<number>;
+  rotate: VisualChannelDefinition<number>;
+  padding: VisualChannelDefinition<number>;
+  minimumSize: VisualChannelDefinition<number>;
+  minimumWidth: VisualChannelDefinition<number>;
+  minimumHeight: VisualChannelDefinition<number>;
+  zIndex: VisualChannelDefinition<number>;
+  size: VisualChannelDefinition<number>;
+  shape: VisualChannelDefinition<string>;
+  strokeWidth: VisualChannelDefinition<number>;
+} = {
+  opacity: defineVisualChannel<number>({
+    channel: 'opacity',
+    output: { outputKind: 'number', range: [OPACITY_MIN, 1], clamp: true },
+    legend: 'ramp',
+    resolve: ctx => makeNumericStyleResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => (mark.type === PlotMark.Point ? mark.opacity : undefined), 'opacity', { range: [OPACITY_MIN, 1], clamp: true }),
+    deliver: (node, value) => {
+      node.opacity = value;
+    },
+  }),
+  fillOpacity: defineVisualChannel<number>({
+    channel: 'fillOpacity',
+    output: { outputKind: 'number', range: [0.2, 1], clamp: true },
+    resolve: ctx => makeNumericStyleResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => (mark.type === PlotMark.Point ? mark.fillOpacity : undefined), 'fillOpacity', { range: [0.2, 1], clamp: true }),
+    deliver: (node, value) => {
+      node.fillOpacity = value;
+    },
+  }),
+  drawOpacity: defineVisualChannel<number>({
+    channel: 'drawOpacity',
+    output: { outputKind: 'number', range: [0.2, 1], clamp: true },
+    resolve: ctx => makeNumericStyleResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => (mark.type === PlotMark.Point ? mark.drawOpacity : undefined), 'drawOpacity', { range: [0.2, 1], clamp: true }),
+    deliver: (node, value) => {
+      node.drawOpacity = value;
+    },
+  }),
+  rotate: defineVisualChannel<number>({
+    channel: 'rotate',
+    output: { outputKind: 'number', range: [0, 0] },
+    resolve: ctx => makeNumericStyleResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => (mark.type === PlotMark.Point ? mark.rotate : undefined), 'rotate'),
+    deliver: (node, value) => {
+      node.rotate = value;
+    },
+  }),
+  padding: defineVisualChannel<number>({
+    channel: 'padding',
+    output: { outputKind: 'number', range: [0, 0] },
+    resolve: ctx => makeNumericStyleResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => (mark.type === PlotMark.Point ? mark.padding : undefined), 'padding'),
+    deliver: (node, value) => {
+      node.padding = value;
+    },
+  }),
+  minimumSize: defineVisualChannel<number>({
+    channel: 'minimumSize',
+    output: { outputKind: 'number', range: [0, 0] },
+    resolve: ctx => makeNumericStyleResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => (mark.type === PlotMark.Point ? mark.minimumSize : undefined), 'minimumSize'),
+    deliver: (node, value) => {
+      node.minimumSize = value;
+    },
+  }),
+  minimumWidth: defineVisualChannel<number>({
+    channel: 'minimumWidth',
+    output: { outputKind: 'number', range: [0, 0] },
+    resolve: ctx => makeNumericStyleResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => (mark.type === PlotMark.Point ? mark.minimumWidth : undefined), 'minimumWidth'),
+    deliver: (node, value) => {
+      node.minimumWidth = value;
+    },
+  }),
+  minimumHeight: defineVisualChannel<number>({
+    channel: 'minimumHeight',
+    output: { outputKind: 'number', range: [0, 0] },
+    resolve: ctx => makeNumericStyleResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => (mark.type === PlotMark.Point ? mark.minimumHeight : undefined), 'minimumHeight'),
+    deliver: (node, value) => {
+      node.minimumHeight = value;
+    },
+  }),
+  zIndex: defineVisualChannel<number>({
+    channel: 'zIndex',
+    output: { outputKind: 'number', range: [0, 0] },
+    resolve: ctx => makeNumericStyleResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => (mark.type === PlotMark.Point ? mark.zIndex : undefined), 'zIndex', { integer: true }),
+    deliver: (node, value) => {
+      node.zIndex = value;
+    },
+  }),
+  size: defineVisualChannel<number>({
+    channel: 'size',
+    output: { outputKind: 'number', range: [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS] },
+    legend: 'size',
+    resolve: resolveSizeChannel,
+    deliver: (node, value, context) => {
+      if (context.nodeKind === 'pointGlyph') node.minimumSize = value * Math.SQRT2;
+    },
+  }),
+  shape: defineVisualChannel<string>({
+    channel: 'shape',
+    output: { outputKind: 'symbol', palette: [...PLOT_SHAPE_PALETTE] },
+    legend: 'symbol',
+    resolve: resolveShapeChannel,
+    deliver: (node, value, context) => {
+      if (context.nodeKind === 'pointGlyph') node.shape = value;
+    },
+  }),
+  strokeWidth: defineVisualChannel<number>({
+    channel: 'strokeWidth',
+    output: { outputKind: 'number', range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true },
+    resolve: ctx => makeNumericStyleResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => (mark.type === PlotMark.Point ? mark.strokeWidth : undefined), 'strokeWidth', { range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true }),
+    deliver: (node, value, context) => {
+      if (context.nodeKind === 'pointGlyph') node.strokeWidth = value;
+    },
+  }),
+};
+
+const eraseVisualChannelDefinition = (def: unknown): AnyVisualChannelDefinition => def as AnyVisualChannelDefinition;
+
+export const VISUAL_CHANNELS: ReadonlyArray<AnyVisualChannelDefinition> = Object.values(BUILTIN_VISUAL_CHANNELS).map(def => eraseVisualChannelDefinition(def));
+
+/**
+ * 保留的内置通道名集：扩展视觉通道的 `channel` 不得撞这些。
+ * @description 含内置 visual channel + color/stroke/fill/label + 位置通道 x/y/z。
+ */
+export const BUILTIN_VISUAL_CHANNEL_NAMES: ReadonlySet<string> = new Set<string>([
+  'x',
+  'y',
+  'z',
+  'color',
+  'fill',
+  'stroke',
+  'label',
+  'size',
+  'opacity',
+  'shape',
+  'strokeWidth',
+  'fillOpacity',
+  'drawOpacity',
+  'rotate',
+  'padding',
+  'minimumSize',
+  'minimumWidth',
+  'minimumHeight',
+  'zIndex',
+]);
+
+/**
+ * 解析视觉通道 registry：内置 definition 先注册，自定义 definition 再合并。
+ * @description 自定义通道不能覆盖内置名，也不能彼此重复；最终返回的 registry 是内置和自定义共享的唯一分派表。
+ */
+export const resolveVisualChannelRegistry = (custom?: ReadonlyArray<AnyVisualChannelDefinition>): Map<string, AnyVisualChannelDefinition> => {
+  const registry = new Map<string, AnyVisualChannelDefinition>();
+  for (const def of VISUAL_CHANNELS) {
+    registry.set(def.channel, def);
+  }
+  for (const def of custom ?? []) {
+    if (BUILTIN_VISUAL_CHANNEL_NAMES.has(def.channel)) {
+      throw new Error(`lowerPlots: custom visual channel "${def.channel}" collides with a built-in channel name`);
+    }
+    if (registry.has(def.channel)) {
+      throw new Error(`lowerPlots: duplicate custom visual channel registration: "${def.channel}"`);
+    }
+    if (typeof def.deliver !== 'function') {
+      throw new Error(`lowerPlots: custom visual channel "${def.channel}" must provide deliver (how its resolved value lands on the node)`);
+    }
+    registry.set(def.channel, def);
+  }
+  return registry;
+};
+
+/**
+ * 建某 mark 的视觉通道交付项（值 + 落地同源）。
+ * @description 内置和自定义 definition 均从同一 registry 遍历解析；自定义绑定若出现在 `encoding.channels` 但未注册则 fail-loud。
+ */
+export const resolveVisualChannelDeliveries = (mark: Mark, ctx: VisualChannelContext, registry: ReadonlyMap<string, AnyVisualChannelDefinition>): Array<ChannelDelivery> => {
+  if (mark.type !== PlotMark.Point) return [];
+  for (const channel of Object.keys(mark.encoding.channels ?? {})) {
+    if (BUILTIN_VISUAL_CHANNEL_NAMES.has(channel)) {
+      throw new Error(`lowerPlots: encoding.channels.${channel} collides with a built-in channel; use the named mark property instead`);
+    }
+    if (!registry.has(channel)) {
+      throw new Error(`lowerPlots: visual channel "${channel}" is not registered; pass a VisualChannelDefinition via options.visualChannelDefinitions`);
+    }
+  }
+  const out: Array<ChannelDelivery> = [];
+  for (const def of registry.values()) {
+    const resolution = def.resolve(ctx)(mark);
+    if (!resolution) continue;
+    // 交付边界：宽类型的 deliver 入参被擦成 never，逐项调用时 `as never` 还原（与 AnyScaleDefinition.resolve 同范式）
+    out.push({ channel: def.channel, of: resolution.of, deliver: (node, value, context) => def.deliver(node, value as never, context) });
+  }
+  return out;
 };

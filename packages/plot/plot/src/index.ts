@@ -39,6 +39,9 @@ export type {
   PositionScaleDefinition,
   ScaleDefinition,
 } from './contract';
+// Visual channel extension surface: factory + types; channels bind via encoding.channels and deliver to a core node property.
+export { defineVisualChannel } from './contract';
+export type { AnyVisualChannelDefinition, ChannelOutputSpace, VisualChannelContext, VisualChannelDefinition } from './contract';
 export type { ColorSchemeResolver } from './providers';
 export type { PositionScale } from './contract';
 // Transform / mark extension surface: factory + types from contract; registry helpers from providers.

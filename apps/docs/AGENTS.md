@@ -149,7 +149,7 @@ H1 走 frontmatter，**mdx 正文里不要再写 `# 标题`**。
     ```
     GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用户来说是可达的"项目延伸阅读"，与第三方外链性质不同。
   - 仅与"项目目录约定"相关的纯文字描述（如"ADR 起新文件用 `cp _template.md ...`"这种命令示例）可以保留路径作为 inline code，不需要超链接——因为这是给已经在用 retikz 的人看的操作说明
-- **demo 含展示文本（节点标签 / 标注文字 / 任何会渲染到 SVG 的字符串）必须双语并行**：写两份文件 `<name>.zh.demo.tsx` + `<name>.en.demo.tsx`，分别用中文 / 英文文案。`ComponentPreview` 按当前 i18n 语言自动挑对应文件，找不到再回退到无 lang 后缀的 `<name>.demo.tsx`。
+- **已有 demo 时不要在正文重复粘完整代码**：`<ComponentPreview>` 自带源码展开能力，正文只说明用途、关键点和边界；完整可运行代码放在同级 `.demo.tsx` / `.data.ts` 里，通过 demo 的代码面板展示。只有没有 demo、或需要解释极小片段时，才在正文放短代码块。
 - **demo 含展示文本（节点标签 / 标注文字 / 任何会渲染到 SVG 的字符串）必须双语并行**：写两份文件 `<name>.zh.demo.tsx` + `<name>.en.demo.tsx`，分别用中文 / 英文文案。`ComponentPreview` 按当前 i18n 语言自动挑对应文件，找不到再回退到无 lang 后缀的 `<name>.demo.tsx`。
   - 纯几何 / 形状演示（无任何文字）继续用单文件 `<name>.demo.tsx`，不需要双份
   - 双份 demo 内 JSX 结构必须保持一致（同样的 props、同样的 `<TikZ>` size、同样的 layout）；只换文本字面量

@@ -138,6 +138,7 @@ import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 | `clip` | `IRClipSpec` | — | 面板级裁剪区域 |
 | `fontSize` | `number?` | — | 刻度标签字号 |
 | `margin` | `{ top?; right?; bottom?; left? }` | — | 覆盖四周留白 |
+| `visualChannelDefinitions` | `Array<AnyVisualChannelDefinition>` | — | 自定义视觉通道运行时定义；配合 spec 里的 `encoding.channels` 使用，详见[自定义数据](/plot/grammar/data/custom#自定义视觉通道) |
 | `spec` | `PlotSpec` | — | spec 入口：已构造好的 Plot IR 根（与 `children` 二选一） |
 
 此外 `renderer` / `className` / `style` 透传给底层 `<Layout>`，分别选渲染后端、附加类名、内联样式。
@@ -149,3 +150,4 @@ import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 - [坐标轴](/plot/grammar/guide/axis) —— 刻度、标签、网格、polar 维度
 - [数据模型](/plot/grammar/data/model) —— `model` 字段类型与 type-driven 派生
 - [数据处理](/plot/grammar/data/processing) —— `fieldMap`、校验、自定义解析
+- [自定义数据](/plot/grammar/data/custom#自定义视觉通道) —— `visualChannelDefinitions` 与 `encoding.channels`

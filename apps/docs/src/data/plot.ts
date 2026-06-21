@@ -29,6 +29,7 @@ export const plotSection: Array<Section> = [
           { id: 'model', label: 'plot.dataModel' },
           { id: 'processing', label: 'plot.dataProcessing' },
           { id: 'channel', label: 'plot.dataChannel' },
+          { id: 'custom', label: 'plot.dataCustom' },
         ],
       },
       {

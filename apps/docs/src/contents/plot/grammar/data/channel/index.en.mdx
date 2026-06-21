@@ -47,6 +47,10 @@ In IR, fields become `{ field: 'gdp' }`, while constants become `{ value: 80 }`.
 
 Field lookup follows the same rule as the model: first check whether the whole field name is a direct key on the row, then fall back to `.` traversal. Because canonical rows write normalized values back under logical field names, marks only reference logical fields and do not need to know the physical source name or storage format.
 
+## Custom Visual Channels
+
+Common visual channels such as `size`, `opacity`, `shape`, and `strokeWidth` have named props. To add your own visual channel, declare a runtime definition with `defineVisualChannel`, then bind a field or constant through `encoding.channels.<name>` in the spec. See [Custom Data](/plot/grammar/data/custom#custom-visual-channels) for a complete example and registry rules.
+
 ## How It Works
 
 In React, mark props are converted into channel configuration while building the Plot spec. Field channels enter `encoding`, constant channels stay as fixed values, and lowering later reads field values from canonical rows.
