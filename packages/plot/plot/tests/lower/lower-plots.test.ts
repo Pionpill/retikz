@@ -1,9 +1,9 @@
 import { compileToScene } from '@retikz/core';
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
-import { schemeCategory10 } from 'd3-scale-chromatic';
+import { schemeCategory10 as d3SchemeCategory10 } from 'd3-scale-chromatic';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 const SALES = [
   { month: 0, revenue: 10 },
@@ -20,7 +20,7 @@ const lineSpec: PlotSpec = PlotSpecSchema.parse({
     { type: 'linear', name: 'yRevenue' },
   ],
   coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-  marks: [{ type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+  marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
 });
 
 const pointSpec = (): PlotSpec =>
@@ -76,10 +76,92 @@ describe('lowerPlots (ADR-06)', () => {
     expect(layer.children).toHaveLength(3);
     // 样式上提：circle / fill 在图层 nodeDefault，不重复写在每个 node
     expect(layer.nodeDefault?.shape).toBe('circle');
-    expect(layer.nodeDefault?.fill).toBe(schemeCategory10[0]);
+    expect(layer.nodeDefault?.fill).toBe(d3SchemeCategory10[0]);
     // 每个 node 是裸的（只有 type + position，无 shape/fill）
     expect(layer.children.every(c => (c as IRNode).shape === undefined)).toBe(true);
     expect((layer.children[0] as IRNode).position).toEqual([0, 240]);
+  });
+
+  it('lower_point_applies_constant_node_style', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'xMonth' },
+        { type: 'linear', name: 'yRevenue' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+      marks: [
+        {
+          type: 'point',
+          fill: { kind: 'constant', value: '#f8fafc' },
+          stroke: { kind: 'constant', value: '#0f172a' },
+          strokeWidth: { kind: 'constant', value: 1.5 },
+          fillOpacity: { kind: 'constant', value: 0.7 },
+          drawOpacity: { kind: 'constant', value: 0.9 },
+          opacity: { kind: 'constant', value: 0.8 },
+          rotate: { kind: 'constant', value: 45 },
+          padding: { kind: 'constant', value: 2 },
+          minimumSize: { kind: 'constant', value: 14 },
+          minimumWidth: { kind: 'constant', value: 16 },
+          minimumHeight: { kind: 'constant', value: 12 },
+          zIndex: { kind: 'constant', value: 3 },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+      ],
+    });
+    const layer = firstLayer(spec, { sales: SALES }, opts);
+    expect(layer.nodeDefault).toMatchObject({
+      shape: 'circle',
+      fill: '#f8fafc',
+      stroke: '#0f172a',
+      strokeWidth: 1.5,
+      fillOpacity: 0.7,
+      drawOpacity: 0.9,
+      opacity: 0.8,
+      rotate: 45,
+      padding: 2,
+      minimumSize: 14,
+      minimumWidth: 16,
+      minimumHeight: 12,
+    });
+    expect((layer.children[0] as IRNode).zIndex).toBe(3);
+  });
+
+  it('lower_point_applies_stroke_channels_per_datum', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'xMonth' },
+        { type: 'linear', name: 'yRevenue' },
+        { type: 'ordinal', name: 'strokeRegion', domain: ['north', 'south'], range: ['#0f172a', '#dc2626'] },
+        { type: 'linear', name: 'strokeWeight', domain: [10, 30], range: [1, 3], clamp: true },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+      marks: [
+        {
+          type: 'point',
+          stroke: { kind: 'field', value: 'region', scale: 'strokeRegion' },
+          strokeWidth: { kind: 'field', value: 'density', scale: 'strokeWeight' },
+          encoding: {
+            x: { field: 'month' },
+            y: { field: 'revenue' },
+          },
+        },
+      ],
+    });
+    const data = [
+      { month: 0, revenue: 10, region: 'north', density: 10 },
+      { month: 1, revenue: 14, region: 'south', density: 30 },
+    ];
+    const layer = firstLayer(spec, { sales: data }, opts);
+    expect(layer.nodeDefault?.stroke).toBeUndefined();
+    expect(layer.nodeDefault?.strokeWidth).toBeUndefined();
+    expect(layer.children[0]).toMatchObject({ stroke: '#0f172a', strokeWidth: 1 });
+    expect(layer.children[1]).toMatchObject({ stroke: '#dc2626', strokeWidth: 3 });
   });
 
   it('compile_line_to_scene_ok', () => {
@@ -181,7 +263,7 @@ describe('lowerPlots (ADR-06)', () => {
       { type: 'linear', name: 'yRevenue' },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     guides: [
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y' },
@@ -248,7 +330,7 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
     expect(layer.nodeDefault?.shape).toBe('rectangle');
     expect(layer.nodeDefault?.padding).toBe(0);
     expect(layer.nodeDefault?.strokeWidth).toBe(0);
-    expect(layer.nodeDefault?.fill).toBe(schemeCategory10[0]);
+    expect(layer.nodeDefault?.fill).toBe(d3SchemeCategory10[0]);
     // 每个 node 裸（只有 type/position/minimumWidth/minimumHeight，无 shape）
     expect(layer.children.every(c => (c as IRNode).shape === undefined)).toBe(true);
   });
@@ -336,7 +418,7 @@ describe('lowerPlots color (ADR-04)', () => {
       data: { reference:'c' },
       scales,
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { field: 'continent', scale: 'col' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'continent', scale: 'col' }, encoding: { x: { field: 'gdp' }, y: { field: 'life' } } }],
     });
 
   it('point_color_groups_into_subscopes', () => {
@@ -370,8 +452,8 @@ describe('lowerPlots color (ADR-04)', () => {
       { c: COUNTRIES },
       opts,
     );
-    expect((layer.children[0] as IRScope).nodeDefault?.fill).toBe(schemeCategory10[0]);
-    expect((layer.children[1] as IRScope).nodeDefault?.fill).toBe(schemeCategory10[1]);
+    expect((layer.children[0] as IRScope).nodeDefault?.fill).toBe(d3SchemeCategory10[0]);
+    expect((layer.children[1] as IRScope).nodeDefault?.fill).toBe(d3SchemeCategory10[1]);
   });
 
   it('point_color_auto_synthesized_scale', () => {
@@ -385,11 +467,11 @@ describe('lowerPlots color (ADR-04)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { field: 'continent' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'continent' }, encoding: { x: { field: 'gdp' }, y: { field: 'life' } } }],
     });
     const layer = firstLayer(spec, { c: COUNTRIES }, opts);
     expect(layer.children).toHaveLength(2);
-    expect((layer.children[0] as IRScope).nodeDefault?.fill).toBe(schemeCategory10[0]);
+    expect((layer.children[0] as IRScope).nodeDefault?.fill).toBe(d3SchemeCategory10[0]);
   });
 
   it('point_color_constant_single_subscope', () => {
@@ -402,7 +484,7 @@ describe('lowerPlots color (ADR-04)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { value: '#333' } } }],
+      marks: [{ type: 'point', color: { kind: 'constant', value: '#333' }, encoding: { x: { field: 'gdp' }, y: { field: 'life' } } }],
     });
     const layer = firstLayer(spec, { c: COUNTRIES }, opts);
     expect(layer.children).toHaveLength(1);
@@ -437,7 +519,7 @@ describe('lowerPlots color (ADR-04)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'line', order: 'gdp', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { value: 'tomato' } } }],
+      marks: [{ type: 'path', order: 'gdp', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { value: 'tomato' } } }],
     });
     expect(firstLayer(spec, { c: COUNTRIES }, opts).pathDefault?.stroke).toBe('tomato');
   });
@@ -488,7 +570,7 @@ describe('lowerPlots relation (ADR-05)', () => {
         { type: 'ordinal', name: 'col' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', series: 'product', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
+      marks: [{ type: 'interval', series: 'product', bounds: { x: { kind: 'band', group: 'product' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
     });
     const layer = firstLayer(spec, { s: SALES2 }, opts);
     // 2 系列 → 2 子 Scope（按颜色），共 4 柱
@@ -518,7 +600,7 @@ describe('lowerPlots relation (ADR-05)', () => {
         { type: 'ordinal', name: 'col' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', series: 'product', arrangement: 'stack', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
+      marks: [{ type: 'interval', series: 'product', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
     });
     const layer = firstLayer(spec, { s: SALES2 }, opts);
     const nodes = allNodes(layer);
@@ -542,9 +624,9 @@ describe('lowerPlots relation (ADR-05)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', series: 'product', arrangement: 'stack', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      marks: [{ type: 'interval', series: 'product', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     });
-    expect(() => expandOf(spec, { s: SALES2 }, opts)).toThrow(/stack transform/);
+    expect(() => expandOf(spec, { s: SALES2 }, opts)).toThrow(/stack/);
   });
 
   it('line_series_multi_paths', () => {
@@ -564,7 +646,7 @@ describe('lowerPlots relation (ADR-05)', () => {
         { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'line', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } }],
+      marks: [{ type: 'path', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } }],
     });
     const layer = firstLayer(spec, { t: TREND }, opts);
     // 2 系列 → 2 条 Path，各自一色
@@ -603,7 +685,7 @@ describe('lowerPlots relation (ADR-05)', () => {
         { type: 'ordinal', name: 'col' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', series: 'product', arrangement: 'stack', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
+      marks: [{ type: 'interval', series: 'product', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
       guides: [{ type: 'axis', dimension: 'x' }, { type: 'axis', dimension: 'y', grid: true }],
     });
     const scene = compileToScene(

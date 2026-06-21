@@ -106,6 +106,7 @@ apps/docs/src/
 - **中性**：不写“竞品做不到 / 我们更好”；对照内容放 `<Comparison>`。
 - **少形容词**：“非常 / 极其 / 强大”这类无信息词直接删。
 - **标题简写**：H2 / H3 优先用短标题，表达主题即可；限定条件、适用场景和解释放到正文首句或表格里，不要堆进标题。
+- **生僻词首次标注**：非常见词汇（如 `canonical 行` / `lowering` / `bbox` / `IR` 等）在一页中**首次**出现时，就近括注中文含义或一句话解释，让读者无需跳页就能跟上；同一页后续出现不再重复。跨页是独立文档，每页各自在首次出现处标注。
 
 | 内容 | 优先形式 |
 | --- | --- |
@@ -114,6 +115,8 @@ apps/docs/src/
 | 对比 / 状态映射 | 表格 |
 | 步骤 / 并列要点 | 列表 |
 | 必要的“为什么” | 短段落 |
+
+如果一页包含多个彼此隔离、没有递进逻辑的条目（例如多个 transform、多个策略、多个变体），按条目组织内容。每个条目里就近放用途说明、demo、关键配置 / API 表和注意事项；只有跨条目的公共机制才单独成节。
 
 ## DSL 优先，IR 克制
 
@@ -244,7 +247,7 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 2. `apps/docs/src/lib/schema-registry.ts` 加一行（含 schema instance + label + URL；URL 是合并页 + `#anchor` 或独立页）
 3. 在合适的合并页 mdx 加 H2/H3 + `<ZodSchema name="..." descriptions={{...}} />`；zh 必须含所有字段（+ 嵌套点路径）；en 只写 `<ZodSchema name="..." />`
 4. **如果是新增独立页**（不属于现有 4 合并页）：在 `data/core.ts` reference section 加 children 条目 + i18n 加 `core.refXxxSchema` key
-5. 跑 `pnpm --filter @retikz/docs exec tsc --noEmit`，再起 dev 看控制台 warn；需要验证站点产物时再跑 `pnpm --filter @retikz/docs build`
+5. 按下方「验证」里的分级规则检查：schema registry 属于结构化改动，通常要跑 `pnpm --filter @retikz/docs exec tsc --noEmit`，再起 dev 看控制台 warn；需要验证站点产物时再跑 `pnpm --filter @retikz/docs build`
 
 ## 与 shadcn 的差异
 
@@ -351,14 +354,17 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 ## 验证
 
-加完一页之后，最少跑这两步：
+按改动类型选择最小有效验证，不要把纯 MDX 文案改动一律升级成完整类型检查：
 
-```bash
-pnpm --filter @retikz/docs exec tsc --noEmit
-pnpm --filter @retikz/docs dev     # 浏览器打开新页，确认中英、demo、TOC、菜单都对
-```
+| 改动类型 | 最小验证 |
+| --- | --- |
+| 只改 MDX 正文、表格、说明文字、站内链接；不改 import、demo、data、i18n、sidebar、schema registry | `git diff --check` + 打开页面或请求关键路由 / 链接 200；可跳过 eslint / tsc，并在汇报中说明 |
+| 新增 / 修改页面结构、frontmatter、MDX 组件调用、`LinkedCard`、TOC 相关标题 | `git diff --check` + 浏览器打开页面，确认中英、TOC、菜单和关键链接 |
+| 新增 / 修改 demo、data、helper、`sourceFiles`、MDX import | `pnpm --filter @retikz/docs exec tsc --noEmit` + 浏览器确认 demo 渲染正常 |
+| 修改 `apps/docs/src/data`、`apps/docs/src/i18n`、schema registry、Reference `<ZodSchema>` | `pnpm --filter @retikz/docs exec tsc --noEmit` + 对应路由 / schema 块可访问 |
+| 需要验证 CI 或站点产物等价路径 | `pnpm --filter @retikz/docs build` |
 
-需要验证站点产物或 CI 等价路径时再跑 `pnpm --filter @retikz/docs build`（docs 包的本地 AGENTS 允许；不要把它当日常类型检查的替代）。
+如果 `tsc` 被无关的未提交源码改动挡住，不要为了文档提交顺手修无关范围；记录阻塞文件和错误，继续完成当前文档验证。
 
 ### 超链接自检
 

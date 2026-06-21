@@ -1,12 +1,12 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 /**
  * ADR-04（alpha.11）：text mark / datum label 下沉契约测试。
  * priority-1 宿主 label（位置 mark 加 label → 填 datum Node.label，零新建 Node）、priority-2 兜底自由 TextMark
- * （新建带 text 的 core Node、与 point 同源投影）、text 内容 field/value/format、运行时 resolveLabel 逃生舱、
+ * （新建带 text 的 core Node、与 point 同源投影）、text 内容 field/value/displayFormat、运行时 resolveLabel 逃生舱、
  * 内容缺失跳过、坐标系无关投影、color → textColor 分子 Scope、dx/dy 微调、pin 引线。
  */
 
@@ -67,7 +67,7 @@ const textSpec = (encoding: Record<string, unknown>, extra: Record<string, unkno
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'text', ...extra, encoding: { x: { field: 'px' }, y: { field: 'py' }, ...encoding } }],
+    marks: [{ type: 'point', ...extra, encoding: { x: { field: 'px' }, y: { field: 'py' }, ...encoding } }],
     guides: [],
   });
 
@@ -92,8 +92,8 @@ describe('ADR-04 priority-1 宿主 label（填 datum Node.label）', () => {
     expect((nodes[1].label as { text: string }).text).toBe('980');
   });
 
-  it('label-format：format 套在 field 上 → datum Node.label 文本为格式化串', () => {
-    const spec = intervalSpec({ content: { field: 'revenue', format: ',.0f' } });
+  it('label-display-format：displayFormat 套在 field 上 → datum Node.label 文本为格式化串', () => {
+    const spec = intervalSpec({ content: { field: 'revenue', displayFormat: ',.0f' } });
     const nodes = nodesOf(expandOf(spec, BAR_ROWS));
     expect((nodes[0].label as { text: string }).text).toBe('1,235');
     expect((nodes[1].label as { text: string }).text).toBe('980');
@@ -112,8 +112,8 @@ describe('ADR-04 priority-1 宿主 label（填 datum Node.label）', () => {
     expect((nodes[1].label as { text: string }).text).toBe('TOP');
   });
 
-  it('label-resolve-runtime：resolveLabel(row) 覆盖 field/format，且 IR 内不含函数', () => {
-    const spec = intervalSpec({ content: { field: 'revenue', format: ',.0f' } }, 'bars');
+  it('label-resolve-runtime：resolveLabel(row) 覆盖 field/displayFormat，且 IR 内不含函数', () => {
+    const spec = intervalSpec({ content: { field: 'revenue', displayFormat: ',.0f' } }, 'bars');
     const layer = expandOf(spec, BAR_ROWS, { width: WIDTH, height: HEIGHT, resolveLabel: { bars: row => `${row.month}=${row.revenue}` } });
     const nodes = nodesOf(layer);
     expect((nodes[0].label as { text: string }).text).toBe('Jan=1234.5');
@@ -185,7 +185,7 @@ describe('ADR-04 priority-2 兜底自由 TextMark（新建带 text 的 Node）',
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'c' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'text', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label' }, color: { field: 'cat', scale: 'c' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'cat', scale: 'c' }, encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label' } } }],
       guides: [],
     });
     const layer = expandOf(spec, POINT_ROWS);
@@ -216,7 +216,7 @@ describe('ADR-04 priority-2 兜底自由 TextMark（新建带 text 的 Node）',
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'a' }, { type: 'linear', name: 'r' }],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r', startAngle: 0, endAngle: 360, innerRadius: 0 },
-      marks: [{ type: 'text', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label' } } }],
+      marks: [{ type: 'point', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label' } } }],
       guides: [],
     });
     const nodes = nodesOf(expandOf(spec, POINT_ROWS));
@@ -242,20 +242,25 @@ describe('ADR-04 schema accept/reject', () => {
     expect(() => textSpec({ text: { field: 'label', value: 'x' } })).toThrow();
   });
 
-  it('text-channel-neither-reject：text 通道 field/value 都缺 → refine 拒（且 encoding.text 必填）', () => {
+  it('text-channel-neither-reject：text 通道 field/value 都缺 → refine 拒', () => {
     expect(() => textSpec({ text: {} })).toThrow();
-    // 整个缺 text 也拒（必填）
-    expect(() =>
-      PlotSpecSchema.parse({
-        namespace: 'plot',
-        type: 'plot',
-        data: { reference: 'd' },
-        scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
-        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-        marks: [{ type: 'text', encoding: { x: { field: 'px' }, y: { field: 'py' } } }],
-        guides: [],
-      }),
-    ).toThrow();
+  });
+
+  // 行为变更（mark 模型重构）：text 已并入 point —— 没有 text 通道的 point 是合法的散点 glyph（非 text Node），不再被拒。
+  it('point-without-text-channel-accepted-as-glyph：无 text 通道的 point 合法且下沉为 glyph Node（非 text Node）', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'px' }, y: { field: 'py' } } }],
+      guides: [],
+    });
+    const nodes = nodesOf(expandOf(spec, POINT_ROWS));
+    expect(nodes).toHaveLength(2);
+    // glyph（散点）—— 不携带 text 内容
+    expect(nodes.every(n => n.text === undefined)).toBe(true);
   });
 
   it('label-content-both-reject：宿主 label.content 同时设 field 与 value → refine 拒', () => {

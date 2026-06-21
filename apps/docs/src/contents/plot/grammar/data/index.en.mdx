@@ -1,0 +1,50 @@
+---
+title: Data
+description: Data is the primary member of the graphics grammar. The data layer aligns external datasets with the field model and binds visual channels; data itself never enters IR — the actual rows arrive at compile time.
+---
+
+Data is the primary member of the graphics grammar: what marks draw, how scales map, and how coordinates interpret all ultimately resolve against rows of data. The data layer aligns external datasets with the **field model** Plot can consume — declaring field names and types, parsing and normalizing real values, then binding fields to visual channels.
+
+Data itself **does not enter IR**. The grammar only describes which fields to read, what types they have, how to parse them, and which channels they bind to; the actual rows arrive and bind only at compile time (lowering), and only field contracts like `model` and `format` persist with the PlotSpec. That keeps one grammar reusable across data sources, and easy to serialize and AI-generate.
+
+<ComponentPreview name="data-pipeline" size="sm" hideCode />
+
+## Pipeline
+
+During compilation, Plot first collects the fields actually referenced by the current configuration, then normalizes external rows into canonical rows (the standardized row after field mapping, parsing, and type coercion, written back under logical field names). Transforms, scales, marks, and locators all read that normalized result instead of repeatedly reading raw input rows.
+
+| Step | What Happens | Main Configuration |
+| --- | --- | --- |
+| Data reference | Select the external dataset for this plot; rows themselves stay out of IR | `<Plot data>` / `data.reference` |
+| Field contract | Decide logical field names, types, category order, and declarative formats; otherwise infer from samples | `model` |
+| Source alignment | Map logical fields to physical data paths, including renamed fields and nested paths | `fieldMap` / `fieldMaps` |
+| Parse and normalize | Parse values with `resolveField`, `format`, or built-in coercion, then write canonical values back under logical names | `resolveField` / `format` / field type |
+| Validation | Sample-check or fully check participating fields, and decide whether invalid values skip or throw | `validateData` / `invalid` |
+| Channel consumption | Mark channels such as `x`, `y`, `color`, `size`, and `text` read canonical values | mark props / `encoding` |
+
+`model` and `format` are persisted with the PlotSpec. `fieldMap` is a serializable lowering option injected by dataset reference. Function options such as `resolveField` and `defineVisualChannel` participate only at runtime and do not enter IR. See [Custom Data](/plot/grammar/data/custom) when you need those runtime extension points.
+
+## Data channels
+
+A data channel is the interface through which a field (or constant) reaches a visual attribute: a mark's `x` / `y` / `color` / `size` / `text` each map to one channel. A channel only answers "which value to read" — it reads the canonical value produced by the pipeline, then the field type derives a default scale and the coordinate system interprets the geometric meaning of position channels. So the same `x` / `y` means different things under Cartesian and polar, while the read rule stays the same. See [Data Channels](/plot/grammar/data/channel) for the full usage.
+
+## Topics
+
+<div className="grid gap-3 sm:grid-cols-2">
+  <LinkedCard href="/plot/grammar/data/model">
+    <strong>Data Model</strong>
+    <span>Declare field types, formatters, category order, and the default inference rules.</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/data/processing">
+    <strong>Data Processing</strong>
+    <span>Handle field names, storage formats, custom parsing functions, and reusable processing logic before data reaches Plot.</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/data/channel">
+    <strong>Data Channels</strong>
+    <span>Bind fields or constants to visual channels such as x, y, color, size, and text.</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/data/custom">
+    <strong>Custom Data</strong>
+    <span>Centralize custom field formats, runtime field parsing, and custom visual channels.</span>
+  </LinkedCard>
+</div>

@@ -1,7 +1,7 @@
 import { ChildSchema, type IRChild, type IRNode, type IRScope, compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 /**
  * ADR-03 legend guide 对抗测试（Adversarial Bug Hunter）。
@@ -80,7 +80,7 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
       data: { reference: 'd', model: [{ name: 'lon', type: 'continuous' }, { name: 'lat', type: 'continuous' }, { name: 't', type: 'continuous' }] },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'sequential', name: 'c' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 't', scale: 'c' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 't', scale: 'c' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'color', scale: 'c' }],
     });
     const outer = expandOf(spec, { d: [{ lon: 0, lat: 0, t: 7 }, { lon: 1, lat: 1, t: 7 }] });
@@ -101,7 +101,7 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'kc' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'kind', scale: 'kc' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kc' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'color', scale: 'kc' }],
     });
     const outer = expandOf(spec, { d: ORDINAL_ROWS });
@@ -121,7 +121,7 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
       data: { reference: 'd', model: [{ name: 'lon', type: 'continuous' }, { name: 'lat', type: 'continuous' }, { name: 't', type: 'continuous' }] },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'sequential', name: 'c' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 't', scale: 'c' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 't', scale: 'c' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'color', scale: 'c' }],
     });
     const composites = lowerPlots({ d: [{ lon: 0, lat: 0, t: 5 }, { lon: 1, lat: 1, t: 20 }] }, { width: 480, height: 300 });
@@ -137,7 +137,7 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'kc' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'kind', scale: 'kc' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kc' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'axis', dimension: 'x' }, { type: 'axis', dimension: 'y' }, { type: 'legend', channel: 'color', scale: 'kc', position: 'right' }],
     });
     // 画布 90×60：legend reserve 80 + axis margin 会逼近 / 超出宽度
@@ -172,7 +172,7 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'kc' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'kind', scale: 'kc' }, size: { field: 'lon' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kc' }, size: { kind: 'field', value: 'lon' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [
         { type: 'legend', channel: 'color', scale: 'kc', position: 'right' },
         { type: 'legend', channel: 'size', position: 'right' },
@@ -191,14 +191,14 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
       namespace: 'plot', type: 'plot', data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'sequential', name: 'c' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 't', scale: 'c' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 't', scale: 'c' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'color', scale: 'c', tickCount: -3 }],
     };
     const parsed = PlotSpecSchema.safeParse(bad);
     expect(parsed.success).toBe(false);
   });
 
-  it('[adversarial] 拼错 channel 被 schema 拒绝', () => {
+  it('[adversarial] 拼错 channel 在 lowering 阶段 fail-loud', () => {
     const bad = {
       namespace: 'plot', type: 'plot', data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
@@ -206,7 +206,8 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
       marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'colour' }],
     };
-    expect(PlotSpecSchema.safeParse(bad).success).toBe(false);
+    const parsed = PlotSpecSchema.parse(bad);
+    expect(() => expandOf(parsed, { d: ORDINAL_ROWS })).toThrow(/legend channel "colour" has no bound scale/);
   });
 
   it('[adversarial] legend 缺 channel 被 schema 拒绝', () => {
@@ -250,7 +251,7 @@ describe('[adversarial] legend — channel 未编码 / 消歧（攻击面 5）',
       namespace: 'plot', type: 'plot', data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'kc' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'kind', scale: 'kc' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kc' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'color', scale: 'x' }],
     });
     // 期望：要么 fail-loud（scale 类型不符），要么产出无 field 的退化 swatch；不应崩出无意义内部错误
@@ -277,7 +278,7 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
       data: { reference: 'd', model: [{ name: 'lon', type: 'continuous' }, { name: 'lat', type: 'continuous' }, { name: 'v', type: 'continuous' }] },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'threshold', name: 'c', breakpoints: [10, 20, 30] }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'v', scale: 'c' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'v', scale: 'c' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'color', scale: 'c' }],
     });
     const outer = expandOf(spec, { d: [{ lon: 0, lat: 0, v: 5 }, { lon: 1, lat: 1, v: 25 }, { lon: 2, lat: 0, v: 35 }] });
@@ -296,7 +297,7 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
       data: { reference: 'd', model: [{ name: 'lon', type: 'continuous' }, { name: 'lat', type: 'continuous' }, { name: 'v', type: 'continuous' }] },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'quantize', name: 'c' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'v', scale: 'c' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'v', scale: 'c' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'color', scale: 'c' }],
     });
     const outer = expandOf(spec, { d: [{ lon: 0, lat: 0, v: 3 }, { lon: 1, lat: 1, v: 3 }, { lon: 2, lat: 0, v: 3 }] });
@@ -315,7 +316,7 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
       namespace: 'plot', type: 'plot', data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'kc' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'kind', scale: 'kc' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kc' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'color', scale: 'kc' }],
     });
     const outer = expandOf(spec, { d: rows });
@@ -334,7 +335,7 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
       namespace: 'plot', type: 'plot', data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, size: { field: 'p' } } }],
+      marks: [{ type: 'point', size: { kind: 'field', value: 'p' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'size' }],
     });
     // 所有 population 为 0 → makeSizeResolver descriptor domain [0,0]
@@ -352,7 +353,7 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
       data: { reference: 'd', model: [{ name: 'lon', type: 'continuous' }, { name: 'lat', type: 'continuous' }, { name: 'o', type: 'continuous' }] },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, opacity: { field: 'o' } } }],
+      marks: [{ type: 'point', opacity: { kind: 'field', value: 'o' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'opacity' }],
     });
     const outer = expandOf(spec, { d: [{ lon: 0, lat: 0, o: 5 }, { lon: 1, lat: 1, o: 5 }] });
@@ -374,7 +375,7 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
       data: { reference: 'd', model: [{ name: 'lon', type: 'continuous' }, { name: 'lat', type: 'continuous' }, { name: 't', type: 'continuous' }] },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'sequential', name: 'c' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 't', scale: 'c' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 't', scale: 'c' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'color', scale: 'c', tickCount: 1 }],
     });
     const outer = expandOf(spec, { d: [{ lon: 0, lat: 0, t: 1 }, { lon: 1, lat: 1, t: 100 }] });
@@ -399,7 +400,7 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
       data: { reference: 'd', model: [{ name: 'lon', type: 'continuous' }, { name: 'lat', type: 'continuous' }, { name: 't', type: 'continuous' }] },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'sequential', name: 'c' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 't', scale: 'c' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 't', scale: 'c' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'color', scale: 'c', tickCount: 1000 }],
     });
     const start = Date.now();
@@ -414,7 +415,7 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
       namespace: 'plot', type: 'plot', data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'kc' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'kind', scale: 'kc' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kc' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'color', scale: 'kc' }],
     });
     const outer = expandOf(spec, { d: [{ lon: 0, lat: 0, kind: longName }, { lon: 1, lat: 1, kind: 'B' }] });
@@ -432,7 +433,7 @@ describe('[adversarial] legend × 默认 axes / polar（攻击面 9）', () => {
       namespace: 'plot', type: 'plot', data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'angle' }, { type: 'linear', name: 'radius' }, { type: 'ordinal', name: 'kc' }],
       coordinate: { type: 'polar2D', angle: 'angle', radius: 'radius', startAngle: 0, endAngle: 360, innerRadius: 0 },
-      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'kind', scale: 'kc' } } }],
+      marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kc' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'color', scale: 'kc', position: 'right' }],
     });
     let outer: IRScope | undefined;

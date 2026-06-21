@@ -1,0 +1,46 @@
+---
+title: 图元
+description: 图元是数据到几何的注册层；每个图元声明一种底层几何，再由比例尺和坐标系决定最终形态。
+---
+
+Mark 是图形语法里的几何层。它不直接写像素坐标，而是声明“这批数据应生成哪类底层几何”：点、路径、区域、区间、参考或链接。
+
+每个内置图元都是一个注册项。编译时先把字段映射解析成通道，再交给对应图元的 lowering；坐标系只负责解释这些通道，所以同一个图元在不同坐标系下可以生成不同形态。
+
+## 机制
+
+| 图元 | 类型 | 机制 | 常见形态 |
+| --- | --- | --- | --- |
+| `PointMark` | 维度图元 | 坐标元组上的 0D glyph | 散点、气泡、文本点 |
+| `PathMark` | 维度图元 | 有序点连成 1D 轨迹 | 折线、路径、雷达线框 |
+| `RegionMark` | 维度图元 | 边界围成 2D 区域 | 面积、填充雷达 |
+| `IntervalMark` | 维度图元 | 各位置维度的正交区间积 | 柱、直方、热图、径向柱、饼 / 环 |
+| `ReferenceMark` | 特殊图元 | 固定位置或固定区间的参考约束 | 阈值线、参考环、容差带 |
+| `LinkMark` | 特殊图元 | source → target 的关系几何 | 流带、alluvial 带 |
+
+图表形态不是新的底层图元。比如热图是 `IntervalMark` 的双 band 区间，饼图是 `IntervalMark` 在极坐标下的角向区间，散点 / 气泡 / 文本点都是 `PointMark` 的不同表现层配置。
+
+## 下沉到 core
+
+plot 的 mark 不直接拥有渲染 primitive；lowering 之后都会变成 [@retikz/core](/core/introduction) 的 Kernel IR。几何本体通常落到 [Node](/core/components/node/overview) 或 [Path](/core/components/draw/path)，颜色分组、series 分组和默认样式则由 [Scope](/core/components/layout/scope) 承载。
+
+| Mark | 最终使用的 core 实现 | 说明 |
+| --- | --- | --- |
+| `PointMark` | [Node](/core/components/node/overview) | 每行数据生成一个点 Node；文本点也是无边框文本 Node |
+| `PathMark` | [Path](/core/components/draw/path) | 有序投影点生成 move / line 等 step，再组成一条或多条 Path |
+| `RegionMark` | [Path](/core/components/draw/path) | 上沿与 baseline 回边生成闭合 Path，通过 fill 表达面积 / 区域 |
+| `IntervalMark` | [Node](/core/components/node/overview) | 坐标系把 cell 投影为 rect / sector / contour，再装配成带尺寸或 shape 的 Node |
+| `ReferenceMark` | [Path](/core/components/draw/path) / [Node](/core/components/node/overview) | 参考线下沉为 Path；参考带下沉为区间 Node |
+| `LinkMark` | [Path](/core/components/draw/path) | source / target 两端生成闭合 cubic Path，fill 后形成流带 |
+
+## 注册图元
+
+<div className="grid gap-3 sm:grid-cols-2">
+  <LinkedCard href="/plot/grammar/mark/point"><strong>PointMark</strong><span>0D glyph：散点、气泡、形状编码，也承载文本点。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/path"><strong>PathMark</strong><span>1D 轨迹：按顺序连接数据点，表达趋势、路径和雷达线框。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/region"><strong>RegionMark</strong><span>2D 区域：路径与基线或边界围出的填充区域。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/interval"><strong>IntervalMark</strong><span>区间积：统一柱、直方、热图、径向柱、饼图和环图。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/reference"><strong>ReferenceMark</strong><span>参考约束：常量位置上的线、环、扇区或容差带。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/link"><strong>LinkMark</strong><span>关系几何：连接 source 和 target 的可填充流带。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/custom"><strong>自定义图元</strong><span>用 defineMark + markDefinitions 注册自己的图元，lower 经 frame 投影装配 core IR。</span></LinkedCard>
+</div>

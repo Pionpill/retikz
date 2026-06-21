@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ChannelSchema, EncodingSchema, OpacityChannelSchema, PointEncodingSchema, ShapeChannelSchema, SizeChannelSchema } from '../../src/ir/encoding';
+import { ChannelSchema, EncodingSchema, PointEncodingSchema, ShapeChannelSchema, SizeChannelSchema } from '../../src/schemas/encoding';
 
 describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
   // Happy path
@@ -59,7 +59,7 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
   });
 
   // ADR-01（alpha.9）：x / y 从必填转可选——必填性下放到 coordinate 级校验（cartesian2D 需 x+y、
-  // cartesian1D 仅需单维、ternary2D 需 a/b/c）。schema 层放宽，缺角色由 lowering fail-loud（见 coordinate-frame.test.ts）。
+  // cartesian1D 仅需单维、ternary2D 需 x/y/z）。schema 层放宽，缺角色由 lowering fail-loud（见 coordinate-frame.test.ts）。
   it('encoding_missing_x_accepted', () => {
     expect(EncodingSchema.parse({ y: { field: 'value' } })).toEqual({ y: { field: 'value' } });
   });
@@ -78,20 +78,25 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
     expect(EncodingSchema.parse(JSON.parse(JSON.stringify(e)))).toEqual(e);
   });
 
-  // alpha.9 ADR-03：ternary 的 a/b/c 位置角色通道（可选；ternary 必填由 lowering 校验）
-  it('encoding_abc_channels_valid', () => {
-    const e = { a: { field: 'sand' }, b: { field: 'silt' }, c: { field: 'clay' } };
+  // alpha.9 ADR-03：ternary 的 x/y/z 位置角色通道（可选；ternary 必填由 lowering 校验）
+  it('encoding_xyz_channels_valid', () => {
+    const e = { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' } };
     expect(EncodingSchema.parse(e)).toEqual(e);
   });
 
-  it('encoding_abc_with_color_valid', () => {
-    const e = { a: { field: 'sand' }, b: { field: 'silt' }, c: { field: 'clay' }, color: { field: 'region', scale: 'col' } };
+  it('encoding_xyz_with_color_valid', () => {
+    const e = { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' }, color: { field: 'region', scale: 'col' } };
     expect(EncodingSchema.parse(e)).toEqual(e);
   });
 
-  it('encoding_abc_json_round_trip', () => {
-    const e = EncodingSchema.parse({ a: { field: 'sand' }, b: { field: 'silt' }, c: { field: 'clay' } });
+  it('encoding_xyz_json_round_trip', () => {
+    const e = EncodingSchema.parse({ x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' } });
     expect(EncodingSchema.parse(JSON.parse(JSON.stringify(e)))).toEqual(e);
+  });
+
+  it('custom_role_channels_preserved_for_coordinate_definition', () => {
+    const e = { u: { field: 'longitude' }, v: { field: 'latitude' } };
+    expect(EncodingSchema.parse(e)).toEqual(e);
   });
 });
 
@@ -110,7 +115,7 @@ describe('SizeChannelSchema / PointEncodingSchema (alpha.7 ADR-02)', () => {
   });
 
   it('point_encoding_with_size_valid', () => {
-    const e = { x: { field: 'lng' }, y: { field: 'lat' }, size: { field: 'pop' } };
+    const e = { x: { field: 'lng' }, y: { field: 'lat' } };
     expect(PointEncodingSchema.parse(e)).toEqual(e);
   });
 
@@ -128,44 +133,10 @@ describe('SizeChannelSchema / PointEncodingSchema (alpha.7 ADR-02)', () => {
     expect(() => SizeChannelSchema.parse({ value: 'big' })).toThrow();
   });
 
-  // size 不进共享 EncodingSchema：非 point mark 的 encoding 会剥离 size（非 strict，类型层由 TS 守）
-  it('shared_encoding_strips_size', () => {
+  // 未知 encoding key 在 schema 层保留，是否是合法位置角色由 active CoordinateDefinition.roles 在 lowering 校验。
+  it('shared_encoding_preserves_unknown_role_key', () => {
     const e = EncodingSchema.parse({ x: { field: 'x' }, y: { field: 'y' }, size: { field: 'p' } });
-    expect((e as { size?: unknown }).size).toBeUndefined();
-  });
-});
-
-describe('OpacityChannelSchema (alpha.7 ADR-04)', () => {
-  // Happy path
-  it('opacity_field_valid', () => {
-    expect(OpacityChannelSchema.parse({ field: 'density' })).toEqual({ field: 'density' });
-  });
-
-  it('opacity_value_valid', () => {
-    expect(OpacityChannelSchema.parse({ value: 0.5 })).toEqual({ value: 0.5 });
-    expect(OpacityChannelSchema.parse({ value: 0 })).toEqual({ value: 0 });
-    expect(OpacityChannelSchema.parse({ value: 1 })).toEqual({ value: 1 });
-  });
-
-  it('point_encoding_with_opacity_valid', () => {
-    const e = { x: { field: 'x' }, y: { field: 'y' }, opacity: { field: 'd' } };
-    expect(PointEncodingSchema.parse(e)).toEqual(e);
-  });
-
-  // 错误路径
-  it('opacity_value_out_of_range_rejected', () => {
-    expect(() => OpacityChannelSchema.parse({ value: 1.5 })).toThrow();
-    expect(() => OpacityChannelSchema.parse({ value: -0.1 })).toThrow();
-  });
-
-  it('opacity_field_and_value_mutually_exclusive', () => {
-    expect(() => OpacityChannelSchema.parse({ field: 'd', value: 0.5 })).toThrow();
-    expect(() => OpacityChannelSchema.parse({})).toThrow();
-  });
-
-  it('shared_encoding_strips_opacity', () => {
-    const e = EncodingSchema.parse({ x: { field: 'x' }, y: { field: 'y' }, opacity: { field: 'd' } });
-    expect((e as { opacity?: unknown }).opacity).toBeUndefined();
+    expect((e as { size?: unknown }).size).toEqual({ field: 'p' });
   });
 });
 
@@ -180,7 +151,7 @@ describe('ShapeChannelSchema (alpha.7 ADR-05)', () => {
   });
 
   it('point_encoding_with_shape_valid', () => {
-    const e = { x: { field: 'x' }, y: { field: 'y' }, shape: { field: 'cat' } };
+    const e = { x: { field: 'x' }, y: { field: 'y' } };
     expect(PointEncodingSchema.parse(e)).toEqual(e);
   });
 
@@ -196,8 +167,8 @@ describe('ShapeChannelSchema (alpha.7 ADR-05)', () => {
     expect((parsed as { scale?: unknown }).scale).toBeUndefined();
   });
 
-  it('shared_encoding_strips_shape', () => {
+  it('shared_encoding_preserves_unknown_role_key_shape', () => {
     const e = EncodingSchema.parse({ x: { field: 'x' }, y: { field: 'y' }, shape: { field: 'c' } });
-    expect((e as { shape?: unknown }).shape).toBeUndefined();
+    expect((e as { shape?: unknown }).shape).toEqual({ field: 'c' });
   });
 });

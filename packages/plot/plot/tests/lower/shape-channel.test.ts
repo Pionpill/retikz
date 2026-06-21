@@ -1,8 +1,8 @@
-import type { IRNode, IRScope } from '@retikz/core';
+﻿import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { PLOT_SHAPE_PALETTE } from '../../src/lower/channel';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { PLOT_SHAPE_PALETTE } from '../../src/providers';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
@@ -28,59 +28,56 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
 
 const shapeOf = (node: IRNode): string | undefined => (node as { shape?: string }).shape;
 
-const pointSpec = (shape: Record<string, unknown> | undefined): PlotSpec =>
+const pointSpec = (shape: { kind: 'field'; value: string } | { kind: 'constant'; value: string } | undefined): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
     scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, ...(shape ? { shape } : {}) } }],
+    marks: [{ type: 'point', ...(shape ? { shape } : {}), encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
   });
 
 describe('shape channel (alpha.7 ADR-05)', () => {
-  // Happy path：分类 → 调色板（按出现序）
   it('shape_field_maps_categories_to_palette', () => {
     const data = [{ x: 0, y: 0, g: 'A' }, { x: 1, y: 1, g: 'B' }, { x: 2, y: 2, g: 'A' }];
-    const nodes = collectNodes(firstLayer(pointSpec({ field: 'g' }), { d: data }));
-    expect(shapeOf(nodes[0])).toBe(PLOT_SHAPE_PALETTE[0]); // A → 第 0 个
-    expect(shapeOf(nodes[1])).toBe(PLOT_SHAPE_PALETTE[1]); // B → 第 1 个
-    expect(shapeOf(nodes[2])).toBe(PLOT_SHAPE_PALETTE[0]); // A 复用
+    const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'g' }), { d: data }));
+    expect(shapeOf(nodes[0])).toBe(PLOT_SHAPE_PALETTE[0]);
+    expect(shapeOf(nodes[1])).toBe(PLOT_SHAPE_PALETTE[1]);
+    expect(shapeOf(nodes[2])).toBe(PLOT_SHAPE_PALETTE[0]);
   });
 
-  // 调色板循环：类别数 > 调色板长度
   it('shape_palette_cycles', () => {
-    const cats = ['A', 'B', 'C', 'D']; // 4 类 > 3 调色板
+    const cats = ['A', 'B', 'C', 'D'];
     const data = cats.map((g, i) => ({ x: i, y: i, g }));
-    const nodes = collectNodes(firstLayer(pointSpec({ field: 'g' }), { d: data }));
-    expect(shapeOf(nodes[3])).toBe(PLOT_SHAPE_PALETTE[3 % PLOT_SHAPE_PALETTE.length]); // D → 循环回第 0 个
+    const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'g' }), { d: data }));
+    expect(shapeOf(nodes[3])).toBe(PLOT_SHAPE_PALETTE[3 % PLOT_SHAPE_PALETTE.length]);
   });
 
   it('shape_value_constant', () => {
     const data = [{ x: 0, y: 0 }, { x: 1, y: 1 }];
-    const nodes = collectNodes(firstLayer(pointSpec({ value: 'diamond' }), { d: data }));
+    const nodes = collectNodes(firstLayer(pointSpec({ kind: 'constant', value: 'diamond' }), { d: data }));
     expect(nodes.every(n => shapeOf(n) === 'diamond')).toBe(true);
   });
 
   it('shape_no_channel_no_shape_override', () => {
     const data = [{ x: 0, y: 0 }];
-    // 无 shape 通道 → node 不带 shape（走 nodeDefault 默认 circle）
     const nodes = collectNodes(firstLayer(pointSpec(undefined), { d: data }));
     expect(nodes.every(n => shapeOf(n) === undefined)).toBe(true);
   });
 
-  // 错误路径：continuous / temporal fail-loud
+  // 閿欒璺緞锛歝ontinuous / temporal fail-loud
   it('shape_continuous_field_fails_loud', () => {
     const data = [{ x: 0, y: 0, v: 1.5 }, { x: 1, y: 1, v: 2.5 }];
-    expect(() => expandOf(pointSpec({ field: 'v' }), { d: data })).toThrow(/shape requires a categorical field/);
+    expect(() => expandOf(pointSpec({ kind: 'field', value: 'v' }), { d: data })).toThrow(/shape requires a categorical field/);
   });
 
   it('shape_temporal_field_fails_loud', () => {
     const data = [{ x: 0, y: 0, t: '2024-01-01' }, { x: 1, y: 1, t: '2024-02-01' }];
-    expect(() => expandOf(pointSpec({ field: 't' }), { d: data })).toThrow(/shape requires a categorical field/);
+    expect(() => expandOf(pointSpec({ kind: 'field', value: 't' }), { d: data })).toThrow(/shape requires a categorical field/);
   });
 
-  // 交互：shape + color + size 共存
+  // 浜や簰锛歴hape + color + size 鍏卞瓨
   it('shape_with_color_and_size_coexist', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
@@ -88,7 +85,7 @@ describe('shape channel (alpha.7 ADR-05)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'col' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, shape: { field: 'g' }, size: { field: 'p' }, color: { field: 'g', scale: 'col' } } }],
+      marks: [{ type: 'point', shape: { kind: 'field', value: 'g' }, size: { kind: 'field', value: 'p' }, color: { kind: 'field', value: 'g', scale: 'col' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     });
     const data = [{ x: 0, y: 0, g: 'A', p: 1 }, { x: 1, y: 1, g: 'B', p: 4 }];
     const nodes = collectNodes(firstLayer(spec, { d: data }));

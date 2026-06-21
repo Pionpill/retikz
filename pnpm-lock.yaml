@@ -594,6 +594,9 @@ importers:
       '@retikz/core':
         specifier: workspace:*
         version: link:../../core/core
+      '@retikz/math':
+        specifier: workspace:*
+        version: link:../../core/math
       d3-array:
         specifier: 'catalog:'
         version: 3.2.4

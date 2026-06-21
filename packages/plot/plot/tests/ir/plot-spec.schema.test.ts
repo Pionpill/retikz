@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PlotSpecSchema } from '../../src/ir/plot';
+import { PlotSpecSchema } from '../../src/schemas/plot';
 
 const baseLine = {
   namespace: 'plot',
@@ -10,7 +10,7 @@ const baseLine = {
     { type: 'linear', name: 'yRevenue', nice: true },
   ],
   coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-  marks: [{ type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+  marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
 };
 
 describe('PlotSpecSchema (ADR-01)', () => {
@@ -76,7 +76,7 @@ describe('PlotSpecSchema (ADR-01)', () => {
     const spec = {
       ...baseLine,
       marks: [
-        { type: 'line', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        { type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
         { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
       ],
     };
@@ -87,6 +87,16 @@ describe('PlotSpecSchema (ADR-01)', () => {
     // 引用完整性是 lowering 的校验，非 schema 职责
     const spec = { ...baseLine, coordinate: { type: 'cartesian2D', x: 'nope', y: 'missing' } };
     expect(PlotSpecSchema.parse(spec)).toEqual(spec);
+  });
+
+  it('custom_coordinate_op_type_schema_passes_and_round_trips', () => {
+    const spec = { ...baseLine, coordinate: { type: 'arch', x: 'xMonth', archHeight: 30 } };
+    expect(PlotSpecSchema.parse(JSON.parse(JSON.stringify(spec)))).toEqual(spec);
+  });
+
+  it('legacy_custom_coordinate_shape_rejected', () => {
+    const spec = { ...baseLine, coordinate: { type: 'custom', name: 'arch', roles: ['x'], params: { archHeight: 30 } } };
+    expect(() => PlotSpecSchema.parse(spec)).toThrow();
   });
 
   // guides 槽位（ADR-01 alpha.2）
@@ -115,7 +125,7 @@ describe('PlotSpecSchema (ADR-01)', () => {
     const spec = {
       ...baseLine,
       marks: [
-        { type: 'line', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        { type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
         { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
       ],
       guides: [{ type: 'axis', dimension: 'x' }],

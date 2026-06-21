@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CoordinateSchema } from '../../src/ir/coordinate';
+import { BUILTIN_COORDINATE_TYPES, CoordinateOperationSchema, CoordinateSchema, PlotCoordinate } from '../../src/schemas/coordinate';
 
 describe('CoordinateSchema (ADR-04)', () => {
   // Happy path
@@ -190,10 +190,10 @@ describe('CoordinateSchema ternary2D (alpha.9 ADR-03)', () => {
     expect(CoordinateSchema.parse({ type: 'ternary2D' })).toEqual({ type: 'ternary2D' });
   });
 
-  // ternary2D 本轮无几何配置字段：分量绑定走 mark 的 a/b/c 通道，coordinate 内自动归一化。
-  // 多余的 a/b/c key（per-component scale 未来才做）被 zod 剥离（同 polar2D 剥离 cartesian x/y）。
+  // ternary2D 本轮无几何配置字段：分量绑定走 mark 的 x/y/z 通道，coordinate 内自动归一化。
+  // 多余的 x/y/z key（per-component scale 未来才做）被 zod 剥离（同 polar2D 剥离 cartesian x/y）。
   it('ternary2d_strips_unsupported_scale_keys', () => {
-    expect(CoordinateSchema.parse({ type: 'ternary2D', a: 'as', b: 'bs', c: 'cs' })).toEqual({ type: 'ternary2D' });
+    expect(CoordinateSchema.parse({ type: 'ternary2D', x: 'xs', y: 'ys', z: 'zs' })).toEqual({ type: 'ternary2D' });
   });
 
   // 回归 + round-trip
@@ -203,7 +203,42 @@ describe('CoordinateSchema ternary2D (alpha.9 ADR-03)', () => {
   });
 
   it('ternary2d_json_round_trip', () => {
-    const ir = CoordinateSchema.parse({ type: 'ternary2D', a: 'as', b: 'bs', c: 'cs' });
+    const ir = CoordinateSchema.parse({ type: 'ternary2D', x: 'xs', y: 'ys', z: 'zs' });
     expect(CoordinateSchema.parse(JSON.parse(JSON.stringify(ir)))).toEqual(ir);
+  });
+});
+
+describe('CoordinateOperationSchema coordinate registry 占位（alpha.12 ADR-05）', () => {
+  it('CoordinateSchema 保持内置 5-union，不接收旧 custom 判别', () => {
+    expect(Object.values(PlotCoordinate)).toEqual(['cartesian2D', 'polar2D', 'cartesian1D', 'polar1D', 'ternary2D']);
+    expect([...BUILTIN_COORDINATE_TYPES].sort()).toEqual(['cartesian1D', 'cartesian2D', 'polar1D', 'polar2D', 'ternary2D'].sort());
+    expect(() => CoordinateSchema.parse({ type: 'custom', name: 'arch', roles: ['x'] })).toThrow();
+  });
+
+  it('自定义 coordinate operation 直接用自有 type 串并透传配置', () => {
+    const operation = { type: 'arch', x: 'xScale', archHeight: 30, label: 'bridge' };
+    expect(CoordinateOperationSchema.parse(operation)).toEqual(operation);
+  });
+
+  it('CoordinateOperationSchema 内置 type 仍走精确 schema 校验，不被自定义 passthrough 吞掉', () => {
+    expect(() => CoordinateOperationSchema.parse({ type: 'cartesian2D', x: 1, y: 'ys' })).toThrow();
+    expect(() => CoordinateOperationSchema.parse({ type: 'polar2D', angle: 'a', radius: 'r', innerRadius: 2 })).toThrow();
+  });
+
+  it('自定义 coordinate type 不能撞内置或旧 custom 保留字', () => {
+    expect(() => CoordinateOperationSchema.parse({ type: 'custom', name: 'arch', roles: ['x'] })).toThrow();
+    expect(() => CoordinateOperationSchema.parse({ type: '' })).toThrow();
+  });
+
+  it('自定义 coordinate operation JSON round-trip 不丢字段', () => {
+    const operation = { type: 'arch', x: 'xScale', archHeight: 30, nested: { curve: 'sine' } };
+    expect(CoordinateOperationSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
+  });
+
+  it('[adversarial] 自定义 coordinate operation 拒绝非 JSON 配置值', () => {
+    expect(() => CoordinateOperationSchema.parse({ type: 'arch', project: () => [0, 0] })).toThrow(/JSON-serializable/);
+    expect(() => CoordinateOperationSchema.parse({ type: 'arch', extra: undefined })).toThrow(/JSON-serializable/);
+    expect(() => CoordinateOperationSchema.parse({ type: 'arch', archHeight: Number.NaN })).toThrow(/JSON-serializable/);
+    expect(() => CoordinateOperationSchema.parse({ type: 'arch', archHeight: Infinity })).toThrow(/JSON-serializable/);
   });
 });

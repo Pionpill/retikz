@@ -1,9 +1,8 @@
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { PlotFieldType, type PlotSpec, PlotSpecSchema, ScalarValueSchema } from '../../src/ir';
-import { coerceValue, normalizeRows, validateBoundData } from '../../src/lower/coerce';
-import { inferFieldType } from '../../src/lower/infer';
-import { type LowerPlotsOptions, lowerPlots, prepareRows } from '../../src/lower/expand';
+import { PlotFieldType, type PlotSpec, PlotSpecSchema, ScalarValueSchema } from '../../src/schemas';
+import { coerceValue, inferFieldType, normalizeRows, validateBoundData } from '../../src/features';
+import { type LowerPlotsOptions, lowerPlots, prepareRows } from '../../src/pipeline/expand';
 
 /**
  * ADR-08 待实现字段的本地类型扩展：`LowerPlotsOptions.invalid` 现在还不存在（实现 Agent 的活），
@@ -46,7 +45,7 @@ const specTemporalNoModel = (): PlotSpec =>
     data: { reference: 'd' },
     scales: [{ type: 'time', name: 'x' }, { type: 'linear', name: 'y' }],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [{ type: 'line', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
+    marks: [{ type: 'path', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
   });
 
 /** stack transform spec：分组 m + 量 v（x continuous，验证非法值被 skip 但整行仍参与 stack） */
@@ -58,7 +57,7 @@ const specStack = (): PlotSpec =>
     scales: [{ type: 'band', name: 'x' }, { type: 'linear', name: 'y' }],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     transform: [{ kind: 'stack', x: 'm', y: 'v' }],
-    marks: [{ type: 'interval', arrangement: 'stack', encoding: { x: { field: 'm' }, y: { field: 'v' } } }],
+    marks: [{ type: 'interval', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } }, encoding: { x: { field: 'm' }, y: { field: 'v' } } }],
   });
 
 /** 直接驱动 prepareRows（绕过 transform），取 normalized 行断言归一化产物 */
@@ -123,7 +122,7 @@ describe('ADR-08 数据健壮性 — invalid 策略（skip / error）', () => {
   });
 
   it('invalid_error_scope_is_participating_fields：error 只校验 spec 参与字段，未引用脏字段不触发（cross-review #5）', () => {
-    // spec 只参与 a / b；额外的脏字段 junk 不在 collectUserSourceFields 内 → invalid:error 不应因 junk 报错
+    // spec 只参与 a / b；额外的脏字段 junk 不在 collectSourceFields 内 → invalid:error 不应因 junk 报错
     expect(() => compile(specWithModel(), { d: [{ a: 1, b: 2, junk: 'garbage' }, { a: 3, b: 4, junk: {} }] }, { invalid: 'error' })).not.toThrow();
   });
 

@@ -1,0 +1,115 @@
+---
+title: 自定义数据
+description: 把数据层的运行时扩展集中管理：自定义字段格式、字段解析函数，以及自定义视觉通道都在这里说明。
+---
+
+数据层有两类扩展：一类仍然能写进 PlotSpec，例如具名 `format`；另一类是运行时函数，例如 `resolveField` 和 `defineVisualChannel`。前者适合持久化和 AI 生成，后者适合接入应用代码里的业务逻辑。
+
+| 场景 | 推荐入口 | 是否进 IR |
+| --- | --- | --- |
+| 可复用字段格式 | `defineFieldFormat` + `formatDefinitions` | 是，IR 只存格式名 |
+| 任意字段解析 | `resolveField` | 否，函数只在运行时使用 |
+| 新视觉通道 | `defineVisualChannel` + `visualChannelDefinitions` | 绑定进 IR，definition 不进 IR |
+
+## 自定义具名格式
+
+内置 `format` 之外，常见的可复用格式（货币串、地区日期、`'1.2万'` 这类带单位的数）可以用 `defineFieldFormat` 注册成具名格式。写进 `model` 的仍然只是格式名串；真正的解析函数放在 runtime definition 里。
+
+<ComponentPreview name="processing-custom-format" sourceFiles={['processing-custom-format.data.ts']} />
+
+定义契约：
+
+| 字段 | 作用 |
+| --- | --- |
+| `name` | 注册键 = 写进 `model` 的 `format` 串；必须非空，且不与内置格式名冲突。 |
+| `impliedType` | 这个格式唯一蕴含的测量类型；字段省略 `type` 时由它补上。 |
+| `parse` | 原始值 → canonical 值；返回 `undefined` / `NaN` 表示非法，下游按非有限值跳过。 |
+
+自定义格式与内置格式共用同一注册表：内置格式恒可用，自定义 `name` 撞内置名或两个自定义同名都会报错；`model` 写了未注册格式名也会 fail-loud。
+
+## 运行时字段解析
+
+碰上词表外的任意格式（例如 `'2026Q1'` 季度串）或想强制某字段按指定类型解释时，用 `resolveField`。它是函数，不进 IR，适合作为手写代码里的逃生舱。
+
+<ComponentPreview name="processing-resolve" sourceFiles={['processing-resolve.data.ts']} />
+
+规则：
+
+- 返回 `{ type }` 会覆盖字段类型，优先级高于 model 和自动推断。
+- 返回 `{ parse }` 会覆盖值解析；只给 `parse` 不给 `type` 时，类型必须来自 model。
+- `resolveField` 不绕过 strict：声明了 model 后，引用未列出的字段仍会报错。
+- 第二参提供 `{ dataReference, physicalPath, declaredType }`，同名字段接不同数据源时可以按数据源或真实路径分支。
+
+## 自定义视觉通道
+
+常用视觉通道（`size`、`opacity`、`shape`、`strokeWidth`）有命名属性。要扩展自己的视觉通道，用 `defineVisualChannel` 声明运行时 definition，再在 spec 的 `encoding.channels.<name>` 里绑定字段或常量。
+
+```tsx
+import { defineVisualChannel } from '@retikz/plot';
+
+const intensity = defineVisualChannel<number>({
+  channel: 'intensity',
+  output: { outputKind: 'number', range: [0.3, 1], clamp: true },
+  resolve: ctx => mark => {
+    const binding = mark.type === 'point' ? mark.encoding.channels?.intensity : undefined;
+    if (binding?.field === undefined) return undefined;
+    const values = ctx.rows.map(row => Number(row[binding.field])).filter(Number.isFinite);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    return {
+      of: row => {
+        const value = Number(row[binding.field]);
+        if (!Number.isFinite(value)) return undefined;
+        return 0.3 + (max === min ? 0.5 : (value - min) / (max - min)) * 0.7;
+      },
+    };
+  },
+  deliver: (node, value) => {
+    node.opacity = value;
+  },
+});
+```
+
+绑定位置仍然是 JSON 安全的 PlotSpec：
+
+```tsx
+<Plot
+  data={{ points }}
+  spec={{
+    namespace: 'plot',
+    type: 'plot',
+    data: { reference: 'points' },
+    scales: [
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ],
+    coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+    marks: [
+      {
+        type: 'point',
+        encoding: {
+          x: { field: 'x' },
+          y: { field: 'y' },
+          channels: { intensity: { field: 'score' } },
+        },
+      },
+    ],
+  }}
+  visualChannelDefinitions={[intensity]}
+/>;
+```
+
+definition 是运行时能力，不写进 PlotSpec；PlotSpec 只保存通道绑定。内置通道和自定义通道合并进同一个 registry，再统一解析、统一交付到 core node 属性。
+
+`encoding.channels` 现在主要服务 spec / 程序化入口；React `<PointMark>` 仍把常用通道暴露成命名属性。自定义通道名不能覆盖内置通道名，绑定了未注册的通道会在 lowering 时报错。
+
+## 怎么选择
+
+| 需求 | 用法 |
+| --- | --- |
+| 格式可枚举、要随 spec 持久化 | `defineFieldFormat` |
+| 一次性解析、依赖应用状态或数据源 | `resolveField` |
+| 只是在已有通道上换字段名 | `fieldMap`，见[数据处理](/plot/grammar/data/processing) |
+| 让字段驱动新的视觉属性 | `defineVisualChannel` |
+
+优先选择能进入 IR 的声明式能力；只有确实需要函数时，再把逻辑放进 runtime definition 或 `resolveField`。

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AxisGuideSchema, GuideSchema, LegendGuideSchema } from '../../src/ir/guide';
+import { AxisGuideSchema, GuideSchema, LegendGuideSchema } from '../../src/schemas/guide';
 
 describe('GuideSchema (ADR-01 alpha.2)', () => {
   // Happy path
@@ -35,13 +35,14 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
     expect(() => GuideSchema.parse({ type: 'axis' })).toThrow();
   });
 
-  it('guide_bad_dimension_rejected', () => {
-    expect(() => GuideSchema.parse({ type: 'axis', dimension: 'z' })).toThrow();
+  it('axis_custom_dimension_name_valid', () => {
+    const guide = { type: 'axis', dimension: 'angle' };
+    expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
-  // alpha.9 ADR-03：ternary 三角轴维度 a / b / c
-  it('axis_ternary_abc_dimensions_valid', () => {
-    for (const dimension of ['a', 'b', 'c']) {
+  // alpha.9 ADR-03：ternary 三角轴维度 x / y / z
+  it('axis_ternary_xyz_dimensions_valid', () => {
+    for (const dimension of ['x', 'y', 'z']) {
       expect(AxisGuideSchema.parse({ type: 'axis', dimension })).toEqual({ type: 'axis', dimension });
     }
   });
@@ -63,32 +64,21 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
   });
 });
 
-describe('GuideSchema polar dimensions (ADR-04)', () => {
-  // Happy path：polar 角向 / 径向维度新成员被接受（非破坏扩展）
-  it('axis_angle_dimension_valid', () => {
-    const guide = { type: 'axis', dimension: 'angle' };
-    expect(GuideSchema.parse(guide)).toEqual(guide);
+describe('GuideSchema plot dimensions', () => {
+  it('axis_angle_dimension_valid_at_schema_layer', () => {
+    expect(GuideSchema.parse({ type: 'axis', dimension: 'angle' })).toEqual({ type: 'axis', dimension: 'angle' });
   });
 
-  it('axis_radius_dimension_valid', () => {
-    const guide = { type: 'axis', dimension: 'radius' };
-    expect(GuideSchema.parse(guide)).toEqual(guide);
+  it('axis_radius_dimension_valid_at_schema_layer', () => {
+    expect(GuideSchema.parse({ type: 'axis', dimension: 'radius' })).toEqual({ type: 'axis', dimension: 'radius' });
   });
 
-  it('axis_radius_with_grid_valid', () => {
-    // 径向轴 + grid（同心环）：grid 子属性在 polar 维度上同样合法
-    const guide = { type: 'axis', dimension: 'radius', grid: true, tickCount: 4 };
-    expect(AxisGuideSchema.parse(guide)).toEqual(guide);
+  it('axis_theta_dimension_valid_at_schema_layer', () => {
+    expect(GuideSchema.parse({ type: 'axis', dimension: 'theta' })).toEqual({ type: 'axis', dimension: 'theta' });
   });
 
-  // 错误路径：非法 polar 维度别名（theta 不是合法成员）被拒
-  it('axis_theta_dimension_rejected', () => {
-    expect(() => GuideSchema.parse({ type: 'axis', dimension: 'theta' })).toThrow();
-  });
-
-  // 交互：polar 维度 JSON round-trip 保形
-  it('polar_guide_roundtrip', () => {
-    const guide = { type: 'axis', dimension: 'angle', grid: true, tickLabels: false, id: 'angularAxis' };
+  it('axis_xyz_roundtrip', () => {
+    const guide = { type: 'axis', dimension: 'x', grid: true, tickLabels: false, id: 'xAxis' };
     expect(GuideSchema.parse(JSON.parse(JSON.stringify(guide)))).toEqual(guide);
   });
 });
@@ -139,8 +129,13 @@ describe('LegendGuideSchema (ADR-03 alpha.8)', () => {
     expect(() => LegendGuideSchema.parse({ type: 'legend' })).toThrow();
   });
 
-  it('legend_bad_channel_rejected', () => {
-    expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'x' })).toThrow();
+  it('legend_custom_channel_name_valid', () => {
+    const guide = { type: 'legend', channel: 'intensity' };
+    expect(LegendGuideSchema.parse(guide)).toEqual(guide);
+  });
+
+  it('legend_empty_channel_rejected', () => {
+    expect(() => LegendGuideSchema.parse({ type: 'legend', channel: '' })).toThrow();
   });
 
   it('legend_bad_position_rejected', () => {

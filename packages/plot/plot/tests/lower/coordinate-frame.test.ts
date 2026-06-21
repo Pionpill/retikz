@@ -1,7 +1,7 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 /**
  * ADR-01（alpha.9）coordinate frame N 通道泛化 + 位置 encoding 角色化 + 维度校验测试。
@@ -120,24 +120,40 @@ describe('coordinate 必填角色校验 fail-loud (ADR-01)', () => {
 
 describe('guide 维度校验 fail-loud (ADR-01, 修 cross-review P2)', () => {
   // 错误路径：cartesian 下 dimension 'angle' 非法 → fail-loud（曾静默丢弃 / 杂散轴线）
-  it('cartesian_angle_dimension_throws', () => {
+  it('angle_dimension_rejected_by_coordinate_definition_roles', () => {
     const spec = PlotSpecSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'd' },
-      scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
-      ],
-      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
-      guides: [{ type: 'axis', dimension: 'angle' }],
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [
+          { type: 'linear', name: 'x' },
+          { type: 'linear', name: 'y' },
+        ],
+        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+        marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
+        guides: [{ type: 'axis', dimension: 'angle' }],
     });
-    expect(() => expandOf(spec, { d: [{ a: 1, b: 2 }] }, opts)).toThrow(/cartesian2D|angle|not support|dimension/i);
+    expect(() => expandOf(spec, { d: [{ a: 0, b: 0 }] }, opts)).toThrow(/does not support axis dimension "angle"/);
   });
 
   // 错误路径：cartesian 下 dimension 'radius'（polar 维度）非法 → fail-loud
-  it('cartesian_radius_dimension_throws', () => {
+  it('radius_dimension_rejected_by_coordinate_definition_roles', () => {
+    const spec = PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [
+          { type: 'linear', name: 'x' },
+          { type: 'linear', name: 'y' },
+        ],
+        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+        marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
+        guides: [{ type: 'axis', dimension: 'radius' }],
+    });
+    expect(() => expandOf(spec, { d: [{ a: 0, b: 0 }] }, opts)).toThrow(/does not support axis dimension "radius"/);
+  });
+
+  it('unknown_encoding_role_rejected_by_coordinate_definition_roles', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -147,14 +163,13 @@ describe('guide 维度校验 fail-loud (ADR-01, 修 cross-review P2)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
-      guides: [{ type: 'axis', dimension: 'radius' }],
+      marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' }, size: { field: 's' } } }],
     });
-    expect(() => expandOf(spec, { d: [{ a: 1, b: 2 }] }, opts)).toThrow(/cartesian2D|not support|dimension|radius/i);
+    expect(() => expandOf(spec, { d: [{ a: 0, b: 0, s: 1 }] }, opts)).toThrow(/does not support encoding role "size"/);
   });
 
-  // 边界：polar 下 x / y 别名 + angle / radius 都合法（alpha.4 别名保留，勿删）
-  it('polar_xy_aliases_and_native_dimensions_accepted', () => {
+  // 边界：polar 下 x / y 合法；x 是角向，y 是径向
+  it('polar_xy_dimensions_accepted', () => {
     const makeSpec = (dimension: string): PlotSpec =>
       PlotSpecSchema.parse({
         namespace: 'plot',
@@ -168,7 +183,7 @@ describe('guide 维度校验 fail-loud (ADR-01, 修 cross-review P2)', () => {
         marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
         guides: [{ type: 'axis', dimension }],
       });
-    for (const dim of ['angle', 'radius', 'x', 'y']) {
+    for (const dim of ['x', 'y']) {
       expect(() => expandOf(makeSpec(dim), { d: [{ theta: 0, value: 1 }] }, opts)).not.toThrow();
     }
   });

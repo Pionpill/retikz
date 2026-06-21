@@ -4,6 +4,14 @@ export type Position = [number, number];
 /** 几何计算默认容差 */
 export const DEFAULT_EPSILON = 1e-9;
 
+/** 有限数值守卫：几何、scale、数据映射只接受真正的 finite number。 */
+export const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value);
+
+/** 无穷数值守卫：只接受正负 Infinity，不把 NaN 视为 infinite。 */
+export const isInfiniteNumber = (value: unknown): value is number =>
+  value === Infinity || value === -Infinity;
+
 /** 二维向量 / 坐标的基础运算工具集 */
 export const point = {
   /** 向量加 a + b */

@@ -1,0 +1,15 @@
+import { Axis, PathMark, Plot } from '@retikz/plot-react';
+import type { FC } from 'react';
+
+import { team } from './line-radar.data';
+
+/** 雷达：polar + closed 折线，首尾相接成线框多边�?*/
+const Demo: FC = () => (
+  <Plot data={team} width={320} height={320} coordinate="polar2D" style={{ maxWidth: '100%', height: 'auto' }}>
+    <PathMark x="dim" y="score" closed />
+    <Axis dimension="x" />
+    <Axis dimension="y" grid />
+  </Plot>
+);
+
+export default Demo;

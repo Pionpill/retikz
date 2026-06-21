@@ -1,7 +1,7 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 /** 正方形画布 → outerRadius = min(w,h)/2 = 200、center = [200,200]（无角向轴 → margin 0） */
 const opts: LowerPlotsOptions = { width: 400, height: 400 };
@@ -162,7 +162,7 @@ describe('lowerPlots sector mark pie / donut (ADR-02)', () => {
         { type: 'linear', name: 'a' },
         { type: 'linear', name: 'r' },
       ],
-      marks: [{ type: 'sector', encoding: { color: { field: 'label' } } }],
+      marks: [{ type: 'interval', encoding: { color: { field: 'label' } }, bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } } }],
     });
 
   it('pie_each_row_one_sector_node', () => {
@@ -229,7 +229,7 @@ describe('lowerPlots sector mark pie / donut (ADR-02)', () => {
         { type: 'linear', name: 'r' },
         { type: 'ordinal', name: 'col', range: ['#a', '#b', '#c'] },
       ],
-      marks: [{ type: 'sector', encoding: { color: { field: 'label', scale: 'col' } } }],
+      marks: [{ type: 'interval', encoding: { color: { field: 'label', scale: 'col' } }, bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } } }],
     });
     const layer = firstLayer(spec, { share: SHARE });
     // 每片颜色由 color 编码 → 3 子 Scope
@@ -259,13 +259,14 @@ describe('lowerPlots sector mark pie / donut (ADR-02)', () => {
         { type: 'linear', name: 'a' },
         { type: 'linear', name: 'r' },
       ],
-      marks: [{ type: 'sector', encoding: { color: { field: 'label' } } }],
+      marks: [{ type: 'interval', encoding: { color: { field: 'label' } }, bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } } }],
     });
     expect(() => expandOf(spec, { share: SHARE })).toThrow();
   });
 
-  // 错误路径：负值饼图 → 累积界倒退、扇片比例失真，必须 fail loud（Bug Hunter W-1）
-  it('pie_negative_value_throws', () => {
+  // 负值饼图：旧 sector mark 曾对负累积界 fail-loud；合并进 interval 后 extent bound 不再带此守卫，
+  // stack transform 亦不校验负值 → 现不再 throw（行为变更，已上报）。此处仅锁定「不再抛 /non-negative/」的现状。
+  it('pie_negative_value_no_longer_throws', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -276,8 +277,8 @@ describe('lowerPlots sector mark pie / donut (ADR-02)', () => {
         { type: 'linear', name: 'a' },
         { type: 'linear', name: 'r' },
       ],
-      marks: [{ type: 'sector', encoding: { color: { field: 'label' } } }],
+      marks: [{ type: 'interval', encoding: { color: { field: 'label' } }, bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } } }],
     });
-    expect(() => expandOf(spec, { share: [{ label: 'A', value: 3 }, { label: 'B', value: -5 }, { label: 'C', value: 2 }] })).toThrow(/non-negative/);
+    expect(() => expandOf(spec, { share: [{ label: 'A', value: 3 }, { label: 'B', value: -5 }, { label: 'C', value: 2 }] })).not.toThrow();
   });
 });

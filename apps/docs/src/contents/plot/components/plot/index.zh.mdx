@@ -3,17 +3,17 @@ title: 图表容器
 description: <Plot> 是图表容器：接收裸数据与尺寸，装配 mark / guide / scale 子组件，并在编译期下沉到 core 图元。
 ---
 
-`<Plot>` 是 plot 体系的容器组件：它接收 `data`（裸数据行数组）和显示尺寸，收集内部的 `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` / `<Scale>` 等子组件，编译期再装配成 PlotSpec 并下沉到 core。数据不写进 IR，只在 lowering 时注入。`<Plot>` 自己不画坐标轴、网格或图例；这些 guide 由你显式声明，scale 会自动推断，也可以用 `<Scale>` 覆盖；坐标系默认 `cartesian2D`，可用 `coordinate` 切换。
+`<Plot>` 是 plot 体系的容器组件：它接收 `data`（裸数据行数组）和显示尺寸，收集内部的 `<PathMark>` / `<IntervalMark>` / `<RegionMark>` / `<Axis>` / `<Scale>` 等子组件，编译期再装配成 PlotSpec 并下沉到 core。数据不写进 IR，只在 lowering 时注入。`<Plot>` 自己不画坐标轴、网格或图例；这些 guide 由你显式声明，scale 会自动推断，也可以用 `<Scale>` 覆盖；坐标系默认 `cartesian2D`，可用 `coordinate` 切换。
 
 ## 用法
 
 ```tsx
-import { Axis, BarMark, Plot } from '@retikz/plot-react';
+import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 ```
 
 ```tsx
 <Plot data={revenue} width={360} height={220}>
-  <BarMark x="quarter" y="value" />
+  <IntervalMark x="quarter" y="value" />
   <Axis dimension="x" />
   <Axis dimension="y" grid />
 </Plot>
@@ -108,7 +108,7 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 | --- | --- | --- |
 | 解析数据 | `data.reference` 取数据集 + `model` / `fieldMap` | 归一化数据行（类型推断、改名、transform） |
 | 推断 scale | 各通道绑定字段 + 坐标系 | band / linear / time / log… scale 与投影帧 |
-| 逐 mark 成层 | 每个 `<LineMark>` / `<BarMark>` … | 一个 core `<Scope>` 图层（内含 `<Node>` / `<Path>`） |
+| 逐 mark 成层 | 每个 `<PathMark>` / `<IntervalMark>` … | 一个 core `<Scope>` 图层（内含 `<Node>` / `<Path>`） |
 | 轴 / 网格 / 图例成层 | 显式 `<Axis>` / `<Legend>` | 网格层、轴层、图例层（各是 `<Scope>`） |
 | 编排 z-order | 上面所有层 | 网格垫底 → mark → 轴 → 图例 |
 
@@ -124,8 +124,8 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 | --- | --- | --- | --- |
 | `data` | `Array<Row>` | — | 裸数据行数组（组合 DSL 入口）；数据不进 IR |
 | `children` | `ReactNode` | — | mark / guide / scale 子组件（组合 DSL 入口） |
-| `model` | `DataModel` | — | 数据模型（字段名 + 类型）：声明则启用 strict 校验与 type-driven scale / guide 派生；详见[数据模型](/plot/data/model) |
-| `fieldMap` | `Record<string, string>` | — | 逻辑字段名 → 数据里的实际路径（需配合 `model`）；只改名、不变换值；详见[数据处理](/plot/data/processing) |
+| `model` | `DataModel` | — | 数据模型（字段名 + 类型）：声明则启用 strict 校验与 type-driven scale / guide 派生；详见[数据模型](/plot/grammar/data/model) |
+| `fieldMap` | `Record<string, string>` | — | 逻辑字段名 → 数据里的实际路径（需配合 `model`）；只改名、不变换值；详见[数据处理](/plot/grammar/data/processing) |
 | `coordinate` | 见[坐标系](/plot/grammar/coordinate) | cartesian2D | 坐标系：`"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` 简写或对应对象配置；缺省平面直角 |
 | `colors` | `Array<string>` | `schemeCategory10` | 默认调色板。分类颜色 scale 会把它作为 range；没有颜色编码的 mark 按图层顺序取色，超过后循环。写 `'currentColor'` 表示保持 core 继承色 |
 | `id` | `string` | — | 面板 id：写入 PlotSpec.id，作为外部 anchor 句柄；嵌入态未显式 `dataRef` 时也作为默认数据集引用 |
@@ -138,6 +138,7 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 | `clip` | `IRClipSpec` | — | 面板级裁剪区域 |
 | `fontSize` | `number?` | — | 刻度标签字号 |
 | `margin` | `{ top?; right?; bottom?; left? }` | — | 覆盖四周留白 |
+| `visualChannelDefinitions` | `Array<AnyVisualChannelDefinition>` | — | 自定义视觉通道运行时定义；配合 spec 里的 `encoding.channels` 使用，详见[自定义数据](/plot/grammar/data/custom#自定义视觉通道) |
 | `spec` | `PlotSpec` | — | spec 入口：已构造好的 Plot IR 根（与 `children` 二选一） |
 
 此外 `renderer` / `className` / `style` 透传给底层 `<Layout>`，分别选渲染后端、附加类名、内联样式。
@@ -145,7 +146,8 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 ## 相关
 
 - [坐标系](/plot/grammar/coordinate) —— polar 开关与角色映射
-- [图元](/plot/components/mark) —— 折线 / 散点 / 柱 / 扇形 / 面积
-- [坐标轴](/plot/components/axis) —— 刻度、标签、网格、polar 维度
-- [数据模型](/plot/data/model) —— `model` 字段类型与 type-driven 派生
-- [数据处理](/plot/data/processing) —— `fieldMap`、校验、自定义解析
+- [图元](/plot/grammar/mark) —— 折线 / 散点 / 柱 / 扇形 / 面积
+- [坐标轴](/plot/grammar/guide/axis) —— 刻度、标签、网格、polar 维度
+- [数据模型](/plot/grammar/data/model) —— `model` 字段类型与 type-driven 派生
+- [数据处理](/plot/grammar/data/processing) —— `fieldMap`、校验、自定义解析
+- [自定义数据](/plot/grammar/data/custom#自定义视觉通道) —— `visualChannelDefinitions` 与 `encoding.channels`

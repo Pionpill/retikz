@@ -1,15 +1,17 @@
 import { Children, Fragment, type ReactNode, isValidElement } from 'react';
 import {
-  type Coordinate,
+  type CoordinateOperation,
+  CoordinateOperationSchema,
   type DataModel,
   type Encoding,
   type ExternalRow,
   type Guide,
+  IntervalBoundKind,
+  type IntervalBounds,
   type Mark,
   type MarkLabel,
+  type MarkValueType,
   PLOT_NAMESPACE,
-  PlotArrangement,
-  type PlotArrangementValue,
   PlotComposite,
   PlotCoordinate,
   PlotFieldType,
@@ -19,32 +21,38 @@ import {
   type Scale as PlotScaleSpec,
   type PlotSpec,
   PlotTransform,
+  type PointColorStyle,
+  type PointFillStyle,
+  type PointNonnegativeNumberStyle,
+  type PointNumberStyle,
+  type PointOpacityStyle,
+  type PointShapeStyle,
+  type PointSizeStyle,
+  type PointStrokeStyle,
+  type PointStrokeWidthStyle,
+  type PointZIndexStyle,
   type TextChannel,
   type Transform,
+  type TransformOperation,
 } from '@retikz/plot';
 import { Axis, type AxisProps, Legend, type LegendProps } from './guides';
 import {
-  AreaMark,
-  type AreaMarkProps,
-  BarMark,
-  type BarMarkProps,
   type DatumLabelProps,
-  LineMark,
-  type LineMarkProps,
+  IntervalMark,
+  type IntervalMarkProps,
+  LinkMark,
+  type LinkMarkProps,
+  PathMark,
+  type PathMarkProps,
   PointMark,
   type PointMarkProps,
-  RectMark,
-  type RectMarkProps,
-  RibbonMark,
-  type RibbonMarkProps,
-  RuleMark,
-  type RuleMarkProps,
-  SectorMark,
-  type SectorMarkProps,
-  TextMark,
-  type TextMarkProps,
+  ReferenceMark,
+  type ReferenceMarkProps,
+  RegionMark,
+  type RegionMarkProps,
 } from './marks';
 import { type PositionScaleType, Scale, type ScaleDimension, type ScaleProps } from './scales';
+import { Transform as TransformComponent, type TransformProps } from './transform';
 
 /** 自动建的 scale 名（用户不可见；需要显式 scale 配置时后续再加 <Scale>） */
 const AUTO_X = '__x';
@@ -93,16 +101,9 @@ export type CoordinateInput =
       /** 2D 三元（重心坐标） */
       type: 'ternary2D';
     }
-  | {
-      /** 自定义坐标系（实验性）：投影由 <Plot coordinates={{ [name]: factory }}> 提供，IR 只存 name + roles + 数值参数 */
-      type: 'custom';
-      /** 工厂名（对应 <Plot coordinates> 表的键） */
-      name: string;
-      /** 该坐标系消费的位置角色序（mark 的 x / y / a / b / c 通道） */
-      roles: Array<'x' | 'y' | 'a' | 'b' | 'c'>;
-      /** 透传给工厂的数值参数（如 archHeight）；JSON 安全 */
-      params?: Record<string, number>;
-    };
+  | ({ type: string } & Record<string, unknown>);
+
+type Polar2DCoordinateInput = Extract<CoordinateInput, { type: 'polar2D' }>;
 
 /** buildPlotSpec 选项：坐标系选择 + 数据模型 */
 export type BuildPlotSpecOptions = {
@@ -116,8 +117,15 @@ export type BuildPlotSpecOptions = {
   coordinate?: CoordinateInput;
   /** 数据模型（字段类型）：声明则进 data.model，并对未显式 <Scale> 的位置维度走 type-driven 派生 */
   model?: DataModel;
+  /**
+   * 直传数据 transform IR（拼到 <Transform> 收集结果之前、自动装配 stack 之前）；与 <Transform> 声明组件共用同一管线。
+   * @description 程序化构造 spec 时完全掌控 transform 顺序的入口；含 stack 时同样抑制 mark auto-stack（B4 去重）。
+   */
+  transforms?: Array<TransformOperation>;
   /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
   colors?: Array<string>;
+  /** 当前数据集可见字段名集合；用于把样式字符串糖优先解析成字段通道 */
+  dataFieldNames?: ReadonlySet<string>;
   /**
    * 延迟位置 scale 推断：省略未显式声明的位置 scale 绑定，让 lowering 按实际数据字段类型派生。
    * @description 供 `<Plot data>` 入口使用；直接调用 buildPlotSpec 时缺省保持旧的 AUTO linear/band 行为。
@@ -144,7 +152,10 @@ export const resolveLabelOf = (spec: PlotSpec): ResolveLabelMap | undefined => r
 type Collected = {
   marks: Array<Mark>;
   guides: Array<Guide>;
-  transforms: Array<Transform>;
+  /** 显式 transform（<Transform> 声明组件收集，按声明序） */
+  transforms: Array<TransformOperation>;
+  /** mark-prop 自动装配的 stack（<IntervalMark stack> / <IntervalMark angle>）；显式 stack 存在时抑制（B4 去重） */
+  autoStacks: Array<Transform>;
   /** 显式声明的位置 scale */
   scales: Array<ScaleProps>;
   /** 按 mark id 收集的运行时 resolveLabel（不进 IR；ADR-04） */
@@ -153,13 +164,13 @@ type Collected = {
   colored: boolean;
   /** 用到的 color 字段名集合（→ 配 model 时按字段类型派生 sequential / ordinal） */
   colorFields: Array<string>;
-  /** 是否有 <BarMark>（→ 角向轴强制 band scale） */
+  /** 是否有 <IntervalMark>（→ 角向轴强制 band scale） */
   hasBar: boolean;
-  /** 是否有 <RectMark>（heatmap → x / y 双轴强制 band scale） */
+  /** 是否有 <IntervalMark>（heatmap → x / y 双轴强制 band scale） */
   hasRect: boolean;
-  /** 是否有 <SectorMark>（→ 角向 linear scale） */
+  /** 是否有 <IntervalMark angle> 饼/环图入口（→ 角向 linear scale） */
   hasSector: boolean;
-  /** 是否有闭合 <LineMark>（雷达 → 角向 point scale） */
+  /** 是否有闭合 <PathMark>（雷达 → 角向 point scale） */
   hasClosedLine: boolean;
 };
 
@@ -169,22 +180,142 @@ const colorChannel = (color: string | undefined, series: string | undefined): { 
   return field ? { color: { field, scale: AUTO_COLOR } } : undefined;
 };
 
+const CSS_COLOR_KEYWORDS = new Set([
+  'black',
+  'silver',
+  'gray',
+  'grey',
+  'white',
+  'maroon',
+  'red',
+  'purple',
+  'fuchsia',
+  'green',
+  'lime',
+  'olive',
+  'yellow',
+  'navy',
+  'blue',
+  'teal',
+  'aqua',
+  'orange',
+  'transparent',
+  'currentcolor',
+  'rebeccapurple',
+  'crimson',
+  'steelblue',
+  'darkorange',
+  'lightblue',
+]);
+
+const canUseCssColor = (value: string): boolean => {
+  const css = globalThis.CSS as { supports?: (property: string, value: string) => boolean } | undefined;
+  if (css?.supports?.('color', value)) return true;
+  const normalized = value.trim().toLowerCase();
+  return (
+    /^#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/i.test(value) ||
+    /^(?:rgb|rgba|hsl|hsla|hwb|lab|lch|oklab|oklch|color)\(/i.test(normalized) ||
+    /^var\(--[\w-]+\)$/i.test(normalized) ||
+    CSS_COLOR_KEYWORDS.has(normalized)
+  );
+};
+
+const warnSkippedStyle = (prop: string, value: string): void => {
+  console.warn(`buildPlotSpec: <PointMark ${prop}="${value}"> is neither a known data field nor a valid constant for ${prop}; skipped`);
+};
+
+type StyleSugarContext = {
+  fieldNames: ReadonlySet<string>;
+};
+
+const styleSugarContext = (options: BuildPlotSpecOptions): StyleSugarContext => {
+  const fieldNames = new Set<string>(options.dataFieldNames);
+  for (const field of options.model ?? []) fieldNames.add(field.name);
+  return { fieldNames };
+};
+
+const isMarkValue = (value: unknown): value is MarkValueType<unknown> =>
+  value !== null && typeof value === 'object' && 'kind' in value && ((value as { kind?: unknown }).kind === 'field' || (value as { kind?: unknown }).kind === 'constant');
+
+const paintStyleOf = (value: PointMarkProps['fill'], context: StyleSugarContext): PointFillStyle | undefined => {
+  if (value === undefined) return undefined;
+  if (isMarkValue(value)) return value;
+  if (typeof value !== 'string') return { kind: 'constant', value };
+  if (context.fieldNames.has(value)) return { kind: 'field', value };
+  if (canUseCssColor(value)) return { kind: 'constant', value };
+  warnSkippedStyle('fill', value);
+  return undefined;
+};
+
+const pointColorStyleOf = (value: PointMarkProps['color'], context: StyleSugarContext): PointColorStyle | undefined => {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string') return value.kind === 'field' ? { ...value, scale: value.scale ?? AUTO_COLOR } : value;
+  if (context.fieldNames.has(value)) return { kind: 'field', value, scale: AUTO_COLOR };
+  if (canUseCssColor(value)) return { kind: 'constant', value };
+  warnSkippedStyle('color', value);
+  return undefined;
+};
+
+const strokeStyleOf = (stroke: PointMarkProps['stroke'], context: StyleSugarContext): PointStrokeStyle | undefined => {
+  if (stroke === undefined) return undefined;
+  if (isMarkValue(stroke)) return stroke;
+  if (context.fieldNames.has(stroke)) return { kind: 'field', value: stroke };
+  if (canUseCssColor(stroke)) return { kind: 'constant', value: stroke };
+  warnSkippedStyle('stroke', stroke);
+  return undefined;
+};
+
+const strokeWidthStyleOf = (strokeWidth: PointMarkProps['strokeWidth'], context: StyleSugarContext): PointStrokeWidthStyle | undefined => {
+  if (strokeWidth === undefined) return undefined;
+  if (isMarkValue(strokeWidth)) return strokeWidth;
+  if (typeof strokeWidth === 'number') return { kind: 'constant', value: strokeWidth };
+  if (context.fieldNames.has(strokeWidth)) return { kind: 'field', value: strokeWidth };
+  warnSkippedStyle('strokeWidth', strokeWidth);
+  return undefined;
+};
+
+const numberStyleOf = <T extends PointNumberStyle | PointNonnegativeNumberStyle | PointOpacityStyle | PointSizeStyle | PointZIndexStyle>(
+  value: string | number | MarkValueType<number> | undefined,
+  prop: string,
+  context: StyleSugarContext,
+): T | undefined => {
+  if (value === undefined) return undefined;
+  if (isMarkValue(value)) return value as T;
+  if (typeof value === 'number') return { kind: 'constant', value } as T;
+  if (context.fieldNames.has(value)) return { kind: 'field', value } as T;
+  warnSkippedStyle(prop, value);
+  return undefined;
+};
+
 /** 记录某 mark 的 color 编码：置 colored 并收集 color 字段名（供 model 派生 sequential / ordinal） */
+const shapeStyleOf = (value: PointMarkProps['shape'], context: StyleSugarContext): PointShapeStyle | undefined => {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string') return value;
+  if (context.fieldNames.has(value)) return { kind: 'field', value };
+  return { kind: 'constant', value };
+};
+
 const recordColor = (into: Collected, colorEnc: { color: { field: string; scale: string } } | undefined): void => {
   if (!colorEnc) return;
   into.colored = true;
   into.colorFields.push(colorEnc.color.field);
 };
 
+const recordMarkColor = (into: Collected, color: PointColorStyle | undefined): void => {
+  if (color?.kind !== 'field') return;
+  into.colored = true;
+  into.colorFields.push(color.value);
+};
+
 /**
  * 把位置 mark 的扁平 label* props 装成 IR MarkLabel（priority-1 宿主 datum label，ADR-04）
- * @description label 顶层 string 默认按字段（content.field）；labelFormat 进 IR；labelPosition / labelDistance / labelPin
+ * @description label 顶层 string 默认按字段（content.field）；labelDisplayFormat 进 IR；labelPosition / labelDistance / labelPin
  *   摊进对齐 core NodeLabelSchema 的字段。无 label 字段 → undefined（不挂标签）。
  */
 const buildMarkLabel = (props: DatumLabelProps): MarkLabel | undefined => {
-  const { label, labelFormat, labelPosition, labelDistance, labelPin } = props;
+  const { label, labelDisplayFormat, labelPosition, labelDistance, labelPin } = props;
   if (label === undefined) return undefined;
-  const content: TextChannel = { field: label, ...(labelFormat !== undefined ? { format: labelFormat } : {}) };
+  const content: TextChannel = { field: label, ...(labelDisplayFormat !== undefined ? { displayFormat: labelDisplayFormat } : {}) };
   return {
     content,
     ...(labelPosition !== undefined ? { position: labelPosition } : {}),
@@ -212,26 +343,26 @@ const positionEncoding = (x: string, y: string): Pick<Encoding, 'x' | 'y'> => ({
 const ruleChannel = (value: number | string): { value: number } | { field: string } => (typeof value === 'number' ? { value } : { field: value });
 
 /**
- * 把 <RuleMark> 扁平 props 装配进 rule IR（取向 / band 上界 / extent / color 校验 fail-loud）
+ * 把 <ReferenceMark> 扁平 props 装配进 rule IR（取向 / band 上界 / extent / color 校验 fail-loud）
  * @description 取向由给 x（竖直）还是 y（水平）决定，二选一（皆给 / 皆缺 → fail-loud）；
  *   band 上界 xTo 须配 x、yTo 须配 y（不匹配 / 单飞 → fail-loud）；extent 须成对（单设 → fail-loud）。
  *   常量 rule（x/y 为数字）→ color 作 value 常量；per-datum rule（x/y 为字段串）→ color 作 field（AUTO_COLOR）。
  */
-const collectRule = (props: RuleMarkProps, into: Collected): void => {
+const collectReference = (props: ReferenceMarkProps, into: Collected): void => {
   const { x, y, xTo, yTo, extentField, extentToField, color, id } = props;
   const hasX = x !== undefined;
   const hasY = y !== undefined;
   if (hasX === hasY) {
-    throw new Error('buildPlotSpec: <RuleMark> must bind exactly one of x (vertical) or y (horizontal); set one, not both / neither');
+    throw new Error('buildPlotSpec: <ReferenceMark> must bind exactly one of x (vertical) or y (horizontal); set one, not both / neither');
   }
   if (hasX && yTo !== undefined) {
-    throw new Error('buildPlotSpec: <RuleMark> binds x (vertical) but sets yTo; the band upper bound must match the bound dimension (use xTo)');
+    throw new Error('buildPlotSpec: <ReferenceMark> binds x (vertical) but sets yTo; the band upper bound must match the bound dimension (use xTo)');
   }
   if (hasY && xTo !== undefined) {
-    throw new Error('buildPlotSpec: <RuleMark> binds y (horizontal) but sets xTo; the band upper bound must match the bound dimension (use yTo)');
+    throw new Error('buildPlotSpec: <ReferenceMark> binds y (horizontal) but sets xTo; the band upper bound must match the bound dimension (use yTo)');
   }
   if ((extentField === undefined) !== (extentToField === undefined)) {
-    throw new Error('buildPlotSpec: <RuleMark> extentField / extentToField must be set together (a partial-length span needs both start and end)');
+    throw new Error('buildPlotSpec: <ReferenceMark> extentField / extentToField must be set together (a partial-length span needs both start and end)');
   }
   // 常量 rule（数字常量轴）→ color 作 value；per-datum（字段串）→ color 作 field（AUTO_COLOR）
   const constantRule = typeof (hasX ? x : y) === 'number';
@@ -242,7 +373,7 @@ const collectRule = (props: RuleMarkProps, into: Collected): void => {
   const positional = hasX ? { x: ruleChannel(x) } : { y: ruleChannel(y as number | string) };
   const upper = hasX ? (xTo !== undefined ? { xTo } : {}) : yTo !== undefined ? { yTo } : {};
   into.marks.push({
-    type: PlotMark.Rule,
+    type: PlotMark.Reference,
     ...(id !== undefined ? { id } : {}),
     ...upper,
     ...(extentField !== undefined ? { extentField } : {}),
@@ -257,20 +388,20 @@ const collectRule = (props: RuleMarkProps, into: Collected): void => {
 };
 
 /** 递归收集 mark / guide / transform：认 mark/guide 组件，穿透 Fragment，忽略其它节点 */
-const collectInto = (children: ReactNode, into: Collected): void => {
+const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSugarContext): void => {
   Children.forEach(children, child => {
     if (!isValidElement(child)) return;
     if (child.type === Fragment) {
-      collectInto((child.props as { children?: ReactNode }).children, into);
+      collectInto((child.props as { children?: ReactNode }).children, into, styleContext);
       return;
     }
-    if (child.type === LineMark) {
-      const props = child.props as LineMarkProps;
+    if (child.type === PathMark) {
+      const props = child.props as PathMarkProps;
       const { x, y, order, series, color, closed, id } = props;
       const colorEnc = colorChannel(color, series);
       const markLabel = buildMarkLabel(props);
       into.marks.push({
-        type: PlotMark.Line,
+        type: PlotMark.Path,
         ...(id !== undefined ? { id } : {}),
         ...(order !== undefined ? { order } : {}),
         ...(series !== undefined ? { series } : {}),
@@ -283,76 +414,157 @@ const collectInto = (children: ReactNode, into: Collected): void => {
       if (closed) into.hasClosedLine = true;
     } else if (child.type === PointMark) {
       const props = child.props as PointMarkProps;
-      const { x, y, a, b, c, color, size, opacity, shape, id } = props;
-      const colorEnc = colorChannel(color, undefined);
+      const {
+        x,
+        y,
+        z,
+        color,
+        fill,
+        stroke,
+        strokeWidth,
+        fillOpacity,
+        drawOpacity,
+        rotate,
+        padding,
+        minimumSize,
+        minimumWidth,
+        minimumHeight,
+        zIndex,
+        size,
+        opacity,
+        shape,
+        text,
+        displayFormat,
+        dx,
+        dy,
+        id,
+      } = props;
       const markLabel = buildMarkLabel(props);
-      // 位置通道按坐标系角色：cartesian1D-2D / polar 用 x/y、ternary 用 a/b/c；缺角色由 lowering 按坐标系校验
+      const colorStyle = pointColorStyleOf(color, styleContext);
+      const sizeStyle = numberStyleOf<PointSizeStyle>(size, 'size', styleContext);
+      const shapeStyle = shapeStyleOf(shape, styleContext);
+      const fillStyle = paintStyleOf(fill, styleContext);
+      const strokeStyle = strokeStyleOf(stroke, styleContext);
+      const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
+      const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
+      const drawOpacityStyle = numberStyleOf<PointOpacityStyle>(drawOpacity, 'drawOpacity', styleContext);
+      const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
+      const rotateStyle = numberStyleOf<PointNumberStyle>(rotate, 'rotate', styleContext);
+      const paddingStyle = numberStyleOf<PointNonnegativeNumberStyle>(padding, 'padding', styleContext);
+      const minimumSizeStyle = numberStyleOf<PointNonnegativeNumberStyle>(minimumSize, 'minimumSize', styleContext);
+      const minimumWidthStyle = numberStyleOf<PointNonnegativeNumberStyle>(minimumWidth, 'minimumWidth', styleContext);
+      const minimumHeightStyle = numberStyleOf<PointNonnegativeNumberStyle>(minimumHeight, 'minimumHeight', styleContext);
+      const zIndexStyle = numberStyleOf<PointZIndexStyle>(zIndex, 'zIndex', styleContext);
+      // text 设 → point 下沉为无边框文本 Node（内容走 encoding.text）；否则散点 glyph。位置通道按坐标系角色（x / x/y / x/y/z）
+      const textEnc: { text: TextChannel } | undefined = text !== undefined ? { text: { field: text, ...(displayFormat !== undefined ? { displayFormat } : {}) } } : undefined;
       into.marks.push({
         type: PlotMark.Point,
         ...(id !== undefined ? { id } : {}),
+        ...(colorStyle !== undefined ? { color: colorStyle } : {}),
+        ...(sizeStyle !== undefined ? { size: sizeStyle } : {}),
+        ...(shapeStyle !== undefined ? { shape: shapeStyle } : {}),
+        ...(fillStyle !== undefined ? { fill: fillStyle } : {}),
+        ...(strokeStyle !== undefined ? { stroke: strokeStyle } : {}),
+        ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
+        ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
+        ...(drawOpacityStyle !== undefined ? { drawOpacity: drawOpacityStyle } : {}),
+        ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
+        ...(rotateStyle !== undefined ? { rotate: rotateStyle } : {}),
+        ...(paddingStyle !== undefined ? { padding: paddingStyle } : {}),
+        ...(minimumSizeStyle !== undefined ? { minimumSize: minimumSizeStyle } : {}),
+        ...(minimumWidthStyle !== undefined ? { minimumWidth: minimumWidthStyle } : {}),
+        ...(minimumHeightStyle !== undefined ? { minimumHeight: minimumHeightStyle } : {}),
+        ...(zIndexStyle !== undefined ? { zIndex: zIndexStyle } : {}),
+        ...(dx !== undefined ? { dx } : {}),
+        ...(dy !== undefined ? { dy } : {}),
         ...(markLabel !== undefined ? { label: markLabel } : {}),
         encoding: {
           ...(x !== undefined ? { x: { field: x } } : {}),
           ...(y !== undefined ? { y: { field: y } } : {}),
-          ...(a !== undefined ? { a: { field: a } } : {}),
-          ...(b !== undefined ? { b: { field: b } } : {}),
-          ...(c !== undefined ? { c: { field: c } } : {}),
-          ...colorEnc,
-          ...(size !== undefined ? { size: { field: size } } : {}),
-          ...(opacity !== undefined ? { opacity: { field: opacity } } : {}),
-          ...(shape !== undefined ? { shape: { field: shape } } : {}),
+          ...(z !== undefined ? { z: { field: z } } : {}),
+          ...textEnc,
         },
       });
-      recordColor(into, colorEnc);
+      recordMarkColor(into, colorStyle);
       recordResolveLabel(into, id, props.resolveLabel);
-    } else if (child.type === BarMark) {
-      const props = child.props as BarMarkProps;
-      const { x, y, color, series, stack, id } = props;
-      const colorEnc = colorChannel(color, series);
+    } else if (child.type === IntervalMark) {
+      const props = child.props as IntervalMarkProps;
+      const { x, y, angle, x0, x1, color, series, stack, bounds: explicitBounds, id } = props;
       const markLabel = buildMarkLabel(props);
-      // series + stack → 堆叠（装配 stack transform，x/y/groupBy 与 mark 对齐）；series 无 stack → dodge
-      let arrangement: PlotArrangementValue | undefined;
-      if (series !== undefined && stack) {
-        arrangement = PlotArrangement.Stack;
-        into.transforms.push({ kind: PlotTransform.Stack, x, y, groupBy: series });
-      } else if (series !== undefined) {
-        arrangement = PlotArrangement.Dodge;
+      // pie / donut：angle → 自动累积 stack transform（产 y0/y1）+ extent×full bounds
+      if (angle !== undefined) {
+        if (y !== undefined || x !== undefined || x0 !== undefined || x1 !== undefined || stack !== undefined || explicitBounds !== undefined) {
+          throw new Error('buildPlotSpec: <IntervalMark angle> is the polar pie/donut form; do not mix it with x/y/x0/x1/stack/bounds');
+        }
+        into.autoStacks.push({ kind: PlotTransform.Stack, y: angle, ...(series !== undefined ? { groupBy: series } : {}) });
+        const colorEnc = colorChannel(color, series) ?? colorChannel(angle, undefined);
+        into.marks.push({
+          type: PlotMark.Interval,
+          ...(id !== undefined ? { id } : {}),
+          bounds: { x: { kind: IntervalBoundKind.Extent, from: 'y0', to: 'y1' }, y: { kind: IntervalBoundKind.Full } },
+          encoding: { ...colorEnc },
+        });
+        into.hasSector = true;
+        recordColor(into, colorEnc);
+        return;
       }
+      // 显式 bounds（heatmap 双 band / 高级）：直接落 IR；band bound → 强制对应轴 band scale
+      if (explicitBounds !== undefined) {
+        const colorEnc = colorChannel(color, series);
+        into.marks.push({
+          type: PlotMark.Interval,
+          ...(id !== undefined ? { id } : {}),
+          ...(series !== undefined ? { series } : {}),
+          bounds: explicitBounds,
+          ...(markLabel !== undefined ? { label: markLabel } : {}),
+          encoding: { ...(x !== undefined ? { x: { field: x } } : {}), ...(y !== undefined ? { y: { field: y } } : {}), ...colorEnc },
+        });
+        if (explicitBounds.x?.kind === IntervalBoundKind.Band) into.hasBar = true;
+        if (explicitBounds.y?.kind === IntervalBoundKind.Band) into.hasRect = true;
+        recordColor(into, colorEnc);
+        recordResolveLabel(into, id, props.resolveLabel);
+        return;
+      }
+      // histogram：x0/x1 → bounds.x = extent（连续 x，不强制 band）；普通 / 分组 / 堆叠柱：band x
+      const histogram = x0 !== undefined && x1 !== undefined;
+      if ((x0 === undefined) !== (x1 === undefined)) {
+        throw new Error('buildPlotSpec: <IntervalMark> x0 / x1 must be set together for continuous-interval bars');
+      }
+      if (!histogram && x === undefined) {
+        throw new Error('buildPlotSpec: <IntervalMark> requires x for categorical bars, x0/x1 for histogram, or angle for the polar pie/donut form');
+      }
+      if (y === undefined) {
+        throw new Error('buildPlotSpec: <IntervalMark> requires y (the value/height), or use angle for the polar pie/donut form');
+      }
+      const colorEnc = colorChannel(color, series);
+      // series + stack → 堆叠（装 stack transform + bounds.y=extent(y0,y1)）；series 无 stack → dodge（bounds.x=band{group}）
+      let bounds: IntervalBounds | undefined;
+      if (series !== undefined && stack) {
+        into.autoStacks.push({ kind: PlotTransform.Stack, x, y, groupBy: series });
+        bounds = { y: { kind: IntervalBoundKind.Extent, from: 'y0', to: 'y1' } };
+      } else if (series !== undefined && !histogram) {
+        bounds = { x: { kind: IntervalBoundKind.Band, group: series } };
+      }
+      if (histogram) bounds = { ...(bounds ?? {}), x: { kind: IntervalBoundKind.Extent, from: x0, to: x1 } };
       into.marks.push({
         type: PlotMark.Interval,
         ...(id !== undefined ? { id } : {}),
         ...(series !== undefined ? { series } : {}),
-        ...(arrangement !== undefined ? { arrangement } : {}),
+        ...(bounds !== undefined ? { bounds } : {}),
         ...(markLabel !== undefined ? { label: markLabel } : {}),
-        encoding: { x: { field: x }, y: { field: y }, ...colorEnc },
+        // histogram：仅 y（高度），x 来自 x0/x1 区间；普通柱：x（分类 band）+ y（值）
+        encoding: histogram ? { y: { field: y }, ...colorEnc } : { x: { field: x }, y: { field: y }, ...colorEnc },
       });
-      into.hasBar = true;
+      if (!histogram) into.hasBar = true;
       recordColor(into, colorEnc);
       recordResolveLabel(into, id, props.resolveLabel);
-    } else if (child.type === SectorMark) {
-      const { angle, color, series, id } = child.props as SectorMarkProps;
-      // 内建自动累积：装单链 stack transform（无分组 x，按 series 排序或数据序）；sector mark 读 y0/y1 为角界
-      into.transforms.push({
-        kind: PlotTransform.Stack,
-        y: angle,
-        ...(series !== undefined ? { groupBy: series } : {}),
-      });
-      // 颜色缺省按 angle 值字段本身分类上色（饼图每片一色）；lowering 的角向域读累积界 y0/y1，不经 encoding，故 encoding 仅承载 color
-      const colorEnc = colorChannel(color, series) ?? colorChannel(angle, undefined);
-      into.marks.push({
-        type: PlotMark.Sector,
-        ...(id !== undefined ? { id } : {}),
-        encoding: { ...colorEnc },
-      });
-      into.hasSector = true;
-      recordColor(into, colorEnc);
-    } else if (child.type === AreaMark) {
-      const props = child.props as AreaMarkProps;
+    } else if (child.type === RegionMark) {
+      const props = child.props as RegionMarkProps;
       const { x, y, order, series, baseline, closed, color, id } = props;
       const colorEnc = colorChannel(color, series);
       const markLabel = buildMarkLabel(props);
       into.marks.push({
-        type: PlotMark.Area,
+        type: PlotMark.Region,
         ...(id !== undefined ? { id } : {}),
         ...(order !== undefined ? { order } : {}),
         ...(series !== undefined ? { series } : {}),
@@ -364,45 +576,12 @@ const collectInto = (children: ReactNode, into: Collected): void => {
       recordColor(into, colorEnc);
       recordResolveLabel(into, id, props.resolveLabel);
       if (closed) into.hasClosedLine = true;
-    } else if (child.type === TextMark) {
-      const { x, y, a, b, c, text, format, color, dx, dy, id } = child.props as TextMarkProps;
-      const colorEnc = colorChannel(color, undefined);
-      const content: TextChannel = { field: text, ...(format !== undefined ? { format } : {}) };
-      // text 几何同 point：x/y/a/b/c 摊进 encoding、text 内容通道必填、dx/dy 落 mark 顶层；不进 interval fail-loud 网
-      into.marks.push({
-        type: PlotMark.Text,
-        ...(id !== undefined ? { id } : {}),
-        ...(dx !== undefined ? { dx } : {}),
-        ...(dy !== undefined ? { dy } : {}),
-        encoding: {
-          ...(x !== undefined ? { x: { field: x } } : {}),
-          ...(y !== undefined ? { y: { field: y } } : {}),
-          ...(a !== undefined ? { a: { field: a } } : {}),
-          ...(b !== undefined ? { b: { field: b } } : {}),
-          ...(c !== undefined ? { c: { field: c } } : {}),
-          text: content,
-          ...colorEnc,
-        },
-      });
-      recordColor(into, colorEnc);
-      recordResolveLabel(into, id, (child.props as TextMarkProps).resolveLabel);
-    } else if (child.type === RectMark) {
-      const { x, y, color, id } = child.props as RectMarkProps;
-      // rect 无 series（网格无堆叠 / 并排）；color 直走 colorChannel（无 series 缺省）
-      const colorEnc = colorChannel(color, undefined);
-      into.marks.push({
-        type: PlotMark.Rect,
-        ...(id !== undefined ? { id } : {}),
-        encoding: { ...positionEncoding(x, y), ...colorEnc },
-      });
-      into.hasRect = true;
-      recordColor(into, colorEnc);
-    } else if (child.type === RibbonMark) {
-      const { sourceX, sourceY, targetX, targetY, value, endWidth, curvature, orientation, color, id } = child.props as RibbonMarkProps;
+    } else if (child.type === LinkMark) {
+      const { sourceX, sourceY, targetX, targetY, value, endWidth, curvature, orientation, color, id } = child.props as LinkMarkProps;
       // 扁平端点 props → 嵌套 IR source/target 字段对；color 走 colorChannel（无 series）
       const colorEnc = colorChannel(color, undefined);
       into.marks.push({
-        type: PlotMark.Ribbon,
+        type: PlotMark.Link,
         ...(id !== undefined ? { id } : {}),
         source: { x: { field: sourceX }, y: { field: sourceY } },
         target: { x: { field: targetX }, y: { field: targetY } },
@@ -413,10 +592,13 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         encoding: { ...colorEnc },
       });
       recordColor(into, colorEnc);
-    } else if (child.type === RuleMark) {
-      collectRule(child.props as RuleMarkProps, into);
+    } else if (child.type === ReferenceMark) {
+      collectReference(child.props as ReferenceMarkProps, into);
     } else if (child.type === Axis) {
-      const { dimension, tickCount, tickLabels, grid, id } = child.props as AxisProps;
+      const { dimension, scale, tickCount, tickLabels, grid, id } = child.props as AxisProps;
+      if (scale !== undefined) {
+        into.scales.push({ dimension, type: scale });
+      }
       into.guides.push({
         type: PlotGuide.Axis,
         dimension,
@@ -440,6 +622,9 @@ const collectInto = (children: ReactNode, into: Collected): void => {
     } else if (child.type === Scale) {
       const { dimension, type } = child.props as ScaleProps;
       into.scales.push({ dimension, type });
+    } else if (child.type === TransformComponent) {
+      // 通用 <Transform kind="..."> 声明：props 即 IR transform operation（按声明序进 spec.transform）
+      into.transforms.push(child.props as TransformProps);
     }
   });
 };
@@ -463,41 +648,57 @@ const buildColorScale = (colorFields: Array<string>, model: DataModel | undefine
 };
 
 const buildPositionScale = (name: string, type: PositionScaleType): PlotScaleSpec => {
-  if (type === 'time') return { type: PlotScale.Time, name };
-  if (type === 'point') return { type: PlotScale.Point, name };
-  if (type === 'log') return { type: PlotScale.Log, name };
-  if (type === 'sqrt') return { type: PlotScale.Sqrt, name };
-  return { type: PlotScale.Linear, name };
+  switch (type) {
+    case 'linear':
+      return { type: PlotScale.Linear, name };
+    case 'time':
+      return { type: PlotScale.Time, name };
+    case 'point':
+      return { type: PlotScale.Point, name };
+    case 'log':
+      return { type: PlotScale.Log, name };
+    case 'sqrt':
+      return { type: PlotScale.Sqrt, name };
+    case 'symlog':
+      return { type: PlotScale.Symlog, name };
+    case 'radial':
+      return { type: PlotScale.Radial, name };
+    default: {
+      // 穷尽守卫：新增 PositionScaleType 未在此映射时 never 编译报错，杜绝静默回退 linear
+      const exhaustive: never = type;
+      throw new Error(`buildPlotSpec: unsupported position scale type "${String(exhaustive)}"`);
+    }
+  }
 };
 
-/** cartesian x scale 类型：含 <BarMark> 或 <RectMark> → band；否则按 <Scale dimension="x"> 或缺省 linear */
+/** cartesian x scale 类型：含 <IntervalMark> 或 <IntervalMark> → band；否则按 <Scale dimension="x"> 或缺省 linear */
 const buildCartesianXScale = (forceBand: boolean, explicit: PositionScaleType | undefined): PlotScaleSpec => {
   if (forceBand && explicit !== undefined) {
-    throw new Error('buildPlotSpec: <BarMark> / <RectMark> requires a band x scale; omit <Scale dimension="x" /> for automatic band inference');
+    throw new Error('buildPlotSpec: <IntervalMark> (bar / heatmap) requires a band x scale; omit <Scale dimension="x" /> for automatic band inference');
   }
   if (forceBand) return { type: PlotScale.Band, name: AUTO_X };
   return buildPositionScale(AUTO_X, explicit ?? 'linear');
 };
 
-/** cartesian y（值轴）scale 类型：含 <RectMark>（heatmap 双 band）→ band；否则按 <Scale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
+/** cartesian y（值轴）scale 类型：含 <IntervalMark>（heatmap 双 band）→ band；否则按 <Scale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
 const buildCartesianYScale = (hasRect: boolean, explicit: PositionScaleType | undefined): PlotScaleSpec => {
   if (hasRect && explicit !== undefined) {
-    throw new Error('buildPlotSpec: <RectMark> requires a band y scale; omit <Scale dimension="y" /> for automatic band inference');
+    throw new Error('buildPlotSpec: <IntervalMark> (heatmap) requires a band y scale; omit <Scale dimension="y" /> for automatic band inference');
   }
   if (hasRect) return { type: PlotScale.Band, name: AUTO_Y };
   return buildPositionScale(AUTO_Y, explicit ?? 'linear');
 };
 
 /**
- * polar 角向 scale 类型推断：sector → linear（连续累积角界）；bar → band（径向柱分类）；
+ * polar 角向 scale 类型推断：IntervalMark angle → linear（连续累积角界）；IntervalMark x/y → band（径向柱分类）；
  *   闭合 line（雷达）→ point（类别落等距点）；否则 linear（极坐标折线）
  */
 const buildAngleScale = (collected: Collected, explicit: PositionScaleType | undefined): PlotScaleSpec => {
   if (collected.hasBar && explicit !== undefined) {
-    throw new Error('buildPlotSpec: <BarMark> in polar coordinates requires a band angle scale; omit <Scale dimension="angle" /> for automatic band inference');
+    throw new Error('buildPlotSpec: <IntervalMark> in polar coordinates requires a band angle scale; omit <Scale dimension="angle" /> for automatic band inference');
   }
   if (collected.hasSector && explicit !== undefined && explicit !== 'linear') {
-    throw new Error('buildPlotSpec: <SectorMark> requires a linear angle scale; omit <Scale dimension="angle" /> or use type="linear"');
+    throw new Error('buildPlotSpec: <IntervalMark angle> requires a linear angle scale; omit <Scale dimension="angle" /> or use type="linear"');
   }
   if (explicit !== undefined) return buildPositionScale(AUTO_ANGLE, explicit);
   if (collected.hasSector) return { type: PlotScale.Linear, name: AUTO_ANGLE };
@@ -512,20 +713,21 @@ type ExplicitScaleMap = Partial<Record<ScaleRole, PositionScaleType>>;
 
 const validScaleDimensionsOf = (coordKind: ReturnType<typeof coordinateTypeOf>): ReadonlyArray<ScaleDimension> => {
   if (coordKind === 'cartesian2D') return ['x', 'y'];
-  if (coordKind === 'polar2D') return ['angle', 'radius', 'x', 'y'];
+  if (coordKind === 'polar2D') return ['x', 'y'];
   if (coordKind === 'cartesian1D') return ['x'];
-  if (coordKind === 'polar1D') return ['angle', 'x'];
+  if (coordKind === 'polar1D') return ['x'];
   return [];
 };
 
 const scaleRoleOf = (dimension: ScaleDimension, coordKind: ReturnType<typeof coordinateTypeOf>): ScaleRole | undefined => {
   if (coordKind === 'cartesian2D') return dimension === 'x' || dimension === 'y' ? dimension : undefined;
   if (coordKind === 'polar2D') {
-    if (dimension === 'angle' || dimension === 'x') return 'angle';
-    return 'radius';
+    if (dimension === 'x') return 'angle';
+    if (dimension === 'y') return 'radius';
+    return undefined;
   }
   if (coordKind === 'cartesian1D') return dimension === 'x' ? 'x' : undefined;
-  if (coordKind === 'polar1D') return dimension === 'angle' || dimension === 'x' ? 'angle' : undefined;
+  if (coordKind === 'polar1D') return dimension === 'x' ? 'angle' : undefined;
   return undefined;
 };
 
@@ -551,8 +753,13 @@ const POLAR_DEFAULT_END_ANGLE = 360;
 const POLAR_DEFAULT_INNER_RADIUS = 0;
 
 /** coordinate 入口判别串（缺省 cartesian2D）；字符串简写与对象 .type 统一取值 */
-const coordinateTypeOf = (input: CoordinateInput | undefined): 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'ternary2D' | 'custom' =>
-  input === undefined ? 'cartesian2D' : typeof input === 'string' ? input : input.type;
+const BUILTIN_COORDINATE_INPUT_TYPES = new Set(['cartesian2D', 'polar2D', 'cartesian1D', 'polar1D', 'ternary2D']);
+
+const coordinateTypeOf = (input: CoordinateInput | undefined): 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'ternary2D' | 'custom' => {
+  if (input === undefined) return 'cartesian2D';
+  const type = typeof input === 'string' ? input : input.type;
+  return BUILTIN_COORDINATE_INPUT_TYPES.has(type) ? (type as 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'ternary2D') : 'custom';
+};
 
 /** 归一化 polar2D coordinate 选项为配置（非 polar2D 返回 undefined），缺省字段填 schema 默认值 */
 type PolarConfig = { innerRadius: number; startAngle: number; endAngle: number };
@@ -561,10 +768,11 @@ const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | u
     return { innerRadius: POLAR_DEFAULT_INNER_RADIUS, startAngle: POLAR_DEFAULT_START_ANGLE, endAngle: POLAR_DEFAULT_END_ANGLE };
   }
   if (typeof coordinate === 'object' && coordinate.type === 'polar2D') {
+    const polar = coordinate as Polar2DCoordinateInput;
     return {
-      innerRadius: coordinate.innerRadius ?? POLAR_DEFAULT_INNER_RADIUS,
-      startAngle: coordinate.startAngle ?? POLAR_DEFAULT_START_ANGLE,
-      endAngle: coordinate.endAngle ?? POLAR_DEFAULT_END_ANGLE,
+      innerRadius: polar.innerRadius ?? POLAR_DEFAULT_INNER_RADIUS,
+      startAngle: polar.startAngle ?? POLAR_DEFAULT_START_ANGLE,
+      endAngle: polar.endAngle ?? POLAR_DEFAULT_END_ANGLE,
     };
   }
   return undefined;
@@ -579,16 +787,29 @@ const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | u
  *   产出须等价于手写 PlotSpec（仿 core Sugar = Kernel 等价性）。data 不进 IR，仅存 reference
  */
 export const buildPlotSpec = (children: ReactNode, dataRef: string, options: BuildPlotSpecOptions = {}): PlotSpec => {
-  const collected: Collected = { marks: [], guides: [], transforms: [], scales: [], resolveLabels: {}, colored: false, colorFields: [], hasBar: false, hasRect: false, hasSector: false, hasClosedLine: false };
-  collectInto(children, collected);
+  const collected: Collected = { marks: [], guides: [], transforms: [], autoStacks: [], scales: [], resolveLabels: {}, colored: false, colorFields: [], hasBar: false, hasRect: false, hasSector: false, hasClosedLine: false };
+  collectInto(children, collected, styleSugarContext(options));
+
+  // transform 装配序：<Plot transforms> 直传 → <Transform> 收集 → auto-stack（B4 去重）
+  // B4 按 stack 签名（x / y / groupBy）去重：仅抑制与某条显式 stack 完全同签名的 auto-stack（那条会二次堆叠），
+  // 不同签名的 auto-stack 保留——否则该 mark 仍是 arrangement='stack' 却没有对应 y0/y1，lower 阶段读空累积界出错。
+  const explicitTransforms: Array<TransformOperation> = [...(options.transforms ?? []), ...collected.transforms];
+  const stackSignature = (transform: TransformOperation): string =>
+    transform.kind === PlotTransform.Stack ? JSON.stringify([transform.x ?? null, transform.y, transform.groupBy ?? null]) : '';
+  const explicitStackSignatures = new Set(explicitTransforms.filter(transform => transform.kind === PlotTransform.Stack).map(stackSignature));
+  const dedupedAutoStacks = collected.autoStacks.filter(autoStack => !explicitStackSignatures.has(stackSignature(autoStack)));
+  const transforms: Array<TransformOperation> = [...explicitTransforms, ...dedupedAutoStacks];
 
   const coordKind = coordinateTypeOf(options.coordinate);
+  if (collected.hasSector && coordKind !== 'polar2D') {
+    throw new Error('buildPlotSpec: <IntervalMark angle> is only valid under coordinate="polar2D"');
+  }
   const explicitScales = collectExplicitScales(collected.scales, coordKind);
 
   // 有 model 或 Plot 入口要求延迟推断时，未显式声明 <Scale> 的维度省略 AUTO 绑定，交给 expand 按字段类型派生。
   // 直接调用 buildPlotSpec 且无 model 时，沿用 AUTO 绑定 + 默认推断（向后兼容）。
   const shouldDeferPositionScales = options.model !== undefined || options.deferPositionScaleInference === true;
-  let coordinate: Coordinate;
+  let coordinate: CoordinateOperation;
   let scales: Array<PlotScaleSpec>;
   if (coordKind === 'polar2D') {
     const polar = toPolarConfig(options.coordinate) as PolarConfig;
@@ -632,10 +853,11 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     coordinate = { type: PlotCoordinate.Ternary2D };
     scales = [];
   } else if (coordKind === 'custom') {
-    // 自定义坐标系：IR 只存 name + roles + 数值参数；投影工厂经 <Plot coordinates> 单独传（运行时函数、不进 IR）。
-    // coordKind 'custom' 必来自对象形态（无字符串简写），故 options.coordinate 是 custom 对象。
-    const custom = options.coordinate as Extract<CoordinateInput, { type: 'custom' }>;
-    coordinate = { type: PlotCoordinate.Custom, name: custom.name, roles: custom.roles, ...(custom.params !== undefined ? { params: custom.params } : {}) };
+    // 自定义坐标系：IR 直接存 { type:<customType>, ...config }；roles / 投影函数来自运行时 CoordinateDefinition。
+    if (typeof options.coordinate !== 'object' || BUILTIN_COORDINATE_INPUT_TYPES.has(options.coordinate.type) || options.coordinate.type === 'custom') {
+      throw new Error('buildPlotSpec: custom coordinates must use a non-built-in type string, for example { type: "arch", archHeight: 30 }');
+    }
+    coordinate = CoordinateOperationSchema.parse({ ...options.coordinate });
     scales = [];
   } else {
     const xScale = buildCartesianXScale(collected.hasBar || collected.hasRect, explicitScales.x);
@@ -665,7 +887,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     type: PlotComposite.Plot,
     ...(options.id !== undefined ? { id: options.id } : {}),
     data: options.model ? { reference: dataRef, model: options.model } : { reference: dataRef },
-    ...(collected.transforms.length > 0 ? { transform: collected.transforms } : {}),
+    ...(transforms.length > 0 ? { transform: transforms } : {}),
     scales,
     ...(options.colors !== undefined ? { colors: options.colors } : {}),
     ...(options.width !== undefined ? { width: options.width } : {}),

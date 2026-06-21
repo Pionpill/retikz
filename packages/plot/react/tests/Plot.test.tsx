@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
 import { Layout } from '@retikz/react';
 import { type ExternalDatasets, type PlotSpec, lowerPlots } from '@retikz/plot';
-import { Axis, BarMark, LineMark, Plot } from '../src';
+import { Axis, IntervalMark, PathMark, Plot } from '../src';
 
 const spec: PlotSpec = {
   namespace: 'plot',
@@ -15,7 +15,7 @@ const spec: PlotSpec = {
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [
-    { type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+    { type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
     { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
   ],
 };
@@ -88,14 +88,14 @@ describe('<Plot spec data> 薄包装', () => {
     const svg = renderToStaticMarkup(
       <Layout width={580} height={260}>
         <Plot id="cartesianPanel" data={revenue} width={300} height={220} x={0} y={20}>
-          <BarMark x="quarter" y="value" color="quarter" />
+          <IntervalMark x="quarter" y="value" color="quarter" />
           <Axis dimension="x" />
           <Axis dimension="y" grid />
         </Plot>
         <Plot id="polarPanel" data={revenue} width={260} height={260} coordinate="polar2D" x={320} y={0}>
-          <BarMark x="quarter" y="value" color="quarter" />
-          <Axis dimension="angle" />
-          <Axis dimension="radius" grid />
+          <IntervalMark x="quarter" y="value" color="quarter" />
+          <Axis dimension="x" />
+          <Axis dimension="y" grid />
         </Plot>
       </Layout>,
     );
@@ -112,7 +112,7 @@ describe('<Plot spec data> 薄包装', () => {
   it('单独渲染时也承接面板 transforms', () => {
     const svg = renderToStaticMarkup(
       <Plot data={revenue} width={300} height={220} transforms={[{ kind: 'translate', x: 10, y: 20 }]}>
-        <BarMark x="quarter" y="value" color="quarter" />
+        <IntervalMark x="quarter" y="value" color="quarter" />
         <Axis dimension="x" />
         <Axis dimension="y" grid />
       </Plot>,
@@ -126,11 +126,11 @@ describe('<Plot spec data> 薄包装', () => {
     const svg = renderToStaticMarkup(
       <Layout width={580} height={260}>
         <Plot id="leftPanel" dataRef="shared" data={revenue} width={300} height={220} x={0} y={20}>
-          <BarMark x="quarter" y="value" />
+          <IntervalMark x="quarter" y="value" />
           <Axis dimension="x" />
         </Plot>
         <Plot id="rightPanel" dataRef="shared" data={revenue} width={260} height={220} x={320} y={20}>
-          <LineMark x="quarter" y="value" order="quarter" />
+          <PathMark x="quarter" y="value" order="quarter" />
           <Axis dimension="x" />
         </Plot>
       </Layout>,

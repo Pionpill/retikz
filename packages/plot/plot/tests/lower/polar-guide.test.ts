@@ -1,7 +1,7 @@
 import type { IRChild, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 /**
  * ADR-04 polar guide lowering 测试。
@@ -76,7 +76,7 @@ const polarSpec = (guides: Array<Record<string, unknown>>, extra: Record<string,
       { type: 'linear', name: 'r', domain: [0, 10] },
     ],
     coordinate: { type: 'polar2D', angle: 'a', radius: 'r', ...extra },
-    marks: [{ type: 'line', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+    marks: [{ type: 'path', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
     guides,
   });
 
@@ -90,7 +90,7 @@ const ROWS = [
 describe('lowerPlots polar guide — angular axis (ADR-04)', () => {
   // Happy path：角向轴 = 外圆弧 + 每类别角度刻度 + 圆周外 Node 标签
   it('angular_axis_produces_arc_axis_line', () => {
-    const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'angle' }]), { d: ROWS }, opts);
+    const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'x' }]), { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     // 角向轴层在 mark 层之后（压顶）
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
@@ -100,7 +100,7 @@ describe('lowerPlots polar guide — angular axis (ADR-04)', () => {
   });
 
   it('angular_axis_arc_radius_near_outer_radius', () => {
-    const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'angle' }]), { d: ROWS }, opts);
+    const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'x' }]), { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
     const arcStep = pathsOf(axisLayer)
@@ -113,7 +113,7 @@ describe('lowerPlots polar guide — angular axis (ADR-04)', () => {
   });
 
   it('angular_axis_tick_per_category', () => {
-    const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'angle' }]), { d: ROWS }, opts);
+    const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'x' }]), { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
     // 4 类别 → 4 个角向短刻度（line 段）+ 4 个圆周外标签 Node
@@ -125,7 +125,7 @@ describe('lowerPlots polar guide — angular axis (ADR-04)', () => {
   });
 
   it('angular_axis_labels_outside_arc', () => {
-    const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'angle' }]), { d: ROWS }, opts);
+    const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'x' }]), { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
     const arcStep = pathsOf(axisLayer).flatMap(p => p.children).find(step => step.kind === 'arc') as { radius?: number };
@@ -144,7 +144,7 @@ describe('lowerPlots polar guide — angular axis (ADR-04)', () => {
 
   // 边界：tickLabels:false → 无标签、仍出轴线刻度
   it('angular_axis_tick_labels_false_keeps_line', () => {
-    const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'angle', tickLabels: false }]), { d: ROWS }, opts);
+    const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'x', tickLabels: false }]), { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
     expect(nodesOf(axisLayer)).toHaveLength(0);
@@ -153,7 +153,7 @@ describe('lowerPlots polar guide — angular axis (ADR-04)', () => {
 });
 
 describe('lowerPlots polar guide — radial axis (ADR-04)', () => {
-  /** 径向轴（linear）spec：dimension=radius；用 linear 角向使刻度沿辐条 */
+  /** 径向轴（linear）spec：dimension=y；用 linear 角向使刻度沿辐条 */
   const radialSpec = (guides: Array<Record<string, unknown>>): PlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
@@ -175,7 +175,7 @@ describe('lowerPlots polar guide — radial axis (ADR-04)', () => {
 
   // Happy path：径向轴 = 沿 startAngle 辐条的轴线（直段）+ radius tick 刻度 + 标签
   it('radial_axis_produces_straight_spoke_axis_line', () => {
-    const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'radius' }]), { d: radialRows }, opts);
+    const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'y' }]), { d: radialRows }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
     expect(axisLayer).toBeDefined();
@@ -186,7 +186,7 @@ describe('lowerPlots polar guide — radial axis (ADR-04)', () => {
 
   it('radial_axis_default_spoke_along_start_angle', () => {
     // startAngle 默认 0（+x）→ 辐条轴线沿圆心向右：两端共 y、x 跨度 > 0
-    const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'radius' }]), { d: radialRows }, opts);
+    const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'y' }]), { d: radialRows }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
     const [axisLine] = segmentsOfAxis(axisLayer); // 首段 = 辐条轴线
@@ -197,7 +197,7 @@ describe('lowerPlots polar guide — radial axis (ADR-04)', () => {
 
   // 刻度垂直于辐条（与 cartesian / angular 一致）：辐条沿 0°（水平）→ 刻度竖直
   it('radial_axis_ticks_perpendicular_to_spoke', () => {
-    const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'radius' }]), { d: radialRows }, opts);
+    const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'y' }]), { d: radialRows }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
     const [, ...tickSegments] = segmentsOfAxis(axisLayer);
@@ -210,7 +210,7 @@ describe('lowerPlots polar guide — radial axis (ADR-04)', () => {
 
   // 刻度不沿辐条越出内 / 外端点（修：首尾刻度曾各多出 AXIS_TICK_LENGTH/2）
   it('radial_axis_ticks_do_not_overshoot_spoke_endpoints', () => {
-    const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'radius' }]), { d: radialRows }, opts);
+    const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'y' }]), { d: radialRows }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
     const [axisLine, ...tickSegments] = segmentsOfAxis(axisLayer);
@@ -227,7 +227,7 @@ describe('lowerPlots polar guide — radial axis (ADR-04)', () => {
   });
 
   it('radial_axis_tick_labels_present', () => {
-    const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'radius' }]), { d: radialRows }, opts);
+    const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'y' }]), { d: radialRows }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
     // linear 径向 → 多个刻度标签（值 0..10 的 nice 刻度）
@@ -248,7 +248,7 @@ describe('lowerPlots polar guide — grid (ADR-04)', () => {
     ],
     coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
     marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
-    guides: [{ type: 'axis', dimension: 'radius', grid: true }],
+    guides: [{ type: 'axis', dimension: 'y', grid: true }],
   });
 
   // Happy path：radius axis grid:true → 每 radius tick 一个同心环（arc step）
@@ -284,8 +284,8 @@ describe('lowerPlots polar guide — grid (ADR-04)', () => {
       { type: 'linear', name: 'r', domain: [0, 10] },
     ],
     coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-    marks: [{ type: 'line', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
-    guides: [{ type: 'axis', dimension: 'angle', grid: true }],
+    marks: [{ type: 'path', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+    guides: [{ type: 'axis', dimension: 'x', grid: true }],
   });
 
   // Happy path：angle axis grid:true → 每 angle tick 一条圆心→外圆辐条（直段，不是 arc）
@@ -320,10 +320,10 @@ describe('lowerPlots polar guide — z-order (ADR-04)', () => {
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'line', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+      marks: [{ type: 'path', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
       guides: [
-        { type: 'axis', dimension: 'angle' },
-        { type: 'axis', dimension: 'radius', grid: true },
+        { type: 'axis', dimension: 'x' },
+        { type: 'axis', dimension: 'y', grid: true },
       ],
     });
     const outer = expandOf(spec, { d: ROWS }, opts);
@@ -349,17 +349,17 @@ describe('lowerPlots polar guide — 错误路径 (ADR-04)', () => {
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'line', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+      marks: [{ type: 'path', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
       guides: [
-        { type: 'axis', dimension: 'angle' },
-        { type: 'axis', dimension: 'angle' },
+        { type: 'axis', dimension: 'x' },
+        { type: 'axis', dimension: 'x' },
       ],
     });
     expect(() => expandOf(spec, { d: ROWS }, opts)).toThrow(/duplicate axis/);
   });
 
   // hybrid 别名：x 与 angle 都映射到角向角色 → 应按角色判重抛错（Bug Hunter ADR-04 W）
-  it('duplicate_angular_role_x_and_angle_throws', () => {
+  it('duplicate_angular_role_x_throws', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -369,10 +369,10 @@ describe('lowerPlots polar guide — 错误路径 (ADR-04)', () => {
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'line', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+      marks: [{ type: 'path', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
       guides: [
         { type: 'axis', dimension: 'x' },
-        { type: 'axis', dimension: 'angle' },
+        { type: 'axis', dimension: 'x' },
       ],
     });
     expect(() => expandOf(spec, { d: ROWS }, opts)).toThrow(/angular/);
@@ -390,7 +390,7 @@ describe('lowerPlots cartesian guide 回归 (ADR-04)', () => {
       { type: 'linear', name: 'yRevenue' },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     guides: [
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y', grid: true },

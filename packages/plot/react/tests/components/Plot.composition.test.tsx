@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { PlotSpec } from '@retikz/plot';
-import { AreaMark, Axis, BarMark, LineMark, Plot, PointMark, Scale, SectorMark } from '../../src';
+import { Axis, IntervalMark, PathMark, Plot, PointMark, RegionMark, Scale } from '../../src';
 
 const rows = [
   { month: 0, revenue: 10 },
@@ -25,7 +25,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
   it('端到端渲出 path（折线）+ ellipse（散点）', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
-        <LineMark x="month" y="revenue" order="month" />
+        <PathMark x="month" y="revenue" order="month" />
         <PointMark x="month" y="revenue" />
       </Plot>,
     );
@@ -36,7 +36,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
   it('与等价 spec 入口渲染几何一致（DSL 只装配、渲染同源）', () => {
     const viaDsl = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
-        <LineMark x="month" y="revenue" order="month" />
+        <PathMark x="month" y="revenue" order="month" />
         <PointMark x="month" y="revenue" />
       </Plot>,
     );
@@ -51,7 +51,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
       ],
       coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
       marks: [
-        { type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        { type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
         { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
       ],
       guides: [],
@@ -64,7 +64,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
   it('dsl_no_axis_no_text：薄 <Plot> 无 <Axis> → 渲 path 但不出刻度文字', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
-        <LineMark x="month" y="revenue" order="month" />
+        <PathMark x="month" y="revenue" order="month" />
       </Plot>,
     );
     expect(svg).toContain('<path');
@@ -74,7 +74,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
   it('dsl_explicit_axis_renders_text：显式 <Axis> → 渲出刻度文字', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
-        <LineMark x="month" y="revenue" order="month" />
+        <PathMark x="month" y="revenue" order="month" />
         <Axis dimension="x" />
         <Axis dimension="y" grid />
       </Plot>,
@@ -92,7 +92,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     ];
     const svg = renderToStaticMarkup(
       <Plot data={quarterly} width={480} height={300}>
-        <LineMark x="quarter" y="revenue" order="quarter" />
+        <PathMark x="quarter" y="revenue" order="quarter" />
         <Axis dimension="x" />
         <Axis dimension="y" grid />
       </Plot>,
@@ -101,11 +101,11 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     expect(svg).toContain('Q1');
   });
 
-  // ADR-07：<BarMark> / <Scale>
-  it('barmark_renders_rect：<BarMark> 渲出矩形', () => {
+  // ADR-07：<IntervalMark> / <Scale>
+  it('barmark_renders_rect：<IntervalMark> 渲出矩形', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
-        <BarMark x="month" y="revenue" />
+        <IntervalMark x="month" y="revenue" />
       </Plot>,
     );
     expect(svg).toMatch(/<rect/);
@@ -120,7 +120,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     ];
     const svg = renderToStaticMarkup(
       <Plot data={sales} width={480} height={300}>
-        <BarMark x="month" y="revenue" series="product" stack />
+        <IntervalMark x="month" y="revenue" series="product" stack />
       </Plot>,
     );
     expect(svg).toMatch(/<rect/);
@@ -134,7 +134,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     ];
     const svg = renderToStaticMarkup(
       <Plot data={trend} width={480} height={300}>
-        <LineMark x="date" y="v" order="date" />
+        <PathMark x="date" y="v" order="date" />
         <Scale dimension="x" type="time" />
         <Axis dimension="x" />
       </Plot>,
@@ -150,10 +150,10 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     { label: 'C', value: 20 },
   ];
 
-  it('polar_pie_renders：<Plot coordinate="polar2D"><SectorMark/> 渲出扇形 path 不崩', () => {
+  it('polar_pie_renders：<Plot coordinate="polar2D"><IntervalMark angle/> 渲出扇形 path 不崩', () => {
     const svg = renderToStaticMarkup(
       <Plot data={share} coordinate="polar2D" width={360} height={360}>
-        <SectorMark angle="value" color="label" />
+        <IntervalMark angle="value" color="label" />
       </Plot>,
     );
     expect(svg).toContain('<svg');
@@ -163,22 +163,22 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
   it('polar_donut_renders：coordinate 对象 innerRadius 渲染不崩', () => {
     const svg = renderToStaticMarkup(
       <Plot data={share} coordinate={{ type: 'polar2D', innerRadius: 0.5 }} width={360} height={360}>
-        <SectorMark angle="value" color="label" />
+        <IntervalMark angle="value" color="label" />
       </Plot>,
     );
     expect(svg).toContain('<path');
   });
 
-  it('polar_radial_bar_renders：<BarMark> + polar 渲出扇形（径向柱）', () => {
+  it('polar_radial_bar_renders：<IntervalMark> + polar 渲出扇形（径向柱）', () => {
     const svg = renderToStaticMarkup(
       <Plot data={share} coordinate="polar2D" width={360} height={360}>
-        <BarMark x="label" y="value" color="label" />
+        <IntervalMark x="label" y="value" color="label" />
       </Plot>,
     );
     expect(svg).toContain('<path');
   });
 
-  it('polar_radar_renders：<LineMark closed> + polar + 角向/径向轴渲染不崩', () => {
+  it('polar_radar_renders：<PathMark closed> + polar + 角向/径向轴渲染不崩', () => {
     const metrics = [
       { dim: 'speed', value: 8 },
       { dim: 'power', value: 5 },
@@ -187,9 +187,9 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     ];
     const svg = renderToStaticMarkup(
       <Plot data={metrics} coordinate="polar2D" width={360} height={360}>
-        <LineMark x="dim" y="value" closed />
-        <Axis dimension="angle" />
-        <Axis dimension="radius" grid />
+        <PathMark x="dim" y="value" closed />
+        <Axis dimension="x" />
+        <Axis dimension="y" grid />
       </Plot>,
     );
     expect(svg).toContain('<path');
@@ -204,13 +204,13 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     ];
     const svg = renderToStaticMarkup(
       <Plot data={spiral} coordinate="polar2D" width={360} height={360}>
-        <LineMark x="theta" y="r" order="theta" />
+        <PathMark x="theta" y="r" order="theta" />
       </Plot>,
     );
     expect(svg).toContain('<path');
   });
 
-  it('polar_area_renders：填充雷达（<AreaMark closed>）渲染不崩', () => {
+  it('polar_area_renders：填充雷达（<RegionMark closed>）渲染不崩', () => {
     const metrics = [
       { dim: 'a', value: 4 },
       { dim: 'b', value: 7 },
@@ -218,7 +218,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     ];
     const svg = renderToStaticMarkup(
       <Plot data={metrics} coordinate="polar2D" width={360} height={360}>
-        <AreaMark x="dim" y="value" closed />
+        <RegionMark x="dim" y="value" closed />
       </Plot>,
     );
     expect(svg).toContain('<path');
@@ -227,7 +227,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
   it('polar_dsl_matches_spec_geometry：polar DSL 与等价手写 spec 渲染几何一致', () => {
     const viaDsl = renderToStaticMarkup(
       <Plot data={share} coordinate="polar2D" width={360} height={360}>
-        <SectorMark angle="value" color="label" />
+        <IntervalMark angle="value" color="label" />
       </Plot>,
     );
     const equivalentSpec: PlotSpec = {
@@ -241,7 +241,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
         { type: 'ordinal', name: '__color' },
       ],
       coordinate: { type: 'polar2D', angle: '__angle', radius: '__radius', startAngle: 0, endAngle: 360, innerRadius: 0 },
-      marks: [{ type: 'sector', encoding: { color: { field: 'label', scale: '__color' } } }],
+      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label', scale: '__color' } } }],
       guides: [],
     };
     const viaSpec = renderToStaticMarkup(<Plot spec={equivalentSpec} data={{ __plot: share }} width={360} height={360} />);

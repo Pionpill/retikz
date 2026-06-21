@@ -1,6 +1,6 @@
 import type { Section } from './interface';
 
-/** plot module 的 sections + pages 树（顺序：简介 / 快速开始 / 图表 / 绘图 / 数据 / 图形语法 / 参考） */
+/** plot module sections + pages tree. */
 export const plotSection: Array<Section> = [
   {
     pages: [
@@ -16,43 +16,71 @@ export const plotSection: Array<Section> = [
   {
     id: 'components',
     label: 'plot.components',
-    pages: [
-      { id: 'plot', label: 'plot.compPlot' },
-      {
-        id: 'mark',
-        label: 'plot.compMark',
-        children: [
-          { id: 'line', label: 'plot.compLineMark' },
-          { id: 'point', label: 'plot.compPointMark' },
-          { id: 'bar', label: 'plot.compBarMark' },
-          { id: 'sector', label: 'plot.compSectorMark' },
-          { id: 'area', label: 'plot.compAreaMark' },
-          { id: 'rect', label: 'plot.compRectMark' },
-          { id: 'rule', label: 'plot.compRuleMark' },
-          { id: 'text', label: 'plot.compTextMark' },
-          { id: 'ribbon', label: 'plot.compRibbonMark' },
-        ],
-      },
-      { id: 'axis', label: 'plot.compAxis' },
-      { id: 'legend', label: 'plot.compLegend' },
-    ],
-  },
-  {
-    id: 'data',
-    label: 'plot.data',
-    pages: [
-      { id: 'model', label: 'plot.dataModel' },
-      { id: 'processing', label: 'plot.dataProcessing' },
-    ],
+    pages: [{ id: 'plot', label: 'plot.compPlot' }],
   },
   {
     id: 'grammar',
     label: 'plot.grammar',
     pages: [
-      { id: 'scale', label: 'plot.grammarScale' },
-      { id: 'coordinate', label: 'plot.grammarCoordinate' },
-      { id: 'mark', label: 'plot.grammarMark' },
-      { id: 'guide', label: 'plot.grammarGuide' },
+      {
+        id: 'data',
+        label: 'plot.data',
+        children: [
+          { id: 'model', label: 'plot.dataModel' },
+          { id: 'processing', label: 'plot.dataProcessing' },
+          { id: 'channel', label: 'plot.dataChannel' },
+          { id: 'custom', label: 'plot.dataCustom' },
+        ],
+      },
+      {
+        id: 'transform',
+        label: 'plot.grammarTransform',
+        children: [
+          { id: 'row', label: 'plot.grammarTransformRow' },
+          { id: 'group', label: 'plot.grammarTransformGroup' },
+          { id: 'custom', label: 'plot.grammarTransformCustom' },
+        ],
+      },
+      {
+        id: 'mark',
+        label: 'plot.grammarMark',
+        children: [
+          { id: 'point', label: 'plot.compPointMark' },
+          { id: 'path', label: 'plot.compPathMark' },
+          { id: 'region', label: 'plot.compRegionMark' },
+          { id: 'interval', label: 'plot.compIntervalMark' },
+          { id: 'reference', label: 'plot.compReferenceMark' },
+          { id: 'link', label: 'plot.compLinkMark' },
+          { id: 'custom', label: 'plot.grammarMarkCustom' },
+        ],
+      },
+      {
+        id: 'scale',
+        label: 'plot.grammarScale',
+        children: [
+          { id: 'position', label: 'plot.grammarScalePosition' },
+          { id: 'color', label: 'plot.grammarScaleColor' },
+          { id: 'custom', label: 'plot.grammarScaleCustom' },
+        ],
+      },
+      {
+        id: 'coordinate',
+        label: 'plot.grammarCoordinate',
+        children: [
+          { id: '2d', label: 'plot.grammarCoordinate2d' },
+          { id: '1d', label: 'plot.grammarCoordinate1d' },
+          { id: 'ternary', label: 'plot.grammarCoordinateTernary' },
+          { id: 'custom', label: 'plot.grammarCoordinateCustom' },
+        ],
+      },
+      {
+        id: 'guide',
+        label: 'plot.grammarGuide',
+        children: [
+          { id: 'axis', label: 'plot.compAxis' },
+          { id: 'legend', label: 'plot.compLegend' },
+        ],
+      },
       { id: 'provenance', label: 'plot.grammarProvenance' },
     ],
   },
@@ -71,9 +99,7 @@ export const plotSection: Array<Section> = [
       {
         id: 'changelog',
         label: 'plot.changelog',
-        children: [
-          { id: 'v0-1', label: 'plot.changelogV01' },
-        ],
+        children: [{ id: 'v0-1', label: 'plot.changelogV01' }],
       },
     ],
   },

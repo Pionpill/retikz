@@ -1,6 +1,6 @@
 import type { FC, ReactNode } from 'react';
 import { type EmbeddableContribution, type EmbeddableTier2Adapter, Layout, type LayoutProps, type ScopeProps } from '@retikz/react';
-import { type DataModel, type ExternalDatasets, type ExternalRow, type LowerPlotsOptions, type PlotSpec, PlotSpecSchema, lowerPlots } from '@retikz/plot';
+import { type DataModel, type ExternalDatasets, type ExternalRow, type LowerPlotsOptions, type PlotSpec, PlotSpecSchema, type TransformOperation, lowerPlots } from '@retikz/plot';
 import { type CoordinateInput, type ResolveLabelMap, buildPlotSpec, resolveLabelOf } from './components';
 
 /** <Plot> 作为 Layout 子面板时可直接承接的 core scope 属性 */
@@ -28,7 +28,7 @@ export type PlotSpecProps = PlotCommonProps & PlotColorProps & {
   children?: never;
 };
 
-/** 组合 DSL 入口：给裸数据行 + <LineMark>/<PointMark>/<Axis> 子组件 */
+/** 组合 DSL 入口：给裸数据行 + <PathMark>/<PointMark>/<Axis> 子组件 */
 export type PlotDslProps = PlotCommonProps & PlotColorProps & {
   spec?: never;
   /** 面板 id：写入 PlotSpec.id，作为外部 anchor 句柄；嵌入态未显式 dataRef 时也作为默认数据集引用 */
@@ -37,7 +37,7 @@ export type PlotDslProps = PlotCommonProps & PlotColorProps & {
   dataRef?: string;
   /** 裸数据行数组；内部包成单数据集注入，不进 IR */
   data: Array<ExternalRow>;
-  /** mark / guide 子组件（<LineMark> / <PointMark> / <BarMark> / <SectorMark> / <AreaMark> / <Axis>） */
+  /** mark / guide 子组件（<PathMark> / <PointMark> / <IntervalMark> / <RegionMark> / <Axis>） */
   children: ReactNode;
   /** 数据模型（字段名 + 类型）：声明则 strict 校验 + type-driven scale/guide；注入构造 spec 的 data.model */
   model?: DataModel;
@@ -45,6 +45,12 @@ export type PlotDslProps = PlotCommonProps & PlotColorProps & {
   fieldMap?: Record<string, string>;
   /** 坐标系：缺省 cartesian2D；"polar2D" 简写或 polar2D 对象配置（innerRadius / startAngle / endAngle） */
   coordinate?: CoordinateInput;
+  /**
+   * 数据变换 IR 直传（快捷入口）：拼到 `<Transform>` 子组件收集结果之前、自动装配 stack 之前。
+   * @description 与 `<Transform kind="...">` 声明组件共用同一管线、可混用；程序化构造变换链时的便捷入口。
+   *   命名 `dataTransforms` 以区别于 core scope 的几何 `transforms`（translate / rotate）。含 stack 时按签名抑制同款 mark auto-stack。
+   */
+  dataTransforms?: Array<TransformOperation>;
 };
 
 /** <Plot> props：spec 入口与组合 DSL 入口二选一（按 spec/children 分流） */
@@ -70,8 +76,8 @@ const lowerPlotOptionsOf = (
   effectiveFieldMaps: LowerPlotsOptions['fieldMaps'],
   collectedResolveLabel: ResolveLabelMap | undefined,
 ): LowerPlotsOptions => {
-  const { width, height, fontSize, margin, provenance, datumProvenance, datumIdField, validateData, resolveField, resolveLabel, invalid, coordinates } = props;
-  // DSL 入口 <TextMark resolveLabel> / <BarMark resolveLabel> 收集的 per-mark 函数，与显式 props.resolveLabel 合并（显式优先）
+  const { width, height, fontSize, margin, provenance, datumProvenance, datumIdField, validateData, resolveField, resolveLabel, invalid, coordinates, transformDefinitions, scaleDefinitions, visualChannelDefinitions, colorSchemes, markDefinitions, formatDefinitions } = props;
+  // DSL 入口 <PointMark resolveLabel> / <IntervalMark resolveLabel> 收集的 per-mark 函数，与显式 props.resolveLabel 合并（显式优先）
   const mergedResolveLabel = collectedResolveLabel !== undefined || resolveLabel !== undefined ? { ...collectedResolveLabel, ...resolveLabel } : undefined;
   return {
     width,
@@ -87,6 +93,12 @@ const lowerPlotOptionsOf = (
     resolveLabel: mergedResolveLabel,
     invalid,
     coordinates,
+    transformDefinitions,
+    scaleDefinitions,
+    visualChannelDefinitions,
+    colorSchemes,
+    markDefinitions,
+    formatDefinitions,
   };
 };
 
@@ -100,6 +112,21 @@ const withPlotColors = (spec: PlotSpec, colors: Array<string> | undefined): Plot
   ...spec,
   ...(colors !== undefined ? { colors } : {}),
 });
+
+const collectRowFields = (value: unknown, into: Set<string>, prefix = ''): void => {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return;
+  for (const [key, child] of Object.entries(value)) {
+    const path = prefix ? `${prefix}.${key}` : key;
+    into.add(path);
+    collectRowFields(child, into, path);
+  }
+};
+
+const dataFieldNamesOf = (rows: Array<ExternalRow>): ReadonlySet<string> => {
+  const fields = new Set<string>();
+  for (const row of rows) collectRowFields(row, fields);
+  return fields;
+};
 
 const wrapPanelScope = (node: PlotSpec, props: PlotPanelProps): EmbeddableContribution['node'] => {
   const { x, y, transforms, zIndex, clip } = props;
@@ -140,7 +167,9 @@ const resolvePlotRuntime = (
       height: props.height,
       coordinate: props.coordinate,
       model: props.model,
+      dataFieldNames: dataFieldNamesOf(props.data),
       colors: props.colors,
+      transforms: props.dataTransforms,
       deferPositionScaleInference: props.model === undefined,
     });
     collectedResolveLabel = resolveLabelOf(spec);

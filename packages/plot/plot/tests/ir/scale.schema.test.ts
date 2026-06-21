@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ScaleSchema } from '../../src/ir/scale';
+import { ScaleSchema } from '../../src/schemas/scale';
 
 describe('ScaleSchema (ADR-03)', () => {
   // Happy path
@@ -75,6 +75,37 @@ describe('ScaleSchema log / pow / sqrt (alpha.7 ADR-01)', () => {
 
   it('pow_exponent_non_number_rejected', () => {
     expect(() => ScaleSchema.parse({ type: 'pow', name: 'y', exponent: 'two' })).toThrow();
+  });
+});
+
+describe('ScaleSchema symlog / radial', () => {
+  it('symlog_omits_optionals_valid', () => {
+    expect(ScaleSchema.parse({ type: 'symlog', name: 'y' })).toEqual({ type: 'symlog', name: 'y' });
+  });
+
+  it('symlog_full_fields_valid', () => {
+    const s = { type: 'symlog', name: 'y', domain: [-100, 100], range: [0, 480], constant: 2, nice: true, clamp: true };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  it('symlog_negative_domain_accepted_by_schema', () => {
+    // symlog 全域有定义（含零 / 负），schema 不拦负 domain
+    const s = { type: 'symlog', name: 'y', domain: [-50, 50] };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  it('symlog_constant_must_be_positive', () => {
+    expect(() => ScaleSchema.parse({ type: 'symlog', name: 'y', constant: 0 })).toThrow();
+    expect(() => ScaleSchema.parse({ type: 'symlog', name: 'y', constant: -1 })).toThrow();
+  });
+
+  it('radial_omits_optionals_valid', () => {
+    expect(ScaleSchema.parse({ type: 'radial', name: 'r' })).toEqual({ type: 'radial', name: 'r' });
+  });
+
+  it('radial_full_fields_valid', () => {
+    const s = { type: 'radial', name: 'r', domain: [0, 50], range: [0, 120], nice: true, clamp: false };
+    expect(ScaleSchema.parse(s)).toEqual(s);
   });
 });
 
@@ -190,8 +221,12 @@ describe('ScaleSchema sequential 连续顺序色阶（alpha.8 ADR-01）', () => 
     expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', domain: [0, 1, 2] })).toThrow();
   });
 
-  it('未知 scheme 被拒', () => {
-    expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', scheme: 'bogus' })).toThrow();
+  it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud，ADR-07）', () => {
+    expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', scheme: 'brand' })).not.toThrow();
+  });
+
+  it('空 scheme 名被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', scheme: '' })).toThrow();
   });
 
   it('range 非字符串被拒', () => {
@@ -250,8 +285,12 @@ describe('ScaleSchema diverging 连续发散色阶（alpha.8 ADR-01）', () => {
     expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', range: ['#f00', '#00f'] })).toThrow();
   });
 
-  it('未知 scheme 被拒', () => {
-    expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', scheme: 'nope' })).toThrow();
+  it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud，ADR-07）', () => {
+    expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', scheme: 'brand' })).not.toThrow();
+  });
+
+  it('空 scheme 名被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', scheme: '' })).toThrow();
   });
 
   // JSON round-trip
@@ -312,8 +351,12 @@ describe('ScaleSchema quantize 等宽离散化（alpha.8 ADR-02）', () => {
     expect(() => ScaleSchema.parse({ type: 'quantize', name: 'col', domain: [0, 1, 2] })).toThrow();
   });
 
-  it('未知 scheme 被拒', () => {
-    expect(() => ScaleSchema.parse({ type: 'quantize', name: 'col', scheme: 'bogus' })).toThrow();
+  it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud，ADR-07）', () => {
+    expect(() => ScaleSchema.parse({ type: 'quantize', name: 'col', scheme: 'brand' })).not.toThrow();
+  });
+
+  it('空 scheme 名被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'quantize', name: 'col', scheme: '' })).toThrow();
   });
 
   // 边界：domain 乱序结构上合法（序校验留 lowering）
@@ -434,8 +477,12 @@ describe('ScaleSchema quantile 分位离散化（alpha.8 ADR-02）', () => {
     expect(() => ScaleSchema.parse({ type: 'quantile', name: 'col', range: ['#fff'] })).toThrow();
   });
 
-  it('未知 scheme 被拒', () => {
-    expect(() => ScaleSchema.parse({ type: 'quantile', name: 'col', scheme: 'nope' })).toThrow();
+  it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud，ADR-07）', () => {
+    expect(() => ScaleSchema.parse({ type: 'quantile', name: 'col', scheme: 'brand' })).not.toThrow();
+  });
+
+  it('空 scheme 名被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'quantile', name: 'col', scheme: '' })).toThrow();
   });
 
   // JSON round-trip
