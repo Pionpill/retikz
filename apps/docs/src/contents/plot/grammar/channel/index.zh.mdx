@@ -1,0 +1,33 @@
+---
+title: 通道
+description: 通道把字段或常量连接到图元属性：position 决定投影角色，mark / scope / node / path 决定可见属性如何消费。
+---
+
+通道回答的是“这个属性从哪里取值”。数据层会先把外部数据归一成 canonical row（规范行），通道再把字段或常量交给坐标、mark lowering（图形下沉）、core scope、core node、core path 和图例。`x` / `y` / `color` / `size` / `text` 共享同一套绑定模型，只是后续消费位置不同。
+
+## 职责
+
+| 主题 | 职责 | 何时查看 |
+| --- | --- | --- |
+| 通道绑定 | 字段 / 常量如何出现在 mark props 或 `encoding` 中 | 想确认 `x="date"`、`color="region"`、`y={80}` 的含义 |
+| 通道分组 | position / mark / scope / node / path 通道分别由谁消费 | 想判断 `color`、`size`、`strokeWidth` 应该归到哪里 |
+| 自定义通道 | 用 `defineScopeChannel` / `defineNodeChannel` / `definePathChannel` / `defineChannel` 声明 definition，再通过 `channelDefinitions` 注册 | spec 需要 `encoding.channels.<name>` |
+
+position 通道会被坐标重新解释：同样的 `x` / `y` 在 `cartesian2D` 中表示水平 / 垂直，在 `polar2D` 中可以表示角度 / 半径。`color` 是 mark 通道，因为不同 mark 会把它落到 node fill、文本颜色、path stroke 或 path fill。`size`、`shape`、`opacity` 是 node 通道，因为它们直接写入 core `IRNode` 属性。
+
+## 主题
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/plot/grammar/channel/binding">
+    <span className="font-semibold">通道绑定</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">把字段或常量绑定到 x、y、color、size、text 等通道</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/channel/visual">
+    <span className="font-semibold">通道分组</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解 mark / scope / node / path 通道、默认 scale 和图例形式</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/channel/custom">
+    <span className="font-semibold">自定义通道</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">注册新的 channel definition，并复用内置 registry 流程</span>
+  </LinkedCard>
+</div>

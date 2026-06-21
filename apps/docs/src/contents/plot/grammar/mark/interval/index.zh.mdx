@@ -152,7 +152,7 @@ const lowerCells = (
 | 区间 | `bounds` | `IntervalBounds?` | 按 scale 推断 | 高级区间来源；热图写 `{ x: { kind: 'band' }, y: { kind: 'band' } }` |
 | 系列 | `series` | `FieldName?` | — | 系列字段；拆成多系列区间 |
 | | `stack` | `boolean?` | `false` | 多系列时改为堆叠；省略时多系列并排 |
-| 样式通道 | `color` | `FieldName?` | `series` | 颜色字段；缺省时取 `series` |
+| mark 通道 | `color` | `FieldName?` | `series` | 颜色字段；缺省时取 `series` |
 | 标签 | `label` | `FieldName?` | — | 宿主 datum 标签字段 |
 | | `labelDisplayFormat` | `string?` | — | 标签展示格式串 |
 | | `labelPosition` | `CompassAnchor \| number?` | `above` | 标签相对宿主 Node 的方位 |

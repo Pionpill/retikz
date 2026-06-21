@@ -1,0 +1,33 @@
+---
+title: Channels
+description: Channels connect fields or constants to mark attributes: position chooses coordinate roles, while mark / scope / node / path channels decide how visible attributes are consumed.
+---
+
+A channel answers "where does this attribute read its value from?" The data layer first normalizes external rows into canonical rows, then channels pass fields or constants to coordinates, mark lowering, core nodes, core paths, and legends. `x` / `y` / `color` / `size` / `text` share one binding model, while later stages consume them differently.
+
+## Responsibilities
+
+| Topic | Responsibility | Reach for it when |
+| --- | --- | --- |
+| Channel binding | How fields / constants appear in mark props or `encoding` | You want to confirm what `x="date"`, `color="region"`, or `y={80}` means |
+| Channel groups | Who consumes position / mark / scope / node / path channels | You want to decide where `color`, `size`, or `strokeWidth` belongs |
+| Custom channels | Declare runtime definitions with `defineScopeChannel` / `defineNodeChannel` / `definePathChannel` / `defineChannel`, then register them through `channelDefinitions` | Your spec needs `encoding.channels.<name>` |
+
+Position channels are reinterpreted by coordinates: the same `x` / `y` means horizontal / vertical under `cartesian2D`, but angle / radius under `polar2D`. `color` is a mark channel because different marks land it on node fill, text color, path stroke, or path fill. `size`, `shape`, and `opacity` are node channels because they write core `IRNode` properties directly.
+
+## Topics
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/plot/grammar/channel/binding">
+    <span className="font-semibold">Channel Binding</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Bind fields or constants to x, y, color, size, text, and related channels</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/channel/visual">
+    <span className="font-semibold">Channel Groups</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Understand mark / scope / node / path channels, default scales, and legend forms</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/channel/custom">
+    <span className="font-semibold">Custom Channels</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Register new channel definitions and share the built-in registry path</span>
+  </LinkedCard>
+</div>

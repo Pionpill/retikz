@@ -1,0 +1,77 @@
+﻿---
+title: Custom Channels
+description: Register new channel definitions through channelDefinitions, so custom channels share the same resolving, registry, and delivery path as built-ins.
+---
+
+Common node channels (`size`, `opacity`, `shape`, `strokeWidth`) have named props. To add your own channel, declare a runtime definition with `defineScopeChannel`, `defineNodeChannel`, `definePathChannel`, or `defineChannel`, then register it through `<Plot channelDefinitions={...}>`; the spec still stores only field / constant bindings in `encoding.channels.<name>`.
+
+```tsx
+import { defineNodeChannel } from '@retikz/plot';
+
+const intensity = defineNodeChannel<number>({
+  channel: 'intensity',
+  output: { outputKind: 'number', range: [0.3, 1], clamp: true },
+  resolve: ctx => mark => {
+    const binding = mark.type === 'point' ? mark.encoding.channels?.intensity : undefined;
+    if (binding?.field === undefined) return undefined;
+    const values = ctx.rows.map(row => Number(row[binding.field])).filter(Number.isFinite);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    return {
+      resolver: row => {
+        const value = Number(row[binding.field]);
+        if (!Number.isFinite(value)) return undefined;
+        return 0.3 + (max === min ? 0.5 : (value - min) / (max - min)) * 0.7;
+      },
+    };
+  },
+  deliver: (node, value) => {
+    node.opacity = value;
+  },
+});
+```
+
+The binding remains JSON-safe PlotSpec:
+
+```tsx
+<Plot
+  data={{ points }}
+  spec={{
+    namespace: 'plot',
+    type: 'plot',
+    data: { reference: 'points' },
+    scales: [
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ],
+    coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+    marks: [
+      {
+        type: 'point',
+        encoding: {
+          x: { field: 'x' },
+          y: { field: 'y' },
+          channels: { intensity: { field: 'score' } },
+        },
+      },
+    ],
+  }}
+  channelDefinitions={[intensity]}
+/>;
+```
+
+The definition is runtime capability and does not enter PlotSpec; the spec stores only channel bindings. Built-in and custom channels are merged into one registry, then routed by definition kind into the position / mark / scope / node / path consumption path.
+
+`encoding.channels` mainly serves the spec / programmatic entry today; React `<PointMark>` still exposes common channels as named props. A custom channel cannot override a built-in channel name, and binding an unregistered channel fails during lowering.
+
+## Contract Boundaries
+
+| Rule | Reason |
+| --- | --- |
+| `channel` cannot collide with built-in channel names | Built-in and custom channels share one registry, so names must not override each other |
+| `resolve` only builds per-row resolvers | Rendered values, legend descriptors, and rows stay in sync |
+| `deliver` only writes existing core scope / node / path properties | New rendering capability should be added to core first instead of bypassing the foundation in plot |
+| Definitions do not enter IR | Functions are not serializable; IR stores only field / constant bindings |
+
+If you are extending field parsing or named formats, return to [Custom Data](/plot/grammar/data/custom). If you are extending how values map to colors or radii, start with [Custom Scales](/plot/grammar/scale/custom).
+

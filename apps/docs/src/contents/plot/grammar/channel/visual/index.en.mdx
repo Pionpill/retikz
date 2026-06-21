@@ -1,0 +1,54 @@
+---
+title: Channel Groups
+description: Channels are grouped by consumption surface: position, mark, scope, node, and path; built-ins and custom channels share the same definition registry.
+---
+
+Channels are not grouped by how they look. They are grouped by who consumes them and where the resolved value lands. That keeps built-ins and custom extensions on one path: both are `ChannelDefinition` entries with different `kind` values.
+
+## Five Groups
+
+| Group | Consumer | Examples | Use it for |
+| --- | --- | --- | --- |
+| `position` | coordinate definition | `x` / `y` / `z` | Coordinate roles; the coordinate decides required roles and projection meaning |
+| `mark` | mark lowering | `color` / `fill` / `stroke` / `label` | One channel maps to different surfaces for different marks |
+| `scope` | core `IRScope` | layer-level `color` / `nodeDefault` / `pathDefault` | Shared cascading properties or every-X defaults for the whole layer |
+| `node` | core `IRNode` | `size` / `shape` / `opacity` / `strokeWidth` | Direct per-element writes to existing node properties |
+| `path` | core `IRPath` | path-level `opacity` / `strokeWidth` (extension surface) | Direct per-path writes to existing path properties |
+
+`color` is a mark channel, not a node or path channel. A point glyph turns it into node fill, a text point turns it into text color, a path mark turns it into path stroke, and region / link / reference marks may turn it into path fill or stroke. That semantic choice belongs to the mark.
+
+`scope` channels match another core style surface: `IRScope` can carry cascading `color`, `stroke`, `fill`, `strokeWidth`, `opacity`, and related properties, plus `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`. When a value is shared by a whole layer, delivering it to scope is closer to core than stamping every node or path.
+
+## Built-In Visible Attributes
+
+| Channel | Group | Output | Legend |
+| --- | --- | --- | --- |
+| `color` / `fill` / `stroke` | `mark` | color | swatch / ramp |
+| `label` | `mark` | text | none |
+| `size` | `node` | numeric radius | size |
+| `opacity` | `node` | numeric opacity | ramp |
+| `shape` | `node` | glyph name | symbol |
+| `strokeWidth` | `node` | numeric stroke width | none |
+| `fillOpacity` / `drawOpacity` / `rotate` / `padding` / `minimumSize` / `minimumWidth` / `minimumHeight` / `zIndex` | `node` | core node property value | none |
+
+Node channels read the same canonical rows, can work with explicit scales, and finally write core `IRNode` values through `deliver`. Scope channels write shared defaults on the layer Scope; path channels write properties on generated `IRPath` elements.
+
+## Definitions Provide Capabilities
+
+A channel that lands directly on core node properties is the `ChannelDefinitionKind.Node` branch in the unified registry, usually declared with `NodeChannelDefinition`:
+
+| Field | Purpose |
+| --- | --- |
+| `channel` | Registration name, also the key in `encoding.channels.<name>` |
+| `output` | Output space: color, numeric range, or symbol palette |
+| `legend` | Legend form: `swatch` / `ramp` / `size` / `symbol` |
+| `resolve` | Reads the mark binding and builds a resolved value plus an optional scale descriptor |
+| `deliver` | Writes the resolved value to existing core scope / node / path properties |
+
+Built-in position / mark / scope / node / path channels enter the same channel registry before lowering resolves each mark. Node / path / scope channels do not have a private whitelist; they only differ by where the definition comes from.
+
+## Relationship To Scales
+
+A channel answers "what is this attribute called, who consumes it, and where does it land?" A scale answers "how does the field value become the output value?" For example, `size="population"` reads the `population` field and uses a sqrt scale by default to produce a radius; `shape="region"` uses an ordinal scale to map categories to glyph names.
+
+If you only want to change the mapping, start with [Scales](/plot/grammar/scale). If you want a field to drive a new scope / node / path property, continue with [Custom Channels](/plot/grammar/channel/custom).

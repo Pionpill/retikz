@@ -1,4 +1,4 @@
-import { type PositionChannelDefinition } from '../../contract';
+import { ChannelDefinitionKind, type PositionChannelDefinition } from '../../contract';
 import { type Channel, PlotMark, isBuiltinMark } from '../../schemas';
 
 /** link 的 source 端只在显式收集 link 源端时参与位置 role；普通投影仍由 mark lowering 自行处理。 */
@@ -15,7 +15,7 @@ const markEncoding = (mark: unknown): Record<string, Channel | undefined> | unde
 
 const positionChannelDefinitionOf = (role: string): BuiltinPositionChannelDefinition => ({
   channel: role,
-  kind: 'position',
+  kind: ChannelDefinitionKind.Position,
   role,
   pick: mark => markEncoding(mark)?.[role],
   pickWithOptions:

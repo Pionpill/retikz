@@ -30,16 +30,16 @@ export const makeMarkValueResolver = <T>(
   if (value === undefined) return undefined;
   if (value.kind === 'constant') {
     if (options.constants === 'skip') return undefined;
-    return { of: () => value.value };
+    return { resolver: () => value.value };
   }
   const field = value.value;
   const fieldType = fieldTypes.get(field);
   if (options.expectedFieldType !== undefined && fieldType !== undefined && fieldType !== options.expectedFieldType) {
-    throw new Error(`lowerPlots: ${options.channelName} style field "${field}" is ${fieldType}; ${options.channelName} requires a ${options.expectedFieldType} field`);
+    throw new Error(`lowerPlots: ${options.channelName} channel field "${field}" is ${fieldType}; ${options.channelName} requires a ${options.expectedFieldType} field`);
   }
   return {
     field,
     fieldType,
-    of: row => options.parse(resolveFieldPath(row, field)),
+    resolver: row => options.parse(resolveFieldPath(row, field)),
   };
 };

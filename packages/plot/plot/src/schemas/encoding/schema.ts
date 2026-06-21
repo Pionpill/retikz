@@ -1,4 +1,4 @@
-import { AtDirection } from '@retikz/core';
+﻿import { AtDirection } from '@retikz/core';
 import { z } from 'zod';
 import { ScalarValueSchema } from '../data';
 
@@ -42,22 +42,28 @@ export const PositionEncodingSchema = z
     'Positional channel bindings. Built-ins use x for 1D, x / y for 2D, and x / y / z for ternary2D; custom CoordinateDefinition roles may add arbitrary non-empty role keys. All are optional at the schema level, and the coordinate system decides which roles are required during lowering',
   );
 
-export const StyleEncodingSchema = z
+export const MarkChannelEncodingSchema = z
   .object({
     color: ChannelSchema.optional().describe(
       'Color channel (non-positional): maps a field through an ordinal / color scale to the mark fill / stroke',
     ),
+    channels: z
+      .record(z.string(), ChannelSchema)
+      .optional()
+      .describe(
+        'Extension channel bindings: a map of registered channel name to field / constant binding, resolved by a ChannelDefinition supplied via options.channelDefinitions. A key colliding with a built-in channel name fails loud at lowering',
+      ),
   })
-  .describe('Non-positional style channel bindings fed to mark visuals (color today)');
+  .describe('Non-positional mark / extension channel bindings fed to mark lowering');
 
 export const EncodingSchema = z
   .object({
     ...PositionEncodingSchema.shape,
-    ...StyleEncodingSchema.shape,
+    ...MarkChannelEncodingSchema.shape,
   })
   .catchall(ChannelSchema)
   .describe(
-    'Channel bindings for a mark: built-in keys cover x / y / z and shared style channels; unknown non-empty keys are treated as custom coordinate position roles',
+    'Channel bindings for a mark: built-in keys cover x / y / z and shared mark channels; unknown non-empty keys are treated as custom coordinate position roles',
   );
 
 export const SizeChannelSchema = z
@@ -110,13 +116,8 @@ export const PointEncodingSchema = PositionEncodingSchema.extend({
   text: TextChannelSchema.optional().describe(
     'Optional text content channel: when set the point lowers to a borderless core Node carrying text (free-text / datum label) instead of a glyph; field is a per-datum string, value is constant, displayFormat handles numeric / temporal display formatting',
   ),
-  channels: z
-    .record(z.string(), ChannelSchema)
-    .optional()
-    .describe(
-      'Extension channel bindings: a map of registered channel name to field / constant binding, resolved by a ChannelDefinition supplied via options.channelDefinitions. Built-in point channels such as size / opacity / shape / strokeWidth keep their named props. A key colliding with a built-in channel name fails loud at lowering',
-    ),
-}).describe('PointMark encoding: positional channels plus optional text and extension visual channel bindings; built-in visual properties live on the mark as MarkValueType fields');
+  ...MarkChannelEncodingSchema.shape,
+}).describe('PointMark encoding: positional channels plus optional text and extension channel bindings; built-in node properties live on the mark as MarkValueType fields');
 
 export const MarkLabelSchema = z
   .object({

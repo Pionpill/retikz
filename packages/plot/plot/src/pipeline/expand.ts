@@ -2,7 +2,7 @@ import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, Json
 import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type MarkOperation, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
 import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyFieldResolver, applyTransforms, assertAllValuesValid, assertBaselineScaleCompatible, assertScaleFieldCompatible, channelValue, collectFormatFields, createPositionChannelDefinitions, deriveScale, lowerMark, makeColorSchemeResolver, normalizeRows, orderedCategoryDomain, resolveChannelRegistry, resolveCoordinateRegistry, resolveFieldPath, resolveFieldTypes, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkChannels, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, scaleTicks, validateBoundData } from '../providers';
 import { type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../features';
-import { type AnyChannelDefinition, type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type AnyVisualChannelDefinition, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, type ResolveField, type ResolveLabel, isBuiltinScaleOperation } from '../contract';
+import { type AnyChannelDefinition, type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, type ResolveField, type ResolveLabel, isBuiltinScaleOperation } from '../contract';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect } from './layout';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { collectSourceFields } from './source-fields';
@@ -168,13 +168,8 @@ export type LowerPlotsOptions = {
    */
   scaleDefinitions?: Array<AnyScaleDefinition>;
   /**
-   * 扩展视觉通道 definition 数组（旧入口，运行时函数，不进 IR）。
-   * @deprecated 新扩展统一使用 channelDefinitions，让 mark / visual / position 通道共用一套 registry。
-   */
-  visualChannelDefinitions?: Array<AnyVisualChannelDefinition>;
-  /**
    * 自定义通道 definition 数组（运行时函数，不进 IR）：所有通道类型共用 registry。
-   * @description 内置通道（position / mark / visual）恒可用；自定义 `channel` 撞内置名 / 互撞 / 缺必要行为 → fail-loud。
+   * @description 内置通道（position / mark / node / path）恒可用；自定义 `channel` 撞内置名 / 互撞 / 缺必要行为 → fail-loud。
    */
   channelDefinitions?: Array<AnyChannelDefinition>;
   /**
@@ -788,10 +783,9 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   });
 
   const channelCtx = { node, rows, fieldTypes, scaleRegistry, resolveColorScheme };
-  // 通道 registry：内置 definition 先注册，自定义 definition 再合并；mark / visual 通道统一解析。
+  // 通道 registry：内置 definition 先注册，自定义 definition 再合并；mark / node / path 通道统一解析。
   const channelRegistry = resolveChannelRegistry({
     custom: options.channelDefinitions,
-    legacyVisual: options.visualChannelDefinitions,
     resolveLabel: options.resolveLabel,
   });
 

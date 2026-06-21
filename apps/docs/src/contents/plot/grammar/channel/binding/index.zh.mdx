@@ -1,9 +1,9 @@
 ---
-title: 数据通道
-description: 数据通道描述字段或常量如何进入 x、y、color、size、text 等视觉通道；React 写法把它们展开成 Plot IR 里的 encoding。
+title: 通道绑定
+description: 通道绑定描述字段或常量如何进入 x、y、color、size、text 等通道；React 写法把它们展开成 Plot IR 里的 encoding。
 ---
 
-数据模型说明字段是什么，数据处理说明真实数据怎么接进来；数据通道说明字段**用在哪里**。在 React 写法里没有单独的 `<Encoding>` 组件，通道通常直接写在 mark props 上。
+数据模型说明字段是什么，数据处理说明真实数据怎么接进来；通道绑定说明字段**用在哪里**。在 React 写法里没有单独的 `<Encoding>` 组件，通道通常直接写在 mark props 上。
 
 ```tsx
 <PointMark x="gdp" y="life" color="region" size="population" />
@@ -47,10 +47,6 @@ React DSL 里字符串通常表示字段名：
 
 字段名解析遵循和 model 相同的规则：先查整段字段名是否是行上的直接 key，再按 `.` 下钻。因为 canonical 行会把规范化值写回逻辑字段名，所以 mark 只需要引用逻辑字段，不需要关心真实数据字段名或存储格式。
 
-## 自定义视觉通道
-
-`size`、`opacity`、`shape`、`strokeWidth` 这类常用视觉通道有命名属性。需要扩展自己的视觉通道时，用 `defineVisualChannel` 声明运行时 definition，再在 spec 的 `encoding.channels.<name>` 里绑定字段或常量。完整示例和 registry 规则见[自定义数据](/plot/grammar/data/custom#自定义视觉通道)。
-
 ## 技术原理
 
 React 写法里的 mark props 会在构建 Plot spec 时转成通道配置。字段通道进入 `encoding`，常量通道保留为固定值；lowering 时再从 canonical 行读取字段值。
@@ -62,10 +58,10 @@ React 写法里的 mark props 会在构建 Plot spec 时转成通道配置。字
 | `<ReferenceMark y={80} />` | `y` 是常量通道，不读取数据行 |
 | `<PathMark order="month" />` | `order` 不在 `encoding` 对象里，但仍按字段读取，用于 datum 排序 |
 
-通道只回答“读哪个值”；至于值怎么映射成绘图空间、位置通道怎么被坐标系解释，交给下一节。
+通道只回答“读哪个值”；至于值怎么映射成绘图空间、位置通道怎么被坐标系解释，交给比例尺和坐标系。
 
 ## 比例尺与坐标系
 
 通道只负责“取哪个值”。比例尺负责把值映射到绘图空间或视觉属性；坐标系负责解释位置通道的角色。例如同样的 `x="quarter"`、`y="value"`，在 `cartesian2D` 下是横向分类 + 纵向数值，在 `polar2D` 下会变成角向分类 + 径向数值。
 
-继续阅读[比例尺](/plot/grammar/scale)可以看到字段类型如何派生 scale；阅读[坐标系](/plot/grammar/coordinate)可以看到位置通道如何被不同坐标系重解释。
+继续阅读[视觉通道](/plot/grammar/channel/visual)可以看到非位置通道如何落到样式属性；阅读[比例尺](/plot/grammar/scale)可以看到字段类型如何派生 scale；阅读[坐标系](/plot/grammar/coordinate)可以看到位置通道如何被不同坐标系重解释。

@@ -128,7 +128,7 @@ const lowerRegion = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFram
 | 几何 | `baseline` | `number?` | `0` | 回边贴附的基线值 |
 | | `closed` | `boolean?` | `false` | 末点回连首点，只影响上沿；区域仍由 baseline 回边闭合 |
 | 系列 | `series` | `FieldName?` | — | 系列字段；拆成多块面积 |
-| 样式通道 | `color` | `FieldName?` | `series` | 颜色字段；无显式 `series` 时按分类颜色字段隐式拆系列 |
+| mark 通道 | `color` | `FieldName?` | `series` | 颜色字段；无显式 `series` 时按分类颜色字段隐式拆系列 |
 | 标签 | `label` | `FieldName?` | — | 宿主 datum 标签字段 |
 | | `labelDisplayFormat` | `string?` | — | 标签展示格式串 |
 | | `labelPosition` | `CompassAnchor \| number?` | `above` | 标签相对宿主 Node 的方位 |

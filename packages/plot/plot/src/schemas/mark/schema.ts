@@ -1,6 +1,6 @@
-import { JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
+﻿import { JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
 import { z } from 'zod';
-import { ChannelSchema, EncodingSchema, MarkLabelSchema, PointEncodingSchema, StyleEncodingSchema } from '../encoding';
+import { ChannelSchema, EncodingSchema, MarkChannelEncodingSchema, MarkLabelSchema, PointEncodingSchema } from '../encoding';
 import { BUILTIN_MARK_TYPES, IntervalBoundKind, LinkOrientation, MarkValueKind, PlotMark } from './constants';
 
 /** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema、link / reference 用专属） */
@@ -259,7 +259,7 @@ export const LinkMarkSchema = z
       .optional()
       .describe('Main-axis orientation; the entry / exit tangents run along this axis and the band half-width is taken along the perpendicular axis (horizontal → flow left-right, vertical → flow top-down); default horizontal'),
     ...markBase,
-    encoding: StyleEncodingSchema,
+    encoding: MarkChannelEncodingSchema,
   })
   .describe('Link mark: one fillable cubic band per record between a source and target field-pair endpoint, width driven by the value field; consumes pre-computed layout positions (sankey / alluvial layout is out of scope). Uses style-only encoding (color)');
 
@@ -276,7 +276,7 @@ export const CustomMarkSchema = z
         message: 'custom mark type must not collide with a built-in mark type',
       })
       .describe('Discriminator: custom mark type; must be a non-empty, non-built-in identifier registered through options.markDefinitions'),
-    encoding: EncodingSchema.optional().describe('Position / visual channels; reuses the shared encoding so a custom mark contributes to scale inference like built-in marks'),
+    encoding: EncodingSchema.optional().describe('Position / non-position channels; reuses the shared encoding so a custom mark contributes to scale inference like built-in marks'),
   })
   .passthrough()
   .superRefine((operation, ctx) => {

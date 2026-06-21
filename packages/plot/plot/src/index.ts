@@ -1,4 +1,4 @@
-// @retikz/plot public API barrel.
+﻿// @retikz/plot public API barrel.
 // Built-in concrete coordinate frames are internal lowering objects; expose
 // CoordinateDefinition/frame helpers here, not built-in frame constructors.
 export {
@@ -40,21 +40,32 @@ export type {
   PositionScaleDefinition,
   ScaleDefinition,
 } from './contract';
-// Channel extension surface: all channel kinds share one registry; visual channels keep a typed convenience factory.
-export { defineChannel, defineVisualChannel } from './contract';
+// Channel extension surface: all channel kinds share one registry; scope/node/path channels keep typed convenience factories.
+export { ChannelDefinitionKind, defineChannel, defineNodeChannel, definePathChannel, defineScopeChannel } from './contract';
 export type {
   AnyChannelDefinition,
-  AnyVisualChannelDefinition,
   BaseChannelDefinition,
   ChannelBindingResolver,
   ChannelContext,
   ChannelDefinition,
+  ChannelDefinitionKindValue,
   ChannelOutputSpace,
   MarkChannelDefinition,
   MarkChannelResolution,
+  NodeChannelContext,
+  NodeChannelDelivery,
+  NodeChannelDeliveryContext,
+  NodeChannelDefinition,
+  PathChannelContext,
+  PathChannelDefinition,
+  PathChannelDelivery,
+  PathChannelDeliveryContext,
   PositionChannelDefinition,
-  VisualChannelContext,
-  VisualChannelDefinition,
+  ScopeChannelContext,
+  ScopeChannelDefinition,
+  ScopeChannelDelivery,
+  ScopeChannelDeliveryContext,
+  ScopeChannelResolution,
 } from './contract';
 export { BUILTIN_COLOR_SCHEMES, PlotColorScheme } from './providers';
 export type { ColorSchemeResolver, PlotColorSchemeValue } from './providers';

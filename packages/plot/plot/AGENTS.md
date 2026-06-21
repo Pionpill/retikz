@@ -1,10 +1,10 @@
-# @retikz/plot 工作指南
+﻿# @retikz/plot 工作指南
 
 `@retikz/plot` 是 plot 分组的核心包：定义 Plot IR，处理 data / transform / scale / coordinate / mark / guide，并通过 composite lowering 接入 `@retikz/core`。
 
 ## 目录结构与模块依赖
 
-可扩展的图形语法层（coordinate / scale / transform / mark）按「抽象 vs 实现」拆成两处顶层目录：
+可扩展的图形语法层（coordinate / scale / transform / mark / channel / format）按「抽象 vs 实现」拆成两处顶层目录：
 
 - `contract/<层>`：扩展契约（核心抽象）——`XxxDefinition` 类型、`defineXxx` 工厂、`AnyXxxDefinition` 宽类型、`extractXxxKey`、层共享接口类型。不依赖具体内置（运行时零依赖 providers）。
 - `providers/<层>`：内置实现——各内置 definition、`BUILTIN_*` 清单、`resolveXxxRegistry`（先注册内置、再合并自定义）、dispatch / apply / resolve 编排与 impl builder。
@@ -16,13 +16,14 @@
 
 ```text
 schemas         Zod schema / 类型真源（Plot IR 形状），所有模块可依赖
-contract/*      coordinate / scale / transform / mark / format 的扩展契约
-providers/*     上述五层的内置实现，依赖 contract（format 内置 def 复用 features/data 的 coerce 工具）
+contract/*      coordinate / scale / transform / mark / channel / format 的扩展契约
+providers/*     上述层的内置实现，依赖 contract（format 内置 def 复用 features/data 的 coerce 工具）
 features/*      内置、不可扩展的特性子系统：data（字段对齐 / 解析 / 归一化）、guide（axis / legend 下沉）、interaction（locator / hit-test）
 pipeline        Tier 2 → Kernel IR 下沉编排，调 providers + contract + features
 ```
 
 - **`features/*`**：不属于 contract（抽象）/ providers（可扩展内置）/ schemas / pipeline 的核心特性逻辑各自成块——`data` / `guide` / `interaction`。它们是必须但**还没有 define 扩展机制**的内置子系统（见下）。
+- **`providers/channel`** 放通道 definition / registry / delivery：position channel 承接坐标角色；mark channel 交给 mark lowering 按图元语义消费（如 color / label）；scope channel 直接写 core `IRScope` 级联属性或 `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`；node channel 直接写 core `IRNode` 属性（如 size / opacity / shape / 自定义 node 通道）；path channel 直接写 core `IRPath` 属性。目录按 `ChannelDefinitionKind` 组织内置实现（如 `position.ts` / `mark.ts` / `node.ts`），跨 kind 的内置注册清单由 `registry.ts` 组装，不要再按输出形态（numeric / size / shape）拆顶层 channel 文件。`providers/scale` 只放 scale definition、position scale、颜色 scale 与 color scheme；scale 里的 `ChannelScaleDefinition` 是「产通道值的 scale family」，不是通道本身。
 - `contract` / `providers` / `features` 各有顶层 `index.ts` barrel；**模块外 import 一律走 `../contract` / `../providers` / `../features`，不深入到子模块**（如 `../contract/scale`、`../features/guide/guide`）。`features` 内部子系统之间可直接相邻 import（如 `interaction/locate` 读 `../data`），不绕自身 barrel。例外：包**公共 API barrel**（`src/index.ts`）按需 deep-import 子路径做表面裁剪（如只暴露 `./features/data/resolve` / `./features/interaction/locate`，不整桶导出 features 内部），与它对 `pipeline` 的处理一致。
 - `schemas` 是 Zod schema / 类型真源，所有模块都可以依赖 `schemas`。下游可依赖上游；上游不要反向读取下游实现。
 - `pipeline` 是编排层（Tier 2 → Kernel IR 下沉），调用各层 `resolveXxxRegistry` + dispatch 函数；具体规则应放回拥有该概念的层。

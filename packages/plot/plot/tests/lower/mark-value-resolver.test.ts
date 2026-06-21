@@ -11,7 +11,7 @@ describe('makeMarkValueResolver', () => {
     });
 
     expect(resolver?.field).toBeUndefined();
-    expect(resolver?.of({ weight: 9 })).toBe(3);
+    expect(resolver?.resolver({ weight: 9 })).toBe(3);
   });
 
   it('resolves_field_mark_value_per_row', () => {
@@ -24,8 +24,8 @@ describe('makeMarkValueResolver', () => {
 
     expect(resolver?.field).toBe('weight');
     expect(resolver?.fieldType).toBe(PlotFieldType.Continuous);
-    expect(resolver?.of({ weight: 9 })).toBe(9);
-    expect(resolver?.of({ weight: 'bad' })).toBeUndefined();
+    expect(resolver?.resolver({ weight: 9 })).toBe(9);
+    expect(resolver?.resolver({ weight: 'bad' })).toBeUndefined();
   });
 
   it('rejects_unexpected_field_type', () => {

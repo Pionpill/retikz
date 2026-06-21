@@ -167,7 +167,7 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
 | 位置 | `x` | `FieldName?` | — | 绑定 x 位置通道字段 |
 | | `y` | `FieldName?` | — | 绑定 y 位置通道字段 |
 | | `z` | `FieldName?` | — | 绑定三元坐标第三分量字段 |
-| 样式通道 | `color` | `FieldName \| MarkValueType<string>?` | - | 字段绑定时进入颜色通道；有效 CSS 字符串可作为常量颜色；会覆盖常量 `fill` |
+| mark 通道 | `color` | `FieldName \| MarkValueType<string>?` | - | 字段绑定时进入颜色通道；有效 CSS 字符串可作为常量颜色；会覆盖常量 `fill` |
 | | `size` | `FieldName \| number \| MarkValueType<number>?` | - | 字段绑定时经 sqrt scale 得到半径；数字或显式 constant 表示常量最终半径 |
 | | `opacity` | `FieldName \| number \| MarkValueType<number>?` | — | 字符串表示不透明度字段；数字表示常量整体透明度 |
 | | `shape` | `FieldName \| MarkValueType<string>?` | - | 字段绑定时按分类映射 glyph shape；非字段字符串可作为常量 core Node shape 名 |

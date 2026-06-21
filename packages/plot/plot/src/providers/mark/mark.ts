@@ -1,4 +1,4 @@
-import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope, type IRStep } from '@retikz/core';
+import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRPath, type IRScope, type IRStep } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
 import { type AnyMarkDefinition, type Cell, type CellGeometry, type ChannelValueResolver, type CoordinateFrame, type FieldCollector, type IntervalContext, type MarkChannels, type MarkDefinition, cellGeometryAnchor, hasProjectCell, isRenderableCellGeometry } from '../../contract';
 import { channelValue, compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../data';
@@ -191,8 +191,8 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
     const row = rows[transformedIndex];
     const applyChannelDeliveries = (node: IRNode, nodeKind: 'pointGlyph' | 'pointText'): void => {
       if (constantZIndex !== undefined) node.zIndex = constantZIndex;
-      for (const entry of channels.deliveries ?? []) {
-        const value = entry.of(row);
+      for (const entry of channels.nodeDeliveries ?? []) {
+        const value = entry.resolver(row);
         if (value !== undefined) entry.deliver(node, value, { mark, row, nodeKind });
       }
     };
@@ -381,12 +381,21 @@ const buildLineSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
 /** 多系列 series 拆分通用：每条 series 一条 Path，provenance 开时绑 `<plotId>.series.<slug>` + Path.meta（series 原值） */
 type SeriesPathBuilder = (seriesRows: Array<ExternalRow>) => Array<IRStep> | null;
 
+const applyPathChannelDeliveries = (path: IRPath, mark: Mark, row: ExternalRow, channels: MarkChannels): IRPath => {
+  for (const entry of channels.pathDeliveries ?? []) {
+    const value = entry.resolver(row);
+    if (value !== undefined) entry.deliver(path, value, { mark, row });
+  }
+  return path;
+};
+
 const buildSeriesPaths = (
   mark: Mark,
   rows: Array<ExternalRow>,
   seriesField: string,
   buildSteps: SeriesPathBuilder,
   paintOf: (seriesRows: Array<ExternalRow>) => Record<string, string>,
+  channels: MarkChannels,
   markProvenance: MarkProvenance | undefined,
 ): Array<IRChild> => {
   const seriesValues = inferCategoryDomain(rows.map(row => resolveFieldPath(row, seriesField)));
@@ -397,7 +406,7 @@ const buildSeriesPaths = (
     const seriesRows = rows.filter(row => resolveFieldPath(row, seriesField) === series);
     const steps = buildSteps(seriesRows);
     if (!steps) continue;
-    const path: IRPathChild = { type: 'path', ...paintOf(seriesRows), children: steps };
+    const path: IRPathChild = applyPathChannelDeliveries({ type: 'path', ...paintOf(seriesRows), children: steps }, mark, seriesRows[0] ?? {}, channels);
     if (markProvenance) {
       if (plotId !== undefined && seenIds) {
         const id = `${plotId}.series.${slug(series)}`;
@@ -415,8 +424,8 @@ const buildSeriesPaths = (
   return paths;
 };
 
-/** path child 的可变形态（series 下沉时按需补 id / meta） */
-type IRPathChild = { type: 'path'; id?: string; meta?: ReturnType<typeof seriesPathMeta>; children: Array<IRStep>; stroke?: string; fill?: string };
+/** path child 的可变形态（series 下沉时按需补 id / meta），直接复用 core IRPath 属性面。 */
+type IRPathChild = IRPath;
 
 /**
  * 显式 series + color 字段并存时，校验 color 在每个 series 组内恒定（否则 fail-loud）
@@ -455,7 +464,15 @@ const pathSeriesField = (mark: Mark, rows: Array<ExternalRow>): string | undefin
 };
 
 /** 折线（path mark）：单线（常量 color → stroke）或多系列（series 拆多线、各取系列色）（坐标系无关） */
-const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ChannelValueResolver<string> | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+const lowerPath = (
+  mark: Mark,
+  rows: Array<ExternalRow>,
+  frame: CoordinateFrame,
+  channels: MarkChannels,
+  colorOf: ChannelValueResolver<string> | undefined,
+  defaultColor: string | undefined,
+  markProvenance: MarkProvenance | undefined,
+): IRScope | null => {
   if (mark.type !== PlotMark.Path) return null;
   const closed = mark.closed ?? false;
   const seriesField = pathSeriesField(mark, rows);
@@ -466,6 +483,7 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
       seriesField,
       seriesRows => buildLineSteps(mark, seriesRows, frame, closed),
       seriesRows => ({ stroke: colorOf?.(seriesRows[0]) ?? DEFAULT_FILL }),
+      channels,
       markProvenance,
     );
     return paths.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
@@ -474,7 +492,7 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
   if (!steps) return null;
   const colorValue = mark.encoding.color?.value;
   const stroke = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
-  return { type: 'scope', pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH }, children: [{ type: 'path', children: steps }] };
+  return { type: 'scope', pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH }, children: [applyPathChannelDeliveries({ type: 'path', children: steps }, mark, rows[0] ?? {}, channels)] };
 };
 
 /**
@@ -506,7 +524,15 @@ const buildAreaSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
 };
 
 /** 区域（region mark）：上沿折线 + baseline 回边闭合的可填充 Path（坐标系无关）；单系列或多系列 */
-const lowerRegion = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ChannelValueResolver<string> | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+const lowerRegion = (
+  mark: Mark,
+  rows: Array<ExternalRow>,
+  frame: CoordinateFrame,
+  channels: MarkChannels,
+  colorOf: ChannelValueResolver<string> | undefined,
+  defaultColor: string | undefined,
+  markProvenance: MarkProvenance | undefined,
+): IRScope | null => {
   if (mark.type !== PlotMark.Region) return null;
   const baseline = mark.baseline ?? AREA_BASELINE;
   const seriesField = pathSeriesField(mark, rows);
@@ -517,6 +543,7 @@ const lowerRegion = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFram
       seriesField,
       seriesRows => buildAreaSteps(mark, seriesRows, frame, baseline),
       seriesRows => ({ fill: colorOf?.(seriesRows[0]) ?? DEFAULT_FILL }),
+      channels,
       markProvenance,
     );
     return paths.length === 0 ? null : { type: 'scope', children: paths };
@@ -525,7 +552,7 @@ const lowerRegion = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFram
   if (!steps) return null;
   const colorValue = mark.encoding.color?.value;
   const fill = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
-  return { type: 'scope', pathDefault: { fill }, children: [{ type: 'path', children: steps }] };
+  return { type: 'scope', pathDefault: { fill }, children: [applyPathChannelDeliveries({ type: 'path', children: steps }, mark, rows[0] ?? {}, channels)] };
 };
 
 /** link 最大带宽（user units）：合成 width 线性 scale 的 range 上界（value 域 max → 此宽） */
@@ -560,13 +587,20 @@ const linkValueOf = (row: ExternalRow, field: string): number | null => {
 /**
  * 流带（link mark）下沉：每行 → 一条可填充 cubic 曲带 Path（坐标系无关端点投影 + 屏幕空间几何）
  */
-const lowerLink = (mark: LinkMark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ChannelValueResolver<string> | undefined, defaultColor: string | undefined): IRScope | null => {
+const lowerLink = (
+  mark: LinkMark,
+  rows: Array<ExternalRow>,
+  frame: CoordinateFrame,
+  channels: MarkChannels,
+  colorOf: ChannelValueResolver<string> | undefined,
+  defaultColor: string | undefined,
+): IRScope | null => {
   if (mark.width !== undefined) {
     throw new Error(`lowerPlots: link mark named width scale "${mark.width}" is not supported this round; omit width for a synthesized linear scale`);
   }
   const halfWidthOf = linkHalfWidthOf(mark, rows);
   const curvature = mark.curvature ?? LINK_DEFAULT_CURVATURE;
-  const placed: Array<{ color: string | undefined; steps: Array<IRStep> }> = [];
+  const placed: Array<{ color: string | undefined; row: ExternalRow; steps: Array<IRStep> }> = [];
   for (const row of rows) {
     const value = linkValueOf(row, mark.value);
     if (value === null) continue;
@@ -586,18 +620,18 @@ const lowerLink = (mark: LinkMark, rows: Array<ExternalRow>, frame: CoordinateFr
       { type: 'step', kind: 'cubic', to: geometry.sourceBottom, control1: geometry.bottomControl1, control2: geometry.bottomControl2 },
       { type: 'step', kind: 'cycle' },
     ];
-    placed.push({ color: colorOf?.(row), steps });
+    placed.push({ color: colorOf?.(row), row, steps });
   }
   if (placed.length === 0) return null;
   if (!colorOf) {
     const colorValue = mark.encoding.color?.value;
     const fill = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
-    return { type: 'scope', pathDefault: { fill }, children: placed.map(p => ({ type: 'path', children: p.steps })) };
+    return { type: 'scope', pathDefault: { fill }, children: placed.map(p => applyPathChannelDeliveries({ type: 'path', children: p.steps }, mark, p.row, channels)) };
   }
   const groups = new Map<string, Array<IRChild>>();
-  for (const { color, steps } of placed) {
+  for (const { color, row, steps } of placed) {
     const fill = color ?? DEFAULT_FILL;
-    const path: IRChild = { type: 'path', children: steps };
+    const path: IRChild = applyPathChannelDeliveries({ type: 'path', children: steps }, mark, row, channels);
     const bucket = groups.get(fill);
     if (bucket) bucket.push(path);
     else groups.set(fill, [path]);
@@ -743,6 +777,7 @@ const lowerReference = (
   mark: ReferenceMark,
   rows: Array<ExternalRow>,
   frame: CartesianCoordinateFrame | PolarCoordinateFrame,
+  channels: MarkChannels,
   colorOf: ChannelValueResolver<string> | undefined,
   defaultColor: string | undefined,
   markProvenance: MarkProvenance | undefined,
@@ -791,12 +826,12 @@ const lowerReference = (
   if (!colorOf) {
     const colorValue = mark.encoding.color?.value;
     const stroke = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
-    return { type: 'scope', pathDefault: { stroke, strokeWidth: REFERENCE_STROKE_WIDTH }, children: placed.map(p => ({ type: 'path', children: p.steps })) };
+    return { type: 'scope', pathDefault: { stroke, strokeWidth: REFERENCE_STROKE_WIDTH }, children: placed.map(p => applyPathChannelDeliveries({ type: 'path', children: p.steps }, mark, p.row, channels)) };
   }
   const groups = new Map<string, Array<IRChild>>();
-  for (const { color, steps } of placed) {
+  for (const { color, row, steps } of placed) {
     const stroke = color ?? DEFAULT_FILL;
-    const path: IRChild = { type: 'path', children: steps };
+    const path: IRChild = applyPathChannelDeliveries({ type: 'path', children: steps }, mark, row, channels);
     const bucket = groups.get(stroke);
     if (bucket) bucket.push(path);
     else groups.set(stroke, [path]);
@@ -816,7 +851,7 @@ const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
-  const layer = lowerPath(mark, rows, frame, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'), markProvenance);
+  const layer = lowerPath(mark, rows, frame, channels, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'), markProvenance);
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
 
@@ -824,7 +859,7 @@ const lowerRegionLayer = (mark: Mark, rows: Array<ExternalRow>, frame: Coordinat
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
-  const layer = lowerRegion(mark, rows, frame, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'), markProvenance);
+  const layer = lowerRegion(mark, rows, frame, channels, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'), markProvenance);
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
 
@@ -834,7 +869,7 @@ const lowerLinkLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
   if (!isCartesianCoordinateFrame(frame)) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
-  const layer = lowerLink(mark, rows, frame, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'));
+  const layer = lowerLink(mark, rows, frame, channels, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'));
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
 
@@ -844,7 +879,7 @@ const lowerReferenceLayer = (mark: Mark, rows: Array<ExternalRow>, frame: Coordi
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
-  const layer = lowerReference(mark, rows, frame, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'), markProvenance);
+  const layer = lowerReference(mark, rows, frame, channels, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'), markProvenance);
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
 
@@ -854,6 +889,9 @@ const collectPositionalFields = (mark: PointMark | PathMark | RegionMark | Inter
     fields.addChannel(channel);
   }
   if ('color' in mark.encoding) fields.addChannel(mark.encoding.color);
+  for (const channel of Object.values(mark.encoding.channels ?? {})) {
+    fields.addChannel(channel);
+  }
   fields.addChannel(mark.label?.content);
 };
 
@@ -884,9 +922,6 @@ export const MARK_REGISTRY: Record<PlotMarkValue, MarkDefinition> = {
       fields.addChannel(mark.minimumHeight);
       fields.addChannel(mark.zIndex);
       fields.addChannel(mark.encoding.text);
-      for (const channel of Object.values(mark.encoding.channels ?? {})) {
-        fields.addChannel(channel);
-      }
     },
     lower: lowerPoint,
   },
@@ -931,6 +966,9 @@ export const MARK_REGISTRY: Record<PlotMarkValue, MarkDefinition> = {
       fields.addChannel(mark.source.y);
       fields.addChannel(mark.target.x);
       fields.addChannel(mark.target.y);
+      for (const channel of Object.values(mark.encoding.channels ?? {})) {
+        fields.addChannel(channel);
+      }
       fields.addFields(mark.value, mark.endWidth);
     },
     lower: lowerLinkLayer,
@@ -943,6 +981,9 @@ export const MARK_REGISTRY: Record<PlotMarkValue, MarkDefinition> = {
       fields.addChannel(mark.encoding.y);
       fields.addChannel(mark.encoding.z);
       if ('color' in mark.encoding) fields.addChannel(mark.encoding.color);
+      for (const channel of Object.values(mark.encoding.channels ?? {})) {
+        fields.addChannel(channel);
+      }
       fields.addFields(typeof mark.xTo === 'string' ? mark.xTo : undefined, typeof mark.yTo === 'string' ? mark.yTo : undefined, mark.extentField, mark.extentToField);
     },
     lower: lowerReferenceLayer,
@@ -983,6 +1024,17 @@ export const collectMarkFields = (mark: MarkOperation, fields: FieldCollector, r
   markDefinitionOf(mark, registry).collectFields?.(mark as never, fields);
 };
 
+const isScopeLayer = (layer: IRChild | null): layer is IRScope =>
+  layer !== null && layer.type === 'scope' && 'children' in layer;
+
+const applyScopeChannelDeliveries = (layer: IRChild | null, mark: MarkOperation, rows: Array<ExternalRow>, channels: MarkChannels): IRChild | null => {
+  if (!isScopeLayer(layer)) return layer;
+  for (const entry of channels.scopeDeliveries ?? []) {
+    entry.deliver(layer, entry.value, { mark: mark as Mark, rows });
+  }
+  return layer;
+};
+
 /**
  * 把一个 mark + 数据行下沉成一个图层 Scope（按 mark type 查 registry 分发）
  * @description **原则：尽可能用 Scope 承载共享信息，把每个 Node / Path 压到最小，以减小生成的 core IR 体积。**
@@ -996,4 +1048,4 @@ export const lowerMark = (
   channels: MarkChannels = {},
   markProvenance?: MarkProvenance,
   registry: ReadonlyMap<string, AnyMarkDefinition> = BUILTIN_MARK_REGISTRY,
-): IRChild | null => markDefinitionOf(mark, registry).lower(mark as never, rows, frame, channels, markProvenance);
+): IRChild | null => applyScopeChannelDeliveries(markDefinitionOf(mark, registry).lower(mark as never, rows, frame, channels, markProvenance), mark, rows, channels);

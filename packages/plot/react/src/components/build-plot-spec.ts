@@ -370,7 +370,12 @@ const collectReference = (props: ReferenceMarkProps, into: Collected): void => {
   if (color !== undefined) {
     colorEnc = constantRule ? { color: { value: color } } : { color: { field: color, scale: AUTO_COLOR } };
   }
-  const positional = hasX ? { x: ruleChannel(x) } : { y: ruleChannel(y as number | string) };
+  const positional: Encoding = {};
+  if (hasX) {
+    positional.x = ruleChannel(x);
+  } else {
+    positional.y = ruleChannel(y as number | string);
+  }
   const upper = hasX ? (xTo !== undefined ? { xTo } : {}) : yTo !== undefined ? { yTo } : {};
   into.marks.push({
     type: PlotMark.Reference,
