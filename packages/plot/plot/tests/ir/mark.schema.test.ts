@@ -435,13 +435,21 @@ describe('MarkSchema (ADR-05)', () => {
   });
 
   it('mark_text_json_round_trip', () => {
-    const m = { type: 'point', id: 't', dx: 2, dy: 3, color: { kind: 'constant', value: '#333' }, encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label', format: ',.0f' } } };
+    const m = { type: 'point', id: 't', dx: 2, dy: 3, color: { kind: 'constant', value: '#333' }, encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label', displayFormat: ',.0f' } } };
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
+  it('mark_text_legacy_format_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'point', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label', format: ',.0f' } } })).toThrow();
+  });
+
   it('mark_interval_label_valid', () => {
-    const m = { type: 'interval', label: { content: { field: 'revenue', format: ',.0f' }, position: 'above', distance: 6, pin: true }, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } };
+    const m = { type: 'interval', label: { content: { field: 'revenue', displayFormat: ',.0f' }, position: 'above', distance: 6, pin: true }, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_label_legacy_format_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'interval', label: { content: { field: 'revenue', format: ',.0f' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } })).toThrow();
   });
 
   it('mark_point_label_numeric_position_valid', () => {

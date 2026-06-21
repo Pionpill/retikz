@@ -309,13 +309,13 @@ const recordMarkColor = (into: Collected, color: PointColorStyle | undefined): v
 
 /**
  * 把位置 mark 的扁平 label* props 装成 IR MarkLabel（priority-1 宿主 datum label，ADR-04）
- * @description label 顶层 string 默认按字段（content.field）；labelFormat 进 IR；labelPosition / labelDistance / labelPin
+ * @description label 顶层 string 默认按字段（content.field）；labelDisplayFormat 进 IR；labelPosition / labelDistance / labelPin
  *   摊进对齐 core NodeLabelSchema 的字段。无 label 字段 → undefined（不挂标签）。
  */
 const buildMarkLabel = (props: DatumLabelProps): MarkLabel | undefined => {
-  const { label, labelFormat, labelPosition, labelDistance, labelPin } = props;
+  const { label, labelDisplayFormat, labelPosition, labelDistance, labelPin } = props;
   if (label === undefined) return undefined;
-  const content: TextChannel = { field: label, ...(labelFormat !== undefined ? { format: labelFormat } : {}) };
+  const content: TextChannel = { field: label, ...(labelDisplayFormat !== undefined ? { displayFormat: labelDisplayFormat } : {}) };
   return {
     content,
     ...(labelPosition !== undefined ? { position: labelPosition } : {}),
@@ -434,7 +434,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         opacity,
         shape,
         text,
-        format,
+        displayFormat,
         dx,
         dy,
         id,
@@ -456,7 +456,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       const minimumHeightStyle = numberStyleOf<PointNonnegativeNumberStyle>(minimumHeight, 'minimumHeight', styleContext);
       const zIndexStyle = numberStyleOf<PointZIndexStyle>(zIndex, 'zIndex', styleContext);
       // text 设 → point 下沉为无边框文本 Node（内容走 encoding.text）；否则散点 glyph。位置通道按坐标系角色（x / x/y / x/y/z）
-      const textEnc: { text: TextChannel } | undefined = text !== undefined ? { text: { field: text, ...(format !== undefined ? { format } : {}) } } : undefined;
+      const textEnc: { text: TextChannel } | undefined = text !== undefined ? { text: { field: text, ...(displayFormat !== undefined ? { displayFormat } : {}) } } : undefined;
       into.marks.push({
         type: PlotMark.Point,
         ...(id !== undefined ? { id } : {}),

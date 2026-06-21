@@ -1,7 +1,7 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope, type IRStep } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
 import { type AnyMarkDefinition, type Cell, type CellGeometry, type ChannelValueResolver, type CoordinateFrame, type FieldCollector, type IntervalContext, type MarkChannels, type MarkDefinition, cellGeometryAnchor, hasProjectCell, isRenderableCellGeometry } from '../../contract';
-import { channelValue, compareByPath, inferCategoryDomain, resolveFieldPath } from '../../features';
+import { channelValue, compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../../features';
 import {
   type DatumIdRegistrar,
   type ProvenanceContext,
@@ -350,7 +350,7 @@ const pointsToSteps = (points: ReadonlyArray<[number, number]>, closed: boolean)
 
 /** 按 order / 数据序排好一组行（path / region 共用连接顺序） */
 const orderRows = (rows: Array<ExternalRow>, order: string | undefined): Array<ExternalRow> =>
-  order ? [...rows].sort((a, b) => compareByPath(a, b, order)) : rows;
+  order ? [...rows].sort((a, b) => compareRowsByFieldPath(a, b, order)) : rows;
 
 /**
  * 把一组有序行投影成上沿屏幕点（坐标系无关）

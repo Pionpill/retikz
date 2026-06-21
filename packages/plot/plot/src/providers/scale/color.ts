@@ -1,5 +1,5 @@
 import { isFiniteNumber } from '@retikz/math';
-import { scaleLinear, scaleOrdinal, scaleQuantile, scaleQuantize, scaleThreshold } from 'd3-scale';
+import { scaleLinear as d3ScaleLinear, scaleOrdinal as d3ScaleOrdinal, scaleQuantile as d3ScaleQuantile, scaleQuantize as d3ScaleQuantize, scaleThreshold as d3ScaleThreshold } from 'd3-scale';
 import { type AnyScaleDefinition, type ChannelResolveContext, type ChannelScaleResolution, defineScale } from '../../contract';
 import { inferCategoryDomain } from '../../features';
 import {
@@ -41,7 +41,7 @@ export const resolveOrdinalScale = (
 ): ((value: string | number) => string) => {
   const domain = def?.domain ?? inferCategoryDomain(values);
   const range = def?.range ?? DEFAULT_PLOT_COLORS;
-  const scale = scaleOrdinal<string | number, string>().domain(domain).range(range);
+  const scale = d3ScaleOrdinal<string | number, string>().domain(domain).range(range);
   return value => scale(value);
 };
 
@@ -66,7 +66,7 @@ export const resolveSequentialColorScale = (def: SequentialColorScale, values: A
     throw new Error(`lowerPlots: sequential color scale "${def.name}" domain must satisfy min < max (got [${def.domain[0]}, ${def.domain[1]}])`);
   }
   if (def.range) {
-    const scale = scaleLinear<string, string>()
+    const scale = d3ScaleLinear<string, string>()
       .domain([lo, hi])
       .range([def.range[0], def.range[1]])
       .clamp(true);
@@ -106,7 +106,7 @@ export const resolveDivergingColorScale = (def: DivergingColorScale, values: Arr
     mid = (lo + hi) / 2;
   }
   if (def.range) {
-    const scale = scaleLinear<string, string>()
+    const scale = d3ScaleLinear<string, string>()
       .domain([low, mid, high])
       .range([def.range[0], def.range[1], def.range[2]])
       .clamp(true);
@@ -136,7 +136,7 @@ export const resolveQuantizeColorScale = (def: QuantizeColorScale, values: Array
   const binCount = def.range ? def.range.length : def.count ?? DEFAULT_DISCRETE_BIN_COUNT;
   const colors = discreteBinColors(def.range, def.scheme, binCount, resolveScheme);
   const [lo, hi] = def.domain ?? safeExtent(values);
-  const scale = scaleQuantize<string>().domain([lo, hi]).range(colors);
+  const scale = d3ScaleQuantize<string>().domain([lo, hi]).range(colors);
   return value => scale(value);
 };
 
@@ -157,7 +157,7 @@ export const resolveThresholdColorScale = (def: ThresholdColorScale, resolveSche
     throw new Error(`lowerPlots: threshold color scale "${def.name}" range length (${def.range.length}) must equal breakpoints.length + 1 (${binCount})`);
   }
   const colors = discreteBinColors(def.range, def.scheme, binCount, resolveScheme);
-  const scale = scaleThreshold<number, string>().domain([...def.breakpoints]).range(colors);
+  const scale = d3ScaleThreshold<number, string>().domain([...def.breakpoints]).range(colors);
   return value => scale(value);
 };
 
@@ -172,7 +172,7 @@ export const resolveQuantileColorScale = (def: QuantileColorScale, values: Array
   }
   const binCount = def.range ? def.range.length : def.count ?? DEFAULT_DISCRETE_BIN_COUNT;
   const colors = discreteBinColors(def.range, def.scheme, binCount, resolveScheme);
-  const scale = scaleQuantile<string>().domain([...values]).range(colors);
+  const scale = d3ScaleQuantile<string>().domain([...values]).range(colors);
   return value => scale(value);
 };
 

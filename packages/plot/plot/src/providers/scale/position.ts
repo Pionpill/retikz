@@ -1,6 +1,6 @@
 import { isFiniteNumber } from '@retikz/math';
-import { extent } from 'd3-array';
-import { type ScaleBand, type ScaleContinuousNumeric, type ScaleLinear, type ScalePoint, type ScaleTime, scaleBand, scaleLinear, scaleLog, scalePoint, scalePow, scaleRadial, scaleSymlog, scaleUtc } from 'd3-scale';
+import { extent as d3Extent } from 'd3-array';
+import { type ScaleBand as D3ScaleBand, type ScaleContinuousNumeric as D3ScaleContinuousNumeric, type ScaleLinear as D3ScaleLinear, type ScalePoint as D3ScalePoint, type ScaleTime as D3ScaleTime, scaleBand as d3ScaleBand, scaleLinear as d3ScaleLinear, scaleLog as d3ScaleLog, scalePoint as d3ScalePoint, scalePow as d3ScalePow, scaleRadial as d3ScaleRadial, scaleSymlog as d3ScaleSymlog, scaleUtc as d3ScaleUtc } from 'd3-scale';
 import { type AnyScaleDefinition, type PositionScale, type TickSet, defineScale } from '../../contract';
 import { coerceTimestamp, inferCategoryDomain } from '../../features';
 import {
@@ -39,8 +39,8 @@ export const resolveLinearScale = (
   def: { domain?: readonly [number, number]; range?: readonly [number, number]; nice?: boolean; clamp?: boolean },
   values: Array<number>,
   fallbackRange: readonly [number, number],
-): ScaleLinear<number, number> => {
-  const scale = scaleLinear()
+): D3ScaleLinear<number, number> => {
+  const scale = d3ScaleLinear()
     .domain([...(def.domain ?? safeExtent(values))])
     .range([...(def.range ?? fallbackRange)]);
   if (def.nice) scale.nice();
@@ -57,13 +57,13 @@ export const resolveLogScale = (
   def: LogScale,
   values: Array<number>,
   fallbackRange: readonly [number, number],
-): ScaleContinuousNumeric<number, number> => {
+): D3ScaleContinuousNumeric<number, number> => {
   if (def.domain && (def.domain[0] <= 0 || def.domain[1] <= 0)) {
     throw new Error(`lowerPlots: log scale "${def.name}" domain must be strictly positive (got [${def.domain[0]}, ${def.domain[1]}])`);
   }
   const positives = values.filter(value => value > 0);
-  const [lo, hi] = extent(positives);
-  const scale = scaleLog()
+  const [lo, hi] = d3Extent(positives);
+  const scale = d3ScaleLog()
     .base(def.base ?? 10)
     .domain([...(def.domain ?? (lo === undefined ? [1, 10] : [lo, hi]))])
     .range([...(def.range ?? fallbackRange)]);
@@ -81,12 +81,12 @@ export const resolvePowScale = (
   def: PowScale,
   values: Array<number>,
   fallbackRange: readonly [number, number],
-): ScaleContinuousNumeric<number, number> => {
+): D3ScaleContinuousNumeric<number, number> => {
   const exponent = def.exponent ?? 2;
   if (def.domain && !Number.isInteger(exponent) && (def.domain[0] < 0 || def.domain[1] < 0)) {
     throw new Error(`lowerPlots: pow scale "${def.name}" with non-integer exponent ${exponent} requires a non-negative domain (got [${def.domain[0]}, ${def.domain[1]}])`);
   }
-  const scale = scalePow()
+  const scale = d3ScalePow()
     .exponent(exponent)
     .domain([...(def.domain ?? safeExtent(values))])
     .range([...(def.range ?? fallbackRange)]);
@@ -103,11 +103,11 @@ export const resolveSqrtScale = (
   def: SqrtScale,
   values: Array<number>,
   fallbackRange: readonly [number, number],
-): ScaleContinuousNumeric<number, number> => {
+): D3ScaleContinuousNumeric<number, number> => {
   if (def.domain && (def.domain[0] < 0 || def.domain[1] < 0)) {
     throw new Error(`lowerPlots: sqrt scale "${def.name}" domain must be non-negative (got [${def.domain[0]}, ${def.domain[1]}])`);
   }
-  const scale = scalePow()
+  const scale = d3ScalePow()
     .exponent(0.5)
     .domain([...(def.domain ?? safeExtent(values.filter(value => value >= 0)))])
     .range([...(def.range ?? fallbackRange)]);
@@ -125,8 +125,8 @@ export const resolveSymlogScale = (
   def: { domain?: readonly [number, number]; range?: readonly [number, number]; constant?: number; nice?: boolean; clamp?: boolean },
   values: Array<number>,
   fallbackRange: readonly [number, number],
-): ScaleContinuousNumeric<number, number> => {
-  const scale = scaleSymlog<number, number>()
+): D3ScaleContinuousNumeric<number, number> => {
+  const scale = d3ScaleSymlog<number, number>()
     .domain([...(def.domain ?? safeExtent(values))])
     .range([...(def.range ?? fallbackRange)]);
   if (def.constant !== undefined) scale.constant(def.constant);
@@ -144,8 +144,8 @@ export const resolveRadialScale = (
   def: { domain?: readonly [number, number]; range?: readonly [number, number]; nice?: boolean; clamp?: boolean },
   values: Array<number>,
   fallbackRange: readonly [number, number],
-): ScaleContinuousNumeric<number, number> => {
-  const scale = scaleRadial<number>()
+): D3ScaleContinuousNumeric<number, number> => {
+  const scale = d3ScaleRadial<number>()
     .domain([...(def.domain ?? safeExtent(values))])
     .range([...(def.range ?? fallbackRange)]);
   if (def.nice) scale.nice();
@@ -154,7 +154,7 @@ export const resolveRadialScale = (
 };
 
 /** 连续 scale → PositionScale（bandwidth=0；只接受有限数值，守 alpha.1 跳过语义） */
-export const linearPositionScale = (scale: ScaleLinear<number, number>): PositionScale => ({
+export const linearPositionScale = (scale: D3ScaleLinear<number, number>): PositionScale => ({
   coordinate: value => (isFiniteNumber(value) ? scale(value) : NaN),
   get bandwidth() {
     return 0;
@@ -175,7 +175,7 @@ export const linearPositionScale = (scale: ScaleLinear<number, number>): Positio
  *   投影结果非有限（log(0)=-∞）也归 NaN，与连续 scale 跳过非有限值一致。
  */
 export const continuousPositionScale = (
-  scale: ScaleContinuousNumeric<number, number>,
+  scale: D3ScaleContinuousNumeric<number, number>,
   isValidInput: (value: unknown) => boolean = isFiniteNumber,
 ): PositionScale => ({
   coordinate: value => {
@@ -199,7 +199,7 @@ export const continuousPositionScale = (
 // ── 时间位置 scale（time）────────────────────────────────────────────────────────
 
 /** 时间 scale 的刻度：值用 epoch ms（供 coordinate 再投影）、标签走 UTC tickFormat */
-export const timeTicks = (scale: ScaleTime<number, number>, count: number = DEFAULT_TICK_COUNT): TickSet => {
+export const timeTicks = (scale: D3ScaleTime<number, number>, count: number = DEFAULT_TICK_COUNT): TickSet => {
   const ticks = scale.ticks(count);
   const format = scale.tickFormat(count);
   return { values: ticks.map(date => date.getTime()), labels: ticks.map(format) };
@@ -210,10 +210,10 @@ export const resolveTimeScale = (
   def: TimeScale,
   values: Array<unknown>,
   fallbackRange: readonly [number, number],
-): ScaleTime<number, number> => {
+): D3ScaleTime<number, number> => {
   const stamps = values.map(coerceTimestamp).filter((stamp): stamp is number => stamp !== null);
   const [lo, hi] = def.domain ?? safeExtent(stamps);
-  const scale = scaleUtc()
+  const scale = d3ScaleUtc()
     .domain([new Date(lo), new Date(hi)])
     .range([fallbackRange[0], fallbackRange[1]]);
   if (def.nice) scale.nice();
@@ -222,7 +222,7 @@ export const resolveTimeScale = (
 };
 
 /** time scale → PositionScale（连续语义，bandwidth=0；coordinate 解析时间戳后投影） */
-export const timePositionScale = (scale: ScaleTime<number, number>): PositionScale => ({
+export const timePositionScale = (scale: D3ScaleTime<number, number>): PositionScale => ({
   coordinate: value => {
     const stamp = coerceTimestamp(value);
     return stamp === null ? NaN : scale(new Date(stamp));
@@ -275,8 +275,8 @@ export const resolveBandScale = (
   def: BandScale,
   values: Array<unknown>,
   fallbackRange: readonly [number, number],
-): ScaleBand<string | number> => {
-  const scale = scaleBand<string | number>()
+): D3ScaleBand<string | number> => {
+  const scale = d3ScaleBand<string | number>()
     .domain(def.domain ?? inferCategoryDomain(values))
     .range([fallbackRange[0], fallbackRange[1]]);
   scale.paddingInner(def.paddingInner ?? DEFAULT_BAND_PADDING_INNER);
@@ -290,8 +290,8 @@ export const resolvePointScale = (
   def: PointScale,
   values: Array<unknown>,
   fallbackRange: readonly [number, number],
-): ScalePoint<string | number> => {
-  const scale = scalePoint<string | number>()
+): D3ScalePoint<string | number> => {
+  const scale = d3ScalePoint<string | number>()
     .domain(def.domain ?? inferCategoryDomain(values))
     .range([fallbackRange[0], fallbackRange[1]]);
   scale.padding(def.padding ?? DEFAULT_POINT_PADDING);
@@ -300,13 +300,13 @@ export const resolvePointScale = (
 };
 
 /** 分类 scale 的刻度 = 每类别一刻度（值 = 类别、标签 = 类别串） */
-const categoryTicks = (scale: ScaleBand<string | number> | ScalePoint<string | number>): TickSet => {
+const categoryTicks = (scale: D3ScaleBand<string | number> | D3ScalePoint<string | number>): TickSet => {
   const domain = scale.domain();
   return { values: [...domain], labels: domain.map(String) };
 };
 
 /** band scale → PositionScale（coordinate 取 band 中心；bandwidth = scale.bandwidth() 实时） */
-export const bandPositionScale = (scale: ScaleBand<string | number>): PositionScale => ({
+export const bandPositionScale = (scale: D3ScaleBand<string | number>): PositionScale => ({
   coordinate: value => {
     if (typeof value !== 'string' && typeof value !== 'number') return NaN;
     const start = scale(value);
@@ -326,7 +326,7 @@ export const bandPositionScale = (scale: ScaleBand<string | number>): PositionSc
 });
 
 /** point scale → PositionScale（coordinate 取点位；bandwidth=0） */
-export const pointPositionScale = (scale: ScalePoint<string | number>): PositionScale => ({
+export const pointPositionScale = (scale: D3ScalePoint<string | number>): PositionScale => ({
   coordinate: value => {
     if (typeof value !== 'string' && typeof value !== 'number') return NaN;
     const position = scale(value);

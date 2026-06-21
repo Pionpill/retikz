@@ -1,11 +1,16 @@
 import { isFiniteNumber } from '@retikz/math';
-import { type ExternalRow, PlotFieldType, type PlotFieldTypeValue } from '../../schemas';
-import { coerceValue } from './coerce';
 import type { ParsedFieldValue } from '../../contract';
+import { type ExternalRow, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue } from '../../schemas';
+import { coerceValue } from './coerce';
 import { resolveFieldPath } from './field';
 
 const asParsedValue = (value: ParsedFieldValue): ParsedFieldValue =>
   typeof value === 'string' || typeof value === 'number' ? value : undefined;
+
+const isCoercedValid = (value: unknown, type: PlotFieldTypeValue): boolean => {
+  if (type === PlotFieldType.Categorical) return value !== undefined && value !== null;
+  return isFiniteNumber(value);
+};
 
 /**
  * ingest 归一化：把每行用户源字段按 fieldMap 解析，再按 PlotFieldTypeValue coerce 成 canonical 行。
@@ -13,7 +18,7 @@ const asParsedValue = (value: ParsedFieldValue): ParsedFieldValue =>
  */
 export const normalizeRows = (
   rows: Array<ExternalRow>,
-  fieldTypes: Map<string, PlotFieldTypeValue>,
+  fieldTypes: PlotFieldTypeMap,
   fieldMap?: Record<string, string>,
   parsers?: Map<string, (raw: unknown) => ParsedFieldValue>,
 ): Array<ExternalRow> =>
@@ -34,7 +39,7 @@ const isMissingRaw = (raw: unknown): boolean => raw === undefined || raw === nul
  * 抽样校验绑定数据：每个用户源字段在样本里至少有一个可 coercion 的值，否则 fail-loud。
  * @description validateData 开启时调用，用字段级 invalid / missing 计数解释空图原因。
  */
-export const validateBoundData = (rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>, sampleRows: number): void => {
+export const validateBoundData = (rows: Array<ExternalRow>, fieldTypes: PlotFieldTypeMap, sampleRows: number): void => {
   const limit = Math.min(rows.length, sampleRows);
   if (limit === 0) return;
   for (const [logical, type] of fieldTypes) {
@@ -62,7 +67,7 @@ export const validateBoundData = (rows: Array<ExternalRow>, fieldTypes: Map<stri
  * 全量严格校验 normalized canonical 值，任一坏值即 fail-loud。
  * @description invalid:'error' 使用；读取已过 parser / coerce 的 canonical 值。
  */
-export const assertAllValuesValid = (normalized: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): void => {
+export const assertAllValuesValid = (normalized: Array<ExternalRow>, fieldTypes: PlotFieldTypeMap): void => {
   for (const [logical, type] of fieldTypes) {
     for (let index = 0; index < normalized.length; index++) {
       const value = normalized[index][logical];
@@ -71,9 +76,4 @@ export const assertAllValuesValid = (normalized: Array<ExternalRow>, fieldTypes:
       throw new Error(`lowerPlots: field "${logical}" has ${shown} at row ${index} (invalid:'error')`);
     }
   }
-};
-
-const isCoercedValid = (value: unknown, type: PlotFieldTypeValue): boolean => {
-  if (type === PlotFieldType.Categorical) return value !== undefined && value !== null;
-  return isFiniteNumber(value);
 };

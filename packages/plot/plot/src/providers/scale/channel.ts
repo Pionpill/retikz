@@ -8,6 +8,7 @@ import {
   type MarkValueType,
   type OrdinalScale,
   PlotFieldType,
+  type PlotFieldTypeMap,
   type PlotFieldTypeValue,
   PlotMark,
   PlotScale,
@@ -42,7 +43,7 @@ export type MarkValueResolverOptions<T> = {
 /** 把 MarkValueType 解析为「行 → 属性值」函数，供内置 mark 与自定义 mark 复用。 */
 export const makeMarkValueResolver = <T>(
   value: MarkValueType<T> | undefined,
-  fieldTypes: Map<string, PlotFieldTypeValue>,
+  fieldTypes: PlotFieldTypeMap,
   options: MarkValueResolverOptions<T>,
 ): MarkValueResolution<T> | undefined => {
   if (value === undefined) return undefined;
@@ -135,7 +136,7 @@ export type NumericStyleResolverOptions = {
 export const makeNumericStyleResolver = (
   node: PlotSpec,
   rows: Array<ExternalRow>,
-  fieldTypes: Map<string, PlotFieldTypeValue>,
+  fieldTypes: PlotFieldTypeMap,
   pick: (mark: Mark) => ScaledMarkValueType<number> | undefined,
   channelName: string,
   options: NumericStyleResolverOptions = {},

@@ -6,7 +6,7 @@ import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 /**
  * ADR-04（alpha.11）：text mark / datum label 下沉契约测试。
  * priority-1 宿主 label（位置 mark 加 label → 填 datum Node.label，零新建 Node）、priority-2 兜底自由 TextMark
- * （新建带 text 的 core Node、与 point 同源投影）、text 内容 field/value/format、运行时 resolveLabel 逃生舱、
+ * （新建带 text 的 core Node、与 point 同源投影）、text 内容 field/value/displayFormat、运行时 resolveLabel 逃生舱、
  * 内容缺失跳过、坐标系无关投影、color → textColor 分子 Scope、dx/dy 微调、pin 引线。
  */
 
@@ -92,8 +92,8 @@ describe('ADR-04 priority-1 宿主 label（填 datum Node.label）', () => {
     expect((nodes[1].label as { text: string }).text).toBe('980');
   });
 
-  it('label-format：format 套在 field 上 → datum Node.label 文本为格式化串', () => {
-    const spec = intervalSpec({ content: { field: 'revenue', format: ',.0f' } });
+  it('label-display-format：displayFormat 套在 field 上 → datum Node.label 文本为格式化串', () => {
+    const spec = intervalSpec({ content: { field: 'revenue', displayFormat: ',.0f' } });
     const nodes = nodesOf(expandOf(spec, BAR_ROWS));
     expect((nodes[0].label as { text: string }).text).toBe('1,235');
     expect((nodes[1].label as { text: string }).text).toBe('980');
@@ -112,8 +112,8 @@ describe('ADR-04 priority-1 宿主 label（填 datum Node.label）', () => {
     expect((nodes[1].label as { text: string }).text).toBe('TOP');
   });
 
-  it('label-resolve-runtime：resolveLabel(row) 覆盖 field/format，且 IR 内不含函数', () => {
-    const spec = intervalSpec({ content: { field: 'revenue', format: ',.0f' } }, 'bars');
+  it('label-resolve-runtime：resolveLabel(row) 覆盖 field/displayFormat，且 IR 内不含函数', () => {
+    const spec = intervalSpec({ content: { field: 'revenue', displayFormat: ',.0f' } }, 'bars');
     const layer = expandOf(spec, BAR_ROWS, { width: WIDTH, height: HEIGHT, resolveLabel: { bars: row => `${row.month}=${row.revenue}` } });
     const nodes = nodesOf(layer);
     expect((nodes[0].label as { text: string }).text).toBe('Jan=1234.5');

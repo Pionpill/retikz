@@ -1,5 +1,5 @@
 import type { FieldFormatDefinition, ParsedFieldValue } from '../../contract';
-import type { DataModel, PlotFieldTypeValue } from '../../schemas';
+import type { DataModel, PlotFieldTypeMap } from '../../schemas';
 import { resolveFormatRegistry } from './definitions';
 
 /**
@@ -9,11 +9,11 @@ import { resolveFormatRegistry } from './definitions';
  */
 export const collectFormatFields = (
   model: DataModel | undefined,
-  baseTypes: Map<string, PlotFieldTypeValue>,
+  baseTypes: PlotFieldTypeMap,
   userSourceFields: Set<string>,
   registry: ReadonlyMap<string, FieldFormatDefinition> = resolveFormatRegistry(),
-): { fieldTypes: Map<string, PlotFieldTypeValue>; parsers: Map<string, (raw: unknown) => ParsedFieldValue> } => {
-  const fieldTypes = new Map(baseTypes);
+): { fieldTypes: PlotFieldTypeMap; parsers: Map<string, (raw: unknown) => ParsedFieldValue> } => {
+  const fieldTypes: PlotFieldTypeMap = new Map(baseTypes);
   const parsers = new Map<string, (raw: unknown) => ParsedFieldValue>();
   if (model === undefined) return { fieldTypes, parsers };
   for (const field of model) {

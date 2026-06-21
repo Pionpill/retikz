@@ -1,5 +1,5 @@
 import type { IRNode, IRScope } from '@retikz/core';
-import { schemeCategory10 } from 'd3-scale-chromatic';
+import { schemeCategory10 as d3SchemeCategory10 } from 'd3-scale-chromatic';
 import { describe, expect, it } from 'vitest';
 import { FieldDefSchema, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
 import { DataModelSchema } from '../../src/schemas/data';
@@ -293,9 +293,9 @@ describe('FieldDef.order — 交互（ADR-07）', () => {
       const category = categoryByX.get((node.position as [number, number])[0]);
       if (category !== undefined) fillByCategory.set(category, scope.nodeDefault?.fill);
     }
-    expect(fillByCategory.get('S')).toBe(schemeCategory10[0]);
-    expect(fillByCategory.get('M')).toBe(schemeCategory10[1]);
-    expect(fillByCategory.get('L')).toBe(schemeCategory10[2]);
+    expect(fillByCategory.get('S')).toBe(d3SchemeCategory10[0]);
+    expect(fillByCategory.get('M')).toBe(d3SchemeCategory10[1]);
+    expect(fillByCategory.get('L')).toBe(d3SchemeCategory10[2]);
   });
 
   it('order_with_type_driven_scale', () => {

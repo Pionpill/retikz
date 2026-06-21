@@ -17,6 +17,10 @@
 - 共用几何类型和工具优先来自 `@retikz/math` / `@retikz/core`。例如二维坐标类型使用 `Position`，有限 / 无穷数值判断使用 `isFiniteNumber` / `isInfiniteNumber`，不要在 plot 内重新定义同义工具。
 - 已存在的本包共用工具应复用，不要在子模块里重复实现同类 parser / formatter；如果工具应该上移到 math/core，先迁移再使用。
 
+## 代码风格
+
+- plot 分组里从 d3 生态导入的运行时函数、常量和值对象统一用 `d3Xxx` 本地名，例如 `format as d3Format`、`utcFormat as d3UtcFormat`、`scaleLinear as d3ScaleLinear`、`schemeCategory10 as d3SchemeCategory10`。从 d3 导入的类型统一用 `D3Xxx` 本地名，例如 `ScaleLinear as D3ScaleLinear`，避免与项目内 scale / formatter / schema 命名混淆。
+
 ## 验证
 
 改 `@retikz/plot` 结构化文件后至少运行：

@@ -1,5 +1,5 @@
 import type { IRNode } from '@retikz/core';
-import type { Channel, ExternalRow, LegendChannelValue, Mark, PlotFieldTypeValue, PlotSpec, ScalarValue } from '../schemas';
+import type { Channel, ExternalRow, LegendChannelValue, Mark, PlotFieldTypeMap, PlotFieldTypeValue, PlotSpec, ScalarValue } from '../schemas';
 
 /**
  * 通道解析器（行 → 求值结果）的运行时契约。
@@ -94,7 +94,7 @@ export type ChannelOutputSpace =
 export type VisualChannelContext = {
   node: PlotSpec;
   rows: Array<ExternalRow>;
-  fieldTypes: Map<string, PlotFieldTypeValue>;
+  fieldTypes: PlotFieldTypeMap;
 };
 
 /**

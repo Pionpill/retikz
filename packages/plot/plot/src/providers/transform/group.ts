@@ -1,4 +1,4 @@
-import { scaleLinear } from 'd3-scale';
+import { scaleLinear as d3ScaleLinear } from 'd3-scale';
 import { isFiniteNumber } from '@retikz/math';
 import { type AggregateTransform, type BinTransform, type ExternalRow } from '../../schemas';
 import { resolveFieldPath } from '../../features';
@@ -70,7 +70,7 @@ const binEdges = (operation: BinTransform, values: Array<number>): Array<number>
   const nice = operation.nice ?? true;
   let [lo, hi] = [domainMin, domainMax];
   if (nice && operation.extent === undefined) {
-    [lo, hi] = scaleLinear().domain([domainMin, domainMax]).nice(count).domain() as [number, number];
+    [lo, hi] = d3ScaleLinear().domain([domainMin, domainMax]).nice(count).domain() as [number, number];
   }
   if (hi - lo < 1e-12) hi = lo + 1;
   const width = (hi - lo) / count;

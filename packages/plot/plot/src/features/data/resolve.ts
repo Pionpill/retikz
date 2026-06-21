@@ -1,4 +1,4 @@
-import type { DataModel, PlotFieldTypeValue } from '../../schemas';
+import type { DataModel, PlotFieldTypeMap, PlotFieldTypeValue } from '../../schemas';
 import type { ParsedFieldValue } from '../../contract';
 
 /**
@@ -29,17 +29,17 @@ export type ResolveField = (
  *   parse 无 type 且 model 未声明该字段类型 → fail-loud（类型来源不清，自定义值会被误判）。
  */
 export const applyFieldResolver = (
-  baseTypes: Map<string, PlotFieldTypeValue>,
+  baseTypes: PlotFieldTypeMap,
   userSourceFields: Set<string>,
   model: DataModel | undefined,
   dataReference: string,
   fieldMap: Record<string, string> | undefined,
   resolveField: ResolveField | undefined,
-): { fieldTypes: Map<string, PlotFieldTypeValue>; parsers: Map<string, (raw: unknown) => ParsedFieldValue>; resolverHit: boolean } => {
+): { fieldTypes: PlotFieldTypeMap; parsers: Map<string, (raw: unknown) => ParsedFieldValue>; resolverHit: boolean } => {
   const parsers = new Map<string, (raw: unknown) => ParsedFieldValue>();
   if (resolveField === undefined) return { fieldTypes: baseTypes, parsers, resolverHit: false };
   const declaredType = new Map((model ?? []).flatMap(field => (field.type !== undefined ? [[field.name, field.type] as const] : [])));
-  const fieldTypes = new Map(baseTypes);
+  const fieldTypes: PlotFieldTypeMap = new Map(baseTypes);
   let resolverHit = false;
   for (const field of userSourceFields) {
     const resolution = resolveField(field, { dataReference, physicalPath: fieldMap?.[field] ?? field, declaredType: declaredType.get(field) });

@@ -182,7 +182,7 @@ Style bindings use one shared `MarkValueType<T>` type: `{ kind: 'field', value: 
 | | `minimumWidth` / `minimumHeight` | `FieldName \| number \| MarkValueType<number>?` | — | Minimum visual width / height |
 | | `zIndex` | `FieldName \| number \| MarkValueType<number>?` | — | Drawing order hint |
 | Label | `label` | `FieldName?` | — | Field bound to host `Node.label`; keeps the point glyph |
-| | `labelFormat` | `string?` | — | Format string for `label` |
+| | `labelDisplayFormat` | `string?` | — | Display format string for `label` |
 | | `resolveLabel` | `(row) => string?` | — | Runtime label resolver; not in IR, requires `id` |
 | Text point | `text` | `FieldName?` | — | Field bound to text content; replaces the point glyph with a text Node |
 | | `format` | `string?` | — | Format string for `text` |

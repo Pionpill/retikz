@@ -1,8 +1,8 @@
-import { format as d3Format } from 'd3-format';
-import { utcFormat } from 'd3-time-format';
 import { isFiniteNumber } from '@retikz/math';
-import { type Channel, type DataModel, type ExternalRow, PlotFieldType, type PlotFieldTypeValue, type TextChannel } from '../../schemas';
+import { format as d3Format } from 'd3-format';
+import { utcFormat as d3UtcFormat } from 'd3-time-format';
 import type { FieldCollector } from '../../contract';
+import { type Channel, type DataModel, type ExternalRow, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, type TextChannel } from '../../schemas';
 
 /**
  * 解析字段路径 a.b.c，返回叶子值（任一段缺失返回 undefined）
@@ -28,7 +28,7 @@ export const channelValue = (channel: Channel | undefined, row: ExternalRow): un
 };
 
 /** 按字段路径比较两行（数值升序，否则字符串序）——line 的连接顺序 */
-export const compareByPath = (a: ExternalRow, b: ExternalRow, path: string): number => {
+export const compareRowsByFieldPath = (a: ExternalRow, b: ExternalRow, path: string): number => {
   const va = resolveFieldPath(a, path);
   const vb = resolveFieldPath(b, path);
   if (isFiniteNumber(va) && isFiniteNumber(vb)) return va - vb;
@@ -39,18 +39,18 @@ export const compareByPath = (a: ExternalRow, b: ExternalRow, path: string): num
 export type ResolveLabel = (row: ExternalRow) => string;
 
 /**
- * 把字段值按 format 串格式化（temporal 走 d3-time-format、数值走 d3-format）
- * @description fieldType 为 temporal（值是 epoch ms canonical）→ utcFormat；其余按数值走 d3-format。
+ * 把字段值按展示格式串格式化（temporal 走 d3-time-format、数值走 d3-format）
+ * @description fieldType 为 temporal（值是 epoch ms canonical）→ d3UtcFormat；其余按数值走 d3-format。
  *   非有限数值无法格式化 → 回退 String(value)；format 串非法 → 同样回退（不 fail-loud，标签是展示层）。
  */
-const applyFormat = (value: unknown, format: string, fieldType: PlotFieldTypeValue | undefined): string => {
+const applyDisplayFormat = (value: unknown, displayFormat: string, fieldType: PlotFieldTypeValue | undefined): string => {
   try {
     if (fieldType === PlotFieldType.Temporal) {
       if (!isFiniteNumber(value)) return String(value);
-      return utcFormat(format)(new Date(value));
+      return d3UtcFormat(displayFormat)(new Date(value));
     }
     if (!isFiniteNumber(value)) return String(value);
-    return d3Format(format)(value);
+    return d3Format(displayFormat)(value);
   } catch {
     return String(value);
   }
@@ -65,14 +65,14 @@ const applyFormat = (value: unknown, format: string, fieldType: PlotFieldTypeVal
 export const labelOf = (
   content: TextChannel,
   row: ExternalRow,
-  fieldType: PlotFieldTypeValue | undefined,
-  resolveLabel: ResolveLabel | undefined,
+  fieldType?: PlotFieldTypeValue,
+  resolveLabel?: ResolveLabel,
 ): string | undefined => {
   if (resolveLabel !== undefined) return String(resolveLabel(row));
   if (content.field !== undefined) {
     const value = resolveFieldPath(row, content.field);
     if (value === null || value === undefined) return undefined;
-    return content.format !== undefined ? applyFormat(value, content.format, fieldType) : String(value);
+    return content.displayFormat !== undefined ? applyDisplayFormat(value, content.displayFormat, fieldType) : String(value);
   }
   if (content.value !== undefined) return content.value;
   return undefined;
@@ -98,7 +98,12 @@ export const createFieldCollector = (fields: Set<string>): FieldCollector => ({
   },
 });
 
+/**
+ * 字段类型自动推断的内部采样上限。
+ * @description 当前不支持外部自定义；需要稳定语义时应在 data.model 显式声明字段 type。
+ */
 const MAX_SCAN_ROWS = 1000;
+/** 字段类型自动推断最多采集的可分类样本数；当前不支持外部自定义。 */
 const MAX_SAMPLE_VALUES = 100;
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const ISO_DATETIME_RE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
@@ -110,20 +115,16 @@ export const isIsoDateString = (value: string): boolean => ISO_DATE_RE.test(valu
  * @description band / point / ordinal 共用。分类顺序属于 data domain 语义；排序是 transform 的显式职责。
  */
 export const inferCategoryDomain = (values: Array<unknown>): Array<string | number> => {
-  const seen = new Set<string | number>();
-  const out: Array<string | number> = [];
+  const domain = new Set<string | number>();
   for (const value of values) {
     if (typeof value !== 'string' && typeof value !== 'number') continue;
-    if (!seen.has(value)) {
-      seen.add(value);
-      out.push(value);
-    }
+    domain.add(value);
   }
-  return out;
+  return [...domain];
 };
 
 /** 单个字段样本值的测量类型推断策略：Date/string ISO -> temporal，bigint/finite number -> continuous，boolean/string -> categorical。 */
-const classifyFieldValue = (value: unknown): PlotFieldTypeValue | undefined => {
+const classifyFieldType = (value: unknown): PlotFieldTypeValue | undefined => {
   if (value instanceof Date) return PlotFieldType.Temporal;
   if (typeof value === 'bigint') return PlotFieldType.Continuous;
   if (typeof value === 'number') return isFiniteNumber(value) ? PlotFieldType.Continuous : undefined;
@@ -134,19 +135,24 @@ const classifyFieldValue = (value: unknown): PlotFieldTypeValue | undefined => {
 
 /** 从绑定数据推断某字段的测量类型；仅在没有 data.model 或 model 缺省 type 时使用。 */
 export const inferFieldType = (rows: Array<ExternalRow>, path: string): PlotFieldTypeValue => {
-  const sample: Array<PlotFieldTypeValue> = [];
+  const observedTypes = new Set<PlotFieldTypeValue>();
+  let sampleCount = 0;
   const scanLimit = Math.min(rows.length, MAX_SCAN_ROWS);
-  for (let index = 0; index < scanLimit && sample.length < MAX_SAMPLE_VALUES; index++) {
+  for (let index = 0; index < scanLimit && sampleCount < MAX_SAMPLE_VALUES; index++) {
     const value = resolveFieldPath(rows[index], path);
     if (value === null || value === undefined) continue;
-    const type = classifyFieldValue(value);
+    const type = classifyFieldType(value);
     if (type === undefined) continue;
-    sample.push(type);
+    observedTypes.add(type);
+    sampleCount++;
   }
-  if (sample.length === 0) return PlotFieldType.Categorical;
-  if (sample.every(type => type === PlotFieldType.Temporal)) return PlotFieldType.Temporal;
-  if (sample.every(type => type === PlotFieldType.Continuous)) return PlotFieldType.Continuous;
-  return PlotFieldType.Categorical;
+  if (sampleCount === 0) return PlotFieldType.Categorical;
+  if (observedTypes.size > 1) return PlotFieldType.Categorical;
+  return observedTypes.has(PlotFieldType.Temporal)
+    ? PlotFieldType.Temporal
+    : observedTypes.has(PlotFieldType.Continuous)
+      ? PlotFieldType.Continuous
+      : PlotFieldType.Categorical;
 };
 
 /** 把源字段解析成字段名到类型的映射，供 type-driven scale / coercion 消费。 */
@@ -154,28 +160,28 @@ export const resolveFieldTypes = (
   model: DataModel | undefined,
   rows: Array<ExternalRow>,
   sourceFields: Set<string>,
-): Map<string, PlotFieldTypeValue> => {
-  const map = new Map<string, PlotFieldTypeValue>();
+): PlotFieldTypeMap => {
+  const fieldTypeMap: PlotFieldTypeMap = new Map();
   if (model !== undefined) {
-    const declaredNames = new Set<string>();
-    const declaredTypes = new Map<string, PlotFieldTypeValue>();
+    const declaredNameMap = new Set<string>();
+    const declaredTypeMap: PlotFieldTypeMap = new Map();
     for (const field of model) {
-      if (declaredNames.has(field.name)) {
+      if (declaredNameMap.has(field.name)) {
         throw new Error(`lowerPlots: duplicate field "${field.name}" in data.model`);
       }
-      declaredNames.add(field.name);
-      if (field.type !== undefined) declaredTypes.set(field.name, field.type);
+      declaredNameMap.add(field.name);
+      if (field.type !== undefined) declaredTypeMap.set(field.name, field.type);
     }
     for (const field of sourceFields) {
-      if (!declaredNames.has(field)) {
+      if (!declaredNameMap.has(field)) {
         throw new Error(`lowerPlots: unknown field "${field}" (data.model is declared; all referenced source fields must be listed)`);
       }
-      map.set(field, declaredTypes.get(field) ?? inferFieldType(rows, field));
+      fieldTypeMap.set(field, declaredTypeMap.get(field) ?? inferFieldType(rows, field));
     }
   } else {
     for (const field of sourceFields) {
-      map.set(field, inferFieldType(rows, field));
+      fieldTypeMap.set(field, inferFieldType(rows, field));
     }
   }
-  return map;
+  return fieldTypeMap;
 };

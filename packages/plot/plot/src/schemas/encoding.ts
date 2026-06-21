@@ -87,20 +87,21 @@ export const TextChannelSchema = z
   .object({
     field: z.string().min(1).optional().describe('Data path whose row value becomes the label string; mutually exclusive with value'),
     value: z.string().min(1).optional().describe('Constant label string for every datum (mutually exclusive with field)'),
-    format: z
+    displayFormat: z
       .string()
       .min(1)
       .optional()
       .describe(
-        'Optional JSON-safe format string (d3-format for numeric fields / d3-time-format for temporal fields) applied to the field value before stringification; only meaningful together with field. A runtime resolveLabel(row) escape hatch (injected via options, never in the IR) overrides this for fully custom templates',
+        'Optional JSON-safe display format string (d3-format for numeric fields / d3-time-format for temporal fields) applied to the field value before stringification; only meaningful together with field. A runtime resolveLabel(row) escape hatch (injected via options, never in the IR) overrides this for fully custom templates',
       ),
   })
+  .strict()
   .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'text channel must set exactly one of `field` or `value`' })
-  .describe('Text content channel: field is a per-datum label string, value is a constant label, format is a format string for a numeric or temporal field');
+  .describe('Text content channel: field is a per-datum label string, value is a constant label, displayFormat is a display format string for a numeric or temporal field');
 
 export const PointEncodingSchema = PositionEncodingSchema.extend({
   text: TextChannelSchema.optional().describe(
-    'Optional text content channel: when set the point lowers to a borderless core Node carrying text (free-text / datum label) instead of a glyph; field is a per-datum string, value is constant, format handles numeric / temporal format',
+    'Optional text content channel: when set the point lowers to a borderless core Node carrying text (free-text / datum label) instead of a glyph; field is a per-datum string, value is constant, displayFormat handles numeric / temporal display formatting',
   ),
   channels: z
     .record(z.string(), ChannelSchema)
@@ -112,7 +113,7 @@ export const PointEncodingSchema = PositionEncodingSchema.extend({
 
 export const MarkLabelSchema = z
   .object({
-    content: TextChannelSchema.describe('Label content channel (field / value / format)'),
+    content: TextChannelSchema.describe('Label content channel (field / value / displayFormat)'),
     position: z
       .union([z.enum(AtDirection), z.number()])
       .optional()

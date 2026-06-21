@@ -96,9 +96,12 @@ AI 执行 `git commit` / `git push` / `git tag` / `npm publish` 前，必须在�
 可选 body：为什么改、行为/API/兼容性/测试文档同步。
 
 Refs: module=<module>; packages=<pkg...>; version=<version>; adr=<adr|->
+Control: <human-directed|llm-autonomous>
 ```
 
 subject 只写改动内容，不写 `alpha.1` / `beta` / `v0.3` / `ADR-xx` / “按 ADR 实现”。这些追溯信息放 footer。release / tag commit 例外，可以写版本：`🔖 core: 发布 v0.3.0`。
+
+`Control` 用于区分提交控制方式：`human-directed` 表示人工 review 后指定具体修改，LLM 按精确指令修改并在授权后提交；`llm-autonomous` 表示 LLM 在已获批准的批量 / 流程 / 自动执行中自行推进、拆分、修改并提交。不要用它替代 Git author / committer。
 
 scope 取包或分组名，不带 `@retikz/`：`core` / `render` / `react` / `vanilla` / `plot` / `docs`。纯仓库工程改动可省略 scope。
 
@@ -129,6 +132,7 @@ scope 取包或分组名，不带 `@retikz/`：`core` / `render` / `react` / `va
 - SVG 走 WAAPI，Canvas 走 per-id 虚拟时钟
 
 Refs: module=core; packages=@retikz/react,@retikz/render; version=v0.3; adr=core-12
+Control: human-directed
 ```
 
 ## 分支策略

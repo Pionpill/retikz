@@ -1,6 +1,6 @@
 import { compileToScene } from '@retikz/core';
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
-import { schemeCategory10 } from 'd3-scale-chromatic';
+import { schemeCategory10 as d3SchemeCategory10 } from 'd3-scale-chromatic';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
@@ -76,7 +76,7 @@ describe('lowerPlots (ADR-06)', () => {
     expect(layer.children).toHaveLength(3);
     // 样式上提：circle / fill 在图层 nodeDefault，不重复写在每个 node
     expect(layer.nodeDefault?.shape).toBe('circle');
-    expect(layer.nodeDefault?.fill).toBe(schemeCategory10[0]);
+    expect(layer.nodeDefault?.fill).toBe(d3SchemeCategory10[0]);
     // 每个 node 是裸的（只有 type + position，无 shape/fill）
     expect(layer.children.every(c => (c as IRNode).shape === undefined)).toBe(true);
     expect((layer.children[0] as IRNode).position).toEqual([0, 240]);
@@ -330,7 +330,7 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
     expect(layer.nodeDefault?.shape).toBe('rectangle');
     expect(layer.nodeDefault?.padding).toBe(0);
     expect(layer.nodeDefault?.strokeWidth).toBe(0);
-    expect(layer.nodeDefault?.fill).toBe(schemeCategory10[0]);
+    expect(layer.nodeDefault?.fill).toBe(d3SchemeCategory10[0]);
     // 每个 node 裸（只有 type/position/minimumWidth/minimumHeight，无 shape）
     expect(layer.children.every(c => (c as IRNode).shape === undefined)).toBe(true);
   });
@@ -452,8 +452,8 @@ describe('lowerPlots color (ADR-04)', () => {
       { c: COUNTRIES },
       opts,
     );
-    expect((layer.children[0] as IRScope).nodeDefault?.fill).toBe(schemeCategory10[0]);
-    expect((layer.children[1] as IRScope).nodeDefault?.fill).toBe(schemeCategory10[1]);
+    expect((layer.children[0] as IRScope).nodeDefault?.fill).toBe(d3SchemeCategory10[0]);
+    expect((layer.children[1] as IRScope).nodeDefault?.fill).toBe(d3SchemeCategory10[1]);
   });
 
   it('point_color_auto_synthesized_scale', () => {
@@ -471,7 +471,7 @@ describe('lowerPlots color (ADR-04)', () => {
     });
     const layer = firstLayer(spec, { c: COUNTRIES }, opts);
     expect(layer.children).toHaveLength(2);
-    expect((layer.children[0] as IRScope).nodeDefault?.fill).toBe(schemeCategory10[0]);
+    expect((layer.children[0] as IRScope).nodeDefault?.fill).toBe(d3SchemeCategory10[0]);
   });
 
   it('point_color_constant_single_subscope', () => {

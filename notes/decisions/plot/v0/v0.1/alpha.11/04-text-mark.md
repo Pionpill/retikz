@@ -43,7 +43,7 @@ text mark 的位置投影复用 point 同源路径（坐标系无关）。差别
 
 ```ts
 // TextChannelSchema：field / value 互斥（refine），format 仅与 field 同用
-{ field?: string; value?: string; format?: string }
+{ field?: string; value?: string; displayFormat?: string }
 // MarkLabelSchema：宿主 datum label 配置，position/distance/pin 对齐 core NodeLabelSchema
 { content: TextChannel; position?: AtDirection | number; distance?: number; pin?: boolean }
 // TextEncodingSchema = EncodingSchema.extend({ text: TextChannelSchema })  // text 必填
@@ -63,7 +63,7 @@ text mark 的位置投影复用 point 同源路径（坐标系无关）。差别
 
 datum label 两套优先级表面，**不要混用**，各有 IR / React 两层。React 是扁平 props、IR 是嵌套通道对象。
 
-- **priority-1（首选）：宿主 mark 加 `label` 通道**——给位置 mark 一个 `label`，lowering 挂到该 mark 每个 datum 的 `Node.label`。React 扁平：`<BarMark x="month" y="revenue" label="revenue" labelPosition="above" labelDistance={6} labelFormat=",.0f" />`；`resolveLabel={row => ...}` 不进 IR、经 options 注入。坐标系无关——换 polar 标签自动跟到环上对应位置。
+- **priority-1（首选）：宿主 mark 加 `label` 通道**——给位置 mark 一个 `label`，lowering 挂到该 mark 每个 datum 的 `Node.label`。React 扁平：`<BarMark x="month" y="revenue" label="revenue" labelPosition="above" labelDistance={6} labelDisplayFormat=",.0f" />`；`resolveLabel={row => ...}` 不进 IR、经 options 注入。坐标系无关——换 polar 标签自动跟到环上对应位置。
 - **priority-2（兜底）：独立 `<TextMark>`**——无宿主自由文本，x / y / text / color 顶层 string，新建 Node 承载 `text`。`TextEncodingSchema.text` 必填（缺失 schema 层即拒）。
 
 落地形态与示例见文档站 `apps/docs/src/contents/plot/components/mark/text/`（zh / en + label / free / resolve 三组 demo）。

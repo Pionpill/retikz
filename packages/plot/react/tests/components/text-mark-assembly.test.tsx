@@ -11,10 +11,10 @@ import { IntervalMark, PointMark } from '../../src/components/marks';
 
 describe('priority-1 宿主 mark label 扁平 props → IR mark.label', () => {
   it('react-mark-label-assembly：IntervalMark label* → interval mark.label，与手写 IR 等价', () => {
-    const spec = buildPlotSpec(<IntervalMark x="month" y="revenue" label="revenue" labelPosition="above" labelDistance={6} labelFormat=",.0f" />, '__plot');
+    const spec = buildPlotSpec(<IntervalMark x="month" y="revenue" label="revenue" labelPosition="above" labelDistance={6} labelDisplayFormat=",.0f" />, '__plot');
     const mark = spec.marks[0] as { type: string; label?: unknown };
     expect(mark.type).toBe('interval');
-    expect(mark.label).toEqual({ content: { field: 'revenue', format: ',.0f' }, position: 'above', distance: 6 });
+    expect(mark.label).toEqual({ content: { field: 'revenue', displayFormat: ',.0f' }, position: 'above', distance: 6 });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
@@ -55,10 +55,10 @@ describe('priority-2 PointMark text 扁平 props → IR point mark', () => {
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
-  it('PointMark text format → encoding.text.format', () => {
-    const spec = buildPlotSpec(<PointMark x="x" y="y" text="v" format=",.1f" />, '__plot');
+  it('PointMark text displayFormat → encoding.text.displayFormat', () => {
+    const spec = buildPlotSpec(<PointMark x="x" y="y" text="v" displayFormat=",.1f" />, '__plot');
     const mark = spec.marks[0] as { encoding: { text?: unknown } };
-    expect(mark.encoding.text).toEqual({ field: 'v', format: ',.1f' });
+    expect(mark.encoding.text).toEqual({ field: 'v', displayFormat: ',.1f' });
   });
 
   it('PointMark text resolveLabel（配 id）→ 旁路收集、不落 IR', () => {

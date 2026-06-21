@@ -1,6 +1,6 @@
 import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, JsonObjectSchema, defineComposite } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
-import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type MarkOperation, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
+import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type MarkOperation, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
 import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyTransforms, assertBaselineScaleCompatible, assertScaleFieldCompatible, collectFormatFields, deriveScale, lowerMark, makeColorSchemeResolver, orderedCategoryDomain, resolveChannelScale, resolveCoordinateRegistry, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, resolveVisualChannelDeliveries, resolveVisualChannelRegistry, scaleTicks } from '../providers';
 import { type LegendEntry, type LegendInput, type ResolveField, type ResolveLabel, applyFieldResolver, assertAllValuesValid, channelValue, coerceTimestamp, labelOf, lowerCustomAxis, lowerGuide, lowerLegend, normalizeRows, resolveFieldPath, resolveFieldTypes, validateBoundData } from '../features';
 import { type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type AnyVisualChannelDefinition, type ChannelResolveContext, type ChannelValueResolver, type CoordinateFrame, type FieldFormatDefinition, isBuiltinScaleOperation } from '../contract';
@@ -207,7 +207,7 @@ export type ResolveFrameParams = {
   /** transform 后的数据行（域推断、guide 刻度同源） */
   rows: Array<ExternalRow>;
   /** 用户源字段 → PlotFieldTypeValue（ADR-01 解析）；供 type-driven scale 派生与兼容校验（ADR-03） */
-  fieldTypes: Map<string, PlotFieldTypeValue>;
+  fieldTypes: PlotFieldTypeMap;
   /** 整图宽（user units） */
   width: number;
   /** 整图高（user units） */
@@ -414,7 +414,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
 const makeColorResolver = (
   node: PlotSpec,
   rows: Array<ExternalRow>,
-  fieldTypes: Map<string, PlotFieldTypeValue>,
+  fieldTypes: PlotFieldTypeMap,
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
   resolveColorScheme: (name: string) => (t: number) => string,
   pickChannel: (mark: MarkOperation) => Channel | undefined = markColorChannel,
@@ -480,7 +480,7 @@ const makeColorResolver = (
  *   无内容声明的 mark → undefined（不挂 label / 不产文本）。format 分派按 content.field 的 fieldType（temporal 走时间格式、数值走 d3-format）。
  *   运行时 resolveLabel[markId] 注入（最高优先、不进 IR）；mark 无 id 时无法命中 resolveLabel，仅走声明层。
  */
-const makeLabelResolver = (fieldTypes: Map<string, PlotFieldTypeValue>, resolveLabel: Record<string, ResolveLabel> | undefined): ((mark: Mark) => ChannelValueResolver<string> | undefined) => {
+const makeLabelResolver = (fieldTypes: PlotFieldTypeMap, resolveLabel: Record<string, ResolveLabel> | undefined): ((mark: Mark) => ChannelValueResolver<string> | undefined) => {
   return (mark: Mark): ChannelValueResolver<string> | undefined => {
     const content = mark.type === PlotMark.Point && mark.encoding.text !== undefined ? mark.encoding.text : 'label' in mark ? mark.label?.content : undefined;
     const runtime = mark.id !== undefined ? resolveLabel?.[mark.id] : undefined;
@@ -499,7 +499,7 @@ const makeLabelResolver = (fieldTypes: Map<string, PlotFieldTypeValue>, resolveL
  */
 const collectChannelDescriptors = (
   node: PlotSpec,
-  visualChannelCtx: { node: PlotSpec; rows: Array<ExternalRow>; fieldTypes: Map<string, PlotFieldTypeValue> },
+  visualChannelCtx: { node: PlotSpec; rows: Array<ExternalRow>; fieldTypes: PlotFieldTypeMap },
   visualChannelRegistry: ReadonlyMap<string, AnyVisualChannelDefinition>,
 ): Map<LegendChannelValue, ScaleDescriptor> => {
   const out = new Map<LegendChannelValue, ScaleDescriptor>();
@@ -554,7 +554,7 @@ type LegendBaseInput = {
 const resolveColorLegend = (
   node: PlotSpec,
   rows: Array<ExternalRow>,
-  fieldTypes: Map<string, PlotFieldTypeValue>,
+  fieldTypes: PlotFieldTypeMap,
   scaleByName: Map<string, ScaleOperation>,
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
   resolveColorScheme: (name: string) => (t: number) => string,
@@ -697,7 +697,7 @@ const reserveLegendBands = (legendGuides: Array<LegendGuide>, width: number, hei
 const buildLegendLayers = (
   node: PlotSpec,
   rows: Array<ExternalRow>,
-  fieldTypes: Map<string, PlotFieldTypeValue>,
+  fieldTypes: PlotFieldTypeMap,
   channelDescriptors: Map<LegendChannelValue, ScaleDescriptor>,
   legendGuides: Array<LegendGuide>,
   fontSize: number,
@@ -784,7 +784,7 @@ export const prepareRows = (
   datasets: ExternalDatasets,
   options: LowerPlotsOptions,
   ingested: Array<ExternalRow>,
-): { fieldTypes: Map<string, PlotFieldTypeValue>; normalized: Array<ExternalRow>; transformRegistry: Map<string, AnyTransformDefinition>; scaleRegistry: Map<string, AnyScaleDefinition>; markRegistry: Map<string, AnyMarkDefinition> } => {
+): { fieldTypes: PlotFieldTypeMap; normalized: Array<ExternalRow>; transformRegistry: Map<string, AnyTransformDefinition>; scaleRegistry: Map<string, AnyScaleDefinition>; markRegistry: Map<string, AnyMarkDefinition> } => {
   validateFieldMaps(spec, datasets, options.fieldMaps);
   const transformRegistry = resolveTransformRegistry(options.transformDefinitions);
   const scaleRegistry = resolveScaleRegistry(options.scaleDefinitions);

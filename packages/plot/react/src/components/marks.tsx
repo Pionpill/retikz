@@ -23,21 +23,21 @@ export type MarkValueProp<T> = FieldName | T | MarkValueType<T>;
 
 /**
  * priority-1 宿主 datum label 扁平 props：给位置 mark（point / interval / path / region）加 datum 标签
- * @description label 顶层 string 默认按字段解析（装成 IR label.content 的 field）；labelFormat 进 IR（d3-format / d3-time-format 串）；
+ * @description label 顶层 string 默认按字段解析（装成 IR label.content 的 field）；labelDisplayFormat 进 IR（d3-format / d3-time-format 串）；
  *   labelPosition / labelDistance / labelPin 摊进 core NodeLabelSchema；resolveLabel 是运行时逃生舱（不进 IR、按 mark id 经 options 注入，需配 id）。
  */
 export type DatumLabelProps = {
   /** datum 标签内容字段名（→ IR label.content.field；优先级低于 resolveLabel、高于无）；缺省不挂标签 */
   label?: FieldName;
   /** 标签格式串（d3-format 数值 / d3-time-format 时间，进 IR）；仅与 label 字段同用 */
-  labelFormat?: string;
+  labelDisplayFormat?: string;
   /** 标签相对宿主 Node 边框方位：8 方向枚举或数字角度（度）；缺省 above（对齐 core NodeLabelSchema.position） */
   labelPosition?: 'above' | 'below' | 'left' | 'right' | 'above-left' | 'above-right' | 'below-left' | 'below-right' | number;
   /** 标签离宿主边框距离（user units）；缺省 12（对齐 core NodeLabelSchema.distance） */
   labelDistance?: number;
   /** 从宿主边框拉引线到标签（core leader）；缺省 false */
   labelPin?: boolean;
-  /** 完全自定义标签逃生舱（运行时函数，不进 IR；最高优先，覆盖 label/labelFormat）；需配 mark id 经 options 注入 */
+  /** 完全自定义标签逃生舱（运行时函数，不进 IR；最高优先，覆盖 label/labelDisplayFormat）；需配 mark id 经 options 注入 */
   resolveLabel?: (row: ExternalRow) => string;
 };
 
@@ -103,7 +103,7 @@ export type PointMarkProps = DatumLabelProps & {
   /** 文本内容字段名：给定则该 point 下沉为无边框带文本的 Node（吸收旧 text mark），否则散点 glyph */
   text?: FieldName;
   /** 文本格式串（d3-format 数值 / d3-time-format 时间，进 IR）；仅与 text 字段同用 */
-  format?: string;
+  displayFormat?: string;
   /** 文本相对锚点水平微调（user units，正 = 右）；仅文本 point 有意义 */
   dx?: number;
   /** 文本相对锚点垂直微调（user units，正 = 屏幕下）；仅文本 point 有意义 */

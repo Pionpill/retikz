@@ -85,7 +85,7 @@ react 便捷 props → 抽象 IR：
 // 堆叠柱：<IntervalMark series stack />；并排：<IntervalMark series />（dodge）
 
 // point 吸收 text
-<PointMark x="q" y="sales" text="sales" format=".0f" />
+<PointMark x="q" y="sales" text="sales" displayFormat=".0f" />
 ```
 
 ## 测试设计

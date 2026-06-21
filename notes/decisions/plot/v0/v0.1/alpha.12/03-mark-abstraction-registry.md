@@ -134,7 +134,7 @@ const heatmap: IntervalMark = {
 };
 
 // point 吸收 text：有 text 通道 → 无边框文本 Node、无 → glyph
-const label: PointMark = { type: 'point', encoding: { x: { field: 'q' }, y: { field: 'sales' }, text: { field: 'sales', format: '.0f' } } };
+const label: PointMark = { type: 'point', encoding: { x: { field: 'q' }, y: { field: 'sales' }, text: { field: 'sales', displayFormat: '.0f' } } };
 ```
 
 ## 测试设计

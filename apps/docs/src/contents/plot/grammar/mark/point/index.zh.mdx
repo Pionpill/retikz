@@ -182,7 +182,7 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
 | | `minimumWidth` / `minimumHeight` | `FieldName \| number \| MarkValueType<number>?` | — | 最小视觉宽 / 高 |
 | | `zIndex` | `FieldName \| number \| MarkValueType<number>?` | — | 绘制顺序提示 |
 | 标签 | `label` | `FieldName?` | — | 绑定宿主 `Node.label` 文本字段；保留点 glyph |
-| | `labelFormat` | `string?` | — | 设置 `label` 的格式 |
+| | `labelDisplayFormat` | `string?` | — | 设置 `label` 的展示格式 |
 | | `resolveLabel` | `(row) => string?` | — | 运行时生成标签；不进 IR，需配 `id` |
 | 文本点 | `text` | `FieldName?` | — | 绑定文本内容字段；设置后点 glyph 会变成文本 Node |
 | | `format` | `string?` | — | 设置 `text` 的格式 |

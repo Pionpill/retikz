@@ -1,28 +1,28 @@
-import { extent } from 'd3-array';
-import type { ScaleContinuousNumeric } from 'd3-scale';
+import { extent as d3Extent } from 'd3-array';
+import type { ScaleContinuousNumeric as D3ScaleContinuousNumeric } from 'd3-scale';
 import {
-  interpolateBlues,
-  interpolateBrBG,
-  interpolateCividis,
-  interpolateGreens,
-  interpolateGreys,
-  interpolateInferno,
-  interpolateMagma,
-  interpolateOranges,
-  interpolatePRGn,
-  interpolatePiYG,
-  interpolatePlasma,
-  interpolatePuOr,
-  interpolatePurples,
-  interpolateRdBu,
-  interpolateRdGy,
-  interpolateRdYlBu,
-  interpolateRdYlGn,
-  interpolateReds,
-  interpolateSpectral,
-  interpolateTurbo,
-  interpolateViridis,
-  schemeCategory10,
+  interpolateBlues as d3InterpolateBlues,
+  interpolateBrBG as d3InterpolateBrBG,
+  interpolateCividis as d3InterpolateCividis,
+  interpolateGreens as d3InterpolateGreens,
+  interpolateGreys as d3InterpolateGreys,
+  interpolateInferno as d3InterpolateInferno,
+  interpolateMagma as d3InterpolateMagma,
+  interpolateOranges as d3InterpolateOranges,
+  interpolatePRGn as d3InterpolatePRGn,
+  interpolatePiYG as d3InterpolatePiYG,
+  interpolatePlasma as d3InterpolatePlasma,
+  interpolatePuOr as d3InterpolatePuOr,
+  interpolatePurples as d3InterpolatePurples,
+  interpolateRdBu as d3InterpolateRdBu,
+  interpolateRdGy as d3InterpolateRdGy,
+  interpolateRdYlBu as d3InterpolateRdYlBu,
+  interpolateRdYlGn as d3InterpolateRdYlGn,
+  interpolateReds as d3InterpolateReds,
+  interpolateSpectral as d3InterpolateSpectral,
+  interpolateTurbo as d3InterpolateTurbo,
+  interpolateViridis as d3InterpolateViridis,
+  schemeCategory10 as d3SchemeCategory10,
 } from 'd3-scale-chromatic';
 import type { TickSet } from '../../contract';
 import { BUILTIN_COLOR_SCHEMES, PlotColorScheme, type PlotColorSchemeValue } from '../../schemas';
@@ -31,12 +31,12 @@ import { BUILTIN_COLOR_SCHEMES, PlotColorScheme, type PlotColorSchemeValue } fro
 export const DEFAULT_TICK_COUNT = 5;
 
 /** 默认 Plot 分类调色板：来自 d3-scale-chromatic schemeCategory10 */
-export const DEFAULT_PLOT_COLORS = [...schemeCategory10];
+export const DEFAULT_PLOT_COLORS = [...d3SchemeCategory10];
 
 /** 从一组数值求 [min, max]；空集 / 全非有限回退 [0, 1]（d3 extent 对空集返回 [undefined, undefined]） */
 export const safeExtent = (values: Array<number>): [number, number] => {
   // d3 extent 空集返回 [undefined, undefined]（相关元组：lo 为 undefined 则 hi 必然也是）
-  const [lo, hi] = extent(values);
+  const [lo, hi] = d3Extent(values);
   return lo === undefined ? [0, 1] : [lo, hi];
 };
 
@@ -45,7 +45,7 @@ export const safeExtent = (values: Array<number>): [number, number] => {
  * @description 刻度值 / 标签只依赖 domain + count（与 range 无关）——故可在 range 定下来前先算，供布局估算 margin（ADR-03）。
  *   axis 与同维 grid 复用同一 TickSet（同源）。
  */
-export const scaleTicks = (scale: ScaleContinuousNumeric<number, number>, count: number = DEFAULT_TICK_COUNT): TickSet => {
+export const scaleTicks = (scale: D3ScaleContinuousNumeric<number, number>, count: number = DEFAULT_TICK_COUNT): TickSet => {
   const values = scale.ticks(count);
   const format = scale.tickFormat(count);
   return { values, labels: values.map(format) };
@@ -56,27 +56,27 @@ export type ColorSchemeResolver = (name: string) => (t: number) => string;
 
 /** 配色方案名 → d3-scale-chromatic interpolator（t∈[0,1] → 颜色串）；命名 scheme 进 IR、求值期映射到函数（函数不进 IR） */
 export const SCHEME_INTERPOLATORS: Record<PlotColorSchemeValue, (t: number) => string> = {
-  [PlotColorScheme.Blues]: interpolateBlues,
-  [PlotColorScheme.Greens]: interpolateGreens,
-  [PlotColorScheme.Greys]: interpolateGreys,
-  [PlotColorScheme.Oranges]: interpolateOranges,
-  [PlotColorScheme.Purples]: interpolatePurples,
-  [PlotColorScheme.Reds]: interpolateReds,
-  [PlotColorScheme.Viridis]: interpolateViridis,
-  [PlotColorScheme.Magma]: interpolateMagma,
-  [PlotColorScheme.Inferno]: interpolateInferno,
-  [PlotColorScheme.Plasma]: interpolatePlasma,
-  [PlotColorScheme.Cividis]: interpolateCividis,
-  [PlotColorScheme.Turbo]: interpolateTurbo,
-  [PlotColorScheme.BrBG]: interpolateBrBG,
-  [PlotColorScheme.PRGn]: interpolatePRGn,
-  [PlotColorScheme.PiYG]: interpolatePiYG,
-  [PlotColorScheme.PuOr]: interpolatePuOr,
-  [PlotColorScheme.RdBu]: interpolateRdBu,
-  [PlotColorScheme.RdGy]: interpolateRdGy,
-  [PlotColorScheme.RdYlBu]: interpolateRdYlBu,
-  [PlotColorScheme.RdYlGn]: interpolateRdYlGn,
-  [PlotColorScheme.Spectral]: interpolateSpectral,
+  [PlotColorScheme.Blues]: d3InterpolateBlues,
+  [PlotColorScheme.Greens]: d3InterpolateGreens,
+  [PlotColorScheme.Greys]: d3InterpolateGreys,
+  [PlotColorScheme.Oranges]: d3InterpolateOranges,
+  [PlotColorScheme.Purples]: d3InterpolatePurples,
+  [PlotColorScheme.Reds]: d3InterpolateReds,
+  [PlotColorScheme.Viridis]: d3InterpolateViridis,
+  [PlotColorScheme.Magma]: d3InterpolateMagma,
+  [PlotColorScheme.Inferno]: d3InterpolateInferno,
+  [PlotColorScheme.Plasma]: d3InterpolatePlasma,
+  [PlotColorScheme.Cividis]: d3InterpolateCividis,
+  [PlotColorScheme.Turbo]: d3InterpolateTurbo,
+  [PlotColorScheme.BrBG]: d3InterpolateBrBG,
+  [PlotColorScheme.PRGn]: d3InterpolatePRGn,
+  [PlotColorScheme.PiYG]: d3InterpolatePiYG,
+  [PlotColorScheme.PuOr]: d3InterpolatePuOr,
+  [PlotColorScheme.RdBu]: d3InterpolateRdBu,
+  [PlotColorScheme.RdGy]: d3InterpolateRdGy,
+  [PlotColorScheme.RdYlBu]: d3InterpolateRdYlBu,
+  [PlotColorScheme.RdYlGn]: d3InterpolateRdYlGn,
+  [PlotColorScheme.Spectral]: d3InterpolateSpectral,
 };
 
 /** 内置 scheme 名 → interpolator；未知名 throw（提示经 options.colorSchemes 注册）。自定义解析由调用方在外层叠加。 */

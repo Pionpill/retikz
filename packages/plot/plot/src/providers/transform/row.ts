@@ -1,5 +1,5 @@
 import { isFiniteNumber } from '@retikz/math';
-import { compareByPath, inferCategoryDomain, resolveFieldPath } from '../../features';
+import { compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../../features';
 import { type DeriveIntervalTransform, type ExternalRow, type JitterTransform, type NormalizeTransform, type SortTransform, type StackTransform } from '../../schemas';
 
 /** 默认堆叠下界 / 上界输出字段名，对齐 IntervalMark 的 y0Field / y1Field 默认值。 */
@@ -17,7 +17,7 @@ export const DEFAULT_JITTER_Y_FIELD = 'y';
 /** 稳定排序：按字段升 / 降序；等键保持原序。 */
 export const applySort = (rows: Array<ExternalRow>, operation: SortTransform): Array<ExternalRow> => {
   const direction = operation.order === 'descending' ? -1 : 1;
-  return [...rows].sort((a, b) => direction * compareByPath(a, b, operation.field));
+  return [...rows].sort((a, b) => direction * compareRowsByFieldPath(a, b, operation.field));
 };
 
 /**

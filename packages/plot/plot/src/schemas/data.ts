@@ -16,6 +16,8 @@ export const PlotFieldType = {
 
 /** 字段测量类型 */
 export type PlotFieldTypeValue = ValueOf<typeof PlotFieldType>;
+/** 逻辑字段名到字段测量类型的运行时映射；由 data.model / 自动推断 / resolver 合成，不进入 IR。 */
+export type PlotFieldTypeMap = Map<string, PlotFieldTypeValue>;
 
 /**
  * 字段值解析格式关键字（暴露给用户；成员值即格式串，裸字面量 `'percent'` 同样可用）
