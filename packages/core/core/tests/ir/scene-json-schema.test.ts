@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { SceneSchema } from '../../src/ir';
+import { SceneSchema } from '../../src/schemas';
 
 describe('SceneSchema 可导出 JSON Schema（喂 LLM / 工具链的结构化 schema 出口）', () => {
   it('z.toJSONSchema 产出 object 型 JSON Schema 且可序列化往返', () => {

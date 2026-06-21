@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import type { IR, IRTarget } from '../../src/ir';
+import type { IR, IRTarget } from '../../src/schemas';
 import type { PathPrim, ScenePrimitive } from '../../src/primitive';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim | undefined =>

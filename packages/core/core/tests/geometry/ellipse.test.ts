@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { type Ellipse, ellipse } from '../../src/geometry/ellipse';
-import { ellipse as ellipseShape } from '../../src/shapes';
+import { ellipse as ellipseShape } from '../../src/providers/shape';
 import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/ir';
+import type { IR } from '../../src/schemas';
 import type { ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 

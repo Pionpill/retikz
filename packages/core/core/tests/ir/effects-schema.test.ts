@@ -3,7 +3,7 @@
  * 全部 PASS（纯 schema / 常量层，无 compile 依赖）。
  */
 import { describe, expect, it } from 'vitest';
-import { BlendMode, DropShadowSchema, SHADOW_PRESETS, ShadowPreset } from '../../src/ir/effects';
+import { BlendMode, DropShadowSchema, SHADOW_PRESETS, ShadowPreset } from '../../src/schemas/effects';
 
 describe('[effects] DropShadowSchema accept/reject', () => {
   it('preset-only：{preset:"md"} → 过', () => {

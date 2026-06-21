@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ArcStepSchema, CirclePathStepSchema, EllipsePathStepSchema, StepSchema } from '../../../src/ir';
+import { ArcStepSchema, CirclePathStepSchema, EllipsePathStepSchema, StepSchema } from '../../../src/schemas';
 
 describe('arc / circlePath / ellipsePath schema refinement', () => {
   it('arc 接受正圆半径或成对椭圆半径', () => {

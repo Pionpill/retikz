@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import { type IR, OffsetPositionSchema, PolarPositionSchema, TargetSchema } from '../../src/ir';
+import { type IR, OffsetPositionSchema, PolarPositionSchema, TargetSchema } from '../../src/schemas';
 import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 

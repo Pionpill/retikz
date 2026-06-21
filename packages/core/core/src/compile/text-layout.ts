@@ -1,4 +1,4 @@
-import type { IRFont, IRLineSpec } from '../ir';
+import type { IRFont, IRLineSpec } from '../schemas';
 import type { GroupPrim, PathCommand, PathPrim, ScenePrimitive, TextPrim } from '../primitive';
 import { type IRInlineRun, isMathRun, parseInlineRuns } from '../parsers/inline-tex';
 import { CompileWarningCode } from './constant';

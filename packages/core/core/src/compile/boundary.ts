@@ -1,8 +1,8 @@
 import type { Rect } from '../geometry/rect';
-import type { IRBoundary } from '../ir';
-import type { IRJsonObject } from '../ir/json';
-import type { ShapeDefinition } from '../shapes';
-import { ellipse, rectangle } from '../shapes';
+import type { IRBoundary } from '../schemas';
+import type { IRJsonObject } from '../schemas/json';
+import type { ShapeDefinition } from '../contract/shape';
+import { ellipse, rectangle } from '../providers/shape';
 
 /** 保留字：连接面 = 节点自身视觉形状 */
 const SELF = 'shape';

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import type { IR, IRNode } from '../../src/ir';
-import { NodeSchema } from '../../src/ir';
+import type { IR, IRNode } from '../../src/schemas';
+import { NodeSchema } from '../../src/schemas';
 import type { ScenePrimitive } from '../../src/primitive';
 import { line, move } from '../helpers/path-command-factory';
 import { flattenPrims } from '../helpers/flatten';

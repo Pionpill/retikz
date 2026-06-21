@@ -1,5 +1,5 @@
-import type { DropShadow, ShadowPresetValue } from '../ir/effects';
-import { SHADOW_PRESETS } from '../ir/effects';
+import type { DropShadow, ShadowPresetValue } from '../schemas/effects';
+import { SHADOW_PRESETS } from '../schemas/effects';
 
 /** shadow color 缺省（半透明黑）；preset 与显式 color 均未给时兜底 */
 const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';

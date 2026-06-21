@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { CompileOptions, CompileWarning } from '../../src/compile/compile';
-import { BUILTIN_PATTERNS, definePattern } from '../../src/patterns';
-import type { PatternDefinition, PatternEmitContext } from '../../src/patterns';
-import { PaintSpecSchema } from '../../src/ir';
-import type { IR, IRPaintSpec } from '../../src/ir';
+import { definePattern } from '../../src/contract/pattern';
+import { BUILTIN_PATTERNS } from '../../src/providers/pattern';
+import type { PatternDefinition, PatternEmitContext } from '../../src/contract/pattern';
+import { PaintSpecSchema } from '../../src/schemas';
+import type { IR, IRPaintSpec } from '../../src/schemas';
 import type {
   MarkerEllipsePrim,
   MarkerPathPrim,

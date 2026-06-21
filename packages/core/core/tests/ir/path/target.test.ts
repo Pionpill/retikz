@@ -4,7 +4,7 @@
  *   TargetSchema 接受对象形态；finite / t 范围 / 缺 id 错误路径；JSON round-trip
  */
 import { describe, expect, it } from 'vitest';
-import { AnchorRefSchema, NodeTargetSchema, TargetSchema } from '../../../src/ir';
+import { AnchorRefSchema, NodeTargetSchema, TargetSchema } from '../../../src/schemas';
 
 describe('AnchorRefSchema：命名 / 角度 / 边上比例点', () => {
   it('接受 9 个命名 anchor', () => {

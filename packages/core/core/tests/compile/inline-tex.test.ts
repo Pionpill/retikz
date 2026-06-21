@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { type CompileWarning, CompileWarningCode } from '../../src/compile/constant';
 import { compileToScene } from '../../src/compile/compile';
 import type { LowerTex } from '../../src/compile/lower-tex';
-import type { IR } from '../../src/ir';
+import type { IR } from '../../src/schemas';
 import type { PathPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 

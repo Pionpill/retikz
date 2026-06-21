@@ -13,11 +13,11 @@
  *   - circumscribe 不随 cornerRadius 变；scaleParams 缩 cornerRadius。
  */
 import { describe, expect, it } from 'vitest';
-import { sector } from '../../src/shapes';
-import type { Rect } from '../../src/shapes';
+import { sector } from '../../src/providers/shape';
+import type { Rect } from '../../src/contract/shape';
 import type { Position } from '../../src/geometry/point';
 import { localToWorld, worldToLocal } from '../../src/geometry/transform';
-import { sectorGeometry, sectorPolarPoint } from '../../src/shapes/shared';
+import { sectorGeometry, sectorPolarPoint } from '../../src/contract/shape/shared';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 const identity = (n: number): number => n;

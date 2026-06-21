@@ -22,7 +22,7 @@
 ### 极坐标进 IR，但只在 Scene 编译时解析为笛卡尔
 
 - `geometry/polar.ts` 提供 `PolarPosition` 类型（含递归 `origin?: string | Position | PolarPosition`）+ `polar` 工具集（`toPosition` / `fromPosition` / `offsetFrom`）
-- `ir/polar-position.ts` 提供 `PolarPositionSchema`（用 `z.lazy` 处理递归），允许 polar 进入 IR
+- `schemas/polar-position.ts` 提供 `PolarPositionSchema`（用 `z.lazy` 处理递归），允许 polar 进入 IR
 - **IR 中接受 polar 的位置字段**：
   - `Node.position`：`Position | PolarPosition`
   - `Step.to`：`Position | PolarPosition | string`（string 是节点 id 引用）
@@ -69,7 +69,13 @@
 - 度量函数通过 `CompileOptions.measureText` **依赖注入**；不传走 fallback
 - `compileToScene` **必须保持纯函数**：相同 IR + 相同 options → 完全相同的 Scene；禁止 `Math.random()` / `Date.now()` / module-level mutable state
 
-## Shape Registry（`shapes/`，alpha.3）
+## 扩展面分层（`contract/` + `providers/`）
+
+- `contract/<能力>/` 放第三方作者要实现的 `Definition` 类型、`defineX()` 工厂和能力无关 helper；这些类型可以包含函数，**不进 IR**。
+- `providers/<能力>/` 放内置实现、`BUILTIN_X` 注册表和 `resolveXRegistry()` 合并逻辑；compile 只消费解析后的有效表。
+- 旧的 `shapes/` / `arrows/` / `patterns/` / `path-generators` / `composites/` 目录已删除；新增内部引用直接指向 `contract/` 或 `providers/`。path generator 的目录名收敛为 `path`（`contract/path` / `providers/path`），公开类型名仍保留 `PathGeneratorDefinition` / `definePathGenerator`。
+
+## Shape Registry（`contract/shape` + `providers/shape`，alpha.3）
 
 - **IR 的 `node.shape` 永远是字符串名**（JSON 可序列化 / LLM 友好）；`ShapeDefinition`（含函数）**不进 IR**，走 `CompileOptions.shapes` 运行时注入。schema 只校验非空字符串；未注册名在 **compile 期** throw（不在 schema 层门控内置名）。
 - 内置 4 shape 是注册项（`BUILTIN_SHAPES`），无特权。有效表 = `{ ...BUILTIN_SHAPES, ...options.shapes }`；同名覆盖经 `onWarn` 发 `SHAPE_OVERRIDES_BUILTIN`。
@@ -89,9 +95,9 @@
 
 - 只通过 `src/index.ts` 暴露公开 API；adapter 不准 import 子路径（如 `@retikz/core/compile`）
 - 顶层 `src/index.ts` 用**显式 named re-export**——这是公开契约面，让 API 一目了然
-- 内部子 barrel（`ir/index.ts`、`primitive/index.ts`、`compile/index.ts` 等）用 `export *`——维护轻
+- 内部子 barrel（`schemas/index.ts`、`primitive/index.ts`、`compile/index.ts` 等）用 `export *`——维护轻
 
-## Scope IR 容器（`ir/scope.ts` + `compile/scope.ts`）
+## Scope IR 容器（`schemas/scope.ts` + `compile/scope.ts`）
 
 - `IRScope` 是 IRChild 第 4 类，对应 TikZ `\begin{scope}[...]...\end{scope}`：分组 + 局部 transform + 样式默认作用域（alpha.2 起，见下「样式继承」）
 - `TransformSchema` 7 变体（IR 层）：`translate` / `polar-translate` / `at-translate` / `offset-translate` / `between-translate` / `rotate` / `scale`——5 个 translate 完全镜像 Node.position union
@@ -100,7 +106,7 @@
 - 空 scope（children 空 + transforms 空 / 缺省 + id 缺省）→ 不 emit GroupPrim
 - **scope 下相对定位**：referent（`polar.origin` / `at.of` / `offset.of`）取全局；relative 部分（polar `(angle, radius)` / at `(direction, distance)` / offset `[dx, dy]`）在**当前 node 所属 scope 局部度量**；末端正向 apply 当前 scope chain 投回全局。`resolvePosition(pos, nameStack, nodeDistance?, scopeChain?)` 第 4 参数空 = v0.1 行为（全局）；非空 = 当前 scope 局部坐标返回值，调用方走 `projectLayoutToGlobal` / `applyTransformChain` 投全局。`inverseTransformChain` 是 `applyTransformChain` 的逆——translate(-x,-y) / rotate(-deg, cx, cy) / scale(1/x, 1/y)；scale 分量 0 退化为 (0,0) 防 NaN
 - **`scope.transforms` 自身定位的边界语义**（与 scope 内 node 相对定位区分）：`lowerScopeTransforms` 处理的是 scope 本身放在父 scope 里的"自身位移 / 旋转 / 缩放"——它的 `polar-translate` / `at-translate` / `offset-translate` / `between-translate` 在解析 referent 时**不接 scope chain**（按"父 scope 全局坐标"度量），因为这些 transform 描述的是 scope 自身在父坐标系里的放置，**不属于"scope 内 node 的相对定位"那条算法**。调用方对此**不要传 chain**——传了反而违背"scope 是被父 scope 包含的"模型。注意：在嵌套 scope 时如果父 scope 内有更外层 scope，本 scope 的 transforms 仍按"父 scope 全局" = 上一层 scope 内的局部坐标（已被外层 scope chain 投到全局前的本层视角），现阶段不展开"嵌套父 scope chain → scope.transforms"语义——这是当前已知边界，alpha 阶段不修
-- **样式继承（alpha.2，`compile/style.ts`）**：scope 兼作样式默认挂点——级联 graphic state（主色 `color` + `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity`）+ 四类默认（`nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`，各从对应 schema `.omit().strict()` 派生，单一真源）+ `resetStyle` 屏障。compile 维护 style frame 栈，每元素 inside-out per-field fold 成 effective `IRNode` / `IRPath` 再喂给现有 `layoutNode` / `emitPathPrimitive`（核心 layout / emit 不感知样式继承）。优先级就近：元素显式分项 > 元素 color > 分类默认分项 > 分类默认 color > scope 级联分项 > scope color > 内置；主色同源展开 stroke / fill / textColor；arrow / step-label 跟宿主 path 已解析主色（host 轴，不被 `resetStyle` 切，故 arrow.color 优先于 `arrowDefault.color`）；opacity 嵌套替换不复合（仅元素内 label × 元素相乘）。主色 `color` 同时上 Node / Path（`ir/node.ts` / `ir/path/path.ts`），StepLabel 加 `textColor` / `opacity` / `font`（`ir/path/step.ts`）。
+- **样式继承（alpha.2，`compile/style.ts`）**：scope 兼作样式默认挂点——级联 graphic state（主色 `color` + `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity`）+ 四类默认（`nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`，各从对应 schema `.omit().strict()` 派生，单一真源）+ `resetStyle` 屏障。compile 维护 style frame 栈，每元素 inside-out per-field fold 成 effective `IRNode` / `IRPath` 再喂给现有 `layoutNode` / `emitPathPrimitive`（核心 layout / emit 不感知样式继承）。优先级就近：元素显式分项 > 元素 color > 分类默认分项 > 分类默认 color > scope 级联分项 > scope color > 内置；主色同源展开 stroke / fill / textColor；arrow / step-label 跟宿主 path 已解析主色（host 轴，不被 `resetStyle` 切，故 arrow.color 优先于 `arrowDefault.color`）；opacity 嵌套替换不复合（仅元素内 label × 元素相乘）。主色 `color` 同时上 Node / Path（`schemas/node.ts` / `schemas/path/path.ts`），StepLabel 加 `textColor` / `opacity` / `font`（`schemas/path/step.ts`）。
 
 ## 命名空间栈（`compile/name-stack.ts`）
 

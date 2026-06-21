@@ -7,9 +7,10 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';
 import type { NodeLayout } from '../../src/compile/node';
-import { BUILTIN_SHAPES, defineShape } from '../../src/shapes';
-import type { ShapeDefinition } from '../../src/shapes';
-import type { BuiltinShapeName } from '../../src/ir';
+import { defineShape } from '../../src/contract/shape';
+import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import type { ShapeDefinition } from '../../src/contract/shape';
+import type { BuiltinShapeName } from '../../src/schemas';
 
 /** 构造一个最简 NodeLayout，rect 已是全局坐标 */
 const makeLayout = (

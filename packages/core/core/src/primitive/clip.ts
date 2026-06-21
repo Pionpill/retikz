@@ -1,4 +1,4 @@
-import type { IRClipSpec } from '../ir/clip';
+import type { IRClipSpec } from '../schemas/clip';
 
 /**
  * 裁剪区几何（Scene 资源用，纯数据，无函数）

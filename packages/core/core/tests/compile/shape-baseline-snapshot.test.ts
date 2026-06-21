@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/ir';
+import type { IR } from '../../src/schemas';
 
 /**
  * Shape Registry 重构的「逐字节」回归网

@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import type { IR, IRPaintSpec } from '../../src/ir';
+import type { IR, IRPaintSpec } from '../../src/schemas';
 import type { RectPrim, ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 

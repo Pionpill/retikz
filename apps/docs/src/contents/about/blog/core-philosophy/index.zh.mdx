@@ -41,7 +41,7 @@ IR 是这三件事的公约数。一旦它存在，JSX 就是 IR 的一种"输�
 }
 ```
 
-`version` 字段强制存在，破坏性改动时递增；schema 用 zod 单源定义（`packages/core/src/ir/scene.ts`），TS 类型靠 `z.infer` 派生，JSON Schema 靠 `zod-to-json-schema` 导出喂给 LLM。每个字段必须带 `.describe(...)` 英文说明——这影响 LLM 生成质量，不是文档。
+`version` 字段强制存在，破坏性改动时递增；schema 用 zod 单源定义（`packages/core/src/schemas/scene.ts`），TS 类型靠 `z.infer` 派生，JSON Schema 靠 `zod-to-json-schema` 导出喂给 LLM。每个字段必须带 `.describe(...)` 英文说明——这影响 LLM 生成质量，不是文档。
 
 中间层是 **Node** 和 **Path**：
 

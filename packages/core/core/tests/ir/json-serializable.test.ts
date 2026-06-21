@@ -5,7 +5,7 @@ import {
   PolarPositionSchema,
   PositionSchema,
   SceneSchema,
-} from '../../src/ir';
+} from '../../src/schemas';
 
 describe('[cross-test] IR JSON 可序列化契约', () => {
   it('笛卡尔坐标拒绝 Infinity / -Infinity，避免 JSON round-trip 变成 null', () => {

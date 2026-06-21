@@ -1,4 +1,4 @@
-import type { IRPaintSpec } from '../ir/paint';
+import type { IRPaintSpec } from '../schemas/paint';
 import type { ClipResource } from './clip';
 import type { MarkerPrimitive } from './marker';
 

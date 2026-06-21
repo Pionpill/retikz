@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/ir';
+import type { IR } from '../../src/schemas';
 import { line, move } from '../helpers/path-command-factory';
 import { flattenPrims } from '../helpers/flatten';
 

@@ -4,7 +4,7 @@
  *   stops 最少 2、offset/opacity 0..1、angle/radius finite；纯 JSON 可序列化。
  */
 import { describe, expect, it } from 'vitest';
-import { PaintSpecSchema } from '../../src/ir';
+import { PaintSpecSchema } from '../../src/schemas';
 
 describe('PaintSpecSchema — linear gradient', () => {
   it('接受 2 stops + angle', () => {

@@ -14,7 +14,7 @@ import {
   WebAnchor,
   normalizeCompassAnchor,
 } from '../geometry/anchor';
-import type { IRNodeTarget } from '../ir';
+import type { IRNodeTarget } from '../schemas';
 
 const SUPPORTED_ANCHOR_NAMES = [
   ...Object.values(CompassAnchor),

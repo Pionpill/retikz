@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NodeDefaultSchema, NodeSchema } from '../../src/ir';
+import { NodeDefaultSchema, NodeSchema } from '../../src/schemas';
 
 describe('Node dashPattern schema', () => {
   it('接受 dashPattern 作为节点显式虚线字段', () => {

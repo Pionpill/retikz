@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/ir';
-import { ArrowDetailSchema } from '../../src/ir';
+import type { IR } from '../../src/schemas';
+import { ArrowDetailSchema } from '../../src/schemas';
 import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathPrim, ScenePrimitive } from '../../src/primitive';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {

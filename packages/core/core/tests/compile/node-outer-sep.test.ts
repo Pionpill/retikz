@@ -8,9 +8,9 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';
 import type { NodeLayout } from '../../src/compile/node';
-import { BUILTIN_SHAPES } from '../../src/shapes';
-import { NodeSchema } from '../../src/ir';
-import type { IR } from '../../src/ir';
+import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import { NodeSchema } from '../../src/schemas';
+import type { IR } from '../../src/schemas';
 import type { ScenePrimitive, TextPrim } from '../../src/primitive';
 import { line, move } from '../helpers/path-command-factory';
 

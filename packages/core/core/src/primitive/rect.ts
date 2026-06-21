@@ -1,6 +1,6 @@
-import type { IRAnimationTrack } from '../ir/animation';
-import type { BlendModeValue, DropShadow } from '../ir/effects';
-import type { IRJsonObject } from '../ir/json';
+import type { IRAnimationTrack } from '../schemas/animation';
+import type { BlendModeValue, DropShadow } from '../schemas/effects';
+import type { IRJsonObject } from '../schemas/json';
 import type { PaintValue } from './paint';
 
 /** 矩形原语 */

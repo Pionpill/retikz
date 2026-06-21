@@ -4,9 +4,9 @@
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import { NodeSchema } from '../../src/ir';
-import { SHADOW_PRESETS } from '../../src/ir/effects';
-import type { IR } from '../../src/ir';
+import { NodeSchema } from '../../src/schemas';
+import { SHADOW_PRESETS } from '../../src/schemas/effects';
+import type { IR } from '../../src/schemas';
 import type { ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 

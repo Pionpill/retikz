@@ -10,8 +10,8 @@
  *   r=0 / 省略时与现状矩形边射线求交（geometry/rect.boundaryPoint）逐数值等价。
  */
 import { describe, expect, it } from 'vitest';
-import { rectangle } from '../../src/shapes';
-import type { Rect } from '../../src/shapes';
+import { rectangle } from '../../src/providers/shape';
+import type { Rect } from '../../src/contract/shape';
 import { rect as rectOps } from '../../src/geometry/rect';
 import type { Position } from '../../src/geometry/point';
 

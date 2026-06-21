@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import { NodeSchema, ScopeSchema } from '../../src/ir';
-import type { IR } from '../../src/ir';
+import { NodeSchema, ScopeSchema } from '../../src/schemas';
+import type { IR } from '../../src/schemas';
 import type { GroupPrim, ScenePrimitive } from '../../src/primitive';
 
 // ---------------------------------------------------------------------------

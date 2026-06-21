@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { CompileOptions, CompileWarning } from '../../src/compile/compile';
-import type { IR, IRPaintSpec } from '../../src/ir';
+import type { IR, IRPaintSpec } from '../../src/schemas';
 import type { MarkerPathPrim, MarkerPrimitive, PaintResource, ResolvedPatternTile, SceneResource } from '../../src/primitive';
-import type { PatternDefinition } from '../../src/patterns';
+import type { PatternDefinition } from '../../src/contract/pattern';
 
 /**
  * Pattern 注册面（ADR-04 emit-in-compile）对抗回归

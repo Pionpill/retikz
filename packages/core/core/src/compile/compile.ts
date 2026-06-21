@@ -1,15 +1,17 @@
 import { rect as rectOps } from '../geometry/rect';
-import type { IR, IRAnimationTrack, IRChild, IRPath, IRPosition, IRTransform } from '../ir';
-import { ScopeBoundingShape } from '../ir';
+import type { IR, IRAnimationTrack, IRChild, IRPath, IRPosition, IRTransform } from '../schemas';
+import { ScopeBoundingShape } from '../schemas';
 import type { DropShadow, GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
-import { BUILTIN_SHAPES } from '../shapes';
-import type { ShapeDefinition } from '../shapes';
-import { BUILTIN_ARROWS } from '../arrows';
-import type { ArrowDefinition } from '../arrows';
-import { BUILTIN_PATTERNS } from '../patterns';
-import type { PatternDefinition } from '../patterns';
-import type { PathGeneratorDefinition } from '../path-generators';
-import type { CompositeDefinition } from '../composites';
+import type { ShapeDefinition } from '../contract/shape';
+import type { ArrowDefinition } from '../contract/arrow';
+import type { PatternDefinition } from '../contract/pattern';
+import type { PathGeneratorDefinition } from '../contract/path';
+import type { CompositeDefinition } from '../contract/composite';
+import { resolveShapeRegistry } from '../providers/shape';
+import { resolveArrowRegistry } from '../providers/arrow';
+import { resolvePatternRegistry } from '../providers/pattern';
+import { resolvePathGeneratorRegistry } from '../providers/path';
+import { resolveCompositeRegistry } from '../providers/composite';
 import {
   type CompileWarning,
   CompileWarningCode,
@@ -401,7 +403,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const onWarn = options.onWarn ?? defaultWarnDispatcher;
 
   // Tier 2：第一步据注册表把 composite 节点展开成 Tier 1（未注册 warn + skip），后续 pass 只见 Tier 1
-  const loweredIr = lowerComposites(ir, options.composites ?? [], {
+  const loweredIr = lowerComposites(ir, resolveCompositeRegistry(options.composites), {
     onWarn,
     maxDepth: options.maxCompositeDepth,
   });
@@ -409,58 +411,11 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   // shape / arrow / pattern 三表策略一致：Record 注入（key 天然去重）→ 同名覆盖内置 warn + last-wins、
   // 未注册名 throw（定位 / 布局类基元缺失无法继续）。与 composite（Array 注入、重名 throw、缺失 warn+skip）
   // 的策略差异是有意的，理由见 lowerComposites JSDoc。
-  // 有效 shape 表：内置 + 注入（同名注入覆盖内置）；覆盖内置经 onWarn 发 SHAPE_OVERRIDES_BUILTIN
-  const effectiveShapes: Record<string, ShapeDefinition> = options.shapes
-    ? { ...BUILTIN_SHAPES, ...options.shapes }
-    : BUILTIN_SHAPES;
-  if (options.shapes) {
-    for (const name of Object.keys(options.shapes)) {
-      if (Object.prototype.hasOwnProperty.call(BUILTIN_SHAPES, name)) {
-        onWarn({
-          code: CompileWarningCode.ShapeOverridesBuiltin,
-          message: `Injected shape '${name}' overrides the built-in shape of the same name.`,
-          path: `options.shapes.${name}`,
-        });
-      }
-    }
-  }
-
-  // 有效 path generator 表：core 无内置，注入即全部（未注册名编译期 throw）。
-  // 解析逻辑（查表 / 双 parse / targetParams resolve / generate splice）由 path 层落地。
+  const effectiveShapes: Record<string, ShapeDefinition> = resolveShapeRegistry(options.shapes, onWarn);
   const effectivePathGenerators: Record<string, PathGeneratorDefinition> =
-    options.pathGenerators ?? {};
-
-  // 有效 arrow 表：内置 + 注入（同名注入覆盖内置）；覆盖内置经 onWarn 发 ARROW_OVERRIDES_BUILTIN
-  const effectiveArrows: Record<string, ArrowDefinition> = options.arrows
-    ? { ...BUILTIN_ARROWS, ...options.arrows }
-    : BUILTIN_ARROWS;
-  if (options.arrows) {
-    for (const name of Object.keys(options.arrows)) {
-      if (Object.prototype.hasOwnProperty.call(BUILTIN_ARROWS, name)) {
-        onWarn({
-          code: CompileWarningCode.ArrowOverridesBuiltin,
-          message: `Injected arrow '${name}' overrides the built-in arrow of the same name.`,
-          path: `options.arrows.${name}`,
-        });
-      }
-    }
-  }
-
-  // 有效 pattern 表：内置 + 注入（同名注入覆盖内置）；覆盖内置经 onWarn 发 PATTERN_OVERRIDES_BUILTIN
-  const effectivePatterns: Record<string, PatternDefinition> = options.patterns
-    ? { ...BUILTIN_PATTERNS, ...options.patterns }
-    : BUILTIN_PATTERNS;
-  if (options.patterns) {
-    for (const name of Object.keys(options.patterns)) {
-      if (Object.prototype.hasOwnProperty.call(BUILTIN_PATTERNS, name)) {
-        onWarn({
-          code: CompileWarningCode.PatternOverridesBuiltin,
-          message: `Injected pattern '${name}' overrides the built-in pattern of the same name.`,
-          path: `options.patterns.${name}`,
-        });
-      }
-    }
-  }
+    resolvePathGeneratorRegistry(options.pathGenerators);
+  const effectiveArrows: Record<string, ArrowDefinition> = resolveArrowRegistry(options.arrows, onWarn);
+  const effectivePatterns: Record<string, PatternDefinition> = resolvePatternRegistry(options.patterns, onWarn);
 
   const primitives: Array<InternalScenePrimitive> = [];
   /** 已 push 但未回填的占位计数；compileToScene 返回前必须归零（无条件守 Scene 公开契约） */

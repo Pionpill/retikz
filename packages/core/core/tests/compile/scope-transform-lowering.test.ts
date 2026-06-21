@@ -4,11 +4,11 @@
  *   referent 未解析返回 null（compile.ts 上游负责发 warn）；rotate/scale 透传
  */
 import { describe, expect, it } from 'vitest';
-import type { IRTransform } from '../../src/ir';
+import type { IRTransform } from '../../src/schemas';
 import { NameStack } from '../../src/compile/name-stack';
 import { type NodeLayout } from '../../src/compile/node';
 import { lowerScopeTransforms, projectLayoutToGlobal } from '../../src/compile/scope';
-import { BUILTIN_SHAPES } from '../../src/shapes';
+import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 /** 把 id → 中心 entries 灌进新建的 NameStack，便于 lower 单测验证 referent lookup */
 const makeStack = (entries: Array<[string, [number, number]]>): NameStack => {

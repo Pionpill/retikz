@@ -1,4 +1,4 @@
-import type { IRPosition } from '../ir';
+import type { IRPosition } from '../schemas';
 import type { Layout } from '../primitive';
 
 /** 由所有 bbox 候选点算出布局边界（含 padding）；points 为空时返回 100×100 兜底 */

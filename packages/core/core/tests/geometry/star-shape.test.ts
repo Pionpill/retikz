@@ -15,9 +15,9 @@
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import { NodeSchema, ShapeRefSchema } from '../../src/ir';
-import type { IR } from '../../src/ir';
-import { star } from '../../src/shapes';
+import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
+import type { IR } from '../../src/schemas';
+import { star } from '../../src/providers/shape';
 import type { ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 

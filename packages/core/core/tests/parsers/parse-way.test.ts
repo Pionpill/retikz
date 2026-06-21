@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { IRStep, IRTarget } from '../../src/ir';
+import type { IRStep, IRTarget } from '../../src/schemas';
 import type { WayDSL } from '../../src/parsers/way';
 import { DrawWay, parseWay } from '../../src/parsers/way';
 

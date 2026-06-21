@@ -1,7 +1,7 @@
 import { CompassAnchor } from '../geometry/anchor';
 import type { CompassAnchorValue } from '../geometry/anchor';
-import { AtDirection } from '../ir';
-import type { AtDirectionValue } from '../ir';
+import { AtDirection } from '../schemas';
+import type { AtDirectionValue } from '../schemas';
 
 export type DirectionVector = readonly [number, number];
 

@@ -10,7 +10,7 @@ import {
   BendStepSchema,
   PathScaleSchema,
   PathSchema,
-} from '../../../src/ir';
+} from '../../../src/schemas';
 
 /** 构造一条最小合法 path（两 step），便于叠加被测字段 */
 const basePath = (extra: Record<string, unknown>) => ({

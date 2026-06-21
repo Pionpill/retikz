@@ -4,7 +4,7 @@ import {
   BetweenPositionSchema,
   type IRAbsoluteTarget,
   type IRBetweenPosition,
-} from '../../src/ir';
+} from '../../src/schemas';
 
 describe('两端点之间按比例取点的端点形态', () => {
   it('端点为笛卡尔坐标 [x, y] 接受', () => {

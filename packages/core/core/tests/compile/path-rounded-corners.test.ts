@@ -6,9 +6,9 @@
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import { PathSchema } from '../../src/ir/path/path';
+import { PathSchema } from '../../src/schemas/path/path';
 import type { GroupPrim, IR, ScenePrimitive } from '../../src';
-import type { IRPath } from '../../src/ir/path/path';
+import type { IRPath } from '../../src/schemas/path/path';
 import type { PathPrim } from '../../src/primitive';
 import { close } from '../helpers/path-command-factory';
 

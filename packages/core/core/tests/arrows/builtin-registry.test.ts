@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { CompileOptions, CompileWarning } from '../../src/compile/compile';
-import { BUILTIN_ARROWS, defineArrow } from '../../src/arrows';
-import type { ArrowDefinition } from '../../src/arrows';
-import { PathSchema } from '../../src/ir';
-import type { IR } from '../../src/ir';
+import { defineArrow } from '../../src/contract/arrow';
+import { BUILTIN_ARROWS } from '../../src/providers/arrow';
+import type { ArrowDefinition } from '../../src/contract/arrow';
+import { PathSchema } from '../../src/schemas';
+import type { IR } from '../../src/schemas';
 import type {
   ArrowEndSpec,
   MarkerEllipsePrim,

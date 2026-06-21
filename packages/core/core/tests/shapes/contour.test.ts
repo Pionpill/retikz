@@ -9,9 +9,9 @@
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import { NodeSchema } from '../../src/ir';
-import type { IR } from '../../src/ir';
-import { contour } from '../../src/shapes';
+import { NodeSchema } from '../../src/schemas';
+import type { IR } from '../../src/schemas';
+import { contour } from '../../src/contract/shape';
 import type { ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 

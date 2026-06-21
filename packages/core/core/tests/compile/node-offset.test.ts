@@ -4,7 +4,7 @@ import {
   type IR,
   type IROffsetPosition,
   OffsetPositionSchema,
-} from '../../src/ir';
+} from '../../src/schemas';
 import type { EllipsePrim, RectPrim, ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 

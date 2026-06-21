@@ -1,5 +1,5 @@
-import type { IRAnimationTrack } from '../ir/animation';
-import type { IRJsonObject } from '../ir/json';
+import type { IRAnimationTrack } from '../schemas/animation';
+import type { IRJsonObject } from '../schemas/json';
 
 /** 行级字段（每行可独立指定），未填走块级 TextPrim 默认 */
 export type TextLine = {

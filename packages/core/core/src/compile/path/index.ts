@@ -26,8 +26,8 @@ import type {
   IRPosition,
   IRStep,
   IRTarget,
-} from '../../ir';
-import { JsonObjectSchema } from '../../ir';
+} from '../../schemas';
+import { JsonObjectSchema } from '../../schemas';
 import type {
   ArrowEndSpec,
   GroupPrim,
@@ -38,7 +38,7 @@ import type {
   Transform,
 } from '../../primitive';
 import type { AssertEqual } from '../../types';
-import type { PathGeneratorDefinition } from '../../path-generators';
+import type { PathGeneratorDefinition } from '../../contract/path';
 import type { LowerTex } from '../lower-tex';
 import { CompileWarningCode } from '../constant';
 import type { CompileWarning } from '../constant';
@@ -50,7 +50,7 @@ import { normalizeRelativeTargets } from './relative';
 import { applyTransformChain } from '../scope';
 import { type EffectiveArrows, applyArrowShrinks, endpointArrows, resolveMarkArrowSpec } from './shrink';
 import { type PathBaseProps, splitSubPathsForEndpointArrows } from './split';
-import { BUILTIN_ARROWS } from '../../arrows';
+import { BUILTIN_ARROWS } from '../../providers/arrow';
 import { applyRoundedCorners, sampleRoundedCommands } from './rounded-corners';
 import { resolveShadow } from '../effects';
 

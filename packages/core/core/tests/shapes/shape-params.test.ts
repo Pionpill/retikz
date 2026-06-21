@@ -8,10 +8,10 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { compileToScene } from '../../src/compile/compile';
-import { NodeSchema, ShapeRefSchema } from '../../src/ir';
-import type { IR, IRJsonObject } from '../../src/ir';
-import { defineShape } from '../../src/shapes';
-import type { ShapeDefinition } from '../../src/shapes';
+import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
+import type { IR, IRJsonObject } from '../../src/schemas';
+import { defineShape } from '../../src/contract/shape';
+import type { ShapeDefinition } from '../../src/contract/shape';
 import type { Position, Rect } from '../../src/geometry';
 import type { ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';

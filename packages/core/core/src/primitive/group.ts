@@ -1,5 +1,5 @@
-import type { IRAnimationTrack } from '../ir/animation';
-import type { IRJsonObject } from '../ir/json';
+import type { IRAnimationTrack } from '../schemas/animation';
+import type { IRJsonObject } from '../schemas/json';
 import type { ScenePrimitive } from './scene';
 
 /** Translate transform：沿 x / y 平移（user units） */

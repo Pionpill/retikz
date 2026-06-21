@@ -1,5 +1,5 @@
 import { arcEndPoint } from '@retikz/math';
-import type { IRPosition, IRStep, IRTarget } from '../../ir';
+import type { IRPosition, IRStep, IRTarget } from '../../schemas';
 import type { Transform } from '../../primitive';
 import type { NameStack } from '../name-stack';
 import { inverseTransformChain } from '../scope';

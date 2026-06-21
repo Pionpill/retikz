@@ -7,5 +7,5 @@ export * from './marker';
 export * from './layout';
 export * from './clip';
 export * from './scene';
-export type { DropShadow, ShadowPresetValue, BlendModeValue } from '../ir/effects';
-export { ShadowPreset, SHADOW_PRESETS, BlendMode } from '../ir/effects';
+export type { DropShadow, ShadowPresetValue, BlendModeValue } from '../schemas/effects';
+export { ShadowPreset, SHADOW_PRESETS, BlendMode } from '../schemas/effects';
