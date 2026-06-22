@@ -36,7 +36,7 @@ export const plotSection: Array<Section> = [
         label: 'plot.grammarChannel',
         children: [
           { id: 'binding', label: 'plot.grammarChannelBinding' },
-          { id: 'visual', label: 'plot.grammarChannelVisual' },
+          { id: 'builtin', label: 'plot.grammarChannelBuiltin' },
           { id: 'custom', label: 'plot.grammarChannelCustom' },
         ],
       },

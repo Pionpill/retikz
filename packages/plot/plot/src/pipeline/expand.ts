@@ -1,6 +1,6 @@
 import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, JsonObjectSchema, defineComposite } from '@retikz/core';
 import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type MarkOperation, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
-import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyFieldResolver, applyTransforms, assertAllValuesValid, assertBaselineScaleCompatible, assertScaleFieldCompatible, channelValue, collectFormatFields, createPositionChannelDefinitions, deriveScale, lowerMark, makeColorSchemeResolver, normalizeRows, orderedCategoryDomain, resolveChannelRegistry, resolveCoordinateRegistry, resolveFieldPath, resolveFieldTypes, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkChannels, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, scaleTicks, validateBoundData } from '../providers';
+import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyFieldResolver, applyTransforms, assertAllValuesValid, assertBaselineScaleCompatible, assertScaleFieldCompatible, channelKindsForMark, channelValue, collectFormatFields, createPositionChannelDefinitions, deriveScale, lowerMark, makeColorSchemeResolver, normalizeRows, orderedCategoryDomain, resolveChannelRegistry, resolveCoordinateRegistry, resolveFieldPath, resolveFieldTypes, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkChannels, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, scaleTicks, validateBoundData } from '../providers';
 import { type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../features';
 import { type AnyChannelDefinition, type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, type ResolveField, type ResolveLabel, isBuiltinScaleOperation } from '../contract';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect } from './layout';
@@ -420,14 +420,14 @@ const collectChannelDescriptors = (
   node: PlotSpec,
   channelCtx: { node: PlotSpec; rows: Array<ExternalRow>; fieldTypes: PlotFieldTypeMap; scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>; resolveColorScheme: (name: string) => (t: number) => string },
   channelRegistry: ReadonlyMap<string, AnyChannelDefinition>,
+  markRegistry: ReadonlyMap<string, AnyMarkDefinition>,
 ): Array<ScaleDescriptor> => {
   const out: Array<ScaleDescriptor> = [];
   const register = (descriptor: ScaleDescriptor | undefined): void => {
     if (descriptor) out.push(descriptor);
   };
   for (const mark of node.marks) {
-    if (!isBuiltinMark(mark)) continue;
-    const markChannels = resolveMarkChannels(mark, channelCtx, channelRegistry, DEFAULT_PLOT_COLORS[0]);
+    const markChannels = resolveMarkChannels(mark, channelCtx, channelRegistry, DEFAULT_PLOT_COLORS[0], channelKindsForMark(mark, markRegistry));
     for (const descriptor of markChannels.descriptors ?? []) register(descriptor);
   }
   return out;
@@ -804,7 +804,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         mark,
         rows,
         frame,
-        resolveMarkChannels(mark, channelCtx, channelRegistry, defaultColorOf(node, markIndex)),
+        resolveMarkChannels(mark, channelCtx, channelRegistry, defaultColorOf(node, markIndex), channelKindsForMark(mark, markRegistry)),
         provenance ? { context: provenance, markIndex, registerDatumId } : undefined,
         markRegistry,
       );
@@ -816,7 +816,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   const legendGuides = (node.guides ?? []).filter(isLegendGuide);
   const legendLayers: Array<IRScope> = [];
   if (legendGuides.length > 0) {
-    const channelDescriptors = collectChannelDescriptors(node, channelCtx, channelRegistry);
+    const channelDescriptors = collectChannelDescriptors(node, channelCtx, channelRegistry, markRegistry);
     const bands = reserveLegendBands(legendGuides, width, height, plotArea);
     legendLayers.push(...buildLegendLayers(node, channelDescriptors, legendGuides, options.fontSize ?? DEFAULT_FONT_SIZE, bands, scaleRegistry));
   }

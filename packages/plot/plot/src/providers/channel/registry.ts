@@ -2,25 +2,28 @@ import {
   type AnyChannelDefinition,
   type ChannelContext,
   ChannelDefinitionKind,
+  type ChannelDefinitionKindValue,
   type MarkChannels,
   type NodeChannelDelivery,
   type PathChannelDelivery,
   type ScaleDescriptor,
   type ScopeChannelDelivery,
 } from '../../contract';
-import { type MarkOperation, isBuiltinMark } from '../../schemas';
-import { type BuiltinMarkChannelOptions, createBuiltinMarkChannels } from './mark';
-import { NODE_CHANNELS } from './node';
+import { type MarkOperation } from '../../schemas';
+import { DELIVERY_CHANNELS } from './delivery';
+import { createBuiltinPaintChannels } from './paint';
+import { type BuiltinTextChannelOptions, createBuiltinTextChannels } from './text';
 
 /**
  * 保留的内置通道名集：扩展通道的 `channel` 不得撞这些。
- * @description 含内置 mark channel + node channel + 位置通道 x/y/z；scope / path 目前主要作为自定义扩展面。
+ * @description 含内置 mark / scope / node / path channel + 位置通道 x/y/z；同名内置通道可按 kind 注册多个 definition。
  */
 export const BUILTIN_CHANNEL_NAMES: ReadonlySet<string> = new Set<string>([
   'x',
   'y',
   'z',
   'color',
+  'textColor',
   'fill',
   'stroke',
   'label',
@@ -36,39 +39,75 @@ export const BUILTIN_CHANNEL_NAMES: ReadonlySet<string> = new Set<string>([
   'minimumWidth',
   'minimumHeight',
   'zIndex',
+  'lineCap',
+  'lineJoin',
+  'roundedCorners',
+  'align',
+  'lineHeight',
+  'maxTextWidth',
+  'cornerRadius',
+  'scale',
+  'xScale',
+  'yScale',
+  'innerXSep',
+  'innerYSep',
+  'outerSep',
+  'margin',
+  'dashed',
+  'dotted',
+  'dashPattern',
+  'font',
+  'boundary',
+  'shadow',
+  'blendMode',
+  'fillRule',
+  'thickness',
+  'arrow',
+  'arrowDetail',
 ]);
 
 export type ChannelRegistryOptions = {
   custom?: ReadonlyArray<AnyChannelDefinition>;
-  resolveLabel?: BuiltinMarkChannelOptions['resolveLabel'];
+  resolveLabel?: BuiltinTextChannelOptions['resolveLabel'];
 };
 
-const createBuiltinChannels = (options: BuiltinMarkChannelOptions = {}): ReadonlyArray<AnyChannelDefinition> => [
-  ...Object.values(createBuiltinMarkChannels(options)),
-  ...NODE_CHANNELS,
+const createBuiltinChannels = (options: BuiltinTextChannelOptions = {}): ReadonlyArray<AnyChannelDefinition> => [
+  ...Object.values(createBuiltinPaintChannels()),
+  ...Object.values(createBuiltinTextChannels(options)),
+  ...DELIVERY_CHANNELS,
 ];
+
+export type ChannelRegistry = Map<string, AnyChannelDefinition> & {
+  readonly definitions: ReadonlyArray<AnyChannelDefinition>;
+};
 
 /**
  * 解析通道 registry：内置 definition 先注册，自定义 definition 再合并。
  * @description 所有通道类型共用一张 registry；kind 决定解析结果进入 mark values、scope/node/path deliveries，或由坐标系 role 消费。
  */
-export const resolveChannelRegistry = (options: ChannelRegistryOptions = {}): Map<string, AnyChannelDefinition> => {
-  const registry = new Map<string, AnyChannelDefinition>();
+export const resolveChannelRegistry = (options: ChannelRegistryOptions = {}): ChannelRegistry => {
+  const registry = new Map<string, AnyChannelDefinition>() as ChannelRegistry;
+  const definitions: Array<AnyChannelDefinition> = [];
+  const addDefinition = (def: AnyChannelDefinition): void => {
+    definitions.push(def);
+    if (!registry.has(def.channel)) registry.set(def.channel, def);
+  };
   for (const def of createBuiltinChannels({ resolveLabel: options.resolveLabel })) {
-    registry.set(def.channel, def);
+    addDefinition(def);
   }
   for (const def of options.custom ?? []) {
     if (BUILTIN_CHANNEL_NAMES.has(def.channel)) {
       throw new Error(`lowerPlots: custom channel "${def.channel}" collides with a built-in channel name`);
     }
-    if (registry.has(def.channel)) {
+    if (definitions.some(registered => registered.channel === def.channel)) {
       throw new Error(`lowerPlots: duplicate custom channel registration: "${def.channel}"`);
     }
     if ((def.kind === ChannelDefinitionKind.Scope || def.kind === ChannelDefinitionKind.Node || def.kind === ChannelDefinitionKind.Path) && typeof def.deliver !== 'function') {
       throw new Error(`lowerPlots: custom ${def.kind} channel "${def.channel}" must provide deliver (how its resolved value lands on the core ${def.kind})`);
     }
-    registry.set(def.channel, def);
+    addDefinition(def);
   }
+  Object.defineProperty(registry, 'definitions', { value: definitions, enumerable: false });
   return registry;
 };
 
@@ -79,17 +118,16 @@ const extensionChannelsOf = (mark: MarkOperation): Record<string, unknown> =>
 export const resolveMarkChannels = (
   mark: MarkOperation,
   ctx: ChannelContext,
-  registry: ReadonlyMap<string, AnyChannelDefinition>,
+  registry: ReadonlyMap<string, AnyChannelDefinition> & { readonly definitions?: ReadonlyArray<AnyChannelDefinition> },
   defaultColor: string,
+  channelKinds?: ReadonlySet<ChannelDefinitionKindValue>,
 ): MarkChannels => {
-  if (isBuiltinMark(mark)) {
-    for (const channel of Object.keys(extensionChannelsOf(mark))) {
-      if (BUILTIN_CHANNEL_NAMES.has(channel)) {
-        throw new Error(`lowerPlots: encoding.channels.${channel} collides with a built-in channel; use the named mark property instead`);
-      }
-      if (!registry.has(channel)) {
-        throw new Error(`lowerPlots: channel "${channel}" is not registered; pass a ChannelDefinition via options.channelDefinitions`);
-      }
+  for (const channel of Object.keys(extensionChannelsOf(mark))) {
+    if (BUILTIN_CHANNEL_NAMES.has(channel)) {
+      throw new Error(`lowerPlots: encoding.channels.${channel} collides with a built-in channel; use the named mark property instead`);
+    }
+    if (!registry.has(channel)) {
+      throw new Error(`lowerPlots: channel "${channel}" is not registered; pass a ChannelDefinition via options.channelDefinitions`);
     }
   }
   const values: Record<string, NonNullable<MarkChannels['values']>[string]> = {};
@@ -102,7 +140,8 @@ export const resolveMarkChannels = (
     if (descriptor !== undefined) descriptors.push(descriptor);
   };
 
-  for (const def of registry.values()) {
+  for (const def of registry.definitions ?? registry.values()) {
+    if (channelKinds !== undefined && !channelKinds.has(def.kind)) continue;
     if (def.kind === ChannelDefinitionKind.Mark) {
       const resolution = def.resolve(ctx)(mark);
       if (!resolution) continue;
@@ -112,7 +151,6 @@ export const resolveMarkChannels = (
       continue;
     }
     if (def.kind === ChannelDefinitionKind.Scope) {
-      if (!isBuiltinMark(mark)) continue;
       const resolution = def.resolve(ctx)(mark);
       if (!resolution) continue;
       scopeDeliveries.push({
@@ -124,7 +162,6 @@ export const resolveMarkChannels = (
       continue;
     }
     if (def.kind === ChannelDefinitionKind.Path) {
-      if (!isBuiltinMark(mark)) continue;
       const resolution = def.resolve(ctx)(mark);
       if (!resolution) continue;
       pathDeliveries.push({
@@ -136,7 +173,6 @@ export const resolveMarkChannels = (
       continue;
     }
     if (def.kind !== ChannelDefinitionKind.Node) continue;
-    if (!isBuiltinMark(mark)) continue;
     const resolution = def.resolve(ctx)(mark);
     if (!resolution) continue;
     nodeDeliveries.push({

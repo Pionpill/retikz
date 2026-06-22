@@ -3,7 +3,7 @@ title: PointMark
 description: PointMark 是坐标元组上的 0D glyph：可以画散点、气泡、形状编码，也可以承载文本点。
 ---
 
-`<PointMark>` 为每行数据生成一个 0D glyph。默认 glyph 是点；给 `size` / `shape` / `opacity` / `color` 后，它仍是同一个点图元，只是视觉通道不同。给 `text` 后，它会改为无边框文本 glyph。
+`<PointMark>` 为每行数据生成一个 0D glyph。默认 glyph 是点；给 `size` / `shape` / `opacity` / `color` 后，它仍是同一个点图元，只是使用的内置通道不同。给 `text` 后，它会改为无边框文本 glyph。
 
 绑哪些位置通道由[坐标系](/plot/grammar/coordinate)决定：一维用 `x`，二维用 `x` / `y`，三元（ternary2D）用 `x` / `y` / `z`。这些属性在组件层都是可选的；当前坐标系会在编译期校验需要哪些维度。
 
@@ -43,7 +43,7 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个 0D 锚�
 
 ### 样式属性
 
-`color` / `size` / `opacity` / `shape` / `stroke` / `strokeWidth` 都可以作为点的视觉通道。它们只改变 glyph 的显示方式，不改变点的坐标锚点。
+`color` / `size` / `opacity` / `shape` / `stroke` / `strokeWidth` 都可以作为点的内置通道。它们只改变 glyph 的显示方式，不改变点的坐标锚点。
 
 `stroke`、`strokeWidth`、`opacity`、`fillOpacity`、`rotate` 等 Node 样式都支持字段绑定。组件层的字符串 / 数字是语法糖：如果有同名数据字段，字符串会变成 `{ kind: 'field', value: FieldName }`；如果没有字段但能作为合法常量使用，就变成 `{ kind: 'constant', value }`；否则会跳过并给出 warning。需要消除歧义时可以直接写显式形式。
 

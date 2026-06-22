@@ -1,5 +1,5 @@
 import { ChannelDefinitionKind, type PositionChannelDefinition } from '../../contract';
-import { type Channel, PlotMark, isBuiltinMark } from '../../schemas';
+import { type Channel } from '../../schemas';
 
 /** link 的 source 端只在显式收集 link 源端时参与位置 role；普通投影仍由 mark lowering 自行处理。 */
 export type PositionChannelPickOptions = {
@@ -13,6 +13,12 @@ export type BuiltinPositionChannelDefinition = PositionChannelDefinition & {
 
 const markEncoding = (mark: unknown): Record<string, Channel | undefined> | undefined => (mark as { encoding?: Record<string, Channel | undefined> }).encoding;
 
+const sourcePositionChannel = (mark: unknown, role: string): Channel | undefined => {
+  if (role !== 'x' && role !== 'y') return undefined;
+  const source = (mark as { source?: { x?: Channel; y?: Channel } }).source;
+  return role === 'x' ? source?.x : source?.y;
+};
+
 const positionChannelDefinitionOf = (role: string): BuiltinPositionChannelDefinition => ({
   channel: role,
   kind: ChannelDefinitionKind.Position,
@@ -21,9 +27,7 @@ const positionChannelDefinitionOf = (role: string): BuiltinPositionChannelDefini
   pickWithOptions:
     (options = {}) =>
     mark => {
-      if (isBuiltinMark(mark) && mark.type === PlotMark.Link) {
-        return options.includeLinkSource === true && (role === 'x' || role === 'y') ? (role === 'x' ? mark.source.x : mark.source.y) : undefined;
-      }
+      if (options.includeLinkSource === true) return sourcePositionChannel(mark, role) ?? markEncoding(mark)?.[role];
       return markEncoding(mark)?.[role];
     },
 });

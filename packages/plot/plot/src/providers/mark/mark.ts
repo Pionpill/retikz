@@ -1,6 +1,21 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRPath, type IRScope, type IRStep } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
-import { type AnyMarkDefinition, type Cell, type CellGeometry, type ChannelValueResolver, type CoordinateFrame, type FieldCollector, type IntervalContext, type MarkChannels, type MarkDefinition, cellGeometryAnchor, hasProjectCell, isRenderableCellGeometry } from '../../contract';
+import {
+  type AnyMarkDefinition,
+  type Cell,
+  type CellGeometry,
+  ChannelDefinitionKind,
+  type ChannelValueResolver,
+  type CoordinateFrame,
+  type FieldChannel,
+  type FieldCollector,
+  type IntervalContext,
+  type MarkChannels,
+  type MarkDefinition,
+  cellGeometryAnchor,
+  hasProjectCell,
+  isRenderableCellGeometry,
+} from '../../contract';
 import { channelValue, compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../data';
 import {
   type DatumIdRegistrar,
@@ -83,6 +98,7 @@ const pointStyle = (fill: IRNodeDefault['fill'], mark: PointMark): IRNodeDefault
     minimumSize: minimumSize ?? POINT_SIZE / Math.SQRT2,
     ...(minimumWidth !== undefined ? { minimumWidth } : {}),
     ...(minimumHeight !== undefined ? { minimumHeight } : {}),
+    ...(typeof fill === 'string' ? { color: fill } : {}),
     fill,
     ...(stroke !== undefined ? { stroke } : {}),
     ...(strokeWidth !== undefined ? { strokeWidth } : {}),
@@ -101,6 +117,7 @@ const textStyle = (textColor: string, mark: PointMark): IRNodeDefault => {
   return {
     padding: padding ?? 0,
     strokeWidth: 0,
+    color: textColor,
     textColor,
     ...(opacity !== undefined ? { opacity } : {}),
     ...(rotate !== undefined ? { rotate } : {}),
@@ -115,7 +132,18 @@ const resolveRolePosition = (mark: Mark, row: ExternalRow): [unknown, unknown] =
   mark.type === PlotMark.Link ? [undefined, undefined] : [channelValue(mark.encoding.x, row), channelValue(mark.encoding.y, row)];
 
 /** 柱 node 样式（rectangle + padding0 + 无描边，使 minimumWidth/Height 即真实柱尺寸） */
-const barStyle = (fill: string): IRNodeDefault => ({ shape: 'rectangle', padding: 0, strokeWidth: 0, fill });
+const barStyle = (fill: string): IRNodeDefault => ({ shape: 'rectangle', padding: 0, strokeWidth: 0, color: fill, fill });
+
+const constantNodeStyleOverrides = (mark: Mark): Partial<IRNodeDefault> => {
+  const strokeWidth = 'strokeWidth' in mark && mark.strokeWidth?.kind === 'constant' ? mark.strokeWidth.value : undefined;
+  const fillOpacity = 'fillOpacity' in mark && mark.fillOpacity?.kind === 'constant' ? mark.fillOpacity.value : undefined;
+  const opacity = 'opacity' in mark && mark.opacity?.kind === 'constant' ? mark.opacity.value : undefined;
+  return {
+    ...(strokeWidth !== undefined ? { strokeWidth } : {}),
+    ...(fillOpacity !== undefined ? { fillOpacity } : {}),
+    ...(opacity !== undefined ? { opacity } : {}),
+  };
+};
 
 /**
  * datum node 装饰器：provenance 开时给 node 挂 per-datum meta（datumProvenance）+ datum id（datumIdField）
@@ -152,9 +180,21 @@ const attachDatumLabel = (node: IRNode, mark: Mark, row: ExternalRow, labelOf: C
     text,
     ...(mark.label.position !== undefined ? { position: mark.label.position } : {}),
     ...(mark.label.distance !== undefined ? { distance: mark.label.distance } : {}),
-    ...(mark.label.pin ? { pin: true } : {}),
+    ...(mark.label.textColor !== undefined ? { textColor: mark.label.textColor } : {}),
+    ...(mark.label.opacity !== undefined ? { opacity: mark.label.opacity } : {}),
+    ...(mark.label.font !== undefined ? { font: mark.label.font } : {}),
+    ...(mark.label.rotate !== undefined ? { rotate: mark.label.rotate } : {}),
+    ...(mark.label.keepUpright !== undefined ? { keepUpright: mark.label.keepUpright } : {}),
+    ...(mark.label.pin !== undefined ? { pin: mark.label.pin } : {}),
   };
   return { ...node, label };
+};
+
+const applyNodeChannelDeliveries = (node: IRNode, mark: Mark, row: ExternalRow, channels: MarkChannels, nodeKind: 'pointGlyph' | 'pointText' | 'cell'): void => {
+  for (const entry of channels.nodeDeliveries ?? []) {
+    const value = entry.resolver(row);
+    if (value !== undefined) entry.deliver(node, value, { mark, row, nodeKind });
+  }
 };
 
 /**
@@ -183,6 +223,7 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
   const labelOf = channelValueOf<string>(channels, 'label');
   const defaultColor = channelDefaultOf<string>(channels, 'color') ?? DEFAULT_FILL;
   const isText = mark.encoding.text !== undefined;
+  const textColorConstant = mark.textColor?.kind === 'constant' ? mark.textColor.value : undefined;
   const dx = mark.dx ?? 0;
   const dy = mark.dy ?? 0;
   const constantZIndex = mark.zIndex?.kind === 'constant' ? mark.zIndex.value : undefined;
@@ -223,27 +264,31 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
   const layer: IRScope = !colorOf
     ? {
         type: 'scope',
-        nodeDefault: isText ? textStyle(typeof fillConstant === 'string' ? fillConstant : defaultColor, mark) : pointStyle(fillConstant ?? defaultColor, mark),
+        nodeDefault: isText ? textStyle(textColorConstant ?? (typeof fillConstant === 'string' ? fillConstant : defaultColor), mark) : pointStyle(fillConstant ?? defaultColor, mark),
         children: placed.map(p => p.node),
       }
-    : colorGroupedScope(placed, fill => (isText ? textStyle(fill, mark) : pointStyle(fill, mark)));
+    : colorGroupedScope(placed, fill => (isText ? textStyle(textColorConstant ?? fill, mark) : pointStyle(fill, mark)));
   return attachMarkLayer(layer, mark, markProvenance);
 };
 
 /** sector / contour node 样式（shape 自带几何，padding0 + 无描边，纯填充） */
-const shapeStyle = (fill: string): IRNodeDefault => ({ padding: 0, strokeWidth: 0, fill });
+const shapeStyle = (fill: string): IRNodeDefault => ({ padding: 0, strokeWidth: 0, color: fill, fill });
 
 /** 某 geometry kind 对应的 node 样式工厂（rect → 矩形 barStyle；sector / contour → shapeStyle） */
-const styleForGeometry = (kind: CellGeometry['kind']): ((fill: string) => IRNodeDefault) => (kind === 'rect' ? barStyle : shapeStyle);
+const styleForGeometry = (kind: CellGeometry['kind'], mark: Mark): ((fill: string) => IRNodeDefault) => {
+  const base = kind === 'rect' ? barStyle : shapeStyle;
+  return fill => ({ ...base(fill), ...constantNodeStyleOverrides(mark) });
+};
 
 /** 把一组「已就位 node + 其颜色」收成图层（有 color 分子 Scope、无则单层 nodeDefault；样式按 geometry kind 选） */
 const cellLayer = (
   placed: Array<{ color: string | undefined; node: IRNode }>,
   kind: CellGeometry['kind'],
+  mark: Mark,
   colorOf: ChannelValueResolver<string> | undefined,
   defaultColor = DEFAULT_FILL,
 ): IRScope => {
-  const styleFor = styleForGeometry(kind);
+  const styleFor = styleForGeometry(kind, mark);
   return colorOf ? colorGroupedScope(placed, styleFor) : { type: 'scope', nodeDefault: styleFor(defaultColor), children: placed.map(p => p.node) };
 };
 
@@ -297,6 +342,7 @@ const lowerCells = (
   ctx: IntervalContext | undefined,
   colorOf: ChannelValueResolver<string> | undefined,
   defaultColor: string | undefined,
+  channels: MarkChannels,
   markProvenance: MarkProvenance | undefined,
   labelOf: ChannelValueResolver<string> | undefined,
 ): IRScope | null => {
@@ -311,6 +357,7 @@ const lowerCells = (
     kind = geometry.kind;
     const cellNode = cellGeometryNode(geometry);
     if (cellNode === null) continue;
+    applyNodeChannelDeliveries(cellNode, mark, row, channels, 'cell');
     const node = attachDatumLabel(
       decorateDatum(cellNode, row, transformedIndex, mark.type, markProvenance, cellSeriesValue(mark, row)),
       mark,
@@ -319,7 +366,7 @@ const lowerCells = (
     );
     placed.push({ color: colorOf?.(row), node });
   }
-  return placed.length === 0 || kind === undefined ? null : cellLayer(placed, kind, colorOf, defaultColor);
+  return placed.length === 0 || kind === undefined ? null : cellLayer(placed, kind, mark, colorOf, defaultColor);
 };
 
 /** interval mark 图层下沉：坐标系守卫 + IntervalContext + lowerCells（cell 类单路径） */
@@ -330,7 +377,18 @@ const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: Coordin
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
   const ctx = isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame) ? buildIntervalContext(mark, frame, rows) : isGenericCoordinateFrame(frame) ? buildGenericIntervalContext(mark, frame, rows) : undefined;
-  const layer = lowerCells(mark, rows, frame, frame.projectCell, ctx, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'), markProvenance, channelValueOf<string>(channels, 'label'));
+  const layer = lowerCells(
+    mark,
+    rows,
+    frame,
+    frame.projectCell,
+    ctx,
+    channelValueOf<string>(channels, 'color'),
+    channelDefaultOf<string>(channels, 'color'),
+    channels,
+    markProvenance,
+    channelValueOf<string>(channels, 'label'),
+  );
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
 
@@ -803,6 +861,7 @@ const lowerReference = (
       kind = geometry.kind;
       const cellNode = cellGeometryNode(geometry);
       if (cellNode === null) continue;
+      applyNodeChannelDeliveries(cellNode, mark, row, channels, 'cell');
       const node = decorateDatum(cellNode, row, transformedIndex, mark.type, markProvenance, undefined);
       placed.push({ color: colorOf?.(row), node });
     }
@@ -810,9 +869,9 @@ const lowerReference = (
     if (!colorOf) {
       const colorValue = mark.encoding.color?.value;
       const fill = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
-      return { type: 'scope', nodeDefault: styleForGeometry(kind)(fill), children: placed.map(p => p.node) };
+      return { type: 'scope', nodeDefault: styleForGeometry(kind, mark)(fill), children: placed.map(p => p.node) };
     }
-    return cellLayer(placed, kind, colorOf, defaultColor);
+    return cellLayer(placed, kind, mark, colorOf, defaultColor);
   }
 
   const placed: Array<{ color: string | undefined; steps: Array<IRStep>; row: ExternalRow; transformedIndex: number }> = [];
@@ -895,6 +954,34 @@ const collectPositionalFields = (mark: PointMark | PathMark | RegionMark | Inter
   fields.addChannel(mark.label?.content);
 };
 
+const NODE_STYLE_CHANNELS = [
+  'align',
+  'lineHeight',
+  'maxTextWidth',
+  'cornerRadius',
+  'scale',
+  'xScale',
+  'yScale',
+  'innerXSep',
+  'innerYSep',
+  'outerSep',
+  'margin',
+  'dashed',
+  'dotted',
+  'dashPattern',
+  'font',
+  'boundary',
+  'shadow',
+  'blendMode',
+] as const;
+
+const PATH_STYLE_CHANNELS = ['drawOpacity', 'zIndex', 'rotate', 'scale', 'fillRule', 'thickness', 'arrow', 'dashPattern', 'arrowDetail', 'shadow', 'blendMode'] as const;
+
+const collectNamedStyleFields = (mark: MarkOperation, fields: FieldCollector, channels: ReadonlyArray<string>): void => {
+  const record = mark as Record<string, FieldChannel | undefined>;
+  for (const channel of channels) fields.addChannel(record[channel]);
+};
+
 /**
  * mark lowering 行为注册表：内置 6 个 mark = 6 个内置注册项（lowerMark 按 type 查表分发）
  * @description 对齐仓库已有 composite / coordinate 工厂注册范式；新增内置 mark = 加一条注册项，不改 lowerMark。
@@ -903,10 +990,12 @@ const collectPositionalFields = (mark: PointMark | PathMark | RegionMark | Inter
 export const MARK_REGISTRY: Record<PlotMarkValue, MarkDefinition> = {
   [PlotMark.Point]: {
     type: PlotMark.Point,
+    channelKinds: () => new Set([ChannelDefinitionKind.Mark, ChannelDefinitionKind.Scope, ChannelDefinitionKind.Node]),
     collectFields: (mark, fields) => {
       if (mark.type !== PlotMark.Point) return;
       collectPositionalFields(mark, fields);
       fields.addChannel(mark.color);
+      fields.addChannel(mark.textColor);
       fields.addChannel(mark.size);
       fields.addChannel(mark.shape);
       fields.addChannel(mark.fill);
@@ -921,30 +1010,44 @@ export const MARK_REGISTRY: Record<PlotMarkValue, MarkDefinition> = {
       fields.addChannel(mark.minimumWidth);
       fields.addChannel(mark.minimumHeight);
       fields.addChannel(mark.zIndex);
+      collectNamedStyleFields(mark, fields, NODE_STYLE_CHANNELS);
       fields.addChannel(mark.encoding.text);
     },
     lower: lowerPoint,
   },
   [PlotMark.Path]: {
     type: PlotMark.Path,
+    channelKinds: () => new Set([ChannelDefinitionKind.Mark, ChannelDefinitionKind.Scope, ChannelDefinitionKind.Path]),
     collectFields: (mark, fields) => {
       if (mark.type !== PlotMark.Path) return;
       collectPositionalFields(mark, fields);
       fields.addFields(mark.order, mark.series);
+      fields.addChannel(mark.strokeWidth);
+      fields.addChannel(mark.opacity);
+      fields.addChannel(mark.lineCap);
+      fields.addChannel(mark.lineJoin);
+      fields.addChannel(mark.roundedCorners);
+      collectNamedStyleFields(mark, fields, PATH_STYLE_CHANNELS);
     },
     lower: lowerPathLayer,
   },
   [PlotMark.Region]: {
     type: PlotMark.Region,
+    channelKinds: () => new Set([ChannelDefinitionKind.Mark, ChannelDefinitionKind.Scope, ChannelDefinitionKind.Path]),
     collectFields: (mark, fields) => {
       if (mark.type !== PlotMark.Region) return;
       collectPositionalFields(mark, fields);
       fields.addFields(mark.order, mark.series);
+      fields.addChannel(mark.strokeWidth);
+      fields.addChannel(mark.opacity);
+      fields.addChannel(mark.fillOpacity);
+      collectNamedStyleFields(mark, fields, PATH_STYLE_CHANNELS);
     },
     lower: lowerRegionLayer,
   },
   [PlotMark.Interval]: {
     type: PlotMark.Interval,
+    channelKinds: () => new Set([ChannelDefinitionKind.Mark, ChannelDefinitionKind.Scope, ChannelDefinitionKind.Node]),
     collectFields: (mark, fields) => {
       if (mark.type !== PlotMark.Interval) return;
       collectPositionalFields(mark, fields);
@@ -954,12 +1057,17 @@ export const MARK_REGISTRY: Record<PlotMarkValue, MarkDefinition> = {
           if (bound.kind === 'extent') fields.addFields(bound.from, bound.to);
         }
       }
+      fields.addChannel(mark.strokeWidth);
+      fields.addChannel(mark.opacity);
+      fields.addChannel(mark.fillOpacity);
+      collectNamedStyleFields(mark, fields, NODE_STYLE_CHANNELS);
     },
     buildCell: (mark, row, frame, ctx) => markCell(mark, row, frame, ctx),
     lower: lowerIntervalLayer,
   },
   [PlotMark.Link]: {
     type: PlotMark.Link,
+    channelKinds: () => new Set([ChannelDefinitionKind.Mark, ChannelDefinitionKind.Scope, ChannelDefinitionKind.Path]),
     collectFields: (mark, fields) => {
       if (mark.type !== PlotMark.Link) return;
       fields.addChannel(mark.source.x);
@@ -970,11 +1078,15 @@ export const MARK_REGISTRY: Record<PlotMarkValue, MarkDefinition> = {
         fields.addChannel(channel);
       }
       fields.addFields(mark.value, mark.endWidth);
+      fields.addChannel(mark.opacity);
+      fields.addChannel(mark.fillOpacity);
+      collectNamedStyleFields(mark, fields, PATH_STYLE_CHANNELS);
     },
     lower: lowerLinkLayer,
   },
   [PlotMark.Reference]: {
     type: PlotMark.Reference,
+    channelKinds: () => new Set([ChannelDefinitionKind.Mark, ChannelDefinitionKind.Scope, ChannelDefinitionKind.Node, ChannelDefinitionKind.Path]),
     collectFields: (mark, fields) => {
       if (mark.type !== PlotMark.Reference) return;
       fields.addChannel(mark.encoding.x);
@@ -985,6 +1097,11 @@ export const MARK_REGISTRY: Record<PlotMarkValue, MarkDefinition> = {
         fields.addChannel(channel);
       }
       fields.addFields(typeof mark.xTo === 'string' ? mark.xTo : undefined, typeof mark.yTo === 'string' ? mark.yTo : undefined, mark.extentField, mark.extentToField);
+      fields.addChannel(mark.strokeWidth);
+      fields.addChannel(mark.opacity);
+      fields.addChannel(mark.fillOpacity);
+      collectNamedStyleFields(mark, fields, NODE_STYLE_CHANNELS);
+      collectNamedStyleFields(mark, fields, PATH_STYLE_CHANNELS);
     },
     lower: lowerReferenceLayer,
   },
@@ -1024,13 +1141,18 @@ export const collectMarkFields = (mark: MarkOperation, fields: FieldCollector, r
   markDefinitionOf(mark, registry).collectFields?.(mark as never, fields);
 };
 
+export const channelKindsForMark = (
+  mark: MarkOperation,
+  registry: ReadonlyMap<string, AnyMarkDefinition> = BUILTIN_MARK_REGISTRY,
+): ReturnType<NonNullable<AnyMarkDefinition['channelKinds']>> | undefined => markDefinitionOf(mark, registry).channelKinds?.(mark as never);
+
 const isScopeLayer = (layer: IRChild | null): layer is IRScope =>
   layer !== null && layer.type === 'scope' && 'children' in layer;
 
 const applyScopeChannelDeliveries = (layer: IRChild | null, mark: MarkOperation, rows: Array<ExternalRow>, channels: MarkChannels): IRChild | null => {
   if (!isScopeLayer(layer)) return layer;
   for (const entry of channels.scopeDeliveries ?? []) {
-    entry.deliver(layer, entry.value, { mark: mark as Mark, rows });
+    entry.deliver(layer, entry.value, { mark, rows });
   }
   return layer;
 };

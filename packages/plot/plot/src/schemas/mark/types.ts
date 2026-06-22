@@ -2,7 +2,42 @@ import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 import type { MarkValueKind } from './constants';
 import { BUILTIN_MARK_TYPES } from './constants';
-import type { CustomMarkSchema, IntervalBoundSchema, IntervalBoundsSchema, IntervalMarkSchema, LinkEndpointSchema, LinkMarkSchema, MarkOperationSchema, MarkSchema, PathMarkSchema, PointColorStyleSchema, PointFillStyleSchema, PointMarkSchema, PointNonnegativeNumberStyleSchema, PointNumberStyleSchema, PointOpacityStyleSchema, PointShapeStyleSchema, PointSizeStyleSchema, PointStrokeStyleSchema, PointZIndexStyleSchema, ReferenceMarkSchema, RegionMarkSchema } from './schema';
+import type {
+  BlendModeStyleSchema,
+  CustomMarkSchema,
+  IntervalBoundSchema,
+  IntervalBoundsSchema,
+  IntervalMarkSchema,
+  LinkEndpointSchema,
+  LinkMarkSchema,
+  MarkOperationSchema,
+  MarkSchema,
+  NodeBooleanStyleSchema,
+  NodeBoundaryStyleSchema,
+  NodeDashPatternStyleSchema,
+  NodeFontStyleSchema,
+  NodePositiveNumberStyleSchema,
+  NodeTextAlignStyleSchema,
+  PathArrowDetailStyleSchema,
+  PathArrowStyleSchema,
+  PathFillRuleStyleSchema,
+  PathMarkSchema,
+  PathScaleStyleSchema,
+  PathThicknessStyleSchema,
+  PointColorStyleSchema,
+  PointFillStyleSchema,
+  PointMarkSchema,
+  PointNonnegativeNumberStyleSchema,
+  PointNumberStyleSchema,
+  PointOpacityStyleSchema,
+  PointShapeStyleSchema,
+  PointSizeStyleSchema,
+  PointStrokeStyleSchema,
+  PointZIndexStyleSchema,
+  ReferenceMarkSchema,
+  RegionMarkSchema,
+  ShadowStyleSchema,
+} from './schema';
 
 /** point mark（散点 + 文本标签） */
 export type PointMark = z.infer<typeof PointMarkSchema>;
@@ -32,6 +67,19 @@ export type PointNonnegativeNumberStyle = z.infer<typeof PointNonnegativeNumberS
 export type PointOpacityStyle = z.infer<typeof PointOpacityStyleSchema>;
 /** PointMark zIndex 样式值（field / constant） */
 export type PointZIndexStyle = z.infer<typeof PointZIndexStyleSchema>;
+export type NodePositiveNumberStyle = z.infer<typeof NodePositiveNumberStyleSchema>;
+export type NodeTextAlignStyle = z.infer<typeof NodeTextAlignStyleSchema>;
+export type NodeBooleanStyle = z.infer<typeof NodeBooleanStyleSchema>;
+export type NodeDashPatternStyle = z.infer<typeof NodeDashPatternStyleSchema>;
+export type NodeFontStyle = z.infer<typeof NodeFontStyleSchema>;
+export type NodeBoundaryStyle = z.infer<typeof NodeBoundaryStyleSchema>;
+export type ShadowStyle = z.infer<typeof ShadowStyleSchema>;
+export type BlendModeStyle = z.infer<typeof BlendModeStyleSchema>;
+export type PathFillRuleStyle = z.infer<typeof PathFillRuleStyleSchema>;
+export type PathThicknessStyle = z.infer<typeof PathThicknessStyleSchema>;
+export type PathArrowStyle = z.infer<typeof PathArrowStyleSchema>;
+export type PathScaleStyle = z.infer<typeof PathScaleStyleSchema>;
+export type PathArrowDetailStyle = z.infer<typeof PathArrowDetailStyleSchema>;
 /** path mark（折线 / 轮廓） */
 export type PathMark = z.infer<typeof PathMarkSchema>;
 /** region mark（面积 / 填充雷达） */

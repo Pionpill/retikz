@@ -3,7 +3,7 @@ title: PointMark
 description: "PointMark is a 0D glyph at a coordinate tuple: scatter, bubbles, shape encoding, and hostless text points all use the same registered mark."
 ---
 
-`<PointMark>` produces one 0D glyph per data row. The default glyph is a dot; `size` / `shape` / `opacity` / `color` change visual channels without changing the mark. Set `text` and the glyph becomes a borderless text node.
+`<PointMark>` produces one 0D glyph per data row. The default glyph is a dot; `size` / `shape` / `opacity` / `color` change built-in channels without changing the mark. Set `text` and the glyph becomes a borderless text node.
 
 Which position channels you bind depends on the [coordinate system](/plot/grammar/coordinate): 1D uses `x`, 2D uses `x` / `y`, and ternary uses `x` / `y` / `z`. The props are optional at the component level; the active coordinate validates the required dimensions at compile time.
 
@@ -43,7 +43,7 @@ This is why PointMark usually does not need coordinate-specific adapters. The co
 
 ### Style Props
 
-`color` / `size` / `opacity` / `shape` / `stroke` / `strokeWidth` can all act as visual channels for the point glyph. They change how the glyph is drawn without changing the projected anchor.
+`color` / `size` / `opacity` / `shape` / `stroke` / `strokeWidth` can all act as built-in channels for the point glyph. They change how the glyph is drawn without changing the projected anchor.
 
 Node style props such as `stroke`, `strokeWidth`, `opacity`, `fillOpacity`, and `rotate` can all bind to data fields. At the component layer, strings and numbers are syntax sugar: a string becomes `{ kind: 'field', value: FieldName }` when it matches a data field; if it does not match a field but is a valid constant, it becomes `{ kind: 'constant', value }`; otherwise it is skipped with a warning. Use the explicit form when you need to remove ambiguity.
 

@@ -17,7 +17,7 @@ export type MarkValueResolverOptions<T> = {
   expectedFieldType?: PlotFieldTypeValue;
   /** 把数据行中的原始字段值转换为属性值；返回 undefined 表示该行跳过该属性。 */
   parse: (value: unknown) => T | undefined;
-  /** 常量变体是否也产出 resolver；默认产出，PointMark 的 nodeDefault 压缩场景可显式跳过。 */
+  /** 常量变体是否也产出 resolver；默认产出，需要把常量收敛进默认 core 属性时可显式跳过。 */
   constants?: 'resolve' | 'skip';
 };
 

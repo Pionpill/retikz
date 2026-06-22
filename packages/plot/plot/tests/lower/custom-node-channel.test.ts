@@ -9,13 +9,16 @@ import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
  * 与内置通道共享 channel registry / delivery。
  */
 
+const extensionChannelsOf = (mark: { encoding?: { channels?: Partial<Record<string, { field?: string; value?: unknown }>> } }): Partial<Record<string, { field?: string; value?: unknown }>> =>
+  mark.encoding?.channels ?? {};
+
 /** 自定义 intensity 通道：score 字段线性映射到 [0.3, 1]，落到 node.opacity */
 const intensityChannel = defineNodeChannel<number>({
   channel: 'intensity',
   output: { outputKind: 'number', range: [0.3, 1] },
   legend: 'ramp',
   resolve: ctx => mark => {
-    const binding = mark.type === 'point' ? mark.encoding.channels?.intensity : undefined;
+    const binding = extensionChannelsOf(mark).intensity;
     if (binding?.field === undefined) return undefined;
     const field = binding.field;
     const valueOf = (row: Record<string, unknown>): number => Number(row[field]);
@@ -42,7 +45,7 @@ const scopeTintChannel = defineScopeChannel<string>({
   channel: 'scopeTint',
   output: { outputKind: 'color' },
   resolve: () => mark => {
-    const binding = 'encoding' in mark ? mark.encoding.channels?.scopeTint : undefined;
+    const binding = extensionChannelsOf(mark).scopeTint;
     if (binding?.value === undefined) return undefined;
     return { value: String(binding.value) };
   },
@@ -55,7 +58,7 @@ const lineWeightChannel = definePathChannel<number>({
   channel: 'lineWeight',
   output: { outputKind: 'number', range: [1, 6] },
   resolve: () => mark => {
-    const binding = 'encoding' in mark ? mark.encoding.channels?.lineWeight : undefined;
+    const binding = extensionChannelsOf(mark).lineWeight;
     if (binding?.field === undefined) return undefined;
     const field = binding.field;
     return {
@@ -231,4 +234,3 @@ describe('custom node channel registry', () => {
     expect(mark.encoding.channels).toEqual({ intensity: { field: 'score' } });
   });
 });
-

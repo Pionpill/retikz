@@ -116,7 +116,7 @@
     "grammar": "Grammar",
     "grammarChannel": "Channels",
     "grammarChannelBinding": "Channel Binding",
-    "grammarChannelVisual": "Visual Channels",
+    "grammarChannelBuiltin": "Built-In Channels",
     "grammarChannelCustom": "Custom Channels",
     "grammarTransform": "Transforms",
     "grammarTransformRow": "Row Transforms",

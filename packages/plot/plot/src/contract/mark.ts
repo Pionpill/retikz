@@ -1,6 +1,6 @@
 import type { IRChild } from '@retikz/core';
 import type { ExternalRow, Mark, MarkOperation } from '../schemas';
-import type { FieldCollector, MarkChannels } from './channel';
+import type { ChannelDefinitionKindValue, FieldCollector, MarkChannels } from './channel';
 import type { Cell, CoordinateFrame } from './coordinate';
 // MarkProvenance 仍依赖 pipeline 的 ProvenanceContext / DatumIdRegistrar（infra，待 ③ 评估），暂从 providers 引入
 import type { MarkProvenance } from '../providers';
@@ -31,6 +31,7 @@ export type MarkDefinition<T extends MarkOperation = Mark> = {
   type: string;
   /** 收集该 mark 额外引用的用户源字段；通用 encoding / label 字段由 data 层统一处理 */
   collectFields?: (mark: T, fields: FieldCollector) => void;
+  channelKinds?: (mark: T) => ReadonlySet<ChannelDefinitionKindValue>;
   /** 区间类 mark：某行 → 正交 Cell（interval 用；非区间类省略） */
   buildCell?: (mark: T, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
   /** 下沉到 core IR 图层（无可绘制图元返回 null；不支持的 mark × coordinate 由实现 fail-loud） */
@@ -50,6 +51,7 @@ export const defineMark = <T extends MarkOperation = Mark>(def: MarkDefinition<T
 export type AnyMarkDefinition = Omit<MarkDefinition<Mark>, 'collectFields' | 'buildCell' | 'lower'> & {
   /** 内部宽类型占位；按 type 取出后调用方已知具体 mark。 */
   collectFields?: (mark: never, fields: FieldCollector) => void;
+  channelKinds?: (mark: never) => ReadonlySet<ChannelDefinitionKindValue>;
   /** 内部宽类型占位；按 type 取出后调用方已知具体 mark。 */
   buildCell?: (mark: never, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
   /** 内部宽类型占位；按 type 取出后调用方已知具体 mark。 */

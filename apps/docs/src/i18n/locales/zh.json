@@ -116,7 +116,7 @@
     "grammar": "图形语法",
     "grammarChannel": "通道",
     "grammarChannelBinding": "通道绑定",
-    "grammarChannelVisual": "视觉通道",
+    "grammarChannelBuiltin": "内置通道",
     "grammarChannelCustom": "自定义通道",
     "grammarTransform": "变换",
     "grammarTransformRow": "行级变换",

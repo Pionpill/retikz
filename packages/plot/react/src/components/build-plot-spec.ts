@@ -1,5 +1,6 @@
 import { Children, Fragment, type ReactNode, isValidElement } from 'react';
 import {
+  type Channel,
   type CoordinateOperation,
   CoordinateOperationSchema,
   type DataModel,
@@ -37,7 +38,10 @@ import {
 } from '@retikz/plot';
 import { Axis, type AxisProps, Legend, type LegendProps } from './guides';
 import {
+  type CoreNodeChannelProps,
+  type CorePathChannelProps,
   type DatumLabelProps,
+  type ExtensionChannelProp,
   IntervalMark,
   type IntervalMarkProps,
   LinkMark,
@@ -237,6 +241,27 @@ const styleSugarContext = (options: BuildPlotSpecOptions): StyleSugarContext => 
 const isMarkValue = (value: unknown): value is MarkValueType<unknown> =>
   value !== null && typeof value === 'object' && 'kind' in value && ((value as { kind?: unknown }).kind === 'field' || (value as { kind?: unknown }).kind === 'constant');
 
+const isChannelBinding = (value: unknown): value is Channel =>
+  value !== null &&
+  !Array.isArray(value) &&
+  typeof value === 'object' &&
+  ('field' in value || 'value' in value || 'scale' in value);
+
+const channelBindingOf = (value: ExtensionChannelProp): Channel => {
+  if (isMarkValue(value)) {
+    return value.kind === 'field' ? { field: String(value.value) } : { value: value.value };
+  }
+  if (isChannelBinding(value)) return value;
+  return typeof value === 'string' ? { field: value } : { value };
+};
+
+const extensionChannelEncoding = (channels: DatumLabelProps['channels']): Pick<Encoding, 'channels'> => {
+  if (channels === undefined) return {};
+  const out: Record<string, Channel> = {};
+  for (const [name, value] of Object.entries(channels)) out[name] = channelBindingOf(value);
+  return Object.keys(out).length > 0 ? { channels: out } : {};
+};
+
 const paintStyleOf = (value: PointMarkProps['fill'], context: StyleSugarContext): PointFillStyle | undefined => {
   if (value === undefined) return undefined;
   if (isMarkValue(value)) return value;
@@ -274,7 +299,7 @@ const strokeWidthStyleOf = (strokeWidth: PointMarkProps['strokeWidth'], context:
   return undefined;
 };
 
-const numberStyleOf = <T extends PointNumberStyle | PointNonnegativeNumberStyle | PointOpacityStyle | PointSizeStyle | PointZIndexStyle>(
+const numberStyleOf = <T extends MarkValueType<number>>(
   value: string | number | MarkValueType<number> | undefined,
   prop: string,
   context: StyleSugarContext,
@@ -287,10 +312,90 @@ const numberStyleOf = <T extends PointNumberStyle | PointNonnegativeNumberStyle 
   return undefined;
 };
 
+const enumStyleOf = <T extends string>(
+  value: string | MarkValueType<T> | undefined,
+  prop: string,
+  allowed: ReadonlySet<string>,
+  context: StyleSugarContext,
+): MarkValueType<T> | undefined => {
+  if (value === undefined) return undefined;
+  if (isMarkValue(value)) return value;
+  if (context.fieldNames.has(value)) return { kind: 'field', value };
+  if (allowed.has(value)) return { kind: 'constant', value: value as T };
+  warnSkippedStyle(prop, value);
+  return undefined;
+};
+
+const booleanStyleOf = (value: string | boolean | MarkValueType<boolean> | undefined, prop: string, context: StyleSugarContext): MarkValueType<boolean> | undefined => {
+  if (value === undefined) return undefined;
+  if (isMarkValue(value)) return value;
+  if (typeof value === 'boolean') return { kind: 'constant', value };
+  if (context.fieldNames.has(value)) return { kind: 'field', value };
+  warnSkippedStyle(prop, value);
+  return undefined;
+};
+
+const jsonStyleOf = <T>(value: string | T | MarkValueType<T> | undefined, prop: string, context: StyleSugarContext): MarkValueType<T> | undefined => {
+  if (value === undefined) return undefined;
+  if (isMarkValue(value)) return value;
+  if (typeof value === 'string') {
+    if (context.fieldNames.has(value)) return { kind: 'field', value };
+    warnSkippedStyle(prop, value);
+    return undefined;
+  }
+  return { kind: 'constant', value };
+};
+
+const nodeStylePropsOf = (props: CoreNodeChannelProps, context: StyleSugarContext): Record<string, unknown> => {
+  const out: Record<string, unknown> = {};
+  const put = (name: string, value: unknown): void => {
+    if (value !== undefined) out[name] = value;
+  };
+  put('align', enumStyleOf(props.align, 'align', new Set(['left', 'center', 'right']), context));
+  put('lineHeight', numberStyleOf(props.lineHeight, 'lineHeight', context));
+  put('maxTextWidth', numberStyleOf(props.maxTextWidth, 'maxTextWidth', context));
+  put('cornerRadius', numberStyleOf(props.cornerRadius, 'cornerRadius', context));
+  put('scale', numberStyleOf(props.scale, 'scale', context));
+  put('xScale', numberStyleOf(props.xScale, 'xScale', context));
+  put('yScale', numberStyleOf(props.yScale, 'yScale', context));
+  put('innerXSep', numberStyleOf(props.innerXSep, 'innerXSep', context));
+  put('innerYSep', numberStyleOf(props.innerYSep, 'innerYSep', context));
+  put('outerSep', numberStyleOf(props.outerSep, 'outerSep', context));
+  put('margin', numberStyleOf(props.margin, 'margin', context));
+  put('dashed', booleanStyleOf(props.dashed, 'dashed', context));
+  put('dotted', booleanStyleOf(props.dotted, 'dotted', context));
+  put('dashPattern', jsonStyleOf(props.dashPattern, 'dashPattern', context));
+  put('font', jsonStyleOf(props.font, 'font', context));
+  put('boundary', jsonStyleOf(props.boundary, 'boundary', context));
+  put('shadow', typeof props.shadow === 'string' ? enumStyleOf(props.shadow, 'shadow', new Set(['none', 'sm', 'md', 'lg', 'xl', '2xl']), context) : jsonStyleOf(props.shadow, 'shadow', context));
+  put('blendMode', enumStyleOf(props.blendMode, 'blendMode', new Set(['normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference', 'exclusion', 'hue', 'saturation', 'color', 'luminosity']), context));
+  return out;
+};
+
+const pathStylePropsOf = (props: CorePathChannelProps, context: StyleSugarContext): Record<string, unknown> => {
+  const out: Record<string, unknown> = {};
+  const put = (name: string, value: unknown): void => {
+    if (value !== undefined) out[name] = value;
+  };
+  put('drawOpacity', numberStyleOf(props.drawOpacity, 'drawOpacity', context));
+  put('zIndex', numberStyleOf(props.zIndex, 'zIndex', context));
+  put('rotate', numberStyleOf(props.rotate, 'rotate', context));
+  put('scale', jsonStyleOf(props.scale, 'scale', context));
+  put('fillRule', enumStyleOf(props.fillRule, 'fillRule', new Set(['nonzero', 'evenodd']), context));
+  put('thickness', enumStyleOf(props.thickness, 'thickness', new Set(['ultraThin', 'veryThin', 'thin', 'semithick', 'thick', 'veryThick', 'ultraThick']), context));
+  put('arrow', enumStyleOf(props.arrow, 'arrow', new Set(['none', '->', '<-', '<->']), context));
+  put('dashPattern', jsonStyleOf(props.dashPattern, 'dashPattern', context));
+  put('arrowDetail', jsonStyleOf(props.arrowDetail, 'arrowDetail', context));
+  put('shadow', typeof props.shadow === 'string' ? enumStyleOf(props.shadow, 'shadow', new Set(['none', 'sm', 'md', 'lg', 'xl', '2xl']), context) : jsonStyleOf(props.shadow, 'shadow', context));
+  put('blendMode', enumStyleOf(props.blendMode, 'blendMode', new Set(['normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference', 'exclusion', 'hue', 'saturation', 'color', 'luminosity']), context));
+  return out;
+};
+
 /** 记录某 mark 的 color 编码：置 colored 并收集 color 字段名（供 model 派生 sequential / ordinal） */
 const shapeStyleOf = (value: PointMarkProps['shape'], context: StyleSugarContext): PointShapeStyle | undefined => {
   if (value === undefined) return undefined;
-  if (typeof value !== 'string') return value;
+  if (isMarkValue(value)) return value;
+  if (typeof value !== 'string') return { kind: 'constant', value };
   if (context.fieldNames.has(value)) return { kind: 'field', value };
   return { kind: 'constant', value };
 };
@@ -313,14 +418,19 @@ const recordMarkColor = (into: Collected, color: PointColorStyle | undefined): v
  *   摊进对齐 core NodeLabelSchema 的字段。无 label 字段 → undefined（不挂标签）。
  */
 const buildMarkLabel = (props: DatumLabelProps): MarkLabel | undefined => {
-  const { label, labelDisplayFormat, labelPosition, labelDistance, labelPin } = props;
+  const { label, labelDisplayFormat, labelPosition, labelDistance, labelPin, labelTextColor, labelOpacity, labelFont, labelRotate, labelKeepUpright } = props;
   if (label === undefined) return undefined;
   const content: TextChannel = { field: label, ...(labelDisplayFormat !== undefined ? { displayFormat: labelDisplayFormat } : {}) };
   return {
     content,
     ...(labelPosition !== undefined ? { position: labelPosition } : {}),
     ...(labelDistance !== undefined ? { distance: labelDistance } : {}),
-    ...(labelPin ? { pin: true } : {}),
+    ...(labelTextColor !== undefined ? { textColor: labelTextColor } : {}),
+    ...(labelOpacity !== undefined ? { opacity: labelOpacity } : {}),
+    ...(labelFont !== undefined ? { font: labelFont } : {}),
+    ...(labelRotate !== undefined ? { rotate: labelRotate } : {}),
+    ...(labelKeepUpright !== undefined ? { keepUpright: labelKeepUpright } : {}),
+    ...(labelPin !== undefined && labelPin !== false ? { pin: labelPin } : {}),
   };
 };
 
@@ -348,8 +458,8 @@ const ruleChannel = (value: number | string): { value: number } | { field: strin
  *   band 上界 xTo 须配 x、yTo 须配 y（不匹配 / 单飞 → fail-loud）；extent 须成对（单设 → fail-loud）。
  *   常量 rule（x/y 为数字）→ color 作 value 常量；per-datum rule（x/y 为字段串）→ color 作 field（AUTO_COLOR）。
  */
-const collectReference = (props: ReferenceMarkProps, into: Collected): void => {
-  const { x, y, xTo, yTo, extentField, extentToField, color, id } = props;
+const collectReference = (props: ReferenceMarkProps, into: Collected, styleContext: StyleSugarContext): void => {
+  const { x, y, xTo, yTo, extentField, extentToField, color, id, channels, strokeWidth, fillOpacity, opacity } = props;
   const hasX = x !== undefined;
   const hasY = y !== undefined;
   if (hasX === hasY) {
@@ -377,13 +487,37 @@ const collectReference = (props: ReferenceMarkProps, into: Collected): void => {
     positional.y = ruleChannel(y as number | string);
   }
   const upper = hasX ? (xTo !== undefined ? { xTo } : {}) : yTo !== undefined ? { yTo } : {};
+  const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
+  const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
+  const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
+  const referenceNodeStyleProps = {
+    align: props.align,
+    lineHeight: props.lineHeight,
+    maxTextWidth: props.maxTextWidth,
+    cornerRadius: props.cornerRadius,
+    xScale: props.xScale,
+    yScale: props.yScale,
+    innerXSep: props.innerXSep,
+    innerYSep: props.innerYSep,
+    outerSep: props.outerSep,
+    margin: props.margin,
+    dashed: props.dashed,
+    dotted: props.dotted,
+    font: props.font,
+    boundary: props.boundary,
+  };
   into.marks.push({
     type: PlotMark.Reference,
     ...(id !== undefined ? { id } : {}),
     ...upper,
     ...(extentField !== undefined ? { extentField } : {}),
     ...(extentToField !== undefined ? { extentToField } : {}),
-    encoding: { ...positional, ...colorEnc },
+    ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
+    ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
+    ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
+    ...nodeStylePropsOf(referenceNodeStyleProps, styleContext),
+    ...pathStylePropsOf(props, styleContext),
+    encoding: { ...positional, ...colorEnc, ...extensionChannelEncoding(channels) },
   });
   // 仅 per-datum color（field）需自动色 scale；常量 color value 直落 IR，不进色 scale
   if (colorEnc && 'field' in colorEnc.color) {
@@ -402,17 +536,28 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
     }
     if (child.type === PathMark) {
       const props = child.props as PathMarkProps;
-      const { x, y, order, series, color, closed, id } = props;
+      const { x, y, order, series, color, closed, id, channels, strokeWidth, opacity, lineCap, lineJoin, roundedCorners } = props;
       const colorEnc = colorChannel(color, series);
       const markLabel = buildMarkLabel(props);
+      const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
+      const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
+      const lineCapStyle = enumStyleOf(lineCap, 'lineCap', new Set(['butt', 'round', 'square']), styleContext);
+      const lineJoinStyle = enumStyleOf(lineJoin, 'lineJoin', new Set(['miter', 'round', 'bevel']), styleContext);
+      const roundedCornersStyle = numberStyleOf<PointNonnegativeNumberStyle>(roundedCorners, 'roundedCorners', styleContext);
       into.marks.push({
         type: PlotMark.Path,
         ...(id !== undefined ? { id } : {}),
         ...(order !== undefined ? { order } : {}),
         ...(series !== undefined ? { series } : {}),
         ...(closed ? { closed: true } : {}),
+        ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
+        ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
+        ...(lineCapStyle !== undefined ? { lineCap: lineCapStyle } : {}),
+        ...(lineJoinStyle !== undefined ? { lineJoin: lineJoinStyle } : {}),
+        ...(roundedCornersStyle !== undefined ? { roundedCorners: roundedCornersStyle } : {}),
+        ...pathStylePropsOf(props, styleContext),
         ...(markLabel !== undefined ? { label: markLabel } : {}),
-        encoding: { ...positionEncoding(x, y), ...colorEnc },
+        encoding: { ...positionEncoding(x, y), ...colorEnc, ...extensionChannelEncoding(channels) },
       });
       recordColor(into, colorEnc);
       recordResolveLabel(into, id, props.resolveLabel);
@@ -424,6 +569,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         y,
         z,
         color,
+        textColor,
         fill,
         stroke,
         strokeWidth,
@@ -443,9 +589,11 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         dx,
         dy,
         id,
+        channels,
       } = props;
       const markLabel = buildMarkLabel(props);
       const colorStyle = pointColorStyleOf(color, styleContext);
+      const textColorStyle = pointColorStyleOf(textColor, styleContext);
       const sizeStyle = numberStyleOf<PointSizeStyle>(size, 'size', styleContext);
       const shapeStyle = shapeStyleOf(shape, styleContext);
       const fillStyle = paintStyleOf(fill, styleContext);
@@ -466,6 +614,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         type: PlotMark.Point,
         ...(id !== undefined ? { id } : {}),
         ...(colorStyle !== undefined ? { color: colorStyle } : {}),
+        ...(textColorStyle !== undefined ? { textColor: textColorStyle } : {}),
         ...(sizeStyle !== undefined ? { size: sizeStyle } : {}),
         ...(shapeStyle !== undefined ? { shape: shapeStyle } : {}),
         ...(fillStyle !== undefined ? { fill: fillStyle } : {}),
@@ -480,6 +629,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(minimumWidthStyle !== undefined ? { minimumWidth: minimumWidthStyle } : {}),
         ...(minimumHeightStyle !== undefined ? { minimumHeight: minimumHeightStyle } : {}),
         ...(zIndexStyle !== undefined ? { zIndex: zIndexStyle } : {}),
+        ...nodeStylePropsOf(props, styleContext),
         ...(dx !== undefined ? { dx } : {}),
         ...(dy !== undefined ? { dy } : {}),
         ...(markLabel !== undefined ? { label: markLabel } : {}),
@@ -488,14 +638,24 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
           ...(y !== undefined ? { y: { field: y } } : {}),
           ...(z !== undefined ? { z: { field: z } } : {}),
           ...textEnc,
+          ...extensionChannelEncoding(channels),
         },
       });
       recordMarkColor(into, colorStyle);
       recordResolveLabel(into, id, props.resolveLabel);
     } else if (child.type === IntervalMark) {
       const props = child.props as IntervalMarkProps;
-      const { x, y, angle, x0, x1, color, series, stack, bounds: explicitBounds, id } = props;
+      const { x, y, angle, x0, x1, color, series, stack, bounds: explicitBounds, id, channels, strokeWidth, fillOpacity, opacity } = props;
       const markLabel = buildMarkLabel(props);
+      const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
+      const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
+      const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
+      const intervalStyle = {
+        ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
+        ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
+        ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
+        ...nodeStylePropsOf(props, styleContext),
+      };
       // pie / donut：angle → 自动累积 stack transform（产 y0/y1）+ extent×full bounds
       if (angle !== undefined) {
         if (y !== undefined || x !== undefined || x0 !== undefined || x1 !== undefined || stack !== undefined || explicitBounds !== undefined) {
@@ -506,8 +666,9 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         into.marks.push({
           type: PlotMark.Interval,
           ...(id !== undefined ? { id } : {}),
+          ...intervalStyle,
           bounds: { x: { kind: IntervalBoundKind.Extent, from: 'y0', to: 'y1' }, y: { kind: IntervalBoundKind.Full } },
-          encoding: { ...colorEnc },
+          encoding: { ...colorEnc, ...extensionChannelEncoding(channels) },
         });
         into.hasSector = true;
         recordColor(into, colorEnc);
@@ -520,9 +681,10 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
           type: PlotMark.Interval,
           ...(id !== undefined ? { id } : {}),
           ...(series !== undefined ? { series } : {}),
+          ...intervalStyle,
           bounds: explicitBounds,
           ...(markLabel !== undefined ? { label: markLabel } : {}),
-          encoding: { ...(x !== undefined ? { x: { field: x } } : {}), ...(y !== undefined ? { y: { field: y } } : {}), ...colorEnc },
+          encoding: { ...(x !== undefined ? { x: { field: x } } : {}), ...(y !== undefined ? { y: { field: y } } : {}), ...colorEnc, ...extensionChannelEncoding(channels) },
         });
         if (explicitBounds.x?.kind === IntervalBoundKind.Band) into.hasBar = true;
         if (explicitBounds.y?.kind === IntervalBoundKind.Band) into.hasRect = true;
@@ -555,19 +717,23 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         type: PlotMark.Interval,
         ...(id !== undefined ? { id } : {}),
         ...(series !== undefined ? { series } : {}),
+        ...intervalStyle,
         ...(bounds !== undefined ? { bounds } : {}),
         ...(markLabel !== undefined ? { label: markLabel } : {}),
         // histogram：仅 y（高度），x 来自 x0/x1 区间；普通柱：x（分类 band）+ y（值）
-        encoding: histogram ? { y: { field: y }, ...colorEnc } : { x: { field: x }, y: { field: y }, ...colorEnc },
+        encoding: histogram ? { y: { field: y }, ...colorEnc, ...extensionChannelEncoding(channels) } : { x: { field: x }, y: { field: y }, ...colorEnc, ...extensionChannelEncoding(channels) },
       });
       if (!histogram) into.hasBar = true;
       recordColor(into, colorEnc);
       recordResolveLabel(into, id, props.resolveLabel);
     } else if (child.type === RegionMark) {
       const props = child.props as RegionMarkProps;
-      const { x, y, order, series, baseline, closed, color, id } = props;
+      const { x, y, order, series, baseline, closed, color, id, channels, strokeWidth, fillOpacity, opacity } = props;
       const colorEnc = colorChannel(color, series);
       const markLabel = buildMarkLabel(props);
+      const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
+      const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
+      const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
       into.marks.push({
         type: PlotMark.Region,
         ...(id !== undefined ? { id } : {}),
@@ -575,16 +741,22 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(series !== undefined ? { series } : {}),
         ...(baseline !== undefined ? { baseline } : {}),
         ...(closed ? { closed: true } : {}),
+        ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
+        ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
+        ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
+        ...pathStylePropsOf(props, styleContext),
         ...(markLabel !== undefined ? { label: markLabel } : {}),
-        encoding: { ...positionEncoding(x, y), ...colorEnc },
+        encoding: { ...positionEncoding(x, y), ...colorEnc, ...extensionChannelEncoding(channels) },
       });
       recordColor(into, colorEnc);
       recordResolveLabel(into, id, props.resolveLabel);
       if (closed) into.hasClosedLine = true;
     } else if (child.type === LinkMark) {
-      const { sourceX, sourceY, targetX, targetY, value, endWidth, curvature, orientation, color, id } = child.props as LinkMarkProps;
+      const { sourceX, sourceY, targetX, targetY, value, endWidth, curvature, orientation, color, id, channels, fillOpacity, opacity } = child.props as LinkMarkProps;
       // 扁平端点 props → 嵌套 IR source/target 字段对；color 走 colorChannel（无 series）
       const colorEnc = colorChannel(color, undefined);
+      const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
+      const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
       into.marks.push({
         type: PlotMark.Link,
         ...(id !== undefined ? { id } : {}),
@@ -594,11 +766,14 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(endWidth !== undefined ? { endWidth } : {}),
         ...(curvature !== undefined ? { curvature } : {}),
         ...(orientation !== undefined ? { orientation } : {}),
-        encoding: { ...colorEnc },
+        ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
+        ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
+        ...pathStylePropsOf(child.props as LinkMarkProps, styleContext),
+        encoding: { ...colorEnc, ...extensionChannelEncoding(channels) },
       });
       recordColor(into, colorEnc);
     } else if (child.type === ReferenceMark) {
-      collectReference(child.props as ReferenceMarkProps, into);
+      collectReference(child.props as ReferenceMarkProps, into, styleContext);
     } else if (child.type === Axis) {
       const { dimension, scale, tickCount, tickLabels, grid, id } = child.props as AxisProps;
       if (scale !== undefined) {
