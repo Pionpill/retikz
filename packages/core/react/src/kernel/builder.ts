@@ -105,6 +105,31 @@ const textElementToLineSpec = (el: ReactElement): IRLineSpec | undefined => {
  *   `React.Fragment` 透明展开其 children（沿用同一缓冲，与裸数组同义）；其余函数式组件同步调用后递归其返回值
  *   （与 `readSceneChildren` 一致，让条件分支返回的 `<Text>` 段不被静默丢弃）；其它类型跳过；遍历结束 flush 残余缓冲
  */
+const isEscapedAt = (text: string, index: number): boolean => {
+  let slashCount = 0;
+  for (let i = index - 1; i >= 0 && text[i] === '\\'; i -= 1) slashCount += 1;
+  return slashCount % 2 === 1;
+};
+
+const splitChildTextLines = (text: string): Array<string> => {
+  const lines: Array<string> = [];
+  let start = 0;
+  let inDisplayTex = false;
+  for (let i = 0; i < text.length; i += 1) {
+    if (text[i] === '$' && text[i + 1] === '$' && !isEscapedAt(text, i)) {
+      inDisplayTex = !inDisplayTex;
+      i += 1;
+      continue;
+    }
+    if (text[i] === '\n' && !inDisplayTex) {
+      lines.push(text.slice(start, i));
+      start = i + 1;
+    }
+  }
+  lines.push(text.slice(start));
+  return lines;
+};
+
 const collectChildLines = (children: unknown): Array<IRLineSpec> => {
   const out: Array<IRLineSpec> = [];
   let buffer = '';
@@ -120,7 +145,7 @@ const collectChildLines = (children: unknown): Array<IRLineSpec> => {
   };
   const visit = (node: unknown): void => {
     if (typeof node === 'string') {
-      const parts = node.split('\n');
+      const parts = splitChildTextLines(node);
       append(parts[0]);
       for (let i = 1; i < parts.length; i += 1) {
         flush();

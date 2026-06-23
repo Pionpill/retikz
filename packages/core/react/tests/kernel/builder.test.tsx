@@ -101,6 +101,24 @@ describe('buildIR', () => {
     expect(ir.children[0]).toMatchObject({ type: 'node', text: ['Line 1', 'Line 2'] });
   });
 
+  it('keeps newlines inside a display tex block in Node children', () => {
+    const tex = String.raw`$$\begin{array}{rl}
+f(x) &= ax^2 + bx + c\\
+f'(x) &= 2ax + b
+\end{array}$$`;
+    const ir = buildIR(<Node id="A" position={[0, 0]}>{tex}</Node>);
+    expect(ir.children[0]).toMatchObject({ type: 'node', text: tex });
+  });
+
+  it('still splits plain newlines around a display tex block in Node children', () => {
+    const tex = String.raw`before
+$$a
+b$$
+after`;
+    const ir = buildIR(<Node id="A" position={[0, 0]}>{tex}</Node>);
+    expect(ir.children[0]).toMatchObject({ type: 'node', text: ['before', '$$a\nb$$', 'after'] });
+  });
+
   it('children 字符串数组按相邻 inline 拼成一行（对齐 React）', () => {
     const ir = buildIR(
       <Node id="A" position={[0, 0]}>{['L1', 'L2', 'L3']}</Node>,

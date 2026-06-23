@@ -6,7 +6,10 @@ import type { IR } from '../../src/schemas';
 import type { PathPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 
+const lowerTexCalls: Array<{ tex: string; displayMode?: boolean }> = [];
+
 const fakeLowerTex: LowerTex = (content, style) => {
+  lowerTexCalls.push({ tex: content.tex, displayMode: content.displayMode });
   if (content.tex === 'INVALID') return null;
   const width = Math.max(content.tex.length, 1) * style.fontSize * 0.5;
   const height = style.fontSize * (content.displayMode ? 2 : 1);
@@ -30,6 +33,7 @@ const compile = (
   withTex = true,
 ): { primitives: Array<ScenePrimitive>; warnings: Array<CompileWarning>; width: number } => {
   const warnings: Array<CompileWarning> = [];
+  lowerTexCalls.length = 0;
   const out = compileToScene(scene(children), {
     onWarn: w => warnings.push(w),
     ...(withTex ? { lowerTex: fakeLowerTex } : {}),
@@ -51,6 +55,20 @@ describe('[inline-tex] node text', () => {
     expect(textPrims(primitives).length).toBe(0);
   });
 
+  it('passes multiline `$$...$$` content to lowerTex as one display run', () => {
+    const tex = String.raw`\begin{array}{rl}
+f(x) &= ax^2 + bx + c\\
+f'(x) &= 2ax + b
+\end{array}`;
+    const { primitives, warnings } = compile([
+      { type: 'node', id: 'a', position: [0, 0], text: `$$${tex}$$` } as never,
+    ]);
+    expect(glyphPaths(primitives).length).toBe(1);
+    expect(textPrims(primitives).length).toBe(0);
+    expect(warnings.length).toBe(0);
+    expect(lowerTexCalls).toEqual([{ tex, displayMode: true }]);
+  });
+
   it('sizes a display-math node from the glyph bbox (wider tex → wider node)', () => {
     const narrow = compile([{ type: 'node', id: 'a', position: [0, 0], text: '$$ab$$' } as never]).width;
     const wide = compile([{ type: 'node', id: 'a', position: [0, 0], text: '$$abcdefgh$$' } as never]).width;
@@ -70,6 +88,20 @@ describe('[inline-tex] node text', () => {
     );
     expect(glyphPaths(primitives).length).toBe(0);
     expect(textPrims(primitives)[0].lines[0].text).toBe('a $x$ b');
+    expect(warnings.length).toBe(0);
+  });
+
+  it('renders multiline `$$...$$` literally when no lowerTex is injected', () => {
+    const text = String.raw`$$\begin{array}{rl}
+f(x) &= ax^2 + bx + c\\
+f'(x) &= 2ax + b
+\end{array}$$`;
+    const { primitives, warnings } = compile(
+      [{ type: 'node', id: 'a', position: [0, 0], text } as never],
+      false,
+    );
+    expect(glyphPaths(primitives).length).toBe(0);
+    expect(textPrims(primitives)[0].lines.map(line => line.text)).toEqual(text.split('\n'));
     expect(warnings.length).toBe(0);
   });
 
