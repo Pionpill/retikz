@@ -1,6 +1,9 @@
 import type { IRJsonObject, JsonValue } from '@retikz/core';
+import type { DatumIdRegistrar, ProvenanceContext } from '../contract/provenance';
 import type { ExternalRow } from '../schemas';
 import { resolveFieldPath } from '../providers';
+
+export type { DatumIdRegistrar, ProvenanceContext } from '../contract/provenance';
 
 /**
  * 行级源序标记：ingest 时给每行打 `row[SOURCE_INDEX]=i`，跨 transform（object spread / sort）存活
@@ -62,21 +65,6 @@ export const slug = (value: unknown): string => String(value).replace(/\./g, '_'
 
 /** plot 来源 meta 的公共前缀字段 */
 const PLOT_SOURCE = 'plot';
-
-/**
- * provenance 下沉上下文：贯穿 expand → mark → guide，承载 plotId / dataReference / 各开关
- * @description provenance 关时不构造此对象（传 undefined），mark / guide 据此决定是否写 id / meta，保默认逐字节等价。
- */
-export type ProvenanceContext = {
-  /** root.id（在 → 作 `<plotId>.` 前缀来源；缺 → 内部元素匿名、meta 省 plotId） */
-  plotId?: string;
-  /** 数据集引用名（写进 root / per-datum meta 的 dataReference） */
-  dataReference: string;
-  /** 每个 datum Node 写 per-datum meta（O(rows) 增量，独立开关） */
-  datumProvenance: boolean;
-  /** 数据属性名：把该字段值绑成 `<plotId>.datum.<值>` 的 Node.id（缺字段 / 重复值 fail loud） */
-  datumIdField?: string;
-};
 
 /** 把 series / datum 值收成 JsonValue（标量直用，其余 String() 兜底，保 meta JSON-safe） */
 const toJsonValue = (value: unknown): JsonValue => {
@@ -143,13 +131,6 @@ export const markLayerId = (plotId: string | undefined, markId: string | undefin
   if (plotId === undefined) return undefined;
   return markId !== undefined ? `${plotId}.${markId}` : `${plotId}.mark.${markIndex}`;
 };
-
-/**
- * datum id 登记器：行 → `<plotId>.datum.<slug>`，跨所有 datum-bearing mark 共享一份 seen
- * @description 同一 plot 命名空间下两 mark 都绑 datum id 时（point + bar），共用 register 才能跨 mark 查重。
- *   缺字段 / 不同原值 slug 撞同串 / 同值重复 → 抛清晰错误（fail loud，保 anchor 稳定唯一）。
- */
-export type DatumIdRegistrar = (row: ExternalRow) => string;
 
 /**
  * 建一个 plot 级 datum id 登记器（datumIdField + plotId 在时由调用方构造一次、线穿全 mark）
