@@ -279,14 +279,15 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_interval_strips_stroke_channels', () => {
-    const parsed = MarkSchema.parse({
+  it('mark_interval_with_node_style_channels_valid', () => {
+    const m = {
       type: 'interval',
-      stroke: { kind: 'field', value: 'region' },
       strokeWidth: { kind: 'field', value: 'density' },
+      opacity: { kind: 'constant', value: 0.8 },
+      fillOpacity: { kind: 'field', value: 'fillAlpha' },
       encoding: { x: { field: 'c' }, y: { field: 'v' } },
-    });
-    expect(parsed).toEqual({ type: 'interval', encoding: { x: { field: 'c' }, y: { field: 'v' } } });
+    };
+    expect(MarkSchema.parse(m)).toEqual(m);
   });
 
   it('mark_interval_preserves_unknown_role_key_shape', () => {
@@ -445,6 +446,36 @@ describe('MarkSchema (ADR-05)', () => {
 
   it('mark_interval_label_valid', () => {
     const m = { type: 'interval', label: { content: { field: 'revenue', displayFormat: ',.0f' }, position: 'above', distance: 6, pin: true }, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_label_core_style_fields_valid', () => {
+    const m = {
+      type: 'interval',
+      label: {
+        content: { field: 'revenue' },
+        textColor: '#334155',
+        opacity: 0.75,
+        font: { family: 'serif', size: 12, weight: 'bold', style: 'italic' },
+        rotate: 'tangent',
+        keepUpright: true,
+        pin: { stroke: '#64748b', strokeWidth: 1.5, dashPattern: [2, 2] },
+      },
+      encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+    };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_path_with_core_path_style_channels_valid', () => {
+    const m = {
+      type: 'path',
+      strokeWidth: { kind: 'field', value: 'weight' },
+      opacity: { kind: 'constant', value: 0.9 },
+      lineCap: { kind: 'constant', value: 'round' },
+      lineJoin: { kind: 'constant', value: 'bevel' },
+      roundedCorners: { kind: 'field', value: 'corner' },
+      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+    };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 

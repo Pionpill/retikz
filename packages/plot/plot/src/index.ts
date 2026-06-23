@@ -1,4 +1,4 @@
-// @retikz/plot public API barrel.
+﻿// @retikz/plot public API barrel.
 // Built-in concrete coordinate frames are internal lowering objects; expose
 // CoordinateDefinition/frame helpers here, not built-in frame constructors.
 export {
@@ -22,7 +22,8 @@ export type {
   DensifyCellContourOptions,
   CoordinateFrame,
 } from './contract';
-export * from './features/data/resolve';
+export { applyFieldResolver } from './providers';
+export type { FieldResolution, ResolveField } from './contract';
 export * from './features/interaction/locate';
 export * from './schemas';
 export * from './pipeline/expand';
@@ -39,9 +40,33 @@ export type {
   PositionScaleDefinition,
   ScaleDefinition,
 } from './contract';
-// Visual channel extension surface: factory + types; channels bind via encoding.channels and deliver to a core node property.
-export { defineVisualChannel } from './contract';
-export type { AnyVisualChannelDefinition, ChannelOutputSpace, VisualChannelContext, VisualChannelDefinition } from './contract';
+// Channel extension surface: all channel kinds share one registry; scope/node/path channels keep typed convenience factories.
+export { ChannelDefinitionKind, defineChannel, defineNodeChannel, definePathChannel, defineScopeChannel } from './contract';
+export type {
+  AnyChannelDefinition,
+  BaseChannelDefinition,
+  ChannelBindingResolver,
+  ChannelContext,
+  ChannelDefinition,
+  ChannelDefinitionKindValue,
+  ChannelOutputSpace,
+  MarkChannelDefinition,
+  MarkChannelResolution,
+  NodeChannelContext,
+  NodeChannelDelivery,
+  NodeChannelDeliveryContext,
+  NodeChannelDefinition,
+  PathChannelContext,
+  PathChannelDefinition,
+  PathChannelDelivery,
+  PathChannelDeliveryContext,
+  PositionChannelDefinition,
+  ScopeChannelContext,
+  ScopeChannelDefinition,
+  ScopeChannelDelivery,
+  ScopeChannelDeliveryContext,
+  ScopeChannelResolution,
+} from './contract';
 export { BUILTIN_COLOR_SCHEMES, PlotColorScheme } from './providers';
 export type { ColorSchemeResolver, PlotColorSchemeValue } from './providers';
 export type { PositionScale } from './contract';

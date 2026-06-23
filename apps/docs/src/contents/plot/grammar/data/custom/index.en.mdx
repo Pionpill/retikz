@@ -1,15 +1,14 @@
 ---
 title: Custom Data
-description: Centralize data-layer runtime extensions: custom field formats, field resolvers, and custom visual channels.
+description: Centralize data-layer runtime extensions: custom field formats and field resolvers.
 ---
 
-The data layer has two extension styles. Some extensions still persist with the PlotSpec, such as named `format` values. Others are runtime functions, such as `resolveField` and `defineVisualChannel`. Use the first when the config should serialize well; use the second when the behavior belongs to application code.
+The data layer has two extension styles. Some extensions still persist with the PlotSpec, such as named `format` values. Others are runtime functions, such as `resolveField`. Use the first when the config should serialize well; use the second when the behavior belongs to application code.
 
 | Case | Recommended Entry | Enters IR |
 | --- | --- | --- |
 | Reusable field format | `defineFieldFormat` + `formatDefinitions` | Yes, only the format name |
 | Arbitrary field parsing | `resolveField` | No, runtime function only |
-| New visual channel | `defineVisualChannel` + `visualChannelDefinitions` | Binding enters IR; definition does not |
 
 ## Custom Named Formats
 
@@ -40,69 +39,6 @@ Rules:
 - `resolveField` does not bypass strict mode: with a model declared, unlisted fields still error.
 - The second argument provides `{ dataReference, physicalPath, declaredType }`, so one logical field can branch by data source or physical path.
 
-## Custom Visual Channels
-
-Common visual channels (`size`, `opacity`, `shape`, `strokeWidth`) have named props. To add your own visual channel, declare a runtime definition with `defineVisualChannel`, then bind a field or constant through `encoding.channels.<name>` in the spec.
-
-```tsx
-import { defineVisualChannel } from '@retikz/plot';
-
-const intensity = defineVisualChannel<number>({
-  channel: 'intensity',
-  output: { outputKind: 'number', range: [0.3, 1], clamp: true },
-  resolve: ctx => mark => {
-    const binding = mark.type === 'point' ? mark.encoding.channels?.intensity : undefined;
-    if (binding?.field === undefined) return undefined;
-    const values = ctx.rows.map(row => Number(row[binding.field])).filter(Number.isFinite);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    return {
-      of: row => {
-        const value = Number(row[binding.field]);
-        if (!Number.isFinite(value)) return undefined;
-        return 0.3 + (max === min ? 0.5 : (value - min) / (max - min)) * 0.7;
-      },
-    };
-  },
-  deliver: (node, value) => {
-    node.opacity = value;
-  },
-});
-```
-
-The binding remains JSON-safe PlotSpec:
-
-```tsx
-<Plot
-  data={{ points }}
-  spec={{
-    namespace: 'plot',
-    type: 'plot',
-    data: { reference: 'points' },
-    scales: [
-      { type: 'linear', name: 'x' },
-      { type: 'linear', name: 'y' },
-    ],
-    coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [
-      {
-        type: 'point',
-        encoding: {
-          x: { field: 'x' },
-          y: { field: 'y' },
-          channels: { intensity: { field: 'score' } },
-        },
-      },
-    ],
-  }}
-  visualChannelDefinitions={[intensity]}
-/>;
-```
-
-The definition is runtime capability and does not enter PlotSpec; the spec stores only channel bindings. Built-in and custom visual channels are merged into one registry, then resolved and delivered to core node properties through the same path.
-
-`encoding.channels` mainly serves the spec / programmatic entry today; React `<PointMark>` still exposes common channels as named props. A custom channel cannot override a built-in channel name, and binding an unregistered channel fails during lowering.
-
 ## Choosing One
 
 | Need | Use |
@@ -110,6 +46,6 @@ The definition is runtime capability and does not enter PlotSpec; the spec store
 | Enumerable format, persisted with the spec | `defineFieldFormat` |
 | One-off parsing, application state, or data-source branching | `resolveField` |
 | Only map logical fields to renamed source fields | `fieldMap`; see [Processing](/plot/grammar/data/processing) |
-| Drive a new visual property from a field | `defineVisualChannel` |
+| Drive a new node property from a field | `defineNodeChannel`; see [Custom Channels](/plot/grammar/channel/custom) |
 
-Prefer declarative capability that can enter IR. Use runtime definitions or `resolveField` only when the behavior truly needs a function.
+Prefer declarative capability that can enter IR. Use `resolveField` or the relevant runtime definition only when the behavior truly needs a function.

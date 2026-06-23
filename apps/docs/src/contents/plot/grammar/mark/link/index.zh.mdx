@@ -116,20 +116,24 @@ const lowerLink = (mark: LinkMark, rows: Array<ExternalRow>, frame: CoordinateFr
 
 ## API
 
-`LinkMark` 的位置和宽度都是数据通道。表里的 `FieldName` 表示字段名或字段路径，例如 `source.x` / `amount`；`curvature` / `orientation` 是常量几何配置。
+`LinkMark` 的 API 按位置、专属、路径、通用和自定义分组：端点字段决定 source / target 位置，专属字段描述宽度和几何，路径字段下沉到 core `Path`。表里的 `FieldName` 表示字段名或字段路径，例如 `source.x` / `amount`；`curvature` / `orientation` 是常量几何配置。
 
 | 分类 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- | --- |
-| 源端点 | `sourceX` | `FieldName` | — | 源端 x 位置字段，经坐标系投影 |
-| | `sourceY` | `FieldName` | — | 源端 y 位置字段，经坐标系投影 |
-| 目标端点 | `targetX` | `FieldName` | — | 目标端 x 位置字段，经坐标系投影 |
-| | `targetY` | `FieldName` | — | 目标端 y 位置字段，经坐标系投影 |
-| 宽度 | `value` | `FieldName` | — | 源端流量字段，经合成线性比例尺映射为带宽 |
-| | `endWidth` | `FieldName?` | `value` | 目标端宽度字段；缺省时目标端与源端等宽 |
-| 几何 | `curvature` | `number?` | `0.5` | cubic 控制点沿主轴外推比例，范围 `0..1` |
-| | `orientation` | `'horizontal' \| 'vertical'?` | `'horizontal'` | 主轴取向：水平左右流或垂直上下流 |
-| 样式 | `color` | `FieldName?` | 默认图层色 | 绑定颜色通道字段，按字段值分组填充 |
-| 通用 | `id` | `string?` | — | 可选句柄（预留，暂不解析） |
+| 位置 | `sourceX` / `sourceY` | `FieldName` | — | 源端位置字段对；当前只在 cartesian2D 下投影 |
+|  | `targetX` / `targetY` | `FieldName` | — | 目标端位置字段对；当前只在 cartesian2D 下投影 |
+| 专属 | `value` | `FieldName` | — | 源端流量字段，经合成线性比例尺映射为带宽 |
+|  | `endWidth` | `FieldName?` | `value` | 目标端宽度字段；缺省时目标端与源端等宽 |
+|  | `curvature` | `number?` | `0.5` | cubic 控制点沿主轴外推比例，范围 `0..1` |
+|  | `orientation` | `'horizontal' / 'vertical'?` | `'horizontal'` | 主轴取向：水平左右流或垂直上下流 |
+|  | `color` | `FieldName?` | 默认图层色 | 绑定颜色通道字段，按字段值分组填充 |
+| 路径 | `opacity` / `fillOpacity`<br />`drawOpacity` | `PointOpacityStyle?`<br />`PointOpacityStyle?` | —<br />— | 流带整体、填充和描边透明度 |
+|  | `zIndex` / `rotate` | `PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />— | 绘制顺序和旋转 |
+|  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | 路径缩放、填充规则和厚度预设 |
+|  | `arrow` / `arrowDetail` | `PathArrowStyle?`<br />`PathArrowDetailStyle?` | —<br />— | 箭头方向与细节 |
+|  | `dashPattern`<br />`shadow` / `blendMode` | `NodeDashPatternStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?` | —<br />—<br />— | 虚线、阴影和混合模式 |
+| 通用 | `id` | `string?` | — | 可选 mark 句柄，用于图层 id |
+| 自定义 | `channels` | `Record<string, Channel>` | — | 自定义通道入口；交给注册的 channel definition 解析 |
 
 ## 相关
 

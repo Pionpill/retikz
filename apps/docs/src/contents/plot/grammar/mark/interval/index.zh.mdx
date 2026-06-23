@@ -141,25 +141,30 @@ const lowerCells = (
 
 ## API
 
-`IntervalMark` 的大多数属性都是数据通道。表里的 `FieldName` 表示数据字段名或字段路径，例如 `quarter` / `sales.revenue`。
+`IntervalMark` 的 API 按位置、专属、节点、标签、通用和自定义分组：位置字段决定 cell 的角色值，专属字段负责区间构造和系列关系，节点字段下沉到 core `Node`。表里的 `FieldName` 表示数据字段名或字段路径，例如 `quarter` / `sales.revenue`。
 
 | 分类 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- | --- |
-| 位置 | `x` | `FieldName?` | — | x 位置字段；普通柱、热图、径向柱使用 |
-| | `y` | `FieldName?` | — | y 位置字段；普通柱、热图、径向柱使用 |
-| | `x0` / `x1` | `FieldName?` | — | 连续 x 区间的上下界字段；用于直方图等显式区间 |
-| | `angle` | `FieldName?` | — | 饼图 / 环图入口：份额值字段，自动累积成角区间 |
-| 区间 | `bounds` | `IntervalBounds?` | 按 scale 推断 | 高级区间来源；热图写 `{ x: { kind: 'band' }, y: { kind: 'band' } }` |
-| 系列 | `series` | `FieldName?` | — | 系列字段；拆成多系列区间 |
-| | `stack` | `boolean?` | `false` | 多系列时改为堆叠；省略时多系列并排 |
-| 样式通道 | `color` | `FieldName?` | `series` | 颜色字段；缺省时取 `series` |
-| 标签 | `label` | `FieldName?` | — | 宿主 datum 标签字段 |
-| | `labelDisplayFormat` | `string?` | — | 标签展示格式串 |
-| | `labelPosition` | `CompassAnchor \| number?` | `above` | 标签相对宿主 Node 的方位 |
-| | `labelDistance` | `number?` | `12` | 标签与宿主边框的距离 |
-| | `labelPin` | `boolean?` | `false` | 是否从宿主边框拉引线到标签 |
-| | `resolveLabel` | `(row) => string?` | — | 运行时生成标签；不进 IR，需要配 `id` |
-| 通用 | `id` | `string?` | — | 可选句柄 |
+| 位置 | `x` / `y` / `z` | `FieldName?` | — | 坐标角色字段；cartesian2D / polar2D 用 `x` / `y`，ternary2D 还需要 `z` |
+| 专属 | `color` | `FieldName?` | `series` | 颜色字段；字段绑定会生成颜色通道和图例 |
+|  | `x0` / `x1` | `FieldName?` | — | 连续 x 区间上下界；组件层会构造 `bounds.x = extent(x0, x1)` |
+|  | `angle` | `FieldName?` | — | 饼图 / 环图入口：份额字段会累积成角区间 |
+|  | `bounds` | `IntervalBounds?` | 按 role 推断 | 显式声明每个 role 的 band / span / extent / full |
+|  | `series` | `FieldName?` | — | 系列字段；可拆分、并排或堆叠区间 |
+|  | `stack` | `boolean?` | `false` | 多系列时改为堆叠；省略时多系列并排 |
+| 节点 | `opacity` / `fillOpacity` | `PointOpacityStyle?` | — | cell Node 整体和填充透明度 |
+|  | `strokeWidth` | `PointNonnegativeNumberStyle?` | — | cell Node 描边宽度 |
+|  | `padding` / `minimumSize` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | cell Node 内边距和最小视觉尺寸 |
+|  | `minimumWidth` / `minimumHeight` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | cell Node 最小视觉宽 / 高 |
+|  | `align`<br />`lineHeight` / `maxTextWidth` | `MarkValueProp<NodeTextAlignValue>`<br />`NodeTextAlignStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />— | 文本排版通道 |
+|  | `cornerRadius`<br />`scale` / `xScale` / `yScale` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />— | cell Node 圆角与缩放 |
+|  | `innerXSep` / `innerYSep`<br />`outerSep` / `margin` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | cell Node 间距通道 |
+|  | `dashed` / `dotted`<br />`dashPattern` | `MarkValueProp<boolean>`<br />`NodeBooleanStyle`<br />`MarkValueProp<Array<number>>`<br />`NodeDashPatternStyle` | —<br />— | cell Node 描边虚线 |
+|  | `font`<br />`boundary`<br />`shadow`<br />`blendMode` | `NodeFontStyle?`<br />`NodeBoundaryStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?` | —<br />—<br />—<br />— | 字体、边界、阴影和混合模式 |
+| 标签 | `label` / `labelDisplayFormat` | `FieldName?`<br />`string?` | —<br />— | 给每个 cell 挂标签 |
+|  | `labelPosition`<br />`labelDistance`<br />`labelPin` | `string / number`<br />`number`<br />`boolean / LabelPin` | `above`<br />`12`<br />`false` | 标签方位、距离和引线 |
+| 通用 | `id` | `string?` | — | 可选 mark 句柄，用于图层 id / 运行时标签解析 |
+| 自定义 | `channels` | `Record<string, Channel>` | — | 自定义通道入口；交给注册的 channel definition 解析 |
 
 ## 相关
 

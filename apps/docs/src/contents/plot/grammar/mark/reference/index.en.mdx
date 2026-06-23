@@ -116,18 +116,31 @@ The logic breaks down into four steps:
 
 ## API
 
-`ReferenceMark` mixes constant axis values and data channels. `FieldName` means a field name or field path, such as `threshold` / `limits.lo`; `number` means an inline constant axis value.
+`ReferenceMark` covers both lines and bands, with props grouped as Position, Specific, Path, Node, General, and Custom: position fields bind the reference axis, specific fields describe the span, path fields style reference lines, and node fields style reference bands. `FieldName` means a field name or field path, such as `threshold` / `limits.lo`; `number` means an inline constant axis value.
 
 | Category | Prop | Type | Default | Description |
 | --- | --- | --- | --- | --- |
-| Orientation | `y` | `number \| FieldName?` | — | Axis bound for a horizontal reference; number is constant, field is per-datum |
-| | `x` | `number \| FieldName?` | — | Axis bound for a vertical reference; number is constant, field is per-datum |
-| Upper bound | `yTo` | `number \| FieldName?` | — | Horizontal band upper bound; pairs with `y` to create `y∈[y,yTo]` |
-| | `xTo` | `number \| FieldName?` | — | Vertical band upper bound; pairs with `x` to create `x∈[x,xTo]` |
-| Partial span | `extentField` | `FieldName?` | full opposite domain | Start field for a partial span along the opposite axis; must pair with `extentToField` |
-| | `extentToField` | `FieldName?` | full opposite domain | End field for a partial span along the opposite axis; must pair with `extentField` |
-| Style | `color` | `string?` | default layer color | Constant reference: color string; per-datum reference: color field name |
-| General | `id` | `string?` | — | Optional handle (reserved, not resolved yet) |
+| Position | `x` | `number`<br />`FieldName?` | — | Axis bound for a vertical reference; number is constant, field is per-datum |
+|  | `y` | `number`<br />`FieldName?` | — | Axis bound for a horizontal reference; number is constant, field is per-datum |
+| Specific | `color` | `string?` | default layer color | Constant reference: color string; per-datum reference: color field name |
+|  | `xTo` | `number`<br />`FieldName?` | — | Vertical band upper bound; pairs with `x` to create `x∈[x,xTo]` |
+|  | `yTo` | `number`<br />`FieldName?` | — | Horizontal band upper bound; pairs with `y` to create `y∈[y,yTo]` |
+|  | `extentField` / `extentToField` | `FieldName?` | full opposite domain | Start / end fields for a partial span along the opposite axis; must appear together |
+| Path | `strokeWidth`<br />`opacity` / `drawOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | Reference-line stroke width, whole opacity, and stroke opacity |
+|  | `zIndex` / `rotate` | `PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />— | Reference-line draw order and rotation |
+|  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | Reference-line path scale, fill rule, and thickness preset |
+|  | `arrow` / `arrowDetail` | `PathArrowStyle?`<br />`PathArrowDetailStyle?` | —<br />— | Reference-line arrow direction and details |
+|  | `dashPattern`<br />`shadow` / `blendMode` | `NodeDashPatternStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?` | —<br />—<br />— | Reference-line dash pattern, shadow, and blend mode |
+| Node | `fillOpacity` | `PointOpacityStyle?` | — | Reference-band fill opacity |
+|  | `padding` / `minimumSize` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | Reference-band Node padding and minimum visual size |
+|  | `minimumWidth` / `minimumHeight` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | Reference-band Node minimum visual width / height |
+|  | `align`<br />`lineHeight` / `maxTextWidth` | `MarkValueProp<NodeTextAlignValue>`<br />`NodeTextAlignStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />— | Reference-band text layout channels |
+|  | `cornerRadius`<br />`xScale` / `yScale` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />— | Reference-band Node corner radius and scaling |
+|  | `innerXSep` / `innerYSep`<br />`outerSep` / `margin` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | Reference-band Node spacing channels |
+|  | `dashed` / `dotted` | `MarkValueProp<boolean>`<br />`NodeBooleanStyle` | — | Reference-band Node stroke dash toggles |
+|  | `font` / `boundary` | `NodeFontStyle?`<br />`NodeBoundaryStyle?` | —<br />— | Reference-band Node font and boundary |
+| General | `id` | `string?` | — | Optional mark handle for layer ids |
+| Custom | `channels` | `Record<string, Channel>` | — | Custom channel bindings; resolved by registered channel definitions |
 
 <ComponentAlert title="Bind exactly one orientation" description="<ReferenceMark> must bind exactly one of x or y; giving both / neither, or an upper bound that does not match the bound dimension (binding x but setting yTo), throws. This round lines support cartesian2D / polar2D, and bands support coordinate systems that provide projectCell (cartesian2D / polar2D); other coordinate systems throw." />
 

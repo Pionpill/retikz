@@ -24,6 +24,33 @@ describe('priority-1 宿主 mark label 扁平 props → IR mark.label', () => {
     expect(mark.label?.pin).toBe(true);
   });
 
+  it('label core style props pass through', () => {
+    const spec = buildPlotSpec(
+      <IntervalMark
+        x="month"
+        y="revenue"
+        label="revenue"
+        labelTextColor="#334155"
+        labelOpacity={0.75}
+        labelFont={{ family: 'serif', size: 12, weight: 'bold' }}
+        labelRotate="tangent"
+        labelKeepUpright
+        labelPin={{ stroke: '#64748b', strokeWidth: 1.5, dashPattern: [2, 2] }}
+      />,
+      '__plot',
+    );
+    const mark = spec.marks[0] as { label?: unknown };
+    expect(mark.label).toMatchObject({
+      content: { field: 'revenue' },
+      textColor: '#334155',
+      opacity: 0.75,
+      font: { family: 'serif', size: 12, weight: 'bold' },
+      rotate: 'tangent',
+      keepUpright: true,
+      pin: { stroke: '#64748b', strokeWidth: 1.5, dashPattern: [2, 2] },
+    });
+  });
+
   it('无 label prop → mark 无 label 字段', () => {
     const spec = buildPlotSpec(<IntervalMark x="m" y="r" />, '__plot');
     expect(spec.marks[0]).not.toHaveProperty('label');

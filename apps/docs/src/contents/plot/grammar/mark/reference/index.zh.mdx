@@ -116,18 +116,31 @@ const lowerReference = (mark: ReferenceMark, rows: Array<ExternalRow>, frame: Ex
 
 ## API
 
-`ReferenceMark` 同时有常量轴值和数据通道。表里的 `FieldName` 表示字段名或字段路径，例如 `threshold` / `limits.lo`；`number` 表示直接写入的常量轴值。
+`ReferenceMark` 的 API 同时覆盖 line 和 band，并按位置、专属、路径、节点、通用和自定义分组：位置字段绑定参考轴，专属字段描述参考范围，路径字段服务参考线，节点字段服务参考带。表里的 `FieldName` 表示字段名或字段路径，例如 `threshold` / `limits.lo`；`number` 表示直接写入的常量轴值。
 
 | 分类 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- | --- |
-| 取向 | `y` | `number \| FieldName?` | — | 绑定水平参考的常量轴；数字为常量，字段为 per-datum 参考 |
-| | `x` | `number \| FieldName?` | — | 绑定竖直参考的常量轴；数字为常量，字段为 per-datum 参考 |
-| 上界 | `yTo` | `number \| FieldName?` | — | 水平 band 上界；与 `y` 配对生成 `y∈[y,yTo]` |
-| | `xTo` | `number \| FieldName?` | — | 竖直 band 上界；与 `x` 配对生成 `x∈[x,xTo]` |
-| 部分长度 | `extentField` | `FieldName?` | 对侧轴满域 | 对侧维部分长度起点字段，必须与 `extentToField` 成对 |
-| | `extentToField` | `FieldName?` | 对侧轴满域 | 对侧维部分长度终点字段，必须与 `extentField` 成对 |
-| 样式 | `color` | `string?` | 默认图层色 | 常量参考时是颜色字符串；per-datum 参考时是颜色字段名 |
-| 通用 | `id` | `string?` | — | 可选句柄（预留，暂不解析） |
+| 位置 | `x` | `number`<br />`FieldName?` | — | 竖直参考的常量轴；数字为常量，字段为 per-datum 参考 |
+|  | `y` | `number`<br />`FieldName?` | — | 水平参考的常量轴；数字为常量，字段为 per-datum 参考 |
+| 专属 | `color` | `string?` | 默认图层色 | 常量参考时是颜色字符串；per-datum 参考时是颜色字段名 |
+|  | `xTo` | `number`<br />`FieldName?` | — | 竖直 band 上界；与 `x` 配对生成 `x∈[x,xTo]` |
+|  | `yTo` | `number`<br />`FieldName?` | — | 水平 band 上界；与 `y` 配对生成 `y∈[y,yTo]` |
+|  | `extentField` / `extentToField` | `FieldName?` | 对侧轴满域 | 对侧维部分长度起止字段，必须成对出现 |
+| 路径 | `strokeWidth`<br />`opacity` / `drawOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | 参考线描边宽度、整体透明度和描边透明度 |
+|  | `zIndex` / `rotate` | `PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />— | 参考线绘制顺序和旋转 |
+|  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | 参考线路径缩放、填充规则和厚度预设 |
+|  | `arrow` / `arrowDetail` | `PathArrowStyle?`<br />`PathArrowDetailStyle?` | —<br />— | 参考线箭头方向与细节 |
+|  | `dashPattern`<br />`shadow` / `blendMode` | `NodeDashPatternStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?` | —<br />—<br />— | 参考线虚线、阴影和混合模式 |
+| 节点 | `fillOpacity` | `PointOpacityStyle?` | — | 参考带填充透明度 |
+|  | `padding` / `minimumSize` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | 参考带 Node 内边距和最小视觉尺寸 |
+|  | `minimumWidth` / `minimumHeight` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | 参考带 Node 最小视觉宽 / 高 |
+|  | `align`<br />`lineHeight` / `maxTextWidth` | `MarkValueProp<NodeTextAlignValue>`<br />`NodeTextAlignStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />— | 参考带文本排版通道 |
+|  | `cornerRadius`<br />`xScale` / `yScale` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />— | 参考带 Node 圆角与缩放通道 |
+|  | `innerXSep` / `innerYSep`<br />`outerSep` / `margin` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | 参考带 Node 间距通道 |
+|  | `dashed` / `dotted` | `MarkValueProp<boolean>`<br />`NodeBooleanStyle` | — | 参考带 Node 描边虚线快捷开关 |
+|  | `font` / `boundary` | `NodeFontStyle?`<br />`NodeBoundaryStyle?` | —<br />— | 参考带 Node 字体和边界 |
+| 通用 | `id` | `string?` | — | 可选 mark 句柄，用于图层 id |
+| 自定义 | `channels` | `Record<string, Channel>` | — | 自定义通道入口；交给注册的 channel definition 解析 |
 
 <ComponentAlert title="取向二选一" description="<ReferenceMark> 必须恰好绑 x 或 y 之一；两者皆给或皆缺、或上界与所绑维度不匹配（绑 x 却给 yTo）都会报错。本轮线支持 cartesian2D / polar2D，带支持有 projectCell 的坐标系（cartesian2D / polar2D）；其余坐标系下报错。" />
 

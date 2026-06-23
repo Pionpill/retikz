@@ -3,4 +3,3 @@ export * from './shared';
 export * from './position';
 export * from './color';
 export * from './registry';
-export * from './channel';

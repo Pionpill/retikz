@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_TICK_COUNT, resolveLinearScale, scaleTicks } from '../../src/providers';
 import { type ScaleOperation } from '../../src/schemas';
 import { resolvePositionScale as resolvePositionScaleOp, resolveScaleRegistry } from '../../src/providers';
-import { coerceTimestamp, inferCategoryDomain } from '../../src/features';
+import { coerceTimestamp, inferCategoryDomain } from '../../src/providers';
 
 // 内置 scale registry：position 分派经 registry，测试包一层省去逐处传参。
 const scaleRegistry = resolveScaleRegistry();

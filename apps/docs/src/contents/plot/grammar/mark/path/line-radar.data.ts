@@ -1,9 +1,9 @@
-/** demo 自造数据集：团队能力雷达（dim 维度 + score 评分），喂闭合折线雷达（不进 IR） */
+/** demo 自造数据集：团队能力雷达；rank 固定角向连接顺序。 */
 export const team: Array<Record<string, string | number>> = [
-  { dim: 'Design', score: 8 },
-  { dim: 'Frontend', score: 9 },
-  { dim: 'Backend', score: 6 },
-  { dim: 'DevOps', score: 5 },
-  { dim: 'Testing', score: 7 },
-  { dim: 'Docs', score: 4 },
+  { rank: 0, dim: 'Design', score: 8 },
+  { rank: 1, dim: 'Frontend', score: 9 },
+  { rank: 2, dim: 'Backend', score: 6 },
+  { rank: 3, dim: 'DevOps', score: 5 },
+  { rank: 4, dim: 'Testing', score: 7 },
+  { rank: 5, dim: 'Docs', score: 4 },
 ];

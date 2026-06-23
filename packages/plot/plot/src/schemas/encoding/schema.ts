@@ -1,6 +1,7 @@
-import { AtDirection } from '@retikz/core';
+﻿import { AtDirection } from '@retikz/core';
 import { z } from 'zod';
-import { ScalarValueSchema } from '../data';
+import { FontSchema } from '@retikz/core';
+import { JsonValueSchema } from '@retikz/core';
 
 export const ChannelSchema = z
   .object({
@@ -11,7 +12,7 @@ export const ChannelSchema = z
       .describe(
         'Path accessor into a data row bound to this channel (e.g. "month" or "user.age"); resolved against the externally-supplied dataset at lowering and must yield a scalar',
       ),
-    value: ScalarValueSchema.optional().describe('Constant scalar literal for this channel (mutually exclusive with field)'),
+    value: JsonValueSchema.optional().describe('Constant JSON literal for this channel (mutually exclusive with field)'),
     scale: z
       .string()
       .min(1)
@@ -42,22 +43,28 @@ export const PositionEncodingSchema = z
     'Positional channel bindings. Built-ins use x for 1D, x / y for 2D, and x / y / z for ternary2D; custom CoordinateDefinition roles may add arbitrary non-empty role keys. All are optional at the schema level, and the coordinate system decides which roles are required during lowering',
   );
 
-export const StyleEncodingSchema = z
+export const MarkChannelEncodingSchema = z
   .object({
     color: ChannelSchema.optional().describe(
       'Color channel (non-positional): maps a field through an ordinal / color scale to the mark fill / stroke',
     ),
+    channels: z
+      .record(z.string(), ChannelSchema)
+      .optional()
+      .describe(
+        'Extension channel bindings: a map of registered channel name to field / constant binding, resolved by a ChannelDefinition supplied via options.channelDefinitions. A key colliding with a built-in channel name fails loud at lowering',
+      ),
   })
-  .describe('Non-positional style channel bindings fed to mark visuals (color today)');
+  .describe('Non-positional mark / extension channel bindings fed to mark lowering');
 
 export const EncodingSchema = z
   .object({
     ...PositionEncodingSchema.shape,
-    ...StyleEncodingSchema.shape,
+    ...MarkChannelEncodingSchema.shape,
   })
   .catchall(ChannelSchema)
   .describe(
-    'Channel bindings for a mark: built-in keys cover x / y / z and shared style channels; unknown non-empty keys are treated as custom coordinate position roles',
+    'Channel bindings for a mark: built-in keys cover x / y / z and shared mark channels; unknown non-empty keys are treated as custom coordinate position roles',
   );
 
 export const SizeChannelSchema = z
@@ -106,17 +113,20 @@ export const TextChannelSchema = z
   .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'text channel must set exactly one of `field` or `value`' })
   .describe('Text content channel: field is a per-datum label string, value is a constant label, displayFormat is a display format string for a numeric or temporal field');
 
+export const LabelPinStyleSchema = z
+  .object({
+    stroke: z.string().optional().describe('Leader line color; defaults to the label color / currentColor'),
+    strokeWidth: z.number().finite().positive().optional().describe('Leader line width in user units; default 1'),
+    dashPattern: z.array(z.number().finite()).optional().describe('Leader dash pattern, e.g. [2, 2]'),
+  })
+  .describe('Styled label leader line options aligned with core NodeLabelSchema.pin');
+
 export const PointEncodingSchema = PositionEncodingSchema.extend({
   text: TextChannelSchema.optional().describe(
     'Optional text content channel: when set the point lowers to a borderless core Node carrying text (free-text / datum label) instead of a glyph; field is a per-datum string, value is constant, displayFormat handles numeric / temporal display formatting',
   ),
-  channels: z
-    .record(z.string(), ChannelSchema)
-    .optional()
-    .describe(
-      'Extension visual channel bindings: a map of registered channel name to field / constant binding, resolved and delivered to a core node style property by a VisualChannelDefinition supplied via options.visualChannelDefinitions. Built-in point channels such as size / opacity / shape / strokeWidth keep their named props. A key colliding with a built-in channel name fails loud at lowering',
-    ),
-}).describe('PointMark encoding: positional channels plus optional text and extension visual channel bindings; built-in visual properties live on the mark as MarkValueType fields');
+  ...MarkChannelEncodingSchema.shape,
+}).describe('PointMark encoding: positional channels plus optional text and extension channel bindings; built-in node properties live on the mark as MarkValueType fields');
 
 export const MarkLabelSchema = z
   .object({
@@ -126,6 +136,14 @@ export const MarkLabelSchema = z
       .optional()
       .describe('Placement around the host datum node border: 8-direction enum or numeric angle (degrees); mirrors core NodeLabelSchema.position. Default above'),
     distance: z.number().nonnegative().optional().describe('Gap between the host node border and the label center (user units); mirrors core NodeLabelSchema.distance. Default 12'),
-    pin: z.boolean().optional().describe('Draw a leader line from the host node border to the label (core NodeLabelSchema.pin). Default false'),
+    textColor: z.string().min(1).optional().describe('Label text color; mirrors core NodeLabelSchema.textColor'),
+    opacity: z.number().min(0).max(1).optional().describe('Label-only opacity 0..1; mirrors core NodeLabelSchema.opacity'),
+    font: FontSchema.optional().describe('Label font overrides; mirrors core NodeLabelSchema.font'),
+    rotate: z
+      .union([z.enum(['none', 'radial', 'tangent']), z.number()])
+      .optional()
+      .describe('Label text rotation: none / radial / tangent / explicit degrees; mirrors core NodeLabelSchema.rotate'),
+    keepUpright: z.boolean().optional().describe('Flip rotated labels that would otherwise read upside-down; mirrors core NodeLabelSchema.keepUpright'),
+    pin: z.union([z.boolean(), LabelPinStyleSchema]).optional().describe('Draw a leader line from the host node border to the label; true uses defaults, object overrides leader style'),
   })
   .describe('Datum label attached to a positional mark: lowered onto each datum Node.label (core border-relative placement), the preferred path over a standalone TextMark');

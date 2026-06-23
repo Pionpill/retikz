@@ -1,5 +1,5 @@
 import { isFiniteNumber } from '@retikz/math';
-import { compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../../features';
+import { compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../data';
 import { type DeriveIntervalTransform, type ExternalRow, type JitterTransform, type NormalizeTransform, type SortTransform, type StackTransform } from '../../schemas';
 
 /** 默认堆叠下界 / 上界输出字段名，对齐 IntervalMark 的 y0Field / y1Field 默认值。 */

@@ -33,9 +33,11 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
     expect(() => ChannelSchema.parse({})).toThrow();
   });
 
-  // 交互：value 复用 ScalarValue 标量约束
-  it('channel_value_uses_scalar', () => {
-    expect(() => ChannelSchema.parse({ value: { a: 1 } })).toThrow();
+  // 交互：value 复用 JSON literal 约束，允许对象常量用于 font / arrowDetail / boundary 等内置通道。
+  it('channel_value_uses_json_literal', () => {
+    const value = { a: 1, nested: [true, null] };
+    expect(ChannelSchema.parse({ value })).toEqual({ value });
+    expect(() => ChannelSchema.parse({ value: () => 1 })).toThrow();
   });
 
   // ADR-04：color 通道 + scale 引用

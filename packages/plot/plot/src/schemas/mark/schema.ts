@@ -1,7 +1,8 @@
-import { JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
+﻿import { JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
 import { z } from 'zod';
-import { ChannelSchema, EncodingSchema, MarkLabelSchema, PointEncodingSchema, StyleEncodingSchema } from '../encoding';
-import { BUILTIN_MARK_TYPES, IntervalBoundKind, LinkOrientation, MarkValueKind, PlotMark } from './constants';
+import { ArrowDetailSchema, BlendMode, BoundarySchema, DropShadowSchema, FontSchema, PathScaleSchema, ShadowPreset, ShapeRefSchema } from '@retikz/core';
+import { ChannelSchema, EncodingSchema, MarkChannelEncodingSchema, MarkLabelSchema, PointEncodingSchema } from '../encoding';
+import { BUILTIN_MARK_TYPES, IntervalBoundKind, LinkOrientation, MarkValueKind, PathCurve, PlotMark } from './constants';
 
 /** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema、link / reference 用专属） */
 const markBase = {
@@ -39,12 +40,17 @@ const markValueSchema = <T extends z.ZodTypeAny>(constantValue: T, fieldDescript
 const StylePaintSchema = z.union([z.string(), PaintSpecSchema]);
 const StyleNumberSchema = z.number().finite();
 const StyleNonnegativeNumberSchema = z.number().finite().nonnegative();
+const StylePositiveNumberSchema = z.number().finite().positive();
 const StyleOpacitySchema = z.number().min(0).max(1);
+const StyleDashPatternSchema = z.array(StyleNonnegativeNumberSchema).min(1);
+const StyleShadowSchema = z.union([z.enum(ShadowPreset), DropShadowSchema]);
+const StyleShapeSchema = z.union([z.string().min(1), ShapeRefSchema]);
+const StyleBlendModeSchema = z.enum(BlendMode);
 
 export const PointFillStyleSchema = markValueSchema(StylePaintSchema, 'Data field path bound to point fill paint', 'Constant core Node fill paint', 'point fill style value');
 export const PointColorStyleSchema = markValueSchema(z.string().min(1), 'Data field path bound to point color', 'Constant point color', 'point color value');
 export const PointSizeStyleSchema = markValueSchema(StyleNonnegativeNumberSchema, 'Data field path bound to point size', 'Constant final glyph radius', 'point size value');
-export const PointShapeStyleSchema = markValueSchema(z.string().min(1), 'Data field path bound to point shape', 'Constant core Node shape name', 'point shape value');
+export const PointShapeStyleSchema = markValueSchema(StyleShapeSchema, 'Data field path bound to point shape', 'Constant core Node shape name or shape ref', 'point shape value');
 export const PointStrokeStyleSchema = markValueSchema(z.string().min(1), 'Data field path bound to point stroke color', 'Constant core Node stroke color', 'point stroke style value');
 export const PointNumberStyleSchema = markValueSchema(StyleNumberSchema, 'Data field path bound to a numeric point style value', 'Constant numeric style value', 'point numeric style value');
 export const PointNonnegativeNumberStyleSchema = markValueSchema(
@@ -55,11 +61,73 @@ export const PointNonnegativeNumberStyleSchema = markValueSchema(
 );
 export const PointOpacityStyleSchema = markValueSchema(StyleOpacitySchema, 'Data field path bound to an opacity style value', 'Constant opacity value 0..1', 'point opacity style value');
 export const PointZIndexStyleSchema = markValueSchema(z.number().int().finite(), 'Data field path bound to zIndex', 'Constant integer zIndex value', 'point zIndex style value');
+export const NodePositiveNumberStyleSchema = markValueSchema(StylePositiveNumberSchema, 'Data field path bound to a positive node style value', 'Constant positive node style value', 'node positive numeric style value');
+export const NodeTextAlignStyleSchema = markValueSchema(z.enum(['left', 'center', 'right']), 'Data field path bound to node text align', 'Constant core Node align', 'node text align style value');
+export const NodeBooleanStyleSchema = markValueSchema(z.boolean(), 'Data field path bound to a boolean node style value', 'Constant boolean node style value', 'node boolean style value');
+export const NodeDashPatternStyleSchema = markValueSchema(StyleDashPatternSchema, 'Data field path bound to node dashPattern', 'Constant core Node dashPattern', 'node dashPattern style value');
+export const NodeFontStyleSchema = markValueSchema(FontSchema, 'Data field path bound to node font', 'Constant core Node font', 'node font style value');
+export const NodeBoundaryStyleSchema = markValueSchema(BoundarySchema, 'Data field path bound to node boundary', 'Constant core Node boundary', 'node boundary style value');
+export const ShadowStyleSchema = markValueSchema(StyleShadowSchema, 'Data field path bound to shadow', 'Constant core shadow preset or object', 'shadow style value');
+export const BlendModeStyleSchema = markValueSchema(StyleBlendModeSchema, 'Data field path bound to blendMode', 'Constant core blendMode', 'blendMode style value');
+export const PathLineCapStyleSchema = markValueSchema(z.enum(['butt', 'round', 'square']), 'Data field path bound to a path lineCap value', 'Constant core Path lineCap', 'path lineCap style value');
+export const PathLineJoinStyleSchema = markValueSchema(z.enum(['miter', 'round', 'bevel']), 'Data field path bound to a path lineJoin value', 'Constant core Path lineJoin', 'path lineJoin style value');
+export const PathRoundedCornersStyleSchema = markValueSchema(
+  StyleNonnegativeNumberSchema,
+  'Data field path bound to path roundedCorners',
+  'Constant core Path roundedCorners radius',
+  'path roundedCorners style value',
+);
+export const PathFillRuleStyleSchema = markValueSchema(z.enum(['nonzero', 'evenodd']), 'Data field path bound to path fillRule', 'Constant core Path fillRule', 'path fillRule style value');
+export const PathThicknessStyleSchema = markValueSchema(
+  z.enum(['ultraThin', 'veryThin', 'thin', 'semithick', 'thick', 'veryThick', 'ultraThick']),
+  'Data field path bound to path thickness',
+  'Constant core Path thickness preset',
+  'path thickness style value',
+);
+export const PathArrowStyleSchema = markValueSchema(z.enum(['none', '->', '<-', '<->']), 'Data field path bound to path arrow direction', 'Constant core Path arrow direction', 'path arrow style value');
+export const PathScaleStyleSchema = markValueSchema(PathScaleSchema, 'Data field path bound to path scale', 'Constant core Path scale', 'path scale style value');
+export const PathArrowDetailStyleSchema = markValueSchema(ArrowDetailSchema, 'Data field path bound to path arrowDetail', 'Constant core Path arrowDetail', 'path arrowDetail style value');
+
+const coreNodeStyle = {
+  align: NodeTextAlignStyleSchema.optional().describe('Core Node text alignment: field-bound datum channel or constant left / center / right'),
+  lineHeight: NodePositiveNumberStyleSchema.optional().describe('Core Node lineHeight: field-bound datum channel or constant positive value'),
+  maxTextWidth: NodePositiveNumberStyleSchema.optional().describe('Core Node maxTextWidth: field-bound datum channel or constant positive value'),
+  cornerRadius: PointNonnegativeNumberStyleSchema.optional().describe('Core Node cornerRadius: field-bound datum channel or constant non-negative value'),
+  scale: NodePositiveNumberStyleSchema.optional().describe('Core Node uniform scale: field-bound datum channel or constant positive value'),
+  xScale: NodePositiveNumberStyleSchema.optional().describe('Core Node xScale: field-bound datum channel or constant positive value'),
+  yScale: NodePositiveNumberStyleSchema.optional().describe('Core Node yScale: field-bound datum channel or constant positive value'),
+  innerXSep: PointNonnegativeNumberStyleSchema.optional().describe('Core Node innerXSep: field-bound datum channel or constant non-negative value'),
+  innerYSep: PointNonnegativeNumberStyleSchema.optional().describe('Core Node innerYSep: field-bound datum channel or constant non-negative value'),
+  outerSep: PointNonnegativeNumberStyleSchema.optional().describe('Core Node outerSep: field-bound datum channel or constant non-negative value'),
+  margin: PointNonnegativeNumberStyleSchema.optional().describe('Core Node margin: field-bound datum channel or constant non-negative value'),
+  dashed: NodeBooleanStyleSchema.optional().describe('Core Node dashed: field-bound datum channel or constant boolean'),
+  dotted: NodeBooleanStyleSchema.optional().describe('Core Node dotted: field-bound datum channel or constant boolean'),
+  dashPattern: NodeDashPatternStyleSchema.optional().describe('Core Node dashPattern: field-bound datum channel or constant number array'),
+  font: NodeFontStyleSchema.optional().describe('Core Node font: field-bound datum channel or constant font object'),
+  boundary: NodeBoundaryStyleSchema.optional().describe('Core Node boundary: field-bound datum channel or constant boundary value'),
+  shadow: ShadowStyleSchema.optional().describe('Core Node shadow: field-bound datum channel or constant preset / object'),
+  blendMode: BlendModeStyleSchema.optional().describe('Core Node blendMode: field-bound datum channel or constant blend mode'),
+};
+
+const corePathStyle = {
+  drawOpacity: PointOpacityStyleSchema.optional().describe('Core Path drawOpacity: field-bound datum channel or constant opacity 0..1'),
+  zIndex: PointZIndexStyleSchema.optional().describe('Core Path zIndex: field-bound datum channel or constant integer'),
+  rotate: PointNumberStyleSchema.optional().describe('Core Path rotate: field-bound datum channel or constant angle'),
+  scale: PathScaleStyleSchema.optional().describe('Core Path scale: field-bound datum channel or constant number / {x,y}'),
+  fillRule: PathFillRuleStyleSchema.optional().describe('Core Path fillRule: field-bound datum channel or constant nonzero / evenodd'),
+  thickness: PathThicknessStyleSchema.optional().describe('Core Path thickness: field-bound datum channel or constant preset'),
+  arrow: PathArrowStyleSchema.optional().describe('Core Path arrow: field-bound datum channel or constant arrow direction'),
+  dashPattern: NodeDashPatternStyleSchema.optional().describe('Core Path dashPattern: field-bound datum channel or constant number array'),
+  arrowDetail: PathArrowDetailStyleSchema.optional().describe('Core Path arrowDetail: field-bound datum channel or constant object'),
+  shadow: ShadowStyleSchema.optional().describe('Core Path shadow: field-bound datum channel or constant preset / object'),
+  blendMode: BlendModeStyleSchema.optional().describe('Core Path blendMode: field-bound datum channel or constant blend mode'),
+};
 
 export const PointMarkSchema = z
   .object({
     type: z.literal(PlotMark.Point).describe('Discriminator: one glyph or text label per record'),
     color: PointColorStyleSchema.optional().describe('Glyph color: field-bound datum channel or constant color; overrides constant fill'),
+    textColor: PointColorStyleSchema.optional().describe('Text point color: field-bound datum channel or constant core Node textColor; only applied when encoding.text is set'),
     size: PointSizeStyleSchema.optional().describe('Glyph size: field-bound datum channel via a sqrt radius scale or constant final radius'),
     shape: PointShapeStyleSchema.optional().describe('Glyph shape: field-bound categorical channel or constant core Node shape name'),
     fill: PointFillStyleSchema.optional().describe('Glyph fill: field-bound datum channel or constant core Node fill paint'),
@@ -74,6 +142,7 @@ export const PointMarkSchema = z
     minimumWidth: PointNonnegativeNumberStyleSchema.optional().describe('Minimum visual width: field-bound datum channel or constant width'),
     minimumHeight: PointNonnegativeNumberStyleSchema.optional().describe('Minimum visual height: field-bound datum channel or constant height'),
     zIndex: PointZIndexStyleSchema.optional().describe('Drawing order hint: field-bound datum channel or constant zIndex'),
+    ...coreNodeStyle,
     dx: z
       .number()
       .finite()
@@ -103,6 +172,16 @@ export const PathMarkSchema = z
       .boolean()
       .optional()
       .describe('Connect the last point back to the first, closing the path into a polygon; under polar this yields a radar outline. Default false'),
+    curve: z
+      .enum(PathCurve)
+      .optional()
+      .describe('Connection curve between adjacent ordered points; default linear'),
+    strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe('Path stroke width: field-bound datum channel or constant core Path stroke width'),
+    opacity: PointOpacityStyleSchema.optional().describe('Path whole opacity: field-bound datum channel or constant opacity 0..1'),
+    lineCap: PathLineCapStyleSchema.optional().describe('Path stroke endpoint style: field-bound datum channel or constant core Path lineCap'),
+    lineJoin: PathLineJoinStyleSchema.optional().describe('Path stroke join style: field-bound datum channel or constant core Path lineJoin'),
+    roundedCorners: PathRoundedCornersStyleSchema.optional().describe('Path geometric corner radius: field-bound datum channel or constant core Path roundedCorners'),
+    ...corePathStyle,
     ...markBase,
     ...positionalLabel,
     ...positionalEncoding,
@@ -127,6 +206,10 @@ export const RegionMarkSchema = z
       .boolean()
       .optional()
       .describe('Connect the last point back to the first, closing the outline into a polygon; under polar this yields a filled radar. Default false'),
+    strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe('Region outline stroke width: field-bound datum channel or constant core Path stroke width'),
+    opacity: PointOpacityStyleSchema.optional().describe('Region whole opacity: field-bound datum channel or constant opacity 0..1'),
+    fillOpacity: PointOpacityStyleSchema.optional().describe('Region fill opacity: field-bound datum channel or constant opacity 0..1'),
+    ...corePathStyle,
     ...markBase,
     ...positionalLabel,
     ...positionalEncoding,
@@ -191,6 +274,10 @@ export const IntervalMarkSchema = z
       .describe('Discriminator: an orthogonal interval product projected to a segment / rectangle / sector / cell by the coordinate system'),
     series: z.string().min(1).optional().describe('Series field: split records into multiple interval series (color grouping; sub-band grouping when bounds.x is a band with group)'),
     bounds: IntervalBoundsSchema.optional().describe('Per-role interval bounds keyed by coordinate role; omit to infer from the coordinate role'),
+    strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe('Interval cell stroke width: field-bound datum channel or constant core Node stroke width'),
+    opacity: PointOpacityStyleSchema.optional().describe('Interval cell whole opacity: field-bound datum channel or constant opacity 0..1'),
+    fillOpacity: PointOpacityStyleSchema.optional().describe('Interval cell fill opacity: field-bound datum channel or constant opacity 0..1'),
+    ...coreNodeStyle,
     ...markBase,
     ...positionalLabel,
     ...positionalEncoding,
@@ -220,6 +307,11 @@ export const ReferenceMarkSchema = z
       .min(1)
       .optional()
       .describe('Per-datum partial-length reference/band: field giving the span end along the opposite axis (omit → span the full opposite domain). Pairs with extentField'),
+    strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe('Reference line stroke width: field-bound datum channel or constant core Path stroke width'),
+    opacity: PointOpacityStyleSchema.optional().describe('Reference mark whole opacity: field-bound datum channel or constant opacity 0..1'),
+    fillOpacity: PointOpacityStyleSchema.optional().describe('Reference band fill opacity: field-bound datum channel or constant opacity 0..1'),
+    ...coreNodeStyle,
+    ...corePathStyle,
     ...markBase,
     ...positionalEncoding,
   })
@@ -258,8 +350,11 @@ export const LinkMarkSchema = z
       .enum(LinkOrientation)
       .optional()
       .describe('Main-axis orientation; the entry / exit tangents run along this axis and the band half-width is taken along the perpendicular axis (horizontal → flow left-right, vertical → flow top-down); default horizontal'),
+    opacity: PointOpacityStyleSchema.optional().describe('Link band whole opacity: field-bound datum channel or constant opacity 0..1'),
+    fillOpacity: PointOpacityStyleSchema.optional().describe('Link band fill opacity: field-bound datum channel or constant opacity 0..1'),
+    ...corePathStyle,
     ...markBase,
-    encoding: StyleEncodingSchema,
+    encoding: MarkChannelEncodingSchema,
   })
   .describe('Link mark: one fillable cubic band per record between a source and target field-pair endpoint, width driven by the value field; consumes pre-computed layout positions (sankey / alluvial layout is out of scope). Uses style-only encoding (color)');
 
@@ -276,7 +371,7 @@ export const CustomMarkSchema = z
         message: 'custom mark type must not collide with a built-in mark type',
       })
       .describe('Discriminator: custom mark type; must be a non-empty, non-built-in identifier registered through options.markDefinitions'),
-    encoding: EncodingSchema.optional().describe('Position / visual channels; reuses the shared encoding so a custom mark contributes to scale inference like built-in marks'),
+    encoding: EncodingSchema.optional().describe('Position / non-position channels; reuses the shared encoding so a custom mark contributes to scale inference like built-in marks'),
   })
   .passthrough()
   .superRefine((operation, ctx) => {

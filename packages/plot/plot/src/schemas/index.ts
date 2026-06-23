@@ -6,4 +6,16 @@ export * from './mark';
 export * from './plot';
 export * from './scale';
 export * from './transform';
-export type { IRPaintSpec } from '@retikz/core';
+export type {
+  BlendModeValue,
+  DropShadow,
+  IRArrowDetail,
+  IRBoundary,
+  IRFont,
+  IRPaintSpec,
+  IRPathScale,
+  IRShapeRef,
+  JsonValue,
+  NodeTextAlignValue,
+  ShadowPresetValue,
+} from '@retikz/core';

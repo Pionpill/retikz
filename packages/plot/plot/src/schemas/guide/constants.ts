@@ -1,4 +1,4 @@
-import type { ValueOf } from '@retikz/core';
+﻿import type { ValueOf } from '@retikz/core';
 
 /**
  * guide 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'axis'` 同样可用）
@@ -16,7 +16,7 @@ export type PlotGuideValue = ValueOf<typeof PlotGuide>;
 
 /**
  * 图例绑定的非位置通道名。
- * @description schema 只要求非空字符串；该通道是否存在、是否产出 legend descriptor，由 visual channel registry 在 lowering 时解析。
+ * @description schema 只要求非空字符串；该通道是否存在、是否产出 legend descriptor，由 channel registry 在 lowering 时解析。
  */
 export type LegendChannelValue = string;
 
