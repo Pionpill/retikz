@@ -6,22 +6,23 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import { cn } from '@/lib/utils';
 
 import { HighlightedCode } from '../highlight-code';
-import type { ComponentRenderSource } from './ComponentRender';
 import { CopyButton, RendererModeButton, SourceViewBar, ToolbarIconButton } from './_parts';
 import {
   type AlignKey,
   type PreviewAction,
   type PreviewActionContext,
+  PreviewActionStateContext,
   type PreviewOverlay,
   type RendererMode,
   alignClass,
   filterDiffByMode,
 } from './_shared';
 import { ANIM_PAUSE_ID, buildAnimationActions } from './animation-actions';
-import { PreviewActionBar } from './PreviewActionBar';
+import type { ComponentRenderSource } from './ComponentRender';
 import { DemoRenderer } from './DemoRenderer';
-import { useSourceViews } from './use-source-views';
+import { PreviewActionBar } from './PreviewActionBar';
 import { usePanZoom } from './use-pan-zoom';
+import { useSourceViews } from './use-source-views';
 
 export type ComponentDetailDialogProps = {
   open: boolean;
@@ -42,6 +43,8 @@ export type ComponentDetailDialogProps = {
   animated?: boolean;
   /** 自定义动作按钮 */
   actions?: Array<PreviewAction>;
+  /** 自定义动作栏是否常驻显示；默认 true */
+  actionsAlwaysVisible?: boolean;
   /** 渲染区内常驻浮层 */
   overlays?: Array<PreviewOverlay>;
   /** 当前 React 源码文件序号，与卡片内源码面板共享 */
@@ -106,15 +109,41 @@ const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
  *   仅一个视图存在时不出 React/IR toggle；两视图都缺（如 hideCode demo）时退化为单 panel 仅渲染区
  */
 export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
-  const { open, onOpenChange, name, Component, source, align, rendererMode, toggleRendererMode, interactive, animated = false, actions, overlays, sourceFileIndex, onSourceFileIndexChange } = props;
+  const {
+    open,
+    onOpenChange,
+    name,
+    Component,
+    source,
+    align,
+    rendererMode,
+    toggleRendererMode,
+    interactive,
+    animated = false,
+    actions,
+    actionsAlwaysVisible = true,
+    overlays,
+    sourceFileIndex,
+    onSourceFileIndexChange,
+  } = props;
   // 视图 / 文件 / 复制走共享 hook（与卡片同源推导）；view 状态本 Dialog 独立、fileIndex 经 prop 与卡片共享
-  const { views, view, setView, files, activeFileIndex, activeFile, render: activeRender, copied, handleCopy } =
-    useSourceViews(source, sourceFileIndex);
+  const {
+    views,
+    view,
+    setView,
+    files,
+    activeFileIndex,
+    activeFile,
+    render: activeRender,
+    copied,
+    handleCopy,
+  } = useSourceViews(source, sourceFileIndex);
   const hasCode = views.length > 0;
 
   // 动作 / 浮层（Dialog 独立的 replay nonce / toolState / renderPane ref）
   const [replayNonce, setReplayNonce] = useState(0);
   const [toolState, setToolState] = useState<Record<string, boolean>>({});
+  const [actionValues, setActionValues] = useState<Record<string, string>>({});
   const paneRef = useRef<HTMLDivElement>(null);
   const actionCtx: PreviewActionContext = {
     replay: () => setReplayNonce(n => n + 1),
@@ -124,17 +153,35 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
     },
     active: id => toolState[id] ?? false,
     setActive: (id, on) => setToolState(prev => ({ ...prev, [id]: on ?? !prev[id] })),
+    actionValue: id => actionValues[id],
+    setActionValue: (id, value) => setActionValues(prev => ({ ...prev, [id]: value })),
   };
   const allActions: Array<PreviewAction> = [
     ...(animated ? buildAnimationActions(toolState[ANIM_PAUSE_ID] ?? false) : []),
     ...(actions ?? []),
   ];
-  const actionBar = <PreviewActionBar actions={allActions} ctx={actionCtx} alwaysVisible />;
+  const actionBar = (
+    <PreviewActionBar
+      actions={allActions}
+      ctx={actionCtx}
+      alwaysVisible={actionsAlwaysVisible || (actions?.length ?? 0) === 0}
+    />
+  );
   const overlayNodes = (overlays ?? []).map(o => <Fragment key={o.id}>{o.render(actionCtx)}</Fragment>);
+  const previewActionState = {
+    values: actionValues,
+    setValue: actionCtx.setActionValue,
+  };
   // 渲染内容包 keyed Fragment：重播时重挂
   const demoContent = (
     <Fragment key={replayNonce}>
-      {activeRender ? activeRender(rendererMode) : <DemoRenderer Component={Component} rendererMode={rendererMode} interactive={interactive} />}
+      <PreviewActionStateContext.Provider value={previewActionState}>
+        {activeRender ? (
+          activeRender(rendererMode)
+        ) : (
+          <DemoRenderer Component={Component} rendererMode={rendererMode} interactive={interactive} />
+        )}
+      </PreviewActionStateContext.Provider>
     </Fragment>
   );
 
@@ -167,7 +214,16 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
         {hasCode ? (
           <ResizablePanelGroup direction="horizontal" className="min-h-0 flex-1">
             <ResizablePanel defaultSize={60} minSize={30} maxSize={85}>
-              <DialogDemoPane align={align} paneRef={paneRef} actionBar={<>{actionBar}{overlayNodes}</>}>
+              <DialogDemoPane
+                align={align}
+                paneRef={paneRef}
+                actionBar={
+                  <>
+                    {actionBar}
+                    {overlayNodes}
+                  </>
+                }
+              >
                 {demoContent}
               </DialogDemoPane>
             </ResizablePanel>
@@ -201,7 +257,16 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
           </ResizablePanelGroup>
         ) : (
           <div className="min-h-0 flex-1">
-            <DialogDemoPane align={align} paneRef={paneRef} actionBar={<>{actionBar}{overlayNodes}</>}>
+            <DialogDemoPane
+              align={align}
+              paneRef={paneRef}
+              actionBar={
+                <>
+                  {actionBar}
+                  {overlayNodes}
+                </>
+              }
+            >
               {demoContent}
             </DialogDemoPane>
           </div>

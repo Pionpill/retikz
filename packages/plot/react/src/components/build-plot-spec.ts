@@ -536,7 +536,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
     }
     if (child.type === PathMark) {
       const props = child.props as PathMarkProps;
-      const { x, y, order, series, color, closed, id, channels, strokeWidth, opacity, lineCap, lineJoin, roundedCorners } = props;
+      const { x, y, order, series, color, closed, curve, id, channels, strokeWidth, opacity, lineCap, lineJoin, roundedCorners } = props;
       const colorEnc = colorChannel(color, series);
       const markLabel = buildMarkLabel(props);
       const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
@@ -550,6 +550,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(order !== undefined ? { order } : {}),
         ...(series !== undefined ? { series } : {}),
         ...(closed ? { closed: true } : {}),
+        ...(curve !== undefined ? { curve } : {}),
         ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
         ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
         ...(lineCapStyle !== undefined ? { lineCap: lineCapStyle } : {}),

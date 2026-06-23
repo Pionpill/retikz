@@ -2,7 +2,7 @@
 import { z } from 'zod';
 import { ArrowDetailSchema, BlendMode, BoundarySchema, DropShadowSchema, FontSchema, PathScaleSchema, ShadowPreset, ShapeRefSchema } from '@retikz/core';
 import { ChannelSchema, EncodingSchema, MarkChannelEncodingSchema, MarkLabelSchema, PointEncodingSchema } from '../encoding';
-import { BUILTIN_MARK_TYPES, IntervalBoundKind, LinkOrientation, MarkValueKind, PlotMark } from './constants';
+import { BUILTIN_MARK_TYPES, IntervalBoundKind, LinkOrientation, MarkValueKind, PathCurve, PlotMark } from './constants';
 
 /** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema、link / reference 用专属） */
 const markBase = {
@@ -172,6 +172,10 @@ export const PathMarkSchema = z
       .boolean()
       .optional()
       .describe('Connect the last point back to the first, closing the path into a polygon; under polar this yields a radar outline. Default false'),
+    curve: z
+      .enum(PathCurve)
+      .optional()
+      .describe('Connection curve between adjacent ordered points; default linear'),
     strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe('Path stroke width: field-bound datum channel or constant core Path stroke width'),
     opacity: PointOpacityStyleSchema.optional().describe('Path whole opacity: field-bound datum channel or constant opacity 0..1'),
     lineCap: PathLineCapStyleSchema.optional().describe('Path stroke endpoint style: field-bound datum channel or constant core Path lineCap'),

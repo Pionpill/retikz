@@ -1,6 +1,6 @@
 import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
-import type { MarkValueKind } from './constants';
+import type { MarkValueKind, PathCurve } from './constants';
 import { BUILTIN_MARK_TYPES } from './constants';
 import type {
   BlendModeStyleSchema,
@@ -80,6 +80,8 @@ export type PathThicknessStyle = z.infer<typeof PathThicknessStyleSchema>;
 export type PathArrowStyle = z.infer<typeof PathArrowStyleSchema>;
 export type PathScaleStyle = z.infer<typeof PathScaleStyleSchema>;
 export type PathArrowDetailStyle = z.infer<typeof PathArrowDetailStyleSchema>;
+/** PathMark 相邻点连接方式。 */
+export type PathCurveValue = ValueOf<typeof PathCurve>;
 /** path mark（折线 / 轮廓） */
 export type PathMark = z.infer<typeof PathMarkSchema>;
 /** region mark（面积 / 填充雷达） */

@@ -39,6 +39,33 @@ export const LinkOrientation = {
 export type LinkOrientationValue = ValueOf<typeof LinkOrientation>;
 
 /**
+ * PathMark 相邻点连接方式。
+ * @description 面向图表层的曲线类型；底层会下沉为 core Path 的 line / cubic / smooth steps。
+ */
+export const PathCurve = {
+  /** 折线连接：每相邻两点用直线段连接 */
+  Linear: 'linear',
+  /** 阶梯线：水平段在相邻点中间切换 */
+  Step: 'step',
+  /** 前置阶梯：先切换到下一个 y，再沿 x 前进 */
+  StepBefore: 'stepBefore',
+  /** 后置阶梯：先沿 x 前进，再切换到下一个 y */
+  StepAfter: 'stepAfter',
+  /** 基础 B 样条：平滑但通常不穿过每个中间点 */
+  Basis: 'basis',
+  /** Cardinal 样条：穿过数据点，曲率较柔和 */
+  Cardinal: 'cardinal',
+  /** Catmull-Rom 样条：穿过数据点，局部形状跟随相邻点 */
+  CatmullRom: 'catmullRom',
+  /** x 单调三次插值：适合 x 递增的趋势线，减少极值过冲 */
+  MonotoneX: 'monotoneX',
+  /** y 单调三次插值：适合 y 递增的轨迹，减少极值过冲 */
+  MonotoneY: 'monotoneY',
+  /** 自然三次样条：整体连续、端点二阶导为 0 */
+  Natural: 'natural',
+} as const;
+
+/**
  * interval 单维区间来源关键字（暴露给用户；裸 `'band'` 等同样可用）
  * @description interval 各位置 role 的区间 [lo,hi] 怎么来：band（band 宽）/ span（baseline→值）/ extent（两字段区间）/ full（满域）。
  */

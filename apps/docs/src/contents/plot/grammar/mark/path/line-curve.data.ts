@@ -1,0 +1,23 @@
+/** 连接方式 demo：20 个点，放大不同曲线类型的形态差异。 */
+export const curveSamples: Array<Record<string, string | number>> = [
+  { index: 0, category: 'A', value: 36 },
+  { index: 1, category: 'B', value: 52 },
+  { index: 2, category: 'C', value: 44 },
+  { index: 3, category: 'D', value: 70 },
+  { index: 4, category: 'E', value: 63 },
+  { index: 5, category: 'F', value: 82 },
+  { index: 6, category: 'G', value: 58 },
+  { index: 7, category: 'H', value: 48 },
+  { index: 8, category: 'I', value: 76 },
+  { index: 9, category: 'J', value: 66 },
+  { index: 10, category: 'K', value: 88 },
+  { index: 11, category: 'L', value: 74 },
+  { index: 12, category: 'M', value: 92 },
+  { index: 13, category: 'N', value: 62 },
+  { index: 14, category: 'O', value: 54 },
+  { index: 15, category: 'P', value: 79 },
+  { index: 16, category: 'Q', value: 68 },
+  { index: 17, category: 'R', value: 84 },
+  { index: 18, category: 'S', value: 72 },
+  { index: 19, category: 'T', value: 90 },
+];

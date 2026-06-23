@@ -23,6 +23,7 @@ import type {
   NodeTextAlignValue,
   PathArrowDetailStyle,
   PathArrowStyle,
+  PathCurveValue,
   PathFillRuleStyle,
   PathScaleStyle,
   PathThicknessStyle,
@@ -133,6 +134,8 @@ export type PathMarkProps = DatumLabelProps & CorePathChannelProps & {
   roundedCorners?: MarkValueProp<number> | PointNonnegativeNumberStyle;
   /** 末点回连首点闭合成多边形（polar 下即雷达轮廓）；缺省 false */
   closed?: boolean;
+  /** 相邻点连接方式；缺省 linear */
+  curve?: PathCurveValue;
   /** 可选 mark 句柄（预留 scope/anchor） */
   id?: string;
 };

@@ -1,5 +1,6 @@
 /** ComponentPreview 套件内部共享：类型、对齐 class 表、IR 格式化 */
 
+import { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
 
 export type Transform = { x: number; y: number; scale: number };
@@ -35,10 +36,15 @@ export type PreviewActionContext = {
   active: (id: string) => boolean;
   /** 写 / 翻转 per-card 工具开关态（`on` 省略 = 翻转） */
   setActive: (id: string, on?: boolean) => void;
+  /** 读取自定义 action 值（select 类工具） */
+  actionValue: (id: string) => string | undefined;
+  /** 写入自定义 action 值（select 类工具） */
+  setActionValue: (id: string, value: string) => void;
 };
 
 /** 渲染区左上角的工具按钮（重播 / 播放暂停 / 停止 / 未来性能监视器开关 …） */
-export type PreviewAction = {
+export type PreviewButtonAction = {
+  type?: 'button';
   /** 稳定 id（兼作 toolState key） */
   id: string;
   /** 图标元素 */
@@ -49,6 +55,38 @@ export type PreviewAction = {
   active?: boolean;
   /** 点击：从 ctx 取能力执行 */
   onClick: (ctx: PreviewActionContext) => void;
+};
+
+/** 渲染区左上角的选择器动作（用于 demo 参数切换） */
+export type PreviewSelectAction = {
+  type: 'select';
+  /** 稳定 id（兼作 actionValues key） */
+  id: string;
+  /** aria-label + title */
+  label: string;
+  /** 初始值；运行时优先取 actionValues 中的当前值 */
+  value: string;
+  /** 选择项 */
+  options: Array<{ value: string; label: string }>;
+  /** 切换后回调；状态写入由 PreviewActionBar 统一处理 */
+  onValueChange?: (value: string, ctx: PreviewActionContext) => void;
+};
+
+export type PreviewAction = PreviewButtonAction | PreviewSelectAction;
+
+export type PreviewActionState = {
+  values: Record<string, string>;
+  setValue: (id: string, value: string) => void;
+};
+
+export const PreviewActionStateContext = createContext<PreviewActionState>({
+  values: {},
+  setValue: () => undefined,
+});
+
+export const usePreviewActionValue = (id: string, fallback: string): string => {
+  const { values } = useContext(PreviewActionStateContext);
+  return values[id] ?? fallback;
 };
 
 /** 渲染区内的常驻浮层（角标 / 面板，如 FPS 监视器）；与 action 分离，按需渲染自身 UI */

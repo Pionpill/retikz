@@ -8,7 +8,7 @@ import {
   isPolarCoordinateFrame,
   toPolarVertex,
 } from '../coordinate';
-import { type ExternalRow, type Mark, type PathMark, PlotMark, type RegionMark } from '../../schemas';
+import { type ExternalRow, type Mark, PathCurve, type PathCurveValue, type PathMark, PlotMark, type RegionMark } from '../../schemas';
 import {
   DEFAULT_FILL,
   LINE_STROKE_WIDTH,
@@ -44,6 +44,195 @@ export const pointsToSteps = (points: ReadonlyArray<[number, number]>, closed: b
   return steps;
 };
 
+// PathMark 的 curve 是图表层连接方式；这里统一下沉为 core Path 已支持的 step 序列。
+const cubicStep = (
+  control1: [number, number],
+  control2: [number, number],
+  to: [number, number],
+): Extract<IRStep, { kind: 'cubic' }> => ({ type: 'step', kind: 'cubic', control1, control2, to });
+
+const withClosingPoint = (points: ReadonlyArray<[number, number]>, closed: boolean): Array<[number, number]> =>
+  closed ? [...points, points[0]] : [...points];
+
+const pointsToStepCurveSteps = (points: ReadonlyArray<[number, number]>, closed: boolean, curve: PathCurveValue): Array<IRStep> | null => {
+  const pathPoints = withClosingPoint(points, closed);
+  if (pathPoints.length < 2) return null;
+  const steps: Array<IRStep> = [{ type: 'step', kind: 'move', to: pathPoints[0] }];
+  for (let i = 1; i < pathPoints.length; i++) {
+    const prev = pathPoints[i - 1];
+    const next = pathPoints[i];
+    if (curve === PathCurve.StepBefore) {
+      steps.push({ type: 'step', kind: 'line', to: [prev[0], next[1]] });
+    } else if (curve === PathCurve.StepAfter) {
+      steps.push({ type: 'step', kind: 'line', to: [next[0], prev[1]] });
+    } else {
+      const midX = (prev[0] + next[0]) / 2;
+      steps.push({ type: 'step', kind: 'line', to: [midX, prev[1]] });
+      steps.push({ type: 'step', kind: 'line', to: [midX, next[1]] });
+    }
+    steps.push({ type: 'step', kind: 'line', to: next });
+  }
+  if (closed) steps.push({ type: 'step', kind: 'cycle' });
+  return steps;
+};
+
+const cardinalSegments = (points: ReadonlyArray<[number, number]>, tension: number): Array<Extract<IRStep, { kind: 'cubic' }>> => {
+  const segments: Array<Extract<IRStep, { kind: 'cubic' }>> = [];
+  const k = (1 - tension) / 6;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i - 1] ?? points[i];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2] ?? p2;
+    segments.push(cubicStep(
+      [p1[0] + (p2[0] - p0[0]) * k, p1[1] + (p2[1] - p0[1]) * k],
+      [p2[0] - (p3[0] - p1[0]) * k, p2[1] - (p3[1] - p1[1]) * k],
+      p2,
+    ));
+  }
+  return segments;
+};
+
+const basisSegments = (points: ReadonlyArray<[number, number]>): Array<Extract<IRStep, { kind: 'cubic' }>> => {
+  if (points.length < 3) return cardinalSegments(points, 0);
+  const segments: Array<Extract<IRStep, { kind: 'cubic' }>> = [];
+  let p0 = points[0];
+  let p1 = points[1];
+  segments.push(cubicStep(
+    [(2 * p0[0] + p1[0]) / 3, (2 * p0[1] + p1[1]) / 3],
+    [(p0[0] + 2 * p1[0]) / 3, (p0[1] + 2 * p1[1]) / 3],
+    [(p0[0] + 4 * p1[0] + points[2][0]) / 6, (p0[1] + 4 * p1[1] + points[2][1]) / 6],
+  ));
+  for (let i = 2; i < points.length - 1; i++) {
+    const p2 = points[i];
+    segments.push(cubicStep(
+      [(2 * p0[0] + p1[0]) / 3, (2 * p0[1] + p1[1]) / 3],
+      [(p0[0] + 2 * p1[0]) / 3, (p0[1] + 2 * p1[1]) / 3],
+      [(p0[0] + 4 * p1[0] + p2[0]) / 6, (p0[1] + 4 * p1[1] + p2[1]) / 6],
+    ));
+    p0 = p1;
+    p1 = p2;
+  }
+  const last = points[points.length - 1];
+  segments.push(cubicStep(
+    [(2 * p0[0] + p1[0]) / 3, (2 * p0[1] + p1[1]) / 3],
+    [(p0[0] + 2 * p1[0]) / 3, (p0[1] + 2 * p1[1]) / 3],
+    last,
+  ));
+  return segments;
+};
+
+const monotoneSlopes = (values: Array<number>, positions: Array<number>): Array<number> => {
+  const n = values.length;
+  const slopes = new Array<number>(n).fill(0);
+  const deltas: Array<number> = [];
+  for (let i = 0; i < n - 1; i++) {
+    const dx = positions[i + 1] - positions[i];
+    deltas.push(dx === 0 ? 0 : (values[i + 1] - values[i]) / dx);
+  }
+  slopes[0] = deltas[0] ?? 0;
+  slopes[n - 1] = deltas[n - 2] ?? 0;
+  for (let i = 1; i < n - 1; i++) slopes[i] = deltas[i - 1] * deltas[i] <= 0 ? 0 : (deltas[i - 1] + deltas[i]) / 2;
+  for (let i = 0; i < n - 1; i++) {
+    const delta = deltas[i];
+    if (delta === 0) {
+      slopes[i] = 0;
+      slopes[i + 1] = 0;
+      continue;
+    }
+    const a = slopes[i] / delta;
+    const b = slopes[i + 1] / delta;
+    const sum = a * a + b * b;
+    if (sum > 9) {
+      const tau = 3 / Math.sqrt(sum);
+      slopes[i] = tau * a * delta;
+      slopes[i + 1] = tau * b * delta;
+    }
+  }
+  return slopes;
+};
+
+const monotoneSegments = (points: ReadonlyArray<[number, number]>, dimension: 'x' | 'y'): Array<Extract<IRStep, { kind: 'cubic' }>> => {
+  const primary = points.map(point => (dimension === 'x' ? point[0] : point[1]));
+  const secondary = points.map(point => (dimension === 'x' ? point[1] : point[0]));
+  const slopes = monotoneSlopes(secondary, primary);
+  const segments: Array<Extract<IRStep, { kind: 'cubic' }>> = [];
+  for (let i = 0; i < points.length - 1; i++) {
+    const d = (primary[i + 1] - primary[i]) / 3;
+    const c1Primary = primary[i] + d;
+    const c2Primary = primary[i + 1] - d;
+    const c1Secondary = secondary[i] + slopes[i] * d;
+    const c2Secondary = secondary[i + 1] - slopes[i + 1] * d;
+    const control1: [number, number] = dimension === 'x' ? [c1Primary, c1Secondary] : [c1Secondary, c1Primary];
+    const control2: [number, number] = dimension === 'x' ? [c2Primary, c2Secondary] : [c2Secondary, c2Primary];
+    segments.push(cubicStep(control1, control2, points[i + 1]));
+  }
+  return segments;
+};
+
+const naturalSecondDerivatives = (values: Array<number>, positions: Array<number>): Array<number> => {
+  const n = values.length;
+  const second = new Array<number>(n).fill(0);
+  const temp = new Array<number>(n).fill(0);
+  for (let i = 1; i < n - 1; i++) {
+    const h0 = positions[i] - positions[i - 1];
+    const h1 = positions[i + 1] - positions[i];
+    if (h0 === 0 || h1 === 0) continue;
+    const sig = h0 / (h0 + h1);
+    const p = sig * second[i - 1] + 2;
+    second[i] = (sig - 1) / p;
+    temp[i] = (6 * ((values[i + 1] - values[i]) / h1 - (values[i] - values[i - 1]) / h0) / (h0 + h1) - sig * temp[i - 1]) / p;
+  }
+  for (let k = n - 2; k >= 0; k--) second[k] = second[k] * second[k + 1] + temp[k];
+  return second;
+};
+
+const naturalSegments = (points: ReadonlyArray<[number, number]>): Array<Extract<IRStep, { kind: 'cubic' }>> => {
+  const t = points.map((_, index) => index);
+  const xs = points.map(point => point[0]);
+  const ys = points.map(point => point[1]);
+  const secondX = naturalSecondDerivatives(xs, t);
+  const secondY = naturalSecondDerivatives(ys, t);
+  const segments: Array<Extract<IRStep, { kind: 'cubic' }>> = [];
+  for (let i = 0; i < points.length - 1; i++) {
+    const h = t[i + 1] - t[i];
+    segments.push(cubicStep(
+      [xs[i] + h * (xs[i + 1] - xs[i]) / 3 - h * h * (2 * secondX[i] + secondX[i + 1]) / 18, ys[i] + h * (ys[i + 1] - ys[i]) / 3 - h * h * (2 * secondY[i] + secondY[i + 1]) / 18],
+      [xs[i + 1] - h * (xs[i + 1] - xs[i]) / 3 + h * h * (secondX[i] + 2 * secondX[i + 1]) / 18, ys[i + 1] - h * (ys[i + 1] - ys[i]) / 3 + h * h * (secondY[i] + 2 * secondY[i + 1]) / 18],
+      points[i + 1],
+    ));
+  }
+  return segments;
+};
+
+const pointsToCurveSteps = (points: ReadonlyArray<[number, number]>, closed: boolean, curve: PathCurveValue = PathCurve.Linear): Array<IRStep> | null => {
+  if (curve === PathCurve.Linear) return pointsToSteps(points, closed);
+  if (curve === PathCurve.Step || curve === PathCurve.StepBefore || curve === PathCurve.StepAfter) {
+    return pointsToStepCurveSteps(points, closed, curve);
+  }
+  const pathPoints = withClosingPoint(points, closed);
+  if (pathPoints.length < 2) return null;
+  if (curve === PathCurve.CatmullRom) {
+    const steps: Array<IRStep> = [{ type: 'step', kind: 'move', to: pathPoints[0] }, { type: 'step', kind: 'smooth', points: pathPoints.slice(1), tension: 1 }];
+    if (closed) steps.push({ type: 'step', kind: 'cycle' });
+    return steps;
+  }
+  const segments =
+    curve === PathCurve.Basis
+      ? basisSegments(pathPoints)
+      : curve === PathCurve.MonotoneX
+        ? monotoneSegments(pathPoints, 'x')
+        : curve === PathCurve.MonotoneY
+          ? monotoneSegments(pathPoints, 'y')
+          : curve === PathCurve.Natural
+            ? naturalSegments(pathPoints)
+            : cardinalSegments(pathPoints, 0);
+  if (segments.length === 0) return null;
+  const steps: Array<IRStep> = [{ type: 'step', kind: 'move', to: pathPoints[0] }, ...segments];
+  if (closed) steps.push({ type: 'step', kind: 'cycle' });
+  return steps;
+};
+
 /** 按 order / 数据序排好一组行（path / region 共用连接顺序）。 */
 const orderRows = (rows: Array<ExternalRow>, order: string | undefined): Array<ExternalRow> =>
   order ? [...rows].sort((a, b) => compareRowsByFieldPath(a, b, order)) : rows;
@@ -72,7 +261,11 @@ const buildOutlinePoints = (mark: Mark, ordered: Array<ExternalRow>, frame: Coor
 
 /** 把一组行连成一条折线的 steps（上沿投影 + 可选闭合）；<2 点返回 null。 */
 const buildLineSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, closed: boolean): Array<IRStep> | null =>
-  pointsToSteps(buildOutlinePoints(mark, orderRows(rows, mark.type === PlotMark.Path || mark.type === PlotMark.Region ? mark.order : undefined), frame, closed), closed);
+  pointsToCurveSteps(
+    buildOutlinePoints(mark, orderRows(rows, mark.type === PlotMark.Path || mark.type === PlotMark.Region ? mark.order : undefined), frame, closed),
+    closed,
+    mark.type === PlotMark.Path ? mark.curve : PathCurve.Linear,
+  );
 
 /** 多系列 series 拆分通用：每条 series 一条 Path，provenance 开时绑 `<plotId>.series.<slug>` + Path.meta（series 原值）。 */
 type SeriesPathBuilder = (seriesRows: Array<ExternalRow>) => Array<IRStep> | null;
