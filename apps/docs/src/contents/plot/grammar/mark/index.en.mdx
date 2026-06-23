@@ -9,14 +9,14 @@ Each built-in mark is a registered entry. During compilation, field mappings bec
 
 ## Mechanism
 
-| Mark | Type | Mechanism | Common forms |
+| Category | Mark | Mechanism | Common forms |
 | --- | --- | --- | --- |
-| `PointMark` | dimensional | A 0D glyph at a coordinate tuple | Scatter, bubbles, text points |
-| `PathMark` | dimensional | Ordered points connected into a 1D trajectory | Lines, paths, radar outlines |
-| `RegionMark` | dimensional | A 2D region enclosed by a boundary | Areas, filled radar |
-| `IntervalMark` | dimensional | Orthogonal interval products across position roles | Bars, histograms, heatmaps, radial bars, pies / donuts |
-| `ReferenceMark` | special | Reference constraints at fixed positions or intervals | Threshold lines, reference rings, tolerance bands |
-| `LinkMark` | special | Relational geometry from source to target | Ribbons, alluvial bands |
+| Dimensional marks | `PointMark` | A Node positioned by the coordinate system | Scatter, bubbles, text points |
+|  | `PathMark` | Ordered points connected into a 1D trajectory | Lines, paths, radar outlines |
+|  | `RegionMark` | A 2D region enclosed by a boundary | Areas, filled radar |
+|  | `IntervalMark` | Orthogonal interval products across position roles | Bars, histograms, heatmaps, radial bars, pies / donuts |
+| Special marks | `ReferenceMark` | Reference constraints at fixed positions or intervals | Threshold lines, reference rings, tolerance bands |
+|  | `LinkMark` | Relational geometry from source to target | Ribbons, alluvial bands |
 
 Chart forms are not separate low-level marks. A heatmap is a double-band `IntervalMark`, a pie is an angular `IntervalMark` under polar coordinates, and scatter / bubble / text points are different presentation settings of `PointMark`.
 
@@ -36,7 +36,7 @@ plot marks do not own renderer primitives directly; after lowering, they become 
 ## Registered Marks
 
 <div className="grid gap-3 sm:grid-cols-2">
-  <LinkedCard href="/plot/grammar/mark/point"><strong>PointMark</strong><span>0D glyphs: scatter, bubbles, shape encoding, and text points.</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/point"><strong>PointMark</strong><span>Coordinate-positioned Nodes for scatter, bubbles, shape encoding, and text points.</span></LinkedCard>
   <LinkedCard href="/plot/grammar/mark/path"><strong>PathMark</strong><span>1D trajectories: connect data points in order for trends, paths, and radar outlines.</span></LinkedCard>
   <LinkedCard href="/plot/grammar/mark/region"><strong>RegionMark</strong><span>2D regions: filled areas enclosed by a path, baseline, or boundary.</span></LinkedCard>
   <LinkedCard href="/plot/grammar/mark/interval"><strong>IntervalMark</strong><span>Interval products: bars, histograms, heatmaps, radial bars, pies, and donuts.</span></LinkedCard>

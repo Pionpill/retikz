@@ -118,24 +118,26 @@ const lowerRegion = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFram
 
 ## API
 
-RegionMark's position, series, and color props are data channels. `FieldName` means a data field name or field path, such as `day` / `traffic.site`.
+`RegionMark` props are grouped as Position, Specific, Path, Label, General, and Custom: position fields define the upper outline, specific fields split regions, set the baseline, and close the outline, while path fields lower onto the core `Path`. `FieldName` means a data field name or field path, such as `day` / `traffic.site`.
 
 | Category | Prop | Type | Default | Description |
 | --- | --- | --- | --- | --- |
-| Position | `x` | `FieldName` | — | x position field; angular under polar |
-| | `y` | `FieldName` | — | y position field; radial under polar |
-| | `order` | `FieldName?` | data order | Field driving the upper outline's connection order |
-| Geometry | `baseline` | `number?` | `0` | Baseline value the return edge sticks to |
-| | `closed` | `boolean?` | `false` | Connect the last point to the first on the upper outline only; the region is still closed by the baseline return edge |
-| Series | `series` | `FieldName?` | — | Series field; split into multiple areas |
-| Style Channel | `color` | `FieldName?` | `series` | Color field; with no explicit `series`, a categorical color field implicitly splits series |
-| Label | `label` | `FieldName?` | — | Host datum-label field |
-| | `labelDisplayFormat` | `string?` | — | Label display format string |
-| | `labelPosition` | `CompassAnchor \| number?` | `above` | Label position relative to the host Node |
-| | `labelDistance` | `number?` | `12` | Distance from the host border to the label |
-| | `labelPin` | `boolean?` | `false` | Whether to draw a leader from the host border to the label |
-| | `resolveLabel` | `(row) => string?` | — | Runtime label resolver; not stored in IR, requires `id` |
-| Common | `id` | `string?` | — | Optional handle |
+| Position | `x` / `y` | `FieldName` | — | Coordinate role fields; cartesian2D forms the upper outline, polar2D interprets them as angle / radius |
+| Specific | `color` | `FieldName?` | `series` | Color field; without explicit `series`, categorical color can split regions |
+|  | `order` | `FieldName?` | data order | Field that drives upper-outline order |
+|  | `series` | `FieldName?` | — | Split rows into multiple filled regions |
+|  | `baseline` | `number?` | `0` | Baseline value for the return edge; in polar2D this usually maps toward inner radius |
+|  | `closed` | `boolean?` | `false` | Connect the final upper point back to the first; the region still closes via baseline |
+| Path | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | Region outline stroke width, whole-path opacity, and fill opacity |
+|  | `drawOpacity`<br />`zIndex` / `rotate` | `PointOpacityStyle?`<br />`PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />—<br />— | Stroke opacity, draw order, and rotation |
+|  | `roundedCorners`<br />`lineCap` / `lineJoin` | `MarkValueProp<number>`<br />`FieldName / LineCapValue`<br />`FieldName / LineJoinValue` | —<br />—<br />— | Corner, cap, and join styling |
+|  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | Path scaling, fill rule, and thickness preset |
+|  | `arrow` / `arrowDetail` | `PathArrowStyle?`<br />`PathArrowDetailStyle?` | —<br />— | Arrow direction and details, usually for outline emphasis |
+|  | `dashPattern`<br />`shadow` / `blendMode` | `NodeDashPatternStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?` | —<br />—<br />— | Dash pattern, shadow, and blend mode |
+| Label | `label` / `labelDisplayFormat` | `FieldName?`<br />`string?` | —<br />— | Attach datum labels to region data |
+|  | `labelPosition`<br />`labelDistance`<br />`labelPin` | `string / number`<br />`number`<br />`boolean / LabelPin` | `above`<br />`12`<br />`false` | Label side, spacing, and leader line |
+| General | `id` | `string?` | — | Optional mark handle for layer ids / runtime label resolution |
+| Custom | `channels` | `Record<string, Channel>` | — | Custom channel bindings; resolved by registered channel definitions |
 
 ## Related
 

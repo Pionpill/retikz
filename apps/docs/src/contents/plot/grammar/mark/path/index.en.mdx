@@ -110,17 +110,26 @@ The logic has four parts:
 
 ## API
 
-Most `PathMark` props are data channels: position props decide which points the trajectory visits, and series props decide whether it splits into multiple paths. `FieldName` means a data field name or field path, such as `month` / `city`.
+`PathMark` props are grouped as Position, Specific, Path, Label, General, and Custom: position fields decide trajectory points, specific fields split series or close the path, and path fields lower onto the core `Path`. `FieldName` means a data field name or field path, such as `month` / `city`.
 
 | Category | Prop | Type | Default | Description |
 | --- | --- | --- | --- | --- |
-| Position | `x` | `FieldName` | — | Field bound to the x position channel |
-| | `y` | `FieldName` | — | Field bound to the y position channel |
-| | `order` | `FieldName?` | data order | Field bound to connection order |
-| Series | `series` | `FieldName?` | — | Split rows into multiple paths |
-| | `color` | `FieldName?` | `series` | Field bound to color; can implicitly split series when `series` is omitted |
-| Geometry | `closed` | `boolean?` | `false` | Connect the last point back to the first |
-| General | `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
+| Position | `x` / `y` | `FieldName` | — | Coordinate role fields; cartesian2D uses planar points, polar2D interprets them as angle / radius |
+| Specific | `color` | `FieldName?` | `series` | Color field; without explicit `series`, categorical color can split the rows |
+|  | `order` | `FieldName?` | data order | Field bound to connection order |
+|  | `series` | `FieldName?` | — | Split rows into multiple paths |
+|  | `closed` | `boolean?` | `false` | Connect the last point back to the first |
+| Path | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | Path stroke width, whole-path opacity, and fill opacity |
+|  | `drawOpacity`<br />`zIndex` / `rotate` | `PointOpacityStyle?`<br />`PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />—<br />— | Stroke opacity, draw order, and rotation |
+|  | `roundedCorners` | `MarkValueProp<number>` | — | Rounded corners for path steps |
+|  | `lineCap` / `lineJoin` | `FieldName / LineCapValue`<br />`FieldName / LineJoinValue` | —<br />— | Line cap and join style |
+|  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | Path scaling, fill rule, and thickness preset |
+|  | `arrow` / `arrowDetail` | `PathArrowStyle?`<br />`PathArrowDetailStyle?` | —<br />— | Arrow direction and details |
+|  | `dashPattern`<br />`shadow` / `blendMode` | `NodeDashPatternStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?` | —<br />—<br />— | Dash pattern, shadow, and blend mode |
+| Label | `label` / `labelDisplayFormat` | `FieldName?`<br />`string?` | —<br />— | Attach datum labels to path data |
+|  | `labelPosition`<br />`labelDistance`<br />`labelPin` | `string / number`<br />`number`<br />`boolean / LabelPin` | `above`<br />`12`<br />`false` | Label side, spacing, and leader line |
+| General | `id` | `string?` | — | Optional mark handle for layer ids / runtime label resolution |
+| Custom | `channels` | `Record<string, Channel>` | — | Custom channel bindings; resolved by registered channel definitions |
 
 ## Related
 

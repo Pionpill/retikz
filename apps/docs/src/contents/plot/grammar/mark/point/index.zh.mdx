@@ -1,9 +1,9 @@
 ---
 title: PointMark
-description: PointMark 是坐标元组上的 0D glyph：可以画散点、气泡、形状编码，也可以承载文本点。
+description: PointMark 是最简单的图元：它在坐标系定位后绘制一个 Node，可作为散点、气泡、形状标记或文本点的底层能力。
 ---
 
-`<PointMark>` 为每行数据生成一个 0D glyph。默认 glyph 是点；给 `size` / `shape` / `opacity` / `color` 后，它仍是同一个点图元，只是使用的内置通道不同。给 `text` 后，它会改为无边框文本 glyph。
+`<PointMark>` 是最简单的图元：它先让每行数据在当前坐标系里得到一个位置，再在这个位置绘制一个 core `Node`。这个 Node 可以是默认圆点、形状标记、气泡、文本，或带标签的组合形态；散点图、气泡图和文本点都可以看作它的上层封装。
 
 绑哪些位置通道由[坐标系](/plot/grammar/coordinate)决定：一维用 `x`，二维用 `x` / `y`，三元（ternary2D）用 `x` / `y` / `z`。这些属性在组件层都是可选的；当前坐标系会在编译期校验需要哪些维度。
 
@@ -23,7 +23,7 @@ PointMark 常和 PathMark 叠加——同一份数据先画 `<PathMark>` 再叠 
 
 ## 表现层
 
-PointMark 是底层点 mark：它只负责把每行数据投影成一个 0D 锚点，并把样式、文本等通道写到这个锚点对应的 Node 上。表现层看到的“散点图”“气泡图”“文本点”不是不同的底层 mark，而是同一个 PointMark 在不同通道配置下的显示形态。
+PointMark 是底层点 mark：它只负责把每行数据投影成一个坐标位置，并把样式、文本等通道写到这个位置对应的 Node 上。表现层看到的“散点图”“气泡图”“文本点”不是不同的底层 mark，而是同一个 PointMark 在不同通道配置下的显示形态。
 
 这也是 PointMark 通常不需要按坐标系单独适配的原因：坐标系只负责把位置角色投影成屏幕点，表现层再决定这个点画成什么。
 
@@ -43,7 +43,7 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个 0D 锚�
 
 ### 样式属性
 
-`color` / `size` / `opacity` / `shape` / `stroke` / `strokeWidth` 都可以作为点的内置通道。它们只改变 glyph 的显示方式，不改变点的坐标锚点。
+`color` / `size` / `opacity` / `shape` / `stroke` / `strokeWidth` 都可以作为点的内置通道。它们只改变点的可见形态，不改变点的坐标位置。
 
 `stroke`、`strokeWidth`、`opacity`、`fillOpacity`、`rotate` 等 Node 样式都支持字段绑定。组件层的字符串 / 数字是语法糖：如果有同名数据字段，字符串会变成 `{ kind: 'field', value: FieldName }`；如果没有字段但能作为合法常量使用，就变成 `{ kind: 'constant', value }`；否则会跳过并给出 warning。需要消除歧义时可以直接写显式形式。
 
@@ -57,19 +57,13 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个 0D 锚�
 
 ### 不同坐标系
 
-下面只看位置角色如何被坐标系解释：PointMark 自身不变，变的是 `x` / `y` / `z` 被投影到直线、圆环、平面或三角形中的方式。
+下面只看位置角色如何被坐标系解释：PointMark 自身不变，变的是 `x` / `y` / `z` 被投影到直线、圆环或三角形中的方式。
 
 #### 一维：直线和极坐标
 
 一维坐标系只消费 `x`。在直线坐标里它落到一条轴上，在极坐标里同一组值落到圆环上。
 
 <ComponentPreview name="point-coordinate-1d" sourceFiles={['point-coordinates.data.ts']} />
-
-#### 二维：笛卡尔和极坐标
-
-二维坐标系消费 `x` / `y`。笛卡尔坐标把它解释成平面位置，极坐标把它解释成角向 / 径向位置。
-
-<ComponentPreview name="point-coordinate-2d" sourceFiles={['point-coordinates.data.ts']} />
 
 #### 三元：三元图
 
@@ -100,7 +94,7 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
     if (isText) {
-      // 文本 glyph：投影同 point（roleValues + projectRoles，坐标系无关）；内容缺失跳过；dx/dy 锚点像素微调
+      // 文本点：投影同 point（roleValues + projectRoles，坐标系无关）；内容缺失跳过；dx/dy 锚点像素微调
       const point = frame.projectRoles(roleValues(mark, row, frame));
       if (!point) continue;
       const text = labelOf?.(row);
@@ -111,7 +105,7 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
       placed.push({ color: colorOf?.(row), node: decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined) });
       continue;
     }
-    // 散点 glyph：锚点与 locator 共享同一 datumAnchor（point → frame.projectRoles），杜绝两套投影漂移
+    // 散点：锚点与 locator 共享同一 datumAnchor（point → frame.projectRoles），杜绝两套投影漂移
     const point = datumAnchor(mark, row, frame);
     if (!point) continue;
     const base: IRNode = { type: 'node', position: point };
@@ -158,36 +152,40 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
 
 ## API
 
-`PointMark` 的大部分属性都是数据通道：位置属性决定每行数据投影到哪里，样式属性决定点如何显示；文本、标签和 `id` 这类属性单独看。表里的 `FieldName` 表示数据字段名或字段路径，例如 `region` / `user.age`。
+`PointMark` 的 API 按位置、专属、节点、文本、标签、通用和自定义分组：位置字段决定投影位置，专属字段由 PointMark 自己消费，节点字段下沉到 core `Node`。表里的 `FieldName` 表示数据字段名或字段路径，例如 `region` / `user.age`。
 
 样式绑定统一使用 `MarkValueType<T>`：`{ kind: 'field', value: FieldName } | { kind: 'constant', value: T }`。需要指定 scale 时使用 `MarkValueType<T> & { scale?: string }`。组件层的 `FieldName`、`number`、`string` 等单值写法只是语法糖，最终都会落到这个统一结构。
 
 | 分类 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- | --- |
-| 位置 | `x` | `FieldName?` | — | 绑定 x 位置通道字段 |
-| | `y` | `FieldName?` | — | 绑定 y 位置通道字段 |
-| | `z` | `FieldName?` | — | 绑定三元坐标第三分量字段 |
-| mark 通道 | `color` | `FieldName \| MarkValueType<string>?` | - | 字段绑定时进入颜色通道；有效 CSS 字符串可作为常量颜色；会覆盖常量 `fill` |
-| | `size` | `FieldName \| number \| MarkValueType<number>?` | - | 字段绑定时经 sqrt scale 得到半径；数字或显式 constant 表示常量最终半径 |
-| | `opacity` | `FieldName \| number \| MarkValueType<number>?` | — | 字符串表示不透明度字段；数字表示常量整体透明度 |
-| | `shape` | `FieldName \| MarkValueType<string>?` | - | 字段绑定时按分类映射 glyph shape；非字段字符串可作为常量 core Node shape 名 |
-| | `stroke` | `FieldName \| MarkValueType<string>?` | — | 字符串优先按字段解析；无字段且是颜色时作为常量；显式常量用 `{ kind: 'constant', value }` |
-| | `strokeWidth` | `FieldName \| number \| MarkValueType<number>?` | — | 字符串表示字段；数字表示常量宽度；显式形式支持 field / constant |
-| Node 样式 | `fill` | `FieldName \| MarkValueType<string \| IRPaintSpec>?` | `currentColor` | 填充样式；有 `color` 通道时由通道颜色接管 |
-| | `fillOpacity` | `FieldName \| number \| MarkValueType<number>?` | — | 填充透明度，范围 0..1 |
-| | `drawOpacity` | `FieldName \| number \| MarkValueType<number>?` | — | 描边透明度，范围 0..1 |
-| | `rotate` | `FieldName \| number \| MarkValueType<number>?` | — | glyph 旋转角度，单位为度 |
-| | `padding` | `FieldName \| number \| MarkValueType<number>?` | `0` | core Node padding |
-| | `minimumSize` | `FieldName \| number \| MarkValueType<number>?` | 点默认尺寸 | 最小视觉尺寸 |
-| | `minimumWidth` / `minimumHeight` | `FieldName \| number \| MarkValueType<number>?` | — | 最小视觉宽 / 高 |
-| | `zIndex` | `FieldName \| number \| MarkValueType<number>?` | — | 绘制顺序提示 |
-| 标签 | `label` | `FieldName?` | — | 绑定宿主 `Node.label` 文本字段；保留点 glyph |
-| | `labelDisplayFormat` | `string?` | — | 设置 `label` 的展示格式 |
-| | `resolveLabel` | `(row) => string?` | — | 运行时生成标签；不进 IR，需配 `id` |
-| 文本点 | `text` | `FieldName?` | — | 绑定文本内容字段；设置后点 glyph 会变成文本 Node |
-| | `format` | `string?` | — | 设置 `text` 的格式 |
-| | `dx` / `dy` | `number?` | `0` | 文本点相对锚点的微调 |
-| 通用 | `id` | `string?` | — | 可选句柄（预留，暂不解析） |
+| 位置 | `x` / `y` / `z` | `FieldName?` | — | 坐标角色字段；必填角色由当前坐标系校验 |
+| 专属 | `color` | `FieldName`<br />`PointColorStyle?` | — | mark 语义颜色；字段绑定会生成颜色通道和图例 |
+|  | `fill` | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?` | `currentColor` | 普通点填充；有 `color` 通道时由颜色接管 |
+|  | `stroke` | `FieldName`<br />`PointStrokeStyle?` | — | 普通点描边颜色 |
+| 节点 | `size` | `FieldName`<br />`number`<br />`PointSizeStyle?` | — | 仅作用于普通点；字段绑定经 sqrt scale 映射为半径 |
+|  | `shape` | `FieldName`<br />`NodeShapeChannelValue`<br />`PointShapeStyle?` | — | 仅作用于普通点；分类字段映射到 point shape |
+|  | `textColor` | `FieldName`<br />`PointColorStyle?` | — | 仅作用于文本点的文字颜色 |
+|  | `opacity` / `fillOpacity`<br />`drawOpacity` | `MarkValueProp<number>`<br />`PointOpacityStyle` | — | 整体、填充和描边透明度 |
+|  | `strokeWidth` | `FieldName`<br />`number`<br />`PointStrokeWidthStyle?` | — | 普通点或 cell 的描边宽度 |
+|  | `rotate` / `zIndex` | `MarkValueProp<number>`<br />`PointNumberStyle`<br />`PointZIndexStyle` | — | 旋转角度与绘制顺序 |
+|  | `padding` / `minimumSize` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | Node 内边距与最小视觉尺寸 |
+|  | `minimumWidth` / `minimumHeight` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | 最小视觉宽 / 高 |
+|  | `align`<br />`lineHeight` / `maxTextWidth` | `MarkValueProp<NodeTextAlignValue>`<br />`NodeTextAlignStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />— | 文本 Node 排版通道 |
+|  | `cornerRadius`<br />`scale` / `xScale` / `yScale` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />— | Node 圆角与缩放通道 |
+|  | `innerXSep` / `innerYSep`<br />`outerSep` / `margin` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | Node 间距通道 |
+|  | `dashed` / `dotted`<br />`dashPattern` | `MarkValueProp<boolean>`<br />`NodeBooleanStyle`<br />`MarkValueProp<Array<number>>`<br />`NodeDashPatternStyle` | —<br />— | Node 描边虚线通道 |
+|  | `font`<br />`boundary`<br />`shadow`<br />`blendMode` | `MarkValueProp<IRFont>`<br />`NodeFontStyle`<br />`MarkValueProp<IRBoundary>`<br />`NodeBoundaryStyle`<br />`MarkValueProp<ShadowPresetValue>`<br />`MarkValueProp<DropShadow>`<br />`ShadowStyle`<br />`MarkValueProp<BlendModeValue>`<br />`BlendModeStyle` | —<br />—<br />—<br />— | 字体、边界、阴影和混合模式 |
+| 文本 | `text` | `FieldName?` | — | 绑定文本内容字段；设置后点本身会变成文本 Node |
+|  | `displayFormat` | `string?` | — | 设置 `text` 的展示格式 |
+|  | `dx` / `dy` | `number?` | `0` | 文本点相对锚点的屏幕微调 |
+| 标签 | `label` | `FieldName?` | — | 绑定宿主 `Node.label` 文本字段；保留点本身 |
+|  | `labelDisplayFormat` | `string?` | — | 设置 `label` 的展示格式 |
+|  | `labelPosition`<br />`labelDistance`<br />`labelPin` | `string / number`<br />`number`<br />`boolean / LabelPin` | `above`<br />`12`<br />`false` | 标签方位、距离和引线 |
+|  | `labelTextColor`<br />`labelOpacity`<br />`labelFont` | `string?`<br />`number?`<br />`IRFont?` | —<br />—<br />— | 标签文字颜色、透明度和字体 |
+|  | `labelRotate`<br />`labelKeepUpright` | `string / number?`<br />`boolean?` | —<br />— | 标签旋转和正向保持 |
+|  | `resolveLabel` | `(row) => string?` | — | 运行时生成标签；不进 IR，需配 `id` |
+| 通用 | `id` | `string?` | — | 可选 mark 句柄，用于图层 id / 运行时标签解析 |
+| 自定义 | `channels` | `Record<string, Channel>` | — | 自定义通道入口；交给注册的 channel definition 解析 |
 
 ## 相关
 

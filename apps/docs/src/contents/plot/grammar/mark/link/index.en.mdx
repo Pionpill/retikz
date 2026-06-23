@@ -116,20 +116,24 @@ The logic breaks down into four steps:
 
 ## API
 
-LinkMark position and width props are data channels. `FieldName` means a field name or field path, such as `source.x` / `amount`; `curvature` / `orientation` are constant geometry settings.
+LinkMark props are grouped as Position, Specific, Path, General, and Custom: endpoint fields define the source / target positions, specific fields describe width and geometry, and path fields lower onto core `Path`. `FieldName` means a field name or field path, such as `source.x` / `amount`; `curvature` / `orientation` are constant geometry settings.
 
 | Category | Prop | Type | Default | Description |
 | --- | --- | --- | --- | --- |
-| Source endpoint | `sourceX` | `FieldName` | — | Source x position field, projected through the coordinate system |
-| | `sourceY` | `FieldName` | — | Source y position field, projected through the coordinate system |
-| Target endpoint | `targetX` | `FieldName` | — | Target x position field, projected through the coordinate system |
-| | `targetY` | `FieldName` | — | Target y position field, projected through the coordinate system |
-| Width | `value` | `FieldName` | — | Source-end flow field, mapped through a synthesized linear scale to band width |
-| | `endWidth` | `FieldName?` | `value` | Target-end width field; omitted means equal target and source widths |
-| Geometry | `curvature` | `number?` | `0.5` | Cubic control-point extrapolation ratio along the main axis, range `0..1` |
-| | `orientation` | `'horizontal' \| 'vertical'?` | `'horizontal'` | Main-axis orientation: horizontal left-right flow or vertical top-bottom flow |
-| Style | `color` | `FieldName?` | default layer color | Field bound to color; groups fills by field value |
-| General | `id` | `string?` | — | Optional handle (reserved, not resolved yet) |
+| Position | `sourceX` / `sourceY` | `FieldName` | — | Source endpoint field pair; currently projected only under cartesian2D |
+|  | `targetX` / `targetY` | `FieldName` | — | Target endpoint field pair; currently projected only under cartesian2D |
+| Specific | `value` | `FieldName` | — | Source-end flow field, mapped through a synthesized linear scale to band width |
+|  | `endWidth` | `FieldName?` | `value` | Target-end width field; omitted means equal target and source widths |
+|  | `curvature` | `number?` | `0.5` | Cubic control-point extrapolation ratio along the main axis, range `0..1` |
+|  | `orientation` | `'horizontal' / 'vertical'?` | `'horizontal'` | Main-axis orientation: horizontal left-right flow or vertical top-bottom flow |
+|  | `color` | `FieldName?` | default layer color | Field bound to color; groups fills by field value |
+| Path | `opacity` / `fillOpacity`<br />`drawOpacity` | `PointOpacityStyle?`<br />`PointOpacityStyle?` | —<br />— | Whole-band, fill, and stroke opacity |
+|  | `zIndex` / `rotate` | `PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />— | Draw order and rotation |
+|  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | Path scaling, fill rule, and thickness preset |
+|  | `arrow` / `arrowDetail` | `PathArrowStyle?`<br />`PathArrowDetailStyle?` | —<br />— | Arrow direction and details |
+|  | `dashPattern`<br />`shadow` / `blendMode` | `NodeDashPatternStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?` | —<br />—<br />— | Dash pattern, shadow, and blend mode |
+| General | `id` | `string?` | — | Optional mark handle for layer ids |
+| Custom | `channels` | `Record<string, Channel>` | — | Custom channel bindings; resolved by registered channel definitions |
 
 ## Related
 

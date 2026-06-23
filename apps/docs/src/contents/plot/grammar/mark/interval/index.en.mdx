@@ -141,25 +141,30 @@ const lowerCells = (
 
 ## API
 
-Most `IntervalMark` props are data channels. `FieldName` means a data field name or field path, such as `quarter` / `sales.revenue`.
+`IntervalMark` props are grouped as Position, Specific, Node, Label, General, and Custom: position fields define cell role values, specific fields build intervals and series relationships, and node fields lower onto core `Node`. `FieldName` means a data field name or field path, such as `quarter` / `sales.revenue`.
 
 | Category | Prop | Type | Default | Description |
 | --- | --- | --- | --- | --- |
-| Position | `x` | `FieldName?` | — | x position field; used by bars, heatmaps, and radial bars |
-| | `y` | `FieldName?` | — | y position field; used by bars, heatmaps, and radial bars |
-| | `x0` / `x1` | `FieldName?` | — | Continuous x interval bounds; used by histograms and other explicit intervals |
-| | `angle` | `FieldName?` | — | Pie / donut shortcut: share-value field, accumulated into angular extents |
-| Bounds | `bounds` | `IntervalBounds?` | inferred from scales | Advanced interval source; heatmaps use `{ x: { kind: 'band' }, y: { kind: 'band' } }` |
-| Series | `series` | `FieldName?` | — | Series field; split into multiple interval series |
-| | `stack` | `boolean?` | `false` | Stack multiple series; omit for side-by-side grouping |
-| Style Channel | `color` | `FieldName?` | `series` | Color field; falls back to `series` |
-| Label | `label` | `FieldName?` | — | Host datum-label field |
-| | `labelDisplayFormat` | `string?` | — | Label display format string |
-| | `labelPosition` | `CompassAnchor \| number?` | `above` | Label position relative to the host Node |
-| | `labelDistance` | `number?` | `12` | Distance from the host border to the label |
-| | `labelPin` | `boolean?` | `false` | Whether to draw a leader from the host border to the label |
-| | `resolveLabel` | `(row) => string?` | — | Runtime label resolver; not stored in IR, requires `id` |
-| Common | `id` | `string?` | — | Optional handle |
+| Position | `x` / `y` / `z` | `FieldName?` | — | Coordinate role fields; cartesian2D / polar2D use `x` / `y`, ternary2D also needs `z` |
+| Specific | `color` | `FieldName?` | `series` | Color field; field bindings create a color channel and legend |
+|  | `x0` / `x1` | `FieldName?` | — | Lower / upper x interval fields; component props create `bounds.x = extent(x0, x1)` |
+|  | `angle` | `FieldName?` | — | Pie / donut shortcut: share field accumulated into angular intervals |
+|  | `bounds` | `IntervalBounds?` | inferred by role | Explicit band / span / extent / full source for each role |
+|  | `series` | `FieldName?` | — | Series field; split, dodge, or stack intervals |
+|  | `stack` | `boolean?` | `false` | Stack multiple series; omitted series dodge side by side |
+| Node | `opacity` / `fillOpacity` | `PointOpacityStyle?` | — | Cell Node whole and fill opacity |
+|  | `strokeWidth` | `PointNonnegativeNumberStyle?` | — | Cell Node stroke width |
+|  | `padding` / `minimumSize` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | Cell Node padding and minimum visual size |
+|  | `minimumWidth` / `minimumHeight` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | Minimum visual width / height |
+|  | `align`<br />`lineHeight` / `maxTextWidth` | `MarkValueProp<NodeTextAlignValue>`<br />`NodeTextAlignStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />— | Text layout channels |
+|  | `cornerRadius`<br />`scale` / `xScale` / `yScale` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />— | Cell Node corner radius and scaling |
+|  | `innerXSep` / `innerYSep`<br />`outerSep` / `margin` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | Cell Node spacing channels |
+|  | `dashed` / `dotted`<br />`dashPattern` | `MarkValueProp<boolean>`<br />`NodeBooleanStyle`<br />`MarkValueProp<Array<number>>`<br />`NodeDashPatternStyle` | —<br />— | Cell Node stroke dash channels |
+|  | `font`<br />`boundary`<br />`shadow`<br />`blendMode` | `NodeFontStyle?`<br />`NodeBoundaryStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?` | —<br />—<br />—<br />— | Font, boundary, shadow, and blend mode |
+| Label | `label` / `labelDisplayFormat` | `FieldName?`<br />`string?` | —<br />— | Attach datum labels to each cell |
+|  | `labelPosition`<br />`labelDistance`<br />`labelPin` | `string / number`<br />`number`<br />`boolean / LabelPin` | `above`<br />`12`<br />`false` | Label side, spacing, and leader line |
+| General | `id` | `string?` | — | Optional mark handle for layer ids / runtime label resolution |
+| Custom | `channels` | `Record<string, Channel>` | — | Custom channel bindings; resolved by registered channel definitions |
 
 ## Related
 

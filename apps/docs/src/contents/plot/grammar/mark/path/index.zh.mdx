@@ -110,17 +110,26 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 
 ## API
 
-`PathMark` 的主要属性都是数据通道：位置属性决定轨迹经过哪些点，系列属性决定是否拆成多条路径。表里的 `FieldName` 表示数据字段名或字段路径，例如 `month` / `city`。
+`PathMark` 的 API 按位置、专属、路径、标签、通用和自定义分组：位置字段决定轨迹点，专属字段负责拆系列和闭合路径，路径字段下沉到 core `Path`。表里的 `FieldName` 表示数据字段名或字段路径，例如 `month` / `city`。
 
 | 分类 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- | --- |
-| 位置 | `x` | `FieldName` | — | 绑定 x 位置通道字段 |
-| | `y` | `FieldName` | — | 绑定 y 位置通道字段 |
-| | `order` | `FieldName?` | 数据顺序 | 绑定连接顺序字段 |
-| 系列 | `series` | `FieldName?` | — | 按字段拆成多条路径 |
-| | `color` | `FieldName?` | `series` | 绑定颜色通道；无显式 `series` 时可隐式拆系列 |
-| 几何 | `closed` | `boolean?` | `false` | 末点回连首点，形成闭合路径 |
-| 通用 | `id` | `string?` | — | 可选句柄（预留，暂不解析） |
+| 位置 | `x` / `y` | `FieldName` | — | 坐标角色字段；cartesian2D 中是平面点，polar2D 中解释为角向 / 径向 |
+| 专属 | `color` | `FieldName?` | `series` | 颜色字段；无显式 `series` 时可按分类颜色隐式拆系列 |
+|  | `order` | `FieldName?` | 数据顺序 | 驱动连接顺序的字段 |
+|  | `series` | `FieldName?` | — | 按字段拆成多条路径 |
+|  | `closed` | `boolean?` | `false` | 末点回连首点，形成闭合路径 |
+| 路径 | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | 路径描边宽度、整体透明度和填充透明度 |
+|  | `drawOpacity`<br />`zIndex` / `rotate` | `PointOpacityStyle?`<br />`PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />—<br />— | 描边透明度、绘制顺序和旋转 |
+|  | `roundedCorners` | `MarkValueProp<number>` | — | step 转角圆角 |
+|  | `lineCap` / `lineJoin` | `FieldName / LineCapValue`<br />`FieldName / LineJoinValue` | —<br />— | 线帽与连接样式 |
+|  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | 路径缩放、填充规则和厚度预设 |
+|  | `arrow` / `arrowDetail` | `PathArrowStyle?`<br />`PathArrowDetailStyle?` | —<br />— | 箭头方向与细节 |
+|  | `dashPattern`<br />`shadow` / `blendMode` | `NodeDashPatternStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?` | —<br />—<br />— | 虚线、阴影和混合模式 |
+| 标签 | `label` / `labelDisplayFormat` | `FieldName?`<br />`string?` | —<br />— | 给路径数据点挂标签 |
+|  | `labelPosition`<br />`labelDistance`<br />`labelPin` | `string / number`<br />`number`<br />`boolean / LabelPin` | `above`<br />`12`<br />`false` | 标签方位、距离和引线 |
+| 通用 | `id` | `string?` | — | 可选 mark 句柄，用于图层 id / 运行时标签解析 |
+| 自定义 | `channels` | `Record<string, Channel>` | — | 自定义通道入口；交给注册的 channel definition 解析 |
 
 ## 相关
 
