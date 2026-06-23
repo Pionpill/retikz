@@ -45,6 +45,12 @@ const localSourceFiles: Record<string, string | undefined> = import.meta.glob<st
     eager: true,
   },
 );
+const actionModules: Record<string, Record<string, unknown> | undefined> = import.meta.glob<Record<string, unknown>>(
+  '../../../contents/**/*.actions.ts',
+  {
+    eager: true,
+  },
+);
 // vanilla 代码视图的手写覆盖：同级 `<name>.vanilla.ts`（命中则原文优先，否则走 IR codegen）
 const vanillaOverrides: Record<string, string | undefined> = import.meta.glob<string>(
   '../../../contents/**/*.vanilla.ts',
@@ -75,12 +81,21 @@ const buildLangKey = (segments: Array<string>, name: string, lang: string) =>
   `../../../contents/${segments.join('/')}/${name}.${lang}.demo.tsx`;
 const buildSourceFileKey = (segments: Array<string>, filename: string) =>
   `../../../contents/${segments.join('/')}/${filename}`;
+const buildActionsKey = (segments: Array<string>, name: string) =>
+  `../../../contents/${segments.join('/')}/${name}.actions.ts`;
 const buildVanillaKey = (segments: Array<string>, name: string) =>
   `../../../contents/${segments.join('/')}/${name}.vanilla.ts`;
 const buildIrJsonKey = (segments: Array<string>, name: string) =>
   `../../../contents/${segments.join('/')}/${name}.ir.json`;
 const filenameFromKey = (key: string) => key.slice(key.lastIndexOf('/') + 1);
 const COMPONENT_EXPANSION_LIMIT = 16;
+
+const resolvePreviewActions = (mod: Record<string, unknown> | undefined): Array<PreviewAction> | undefined => {
+  if (mod === undefined) return undefined;
+  if (Array.isArray(mod.previewActions)) return mod.previewActions as Array<PreviewAction>;
+  const namedActions = Object.entries(mod).find(([key, value]) => key.endsWith('Actions') && Array.isArray(value));
+  return namedActions?.[1] as Array<PreviewAction> | undefined;
+};
 
 type PreviewRootProps = {
   children?: ReactNode;
@@ -257,7 +272,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const mod = key ? demoModules[key] : undefined;
   const rawSource = key ? demoSources[key] : undefined;
   const Component = mod?.default;
-  const moduleActions = mod?.previewActions;
+  const actionModule = segments ? actionModules[buildActionsKey(segments, name)] : undefined;
+  const moduleActions = mod?.previewActions ?? resolvePreviewActions(actionModule);
   // baseline 走同样的 i18n 解析；找不到时 baselineRawSource = undefined，下游静默跳过染色
   const baselineKey = segments && diffFrom ? resolveDemoKey(segments, diffFrom, lang) : null;
   const baselineRawSource = baselineKey ? demoSources[baselineKey] : undefined;

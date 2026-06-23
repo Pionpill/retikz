@@ -3,7 +3,6 @@ title: PathMark
 description: PathMark 是有序点形成的一维轨迹；折线、多系列线和雷达线框都是它在不同配置下的表现形态。
 ---
 
-import { lineCurveActions } from './line-curve.actions';
 
 `<PathMark>` 为一组数据行生成一条 1D 轨迹。它先把每行数据投影成点，再按 `order` 排序并连接成 core `Path`；在 cartesian2D 下常表现为折线，在 polar2D 下可以表现为极坐标路径或雷达线框。
 
@@ -63,7 +62,7 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 `curve` 控制相邻点之间如何连接。左侧是二维笛卡尔坐标，右侧是二维极坐标；切换连接方式时，两边会同步更新。极坐标下不额外设置内部半径，PathMark 会按角向和径向位置直接投影。
 
-<ComponentPreview name="line-curve" sourceFiles={['line-curve.data.ts']} actions={lineCurveActions} interactive size="md" />
+<ComponentPreview name="line-curve" sourceFiles={['line-curve.data.ts']} interactive size="md" />
 
 | 值 | 说明 | 表现 |
 | --- | --- | --- |

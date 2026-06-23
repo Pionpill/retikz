@@ -3,7 +3,6 @@ title: PathMark
 description: "PathMark is a one-dimensional trajectory made from ordered points; lines, multi-series lines, and radar outlines are presentation forms of the same mark."
 ---
 
-import { lineCurveActions } from './line-curve.actions';
 
 `<PathMark>` produces one 1D trajectory from a set of data rows. It projects each row into a point, sorts the points by `order`, and lowers the result into a core `Path`. Under cartesian2D it is usually a line; under polar2D it can become a polar path or a radar outline.
 
@@ -63,7 +62,7 @@ With no `series`, giving `color` a categorical field also splits PathMark implic
 
 `curve` controls how adjacent points connect. The left side uses cartesian2D and the right side uses polar2D; when you switch the connection type, both sides update together. The polar plot does not set an inner radius, so PathMark projects angular and radial positions directly.
 
-<ComponentPreview name="line-curve" sourceFiles={['line-curve.data.ts']} actions={lineCurveActions} interactive size="md" />
+<ComponentPreview name="line-curve" sourceFiles={['line-curve.data.ts']} interactive size="md" />
 
 | Value | Meaning | Behavior |
 | --- | --- | --- |
