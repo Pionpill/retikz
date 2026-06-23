@@ -266,15 +266,19 @@ Line 2`}</Node>
 
 <ComponentPreview name="node-color-opacity" size="xs" />
 
-#### 渐变填充（Paint）
+#### 渐变填充与描边
 
-`fill` 除纯色字符串外还接 **PaintSpec 对象**——线性 / 径向渐变、图案 pattern、图片 image。相同 PaintSpec 自动去重，渲染为 SVG `<defs>` 里的 paint server。`<Path fill>` 同样支持。
+`fill` / `stroke` 除纯色字符串外还接 **PaintSpec 对象**——线性 / 径向渐变、图案 pattern、图片 image。相同 PaintSpec 自动去重，渲染为 SVG `<defs>` 里的 paint server。`<Path fill>` / `<Path stroke>` 同样支持。
 
 - 线性：`{ kind: 'linearGradient', angle?, stops }`——`angle` 度数（0 = 左→右，90 = 上→下）
 - 径向：`{ kind: 'radialGradient', center?, radius?, stops }`——`center` / `radius` 用 0..1 相对值
 - `stops`：`{ offset (0..1), color, opacity? }` 数组，至少 2 个；`color` 可用 `currentColor`
 
 <ComponentPreview name="node-paint" size="sm" />
+
+节点外框也能用渐变描边，`strokeWidth`、`drawOpacity`、`dashPattern` 等描边样式照常生效：
+
+<ComponentPreview name="node-stroke-paint" size="sm" />
 
 `stop` 的 `opacity` 可做"实色 → 透明"渐隐；`color` 用 `currentColor` 让渐变跟随元素 `color`、随主题切换：
 
@@ -317,7 +321,7 @@ Line 2`}</Node>
 | `rotate` | `number` | `0` | 绕中心旋转角度（度，正值顺时针） |
 | `color` | `string` | — | 主色（TikZ `color=`）；`stroke` / `fill` / `textColor` 未单设则随它，并级联到内部文字与边 label |
 | `fill` | `string \| PaintSpec` | — | 背景填充：纯色 CSS 串，或 PaintSpec（渐变 linear / radial、图案 pattern、图片 image） |
-| `stroke` | `string` | `currentColor` | 边框色 |
+| `stroke` | `string \| PaintSpec` | `currentColor` | 边框 paint：CSS 颜色或 PaintSpec（渐变 / pattern / image） |
 | `strokeWidth` | `number` | `1` | 边框宽度（user units） |
 | `innerXSep` | `number` | — | 横向内边距（text → 左右 border）；不填走 `padding` 兜底 |
 | `innerYSep` | `number` | — | 纵向内边距（text → 上下 border）；不填走 `padding` 兜底 |

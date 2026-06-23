@@ -44,6 +44,25 @@ describe('@retikz/vanilla builder ↔ render 管线', () => {
     expect(out).not.toContain('retikz-paint-aaa-');
   });
 
+  it('stroke-paint：vanilla draw() 结构化 stroke paint → SVG stroke url + paint defs', () => {
+    const fig = figure({ width: 120, height: 80 }, [
+      draw([[0, 0], [80, 20]], {
+        stroke: {
+          kind: 'linearGradient',
+          angle: 90,
+          stops: [
+            { offset: 0, color: '#2563eb' },
+            { offset: 1, color: '#e11d48' },
+          ],
+        },
+        strokeWidth: 4,
+      }),
+    ]);
+    const out = fig.toSvgString({ idPrefix: 'stroke' });
+    expect(out).toContain('retikz-paint-stroke-');
+    expect(out).toMatch(/<path[^>]*stroke="url\(#retikz-paint-stroke-paint-1\)"/);
+  });
+
   it('figure-feeds-standalone：mountSvg/renderToSvgString 直接接受 Figure', () => {
     const fig = figure({ width: 120, height: 90 }, [node('a', { position: [0, 0], text: 'A' })]);
     const c = document.createElement('div');

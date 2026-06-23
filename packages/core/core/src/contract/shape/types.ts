@@ -13,7 +13,7 @@ import type { PaintValue, ScenePrimitive } from '../../primitive';
 export type ShapeStyle = {
   fill?: PaintValue;
   fillOpacity?: number;
-  stroke?: string;
+  stroke?: PaintValue;
   strokeOpacity?: number;
   strokeWidth?: number;
   dashPattern?: Array<number>;

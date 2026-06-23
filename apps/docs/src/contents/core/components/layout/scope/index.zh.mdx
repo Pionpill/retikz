@@ -382,7 +382,7 @@ compile 维护一个 style frame 栈，进入每层 scope 压一帧，每个元�
 | `localNamespace` | `boolean` | `false` | 是否创建本地命名空间：`true` 时 scope 推一个子 frame，内部 id 与外部隔离；详见 § 技术原理 §「命名空间栈与 lookup」 |
 | `meta` | `Record<string, JSON 值>` | — | provenance 元数据：原样透传进本 scope emit 的 `GroupPrim`，renderer 忽略、不参与布局、**不下传子元素**；典型由 plot 等高层 lowering 注入（标记 series / layer 层）。须为 JSON 可序列化对象 |
 | `color` | `string` | — | 级联主色；内部 stroke / fill / 文字 / 箭头 / 标注未单设则随它 |
-| `stroke` | `string` | — | 级联默认描边色（跨类共享分项） |
+| `stroke` | `string \| PaintSpec` | — | 级联默认描边 paint（CSS 颜色或 PaintSpec：渐变 / pattern / image） |
 | `fill` | `string \| PaintSpec` | — | 级联默认填充（CSS 颜色或 PaintSpec：渐变 / pattern / image） |
 | `strokeWidth` | `number` | — | 级联默认描边宽度 |
 | `opacity` | `number` | — | 级联默认整体透明度 0~1（嵌套替换、不复合） |

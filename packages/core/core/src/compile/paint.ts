@@ -3,8 +3,8 @@ import type { PatternDefinition, PatternEmitContext } from '../contract/pattern'
 import type { MarkerPrimitive, PaintValue, ResolvedPatternTile, SceneResource } from '../primitive';
 import { validateMarkerPrimitives } from './marker-prim';
 
-/** fill 解析器：纯色 string 原样返回；PaintSpec 去重 + 派稳定 id → `{ kind:'resourceRef', id }`；undefined 透传 */
-export type PaintResolver = (fill: string | IRPaintSpec | undefined) => PaintValue | undefined;
+/** paint 解析器：纯色 string 原样返回；PaintSpec 去重 + 派稳定 id → `{ kind:'resourceRef', id }`；undefined 透传 */
+export type PaintResolver = (paint: string | IRPaintSpec | undefined) => PaintValue | undefined;
 
 /** paint 资源登记表：编译期收集 PaintSpec、去重派 id，最后产出 Scene.resources */
 export type PaintRegistry = {
@@ -105,19 +105,19 @@ export const createPaintRegistry = (
   const idByKey = new Map<string, string>();
   const list: Array<SceneResource> = [];
   let counter = 0;
-  const resolve: PaintResolver = fill => {
-    if (fill === undefined) return undefined;
-    if (typeof fill === 'string') return fill;
-    const key = JSON.stringify(fill);
+  const resolve: PaintResolver = paint => {
+    if (paint === undefined) return undefined;
+    if (typeof paint === 'string') return paint;
+    const key = JSON.stringify(paint);
     let id = idByKey.get(key);
     if (id === undefined) {
       counter += 1;
       id = `paint-${counter}`;
       idByKey.set(key, id);
-      const resource: SceneResource = { kind: 'paint', id, spec: fill };
+      const resource: SceneResource = { kind: 'paint', id, spec: paint };
       // pattern 资源 emit-in-compile：查表 + 调 emit 产 tile（同 spec → 1 资源 1 tile，因 dedup 已先于此）
-      if (fill.kind === 'pattern') {
-        resource.tile = resolvePatternTile(fill, effectivePatterns, round);
+      if (paint.kind === 'pattern') {
+        resource.tile = resolvePatternTile(paint, effectivePatterns, round);
       }
       list.push(resource);
     }

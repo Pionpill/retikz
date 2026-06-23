@@ -94,6 +94,14 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="path-dashed" size="xs" />
 
+#### 渐变描边
+
+`stroke` 除纯色字符串外还接 `PaintSpec`。线性 / 径向渐变、pattern、image 会进入同一份 paint 资源表；`dashPattern`、`lineCap`、`drawOpacity` 等描边样式照常作用在这条线本身。
+
+<ComponentPreview name="path-stroke-paint" size="sm" />
+
+带箭头的路径如果用渐变描边，需要给 `arrowDetail.color` 或端点 `color` 一个显式纯色；箭头 marker 不能继承资源型描边。
+
 #### 描边端点 / 拐点
 
 `lineCap` 控制描边端点形状：`'butt'` 默认（直角端）/ `'round'` 半圆 / `'square'` 方头外扩半个 stroke。`lineJoin` 控制拐点形状：`'miter'` 默认（尖角）/ `'round'` 圆角 / `'bevel'` 切角。
@@ -179,7 +187,7 @@ import { Path, Step } from '@retikz/react';
 | `id` | `string` | — | 可选稳定 id：供其它元素 anchor 引用，也是[水合](/core/reference/hydration)事件绑定的挂点（带 `id` 才能给 path 绑 `onClick` 等 handler） |
 | `meta` | `Record<string, JSON 值>` | — | provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 plot 等高层 lowering 注入（标记来自哪个 datum / series / layer），供交互层命中后反查来源。须为 JSON 可序列化对象 |
 | `color` | `string` | — | 主色（TikZ `color=`）；`stroke` / 箭头 / step label 未单设则随它（跟主色不跟 `stroke`） |
-| `stroke` | `string` | `currentColor` | 描边色 |
+| `stroke` | `string \| PaintSpec` | `currentColor` | 描边 paint：CSS 颜色或 PaintSpec（渐变 / pattern / image）；箭头继承时需给箭头显式纯色 |
 | `strokeWidth` | `number` | `1` | 描边宽度 |
 | `dashPattern` | `Array<number>` | — | dash/gap 长度序列（如 `[4, 2]`） |
 | `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | 描边端点形状 |

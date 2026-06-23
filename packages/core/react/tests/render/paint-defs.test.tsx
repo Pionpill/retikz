@@ -1,6 +1,6 @@
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
-import type { RectPrim, SceneResource } from '@retikz/core';
+import type { PathPrim, RectPrim, SceneResource } from '@retikz/core';
 import { renderPrim } from '../../src/render/render-prim';
 import { PaintDefs } from '../../src/render/paint-defs';
 
@@ -35,6 +35,30 @@ describe('renderPrim — PaintValue fill 分派', () => {
   it('resourceRef 缺省 paintRefUrl → url(#id)', () => {
     const el = renderPrim(rect({ kind: 'resourceRef', id: 'paint-2' }), 0) as AnyEl;
     expect(el.props.fill).toBe('url(#paint-2)');
+  });
+});
+
+describe('renderPrim — PaintValue stroke 分派', () => {
+  const path: PathPrim = {
+    type: 'path',
+    commands: [
+      { kind: 'move', to: [0, 0] },
+      { kind: 'line', to: [10, 0] },
+    ],
+    stroke: { kind: 'resourceRef', id: 'paint-1' },
+  };
+
+  it('resourceRef → stroke="url(#prefix-id)"（经 paintRefUrl）', () => {
+    const el = renderPrim(path, 0, {
+      paintRefUrl: id => `url(#X-${id})`,
+    }) as AnyEl;
+    expect(el.props.stroke).toBe('url(#X-paint-1)');
+  });
+
+  it('var() 纯色 stroke → 走 inline style.stroke', () => {
+    const el = renderPrim({ ...path, stroke: 'var(--outline)' }, 0) as AnyEl;
+    expect(el.props.stroke).toBeUndefined();
+    expect((el.props.style as { stroke?: string }).stroke).toBe('var(--outline)');
   });
 });
 

@@ -124,7 +124,7 @@ export type IRScope = {
   localNamespace?: boolean;
   transforms?: Array<IRTransform>;
   color?: string;
-  stroke?: string;
+  stroke?: string | IRPaintSpec;
   fill?: string | IRPaintSpec;
   strokeWidth?: number;
   opacity?: number;
@@ -197,10 +197,10 @@ export const ScopeSchema = z
         'Cascading master color for all elements in this scope (TikZ scope `color=`). Stroke / fill / text of inner elements default to it unless individually overridden; cascades into edge labels and arrows.',
       ),
     stroke: z
-      .string()
+      .union([z.string(), PaintSpecSchema])
       .optional()
       .describe(
-        'Cascading default stroke color for inner nodes and paths; overrides the cascading master color for the stroke channel.',
+        'Cascading default stroke paint (CSS color or PaintSpec: gradient / pattern / image) for inner nodes and paths; overrides the cascading master color for the stroke channel.',
       ),
     fill: z
       .union([z.string(), PaintSpecSchema])

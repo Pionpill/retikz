@@ -81,10 +81,10 @@ export const PathSchema = z
         'Master color (TikZ `color=`). When set, the stroke, arrow tips, and step labels default to it unless individually overridden. Following the master color (not the stroke) is how a colored line shares its color with its labels and arrows — `stroke=` alone only paints the line.',
       ),
     stroke: z
-      .string()
+      .union([z.string(), PaintSpecSchema])
       .optional()
       .describe(
-        'Stroke color of the path; any CSS color. Defaults to currentColor when omitted',
+        'Stroke paint of the path; any CSS color string or a PaintSpec (linear / radial gradient, pattern, or image). Defaults to currentColor when omitted.',
       ),
     strokeWidth: z
       .number()

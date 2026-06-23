@@ -94,6 +94,32 @@ describe('buildIR', () => {
     expect(ir.children[0]).toMatchObject({ type: 'path', roundedCorners: 8 });
   });
 
+  it('stroke PaintSpec prop 透传进 Node / Path / Scope 的 IR', () => {
+    const stroke = {
+      kind: 'linearGradient' as const,
+      angle: 90,
+      stops: [
+        { offset: 0, color: '#2563eb' },
+        { offset: 1, color: '#e11d48' },
+      ],
+    };
+    const ir = buildIR(
+      <Fragment>
+        <Node id="A" position={[0, 0]} stroke={stroke} />
+        <Path stroke={stroke}>
+          <Step kind="move" to={[0, 0]} />
+          <Step kind="line" to={[10, 0]} />
+        </Path>
+        <Scope stroke={stroke}>
+          <Node id="B" position={[10, 0]} />
+        </Scope>
+      </Fragment>,
+    );
+    expect(ir.children[0]).toMatchObject({ type: 'node', stroke });
+    expect(ir.children[1]).toMatchObject({ type: 'path', stroke });
+    expect(ir.children[2]).toMatchObject({ type: 'scope', stroke });
+  });
+
   it("children 字符串带 '\\n' 自动拆成多行数组", () => {
     const ir = buildIR(
       <Node id="A" position={[0, 0]}>{'Line 1\nLine 2'}</Node>,

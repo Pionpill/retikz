@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { IR, IRPaintSpec } from '../../src/schemas';
-import type { RectPrim, ScenePrimitive } from '../../src/primitive';
+import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 
 const grad: IRPaintSpec = {
@@ -20,6 +20,9 @@ const grad: IRPaintSpec = {
 
 const rectsOf = (prims: Array<ScenePrimitive>): Array<RectPrim> =>
   flattenPrims(prims).filter((p): p is RectPrim => p.type === 'rect');
+
+const pathsOf = (prims: Array<ScenePrimitive>): Array<PathPrim> =>
+  flattenPrims(prims).filter((p): p is PathPrim => p.type === 'path');
 
 describe('node PaintSpec fill → 资源表 + resourceRef', () => {
   it('单 node gradient → primitive.fill = resourceRef + resources 1 条', () => {
@@ -150,5 +153,172 @@ describe('交互：scope 级联 + 纯色/渐变共存', () => {
     expect(rects[0].fill).toBe('lightblue');
     expect(rects[1].fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: grad }]);
+  });
+});
+
+describe('stroke PaintSpec → 资源表 + resourceRef', () => {
+  it('path stroke linearGradient → PathPrim.stroke = resourceRef', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          stroke: grad,
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    expect(pathsOf(scene.primitives)[0].stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
+    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: grad }]);
+  });
+
+  it('node stroke radialGradient → RectPrim.stroke = resourceRef', () => {
+    const radial: IRPaintSpec = { kind: 'radialGradient', stops: grad.stops };
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', stroke: radial }],
+    };
+    const scene = compileToScene(ir);
+    expect(rectsOf(scene.primitives)[0].stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
+    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: radial }]);
+  });
+
+  it('scope stroke PaintSpec 级联到 node/path，并共用同一个 resourceRef', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          stroke: grad,
+          children: [
+            { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+            {
+              type: 'path',
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                { type: 'step', kind: 'line', to: [10, 0] },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    expect(rectsOf(scene.primitives)[0].stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
+    expect(pathsOf(scene.primitives)[0].stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
+    expect(scene.resources).toHaveLength(1);
+  });
+
+  it('fill 与 stroke 使用同一 PaintSpec → 资源去重', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          fill: grad,
+          stroke: grad,
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+            { type: 'step', kind: 'line', to: [10, 10] },
+            { type: 'step', kind: 'cycle' },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    const path = pathsOf(scene.primitives)[0];
+    expect(path.fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
+    expect(path.stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
+    expect(scene.resources).toHaveLength(1);
+  });
+
+  it('纯色 stroke 保持原样、不进入 resources', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          stroke: '#333',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    expect(pathsOf(scene.primitives)[0].stroke).toBe('#333');
+    expect(scene.resources).toBeUndefined();
+  });
+
+  it('stroke undefined 不生成 paint resource', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    expect(pathsOf(scene.primitives)[0].stroke).toBe('currentColor');
+    expect(scene.resources).toBeUndefined();
+  });
+
+  it('arrow × gradient stroke：未显式 arrow 纯色时 fail-loud', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          stroke: grad,
+          arrow: '->',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    expect(() => compileToScene(ir)).toThrow(/arrow.*stroke.*PaintSpec|PaintSpec.*arrow/i);
+  });
+
+  it('arrow × gradient stroke：显式 arrowDetail.color 时允许，marker 使用纯色', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          stroke: grad,
+          arrow: '->',
+          arrowDetail: { color: '#111' },
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    const path = pathsOf(scene.primitives)[0];
+    expect(path.stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
+    expect(path.arrowEnd?.marker[0]).toMatchObject({ fill: '#111' });
   });
 });

@@ -266,15 +266,19 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 
 <ComponentPreview name="node-color-opacity" size="xs" />
 
-#### Gradient fill (Paint)
+#### Gradient fill and stroke
 
-Besides a plain color string, `fill` accepts a **PaintSpec object** — linear / radial gradient, pattern, or image. Identical PaintSpecs are deduplicated automatically and rendered as a paint server inside SVG `<defs>`. `<Path fill>` supports it too.
+Besides a plain color string, `fill` / `stroke` accept a **PaintSpec object** — linear / radial gradient, pattern, or image. Identical PaintSpecs are deduplicated automatically and rendered as a paint server inside SVG `<defs>`. `<Path fill>` / `<Path stroke>` support it too.
 
 - Linear: `{ kind: 'linearGradient', angle?, stops }` — `angle` in degrees (0 = left→right, 90 = top→bottom)
 - Radial: `{ kind: 'radialGradient', center?, radius?, stops }` — `center` / `radius` in 0..1 relative units
 - `stops`: array of `{ offset (0..1), color, opacity? }`, at least 2; `color` may be `currentColor`
 
 <ComponentPreview name="node-paint" size="sm" />
+
+A node border can use gradient stroke as well; `strokeWidth`, `drawOpacity`, `dashPattern`, and other stroke styles keep applying:
+
+<ComponentPreview name="node-stroke-paint" size="sm" />
 
 A stop's `opacity` gives a "solid → transparent" fade; `color` set to `currentColor` makes the gradient follow the element's `color` and react to theme changes:
 
@@ -317,7 +321,7 @@ A stop's `opacity` gives a "solid → transparent" fade; `color` set to `current
 | `rotate` | `number` | `0` | Rotation around center, degrees, positive = clockwise |
 | `color` | `string` | — | Master color (TikZ `color=`); `stroke` / `fill` / `textColor` default to it unless individually set, and it cascades to inner text and edge labels |
 | `fill` | `string \| PaintSpec` | — | Background fill: a plain CSS color string, or a PaintSpec (gradient linear / radial, pattern, or image) |
-| `stroke` | `string` | `currentColor` | Border color |
+| `stroke` | `string \| PaintSpec` | `currentColor` | Border paint: CSS color or PaintSpec (gradient / pattern / image) |
 | `strokeWidth` | `number` | `1` | Border width (user units) |
 | `innerXSep` | `number` | — | Horizontal inner padding (text → left/right border); falls back to `padding` |
 | `innerYSep` | `number` | — | Vertical inner padding (text → top/bottom border); falls back to `padding` |

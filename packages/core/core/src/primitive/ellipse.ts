@@ -25,7 +25,8 @@ export type EllipsePrim = {
   fill?: PaintValue;
   /** 填充透明度 0~1 */
   fillOpacity?: number;
-  stroke?: string;
+  /** 描边：纯色 / 资源表 paint server（gradient）/ contextStroke */
+  stroke?: PaintValue;
   /** 描边透明度 0~1 */
   strokeOpacity?: number;
   strokeWidth?: number;

@@ -205,10 +205,10 @@ export const NodeSchema = z
       .optional()
       .describe('Fill opacity 0..1; affects only the shape fill, leaves stroke / text alone.'),
     stroke: z
-      .string()
+      .union([z.string(), PaintSpecSchema])
       .optional()
       .describe(
-        'Border color of the node shape; any CSS color. Defaults to currentColor when omitted',
+        'Border paint of the node shape; any CSS color string or a PaintSpec (linear / radial gradient, pattern, or image). Defaults to currentColor when omitted.',
       ),
     drawOpacity: z
       .number()

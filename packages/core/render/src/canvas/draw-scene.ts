@@ -63,13 +63,10 @@ const applyDash = (ctx: CanvasRenderingContext2D, dashPattern: Array<number> | u
 
 const applyStrokeStyle = (
   ctx: CanvasRenderingContext2D,
-  stroke: string | undefined,
   strokeWidth: number | undefined,
   strokeOpacity: number | undefined,
   dashPattern: Array<number> | undefined,
-  options: DrawOptions,
 ): void => {
-  if (stroke !== undefined) ctx.strokeStyle = resolveColor(stroke, options) ?? stroke;
   if (strokeWidth !== undefined) ctx.lineWidth = strokeWidth;
   if (strokeOpacity !== undefined) ctx.globalAlpha *= strokeOpacity;
   applyDash(ctx, dashPattern);
@@ -242,18 +239,18 @@ const buildGradient = (
   return gradient;
 };
 
-const resolveFillStyle = (
+const resolvePaintStyle = (
   ctx: CanvasRenderingContext2D,
-  fill: PaintValue | undefined,
-  stroke: string | undefined,
+  paint: PaintValue | undefined,
+  contextStroke: string | undefined,
   options: DrawOptions,
   resources: ResourceMap,
   bbox: BBox,
 ): string | CanvasGradient | CanvasPattern | undefined => {
-  if (fill === undefined) return undefined;
-  if (typeof fill === 'string') return fill === 'none' ? undefined : resolveColor(fill, options);
-  if (fill.kind === 'contextStroke') return resolveColor(stroke, options) ?? String(ctx.strokeStyle);
-  const resource = resources.get(fill.id);
+  if (paint === undefined) return undefined;
+  if (typeof paint === 'string') return paint === 'none' ? undefined : resolveColor(paint, options);
+  if (paint.kind === 'contextStroke') return resolveColor(contextStroke, options) ?? String(ctx.strokeStyle);
+  const resource = resources.get(paint.id);
   if (resource !== undefined && resource.kind === 'paint') {
     const spec = resource.spec;
     if (spec.kind === 'linearGradient' || spec.kind === 'radialGradient') {
@@ -264,7 +261,7 @@ const resolveFillStyle = (
       if (pattern !== undefined) return pattern;
     }
   }
-  warnUnsupported(options, 'paint', `Canvas renderer does not support paint resource "${fill.id}" yet; fill is skipped.`);
+  warnUnsupported(options, 'paint', `Canvas renderer does not support paint resource "${paint.id}" yet; paint is skipped.`);
   return undefined;
 };
 
@@ -314,7 +311,7 @@ const fillImage = (
 const fillCurrentPath = (
   ctx: CanvasRenderingContext2D,
   fill: PaintValue | undefined,
-  stroke: string | undefined,
+  stroke: PaintValue | undefined,
   fillOpacity: number | undefined,
   fillRule: CanvasFillRule | undefined,
   options: DrawOptions,
@@ -328,7 +325,7 @@ const fillCurrentPath = (
       return;
     }
   }
-  const fillStyle = resolveFillStyle(ctx, fill, stroke, options, resources, bbox);
+  const fillStyle = resolvePaintStyle(ctx, fill, typeof stroke === 'string' ? stroke : undefined, options, resources, bbox);
   if (fillStyle === undefined) return;
   if (fillOpacity !== undefined) {
     ctx.save();
@@ -341,15 +338,19 @@ const fillCurrentPath = (
 
 const strokeCurrentPath = (
   ctx: CanvasRenderingContext2D,
-  stroke: string | undefined,
+  stroke: PaintValue | undefined,
   strokeOpacity: number | undefined,
   strokeWidth: number | undefined,
   dashPattern: Array<number> | undefined,
   options: DrawOptions,
+  resources: ResourceMap,
+  bbox: BBox,
 ): void => {
-  if (stroke === undefined || stroke === 'none') return;
+  const strokeStyle = resolvePaintStyle(ctx, stroke, undefined, options, resources, bbox);
+  if (strokeStyle === undefined) return;
   if (strokeOpacity !== undefined) ctx.save();
-  applyStrokeStyle(ctx, stroke, strokeWidth, strokeOpacity, dashPattern, options);
+  ctx.strokeStyle = strokeStyle;
+  applyStrokeStyle(ctx, strokeWidth, strokeOpacity, dashPattern);
   ctx.stroke();
   if (strokeOpacity !== undefined) ctx.restore();
 };
@@ -694,7 +695,12 @@ const drawPrim = (
               w: p.width,
               h: p.height,
             });
-            strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
+            strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options, resources, {
+              x: p.x,
+              y: p.y,
+              w: p.width,
+              h: p.height,
+            });
           }),
         ),
       );
@@ -718,7 +724,12 @@ const drawPrim = (
           w: 2 * p.rx,
           h: 2 * p.ry,
         });
-            strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
+            strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options, resources, {
+              x: p.cx - p.rx,
+              y: p.cy - p.ry,
+              w: 2 * p.rx,
+              h: 2 * p.ry,
+            });
             if (shouldRestore) ctx.restore();
           }),
         ),
@@ -731,11 +742,12 @@ const drawPrim = (
             buildPath(ctx, p.commands);
             if (p.strokeLinecap !== undefined) ctx.lineCap = p.strokeLinecap;
             if (p.strokeLinejoin !== undefined) ctx.lineJoin = p.strokeLinejoin;
-            fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, p.fillRule, options, resources, pathBBox(p.commands));
-            strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
+            const bbox = pathBBox(p.commands);
+            fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, p.fillRule, options, resources, bbox);
+            strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options, resources, bbox);
             if (p.arrowStart || p.arrowEnd) {
               const strokeWidth = p.strokeWidth ?? 1;
-              const pathStroke = resolveColor(p.stroke, options);
+              const pathStroke = typeof p.stroke === 'string' ? resolveColor(p.stroke, options) : undefined;
               if (p.arrowStart) {
                 const placement = startArrowPlacement(p.commands);
                 if (placement) drawArrowMarker(ctx, p.arrowStart, placement.vertex, placement.angle, strokeWidth, pathStroke, options);

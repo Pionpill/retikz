@@ -142,8 +142,8 @@ export type PathPrim = {
   fillOpacity?: number;
   /** 填充规则：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景） */
   fillRule?: 'nonzero' | 'evenodd';
-  /** 描边色 */
-  stroke?: string;
+  /** 描边：纯色 / 资源表 paint server（gradient）/ contextStroke */
+  stroke?: PaintValue;
   /** 描边透明度 0~1 */
   strokeOpacity?: number;
   /** 描边宽度 */

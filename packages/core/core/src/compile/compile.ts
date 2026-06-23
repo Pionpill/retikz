@@ -460,7 +460,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           onWarn,
           irPath: item.irPath,
           scopeChain: item.scopeChain,
-          resolveFill: paint.resolve,
+          resolvePaint: paint.resolve,
           effectiveArrows,
           effectivePathGenerators,
           lowerTex: options.lowerTex,
