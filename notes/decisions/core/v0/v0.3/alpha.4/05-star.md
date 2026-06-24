@@ -13,7 +13,7 @@ core 无星形 shape。星形（评分、徽标、标注强调）是常见图元
 ## 决策：star 注册 shape，nested params 为角数 + 内外半径
 
 ```ts
-// packages/core/core/src/shapes/star.ts —— 经 defineShape，params-半径驱动
+// packages/kernel/core/src/shapes/star.ts —— 经 defineShape，params-半径驱动
 export const star = defineShape({
   paramsSchema: z.strictObject({
     points: z.number().int().min(3).describe('Number of star points (≥3).'),

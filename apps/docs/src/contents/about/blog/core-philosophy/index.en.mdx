@@ -41,7 +41,7 @@ The top layer is `Scene`, fixed in shape:
 }
 ```
 
-`version` is mandatory and bumps on breaking changes; the schema is defined once in zod (`packages/core/src/schemas/scene.ts`), TS types derive via `z.infer`, and the JSON Schema gets exported through `zod-to-json-schema` to feed LLMs. Every field must carry an English `.describe(...)` — that affects LLM output quality; it's not documentation.
+`version` is mandatory and bumps on breaking changes; the schema is defined once in zod (`packages/kernel/core/src/schemas/scene.ts`), TS types derive via `z.infer`, and the JSON Schema gets exported through `zod-to-json-schema` to feed LLMs. Every field must carry an English `.describe(...)` — that affects LLM output quality; it's not documentation.
 
 The middle layer is **Node** and **Path**:
 
@@ -69,7 +69,7 @@ These 12 are the result of repeated trimming — TikZ has dozens of native path 
 
 ## The Scene compiler: what the two passes do
 
-`compileToScene(ir, options)` is core's heaviest asset (`packages/core/src/compile/compile.ts`), and it's a two-pass design:
+`compileToScene(ir, options)` is core's heaviest asset (`packages/kernel/core/src/compile/compile.ts`), and it's a two-pass design:
 
 - **Pass 1**: Walk every Node, resolve relative placement (e.g. `{ direction: 'right', of: 'A', distance: 2 }`), register into `nodeIndex` — a map from node id to known coordinates plus anchor table.
 - **Pass 2**: Emit primitives in JSX source order. Steps in a Path resolve their `to` here — node references like `"A.east"` / `"A.45"` look up `nodeIndex`; relative / accumulated-relative targets track cursor position.
@@ -126,7 +126,7 @@ The shared trait is that they involve algorithmic decisions (dagre layout, auto-
 - The builder (`packages/react/src/kernel/builder.ts`) does synchronous JSX → IR conversion, using a shared field table (`NODE_FIELDS` / `PATH_FIELDS`) and component `displayName` to recognize types; it doesn't call hooks and isn't part of the React render call stack.
 - Text measurement uses `browserMeasurer` (canvas.measureText), injected into compile as a `TextMeasurer` — later SSR adapters can swap in satori / sharp etc., with zero changes to compile itself.
 
-The goal of this layer is **adding a new adapter in the future should take roughly 50 lines of translation code**. SSR translates to SVG strings, Canvas to ctx calls, PDF to PDFKit commands — all sharing the same Scene primitives. The zero-dependency principle lands here: CI enforces that `@retikz/core` loads in a React-free environment, and packages/core's dependency allowlist contains only `zod`.
+The goal of this layer is **adding a new adapter in the future should take roughly 50 lines of translation code**. SSR translates to SVG strings, Canvas to ctx calls, PDF to PDFKit commands — all sharing the same Scene primitives. The zero-dependency principle lands here: CI enforces that `@retikz/core` loads in a React-free environment, and packages/kernel's dependency allowlist contains only `zod`.
 
 ## How AI-friendliness lands in code
 

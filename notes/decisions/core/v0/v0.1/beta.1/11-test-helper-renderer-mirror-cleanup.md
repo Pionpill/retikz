@@ -2,7 +2,7 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-13
-- 关联：[v0.1-beta.1 plan TODO-18](./roadmap.md) · [packages/core/AGENTS.md](../../../../../../packages/core/AGENTS.md)
+- 关联：[v0.1-beta.1 plan TODO-18](./roadmap.md) · [packages/kernel/AGENTS.md](../../../../../../packages/kernel/AGENTS.md)
 
 > **范围**：core 测试里 `helpers/path-d.ts` / `helpers/transform.ts` 镜像了 react adapter 的 `buildPathD` / `buildTransform`，把结构化 `PathCommand[]` / `Transform[]` 再序列化成 SVG 字符串作断言。把这些断言改为直接断言结构化命令数组，删掉镜像 helper，消除漂移风险。
 

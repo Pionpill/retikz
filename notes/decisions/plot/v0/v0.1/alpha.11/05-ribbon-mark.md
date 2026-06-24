@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-06-16
-- 关联：[alpha.11 roadmap](./roadmap.md)「ribbon mark」· [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.7 ribbon / §7 scope 组合 / §8.1 可连接性](../../../../../architecture/plot-design.md) · [ADR-01 区间几何投影](./01-cell-geometry-projection.md)（contour 围合思路同源）· core [step.ts cubic / curve / bend](../../../../../../packages/core/core/src/ir/path/step.ts)
+- 关联：[alpha.11 roadmap](./roadmap.md)「ribbon mark」· [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.7 ribbon / §7 scope 组合 / §8.1 可连接性](../../../../../architecture/plot-design.md) · [ADR-01 区间几何投影](./01-cell-geometry-projection.md)（contour 围合思路同源）· core [step.ts cubic / curve / bend](../../../../../../packages/kernel/core/src/ir/path/step.ts)
 
 ## 背景
 
@@ -71,9 +71,9 @@ DSL 表面与字段含义见文档站 `apps/docs/src/contents/plot/components/ma
 
 ## 实现指针
 
-- IR / lowering / 几何辅助：`packages/plot/plot/src/ir/mark.ts`、`packages/plot/plot/src/lower/mark.ts`（`lowerRibbon`）、`packages/plot/plot/src/lower/anchor.ts`（四角 / 法向 / 控制点 / datum 中线锚点）；测试 `packages/plot/plot/tests/lower/ribbon.test.ts`、`packages/plot/plot/tests/ir/mark.schema.test.ts`。
-- React sugar：`packages/plot/react/src/components/marks.tsx`（`RibbonMark` FC）+ `build-plot-spec.ts`（`collectInto` ribbon 分支）+ barrel；测试 `packages/plot/react/tests/components/ribbon-mark-assembly.test.tsx`。
-- vanilla SSR：`packages/plot/vanilla/tests/render-plot.test.ts`（无 vanilla 源码改动）。
+- IR / lowering / 几何辅助：`packages/graph/plot/src/ir/mark.ts`、`packages/graph/plot/src/lower/mark.ts`（`lowerRibbon`）、`packages/graph/plot/src/lower/anchor.ts`（四角 / 法向 / 控制点 / datum 中线锚点）；测试 `packages/graph/plot/tests/lower/ribbon.test.ts`、`packages/graph/plot/tests/ir/mark.schema.test.ts`。
+- React sugar：`packages/graph/plot-react/src/components/marks.tsx`（`RibbonMark` FC）+ `build-plot-spec.ts`（`collectInto` ribbon 分支）+ barrel；测试 `packages/graph/plot-react/tests/components/ribbon-mark-assembly.test.tsx`。
+- vanilla SSR：`packages/graph/plot-vanilla/tests/render-plot.test.ts`（无 vanilla 源码改动）。
 - 文档：`apps/docs/src/contents/plot/components/mark/ribbon/`（mdx zh/en + basic / flared demo）。
 
 > 🔖 本文件压缩前完整施工蓝图 = `git show 6902289a:notes/decisions/plot/v0/v0.1/alpha.11/05-ribbon-mark.md`（封板全文）。

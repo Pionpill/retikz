@@ -8,7 +8,7 @@
 
 alpha.12 把可扩展语法层逐个做成「内置与自定义经同一 registry 分派」：coordinate（ADR-05）、transform（ADR-06）、scale（ADR-07）、mark（ADR-08）都给出了 `defineXxx` + `resolveXxxRegistry` + `options.xxxDefinitions` + IR passthrough 的同构四件套。`contract`（抽象）/ `providers`（内置 def + registry）/ `pipeline`（消费）的三层拆分也按这个范式收敛。
 
-`packages/plot/plot/src/data` 是当时**明确缓置**的一层（plot AGENTS.md 记「data/guide/interaction 暂无 define 机制」）。复审 data 层后确认：它整体**不是** registry 形状——`DataModel`/`FieldDef` 是声明式配置、infer→coerce→normalize→validate 是固定管线、`resolveField`/`resolveLabel` 是运行时函数逃生舱（任意函数本就不该塞进具名注册表）。但其中**恰有一处**是真正的 define 缝：**字段解析格式 `PlotFieldFormat`**。
+`packages/graph/plot/src/data` 是当时**明确缓置**的一层（plot AGENTS.md 记「data/guide/interaction 暂无 define 机制」）。复审 data 层后确认：它整体**不是** registry 形状——`DataModel`/`FieldDef` 是声明式配置、infer→coerce→normalize→validate 是固定管线、`resolveField`/`resolveLabel` 是运行时函数逃生舱（任意函数本就不该塞进具名注册表）。但其中**恰有一处**是真正的 define 缝：**字段解析格式 `PlotFieldFormat`**。
 
 `PlotFieldFormat` 是一个封闭枚举（`iso` / `epochSeconds` / `epochMillis` / `slashDate` / `numberString` / `percent`），每个成员在 `data/coerce.ts` 里硬绑一个 `(impliedType + parser)`：`FORMAT_IMPLIED_TYPE` 记录 + `formatParser` switch。这正是「一组具名声明式 parser」——和 transform kind / mark type 同构。它今天的扩展故事很别扭：用户想加自定义解析（货币、`'1.2万'`、地区日期…）**只能走 `resolveField.parse` 这条按字段、无 schema 判别、还强制额外声明 type 的逃生舱**（`data/resolve.ts` 那条「parse 无 type 且 model 未声明 → fail-loud」就是它的摩擦点）。format 想复用、想进 IR 当判别串、想内置与自定义同表分派，现状都做不到。
 
@@ -71,7 +71,7 @@ const currency = defineFieldFormat({
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/field-format.test.ts`（扩展现有内置 format 测试）覆盖：
+`packages/graph/plot/tests/lower/field-format.test.ts`（扩展现有内置 format 测试）覆盖：
 
 - 内置回归：现有 slashDate/epochSeconds/percent/numberString/format-implies-type/type-mismatch 行为逐字段不变（registry 化不改内置语义）。
 - 自定义：`defineFieldFormat` 经 `options.formatDefinitions` 注入 → `parse` 被调、`impliedType` 在省略 type 时覆盖推断；自定义与显式 type 冲突 fail-loud。

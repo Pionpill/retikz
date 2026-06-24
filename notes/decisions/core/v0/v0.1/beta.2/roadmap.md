@@ -2,7 +2,7 @@
 
 > 写于 2026-05-13。完工后保留留档（摘要见 roadmap v0.1 跟踪段）。
 >
-> 关联：[`v0 roadmap`](./roadmap.md) · [`packages/core/AGENTS.md`](../../../../../../packages/core/AGENTS.md) · [`beta.1 ADRs`](../beta.1/)
+> 关联：[`v0 roadmap`](./roadmap.md) · [`packages/kernel/AGENTS.md`](../../../../../../packages/kernel/AGENTS.md) · [`beta.1 ADRs`](../beta.1/)
 
 ## 背景与定位
 
@@ -34,7 +34,7 @@ v0.1 beta 阶段：**持续优化 + 不考虑兼容性，rc 才冻结公开 API*
 
 ### 问题陈述
 
-`packages/core/src/primitive/view-box.ts` 导出 type `ViewBox = { x, y, width, height }`，是 Scene primitive 的场景级布局边界——`viewBox` 这个词汇来自 SVG，让 type 系统看起来"为 SVG 准备"，与 alpha.5 ADR-01 把 PathPrim / GroupPrim 结构化、去 SVG 词汇的方向一致——type / field / file 层名字也应当中性化。
+`packages/kernel/core/src/primitive/view-box.ts` 导出 type `ViewBox = { x, y, width, height }`，是 Scene primitive 的场景级布局边界——`viewBox` 这个词汇来自 SVG，让 type 系统看起来"为 SVG 准备"，与 alpha.5 ADR-01 把 PathPrim / GroupPrim 结构化、去 SVG 词汇的方向一致——type / field / file 层名字也应当中性化。
 
 `ViewBox` 描述的是"场景的整体边界"，本质是几何布局；改名 `Layout` 表意中性、与 canvas / Skia / PDF 等 adapter 概念兼容。SVG adapter 内部把 `Layout` 翻译成 SVG `<svg viewBox="...">` 字符串（react adapter 内部已有 `formatViewBox` helper，保留），但 retikz 公开类型层不应叫 `ViewBox`。
 
@@ -56,17 +56,17 @@ type Scene = {
 };
 ```
 
-文件 rename：`packages/core/src/primitive/view-box.ts` → `primitive/layout.ts`；`packages/core/src/compile/view-box.ts` → `compile/layout.ts`；函数 `computeViewBox` → `computeLayout`。`react/src/render/viewBox.ts` 保留——SVG adapter 内部 helper，`formatViewBox` 函数 / 文件名是产出 SVG viewBox 字符串的事实陈述，合理（其参数类型 `ViewBox` → `Layout`）。
+文件 rename：`packages/kernel/core/src/primitive/view-box.ts` → `primitive/layout.ts`；`packages/kernel/core/src/compile/view-box.ts` → `compile/layout.ts`；函数 `computeViewBox` → `computeLayout`。`react/src/render/viewBox.ts` 保留——SVG adapter 内部 helper，`formatViewBox` 函数 / 文件名是产出 SVG viewBox 字符串的事实陈述，合理（其参数类型 `ViewBox` → `Layout`）。
 
 ### 影响范围
 
-- `packages/core/src/primitive/view-box.ts` → `layout.ts`（rename + type 改名）
-- `packages/core/src/primitive/scene.ts`（`viewBox: ViewBox` → `layout: Layout`）
-- `packages/core/src/primitive/index.ts` barrel
-- `packages/core/src/compile/view-box.ts` → `layout.ts`（rename + function 改名）
-- `packages/core/src/compile/compile.ts`（调用方）
-- `packages/core/src/compile/index.ts` barrel
-- `packages/core/src/index.ts`（公开 export rename）
+- `packages/kernel/core/src/primitive/view-box.ts` → `layout.ts`（rename + type 改名）
+- `packages/kernel/core/src/primitive/scene.ts`（`viewBox: ViewBox` → `layout: Layout`）
+- `packages/kernel/core/src/primitive/index.ts` barrel
+- `packages/kernel/core/src/compile/view-box.ts` → `layout.ts`（rename + function 改名）
+- `packages/kernel/core/src/compile/compile.ts`（调用方）
+- `packages/kernel/core/src/compile/index.ts` barrel
+- `packages/kernel/core/src/index.ts`（公开 export rename）
 - `packages/react/src/kernel/TikZ.tsx`（`scene.viewBox` → `scene.layout`）
 - `packages/react/src/render/viewBox.ts`（参数类型 import 名变化）
 - 全部测试文件（`scene.viewBox` 断言 / `computeViewBox` 引用）
@@ -140,7 +140,7 @@ Migration helper: boundary replace `'Tikz'` -> `'TikZ'`.
 
 ### TODO-3 — core endpoint arrow split 命名中性化
 
-`packages/core/src/compile/path/split.ts` 当前的 `splitSubPathsForMarkers` 以 SVG marker 行为解释多 sub-path + arrow 的拆分策略。实际需求是 renderer-neutral 的“端点箭头只作用于整条 path 的首末端”，SVG marker 只是 React/SVG adapter 的一种实现方式。beta.2 后续调整：
+`packages/kernel/core/src/compile/path/split.ts` 当前的 `splitSubPathsForMarkers` 以 SVG marker 行为解释多 sub-path + arrow 的拆分策略。实际需求是 renderer-neutral 的“端点箭头只作用于整条 path 的首末端”，SVG marker 只是 React/SVG adapter 的一种实现方式。beta.2 后续调整：
 
 - `splitSubPathsForMarkers` 改名为 `splitSubPathsForEndpointArrows`。
 - 注释从 “SVG marker” 改为“endpoint arrows / path endpoints”。
@@ -151,7 +151,7 @@ Level: internal。目标是收紧 core/renderer 边界，不改 IR / Scene 结�
 
 ### TODO-4 — arrow shrink 几何从 SVG viewBox/refX 语义中抽离
 
-`packages/core/src/compile/path/shrink.ts` 当前用 SVG marker `viewBox` / `refX` 描述箭头 shrink 公式，并在注释中要求和 `react/render/arrowMarkers.tsx` 的内部几何一致。这会让 core 的箭头几何隐式依赖 React/SVG renderer。beta.2 后续调整：
+`packages/kernel/core/src/compile/path/shrink.ts` 当前用 SVG marker `viewBox` / `refX` 描述箭头 shrink 公式，并在注释中要求和 `react/render/arrowMarkers.tsx` 的内部几何一致。这会让 core 的箭头几何隐式依赖 React/SVG renderer。beta.2 后续调整：
 
 - 抽出 renderer-neutral 的 arrow shape geometry 常量或 helper，例如 `arrowTipGeometry` / `arrowShapeGeometry`。
 - core shrink 只依赖“尖端位置 / 线端接触位置 / 默认尺寸 / 空心描边宽度”等中性几何概念。

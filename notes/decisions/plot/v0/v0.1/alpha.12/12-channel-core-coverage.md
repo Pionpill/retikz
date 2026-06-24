@@ -181,7 +181,7 @@ React / vanilla 表面与既有 point style 字段对齐：
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/channel-core-coverage.test.ts` 覆盖：
+`packages/graph/plot/tests/lower/channel-core-coverage.test.ts` 覆盖：
 
 - point 与 path 共享 `strokeWidth` / `opacity` 的同名语义：同一字段写法在 point 落 Node，在 path 落 Path。
 - path-like mark 的 `lineCap` / `lineJoin` / `roundedCorners` 常量下沉到 `IRPath`。
@@ -215,28 +215,28 @@ React / vanilla 表面与既有 point style 字段对齐：
 
 `red`
 
-判级：新增 / 修改 mark schema 与公开 mark props，触及 `packages/plot/plot/src/schemas/mark/schema.ts` 和 adapter 表面；同时调整 channel 分派和 mark lowering。虽然不改 core IR，但这是用户可见 plot API。
+判级：新增 / 修改 mark schema 与公开 mark props，触及 `packages/graph/plot/src/schemas/mark/schema.ts` 和 adapter 表面；同时调整 channel 分派和 mark lowering。虽然不改 core IR，但这是用户可见 plot API。
 
 ### Schema 改动
 
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
-| `packages/plot/plot/src/schemas/mark/schema.ts` | 加 | `PathMark.strokeWidth` | `PointNonnegativeNumberStyleSchema.optional()` 或抽出的 shared schema | 省略 | path stroke width: field-bound numeric channel or constant core path stroke width |
-| `packages/plot/plot/src/schemas/mark/schema.ts` | 加 | `PathMark.opacity` | `PointOpacityStyleSchema.optional()` 或抽出的 shared schema | 省略 | whole-path opacity: field-bound opacity channel or constant 0..1 |
-| `packages/plot/plot/src/schemas/mark/schema.ts` | 加 | `PathMark.lineCap` | field/constant enum schema | 省略 | path stroke endpoint cap style |
-| `packages/plot/plot/src/schemas/mark/schema.ts` | 加 | `PathMark.lineJoin` | field/constant enum schema | 省略 | path stroke join style |
-| `packages/plot/plot/src/schemas/mark/schema.ts` | 加 | `PathMark.roundedCorners` | non-negative field/constant numeric schema | 省略 | geometric corner radius for path joints |
-| `packages/plot/plot/src/schemas/mark/schema.ts` | 加 | `RegionMark.opacity` / `fillOpacity` / `strokeWidth` | shared scalar style schemas | 省略 | region path visual style channels |
-| `packages/plot/plot/src/schemas/mark/schema.ts` | 加 | `IntervalMark.opacity` / `fillOpacity` / `strokeWidth` | shared scalar style schemas | 省略 | interval cell visual style channels |
-| `packages/plot/plot/src/schemas/mark/schema.ts` | 加 | `ReferenceMark.opacity` / `strokeWidth` / `fillOpacity` | shared scalar style schemas | 省略 | reference line / band visual style channels |
-| `packages/plot/plot/src/schemas/mark/schema.ts` | 加 | `LinkMark.opacity` / `fillOpacity` | shared scalar style schemas | 省略 | link band visual style channels |
-| `packages/plot/plot/src/schemas/mark/schema.ts` | 加 | `PointMark.textColor` | color field/constant schema | 省略 | text point color; lowered to core Node.textColor when encoding.text is set |
-| `packages/plot/plot/src/schemas/encoding/schema.ts` | 加 | `MarkLabelSchema.textColor` | `z.string().optional()` | 省略 | datum label text color; lowered to core Node.label.textColor |
-| `packages/plot/plot/src/schemas/encoding/schema.ts` | 加 | `MarkLabelSchema.opacity` | `z.number().min(0).max(1).optional()` | 省略 | datum label opacity 0..1 |
-| `packages/plot/plot/src/schemas/encoding/schema.ts` | 加 | `MarkLabelSchema.font` | `FontSchema.optional()` | 省略 | datum label constant font overrides |
-| `packages/plot/plot/src/schemas/encoding/schema.ts` | 加 | `MarkLabelSchema.rotate` | `z.union([z.enum(['none','radial','tangent']), z.number()]).optional()` | 省略 | datum label orientation around its own center |
-| `packages/plot/plot/src/schemas/encoding/schema.ts` | 加 | `MarkLabelSchema.keepUpright` | `z.boolean().optional()` | 省略 | flip rotated datum label upright when needed |
-| `packages/plot/plot/src/schemas/encoding/schema.ts` | 改 | `MarkLabelSchema.pin` | `z.union([z.boolean(), pin style object]).optional()` | 省略 | datum label leader line; object form carries stroke / strokeWidth / dashPattern |
+| `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `PathMark.strokeWidth` | `PointNonnegativeNumberStyleSchema.optional()` 或抽出的 shared schema | 省略 | path stroke width: field-bound numeric channel or constant core path stroke width |
+| `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `PathMark.opacity` | `PointOpacityStyleSchema.optional()` 或抽出的 shared schema | 省略 | whole-path opacity: field-bound opacity channel or constant 0..1 |
+| `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `PathMark.lineCap` | field/constant enum schema | 省略 | path stroke endpoint cap style |
+| `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `PathMark.lineJoin` | field/constant enum schema | 省略 | path stroke join style |
+| `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `PathMark.roundedCorners` | non-negative field/constant numeric schema | 省略 | geometric corner radius for path joints |
+| `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `RegionMark.opacity` / `fillOpacity` / `strokeWidth` | shared scalar style schemas | 省略 | region path visual style channels |
+| `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `IntervalMark.opacity` / `fillOpacity` / `strokeWidth` | shared scalar style schemas | 省略 | interval cell visual style channels |
+| `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `ReferenceMark.opacity` / `strokeWidth` / `fillOpacity` | shared scalar style schemas | 省略 | reference line / band visual style channels |
+| `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `LinkMark.opacity` / `fillOpacity` | shared scalar style schemas | 省略 | link band visual style channels |
+| `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `PointMark.textColor` | color field/constant schema | 省略 | text point color; lowered to core Node.textColor when encoding.text is set |
+| `packages/graph/plot/src/schemas/encoding/schema.ts` | 加 | `MarkLabelSchema.textColor` | `z.string().optional()` | 省略 | datum label text color; lowered to core Node.label.textColor |
+| `packages/graph/plot/src/schemas/encoding/schema.ts` | 加 | `MarkLabelSchema.opacity` | `z.number().min(0).max(1).optional()` | 省略 | datum label opacity 0..1 |
+| `packages/graph/plot/src/schemas/encoding/schema.ts` | 加 | `MarkLabelSchema.font` | `FontSchema.optional()` | 省略 | datum label constant font overrides |
+| `packages/graph/plot/src/schemas/encoding/schema.ts` | 加 | `MarkLabelSchema.rotate` | `z.union([z.enum(['none','radial','tangent']), z.number()]).optional()` | 省略 | datum label orientation around its own center |
+| `packages/graph/plot/src/schemas/encoding/schema.ts` | 加 | `MarkLabelSchema.keepUpright` | `z.boolean().optional()` | 省略 | flip rotated datum label upright when needed |
+| `packages/graph/plot/src/schemas/encoding/schema.ts` | 改 | `MarkLabelSchema.pin` | `z.union([z.boolean(), pin style object]).optional()` | 省略 | datum label leader line; object form carries stroke / strokeWidth / dashPattern |
 
 字段清单是首批下限。实现期若继续增加 `drawOpacity` / `zIndex` 等字段，必须先把本表补齐。
 
@@ -244,19 +244,19 @@ React / vanilla 表面与既有 point style 字段对齐：
 
 本 ADR 实现允许触碰的文件白名单：
 
-- `packages/plot/plot/src/contract/channel.ts`（仅当选择多目标 definition 时修改；若走 MarkChannelDefinition 不改）
-- `packages/plot/plot/src/providers/channel/common.ts`（修改：抽共享 scalar resolver）
-- `packages/plot/plot/src/providers/channel/mark.ts`（修改：共享 style channel resolver，或保留 color/label 并新增 style helpers）
-- `packages/plot/plot/src/providers/channel/path.ts`（新建：path-only enum / scalar channels）
-- `packages/plot/plot/src/providers/channel/scope.ts`（新建：layer default / zIndex channel，按需）
-- `packages/plot/plot/src/providers/channel/node.ts`（修改：迁出共享 `opacity` / `strokeWidth` 等，保留 point-only）
-- `packages/plot/plot/src/providers/channel/registry.ts`（修改：注册 path/scope provider 或共享 mark provider）
-- `packages/plot/plot/src/providers/mark/mark.ts`（修改：path-like mark 应用共享 style channels）
-- `packages/plot/plot/src/schemas/mark/schema.ts`（修改：path-like mark style fields）
-- `packages/plot/plot/src/schemas/encoding/schema.ts`（修改：补齐 `MarkLabelSchema` 的 core Node.label 字段）
-- `packages/plot/plot/src/schemas/mark/types.ts`（如存在类型导出，按需修改）
-- `packages/plot/plot/tests/lower/channel-core-coverage.test.ts`（新建）
-- `packages/plot/react/src/**` 与 `packages/plot/vanilla/src/**`（如 mark props / builder 需要透传）
+- `packages/graph/plot/src/contract/channel.ts`（仅当选择多目标 definition 时修改；若走 MarkChannelDefinition 不改）
+- `packages/graph/plot/src/providers/channel/common.ts`（修改：抽共享 scalar resolver）
+- `packages/graph/plot/src/providers/channel/mark.ts`（修改：共享 style channel resolver，或保留 color/label 并新增 style helpers）
+- `packages/graph/plot/src/providers/channel/path.ts`（新建：path-only enum / scalar channels）
+- `packages/graph/plot/src/providers/channel/scope.ts`（新建：layer default / zIndex channel，按需）
+- `packages/graph/plot/src/providers/channel/node.ts`（修改：迁出共享 `opacity` / `strokeWidth` 等，保留 point-only）
+- `packages/graph/plot/src/providers/channel/registry.ts`（修改：注册 path/scope provider 或共享 mark provider）
+- `packages/graph/plot/src/providers/mark/mark.ts`（修改：path-like mark 应用共享 style channels）
+- `packages/graph/plot/src/schemas/mark/schema.ts`（修改：path-like mark style fields）
+- `packages/graph/plot/src/schemas/encoding/schema.ts`（修改：补齐 `MarkLabelSchema` 的 core Node.label 字段）
+- `packages/graph/plot/src/schemas/mark/types.ts`（如存在类型导出，按需修改）
+- `packages/graph/plot/tests/lower/channel-core-coverage.test.ts`（新建）
+- `packages/graph/plot-react/src/**` 与 `packages/graph/plot-vanilla/src/**`（如 mark props / builder 需要透传）
 - `apps/docs/src/contents/plot/**`（develop-document 阶段补文档）
 
 偏离白名单需回本 ADR 加条目并注解原因，或另起 ADR。
@@ -294,9 +294,9 @@ React / vanilla 表面与既有 point style 字段对齐：
 
 ### 依赖的现有元素
 
-- `ChannelDefinitionKind` / `MarkChannels` / `defineNodeChannel` / `definePathChannel` / `defineScopeChannel`（`packages/plot/plot/src/contract/channel.ts`）——引用 / 可能小幅修改，用于共享 style channel 分派。
-- `PointMarkSchema` 的 style schema helpers（`packages/plot/plot/src/schemas/mark/schema.ts`）——扩展：抽成 shared scalar style schema，供 path-like mark 复用。
-- `MarkLabelSchema` / core `NodeLabelSchema`（`packages/plot/plot/src/schemas/encoding/schema.ts`、`packages/core/core/src/ir/node.ts`）——扩展：plot datum label 表面对齐 core label 的稳定字段子集。
-- `IRNode` / `IRPath` / `IRScope`（`packages/core/core/src/ir/node.ts`、`packages/core/core/src/ir/path/path.ts`、`packages/core/core/src/ir/scope.ts`）——仅消费既有字段，不改 core。
-- `resolveLinearScale` / `resolveSqrtScale`（`packages/plot/plot/src/providers/scale/position.ts`）——引用：共享 numeric style channel 复用现有 scale 数学。
-- `resolveMarkChannels`（`packages/plot/plot/src/providers/channel/registry.ts`）——修改：注册 path/scope provider 或共享 mark provider，保持内置与自定义同机制。
+- `ChannelDefinitionKind` / `MarkChannels` / `defineNodeChannel` / `definePathChannel` / `defineScopeChannel`（`packages/graph/plot/src/contract/channel.ts`）——引用 / 可能小幅修改，用于共享 style channel 分派。
+- `PointMarkSchema` 的 style schema helpers（`packages/graph/plot/src/schemas/mark/schema.ts`）——扩展：抽成 shared scalar style schema，供 path-like mark 复用。
+- `MarkLabelSchema` / core `NodeLabelSchema`（`packages/graph/plot/src/schemas/encoding/schema.ts`、`packages/kernel/core/src/ir/node.ts`）——扩展：plot datum label 表面对齐 core label 的稳定字段子集。
+- `IRNode` / `IRPath` / `IRScope`（`packages/kernel/core/src/ir/node.ts`、`packages/kernel/core/src/ir/path/path.ts`、`packages/kernel/core/src/ir/scope.ts`）——仅消费既有字段，不改 core。
+- `resolveLinearScale` / `resolveSqrtScale`（`packages/graph/plot/src/providers/scale/position.ts`）——引用：共享 numeric style channel 复用现有 scale 数学。
+- `resolveMarkChannels`（`packages/graph/plot/src/providers/channel/registry.ts`）——修改：注册 path/scope provider 或共享 mark provider，保持内置与自定义同机制。

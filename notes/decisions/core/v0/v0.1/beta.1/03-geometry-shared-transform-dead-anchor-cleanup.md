@@ -2,7 +2,7 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-13
-- 关联：[v0.1-beta.1 plan TODO-8](./roadmap.md) · [packages/core/AGENTS.md "geometry 是跨平台纯数学"](../../../../../../packages/core/AGENTS.md)
+- 关联：[v0.1-beta.1 plan TODO-8](./roadmap.md) · [packages/kernel/AGENTS.md "geometry 是跨平台纯数学"](../../../../../../packages/kernel/AGENTS.md)
 
 > **范围**：`geometry/{rect,circle,ellipse,diamond}.ts` 四份一字不差的 `localToWorld` / `worldToLocal` 抽成共享 helper；三个与 `RectAnchor` 字面量完全相同、且零消费方的 `*Anchor` 类型删除。
 

@@ -12,9 +12,9 @@ v0.3 已从「core + react」扩成四个 core 相关包：`@retikz/core`、`@re
 
 | 位置 | 现状（陈旧） | 问题 |
 |---|---|---|
-| `packages/core/core/package.json` | `"retikz v0.1 core: ..."` | 版本标签停在 v0.1 |
-| `packages/core/react/package.json` | `"...Kernel/Sugar JSX components and SVG renderer."` | 只提 SVG，漏 Canvas |
-| `packages/core/vanilla/package.json` | `"...mount Scene/IR to SVG DOM, or render to SVG string for SSR."` | 漏 `mountCanvas` / `hydrate` / 动画 |
+| `packages/kernel/core/package.json` | `"retikz v0.1 core: ..."` | 版本标签停在 v0.1 |
+| `packages/kernel/react/package.json` | `"...Kernel/Sugar JSX components and SVG renderer."` | 只提 SVG，漏 Canvas |
+| `packages/kernel/vanilla/package.json` | `"...mount Scene/IR to SVG DOM, or render to SVG string for SSR."` | 漏 `mountCanvas` / `hydrate` / 动画 |
 | `apps/docs/.../source-code-guide/index.zh.mdx:15` | 「目前官方只提供 React adapter……Canvas / SSR…交由社区或后续推进」 | render 已出 Canvas、vanilla 已出 SSR，表述自相矛盾 |
 | `.../source-code-guide/index.en.mdx:15` | "Only the React adapter is officially provided today. … Canvas / SSR / … left to the community" | 同上（en/zh 同步错） |
 
@@ -33,8 +33,8 @@ zh 是真源，en 同步（docs 双语硬规则）。
 
 ## 影响范围
 
-- `packages/core/core/package.json`、`packages/core/react/package.json`、`packages/core/vanilla/package.json`（description）
-- `packages/core/*/README.md`（若 README 复述了同样的陈旧能力面）
+- `packages/kernel/core/package.json`、`packages/kernel/react/package.json`、`packages/kernel/vanilla/package.json`（description）
+- `packages/kernel/*/README.md`（若 README 复述了同样的陈旧能力面）
 - `apps/docs/src/contents/about/developer/source-code-guide/index.{zh,en}.mdx`
 - 视扫描结果可能触及 docs introduction / renderer 页面（凡硬列「仅 SVG」「仅 React」的句子）
 

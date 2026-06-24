@@ -139,7 +139,7 @@ const label: PointMark = { type: 'point', encoding: { x: { field: 'q' }, y: { fi
 
 ## 测试设计
 
-`packages/plot/plot/tests/` 下 schema / lowering / 等价性三类覆盖：
+`packages/graph/plot/tests/` 下 schema / lowering / 等价性三类覆盖：
 
 - **schema**：6 个 mark accept 合法 JSON-safe spec；旧 `sector` / `rect` / `text` type reject；interval `bounds` 四 kind accept、非法 kind reject；`extent` 缺 `from`/`to` reject。
 - **registry**：6 内置 mark 按 type 查得；coordinate override（polar→sector、cartesian→rect）经 `projectCell` 生效；不支持的 mark × coordinate（无 `projectCell` 的 1D/ternary）fail-loud 文案清晰。
@@ -181,7 +181,7 @@ const label: PointMark = { type: 'point', encoding: { x: { field: 'q' }, y: { fi
 
 `red`
 
-判级：动 `packages/plot/plot/src/ir/**`（mark / encoding schema）+ `packages/plot/plot/src/lower/**`（registry 分发、cell builder、下沉契约边界）。跨级取最高 → red。
+判级：动 `packages/graph/plot/src/ir/**`（mark / encoding schema）+ `packages/graph/plot/src/lower/**`（registry 分发、cell builder、下沉契约边界）。跨级取最高 → red。
 
 ### Schema 改动
 
@@ -206,13 +206,13 @@ const label: PointMark = { type: 'point', encoding: { x: { field: 'q' }, y: { fi
 
 ### 文件 scope
 
-- `packages/plot/plot/src/ir/mark.ts`（重写）
-- `packages/plot/plot/src/ir/encoding.ts`（修改：point 加 text、删 TextEncoding）
-- `packages/plot/plot/src/lower/mark-registry.ts`（新建：`MarkDefinition` + 6 内置注册项）
-- `packages/plot/plot/src/lower/mark.ts`（修改：`lowerMark` 改 registry 分发、point/text 合一、删 sector/rect 特判）
-- `packages/plot/plot/src/lower/anchor.ts`（修改：`markCell` → bounds 驱动 cell builder）
-- `packages/plot/plot/src/ir/index.ts` / `lower/index.ts`（修改：导出调整）
-- `packages/plot/plot/tests/**`（新建 / 修改：schema / registry / interval bounds / point-text / 等价性）
+- `packages/graph/plot/src/ir/mark.ts`（重写）
+- `packages/graph/plot/src/ir/encoding.ts`（修改：point 加 text、删 TextEncoding）
+- `packages/graph/plot/src/lower/mark-registry.ts`（新建：`MarkDefinition` + 6 内置注册项）
+- `packages/graph/plot/src/lower/mark.ts`（修改：`lowerMark` 改 registry 分发、point/text 合一、删 sector/rect 特判）
+- `packages/graph/plot/src/lower/anchor.ts`（修改：`markCell` → bounds 驱动 cell builder）
+- `packages/graph/plot/src/ir/index.ts` / `lower/index.ts`（修改：导出调整）
+- `packages/graph/plot/tests/**`（新建 / 修改：schema / registry / interval bounds / point-text / 等价性）
 
 偏离白名单需加条目自注或开新 ADR。
 
@@ -250,4 +250,4 @@ const label: PointMark = { type: 'point', encoding: { x: { field: 'q' }, y: { fi
 - `lowerPoint` / `lowerText` / `roleValues` / `datumAnchor`（`lower/mark.ts` / `anchor.ts`）—— 修改：point/text 合一、共享投影
 - `TextChannelSchema` / `EncodingSchema` / `PointEncodingSchema`（`ir/encoding.ts`）—— 修改：point 吸收 text 通道
 - `defineComposite` 注册范式（core）/ `options.coordinates` 工厂注册（`lower/expand.ts`）—— 参照：mark registry 对齐同款注册接口形态
-- core `Node` / `Path` / `Scope` / `sector` / `contour` / `rectangle` shape（`packages/core/core`）—— 仅消费（经现有 lowering）
+- core `Node` / `Path` / `Scope` / `sector` / `contour` / `rectangle` shape（`packages/kernel/core`）—— 仅消费（经现有 lowering）

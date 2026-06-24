@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-06-09
-- 关联：[`v0.3-beta.1 roadmap`](./roadmap.md) TODO-4 · **正向语法真源**：`packages/core/core/src/parsers/parseWay.ts`（`WayArcOp` / `WayCircleOp` / `WayEllipseOp` 等十二形态）· `packages/core/vanilla/src/builder/draw.ts`（`draw(way)` 内部就是 `parseWay`，与 React `<Draw way>` 同一全集）
+- 关联：[`v0.3-beta.1 roadmap`](./roadmap.md) TODO-4 · **正向语法真源**：`packages/kernel/core/src/parsers/parseWay.ts`（`WayArcOp` / `WayCircleOp` / `WayEllipseOp` 等十二形态）· `packages/kernel/vanilla/src/builder/draw.ts`（`draw(way)` 内部就是 `parseWay`，与 React `<Draw way>` 同一全集）
 
 ## 背景
 

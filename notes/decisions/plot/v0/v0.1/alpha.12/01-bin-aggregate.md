@@ -6,7 +6,7 @@
 
 ## 背景
 
-grammar of graphics 的 **Statistics（统计变换）** 是数据管线（plot-design §3.1 / §3.3 / 表 §一行 1）中位于 mark 之前、scale 之后域推断之前的一层：把数据行按统计规则重写，再喂位置 / 颜色编码。现状 plot 的 transform 层（`packages/plot/plot/src/ir/transform.ts`）只有 alpha.3 的 `sort`（稳定重排）与 `stack`（组内累加派生 `[y0,y1]`）——**两者都保行数**（N 行进、N 行出，只重排或追加标量字段）。缺了「**改行数**」的规约变换，plot 画不出最基础的统计图：
+grammar of graphics 的 **Statistics（统计变换）** 是数据管线（plot-design §3.1 / §3.3 / 表 §一行 1）中位于 mark 之前、scale 之后域推断之前的一层：把数据行按统计规则重写，再喂位置 / 颜色编码。现状 plot 的 transform 层（`packages/graph/plot/src/ir/transform.ts`）只有 alpha.3 的 `sort`（稳定重排）与 `stack`（组内累加派生 `[y0,y1]`）——**两者都保行数**（N 行进、N 行出，只重排或追加标量字段）。缺了「**改行数**」的规约变换，plot 画不出最基础的统计图：
 
 - **histogram（直方图）**：连续字段先分箱（N 个观测 → M 个箱），再数每箱频数。没有 bin，cartesian1D「histogram 底座」（alpha.9）只有空壳、没有分箱数据来源。
 - **分组聚合柱 / 折线**：原始明细（每笔订单一行）按类别 groupBy 后求 sum / mean / count（N 笔 → M 类），再画柱。没有 aggregate，用户得在 plot 之外手动 reduce，违背「数据 → transform → mark」的 GoG 管线。
@@ -149,7 +149,7 @@ const applyAggregate = (rows: Array<ExternalRow>, op: AggregateTransform): Array
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/transform.test.ts`（扩展现有）+ `packages/plot/plot/tests/ir/transform.test.ts`（schema 分支）+ `packages/plot/plot/tests/lower/validate.test.ts`（用户源字段集）覆盖：
+`packages/graph/plot/tests/lower/transform.test.ts`（扩展现有）+ `packages/graph/plot/tests/ir/transform.test.ts`（schema 分支）+ `packages/graph/plot/tests/lower/validate.test.ts`（用户源字段集）覆盖：
 
 - bin：三种边界策略（count / step / thresholds）的箱边、空箱跳过、reduce 五种规约、nice 对齐、extent 覆盖域
 - aggregate：单 / 多键 groupBy、五种 reducer、`as` 默认 / 显式命名、组键原样保留
@@ -193,58 +193,58 @@ const applyAggregate = (rows: Array<ExternalRow>, op: AggregateTransform): Array
 
 `red`
 
-判级：动 `packages/plot/plot/src/ir/transform.ts`（加 `BinTransformSchema` / `AggregateTransformSchema` + 并入 `TransformSchema` union）+ `packages/plot/plot/src/ir/mark.ts`（`IntervalMarkSchema` 加 `x0Field`/`x1Field`，histogram 连续 x 区间柱），改 Plot IR schema → 动 `ir/**`。同时动 `packages/plot/plot/src/lower/{transform,validate,anchor,mark}.ts`（改行数 lowering + 用户源字段集 + interval 连续区间 primary，属 yellow 面）+ `packages/plot/react/src/components/**`（`<Transform>` + build-plot-spec + BarMark x0/x1，yellow 面）。跨级取最高 → red。
+判级：动 `packages/graph/plot/src/ir/transform.ts`（加 `BinTransformSchema` / `AggregateTransformSchema` + 并入 `TransformSchema` union）+ `packages/graph/plot/src/ir/mark.ts`（`IntervalMarkSchema` 加 `x0Field`/`x1Field`，histogram 连续 x 区间柱），改 Plot IR schema → 动 `ir/**`。同时动 `packages/graph/plot/src/lower/{transform,validate,anchor,mark}.ts`（改行数 lowering + 用户源字段集 + interval 连续区间 primary，属 yellow 面）+ `packages/graph/plot-react/src/components/**`（`<Transform>` + build-plot-spec + BarMark x0/x1，yellow 面）。跨级取最高 → red。
 
 ### Schema 改动
 
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `PlotTransform.Bin` | `as const` 成员 `'bin'` | — | 连续分箱 transform 判别串（改行数） |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `PlotTransform.Aggregate` | `as const` 成员 `'aggregate'` | — | 分组聚合 transform 判别串（改行数） |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.kind` | `z.literal(PlotTransform.Bin)` | — | 判别字段：连续字段分箱（改行数） |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.field` | `z.string().min(1)` | — | 被分箱的连续源字段（其值域 = 分箱域，除非设 extent） |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.count` | `z.number().int().positive().optional()` | `10`（无策略时） | 目标箱数；与 step / thresholds 互斥 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.step` | `z.number().positive().optional()` | — | 固定箱宽（数据单位）；与 count / thresholds 互斥 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.thresholds` | `z.array(z.number()).min(1).optional()` | — | 显式内部箱边（升序）；与 count / step 互斥 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.extent` | `z.tuple([z.number(), z.number()]).optional()` | 观测 min/max | 覆盖分箱域 [min,max] |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.nice` | `z.boolean().optional()` | `true` | 箱边对齐友好刻度（仅 count 策略） |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.reduce` | `z.enum(['count','sum','mean','min','max']).optional()` | `'count'` | 每箱规约器（count = 频数） |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.reduceField` | `z.string().min(1).optional()` | — | 被规约数值字段；sum/mean/min/max 必填、count 忽略 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.startField` | `z.string().min(1).optional()` | `'binStart'` | 箱下界输出字段 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.endField` | `z.string().min(1).optional()` | `'binEnd'` | 箱上界输出字段 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.valueField` | `z.string().min(1).optional()` | `'binValue'` | 每箱规约值输出字段 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `AggregateTransformSchema.kind` | `z.literal(PlotTransform.Aggregate)` | — | 判别字段：分组聚合（改行数） |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `AggregateTransformSchema.groupBy` | `z.array(z.string().min(1)).min(1)` | — | 分组键字段（多键 = 复合键；组键原样携到输出行） |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `AggregateTransformSchema.reduce` | `z.enum(['sum','mean','count','min','max'])` | — | 组内规约器 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `AggregateTransformSchema.field` | `z.string().min(1).optional()` | — | 被规约数值字段；sum/mean/min/max 必填、count 忽略 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `AggregateTransformSchema.as` | `z.string().min(1).optional()` | `reduce`+大写`field`（count → `'count'`） | 规约值输出字段 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `BinTransform` | `z.infer<typeof BinTransformSchema>` | — | bin transform 派生类型 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `AggregateTransform` | `z.infer<typeof AggregateTransformSchema>` | — | aggregate transform 派生类型 |
-| `packages/plot/plot/src/ir/transform.ts` | 改 | `TransformSchema` | `discriminatedUnion` 增 `BinTransformSchema` / `AggregateTransformSchema` | — | transform union 并入 bin / aggregate |
-| `packages/plot/plot/src/ir/mark.ts` | 加 | `IntervalMarkSchema.x0Field` | `z.string().min(1).optional()` | — | 连续 x 区间柱下界字段（histogram：读 bin 的 binStart）；与 band primary 互斥，设则 primary 取 [coord(x0),coord(x1)] |
-| `packages/plot/plot/src/ir/mark.ts` | 加 | `IntervalMarkSchema.x1Field` | `z.string().min(1).optional()` | — | 连续 x 区间柱上界字段（histogram：读 bin 的 binEnd）；与 x0Field 配对 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `PlotTransform.Bin` | `as const` 成员 `'bin'` | — | 连续分箱 transform 判别串（改行数） |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `PlotTransform.Aggregate` | `as const` 成员 `'aggregate'` | — | 分组聚合 transform 判别串（改行数） |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.kind` | `z.literal(PlotTransform.Bin)` | — | 判别字段：连续字段分箱（改行数） |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.field` | `z.string().min(1)` | — | 被分箱的连续源字段（其值域 = 分箱域，除非设 extent） |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.count` | `z.number().int().positive().optional()` | `10`（无策略时） | 目标箱数；与 step / thresholds 互斥 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.step` | `z.number().positive().optional()` | — | 固定箱宽（数据单位）；与 count / thresholds 互斥 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.thresholds` | `z.array(z.number()).min(1).optional()` | — | 显式内部箱边（升序）；与 count / step 互斥 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.extent` | `z.tuple([z.number(), z.number()]).optional()` | 观测 min/max | 覆盖分箱域 [min,max] |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.nice` | `z.boolean().optional()` | `true` | 箱边对齐友好刻度（仅 count 策略） |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.reduce` | `z.enum(['count','sum','mean','min','max']).optional()` | `'count'` | 每箱规约器（count = 频数） |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.reduceField` | `z.string().min(1).optional()` | — | 被规约数值字段；sum/mean/min/max 必填、count 忽略 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.startField` | `z.string().min(1).optional()` | `'binStart'` | 箱下界输出字段 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.endField` | `z.string().min(1).optional()` | `'binEnd'` | 箱上界输出字段 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `BinTransformSchema.valueField` | `z.string().min(1).optional()` | `'binValue'` | 每箱规约值输出字段 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `AggregateTransformSchema.kind` | `z.literal(PlotTransform.Aggregate)` | — | 判别字段：分组聚合（改行数） |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `AggregateTransformSchema.groupBy` | `z.array(z.string().min(1)).min(1)` | — | 分组键字段（多键 = 复合键；组键原样携到输出行） |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `AggregateTransformSchema.reduce` | `z.enum(['sum','mean','count','min','max'])` | — | 组内规约器 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `AggregateTransformSchema.field` | `z.string().min(1).optional()` | — | 被规约数值字段；sum/mean/min/max 必填、count 忽略 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `AggregateTransformSchema.as` | `z.string().min(1).optional()` | `reduce`+大写`field`（count → `'count'`） | 规约值输出字段 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `BinTransform` | `z.infer<typeof BinTransformSchema>` | — | bin transform 派生类型 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `AggregateTransform` | `z.infer<typeof AggregateTransformSchema>` | — | aggregate transform 派生类型 |
+| `packages/graph/plot/src/ir/transform.ts` | 改 | `TransformSchema` | `discriminatedUnion` 增 `BinTransformSchema` / `AggregateTransformSchema` | — | transform union 并入 bin / aggregate |
+| `packages/graph/plot/src/ir/mark.ts` | 加 | `IntervalMarkSchema.x0Field` | `z.string().min(1).optional()` | — | 连续 x 区间柱下界字段（histogram：读 bin 的 binStart）；与 band primary 互斥，设则 primary 取 [coord(x0),coord(x1)] |
+| `packages/graph/plot/src/ir/mark.ts` | 加 | `IntervalMarkSchema.x1Field` | `z.string().min(1).optional()` | — | 连续 x 区间柱上界字段（histogram：读 bin 的 binEnd）；与 x0Field 配对 |
 
 字段名写死，下游不得改——需改回本 ADR 加条 / 开新 ADR。`count` / `step` / `thresholds` 互斥与「sum/mean/min/max 必填 field/reduceField」是 lowering 期校验（schema 层各字段 `.optional()`，不在 zod 层做跨字段约束，保 schema 简单）。
 
 ### 文件 scope
 
-- `packages/plot/plot/src/ir/transform.ts`（修改：加 `PlotTransform.Bin`/`Aggregate` + `BinTransformSchema`/`AggregateTransformSchema` + 派生类型 + 并入 `TransformSchema`）
-- `packages/plot/plot/src/lower/transform.ts`（修改：加 `applyBin`/`applyAggregate` 改行数纯函数 + `applyTransforms` switch 加两分支 + 默认输出字段名常量）
-- `packages/plot/plot/src/lower/validate.ts`（修改：`collectUserSourceFields` 加 bin/aggregate 分支——输入字段进、派生输出字段不进，`validate.ts:61` 的 transform 循环）
-- `packages/plot/plot/tests/lower/transform.test.ts`（修改：bin/aggregate lowering case）
-- `packages/plot/plot/tests/ir/transform.test.ts`（修改 / 新建：schema accept/reject 分支）
-- `packages/plot/plot/tests/lower/validate.test.ts`（修改：用户源字段集断言）
-- `packages/plot/plot/tests/lower/mark.test.ts`（或 interval 测试文件，修改：interval `x0Field`/`x1Field` 连续 x 区间柱 cell 断言 + 未设 x0/x1 走 band 旧路回归）
-- `packages/plot/plot/tests/ir/mark.test.ts`（修改：interval `x0Field`/`x1Field` schema accept 分支）
-- `packages/plot/react/src/components/transform.tsx`（新建：通用 `Transform`（返回 null 的 `FC<TransformProps>`，服务全部 5 个 kind）+ `TransformProps`——按 `kind` 判别的扁平 props）
-- `packages/plot/react/src/components/build-plot-spec.ts`（修改：加 `Transform` import + `collectInto` `<Transform>` 分支（→ `collected.transforms`）+ `buildPlotSpec` 接 `BuildPlotSpecOptions.transforms`（`<Plot transforms>` 直传，拼到自动装配 stack 之前））
-- `packages/plot/react/src/components/index.ts`（修改：barrel re-export `Transform` + `TransformProps`）
-- `packages/plot/react/src/index.ts`（修改：public API barrel re-export）
-- `packages/plot/react/src/Plot.tsx`（修改：`<Plot transforms>` prop 透传给 buildPlotSpec，按现有 `<Plot>` 入口形态）
-- `packages/plot/plot/src/ir/mark.ts`（修改：`IntervalMarkSchema` 加 `x0Field`/`x1Field`——连续 x 区间柱，histogram 渲染来源；与 band primary 互斥）
-- `packages/plot/plot/src/lower/anchor.ts` + `packages/plot/plot/src/lower/mark.ts`（修改：interval lowering 在设了 `x0Field`/`x1Field` 时 primary 取 `[coord(x0),coord(x1)]` 连续区间而非 band bandwidth，secondary 高度照旧；未设则走旧 band 路）
-- `packages/plot/react/src/components/marks.tsx`（修改：`BarMark`（interval）props 加 `x0`/`x1`——映射到 `x0Field`/`x1Field`，与现有扁平 props 同风格）
-- `packages/plot/vanilla/tests/`（新建：`renderPlot` 出 histogram + 分组聚合柱 SVG 的 SSR 断言；vanilla 不改 `src/`）
+- `packages/graph/plot/src/ir/transform.ts`（修改：加 `PlotTransform.Bin`/`Aggregate` + `BinTransformSchema`/`AggregateTransformSchema` + 派生类型 + 并入 `TransformSchema`）
+- `packages/graph/plot/src/lower/transform.ts`（修改：加 `applyBin`/`applyAggregate` 改行数纯函数 + `applyTransforms` switch 加两分支 + 默认输出字段名常量）
+- `packages/graph/plot/src/lower/validate.ts`（修改：`collectUserSourceFields` 加 bin/aggregate 分支——输入字段进、派生输出字段不进，`validate.ts:61` 的 transform 循环）
+- `packages/graph/plot/tests/lower/transform.test.ts`（修改：bin/aggregate lowering case）
+- `packages/graph/plot/tests/ir/transform.test.ts`（修改 / 新建：schema accept/reject 分支）
+- `packages/graph/plot/tests/lower/validate.test.ts`（修改：用户源字段集断言）
+- `packages/graph/plot/tests/lower/mark.test.ts`（或 interval 测试文件，修改：interval `x0Field`/`x1Field` 连续 x 区间柱 cell 断言 + 未设 x0/x1 走 band 旧路回归）
+- `packages/graph/plot/tests/ir/mark.test.ts`（修改：interval `x0Field`/`x1Field` schema accept 分支）
+- `packages/graph/plot-react/src/components/transform.tsx`（新建：通用 `Transform`（返回 null 的 `FC<TransformProps>`，服务全部 5 个 kind）+ `TransformProps`——按 `kind` 判别的扁平 props）
+- `packages/graph/plot-react/src/components/build-plot-spec.ts`（修改：加 `Transform` import + `collectInto` `<Transform>` 分支（→ `collected.transforms`）+ `buildPlotSpec` 接 `BuildPlotSpecOptions.transforms`（`<Plot transforms>` 直传，拼到自动装配 stack 之前））
+- `packages/graph/plot-react/src/components/index.ts`（修改：barrel re-export `Transform` + `TransformProps`）
+- `packages/graph/plot-react/src/index.ts`（修改：public API barrel re-export）
+- `packages/graph/plot-react/src/Plot.tsx`（修改：`<Plot transforms>` prop 透传给 buildPlotSpec，按现有 `<Plot>` 入口形态）
+- `packages/graph/plot/src/ir/mark.ts`（修改：`IntervalMarkSchema` 加 `x0Field`/`x1Field`——连续 x 区间柱，histogram 渲染来源；与 band primary 互斥）
+- `packages/graph/plot/src/lower/anchor.ts` + `packages/graph/plot/src/lower/mark.ts`（修改：interval lowering 在设了 `x0Field`/`x1Field` 时 primary 取 `[coord(x0),coord(x1)]` 连续区间而非 band bandwidth，secondary 高度照旧；未设则走旧 band 路）
+- `packages/graph/plot-react/src/components/marks.tsx`（修改：`BarMark`（interval）props 加 `x0`/`x1`——映射到 `x0Field`/`x1Field`，与现有扁平 props 同风格）
+- `packages/graph/plot-vanilla/tests/`（新建：`renderPlot` 出 histogram + 分组聚合柱 SVG 的 SSR 断言；vanilla 不改 `src/`）
 - `apps/docs/src/contents/plot/.../transform`（修改 / 新建：bin / aggregate 双语 mdx + histogram demo + 分组聚合柱 demo + `<Transform>` / `<Plot transforms>` 说明）
 
 偏离白名单需加条目自注解或开新 ADR。
@@ -271,17 +271,17 @@ const applyAggregate = (rows: Array<ExternalRow>, op: AggregateTransform): Array
 **交互（≥2）**：
 - `transform-chain-aggregate-then-stack`：aggregate 改行数后接 stack（保行数）→ 链顺序正确折叠、stack 在聚合结果上累加；scale 域取派生字段（`expand.ts` 用 transform 后 rows）
 - `user-source-fields-split`：`collectUserSourceFields` 对 bin/aggregate——输入字段（bin `field`/`reduceField`、aggregate `groupBy`/`field`）进 strict 集、派生输出字段（`binStart`/`binValue`/`as`）不进（误进会 `unknown field` fail-loud）
-- `auto-stack-suppressed-by-explicit-stack`（`packages/plot/react`）：显式 stack（`<Transform kind="stack">` / `<Plot transforms>`）存在时 `<BarMark stack>` 的 auto-stack 不再注入，最终 `spec.transform` 只含一个 stack op（B4 去重，不二次堆叠）
+- `auto-stack-suppressed-by-explicit-stack`（`packages/graph/plot-react`）：显式 stack（`<Transform kind="stack">` / `<Plot transforms>`）存在时 `<BarMark stack>` 的 auto-stack 不再注入，最终 `spec.transform` 只含一个 stack op（B4 去重，不二次堆叠）
 
 **三包同步（plot-react + plot-vanilla）**：
-- `transform-react-build-plot-spec`（`packages/plot/react`）：`<Transform kind="bin" .../>` + `<Plot transforms={[...]}>` → 正确 transform IR 数组（与手写 `spec.transform` 等价）的 build-plot-spec 装配断言；**通用 `<Transform>` 服务全部 kind**；放弃 mark-prop 自动装配（`<BarMark bin>` 不被识别）；`<BarMark x0="binStart" x1="binEnd" y="binValue" />` → interval IR `x0Field`/`x1Field` 装配正确
-- `transform-vanilla-ssr`（`packages/plot/vanilla`）：`renderPlot(spec, data)` 喂 histogram spec（bin + interval x0/x1 连续 x 区间柱）+ 分组聚合柱 spec（aggregate）→ 出含连续 x 区间直方柱 / 聚合柱的 SVG 字符串 SSR 断言（vanilla 不改代码，纯 spec 驱动）
+- `transform-react-build-plot-spec`（`packages/graph/plot-react`）：`<Transform kind="bin" .../>` + `<Plot transforms={[...]}>` → 正确 transform IR 数组（与手写 `spec.transform` 等价）的 build-plot-spec 装配断言；**通用 `<Transform>` 服务全部 kind**；放弃 mark-prop 自动装配（`<BarMark bin>` 不被识别）；`<BarMark x0="binStart" x1="binEnd" y="binValue" />` → interval IR `x0Field`/`x1Field` 装配正确
+- `transform-vanilla-ssr`（`packages/graph/plot-vanilla`）：`renderPlot(spec, data)` 喂 histogram spec（bin + interval x0/x1 连续 x 区间柱）+ 分组聚合柱 spec（aggregate）→ 出含连续 x 区间直方柱 / 聚合柱的 SVG 字符串 SSR 断言（vanilla 不改代码，纯 spec 驱动）
 
 ### 依赖的现有元素
 
-- `ir/transform.ts` 的 `PlotTransform` / `SortTransformSchema` / `StackTransformSchema` / `TransformSchema`（`packages/plot/plot/src/ir/transform.ts`）—— 扩展 `PlotTransform` 加成员、并入 union；仿 stack 的 `startField`/`endField` 派生字段命名风格。
-- `ir/mark.ts` 的 `IntervalMarkSchema`（`y0Field`/`y1Field` 模式，`packages/plot/plot/src/ir/mark.ts:117`）—— 仿 stack y0/y1 派生字段写法加 `x0Field`/`x1Field`（连续 x 区间柱）；`lower/anchor.ts` 的 interval cell 构造分支接 x0/x1 连续区间 primary（仿 secondary 连续区间取 `coordinate(...)`）。
-- `lower/transform.ts` 的 `applyTransforms` / `applySort` / `applyStack` / `DEFAULT_START_FIELD` / `DEFAULT_END_FIELD`（`packages/plot/plot/src/lower/transform.ts`）—— `applyTransforms` switch 加 bin/aggregate 分支；复用 `resolveFieldPath` / `isFiniteNumber` / `inferCategoryDomain`（`lower/field` / `lower/scale`）落箱 / 分组 / 取值。
-- `lower/validate.ts` 的 `collectUserSourceFields`（`packages/plot/plot/src/lower/validate.ts:61` 的 transform 循环）—— 加 bin/aggregate 分支，严守「输入进、派生输出不进」（仿 stack 已排除 `startField`/`endField`）。
-- `lower/expand.ts` 的 `applyTransforms` 调用点 + 域推断（`packages/plot/plot/src/lower/expand.ts:1172` / `:241` / `:250`）—— **仅引用不改**：域推断已用 transform 后 rows，bin/aggregate 派生字段自动进域。
-- `build-plot-spec.ts` 的 `collectInto` / `Collected.transforms` / `BuildPlotSpecOptions`（`packages/plot/react/src/components/build-plot-spec.ts`）—— 加 `<Transform>` 收集分支 + `transforms` option；保留现有 stack 自动装配（`:317`/`:335`），新 transform 不走自动装配；显式 stack 存在时抑制 auto-stack（B4 去重）。
+- `ir/transform.ts` 的 `PlotTransform` / `SortTransformSchema` / `StackTransformSchema` / `TransformSchema`（`packages/graph/plot/src/ir/transform.ts`）—— 扩展 `PlotTransform` 加成员、并入 union；仿 stack 的 `startField`/`endField` 派生字段命名风格。
+- `ir/mark.ts` 的 `IntervalMarkSchema`（`y0Field`/`y1Field` 模式，`packages/graph/plot/src/ir/mark.ts:117`）—— 仿 stack y0/y1 派生字段写法加 `x0Field`/`x1Field`（连续 x 区间柱）；`lower/anchor.ts` 的 interval cell 构造分支接 x0/x1 连续区间 primary（仿 secondary 连续区间取 `coordinate(...)`）。
+- `lower/transform.ts` 的 `applyTransforms` / `applySort` / `applyStack` / `DEFAULT_START_FIELD` / `DEFAULT_END_FIELD`（`packages/graph/plot/src/lower/transform.ts`）—— `applyTransforms` switch 加 bin/aggregate 分支；复用 `resolveFieldPath` / `isFiniteNumber` / `inferCategoryDomain`（`lower/field` / `lower/scale`）落箱 / 分组 / 取值。
+- `lower/validate.ts` 的 `collectUserSourceFields`（`packages/graph/plot/src/lower/validate.ts:61` 的 transform 循环）—— 加 bin/aggregate 分支，严守「输入进、派生输出不进」（仿 stack 已排除 `startField`/`endField`）。
+- `lower/expand.ts` 的 `applyTransforms` 调用点 + 域推断（`packages/graph/plot/src/lower/expand.ts:1172` / `:241` / `:250`）—— **仅引用不改**：域推断已用 transform 后 rows，bin/aggregate 派生字段自动进域。
+- `build-plot-spec.ts` 的 `collectInto` / `Collected.transforms` / `BuildPlotSpecOptions`（`packages/graph/plot-react/src/components/build-plot-spec.ts`）—— 加 `<Transform>` 收集分支 + `transforms` option；保留现有 stack 自动装配（`:317`/`:335`），新 transform 不走自动装配；显式 stack 存在时抑制 auto-stack（B4 去重）。

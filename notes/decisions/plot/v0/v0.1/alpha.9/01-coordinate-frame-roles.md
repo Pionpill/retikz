@@ -41,6 +41,6 @@ alpha.4 用 polar 逼出 coordinate frame 抽象（scale 归一化 → 投影 �
 
 ## 实现指针
 
-最终形态见 `packages/plot/plot/src/lower/project.ts`（frame `roles` / `projectRoles` / `createCartesianFrame` / `createPolarFrame`）、`src/lower/coordinate-meta.ts`（`VALID_GUIDE_DIMENSIONS` 每坐标系合法维度集）、`src/lower/expand.ts`（`assertValidGuideDimensions` + 必填角色校验）、`src/ir/encoding.ts`（x/y `.optional()`）；测试 `tests/lower/coordinate-frame.test.ts` + `tests/ir/encoding.schema.test.ts`。
+最终形态见 `packages/graph/plot/src/lower/project.ts`（frame `roles` / `projectRoles` / `createCartesianFrame` / `createPolarFrame`）、`src/lower/coordinate-meta.ts`（`VALID_GUIDE_DIMENSIONS` 每坐标系合法维度集）、`src/lower/expand.ts`（`assertValidGuideDimensions` + 必填角色校验）、`src/ir/encoding.ts`（x/y `.optional()`）；测试 `tests/lower/coordinate-frame.test.ts` + `tests/ir/encoding.schema.test.ts`。
 
 > 🔖 本文件压缩前完整施工蓝图 = `git show 329fb8b7:notes/decisions/plot/v0/v0.1/alpha.9/01-coordinate-frame-roles.md`（封板全文）。

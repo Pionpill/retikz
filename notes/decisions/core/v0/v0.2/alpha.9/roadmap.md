@@ -12,7 +12,7 @@
 
 ### 比例 partway 定位
 
-`OffsetPosition`（`packages/core/src/ir/position/offset-position.ts:5`）现状 = `{ of, offset:[dx,dy] }` 纯向量加法（对齐 TikZ `($(A)+(1,2)$)`）。`TargetSchema`（`ir/path/target.ts:64-72`）= union(`Position`/`Polar`/`NodeTarget`/`Relative`/`RelativeAccumulate`/`Offset`)。
+`OffsetPosition`（`packages/kernel/core/src/ir/position/offset-position.ts:5`）现状 = `{ of, offset:[dx,dy] }` 纯向量加法（对齐 TikZ `($(A)+(1,2)$)`）。`TargetSchema`（`ir/path/target.ts:64-72`）= union(`Position`/`Polar`/`NodeTarget`/`Relative`/`RelativeAccumulate`/`Offset`)。
 
 TikZ calc 还有：**比例 partway** `($(A)!t!(B)$)`（A、B 间 t 处 = lerp）、**投影** `($(A)!(P)!(B)$)`（垂足）、**完整 affine**。retikz 只对齐了加法。
 

@@ -2,7 +2,7 @@
 
 - 状态：Accepted（设计已拍板，待实现）
 - 决策日期：2026-06-13（拆分重写 2026-06-14）
-- 关联：[v0.4 roadmap 候选 A](../roadmap.md#a--retikzmath2026-06-12-拍板) · [alpha.1 roadmap](./roadmap.md) · [ADR-02 core 纯几何下沉](./02-core-pure-geometry-sink.md) · [ADR-03 point 公开面修正](./03-point-polar-surface-fix.md) · core `geometry/`（`packages/core/core/src/geometry/`）
+- 关联：[v0.4 roadmap 候选 A](../roadmap.md#a--retikzmath2026-06-12-拍板) · [alpha.1 roadmap](./roadmap.md) · [ADR-02 core 纯几何下沉](./02-core-pure-geometry-sink.md) · [ADR-03 point 公开面修正](./03-point-polar-surface-fix.md) · core `geometry/`（`packages/kernel/core/src/geometry/`）
 
 > **范围**：承接 v0.4 roadmap 候选 A（2026-06-12 拍板「新增独立零依赖纯计算几何包」）。本 ADR 只定 **math 侧**——包的存在 / 边界 / API 风格 / 首切几何能力与返回形态。core 如何接入、公开面 re-export 见 [ADR-02](./02-core-pure-geometry-sink.md)；`point.toPolar`/`equalPolar` 的移除见 [ADR-03](./03-point-polar-surface-fix.md)。
 
@@ -16,7 +16,7 @@
 
 ### 1. 包定位与工程
 
-- 新建 `packages/core/math`，名 `@retikz/math`，`type: module`、`sideEffects: false`、**零运行时依赖**、零 IR、零 zod。
+- 新建 `packages/kernel/math`，名 `@retikz/math`，`type: module`、`sideEffects: false`、**零运行时依赖**、零 IR、零 zod。
 - 一律纯函数 + 普通对象 / `Position` 数组，**不写 class**。
 - tsconfig / eslint / Vite（lib + vite-plugin-dts）/ Vitest 配置复用 core 同款（vite.config 的 external 守卫 `Object.keys(pkg.dependencies ?? {})`，零依赖兼容）。
 
@@ -69,7 +69,7 @@
 
 - `@retikz/math` 加入 **core 组 lockstep**（与 `core` / `render` / `react` / `vanilla` 同版本节奏）——它是 core 的前置底座、低 churn，lockstep 避免 core↔math 版本错配。
 - 初始发布版本对齐 core 组 v0.4 线；scaffold 里的 `0.4.0-alpha.1` 是占位，发布时与 core 组实际版本号对齐。
-- 实现时**更新 `packages/core/AGENTS.md` 的 lockstep / 发布规则**（core 组由 4 包 → 5 包，纳入 `@retikz/math`）。
+- 实现时**更新 `packages/kernel/AGENTS.md` 的 lockstep / 发布规则**（core 组由 4 包 → 5 包，纳入 `@retikz/math`）。
 
 ## 被否决的选项
 
@@ -83,4 +83,4 @@
 
 ---
 
-> **实现指针**：level `red`（新建包公开 API 表面）。非 breaking（纯新增包）。文件 scope：`packages/core/math/{package.json, tsconfig.json, vite.config.ts, src/{index,geometry/index,geometry/point,geometry/transform,geometry/arc,geometry/intersect,geometry/triangle,geometry/polygon,geometry/hull}.ts, tests/geometry/**}`；`apps/docs/**`（新增 `@retikz/math` 包介绍 / 首切 API 能力页，zh / en 双语 + contents / data / i18n 同步，按 `docs-doc-principle` skill）；`packages/core/AGENTS.md`（决策 7：lockstep / 发布规则纳入 math）。测试：每模块纯函数单测（求交退化：平行 / 相切 / 共线 / 零长；triangle / hull 退化 → null / 排序去重；现成库仅作正确性参考）。**文档验收**：math 包能力在文档站可见（新增包，用户可见 public API，AGENTS 要求同步）。逐文件 TDD 步骤见 [alpha.1 roadmap TODO-1](./roadmap.md)。
+> **实现指针**：level `red`（新建包公开 API 表面）。非 breaking（纯新增包）。文件 scope：`packages/kernel/math/{package.json, tsconfig.json, vite.config.ts, src/{index,geometry/index,geometry/point,geometry/transform,geometry/arc,geometry/intersect,geometry/triangle,geometry/polygon,geometry/hull}.ts, tests/geometry/**}`；`apps/docs/**`（新增 `@retikz/math` 包介绍 / 首切 API 能力页，zh / en 双语 + contents / data / i18n 同步，按 `docs-doc-principle` skill）；`packages/kernel/AGENTS.md`（决策 7：lockstep / 发布规则纳入 math）。测试：每模块纯函数单测（求交退化：平行 / 相切 / 共线 / 零长；triangle / hull 退化 → null / 排序去重；现成库仅作正确性参考）。**文档验收**：math 包能力在文档站可见（新增包，用户可见 public API，AGENTS 要求同步）。逐文件 TDD 步骤见 [alpha.1 roadmap TODO-1](./roadmap.md)。

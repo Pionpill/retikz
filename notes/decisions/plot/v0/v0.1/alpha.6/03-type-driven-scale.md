@@ -69,7 +69,7 @@ vanilla 对等：spec 省略 `scales` / coordinate 绑定 → lowering 派生；
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/type-driven-scale.test.ts` 覆盖：
+`packages/graph/plot/tests/lower/type-driven-scale.test.ts` 覆盖：
 
 - 各 FieldType → 默认 scale（quantitative→linear、temporal→time、nominal→band、proportion→linear[0,1]）
 - 显式 scale 覆盖派生
@@ -94,5 +94,5 @@ vanilla 对等：spec 省略 `scales` / coordinate 绑定 → lowering 派生；
 - **legend**（非位置 scale 的图例）→ alpha.8。
 - **measure-driven tick 防重叠 / 旋转** → 文字度量 oracle（plot-design §16，后续）。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/ir/{coordinate,encoding}.ts` 与 `packages/plot/plot/src/lower/{scale,expand}.ts`，测试见 `packages/plot/plot/tests/lower/type-driven-scale.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/ir/{coordinate,encoding}.ts` 与 `packages/graph/plot/src/lower/{scale,expand}.ts`，测试见 `packages/graph/plot/tests/lower/type-driven-scale.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/alpha.6/03-type-driven-scale.md`（封板全文）。

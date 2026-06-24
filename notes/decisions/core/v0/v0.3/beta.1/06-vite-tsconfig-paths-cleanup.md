@@ -11,7 +11,7 @@
 现状核对（避免按陈旧假设动手）：
 
 - catalog 里 **Vite 已是 `^8.0.10`**——本条**不是 Vite 版本升级**，是「在已有的 Vite 8 上把插件换成原生选项」。
-- `vite-tsconfig-paths: ^6.1.1` 被 **7 个 workspace** 的 `vite.config.ts` 使用：`packages/core/{core,render,react,vanilla}` + `packages/plot/{plot,react,vanilla}`。
+- `vite-tsconfig-paths: ^6.1.1` 被 **7 个 workspace** 的 `vite.config.ts` 使用：`packages/kernel/{core,render,react,vanilla}` + `packages/graph/{plot,plot-react,plot-vanilla}`。
 - 这些 config 同时挂 `vite-plugin-dts`（产 `.d.ts`）——**本条不碰 dts**，只动 tsconfigPaths 这一项。
 - tsconfigPaths 在这些 config 里同时服务两条路径：**build**（cross-package / 内部 alias 解析）与 **vitest test**（`@retikz/*` 跨包导入解析）。替换后两条都要继续工作。
 
@@ -36,8 +36,8 @@
 ## 影响范围
 
 - `pnpm-workspace.yaml`（catalog 移除 `vite-tsconfig-paths`）
-- `packages/core/{core,render,react,vanilla}/vite.config.ts`
-- `packages/plot/{plot,react,vanilla}/vite.config.ts`
+- `packages/kernel/{core,render,react,vanilla}/vite.config.ts`
+- `packages/graph/{plot,plot-react,plot-vanilla}/vite.config.ts`
 - 各包 `package.json`（devDependencies）
 - `pnpm-lock.yaml`
 

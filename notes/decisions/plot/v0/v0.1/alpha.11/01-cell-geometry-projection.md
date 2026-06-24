@@ -19,7 +19,7 @@
 
 **分级在输出、统一在机制**：投影后是不是闭式 shape 的判断**挪进坐标系**（每个 frame 最懂自己的投影），mark 侧 lowering 收敛成单路径。
 
-核心数据结构（最终形态见 `packages/plot/plot/src/lower/project.ts`）：
+核心数据结构（最终形态见 `packages/graph/plot/src/lower/project.ts`）：
 
 ```ts
 // 正交 cell：primary/secondary 各一段 scale 输出空间区间（cartesian=像素带/像素；polar=角度带/半径）
@@ -72,6 +72,6 @@ contour 不是引擎自动产物，而是**曲线 frame 在自己的 `projectCel
 
 ---
 
-实现指针：契约与 `densifyCellContour` 在 `packages/plot/plot/src/lower/project.ts`（`Cell` / `CellGeometry` / `projectCell`）；mark 单路径装配在 `packages/plot/plot/src/lower/mark.ts`；锚点同源在 `packages/plot/plot/src/lower/anchor.ts`；core `contour` shape 在 `packages/core/core/src/shapes/contour-shape.ts`。测试在 `packages/plot/plot/tests/lower/cell-geometry.test.ts`（含回归基线、三态装配、曲线 frame contour、AABB 中心、fail-loud、连接性、locator parity），回归基线另见同目录 `mark`/`anchor`/`sector` 相关测试。
+实现指针：契约与 `densifyCellContour` 在 `packages/graph/plot/src/lower/project.ts`（`Cell` / `CellGeometry` / `projectCell`）；mark 单路径装配在 `packages/graph/plot/src/lower/mark.ts`；锚点同源在 `packages/graph/plot/src/lower/anchor.ts`；core `contour` shape 在 `packages/kernel/core/src/shapes/contour-shape.ts`。测试在 `packages/graph/plot/tests/lower/cell-geometry.test.ts`（含回归基线、三态装配、曲线 frame contour、AABB 中心、fail-loud、连接性、locator parity），回归基线另见同目录 `mark`/`anchor`/`sector` 相关测试。
 
 > 🔖 本文件压缩前完整施工蓝图 = `git show 6902289a:notes/decisions/plot/v0/v0.1/alpha.11/01-cell-geometry-projection.md`（封板全文）。

@@ -298,7 +298,7 @@ Path 级 sugar 与 Node shape（`shape="..."` + `ShapeDefinition`）共享「形
 
 ### 复用方向：共享 core 几何层，而非「Node 复用 sugar」
 
-`@retikz/core` **不能 import `@retikz/react`**（依赖单向），sugar 在 react 包里、core 拿不到它——所以「Node 复用 sugar」在依赖方向上不成立。正确形态：**两边并列消费 `packages/core/src/geometry/`**。复用点：
+`@retikz/core` **不能 import `@retikz/react`**（依赖单向），sugar 在 react 包里、core 拿不到它——所以「Node 复用 sugar」在依赖方向上不成立。正确形态：**两边并列消费 `packages/kernel/core/src/geometry/`**。复用点：
 
 1. **alpha.5 新增几何 = 未来 node shape 的地基**：椭圆弧 / 部分圆椭圆 / 圆角矩形的几何**写进 `core/geometry/`**（见 §实现拆分），sugar 的 compile 路径与未来 `ShapeDefinition.emit`（如圆角矩形节点）共用同一份
 2. **RegularPolygon / Star 顶点数学最该共享**：新增 `geometry/polygon.ts`（`center + polar(r, angle)` 顶点生成），sugar 与未来 `regular polygon` node shape（emit + 射线∩多边形 boundaryPoint + 顶点/边中点 anchor）共用同一份
@@ -306,7 +306,7 @@ Path 级 sugar 与 Node shape（`shape="..."` + `ShapeDefinition`）共享「形
 
 ## 实现拆分
 
-1. **IR 改动**（packages/core）：
+1. **IR 改动**（packages/kernel）：
    - **几何下沉 `core/geometry/`（复用前提，见 §与 Node shape 的关系）**：新增 outline / 顶点几何一律写成 `geometry/*.ts` 纯函数，**不内联在 `compile/path/` 里**，以便未来 node shape 的 `emit` / `boundaryPoint` / `anchor` 复用
    - `arc` schema：加 `radiusX` / `radiusY` + refine 互斥；椭圆弧几何进 `geometry/arc.ts`
    - `circlePath` / `ellipsePath` schema：加 `startAngle` / `endAngle` / `sweepAngle` / `closed`；部分 outline 几何进 `geometry/{circle,ellipse}.ts`，compile/path 按 closed 模式拼 path d

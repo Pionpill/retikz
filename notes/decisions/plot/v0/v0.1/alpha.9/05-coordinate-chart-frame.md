@@ -108,7 +108,7 @@ def.expand(spec); // spec.coordinate = { type:'custom', name:'bridge', roles:['x
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/custom-coordinate.test.ts`（扩：现有 10 case 之上加 frameAlong 契约）+ `tests/lower/coordinate-frame.test.ts`（扩：built-in 回归）覆盖：
+`packages/graph/plot/tests/lower/custom-coordinate.test.ts`（扩：现有 10 case 之上加 frameAlong 契约）+ `tests/lower/coordinate-frame.test.ts`（扩：built-in 回归）覆盖：
 
 - `frameAlong` 原点与 `projectRoles` 分量近似相等（容差内）、null / 非有限行为一致、切向方向沿轴曲线
 - 曲线轴优先吃 `frameAlong`、缺则回落数值差分仍出弯曲轴；**2D custom（桥）的 x 轴仍有切向法向、标签沿轴法向偏移**（评审 P0 替代 case）
@@ -146,28 +146,28 @@ def.expand(spec); // spec.coordinate = { type:'custom', name:'bridge', roles:['x
 
 `red`
 
-判级：触及 `packages/plot/plot/src/ir/coordinate.ts`（custom IR 正式化）+ `packages/plot/*/src/index.ts`（公开导出 `createCustomFrame` / 类型）→ red。runtime frame 契约（`lower/project.ts`）+ guide（`lower/guide.ts`）本是 yellow，跨级取最高 → **red**。
+判级：触及 `packages/graph/plot/src/ir/coordinate.ts`（custom IR 正式化）+ `packages/graph/*/src/index.ts`（公开导出 `createCustomFrame` / 类型）→ red。runtime frame 契约（`lower/project.ts`）+ guide（`lower/guide.ts`）本是 yellow，跨级取最高 → **red**。
 
 ### Schema 改动
 
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
-| `packages/plot/plot/src/ir/coordinate.ts` | 正式化（字段不变） | `CustomCoordinateSchema` | `z.object({ type: z.literal('custom'), name, roles, params? })` | — | 自定义坐标系：name 引用运行时工厂，roles 声明位置角色，params 为数值参数；投影函数不进 IR |
-| `packages/plot/plot/src/ir/coordinate.ts` | 确认边界（评审 P2） | `roles` | `z.array(z.enum(['x','y','a','b','c'])).min(1)` | — | custom roles 限 mark channel 名（x/y/a/b/c），**不含 polar 的 angle/radius**——圆周 / 曲线类 custom 用 x/y 作参数名，几何由 projectRoles 决定，不复用 polar 角色 |
+| `packages/graph/plot/src/ir/coordinate.ts` | 正式化（字段不变） | `CustomCoordinateSchema` | `z.object({ type: z.literal('custom'), name, roles, params? })` | — | 自定义坐标系：name 引用运行时工厂，roles 声明位置角色，params 为数值参数；投影函数不进 IR |
+| `packages/graph/plot/src/ir/coordinate.ts` | 确认边界（评审 P2） | `roles` | `z.array(z.enum(['x','y','a','b','c'])).min(1)` | — | custom roles 限 mark channel 名（x/y/a/b/c），**不含 polar 的 angle/radius**——圆周 / 曲线类 custom 用 x/y 作参数名，几何由 projectRoles 决定，不复用 polar 角色 |
 
 无新增 IR 字段（`frameAlong` / γ 是函数，运行时工厂，不进 IR）。`roles` 限 `x/y/a/b/c` 是**有意限制**（评审 P2）：custom 角色只是 mark channel 绑定名，polar 的 `angle/radius` 是内建坐标系的角色别名、不向 custom 开放。
 
 ### 文件 scope
 
-- `packages/plot/plot/src/ir/coordinate.ts`（修改：custom 正式化 + describe 收口）
-- `packages/plot/plot/src/lower/project.ts`（修改：`AxisFrame` 类型 + `CoordinateFrame.frameAlong?` + `createCustomFrame` 第三参定稿 options 对象）
-- `packages/plot/plot/src/lower/guide.ts`（修改：`lowerCustomAxis` 吃 frameAlong + 数值回落）
-- `packages/plot/plot/src/lower/expand.ts`（修改：`CustomCoordinateContext` 透传 / 构造 frameAlong 所需上下文，按需）
-- `packages/plot/plot/src/index.ts`（修改：正式导出 `AxisFrame` 等）
-- `packages/plot/react/src/Plot.tsx` / `components/buildPlotSpec.ts`（修改：custom 表面正式化，随 createCustomFrame 签名改同步）
-- `packages/plot/plot/tests/lower/custom-coordinate.test.ts`（修改：加 frameAlong 契约 case + 迁 createCustomFrame 调用到 options 对象）
-- `packages/plot/plot/tests/lower/coordinate-frame.test.ts`（修改：built-in 回归）
-- `packages/plot/react/tests/components/buildPlotSpec.test.tsx`（修改：custom 表面 case）
+- `packages/graph/plot/src/ir/coordinate.ts`（修改：custom 正式化 + describe 收口）
+- `packages/graph/plot/src/lower/project.ts`（修改：`AxisFrame` 类型 + `CoordinateFrame.frameAlong?` + `createCustomFrame` 第三参定稿 options 对象）
+- `packages/graph/plot/src/lower/guide.ts`（修改：`lowerCustomAxis` 吃 frameAlong + 数值回落）
+- `packages/graph/plot/src/lower/expand.ts`（修改：`CustomCoordinateContext` 透传 / 构造 frameAlong 所需上下文，按需）
+- `packages/graph/plot/src/index.ts`（修改：正式导出 `AxisFrame` 等）
+- `packages/graph/plot-react/src/Plot.tsx` / `components/buildPlotSpec.ts`（修改：custom 表面正式化，随 createCustomFrame 签名改同步）
+- `packages/graph/plot/tests/lower/custom-coordinate.test.ts`（修改：加 frameAlong 契约 case + 迁 createCustomFrame 调用到 options 对象）
+- `packages/graph/plot/tests/lower/coordinate-frame.test.ts`（修改：built-in 回归）
+- `packages/graph/plot-react/tests/components/buildPlotSpec.test.tsx`（修改：custom 表面 case）
 - `apps/docs/src/contents/plot/grammar/coordinate/index.{zh,en}.mdx`（修改：实验性 → 正式 + frameAlong 说明）
 - `apps/docs/src/contents/plot/grammar/coordinate/coordinate-custom-bridge.demo.tsx`（修改：迁 options 对象 + 示范 frameAlong，按需）
 
@@ -204,4 +204,4 @@ def.expand(spec); // spec.coordinate = { type:'custom', name:'bridge', roles:['x
 - `lowerCustomAxis` / `polylinePath` / `CUSTOM_AXIS_SAMPLES`（`lower/guide.ts`，实验性 spike）—— 修改：吃 frameAlong + 数值回落
 - `CustomCoordinateSchema` / `PlotCoordinate.Custom`（`ir/coordinate.ts`，实验性 spike）—— 修改：转正式
 - `LowerPlotsOptions.coordinates` / `resolveFrame`（`lower/expand.ts`）—— 引用 / 按需扩 context
-- core `Path` / `Node` / `Scope`（`packages/core/core`）—— 仅消费：曲线轴下沉目标，不改 core 内部
+- core `Path` / `Node` / `Scope`（`packages/kernel/core`）—— 仅消费：曲线轴下沉目标，不改 core 内部

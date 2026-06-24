@@ -4,13 +4,13 @@
 >
 > 关联：[`v0.2 总计划 §alpha.7 设计预想`](../roadmap.md) · [`tikz-gap-analysis §1 Node`](../../../../../analysis/tikz-gap-analysis.md) · 后续段 [`v0.2-alpha.8.md`](../alpha.8/roadmap.md)（自定义 arrow 复用本段 Paint 颜色继承）
 >
-> **贯穿约束（评审 P1，本段两处命中）**：① ScenePrimitive 渲染无关（`packages/core/src/primitive/scene.ts:8`：不允许 SVG-only 特性）——Paint 由 core 产 renderer-agnostic 资源表 + primitive 挂 `paintRef`，`<defs>` 物化只在 React SVG adapter；② IR 100% JSON 可序列化——`PaintSpec` 字段只用 JSON 值，禁 function / `z.any`。
+> **贯穿约束（评审 P1，本段两处命中）**：① ScenePrimitive 渲染无关（`packages/kernel/core/src/primitive/scene.ts:8`：不允许 SVG-only 特性）——Paint 由 core 产 renderer-agnostic 资源表 + primitive 挂 `paintRef`，`<defs>` 物化只在 React SVG adapter；② IR 100% JSON 可序列化——`PaintSpec` 字段只用 JSON 值，禁 function / `z.any`。
 
 ## 背景
 
 ### 填充服务 Paint（主线先行）
 
-`fill` 现状是**纯字符串**：`NodeSchema.fill`（`packages/core/src/ir/node.ts:145`）、`PathSchema.fill`（`ir/path/path.ts:42`）、`ScopeSchema.fill`（`ir/scope.ts:169`）全是 `z.string().optional()`；primitive 层 `RectPrim.fill` / `EllipsePrim.fill` / `PathPrim.fill` / `TextPrim.fill` 同为 `string`。render 端 `renderPrim.tsx` 的 `paintAttr` / `paintStyle`（`packages/react/src/render/renderPrim.tsx:44-55`）把含 `var(` 的值塞 inline style、其余走 attribute。
+`fill` 现状是**纯字符串**：`NodeSchema.fill`（`packages/kernel/core/src/ir/node.ts:145`）、`PathSchema.fill`（`ir/path/path.ts:42`）、`ScopeSchema.fill`（`ir/scope.ts:169`）全是 `z.string().optional()`；primitive 层 `RectPrim.fill` / `EllipsePrim.fill` / `PathPrim.fill` / `TextPrim.fill` 同为 `string`。render 端 `renderPrim.tsx` 的 `paintAttr` / `paintStyle`（`packages/react/src/render/renderPrim.tsx:44-55`）把含 `var(` 的值塞 inline style、其余走 attribute。
 
 痛点：只能单色。无渐变 / 图案 / 图片——SVG 这些都靠 `fill="url(#id)"` 引用 `<defs>` 里的 paint server，而 core 没有任何 defs / 资源管理。硬塞 `url(#x)` 能侥幸渲染但无 API、无 defs 物化、跨 adapter 不可移植。
 

@@ -76,7 +76,7 @@ const halfBar = defineMark({
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/mark-registry.test.ts`（新建）覆盖：
+`packages/graph/plot/tests/lower/mark-registry.test.ts`（新建）覆盖：
 
 - schema：`MarkOperationSchema` accept 自定义 type + 内置；自定义 type 撞内置（`'point'`）reject；非 JSON-safe（函数 / NaN）reject。
 - registry：`resolveMarkRegistry([custom])` 注册内置 + 自定义；自定义撞内置 type throw；两自定义同 type throw；未注册 type 经 lowerPlots fail-loud。
@@ -108,7 +108,7 @@ const halfBar = defineMark({
 
 `red`
 
-判级：动 `packages/plot/plot/src/schemas/**`（mark / plot schema）+ `packages/plot/plot/src/pipeline/**`（下沉到 core IR 的契约边界）。跨级取最高 → red。
+判级：动 `packages/graph/plot/src/schemas/**`（mark / plot schema）+ `packages/graph/plot/src/pipeline/**`（下沉到 core IR 的契约边界）。跨级取最高 → red。
 
 ### Schema 改动
 
@@ -121,12 +121,12 @@ const halfBar = defineMark({
 
 ### 文件 scope
 
-- `packages/plot/plot/src/schemas/mark.ts`（加 CustomMark / MarkOperation）
-- `packages/plot/plot/src/schemas/plot.ts`（marks 放宽）
-- `packages/plot/plot/src/providers/mark/mark.ts`（加 `isBuiltinMark`）
-- `packages/plot/plot/src/pipeline/expand.ts`（mark 读取类型无关化）
-- `packages/plot/plot/src/interaction/locate.ts`（mark 入参对齐 MarkOperation）
-- `packages/plot/plot/tests/lower/mark-registry.test.ts`（新建）
+- `packages/graph/plot/src/schemas/mark.ts`（加 CustomMark / MarkOperation）
+- `packages/graph/plot/src/schemas/plot.ts`（marks 放宽）
+- `packages/graph/plot/src/providers/mark/mark.ts`（加 `isBuiltinMark`）
+- `packages/graph/plot/src/pipeline/expand.ts`（mark 读取类型无关化）
+- `packages/graph/plot/src/interaction/locate.ts`（mark 入参对齐 MarkOperation）
+- `packages/graph/plot/tests/lower/mark-registry.test.ts`（新建）
 - `apps/docs/src/contents/plot/grammar/mark/**`（自定义 mark 节，按需）
 
 ### 测试象限

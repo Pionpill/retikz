@@ -67,9 +67,9 @@ render 层吃**已编译 Scene**（边界最小、与 `drawScene` 同层）。�
 
 ## 影响范围
 
-- `packages/core/render/package.json`（`exports["./canvas-node"]` + optional peer 声明）
-- `packages/core/render/src/**`（新增 `canvas-node` 入口，dynamic import）
-- 视方案触及 `packages/core/vanilla/package.json` / `src/**`（可选 IR 级便捷入口）
+- `packages/kernel/render/package.json`（`exports["./canvas-node"]` + optional peer 声明）
+- `packages/kernel/render/src/**`（新增 `canvas-node` 入口，dynamic import）
+- 视方案触及 `packages/kernel/vanilla/package.json` / `src/**`（可选 IR 级便捷入口）
 - `pnpm-workspace.yaml`（catalog 加 `@napi-rs/canvas`）
 - docs renderer / vanilla 页面
 

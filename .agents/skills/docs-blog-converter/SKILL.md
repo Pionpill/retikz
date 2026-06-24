@@ -31,7 +31,7 @@ description: 把 retikz 文档站 blog mdx 转成可贴到掘金/公众号等外
 
 ## SVG 抓取
 
-retikz 的渲染依赖 DOM 文本测量（`packages/core/react/src/render/browser-measurer.ts`），SSR / jsdom 不可靠——SVG 必须从浏览器渲染好的 DOM 里抓。
+retikz 的渲染依赖 DOM 文本测量（`packages/kernel/react/src/render/browser-measurer.ts`），SSR / jsdom 不可靠——SVG 必须从浏览器渲染好的 DOM 里抓。
 
 走 **Node 22 自带 WebSocket + 系统 Edge/Chrome headless 经 CDP 抓** 这条零依赖自动化路径，配套脚本 [`grab-svg.mjs`](./grab-svg.mjs) 同目录已备好。
 

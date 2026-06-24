@@ -25,7 +25,7 @@
 3. **`deliver` 改为必填，缺 deliver 只作为运行时防线测试。** 公开 `defineVisualChannel` 在类型层要求 definition 说明落点；registry 仍对宽类型输入做缺失检查，防外部 JS / 非类型调用。
 4. **自定义通道的 legend 未做（决策 (5) 部分推迟）。** `LegendChannel` schema 仍是闭集（color/size/opacity/shape）。def 的 `resolve` 可产 descriptor，但 legend channel schema 放宽 string + 收集自定义 descriptor 留后续小迭代。
 
-实现文件：`contract/channel.ts`（通用 `ChannelValueResolver` / `ChannelDelivery` / `MarkChannels.values/defaults/deliveries` / `AnyVisualChannelDefinition`）· `schemas/encoding.ts`（`PointEncodingSchema.channels`）· `providers/scale/channel.ts`（`resolveVisualChannelRegistry` / `resolveVisualChannelDeliveries` / `BUILTIN_VISUAL_CHANNEL_NAMES`）· `pipeline/expand.ts`（options + 统一 delivery）· `providers/mark/mark.ts`（lowerPoint 遍历 deliveries）· `src/index.ts`（导出）· `packages/plot/react/src/Plot.tsx`（透传）。测试 `tests/lower/custom-visual-channel.test.ts`。
+实现文件：`contract/channel.ts`（通用 `ChannelValueResolver` / `ChannelDelivery` / `MarkChannels.values/defaults/deliveries` / `AnyVisualChannelDefinition`）· `schemas/encoding.ts`（`PointEncodingSchema.channels`）· `providers/scale/channel.ts`（`resolveVisualChannelRegistry` / `resolveVisualChannelDeliveries` / `BUILTIN_VISUAL_CHANNEL_NAMES`）· `pipeline/expand.ts`（options + 统一 delivery）· `providers/mark/mark.ts`（lowerPoint 遍历 deliveries）· `src/index.ts`（导出）· `packages/graph/plot-react/src/Plot.tsx`（透传）。测试 `tests/lower/custom-visual-channel.test.ts`。
 
 ## 决策
 
@@ -91,7 +91,7 @@ type VisualChannelDefinition<T extends ScalarValue = ScalarValue> = {
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/custom-visual-channel-*.test.ts`：
+`packages/graph/plot/tests/lower/custom-visual-channel-*.test.ts`：
 
 - **Happy path**：注册 intensity（→opacity）+ encoding.channels 绑字段 → 逐 node opacity 随字段；自定义 symbol 通道（→既有离散属性）；多个自定义通道共存。
 - **边界**：encoding.channels 缺该键 → 不应用（node 用默认）；常量绑定 → 直落；空数据。
@@ -132,7 +132,7 @@ type VisualChannelDefinition<T extends ScalarValue = ScalarValue> = {
 
 ### 文件 scope
 
-`contract/channel.ts`（`deliver` + `MarkChannels.values/defaults/deliveries`）· `schemas/encoding.ts`（`channels`）· `providers/scale/channel.ts` + `providers/scale/registry.ts`（custom 合并 / 撞名守卫 / `resolveVisualChannelDeliveries`）· `providers/scale/index.ts` · `pipeline/expand.ts`（解析 + options 透传）· `providers/mark/mark.ts`（lowerPoint deliveries）· `schemas/guide.ts` + `features/guide/*`（legend channel 放宽）· `src/index.ts`（导出 `defineVisualChannel`）· `packages/plot/react/src/components/{build-plot-spec,Plot}.ts`（`visualChannelDefinitions` 透传）· `packages/plot/plot/tests/lower/custom-visual-channel-*.test.ts`（新建）。
+`contract/channel.ts`（`deliver` + `MarkChannels.values/defaults/deliveries`）· `schemas/encoding.ts`（`channels`）· `providers/scale/channel.ts` + `providers/scale/registry.ts`（custom 合并 / 撞名守卫 / `resolveVisualChannelDeliveries`）· `providers/scale/index.ts` · `pipeline/expand.ts`（解析 + options 透传）· `providers/mark/mark.ts`（lowerPoint deliveries）· `schemas/guide.ts` + `features/guide/*`（legend channel 放宽）· `src/index.ts`（导出 `defineVisualChannel`）· `packages/graph/plot-react/src/components/{build-plot-spec,Plot}.ts`（`visualChannelDefinitions` 透传）· `packages/graph/plot/tests/lower/custom-visual-channel-*.test.ts`（新建）。
 
 ### 测试象限
 

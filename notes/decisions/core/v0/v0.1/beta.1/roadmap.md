@@ -2,7 +2,7 @@
 
 > 写于 2026-05-11。完工后保留留档（摘要见 roadmap v0.1 跟踪段）。
 >
-> 关联：[`v0 roadmap`](./roadmap.md) · [`packages/core/AGENTS.md`](../../../../../../packages/core/AGENTS.md) · [`alpha.5 ADRs`](../alpha.5/)
+> 关联：[`v0 roadmap`](./roadmap.md) · [`packages/kernel/AGENTS.md`](../../../../../../packages/kernel/AGENTS.md) · [`alpha.5 ADRs`](../alpha.5/)
 
 ## 背景与定位
 
@@ -44,7 +44,7 @@ v0.1 收尾两版分工（详见 `v0/roadmap.md` "拆分原则"）：
 
 ### 问题陈述
 
-`packages/core/src/ir/node.ts` 当前 321 行，混着 4 个 schema（`FontSchema` / `LineSpecSchema` / `NodeTextSchema` / `NodeLabelSchema` / `NodeSchema`）+ 5 个派生类型 + 1 个 const 集合。其中 `FontSchema` **不是节点专属属性**——它描述的是文字排印规格（family / size / weight / style），node.ts 里已经被 3 处复用：
+`packages/kernel/core/src/ir/node.ts` 当前 321 行，混着 4 个 schema（`FontSchema` / `LineSpecSchema` / `NodeTextSchema` / `NodeLabelSchema` / `NodeSchema`）+ 5 个派生类型 + 1 个 const 集合。其中 `FontSchema` **不是节点专属属性**——它描述的是文字排印规格（family / size / weight / style），node.ts 里已经被 3 处复用：
 
 - `NodeSchema.font`（块级）
 - `LineSpecSchema.font`（行级覆盖）
@@ -54,16 +54,16 @@ v0.2 预备项里 Scope / Group 全局字体默认值、`<Tikz fontDefault={...}
 
 ### 建议方案
 
-**搬到独立文件 `packages/core/src/ir/font.ts`，单文件不开文件夹**（单 schema 开 `font/` 文件夹是过度——参考 `ir/coordinate.ts` / `ir/scene.ts` 同级单文件先例；只有 `ir/position/` 因有 3 个互不耦合的 schema 才开文件夹）。
+**搬到独立文件 `packages/kernel/core/src/ir/font.ts`，单文件不开文件夹**（单 schema 开 `font/` 文件夹是过度——参考 `ir/coordinate.ts` / `ir/scene.ts` 同级单文件先例；只有 `ir/position/` 因有 3 个互不耦合的 schema 才开文件夹）。
 
 ### 改动清单
 
 | 改动 | 文件 |
 |---|---|
-| 新建 `ir/font.ts`：搬迁 `FontSchema` + `IRFont` 派生类型 + 关联 JSDoc | `packages/core/src/ir/font.ts`（新文件） |
-| 从 `node.ts` 删 `FontSchema` 定义 + `IRFont` 类型；改为 `import { FontSchema } from './font'`；`IRFont` 不再在 node.ts 中重复声明 | `packages/core/src/ir/node.ts` |
-| barrel 加 `export * from './font'` | `packages/core/src/ir/index.ts` |
-| 公开 API 不需要改 | `packages/core/src/index.ts`（已 re-export `FontSchema` / `IRFont`，链路自动跟随） |
+| 新建 `ir/font.ts`：搬迁 `FontSchema` + `IRFont` 派生类型 + 关联 JSDoc | `packages/kernel/core/src/ir/font.ts`（新文件） |
+| 从 `node.ts` 删 `FontSchema` 定义 + `IRFont` 类型；改为 `import { FontSchema } from './font'`；`IRFont` 不再在 node.ts 中重复声明 | `packages/kernel/core/src/ir/node.ts` |
+| barrel 加 `export * from './font'` | `packages/kernel/core/src/ir/index.ts` |
+| 公开 API 不需要改 | `packages/kernel/core/src/index.ts`（已 re-export `FontSchema` / `IRFont`，链路自动跟随） |
 
 ### 验证项
 
@@ -101,7 +101,7 @@ v0.2 预备项里 Scope / Group 全局字体默认值、`<Tikz fontDefault={...}
 
 ### 建议方案
 
-新建 `packages/core/src/ir/text.ts`，**`LineSpecSchema` + `NodeTextSchema` 一并搬过去**（两者绑死：`NodeTextSchema = z.union([z.string(), z.array(LineSpecSchema).min(1)])`，拆两文件互相 import 反而复杂）。
+新建 `packages/kernel/core/src/ir/text.ts`，**`LineSpecSchema` + `NodeTextSchema` 一并搬过去**（两者绑死：`NodeTextSchema = z.union([z.string(), z.array(LineSpecSchema).min(1)])`，拆两文件互相 import 反而复杂）。
 
 不开 `ir/text/` 文件夹——目前只 2 schema，跟 `ir/font.ts` 同级单文件足够。
 
@@ -119,10 +119,10 @@ v0.2 预备项里 Scope / Group 全局字体默认值、`<Tikz fontDefault={...}
 
 | 改动 | 文件 |
 |---|---|
-| 新建 `ir/text.ts`：搬迁 `LineSpecSchema` + `IRLineSpec` + `NodeTextSchema` + 关联 JSDoc；`LineSpec` 内部 `import { FontSchema } from './font'` | `packages/core/src/ir/text.ts`（新文件） |
-| 从 `node.ts` 删两个 schema 的定义；改为 `import { LineSpecSchema, NodeTextSchema } from './text'`；`IRLineSpec` 不再在 node.ts 中重复声明 | `packages/core/src/ir/node.ts` |
-| barrel 加 `export * from './text'` | `packages/core/src/ir/index.ts` |
-| 公开 API 不需要改 | `packages/core/src/index.ts`（已 re-export `LineSpecSchema` / `IRLineSpec` / `NodeTextSchema`，链路自动跟随） |
+| 新建 `ir/text.ts`：搬迁 `LineSpecSchema` + `IRLineSpec` + `NodeTextSchema` + 关联 JSDoc；`LineSpec` 内部 `import { FontSchema } from './font'` | `packages/kernel/core/src/ir/text.ts`（新文件） |
+| 从 `node.ts` 删两个 schema 的定义；改为 `import { LineSpecSchema, NodeTextSchema } from './text'`；`IRLineSpec` 不再在 node.ts 中重复声明 | `packages/kernel/core/src/ir/node.ts` |
+| barrel 加 `export * from './text'` | `packages/kernel/core/src/ir/index.ts` |
+| 公开 API 不需要改 | `packages/kernel/core/src/index.ts`（已 re-export `LineSpecSchema` / `IRLineSpec` / `NodeTextSchema`，链路自动跟随） |
 
 ### 前置依赖
 
@@ -146,13 +146,13 @@ v0.2 预备项里 Scope / Group 全局字体默认值、`<Tikz fontDefault={...}
 
 ### 问题陈述
 
-`packages/core/src/` 下大量 JSDoc 注释 + zod `.describe()` 字符串把 SVG 当作"the renderer"来描述类型——"椭圆原语"被写成"对应 SVG `<ellipse>`"、"dash 模式"写成"SVG stroke-dasharray 模式"、`<tspan>` / SVG path "M"/"L"/"Q"/"C"/"Z" 等满天飞。
+`packages/kernel/core/src/` 下大量 JSDoc 注释 + zod `.describe()` 字符串把 SVG 当作"the renderer"来描述类型——"椭圆原语"被写成"对应 SVG `<ellipse>`"、"dash 模式"写成"SVG stroke-dasharray 模式"、`<tspan>` / SVG path "M"/"L"/"Q"/"C"/"Z" 等满天飞。
 
-这与 `packages/core/AGENTS.md` 硬约束冲突：**"不准依赖 DOM API"** 延伸到注释层就是 core 描述抽象 IR / primitive 时**不该假定"目标渲染器是 SVG"**。这种语言让人误以为 core 是 SVG 库，未来 canvas / Skia / PDF adapter 作者读这些注释会被误导。
+这与 `packages/kernel/AGENTS.md` 硬约束冲突：**"不准依赖 DOM API"** 延伸到注释层就是 core 描述抽象 IR / primitive 时**不该假定"目标渲染器是 SVG"**。这种语言让人误以为 core 是 SVG 库，未来 canvas / Skia / PDF adapter 作者读这些注释会被误导。
 
 ### grep 出的位置（按文件聚合）
 
-**`packages/core/src/primitive/`**：
+**`packages/kernel/core/src/primitive/`**：
 
 - `ellipse.ts:2` — "椭圆原语，对应 SVG `<ellipse>`"
 - `rect.ts:19, 23` — "SVG stroke-opacity"、"SVG stroke-dasharray 模式"
@@ -161,18 +161,18 @@ v0.2 预备项里 Scope / Group 全局字体默认值、`<Tikz fontDefault={...}
 - `text.ts:1, 14, 30` — `<tspan>` 多处提及
 - `path.ts:3-21` — 全文 SVG-tinted（alpha.5 TODO-6 重写时自然清理）
 
-**`packages/core/src/compile/`**：
+**`packages/kernel/core/src/compile/`**：
 
 - `node.ts:36, 52, 65, 87` — "SVG textAnchor" / "SVG transform" / "SVG stroke-dasharray"
 - `path.ts` 多处 — "SVG y-down CW" / "SVG cursor" / "SVG marker"（大部分随 alpha.5 TODO-6 重写消失）
 
-**`packages/core/src/ir/`**：
+**`packages/kernel/core/src/ir/`**：
 
 - `node.ts:19, 51, 224, 229` — JSDoc / `.describe(...)` 多处 "SVG `<text>`" / `<tspan>` / "SVG stroke-dasharray"
 - `path/path.ts:24, 48, 54, 60` — `.describe(...)` "SVG stroke-dasharray" / "SVG fill-rule" / "SVG stroke-linecap" / "SVG stroke-linejoin"
 - `path/step.ts:39, 49, 83, 107, 121, 160, 177, 191, 228` — `.describe(...)` "SVG path M/L/Z/Q/C" / "SVG A 命令"
 
-**`packages/core/src/geometry/`**：
+**`packages/kernel/core/src/geometry/`**：
 
 - `bend.ts:5` — "法向 SVG y-down"（改为 "screen y-down"——y-down 是 SVG/Canvas/PDF 共享几何约定，不是 SVG 专属）
 - `arc.ts` 多处 — 整体随 alpha.5 TODO-5 挪去 react adapter 处理
@@ -355,7 +355,7 @@ export type StepProps =
 
 ### 问题陈述
 
-`packages/core/src/ir/position/polar-position.ts:17` 旧 describe 写 `"counter-clockwise positive (TikZ convention)"`，`packages/core/src/geometry/polar.ts:18` JSDoc 写 `"逆时针为正"`——但 compile 实际行为是 SVG 屏幕 y-down 下的 CW（与 `ir/path/step.ts` 中 `ArcStep` describe 一致诚实）。LLM / 用户读 polar schema 生成径向图会方向反。
+`packages/kernel/core/src/ir/position/polar-position.ts:17` 旧 describe 写 `"counter-clockwise positive (TikZ convention)"`，`packages/kernel/core/src/geometry/polar.ts:18` JSDoc 写 `"逆时针为正"`——但 compile 实际行为是 SVG 屏幕 y-down 下的 CW（与 `ir/path/step.ts` 中 `ArcStep` describe 一致诚实）。LLM / 用户读 polar schema 生成径向图会方向反。
 
 ### 已落地方案
 
@@ -395,13 +395,13 @@ export type StepProps =
 
 ### 问题陈述
 
-`packages/core/src/geometry/{rect,circle,ellipse,diamond}.ts` 各自一份 `localToWorld(s, local)` / `worldToLocal(s, world)` 函数（30 行 × 4 = 120 行），函数体一字不差只参数类型名不同。
+`packages/kernel/core/src/geometry/{rect,circle,ellipse,diamond}.ts` 各自一份 `localToWorld(s, local)` / `worldToLocal(s, world)` 函数（30 行 × 4 = 120 行），函数体一字不差只参数类型名不同。
 
 同时 `CircleAnchor`（`circle.ts:16`）/ `EllipseAnchor`（`ellipse.ts:18`）/ `DiamondAnchor`（`diamond.ts:16`）三个类型的字面量与 `RectAnchor` 9 个值完全相同；grep 全仓除自定义文件 + `index.ts` re-export 外**零消费方**。
 
 ### 建议方案
 
-(1) 新建 `packages/core/src/geometry/_transform.ts` 暴露 `localToWorld(s, local)` / `worldToLocal(s, world)`，参数化"中心 + 旋转弧度"（`type CenteredShape = { x: number; y: number; rotate?: number }`）；4 个 shape 文件 import 共用版本。
+(1) 新建 `packages/kernel/core/src/geometry/_transform.ts` 暴露 `localToWorld(s, local)` / `worldToLocal(s, world)`，参数化"中心 + 旋转弧度"（`type CenteredShape = { x: number; y: number; rotate?: number }`）；4 个 shape 文件 import 共用版本。
 
 (2) 公开 type 收敛：保留 `RectAnchor`，删除三个重复类型；`index.ts` re-export 保留 `CircleAnchor`/`EllipseAnchor`/`DiamondAnchor` 作为 alias `export type CircleAnchor = RectAnchor`，不破坏外部 import。
 
@@ -409,7 +409,7 @@ export type StepProps =
 
 | 改动 | 文件 |
 |---|---|
-| 新建共享 helper | `packages/core/src/geometry/_transform.ts` |
+| 新建共享 helper | `packages/kernel/core/src/geometry/_transform.ts` |
 | 4 文件改为 import 共享 helper、删本地实现 | `geometry/{rect,circle,ellipse,diamond}.ts` |
 | 三个 `*Anchor` 类型 → alias 到 `RectAnchor` | `geometry/{circle,ellipse,diamond}.ts` |
 | barrel 不动 | `geometry/index.ts` |
@@ -489,7 +489,7 @@ export type StepProps =
 
 ### 问题陈述
 
-`packages/core/src/compile/path.ts` 单文件 879 行；其中 `emitPathPrimitive` 单函数 489 行，混 8 类职责（relative 解析 / step iteration / emit helpers / arrow shrink / label emit / sub-path split / endpoint shift / cycle close）。
+`packages/kernel/core/src/compile/path.ts` 单文件 879 行；其中 `emitPathPrimitive` 单函数 489 行，混 8 类职责（relative 解析 / step iteration / emit helpers / arrow shrink / label emit / sub-path split / endpoint shift / cycle close）。
 
 `emitPathPrimitive` 内 `findPrev(i)` 每步反向扫一遍 anchors 数组，n 步全程 **O(n²)**——典型流程图 50+ step 时已成 hotspot。
 
@@ -589,7 +589,7 @@ const reactProps = pickDefined(ir, NODE_FIELDS);
 
 ### 问题陈述
 
-`packages/core/src/compile/path.ts` 在路径解析失败时 **20+ 处 silent `return null`**（line 132/144/169/181/399/448/451/462/582/586/601/667/677/687/696/709/720/775），`compile.ts:96` 的调用方 `if (result)` 跳过——用户写 `<Path><Step to="bogusId"/></Path>` **整个 path 静默消失、控制台零信息**。
+`packages/kernel/core/src/compile/path.ts` 在路径解析失败时 **20+ 处 silent `return null`**（line 132/144/169/181/399/448/451/462/582/586/601/667/677/687/696/709/720/775），`compile.ts:96` 的调用方 `if (result)` 跳过——用户写 `<Path><Step to="bogusId"/></Path>` **整个 path 静默消失、控制台零信息**。
 
 同病：
 - `compile/position.ts` 三处 `return null`
@@ -621,10 +621,10 @@ CompileOptions.onWarn?: (w: CompileWarning) => void;
 
 | 改动 | 文件 |
 |---|---|
-| 加 `CompileOptions.onWarn` + `CompileWarning` 类型 | `packages/core/src/compile/compile.ts` |
-| 20+ 个 `return null` 点加 `onWarn(...)` | `packages/core/src/compile/path.ts` |
-| 3 个 `return null` 点加 `onWarn(...)` | `packages/core/src/compile/position.ts` |
-| 公开 API 加 `CompileWarning` export | `packages/core/src/index.ts` |
+| 加 `CompileOptions.onWarn` + `CompileWarning` 类型 | `packages/kernel/core/src/compile/compile.ts` |
+| 20+ 个 `return null` 点加 `onWarn(...)` | `packages/kernel/core/src/compile/path.ts` |
+| 3 个 `return null` 点加 `onWarn(...)` | `packages/kernel/core/src/compile/position.ts` |
+| 公开 API 加 `CompileWarning` export | `packages/kernel/core/src/index.ts` |
 | 测试 | core 加新测试组：构造错误 IR → 验 `onWarn` 收到对应 code + path |
 
 ### 风险
@@ -736,7 +736,7 @@ const ARROW_END_SPEC_KEY_FIELDS = [
 
 ### 问题陈述
 
-`packages/core/tests/helpers/path-d.ts` 和 `packages/core/tests/helpers/transform.ts` 镜像了一部分 React adapter 的 `buildPathD` / `buildTransform` 逻辑，用来把 Scene primitive 再序列化成 SVG 字符串断言。这样写短期方便，但长期有两个风险：
+`packages/kernel/tests/helpers/path-d.ts` 和 `packages/kernel/tests/helpers/transform.ts` 镜像了一部分 React adapter 的 `buildPathD` / `buildTransform` 逻辑，用来把 Scene primitive 再序列化成 SVG 字符串断言。这样写短期方便，但长期有两个风险：
 
 1. core 测试本应守住“结构化 Scene primitive”契约，却把断言重心拉回 SVG mini-language。
 2. helper 与 `packages/react/src/render/*` 各自维护，未来 arc / transform / rounding 语义改动时可能出现测试 helper 与真实 renderer 漂移，导致测试既可能误报，也可能漏报。
@@ -756,9 +756,9 @@ const ARROW_END_SPEC_KEY_FIELDS = [
 
 | 改动 | 文件 |
 |---|---|
-| 统计并替换 core 测试中可结构化断言的 `pathCommandsToD` 调用 | `packages/core/tests/**/*.test.ts` |
-| 统计并替换 core 测试中可结构化断言的 transform helper 调用 | `packages/core/tests/**/*.test.ts` |
-| 删除或收窄 test helper 的职责说明 | `packages/core/tests/helpers/path-d.ts` / `packages/core/tests/helpers/transform.ts` |
+| 统计并替换 core 测试中可结构化断言的 `pathCommandsToD` 调用 | `packages/kernel/tests/**/*.test.ts` |
+| 统计并替换 core 测试中可结构化断言的 transform helper 调用 | `packages/kernel/tests/**/*.test.ts` |
+| 删除或收窄 test helper 的职责说明 | `packages/kernel/tests/helpers/path-d.ts` / `packages/kernel/tests/helpers/transform.ts` |
 | 如仍需 SVG 输出契约，迁到 React render 测试 | `packages/react/tests/render/*` |
 
 ### 风险

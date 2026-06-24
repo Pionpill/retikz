@@ -43,8 +43,8 @@ retikz 一次发包 = **3 处同步改动 + 用户确认 + npm publish**。
 
 | 组 | 包名 | 路径 | 备注 |
 | --- | --- | --- | --- |
-| core 组 | `@retikz/math`, `@retikz/core`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla` | `packages/core/{math,core,render,react,vanilla}/` | Tier 1；`math` 是零依赖纯计算底座，被 core 依赖、同组 lockstep |
-| plot 组 | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla` | `packages/plot/{plot,react,vanilla}/` | Tier 2，依赖 core |
+| core 组 | `@retikz/math`, `@retikz/core`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla` | `packages/kernel/{math,core,render,react,vanilla}/` | Tier 1；`math` 是零依赖纯计算底座，被 core 依赖、同组 lockstep |
+| plot 组 | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla` | `packages/graph/{plot,plot-react,plot-vanilla}/` | Tier 2，依赖 core |
 | 不发 | `@retikz/docs` | `apps/docs/` | `private: true` |
 
 **发布顺序按依赖**：core 组先（math → core → render → vanilla → react），plot 组后（plot → plot-vanilla → plot-react）——`workspace:*` 在发布时替换成确切版本，被依赖方必须先发；`math` 零依赖、被 core 依赖，必须最先发。
@@ -219,7 +219,7 @@ pnpm install   # catalog 没变就基本无操作；版本字段变化也无影�
 git commit -m ":bookmark: core 组 bump 到 0.3.0-alpha.x（<主题>）"
 
 # 2. 确认 HEAD 已包含目标版本；如果仍是旧版本，halt，不能 tag / publish（示例 core 组 5 包）
-node -e "const fs=require('node:fs'); for (const p of ['math','core','render','react','vanilla']) { const j=JSON.parse(fs.readFileSync(`packages/core/${p}/package.json`,'utf8')); if (j.version !== '0.3.0-alpha.4') throw new Error(`${j.name} version is ${j.version}`); }"
+node -e "const fs=require('node:fs'); for (const p of ['math','core','render','react','vanilla']) { const j=JSON.parse(fs.readFileSync(`packages/kernel/${p}/package.json`,'utf8')); if (j.version !== '0.3.0-alpha.4') throw new Error(`${j.name} version is ${j.version}`); }"
 git status --short
 
 # 3. tag（Tier 1 用 v<version>；plot 组用 plot-v<version>，避开旧 core 的 v0.1.* tag 空间）

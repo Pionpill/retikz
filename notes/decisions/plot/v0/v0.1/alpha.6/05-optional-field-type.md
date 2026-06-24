@@ -6,7 +6,7 @@
 
 ## 背景
 
-`FieldDefSchema`（`packages/plot/plot/src/ir/data.ts`）当前要求 `{ name, type }` 两字段都填，`type` 必填。而 `resolveFieldTypes`（`packages/plot/plot/src/lower/validate.ts`）是**非此即彼**：声明了 `model` → 全用声明类型（缺字段名抛 strict unknown）；无 `model` → 全部 `inferFieldType` 推断（ADR-01 拍板「model strict / infer 二选一，无混合」）。
+`FieldDefSchema`（`packages/graph/plot/src/ir/data.ts`）当前要求 `{ name, type }` 两字段都填，`type` 必填。而 `resolveFieldTypes`（`packages/graph/plot/src/lower/validate.ts`）是**非此即彼**：声明了 `model` → 全用声明类型（缺字段名抛 strict unknown）；无 `model` → 全部 `inferFieldType` 推断（ADR-01 拍板「model strict / infer 二选一，无混合」）。
 
 这把 `model` 强行绑死了两件**本应分开**的事：
 
@@ -65,7 +65,7 @@ for (const field of userSourceFields) {
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/data-model.test.ts`（扩展现有 `resolveFieldTypes` 段）+ `packages/plot/plot/tests/ir/data.schema.test.ts`（`type` 可省 accept）。落地测试见实现指针。
+`packages/graph/plot/tests/lower/data-model.test.ts`（扩展现有 `resolveFieldTypes` 段）+ `packages/graph/plot/tests/ir/data.schema.test.ts`（`type` 可省 accept）。落地测试见实现指针。
 
 ## 影响
 
@@ -82,5 +82,5 @@ for (const field of userSourceFields) {
 - **「可移植性是否必须有 type」的强约束改动**——本 ADR 只让 type 可省；fieldMaps 移植本就只需 name，不在此扩。
 - **推断质量提升**（更聪明的类型嗅探）——沿用 ADR-01 的抽样推断，不在本 ADR 动。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/ir/data.ts` 与 `packages/plot/plot/src/lower/validate.ts`，测试见 `packages/plot/plot/tests/lower/data-model.test.ts` 和 `packages/plot/plot/tests/ir/data.schema.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/ir/data.ts` 与 `packages/graph/plot/src/lower/validate.ts`，测试见 `packages/graph/plot/tests/lower/data-model.test.ts` 和 `packages/graph/plot/tests/ir/data.schema.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/alpha.6/05-optional-field-type.md`（封板全文）。

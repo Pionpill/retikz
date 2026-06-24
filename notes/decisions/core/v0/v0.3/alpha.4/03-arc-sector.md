@@ -18,7 +18,7 @@ retikz 要求图元一等可连接，故 sector 必须是带 `boundaryPoint` / `
 ## 决策：sector / arc 两个注册 shape，nested params 为内外半径 + 起止角
 
 ```ts
-// packages/core/core/src/shapes/sector.ts —— 经 defineShape，nested params
+// packages/kernel/core/src/shapes/sector.ts —— 经 defineShape，nested params
 export const sector = defineShape({
   paramsSchema: z.strictObject({
     innerRadius: z.number().finite().nonnegative().describe('Inner radius (user units); 0 = solid pie slice.'),

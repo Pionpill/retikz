@@ -6,7 +6,7 @@
 
 ## 1. plot 的图元随数据量线性爆炸（O(N)，已确认）
 
-探查 `packages/plot/plot/src/lower/mark.ts` 的下沉逻辑，每种 mark 把 N 个数据点下沉成的 Tier 1 节点 / 编译后 Scene primitive：
+探查 `packages/graph/plot/src/lower/mark.ts` 的下沉逻辑，每种 mark 把 N 个数据点下沉成的 Tier 1 节点 / 编译后 Scene primitive：
 
 | mark | N 数据点 → Tier 1 | 编译后 Scene primitive | 量级 | 备注 |
 |---|---|---|---|---|
@@ -23,7 +23,7 @@
 
 ## 2. canvas 在哪里断
 
-探查 `packages/core/render/src/canvas/drawScene.ts`：
+探查 `packages/kernel/render/src/canvas/drawScene.ts`：
 
 ```ts
 export const drawScene = (ctx, scene, options) => {
@@ -74,7 +74,7 @@ plot 的 color grouping 在 IR 层已把同色图元归到 `scope.nodeDefault`�
 
 ## 4. GPU 友好度清单（若真做 hybrid 后端）
 
-按 `packages/core/core/src/primitive/*.ts` 的 primitive 契约逐项评估（探查确认无任何现存 webgl/gpu 占位代码，仅 canvas/svg 两后端）：
+按 `packages/kernel/core/src/primitive/*.ts` 的 primitive 契约逐项评估（探查确认无任何现存 webgl/gpu 占位代码，仅 canvas/svg 两后端）：
 
 | primitive | GPU 难度 | 方案 | plot 相关性 |
 |---|---|---|---|
@@ -93,7 +93,7 @@ plot 的 color grouping 在 IR 层已把同色图元归到 `scope.nodeDefault`�
 
 ## 5. 与现有架构的契合
 
-- **Scene 契约无需改**：GPU 后端与 canvas/svg 一样消费已编译 `Scene`（`packages/core/core/src/primitive/scene.ts`：`RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim`）。编译期产物（gradient/pattern tile、marker primitives、文本度量）可复用。
+- **Scene 契约无需改**：GPU 后端与 canvas/svg 一样消费已编译 `Scene`（`packages/kernel/core/src/primitive/scene.ts`：`RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim`）。编译期产物（gradient/pattern tile、marker primitives、文本度量）可复用。
 - **core 不受影响**：渲染后端是 `@retikz/render` 子路径，core 仍零 React/DOM/GPU 依赖。
 - **降级既有范式**：沿用 canvas「能力声明 + 可诊断降级、不静默」——GPU 不可用 / 不支持的 primitive 子集回落 2D，绝不丢图。与 alpha.5 动画的降级契约同一套思路。
 - **分支流向**：batching（§3.1）属 core 组 → `next-core`；聚合（§3.2）属 plot → `next-plot`；GPU 后端（§3.3）属 render → `next-core`，plot 通过同一 Scene 受益，无需 plot 自造渲染路径（守 AGENTS.md「子组不绕开 core 自造平行机制」）。

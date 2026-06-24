@@ -21,10 +21,10 @@ v0 roadmap 早已预留 **`@retikz/chart`（`type` + 配置的 preset 封装）�
 
 ## 决策：chart 框架无关核心暂归 `@retikz/plot` 自包含模块，react/vanilla 三包对称薄绑定
 
-**(1) chart 框架无关核心暂归 `@retikz/plot`**。新增自包含、框架无关的 chart 模块（建议 `packages/plot/plot/src/chart/`），**收纳 v0.1-alpha.10 抽出的 `decorateDefaultGuides`** 并扩展为完整装饰：输入 marks/config + theme、输出**装饰完整的 `PlotSpec`**（补默认轴 / 图例 / 网格 + 透出 theme）。**无新 IR、无新 lowering、不进 IR**——它是 PlotSpec 生产者，与用户手写 PlotSpec 同级。
+**(1) chart 框架无关核心暂归 `@retikz/plot`**。新增自包含、框架无关的 chart 模块（建议 `packages/graph/plot/src/chart/`），**收纳 v0.1-alpha.10 抽出的 `decorateDefaultGuides`** 并扩展为完整装饰：输入 marks/config + theme、输出**装饰完整的 `PlotSpec`**（补默认轴 / 图例 / 网格 + 透出 theme）。**无新 IR、无新 lowering、不进 IR**——它是 PlotSpec 生产者，与用户手写 PlotSpec 同级。
 
 ```ts
-// packages/plot/plot/src/chart/decorate.ts （示意）
+// packages/graph/plot/src/chart/decorate.ts （示意）
 /** 框架无关：裸 PlotSpec（marks + scale/coord）→ 装饰完整 PlotSpec（默认轴/图例/网格 + theme） */
 export const decorateChartSpec = (spec: PlotSpec, options?: ChartDecorateOptions): PlotSpec => { /* 复用 decorateDefaultGuides + theme 注入 */ };
 ```
@@ -76,7 +76,7 @@ const svg = renderChart({ data: rows, marks: [...], title: 'Sales' });
 
 ## 测试设计
 
-`packages/plot/plot/tests/chart/decorate.test.ts`（新建：装饰函数契约）+ `packages/plot/react/tests/Chart.test.tsx`（新建：`<Chart>` 表面）+ `packages/plot/vanilla/tests/renderChart.test.ts`（新建）覆盖：
+`packages/graph/plot/tests/chart/decorate.test.ts`（新建：装饰函数契约）+ `packages/graph/plot-react/tests/Chart.test.tsx`（新建：`<Chart>` 表面）+ `packages/graph/plot-vanilla/tests/renderChart.test.ts`（新建）覆盖：
 
 - `decorateChartSpec` 等价性：装饰产物 = 薄 `<Plot>` + 手写默认轴 / 图例 / 网格
 - `<Chart>` 复用 `<Plot>` DSL props（coordinate / scaleX / model…）+ title/theme
@@ -88,7 +88,7 @@ const svg = renderChart({ data: rows, marks: [...], title: 'Sales' });
 
 ## 影响
 
-- **`@retikz/plot` 新增 chart 模块**：`packages/plot/plot/src/chart/`（框架无关，收纳 + 扩展 v0.1 装饰函数）；**无新 IR 字段、无 lowering 改动**。
+- **`@retikz/plot` 新增 chart 模块**：`packages/graph/plot/src/chart/`（框架无关，收纳 + 扩展 v0.1 装饰函数）；**无新 IR 字段、无 lowering 改动**。
 - **`@retikz/plot-react`**：新增 `<Chart>` 组件 + 导出。
 - **`@retikz/plot-vanilla`**：新增 `renderChart` / chart builder + 导出。
 - **公开 API**：`@retikz/plot` 导出 chart 模块（red）；react `<Chart>` / vanilla `renderChart` 新导出。
@@ -113,7 +113,7 @@ const svg = renderChart({ data: rows, marks: [...], title: 'Sales' });
 
 `red`
 
-判级：触及 `packages/plot/plot/src/index.ts`（导出 chart 模块）+ `packages/plot/{react,vanilla}/src/index.ts`（导出 `<Chart>` / `renderChart`），公开 API 新增 → red。chart 模块本身（`src/chart/**`）是 yellow（preset 层），跨级取最高 → red。
+判级：触及 `packages/graph/plot/src/index.ts`（导出 chart 模块）+ `packages/graph/{react,vanilla}/src/index.ts`（导出 `<Chart>` / `renderChart`），公开 API 新增 → red。chart 模块本身（`src/chart/**`）是 yellow（preset 层），跨级取最高 → red。
 
 ### Schema 改动
 
@@ -121,13 +121,13 @@ const svg = renderChart({ data: rows, marks: [...], title: 'Sales' });
 
 ### 文件 scope
 
-- `packages/plot/plot/src/chart/`（新建：`decorateChartSpec` + 收纳 v0.1 `decorateDefaultGuides` + theme 注入）
-- `packages/plot/plot/src/index.ts`（修改：导出 chart 模块 / 子路径）
-- `packages/plot/react/src/Chart.tsx`（新建：`<Chart>` 组件）
-- `packages/plot/react/src/components/buildPlotSpec.ts`（修改：装饰函数下沉到 plot chart 模块、react 改 import）
-- `packages/plot/react/src/index.ts`（修改：导出 `<Chart>`）
-- `packages/plot/vanilla/src/renderChart.ts`（新建）+ `packages/plot/vanilla/src/index.ts`（修改：导出）
-- `packages/plot/plot/tests/chart/decorate.test.ts` / `packages/plot/react/tests/Chart.test.tsx` / `packages/plot/vanilla/tests/renderChart.test.ts`（新建）
+- `packages/graph/plot/src/chart/`（新建：`decorateChartSpec` + 收纳 v0.1 `decorateDefaultGuides` + theme 注入）
+- `packages/graph/plot/src/index.ts`（修改：导出 chart 模块 / 子路径）
+- `packages/graph/plot-react/src/Chart.tsx`（新建：`<Chart>` 组件）
+- `packages/graph/plot-react/src/components/buildPlotSpec.ts`（修改：装饰函数下沉到 plot chart 模块、react 改 import）
+- `packages/graph/plot-react/src/index.ts`（修改：导出 `<Chart>`）
+- `packages/graph/plot-vanilla/src/renderChart.ts`（新建）+ `packages/graph/plot-vanilla/src/index.ts`（修改：导出）
+- `packages/graph/plot/tests/chart/decorate.test.ts` / `packages/graph/plot-react/tests/Chart.test.tsx` / `packages/graph/plot-vanilla/tests/renderChart.test.ts`（新建）
 - `apps/docs/src/contents/plot/**`（新增 `<Chart>` 线 + demo，zh/en 同步）
 
 偏离白名单需加条目自注或开新 ADR。
@@ -164,4 +164,4 @@ const svg = renderChart({ data: rows, marks: [...], title: 'Sales' });
 - `Plot`（`react/src/Plot.tsx`）—— 引用：`<Chart>` 委托薄 `<Plot>` 渲染
 - `renderPlot`（`vanilla/src/renderPlot.ts`）—— 引用：`renderChart` 对称、复用 lowering 路径
 - `PlotSpec` / `PlotSpecSchema` / `lowerPlots`（`@retikz/plot`）—— 仅引用：chart 模块产 `PlotSpec`，不改 schema / lowering
-- core `Node` / `Path` / `Scope`（`packages/core/core`）—— 仅消费（经 plot 既有 lowering）
+- core `Node` / `Path` / `Scope`（`packages/kernel/core`）—— 仅消费（经 plot 既有 lowering）

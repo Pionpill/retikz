@@ -50,19 +50,19 @@
 ### IR 侧（`boundary` 进 Node、`boundary` 进端点引用，均进 IR、JSON 可序列化）
 
 ```ts
-// packages/core/core/src/ir/boundary.ts（新建）—— 复用 ShapeRefSchema，保留字编译期消解
+// packages/kernel/core/src/ir/boundary.ts（新建）—— 复用 ShapeRefSchema，保留字编译期消解
 export const BoundarySchema = z
   .union([z.string().min(1), ShapeRefSchema])
   .describe(
     'Connection surface: how edges meet this node and how compass anchors resolve, independent of the visual `shape`. Reserved keywords: "shape" (default — the node\'s own visual shape) and "circle" (true circle, radius = larger AABB half-axis). Any other registered shape name ("rectangle" / "ellipse" / "polygon" / …) or `{ type, params }` borrows that shape\'s boundary over this node\'s bounding box. Layout-neutral: never changes the node footprint. Named shape-specific anchors and edge proportional points always resolve against the visual shape.',
   );
 
-// packages/core/core/src/ir/node.ts —— 新增字段，缺省 'shape'
+// packages/kernel/core/src/ir/node.ts —— 新增字段，缺省 'shape'
 boundary: BoundarySchema.optional().describe(
   'Default connection surface for edges meeting this node (see BoundarySchema). Defaults to "shape" (use the visual shape). Per-edge overridable via the edge endpoint `boundary` field.',
 )
 
-// packages/core/core/src/ir/path/target.ts —— NodeTargetSchema 加 boundary（单边覆盖 node.boundary）
+// packages/kernel/core/src/ir/path/target.ts —— NodeTargetSchema 加 boundary（单边覆盖 node.boundary）
 boundary: BoundarySchema.optional().describe(
   'Per-edge override of the target node connection surface for THIS endpoint only; omitted = the node\'s boundary (default "shape"). Effective only where a connection surface is meaningful: path-endpoint auto-clip (no explicit anchor) and this endpoint\'s compass / angle anchor. In toward-less reference contexts (between endpoints, offset `of`, node center) it is a no-op.',
 )
@@ -71,7 +71,7 @@ boundary: BoundarySchema.optional().describe(
 **保留字常量（暴露给用户，`DrawWay` 风格，裸字面量仍第一形态）：**
 
 ```ts
-// packages/core/core/src/ir/boundary.ts
+// packages/kernel/core/src/ir/boundary.ts
 /** 连接面保留关键字：非「借用已注册 shape」的两个内置语义（编译期消解） */
 export const Boundary = {
   /** 连接面 = 节点自身视觉形状（默认） */
