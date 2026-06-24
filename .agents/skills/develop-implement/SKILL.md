@@ -25,7 +25,7 @@ retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**�
 authoring API 有两套用户入口——`@retikz/react`（JSX DSL）与 `@retikz/vanilla`（命令式 builder）。**ADR 的「DSL 表面」给了两套写法时，实现必须两套都落**，不能只实现 react 留 vanilla 欠账：
 
 - 两套共享同一份 core IR + zod schema（单一真源），实现各自只是 props/config → IR 的薄壳；vanilla builder 字段派生自 core IR 类型（`Omit<IRNode, …>` 等），不手维护第二份字段清单。
-- 文件 scope 命中 `packages/core/react/**` 改 authoring 面时，检查是否需要 `packages/core/vanilla/**` 对应改；反之亦然（plot 组同理：`packages/plot/react/**` ↔ `packages/plot/vanilla/**`）。
+- 文件 scope 命中 `packages/kernel/react/**` 改 authoring 面时，检查是否需要 `packages/kernel/vanilla/**` 对应改；反之亦然（plot 组同理：`packages/graph/plot-react/**` ↔ `packages/graph/plot-vanilla/**`）。
 - 测试两套都要有（react kernel 测试 + vanilla builder 测试）；develop-test / cross-test 阶段两套适配器一致性也在覆盖范围。
 
 ## 输入

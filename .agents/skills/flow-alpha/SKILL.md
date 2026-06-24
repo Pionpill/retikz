@@ -59,8 +59,8 @@ retikz alpha 期 ADR 端到端开发的**编排器**，支持两种执行模式�
 
 | Level | 触发文件 path |
 |---|---|
-| **red** | `packages/core/core/src/ir/**` · `packages/core/core/src/compile/**` · `packages/*/*/src/index.ts` |
-| **yellow** | `packages/core/react/src/{kernel,sugar}/**` · `packages/core/core/src/parsers/**` · `packages/core/react/src/render/**` |
+| **red** | `packages/kernel/core/src/ir/**` · `packages/kernel/core/src/compile/**` · `packages/*/*/src/index.ts` |
+| **yellow** | `packages/kernel/react/src/{kernel,sugar}/**` · `packages/kernel/core/src/parsers/**` · `packages/kernel/react/src/render/**` |
 | **green** | `apps/docs/**` · `**/*.test.ts` · `**/*.md` · 配置（`*.json` / `*.yaml`） |
 
 **跨级 ADR**（同时碰红 + 黄 + 绿）取最高 level 走流程，但绿色文档允许独立 commit 不走 Spec-First（绿色部分只过 stage 4 的简化路径）。

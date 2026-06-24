@@ -77,7 +77,7 @@ DSL 表面（字面形态即决策，react kernel `<Step kind="smooth">`）：
 
 vanilla 同一份 zod schema、以 IR-object 形态进 path `children`，与 react kernel 零漂移；完整用法见文档站 `<Path>` / step 与 `@retikz/math` `curve` 页。
 
-> 实现：core `789602b5`（schema + math curve/ stub + spec）→ `ee342f0d`（math centripetal Catmull-Rom 转 cubic）→ `df233efe`（smooth step 编译为 cubic 贝塞尔）→ `829e73b5`（react `<Step kind="smooth">` 透传），行为对齐 `38f35c95`；测试见 `packages/core/math/tests/curve/catmull-rom.test.ts` 与 `packages/core/core/tests/compile/path-smooth.test.ts`；最终 schema / 行为以代码为准。
+> 实现：core `789602b5`（schema + math curve/ stub + spec）→ `ee342f0d`（math centripetal Catmull-Rom 转 cubic）→ `df233efe`（smooth step 编译为 cubic 贝塞尔）→ `829e73b5`（react `<Step kind="smooth">` 透传），行为对齐 `38f35c95`；测试见 `packages/kernel/math/tests/curve/catmull-rom.test.ts` 与 `packages/kernel/core/tests/compile/path-smooth.test.ts`；最终 schema / 行为以代码为准。
 
 ## 不在本 ADR 范围
 

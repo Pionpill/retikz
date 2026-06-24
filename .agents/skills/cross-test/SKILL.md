@@ -10,7 +10,7 @@ description: retikz 交叉测试 / 缺陷挖掘技能。用于基于 packages �
 ## 核心原则
 
 1. **先读实现与测试，再写测试**
-   - 先理解 `packages/core` / `packages/react` 的真实行为、现有测试覆盖和公开导出。
+   - 先理解 `packages/kernel` / `packages/react` 的真实行为、现有测试覆盖和公开导出。
    - 不要只看文档猜功能；以实现和已有测试为准，必要时对照 `apps/docs` 判断用户预期。
 
 2. **以找 bug 为目标，但不伪造 bug**
@@ -29,7 +29,7 @@ description: retikz 交叉测试 / 缺陷挖掘技能。用于基于 packages �
 ## 输入
 
 - 目标范围：一个包、一个模块、一个 TODO、一个 ADR、一个 bug 线索，或整个 `packages/`。
-- 现有实现：`packages/core/core/src/**`、`packages/core/render/src/**`、`packages/core/react/src/**`、`packages/core/vanilla/src/**`、`packages/plot/*/src/**`。
+- 现有实现：`packages/kernel/core/src/**`、`packages/kernel/render/src/**`、`packages/kernel/react/src/**`、`packages/kernel/vanilla/src/**`、`packages/graph/*/src/**`。
 - 现有测试：`packages/*/*/tests/**`。
 - 可选上下文：`notes/decisions/core/**`、`notes/decisions/core/**`、`apps/docs/**`。
 
@@ -48,9 +48,9 @@ description: retikz 交叉测试 / 缺陷挖掘技能。用于基于 packages �
 先快速建立覆盖图：
 
 - 入口导出：`packages/*/*/src/index.ts`
-- schema 与核心类型：`packages/core/core/src/ir/**`、`primitive/**`
-- 编译链路：`packages/core/core/src/compile/**`
-- React 链路：`packages/core/react/src/kernel/**`、`sugar/**`、`render/**`
+- schema 与核心类型：`packages/kernel/core/src/ir/**`、`primitive/**`
+- 编译链路：`packages/kernel/core/src/compile/**`
+- React 链路：`packages/kernel/react/src/kernel/**`、`sugar/**`、`render/**`
 - 测试分布：`packages/*/*/tests/**`
 
 输出一个简短判断：
@@ -88,12 +88,12 @@ description: retikz 交叉测试 / 缺陷挖掘技能。用于基于 packages �
 
 测试落点遵循现有布局：
 
-- core parser：`packages/core/core/tests/parsers/*.test.ts`
-- core compile：`packages/core/core/tests/compile/*.test.ts`
-- core geometry：`packages/core/core/tests/geometry/*.test.ts`
-- React builder/unbuilder：`packages/core/react/tests/kernel/*.test.tsx`
-- React render：`packages/core/react/tests/render/*.test.tsx`
-- Sugar：`packages/core/react/tests/sugar/*.test.tsx`
+- core parser：`packages/kernel/core/tests/parsers/*.test.ts`
+- core compile：`packages/kernel/core/tests/compile/*.test.ts`
+- core geometry：`packages/kernel/core/tests/geometry/*.test.ts`
+- React builder/unbuilder：`packages/kernel/react/tests/kernel/*.test.tsx`
+- React render：`packages/kernel/react/tests/render/*.test.tsx`
+- Sugar：`packages/kernel/react/tests/sugar/*.test.tsx`
 
 命名建议：
 
@@ -183,7 +183,7 @@ notes/reports/cross-test-YYYY-MM-DD-<scope>.md
 # Cross Test Report: <scope>
 
 日期：YYYY-MM-DD
-范围：<packages/core、packages/react、具体模块或 TODO>
+范围：<packages/kernel、packages/react、具体模块或 TODO>
 测试目标：补充边缘场景 / 缺陷挖掘 / 用户视角评估
 
 ## 读取范围

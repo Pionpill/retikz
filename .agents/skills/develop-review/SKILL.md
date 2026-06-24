@@ -42,8 +42,8 @@ beta 期对**单个模块横向通读**、系统排查全局优化点的只读�
 ## 启动前确认
 
 1. **审查范围所属分组在 beta 期**——版本通道按**被审范围所属的 package / 分组**判断，不把 core 包当唯一版本来源：
-   - **core 分组**（core / render / react / vanilla，版本 lockstep）：读 `packages/core/core/package.json`
-   - **plot / chart 等 Tier 2 分组**（各自独立版本）：读对应分组的 `packages/<group>/<pkg>/package.json`（如 `packages/plot/plot/package.json`）
+   - **core 分组**（core / render / react / vanilla，版本 lockstep）：读 `packages/kernel/core/package.json`
+   - **plot / chart 等 Tier 2 分组**（各自独立版本）：读对应分组的 `packages/<group>/<pkg>/package.json`（如 `packages/graph/plot/package.json`）
    - 版本号含 `-beta.` 即在 beta 期。alpha 期清理也能用本 skill，但要在报告里注明「所属分组非 beta 期，仅作整理盘点参考」。
 2. **范围已声明**（见下）——没说清审哪个模块就先问，不默认全仓（全仓审计又慢又发散、价值低）。
 

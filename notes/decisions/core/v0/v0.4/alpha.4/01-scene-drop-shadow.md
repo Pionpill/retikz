@@ -38,7 +38,7 @@ union 先例：`fill: string|PaintSpec`、`scale: number|{x,y}`。**IR 存原始
 
 ### 最终 schema 形态
 
-字面 union 形态本身是决策的一部分（字符串 `"md"` ≡ 对象 `{ preset:'md' }`），故留最小骨架；完整 schema / describe / 预设档位数值见 `packages/core/core/src/ir/effects.ts`（`DropShadowSchema` / `ShadowPreset` / `SHADOW_PRESETS`）。
+字面 union 形态本身是决策的一部分（字符串 `"md"` ≡ 对象 `{ preset:'md' }`），故留最小骨架；完整 schema / describe / 预设档位数值见 `packages/kernel/core/src/ir/effects.ts`（`DropShadowSchema` / `ShadowPreset` / `SHADOW_PRESETS`）。
 
 ```ts
 // IRNode / IRPath 的 shadow 字段
@@ -68,10 +68,10 @@ react kernel `<Node shadow>` / `<Path shadow>` 与 vanilla `node()` / `draw()` c
 
 ## 实现指针
 
-- IR / schema / 预设表：`packages/core/core/src/ir/effects.ts`；node / path 字段 `ir/node.ts`、`ir/path/path.ts`；`ShapeStyle`、primitive 透传见 `shapes/types.ts`、`primitive/{rect,ellipse,path,index}.ts`；公开导出 `src/index.ts`。
+- IR / schema / 预设表：`packages/kernel/core/src/ir/effects.ts`；node / path 字段 `ir/node.ts`、`ir/path/path.ts`；`ShapeStyle`、primitive 透传见 `shapes/types.ts`、`primitive/{rect,ellipse,path,index}.ts`；公开导出 `src/index.ts`。
 - compile 展开（`resolveShadow` helper + 外溢角点）：`compile/effects.ts`、`compile/node.ts`、`compile/path/index.ts`、`compile/compile.ts`。
 - renderer：SVG `render/src/svg/builders/shadow-defs.ts` + `prim.ts`（filter 去重注册 + `filter=` 引用）；Canvas `render/src/canvas/draw-scene.ts`。
-- 测试：`packages/core/core/tests/ir/effects-schema.test.ts`、`tests/compile/{node,path}-shadow.test.ts`、`packages/core/render/tests/svg-effects.test.ts`、`packages/core/react/tests/string-react-parity.test.tsx`。
+- 测试：`packages/kernel/core/tests/ir/effects-schema.test.ts`、`tests/compile/{node,path}-shadow.test.ts`、`packages/kernel/render/tests/svg-effects.test.ts`、`packages/kernel/react/tests/string-react-parity.test.tsx`。
 - 文档：`apps/docs/src/contents/core/components/effects/shadow/`。
 
 ---

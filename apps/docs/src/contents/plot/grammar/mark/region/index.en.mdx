@@ -128,7 +128,8 @@ const lowerRegion = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFram
 |  | `series` | `FieldName?` | — | Split rows into multiple filled regions |
 |  | `baseline` | `number?` | `0` | Baseline value for the return edge; in polar2D this usually maps toward inner radius |
 |  | `closed` | `boolean?` | `false` | Connect the final upper point back to the first; the region still closes via baseline |
-| Path | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | Region outline stroke width, whole-path opacity, and fill opacity |
+| Path | `fill` / `stroke` | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?` / `PointStrokeStyle?` | `currentColor` / — | Region fill paint and outline stroke paint |
+|  | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | Region outline stroke width, whole-path opacity, and fill opacity |
 |  | `drawOpacity`<br />`zIndex` / `rotate` | `PointOpacityStyle?`<br />`PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />—<br />— | Stroke opacity, draw order, and rotation |
 |  | `roundedCorners`<br />`lineCap` / `lineJoin` | `MarkValueProp<number>`<br />`FieldName / LineCapValue`<br />`FieldName / LineJoinValue` | —<br />—<br />— | Corner, cap, and join styling |
 |  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | Path scaling, fill rule, and thickness preset |

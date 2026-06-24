@@ -124,7 +124,7 @@ const defineVisualChannel = (def: VisualChannelDefinition): VisualChannelDefinit
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/visual-channel-*.test.ts`（仅内置通道）：
+`packages/graph/plot/tests/lower/visual-channel-*.test.ts`（仅内置通道）：
 
 - **Happy path**：size 经 sqrt 映射半径（面积感知）；opacity 经 linear 映射 [0.2,1]；shape 经 ordinal 循环 glyph；color 仍按字段派生 sequential/ordinal。
 - **边界**：size 全 0 / 空集退化最小半径；单正值取上界；opacity/strokeWidth clamp 越界；ordinal 调色板用尽循环。
@@ -162,7 +162,7 @@ const defineVisualChannel = (def: VisualChannelDefinition): VisualChannelDefinit
 
 `yellow`
 
-判级：动 `packages/plot/plot/src/contract/{channel,scale}.ts`（运行时契约，非 zod IR schema）+ `providers/scale/{channel,color,registry,index}.ts` + `pipeline/expand.ts`（legend 分派）；**不触 `ir/**` 下沉契约、不加公开 API（不动 `src/index.ts` / React）**。一旦纳入「公开扩展 / 全新通道 IR passthrough」（已划出范围）→ 升 `red`、属后续 ADR。范围裁定保证本判级稳定（评审第 2 条 BLOCKING 的处置）。
+判级：动 `packages/graph/plot/src/contract/{channel,scale}.ts`（运行时契约，非 zod IR schema）+ `providers/scale/{channel,color,registry,index}.ts` + `pipeline/expand.ts`（legend 分派）；**不触 `ir/**` 下沉契约、不加公开 API（不动 `src/index.ts` / React）**。一旦纳入「公开扩展 / 全新通道 IR passthrough」（已划出范围）→ 升 `red`、属后续 ADR。范围裁定保证本判级稳定（评审第 2 条 BLOCKING 的处置）。
 
 ### Schema 改动
 
@@ -170,15 +170,15 @@ const defineVisualChannel = (def: VisualChannelDefinition): VisualChannelDefinit
 
 ### 文件 scope
 
-- `packages/plot/plot/src/contract/channel.ts`（修改：新增 `VisualChannelDefinition` / `ChannelOutputSpace` / `defineVisualChannel`；上移 `ChannelResolution` / `ScaleDescriptor`）
-- `packages/plot/plot/src/contract/scale.ts`（修改：`ChannelScaleResolution.of` 放宽）
-- `packages/plot/plot/src/providers/scale/channel.ts`（重写：`makeXxxResolver` → visual channel definitions + 内部 registry + `resolveVisualChannel`）
-- `packages/plot/plot/src/providers/scale/color.ts`（修改：`resolveOrdinalScale` 调色板泛型化）
-- `packages/plot/plot/src/providers/scale/registry.ts`、`providers/scale/index.ts`（修改：internal 组装 / 重导出）
-- `packages/plot/plot/src/pipeline/expand.ts`（修改：通道解析 + legend 按 channel def 形态分派）
-- `packages/plot/plot/tests/lower/visual-channel-*.test.ts`（新建）
+- `packages/graph/plot/src/contract/channel.ts`（修改：新增 `VisualChannelDefinition` / `ChannelOutputSpace` / `defineVisualChannel`；上移 `ChannelResolution` / `ScaleDescriptor`）
+- `packages/graph/plot/src/contract/scale.ts`（修改：`ChannelScaleResolution.of` 放宽）
+- `packages/graph/plot/src/providers/scale/channel.ts`（重写：`makeXxxResolver` → visual channel definitions + 内部 registry + `resolveVisualChannel`）
+- `packages/graph/plot/src/providers/scale/color.ts`（修改：`resolveOrdinalScale` 调色板泛型化）
+- `packages/graph/plot/src/providers/scale/registry.ts`、`providers/scale/index.ts`（修改：internal 组装 / 重导出）
+- `packages/graph/plot/src/pipeline/expand.ts`（修改：通道解析 + legend 按 channel def 形态分派）
+- `packages/graph/plot/tests/lower/visual-channel-*.test.ts`（新建）
 
-**不在 scope（与范围裁定一致）**：`packages/plot/plot/src/index.ts`（无公开 API 新增）、`packages/plot/plot/src/schemas/{encoding,mark}.ts`（无 IR 改动）、`packages/plot/react/**`（无 React 表面）。偏离白名单需回本段加条目并注解，或开新 ADR。
+**不在 scope（与范围裁定一致）**：`packages/graph/plot/src/index.ts`（无公开 API 新增）、`packages/graph/plot/src/schemas/{encoding,mark}.ts`（无 IR 改动）、`packages/graph/plot-react/**`（无 React 表面）。偏离白名单需回本段加条目并注解，或开新 ADR。
 
 ### 测试象限
 

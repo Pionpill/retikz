@@ -234,7 +234,7 @@ renderPlot(spec, { series: rows }, {
 
 ## 测试设计
 
-`packages/plot/plot/tests/scale/registry.test.ts`（新建）+ `tests/lower/scale*.test.ts`（既有，加 registry parity）+ `tests/lower/data-portability.test.ts`（自定义 type round-trip）+ `tests/interaction/*`（locator parity）+ legend 测试覆盖：
+`packages/graph/plot/tests/scale/registry.test.ts`（新建）+ `tests/lower/scale*.test.ts`（既有，加 registry parity）+ `tests/lower/data-portability.test.ts`（自定义 type round-trip）+ `tests/interaction/*`（locator parity）+ legend 测试覆盖：
 
 - 13 内置经 registry 分派与旧 switch 产物逐字节等价（position 投影 + channel 取色两路）
 - 自定义 position scale 注入后 coordinate 投影 + guide ticks 生效；自定义 channel scale 取色 + legend（ramp/swatch）生效
@@ -281,7 +281,7 @@ renderPlot(spec, { series: rows }, {
 
 `red`
 
-判级：动 `packages/plot/plot/src/ir/**`（`ir/scale/scale.ts` + `ir/plot.ts`）+ `packages/plot/*/src/index.ts`（导出 `defineScale`）。跨级取最高 → red。
+判级：动 `packages/graph/plot/src/ir/**`（`ir/scale/scale.ts` + `ir/plot.ts`）+ `packages/graph/*/src/index.ts`（导出 `defineScale`）。跨级取最高 → red。
 
 ### Schema 改动
 
@@ -301,18 +301,18 @@ renderPlot(spec, { series: rows }, {
 
 ### 文件 scope
 
-- `packages/plot/plot/src/ir/scale/scale.ts`（改：加 Custom/Op schema + 内置 type 集 + 类型；`scheme` 字段放宽为 `ColorSchemeNameSchema`；`ScaleSchema` union 成员不变）
-- `packages/plot/plot/src/ir/plot.ts`（改：`scales` 字段换 `ScaleOpSchema`）
-- `packages/plot/plot/src/scale/registry.ts`（新建：`ScaleDefinition` / `ChannelResolveContext` / `defineScale` / `extractType` / `resolveScaleRegistry` / `BUILTIN_SCALES`）
-- `packages/plot/plot/src/scale/scale.ts`（改：`resolvePositionScale` → registry 查表；compat assert 读 registry 元数据；scheme 解析加 colorSchemes 回退；`resolve*` 包成注册项）
-- `packages/plot/plot/src/scale/channel.ts`（改：`ScaleDescriptor.scaleType` 放宽为 string；隐式通道 scale 不动）
-- `packages/plot/plot/src/scale/index.ts`（改：导出 `defineScale` / 类型）
-- `packages/plot/plot/src/pipeline/expand.ts`（改：`makeColorResolver` → registry 查表；`LowerPlotsOptions.{scaleDefinitions,colorSchemes}`；`prepareRows` / `resolveFrame` 解析 + 贯穿 registry）
-- `packages/plot/plot/src/guide/guide.ts`（改：legend form 据 `ChannelResolution.legendForm` 选，非 scaleType 闭集）
-- `packages/plot/plot/src/interaction/locate.ts`（改 / 验证：经 resolveFrame 用同一 registry 保 parity）
-- `packages/plot/plot/src/index.ts`（改：re-export `defineScale` / 类型）
-- `packages/plot/react/src/Plot.tsx` + `components/scales.tsx` + `components/build-plot-spec.ts`（改：`scaleDefinitions` / `colorSchemes` 透传；`<Scale>` 接受自定义 type 扁平透传；build*Scale 透传自定义 type）
-- `packages/plot/plot/tests/scale/registry.test.ts`（新建）· `tests/lower/scale*.test.ts`（改）· `tests/lower/data-portability.test.ts`（改）· `tests/interaction/*`（改）· legend 测试（改 / 新建）
+- `packages/graph/plot/src/ir/scale/scale.ts`（改：加 Custom/Op schema + 内置 type 集 + 类型；`scheme` 字段放宽为 `ColorSchemeNameSchema`；`ScaleSchema` union 成员不变）
+- `packages/graph/plot/src/ir/plot.ts`（改：`scales` 字段换 `ScaleOpSchema`）
+- `packages/graph/plot/src/scale/registry.ts`（新建：`ScaleDefinition` / `ChannelResolveContext` / `defineScale` / `extractType` / `resolveScaleRegistry` / `BUILTIN_SCALES`）
+- `packages/graph/plot/src/scale/scale.ts`（改：`resolvePositionScale` → registry 查表；compat assert 读 registry 元数据；scheme 解析加 colorSchemes 回退；`resolve*` 包成注册项）
+- `packages/graph/plot/src/scale/channel.ts`（改：`ScaleDescriptor.scaleType` 放宽为 string；隐式通道 scale 不动）
+- `packages/graph/plot/src/scale/index.ts`（改：导出 `defineScale` / 类型）
+- `packages/graph/plot/src/pipeline/expand.ts`（改：`makeColorResolver` → registry 查表；`LowerPlotsOptions.{scaleDefinitions,colorSchemes}`；`prepareRows` / `resolveFrame` 解析 + 贯穿 registry）
+- `packages/graph/plot/src/guide/guide.ts`（改：legend form 据 `ChannelResolution.legendForm` 选，非 scaleType 闭集）
+- `packages/graph/plot/src/interaction/locate.ts`（改 / 验证：经 resolveFrame 用同一 registry 保 parity）
+- `packages/graph/plot/src/index.ts`（改：re-export `defineScale` / 类型）
+- `packages/graph/plot-react/src/Plot.tsx` + `components/scales.tsx` + `components/build-plot-spec.ts`（改：`scaleDefinitions` / `colorSchemes` 透传；`<Scale>` 接受自定义 type 扁平透传；build*Scale 透传自定义 type）
+- `packages/graph/plot/tests/scale/registry.test.ts`（新建）· `tests/lower/scale*.test.ts`（改）· `tests/lower/data-portability.test.ts`（改）· `tests/interaction/*`（改）· legend 测试（改 / 新建）
 - `apps/docs/src/contents/.../scale/*.mdx` + `*.demo.tsx`（改 / 新建：`defineScale` 两族 + 自定义 scheme + demo，双语）
 
 偏离白名单需加条目自注或开新 ADR。

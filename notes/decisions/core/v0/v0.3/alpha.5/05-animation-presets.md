@@ -24,7 +24,7 @@ node('a').animations([fadeIn(), spin()])                      // vanilla builder
 
 不做组件 / JSX（动画是挂在元素上的数据数组，不是子树）；函数组合进数组最自然，且天然 framework-agnostic。
 
-### 归属：pure preset 落 **core**（`packages/core/core/src/presets/animation.ts`），react + vanilla re-export
+### 归属：pure preset 落 **core**（`packages/kernel/core/src/presets/animation.ts`），react + vanilla re-export
 
 - preset 是**纯数据构造**（无 React、无 DOM、无新依赖），且 react / vanilla **两个 runtime 都要用**。落 core 单一真源、两 adapter 各 `export { fadeIn, ... } from '@retikz/core'` re-export，避免重复实现。
 - 符合 AGENTS.md「Sugar 共享 pure 部分」的精神（该规则原文指 `core/src/parsers/`，但 preset 是**构造器**不是**解析器**，故新开 `core/src/presets/` 目录、不混进 parsers）。

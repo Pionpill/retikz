@@ -8,7 +8,7 @@
 
 ### 主任务：结构化 Target / Anchor
 
-path target 现状是 6 分支 union（`packages/core/src/ir/path/target.ts:24-35`）：
+path target 现状是 6 分支 union（`packages/kernel/core/src/ir/path/target.ts:24-35`）：
 
 ```ts
 // 现状
@@ -25,10 +25,10 @@ export const TargetSchema = z.union([
 痛点：节点引用的 anchor 语义全藏在字符串里——schema 只看到 `string`，无法约束 anchor 枚举 / 角度 / 边上比例点 / offset；`.` 分隔符把"节点 id 不能含点"这种解析细节暴露给用户；LLM 生成时只能盲拼字符串，错了只能报"字符串解析失败"而非结构化诊断。
 
 解析逻辑现在分两处：
-- `packages/core/src/compile/parseTarget.ts:24-38` `parseNodeRef(s)` —— 编译期把 `'A.north'` 拆成三态 `{ kind:'node'|'anchor'|'angle', ... }`
-- `packages/core/src/parsers/parseTargetSugar.ts:10-21` `parseTargetSugar(input)` —— react / Draw 端只解析 `'+dx,dy'` / `'++dx,dy'` 相对偏移，节点 id 字符串原样透传给 core
+- `packages/kernel/core/src/compile/parseTarget.ts:24-38` `parseNodeRef(s)` —— 编译期把 `'A.north'` 拆成三态 `{ kind:'node'|'anchor'|'angle', ... }`
+- `packages/kernel/core/src/parsers/parseTargetSugar.ts:10-21` `parseTargetSugar(input)` —— react / Draw 端只解析 `'+dx,dy'` / `'++dx,dy'` 相对偏移，节点 id 字符串原样透传给 core
 
-消费方：`packages/core/src/compile/path/anchor.ts` 的 `refPointOfTarget`（17-42）/ `clipForTarget`（58-84）逐 step 调 `parseNodeRef` + `resolveAnchor` / `boundaryPointOf`。
+消费方：`packages/kernel/core/src/compile/path/anchor.ts` 的 `refPointOfTarget`（17-42）/ `clipForTarget`（58-84）逐 step 调 `parseNodeRef` + `resolveAnchor` / `boundaryPointOf`。
 
 ### 并入项：`<TikZ>` → `<Layout>` 命名整理
 
@@ -43,7 +43,7 @@ export const TargetSchema = z.union([
 
 ## 为什么排在最后 / 为什么并入
 
-- **依赖 alpha.3 的 anchor 接口**（接口先后，非排期紧邻）：结构化 anchor 的解释面与 `ShapeDefinition.anchor(rect, name)`（`packages/core/src/shapes/types.ts`）同源。alpha.3 已固化 anchor 接口（命名 anchor 走各 shape `anchor`、数字角度走通用 `angleBoundaryOf`），alpha.6 把 path target 升级为对象 IR 时直接消费这套入口，不出现"内置 4 shape anchor 走旧路径、注册 shape anchor 走新路径"的双轨。
+- **依赖 alpha.3 的 anchor 接口**（接口先后，非排期紧邻）：结构化 anchor 的解释面与 `ShapeDefinition.anchor(rect, name)`（`packages/kernel/core/src/shapes/types.ts`）同源。alpha.3 已固化 anchor 接口（命名 anchor 走各 shape `anchor`、数字角度走通用 `angleBoundaryOf`），alpha.6 把 path target 升级为对象 IR 时直接消费这套入口，不出现"内置 4 shape anchor 走旧路径、注册 shape anchor 走新路径"的双轨。
 - **`{ side, t }` 是本段引入的新几何能力**：现仓库零实现（`AnchorRef` 草案在 roadmap，代码里不存在）。它要求 anchor 解释面从"字符串名"扩到"结构化键"，正好趁对象化一并落地。
 - **并入而非单列改名段**：改名机械、低风险、与 IR/compile/emit/sugar 工作面零交叉；与结构化 Target/Anchor 同属"DSL 整理"主题，AST 白名单 + system prompt 两处**两件事都要改**，并入后一次同步，不必分两段各刷一遍。
 
@@ -119,10 +119,10 @@ export const TargetSchema = z
 
 ### `parseNodeRef` → `parsers/parseNodeTarget`（单一真源，移出 compile 层）
 
-字符串 shorthand 仍要解析成对象，**但只解析在一个地方**。现 `parseNodeRef` 在 `compile/parseTarget.ts`——若让 react adapter 复用它，会形成 parser / adapter 层反向依赖 compile 层。改为**搬到 parser 入口** `packages/core/src/parsers/parseNodeTarget.ts`（与 `parseTargetSugar` 同层），compile 不再消费字符串（core 已对象唯一），唯一消费方是 react adapter（`parseTargetSugar` / `Draw`）：
+字符串 shorthand 仍要解析成对象，**但只解析在一个地方**。现 `parseNodeRef` 在 `compile/parseTarget.ts`——若让 react adapter 复用它，会形成 parser / adapter 层反向依赖 compile 层。改为**搬到 parser 入口** `packages/kernel/core/src/parsers/parseNodeTarget.ts`（与 `parseTargetSugar` 同层），compile 不再消费字符串（core 已对象唯一），唯一消费方是 react adapter（`parseTargetSugar` / `Draw`）：
 
 ```ts
-// packages/core/src/parsers/parseNodeTarget.ts（新文件，从 compile/parseTarget.ts 搬迁 + 改返回类型）
+// packages/kernel/core/src/parsers/parseNodeTarget.ts（新文件，从 compile/parseTarget.ts 搬迁 + 改返回类型）
 import { RECT_ANCHORS, type RectAnchor } from '../geometry/rect';
 import type { IRNodeTarget } from '../ir';
 
@@ -257,9 +257,9 @@ export const resolveEdgePoint = (layout: NodeLayout, side: Side, t: number): IRP
 
 core schema 已对象唯一,字符串 shorthand 必须在抵达 core 前转成对象——react 在构造 IR 时即解析,序列化 / LLM tool schema / JSON patch 都拿对象:
 
-- `parseTargetSugar`（`packages/core/src/parsers/parseTargetSugar.ts`）扩展：现仅解析 `'+dx,dy'`；改为**字符串节点 ref 也经 `parseNodeTarget` 转对象**（相对偏移分支保留在前）。纯函数，react adapter + Draw DSL 共用。
+- `parseTargetSugar`（`packages/kernel/core/src/parsers/parseTargetSugar.ts`）扩展：现仅解析 `'+dx,dy'`；改为**字符串节点 ref 也经 `parseNodeTarget` 转对象**（相对偏移分支保留在前）。纯函数，react adapter + Draw DSL 共用。
 - `builder.ts`（`packages/react/src/kernel/builder.ts:173,184,228,267,276,284`）各 step 已调 `parseTargetSugar(p.to)`——扩展后自动产出对象，无需逐处改。
-- `Draw` / `parseWay`（`packages/core/src/parsers/parseWay.ts` + `sugar/Draw.tsx`）：way item 的节点 ref 字符串同样经 `parseNodeTarget` 归一。
+- `Draw` / `parseWay`（`packages/kernel/core/src/parsers/parseWay.ts` + `sugar/Draw.tsx`）：way item 的节点 ref 字符串同样经 `parseNodeTarget` 归一。
 - 对象形态也要能直接写：用户可写 `<Step kind="line" to={{ id: 'A', anchor: { side: 'north', t: 0.25 } }} />`——builder 透传对象，`parseTargetSugar` 对非字符串原样返回（现行为已支持）。
 
 公开类型（react `src/index.ts`，供用户写对象形态时有类型）：从 `@retikz/core` re-export `IRNodeTarget` / `IRAnchorRef`（或更友好的别名 `NodeTarget` / `AnchorRef`，命名见 §待定）。
@@ -369,7 +369,7 @@ export const TikZ: FC<TikZProps> = props => {
 - **决策 3 — `offset` 用世界系 / 已解析坐标系，不随节点 rotate**：先把 `{ id, anchor }` / `{ side, t }` 解析到最终点，再直接加 `[dx, dy]`；节点旋转只影响 anchor / 边点位置，不旋转 offset。未来若需节点局部偏移，另加显式字段，不让 `offset` 变双语义。
 - **schema 禁非有限数值**：角度 anchor `z.number().finite()`、`offset` 两分量 `.finite()`（与 `position` / `transform` / `font` 既有 `.finite()` 约定一致；NaN/Infinity 与 JSON 可序列化 IR 契约冲突）。
 - **dev-warning 守卫（fail-open + best-effort）**：`<TikZ>` alias 仅当 `typeof process !== 'undefined' && process.env.NODE_ENV === 'production'`（确定性生产）才静默，其余一切环境（含裸 browser ESM / process 未定义）fail-open 到 warn——让真实 docs browser dev 也拿到 deprecation warning；不用 `import.meta.env.DEV`（Vite 专属、CJS 构建 `import.meta` 语法错、跨打包器不可移植）。详 [ADR-03 决策细节 #1](.//03-tikz-to-layout-rename.md)。
-- **`parseNodeTarget` 落 parser 层**：放 `packages/core/src/parsers/`，避免 parser / adapter 反向依赖 compile。
+- **`parseNodeTarget` 落 parser 层**：放 `packages/kernel/core/src/parsers/`，避免 parser / adapter 反向依赖 compile。
 - **计数口径**：parser registry 接受 18 个名字（17 主组件 + `TikZ` 兼容别名）；面向 LLM / 文档的主契约 17 个组件，只列 `Layout`，`TikZ` 为 deprecated alias 不计入。
 
 ## 待定（ADR 阶段敲定）

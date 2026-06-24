@@ -52,6 +52,12 @@ With no `series`, giving `color` a categorical field also splits PathMark implic
 
 <ComponentPreview name="line-color-split" sourceFiles={['line-series.data.ts']} />
 
+### Paint Styles
+
+`stroke` can be an `IRPaintSpec`, such as a linear gradient. Path style props like `strokeWidth`, `lineCap`, and `lineJoin` still apply to the same core `Path`.
+
+<ComponentPreview name="line-paint" sourceFiles={['line-basic.data.ts']} />
+
 ### Geometry Props
 
 `closed` connects the last point back to the first. Under `polar2D`, categories spread along the angular role and values map to radius; the left side is closed, while the right side leaves the final point unconnected.
@@ -139,7 +145,8 @@ The logic has four parts:
 |  | `order` | `FieldName?` | data order | Field bound to connection order |
 |  | `series` | `FieldName?` | — | Split rows into multiple paths |
 |  | `closed` | `boolean?` | `false` | Connect the last point back to the first |
-| Path | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | Path stroke width, whole-path opacity, and fill opacity |
+| Path | `stroke` / `fill` | `FieldName`<br />`IRPaintSpec`<br />`PointStrokeStyle?` / `PointFillStyle?` | `currentColor` / — | Path stroke paint and closed-path fill paint |
+|  | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | Path stroke width, whole-path opacity, and fill opacity |
 |  | `drawOpacity`<br />`zIndex` / `rotate` | `PointOpacityStyle?`<br />`PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />—<br />— | Stroke opacity, draw order, and rotation |
 |  | `roundedCorners` | `MarkValueProp<number>` | — | Rounded corners for path steps |
 |  | `lineCap` / `lineJoin` | `FieldName / LineCapValue`<br />`FieldName / LineJoinValue` | —<br />— | Line cap and join style |

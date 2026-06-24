@@ -47,7 +47,7 @@ alpha.4 的核心不是「再加一个坐标系」那么简单——是**逼出 
 
 无新包（三包脚手架 alpha.1 已建）。alpha.4 主要在 `src/ir/{coordinate,encoding,mark}.ts` 与 `src/lower/{project,expand,mark,guide,scale,layout}.ts` 改 / 加。
 
-- **core 依赖**：消费 core v0.3-alpha.4 的参数化可连接 `sector` / `arc` shape（`packages/core/core/src/shapes/`，params `{ innerRadius, outerRadius, startAngle, endAngle }`，角度 0°=+x / 90°=+y 屏幕 y 向下）；node `shape: { type:'sector', params }`（`ir/shape.ts`）。plot 只消费、不改 core 内部。
+- **core 依赖**：消费 core v0.3-alpha.4 的参数化可连接 `sector` / `arc` shape（`packages/kernel/core/src/shapes/`，params `{ innerRadius, outerRadius, startAngle, endAngle }`，角度 0°=+x / 90°=+y 屏幕 y 向下）；node `shape: { type:'sector', params }`（`ir/shape.ts`）。plot 只消费、不改 core 内部。
 - **d3 依赖**：极坐标投影是自有几何（无需 d3-shape，弧由 core sector 发射）；饼图累积角用自有 transform。**预计无新增 d3 子依赖**——若 02 的 cumulative-angle 复用 `d3-shape` 的 `pie` / `arc`，在对应 ADR 评估后于 catalog 登记。
 
 ## ADR 清单

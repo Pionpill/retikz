@@ -107,7 +107,7 @@ export type ScaleDescriptor = {
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/legend.test.ts`（新建）+ `tests/ir/guide.schema.test.ts`（扩）+ `react/tests/components/buildPlotSpec.test.tsx`（扩）覆盖：union 判别、各通道各 scale 形态派生、descriptor 产出、默认 axes 共存、占位、标签 formatter、多 legend、fail-loud。落地测试见实现指针。
+`packages/graph/plot/tests/lower/legend.test.ts`（新建）+ `tests/ir/guide.schema.test.ts`（扩）+ `react/tests/components/buildPlotSpec.test.tsx`（扩）覆盖：union 判别、各通道各 scale 形态派生、descriptor 产出、默认 axes 共存、占位、标签 formatter、多 legend、fail-loud。落地测试见实现指针。
 
 ## 影响
 
@@ -125,5 +125,5 @@ export type ScaleDescriptor = {
 - **reference line / band 等其它 guide** → 后续（本轮只 axis + legend）。
 - **legend 内排序 / 自定义 swatch 模板** → 顺延。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/ir/guide.ts`、`packages/plot/plot/src/lower/{channel,guide,layout,expand}.ts` 与 `packages/plot/react/src/components/`，测试见 `packages/plot/plot/tests/{ir/guide.schema,lower/legend}.test.ts` 和 `packages/plot/react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/ir/guide.ts`、`packages/graph/plot/src/lower/{channel,guide,layout,expand}.ts` 与 `packages/graph/plot-react/src/components/`，测试见 `packages/graph/plot/tests/{ir/guide.schema,lower/legend}.test.ts` 和 `packages/graph/plot-react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/alpha.8/03-legend-guide.md`（封板全文）。

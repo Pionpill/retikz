@@ -126,7 +126,8 @@ The logic breaks down into four steps:
 |  | `xTo` | `number`<br />`FieldName?` | — | Vertical band upper bound; pairs with `x` to create `x∈[x,xTo]` |
 |  | `yTo` | `number`<br />`FieldName?` | — | Horizontal band upper bound; pairs with `y` to create `y∈[y,yTo]` |
 |  | `extentField` / `extentToField` | `FieldName?` | full opposite domain | Start / end fields for a partial span along the opposite axis; must appear together |
-| Path | `strokeWidth`<br />`opacity` / `drawOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | Reference-line stroke width, whole opacity, and stroke opacity |
+| Path / reference band | `fill` / `stroke` | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?` / `PointStrokeStyle?` | `currentColor` / — | Reference lines use `stroke`; reference bands use `fill` / `stroke` paint |
+|  | `strokeWidth`<br />`opacity` / `drawOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | Reference-line stroke width, whole opacity, and stroke opacity |
 |  | `zIndex` / `rotate` | `PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />— | Reference-line draw order and rotation |
 |  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | Reference-line path scale, fill rule, and thickness preset |
 |  | `arrow` / `arrowDetail` | `PathArrowStyle?`<br />`PathArrowDetailStyle?` | —<br />— | Reference-line arrow direction and details |

@@ -64,7 +64,7 @@ export type BlendModeValue = ValueOf<typeof BlendMode>;
 
 ## 实现指针
 
-- IR / schema：`packages/core/core/src/ir/effects.ts`（`BlendMode` + `BlendModeValue`，公开经 `src/index.ts`）、`ir/node.ts`、`ir/path/path.ts`；透传 `shapes/types.ts`（`ShapeStyle`）、`primitive/{path,rect,ellipse}.ts`（`TextPrim` / `GroupPrim` 不加）。
+- IR / schema：`packages/kernel/core/src/ir/effects.ts`（`BlendMode` + `BlendModeValue`，公开经 `src/index.ts`）、`ir/node.ts`、`ir/path/path.ts`；透传 `shapes/types.ts`（`ShapeStyle`）、`primitive/{path,rect,ellipse}.ts`（`TextPrim` / `GroupPrim` 不加）。
 - 编译：`compile/node.ts`（`toShapeStyle`）、`compile/path/index.ts`。
 - renderer：`render/src/svg/builders/prim.ts`（emit `mix-blend-mode`）、`render/src/canvas/draw-scene.ts`（`withBlend`，参照 `withOpacity` 的 save/set/draw/restore）。
 - React kernel：`react/src/kernel/{Node,Path}.tsx`、`react/src/kernel/_fields.ts`。

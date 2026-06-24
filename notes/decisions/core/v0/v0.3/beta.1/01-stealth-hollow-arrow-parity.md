@@ -56,17 +56,17 @@ openStealth: {
 
 ## 影响范围
 
-- `packages/core/core/src/ir/path/arrow.ts`
+- `packages/kernel/core/src/ir/path/arrow.ts`
   - `ARROW_SHAPES` 加 `openStealth`
   - `HOLLOW_ARROW_SHAPES` 加 `openStealth`
   - **`shape` 字段 `.describe()`**：`built-in 7 (...)` → 8 名，补 `openStealth`
   - **`fill` 字段 `.describe()`**：空心列举 `(open / openDiamond / openCircle)` → 加 `openStealth`
-- `packages/core/core/src/arrows/index.ts`
+- `packages/kernel/core/src/arrows/index.ts`
   - `BUILTIN_ARROWS` 加 `openStealth` 注册项
   - 头部 JSDoc「内置 7」表述同步（JSDoc 是中文、不引 ADR——只更新数量与几何描述）
-- `packages/core/core/tests/arrows/builtin-registry*.test.ts`（注册键数 7→8、几何 golden）
-- `packages/core/core/tests/compile/path-arrow-detail*.test.ts`（fill no-op、color→stroke、refX/shrink）
-- `packages/core/render/tests/*`（SVG/Canvas marker parity，视实现补）
+- `packages/kernel/core/tests/arrows/builtin-registry*.test.ts`（注册键数 7→8、几何 golden）
+- `packages/kernel/core/tests/compile/path-arrow-detail*.test.ts`（fill no-op、color→stroke、refX/shrink）
+- `packages/kernel/render/tests/*`（SVG/Canvas marker parity，视实现补）
 - `apps/docs/src/contents/core/components/draw/arrow/*`（demo + API 表）
 - `apps/docs/src/contents/core/reference/schema/path/*`、`extending/custom-arrow/*`（若文中硬列了 7 名清单）
 

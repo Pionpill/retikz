@@ -38,7 +38,7 @@ roundedCorners: z
 2. **复用已有 fillet 几何，churn 最小**——`filletContour` / `contourCommands` 已实现切圆弧 + clamp，B1 主要是「接线 + 把闭合 fillet 推广到开放折线」，不新造几何。
 3. **只产既有 PathCommand（line + arc），renderer 零改动**——守 renderer-agnostic 红线；几何倒角 vs 描边 join 正交、可共存。
 
-> 实现：core `9f3f3a49`（schema+spec）→ `3b04e046`（折线接缝圆角编译）→ `9ac26761`（react `<Path>` / vanilla draw 透传），修正 `dbdb7cee`；测试 `packages/core/core/tests/compile/path-rounded-corners.test.ts`；最终 schema / 行为以代码为准。
+> 实现：core `9f3f3a49`（schema+spec）→ `3b04e046`（折线接缝圆角编译）→ `9ac26761`（react `<Path>` / vanilla draw 透传），修正 `dbdb7cee`；测试 `packages/kernel/core/tests/compile/path-rounded-corners.test.ts`；最终 schema / 行为以代码为准。
 
 ## DSL 表面
 

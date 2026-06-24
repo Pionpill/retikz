@@ -60,7 +60,7 @@ description: alpha 功能开发的收尾阶段——AI 起草 changelog 草稿�
 - changelog 草稿（zh + en）
 - 本 ADR 涉及的 commit 历史 `git log --oneline <range>`
 - mdx / demo diff
-- schema diff（`git diff <ADR commit 起点>..HEAD -- 'packages/core/core/src/ir/**'`）
+- schema diff（`git diff <ADR commit 起点>..HEAD -- 'packages/kernel/core/src/ir/**'`）
 
 #### 调度方式
 

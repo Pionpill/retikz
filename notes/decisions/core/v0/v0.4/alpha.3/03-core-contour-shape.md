@@ -53,7 +53,7 @@ type ContourParams = {
 - **`points` 坐标系 = core 自动居中**：调用方在任意局部原点给点，core 按 AABB 中心归一化、Node position = 几何中心，无需预居中 / 无需 helper——schema 防不住的「未居中」隐患从此不存在。
 - **builtin（非扩展 shape）**：每个 consumer（react / vanilla / SSR）直接可用，无需各自 `CompileOptions.shapes` 注入。
 
-> 实现：core `e43809f8`（contour 注册 + paramsSchema + spec）→ `cddea5fe`（几何实现：自动按 AABB 中心居中 + 复用轮廓引擎），清理 `8b9f60da`；测试 `packages/core/core/tests/shapes/contour.test.ts`；最终 schema / 行为以代码为准。
+> 实现：core `e43809f8`（contour 注册 + paramsSchema + spec）→ `cddea5fe`（几何实现：自动按 AABB 中心居中 + 复用轮廓引擎），清理 `8b9f60da`；测试 `packages/kernel/core/tests/shapes/contour.test.ts`；最终 schema / 行为以代码为准。
 
 ## DSL 表面
 

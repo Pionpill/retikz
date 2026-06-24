@@ -152,7 +152,8 @@ const lowerCells = (
 |  | `bounds` | `IntervalBounds?` | inferred by role | Explicit band / span / extent / full source for each role |
 |  | `series` | `FieldName?` | — | Series field; split, dodge, or stack intervals |
 |  | `stack` | `boolean?` | `false` | Stack multiple series; omitted series dodge side by side |
-| Node | `opacity` / `fillOpacity` | `PointOpacityStyle?` | — | Cell Node whole and fill opacity |
+| Node | `fill` / `stroke` | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?` / `PointStrokeStyle?` | `currentColor` / — | Cell Node fill and stroke paint |
+|  | `opacity` / `fillOpacity` | `PointOpacityStyle?` | — | Cell Node whole and fill opacity |
 |  | `strokeWidth` | `PointNonnegativeNumberStyle?` | — | Cell Node stroke width |
 |  | `padding` / `minimumSize` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | Cell Node padding and minimum visual size |
 |  | `minimumWidth` / `minimumHeight` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | Minimum visual width / height |

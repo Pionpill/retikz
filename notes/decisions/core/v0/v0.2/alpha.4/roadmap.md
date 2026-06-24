@@ -32,7 +32,7 @@
 
 ### 问题定位（精确到文件 / 行）
 
-全部集中在 `packages/core/src/compile/compile.ts`：
+全部集中在 `packages/kernel/core/src/compile/compile.ts`：
 
 | 位置 | 现状 | 问题 |
 |---|---|---|
@@ -141,7 +141,7 @@ zIndex 是**纯渲染顺序**字段，不参与 layout / 几何 / 文本度量�
 
 #### schema（零破坏，加可选字段）
 
-`packages/core/src/ir/node.ts` `NodeSchema`（末尾，`label` 之后）：
+`packages/kernel/core/src/ir/node.ts` `NodeSchema`（末尾，`label` 之后）：
 
 ```ts
 zIndex: z
@@ -154,9 +154,9 @@ zIndex: z
   ),
 ```
 
-`packages/core/src/ir/path/path.ts` `PathSchema`（`drawOpacity` 之后、`children` 之前）：同字段、同 describe（措辞改"path"）。
+`packages/kernel/core/src/ir/path/path.ts` `PathSchema`（`drawOpacity` 之后、`children` 之前）：同字段、同 describe（措辞改"path"）。
 
-`packages/core/src/ir/scope.ts` `ScopeSchema`（`resetStyle` 之后、`children` 之前）+ 手写 `IRScope` 类型同步加 `zIndex?: number`：
+`packages/kernel/core/src/ir/scope.ts` `ScopeSchema`（`resetStyle` 之后、`children` 之前）+ 手写 `IRScope` 类型同步加 `zIndex?: number`：
 
 ```ts
 zIndex: z
@@ -319,7 +319,7 @@ return [group];
 
 #### schema（`NodeLabelSchema` 加两个可选字段，零破坏）
 
-`packages/core/src/ir/node.ts` `NodeLabelSchema`（`font` 之后）：
+`packages/kernel/core/src/ir/node.ts` `NodeLabelSchema`（`font` 之后）：
 
 ```ts
 rotate: z
@@ -433,7 +433,7 @@ const resolveLabelRotateDeg = (
 
 ## 改动清单
 
-### A. compile IR 顺序回归（`packages/core/src/compile/compile.ts`，走 Spec-First TDD，**red**）
+### A. compile IR 顺序回归（`packages/kernel/core/src/compile/compile.ts`，走 Spec-First TDD，**red**）
 
 | 改动 | 位置 | 说明 |
 |---|---|---|
@@ -445,7 +445,7 @@ const resolveLabelRotateDeg = (
 | sealSink：末端无残留断言 + 收窄 | 构造 `GroupPrim` / 返回 `Scene` 前 | dev 递归断言无 `path-placeholder` 残留，收窄回 `Array<ScenePrimitive>` |
 | 注释订正 | `compile.ts:183` / `:353` | 「一律 push 顶层」改为「`chain` 空回填本层 sink、非空才 hoist」 |
 
-### B. IR / schema（`packages/core`）
+### B. IR / schema（`packages/kernel`）
 
 | 改动 | 位置 | 说明 |
 |---|---|---|
@@ -455,7 +455,7 @@ const resolveLabelRotateDeg = (
 | `NodeDefaultSchema` / `PathDefaultSchema` omit 加 `zIndex` | `ir/scope.ts:19-25` / `:31-36` | zIndex 不进 every-X 默认通道（定位非样式）；`.strict()` 拒 `nodeDefault.zIndex` |
 | `NodeLabelSchema` 加 `rotate` + `keepUpright` | `ir/node.ts:72` `font` 后 | union enum + number / boolean |
 
-### B. compile（`packages/core`）
+### B. compile（`packages/kernel`）
 
 | 改动 | 位置 | 说明 |
 |---|---|---|
@@ -524,13 +524,13 @@ const resolveLabelRotateDeg = (
 
 ### A：回归（既有测试零破坏）
 
-- `cd packages/core && npm run test:run` 全绿；重点盯 `scope.test.ts` / `scope-bbox.test.ts` / `scope-namespace.test.ts` / `path.test.ts` / `path-e2e-snapshot.test.ts` / `shape-baseline-snapshot.test.ts`。
+- `cd packages/kernel && npm run test:run` 全绿；重点盯 `scope.test.ts` / `scope-bbox.test.ts` / `scope-namespace.test.ts` / `path.test.ts` / `path-e2e-snapshot.test.ts` / `shape-baseline-snapshot.test.ts`。
 - transformed scope 内 path 的 Scene 输出与改造前**逐字节相等**（hoist 行为 + 全局坐标不变）；测试名 / 注释标明这是已知限制而非完整 z-order 修复。
 - `z-order.test.ts`（已存在、red）转 green：覆盖顶层 / transform-free scope 内 node·path 交错声明序、占位回填边界、解析失败占位移除、transformed scope path hoist 锁定、占位无泄漏。
 
 ### B：新增测试
 
-**`packages/core/tests/compile/z-index.test.ts`**（zIndex 排序）：
+**`packages/kernel/tests/compile/z-index.test.ts`**（zIndex 排序）：
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -612,7 +612,7 @@ describe('compile zIndex 稳定排序', () => {
 
 > **schema 守卫（同文件或 schema 测试）**：`nodeDefault: { zIndex: 1 }` / `pathDefault: { zIndex: 1 }` 应被 `ScopeSchema` 拒（`.strict()` + omit zIndex）——zIndex 不是可继承样式，加一条 `expect(() => ScopeSchema.parse({ type:'scope', nodeDefault:{ zIndex:1 }, children:[] })).toThrow()` 守卫。
 
-**`packages/core/tests/compile/node-group-wrap.test.ts`**（带文本 Node 包 `<g>`）：
+**`packages/kernel/tests/compile/node-group-wrap.test.ts`**（带文本 Node 包 `<g>`）：
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -648,7 +648,7 @@ describe('emitNodePrimitives：带文本 Node 包 <g>', () => {
 });
 ```
 
-**`packages/core/tests/compile/node-label-rotate.test.ts`**（label 自旋）：
+**`packages/kernel/tests/compile/node-label-rotate.test.ts`**（label 自旋）：
 
 ```ts
 import { describe, expect, it } from 'vitest';

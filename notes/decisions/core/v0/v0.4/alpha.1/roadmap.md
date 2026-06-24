@@ -26,12 +26,12 @@
 
 详 [`ADR-01`](./01-math-package-and-geometry-api.md)。要点：
 
-- scaffold `packages/core/math`（package.json 零依赖 / tsconfig / vite.config external 守卫 `?? {}` / index）。
+- scaffold `packages/kernel/math`（package.json 零依赖 / tsconfig / vite.config external 守卫 `?? {}` / index）。
 - `geometry/` 七模块：`point`（向量 + `dot`/`cross` 新增 + `shiftToward` + `lerp`，迁自 core point/edge）、`transform`（迁自 core）、`arc`（全文件迁自 core）、`intersect`（contour 私有求交提出 + `segmentSegment` 新增；`rayArc` 留 `arc` 模块、不并入——返回标量参数语义不同）、`triangle`（incircle/circumcircle 新增）、`polygon.containsPoint`（新增）、`hull.convexHull`（新增）。
 - 返回形态（ADR-01 决策 4）：`lineLine`/`segmentSegment` → `Position | null`；`lineCircle`/`circleCircle` → `Array<Position>`；`triangle.*` 退化 → `null`。
 - 每模块 TDD 单测；退化 case（平行 / 相切 / 共线 / 零长 / 三点共线 / hull 共线剔除）。现成库（kld / robust-predicates）仅作正确性参考、不进依赖。
 - **文档**：`apps/docs` 新增 `@retikz/math` 包介绍 / 首切 API 能力页（双语 + contents/data/i18n，按 `docs-doc-principle`）——新增公开包必须同步（AGENTS）。
-- **发布分组**（ADR-01 决策 7）：math 加入 core 组 lockstep；更新 `packages/core/AGENTS.md` 发布规则（4 包 → 5 包）；发布版本对齐 core 组 v0.4 线。
+- **发布分组**（ADR-01 决策 7）：math 加入 core 组 lockstep；更新 `packages/kernel/AGENTS.md` 发布规则（4 包 → 5 包）；发布版本对齐 core 组 v0.4 线。
 - 闭环：`pnpm --filter @retikz/math exec tsc --noEmit` + `vitest run` + `eslint` 全过。
 
 ## TODO-2 — core 纯几何下沉 + re-export（ADR-02）

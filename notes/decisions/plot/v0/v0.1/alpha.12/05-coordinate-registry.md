@@ -235,7 +235,7 @@ renderPlot(spec, { series: rows }, { coordinates: [arch] });
 
 ## 测试设计
 
-`packages/plot/plot/tests/coordinate/registry.test.ts`（新建）+ `tests/lower/coordinate*.test.ts`（既有，加 registry parity）+ `tests/lower/data-portability.test.ts`（自定义 type round-trip）+ `tests/interaction/*`（locator parity）覆盖：
+`packages/graph/plot/tests/coordinate/registry.test.ts`（新建）+ `tests/lower/coordinate*.test.ts`（既有，加 registry parity）+ `tests/lower/data-portability.test.ts`（自定义 type round-trip）+ `tests/interaction/*`（locator parity）覆盖：
 
 - 5 内置经 registry 分派与旧 bespoke 分支产物**逐字节等价**（frame + plotArea + gridLayers + axisLayers 四产物，cartesian2D / polar2D / cartesian1D / polar1D / ternary2D 各一组）
 - 自定义 coordinate 注入后投影 + guide（曲线轴）生效；`{type:'arch',...}` 直接判别、`roles` 取自 definition
@@ -280,7 +280,7 @@ renderPlot(spec, { series: rows }, { coordinates: [arch] });
 
 `red`
 
-判级：动 `packages/plot/plot/src/ir/**`（`ir/coordinate/coordinate.ts` + `ir/plot.ts`）+ `packages/plot/*/src/index.ts`（导出 `defineCoordinate`、删 `CustomCoordinateFactory`）。跨级取最高 → red。
+判级：动 `packages/graph/plot/src/ir/**`（`ir/coordinate/coordinate.ts` + `ir/plot.ts`）+ `packages/graph/*/src/index.ts`（导出 `defineCoordinate`、删 `CustomCoordinateFactory`）。跨级取最高 → red。
 
 ### Schema 改动
 
@@ -300,18 +300,18 @@ renderPlot(spec, { series: rows }, { coordinates: [arch] });
 
 ### 文件 scope
 
-- `packages/plot/plot/src/ir/coordinate/coordinate.ts`（改：删 Custom 成员/旧 schema，加 Custom/Op schema + 内置 type 集 + 类型；`CoordinateSchema` 收 5-union）
-- `packages/plot/plot/src/ir/plot.ts`（改：`coordinate` 字段换 `CoordinateOpSchema`）
-- `packages/plot/plot/src/coordinate/define.ts`（新建：`CoordinateDefinition` / `CoordinateResolveContext` / `CoordinateResolution` / `defineCoordinate` / `createCustomCoordinate` / `extractCoordinateType` / `resolveCoordinateRegistry` / `BUILTIN_COORDINATES`）
-- `packages/plot/plot/src/coordinate/cartesian.ts` / `polar.ts` / `ternary.ts`（改：各加内置 `CoordinateDefinition` 注册项，resolve 搬入对应分支；构造器不变）
-- `packages/plot/plot/src/coordinate/types.ts`（改：收纳 `ResolvedCustomCoordinate` 运行时帧契约；`ResolvedCoordinate` union 保留自定义分支）
-- `packages/plot/plot/src/coordinate/constants.ts`（改：删三张内置 roles/guide-dim 表）
-- `packages/plot/plot/src/coordinate/index.ts`（改：导出 `defineCoordinate` / 类型）
-- `packages/plot/plot/src/pipeline/expand.ts`（改：`resolveFrame` 六路 → registry 查表 + `resolve`；组装 `CoordinateResolveContext`；校验改读 registry roles；`LowerPlotsOptions.coordinates` / `ResolveFrameParams.coordinates` 改 Array；registry 解析贯穿）
-- `packages/plot/plot/src/interaction/locate.ts`（改：`coordinates` 改 Array；经 resolveFrame 用同一 registry 保 parity）
-- `packages/plot/plot/src/index.ts`（改：re-export `defineCoordinate` / 类型；删 `CustomCoordinateFactory` / `CustomCoordinateContext`）
-- `packages/plot/react/src/Plot.tsx` + `components/build-plot-spec.ts`（改：`coordinates` prop Record→Array 透传；`coordinate` prop / 坐标系组件接受自定义 type 扁平透传）
-- `packages/plot/plot/tests/coordinate/registry.test.ts`（新建）· `tests/lower/coordinate*.test.ts`（改）· `tests/lower/data-portability.test.ts`（改）· `tests/interaction/*`（改）
+- `packages/graph/plot/src/ir/coordinate/coordinate.ts`（改：删 Custom 成员/旧 schema，加 Custom/Op schema + 内置 type 集 + 类型；`CoordinateSchema` 收 5-union）
+- `packages/graph/plot/src/ir/plot.ts`（改：`coordinate` 字段换 `CoordinateOpSchema`）
+- `packages/graph/plot/src/coordinate/define.ts`（新建：`CoordinateDefinition` / `CoordinateResolveContext` / `CoordinateResolution` / `defineCoordinate` / `createCustomCoordinate` / `extractCoordinateType` / `resolveCoordinateRegistry` / `BUILTIN_COORDINATES`）
+- `packages/graph/plot/src/coordinate/cartesian.ts` / `polar.ts` / `ternary.ts`（改：各加内置 `CoordinateDefinition` 注册项，resolve 搬入对应分支；构造器不变）
+- `packages/graph/plot/src/coordinate/types.ts`（改：收纳 `ResolvedCustomCoordinate` 运行时帧契约；`ResolvedCoordinate` union 保留自定义分支）
+- `packages/graph/plot/src/coordinate/constants.ts`（改：删三张内置 roles/guide-dim 表）
+- `packages/graph/plot/src/coordinate/index.ts`（改：导出 `defineCoordinate` / 类型）
+- `packages/graph/plot/src/pipeline/expand.ts`（改：`resolveFrame` 六路 → registry 查表 + `resolve`；组装 `CoordinateResolveContext`；校验改读 registry roles；`LowerPlotsOptions.coordinates` / `ResolveFrameParams.coordinates` 改 Array；registry 解析贯穿）
+- `packages/graph/plot/src/interaction/locate.ts`（改：`coordinates` 改 Array；经 resolveFrame 用同一 registry 保 parity）
+- `packages/graph/plot/src/index.ts`（改：re-export `defineCoordinate` / 类型；删 `CustomCoordinateFactory` / `CustomCoordinateContext`）
+- `packages/graph/plot-react/src/Plot.tsx` + `components/build-plot-spec.ts`（改：`coordinates` prop Record→Array 透传；`coordinate` prop / 坐标系组件接受自定义 type 扁平透传）
+- `packages/graph/plot/tests/coordinate/registry.test.ts`（新建）· `tests/lower/coordinate*.test.ts`（改）· `tests/lower/data-portability.test.ts`（改）· `tests/interaction/*`（改）
 - `apps/docs/src/contents/.../coordinate/*.mdx` + `*.demo.tsx`（改 / 新建：`defineCoordinate` 章节 + context 契约 + demo + 迁移说明，双语）
 
 偏离白名单需加条目自注或开新 ADR。

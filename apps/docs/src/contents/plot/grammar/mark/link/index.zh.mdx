@@ -127,7 +127,8 @@ const lowerLink = (mark: LinkMark, rows: Array<ExternalRow>, frame: CoordinateFr
 |  | `curvature` | `number?` | `0.5` | cubic 控制点沿主轴外推比例，范围 `0..1` |
 |  | `orientation` | `'horizontal' / 'vertical'?` | `'horizontal'` | 主轴取向：水平左右流或垂直上下流 |
 |  | `color` | `FieldName?` | 默认图层色 | 绑定颜色通道字段，按字段值分组填充 |
-| 路径 | `opacity` / `fillOpacity`<br />`drawOpacity` | `PointOpacityStyle?`<br />`PointOpacityStyle?` | —<br />— | 流带整体、填充和描边透明度 |
+| 路径 | `fill` / `stroke` | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?` / `PointStrokeStyle?` | `currentColor` / — | 流带填充和描边样式 |
+|  | `opacity` / `fillOpacity`<br />`drawOpacity` | `PointOpacityStyle?`<br />`PointOpacityStyle?` | —<br />— | 流带整体、填充和描边透明度 |
 |  | `zIndex` / `rotate` | `PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />— | 绘制顺序和旋转 |
 |  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | 路径缩放、填充规则和厚度预设 |
 |  | `arrow` / `arrowDetail` | `PathArrowStyle?`<br />`PathArrowDetailStyle?` | —<br />— | 箭头方向与细节 |

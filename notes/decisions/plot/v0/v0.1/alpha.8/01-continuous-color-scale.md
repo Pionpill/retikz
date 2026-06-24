@@ -91,7 +91,7 @@ renderPlot(
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/continuous-color.test.ts`（新建）+ `tests/ir/scale.schema.test.ts`（扩）覆盖：sequential / diverging 求值、端点 / 中点映射、scheme 取色、range 覆盖、domain 推断、line/area 连续色 fail-loud、React type-driven 派生。落地测试见实现指针。
+`packages/graph/plot/tests/lower/continuous-color.test.ts`（新建）+ `tests/ir/scale.schema.test.ts`（扩）覆盖：sequential / diverging 求值、端点 / 中点映射、scheme 取色、range 覆盖、domain 推断、line/area 连续色 fail-loud、React type-driven 派生。落地测试见实现指针。
 
 ## 影响
 
@@ -109,5 +109,5 @@ renderPlot(
 - **React 显式 `<ColorScale>` DSL / diverging React 入口** → 顺延。
 - **多 hue 自定义插值 / 自定义 interpolator 函数** → 不做（IR 须可序列化，只命名 scheme + range 端点）。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/ir/scale.ts`、`packages/plot/plot/src/lower/{scale,expand}.ts` 与 `packages/plot/react/src/components/buildPlotSpec.ts`，测试见 `packages/plot/plot/tests/{ir/scale.schema,lower/continuous-color}.test.ts` 和 `packages/plot/react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/ir/scale.ts`、`packages/graph/plot/src/lower/{scale,expand}.ts` 与 `packages/graph/plot-react/src/components/buildPlotSpec.ts`，测试见 `packages/graph/plot/tests/{ir/scale.schema,lower/continuous-color}.test.ts` 和 `packages/graph/plot-react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/alpha.8/01-continuous-color-scale.md`（封板全文）。

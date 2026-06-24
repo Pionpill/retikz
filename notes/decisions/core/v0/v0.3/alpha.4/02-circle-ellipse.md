@@ -20,7 +20,7 @@
 ellipse 的 `paramsSchema` 加外接策略参数；circle 不再有独立几何，编译期规范化为 ellipse 的 `equal` preset。
 
 ```ts
-// packages/core/core/src/shapes/ellipse.ts —— 经 defineShape，nested params
+// packages/kernel/core/src/shapes/ellipse.ts —— 经 defineShape，nested params
 export const ellipse = defineShape({
   paramsSchema: z.strictObject({
     circumscribe: z

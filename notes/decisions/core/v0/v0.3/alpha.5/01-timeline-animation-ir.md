@@ -35,7 +35,7 @@
 ### IR 侧
 
 ```ts
-// packages/core/core/src/ir/animation.ts（新建）
+// packages/kernel/core/src/ir/animation.ts（新建）
 
 /** 内置可动画属性通道（renderer 无关；DrawWay 风格，裸字面量第一形态）。property 字段开放（见下），这里只是内置集 + 自动补全锚 */
 export const AnimationProperty = {

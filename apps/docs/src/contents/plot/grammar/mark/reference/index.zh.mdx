@@ -126,7 +126,8 @@ const lowerReference = (mark: ReferenceMark, rows: Array<ExternalRow>, frame: Ex
 |  | `xTo` | `number`<br />`FieldName?` | — | 竖直 band 上界；与 `x` 配对生成 `x∈[x,xTo]` |
 |  | `yTo` | `number`<br />`FieldName?` | — | 水平 band 上界；与 `y` 配对生成 `y∈[y,yTo]` |
 |  | `extentField` / `extentToField` | `FieldName?` | 对侧轴满域 | 对侧维部分长度起止字段，必须成对出现 |
-| 路径 | `strokeWidth`<br />`opacity` / `drawOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | 参考线描边宽度、整体透明度和描边透明度 |
+| 路径 / 参考带 | `fill` / `stroke` | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?` / `PointStrokeStyle?` | `currentColor` / — | 参考线使用 `stroke`；参考带使用 `fill` / `stroke` 样式 |
+|  | `strokeWidth`<br />`opacity` / `drawOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | 参考线描边宽度、整体透明度和描边透明度 |
 |  | `zIndex` / `rotate` | `PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />— | 参考线绘制顺序和旋转 |
 |  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | 参考线路径缩放、填充规则和厚度预设 |
 |  | `arrow` / `arrowDetail` | `PathArrowStyle?`<br />`PathArrowDetailStyle?` | —<br />— | 参考线箭头方向与细节 |

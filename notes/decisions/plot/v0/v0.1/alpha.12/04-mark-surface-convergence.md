@@ -90,7 +90,7 @@ react 便捷 props → 抽象 IR：
 
 ## 测试设计
 
-`packages/plot/react/tests/` + `packages/plot/vanilla/tests/` 覆盖：
+`packages/graph/plot-react/tests/` + `packages/graph/plot-vanilla/tests/` 覆盖：
 
 - `<IntervalMark x y>` / 双 band / `series`(dodge) / 显式 `bounds` 经 build-plot-spec 装配出的 PlotSpec 与手写抽象 IR 等价；plot-react **不自动注入 transform**（饼 / 堆叠须显式 `<Transform>`）。
 - `<PointMark text>` → `encoding.text`；旧 `<TextMark>` 已删（import 失败 / 类型不存在）。
@@ -124,7 +124,7 @@ react 便捷 props → 抽象 IR：
 
 `red`
 
-判级：动 `packages/plot/{react,vanilla}/src/index.ts`（公开组件导出改名 / 删除）。docs / 测试为 green，跨级取最高 → red。
+判级：动 `packages/graph/{react,vanilla}/src/index.ts`（公开组件导出改名 / 删除）。docs / 测试为 green，跨级取最高 → red。
 
 ### Schema 改动
 
@@ -132,11 +132,11 @@ react 便捷 props → 抽象 IR：
 
 ### 文件 scope
 
-- `packages/plot/react/src/components/marks.tsx`（修改：6 组件改名 / 合并、props 调整）
-- `packages/plot/react/src/components/build-plot-spec.ts`（修改：便捷 props → 抽象 `bounds` IR 映射）
-- `packages/plot/react/src/components/index.ts` / `packages/plot/react/src/index.ts`（修改：导出调整）
-- `packages/plot/vanilla/tests/**`（修改：新 spec / parity）
-- `packages/plot/react/tests/**`（新建 / 修改：组件装配 + 等价性）
+- `packages/graph/plot-react/src/components/marks.tsx`（修改：6 组件改名 / 合并、props 调整）
+- `packages/graph/plot-react/src/components/build-plot-spec.ts`（修改：便捷 props → 抽象 `bounds` IR 映射）
+- `packages/graph/plot-react/src/components/index.ts` / `packages/graph/plot-react/src/index.ts`（修改：导出调整）
+- `packages/graph/plot-vanilla/tests/**`（修改：新 spec / parity）
+- `packages/graph/plot-react/tests/**`（新建 / 修改：组件装配 + 等价性）
 - `apps/docs/src/contents/plot/grammar/**`（修改 / 新建：抽象 mark 页 + 图表示例改写，zh/en）
 - `apps/docs/src/contents/plot/**` 的 `data/plot.ts` + i18n（修改：contents + data + i18n 同步）
 

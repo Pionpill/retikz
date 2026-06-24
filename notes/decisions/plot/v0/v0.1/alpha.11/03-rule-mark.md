@@ -65,10 +65,10 @@ DSL / API 两套表面（IR `{value}`/`{field}` 互斥；React `<RuleMark>` 扁�
 ## 实现指针
 
 - 实现 commit：`d0071529`（后续对抗审查修复见 `f0085156` 的 ribbon/rule 边界修复）。
-- IR schema：`packages/plot/plot/src/ir/mark.ts`（`PlotMark.Rule` + `RuleMarkSchema` + 并入 `MarkSchema` discriminatedUnion + `RuleMark` 类型）。
-- lowering：`packages/plot/plot/src/lower/mark.ts`（`lowerRule`，line 产 core Path、band 经 `frame.projectCell` 出 Node）。
-- React sugar：`packages/plot/react/src/components/marks.tsx`（`RuleMark` / `RuleMarkProps`）+ `packages/plot/react/src/components/build-plot-spec.ts`（扁平 props → rule IR 装配 + fail-loud 校验）。
-- 测试：`packages/plot/plot/tests/lower/rule.test.ts`、`packages/plot/react/tests/components/build-plot-spec.test.tsx`、`packages/plot/vanilla/tests/render-plot.test.ts`。
+- IR schema：`packages/graph/plot/src/ir/mark.ts`（`PlotMark.Rule` + `RuleMarkSchema` + 并入 `MarkSchema` discriminatedUnion + `RuleMark` 类型）。
+- lowering：`packages/graph/plot/src/lower/mark.ts`（`lowerRule`，line 产 core Path、band 经 `frame.projectCell` 出 Node）。
+- React sugar：`packages/graph/plot-react/src/components/marks.tsx`（`RuleMark` / `RuleMarkProps`）+ `packages/graph/plot-react/src/components/build-plot-spec.ts`（扁平 props → rule IR 装配 + fail-loud 校验）。
+- 测试：`packages/graph/plot/tests/lower/rule.test.ts`、`packages/graph/plot-react/tests/components/build-plot-spec.test.tsx`、`packages/graph/plot-vanilla/tests/render-plot.test.ts`。
 - 文档 + demo：`apps/docs/src/contents/plot/components/mark/rule/`（line / band / per-datum demo，zh / en）。
 
 ---

@@ -1,6 +1,6 @@
 # v0.2.0-alpha.3 实施待办：Shape Registry（打开 NodeShape + ShapeDefinition 注入面）
 
-> ✅ **完工留档（2026-05-22）**：按本 plan + [ADR-01](.//01-shape-registry.md)（已 Accepted）落地。新建 `packages/core/src/shapes/`（`ShapeDefinition` / `ShapeStyle` + 内置 4 注册项 + `BUILTIN_SHAPES`）；`NodeSchema.shape` 开放 `z.string().min(1)`、`BuiltinShapeName` / `NodeShape` 分离；`compile/node.ts` 5 分发点查表 + `NodeLayout` `shape`→`shapeName`+`shapeDef`、`inflateRect` generic、删 `*Of`/`unrotated`；`CompileOptions.shapes` 注入 + `SHAPE_OVERRIDES_BUILTIN` warn + 未知名 throw；synthetic layout 挂 `BUILTIN_SHAPES.rectangle`；公开 API + `<TikZ shapes>` 透传 + 文档站「自定义 Shape」页。内置 4 shape 改造前后 Scene 逐字节相等（`tests/compile/shape-baseline-snapshot.test.ts`）。core 941 / react 264 / docs 54 全过。
+> ✅ **完工留档（2026-05-22）**：按本 plan + [ADR-01](.//01-shape-registry.md)（已 Accepted）落地。新建 `packages/kernel/core/src/shapes/`（`ShapeDefinition` / `ShapeStyle` + 内置 4 注册项 + `BUILTIN_SHAPES`）；`NodeSchema.shape` 开放 `z.string().min(1)`、`BuiltinShapeName` / `NodeShape` 分离；`compile/node.ts` 5 分发点查表 + `NodeLayout` `shape`→`shapeName`+`shapeDef`、`inflateRect` generic、删 `*Of`/`unrotated`；`CompileOptions.shapes` 注入 + `SHAPE_OVERRIDES_BUILTIN` warn + 未知名 throw；synthetic layout 挂 `BUILTIN_SHAPES.rectangle`；公开 API + `<TikZ shapes>` 透传 + 文档站「自定义 Shape」页。内置 4 shape 改造前后 Scene 逐字节相等（`tests/compile/shape-baseline-snapshot.test.ts`）。core 941 / react 264 / docs 54 全过。
 >
 > 写于 2026-05-21。v0.2 第三段；plan 与 ADR 在 next 分支起草，alpha.1 出关后再开实施代码。完工后保留留档（摘要见 v0.2.md 跟踪段）。
 >
@@ -85,7 +85,7 @@ export type ShapeDefinition = {
 
 ## 实现拆分
 
-1. **shapes/ 扩展面**（packages/core）：`types.ts`（`ShapeDefinition` / `ShapeStyle`）；`{rectangle,circle,ellipse,diamond}.ts` 4 注册项（内部复用 `geometry/*` 纯数学 ops，数学层不动）；`index.ts`（`BUILTIN_SHAPES: Record<BuiltinShapeName, ...>` + helper re-export）。
+1. **shapes/ 扩展面**（packages/kernel）：`types.ts`（`ShapeDefinition` / `ShapeStyle`）；`{rectangle,circle,ellipse,diamond}.ts` 4 注册项（内部复用 `geometry/*` 纯数学 ops，数学层不动）；`index.ts`（`BUILTIN_SHAPES: Record<BuiltinShapeName, ...>` + helper re-export）。
 2. **schema + 类型**：`ir/node.ts` 的 `shape` 改 `z.string().min(1)` + describe；加 `BuiltinShapeName`、重定义 `NodeShape` 为开放名。
 3. **compile 查表**：`compile/compile.ts` 加 `CompileOptions.shapes` + 有效表解析 + 覆盖 warn（onWarn 通道）+ 未知 throw-only + warn code `SHAPE_OVERRIDES_BUILTIN`；`compile/node.ts` 5 分发点 switch → 查表、emit 搬迁、NodeLayout `shape`→`shapeName` + 加必填 `shapeDef`、删 `*Of`/`unrotated`、margin 走 generic `inflateRect`。
 4. **synthetic layout shapeDef**：`compile/compile.ts` 的 `zeroSizeRectAt`（coordinate / scope.id 占位）+ `compile/scope.ts` 的 `registerScopeAsLayout`（scope bbox）显式挂 `shapeDef: BUILTIN_SHAPES.rectangle`。
@@ -98,7 +98,7 @@ export type ShapeDefinition = {
 
 - `apps/docs/.../reference/schema/**`：`shape` 字段描述更新（开放 string + 注册扩展点）
 - `apps/docs/.../core/**`：新增「自定义 shape / Shape Registry」章节——`ShapeDefinition` 四方法 + factory 模式示例（`createPolygonShape`）+ `CompileOptions.shapes` 注入 + 覆盖内置 warn；配 demo
-- `AGENTS.md` / `packages/core/AGENTS.md`：Shape Registry 一节（IR 字符串 + 运行时注入的边界）
+- `AGENTS.md` / `packages/kernel/AGENTS.md`：Shape Registry 一节（IR 字符串 + 运行时注入的边界）
 - system prompt：注明 shape 开放扩展 + 列举已注册名
 
 ## 验收

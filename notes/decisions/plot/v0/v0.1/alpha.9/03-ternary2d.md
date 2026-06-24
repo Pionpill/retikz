@@ -39,6 +39,6 @@ ADR-01 把 frame 泛化成 N 通道、x/y 转可选后，ternary2D（三元图�
 
 ## 实现指针
 
-最终形态见 `packages/plot/plot/src/ir/{coordinate,encoding,guide}.ts`（`Ternary2DSchema` / a/b/c 通道 / `GuideDimension` A/B/C）、`src/lower/project.ts`（ternary frame + 重心投影 + 归一化 + 上溢 fail-loud）、`src/lower/layout.ts`（三角占位）、`src/lower/guide.ts`（三角轴 + 三向网格）；测试 `tests/lower/ternary2d.test.ts` + `tests/ir/{coordinate,encoding,guide}.schema.test.ts`，「和上溢 Infinity」回归见 `tests/lower/` adversarial 用例。
+最终形态见 `packages/graph/plot/src/ir/{coordinate,encoding,guide}.ts`（`Ternary2DSchema` / a/b/c 通道 / `GuideDimension` A/B/C）、`src/lower/project.ts`（ternary frame + 重心投影 + 归一化 + 上溢 fail-loud）、`src/lower/layout.ts`（三角占位）、`src/lower/guide.ts`（三角轴 + 三向网格）；测试 `tests/lower/ternary2d.test.ts` + `tests/ir/{coordinate,encoding,guide}.schema.test.ts`，「和上溢 Infinity」回归见 `tests/lower/` adversarial 用例。
 
 > 🔖 本文件压缩前完整施工蓝图 = `git show 329fb8b7:notes/decisions/plot/v0/v0.1/alpha.9/03-ternary2d.md`（封板全文）。

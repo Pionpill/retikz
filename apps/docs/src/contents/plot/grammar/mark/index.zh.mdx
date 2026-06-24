@@ -33,6 +33,26 @@ plot 的 mark 不直接拥有渲染 primitive；lowering 之后都会变成 [@re
 | `ReferenceMark` | [Path](/core/components/draw/path) / [Node](/core/components/node/overview) | 参考线下沉为 Path；参考带下沉为区间 Node |
 | `LinkMark` | [Path](/core/components/draw/path) | source / target 两端生成闭合 cubic Path，fill 后形成流带 |
 
+## 填充与描边
+
+`fill` / `stroke` 可以写纯色，也可以写 core `IRPaintSpec`。常量样式会随 mark 下沉到对应的 Node 或 Path 默认样式；字段绑定仍走颜色 scale，适合按类别或数值映射颜色。
+
+```tsx
+const sunsetStroke = {
+  kind: 'linearGradient',
+  angle: 0,
+  stops: [
+    { offset: 0, color: '#38bdf8' },
+    { offset: 1, color: '#f97316' },
+  ],
+};
+
+<PathMark x="month" y="revenue" order="month" stroke={sunsetStroke} />
+<IntervalMark x="month" y="revenue" fill={sunsetStroke} />
+```
+
+渐变、图案和图片填充都由 core 资源表处理；plot 不拼接 renderer 私有的 `url(#...)`，因此 SVG 和 Canvas 后端会复用同一份语义。
+
 ## 注册图元
 
 <div className="grid gap-3 sm:grid-cols-2">

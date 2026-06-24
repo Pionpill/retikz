@@ -33,6 +33,26 @@ plot marks do not own renderer primitives directly; after lowering, they become 
 | `ReferenceMark` | [Path](/core/components/draw/path) / [Node](/core/components/node/overview) | Reference lines lower to Paths; reference bands lower to interval Nodes |
 | `LinkMark` | [Path](/core/components/draw/path) | Source / target endpoints form a closed cubic Path, filled as a flow band |
 
+## Paint Styles
+
+`fill` / `stroke` can be solid colors or core `IRPaintSpec` objects. Constant paint lowers to the matching Node or Path default style; field bindings still go through color scales, which is the right path for category or numeric color mapping.
+
+```tsx
+const sunsetStroke = {
+  kind: 'linearGradient',
+  angle: 0,
+  stops: [
+    { offset: 0, color: '#38bdf8' },
+    { offset: 1, color: '#f97316' },
+  ],
+};
+
+<PathMark x="month" y="revenue" order="month" stroke={sunsetStroke} />
+<IntervalMark x="month" y="revenue" fill={sunsetStroke} />
+```
+
+Gradients, patterns, and image paint are handled by the core resource table. plot does not assemble renderer-private `url(#...)` values, so SVG and Canvas consume the same semantics.
+
 ## Registered Marks
 
 <div className="grid gap-3 sm:grid-cols-2">
