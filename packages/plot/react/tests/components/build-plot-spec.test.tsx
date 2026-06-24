@@ -1,10 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema, isBuiltinMark, lowerPlots } from '@retikz/plot';
+import { type IRPaintSpec, type PlotSpec, PlotSpecSchema, isBuiltinMark, lowerPlots } from '@retikz/plot';
 import { buildPlotSpec, decorateDefaultGuides } from '../../src/components/build-plot-spec';
 import { Axis, Legend } from '../../src/components/guides';
-import { IntervalMark, PathMark, PointMark, ReferenceMark, RegionMark } from '../../src/components/marks';
+import { IntervalMark, LinkMark, PathMark, PointMark, ReferenceMark, RegionMark } from '../../src/components/marks';
 import { Scale } from '../../src/components/scales';
 import { Transform } from '../../src/components/transform';
+
+const gradientPaint: IRPaintSpec = {
+  kind: 'linearGradient',
+  angle: 90,
+  stops: [
+    { offset: 0, color: '#38bdf8' },
+    { offset: 1, color: '#0f172a' },
+  ],
+};
 
 describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P1）', () => {
   it('有 model 时省略 AUTO 位置 scale 绑定（交给 expand 派生）', () => {
@@ -61,6 +70,65 @@ describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P
     );
     expect(spec.coordinate).toEqual({ type: 'cartesian2D', x: '__x' });
     expect(spec.scales).toEqual([{ type: 'time', name: '__x' }]);
+  });
+});
+
+describe('buildPlotSpec paint props', () => {
+  it('point paint props pass through to mark IR', () => {
+    const spec = buildPlotSpec(<PointMark x="x" y="y" fill={gradientPaint} stroke={gradientPaint} />, '__plot');
+    expect(spec.marks[0]).toMatchObject({
+      type: 'point',
+      fill: { kind: 'constant', value: gradientPaint },
+      stroke: { kind: 'constant', value: gradientPaint },
+    });
+  });
+
+  it('path paint props pass through to mark IR', () => {
+    const spec = buildPlotSpec(<PathMark x="x" y="y" fill={gradientPaint} stroke={gradientPaint} />, '__plot');
+    expect(spec.marks[0]).toMatchObject({
+      type: 'path',
+      fill: { kind: 'constant', value: gradientPaint },
+      stroke: { kind: 'constant', value: gradientPaint },
+    });
+  });
+
+  it('interval paint props pass through to mark IR', () => {
+    const spec = buildPlotSpec(<IntervalMark x="month" y="revenue" fill={gradientPaint} stroke={gradientPaint} />, '__plot');
+    expect(spec.marks[0]).toMatchObject({
+      type: 'interval',
+      fill: { kind: 'constant', value: gradientPaint },
+      stroke: { kind: 'constant', value: gradientPaint },
+    });
+  });
+
+  it('region paint props pass through to mark IR', () => {
+    const spec = buildPlotSpec(<RegionMark x="x" y="y" fill={gradientPaint} stroke={gradientPaint} />, '__plot');
+    expect(spec.marks[0]).toMatchObject({
+      type: 'region',
+      fill: { kind: 'constant', value: gradientPaint },
+      stroke: { kind: 'constant', value: gradientPaint },
+    });
+  });
+
+  it('reference paint props pass through to mark IR', () => {
+    const spec = buildPlotSpec(<ReferenceMark y={8} yTo={12} fill={gradientPaint} stroke={gradientPaint} />, '__plot');
+    expect(spec.marks[0]).toMatchObject({
+      type: 'reference',
+      fill: { kind: 'constant', value: gradientPaint },
+      stroke: { kind: 'constant', value: gradientPaint },
+    });
+  });
+
+  it('link paint props pass through to mark IR', () => {
+    const spec = buildPlotSpec(
+      <LinkMark sourceX="sourceX" sourceY="sourceY" targetX="targetX" targetY="targetY" value="value" fill={gradientPaint} stroke={gradientPaint} />,
+      '__plot',
+    );
+    expect(spec.marks[0]).toMatchObject({
+      type: 'link',
+      fill: { kind: 'constant', value: gradientPaint },
+      stroke: { kind: 'constant', value: gradientPaint },
+    });
   });
 });
 

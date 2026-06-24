@@ -1,4 +1,5 @@
 import { isFiniteNumber } from '@retikz/math';
+import { type IRPaintSpec, PaintSpecSchema } from '@retikz/core';
 import { ChannelDefinitionKind, type ChannelResolveContext, type MarkChannelDefinition, isBuiltinScaleOperation } from '../../contract';
 import { type Channel, type MarkOperation, PlotFieldType, type PlotFieldTypeMap, PlotScale, type PlotSpec, type ScaleOperation } from '../../schemas';
 import { coerceTimestamp, resolveFieldPath } from '../data';
@@ -7,13 +8,25 @@ import { type CategoryOrder, orderedCategoryDomain, resolveChannelScale } from '
 export type ColorChannelDefinitionOptions = {
   channel: string;
   pick: (mark: MarkOperation) => Channel | undefined;
+  constantPaint?: boolean;
+};
+
+export type PlotPaint = string | IRPaintSpec;
+
+const parsePaintConstant = (channelName: string, value: unknown, allowPaintSpec: boolean): PlotPaint => {
+  if (typeof value === 'string') return value;
+  if (allowPaintSpec) {
+    const result = PaintSpecSchema.safeParse(value);
+    if (result.success) return result.data;
+  }
+  throw new Error(`lowerPlots: constant ${channelName} channel must be a CSS color string${allowPaintSpec ? ' or core PaintSpec' : ''}`);
 };
 
 /**
  * 创建 color-like mark 通道（color / fill / stroke）。
  * @description 常量 value 直返；字段值经 channel scale registry 取色。连续 / temporal 字段必须显式引用 color scale。
  */
-export const makeColorChannelDefinition = (options: ColorChannelDefinitionOptions): MarkChannelDefinition<string> => ({
+export const makeColorChannelDefinition = (options: ColorChannelDefinitionOptions): MarkChannelDefinition<PlotPaint> => ({
   channel: options.channel,
   kind: ChannelDefinitionKind.Mark,
   resolve: ctx => {
@@ -26,8 +39,8 @@ export const makeColorChannelDefinition = (options: ColorChannelDefinitionOption
       const channel = options.pick(mark);
       if (!channel) return undefined;
       if (channel.value !== undefined) {
-        const constant = String(channel.value);
-        return { resolver: () => constant };
+        const constant = parsePaintConstant(options.channel, channel.value, options.constantPaint ?? false);
+        return { resolver: () => constant, defaultValue: constant };
       }
       if (channel.field === undefined) return undefined;
       if (ctx.scaleRegistry === undefined || ctx.resolveColorScheme === undefined) {
@@ -78,9 +91,9 @@ const colorResolveContext = (node: PlotSpec, fieldTypes: PlotFieldTypeMap, field
 });
 
 export type BuiltinPaintChannels = {
-  color: MarkChannelDefinition<string>;
-  fill: MarkChannelDefinition<string>;
-  stroke: MarkChannelDefinition<string>;
+  color: MarkChannelDefinition<PlotPaint>;
+  fill: MarkChannelDefinition<PlotPaint>;
+  stroke: MarkChannelDefinition<PlotPaint>;
 };
 
 const markValueChannel = (value: unknown): Channel | undefined => {
@@ -104,9 +117,11 @@ export const createBuiltinPaintChannels = (): BuiltinPaintChannels => ({
   fill: makeColorChannelDefinition({
     channel: 'fill',
     pick: mark => markValueChannel((mark as Record<string, unknown>).fill),
+    constantPaint: true,
   }),
   stroke: makeColorChannelDefinition({
     channel: 'stroke',
     pick: mark => markValueChannel((mark as Record<string, unknown>).stroke),
+    constantPaint: true,
   }),
 });

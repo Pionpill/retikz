@@ -49,6 +49,12 @@ Node style props such as `stroke`, `strokeWidth`, `opacity`, `fillOpacity`, and 
 
 <ComponentPreview name="point-style" sourceFiles={['point-api.data.ts']} />
 
+### Paint Styles
+
+Besides solid colors, `fill` / `stroke` can take `IRPaintSpec` objects. Constant paint lowers into the core `Node` default style; use `color` or field-bound paint when the color should be data-driven.
+
+<ComponentPreview name="point-paint" sourceFiles={['point-api.data.ts']} />
+
 ### Text Props
 
 For text attached to dots, prefer `label`: it writes to the core `Node.label` on each point, so a single `PointMark` can draw the dot and its label. `labelPosition`, `labelDistance`, and `labelPin` mirror core Node label placement, spacing, and leader lines. `text` is a different mode: it replaces the point itself with a borderless text Node, useful when the mark itself should be text. `dx` / `dy` apply a small screen-space offset.
@@ -161,7 +167,7 @@ Style bindings use one shared `MarkValueType<T>` type: `{ kind: 'field', value: 
 | Position | `x` / `y` / `z` | `FieldName?` | — | Coordinate role fields; the active coordinate validates required roles |
 | Specific | `color` | `FieldName`<br />`PointColorStyle?` | — | Mark semantic color; field bindings create a color channel and legend |
 |  | `fill` | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?` | `currentColor` | Point fill; `color` takes over when bound |
-|  | `stroke` | `FieldName`<br />`PointStrokeStyle?` | — | Point stroke color |
+|  | `stroke` | `FieldName`<br />`IRPaintSpec`<br />`PointStrokeStyle?` | — | Point stroke paint; field bindings still go through a color scale |
 | Node | `size` | `FieldName`<br />`number`<br />`PointSizeStyle?` | — | Point-only radius channel; field values use a sqrt scale |
 |  | `shape` | `FieldName`<br />`NodeShapeChannelValue`<br />`PointShapeStyle?` | — | Point-only shape channel; categorical fields map to point shapes |
 |  | `textColor` | `FieldName`<br />`PointColorStyle?` | — | Text color for text points |

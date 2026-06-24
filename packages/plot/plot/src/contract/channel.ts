@@ -184,7 +184,7 @@ export type MarkChannelResolution<T extends ChannelValue = ChannelValue> = {
   /** 逐行通道值解析器。 */
   resolver: ChannelValueResolver<T>;
   /** 默认值，供 mark 在无字段编码时上提到 nodeDefault / pathDefault。 */
-  defaultValue?: ScalarValue;
+  defaultValue?: ChannelValue;
   /** 可选 legend descriptor。 */
   descriptor?: ScaleDescriptor;
 };

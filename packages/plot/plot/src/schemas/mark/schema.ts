@@ -51,7 +51,7 @@ export const PointFillStyleSchema = markValueSchema(StylePaintSchema, 'Data fiel
 export const PointColorStyleSchema = markValueSchema(z.string().min(1), 'Data field path bound to point color', 'Constant point color', 'point color value');
 export const PointSizeStyleSchema = markValueSchema(StyleNonnegativeNumberSchema, 'Data field path bound to point size', 'Constant final glyph radius', 'point size value');
 export const PointShapeStyleSchema = markValueSchema(StyleShapeSchema, 'Data field path bound to point shape', 'Constant core Node shape name or shape ref', 'point shape value');
-export const PointStrokeStyleSchema = markValueSchema(z.string().min(1), 'Data field path bound to point stroke color', 'Constant core Node stroke color', 'point stroke style value');
+export const PointStrokeStyleSchema = markValueSchema(StylePaintSchema, 'Data field path bound to point stroke paint', 'Constant core Node stroke paint', 'point stroke style value');
 export const PointNumberStyleSchema = markValueSchema(StyleNumberSchema, 'Data field path bound to a numeric point style value', 'Constant numeric style value', 'point numeric style value');
 export const PointNonnegativeNumberStyleSchema = markValueSchema(
   StyleNonnegativeNumberSchema,
@@ -110,6 +110,8 @@ const coreNodeStyle = {
 };
 
 const corePathStyle = {
+  fill: PointFillStyleSchema.optional().describe('Core Path fill paint: field-bound datum channel or constant CSS color / PaintSpec'),
+  stroke: PointStrokeStyleSchema.optional().describe('Core Path stroke paint: field-bound datum channel or constant CSS color / PaintSpec'),
   drawOpacity: PointOpacityStyleSchema.optional().describe('Core Path drawOpacity: field-bound datum channel or constant opacity 0..1'),
   zIndex: PointZIndexStyleSchema.optional().describe('Core Path zIndex: field-bound datum channel or constant integer'),
   rotate: PointNumberStyleSchema.optional().describe('Core Path rotate: field-bound datum channel or constant angle'),
@@ -131,7 +133,7 @@ export const PointMarkSchema = z
     size: PointSizeStyleSchema.optional().describe('Glyph size: field-bound datum channel via a sqrt radius scale or constant final radius'),
     shape: PointShapeStyleSchema.optional().describe('Glyph shape: field-bound categorical channel or constant core Node shape name'),
     fill: PointFillStyleSchema.optional().describe('Glyph fill: field-bound datum channel or constant core Node fill paint'),
-    stroke: PointStrokeStyleSchema.optional().describe('Glyph stroke color: field-bound datum channel or constant core Node stroke color'),
+    stroke: PointStrokeStyleSchema.optional().describe('Glyph stroke paint: field-bound datum channel or constant core Node stroke paint'),
     strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe('Glyph stroke width: field-bound datum channel or constant core Node stroke width'),
     fillOpacity: PointOpacityStyleSchema.optional().describe('Glyph fill opacity: field-bound datum channel or constant opacity 0..1'),
     drawOpacity: PointOpacityStyleSchema.optional().describe('Glyph stroke opacity: field-bound datum channel or constant opacity 0..1'),
@@ -275,6 +277,8 @@ export const IntervalMarkSchema = z
     series: z.string().min(1).optional().describe('Series field: split records into multiple interval series (color grouping; sub-band grouping when bounds.x is a band with group)'),
     bounds: IntervalBoundsSchema.optional().describe('Per-role interval bounds keyed by coordinate role; omit to infer from the coordinate role'),
     strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe('Interval cell stroke width: field-bound datum channel or constant core Node stroke width'),
+    fill: PointFillStyleSchema.optional().describe('Interval cell fill paint: field-bound datum channel or constant CSS color / PaintSpec'),
+    stroke: PointStrokeStyleSchema.optional().describe('Interval cell stroke paint: field-bound datum channel or constant CSS color / PaintSpec'),
     opacity: PointOpacityStyleSchema.optional().describe('Interval cell whole opacity: field-bound datum channel or constant opacity 0..1'),
     fillOpacity: PointOpacityStyleSchema.optional().describe('Interval cell fill opacity: field-bound datum channel or constant opacity 0..1'),
     ...coreNodeStyle,

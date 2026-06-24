@@ -49,6 +49,12 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个坐标�
 
 <ComponentPreview name="point-style" sourceFiles={['point-api.data.ts']} />
 
+### 填充与描边
+
+`fill` / `stroke` 除纯色外也可以接 `IRPaintSpec`。常量样式会下沉到 core `Node` 的默认样式；如果需要按数据字段映射颜色，继续使用 `color` 或字段绑定形式。
+
+<ComponentPreview name="point-paint" sourceFiles={['point-api.data.ts']} />
+
 ### 文本属性
 
 点上的文字优先使用 `label`：它会把文本挂到每个散点对应的 core `Node.label` 上，因此一层 `PointMark` 就能同时画点和显示标签。`labelPosition`、`labelDistance`、`labelPin` 对齐 core Node label 的方位、距离和引线能力。`text` 是另一种模式：它把点本身替换成无边框文本 Node，适合只画文字点而不画圆点的场景；`dx` / `dy` 用来做屏幕方向的微调。
@@ -161,7 +167,7 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
 | 位置 | `x` / `y` / `z` | `FieldName?` | — | 坐标角色字段；必填角色由当前坐标系校验 |
 | 专属 | `color` | `FieldName`<br />`PointColorStyle?` | — | mark 语义颜色；字段绑定会生成颜色通道和图例 |
 |  | `fill` | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?` | `currentColor` | 普通点填充；有 `color` 通道时由颜色接管 |
-|  | `stroke` | `FieldName`<br />`PointStrokeStyle?` | — | 普通点描边颜色 |
+|  | `stroke` | `FieldName`<br />`IRPaintSpec`<br />`PointStrokeStyle?` | — | 普通点描边样式；字段绑定仍走颜色 scale |
 | 节点 | `size` | `FieldName`<br />`number`<br />`PointSizeStyle?` | — | 仅作用于普通点；字段绑定经 sqrt scale 映射为半径 |
 |  | `shape` | `FieldName`<br />`NodeShapeChannelValue`<br />`PointShapeStyle?` | — | 仅作用于普通点；分类字段映射到 point shape |
 |  | `textColor` | `FieldName`<br />`PointColorStyle?` | — | 仅作用于文本点的文字颜色 |

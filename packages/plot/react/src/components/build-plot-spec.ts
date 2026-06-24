@@ -7,6 +7,7 @@ import {
   type Encoding,
   type ExternalRow,
   type Guide,
+  type IRPaintSpec,
   IntervalBoundKind,
   type IntervalBounds,
   type Mark,
@@ -262,13 +263,15 @@ const extensionChannelEncoding = (channels: DatumLabelProps['channels']): Pick<E
   return Object.keys(out).length > 0 ? { channels: out } : {};
 };
 
-const paintStyleOf = (value: PointMarkProps['fill'], context: StyleSugarContext): PointFillStyle | undefined => {
+type PaintStyleInput = string | IRPaintSpec | MarkValueType<string | IRPaintSpec> | undefined;
+
+const paintStyleOf = <T extends PointFillStyle | PointStrokeStyle>(value: PaintStyleInput, prop: 'fill' | 'stroke', context: StyleSugarContext): T | undefined => {
   if (value === undefined) return undefined;
-  if (isMarkValue(value)) return value;
-  if (typeof value !== 'string') return { kind: 'constant', value };
-  if (context.fieldNames.has(value)) return { kind: 'field', value };
-  if (canUseCssColor(value)) return { kind: 'constant', value };
-  warnSkippedStyle('fill', value);
+  if (isMarkValue(value)) return value as T;
+  if (typeof value !== 'string') return { kind: 'constant', value } as T;
+  if (context.fieldNames.has(value)) return { kind: 'field', value } as T;
+  if (canUseCssColor(value)) return { kind: 'constant', value } as T;
+  warnSkippedStyle(prop, value);
   return undefined;
 };
 
@@ -282,12 +285,7 @@ const pointColorStyleOf = (value: PointMarkProps['color'], context: StyleSugarCo
 };
 
 const strokeStyleOf = (stroke: PointMarkProps['stroke'], context: StyleSugarContext): PointStrokeStyle | undefined => {
-  if (stroke === undefined) return undefined;
-  if (isMarkValue(stroke)) return stroke;
-  if (context.fieldNames.has(stroke)) return { kind: 'field', value: stroke };
-  if (canUseCssColor(stroke)) return { kind: 'constant', value: stroke };
-  warnSkippedStyle('stroke', stroke);
-  return undefined;
+  return paintStyleOf<PointStrokeStyle>(stroke, 'stroke', context);
 };
 
 const strokeWidthStyleOf = (strokeWidth: PointMarkProps['strokeWidth'], context: StyleSugarContext): PointStrokeWidthStyle | undefined => {
@@ -377,6 +375,8 @@ const pathStylePropsOf = (props: CorePathChannelProps, context: StyleSugarContex
   const put = (name: string, value: unknown): void => {
     if (value !== undefined) out[name] = value;
   };
+  put('fill', paintStyleOf<PointFillStyle>(props.fill, 'fill', context));
+  put('stroke', paintStyleOf<PointStrokeStyle>(props.stroke, 'stroke', context));
   put('drawOpacity', numberStyleOf(props.drawOpacity, 'drawOpacity', context));
   put('zIndex', numberStyleOf(props.zIndex, 'zIndex', context));
   put('rotate', numberStyleOf(props.rotate, 'rotate', context));
@@ -597,7 +597,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       const textColorStyle = pointColorStyleOf(textColor, styleContext);
       const sizeStyle = numberStyleOf<PointSizeStyle>(size, 'size', styleContext);
       const shapeStyle = shapeStyleOf(shape, styleContext);
-      const fillStyle = paintStyleOf(fill, styleContext);
+      const fillStyle = paintStyleOf<PointFillStyle>(fill, 'fill', styleContext);
       const strokeStyle = strokeStyleOf(stroke, styleContext);
       const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
       const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
@@ -646,12 +646,16 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       recordResolveLabel(into, id, props.resolveLabel);
     } else if (child.type === IntervalMark) {
       const props = child.props as IntervalMarkProps;
-      const { x, y, angle, x0, x1, color, series, stack, bounds: explicitBounds, id, channels, strokeWidth, fillOpacity, opacity } = props;
+      const { x, y, angle, x0, x1, color, series, stack, bounds: explicitBounds, id, channels, fill, stroke, strokeWidth, fillOpacity, opacity } = props;
       const markLabel = buildMarkLabel(props);
+      const fillStyle = paintStyleOf<PointFillStyle>(fill, 'fill', styleContext);
+      const strokeStyle = strokeStyleOf(stroke, styleContext);
       const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
       const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
       const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
       const intervalStyle = {
+        ...(fillStyle !== undefined ? { fill: fillStyle } : {}),
+        ...(strokeStyle !== undefined ? { stroke: strokeStyle } : {}),
         ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
         ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
         ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),

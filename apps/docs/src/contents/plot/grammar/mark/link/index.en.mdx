@@ -127,7 +127,8 @@ LinkMark props are grouped as Position, Specific, Path, General, and Custom: end
 |  | `curvature` | `number?` | `0.5` | Cubic control-point extrapolation ratio along the main axis, range `0..1` |
 |  | `orientation` | `'horizontal' / 'vertical'?` | `'horizontal'` | Main-axis orientation: horizontal left-right flow or vertical top-bottom flow |
 |  | `color` | `FieldName?` | default layer color | Field bound to color; groups fills by field value |
-| Path | `opacity` / `fillOpacity`<br />`drawOpacity` | `PointOpacityStyle?`<br />`PointOpacityStyle?` | —<br />— | Whole-band, fill, and stroke opacity |
+| Path | `fill` / `stroke` | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?` / `PointStrokeStyle?` | `currentColor` / — | Flow-band fill and stroke paint |
+|  | `opacity` / `fillOpacity`<br />`drawOpacity` | `PointOpacityStyle?`<br />`PointOpacityStyle?` | —<br />— | Whole-band, fill, and stroke opacity |
 |  | `zIndex` / `rotate` | `PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />— | Draw order and rotation |
 |  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | Path scaling, fill rule, and thickness preset |
 |  | `arrow` / `arrowDetail` | `PathArrowStyle?`<br />`PathArrowDetailStyle?` | —<br />— | Arrow direction and details |

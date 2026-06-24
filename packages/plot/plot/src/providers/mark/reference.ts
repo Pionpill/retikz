@@ -24,6 +24,7 @@ import { pointsToSteps } from './path';
 import {
   DEFAULT_FILL,
   LINE_STROKE_WIDTH,
+  type MarkPaint,
   applyNodeChannelDeliveries,
   applyPathChannelDeliveries,
   attachMarkLayer,
@@ -186,6 +187,10 @@ const lowerReference = (
   }
   const band = isReferenceBand(mark, orientation);
   const effectiveRows = referenceRows(mark, rows, orientation);
+  const defaultFill = channelDefaultOf<MarkPaint>(channels, 'fill') ?? defaultColor ?? DEFAULT_FILL;
+  const defaultStroke = channelDefaultOf<MarkPaint>(channels, 'stroke') ?? defaultColor ?? DEFAULT_FILL;
+  const fillOf = mark.fill?.kind === 'field' && !colorOf ? channelValueOf<MarkPaint>(channels, 'fill') : undefined;
+  const strokeOf = mark.stroke?.kind === 'field' ? channelValueOf<MarkPaint>(channels, 'stroke') : undefined;
 
   if (band) {
     const placed: Array<{ color: string | undefined; node: IRNode }> = [];
@@ -199,6 +204,10 @@ const lowerReference = (
       kind = geometry.kind;
       const cellNode = cellGeometryNode(geometry);
       if (cellNode === null) continue;
+      const fill = fillOf?.(row);
+      if (fill !== undefined) cellNode.fill = fill;
+      const stroke = strokeOf?.(row);
+      if (stroke !== undefined) cellNode.stroke = stroke;
       applyNodeChannelDeliveries(cellNode, mark, row, channels, 'cell');
       const node = decorateDatum(cellNode, row, transformedIndex, mark.type, markProvenance, undefined);
       placed.push({ color: colorOf?.(row), node });
@@ -206,10 +215,10 @@ const lowerReference = (
     if (placed.length === 0 || kind === undefined) return null;
     if (!colorOf) {
       const colorValue = mark.encoding.color?.value;
-      const fill = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
-      return { type: 'scope', nodeDefault: styleForGeometry(kind, mark)(fill), children: placed.map(p => p.node) };
+      const fill = colorValue !== undefined ? String(colorValue) : defaultFill;
+      return { type: 'scope', nodeDefault: styleForGeometry(kind, mark)(fill, channelDefaultOf<MarkPaint>(channels, 'stroke')), children: placed.map(p => p.node) };
     }
-    return cellLayer(placed, kind, mark, colorOf, defaultColor);
+    return cellLayer(placed, kind, mark, colorOf, undefined, channelDefaultOf<MarkPaint>(channels, 'stroke'));
   }
 
   const placed: Array<{ color: string | undefined; steps: Array<IRStep>; row: ExternalRow; transformedIndex: number }> = [];
@@ -222,13 +231,14 @@ const lowerReference = (
   if (placed.length === 0) return null;
   if (!colorOf) {
     const colorValue = mark.encoding.color?.value;
-    const stroke = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
+    const stroke = colorValue !== undefined ? String(colorValue) : defaultStroke;
     return { type: 'scope', pathDefault: { stroke, strokeWidth: REFERENCE_STROKE_WIDTH }, children: placed.map(p => applyPathChannelDeliveries({ type: 'path', children: p.steps }, mark, p.row, channels)) };
   }
   const groups = new Map<string, Array<IRChild>>();
   for (const { color, row, steps } of placed) {
     const stroke = color ?? DEFAULT_FILL;
-    const path: IRChild = applyPathChannelDeliveries({ type: 'path', children: steps }, mark, row, channels);
+    const directStroke = strokeOf?.(row);
+    const path: IRChild = applyPathChannelDeliveries({ type: 'path', ...(directStroke !== undefined ? { stroke: directStroke } : {}), children: steps }, mark, row, channels);
     const bucket = groups.get(stroke);
     if (bucket) bucket.push(path);
     else groups.set(stroke, [path]);

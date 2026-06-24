@@ -6,6 +6,7 @@ import { isCartesianCoordinateFrame } from '../coordinate';
 import { type Channel, type ExternalRow, type LinkMark, type LinkOrientationValue, type Mark, PlotMark } from '../../schemas';
 import {
   DEFAULT_FILL,
+  type MarkPaint,
   applyPathChannelDeliveries,
   attachMarkLayer,
   channelDefaultOf,
@@ -137,6 +138,10 @@ const lowerLink = (
   }
   const halfWidthOf = linkHalfWidthOf(mark, rows);
   const curvature = mark.curvature ?? LINK_DEFAULT_CURVATURE;
+  const fillOf = mark.fill?.kind === 'field' && !colorOf ? channelValueOf<MarkPaint>(channels, 'fill') : undefined;
+  const strokeOf = mark.stroke?.kind === 'field' ? channelValueOf<MarkPaint>(channels, 'stroke') : undefined;
+  const defaultFill = channelDefaultOf<MarkPaint>(channels, 'fill') ?? defaultColor ?? DEFAULT_FILL;
+  const defaultStroke = channelDefaultOf<MarkPaint>(channels, 'stroke');
   const placed: Array<{ color: string | undefined; row: ExternalRow; steps: Array<IRStep> }> = [];
   for (const row of rows) {
     const value = linkValueOf(row, mark.value);
@@ -162,18 +167,27 @@ const lowerLink = (
   if (placed.length === 0) return null;
   if (!colorOf) {
     const colorValue = mark.encoding.color?.value;
-    const fill = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
-    return { type: 'scope', pathDefault: { fill }, children: placed.map(p => applyPathChannelDeliveries({ type: 'path', children: p.steps }, mark, p.row, channels)) };
+    const fill = colorValue !== undefined ? String(colorValue) : defaultFill;
+    return {
+      type: 'scope',
+      pathDefault: { fill, ...(defaultStroke !== undefined ? { stroke: defaultStroke } : {}) },
+      children: placed.map(p => {
+        const directFill = fillOf?.(p.row);
+        const directStroke = strokeOf?.(p.row);
+        return applyPathChannelDeliveries({ type: 'path', ...(directFill !== undefined ? { fill: directFill } : {}), ...(directStroke !== undefined ? { stroke: directStroke } : {}), children: p.steps }, mark, p.row, channels);
+      }),
+    };
   }
   const groups = new Map<string, Array<IRChild>>();
   for (const { color, row, steps } of placed) {
     const fill = color ?? DEFAULT_FILL;
-    const path: IRChild = applyPathChannelDeliveries({ type: 'path', children: steps }, mark, row, channels);
+    const directStroke = strokeOf?.(row);
+    const path: IRChild = applyPathChannelDeliveries({ type: 'path', ...(directStroke !== undefined ? { stroke: directStroke } : {}), children: steps }, mark, row, channels);
     const bucket = groups.get(fill);
     if (bucket) bucket.push(path);
     else groups.set(fill, [path]);
   }
-  const children: Array<IRChild> = [...groups].map(([fill, paths]) => ({ type: 'scope', pathDefault: { fill }, children: paths }));
+  const children: Array<IRChild> = [...groups].map(([fill, paths]) => ({ type: 'scope', pathDefault: { fill, ...(defaultStroke !== undefined ? { stroke: defaultStroke } : {}) }, children: paths }));
   return { type: 'scope', children };
 };
 

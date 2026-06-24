@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { MarkSchema } from '../../src/schemas/mark';
 
+const gradientPaint = {
+  kind: 'linearGradient',
+  angle: 90,
+  stops: [
+    { offset: 0, color: '#38bdf8' },
+    { offset: 1, color: '#0f172a' },
+  ],
+};
+
 describe('MarkSchema (ADR-05)', () => {
   // Happy path
   it('mark_point_valid', () => {
@@ -279,6 +288,16 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
+  it('mark_point_accepts_paint_fill_and_stroke', () => {
+    const m = {
+      type: 'point',
+      fill: { kind: 'constant', value: gradientPaint },
+      stroke: { kind: 'constant', value: gradientPaint },
+      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+    };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
   it('mark_interval_with_node_style_channels_valid', () => {
     const m = {
       type: 'interval',
@@ -475,6 +494,59 @@ describe('MarkSchema (ADR-05)', () => {
       lineJoin: { kind: 'constant', value: 'bevel' },
       roundedCorners: { kind: 'field', value: 'corner' },
       encoding: { x: { field: 'x' }, y: { field: 'y' } },
+    };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_path_accepts_paint_fill_and_stroke', () => {
+    const m = {
+      type: 'path',
+      fill: { kind: 'constant', value: gradientPaint },
+      stroke: { kind: 'constant', value: gradientPaint },
+      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+    };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_interval_accepts_paint_fill_and_stroke', () => {
+    const m = {
+      type: 'interval',
+      fill: { kind: 'constant', value: gradientPaint },
+      stroke: { kind: 'constant', value: gradientPaint },
+      encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+    };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_region_accepts_paint_fill_and_stroke', () => {
+    const m = {
+      type: 'region',
+      fill: { kind: 'constant', value: gradientPaint },
+      stroke: { kind: 'constant', value: gradientPaint },
+      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+    };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_reference_accepts_paint_fill_and_stroke', () => {
+    const m = {
+      type: 'reference',
+      fill: { kind: 'constant', value: gradientPaint },
+      stroke: { kind: 'constant', value: gradientPaint },
+      encoding: { y: { value: 80 } },
+    };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_link_accepts_paint_fill_and_stroke', () => {
+    const m = {
+      type: 'link',
+      source: { x: { field: 'sx' }, y: { field: 'sy' } },
+      target: { x: { field: 'tx' }, y: { field: 'ty' } },
+      value: 'amount',
+      fill: { kind: 'constant', value: gradientPaint },
+      stroke: { kind: 'constant', value: gradientPaint },
+      encoding: {},
     };
     expect(MarkSchema.parse(m)).toEqual(m);
   });

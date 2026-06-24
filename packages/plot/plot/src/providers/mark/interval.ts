@@ -28,6 +28,7 @@ import { type ExternalRow, type IntervalBound, IntervalBoundKind, type IntervalM
 import { cellGeometryNode, cellLayer } from './cell';
 import { channelForRole } from './roles';
 import {
+  type MarkPaint,
   applyNodeChannelDeliveries,
   attachDatumLabel,
   attachMarkLayer,
@@ -327,6 +328,8 @@ const lowerCells = (
   labelOf: ChannelValueResolver<string> | undefined,
 ): IRScope | null => {
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
+  const fillOf = 'fill' in mark && mark.fill?.kind === 'field' && !colorOf ? channelValueOf<MarkPaint>(channels, 'fill') : undefined;
+  const strokeOf = 'stroke' in mark && mark.stroke?.kind === 'field' ? channelValueOf<MarkPaint>(channels, 'stroke') : undefined;
   let kind: CellGeometry['kind'] | undefined;
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
@@ -337,6 +340,10 @@ const lowerCells = (
     kind = geometry.kind;
     const cellNode = cellGeometryNode(geometry);
     if (cellNode === null) continue;
+    const fill = fillOf?.(row);
+    if (fill !== undefined) cellNode.fill = fill;
+    const stroke = strokeOf?.(row);
+    if (stroke !== undefined) cellNode.stroke = stroke;
     applyNodeChannelDeliveries(cellNode, mark, row, channels, 'cell');
     const node = attachDatumLabel(
       decorateDatum(cellNode, row, transformedIndex, mark.type, markProvenance, cellSeriesValue(mark, row)),
@@ -346,7 +353,9 @@ const lowerCells = (
     );
     placed.push({ color: colorOf?.(row), node });
   }
-  return placed.length === 0 || kind === undefined ? null : cellLayer(placed, kind, mark, colorOf, defaultColor);
+  const defaultFill = channelDefaultOf<MarkPaint>(channels, 'fill') ?? defaultColor ?? undefined;
+  const defaultStroke = channelDefaultOf<MarkPaint>(channels, 'stroke');
+  return placed.length === 0 || kind === undefined ? null : cellLayer(placed, kind, mark, colorOf, defaultFill, defaultStroke);
 };
 
 /** interval mark 图层下沉：坐标系守卫 + IntervalContext + lowerCells（cell 类单路径）。 */

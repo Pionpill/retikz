@@ -12,6 +12,7 @@ import { type ExternalRow, type Mark, PathCurve, type PathCurveValue, type PathM
 import {
   DEFAULT_FILL,
   LINE_STROKE_WIDTH,
+  type MarkPaint,
   applyPathChannelDeliveries,
   attachMarkLayer,
   channelDefaultOf,
@@ -278,7 +279,7 @@ const buildSeriesPaths = (
   rows: Array<ExternalRow>,
   seriesField: string,
   buildSteps: SeriesPathBuilder,
-  paintOf: (seriesRows: Array<ExternalRow>) => Record<string, string>,
+  paintOf: (seriesRows: Array<ExternalRow>) => Partial<Pick<IRPath, 'fill' | 'stroke'>>,
   channels: MarkChannels,
   markProvenance: MarkProvenance | undefined,
 ): Array<IRChild> => {
@@ -306,6 +307,12 @@ const buildSeriesPaths = (
     paths.push(path);
   }
   return paths;
+};
+
+const markPaintOf = (mark: Mark, channels: MarkChannels, channel: 'fill' | 'stroke', rows: Array<ExternalRow>, fallback?: MarkPaint): MarkPaint | undefined => {
+  const value = (mark as { fill?: { kind: string }; stroke?: { kind: string } })[channel];
+  const resolver = value?.kind === 'field' ? channelValueOf<MarkPaint>(channels, channel) : undefined;
+  return resolver?.(rows[0] ?? {}) ?? channelDefaultOf<MarkPaint>(channels, channel) ?? fallback;
 };
 
 /**
@@ -357,13 +364,21 @@ const lowerPath = (
   if (mark.type !== PlotMark.Path) return null;
   const closed = mark.closed ?? false;
   const seriesField = pathSeriesField(mark, rows);
+  const defaultStroke = markPaintOf(mark, channels, 'stroke', rows, defaultColor ?? DEFAULT_FILL) ?? DEFAULT_FILL;
+  const defaultFill = markPaintOf(mark, channels, 'fill', rows);
   if (seriesField) {
     const paths = buildSeriesPaths(
       mark,
       rows,
       seriesField,
       seriesRows => buildLineSteps(mark, seriesRows, frame, closed),
-      seriesRows => ({ stroke: colorOf?.(seriesRows[0]) ?? DEFAULT_FILL }),
+      seriesRows => {
+        const fill = markPaintOf(mark, channels, 'fill', seriesRows);
+        return {
+          stroke: markPaintOf(mark, channels, 'stroke', seriesRows, colorOf?.(seriesRows[0]) ?? DEFAULT_FILL) ?? DEFAULT_FILL,
+          ...(fill !== undefined ? { fill } : {}),
+        };
+      },
       channels,
       markProvenance,
     );
@@ -372,8 +387,12 @@ const lowerPath = (
   const steps = buildLineSteps(mark, rows, frame, closed);
   if (!steps) return null;
   const colorValue = mark.encoding.color?.value;
-  const stroke = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
-  return { type: 'scope', pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH }, children: [applyPathChannelDeliveries({ type: 'path', children: steps }, mark, rows[0] ?? {}, channels)] };
+  const stroke = colorValue !== undefined ? String(colorValue) : defaultStroke;
+  return {
+    type: 'scope',
+    pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH, ...(defaultFill !== undefined ? { fill: defaultFill } : {}) },
+    children: [applyPathChannelDeliveries({ type: 'path', children: steps }, mark, rows[0] ?? {}, channels)],
+  };
 };
 
 /**
@@ -417,13 +436,21 @@ const lowerRegion = (
   if (mark.type !== PlotMark.Region) return null;
   const baseline = mark.baseline ?? AREA_BASELINE;
   const seriesField = pathSeriesField(mark, rows);
+  const defaultFill = markPaintOf(mark, channels, 'fill', rows, defaultColor ?? DEFAULT_FILL) ?? DEFAULT_FILL;
+  const defaultStroke = markPaintOf(mark, channels, 'stroke', rows);
   if (seriesField) {
     const paths = buildSeriesPaths(
       mark,
       rows,
       seriesField,
       seriesRows => buildAreaSteps(mark, seriesRows, frame, baseline),
-      seriesRows => ({ fill: colorOf?.(seriesRows[0]) ?? DEFAULT_FILL }),
+      seriesRows => {
+        const stroke = markPaintOf(mark, channels, 'stroke', seriesRows);
+        return {
+          fill: markPaintOf(mark, channels, 'fill', seriesRows, colorOf?.(seriesRows[0]) ?? DEFAULT_FILL) ?? DEFAULT_FILL,
+          ...(stroke !== undefined ? { stroke } : {}),
+        };
+      },
       channels,
       markProvenance,
     );
@@ -432,8 +459,12 @@ const lowerRegion = (
   const steps = buildAreaSteps(mark, rows, frame, baseline);
   if (!steps) return null;
   const colorValue = mark.encoding.color?.value;
-  const fill = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
-  return { type: 'scope', pathDefault: { fill }, children: [applyPathChannelDeliveries({ type: 'path', children: steps }, mark, rows[0] ?? {}, channels)] };
+  const fill = colorValue !== undefined ? String(colorValue) : defaultFill;
+  return {
+    type: 'scope',
+    pathDefault: { fill, ...(defaultStroke !== undefined ? { stroke: defaultStroke } : {}) },
+    children: [applyPathChannelDeliveries({ type: 'path', children: steps }, mark, rows[0] ?? {}, channels)],
+  };
 };
 
 /** path 图层下沉：仅 cartesian2D / polar2D 有上沿几何；其余坐标系 fail-loud + attachMarkLayer。 */

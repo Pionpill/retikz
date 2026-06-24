@@ -52,6 +52,12 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 <ComponentPreview name="line-color-split" sourceFiles={['line-series.data.ts']} />
 
+### 填充与描边
+
+`stroke` 可以写成 `IRPaintSpec`，例如线性渐变；`strokeWidth`、`lineCap`、`lineJoin` 等路径样式仍然照常作用在同一条 core `Path` 上。
+
+<ComponentPreview name="line-paint" sourceFiles={['line-basic.data.ts']} />
+
 ### 几何属性
 
 `closed` 会让末点回连首点。在 `polar2D` 下，分类维度沿角向分布，数值维度映射到半径；左侧展示闭合线框，右侧展示不闭合时末点不会回到首点。
@@ -140,7 +146,8 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 |  | `series` | `FieldName?` | — | 按字段拆成多条路径 |
 |  | `curve` | `PathCurveValue?` | `linear` | 相邻点连接方式；支持直线、阶梯、样条和单调曲线 |
 |  | `closed` | `boolean?` | `false` | 末点回连首点，形成闭合路径 |
-| 路径 | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | 路径描边宽度、整体透明度和填充透明度 |
+| 路径 | `stroke` / `fill` | `FieldName`<br />`IRPaintSpec`<br />`PointStrokeStyle?` / `PointFillStyle?` | `currentColor` / — | 路径描边和闭合路径填充样式 |
+|  | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | 路径描边宽度、整体透明度和填充透明度 |
 |  | `drawOpacity`<br />`zIndex` / `rotate` | `PointOpacityStyle?`<br />`PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />—<br />— | 描边透明度、绘制顺序和旋转 |
 |  | `roundedCorners` | `MarkValueProp<number>` | — | step 转角圆角 |
 |  | `lineCap` / `lineJoin` | `FieldName / LineCapValue`<br />`FieldName / LineJoinValue` | —<br />— | 线帽与连接样式 |

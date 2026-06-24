@@ -152,7 +152,8 @@ const lowerCells = (
 |  | `bounds` | `IntervalBounds?` | 按 role 推断 | 显式声明每个 role 的 band / span / extent / full |
 |  | `series` | `FieldName?` | — | 系列字段；可拆分、并排或堆叠区间 |
 |  | `stack` | `boolean?` | `false` | 多系列时改为堆叠；省略时多系列并排 |
-| 节点 | `opacity` / `fillOpacity` | `PointOpacityStyle?` | — | cell Node 整体和填充透明度 |
+| 节点 | `fill` / `stroke` | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?` / `PointStrokeStyle?` | `currentColor` / — | cell Node 填充和描边样式 |
+|  | `opacity` / `fillOpacity` | `PointOpacityStyle?` | — | cell Node 整体和填充透明度 |
 |  | `strokeWidth` | `PointNonnegativeNumberStyle?` | — | cell Node 描边宽度 |
 |  | `padding` / `minimumSize` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | cell Node 内边距和最小视觉尺寸 |
 |  | `minimumWidth` / `minimumHeight` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | cell Node 最小视觉宽 / 高 |

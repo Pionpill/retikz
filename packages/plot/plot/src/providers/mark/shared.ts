@@ -1,6 +1,7 @@
-import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRPath, type IRScope } from '@retikz/core';
+import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRPaintSpec, type IRPath, type IRScope } from '@retikz/core';
 import {
   ChannelDefinitionKind,
+  type ChannelValue,
   type ChannelValueResolver,
   type FieldChannel,
   type FieldCollector,
@@ -26,10 +27,12 @@ export const LINE_STROKE_WIDTH = 2;
 /** 无 color 编码时的回退填充。 */
 export const DEFAULT_FILL = 'currentColor';
 
-export const channelValueOf = <T extends string | number>(channels: MarkChannels, channel: string): ChannelValueResolver<T> | undefined =>
+export type MarkPaint = string | IRPaintSpec;
+
+export const channelValueOf = <T extends ChannelValue>(channels: MarkChannels, channel: string): ChannelValueResolver<T> | undefined =>
   channels.values?.[channel] as ChannelValueResolver<T> | undefined;
 
-export const channelDefaultOf = <T extends string | number>(channels: MarkChannels, channel: string): T | undefined => channels.defaults?.[channel] as T | undefined;
+export const channelDefaultOf = <T extends ChannelValue>(channels: MarkChannels, channel: string): T | undefined => channels.defaults?.[channel] as T | undefined;
 
 /**
  * 把若干「已就位 node + 其颜色」按颜色分组，每色一子 Scope（fill 上提到子 Scope 的 nodeDefault）。
@@ -55,10 +58,12 @@ export const colorGroupedScope = (
 };
 
 export const constantNodeStyleOverrides = (mark: Mark): Partial<IRNodeDefault> => {
+  const stroke = 'stroke' in mark && mark.stroke?.kind === 'constant' ? mark.stroke.value : undefined;
   const strokeWidth = 'strokeWidth' in mark && mark.strokeWidth?.kind === 'constant' ? mark.strokeWidth.value : undefined;
   const fillOpacity = 'fillOpacity' in mark && mark.fillOpacity?.kind === 'constant' ? mark.fillOpacity.value : undefined;
   const opacity = 'opacity' in mark && mark.opacity?.kind === 'constant' ? mark.opacity.value : undefined;
   return {
+    ...(stroke !== undefined ? { stroke } : {}),
     ...(strokeWidth !== undefined ? { strokeWidth } : {}),
     ...(fillOpacity !== undefined ? { fillOpacity } : {}),
     ...(opacity !== undefined ? { opacity } : {}),

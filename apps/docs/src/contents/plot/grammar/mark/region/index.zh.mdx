@@ -128,7 +128,8 @@ const lowerRegion = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFram
 |  | `series` | `FieldName?` | — | 拆成多块区域 |
 |  | `baseline` | `number?` | `0` | 回边贴附的基线值；polar2D 下通常是内半径方向 |
 |  | `closed` | `boolean?` | `false` | 末点回连首点，只影响上沿；区域仍由 baseline 回边闭合 |
-| 路径 | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | 区域轮廓描边宽度、整体透明度和填充透明度 |
+| 路径 | `fill` / `stroke` | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?` / `PointStrokeStyle?` | `currentColor` / — | 区域填充和轮廓描边样式 |
+|  | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | 区域轮廓描边宽度、整体透明度和填充透明度 |
 |  | `drawOpacity`<br />`zIndex` / `rotate` | `PointOpacityStyle?`<br />`PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />—<br />— | 描边透明度、绘制顺序和旋转 |
 |  | `roundedCorners`<br />`lineCap` / `lineJoin` | `MarkValueProp<number>`<br />`FieldName / LineCapValue`<br />`FieldName / LineJoinValue` | —<br />—<br />— | 转角、线帽和连接样式 |
 |  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | 路径缩放、填充规则和厚度预设 |

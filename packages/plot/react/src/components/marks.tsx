@@ -75,6 +75,8 @@ export type CoreNodeChannelProps = {
 };
 
 export type CorePathChannelProps = {
+  fill?: FieldName | IRPaintSpec | PointFillStyle;
+  stroke?: FieldName | IRPaintSpec | PointStrokeStyle;
   drawOpacity?: MarkValueProp<number> | PointOpacityStyle;
   zIndex?: MarkValueProp<number> | PointZIndexStyle;
   rotate?: MarkValueProp<number> | PointNumberStyle;
@@ -157,7 +159,7 @@ export type PointMarkProps = DatumLabelProps & CoreNodeChannelProps & {
   /** 填充：字符串优先按数据字段解析；需要强制常量时用 `{ kind: 'constant', value }` */
   fill?: FieldName | IRPaintSpec | PointFillStyle;
   /** 描边颜色：字符串优先按数据字段解析；需要强制常量时用 `{ kind: 'constant', value }` */
-  stroke?: FieldName | PointStrokeStyle;
+  stroke?: FieldName | IRPaintSpec | PointStrokeStyle;
   /** 描边宽度：字符串优先按数据字段解析，数字为常量糖；需要显式控制时用 `{ kind, value }` */
   strokeWidth?: FieldName | number | PointStrokeWidthStyle;
   /** 填充透明度：字符串按字段解析，数字为常量糖 */
@@ -218,6 +220,8 @@ export type IntervalMarkProps = DatumLabelProps & CoreNodeChannelProps & {
   stack?: boolean;
   /** 显式 per-role 区间来源（高级 / heatmap 双 band）：给定则直接落 IR bounds，便捷 props 之外的逃生舱 */
   bounds?: IntervalBounds;
+  fill?: FieldName | IRPaintSpec | PointFillStyle;
+  stroke?: FieldName | IRPaintSpec | PointStrokeStyle;
   strokeWidth?: MarkValueProp<number> | PointStrokeWidthStyle;
   fillOpacity?: MarkValueProp<number> | PointOpacityStyle;
   opacity?: MarkValueProp<number> | PointOpacityStyle;

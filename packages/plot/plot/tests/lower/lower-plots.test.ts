@@ -1,5 +1,5 @@
 import { compileToScene } from '@retikz/core';
-import type { IRNode, IRPath, IRScope } from '@retikz/core';
+import type { IRNode, IRPaintSpec, IRPath, IRScope } from '@retikz/core';
 import { schemeCategory10 as d3SchemeCategory10 } from 'd3-scale-chromatic';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
@@ -10,6 +10,15 @@ const SALES = [
   { month: 1, revenue: 14 },
   { month: 2, revenue: 9 },
 ];
+
+const paintGradient: IRPaintSpec = {
+  kind: 'linearGradient',
+  angle: 90,
+  stops: [
+    { offset: 0, color: '#38bdf8' },
+    { offset: 1, color: '#0f172a' },
+  ],
+};
 
 const lineSpec: PlotSpec = PlotSpecSchema.parse({
   namespace: 'plot',
@@ -545,6 +554,174 @@ describe('lowerPlots color (ADR-04)', () => {
   it('uncolored_point_keeps_single_scope', () => {
     // 无 color：守 alpha.1 结构（单层 nodeDefault，不分子 Scope）
     expect(firstLayer(pointSpec(), { sales: SALES }, opts).nodeDefault?.shape).toBe('circle');
+  });
+});
+
+describe('lowerPlots mark paint', () => {
+  it('point_constant_paint_lowers_to_node_default_and_compiles', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'xMonth' },
+        { type: 'linear', name: 'yRevenue' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+      marks: [
+        {
+          type: 'point',
+          fill: { kind: 'constant', value: paintGradient },
+          stroke: { kind: 'constant', value: paintGradient },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+      ],
+    });
+    const layer = firstLayer(spec, { sales: SALES }, opts);
+    expect(layer.nodeDefault?.fill).toEqual(paintGradient);
+    expect(layer.nodeDefault?.stroke).toEqual(paintGradient);
+
+    const scene = compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots({ sales: SALES }, opts) });
+    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
+  });
+
+  it('path_constant_stroke_paint_lowers_to_path_default_and_compiles', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'xMonth' },
+        { type: 'linear', name: 'yRevenue' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+      marks: [
+        {
+          type: 'path',
+          order: 'month',
+          stroke: { kind: 'constant', value: paintGradient },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+      ],
+    });
+    const layer = firstLayer(spec, { sales: SALES }, opts);
+    expect(layer.pathDefault?.stroke).toEqual(paintGradient);
+
+    const scene = compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots({ sales: SALES }, opts) });
+    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
+  });
+
+  it('interval_constant_paint_lowers_to_node_default_and_compiles', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'band', name: 'xMonth' },
+        { type: 'linear', name: 'yRevenue' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+      marks: [
+        {
+          type: 'interval',
+          fill: { kind: 'constant', value: paintGradient },
+          stroke: { kind: 'constant', value: paintGradient },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+      ],
+    });
+    const layer = firstLayer(spec, { sales: SALES }, opts);
+    expect(layer.nodeDefault?.fill).toEqual(paintGradient);
+    expect(layer.nodeDefault?.stroke).toEqual(paintGradient);
+
+    const scene = compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots({ sales: SALES }, opts) });
+    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
+  });
+
+  it('region_constant_paint_lowers_to_path_default_and_compiles', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'xMonth' },
+        { type: 'linear', name: 'yRevenue' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+      marks: [
+        {
+          type: 'region',
+          order: 'month',
+          fill: { kind: 'constant', value: paintGradient },
+          stroke: { kind: 'constant', value: paintGradient },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+      ],
+    });
+    const layer = firstLayer(spec, { sales: SALES }, opts);
+    expect(layer.pathDefault?.fill).toEqual(paintGradient);
+    expect(layer.pathDefault?.stroke).toEqual(paintGradient);
+
+    const scene = compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots({ sales: SALES }, opts) });
+    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
+  });
+
+  it('reference_band_constant_paint_lowers_to_node_default_and_compiles', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'xMonth' },
+        { type: 'linear', name: 'yRevenue' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+      marks: [
+        {
+          type: 'reference',
+          yTo: 12,
+          fill: { kind: 'constant', value: paintGradient },
+          stroke: { kind: 'constant', value: paintGradient },
+          encoding: { y: { value: 8 } },
+        },
+      ],
+    });
+    const layer = firstLayer(spec, { sales: SALES }, opts);
+    expect(layer.nodeDefault?.fill).toEqual(paintGradient);
+    expect(layer.nodeDefault?.stroke).toEqual(paintGradient);
+
+    const scene = compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots({ sales: SALES }, opts) });
+    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
+  });
+
+  it('link_constant_paint_lowers_to_path_default_and_compiles', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'links' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'link',
+          source: { x: { field: 'sourceX' }, y: { field: 'sourceY' } },
+          target: { x: { field: 'targetX' }, y: { field: 'targetY' } },
+          value: 'value',
+          fill: { kind: 'constant', value: paintGradient },
+          stroke: { kind: 'constant', value: paintGradient },
+          encoding: {},
+        },
+      ],
+    });
+    const layer = firstLayer(spec, { links: [{ sourceX: 0, sourceY: 0, targetX: 1, targetY: 1, value: 4 }] }, opts);
+    expect(layer.pathDefault?.fill).toEqual(paintGradient);
+    expect(layer.pathDefault?.stroke).toEqual(paintGradient);
+
+    const scene = compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots({ links: [{ sourceX: 0, sourceY: 0, targetX: 1, targetY: 1, value: 4 }] }, opts) });
+    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 });
 

@@ -5,6 +5,7 @@ import { datumAnchor } from './anchor';
 import { roleValues } from './roles';
 import {
   DEFAULT_FILL,
+  type MarkPaint,
   attachDatumLabel,
   attachMarkLayer,
   channelDefaultOf,
@@ -20,7 +21,7 @@ import {
 const POINT_SIZE = 10;
 
 /** 散点 node 样式（circle + padding0 + minimumSize；÷√2 补 circle 外接，使 POINT_SIZE 即真实直径）。 */
-const pointStyle = (fill: IRNodeDefault['fill'], mark: PointMark): IRNodeDefault => {
+const pointStyle = (fill: MarkPaint, mark: PointMark): IRNodeDefault => {
   const padding = mark.padding?.kind === 'constant' ? mark.padding.value : undefined;
   const minimumSize = mark.minimumSize?.kind === 'constant' ? mark.minimumSize.value : undefined;
   const minimumWidth = mark.minimumWidth?.kind === 'constant' ? mark.minimumWidth.value : undefined;
@@ -77,7 +78,8 @@ export const lowerPoint = (
 ): IRChild | null => {
   if (mark.type !== PlotMark.Point) return null;
   const colorOf = channelValueOf<string>(channels, 'color');
-  const strokeOf = channelValueOf<string>(channels, 'stroke');
+  const fillOf = mark.fill?.kind === 'field' && !colorOf ? channelValueOf<MarkPaint>(channels, 'fill') : undefined;
+  const strokeOf = mark.stroke?.kind === 'field' ? channelValueOf<MarkPaint>(channels, 'stroke') : undefined;
   const labelOf = channelValueOf<string>(channels, 'label');
   const defaultColor = channelDefaultOf<string>(channels, 'color') ?? DEFAULT_FILL;
   const isText = mark.encoding.text !== undefined;
@@ -111,6 +113,8 @@ export const lowerPoint = (
     const point = datumAnchor(mark, row, frame);
     if (!point) continue;
     const base: IRNode = { type: 'node', position: point };
+    const fill = fillOf?.(row);
+    if (fill !== undefined) base.fill = fill;
     const stroke = strokeOf?.(row);
     if (stroke !== undefined) base.stroke = stroke;
     applyChannelDeliveries(base, 'pointGlyph');
@@ -118,7 +122,7 @@ export const lowerPoint = (
     placed.push({ color: colorOf?.(row), node });
   }
   if (placed.length === 0) return null;
-  const fillConstant = mark.fill?.kind === 'constant' ? mark.fill.value : undefined;
+  const fillConstant = channelDefaultOf<MarkPaint>(channels, 'fill') ?? (mark.fill?.kind === 'constant' ? mark.fill.value : undefined);
   const layer: IRScope = !colorOf
     ? {
         type: 'scope',
