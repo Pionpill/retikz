@@ -52,7 +52,7 @@
 
 ## 测试设计
 
-`packages/plot/plot/tests/<对应路径>.test.ts`（chart preset 相关则 `packages/plot/chart/tests/...`）覆盖：
+`packages/graph/plot/tests/<对应路径>.test.ts`（chart preset 相关则 `packages/graph/chart/tests/...`）覆盖：
 
 - <case 类别 1>
 - <case 类别 2>
@@ -85,8 +85,8 @@
 
 判级规则（参 [`flow-alpha`](../../../.agents/skills/flow-alpha/SKILL.md) "自动判级" 表）：
 
-- **red**：动 `packages/plot/plot/src/ir/**` · `packages/plot/plot/src/lowering/**`（下沉到 core IR 的契约边界）· `packages/plot/*/src/index.ts`
-- **yellow**：动 `packages/plot/plot/src/{transform,encoding,scale,coordinate,mark,relation,guide,scope}/**` · `packages/plot/chart/src/**`（preset 层）
+- **red**：动 `packages/graph/plot/src/ir/**` · `packages/graph/plot/src/lowering/**`（下沉到 core IR 的契约边界）· `packages/graph/*/src/index.ts`
+- **yellow**：动 `packages/graph/plot/src/{transform,encoding,scale,coordinate,mark,relation,guide,scope}/**` · `packages/graph/chart/src/**`（preset 层）
 - **green**：仅 `apps/docs/**` / 测试 / 注释 / 配置
 
 跨级取最高 level。本 ADR 自评 level：`<red / yellow / green>`，与"文件 scope" 段相符。
@@ -95,7 +95,7 @@
 
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
-| `packages/plot/plot/src/ir/<...>.ts` | 加 / 改 / 删 | `<exact name>` | `<zod 类型>` | `<default 或 —>` | <一句话> |
+| `packages/graph/plot/src/ir/<...>.ts` | 加 / 改 / 删 | `<exact name>` | `<zod 类型>` | `<default 或 —>` | <一句话> |
 | ... | ... | ... | ... | ... | ... |
 
 每行一条字段改动。**字段名一旦写死，下游 Spec / 实现 Agent 不允许改**——发现需要改 → 回本 ADR 加条 / 开新 ADR。
@@ -106,11 +106,11 @@
 
 本 ADR 实现允许触碰的文件白名单：
 
-- `packages/plot/plot/src/ir/<新建>.ts`
-- `packages/plot/plot/src/<模块>/<...>.ts`（修改）
-- `packages/plot/plot/src/lowering/<...>.ts`（修改）
-- `packages/plot/plot/tests/<.../...>.test.ts`（新建）
-- `packages/plot/chart/src/<...>.ts`（preset，按需）
+- `packages/graph/plot/src/ir/<新建>.ts`
+- `packages/graph/plot/src/<模块>/<...>.ts`（修改）
+- `packages/graph/plot/src/lowering/<...>.ts`（修改）
+- `packages/graph/plot/tests/<.../...>.test.ts`（新建）
+- `packages/graph/chart/src/<...>.ts`（preset，按需）
 - `apps/docs/src/contents/<...>/<...>.mdx`（修改）
 - `apps/docs/src/contents/<...>/<...>.demo.tsx`（新建）
 - ...
@@ -151,7 +151,7 @@
 本 ADR 引用 / 扩展 / 修改的现有 Plot IR 元素 / plot API / core 能力：
 
 - `<元素名>`（位于 `<file path>`）—— <如何用：仅引用 / 扩展 / 修改>
-- `<core 能力>`（位于 `packages/core/core/src/<...>`）—— <plot 如何消费：lowering 目标 / Scope 引用，仅消费不改 core 内部>
+- `<core 能力>`（位于 `packages/kernel/core/src/<...>`）—— <plot 如何消费：lowering 目标 / Scope 引用，仅消费不改 core 内部>
 - ...
 
 无依赖（全新孤立功能）→ 写"无"。

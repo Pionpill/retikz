@@ -193,7 +193,7 @@ renderPlot(spec, { sales: rows }, { transformDefinitions: [regression] });
 
 ## 测试设计
 
-`packages/plot/plot/tests/transform/registry.test.ts`（新建）+ `tests/lower/transform.test.ts`（既有，加 registry parity）+ `tests/lower/data-portability.test.ts`（既有，加自定义 kind round-trip）+ `tests/interaction/*`（locator parity / 自定义 provenance）覆盖：
+`packages/graph/plot/tests/transform/registry.test.ts`（新建）+ `tests/lower/transform.test.ts`（既有，加 registry parity）+ `tests/lower/data-portability.test.ts`（既有，加自定义 kind round-trip）+ `tests/interaction/*`（locator parity / 自定义 provenance）覆盖：
 
 - 内置 7 个经 registry 分派与旧 switch 产物逐字节等价（apply + 字段收集两路）
 - 自定义 transform 经 `options.transformDefinitions` 注入后 apply / inputFields / outputFields 生效
@@ -240,7 +240,7 @@ renderPlot(spec, { sales: rows }, { transformDefinitions: [regression] });
 
 `red`
 
-判级：动 `packages/plot/plot/src/ir/**`（`ir/transform/transform.ts` + `ir/plot.ts`）+ `packages/plot/*/src/index.ts`（导出 `defineTransform`）。跨级取最高 → red。
+判级：动 `packages/graph/plot/src/ir/**`（`ir/transform/transform.ts` + `ir/plot.ts`）+ `packages/graph/*/src/index.ts`（导出 `defineTransform`）。跨级取最高 → red。
 
 ### Schema 改动
 
@@ -260,20 +260,20 @@ renderPlot(spec, { sales: rows }, { transformDefinitions: [regression] });
 
 ### 文件 scope
 
-- `packages/plot/plot/src/ir/transform/transform.ts`（改：加 Custom/Operation schema + 内置 kind 集 + 类型；`TransformSchema` 不动）
-- `packages/plot/plot/src/ir/plot.ts`（改：`transform` 字段换 `TransformOperationSchema`）
-- `packages/plot/plot/src/transform/registry.ts`（新建：`TransformDefinition` / `TransformContext` / `defineTransform` / `extractKind` / `resolveTransformRegistry` / `BUILTIN_TRANSFORMS`）
-- `packages/plot/plot/src/transform/transform.ts`（改：两 switch → registry 查表；未注册 throw）
-- `packages/plot/plot/src/transform/group.ts`（改：bin / aggregate 的 `inputFields` / `outputFields` 下沉为 definition；`apply*` 经 `ctx.groupProvenance` 复用现 `withGroupProvenance` 逻辑）
-- `packages/plot/plot/src/transform/row.ts`（改：sort / stack / normalize / derive-interval / jitter 的 `inputFields` / `outputFields` 下沉为 definition；`apply*` 不变、按签名加 ctx）
-- `packages/plot/plot/src/transform/index.ts`（改：导出 `defineTransform` / 类型）
-- `packages/plot/plot/src/pipeline/provenance.ts`（改：抽 `withGroupProvenance` 为可复用、构造 `TransformContext` 的 helper；或在 registry 适配层组装 ctx）
-- `packages/plot/plot/src/pipeline/expand.ts`（改：`LowerPlotsOptions.transformDefinitions`、`prepareRows` 解析并回传 registry、传参）
-- `packages/plot/plot/src/pipeline/source-fields.ts`（改：`collectSourceFields` 加 registry 入参）
-- `packages/plot/plot/src/interaction/locate.ts`（改：用 `prepareRows` 回传 registry 跑 `applyTransforms`）
-- `packages/plot/plot/src/index.ts`（改：re-export `defineTransform` / `TransformDefinition` / `TransformContext` / `TransformOperation`）
-- `packages/plot/react/src/Plot.tsx` + `components/transform.tsx` + `components/build-plot-spec.ts`（改：`transformDefinitions` 经 `LowerPlotsOptions` 透传；`dataTransforms` / `<Transform>` 接受 `TransformOperation`；非内置 kind 扁平透传）
-- `packages/plot/plot/tests/transform/registry.test.ts`（新建）· `tests/lower/transform.test.ts`（改）· `tests/lower/data-portability.test.ts`（改）· `tests/interaction/*`（改 / 新建）
+- `packages/graph/plot/src/ir/transform/transform.ts`（改：加 Custom/Operation schema + 内置 kind 集 + 类型；`TransformSchema` 不动）
+- `packages/graph/plot/src/ir/plot.ts`（改：`transform` 字段换 `TransformOperationSchema`）
+- `packages/graph/plot/src/transform/registry.ts`（新建：`TransformDefinition` / `TransformContext` / `defineTransform` / `extractKind` / `resolveTransformRegistry` / `BUILTIN_TRANSFORMS`）
+- `packages/graph/plot/src/transform/transform.ts`（改：两 switch → registry 查表；未注册 throw）
+- `packages/graph/plot/src/transform/group.ts`（改：bin / aggregate 的 `inputFields` / `outputFields` 下沉为 definition；`apply*` 经 `ctx.groupProvenance` 复用现 `withGroupProvenance` 逻辑）
+- `packages/graph/plot/src/transform/row.ts`（改：sort / stack / normalize / derive-interval / jitter 的 `inputFields` / `outputFields` 下沉为 definition；`apply*` 不变、按签名加 ctx）
+- `packages/graph/plot/src/transform/index.ts`（改：导出 `defineTransform` / 类型）
+- `packages/graph/plot/src/pipeline/provenance.ts`（改：抽 `withGroupProvenance` 为可复用、构造 `TransformContext` 的 helper；或在 registry 适配层组装 ctx）
+- `packages/graph/plot/src/pipeline/expand.ts`（改：`LowerPlotsOptions.transformDefinitions`、`prepareRows` 解析并回传 registry、传参）
+- `packages/graph/plot/src/pipeline/source-fields.ts`（改：`collectSourceFields` 加 registry 入参）
+- `packages/graph/plot/src/interaction/locate.ts`（改：用 `prepareRows` 回传 registry 跑 `applyTransforms`）
+- `packages/graph/plot/src/index.ts`（改：re-export `defineTransform` / `TransformDefinition` / `TransformContext` / `TransformOperation`）
+- `packages/graph/plot-react/src/Plot.tsx` + `components/transform.tsx` + `components/build-plot-spec.ts`（改：`transformDefinitions` 经 `LowerPlotsOptions` 透传；`dataTransforms` / `<Transform>` 接受 `TransformOperation`；非内置 kind 扁平透传）
+- `packages/graph/plot/tests/transform/registry.test.ts`（新建）· `tests/lower/transform.test.ts`（改）· `tests/lower/data-portability.test.ts`（改）· `tests/interaction/*`（改 / 新建）
 - `apps/docs/src/contents/.../transform/*.mdx` + `*.demo.tsx`（改 / 新建：`defineTransform` 章节 + provenance 等级 + demo，双语）
 
 偏离白名单需加条目自注或开新 ADR。

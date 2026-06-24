@@ -4,7 +4,7 @@
 >
 > **状态：方向已定，alpha 阶段不实现，后续统一优化。** 本设计已做过可用原型（core + plot 全跑通、测试守门全绿），评估后决定推迟落地、先把设计沉淀在此；后续按本文实现即可，不必重新探索。
 >
-> 关联：[`core-design.md` §AI 优先](./core-design.md) · `packages/core/core/src/ir/**`（IR zod schema，含 `.describe()`）· `packages/plot/plot/src/ir/**`。
+> 关联：[`core-design.md` §AI 优先](./core-design.md) · `packages/kernel/core/src/ir/**`（IR zod schema，含 `.describe()`）· `packages/graph/plot/src/ir/**`。
 
 ---
 
@@ -12,7 +12,7 @@
 
 retikz 是 AI-native 库，IR 的 zod schema 字段都写了英文 `.describe()`，作为「IR 自描述契约」喂给 LLM（生成 / 编辑 IR）。这带来两个现实问题：
 
-1. **describe 是运行时实打实的体积**。实测 `packages/core/core/dist/es/ir/*.js`：`.describe(...)` 调用占 **52%**（约 46KB 文本）。且：
+1. **describe 是运行时实打实的体积**。实测 `packages/kernel/core/dist/es/ir/*.js`：`.describe(...)` 调用占 **52%**（约 46KB 文本）。且：
    - **tree-shaking 摇不掉**：`compileToScene` 的校验路径会拉入 IR schema 图（`compile` import `../ir`，schema 间互相引用），实测把 `compileToScene` 单独打包仍带 ~397/416 个 `.describe()`。所以 describe 会进消费方 bundle。
    - **minify 削不掉**：describe 是字符串字面量，压缩器原样保留。
 2. **describe 不能删**。这是给 AI 的一等公民内容（AI 优先原则），删了等于砍掉核心卖点。

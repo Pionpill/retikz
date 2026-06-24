@@ -104,7 +104,7 @@ scope.draw({ way: ['A.north', 'B'], arrow: '->' }); // A.north 含 margin
 
 ## 测试设计
 
-`packages/core/core/tests/compile/node-*.test.ts` / `boundary` / `anchor` 相关覆盖：
+`packages/kernel/core/tests/compile/node-*.test.ts` / `boundary` / `anchor` 相关覆盖：
 
 - border 类 anchor（compass / 角度 / auto-clip）三处一致外扩 m
 - center / 专属 anchor / edgePoint / **label 附着点** 不受 m 影响
@@ -138,26 +138,26 @@ scope.draw({ way: ['A.north', 'B'], arrow: '->' }); // A.north 含 margin
 
 ### Level
 
-`red`——动 `packages/core/core/src/compile/**`（边界 / anchor / layout 解析）与 `packages/core/core/src/ir/node.ts`（describe）。
+`red`——动 `packages/kernel/core/src/compile/**`（边界 / anchor / layout 解析）与 `packages/kernel/core/src/ir/node.ts`（describe）。
 
 ### Schema 改动
 
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
-| `packages/core/core/src/ir/node.ts` | 改 describe | `outerSep` | `z.number().min(0).optional()` | `0`（回退 `margin`） | 连接面外的均匀外偏移；作用于所有 border 类 anchor（compass / 角度 / 自动连线）并计入布局占位 / viewBox；不改视觉 shape |
-| `packages/core/core/src/ir/node.ts` | 改 describe | `margin` | `z.number().min(0).optional()` | `0` | `outerSep` 的对称别名；axis-specific 字段优先 |
+| `packages/kernel/core/src/ir/node.ts` | 改 describe | `outerSep` | `z.number().min(0).optional()` | `0`（回退 `margin`） | 连接面外的均匀外偏移；作用于所有 border 类 anchor（compass / 角度 / 自动连线）并计入布局占位 / viewBox；不改视觉 shape |
+| `packages/kernel/core/src/ir/node.ts` | 改 describe | `margin` | `z.number().min(0).optional()` | `0` | `outerSep` 的对称别名；axis-specific 字段优先 |
 
 > 仅改 `describe` 文案，**字段名 / 类型 / 默认值不变**（无新增公开字段，符合 beta.1 约束）。
 
 ### 文件 scope
 
-- `packages/core/core/src/compile/node.ts`（修改：新增 `outerRectOf` helper；`anchorOf` / `angleBoundaryOf` **本体不改**——由 `anchor-cache.ts` 调用方喂 outer-inflated layout；`labelBorderPoint` 不改）
-- `packages/core/core/src/compile/anchor-cache.ts`（修改：`computeAnchor` 对 compass / 角度走 `outerRectOf(layout)` 解析；cache key **无需纳入 m**，见待决策点）
-- `packages/core/core/src/compile/compile.ts`（修改：bbox 聚合 `:536` 处 push `outerRectOf(globalLayout)` 四角而非视觉 `rect` 四角；`labelExtentPoints` 已基于视觉附着点，不动）
-- `packages/core/core/src/compile/scope.ts`（**实现期新增 scope**：`computeScopeBoundingBox` 同样 push `outerRectOf(layout)` 四角——scope.id bbox 与顶层 viewBox 同口径；不加则 scope 内含 margin 节点的 bbox 与 viewBox 不一致）
-- `packages/core/core/src/ir/node.ts`（修改：`outerSep` / `margin` describe）
-- `packages/core/core/tests/compile/node-outer-sep.test.ts`（新建：12 case 覆盖 4 象限）
-- `packages/core/core/tests/compile/shape-baseline-snapshot.test.ts` 的 `__snapshots__`（**实现期新增**：含 `outerSep:5` 旋转节点的回归快照 viewBox 随 footprint 计入 margin 更新；primitive 字节零变更，仅 layout 4 字段）
+- `packages/kernel/core/src/compile/node.ts`（修改：新增 `outerRectOf` helper；`anchorOf` / `angleBoundaryOf` **本体不改**——由 `anchor-cache.ts` 调用方喂 outer-inflated layout；`labelBorderPoint` 不改）
+- `packages/kernel/core/src/compile/anchor-cache.ts`（修改：`computeAnchor` 对 compass / 角度走 `outerRectOf(layout)` 解析；cache key **无需纳入 m**，见待决策点）
+- `packages/kernel/core/src/compile/compile.ts`（修改：bbox 聚合 `:536` 处 push `outerRectOf(globalLayout)` 四角而非视觉 `rect` 四角；`labelExtentPoints` 已基于视觉附着点，不动）
+- `packages/kernel/core/src/compile/scope.ts`（**实现期新增 scope**：`computeScopeBoundingBox` 同样 push `outerRectOf(layout)` 四角——scope.id bbox 与顶层 viewBox 同口径；不加则 scope 内含 margin 节点的 bbox 与 viewBox 不一致）
+- `packages/kernel/core/src/ir/node.ts`（修改：`outerSep` / `margin` describe）
+- `packages/kernel/core/tests/compile/node-outer-sep.test.ts`（新建：12 case 覆盖 4 象限）
+- `packages/kernel/core/tests/compile/shape-baseline-snapshot.test.ts` 的 `__snapshots__`（**实现期新增**：含 `outerSep:5` 旋转节点的回归快照 viewBox 随 footprint 计入 margin 更新；primitive 字节零变更，仅 layout 4 字段）
 - 文档（**实现期按用户指示扩到「概念 / 组件 / 扩展」全部相关页**，原 scope 仅列 primitive-model）：
   - `apps/docs/.../concepts/core/primitive-model/index.{zh,en}.mdx`（模型解剖表 / 盒模型 / 外层边界口径）
   - `apps/docs/.../concepts/core/primitive-relations/index.{zh,en}.mdx`（margin 节：显式锚点也吃 margin；center/边比例点/标签不吃）

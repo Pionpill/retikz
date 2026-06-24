@@ -78,7 +78,7 @@ if (mark.series && colorField && !colorConstantWithinSeries(...)) throw new Erro
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/color-series.test.ts` 覆盖：类型兼容校验、B/C 各 mark 着色、隐式拆等价性、冲突 fail-loud。落地测试见实现指针。
+`packages/graph/plot/tests/lower/color-series.test.ts` 覆盖：类型兼容校验、B/C 各 mark 着色、隐式拆等价性、冲突 fail-loud。落地测试见实现指针。
 
 ## 影响
 
@@ -95,5 +95,5 @@ if (mark.series && colorField && !colorConstantWithinSeries(...)) throw new Erro
 - **point/bar/sector 的隐式 series** → 不做（它们按 datum 着色，无 path 整体性问题）。
 - **size 通道** → [ADR-02](./02-channel-scale-resolver-size.md)。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/lower/{expand,mark,channel}.ts` 与 React mark 构造，测试见 `packages/plot/plot/tests/lower/color-series.test.ts` 和 `packages/plot/react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/lower/{expand,mark,channel}.ts` 与 React mark 构造，测试见 `packages/graph/plot/tests/lower/color-series.test.ts` 和 `packages/graph/plot-react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/alpha.7/03-color-series.md`（封板全文）。

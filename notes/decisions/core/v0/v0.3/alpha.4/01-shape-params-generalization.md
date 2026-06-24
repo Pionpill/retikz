@@ -20,7 +20,7 @@
 **IR 侧（nested，参数进 IR、自描述）：**
 
 ```ts
-// packages/core/core/src/ir/shape.ts（新建）
+// packages/kernel/core/src/ir/shape.ts（新建）
 export const ShapeRefSchema = z
   .object({
     type: z
@@ -33,7 +33,7 @@ export const ShapeRefSchema = z
   })
   .describe('Shape reference: type name + optional JSON params, validated at compile time by the registered shape.');
 
-// packages/core/core/src/ir/node.ts —— shape 字段：裸 string（无参，向后兼容）或 {type, params?}
+// packages/kernel/core/src/ir/node.ts —— shape 字段：裸 string（无参，向后兼容）或 {type, params?}
 shape: z
   .union([z.string().min(1), ShapeRefSchema])
   .optional()
@@ -45,7 +45,7 @@ shape: z
 **注册侧（擦除注册表 + `defineShape<T>` 定义点类型安全）：**
 
 ```ts
-// packages/core/core/src/shapes/types.ts —— params 暴露给所有计算函数；registry 同构（无泛型）
+// packages/kernel/core/src/shapes/types.ts —— params 暴露给所有计算函数；registry 同构（无泛型）
 type ShapeDefinitionInput<TParams extends IRJsonObject> = {
   /** params 的 zod schema；类型约束输出 JSON-safe（双 parse 才是真护栏，见编译期） */
   paramsSchema: z.ZodType<TParams>;
@@ -58,7 +58,7 @@ type ShapeDefinitionInput<TParams extends IRJsonObject> = {
 /** 擦除形态：registry 存这个，所有函数收 IRJsonObject（实际类型由 paramsSchema.parse 保证） */
 export type ShapeDefinition = ShapeDefinitionInput<IRJsonObject>;
 
-// packages/core/core/src/shapes/define.ts（新建）—— 定义点 typed，返回擦除形态进 registry（唯一受控 cast）
+// packages/kernel/core/src/shapes/define.ts（新建）—— 定义点 typed，返回擦除形态进 registry（唯一受控 cast）
 export const defineShape = <TParams extends IRJsonObject>(
   def: ShapeDefinitionInput<TParams>,
 ): ShapeDefinition => def as unknown as ShapeDefinition;

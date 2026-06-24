@@ -53,7 +53,7 @@ export const OpacityChannelSchema = z.object({
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/opacity-channel.test.ts` + `tests/ir/encoding.schema.test.ts` 覆盖：linear 映射到 [min,1]、常量 value、`value` 越界 schema 拒绝、`field` 越界 clamp 不报错、temporal fail-loud、size+opacity 共存、schema accept/reject。落地测试见实现指针。
+`packages/graph/plot/tests/lower/opacity-channel.test.ts` + `tests/ir/encoding.schema.test.ts` 覆盖：linear 映射到 [min,1]、常量 value、`value` 越界 schema 拒绝、`field` 越界 clamp 不报错、temporal fail-loud、size+opacity 共存、schema accept/reject。落地测试见实现指针。
 
 ## 影响
 
@@ -69,5 +69,5 @@ export const OpacityChannelSchema = z.object({
 - **categorical → 离散 opacity 档** → 顺延（本轮 continuous only）。
 - **stroke/fill 分别控制 opacity** → 顺延（本轮整节点 opacity）。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/ir/encoding.ts`、`packages/plot/plot/src/lower/{channel,mark}.ts` 与 `packages/plot/react/src/components/marks.tsx`，测试见 `packages/plot/plot/tests/{ir/encoding.schema,ir/mark.schema,lower/opacity-channel}.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/ir/encoding.ts`、`packages/graph/plot/src/lower/{channel,mark}.ts` 与 `packages/graph/plot-react/src/components/marks.tsx`，测试见 `packages/graph/plot/tests/{ir/encoding.schema,ir/mark.schema,lower/opacity-channel}.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/alpha.7/04-opacity-channel.md`（封板全文）。

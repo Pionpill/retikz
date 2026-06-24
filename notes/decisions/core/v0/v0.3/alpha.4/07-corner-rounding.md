@@ -34,15 +34,15 @@
 
 ```ts
 // 子系统 A — Node rectangle 形状（重命名 roundedCorners → cornerRadius）：
-//   packages/core/core/src/ir/node.ts            —— Node 顶层迁移期 prop
-//   packages/core/core/src/shapes/types.ts       —— ShapeStyle.roundedCorners
-//   packages/core/core/src/shapes/rectangle.ts   —— params.roundedCorners（+ emit/scaleParams 内引用）
-//   packages/core/core/src/compile/node.ts       —— NodeLayout.roundedCorners + 透传
+//   packages/kernel/core/src/ir/node.ts            —— Node 顶层迁移期 prop
+//   packages/kernel/core/src/shapes/types.ts       —— ShapeStyle.roundedCorners
+//   packages/kernel/core/src/shapes/rectangle.ts   —— params.roundedCorners（+ emit/scaleParams 内引用）
+//   packages/kernel/core/src/compile/node.ts       —— NodeLayout.roundedCorners + 透传
 // 子系统 B — path rectangle step / <Rectangle> sugar（纯改名，rectOutline 圆角实现不变）：
-//   packages/core/core/src/ir/path/step.ts       —— rectangle step 的 roundedCorners 字段
-//   packages/core/core/src/compile/path/index.ts —— rectOutline(..., step.roundedCorners) 调用
-//   packages/core/core/src/geometry/rect.ts      —— rectOutline 的 roundedCorners 形参
-//   packages/core/react/src/sugar/Rectangle.tsx + Step 相关 —— prop 名
+//   packages/kernel/core/src/ir/path/step.ts       —— rectangle step 的 roundedCorners 字段
+//   packages/kernel/core/src/compile/path/index.ts —— rectOutline(..., step.roundedCorners) 调用
+//   packages/kernel/core/src/geometry/rect.ts      —— rectOutline 的 roundedCorners 形参
+//   packages/kernel/react/src/sugar/Rectangle.tsx + Step 相关 —— prop 名
 // 新增 cornerRadius 到 Node 形状 params：
 //   shapes/polygon.ts · shapes/star.ts · shapes/sector.ts
 cornerRadius: z

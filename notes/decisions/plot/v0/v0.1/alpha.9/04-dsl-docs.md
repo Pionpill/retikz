@@ -34,6 +34,6 @@ ADR-01~03 把 cartesian1D / polar1D / ternary2D 的 IR + lowering 落齐，但�
 
 ## 实现指针
 
-最终形态见 `packages/plot/react/src/components/buildPlotSpec.ts`（`CoordinateInput` + a/b/c 组装）、`src/components/marks.tsx`（`PointMarkProps` x/y 可选 + a/b/c）、`packages/plot/vanilla/src/renderPlot.ts`（对等表面）、`apps/docs/src/contents/plot/grammar/coordinate/`（rug / polar1d / ternary demo）；测试 `packages/plot/react/tests/components/buildPlotSpec.test.tsx`。
+最终形态见 `packages/graph/plot-react/src/components/buildPlotSpec.ts`（`CoordinateInput` + a/b/c 组装）、`src/components/marks.tsx`（`PointMarkProps` x/y 可选 + a/b/c）、`packages/graph/plot-vanilla/src/renderPlot.ts`（对等表面）、`apps/docs/src/contents/plot/grammar/coordinate/`（rug / polar1d / ternary demo）；测试 `packages/graph/plot-react/tests/components/buildPlotSpec.test.tsx`。
 
 > 🔖 本文件压缩前完整施工蓝图 = `git show 329fb8b7:notes/decisions/plot/v0/v0.1/alpha.9/04-dsl-docs.md`（封板全文）。

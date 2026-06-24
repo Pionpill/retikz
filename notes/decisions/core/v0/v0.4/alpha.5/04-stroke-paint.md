@@ -2,7 +2,7 @@
 
 - 状态：Accepted（2026-06-23 完工）
 - 决策日期：2026-06-23
-- 关联：[core v0.2-alpha.7 ADR-01 Paint 基础](../../v0.2/alpha.7/01-paint-basics.md) · [core-design.md §4.5 Scene 编译器](../../../../../architecture/core-design.md#45-scene-编译器) · `packages/core/core/src/compile/paint.ts`
+- 关联：[core v0.2-alpha.7 ADR-01 Paint 基础](../../v0.2/alpha.7/01-paint-basics.md) · [core-design.md §4.5 Scene 编译器](../../../../../architecture/core-design.md#45-scene-编译器) · `packages/kernel/core/src/compile/paint.ts`
 
 ## 背景
 
@@ -52,16 +52,16 @@ arrow marker 继承是唯一需要限制的交互：当 path stroke 是 PaintSpe
 
 实现以当前代码和测试为准，重点见：
 
-- `packages/core/core/src/schemas/{node,scope,path/path}.ts`
-- `packages/core/core/src/primitive/{path,rect,ellipse}.ts`
-- `packages/core/core/src/compile/paint.ts`
-- `packages/core/core/src/compile/node.ts`
-- `packages/core/core/src/compile/path/index.ts`
-- `packages/core/render/src/svg/builders/prim.ts`
-- `packages/core/render/src/canvas/draw-scene.ts`
-- `packages/core/core/tests/ir/paint.test.ts`
-- `packages/core/core/tests/compile/paint.test.ts`
-- `packages/core/render/tests/draw.test.ts`
-- `packages/core/react/tests/render/paint-defs.test.tsx`
+- `packages/kernel/core/src/schemas/{node,scope,path/path}.ts`
+- `packages/kernel/core/src/primitive/{path,rect,ellipse}.ts`
+- `packages/kernel/core/src/compile/paint.ts`
+- `packages/kernel/core/src/compile/node.ts`
+- `packages/kernel/core/src/compile/path/index.ts`
+- `packages/kernel/render/src/svg/builders/prim.ts`
+- `packages/kernel/render/src/canvas/draw-scene.ts`
+- `packages/kernel/core/tests/ir/paint.test.ts`
+- `packages/kernel/core/tests/compile/paint.test.ts`
+- `packages/kernel/render/tests/draw.test.ts`
+- `packages/kernel/react/tests/render/paint-defs.test.tsx`
 
 > 压缩前完整施工蓝图：`git show 63220f823d012744b29551f0a4bf38ff269b0c7e:notes/decisions/core/v0/v0.4/alpha.5/04-stroke-paint.md`

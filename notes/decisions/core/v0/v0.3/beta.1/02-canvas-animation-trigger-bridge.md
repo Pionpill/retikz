@@ -79,11 +79,11 @@ runtime 继续维护 `IdClockRegistry`：
 
 ## 影响范围
 
-- `packages/core/render/src/animation/*`（复用 `IdClockRegistry`；必要时补视口判定 helper，不新增 per-track registry）
-- `packages/core/render/src/canvas/*`（维持 `resolvePrimAnimation(id)` / `includeNonAutoplay` 契约，补必要回归测试）
-- `packages/core/react/src/render/canvasHost.tsx`（事件命中激活、视口接线）
-- `packages/core/vanilla/src/mountCanvas.ts`（事件命中激活、视口接线；不改变 `view.animation` 的 scene 级含义）
-- `packages/core/react/tests/animation.test.tsx`、`packages/core/vanilla/tests/animation.test.ts`
+- `packages/kernel/render/src/animation/*`（复用 `IdClockRegistry`；必要时补视口判定 helper，不新增 per-track registry）
+- `packages/kernel/render/src/canvas/*`（维持 `resolvePrimAnimation(id)` / `includeNonAutoplay` 契约，补必要回归测试）
+- `packages/kernel/react/src/render/canvasHost.tsx`（事件命中激活、视口接线）
+- `packages/kernel/vanilla/src/mountCanvas.ts`（事件命中激活、视口接线；不改变 `view.animation` 的 scene 级含义）
+- `packages/kernel/react/tests/animation.test.tsx`、`packages/kernel/vanilla/tests/animation.test.ts`
 - 视需要补 hydration canvas 交互测试
 
 ## 非目标

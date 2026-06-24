@@ -2,13 +2,13 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-13
-- 关联：[v0.1-beta.1 plan TODO-3](./roadmap.md) · [packages/core/AGENTS.md](../../../../../../packages/core/AGENTS.md) · [core-design.md](../../../../../architecture/core-design.md)
+- 关联：[v0.1-beta.1 plan TODO-3](./roadmap.md) · [packages/kernel/AGENTS.md](../../../../../../packages/kernel/AGENTS.md) · [core-design.md](../../../../../architecture/core-design.md)
 
 > **范围**：把 core 里 JSDoc 注释与 zod `.describe()` 字符串里"把 SVG 当作 the renderer"的措辞（`<ellipse>` / `<tspan>` / `stroke-dasharray` / SVG path `M/L/Q/C/A/Z` / SVG `textAnchor` 等）改成渲染器中性表述。纯字符串改动，DSL / 行为不变。
 
 ## 背景 / 约束
 
-- `packages/core/AGENTS.md` 硬约束 "core 不准依赖 DOM API" 应延伸到注释层——core 描述抽象 IR / primitive 时不该假定目标渲染器是 SVG，否则误导未来 canvas / Skia / PDF adapter 作者以为 core 是 SVG 库。
+- `packages/kernel/AGENTS.md` 硬约束 "core 不准依赖 DOM API" 应延伸到注释层——core 描述抽象 IR / primitive 时不该假定目标渲染器是 SVG，否则误导未来 canvas / Skia / PDF adapter 作者以为 core 是 SVG 库。
 - `.describe()` 字符串是 LLM 工具调用契约的一部分（zod JSON Schema 导出）——LLM 看到 "SVG stroke-dasharray" 会以为只能配 SVG；中性表述让生成的 IR 更不依赖具体 renderer。
 - 数据层已在 alpha.5 去 SVG 化（`PathPrim.commands` / `GroupPrim.transforms` 结构化、`arcSvgFlags` 挪去 react adapter），注释层不跟上等于 core 一半诚实、一半装样。
 

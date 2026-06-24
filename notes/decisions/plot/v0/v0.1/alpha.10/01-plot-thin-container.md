@@ -48,6 +48,6 @@ PlotSpecSchema.colors: z.array(z.string().min(1)).min(1).optional()
 
 ## 实现指针
 
-落地于 `@retikz/plot`（`plot/src/ir/plot.ts`、`lower/*`）与 `@retikz/plot-react`（`react/src/Plot.tsx`、`components/build-plot-spec.ts`、`components/scales.tsx`），行为与 schema 覆盖见 `packages/plot/react/tests/**`、`packages/plot/plot/tests/**`；文档同步见 `apps/docs/src/contents/plot/**`。
+落地于 `@retikz/plot`（`plot/src/ir/plot.ts`、`lower/*`）与 `@retikz/plot-react`（`react/src/Plot.tsx`、`components/build-plot-spec.ts`、`components/scales.tsx`），行为与 schema 覆盖见 `packages/graph/plot-react/tests/**`、`packages/graph/plot/tests/**`；文档同步见 `apps/docs/src/contents/plot/**`。
 
 > 🔖 本文件压缩前完整施工蓝图 = `git show 13765be7:notes/decisions/plot/v0/v0.1/alpha.10/01-plot-thin-container.md`（封板全文）。

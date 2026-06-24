@@ -210,7 +210,7 @@ const mulberry32 = (seed: number) => () => {
 
 ## 测试设计
 
-`packages/plot/plot/tests/ir/transform.schema.test.ts`（扩展）+ `packages/plot/plot/tests/lower/transform.test.ts`（扩展）+ `packages/plot/vanilla/tests/`（SSR 确定性快照）覆盖：
+`packages/graph/plot/tests/ir/transform.schema.test.ts`（扩展）+ `packages/graph/plot/tests/lower/transform.test.ts`（扩展）+ `packages/graph/plot-vanilla/tests/`（SSR 确定性快照）覆盖：
 
 - normalize：组内求和归一化、fraction / percent、`as` 新字段 vs 原位覆盖、组和为 0 不产 NaN
 - derive-interval：baseline→value 单行、两字段 `startFrom/endFrom`、自定义 `startField/endField`、与 stack 语义对照（同数据两 op 产不同 y0/y1）
@@ -249,45 +249,45 @@ const mulberry32 = (seed: number) => () => {
 
 `red`
 
-判级：动 `packages/plot/plot/src/ir/**`（transform IR schema 改动）。虽不下沉 core IR，但触 Plot IR schema 契约边界 → red。
+判级：动 `packages/graph/plot/src/ir/**`（transform IR schema 改动）。虽不下沉 core IR，但触 Plot IR schema 契约边界 → red。
 
 ### Schema 改动
 
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `PlotTransform.Normalize` | `'normalize'`（const 成员） | — | 组内百分比归一化判别值 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `PlotTransform.DeriveInterval` | `'derive-interval'`（const 成员） | — | 单行派生区间判别值 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `PlotTransform.Jitter` | `'jitter'`（const 成员） | — | 位置抖动判别值 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `NormalizeTransformSchema.kind` | `z.literal('normalize')` | — | 判别字段 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `NormalizeTransformSchema.field` | `z.string().min(1)` | — | 求组内占比的数值字段 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `NormalizeTransformSchema.groupBy` | `z.array(z.string().min(1)).min(1).optional()` | 全行单组 | 归一化分组键（数组，复合键，对齐 aggregate.groupBy）；缺省按全局总和 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `NormalizeTransformSchema.basis` | `z.enum(['fraction','percent']).optional()` | `'fraction'` | 输出比例尺度（[0,1] / [0,100]） |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `NormalizeTransformSchema.as` | `z.string().min(1).optional()` | 原位覆盖 | 归一化输出字段；缺省覆盖输入字段 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `DeriveIntervalTransformSchema.kind` | `z.literal('derive-interval')` | — | 判别字段 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `DeriveIntervalTransformSchema.from` | `z.string().min(1).optional()` | — | baseline→value 模式的值字段 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `DeriveIntervalTransformSchema.baseline` | `z.number().finite().optional()` | `0` | from 模式区间起点 baseline |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `DeriveIntervalTransformSchema.startFrom` | `z.string().min(1).optional()` | — | 两字段模式的起点字段（配 endFrom，优先 from） |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `DeriveIntervalTransformSchema.endFrom` | `z.string().min(1).optional()` | — | 两字段模式的终点字段（配 startFrom） |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `DeriveIntervalTransformSchema.startField` | `z.string().min(1).optional()` | `'y0'` | 区间起点输出字段（对齐 interval/sector 消费） |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `DeriveIntervalTransformSchema.endField` | `z.string().min(1).optional()` | `'y1'` | 区间终点输出字段 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `JitterTransformSchema.kind` | `z.literal('jitter')` | — | 判别字段 |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `JitterTransformSchema.axis` | `z.enum(['x','y','both']).optional()` | `'x'` | 抖动作用轴（被抖字段须为连续数值） |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `JitterTransformSchema.xField` | `z.string().min(1).optional()` | `'x'` | x 轴被抖动的连续数值字段（axis x/both 时读） |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `JitterTransformSchema.yField` | `z.string().min(1).optional()` | `'y'` | y 轴被抖动的连续数值字段（axis y/both 时读） |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `JitterTransformSchema.amount` | `z.number().finite().nonnegative().optional()` | `1` | 最大绝对偏移（数据单位，pre-scale，均匀 [-amount,+amount]；仅数值数据空间） |
-| `packages/plot/plot/src/ir/transform.ts` | 加 | `JitterTransformSchema.seed` | `z.number().int().optional()` | `0` | 确定性 PRNG（mulberry32）整数 seed；同 seed 复现同偏移 |
-| `packages/plot/plot/src/ir/transform.ts` | 改 | `TransformSchema` | 并入三新 schema 到 discriminatedUnion（与 ADR-01 Bin/Aggregate 同表追加） | — | transform op union 扩成 5+ 成员 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `PlotTransform.Normalize` | `'normalize'`（const 成员） | — | 组内百分比归一化判别值 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `PlotTransform.DeriveInterval` | `'derive-interval'`（const 成员） | — | 单行派生区间判别值 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `PlotTransform.Jitter` | `'jitter'`（const 成员） | — | 位置抖动判别值 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `NormalizeTransformSchema.kind` | `z.literal('normalize')` | — | 判别字段 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `NormalizeTransformSchema.field` | `z.string().min(1)` | — | 求组内占比的数值字段 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `NormalizeTransformSchema.groupBy` | `z.array(z.string().min(1)).min(1).optional()` | 全行单组 | 归一化分组键（数组，复合键，对齐 aggregate.groupBy）；缺省按全局总和 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `NormalizeTransformSchema.basis` | `z.enum(['fraction','percent']).optional()` | `'fraction'` | 输出比例尺度（[0,1] / [0,100]） |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `NormalizeTransformSchema.as` | `z.string().min(1).optional()` | 原位覆盖 | 归一化输出字段；缺省覆盖输入字段 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `DeriveIntervalTransformSchema.kind` | `z.literal('derive-interval')` | — | 判别字段 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `DeriveIntervalTransformSchema.from` | `z.string().min(1).optional()` | — | baseline→value 模式的值字段 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `DeriveIntervalTransformSchema.baseline` | `z.number().finite().optional()` | `0` | from 模式区间起点 baseline |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `DeriveIntervalTransformSchema.startFrom` | `z.string().min(1).optional()` | — | 两字段模式的起点字段（配 endFrom，优先 from） |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `DeriveIntervalTransformSchema.endFrom` | `z.string().min(1).optional()` | — | 两字段模式的终点字段（配 startFrom） |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `DeriveIntervalTransformSchema.startField` | `z.string().min(1).optional()` | `'y0'` | 区间起点输出字段（对齐 interval/sector 消费） |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `DeriveIntervalTransformSchema.endField` | `z.string().min(1).optional()` | `'y1'` | 区间终点输出字段 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `JitterTransformSchema.kind` | `z.literal('jitter')` | — | 判别字段 |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `JitterTransformSchema.axis` | `z.enum(['x','y','both']).optional()` | `'x'` | 抖动作用轴（被抖字段须为连续数值） |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `JitterTransformSchema.xField` | `z.string().min(1).optional()` | `'x'` | x 轴被抖动的连续数值字段（axis x/both 时读） |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `JitterTransformSchema.yField` | `z.string().min(1).optional()` | `'y'` | y 轴被抖动的连续数值字段（axis y/both 时读） |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `JitterTransformSchema.amount` | `z.number().finite().nonnegative().optional()` | `1` | 最大绝对偏移（数据单位，pre-scale，均匀 [-amount,+amount]；仅数值数据空间） |
+| `packages/graph/plot/src/ir/transform.ts` | 加 | `JitterTransformSchema.seed` | `z.number().int().optional()` | `0` | 确定性 PRNG（mulberry32）整数 seed；同 seed 复现同偏移 |
+| `packages/graph/plot/src/ir/transform.ts` | 改 | `TransformSchema` | 并入三新 schema 到 discriminatedUnion（与 ADR-01 Bin/Aggregate 同表追加） | — | transform op union 扩成 5+ 成员 |
 
 字段名一旦写死，下游 Spec / 实现 Agent 不允许改——需改 → 回本 ADR 加条 / 开新 ADR。
 
 ### 文件 scope
 
-- `packages/plot/plot/src/ir/transform.ts`（修改：加三成员 + 三 schema + 三 `z.infer` 类型 + 并入 union）
-- `packages/plot/plot/src/lower/transform.ts`（修改：加 `applyNormalize` / `applyDeriveInterval` / `applyJitter` + `mulberry32` PRNG + 接进 `applyTransforms` switch）
-- `packages/plot/plot/tests/ir/transform.schema.test.ts`（修改：三 schema accept/reject）
-- `packages/plot/plot/tests/lower/transform.test.ts`（修改：三 op 行为 + 链组合）
-- `packages/plot/vanilla/tests/`（新建 / 修改：jitter SSR 确定性快照——同 seed 同坐标）
-- `packages/plot/react/tests/`（修改：`<Transform kind="normalize|derive-interval|jitter"/>` 经 ADR-01 surface 透传出等价 transform IR；本 ADR **不新增 React 组件 / 不改 `components/src`**，复用 ADR-01 的 `<Transform>`，仅验证三新 kind 透传。gate 于 ADR-01）
+- `packages/graph/plot/src/ir/transform.ts`（修改：加三成员 + 三 schema + 三 `z.infer` 类型 + 并入 union）
+- `packages/graph/plot/src/lower/transform.ts`（修改：加 `applyNormalize` / `applyDeriveInterval` / `applyJitter` + `mulberry32` PRNG + 接进 `applyTransforms` switch）
+- `packages/graph/plot/tests/ir/transform.schema.test.ts`（修改：三 schema accept/reject）
+- `packages/graph/plot/tests/lower/transform.test.ts`（修改：三 op 行为 + 链组合）
+- `packages/graph/plot-vanilla/tests/`（新建 / 修改：jitter SSR 确定性快照——同 seed 同坐标）
+- `packages/graph/plot-react/tests/`（修改：`<Transform kind="normalize|derive-interval|jitter"/>` 经 ADR-01 surface 透传出等价 transform IR；本 ADR **不新增 React 组件 / 不改 `components/src`**，复用 ADR-01 的 `<Transform>`，仅验证三新 kind 透传。gate 于 ADR-01）
 - `apps/docs/src/contents/plot/.../transform`（修改：normalize / derive-interval / jitter 双语 mdx 章节——经 ADR-01 `<Transform>` / `<Plot transforms>` 编写，jitter demo 用连续数值字段，百分比堆叠不带 `<BarMark stack>`）
 - `apps/docs/src/contents/plot/.../*.demo.tsx`（新建：百分比堆叠（显式 `[normalize, stack]`，无 mark auto-stack）/ 甘特区间 / jitter 连续数值散点 demo）
 
@@ -317,10 +317,10 @@ const mulberry32 = (seed: number) => () => {
 
 ### 依赖的现有元素
 
-- `lower/transform.ts` 的 `applyTransforms` / `applySort` / `applyStack`（`packages/plot/plot/src/lower/transform.ts`）—— 扩展：新增三 apply 函数挂进 reduce switch；复用 `DEFAULT_START_FIELD/END_FIELD` 常量对齐默认输出字段。
-- `lower/field.ts` 的 `resolveFieldPath` / `isFiniteNumber`（`packages/plot/plot/src/lower/field.ts`）—— 仅引用：取字段值 / 有限数守卫（非有限按 0 或 baseline 计，同 stack 口径）。
-- `lower/scale.ts` 的 `inferCategoryDomain`（`packages/plot/plot/src/lower/scale.ts`）—— 仅引用：normalize groupBy 保序去重分组（同 stack 的系列序逻辑）。
-- `ir/transform.ts` 的 `PlotTransform` / `SortTransformSchema` / `StackTransformSchema` / `TransformSchema`（`packages/plot/plot/src/ir/transform.ts`）—— 扩展：加成员、并入 union。
-- interval `y0Field/y1Field`、sector `startField/endField`（`packages/plot/plot/src/ir/mark.ts`）—— 仅作消费方：derive-interval 默认产 `y0/y1` 与之对接，不改 mark schema。
-- ADR-01 的 `<Transform>` 组件 / `<Plot transforms>` / `build-plot-spec` `collectInto`（`packages/plot/react/src/components/transform.tsx` / `build-plot-spec.ts`）—— 复用：本 ADR 三个新 kind 经同一 surface 透传，不新增组件；gate 于 ADR-01 先落地。ADR-01「显式 stack 抑制 mark auto-stack」是本 ADR 百分比堆叠去重的依赖约定。
+- `lower/transform.ts` 的 `applyTransforms` / `applySort` / `applyStack`（`packages/graph/plot/src/lower/transform.ts`）—— 扩展：新增三 apply 函数挂进 reduce switch；复用 `DEFAULT_START_FIELD/END_FIELD` 常量对齐默认输出字段。
+- `lower/field.ts` 的 `resolveFieldPath` / `isFiniteNumber`（`packages/graph/plot/src/lower/field.ts`）—— 仅引用：取字段值 / 有限数守卫（非有限按 0 或 baseline 计，同 stack 口径）。
+- `lower/scale.ts` 的 `inferCategoryDomain`（`packages/graph/plot/src/lower/scale.ts`）—— 仅引用：normalize groupBy 保序去重分组（同 stack 的系列序逻辑）。
+- `ir/transform.ts` 的 `PlotTransform` / `SortTransformSchema` / `StackTransformSchema` / `TransformSchema`（`packages/graph/plot/src/ir/transform.ts`）—— 扩展：加成员、并入 union。
+- interval `y0Field/y1Field`、sector `startField/endField`（`packages/graph/plot/src/ir/mark.ts`）—— 仅作消费方：derive-interval 默认产 `y0/y1` 与之对接，不改 mark schema。
+- ADR-01 的 `<Transform>` 组件 / `<Plot transforms>` / `build-plot-spec` `collectInto`（`packages/graph/plot-react/src/components/transform.tsx` / `build-plot-spec.ts`）—— 复用：本 ADR 三个新 kind 经同一 surface 透传，不新增组件；gate 于 ADR-01 先落地。ADR-01「显式 stack 抑制 mark auto-stack」是本 ADR 百分比堆叠去重的依赖约定。
 - core 能力 —— 无（transform 纯 plot domain，不下沉 core IR）。

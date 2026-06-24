@@ -90,7 +90,7 @@ export const PlotScale = {
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/discretization-scale.test.ts`（新建）+ `tests/ir/scale.schema.test.ts`（扩）覆盖：三类切档求值、scheme 采样档色、range 覆盖、threshold 断点校验、quantile 分位、边界落档、fail-loud。落地测试见实现指针。
+`packages/graph/plot/tests/lower/discretization-scale.test.ts`（新建）+ `tests/ir/scale.schema.test.ts`（扩）覆盖：三类切档求值、scheme 采样档色、range 覆盖、threshold 断点校验、quantile 分位、边界落档、fail-loud。落地测试见实现指针。
 
 ## 影响
 
@@ -107,5 +107,5 @@ export const PlotScale = {
 - **React 离散化 scale 显式表面 / `<ColorScale>` DSL** → 顺延。
 - **legend 分箱 swatch 渲染** → [ADR-03](./03-legend-guide.md)。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/ir/scale.ts` 与 `packages/plot/plot/src/lower/{scale,expand}.ts`，测试见 `packages/plot/plot/tests/{ir/scale.schema,lower/discretization-scale}.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/ir/scale.ts` 与 `packages/graph/plot/src/lower/{scale,expand}.ts`，测试见 `packages/graph/plot/tests/{ir/scale.schema,lower/discretization-scale}.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/alpha.8/02-discretization-scale.md`（封板全文）。

@@ -12,7 +12,7 @@
 
 ### 自定义 arrow（关键能力）
 
-arrow shape 现状是**固定 7 枚举** `ARROW_SHAPES`（`packages/core/src/ir/path/arrow.ts:8-16`：normal / open / stealth / diamond / openDiamond / circle / openCircle），定义**散在两处**：
+arrow shape 现状是**固定 7 枚举** `ARROW_SHAPES`（`packages/kernel/core/src/ir/path/arrow.ts:8-16`：normal / open / stealth / diamond / openDiamond / circle / openCircle），定义**散在两处**：
 
 - compile 几何：`compile/path/arrow-geometry.ts:33` `resolveArrowShapeGeometry(spec)` —— `switch(spec.shape)` 出 `lineContactX` / `tipX` / `defaultLength` 等，供 `compile/path/shrink.ts` 算 path 收缩（避免线穿出箭头）。
 - render：`react/src/render/arrowMarkers.tsx:15` `renderInner(spec)` —— `switch(spec.shape)` 出写死的 SVG `<path>` / `<circle>`，`ArrowMarker` 包进 `<marker>`。

@@ -19,7 +19,7 @@ v0.1-alpha.10 已把 `<Plot>` 退化为薄容器，并把"默认轴 / 网格补�
 
 ## 包结构决策（interim，2026-06-13 定）
 
-chart 的框架无关核心逻辑（marks/config + theme → 装饰完整 `PlotSpec`）**先放进 `@retikz/plot`**（自包含模块，建议 `packages/plot/plot/src/chart/`，含从 v0.1 抽出的装饰函数），向 `@retikz/plot-react` / `@retikz/plot-vanilla` 提供能力；**暂不**新建 `@retikz/chart{,-react,-vanilla}` 三件套。
+chart 的框架无关核心逻辑（marks/config + theme → 装饰完整 `PlotSpec`）**先放进 `@retikz/plot`**（自包含模块，建议 `packages/graph/plot/src/chart/`，含从 v0.1 抽出的装饰函数），向 `@retikz/plot-react` / `@retikz/plot-vanilla` 提供能力；**暂不**新建 `@retikz/chart{,-react,-vanilla}` 三件套。
 
 - **理由**：避免在 type+config preset 真正落地前建三个近空壳包（YAGNI）；复用 v0.1 抽出的装饰函数；plot 核心新增的是「PlotSpec 生产者」纯函数，不进 IR、不引入平行机制。chart 同时服务 react + vanilla，需框架无关共享核心，故放 plot（而非某个绑定包内）。
 - **interim 标注（AGENTS.md 临时设计要求）**：显式临时方案。**毕业**为独立 `@retikz/chart` 三件套的触发条件（任一）：① 引入 `type` + 配置驱动 preset（非组合式）；② chart 逻辑体量 / 演进节奏明显独立于 plot 核心；③ chart 需独立版本线。模块按"PlotSpec 进、PlotSpec 出"自包含隔离，毕业是机械搬迁非重写。

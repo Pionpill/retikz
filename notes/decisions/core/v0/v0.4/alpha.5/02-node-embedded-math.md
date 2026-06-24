@@ -2,7 +2,7 @@
 
 - 状态：Accepted（2026-06-17 完工；最终随 ADR-03 收敛）
 - 决策日期：2026-06-16
-- 关联：[v0.4-alpha.5 roadmap](./roadmap.md) · [ADR-01 tex 包](./01-tex-package-and-node-math.md) · [ADR-03 行内混排](./03-inline-math-runs.md) · `packages/core/core/src/compile/node.ts`
+- 关联：[v0.4-alpha.5 roadmap](./roadmap.md) · [ADR-01 tex 包](./01-tex-package-and-node-math.md) · [ADR-03 行内混排](./03-inline-math-runs.md) · `packages/kernel/core/src/compile/node.ts`
 
 ## 背景
 
@@ -45,10 +45,10 @@
 
 实现以当前代码和测试为准，重点见：
 
-- `packages/core/core/src/compile/node.ts`
-- `packages/core/core/src/compile/text-layout.ts`
-- `packages/core/core/tests/compile/inline-tex.test.ts`
-- `packages/core/react/src/kernel/Node.tsx`
+- `packages/kernel/core/src/compile/node.ts`
+- `packages/kernel/core/src/compile/text-layout.ts`
+- `packages/kernel/core/tests/compile/inline-tex.test.ts`
+- `packages/kernel/react/src/kernel/Node.tsx`
 - `apps/docs/src/contents/core/packages/tex/tex-framed.demo.tsx`
 
 > 压缩前完整施工蓝图：`git show 63220f823d012744b29551f0a4bf38ff269b0c7e:notes/decisions/core/v0/v0.4/alpha.5/02-node-embedded-math.md`

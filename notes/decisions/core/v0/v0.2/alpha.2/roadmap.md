@@ -108,7 +108,7 @@ for S in stack 外→内：
 
 ## 实现拆分
 
-1. **schema**（packages/core）：`scope.ts` 4 派生 schema + 级联字段 + 四通道 + resetStyle；`node.ts` / `path.ts` 加 `color`；`step.ts` StepLabel 加 3 字段。全 `.optional()`、禁 `.default()`。
+1. **schema**（packages/kernel）：`scope.ts` 4 派生 schema + 级联字段 + 四通道 + resetStyle；`node.ts` / `path.ts` 加 `color`；`step.ts` StepLabel 加 3 字段。全 `.optional()`、禁 `.default()`。
 2. **compile 继承解析**：style frame 栈（enter push / exit pop）；每源主色展开 → per-field fold（按 `!== undefined`）；颜色级联下传子元素；遇 `resetStyle` 丢通道；内置默认 fold 末尾补；opacity 逐元素覆盖、不落 scope `<g opacity>`。
 3. **label 回退链**：`compile/path/label.ts` fill / font 改回退链（消费 labelDefault + 宿主 path 主色）。
 4. **测试**（Spec-First，red）：见 ADR-01/02 测试象限——主色级联 / 分项覆盖 / 四通道 / 就近优先 / 缺省-none / resetStyle / opacity 不复合 / label 跟宿主主色 / 零破坏。
@@ -119,7 +119,7 @@ for S in stack 外→内：
 - `apps/docs/.../components/tikz/scope/index.{zh,en}.mdx`：加"样式继承"章节——主色 `color` + 级联 + 四通道 every-X + 优先级链 + 嵌套 + resetStyle；配 demo
 - `apps/docs/.../components/draw/step/index.{zh,en}.mdx`：StepLabel 新字段 + 彩色线同色标注（用 `<Path color=...>`）
 - Node / Path 文档补 `color` 主色说明（与 stroke/fill 的关系）
-- 双语一致；AGENTS.md / `packages/core/AGENTS.md` 补 Scope 样式继承 + 主色一节
+- 双语一致；AGENTS.md / `packages/kernel/AGENTS.md` 补 Scope 样式继承 + 主色一节
 
 ## 验收
 

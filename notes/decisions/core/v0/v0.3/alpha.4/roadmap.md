@@ -51,7 +51,7 @@
 
 ## 前置 setup
 
-无新包。改动集中在 `packages/core/core/src/shapes/**`（ShapeDefinition 接口 + 各形状）、`src/ir/node.ts`（shape 字段）、`src/ir/shape.ts`（新建 ShapeRefSchema）、`src/compile/node.ts`（params 桥接）；renderer 侧按 emit 出的 primitive 消费（弧 / 多边形若需新 ScenePrimitive，在对应形状 ADR 标注）。
+无新包。改动集中在 `packages/kernel/core/src/shapes/**`（ShapeDefinition 接口 + 各形状）、`src/ir/node.ts`（shape 字段）、`src/ir/shape.ts`（新建 ShapeRefSchema）、`src/compile/node.ts`（params 桥接）；renderer 侧按 emit 出的 primitive 消费（弧 / 多边形若需新 ScenePrimitive，在对应形状 ADR 标注）。
 
 ## 贯穿原则
 

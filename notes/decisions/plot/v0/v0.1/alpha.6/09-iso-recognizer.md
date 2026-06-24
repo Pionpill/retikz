@@ -42,5 +42,5 @@ ADR-01 把 temporal 推断钉死在严格 ISO（`YYYY-MM-DD` / 带时区 ISO dat
 - **文档站**：`grammar/data` 的"推断是尽力而为"提示补一句"空格分隔的带时区写法（SQL 时间戳）也认"。
 - **core**：无。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/lower/{infer,scale}.ts`，测试见 `packages/plot/plot/tests/lower/iso-recognizer.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/lower/{infer,scale}.ts`，测试见 `packages/graph/plot/tests/lower/iso-recognizer.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/alpha.6/09-iso-recognizer.md`（封板全文）。

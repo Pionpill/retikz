@@ -362,7 +362,7 @@ packages/
 plot / chart 留在主 monorepo，不拆 `retikz-plot` 独立仓——至少贯穿整个 0.x。
 
 - **理由**：plot / chart 是 core 的紧耦合消费者，直接吃 core 的 IR / Scene 契约、并以验证该契约为职责；0.x 契约频繁破坏性变更，单仓可在同一 PR 原子联调、用 `workspace:*` 直连源码，免去「发版 → 消费」回环与版本错配。
-- **可逆**：`packages/plot/*`、`packages/chart/*` 是干净子树，需要时可 `git subtree split` 带历史拆出。先合后拆易，先拆再天天联调难。
+- **可逆**：`packages/graph/*`、`packages/chart/*` 是干净子树，需要时可 `git subtree split` 带历史拆出。先合后拆易，先拆再天天联调难。
 - **重新评估触发条件**：core API 稳定（≥1.0）且 plot / chart 有独立发布节奏；或出现不同团队 / 治理 / license 需求。注意「仓库 ≠ 安装单位」——各包在 npm 上始终独立可选安装，与同处一仓无关。
 
 ## 7. 多坐标组合
@@ -740,7 +740,7 @@ intent
 
 ### 16.1 六条固有软肋
 
-代码核对于 `packages/plot/plot/src/lower/`：
+代码核对于 `packages/graph/plot/src/lower/`：
 
 1. **高基数性能天花板**：散点/柱每行下沉成**一个 `IRNode`**（`mark.ts` `lowerPoint` / `intervalRect`），IR 体积 O(数据点数) 个重对象 → Scene O(N) primitive → SVG O(N) DOM。「一切可见物是 Node」直接与「大数据合批渲染」相冲（可连接 ⊥ 合批）。
    - *已缓解的一半*：颜色不逐 node 写，按色分组到 O(色数) 子 Scope（`colorGroupedScope`），样式不是 O(N)；但 node 数量仍 O(行数)。§8.1 风险备注已点出 datum 逐点绑 id 的同类问题（locator 不预注册即对此的缓解）。

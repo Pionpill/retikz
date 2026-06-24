@@ -105,7 +105,7 @@ React / vanilla 具体 API（评审 P1，当前 `Plot.tsx` 只显式转发列举
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/data-portability.test.ts` 覆盖：
+`packages/graph/plot/tests/lower/data-portability.test.ts` 覆盖：
 
 - 恒等绑定换源（需求 1）
 - fieldMaps 改名后正确取值（需求 2）
@@ -130,5 +130,5 @@ React / vanilla 具体 API（评审 P1，当前 `Plot.tsx` 只显式转发列举
 - **远程 / 流式数据源、大数据采样** → 后续。
 - **运行时响应式换源（不重 lower）** → v0.1 之后交互/性能轴。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/lower/{coerce,expand,scale,field}.ts`、plot React/vanilla 入口透传与 public export，测试见 `packages/plot/plot/tests/lower/data-portability.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/lower/{coerce,expand,scale,field}.ts`、plot React/vanilla 入口透传与 public export，测试见 `packages/graph/plot/tests/lower/data-portability.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/alpha.6/02-data-portability.md`（封板全文）。

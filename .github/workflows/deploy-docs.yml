@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'apps/docs/**'
-      - 'packages/core/**'
+      - 'packages/kernel/**'
       - 'packages/react/**'
       - 'pnpm-workspace.yaml'
       - 'pnpm-lock.yaml'

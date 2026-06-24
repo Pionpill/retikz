@@ -2,7 +2,7 @@
 
 - 状态：Accepted（2026-06-19 落地于 v0.4.0-alpha.5）
 - 决策日期：2026-06-16（实现收敛：2026-06-19）
-- 关联：[v0.4-alpha.5 roadmap](./roadmap.md) · [ADR-01 tex 包](./01-tex-package-and-node-math.md) · [ADR-02 带框公式](./02-node-embedded-math.md) · `packages/core/core/src/schemas/text.ts` · `packages/core/core/src/parsers/inline-tex.ts` · `packages/core/core/src/compile/text-layout.ts`
+- 关联：[v0.4-alpha.5 roadmap](./roadmap.md) · [ADR-01 tex 包](./01-tex-package-and-node-math.md) · [ADR-02 带框公式](./02-node-embedded-math.md) · `packages/kernel/core/src/schemas/text.ts` · `packages/kernel/core/src/parsers/inline-tex.ts` · `packages/kernel/core/src/compile/text-layout.ts`
 
 ## 背景
 
@@ -54,13 +54,13 @@ alpha.5 早期草稿曾把独立公式和带框公式设计为 node 内容字段
 
 实现以当前代码和测试为准，重点见：
 
-- `packages/core/core/src/schemas/text.ts`
-- `packages/core/core/src/schemas/tex.ts`
-- `packages/core/core/src/parsers/inline-tex.ts`
-- `packages/core/core/src/compile/text-layout.ts`
-- `packages/core/core/tests/ir/text-runs.test.ts`
-- `packages/core/core/tests/parsers/inline-tex.test.ts`
-- `packages/core/core/tests/compile/inline-tex.test.ts`
+- `packages/kernel/core/src/schemas/text.ts`
+- `packages/kernel/core/src/schemas/tex.ts`
+- `packages/kernel/core/src/parsers/inline-tex.ts`
+- `packages/kernel/core/src/compile/text-layout.ts`
+- `packages/kernel/core/tests/ir/text-runs.test.ts`
+- `packages/kernel/core/tests/parsers/inline-tex.test.ts`
+- `packages/kernel/core/tests/compile/inline-tex.test.ts`
 - `apps/docs/src/contents/core/packages/tex/**`
 - `apps/docs/src/contents/core/examples/karl-circle/**`
 

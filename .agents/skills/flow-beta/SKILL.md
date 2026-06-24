@@ -22,7 +22,7 @@ retikz beta 期 plan TODO 端到端执行的**编排器**。beta 与 alpha / rc 
 
 调用本 SKILL 前必须先确认两件事：
 
-1. **当前在 beta 期**（`packages/core/core/package.json` 版本号含 `-beta.`）——否则 halt，去用 `flow-alpha`
+1. **当前在 beta 期**（`packages/kernel/core/package.json` 版本号含 `-beta.`）——否则 halt，去用 `flow-alpha`
 2. **TODO 候选已在 milestone roadmap 登记**（`notes/decisions/core/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-beta.<N>/roadmap.md`）——没登记的不接
 
 启动模式与 `flow-alpha` 对齐：
