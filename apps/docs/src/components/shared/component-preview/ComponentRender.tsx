@@ -16,6 +16,7 @@ import {
   type DiffMode,
   type PreviewAction,
   type PreviewActionContext,
+  PreviewActionStateContext,
   type PreviewOverlay,
   type RendererMode,
   type SizeKey,
@@ -90,6 +91,8 @@ export type ComponentRenderProps = {
   animated?: boolean;
   /** 自定义动作按钮（追加在内置工具之后，渲染在左上角动作栏） */
   actions?: Array<PreviewAction>;
+  /** 自定义动作栏是否常驻显示；默认 true */
+  actionsAlwaysVisible?: boolean;
   /** 渲染区内常驻浮层（如未来的 FPS 监视器面板） */
   overlays?: Array<PreviewOverlay>;
 };
@@ -99,7 +102,7 @@ export type ComponentRenderProps = {
  * @description 不接触 demo 文件加载、AST 解析或 IR 派生——那些由调用方（`ComponentPreview` 走 glob、`RetikzPreview` 走 source string）准备好后喂进来
  */
 export const ComponentRender: FC<ComponentRenderProps> = props => {
-  const { name, Component, source, align = 'center', size = 'md', componentClassName, showAskAi = true, interactive, animated = false, actions, overlays } =
+  const { name, Component, source, align = 'center', size = 'md', componentClassName, showAskAi = true, interactive, animated = false, actions, actionsAlwaysVisible = true, overlays } =
     props;
   // 局部状态用 `boolean | undefined`：undefined 跟随全局默认；用户单卡操作过一次后本地选择胜出
   const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);
@@ -126,6 +129,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   const [replayNonce, setReplayNonce] = useState(0);
   // per-card 工具开关态（播放暂停、未来性能监视器等 toggle 类工具）
   const [toolState, setToolState] = useState<Record<string, boolean>>({});
+  const [actionValues, setActionValues] = useState<Record<string, string>>({});
   const { transform, isDragging, panBy, zoomBy, resetTransform, isTransformed, transformStyle, beginDrag } =
     usePanZoom();
   // outer card ref：Ask AI 时反查最近前置 heading 拼 prompt 用
@@ -264,10 +268,16 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     },
     active: id => toolState[id] ?? false,
     setActive: (id, on) => setToolState(prev => ({ ...prev, [id]: on ?? !prev[id] })),
+    actionValue: id => actionValues[id],
+    setActionValue: (id, value) => setActionValues(prev => ({ ...prev, [id]: value })),
   };
   // 有效动作 = 内置工具（含动画时的重播/播放暂停/停止）∪ 自定义 actions
   const builtinActions = animated ? buildAnimationActions(toolState[ANIM_PAUSE_ID] ?? false) : [];
   const allActions: Array<PreviewAction> = [...builtinActions, ...(actions ?? [])];
+  const previewActionState = {
+    values: actionValues,
+    setValue: actionCtx.setActionValue,
+  };
   const overlayNodes: Array<ReactNode> = (overlays ?? []).map(o => <Fragment key={o.id}>{o.render(actionCtx)}</Fragment>);
 
   return (
@@ -296,14 +306,16 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
           style={{ transform: transformStyle }}
         >
           <Fragment key={replayNonce}>
-            {activeRender ? (
-              activeRender(rendererMode)
-            ) : (
-              <DemoRenderer Component={Component} rendererMode={rendererMode} interactive={interactive} />
-            )}
+            <PreviewActionStateContext.Provider value={previewActionState}>
+              {activeRender ? (
+                activeRender(rendererMode)
+              ) : (
+                <DemoRenderer Component={Component} rendererMode={rendererMode} interactive={interactive} />
+              )}
+            </PreviewActionStateContext.Provider>
           </Fragment>
         </div>
-        <PreviewActionBar actions={allActions} ctx={actionCtx} pinned={toolbarPinned} />
+        <PreviewActionBar actions={allActions} ctx={actionCtx} pinned={toolbarPinned} alwaysVisible={actionsAlwaysVisible && (actions?.length ?? 0) > 0} />
         {overlayNodes}
         <PanZoomToolbar
           transform={transform}
@@ -320,6 +332,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
           rendererMode={rendererMode}
           toggleRendererMode={toggleRendererMode}
           pinned={toolbarPinned}
+          alwaysVisible={actionsAlwaysVisible && (actions?.length ?? 0) > 0}
         />
       </div>
       {hasCode ? (
@@ -454,6 +467,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
         interactive={interactive}
         animated={animated}
         actions={actions}
+        actionsAlwaysVisible={actionsAlwaysVisible}
         overlays={overlays}
         sourceFileIndex={activeFileIndex}
         onSourceFileIndexChange={setSourceFileIndex}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema, isBuiltinMark } from '@retikz/plot';
+import { type PlotSpec, PlotSpecSchema, isBuiltinMark, lowerPlots } from '@retikz/plot';
 import { buildPlotSpec, decorateDefaultGuides } from '../../src/components/build-plot-spec';
 import { Axis, Legend } from '../../src/components/guides';
 import { IntervalMark, PathMark, PointMark, ReferenceMark, RegionMark } from '../../src/components/marks';
@@ -97,6 +97,21 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     expect(spec.marks[0]).toEqual({ type: 'point', opacity: { kind: 'field', value: 'density' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } });
   });
 
+  it('point extension channels -> encoding.channels', () => {
+    const spec = buildPlotSpec(<PointMark x="x" y="y" channels={{ intensity: 'score', threshold: { kind: 'constant', value: 0.8 } }} />, '__plot');
+    expect(spec.marks[0]).toEqual({
+      type: 'point',
+      encoding: {
+        x: { field: 'x' },
+        y: { field: 'y' },
+        channels: {
+          intensity: { field: 'score' },
+          threshold: { value: 0.8 },
+        },
+      },
+    });
+  });
+
   it('point shape 字段 → shape 通道（alpha.7 ADR-05）', () => {
     const spec = buildPlotSpec(<PointMark x="x" y="y" shape="category" />, '__plot', { dataFieldNames: new Set(['category']) });
     expect(spec.marks[0]).toEqual({ type: 'point', shape: { kind: 'field', value: 'category' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } });
@@ -150,6 +165,29 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
       minimumHeight: { kind: 'constant', value: 12 },
       zIndex: { kind: 'constant', value: 3 },
       encoding: { x: { field: 'x' }, y: { field: 'y' } },
+    });
+  });
+
+  it('path core style props pass through to mark IR', () => {
+    const spec = buildPlotSpec(<PathMark x="x" y="y" strokeWidth={3} opacity={0.6} lineCap="round" lineJoin="bevel" roundedCorners={4} />, '__plot');
+    expect(spec.marks[0]).toEqual({
+      type: 'path',
+      strokeWidth: { kind: 'constant', value: 3 },
+      opacity: { kind: 'constant', value: 0.6 },
+      lineCap: { kind: 'constant', value: 'round' },
+      lineJoin: { kind: 'constant', value: 'bevel' },
+      roundedCorners: { kind: 'constant', value: 4 },
+      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+    });
+  });
+
+  it('interval core node style props pass through to mark IR', () => {
+    const spec = buildPlotSpec(<IntervalMark x="month" y="revenue" strokeWidth="weight" fillOpacity={0.5} opacity={0.9} />, '__plot', { dataFieldNames: new Set(['weight']) });
+    expect(spec.marks[0]).toMatchObject({
+      type: 'interval',
+      strokeWidth: { kind: 'field', value: 'weight' },
+      fillOpacity: { kind: 'constant', value: 0.5 },
+      opacity: { kind: 'constant', value: 0.9 },
     });
   });
 
@@ -235,16 +273,20 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
-  it('dsl_axis_bad_dim_type：非法 dimension 经 PlotSpecSchema 被拒', () => {
+  it('dsl_axis_bad_dim_type：非法 dimension 经 lowering 按坐标系角色拒绝', () => {
     const spec = buildPlotSpec(
       <>
         <PathMark x="m" y="r" />
-        {/* @ts-expect-error 故意传非法 dimension，验证装配产物被 schema 拒 */}
+        {/* @ts-expect-error 故意传非法 dimension，验证 lowering 按坐标系角色拒绝 */}
         <Axis dimension="q" />
       </>,
       '__plot',
     );
-    expect(() => PlotSpecSchema.parse(spec)).toThrow();
+    expect(spec.guides).toEqual([{ type: 'axis', dimension: 'q' }]);
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => lowerPlots({ __plot: [{ m: 1, r: 2 }] }, { width: 320, height: 200 })[0]?.expand(spec)).toThrow(
+      /does not support axis dimension "q"/,
+    );
   });
 });
 

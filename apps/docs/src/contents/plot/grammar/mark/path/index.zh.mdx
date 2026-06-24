@@ -3,9 +3,10 @@ title: PathMark
 description: PathMark 是有序点形成的一维轨迹；折线、多系列线和雷达线框都是它在不同配置下的表现形态。
 ---
 
+
 `<PathMark>` 为一组数据行生成一条 1D 轨迹。它先把每行数据投影成点，再按 `order` 排序并连接成 core `Path`；在 cartesian2D 下常表现为折线，在 polar2D 下可以表现为极坐标路径或雷达线框。
 
-`x` / `y` 绑定位置通道，`order` 决定连接顺序，`series` 决定是否拆成多条路径，`closed` 决定末点是否回连首点。当前 PathMark 支持二维笛卡尔坐标系和二维极坐标系。
+`x` / `y` 绑定位置通道，`order` 决定连接顺序，`series` 决定是否拆成多条路径，`curve` 决定相邻点的连接方式，`closed` 决定末点是否回连首点。当前 PathMark 支持二维笛卡尔坐标系和二维极坐标系。
 
 ## 用法
 
@@ -37,25 +38,44 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 ### 位置属性
 
-`x` / `y` 决定路径经过哪些点，`order` 决定这些点的连接顺序。这个例子对应 API 里的位置属性，是最小的单线折线。
+`x` / `y` 决定路径经过哪些点，`order` 决定这些点的连接顺序。左侧是二维笛卡尔坐标，右侧是二维极坐标，用同一组数据对比位置通道在不同坐标系下的投影。
 
 <ComponentPreview name="line-basic" sourceFiles={['line-basic.data.ts']} />
 
 ### 系列属性
 
-给 `series` 一个字段，数据会先按该字段拆成多组，每组下沉为一条 core Path。颜色没有显式指定时，每个系列会按默认颜色序列取色。
+给 `series` 一个字段，数据会先按该字段拆成多组，每组下沉为一条 core Path。这个例子显式按 `city` 拆分，左侧看多系列折线，右侧看同一组系列在极坐标下形成的线框。
 
 <ComponentPreview name="line-series" sourceFiles={['line-series.data.ts']} />
 
-不写 `series`、只给 `color` 一个分类字段时，PathMark 也会按该字段隐式拆系列。这个写法对应 API 里的 `color`，适合“颜色就是系列”的场景。
+不写 `series`、只给 `color` 一个分类字段时，PathMark 也会按该字段隐式拆系列。这个例子换成另一组数据，突出“颜色字段本身就是系列字段”的紧凑写法。
 
 <ComponentPreview name="line-color-split" sourceFiles={['line-series.data.ts']} />
 
 ### 几何属性
 
-`closed` 是 PathMark 当前最重要的几何属性：它会让末点回连首点。在 `polar2D` 下，分类维度沿角向分布，数值维度映射到半径，闭合后就是线框雷达。
+`closed` 会让末点回连首点。在 `polar2D` 下，分类维度沿角向分布，数值维度映射到半径；左侧展示闭合线框，右侧展示不闭合时末点不会回到首点。
 
 <ComponentPreview name="line-radar" sourceFiles={['line-radar.data.ts']} />
+
+### 连接方式
+
+`curve` 控制相邻点之间如何连接。左侧是二维笛卡尔坐标，右侧是二维极坐标；切换连接方式时，两边会同步更新。极坐标下不额外设置内部半径，PathMark 会按角向和径向位置直接投影。
+
+<ComponentPreview name="line-curve" sourceFiles={['line-curve.data.ts']} interactive size="md" />
+
+| 值 | 说明 | 表现 |
+| --- | --- | --- |
+| `linear` | 直线连接 | 最忠实于相邻点之间的折线关系，适合强调逐段变化 |
+| `step` | 中点阶梯 | 在两个 x 位置中间切换 y 值，适合状态或库存类数据 |
+| `stepBefore` | 前置阶梯 | 先切换到新值，再沿 x 方向推进，适合“新值立即生效”的序列 |
+| `stepAfter` | 后置阶梯 | 先保持旧值，到下一个 x 位置再切换，适合“旧值持续到下一时刻”的序列 |
+| `basis` | 平滑样条 | 曲线最柔和，但不保证穿过每个中间点，适合表现整体趋势 |
+| `cardinal` | 基数样条 | 穿过数据点，曲率比直线自然，但局部极值可能略有过冲 |
+| `catmullRom` | 穿点平滑 | 穿过数据点，并更多保留局部形状，适合一般平滑折线 |
+| `monotoneX` | 横向单调 | x 单调时尽量避免曲线超过相邻点的 y 极值，BI 趋势线优先用它 |
+| `monotoneY` | 纵向单调 | y 单调时尽量避免曲线超过相邻点的 x 极值，适合竖向轨迹 |
+| `natural` | 自然样条 | 整体连续且端点更放松，适合追求连续曲率的趋势表达 |
 
 ## 技术原理
 
@@ -110,17 +130,27 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 
 ## API
 
-`PathMark` 的主要属性都是数据通道：位置属性决定轨迹经过哪些点，系列属性决定是否拆成多条路径。表里的 `FieldName` 表示数据字段名或字段路径，例如 `month` / `city`。
+`PathMark` 的 API 按位置、专属、路径、标签、通用和自定义分组：位置字段决定轨迹点，专属字段负责拆系列、连接方式和闭合路径，路径字段下沉到 core `Path`。表里的 `FieldName` 表示数据字段名或字段路径，例如 `month` / `city`。
 
 | 分类 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- | --- |
-| 位置 | `x` | `FieldName` | — | 绑定 x 位置通道字段 |
-| | `y` | `FieldName` | — | 绑定 y 位置通道字段 |
-| | `order` | `FieldName?` | 数据顺序 | 绑定连接顺序字段 |
-| 系列 | `series` | `FieldName?` | — | 按字段拆成多条路径 |
-| | `color` | `FieldName?` | `series` | 绑定颜色通道；无显式 `series` 时可隐式拆系列 |
-| 几何 | `closed` | `boolean?` | `false` | 末点回连首点，形成闭合路径 |
-| 通用 | `id` | `string?` | — | 可选句柄（预留，暂不解析） |
+| 位置 | `x` / `y` | `FieldName` | — | 坐标角色字段；cartesian2D 中是平面点，polar2D 中解释为角向 / 径向 |
+| 专属 | `color` | `FieldName?` | `series` | 颜色字段；无显式 `series` 时可按分类颜色隐式拆系列 |
+|  | `order` | `FieldName?` | 数据顺序 | 驱动连接顺序的字段 |
+|  | `series` | `FieldName?` | — | 按字段拆成多条路径 |
+|  | `curve` | `PathCurveValue?` | `linear` | 相邻点连接方式；支持直线、阶梯、样条和单调曲线 |
+|  | `closed` | `boolean?` | `false` | 末点回连首点，形成闭合路径 |
+| 路径 | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | 路径描边宽度、整体透明度和填充透明度 |
+|  | `drawOpacity`<br />`zIndex` / `rotate` | `PointOpacityStyle?`<br />`PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />—<br />— | 描边透明度、绘制顺序和旋转 |
+|  | `roundedCorners` | `MarkValueProp<number>` | — | step 转角圆角 |
+|  | `lineCap` / `lineJoin` | `FieldName / LineCapValue`<br />`FieldName / LineJoinValue` | —<br />— | 线帽与连接样式 |
+|  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | 路径缩放、填充规则和厚度预设 |
+|  | `arrow` / `arrowDetail` | `PathArrowStyle?`<br />`PathArrowDetailStyle?` | —<br />— | 箭头方向与细节 |
+|  | `dashPattern`<br />`shadow` / `blendMode` | `NodeDashPatternStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?` | —<br />—<br />— | 虚线、阴影和混合模式 |
+| 标签 | `label` / `labelDisplayFormat` | `FieldName?`<br />`string?` | —<br />— | 给路径数据点挂标签 |
+|  | `labelPosition`<br />`labelDistance`<br />`labelPin` | `string / number`<br />`number`<br />`boolean / LabelPin` | `above`<br />`12`<br />`false` | 标签方位、距离和引线 |
+| 通用 | `id` | `string?` | — | 可选 mark 句柄，用于图层 id / 运行时标签解析 |
+| 自定义 | `channels` | `Record<string, Channel>` | — | 自定义通道入口；交给注册的 channel definition 解析 |
 
 ## 相关
 

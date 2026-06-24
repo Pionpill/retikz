@@ -49,6 +49,44 @@
 
 > **分组均值慎读**：均值为等权、且对维度选取高度敏感（本表偏重图形语法 / 渲染架构 / AI 等 retikz 结构强项），故不压成单一总分。retikz 现状低分（交互 2、动画 1、facet 3）是阶段性而非结构性；较高分（renderer-agnostic 7、schema 契约 8、类型安全 8、深度使用 7）是结构性优势，源于核心架构（registry 三联 + operation/definition 二分）而非堆功能。看分组趋势（如能力维度现状 3.2）比看总分可靠，结构优势 ≠ 整体成熟度。
 
+## 图形语法分层评分
+
+> 口径：只评 retikz plot 现状，不再横向比较各库；**功能完整度**看内置能力是否足够覆盖常见图表语义，**拓展性**看该层是否有一等 definition / registry / schema contract，以及扩展是否仍能保持 IR 可序列化。分数仍为 10 分制，现状按 alpha.12 已落地能力估算。
+
+| 图形语法层级 | 功能完整度 | 拓展性 | 现状判断 | 主要缺口 / 下一步 |
+|---|:--:|:--:|---|---|
+| Data / 数据入口 | 5 | 6 | 能承载结构化数据并进入 plot spec，但更多是“数据作为输入”而非成熟 dataflow 层 | 数据集命名、跨 mark 共享、派生数据复用、异步 / 流式数据都还不是一等模型 |
+| Transform / 数据变换 | 6 | 9 | 已有 7 类 transform，且 `defineTransform` 让内置与自定义同机制 | 需要补更完整的统计变换、窗口变换、bin / density 等常见图表数据流能力 |
+| Scale / 尺度与配色 | 7 | 9 | 13 scale + 19 配色已能覆盖多数常见图，`defineScale` 拓展路径清楚 | 需要继续打磨默认值、domain 推断、legend/axis 联动与主题化体验 |
+| Coordinate / 坐标系 | 6 | 9 | 5 种坐标系已覆盖 cartesian / polar / ternary 主干，`defineCoordinate` 是强拓展点 | 缺 geo、parallel、radial/helix 等更偏专用或高阶的坐标变体 |
+| Mark / 几何图元 | 6 | 9 | 6 mark 已能组合出柱、线、面、散点、饼环、热力、桑基、参考线等基础图 | 缺 boxplot、candlestick、geo shape、graph edge/node 等专用 mark 家族 |
+| Encoding / Channel | 5 | 7 | 已能把字段映射到位置、颜色、形状等视觉变量，是 mark 组合的核心胶水 | channel contract 与 guide / scale / mark 的联动还需收敛，复杂 channel 复用能力不足 |
+| Guide / 轴与图例 | 4 | 5 | 有 guide 概念，但成熟度低于 data / scale / coordinate / mark 主干 | 需要补 axis / legend 的布局、主题、格式化、交互状态与自动推断 |
+| Layer / Composition / Facet | 3 | 6 | 现状主要是 marks 数组多层组合；scope-aware IR 给 facet 留了位置 | facet、小多图、layer 继承、共享 scale / guide 还未形成完整语法 |
+| Selection / Interaction | 2 | 5 | locator API 已给 datum/series resolve 打地基，但还不是完整交互语法 | hover、tooltip、brush、zoom、selection state、事件到 IR / runtime 的契约仍缺 |
+| Lowering / IR 边界 | 7 | 9 | Tier 2 plot 可下沉到 core Kernel，IR / Scene 仍保持 renderer-agnostic 和可序列化 | 需要继续验证复杂图表 lowering 后的可调试性、source map / locator parity 和文档化 |
+| **均值** | **5.1** | **7.4** | 现状是“功能成熟度中等偏早、拓展性明显先行”的结构 | 短期补功能广度，长期守住 operation/definition 二分与可序列化边界 |
+
+结论：从图形语法分层看，retikz 的强项不是“每层功能都已成熟”，而是 **transform / scale / coordinate / mark / lowering 这些核心层的拓展契约已经先搭起来**。低分集中在 guide、facet、interaction 和 channel 联动，这些决定用户日常出图与复杂图表表达力；若后续补齐时仍沿用 definition / registry / 可序列化 operation 的同一套机制，目标形态会更接近 Vega-Lite 的 spec 纯度，同时保留 G2 式可扩展语法的灵活性。
+
+### 图形语法分层横向对比
+
+> 口径：单元格为 **功能完整度 / 拓展性**。功能完整度看内置语法与常见图表覆盖，拓展性看用户能否以稳定机制新增语法能力。这里的 Vega 指 **Vega-Lite**，Observable Plot 按 D3 团队的 Plot API 计，VChart 按 VisActor 的 VGrammar + VChart 组合能力计。
+
+| 图形语法层级 | ggplot2 | Vega-Lite | Observable Plot | AntV G2 | VChart | retikz 现状 | 关键判断 |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|---|
+| Data / 数据入口 | 8/7 | 8/6 | 7/5 | 8/7 | 8/7 | 5/6 | 成熟库都有更自然的数据集、分组和派生数据语义；retikz 现状仍偏“输入数据”而非完整 dataflow |
+| Transform / Stat | 9/8 | 8/5 | 7/5 | 8/8 | 8/7 | 6/9 | ggplot2 统计变换最成熟；retikz 内置数量还少，但 `defineTransform` 的扩展契约强 |
+| Scale / 尺度 | 9/8 | 9/6 | 7/5 | 8/8 | 8/7 | 7/9 | retikz 已有可用基础，拓展性接近 G2；短板在自动推断、guide 联动和默认体验 |
+| Coordinate / 坐标 | 8/7 | 6/5 | 5/4 | 9/8 | 8/7 | 6/9 | G2 坐标系最全；retikz 种类少于 G2/VChart，但 `defineCoordinate` 保留了高扩展上限 |
+| Mark / Geom | 9/8 | 8/5 | 8/6 | 9/8 | 9/7 | 6/9 | ggplot2/G2/VChart 专用图元更全；retikz mark 家族少，但自定义 mark 与内置同机制 |
+| Encoding / Channel | 8/7 | 9/6 | 8/5 | 9/8 | 8/7 | 5/7 | Vega-Lite 与 G2 的 channel 语义更完整；retikz 需要继续收敛 channel、scale、guide、mark 的联动契约 |
+| Guide / Axis / Legend | 8/6 | 8/5 | 6/4 | 8/7 | 8/7 | 4/5 | retikz guide 明显早期；成熟库优势在布局、格式化、主题、自动推断与交互状态 |
+| Layer / Composition / Facet | 10/8 | 9/6 | 7/5 | 9/8 | 7/6 | 3/6 | ggplot2 facet 与 G2 composite view 是高线；retikz 目前只有多 mark 组合，facet 仍是核心 gap |
+| Selection / Interaction | 2/3 | 7/5 | 4/4 | 9/8 | 9/8 | 2/5 | G2/VChart 在交互语法和运行时能力领先；retikz 只有 locator 地基，还缺 selection grammar |
+| Spec / IR 边界 | 3/4 | 10/5 | 3/4 | 6/8 | 6/7 | 8/9 | retikz 的可序列化 IR + operation/definition 二分是最强差异点；Vega-Lite spec 最纯但用户扩展弱 |
+| **均值** | **7.4/6.6** | **8.2/5.4** | **6.2/4.7** | **8.3/7.8** | **7.9/7.0** | **5.2/7.4** | retikz 横向位置很清楚：功能成熟度仍落后，拓展性已经进入 G2/VChart 这一档 |
+
 ## 结论：结构优势 / gap / 取舍
 
 **国内同赛道对手（G2 / VChart）画像**
@@ -87,3 +125,4 @@
 - **压缩**（2026-06-12）：精简为对比表 + 评分口径 + 结论（结构优势 / gap / 非目标）；移除逐库画像与人群体验长文（逐库要点已在表的备注列、评分已在表内）。
 - **v0.3**（2026-06-20）：补入国内同赛道 **AntV G2**（阿里）与 **VChart**（字节 VisActor）两列，重算分组均值；新增「国内同赛道对手画像」段落，校正渲染维度认知（后端数量非 retikz 强项，硬优势是解耦边界可序列化）；结论补「不与 G2 拼广度/生态」取舍。
 - **v0.4**（2026-06-20）：retikz 现状评分基线从 **alpha.4** 重置到 **alpha.12** 实际落地能力。上调：图表类型覆盖 3→4、坐标系种类 4→6、交互 1→2、真·图形语法 6→7、类型安全 7→8、日常出图 3→4、深度使用 5→7（registry 三联全套扩展驱动）；连带分组均值 能力 2.4→3.2、图形语法 6.3→6.7、API 6.0→6.3、人群体验 4.0→5.0。动画 / facet / 大数据 / AI 语料维度无实现进展，保持原分。
+- **v0.5**（2026-06-22）：新增「图形语法分层评分」与「图形语法分层横向对比」，按 Data / Transform / Scale / Coordinate / Mark / Channel / Guide / Composition / Interaction / Spec 边界拆分 retikz 现状及 ggplot2 / Vega-Lite / Observable Plot / AntV G2 / VChart 的功能完整度与拓展性，明确“拓展契约先行、功能成熟度仍需补齐”的判断。

@@ -138,7 +138,7 @@ When the PlotSpec carries an `id` (spec entry or generated IR), lowering wraps a
 | `clip` | `IRClipSpec` | — | Panel-level clipping region |
 | `fontSize` | `number?` | — | Tick label font size |
 | `margin` | `{ top?; right?; bottom?; left? }` | — | Override the surrounding padding |
-| `visualChannelDefinitions` | `Array<AnyVisualChannelDefinition>` | — | Runtime definitions for custom visual channels; used together with `encoding.channels` in a spec. See [Custom Data](/plot/grammar/data/custom#custom-visual-channels) |
+| `channelDefinitions` | `Array<AnyChannelDefinition>` | — | Runtime definitions for custom channels; used together with `encoding.channels` in a spec. See [Custom Channels](/plot/grammar/channel/custom) |
 | `spec` | `PlotSpec` | — | Spec entry: a prebuilt Plot IR root (mutually exclusive with `children`) |
 
 In addition, `renderer` / `className` / `style` pass through to the underlying `<Layout>` — picking the render backend, an extra class name, and inline styles respectively.
@@ -150,4 +150,4 @@ In addition, `renderer` / `className` / `style` pass through to the underlying `
 - [Axis](/plot/grammar/guide/axis) — ticks, labels, grid, polar dimensions
 - [Data Model](/plot/grammar/data/model) — `model` field types and type-driven derivation
 - [Processing](/plot/grammar/data/processing) — `fieldMap`, validation, custom parsing
-- [Custom Data](/plot/grammar/data/custom#custom-visual-channels) — `visualChannelDefinitions` and `encoding.channels`
+- [Custom Channels](/plot/grammar/channel/custom) — `channelDefinitions` and `encoding.channels`

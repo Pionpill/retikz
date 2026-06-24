@@ -1,6 +1,6 @@
 import { isFiniteNumber } from '@retikz/math';
 import { type FieldFormatDefinition, defineFieldFormat } from '../../contract';
-import { coerceValue } from '../../features';
+import { coerceValue } from '../data';
 import { PlotFieldType } from '../../schemas';
 import { PlotFieldFormat } from './constants';
 

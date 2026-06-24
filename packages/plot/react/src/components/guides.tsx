@@ -29,7 +29,7 @@ export const Axis: FC<AxisProps> = () => null;
 /** <Legend> props：图例配置；可视化哪个非位置通道由 channel 指定，形态（swatch / 色带 / 分箱 / 梯度符号）据绑定 scale 类型自动选 */
 export type LegendProps = {
   /** 可视化哪个非位置通道：color（颜色）/ size（尺寸）/ opacity（透明度）/ shape（形状） */
-  channel: 'color' | 'size' | 'opacity' | 'shape';
+  channel: string;
   /** 消歧 scale name（同通道被多个 scale 驱动时指定；省略 = 该通道唯一 scale，多于一个且省略 → lowering fail-loud） */
   scale?: string;
   /** 图例标题；省略 = 用绑定字段名 */

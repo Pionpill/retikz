@@ -22,7 +22,6 @@ description: 自定义图元把下沉函数留在运行时：IR 只保存自定�
 | `type` | 必填 | 注册键 = IR 判别串；必须是非内置标识符（不能撞 `point` / `path` / `region` / `interval` / `link` / `reference`） |
 | `lower` | 必填 | 把当前图元 + 数据行 + `frame` + 通道 resolver 下沉成 core IR；无可绘制内容返回 `null` |
 | `collectFields` | 可选 | 登记这个图元读取的源字段；strict model 据此校验，避免把字段误判为缺失 |
-| `requiredRoles` | 可选 | 声明当前坐标系下需要哪些位置角色；省略时由 `lower` 自行 fail-loud |
 | `buildCell` | 可选 | 区间类图元的 per-row cell 构造入口（内置 `interval` 走这条；普通 glyph 不需要） |
 
 用 `defineMark<MyMark>` 显式给出自己的 operation 类型，`lower` / `collectFields` 里就能拿到精确的图元形态（不写则默认内置 `Mark`）。

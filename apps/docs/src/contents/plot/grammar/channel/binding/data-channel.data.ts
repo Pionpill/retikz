@@ -8,4 +8,3 @@ export const cities = [
   { city: 'Sao Paulo', abbr: 'SAO', region: 'South America', gdp: 530, life: 76.8, population: 22.4 },
   { city: 'Buenos Aires', abbr: 'BUE', region: 'South America', gdp: 310, life: 77.6, population: 15.6 },
 ];
-

@@ -1,7 +1,7 @@
 import { isFiniteNumber } from '@retikz/math';
 import { format as d3Format } from 'd3-format';
 import { utcFormat as d3UtcFormat } from 'd3-time-format';
-import type { FieldCollector } from '../../contract';
+import type { FieldCollector, ResolveLabel } from '../../contract';
 import { type Channel, type DataModel, type ExternalRow, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, type TextChannel } from '../../schemas';
 
 /**
@@ -36,7 +36,6 @@ export const compareRowsByFieldPath = (a: ExternalRow, b: ExternalRow, path: str
 };
 
 /** 运行时 label 解析逃生舱（不进 IR，options 注入）：按 mark 顺序的某 datum 行 → 完全自定义标签串 */
-export type ResolveLabel = (row: ExternalRow) => string;
 
 /**
  * 把字段值按展示格式串格式化（temporal 走 d3-time-format、数值走 d3-format）

@@ -1762,8 +1762,8 @@ export const changelog: Array<Release> = [
             version: 'alpha.7',
             date: '2026-06-08',
             summary: {
-              zh: '阶段二·Aesthetics 全部视觉通道 + 连续 scale 家族：补 log / pow / sqrt 连续 scale（L1：仅 point/line，bar/area fail-loud）;把「通道→scale」抽象成通用 resolver，落地 `size` / `opacity` / `shape` 三个仅 PointMark 的非位置通道;`color` 收口为真 scale 通道 + `series` 一等化。',
-              en: 'Stage 2 · all aesthetic visual channels + the continuous scale family: adds log / pow / sqrt continuous scales (L1: point/line only, bar/area fails loud); abstracts channel→scale into a reusable resolver and lands `size` / `opacity` / `shape` as PointMark-only non-position channels; closes `color` into a real scale channel + first-classes `series`.',
+              zh: '阶段二·Aesthetics 全部内置通道 + 连续 scale 家族：补 log / pow / sqrt 连续 scale（L1：仅 point/line，bar/area fail-loud）;把「通道→scale」抽象成通用 resolver，落地 `size` / `opacity` / `shape` 三个仅 PointMark 的非位置通道;`color` 收口为真 scale 通道 + `series` 一等化。',
+              en: 'Stage 2 · all built-in channels + the continuous scale family: adds log / pow / sqrt continuous scales (L1: point/line only, bar/area fails loud); abstracts channel→scale into a reusable resolver and lands `size` / `opacity` / `shape` as PointMark-only non-position channels; closes `color` into a real scale channel + first-classes `series`.',
             },
             items: [
               {
@@ -2200,7 +2200,7 @@ export const changelog: Array<Release> = [
                 },
               },
               {
-                label: { zh: '<PointMark> 视觉通道 props', en: '`<PointMark>` visual-channel props' },
+                label: { zh: '<PointMark> 内置通道 props', en: '`<PointMark>` built-in channel props' },
                 content: {
                   zh: '`<PointMark size opacity shape>` 三个字段 prop 映射到 size（sqrt 半径 scale，面积感知）/ opacity（clamp linear `[minOpacity, 1]`）/ shape（categorical → glyph circle / rectangle / diamond） 通道;`color` / `series` 按 B/C 规则收口——line / area 无显式 `series` 时按 categorical `color` 隐式拆 series（修单系列静默丢弃），等价显式写 `series`。',
                   en: '`<PointMark size opacity shape>` maps three field props to the size (sqrt radius scale, area-aware) / opacity (clamped linear `[minOpacity, 1]`) / shape (categorical → glyph circle / rectangle / diamond) channels; `color` / `series` close per the B/C rules — a line / area with no explicit `series` implicitly splits series by a categorical `color` (fixing the silent single-series drop), equivalent to writing `series` explicitly.',

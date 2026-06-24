@@ -118,24 +118,26 @@ const lowerRegion = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFram
 
 ## API
 
-`RegionMark` 的位置、系列和颜色属性都是数据通道。表里的 `FieldName` 表示数据字段名或字段路径，例如 `day` / `traffic.site`。
+`RegionMark` 的 API 按位置、专属、路径、标签、通用和自定义分组：位置字段决定上沿，专属字段负责拆区域、baseline 和闭合，路径字段下沉到 core `Path`。表里的 `FieldName` 表示数据字段名或字段路径，例如 `day` / `traffic.site`。
 
 | 分类 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- | --- |
-| 位置 | `x` | `FieldName` | — | x 位置字段；polar 下作角向 |
-| | `y` | `FieldName` | — | y 位置字段；polar 下作径向 |
-| | `order` | `FieldName?` | 数据顺序 | 驱动上沿连接顺序的字段 |
-| 几何 | `baseline` | `number?` | `0` | 回边贴附的基线值 |
-| | `closed` | `boolean?` | `false` | 末点回连首点，只影响上沿；区域仍由 baseline 回边闭合 |
-| 系列 | `series` | `FieldName?` | — | 系列字段；拆成多块面积 |
-| 样式通道 | `color` | `FieldName?` | `series` | 颜色字段；无显式 `series` 时按分类颜色字段隐式拆系列 |
-| 标签 | `label` | `FieldName?` | — | 宿主 datum 标签字段 |
-| | `labelDisplayFormat` | `string?` | — | 标签展示格式串 |
-| | `labelPosition` | `CompassAnchor \| number?` | `above` | 标签相对宿主 Node 的方位 |
-| | `labelDistance` | `number?` | `12` | 标签与宿主边框的距离 |
-| | `labelPin` | `boolean?` | `false` | 是否从宿主边框拉引线到标签 |
-| | `resolveLabel` | `(row) => string?` | — | 运行时生成标签；不进 IR，需要配 `id` |
-| 通用 | `id` | `string?` | — | 可选句柄 |
+| 位置 | `x` / `y` | `FieldName` | — | 坐标角色字段；cartesian2D 中是上沿点，polar2D 中解释为角向 / 径向 |
+| 专属 | `color` | `FieldName?` | `series` | 颜色字段；无显式 `series` 时可按分类颜色隐式拆区域 |
+|  | `order` | `FieldName?` | 数据顺序 | 驱动上沿连接顺序的字段 |
+|  | `series` | `FieldName?` | — | 拆成多块区域 |
+|  | `baseline` | `number?` | `0` | 回边贴附的基线值；polar2D 下通常是内半径方向 |
+|  | `closed` | `boolean?` | `false` | 末点回连首点，只影响上沿；区域仍由 baseline 回边闭合 |
+| 路径 | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | 区域轮廓描边宽度、整体透明度和填充透明度 |
+|  | `drawOpacity`<br />`zIndex` / `rotate` | `PointOpacityStyle?`<br />`PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />—<br />— | 描边透明度、绘制顺序和旋转 |
+|  | `roundedCorners`<br />`lineCap` / `lineJoin` | `MarkValueProp<number>`<br />`FieldName / LineCapValue`<br />`FieldName / LineJoinValue` | —<br />—<br />— | 转角、线帽和连接样式 |
+|  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | 路径缩放、填充规则和厚度预设 |
+|  | `arrow` / `arrowDetail` | `PathArrowStyle?`<br />`PathArrowDetailStyle?` | —<br />— | 箭头方向与细节，通常只在轮廓强调时使用 |
+|  | `dashPattern`<br />`shadow` / `blendMode` | `NodeDashPatternStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?` | —<br />—<br />— | 虚线、阴影和混合模式 |
+| 标签 | `label` / `labelDisplayFormat` | `FieldName?`<br />`string?` | —<br />— | 给区域数据点挂标签 |
+|  | `labelPosition`<br />`labelDistance`<br />`labelPin` | `string / number`<br />`number`<br />`boolean / LabelPin` | `above`<br />`12`<br />`false` | 标签方位、距离和引线 |
+| 通用 | `id` | `string?` | — | 可选 mark 句柄，用于图层 id / 运行时标签解析 |
+| 自定义 | `channels` | `Record<string, Channel>` | — | 自定义通道入口；交给注册的 channel definition 解析 |
 
 ## 相关
 

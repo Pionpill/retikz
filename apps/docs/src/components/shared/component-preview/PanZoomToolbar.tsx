@@ -32,6 +32,8 @@ export type PanZoomToolbarProps = {
    * 未指定时沿用原 group-hover/focus-within 显示规则
    */
   pinned?: boolean;
+  /** 始终显示工具栏。 */
+  alwaysVisible?: boolean;
 };
 
 /**
@@ -60,6 +62,7 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
     rendererMode,
     toggleRendererMode,
     pinned,
+    alwaysVisible,
   } = props;
   const downloadLabel = rendererMode === 'canvas' ? 'Download PNG' : 'Download SVG';
   const isSmallPreview = size === 'xs' || size === 'sm';
@@ -67,7 +70,7 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
     <div
       className={cn(
         'absolute right-2 bottom-2 flex flex-col items-center gap-1 rounded-md border bg-background/95 p-1 shadow-sm backdrop-blur',
-        pinned
+        pinned || alwaysVisible
           ? 'pointer-events-auto opacity-100'
           : 'pointer-events-none opacity-0 transition-opacity group-hover/preview:pointer-events-auto group-hover/preview:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100',
       )}

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 import { LegendOrient, LegendPosition, PlotGuide } from './constants';
 
 export const AxisGuideSchema = z
@@ -53,7 +53,7 @@ export const LegendGuideSchema = z
       .string()
       .min(1)
       .describe(
-        'Non-positional visual channel name this legend visualizes; resolved against the visual channel registry at lowering time',
+        'Non-positional channel name this legend visualizes; resolved against the channel registry at lowering time',
       ),
     scale: z
       .string()

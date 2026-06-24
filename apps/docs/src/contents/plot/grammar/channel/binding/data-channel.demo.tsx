@@ -1,3 +1,4 @@
+import { PlotFieldType } from '@retikz/plot';
 import { Axis, Legend, Plot, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 
@@ -8,11 +9,11 @@ const Demo: FC = () => (
   <Plot
     data={cities}
     model={[
-      { name: 'gdp', type: 'continuous' },
-      { name: 'life', type: 'continuous' },
-      { name: 'population', type: 'continuous' },
-      { name: 'region', type: 'categorical' },
-      { name: 'abbr', type: 'categorical' },
+      { name: 'gdp', type: PlotFieldType.Continuous },
+      { name: 'life', type: PlotFieldType.Continuous },
+      { name: 'population', type: PlotFieldType.Continuous },
+      { name: 'region', type: PlotFieldType.Categorical },
+      { name: 'abbr', type: PlotFieldType.Categorical },
     ]}
     width={460}
     height={300}
@@ -27,4 +28,3 @@ const Demo: FC = () => (
 );
 
 export default Demo;
-

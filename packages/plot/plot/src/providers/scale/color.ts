@@ -1,7 +1,7 @@
 import { isFiniteNumber } from '@retikz/math';
 import { scaleLinear as d3ScaleLinear, scaleOrdinal as d3ScaleOrdinal, scaleQuantile as d3ScaleQuantile, scaleQuantize as d3ScaleQuantize, scaleThreshold as d3ScaleThreshold } from 'd3-scale';
 import { type AnyScaleDefinition, type ChannelResolveContext, type ChannelScaleResolution, defineScale } from '../../contract';
-import { inferCategoryDomain } from '../../features';
+import { inferCategoryDomain } from '../data';
 import {
   type DivergingColorScale,
   DivergingColorScaleSchema,

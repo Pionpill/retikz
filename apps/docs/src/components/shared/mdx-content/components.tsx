@@ -158,7 +158,7 @@ export const mdxComponents: MDXComponents = {
   td: ({ className, ...props }) => (
     <td
       className={cn(
-        'px-4 py-2 text-left align-middle first:font-semibold [&[align=center]]:text-center [&[align=right]]:text-right',
+        'px-4 py-2 text-left align-middle first:font-semibold [&_br+code]:mt-1 [&_br+code]:inline-block [&[align=center]]:text-center [&[align=right]]:text-right',
         className,
       )}
       {...props}

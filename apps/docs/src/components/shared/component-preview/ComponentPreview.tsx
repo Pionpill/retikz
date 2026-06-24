@@ -27,9 +27,10 @@ import {
  * 收集 contents 下全部 demo 模块 + 源码字符串
  * @description 双 glob 同 key 一一对应：default 导出当渲染组件，?raw 取源码喂底部代码段。`undefined` 显式声明，让 TS 知道存在性检查不是冗余
  */
-const demoModules: Record<string, { default: FC; previewIR?: IR } | undefined> = import.meta.glob<{
+const demoModules: Record<string, { default: FC; previewIR?: IR; previewActions?: Array<PreviewAction> } | undefined> = import.meta.glob<{
   default: FC;
   previewIR?: IR;
+  previewActions?: Array<PreviewAction>;
 }>('../../../contents/**/*.demo.tsx', { eager: true });
 const demoSources: Record<string, string | undefined> = import.meta.glob<string>('../../../contents/**/*.demo.tsx', {
   query: '?raw',
@@ -41,6 +42,12 @@ const localSourceFiles: Record<string, string | undefined> = import.meta.glob<st
   {
     query: '?raw',
     import: 'default',
+    eager: true,
+  },
+);
+const actionModules: Record<string, Record<string, unknown> | undefined> = import.meta.glob<Record<string, unknown>>(
+  '../../../contents/**/*.actions.ts',
+  {
     eager: true,
   },
 );
@@ -74,12 +81,21 @@ const buildLangKey = (segments: Array<string>, name: string, lang: string) =>
   `../../../contents/${segments.join('/')}/${name}.${lang}.demo.tsx`;
 const buildSourceFileKey = (segments: Array<string>, filename: string) =>
   `../../../contents/${segments.join('/')}/${filename}`;
+const buildActionsKey = (segments: Array<string>, name: string) =>
+  `../../../contents/${segments.join('/')}/${name}.actions.ts`;
 const buildVanillaKey = (segments: Array<string>, name: string) =>
   `../../../contents/${segments.join('/')}/${name}.vanilla.ts`;
 const buildIrJsonKey = (segments: Array<string>, name: string) =>
   `../../../contents/${segments.join('/')}/${name}.ir.json`;
 const filenameFromKey = (key: string) => key.slice(key.lastIndexOf('/') + 1);
 const COMPONENT_EXPANSION_LIMIT = 16;
+
+const resolvePreviewActions = (mod: Record<string, unknown> | undefined): Array<PreviewAction> | undefined => {
+  if (mod === undefined) return undefined;
+  if (Array.isArray(mod.previewActions)) return mod.previewActions as Array<PreviewAction>;
+  const namedActions = Object.entries(mod).find(([key, value]) => key.endsWith('Actions') && Array.isArray(value));
+  return namedActions?.[1] as Array<PreviewAction> | undefined;
+};
 
 type PreviewRootProps = {
   children?: ReactNode;
@@ -230,6 +246,8 @@ export type ComponentPreviewProps = {
   replayable?: boolean;
   /** 自定义动作按钮（渲染在渲染区左上角动作栏，追加在内置工具后） */
   actions?: Array<PreviewAction>;
+  /** 自定义动作栏是否常驻显示；默认 true */
+  actionsAlwaysVisible?: boolean;
   /** 渲染区内常驻浮层（如未来的 FPS 监视器面板） */
   overlays?: Array<PreviewOverlay>;
 };
@@ -239,7 +257,7 @@ export type ComponentPreviewProps = {
  * @description 只负责 demo 文件 glob 加载 + IR 派生 + "Demo not found" 兜底；卡片 / pan&zoom / 代码面板 / 放大 dialog 全部走 `ComponentRender` 核心
  */
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
-  const { name, align = 'center', size = 'md', componentClassName, hideCode = false, sourceFiles, diffFrom, interactive = false, replayable, actions, overlays } =
+  const { name, align = 'center', size = 'md', componentClassName, hideCode = false, sourceFiles, diffFrom, interactive = false, replayable, actions, actionsAlwaysVisible = true, overlays } =
     props;
   const loc = useDocLocation();
   const { i18n } = useTranslation();
@@ -254,6 +272,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const mod = key ? demoModules[key] : undefined;
   const rawSource = key ? demoSources[key] : undefined;
   const Component = mod?.default;
+  const actionModule = segments ? actionModules[buildActionsKey(segments, name)] : undefined;
+  const moduleActions = mod?.previewActions ?? resolvePreviewActions(actionModule);
   // baseline 走同样的 i18n 解析；找不到时 baselineRawSource = undefined，下游静默跳过染色
   const baselineKey = segments && diffFrom ? resolveDemoKey(segments, diffFrom, lang) : null;
   const baselineRawSource = baselineKey ? demoSources[baselineKey] : undefined;
@@ -395,7 +415,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       componentClassName={componentClassName}
       interactive={interactive}
       animated={animated}
-      actions={actions}
+      actions={actions ?? moduleActions}
+      actionsAlwaysVisible={actionsAlwaysVisible}
       overlays={overlays}
     />
   );

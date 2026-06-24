@@ -15,7 +15,7 @@ plot 的本质是 **core + 图形语法**。core 提供最终能渲染的节点�
 
 | 部分 | 实现里对应什么 | 作用 |
 | --- | --- | --- |
-| **图形语法** | `marks`、`encoding`、`scales`、`coordinate`、`guides`；React 侧是 `<PathMark>` / `<PointMark>` / `<Axis>` | 绘图指导思想：先声明“哪个字段映射到哪个视觉通道”，再由 scale、coordinate 和 guide 决定如何落到画布 |
+| **图形语法** | `marks`、`encoding`、`scales`、`coordinate`、`guides`；React 侧是 `<PathMark>` / `<PointMark>` / `<Axis>` | 绘图指导思想：先声明“哪个字段映射到哪个内置通道”，再由 scale、coordinate 和 guide 决定如何落到画布 |
 | **数据** | `data.reference` + 可选 `model` 指向外部数据集；lowering 时把每一行解析成 `x` / `y` 数据通道 | 保存真实数据和字段模型；数据值不进入 IR，字段路径通过 `field` 解析，常量通过 `value` 进入通道 |
 | **`@retikz/plot`** | `PlotSpecSchema`、`buildPlotSpec`、`lowerPlots`、`renderPlot`、`<Plot>` | 逻辑封装：校验 PlotSpec、补默认 linear scale / cartesian2D / Axis、计算 domain / ticks / projector，并把结果下沉成 core IR |
 
