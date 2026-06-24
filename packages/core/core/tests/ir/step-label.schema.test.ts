@@ -4,7 +4,7 @@
  *   零破坏（旧 text/position/side 仍合法）+ JSON round-trip。继承顺序解析属 compile 行为，见 compile/path-label-style.test.ts
  */
 import { describe, expect, it } from 'vitest';
-import { StepLabelSchema } from '../../src/ir';
+import { StepLabelSchema } from '../../src/schemas';
 
 describe('StepLabelSchema 新增样式字段', () => {
   it('接受 textColor', () => {

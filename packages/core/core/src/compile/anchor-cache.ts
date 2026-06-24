@@ -11,7 +11,7 @@
 
 import type { Side } from '../geometry/edge';
 import type { Position } from '../geometry/point';
-import type { IRBoundary, IRPosition } from '../ir';
+import type { IRBoundary, IRPosition } from '../schemas';
 import { anchorOf, angleBoundaryOf, outerRectOf } from './node';
 import type { NodeLayout } from './node';
 import { normalizeCompassAnchor } from '../geometry/anchor';

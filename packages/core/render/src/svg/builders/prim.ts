@@ -40,22 +40,22 @@ const baselineToDominant = (b: 'top' | 'middle' | 'bottom' | 'alphabetic'): Domi
 };
 
 /**
- * PaintValue → SVG fill attribute / inline style 值
+ * PaintValue → SVG paint attribute / inline style 值
  * @description string 纯色：含 `var(` 走 style（attribute 不解析 CSS var）否则 attribute；`resourceRef` →
  *   `url(#...)`；`contextStroke` → `context-stroke`（继承 path 描边）。
  */
-const fillToSvg = (
-  fill: PaintValue | undefined,
+const paintToSvg = (
+  paint: PaintValue | undefined,
   paintRefUrl: (id: string) => string,
-): { attr: string | undefined; styleFill: string | undefined } => {
-  if (fill === undefined) return { attr: undefined, styleFill: undefined };
-  if (typeof fill === 'string') {
-    return fill.includes('var(')
-      ? { attr: undefined, styleFill: fill }
-      : { attr: fill, styleFill: undefined };
+): { attr: string | undefined; stylePaint: string | undefined } => {
+  if (paint === undefined) return { attr: undefined, stylePaint: undefined };
+  if (typeof paint === 'string') {
+    return paint.includes('var(')
+      ? { attr: undefined, stylePaint: paint }
+      : { attr: paint, stylePaint: undefined };
   }
-  if (fill.kind === 'resourceRef') return { attr: paintRefUrl(fill.id), styleFill: undefined };
-  return { attr: 'context-stroke', styleFill: undefined };
+  if (paint.kind === 'resourceRef') return { attr: paintRefUrl(paint.id), stylePaint: undefined };
+  return { attr: 'context-stroke', stylePaint: undefined };
 };
 
 /**
@@ -66,14 +66,14 @@ const fillToSvg = (
 const paintAttr = (value: string | undefined): string | undefined =>
   value === undefined || value.includes('var(') ? undefined : value;
 
-/** 合并 fill（PaintValue 解析出的 var 值）+ stroke（含 var( 走 style）的 inline style */
+/** 合并 fill / stroke（PaintValue 解析出的 var 值）的 inline style */
 const mergeFillStrokeStyle = (
   styleFill: string | undefined,
-  stroke: string | undefined,
+  styleStroke: string | undefined,
 ): SvgStyle | undefined => {
   const out: SvgStyle = {};
   if (styleFill !== undefined) out.fill = styleFill;
-  if (stroke !== undefined && stroke.includes('var(')) out.stroke = stroke;
+  if (styleStroke !== undefined) out.stroke = styleStroke;
   return out.fill !== undefined || out.stroke !== undefined ? out : undefined;
 };
 
@@ -121,7 +121,8 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
   const paintRefUrl = context.paintRefUrl ?? ((id: string) => `url(#${id})`);
   switch (p.type) {
     case 'rect': {
-      const f = fillToSvg(p.fill, paintRefUrl);
+      const f = paintToSvg(p.fill, paintRefUrl);
+      const s = paintToSvg(p.stroke, paintRefUrl);
       return withStyle(
         {
           tag: 'rect',
@@ -133,7 +134,7 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
             height: p.height,
             fill: f.attr,
             'fill-opacity': p.fillOpacity,
-            stroke: paintAttr(p.stroke),
+            stroke: s.attr,
             'stroke-opacity': p.strokeOpacity,
             'stroke-width': p.strokeWidth,
             'stroke-dasharray': p.dashPattern?.join(' '),
@@ -143,12 +144,13 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
             filter: shadowFilterRef(p.shadow, context.shadowIdFor),
           }),
         },
-        mergeBlendStyle(mergeFillStrokeStyle(f.styleFill, p.stroke), p.blendMode),
+        mergeBlendStyle(mergeFillStrokeStyle(f.stylePaint, s.stylePaint), p.blendMode),
       );
     }
     case 'ellipse': {
       const transform = p.rotate ? `rotate(${p.rotate} ${p.cx} ${p.cy})` : undefined;
-      const f = fillToSvg(p.fill, paintRefUrl);
+      const f = paintToSvg(p.fill, paintRefUrl);
+      const s = paintToSvg(p.stroke, paintRefUrl);
       return withStyle(
         {
           tag: 'ellipse',
@@ -161,7 +163,7 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
             transform,
             fill: f.attr,
             'fill-opacity': p.fillOpacity,
-            stroke: paintAttr(p.stroke),
+            stroke: s.attr,
             'stroke-opacity': p.strokeOpacity,
             'stroke-width': p.strokeWidth,
             'stroke-dasharray': p.dashPattern?.join(' '),
@@ -169,7 +171,7 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
             filter: shadowFilterRef(p.shadow, context.shadowIdFor),
           }),
         },
-        mergeBlendStyle(mergeFillStrokeStyle(f.styleFill, p.stroke), p.blendMode),
+        mergeBlendStyle(mergeFillStrokeStyle(f.stylePaint, s.stylePaint), p.blendMode),
       );
     }
     case 'text': {
@@ -221,7 +223,8 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
         p.arrowStart && context.arrowMarkerIdFor ? context.arrowMarkerIdFor(p.arrowStart) : undefined;
       const endId =
         p.arrowEnd && context.arrowMarkerIdFor ? context.arrowMarkerIdFor(p.arrowEnd) : undefined;
-      const f = fillToSvg(p.fill, paintRefUrl);
+      const f = paintToSvg(p.fill, paintRefUrl);
+      const s = paintToSvg(p.stroke, paintRefUrl);
       return withStyle(
         {
           tag: 'path',
@@ -231,7 +234,7 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
             fill: f.attr,
             'fill-opacity': p.fillOpacity,
             'fill-rule': p.fillRule,
-            stroke: paintAttr(p.stroke),
+            stroke: s.attr,
             'stroke-opacity': p.strokeOpacity,
             'stroke-width': p.strokeWidth,
             'stroke-dasharray': p.dashPattern?.join(' '),
@@ -243,7 +246,7 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
             filter: shadowFilterRef(p.shadow, context.shadowIdFor),
           }),
         },
-        mergeBlendStyle(mergeFillStrokeStyle(f.styleFill, p.stroke), p.blendMode),
+        mergeBlendStyle(mergeFillStrokeStyle(f.stylePaint, s.stylePaint), p.blendMode),
       );
     }
     case 'group': {

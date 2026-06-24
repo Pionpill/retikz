@@ -382,7 +382,7 @@ Inner overrides outer; within one frame the typed default overrides the cascade.
 | `localNamespace` | `boolean` | `false` | Whether to create a local namespace: `true` pushes a child frame and isolates child ids from the outside; details in § How it works §「Namespace stack and lookup」 |
 | `meta` | `Record<string, JSON value>` | — | Provenance metadata, passed through verbatim onto the `GroupPrim` this scope emits; ignored by renderers, never part of layout, and **not propagated to children**. Typically injected by a higher-level lowering (e.g. plot) to tag the series / layer. Must be a JSON-serializable object |
 | `color` | `string` | — | Cascading master color; inner stroke / fill / text / arrow / label default to it |
-| `stroke` | `string` | — | Cascading default stroke color (shared sub-field) |
+| `stroke` | `string \| PaintSpec` | — | Cascading default stroke paint (CSS color or PaintSpec: gradient / pattern / image) |
 | `fill` | `string \| PaintSpec` | — | Cascading default fill (CSS color or PaintSpec: gradient / pattern / image) |
 | `strokeWidth` | `number` | — | Cascading default stroke width |
 | `opacity` | `number` | — | Cascading default whole-element opacity 0–1 (replaces, not compounds) |

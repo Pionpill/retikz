@@ -1,5 +1,5 @@
 import type { SegmentSample } from '../../geometry/segment';
-import type { IRPosition, IRStepLabel } from '../../ir';
+import type { IRPosition, IRStepLabel } from '../../schemas';
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../primitive';
 import { CompileWarningCode } from '../constant';
 import type { CompileWarningCodeValue } from '../constant';

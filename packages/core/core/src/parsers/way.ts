@@ -13,7 +13,7 @@ import type {
   IRStep,
   IRStepLabel,
   IRTarget,
-} from '../ir';
+} from '../schemas';
 import { parseTargetSugar } from './target-sugar';
 
 /**

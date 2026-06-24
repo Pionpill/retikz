@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CoordinateSchema, NodeSchema, PathSchema, ScopeSchema, TargetSchema } from '../../src/ir';
+import { CoordinateSchema, NodeSchema, PathSchema, ScopeSchema, TargetSchema } from '../../src/schemas';
 
 describe('IR numeric constraints', () => {
   it('node/path/scope strokeWidth 拒绝非有限数和负数', () => {

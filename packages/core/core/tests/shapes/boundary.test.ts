@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { Boundary, BoundarySchema } from '../../src/ir/boundary';
+import { Boundary, BoundarySchema } from '../../src/schemas/boundary';
 import * as core from '../../src/index';
-import { NodeSchema } from '../../src/ir/node';
-import { NodeTargetSchema } from '../../src/ir/path/target';
+import { NodeSchema } from '../../src/schemas/node';
+import { NodeTargetSchema } from '../../src/schemas/path/target';
 import { anchorOf, angleBoundaryOf, boundaryPointOf, layoutNode } from '../../src/compile/node';
 import { NameStack } from '../../src/compile/name-stack';
-import { BUILTIN_SHAPES, star } from '../../src/shapes';
-import type { Rect } from '../../src/shapes';
+import { BUILTIN_SHAPES, star } from '../../src/providers/shape';
+import type { Rect } from '../../src/contract/shape';
 import { compileToScene } from '../../src/compile/compile';
-import type { IR, IRNodeTarget } from '../../src/ir';
+import type { IR, IRNodeTarget } from '../../src/schemas';
 import type { PathPrim, ScenePrimitive } from '../../src/primitive';
 
 describe('BoundarySchema', () => {

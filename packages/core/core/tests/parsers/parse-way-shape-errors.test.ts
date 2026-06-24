@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ArcStepSchema, CirclePathStepSchema, EllipsePathStepSchema } from '../../src/ir';
+import { ArcStepSchema, CirclePathStepSchema, EllipsePathStepSchema } from '../../src/schemas';
 import { parseWay } from '../../src/parsers/way';
 
 describe('parseWay 形状算子边界', () => {

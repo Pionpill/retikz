@@ -26,19 +26,20 @@ import type {
   IRPosition,
   IRStep,
   IRTarget,
-} from '../../ir';
-import { JsonObjectSchema } from '../../ir';
+} from '../../schemas';
+import { JsonObjectSchema } from '../../schemas';
 import type {
   ArrowEndSpec,
   GroupPrim,
   MarkerFill,
   MarkerPrimitive,
+  PaintValue,
   PathCommand,
   ScenePrimitive,
   Transform,
 } from '../../primitive';
 import type { AssertEqual } from '../../types';
-import type { PathGeneratorDefinition } from '../../path-generators';
+import type { PathGeneratorDefinition } from '../../contract/path';
 import type { LowerTex } from '../lower-tex';
 import { CompileWarningCode } from '../constant';
 import type { CompileWarning } from '../constant';
@@ -50,7 +51,7 @@ import { normalizeRelativeTargets } from './relative';
 import { applyTransformChain } from '../scope';
 import { type EffectiveArrows, applyArrowShrinks, endpointArrows, resolveMarkArrowSpec } from './shrink';
 import { type PathBaseProps, splitSubPathsForEndpointArrows } from './split';
-import { BUILTIN_ARROWS } from '../../arrows';
+import { BUILTIN_ARROWS } from '../../providers/arrow';
 import { applyRoundedCorners, sampleRoundedCommands } from './rounded-corners';
 import { resolveShadow } from '../effects';
 
@@ -167,8 +168,8 @@ export type EmitPathWarnHook = {
    *   投影回全局；顶层 path / 无 scope chain 时为 `[]`（恒等，全局坐标）
    */
   scopeChain?: ReadonlyArray<Transform>;
-  /** fill 解析器（PaintSpec → resourceRef + 登记资源）；缺省时纯色透传、PaintSpec 退化为无填充 */
-  resolveFill?: PaintResolver;
+  /** paint 解析器（PaintSpec → resourceRef + 登记资源）；缺省时纯色透传、PaintSpec 退化为无填充 / currentColor */
+  resolvePaint?: PaintResolver;
   /**
    * 有效 arrow 表（内置 8 + 注入）；缺省 = 仅内置 8
    * @description compileToScene 合并 `{ ...BUILTIN_ARROWS, ...options.arrows }` 传入；
@@ -252,6 +253,36 @@ const buildPathTransforms = (
 const resolveMarkerContextFill = (value: MarkerFill, contextStroke: string): string =>
   typeof value === 'string' ? value : contextStroke;
 
+const markerFillUsesContextStroke = (value: MarkerFill | undefined): boolean =>
+  typeof value === 'object';
+
+const markerPrimUsesContextStroke = (prim: MarkerPrimitive): boolean => {
+  if (prim.type === 'group') return prim.children.some(markerPrimUsesContextStroke);
+  return markerFillUsesContextStroke(prim.fill) || markerFillUsesContextStroke(prim.stroke);
+};
+
+const assertArrowCanInheritStroke = (
+  stroke: PaintValue | undefined,
+  arrows: { arrowStart?: ArrowEndSpec; arrowEnd?: ArrowEndSpec },
+): void => {
+  if (stroke === undefined || typeof stroke === 'string') return;
+  const usesContextStroke =
+    (arrows.arrowStart?.marker.some(markerPrimUsesContextStroke) ?? false) ||
+    (arrows.arrowEnd?.marker.some(markerPrimUsesContextStroke) ?? false);
+  if (!usesContextStroke) return;
+  throw new Error(
+    'Path arrow cannot inherit a PaintSpec stroke; set arrowDetail.color or endpoint color to an explicit CSS color.',
+  );
+};
+
+const markerContextStroke = (stroke: PaintValue | undefined): string => {
+  if (stroke === undefined) return 'currentColor';
+  if (typeof stroke === 'string') return stroke;
+  throw new Error(
+    'Path mark cannot inherit a PaintSpec stroke; set the mark or arrow color to an explicit CSS color.',
+  );
+};
+
 /** marker 图元 → Scene 图元：结构同构，仅把 fill/stroke 的 contextStroke 解析成具体描边色（递归 group） */
 const markerPrimToScene = (prim: MarkerPrimitive, contextStroke: string): ScenePrimitive => {
   if (prim.type === 'group') {
@@ -262,7 +293,7 @@ const markerPrimToScene = (prim: MarkerPrimitive, contextStroke: string): SceneP
     ...prim,
     ...(prim.fill !== undefined && { fill: resolveMarkerContextFill(prim.fill, contextStroke) }),
     ...(prim.stroke !== undefined && { stroke: resolveMarkerContextFill(prim.stroke, contextStroke) }),
-  } as ScenePrimitive;
+  };
 };
 
 const buildMarkMarkerGroup = (
@@ -301,9 +332,9 @@ export const emitPathPrimitive = (
     warnHook.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
   };
   const scopeChain = warnHook.scopeChain ?? [];
-  // fill 解析：有 registry 走去重派 id；无（直调）时纯色透传、PaintSpec 退化无填充
-  const resolveFill: PaintResolver =
-    warnHook.resolveFill ?? (f => (typeof f === 'string' || f === undefined ? f : undefined));
+  // paint 解析：有 registry 走去重派 id；无（直调）时纯色透传、PaintSpec 退化为 undefined
+  const resolvePaint: PaintResolver =
+    warnHook.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
   // 先把 relative/relativeAccumulate 解析为绝对坐标，后续算法可统一按绝对坐标处理
   const steps = normalizeRelativeTargets(path.children, nameStack, scopeChain);
   // 自包含 shape step（rectangle 自带 from/to 两对角、不依赖游标）单独成 path 合法；
@@ -1107,10 +1138,10 @@ export const emitPathPrimitive = (
   const strokeWidth =
     path.strokeWidth ?? (path.thickness ? THICKNESS_TO_WIDTH[path.thickness] : 1);
   const baseProps: PathBaseProps = {
-    stroke: path.stroke ?? 'currentColor',
+    stroke: resolvePaint(path.stroke) ?? 'currentColor',
     strokeWidth,
-    // path.fill 缺省 'none'（仅描边）；纯色 / PaintSpec gradient 经 resolveFill → PaintValue
-    fill: resolveFill(path.fill) ?? 'none',
+    // path.fill 缺省 'none'（仅描边）；纯色 / PaintSpec gradient 经 resolvePaint → PaintValue
+    fill: resolvePaint(path.fill) ?? 'none',
     fillRule: path.fillRule,
     dashPattern: path.dashPattern,
     strokeLinecap: path.lineCap,
@@ -1125,6 +1156,7 @@ export const emitPathPrimitive = (
 
   const effectiveArrows = warnHook.effectiveArrows ?? BUILTIN_ARROWS;
   const arrows = endpointArrows(path.arrow, path.arrowDetail, effectiveArrows, round);
+  assertArrowCanInheritStroke(baseProps.stroke, arrows);
 
   // 中段 marking：把整条 path 的 pos∈[0,1] 分摊到 N 个绘制段，取该处 { point, tangent }，
   // 产一个按 tangent 定向的 arrow marker（复用端点箭头同款 def.emit 几何）；point 计入 bbox（远端 mark 不被裁）。
@@ -1143,7 +1175,7 @@ export const emitPathPrimitive = (
             return segmentSamplers[segIdx](pos === 1 ? 1 : localT);
           })();
       const spec = resolveMarkArrowSpec(mark, effectiveArrows, round);
-      markPrims.push(buildMarkMarkerGroup(spec, sample, strokeWidth, round, baseProps.stroke ?? 'currentColor'));
+      markPrims.push(buildMarkMarkerGroup(spec, sample, strokeWidth, round, markerContextStroke(baseProps.stroke)));
       // marker 落点纳入 bbox（保守取采样点；marker 自身尺寸相对小，端点已足够避免被裁）
       points.push(sample.point);
     }

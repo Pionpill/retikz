@@ -1,4 +1,4 @@
-import type { IRAtPosition, IRBetweenPosition, IROffsetPosition, IRPosition, PolarPosition } from '../ir';
+import type { IRAtPosition, IRBetweenPosition, IROffsetPosition, IRPosition, PolarPosition } from '../schemas';
 import { arcEndPoint } from '@retikz/math';
 import type { Transform } from '../primitive';
 import { DirectionVectorByAtDirection } from './direction';

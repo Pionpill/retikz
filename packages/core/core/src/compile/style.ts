@@ -9,7 +9,7 @@ import type {
   IRStep,
   IRStepLabel,
   StyleChannel,
-} from '../ir';
+} from '../schemas';
 
 /**
  * scope 级联 graphic state——主色 color + 跨类共享分项

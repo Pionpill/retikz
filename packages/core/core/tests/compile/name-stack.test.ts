@@ -5,7 +5,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { type DuplicateRegisterInfo, NameStack } from '../../src/compile/name-stack';
 import type { NodeLayout } from '../../src/compile/node';
-import { BUILTIN_SHAPES } from '../../src/shapes';
+import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const makeLayout = (id: string, x = 0, y = 0): NodeLayout => ({
   id,

@@ -1,4 +1,4 @@
-import type { IRTarget } from '../ir';
+import type { IRTarget } from '../schemas';
 import { parseNodeTarget } from './node-target';
 
 /** TikZ 风格相对偏移字面量正则：捕获 `+` / `++` 前缀 + dx / dy 数值 */

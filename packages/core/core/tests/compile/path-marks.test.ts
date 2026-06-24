@@ -7,7 +7,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import type { ArrowDefinition } from '../../src/arrows';
+import type { ArrowDefinition } from '../../src/contract/arrow';
 import type { IR, IRPath, ScenePrimitive } from '../../src';
 import {
   arcSegmentSample,

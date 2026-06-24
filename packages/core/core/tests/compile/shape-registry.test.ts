@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { compileToScene } from '../../src/compile/compile';
 import type { CompileWarning } from '../../src/compile/compile';
-import { BUILTIN_SHAPES, defineShape, localToWorld, worldToLocal } from '../../src/shapes';
-import type { ShapeDefinition } from '../../src/shapes';
-import { NodeSchema } from '../../src/ir';
-import type { IR } from '../../src/ir';
+import { defineShape, localToWorld, worldToLocal } from '../../src/contract/shape';
+import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import type { ShapeDefinition } from '../../src/contract/shape';
+import { NodeSchema } from '../../src/schemas';
+import type { IR } from '../../src/schemas';
 import type { ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 

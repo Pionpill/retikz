@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LineSpecSchema, MathRunSchema, MixedLineSchema, NodeSchema, TextRunSchema } from '../../src/ir';
+import { LineSpecSchema, MathRunSchema, MixedLineSchema, NodeSchema, TextRunSchema } from '../../src/schemas';
 
 describe('[text-runs] run schemas', () => {
   it('accepts a text run with per-run style', () => {

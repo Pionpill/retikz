@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
-import { NodeLabelSchema } from '../../src/ir';
-import type { IR } from '../../src/ir';
+import { NodeLabelSchema } from '../../src/schemas';
+import type { IR } from '../../src/schemas';
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 

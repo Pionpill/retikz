@@ -4,7 +4,7 @@
  *   stops 最少 2、offset/opacity 0..1、angle/radius finite；纯 JSON 可序列化。
  */
 import { describe, expect, it } from 'vitest';
-import { PaintSpecSchema } from '../../src/ir';
+import { NodeSchema, PaintSpecSchema, PathSchema, ScopeSchema } from '../../src/schemas';
 
 describe('PaintSpecSchema — linear gradient', () => {
   it('接受 2 stops + angle', () => {
@@ -201,5 +201,62 @@ describe('PaintSpecSchema — JSON 可序列化', () => {
     };
     const parsed = PaintSpecSchema.parse(spec);
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
+  });
+});
+
+describe('stroke PaintSpec schema', () => {
+  const strokePaint = {
+    kind: 'linearGradient',
+    angle: 90,
+    stops: [
+      { offset: 0, color: '#2563eb' },
+      { offset: 1, color: '#e11d48' },
+    ],
+  } as const;
+
+  it('path-stroke-paint：PathSchema 接受 PaintSpec stroke', () => {
+    const parsed = PathSchema.parse({
+      type: 'path',
+      stroke: strokePaint,
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [10, 0] },
+      ],
+    });
+    expect(parsed.stroke).toEqual(strokePaint);
+  });
+
+  it('node-stroke-paint：NodeSchema 接受 PaintSpec stroke', () => {
+    const parsed = NodeSchema.parse({ type: 'node', position: [0, 0], stroke: strokePaint });
+    expect(parsed.stroke).toEqual(strokePaint);
+  });
+
+  it('scope-stroke-paint：ScopeSchema 接受 PaintSpec stroke 并保持 JSON round-trip', () => {
+    const input = {
+      type: 'scope',
+      stroke: strokePaint,
+      children: [{ type: 'node', position: [0, 0], text: 'A' }],
+    };
+    const parsed = ScopeSchema.parse(JSON.parse(JSON.stringify(input)));
+    expect(parsed).toEqual(input);
+  });
+
+  it('invalid-stroke-paint：非法 PaintSpec stroke 被 schema 拒绝', () => {
+    expect(() =>
+      PathSchema.parse({
+        type: 'path',
+        stroke: { kind: 'linearGradient', stops: [{ offset: 0, color: 'red' }] },
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'line', to: [10, 0] },
+        ],
+      }),
+    ).toThrow();
+  });
+
+  it('invalid-stroke-type：非字符串且非 PaintSpec 的 stroke 被 schema 拒绝', () => {
+    expect(() =>
+      NodeSchema.parse({ type: 'node', position: [0, 0], stroke: 123 }),
+    ).toThrow();
   });
 });

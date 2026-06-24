@@ -5,7 +5,7 @@ import type { RectPrim } from './rect';
 import type { TextPrim } from './text';
 import type { Layout } from './layout';
 import type { SceneResource } from './paint';
-import type { IRAnimationTrack } from '../ir/animation';
+import type { IRAnimationTrack } from '../schemas/animation';
 
 export type { PaintValue, SceneResource, PaintResource, ResolvedPatternTile } from './paint';
 export type { ClipShape, ClipResource } from './clip';

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { BUILTIN_SHAPES, defineShape, localToWorld, worldToLocal } from '../../src/shapes';
-import type { ShapeDefinition, ShapeStyle } from '../../src/shapes';
+import { defineShape, localToWorld, worldToLocal } from '../../src/contract/shape';
+import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import type { ShapeDefinition, ShapeStyle } from '../../src/contract/shape';
 import type { Rect } from '../../src/geometry/rect';
 import type { PathCommand, ScenePrimitive } from '../../src/primitive';
 

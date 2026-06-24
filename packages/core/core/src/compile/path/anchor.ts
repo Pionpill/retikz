@@ -1,6 +1,6 @@
-import { FoldStepVia } from '../../ir';
-import type { FoldStepViaValue, IRBetweenPosition, IRNodeTarget, IRPosition, IRTarget } from '../../ir';
-import type { IRBoundary } from '../../ir';
+import { FoldStepVia } from '../../schemas';
+import type { FoldStepViaValue, IRBetweenPosition, IRNodeTarget, IRPosition, IRTarget } from '../../schemas';
+import type { IRBoundary } from '../../schemas';
 import type { Transform } from '../../primitive';
 import { lerpPoint } from '../../geometry/edge';
 import { point } from '../../geometry/point';

@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import type { CompositeDefinition } from '../composites';
-import type { IR, IRChild } from '../ir';
+import type { CompositeDefinition } from '../contract/composite';
+import type { IR, IRChild } from '../schemas';
 import { CompileWarningCode } from './constant';
 import type { CompileWarning } from './constant';
 

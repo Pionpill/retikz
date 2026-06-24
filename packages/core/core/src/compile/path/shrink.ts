@@ -6,8 +6,8 @@ import {
   type IRArrowEndDetail,
   type IRArrowMark,
   type IRPosition,
-} from '../../ir';
-import type { ArrowDefinition, ArrowEmitContext } from '../../arrows';
+} from '../../schemas';
+import type { ArrowDefinition, ArrowEmitContext } from '../../contract/arrow';
 import { arcEndPoint, ellipseArcPoint } from '@retikz/math';
 import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathCommand } from '../../primitive';
 import { validateMarkerPrimitives } from '../marker-prim';

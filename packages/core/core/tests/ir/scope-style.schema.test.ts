@@ -11,7 +11,7 @@ import {
   NodeDefaultSchema,
   PathDefaultSchema,
   ScopeSchema,
-} from '../../src/ir';
+} from '../../src/schemas';
 
 describe('NodeDefaultSchema（every node 默认）', () => {
   it('接受 node 样式字段子集', () => {
@@ -253,14 +253,14 @@ describe('Scope 样式 JSON round-trip', () => {
 
 describe('Node / Path 主色 color 字段', () => {
   it('Node 接受 color', async () => {
-    const { NodeSchema } = await import('../../src/ir');
+    const { NodeSchema } = await import('../../src/schemas');
     expect(
       NodeSchema.safeParse({ type: 'node', position: [0, 0], color: 'blue' }).success,
     ).toBe(true);
   });
 
   it('Path 接受 color', async () => {
-    const { PathSchema } = await import('../../src/ir');
+    const { PathSchema } = await import('../../src/schemas');
     expect(
       PathSchema.safeParse({
         type: 'path',

@@ -4,9 +4,9 @@
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import { PathSchema } from '../../src/ir';
-import { BlendMode } from '../../src/ir/effects';
-import type { IR } from '../../src/ir';
+import { PathSchema } from '../../src/schemas';
+import { BlendMode } from '../../src/schemas/effects';
+import type { IR } from '../../src/schemas';
 import type { PathPrim, ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 

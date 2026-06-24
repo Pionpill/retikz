@@ -41,7 +41,7 @@ The top layer is `Scene`, fixed in shape:
 }
 ```
 
-`version` is mandatory and bumps on breaking changes; the schema is defined once in zod (`packages/core/src/ir/scene.ts`), TS types derive via `z.infer`, and the JSON Schema gets exported through `zod-to-json-schema` to feed LLMs. Every field must carry an English `.describe(...)` — that affects LLM output quality; it's not documentation.
+`version` is mandatory and bumps on breaking changes; the schema is defined once in zod (`packages/core/src/schemas/scene.ts`), TS types derive via `z.infer`, and the JSON Schema gets exported through `zod-to-json-schema` to feed LLMs. Every field must carry an English `.describe(...)` — that affects LLM output quality; it's not documentation.
 
 The middle layer is **Node** and **Path**:
 

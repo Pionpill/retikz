@@ -3,7 +3,7 @@ import {
   ArrowDetailSchema,
   ArrowEndDetailSchema,
   PathSchema,
-} from '../../src/ir';
+} from '../../src/schemas';
 
 /**
  * ArrowDetailSchema schema-level 测试

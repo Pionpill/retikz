@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { CompileWarning } from '../../src/compile/compile';
-import { PathSchema } from '../../src/ir';
-import type { IR } from '../../src/ir';
+import { PathSchema } from '../../src/schemas';
+import type { IR } from '../../src/schemas';
 import type {
   PathCommand,
   PathPrim,
   ScenePrimitive,
 } from '../../src/primitive';
-import type { ArrowDefinition } from '../../src/arrows';
+import type { ArrowDefinition } from '../../src/contract/arrow';
 import { flattenPrims } from '../helpers/flatten';
 
 /**

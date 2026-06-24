@@ -7,10 +7,10 @@ import type {
   IRPosition,
   IRTransform,
   PolarPosition,
-} from '../ir';
+} from '../schemas';
 import type { Transform } from '../primitive';
-import { BUILTIN_SHAPES } from '../shapes';
-import type { ShapeDefinition } from '../shapes';
+import { BUILTIN_SHAPES } from '../providers/shape';
+import type { ShapeDefinition } from '../contract/shape';
 import type { NameStack } from './name-stack';
 import { type NodeLayout, outerRectOf } from './node';
 import { type ResolveBetweenGlobal, resolvePosition } from './position';

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { layoutNode } from '../../src/compile/node';
 import { NameStack } from '../../src/compile/name-stack';
-import { BUILTIN_SHAPES } from '../../src/shapes';
+import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const measureText = (): { width: number; height: number; ascent: number } => ({
   width: 10,

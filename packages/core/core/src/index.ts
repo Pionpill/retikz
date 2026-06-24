@@ -3,7 +3,7 @@
  * @description 任何 framework adapter（@retikz/react、@retikz/vue、@retikz/render/canvas、@retikz/ssr）只能 import 本文件导出内容，不准走子路径。本包零 React/零 DOM 依赖
  */
 
-// IR
+// Schemas
 export {
   PositionSchema,
   PolarPositionSchema,
@@ -63,7 +63,7 @@ export {
   JsonObjectSchema,
   ClipSpecSchema,
   ViewBoxSchema,
-} from './ir';
+} from './schemas';
 export type {
   IRPosition,
   IRAtPosition,
@@ -141,7 +141,7 @@ export type {
   IRJsonObject,
   IRClipSpec,
   IRViewBox,
-} from './ir';
+} from './schemas';
 export {
   ArrowShape,
   DEFAULT_ARROW_SHAPE,
@@ -166,8 +166,8 @@ export {
   TriggerSchema,
   EasingSchema,
   OriginSchema,
-} from './ir';
-export type { BoundaryValue, IRBoundary } from './ir';
+} from './schemas';
+export type { BoundaryValue, IRBoundary } from './schemas';
 export type {
   BuiltinAnimationProperty,
   AnimationPropertyRef,
@@ -179,7 +179,7 @@ export type {
   IRKeyframe,
   IRAnimationTrigger,
   IRAnimationOrigin,
-} from './ir';
+} from './schemas';
 
 // Primitive (Scene 数据模型)
 export type {
@@ -307,24 +307,27 @@ export {
 } from './geometry';
 
 // Shapes (Shape Registry 扩展面：第三方 shape 注入 + 内置注册项 + 作者所需 helper)
-export type { ShapeDefinition, ShapeDefinitionInput, ShapeStyle } from './shapes';
-export { BUILTIN_SHAPES, contour, defineShape, worldToLocal, localToWorld } from './shapes';
+export type { ShapeDefinition, ShapeDefinitionInput, ShapeStyle } from './contract/shape';
+export { contour, defineShape, worldToLocal, localToWorld } from './contract/shape';
+export { BUILTIN_SHAPES } from './providers/shape';
 
 // Arrows (Arrow Registry 扩展面：第三方 arrow 注入 + 内置注册项)
-export type { ArrowDefinition, ArrowEmitContext } from './arrows';
-export { BUILTIN_ARROWS, defineArrow } from './arrows';
+export type { ArrowDefinition, ArrowEmitContext } from './contract/arrow';
+export { defineArrow } from './contract/arrow';
+export { BUILTIN_ARROWS } from './providers/arrow';
 
 // Patterns (Pattern Registry 扩展面：第三方 pattern motif 注入 + 内置注册项)
-export type { PatternDefinition, PatternEmitContext } from './patterns';
-export { BUILTIN_PATTERNS, definePattern } from './patterns';
+export type { PatternDefinition, PatternEmitContext } from './contract/pattern';
+export { definePattern } from './contract/pattern';
+export { BUILTIN_PATTERNS } from './providers/pattern';
 
 // Path Generators (Path Generator Registry 扩展面：第三方曲线生成器注入；core 无内置)
-export type { PathGeneratorDefinition, PathGeneratorContext } from './path-generators';
-export { definePathGenerator } from './path-generators';
+export type { PathGeneratorDefinition, PathGeneratorContext } from './contract/path';
+export { definePathGenerator } from './contract/path';
 
 // Composites (Tier 2 注册面：domain 节点 schema + 展开逻辑；core 无内置)
-export type { CompositeDefinition } from './composites';
-export { defineComposite } from './composites';
+export type { CompositeDefinition } from './contract/composite';
+export { defineComposite } from './contract/composite';
 
 // Type utilities
 export type { ValueOf, AssertEqual } from './types';

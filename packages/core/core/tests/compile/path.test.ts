@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/ir';
+import type { IR } from '../../src/schemas';
 import type { PathPrim, ScenePrimitive } from '../../src/primitive';
 import { arc, close, cubic, ellipseArc, line, move, quad } from '../helpers/path-command-factory';
 

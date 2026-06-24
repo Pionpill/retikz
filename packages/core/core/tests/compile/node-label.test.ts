@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
-import type { IR } from '../../src/ir';
+import type { IR } from '../../src/schemas';
 import type { ScenePrimitive, TextPrim } from '../../src/primitive';
 
 // core emit alphabetic 基线，按字体度量从基线还原单行文本视觉中心，验证垂直居中落点

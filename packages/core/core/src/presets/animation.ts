@@ -3,7 +3,7 @@
  * @description 纯函数、产 `IRAnimationTrack`，用于 `animations={[fadeIn(), scaleIn()]}`。不引入新能力——
  *   产出逐字段等于手写 track（Sugar=Kernel 等价），播放 / 降级全走 renderer 既有通路。默认值 = 配方表，单一真源。
  */
-import { AnimationProperty, type IRAnimationOrigin, type IRAnimationTrack } from '../ir/animation';
+import { AnimationProperty, type IRAnimationOrigin, type IRAnimationTrack } from '../schemas/animation';
 
 /** preset 公共可调项（各 preset 在此之上加专有项；默认值由各 preset 给） */
 export type AnimationPresetOptions = {

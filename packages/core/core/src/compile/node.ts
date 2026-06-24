@@ -2,9 +2,9 @@ import type { Position } from '../geometry/point';
 import { arcEndPoint } from '@retikz/math';
 import { normalizeCompassAnchor } from '../geometry/anchor';
 import type { Rect } from '../geometry/rect';
-import type { AtDirectionValue, IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../ir';
-import { JsonObjectSchema } from '../ir';
-import type { BlendModeValue, DropShadow } from '../ir/effects';
+import type { AtDirectionValue, IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../schemas';
+import { JsonObjectSchema } from '../schemas';
+import type { BlendModeValue, DropShadow } from '../schemas/effects';
 import { resolveShadow } from './effects';
 import { CompileWarningCode } from './constant';
 import type { CompileWarningCodeValue } from './constant';
@@ -12,8 +12,8 @@ import type { LowerTex } from './lower-tex';
 import { type LaidLine, type LineLayoutContext, layoutInlineLine, resolveLineRuns } from './text-layout';
 import type { PaintResolver } from './paint';
 import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
-import { BUILTIN_SHAPES } from '../shapes';
-import type { ShapeDefinition, ShapeStyle } from '../shapes';
+import { BUILTIN_SHAPES } from '../providers/shape';
+import type { ShapeDefinition, ShapeStyle } from '../contract/shape';
 import type { NameStack } from './name-stack';
 import { DirectionVectorByAtDirection, LabelAnchorByAtDirection } from './direction';
 import { type ResolveBetweenGlobal, resolvePosition } from './position';
@@ -197,12 +197,12 @@ export type NodeLayout = {
   fontWeight?: string | number;
   /** 字形 */
   fontStyle?: 'normal' | 'italic' | 'oblique';
-  /** 节点背景填充（纯色 / PaintSpec gradient），emit 时经 resolveFill → PaintValue、'transparent' 兜底 */
+  /** 节点背景填充（纯色 / PaintSpec gradient），emit 时经 resolvePaint → PaintValue、'transparent' 兜底 */
   fill?: string | IRPaintSpec;
   /** 填充透明度 0~1 */
   fillOpacity?: number;
-  /** 节点边框色，emit 时 'currentColor' 兜底 */
-  stroke?: string;
+  /** 节点边框 paint，emit 时经 resolvePaint → PaintValue、'currentColor' 兜底 */
+  stroke?: string | IRPaintSpec;
   /** 描边透明度 0~1（TikZ `draw opacity`） */
   strokeOpacity?: number;
   /** 边框宽度，emit 时 1 兜底 */
@@ -765,11 +765,11 @@ export const layoutNode = (
   };
 };
 
-/** 从 NodeLayout 收敛 emit 所需的视觉样式子集（ShapeStyle，不含几何 / 文本）；fill 经 resolveFill 转 PaintValue */
-const toShapeStyle = (layout: NodeLayout, resolveFill: PaintResolver): ShapeStyle => ({
-  fill: resolveFill(layout.fill),
+/** 从 NodeLayout 收敛 emit 所需的视觉样式子集（ShapeStyle，不含几何 / 文本）；fill / stroke 经 resolvePaint 转 PaintValue */
+const toShapeStyle = (layout: NodeLayout, resolvePaint: PaintResolver): ShapeStyle => ({
+  fill: resolvePaint(layout.fill),
   fillOpacity: layout.fillOpacity,
-  stroke: layout.stroke,
+  stroke: resolvePaint(layout.stroke) ?? 'currentColor',
   strokeOpacity: layout.strokeOpacity,
   strokeWidth: layout.strokeWidth,
   dashPattern: layout.dashPattern,
@@ -825,14 +825,14 @@ const cloneScenePrimitive = <T extends ScenePrimitive>(primitive: T): T => ({ ..
 export const emitNodePrimitives = (
   layout: NodeLayout,
   round: (n: number) => number,
-  resolveFill: PaintResolver,
+  resolvePaint: PaintResolver,
 ): Array<ScenePrimitive> => {
   // shape 主体：emit 收**轴对齐 rect（rotate=0）**，rotate 由末端外层 GroupPrim 统一施加
   const axisAlignedRect: Rect = { ...layout.rect, rotate: 0 };
   const shapePrims: Array<ScenePrimitive> = [
     ...layout.shapeDef.emit(
       axisAlignedRect,
-      toShapeStyle(layout, resolveFill),
+      toShapeStyle(layout, resolvePaint),
       round,
       layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
     ),

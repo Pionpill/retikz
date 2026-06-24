@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import { PathSchema, SmoothStepSchema } from '../../src/ir';
+import { PathSchema, SmoothStepSchema } from '../../src/schemas';
 import type { CompileWarning, IR } from '../../src';
 import type { CubicPathCommand, PathPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
 import { move } from '../helpers/path-command-factory';

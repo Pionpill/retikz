@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/ir';
+import type { IR } from '../../src/schemas';
 import type {
   ArrowEndSpec,
   EllipsePrim,

@@ -12,7 +12,7 @@ import {
 } from '../../src/compile/scope';
 import type { CompileWarning, IR, ScenePrimitive } from '../../src';
 import type { NodeLayout } from '../../src/compile/node';
-import { BUILTIN_SHAPES } from '../../src/shapes';
+import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import type { TextMeasurer } from '../../src/compile/text-metrics';
 
 const scene = (children: IR['children']): IR => ({

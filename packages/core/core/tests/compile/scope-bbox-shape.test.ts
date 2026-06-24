@@ -14,7 +14,7 @@ import {
 import { minimalEnclosingCircle } from '@retikz/math';
 import type { CompileWarning, IR, ScenePrimitive } from '../../src';
 import type { NodeLayout } from '../../src/compile/node';
-import { BUILTIN_SHAPES } from '../../src/shapes';
+import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const scene = (children: IR['children']): IR => ({
   version: 1,

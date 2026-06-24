@@ -20,6 +20,17 @@ describe('[inline-tex] parseInlineRuns', () => {
     expect(r.hasMath).toBe(true);
   });
 
+  it('reads multiline `$$...$$` as one display math run', () => {
+    const tex = String.raw`\begin{array}{rl}
+f(x) &= ax^2 + bx + c\\
+f'(x) &= 2ax + b
+\end{array}`;
+    const r = parseInlineRuns(`$$${tex}$$`, true);
+    expect(r.runs).toEqual([{ tex, displayMode: true }]);
+    expect(r.hasMath).toBe(true);
+    expect(r.warn).toBe(false);
+  });
+
   it('unescapes `\\$` to a literal dollar in text runs', () => {
     const r = parseInlineRuns('price a\\$b only', true);
     expect(r.runs).toEqual([{ text: 'price a$b only' }]);

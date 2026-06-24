@@ -4,10 +4,10 @@
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import { NodeSchema, ShapeRefSchema } from '../../src/ir';
-import type { IR } from '../../src/ir';
-import { arc, polygon, sector, star } from '../../src/shapes';
-import { normalizeAngularRange } from '../../src/shapes/shared';
+import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
+import type { IR } from '../../src/schemas';
+import { arc, polygon, sector, star } from '../../src/providers/shape';
+import { normalizeAngularRange } from '../../src/contract/shape/shared';
 import type { ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 

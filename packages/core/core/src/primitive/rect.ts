@@ -1,6 +1,6 @@
-import type { IRAnimationTrack } from '../ir/animation';
-import type { BlendModeValue, DropShadow } from '../ir/effects';
-import type { IRJsonObject } from '../ir/json';
+import type { IRAnimationTrack } from '../schemas/animation';
+import type { BlendModeValue, DropShadow } from '../schemas/effects';
+import type { IRJsonObject } from '../schemas/json';
 import type { PaintValue } from './paint';
 
 /** 矩形原语 */
@@ -25,8 +25,8 @@ export type RectPrim = {
   fill?: PaintValue;
   /** 填充透明度 0~1 */
   fillOpacity?: number;
-  /** 描边色 */
-  stroke?: string;
+  /** 描边：纯色 / 资源表 paint server（gradient）/ contextStroke */
+  stroke?: PaintValue;
   /** 描边透明度 0~1 */
   strokeOpacity?: number;
   /** 描边宽度 */

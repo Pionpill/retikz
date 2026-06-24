@@ -94,6 +94,14 @@ Below, two edges target the same five-pointed star (no node `boundary` set) and 
 
 <ComponentPreview name="path-dashed" size="xs" />
 
+#### Gradient stroke
+
+Besides a plain color string, `stroke` accepts a `PaintSpec`. Linear / radial gradients, patterns, and images enter the same paint resource table; `dashPattern`, `lineCap`, `drawOpacity`, and other stroke styles still apply to the line itself.
+
+<ComponentPreview name="path-stroke-paint" size="sm" />
+
+If a gradient-stroked path also has arrows, give `arrowDetail.color` or the endpoint `color` an explicit solid color; marker geometry cannot inherit a resource-backed stroke.
+
 #### Stroke endpoints / corners
 
 `lineCap` controls the stroke endpoint shape: `'butt'` default (square end at endpoint) / `'round'` half-circle cap / `'square'` square cap extended past the endpoint by half a stroke. `lineJoin` controls the corner shape: `'miter'` default (sharp) / `'round'` rounded / `'bevel'` flat-cut.
@@ -179,7 +187,7 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 | `id` | `string` | — | Optional stable id: lets other elements anchor to the path and serves as the attach point for [hydration](/core/reference/hydration) event binding (a path needs an `id` before you can bind `onClick` and friends) |
 | `meta` | `Record<string, JSON value>` | — | Provenance metadata, passed through verbatim onto the Scene primitives this path emits; ignored by renderers and never part of layout / style. Typically injected by a higher-level lowering (e.g. plot) to tag which datum / series / layer it came from, so an interaction layer can trace a hit primitive back to its source. Must be a JSON-serializable object |
 | `color` | `string` | — | Master color (TikZ `color=`); `stroke` / arrow / step label default to it unless individually set (follows the master color, not `stroke`) |
-| `stroke` | `string` | `currentColor` | Stroke color |
+| `stroke` | `string \| PaintSpec` | `currentColor` | Stroke paint: CSS color or PaintSpec (gradient / pattern / image); arrows that inherit stroke need an explicit solid arrow color |
 | `strokeWidth` | `number` | `1` | Stroke width |
 | `dashPattern` | `Array<number>` | — | Dash/gap lengths in user units (e.g. `[4, 2]`) |
 | `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape |

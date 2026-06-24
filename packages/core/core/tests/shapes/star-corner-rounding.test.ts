@@ -13,8 +13,8 @@
  *   奇 k 取 innerRadius（凹角 notch）；0°=+x、90°=+y(屏幕下)、−90 基准使默认第一尖角朝上（−y）。
  */
 import { describe, expect, it } from 'vitest';
-import { star } from '../../src/shapes';
-import type { Rect } from '../../src/shapes';
+import { star } from '../../src/providers/shape';
+import type { Rect } from '../../src/contract/shape';
 import type { Position } from '../../src/geometry/point';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
