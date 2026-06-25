@@ -29,6 +29,10 @@ export const StackTransformSchema = z
       .describe('Series field ordering segments within each stack (one segment per distinct value); omit to accumulate in data row order'),
     startField: z.string().min(1).optional().describe('Output field for the lower bound of each segment; default "y0"'),
     endField: z.string().min(1).optional().describe('Output field for the upper bound of each segment; default "y1"'),
+    offset: z
+      .enum(['zero', 'normalize', 'diverging', 'center', 'overlap'])
+      .optional()
+      .describe('Stack baseline offset: zero accumulates from 0; normalize scales each stack to 0..1; diverging separates positive/negative values; center centers the full stack; overlap draws every segment from 0'),
   })
   .describe('Stack transform: within each x group, accumulate y across series and derive [start, end] bounds per row');
 

@@ -1,4 +1,4 @@
-/** demo 自造数据集：季度 × 产品营收，喂给 bar-grouped / bar-stacked 的 <Plot data>（不进 IR） */
+/** demo 自造数据集：季度 × 产品营收，喂给 bar-series.demo.tsx 的 <Plot data>（不进 IR） */
 export const sales: Array<Record<string, string | number>> = [
   { quarter: 'Q1', product: 'A', revenue: 12 },
   { quarter: 'Q1', product: 'B', revenue: 8 },

@@ -1045,6 +1045,17 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x
     expect(spec.scales.find(s => s.name === '__x')?.type).not.toBe('band');
   });
 
+  it('bar_width_proportional_keeps_x_as_axis_label_field', () => {
+    const spec = buildPlotSpec(<IntervalMark x="country" y="cost" width="gdp" color="country" />, '__plot');
+    const mark = spec.marks[0];
+    expect(mark).toMatchObject({
+      type: 'interval',
+      bounds: { x: { kind: 'proportional', field: 'gdp' } },
+      encoding: { x: { field: 'country' }, y: { field: 'cost' }, color: { field: 'country', scale: '__color' } },
+    });
+    expect(spec.scales.find(scale => scale.name === '__x')?.type).toBe('linear');
+  });
+
   it('transform_aggregate_declared_to_ir', () => {
     const spec = buildPlotSpec(
       <>

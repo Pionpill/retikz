@@ -169,6 +169,8 @@ type Collected = {
   hasBar: boolean;
   /** 是否有 <IntervalMark>（heatmap → x / y 双轴强制 band scale） */
   hasRect: boolean;
+  /** 是否有横向 <IntervalMark> 快捷入口（仅 cartesian2D） */
+  hasHorizontalBar: boolean;
   /** 是否有 <IntervalMark angle> 饼/环图入口（→ 角向 linear scale） */
   hasSector: boolean;
   /** 是否有闭合 <PathMark>（雷达 → 角向 point scale） */
@@ -645,7 +647,16 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       recordResolveLabel(into, id, props.resolveLabel);
     } else if (child.type === IntervalMark) {
       const props = child.props as IntervalMarkProps;
-      const { x, y, angle, x0, x1, color, series, stack, bounds: explicitBounds, id, channels, fill, stroke, strokeWidth, fillOpacity, opacity } = props;
+      const { x, y, angle, x0, x1, width, direction: rawDirection, color, series, group, arrangement: explicitArrangement, stackOffset, percent, stack, bounds: explicitBounds, id, channels, fill, stroke, strokeWidth, fillOpacity, opacity } = props;
+      const direction = rawDirection ?? 'vertical';
+      const arrangementGroup = group ?? series;
+      if (percent === true && explicitArrangement !== undefined && explicitArrangement !== 'normalize-stack') {
+        throw new Error('buildPlotSpec: <IntervalMark percent> cannot be mixed with an arrangement other than "normalize-stack"');
+      }
+      if (stackOffset !== undefined && explicitArrangement === 'normalize-stack') {
+        throw new Error('buildPlotSpec: <IntervalMark stackOffset> cannot be mixed with arrangement="normalize-stack"; use percent for percentage stacks');
+      }
+      const arrangement = explicitArrangement ?? (percent === true ? 'normalize-stack' : stack ? 'stack' : arrangementGroup !== undefined ? 'dodge' : undefined);
       const markLabel = buildMarkLabel(props);
       const fillStyle = paintStyleOf<PointFillStyle>(fill, 'fill', styleContext);
       const strokeStyle = strokeStyleOf(stroke, styleContext);
@@ -662,11 +673,11 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       };
       // pie / donut：angle → 自动累积 stack transform（产 y0/y1）+ extent×full bounds
       if (angle !== undefined) {
-        if (y !== undefined || x !== undefined || x0 !== undefined || x1 !== undefined || stack !== undefined || explicitBounds !== undefined) {
-          throw new Error('buildPlotSpec: <IntervalMark angle> is the polar pie/donut form; do not mix it with x/y/x0/x1/stack/bounds');
+        if (y !== undefined || x !== undefined || x0 !== undefined || x1 !== undefined || width !== undefined || rawDirection !== undefined || stack !== undefined || explicitBounds !== undefined) {
+          throw new Error('buildPlotSpec: <IntervalMark angle> is the polar pie/donut form; do not mix it with x/y/x0/x1/width/direction/stack/bounds');
         }
         into.autoStacks.push({ kind: PlotTransform.Stack, y: angle, ...(series !== undefined ? { groupBy: series } : {}) });
-        const colorEnc = colorChannel(color, series) ?? colorChannel(angle, undefined);
+        const colorEnc = colorChannel(color, series ?? group) ?? colorChannel(angle, undefined);
         into.marks.push({
           type: PlotMark.Interval,
           ...(id !== undefined ? { id } : {}),
@@ -680,7 +691,13 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       }
       // 显式 bounds（heatmap 双 band / 高级）：直接落 IR；band bound → 强制对应轴 band scale
       if (explicitBounds !== undefined) {
-        const colorEnc = colorChannel(color, series);
+        if (rawDirection !== undefined) {
+          throw new Error('buildPlotSpec: <IntervalMark direction> cannot be mixed with explicit bounds; encode the orientation through bounds directly');
+        }
+        if (width !== undefined) {
+          throw new Error('buildPlotSpec: <IntervalMark width> cannot be mixed with explicit bounds; use bounds.<role>={kind:"proportional"} directly');
+        }
+        const colorEnc = colorChannel(color, series ?? group);
         into.marks.push({
           type: PlotMark.Interval,
           ...(id !== undefined ? { id } : {}),
@@ -698,23 +715,69 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       }
       // histogram：x0/x1 → bounds.x = extent（连续 x，不强制 band）；普通 / 分组 / 堆叠柱：band x
       const histogram = x0 !== undefined && x1 !== undefined;
+      const proportional = width !== undefined;
+      if (proportional && histogram) {
+        throw new Error('buildPlotSpec: <IntervalMark width> cannot be mixed with x0/x1 histogram bounds');
+      }
+      if (proportional && arrangement !== undefined) {
+        throw new Error('buildPlotSpec: <IntervalMark width> cannot be mixed with arrangement/stack/percent/group/series; use precomputed extent bounds for custom layouts');
+      }
+      if (proportional && stackOffset !== undefined) {
+        throw new Error('buildPlotSpec: <IntervalMark width> cannot be mixed with stackOffset; use precomputed extent bounds for custom layouts');
+      }
+      if (proportional && (group !== undefined || series !== undefined)) {
+        throw new Error('buildPlotSpec: <IntervalMark width> cannot be mixed with group or series; use color for visual grouping');
+      }
+      if (histogram && direction === 'horizontal') {
+        throw new Error('buildPlotSpec: <IntervalMark direction="horizontal"> cannot be mixed with x0/x1 histogram bounds');
+      }
+      if (histogram && arrangement !== undefined) {
+        throw new Error('buildPlotSpec: <IntervalMark arrangement> cannot be mixed with x0/x1 histogram bounds');
+      }
       if ((x0 === undefined) !== (x1 === undefined)) {
         throw new Error('buildPlotSpec: <IntervalMark> x0 / x1 must be set together for continuous-interval bars');
       }
-      if (!histogram && x === undefined) {
-        throw new Error('buildPlotSpec: <IntervalMark> requires x for categorical bars, x0/x1 for histogram, or angle for the polar pie/donut form');
+      if (!histogram && !proportional && x === undefined) {
+        throw new Error('buildPlotSpec: <IntervalMark> requires x for categorical bars, x0/x1 for histogram, width for proportional bars, or angle for the polar pie/donut form');
       }
-      if (y === undefined) {
-        throw new Error('buildPlotSpec: <IntervalMark> requires y (the value/height), or use angle for the polar pie/donut form');
+      const valueField = direction === 'horizontal' ? x : y;
+      if (valueField === undefined) {
+        throw new Error('buildPlotSpec: <IntervalMark> requires the value field on y (vertical) or x (horizontal), or use angle for the polar pie/donut form');
       }
-      const colorEnc = colorChannel(color, series);
-      // series + stack → 堆叠（装 stack transform + bounds.y=extent(y0,y1)）；series 无 stack → dodge（bounds.x=band{group}）
+      const colorEnc = colorChannel(color, series ?? group);
+      const categoryField = direction === 'horizontal' ? y : x;
+      if (!histogram && !proportional && categoryField === undefined) {
+        throw new Error('buildPlotSpec: <IntervalMark> requires the category field on x (vertical) or y (horizontal), x0/x1 for histogram, width for proportional bars, or angle for the polar pie/donut form');
+      }
+      const bandRole = direction === 'horizontal' ? 'y' : 'x';
+      const valueRole = direction === 'horizontal' ? 'x' : 'y';
+      const bandBound = { kind: IntervalBoundKind.Band, ...(arrangement === 'dodge' && arrangementGroup !== undefined ? { group: arrangementGroup } : {}) };
+      if ((arrangement === 'stack' || arrangement === 'normalize-stack') && arrangementGroup === undefined) {
+        throw new Error('buildPlotSpec: <IntervalMark arrangement="stack"> requires group or series to identify stacked segments');
+      }
+      if (arrangement === 'normalize-stack') {
+        into.autoStacks.push({ kind: PlotTransform.Normalize, field: valueField, groupBy: [categoryField], basis: 'percent' });
+      }
+      if ((arrangement === 'stack' || arrangement === 'normalize-stack') && arrangementGroup !== undefined) {
+        into.autoStacks.push({
+          kind: PlotTransform.Stack,
+          x: categoryField,
+          y: valueField,
+          groupBy: arrangementGroup,
+          ...(arrangement === 'stack' && stackOffset !== undefined ? { offset: stackOffset } : {}),
+        });
+      }
+      // arrangement → bounds：dodge 切 band 子带；stack / normalize-stack 读 y0/y1 extent。
       let bounds: IntervalBounds | undefined;
-      if (series !== undefined && stack) {
-        into.autoStacks.push({ kind: PlotTransform.Stack, x, y, groupBy: series });
-        bounds = { y: { kind: IntervalBoundKind.Extent, from: 'y0', to: 'y1' } };
-      } else if (series !== undefined && !histogram) {
-        bounds = { x: { kind: IntervalBoundKind.Band, group: series } };
+      if (proportional) {
+        bounds = { [bandRole]: { kind: IntervalBoundKind.Proportional, field: width } };
+      } else if (!histogram && (direction === 'horizontal' || arrangement === 'dodge')) {
+        bounds = { [bandRole]: bandBound };
+      }
+      if (arrangement === 'stack' || arrangement === 'normalize-stack') {
+        bounds = { ...(bounds ?? {}), [valueRole]: { kind: IntervalBoundKind.Extent, from: 'y0', to: 'y1' } };
+      } else if (direction === 'horizontal') {
+        bounds = { ...(bounds ?? {}), x: { kind: IntervalBoundKind.Span } };
       }
       if (histogram) bounds = { ...(bounds ?? {}), x: { kind: IntervalBoundKind.Extent, from: x0, to: x1 } };
       into.marks.push({
@@ -725,9 +788,17 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(bounds !== undefined ? { bounds } : {}),
         ...(markLabel !== undefined ? { label: markLabel } : {}),
         // histogram：仅 y（高度），x 来自 x0/x1 区间；普通柱：x（分类 band）+ y（值）
-        encoding: histogram ? { y: { field: y }, ...colorEnc, ...extensionChannelEncoding(channels) } : { x: { field: x }, y: { field: y }, ...colorEnc, ...extensionChannelEncoding(channels) },
+        encoding: histogram
+          ? { y: { field: y }, ...colorEnc, ...extensionChannelEncoding(channels) }
+          : proportional
+            ? { ...(x !== undefined ? { x: { field: x } } : {}), ...(y !== undefined ? { y: { field: y } } : {}), ...colorEnc, ...extensionChannelEncoding(channels) }
+            : { x: { field: x }, y: { field: y }, ...colorEnc, ...extensionChannelEncoding(channels) },
       });
-      if (!histogram) into.hasBar = true;
+      if (!histogram && !proportional) {
+        if (bandRole === 'x') into.hasBar = true;
+        else into.hasRect = true;
+      }
+      if (direction === 'horizontal') into.hasHorizontalBar = true;
       recordColor(into, colorEnc);
       recordResolveLabel(into, id, props.resolveLabel);
     } else if (child.type === ReferenceMark) {
@@ -925,7 +996,7 @@ const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | u
  *   产出须等价于手写 PlotSpec（仿 core Sugar = Kernel 等价性）。data 不进 IR，仅存 reference
  */
 export const buildPlotSpec = (children: ReactNode, dataRef: string, options: BuildPlotSpecOptions = {}): PlotSpec => {
-  const collected: Collected = { marks: [], guides: [], transforms: [], autoStacks: [], scales: [], resolveLabels: {}, colored: false, colorFields: [], hasBar: false, hasRect: false, hasSector: false, hasClosedLine: false };
+  const collected: Collected = { marks: [], guides: [], transforms: [], autoStacks: [], scales: [], resolveLabels: {}, colored: false, colorFields: [], hasBar: false, hasRect: false, hasHorizontalBar: false, hasSector: false, hasClosedLine: false };
   collectInto(children, collected, styleSugarContext(options));
 
   // transform 装配序：<Plot transforms> 直传 → <Transform> 收集 → auto-stack（B4 去重）
@@ -933,7 +1004,9 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   // 不同签名的 auto-stack 保留——否则该 mark 仍是 arrangement='stack' 却没有对应 y0/y1，lower 阶段读空累积界出错。
   const explicitTransforms: Array<TransformOperation> = [...(options.transforms ?? []), ...collected.transforms];
   const stackSignature = (transform: TransformOperation): string =>
-    transform.kind === PlotTransform.Stack ? JSON.stringify([transform.x ?? null, transform.y, transform.groupBy ?? null]) : '';
+    transform.kind === PlotTransform.Stack
+      ? JSON.stringify([transform.x ?? null, transform.y, transform.groupBy ?? null, transform.offset ?? 'zero', transform.startField ?? null, transform.endField ?? null])
+      : '';
   const explicitStackSignatures = new Set(explicitTransforms.filter(transform => transform.kind === PlotTransform.Stack).map(stackSignature));
   const dedupedAutoStacks = collected.autoStacks.filter(autoStack => !explicitStackSignatures.has(stackSignature(autoStack)));
   const transforms: Array<TransformOperation> = [...explicitTransforms, ...dedupedAutoStacks];
@@ -941,6 +1014,9 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   const coordKind = coordinateTypeOf(options.coordinate);
   if (collected.hasSector && coordKind !== 'polar2D') {
     throw new Error('buildPlotSpec: <IntervalMark angle> is only valid under coordinate="polar2D"');
+  }
+  if (collected.hasHorizontalBar && coordKind !== 'cartesian2D') {
+    throw new Error('buildPlotSpec: <IntervalMark direction="horizontal"> is only valid under coordinate="cartesian2D"');
   }
   if (coordKind === 'polar2D' && collected.marks.some(mark => mark.type === PlotMark.Path && mark.closed !== false)) {
     collected.hasClosedLine = true;
@@ -1001,7 +1077,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     coordinate = CoordinateOperationSchema.parse({ ...options.coordinate });
     scales = [];
   } else {
-    const xScale = buildCartesianXScale(collected.hasBar || collected.hasRect, explicitScales.x);
+    const xScale = buildCartesianXScale(collected.hasBar, explicitScales.x);
     const yScale = buildCartesianYScale(collected.hasRect, explicitScales.y);
     coordinate = shouldDeferPositionScales
       ? {

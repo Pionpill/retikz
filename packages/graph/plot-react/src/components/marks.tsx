@@ -217,10 +217,22 @@ export type IntervalMarkProps = DatumLabelProps & CoreNodeChannelProps & {
   x0?: FieldName;
   /** 直方连续 x 区间上界字段（如 bin 的 binEnd）；与 x0 配对 */
   x1?: FieldName;
+  /** Proportional interval width field; derives a running interval from row order. */
+  width?: FieldName;
+  /** Bar orientation; horizontal treats x as value and y as category. */
+  direction?: 'vertical' | 'horizontal';
   /** 颜色字段（→ color 通道 + 自动色 scale）；缺省取 series */
   color?: FieldName;
   /** 系列字段：拆成多组 / 多系列柱；缺省单系列 */
   series?: FieldName;
+  /** Arrangement group field for dodge / stack / normalize-stack. */
+  group?: FieldName;
+  /** Multi-series interval arrangement. */
+  arrangement?: 'dodge' | 'stack' | 'normalize-stack';
+  /** Stack transform baseline offset for arrangement="stack". */
+  stackOffset?: 'zero' | 'normalize' | 'diverging' | 'center' | 'overlap';
+  /** Percentage stack shortcut, equivalent to arrangement="normalize-stack". */
+  percent?: boolean;
   /** 多系列时是否堆叠（true=stack，自动 stack transform + bounds.y=extent）；否则并排（dodge，bounds.x=band{group}） */
   stack?: boolean;
   /** 显式 per-role 区间来源（高级 / heatmap 双 band）：给定则直接落 IR bounds，便捷 props 之外的逃生舱 */

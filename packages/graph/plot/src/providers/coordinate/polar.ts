@@ -258,7 +258,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     const radialAxis = ctx.axisGuides.find(guide => guide.dimension === 'y');
 
     const angleScale = ctx.buildPositionScale(angleScaleDef, angleValues, [coordinate.startAngle, coordinate.endAngle]);
-    const angularTicks: TickSet | undefined = angularAxis ? angleScale.ticks(angularAxis.tickCount) : undefined;
+    const angularTicks: TickSet | undefined = angularAxis ? ctx.collectAxisTicks('x') ?? angleScale.ticks(angularAxis.tickCount) : undefined;
     const layout = computePolarCoordinate(
       ctx.width,
       ctx.height,
@@ -267,7 +267,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     );
     const innerRadiusUnits = coordinate.innerRadius * layout.outerRadius;
     const radiusScale = ctx.buildPositionScale(radiusScaleDef, radiusValues, [innerRadiusUnits, layout.outerRadius]);
-    const radialTicks: TickSet | undefined = radialAxis ? radiusScale.ticks(radialAxis.tickCount) : undefined;
+    const radialTicks: TickSet | undefined = radialAxis ? ctx.collectAxisTicks('y') ?? radiusScale.ticks(radialAxis.tickCount) : undefined;
     const frame = createPolarCoordinate({
       center: layout.center,
       innerRadius: innerRadiusUnits,
@@ -314,7 +314,7 @@ const polar1DCoordinateDefinition: CoordinateDefinition<Polar1DCoordinate> = {
     const angularAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
 
     const angleScale = ctx.buildPositionScale(angleScaleDef, angleValues, [startAngle, endAngle]);
-    const angularTicks: TickSet | undefined = angularAxis ? angleScale.ticks(angularAxis.tickCount) : undefined;
+    const angularTicks: TickSet | undefined = angularAxis ? ctx.collectAxisTicks('x') ?? angleScale.ticks(angularAxis.tickCount) : undefined;
     const layout = computePolarCoordinate(
       ctx.width,
       ctx.height,

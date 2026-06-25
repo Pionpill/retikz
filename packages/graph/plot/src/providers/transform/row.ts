@@ -14,6 +14,8 @@ export const DEFAULT_DERIVE_END_FIELD = 'y1';
 export const DEFAULT_JITTER_X_FIELD = 'x';
 export const DEFAULT_JITTER_Y_FIELD = 'y';
 
+type StackOffset = NonNullable<StackTransform['offset']>;
+
 /** 稳定排序：按字段升 / 降序；等键保持原序。 */
 export const applySort = (rows: Array<ExternalRow>, operation: SortTransform): Array<ExternalRow> => {
   const direction = operation.order === 'descending' ? -1 : 1;
@@ -27,6 +29,7 @@ export const applySort = (rows: Array<ExternalRow>, operation: SortTransform): A
 export const applyStack = (rows: Array<ExternalRow>, operation: StackTransform): Array<ExternalRow> => {
   const startField = operation.startField ?? DEFAULT_START_FIELD;
   const endField = operation.endField ?? DEFAULT_END_FIELD;
+  const offset: StackOffset = operation.offset ?? 'zero';
   const groupByField = operation.groupBy;
   const seriesOrder = groupByField === undefined ? [] : inferCategoryDomain(rows.map(row => resolveFieldPath(row, groupByField)));
   const seriesRank = new Map(seriesOrder.map((series, index) => [series, index] as const));
@@ -46,17 +49,52 @@ export const applyStack = (rows: Array<ExternalRow>, operation: StackTransform):
     else groups.set(key, [row]);
   }
 
-  const bounds = new Map<ExternalRow, [number, number]>();
-  for (const groupRows of groups.values()) {
-    const ordered = [...groupRows].sort((a, b) => rankOf(a) - rankOf(b));
-    let cumulative = 0;
-    for (const row of ordered) {
+  const stackGroupBounds = (ordered: Array<ExternalRow>): Map<ExternalRow, [number, number]> => {
+    const values = ordered.map(row => {
       const value = resolveFieldPath(row, operation.y);
-      const segment = isFiniteNumber(value) ? value : 0;
+      return isFiniteNumber(value) ? value : 0;
+    });
+    const out = new Map<ExternalRow, [number, number]>();
+
+    if (offset === 'overlap') {
+      ordered.forEach((row, index) => out.set(row, [0, values[index] ?? 0]));
+      return out;
+    }
+
+    if (offset === 'diverging') {
+      let positive = 0;
+      let negative = 0;
+      ordered.forEach((row, index) => {
+        const segment = values[index] ?? 0;
+        if (segment >= 0) {
+          out.set(row, [positive, positive + segment]);
+          positive += segment;
+        } else {
+          out.set(row, [negative + segment, negative]);
+          negative += segment;
+        }
+      });
+      return out;
+    }
+
+    const total = values.reduce((sum, value) => sum + value, 0);
+    const scale = offset === 'normalize' ? (total === 0 ? 0 : 1 / total) : 1;
+    let cumulative = offset === 'center' ? (-total * scale) / 2 : 0;
+    ordered.forEach((row, index) => {
+      const segment = (values[index] ?? 0) * scale;
       const y0 = cumulative;
       const y1 = cumulative + segment;
       cumulative = y1;
-      bounds.set(row, [y0, y1]);
+      out.set(row, [y0, y1]);
+    });
+    return out;
+  };
+
+  const bounds = new Map<ExternalRow, [number, number]>();
+  for (const groupRows of groups.values()) {
+    const ordered = [...groupRows].sort((a, b) => rankOf(a) - rankOf(b));
+    for (const [row, bound] of stackGroupBounds(ordered)) {
+      bounds.set(row, bound);
     }
   }
 

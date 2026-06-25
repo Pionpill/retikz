@@ -111,6 +111,30 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     expect(svg).toMatch(/<rect/);
   });
 
+  it('horizontal_barmark_renders_rect：<IntervalMark direction="horizontal"> 渲出矩形', () => {
+    const svg = renderToStaticMarkup(
+      <Plot data={rows} width={480} height={300}>
+        <IntervalMark x="revenue" y="month" direction="horizontal" />
+      </Plot>,
+    );
+    expect(svg).toMatch(/<rect/);
+  });
+
+  it('horizontal_grouped_bar_renders：横向 dodge 在 y band 内切子带', () => {
+    const sales = [
+      { month: 'Jan', product: 'A', revenue: 3 },
+      { month: 'Jan', product: 'B', revenue: 5 },
+      { month: 'Feb', product: 'A', revenue: 2 },
+      { month: 'Feb', product: 'B', revenue: 4 },
+    ];
+    const svg = renderToStaticMarkup(
+      <Plot data={sales} width={480} height={300}>
+        <IntervalMark x="revenue" y="month" direction="horizontal" group="product" />
+      </Plot>,
+    );
+    expect(svg).toMatch(/<rect/);
+  });
+
   it('stacked_bar_renders：分组数据堆叠柱端到端', () => {
     const sales = [
       { month: 'Jan', product: 'A', revenue: 3 },

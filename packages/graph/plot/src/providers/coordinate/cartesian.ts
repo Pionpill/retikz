@@ -131,8 +131,8 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
     assertUniqueAxisDimension(ctx.axisGuides);
     const xAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
     const yAxis = ctx.axisGuides.find(guide => guide.dimension === 'y');
-    const xTicks: TickSet | undefined = xAxis ? xScale.ticks(xAxis.tickCount) : undefined;
-    const yTicks: TickSet | undefined = yAxis ? yScale.ticks(yAxis.tickCount) : undefined;
+    const xTicks: TickSet | undefined = xAxis ? ctx.collectAxisTicks('x') ?? xScale.ticks(xAxis.tickCount) : undefined;
+    const yTicks: TickSet | undefined = yAxis ? ctx.collectAxisTicks('y') ?? yScale.ticks(yAxis.tickCount) : undefined;
 
     const computed = computePlotArea(
       ctx.width,
@@ -186,7 +186,7 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
 
     const provisional: [number, number] = horizontal ? [0, ctx.width] : [ctx.height, 0];
     const scale = ctx.buildPositionScale(scaleDef, values, provisional);
-    const ticks: TickSet | undefined = axis ? scale.ticks(axis.tickCount) : undefined;
+    const ticks: TickSet | undefined = axis ? ctx.collectAxisTicks('x') ?? scale.ticks(axis.tickCount) : undefined;
     const computed = computePlotArea(
       ctx.width,
       ctx.height,

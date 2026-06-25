@@ -1,6 +1,6 @@
 import type { IRJsonObject } from '@retikz/core';
 import { type ExternalDatasets, type ExternalRow, type Mark, type MarkOperation, PlotMark, type PlotSpec, isBuiltinMark } from '../../schemas';
-import { applyTransforms, buildGenericIntervalContext, buildIntervalContext, datumAnchor, isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame, resolveFieldPath } from '../../providers';
+import { applyTransforms, buildIntervalContext, datumAnchor, resolveFieldPath } from '../../providers';
 import { type LowerPlotsOptions, prepareRows, resolveFrame } from '../../pipeline/expand';
 import { DEFAULT_FONT_SIZE } from '../../pipeline/layout';
 import type { CoordinateFrame, IntervalContext } from '../../contract';
@@ -108,19 +108,10 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
   const intervalContexts = new Map<number, IntervalContext>();
   const intervalContextOf = (markIndex: number, mark: MarkOperation): IntervalContext | undefined => {
     if (!isBuiltinMark(mark) || mark.type !== PlotMark.Interval) return undefined;
-    // interval 在 cartesian2D / polar2D 需要内置 IntervalContext；自定义 frame 仅在 grouped band 时需要 generic context。
-    if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
-      if (!isGenericCoordinateFrame(frame)) return undefined;
-      const cached = intervalContexts.get(markIndex);
-      if (cached) return cached;
-      const ctx = buildGenericIntervalContext(mark, frame, rows);
-      if (ctx) intervalContexts.set(markIndex, ctx);
-      return ctx;
-    }
     const cached = intervalContexts.get(markIndex);
     if (cached) return cached;
     const ctx = buildIntervalContext(mark, frame, rows);
-    intervalContexts.set(markIndex, ctx);
+    if (ctx) intervalContexts.set(markIndex, ctx);
     return ctx;
   };
 

@@ -1,8 +1,8 @@
 import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, JsonObjectSchema, defineComposite } from '@retikz/core';
 import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type MarkOperation, PathClosureKind, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
-import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyFieldResolver, applyTransforms, assertAllValuesValid, assertBaselineScaleCompatible, assertScaleFieldCompatible, channelKindsForMark, channelValue, collectFormatFields, createPositionChannelDefinitions, deriveScale, lowerMark, makeColorSchemeResolver, normalizeRows, orderedCategoryDomain, resolveChannelRegistry, resolveCoordinateRegistry, resolveFieldPath, resolveFieldTypes, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkChannels, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, scaleTicks, validateBoundData } from '../providers';
+import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyFieldResolver, applyTransforms, assertAllValuesValid, assertBaselineScaleCompatible, assertScaleFieldCompatible, buildProportionalIntervals, channelKindsForMark, channelValue, collectFormatFields, createPositionChannelDefinitions, deriveScale, lowerMark, makeColorSchemeResolver, normalizeRows, orderedCategoryDomain, proportionalIntervalDomainValues, resolveChannelRegistry, resolveCoordinateRegistry, resolveFieldPath, resolveFieldTypes, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkChannels, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, scaleTicks, validateBoundData } from '../providers';
 import { type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../features';
-import { type AnyChannelDefinition, type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, type ResolveField, type ResolveLabel, isBuiltinScaleOperation } from '../contract';
+import { type AnyChannelDefinition, type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, type ResolveField, type ResolveLabel, type TickSet, isBuiltinScaleOperation } from '../contract';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect } from './layout';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { collectSourceFields } from './source-fields';
@@ -15,6 +15,7 @@ import { collectSourceFields } from './source-fields';
 const intervalRoleValues = (mark: IntervalMark, axis: 'primary' | 'secondary', pick: (mark: MarkOperation) => Channel | undefined, rows: Array<ExternalRow>): Array<unknown> => {
   const bound = resolveIntervalBound(mark, axis === 'primary' ? 'x' : 'y');
   if (bound.kind === IntervalBoundKind.Extent) return rows.flatMap(row => [resolveFieldPath(row, bound.from), resolveFieldPath(row, bound.to)]);
+  if (bound.kind === IntervalBoundKind.Proportional) return proportionalIntervalDomainValues(bound.field, rows);
   if (bound.kind === IntervalBoundKind.Full) return [];
   const channel = pick(mark);
   if (channel === undefined) return [];
@@ -24,7 +25,32 @@ const intervalRoleValues = (mark: IntervalMark, axis: 'primary' | 'secondary', p
 /** interval mark 在某 role 是否需把 baseline 0 纳入连续域（span / extent 值轴含 0；band / full 不需） */
 const intervalContributesBaseline = (mark: IntervalMark, axis: 'primary' | 'secondary'): boolean => {
   const bound = resolveIntervalBound(mark, axis === 'primary' ? 'x' : 'y');
-  return bound.kind === IntervalBoundKind.Span || bound.kind === IntervalBoundKind.Extent;
+  return bound.kind === IntervalBoundKind.Span || bound.kind === IntervalBoundKind.Extent || bound.kind === IntervalBoundKind.Proportional;
+};
+
+const intervalBoundConsumesRoleChannel = (mark: IntervalMark, role: DimensionRole): boolean => {
+  const bound = resolveIntervalBound(mark, role);
+  return bound.kind === IntervalBoundKind.Band || bound.kind === IntervalBoundKind.Span;
+};
+
+const intervalProportionalAxisTicks = (mark: IntervalMark, role: DimensionRole, rows: Array<ExternalRow>): TickSet | undefined => {
+  const bound = resolveIntervalBound(mark, role);
+  if (bound.kind !== IntervalBoundKind.Proportional) return undefined;
+  const channel = (mark.encoding as Record<string, Channel | undefined>)[role];
+  if (channel?.field === undefined) return undefined;
+  const intervals = buildProportionalIntervals(bound.field, rows);
+  const values: TickSet['values'] = [];
+  const labels: TickSet['labels'] = [];
+  for (const row of rows) {
+    const interval = intervals.get(row);
+    if (interval === undefined) continue;
+    const center = (interval[0] + interval[1]) / 2;
+    if (!Number.isFinite(center)) continue;
+    values.push(center);
+    const label = channelValue(channel, row);
+    labels.push(label === null || label === undefined ? '' : String(label));
+  }
+  return values.length > 0 ? { values, labels } : undefined;
 };
 
 const defaultColorOf = (node: PlotSpec, markIndex: number): string => {
@@ -90,8 +116,7 @@ const assertRequiredPositionChannels = (coordinateType: string, roles: ReadonlyA
     if (mark.type === PlotMark.Interval) {
       const encoding = mark.encoding as Record<string, Channel | undefined>;
       for (const channel of required) {
-        const bound = resolveIntervalBound(mark, channel);
-        if (bound.kind === IntervalBoundKind.Extent || bound.kind === IntervalBoundKind.Full) continue;
+        if (!intervalBoundConsumesRoleChannel(mark, channel)) continue;
         if (encoding[channel] === undefined) {
           throw new Error(`lowerPlots: ${coordinateType} coordinate system requires the "${channel}" position channel on ${mark.type} marks, but it is missing`);
         }
@@ -263,9 +288,9 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
         out.push(channelValue(channel, row));
       }
     }
-    // 值轴从 baseline 起：interval span / extent + path closure 把 baseline 纳入连续域（即便所有值同号）
+    // 值轴从 baseline 起：interval span / extent 按实际 role 纳入 0；path closure 仍由调用方显式请求。
+    if (axis !== undefined && node.marks.some(mark => isBuiltinMark(mark) && mark.type === PlotMark.Interval && intervalContributesBaseline(mark, axis))) out.push(0);
     if (includeBaseline) {
-      if (axis !== undefined && node.marks.some(mark => isBuiltinMark(mark) && mark.type === PlotMark.Interval && intervalContributesBaseline(mark, axis))) out.push(0);
       for (const mark of node.marks) {
         if (isBuiltinMark(mark) && mark.type === PlotMark.Path) {
           if (mark.closure?.kind === PathClosureKind.Baseline) {
@@ -279,10 +304,30 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     return out;
   };
 
+  const collectAxisTicks = (role: DimensionRole): TickSet | undefined => {
+    const hasRegularRoleTicks = node.marks.some(mark => {
+      const channel = markEncoding(mark)?.[role];
+      if (channel === undefined) return false;
+      return !(isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role));
+    });
+    if (hasRegularRoleTicks) return undefined;
+    const values: TickSet['values'] = [];
+    const labels: TickSet['labels'] = [];
+    for (const mark of node.marks) {
+      if (!isBuiltinMark(mark) || mark.type !== PlotMark.Interval) continue;
+      const ticks = intervalProportionalAxisTicks(mark, role, rows);
+      if (ticks === undefined) continue;
+      values.push(...ticks.values);
+      labels.push(...ticks.labels);
+    }
+    return values.length > 0 ? { values, labels } : undefined;
+  };
+
   // 某角色（跨所有 mark）绑定字段的全部类型——多 mark 共用一角色时须校验 / 派生全部，不能只看首个
-  const roleFieldTypes = (pick: (mark: MarkOperation) => Channel | undefined): Array<PlotFieldTypeValue> => {
+  const roleFieldTypes = (role: DimensionRole, pick: (mark: MarkOperation) => Channel | undefined): Array<PlotFieldTypeValue> => {
     const types: Array<PlotFieldTypeValue> = [];
     for (const mark of node.marks) {
+      if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role)) continue;
       const channel = pick(mark);
       if (channel?.field === undefined) continue;
       const type = fieldTypes.get(channel.field);
@@ -302,9 +347,10 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
    * @description 收集该 role 各绑定字段的非默认 order（!=='data'）：非分类字段配 order → throw；
    *   ≥2 个不同非默认 order → throw；恰好 1 个 → 返回它；0 个 → undefined（保持现状出现序）。
    */
-  const resolveRoleOrder = (role: string, pick: (mark: MarkOperation) => Channel | undefined): CategoryOrder | undefined => {
+  const resolveRoleOrder = (role: DimensionRole, pick: (mark: MarkOperation) => Channel | undefined): CategoryOrder | undefined => {
     const found: Array<CategoryOrder> = [];
     for (const mark of node.marks) {
+      if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role)) continue;
       const channel = pick(mark);
       if (channel?.field === undefined) continue;
       const order = fieldOrders.get(channel.field);
@@ -326,7 +372,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   // 解析角色 scale（ADR-03）：显式绑定 → 查表（未声明仍抛，typo 守卫）+ 对该 role **全部**字段做兼容校验；
   //   省略 → 按字段类型派生（要求该 role 字段类型一致，混类型 fail-loud）。兼容校验只对「声明 model 的类型」生效。
   const resolveScaleForRole = (role: DimensionRole, scaleName: string | undefined, pick: (mark: MarkOperation) => Channel | undefined, values: Array<unknown>): ScaleOperation => {
-    const types = roleFieldTypes(pick);
+    const types = roleFieldTypes(role, pick);
     // 解析该 role 有效 order（含「非分类配 order」「冲突 order」两道 fail-loud），无论 scale 显式与否都先校验
     const order = resolveRoleOrder(role, pick);
     let def: ScaleOperation;
@@ -382,6 +428,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
         roleChannelOf(role),
         opts?.includeBaseline ?? false,
       ),
+    collectAxisTicks,
     resolveScaleForRole: resolveScaleForDefinitionRole,
     buildPositionScale: (def, values, range) => resolvePositionScale(def, values, [range[0], range[1]], scaleRegistry),
     assertBaselineScaleCompatible: (scaleType, marks) => assertBaselineScaleCompatible(scaleType, marks, scaleRegistry),

@@ -105,6 +105,7 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
     const frame = createCartesianCoordinate(bandStub(['r0', 'r1'], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
     const mark = rectMark();
     const ctx = buildIntervalContext(mark, frame, [{ rk: 'r0', ck: 'c0' }]);
+    if (ctx === undefined) throw new Error('expected interval context');
     const cell = intervalCell(mark, { rk: 'r0', ck: 'c0' }, frame, ctx);
     expect(cell).not.toBeNull();
     const geometry = frame.projectCell(cell as Cell);

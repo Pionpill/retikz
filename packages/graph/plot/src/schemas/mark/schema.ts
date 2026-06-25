@@ -249,6 +249,16 @@ const ExtentBoundSchema = z
   })
   .describe('Extent bound: explicit [from, to] field interval (histogram bin / stacked bar / cumulative pie angle)');
 
+const ProportionalBoundSchema = z
+  .object({
+    kind: z.literal(IntervalBoundKind.Proportional).describe('Proportional bound: contiguous intervals whose widths are driven by a numeric field'),
+    field: z
+      .string()
+      .min(1)
+      .describe('Non-negative numeric field used to build contiguous proportional intervals along this role'),
+  })
+  .describe('Proportional bound: contiguous variable-width intervals along this role (variable-width bar / mosaic)');
+
 const FullBoundSchema = z
   .object({
     kind: z.literal(IntervalBoundKind.Full).describe('Full bound: span the whole coordinate domain of this role'),
@@ -256,8 +266,8 @@ const FullBoundSchema = z
   .describe('Full bound: spans the role coordinate domain (pie / donut radius, inner→outer)');
 
 export const IntervalBoundSchema = z
-  .discriminatedUnion('kind', [BandBoundSchema, SpanBoundSchema, ExtentBoundSchema, FullBoundSchema])
-  .describe('Single-role interval bound source: band / span / extent / full');
+  .discriminatedUnion('kind', [BandBoundSchema, SpanBoundSchema, ExtentBoundSchema, ProportionalBoundSchema, FullBoundSchema])
+  .describe('Single-role interval bound source: band / span / extent / proportional / full');
 
 export const IntervalBoundsSchema = z
   .object({

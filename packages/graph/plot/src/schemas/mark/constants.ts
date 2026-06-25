@@ -76,6 +76,8 @@ export const IntervalBoundKind = {
   Span: 'span',
   /** 两字段显式区间：histogram 箱边 / 堆叠 y0,y1 / 累积饼角 start,end */
   Extent: 'extent',
+  /** 按数值字段累加出的连续比例区间：variable-width bar / mosaic */
+  Proportional: 'proportional',
   /** 满铺该 role 的坐标域（极坐标 inner→outer 半径；饼 / 环半径方向） */
   Full: 'full',
 } as const;

@@ -73,6 +73,30 @@ describe('applyTransforms (ADR-03)', () => {
     expect(out[0]).not.toHaveProperty('y0');
   });
 
+  it('stack_offset_normalize', () => {
+    const rows = [{ x: 'a', s: 'A', v: 2 }, { x: 'a', s: 'B', v: 6 }];
+    const out = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's', offset: 'normalize' }]);
+    expect(out.map(row => [row.y0, row.y1])).toEqual([[0, 0.25], [0.25, 1]]);
+  });
+
+  it('stack_offset_diverging', () => {
+    const rows = [{ x: 'a', s: 'A', v: 3 }, { x: 'a', s: 'B', v: -2 }, { x: 'a', s: 'C', v: 4 }];
+    const out = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's', offset: 'diverging' }]);
+    expect(out.map(row => [row.y0, row.y1])).toEqual([[0, 3], [-2, 0], [3, 7]]);
+  });
+
+  it('stack_offset_center', () => {
+    const rows = [{ x: 'a', s: 'A', v: 2 }, { x: 'a', s: 'B', v: 6 }];
+    const out = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's', offset: 'center' }]);
+    expect(out.map(row => [row.y0, row.y1])).toEqual([[-4, -2], [-2, 4]]);
+  });
+
+  it('stack_offset_overlap', () => {
+    const rows = [{ x: 'a', s: 'A', v: 2 }, { x: 'a', s: 'B', v: 6 }];
+    const out = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's', offset: 'overlap' }]);
+    expect(out.map(row => [row.y0, row.y1])).toEqual([[0, 2], [0, 6]]);
+  });
+
   // ADR-02：泛化 stack —— 缺省 x / groupBy 的单链累积（按数据序），喂饼图
   it('stack_single_chain_accumulates_in_data_order', () => {
     const SHARE = [{ label: 'A', value: 3 }, { label: 'B', value: 5 }, { label: 'C', value: 2 }];

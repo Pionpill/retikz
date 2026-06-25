@@ -373,6 +373,44 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
     expect(xs[1] - xs[0]).toBeCloseTo(xs[2] - xs[1], 6);
   });
 
+  it('proportional_interval_axis_uses_role_channel_as_labels', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'labor' },
+      scales: [
+        { type: 'linear', name: 'xWidth' },
+        { type: 'linear', name: 'yCost' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xWidth', y: 'yCost' },
+      marks: [
+        {
+          type: 'interval',
+          bounds: { x: { kind: 'proportional', field: 'gdp' } },
+          encoding: { x: { field: 'country' }, y: { field: 'cost' } },
+        },
+      ],
+      guides: [{ type: 'axis', dimension: 'x' }],
+    });
+    const outer = expandOf(
+      spec,
+      {
+        labor: [
+          { country: 'Norway', cost: 52, gdp: 3 },
+          { country: 'France', cost: 42, gdp: 8 },
+          { country: 'Germany', cost: 41, gdp: 10 },
+        ],
+      },
+      opts,
+    );
+    const xAxis = outer.children[1] as IRScope;
+    const labels = xAxis.children.filter((child): child is IRNode => (child as IRNode).text !== undefined);
+    expect(labels.map(label => label.text)).toEqual(['Norway', 'France', 'Germany']);
+    const xs = labels.map(label => (label.position as [number, number])[0]);
+    expect(xs[0]).toBeLessThan(xs[1]);
+    expect(xs[1]).toBeLessThan(xs[2]);
+  });
+
   it('bar_missing_value_skipped', () => {
     const rows = [
       { month: 0, revenue: 10 },
@@ -801,8 +839,8 @@ describe('lowerPlots relation (ADR-05)', () => {
     // 2 系列 → 2 条 Path，各自一色
     expect(layer.children).toHaveLength(2);
     expect((layer.children[0] as IRPath).type).toBe('path');
-    expect((layer.children[0]).stroke).toBe('#aa');
-    expect((layer.children[1]).stroke).toBe('#bb');
+    expect((layer.children[0] as IRPath).stroke).toBe('#aa');
+    expect((layer.children[1] as IRPath).stroke).toBe('#bb');
   });
 
   it('series_omitted_single_bar_layer', () => {

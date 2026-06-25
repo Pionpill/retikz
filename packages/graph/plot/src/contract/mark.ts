@@ -10,14 +10,24 @@ import type { MarkProvenance } from './provenance';
  *   （seriesRank / subWidth）收进一处，杜绝两处各算各的漂移。堆叠经 extent bounds 表达、不再走 ctx。
  */
 export type IntervalContext = {
-  /** 类别带宽（primary.bandwidth；group 切子带、plain 直接用） */
-  bandwidth: number;
-  /** band group 子带字段（bounds.x = band{group} 时有值；否则 undefined = 整带） */
-  group?: string;
-  /** group 值 → 子带序号（按数据序去重推断，与 lowering 一致） */
-  seriesRank: Map<string | number, number>;
-  /** 单子带宽（bandwidth / 子带数；无 group 下 = bandwidth） */
-  subWidth: number;
+  /** 按 role 保存的 band 子带上下文；仅 interval lowering / locator 共享，不进 IR */
+  byRole: Partial<
+    Record<
+      string,
+      {
+        /** 类别带宽（group 切子带、plain 直接用） */
+        bandwidth: number;
+        /** band group 子带字段（bounds.<role> = band{group} 时有值；否则 undefined = 整带） */
+        group?: string;
+        /** group 值 → 子带序号（按数据序去重推断，与 lowering 一致） */
+        seriesRank: Map<string | number, number>;
+        /** 单子带宽（bandwidth / 子带数；无 group 下 = bandwidth） */
+        subWidth: number;
+      }
+    >
+  >;
+  /** 按 role 保存的比例宽度累积区间；供 variable-width interval lowering / locator 共享，不进 IR */
+  proportionalByRole?: Partial<Record<string, Map<ExternalRow, [number, number]>>>;
 };
 
 /**

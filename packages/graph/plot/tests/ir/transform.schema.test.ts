@@ -24,6 +24,11 @@ describe('TransformSchema (ADR-03)', () => {
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
+  it('stack_offset_valid', () => {
+    const t = { kind: 'stack', x: 'm', y: 'r', groupBy: 'p', offset: 'diverging' };
+    expect(TransformSchema.parse(t)).toEqual(t);
+  });
+
   // 错误路径
   it('builtin_transform_unknown_kind_rejected', () => {
     expect(() => BuiltinTransformSchema.parse({ kind: 'filter', field: 'm' })).toThrow();
