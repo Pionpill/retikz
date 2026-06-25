@@ -49,7 +49,7 @@ description: 位置比例尺把数据值映射成坐标 / 长度 / 半径——�
 
 ## 径向
 
-`radial` 把值映射成半径，且让**扇形 / 圆环的面积**（而非半径长度）正比于值——这正是极坐标玫瑰图（南丁格尔图）的编码方式。它是开方型映射，但与 `sqrt` 不同：`radial` 从 0 基线起算、专作半径值轴，因此**允许**配 interval / region（玫瑰图扇区），而 `sqrt` 不可。
+`radial` 把值映射成半径，且让**扇形 / 圆环的面积**（而非半径长度）正比于值——这正是极坐标玫瑰图（南丁格尔图）的编码方式。它是开方型映射，但与 `sqrt` 不同：`radial` 从 0 基线起算、专作半径值轴，因此**允许**配 interval / path closure（玫瑰图扇区或闭合面积），而 `sqrt` 不可。
 
 <ComponentPreview name="scale-radial" sourceFiles={['scale-radial.data.ts']} />
 

@@ -23,6 +23,7 @@ import type {
   NodeTextAlignValue,
   PathArrowDetailStyle,
   PathArrowStyle,
+  PathClosure,
   PathCurveValue,
   PathFillRuleStyle,
   PathScaleStyle,
@@ -91,7 +92,7 @@ export type CorePathChannelProps = {
 };
 
 /**
- * priority-1 宿主 datum label 扁平 props：给位置 mark（point / interval / path / region）加 datum 标签
+ * priority-1 宿主 datum label 扁平 props：给位置 mark（point / interval / path）加 datum 标签
  * @description label 顶层 string 默认按字段解析（装成 IR label.content 的 field）；labelDisplayFormat 进 IR（d3-format / d3-time-format 串）；
  *   labelPosition / labelDistance / labelPin 摊进 core NodeLabelSchema；resolveLabel 是运行时逃生舱（不进 IR、按 mark id 经 options 注入，需配 id）。
  */
@@ -136,6 +137,8 @@ export type PathMarkProps = DatumLabelProps & CorePathChannelProps & {
   roundedCorners?: MarkValueProp<number> | PointNonnegativeNumberStyle;
   /** 末点回连首点闭合成多边形（polar 下即雷达轮廓）；缺省 false */
   closed?: boolean;
+  /** 闭合并填充路径：cycle 首尾闭合，baseline 回到常量基线，stack 回到逐行基线字段 */
+  closure?: PathClosure;
   /** 相邻点连接方式；缺省 linear */
   curve?: PathCurveValue;
   /** 可选 mark 句柄（预留 scope/anchor） */
@@ -229,28 +232,6 @@ export type IntervalMarkProps = DatumLabelProps & CoreNodeChannelProps & {
   id?: string;
 };
 
-/** <RegionMark> props：区域图层（上沿折线 ↔ baseline 围成可填充区域；polar 下闭合成填充雷达） */
-export type RegionMarkProps = DatumLabelProps & CorePathChannelProps & {
-  /** 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值） */
-  x: FieldName;
-  /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
-  y: FieldName;
-  /** 上沿连接顺序的字段；缺省按数据数组顺序 */
-  order?: FieldName;
-  /** 系列字段：拆成多块区域（多系列）；缺省单块 */
-  series?: FieldName;
-  /** 回边贴附的 baseline 值；缺省 0 */
-  baseline?: number;
-  /** 末点回连首点闭合成多边形（polar 下即填充雷达）；缺省 false */
-  closed?: boolean;
-  /** 颜色字段（categorical，自动 ordinal 色 scale）：无显式 series 时按此字段隐式拆多块；缺省取 series。连续 / 时间字段报错 */
-  color?: FieldName;
-  strokeWidth?: MarkValueProp<number> | PointStrokeWidthStyle;
-  fillOpacity?: MarkValueProp<number> | PointOpacityStyle;
-  opacity?: MarkValueProp<number> | PointOpacityStyle;
-  /** 可选 mark 句柄（预留 scope/anchor） */
-  id?: string;
-};
 
 /**
  * <ReferenceMark> props：参考标注图层（阈值线 / 容差带）。取向由给 x（竖直）还是 y（水平）决定，二选一。
@@ -325,8 +306,6 @@ export const PointMark: FC<PointMarkProps> = () => null;
 /** 区间图层声明组件（柱 / 直方 / 饼环 / heatmap，统一） */
 export const IntervalMark: FC<IntervalMarkProps> = () => null;
 
-/** 区域图层声明组件（面积 / 填充雷达） */
-export const RegionMark: FC<RegionMarkProps> = () => null;
 
 /** 参考标注（阈值线 / 容差带）图层声明组件 */
 export const ReferenceMark: FC<ReferenceMarkProps> = () => null;

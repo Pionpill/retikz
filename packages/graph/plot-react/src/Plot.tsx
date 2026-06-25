@@ -37,7 +37,7 @@ export type PlotDslProps = PlotCommonProps & PlotColorProps & {
   dataRef?: string;
   /** 裸数据行数组；内部包成单数据集注入，不进 IR */
   data: Array<ExternalRow>;
-  /** mark / guide 子组件（<PathMark> / <PointMark> / <IntervalMark> / <RegionMark> / <Axis>） */
+  /** mark / guide 子组件（<PathMark> / <PointMark> / <IntervalMark> / <Axis>） */
   children: ReactNode;
   /** 数据模型（字段名 + 类型）：声明则 strict 校验 + type-driven scale/guide；注入构造 spec 的 data.model */
   model?: DataModel;

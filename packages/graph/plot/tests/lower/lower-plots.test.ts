@@ -638,7 +638,7 @@ describe('lowerPlots mark paint', () => {
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
-  it('region_constant_paint_lowers_to_path_default_and_compiles', () => {
+  it('path_closure_constant_paint_lowers_to_path_default_and_compiles', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -650,8 +650,9 @@ describe('lowerPlots mark paint', () => {
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [
         {
-          type: 'region',
+          type: 'path',
           order: 'month',
+          closure: { kind: 'baseline' },
           fill: { kind: 'constant', value: paintGradient },
           stroke: { kind: 'constant', value: paintGradient },
           encoding: { x: { field: 'month' }, y: { field: 'revenue' } },

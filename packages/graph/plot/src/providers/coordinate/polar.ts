@@ -206,7 +206,7 @@ export type PolarVertex = { theta: number; radius: number };
 /**
  * 把一行的角向 / 径向原始值映射成 PolarVertex。
  * @description PolarVertex 保留的是 scale 输出空间的 θ（度）和 r（user units），还不是屏幕点；
- *   path / region 会先收集顶点，再决定是否按连续角轴 densify 成弧线。非有限值返回 null。
+ *   path 会先收集顶点，再决定是否按连续角轴 densify 成弧线。非有限值返回 null。
  */
 export const toPolarVertex = (frame: PolarCoordinateFrame, angleValue: unknown, radiusValue: unknown): PolarVertex | null => {
   const theta = frame.primary.coordinate(angleValue);

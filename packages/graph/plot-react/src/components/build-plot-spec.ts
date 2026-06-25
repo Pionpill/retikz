@@ -53,8 +53,6 @@ import {
   type PointMarkProps,
   ReferenceMark,
   type ReferenceMarkProps,
-  RegionMark,
-  type RegionMarkProps,
 } from './marks';
 import { type PositionScaleType, Scale, type ScaleDimension, type ScaleProps } from './scales';
 import { Transform as TransformComponent, type TransformProps } from './transform';
@@ -536,7 +534,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
     }
     if (child.type === PathMark) {
       const props = child.props as PathMarkProps;
-      const { x, y, order, series, color, closed, curve, id, channels, strokeWidth, opacity, lineCap, lineJoin, roundedCorners } = props;
+      const { x, y, order, series, color, closed, closure, curve, id, channels, strokeWidth, opacity, lineCap, lineJoin, roundedCorners } = props;
       const colorEnc = colorChannel(color, series);
       const markLabel = buildMarkLabel(props);
       const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
@@ -550,6 +548,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(order !== undefined ? { order } : {}),
         ...(series !== undefined ? { series } : {}),
         ...(closed ? { closed: true } : {}),
+        ...(closure !== undefined ? { closure } : {}),
         ...(curve !== undefined ? { curve } : {}),
         ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
         ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
@@ -562,7 +561,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       });
       recordColor(into, colorEnc);
       recordResolveLabel(into, id, props.resolveLabel);
-      if (closed) into.hasClosedLine = true;
+      if (closed || closure !== undefined) into.hasClosedLine = true;
     } else if (child.type === PointMark) {
       const props = child.props as PointMarkProps;
       const {
@@ -731,31 +730,6 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       if (!histogram) into.hasBar = true;
       recordColor(into, colorEnc);
       recordResolveLabel(into, id, props.resolveLabel);
-    } else if (child.type === RegionMark) {
-      const props = child.props as RegionMarkProps;
-      const { x, y, order, series, baseline, closed, color, id, channels, strokeWidth, fillOpacity, opacity } = props;
-      const colorEnc = colorChannel(color, series);
-      const markLabel = buildMarkLabel(props);
-      const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
-      const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
-      const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
-      into.marks.push({
-        type: PlotMark.Region,
-        ...(id !== undefined ? { id } : {}),
-        ...(order !== undefined ? { order } : {}),
-        ...(series !== undefined ? { series } : {}),
-        ...(baseline !== undefined ? { baseline } : {}),
-        ...(closed ? { closed: true } : {}),
-        ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
-        ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
-        ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
-        ...pathStylePropsOf(props, styleContext),
-        ...(markLabel !== undefined ? { label: markLabel } : {}),
-        encoding: { ...positionEncoding(x, y), ...colorEnc, ...extensionChannelEncoding(channels) },
-      });
-      recordColor(into, colorEnc);
-      recordResolveLabel(into, id, props.resolveLabel);
-      if (closed) into.hasClosedLine = true;
     } else if (child.type === LinkMark) {
       const { sourceX, sourceY, targetX, targetY, value, endWidth, curvature, orientation, color, id, channels, fillOpacity, opacity } = child.props as LinkMarkProps;
       // 扁平端点 props → 嵌套 IR source/target 字段对；color 走 colorChannel（无 series）

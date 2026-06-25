@@ -164,7 +164,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 | 通道 | 通道值 | 含义 | 落点 |
 | --- | --- | --- | --- |
 | `zIndex` | 字段：`zIndex = "field"`<br />常量：`zIndex = {1}` | 绘制顺序提示 | scope / node / path `zIndex` |
-| `order` | 字段：`order = "field"` | path / region 的连接顺序 | mark 读取字段后排序 datum |
+| `order` | 字段：`order = "field"` | path 的连接顺序 | mark 读取字段后排序 datum |
 | `series` | 字段：`series = "field"` | 多系列拆分或分组 | mark 读取字段后拆分图元 |
 
 `order` 和 `series` 不属于 `encoding` 对象，但它们仍然是字段驱动的通道入口。用户在 React DSL 里同样把它们写成 mark props。

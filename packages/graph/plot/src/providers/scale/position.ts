@@ -397,7 +397,7 @@ const radialScaleDefinition = defineScale<RadialScale>({
   family: 'position',
   schema: RadialScaleSchema,
   isFieldCompatible: fieldType => fieldType !== PlotFieldType.Categorical,
-  // 面积感知半径，自 0 基线起算（南丁格尔 / 玫瑰图扇区面积编码值）→ 允许作 interval / region 值轴
+  // 面积感知半径，自 0 基线起算（南丁格尔 / 玫瑰图扇区面积编码值）→ 允许作 interval / path closure 值轴
   allowsBaseline: true,
   resolve: (def, values, range) => continuousPositionScale(resolveRadialScale(def, values.filter(isFiniteNumber), range)),
 });

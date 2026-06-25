@@ -1,5 +1,5 @@
 import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, JsonObjectSchema, defineComposite } from '@retikz/core';
-import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type MarkOperation, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
+import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type MarkOperation, PathClosureKind, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
 import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyFieldResolver, applyTransforms, assertAllValuesValid, assertBaselineScaleCompatible, assertScaleFieldCompatible, channelKindsForMark, channelValue, collectFormatFields, createPositionChannelDefinitions, deriveScale, lowerMark, makeColorSchemeResolver, normalizeRows, orderedCategoryDomain, resolveChannelRegistry, resolveCoordinateRegistry, resolveFieldPath, resolveFieldTypes, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkChannels, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, scaleTicks, validateBoundData } from '../providers';
 import { type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../features';
 import { type AnyChannelDefinition, type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, type ResolveField, type ResolveLabel, isBuiltinScaleOperation } from '../contract';
@@ -104,7 +104,7 @@ const assertRequiredPositionChannels = (coordinateType: string, roles: ReadonlyA
       }
       continue;
     }
-    // point / path / region：所有必填位置角色都要对应 encoding 通道
+    // point / path：所有必填位置角色都要对应 encoding 通道
     const encoding = mark.encoding as Record<string, Channel | undefined>;
     for (const channel of required) {
       if (encoding[channel] === undefined) {
@@ -280,11 +280,17 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
         out.push(channelValue(channel, row));
       }
     }
-    // 值轴从 baseline 起：interval span / extent + region 把 baseline 纳入连续域（即便所有值同号）
+    // 值轴从 baseline 起：interval span / extent + path closure 把 baseline 纳入连续域（即便所有值同号）
     if (includeBaseline) {
       if (axis !== undefined && node.marks.some(mark => isBuiltinMark(mark) && mark.type === PlotMark.Interval && intervalContributesBaseline(mark, axis))) out.push(0);
       for (const mark of node.marks) {
-        if (isBuiltinMark(mark) && mark.type === PlotMark.Region) out.push(mark.baseline ?? 0);
+        if (isBuiltinMark(mark) && mark.type === PlotMark.Path) {
+          if (mark.closure?.kind === PathClosureKind.Baseline) {
+            out.push(mark.closure.baseline ?? 0);
+          } else if (mark.closure?.kind === PathClosureKind.Stack) {
+            for (const row of rows) out.push(resolveFieldPath(row, mark.closure.baselineField));
+          }
+        }
       }
     }
     return out;

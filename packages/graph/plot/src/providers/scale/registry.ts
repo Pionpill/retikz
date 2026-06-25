@@ -1,6 +1,6 @@
 import { JsonObjectSchema } from '@retikz/core';
 import { type AnyScaleDefinition, type ChannelResolveContext, type ChannelScaleResolution, type PositionScale, extractScaleType, isBuiltinScaleOperation } from '../../contract';
-import { PlotFieldType, type PlotFieldTypeValue, PlotMark, PlotScale, type Scale, type ScaleOperation } from '../../schemas';
+import { type MarkOperation, PathClosureKind, PlotFieldType, type PlotFieldTypeValue, PlotMark, PlotScale, type Scale, type ScaleOperation, isBuiltinMark } from '../../schemas';
 import { COLOR_SCALE_DEFINITIONS } from './color';
 import { POSITION_SCALE_DEFINITIONS } from './position';
 
@@ -113,14 +113,19 @@ export const assertScaleFieldCompatible = (
  */
 export const assertBaselineScaleCompatible = (
   valueScaleType: string,
-  marks: ReadonlyArray<{ type: string }>,
+  marks: ReadonlyArray<MarkOperation>,
   registry: ReadonlyMap<string, AnyScaleDefinition>,
 ): void => {
   const def = registry.get(valueScaleType);
   if (def === undefined || def.family !== 'position' || def.allowsBaseline !== false) return;
-  if (marks.some(mark => mark.type === PlotMark.Interval || mark.type === PlotMark.Region)) {
+  const hasBaselineMark = marks.some(mark =>
+    isBuiltinMark(mark) &&
+    (mark.type === PlotMark.Interval ||
+      (mark.type === PlotMark.Path && (mark.closure?.kind === PathClosureKind.Baseline || mark.closure?.kind === PathClosureKind.Stack))),
+  );
+  if (hasBaselineMark) {
     throw new Error(
-      `nonlinear continuous scale (${valueScaleType}) cannot be used with interval/area because their baseline includes 0; use point/line or wait for explicit positive baseline support`,
+      `nonlinear continuous scale (${valueScaleType}) cannot be used with interval/area/path closure because their baseline participates in the value axis; use a linear value scale or an open point/line mark`,
     );
   }
 };

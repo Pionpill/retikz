@@ -3,7 +3,7 @@ title: Plot
 description: "<Plot> is the chart container: it takes raw data and a size, assembles mark / guide / scale children, and lowers to core primitives at compile time."
 ---
 
-`<Plot>` is the container component for the plot layer. It takes `data` (an array of raw rows) and a display size, collects `<PathMark>` / `<IntervalMark>` / `<RegionMark>` / `<Axis>` / `<Scale>` children, then assembles a PlotSpec and lowers it to core at compile time. Data never enters the IR; it is injected during lowering. `<Plot>` does not draw axes, grids, or legends by itself. Declare those guides explicitly. Scales are inferred unless overridden with `<Scale>`; the coordinate system defaults to `cartesian2D` and can be switched with `coordinate`.
+`<Plot>` is the container component for the plot layer. It takes `data` (an array of raw rows) and a display size, collects `<PathMark>` / `<IntervalMark>` / `<Axis>` / `<Scale>` children, then assembles a PlotSpec and lowers it to core at compile time. Data never enters the IR; it is injected during lowering. `<Plot>` does not draw axes, grids, or legends by itself. Declare those guides explicitly. Scales are inferred unless overridden with `<Scale>`; the coordinate system defaults to `cartesian2D` and can be switched with `coordinate`.
 
 ## Usage
 

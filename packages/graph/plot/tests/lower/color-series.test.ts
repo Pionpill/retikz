@@ -81,8 +81,8 @@ describe('color × series · B/C 收口（alpha.7 ADR-03）', () => {
   });
 
   // Happy path：area 同理隐式拆
-  it('single_area_categorical_color_implicitly_splits', () => {
-    const spec = specOf({ type: 'region', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
+  it('single_closed_path_categorical_color_implicitly_splits', () => {
+    const spec = specOf({ type: 'path', order: 't', closure: { kind: 'baseline' }, encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
     const paths = collectPaths(firstLayer(spec, { d: SERIES_DATA }));
     expect(paths).toHaveLength(2);
   });

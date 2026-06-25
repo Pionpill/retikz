@@ -20,6 +20,7 @@ import type {
   NodeTextAlignStyleSchema,
   PathArrowDetailStyleSchema,
   PathArrowStyleSchema,
+  PathClosureSchema,
   PathFillRuleStyleSchema,
   PathMarkSchema,
   PathScaleStyleSchema,
@@ -35,7 +36,6 @@ import type {
   PointStrokeStyleSchema,
   PointZIndexStyleSchema,
   ReferenceMarkSchema,
-  RegionMarkSchema,
   ShadowStyleSchema,
 } from './schema';
 
@@ -82,10 +82,10 @@ export type PathScaleStyle = z.infer<typeof PathScaleStyleSchema>;
 export type PathArrowDetailStyle = z.infer<typeof PathArrowDetailStyleSchema>;
 /** PathMark 相邻点连接方式。 */
 export type PathCurveValue = ValueOf<typeof PathCurve>;
+/** PathMark 闭合策略配置。 */
+export type PathClosure = z.infer<typeof PathClosureSchema>;
 /** path mark（折线 / 轮廓） */
 export type PathMark = z.infer<typeof PathMarkSchema>;
-/** region mark（面积 / 填充雷达） */
-export type RegionMark = z.infer<typeof RegionMarkSchema>;
 /** interval 单维区间来源 */
 export type IntervalBound = z.infer<typeof IntervalBoundSchema>;
 /** interval per-role 区间来源 */
@@ -98,7 +98,7 @@ export type ReferenceMark = z.infer<typeof ReferenceMarkSchema>;
 export type LinkEndpoint = z.infer<typeof LinkEndpointSchema>;
 /** link mark（sankey / alluvial 流带） */
 export type LinkMark = z.infer<typeof LinkMarkSchema>;
-/** mark（point / path / region / interval / reference / link） */
+/** mark（point / path / interval / reference / link） */
 export type Mark = z.infer<typeof MarkSchema>;
 /** custom mark operation（自定义 type passthrough，由 runtime MarkDefinition 解释） */
 export type CustomMark = z.infer<typeof CustomMarkSchema>;

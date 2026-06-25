@@ -1,12 +1,12 @@
 ---
 title: PathMark
-description: PathMark 是有序点形成的一维轨迹；折线、多系列线和雷达线框都是它在不同配置下的表现形态。
+description: PathMark 是有序点形成的一维轨迹；折线、填充闭合区域、多系列线和雷达线框都是它在不同配置下的表现形态。
 ---
 
 
 `<PathMark>` 为一组数据行生成一条 1D 轨迹。它先把每行数据投影成点，再按 `order` 排序并连接成 core `Path`；在 cartesian2D 下常表现为折线，在 polar2D 下可以表现为极坐标路径或雷达线框。
 
-`x` / `y` 绑定位置通道，`order` 决定连接顺序，`series` 决定是否拆成多条路径，`curve` 决定相邻点的连接方式，`closed` 决定末点是否回连首点。当前 PathMark 支持二维笛卡尔坐标系和二维极坐标系。
+`x` / `y` 绑定位置通道，`order` 决定连接顺序，`series` 决定是否拆成多条路径，`curve` 决定相邻点的连接方式，`closure` 决定路径是否闭合成可填充区域。当前 PathMark 支持二维笛卡尔坐标系和二维极坐标系。
 
 ## 用法
 
@@ -26,13 +26,14 @@ import { PathMark, Plot } from '@retikz/plot-react';
 
 PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D 轨迹。它不关心这条轨迹最终被命名为折线图、趋势线、轮廓线还是雷达线框；这些都是表现层对同一个 PathMark 的解释。
 
-表现层的差异主要来自三类配置：位置通道决定点从哪里来，系列通道决定拆成几条线，几何属性决定是否闭合。PathMark 不负责填充面积；需要有填充的面积图或雷达图时，使用 [RegionMark](/plot/grammar/mark/region)。
+表现层的差异主要来自三类配置：位置通道决定点从哪里来，系列通道决定拆成几条线，几何属性决定路径只是闭合线框，还是闭合成可填充区域。
 
 | 表现形态 | 关键属性 | 说明 |
 | --- | --- | --- |
 | 折线 | `x` / `y` / `order` | 每行投影成点，按顺序连接成一条轨迹 |
 | 多系列线 | `series` / `color` | 先按系列拆分数据，再分别生成多条路径 |
 | 雷达线框 | `closed` + `polar2D` | 在极坐标下首尾相接，形成闭合线框 |
+| 填充区域 | `closure` | 按首尾、常量 baseline 或逐行 stack baseline 闭合路径，并填充结果 |
 
 ## 例子
 
@@ -64,6 +65,14 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 <ComponentPreview name="line-radar" sourceFiles={['line-radar.data.ts']} />
 
+`closure` 会让同一条 PathMark 闭合并填充。左侧使用可自由设置的常量 `baseline` 形成面积路径，右侧使用 `cycle` 填充雷达多边形。
+
+<ComponentPreview name="line-closure" sourceFiles={['line-closure.data.ts']} />
+
+堆叠面积可以把上边界绑定到 `y`，再把下边界字段交给 `closure.baselineField`。这个字段可以来自 stack transform，也可以像示例一样来自预先算好的 `y0` / `y1`。
+
+<ComponentPreview name="line-stack-area" sourceFiles={['line-stack-area.data.ts']} />
+
 ### 连接方式
 
 `curve` 控制相邻点之间如何连接。左侧是二维笛卡尔坐标，右侧是二维极坐标；切换连接方式时，两边会同步更新。极坐标下不额外设置内部半径，PathMark 会按角向和径向位置直接投影。
@@ -85,7 +94,7 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 ## 技术原理
 
-`PathMark` 是一个内置注册图元。React 里的 `<PathMark>` 本身不渲染 DOM；`<Plot>` 会在构造 `PlotSpec` 时把它收集成 `type: 'path'` 的 mark IR，并记录 `x` / `y` / `order` / `series` / `closed` 等配置。
+`PathMark` 是一个内置注册图元。React 里的 `<PathMark>` 本身不渲染 DOM；`<Plot>` 会在构造 `PlotSpec` 时把它收集成 `type: 'path'` 的 mark IR，并记录 `x` / `y` / `order` / `series` / `closed` / `closure` 等配置。
 
 编译时，`lowerMark` 按 `mark.type` 查询 `MARK_REGISTRY`，`PathMark` 命中 `PlotMark.Path` 对应的 `lowerPathLayer`。`lowerPathLayer` 只接受 cartesian2D / polar2D，然后调用 `lowerPath`：它按系列拆分数据、排序、投影点，最后把点序列下沉为 core `Path`。
 
@@ -104,6 +113,7 @@ const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
 
 const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
   if (mark.type !== PlotMark.Path) return null;
+  const closure = mark.closure;
   const closed = mark.closed ?? false;
   const seriesField = pathSeriesField(mark, rows);
   if (seriesField) {
@@ -111,13 +121,13 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
       mark,
       rows,
       seriesField,
-      seriesRows => buildLineSteps(mark, seriesRows, frame, closed),
+      seriesRows => (closure ? buildClosureSteps(mark, seriesRows, frame, closure) : buildLineSteps(mark, seriesRows, frame, closed)),
       seriesRows => ({ stroke: colorOf?.(seriesRows[0]) ?? DEFAULT_FILL }),
       markProvenance,
     );
     return paths.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
   }
-  const steps = buildLineSteps(mark, rows, frame, closed);
+  const steps = closure ? buildClosureSteps(mark, rows, frame, closure) : buildLineSteps(mark, rows, frame, closed);
   if (!steps) return null;
   const colorValue = mark.encoding.color?.value;
   const stroke = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
@@ -132,7 +142,7 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 | 坐标系校验 | PathMark 需要二维轨迹几何；当前只在 cartesian2D / polar2D 下下沉 |
 | 排序与投影 | `orderRows` 决定连接顺序，`frame.project(...)` 把位置通道投影成屏幕点 |
 | 系列拆分 | `series` 显式优先；没有 `series` 但有分类 `color` 时，按 `color` 隐式拆系列 |
-| core 下沉 | 每个系列生成一个 core `Path`；`closed` 会在 step 序列末尾补闭合段 |
+| core 下沉 | 每个系列生成一个 core `Path`；`closed` 追加线框闭合段，`closure` 构建可填充的闭合路径 |
 
 ## API
 
@@ -146,6 +156,7 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 |  | `series` | `FieldName?` | — | 按字段拆成多条路径 |
 |  | `curve` | `PathCurveValue?` | `linear` | 相邻点连接方式；支持直线、阶梯、样条和单调曲线 |
 |  | `closed` | `boolean?` | `false` | 末点回连首点，形成闭合路径 |
+|  | `closure` | `{ kind: 'cycle' }`<br />`{ kind: 'baseline'; baseline?: number }`<br />`{ kind: 'stack'; baselineField: FieldName }` | — | 闭合并填充路径；`baseline` 使用常量下边界，`stack` 读取逐行下边界字段 |
 | 路径 | `stroke` / `fill` | `FieldName`<br />`IRPaintSpec`<br />`PointStrokeStyle?` / `PointFillStyle?` | `currentColor` / — | 路径描边和闭合路径填充样式 |
 |  | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | 路径描边宽度、整体透明度和填充透明度 |
 |  | `drawOpacity`<br />`zIndex` / `rotate` | `PointOpacityStyle?`<br />`PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />—<br />— | 描边透明度、绘制顺序和旋转 |
@@ -162,5 +173,4 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 ## 相关
 
 - [PointMark](/plot/grammar/mark/point) —— 叠在路径上标出每个观测点
-- [RegionMark](/plot/grammar/mark/region) —— 带填充的路径 / 填充雷达
 - [坐标系](/plot/grammar/coordinate) —— cartesian2D / polar2D 如何解释位置角色

@@ -5,7 +5,7 @@ description: ReferenceMark expresses axis-constrained references: a constant or 
 
 `<ReferenceMark>` declares an axis constraint in data space. Bind `y` for a horizontal reference, bind `x` for a vertical reference; a lower bound alone becomes a line, while `xTo` / `yTo` turns it into a band. `number` means a constant, while `FieldName` means a data field name or field path and produces one reference per row.
 
-It joins the same draw order as `<PointMark>` / `<IntervalMark>`, but it does not start from point, line, or region dimensions. It first fixes one axis value, then expands along the opposite axis domain.
+It joins the same draw order as `<PointMark>` / `<IntervalMark>`, but it does not start from point, line, or interval dimensions. It first fixes one axis value, then expands along the opposite axis domain.
 
 ## Usage
 

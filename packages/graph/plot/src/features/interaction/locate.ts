@@ -46,9 +46,9 @@ export type PlotLocator = {
   resolve: (address: string) => ResolvedAnchor | null;
 };
 
-/** 取某 mark 的 series 字段名（无则 undefined）；只有 path / interval / region 含 series */
+/** 取某 mark 的 series 字段名（无则 undefined）；只有 path / interval 含 series */
 const seriesFieldOf = (mark: Mark): string | undefined =>
-  mark.type === PlotMark.Path || mark.type === PlotMark.Interval || mark.type === PlotMark.Region ? mark.series : undefined;
+  mark.type === PlotMark.Path || mark.type === PlotMark.Interval ? mark.series : undefined;
 
 /** datum-bearing mark（展成独立可见 Node 的 mark）：point / interval（含 heatmap cell / sector，皆 interval）；自定义 mark 非 datum-bearing。 */
 const isDatumBearing = (mark: MarkOperation): mark is Mark => isBuiltinMark(mark) && (mark.type === PlotMark.Point || mark.type === PlotMark.Interval);

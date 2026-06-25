@@ -140,7 +140,6 @@
     "compPathMark": "PathMark",
     "compPointMark": "PointMark",
     "compIntervalMark": "IntervalMark",
-    "compRegionMark": "RegionMark",
     "compReferenceMark": "ReferenceMark",
     "compLinkMark": "LinkMark",
     "grammarMarkCustom": "Custom Marks",

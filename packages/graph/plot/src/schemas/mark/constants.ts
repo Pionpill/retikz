@@ -3,7 +3,7 @@ import type { ValueOf } from '@retikz/core';
 /**
  * mark 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'point'` 同样可用）
  * @description discriminated union 判别字段，成员里写 z.literal(PlotMark.x)（不用 z.enum）。
- *   6 个抽象 mark = 4 个维度 mark（point / path / region / interval，描述数据在坐标空间的 k 维几何）
+ *   5 个抽象 mark = 3 个维度 mark（point / path / interval，描述数据在坐标空间的 k 维几何）
  *   + 2 个特殊 mark（link / reference，复用维度 mark 投影但语义不等同）。
  */
 export const PlotMark = {
@@ -12,7 +12,6 @@ export const PlotMark = {
   /** 维度 mark / 1D：有序点连成的一维轨迹（折线 / 闭合轮廓） */
   Path: 'path',
   /** 维度 mark / 2D：边界围出的可填充区域（面积 / 填充雷达 / 置信带） */
-  Region: 'region',
   /** 维度 mark / 区间积：各位置 role 正交区间积，经坐标系投影成段 / 矩形 / 扇区 / cell（柱 / histogram / heatmap / 径向柱 / 饼环） */
   Interval: 'interval',
   /** 特殊 mark / relation：source→target 关系几何（sankey / alluvial 流带） */
@@ -64,6 +63,22 @@ export const PathCurve = {
   /** 自然三次样条：整体连续、端点二阶导为 0 */
   Natural: 'natural',
 } as const;
+
+/**
+ * PathMark 闭合策略关键字。
+ * @description cycle 首尾闭合；baseline 回到常量基线；stack 回到逐行基线字段，适合堆叠面积。
+ */
+export const PathClosureKind = {
+  /** 首尾直接闭合，形成多边形 / 雷达轮廓 */
+  Cycle: 'cycle',
+  /** 上沿回到常量 baseline 后闭合，形成常规面积 */
+  Baseline: 'baseline',
+  /** 上沿回到每行 baselineField 指向的下边界后闭合，形成堆叠面积 / 区间带 */
+  Stack: 'stack',
+} as const;
+
+/** PathMark 闭合策略 */
+export type PathClosureKindValue = ValueOf<typeof PathClosureKind>;
 
 /**
  * interval 单维区间来源关键字（暴露给用户；裸 `'band'` 等同样可用）

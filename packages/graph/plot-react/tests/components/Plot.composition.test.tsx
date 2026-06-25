@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { PlotSpec } from '@retikz/plot';
-import { Axis, IntervalMark, PathMark, Plot, PointMark, RegionMark, Scale } from '../../src';
+import { Axis, IntervalMark, PathMark, Plot, PointMark, Scale } from '../../src';
 
 const rows = [
   { month: 0, revenue: 10 },
@@ -210,7 +210,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     expect(svg).toContain('<path');
   });
 
-  it('polar_area_renders：填充雷达（<RegionMark closed>）渲染不崩', () => {
+  it('polar_area_renders：填充雷达（<PathMark closed>）渲染不崩', () => {
     const metrics = [
       { dim: 'a', value: 4 },
       { dim: 'b', value: 7 },
@@ -218,7 +218,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     ];
     const svg = renderToStaticMarkup(
       <Plot data={metrics} coordinate="polar2D" width={360} height={360}>
-        <RegionMark x="dim" y="value" closed />
+        <PathMark x="dim" y="value" closure={{ kind: 'cycle' }} />
       </Plot>,
     );
     expect(svg).toContain('<path');

@@ -136,68 +136,14 @@ describe('MarkSchema (ADR-05)', () => {
     expect(() => MarkSchema.parse({ type: 'interval', bounds: { x: { kind: 'extent', from: '', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label' } } })).toThrow();
   });
 
-  // ADR-03：region mark
-  it('mark_region_minimal_valid', () => {
-    // baseline / closed 省略：schema 不写入默认值，仅解析通过
-    const m = { type: 'region', encoding: { x: { field: 'date' }, y: { field: 'val' } } };
-    const parsed = MarkSchema.parse(m);
-    expect(parsed).toEqual(m);
-    expect(parsed).not.toHaveProperty('baseline');
-    expect(parsed).not.toHaveProperty('closed');
-  });
 
-  it('mark_region_explicit_baseline_closed_valid', () => {
-    const m = { type: 'region', order: 'date', baseline: 5, closed: true, encoding: { x: { field: 'date' }, y: { field: 'val' } } };
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
 
-  it('mark_region_baseline_zero_valid', () => {
-    const m = { type: 'region', baseline: 0, encoding: { x: { field: 'date' }, y: { field: 'val' } } };
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
 
-  it('mark_region_series_valid', () => {
-    const m = { type: 'region', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' } } };
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
-  it('mark_region_with_id_valid', () => {
-    const m = { type: 'region', id: 'band', encoding: { x: { field: 'x' }, y: { field: 'y' } } };
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
 
   // 错误路径：baseline 必须有限（.finite 防 Infinity 破坏 JSON round-trip）
-  it('mark_region_baseline_infinity_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'region', baseline: Number.POSITIVE_INFINITY, encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
-  });
 
-  it('mark_region_baseline_nan_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'region', baseline: Number.NaN, encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
-  });
 
-  it('mark_region_missing_encoding_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'region' })).toThrow();
-  });
 
-  it('mark_region_typo_type_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'aria', encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
-  });
-
-  it('mark_region_empty_order_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'region', order: '', encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
-  });
-
-  // union 判别到 region 分支（保留 region 专属 baseline，不与别的成员混淆）
-  it('mark_region_union_discriminates', () => {
-    const parsed = MarkSchema.parse({ type: 'region', baseline: 2, encoding: { x: { field: 'x' }, y: { field: 'y' } } });
-    expect(parsed.type).toBe('region');
-    expect((parsed as { baseline?: number }).baseline).toBe(2);
-  });
-
-  it('mark_region_json_round_trip', () => {
-    const m = { type: 'region', order: 'date', series: 'city', baseline: 0, closed: false, encoding: { x: { field: 'date' }, y: { field: 'val' } } };
-    expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
-  });
 
   // ADR-03：path 加 closed（雷达多边形）
   it('mark_path_closed_valid', () => {
@@ -218,6 +164,29 @@ describe('MarkSchema (ADR-05)', () => {
   it('mark_path_closed_json_round_trip', () => {
     const m = { type: 'path', order: 'dim', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } } };
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
+  });
+
+  it('mark_path_closure_cycle_valid', () => {
+    const m = { type: 'path', closure: { kind: 'cycle' }, encoding: { x: { field: 'dim' }, y: { field: 'value' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_path_closure_baseline_valid', () => {
+    const m = { type: 'path', closure: { kind: 'baseline', baseline: 5 }, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_path_closure_stack_valid', () => {
+    const m = { type: 'path', closure: { kind: 'stack', baselineField: 'y0' }, encoding: { x: { field: 'month' }, y: { field: 'y1' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_path_closure_stack_empty_baseline_field_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'path', closure: { kind: 'stack', baselineField: '' }, encoding: { x: { field: 'month' }, y: { field: 'y1' } } })).toThrow();
+  });
+
+  it('mark_path_closure_baseline_nan_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'path', closure: { kind: 'baseline', baseline: Number.NaN }, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } })).toThrow();
   });
 
   // alpha.7 ADR-02：size 通道仅 PointMark
@@ -518,16 +487,6 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_region_accepts_paint_fill_and_stroke', () => {
-    const m = {
-      type: 'region',
-      fill: { kind: 'constant', value: gradientPaint },
-      stroke: { kind: 'constant', value: gradientPaint },
-      encoding: { x: { field: 'x' }, y: { field: 'y' } },
-    };
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
   it('mark_reference_accepts_paint_fill_and_stroke', () => {
     const m = {
       type: 'reference',
@@ -565,7 +524,6 @@ describe('MarkSchema (ADR-05)', () => {
   });
 
   it('mark_reference_strips_label', () => {
-    // label 仅位置 mark（point/path/region/interval）；reference 非 strict zod 剥离
     const parsed = MarkSchema.parse({ type: 'reference', label: { content: { value: 'x' } }, encoding: { y: { value: 80 } } });
     expect((parsed as { label?: unknown }).label).toBeUndefined();
   });

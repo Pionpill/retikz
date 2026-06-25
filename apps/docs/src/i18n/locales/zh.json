@@ -140,7 +140,6 @@
     "compPathMark": "路径",
     "compPointMark": "散点",
     "compIntervalMark": "区间",
-    "compRegionMark": "区域",
     "compReferenceMark": "参考",
     "compLinkMark": "链接",
     "grammarMarkCustom": "自定义图元",

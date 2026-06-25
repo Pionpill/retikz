@@ -49,7 +49,7 @@ When data spans several orders of magnitude, a linear axis crushes the small val
 
 ## Radial
 
-`radial` maps a value to a radius such that the **area** of a sector / ring (not the radius length) stays proportional to the value — exactly how a polar rose chart (Nightingale chart) encodes magnitude. It is a square-root-style mapping, but unlike `sqrt` it starts from a 0 baseline and is meant for the radius value axis, so it **is** allowed with interval / region marks (rose-chart sectors), whereas `sqrt` is not.
+`radial` maps a value to a radius such that the **area** of a sector / ring (not the radius length) stays proportional to the value — exactly how a polar rose chart (Nightingale chart) encodes magnitude. It is a square-root-style mapping, but unlike `sqrt` it starts from a 0 baseline and is meant for the radius value axis, so it **is** allowed with interval / path-closure marks (rose-chart sectors or closed areas), whereas `sqrt` is not.
 
 <ComponentPreview name="scale-radial" sourceFiles={['scale-radial.data.ts']} />
 

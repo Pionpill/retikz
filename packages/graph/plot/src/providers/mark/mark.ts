@@ -3,7 +3,7 @@ import { type AnyMarkDefinition, type CoordinateFrame, type FieldCollector, type
 import { type ExternalRow, type MarkOperation, PlotMark, type PlotMarkValue } from '../../schemas';
 import { intervalMarkDefinition } from './interval';
 import { linkMarkDefinition } from './link';
-import { pathMarkDefinition, regionMarkDefinition } from './path';
+import { pathMarkDefinition } from './path';
 import { pointMarkDefinition } from './point';
 import { referenceMarkDefinition } from './reference';
 
@@ -17,7 +17,6 @@ const asAnyMarkDefinition = <T extends MarkOperation>(def: MarkDefinition<T>): A
 export const MARK_REGISTRY: Record<PlotMarkValue, AnyMarkDefinition> = {
   [PlotMark.Point]: asAnyMarkDefinition(pointMarkDefinition),
   [PlotMark.Path]: asAnyMarkDefinition(pathMarkDefinition),
-  [PlotMark.Region]: asAnyMarkDefinition(regionMarkDefinition),
   [PlotMark.Interval]: asAnyMarkDefinition(intervalMarkDefinition),
   [PlotMark.Link]: asAnyMarkDefinition(linkMarkDefinition),
   [PlotMark.Reference]: asAnyMarkDefinition(referenceMarkDefinition),

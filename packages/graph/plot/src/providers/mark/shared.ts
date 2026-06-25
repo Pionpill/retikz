@@ -17,7 +17,6 @@ import {
   type MarkOperation,
   type PathMark,
   type PointMark,
-  type RegionMark,
 } from '../../schemas';
 import { BUILTIN_NODE_CHANNELS, BUILTIN_PATH_CHANNELS } from '../channel/delivery';
 
@@ -156,7 +155,7 @@ export const attachMarkLayer = (layer: IRScope, mark: Mark, markProvenance: Mark
 export const failLoudMessage = (markType: string, frameType: string): string =>
   `lowerPlots: ${markType} mark is not supported under the ${frameType} coordinate system (this coordinate system does not provide the geometry for ${markType} marks this round)`;
 
-type PositionEncodedMark = PointMark | PathMark | RegionMark | IntervalMark;
+type PositionEncodedMark = PointMark | PathMark | IntervalMark;
 
 /**
  * shared encoding 中保留给非位置语义的 key。
@@ -196,7 +195,7 @@ export const collectDatumLabelFields = (mark: PositionEncodedMark, fields: Field
 
 /**
  * 位置类 mark 的通用 encoding 字段收集入口。
- * @description point / path / region / interval 共用 shared encoding；具体样式字段再由 node/path channel definition 派生收集。
+ * @description point / path / interval 共用 shared encoding；具体样式字段再由 node/path channel definition 派生收集。
  */
 export const collectCommonEncodingFields = (mark: PositionEncodedMark, fields: FieldCollector): void => {
   collectPositionRoleFields(mark, fields);

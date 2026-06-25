@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { type IRPaintSpec, type PlotSpec, PlotSpecSchema, isBuiltinMark, lowerPlots } from '@retikz/plot';
 import { buildPlotSpec, decorateDefaultGuides } from '../../src/components/build-plot-spec';
 import { Axis, Legend } from '../../src/components/guides';
-import { IntervalMark, LinkMark, PathMark, PointMark, ReferenceMark, RegionMark } from '../../src/components/marks';
+import { IntervalMark, LinkMark, PathMark, PointMark, ReferenceMark } from '../../src/components/marks';
 import { Scale } from '../../src/components/scales';
 import { Transform } from '../../src/components/transform';
 
@@ -96,15 +96,6 @@ describe('buildPlotSpec paint props', () => {
     const spec = buildPlotSpec(<IntervalMark x="month" y="revenue" fill={gradientPaint} stroke={gradientPaint} />, '__plot');
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
-      fill: { kind: 'constant', value: gradientPaint },
-      stroke: { kind: 'constant', value: gradientPaint },
-    });
-  });
-
-  it('region paint props pass through to mark IR', () => {
-    const spec = buildPlotSpec(<RegionMark x="x" y="y" fill={gradientPaint} stroke={gradientPaint} />, '__plot');
-    expect(spec.marks[0]).toMatchObject({
-      type: 'region',
       fill: { kind: 'constant', value: gradientPaint },
       stroke: { kind: 'constant', value: gradientPaint },
     });
@@ -713,9 +704,9 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
     expect(spec.coordinate).toMatchObject({ type: 'polar2D', angle: '__angle', radius: '__radius' });
   });
 
-  it('area_mark_equivalence：<RegionMark> → area mark IR（baseline / closed 落位）', () => {
-    const spec = buildPlotSpec(<RegionMark x="t" y="v" baseline={2} closed />, '__plot', { coordinate: 'polar2D' });
-    expect(spec.marks[0]).toEqual({ type: 'region', baseline: 2, closed: true, encoding: { x: { field: 't' }, y: { field: 'v' } } });
+  it('area_mark_equivalence：<PathMark> → area mark IR（baseline / closed 落位）', () => {
+    const spec = buildPlotSpec(<PathMark x="t" y="v" closure={{ kind: 'baseline', baseline: 2 }} />, '__plot', { coordinate: 'polar2D' });
+    expect(spec.marks[0]).toEqual({ type: 'path', closure: { kind: 'baseline', baseline: 2 }, encoding: { x: { field: 't' }, y: { field: 'v' } } });
   });
 
   it('polar_explicit_axis：写 <Axis dimension="x"/> → guides 含该轴', () => {
@@ -762,7 +753,7 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
     expect(() => PlotSpecSchema.parse(buildPlotSpec(<IntervalMark x="m" y="a" color="m" />, '__plot', { coordinate: 'polar2D' }))).not.toThrow();
     expect(() => PlotSpecSchema.parse(buildPlotSpec(<PathMark x="d" y="v" closed />, '__plot', { coordinate: 'polar2D' }))).not.toThrow();
     expect(() =>
-      PlotSpecSchema.parse(buildPlotSpec(<RegionMark x="t" y="v" closed />, '__plot', { coordinate: { type: 'polar2D', innerRadius: 0.3 } })),
+      PlotSpecSchema.parse(buildPlotSpec(<PathMark x="t" y="v" closure={{ kind: 'cycle' }} />, '__plot', { coordinate: { type: 'polar2D', innerRadius: 0.3 } })),
     ).not.toThrow();
   });
 });

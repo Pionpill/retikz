@@ -2,14 +2,14 @@
 import { z } from 'zod';
 import { ArrowDetailSchema, BlendMode, BoundarySchema, DropShadowSchema, FontSchema, PathScaleSchema, ShadowPreset, ShapeRefSchema } from '@retikz/core';
 import { ChannelSchema, EncodingSchema, MarkChannelEncodingSchema, MarkLabelSchema, PointEncodingSchema } from '../encoding';
-import { BUILTIN_MARK_TYPES, IntervalBoundKind, LinkOrientation, MarkValueKind, PathCurve, PlotMark } from './constants';
+import { BUILTIN_MARK_TYPES, IntervalBoundKind, LinkOrientation, MarkValueKind, PathClosureKind, PathCurve, PlotMark } from './constants';
 
 /** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema、link / reference 用专属） */
 const markBase = {
   id: z.string().min(1).optional().describe('Optional mark handle; reserved scope/anchor target'),
 };
 
-/** 位置 mark（point / path / region / interval）的 encoding：x / y 可选（必填性下放 coordinate 级校验）+ 样式 */
+/** 位置 mark（point / path / interval）的 encoding：x / y 可选（必填性下放 coordinate 级校验）+ 样式 */
 const positionalEncoding = { encoding: EncodingSchema };
 
 /** 位置 mark 的可选 datum label（priority-1 宿主路径）：lowering 时挂到该 mark 每个 datum Node 的 label */
@@ -87,6 +87,34 @@ export const PathThicknessStyleSchema = markValueSchema(
 export const PathArrowStyleSchema = markValueSchema(z.enum(['none', '->', '<-', '<->']), 'Data field path bound to path arrow direction', 'Constant core Path arrow direction', 'path arrow style value');
 export const PathScaleStyleSchema = markValueSchema(PathScaleSchema, 'Data field path bound to path scale', 'Constant core Path scale', 'path scale style value');
 export const PathArrowDetailStyleSchema = markValueSchema(ArrowDetailSchema, 'Data field path bound to path arrowDetail', 'Constant core Path arrowDetail', 'path arrowDetail style value');
+
+const PathCycleClosureSchema = z
+  .object({
+    kind: z.literal(PathClosureKind.Cycle).describe('Cycle closure: connect the final point back to the first point'),
+  })
+  .describe('Path cycle closure: closes the path as a polygon and enables fill');
+
+const PathBaselineClosureSchema = z
+  .object({
+    kind: z.literal(PathClosureKind.Baseline).describe('Baseline closure: return from the upper outline to a constant baseline'),
+    baseline: z
+      .number()
+      .finite()
+      .optional()
+      .describe('Constant baseline value for the return edge; default 0. Finite-only to keep the IR JSON round-trippable'),
+  })
+  .describe('Path baseline closure: closes the upper outline down to a constant baseline and enables fill');
+
+const PathStackClosureSchema = z
+  .object({
+    kind: z.literal(PathClosureKind.Stack).describe('Stack closure: return from the upper outline to a per-row baseline field'),
+    baselineField: z.string().min(1).describe('Data field path for the lower boundary value, such as y0 from a stack transform; the upper boundary still comes from encoding.y'),
+  })
+  .describe('Path stack closure: closes the upper outline against a per-row lower-bound field and enables fill');
+
+export const PathClosureSchema = z
+  .discriminatedUnion('kind', [PathCycleClosureSchema, PathBaselineClosureSchema, PathStackClosureSchema])
+  .describe('Path closure strategy: cycle, constant baseline, or per-row stacked baseline. Providing closure makes PathMark fillable');
 
 const coreNodeStyle = {
   align: NodeTextAlignStyleSchema.optional().describe('Core Node text alignment: field-bound datum channel or constant left / center / right'),
@@ -174,6 +202,7 @@ export const PathMarkSchema = z
       .boolean()
       .optional()
       .describe('Connect the last point back to the first, closing the path into a polygon; under polar this yields a radar outline. Default false'),
+    closure: PathClosureSchema.optional().describe('Close and fill the path using a cycle, a constant baseline, or a per-row stacked baseline. Prefer this over closed when the path should have area fill'),
     curve: z
       .enum(PathCurve)
       .optional()
@@ -189,34 +218,6 @@ export const PathMarkSchema = z
     ...positionalEncoding,
   })
   .describe('Path mark: connects records in order into a 1D trajectory (line / radar outline)');
-
-export const RegionMarkSchema = z
-  .object({
-    type: z.literal(PlotMark.Region).describe('Discriminator: a fillable 2D region between an upper outline and a baseline'),
-    order: z.string().min(1).optional().describe('Data field driving connection order of the upper outline; omit for data array order'),
-    series: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Series field: split records into one region per distinct value (multi-series); each series gets its own fill via the color scale'),
-    baseline: z
-      .number()
-      .finite()
-      .optional()
-      .describe('Baseline value the region fills down to (the return edge runs along it); default 0. Finite-only to keep the IR JSON round-trippable'),
-    closed: z
-      .boolean()
-      .optional()
-      .describe('Connect the last point back to the first, closing the outline into a polygon; under polar this yields a filled radar. Default false'),
-    strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe('Region outline stroke width: field-bound datum channel or constant core Path stroke width'),
-    opacity: PointOpacityStyleSchema.optional().describe('Region whole opacity: field-bound datum channel or constant opacity 0..1'),
-    fillOpacity: PointOpacityStyleSchema.optional().describe('Region fill opacity: field-bound datum channel or constant opacity 0..1'),
-    ...corePathStyle,
-    ...markBase,
-    ...positionalLabel,
-    ...positionalEncoding,
-  })
-  .describe('Region mark: fillable 2D region between the value outline and a baseline (area chart / filled radar / confidence band)');
 
 const BandBoundSchema = z
   .object({
@@ -363,8 +364,8 @@ export const LinkMarkSchema = z
   .describe('Link mark: one fillable cubic band per record between a source and target field-pair endpoint, width driven by the value field; consumes pre-computed layout positions (sankey / alluvial layout is out of scope). Uses style-only encoding (color)');
 
 export const MarkSchema = z
-  .discriminatedUnion('type', [PointMarkSchema, PathMarkSchema, RegionMarkSchema, IntervalMarkSchema, ReferenceMarkSchema, LinkMarkSchema])
-  .describe('Mark union: 4 dimensional marks (point / path / region / interval) + 2 special marks (link / reference)');
+  .discriminatedUnion('type', [PointMarkSchema, PathMarkSchema, IntervalMarkSchema, ReferenceMarkSchema, LinkMarkSchema])
+  .describe('Mark union: 3 dimensional marks (point / path / interval) + 2 special marks (link / reference)');
 
 export const CustomMarkSchema = z
   .object({

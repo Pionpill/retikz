@@ -55,7 +55,6 @@ export const plotSection: Array<Section> = [
         children: [
           { id: 'point', label: 'plot.compPointMark' },
           { id: 'path', label: 'plot.compPathMark' },
-          { id: 'region', label: 'plot.compRegionMark' },
           { id: 'interval', label: 'plot.compIntervalMark' },
           { id: 'reference', label: 'plot.compReferenceMark' },
           { id: 'link', label: 'plot.compLinkMark' },
