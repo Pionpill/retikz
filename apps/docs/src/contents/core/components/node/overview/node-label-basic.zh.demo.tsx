@@ -3,23 +3,26 @@ import type { FC } from 'react';
 
 /**
  * Node `label` 边挂标签
- * @description 单对象或数组形态；position 接 8 方向枚举或数字角度（TikZ `label=30:foo` 同义）；font / textColor 缺省时从 node 继承。
+ * @description 单对象或数组形态；position 接 8 方向枚举、center 或数字角度（TikZ `label=30:foo` 同义）；font / textColor 缺省时从 node 继承。
  */
 const Demo: FC = () => (
   <Layout width={500} height={260}>
     {/* 单 label，缺省 position='above' */}
     <Node id="A" position={[-160, 0]} label={{ text: '简单标签' }}>A</Node>
-    {/* 多 label，不同方向 */}
+    {/* 多 label，含中心标签 */}
     <Node
       id="B"
       shape="circle"
+      color="white"
+      fill="#2563eb"
       position={[0, 0]}
       label={[
-        { text: '上', position: 'above' },
-        { text: '右', position: 'right' },
-        { text: '左下', position: 'below-left' },
+        { text: '中心', position: 'center', textColor: 'currentColor' },
+        { text: '上', position: 'above', textColor: '#0f172a' },
+        { text: '右', position: 'right', textColor: '#0f172a' },
+        { text: '左下', position: 'below-left', textColor: '#0f172a' },
       ]}
-    >B</Node>
+    />
     {/* 数字角度（视觉 30°，retikz polar 0°=+x、90°=+y 屏幕下） */}
     <Node
       id="C"

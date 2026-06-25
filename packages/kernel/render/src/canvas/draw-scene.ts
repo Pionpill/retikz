@@ -78,7 +78,7 @@ type BBox = { x: number; y: number; w: number; h: number };
 /** Scene 资源按 id 索引（fill resourceRef 查表） */
 type ResourceMap = ReadonlyMap<string, SceneResource>;
 
-type GradientSpec = Extract<IRPaintSpec, { kind: 'linearGradient' | 'radialGradient' }>;
+type GradientSpec = Extract<IRPaintSpec, { kind: 'linearGradient' | 'radialGradient' | 'conicGradient' }>;
 
 /**
  * 把 hex / rgb(a) 颜色乘上 alpha 转成 rgba 串；无法正则解析则返回 undefined
@@ -214,7 +214,7 @@ const buildGradient = (
   spec: GradientSpec,
   bbox: BBox,
   options: DrawOptions,
-): CanvasGradient => {
+): CanvasGradient | undefined => {
   let gradient: CanvasGradient;
   if (spec.kind === 'linearGradient') {
     const line = gradientLineFromAngle(spec.angle);
@@ -224,11 +224,19 @@ const buildGradient = (
       bbox.x + line.x2 * bbox.w,
       bbox.y + line.y2 * bbox.h,
     );
-  } else {
+  } else if (spec.kind === 'radialGradient') {
     const [cx, cy] = spec.center ?? [0.5, 0.5];
     const acx = bbox.x + cx * bbox.w;
     const acy = bbox.y + cy * bbox.h;
     gradient = ctx.createRadialGradient(acx, acy, 0, acx, acy, (spec.radius ?? 0.5) * Math.max(bbox.w, bbox.h));
+  } else {
+    const createConicGradient = (ctx as { createConicGradient?: (startAngle: number, x: number, y: number) => CanvasGradient }).createConicGradient;
+    if (typeof createConicGradient !== 'function') {
+      warnUnsupported(options, 'paint', 'Canvas renderer does not support conicGradient paint on this host; paint is skipped.');
+      return undefined;
+    }
+    const [cx, cy] = spec.center ?? [0.5, 0.5];
+    gradient = createConicGradient.call(ctx, ((spec.angle ?? 0) * Math.PI) / 180, bbox.x + cx * bbox.w, bbox.y + cy * bbox.h);
   }
   for (const stop of spec.stops) {
     gradient.addColorStop(
@@ -253,7 +261,7 @@ const resolvePaintStyle = (
   const resource = resources.get(paint.id);
   if (resource !== undefined && resource.kind === 'paint') {
     const spec = resource.spec;
-    if (spec.kind === 'linearGradient' || spec.kind === 'radialGradient') {
+    if (spec.kind === 'linearGradient' || spec.kind === 'radialGradient' || spec.kind === 'conicGradient') {
       return buildGradient(ctx, spec, bbox, options);
     }
     if (spec.kind === 'pattern' && resource.tile !== undefined) {

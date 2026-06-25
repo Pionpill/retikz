@@ -80,11 +80,11 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 
 ## 节点标签
 
-`NodeLabelSchema` 描述节点外围的附加文本；`Node.label` 可填单个对象或数组。
+`NodeLabelSchema` 描述节点的附加文本；`Node.label` 可填单个对象或数组。
 
-<ZodSchema name="NodeLabelSchema" description="附着在节点边界外侧的额外文本标签。" descriptions={{
+<ZodSchema name="NodeLabelSchema" description="附着在节点上的额外文本标签。" descriptions={{
   text: '标签文字内容，按单行文本渲染',
-  position: '标签相对节点边界的位置：8 向枚举或数字角度；默认 above',
+  position: '标签相对节点边界的位置：8 向枚举、center 或数字角度；默认 above；center 直接画在节点中心',
   distance: '节点边界到标签中心的间距（用户单位），默认 12',
   textColor: '标签文字颜色，省略时使用 currentColor',
   opacity: '标签自身不透明度 0..1；会与节点 opacity 相乘',

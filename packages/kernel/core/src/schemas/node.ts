@@ -44,6 +44,13 @@ export const NodeTextAlign = {
 
 export type NodeTextAlignValue = ValueOf<typeof NodeTextAlign>;
 
+export const NodeLabelPosition = {
+  ...AtDirection,
+  Center: 'center',
+} as const;
+
+export type NodeLabelPositionValue = ValueOf<typeof NodeLabelPosition>;
+
 /**
  * 节点附属标签 label（TikZ `[label=above:foo]` 同义）
  * @description 可挂多个；label 不参与 layout。position 支持 8 方向枚举或数字角度（polar 约定：0°=+x，90°=+y 屏幕下方）；默认 position='above'，distance=12
@@ -56,10 +63,10 @@ export const NodeLabelSchema = z
         'Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ runs }` mixed text+math line. Rendered as a single line.',
       ),
     position: z
-      .union([z.enum(AtDirection), z.number()])
+      .union([z.enum(NodeLabelPosition), z.number()])
       .optional()
       .describe(
-        'Placement around the node border: 8-direction enum (above / right / above-left / ...) or numeric angle in degrees (`label=30:foo` for radial placement). Default `above`. Numeric uses the polar convention (0° = +x, 90° = +y, screen-down).',
+        'Placement around the node border: 8-direction enum (above / right / above-left / ...), `center`, or numeric angle in degrees (`label=30:foo` for radial placement). Default `above`. `center` draws the label at the node center. Numeric uses the polar convention (0° = +x, 90° = +y, screen-down).',
       ),
     distance: z
       .number()

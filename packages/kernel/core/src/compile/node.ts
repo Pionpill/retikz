@@ -2,7 +2,7 @@ import type { Position } from '../geometry/point';
 import { arcEndPoint } from '@retikz/math';
 import { normalizeCompassAnchor } from '../geometry/anchor';
 import type { Rect } from '../geometry/rect';
-import type { AtDirectionValue, IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../schemas';
+import type { IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue, NodeLabelPositionValue } from '../schemas';
 import { JsonObjectSchema } from '../schemas';
 import type { BlendModeValue, DropShadow } from '../schemas/effects';
 import { resolveShadow } from './effects';
@@ -240,8 +240,8 @@ export type NodeLabelLayout = {
   text: string;
   /** 含公式时的混排行布局（emit 走 laid）；纯文本时 undefined */
   laid?: LaidLine;
-  /** 8 方向枚举或数字角度 */
-  position: AtDirectionValue | number;
+  /** 8 方向枚举、center 或数字角度 */
+  position: NodeLabelPositionValue | number;
   /** 已应用默认值 */
   distance: number;
   textColor?: string;
@@ -361,6 +361,7 @@ export const anchorOf = (
  */
 /** label 在 node 边界上的附着点（未旋转局部系；pin 引线起点 = 此点） */
 const labelBorderPoint = (layout: NodeLayout, label: NodeLabelLayout): Position => {
+  if (label.position === 'center') return [layout.rect.x, layout.rect.y];
   const aaLayout: NodeLayout = { ...layout, rect: { ...layout.rect, rotate: 0 } };
   if (typeof label.position === 'number') {
     return angleBoundaryOf(aaLayout, label.position);
@@ -369,6 +370,7 @@ const labelBorderPoint = (layout: NodeLayout, label: NodeLabelLayout): Position 
 };
 
 const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
+  if (label.position === 'center') return [layout.rect.x, layout.rect.y];
   const [bx, by] = labelBorderPoint(layout, label);
   if (typeof label.position === 'number') {
     return arcEndPoint([bx, by], label.distance, label.position);

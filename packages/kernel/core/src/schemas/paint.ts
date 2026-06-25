@@ -74,6 +74,21 @@ export const PaintSpecSchema = z
       .describe('Radial gradient paint server'),
     z
       .object({
+        kind: z.literal('conicGradient'),
+        stops: z.array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
+        center: z
+          .tuple([z.number().finite(), z.number().finite()])
+          .optional()
+          .describe('Center in objectBoundingBox units (0..1 relative to the filled shape); omitted = (0.5, 0.5)'),
+        angle: z
+          .number()
+          .finite()
+          .optional()
+          .describe('Start angle in degrees (polar convention; 0°=+x, 90°=+y screen-down); omitted = 0'),
+      })
+      .describe('Conic gradient paint server'),
+    z
+      .object({
         kind: z.literal('pattern'),
         shape: z
           .string()

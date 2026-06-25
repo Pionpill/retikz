@@ -181,7 +181,7 @@ Line 2`}</Node>
 
 ### 节点标签
 
-`label` 在节点边界外挂额外文字。单对象或数组形态；`position` 接 8 方向枚举（缺省 `'above'`）或数字角度；`font` / `textColor` 缺省时从 node 继承，`opacity` 可单独控制标签透明度（0~1，与 node `opacity` 相乘）。
+`label` 在节点边界外挂额外文字。单对象或数组形态；`position` 接 8 方向枚举（缺省 `'above'`）、`'center'` 或数字角度；`'center'` 会把 label 直接画在节点中心，不做重叠避让；`font` / `textColor` 缺省时从 node 继承，`opacity` 可单独控制标签透明度（0~1，与 node `opacity` 相乘）。
 
 <Comparison target="tikz" title="节点标签">
 
@@ -268,10 +268,11 @@ Line 2`}</Node>
 
 #### 渐变填充与描边
 
-`fill` / `stroke` 除纯色字符串外还接 **PaintSpec 对象**——线性 / 径向渐变、图案 pattern、图片 image。相同 PaintSpec 自动去重，渲染为 SVG `<defs>` 里的 paint server。`<Path fill>` / `<Path stroke>` 同样支持。
+`fill` / `stroke` 除纯色字符串外还接 **PaintSpec 对象**——线性 / 径向 / 锥形渐变、图案 pattern、图片 image。相同 PaintSpec 自动去重，渲染为 SVG `<defs>` 里的 paint server。`<Path fill>` / `<Path stroke>` 同样支持。
 
 - 线性：`{ kind: 'linearGradient', angle?, stops }`——`angle` 度数（0 = 左→右，90 = 上→下）
 - 径向：`{ kind: 'radialGradient', center?, radius?, stops }`——`center` / `radius` 用 0..1 相对值
+- 锥形：`{ kind: 'conicGradient', center?, angle?, stops }`——围绕 `center` 按角度插值，用于极坐标 / 扇区类色带
 - `stops`：`{ offset (0..1), color, opacity? }` 数组，至少 2 个；`color` 可用 `currentColor`
 
 <ComponentPreview name="node-paint" size="sm" />
@@ -320,7 +321,7 @@ Line 2`}</Node>
 | `maxTextWidth` | `number` | — | 折行阈值（user units）；超过才折行（西文按词 / CJK 按字），短文本盒宽收缩；非固定段落宽 |
 | `rotate` | `number` | `0` | 绕中心旋转角度（度，正值顺时针） |
 | `color` | `string` | — | 主色（TikZ `color=`）；`stroke` / `fill` / `textColor` 未单设则随它，并级联到内部文字与边 label |
-| `fill` | `string \| PaintSpec` | — | 背景填充：纯色 CSS 串，或 PaintSpec（渐变 linear / radial、图案 pattern、图片 image） |
+| `fill` | `string \| PaintSpec` | — | 背景填充：纯色 CSS 串，或 PaintSpec（渐变 linear / radial / conic、图案 pattern、图片 image） |
 | `stroke` | `string \| PaintSpec` | `currentColor` | 边框 paint：CSS 颜色或 PaintSpec（渐变 / pattern / image） |
 | `strokeWidth` | `number` | `1` | 边框宽度（user units） |
 | `innerXSep` | `number` | — | 横向内边距（text → 左右 border）；不填走 `padding` 兜底 |
@@ -344,7 +345,7 @@ Line 2`}</Node>
 | `scale` | `number` | `1` | 均匀缩放（含字号、padding、路径附着点） |
 | `xScale` / `yScale` | `number` | — | 分轴缩放，优先于 `scale` |
 | `zIndex` | `number`（整数） | `0` | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效 |
-| `label` | `NodeLabel \| Array<NodeLabel>` | — | 边挂标签；单对象或数组；`position` 接 8 方向枚举（缺省 `'above'`）或数字角度，`distance` 缺省 12，`font` / `textColor` 缺省继承 node，`opacity` 单独控制标签 0~1；`rotate`（`'none'` / `'radial'` / `'tangent'` / 数字度数）+ `keepUpright` 控制标签自旋；`pin`（`true` 默认线 / `{ stroke, strokeWidth, dashPattern }` 带样式 / 省略无引线）画引线 |
+| `label` | `NodeLabel \| Array<NodeLabel>` | — | 边挂标签；单对象或数组；`position` 接 8 方向枚举（缺省 `'above'`）、`'center'` 或数字角度，`'center'` 直接画在节点中心，`distance` 缺省 12，`font` / `textColor` 缺省继承 node，`opacity` 单独控制标签 0~1；`rotate`（`'none'` / `'radial'` / `'tangent'` / 数字度数）+ `keepUpright` 控制标签自旋；`pin`（`true` 默认线 / `{ stroke, strokeWidth, dashPattern }` 带样式 / 省略无引线）画引线 |
 | `animations` | `Array<AnimationTrack>` | — | 时间轴动画 tracks：每条 track 动一个 renderer 无关 property，base = 动画终态；透传进 Scene 图元，renderer 播放或降级到静态。不参与布局。见 [动画](/core/components/effects/animation) |
 
 ### margin 与 padding 的区别

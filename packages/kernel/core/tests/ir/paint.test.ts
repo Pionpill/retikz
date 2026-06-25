@@ -128,7 +128,7 @@ describe('PaintSpecSchema — 错误路径', () => {
   it('未知 kind 被拒', () => {
     expect(() =>
       PaintSpecSchema.parse({
-        kind: 'conicGradient',
+        kind: 'meshGradient',
         stops: [
           { offset: 0, color: 'red' },
           { offset: 1, color: 'blue' },
