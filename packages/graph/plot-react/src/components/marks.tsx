@@ -265,38 +265,6 @@ export type ReferenceMarkProps = Omit<CoreNodeChannelProps, 'scale' | 'dashPatte
 };
 
 /**
- * <LinkMark> props：流带图层（sankey / alluvial 流量），每行一条源 → 目标的可填充 cubic 曲带。
- * @description 扁平 props：端点拆成 sourceX/sourceY/targetX/targetY 顶层字段串（经坐标系投影），value 字段 → 带宽。
- *   布局（节点排布 / 流量堆叠）须由 transform / 预处理算好写回数据。
- */
-export type LinkMarkProps = CorePathChannelProps & {
-  /** 源端 x 位置通道字段（经坐标系投影成屏幕点） */
-  sourceX: FieldName;
-  /** 源端 y 位置通道字段 */
-  sourceY: FieldName;
-  /** 目标端 x 位置通道字段 */
-  targetX: FieldName;
-  /** 目标端 y 位置通道字段 */
-  targetY: FieldName;
-  /** 流量字段：经合成 width 线性 scale 映射成源端带宽 */
-  value: FieldName;
-  /** 目标端宽度字段：缺省 = 与源端等宽（等宽带）；给定 → 喇叭带 */
-  endWidth?: FieldName;
-  /** cubic 控制点沿主轴外推比例 0..1（0=准直、大=更 S）；缺省 0.5 */
-  curvature?: number;
-  /** 主轴取向：horizontal 出入切向沿 x、半宽沿 y（左右流）；vertical 反之；缺省 horizontal */
-  orientation?: 'horizontal' | 'vertical';
-  /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale）；缺省按图层序取默认色 */
-  color?: FieldName;
-  fillOpacity?: MarkValueProp<number> | PointOpacityStyle;
-  opacity?: MarkValueProp<number> | PointOpacityStyle;
-  /** Extension channel bindings forwarded to `encoding.channels`; string values are field names. */
-  channels?: Record<string, ExtensionChannelProp>;
-  /** 可选 mark 句柄（预留 scope/anchor） */
-  id?: string;
-};
-
-/**
  * 折线图层声明组件
  * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 type + props 装配进 PlotSpec
  */
@@ -311,6 +279,3 @@ export const IntervalMark: FC<IntervalMarkProps> = () => null;
 
 /** 参考标注（阈值线 / 容差带）图层声明组件 */
 export const ReferenceMark: FC<ReferenceMarkProps> = () => null;
-
-/** 流带（sankey / alluvial）图层声明组件 */
-export const LinkMark: FC<LinkMarkProps> = () => null;

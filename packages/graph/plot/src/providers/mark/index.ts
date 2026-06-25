@@ -1,7 +1,6 @@
 export * from './anchor';
 export * from './cell';
 export * from './interval';
-export * from './link';
 export * from './mark';
 export * from './path';
 export * from './point';

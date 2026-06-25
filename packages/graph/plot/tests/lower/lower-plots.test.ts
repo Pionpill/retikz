@@ -695,35 +695,6 @@ describe('lowerPlots mark paint', () => {
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
-  it('link_constant_paint_lowers_to_path_default_and_compiles', () => {
-    const spec = PlotSpecSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'links' },
-      scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
-      ],
-      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [
-        {
-          type: 'link',
-          source: { x: { field: 'sourceX' }, y: { field: 'sourceY' } },
-          target: { x: { field: 'targetX' }, y: { field: 'targetY' } },
-          value: 'value',
-          fill: { kind: 'constant', value: paintGradient },
-          stroke: { kind: 'constant', value: paintGradient },
-          encoding: {},
-        },
-      ],
-    });
-    const layer = firstLayer(spec, { links: [{ sourceX: 0, sourceY: 0, targetX: 1, targetY: 1, value: 4 }] }, opts);
-    expect(layer.pathDefault?.fill).toEqual(paintGradient);
-    expect(layer.pathDefault?.stroke).toEqual(paintGradient);
-
-    const scene = compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots({ links: [{ sourceX: 0, sourceY: 0, targetX: 1, targetY: 1, value: 4 }] }, opts) });
-    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
-  });
 });
 
 // ADR-05：relation（series / dodge / stack / 多系列折线）

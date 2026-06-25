@@ -45,8 +45,6 @@ import {
   type ExtensionChannelProp,
   IntervalMark,
   type IntervalMarkProps,
-  LinkMark,
-  type LinkMarkProps,
   PathMark,
   type PathMarkProps,
   PointMark,
@@ -732,27 +730,6 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       if (!histogram) into.hasBar = true;
       recordColor(into, colorEnc);
       recordResolveLabel(into, id, props.resolveLabel);
-    } else if (child.type === LinkMark) {
-      const { sourceX, sourceY, targetX, targetY, value, endWidth, curvature, orientation, color, id, channels, fillOpacity, opacity } = child.props as LinkMarkProps;
-      // 扁平端点 props → 嵌套 IR source/target 字段对；color 走 colorChannel（无 series）
-      const colorEnc = colorChannel(color, undefined);
-      const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
-      const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
-      into.marks.push({
-        type: PlotMark.Link,
-        ...(id !== undefined ? { id } : {}),
-        source: { x: { field: sourceX }, y: { field: sourceY } },
-        target: { x: { field: targetX }, y: { field: targetY } },
-        value,
-        ...(endWidth !== undefined ? { endWidth } : {}),
-        ...(curvature !== undefined ? { curvature } : {}),
-        ...(orientation !== undefined ? { orientation } : {}),
-        ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
-        ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
-        ...pathStylePropsOf(child.props as LinkMarkProps, styleContext),
-        encoding: { ...colorEnc, ...extensionChannelEncoding(channels) },
-      });
-      recordColor(into, colorEnc);
     } else if (child.type === ReferenceMark) {
       collectReference(child.props as ReferenceMarkProps, into, styleContext);
     } else if (child.type === Axis) {

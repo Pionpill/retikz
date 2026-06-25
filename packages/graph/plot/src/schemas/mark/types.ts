@@ -8,8 +8,6 @@ import type {
   IntervalBoundSchema,
   IntervalBoundsSchema,
   IntervalMarkSchema,
-  LinkEndpointSchema,
-  LinkMarkSchema,
   MarkOperationSchema,
   MarkSchema,
   NodeBooleanStyleSchema,
@@ -94,11 +92,7 @@ export type IntervalBounds = z.infer<typeof IntervalBoundsSchema>;
 export type IntervalMark = z.infer<typeof IntervalMarkSchema>;
 /** reference mark（参考线 / 阈值线 / 容差带） */
 export type ReferenceMark = z.infer<typeof ReferenceMarkSchema>;
-/** link 一端：字段对端点（经坐标系投影成屏幕点） */
-export type LinkEndpoint = z.infer<typeof LinkEndpointSchema>;
-/** link mark（sankey / alluvial 流带） */
-export type LinkMark = z.infer<typeof LinkMarkSchema>;
-/** mark（point / path / interval / reference / link） */
+/** mark（point / path / interval / reference） */
 export type Mark = z.infer<typeof MarkSchema>;
 /** custom mark operation（自定义 type passthrough，由 runtime MarkDefinition 解释） */
 export type CustomMark = z.infer<typeof CustomMarkSchema>;

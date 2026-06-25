@@ -57,7 +57,6 @@ export const plotSection: Array<Section> = [
           { id: 'path', label: 'plot.compPathMark' },
           { id: 'interval', label: 'plot.compIntervalMark' },
           { id: 'reference', label: 'plot.compReferenceMark' },
-          { id: 'link', label: 'plot.compLinkMark' },
           { id: 'custom', label: 'plot.grammarMarkCustom' },
         ],
       },

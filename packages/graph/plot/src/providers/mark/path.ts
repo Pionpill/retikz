@@ -29,7 +29,7 @@ import { seriesPathMeta, slug } from '../../pipeline';
  * @description x/y 是唯一位置通道（坐标系决定其含义）。
  */
 export const resolveRolePosition = (mark: Mark, row: ExternalRow): [unknown, unknown] =>
-  mark.type === PlotMark.Link ? [undefined, undefined] : [channelValue(mark.encoding.x, row), channelValue(mark.encoding.y, row)];
+  [channelValue(mark.encoding.x, row), channelValue(mark.encoding.y, row)];
 
 /** 把若干屏幕点连成 move + line steps（按需尾部加 cycle 闭合）；点数 < 2 返回 null。 */
 export const pointsToSteps = (points: ReadonlyArray<[number, number]>, closed: boolean): Array<IRStep> | null => {

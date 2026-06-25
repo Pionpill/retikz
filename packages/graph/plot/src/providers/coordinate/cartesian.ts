@@ -119,10 +119,10 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
   schema: Cartesian2DSchema,
   roles: ['x', 'y'],
   resolve: (coordinate, ctx) => {
-    const xValues = ctx.collectPositionValues('x', { axis: 'primary', includeLinkSource: true, includeLinkTargets: true });
-    const yValues = ctx.collectPositionValues('y', { axis: 'secondary', includeBaseline: true, includeLinkSource: true, includeLinkTargets: true });
-    const xScaleDef = ctx.resolveScaleForRole('x', coordinate.x, xValues, { includeLinkSource: true });
-    const yScaleDef = ctx.resolveScaleForRole('y', coordinate.y, yValues, { includeLinkSource: true });
+    const xValues = ctx.collectPositionValues('x', { axis: 'primary' });
+    const yValues = ctx.collectPositionValues('y', { axis: 'secondary', includeBaseline: true });
+    const xScaleDef = ctx.resolveScaleForRole('x', coordinate.x, xValues);
+    const yScaleDef = ctx.resolveScaleForRole('y', coordinate.y, yValues);
     ctx.assertBaselineScaleCompatible(yScaleDef.type, ctx.marks);
 
     const xScale = ctx.buildPositionScale(xScaleDef, xValues, [0, ctx.width]);
@@ -178,8 +178,8 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
   resolve: (coordinate, ctx) => {
     const orientation = coordinate.orientation ?? Cartesian1DOrientation.Horizontal;
     const horizontal = orientation === Cartesian1DOrientation.Horizontal;
-    const values = ctx.collectPositionValues('x', { axis: 'primary', includeLinkSource: true });
-    const scaleDef = ctx.resolveScaleForRole('x', coordinate.x, values, { includeLinkSource: true });
+    const values = ctx.collectPositionValues('x', { axis: 'primary' });
+    const scaleDef = ctx.resolveScaleForRole('x', coordinate.x, values);
 
     assertUniqueAxisDimension(ctx.axisGuides);
     const axis = ctx.axisGuides.find(guide => guide.dimension === 'x');

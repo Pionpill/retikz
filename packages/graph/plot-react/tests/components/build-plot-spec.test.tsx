@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { type IRPaintSpec, type PlotSpec, PlotSpecSchema, isBuiltinMark, lowerPlots } from '@retikz/plot';
 import { buildPlotSpec, decorateDefaultGuides } from '../../src/components/build-plot-spec';
 import { Axis, Legend } from '../../src/components/guides';
-import { IntervalMark, LinkMark, PathMark, PointMark, ReferenceMark } from '../../src/components/marks';
+import { IntervalMark, PathMark, PointMark, ReferenceMark } from '../../src/components/marks';
 import { Scale } from '../../src/components/scales';
 import { Transform } from '../../src/components/transform';
 
@@ -126,17 +126,6 @@ describe('buildPlotSpec paint props', () => {
     });
   });
 
-  it('link paint props pass through to mark IR', () => {
-    const spec = buildPlotSpec(
-      <LinkMark sourceX="sourceX" sourceY="sourceY" targetX="targetX" targetY="targetY" value="value" fill={gradientPaint} stroke={gradientPaint} />,
-      '__plot',
-    );
-    expect(spec.marks[0]).toMatchObject({
-      type: 'link',
-      fill: { kind: 'constant', value: gradientPaint },
-      stroke: { kind: 'constant', value: gradientPaint },
-    });
-  });
 });
 
 describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {

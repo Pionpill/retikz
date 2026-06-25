@@ -247,10 +247,10 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
   schema: Polar2DSchema,
   roles: ['x', 'y'],
   resolve: (coordinate, ctx) => {
-    const angleValues = ctx.collectPositionValues('x', { axis: 'primary', includeLinkSource: true });
-    const radiusValues = ctx.collectPositionValues('y', { axis: 'secondary', includeBaseline: true, includeLinkSource: true });
-    const angleScaleDef = ctx.resolveScaleForRole('x', coordinate.angle, angleValues, { includeLinkSource: true });
-    const radiusScaleDef = ctx.resolveScaleForRole('y', coordinate.radius, radiusValues, { includeLinkSource: true });
+    const angleValues = ctx.collectPositionValues('x', { axis: 'primary' });
+    const radiusValues = ctx.collectPositionValues('y', { axis: 'secondary', includeBaseline: true });
+    const angleScaleDef = ctx.resolveScaleForRole('x', coordinate.angle, angleValues);
+    const radiusScaleDef = ctx.resolveScaleForRole('y', coordinate.radius, radiusValues);
     ctx.assertBaselineScaleCompatible(radiusScaleDef.type, ctx.marks);
 
     assertUniqueAxisDimension(ctx.axisGuides, axisRole);
@@ -307,8 +307,8 @@ const polar1DCoordinateDefinition: CoordinateDefinition<Polar1DCoordinate> = {
     const radiusFraction = coordinate.radius ?? 1;
     const startAngle = coordinate.startAngle ?? 0;
     const endAngle = coordinate.endAngle ?? 360;
-    const angleValues = ctx.collectPositionValues('x', { axis: 'primary', includeLinkSource: true });
-    const angleScaleDef = ctx.resolveScaleForRole('x', coordinate.angle, angleValues, { includeLinkSource: true });
+    const angleValues = ctx.collectPositionValues('x', { axis: 'primary' });
+    const angleScaleDef = ctx.resolveScaleForRole('x', coordinate.angle, angleValues);
 
     assertUniqueAxisDimension(ctx.axisGuides, axisRole);
     const angularAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');

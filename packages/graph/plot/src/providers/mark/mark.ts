@@ -2,7 +2,6 @@ import { type IRChild, type IRScope } from '@retikz/core';
 import { type AnyMarkDefinition, type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkProvenance } from '../../contract';
 import { type ExternalRow, type MarkOperation, PlotMark, type PlotMarkValue } from '../../schemas';
 import { intervalMarkDefinition } from './interval';
-import { linkMarkDefinition } from './link';
 import { pathMarkDefinition } from './path';
 import { pointMarkDefinition } from './point';
 import { referenceMarkDefinition } from './reference';
@@ -18,7 +17,6 @@ export const MARK_REGISTRY: Record<PlotMarkValue, AnyMarkDefinition> = {
   [PlotMark.Point]: asAnyMarkDefinition(pointMarkDefinition),
   [PlotMark.Path]: asAnyMarkDefinition(pathMarkDefinition),
   [PlotMark.Interval]: asAnyMarkDefinition(intervalMarkDefinition),
-  [PlotMark.Link]: asAnyMarkDefinition(linkMarkDefinition),
   [PlotMark.Reference]: asAnyMarkDefinition(referenceMarkDefinition),
 };
 

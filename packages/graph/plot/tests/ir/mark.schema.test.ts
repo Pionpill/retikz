@@ -502,18 +502,6 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_link_accepts_paint_fill_and_stroke', () => {
-    const m = {
-      type: 'link',
-      source: { x: { field: 'sx' }, y: { field: 'sy' } },
-      target: { x: { field: 'tx' }, y: { field: 'ty' } },
-      value: 'amount',
-      fill: { kind: 'constant', value: gradientPaint },
-      stroke: { kind: 'constant', value: gradientPaint },
-      encoding: {},
-    };
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
 
   it('mark_label_legacy_format_rejected', () => {
     expect(() => MarkSchema.parse({ type: 'interval', label: { content: { field: 'revenue', format: ',.0f' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } })).toThrow();
@@ -533,74 +521,4 @@ describe('MarkSchema (ADR-05)', () => {
     expect((parsed as { label?: unknown }).label).toBeUndefined();
   });
 
-  // alpha.11 ADR-05：link(sankey / alluvial 流带) mark
-  it('mark_link_minimal_valid', () => {
-    const m = { type: 'link', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} };
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
-  it('mark_link_full_options_valid', () => {
-    const m = {
-      type: 'link',
-      id: 'flow',
-      source: { x: { field: 'sx' }, y: { field: 'sy' } },
-      target: { x: { field: 'tx' }, y: { field: 'ty' } },
-      value: 'amount',
-      width: 'w',
-      endWidth: 'end',
-      curvature: 0.3,
-      orientation: 'vertical',
-      encoding: { color: { field: 'cat', scale: 'c' } },
-    };
-    expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
-  it('mark_link_orientation_default_undefined', () => {
-    // orientation 可选；缺省解析为 undefined（lowering 兜底 horizontal）
-    const parsed = MarkSchema.parse({ type: 'link', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} });
-    expect((parsed as { orientation?: string }).orientation).toBeUndefined();
-  });
-
-  it('mark_link_orientation_invalid_rejected', () => {
-    expect(() =>
-      MarkSchema.parse({ type: 'link', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', orientation: 'diagonal', encoding: {} }),
-    ).toThrow();
-  });
-
-  it('mark_link_union_discriminates', () => {
-    const parsed = MarkSchema.parse({ type: 'link', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', endWidth: 'e', encoding: {} });
-    expect(parsed.type).toBe('link');
-    expect((parsed as { endWidth?: string }).endWidth).toBe('e');
-  });
-
-  it('mark_link_endpoint_missing_y_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'link', source: { x: { field: 'sx' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} })).toThrow();
-  });
-
-  it('mark_link_missing_value_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'link', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, encoding: {} })).toThrow();
-  });
-
-  it('mark_link_empty_value_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'link', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: '', encoding: {} })).toThrow();
-  });
-
-  it('mark_link_curvature_out_of_range_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'link', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', curvature: 1.5, encoding: {} })).toThrow();
-  });
-
-  it('mark_link_typo_type_rejected', () => {
-    expect(() => MarkSchema.parse({ type: 'rbbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} })).toThrow();
-  });
-
-  it('mark_link_strips_label', () => {
-    // label 仅位置 mark；link 非 strict zod 剥离
-    const parsed = MarkSchema.parse({ type: 'link', label: { content: { value: 'x' } }, source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} });
-    expect((parsed as { label?: unknown }).label).toBeUndefined();
-  });
-
-  it('mark_link_json_round_trip', () => {
-    const m = { type: 'link', id: 'f', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', endWidth: 'end', curvature: 0.5, encoding: { color: { field: 'cat', scale: 'c' } } };
-    expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
-  });
 });

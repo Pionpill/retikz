@@ -1,10 +1,10 @@
 ﻿import { JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
 import { z } from 'zod';
 import { ArrowDetailSchema, BlendMode, BoundarySchema, DropShadowSchema, FontSchema, PathScaleSchema, ShadowPreset, ShapeRefSchema } from '@retikz/core';
-import { ChannelSchema, EncodingSchema, MarkChannelEncodingSchema, MarkLabelSchema, PointEncodingSchema } from '../encoding';
-import { BUILTIN_MARK_TYPES, IntervalBoundKind, LinkOrientation, MarkValueKind, PathClosureKind, PathCurve, PlotMark } from './constants';
+import { EncodingSchema, MarkLabelSchema, PointEncodingSchema } from '../encoding';
+import { BUILTIN_MARK_TYPES, IntervalBoundKind, MarkValueKind, PathClosureKind, PathCurve, PlotMark } from './constants';
 
-/** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema、link / reference 用专属） */
+/** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema，reference 用专属） */
 const markBase = {
   id: z.string().min(1).optional().describe('Optional mark handle; reserved scope/anchor target'),
 };
@@ -326,50 +326,9 @@ export const ReferenceMarkSchema = z
   })
   .describe('Reference mark: a constant-position reference constraint. Bind x (vertical) or y (horizontal); field → per-datum, value → constant. Give only the lower bound for a line; pair it with xTo / yTo for a filled band [lo,hi]. Use extentField / extentToField for partial-length spans');
 
-export const LinkEndpointSchema = z
-  .object({
-    x: ChannelSchema.describe('Field-pair endpoint primary position channel (projected through the coordinate system)'),
-    y: ChannelSchema.describe('Field-pair endpoint secondary position channel (projected through the coordinate system)'),
-  })
-  .describe('One link endpoint: an { x, y } field pair projected through the coordinate system into a screen point');
-
-export const LinkMarkSchema = z
-  .object({
-    type: z.literal(PlotMark.Link).describe('Discriminator: a fillable cubic flow band between two endpoint sets'),
-    source: LinkEndpointSchema.describe('Source endpoint (the band start, projected to a screen point)'),
-    target: LinkEndpointSchema.describe('Target endpoint (the band end, projected to a screen point)'),
-    value: z.string().min(1).describe('Flow magnitude field; mapped through a width scale to the source-end band width (user units)'),
-    width: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Optional independent width-scale name; omitted → a default linear scale is synthesized from the value extent'),
-    endWidth: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Optional target-end width field; omitted → equal width to the source end (a straight-width band rather than a flared one)'),
-    curvature: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Cubic control-point extrapolation ratio along the main axis (0 = near-straight, larger = more S-shaped); default 0.5'),
-    orientation: z
-      .enum(LinkOrientation)
-      .optional()
-      .describe('Main-axis orientation; the entry / exit tangents run along this axis and the band half-width is taken along the perpendicular axis (horizontal → flow left-right, vertical → flow top-down); default horizontal'),
-    opacity: PointOpacityStyleSchema.optional().describe('Link band whole opacity: field-bound datum channel or constant opacity 0..1'),
-    fillOpacity: PointOpacityStyleSchema.optional().describe('Link band fill opacity: field-bound datum channel or constant opacity 0..1'),
-    ...corePathStyle,
-    ...markBase,
-    encoding: MarkChannelEncodingSchema,
-  })
-  .describe('Link mark: one fillable cubic band per record between a source and target field-pair endpoint, width driven by the value field; consumes pre-computed layout positions (sankey / alluvial layout is out of scope). Uses style-only encoding (color)');
-
 export const MarkSchema = z
-  .discriminatedUnion('type', [PointMarkSchema, PathMarkSchema, IntervalMarkSchema, ReferenceMarkSchema, LinkMarkSchema])
-  .describe('Mark union: 3 dimensional marks (point / path / interval) + 2 special marks (link / reference)');
+  .discriminatedUnion('type', [PointMarkSchema, PathMarkSchema, IntervalMarkSchema, ReferenceMarkSchema])
+  .describe('Mark union: 3 dimensional marks (point / path / interval) + reference marks');
 
 export const CustomMarkSchema = z
   .object({
