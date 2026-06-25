@@ -202,7 +202,11 @@ export const PathMarkSchema = z
       .boolean()
       .optional()
       .describe('Connect the last point back to the first, closing the path into a polygon; under polar this yields a radar outline. Default false'),
-    closure: PathClosureSchema.optional().describe('Close and fill the path using a cycle, a constant baseline, or a per-row stacked baseline. Prefer this over closed when the path should have area fill'),
+    connectNulls: z
+      .boolean()
+      .optional()
+      .describe('Whether invalid or missing projected points should be skipped and connected across; default false splits the path into separate core Path segments'),
+    closure: PathClosureSchema.optional().describe('Close the path using a cycle, a baseline, or a per-row stacked baseline. Set fill when the closed path should render as an area'),
     curve: z
       .enum(PathCurve)
       .optional()

@@ -264,14 +264,6 @@ export const buildOutlinePoints = (mark: Mark, ordered: Array<ExternalRow>, fram
     .filter((point): point is [number, number] => point !== null);
 };
 
-/** 把一组行连成一条折线的 steps（上沿投影 + 可选闭合）；<2 点返回 null。 */
-const buildLineSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, closed: boolean): Array<IRStep> | null =>
-  pointsToCurveSteps(
-    buildOutlinePoints(mark, orderRows(rows, mark.type === PlotMark.Path ? mark.order : undefined), frame, closed),
-    closed,
-    mark.type === PlotMark.Path ? effectivePathCurve(mark.curve, frame) : PathCurve.Linear,
-  );
-
 const ZERO_BASELINE = 0;
 
 const pathDefaultBaseline = (frame: CoordinateFrame): number => {
@@ -286,6 +278,54 @@ const pathDefaultBaseline = (frame: CoordinateFrame): number => {
 
 const pathClosureOf = (mark: PathMark): PathClosure | undefined =>
   mark.closure;
+
+type PathRowSegment = Array<ExternalRow>;
+type PathStepSegment = { rows: PathRowSegment; steps: Array<IRStep> };
+
+const projectableTopPoint = (mark: PathMark, row: ExternalRow, frame: CoordinateFrame, closed: boolean): boolean => {
+  const [primaryValue, secondaryValue] = resolveRolePosition(mark, row);
+  if (isPolarCoordinateFrame(frame) && frame.continuousAngle && !closed) return toPolarVertex(frame, primaryValue, secondaryValue) !== null;
+  return frame.project(primaryValue, secondaryValue) !== null;
+};
+
+const projectableClosurePoint = (mark: PathMark, row: ExternalRow, frame: CoordinateFrame, closure: PathClosure, closed: boolean): boolean => {
+  if (!projectableTopPoint(mark, row, frame, closed)) return false;
+  const [primaryValue] = resolveRolePosition(mark, row);
+  if (closure.kind === PathClosureKind.Baseline) return frame.project(primaryValue, closure.baseline ?? pathDefaultBaseline(frame)) !== null;
+  if (closure.kind === PathClosureKind.Stack) return frame.project(primaryValue, resolveFieldPath(row, closure.baselineField)) !== null;
+  return true;
+};
+
+const splitRowsByProjectability = (
+  rows: Array<ExternalRow>,
+  projectable: (row: ExternalRow) => boolean,
+  connectNulls: boolean,
+): Array<PathRowSegment> => {
+  if (connectNulls) {
+    const segment = rows.filter(projectable);
+    return segment.length > 0 ? [segment] : [];
+  }
+  const segments: Array<PathRowSegment> = [];
+  let current: PathRowSegment = [];
+  for (const row of rows) {
+    if (projectable(row)) {
+      current.push(row);
+    } else if (current.length > 0) {
+      segments.push(current);
+      current = [];
+    }
+  }
+  if (current.length > 0) segments.push(current);
+  return segments;
+};
+
+const pathRowSegments = (mark: PathMark, rows: Array<ExternalRow>, frame: CoordinateFrame, closure: PathClosure | undefined, closed: boolean): Array<PathRowSegment> => {
+  const ordered = orderRows(rows, mark.order);
+  const connectNulls = mark.connectNulls ?? false;
+  const projectable = (row: ExternalRow): boolean =>
+    closure === undefined ? projectableTopPoint(mark, row, frame, closed) : projectableClosurePoint(mark, row, frame, closure, closed);
+  return splitRowsByProjectability(ordered, projectable, connectNulls);
+};
 
 const buildConstantBaselinePoints = (mark: PathMark, ordered: Array<ExternalRow>, frame: CoordinateFrame, baseline: number): Array<[number, number]> =>
   ordered
@@ -315,25 +355,59 @@ const buildClosureReturnPoints = (mark: PathMark, ordered: Array<ExternalRow>, f
   return [];
 };
 
-const buildClosureSteps = (mark: PathMark, rows: Array<ExternalRow>, frame: CoordinateFrame, closure: PathClosure, closed: boolean): Array<IRStep> | null => {
-  if (closure.kind === PathClosureKind.Cycle) return buildLineSteps(mark, rows, frame, true);
-  const ordered = orderRows(rows, mark.order);
-  const top = buildOutlinePoints(mark, ordered, frame, closed);
-  const bottom = buildClosureReturnPoints(mark, ordered, frame, closure);
+const buildLineStepSegments = (mark: PathMark, rows: Array<ExternalRow>, frame: CoordinateFrame, closed: boolean): Array<PathStepSegment> =>
+  pathRowSegments(mark, rows, frame, undefined, closed).flatMap(segmentRows => {
+    const steps = pointsToCurveSteps(
+      buildOutlinePoints(mark, segmentRows, frame, closed),
+      closed,
+      effectivePathCurve(mark.curve, frame),
+    );
+    return steps === null ? [] : [{ rows: segmentRows, steps }];
+  });
+
+const returnCurveSteps = (points: ReadonlyArray<[number, number]>, curve: PathCurveValue): Array<IRStep> | null => {
+  const steps = pointsToCurveSteps(points, false, curve);
+  if (steps === null) return null;
+  const [, ...rest] = steps;
+  return [{ type: 'step', kind: 'line', to: points[0] }, ...rest];
+};
+
+const buildClosureStepSegment = (mark: PathMark, segmentRows: PathRowSegment, frame: CoordinateFrame, closure: PathClosure, closed: boolean): PathStepSegment | null => {
+  if (closure.kind === PathClosureKind.Cycle) {
+    const steps = pointsToCurveSteps(
+      buildOutlinePoints(mark, segmentRows, frame, true),
+      true,
+      effectivePathCurve(mark.curve, frame),
+    );
+    return steps === null ? null : { rows: segmentRows, steps };
+  }
+  const top = buildOutlinePoints(mark, segmentRows, frame, closed);
+  const bottom = buildClosureReturnPoints(mark, segmentRows, frame, closure);
   if (top.length < 2 || bottom.length < 2) return null;
   const topLoop = closed ? [...top, top[0]] : top;
   const bottomLoop = closed ? [bottom[bottom.length - 1], ...bottom] : bottom;
-  const topSteps = pointsToCurveSteps(topLoop, false, effectivePathCurve(mark.curve, frame));
-  if (!topSteps) return null;
-  return [
-    ...topSteps,
-    ...bottomLoop.map((point): IRStep => ({ type: 'step', kind: 'line', to: point })),
-    { type: 'step', kind: 'cycle' },
-  ];
+  const curve = effectivePathCurve(mark.curve, frame);
+  const topSteps = pointsToCurveSteps(topLoop, false, curve);
+  const bottomSteps = returnCurveSteps(bottomLoop, curve);
+  if (!topSteps || !bottomSteps) return null;
+  return {
+    rows: segmentRows,
+    steps: [
+      ...topSteps,
+      ...bottomSteps,
+      { type: 'step', kind: 'cycle' },
+    ],
+  };
 };
 
+const buildClosureStepSegments = (mark: PathMark, rows: Array<ExternalRow>, frame: CoordinateFrame, closure: PathClosure, closed: boolean): Array<PathStepSegment> =>
+  pathRowSegments(mark, rows, frame, closure, closure.kind === PathClosureKind.Cycle ? true : closed).flatMap(segmentRows => {
+    const segment = buildClosureStepSegment(mark, segmentRows, frame, closure, closed);
+    return segment === null ? [] : [segment];
+  });
+
 /** 多系列 series 拆分通用：每条 series 一条 Path，provenance 开时绑 `<plotId>.series.<slug>` + Path.meta（series 原值）。 */
-export type SeriesPathBuilder = (seriesRows: Array<ExternalRow>) => Array<IRStep> | null;
+export type SeriesPathBuilder = (seriesRows: Array<ExternalRow>) => Array<PathStepSegment>;
 
 /** path child 的可变形态（series 下沉时按需补 id / meta），直接复用 core IRPath 属性面。 */
 type IRPathChild = IRPath;
@@ -353,22 +427,25 @@ export const buildSeriesPaths = (
   const paths: Array<IRChild> = [];
   for (const series of seriesValues) {
     const seriesRows = rows.filter(row => resolveFieldPath(row, seriesField) === series);
-    const steps = buildSteps(seriesRows);
-    if (!steps) continue;
-    const path: IRPathChild = applyPathChannelDeliveries({ type: 'path', ...paintOf(seriesRows), children: steps }, mark, seriesRows[0] ?? {}, channels);
-    if (markProvenance) {
-      if (plotId !== undefined && seenIds) {
-        const id = `${plotId}.series.${slug(series)}`;
-        const prior = seenIds.get(id);
-        if (prior !== undefined && prior !== series) {
-          throw new Error(`lowerPlots: series values "${String(prior)}" and "${String(series)}" collide to the same series id "${id}"; series anchors must be unique`);
+    const segments = buildSteps(seriesRows);
+    for (let index = 0; index < segments.length; index += 1) {
+      const segment = segments[index];
+      const path: IRPathChild = applyPathChannelDeliveries({ type: 'path', ...paintOf(segment.rows), children: segment.steps }, mark, segment.rows[0] ?? {}, channels);
+      if (markProvenance) {
+        if (plotId !== undefined && seenIds) {
+          const baseId = `${plotId}.series.${slug(series)}`;
+          const id = segments.length === 1 ? baseId : `${baseId}.segment.${index + 1}`;
+          const prior = seenIds.get(id);
+          if (prior !== undefined && prior !== series) {
+            throw new Error(`lowerPlots: series values "${String(prior)}" and "${String(series)}" collide to the same series id "${id}"; series anchors must be unique`);
+          }
+          seenIds.set(id, series);
+          path.id = id;
         }
-        seenIds.set(id, series);
-        path.id = id;
+        path.meta = seriesPathMeta(mark.type, markProvenance.markIndex, series);
       }
-      path.meta = seriesPathMeta(mark.type, markProvenance.markIndex, series);
+      paths.push(path);
     }
-    paths.push(path);
   }
   return paths;
 };
@@ -436,7 +513,7 @@ const lowerPath = (
       mark,
       rows,
       seriesField,
-      seriesRows => (closure ? buildClosureSteps(mark, seriesRows, frame, closure, closed) : buildLineSteps(mark, seriesRows, frame, closed)),
+      seriesRows => (closure ? buildClosureStepSegments(mark, seriesRows, frame, closure, closed) : buildLineStepSegments(mark, seriesRows, frame, closed)),
       seriesRows => {
         const fill = markPaintOf(mark, channels, 'fill', seriesRows, undefined);
         return {
@@ -449,14 +526,14 @@ const lowerPath = (
     );
     return paths.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
   }
-  const steps = closure ? buildClosureSteps(mark, rows, frame, closure, closed) : buildLineSteps(mark, rows, frame, closed);
-  if (!steps) return null;
+  const segments = closure ? buildClosureStepSegments(mark, rows, frame, closure, closed) : buildLineStepSegments(mark, rows, frame, closed);
+  if (segments.length === 0) return null;
   const colorValue = mark.encoding.color?.value;
   const stroke = colorValue !== undefined ? String(colorValue) : defaultStroke;
   return {
     type: 'scope',
     pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH, ...(defaultFill !== undefined ? { fill: defaultFill } : {}) },
-    children: [applyPathChannelDeliveries({ type: 'path', children: steps }, mark, rows[0] ?? {}, channels)],
+    children: segments.map(segment => applyPathChannelDeliveries({ type: 'path', children: segment.steps }, mark, segment.rows[0] ?? {}, channels)),
   };
 };
 

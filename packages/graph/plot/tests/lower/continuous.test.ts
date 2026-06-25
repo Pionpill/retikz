@@ -224,6 +224,34 @@ describe('lowerPlots line cartesian regression (ADR-03)', () => {
     const path = collectPaths(firstLayer(lineSpec({ closed: true }), { sales: SALES }, cartOpts))[0];
     expect(isClosedSteps(path.children)).toBe(true);
   });
+
+  it('line_missing_points_split_into_multiple_core_paths_by_default', () => {
+    const rows = [
+      { month: 0, revenue: 10 },
+      { month: 1, revenue: 12 },
+      { month: 2, revenue: null },
+      { month: 3, revenue: 9 },
+      { month: 4, revenue: 11 },
+    ];
+    const paths = collectPaths(firstLayer(lineSpec(), { sales: rows }, cartOpts));
+    expect(paths).toHaveLength(2);
+    expect(paths.map(path => path.children.filter(step => step.kind === 'move').length)).toEqual([1, 1]);
+    expect(paths.map(path => path.children.filter(step => step.kind === 'line').length)).toEqual([1, 1]);
+  });
+
+  it('line_connect_nulls_keeps_previous_skip_and_connect_behavior', () => {
+    const rows = [
+      { month: 0, revenue: 10 },
+      { month: 1, revenue: 12 },
+      { month: 2, revenue: null },
+      { month: 3, revenue: 9 },
+      { month: 4, revenue: 11 },
+    ];
+    const paths = collectPaths(firstLayer(lineSpec({ connectNulls: true }), { sales: rows }, cartOpts));
+    expect(paths).toHaveLength(1);
+    expect(paths[0].children.filter(step => step.kind === 'move')).toHaveLength(1);
+    expect(paths[0].children.filter(step => step.kind === 'line')).toHaveLength(3);
+  });
 });
 
 describe('lowerPlots path closure cartesian', () => {
@@ -268,6 +296,29 @@ describe('lowerPlots path closure cartesian', () => {
     expect(path.children[path.children.length - 1].kind).toBe('cycle');
   });
 
+  it('path_closure_baseline_splits_fill_at_missing_points', () => {
+    const rows = [
+      { x: 0, y: 10 },
+      { x: 1, y: 12 },
+      { x: 2, y: null },
+      { x: 3, y: 9 },
+      { x: 4, y: 11 },
+    ];
+    const layer = firstLayer(
+      pathSpec({
+        closure: { kind: 'baseline', baseline: 8 },
+        fill: { kind: 'constant', value: 'rgba(14, 165, 233, 0.22)' },
+        stroke: { kind: 'constant', value: 'none' },
+      }),
+      { series: rows },
+      cartOpts,
+    );
+    const paths = collectPaths(layer);
+    expect(paths).toHaveLength(2);
+    for (const path of paths) expect(isClosedSteps(path.children)).toBe(true);
+    expect(paths.every(path => (path.fill ?? (layer.pathDefault as { fill?: unknown } | undefined)?.fill) === 'rgba(14, 165, 233, 0.22)')).toBe(true);
+  });
+
   it('path_closure_stack_uses_per_row_baseline_field', () => {
     const spec = pathSpec({
       closure: { kind: 'stack', baselineField: 'y0' },
@@ -280,6 +331,16 @@ describe('lowerPlots path closure cartesian', () => {
     expect(stackReturnEnd?.[1]).toBeCloseTo(200, 6);
     const stackReturnStart = linePoints.find(([x, y]) => Math.abs(x) < 1e-6 && y > 250);
     expect(stackReturnStart?.[1]).toBeCloseTo(300, 6);
+  });
+
+  it('path_closure_stack_applies_curve_to_return_edge', () => {
+    const spec = pathSpec({
+      curve: 'cardinal',
+      closure: { kind: 'stack', baselineField: 'y0' },
+      encoding: { x: { field: 'x' }, y: { field: 'y1' } },
+    });
+    const path = collectPaths(firstLayer(spec, { series: SERIES }, cartOpts))[0];
+    expect(path.children.filter(step => step.kind === 'cubic')).toHaveLength(4);
   });
 });
 

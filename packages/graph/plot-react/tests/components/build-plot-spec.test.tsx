@@ -100,6 +100,14 @@ describe('buildPlotSpec paint props', () => {
     });
   });
 
+  it('path connectNulls passes through to mark IR', () => {
+    const spec = buildPlotSpec(<PathMark x="x" y="y" connectNulls />, '__plot');
+    expect(spec.marks[0]).toMatchObject({
+      type: 'path',
+      connectNulls: true,
+    });
+  });
+
   it('interval paint props pass through to mark IR', () => {
     const spec = buildPlotSpec(<IntervalMark x="month" y="revenue" fill={gradientPaint} stroke={gradientPaint} />, '__plot');
     expect(spec.marks[0]).toMatchObject({

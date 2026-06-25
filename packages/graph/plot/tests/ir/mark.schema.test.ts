@@ -166,6 +166,11 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
+  it('mark_path_connect_nulls_valid', () => {
+    const m = { type: 'path', connectNulls: true, encoding: { x: { field: 'x' }, y: { field: 'y' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
   it('mark_path_closure_cycle_valid', () => {
     const m = { type: 'path', closure: { kind: 'cycle' }, encoding: { x: { field: 'dim' }, y: { field: 'value' } } };
     expect(MarkSchema.parse(m)).toEqual(m);

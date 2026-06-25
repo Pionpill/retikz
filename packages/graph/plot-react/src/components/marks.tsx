@@ -137,6 +137,8 @@ export type PathMarkProps = DatumLabelProps & CorePathChannelProps & {
   roundedCorners?: MarkValueProp<number> | PointNonnegativeNumberStyle;
   /** 末点回连首点闭合成多边形（polar 下即雷达轮廓）；cartesian 缺省 false，polar2D 缺省 true */
   closed?: boolean;
+  /** 是否跨过缺失 / 无效点继续连接；缺省 false 时会切成多个 core Path */
+  connectNulls?: boolean;
   /** 构建闭合路径：cycle 首尾闭合，baseline 回到基线，stack 回到逐行基线字段；是否填充由 fill 控制 */
   closure?: PathClosure;
   /** 相邻点连接方式；缺省 linear */

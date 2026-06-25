@@ -55,7 +55,7 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 ### 填充与描边
 
-`stroke` 可以写成 `IRPaintSpec`，例如线性渐变；`strokeWidth`、`lineCap`、`lineJoin` 等路径样式仍然照常作用在同一条 core `Path` 上。
+`stroke` 和 `fill` 都可以写成 `IRPaintSpec`。左侧把线性渐变用在描边上；右侧先用 `closure={{ kind: 'baseline' }}` 生成可填充面积层，再把渐变交给 `fill`，最后叠一条只描边的 PathMark 作为上边界。
 
 <ComponentPreview name="line-paint" sourceFiles={['line-basic.data.ts']} />
 
@@ -86,21 +86,29 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 ### 路径区域
 
-`closure` 只让 PathMark 闭合成可填充路径，不会自动开启填充。`stroke` 默认开启，写 `stroke="none"` 可以关闭边框线；`fill` 默认关闭，写具体颜色或 paint 后才填充内容。左侧的面积效果由两层 PathMark 组合：一层 `baseline + fill + stroke="none"` 负责填充，另一层普通 path 负责上边界描边；右侧使用 `cycle + fill` 填充雷达多边形。左上角可以切换 `curve`，默认是直线连接。
+`closure` 只让 PathMark 闭合成可填充路径，不会自动开启填充。`stroke` 默认开启，写 `stroke="none"` 可以关闭边框线；`fill` 默认关闭，写具体颜色或 paint 后才填充内容。左侧的面积效果由两层 PathMark 组合：一层 `baseline + fill + stroke="none"` 负责填充，另一层普通 path 负责上边界描边；右侧使用 `cycle + fill` 填充雷达多边形。左上角可以切换 `curve`，默认是直线连接；baseline / stack 的回程下边界也会使用同一个连接方式。
 
 <ComponentPreview name="line-closure" sourceFiles={['line-closure.data.ts']} interactive size="md" />
 
 `baseline` 省略时会跟随值轴：0 落在值轴 domain 内就使用 0；如果显式 domain 不包含 0，例如 `[30, 80]`，则使用离 0 最近的 domain 边界 30。需要固定到其它值时再显式传 `closure={{ kind: 'baseline', baseline: ... }}`。
 
-堆叠面积可以把上边界绑定到 `y`，再把下边界字段交给 `closure.baselineField`。这个字段可以来自 stack transform，也可以像示例一样来自预先算好的 `y0` / `y1`；示例同样用填充层和描边层组合出面积图效果。
+堆叠面积可以把上边界绑定到 `y`，再把下边界字段交给 `closure.baselineField`。这个字段可以来自 stack transform，也可以像示例一样来自预先算好的 `y0` / `y1`；示例同样用填充层和描边层组合出面积图效果。设置 `curve` 时，上下两条边界都会按同一种方式连接。
 
 <ComponentPreview name="line-stack-area" sourceFiles={['line-stack-area.data.ts']} interactive size="md" />
+
+### 路径中断
+
+当某一行无法投影成有效点时，PathMark 默认会在这里断开，并为前后两段分别生成 core `Path`。如果路径同时设置了 `closure` 和 `fill`，填充也按同样的段落拆开，不会跨过缺失点铺满中间空档。
+
+这个例子里 `Yasin` 的 2019 年数据缺失，因此线和填充都会在 2018 到 2020 之间断开。确实需要跨过缺口连接时，再显式设置 `connectNulls`。
+
+<ComponentPreview name="line-interruption" sourceFiles={['line-interruption.data.ts']} size="md" />
 
 ## 技术原理
 
 `PathMark` 是一个内置注册图元。React 里的 `<PathMark>` 本身不渲染 DOM；`<Plot>` 会在构造 `PlotSpec` 时把它收集成 `type: 'path'` 的 mark IR，并记录 `x` / `y` / `order` / `series` / `closed` / `closure` 等配置。
 
-编译时，`lowerMark` 按 `mark.type` 查询 `MARK_REGISTRY`，`PathMark` 命中 `PlotMark.Path` 对应的 `lowerPathLayer`。`lowerPathLayer` 只接受 cartesian2D / polar2D，然后调用 `lowerPath`：它按系列拆分数据、排序、投影点，最后把点序列下沉为 core `Path`。
+编译时，`lowerMark` 按 `mark.type` 查询 `MARK_REGISTRY`，`PathMark` 命中 `PlotMark.Path` 对应的 `lowerPathLayer`。`lowerPathLayer` 只接受 cartesian2D / polar2D，然后调用 `lowerPath`：它先按系列拆分数据，再按可投影的连续段拆分，每个连续段下沉为一个 core `Path`。
 
 注册部分只需要看 `PathMark` 对应的注册行，以及真正执行下沉的 `lowerPathLayer` / `lowerPath`：
 
@@ -120,22 +128,23 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
   const closure = mark.closure;
   const closed = mark.closed ?? isPolarCoordinateFrame(frame);
   const seriesField = pathSeriesField(mark, rows);
+  const buildSegments = (segmentRows: Array<ExternalRow>) =>
+    closure
+      ? buildClosureStepSegments(mark, segmentRows, frame, closure, closed)
+      : buildLineStepSegments(mark, segmentRows, frame, closed);
   if (seriesField) {
-    const paths = buildSeriesPaths(
-      mark,
-      rows,
-      seriesField,
-      seriesRows => (closure ? buildClosureSteps(mark, seriesRows, frame, closure, closed) : buildLineSteps(mark, seriesRows, frame, closed)),
-      seriesRows => ({ stroke: colorOf?.(seriesRows[0]) ?? DEFAULT_FILL }),
-      markProvenance,
-    );
+    const paths = buildSeriesPaths(mark, rows, seriesField, buildSegments, paintOfSeries, markProvenance);
     return paths.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
   }
-  const steps = closure ? buildClosureSteps(mark, rows, frame, closure, closed) : buildLineSteps(mark, rows, frame, closed);
-  if (!steps) return null;
+  const segments = buildSegments(rows);
+  if (segments.length === 0) return null;
   const colorValue = mark.encoding.color?.value;
   const stroke = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
-  return { type: 'scope', pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH }, children: [{ type: 'path', children: steps }] };
+  return {
+    type: 'scope',
+    pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH },
+    children: segments.map(segment => ({ type: 'path', children: segment.steps })),
+  };
 };
 ```
 
@@ -146,7 +155,7 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 | 坐标系校验 | PathMark 需要二维轨迹几何；当前只在 cartesian2D / polar2D 下下沉 |
 | 排序与投影 | `orderRows` 决定连接顺序，`frame.project(...)` 把位置通道投影成屏幕点 |
 | 系列拆分 | `series` 显式优先；没有 `series` 但有分类 `color` 时，按 `color` 隐式拆系列 |
-| core 下沉 | 每个系列生成一个 core `Path`；`closed` 追加线框闭合段（polar2D 缺省闭合），`closure` 构建闭合路径，`fill` 决定是否填充 |
+| core 下沉 | 每个系列里的每个连续段生成一个 core `Path`；`closed` 追加线框闭合段（polar2D 缺省闭合），`closure` 构建闭合路径，`fill` 决定是否填充 |
 
 ## API
 
@@ -160,6 +169,7 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 |  | `series` | `FieldName?` | — | 按字段拆成多条路径 |
 |  | `curve` | `PathCurveValue?` | `linear` | 相邻点连接方式；支持直线、阶梯、样条和单调曲线，polar2D 下 `monotoneX` / `monotoneY` 会降级为 `linear` |
 |  | `closed` | `boolean?` | cartesian2D: `false`<br />polar2D: `true` | 末点回连首点，形成闭合路径；极坐标下写 `false` 可保留开放路径 |
+|  | `connectNulls` | `boolean?` | `false` | 是否跨过缺失 / 无效点继续连接；默认断开并拆成多个 core `Path` |
 |  | `closure` | `{ kind: 'cycle' }`<br />`{ kind: 'baseline'; baseline?: number }`<br />`{ kind: 'stack'; baselineField: FieldName }` | — | 构建闭合路径；`baseline` 省略时取值轴基础值，显式传入时使用常量下边界，`stack` 读取逐行下边界字段 |
 | 路径 | `stroke` / `fill` | `FieldName`<br />`IRPaintSpec`<br />`PointStrokeStyle?` / `PointFillStyle?` | `currentColor` / — | 路径描边和闭合路径填充样式；`stroke="none"` 可关闭边框线，`fill` 省略则不填充 |
 |  | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | 路径描边宽度、整体透明度和填充透明度 |

@@ -55,7 +55,7 @@ With no `series`, giving `color` a categorical field also splits PathMark implic
 
 ### Paint Styles
 
-`stroke` can be an `IRPaintSpec`, such as a linear gradient. Path style props like `strokeWidth`, `lineCap`, and `lineJoin` still apply to the same core `Path`.
+Both `stroke` and `fill` can be `IRPaintSpec` values. The left chart applies a linear gradient to the stroke; the right chart uses `closure={{ kind: 'baseline' }}` to create a fillable area layer, passes the gradient to `fill`, and then overlays a stroke-only PathMark for the upper outline.
 
 <ComponentPreview name="line-paint" sourceFiles={['line-basic.data.ts']} />
 
@@ -86,21 +86,29 @@ With no `series`, giving `color` a categorical field also splits PathMark implic
 
 ### Path Areas
 
-`closure` only closes PathMark into a fillable path; it does not enable filling by itself. `stroke` is on by default, and `stroke="none"` removes the border line; `fill` is off by default, and a concrete color or paint enables filling. The left area effect is composed from two PathMark layers: one `baseline + fill + stroke="none"` layer for the area, and one normal path layer for the upper outline. The right side uses `cycle + fill` to fill a radar polygon. Use the top-left control to switch `curve`; the default is a straight line.
+`closure` only closes PathMark into a fillable path; it does not enable filling by itself. `stroke` is on by default, and `stroke="none"` removes the border line; `fill` is off by default, and a concrete color or paint enables filling. The left area effect is composed from two PathMark layers: one `baseline + fill + stroke="none"` layer for the area, and one normal path layer for the upper outline. The right side uses `cycle + fill` to fill a radar polygon. Use the top-left control to switch `curve`; the default is a straight line. Baseline and stack return edges use the same connection curve.
 
 <ComponentPreview name="line-closure" sourceFiles={['line-closure.data.ts']} interactive size="md" />
 
 When `baseline` is omitted, it follows the value axis: use 0 when 0 is inside the value-axis domain; if an explicit domain excludes 0, such as `[30, 80]`, use the nearest domain edge, 30. Pass `closure={{ kind: 'baseline', baseline: ... }}` when the lower edge should be pinned to another value.
 
-For stacked areas, bind the upper boundary to `y` and pass the lower boundary field as `closure.baselineField`. The data can come from a stack transform or from precomputed `y0` / `y1` fields. The example uses the same fill-layer plus outline-layer composition for the area-chart effect.
+For stacked areas, bind the upper boundary to `y` and pass the lower boundary field as `closure.baselineField`. The data can come from a stack transform or from precomputed `y0` / `y1` fields. The example uses the same fill-layer plus outline-layer composition for the area-chart effect. When `curve` is set, both boundaries use the same connection mode.
 
 <ComponentPreview name="line-stack-area" sourceFiles={['line-stack-area.data.ts']} interactive size="md" />
+
+### Interrupted Paths
+
+When a row cannot project into a valid point, PathMark breaks there by default and lowers the surrounding runs into separate core `Path` elements. If the path also has `closure` and `fill`, the fill follows the same segments instead of spanning across the missing gap.
+
+In this example, `Yasin` has no 2019 value, so both the outline and the filled area stop between 2018 and 2020. Set `connectNulls` explicitly when a chart should connect across gaps.
+
+<ComponentPreview name="line-interruption" sourceFiles={['line-interruption.data.ts']} size="md" />
 
 ## How It Works
 
 `PathMark` is a built-in registered mark. The React `<PathMark>` component does not render DOM; `<Plot>` collects it into mark IR with `type: 'path'` and records settings such as `x` / `y` / `order` / `series` / `closed` / `closure`.
 
-At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `PathMark` resolves to the `PlotMark.Path` entry, which calls `lowerPathLayer`. `lowerPathLayer` accepts only cartesian2D / polar2D, then calls `lowerPath`: it splits rows into series, sorts them, projects points, and lowers the point sequence into a core `Path`.
+At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `PathMark` resolves to the `PlotMark.Path` entry, which calls `lowerPathLayer`. `lowerPathLayer` accepts only cartesian2D / polar2D, then calls `lowerPath`: it splits rows into series, splits each series into projectable continuous segments, and lowers each segment into a core `Path`.
 
 For registration, focus on the `PathMark` registry entry and the `lowerPathLayer` / `lowerPath` functions that perform the lowering:
 
@@ -120,22 +128,23 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
   const closure = mark.closure;
   const closed = mark.closed ?? isPolarCoordinateFrame(frame);
   const seriesField = pathSeriesField(mark, rows);
+  const buildSegments = (segmentRows: Array<ExternalRow>) =>
+    closure
+      ? buildClosureStepSegments(mark, segmentRows, frame, closure, closed)
+      : buildLineStepSegments(mark, segmentRows, frame, closed);
   if (seriesField) {
-    const paths = buildSeriesPaths(
-      mark,
-      rows,
-      seriesField,
-      seriesRows => (closure ? buildClosureSteps(mark, seriesRows, frame, closure, closed) : buildLineSteps(mark, seriesRows, frame, closed)),
-      seriesRows => ({ stroke: colorOf?.(seriesRows[0]) ?? DEFAULT_FILL }),
-      markProvenance,
-    );
+    const paths = buildSeriesPaths(mark, rows, seriesField, buildSegments, paintOfSeries, markProvenance);
     return paths.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
   }
-  const steps = closure ? buildClosureSteps(mark, rows, frame, closure, closed) : buildLineSteps(mark, rows, frame, closed);
-  if (!steps) return null;
+  const segments = buildSegments(rows);
+  if (segments.length === 0) return null;
   const colorValue = mark.encoding.color?.value;
   const stroke = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
-  return { type: 'scope', pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH }, children: [{ type: 'path', children: steps }] };
+  return {
+    type: 'scope',
+    pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH },
+    children: segments.map(segment => ({ type: 'path', children: segment.steps })),
+  };
 };
 ```
 
@@ -146,7 +155,7 @@ The logic has four parts:
 | Coordinate check | PathMark needs 2D trajectory geometry; this release lowers it only under cartesian2D / polar2D |
 | Sort and project | `orderRows` decides connection order, and `frame.project(...)` maps position channels into screen points |
 | Series split | Explicit `series` wins; without `series`, categorical `color` can implicitly split the rows |
-| Core lowering | Each series becomes one core `Path`; `closed` appends a cycle for a line outline (`polar2D` closes by default), while `closure` builds a closed path and `fill` decides whether it is filled |
+| Core lowering | Each continuous segment inside each series becomes one core `Path`; `closed` appends a cycle for a line outline (`polar2D` closes by default), while `closure` builds a closed path and `fill` decides whether it is filled |
 
 ## API
 
@@ -160,6 +169,7 @@ The logic has four parts:
 |  | `series` | `FieldName?` | — | Split rows into multiple paths |
 |  | `curve` | `PathCurveValue?` | `linear` | Connection curve between adjacent points; under polar2D, `monotoneX` / `monotoneY` fall back to `linear` |
 |  | `closed` | `boolean?` | cartesian2D: `false`<br />polar2D: `true` | Connect the last point back to the first; set `false` under polar coordinates to keep an open path |
+|  | `connectNulls` | `boolean?` | `false` | Whether to connect across missing or invalid points; by default the path breaks and lowers into multiple core `Path` elements |
 |  | `closure` | `{ kind: 'cycle' }`<br />`{ kind: 'baseline'; baseline?: number }`<br />`{ kind: 'stack'; baselineField: FieldName }` | — | Build a closed path; omitted `baseline` uses the value-axis baseline, explicit `baseline` pins a constant lower edge, and `stack` reads a per-row lower boundary |
 | Path | `stroke` / `fill` | `FieldName`<br />`IRPaintSpec`<br />`PointStrokeStyle?` / `PointFillStyle?` | `currentColor` / — | Path stroke paint and closed-path fill paint; `stroke="none"` disables the border, while omitted `fill` keeps the path unfilled |
 |  | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | Path stroke width, whole-path opacity, and fill opacity |
