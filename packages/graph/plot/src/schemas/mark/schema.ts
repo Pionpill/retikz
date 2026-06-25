@@ -92,29 +92,29 @@ const PathCycleClosureSchema = z
   .object({
     kind: z.literal(PathClosureKind.Cycle).describe('Cycle closure: connect the final point back to the first point'),
   })
-  .describe('Path cycle closure: closes the path as a polygon and enables fill');
+  .describe('Path cycle closure: closes the path as a polygon; set fill to render an area');
 
 const PathBaselineClosureSchema = z
   .object({
-    kind: z.literal(PathClosureKind.Baseline).describe('Baseline closure: return from the upper outline to a constant baseline'),
+    kind: z.literal(PathClosureKind.Baseline).describe('Baseline closure: return from the upper outline to a baseline value'),
     baseline: z
       .number()
       .finite()
       .optional()
-      .describe('Constant baseline value for the return edge; default 0. Finite-only to keep the IR JSON round-trippable'),
+      .describe('Constant baseline value for the return edge; omit to use 0 when it is inside the value-axis domain, otherwise the nearest value-axis domain edge. Finite-only to keep the IR JSON round-trippable'),
   })
-  .describe('Path baseline closure: closes the upper outline down to a constant baseline and enables fill');
+  .describe('Path baseline closure: closes the upper outline down to a baseline; set fill to render an area');
 
 const PathStackClosureSchema = z
   .object({
     kind: z.literal(PathClosureKind.Stack).describe('Stack closure: return from the upper outline to a per-row baseline field'),
     baselineField: z.string().min(1).describe('Data field path for the lower boundary value, such as y0 from a stack transform; the upper boundary still comes from encoding.y'),
   })
-  .describe('Path stack closure: closes the upper outline against a per-row lower-bound field and enables fill');
+  .describe('Path stack closure: closes the upper outline against a per-row lower-bound field; set fill to render an area');
 
 export const PathClosureSchema = z
   .discriminatedUnion('kind', [PathCycleClosureSchema, PathBaselineClosureSchema, PathStackClosureSchema])
-  .describe('Path closure strategy: cycle, constant baseline, or per-row stacked baseline. Providing closure makes PathMark fillable');
+  .describe('Path closure strategy: cycle, baseline, or per-row stacked baseline. Providing closure makes PathMark geometrically closed; fill still controls whether the path is painted as an area');
 
 const coreNodeStyle = {
   align: NodeTextAlignStyleSchema.optional().describe('Core Node text alignment: field-bound datum channel or constant left / center / right'),

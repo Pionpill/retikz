@@ -1,12 +1,12 @@
 ---
 title: PathMark
-description: "PathMark is a one-dimensional trajectory made from ordered points; lines, filled closures, multi-series lines, and radar outlines are presentation forms of the same mark."
+description: "PathMark is a one-dimensional trajectory made from ordered points; lines, closed paths, multi-series lines, and radar outlines are presentation forms of the same mark."
 ---
 
 
 `<PathMark>` produces one 1D trajectory from a set of data rows. It projects each row into a point, sorts the points by `order`, and lowers the result into a core `Path`. Under cartesian2D it is usually a line; under polar2D it can become a polar path or a radar outline.
 
-`x` / `y` bind position channels, `order` decides connection order, `series` decides whether to split into multiple paths, `curve` decides how adjacent points connect, and `closure` decides whether the path becomes a filled closed area. PathMark currently supports cartesian2D and polar2D.
+`x` / `y` bind position channels, `order` decides connection order, `series` decides whether to split into multiple paths, `curve` decides how adjacent points connect, and `closure` decides whether the path closes by baseline or by cycle. PathMark currently supports cartesian2D and polar2D.
 
 ## Usage
 
@@ -32,8 +32,8 @@ The presentation form mainly changes through three groups of props: position cha
 | --- | --- | --- |
 | Line | `x` / `y` / `order` | Project each row into a point, then connect the points in order |
 | Multi-series line | `series` / `color` | Split rows by series first, then produce one path per group |
-| Radar outline | `closed` + `polar2D` | Join the ends under polar coordinates to form a closed wireframe |
-| Filled area | `closure` | Close the path by cycle, constant baseline, or per-row stacked baseline, then fill the result |
+| Radar outline | `polar2D` | Polar paths close by default; set `closed={false}` for an open path |
+| Path area | `closure` / `fill` | Close the path by cycle, constant baseline, or per-row stacked baseline; set `fill` explicitly to fill the result |
 
 ## Examples
 
@@ -61,21 +61,13 @@ With no `series`, giving `color` a categorical field also splits PathMark implic
 
 ### Geometry Props
 
-`closed` connects the last point back to the first. Under `polar2D`, categories spread along the angular role and values map to radius; the left side is closed, while the right side leaves the final point unconnected.
+`closed` connects the last point back to the first. Under `polar2D`, PathMark closes by default: the left side omits `closed` and still forms a radar outline, while the right side sets `closed={false}` to keep the path open.
 
 <ComponentPreview name="line-radar" sourceFiles={['line-radar.data.ts']} />
 
-`closure` closes and fills the same path. The left side uses a free constant `baseline` for an area path, while the right side uses `cycle` to fill a radar polygon.
-
-<ComponentPreview name="line-closure" sourceFiles={['line-closure.data.ts']} />
-
-For stacked areas, bind the upper boundary to `y` and pass the lower boundary field as `closure.baselineField`. The data can come from a stack transform or from precomputed `y0` / `y1` fields.
-
-<ComponentPreview name="line-stack-area" sourceFiles={['line-stack-area.data.ts']} />
-
 ### Connection Type
 
-`curve` controls how adjacent points connect. The left side uses cartesian2D and the right side uses polar2D; when you switch the connection type, both sides update together. The polar plot does not set an inner radius, so PathMark projects angular and radial positions directly.
+`curve` controls how adjacent points connect. The left side uses cartesian2D and the right side uses polar2D; when you switch the connection type, both sides update together. The polar plot does not set an inner radius, so PathMark projects angular and radial positions directly. Because `monotoneX` / `monotoneY` rely on monotonic projected screen x / y values, they fall back to `linear` under polar2D to avoid long control handles in closed areas.
 
 <ComponentPreview name="line-curve" sourceFiles={['line-curve.data.ts']} interactive size="md" />
 
@@ -91,6 +83,18 @@ For stacked areas, bind the upper boundary to `y` and pass the lower boundary fi
 | `monotoneX` | Monotone x | When x is monotonic, reduces y overshoot beyond neighboring extrema; prefer this for BI trend lines |
 | `monotoneY` | Monotone y | When y is monotonic, reduces x overshoot beyond neighboring extrema; useful for vertical trajectories |
 | `natural` | Natural spline | Keeps the whole curve continuous with relaxed endpoints; useful when continuous curvature matters |
+
+### Path Areas
+
+`closure` only closes PathMark into a fillable path; it does not enable filling by itself. `stroke` is on by default, and `stroke="none"` removes the border line; `fill` is off by default, and a concrete color or paint enables filling. The left area effect is composed from two PathMark layers: one `baseline + fill + stroke="none"` layer for the area, and one normal path layer for the upper outline. The right side uses `cycle + fill` to fill a radar polygon. Use the top-left control to switch `curve`; the default is a straight line.
+
+<ComponentPreview name="line-closure" sourceFiles={['line-closure.data.ts']} interactive size="md" />
+
+When `baseline` is omitted, it follows the value axis: use 0 when 0 is inside the value-axis domain; if an explicit domain excludes 0, such as `[30, 80]`, use the nearest domain edge, 30. Pass `closure={{ kind: 'baseline', baseline: ... }}` when the lower edge should be pinned to another value.
+
+For stacked areas, bind the upper boundary to `y` and pass the lower boundary field as `closure.baselineField`. The data can come from a stack transform or from precomputed `y0` / `y1` fields. The example uses the same fill-layer plus outline-layer composition for the area-chart effect.
+
+<ComponentPreview name="line-stack-area" sourceFiles={['line-stack-area.data.ts']} interactive size="md" />
 
 ## How It Works
 
@@ -114,20 +118,20 @@ const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
 const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
   if (mark.type !== PlotMark.Path) return null;
   const closure = mark.closure;
-  const closed = mark.closed ?? false;
+  const closed = mark.closed ?? isPolarCoordinateFrame(frame);
   const seriesField = pathSeriesField(mark, rows);
   if (seriesField) {
     const paths = buildSeriesPaths(
       mark,
       rows,
       seriesField,
-      seriesRows => (closure ? buildClosureSteps(mark, seriesRows, frame, closure) : buildLineSteps(mark, seriesRows, frame, closed)),
+      seriesRows => (closure ? buildClosureSteps(mark, seriesRows, frame, closure, closed) : buildLineSteps(mark, seriesRows, frame, closed)),
       seriesRows => ({ stroke: colorOf?.(seriesRows[0]) ?? DEFAULT_FILL }),
       markProvenance,
     );
     return paths.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
   }
-  const steps = closure ? buildClosureSteps(mark, rows, frame, closure) : buildLineSteps(mark, rows, frame, closed);
+  const steps = closure ? buildClosureSteps(mark, rows, frame, closure, closed) : buildLineSteps(mark, rows, frame, closed);
   if (!steps) return null;
   const colorValue = mark.encoding.color?.value;
   const stroke = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
@@ -142,7 +146,7 @@ The logic has four parts:
 | Coordinate check | PathMark needs 2D trajectory geometry; this release lowers it only under cartesian2D / polar2D |
 | Sort and project | `orderRows` decides connection order, and `frame.project(...)` maps position channels into screen points |
 | Series split | Explicit `series` wins; without `series`, categorical `color` can implicitly split the rows |
-| Core lowering | Each series becomes one core `Path`; `closed` appends a cycle for a line outline, while `closure` builds a fillable closed path |
+| Core lowering | Each series becomes one core `Path`; `closed` appends a cycle for a line outline (`polar2D` closes by default), while `closure` builds a closed path and `fill` decides whether it is filled |
 
 ## API
 
@@ -154,10 +158,10 @@ The logic has four parts:
 | Specific | `color` | `FieldName?` | `series` | Color field; without explicit `series`, categorical color can split the rows |
 |  | `order` | `FieldName?` | data order | Field bound to connection order |
 |  | `series` | `FieldName?` | — | Split rows into multiple paths |
-|  | `curve` | `PathCurveValue?` | `linear` | Connection curve between adjacent points |
-|  | `closed` | `boolean?` | `false` | Connect the last point back to the first |
-|  | `closure` | `{ kind: 'cycle' }`<br />`{ kind: 'baseline'; baseline?: number }`<br />`{ kind: 'stack'; baselineField: FieldName }` | — | Close and fill the path; `baseline` uses a constant lower edge, `stack` reads a per-row lower boundary |
-| Path | `stroke` / `fill` | `FieldName`<br />`IRPaintSpec`<br />`PointStrokeStyle?` / `PointFillStyle?` | `currentColor` / — | Path stroke paint and closed-path fill paint |
+|  | `curve` | `PathCurveValue?` | `linear` | Connection curve between adjacent points; under polar2D, `monotoneX` / `monotoneY` fall back to `linear` |
+|  | `closed` | `boolean?` | cartesian2D: `false`<br />polar2D: `true` | Connect the last point back to the first; set `false` under polar coordinates to keep an open path |
+|  | `closure` | `{ kind: 'cycle' }`<br />`{ kind: 'baseline'; baseline?: number }`<br />`{ kind: 'stack'; baselineField: FieldName }` | — | Build a closed path; omitted `baseline` uses the value-axis baseline, explicit `baseline` pins a constant lower edge, and `stack` reads a per-row lower boundary |
+| Path | `stroke` / `fill` | `FieldName`<br />`IRPaintSpec`<br />`PointStrokeStyle?` / `PointFillStyle?` | `currentColor` / — | Path stroke paint and closed-path fill paint; `stroke="none"` disables the border, while omitted `fill` keeps the path unfilled |
 |  | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | Path stroke width, whole-path opacity, and fill opacity |
 |  | `drawOpacity`<br />`zIndex` / `rotate` | `PointOpacityStyle?`<br />`PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />—<br />— | Stroke opacity, draw order, and rotation |
 |  | `roundedCorners` | `MarkValueProp<number>` | — | Rounded corners for path steps |

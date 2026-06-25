@@ -54,6 +54,7 @@ const identityScale = (): PositionScale => {
   let r: [number, number] = [0, WIDTH];
   return {
     coordinate: (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? value : NaN),
+    domain: () => [0, 1],
     get bandwidth() {
       return 0;
     },

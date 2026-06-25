@@ -45,6 +45,7 @@ const linearStub = (domain: [number, number], range: [number, number], bandwidth
   const [r0, r1] = range;
   return {
     coordinate: (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? r0 + ((value - d0) / (d1 - d0)) * (r1 - r0) : NaN),
+    domain: () => [d0, d1],
     get bandwidth() {
       return bandwidth;
     },

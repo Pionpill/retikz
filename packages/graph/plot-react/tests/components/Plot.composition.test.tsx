@@ -204,7 +204,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     ];
     const svg = renderToStaticMarkup(
       <Plot data={spiral} coordinate="polar2D" width={360} height={360}>
-        <PathMark x="theta" y="r" order="theta" />
+        <PathMark x="theta" y="r" order="theta" closed={false} />
       </Plot>,
     );
     expect(svg).toContain('<path');

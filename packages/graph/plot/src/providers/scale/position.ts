@@ -156,6 +156,10 @@ export const resolveRadialScale = (
 /** 连续 scale → PositionScale（bandwidth=0；只接受有限数值，守 alpha.1 跳过语义） */
 export const linearPositionScale = (scale: D3ScaleLinear<number, number>): PositionScale => ({
   coordinate: value => (isFiniteNumber(value) ? scale(value) : NaN),
+  domain: () => {
+    const [start, end] = scale.domain();
+    return [start, end];
+  },
   get bandwidth() {
     return 0;
   },
@@ -182,6 +186,10 @@ export const continuousPositionScale = (
     if (!isValidInput(value)) return NaN;
     const coordinate = scale(value as number);
     return Number.isFinite(coordinate) ? coordinate : NaN;
+  },
+  domain: () => {
+    const [start, end] = scale.domain();
+    return [start, end];
   },
   get bandwidth() {
     return 0;
@@ -226,6 +234,10 @@ export const timePositionScale = (scale: D3ScaleTime<number, number>): PositionS
   coordinate: value => {
     const stamp = coerceTimestamp(value);
     return stamp === null ? NaN : scale(new Date(stamp));
+  },
+  domain: () => {
+    const [start, end] = scale.domain();
+    return [start.getTime(), end.getTime()];
   },
   get bandwidth() {
     return 0;
@@ -312,6 +324,7 @@ export const bandPositionScale = (scale: D3ScaleBand<string | number>): Position
     const start = scale(value);
     return start === undefined ? NaN : start + scale.bandwidth() / 2;
   },
+  domain: () => [...scale.domain()],
   get bandwidth() {
     return scale.bandwidth();
   },
@@ -332,6 +345,7 @@ export const pointPositionScale = (scale: D3ScalePoint<string | number>): Positi
     const position = scale(value);
     return position === undefined ? NaN : position;
   },
+  domain: () => [...scale.domain()],
   get bandwidth() {
     return 0;
   },

@@ -202,6 +202,7 @@ const CSS_COLOR_KEYWORDS = new Set([
   'teal',
   'aqua',
   'orange',
+  'none',
   'transparent',
   'currentcolor',
   'rebeccapurple',
@@ -547,7 +548,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(id !== undefined ? { id } : {}),
         ...(order !== undefined ? { order } : {}),
         ...(series !== undefined ? { series } : {}),
-        ...(closed ? { closed: true } : {}),
+        ...(closed !== undefined ? { closed } : {}),
         ...(closure !== undefined ? { closure } : {}),
         ...(curve !== undefined ? { curve } : {}),
         ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
@@ -962,6 +963,9 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   const coordKind = coordinateTypeOf(options.coordinate);
   if (collected.hasSector && coordKind !== 'polar2D') {
     throw new Error('buildPlotSpec: <IntervalMark angle> is only valid under coordinate="polar2D"');
+  }
+  if (coordKind === 'polar2D' && collected.marks.some(mark => mark.type === PlotMark.Path && mark.closed !== false)) {
+    collected.hasClosedLine = true;
   }
   const explicitScales = collectExplicitScales(collected.scales, coordKind);
 

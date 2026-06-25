@@ -18,7 +18,7 @@ const Demo: FC = () => {
         <Axis dimension="y" grid />
       </Plot>
       <Plot data={curveSamples} width={280} height={280} coordinate="polar2D" style={{ maxWidth: '100%', height: 'auto' }}>
-        <PathMark x="category" y="value" order="index" curve={curve} closed />
+        <PathMark x="category" y="value" order="index" curve={curve} />
         <Axis dimension="x" />
         <Axis dimension="y" grid />
       </Plot>

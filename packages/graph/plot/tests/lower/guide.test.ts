@@ -9,6 +9,7 @@ import type { PositionScale } from '../../src/contract';
 /** 测试用最小 PositionScale：guide 只调 coordinate，其余成员给占位 */
 const fakeScale = (coordinate: (value: number) => number): PositionScale => ({
   coordinate: value => coordinate(value as number),
+  domain: () => [0, 1],
   bandwidth: 0,
   ticks: () => ({ values: [], labels: [] }),
   range: () => [0, 0],

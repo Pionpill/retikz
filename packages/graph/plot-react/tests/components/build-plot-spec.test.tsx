@@ -92,6 +92,14 @@ describe('buildPlotSpec paint props', () => {
     });
   });
 
+  it('path paint none passes through as constant paint', () => {
+    const spec = buildPlotSpec(<PathMark x="x" y="y" stroke="none" />, '__plot');
+    expect(spec.marks[0]).toMatchObject({
+      type: 'path',
+      stroke: { kind: 'constant', value: 'none' },
+    });
+  });
+
   it('interval paint props pass through to mark IR', () => {
     const spec = buildPlotSpec(<IntervalMark x="month" y="revenue" fill={gradientPaint} stroke={gradientPaint} />, '__plot');
     expect(spec.marks[0]).toMatchObject({
@@ -680,8 +688,8 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
     expect(spec.coordinate).toMatchObject({ type: 'polar2D', angle: '__angle', radius: '__radius' });
   });
 
-  it('radar_equivalence：<PathMark closed> + polar → closed line + point 角向', () => {
-    const spec = buildPlotSpec(<PathMark x="dim" y="value" closed />, '__plot', { coordinate: 'polar2D' });
+  it('radar_equivalence：<PathMark> + polar 默认闭合 → point 角向', () => {
+    const spec = buildPlotSpec(<PathMark x="dim" y="value" />, '__plot', { coordinate: 'polar2D' });
     const expected: PlotSpec = {
       namespace: 'plot',
       type: 'plot',
@@ -691,16 +699,16 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
         { type: 'linear', name: '__radius' },
       ],
       coordinate: { type: 'polar2D', angle: '__angle', radius: '__radius', startAngle: 0, endAngle: 360, innerRadius: 0 },
-      marks: [{ type: 'path', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } } }],
+      marks: [{ type: 'path', encoding: { x: { field: 'dim' }, y: { field: 'value' } } }],
       guides: [],
     };
     expect(spec).toEqual(expected);
   });
 
-  it('polar_line_equivalence：<PathMark> + polar（不闭合）→ linear 角向', () => {
-    const spec = buildPlotSpec(<PathMark x="theta" y="r" order="theta" />, '__plot', { coordinate: 'polar2D' });
+  it('polar_line_equivalence：<PathMark closed={false}> + polar（不闭合）→ linear 角向', () => {
+    const spec = buildPlotSpec(<PathMark x="theta" y="r" order="theta" closed={false} />, '__plot', { coordinate: 'polar2D' });
     expect(spec.scales[0]).toEqual({ type: 'linear', name: '__angle' });
-    expect(spec.marks[0]).toEqual({ type: 'path', order: 'theta', encoding: { x: { field: 'theta' }, y: { field: 'r' } } });
+    expect(spec.marks[0]).toEqual({ type: 'path', order: 'theta', closed: false, encoding: { x: { field: 'theta' }, y: { field: 'r' } } });
     expect(spec.coordinate).toMatchObject({ type: 'polar2D', angle: '__angle', radius: '__radius' });
   });
 

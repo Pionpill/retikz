@@ -52,6 +52,7 @@ const bandStub = (categories: Array<string>, range: [number, number]): PositionS
       const i = typeof value === 'string' ? index.get(value) : undefined;
       return i === undefined ? NaN : r0 + step * (i + 0.5);
     },
+    domain: () => categories,
     get bandwidth() {
       return Math.abs(step);
     },
@@ -67,6 +68,7 @@ const linearStub = (domain: [number, number], range: [number, number]): Position
   const [r0, r1] = range;
   return {
     coordinate: (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? r0 + ((value - d0) / (d1 - d0)) * (r1 - r0) : NaN),
+    domain: () => [d0, d1],
     get bandwidth() {
       return 0;
     },

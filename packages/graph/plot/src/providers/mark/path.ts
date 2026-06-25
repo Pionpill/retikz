@@ -232,6 +232,13 @@ const pointsToCurveSteps = (points: ReadonlyArray<[number, number]>, closed: boo
 };
 
 /** 按 order / 数据序排好一组行（path 共用连接顺序）。 */
+const effectivePathCurve = (curve: PathCurveValue | undefined, frame: CoordinateFrame): PathCurveValue => {
+  if (isPolarCoordinateFrame(frame) && (curve === PathCurve.MonotoneX || curve === PathCurve.MonotoneY)) {
+    return PathCurve.Linear;
+  }
+  return curve ?? PathCurve.Linear;
+};
+
 export const orderRows = (rows: Array<ExternalRow>, order: string | undefined): Array<ExternalRow> =>
   order ? [...rows].sort((a, b) => compareRowsByFieldPath(a, b, order)) : rows;
 
@@ -262,10 +269,20 @@ const buildLineSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
   pointsToCurveSteps(
     buildOutlinePoints(mark, orderRows(rows, mark.type === PlotMark.Path ? mark.order : undefined), frame, closed),
     closed,
-    mark.type === PlotMark.Path ? mark.curve : PathCurve.Linear,
+    mark.type === PlotMark.Path ? effectivePathCurve(mark.curve, frame) : PathCurve.Linear,
   );
 
-const PATH_BASELINE = 0;
+const ZERO_BASELINE = 0;
+
+const pathDefaultBaseline = (frame: CoordinateFrame): number => {
+  if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) return ZERO_BASELINE;
+  const numericDomain = frame.secondary.domain().filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+  if (numericDomain.length < 2) return ZERO_BASELINE;
+  const min = Math.min(...numericDomain);
+  const max = Math.max(...numericDomain);
+  if (min <= ZERO_BASELINE && max >= ZERO_BASELINE) return ZERO_BASELINE;
+  return Math.abs(min - ZERO_BASELINE) <= Math.abs(max - ZERO_BASELINE) ? min : max;
+};
 
 const pathClosureOf = (mark: PathMark): PathClosure | undefined =>
   mark.closure;
@@ -290,7 +307,7 @@ const buildStackBaselinePoints = (mark: PathMark, ordered: Array<ExternalRow>, f
 
 const buildClosureReturnPoints = (mark: PathMark, ordered: Array<ExternalRow>, frame: CoordinateFrame, closure: PathClosure): Array<[number, number]> => {
   if (closure.kind === PathClosureKind.Baseline) {
-    return buildConstantBaselinePoints(mark, ordered, frame, closure.baseline ?? PATH_BASELINE);
+    return buildConstantBaselinePoints(mark, ordered, frame, closure.baseline ?? pathDefaultBaseline(frame));
   }
   if (closure.kind === PathClosureKind.Stack) {
     return buildStackBaselinePoints(mark, ordered, frame, closure.baselineField);
@@ -298,17 +315,19 @@ const buildClosureReturnPoints = (mark: PathMark, ordered: Array<ExternalRow>, f
   return [];
 };
 
-const buildClosureSteps = (mark: PathMark, rows: Array<ExternalRow>, frame: CoordinateFrame, closure: PathClosure): Array<IRStep> | null => {
+const buildClosureSteps = (mark: PathMark, rows: Array<ExternalRow>, frame: CoordinateFrame, closure: PathClosure, closed: boolean): Array<IRStep> | null => {
   if (closure.kind === PathClosureKind.Cycle) return buildLineSteps(mark, rows, frame, true);
   const ordered = orderRows(rows, mark.order);
-  const top = buildOutlinePoints(mark, ordered, frame, false);
+  const top = buildOutlinePoints(mark, ordered, frame, closed);
   const bottom = buildClosureReturnPoints(mark, ordered, frame, closure);
   if (top.length < 2 || bottom.length < 2) return null;
-  const topSteps = pointsToCurveSteps(top, false, mark.curve);
+  const topLoop = closed ? [...top, top[0]] : top;
+  const bottomLoop = closed ? [bottom[bottom.length - 1], ...bottom] : bottom;
+  const topSteps = pointsToCurveSteps(topLoop, false, effectivePathCurve(mark.curve, frame));
   if (!topSteps) return null;
   return [
     ...topSteps,
-    ...bottom.map((point): IRStep => ({ type: 'step', kind: 'line', to: point })),
+    ...bottomLoop.map((point): IRStep => ({ type: 'step', kind: 'line', to: point })),
     { type: 'step', kind: 'cycle' },
   ];
 };
@@ -408,18 +427,18 @@ const lowerPath = (
 ): IRScope | null => {
   if (mark.type !== PlotMark.Path) return null;
   const closure = pathClosureOf(mark);
-  const closed = mark.closed ?? false;
+  const closed = mark.closed ?? isPolarCoordinateFrame(frame);
   const seriesField = pathSeriesField(mark, rows);
   const defaultStroke = markPaintOf(mark, channels, 'stroke', rows, defaultColor ?? DEFAULT_FILL) ?? DEFAULT_FILL;
-  const defaultFill = markPaintOf(mark, channels, 'fill', rows, closure ? defaultColor ?? DEFAULT_FILL : undefined);
+  const defaultFill = markPaintOf(mark, channels, 'fill', rows, undefined);
   if (seriesField) {
     const paths = buildSeriesPaths(
       mark,
       rows,
       seriesField,
-      seriesRows => (closure ? buildClosureSteps(mark, seriesRows, frame, closure) : buildLineSteps(mark, seriesRows, frame, closed)),
+      seriesRows => (closure ? buildClosureSteps(mark, seriesRows, frame, closure, closed) : buildLineSteps(mark, seriesRows, frame, closed)),
       seriesRows => {
-        const fill = markPaintOf(mark, channels, 'fill', seriesRows, closure ? colorOf?.(seriesRows[0]) ?? DEFAULT_FILL : undefined);
+        const fill = markPaintOf(mark, channels, 'fill', seriesRows, undefined);
         return {
           stroke: markPaintOf(mark, channels, 'stroke', seriesRows, colorOf?.(seriesRows[0]) ?? DEFAULT_FILL) ?? DEFAULT_FILL,
           ...(fill !== undefined ? { fill } : {}),
@@ -430,7 +449,7 @@ const lowerPath = (
     );
     return paths.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
   }
-  const steps = closure ? buildClosureSteps(mark, rows, frame, closure) : buildLineSteps(mark, rows, frame, closed);
+  const steps = closure ? buildClosureSteps(mark, rows, frame, closure, closed) : buildLineSteps(mark, rows, frame, closed);
   if (!steps) return null;
   const colorValue = mark.encoding.color?.value;
   const stroke = colorValue !== undefined ? String(colorValue) : defaultStroke;
