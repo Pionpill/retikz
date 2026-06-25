@@ -125,19 +125,19 @@ export const JitterTransformSchema = z
     'Jitter transform: add a deterministic pseudo-random offset (in DATA units, pre-scale) to a CONTINUOUS numeric positional field to de-overlap scatter; row-preserving. Operates purely in the numeric data space — it cannot offset categorical/string fields, and categorical band-internal spreading (a post-scale screen-space mechanism) is out of scope. Randomness is rebuilt at runtime from a serializable integer seed + a fixed PRNG, never a stored function — preserving SSR / locator parity',
   );
 
-export const TransformSchema = z
+export const BuiltinTransformSchema = z
   .discriminatedUnion('kind', [SortTransformSchema, StackTransformSchema, BinTransformSchema, AggregateTransformSchema, NormalizeTransformSchema, DeriveIntervalTransformSchema, JitterTransformSchema])
-  .describe('Data transform operation applied before scale / mark; ordered pipeline. sort / stack / normalize / derive-interval / jitter preserve row count; bin / aggregate reduce it');
+  .describe('Built-in data transform operation applied before scale / mark; ordered pipeline. sort / stack / normalize / derive-interval / jitter preserve row count; bin / aggregate reduce it');
 
-export const CustomTransformSchema = z
+const ExternalTransformSchema = z
   .object({
     kind: z
       .string()
       .min(1)
       .refine(kind => !BUILTIN_TRANSFORM_KINDS.has(kind), {
-        message: 'custom transform kind must not collide with a built-in transform kind',
+        message: 'external transform kind must not collide with a built-in transform kind',
       })
-      .describe('Discriminator: custom transform operation kind; must be a non-empty, non-built-in identifier registered through options.transformDefinitions'),
+      .describe('Discriminator: externally registered transform operation kind; must be a non-empty, non-built-in identifier registered through options.transformDefinitions'),
   })
   .passthrough()
   .superRefine((operation, ctx) => {
@@ -145,12 +145,14 @@ export const CustomTransformSchema = z
     if (!result.success) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'custom transform operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
+        message: 'external transform operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
       });
     }
   })
-  .describe('Custom transform operation: kind is any non-built-in identifier; its config is validated at lowering time against the matching TransformDefinition supplied via options.transformDefinitions');
+  .describe('Externally registered transform operation: kind is any non-built-in identifier; its config is validated at lowering time against the matching TransformDefinition supplied via options.transformDefinitions');
 
-export const TransformOperationSchema = z
-  .union([TransformSchema, CustomTransformSchema])
-  .describe('Transform operation union: built-in transform configs plus custom kind passthrough operations validated by a runtime TransformDefinition');
+export const TransformSchema = z
+  .union([BuiltinTransformSchema, ExternalTransformSchema])
+  .describe('Data transform operation: built-in transform configs plus externally registered kind passthrough operations validated by a runtime TransformDefinition');
+
+export const TransformOperationSchema = TransformSchema;

@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { AggregateTransformSchema, BinTransformSchema, CustomTransformSchema, DeriveIntervalTransformSchema, JitterTransformSchema, NormalizeTransformSchema, SortTransformSchema, StackTransformSchema, TransformOperationSchema, TransformSchema } from './schema';
+import type { AggregateTransformSchema, BinTransformSchema, BuiltinTransformSchema, DeriveIntervalTransformSchema, JitterTransformSchema, NormalizeTransformSchema, SortTransformSchema, StackTransformSchema, TransformSchema } from './schema';
 
 /** sort transform */
 export type SortTransform = z.infer<typeof SortTransformSchema>;
@@ -16,8 +16,8 @@ export type DeriveIntervalTransform = z.infer<typeof DeriveIntervalTransformSche
 /** jitter transform（确定性位置抖动，保行数） */
 export type JitterTransform = z.infer<typeof JitterTransformSchema>;
 /** 内置 transform operation（sort / stack / bin / aggregate / normalize / derive-interval / jitter） */
+export type BuiltinTransform = z.infer<typeof BuiltinTransformSchema>;
+/** transform operation（内置 ∪ 外部注册 kind passthrough） */
 export type Transform = z.infer<typeof TransformSchema>;
-/** transform operation（内置 ∪ 自定义 kind passthrough） */
-export type TransformOperation = z.infer<typeof TransformOperationSchema>;
-/** 自定义 transform operation（运行时由 TransformDefinition 精确校验并执行） */
-export type CustomTransform = z.infer<typeof CustomTransformSchema>;
+/** transform pipeline operation；definition 运行时用 schema 精确收窄。 */
+export type TransformOperation = Transform;
