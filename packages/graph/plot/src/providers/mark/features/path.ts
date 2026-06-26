@@ -1,5 +1,5 @@
-import { type IRChild, type IRPath, type IRScope, type IRStep } from '@retikz/core';
-import { type ChannelValueResolver, type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkProvenance } from '../../../contract';
+import { type IRChild, type IRCoordinate, type IRPath, type IRScope, type IRStep } from '@retikz/core';
+import { type ChannelValueResolver, type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkLoweringContext, type MarkProvenance } from '../../../contract';
 import { channelValue, compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../../data';
 import {
   type PolarVertex,
@@ -21,6 +21,7 @@ import {
   collectPathChannelFields,
   failLoudMessage,
   pathChannelKinds,
+  roleAnchor,
 } from '../shared';
 import { seriesPathMeta, slug } from '../../../pipeline';
 
@@ -28,7 +29,7 @@ import { seriesPathMeta, slug } from '../../../pipeline';
  * 取一行的位置通道值 → [xValue, yValue]（坐标系无关；投影交给 frame.project，frame 把 x/y 重解释为对应角色）。
  * @description x/y 是唯一位置通道（坐标系决定其含义）。
  */
-export const resolveRolePosition = (mark: Mark, row: ExternalRow): [unknown, unknown] =>
+export const resolveRolePosition = (mark: PathMark, row: ExternalRow): [unknown, unknown] =>
   [channelValue(mark.encoding.x, row), channelValue(mark.encoding.y, row)];
 
 /** 把若干屏幕点连成 move + line steps（按需尾部加 cycle 闭合）；点数 < 2 返回 null。 */
@@ -246,7 +247,7 @@ export const orderRows = (rows: Array<ExternalRow>, order: string | undefined): 
  * 把一组有序行投影成上沿屏幕点（坐标系无关）。
  * @description cartesian / polar 分类角轴 / closed 走弦（顶点直连）；polar 连续角轴段内采样弯弧。
  */
-export const buildOutlinePoints = (mark: Mark, ordered: Array<ExternalRow>, frame: CoordinateFrame, closed: boolean): Array<[number, number]> => {
+export const buildOutlinePoints = (mark: PathMark, ordered: Array<ExternalRow>, frame: CoordinateFrame, closed: boolean): Array<[number, number]> => {
   if (isPolarCoordinateFrame(frame) && frame.continuousAngle && !closed) {
     const vertices = ordered
       .map(row => {
@@ -413,7 +414,7 @@ export type SeriesPathBuilder = (seriesRows: Array<ExternalRow>) => Array<PathSt
 type IRPathChild = IRPath;
 
 export const buildSeriesPaths = (
-  mark: Mark,
+  mark: PathMark,
   rows: Array<ExternalRow>,
   seriesField: string,
   buildSteps: SeriesPathBuilder,
@@ -538,12 +539,35 @@ const lowerPath = (
 };
 
 /** path 图层下沉：仅 cartesian2D / polar2D 有上沿几何；其余坐标系 fail-loud + attachMarkLayer。 */
-export const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+const pathAnchorCoordinates = (mark: PathMark, rows: Array<ExternalRow>, frame: CoordinateFrame, ctx: MarkLoweringContext | undefined): Array<IRCoordinate> => {
+  if (mark.anchorId === undefined || ctx?.anchors === undefined) return [];
+  const coordinates: Array<IRCoordinate> = [];
+  const ordered = orderRows(rows, mark.order);
+  for (let transformedIndex = 0; transformedIndex < ordered.length; transformedIndex += 1) {
+    const row = ordered[transformedIndex];
+    const position = roleAnchor(mark, row, frame);
+    if (position === null) continue;
+    const owner = {
+      markType: mark.type,
+      markId: mark.id,
+      markIndex: ctx.markIndex,
+      transformedIndex,
+    };
+    const id = ctx.anchors.makeId(mark.anchorId, row, owner);
+    coordinates.push(ctx.anchors.coordinate(id, position, owner));
+  }
+  return coordinates;
+};
+
+export const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, ctx: MarkLoweringContext | undefined): IRChild | null => {
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
-  const layer = lowerPath(mark, rows, frame, channels, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'), markProvenance);
-  return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
+  const layer = lowerPath(mark, rows, frame, channels, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'), ctx?.provenance);
+  if (layer === null || mark.type !== PlotMark.Path) return layer;
+  const coordinates = pathAnchorCoordinates(mark, rows, frame, ctx);
+  const anchoredLayer = coordinates.length === 0 ? layer : { ...layer, children: [...coordinates, ...layer.children] };
+  return attachMarkLayer(anchoredLayer, mark, ctx?.provenance);
 };
 
 /** 收集 path mark 独有字段：连接顺序与 series 拆分。 */

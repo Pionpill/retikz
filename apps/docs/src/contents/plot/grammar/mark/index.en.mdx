@@ -3,7 +3,7 @@ title: Marks
 description: Marks are the registered layer from data to geometry: each mark declares a low-level geometry, while scales and coordinates decide its final form.
 ---
 
-Marks are the geometry layer of the graphic grammar. They do not hard-code pixel positions; they declare which kind of low-level geometry the data should produce: point, path, interval, or reference.
+Marks are the geometry layer of the graphic grammar. They do not hard-code pixel positions; they declare which kind of low-level geometry the data should produce: points, paths, intervals, reference constraints, or relation paths between two targets.
 
 Each built-in mark is a registered entry. During compilation, field mappings become channels and are then lowered by the matching mark; the coordinate system interprets those channels, so the same mark can produce different shapes in different coordinates.
 
@@ -15,6 +15,7 @@ Each built-in mark is a registered entry. During compilation, field mappings bec
 |  | `PathMark` | Ordered points connected into a 1D trajectory | Lines, paths, radar outlines |
 |  | `IntervalMark` | Orthogonal interval products across position roles | Bars, histograms, heatmaps, radial bars, pies / donuts |
 | Special marks | `ReferenceMark` | Reference constraints at fixed positions or intervals | Threshold lines, reference rings, tolerance bands |
+|  | `RelationMark` | A core Path from source to target | Arrows, dependencies, point-to-point or interval-to-interval connectors |
 
 Chart forms are not separate low-level marks. A heatmap is a double-band `IntervalMark`, a pie is an angular `IntervalMark` under polar coordinates, and scatter / bubble / text points are different presentation settings of `PointMark`.
 
@@ -25,9 +26,23 @@ plot marks do not own renderer primitives directly; after lowering, they become 
 | Mark | Core implementation | Notes |
 | --- | --- | --- |
 | `PointMark` | [Node](/core/components/node/overview) | Each row produces one point Node; text points are borderless text Nodes |
-| `PathMark` | [Path](/core/components/draw/path) | Ordered projected points become move / line steps, then one or more Paths |
+| `PathMark` | [Path](/core/components/draw/path) + [Coordinate](/core/components/layout/coordinate) | Ordered projected points produce a Path; with `anchorId`, each valid vertex also produces a referenceable Coordinate |
 | `IntervalMark` | [Node](/core/components/node/overview) | The coordinate frame projects each cell into rect / sector / contour geometry, then packs it into a sized or shaped Node |
 | `ReferenceMark` | [Path](/core/components/draw/path) / [Node](/core/components/node/overview) | Reference lines lower to Paths; reference bands lower to interval Nodes |
+| `RelationMark` | [Path](/core/components/draw/path) + [Coordinate](/core/components/layout/coordinate) | source / target resolve into core targets; via and projected targets can generate addressable Coordinates |
+
+## Anchor IDs
+
+`PointMark`, `PathMark`, and `IntervalMark` can configure `anchorId` to write stable ids onto the core Nodes or Coordinates they generate. `anchorId` takes precedence over the older `datumIdField`; `datumIdField` remains for legacy locator / provenance semantics.
+
+`anchorId` supports four inputs: `prefix` provides a namespace, `field` slugs a data field into the id, `template` supports `{plotId}` / `{markId}` / `{markIndex}` / `{index}` / `{field:name}`, and `generator` stores only a runtime key whose function is supplied through `LowerPlotsOptions.anchorIdGenerators`.
+
+```tsx
+<PointMark id="cities" x="x" y="y" anchorId={{ prefix: 'city', field: 'id' }} />
+<PathMark id="route" x="x" y="y" order="order" anchorId={{ template: 'route.{index}' }} />
+```
+
+`PathMark` does not simulate path vertices with invisible Nodes. With `anchorId`, every valid datum becomes a core `Coordinate`, so later relation, annotation, or custom marks can target those vertices by id.
 
 ## Paint Styles
 
@@ -56,5 +71,6 @@ Gradients, patterns, and image paint are handled by the core resource table. plo
   <LinkedCard href="/plot/grammar/mark/path"><strong>PathMark</strong><span>1D trajectories: connect data points in order for trends, paths, and radar outlines.</span></LinkedCard>
   <LinkedCard href="/plot/grammar/mark/interval"><strong>IntervalMark</strong><span>Interval products: bars, histograms, heatmaps, radial bars, pies, and donuts.</span></LinkedCard>
   <LinkedCard href="/plot/grammar/mark/reference"><strong>ReferenceMark</strong><span>Reference constraints: lines, rings, sectors, and tolerance bands at fixed positions.</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/relation"><strong>RelationMark</strong><span>Lower source / target relations into core Paths with arrows, bends, folds, and step labels.</span></LinkedCard>
   <LinkedCard href="/plot/grammar/mark/custom"><strong>Custom Marks</strong><span>Register your own glyph with defineMark + markDefinitions; lower projects via frame into core IR.</span></LinkedCard>
 </div>

@@ -1,9 +1,10 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRScope } from '@retikz/core';
-import { type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkProvenance } from '../../../contract';
+import { type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkLoweringContext } from '../../../contract';
 import { type ExternalRow, type Mark, PlotMark, type PointMark } from '../../../schemas';
 import {
   DEFAULT_FILL,
   type MarkPaint,
+  attachDatumAnchor,
   attachDatumLabel,
   attachMarkLayer,
   channelDefaultOf,
@@ -56,6 +57,8 @@ const textStyle = (textColor: string, mark: PointMark): IRNodeDefault => {
   const rotate = mark.rotate?.kind === 'constant' ? mark.rotate.value : undefined;
   return {
     padding: padding ?? 0,
+    fill: 'none',
+    stroke: 'none',
     strokeWidth: 0,
     color: textColor,
     textColor,
@@ -74,9 +77,10 @@ export const lowerPoint = (
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   channels: MarkChannels,
-  markProvenance: MarkProvenance | undefined,
+  ctx: MarkLoweringContext | undefined,
 ): IRChild | null => {
   if (mark.type !== PlotMark.Point) return null;
+  const markProvenance = ctx?.provenance;
   const colorOf = channelValueOf<string>(channels, 'color');
   const fillOf = mark.fill?.kind === 'field' && !colorOf ? channelValueOf<MarkPaint>(channels, 'fill') : undefined;
   const strokeOf = mark.stroke?.kind === 'field' ? channelValueOf<MarkPaint>(channels, 'stroke') : undefined;
@@ -106,7 +110,10 @@ export const lowerPoint = (
       const position: [number, number] = dx === 0 && dy === 0 ? point : [point[0] + dx, point[1] + dy];
       const base: IRNode = { type: 'node', position, text };
       applyChannelDeliveries(base, 'pointText');
-      placed.push({ color: colorOf?.(row), node: decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined) });
+      placed.push({
+        color: colorOf?.(row),
+        node: attachDatumAnchor(decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined), mark, row, transformedIndex, ctx),
+      });
       continue;
     }
     // 散点 glyph：锚点与 locator 共享同一 role 投影（point → frame.projectRoles），杜绝两套投影漂移
@@ -118,7 +125,12 @@ export const lowerPoint = (
     const stroke = strokeOf?.(row);
     if (stroke !== undefined) base.stroke = stroke;
     applyChannelDeliveries(base, 'pointGlyph');
-    const node = attachDatumLabel(decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined), mark, row, labelOf);
+    const node = attachDatumLabel(
+      attachDatumAnchor(decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined), mark, row, transformedIndex, ctx),
+      mark,
+      row,
+      labelOf,
+    );
     placed.push({ color: colorOf?.(row), node });
   }
   if (placed.length === 0) return null;

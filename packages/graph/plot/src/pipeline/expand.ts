@@ -2,9 +2,10 @@ import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, Json
 import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type MarkOperation, PathClosureKind, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
 import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyFieldResolver, applyTransforms, assertAllValuesValid, assertBaselineScaleCompatible, assertScaleFieldCompatible, buildProportionalIntervals, channelKindsForMark, channelValue, collectFormatFields, createPositionChannelDefinitions, deriveScale, lowerMark, makeColorSchemeResolver, normalizeRows, orderedCategoryDomain, proportionalIntervalDomainValues, resolveChannelRegistry, resolveCoordinateRegistry, resolveFieldPath, resolveFieldTypes, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkChannels, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, scaleTicks, validateBoundData } from '../providers';
 import { type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../features';
-import { type AnyChannelDefinition, type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, type ResolveField, type ResolveLabel, type TickSet, isBuiltinScaleOperation } from '../contract';
+import { type AnchorIdGenerator, type AnyChannelDefinition, type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, type ResolveField, type ResolveLabel, type TickSet, isBuiltinScaleOperation } from '../contract';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect } from './layout';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
+import { createAnchorRegistry } from './anchors';
 import { collectSourceFields } from './source-fields';
 
 /**
@@ -111,7 +112,7 @@ const assertRequiredPositionChannels = (coordinateType: string, roles: ReadonlyA
     // 自定义 mark：必填位置通道由其 MarkDefinition.lower 自行 fail-loud，不在通用校验内强制
     if (!isBuiltinMark(mark)) continue;
     // reference 取向由 encoding.x XOR y 决定（绑一个、缺一个）；其取向校验在 lowerReference fail-loud
-    if (mark.type === PlotMark.Reference) continue;
+    if (mark.type === PlotMark.Reference || mark.type === PlotMark.Relation) continue;
     // interval：band / span bounds 需对应 encoding 位置通道；extent（字段区间）/ full（满域）从字段 / 坐标系取位置，豁免该角色
     if (mark.type === PlotMark.Interval) {
       const encoding = mark.encoding as Record<string, Channel | undefined>;
@@ -153,6 +154,8 @@ export type LowerPlotsOptions = {
   datumProvenance?: boolean;
   /** 数据属性名：把该字段值绑成 `<plotId>.datum.<值>` 的 Node.id（opt-in 可连接；缺字段 / 重复值 fail loud） */
   datumIdField?: string;
+  /** Runtime-only functions referenced by AnchorIdSpec.generator; PlotSpec stores only generator keys. */
+  anchorIdGenerators?: Record<string, AnchorIdGenerator>;
   /** 逻辑字段 → 物理数据路径映射（按数据集 reference 键，不进 IR）；需 data.model；缺省恒等 */
   fieldMaps?: Record<string, Record<string, string>>;
   /** 抽样校验绑定数据（字段缺失 / 不可强制 → fail-loud）；默认关、不 warn */
@@ -830,6 +833,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     provenance && provenance.datumIdField !== undefined && provenance.plotId !== undefined
       ? createDatumIdRegistrar(provenance.datumIdField, provenance.plotId)
       : undefined;
+  const anchorRegistry = createAnchorRegistry({ plotId: node.id, generators: options.anchorIdGenerators });
 
   // 每个 mark 下沉成一个图层 Scope（样式上提到 nodeDefault/pathDefault）；空图层（无可绘制点）丢弃
   // provenance 开 → 传 markProvenance（plotId / markIndex / datum 开关 + 共享 registerDatumId），各层 / datum 绑 id + 来源 meta
@@ -840,11 +844,17 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         rows,
         frame,
         resolveMarkChannels(mark, channelCtx, channelRegistry, defaultColorOf(node, markIndex), channelKindsForMark(mark, markRegistry)),
-        provenance ? { context: provenance, markIndex, registerDatumId } : undefined,
+        {
+          markIndex,
+          plotId: node.id,
+          ...(provenance !== undefined ? { provenance: { context: provenance, markIndex, registerDatumId } } : {}),
+          anchors: anchorRegistry,
+        },
         markRegistry,
       );
     })
     .filter((layer): layer is IRChild => layer !== null);
+  anchorRegistry.assertResolved();
 
   // legend（ADR-03）：收 legend guide → 据通道 + scale 类型选形态下沉成独立 scope，落 position 预留带。
   // 占位（band 计算 / plotArea 收窄）见 reserveLegendBands；fail-loud（多 scale 未消歧 / scale 不存在）在 buildLegendLayers 内。

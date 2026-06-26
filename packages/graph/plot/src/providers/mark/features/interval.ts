@@ -10,7 +10,7 @@ import {
   type IntervalContext,
   type MarkChannels,
   type MarkDefinition,
-  type MarkProvenance,
+  type MarkLoweringContext,
   type PositionScale,
   hasProjectCell,
   isRenderableCellGeometry,
@@ -23,6 +23,7 @@ import { channelForRole } from '../shared';
 import {
   type MarkPaint,
   applyNodeChannelDeliveries,
+  attachDatumAnchor,
   attachDatumLabel,
   attachMarkLayer,
   channelDefaultOf,
@@ -427,15 +428,15 @@ const applySectorStyleParams = (node: IRNode, mark: Mark): void => {
  *   kind 选（rect → 矩形 barStyle、sector / contour → shapeStyle）。无可绘制图元返回 null。
  */
 const lowerCells = (
-  mark: Mark,
+  mark: IntervalMark,
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   projectCell: (cell: Cell) => CellGeometry,
-  ctx: IntervalContext | undefined,
+  intervalContext: IntervalContext | undefined,
   colorOf: ChannelValueResolver<string> | undefined,
   defaultColor: string | undefined,
   channels: MarkChannels,
-  markProvenance: MarkProvenance | undefined,
+  markContext: MarkLoweringContext | undefined,
   labelOf: ChannelValueResolver<string> | undefined,
 ): IRScope | null => {
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
@@ -444,7 +445,7 @@ const lowerCells = (
   let kind: CellGeometry['kind'] | undefined;
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
-    const cell = markCell(mark, row, frame, ctx);
+    const cell = markCell(mark, row, frame, intervalContext);
     if (!cell) continue;
     const geometry = projectCell(cell);
     if (!isRenderableCellGeometry(geometry)) continue;
@@ -458,7 +459,7 @@ const lowerCells = (
     applyNodeChannelDeliveries(cellNode, mark, row, channels, 'cell');
     applySectorStyleParams(cellNode, mark);
     const node = attachDatumLabel(
-      decorateDatum(cellNode, row, transformedIndex, mark.type, markProvenance, cellSeriesValue(mark, row)),
+      attachDatumAnchor(decorateDatum(cellNode, row, transformedIndex, mark.type, markContext?.provenance, cellSeriesValue(mark, row)), mark, row, transformedIndex, markContext),
       mark,
       row,
       labelOf,
@@ -471,26 +472,26 @@ const lowerCells = (
 };
 
 /** interval mark 图层下沉：坐标系守卫 + IntervalContext + lowerCells（cell 类单路径）。 */
-export const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+export const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, ctx: MarkLoweringContext | undefined): IRChild | null => {
   if (mark.type !== PlotMark.Interval) return null;
   // interval 需要坐标帧提供 cell 几何投影；内置和自定义帧都走同一 projectCell 契约。
   if (!hasProjectCell(frame)) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
-  const ctx = buildIntervalContext(mark, frame, rows);
+  const intervalContext = buildIntervalContext(mark, frame, rows);
   const layer = lowerCells(
     mark,
     rows,
     frame,
     frame.projectCell,
-    ctx,
+    intervalContext,
     channelValueOf<string>(channels, 'color'),
     channelDefaultOf<string>(channels, 'color'),
     channels,
-    markProvenance,
+    ctx,
     channelValueOf<string>(channels, 'label'),
   );
-  return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
+  return layer === null ? null : attachMarkLayer(layer, mark, ctx?.provenance);
 };
 
 /** 收集 interval mark 独有字段：series 分组与显式 extent bounds。 */

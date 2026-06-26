@@ -1,7 +1,7 @@
 import { type IRChild, type IRScope } from '@retikz/core';
-import { type AnyMarkDefinition, type CoordinateFrame, type FieldCollector, type IntervalContext, type MarkChannels, type MarkDefinition, type MarkProvenance } from '../../contract';
+import { type AnyMarkDefinition, type CoordinateFrame, type FieldCollector, type IntervalContext, type MarkChannels, type MarkDefinition, type MarkLoweringContext } from '../../contract';
 import { type ExternalRow, type Mark, type MarkOperation, PlotMark, type PlotMarkValue } from '../../schemas';
-import { intervalMarkDefinition, pathMarkDefinition, pointMarkDefinition, referenceMarkDefinition } from './features';
+import { intervalMarkDefinition, pathMarkDefinition, pointMarkDefinition, referenceMarkDefinition, relationMarkDefinition } from './features';
 import { cellAnchor, roleAnchor } from './shared';
 
 const asAnyMarkDefinition = <T extends MarkOperation>(def: MarkDefinition<T>): AnyMarkDefinition => def as unknown as AnyMarkDefinition;
@@ -16,6 +16,7 @@ export const MARK_REGISTRY: Record<PlotMarkValue, AnyMarkDefinition> = {
   [PlotMark.Path]: asAnyMarkDefinition(pathMarkDefinition),
   [PlotMark.Interval]: asAnyMarkDefinition(intervalMarkDefinition),
   [PlotMark.Reference]: asAnyMarkDefinition(referenceMarkDefinition),
+  [PlotMark.Relation]: asAnyMarkDefinition(relationMarkDefinition),
 };
 
 /** 内置 mark definition registry（按 type 索引）；内置与自定义 mark 共享同一分派流程。 */
@@ -97,6 +98,6 @@ export const lowerMark = (
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   channels: MarkChannels = {},
-  markProvenance?: MarkProvenance,
+  markContext?: MarkLoweringContext,
   registry: ReadonlyMap<string, AnyMarkDefinition> = BUILTIN_MARK_REGISTRY,
-): IRChild | null => applyScopeChannelDeliveries(markDefinitionOf(mark, registry).lower(mark as never, rows, frame, channels, markProvenance), mark, rows, channels);
+): IRChild | null => applyScopeChannelDeliveries(markDefinitionOf(mark, registry).lower(mark as never, rows, frame, channels, markContext), mark, rows, channels);

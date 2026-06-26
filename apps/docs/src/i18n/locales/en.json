@@ -141,6 +141,7 @@
     "compPointMark": "PointMark",
     "compIntervalMark": "IntervalMark",
     "compReferenceMark": "ReferenceMark",
+    "compRelationMark": "RelationMark",
     "grammarMarkCustom": "Custom Marks",
     "compAxis": "Axis",
     "compLegend": "Legend",

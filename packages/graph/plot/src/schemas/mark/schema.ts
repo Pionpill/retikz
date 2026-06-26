@@ -1,5 +1,6 @@
 ﻿import { JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
 import { z } from 'zod';
+import { AnchorRefSchema, PathSchema, PositionSchema, StepLabelSchema } from '@retikz/core';
 import { ArrowDetailSchema, BlendMode, BoundarySchema, DropShadowSchema, FontSchema, PathScaleSchema, ShadowPreset, ShapeRefSchema } from '@retikz/core';
 import { EncodingSchema, MarkLabelSchema, PointEncodingSchema } from '../encoding';
 import { BUILTIN_MARK_TYPES, IntervalBoundKind, MarkValueKind, PathClosureKind, PathCurve, PlotMark } from './constants';
@@ -8,6 +9,109 @@ import { BUILTIN_MARK_TYPES, IntervalBoundKind, MarkValueKind, PathClosureKind, 
 const markBase = {
   id: z.string().min(1).optional().describe('Optional mark handle; reserved scope/anchor target'),
 };
+
+export const AnchorIdSpecSchema = z
+  .object({
+    prefix: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Optional id namespace under the current plot; defaults to the mark id, or mark.<index> when the mark has no id'),
+    field: z.string().min(1).optional().describe('Data field path whose value is slugged into the anchor id'),
+    template: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('JSON-safe id template supporting {plotId}, {markId}, {markIndex}, {index}, and {field:name} placeholders'),
+    generator: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Runtime generator key resolved from LowerPlotsOptions.anchorIdGenerators; the function itself is not stored in the PlotSpec'),
+  })
+  .strict()
+  .superRefine((spec, ctx) => {
+    const count = [spec.field, spec.template, spec.generator].filter(value => value !== undefined).length;
+    if (count !== 1) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'anchorId requires exactly one of field, template, or generator',
+      });
+    }
+  })
+  .describe('Mark-scoped stable anchor id rule for generated core Node / Coordinate ids');
+
+const anchorTargetFields = {
+  anchor: AnchorRefSchema.optional().describe('Optional core anchor ref on the resolved target id'),
+  offset: PositionSchema.optional().describe('Optional world-space offset applied after anchor resolution'),
+  boundary: z.union([BoundarySchema, z.boolean()]).optional().describe('Core target boundary override; true means shape, false omits the override'),
+};
+
+const DirectPlotTargetRefSchema = z
+  .object({
+    id: z.string().min(1).describe('Existing core Node / Coordinate id'),
+    ...anchorTargetFields,
+  })
+  .strict()
+  .describe('Direct core target reference by id');
+
+const GeneratedAnchorPlotTargetRefSchema = z
+  .object({
+    anchorId: AnchorIdSpecSchema.describe('Anchor id rule evaluated against the current relation row'),
+    ...anchorTargetFields,
+  })
+  .strict()
+  .describe('Generated anchor target reference evaluated from the current relation row');
+
+const ProjectedPlotTargetRefSchema = z
+  .object({
+    project: z
+      .record(z.string().min(1), z.string().min(1))
+      .describe('Coordinate-role to data-field map projected in the relation mark coordinate frame'),
+    anchorId: AnchorIdSpecSchema.optional().describe('Optional id rule for the generated projected Coordinate'),
+    ...anchorTargetFields,
+  })
+  .strict()
+  .describe('Projected coordinate target from the current relation row');
+
+export const PlotTargetRefSchema = z
+  .union([DirectPlotTargetRefSchema, GeneratedAnchorPlotTargetRefSchema, ProjectedPlotTargetRefSchema])
+  .describe('Relation/annotation target reference: direct core id, generated mark anchor id, or projected coordinate');
+
+const relationLabelTextSchema = z.union([
+  StepLabelSchema.shape.text,
+  z
+    .object({
+      field: z.string().min(1).describe('Data field path resolved from the current relation row and stringified into StepLabel.text'),
+    })
+    .strict(),
+]);
+
+export const RelationStepLabelSchema = StepLabelSchema.extend({
+  text: relationLabelTextSchema.describe('Constant core step label text, mixed text, or a data-field binding'),
+}).describe('Relation path step label; lowered to core StepLabelSchema after field bindings are resolved');
+
+export const RelationPathOptionsSchema = PathSchema.omit({ type: true, children: true })
+  .partial()
+  .describe('Core Path options passed through by RelationMark, excluding type and children');
+
+export const RelationRouteStepSchema = z
+  .object({
+    kind: z.enum(['move', 'line', 'fold', 'curve', 'cubic', 'bend']).describe('Core path step kind for this relation route segment'),
+    to: PlotTargetRefSchema.optional().describe('Target for this step; omitted on the last drawable step defaults to RelationMark.target'),
+    via: z.enum(['-|', '|-']).optional().describe('Fold direction for kind=fold'),
+    control: PositionSchema.optional().describe('Quadratic Bezier control point for kind=curve'),
+    control1: PositionSchema.optional().describe('First cubic Bezier control point for kind=cubic'),
+    control2: PositionSchema.optional().describe('Second cubic Bezier control point for kind=cubic'),
+    bendDirection: z.enum(['left', 'right']).optional().describe('Bend direction for kind=bend'),
+    bendAngle: z.number().finite().gt(-180).lt(180).optional().describe('Bend angle for kind=bend'),
+    outAngle: z.number().finite().optional().describe('Outgoing angle for kind=bend'),
+    inAngle: z.number().finite().optional().describe('Incoming angle for kind=bend'),
+    looseness: z.number().finite().positive().optional().describe('Curve looseness for kind=bend'),
+    label: RelationStepLabelSchema.optional().describe('Optional label attached to this drawable step'),
+  })
+  .strict()
+  .describe('Relation route step lowered to a core path step');
 
 /** 位置 mark（point / path / interval）的 encoding：x / y 可选（必填性下放 coordinate 级校验）+ 样式 */
 const positionalEncoding = { encoding: EncodingSchema };
@@ -183,6 +287,7 @@ export const PointMarkSchema = z
       .finite()
       .optional()
       .describe('Fine-tuning vertical offset (user units) from the projected anchor; positive = screen-down. Mainly for text points. Default 0'),
+    anchorId: AnchorIdSpecSchema.optional().describe('Stable id rule written to each generated core Node; takes precedence over datumIdField for the node id'),
     ...markBase,
     ...positionalLabel,
     encoding: PointEncodingSchema,
@@ -217,6 +322,7 @@ export const PathMarkSchema = z
     lineJoin: PathLineJoinStyleSchema.optional().describe('Path stroke join style: field-bound datum channel or constant core Path lineJoin'),
     roundedCorners: PathRoundedCornersStyleSchema.optional().describe('Path geometric corner radius: field-bound datum channel or constant core Path roundedCorners'),
     ...corePathStyle,
+    anchorId: AnchorIdSpecSchema.optional().describe('Stable id rule for generated per-datum core Coordinates along this path'),
     ...markBase,
     ...positionalLabel,
     ...positionalEncoding,
@@ -302,6 +408,7 @@ export const IntervalMarkSchema = z
       .nonnegative()
       .optional()
       .describe('Angular gap in degrees applied to polar sector cells; each sector shrinks by half this angle on both sides. Cartesian cells ignore it'),
+    anchorId: AnchorIdSpecSchema.optional().describe('Stable id rule written to each generated core interval Node; takes precedence over datumIdField for the node id'),
     ...coreNodeStyle,
     ...markBase,
     ...positionalLabel,
@@ -350,9 +457,39 @@ export const ReferenceMarkSchema = z
   })
   .describe('Reference mark: a constant-position reference constraint. Bind x (vertical) or y (horizontal) for a line or one-axis band; set kind=region with lower/upper bounds for the active coordinate roles. Field → per-datum, value → constant. Use extentField / extentToField for partial-length one-axis spans');
 
+export const RelationMarkSchema = z
+  .object({
+    type: z.literal(PlotMark.Relation).describe('Discriminator: source-target relation path lowered to a core Path'),
+    source: PlotTargetRefSchema.describe('Relation source target'),
+    target: PlotTargetRefSchema.describe('Relation target target'),
+    via: z.array(PlotTargetRefSchema).optional().describe('Optional intermediate waypoints; each projected waypoint may generate a core Coordinate'),
+    route: z.array(RelationRouteStepSchema).min(1).optional().describe('Explicit route steps after the initial move(source) step'),
+    label: RelationStepLabelSchema.optional().describe('Convenience label attached to the default route or the final drawable explicit route step'),
+    path: RelationPathOptionsSchema.optional().describe('Core Path options passed through to the lowered relation path'),
+    ...markBase,
+    encoding: z
+      .object({
+        color: PointEncodingSchema.shape.color.optional().describe('Optional relation color channel; delivered as core Path color'),
+        channels: EncodingSchema.shape.channels.optional().describe('Custom channel bindings consumed by mark / scope / path definitions'),
+      })
+      .optional()
+      .describe('Optional non-position relation channels; source/target carry relation geometry'),
+  })
+  .strict()
+  .superRefine((mark, ctx) => {
+    if (mark.via !== undefined && mark.route !== undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['via'],
+        message: 'relation mark cannot use via and route together; encode waypoints as route steps when route is explicit',
+      });
+    }
+  })
+  .describe('Relation mark: connects source and target targets through a core Path, including arrows, bends, folds, marks, animations, and step labels');
+
 export const MarkSchema = z
-  .discriminatedUnion('type', [PointMarkSchema, PathMarkSchema, IntervalMarkSchema, ReferenceMarkSchema])
-  .describe('Mark union: 3 dimensional marks (point / path / interval) + reference marks');
+  .discriminatedUnion('type', [PointMarkSchema, PathMarkSchema, IntervalMarkSchema, ReferenceMarkSchema, RelationMarkSchema])
+  .describe('Mark union: dimensional marks (point / path / interval), reference marks, and source-target relation marks');
 
 export const CustomMarkSchema = z
   .object({

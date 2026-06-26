@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 import type {
+  AnchorIdSpec,
   BlendModeStyle,
   BlendModeValue,
   Channel,
@@ -28,6 +29,7 @@ import type {
   PathFillRuleStyle,
   PathScaleStyle,
   PathThicknessStyle,
+  PlotTargetRef,
   PointColorStyle,
   PointFillStyle,
   PointNonnegativeNumberStyle,
@@ -38,6 +40,9 @@ import type {
   PointStrokeStyle,
   PointStrokeWidthStyle,
   PointZIndexStyle,
+  RelationPathOptions,
+  RelationRouteStep,
+  RelationStepLabel,
   ShadowPresetValue,
   ShadowStyle,
 } from '@retikz/plot';
@@ -145,6 +150,7 @@ export type PathMarkProps = DatumLabelProps & CorePathChannelProps & {
   curve?: PathCurveValue;
   /** 可选 mark 句柄（预留 scope/anchor） */
   id?: string;
+  anchorId?: AnchorIdSpec;
 };
 
 /** <PointMark> props：散点 / 文本图层，每行一个 glyph（给 text → 无边框文本 Node） */
@@ -199,6 +205,7 @@ export type PointMarkProps = DatumLabelProps & CoreNodeChannelProps & {
   dy?: number;
   /** 可选 mark 句柄（预留 scope/anchor） */
   id?: string;
+  anchorId?: AnchorIdSpec;
 };
 
 /**
@@ -246,6 +253,19 @@ export type IntervalMarkProps = DatumLabelProps & CoreNodeChannelProps & {
   padAngle?: number;
   /** 可选 mark 句柄（预留 scope/anchor） */
   id?: string;
+  anchorId?: AnchorIdSpec;
+};
+
+export type RelationMarkProps = {
+  id?: string;
+  source: PlotTargetRef;
+  target: PlotTargetRef;
+  via?: Array<PlotTargetRef>;
+  route?: Array<RelationRouteStep>;
+  label?: RelationStepLabel;
+  path?: RelationPathOptions;
+  color?: FieldName;
+  channels?: Record<string, ExtensionChannelProp>;
 };
 
 
@@ -300,3 +320,6 @@ export const IntervalMark: FC<IntervalMarkProps> = () => null;
 
 /** 参考标注（阈值线 / 容差带）图层声明组件 */
 export const ReferenceMark: FC<ReferenceMarkProps> = () => null;
+
+/** source-target relation path 图层声明组件 */
+export const RelationMark: FC<RelationMarkProps> = () => null;

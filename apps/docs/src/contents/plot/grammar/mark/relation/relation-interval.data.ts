@@ -1,0 +1,22 @@
+/** Paired interval rows plus projected relation rows between bar tops. */
+export const intervalRelations: Array<Record<string, string | number>> = [
+  { slot: 'p1-before', beforeValue: 137, beforeLabelY: 122, beforeLabel: '137' },
+  { slot: 'p1-after', afterValue: 128, afterLabelY: 113, afterLabel: '128' },
+  { slot: 'gap-1', beforeValue: 0, afterValue: 0 },
+  { slot: 'p2-before', beforeValue: 292, beforeLabelY: 274, beforeLabel: '292' },
+  { slot: 'p2-after', afterValue: 109, afterLabelY: 94, afterLabel: '109' },
+  { slot: 'gap-2', beforeValue: 0, afterValue: 0 },
+  { slot: 'p3-before', beforeValue: 286, beforeLabelY: 268, beforeLabel: '286' },
+  { slot: 'p3-after', afterValue: 104, afterLabelY: 89, afterLabel: '104' },
+  { slot: 'gap-3', beforeValue: 0, afterValue: 0 },
+  { slot: 'p4-before', beforeValue: 116, beforeLabelY: 101, beforeLabel: '116' },
+  { slot: 'p4-after', afterValue: 173, afterLabelY: 157, afterLabel: '173' },
+  { slot: 'gap-4', beforeValue: 0, afterValue: 0 },
+  { slot: 'p5-before', beforeValue: 299, beforeLabelY: 281, beforeLabel: '299' },
+  { slot: 'p5-after', afterValue: 134, afterLabelY: 119, afterLabel: '134' },
+  { negativeSourceX: 'p1-before', negativeSourceY: 137, negativeViaX: 'p1-before', negativeViaY: 168, negativeTargetX: 'p1-after', negativeTargetY: 128 },
+  { negativeSourceX: 'p2-before', negativeSourceY: 292, negativeViaX: 'p2-before', negativeViaY: 352, negativeTargetX: 'p2-after', negativeTargetY: 109, negativeLabel: '-182' },
+  { negativeSourceX: 'p3-before', negativeSourceY: 286, negativeViaX: 'p3-before', negativeViaY: 348, negativeTargetX: 'p3-after', negativeTargetY: 104, negativeLabel: '-182' },
+  { positiveSourceX: 'p4-before', positiveSourceY: 116, positiveViaX: 'p4-before', positiveViaY: 232, positiveTargetX: 'p4-after', positiveTargetY: 173, positiveLabel: '+57' },
+  { negativeSourceX: 'p5-before', negativeSourceY: 299, negativeViaX: 'p5-before', negativeViaY: 360, negativeTargetX: 'p5-after', negativeTargetY: 134, negativeLabel: '-165' },
+];

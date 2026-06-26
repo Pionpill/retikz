@@ -14,7 +14,8 @@ export const PlotMark = {
   /** 维度 mark / 2D：边界围出的可填充区域（面积 / 填充雷达 / 置信带） */
   /** 维度 mark / 区间积：各位置 role 正交区间积，经坐标系投影成段 / 矩形 / 扇区 / cell（柱 / histogram / heatmap / 径向柱 / 饼环） */
   Interval: 'interval',
-  /** 特殊 mark / relation：source→target 关系几何（sankey / alluvial 流带） */
+  /** 特殊 mark / relation：source→target 关系路径，降低为 core Path */
+  Relation: 'relation',
   /** 特殊 mark / reference：固定位置 / 区间的参考约束（阈值线 / 容差带） */
   Reference: 'reference',
 } as const;

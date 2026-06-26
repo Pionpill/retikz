@@ -1,0 +1,28 @@
+/** Bubble nodes plus one projected relation row. */
+export const bubbleNodes: Array<Record<string, string | number>> = [
+  { id: 'A', x: 18, y: 72, value: 420, segment: 'growth', label: 'A' },
+  { id: 'B', x: 78, y: 64, value: 360, segment: 'growth', label: 'B' },
+  { id: 'C', x: 35, y: 41, value: 280, segment: 'core' },
+  { id: 'D', x: 52, y: 88, value: 190, segment: 'core' },
+  { id: 'E', x: 66, y: 28, value: 230, segment: 'risk' },
+  { id: 'F', x: 24, y: 34, value: 160, segment: 'core' },
+  { id: 'G', x: 89, y: 46, value: 210, segment: 'risk' },
+  { id: 'H', x: 42, y: 65, value: 150, segment: 'growth' },
+  { id: 'I', x: 58, y: 52, value: 300, segment: 'core' },
+  { id: 'J', x: 12, y: 24, value: 130, segment: 'risk' },
+  { id: 'K', x: 73, y: 84, value: 260, segment: 'growth' },
+  { id: 'L', x: 31, y: 82, value: 180, segment: 'core' },
+  { id: 'M', x: 95, y: 76, value: 120, segment: 'growth' },
+  { id: 'N', x: 47, y: 22, value: 250, segment: 'risk' },
+  { id: 'O', x: 68, y: 38, value: 170, segment: 'core' },
+  { id: 'P', x: 20, y: 56, value: 140, segment: 'risk' },
+  { id: 'Q', x: 84, y: 20, value: 220, segment: 'risk' },
+  { id: 'R', x: 40, y: 15, value: 110, segment: 'core' },
+  { id: 'S', x: 60, y: 74, value: 200, segment: 'growth' },
+  { id: 'T', x: 90, y: 92, value: 155, segment: 'growth' },
+];
+
+/** One relation row that references the bubble nodes by generated core ids. */
+export const bubbleRelations: Array<Record<string, string | number>> = [
+  { sourceId: 'A', targetId: 'B', relLabel: 'shared audience +31%' },
+];

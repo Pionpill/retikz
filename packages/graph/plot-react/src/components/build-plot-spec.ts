@@ -51,6 +51,8 @@ import {
   type PointMarkProps,
   ReferenceMark,
   type ReferenceMarkProps,
+  RelationMark,
+  type RelationMarkProps,
 } from './marks';
 import { type PositionScaleType, Scale, type ScaleDimension, type ScaleProps } from './scales';
 import { Transform as TransformComponent, type TransformProps } from './transform';
@@ -560,7 +562,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
     }
     if (child.type === PathMark) {
       const props = child.props as PathMarkProps;
-      const { x, y, order, series, color, closed, connectNulls, closure, curve, id, channels, strokeWidth, opacity, lineCap, lineJoin, roundedCorners } = props;
+      const { x, y, order, series, color, closed, connectNulls, closure, curve, id, anchorId, channels, strokeWidth, opacity, lineCap, lineJoin, roundedCorners } = props;
       const colorEnc = colorChannel(color, series);
       const markLabel = buildMarkLabel(props);
       const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
@@ -571,6 +573,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       into.marks.push({
         type: PlotMark.Path,
         ...(id !== undefined ? { id } : {}),
+        ...(anchorId !== undefined ? { anchorId } : {}),
         ...(order !== undefined ? { order } : {}),
         ...(series !== undefined ? { series } : {}),
         ...(closed !== undefined ? { closed } : {}),
@@ -616,6 +619,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         dx,
         dy,
         id,
+        anchorId,
         channels,
       } = props;
       const markLabel = buildMarkLabel(props);
@@ -640,6 +644,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       into.marks.push({
         type: PlotMark.Point,
         ...(id !== undefined ? { id } : {}),
+        ...(anchorId !== undefined ? { anchorId } : {}),
         ...(colorStyle !== undefined ? { color: colorStyle } : {}),
         ...(textColorStyle !== undefined ? { textColor: textColorStyle } : {}),
         ...(sizeStyle !== undefined ? { size: sizeStyle } : {}),
@@ -672,7 +677,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       recordResolveLabel(into, id, props.resolveLabel);
     } else if (child.type === IntervalMark) {
       const props = child.props as IntervalMarkProps;
-      const { x, y, angle, x0, x1, width, direction: rawDirection, color, series, group, arrangement: explicitArrangement, stackOffset, percent, stack, bounds: explicitBounds, id, channels, fill, stroke, strokeWidth, fillOpacity, opacity, padAngle } = props;
+      const { x, y, angle, x0, x1, width, direction: rawDirection, color, series, group, arrangement: explicitArrangement, stackOffset, percent, stack, bounds: explicitBounds, id, anchorId, channels, fill, stroke, strokeWidth, fillOpacity, opacity, padAngle } = props;
       const direction = rawDirection ?? 'vertical';
       const arrangementGroup = group ?? series;
       if (percent === true && explicitArrangement !== undefined && explicitArrangement !== 'normalize-stack') {
@@ -707,6 +712,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         into.marks.push({
           type: PlotMark.Interval,
           ...(id !== undefined ? { id } : {}),
+          ...(anchorId !== undefined ? { anchorId } : {}),
           ...intervalStyle,
           bounds: { x: { kind: IntervalBoundKind.Extent, from: 'y0', to: 'y1' }, y: { kind: IntervalBoundKind.Full } },
           encoding: { ...colorEnc, ...extensionChannelEncoding(channels) },
@@ -727,6 +733,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         into.marks.push({
           type: PlotMark.Interval,
           ...(id !== undefined ? { id } : {}),
+          ...(anchorId !== undefined ? { anchorId } : {}),
           ...(series !== undefined ? { series } : {}),
           ...intervalStyle,
           bounds: explicitBounds,
@@ -809,6 +816,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       into.marks.push({
         type: PlotMark.Interval,
         ...(id !== undefined ? { id } : {}),
+        ...(anchorId !== undefined ? { anchorId } : {}),
         ...(series !== undefined ? { series } : {}),
         ...intervalStyle,
         ...(bounds !== undefined ? { bounds } : {}),
@@ -829,6 +837,22 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       recordResolveLabel(into, id, props.resolveLabel);
     } else if (child.type === ReferenceMark) {
       collectReference(child.props as ReferenceMarkProps, into, styleContext);
+    } else if (child.type === RelationMark) {
+      const { id, source, target, via, route, label, path, color, channels } = child.props as RelationMarkProps;
+      const colorEnc = colorChannel(color, undefined);
+      const encoding = { ...colorEnc, ...extensionChannelEncoding(channels) };
+      into.marks.push({
+        type: PlotMark.Relation,
+        ...(id !== undefined ? { id } : {}),
+        source,
+        target,
+        ...(via !== undefined ? { via } : {}),
+        ...(route !== undefined ? { route } : {}),
+        ...(label !== undefined ? { label } : {}),
+        ...(path !== undefined ? { path } : {}),
+        ...(Object.keys(encoding).length > 0 ? { encoding } : {}),
+      });
+      recordColor(into, colorEnc);
     } else if (child.type === Axis) {
       const { dimension, scale, tickCount, tickLabels, grid, id } = child.props as AxisProps;
       if (scale !== undefined) {

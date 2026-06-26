@@ -7,6 +7,7 @@ import {
   type FieldCollector,
   type MarkChannels,
   type MarkDefinition,
+  type MarkLoweringContext,
   type MarkProvenance,
   type PositionScale,
   hasProjectCell,
@@ -345,7 +346,7 @@ export const lowerReferenceLayer = (
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   channels: MarkChannels,
-  markProvenance: MarkProvenance | undefined,
+  ctx: MarkLoweringContext | undefined,
 ): IRChild | null => {
   if (mark.type !== PlotMark.Reference) return null;
   const shape = referenceShape(mark);
@@ -356,8 +357,8 @@ export const lowerReferenceLayer = (
   } else if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
-  const layer = lowerReference(mark, rows, frame, channels, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'), markProvenance);
-  return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
+  const layer = lowerReference(mark, rows, frame, channels, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'), ctx?.provenance);
+  return layer === null ? null : attachMarkLayer(layer, mark, ctx?.provenance);
 };
 
 /** 收集 reference mark 的位置 / color / 扩展 encoding 字段。 */

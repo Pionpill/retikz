@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { type IRPaintSpec, type PlotSpec, PlotSpecSchema, isBuiltinMark, lowerPlots } from '@retikz/plot';
 import { buildPlotSpec, decorateDefaultGuides } from '../../src/components/build-plot-spec';
 import { Axis, Legend } from '../../src/components/guides';
-import { IntervalMark, PathMark, PointMark, ReferenceMark } from '../../src/components/marks';
+import { IntervalMark, PathMark, PointMark, ReferenceMark, RelationMark } from '../../src/components/marks';
 import { Scale } from '../../src/components/scales';
 import { Transform } from '../../src/components/transform';
 
@@ -261,6 +261,36 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
       type: 'interval',
       padAngle: 4,
     });
+  });
+
+  it('relation mark assembles source-target refs, label, path passthrough, and color channel', () => {
+    const spec = buildPlotSpec(
+      <>
+        <PointMark x="x" y="y" anchorId={{ prefix: 'pt', field: 'id' }} />
+        <RelationMark
+          source={{ anchorId: { prefix: 'pt', field: 'from' } }}
+          target={{ anchorId: { prefix: 'pt', field: 'to' } }}
+          label={{ text: { field: 'label' }, position: 'midway' }}
+          path={{ arrow: '->', roundedCorners: 6 }}
+          color="kind"
+        />
+      </>,
+      '__plot',
+      { dataFieldNames: new Set(['kind']) },
+    );
+    expect(spec.marks[0]).toMatchObject({
+      type: 'point',
+      anchorId: { prefix: 'pt', field: 'id' },
+    });
+    expect(spec.marks[1]).toEqual({
+      type: 'relation',
+      source: { anchorId: { prefix: 'pt', field: 'from' } },
+      target: { anchorId: { prefix: 'pt', field: 'to' } },
+      label: { text: { field: 'label' }, position: 'midway' },
+      path: { arrow: '->', roundedCorners: 6 },
+      encoding: { color: { field: 'kind', scale: '__color' } },
+    });
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
   it('line + point 叠加：marks 两项、共享 scales/coordinate', () => {

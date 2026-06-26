@@ -7,10 +7,12 @@ import {
   type FieldCollector,
   type MarkChannels,
   type MarkDefinition,
+  type MarkLoweringContext,
   type MarkProvenance,
 } from '../../../contract';
 import { datumMeta, markLayerId, markLayerMeta, readSourceIndex, readSourceIndices } from '../../../pipeline';
 import {
+  type AnchorIdSpec,
   type ExternalRow,
   type IntervalMark,
   type Mark,
@@ -96,7 +98,7 @@ export const decorateDatum = (
  * priority-1 宿主 label：若位置 mark 带 `label` 且该行解析出内容，给 datum Node 填 core NodeLabelSchema。
  * @description 零新建 Node：position / distance / pin 直接落 core label（边框相对定位 + 引线由 core 负责）。
  */
-export const attachDatumLabel = (node: IRNode, mark: Mark, row: ExternalRow, labelOf: ChannelValueResolver<string> | undefined): IRNode => {
+export const attachDatumLabel = (node: IRNode, mark: PositionEncodedMark, row: ExternalRow, labelOf: ChannelValueResolver<string> | undefined): IRNode => {
   if (labelOf === undefined || !('label' in mark) || mark.label === undefined) return node;
   const text = labelOf(row);
   if (text === undefined) return node;
@@ -157,6 +159,29 @@ export const failLoudMessage = (markType: string, frameType: string): string =>
 
 type PositionEncodedMark = PointMark | PathMark | IntervalMark;
 
+const anchorOwnerOf = (mark: PositionEncodedMark, transformedIndex: number, ctx: MarkLoweringContext, role?: string) => ({
+  markType: mark.type,
+  markId: mark.id,
+  markIndex: ctx.markIndex,
+  transformedIndex,
+  ...(role !== undefined ? { role } : {}),
+});
+
+export const attachDatumAnchor = (
+  node: IRNode,
+  mark: PositionEncodedMark,
+  row: ExternalRow,
+  transformedIndex: number,
+  ctx: MarkLoweringContext | undefined,
+  role?: string,
+): IRNode => {
+  if (mark.anchorId === undefined || ctx?.anchors === undefined) return node;
+  const owner = anchorOwnerOf(mark, transformedIndex, ctx, role);
+  const id = ctx.anchors.makeId(mark.anchorId, row, owner);
+  ctx.anchors.register(id, owner);
+  return { ...node, id };
+};
+
 /**
  * shared encoding 中保留给非位置语义的 key。
  * @description 其它 encoding key 一律视为 coordinate role，避免把位置收集写死成 x/y/z 后漏掉自定义坐标系 role。
@@ -193,6 +218,13 @@ export const collectDatumLabelFields = (mark: PositionEncodedMark, fields: Field
   fields.addChannel(mark.label?.content);
 };
 
+export const collectAnchorIdFields = (anchorId: AnchorIdSpec | undefined, fields: FieldCollector): void => {
+  if (anchorId === undefined) return;
+  fields.addField(anchorId.field);
+  if (anchorId.template === undefined) return;
+  for (const match of anchorId.template.matchAll(/\{field:([^}]+)\}/g)) fields.addField(match[1]);
+};
+
 /**
  * 位置类 mark 的通用 encoding 字段收集入口。
  * @description point / path / interval 共用 shared encoding；具体样式字段再由 node/path channel definition 派生收集。
@@ -201,6 +233,7 @@ export const collectCommonEncodingFields = (mark: PositionEncodedMark, fields: F
   collectPositionRoleFields(mark, fields);
   collectEncodingChannelFields(mark, fields);
   collectDatumLabelFields(mark, fields);
+  collectAnchorIdFields(mark.anchorId, fields);
 };
 
 type ChannelDefinitionMap = Readonly<Record<string, { channel: string }>>;

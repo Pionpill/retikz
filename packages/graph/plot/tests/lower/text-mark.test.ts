@@ -205,7 +205,9 @@ describe('ADR-04 priority-2 兜底自由 TextMark（新建带 text 的 Node）',
     expect(withDefault.length).toBeGreaterThanOrEqual(2);
     for (const s of withDefault) {
       expect(s.nodeDefault).toHaveProperty('textColor');
-      expect(s.nodeDefault).not.toHaveProperty('fill');
+      expect(s.nodeDefault).toHaveProperty('fill', 'none');
+      expect(s.nodeDefault).toHaveProperty('stroke', 'none');
+      expect(s.nodeDefault).toHaveProperty('strokeWidth', 0);
     }
   });
 

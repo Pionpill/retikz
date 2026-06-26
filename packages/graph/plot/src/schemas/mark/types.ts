@@ -3,6 +3,7 @@ import type { z } from 'zod';
 import type { MarkValueKind, PathCurve } from './constants';
 import { BUILTIN_MARK_TYPES } from './constants';
 import type {
+  AnchorIdSpecSchema,
   BlendModeStyleSchema,
   CustomMarkSchema,
   IntervalBoundSchema,
@@ -23,6 +24,7 @@ import type {
   PathMarkSchema,
   PathScaleStyleSchema,
   PathThicknessStyleSchema,
+  PlotTargetRefSchema,
   PointColorStyleSchema,
   PointFillStyleSchema,
   PointMarkSchema,
@@ -34,6 +36,10 @@ import type {
   PointStrokeStyleSchema,
   PointZIndexStyleSchema,
   ReferenceMarkSchema,
+  RelationMarkSchema,
+  RelationPathOptionsSchema,
+  RelationRouteStepSchema,
+  RelationStepLabelSchema,
   ShadowStyleSchema,
 } from './schema';
 
@@ -93,6 +99,12 @@ export type IntervalMark = z.infer<typeof IntervalMarkSchema>;
 /** reference mark（参考线 / 阈值线 / 容差带） */
 export type ReferenceMark = z.infer<typeof ReferenceMarkSchema>;
 /** mark（point / path / interval / reference） */
+export type AnchorIdSpec = z.infer<typeof AnchorIdSpecSchema>;
+export type PlotTargetRef = z.infer<typeof PlotTargetRefSchema>;
+export type RelationStepLabel = z.infer<typeof RelationStepLabelSchema>;
+export type RelationRouteStep = z.infer<typeof RelationRouteStepSchema>;
+export type RelationPathOptions = z.infer<typeof RelationPathOptionsSchema>;
+export type RelationMark = z.infer<typeof RelationMarkSchema>;
 export type Mark = z.infer<typeof MarkSchema>;
 /** custom mark operation（自定义 type passthrough，由 runtime MarkDefinition 解释） */
 export type CustomMark = z.infer<typeof CustomMarkSchema>;
