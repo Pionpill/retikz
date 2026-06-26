@@ -10,13 +10,12 @@ export type RibbonProps = HydrationEventProps & {
   animations?: IRRibbon['animations'];
   color?: IRRibbon['color'];
   width?: IRRibbon['width'];
+  start?: IRRibbon['start'];
+  end?: IRRibbon['end'];
+  interpolation?: IRRibbon['interpolation'];
   align?: IRRibbon['align'];
-  startDirection?: IRRibbon['startDirection'];
-  endDirection?: IRRibbon['endDirection'];
   samples?: IRRibbon['samples'];
   sampling?: IRRibbon['sampling'];
-  startCap?: IRRibbon['startCap'];
-  endCap?: IRRibbon['endCap'];
   fill?: IRRibbon['fill'];
   fillOpacity?: IRRibbon['fillOpacity'];
   stroke?: IRRibbon['stroke'];

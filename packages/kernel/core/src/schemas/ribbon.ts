@@ -54,29 +54,6 @@ export const RibbonWidthSchema = z
     z.number().finite().nonnegative(),
     z
       .object({
-        kind: z
-          .literal('linear')
-          .optional()
-          .describe('Linear taper discriminator; omitted object kind also means linear.'),
-        start: z
-          .number()
-          .finite()
-          .nonnegative()
-          .describe('Ribbon width in user units at offset 0.'),
-        end: z
-          .number()
-          .finite()
-          .nonnegative()
-          .describe('Ribbon width in user units at offset 1.'),
-        interpolation: z
-          .enum(['linear', 'smooth'])
-          .optional()
-          .describe('Interpolation curve between start and end widths.'),
-      })
-      .strict()
-      .describe('A two-end ribbon width rule.'),
-    z
-      .object({
         kind: z.literal('stops').describe('Discriminator for stop-based width rules.'),
         stops: z
           .array(RibbonWidthStopSchema)
@@ -102,7 +79,7 @@ export const RibbonWidthSchema = z
       .describe('A runtime-registered width profile reference.'),
   ])
   .describe(
-    'Ribbon width rule: fixed number, linear/taper object, stop curve, or registered profile reference.',
+    'Ribbon width rule: fixed number, stop curve, or registered profile reference. Endpoint taper widths live on start.width and end.width.',
   );
 
 export type IRRibbonDirection = number | Vector2 | PolarPosition;
@@ -117,6 +94,25 @@ export const RibbonDirectionSchema: z.ZodType<IRRibbonDirection> = z
     PolarPositionSchema.describe('PolarPosition sugar converted to a vector before normalization.'),
   ])
   .describe('Endpoint tangent direction override as an angle, Vector2/Position tuple, or PolarPosition sugar.');
+
+export const RibbonEndpointSchema = z
+  .object({
+    width: z
+      .number()
+      .finite()
+      .nonnegative()
+      .optional()
+      .describe('Ribbon width in user units at this endpoint.'),
+    direction: RibbonDirectionSchema.optional().describe(
+      'Optional tangent direction override at this endpoint; omitted means the start-to-end connection direction.',
+    ),
+    cap: z
+      .enum(RibbonCap)
+      .optional()
+      .describe('Cap style used at this endpoint of the emitted ribbon polygon.'),
+  })
+  .strict()
+  .describe('Endpoint-local ribbon properties such as width, tangent direction, and cap.');
 
 export const RibbonSamplingSchema = z
   .union([
@@ -226,41 +222,36 @@ const RibbonSharedSchema = z.object({
     .optional()
     .describe('Explicit stacking order among sibling IR children.'),
   samples: z
-    .number()
-    .int()
-    .min(2)
-    .max(512)
+    .union([z.boolean(), z.number().int().min(2).max(512)])
     .optional()
-    .describe('Number of cross-section samples; shorthand for sampling.kind = fixed.'),
+    .describe(
+      'Sampling override for centerline lowering; true uses 64 samples, a number uses that fixed sample count, omitted keeps automatic lowering.',
+    ),
   sampling: RibbonSamplingSchema.optional().describe(
     'Explicit sampling strategy. Cannot be combined with samples.',
   ),
-  startCap: z
-    .enum(RibbonCap)
-    .optional()
-    .describe('Cap style used at the start boundary of the emitted ribbon polygon.'),
-  endCap: z
-    .enum(RibbonCap)
-    .optional()
-    .describe('Cap style used at the end boundary of the emitted ribbon polygon.'),
 });
 
 export const RibbonSchema = z
   .object({
     ...RibbonSharedSchema.shape,
     width: RibbonWidthSchema.optional().describe(
-      'Variable width rule applied along the centerline.',
+      'Whole-ribbon width rule applied along the centerline; use start.width/end.width for two-end taper.',
     ),
+    start: RibbonEndpointSchema.optional().describe(
+      'Start endpoint properties: width, tangent direction, and cap.',
+    ),
+    end: RibbonEndpointSchema.optional().describe(
+      'End endpoint properties: width, tangent direction, and cap.',
+    ),
+    interpolation: z
+      .enum(['linear', 'smooth'])
+      .optional()
+      .describe('Interpolation curve between start.width and end.width.'),
     align: z
       .enum(RibbonAlignment)
       .optional()
       .describe('Which side of the generated band stays on the centerline.'),
-    startDirection: RibbonDirectionSchema.optional().describe(
-      'Optional tangent direction override at offset 0; omitted means the start-to-end connection direction.',
-    ),
-    endDirection: RibbonDirectionSchema.optional().describe(
-      'Optional tangent direction override at offset 1; omitted means the start-to-end connection direction.',
-    ),
     children: z
       .array(StepSchema)
       .min(2)
@@ -301,7 +292,7 @@ export const RibbonSchema = z
           message: 'Boundary ribbons require `lower` steps.',
         });
       }
-      for (const field of ['width', 'children', 'align', 'startDirection', 'endDirection'] as const) {
+      for (const field of ['width', 'children', 'align', 'start', 'end', 'interpolation'] as const) {
         if (ribbon[field] !== undefined) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
@@ -312,11 +303,27 @@ export const RibbonSchema = z
       }
       return;
     }
-    if (ribbon.width === undefined) {
+    const hasStartWidth = ribbon.start?.width !== undefined;
+    const hasEndWidth = ribbon.end?.width !== undefined;
+    if (ribbon.width !== undefined && (hasStartWidth || hasEndWidth)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['width'],
-        message: 'Centerline ribbons require `width`.',
+        message: 'Use either top-level `width` or `start.width` + `end.width`, not both.',
+      });
+    }
+    if (ribbon.width === undefined && (!hasStartWidth || !hasEndWidth)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['start'],
+        message: 'Centerline ribbons require either top-level `width` or both `start.width` and `end.width`.',
+      });
+    }
+    if (ribbon.width !== undefined && ribbon.interpolation !== undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['interpolation'],
+        message: '`interpolation` only applies to start.width/end.width taper.',
       });
     }
     if (ribbon.children === undefined) {
@@ -340,5 +347,6 @@ export const RibbonSchema = z
 
 export type IRRibbonWidthStop = z.infer<typeof RibbonWidthStopSchema>;
 export type IRRibbonWidth = z.infer<typeof RibbonWidthSchema>;
+export type IRRibbonEndpoint = z.infer<typeof RibbonEndpointSchema>;
 export type IRRibbonSampling = z.infer<typeof RibbonSamplingSchema>;
 export type IRRibbon = z.infer<typeof RibbonSchema>;

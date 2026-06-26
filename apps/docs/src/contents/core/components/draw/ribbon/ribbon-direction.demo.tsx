@@ -11,13 +11,13 @@ const labelStyle = {
 
 const rows = [
   { label: 'default', y: -78, fill: '#5dade2' },
-  { label: 'angle', y: 0, fill: '#8ac926', startDirection: 0, endDirection: 0 },
+  { label: 'angle', y: 0, fill: '#8ac926', start: { direction: 0 }, end: { direction: 0 } },
   {
     label: 'vector / polar',
     y: 78,
     fill: '#ffb703',
-    startDirection: [1, 0] as [number, number],
-    endDirection: { angle: 0, radius: 1 },
+    start: { direction: [1, 0] as [number, number] },
+    end: { direction: { angle: 0, radius: 1 } },
   },
 ];
 
@@ -32,8 +32,8 @@ const Demo: FC = () => (
       <Ribbon
         key={row.label}
         width={28}
-        startDirection={row.startDirection}
-        endDirection={row.endDirection}
+        start={row.start}
+        end={row.end}
         fill={row.fill}
         fillOpacity={0.78}
         stroke="#172033"

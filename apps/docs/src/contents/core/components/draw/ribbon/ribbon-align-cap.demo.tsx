@@ -3,9 +3,9 @@ import type { FC } from 'react';
 import { Layout, Node, Ribbon, Step } from '@retikz/react';
 
 const rows = [
-  { label: 'center / butt', y: -70, align: 'center' as const, startCap: 'butt' as const, endCap: 'butt' as const, fill: '#60a5fa' },
-  { label: 'left / square', y: 0, align: 'left' as const, startCap: 'square' as const, endCap: 'square' as const, fill: '#43aa8b' },
-  { label: 'right / round', y: 70, align: 'right' as const, startCap: 'round' as const, endCap: 'round' as const, fill: '#f9844a' },
+  { label: 'center / butt', y: -70, align: 'center' as const, start: { cap: 'butt' as const }, end: { cap: 'butt' as const }, fill: '#60a5fa' },
+  { label: 'left / square', y: 0, align: 'left' as const, start: { cap: 'square' as const }, end: { cap: 'square' as const }, fill: '#43aa8b' },
+  { label: 'right / round', y: 70, align: 'right' as const, start: { cap: 'round' as const }, end: { cap: 'round' as const }, fill: '#f9844a' },
 ];
 
 const Demo: FC = () => (
@@ -20,8 +20,8 @@ const Demo: FC = () => (
         key={row.label}
         width={22}
         align={row.align}
-        startCap={row.startCap}
-        endCap={row.endCap}
+        start={row.start}
+        end={row.end}
         fill={row.fill}
         fillOpacity={0.76}
         stroke="#172033"

@@ -17,7 +17,9 @@ const Demo: FC = () => (
     color="#172033"
   >
     <Ribbon
-      width={{ start: 18, end: 42, interpolation: 'smooth' }}
+      start={{ width: 18 }}
+      end={{ width: 42 }}
+      interpolation="smooth"
       fill={{
         kind: 'linearGradient',
         angle: 0,
@@ -28,27 +30,31 @@ const Demo: FC = () => (
         ],
       }}
       fillOpacity={0.82}
-      samples={56}
+      samples
     >
       <Step kind="move" to={[-172, -98]} />
       <Step kind="curve" control={[28, -128]} to={[222, -58]} />
     </Ribbon>
 
     <Ribbon
-      width={{ start: 42, end: 20, interpolation: 'linear' }}
+      start={{ width: 42 }}
+      end={{ width: 20 }}
+      interpolation="linear"
       fill="#ffb703"
       fillOpacity={0.58}
       stroke="#9b4d00"
       strokeWidth={2}
       drawOpacity={0.78}
-      samples={48}
+      samples
     >
       <Step kind="move" to={[-172, -20]} />
       <Step kind="curve" control={[20, -52]} to={[222, 20]} />
     </Ribbon>
 
     <Ribbon
-      width={{ start: 18, end: 24, interpolation: 'smooth' }}
+      start={{ width: 18 }}
+      end={{ width: 24 }}
+      interpolation="smooth"
       fill="#7c3aed"
       fillOpacity={0.7}
       opacity={0.88}
@@ -58,7 +64,7 @@ const Demo: FC = () => (
         blur: 10,
         color: 'rgba(15, 23, 42, 0.38)',
       }}
-      samples={64}
+      samples
     >
       <Step kind="move" to={[-172, 64]} />
       <Step kind="curve" control={[24, 28]} to={[222, 100]} />

@@ -63,13 +63,12 @@ export const CenterlineRibbonSchema = BaseRibbonStyleSchema.extend({
   type: z.literal("ribbon"),
   kind: z.literal("centerline").optional(),
   children: z.array(StepSchema).min(2),
-  width: RibbonWidthSchema,
+  start: RibbonEndpointSchema.optional(),
+  end: RibbonEndpointSchema.optional(),
+  interpolation: z.enum(["linear", "smooth"]).optional(),
+  width: RibbonWidthSchema.optional(),
   align: z.enum(RibbonAlignment).optional(),
-  startDirection: RibbonDirectionSchema.optional(),
-  endDirection: RibbonDirectionSchema.optional(),
-  startCap: z.enum(RibbonCap).optional(),
-  endCap: z.enum(RibbonCap).optional(),
-  samples: z.number().int().min(2).max(512).optional(),
+  samples: z.union([z.boolean(), z.number().int().min(2).max(512)]).optional(),
   sampling: RibbonSamplingSchema.optional(),
 });
 
@@ -78,9 +77,7 @@ export const BoundaryRibbonSchema = BaseRibbonStyleSchema.extend({
   kind: z.literal("boundary"),
   upper: z.array(StepSchema).min(2),
   lower: z.array(StepSchema).min(2),
-  startCap: z.enum(RibbonCap).optional(),
-  endCap: z.enum(RibbonCap).optional(),
-  samples: z.number().int().min(2).max(512).optional(),
+  samples: z.union([z.boolean(), z.number().int().min(2).max(512)]).optional(),
   sampling: RibbonSamplingSchema.optional(),
 });
 ```
@@ -90,11 +87,13 @@ export const BoundaryRibbonSchema = BaseRibbonStyleSchema.extend({
 - `align: "center"`：当前行为，左右各偏移 `width / 2`。
 - `align: "left"`：中心线作为一侧边界，ribbon 只向路径左侧展开 `width`。
 - `align: "right"`：中心线作为一侧边界，ribbon 只向路径右侧展开 `width`。
+- 端点局部配置聚合到 `start` / `end`：`width`、`direction`、`cap` 都放在对应端点对象内。例如线性 taper 写 `start={{ width: 36 }} end={{ width: 12 }}`，端点切线写 `start={{ direction: 0 }}`。
+- 顶层 `width` 只表示整条中心线的宽度规则：固定宽度、`stops` 或 `profile`。它不能和 `start.width` / `end.width` 同时出现。
 - 中段变宽 / 变窄不新增字段，继续由 ADR-01 的 `width.kind: "stops"` 或 `width.kind: "profile"` 表达。例如两端粗、中间细是 stops `[0 -> large, 0.5 -> small, 1 -> large]`。
 - “先平行一段时间后再曲线”不新增 `straightLength` 字段，继续由 `Step` 组合表达：先写一段 `line`，再接 `curve` / `cubic`。这样中心线模式和 boundary 模式都能复用同一套 path 语言。
-- `startCap` / `endCap` 默认 `"butt"`。`"round"` 用半圆或采样弧连接两侧边界；`"square"` 沿端点切线方向外扩半个端点宽度后再闭合。
-- `samples` 是 fixed sampling 的快捷字段。`sampling` 是完整采样配置。两者同时出现时 schema 应拒绝，避免两个字段竞争。
-- `boundary` 模式下不接受 `children` / `width` / `align` / `startDirection` / `endDirection`。两条边界各自已经决定形状，compile 只负责按同向路径拼接和端面处理。
+- `start.cap` / `end.cap` 默认 `"butt"`。`"round"` 用半圆或采样弧连接两侧边界；`"square"` 沿端点切线方向外扩半个端点宽度后再闭合。
+- `samples` 是 fixed sampling 的快捷字段。省略时，固定宽度与 `start.width` / `end.width` 端点宽度优先把直线 / 二次贝塞尔 / 三次贝塞尔 lower 为结构化 Path command；`width.kind: "stops"` 与 profile 这类沿途宽度规则自动使用默认 64 个采样截面；`samples: true` 使用 64 个采样截面；`samples: number` 使用指定截面数。`sampling` 是完整采样配置。两者同时出现时 schema 应拒绝，避免两个字段竞争。
+- `boundary` 模式下不接受 `children` / `width` / `align` / `start` / `end` / `interpolation`。两条边界各自已经决定形状，compile 只负责按同向路径拼接。
 - `boundary.upper` 与 `boundary.lower` 都必须是单条开放路径。它们应从同一个逻辑起点走向同一个逻辑终点；compile 不做路径反向猜测。
 - compile 应通过现有 warning hook 或新增 ribbon diagnostics hook 报告明显自交、边界翻转和采样不足风险。诊断不改变 IR 结构。
 
@@ -102,7 +101,7 @@ export const BoundaryRibbonSchema = BaseRibbonStyleSchema.extend({
 
 1. `align` 是当前中心线模型的最小扩展，可以表达贴边、堆叠、单侧扩展，且不会改变 renderer。
 2. `boundary` 模式补齐中心线模型的表达边界，避免把复杂非对称形状强塞进 width profile。
-3. `startCap` / `endCap` 是端面语义，不应由用户手动伪造额外 path。
+3. `start.cap` / `end.cap` 是端面语义，不应由用户手动伪造额外 path。
 4. `sampling` 把“固定点数”和“按误差自适应”放在同一套 JSON-safe schema 内，避免将来新增并行字段。
 5. 所有模式仍 lower 为 `PathPrim`，保持 ADR-01 的 renderer-agnostic 决策。
 
@@ -127,11 +126,8 @@ export const BoundaryRibbonSchema = BaseRibbonStyleSchema.extend({
 
 ```tsx
 <Ribbon
-  width={{ start: 36, end: 12 }}
-  startCap="round"
-  endCap="square"
-  startDirection={0}
-  endDirection={0}
+  start={{ width: 36, cap: "round", direction: 0 }}
+  end={{ width: 12, cap: "square", direction: 0 }}
   fill="#f59e0b"
 >
   <Step kind="move" to={[-160, 0]} />
@@ -162,7 +158,7 @@ export const BoundaryRibbonSchema = BaseRibbonStyleSchema.extend({
 先平行一段再进入曲线：
 
 ```tsx
-<Ribbon width={18} startDirection={0} endDirection={0} fill="#c084fc">
+<Ribbon width={18} start={{ direction: 0 }} end={{ direction: 0 }} fill="#c084fc">
   <Step kind="move" to={[-180, 0]} />
   <Step kind="line" to={[-120, 0]} />
   <Step kind="cubic" control1={[-40, 0]} control2={[80, 80]} to={[180, 80]} />
@@ -239,13 +235,15 @@ ribbon({
 | --- | --- | --- | --- | --- | --- |
 | `packages/kernel/core/src/schemas/ribbon.ts` | 修改 | `kind` | `"centerline" \| "boundary"` | `"centerline"` | 选择中心线模式或显式边界模式 |
 | `packages/kernel/core/src/schemas/ribbon.ts` | 新增 | `align` | `"center" \| "left" \| "right"` | `"center"` | width 相对中心线如何展开 |
-| `packages/kernel/core/src/schemas/ribbon.ts` | 新增 | `startCap` | `"butt" \| "round" \| "square"` | `"butt"` | 起点端面形态 |
-| `packages/kernel/core/src/schemas/ribbon.ts` | 新增 | `endCap` | `"butt" \| "round" \| "square"` | `"butt"` | 终点端面形态 |
-| `packages/kernel/core/src/schemas/ribbon.ts` | 新增 | `sampling` | `{ kind: "fixed", samples } \| { kind: "adaptive", tolerance, maxSamples? }` | `{ kind: "fixed", samples: 48 }` | ribbon 边界采样策略 |
+| `packages/kernel/core/src/schemas/ribbon.ts` | 新增 | `start` | `{ width?, direction?, cap? }` | 无 | 起点端点局部配置 |
+| `packages/kernel/core/src/schemas/ribbon.ts` | 新增 | `end` | `{ width?, direction?, cap? }` | 无 | 终点端点局部配置 |
+| `packages/kernel/core/src/schemas/ribbon.ts` | 新增 | `interpolation` | `"linear" \| "smooth"` | `"linear"` | `start.width` 到 `end.width` 的过渡曲线 |
+| `packages/kernel/core/src/schemas/ribbon.ts` | 修改 | `width` | `number \| stops \| profile` | 无 | 固定宽度或中段自定义宽度规则 |
+| `packages/kernel/core/src/schemas/ribbon.ts` | 新增 | `sampling` | `{ kind: "fixed", samples } \| { kind: "adaptive", tolerance, maxSamples? }` | 无 | 显式 ribbon 边界采样策略 |
 | `packages/kernel/core/src/schemas/ribbon.ts` | 新增 | `upper` | `Array<Step>` | 无 | boundary 模式的第一条开放边界路径 |
 | `packages/kernel/core/src/schemas/ribbon.ts` | 新增 | `lower` | `Array<Step>` | 无 | boundary 模式的第二条开放边界路径 |
 | `packages/kernel/core/src/schemas/ribbon.ts` | 修改 | `children` | `Array<Step>` | centerline 模式必填 | centerline 模式的开放中心线 |
-| `packages/kernel/core/src/schemas/ribbon.ts` | 修改 | `samples` | `number` | `48` | fixed sampling 快捷字段；不得与 `sampling` 同时出现 |
+| `packages/kernel/core/src/schemas/ribbon.ts` | 修改 | `samples` | `boolean \| number` | 自动 | fixed sampling 快捷字段；`true` = 64，数字 = 指定截面数；不得与 `sampling` 同时出现；未传时允许根据宽度规则自动选择结构化 path 或采样 |
 
 ### 文件 scope
 
@@ -290,20 +288,22 @@ Happy path（至少 3）：
 
 边界（至少 2）：
 
-- `samples shortcut and sampling fixed produce identical output`：`samples: 16` 与 `sampling: { kind: "fixed", samples: 16 }` 等价。
+- `samples shortcut and sampling fixed produce identical output`：`samples: 16` 与 `sampling: { kind: "fixed", samples: 16 }` 等价；`samples: true` 等价 64 个截面。
+- `omitted samples prefers path commands`：未传 `samples` 且宽度规则可结构化表达时，直线 / 二次贝塞尔 / 三次贝塞尔优先输出结构化 path command，而不是默认折线采样。
+- `omitted samples auto-samples along-path width rules`：未传 `samples` 但使用 `width.kind: "stops"` 或 profile 时，compile 自动使用默认采样截面，保证 step / profile 这类中途宽度变化可表达。
 - `zero width with left/right align still produces deterministic outline`：零宽边界不产生 NaN。
 - `boundary mode accepts curves with different upper/lower curvature`：上下边界曲率不同仍能 lower。
 
 错误路径（至少 2）：
 
 - `schema rejects samples and sampling together`：避免双字段竞争。
-- `schema rejects centerline-only fields in boundary mode`：`boundary` 模式不能带 `children` / `width` / `align`。
+- `schema rejects centerline-only fields in boundary mode`：`boundary` 模式不能带 `children` / `width` / `align` / `start` / `end`。
 - `schema rejects boundary-only fields in centerline mode`：`centerline` 模式不能带 `upper` / `lower`。
 - `compile rejects boundary paths with close or multiple subpaths`：边界必须是单条开放路径。
 
 交互（至少 2）：
 
-- `startDirection/endDirection still reshape centerline mode before align is applied`：端点方向与 align 同时工作。
+- `start.direction/end.direction still reshape centerline mode before align is applied`：端点方向与 align 同时工作。
 - `fill/stroke/shadow/blendMode survive both centerline and boundary lowering`：样式透传一致。
 - `React Ribbon boundary children produce the same IR as raw JSON`：React adapter 对齐 core IR。
 - `Vanilla ribbon boundary config produces the same IR as raw JSON`：Vanilla adapter 对齐 core IR。

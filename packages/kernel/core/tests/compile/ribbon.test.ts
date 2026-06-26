@@ -47,13 +47,23 @@ const ribbon = (
   ...overrides,
 });
 
+const ribbonWithoutSamples = (
+  overrides: Partial<Extract<IR['children'][number], { type: 'ribbon' }>> = {},
+): Extract<IR['children'][number], { type: 'ribbon' }> => {
+  const next = ribbon(overrides);
+  delete next.samples;
+  return next;
+};
+
 describe('compile ribbon', () => {
   it('schema accepts JSON round-trip numeric width and rejects negative widths', () => {
     expect(RibbonSchema.parse(JSON.parse(JSON.stringify(ribbon())))).toEqual(ribbon());
     expect(() => RibbonSchema.parse(ribbon({ width: -1 }))).toThrow();
-    expect(() => RibbonSchema.parse(ribbon({ width: { start: -1, end: 2 } }))).toThrow();
-    expect(() => RibbonSchema.parse(ribbon({ startDirection: [0, 0] }))).toThrow();
-    expect(RibbonSchema.parse(ribbon({ startDirection: { angle: 90, radius: 1 } })).startDirection).toEqual({
+    expect(() =>
+      RibbonSchema.parse(ribbon({ width: undefined, start: { width: -1 }, end: { width: 2 } })),
+    ).toThrow();
+    expect(() => RibbonSchema.parse(ribbon({ start: { direction: [0, 0] } }))).toThrow();
+    expect(RibbonSchema.parse(ribbon({ start: { direction: { angle: 90, radius: 1 } } })).start?.direction).toEqual({
       angle: 90,
       radius: 1,
     });
@@ -74,9 +84,75 @@ describe('compile ribbon', () => {
     ]);
   });
 
+  it('omitted samples lowers a straight centerline through path commands instead of default sampling', () => {
+    const compiled = compileToScene(scene([ribbonWithoutSamples()]), { padding: 0 });
+    const prim = pathPrim(compiled.primitives[0]);
+
+    expect(prim.commands).toEqual([
+      { kind: 'move', to: [0, 2] },
+      { kind: 'line', to: [10, 2] },
+      { kind: 'line', to: [10, -2] },
+      { kind: 'line', to: [0, -2] },
+      { kind: 'close' },
+    ]);
+  });
+
+  it('omitted samples preserves quadratic centerlines as quadratic outline commands', () => {
+    const compiled = compileToScene(
+      scene([
+        ribbonWithoutSamples({
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'curve', control: [5, -10], to: [10, 0] },
+          ],
+        }),
+      ]),
+      { padding: 0 },
+    );
+    const prim = pathPrim(compiled.primitives[0]);
+
+    expect(prim.commands.map(command => command.kind)).toEqual([
+      'move',
+      'quad',
+      'line',
+      'quad',
+      'close',
+    ]);
+  });
+
+  it('samples true uses the default fixed sampling count', () => {
+    const parsed = RibbonSchema.parse(ribbon({ samples: true }));
+    const compiled = compileToScene(scene([parsed]), { padding: 0 });
+    const prim = pathPrim(compiled.primitives[0]);
+
+    expect(prim.commands).toHaveLength(129);
+  });
+
+  it('omitted samples falls back to sampling for stepped width stops', () => {
+    const compiled = compileToScene(
+      scene([
+        ribbonWithoutSamples({
+          width: {
+            kind: 'stops',
+            stops: [
+              { offset: 0, value: 4 },
+              { offset: 0.5, value: 8 },
+              { offset: 1, value: 8 },
+            ],
+            interpolation: 'step',
+          },
+        }),
+      ]),
+      { padding: 0 },
+    );
+    const prim = pathPrim(compiled.primitives[0]);
+
+    expect(prim.commands).toHaveLength(129);
+  });
+
   it('linear taper changes start and end widths independently', () => {
     const compiled = compileToScene(
-      scene([ribbon({ width: { start: 4, end: 2 }, samples: 2 })]),
+      scene([ribbon({ width: undefined, start: { width: 4 }, end: { width: 2 }, samples: 2 })]),
       { padding: 0 },
     );
     const prim = pathPrim(compiled.primitives[0]);
@@ -208,8 +284,8 @@ describe('compile ribbon', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
-          startDirection: 90,
-          endDirection: [0, 1],
+          start: { direction: 90 },
+          end: { direction: [0, 1] },
         }),
       ]),
       { padding: 0 },
@@ -229,8 +305,8 @@ describe('compile ribbon', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
-          startDirection: { angle: 90, radius: 1 },
-          endDirection: { angle: 90, radius: 1 },
+          start: { direction: { angle: 90, radius: 1 } },
+          end: { direction: { angle: 90, radius: 1 } },
         }),
       ]),
       { padding: 0 },
@@ -272,7 +348,7 @@ describe('compile ribbon', () => {
 
   it('supports square caps on centerline ribbons', () => {
     const prim = pathPrim(
-      compileToScene(scene([ribbon({ startCap: 'square', endCap: 'square' })]), {
+      compileToScene(scene([ribbon({ start: { cap: 'square' }, end: { cap: 'square' } })]), {
         padding: 0,
       }).primitives[0],
     );
@@ -284,6 +360,27 @@ describe('compile ribbon', () => {
       { kind: 'line', to: [-2, -2] },
       { kind: 'close' },
     ]);
+  });
+
+  it('uses the ribbon side midpoint for round caps when aligned right', () => {
+    const prim = pathPrim(
+      compileToScene(
+        scene([
+          ribbon({
+            align: 'right',
+            start: { cap: 'round' },
+            end: { cap: 'round' },
+          }),
+        ]),
+        { padding: 0 },
+      ).primitives[0],
+    );
+
+    expect(prim.commands[9]).toEqual({ kind: 'line', to: [10, -4] });
+    expect(prim.commands.at(-2)).toEqual({ kind: 'line', to: [0, 0] });
+    const points = prim.commands.flatMap(command => ('to' in command ? [command.to] : []));
+    expect(Math.max(...points.map(point => point[0]))).toBe(12);
+    expect(Math.min(...points.map(point => point[0]))).toBe(-2);
   });
 
   it('uses fixed sampling config as the samples shorthand replacement', () => {
@@ -300,14 +397,14 @@ describe('compile ribbon', () => {
   });
 
   it('normalizes angle, vector, and polar endpoint directions through the same path', () => {
-    type RibbonDirection = Extract<IR['children'][number], { type: 'ribbon' }>['startDirection'];
+    type RibbonDirection = NonNullable<Extract<IR['children'][number], { type: 'ribbon' }>['start']>['direction'];
     const commandsFor = (startDirection: RibbonDirection, endDirection: RibbonDirection) =>
       pathPrim(
         compileToScene(
           scene([
             ribbon({
-              startDirection,
-              endDirection,
+              start: { direction: startDirection },
+              end: { direction: endDirection },
               samples: 5,
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
@@ -335,7 +432,7 @@ describe('compile ribbon', () => {
     );
     const withDirection = pathPrim(
       compileToScene(
-        scene([ribbon({ children, samples: 5, startDirection: 0, endDirection: 0 })]),
+        scene([ribbon({ children, samples: 5, start: { direction: 0 }, end: { direction: 0 } })]),
         { padding: 0 },
       ).primitives[0],
     );
@@ -350,7 +447,7 @@ describe('compile ribbon', () => {
         scene([
           ribbon({
             samples: 5,
-            startDirection: 0,
+            start: { direction: 0 },
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [20, 0] },
@@ -370,7 +467,7 @@ describe('compile ribbon', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
-          startDirection: [0, 1],
+          start: { direction: [0, 1] },
           samples: 2,
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
@@ -395,7 +492,7 @@ describe('compile ribbon', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
-          startDirection: 90,
+          start: { direction: 90 },
           samples: 8,
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },

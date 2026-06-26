@@ -120,10 +120,10 @@ describe('convertIRToReactNode', () => {
       children: [
         {
           type: 'ribbon',
-          width: { start: 8, end: 2 },
-          startDirection: 0,
-          endDirection: [1, 0],
+          start: { width: 8, direction: 0 },
+          end: { width: 2, direction: [1, 0] },
           fill: 'steelblue',
+          samples: true,
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },

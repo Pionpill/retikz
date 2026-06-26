@@ -48,13 +48,18 @@ describe('@retikz/vanilla draw()', () => {
 
 describe('@retikz/vanilla ribbon()', () => {
   it('ribbon-way-reuses-core：ribbon(way) 的 steps 与 core parseWay 逐字一致', () => {
-    const r = ribbon(['a', 'b'], { width: { start: 8, end: 2 }, startDirection: 0, endDirection: [1, 0], fill: 'steelblue' });
+    const r = ribbon(['a', 'b'], {
+      start: { width: 8, direction: 0 },
+      end: { width: 2, direction: [1, 0] },
+      fill: 'steelblue',
+      samples: true,
+    });
     expect(r.type).toBe('ribbon');
     if (r.type !== 'ribbon') throw new Error('unreachable');
-    expect(r.width).toEqual({ start: 8, end: 2 });
-    expect(r.startDirection).toBe(0);
-    expect(r.endDirection).toEqual([1, 0]);
+    expect(r.start).toEqual({ width: 8, direction: 0 });
+    expect(r.end).toEqual({ width: 2, direction: [1, 0] });
     expect(r.fill).toBe('steelblue');
+    expect(r.samples).toBe(true);
     expect(r.children).toEqual(parseWay(['a', 'b']));
   });
 

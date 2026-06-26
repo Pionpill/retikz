@@ -10,13 +10,14 @@ const Demo: FC = () => (
     color="#172033"
   >
     <Ribbon
-      width={{ start: 44, end: 18, interpolation: 'smooth' }}
+      start={{ width: 44 }}
+      end={{ width: 18 }}
+      interpolation="smooth"
       fill="#5dade2"
       fillOpacity={0.84}
-      samples={48}
     >
-      <Step kind="move" to={[-220, -70]} />
-      <Step kind="curve" control={[8, -8]} to={[220, 76]} />
+      <Step kind="move" to={[-220, 0]} />
+      <Step to={[220, 0]} />
     </Ribbon>
   </Layout>
 );

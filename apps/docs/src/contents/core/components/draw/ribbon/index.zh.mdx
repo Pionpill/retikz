@@ -14,7 +14,7 @@ import { Ribbon, Step } from '@retikz/react';
 ```
 
 ```tsx
-<Ribbon width={{ start: 32, end: 12 }} fill="#60a5fa">
+<Ribbon start={{ width: 32 }} end={{ width: 12 }} fill="#60a5fa">
   <Step kind="move" to="source" />
   <Step kind="cubic" control1={[80, 0]} control2={[160, 80]} to="target" />
 </Ribbon>
@@ -54,21 +54,27 @@ import { Ribbon, Step } from '@retikz/react';
 
 ### 基础流带
 
-一条从左上到右下的二次贝塞尔中心线，起点更宽、终点更窄。
+一条水平中心线，起点更宽、终点更窄。
 
-<ComponentPreview name="ribbon-basic" size="sm" />
+<ComponentPreview name="ribbon-basic" size="xs" />
 
-### 不同 interpolation
+### 不同插值方式
 
 同一条中心线和同一组起止宽度，只切换 `interpolation`，观察宽度在中段如何过渡。
 
 <ComponentPreview name="ribbon-interpolation" size="md" />
 
+| 值 | 写法 | 区别 |
+| --- | --- | --- |
+| `linear` | `interpolation="linear"` | 宽度按 offset 匀速变化；中段宽度在起止宽度之间线性过渡。 |
+| `smooth` | `interpolation="smooth"` | 起点和终点附近变化更缓，中段过渡更柔和；仍只由 `start.width` 和 `end.width` 决定。 |
+| `step` | `width.kind="stops"`<br />`interpolation="step"` | 到下一个 stop 前保持上一段宽度，适合突然变宽或变窄；不用于顶层 `interpolation`。 |
+
 ### 中间自定义宽度
 
 `width.kind="stops"` 可以让两端粗、中间细，或定义任意多段宽度变化。
 
-<ComponentPreview name="ribbon-width-stops" size="sm" />
+<ComponentPreview name="ribbon-width-stops" size="xs" />
 
 ### 先直后曲
 
@@ -83,7 +89,7 @@ import { Ribbon, Step } from '@retikz/react';
 
 ### 对齐与端帽
 
-`align` 控制中心线落在流带中线、左边界或右边界；`startCap` / `endCap` 控制两端闭合形状。
+`align` 控制中心线落在流带中线、左边界或右边界；`start.cap` / `end.cap` 控制两端闭合形状。
 
 <ComponentPreview name="ribbon-align-cap" size="md" />
 
@@ -105,7 +111,9 @@ Ribbon 是闭合面，样式集中在 `fill`、外轮廓描边、透明度和阴
 
 ### Lower 为闭合 Path
 
-编译器先把 `<Step>` 序列解析成一条开放中心线，再按 `samples` 采样。每个采样点根据切线求法线，`width` 给出该点宽度，左右各偏移半宽，最后拼成闭合 path。
+编译器先把 `<Step>` 序列解析成一条开放中心线。不传 `samples` 时，固定宽度和 `start.width` / `end.width` 端点宽度会优先 lower 成结构化 Path command：边界仍是 `line` / `quad` / `cubic`，renderer 可以直接使用 SVG / Canvas 的原生路径能力。
+
+传入 `samples` / `sampling`，或使用 `width.kind="stops"`、注册 profile 这类沿途宽度规则时，编译器改为按截面采样：每个采样点根据切线求法线，`start.width` / `end.width` 或顶层 `width` 给出该点宽度，左右各偏移半宽，最后拼成折线闭合 path。采样也适合极紧曲线或暂未解析为精确 path 的 arc / ellipseArc。
 
 这样 renderer 看到的仍是普通闭合 path：`fill` 是带状面的填充，`stroke` 是外轮廓描边。Ribbon 第一版不支持 arrow、dash、marks、path label，因为这些都是中心线描边语义。
 
@@ -118,13 +126,13 @@ IR 不能保存函数；自定义变化规则通过 `width={{ kind: 'profile', n
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
 | `kind` | `'centerline' \| 'boundary'` | `'centerline'` | 构造模式；默认从中心线和 `width` 生成面，`boundary` 直接使用上下边界。 |
-| `width` | `number \| { start, end, interpolation? } \| { kind: 'stops', stops, interpolation? } \| { kind: 'profile', name, params? }` | — | 沿中心线采样的宽度规则；`boundary` 模式不使用。 |
+| `start` | `{ width?, direction?, cap? }` | — | 起点局部配置：端点宽度、切线方向和端帽。 |
+| `end` | `{ width?, direction?, cap? }` | — | 终点局部配置：端点宽度、切线方向和端帽。 |
+| `interpolation` | `'linear' \| 'smooth'` | `'linear'` | `start.width` 到 `end.width` 的过渡曲线；只用于端点宽度 taper。 |
+| `width` | `number \| { kind: 'stops', stops, interpolation? } \| { kind: 'profile', name, params? }` | — | 整条中心线的宽度规则；固定宽度或中间自定义宽度使用它，不能和 `start.width` / `end.width` 同时使用。 |
 | `align` | `'center' \| 'left' \| 'right'` | `'center'` | 中心线相对流带的位置；`left` / `right` 让中心线成为一侧边界。 |
-| `startDirection` | `number \| Vector2 \| Position \| PolarPosition` | 起终点连接方向 | 起点切线方向覆盖；tuple 输入按非零向量处理，polar 输入会先转换再归一化。 |
-| `endDirection` | `number \| Vector2 \| Position \| PolarPosition` | 起终点连接方向 | 终点切线方向覆盖；tuple 输入按非零向量处理，polar 输入会先转换再归一化。 |
-| `samples` | `number` | `48` | 采样截面数量，范围 `2..512`；曲线越紧可适当增大。 |
+| `samples` | `boolean \| number` | 自动 | 采样覆盖项；`true` 使用 64 个截面，数字使用指定截面数 `2..512`。不传时优先解析为结构化 path，遇到 `stops` / profile 等宽度规则会自动采样。 |
 | `sampling` | `{ kind: 'fixed', samples } \| { kind: 'adaptive', tolerance, maxSamples? }` | — | 显式采样策略；不能和 `samples` 同时使用。 |
-| `startCap` / `endCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | 起点 / 终点闭合端帽。 |
 | `fill` | `string \| PaintSpec` | `currentColor` | Ribbon 面的填充，可用纯色、渐变、pattern、image。 |
 | `fillOpacity` | `number` | — | 只作用于填充的透明度。 |
 | `stroke` | `string \| PaintSpec` | — | 外轮廓描边颜色；省略时不描边。 |

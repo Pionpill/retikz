@@ -273,17 +273,22 @@ after`;
 
   it('<Ribbon><Step/><Step/></Ribbon> collects a variable-width centerline', () => {
     const ir = buildIR(
-      <Ribbon width={{ start: 8, end: 2 }} startDirection={0} endDirection={[1, 0]} fill="steelblue">
+      <Ribbon
+        start={{ width: 8, direction: 0 }}
+        end={{ width: 2, direction: [1, 0] }}
+        fill="steelblue"
+        samples
+      >
         <Step kind="move" to={[0, 0]} />
         <Step to={[10, 0]} />
       </Ribbon>,
     );
     expect(ir.children[0]).toEqual({
       type: 'ribbon',
-      width: { start: 8, end: 2 },
-      startDirection: 0,
-      endDirection: [1, 0],
+      start: { width: 8, direction: 0 },
+      end: { width: 2, direction: [1, 0] },
       fill: 'steelblue',
+      samples: true,
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [10, 0] },
