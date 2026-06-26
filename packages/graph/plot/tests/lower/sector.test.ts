@@ -30,10 +30,10 @@ const sectorNodes = (layer: IRScope): Array<IRNode> => {
 };
 
 /** 读 sector node 的 shape params（断言其确为 sector shape ref） */
-const sectorParams = (node: IRNode): { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number } => {
+const sectorParams = (node: IRNode): { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number; cornerRadius?: number } => {
   const shape = node.shape as { type?: string; params?: Record<string, number> } | undefined;
   expect(shape?.type).toBe('sector');
-  return shape!.params as { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number };
+  return shape!.params as { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number; cornerRadius?: number };
 };
 
 // ── interval polar → sector（径向柱 / 玫瑰）─────────────────────────────
@@ -131,6 +131,43 @@ describe('lowerPlots interval→sector under polar2D (ADR-02)', () => {
     expect(layer.children).toHaveLength(3);
     expect((layer.children[0] as IRScope).type).toBe('scope');
     expect(sectorNodes(layer)).toHaveLength(3);
+  });
+
+  it('rose_sector_corner_radius_and_pad_angle_lower_into_shape_params', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      coordinate: { type: 'polar2D', angle: 'cat', radius: 'val', innerRadius: 0.45 },
+      scales: [
+        { type: 'band', name: 'cat' },
+        { type: 'linear', name: 'val' },
+      ],
+      marks: [{ type: 'interval', cornerRadius: { kind: 'constant', value: 8 }, padAngle: 6, encoding: { x: { field: 'month' }, y: { field: 'amount' } } }],
+    });
+    const unpaddedSpec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      coordinate: { type: 'polar2D', angle: 'cat', radius: 'val', innerRadius: 0.45 },
+      scales: [
+        { type: 'band', name: 'cat' },
+        { type: 'linear', name: 'val' },
+      ],
+      marks: [{ type: 'interval', cornerRadius: { kind: 'constant', value: 8 }, encoding: { x: { field: 'month' }, y: { field: 'amount' } } }],
+    });
+    const params = sectorNodes(firstLayer(spec, { sales: SALES })).map(sectorParams);
+    const unpaddedParams = sectorNodes(firstLayer(unpaddedSpec, { sales: SALES })).map(sectorParams);
+    expect(params).toHaveLength(3);
+    expect(unpaddedParams).toHaveLength(3);
+    for (let index = 0; index < params.length; index++) {
+      const p = params[index];
+      const unpadded = unpaddedParams[index];
+      expect(p.innerRadius).toBeGreaterThan(0);
+      expect(p.cornerRadius).toBe(8);
+      expect(p.startAngle).toBeCloseTo(unpadded.startAngle + 3, 6);
+      expect(p.endAngle).toBeCloseTo(unpadded.endAngle - 3, 6);
+    }
   });
 
   it('rose_compiles_to_scene', async () => {

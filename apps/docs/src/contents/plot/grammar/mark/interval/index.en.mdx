@@ -48,6 +48,8 @@ IntervalMark is the low-level cell mark: it turns each data row into an orthogon
 
 <ComponentPreview name="bar-position" sourceFiles={['bar-basic.data.ts']} interactive />
 
+### Continuous Intervals
+
 `x0` / `x1` are the continuous-interval form. The left histogram below first lets the bin transform produce `binStart` / `binEnd`, then IntervalMark uses them as `bounds.x=extent(x0,x1)`; the right example uses `width` to allocate bar width proportionally by GDP and `x` to show country labels.
 
 <ComponentPreview name="interval-histogram" sourceFiles={['interval-histogram.data.ts', 'bar-variable-width.data.ts']} interactive />
@@ -76,6 +78,12 @@ The same `x` / `y` interval under `coordinate="polar2D"` maps the `x` band to an
 `angle` is the shortcut for pies and donuts: it accumulates a share field into angular extents, and the radial role uses full. A donut is not a new mark; it is a polar coordinate with `innerRadius`.
 
 <ComponentPreview name="bar-pie-donut" sourceFiles={['bar-pie.data.ts']} interactive />
+
+### Style Props
+
+IntervalMark visual styles lower onto the core `Node` for each cell. Common entries include `cornerRadius`, `stroke`, `strokeWidth`, `fillOpacity`, `shadow`, and label styling; polar sectors can also use `padAngle` for a real angular gap. The left chart is cartesian, and the right chart switches the same data into a rounded polar donut.
+
+<ComponentPreview name="bar-style" sourceFiles={['bar-basic.data.ts']} interactive />
 
 ## How It Works
 
@@ -149,6 +157,7 @@ const lowerCells = (
 |  | `width` | `FieldName?` | — | Proportional-width field; component props create `bounds.<bandRole> = proportional(width)`; the same-role `x` / `y` field can label axis ticks |
 |  | `direction` | `'vertical' \| 'horizontal'` | `vertical` | Ordinary bar direction; `horizontal` uses an x value span and y categorical band |
 |  | `angle` | `FieldName?` | — | Pie / donut shortcut: share field accumulated into angular intervals |
+|  | `padAngle` | `number?` | — | Angular gap in degrees for polar sectors; each sector shrinks by half the gap on each side |
 |  | `bounds` | `IntervalBounds?` | inferred by role | Explicit band / span / extent / proportional / full source for each role |
 |  | `group` | `FieldName?` | `series` | Arrangement grouping field; dodge cuts sub-bands by it, stack uses it for segments |
 |  | `arrangement` | `'dodge' \| 'stack' \| 'normalize-stack'` | inferred from `group` / `series` / `stack` | Multi-segment interval arrangement |

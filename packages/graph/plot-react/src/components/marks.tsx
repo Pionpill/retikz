@@ -242,6 +242,8 @@ export type IntervalMarkProps = DatumLabelProps & CoreNodeChannelProps & {
   strokeWidth?: MarkValueProp<number> | PointStrokeWidthStyle;
   fillOpacity?: MarkValueProp<number> | PointOpacityStyle;
   opacity?: MarkValueProp<number> | PointOpacityStyle;
+  /** Angular gap in degrees for polar sector / donut interval cells. */
+  padAngle?: number;
   /** 可选 mark 句柄（预留 scope/anchor） */
   id?: string;
 };

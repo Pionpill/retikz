@@ -49,6 +49,8 @@ IntervalMark 是底层 cell mark：它只负责把每行数据变成一个正交
 
 <ComponentPreview name="bar-position" sourceFiles={['bar-basic.data.ts']} interactive />
 
+### 连续区间
+
 `x0` / `x1` 是连续区间写法。下面左侧直方图先用 bin transform 产出 `binStart` / `binEnd`，再由 IntervalMark 把它们作为 `bounds.x=extent(x0,x1)`；右侧示例使用 `width` 表达按 GDP 比例分配的柱宽，并用 `x` 显示国家标签。
 
 <ComponentPreview name="interval-histogram" sourceFiles={['interval-histogram.data.ts', 'bar-variable-width.data.ts']} interactive />
@@ -77,6 +79,12 @@ IntervalMark 是底层 cell mark：它只负责把每行数据变成一个正交
 `angle` 是饼图 / 环图的便捷入口：它会把份额字段累积成角向 extent，半径方向使用 full。环图不是新的 mark，只是 polar 坐标系配置了 `innerRadius`。
 
 <ComponentPreview name="bar-pie-donut" sourceFiles={['bar-pie.data.ts']} interactive />
+
+### 样式属性
+
+IntervalMark 的视觉样式会下沉到每个 cell 的 core `Node`。常用入口包括 `cornerRadius`、`stroke`、`strokeWidth`、`fillOpacity`、`shadow` 和标签样式；极坐标 sector 还可以用 `padAngle` 留出真实角向间隔。左侧是笛卡尔柱，右侧是同一份数据切到极坐标后的圆角环形图。
+
+<ComponentPreview name="bar-style" sourceFiles={['bar-basic.data.ts']} interactive />
 
 ## 技术原理
 
@@ -150,6 +158,7 @@ const lowerCells = (
 |  | `width` | `FieldName?` | — | 比例宽度字段；组件层会构造 `bounds.<bandRole> = proportional(width)`；同 role 的 `x` / `y` 字段可作为轴标签 |
 |  | `direction` | `'vertical' \| 'horizontal'` | `vertical` | 普通柱方向；`horizontal` 使用 x 数值 span 与 y 分类 band |
 |  | `angle` | `FieldName?` | — | 饼图 / 环图入口：份额字段会累积成角区间 |
+|  | `padAngle` | `number?` | — | 极坐标 sector 的角向间隔（度）；每个扇区两侧各收半个间隔角 |
 |  | `bounds` | `IntervalBounds?` | 按 role 推断 | 显式声明每个 role 的 band / span / extent / proportional / full |
 |  | `group` | `FieldName?` | `series` | 编排分组字段；dodge 按它切子带，stack 按它生成堆叠段 |
 |  | `arrangement` | `'dodge' \| 'stack' \| 'normalize-stack'` | 由 `group` / `series` / `stack` 推断 | 多系列区间编排方式 |

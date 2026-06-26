@@ -394,6 +394,33 @@ export const markCell = (mark: Mark, row: ExternalRow, frame: CoordinateFrame, c
 const cellSeriesValue = (mark: Mark, row: ExternalRow): unknown =>
   mark.type === PlotMark.Interval && mark.series !== undefined ? resolveFieldPath(row, mark.series) : undefined;
 
+const applySectorStyleParams = (node: IRNode, mark: Mark): void => {
+  if (typeof node.shape !== 'object' || node.shape.type !== 'sector') return;
+  const params = node.shape.params ?? {};
+  const startAngle = params.startAngle;
+  const endAngle = params.endAngle;
+  const padAngle = mark.type === PlotMark.Interval ? mark.padAngle : undefined;
+  const nextParams = { ...params };
+  if (node.cornerRadius !== undefined) {
+    nextParams.cornerRadius = node.cornerRadius;
+    delete node.cornerRadius;
+  }
+  if (padAngle !== undefined && typeof startAngle === 'number' && typeof endAngle === 'number') {
+    const sweep = endAngle - startAngle;
+    const maxInset = Math.max(0, Math.abs(sweep) - 1e-6);
+    const inset = Math.min(padAngle, maxInset);
+    if (inset > 0) {
+      const direction = sweep >= 0 ? 1 : -1;
+      nextParams.startAngle = startAngle + (direction * inset) / 2;
+      nextParams.endAngle = endAngle - (direction * inset) / 2;
+    }
+  }
+  node.shape = {
+    ...node.shape,
+    params: nextParams,
+  };
+};
+
 /**
  * interval 单路径下沉：算 cell → frame.projectCell → CellGeometry → 装配 Node（坐标系无关）。
  * @description 判断挪进坐标系（frame.projectCell 产 rect / sector / contour），mark 侧零分叉。装配样式按 geometry
@@ -429,6 +456,7 @@ const lowerCells = (
     const stroke = strokeOf?.(row);
     if (stroke !== undefined) cellNode.stroke = stroke;
     applyNodeChannelDeliveries(cellNode, mark, row, channels, 'cell');
+    applySectorStyleParams(cellNode, mark);
     const node = attachDatumLabel(
       decorateDatum(cellNode, row, transformedIndex, mark.type, markProvenance, cellSeriesValue(mark, row)),
       mark,

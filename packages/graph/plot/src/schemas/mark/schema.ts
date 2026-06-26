@@ -296,6 +296,12 @@ export const IntervalMarkSchema = z
     stroke: PointStrokeStyleSchema.optional().describe('Interval cell stroke paint: field-bound datum channel or constant CSS color / PaintSpec'),
     opacity: PointOpacityStyleSchema.optional().describe('Interval cell whole opacity: field-bound datum channel or constant opacity 0..1'),
     fillOpacity: PointOpacityStyleSchema.optional().describe('Interval cell fill opacity: field-bound datum channel or constant opacity 0..1'),
+    padAngle: z
+      .number()
+      .finite()
+      .nonnegative()
+      .optional()
+      .describe('Angular gap in degrees applied to polar sector cells; each sector shrinks by half this angle on both sides. Cartesian cells ignore it'),
     ...coreNodeStyle,
     ...markBase,
     ...positionalLabel,

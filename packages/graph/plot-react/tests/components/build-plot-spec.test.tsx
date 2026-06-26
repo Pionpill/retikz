@@ -255,6 +255,14 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     });
   });
 
+  it('interval padAngle forwards to interval mark', () => {
+    const spec = buildPlotSpec(<IntervalMark angle="value" padAngle={4} />, '__plot', { coordinate: 'polar2D' });
+    expect(spec.marks[0]).toMatchObject({
+      type: 'interval',
+      padAngle: 4,
+    });
+  });
+
   it('line + point 叠加：marks 两项、共享 scales/coordinate', () => {
     const spec = buildPlotSpec(
       <>
