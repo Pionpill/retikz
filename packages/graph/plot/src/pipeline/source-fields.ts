@@ -1,5 +1,5 @@
 import { createFieldCollector } from '../providers';
-import { type PlotSpec } from '../schemas';
+import { PlotMark, type PlotSpec, isBuiltinMark } from '../schemas';
 import { type AnyMarkDefinition, type AnyTransformDefinition } from '../contract';
 import { collectMarkFields, collectTransformFields, resolveMarkRegistry, resolveTransformRegistry } from '../providers';
 
@@ -15,6 +15,11 @@ export const collectSourceFields = (
 
   for (const mark of spec.marks) collectMarkFields(mark, collector, markRegistry);
   for (const transform of spec.transform ?? []) collectTransformFields(transform, collector, derivedOutputs, transformRegistry);
+  for (const mark of spec.marks) {
+    if (isBuiltinMark(mark) && mark.type === PlotMark.Relation) {
+      for (const transform of mark.transform ?? []) collectTransformFields(transform, collector, derivedOutputs, transformRegistry);
+    }
+  }
   for (const derived of derivedOutputs) fields.delete(derived);
 
   return fields;

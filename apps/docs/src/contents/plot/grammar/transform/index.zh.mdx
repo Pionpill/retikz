@@ -15,6 +15,7 @@ description: transform 是图形语法的统计层：在比例尺和图元之前
 | --- | --- | --- | --- |
 | 行级变换 | `sort` / `stack` / `normalize` / `derive-interval` / `jitter` | N 行 → N 行 | 重排、派生字段、堆叠、占比、抖散点 |
 | 分组规约 | `bin` / `aggregate` | N 行 → M 箱 / 组 | 直方图、分组统计、明细汇总 |
+| relation 局部派生 | `derive-relation` | N 行 → relation 行 | 为 `RelationMark.transform` 选出 source / target 行 |
 
 ## 声明方式
 
@@ -38,6 +39,8 @@ description: transform 是图形语法的统计层：在比例尺和图元之前
 lowering 时，Plot 先收集 transform 读取的源字段，同时登记 transform 派生出来的输出字段。这样 strict model 只校验真实输入字段，不要求你把派生字段提前声明。
 
 然后 transform 按声明顺序折叠应用：前一个 transform 的输出行会成为下一个 transform 的输入行。最后的行集再进入 scale 推断、mark lowering 和 locator。
+
+`derive-relation` 通常放在 `RelationMark.transform` 里，而不是 plot 级 transform。它可以从原始趋势点里派生“最低点到最高点”这类关系行，同时让 point、path、interval 等位置 mark 继续使用原始行集。
 
 ## 章节内容
 

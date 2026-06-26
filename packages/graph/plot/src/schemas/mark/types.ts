@@ -39,7 +39,9 @@ import type {
   RelationMarkSchema,
   RelationPathOptionsSchema,
   RelationRouteStepSchema,
+  RelationRoutingSpecSchema,
   RelationStepLabelSchema,
+  RelationTransformSchema,
   ShadowStyleSchema,
 } from './schema';
 
@@ -103,6 +105,8 @@ export type AnchorIdSpec = z.infer<typeof AnchorIdSpecSchema>;
 export type PlotTargetRef = z.infer<typeof PlotTargetRefSchema>;
 export type RelationStepLabel = z.infer<typeof RelationStepLabelSchema>;
 export type RelationRouteStep = z.infer<typeof RelationRouteStepSchema>;
+export type RelationTransform = z.infer<typeof RelationTransformSchema>;
+export type RelationRoutingSpec = z.infer<typeof RelationRoutingSpecSchema>;
 export type RelationPathOptions = z.infer<typeof RelationPathOptionsSchema>;
 export type RelationMark = z.infer<typeof RelationMarkSchema>;
 export type Mark = z.infer<typeof MarkSchema>;

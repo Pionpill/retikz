@@ -7,6 +7,8 @@ import {
   BinTransformSchema,
   type DeriveIntervalTransform,
   DeriveIntervalTransformSchema,
+  type DeriveRelationTransform,
+  DeriveRelationTransformSchema,
   type JitterTransform,
   JitterTransformSchema,
   type NormalizeTransform,
@@ -16,6 +18,7 @@ import {
   type StackTransform,
   StackTransformSchema,
 } from '../../schemas';
+import { applyDeriveRelation, deriveRelationInputFields, deriveRelationOutputFields } from './derive-relation';
 import { aggregateOutputField, applyAggregate, applyBin, binOutputFields } from './group';
 import { DEFAULT_DERIVE_END_FIELD, DEFAULT_DERIVE_START_FIELD, DEFAULT_END_FIELD, DEFAULT_JITTER_X_FIELD, DEFAULT_JITTER_Y_FIELD, DEFAULT_START_FIELD, applyDeriveInterval, applyJitter, applyNormalize, applySort, applyStack } from './row';
 
@@ -70,6 +73,13 @@ const deriveIntervalTransformDefinition = defineTransform<DeriveIntervalTransfor
   apply: (rows, operation) => applyDeriveInterval(rows, operation),
 });
 
+const deriveRelationTransformDefinition = defineTransform<DeriveRelationTransform>({
+  schema: DeriveRelationTransformSchema,
+  inputFields: deriveRelationInputFields,
+  outputFields: deriveRelationOutputFields,
+  apply: (rows, operation) => applyDeriveRelation(rows, operation),
+});
+
 const jitterTransformDefinition = defineTransform<JitterTransform>({
   schema: JitterTransformSchema,
   inputFields: operation => {
@@ -90,6 +100,7 @@ export const BUILTIN_TRANSFORMS: ReadonlyArray<AnyTransformDefinition> = [
   aggregateTransformDefinition,
   normalizeTransformDefinition,
   deriveIntervalTransformDefinition,
+  deriveRelationTransformDefinition,
   jitterTransformDefinition,
 ] as ReadonlyArray<AnyTransformDefinition>;
 

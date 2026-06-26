@@ -25,7 +25,7 @@ import { Plot, PointMark, RelationMark } from '@retikz/plot-react';
 </Plot>
 ```
 
-`RelationMark` is usually paired with positional marks that define `anchorId`. The positional mark projects rows into core `Node` / `Coordinate` elements and gives them stable ids. The relation mark uses the same rule shape on its own rows to compute source / target ids, then lowers to a core `Path`.
+`RelationMark` is usually paired with positional marks that define `anchorId`. The positional mark projects rows into core `Node` / `Coordinate` elements and gives them stable ids. The relation mark uses the same rule shape on its own rows to compute source / target ids, then lowers to a core `Path`. When the edge rows do not already exist, `transform` can derive relation rows locally for this mark.
 
 ## Presentation Layer
 
@@ -40,33 +40,35 @@ RelationMark is the low-level relationship path mark. It does not reinvent arrow
 
 ## Examples
 
+### Scatter Relations
+
+Each scatter row declares both `id` and `target`. `PointMark` generates node ids with `anchorId`, and `RelationMark` joins those ids from the data fields. This example does not need `transform`: the relationship already exists in the raw rows, so RelationMark only resolves those fields into source / target paths.
+
+<ComponentPreview name="relation-scatter" sourceFiles={['relation-scatter.data.ts']} size="lg" />
+
 ### Bubble Relation
 
-Bubble charts often need to highlight one business relationship inside a broader distribution. This example uses 20 bubbles for the distribution. The bubble layer generates reusable Node ids with `anchorId`; the relation layer directly references A / B with `boundary`, so the connector stops at the bubble boundary.
+Bubble charts often need to highlight one business relationship inside a broader distribution. This example uses 20 bubbles for the distribution, and the bubble layer generates reusable Node ids with `anchorId`. The relation layer does not hand-write an edge row; its `transform` runs `derive-relation`: source selects the bubble with the largest `value`, target selects the bubble with the highest `y`, and the transform emits `sourceId`, `targetId`, and the path label. Source / target then reference those derived ids with `boundary`, so the connector stops at the bubble boundary.
 
 <ComponentPreview name="relation-bubble" sourceFiles={['relation-bubble.data.ts']} size="lg" />
 
 ### Path Extremes
 
-The path mark draws 20 ordered points; the relation row only provides the minimum and maximum coordinates. The connector uses a `bend` curve and writes the delta as a step label, which is useful for explaining the change from a low point to a high point in a trend line.
+The path mark draws 20 ordered points and registers each vertex with `anchorId`. This example also avoids a separate edge table: `RelationMark.transform` runs `derive-relation` over the same points, selects the minimum `y` row as source and the maximum `y` row as target, then emits `sourceId`, `targetId`, and `deltaLabel`. Source / target connect to those derived vertex ids, and `routing={{ kind: 'bend' }}` draws the low-to-high relationship as a curve.
 
 <ComponentPreview name="relation-path-extremes" sourceFiles={['relation-path-extremes.data.ts']} size="lg" />
 
 ### Interval Relation
 
-In a bar or interval chart, a relation can connect the tops of two interval elements to explain a handoff or difference between stages. This example projects the relation row onto two categorical positions, routes upward to a waypoint, then uses a `-|` fold to reach the target.
+In a bar or interval chart, a relation can connect the tops of two interval elements to explain a handoff or difference between stages. This example keeps only before / after interval rows, not five handwritten relation lines. Two `RelationMark.transform` pipelines split decrease and increase groups: the decrease layer reads `decreaseOrder`, the increase layer reads `increaseOrder`, and both group by `pair` to emit source / target coordinates, the `sourceViaY` waypoint height, and `deltaLabel`. `routing={{ kind: 'orthogonal' }}` consumes those derived fields to draw the upward right-angle connector; decreases are red, increases are green.
 
 <ComponentPreview name="relation-interval" sourceFiles={['relation-interval.data.ts']} size="lg" />
-
-### Scatter Relations
-
-Each scatter row declares both `id` and `target`. `PointMark` generates node ids with `anchorId`, and `RelationMark` joins those ids from the data fields. This keeps nodes and edges in one table for lightweight network, flow, dependency, and reference views.
-
-<ComponentPreview name="relation-scatter" sourceFiles={['relation-scatter.data.ts']} size="lg" />
 
 ## How It Works
 
 `<RelationMark>` does not render DOM directly. `<Plot>` collects it into mark IR with `type: 'relation'` while building the `PlotSpec`. During lowering, plot resolves `source`, `target`, `via`, and `route[].to`, then lowers each data row into one core `Path`, plus any required core `Coordinate` elements.
+
+`transform` runs after the plot-level transform pipeline and only feeds the current relation mark. Derived fields such as `sourceId`, `targetId`, or `deltaLabel` can be consumed by `source`, `target`, `label`, and relation channels without adding them to the root data model.
 
 Target references share the `PlotTargetRef` structure:
 
@@ -76,7 +78,7 @@ Target references share the `PlotTargetRef` structure:
 | `{ anchorId }` | Generate the target id from the current relation row | Uses the same rule shape as positional mark `anchorId`; useful for joining by data fields |
 | `{ project }` | Project a point from the current relation row | `project` maps coordinate roles to fields; add `anchorId` only when the point needs a reusable id |
 
-Without `route`, the default path is `move(source) -> line(target)`. With `via`, intermediate points are inserted as `line(via)` in order. With `route`, route steps align with core path steps and support `line`, `fold`, `curve`, `cubic`, and `bend`. `label` is shorthand: it lands on the default path or on the final drawable explicit route step. If a `route[].label` is already set, that explicit step label wins. Step labels generated by RelationMark default to `side: 'sloped'`, so they rotate along the path; an explicit `side` still takes priority.
+Without `route`, the default path is `move(source) -> line(target)`. With `via`, intermediate points are inserted as `line(via)` in order. `routing` is a route strategy: `line` keeps straight segments, `bend` emits core bend steps, and `orthogonal` emits explicit right-angle line steps when the endpoints are projected coordinates. With `route`, route steps align with core path steps and support `line`, `fold`, `curve`, `cubic`, and `bend`. `route` and `routing` are mutually exclusive. `label` is shorthand: it lands on the default path, the selected routing segment, or the final drawable explicit route step. If a `route[].label` is already set, that explicit step label wins. Step labels generated by RelationMark default to `side: 'sloped'`, so they rotate along the path; an explicit `side` still takes priority.
 
 When a relation uses generated `anchorId` and the target does not exist, lowering fails after the plot finishes and reports the relation mark id / index, data row index, and generated id. Duplicate generated anchor ids also fail loudly.
 
@@ -84,12 +86,16 @@ When a relation uses generated `anchorId` and the target does not exist, lowerin
 
 `RelationMark` groups its API by targets, route, path, label, common props, and custom channels. `FieldName` means a data field name or field path, for example `sourceId` / `meta.to`.
 
+### Mark API
+
 | Group | Prop | Type | Default | Description |
 | --- | --- | --- | --- | --- |
 | Target | `source` | `PlotTargetRef` | Required | Start target of the relationship path: direct id, generated anchor id, or projected coordinate |
 |  | `target` | `PlotTargetRef` | Required | End target of the relationship path, using the same structure as `source` |
 |  | `via` | `Array<PlotTargetRef>` | - | Waypoints for the default route; each projected waypoint generates a core `Coordinate` |
+| Data | `transform` | `Array<Transform>?` | - | Relation-local transform pipeline for deriving relation rows from plot rows; see the transform table below for each type |
 | Route | `route` | `Array<RelationRouteStep>` | - | Explicit step sequence; the last step may omit `to` and default to `target` |
+|  | `routing` | `RelationRoutingSpec?` | `line` | Algorithmic route strategy: `line`, `bend`, or `orthogonal`; mutually exclusive with `route` |
 |  | `route[].kind` | `'move' / 'line' / 'fold' / 'curve' / 'cubic' / 'bend'` | - | Core path step kind |
 |  | `route[].to` | `PlotTargetRef?` | Last step uses `target` | Destination for the current step |
 |  | `route[].label` | `RelationStepLabel?` | - | Label for the current step; higher priority than `label` shorthand |
@@ -100,6 +106,14 @@ When a relation uses generated `anchorId` and the target does not exist, lowerin
 | Custom | `channels` | `Record<string, Channel>` | - | Custom channel entry point, resolved by registered channel definitions |
 
 `RelationPathOptions` is the place for constant Path capabilities such as `arrow`, `arrowDetail`, `marks`, `bend` / `fold` / `curve`, `animations`, `roundedCorners`, `strokeWidth`, and `color`. Field-driven visual styling should still use plot channels, for example `color="kind"`.
+
+### Transform API
+
+`transform` reuses the plot-level transform structure; see [Transform](/plot/grammar/transform) for common transform types. Inside `RelationMark`, it only feeds the current relation mark and does not rewrite the rows seen by sibling marks. This table only lists relation-specific transform types.
+
+| Type | Row count | Meaning |
+| --- | --- | --- |
+| `derive-relation` | N → relation rows | Selects source / target rows and emits relation rows, usually for `RelationMark.transform` |
 
 ## Related
 

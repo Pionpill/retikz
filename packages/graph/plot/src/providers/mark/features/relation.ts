@@ -1,7 +1,7 @@
 import { type IRChild, type IRCoordinate, type IRNodeTarget, type IRPath, type IRStep, type IRStepLabel, type IRTarget } from '@retikz/core';
 import { type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkLoweringContext } from '../../../contract';
 import { resolveFieldPath } from '../../data';
-import { type ExternalRow, PlotMark, type PlotTargetRef, type RelationMark, type RelationRouteStep, type RelationStepLabel } from '../../../schemas';
+import { type ExternalRow, PlotMark, type PlotTargetRef, type RelationMark, type RelationRouteStep, type RelationRoutingSpec, type RelationStepLabel } from '../../../schemas';
 import {
   applyPathChannelDeliveries,
   attachMarkLayer,
@@ -160,6 +160,91 @@ const defaultRoute = (source: IRTarget, via: Array<IRTarget>, target: IRTarget, 
     label,
   );
 
+const routeTargets = (source: IRTarget, via: Array<IRTarget>, target: IRTarget): Array<IRTarget> => [source, ...via, target];
+
+const lineRoute = (targets: Array<IRTarget>): Array<IRStep> => [
+  { type: 'step', kind: 'move', to: targets[0] },
+  ...targets.slice(1).map((to): IRStep => ({ type: 'step', kind: 'line', to })),
+];
+
+const bendRoute = (routing: Extract<RelationRoutingSpec, { kind: 'bend' }>, targets: Array<IRTarget>): Array<IRStep> => [
+  { type: 'step', kind: 'move', to: targets[0] },
+  ...targets.slice(1).map((to): IRStep => ({
+    type: 'step',
+    kind: 'bend',
+    to,
+    ...(routing.bendDirection !== undefined ? { bendDirection: routing.bendDirection } : {}),
+    ...(routing.bendAngle !== undefined ? { bendAngle: routing.bendAngle } : {}),
+    ...(routing.outAngle !== undefined ? { outAngle: routing.outAngle } : {}),
+    ...(routing.inAngle !== undefined ? { inAngle: routing.inAngle } : {}),
+    ...(routing.looseness !== undefined ? { looseness: routing.looseness } : {}),
+  })),
+];
+
+const positionOf = (target: IRTarget): [number, number] | undefined =>
+  Array.isArray(target) && typeof target[0] === 'number' && typeof target[1] === 'number' ? target : undefined;
+
+const segmentLength = (from: [number, number], to: [number, number]): number => Math.hypot(to[0] - from[0], to[1] - from[1]);
+
+const applyOrthogonalLabel = (
+  steps: Array<IRStep>,
+  label: IRStepLabel | undefined,
+  candidates: Array<{ stepIndex: number; length: number }>,
+  labelStep: 'main' | 'last' | undefined,
+): Array<IRStep> => {
+  if (label === undefined || steps.some(step => 'label' in step && step.label !== undefined)) return steps;
+  if (labelStep === 'last' || candidates.length === 0) return applyStepLabel(steps, label);
+  const selected = candidates.reduce((best, current) => (current.length > best.length ? current : best), candidates[0]);
+  const next = [...steps];
+  const step = next[selected.stepIndex];
+  if (step.kind !== 'move' && step.kind !== 'cycle') {
+    next[selected.stepIndex] = { ...step, label } as IRStep;
+  }
+  return next;
+};
+
+const orthogonalRoute = (
+  routing: Extract<RelationRoutingSpec, { kind: 'orthogonal' }>,
+  targets: Array<IRTarget>,
+  label: IRStepLabel | undefined,
+): Array<IRStep> => {
+  const via = routing.via;
+  if (via === undefined) throw new Error('lowerPlots: orthogonal relation routing requires via');
+  const steps: Array<IRStep> = [{ type: 'step', kind: 'move', to: targets[0] }];
+  const candidates: Array<{ stepIndex: number; length: number }> = [];
+  let cursor = targets[0];
+  for (const target of targets.slice(1)) {
+    const fromPosition = positionOf(cursor);
+    const toPosition = positionOf(target);
+    if (fromPosition === undefined || toPosition === undefined) {
+      steps.push({ type: 'step', kind: 'fold', via, to: target });
+      cursor = target;
+      continue;
+    }
+    const corner: [number, number] = via === '-|' ? [toPosition[0], fromPosition[1]] : [fromPosition[0], toPosition[1]];
+    const firstIndex = steps.length;
+    steps.push({ type: 'step', kind: 'line', to: corner });
+    steps.push({ type: 'step', kind: 'line', to: target });
+    candidates.push({ stepIndex: firstIndex, length: segmentLength(fromPosition, corner) });
+    candidates.push({ stepIndex: firstIndex + 1, length: segmentLength(corner, toPosition) });
+    cursor = target;
+  }
+  return applyOrthogonalLabel(steps, label, candidates, routing.labelStep);
+};
+
+const routedSteps = (
+  routing: RelationRoutingSpec | undefined,
+  source: IRTarget,
+  via: Array<IRTarget>,
+  target: IRTarget,
+  label: IRStepLabel | undefined,
+): Array<IRStep> => {
+  const targets = routeTargets(source, via, target);
+  if (routing === undefined || routing.kind === 'line') return applyStepLabel(lineRoute(targets), label);
+  if (routing.kind === 'bend') return applyStepLabel(bendRoute(routing, targets), label);
+  return orthogonalRoute(routing, targets, label);
+};
+
 const routeStepToIr = (
   step: RelationRouteStep,
   target: IRTarget,
@@ -255,7 +340,9 @@ export const lowerRelation = (
         coordinates.push(...via.coordinates);
         viaTargets.push(via.target);
       }
-      steps = defaultRoute(source.target, viaTargets, target.target, resolveLabel(mark.label, row));
+      steps = mark.routing === undefined
+        ? defaultRoute(source.target, viaTargets, target.target, resolveLabel(mark.label, row))
+        : routedSteps(mark.routing, source.target, viaTargets, target.target, resolveLabel(mark.label, row));
     }
     const path: IRPath = applyPathChannelDeliveries(
       {

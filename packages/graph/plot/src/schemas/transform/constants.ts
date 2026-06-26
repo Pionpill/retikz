@@ -17,6 +17,8 @@ export const PlotTransform = {
   Normalize: 'normalize',
   /** 单行派生区间：from 字段 → [start, end]（baseline→value 或两字段；保行数） */
   DeriveInterval: 'derive-interval',
+  /** 从数据行动态派生 source-target relation rows */
+  DeriveRelation: 'derive-relation',
   /** 位置抖动：可序列化 seed + 确定性 PRNG 加随机偏移（v1 仅连续数值数据空间，保行数） */
   Jitter: 'jitter',
 } as const;

@@ -1,10 +1,10 @@
 import type { FC } from 'react';
 import { Axis, Plot, PointMark, RelationMark } from '@retikz/plot-react';
 
-import { bubbleNodes, bubbleRelations } from './relation-bubble.data';
+import { bubbleNodes } from './relation-bubble.data';
 
 const Demo: FC = () => (
-  <Plot data={[...bubbleNodes, ...bubbleRelations]} width={620} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Plot data={bubbleNodes} width={620} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
     <PointMark
       x="x"
       y="y"
@@ -18,6 +18,14 @@ const Demo: FC = () => (
       strokeWidth={0.8}
     />
     <RelationMark
+      transform={[
+        {
+          kind: 'derive-relation',
+          source: { select: 'max', by: 'value', fields: { id: 'id' } },
+          target: { select: 'max', by: 'y', fields: { id: 'id' } },
+          measure: { kind: 'difference', field: 'y', labelAs: 'relLabel', labelPrefix: 'lift +' },
+        },
+      ]}
       source={{ anchorId: { prefix: 'bubble', field: 'sourceId' }, boundary: true }}
       target={{ anchorId: { prefix: 'bubble', field: 'targetId' }, boundary: true }}
       label={{ text: { field: 'relLabel' }, position: 0.5, side: 'sloped' }}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type IRPaintSpec, type PlotSpec, PlotSpecSchema, isBuiltinMark, lowerPlots } from '@retikz/plot';
+import { type DeriveRelationTransform, type IRPaintSpec, type PlotSpec, PlotSpecSchema, type RelationRoutingSpec, isBuiltinMark, lowerPlots } from '@retikz/plot';
 import { buildPlotSpec, decorateDefaultGuides } from '../../src/components/build-plot-spec';
 import { Axis, Legend } from '../../src/components/guides';
 import { IntervalMark, PathMark, PointMark, ReferenceMark, RelationMark } from '../../src/components/marks';
@@ -289,6 +289,37 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
       label: { text: { field: 'label' }, position: 'midway' },
       path: { arrow: '->', roundedCorners: 6 },
       encoding: { color: { field: 'kind', scale: '__color' } },
+    });
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('relation mark forwards mark-scoped transform and routing strategy', () => {
+    const transform: Array<DeriveRelationTransform> = [
+      {
+        kind: 'derive-relation',
+        source: { select: 'min', by: 'value', fields: { id: 'id' } },
+        target: { select: 'max', by: 'value', fields: { id: 'id' } },
+        measure: { kind: 'difference', field: 'value', labelAs: 'deltaLabel', labelPrefix: '+' },
+      },
+    ];
+    const routing: RelationRoutingSpec = { kind: 'bend', bendDirection: 'left', bendAngle: 20 };
+    const spec = buildPlotSpec(
+      <RelationMark
+        transform={transform}
+        source={{ anchorId: { prefix: 'trend', field: 'sourceId' } }}
+        target={{ anchorId: { prefix: 'trend', field: 'targetId' } }}
+        routing={routing}
+        label={{ text: { field: 'deltaLabel' }, position: 0.5 }}
+      />,
+      '__plot',
+    );
+    expect(spec.marks[0]).toEqual({
+      type: 'relation',
+      transform,
+      source: { anchorId: { prefix: 'trend', field: 'sourceId' } },
+      target: { anchorId: { prefix: 'trend', field: 'targetId' } },
+      routing,
+      label: { text: { field: 'deltaLabel' }, position: 0.5 },
     });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });

@@ -1,4 +1,4 @@
-/** Bubble nodes plus one projected relation row. */
+/** Bubble nodes; RelationMark derives the highlighted relation from this table. */
 export const bubbleNodes: Array<Record<string, string | number>> = [
   { id: 'A', x: 18, y: 72, value: 420, segment: 'growth', label: 'A' },
   { id: 'B', x: 78, y: 64, value: 360, segment: 'growth', label: 'B' },
@@ -20,9 +20,4 @@ export const bubbleNodes: Array<Record<string, string | number>> = [
   { id: 'R', x: 40, y: 15, value: 110, segment: 'core' },
   { id: 'S', x: 60, y: 74, value: 200, segment: 'growth' },
   { id: 'T', x: 90, y: 92, value: 155, segment: 'growth' },
-];
-
-/** One relation row that references the bubble nodes by generated core ids. */
-export const bubbleRelations: Array<Record<string, string | number>> = [
-  { sourceId: 'A', targetId: 'B', relLabel: 'shared audience +31%' },
 ];

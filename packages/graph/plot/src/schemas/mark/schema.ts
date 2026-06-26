@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { AnchorRefSchema, PathSchema, PositionSchema, StepLabelSchema } from '@retikz/core';
 import { ArrowDetailSchema, BlendMode, BoundarySchema, DropShadowSchema, FontSchema, PathScaleSchema, ShadowPreset, ShapeRefSchema } from '@retikz/core';
 import { EncodingSchema, MarkLabelSchema, PointEncodingSchema } from '../encoding';
+import { TransformSchema } from '../transform';
 import { BUILTIN_MARK_TYPES, IntervalBoundKind, MarkValueKind, PathClosureKind, PathCurve, PlotMark } from './constants';
 
 /** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema，reference 用专属） */
@@ -112,6 +113,51 @@ export const RelationRouteStepSchema = z
   })
   .strict()
   .describe('Relation route step lowered to a core path step');
+
+export const RelationTransformSchema = z
+  .array(TransformSchema)
+  .describe('Relation-local transform pipeline applied after the plot root transform to derive rows consumed only by this RelationMark');
+
+const RelationLineRoutingSchema = z
+  .object({
+    kind: z.literal('line').describe('Discriminator: connect source, via points, and target with straight line steps'),
+  })
+  .strict()
+  .describe('Line relation routing strategy');
+
+const RelationBendRoutingSchema = z
+  .object({
+    kind: z.literal('bend').describe('Discriminator: connect each segment with a core bend step'),
+    bendDirection: z.enum(['left', 'right']).optional().describe('Bend side relative to each relation segment'),
+    bendAngle: z.number().finite().gt(-180).lt(180).optional().describe('Bend angle in degrees for each relation segment'),
+    outAngle: z.number().finite().optional().describe('Outgoing angle in degrees for bend routing'),
+    inAngle: z.number().finite().optional().describe('Incoming angle in degrees for bend routing'),
+    looseness: z.number().finite().positive().optional().describe('Curve looseness factor for bend routing'),
+  })
+  .strict()
+  .describe('Bend relation routing strategy');
+
+const RelationOrthogonalRoutingSchema = z
+  .object({
+    kind: z.literal('orthogonal').describe('Discriminator: connect each segment with right-angle orthogonal line steps'),
+    via: z.enum(['-|', '|-']).optional().describe('Orthogonal direction: -| first horizontal then vertical; |- first vertical then horizontal'),
+    labelStep: z.enum(['main', 'last']).optional().describe('Which generated drawable step receives the shorthand relation label; default main'),
+  })
+  .strict()
+  .superRefine((routing, ctx) => {
+    if (routing.via === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['via'],
+        message: 'orthogonal relation routing requires via',
+      });
+    }
+  })
+  .describe('Orthogonal relation routing strategy');
+
+export const RelationRoutingSpecSchema = z
+  .discriminatedUnion('kind', [RelationLineRoutingSchema, RelationBendRoutingSchema, RelationOrthogonalRoutingSchema])
+  .describe('Relation route strategy lowered to core Path steps after source and target refs are resolved');
 
 /** 位置 mark（point / path / interval）的 encoding：x / y 可选（必填性下放 coordinate 级校验）+ 样式 */
 const positionalEncoding = { encoding: EncodingSchema };
@@ -460,10 +506,12 @@ export const ReferenceMarkSchema = z
 export const RelationMarkSchema = z
   .object({
     type: z.literal(PlotMark.Relation).describe('Discriminator: source-target relation path lowered to a core Path'),
+    transform: RelationTransformSchema.optional().describe('Optional relation-local transform pipeline applied after the plot root transform'),
     source: PlotTargetRefSchema.describe('Relation source target'),
     target: PlotTargetRefSchema.describe('Relation target target'),
     via: z.array(PlotTargetRefSchema).optional().describe('Optional intermediate waypoints; each projected waypoint may generate a core Coordinate'),
     route: z.array(RelationRouteStepSchema).min(1).optional().describe('Explicit route steps after the initial move(source) step'),
+    routing: RelationRoutingSpecSchema.optional().describe('Optional algorithmic route strategy; omitted means straight line routing'),
     label: RelationStepLabelSchema.optional().describe('Convenience label attached to the default route or the final drawable explicit route step'),
     path: RelationPathOptionsSchema.optional().describe('Core Path options passed through to the lowered relation path'),
     ...markBase,
@@ -477,6 +525,13 @@ export const RelationMarkSchema = z
   })
   .strict()
   .superRefine((mark, ctx) => {
+    if (mark.route !== undefined && mark.routing !== undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['routing'],
+        message: 'relation mark cannot use route and routing together; use explicit route steps or a routing strategy',
+      });
+    }
     if (mark.via !== undefined && mark.route !== undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

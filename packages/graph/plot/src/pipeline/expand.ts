@@ -59,6 +59,23 @@ const defaultColorOf = (node: PlotSpec, markIndex: number): string => {
   return colors[markIndex % colors.length];
 };
 
+export type MarkDataView = {
+  mark: MarkOperation;
+  rows: Array<ExternalRow>;
+};
+
+const relationTargetRoleValues = (mark: MarkOperation, role: DimensionRole, rows: Array<ExternalRow>): Array<unknown> => {
+  if (!isBuiltinMark(mark) || mark.type !== PlotMark.Relation) return [];
+  const refs = [
+    mark.source,
+    mark.target,
+    ...(mark.via ?? []),
+    ...(mark.route ?? []).flatMap(step => (step.to === undefined ? [] : [step.to])),
+  ];
+  const fields = refs.flatMap(ref => ('project' in ref && Object.prototype.hasOwnProperty.call(ref.project, role) ? [ref.project[role]] : []));
+  return fields.flatMap(field => rows.map(row => resolveFieldPath(row, field)));
+};
+
 /** 读 mark 的 encoding（内置与自定义共享 EncodingSchema 形态）；自定义 mark 缺 encoding 时 undefined。 */
 const markEncoding = (mark: MarkOperation): Record<string, Channel | undefined> | undefined => (mark as { encoding?: Record<string, Channel | undefined> }).encoding;
 
@@ -245,6 +262,8 @@ export type ResolveFrameParams = {
   coordinates?: Array<AnyCoordinateDefinition>;
   /** scale registry（内置 13 + 自定义 scaleDefinitions）；position 投影 / channel 取色 / compat 共用单一真源，保 locator parity */
   scaleRegistry: Map<string, AnyScaleDefinition>;
+  /** 每个 mark 实际使用的数据视图；普通 mark 用全图 rows，relation 可使用 mark-scoped transform rows。 */
+  markDataViews?: Array<MarkDataView>;
 };
 
 /**
@@ -254,6 +273,7 @@ export type ResolveFrameParams = {
  */
 export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolution => {
   const { node, rows, fieldTypes, width, height, fontSize, margin, provenance, coordinates, scaleRegistry } = params;
+  const markDataViews = params.markDataViews ?? node.marks.map(mark => ({ mark, rows }));
   const coordinateOperation = node.coordinate;
   const coordinateRegistry = resolveCoordinateRegistry(coordinates);
   const coordinateDefinition = coordinateRegistry.get(coordinateOperation.type);
@@ -274,20 +294,22 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   //   连续 scale 内部过滤为有限数求 extent、分类 scale 按数据序去重推断 domain。
   // role 决定从哪个通道取值：cartesian 用 x/y；polar 用 angle??x / radius??y（mark 不写死笛卡尔）。
   const collectValues = (
+    role: DimensionRole,
     axis: 'primary' | 'secondary' | undefined,
     pick: (mark: MarkOperation) => Channel | undefined,
     includeBaseline: boolean,
   ): Array<unknown> => {
     const out: Array<unknown> = [];
-    for (const mark of node.marks) {
+    for (const { mark, rows: markRows } of markDataViews) {
+      out.push(...relationTargetRoleValues(mark, role, markRows));
       // interval：域贡献按 bounds 来源（band/span → 位置通道值、extent → 两字段、full → 不贡献），统一替代旧 histogram / stack / sector 特判
       if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && axis !== undefined) {
-        out.push(...intervalRoleValues(mark, axis, pick, rows));
+        out.push(...intervalRoleValues(mark, axis, pick, markRows));
         continue;
       }
       const channel = pick(mark);
       if (channel === undefined) continue;
-      for (const row of rows) {
+      for (const row of markRows) {
         out.push(channelValue(channel, row));
       }
     }
@@ -299,7 +321,8 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
           if (mark.closure?.kind === PathClosureKind.Baseline) {
             out.push(mark.closure.baseline ?? 0);
           } else if (mark.closure?.kind === PathClosureKind.Stack) {
-            for (const row of rows) out.push(resolveFieldPath(row, mark.closure.baselineField));
+            const markRows = markDataViews.find(view => view.mark === mark)?.rows ?? rows;
+            for (const row of markRows) out.push(resolveFieldPath(row, mark.closure.baselineField));
           }
         }
       }
@@ -316,9 +339,9 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     if (hasRegularRoleTicks) return undefined;
     const values: TickSet['values'] = [];
     const labels: TickSet['labels'] = [];
-    for (const mark of node.marks) {
+    for (const { mark, rows: markRows } of markDataViews) {
       if (!isBuiltinMark(mark) || mark.type !== PlotMark.Interval) continue;
-      const ticks = intervalProportionalAxisTicks(mark, role, rows);
+      const ticks = intervalProportionalAxisTicks(mark, role, markRows);
       if (ticks === undefined) continue;
       values.push(...ticks.values);
       labels.push(...ticks.labels);
@@ -424,9 +447,10 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     ...(margin !== undefined ? { margin } : {}),
     legendReserve,
     ...(provenance !== undefined ? { provenance } : {}),
-    collectRoleValues: (role, opts) => collectValues(undefined, roleChannelOf(role), opts?.includeBaseline ?? false),
+    collectRoleValues: (role, opts) => collectValues(role, undefined, roleChannelOf(role), opts?.includeBaseline ?? false),
     collectPositionValues: (role, opts) =>
       collectValues(
+        role,
         opts?.axis,
         roleChannelOf(role),
         opts?.includeBaseline ?? false,
@@ -459,13 +483,20 @@ const collectChannelDescriptors = (
   channelCtx: { node: PlotSpec; rows: Array<ExternalRow>; fieldTypes: PlotFieldTypeMap; scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>; resolveColorScheme: (name: string) => (t: number) => string },
   channelRegistry: ReadonlyMap<string, AnyChannelDefinition>,
   markRegistry: ReadonlyMap<string, AnyMarkDefinition>,
+  markDataViews?: ReadonlyArray<MarkDataView>,
 ): Array<ScaleDescriptor> => {
   const out: Array<ScaleDescriptor> = [];
   const register = (descriptor: ScaleDescriptor | undefined): void => {
     if (descriptor) out.push(descriptor);
   };
-  for (const mark of node.marks) {
-    const markChannels = resolveMarkChannels(mark, channelCtx, channelRegistry, DEFAULT_PLOT_COLORS[0], channelKindsForMark(mark, markRegistry));
+  for (const view of markDataViews ?? node.marks.map(mark => ({ mark, rows: channelCtx.rows }))) {
+    const markChannels = resolveMarkChannels(
+      view.mark,
+      { ...channelCtx, rows: view.rows },
+      channelRegistry,
+      DEFAULT_PLOT_COLORS[0],
+      channelKindsForMark(view.mark, markRegistry),
+    );
     for (const descriptor of markChannels.descriptors ?? []) register(descriptor);
   }
   return out;
@@ -691,6 +722,15 @@ const buildLegendLayers = (
   });
 };
 
+const resolveMarkRows = (
+  mark: MarkOperation,
+  rows: Array<ExternalRow>,
+  transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
+): Array<ExternalRow> => {
+  if (!isBuiltinMark(mark) || mark.type !== PlotMark.Relation || mark.transform === undefined) return rows;
+  return applyTransforms(rows, mark.transform, transformRegistry);
+};
+
 /**
  * 校验 fieldMaps（fail-loud）：ref∈datasets；本 plot 的 map 需 model + 逻辑名∈model
  * @description 抽出供 expandPlot 与 createPlotLocator 共用，保证「render 抛错 ⟺ locator 抛错」的 parity（评审 P2）
@@ -806,6 +846,10 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   }
 
   const rows = applyTransforms(normalized, node.transform, transformRegistry);
+  const markDataViews: Array<MarkDataView> = node.marks.map(mark => ({
+    mark,
+    rows: resolveMarkRows(mark, rows, transformRegistry),
+  }));
 
   const { frame, gridLayers, axisLayers, plotArea } = resolveFrame({
     node,
@@ -818,6 +862,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     provenance,
     coordinates: options.coordinates,
     scaleRegistry,
+    markDataViews,
   });
 
   const channelCtx = { node, rows, fieldTypes, scaleRegistry, resolveColorScheme };
@@ -839,11 +884,12 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   // provenance 开 → 传 markProvenance（plotId / markIndex / datum 开关 + 共享 registerDatumId），各层 / datum 绑 id + 来源 meta
   const markLayers: Array<IRChild> = node.marks
     .map((mark, markIndex) => {
+      const markRows = markDataViews[markIndex]?.rows ?? rows;
       return lowerMark(
         mark,
-        rows,
+        markRows,
         frame,
-        resolveMarkChannels(mark, channelCtx, channelRegistry, defaultColorOf(node, markIndex), channelKindsForMark(mark, markRegistry)),
+        resolveMarkChannels(mark, { ...channelCtx, rows: markRows }, channelRegistry, defaultColorOf(node, markIndex), channelKindsForMark(mark, markRegistry)),
         {
           markIndex,
           plotId: node.id,
@@ -861,7 +907,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   const legendGuides = (node.guides ?? []).filter(isLegendGuide);
   const legendLayers: Array<IRScope> = [];
   if (legendGuides.length > 0) {
-    const channelDescriptors = collectChannelDescriptors(node, channelCtx, channelRegistry, markRegistry);
+    const channelDescriptors = collectChannelDescriptors(node, channelCtx, channelRegistry, markRegistry, markDataViews);
     const bands = reserveLegendBands(legendGuides, width, height, plotArea);
     legendLayers.push(...buildLegendLayers(node, channelDescriptors, legendGuides, options.fontSize ?? DEFAULT_FONT_SIZE, bands, scaleRegistry));
   }

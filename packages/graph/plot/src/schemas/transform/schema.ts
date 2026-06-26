@@ -104,6 +104,57 @@ export const DeriveIntervalTransformSchema = z
     'Derive-interval transform: per-row [start, end] from one value field (baseline→value) or two explicit fields; row-preserving. Distinct from stack (which accumulates ACROSS rows into a cumulative chain). Feeds interval / rect / sector / gantt bound fields',
   );
 
+export const RelationEndpointSelectorSchema = z
+  .object({
+    select: z
+      .enum(['min', 'max', 'first', 'last'])
+      .describe('Endpoint row selector: min/max by a numeric field, or first/last in row order or sorted by an optional field'),
+    by: z.string().min(1).optional().describe('Field used for min/max comparison or optional first/last sorting'),
+    groupBy: z.array(z.string().min(1)).min(1).optional().describe('Optional endpoint grouping fields; omitted endpoints inherit the transform-level groupBy'),
+    tie: z.enum(['first', 'last']).optional().describe('Tie-breaking strategy for min/max selectors; default first'),
+    fields: z
+      .record(z.string().min(1), z.string().min(1))
+      .refine(fields => Object.keys(fields).length > 0, { message: 'relation endpoint fields must not be empty' })
+      .describe('Output field suffix to source row field map; source outputs sourceX/sourceId, target outputs targetX/targetId'),
+  })
+  .strict()
+  .superRefine((selector, ctx) => {
+    if ((selector.select === 'min' || selector.select === 'max') && selector.by === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['by'],
+        message: 'relation endpoint min/max selectors require by',
+      });
+    }
+  })
+  .describe('Relation endpoint selector: picks one row per group and maps selected row fields to generated relation row fields');
+
+export const RelationMeasureSchema = z
+  .discriminatedUnion('kind', [
+    z
+      .object({
+        kind: z.literal('difference').describe('Discriminator: compute target minus source for one numeric field'),
+        field: z.string().min(1).describe('Numeric field read from the selected source and target rows'),
+        as: z.string().min(1).optional().describe('Output field for the numeric difference; default "delta"'),
+        labelAs: z.string().min(1).optional().describe('Optional output field for stringified label text derived from the difference'),
+        labelPrefix: z.string().optional().describe('Optional prefix for non-negative label text, commonly "+"'),
+      })
+      .strict()
+      .describe('Difference relation measure: target field value minus source field value'),
+  ])
+  .describe('Relation measure computed from selected source and target rows');
+
+export const DeriveRelationTransformSchema = z
+  .object({
+    kind: z.literal(PlotTransform.DeriveRelation).describe('Discriminator: derive source-target relation rows from selected data rows'),
+    source: RelationEndpointSelectorSchema.describe('Source endpoint selector'),
+    target: RelationEndpointSelectorSchema.describe('Target endpoint selector'),
+    groupBy: z.array(z.string().min(1)).min(1).optional().describe('Optional transform-level grouping fields; endpoint selectors inherit this when their own groupBy is omitted'),
+    measure: RelationMeasureSchema.optional().describe('Optional measure derived from the selected source and target rows'),
+  })
+  .strict()
+  .describe('Derive-relation transform: select source and target rows per group and emit relation rows consumed by RelationMark');
+
 export const JitterTransformSchema = z
   .object({
     kind: z.literal(PlotTransform.Jitter).describe('Discriminator: deterministic positional jitter'),
@@ -130,8 +181,17 @@ export const JitterTransformSchema = z
   );
 
 export const BuiltinTransformSchema = z
-  .discriminatedUnion('kind', [SortTransformSchema, StackTransformSchema, BinTransformSchema, AggregateTransformSchema, NormalizeTransformSchema, DeriveIntervalTransformSchema, JitterTransformSchema])
-  .describe('Built-in data transform operation applied before scale / mark; ordered pipeline. sort / stack / normalize / derive-interval / jitter preserve row count; bin / aggregate reduce it');
+  .discriminatedUnion('kind', [
+    SortTransformSchema,
+    StackTransformSchema,
+    BinTransformSchema,
+    AggregateTransformSchema,
+    NormalizeTransformSchema,
+    DeriveIntervalTransformSchema,
+    DeriveRelationTransformSchema,
+    JitterTransformSchema,
+  ])
+  .describe('Built-in data transform operation applied before scale / mark; ordered pipeline. sort / stack / normalize / derive-interval / derive-relation / jitter preserve or derive rows; bin / aggregate reduce rows');
 
 const ExternalTransformSchema = z
   .object({

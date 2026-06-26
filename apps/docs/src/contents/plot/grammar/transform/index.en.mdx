@@ -15,6 +15,7 @@ In the pipeline, transforms sit **downstream of the canonical rows produced by t
 | --- | --- | --- | --- |
 | Row transforms | `sort` / `stack` / `normalize` / `derive-interval` / `jitter` | N rows → N rows | Reorder, derive fields, stack, compute shares, or spread overlapping points |
 | Group transforms | `bin` / `aggregate` | N rows → M bins / groups | Build histograms, grouped summaries, or detail-to-summary views |
+| Relation-local derivation | `derive-relation` | N rows → relation rows | Select source / target rows for `RelationMark.transform` |
 
 ## Declaration
 
@@ -38,6 +39,8 @@ For programmatic construction, `<Plot dataTransforms={[...]}>` can pass a transf
 During lowering, Plot collects source fields read by transforms and records output fields derived by transforms. Strict model validation then checks only real input fields and does not require derived fields to be declared ahead of time.
 
 Transforms are applied in declaration order: the output rows from one transform become the input rows for the next. The final row set then feeds scale inference, mark lowering, and locators.
+
+`derive-relation` is usually used inside `RelationMark.transform`, not as a plot-level transform. It derives relation rows such as minimum-to-maximum connectors while leaving point, path, and interval marks on the original row set.
 
 ## Topics
 

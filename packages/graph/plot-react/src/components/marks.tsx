@@ -42,9 +42,11 @@ import type {
   PointZIndexStyle,
   RelationPathOptions,
   RelationRouteStep,
+  RelationRoutingSpec,
   RelationStepLabel,
   ShadowPresetValue,
   ShadowStyle,
+  Transform,
 } from '@retikz/plot';
 
 /** 数据字段名或字段路径；例如 `month` / `user.age`，用于 React DSL 的数据通道 props。 */
@@ -258,10 +260,12 @@ export type IntervalMarkProps = DatumLabelProps & CoreNodeChannelProps & {
 
 export type RelationMarkProps = {
   id?: string;
+  transform?: Array<Transform>;
   source: PlotTargetRef;
   target: PlotTargetRef;
   via?: Array<PlotTargetRef>;
   route?: Array<RelationRouteStep>;
+  routing?: RelationRoutingSpec;
   label?: RelationStepLabel;
   path?: RelationPathOptions;
   color?: FieldName;

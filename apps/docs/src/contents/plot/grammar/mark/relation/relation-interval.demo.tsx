@@ -7,63 +7,48 @@ const Demo: FC = () => (
   <Plot data={intervalRelations} width={620} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
     <Axis dimension="x" tickLabels={false} />
     <Axis dimension="y" grid tickCount={4} />
-    <IntervalMark
-      x="slot"
-      y="beforeValue"
-      fill={{ kind: 'constant', value: '#a9e6f5' }}
-      stroke="#ffffff"
-      strokeWidth={0.8}
-    />
-    <IntervalMark
-      x="slot"
-      y="afterValue"
-      fill={{ kind: 'constant', value: '#2d6fb8' }}
-      stroke="#ffffff"
-      strokeWidth={0.8}
-    />
+    <IntervalMark x="slot" y="value" color="phase" stroke="#ffffff" strokeWidth={0.8} />
     <PointMark
       x="slot"
-      y="beforeLabelY"
-      text="beforeLabel"
-      textColor={{ kind: 'constant', value: '#0f4661' }}
-      font={{ size: 10, weight: 'bold' }}
-      align="center"
-    />
-    <PointMark
-      x="slot"
-      y="afterLabelY"
-      text="afterLabel"
-      textColor={{ kind: 'constant', value: '#f8fbff' }}
+      y="labelY"
+      text="label"
+      textColor="#ffffff"
       font={{ size: 10, weight: 'bold' }}
       align="center"
     />
     <RelationMark
-      source={{ project: { x: 'negativeSourceX', y: 'negativeSourceY' } }}
-      target={{ project: { x: 'negativeTargetX', y: 'negativeTargetY' } }}
-      route={[
-        { kind: 'line', to: { project: { x: 'negativeViaX', y: 'negativeViaY' } } },
+      transform={[
         {
-          kind: 'line',
-          to: { project: { x: 'negativeTargetX', y: 'negativeViaY' } },
-          label: { text: { field: 'negativeLabel' }, position: 0.5, side: 'sloped', textColor: '#8f1d1d', font: { size: 10, weight: 'bold' } },
+          kind: 'derive-relation',
+          groupBy: ['pair'],
+          source: { select: 'min', by: 'decreaseOrder', fields: { x: 'slot', y: 'value', viaY: 'routeY' } },
+          target: { select: 'max', by: 'decreaseOrder', fields: { x: 'slot', y: 'value' } },
+          measure: { kind: 'difference', field: 'value', labelAs: 'deltaLabel', labelPrefix: '+' },
         },
-        { kind: 'line' },
       ]}
-      path={{ arrow: '->', color: '#9f3030', dashPattern: [5, 4], strokeWidth: 1.1 }}
+      source={{ project: { x: 'sourceX', y: 'sourceY' } }}
+      via={[{ project: { x: 'sourceX', y: 'sourceViaY' } }]}
+      target={{ project: { x: 'targetX', y: 'targetY' } }}
+      routing={{ kind: 'orthogonal', via: '-|', labelStep: 'main' }}
+      label={{ text: { field: 'deltaLabel' }, position: 0.5, side: 'sloped', textColor: '#7f1d1d', font: { size: 10, weight: 'bold' } }}
+      path={{ arrow: '->', color: '#b91c1c', dashPattern: [5, 4], strokeWidth: 1.1 }}
     />
     <RelationMark
-      source={{ project: { x: 'positiveSourceX', y: 'positiveSourceY' } }}
-      target={{ project: { x: 'positiveTargetX', y: 'positiveTargetY' } }}
-      route={[
-        { kind: 'line', to: { project: { x: 'positiveViaX', y: 'positiveViaY' } } },
+      transform={[
         {
-          kind: 'line',
-          to: { project: { x: 'positiveTargetX', y: 'positiveViaY' } },
-          label: { text: { field: 'positiveLabel' }, position: 0.5, side: 'sloped', textColor: '#166534', font: { size: 10, weight: 'bold' } },
+          kind: 'derive-relation',
+          groupBy: ['pair'],
+          source: { select: 'min', by: 'increaseOrder', fields: { x: 'slot', y: 'value', viaY: 'routeY' } },
+          target: { select: 'max', by: 'increaseOrder', fields: { x: 'slot', y: 'value' } },
+          measure: { kind: 'difference', field: 'value', labelAs: 'deltaLabel', labelPrefix: '+' },
         },
-        { kind: 'line' },
       ]}
-      path={{ arrow: '->', color: '#4d937e', dashPattern: [5, 4], strokeWidth: 1.1 }}
+      source={{ project: { x: 'sourceX', y: 'sourceY' } }}
+      via={[{ project: { x: 'sourceX', y: 'sourceViaY' } }]}
+      target={{ project: { x: 'targetX', y: 'targetY' } }}
+      routing={{ kind: 'orthogonal', via: '-|', labelStep: 'main' }}
+      label={{ text: { field: 'deltaLabel' }, position: 0.5, side: 'sloped', textColor: '#166534', font: { size: 10, weight: 'bold' } }}
+      path={{ arrow: '->', color: '#15803d', dashPattern: [5, 4], strokeWidth: 1.1 }}
     />
   </Plot>
 );

@@ -277,4 +277,119 @@ describe('RelationMark and anchorId lowering', () => {
     ]);
     expect(() => expandOf(spec, { d: [{ id: 'A', x: 0, y: 0, source: 'A', missing: 'Z' }] })).toThrow(/pt.Z/);
   });
+
+  it('derives relation rows locally and connects generated anchor targets', () => {
+    const root = expandOf(baseSpec([
+      { type: 'path', anchorId: { prefix: 'trend', field: 'id' }, encoding: { x: { field: 'x' }, y: { field: 'value' } } },
+      {
+        type: 'relation',
+        transform: [
+          {
+            kind: 'derive-relation',
+            source: { select: 'min', by: 'value', fields: { id: 'id' } },
+            target: { select: 'max', by: 'value', fields: { id: 'id' } },
+            measure: { kind: 'difference', field: 'value', labelAs: 'deltaLabel', labelPrefix: '+' },
+          },
+        ],
+        source: { anchorId: { prefix: 'trend', field: 'sourceId' } },
+        target: { anchorId: { prefix: 'trend', field: 'targetId' } },
+        routing: { kind: 'bend', bendDirection: 'left', bendAngle: 20 },
+        label: { text: { field: 'deltaLabel' }, position: 0.5 },
+        path: { arrow: '->' },
+      },
+    ]), {
+      d: [
+        { id: 'a', x: 0, value: 14 },
+        { id: 'b', x: 1, value: 5 },
+        { id: 'c', x: 2, value: 29 },
+      ],
+    });
+    const [path] = collectPaths(markLayer(root, 1));
+    expect(collectPaths(markLayer(root, 1))).toHaveLength(1);
+    expect(path.arrow).toBe('->');
+    expect(path.children[0]).toMatchObject({ kind: 'move', to: { id: 'trend.b' } });
+    expect(path.children[1]).toMatchObject({ kind: 'bend', to: { id: 'trend.c' }, bendDirection: 'left', bendAngle: 20, label: { text: '+24', position: 0.5, side: 'sloped' } });
+  });
+
+  it('uses relation-local projected fields for scale domain and lowering', () => {
+    const root = expandOf(baseSpec([
+      {
+        type: 'relation',
+        transform: [
+          {
+            kind: 'derive-relation',
+            source: { select: 'first', fields: { x: 'x', y: 'value' } },
+            target: { select: 'last', fields: { x: 'x', y: 'value' } },
+          },
+        ],
+        source: { project: { x: 'sourceX', y: 'sourceY' } },
+        target: { project: { x: 'targetX', y: 'targetY' } },
+        routing: { kind: 'line' },
+      },
+    ]), {
+      d: [
+        { id: 'a', x: 10, value: 3 },
+        { id: 'b', x: 30, value: 9 },
+      ],
+    });
+    const [path] = collectPaths(markLayer(root, 0));
+    expect(path.children).toHaveLength(2);
+    expect(path.children[0]).toMatchObject({ kind: 'move' });
+    expect(path.children[1]).toMatchObject({ kind: 'line' });
+  });
+
+  it('lowers orthogonal routing to explicit line segments and attaches shorthand label to the main segment', () => {
+    const root = expandOf(
+      baseSpec([
+        {
+          type: 'relation',
+          id: 'delta',
+          transform: [
+            {
+              kind: 'derive-relation',
+              source: { select: 'first', fields: { x: 'x', y: 'value' } },
+              target: { select: 'last', fields: { x: 'x', y: 'value' } },
+              measure: { kind: 'difference', field: 'value', labelAs: 'deltaLabel', labelPrefix: '+' },
+            },
+          ],
+          source: { project: { x: 'sourceX', y: 'sourceY' } },
+          target: { project: { x: 'targetX', y: 'targetY' } },
+          routing: { kind: 'orthogonal', via: '|-', labelStep: 'main' },
+          label: { text: { field: 'deltaLabel' }, position: 0.5 },
+        },
+      ]),
+      {
+        d: [
+          { x: 0, value: 2 },
+          { x: 10, value: 18 },
+        ],
+      },
+      { width: 50, height: 200 },
+    );
+    const [path] = collectPaths(markLayer(root, 0));
+    expect(path.children).toHaveLength(3);
+    expect(path.children[1]).toMatchObject({ kind: 'line', label: { text: '+16', position: 0.5, side: 'sloped' } });
+    expect(path.children[2]).toMatchObject({ kind: 'line' });
+  });
+
+  it('rejects route and routing conflicts plus malformed orthogonal routing', () => {
+    expect(() => baseSpec([
+      {
+        type: 'relation',
+        source: { id: 'A' },
+        target: { id: 'B' },
+        route: [{ kind: 'line' }],
+        routing: { kind: 'line' },
+      },
+    ])).toThrow(/route and routing/);
+
+    expect(() => baseSpec([
+      {
+        type: 'relation',
+        source: { id: 'A' },
+        target: { id: 'B' },
+        routing: { kind: 'orthogonal' },
+      },
+    ])).toThrow(/via/);
+  });
 });
