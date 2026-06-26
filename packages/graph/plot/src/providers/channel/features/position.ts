@@ -1,5 +1,5 @@
-import { ChannelDefinitionKind, type PositionChannelDefinition } from '../../contract';
-import { type Channel } from '../../schemas';
+import { ChannelDefinitionKind, type PositionChannelDefinition } from '../../../contract';
+import { type Channel } from '../../../schemas';
 
 /** 内置 position channel definition 的扩展形态。 */
 export type BuiltinPositionChannelDefinition = PositionChannelDefinition & {

@@ -1,4 +1,4 @@
-import type { AxisGuide } from '../../schemas';
+import type { AxisGuide } from '../../../schemas';
 
 /**
  * guide 维度到坐标角色的映射函数。

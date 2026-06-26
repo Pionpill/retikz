@@ -1,5 +1,5 @@
 import { type AnyCoordinateDefinition, extractCoordinateType } from '../../contract';
-import { BUILTIN_COORDINATES } from './constants';
+import { BUILTIN_COORDINATES } from './private';
 
 /**
  * 解析坐标系 registry。

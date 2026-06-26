@@ -14,9 +14,8 @@ import {
   type ScaledMarkValueType,
   type SqrtScale,
 } from '../../../schemas';
-import { resolveOrdinalScale } from '../../scale/color';
-import { resolveLinearScale, resolveSqrtScale } from '../../scale/position';
-import { makeMarkValueResolver } from '../common';
+import { resolveLinearScale, resolveOrdinalScale, resolveSqrtScale } from '../../scale';
+import { makeMarkValueResolver } from '../shared';
 
 /** opacity 通道连续映射的最小不透明度（range 下界，避免最小值全透明不可见）；契约常量，测试 import 断言 */
 export const OPACITY_MIN = 0.2;

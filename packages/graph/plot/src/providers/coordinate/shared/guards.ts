@@ -1,8 +1,6 @@
-import type { CoordinateFrame } from '../../contract';
-import { PlotCoordinate } from '../../schemas';
-import type { CartesianCoordinateFrame } from './cartesian';
-import type { PolarCoordinateFrame } from './polar';
-import type { Ternary2DCoordinateFrame } from './ternary';
+import type { CoordinateFrame } from '../../../contract';
+import { PlotCoordinate } from '../../../schemas';
+import type { CartesianCoordinateFrame, PolarCoordinateFrame, Ternary2DCoordinateFrame } from '../features';
 
 /**
  * 判断运行时坐标帧是否为内置二维笛卡尔帧。

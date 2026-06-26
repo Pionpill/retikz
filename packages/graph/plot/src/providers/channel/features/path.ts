@@ -2,9 +2,9 @@ import { isFiniteNumber } from '@retikz/math';
 import { ArrowDetailSchema, DropShadowSchema, type IRArrowDetail, type IRPathScale, type JsonValue, JsonValueSchema, PathScaleSchema } from '@retikz/core';
 import { type AnyChannelDefinition, type ChannelResolution, type PathChannelDefinition, definePathChannel, isBuiltinScaleOperation } from '../../../contract';
 import { resolveFieldPath } from '../../data';
-import { type ExternalRow, type LinearScale, type MarkOperation, PlotFieldType, type PlotFieldTypeMap, PlotScale, type PlotSpec, type ScaledMarkValueType } from '../../../schemas';
 import { resolveLinearScale } from '../../scale';
-import { makeMarkValueResolver } from '../common';
+import { type ExternalRow, type LinearScale, type MarkOperation, PlotFieldType, type PlotFieldTypeMap, PlotScale, type PlotSpec, type ScaledMarkValueType } from '../../../schemas';
+import { makeMarkValueResolver } from '../shared';
 import { OPACITY_MIN, STROKE_WIDTH_MAX, STROKE_WIDTH_MIN } from './node';
 
 type NumericPathResolverOptions = {

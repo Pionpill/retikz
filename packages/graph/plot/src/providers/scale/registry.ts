@@ -1,8 +1,7 @@
 import { JsonObjectSchema } from '@retikz/core';
 import { type AnyScaleDefinition, type ChannelResolveContext, type ChannelScaleResolution, type PositionScale, extractScaleType, isBuiltinScaleOperation } from '../../contract';
 import { type MarkOperation, PathClosureKind, PlotFieldType, type PlotFieldTypeValue, PlotMark, PlotScale, type Scale, type ScaleOperation, isBuiltinMark } from '../../schemas';
-import { COLOR_SCALE_DEFINITIONS } from './color';
-import { POSITION_SCALE_DEFINITIONS } from './position';
+import { COLOR_SCALE_DEFINITIONS, POSITION_SCALE_DEFINITIONS } from './features';
 
 /**
  * 内置 scale definition 列表（position 9 + channel 6 = 15）。

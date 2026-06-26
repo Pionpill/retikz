@@ -1,7 +1,7 @@
 import { isFiniteNumber } from '@retikz/math';
 import { scaleLinear as d3ScaleLinear, scaleOrdinal as d3ScaleOrdinal, scaleQuantile as d3ScaleQuantile, scaleQuantize as d3ScaleQuantize, scaleThreshold as d3ScaleThreshold } from 'd3-scale';
-import { type AnyScaleDefinition, type ChannelResolveContext, type ChannelScaleResolution, defineScale } from '../../contract';
-import { inferCategoryDomain } from '../data';
+import { type AnyScaleDefinition, type ChannelResolveContext, type ChannelScaleResolution, defineScale } from '../../../contract';
+import { inferCategoryDomain } from '../../data';
 import {
   type DivergingColorScale,
   DivergingColorScaleSchema,
@@ -17,9 +17,8 @@ import {
   SequentialColorScaleSchema,
   type ThresholdColorScale,
   ThresholdColorScaleSchema,
-} from '../../schemas';
-import { PlotColorScheme } from './constants';
-import { type ColorScaleEvaluator, type ColorSchemeResolver, DEFAULT_PLOT_COLORS, builtinColorSchemeInterpolator, safeExtent, sampleSchemeColors, toHexColor } from './shared';
+} from '../../../schemas';
+import { type ColorScaleEvaluator, type ColorSchemeResolver, DEFAULT_PLOT_COLORS, PlotColorScheme, builtinColorSchemeInterpolator, safeExtent, sampleSchemeColors, toHexColor } from '../shared';
 
 /** sequential 缺省配色（感知均匀、色盲友好） */
 const DEFAULT_SEQUENTIAL_SCHEME = PlotColorScheme.Viridis;

@@ -18,7 +18,7 @@ import {
   type PathMark,
   type PointMark,
 } from '../../../schemas';
-import { BUILTIN_NODE_CHANNELS, BUILTIN_PATH_CHANNELS } from '../../channel/delivery';
+import { BUILTIN_NODE_CHANNELS, BUILTIN_PATH_CHANNELS } from '../../channel';
 
 /** 折线默认描边宽度（user units）。 */
 export const LINE_STROKE_WIDTH = 2;

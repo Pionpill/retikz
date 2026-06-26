@@ -1,9 +1,9 @@
 import { type Position, isFiniteNumber } from '@retikz/math';
-import { type AnyCoordinateDefinition, type Cell, type CellGeometry, type CoordinateDefinition, type DimensionRole, type TickSet, cellInterval } from '../../contract';
-import type { GuideContext } from '../../features';
-import { computeTernaryFrame } from '../../pipeline';
-import { PlotCoordinate, PlotScale, type Ternary2DCoordinate, Ternary2DSchema } from '../../schemas';
-import { assertUniqueAxisDimension } from './axis';
+import { type AnyCoordinateDefinition, type Cell, type CellGeometry, type CoordinateDefinition, type DimensionRole, type TickSet, cellInterval } from '../../../contract';
+import type { GuideContext } from '../../../features';
+import { computeTernaryFrame } from '../../../pipeline';
+import { PlotCoordinate, PlotScale, type Ternary2DCoordinate, Ternary2DSchema } from '../../../schemas';
+import { assertUniqueAxisDimension } from '../shared';
 
 /** 空刻度集：三角 guide 的 x/y 位置 scale 占位不会被实际读取。 */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };

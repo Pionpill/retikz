@@ -1,9 +1,9 @@
 import type { Position } from '@retikz/math';
-import { type AnyCoordinateDefinition, type Cell, type CellGeometry, type CoordinateDefinition, type DimensionRole, type PositionScale, type TickSet, cellInterval } from '../../contract';
-import type { GuideContext } from '../../features';
-import { type Rect, computePlotArea } from '../../pipeline/layout';
-import { type Cartesian1DCoordinate, Cartesian1DOrientation, type Cartesian1DOrientationType, Cartesian1DSchema, Cartesian2DSchema, type Coordinate, PlotCoordinate, PlotScale, type ScaleOperation } from '../../schemas';
-import { assertUniqueAxisDimension } from './axis';
+import { type AnyCoordinateDefinition, type Cell, type CellGeometry, type CoordinateDefinition, type DimensionRole, type PositionScale, type TickSet, cellInterval } from '../../../contract';
+import type { GuideContext } from '../../../features';
+import { type Rect, computePlotArea } from '../../../pipeline/layout';
+import { type Cartesian1DCoordinate, Cartesian1DOrientation, type Cartesian1DOrientationType, Cartesian1DSchema, Cartesian2DSchema, type Coordinate, PlotCoordinate, PlotScale, type ScaleOperation } from '../../../schemas';
+import { assertUniqueAxisDimension } from '../shared';
 
 type Cartesian2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Cartesian2D }>;
 

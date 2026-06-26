@@ -1,6 +1,6 @@
-import { ChannelDefinitionKind, type MarkChannelDefinition, type ResolveLabel } from '../../contract';
-import { type MarkOperation, type TextChannel } from '../../schemas';
-import { labelOf } from '../data';
+import { ChannelDefinitionKind, type MarkChannelDefinition, type ResolveLabel } from '../../../contract';
+import { labelOf } from '../../data';
+import { type MarkOperation, type TextChannel } from '../../../schemas';
 
 export type BuiltinTextChannels = {
   label: MarkChannelDefinition<string>;

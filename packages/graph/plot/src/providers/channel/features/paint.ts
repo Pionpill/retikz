@@ -1,9 +1,9 @@
 import { isFiniteNumber } from '@retikz/math';
 import { type IRPaintSpec, PaintSpecSchema } from '@retikz/core';
-import { ChannelDefinitionKind, type ChannelResolveContext, type MarkChannelDefinition, isBuiltinScaleOperation } from '../../contract';
-import { type Channel, type MarkOperation, PlotFieldType, type PlotFieldTypeMap, PlotScale, type PlotSpec, type ScaleOperation } from '../../schemas';
-import { coerceTimestamp, resolveFieldPath } from '../data';
-import { type CategoryOrder, orderedCategoryDomain, resolveChannelScale } from '../scale';
+import { ChannelDefinitionKind, type ChannelResolveContext, type MarkChannelDefinition, isBuiltinScaleOperation } from '../../../contract';
+import { coerceTimestamp, resolveFieldPath } from '../../data';
+import { type CategoryOrder, orderedCategoryDomain, resolveChannelScale } from '../../scale';
+import { type Channel, type MarkOperation, PlotFieldType, type PlotFieldTypeMap, PlotScale, type PlotSpec, type ScaleOperation } from '../../../schemas';
 
 export type ColorChannelDefinitionOptions = {
   channel: string;

@@ -1,7 +1,7 @@
-import { type ChannelResolution } from '../../contract';
-import { resolveFieldPath } from '../data';
-import { type MarkValueType, type PlotFieldTypeMap, type PlotFieldTypeValue } from '../../schemas';
-export type { ChannelResolution, ScaleDescriptor } from '../../contract';
+import { type ChannelResolution } from '../../../contract';
+import { resolveFieldPath } from '../../data';
+import { type MarkValueType, type PlotFieldTypeMap, type PlotFieldTypeValue } from '../../../schemas';
+export type { ChannelResolution, ScaleDescriptor } from '../../../contract';
 
 export type MarkValueResolution<T> = ChannelResolution<T> & {
   /** 绑定的数据字段名；常量值没有字段名。 */

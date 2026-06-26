@@ -1,9 +1,9 @@
 import { type Position, arcEndPoint, isFiniteNumber } from '@retikz/math';
-import { type AnyCoordinateDefinition, type Cell, type CellGeometry, type CoordinateDefinition, type DimensionRole, type PositionScale, RETIKZ_POLAR_SEGMENT_SAMPLES, type TickSet, cellInterval } from '../../contract';
-import type { GuideContext } from '../../features';
-import { computePolarCoordinate } from '../../pipeline';
-import { type Coordinate, PlotCoordinate, PlotScale, type Polar1DCoordinate, Polar1DSchema, Polar2DSchema } from '../../schemas';
-import { assertUniqueAxisDimension } from './axis';
+import { type AnyCoordinateDefinition, type Cell, type CellGeometry, type CoordinateDefinition, type DimensionRole, type PositionScale, RETIKZ_POLAR_SEGMENT_SAMPLES, type TickSet, cellInterval } from '../../../contract';
+import type { GuideContext } from '../../../features';
+import { computePolarCoordinate } from '../../../pipeline';
+import { type Coordinate, PlotCoordinate, PlotScale, type Polar1DCoordinate, Polar1DSchema, Polar2DSchema } from '../../../schemas';
+import { assertUniqueAxisDimension } from '../shared';
 
 type Polar2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Polar2D }>;
 

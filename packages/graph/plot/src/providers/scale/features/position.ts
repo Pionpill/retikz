@@ -1,8 +1,8 @@
 import { isFiniteNumber } from '@retikz/math';
 import { extent as d3Extent } from 'd3-array';
 import { type ScaleBand as D3ScaleBand, type ScaleContinuousNumeric as D3ScaleContinuousNumeric, type ScaleLinear as D3ScaleLinear, type ScalePoint as D3ScalePoint, type ScaleTime as D3ScaleTime, scaleBand as d3ScaleBand, scaleLinear as d3ScaleLinear, scaleLog as d3ScaleLog, scalePoint as d3ScalePoint, scalePow as d3ScalePow, scaleRadial as d3ScaleRadial, scaleSymlog as d3ScaleSymlog, scaleUtc as d3ScaleUtc } from 'd3-scale';
-import { type AnyScaleDefinition, type PositionScale, type TickSet, defineScale } from '../../contract';
-import { coerceTimestamp, inferCategoryDomain } from '../data';
+import { type AnyScaleDefinition, type PositionScale, type TickSet, defineScale } from '../../../contract';
+import { coerceTimestamp, inferCategoryDomain } from '../../data';
 import {
   type BandScale,
   BandScaleSchema,
@@ -24,8 +24,8 @@ import {
   SymlogScaleSchema,
   type TimeScale,
   TimeScaleSchema,
-} from '../../schemas';
-import { DEFAULT_TICK_COUNT, safeExtent, scaleTicks } from './shared';
+} from '../../../schemas';
+import { DEFAULT_TICK_COUNT, safeExtent, scaleTicks } from '../shared';
 
 // ── 连续数值位置 scale（linear / log / pow / sqrt / symlog / radial）────────────────
 

@@ -24,7 +24,7 @@ import {
   interpolateViridis as d3InterpolateViridis,
   schemeCategory10 as d3SchemeCategory10,
 } from 'd3-scale-chromatic';
-import type { TickSet } from '../../contract';
+import type { TickSet } from '../../../contract';
 import { BUILTIN_COLOR_SCHEMES, PlotColorScheme, type PlotColorSchemeValue } from './constants';
 
 /** 默认目标刻度数（d3 ticks 的提示值，非硬约束——实际数量按 nice 区间取整定） */
