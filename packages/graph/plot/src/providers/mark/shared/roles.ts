@@ -1,6 +1,6 @@
-import { type CoordinateFrame, type DimensionRole } from '../../contract';
-import { type Channel, type ExternalRow, type Mark } from '../../schemas';
-import { channelValue } from '../data';
+import { type CoordinateFrame, type DimensionRole } from '../../../contract';
+import { type Channel, type ExternalRow, type Mark } from '../../../schemas';
+import { channelValue } from '../../data';
 
 /**
  * 取某 mark 在某位置角色下的 encoding 通道（投影时按 frame.roles 序逐角色取值）。

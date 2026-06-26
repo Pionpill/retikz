@@ -1,7 +1,7 @@
 import { type IRNode, type IRNodeDefault, type IRScope } from '@retikz/core';
-import { type CellGeometry, type ChannelValueResolver, cellGeometryAnchor } from '../../contract';
-import { type Mark } from '../../schemas';
-import { DEFAULT_FILL, type MarkPaint, colorGroupedScope, constantNodeStyleOverrides } from './shared';
+import { type CellGeometry, type ChannelValueResolver, cellGeometryAnchor } from '../../../contract';
+import { type Mark } from '../../../schemas';
+import { DEFAULT_FILL, type MarkPaint, colorGroupedScope, constantNodeStyleOverrides } from '../shared';
 
 /** 柱 node 样式（rectangle + padding0 + 无描边，使 minimumWidth/Height 即真实柱尺寸）。 */
 const barStyle = (fill: MarkPaint, stroke: MarkPaint | undefined): IRNodeDefault => ({

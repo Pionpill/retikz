@@ -1,14 +1,14 @@
 import { type IRChild, type IRPath, type IRScope, type IRStep } from '@retikz/core';
-import { type ChannelValueResolver, type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkProvenance } from '../../contract';
-import { channelValue, compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../data';
+import { type ChannelValueResolver, type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkProvenance } from '../../../contract';
+import { channelValue, compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../../data';
 import {
   type PolarVertex,
   densifyPolarSegments,
   isCartesianCoordinateFrame,
   isPolarCoordinateFrame,
   toPolarVertex,
-} from '../coordinate';
-import { type ExternalRow, type Mark, type PathClosure, PathClosureKind, PathCurve, type PathCurveValue, type PathMark, PlotMark } from '../../schemas';
+} from '../../coordinate';
+import { type ExternalRow, type Mark, type PathClosure, PathClosureKind, PathCurve, type PathCurveValue, type PathMark, PlotMark } from '../../../schemas';
 import {
   DEFAULT_FILL,
   LINE_STROKE_WIDTH,
@@ -21,8 +21,8 @@ import {
   collectPathChannelFields,
   failLoudMessage,
   pathChannelKinds,
-} from './shared';
-import { seriesPathMeta, slug } from '../../pipeline';
+} from '../shared';
+import { seriesPathMeta, slug } from '../../../pipeline';
 
 /**
  * 取一行的位置通道值 → [xValue, yValue]（坐标系无关；投影交给 frame.project，frame 把 x/y 重解释为对应角色）。

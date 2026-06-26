@@ -14,12 +14,12 @@ import {
   type PositionScale,
   hasProjectCell,
   isRenderableCellGeometry,
-} from '../../contract';
-import { channelValue, inferCategoryDomain, resolveFieldPath } from '../data';
-import { type CartesianCoordinateFrame, type PolarCoordinateFrame, isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame, isTernary2DCoordinateFrame } from '../coordinate';
-import { type ExternalRow, type IntervalBound, IntervalBoundKind, type IntervalMark, type Mark, PlotCoordinate, PlotMark } from '../../schemas';
-import { cellGeometryNode, cellLayer } from './cell';
-import { channelForRole } from './roles';
+} from '../../../contract';
+import { channelValue, inferCategoryDomain, resolveFieldPath } from '../../data';
+import { type CartesianCoordinateFrame, type PolarCoordinateFrame, isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame, isTernary2DCoordinateFrame } from '../../coordinate';
+import { type ExternalRow, type IntervalBound, IntervalBoundKind, type IntervalMark, type Mark, PlotCoordinate, PlotMark } from '../../../schemas';
+import { cellGeometryNode, cellLayer } from '../private';
+import { channelForRole } from '../shared';
 import {
   type MarkPaint,
   applyNodeChannelDeliveries,
@@ -32,7 +32,7 @@ import {
   decorateDatum,
   failLoudMessage,
   nodeChannelKinds,
-} from './shared';
+} from '../shared';
 
 type IntervalRoleContext = NonNullable<IntervalContext['byRole'][string]>;
 

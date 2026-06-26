@@ -1,8 +1,6 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRScope } from '@retikz/core';
-import { type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkProvenance } from '../../contract';
-import { type ExternalRow, type Mark, PlotMark, type PointMark } from '../../schemas';
-import { datumAnchor } from './anchor';
-import { roleValues } from './roles';
+import { type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkProvenance } from '../../../contract';
+import { type ExternalRow, type Mark, PlotMark, type PointMark } from '../../../schemas';
 import {
   DEFAULT_FILL,
   type MarkPaint,
@@ -15,7 +13,9 @@ import {
   colorGroupedScope,
   decorateDatum,
   nodeChannelKinds,
-} from './shared';
+  roleAnchor,
+  roleValues,
+} from '../shared';
 
 /** 散点 glyph 默认直径（user units，已补偿 circle 外接）。 */
 const POINT_SIZE = 10;
@@ -109,8 +109,8 @@ export const lowerPoint = (
       placed.push({ color: colorOf?.(row), node: decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined) });
       continue;
     }
-    // 散点 glyph：锚点与 locator 共享同一 datumAnchor（point → frame.projectRoles），杜绝两套投影漂移
-    const point = datumAnchor(mark, row, frame);
+    // 散点 glyph：锚点与 locator 共享同一 role 投影（point → frame.projectRoles），杜绝两套投影漂移
+    const point = roleAnchor(mark, row, frame);
     if (!point) continue;
     const base: IRNode = { type: 'node', position: point };
     const fill = fillOf?.(row);

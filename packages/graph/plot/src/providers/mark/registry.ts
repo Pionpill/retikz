@@ -1,10 +1,8 @@
 import { type IRChild, type IRScope } from '@retikz/core';
-import { type AnyMarkDefinition, type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkProvenance } from '../../contract';
-import { type ExternalRow, type MarkOperation, PlotMark, type PlotMarkValue } from '../../schemas';
-import { intervalMarkDefinition } from './interval';
-import { pathMarkDefinition } from './path';
-import { pointMarkDefinition } from './point';
-import { referenceMarkDefinition } from './reference';
+import { type AnyMarkDefinition, type CoordinateFrame, type FieldCollector, type IntervalContext, type MarkChannels, type MarkDefinition, type MarkProvenance } from '../../contract';
+import { type ExternalRow, type Mark, type MarkOperation, PlotMark, type PlotMarkValue } from '../../schemas';
+import { intervalMarkDefinition, pathMarkDefinition, pointMarkDefinition, referenceMarkDefinition } from './features';
+import { cellAnchor, roleAnchor } from './shared';
 
 const asAnyMarkDefinition = <T extends MarkOperation>(def: MarkDefinition<T>): AnyMarkDefinition => def as unknown as AnyMarkDefinition;
 
@@ -58,6 +56,24 @@ export const channelKindsForMark = (
   mark: MarkOperation,
   registry: ReadonlyMap<string, AnyMarkDefinition> = BUILTIN_MARK_REGISTRY,
 ): ReturnType<NonNullable<AnyMarkDefinition['channelKinds']>> | undefined => markDefinitionOf(mark, registry).channelKinds?.(mark as never);
+
+/**
+ * 解析 datum 锚点：cell 类 mark 通过 definition.buildCell 取逻辑 cell，其余内置 mark 走 role 投影。
+ * @description registry 层负责查 definition，shared 层只提供纯投影 helper，避免 shared 反向依赖 interval feature。
+ */
+export const datumAnchor = (
+  mark: Mark,
+  row: ExternalRow,
+  frame: CoordinateFrame,
+  ctx?: IntervalContext,
+  registry: ReadonlyMap<string, AnyMarkDefinition> = BUILTIN_MARK_REGISTRY,
+): [number, number] | null => {
+  const definition = markDefinitionOf(mark, registry);
+  if (definition.buildCell !== undefined) {
+    return cellAnchor(definition.buildCell(mark as never, row, frame, ctx), frame);
+  }
+  return roleAnchor(mark, row, frame);
+};
 
 const isScopeLayer = (layer: IRChild | null): layer is IRScope =>
   layer !== null && layer.type === 'scope' && 'children' in layer;

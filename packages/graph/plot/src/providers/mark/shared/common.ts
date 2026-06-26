@@ -8,8 +8,8 @@ import {
   type MarkChannels,
   type MarkDefinition,
   type MarkProvenance,
-} from '../../contract';
-import { datumMeta, markLayerId, markLayerMeta, readSourceIndex, readSourceIndices } from '../../pipeline';
+} from '../../../contract';
+import { datumMeta, markLayerId, markLayerMeta, readSourceIndex, readSourceIndices } from '../../../pipeline';
 import {
   type ExternalRow,
   type IntervalMark,
@@ -17,8 +17,8 @@ import {
   type MarkOperation,
   type PathMark,
   type PointMark,
-} from '../../schemas';
-import { BUILTIN_NODE_CHANNELS, BUILTIN_PATH_CHANNELS } from '../channel/delivery';
+} from '../../../schemas';
+import { BUILTIN_NODE_CHANNELS, BUILTIN_PATH_CHANNELS } from '../../channel/delivery';
 
 /** 折线默认描边宽度（user units）。 */
 export const LINE_STROKE_WIDTH = 2;

@@ -11,17 +11,17 @@ import {
   type PositionScale,
   hasProjectCell,
   isRenderableCellGeometry,
-} from '../../contract';
-import { channelValue, resolveFieldPath } from '../data';
+} from '../../../contract';
+import { channelValue, resolveFieldPath } from '../../data';
 import {
   type CartesianCoordinateFrame,
   type PolarCoordinateFrame,
   isCartesianCoordinateFrame,
   isPolarCoordinateFrame,
   isTernary2DCoordinateFrame,
-} from '../coordinate';
-import { type ExternalRow, type Mark, PlotMark, type ReferenceMark } from '../../schemas';
-import { cellGeometryNode, cellLayer, styleForGeometry } from './cell';
+} from '../../coordinate';
+import { type ExternalRow, type Mark, PlotMark, type ReferenceMark } from '../../../schemas';
+import { cellGeometryNode, cellLayer, styleForGeometry } from '../private';
 import { pointsToSteps } from './path';
 import {
   DEFAULT_FILL,
@@ -36,8 +36,8 @@ import {
   collectPathChannelFields,
   decorateDatum,
   failLoudMessage,
-} from './shared';
-import { ChannelDefinitionKind } from '../../contract';
+} from '../shared';
+import { ChannelDefinitionKind } from '../../../contract';
 
 /** reference 描边宽度（参考线；与 path mark 同宽，视觉一致）。 */
 const REFERENCE_STROKE_WIDTH = LINE_STROKE_WIDTH;
