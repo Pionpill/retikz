@@ -14,10 +14,12 @@ Mark 是图形语法里的几何层。它不直接写像素坐标，而是声明
 | 维度图元 | `PointMark` | 坐标系定位后的 Node 节点 | 散点、气泡、文本点 |
 |  | `PathMark` | 有序点连成 1D 轨迹 | 折线、路径、雷达线框 |
 |  | `IntervalMark` | 各位置维度的正交区间积 | 柱、直方、热图、径向柱、饼 / 环 |
-| 特殊图元 | `ReferenceMark` | 固定位置或固定区间的参考约束 | 阈值线、参考环、容差带 |
-|  | `RelationMark` | 从 source 到 target 的 core Path | 箭头、依赖关系、跨点或跨区间连线 |
+| 辅助图元 | `ReferenceMark` | 固定位置或固定区间的参考约束 | 阈值线、参考环、容差带 |
+| 关系图元 | `RelationMark` | 从 source 到 target 的 core Path | 箭头、依赖关系、跨点或跨区间连线 |
 
 图表形态不是新的底层图元。比如热图是 `IntervalMark` 的双 band 区间，饼图是 `IntervalMark` 在极坐标下的角向区间，散点 / 气泡 / 文本点都是 `PointMark` 的不同表现层配置。
+
+这里的分类只描述图元的作用：维度图元表达数据维度到几何的映射，辅助图元表达参考约束，关系图元表达目标之间的连接。实现上它们仍然都是同一套 mark 注册项，并通过各自的 lowering 下沉到 core。
 
 ## 下沉到 core
 

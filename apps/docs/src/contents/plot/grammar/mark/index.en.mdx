@@ -14,10 +14,12 @@ Each built-in mark is a registered entry. During compilation, field mappings bec
 | Dimensional marks | `PointMark` | A Node positioned by the coordinate system | Scatter, bubbles, text points |
 |  | `PathMark` | Ordered points connected into a 1D trajectory | Lines, paths, radar outlines |
 |  | `IntervalMark` | Orthogonal interval products across position roles | Bars, histograms, heatmaps, radial bars, pies / donuts |
-| Special marks | `ReferenceMark` | Reference constraints at fixed positions or intervals | Threshold lines, reference rings, tolerance bands |
-|  | `RelationMark` | A core Path from source to target | Arrows, dependencies, point-to-point or interval-to-interval connectors |
+| Auxiliary marks | `ReferenceMark` | Reference constraints at fixed positions or intervals | Threshold lines, reference rings, tolerance bands |
+| Relation marks | `RelationMark` | A core Path from source to target | Arrows, dependencies, point-to-point or interval-to-interval connectors |
 
 Chart forms are not separate low-level marks. A heatmap is a double-band `IntervalMark`, a pie is an angular `IntervalMark` under polar coordinates, and scatter / bubble / text points are different presentation settings of `PointMark`.
+
+These categories describe each mark's role only: dimensional marks map data dimensions to geometry, auxiliary marks express reference constraints, and relation marks express connections between targets. In implementation, they remain entries in the same mark registry and lower to core through their own lowering logic.
 
 ## Lowering to Core
 
