@@ -20,7 +20,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'node') out.push(node);
+      if (node.type === 'node') out.push(child as IRNode);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -33,7 +33,7 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'path') out.push(node);
+      if (node.type === 'path') out.push(child as IRPath);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -234,7 +234,7 @@ describe('连续色 · 非有限 domain 端点 fail-loud（ADR-01 越界一致�
       scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { ...colorScale, name: 'col' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', color: { kind: 'field', value: 'v', scale: 'col' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
-    });
+    }) as PlotSpec;
   const data = [{ x: 0, y: 0, v: 1 }, { x: 1, y: 1, v: 1e9 }, { x: 2, y: 2, v: 1e18 }];
 
   // 此前 [0, Infinity] 会让 span=Infinity、每点 t=0，所有点静默压成端点色（信息全丢、不报错）

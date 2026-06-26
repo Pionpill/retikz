@@ -18,7 +18,7 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'path') out.push(node);
+      if (node.type === 'path') out.push(child as IRPath);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -31,7 +31,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'node') out.push(node);
+      if (node.type === 'node') out.push(child as IRNode);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };

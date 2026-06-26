@@ -419,7 +419,7 @@ describe('rule polar', () => {
 
     const scene = compileToScene({ version: 1, type: 'scene', children: [layer] });
     const filledRing = flattenPrimitives(scene.primitives).find(
-      p => p.type === 'path' && p.fill === '#fde68a',
+      (p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path' && p.fill === '#fde68a',
     );
     expect(filledRing?.type).toBe('path');
     expect(filledRing?.fillRule).toBe('evenodd');
