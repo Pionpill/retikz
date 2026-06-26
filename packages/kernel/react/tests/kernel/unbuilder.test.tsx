@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { IR, IRChild } from '@retikz/core';
 import { CURRENT_IR_VERSION } from '@retikz/core';
 import { Draw } from '../../src/sugar/Draw';
-import { TIKZ_NODE, TIKZ_PATH, TIKZ_STEP } from '../../src/kernel/_displayNames';
+import { TIKZ_NODE, TIKZ_PATH, TIKZ_RIBBON, TIKZ_STEP } from '../../src/kernel/_displayNames';
 import { buildIR } from '../../src/kernel/builder';
 import { convertIRToReactNode } from '../../src/kernel/unbuilder';
 
@@ -111,6 +111,29 @@ describe('convertIRToReactNode', () => {
     };
     const back = buildIR(convertIRToReactNode(ir));
     expect(back).toEqual(ir);
+  });
+
+  it('Ribbon round-trip：IR → React → IR 等价', () => {
+    const ir: IR = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [
+        {
+          type: 'ribbon',
+          width: { start: 8, end: 2 },
+          startDirection: 0,
+          endDirection: [1, 0],
+          fill: 'steelblue',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const [ribbonEl] = toElements(convertIRToReactNode(ir));
+    expect((ribbonEl.type as { displayName?: string }).displayName).toBe(TIKZ_RIBBON);
+    expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
   });
 
   it('Sugar 降级：<Draw> → IR → React 还原成 <Path>，二次 round-trip IR 稳定', () => {

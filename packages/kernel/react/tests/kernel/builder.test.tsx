@@ -5,6 +5,7 @@ import { Draw } from '../../src/sugar/Draw';
 import { EdgeLabel } from '../../src/sugar/EdgeLabel';
 import { Node } from '../../src/kernel/Node';
 import { Path } from '../../src/kernel/Path';
+import { Ribbon } from '../../src/kernel/Ribbon';
 import { Scope } from '../../src/kernel/Scope';
 import { Step } from '../../src/kernel/Step';
 import { Text } from '../../src/kernel/Text';
@@ -266,6 +267,26 @@ after`;
       children: [
         { type: 'step', kind: 'move', to: { id: 'A' } },
         { type: 'step', kind: 'line', to: [100, 100] },
+      ],
+    });
+  });
+
+  it('<Ribbon><Step/><Step/></Ribbon> collects a variable-width centerline', () => {
+    const ir = buildIR(
+      <Ribbon width={{ start: 8, end: 2 }} startDirection={0} endDirection={[1, 0]} fill="steelblue">
+        <Step kind="move" to={[0, 0]} />
+        <Step to={[10, 0]} />
+      </Ribbon>,
+    );
+    expect(ir.children[0]).toEqual({
+      type: 'ribbon',
+      width: { start: 8, end: 2 },
+      startDirection: 0,
+      endDirection: [1, 0],
+      fill: 'steelblue',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [10, 0] },
       ],
     });
   });

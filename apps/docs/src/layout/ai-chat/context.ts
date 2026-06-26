@@ -112,7 +112,7 @@ Coordinate = {
 
 - 定位：\`/core/concepts/basic/position\` · \`/core/reference/schema/placement\`
 - IR：\`/core/reference/schema/scene\` · \`.../entity\` · \`.../path\`
-- 组件：\`/core/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
+- 组件：\`/core/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/ribbon,draw/step,draw/arrow}\`
 - 形状 sugar：\`/core/components/shapes/circle-ellipse\`
 - 完整范例：\`/core/examples/karl-circle\`
 
@@ -218,7 +218,7 @@ For polar coordinates / multi-segment paths / Node anchors / Draw way DSL / Edge
 
 - Positioning: \`/core/concepts/basic/position\` · \`/core/reference/schema/placement\`
 - IR: \`/core/reference/schema/scene\` · \`.../entity\` · \`.../path\`
-- Components: \`/core/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
+- Components: \`/core/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/ribbon,draw/step,draw/arrow}\`
 - Shape sugar: \`/core/components/shapes/circle-ellipse\`
 - Worked example: \`/core/examples/karl-circle\`
 

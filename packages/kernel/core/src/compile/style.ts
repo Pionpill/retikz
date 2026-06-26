@@ -5,6 +5,7 @@ import type {
   IRLabelDefault,
   IRNode,
   IRPath,
+  IRRibbon,
   IRScope,
   IRStep,
   IRStepLabel,
@@ -111,6 +112,19 @@ const cascadeToPath = (c: CascadeState): Partial<IRPath> => {
   return out;
 };
 
+/** Cascaded graphic state projected to ribbon style. Ribbon is a filled path-like area. */
+const cascadeToRibbon = (c: CascadeState): Partial<IRRibbon> => {
+  const out: Partial<IRRibbon> = {};
+  const fill = c.fill ?? c.color;
+  if (fill !== undefined) out.fill = fill;
+  if (c.stroke !== undefined) out.stroke = c.stroke;
+  if (c.strokeWidth !== undefined) out.strokeWidth = c.strokeWidth;
+  if (c.opacity !== undefined) out.opacity = c.opacity;
+  if (c.fillOpacity !== undefined) out.fillOpacity = c.fillOpacity;
+  if (c.drawOpacity !== undefined) out.drawOpacity = c.drawOpacity;
+  return out;
+};
+
 /** node 源同源主色展开：未显式给的 stroke / fill / textColor 取该源 color */
 const expandNodeColor = (src: Partial<IRNode>): Partial<IRNode> => {
   const out: Partial<IRNode> = { ...src };
@@ -127,6 +141,12 @@ const expandNodeColor = (src: Partial<IRNode>): Partial<IRNode> => {
 const expandPathColor = (src: Partial<IRPath>): Partial<IRPath> => {
   const out: Partial<IRPath> = { ...src };
   if (src.color !== undefined && out.stroke === undefined) out.stroke = src.color;
+  return out;
+};
+
+const expandRibbonColor = (src: Partial<IRRibbon>): Partial<IRRibbon> => {
+  const out: Partial<IRRibbon> = { ...src };
+  if (src.color !== undefined && out.fill === undefined) out.fill = src.color;
   return out;
 };
 
@@ -323,4 +343,37 @@ export const resolveEffectivePath = (
   const labelDefault = resolveLabelDefault(stack);
   effective.children = resolveStepLabels(path.children, labelDefault, masterColor);
   return effective;
+};
+
+export const resolveEffectiveRibbon = (
+  ribbon: IRRibbon,
+  stack: ReadonlyArray<StyleFrame>,
+): IRRibbon => {
+  let acc: Partial<IRRibbon> = {};
+  for (const frame of stack) {
+    if (cuts(frame.resetStyle, 'path')) {
+      acc = {};
+    }
+    acc = { ...acc, ...pickDefinedKeys(cascadeToRibbon(frame.cascade)) };
+    if (frame.pathDefault) {
+      acc = {
+        ...acc,
+        ...pickDefinedKeys(
+          expandRibbonColor({
+            color: frame.pathDefault.color,
+            fill: frame.pathDefault.fill,
+            fillOpacity: frame.pathDefault.fillOpacity,
+            stroke: frame.pathDefault.stroke,
+            strokeWidth: frame.pathDefault.strokeWidth,
+            drawOpacity: frame.pathDefault.drawOpacity,
+            opacity: frame.pathDefault.opacity,
+            shadow: frame.pathDefault.shadow,
+            blendMode: frame.pathDefault.blendMode,
+          }),
+        ),
+      };
+    }
+  }
+  acc = { ...acc, ...pickDefinedKeys(expandRibbonColor(ribbon)) };
+  return acc as IRRibbon;
 };

@@ -14,6 +14,7 @@ description: 绘制家族——从日常连线的 Sugar 到逐段精确控制的
 | Draw | Sugar | way 数组串起目标点 / 折角 / 曲线 / 闭合 / 边标注 / 样式，编译期展开为 Path + Step | 日常连线、流程图边、带箭头连接（首选）|
 | Way | Sugar | Draw 的 way item 形态、DrawWay 常量、折角、闭合、相对坐标 | 查 way 数组里到底能写什么 |
 | Path | Kernel | 路径容器，由 Step 子节点序列定义折线 / 曲线 / 弧形 | 需要多次 move、逐段精确控制、最贴近 IR |
+| Ribbon | Kernel | 沿开放中心线扫出的可变宽度带状面，编译成闭合 Path | 桑基 / alluvial 流带、头尾宽度不同的连接面 |
 | Step | Kernel | 一个 step = 一个动作（move / line / curve / arc / cycle…）| 逐段控制每一段的路径动作语义 |
 | Arrow | 通用 | Path / Draw 共用的箭头：`arrow` 定方向、`arrowDetail` 管视觉规格 | 需要精细的箭头 shape / 尺寸 / 颜色 / 起末 |
 
@@ -31,6 +32,10 @@ description: 绘制家族——从日常连线的 Sugar 到逐段精确控制的
   <LinkedCard href="/core/components/draw/path">
     <span className="font-semibold">Path</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Kernel 路径容器与完整描边字段</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/draw/ribbon">
+    <span className="font-semibold">Ribbon</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">开放中心线生成可填充的变宽带状面</span>
   </LinkedCard>
   <LinkedCard href="/core/components/draw/step">
     <span className="font-semibold">Step</span>

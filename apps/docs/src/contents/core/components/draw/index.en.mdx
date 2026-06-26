@@ -14,6 +14,7 @@ This group is about *drawing lines*: node to node, folds, curves, arcs, and clos
 | Draw | Sugar | A way array threads targets / folds / curves / cycle / edge labels / styling, expanding to Path + Step | Everyday connections, flowchart edges, arrowed links (the default) |
 | Way | Sugar | Draw's way item forms, DrawWay constants, folds, cycle, relative coordinates | Looking up what a way array can contain |
 | Path | Kernel | Path container, a sequence of Step children defining a polyline / curve / arc | Multiple moves, step-by-step control, closest to the IR |
+| Ribbon | Kernel | A variable-width filled band swept along an open centerline, compiled to a closed Path | Sankey / alluvial bands and links whose start and end widths differ |
 | Step | Kernel | One step = one action (move / line / curve / arc / cycle…) | Controlling each segment's path action semantics |
 | Arrow | Shared | Arrows shared by Path / Draw: `arrow` sets direction, `arrowDetail` covers visual specs | Fine-grained arrow shape / size / color / per-end config |
 
@@ -31,6 +32,10 @@ This group is about *drawing lines*: node to node, folds, curves, arcs, and clos
   <LinkedCard href="/core/components/draw/path">
     <span className="font-semibold">Path</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Kernel path container and full stroke fields</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/draw/ribbon">
+    <span className="font-semibold">Ribbon</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Build fillable variable-width bands from open centerlines</span>
   </LinkedCard>
   <LinkedCard href="/core/components/draw/step">
     <span className="font-semibold">Step</span>

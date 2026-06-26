@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DrawWay, parseWay } from '@retikz/core';
 import { draw } from '../src/builder/draw';
+import { ribbon } from '../src/builder/ribbon';
 
 describe('@retikz/vanilla draw()', () => {
   it('draw-way-reuses-core：draw(way) 的 steps 与 core parseWay 逐字一致', () => {
@@ -42,5 +43,18 @@ describe('@retikz/vanilla draw()', () => {
   it('draw-no-config：draw(way) 无 config 也合法', () => {
     const p = draw(['a', 'b']);
     expect(p).toEqual({ type: 'path', children: parseWay(['a', 'b']) });
+  });
+});
+
+describe('@retikz/vanilla ribbon()', () => {
+  it('ribbon-way-reuses-core：ribbon(way) 的 steps 与 core parseWay 逐字一致', () => {
+    const r = ribbon(['a', 'b'], { width: { start: 8, end: 2 }, startDirection: 0, endDirection: [1, 0], fill: 'steelblue' });
+    expect(r.type).toBe('ribbon');
+    if (r.type !== 'ribbon') throw new Error('unreachable');
+    expect(r.width).toEqual({ start: 8, end: 2 });
+    expect(r.startDirection).toBe(0);
+    expect(r.endDirection).toEqual([1, 0]);
+    expect(r.fill).toBe('steelblue');
+    expect(r.children).toEqual(parseWay(['a', 'b']));
   });
 });

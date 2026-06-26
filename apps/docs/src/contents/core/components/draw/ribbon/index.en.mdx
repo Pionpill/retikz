@@ -1,0 +1,101 @@
+---
+title: Ribbon
+description: Kernel band path — generate a fillable variable-width area from an open centerline, for Sankey and alluvial ribbons.
+---
+
+`<Ribbon>` draws an area, not a variable `strokeWidth`. Like `<Path>`, it uses `<Step>` children for the centerline, but compile offsets both sides of that line by `width`, closes the outline, and fills the resulting Path primitive.
+
+This gives plot-level Sankey charts, alluvial diagrams, and any “wide at the source, narrow at the target” link a core capability. SVG / Canvas renderers still receive an ordinary closed path.
+
+## Usage
+
+```tsx
+import { Ribbon, Step } from '@retikz/react';
+```
+
+```tsx
+<Ribbon width={{ start: 32, end: 12 }} fill="#60a5fa">
+  <Step kind="move" to="source" />
+  <Step kind="cubic" control1={[80, 0]} control2={[160, 80]} to="target" />
+</Ribbon>
+```
+
+Use `<Draw>` / `<Path>` for a line, arrow, dash, or path label. Use `<Ribbon>` when the visible object is a filled band and its width needs to change along the centerline.
+
+## Composition
+
+`<Ribbon>` requires `<Step>` children, and those steps must form one open centerline. `cycle`, multiple `move` subpaths, and zero-length centerlines fail during compile.
+
+```tsx
+<Ribbon width={24}>
+  <Step kind="move" to={[-120, 0]} />
+  <Step kind="line" to={[120, 0]} />
+</Ribbon>
+```
+
+The centerline is only used for geometry sampling. `stroke` / `strokeWidth` outline the ribbon polygon; they do not stroke the centerline.
+
+## Examples
+
+### Basic Bands
+
+One quadratic centerline runs from upper left to lower right, wider at the source and narrower at the target.
+
+<ComponentPreview name="ribbon-basic" size="sm" />
+
+### Interpolation
+
+The same centerline and start/end widths are repeated while only `interpolation` changes, making the mid-band transition easier to compare.
+
+<ComponentPreview name="ribbon-interpolation" size="md" />
+
+### Endpoint Direction
+
+Endpoint direction defaults to the start-to-end connection. Override it with an angle, vector, or polar input when the cap needs a specific orientation.
+
+<ComponentPreview name="ribbon-direction" size="md" />
+
+### Ribbon Style
+
+Ribbon is a closed area, so styling focuses on `fill`, outline stroke, opacity, and shadow.
+
+<ComponentPreview name="ribbon-style" size="md" />
+
+## How it works
+
+> Optional for everyday use; revisit when you hit edge cases or want to understand why Ribbon has no arrows or dashes.
+
+### Lowering to a Closed Path
+
+The compiler first resolves the `<Step>` sequence into one open centerline, then samples it by `samples`. At each sample it computes the tangent, derives a normal, asks `width` for the local width, offsets left and right by half that width, and closes the resulting outline.
+
+The renderer still sees a normal closed path: `fill` paints the band area, and `stroke` outlines the boundary. The first Ribbon version does not support arrow, dash, marks, or path labels because those belong to centerline stroke semantics.
+
+### Custom Width Profiles
+
+IR cannot store functions. Custom rules use `width={{ kind: 'profile', name, params }}` to reference a runtime registry. The host registers `defineRibbonWidthProfile(...)` through `<Layout ribbonWidthProfiles={...}>` or compile options, and compile calls `widthAt` for each normalized offset.
+
+## API Reference
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `width` | `number \| { start, end, interpolation? } \| { kind: 'stops', stops, interpolation? } \| { kind: 'profile', name, params? }` | — | Width rule sampled along the centerline. |
+| `startDirection` | `number \| Vector2 \| Position \| PolarPosition` | Start-to-end direction | Tangent override at the start; tuple inputs are nonzero vectors, and polar inputs are converted before normalization. |
+| `endDirection` | `number \| Vector2 \| Position \| PolarPosition` | Start-to-end direction | Tangent override at the end; tuple inputs are nonzero vectors, and polar inputs are converted before normalization. |
+| `samples` | `number` | `48` | Number of cross-section samples, in `2..512`; increase for tight curves. |
+| `fill` | `string \| PaintSpec` | `currentColor` | Fill for the ribbon area: solid color, gradient, pattern, or image. |
+| `fillOpacity` | `number` | — | Opacity for fill only. |
+| `stroke` | `string \| PaintSpec` | — | Optional outline stroke paint; omitted means no outline. |
+| `strokeWidth` | `number` | — | Optional outline stroke width; if set alone, outline color is `currentColor`. |
+| `drawOpacity` | `number` | — | Opacity for the outline stroke. |
+| `opacity` | `number` | — | Whole-ribbon opacity. |
+| `shadow` | `ShadowPreset \| DropShadow` | — | Shadow applied to the emitted closed path. |
+| `blendMode` | `BlendMode` | — | Blend mode applied to the emitted closed path. |
+| `zIndex` | `number` | — | Explicit stacking order among sibling children. |
+| `children` | `Array<Step>` | — | Open centerline step sequence, at least 2 steps. |
+
+## Related
+
+- [Path](/core/components/draw/path): use it for lines, arrows, dashes, or path labels.
+- [Step](/core/components/draw/step): Ribbon reuses the same centerline step semantics.
+- [Draw](/core/components/draw/overview): the Sugar form for everyday connections.

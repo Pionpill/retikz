@@ -11,6 +11,9 @@ export const TIKZ_NODE = '@retikz/Node';
 /** <Path> 组件的 displayName */
 export const TIKZ_PATH = '@retikz/Path';
 
+/** <Ribbon> 组件的 displayName */
+export const TIKZ_RIBBON = '@retikz/Ribbon';
+
 /** <Step> 组件的 displayName */
 export const TIKZ_STEP = '@retikz/Step';
 

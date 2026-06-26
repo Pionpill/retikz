@@ -8,6 +8,7 @@ import { type IRJsonObject, JsonObjectSchema } from './json';
 import { type IRPaintSpec, PaintSpecSchema } from './paint';
 import { type IRNode, NodeSchema } from './node';
 import { type IRPath, PathSchema } from './path';
+import type { IRRibbon } from './ribbon';
 import { ArrowDetailSchema } from './path/arrow';
 import { type IRTransform, TransformSchema } from './transform';
 import type { ValueOf } from '../types';
@@ -140,13 +141,13 @@ export type IRScope = {
   boundingShape?: ScopeBoundingShapeValue;
   meta?: IRJsonObject;
   animations?: Array<IRAnimationTrack>;
-  children: Array<IRNode | IRPath | IRCoordinate | IRScope | IRComposite>;
+  children: Array<IRNode | IRPath | IRRibbon | IRCoordinate | IRScope | IRComposite>;
 };
 
 // ChildSchema 在 scene.ts 中定义并通过 z.lazy 注入；让 scope.children 能在
 // ChildSchema 完成定义后才被实际触达（schema 层与文件层都不形成 hard 循环依赖）。
 /** scope 子节点 union——与 scene.ts 的 IRChild 同构（此处内联避免文件层循环依赖） */
-type ScopeChild = IRNode | IRPath | IRCoordinate | IRScope | IRComposite;
+type ScopeChild = IRNode | IRPath | IRRibbon | IRCoordinate | IRScope | IRComposite;
 
 /** schema 注册顺序：scene.ts import 时由 __registerChildSchema 一次性回灌；之后只读 */
 let childSchemaRef: z.ZodType<ScopeChild> | null = null;

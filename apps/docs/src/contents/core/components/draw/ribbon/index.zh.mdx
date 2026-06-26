@@ -1,0 +1,100 @@
+---
+title: Ribbon
+description: Kernel 带状路径——沿开放中心线生成可填充的可变宽度面，适合桑基图和 alluvial 流带。
+---
+
+`<Ribbon>` 画的是一个面，不是可变 `strokeWidth`。它和 `<Path>` 一样用 `<Step>` 描述中心线，但编译时会把中心线两侧按 `width` 偏移，生成一个闭合的 Path primitive，再用 `fill` 填充。
+
+这让 plot 的桑基图、alluvial 图或任何“起点宽、终点窄”的连接带可以复用 core 能力；SVG / Canvas renderer 不需要新增 primitive。
+
+## 用法
+
+```tsx
+import { Ribbon, Step } from '@retikz/react';
+```
+
+```tsx
+<Ribbon width={{ start: 32, end: 12 }} fill="#60a5fa">
+  <Step kind="move" to="source" />
+  <Step kind="cubic" control1={[80, 0]} control2={[160, 80]} to="target" />
+</Ribbon>
+```
+
+当你需要的是一条线、箭头、虚线或路径标签，继续用 `<Draw>` / `<Path>`。当视觉主体是有面积的流带，并且宽度要沿中心线变化时，用 `<Ribbon>`。
+
+## 组合
+
+`<Ribbon>` 必须包含 `<Step>` 子节点，且这些 step 要形成单条开放中心线。`cycle`、多次 `move` 形成的多子路径、零长度中心线都会在编译时报错。
+
+```tsx
+<Ribbon width={24}>
+  <Step kind="move" to={[-120, 0]} />
+  <Step kind="line" to={[120, 0]} />
+</Ribbon>
+```
+
+中心线只负责几何采样，不绘制出来；`stroke` / `strokeWidth` 描的是 ribbon 外轮廓，不是中心线。
+
+## 例子
+
+### 基础流带
+
+一条从左上到右下的二次贝塞尔中心线，起点更宽、终点更窄。
+
+<ComponentPreview name="ribbon-basic" size="sm" />
+
+### 不同 interpolation
+
+同一条中心线和同一组起止宽度，只切换 `interpolation`，观察宽度在中段如何过渡。
+
+<ComponentPreview name="ribbon-interpolation" size="md" />
+
+### 端点方向
+
+端点方向默认取起点到终点的连接方向；需要调整端面时，可以用角度、向量或 polar 写法覆盖。
+<ComponentPreview name="ribbon-direction" size="md" />
+
+### 流带样式
+
+Ribbon 是闭合面，样式集中在 `fill`、外轮廓描边、透明度和阴影上。
+
+<ComponentPreview name="ribbon-style" size="md" />
+
+## 技术原理
+
+> 上手阶段可跳过本节；遇到边界 case 或想理解 Ribbon 为什么没有箭头、虚线时再回来读。
+
+### Lower 为闭合 Path
+
+编译器先把 `<Step>` 序列解析成一条开放中心线，再按 `samples` 采样。每个采样点根据切线求法线，`width` 给出该点宽度，左右各偏移半宽，最后拼成闭合 path。
+
+这样 renderer 看到的仍是普通闭合 path：`fill` 是带状面的填充，`stroke` 是外轮廓描边。Ribbon 第一版不支持 arrow、dash、marks、path label，因为这些都是中心线描边语义。
+
+### 自定义宽度 profile
+
+IR 不能保存函数；自定义变化规则通过 `width={{ kind: 'profile', name, params }}` 引用运行时 registry。宿主在 `<Layout ribbonWidthProfiles={...}>` 或 compile options 里注册 `defineRibbonWidthProfile(...)`，编译时按 offset 调用 `widthAt`。
+
+## API 参考
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `width` | `number \| { start, end, interpolation? } \| { kind: 'stops', stops, interpolation? } \| { kind: 'profile', name, params? }` | — | 沿中心线采样的宽度规则。 |
+| `startDirection` | `number \| Vector2 \| Position \| PolarPosition` | 起终点连接方向 | 起点切线方向覆盖；tuple 输入按非零向量处理，polar 输入会先转换再归一化。 |
+| `endDirection` | `number \| Vector2 \| Position \| PolarPosition` | 起终点连接方向 | 终点切线方向覆盖；tuple 输入按非零向量处理，polar 输入会先转换再归一化。 |
+| `samples` | `number` | `48` | 采样截面数量，范围 `2..512`；曲线越紧可适当增大。 |
+| `fill` | `string \| PaintSpec` | `currentColor` | Ribbon 面的填充，可用纯色、渐变、pattern、image。 |
+| `fillOpacity` | `number` | — | 只作用于填充的透明度。 |
+| `stroke` | `string \| PaintSpec` | — | 外轮廓描边颜色；省略时不描边。 |
+| `strokeWidth` | `number` | — | 外轮廓描边宽度；只设置它时描边颜色为 `currentColor`。 |
+| `drawOpacity` | `number` | — | 外轮廓描边透明度。 |
+| `opacity` | `number` | — | 整个 ribbon 的透明度。 |
+| `shadow` | `ShadowPreset \| DropShadow` | — | 编译后闭合 path 的阴影。 |
+| `blendMode` | `BlendMode` | — | 编译后闭合 path 的混合模式。 |
+| `zIndex` | `number` | — | 同层子节点的显式栈序。 |
+| `children` | `Array<Step>` | — | 开放中心线 step 序列，至少 2 个。 |
+
+## 相关
+
+- [Path](/core/components/draw/path)：需要画线、箭头、虚线或路径标签时使用。
+- [Step](/core/components/draw/step)：Ribbon 中心线复用同一套 step 语义。
+- [Draw](/core/components/draw/overview)：日常连线的 Sugar 写法。
