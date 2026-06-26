@@ -74,11 +74,11 @@ IntervalMark 是底层 cell mark：它只负责把每行数据变成一个正交
 
 同一个 `x` / `y` 区间切到 `coordinate="polar2D"` 后，`x` band 会被解释成角向 band，`y` span 会被解释成半径方向长度。
 
-<ComponentPreview name="bar-radial" sourceFiles={['bar-radial.data.ts']} />
+<ComponentPreview name="bar-radial" size="sm" sourceFiles={['bar-radial.data.ts']} />
 
 `angle` 是饼图 / 环图的便捷入口：它会把份额字段累积成角向 extent，半径方向使用 full。环图不是新的 mark，只是 polar 坐标系配置了 `innerRadius`。
 
-<ComponentPreview name="bar-pie-donut" sourceFiles={['bar-pie.data.ts']} interactive />
+<ComponentPreview name="bar-pie-donut" size="sm" sourceFiles={['bar-pie.data.ts']} interactive />
 
 ### 样式属性
 
