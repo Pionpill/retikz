@@ -313,15 +313,23 @@ export const ReferenceMarkSchema = z
   .object({
     type: z
       .literal(PlotMark.Reference)
-      .describe('Discriminator: a constant-position reference mark (line for a single value, band for a [lo,hi] interval) spanning the opposite axis domain'),
+      .describe('Discriminator: a constant-position reference mark (line for a single value, band for a [lo,hi] interval, or region for a bounded coordinate cell)'),
+    kind: z
+      .literal('region')
+      .optional()
+      .describe('Reference form override. Set to region to require lower/upper bounds for every consumed coordinate role and fill the bounded reference cell; omit to infer line or one-axis band'),
     yTo: z
       .union([z.number(), z.string().min(1)])
       .optional()
-      .describe('Horizontal band upper bound along y: number → constant, string → per-datum field. Present (paired with encoding.y as the lower bound) turns a horizontal reference into a filled band y∈[y,yTo]; omit → a single line'),
+      .describe('Upper bound along y: number → constant, string → per-datum field. With encoding.y alone it creates a horizontal band y∈[y,yTo]; with kind=region it is the region y upper bound'),
     xTo: z
       .union([z.number(), z.string().min(1)])
       .optional()
-      .describe('Vertical band upper bound along x: number → constant, string → per-datum field. Present (paired with encoding.x as the lower bound) turns a vertical reference into a filled band x∈[x,xTo]; omit → a single line'),
+      .describe('Upper bound along x: number → constant, string → per-datum field. With encoding.x alone it creates a vertical band x∈[x,xTo]; with kind=region it is the region x upper bound'),
+    zTo: z
+      .union([z.number(), z.string().min(1)])
+      .optional()
+      .describe('Upper bound along z: number → constant, string → per-datum field. Used by kind=region when the active coordinate consumes a z role, such as ternary2D'),
     extentField: z
       .string()
       .min(1)
@@ -340,7 +348,7 @@ export const ReferenceMarkSchema = z
     ...markBase,
     ...positionalEncoding,
   })
-  .describe('Reference mark: a constant-position reference constraint. Bind x (vertical) or y (horizontal); field → per-datum, value → constant. Give only the lower bound for a line; pair it with xTo / yTo for a filled band [lo,hi]. Use extentField / extentToField for partial-length spans');
+  .describe('Reference mark: a constant-position reference constraint. Bind x (vertical) or y (horizontal) for a line or one-axis band; set kind=region with lower/upper bounds for the active coordinate roles. Field → per-datum, value → constant. Use extentField / extentToField for partial-length one-axis spans');
 
 export const MarkSchema = z
   .discriminatedUnion('type', [PointMarkSchema, PathMarkSchema, IntervalMarkSchema, ReferenceMarkSchema])

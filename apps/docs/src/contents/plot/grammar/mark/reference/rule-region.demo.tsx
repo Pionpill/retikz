@@ -2,32 +2,32 @@ import { Axis, Plot, PointMark, ReferenceMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import type { FC } from 'react';
 
-import { scores } from './rule-threshold.data';
+import { regionSamples } from './rule-region.data';
 
-/** 阈值线：散点 + 一条 y=60 水平 rule（数字常量 → value，跨满 x 域，crimson 描边） */
+/** 参考区域：左侧笛卡尔矩形，右侧极坐标扇环，二者共用 projectCell 下沉路径。 */
 const Demo: FC = () => (
   <Layout width={620} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
     <Plot
-      data={scores}
+      data={regionSamples}
       model={[
-        { name: 'name', type: 'categorical' },
-        { name: 'score', type: 'continuous' },
+        { name: 'x', type: 'continuous' },
+        { name: 'y', type: 'continuous' },
       ]}
       width={300}
       height={220}
       x={0}
       y={30}
     >
-      <PointMark x="name" y="score" />
-      <ReferenceMark y={60} color="crimson" />
+      <ReferenceMark kind="region" x={45} xTo={150} y={55} yTo={80} color="#bfdbfe" fillOpacity={0.55} />
+      <PointMark x="x" y="y" />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>
     <Plot
-      data={scores}
+      data={regionSamples}
       model={[
-        { name: 'name', type: 'categorical' },
-        { name: 'score', type: 'continuous' },
+        { name: 'x', type: 'continuous' },
+        { name: 'y', type: 'continuous' },
       ]}
       width={260}
       height={260}
@@ -35,8 +35,8 @@ const Demo: FC = () => (
       x={350}
       y={0}
     >
-      <PointMark x="name" y="score" />
-      <ReferenceMark y={60} color="crimson" />
+      <ReferenceMark kind="region" x={45} xTo={150} y={55} yTo={80} color="#bfdbfe" fillOpacity={0.55} />
+      <PointMark x="x" y="y" />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>

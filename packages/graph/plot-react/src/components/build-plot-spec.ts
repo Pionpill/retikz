@@ -452,29 +452,45 @@ const positionEncoding = (x: string, y: string): Pick<Encoding, 'x' | 'y'> => ({
 const ruleChannel = (value: number | string): { value: number } | { field: string } => (typeof value === 'number' ? { value } : { field: value });
 
 /**
- * 把 <ReferenceMark> 扁平 props 装配进 rule IR（取向 / band 上界 / extent / color 校验 fail-loud）
+ * 把 <ReferenceMark> 扁平 props 装配进 reference IR（line / band / region / extent / color 校验 fail-loud）
  * @description 取向由给 x（竖直）还是 y（水平）决定，二选一（皆给 / 皆缺 → fail-loud）；
- *   band 上界 xTo 须配 x、yTo 须配 y（不匹配 / 单飞 → fail-loud）；extent 须成对（单设 → fail-loud）。
+ *   band 上界 xTo 须配 x、yTo 须配 y（不匹配 / 单飞 → fail-loud）。kind="region" 时 x/y/xTo/yTo 必填；
+ *   extent 须成对（单设 → fail-loud），且 region 不接收 extent。
  *   常量 rule（x/y 为数字）→ color 作 value 常量；per-datum rule（x/y 为字段串）→ color 作 field（AUTO_COLOR）。
  */
 const collectReference = (props: ReferenceMarkProps, into: Collected, styleContext: StyleSugarContext): void => {
-  const { x, y, xTo, yTo, extentField, extentToField, color, id, channels, strokeWidth, fillOpacity, opacity } = props;
+  const { kind, x, y, z, xTo, yTo, zTo, extentField, extentToField, color, id, channels, strokeWidth, fillOpacity, opacity } = props;
+  const region = kind === 'region';
   const hasX = x !== undefined;
   const hasY = y !== undefined;
-  if (hasX === hasY) {
+  const hasZ = z !== undefined;
+  if (region) {
+    if (!hasX || !hasY || xTo === undefined || yTo === undefined) {
+      throw new Error('buildPlotSpec: <ReferenceMark kind="region"> requires x, xTo, y, and yTo to define a bounded reference area');
+    }
+    if (hasZ !== (zTo !== undefined)) {
+      throw new Error('buildPlotSpec: <ReferenceMark kind="region"> z and zTo must be set together for z-role reference areas');
+    }
+    if (extentField !== undefined || extentToField !== undefined) {
+      throw new Error('buildPlotSpec: <ReferenceMark kind="region"> does not support extentField / extentToField; set x/xTo/y/yTo bounds directly');
+    }
+  } else if (hasX === hasY) {
     throw new Error('buildPlotSpec: <ReferenceMark> must bind exactly one of x (vertical) or y (horizontal); set one, not both / neither');
   }
-  if (hasX && yTo !== undefined) {
+  if (!region && hasX && yTo !== undefined) {
     throw new Error('buildPlotSpec: <ReferenceMark> binds x (vertical) but sets yTo; the band upper bound must match the bound dimension (use xTo)');
   }
-  if (hasY && xTo !== undefined) {
+  if (!region && hasY && xTo !== undefined) {
     throw new Error('buildPlotSpec: <ReferenceMark> binds y (horizontal) but sets xTo; the band upper bound must match the bound dimension (use yTo)');
+  }
+  if (!region && (hasZ || zTo !== undefined)) {
+    throw new Error('buildPlotSpec: <ReferenceMark> z / zTo are only valid with kind="region"');
   }
   if ((extentField === undefined) !== (extentToField === undefined)) {
     throw new Error('buildPlotSpec: <ReferenceMark> extentField / extentToField must be set together (a partial-length span needs both start and end)');
   }
   // 常量 rule（数字常量轴）→ color 作 value；per-datum（字段串）→ color 作 field（AUTO_COLOR）
-  const constantRule = typeof (hasX ? x : y) === 'number';
+  const constantRule = region ? typeof x === 'number' && typeof y === 'number' && typeof xTo === 'number' && typeof yTo === 'number' && (!hasZ || (typeof z === 'number' && typeof zTo === 'number')) : typeof (hasX ? x : y) === 'number';
   let colorEnc: { color: { value: string } | { field: string; scale: string } } | undefined;
   if (color !== undefined) {
     colorEnc = constantRule ? { color: { value: color } } : { color: { field: color, scale: AUTO_COLOR } };
@@ -482,10 +498,18 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
   const positional: Encoding = {};
   if (hasX) {
     positional.x = ruleChannel(x);
-  } else {
-    positional.y = ruleChannel(y as number | string);
   }
-  const upper = hasX ? (xTo !== undefined ? { xTo } : {}) : yTo !== undefined ? { yTo } : {};
+  if (hasY) {
+    positional.y = ruleChannel(y);
+  }
+  if (hasZ) {
+    positional.z = ruleChannel(z);
+  }
+  const upper = {
+    ...(xTo !== undefined ? { xTo } : {}),
+    ...(yTo !== undefined ? { yTo } : {}),
+    ...(zTo !== undefined ? { zTo } : {}),
+  };
   const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
   const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
   const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
@@ -507,6 +531,7 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
   };
   into.marks.push({
     type: PlotMark.Reference,
+    ...(kind !== undefined ? { kind } : {}),
     ...(id !== undefined ? { id } : {}),
     ...upper,
     ...(extentField !== undefined ? { extentField } : {}),

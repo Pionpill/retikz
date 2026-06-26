@@ -250,19 +250,26 @@ export type IntervalMarkProps = DatumLabelProps & CoreNodeChannelProps & {
 
 
 /**
- * <ReferenceMark> props：参考标注图层（阈值线 / 容差带）。取向由给 x（竖直）还是 y（水平）决定，二选一。
+ * <ReferenceMark> props：参考标注图层（阈值线 / 容差带 / 参考区域）。
  * @description 扁平 props：数字 → IR 常量 value、字符串 → IR field（per-datum）。只给下界（x / y）→ line；
- *   配上界（xTo 与 x 配对 / yTo 与 y 配对）→ band [lo,hi]。extent 给对侧维起止字段截成部分长度。
+ *   配上界（xTo 与 x 配对 / yTo 与 y 配对）→ band [lo,hi]。kind="region" 时 x/xTo/y/yTo 围出二维区域。
+ *   extent 给对侧维起止字段截成部分长度。
  */
 export type ReferenceMarkProps = Omit<CoreNodeChannelProps, 'scale' | 'dashPattern' | 'shadow' | 'blendMode'> & CorePathChannelProps & {
+  /** 参考形态覆写；设为 region 时 x/xTo/y/yTo 四个边界共同围出二维区域 */
+  kind?: 'region';
   /** 竖直参考的常量轴绑定（x=const 跨满 y 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */
   x?: number | FieldName;
   /** 水平参考的常量轴绑定（y=const 跨满 x 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */
   y?: number | FieldName;
+  /** Ternary / z-role region lower bound; only used with kind="region" when the coordinate consumes z. */
+  z?: number | FieldName;
   /** 竖直 band 上界（与 x 配对 → x∈[x,xTo] 填充带）：数字 → 常量、字符串 → 字段；缺 → line */
   xTo?: number | FieldName;
   /** 水平 band 上界（与 y 配对 → y∈[y,yTo] 填充带）：数字 → 常量、字符串 → 字段；缺 → line */
   yTo?: number | FieldName;
+  /** Ternary / z-role region upper bound paired with z. */
+  zTo?: number | FieldName;
   /** 对侧维部分长度起点字段（与 extentToField 成对）；缺 → 满铺对侧轴域 */
   extentField?: FieldName;
   /** 对侧维部分长度终点字段（与 extentField 成对）；缺 → 满铺对侧轴域 */

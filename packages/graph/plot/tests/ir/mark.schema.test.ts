@@ -365,10 +365,21 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
+  it('mark_reference_region_valid', () => {
+    const m = { type: 'reference', kind: 'region', xTo: 5, yTo: 90, encoding: { x: { value: 2 }, y: { value: 70 } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_reference_region_ternary_zTo_valid', () => {
+    const m = { type: 'reference', kind: 'region', xTo: 0.8, yTo: 0.6, zTo: 0.7, encoding: { x: { value: 0.1 }, y: { value: 0.1 }, z: { value: 0.1 } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
   it('mark_reference_minimal_omits_optionals', () => {
     // xTo / yTo / extent 省略：schema 不写入默认值，仅解析通过（line 形态由 lowering 判别）
     const m = { type: 'reference', encoding: { y: { value: 50 } } };
     const parsed = MarkSchema.parse(m);
+    expect(parsed).not.toHaveProperty('kind');
     expect(parsed).not.toHaveProperty('yTo');
     expect(parsed).not.toHaveProperty('xTo');
     expect(parsed).not.toHaveProperty('extentField');
@@ -394,6 +405,10 @@ describe('MarkSchema (ADR-05)', () => {
     expect(() => MarkSchema.parse({ type: 'reference', yTo: '', encoding: { y: { value: 70 } } })).toThrow();
   });
 
+  it('mark_reference_unknown_kind_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'reference', kind: 'band', yTo: 90, encoding: { y: { value: 70 } } })).toThrow();
+  });
+
   it('mark_reference_typo_type_rejected', () => {
     expect(() => MarkSchema.parse({ type: 'rul', encoding: { y: { value: 80 } } })).toThrow();
   });
@@ -405,7 +420,7 @@ describe('MarkSchema (ADR-05)', () => {
   });
 
   it('mark_reference_json_round_trip', () => {
-    const m = { type: 'reference', id: 'tol', yTo: 'hi', extentField: 'a', extentToField: 'b', encoding: { y: { field: 'lo' }, color: { field: 'cat', scale: 'c' } } };
+    const m = { type: 'reference', id: 'tol', kind: 'region', xTo: 'x1', yTo: 'hi', zTo: 'z1', encoding: { x: { field: 'x0' }, y: { field: 'lo' }, z: { field: 'z0' }, color: { field: 'cat', scale: 'c' } } };
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
