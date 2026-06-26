@@ -475,6 +475,41 @@ describe('label on fold (step kind="fold")：N=2 段等 t 拼接、拐角恒在 
     ],
   });
 
+  it('label_fold_midway_matches_numeric_0_5', () => {
+    const numeric = compileToScene(foldIR(0.5));
+    const keyword = compileToScene(foldIR('midway'));
+    expect(findTextPrims(keyword.primitives)[0].x).toBe(findTextPrims(numeric.primitives)[0].x);
+    expect(visualBottom(findTextPrims(keyword.primitives)[0])).toBeCloseTo(
+      visualBottom(findTextPrims(numeric.primitives)[0]),
+      2,
+    );
+  });
+
+  it('label_fold_sloped_uses_tangent_of_actual_sampled_leg', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            {
+              type: 'step',
+              kind: 'fold',
+              via: '-|',
+              to: [40, 30],
+              label: { text: 'F', position: 0.5, side: 'sloped' },
+            },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    const group = findGroupPrim(scene.primitives);
+    expect(group!.transforms).toEqual([{ kind: 'rotate', degrees: 0, cx: 40, cy: 0 }]);
+  });
+
   it('label_fold_t_0_5_at_corner：position=0.5 落在拐角 (40, 0)', () => {
     const scene = compileToScene(foldIR(0.5));
     const t = findTextPrims(scene.primitives)[0];
