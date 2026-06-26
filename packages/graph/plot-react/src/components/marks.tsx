@@ -61,6 +61,10 @@ export type ArrowValue = 'none' | '->' | '<-' | '<->';
 export type NodeShapeChannelValue = string | IRShapeRef;
 export type ExtensionChannelProp = FieldName | JsonValue | Channel | MarkValueType<JsonValue>;
 
+export type MarkTransformProps = {
+  transform?: Array<Transform>;
+};
+
 export type CoreNodeChannelProps = {
   align?: MarkValueProp<NodeTextAlignValue> | NodeTextAlignStyle;
   lineHeight?: MarkValueProp<number> | NodePositiveNumberStyle;
@@ -126,7 +130,7 @@ export type DatumLabelProps = {
 };
 
 /** <PathMark> props：折线图层，按 order（缺省按数据顺序）连点成一维轨迹 */
-export type PathMarkProps = DatumLabelProps & CorePathChannelProps & {
+export type PathMarkProps = MarkTransformProps & DatumLabelProps & CorePathChannelProps & {
   /** 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值） */
   x: FieldName;
   /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
@@ -156,7 +160,7 @@ export type PathMarkProps = DatumLabelProps & CorePathChannelProps & {
 };
 
 /** <PointMark> props：散点 / 文本图层，每行一个 glyph（给 text → 无边框文本 Node） */
-export type PointMarkProps = DatumLabelProps & CoreNodeChannelProps & {
+export type PointMarkProps = MarkTransformProps & DatumLabelProps & CoreNodeChannelProps & {
   /**
    * 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值；cartesian1D / polar1D 单维亦用 x）。
    * 可选：一维用 x，二维用 x/y，ternary2D 用 x/y/z；必填性由坐标系在 lowering 校验。
@@ -215,7 +219,7 @@ export type PointMarkProps = DatumLabelProps & CoreNodeChannelProps & {
  * @description 便捷 props 是 authoring 糖（自动拼 transform + 抽象 bounds）：x/y 画柱、angle 画饼/环、x0/x1 画直方、
  *   series(+stack) 分组/堆叠；heatmap（双 band）经显式 bounds={{x:{kind:'band'},y:{kind:'band'}}}。
  */
-export type IntervalMarkProps = DatumLabelProps & CoreNodeChannelProps & {
+export type IntervalMarkProps = MarkTransformProps & DatumLabelProps & CoreNodeChannelProps & {
   /** 绑 x 位置通道的字段路径（分类，自动 band scale；polar 下作角向类别）；直方连续 x 用 x0/x1 取代 */
   x?: FieldName;
   /** 绑 y 位置通道的字段路径（数值；polar 下作径向值；直方下作箱高度 binValue） */
@@ -258,9 +262,8 @@ export type IntervalMarkProps = DatumLabelProps & CoreNodeChannelProps & {
   anchorId?: AnchorIdSpec;
 };
 
-export type RelationMarkProps = {
+export type RelationMarkProps = MarkTransformProps & {
   id?: string;
-  transform?: Array<Transform>;
   source: PlotTargetRef;
   target: PlotTargetRef;
   via?: Array<PlotTargetRef>;
@@ -279,7 +282,7 @@ export type RelationMarkProps = {
  *   配上界（xTo 与 x 配对 / yTo 与 y 配对）→ band [lo,hi]。kind="region" 时 x/xTo/y/yTo 围出二维区域。
  *   extent 给对侧维起止字段截成部分长度。
  */
-export type ReferenceMarkProps = Omit<CoreNodeChannelProps, 'scale' | 'dashPattern' | 'shadow' | 'blendMode'> & CorePathChannelProps & {
+export type ReferenceMarkProps = MarkTransformProps & Omit<CoreNodeChannelProps, 'scale' | 'dashPattern' | 'shadow' | 'blendMode'> & CorePathChannelProps & {
   /** 参考形态覆写；设为 region 时 x/xTo/y/yTo 四个边界共同围出二维区域 */
   kind?: 'region';
   /** 竖直参考的常量轴绑定（x=const 跨满 y 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */

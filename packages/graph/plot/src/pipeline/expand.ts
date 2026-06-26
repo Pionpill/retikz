@@ -1,5 +1,5 @@
 import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, JsonObjectSchema, defineComposite } from '@retikz/core';
-import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type MarkOperation, PathClosureKind, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
+import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type MarkOperation, PathClosureKind, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, type TransformOperation, isBuiltinMark } from '../schemas';
 import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyFieldResolver, applyTransforms, assertAllValuesValid, assertBaselineScaleCompatible, assertScaleFieldCompatible, buildProportionalIntervals, channelKindsForMark, channelValue, collectFormatFields, createPositionChannelDefinitions, deriveScale, lowerMark, makeColorSchemeResolver, normalizeRows, orderedCategoryDomain, proportionalIntervalDomainValues, resolveChannelRegistry, resolveCoordinateRegistry, resolveFieldPath, resolveFieldTypes, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkChannels, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, scaleTicks, validateBoundData } from '../providers';
 import { type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../features';
 import { type AnchorIdGenerator, type AnyChannelDefinition, type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, type ResolveField, type ResolveLabel, type TickSet, isBuiltinScaleOperation } from '../contract';
@@ -727,8 +727,9 @@ const resolveMarkRows = (
   rows: Array<ExternalRow>,
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
 ): Array<ExternalRow> => {
-  if (!isBuiltinMark(mark) || mark.type !== PlotMark.Relation || mark.transform === undefined) return rows;
-  return applyTransforms(rows, mark.transform, transformRegistry);
+  const transform = (mark as { transform?: Array<TransformOperation> }).transform;
+  if (transform === undefined) return rows;
+  return applyTransforms(rows, transform, transformRegistry);
 };
 
 /**

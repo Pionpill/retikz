@@ -41,6 +41,12 @@ This is why PointMark usually does not need coordinate-specific adapters. The co
 
 <ComponentPreview name="point-position" sourceFiles={['point-api.data.ts']} />
 
+### Mark-Local Transforms
+
+`transform` can live directly on the current PointMark. In the example below, the gray points still read the original rows, while the colored bubble layer aggregates by `region`, creates `totalOrders`, and binds the transformed field to `y` / `size`.
+
+<ComponentPreview name="point-transform" sourceFiles={['point-transform.data.ts']} />
+
 ### Style Props
 
 `color` / `size` / `opacity` / `shape` / `stroke` / `strokeWidth` can all act as built-in channels for a point. They change the point's visible form without changing its projected position.
@@ -191,6 +197,7 @@ Style bindings use one shared `MarkValueType<T>` type: `{ kind: 'field', value: 
 |  | `labelRotate`<br />`labelKeepUpright` | `string / number?`<br />`boolean?` | —<br />— | Label rotation and upright handling |
 |  | `resolveLabel` | `(row) => string?` | — | Runtime label resolver; not in IR, requires `id` |
 | General | `id` | `string?` | — | Optional mark handle for layer ids / runtime label resolution |
+|  | `transform` | `Array<Transform>?` | — | Mark-local data transform; runs after the plot-level transform and only changes the rows seen by this layer |
 | Custom | `channels` | `Record<string, Channel>` | — | Custom channel bindings; resolved by registered channel definitions |
 
 ## Related

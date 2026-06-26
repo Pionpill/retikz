@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MarkSchema } from '../../src/schemas/mark';
+import { MarkOperationSchema, MarkSchema } from '../../src/schemas/mark';
 
 const gradientPaint = {
   kind: 'linearGradient',
@@ -534,6 +534,43 @@ describe('MarkSchema (ADR-05)', () => {
   it('mark_reference_strips_label', () => {
     const parsed = MarkSchema.parse({ type: 'reference', label: { content: { value: 'x' } }, encoding: { y: { value: 80 } } });
     expect((parsed as { label?: unknown }).label).toBeUndefined();
+  });
+
+  it('mark_point_accepts_local_transform', () => {
+    const m = {
+      type: 'point',
+      transform: [{ kind: 'sort', field: 'score', order: 'descending' }],
+      encoding: { x: { field: 'x' }, y: { field: 'score' } },
+    };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_path_accepts_local_transform', () => {
+    const m = {
+      type: 'path',
+      transform: [{ kind: 'aggregate', groupBy: ['series'], reduce: 'sum', field: 'value', as: 'total' }],
+      order: 'series',
+      encoding: { x: { field: 'series' }, y: { field: 'total' } },
+    };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_reference_accepts_local_transform', () => {
+    const m = {
+      type: 'reference',
+      transform: [{ kind: 'derive-interval', startFrom: 'low', endFrom: 'high' }],
+      encoding: { y: { field: 'intervalEnd' } },
+    };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('custom_mark_accepts_local_transform', () => {
+    const m = {
+      type: 'dot',
+      transform: [{ kind: 'top-n', field: 'score', n: 3 }],
+      encoding: { x: { field: 'x' }, y: { field: 'score' } },
+    };
+    expect(MarkOperationSchema.parse(m)).toEqual(m);
   });
 
 });

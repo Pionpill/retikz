@@ -41,6 +41,12 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个坐标�
 
 <ComponentPreview name="point-position" sourceFiles={['point-api.data.ts']} />
 
+### 图元局部变换
+
+`transform` 可以直接写在当前 PointMark 上。下面的灰点仍然使用原始行，彩色气泡层先按 `region` 聚合出 `totalOrders`，再把变换后的字段绑定到 `y` / `size`。
+
+<ComponentPreview name="point-transform" sourceFiles={['point-transform.data.ts']} />
+
 ### 样式属性
 
 `color` / `size` / `opacity` / `shape` / `stroke` / `strokeWidth` 都可以作为点的内置通道。它们只改变点的可见形态，不改变点的坐标位置。
@@ -191,6 +197,7 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
 |  | `labelRotate`<br />`labelKeepUpright` | `string / number?`<br />`boolean?` | —<br />— | 标签旋转和正向保持 |
 |  | `resolveLabel` | `(row) => string?` | — | 运行时生成标签；不进 IR，需配 `id` |
 | 通用 | `id` | `string?` | — | 可选 mark 句柄，用于图层 id / 运行时标签解析 |
+|  | `transform` | `Array<Transform>?` | — | 当前图元局部的数据变换；在 plot 级 transform 之后执行，只影响这一层看到的 rows |
 | 自定义 | `channels` | `Record<string, Channel>` | — | 自定义通道入口；交给注册的 channel definition 解析 |
 
 ## 相关

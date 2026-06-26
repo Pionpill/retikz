@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type DeriveRelationTransform, type IRPaintSpec, type PlotSpec, PlotSpecSchema, type RelationRoutingSpec, isBuiltinMark, lowerPlots } from '@retikz/plot';
+import { type DeriveRelationTransform, type IRPaintSpec, type PlotSpec, PlotSpecSchema, type Transform as PlotTransformOperation, type RelationRoutingSpec, isBuiltinMark, lowerPlots } from '@retikz/plot';
 import { buildPlotSpec, decorateDefaultGuides } from '../../src/components/build-plot-spec';
 import { Axis, Legend } from '../../src/components/guides';
 import { IntervalMark, PathMark, PointMark, ReferenceMark, RelationMark } from '../../src/components/marks';
@@ -472,6 +472,30 @@ describe('buildPlotSpec legend 装配（ADR-03 alpha.8）', () => {
       '__plot',
     );
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+});
+
+describe('buildPlotSpec mark-local transform', () => {
+  const markTransform: Array<PlotTransformOperation> = [{ kind: 'sort', field: 'score', order: 'descending' }];
+
+  it('point_mark_forwards_local_transform', () => {
+    const spec = buildPlotSpec(<PointMark x="x" y="score" transform={markTransform} />, '__plot');
+    expect(spec.marks[0]).toMatchObject({ type: 'point', transform: markTransform });
+  });
+
+  it('path_mark_forwards_local_transform', () => {
+    const spec = buildPlotSpec(<PathMark x="x" y="score" order="x" transform={markTransform} />, '__plot');
+    expect(spec.marks[0]).toMatchObject({ type: 'path', transform: markTransform });
+  });
+
+  it('interval_mark_forwards_local_transform', () => {
+    const spec = buildPlotSpec(<IntervalMark x="x" y="score" transform={markTransform} />, '__plot');
+    expect(spec.marks[0]).toMatchObject({ type: 'interval', transform: markTransform });
+  });
+
+  it('reference_mark_forwards_local_transform', () => {
+    const spec = buildPlotSpec(<ReferenceMark y={80} transform={markTransform} />, '__plot');
+    expect(spec.marks[0]).toMatchObject({ type: 'reference', transform: markTransform });
   });
 });
 

@@ -7,6 +7,8 @@ Beyond the built-in marks, define your own glyph with `defineMark`. It follows t
 
 A custom mark's `type` is any non-built-in discriminator; its `encoding` reuses the same channel shape as built-in marks. Common coordinates use `x` / `y` / `color`, and custom coordinates may declare their own position roles. Position channels feed scale inference, so the custom mark shares the same coordinate system and scales as built-in marks.
 
+Custom marks can also put `transform` on the operation. That mark-local pipeline runs after the plot-level transform, and `lower(mark, rows, ...)` receives the rows for this mark after its own transform; the custom definition does not need to call `applyTransforms` again.
+
 ## Diamond glyph
 
 The `diamond` mark below projects each row into a diamond. It is registered in `markDefinitions`; a custom mark has **no dedicated React component**, so it is authored via the `<Plot spec={...}>` entry — write `{ type: 'diamond', ... }` directly in the `marks` array.
@@ -32,7 +34,7 @@ A mark spans three layers, with the same boundary as built-in marks:
 
 | Layer | Holds | In IR | Responsibility |
 | --- | --- | --- | --- |
-| schema | `type`, `encoding`, and other serializable fields | yes | validation, persistence, AI generation, cross-runtime transfer |
+| schema | `type`, `encoding`, `transform`, and other serializable fields | yes | validation, persistence, AI generation, cross-runtime transfer |
 | authoring | built-in via React components; custom via the spec entry | no | assemble user input into JSON-safe mark IR |
 | registry | `lower(mark, rows, frame, channels)` behavior | no | lower into core IR at compile time |
 

@@ -461,7 +461,7 @@ const ruleChannel = (value: number | string): { value: number } | { field: strin
  *   常量 rule（x/y 为数字）→ color 作 value 常量；per-datum rule（x/y 为字段串）→ color 作 field（AUTO_COLOR）。
  */
 const collectReference = (props: ReferenceMarkProps, into: Collected, styleContext: StyleSugarContext): void => {
-  const { kind, x, y, z, xTo, yTo, zTo, extentField, extentToField, color, id, channels, strokeWidth, fillOpacity, opacity } = props;
+  const { kind, x, y, z, xTo, yTo, zTo, extentField, extentToField, color, id, transform, channels, strokeWidth, fillOpacity, opacity } = props;
   const region = kind === 'region';
   const hasX = x !== undefined;
   const hasY = y !== undefined;
@@ -535,6 +535,7 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
     type: PlotMark.Reference,
     ...(kind !== undefined ? { kind } : {}),
     ...(id !== undefined ? { id } : {}),
+    ...(transform !== undefined ? { transform } : {}),
     ...upper,
     ...(extentField !== undefined ? { extentField } : {}),
     ...(extentToField !== undefined ? { extentToField } : {}),
@@ -562,7 +563,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
     }
     if (child.type === PathMark) {
       const props = child.props as PathMarkProps;
-      const { x, y, order, series, color, closed, connectNulls, closure, curve, id, anchorId, channels, strokeWidth, opacity, lineCap, lineJoin, roundedCorners } = props;
+      const { x, y, order, series, color, closed, connectNulls, closure, curve, id, transform, anchorId, channels, strokeWidth, opacity, lineCap, lineJoin, roundedCorners } = props;
       const colorEnc = colorChannel(color, series);
       const markLabel = buildMarkLabel(props);
       const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
@@ -573,6 +574,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       into.marks.push({
         type: PlotMark.Path,
         ...(id !== undefined ? { id } : {}),
+        ...(transform !== undefined ? { transform } : {}),
         ...(anchorId !== undefined ? { anchorId } : {}),
         ...(order !== undefined ? { order } : {}),
         ...(series !== undefined ? { series } : {}),
@@ -619,6 +621,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         dx,
         dy,
         id,
+        transform,
         anchorId,
         channels,
       } = props;
@@ -644,6 +647,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       into.marks.push({
         type: PlotMark.Point,
         ...(id !== undefined ? { id } : {}),
+        ...(transform !== undefined ? { transform } : {}),
         ...(anchorId !== undefined ? { anchorId } : {}),
         ...(colorStyle !== undefined ? { color: colorStyle } : {}),
         ...(textColorStyle !== undefined ? { textColor: textColorStyle } : {}),
@@ -677,7 +681,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       recordResolveLabel(into, id, props.resolveLabel);
     } else if (child.type === IntervalMark) {
       const props = child.props as IntervalMarkProps;
-      const { x, y, angle, x0, x1, width, direction: rawDirection, color, series, group, arrangement: explicitArrangement, stackOffset, percent, stack, bounds: explicitBounds, id, anchorId, channels, fill, stroke, strokeWidth, fillOpacity, opacity, padAngle } = props;
+      const { x, y, angle, x0, x1, width, direction: rawDirection, color, series, group, arrangement: explicitArrangement, stackOffset, percent, stack, bounds: explicitBounds, id, transform, anchorId, channels, fill, stroke, strokeWidth, fillOpacity, opacity, padAngle } = props;
       const direction = rawDirection ?? 'vertical';
       const arrangementGroup = group ?? series;
       if (percent === true && explicitArrangement !== undefined && explicitArrangement !== 'normalize-stack') {
@@ -712,6 +716,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         into.marks.push({
           type: PlotMark.Interval,
           ...(id !== undefined ? { id } : {}),
+          ...(transform !== undefined ? { transform } : {}),
           ...(anchorId !== undefined ? { anchorId } : {}),
           ...intervalStyle,
           bounds: { x: { kind: IntervalBoundKind.Extent, from: 'y0', to: 'y1' }, y: { kind: IntervalBoundKind.Full } },
@@ -733,6 +738,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         into.marks.push({
           type: PlotMark.Interval,
           ...(id !== undefined ? { id } : {}),
+          ...(transform !== undefined ? { transform } : {}),
           ...(anchorId !== undefined ? { anchorId } : {}),
           ...(series !== undefined ? { series } : {}),
           ...intervalStyle,
@@ -816,6 +822,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       into.marks.push({
         type: PlotMark.Interval,
         ...(id !== undefined ? { id } : {}),
+        ...(transform !== undefined ? { transform } : {}),
         ...(anchorId !== undefined ? { anchorId } : {}),
         ...(series !== undefined ? { series } : {}),
         ...intervalStyle,

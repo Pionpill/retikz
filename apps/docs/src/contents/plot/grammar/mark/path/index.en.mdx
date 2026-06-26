@@ -53,6 +53,12 @@ With no `series`, giving `color` a categorical field also splits PathMark implic
 
 <ComponentPreview name="line-color-split" sourceFiles={['line-series.data.ts']} />
 
+### Mark-Local Transforms
+
+When `transform` is placed on PathMark, only that path layer sees the changed rows. The point layer below keeps the original channel values, while the dark path layer aggregates by `day`, creates `totalValue`, and connects those transformed rows into a total trend.
+
+<ComponentPreview name="line-transform" sourceFiles={['line-transform.data.ts']} />
+
 ### Paint Styles
 
 Both `stroke` and `fill` can be `IRPaintSpec` values. The left chart applies a linear gradient to the stroke; the right chart uses `closure={{ kind: 'baseline' }}` to create a fillable area layer, passes the gradient to `fill`, and then overlays a stroke-only PathMark for the upper outline.
@@ -182,6 +188,7 @@ The logic has four parts:
 | Label | `label` / `labelDisplayFormat` | `FieldName?`<br />`string?` | —<br />— | Attach datum labels to path data |
 |  | `labelPosition`<br />`labelDistance`<br />`labelPin` | `string / number`<br />`number`<br />`boolean / LabelPin` | `above`<br />`12`<br />`false` | Label side, spacing, and leader line |
 | General | `id` | `string?` | — | Optional mark handle for layer ids / runtime label resolution |
+|  | `transform` | `Array<Transform>?` | — | Mark-local data transform; runs after the plot-level transform and only changes the rows seen by this layer |
 | Custom | `channels` | `Record<string, Channel>` | — | Custom channel bindings; resolved by registered channel definitions |
 
 ## Related

@@ -93,7 +93,7 @@ When a relation uses generated `anchorId` and the target does not exist, lowerin
 | Target | `source` | `PlotTargetRef` | Required | Start target of the relationship path: direct id, generated anchor id, or projected coordinate |
 |  | `target` | `PlotTargetRef` | Required | End target of the relationship path, using the same structure as `source` |
 |  | `via` | `Array<PlotTargetRef>` | - | Waypoints for the default route; each projected waypoint generates a core `Coordinate` |
-| Data | `transform` | `Array<Transform>?` | - | Relation-local transform pipeline for deriving relation rows from plot rows; see the transform table below for each type |
+| Data | `transform` | `Array<Transform>?` | - | Mark-local transform pipeline for deriving the current relation layer's rows from plot rows; see the transform table below for each type |
 | Route | `route` | `Array<RelationRouteStep>` | - | Explicit step sequence; the last step may omit `to` and default to `target` |
 |  | `routing` | `RelationRoutingSpec?` | `line` | Algorithmic route strategy: `line`, `bend`, or `orthogonal`; mutually exclusive with `route` |
 |  | `route[].kind` | `'move' / 'line' / 'fold' / 'curve' / 'cubic' / 'bend'` | - | Core path step kind |
@@ -109,7 +109,7 @@ When a relation uses generated `anchorId` and the target does not exist, lowerin
 
 ### Transform API
 
-`transform` reuses the plot-level transform structure; see [Transform](/plot/grammar/transform) for common transform types. Inside `RelationMark`, it only feeds the current relation mark and does not rewrite the rows seen by sibling marks. This table only lists relation-specific transform types.
+`transform` is the mark-local data entry shared by all marks, and it reuses the plot transform structure; see [Transform](/plot/grammar/transform) for common transform types. Inside `RelationMark`, it only feeds the current relation mark and does not rewrite the rows seen by sibling marks. This table lists the relation-oriented transform that is most often used here.
 
 | Type | Row count | Meaning |
 | --- | --- | --- |

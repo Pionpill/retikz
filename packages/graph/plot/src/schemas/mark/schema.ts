@@ -6,9 +6,16 @@ import { EncodingSchema, MarkLabelSchema, PointEncodingSchema } from '../encodin
 import { TransformSchema } from '../transform';
 import { BUILTIN_MARK_TYPES, IntervalBoundKind, MarkValueKind, PathClosureKind, PathCurve, PlotMark } from './constants';
 
+export const MarkTransformSchema = z
+  .array(TransformSchema)
+  .describe('Mark-local transform pipeline applied after the plot root transform to derive rows consumed only by this mark');
+
+export const RelationTransformSchema = MarkTransformSchema;
+
 /** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema，reference 用专属） */
 const markBase = {
   id: z.string().min(1).optional().describe('Optional mark handle; reserved scope/anchor target'),
+  transform: MarkTransformSchema.optional().describe('Optional mark-local transform pipeline applied after the plot root transform'),
 };
 
 export const AnchorIdSpecSchema = z
@@ -113,10 +120,6 @@ export const RelationRouteStepSchema = z
   })
   .strict()
   .describe('Relation route step lowered to a core path step');
-
-export const RelationTransformSchema = z
-  .array(TransformSchema)
-  .describe('Relation-local transform pipeline applied after the plot root transform to derive rows consumed only by this RelationMark');
 
 const RelationLineRoutingSchema = z
   .object({
@@ -506,7 +509,6 @@ export const ReferenceMarkSchema = z
 export const RelationMarkSchema = z
   .object({
     type: z.literal(PlotMark.Relation).describe('Discriminator: source-target relation path lowered to a core Path'),
-    transform: RelationTransformSchema.optional().describe('Optional relation-local transform pipeline applied after the plot root transform'),
     source: PlotTargetRefSchema.describe('Relation source target'),
     target: PlotTargetRefSchema.describe('Relation target target'),
     via: z.array(PlotTargetRefSchema).optional().describe('Optional intermediate waypoints; each projected waypoint may generate a core Coordinate'),
@@ -555,6 +557,7 @@ export const CustomMarkSchema = z
         message: 'custom mark type must not collide with a built-in mark type',
       })
       .describe('Discriminator: custom mark type; must be a non-empty, non-built-in identifier registered through options.markDefinitions'),
+    transform: MarkTransformSchema.optional().describe('Optional mark-local transform pipeline applied after the plot root transform'),
     encoding: EncodingSchema.optional().describe('Position / non-position channels; reuses the shared encoding so a custom mark contributes to scale inference like built-in marks'),
   })
   .passthrough()

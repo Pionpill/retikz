@@ -53,6 +53,12 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 <ComponentPreview name="line-color-split" sourceFiles={['line-series.data.ts']} />
 
+### 图元局部变换
+
+`transform` 写在 PathMark 上时，只改变这条路径层看到的数据。下面的点层保留每个渠道的原始值，深色路径层先按 `day` 聚合出 `totalValue`，再用聚合后的行连成总量趋势。
+
+<ComponentPreview name="line-transform" sourceFiles={['line-transform.data.ts']} />
+
 ### 填充与描边
 
 `stroke` 和 `fill` 都可以写成 `IRPaintSpec`。左侧把线性渐变用在描边上；右侧先用 `closure={{ kind: 'baseline' }}` 生成可填充面积层，再把渐变交给 `fill`，最后叠一条只描边的 PathMark 作为上边界。
@@ -182,6 +188,7 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 | 标签 | `label` / `labelDisplayFormat` | `FieldName?`<br />`string?` | —<br />— | 给路径数据点挂标签 |
 |  | `labelPosition`<br />`labelDistance`<br />`labelPin` | `string / number`<br />`number`<br />`boolean / LabelPin` | `above`<br />`12`<br />`false` | 标签方位、距离和引线 |
 | 通用 | `id` | `string?` | — | 可选 mark 句柄，用于图层 id / 运行时标签解析 |
+|  | `transform` | `Array<Transform>?` | — | 当前图元局部的数据变换；在 plot 级 transform 之后执行，只影响这一层看到的 rows |
 | 自定义 | `channels` | `Record<string, Channel>` | — | 自定义通道入口；交给注册的 channel definition 解析 |
 
 ## 相关

@@ -7,6 +7,8 @@ description: 自定义图元把下沉函数留在运行时：IR 只保存自定�
 
 自定义图元的 `type` 是任意非内置判别串；`encoding` 复用和内置图元同一套通道。常见坐标系用 `x` / `y` / `color`，自定义坐标系也可以声明自己的位置 role。位置通道会参与 scale 推断，它和内置图元共享同一坐标系和比例尺。
 
+自定义图元也能在 operation 上写 `transform`。这条 mark-local 管线会在 plot 级 transform 之后执行，`lower(mark, rows, ...)` 收到的就是当前图元自己的变换后 rows；自定义图元不需要在 definition 里重复调用 `applyTransforms`。
+
 ## 菱形 glyph
 
 下面的 `diamond` 图元把每行投影成一个菱形。它在 `markDefinitions` 里注册；自定义图元**没有专属 React 组件**，所以用 `<Plot spec={...}>` 入口创作——`marks` 数组里直接写 `{ type: 'diamond', ... }`。
@@ -32,7 +34,7 @@ description: 自定义图元把下沉函数留在运行时：IR 只保存自定�
 
 | 层 | 放什么 | 进 IR | 职责 |
 | --- | --- | --- | --- |
-| schema | `type`、`encoding` 等可序列化字段 | 是 | 校验、持久化、AI 生成、跨端传输 |
+| schema | `type`、`encoding`、`transform` 等可序列化字段 | 是 | 校验、持久化、AI 生成、跨端传输 |
 | 创作层 | 内置走 React 组件；自定义走 spec 入口 | 否 | 把用户写法装配成 JSON-safe 图元 IR |
 | registry | `lower(mark, rows, frame, channels)` 行为 | 否 | 编译时下沉成 core IR |
 

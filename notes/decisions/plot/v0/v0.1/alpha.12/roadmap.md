@@ -20,6 +20,8 @@
 | [11](./11-custom-visual-channel.md) | **开放自定义视觉通道**：承 ADR-10——公开 `defineVisualChannel` + `options.visualChannelDefinitions`，加性 `encoding.channels`（IR 非破坏）让自定义通道绑字段，`VisualChannelDefinition.deliver` 必填（落 core IRNode 既有样式属性）。内置 definition 先注册、自定义 definition 再合并；`lowerPoint` 遍历统一 `ChannelDelivery[]`，不再把 custom 放进单独补丁路径。自定义落点限既有 node 属性（新渲染能力下沉补 core）。补齐「内置/自定义同机制」最后一环。 | Accepted（实现 2026-06-21；偏差：encoding.channels 落 PointEncodingSchema、自定义通道 legend 推迟；评审后修正 custom 二等路径） |
 | [12](./12-channel-core-coverage.md) | **channel core coverage 对账**：对照 core `IRNode` / `IRPath` / `IRScope` 属性，明确当前 `ChannelDefinitionKind` 覆盖边界：position/mark/node 已有内置，path/scope 只有 contract 和 delivery hook、缺内置 provider；同名共享样式（opacity/strokeWidth/fillOpacity/drawOpacity/zIndex）不能拆成 Node/Path 双注册，应按共享 channel 由 mark lowering 选择落点。首批补 scalar / enum 样式，并补齐现有 datum `label` 表面到 core `NodeLabelSchema` 的稳定字段子集；PaintSpec/Shadow/ArrowDetail 等对象值推迟。 | Proposed |
 | [13](./13-relation-mark-anchor.md) | **RelationMark + anchor id contract**：删除旧 `LinkMark` 方向，新增 source-target 关系图元；point/path/interval 通过 `anchorId` 暴露稳定 Node/Coordinate id，RelationMark 复用 core Path target / boundary / arrow / label / route 能力。 | Proposed |
+| [14](./14-relation-derived-data-routing.md) | **RelationMark derived data and routing strategy**：relation 通过 mark-local transform 从当前 rows 派生 source-target relation rows，并新增 line / bend / orthogonal routing strategy；复用 transform registry、AnchorRegistry 与 core Path target / step 能力。 | Proposed |
+| [15](./15-mark-local-transform.md) | **Mark-local transform for all marks**：把 relation 专属 `transform` 提升为所有 mark 的公共字段；root transform 后每个 mark 可独立运行局部 transform，内置和自定义 mark 共用同一 `MarkDataView` / transform registry / locator parity。 | Proposed |
 
 ## 排序与依赖
 

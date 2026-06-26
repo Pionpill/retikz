@@ -70,6 +70,12 @@ IntervalMark 是底层 cell mark：它只负责把每行数据变成一个正交
 
 <ComponentPreview name="bar-series" sourceFiles={['bar-grouped.data.ts']} interactive />
 
+### 图元局部变换
+
+IntervalMark 也可以直接通过自己的 `transform` 获取派生数据。下面的灰点展示门店原始收入，柱层先按 `segment` 聚合出 `totalRevenue`，再用聚合后的三行数据画柱。
+
+<ComponentPreview name="bar-transform" sourceFiles={['bar-transform.data.ts']} />
+
 ### 角度属性
 
 同一个 `x` / `y` 区间切到 `coordinate="polar2D"` 后，`x` band 会被解释成角向 band，`y` span 会被解释成半径方向长度。
@@ -179,6 +185,7 @@ const lowerCells = (
 | 标签 | `label` / `labelDisplayFormat` | `FieldName?`<br />`string?` | —<br />— | 给每个 cell 挂标签 |
 |  | `labelPosition`<br />`labelDistance`<br />`labelPin` | `string / number`<br />`number`<br />`boolean / LabelPin` | `above`<br />`12`<br />`false` | 标签方位、距离和引线 |
 | 通用 | `id` | `string?` | — | 可选 mark 句柄，用于图层 id / 运行时标签解析 |
+|  | `transform` | `Array<Transform>?` | — | 当前图元局部的数据变换；在 plot 级 transform 之后执行，只影响这一层看到的 rows |
 | 自定义 | `channels` | `Record<string, Channel>` | — | 自定义通道入口；交给注册的 channel definition 解析 |
 
 ## 相关

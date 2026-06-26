@@ -93,7 +93,7 @@ React 里的 `<RelationMark>` 本身不渲染 DOM；`<Plot>` 构造 `PlotSpec` �
 | 目标 | `source` | `PlotTargetRef` | 必填 | 关系路径起点，可以是 direct id、generated anchor id 或 projected coordinate |
 |  | `target` | `PlotTargetRef` | 必填 | 关系路径终点，结构同 `source` |
 |  | `via` | `Array<PlotTargetRef>` | - | 默认 route 下的中间点；每个投影点会生成 core `Coordinate` |
-| 数据 | `transform` | `Array<Transform>?` | - | relation 局部 transform 管线，用于从 plot rows 派生关系行；各类型见下方变化 API |
+| 数据 | `transform` | `Array<Transform>?` | - | mark 局部 transform 管线，用于从 plot rows 派生当前关系层的 rows；各类型见下方变化 API |
 | 路由 | `route` | `Array<RelationRouteStep>` | - | 显式 step 序列；最后一个 step 省略 `to` 时默认指向 `target` |
 |  | `routing` | `RelationRoutingSpec?` | `line` | 算法路由策略：`line`、`bend` 或 `orthogonal`；与 `route` 互斥 |
 |  | `route[].kind` | `'move' / 'line' / 'fold' / 'curve' / 'cubic' / 'bend'` | - | 对齐 core path step kind |
@@ -109,7 +109,7 @@ React 里的 `<RelationMark>` 本身不渲染 DOM；`<Plot>` 构造 `PlotSpec` �
 
 ### 变化 API
 
-`transform` 复用 plot 的通用 transform 结构；通用能力见[变换](/plot/grammar/transform)。在 `RelationMark` 里，它只影响当前 relation mark，不会改写其它图元看到的数据。下面只列 relation 专属的变换类型。
+`transform` 是所有 mark 共享的局部数据入口，复用 plot 的通用 transform 结构；通用能力见[变换](/plot/grammar/transform)。在 `RelationMark` 里，它只影响当前 relation mark，不会改写其它图元看到的数据。下面只列 relation 常用的派生关系变换。
 
 | 类型 | 行数变化 | 含义 |
 | --- | --- | --- |

@@ -1,9 +1,9 @@
 import type { IRJsonObject } from '@retikz/core';
-import { type ExternalDatasets, type ExternalRow, type Mark, type MarkOperation, PlotMark, type PlotSpec, isBuiltinMark } from '../../schemas';
+import { type ExternalDatasets, type ExternalRow, type Mark, type MarkOperation, PlotMark, type PlotSpec, type TransformOperation, isBuiltinMark } from '../../schemas';
 import { applyTransforms, buildIntervalContext, datumAnchor, resolveFieldPath } from '../../providers';
-import { type LowerPlotsOptions, prepareRows, resolveFrame } from '../../pipeline/expand';
+import { type LowerPlotsOptions, type MarkDataView, prepareRows, resolveFrame } from '../../pipeline/expand';
 import { DEFAULT_FONT_SIZE } from '../../pipeline/layout';
-import type { CoordinateFrame, IntervalContext } from '../../contract';
+import type { AnyTransformDefinition, CoordinateFrame, IntervalContext } from '../../contract';
 import { type ProvenanceContext, createDatumIdRegistrar, datumMeta, readSourceIndex, readSourceIndices, tagSourceIndex } from '../../pipeline/provenance';
 
 /** 默认整图尺寸（与 expand.ts 对齐，保 locator 投影与 lowering 一致） */
@@ -53,6 +53,16 @@ const seriesFieldOf = (mark: Mark): string | undefined =>
 /** datum-bearing mark（展成独立可见 Node 的 mark）：point / interval（含 heatmap cell / sector，皆 interval）；自定义 mark 非 datum-bearing。 */
 const isDatumBearing = (mark: MarkOperation): mark is Mark => isBuiltinMark(mark) && (mark.type === PlotMark.Point || mark.type === PlotMark.Interval);
 
+const resolveMarkRows = (
+  mark: MarkOperation,
+  rows: Array<ExternalRow>,
+  transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
+): Array<ExternalRow> => {
+  const transform = (mark as { transform?: Array<TransformOperation> }).transform;
+  if (transform === undefined) return rows;
+  return applyTransforms(rows, transform, transformRegistry);
+};
+
 /**
  * 用与 lowerPlots 同一份 spec + datasets + options 建 locator（复用 ADR-01 resolveFrame，投影单一真源）
  * @description 行构造与 expandPlot 一致：先 tagSourceIndex（克隆、不污染入参）供 sourceIndex 回指，再 applyTransforms；
@@ -80,6 +90,11 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
   const ingested = tagSourceIndex(dataset);
   const { fieldTypes, normalized, transformRegistry, scaleRegistry } = prepareRows(spec, datasets, options, ingested);
   const rows = applyTransforms(normalized, spec.transform, transformRegistry);
+  const markDataViews: Array<MarkDataView> = spec.marks.map(mark => ({
+    mark,
+    rows: resolveMarkRows(mark, rows, transformRegistry),
+  }));
+  const rowsOfMark = (markIndex: number): Array<ExternalRow> => markDataViews[markIndex]?.rows ?? rows;
 
   // frame 复用 resolveFrame：投影几何与 provenance 无关（provenance 只影响 guide 层 id/meta），故传 undefined。
   // scaleRegistry 与 lowering 同源（prepareRows 解析），保证 position 投影 parity。
@@ -94,6 +109,7 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
     provenance: undefined,
     coordinates: options.coordinates,
     scaleRegistry,
+    markDataViews,
   });
 
   // 合成 meta 用的上下文（locator 始终按需合成同构 meta，与 lowering 是否开 datumProvenance 无关）
@@ -110,7 +126,7 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
     if (!isBuiltinMark(mark) || mark.type !== PlotMark.Interval) return undefined;
     const cached = intervalContexts.get(markIndex);
     if (cached) return cached;
-    const ctx = buildIntervalContext(mark, frame, rows);
+    const ctx = buildIntervalContext(mark, frame, rowsOfMark(markIndex));
     if (ctx) intervalContexts.set(markIndex, ctx);
     return ctx;
   };
@@ -128,8 +144,9 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
       if (!isDatumBearing(mark)) return;
       const ctx = intervalContextOf(markIndex, mark);
       const idsForMark = new Map<number, string>();
-      for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
-        const row = rows[transformedIndex];
+      const markRows = rowsOfMark(markIndex);
+      for (let transformedIndex = 0; transformedIndex < markRows.length; transformedIndex++) {
+        const row = markRows[transformedIndex];
         if (!datumAnchor(mark, row, frame, ctx)) continue; // 未渲染行不绑 id（与 lowering 一致）
         idsForMark.set(transformedIndex, register(row));
       }
@@ -145,8 +162,9 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
   const anchorAt = (markIndex: number, transformedIndex: number): { position: [number, number]; row: ExternalRow; mark: Mark } | null => {
     const mark = markOf(markIndex);
     if (!mark || !isBuiltinMark(mark)) return null; // 自定义 mark 非 datum-bearing，locator 跳过
-    if (!Number.isInteger(transformedIndex) || transformedIndex < 0 || transformedIndex >= rows.length) return null;
-    const row = rows[transformedIndex];
+    const markRows = rowsOfMark(markIndex);
+    if (!Number.isInteger(transformedIndex) || transformedIndex < 0 || transformedIndex >= markRows.length) return null;
+    const row = markRows[transformedIndex];
     const position = datumAnchor(mark, row, frame, intervalContextOf(markIndex, mark));
     if (!position) return null;
     return { position, row, mark };
@@ -173,7 +191,7 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
     let sumX = 0;
     let sumY = 0;
     let count = 0;
-    for (const row of rows) {
+    for (const row of rowsOfMark(markIndex)) {
       // 系列值匹配：先精确相等，再宽松字符串比对（resolve 的 '5' 字符串 token 匹配数值 5；#4）
       const fieldValue = resolveFieldPath(row, seriesField);
       if (fieldValue !== value && String(fieldValue) !== String(value)) continue;

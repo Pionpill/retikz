@@ -11,6 +11,7 @@ import type {
   IntervalMarkSchema,
   MarkOperationSchema,
   MarkSchema,
+  MarkTransformSchema,
   NodeBooleanStyleSchema,
   NodeBoundaryStyleSchema,
   NodeDashPatternStyleSchema,
@@ -105,6 +106,7 @@ export type AnchorIdSpec = z.infer<typeof AnchorIdSpecSchema>;
 export type PlotTargetRef = z.infer<typeof PlotTargetRefSchema>;
 export type RelationStepLabel = z.infer<typeof RelationStepLabelSchema>;
 export type RelationRouteStep = z.infer<typeof RelationRouteStepSchema>;
+export type MarkTransform = z.infer<typeof MarkTransformSchema>;
 export type RelationTransform = z.infer<typeof RelationTransformSchema>;
 export type RelationRoutingSpec = z.infer<typeof RelationRoutingSpecSchema>;
 export type RelationPathOptions = z.infer<typeof RelationPathOptionsSchema>;

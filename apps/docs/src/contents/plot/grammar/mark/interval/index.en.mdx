@@ -69,6 +69,12 @@ Without `color`, the same double-band interval draws a fixed grid. It is still I
 
 <ComponentPreview name="bar-series" sourceFiles={['bar-grouped.data.ts']} interactive />
 
+### Mark-Local Transforms
+
+IntervalMark can also derive the rows it needs through its own `transform`. The gray points show raw store revenue, while the bar layer aggregates by `segment`, creates `totalRevenue`, and draws bars from the three transformed rows.
+
+<ComponentPreview name="bar-transform" sourceFiles={['bar-transform.data.ts']} />
+
 ### Angle Prop
 
 The same `x` / `y` interval under `coordinate="polar2D"` maps the `x` band to an angular band and the `y` span to radial length.
@@ -178,6 +184,7 @@ const lowerCells = (
 | Label | `label` / `labelDisplayFormat` | `FieldName?`<br />`string?` | —<br />— | Attach datum labels to each cell |
 |  | `labelPosition`<br />`labelDistance`<br />`labelPin` | `string / number`<br />`number`<br />`boolean / LabelPin` | `above`<br />`12`<br />`false` | Label side, spacing, and leader line |
 | General | `id` | `string?` | — | Optional mark handle for layer ids / runtime label resolution |
+|  | `transform` | `Array<Transform>?` | — | Mark-local data transform; runs after the plot-level transform and only changes the rows seen by this layer |
 | Custom | `channels` | `Record<string, Channel>` | — | Custom channel bindings; resolved by registered channel definitions |
 
 ## Related
