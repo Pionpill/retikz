@@ -19,11 +19,28 @@ const nodePropsFromIR = (n: IRNode): NodeProps => {
   return props;
 };
 
-const ribbonPropsFromIR = (ribbon: IRRibbon): RibbonProps => ({
-  width: ribbon.width,
-  ...pickDefined(ribbon, RIBBON_FIELDS),
-  children: ribbon.children.map((s, j) => stepToElement(s, j)),
-});
+const ribbonPropsFromIR = (ribbon: IRRibbon): RibbonProps => {
+  const props = pickDefined(ribbon, RIBBON_FIELDS) as RibbonProps;
+  delete props.upper;
+  delete props.lower;
+  if (ribbon.kind === 'boundary') {
+    props.children = [
+      createElement(
+        Ribbon.Upper,
+        { key: 'upper' },
+        ...(ribbon.upper ?? []).map((s, j) => stepToElement(s, j)),
+      ),
+      createElement(
+        Ribbon.Lower,
+        { key: 'lower' },
+        ...(ribbon.lower ?? []).map((s, j) => stepToElement(s, j)),
+      ),
+    ];
+    return props;
+  }
+  props.children = (ribbon.children ?? []).map((s, j) => stepToElement(s, j));
+  return props;
+};
 
 /** 单个 IRStep → <Step /> element */
 const stepToElement = (step: IRStep, key: number): ReactNode => {

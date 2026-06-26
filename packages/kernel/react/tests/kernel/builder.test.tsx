@@ -291,6 +291,34 @@ after`;
     });
   });
 
+  it('<Ribbon kind="boundary"> collects upper and lower boundary steps', () => {
+    const ir = buildIR(
+      <Ribbon kind="boundary" fill="#bfdbfe">
+        <Ribbon.Upper>
+          <Step kind="move" to={[0, 0]} />
+          <Step to={[10, 0]} />
+        </Ribbon.Upper>
+        <Ribbon.Lower>
+          <Step kind="move" to={[0, 4]} />
+          <Step to={[10, 4]} />
+        </Ribbon.Lower>
+      </Ribbon>,
+    );
+    expect(ir.children[0]).toEqual({
+      type: 'ribbon',
+      kind: 'boundary',
+      fill: '#bfdbfe',
+      upper: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [10, 0] },
+      ],
+      lower: [
+        { type: 'step', kind: 'move', to: [0, 4] },
+        { type: 'step', kind: 'line', to: [10, 4] },
+      ],
+    });
+  });
+
   it('<Path> 仅一个自包含 rectangle step（无 move）→ 不抛错，保留 rectangle（不被 move 替换）', () => {
     const ir = buildIR(
       <Path>

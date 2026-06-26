@@ -90,6 +90,36 @@ describe('compile ribbon', () => {
     ]);
   });
 
+  it('stop widths can make the middle narrower than both ends', () => {
+    const compiled = compileToScene(
+      scene([
+        ribbon({
+          width: {
+            kind: 'stops',
+            stops: [
+              { offset: 0, value: 8 },
+              { offset: 0.5, value: 2 },
+              { offset: 1, value: 8 },
+            ],
+          },
+          samples: 3,
+        }),
+      ]),
+      { padding: 0 },
+    );
+    const prim = pathPrim(compiled.primitives[0]);
+
+    expect(prim.commands).toEqual([
+      { kind: 'move', to: [0, 4] },
+      { kind: 'line', to: [5, 1] },
+      { kind: 'line', to: [10, 4] },
+      { kind: 'line', to: [10, -4] },
+      { kind: 'line', to: [5, -1] },
+      { kind: 'line', to: [0, -4] },
+      { kind: 'close' },
+    ]);
+  });
+
   it('stop widths are sorted by offset before interpolation', () => {
     const compiled = compileToScene(
       scene([
@@ -216,6 +246,59 @@ describe('compile ribbon', () => {
     ]);
   });
 
+  it('aligns centerline ribbons to the left or right side', () => {
+    const left = pathPrim(
+      compileToScene(scene([ribbon({ align: 'left' })]), { padding: 0 }).primitives[0],
+    );
+    const right = pathPrim(
+      compileToScene(scene([ribbon({ align: 'right' })]), { padding: 0 }).primitives[0],
+    );
+
+    expect(left.commands).toEqual([
+      { kind: 'move', to: [0, 4] },
+      { kind: 'line', to: [10, 4] },
+      { kind: 'line', to: [10, 0] },
+      { kind: 'line', to: [0, 0] },
+      { kind: 'close' },
+    ]);
+    expect(right.commands).toEqual([
+      { kind: 'move', to: [0, 0] },
+      { kind: 'line', to: [10, 0] },
+      { kind: 'line', to: [10, -4] },
+      { kind: 'line', to: [0, -4] },
+      { kind: 'close' },
+    ]);
+  });
+
+  it('supports square caps on centerline ribbons', () => {
+    const prim = pathPrim(
+      compileToScene(scene([ribbon({ startCap: 'square', endCap: 'square' })]), {
+        padding: 0,
+      }).primitives[0],
+    );
+
+    expect(prim.commands).toEqual([
+      { kind: 'move', to: [-2, 2] },
+      { kind: 'line', to: [12, 2] },
+      { kind: 'line', to: [12, -2] },
+      { kind: 'line', to: [-2, -2] },
+      { kind: 'close' },
+    ]);
+  });
+
+  it('uses fixed sampling config as the samples shorthand replacement', () => {
+    const prim = pathPrim(
+      compileToScene(scene([ribbon({ samples: undefined, sampling: { kind: 'fixed', samples: 3 } })]), {
+        padding: 0,
+      }).primitives[0],
+    );
+
+    expect(prim.commands).toHaveLength(7);
+    expect(() =>
+      RibbonSchema.parse(ribbon({ samples: 2, sampling: { kind: 'fixed', samples: 3 } })),
+    ).toThrow(/samples/);
+  });
+
   it('normalizes angle, vector, and polar endpoint directions through the same path', () => {
     type RibbonDirection = Extract<IR['children'][number], { type: 'ribbon' }>['startDirection'];
     const commandsFor = (startDirection: RibbonDirection, endDirection: RibbonDirection) =>
@@ -259,6 +342,28 @@ describe('compile ribbon', () => {
 
     expect(ribbonCenterAt(withoutDirection, 5, 1)[1]).toBeLessThan(0);
     expect(ribbonCenterAt(withDirection, 5, 1)[1]).toBeGreaterThanOrEqual(0);
+  });
+
+  it('keeps a straight segment before a curved segment when the centerline asks for it', () => {
+    const prim = pathPrim(
+      compileToScene(
+        scene([
+          ribbon({
+            samples: 5,
+            startDirection: 0,
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [20, 0] },
+              { type: 'step', kind: 'curve', control: [45, 0], to: [70, 30] },
+            ],
+          }),
+        ]),
+        { padding: 0 },
+      ).primitives[0],
+    );
+
+    expect(ribbonCenterAt(prim, 5, 1)[1]).toBe(0);
+    expect(ribbonCenterAt(prim, 5, 3)[1]).toBeGreaterThan(0);
   });
 
   it('keeps endpoint override sides aligned with the sampled outline', () => {
@@ -345,6 +450,36 @@ describe('compile ribbon', () => {
         ribbonWidthProfiles: { bad },
       }),
     ).toThrow(/profile "bad"/);
+  });
+
+  it('lowers explicit boundary ribbons from upper and lower open paths', () => {
+    const boundary = {
+      type: 'ribbon' as const,
+      kind: 'boundary' as const,
+      samples: 2,
+      upper: [
+        { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
+        { type: 'step' as const, kind: 'line' as const, to: [10, 0] as [number, number] },
+      ],
+      lower: [
+        { type: 'step' as const, kind: 'move' as const, to: [0, 4] as [number, number] },
+        { type: 'step' as const, kind: 'line' as const, to: [10, 4] as [number, number] },
+      ],
+      fill: '#bfdbfe',
+    };
+    expect(RibbonSchema.parse(boundary)).toEqual(boundary);
+    expect(() => RibbonSchema.parse({ ...boundary, width: 4 })).toThrow(/Boundary/);
+
+    const prim = pathPrim(compileToScene(scene([boundary]), { padding: 0 }).primitives[0]);
+
+    expect(prim.commands).toEqual([
+      { kind: 'move', to: [0, 0] },
+      { kind: 'line', to: [10, 0] },
+      { kind: 'line', to: [10, 4] },
+      { kind: 'line', to: [0, 4] },
+      { kind: 'close' },
+    ]);
+    expect(prim.fill).toBe('#bfdbfe');
   });
 
   it('rejects closed centerlines', () => {

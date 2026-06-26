@@ -35,6 +35,21 @@ import { Ribbon, Step } from '@retikz/react';
 
 中心线只负责几何采样，不绘制出来；`stroke` / `strokeWidth` 描的是 ribbon 外轮廓，不是中心线。
 
+如果上下边界已经由布局算法算好，可以使用 `kind="boundary"`，把两条开放边界分别放进 `<Ribbon.Upper>` 与 `<Ribbon.Lower>`。这种模式不再需要 `width`。
+
+```tsx
+<Ribbon kind="boundary" fill="#bfdbfe">
+  <Ribbon.Upper>
+    <Step kind="move" to={[-120, -20]} />
+    <Step kind="curve" control={[0, -40]} to={[120, -10]} />
+  </Ribbon.Upper>
+  <Ribbon.Lower>
+    <Step kind="move" to={[-120, 20]} />
+    <Step kind="curve" control={[0, 48]} to={[120, 34]} />
+  </Ribbon.Lower>
+</Ribbon>
+```
+
 ## 例子
 
 ### 基础流带
@@ -49,10 +64,34 @@ import { Ribbon, Step } from '@retikz/react';
 
 <ComponentPreview name="ribbon-interpolation" size="md" />
 
+### 中间自定义宽度
+
+`width.kind="stops"` 可以让两端粗、中间细，或定义任意多段宽度变化。
+
+<ComponentPreview name="ribbon-width-stops" size="sm" />
+
+### 先直后曲
+
+中心线可以由多段 `<Step>` 组成；先用 `line` 保持一段平行方向，再接 `curve` 转向。
+
+<ComponentPreview name="ribbon-straight-curve" size="sm" />
+
 ### 端点方向
 
 端点方向默认取起点到终点的连接方向；需要调整端面时，可以用角度、向量或 polar 写法覆盖。
 <ComponentPreview name="ribbon-direction" size="md" />
+
+### 对齐与端帽
+
+`align` 控制中心线落在流带中线、左边界或右边界；`startCap` / `endCap` 控制两端闭合形状。
+
+<ComponentPreview name="ribbon-align-cap" size="md" />
+
+### 显式边界
+
+当布局已经产出上下两条边界时，`kind="boundary"` 可以直接把两条路径 lower 为一个闭合面。
+
+<ComponentPreview name="ribbon-boundary" size="sm" />
 
 ### 流带样式
 
@@ -78,10 +117,14 @@ IR 不能保存函数；自定义变化规则通过 `width={{ kind: 'profile', n
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `width` | `number \| { start, end, interpolation? } \| { kind: 'stops', stops, interpolation? } \| { kind: 'profile', name, params? }` | — | 沿中心线采样的宽度规则。 |
+| `kind` | `'centerline' \| 'boundary'` | `'centerline'` | 构造模式；默认从中心线和 `width` 生成面，`boundary` 直接使用上下边界。 |
+| `width` | `number \| { start, end, interpolation? } \| { kind: 'stops', stops, interpolation? } \| { kind: 'profile', name, params? }` | — | 沿中心线采样的宽度规则；`boundary` 模式不使用。 |
+| `align` | `'center' \| 'left' \| 'right'` | `'center'` | 中心线相对流带的位置；`left` / `right` 让中心线成为一侧边界。 |
 | `startDirection` | `number \| Vector2 \| Position \| PolarPosition` | 起终点连接方向 | 起点切线方向覆盖；tuple 输入按非零向量处理，polar 输入会先转换再归一化。 |
 | `endDirection` | `number \| Vector2 \| Position \| PolarPosition` | 起终点连接方向 | 终点切线方向覆盖；tuple 输入按非零向量处理，polar 输入会先转换再归一化。 |
 | `samples` | `number` | `48` | 采样截面数量，范围 `2..512`；曲线越紧可适当增大。 |
+| `sampling` | `{ kind: 'fixed', samples } \| { kind: 'adaptive', tolerance, maxSamples? }` | — | 显式采样策略；不能和 `samples` 同时使用。 |
+| `startCap` / `endCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | 起点 / 终点闭合端帽。 |
 | `fill` | `string \| PaintSpec` | `currentColor` | Ribbon 面的填充，可用纯色、渐变、pattern、image。 |
 | `fillOpacity` | `number` | — | 只作用于填充的透明度。 |
 | `stroke` | `string \| PaintSpec` | — | 外轮廓描边颜色；省略时不描边。 |
@@ -91,7 +134,8 @@ IR 不能保存函数；自定义变化规则通过 `width={{ kind: 'profile', n
 | `shadow` | `ShadowPreset \| DropShadow` | — | 编译后闭合 path 的阴影。 |
 | `blendMode` | `BlendMode` | — | 编译后闭合 path 的混合模式。 |
 | `zIndex` | `number` | — | 同层子节点的显式栈序。 |
-| `children` | `Array<Step>` | — | 开放中心线 step 序列，至少 2 个。 |
+| `children` | `Array<Step>` | — | 中心线模式的开放 step 序列，至少 2 个。 |
+| `upper` / `lower` | `Array<Step>` | — | `boundary` 模式的上下开放边界；React DSL 对应 `<Ribbon.Upper>` / `<Ribbon.Lower>`。 |
 
 ## 相关
 

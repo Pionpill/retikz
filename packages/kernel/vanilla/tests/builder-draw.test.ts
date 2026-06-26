@@ -57,4 +57,35 @@ describe('@retikz/vanilla ribbon()', () => {
     expect(r.fill).toBe('steelblue');
     expect(r.children).toEqual(parseWay(['a', 'b']));
   });
+
+  it('ribbon-boundary-reuses-core：boundary upper/lower 复用 core parseWay', () => {
+    const r = ribbon({
+      kind: 'boundary',
+      upper: [
+        [0, 0],
+        [10, 0],
+      ],
+      lower: [
+        [0, 4],
+        [10, 4],
+      ],
+      fill: '#bfdbfe',
+    });
+    expect(r.type).toBe('ribbon');
+    if (r.type !== 'ribbon') throw new Error('unreachable');
+    expect(r.kind).toBe('boundary');
+    expect(r.fill).toBe('#bfdbfe');
+    expect(r.upper).toEqual(
+      parseWay([
+        [0, 0],
+        [10, 0],
+      ]),
+    );
+    expect(r.lower).toEqual(
+      parseWay([
+        [0, 4],
+        [10, 4],
+      ]),
+    );
+  });
 });

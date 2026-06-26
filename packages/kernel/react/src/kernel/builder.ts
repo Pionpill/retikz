@@ -36,6 +36,8 @@ import {
   TIKZ_NODE,
   TIKZ_PATH,
   TIKZ_RIBBON,
+  TIKZ_RIBBON_LOWER,
+  TIKZ_RIBBON_UPPER,
   TIKZ_SCOPE,
   TIKZ_STEP,
   TIKZ_TEXT,
@@ -488,13 +490,64 @@ const buildPathFromProps = (props: PathProps): IRChild => ({
   children: readPathChildren(props.children),
 });
 
+const readRibbonChildren = (
+  children: ReactNode,
+): {
+  centerline?: Array<IRStep>;
+  upper?: Array<IRStep>;
+  lower?: Array<IRStep>;
+} => {
+  const centerlineNodes: Array<ReactNode> = [];
+  let upper: Array<IRStep> | undefined;
+  let lower: Array<IRStep> | undefined;
+  const visit = (node: ReactNode): void => {
+    Children.forEach(node, child => {
+      if (!isValidElement(child)) return;
+      if (child.type === Fragment) {
+        visit((child.props as { children?: ReactNode }).children);
+        return;
+      }
+      const name = getDisplayName(child);
+      if (name === TIKZ_RIBBON_UPPER) {
+        upper = readPathChildren((child.props as { children?: ReactNode }).children);
+        return;
+      }
+      if (name === TIKZ_RIBBON_LOWER) {
+        lower = readPathChildren((child.props as { children?: ReactNode }).children);
+        return;
+      }
+      centerlineNodes.push(child);
+    });
+  };
+  visit(children);
+  return {
+    ...(centerlineNodes.length > 0 ? { centerline: readPathChildren(centerlineNodes) } : {}),
+    ...(upper !== undefined ? { upper } : {}),
+    ...(lower !== undefined ? { lower } : {}),
+  };
+};
+
 /** `<Ribbon>` props → IRChild；step 序列由 readPathChildren 收集 */
-const buildRibbonFromProps = (props: RibbonProps): IRChild => ({
-  type: 'ribbon',
-  width: props.width,
-  ...pickDefined(props, RIBBON_FIELDS),
-  children: readPathChildren(props.children),
-});
+const buildRibbonFromProps = (props: RibbonProps): IRChild => {
+  const picked = pickDefined(props, RIBBON_FIELDS);
+  const parsed = readRibbonChildren(props.children);
+  const upper = props.upper ?? parsed.upper;
+  const lower = props.lower ?? parsed.lower;
+  if (props.kind === 'boundary' || upper !== undefined || lower !== undefined) {
+    return {
+      type: 'ribbon',
+      ...picked,
+      kind: 'boundary',
+      ...(upper !== undefined ? { upper } : {}),
+      ...(lower !== undefined ? { lower } : {}),
+    };
+  }
+  return {
+    type: 'ribbon',
+    ...picked,
+    ...(parsed.centerline !== undefined ? { children: parsed.centerline } : {}),
+  };
+};
 
 /**
  * 扫描 <TikZ> 直接 children

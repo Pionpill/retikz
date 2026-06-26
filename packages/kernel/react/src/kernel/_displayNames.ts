@@ -14,6 +14,12 @@ export const TIKZ_PATH = '@retikz/Path';
 /** <Ribbon> 组件的 displayName */
 export const TIKZ_RIBBON = '@retikz/Ribbon';
 
+/** <Ribbon.Upper> 组件的 displayName */
+export const TIKZ_RIBBON_UPPER = '@retikz/Ribbon.Upper';
+
+/** <Ribbon.Lower> 组件的 displayName */
+export const TIKZ_RIBBON_LOWER = '@retikz/Ribbon.Lower';
+
 /** <Step> 组件的 displayName */
 export const TIKZ_STEP = '@retikz/Step';
 

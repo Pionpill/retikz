@@ -35,6 +35,21 @@ Use `<Draw>` / `<Path>` for a line, arrow, dash, or path label. Use `<Ribbon>` w
 
 The centerline is only used for geometry sampling. `stroke` / `strokeWidth` outline the ribbon polygon; they do not stroke the centerline.
 
+When a layout algorithm already computed both sides, use `kind="boundary"` and place the two open boundaries in `<Ribbon.Upper>` and `<Ribbon.Lower>`. This mode does not use `width`.
+
+```tsx
+<Ribbon kind="boundary" fill="#bfdbfe">
+  <Ribbon.Upper>
+    <Step kind="move" to={[-120, -20]} />
+    <Step kind="curve" control={[0, -40]} to={[120, -10]} />
+  </Ribbon.Upper>
+  <Ribbon.Lower>
+    <Step kind="move" to={[-120, 20]} />
+    <Step kind="curve" control={[0, 48]} to={[120, 34]} />
+  </Ribbon.Lower>
+</Ribbon>
+```
+
 ## Examples
 
 ### Basic Bands
@@ -49,11 +64,35 @@ The same centerline and start/end widths are repeated while only `interpolation`
 
 <ComponentPreview name="ribbon-interpolation" size="md" />
 
+### Custom Mid Width
+
+`width.kind="stops"` can make both ends wide and the middle narrow, or express any multi-stop width profile.
+
+<ComponentPreview name="ribbon-width-stops" size="sm" />
+
+### Straight Then Curved
+
+The centerline can be built from multiple `<Step>` segments: keep one straight section with `line`, then turn with `curve`.
+
+<ComponentPreview name="ribbon-straight-curve" size="sm" />
+
 ### Endpoint Direction
 
 Endpoint direction defaults to the start-to-end connection. Override it with an angle, vector, or polar input when the cap needs a specific orientation.
 
 <ComponentPreview name="ribbon-direction" size="md" />
+
+### Alignment And Caps
+
+`align` places the centerline at the middle, left boundary, or right boundary. `startCap` / `endCap` control how the two ends close.
+
+<ComponentPreview name="ribbon-align-cap" size="md" />
+
+### Explicit Boundaries
+
+When layout already emitted the upper and lower sides, `kind="boundary"` lowers both paths directly into one closed area.
+
+<ComponentPreview name="ribbon-boundary" size="sm" />
 
 ### Ribbon Style
 
@@ -79,10 +118,14 @@ IR cannot store functions. Custom rules use `width={{ kind: 'profile', name, par
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `width` | `number \| { start, end, interpolation? } \| { kind: 'stops', stops, interpolation? } \| { kind: 'profile', name, params? }` | — | Width rule sampled along the centerline. |
+| `kind` | `'centerline' \| 'boundary'` | `'centerline'` | Construction mode; the default derives an area from a centerline and `width`, while `boundary` uses explicit upper and lower sides. |
+| `width` | `number \| { start, end, interpolation? } \| { kind: 'stops', stops, interpolation? } \| { kind: 'profile', name, params? }` | — | Width rule sampled along the centerline; unused in `boundary` mode. |
+| `align` | `'center' \| 'left' \| 'right'` | `'center'` | Where the centerline sits relative to the band; `left` / `right` makes it one boundary. |
 | `startDirection` | `number \| Vector2 \| Position \| PolarPosition` | Start-to-end direction | Tangent override at the start; tuple inputs are nonzero vectors, and polar inputs are converted before normalization. |
 | `endDirection` | `number \| Vector2 \| Position \| PolarPosition` | Start-to-end direction | Tangent override at the end; tuple inputs are nonzero vectors, and polar inputs are converted before normalization. |
 | `samples` | `number` | `48` | Number of cross-section samples, in `2..512`; increase for tight curves. |
+| `sampling` | `{ kind: 'fixed', samples } \| { kind: 'adaptive', tolerance, maxSamples? }` | — | Explicit sampling strategy. Cannot be combined with `samples`. |
+| `startCap` / `endCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Cap shape at the start / end of the closed ribbon. |
 | `fill` | `string \| PaintSpec` | `currentColor` | Fill for the ribbon area: solid color, gradient, pattern, or image. |
 | `fillOpacity` | `number` | — | Opacity for fill only. |
 | `stroke` | `string \| PaintSpec` | — | Optional outline stroke paint; omitted means no outline. |
@@ -92,7 +135,8 @@ IR cannot store functions. Custom rules use `width={{ kind: 'profile', name, par
 | `shadow` | `ShadowPreset \| DropShadow` | — | Shadow applied to the emitted closed path. |
 | `blendMode` | `BlendMode` | — | Blend mode applied to the emitted closed path. |
 | `zIndex` | `number` | — | Explicit stacking order among sibling children. |
-| `children` | `Array<Step>` | — | Open centerline step sequence, at least 2 steps. |
+| `children` | `Array<Step>` | — | Open centerline step sequence for centerline mode, at least 2 steps. |
+| `upper` / `lower` | `Array<Step>` | — | Open upper and lower boundaries for `boundary` mode; React DSL uses `<Ribbon.Upper>` / `<Ribbon.Lower>`. |
 
 ## Related
 

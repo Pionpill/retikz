@@ -1,6 +1,16 @@
 import { type Vector2, polar, vector2 } from '../geometry';
 import type { PathCommand, PathPrim, ScenePrimitive } from '../primitive';
-import type { IRPath, IRPosition, IRRibbon, IRRibbonDirection, IRRibbonWidth, IRStep } from '../schemas';
+import type {
+  IRPath,
+  IRPosition,
+  IRRibbon,
+  IRRibbonDirection,
+  IRRibbonSampling,
+  IRRibbonWidth,
+  IRStep,
+  RibbonAlignmentValue,
+  RibbonCapValue,
+} from '../schemas';
 import { JsonObjectSchema } from '../schemas';
 import type { RibbonWidthProfileDefinition } from '../contract/ribbon';
 import type { NameStack } from './name-stack';
@@ -255,6 +265,7 @@ const widthFunction = (
 
 const commandsToSegmentInputs = (
   commands: ReadonlyArray<PathCommand>,
+  source = 'centerline',
 ): Array<RibbonSegmentInput> => {
   const inputs: Array<RibbonSegmentInput> = [];
   let cursor: IRPosition | undefined;
@@ -264,7 +275,9 @@ const commandsToSegmentInputs = (
       case 'move':
         moveCount += 1;
         if (moveCount > 1) {
-          throw new Error('Ribbon centerline must be a single open subpath; multiple move commands are not supported.');
+          throw new Error(
+            `Ribbon ${source} must be a single open subpath; multiple move commands are not supported.`,
+          );
         }
         cursor = command.to;
         break;
@@ -344,10 +357,33 @@ const commandsToSegmentInputs = (
         break;
       }
       case 'close':
-        throw new Error('Ribbon centerline must be open; close/cycle is not supported.');
+        throw new Error(`Ribbon ${source} must be open; close/cycle is not supported.`);
     }
   }
   return inputs;
+};
+
+const resolveSampleCount = (
+  samples: number | undefined,
+  sampling: IRRibbonSampling | undefined,
+  totalLength: number,
+): number => {
+  if (samples !== undefined && sampling !== undefined) {
+    throw new Error('Ribbon cannot use both `samples` and `sampling`.');
+  }
+  if (sampling?.kind === 'fixed') return sampling.samples;
+  if (sampling?.kind === 'adaptive') {
+    const maxSamples = sampling.maxSamples ?? 512;
+    return Math.max(2, Math.min(maxSamples, Math.ceil(totalLength / sampling.tolerance) + 1));
+  }
+  return samples ?? DEFAULT_RIBBON_SAMPLES;
+};
+
+const assertSampleCount = (samples: number): number => {
+  if (!Number.isInteger(samples) || samples < 2 || samples > 512) {
+    throw new Error(`Ribbon samples must be an integer in [2, 512]; got ${String(samples)}.`);
+  }
+  return samples;
 };
 
 const controlHandleLength = (
@@ -460,21 +496,54 @@ const sampleAtDistance = (
   return segments[segments.length - 1].sampleAt(1);
 };
 
+const roundedArcPoints = (
+  center: IRPosition,
+  from: IRPosition,
+  to: IRPosition,
+  round: (n: number) => number,
+): Array<IRPosition> => {
+  const start = Math.atan2(from[1] - center[1], from[0] - center[0]);
+  const end = Math.atan2(to[1] - center[1], to[0] - center[0]);
+  let delta = end - start;
+  if (delta > Math.PI) delta -= Math.PI * 2;
+  if (delta < -Math.PI) delta += Math.PI * 2;
+  const radius = distance(center, from);
+  const points: Array<IRPosition> = [];
+  for (let i = 1; i <= 8; i += 1) {
+    const angle = start + (delta * i) / 8;
+    points.push([
+      round(center[0] + Math.cos(angle) * radius),
+      round(center[1] + Math.sin(angle) * radius),
+    ]);
+  }
+  return points;
+};
+
+const capExtension = (width: number, align: RibbonAlignmentValue): number => {
+  if (align === 'center') return width / 2;
+  return width;
+};
+
 const outlineCommands = (
   segments: ReadonlyArray<RibbonSegment>,
   totalLength: number,
   sampleCount: number,
   widthAt: (offset: number) => number,
   endpointTangents: { start: Vector2; end: Vector2 },
+  align: RibbonAlignmentValue,
+  startCap: RibbonCapValue,
+  endCap: RibbonCapValue,
   round: (n: number) => number,
 ): { commands: Array<PathCommand>; points: Array<IRPosition> } => {
   const left: Array<IRPosition> = [];
   const right: Array<IRPosition> = [];
+  const centers: Array<IRPosition> = [];
+  const tangents: Array<Vector2> = [];
+  const widths: Array<number> = [];
   for (let i = 0; i < sampleCount; i += 1) {
     const offset = sampleCount === 1 ? 0 : i / (sampleCount - 1);
     const sample = sampleAtDistance(segments, totalLength, offset * totalLength);
     const width = widthAt(offset);
-    const half = width / 2;
     const startTangent = alignTangentNormal(endpointTangents.start, sample.tangent);
     const endTangent = alignTangentNormal(endpointTangents.end, sample.tangent);
     const tangent =
@@ -494,26 +563,168 @@ const outlineCommands = (
             )
           : sample.tangent;
     const normal = normalOf(tangent);
+    const leftOffset = align === 'right' ? 0 : align === 'left' ? width : width / 2;
+    const rightOffset = align === 'left' ? 0 : align === 'right' ? width : width / 2;
     const l: IRPosition = [
-      round(sample.point[0] + normal[0] * half),
-      round(sample.point[1] + normal[1] * half),
+      round(sample.point[0] + normal[0] * leftOffset),
+      round(sample.point[1] + normal[1] * leftOffset),
     ];
     const r: IRPosition = [
-      round(sample.point[0] - normal[0] * half),
-      round(sample.point[1] - normal[1] * half),
+      round(sample.point[0] - normal[0] * rightOffset),
+      round(sample.point[1] - normal[1] * rightOffset),
     ];
     if (!finitePoint(l) || !finitePoint(r)) {
       throw new Error('Ribbon sampling produced a non-finite coordinate; check width profile output.');
     }
     left.push(l);
     right.push(r);
+    centers.push([round(sample.point[0]), round(sample.point[1])]);
+    tangents.push(tangent);
+    widths.push(width);
+  }
+
+  if (startCap === 'square') {
+    const ext = capExtension(widths[0], align);
+    left[0] = [
+      round(left[0][0] - tangents[0][0] * ext),
+      round(left[0][1] - tangents[0][1] * ext),
+    ];
+    right[0] = [
+      round(right[0][0] - tangents[0][0] * ext),
+      round(right[0][1] - tangents[0][1] * ext),
+    ];
+  }
+  if (endCap === 'square') {
+    const last = sampleCount - 1;
+    const ext = capExtension(widths[last], align);
+    left[last] = [
+      round(left[last][0] + tangents[last][0] * ext),
+      round(left[last][1] + tangents[last][1] * ext),
+    ];
+    right[last] = [
+      round(right[last][0] + tangents[last][0] * ext),
+      round(right[last][1] + tangents[last][1] * ext),
+    ];
   }
 
   const commands: Array<PathCommand> = [{ kind: 'move', to: left[0] }];
   for (let i = 1; i < left.length; i += 1) commands.push({ kind: 'line', to: left[i] });
-  for (let i = right.length - 1; i >= 0; i -= 1) commands.push({ kind: 'line', to: right[i] });
+  if (endCap === 'round') {
+    const last = sampleCount - 1;
+    for (const point of roundedArcPoints(centers[last], left[last], right[last], round)) {
+      commands.push({ kind: 'line', to: point });
+    }
+  } else {
+    commands.push({ kind: 'line', to: right[right.length - 1] });
+  }
+  for (let i = right.length - 2; i >= 0; i -= 1) commands.push({ kind: 'line', to: right[i] });
+  if (startCap === 'round') {
+    for (const point of roundedArcPoints(centers[0], right[0], left[0], round)) {
+      commands.push({ kind: 'line', to: point });
+    }
+  }
   commands.push({ kind: 'close' });
   return { commands, points: [...left, ...right] };
+};
+
+const emittedPathFromSteps = (
+  steps: ReadonlyArray<IRStep>,
+  source: string,
+  nameStack: NameStack,
+  round: (n: number) => number,
+  measureText: TextMeasurer,
+  options: RibbonEmitOptions,
+): PathPrim => {
+  const path: IRPath = {
+    type: 'path',
+    children: steps.map(stripStepLabel),
+  };
+  const emitted = emitPathPrimitive(path, nameStack, round, measureText, options);
+  if (emitted === null) {
+    throw new Error(`Ribbon ${source} path was skipped unexpectedly.`);
+  }
+  if (emitted.primitives.length !== 1 || !isPathPrim(emitted.primitives[0])) {
+    throw new Error(`Ribbon ${source} must lower to exactly one open Path primitive.`);
+  }
+  return emitted.primitives[0];
+};
+
+const segmentsFromSteps = (
+  steps: ReadonlyArray<IRStep>,
+  source: string,
+  nameStack: NameStack,
+  round: (n: number) => number,
+  measureText: TextMeasurer,
+  options: RibbonEmitOptions,
+  endpointTangents: { start?: Vector2; end?: Vector2 } = {},
+): { segments: Array<RibbonSegment>; totalLength: number } => {
+  const prim = emittedPathFromSteps(steps, source, nameStack, round, measureText, options);
+  const inputs = commandsToSegmentInputs(prim.commands, source);
+  const segments = segmentInputsToSegments(inputs, endpointTangents);
+  const totalLength = segments.reduce((sum, segment) => sum + segment.length, 0);
+  if (!Number.isFinite(totalLength) || totalLength <= 0) {
+    throw new Error(`Ribbon ${source} has zero length; at least one nonzero segment is required.`);
+  }
+  return { segments, totalLength };
+};
+
+const boundaryOutlineCommands = (
+  upper: ReadonlyArray<RibbonSegment>,
+  upperLength: number,
+  lower: ReadonlyArray<RibbonSegment>,
+  lowerLength: number,
+  sampleCount: number,
+  round: (n: number) => number,
+): { commands: Array<PathCommand>; points: Array<IRPosition> } => {
+  const upperPoints: Array<IRPosition> = [];
+  const lowerPoints: Array<IRPosition> = [];
+  for (let i = 0; i < sampleCount; i += 1) {
+    const offset = i / (sampleCount - 1);
+    const upperPoint = sampleAtDistance(upper, upperLength, offset * upperLength).point;
+    const lowerPoint = sampleAtDistance(lower, lowerLength, offset * lowerLength).point;
+    const u: IRPosition = [round(upperPoint[0]), round(upperPoint[1])];
+    const l: IRPosition = [round(lowerPoint[0]), round(lowerPoint[1])];
+    if (!finitePoint(u) || !finitePoint(l)) {
+      throw new Error('Ribbon boundary sampling produced a non-finite coordinate.');
+    }
+    upperPoints.push(u);
+    lowerPoints.push(l);
+  }
+  const commands: Array<PathCommand> = [{ kind: 'move', to: upperPoints[0] }];
+  for (let i = 1; i < upperPoints.length; i += 1) {
+    commands.push({ kind: 'line', to: upperPoints[i] });
+  }
+  for (let i = lowerPoints.length - 1; i >= 0; i -= 1) {
+    commands.push({ kind: 'line', to: lowerPoints[i] });
+  }
+  commands.push({ kind: 'close' });
+  return { commands, points: [...upperPoints, ...lowerPoints] };
+};
+
+const styledPrimitiveFromOutline = (
+  ribbon: IRRibbon,
+  outline: { commands: Array<PathCommand>; points: Array<IRPosition> },
+  resolvePaint: PaintResolver,
+): PathPrim => {
+  const outlineRequested = ribbon.stroke !== undefined || ribbon.strokeWidth !== undefined;
+  const primitive: PathPrim = {
+    type: 'path',
+    commands: outline.commands,
+    fill: resolvePaint(ribbon.fill) ?? 'currentColor',
+    fillOpacity: ribbon.fillOpacity,
+    opacity: ribbon.opacity,
+    shadow: resolveShadow(ribbon.shadow),
+    blendMode: ribbon.blendMode,
+  };
+  if (outlineRequested) {
+    primitive.stroke = resolvePaint(ribbon.stroke) ?? 'currentColor';
+    primitive.strokeWidth = ribbon.strokeWidth ?? 1;
+    primitive.strokeOpacity = ribbon.drawOpacity;
+  }
+  if (ribbon.id !== undefined) primitive.id = ribbon.id;
+  if (ribbon.meta !== undefined) primitive.meta = ribbon.meta;
+  if (ribbon.animations !== undefined) primitive.animations = ribbon.animations;
+  return primitive;
 };
 
 export const emitRibbonPrimitive = (
@@ -525,27 +736,42 @@ export const emitRibbonPrimitive = (
 ): { primitives: Array<ScenePrimitive>; points: Array<IRPosition> } | null => {
   const resolvePaint: PaintResolver =
     options.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
-  const centerPath: IRPath = {
-    type: 'path',
-    children: ribbon.children.map(stripStepLabel),
-  };
-  const emitted = emitPathPrimitive(centerPath, nameStack, round, measureText, options);
-  if (emitted === null) return null;
-  if (emitted.primitives.length !== 1 || !isPathPrim(emitted.primitives[0])) {
-    throw new Error('Ribbon centerline must lower to exactly one open Path primitive.');
+  if (ribbon.kind === 'boundary') {
+    if (ribbon.upper === undefined || ribbon.lower === undefined) {
+      throw new Error('Boundary ribbon requires `upper` and `lower` steps.');
+    }
+    const upper = segmentsFromSteps(ribbon.upper, 'upper boundary', nameStack, round, measureText, options);
+    const lower = segmentsFromSteps(ribbon.lower, 'lower boundary', nameStack, round, measureText, options);
+    const samples = assertSampleCount(
+      resolveSampleCount(ribbon.samples, ribbon.sampling, Math.max(upper.totalLength, lower.totalLength)),
+    );
+    const outline = boundaryOutlineCommands(
+      upper.segments,
+      upper.totalLength,
+      lower.segments,
+      lower.totalLength,
+      samples,
+      round,
+    );
+    return {
+      primitives: [styledPrimitiveFromOutline(ribbon, outline, resolvePaint)],
+      points: outline.points,
+    };
   }
-  const segmentInputs = commandsToSegmentInputs(emitted.primitives[0].commands);
+
+  if (ribbon.children === undefined || ribbon.width === undefined) {
+    throw new Error('Centerline ribbon requires `children` and `width`.');
+  }
+  const segmentInputs = commandsToSegmentInputs(
+    emittedPathFromSteps(ribbon.children, 'centerline', nameStack, round, measureText, options).commands,
+    'centerline',
+  );
   const rawSegments = segmentInputsToSegments(segmentInputs);
   const rawTotalLength = rawSegments.reduce((sum, segment) => sum + segment.length, 0);
   if (!Number.isFinite(rawTotalLength) || rawTotalLength <= 0) {
     throw new Error('Ribbon centerline has zero length; at least one nonzero segment is required.');
   }
-  const samples = ribbon.samples ?? DEFAULT_RIBBON_SAMPLES;
-  if (!Number.isInteger(samples) || samples < 2 || samples > 512) {
-    throw new Error(
-      `Ribbon samples must be an integer in [2, 512]; got ${String(samples)}.`,
-    );
-  }
+  const samples = assertSampleCount(resolveSampleCount(ribbon.samples, ribbon.sampling, rawTotalLength));
   const startPoint = sampleAtDistance(rawSegments, rawTotalLength, 0).point;
   const endPoint = sampleAtDistance(rawSegments, rawTotalLength, rawTotalLength).point;
   const connectionTangent = normalizeVector(
@@ -571,28 +797,16 @@ export const emitRibbonPrimitive = (
     samples,
     widthAt,
     endpointTangents,
+    ribbon.align ?? 'center',
+    ribbon.startCap ?? 'butt',
+    ribbon.endCap ?? 'butt',
     round,
   );
 
-  const outlineRequested = ribbon.stroke !== undefined || ribbon.strokeWidth !== undefined;
-  const primitive: PathPrim = {
-    type: 'path',
-    commands: outline.commands,
-    fill: resolvePaint(ribbon.fill) ?? 'currentColor',
-    fillOpacity: ribbon.fillOpacity,
-    opacity: ribbon.opacity,
-    shadow: resolveShadow(ribbon.shadow),
-    blendMode: ribbon.blendMode,
+  return {
+    primitives: [styledPrimitiveFromOutline(ribbon, outline, resolvePaint)],
+    points: outline.points,
   };
-  if (outlineRequested) {
-    primitive.stroke = resolvePaint(ribbon.stroke) ?? 'currentColor';
-    primitive.strokeWidth = ribbon.strokeWidth ?? 1;
-    primitive.strokeOpacity = ribbon.drawOpacity;
-  }
-  if (ribbon.id !== undefined) primitive.id = ribbon.id;
-  if (ribbon.meta !== undefined) primitive.meta = ribbon.meta;
-  if (ribbon.animations !== undefined) primitive.animations = ribbon.animations;
-  return { primitives: [primitive], points: outline.points };
 };
 
 export type { RibbonEmitOptions };

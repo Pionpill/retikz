@@ -90,14 +90,19 @@ const _assertPathFieldsCheck: _PathFieldsCheck = true;
 void _assertPathFieldsCheck;
 
 export const RIBBON_FIELDS = [
+  'kind',
   'id',
   'meta',
   'animations',
   'color',
   'width',
+  'align',
   'startDirection',
   'endDirection',
   'samples',
+  'sampling',
+  'startCap',
+  'endCap',
   'fill',
   'fillOpacity',
   'stroke',
@@ -107,6 +112,8 @@ export const RIBBON_FIELDS = [
   'shadow',
   'blendMode',
   'zIndex',
+  'upper',
+  'lower',
 ] as const satisfies ReadonlyArray<keyof IRRibbon>;
 
 type _RibbonFieldsCheck = AssertEqual<

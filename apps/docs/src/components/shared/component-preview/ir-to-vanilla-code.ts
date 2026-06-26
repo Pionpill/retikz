@@ -205,6 +205,26 @@ const drawCode = (path: IRPath, indent: number, ctx: Ctx): string => {
 };
 
 const ribbonCode = (ribbon: IRRibbon, indent: number, ctx: Ctx): string => {
+  if (ribbon.kind === 'boundary') {
+    if (
+      ribbon.upper === undefined ||
+      ribbon.lower === undefined ||
+      !ribbon.upper.every(isWayRepresentableStep) ||
+      !ribbon.lower.every(isWayRepresentableStep)
+    ) {
+      return rawIrChildCode(ribbon, indent, 'not vanilla boundary way sugar');
+    }
+    ctx.used.add('ribbon');
+    const config = {
+      ...stripKeys(ribbon, ['type', 'upper', 'lower']),
+      upper: stepsToWay(ribbon.upper, ctx, indent + 1),
+      lower: stepsToWay(ribbon.lower, ctx, indent + 1),
+    };
+    return `ribbon(${formatObject(config, indent)})`;
+  }
+  if (ribbon.children === undefined) {
+    return rawIrChildCode(ribbon, indent, 'missing ribbon centerline');
+  }
   if (!ribbon.children.every(isWayRepresentableStep)) {
     return rawIrChildCode(ribbon, indent, 'not vanilla way sugar');
   }

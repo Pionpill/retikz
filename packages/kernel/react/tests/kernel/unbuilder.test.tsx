@@ -136,6 +136,31 @@ describe('convertIRToReactNode', () => {
     expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
   });
 
+  it('Boundary Ribbon round-trip：IR → React → IR 等价', () => {
+    const ir: IR = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [
+        {
+          type: 'ribbon',
+          kind: 'boundary',
+          fill: '#bfdbfe',
+          upper: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+          lower: [
+            { type: 'step', kind: 'move', to: [0, 4] },
+            { type: 'step', kind: 'line', to: [10, 4] },
+          ],
+        },
+      ],
+    };
+    const [ribbonEl] = toElements(convertIRToReactNode(ir));
+    expect((ribbonEl.type as { displayName?: string }).displayName).toBe(TIKZ_RIBBON);
+    expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+  });
+
   it('Sugar 降级：<Draw> → IR → React 还原成 <Path>，二次 round-trip IR 稳定', () => {
     const ir1 = buildIR(<Draw way={['A', [10, 0]]} stroke="red" />);
     const ir2 = buildIR(convertIRToReactNode(ir1));
