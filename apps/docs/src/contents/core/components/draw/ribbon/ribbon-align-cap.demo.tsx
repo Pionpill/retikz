@@ -1,18 +1,65 @@
 import type { FC } from 'react';
 
-import { Layout, Node, Ribbon, Step } from '@retikz/react';
+import { Layout, Node, Ribbon, type RibbonProps, Step } from '@retikz/react';
+
+type Row = {
+  label: string;
+  y: number;
+  align: NonNullable<RibbonProps['align']>;
+  start: NonNullable<RibbonProps['start']>;
+  end: NonNullable<RibbonProps['end']>;
+  fill: string;
+  path: 'curve' | 'line';
+};
+
+const LEFT_X = -152;
+const RIGHT_X = 222;
+const ARC_RADIUS = 11;
 
 const rows = [
-  { label: 'center / butt', y: -70, align: 'center' as const, start: { cap: 'butt' as const }, end: { cap: 'butt' as const }, fill: '#60a5fa' },
-  { label: 'left / square', y: 0, align: 'left' as const, start: { cap: 'square' as const }, end: { cap: 'square' as const }, fill: '#43aa8b' },
-  { label: 'right / round', y: 70, align: 'right' as const, start: { cap: 'round' as const }, end: { cap: 'round' as const }, fill: '#f9844a' },
-];
+  {
+    label: 'center / butt',
+    y: -105,
+    align: 'center',
+    start: { cap: 'butt' },
+    end: { cap: 'butt' },
+    fill: '#60a5fa',
+    path: 'curve',
+  },
+  {
+    label: 'left / square',
+    y: -35,
+    align: 'left',
+    start: { cap: 'square' },
+    end: { cap: 'square' },
+    fill: '#43aa8b',
+    path: 'curve',
+  },
+  {
+    label: 'right / round',
+    y: 35,
+    align: 'right',
+    start: { cap: 'round' },
+    end: { cap: 'round' },
+    fill: '#f9844a',
+    path: 'curve',
+  },
+  {
+    label: 'center / arc',
+    y: 105,
+    align: 'center',
+    start: { cap: { type: 'arc', center: [LEFT_X, 105], radius: ARC_RADIUS, sweep: 'long' } },
+    end: { cap: { type: 'arc', center: [RIGHT_X, 105], radius: ARC_RADIUS } },
+    fill: '#8b5cf6',
+    path: 'line',
+  },
+] satisfies Array<Row>;
 
 const Demo: FC = () => (
   <Layout
     width={560}
-    height={280}
-    viewBox={{ x: -280, y: -140, width: 560, height: 280 }}
+    height={340}
+    viewBox={{ x: -280, y: -170, width: 560, height: 340 }}
     color="#172033"
   >
     {rows.map(row => (
@@ -29,8 +76,17 @@ const Demo: FC = () => (
         drawOpacity={0.2}
         samples={64}
       >
-        <Step kind="move" to={[-152, row.y - 18]} />
-        <Step kind="curve" control={[20, row.y - 36]} to={[222, row.y + 18]} />
+        {row.path === 'curve' ? (
+          <>
+            <Step kind="move" to={[LEFT_X, row.y - 18]} />
+            <Step kind="curve" control={[20, row.y - 36]} to={[RIGHT_X, row.y + 18]} />
+          </>
+        ) : (
+          <>
+            <Step kind="move" to={[LEFT_X, row.y]} />
+            <Step kind="line" to={[RIGHT_X, row.y]} />
+          </>
+        )}
       </Ribbon>
     ))}
 

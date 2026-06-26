@@ -67,6 +67,22 @@ describe('compile ribbon', () => {
       angle: 90,
       radius: 1,
     });
+    expect(
+      RibbonSchema.parse({
+        ...ribbon(),
+        start: { cap: { type: 'arc', center: [0, 0], radius: 2, sweep: 'long' } },
+        end: { cap: { type: 'arc', center: [10, 0], radius: 2 } },
+      }),
+    ).toMatchObject({
+      start: { cap: { type: 'arc', center: [0, 0], radius: 2, sweep: 'long' } },
+      end: { cap: { type: 'arc', center: [10, 0], radius: 2 } },
+    });
+    expect(() =>
+      RibbonSchema.parse({
+        ...ribbon(),
+        start: { cap: { type: 'arc', center: [0, 0], radius: 0 } },
+      }),
+    ).toThrow();
   });
 
   it('fixed-width ribbon lowers a straight centerline to one filled closed path', () => {
@@ -381,6 +397,47 @@ describe('compile ribbon', () => {
     const points = prim.commands.flatMap(command => ('to' in command ? [command.to] : []));
     expect(Math.max(...points.map(point => point[0]))).toBe(12);
     expect(Math.min(...points.map(point => point[0]))).toBe(-2);
+  });
+
+  it('supports custom arc caps with explicit center and radius', () => {
+    const parsed = RibbonSchema.parse({
+      ...ribbon(),
+      start: { cap: { type: 'arc', center: [0, 0], radius: 2, sweep: 'long' } },
+      end: { cap: { type: 'arc', center: [10, 0], radius: 2 } },
+    });
+    const prim = pathPrim(compileToScene(scene([parsed]), { padding: 0 }).primitives[0]);
+
+    expect(prim.commands).toEqual([
+      { kind: 'move', to: [0, 2] },
+      { kind: 'line', to: [10, 2] },
+      { kind: 'line', to: [10.77, 1.85] },
+      { kind: 'line', to: [11.41, 1.41] },
+      { kind: 'line', to: [11.85, 0.77] },
+      { kind: 'line', to: [12, 0] },
+      { kind: 'line', to: [11.85, -0.77] },
+      { kind: 'line', to: [11.41, -1.41] },
+      { kind: 'line', to: [10.77, -1.85] },
+      { kind: 'line', to: [10, -2] },
+      { kind: 'line', to: [0, -2] },
+      { kind: 'line', to: [-0.77, -1.85] },
+      { kind: 'line', to: [-1.41, -1.41] },
+      { kind: 'line', to: [-1.85, -0.77] },
+      { kind: 'line', to: [-2, 0] },
+      { kind: 'line', to: [-1.85, 0.77] },
+      { kind: 'line', to: [-1.41, 1.41] },
+      { kind: 'line', to: [-0.77, 1.85] },
+      { kind: 'line', to: [0, 2] },
+      { kind: 'close' },
+    ]);
+  });
+
+  it('throws when a custom arc cap radius does not reach both ribbon sides', () => {
+    const parsed = RibbonSchema.parse({
+      ...ribbon(),
+      start: { cap: { type: 'arc', center: [0, 0], radius: 3 } },
+    });
+
+    expect(() => compileToScene(scene([parsed]), { padding: 0 })).toThrow(/arc cap/);
   });
 
   it('uses fixed sampling config as the samples shorthand replacement', () => {

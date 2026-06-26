@@ -4,7 +4,7 @@ import { BlendMode, DropShadowSchema, ShadowPreset } from './effects';
 import { JsonObjectSchema } from './json';
 import { PaintSpecSchema } from './paint';
 import { StepSchema } from './path';
-import { PolarPositionSchema, Vector2Schema } from './position';
+import { PolarPositionSchema, PositionSchema, Vector2Schema } from './position';
 import type { PolarPosition } from '../geometry/polar';
 import type { Vector2 } from '../geometry/point';
 import type { ValueOf } from '../types';
@@ -31,6 +31,36 @@ export const RibbonCap = {
 } as const;
 
 export type RibbonCapValue = ValueOf<typeof RibbonCap>;
+
+export const RibbonArcCapSweep = {
+  Short: 'short',
+  Long: 'long',
+} as const;
+
+export type RibbonArcCapSweepValue = ValueOf<typeof RibbonArcCapSweep>;
+
+export const RibbonArcCapSchema = z
+  .object({
+    type: z.literal('arc').describe('Discriminator for an explicit circular arc cap.'),
+    center: z
+      .union([PositionSchema, PolarPositionSchema])
+      .describe('Arc center as a Cartesian position or PolarPosition sugar.'),
+    radius: z
+      .number()
+      .finite()
+      .positive()
+      .describe('Arc radius in user units; both ribbon side endpoints must lie on this circle.'),
+    sweep: z
+      .enum(RibbonArcCapSweep)
+      .optional()
+      .describe('Which circular sweep connects the two ribbon sides; omitted means short.'),
+  })
+  .strict()
+  .describe('Endpoint cap closed by an explicit circular arc.');
+
+export const RibbonCapSchema = z
+  .union([z.enum(RibbonCap), RibbonArcCapSchema])
+  .describe('Ribbon endpoint cap: built-in cap name or explicit circular arc cap.');
 
 export const RibbonWidthStopSchema = z
   .object({
@@ -106,8 +136,7 @@ export const RibbonEndpointSchema = z
     direction: RibbonDirectionSchema.optional().describe(
       'Optional tangent direction override at this endpoint; omitted means the start-to-end connection direction.',
     ),
-    cap: z
-      .enum(RibbonCap)
+    cap: RibbonCapSchema
       .optional()
       .describe('Cap style used at this endpoint of the emitted ribbon polygon.'),
   })
@@ -347,6 +376,8 @@ export const RibbonSchema = z
 
 export type IRRibbonWidthStop = z.infer<typeof RibbonWidthStopSchema>;
 export type IRRibbonWidth = z.infer<typeof RibbonWidthSchema>;
+export type IRRibbonArcCap = z.infer<typeof RibbonArcCapSchema>;
+export type IRRibbonCap = z.infer<typeof RibbonCapSchema>;
 export type IRRibbonEndpoint = z.infer<typeof RibbonEndpointSchema>;
 export type IRRibbonSampling = z.infer<typeof RibbonSamplingSchema>;
 export type IRRibbon = z.infer<typeof RibbonSchema>;

@@ -93,6 +93,13 @@ import { Ribbon, Step } from '@retikz/react';
 
 <ComponentPreview name="ribbon-align-cap" size="md" />
 
+| cap type | 作用 | 常见场景 |
+| --- | --- | --- |
+| `butt` | 直接用直线连接两侧边界，不额外延伸。 | 默认端面；流带贴齐矩形节点边界。 |
+| `round` | 以端点两侧中点为圆心自动画半圆端帽。 | 普通圆角端面，不需要手动指定圆心。 |
+| `square` | 沿端点切线向外延伸后再直线闭合。 | 希望端面比中心线更外伸，类似线条的 square cap。 |
+| `{ type: 'arc' }` | 用 `center` 和 `radius` 指定圆弧端帽，`sweep` 可选短弧或长弧。 | 桑基图贴合圆形/弧形节点边界，或需要自定义圆心的端面。 |
+
 ### 显式边界
 
 当布局已经产出上下两条边界时，`kind="boundary"` 可以直接把两条路径 lower 为一个闭合面。
@@ -126,8 +133,8 @@ IR 不能保存函数；自定义变化规则通过 `width={{ kind: 'profile', n
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
 | `kind` | `'centerline' \| 'boundary'` | `'centerline'` | 构造模式；默认从中心线和 `width` 生成面，`boundary` 直接使用上下边界。 |
-| `start` | `{ width?, direction?, cap? }` | — | 起点局部配置：端点宽度、切线方向和端帽。 |
-| `end` | `{ width?, direction?, cap? }` | — | 终点局部配置：端点宽度、切线方向和端帽。 |
+| `start` | `{ width?, direction?, cap?: 'butt' \| 'round' \| 'square' \| { type: 'arc', center, radius, sweep? } }` | — | 起点局部配置：端点宽度、切线方向和端帽。 |
+| `end` | `{ width?, direction?, cap?: 'butt' \| 'round' \| 'square' \| { type: 'arc', center, radius, sweep? } }` | — | 终点局部配置：端点宽度、切线方向和端帽。 |
 | `interpolation` | `'linear' \| 'smooth'` | `'linear'` | `start.width` 到 `end.width` 的过渡曲线；只用于端点宽度 taper。 |
 | `width` | `number \| { kind: 'stops', stops, interpolation? } \| { kind: 'profile', name, params? }` | — | 整条中心线的宽度规则；固定宽度或中间自定义宽度使用它，不能和 `start.width` / `end.width` 同时使用。 |
 | `align` | `'center' \| 'left' \| 'right'` | `'center'` | 中心线相对流带的位置；`left` / `right` 让中心线成为一侧边界。 |

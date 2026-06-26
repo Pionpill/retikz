@@ -94,6 +94,13 @@ Endpoint direction defaults to the start-to-end connection. Override it with an 
 
 <ComponentPreview name="ribbon-align-cap" size="md" />
 
+| cap type | Effect | Common use |
+| --- | --- | --- |
+| `butt` | Connects both ribbon sides directly without extending the endpoint. | Default flat end; bands that meet rectangular node edges. |
+| `round` | Draws an automatic semicircle using the midpoint between both sides as the center. | Standard rounded end without choosing a center manually. |
+| `square` | Extends along the endpoint tangent before closing with a straight edge. | Ends that should project past the centerline, similar to a square line cap. |
+| `{ type: 'arc' }` | Closes the endpoint with an arc from explicit `center` and `radius`; `sweep` chooses short or long arc. | Sankey bands that meet circular or curved node boundaries, or any cap that needs a custom center. |
+
 ### Explicit Boundaries
 
 When layout already emitted the upper and lower sides, `kind="boundary"` lowers both paths directly into one closed area.
@@ -127,8 +134,8 @@ IR cannot store functions. Custom rules use `width={{ kind: 'profile', name, par
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `kind` | `'centerline' \| 'boundary'` | `'centerline'` | Construction mode; the default derives an area from a centerline and `width`, while `boundary` uses explicit upper and lower sides. |
-| `start` | `{ width?, direction?, cap? }` | — | Start endpoint configuration: endpoint width, tangent direction, and cap. |
-| `end` | `{ width?, direction?, cap? }` | — | End endpoint configuration: endpoint width, tangent direction, and cap. |
+| `start` | `{ width?, direction?, cap?: 'butt' \| 'round' \| 'square' \| { type: 'arc', center, radius, sweep? } }` | — | Start endpoint configuration: endpoint width, tangent direction, and cap. |
+| `end` | `{ width?, direction?, cap?: 'butt' \| 'round' \| 'square' \| { type: 'arc', center, radius, sweep? } }` | — | End endpoint configuration: endpoint width, tangent direction, and cap. |
 | `interpolation` | `'linear' \| 'smooth'` | `'linear'` | Transition curve between `start.width` and `end.width`; only used for endpoint taper. |
 | `width` | `number \| { kind: 'stops', stops, interpolation? } \| { kind: 'profile', name, params? }` | — | Whole-centerline width rule. Use it for fixed width or custom mid-width profiles; do not combine it with `start.width` / `end.width`. |
 | `align` | `'center' \| 'left' \| 'right'` | `'center'` | Where the centerline sits relative to the band; `left` / `right` makes it one boundary. |

@@ -4,12 +4,13 @@ import type {
   IRPath,
   IRPosition,
   IRRibbon,
+  IRRibbonArcCap,
+  IRRibbonCap,
   IRRibbonDirection,
   IRRibbonSampling,
   IRRibbonWidth,
   IRStep,
   RibbonAlignmentValue,
-  RibbonCapValue,
 } from '../schemas';
 import { JsonObjectSchema } from '../schemas';
 import type { RibbonWidthProfileDefinition } from '../contract/ribbon';
@@ -26,10 +27,12 @@ import {
   quadSegmentSample,
 } from '../geometry/segment';
 import { resolveShadow } from './effects';
+import { resolvePosition } from './position';
 
 const DEFAULT_RIBBON_SAMPLES = 64;
 const LENGTH_SUBDIVISIONS = 16;
 const ENDPOINT_DIRECTION_BLEND_SPAN = 0.18;
+const ARC_CAP_POINT_COUNT = 8;
 
 type RibbonSegment = {
   sampleAt: (t: number) => SegmentSample;
@@ -546,11 +549,63 @@ const roundedArcPoints = (
   }
   const radius = distance(center, from);
   const points: Array<IRPosition> = [];
-  for (let i = 1; i <= 8; i += 1) {
-    const angle = start + (delta * i) / 8;
+  for (let i = 1; i <= ARC_CAP_POINT_COUNT; i += 1) {
+    const angle = start + (delta * i) / ARC_CAP_POINT_COUNT;
     points.push([
       round(center[0] + Math.cos(angle) * radius),
       round(center[1] + Math.sin(angle) * radius),
+    ]);
+  }
+  return points;
+};
+
+const isArcCap = (cap: IRRibbonCap): cap is IRRibbonArcCap => typeof cap === 'object';
+
+const assertArcCapRadius = (
+  actual: number,
+  expected: number,
+  endpoint: 'start' | 'end',
+  side: 'first' | 'second',
+): void => {
+  const tolerance = Math.max(0.01, Math.abs(expected) * 1e-4);
+  if (Math.abs(actual - expected) > tolerance) {
+    throw new Error(
+      `Ribbon ${endpoint} arc cap radius must reach the ${side} side point; expected ${String(expected)}, got ${String(actual)}.`,
+    );
+  }
+};
+
+const arcCapPoints = (
+  cap: IRRibbonArcCap,
+  from: IRPosition,
+  to: IRPosition,
+  endpoint: 'start' | 'end',
+  nameStack: NameStack,
+  round: (n: number) => number,
+): Array<IRPosition> => {
+  const resolvedCenter = resolvePosition(cap.center, nameStack);
+  if (resolvedCenter === null) {
+    throw new Error(`Ribbon ${endpoint} arc cap center could not be resolved.`);
+  }
+  const center: IRPosition = [round(resolvedCenter[0]), round(resolvedCenter[1])];
+  assertArcCapRadius(distance(center, from), cap.radius, endpoint, 'first');
+  assertArcCapRadius(distance(center, to), cap.radius, endpoint, 'second');
+
+  const start = Math.atan2(from[1] - center[1], from[0] - center[0]);
+  const end = Math.atan2(to[1] - center[1], to[0] - center[0]);
+  let delta = end - start;
+  if (delta > Math.PI) delta -= Math.PI * 2;
+  if (delta < -Math.PI) delta += Math.PI * 2;
+  if (cap.sweep === 'long') {
+    delta = delta > 0 ? delta - Math.PI * 2 : delta + Math.PI * 2;
+  }
+
+  const points: Array<IRPosition> = [];
+  for (let i = 1; i <= ARC_CAP_POINT_COUNT; i += 1) {
+    const angle = start + (delta * i) / ARC_CAP_POINT_COUNT;
+    points.push([
+      round(center[0] + Math.cos(angle) * cap.radius),
+      round(center[1] + Math.sin(angle) * cap.radius),
     ]);
   }
   return points;
@@ -716,8 +771,9 @@ const outlineCommands = (
   widthAt: (offset: number) => number,
   endpointTangents: { start: Vector2; end: Vector2 },
   align: RibbonAlignmentValue,
-  startEndpointCap: RibbonCapValue,
-  endEndpointCap: RibbonCapValue,
+  startEndpointCap: IRRibbonCap,
+  endEndpointCap: IRRibbonCap,
+  nameStack: NameStack,
   round: (n: number) => number,
 ): { commands: Array<PathCommand>; points: Array<IRPosition> } => {
   const left: Array<IRPosition> = [];
@@ -762,7 +818,19 @@ const outlineCommands = (
 
   const commands: Array<PathCommand> = [{ kind: 'move', to: left[0] }];
   for (let i = 1; i < left.length; i += 1) commands.push({ kind: 'line', to: left[i] });
-  if (endEndpointCap === 'round') {
+  if (isArcCap(endEndpointCap)) {
+    const last = sampleCount - 1;
+    for (const point of arcCapPoints(
+      endEndpointCap,
+      left[last],
+      right[last],
+      'end',
+      nameStack,
+      round,
+    )) {
+      commands.push({ kind: 'line', to: point });
+    }
+  } else if (endEndpointCap === 'round') {
     const last = sampleCount - 1;
     for (const point of roundedArcPoints(
       midpoint(left[last], right[last], round),
@@ -777,7 +845,18 @@ const outlineCommands = (
     commands.push({ kind: 'line', to: right[right.length - 1] });
   }
   for (let i = right.length - 2; i >= 0; i -= 1) commands.push({ kind: 'line', to: right[i] });
-  if (startEndpointCap === 'round') {
+  if (isArcCap(startEndpointCap)) {
+    for (const point of arcCapPoints(
+      startEndpointCap,
+      right[0],
+      left[0],
+      'start',
+      nameStack,
+      round,
+    )) {
+      commands.push({ kind: 'line', to: point });
+    }
+  } else if (startEndpointCap === 'round') {
     for (const point of roundedArcPoints(
       midpoint(left[0], right[0], round),
       right[0],
@@ -800,8 +879,9 @@ const analyticOutlineCommands = (
   endpointTangents: { start: Vector2; end: Vector2 },
   endpointTangentOverrides: { start?: Vector2; end?: Vector2 },
   align: RibbonAlignmentValue,
-  startEndpointCap: RibbonCapValue,
-  endEndpointCap: RibbonCapValue,
+  startEndpointCap: IRRibbonCap,
+  endEndpointCap: IRRibbonCap,
+  nameStack: NameStack,
   round: (n: number) => number,
 ): { commands: Array<PathCommand>; points: Array<IRPosition> } | null => {
   if (inputs.length !== segments.length) return null;
@@ -954,7 +1034,18 @@ const analyticOutlineCommands = (
   commands.push(...leftCommands);
   const lastLeftCommand = commands[commands.length - 1];
   if ('to' in lastLeftCommand) lastLeftCommand.to = endLeft;
-  if (endEndpointCap === 'round') {
+  if (isArcCap(endEndpointCap)) {
+    for (const point of arcCapPoints(
+      endEndpointCap,
+      endLeft,
+      endRight,
+      'end',
+      nameStack,
+      round,
+    )) {
+      commands.push({ kind: 'line', to: point });
+    }
+  } else if (endEndpointCap === 'round') {
     for (const point of roundedArcPoints(
       midpoint(endLeft, endRight, round),
       endLeft,
@@ -972,7 +1063,18 @@ const analyticOutlineCommands = (
     if (index === 0 && 'to' in command) command.to = startRight;
     commands.push(command);
   }
-  if (startEndpointCap === 'round') {
+  if (isArcCap(startEndpointCap)) {
+    for (const point of arcCapPoints(
+      startEndpointCap,
+      startRight,
+      startLeft,
+      'start',
+      nameStack,
+      round,
+    )) {
+      commands.push({ kind: 'line', to: point });
+    }
+  } else if (startEndpointCap === 'round') {
     for (const point of roundedArcPoints(
       midpoint(startLeft, startRight, round),
       startRight,
@@ -1173,6 +1275,7 @@ export const emitRibbonPrimitive = (
           ribbon.align ?? 'center',
           ribbon.start?.cap ?? 'butt',
           ribbon.end?.cap ?? 'butt',
+          nameStack,
           round,
         ) ??
         outlineCommands(
@@ -1184,6 +1287,7 @@ export const emitRibbonPrimitive = (
           ribbon.align ?? 'center',
           ribbon.start?.cap ?? 'butt',
           ribbon.end?.cap ?? 'butt',
+          nameStack,
           round,
         )
       : outlineCommands(
@@ -1195,6 +1299,7 @@ export const emitRibbonPrimitive = (
           ribbon.align ?? 'center',
           ribbon.start?.cap ?? 'butt',
           ribbon.end?.cap ?? 'butt',
+          nameStack,
           round,
         );
 
