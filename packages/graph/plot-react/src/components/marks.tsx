@@ -40,10 +40,10 @@ import type {
   PointStrokeStyle,
   PointStrokeWidthStyle,
   PointZIndexStyle,
-  RelationPathOptions,
-  RelationRouteStep,
-  RelationRoutingSpec,
-  RelationStepLabel,
+  RelationGeometryKindValue,
+  RelationPathGeometry,
+  RelationPrimitiveStyle,
+  RelationRibbonOptions,
   ShadowPresetValue,
   ShadowStyle,
   Transform,
@@ -264,13 +264,12 @@ export type IntervalMarkProps = MarkTransformProps & DatumLabelProps & CoreNodeC
 
 export type RelationMarkProps = MarkTransformProps & {
   id?: string;
+  kind?: RelationGeometryKindValue;
   source: PlotTargetRef;
   target: PlotTargetRef;
-  via?: Array<PlotTargetRef>;
-  route?: Array<RelationRouteStep>;
-  routing?: RelationRoutingSpec;
-  label?: RelationStepLabel;
-  path?: RelationPathOptions;
+  style?: RelationPrimitiveStyle;
+  path?: RelationPathGeometry;
+  ribbon?: RelationRibbonOptions;
   color?: FieldName;
   channels?: Record<string, ExtensionChannelProp>;
 };

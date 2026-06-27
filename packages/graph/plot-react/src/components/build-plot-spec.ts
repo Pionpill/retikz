@@ -861,20 +861,19 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
     } else if (child.type === ReferenceMark) {
       collectReference(child.props as ReferenceMarkProps, into, styleContext);
     } else if (child.type === RelationMark) {
-      const { id, transform, source, target, via, route, routing, label, path, color, channels } = child.props as RelationMarkProps;
+      const { id, kind, transform, source, target, style, path, ribbon, color, channels } = child.props as RelationMarkProps;
       const colorEnc = colorChannel(color, undefined);
       const encoding = { ...colorEnc, ...extensionChannelEncoding(channels) };
       into.marks.push({
         type: PlotMark.Relation,
         ...(id !== undefined ? { id } : {}),
+        ...(kind !== undefined ? { kind } : {}),
         ...(transform !== undefined ? { transform } : {}),
         source,
         target,
-        ...(via !== undefined ? { via } : {}),
-        ...(route !== undefined ? { route } : {}),
-        ...(routing !== undefined ? { routing } : {}),
-        ...(label !== undefined ? { label } : {}),
+        ...(style !== undefined ? { style } : {}),
         ...(path !== undefined ? { path } : {}),
+        ...(ribbon !== undefined ? { ribbon } : {}),
         ...(Object.keys(encoding).length > 0 ? { encoding } : {}),
       });
       recordColor(into, colorEnc);

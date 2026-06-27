@@ -38,7 +38,11 @@ import type {
   PointZIndexStyleSchema,
   ReferenceMarkSchema,
   RelationMarkSchema,
-  RelationPathOptionsSchema,
+  RelationPathGeometrySchema,
+  RelationPathSpecificOptionsSchema,
+  RelationPrimitiveStyleSchema,
+  RelationRibbonOptionsSchema,
+  RelationRibbonSpecificOptionsSchema,
   RelationRouteStepSchema,
   RelationRoutingSpecSchema,
   RelationStepLabelSchema,
@@ -109,7 +113,11 @@ export type RelationRouteStep = z.infer<typeof RelationRouteStepSchema>;
 export type MarkTransform = z.infer<typeof MarkTransformSchema>;
 export type RelationTransform = z.infer<typeof RelationTransformSchema>;
 export type RelationRoutingSpec = z.infer<typeof RelationRoutingSpecSchema>;
-export type RelationPathOptions = z.infer<typeof RelationPathOptionsSchema>;
+export type RelationPrimitiveStyle = z.infer<typeof RelationPrimitiveStyleSchema>;
+export type RelationPathSpecificOptions = z.infer<typeof RelationPathSpecificOptionsSchema>;
+export type RelationPathGeometry = z.infer<typeof RelationPathGeometrySchema>;
+export type RelationRibbonSpecificOptions = z.infer<typeof RelationRibbonSpecificOptionsSchema>;
+export type RelationRibbonOptions = z.infer<typeof RelationRibbonOptionsSchema>;
 export type RelationMark = z.infer<typeof RelationMarkSchema>;
 export type Mark = z.infer<typeof MarkSchema>;
 /** custom mark operation（自定义 type passthrough，由 runtime MarkDefinition 解释） */

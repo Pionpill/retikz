@@ -28,8 +28,14 @@ const Demo: FC = () => (
       ]}
       source={{ anchorId: { prefix: 'bubble', field: 'sourceId' }, boundary: true }}
       target={{ anchorId: { prefix: 'bubble', field: 'targetId' }, boundary: true }}
-      label={{ text: { field: 'relLabel' }, position: 0.5, side: 'sloped' }}
-      path={{ arrow: '->', color: '#e11d48', roundedCorners: 8, strokeWidth: 1.6 }}
+      style={{
+        color: { kind: 'constant', value: '#e11d48' },
+        strokeWidth: { kind: 'constant', value: 1.6 },
+      }}
+      path={{
+        label: { text: { field: 'relLabel' }, position: 0.5, side: 'sloped' },
+        options: { arrow: '->', roundedCorners: 8 },
+      }}
     />
     <Axis dimension="x" grid />
     <Axis dimension="y" grid />

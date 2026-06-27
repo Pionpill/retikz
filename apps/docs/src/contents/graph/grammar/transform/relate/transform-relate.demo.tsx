@@ -18,9 +18,15 @@ const Demo: FC = () => (
       ]}
       source={{ anchorId: { prefix: 'trend', field: 'sourceId' } }}
       target={{ anchorId: { prefix: 'trend', field: 'targetId' } }}
-      routing={{ kind: 'bend', bendDirection: 'left', bendAngle: 28 }}
-      label={{ text: { field: 'deltaLabel' }, position: 0.5, side: 'sloped', textColor: '#ea580c', font: { size: 11, weight: 'bold' } }}
-      path={{ arrow: '->', color: '#f97316', strokeWidth: 1.6 }}
+      style={{
+        color: { kind: 'constant', value: '#f97316' },
+        strokeWidth: { kind: 'constant', value: 1.6 },
+      }}
+      path={{
+        routing: { kind: 'bend', bendDirection: 'left', bendAngle: 28 },
+        label: { text: { field: 'deltaLabel' }, position: 0.5, side: 'sloped', textColor: '#ea580c', font: { size: 11, weight: 'bold' } },
+        options: { arrow: '->' },
+      }}
     />
     <Axis dimension="x" grid />
     <Axis dimension="y" grid />

@@ -69,8 +69,8 @@ const relationTargetRoleValues = (mark: MarkOperation, role: DimensionRole, rows
   const refs = [
     mark.source,
     mark.target,
-    ...(mark.via ?? []),
-    ...(mark.route ?? []).flatMap(step => (step.to === undefined ? [] : [step.to])),
+    ...(mark.path?.via ?? []),
+    ...(mark.path?.route ?? []).flatMap(step => (step.to === undefined ? [] : [step.to])),
   ];
   const fields = refs.flatMap(ref => ('project' in ref && Object.prototype.hasOwnProperty.call(ref.project, role) ? [ref.project[role]] : []));
   return fields.flatMap(field => rows.map(row => resolveFieldPath(row, field)));

@@ -9,8 +9,15 @@ const Demo: FC = () => (
     <RelationMark
       source={{ anchorId: { prefix: 'node', field: 'id' } }}
       target={{ anchorId: { prefix: 'node', field: 'target' } }}
-      label={{ text: { field: 'relation' }, position: 0.45, side: 'sloped' }}
-      path={{ arrow: '->', color: '#64748b', opacity: 0.55, strokeWidth: 1.1 }}
+      style={{
+        color: { kind: 'constant', value: '#64748b' },
+        opacity: { kind: 'constant', value: 0.55 },
+        strokeWidth: { kind: 'constant', value: 1.1 },
+      }}
+      path={{
+        label: { text: { field: 'relation' }, position: 0.45, side: 'sloped' },
+        options: { arrow: '->' },
+      }}
     />
     <PointMark
       x="x"

@@ -66,6 +66,14 @@ export const PathClosureKind = {
 /** PathMark 闭合策略 */
 export type PathClosureKindValue = ValueOf<typeof PathClosureKind>;
 
+export const RelationGeometryKind = {
+  Path: 'path',
+  Ribbon: 'ribbon',
+} as const;
+
+/** RelationMark 几何子类型值 */
+export type RelationGeometryKindValue = ValueOf<typeof RelationGeometryKind>;
+
 /**
  * interval 单维区间来源关键字（暴露给用户；裸 `'band'` 等同样可用）
  * @description interval 各位置 role 的区间 [lo,hi] 怎么来：band（band 宽）/ span（baseline→值）/ extent（两字段区间）/ full（满域）。

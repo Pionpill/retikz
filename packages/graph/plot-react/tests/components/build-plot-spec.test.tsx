@@ -270,8 +270,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
         <RelationMark
           source={{ anchorId: { prefix: 'pt', field: 'from' } }}
           target={{ anchorId: { prefix: 'pt', field: 'to' } }}
-          label={{ text: { field: 'label' }, position: 'midway' }}
-          path={{ arrow: '->', roundedCorners: 6 }}
+          path={{ label: { text: { field: 'label' }, position: 'midway' }, options: { arrow: '->', roundedCorners: 6 } }}
           color="kind"
         />
       </>,
@@ -286,8 +285,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
       type: 'relation',
       source: { anchorId: { prefix: 'pt', field: 'from' } },
       target: { anchorId: { prefix: 'pt', field: 'to' } },
-      label: { text: { field: 'label' }, position: 'midway' },
-      path: { arrow: '->', roundedCorners: 6 },
+      path: { label: { text: { field: 'label' }, position: 'midway' }, options: { arrow: '->', roundedCorners: 6 } },
       encoding: { color: { field: 'kind', scale: '__color' } },
     });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
@@ -308,8 +306,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
         transform={transform}
         source={{ anchorId: { prefix: 'trend', field: 'sourceId' } }}
         target={{ anchorId: { prefix: 'trend', field: 'targetId' } }}
-        routing={routing}
-        label={{ text: { field: 'deltaLabel' }, position: 0.5 }}
+        path={{ routing, label: { text: { field: 'deltaLabel' }, position: 0.5 } }}
       />,
       '__plot',
     );
@@ -318,8 +315,29 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
       transform,
       source: { anchorId: { prefix: 'trend', field: 'sourceId' } },
       target: { anchorId: { prefix: 'trend', field: 'targetId' } },
-      routing,
-      label: { text: { field: 'deltaLabel' }, position: 0.5 },
+      path: { routing, label: { text: { field: 'deltaLabel' }, position: 0.5 } },
+    });
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('relation mark assembles ribbon kind, shared style, and ribbon options', () => {
+    const spec = buildPlotSpec(
+      <RelationMark
+        kind="ribbon"
+        source={{ project: { x: 'sourceX', y: 'sourceY' } }}
+        target={{ project: { x: 'targetX', y: 'targetY' } }}
+        style={{ fill: { kind: 'field', value: 'fill' }, opacity: { kind: 'constant', value: 0.8 } }}
+        ribbon={{ width: { kind: 'field', value: 'width' }, endWidth: { kind: 'constant', value: 4 }, options: { interpolation: 'smooth' } }}
+      />,
+      '__plot',
+    );
+    expect(spec.marks[0]).toEqual({
+      type: 'relation',
+      kind: 'ribbon',
+      source: { project: { x: 'sourceX', y: 'sourceY' } },
+      target: { project: { x: 'targetX', y: 'targetY' } },
+      style: { fill: { kind: 'field', value: 'fill' }, opacity: { kind: 'constant', value: 0.8 } },
+      ribbon: { width: { kind: 'field', value: 'width' }, endWidth: { kind: 'constant', value: 4 }, options: { interpolation: 'smooth' } },
     });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
