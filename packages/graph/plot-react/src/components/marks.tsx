@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 import type {
+  AnchorIdSpec,
   BlendModeStyle,
   BlendModeValue,
   Channel,
@@ -23,10 +24,12 @@ import type {
   NodeTextAlignValue,
   PathArrowDetailStyle,
   PathArrowStyle,
+  PathClosure,
   PathCurveValue,
   PathFillRuleStyle,
   PathScaleStyle,
   PathThicknessStyle,
+  PlotTargetRef,
   PointColorStyle,
   PointFillStyle,
   PointNonnegativeNumberStyle,
@@ -37,8 +40,13 @@ import type {
   PointStrokeStyle,
   PointStrokeWidthStyle,
   PointZIndexStyle,
+  RelationPathOptions,
+  RelationRouteStep,
+  RelationRoutingSpec,
+  RelationStepLabel,
   ShadowPresetValue,
   ShadowStyle,
+  Transform,
 } from '@retikz/plot';
 
 /** 数据字段名或字段路径；例如 `month` / `user.age`，用于 React DSL 的数据通道 props。 */
@@ -52,6 +60,10 @@ export type ThicknessValue = 'ultraThin' | 'veryThin' | 'thin' | 'semithick' | '
 export type ArrowValue = 'none' | '->' | '<-' | '<->';
 export type NodeShapeChannelValue = string | IRShapeRef;
 export type ExtensionChannelProp = FieldName | JsonValue | Channel | MarkValueType<JsonValue>;
+
+export type MarkTransformProps = {
+  transform?: Array<Transform>;
+};
 
 export type CoreNodeChannelProps = {
   align?: MarkValueProp<NodeTextAlignValue> | NodeTextAlignStyle;
@@ -91,7 +103,7 @@ export type CorePathChannelProps = {
 };
 
 /**
- * priority-1 宿主 datum label 扁平 props：给位置 mark（point / interval / path / region）加 datum 标签
+ * priority-1 宿主 datum label 扁平 props：给位置 mark（point / interval / path）加 datum 标签
  * @description label 顶层 string 默认按字段解析（装成 IR label.content 的 field）；labelDisplayFormat 进 IR（d3-format / d3-time-format 串）；
  *   labelPosition / labelDistance / labelPin 摊进 core NodeLabelSchema；resolveLabel 是运行时逃生舱（不进 IR、按 mark id 经 options 注入，需配 id）。
  */
@@ -118,7 +130,7 @@ export type DatumLabelProps = {
 };
 
 /** <PathMark> props：折线图层，按 order（缺省按数据顺序）连点成一维轨迹 */
-export type PathMarkProps = DatumLabelProps & CorePathChannelProps & {
+export type PathMarkProps = MarkTransformProps & DatumLabelProps & CorePathChannelProps & {
   /** 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值） */
   x: FieldName;
   /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
@@ -134,16 +146,21 @@ export type PathMarkProps = DatumLabelProps & CorePathChannelProps & {
   lineCap?: FieldName | LineCapValue | MarkValueType<LineCapValue>;
   lineJoin?: FieldName | LineJoinValue | MarkValueType<LineJoinValue>;
   roundedCorners?: MarkValueProp<number> | PointNonnegativeNumberStyle;
-  /** 末点回连首点闭合成多边形（polar 下即雷达轮廓）；缺省 false */
+  /** 末点回连首点闭合成多边形（polar 下即雷达轮廓）；cartesian 缺省 false，polar2D 缺省 true */
   closed?: boolean;
+  /** 是否跨过缺失 / 无效点继续连接；缺省 false 时会切成多个 core Path */
+  connectNulls?: boolean;
+  /** 构建闭合路径：cycle 首尾闭合，baseline 回到基线，stack 回到逐行基线字段；是否填充由 fill 控制 */
+  closure?: PathClosure;
   /** 相邻点连接方式；缺省 linear */
   curve?: PathCurveValue;
   /** 可选 mark 句柄（预留 scope/anchor） */
   id?: string;
+  anchorId?: AnchorIdSpec;
 };
 
 /** <PointMark> props：散点 / 文本图层，每行一个 glyph（给 text → 无边框文本 Node） */
-export type PointMarkProps = DatumLabelProps & CoreNodeChannelProps & {
+export type PointMarkProps = MarkTransformProps & DatumLabelProps & CoreNodeChannelProps & {
   /**
    * 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值；cartesian1D / polar1D 单维亦用 x）。
    * 可选：一维用 x，二维用 x/y，ternary2D 用 x/y/z；必填性由坐标系在 lowering 校验。
@@ -194,6 +211,7 @@ export type PointMarkProps = DatumLabelProps & CoreNodeChannelProps & {
   dy?: number;
   /** 可选 mark 句柄（预留 scope/anchor） */
   id?: string;
+  anchorId?: AnchorIdSpec;
 };
 
 /**
@@ -201,10 +219,10 @@ export type PointMarkProps = DatumLabelProps & CoreNodeChannelProps & {
  * @description 便捷 props 是 authoring 糖（自动拼 transform + 抽象 bounds）：x/y 画柱、angle 画饼/环、x0/x1 画直方、
  *   series(+stack) 分组/堆叠；heatmap（双 band）经显式 bounds={{x:{kind:'band'},y:{kind:'band'}}}。
  */
-export type IntervalMarkProps = DatumLabelProps & CoreNodeChannelProps & {
+export type IntervalMarkProps = MarkTransformProps & DatumLabelProps & CoreNodeChannelProps & {
   /** 绑 x 位置通道的字段路径（分类，自动 band scale；polar 下作角向类别）；直方连续 x 用 x0/x1 取代 */
   x?: FieldName;
-  /** 绑 y 位置通道的字段路径（数值；polar 下作径向值；直方下作箱高度 binValue） */
+  /** 绑 y 位置通道的字段路径（数值；polar 下作径向值；直方下作箱高度 binCount 或自定义 metric 字段） */
   y?: FieldName;
   /** polar 饼图 / 环图的份额值字段；设置后自动累积成角界（extent×full bounds），下沉为扇区 */
   angle?: FieldName;
@@ -212,10 +230,22 @@ export type IntervalMarkProps = DatumLabelProps & CoreNodeChannelProps & {
   x0?: FieldName;
   /** 直方连续 x 区间上界字段（如 bin 的 binEnd）；与 x0 配对 */
   x1?: FieldName;
+  /** Proportional interval width field; derives a running interval from row order. */
+  width?: FieldName;
+  /** Bar orientation; horizontal treats x as value and y as category. */
+  direction?: 'vertical' | 'horizontal';
   /** 颜色字段（→ color 通道 + 自动色 scale）；缺省取 series */
   color?: FieldName;
   /** 系列字段：拆成多组 / 多系列柱；缺省单系列 */
   series?: FieldName;
+  /** Arrangement group field for dodge / stack / normalize-stack. */
+  group?: FieldName;
+  /** Multi-series interval arrangement. */
+  arrangement?: 'dodge' | 'stack' | 'normalize-stack';
+  /** Stack transform baseline offset for arrangement="stack". */
+  stackOffset?: 'zero' | 'normalize' | 'diverging' | 'center' | 'overlap';
+  /** Percentage stack shortcut, equivalent to arrangement="normalize-stack". */
+  percent?: boolean;
   /** 多系列时是否堆叠（true=stack，自动 stack transform + bounds.y=extent）；否则并排（dodge，bounds.x=band{group}） */
   stack?: boolean;
   /** 显式 per-role 区间来源（高级 / heatmap 双 band）：给定则直接落 IR bounds，便捷 props 之外的逃生舱 */
@@ -225,47 +255,48 @@ export type IntervalMarkProps = DatumLabelProps & CoreNodeChannelProps & {
   strokeWidth?: MarkValueProp<number> | PointStrokeWidthStyle;
   fillOpacity?: MarkValueProp<number> | PointOpacityStyle;
   opacity?: MarkValueProp<number> | PointOpacityStyle;
+  /** Angular gap in degrees for polar sector / donut interval cells. */
+  padAngle?: number;
   /** 可选 mark 句柄（预留 scope/anchor） */
   id?: string;
+  anchorId?: AnchorIdSpec;
 };
 
-/** <RegionMark> props：区域图层（上沿折线 ↔ baseline 围成可填充区域；polar 下闭合成填充雷达） */
-export type RegionMarkProps = DatumLabelProps & CorePathChannelProps & {
-  /** 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值） */
-  x: FieldName;
-  /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
-  y: FieldName;
-  /** 上沿连接顺序的字段；缺省按数据数组顺序 */
-  order?: FieldName;
-  /** 系列字段：拆成多块区域（多系列）；缺省单块 */
-  series?: FieldName;
-  /** 回边贴附的 baseline 值；缺省 0 */
-  baseline?: number;
-  /** 末点回连首点闭合成多边形（polar 下即填充雷达）；缺省 false */
-  closed?: boolean;
-  /** 颜色字段（categorical，自动 ordinal 色 scale）：无显式 series 时按此字段隐式拆多块；缺省取 series。连续 / 时间字段报错 */
-  color?: FieldName;
-  strokeWidth?: MarkValueProp<number> | PointStrokeWidthStyle;
-  fillOpacity?: MarkValueProp<number> | PointOpacityStyle;
-  opacity?: MarkValueProp<number> | PointOpacityStyle;
-  /** 可选 mark 句柄（预留 scope/anchor） */
+export type RelationMarkProps = MarkTransformProps & {
   id?: string;
+  source: PlotTargetRef;
+  target: PlotTargetRef;
+  via?: Array<PlotTargetRef>;
+  route?: Array<RelationRouteStep>;
+  routing?: RelationRoutingSpec;
+  label?: RelationStepLabel;
+  path?: RelationPathOptions;
+  color?: FieldName;
+  channels?: Record<string, ExtensionChannelProp>;
 };
+
 
 /**
- * <ReferenceMark> props：参考标注图层（阈值线 / 容差带）。取向由给 x（竖直）还是 y（水平）决定，二选一。
+ * <ReferenceMark> props：参考标注图层（阈值线 / 容差带 / 参考区域）。
  * @description 扁平 props：数字 → IR 常量 value、字符串 → IR field（per-datum）。只给下界（x / y）→ line；
- *   配上界（xTo 与 x 配对 / yTo 与 y 配对）→ band [lo,hi]。extent 给对侧维起止字段截成部分长度。
+ *   配上界（xTo 与 x 配对 / yTo 与 y 配对）→ band [lo,hi]。kind="region" 时 x/xTo/y/yTo 围出二维区域。
+ *   extent 给对侧维起止字段截成部分长度。
  */
-export type ReferenceMarkProps = Omit<CoreNodeChannelProps, 'scale' | 'dashPattern' | 'shadow' | 'blendMode'> & CorePathChannelProps & {
+export type ReferenceMarkProps = MarkTransformProps & Omit<CoreNodeChannelProps, 'scale' | 'dashPattern' | 'shadow' | 'blendMode'> & CorePathChannelProps & {
+  /** 参考形态覆写；设为 region 时 x/xTo/y/yTo 四个边界共同围出二维区域 */
+  kind?: 'region';
   /** 竖直参考的常量轴绑定（x=const 跨满 y 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */
   x?: number | FieldName;
   /** 水平参考的常量轴绑定（y=const 跨满 x 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */
   y?: number | FieldName;
+  /** Ternary / z-role region lower bound; only used with kind="region" when the coordinate consumes z. */
+  z?: number | FieldName;
   /** 竖直 band 上界（与 x 配对 → x∈[x,xTo] 填充带）：数字 → 常量、字符串 → 字段；缺 → line */
   xTo?: number | FieldName;
   /** 水平 band 上界（与 y 配对 → y∈[y,yTo] 填充带）：数字 → 常量、字符串 → 字段；缺 → line */
   yTo?: number | FieldName;
+  /** Ternary / z-role region upper bound paired with z. */
+  zTo?: number | FieldName;
   /** 对侧维部分长度起点字段（与 extentToField 成对）；缺 → 满铺对侧轴域 */
   extentField?: FieldName;
   /** 对侧维部分长度终点字段（与 extentField 成对）；缺 → 满铺对侧轴域 */
@@ -273,38 +304,6 @@ export type ReferenceMarkProps = Omit<CoreNodeChannelProps, 'scale' | 'dashPatte
   /** 颜色：数字 / 颜色串常量 → value（line→stroke / band→fill）；字段名 → field（per-datum 按色分组） */
   color?: string;
   strokeWidth?: MarkValueProp<number> | PointStrokeWidthStyle;
-  fillOpacity?: MarkValueProp<number> | PointOpacityStyle;
-  opacity?: MarkValueProp<number> | PointOpacityStyle;
-  /** Extension channel bindings forwarded to `encoding.channels`; string values are field names. */
-  channels?: Record<string, ExtensionChannelProp>;
-  /** 可选 mark 句柄（预留 scope/anchor） */
-  id?: string;
-};
-
-/**
- * <LinkMark> props：流带图层（sankey / alluvial 流量），每行一条源 → 目标的可填充 cubic 曲带。
- * @description 扁平 props：端点拆成 sourceX/sourceY/targetX/targetY 顶层字段串（经坐标系投影），value 字段 → 带宽。
- *   布局（节点排布 / 流量堆叠）须由 transform / 预处理算好写回数据。
- */
-export type LinkMarkProps = CorePathChannelProps & {
-  /** 源端 x 位置通道字段（经坐标系投影成屏幕点） */
-  sourceX: FieldName;
-  /** 源端 y 位置通道字段 */
-  sourceY: FieldName;
-  /** 目标端 x 位置通道字段 */
-  targetX: FieldName;
-  /** 目标端 y 位置通道字段 */
-  targetY: FieldName;
-  /** 流量字段：经合成 width 线性 scale 映射成源端带宽 */
-  value: FieldName;
-  /** 目标端宽度字段：缺省 = 与源端等宽（等宽带）；给定 → 喇叭带 */
-  endWidth?: FieldName;
-  /** cubic 控制点沿主轴外推比例 0..1（0=准直、大=更 S）；缺省 0.5 */
-  curvature?: number;
-  /** 主轴取向：horizontal 出入切向沿 x、半宽沿 y（左右流）；vertical 反之；缺省 horizontal */
-  orientation?: 'horizontal' | 'vertical';
-  /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale）；缺省按图层序取默认色 */
-  color?: FieldName;
   fillOpacity?: MarkValueProp<number> | PointOpacityStyle;
   opacity?: MarkValueProp<number> | PointOpacityStyle;
   /** Extension channel bindings forwarded to `encoding.channels`; string values are field names. */
@@ -325,11 +324,9 @@ export const PointMark: FC<PointMarkProps> = () => null;
 /** 区间图层声明组件（柱 / 直方 / 饼环 / heatmap，统一） */
 export const IntervalMark: FC<IntervalMarkProps> = () => null;
 
-/** 区域图层声明组件（面积 / 填充雷达） */
-export const RegionMark: FC<RegionMarkProps> = () => null;
 
 /** 参考标注（阈值线 / 容差带）图层声明组件 */
 export const ReferenceMark: FC<ReferenceMarkProps> = () => null;
 
-/** 流带（sankey / alluvial）图层声明组件 */
-export const LinkMark: FC<LinkMarkProps> = () => null;
+/** source-target relation path 图层声明组件 */
+export const RelationMark: FC<RelationMarkProps> = () => null;

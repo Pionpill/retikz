@@ -117,7 +117,7 @@ Text channels split into two groups: visible text inside a node, and labels atta
 
 ## Paths And Arrows
 
-Paths and arrows channels apply to marks that lower to core paths, such as line marks, links, region boundaries, and reference lines.
+Paths and arrows channels apply to marks that lower to core paths, such as line marks, relation marks, region boundaries, and reference lines.
 
 ### Path styling
 
@@ -164,7 +164,7 @@ Other channels do not directly describe color, position, or path shape. They con
 | Channel | Channel Value | Meaning | Delivery |
 | --- | --- | --- | --- |
 | `zIndex` | Field: `zIndex = "field"`<br />Constant: `zIndex = {1}` | Drawing-order hint | scope / node / path `zIndex` |
-| `order` | Field: `order = "field"` | Connection order for path / region marks | mark reads the field and sorts datums |
+| `order` | Field: `order = "field"` | Connection order for path marks | mark reads the field and sorts datums |
 | `series` | Field: `series = "field"` | Multi-series splitting or grouping | mark reads the field and splits elements |
 
 `order` and `series` are not part of the `encoding` object, but they are still field-driven channel entries. In React DSL, users write them as mark props too.

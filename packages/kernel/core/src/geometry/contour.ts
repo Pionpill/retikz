@@ -464,6 +464,19 @@ const emitSegmentBody = (
     cmds.push({ kind: 'line', to: end });
     return;
   }
+  const originalSweep = Math.abs(seg.endAngle - seg.startAngle);
+  if (originalSweep >= 360 - 1e-9 && point.length([start[0] - end[0], start[1] - end[1]]) < 1e-9) {
+    const adjusted = alignSweep(seg.startAngle, seg.endAngle, seg.counterClockwise ?? false);
+    cmds.push({
+      kind: 'arc',
+      center: seg.center,
+      radius: seg.radius,
+      startAngle: adjusted.start,
+      endAngle: adjusted.end,
+      counterClockwise: seg.counterClockwise,
+    });
+    return;
+  }
   // arc：起点角 / 终点角 = start / end 相对圆心的角，扫描方向不变
   const startAngle = Math.atan2(start[1] - seg.center[1], start[0] - seg.center[0]) * RAD_TO_DEG;
   const endAngle = Math.atan2(end[1] - seg.center[1], end[0] - seg.center[0]) * RAD_TO_DEG;

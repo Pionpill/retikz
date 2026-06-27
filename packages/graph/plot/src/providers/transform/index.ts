@@ -1,3 +1,3 @@
-export { aggregateOutputField, binOutputFields } from './group';
+export { binMetricOperations, binOutputFields } from './group';
 export * from './definitions';
 export * from './orchestrate';

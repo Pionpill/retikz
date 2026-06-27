@@ -10,9 +10,7 @@ import {
   type ScopeChannelDelivery,
 } from '../../contract';
 import { type MarkOperation } from '../../schemas';
-import { DELIVERY_CHANNELS } from './delivery';
-import { createBuiltinPaintChannels } from './paint';
-import { type BuiltinTextChannelOptions, createBuiltinTextChannels } from './text';
+import { type BuiltinTextChannelOptions, DELIVERY_CHANNELS, createBuiltinPaintChannels, createBuiltinTextChannels } from './features';
 
 /**
  * 保留的内置通道名集：扩展通道的 `channel` 不得撞这些。

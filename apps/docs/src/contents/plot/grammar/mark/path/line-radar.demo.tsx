@@ -8,12 +8,12 @@ import { team } from './line-radar.data';
 const Demo: FC = () => (
   <Layout width={620} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
     <Plot data={team} width={280} height={280} coordinate="polar2D" x={10} y={10}>
-      <PathMark x="dim" y="score" order="rank" closed />
+      <PathMark x="dim" y="score" order="rank" />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>
     <Plot data={team} width={280} height={280} coordinate="polar2D" x={330} y={10}>
-      <PathMark x="dim" y="score" order="rank" />
+      <PathMark x="dim" y="score" order="rank" closed={false} />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>

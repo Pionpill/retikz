@@ -3,15 +3,15 @@ import type { z } from 'zod';
 import type { MarkValueKind, PathCurve } from './constants';
 import { BUILTIN_MARK_TYPES } from './constants';
 import type {
+  AnchorIdSpecSchema,
   BlendModeStyleSchema,
   CustomMarkSchema,
   IntervalBoundSchema,
   IntervalBoundsSchema,
   IntervalMarkSchema,
-  LinkEndpointSchema,
-  LinkMarkSchema,
   MarkOperationSchema,
   MarkSchema,
+  MarkTransformSchema,
   NodeBooleanStyleSchema,
   NodeBoundaryStyleSchema,
   NodeDashPatternStyleSchema,
@@ -20,10 +20,12 @@ import type {
   NodeTextAlignStyleSchema,
   PathArrowDetailStyleSchema,
   PathArrowStyleSchema,
+  PathClosureSchema,
   PathFillRuleStyleSchema,
   PathMarkSchema,
   PathScaleStyleSchema,
   PathThicknessStyleSchema,
+  PlotTargetRefSchema,
   PointColorStyleSchema,
   PointFillStyleSchema,
   PointMarkSchema,
@@ -35,7 +37,12 @@ import type {
   PointStrokeStyleSchema,
   PointZIndexStyleSchema,
   ReferenceMarkSchema,
-  RegionMarkSchema,
+  RelationMarkSchema,
+  RelationPathOptionsSchema,
+  RelationRouteStepSchema,
+  RelationRoutingSpecSchema,
+  RelationStepLabelSchema,
+  RelationTransformSchema,
   ShadowStyleSchema,
 } from './schema';
 
@@ -82,10 +89,10 @@ export type PathScaleStyle = z.infer<typeof PathScaleStyleSchema>;
 export type PathArrowDetailStyle = z.infer<typeof PathArrowDetailStyleSchema>;
 /** PathMark 相邻点连接方式。 */
 export type PathCurveValue = ValueOf<typeof PathCurve>;
+/** PathMark 闭合策略配置。 */
+export type PathClosure = z.infer<typeof PathClosureSchema>;
 /** path mark（折线 / 轮廓） */
 export type PathMark = z.infer<typeof PathMarkSchema>;
-/** region mark（面积 / 填充雷达） */
-export type RegionMark = z.infer<typeof RegionMarkSchema>;
 /** interval 单维区间来源 */
 export type IntervalBound = z.infer<typeof IntervalBoundSchema>;
 /** interval per-role 区间来源 */
@@ -94,11 +101,16 @@ export type IntervalBounds = z.infer<typeof IntervalBoundsSchema>;
 export type IntervalMark = z.infer<typeof IntervalMarkSchema>;
 /** reference mark（参考线 / 阈值线 / 容差带） */
 export type ReferenceMark = z.infer<typeof ReferenceMarkSchema>;
-/** link 一端：字段对端点（经坐标系投影成屏幕点） */
-export type LinkEndpoint = z.infer<typeof LinkEndpointSchema>;
-/** link mark（sankey / alluvial 流带） */
-export type LinkMark = z.infer<typeof LinkMarkSchema>;
-/** mark（point / path / region / interval / reference / link） */
+/** mark（point / path / interval / reference） */
+export type AnchorIdSpec = z.infer<typeof AnchorIdSpecSchema>;
+export type PlotTargetRef = z.infer<typeof PlotTargetRefSchema>;
+export type RelationStepLabel = z.infer<typeof RelationStepLabelSchema>;
+export type RelationRouteStep = z.infer<typeof RelationRouteStepSchema>;
+export type MarkTransform = z.infer<typeof MarkTransformSchema>;
+export type RelationTransform = z.infer<typeof RelationTransformSchema>;
+export type RelationRoutingSpec = z.infer<typeof RelationRoutingSpecSchema>;
+export type RelationPathOptions = z.infer<typeof RelationPathOptionsSchema>;
+export type RelationMark = z.infer<typeof RelationMarkSchema>;
 export type Mark = z.infer<typeof MarkSchema>;
 /** custom mark operation（自定义 type passthrough，由 runtime MarkDefinition 解释） */
 export type CustomMark = z.infer<typeof CustomMarkSchema>;

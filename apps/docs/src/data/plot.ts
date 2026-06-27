@@ -45,7 +45,9 @@ export const plotSection: Array<Section> = [
         label: 'plot.grammarTransform',
         children: [
           { id: 'row', label: 'plot.grammarTransformRow' },
-          { id: 'group', label: 'plot.grammarTransformGroup' },
+          { id: 'annotation', label: 'plot.grammarTransformAnnotation' },
+          { id: 'summary', label: 'plot.grammarTransformSummary' },
+          { id: 'relate', label: 'plot.grammarTransformRelate' },
           { id: 'custom', label: 'plot.grammarTransformCustom' },
         ],
       },
@@ -55,10 +57,9 @@ export const plotSection: Array<Section> = [
         children: [
           { id: 'point', label: 'plot.compPointMark' },
           { id: 'path', label: 'plot.compPathMark' },
-          { id: 'region', label: 'plot.compRegionMark' },
           { id: 'interval', label: 'plot.compIntervalMark' },
           { id: 'reference', label: 'plot.compReferenceMark' },
-          { id: 'link', label: 'plot.compLinkMark' },
+          { id: 'relation', label: 'plot.compRelationMark' },
           { id: 'custom', label: 'plot.grammarMarkCustom' },
         ],
       },

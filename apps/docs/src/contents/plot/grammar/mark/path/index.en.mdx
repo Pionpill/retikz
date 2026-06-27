@@ -1,12 +1,12 @@
 ---
 title: PathMark
-description: "PathMark is a one-dimensional trajectory made from ordered points; lines, multi-series lines, and radar outlines are presentation forms of the same mark."
+description: "PathMark is a one-dimensional trajectory made from ordered points; lines, closed paths, multi-series lines, and radar outlines are presentation forms of the same mark."
 ---
 
 
 `<PathMark>` produces one 1D trajectory from a set of data rows. It projects each row into a point, sorts the points by `order`, and lowers the result into a core `Path`. Under cartesian2D it is usually a line; under polar2D it can become a polar path or a radar outline.
 
-`x` / `y` bind position channels, `order` decides connection order, `series` decides whether to split into multiple paths, and `closed` decides whether the last point connects back to the first. PathMark currently supports cartesian2D and polar2D.
+`x` / `y` bind position channels, `order` decides connection order, `series` decides whether to split into multiple paths, `curve` decides how adjacent points connect, and `closure` decides whether the path closes by baseline or by cycle. PathMark currently supports cartesian2D and polar2D.
 
 ## Usage
 
@@ -26,13 +26,14 @@ Set `order` explicitly. Otherwise PathMark follows data array order, so a differ
 
 PathMark is a low-level line mark: it only connects a set of ordered anchors into one 1D trajectory. It does not care whether the presentation layer calls that trajectory a line chart, trend line, outline, or radar outline; those are interpretations of the same PathMark.
 
-The presentation form mainly changes through three groups of props: position channels decide where points come from, series channels decide how many paths are produced, and geometry props decide whether the path closes. PathMark does not fill an area. Use [RegionMark](/plot/grammar/mark/region) for filled area charts or filled radar charts.
+The presentation form mainly changes through three groups of props: position channels decide where points come from, series channels decide how many paths are produced, and geometry props decide whether the path closes as a line or as a fillable area.
 
 | Presentation form | Key props | Behavior |
 | --- | --- | --- |
 | Line | `x` / `y` / `order` | Project each row into a point, then connect the points in order |
 | Multi-series line | `series` / `color` | Split rows by series first, then produce one path per group |
-| Radar outline | `closed` + `polar2D` | Join the ends under polar coordinates to form a closed wireframe |
+| Radar outline | `polar2D` | Polar paths close by default; set `closed={false}` for an open path |
+| Path area | `closure` / `fill` | Close the path by cycle, constant baseline, or per-row stacked baseline; set `fill` explicitly to fill the result |
 
 ## Examples
 
@@ -52,21 +53,27 @@ With no `series`, giving `color` a categorical field also splits PathMark implic
 
 <ComponentPreview name="line-color-split" sourceFiles={['line-series.data.ts']} />
 
+### Mark-Local Transforms
+
+When `transform` is placed on PathMark, only that path layer sees the changed rows. The point layer below keeps the original channel values, while the dark path layer summarizes by `day`, creates `totalValue`, and connects those transformed rows into a total trend.
+
+<ComponentPreview name="line-transform" sourceFiles={['line-transform.data.ts']} />
+
 ### Paint Styles
 
-`stroke` can be an `IRPaintSpec`, such as a linear gradient. Path style props like `strokeWidth`, `lineCap`, and `lineJoin` still apply to the same core `Path`.
+Both `stroke` and `fill` can be `IRPaintSpec` values. The left chart applies a linear gradient to the stroke; the right chart uses `closure={{ kind: 'baseline' }}` to create a fillable area layer, passes the gradient to `fill`, and then overlays a stroke-only PathMark for the upper outline.
 
 <ComponentPreview name="line-paint" sourceFiles={['line-basic.data.ts']} />
 
 ### Geometry Props
 
-`closed` connects the last point back to the first. Under `polar2D`, categories spread along the angular role and values map to radius; the left side is closed, while the right side leaves the final point unconnected.
+`closed` connects the last point back to the first. Under `polar2D`, PathMark closes by default: the left side omits `closed` and still forms a radar outline, while the right side sets `closed={false}` to keep the path open.
 
 <ComponentPreview name="line-radar" sourceFiles={['line-radar.data.ts']} />
 
 ### Connection Type
 
-`curve` controls how adjacent points connect. The left side uses cartesian2D and the right side uses polar2D; when you switch the connection type, both sides update together. The polar plot does not set an inner radius, so PathMark projects angular and radial positions directly.
+`curve` controls how adjacent points connect. The left side uses cartesian2D and the right side uses polar2D; when you switch the connection type, both sides update together. The polar plot does not set an inner radius, so PathMark projects angular and radial positions directly. Because `monotoneX` / `monotoneY` rely on monotonic projected screen x / y values, they fall back to `linear` under polar2D to avoid long control handles in closed areas.
 
 <ComponentPreview name="line-curve" sourceFiles={['line-curve.data.ts']} interactive size="md" />
 
@@ -83,11 +90,31 @@ With no `series`, giving `color` a categorical field also splits PathMark implic
 | `monotoneY` | Monotone y | When y is monotonic, reduces x overshoot beyond neighboring extrema; useful for vertical trajectories |
 | `natural` | Natural spline | Keeps the whole curve continuous with relaxed endpoints; useful when continuous curvature matters |
 
+### Path Areas
+
+`closure` only closes PathMark into a fillable path; it does not enable filling by itself. `stroke` is on by default, and `stroke="none"` removes the border line; `fill` is off by default, and a concrete color or paint enables filling. The left area effect is composed from two PathMark layers: one `baseline + fill + stroke="none"` layer for the area, and one normal path layer for the upper outline. The right side uses `cycle + fill` to fill a radar polygon. Use the top-left control to switch `curve`; the default is a straight line. Baseline and stack return edges use the same connection curve.
+
+<ComponentPreview name="line-closure" sourceFiles={['line-closure.data.ts']} interactive size="md" />
+
+When `baseline` is omitted, it follows the value axis: use 0 when 0 is inside the value-axis domain; if an explicit domain excludes 0, such as `[30, 80]`, use the nearest domain edge, 30. Pass `closure={{ kind: 'baseline', baseline: ... }}` when the lower edge should be pinned to another value.
+
+For stacked areas, bind the upper boundary to `y` and pass the lower boundary field as `closure.baselineField`. The data can come from a stack transform or from precomputed `y0` / `y1` fields. The example uses the same fill-layer plus outline-layer composition for the area-chart effect. When `curve` is set, both boundaries use the same connection mode.
+
+<ComponentPreview name="line-stack-area" sourceFiles={['line-stack-area.data.ts']} interactive size="md" />
+
+### Interrupted Paths
+
+When a row cannot project into a valid point, PathMark breaks there by default and lowers the surrounding runs into separate core `Path` elements. If the path also has `closure` and `fill`, the fill follows the same segments instead of spanning across the missing gap.
+
+In this example, `Yasin` has no 2019 value, so both the outline and the filled area stop between 2018 and 2020. Set `connectNulls` explicitly when a chart should connect across gaps.
+
+<ComponentPreview name="line-interruption" sourceFiles={['line-interruption.data.ts']} size="md" />
+
 ## How It Works
 
-`PathMark` is a built-in registered mark. The React `<PathMark>` component does not render DOM; `<Plot>` collects it into mark IR with `type: 'path'` and records settings such as `x` / `y` / `order` / `series` / `closed`.
+`PathMark` is a built-in registered mark. The React `<PathMark>` component does not render DOM; `<Plot>` collects it into mark IR with `type: 'path'` and records settings such as `x` / `y` / `order` / `series` / `closed` / `closure`.
 
-At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `PathMark` resolves to the `PlotMark.Path` entry, which calls `lowerPathLayer`. `lowerPathLayer` accepts only cartesian2D / polar2D, then calls `lowerPath`: it splits rows into series, sorts them, projects points, and lowers the point sequence into a core `Path`.
+At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `PathMark` resolves to the `PlotMark.Path` entry, which calls `lowerPathLayer`. `lowerPathLayer` accepts only cartesian2D / polar2D, then calls `lowerPath`: it splits rows into series, splits each series into projectable continuous segments, and lowers each segment into a core `Path`.
 
 For registration, focus on the `PathMark` registry entry and the `lowerPathLayer` / `lowerPath` functions that perform the lowering:
 
@@ -104,24 +131,26 @@ const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
 
 const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
   if (mark.type !== PlotMark.Path) return null;
-  const closed = mark.closed ?? false;
+  const closure = mark.closure;
+  const closed = mark.closed ?? isPolarCoordinateFrame(frame);
   const seriesField = pathSeriesField(mark, rows);
+  const buildSegments = (segmentRows: Array<ExternalRow>) =>
+    closure
+      ? buildClosureStepSegments(mark, segmentRows, frame, closure, closed)
+      : buildLineStepSegments(mark, segmentRows, frame, closed);
   if (seriesField) {
-    const paths = buildSeriesPaths(
-      mark,
-      rows,
-      seriesField,
-      seriesRows => buildLineSteps(mark, seriesRows, frame, closed),
-      seriesRows => ({ stroke: colorOf?.(seriesRows[0]) ?? DEFAULT_FILL }),
-      markProvenance,
-    );
+    const paths = buildSeriesPaths(mark, rows, seriesField, buildSegments, paintOfSeries, markProvenance);
     return paths.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
   }
-  const steps = buildLineSteps(mark, rows, frame, closed);
-  if (!steps) return null;
+  const segments = buildSegments(rows);
+  if (segments.length === 0) return null;
   const colorValue = mark.encoding.color?.value;
   const stroke = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
-  return { type: 'scope', pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH }, children: [{ type: 'path', children: steps }] };
+  return {
+    type: 'scope',
+    pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH },
+    children: segments.map(segment => ({ type: 'path', children: segment.steps })),
+  };
 };
 ```
 
@@ -132,7 +161,7 @@ The logic has four parts:
 | Coordinate check | PathMark needs 2D trajectory geometry; this release lowers it only under cartesian2D / polar2D |
 | Sort and project | `orderRows` decides connection order, and `frame.project(...)` maps position channels into screen points |
 | Series split | Explicit `series` wins; without `series`, categorical `color` can implicitly split the rows |
-| Core lowering | Each series becomes one core `Path`; `closed` appends the closing segment to the step sequence |
+| Core lowering | Each continuous segment inside each series becomes one core `Path`; `closed` appends a cycle for a line outline (`polar2D` closes by default), while `closure` builds a closed path and `fill` decides whether it is filled |
 
 ## API
 
@@ -144,8 +173,11 @@ The logic has four parts:
 | Specific | `color` | `FieldName?` | `series` | Color field; without explicit `series`, categorical color can split the rows |
 |  | `order` | `FieldName?` | data order | Field bound to connection order |
 |  | `series` | `FieldName?` | — | Split rows into multiple paths |
-|  | `closed` | `boolean?` | `false` | Connect the last point back to the first |
-| Path | `stroke` / `fill` | `FieldName`<br />`IRPaintSpec`<br />`PointStrokeStyle?` / `PointFillStyle?` | `currentColor` / — | Path stroke paint and closed-path fill paint |
+|  | `curve` | `PathCurveValue?` | `linear` | Connection curve between adjacent points; under polar2D, `monotoneX` / `monotoneY` fall back to `linear` |
+|  | `closed` | `boolean?` | cartesian2D: `false`<br />polar2D: `true` | Connect the last point back to the first; set `false` under polar coordinates to keep an open path |
+|  | `connectNulls` | `boolean?` | `false` | Whether to connect across missing or invalid points; by default the path breaks and lowers into multiple core `Path` elements |
+|  | `closure` | `{ kind: 'cycle' }`<br />`{ kind: 'baseline'; baseline?: number }`<br />`{ kind: 'stack'; baselineField: FieldName }` | — | Build a closed path; omitted `baseline` uses the value-axis baseline, explicit `baseline` pins a constant lower edge, and `stack` reads a per-row lower boundary |
+| Path | `stroke` / `fill` | `FieldName`<br />`IRPaintSpec`<br />`PointStrokeStyle?` / `PointFillStyle?` | `currentColor` / — | Path stroke paint and closed-path fill paint; `stroke="none"` disables the border, while omitted `fill` keeps the path unfilled |
 |  | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | Path stroke width, whole-path opacity, and fill opacity |
 |  | `drawOpacity`<br />`zIndex` / `rotate` | `PointOpacityStyle?`<br />`PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />—<br />— | Stroke opacity, draw order, and rotation |
 |  | `roundedCorners` | `MarkValueProp<number>` | — | Rounded corners for path steps |
@@ -156,10 +188,10 @@ The logic has four parts:
 | Label | `label` / `labelDisplayFormat` | `FieldName?`<br />`string?` | —<br />— | Attach datum labels to path data |
 |  | `labelPosition`<br />`labelDistance`<br />`labelPin` | `string / number`<br />`number`<br />`boolean / LabelPin` | `above`<br />`12`<br />`false` | Label side, spacing, and leader line |
 | General | `id` | `string?` | — | Optional mark handle for layer ids / runtime label resolution |
+|  | `transform` | `Array<Transform>?` | — | Mark-local data transform; runs after the plot-level transform and only changes the rows seen by this layer |
 | Custom | `channels` | `Record<string, Channel>` | — | Custom channel bindings; resolved by registered channel definitions |
 
 ## Related
 
 - [PointMark](/plot/grammar/mark/point) — overlay markers on each observation
-- [RegionMark](/plot/grammar/mark/region) — filled paths / filled radar
 - [Coordinates](/plot/grammar/coordinate) — how cartesian2D / polar2D interpret position roles

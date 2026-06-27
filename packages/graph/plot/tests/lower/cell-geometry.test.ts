@@ -31,7 +31,7 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'node') out.push(node);
+      if (node.type === 'node') out.push(child as IRNode);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -45,6 +45,7 @@ const linearStub = (domain: [number, number], range: [number, number], bandwidth
   const [r0, r1] = range;
   return {
     coordinate: (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? r0 + ((value - d0) / (d1 - d0)) * (r1 - r0) : NaN),
+    domain: () => [d0, d1],
     get bandwidth() {
       return bandwidth;
     },
@@ -407,13 +408,13 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
   const histogramMark = (): IntervalMark => ({
     type: 'interval',
     bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } },
-    encoding: { y: { field: 'binValue' } },
+    encoding: { y: { field: 'binCount' } },
   });
 
   it('x0x1_primary_is_continuous_interval_not_band', () => {
     // 连续 x scale（bandwidth 0）：primary cell = [coord(binStart), coord(binEnd)]、紧贴排列、宽随箱边
     const mark = histogramMark();
-    const rows = [{ binStart: 0, binEnd: 2, binValue: 5 }, { binStart: 2, binEnd: 4, binValue: 3 }];
+    const rows = [{ binStart: 0, binEnd: 2, binCount: 5 }, { binStart: 2, binEnd: 4, binCount: 3 }];
     const frame = createCartesianCoordinate(linearStub([0, 10], [0, 200], 0), linearStub([0, 10], [200, 0]));
     const nodes = nodesOf(lowerMark(mark, rows, frame) as IRScope);
     expect(nodes).toHaveLength(2);
@@ -422,7 +423,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
     expect(nodes[1].minimumWidth).toBeCloseTo(40, 9);
     expect((nodes[0].position as [number, number])[0]).toBeCloseTo(20, 9);
     expect((nodes[1].position as [number, number])[0]).toBeCloseTo(60, 9);
-    // secondary 高度 = coord(0)..coord(binValue)：bar0 = |200-100|=100、bar1 = |200-140|=60
+    // secondary 高度 = coord(0)..coord(binCount)：bar0 = |200-100|=100、bar1 = |200-140|=60
     expect(nodes[0].minimumHeight).toBeCloseTo(100, 9);
     expect(nodes[1].minimumHeight).toBeCloseTo(60, 9);
   });
@@ -430,7 +431,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
   it('x0x1_unequal_width_bins_follow_edges', () => {
     // 不等宽箱（thresholds 派生）：宽随各自箱边
     const mark = histogramMark();
-    const rows = [{ binStart: 0, binEnd: 1, binValue: 2 }, { binStart: 1, binEnd: 5, binValue: 4 }];
+    const rows = [{ binStart: 0, binEnd: 1, binCount: 2 }, { binStart: 1, binEnd: 5, binCount: 4 }];
     const frame = createCartesianCoordinate(linearStub([0, 10], [0, 200], 0), linearStub([0, 10], [200, 0]));
     const nodes = nodesOf(lowerMark(mark, rows, frame) as IRScope);
     // coord(1)-coord(0)=20、coord(5)-coord(1)=80
@@ -444,13 +445,13 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      transform: [{ kind: 'bin', field: 'm', step: 2, reduce: 'count' }],
+      transform: [{ kind: 'bin', field: 'm', step: 2 }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
       ],
-      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } }, encoding: { y: { field: 'binValue' } } }],
+      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } }, encoding: { y: { field: 'binCount' } } }],
     });
     const rows = [{ m: 0 }, { m: 1 }, { m: 3 }, { m: 5 }];
     const layer = firstLayer(spec, { d: rows }, cartOpts);

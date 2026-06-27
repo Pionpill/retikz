@@ -89,7 +89,7 @@ const datumNodes = (layer: IRScope): Array<IRNode> => {
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'node') out.push(node);
+      if (node.type === 'node') out.push(child as IRNode);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -541,6 +541,40 @@ describe('ADR-06 locator transform registry parity', () => {
     for (let index = 0; index < nodes.length; index++) {
       expect(locator.datum(index)!.position).toEqual(nodes[index].position);
     }
+  });
+
+  it('mark_local_transform_locator_matches_lowering', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      id: 'local',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'point',
+          transform: [{ kind: 'sort', field: 'revenue', order: 'descending' }],
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+      ],
+    });
+    const datasets = { sales: SALES };
+    const options: LowerPlotsOptions = { ...opts, provenance: true, datumProvenance: true };
+    const nodes = datumNodes(firstLayer(spec, datasets, options));
+    const locator = createPlotLocator(spec, datasets, options);
+
+    expect(nodes).toHaveLength(3);
+    for (let index = 0; index < nodes.length; index++) {
+      const anchor = locator.datum(index);
+      expect(anchor).not.toBeNull();
+      expect(anchor!.position).toEqual(nodes[index].position);
+      expect((anchor!.meta as { sourceIndex?: number }).sourceIndex).toBe((nodes[index].meta as { sourceIndex?: number }).sourceIndex);
+    }
+    expect(nodes.map(node => (node.meta as { sourceIndex?: number }).sourceIndex)).toEqual([1, 0, 2]);
   });
 
   it('custom_group_transform_locator_meta_carries_source_indices', () => {

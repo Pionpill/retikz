@@ -1,117 +1,55 @@
 ---
 title: Row Transforms
-description: Row transforms preserve row count while sorting, stacking, normalizing, deriving per-row intervals, or applying deterministic jitter.
+description: Row transforms keep the input row count unchanged. They reorder rows or derive values from each row before scales and marks consume the data.
 ---
 
-Row transforms do not merge multiple rows into one, and they do not split one row into many. They reorder rows or write derived fields on each row before mark lowering.
+Row transforms still produce one output row for every input row. They do not summarize groups or choose representative rows. Use them when a mark only needs a steadier row order, normalized interval fields, or deterministic positional noise.
 
-Each transform section below contains its behavior, example, and configuration.
-
-| kind | Purpose | Common Output |
+| kind | Row count | Typical use |
 | --- | --- | --- |
-| `sort` | Stable sort by one field | row order changes |
-| `stack` | Accumulate values within each group | `y0` / `y1` |
-| `normalize` | Compute within-group share | original field or `as` field |
-| `derive-interval` | Derive one `[start,end]` interval per row | `y0` / `y1` |
-| `jitter` | Add deterministic offsets to continuous position fields | overwrite `x` / `y` or chosen fields |
+| `sort` | N → N | Control line order or stack input order |
+| `derive-interval` | N → N | Turn per-row values into `[start,end]` intervals |
+| `jitter` | N → N | Separate overlapping points in data space |
 
-## sort
+## Sort
 
-`sort` reorders rows by one field while preserving the original relative order for ties. It is useful before path/line marks, or before stack when input order matters.
+`sort` stably reorders rows by one field. Ties keep their original relative order, which is useful before `PathMark` or before an explicit stack.
 
-Keep it distinct from the data model's [`order`](/plot/grammar/data/model#category-order-order): `sort` reorders **data rows**, while `order` reorders the **categorical domain**; they do not affect each other.
-
-| Dimension | `sort` transform | model `order` |
-| --- | --- | --- |
-| Reorders | data row order | categorical domain |
-| Affects | connection order, stack input | axis ticks, legend, colors |
-| Applies to | any field | `categorical` only |
-
-Use `order` to fix axis or legend category order; use `sort` to control row order (connection order, stack input).
+Keep it separate from [`order`](/plot/grammar/data/model#category-order) in the data model: `sort` reorders data rows, while `order` reorders a categorical domain.
 
 <ComponentPreview name="transform-sort" sourceFiles={['transform-sort.data.ts']} />
 
-<p className="text-sm text-muted-foreground">Left: the path follows the raw row order (months 3, 1, 4, 2, 6, 5) and folds back on itself; right: sort makes it connect by month.</p>
-
-Configuration:
-
-| prop | type | default | description |
+| prop | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `field` | `string` | — | Field used for sorting |
 | `order` | `'ascending' \| 'descending'?` | `'ascending'` | Sort direction |
 
-## stack
+## Derive Interval
 
-`stack` accumulates `y` within each `x` group, optionally ordered by a `groupBy` series field. It derives lower / upper bounds per row. The default output fields are `y0` / `y1`, matching interval consumers.
-
-<ComponentPreview name="transform-stack" sourceFiles={['transform-stack.data.ts']} />
-
-<p className="text-sm text-muted-foreground">Within each quarter, product revenue accumulates into the y0 / y1 intervals used by stacked bars.</p>
-
-The auto-stacking of `<IntervalMark stack>` / `<IntervalMark angle>` is a convenience. When an explicit matching `stack` with the same `x` / `y` / `groupBy` exists in the pipeline, the auto-stack is suppressed to avoid stacking the same data twice.
-
-Configuration:
-
-| prop | type | default | description |
-| --- | --- | --- | --- |
-| `x` | `string?` | one cumulative chain | Grouping key; values stack within each group |
-| `y` | `string` | — | Numeric value field to accumulate |
-| `groupBy` | `string?` | input row order | Series field; data appearance order decides segment order |
-| `startField` / `endField` | `string?` | `y0` / `y1` | Output bound fields |
-
-## normalize
-
-`normalize` divides each row's value by its group sum. `basis` can be `fraction` (0 to 1) or `percent` (0 to 100); when `as` is omitted, the input field is overwritten.
-
-Composing normalize with stack gives percentage stacking: normalize each group first, then stack the normalized values.
-
-<ComponentPreview name="transform-normalize" sourceFiles={['transform-normalize.data.ts']} />
-
-<p className="text-sm text-muted-foreground">Each quarter's products stacked by share; the bar top is always 100%.</p>
-
-Configuration:
-
-| prop | type | default | description |
-| --- | --- | --- | --- |
-| `field` | `string` | — | Numeric field whose within-group share is computed |
-| `groupBy` | `Array<string>?` | all rows, one group | Grouping keys; composite keys are supported |
-| `basis` | `'fraction' \| 'percent'?` | `'fraction'` | Output scale |
-| `as` | `string?` | overwrite in place | Output field name |
-
-## derive-interval
-
-`derive-interval` computes one independent `[start,end]` interval per row. It does not inspect other rows, so it fits Gantt bars, explicit intervals, or bars with a non-zero baseline.
+`derive-interval` computes one interval for each row. It does not inspect neighboring rows, so it works well for task bars, explicit ranges, and bars with a non-zero baseline.
 
 <ComponentPreview name="transform-derive-interval" sourceFiles={['transform-derive-interval.data.ts']} />
 
-<p className="text-sm text-muted-foreground">Each task row independently reads start / end and derives the shared y0 / y1 interval fields.</p>
+Both `derive-interval` and `stack` default to `y0` / `y1`, but they mean different things: `derive-interval` is per-row derivation, while `stack` is cross-row accumulation.
 
-It differs from `stack`: `stack` accumulates across rows, while `derive-interval` derives each row independently. Both default to `y0` / `y1`, but the semantics are different.
-
-Configuration:
-
-| prop | type | default | description |
+| prop | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `from` | `string?` | — | Value field for baseline-to-value mode |
-| `baseline` | `number?` | `0` | Start value for `from` mode |
-| `startFrom` / `endFrom` | `string?` | — | Two-field interval mode; must be paired |
+| `baseline` | `number?` | `0` | Start value in `from` mode |
+| `startFrom` / `endFrom` | `string?` | — | Two-field interval mode; must appear together |
 | `startField` / `endField` | `string?` | `y0` / `y1` | Output field names |
 
-## jitter
+## Jitter
 
-`jitter` adds a pseudo-random offset to continuous numeric position fields to de-overlap scatter points. The offset happens in data space before scale mapping; `seed` is an integer so SSR and browser hydration produce the same result.
+`jitter` adds deterministic pseudo-random offsets to continuous numeric position fields. The offset happens in data space before scaling; the integer `seed` keeps SSR and browser hydration aligned.
 
 <ComponentPreview name="transform-jitter" sourceFiles={['transform-jitter.data.ts']} />
 
-<p className="text-sm text-muted-foreground">Left: four points overlap at the same x for each of three doses; right: jitter spreads them along x to reveal the distribution.</p>
+Current `jitter` works on continuous numeric fields. Screen-space jitter inside categorical bands belongs to a different layer.
 
-v1 jitter only applies to continuous numeric fields. Screen-space spreading inside a categorical band is not handled by this transform layer.
-
-Configuration:
-
-| prop | type | default | description |
+| prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `axis` | `'x' \| 'y' \| 'both'?` | `'x'` | Axis to perturb |
-| `xField` / `yField` | `string?` | `x` / `y` | Continuous numeric fields to jitter |
+| `axis` | `'x' \| 'y' \| 'both'?` | `'x'` | Axis to jitter |
+| `xField` / `yField` | `string?` | `x` / `y` | Continuous numeric field to offset |
 | `amount` | `number?` | `1` | Maximum absolute offset in data units |
 | `seed` | `number?` | `0` | Deterministic PRNG seed |
