@@ -7,8 +7,7 @@ import { FontSchema } from './font';
 import { type IRJsonObject, JsonObjectSchema } from './json';
 import { type IRPaintSpec, PaintSpecSchema } from './paint';
 import { type IRNode, NodeSchema } from './node';
-import { type IRPath, PathSchema } from './path';
-import type { IRRibbon } from './ribbon';
+import { type IRPathBase, PathBaseSchema } from './path';
 import { ArrowDetailSchema } from './path/arrow';
 import { type IRTransform, TransformSchema } from './transform';
 import type { ValueOf } from '../types';
@@ -56,8 +55,12 @@ export const NodeDefaultSchema = NodeSchema.omit({
  *   （arrow 走独立 arrowDefault 通道，免双入口）。id 是实例水合挂点，作默认会被 stamp 到 scope 内每条 path
  *   造成挂点冲突，故与 NodeDefault 一致排除。
  */
-export const PathDefaultSchema = PathSchema.omit({
+export const PathDefaultSchema = PathBaseSchema.omit({
   type: true,
+  kind: true,
+  kindOptions: true,
+  ribbon: true,
+  label: true,
   id: true,
   children: true,
   arrow: true,
@@ -141,13 +144,13 @@ export type IRScope = {
   boundingShape?: ScopeBoundingShapeValue;
   meta?: IRJsonObject;
   animations?: Array<IRAnimationTrack>;
-  children: Array<IRNode | IRPath | IRRibbon | IRCoordinate | IRScope | IRComposite>;
+  children: Array<IRNode | IRPathBase | IRCoordinate | IRScope | IRComposite>;
 };
 
 // ChildSchema 在 scene.ts 中定义并通过 z.lazy 注入；让 scope.children 能在
 // ChildSchema 完成定义后才被实际触达（schema 层与文件层都不形成 hard 循环依赖）。
 /** scope 子节点 union——与 scene.ts 的 IRChild 同构（此处内联避免文件层循环依赖） */
-type ScopeChild = IRNode | IRPath | IRRibbon | IRCoordinate | IRScope | IRComposite;
+type ScopeChild = IRNode | IRPathBase | IRCoordinate | IRScope | IRComposite;
 
 /** schema 注册顺序：scene.ts import 时由 __registerChildSchema 一次性回灌；之后只读 */
 let childSchemaRef: z.ZodType<ScopeChild> | null = null;

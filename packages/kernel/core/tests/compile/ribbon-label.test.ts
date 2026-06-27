@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   type GroupPrim,
   type IR,
+  type IRPathBase,
+  type IRPathRibbonOptions,
+  type IRStep,
   type PathPrim,
-  RibbonSchema,
+  PathSchema,
   type ScenePrimitive,
   StepLabelSchema,
   type TextPrim,
@@ -17,15 +20,72 @@ const scene = (children: IR['children']): IR => ({
   children,
 });
 
-const ribbon = (overrides: Record<string, unknown> = {}): IR['children'][number] =>
-  ({
-    type: 'ribbon',
-    width: 10,
+type RibbonInput = Partial<Omit<IRPathBase, 'kind' | 'ribbon' | 'type'>> &
+  IRPathRibbonOptions & {
+    kind?: IRPathRibbonOptions['mode'];
+    type?: 'path' | 'ribbon';
+    ribbon?: IRPathRibbonOptions;
+  };
+
+const defaultRibbonChildren: Array<IRStep> = [
+  { type: 'step', kind: 'move', to: [0, 0] },
+  { type: 'step', kind: 'line', to: [100, 0] },
+];
+
+const normalizeRibbonInput = (input: Record<string, unknown> = {}): IRPathBase => {
+  const raw = input as RibbonInput;
+  const {
+    type: inputType,
+    kind,
+    ribbon: nestedRibbon,
+    width,
+    start,
+    end,
+    interpolation,
+    align,
+    samples,
+    sampling,
+    upper,
+    lower,
+    children,
+    ...pathProps
+  } = raw;
+  void inputType;
+  const options: IRPathRibbonOptions = { ...(nestedRibbon ?? {}) };
+  const mode = kind === 'boundary' || kind === 'centerline' ? kind : options.mode;
+  if (mode !== undefined) options.mode = mode;
+  if (width !== undefined) options.width = width;
+  if (start !== undefined) options.start = start;
+  if (end !== undefined) options.end = end;
+  if (interpolation !== undefined) options.interpolation = interpolation;
+  if (align !== undefined) options.align = align;
+  if (samples !== undefined) options.samples = samples;
+  if (sampling !== undefined) options.sampling = sampling;
+  if (upper !== undefined) options.upper = upper;
+  if (lower !== undefined) options.lower = lower;
+
+  const path: IRPathBase = {
+    type: 'path',
+    kind: 'ribbon',
+    ...pathProps,
+    ribbon: options,
+  };
+  if (options.mode !== 'boundary') path.children = children ?? defaultRibbonChildren;
+  return path;
+};
+
+const RibbonSchema = {
+  parse: (value: unknown): IRPathBase =>
+    PathSchema.parse(typeof value === 'object' && value !== null ? normalizeRibbonInput(value as Record<string, unknown>) : value),
+  safeParse: (value: unknown) =>
+    PathSchema.safeParse(typeof value === 'object' && value !== null ? normalizeRibbonInput(value as Record<string, unknown>) : value),
+};
+
+const ribbon = (overrides: Record<string, unknown> = {}): IRPathBase =>
+  normalizeRibbonInput({
+    ...(overrides.kind === 'boundary' ? {} : { width: 10 }),
     samples: 2,
-    children: [
-      { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'line', to: [100, 0] },
-    ],
+    children: defaultRibbonChildren,
     ...overrides,
   });
 
@@ -228,8 +288,7 @@ describe('Ribbon label compile', () => {
   });
 
   it('boundary ribbon 首版带 label 时给出明确诊断', () => {
-    const boundary = {
-      type: 'ribbon',
+    const boundary = ribbon({
       kind: 'boundary',
       label: { text: 'nope' },
       upper: [
@@ -240,7 +299,7 @@ describe('Ribbon label compile', () => {
         { type: 'step', kind: 'move', to: [0, 10] },
         { type: 'step', kind: 'line', to: [100, 10] },
       ],
-    } as IR['children'][number];
+    });
 
     expect(() => compileToScene(scene([boundary]))).toThrow(/centerline ribbon labels/i);
   });

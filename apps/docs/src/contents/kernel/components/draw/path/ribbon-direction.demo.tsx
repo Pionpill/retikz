@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Layout, Node, Ribbon, Step } from '@retikz/react';
+import { Layout, Node, Path, Step } from '@retikz/react';
 
 const labelStyle = {
   fill: 'none',
@@ -29,21 +29,24 @@ const Demo: FC = () => (
     color="#172033"
   >
     {rows.map(row => (
-      <Ribbon
+      <Path
         key={row.label}
-        width={28}
-        start={row.start}
-        end={row.end}
+        kind="ribbon"
+        ribbon={{
+          width: 28,
+          start: row.start,
+          end: row.end,
+          samples: 64,
+        }}
         fill={row.fill}
         fillOpacity={0.78}
         stroke="#172033"
         strokeWidth={0.8}
         drawOpacity={0.18}
-        samples={64}
       >
         <Step kind="move" to={[-150, row.y - 28]} />
         <Step kind="curve" control={[8, row.y - 58]} to={[214, row.y + 22]} />
-      </Ribbon>
+      </Path>
     ))}
 
     {rows.map(row => (

@@ -20,6 +20,7 @@ alpha.6 聚焦来自 plot / graph 的关系图底座需求：`Ribbon` 可变宽�
 | [ADR-04](./04-node-label-inside-placement.md) | Proposed | Node label 内侧 placement | `Node.label` 增加 `placement: "outside" \| "inside"` 与 `{ boundary, t }` position，支持边界上的自定义标签位置 |
 | [ADR-05](./05-ribbon-label.md) | Proposed | Ribbon host label | `Ribbon` 增加顶层 `label`，沿 ribbon centerline 使用与 Path step label 一致的位置、side 与文字样式契约 |
 | [ADR-06](./06-path-ribbon-shared-contract.md) | Proposed | Path / Ribbon 共享 drawable 契约 | 抽取 Path 与 Ribbon 共享样式 / 元数据 schema，明确 graph 可共享字段、scope default 子集与 label 共用契约 |
+| [ADR-07](./07-path-kind-registry.md) | Proposed | Path kind registry 与 Ribbon 合并 | 移除独立 `IRRibbon`；Ribbon 表示为 `type: "path", kind: "ribbon"` 与 `ribbon` 参数对象，并让 `Path.kind` 通过一等 provider contract 扩展。 |
 
 ## 验收清单
 
@@ -39,3 +40,10 @@ alpha.6 聚焦来自 plot / graph 的关系图底座需求：`Ribbon` 可变宽�
 - [ ] `Ribbon.label` 与 Path step label 使用同一个 `GeometryLabelSchema` / `IRGeometryLabel` 来源，包含相同的 `position`、`side`、`textColor`、`opacity`、`font` 契约。
 - [ ] `Path` / `Ribbon` 共享 drawable style 子集被 core schema 显式命名并导出，graph 不再手写 ad hoc intersection。
 - [ ] `pathDefault` 对 Path 完整生效，对 Ribbon 仅消费共享 drawable subset；path-only 字段不会静默改变 Ribbon 几何。
+
+## ADR-07 追加验收
+
+- [x] `IRRibbon` 已移除；Ribbon 表示为带 `kind: "ribbon"` 与 `ribbon` 参数对象的 `IRPath`。
+- [x] `Path.kind` 通过 provider registry 分派；内置 `stroke` / `ribbon` 与外部 kind 使用同一个 `PathKindDefinition` contract。
+- [x] `DrawableGeometryStyleSchema` / `DrawableElementMetadataSchema` 改名为 `DrawableStyleSchema` / `DrawableMetaSchema`，相关 public export 和文档同步改名。
+- [x] Ribbon 文档和 demo 移入 Path 组件页；独立 Ribbon draw 组件页从 sidebar / i18n data 中移除。

@@ -1,9 +1,10 @@
-import { type Vector2, polar, vector2 } from '../geometry';
-import type { PathCommand, PathPrim, ScenePrimitive } from '../primitive';
+import { type Vector2, polar, vector2 } from '../../geometry';
+import type { PathCommand, PathPrim, ScenePrimitive } from '../../primitive';
 import type {
   IRPath,
+  IRPathBase,
+  IRPathRibbonOptions,
   IRPosition,
-  IRRibbon,
   IRRibbonArcCap,
   IRRibbonCap,
   IRRibbonDirection,
@@ -11,14 +12,14 @@ import type {
   IRRibbonWidth,
   IRStep,
   RibbonAlignmentValue,
-} from '../schemas';
-import { JsonObjectSchema } from '../schemas';
-import type { RibbonWidthProfileDefinition } from '../contract/ribbon';
-import type { NameStack } from './name-stack';
-import type { TextMeasurer } from './text-metrics';
-import type { PaintResolver } from './paint';
-import { type EmitPathWarnHook, emitPathPrimitive } from './path';
-import { emitLabelPrimitive, tForLabelPosition } from './path/label';
+} from '../../schemas';
+import { JsonObjectSchema } from '../../schemas';
+import type { RibbonWidthProfileDefinition } from '../../contract/ribbon';
+import type { NameStack } from '../name-stack';
+import type { TextMeasurer } from '../text-metrics';
+import type { PaintResolver } from '../paint';
+import { type EmitPathWarnHook, emitPathPrimitive } from '.';
+import { emitLabelPrimitive, tForLabelPosition } from './label';
 import {
   type SegmentSample,
   arcSegmentSample,
@@ -26,9 +27,11 @@ import {
   ellipseArcSegmentSample,
   lineSegmentSample,
   quadSegmentSample,
-} from '../geometry/segment';
-import { resolveShadow } from './effects';
-import { resolvePosition } from './position';
+} from '../../geometry/segment';
+import { resolveShadow } from '../effects';
+import { resolvePosition } from '../position';
+
+type RibbonLike = Omit<IRPathBase, 'kind' | 'kindOptions' | 'ribbon'> & IRPathRibbonOptions;
 
 const DEFAULT_RIBBON_SAMPLES = 64;
 const LENGTH_SUBDIVISIONS = 16;
@@ -268,7 +271,7 @@ const widthFunction = (
 };
 
 const centerlineWidthFunction = (
-  ribbon: IRRibbon,
+  ribbon: RibbonLike,
   profiles: Partial<Record<string, RibbonWidthProfileDefinition>>,
   totalLength: number,
 ): ((offset: number) => number) => {
@@ -290,7 +293,7 @@ const centerlineWidthFunction = (
     );
 };
 
-const centerlineWidthRequiresSampling = (ribbon: IRRibbon): boolean =>
+const centerlineWidthRequiresSampling = (ribbon: RibbonLike): boolean =>
   ribbon.width !== undefined && typeof ribbon.width !== 'number';
 
 const commandsToSegmentInputs = (
@@ -394,7 +397,7 @@ const commandsToSegmentInputs = (
 };
 
 const resolveSampleCount = (
-  samples: IRRibbon['samples'],
+  samples: IRPathRibbonOptions['samples'],
   sampling: IRRibbonSampling | undefined,
   totalLength: number,
 ): number | undefined => {
@@ -1165,7 +1168,7 @@ const boundaryOutlineCommands = (
 };
 
 const styledPrimitiveFromOutline = (
-  ribbon: IRRibbon,
+  ribbon: RibbonLike,
   outline: { commands: Array<PathCommand>; points: Array<IRPosition> },
   resolvePaint: PaintResolver,
 ): PathPrim => {
@@ -1191,15 +1194,19 @@ const styledPrimitiveFromOutline = (
 };
 
 export const emitRibbonPrimitive = (
-  ribbon: IRRibbon,
+  path: IRPathBase,
   nameStack: NameStack,
   round: (n: number) => number,
   measureText: TextMeasurer,
   options: RibbonEmitOptions = {},
 ): { primitives: Array<ScenePrimitive>; points: Array<IRPosition> } | null => {
+  if (path.ribbon === undefined) {
+    throw new Error('Ribbon path requires a `ribbon` options object.');
+  }
+  const ribbon: RibbonLike = { ...path, ...path.ribbon };
   const resolvePaint: PaintResolver =
     options.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
-  if (ribbon.kind === 'boundary') {
+  if (ribbon.mode === 'boundary') {
     if (ribbon.label !== undefined) {
       throw new Error('Ribbon label first version only supports centerline ribbon labels.');
     }

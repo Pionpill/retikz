@@ -5,6 +5,10 @@ import type { HydrationEventProps } from './event-props';
 
 /** <Path> 组件的 props */
 export type PathProps = HydrationEventProps & {
+  kind?: IRPath['kind'];
+  kindOptions?: IRPath['kindOptions'];
+  ribbon?: IRPath['ribbon'];
+  label?: IRPath['label'];
   /** 路径 id；其他 path / position 通过这个 id 引用本路径，也作为水合挂点供事件 handler 绑定 */
   id?: IRPath['id'];
   /** provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局；典型由 Tier 2 lowering 注入（标记来自哪个 datum / series / layer）。须为 JSON 可序列化对象 */
@@ -71,7 +75,7 @@ export type PathProps = HydrationEventProps & {
    */
   marks?: IRPath['marks'];
   /** 应当全部是 <Step /> */
-  children: ReactNode;
+  children?: ReactNode;
 };
 
 /**

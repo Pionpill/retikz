@@ -14,6 +14,7 @@ This group is about **extending** retikz: capabilities the built-in components d
 | Custom Shapes | Registering new node shapes (`ShapeDefinition` + `CompileOptions.shapes`) | You need cylinder / cloud beyond the 6 registered built-ins + 2 presets (hexagon is already expressible via the built-in `polygon{ sides:6 }`) |
 | Custom Arrows | Registering new arrow styles (`defineArrow` / `ArrowDefinition` + `CompileOptions.arrows`) | You need bracket / domain-specific end caps |
 | Custom Patterns | Registering new fill patterns (`definePattern` / `PatternDefinition` + `CompileOptions.patterns`) | You need cross / stripes / special motifs |
+| Custom Paths | Registering new Path kinds (`definePathKind` / `PathKindDefinition` + `CompileOptions.pathKinds`) | You need to treat the whole Path as a highlight, double line, domain relation, or another relation form |
 | Path Generators | Registering new curve generators (`PathGeneratorDefinition` + `CompileOptions.pathGenerators`) | You need parabola / waves / custom curves |
 | Composite (Tier 2) | Registering Tier 2 high-level nodes (`CompositeDefinition` + `CompileOptions.composites`) | A domain package lowers high-level nodes into Tier 1 primitives — see [Composites](/kernel/reference/composites) |
 | Custom Easing | Registering new easing curves (`EasingRegistry` + `<Layout easings>`) | You need spring or other easings beyond the built-ins |
@@ -23,7 +24,7 @@ This group is about **extending** retikz: capabilities the built-in components d
 
 Extension points fall into three models by mechanism; knowing which one a capability belongs to tells you how it's defined and when it takes effect:
 
-- **Definition extensions** (shape / arrow / pattern / path generator / composite): defined with an `xxxDefinition`, injected via `CompileOptions` / `<Layout>`, applied at compile time; the IR only carries a name. Shape / arrow / pattern / path generator are injected by name (`Record<string, …>`, a built-in of the same name is overridden with a warning); composite is an `Array<CompositeDefinition>`, discriminated by `namespace` + `type`, and a duplicate key throws.
+- **Definition extensions** (shape / arrow / pattern / custom path / path generator / composite): defined with an `xxxDefinition`, injected via `CompileOptions` / `<Layout>`, applied at compile time; the IR only carries a name. Shape / arrow / pattern / custom path / path generator are injected by name (`Record<string, …>`, built-ins can be overridden or replaced); composite is an `Array<CompositeDefinition>`, discriminated by `namespace` + `type`, and a duplicate key throws.
 - **Registry extensions** (easing / animation property): the injection points are lightweight registries on `<Layout>`, applied at runtime inside the renderer, never entering compile. Easing has no `EasingDefinition` — the value is just a cubic-bezier tuple or a function; an animation property needs both an interpolator and backend application, which is why it uses `AnimationPropertyDefinition`.
 - **Host lowerer** (TeX formula): `CompileOptions.lowerTex` is an optional host capability that lowers formulas into plain paths at compile time; it is not a general primitive extension and degrades diagnosably when absent.
 
@@ -41,6 +42,10 @@ Extension points fall into three models by mechanism; knowing which one a capabi
   <LinkedCard href="/kernel/reference/extending/custom-pattern">
     <span className="font-semibold">Custom Patterns</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Register / inject a PatternDefinition for custom fills</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/reference/extending/custom-path">
+    <span className="font-semibold">Custom Paths</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Register / inject a PathKindDefinition for whole-path providers</span>
   </LinkedCard>
   <LinkedCard href="/kernel/reference/extending/path-generator">
     <span className="font-semibold">Path Generators</span>

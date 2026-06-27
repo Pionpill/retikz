@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { DrawWay, parseWay } from '@retikz/core';
+import { DrawWay, type IRPathRibbonOptions, parseWay } from '@retikz/core';
 import { draw } from '../src/builder/draw';
-import { ribbon } from '../src/builder/ribbon';
 
 describe('@retikz/vanilla draw()', () => {
   it('draw-way-reuses-core：draw(way) 的 steps 与 core parseWay 逐字一致', () => {
@@ -46,26 +45,32 @@ describe('@retikz/vanilla draw()', () => {
   });
 });
 
-describe('@retikz/vanilla ribbon()', () => {
-  it('ribbon-way-reuses-core：ribbon(way) 的 steps 与 core parseWay 逐字一致', () => {
-    const r = ribbon(['a', 'b'], {
-      start: { width: 8, direction: 0 },
-      end: { width: 2, direction: [1, 0] },
+describe('@retikz/vanilla draw(kind=ribbon)', () => {
+  it('ribbon-way-reuses-core：draw(way, kind=ribbon) 的 steps 与 core parseWay 逐字一致', () => {
+    const r = draw(['a', 'b'], {
+      kind: 'ribbon',
       fill: 'steelblue',
-      samples: true,
+      ribbon: {
+        start: { width: 8, direction: 0 },
+        end: { width: 2, direction: [1, 0] },
+        samples: true,
+      },
     });
-    expect(r.type).toBe('ribbon');
-    if (r.type !== 'ribbon') throw new Error('unreachable');
-    expect(r.start).toEqual({ width: 8, direction: 0 });
-    expect(r.end).toEqual({ width: 2, direction: [1, 0] });
+    expect(r.type).toBe('path');
+    if (r.type !== 'path') throw new Error('unreachable');
+    expect(r.kind).toBe('ribbon');
+    const options = r.ribbon as IRPathRibbonOptions;
+    expect(options.start).toEqual({ width: 8, direction: 0 });
+    expect(options.end).toEqual({ width: 2, direction: [1, 0] });
     expect(r.fill).toBe('steelblue');
-    expect(r.samples).toBe(true);
+    expect(options.samples).toBe(true);
     expect(r.children).toEqual(parseWay(['a', 'b']));
   });
 
-  it('ribbon-label-forwards：ribbon(way, { label }) 透传 path-like geometry label', () => {
-    const r = ribbon(['a', 'b'], {
-      width: 8,
+  it('ribbon-label-forwards：draw(kind=ribbon, { label }) 透传 path-like geometry label', () => {
+    const r = draw(['a', 'b'], {
+      kind: 'ribbon',
+      ribbon: { width: 8 },
       label: {
         text: '128',
         position: 'midway',
@@ -73,43 +78,13 @@ describe('@retikz/vanilla ribbon()', () => {
       },
     });
 
-    expect(r.type).toBe('ribbon');
-    if (r.type !== 'ribbon') throw new Error('unreachable');
+    expect(r.type).toBe('path');
+    if (r.type !== 'path') throw new Error('unreachable');
+    expect(r.kind).toBe('ribbon');
     expect(r.label).toEqual({
       text: '128',
       position: 'midway',
       sloped: true,
     });
-  });
-
-  it('ribbon-boundary-reuses-core：boundary upper/lower 复用 core parseWay', () => {
-    const r = ribbon({
-      kind: 'boundary',
-      upper: [
-        [0, 0],
-        [10, 0],
-      ],
-      lower: [
-        [0, 4],
-        [10, 4],
-      ],
-      fill: '#bfdbfe',
-    });
-    expect(r.type).toBe('ribbon');
-    if (r.type !== 'ribbon') throw new Error('unreachable');
-    expect(r.kind).toBe('boundary');
-    expect(r.fill).toBe('#bfdbfe');
-    expect(r.upper).toEqual(
-      parseWay([
-        [0, 0],
-        [10, 0],
-      ]),
-    );
-    expect(r.lower).toEqual(
-      parseWay([
-        [0, 4],
-        [10, 4],
-      ]),
-    );
   });
 });

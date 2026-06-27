@@ -26,9 +26,9 @@ const linePath = (overrides: Record<string, unknown> = {}): IR['children'][numbe
 });
 
 const ribbon = (overrides: Record<string, unknown> = {}): IR['children'][number] => ({
-  type: 'ribbon',
-  width: 10,
-  samples: 2,
+  type: 'path',
+  kind: 'ribbon',
+  ribbon: { width: 10, samples: 2 },
   children: steps,
   ...overrides,
 });

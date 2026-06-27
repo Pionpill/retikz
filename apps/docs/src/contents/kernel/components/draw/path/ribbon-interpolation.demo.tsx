@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Layout, Node, Ribbon, Step } from '@retikz/react';
+import { Layout, Node, Path, Step } from '@retikz/react';
 
 const rows = [
   { label: 'linear', y: -78, width: undefined, start: { width: 14 }, end: { width: 42 }, interpolation: 'linear' as const, fill: '#5dade2' },
@@ -32,12 +32,15 @@ const Demo: FC = () => (
     color="#172033"
   >
     {rows.map(row => (
-      <Ribbon
+      <Path
         key={row.label}
-        width={row.width}
-        start={row.start}
-        end={row.end}
-        interpolation={row.interpolation}
+        kind="ribbon"
+        ribbon={{
+          width: row.width,
+          start: row.start,
+          end: row.end,
+          interpolation: row.interpolation,
+        }}
         fill={row.fill}
         fillOpacity={0.78}
         stroke="#172033"
@@ -46,7 +49,7 @@ const Demo: FC = () => (
       >
         <Step kind="move" to={[-182, row.y - 24]} />
         <Step kind="curve" control={[12, row.y - 42]} to={[226, row.y + 24]} />
-      </Ribbon>
+      </Path>
     ))}
 
     {rows.map(row => (

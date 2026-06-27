@@ -7,7 +7,7 @@
  * 渲染管道：buildIR → compileToScene → renderPrim → SVG
  */
 
-export { Layout, Node, Path, Ribbon, Step, Text, Coordinate, Scope, RendererModeProvider, useRendererMode, collectHydrationHandlers, isEmbeddableMarked, resolveEmbeddableAdapter } from './kernel';
+export { Layout, Node, Path, Step, Text, Coordinate, Scope, RendererModeProvider, useRendererMode, collectHydrationHandlers, isEmbeddableMarked, resolveEmbeddableAdapter } from './kernel';
 export type { RendererMode, RendererModeProviderProps, HydrationEventProps } from './kernel';
 export type {
   EmbeddableDatasets,
@@ -28,7 +28,6 @@ export type {
   LayoutProps,
   NodeProps,
   PathProps,
-  RibbonProps,
   StepProps,
   /** React DSL target：core `IRTarget` 对象 + 字符串 shorthand（仅 DSL 层，eager 转对象后入 IR） */
   DslTarget,
@@ -95,8 +94,8 @@ export type {
 export type { IRNodeTarget, IRAnchorRef } from '@retikz/core';
 
 // 扩展面：自定义箭头 / pattern motif / 路径生成器注册——react 用户单包 import 即可定义并注入
-// <Layout arrows / patterns / pathGenerators>
-export { defineArrow, definePattern, definePathGenerator, defineRibbonWidthProfile } from '@retikz/core';
+// <Layout arrows / patterns / pathGenerators / pathKinds>
+export { defineArrow, definePattern, definePathGenerator, definePathKind, defineRibbonWidthProfile } from '@retikz/core';
 export type {
   ArrowDefinition,
   ArrowEmitContext,
@@ -106,6 +105,8 @@ export type {
   MarkerFill,
   PathGeneratorDefinition,
   PathGeneratorContext,
+  PathKindDefinition,
+  PathKindCompileContext,
   RibbonWidthProfileContext,
   RibbonWidthProfileDefinition,
   RibbonWidthProfileInput,

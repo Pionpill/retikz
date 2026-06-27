@@ -1,18 +1,17 @@
 import { z } from 'zod';
-import { DrawableElementMetadataSchema, DrawableGeometryStyleSchema } from './drawable';
-import { JsonObjectSchema } from './json';
-import { GeometryLabelSchema, type IRGeometryLabel, StepSchema } from './path';
-import { PolarPositionSchema, PositionSchema, Vector2Schema } from './position';
-import type { PolarPosition } from '../geometry/polar';
-import type { Vector2 } from '../geometry/point';
-import type { ValueOf } from '../types';
+import { JsonObjectSchema } from '../json';
+import { PolarPositionSchema, PositionSchema, Vector2Schema } from '../position';
+import { StepSchema } from './step';
+import type { PolarPosition } from '../../geometry/polar';
+import type { Vector2 } from '../../geometry/point';
+import type { ValueOf } from '../../types';
 
-export const RibbonKind = {
+export const RibbonMode = {
   Centerline: 'centerline',
   Boundary: 'boundary',
 } as const;
 
-export type RibbonKindValue = ValueOf<typeof RibbonKind>;
+export type RibbonModeValue = ValueOf<typeof RibbonMode>;
 
 export const RibbonAlignment = {
   Center: 'center',
@@ -176,38 +175,21 @@ export const RibbonSamplingSchema = z
   ])
   .describe('Ribbon boundary sampling strategy; `samples` is retained as a shorthand for fixed sampling.');
 
-const RibbonSharedSchema = z.object({
-  type: z
-    .literal('ribbon')
-    .describe('Discriminator marking this child as a variable-width ribbon.'),
-  kind: z
-    .enum(RibbonKind)
-    .optional()
-    .describe('Ribbon construction mode; omitted means centerline.'),
-  ...DrawableElementMetadataSchema.shape,
-  ...DrawableGeometryStyleSchema.shape,
-  samples: z
-    .union([z.boolean(), z.number().int().min(2).max(512)])
-    .optional()
-    .describe(
-      'Sampling override for centerline lowering; true uses 64 samples, a number uses that fixed sample count, omitted keeps automatic lowering.',
-    ),
-  sampling: RibbonSamplingSchema.optional().describe(
-    'Explicit sampling strategy. Cannot be combined with samples.',
-  ),
-  label: z
-    .union([GeometryLabelSchema, z.array(GeometryLabelSchema).min(1)])
-    .optional()
-    .describe(
-      'Flow label attached to the ribbon host; its inner contract is the same as Path step labels.',
-    ),
-});
-
-export const RibbonLabelSchema = GeometryLabelSchema;
-
-export const RibbonSchema = z
+export const PathRibbonOptionsSchema = z
   .object({
-    ...RibbonSharedSchema.shape,
+    mode: z
+      .enum(RibbonMode)
+      .optional()
+      .describe('Ribbon construction mode; omitted means centerline.'),
+    samples: z
+      .union([z.boolean(), z.number().int().min(2).max(512)])
+      .optional()
+      .describe(
+        'Sampling override for centerline lowering; true uses 64 samples, a number uses that fixed sample count, omitted keeps automatic lowering.',
+      ),
+    sampling: RibbonSamplingSchema.optional().describe(
+      'Explicit sampling strategy. Cannot be combined with samples.',
+    ),
     width: RibbonWidthSchema.optional().describe(
       'Whole-ribbon width rule applied along the centerline; use start.width/end.width for two-end taper.',
     ),
@@ -225,11 +207,6 @@ export const RibbonSchema = z
       .enum(RibbonAlignment)
       .optional()
       .describe('Which side of the generated band stays on the centerline.'),
-    children: z
-      .array(StepSchema)
-      .min(2)
-      .optional()
-      .describe('Open centerline step sequence; compile rejects closed or multi-subpath results.'),
     upper: z
       .array(StepSchema)
       .min(2)
@@ -242,31 +219,31 @@ export const RibbonSchema = z
       .describe('Explicit lower boundary path used when kind is boundary.'),
   })
   .strict()
-  .superRefine((ribbon, ctx) => {
-    if (ribbon.samples !== undefined && ribbon.sampling !== undefined) {
+  .superRefine((options, ctx) => {
+    if (options.samples !== undefined && options.sampling !== undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['sampling'],
         message: 'Use either `samples` or `sampling`, not both.',
       });
     }
-    if (ribbon.kind === 'boundary') {
-      if (ribbon.upper === undefined) {
+    if (options.mode === 'boundary') {
+      if (options.upper === undefined) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['upper'],
           message: 'Boundary ribbons require `upper` steps.',
         });
       }
-      if (ribbon.lower === undefined) {
+      if (options.lower === undefined) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['lower'],
           message: 'Boundary ribbons require `lower` steps.',
         });
       }
-      for (const field of ['width', 'children', 'align', 'start', 'end', 'interpolation'] as const) {
-        if (ribbon[field] !== undefined) {
+      for (const field of ['width', 'align', 'start', 'end', 'interpolation'] as const) {
+        if (options[field] !== undefined) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: [field],
@@ -276,38 +253,31 @@ export const RibbonSchema = z
       }
       return;
     }
-    const hasStartWidth = ribbon.start?.width !== undefined;
-    const hasEndWidth = ribbon.end?.width !== undefined;
-    if (ribbon.width !== undefined && (hasStartWidth || hasEndWidth)) {
+    const hasStartWidth = options.start?.width !== undefined;
+    const hasEndWidth = options.end?.width !== undefined;
+    if (options.width !== undefined && (hasStartWidth || hasEndWidth)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['width'],
         message: 'Use either top-level `width` or `start.width` + `end.width`, not both.',
       });
     }
-    if (ribbon.width === undefined && (!hasStartWidth || !hasEndWidth)) {
+    if (options.width === undefined && (!hasStartWidth || !hasEndWidth)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['start'],
         message: 'Centerline ribbons require either top-level `width` or both `start.width` and `end.width`.',
       });
     }
-    if (ribbon.width !== undefined && ribbon.interpolation !== undefined) {
+    if (options.width !== undefined && options.interpolation !== undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['interpolation'],
         message: '`interpolation` only applies to start.width/end.width taper.',
       });
     }
-    if (ribbon.children === undefined) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['children'],
-        message: 'Centerline ribbons require centerline `children` steps.',
-      });
-    }
     for (const field of ['upper', 'lower'] as const) {
-      if (ribbon[field] !== undefined) {
+      if (options[field] !== undefined) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: [field],
@@ -316,7 +286,7 @@ export const RibbonSchema = z
       }
     }
   })
-  .describe('A variable-width filled path lowered from a centerline into a closed polygon.');
+  .describe('Ribbon-specific options for Path kind=ribbon.');
 
 export type IRRibbonWidthStop = z.infer<typeof RibbonWidthStopSchema>;
 export type IRRibbonWidth = z.infer<typeof RibbonWidthSchema>;
@@ -324,5 +294,4 @@ export type IRRibbonArcCap = z.infer<typeof RibbonArcCapSchema>;
 export type IRRibbonCap = z.infer<typeof RibbonCapSchema>;
 export type IRRibbonEndpoint = z.infer<typeof RibbonEndpointSchema>;
 export type IRRibbonSampling = z.infer<typeof RibbonSamplingSchema>;
-export type IRRibbonLabel = IRGeometryLabel;
-export type IRRibbon = z.infer<typeof RibbonSchema>;
+export type IRPathRibbonOptions = z.infer<typeof PathRibbonOptionsSchema>;

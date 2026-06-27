@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { IR, IRChild } from '@retikz/core';
 import { CURRENT_IR_VERSION } from '@retikz/core';
 import { Draw } from '../../src/sugar/Draw';
-import { TIKZ_NODE, TIKZ_PATH, TIKZ_RIBBON, TIKZ_STEP } from '../../src/kernel/_displayNames';
+import { TIKZ_NODE, TIKZ_PATH, TIKZ_STEP } from '../../src/kernel/_displayNames';
 import { buildIR } from '../../src/kernel/builder';
 import { convertIRToReactNode } from '../../src/kernel/unbuilder';
 
@@ -119,11 +119,14 @@ describe('convertIRToReactNode', () => {
       type: 'scene',
       children: [
         {
-          type: 'ribbon',
-          start: { width: 8, direction: 0 },
-          end: { width: 2, direction: [1, 0] },
+          type: 'path',
+          kind: 'ribbon',
+          ribbon: {
+            start: { width: 8, direction: 0 },
+            end: { width: 2, direction: [1, 0] },
+            samples: true,
+          },
           fill: 'steelblue',
-          samples: true,
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -132,7 +135,7 @@ describe('convertIRToReactNode', () => {
       ],
     };
     const [ribbonEl] = toElements(convertIRToReactNode(ir));
-    expect((ribbonEl.type as { displayName?: string }).displayName).toBe(TIKZ_RIBBON);
+    expect((ribbonEl.type as { displayName?: string }).displayName).toBe(TIKZ_PATH);
     expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
   });
 
@@ -142,22 +145,25 @@ describe('convertIRToReactNode', () => {
       type: 'scene',
       children: [
         {
-          type: 'ribbon',
-          kind: 'boundary',
+          type: 'path',
+          kind: 'ribbon',
           fill: '#bfdbfe',
-          upper: [
-            { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'line', to: [10, 0] },
-          ],
-          lower: [
-            { type: 'step', kind: 'move', to: [0, 4] },
-            { type: 'step', kind: 'line', to: [10, 4] },
-          ],
+          ribbon: {
+            mode: 'boundary',
+            upper: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [10, 0] },
+            ],
+            lower: [
+              { type: 'step', kind: 'move', to: [0, 4] },
+              { type: 'step', kind: 'line', to: [10, 4] },
+            ],
+          },
         },
       ],
     };
     const [ribbonEl] = toElements(convertIRToReactNode(ir));
-    expect((ribbonEl.type as { displayName?: string }).displayName).toBe(TIKZ_RIBBON);
+    expect((ribbonEl.type as { displayName?: string }).displayName).toBe(TIKZ_PATH);
     expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
   });
 

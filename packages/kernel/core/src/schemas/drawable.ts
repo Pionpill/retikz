@@ -4,7 +4,7 @@ import { BlendMode, DropShadowSchema, ShadowPreset } from './effects';
 import { JsonObjectSchema } from './json';
 import { PaintSpecSchema } from './paint';
 
-export const DrawableGeometryStyleSchema = z
+export const DrawableStyleSchema = z
   .object({
     color: z
       .string()
@@ -64,7 +64,7 @@ export const DrawableGeometryStyleSchema = z
   .strict()
   .describe('Shared geometry style fields for path-like drawable elements.');
 
-export const DrawableElementMetadataSchema = z
+export const DrawableMetaSchema = z
   .object({
     id: z
       .string()
@@ -94,7 +94,6 @@ export const DrawableElementMetadataSchema = z
   .strict()
   .describe('Shared identity, provenance, animation, and stacking metadata for drawable elements.');
 
-export type IRDrawableGeometryStyle = z.infer<typeof DrawableGeometryStyleSchema>;
-export type IRDrawableElementMetadata = z.infer<typeof DrawableElementMetadataSchema>;
-export type IRDrawableSharedStyle = IRDrawableGeometryStyle &
-  Pick<IRDrawableElementMetadata, 'zIndex'>;
+export type IRDrawableStyle = z.infer<typeof DrawableStyleSchema>;
+export type IRDrawableMeta = z.infer<typeof DrawableMetaSchema>;
+export type IRDrawableSharedStyle = IRDrawableStyle & Pick<IRDrawableMeta, 'zIndex'>;

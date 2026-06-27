@@ -9,7 +9,6 @@ export * from './clip';
 export * from './text';
 export * from './drawable';
 export * from './path';
-export * from './ribbon';
 export * from './shape';
 export * from './boundary';
 export * from './node';

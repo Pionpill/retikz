@@ -22,6 +22,7 @@ import {
 } from '../../geometry/segment';
 import type {
   IRPath,
+  IRPathBase,
   IRPathScale,
   IRPosition,
   IRStep,
@@ -321,7 +322,7 @@ const buildMarkMarkerGroup = (
  * @description 每个绘制段独立用节点中心算两端 boundary clip——中段节点的入/出 boundary 点通常不同，path 在该节点可见"断开"（与 TikZ `\draw (A)--(B)--(C);` 段独立 clip 一致）。仍产一个 PathPrim：commands 用多组 move/line 表达 sub-path；段起点等于上段终点时复用 cursor 省 move。cycle 段闭回最近 move 起点，起点==lastEnd && 终点==subPathStart 时输出 close，否则显式画段 line。引用未定义节点/解析失败返回 null，并通过 `warnHook.onWarn` 同步触发 warning
  */
 export const emitPathPrimitive = (
-  path: IRPath,
+  path: IRPathBase,
   nameStack: NameStack,
   round: (n: number) => number,
   measureText: TextMeasurer = fallbackMeasurer,
@@ -335,6 +336,9 @@ export const emitPathPrimitive = (
   // paint 解析：有 registry 走去重派 id；无（直调）时纯色透传、PaintSpec 退化为 undefined
   const resolvePaint: PaintResolver =
     warnHook.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
+  if (path.children === undefined) {
+    throw new Error('Stroke path requires `children` steps.');
+  }
   // 先把 relative/relativeAccumulate 解析为绝对坐标，后续算法可统一按绝对坐标处理
   const steps = normalizeRelativeTargets(path.children, nameStack, scopeChain);
   // 自包含 shape step（rectangle 自带 from/to 两对角、不依赖游标）单独成 path 合法；

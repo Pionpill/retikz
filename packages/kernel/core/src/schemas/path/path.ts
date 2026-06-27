@@ -1,6 +1,9 @@
 import { z } from 'zod';
-import { DrawableElementMetadataSchema, DrawableGeometryStyleSchema } from '../drawable';
+import { DrawableMetaSchema, DrawableStyleSchema } from '../drawable';
+import { JsonObjectSchema } from '../json';
+import { PathRibbonOptionsSchema } from './ribbon';
 import { ArrowDetailSchema, ArrowEndDetailSchema } from './arrow';
+import { GeometryLabelSchema } from './step';
 import { StepSchema } from './step';
 
 /**
@@ -50,11 +53,26 @@ export const ArrowMarkSchema = ArrowEndDetailSchema.extend({
 /** 路径中段箭头标记类型 */
 export type IRArrowMark = z.infer<typeof ArrowMarkSchema>;
 
-export const PathSchema = z
+export const PathBaseSchema = z
   .object({
     type: z.literal('path').describe('Discriminator marking this child as a path.'),
-    ...DrawableElementMetadataSchema.shape,
-    ...DrawableGeometryStyleSchema.shape,
+    kind: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Path kind provider name. Omitted means built-in `stroke`.'),
+    kindOptions: JsonObjectSchema.optional().describe(
+      'JSON-safe option object for custom path kind providers. Built-in `stroke` and `ribbon` do not use this field.',
+    ),
+    ribbon: PathRibbonOptionsSchema.optional().describe(
+      'Ribbon-specific options. Valid only when kind is `ribbon`.',
+    ),
+    label: z
+      .union([GeometryLabelSchema, z.array(GeometryLabelSchema).min(1)])
+      .optional()
+      .describe('Host label attached to this path-like relation.'),
+    ...DrawableMetaSchema.shape,
+    ...DrawableStyleSchema.shape,
     dashPattern: z
       .array(z.number().finite().nonnegative())
       .min(1)
@@ -145,14 +163,90 @@ export const PathSchema = z
     children: z
       .array(StepSchema)
       .min(2)
+      .optional()
       .describe(
         'Sequence of step actions defining the path; the first should usually be a `move`',
       ),
   })
   .strict()
   .describe(
+    'Base fields for a path-like relation before kind-specific structural refinement.',
+  );
+
+export const PathSchema = PathBaseSchema
+  .superRefine((path, ctx) => {
+    const kind = path.kind ?? 'stroke';
+    if (kind === 'stroke') {
+      if (path.children === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['children'],
+          message: 'Stroke paths require `children` steps.',
+        });
+      }
+      if (path.ribbon !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['ribbon'],
+          message: '`ribbon` options are only valid when `kind` is `ribbon`.',
+        });
+      }
+      if (path.kindOptions !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['kindOptions'],
+          message: '`kindOptions` is only valid for custom path kinds.',
+        });
+      }
+      return;
+    }
+    if (kind === 'ribbon') {
+      if (path.ribbon === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['ribbon'],
+          message: 'Ribbon paths require a `ribbon` options object.',
+        });
+      }
+      if (path.kindOptions !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['kindOptions'],
+          message: '`kindOptions` is only valid for custom path kinds.',
+        });
+      }
+      if (path.ribbon?.mode === 'boundary') {
+        if (path.children !== undefined) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['children'],
+            message: 'Boundary ribbon paths use `ribbon.upper` and `ribbon.lower`, not top-level `children`.',
+          });
+        }
+      } else if (path.children === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['children'],
+          message: 'Centerline ribbon paths require top-level `children` steps.',
+        });
+      }
+      return;
+    }
+    if (path.ribbon !== undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['ribbon'],
+        message: '`ribbon` options are only valid when `kind` is `ribbon`.',
+      });
+    }
+  })
+  .describe(
     'A drawn path composed of a sequence of step actions (move / line / ...)',
   );
 
 /** 路径：由若干 step 动作（move/line/...）组成 */
-export type IRPath = z.infer<typeof PathSchema>;
+/** Path schema 的原始输出类型：供 kind 派生、boundary ribbon 等特殊形态使用。 */
+export type IRPathBase = z.infer<typeof PathBaseSchema>;
+
+/** 路径：由若干 step 动作（move/line/...）组成；常规 stroke path 与中心线 ribbon 均携带 children。 */
+export type IRPath = Omit<IRPathBase, 'children'> & { children: Array<z.infer<typeof StepSchema>> };

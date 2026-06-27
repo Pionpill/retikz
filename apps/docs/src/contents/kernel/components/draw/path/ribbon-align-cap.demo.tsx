@@ -1,13 +1,14 @@
 import type { FC } from 'react';
+import type { IRPathRibbonOptions } from '@retikz/core';
 
-import { Layout, Node, Ribbon, type RibbonProps, Step } from '@retikz/react';
+import { Layout, Node, Path, Step } from '@retikz/react';
 
 type Row = {
   label: string;
   y: number;
-  align: NonNullable<RibbonProps['align']>;
-  start: NonNullable<RibbonProps['start']>;
-  end: NonNullable<RibbonProps['end']>;
+  align: NonNullable<IRPathRibbonOptions['align']>;
+  start: NonNullable<IRPathRibbonOptions['start']>;
+  end: NonNullable<IRPathRibbonOptions['end']>;
   fill: string;
   path: 'curve' | 'line';
 };
@@ -63,18 +64,21 @@ const Demo: FC = () => (
     color="#172033"
   >
     {rows.map(row => (
-      <Ribbon
+      <Path
         key={row.label}
-        width={22}
-        align={row.align}
-        start={row.start}
-        end={row.end}
+        kind="ribbon"
+        ribbon={{
+          width: 22,
+          align: row.align,
+          start: row.start,
+          end: row.end,
+          samples: 64,
+        }}
         fill={row.fill}
         fillOpacity={0.76}
         stroke="#172033"
         strokeWidth={0.8}
         drawOpacity={0.2}
-        samples={64}
       >
         {row.path === 'curve' ? (
           <>
@@ -87,7 +91,7 @@ const Demo: FC = () => (
             <Step kind="line" to={[RIGHT_X, row.y]} />
           </>
         )}
-      </Ribbon>
+      </Path>
     ))}
 
     {rows.map(row => (

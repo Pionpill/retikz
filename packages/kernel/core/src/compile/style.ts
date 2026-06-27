@@ -1,13 +1,12 @@
 import type {
   IRArrowDetail,
   IRArrowEndDetail,
-  IRDrawableGeometryStyle,
+  IRDrawableStyle,
   IRFont,
   IRGeometryLabel,
   IRLabelDefault,
   IRNode,
-  IRPath,
-  IRRibbon,
+  IRPathBase,
   IRScope,
   IRStep,
   StyleChannel,
@@ -51,7 +50,7 @@ const pickDefinedKeys = <T extends object>(src: T): Partial<T> => {
   return out;
 };
 
-const DRAWABLE_GEOMETRY_STYLE_KEYS = [
+const DRAWABLE_STYLE_KEYS = [
   'color',
   'fill',
   'fillOpacity',
@@ -61,12 +60,10 @@ const DRAWABLE_GEOMETRY_STYLE_KEYS = [
   'opacity',
   'shadow',
   'blendMode',
-] as const satisfies ReadonlyArray<keyof IRDrawableGeometryStyle>;
+] as const satisfies ReadonlyArray<keyof IRDrawableStyle>;
 
-const pickDrawableGeometryStyle = (
-  src: Partial<IRDrawableGeometryStyle>,
-): Partial<IRDrawableGeometryStyle> => {
-  const entries = DRAWABLE_GEOMETRY_STYLE_KEYS.flatMap(key => {
+const pickDrawableStyle = (src: Partial<IRDrawableStyle>): Partial<IRDrawableStyle> => {
+  const entries = DRAWABLE_STYLE_KEYS.flatMap(key => {
     const value = src[key];
     return value === undefined ? [] : ([[key, value]] as const);
   });
@@ -123,8 +120,8 @@ const cascadeToNode = (c: CascadeState): Partial<IRNode> => {
 };
 
 /** 级联 graphic state 投影到 path 样式字段（主色展开 stroke；path fill 不随主色——与 TikZ 一致） */
-const cascadeToPath = (c: CascadeState): Partial<IRPath> => {
-  const out: Partial<IRPath> = {};
+const cascadeToPath = (c: CascadeState): Partial<IRPathBase> => {
+  const out: Partial<IRPathBase> = {};
   const stroke = c.stroke ?? c.color;
   if (stroke !== undefined) out.stroke = stroke;
   if (c.fill !== undefined) out.fill = c.fill;
@@ -136,8 +133,8 @@ const cascadeToPath = (c: CascadeState): Partial<IRPath> => {
 };
 
 /** Cascaded graphic state projected to ribbon style. Ribbon is a filled path-like area. */
-const cascadeToRibbon = (c: CascadeState): Partial<IRRibbon> => {
-  const out: Partial<IRRibbon> = {};
+const cascadeToRibbon = (c: CascadeState): Partial<IRPathBase> => {
+  const out: Partial<IRPathBase> = {};
   const fill = c.fill ?? c.color;
   if (fill !== undefined) out.fill = fill;
   if (c.stroke !== undefined) out.stroke = c.stroke;
@@ -161,14 +158,14 @@ const expandNodeColor = (src: Partial<IRNode>): Partial<IRNode> => {
 };
 
 /** path 源同源主色展开：未显式给的 stroke 取该源 color（fill 不随主色） */
-const expandPathColor = (src: Partial<IRPath>): Partial<IRPath> => {
-  const out: Partial<IRPath> = { ...src };
+const expandPathColor = (src: Partial<IRPathBase>): Partial<IRPathBase> => {
+  const out: Partial<IRPathBase> = { ...src };
   if (src.color !== undefined && out.stroke === undefined) out.stroke = src.color;
   return out;
 };
 
-const expandRibbonColor = (src: Partial<IRRibbon>): Partial<IRRibbon> => {
-  const out: Partial<IRRibbon> = { ...src };
+const expandRibbonColor = (src: Partial<IRPathBase>): Partial<IRPathBase> => {
+  const out: Partial<IRPathBase> = { ...src };
   if (src.color !== undefined && out.fill === undefined) out.fill = src.color;
   return out;
 };
@@ -349,63 +346,57 @@ const resolveGeometryLabelField = (
  *   每个 step.label 消费 labelDefault 通道 + 跟主色。masterColor = path 已解析主色（就近 color），arrow / step-label 跟它（不跟 stroke）。
  */
 export const resolveEffectivePath = (
-  path: IRPath,
+  path: IRPathBase,
   stack: ReadonlyArray<StyleFrame>,
-): IRPath => {
-  let acc: Partial<IRPath> = {};
+): IRPathBase => {
+  let acc: Partial<IRPathBase> = {};
   let masterColor: string | undefined;
+  const pathKind = path.kind ?? 'stroke';
+  const isRibbon = pathKind === 'ribbon';
   for (const frame of stack) {
     if (cuts(frame.resetStyle, 'path')) {
       acc = {};
       masterColor = undefined;
     }
     if (frame.cascade.color !== undefined) masterColor = frame.cascade.color;
-    acc = { ...acc, ...pickDefinedKeys(cascadeToPath(frame.cascade)) };
-    if (frame.pathDefault) {
-      if (frame.pathDefault.color !== undefined) masterColor = frame.pathDefault.color;
-      acc = { ...acc, ...pickDefinedKeys(expandPathColor(frame.pathDefault)) };
-    }
-  }
-  if (path.color !== undefined) masterColor = path.color;
-  // 元素源含 type / children / arrow / arrowDetail —— 后续覆盖 arrowDetail / children
-  acc = { ...acc, ...pickDefinedKeys(expandPathColor(path)) };
-  const effective = acc as IRPath;
-
-  const arrowDetail = resolveArrowDetail(path.arrowDetail, stack, masterColor);
-  if (arrowDetail !== undefined) effective.arrowDetail = arrowDetail;
-  else delete effective.arrowDetail;
-
-  const labelDefault = resolveLabelDefault(stack);
-  effective.children = resolveStepLabels(path.children, labelDefault, masterColor);
-  return effective;
-};
-
-export const resolveEffectiveRibbon = (
-  ribbon: IRRibbon,
-  stack: ReadonlyArray<StyleFrame>,
-): IRRibbon => {
-  let acc: Partial<IRRibbon> = {};
-  let masterColor: string | undefined;
-  for (const frame of stack) {
-    if (cuts(frame.resetStyle, 'path')) {
-      acc = {};
-      masterColor = undefined;
-    }
-    if (frame.cascade.color !== undefined) masterColor = frame.cascade.color;
-    acc = { ...acc, ...pickDefinedKeys(cascadeToRibbon(frame.cascade)) };
+    acc = {
+      ...acc,
+      ...pickDefinedKeys(isRibbon ? cascadeToRibbon(frame.cascade) : cascadeToPath(frame.cascade)),
+    };
     if (frame.pathDefault) {
       if (frame.pathDefault.color !== undefined) masterColor = frame.pathDefault.color;
       acc = {
         ...acc,
-        ...pickDefinedKeys(expandRibbonColor(pickDrawableGeometryStyle(frame.pathDefault))),
+        ...pickDefinedKeys(
+          isRibbon
+            ? expandRibbonColor(pickDrawableStyle(frame.pathDefault))
+            : expandPathColor(frame.pathDefault),
+        ),
       };
     }
   }
-  if (ribbon.color !== undefined) masterColor = ribbon.color;
-  acc = { ...acc, ...pickDefinedKeys(expandRibbonColor(ribbon)) };
-  const effective = acc as IRRibbon;
+  if (path.color !== undefined) masterColor = path.color;
+  // 元素源含 type / children / arrow / arrowDetail —— 后续覆盖 arrowDetail / children
+  acc = {
+    ...acc,
+    ...pickDefinedKeys(isRibbon ? expandRibbonColor(path) : expandPathColor(path)),
+  };
+  const effective = acc as IRPathBase;
+
   const labelDefault = resolveLabelDefault(stack);
-  const label = resolveGeometryLabelField(effective.label, labelDefault, masterColor);
+  if (isRibbon) {
+    delete effective.arrowDetail;
+  } else {
+    const arrowDetail = resolveArrowDetail(path.arrowDetail, stack, masterColor);
+    if (arrowDetail !== undefined) effective.arrowDetail = arrowDetail;
+    else delete effective.arrowDetail;
+  }
+  if (path.children !== undefined) {
+    effective.children = resolveStepLabels(path.children, labelDefault, masterColor);
+  } else {
+    delete effective.children;
+  }
+  const label = resolveGeometryLabelField(path.label, labelDefault, masterColor);
   if (label !== undefined) effective.label = label;
   return effective;
 };
