@@ -28,7 +28,6 @@ export const graphSection: Array<Section> = [
         children: [
           { id: 'model', label: 'plot.dataModel' },
           { id: 'processing', label: 'plot.dataProcessing' },
-          { id: 'custom', label: 'plot.dataCustom' },
         ],
       },
       {
@@ -37,7 +36,6 @@ export const graphSection: Array<Section> = [
         children: [
           { id: 'binding', label: 'plot.grammarChannelBinding' },
           { id: 'builtin', label: 'plot.grammarChannelBuiltin' },
-          { id: 'custom', label: 'plot.grammarChannelCustom' },
         ],
       },
       {
@@ -49,7 +47,6 @@ export const graphSection: Array<Section> = [
           { id: 'summary', label: 'plot.grammarTransformSummary' },
           { id: 'statistics', label: 'plot.grammarTransformStatistics' },
           { id: 'relate', label: 'plot.grammarTransformRelate' },
-          { id: 'custom', label: 'plot.grammarTransformCustom' },
         ],
       },
       {
@@ -61,7 +58,6 @@ export const graphSection: Array<Section> = [
           { id: 'interval', label: 'plot.compIntervalMark' },
           { id: 'reference', label: 'plot.compReferenceMark' },
           { id: 'relation', label: 'plot.compRelationMark' },
-          { id: 'custom', label: 'plot.grammarMarkCustom' },
         ],
       },
       {
@@ -70,7 +66,6 @@ export const graphSection: Array<Section> = [
         children: [
           { id: 'position', label: 'plot.grammarScalePosition' },
           { id: 'color', label: 'plot.grammarScaleColor' },
-          { id: 'custom', label: 'plot.grammarScaleCustom' },
         ],
       },
       {
@@ -80,7 +75,6 @@ export const graphSection: Array<Section> = [
           { id: '2d', label: 'plot.grammarCoordinate2d' },
           { id: '1d', label: 'plot.grammarCoordinate1d' },
           { id: 'ternary', label: 'plot.grammarCoordinateTernary' },
-          { id: 'custom', label: 'plot.grammarCoordinateCustom' },
         ],
       },
       {
@@ -92,6 +86,18 @@ export const graphSection: Array<Section> = [
         ],
       },
       { id: 'provenance', label: 'plot.grammarProvenance' },
+      {
+        id: 'extend',
+        label: 'plot.grammarExtend',
+        children: [
+          { id: 'data', label: 'plot.grammarExtendData' },
+          { id: 'channel', label: 'plot.grammarExtendChannel' },
+          { id: 'transform', label: 'plot.grammarExtendTransform' },
+          { id: 'mark', label: 'plot.grammarExtendMark' },
+          { id: 'scale', label: 'plot.grammarExtendScale' },
+          { id: 'coordinate', label: 'plot.grammarExtendCoordinate' },
+        ],
+      },
     ],
   },
   {

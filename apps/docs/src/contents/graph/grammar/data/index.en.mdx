@@ -22,7 +22,7 @@ During compilation, Plot first collects the fields actually referenced by the cu
 | Validation | Sample-check or fully check participating fields, and decide whether invalid values skip or throw | `validateData` / `invalid` |
 | Channel consumption | Mark channels such as `x`, `y`, `color`, `size`, and `text` read canonical values | mark props / `encoding` |
 
-`model` and `format` are persisted with the PlotSpec. `fieldMap` is a serializable lowering option injected by dataset reference. Function options such as `resolveField` participate only at runtime and do not enter IR. See [Custom Data](/graph/grammar/data/custom) when you need custom field formats or field parsing.
+`model` and `format` are persisted with the PlotSpec. `fieldMap` is a serializable lowering option injected by dataset reference. Function options such as `resolveField` participate only at runtime and do not enter IR. See [Custom Data](/graph/grammar/extend/data) when you need custom field formats or field parsing.
 
 ## Channel Consumption
 
@@ -38,9 +38,5 @@ The data layer only turns external rows into canonical rows. How a field or cons
   <LinkedCard href="/graph/grammar/data/processing">
     <strong>Data Processing</strong>
     <span>Handle field names, storage formats, custom parsing functions, and reusable processing logic before data reaches Plot.</span>
-  </LinkedCard>
-  <LinkedCard href="/graph/grammar/data/custom">
-    <strong>Custom Data</strong>
-    <span>Centralize custom field formats and runtime field parsing.</span>
   </LinkedCard>
 </div>

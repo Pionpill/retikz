@@ -22,7 +22,7 @@ description: 比例尺（scale）把数据值映射成视觉量。按产出分�
 | `temporal` | `time` | `sequential`（时间也是连续量） |
 | `categorical` | `band`（折线用 `point`） | `ordinal` |
 
-字段类型怎么声明见[数据模型](/graph/grammar/data/model)。内置 15 个 scale 之外的长尾（品牌色阶、领域专用映射……）走[自定义比例尺](/graph/grammar/scale/custom)。
+字段类型怎么声明见[数据模型](/graph/grammar/data/model)。内置 15 个 scale 之外的长尾（品牌色阶、领域专用映射……）走[自定义比例尺](/graph/grammar/extend/scale)。
 
 ## 显式覆盖
 
@@ -49,9 +49,5 @@ polar 图里用 `dimension="angle"` / `dimension="radius"`，也可用 `x` / `y`
   <LinkedCard href="/graph/grammar/scale/color">
     <span className="font-semibold">颜色比例尺</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">ordinal 一类一色、sequential / diverging 连续色带、quantize / threshold / quantile 离散化分箱</span>
-  </LinkedCard>
-  <LinkedCard href="/graph/grammar/scale/custom">
-    <span className="font-semibold">自定义比例尺</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">defineScale 注入运行时 position / channel 定义，colorSchemes 接自定义配色</span>
   </LinkedCard>
 </div>

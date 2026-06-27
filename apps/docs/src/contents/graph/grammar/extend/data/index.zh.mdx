@@ -46,6 +46,6 @@ description: 把数据层的运行时扩展集中管理：自定义字段格式�
 | 格式可枚举、要随 spec 持久化 | `defineFieldFormat` |
 | 一次性解析、依赖应用状态或数据源 | `resolveField` |
 | 只是在已有通道上换字段名 | `fieldMap`，见[数据处理](/graph/grammar/data/processing) |
-| 让字段驱动新的 node 属性 | `defineNodeChannel`，见[自定义通道](/graph/grammar/channel/custom) |
+| 让字段驱动新的 node 属性 | `defineNodeChannel`，见[自定义通道](/graph/grammar/extend/channel) |
 
 优先选择能进入 IR 的声明式能力；只有确实需要函数时，再把逻辑放进 `resolveField` 或对应的 runtime definition。
