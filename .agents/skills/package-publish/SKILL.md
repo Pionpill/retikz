@@ -13,7 +13,7 @@ retikz 一次发包 = **3 处同步改动 + 用户确认 + npm publish**。
 | --- | --- |
 | **包元数据** | `packages/<pkg>/package.json` 的 `version` 字段 |
 | **文档站** | `apps/docs/src/data/changelog.ts` 加结构化发布条目 + `apps/docs/src/data/module.ts` 对应模块条目的 `version`（顶栏版本徽章，仅 MINOR / MAJOR / 大里程碑变） |
-| **路线文档** | 按当前发布组对应 roadmap 的既有格式更新里程碑跟踪（通常是勾选版本 checkbox；core 参考 `notes/decisions/core/v0/v0.3/roadmap.md`，plot 参考 `notes/decisions/plot/v0/...`） |
+| **路线文档** | 按当前发布组对应 roadmap 的既有格式更新里程碑跟踪（通常是勾选版本 checkbox；core 参考 `notes/decisions/kernel/v0/v0.3/roadmap.md`，plot 参考 `notes/decisions/graph/v0/...`） |
 
 漏一处的后果：
 
@@ -53,7 +53,7 @@ retikz 一次发包 = **3 处同步改动 + 用户确认 + npm publish**。
 
 ## 版本节奏
 
-参考当前发布组的 roadmap（core 通常在 `notes/decisions/core/v0/v0.3/roadmap.md`，plot 在 `notes/decisions/plot/v0/...`）。pre-stable（v1.0 之前）走 `-alpha.N` / `-beta.N` / `-rc.N`：
+参考当前发布组的 roadmap（core 通常在 `notes/decisions/kernel/v0/v0.3/roadmap.md`，plot 在 `notes/decisions/graph/v0/...`）。pre-stable（v1.0 之前）走 `-alpha.N` / `-beta.N` / `-rc.N`：
 
 | 形态 | 示例 | npm dist-tag | 下游默认 install |
 | --- | --- | --- | --- |
@@ -161,7 +161,7 @@ monorepo 子包跑 `version` 不会触发 git commit，安全。
 
 #### 2.4 roadmap checklist
 
-里程碑跟踪段通常在当前发布组的 roadmap 里：core 看 `notes/decisions/core/v0/v0.3/roadmap.md` 或当前活跃版本目录，plot 看 `notes/decisions/plot/v0/...`。按 roadmap 既有格式更新本次发布对应版本；若是 checkbox，就把 `[ ]` 改成 `[x]`：
+里程碑跟踪段通常在当前发布组的 roadmap 里：core 看 `notes/decisions/kernel/v0/v0.3/roadmap.md` 或当前活跃版本目录，plot 看 `notes/decisions/graph/v0/...`。按 roadmap 既有格式更新本次发布对应版本；若是 checkbox，就把 `[ ]` 改成 `[x]`：
 
 ```diff
 - - [ ] v0.1.0-alpha.1
@@ -265,7 +265,7 @@ git tag: v0.3.0-alpha.x（已 push；plot 组为 plot-v<version>）
 
 刚发布的里程碑已封板，代码和测试是真源；bump 到下一开发版本前，把对应里程碑目录下已 `Accepted` 的 ADR 从“施工蓝图”压成“决策记录”。仍 `Proposed` 的 ADR 不动。
 
-目标目录示例：发 `0.3.0-alpha.3` → `notes/decisions/core/v0/v0.3/alpha.3/*.md`；plot 同理在 `notes/decisions/plot/...`。
+目标目录示例：发 `0.3.0-alpha.3` → `notes/decisions/kernel/v0/v0.3/alpha.3/*.md`；plot 同理在 `notes/decisions/graph/...`。
 
 | 内容 | 处理 |
 | --- | --- |
@@ -291,7 +291,7 @@ git tag: v0.3.0-alpha.x（已 push；plot 组为 plot-v<version>）
 
 下一版本怎么定：
 
-1. 查路线文档的版本跟踪/进度段——Tier 1 看 [`v0.3/roadmap.md`](../../../notes/decisions/core/v0/v0.3/roadmap.md)，plot 看 [`plot/v0/v0.1/roadmap.md`](../../../notes/decisions/plot/v0/v0.1/roadmap.md)。
+1. 查路线文档的版本跟踪/进度段——Tier 1 看 [`v0.3/roadmap.md`](../../../notes/decisions/kernel/v0/v0.3/roadmap.md)，plot 看 [`plot/v0/v0.1/roadmap.md`](../../../notes/decisions/graph/v0/v0.1/roadmap.md)。
 2. **plan 里明确有下一个未发布版本** → 直接把本组所有包 version 改成它。例：刚发 Tier 1 `0.3.0-alpha.3`、下一段是 alpha.4 → core 组 5 包 version 改 `0.3.0-alpha.4`。
 3. **plan 里没有明确的下一个版本**（刚发的是该 milestone 最后一个 alpha、下一步 beta / rc / 正式版未排期）→ **停下来问用户**下一个版本号，不要瞎猜。
 
@@ -332,7 +332,7 @@ git tag: v0.3.0-alpha.x（已 push；plot 组为 plot-v<version>）
 - **根 AGENTS.md commit 规则**：阶段 5 的 commit / push / publish 都需要用户**当次明确授权**。授权一次只覆盖本次发布，下次发版要再问一遍
 - **`docs-doc-principle` 技能**：本技能里 changelog 数据写法是简版规范；如果要做更复杂的版本说明页（迁移指南、breaking changes 详解），改完后参考 `docs-doc-principle` 写正文
 - **milestone roadmap 完结**：正式发布后，按 `notes/README.md` 约定精简或删除对应 milestone 的 `roadmap.md`；major / minor 的 `roadmap.md` 保留作长期路线索引。
-- **ADR 封板压缩**（阶段 6.1）：发版后、bump 前把本里程碑 Accepted ADR 从「施工蓝图」压成「决策记录」（删 🔻 待决策点 / 实现契约两段、折成指针）。规则与生命周期定义见 `notes/decisions/core/_template.md` header「ADR 生命周期」段。
+- **ADR 封板压缩**（阶段 6.1）：发版后、bump 前把本里程碑 Accepted ADR 从「施工蓝图」压成「决策记录」（删 🔻 待决策点 / 实现契约两段、折成指针）。规则与生命周期定义见 `notes/decisions/kernel/_template.md` header「ADR 生命周期」段。
 
 ## 验证清单
 

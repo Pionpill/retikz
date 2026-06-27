@@ -1,0 +1,78 @@
+---
+title: 图元
+description: 图元是数据到几何的注册层；每个图元声明一种底层几何，再由比例尺和坐标系决定最终形态。
+---
+
+Mark 是图形语法里的几何层。它不直接写像素坐标，而是声明“这批数据应生成哪类底层几何”：点、路径、区间、参考约束，或连接两个目标的关系路径。
+
+每个内置图元都是一个注册项。编译时先把字段映射解析成通道，再交给对应图元的 lowering；坐标系只负责解释这些通道，所以同一个图元在不同坐标系下可以生成不同形态。
+
+## 机制
+
+| 分类 | 图元 | 机制 | 常见形态 |
+| --- | --- | --- | --- |
+| 维度图元 | `PointMark` | 坐标系定位后的 Node 节点 | 散点、气泡、文本点 |
+|  | `PathMark` | 有序点连成 1D 轨迹 | 折线、路径、雷达线框 |
+|  | `IntervalMark` | 各位置维度的正交区间积 | 柱、直方、热图、径向柱、饼 / 环 |
+| 辅助图元 | `ReferenceMark` | 固定位置或固定区间的参考约束 | 阈值线、参考环、容差带 |
+| 关系图元 | `RelationMark` | 从 source 到 target 的 core Path | 箭头、依赖关系、跨点或跨区间连线 |
+
+图表形态不是新的底层图元。比如热图是 `IntervalMark` 的双 band 区间，饼图是 `IntervalMark` 在极坐标下的角向区间，散点 / 气泡 / 文本点都是 `PointMark` 的不同表现层配置。
+
+这里的分类只描述图元的作用：维度图元表达数据维度到几何的映射，辅助图元表达参考约束，关系图元表达目标之间的连接。实现上它们仍然都是同一套 mark 注册项，并通过各自的 lowering 下沉到 core。
+
+## 下沉到 core
+
+plot 的 mark 不直接拥有渲染 primitive；lowering 之后都会变成 [@retikz/core](/kernel/introduction) 的 Kernel IR。几何本体通常落到 [Node](/kernel/components/node/overview) 或 [Path](/kernel/components/draw/path)，颜色分组、series 分组和默认样式则由 [Scope](/kernel/components/layout/scope) 承载。
+
+| Mark | 最终使用的 core 实现 | 说明 |
+| --- | --- | --- |
+| `PointMark` | [Node](/kernel/components/node/overview) | 每行数据生成一个点 Node；文本点也是无边框文本 Node |
+| `PathMark` | [Path](/kernel/components/draw/path) + [Coordinate](/kernel/components/layout/coordinate) | 有序投影点生成 Path；配置 `anchorId` 时，每个有效顶点额外生成可引用 Coordinate |
+| `IntervalMark` | [Node](/kernel/components/node/overview) | 坐标系把 cell 投影为 rect / sector / contour，再装配成带尺寸或 shape 的 Node |
+| `ReferenceMark` | [Path](/kernel/components/draw/path) / [Node](/kernel/components/node/overview) | 参考线下沉为 Path；参考带下沉为区间 Node |
+| `RelationMark` | [Path](/kernel/components/draw/path) + [Coordinate](/kernel/components/layout/coordinate) | source / target 解析成 core target；via 和投影目标可生成可定位 Coordinate |
+
+## 锚点 id
+
+`PointMark`、`PathMark` 和 `IntervalMark` 可以配置 `anchorId`，为它们生成的 core Node 或 Coordinate 写入稳定 id。`anchorId` 优先于旧的 `datumIdField`；后者仍保留给旧 locator / provenance 语义。
+
+`anchorId` 支持四种输入：`prefix` 提供命名空间，`field` 把数据字段 slug 成 id，`template` 使用 `{plotId}` / `{markId}` / `{markIndex}` / `{index}` / `{field:name}` 模板，`generator` 只保存 runtime key，实际函数从 `LowerPlotsOptions.anchorIdGenerators` 注入。
+
+```tsx
+<PointMark id="cities" x="x" y="y" anchorId={{ prefix: 'city', field: 'id' }} />
+<PathMark id="route" x="x" y="y" order="order" anchorId={{ template: 'route.{index}' }} />
+```
+
+`PathMark` 的 `anchorId` 不会把路径顶点伪装成不可见 Node，而是为每个有效数据点生成 core `Coordinate`。这样后续的 relation、annotation 或自定义图元都能按 id 定位这些顶点。
+
+## 填充与描边
+
+`fill` / `stroke` 可以写纯颜色，也可以写 core `IRPaintSpec`。常量样式会随 mark 下沉到对应的 Node 或 Path 默认样式；字段绑定仍走颜色 scale，适合按类别或数值映射颜色。
+
+```tsx
+const sunsetStroke = {
+  kind: 'linearGradient',
+  angle: 0,
+  stops: [
+    { offset: 0, color: '#38bdf8' },
+    { offset: 1, color: '#f97316' },
+  ],
+};
+
+<PathMark x="month" y="revenue" order="month" stroke={sunsetStroke} />
+<IntervalMark x="month" y="revenue" fill={sunsetStroke} />
+```
+
+渐变、图案和图片填充都由 core 资源表处理；plot 不拼接 renderer 私有的 `url(#...)`，因此 SVG 和 Canvas 后端会复用同一份语义。
+
+## 注册图元
+
+<div className="grid gap-3 sm:grid-cols-2">
+  <LinkedCard href="/graph/grammar/mark/point"><strong>PointMark</strong><span>坐标定位后的 Node：散点、气泡、形状编码，也承载文本点。</span></LinkedCard>
+  <LinkedCard href="/graph/grammar/mark/path"><strong>PathMark</strong><span>1D 轨迹：按顺序连接数据点，表达趋势、路径和雷达线框。</span></LinkedCard>
+  <LinkedCard href="/graph/grammar/mark/interval"><strong>IntervalMark</strong><span>区间积：统一柱、直方、热图、径向柱、饼图和环图。</span></LinkedCard>
+  <LinkedCard href="/graph/grammar/mark/reference"><strong>ReferenceMark</strong><span>参考约束：常量位置上的线、环、扇区或容差带。</span></LinkedCard>
+  <LinkedCard href="/graph/grammar/mark/relation"><strong>RelationMark</strong><span>把 source / target 关系下沉为 core Path，复用箭头、弯曲、折线和 step label。</span></LinkedCard>
+  <LinkedCard href="/graph/grammar/mark/custom"><strong>自定义图元</strong><span>用 defineMark + markDefinitions 注册自己的图元，lower 经 frame 投影装配 core IR。</span></LinkedCard>
+</div>

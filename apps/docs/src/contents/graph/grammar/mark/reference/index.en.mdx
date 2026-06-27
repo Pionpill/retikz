@@ -1,0 +1,172 @@
+---
+title: ReferenceMark
+description: ReferenceMark expresses reference constraints: constant or field values expanded into lines, one-axis bands, or coordinate regions.
+---
+
+`<ReferenceMark>` declares a reference constraint in data space. By default, bind `y` for a horizontal reference and bind `x` for a vertical reference; a lower bound alone becomes a line, while `xTo` / `yTo` turns it into a one-axis band. Set `kind="region"` and ReferenceMark builds a region from the roles consumed by the active coordinate: cartesian / polar use `x` / `xTo` plus `y` / `yTo`, while ternary also uses `z` / `zTo`. `number` means a constant, while `FieldName` means a data field name or field path and produces one reference per row.
+
+It joins the same draw order as `<PointMark>` / `<IntervalMark>`, but it does not start from point, line, or interval dimensions. It first fixes one axis value, then expands along the opposite axis domain.
+
+## Usage
+
+```tsx
+import { Plot, ReferenceMark } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={scores}>
+  <ReferenceMark y={60} color="crimson" />
+  <ReferenceMark y={60} yTo={80} color="#fde68a" />
+</Plot>
+```
+
+For the default line / band form, exactly one of `x` / `y` is required. `xTo` only pairs with `x`, and `yTo` only pairs with `y`; partial spans along the opposite axis use `extentField` / `extentToField` together. The region form must explicitly set `kind="region"` and provide lower / upper bounds for every active coordinate role; for example, `ternary2D` needs `x` / `xTo`, `y` / `yTo`, and `z` / `zTo`.
+
+## Presentation Layer
+
+ReferenceMark is a low-level reference mark: it turns one fixed axis value into a line, a one-axis interval into a band, or two axis intervals into a region. What the presentation layer calls a threshold line, tolerance band, reference ring, sector wedge, or highlighted range is not a different mark; it is the same ReferenceMark under different coordinate and bound settings.
+
+The bound axis decides orientation, and the optional upper bound decides the form:
+
+| Presentation form | Key props | Description |
+| --- | --- | --- |
+| Horizontal reference line | `y` | Fixed y value, spanning the x domain |
+| Vertical reference line | `x` | Fixed x value, spanning the y domain |
+| Horizontal reference band | `y` / `yTo` | Fixed y interval, filling `y∈[y,yTo]` |
+| Vertical reference band | `x` / `xTo` | Fixed x interval, filling `x∈[x,xTo]` |
+| Bounded 2D region | `kind="region"` + `x` / `xTo` / `y` / `yTo` | Fixed x and y intervals, filling their intersection |
+| Ternary reference region | `kind="region"` + `x` / `xTo` / `y` / `yTo` / `z` / `zTo` | Fixed component intervals clipped into the simplex |
+
+Under `polar2D`, the coordinate system reinterprets the same props: `y` is a constant-radius reference ring, `y` / `yTo` is an annular band, `x` is a radial reference line, `x` / `xTo` is a sector wedge, and `kind="region"` constrains both angle and radius to form an annular sector. Under `ternary2D`, `kind="region"` uses the three `x/y/z` component intervals and lets the ternary coordinate `projectCell` clip them into a contour.
+
+## Examples
+
+### Constant Axis Value
+
+`y={60}` is a constant axis value, producing one horizontal threshold line across the full x domain. This example maps to the constant form of `x` / `y` in the API table.
+
+<ComponentPreview name="rule-threshold" sourceFiles={['rule-threshold.data.ts']} />
+
+### Upper Bound Props
+
+Add `yTo` and ReferenceMark turns from a line into a filled band. Bands are usually declared before data marks, so points, bars, or paths are drawn on top.
+
+<ComponentPreview name="rule-band" sourceFiles={['rule-threshold.data.ts']} />
+
+`xTo` mirrors `yTo`: with `x` bound, use `xTo` for a vertical band. The upper bound must match the bound axis, otherwise construction or lowering throws.
+
+### Bounded Region
+
+`kind="region"` turns ReferenceMark from a one-axis constraint into a coordinate cell region. In cartesian coordinates it draws a rectangle; under polar coordinates the same `x` / `xTo` / `y` / `yTo` pair becomes an angle interval plus a radius interval, producing an annular sector; under ternary coordinates, `x` / `xTo`, `y` / `yTo`, and `z` / `zTo` bound a component range inside the simplex.
+
+<ComponentPreview name="rule-region" sourceFiles={['rule-region.data.ts']} />
+
+### Field Axis Value and Color
+
+`y="threshold"` is a field axis value, so each data row produces one reference line. In that form, `color="tier"` is interpreted as a color field and grouped by category.
+
+<ComponentPreview name="rule-per-datum" sourceFiles={['rule-per-datum.data.ts']} />
+
+### Mark-Local Transforms
+
+Field-based ReferenceMark values can also read the rows produced by the current mark's transform. In the example below, the point layer shows raw sample scores, while the reference line layer computes `meanScore` through `transform` and draws that mean line.
+
+<ComponentPreview name="rule-transform" sourceFiles={['rule-transform.data.ts']} />
+
+Constant references use color strings such as `color="crimson"`; field references use field names such as `color="tier"`. Both are strings at the React props layer, and assembly decides whether they become a constant color value or a color channel from whether `x` / `y` is a number or field.
+
+## How It Works
+
+`ReferenceMark` is a built-in registered mark. The React `<ReferenceMark>` component does not render DOM; `<Plot>` assembles the flat props into mark IR with `type: 'reference'`, puts `x` / `y` / `z` under `encoding`, and keeps `kind` / `xTo` / `yTo` / `zTo` / `extentField` / `extentToField` on the mark itself.
+
+At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `ReferenceMark` resolves to the `PlotMark.Reference` entry, which calls `lowerReferenceLayer`. The default line / band form accepts cartesian2D / polar2D; `kind="region"` follows the cell path and accepts any coordinate frame with `projectCell`. Lines lower into core `Path`, while bands / regions first build a coordinate-independent `Cell`, then use `frame.projectCell(...)` and lower into core `Node` geometry.
+
+For registration, focus on the `ReferenceMark` registry entry and the `lowerReferenceLayer` / `lowerReference` functions that perform the lowering:
+
+```ts
+[PlotMark.Reference]: { type: PlotMark.Reference, lower: lowerReferenceLayer },
+
+const lowerReferenceLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+  if (mark.type !== PlotMark.Reference) return null;
+  const shape = referenceShape(mark);
+  if (shape.kind === 'region') {
+    if (!hasProjectCell(frame)) throw new Error(failLoudMessage(mark.type, frame.type));
+  } else if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
+    throw new Error(failLoudMessage(mark.type, frame.type));
+  }
+  const layer = lowerReference(mark, rows, frame, channels.colorOf, channels.defaultColor, markProvenance);
+  return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
+};
+
+const lowerReference = (mark: ReferenceMark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+  const shape = referenceShape(mark);
+  const effectiveRows = referenceRows(mark, rows, shape, frame);
+
+  if (shape.kind === 'region' || shape.band) {
+    for (const row of effectiveRows) {
+      const cell = referenceCell(mark, row, frame);
+      if (!cell) continue;
+      const geometry = frame.projectCell(cell);
+      // band / region: cell geometry -> core Node layer
+    }
+    return cellLayer;
+  }
+
+  for (const row of effectiveRows) {
+    const steps = referenceLineSteps(mark, row, frame, shape.orientation);
+    if (!steps) continue;
+    // line: reference steps -> core Path layer
+  }
+  return lineLayer;
+};
+```
+
+The logic breaks down into four steps:
+
+| Step | Description |
+| --- | --- |
+| Orientation check | The default line / band form requires exactly one of `encoding.x` / `encoding.y`; `kind="region"` requires lower and upper bounds for every coordinate role consumed by the active frame |
+| Form check | The default form infers line / band from the upper bound; region goes straight to the cell path |
+| Row iteration | A fully constant reference produces one item; field axis values, field upper bounds, or extent fields produce one item per row |
+| Core lowering | A line becomes a core `Path`; a band / region uses coordinate `projectCell` to become fillable geometry in a Node |
+
+## API
+
+`ReferenceMark` covers lines, bands, and regions, with props grouped as Position, Specific, Path, Node, General, and Custom: position fields bind the reference axes, specific fields describe the span, path fields style reference lines, and node fields style reference bands / regions. `FieldName` means a field name or field path, such as `threshold` / `limits.lo`; `number` means an inline constant axis value.
+
+| Category | Prop | Type | Default | Description |
+| --- | --- | --- | --- | --- |
+| Position | `x` | `number`<br />`FieldName?` | — | Axis bound for a vertical reference; number is constant, field is per-datum |
+|  | `y` | `number`<br />`FieldName?` | — | Axis bound for a horizontal reference; number is constant, field is per-datum |
+|  | `z` | `number`<br />`FieldName?` | — | Lower bound for a z role region; only used by `kind="region"` when the coordinate consumes z |
+| Specific | `kind` | `'region'?` | — | Set to `region` to build an area from the active coordinate roles; omit to infer line / band |
+|  | `color` | `string?` | default layer color | Constant reference: color string; per-datum reference: color field name |
+|  | `xTo` | `number`<br />`FieldName?` | — | Upper bound along x; by default pairs with `x` to create a vertical band, and acts as the region x upper bound |
+|  | `yTo` | `number`<br />`FieldName?` | — | Upper bound along y; by default pairs with `y` to create a horizontal band, and acts as the region y upper bound |
+|  | `z` / `zTo` | `number`<br />`FieldName?` | — | Lower / upper bound along z; only used by `kind="region"` when the active coordinate consumes a z role, such as `ternary2D` |
+|  | `extentField` / `extentToField` | `FieldName?` | full opposite domain | Start / end fields for a partial span along the opposite axis; must appear together |
+| Path / reference band | `fill` / `stroke` | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?` / `PointStrokeStyle?` | `currentColor` / — | Reference lines use `stroke`; reference bands / regions use `fill` / `stroke` paint |
+|  | `strokeWidth`<br />`opacity` / `drawOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | Reference-line stroke width, whole opacity, and stroke opacity |
+|  | `zIndex` / `rotate` | `PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />— | Reference-line draw order and rotation |
+|  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | Reference-line path scale, fill rule, and thickness preset |
+|  | `arrow` / `arrowDetail` | `PathArrowStyle?`<br />`PathArrowDetailStyle?` | —<br />— | Reference-line arrow direction and details |
+|  | `dashPattern`<br />`shadow` / `blendMode` | `NodeDashPatternStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?` | —<br />—<br />— | Reference-line dash pattern, shadow, and blend mode |
+| Node | `fillOpacity` | `PointOpacityStyle?` | — | Reference-band / region fill opacity |
+|  | `padding` / `minimumSize` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | Reference-band / region Node padding and minimum visual size |
+|  | `minimumWidth` / `minimumHeight` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | Reference-band / region Node minimum visual width / height |
+|  | `align`<br />`lineHeight` / `maxTextWidth` | `MarkValueProp<NodeTextAlignValue>`<br />`NodeTextAlignStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />— | Reference-band / region text layout channels |
+|  | `cornerRadius`<br />`xScale` / `yScale` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />— | Reference-band / region Node corner radius and scaling |
+|  | `innerXSep` / `innerYSep`<br />`outerSep` / `margin` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | Reference-band / region Node spacing channels |
+|  | `dashed` / `dotted` | `MarkValueProp<boolean>`<br />`NodeBooleanStyle` | — | Reference-band / region Node stroke dash toggles |
+|  | `font` / `boundary` | `NodeFontStyle?`<br />`NodeBoundaryStyle?` | —<br />— | Reference-band / region Node font and boundary |
+| General | `id` | `string?` | — | Optional mark handle for layer ids |
+|  | `transform` | `Array<Transform>?` | — | Mark-local data transform; runs after the plot-level transform and only changes the rows seen by this layer |
+| Custom | `channels` | `Record<string, Channel>` | — | Custom channel bindings; resolved by registered channel definitions |
+
+<ComponentAlert title="Default Form Binds One Orientation" description="The default line / band form must bind exactly one of x or y; giving both / neither, or an upper bound that does not match the bound dimension (binding x but setting yTo), throws. kind=&quot;region&quot; is the exception: it must provide lower / upper bounds for every active coordinate role, does not accept extentField / extentToField, and can lower through any coordinate frame that provides projectCell." />
+
+## Related
+
+- [IntervalMark](/graph/grammar/mark/interval) — bars, heatmaps, and continuous interval marks
+- [PointMark](/graph/grammar/mark/point) — observations layered on top of reference lines, bands, or regions
+- [Coordinates](/graph/grammar/coordinate) — how cartesian2D / polar2D / ternary2D interpret reference regions

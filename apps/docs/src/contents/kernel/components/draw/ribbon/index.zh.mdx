@@ -1,0 +1,159 @@
+---
+title: Ribbon
+description: Kernel 带状路径——沿开放中心线生成可填充的可变宽度面，适合桑基图和 alluvial 流带。
+---
+
+`<Ribbon>` 画的是一个面，不是可变 `strokeWidth`。它和 `<Path>` 一样用 `<Step>` 描述中心线，但编译时会把中心线两侧按 `width` 偏移，生成一个闭合的 Path primitive，再用 `fill` 填充。
+
+这让 plot 的桑基图、alluvial 图或任何“起点宽、终点窄”的连接带可以复用 core 能力；SVG / Canvas renderer 不需要新增 primitive。
+
+## 用法
+
+```tsx
+import { Ribbon, Step } from '@retikz/react';
+```
+
+```tsx
+<Ribbon start={{ width: 32 }} end={{ width: 12 }} fill="#60a5fa">
+  <Step kind="move" to="source" />
+  <Step kind="cubic" control1={[80, 0]} control2={[160, 80]} to="target" />
+</Ribbon>
+```
+
+当你需要的是一条线、箭头、虚线或路径标签，继续用 `<Draw>` / `<Path>`。当视觉主体是有面积的流带，并且宽度要沿中心线变化时，用 `<Ribbon>`。
+
+## 组合
+
+`<Ribbon>` 必须包含 `<Step>` 子节点，且这些 step 要形成单条开放中心线。`cycle`、多次 `move` 形成的多子路径、零长度中心线都会在编译时报错。
+
+```tsx
+<Ribbon width={24}>
+  <Step kind="move" to={[-120, 0]} />
+  <Step kind="line" to={[120, 0]} />
+</Ribbon>
+```
+
+中心线只负责几何采样，不绘制出来；`stroke` / `strokeWidth` 描的是 ribbon 外轮廓，不是中心线。
+
+如果上下边界已经由布局算法算好，可以使用 `kind="boundary"`，把两条开放边界分别放进 `<Ribbon.Upper>` 与 `<Ribbon.Lower>`。这种模式不再需要 `width`。
+
+```tsx
+<Ribbon kind="boundary" fill="#bfdbfe">
+  <Ribbon.Upper>
+    <Step kind="move" to={[-120, -20]} />
+    <Step kind="curve" control={[0, -40]} to={[120, -10]} />
+  </Ribbon.Upper>
+  <Ribbon.Lower>
+    <Step kind="move" to={[-120, 20]} />
+    <Step kind="curve" control={[0, 48]} to={[120, 34]} />
+  </Ribbon.Lower>
+</Ribbon>
+```
+
+## 例子
+
+### 基础流带
+
+一条水平中心线，起点更宽、终点更窄。
+
+<ComponentPreview name="ribbon-basic" size="xs" />
+
+### 不同插值方式
+
+同一条中心线和同一组起止宽度，只切换 `interpolation`，观察宽度在中段如何过渡。
+
+<ComponentPreview name="ribbon-interpolation" size="md" />
+
+| 值 | 写法 | 区别 |
+| --- | --- | --- |
+| `linear` | `interpolation="linear"` | 宽度按 offset 匀速变化；中段宽度在起止宽度之间线性过渡。 |
+| `smooth` | `interpolation="smooth"` | 起点和终点附近变化更缓，中段过渡更柔和；仍只由 `start.width` 和 `end.width` 决定。 |
+| `step` | `width.kind="stops"`<br />`interpolation="step"` | 到下一个 stop 前保持上一段宽度，适合突然变宽或变窄；不用于顶层 `interpolation`。 |
+
+### 中间自定义宽度
+
+`width.kind="stops"` 可以让两端粗、中间细，或定义任意多段宽度变化。
+
+<ComponentPreview name="ribbon-width-stops" size="xs" />
+
+### 先直后曲
+
+中心线可以由多段 `<Step>` 组成；先用 `line` 保持一段平行方向，再接 `curve` 转向。
+
+<ComponentPreview name="ribbon-straight-curve" size="sm" />
+
+### 端点方向
+
+端点方向默认取起点到终点的连接方向；需要调整端面时，可以用角度、向量或 polar 写法覆盖。
+<ComponentPreview name="ribbon-direction" size="md" />
+
+### 对齐与端帽
+
+`align` 控制中心线落在流带中线、左边界或右边界；`start.cap` / `end.cap` 控制两端闭合形状。
+
+<ComponentPreview name="ribbon-align-cap" size="md" />
+
+| cap type | 作用 | 常见场景 |
+| --- | --- | --- |
+| `butt` | 直接用直线连接两侧边界，不额外延伸。 | 默认端面；流带贴齐矩形节点边界。 |
+| `round` | 以端点两侧中点为圆心自动画半圆端帽。 | 普通圆角端面，不需要手动指定圆心。 |
+| `square` | 沿端点切线向外延伸后再直线闭合。 | 希望端面比中心线更外伸，类似线条的 square cap。 |
+| `{ type: 'arc' }` | 用 `center` 和 `radius` 指定圆弧端帽，`sweep` 可选短弧或长弧。 | 桑基图贴合圆形/弧形节点边界，或需要自定义圆心的端面。 |
+
+### 显式边界
+
+当布局已经产出上下两条边界时，`kind="boundary"` 可以直接把两条路径 lower 为一个闭合面。
+
+<ComponentPreview name="ribbon-boundary" size="sm" />
+
+### 流带样式
+
+Ribbon 是闭合面，样式集中在 `fill`、外轮廓描边、透明度和阴影上。
+
+<ComponentPreview name="ribbon-style" size="md" />
+
+## 技术原理
+
+> 上手阶段可跳过本节；遇到边界 case 或想理解 Ribbon 为什么没有箭头、虚线时再回来读。
+
+### Lower 为闭合 Path
+
+编译器先把 `<Step>` 序列解析成一条开放中心线。不传 `samples` 时，固定宽度和 `start.width` / `end.width` 端点宽度会优先 lower 成结构化 Path command：边界仍是 `line` / `quad` / `cubic`，renderer 可以直接使用 SVG / Canvas 的原生路径能力。
+
+传入 `samples` / `sampling`，或使用 `width.kind="stops"`、注册 profile 这类沿途宽度规则时，编译器改为按截面采样：每个采样点根据切线求法线，`start.width` / `end.width` 或顶层 `width` 给出该点宽度，左右各偏移半宽，最后拼成折线闭合 path。采样也适合极紧曲线或暂未解析为精确 path 的 arc / ellipseArc。
+
+这样 renderer 看到的仍是普通闭合 path：`fill` 是带状面的填充，`stroke` 是外轮廓描边。Ribbon 第一版不支持 arrow、dash、marks、path label，因为这些都是中心线描边语义。
+
+### 自定义宽度 profile
+
+IR 不能保存函数；自定义变化规则通过 `width={{ kind: 'profile', name, params }}` 引用运行时 registry。宿主在 `<Layout ribbonWidthProfiles={...}>` 或 compile options 里注册 `defineRibbonWidthProfile(...)`，编译时按 offset 调用 `widthAt`。
+
+## API 参考
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `kind` | `'centerline' \| 'boundary'` | `'centerline'` | 构造模式；默认从中心线和 `width` 生成面，`boundary` 直接使用上下边界。 |
+| `start` | `{ width?, direction?, cap?: 'butt' \| 'round' \| 'square' \| { type: 'arc', center, radius, sweep? } }` | — | 起点局部配置：端点宽度、切线方向和端帽。 |
+| `end` | `{ width?, direction?, cap?: 'butt' \| 'round' \| 'square' \| { type: 'arc', center, radius, sweep? } }` | — | 终点局部配置：端点宽度、切线方向和端帽。 |
+| `interpolation` | `'linear' \| 'smooth'` | `'linear'` | `start.width` 到 `end.width` 的过渡曲线；只用于端点宽度 taper。 |
+| `width` | `number \| { kind: 'stops', stops, interpolation? } \| { kind: 'profile', name, params? }` | — | 整条中心线的宽度规则；固定宽度或中间自定义宽度使用它，不能和 `start.width` / `end.width` 同时使用。 |
+| `align` | `'center' \| 'left' \| 'right'` | `'center'` | 中心线相对流带的位置；`left` / `right` 让中心线成为一侧边界。 |
+| `samples` | `boolean \| number` | 自动 | 采样覆盖项；`true` 使用 64 个截面，数字使用指定截面数 `2..512`。不传时优先解析为结构化 path，遇到 `stops` / profile 等宽度规则会自动采样。 |
+| `sampling` | `{ kind: 'fixed', samples } \| { kind: 'adaptive', tolerance, maxSamples? }` | — | 显式采样策略；不能和 `samples` 同时使用。 |
+| `fill` | `string \| PaintSpec` | `currentColor` | Ribbon 面的填充，可用纯色、渐变、pattern、image。 |
+| `fillOpacity` | `number` | — | 只作用于填充的透明度。 |
+| `stroke` | `string \| PaintSpec` | — | 外轮廓描边颜色；省略时不描边。 |
+| `strokeWidth` | `number` | — | 外轮廓描边宽度；只设置它时描边颜色为 `currentColor`。 |
+| `drawOpacity` | `number` | — | 外轮廓描边透明度。 |
+| `opacity` | `number` | — | 整个 ribbon 的透明度。 |
+| `shadow` | `ShadowPreset \| DropShadow` | — | 编译后闭合 path 的阴影。 |
+| `blendMode` | `BlendMode` | — | 编译后闭合 path 的混合模式。 |
+| `zIndex` | `number` | — | 同层子节点的显式栈序。 |
+| `children` | `Array<Step>` | — | 中心线模式的开放 step 序列，至少 2 个。 |
+| `upper` / `lower` | `Array<Step>` | — | `boundary` 模式的上下开放边界；React DSL 对应 `<Ribbon.Upper>` / `<Ribbon.Lower>`。 |
+
+## 相关
+
+- [Path](/kernel/components/draw/path)：需要画线、箭头、虚线或路径标签时使用。
+- [Step](/kernel/components/draw/step)：Ribbon 中心线复用同一套 step 语义。
+- [Draw](/kernel/components/draw/overview)：日常连线的 Sugar 写法。
