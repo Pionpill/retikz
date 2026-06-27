@@ -1,0 +1,67 @@
+---
+title: Row Annotations
+description: Row annotations keep every detail row while adding fields derived from groups, row order, or statistical context.
+---
+
+Row annotations are for charts that still draw detail rows, but each row needs more context. They do not collapse many rows into one row and they do not discard source rows; the output can still feed points, paths, intervals, or custom marks directly.
+
+| kind | Row count | Common output |
+| --- | --- | --- |
+| `stack` | N → N | `y0` / `y1` |
+| `normalize` | N → N | A ratio field, or the original field overwritten |
+| `annotate` | N → N | Group mean, median, extrema, or other statistic fields |
+
+## Stack
+
+`stack` accumulates values within each `x` group and series, adding a lower and upper bound to every row. By default it writes `y0` / `y1`, which `IntervalMark` can consume as an extent.
+
+<ComponentPreview name="transform-stack" sourceFiles={['transform-stack.data.ts']} />
+
+The automatic stack used by `<IntervalMark stack>` / `<IntervalMark angle>` is only a shortcut. When an equivalent explicit `stack` already exists in the pipeline, the shortcut is suppressed to avoid stacking twice.
+
+| prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `x` | `string?` | Single group | Group key; rows with the same value accumulate together |
+| `y` | `string` | — | Numeric field to accumulate |
+| `groupBy` | `string?` | Row order | Series field; first appearance decides segment order |
+| `startField` / `endField` | `string?` | `y0` / `y1` | Output bound fields |
+
+## Normalize
+
+`normalize` divides each row's value by the total of its group. `basis` can be `fraction` (0 to 1) or `percent` (0 to 100); when `as` is omitted, the input field is overwritten.
+
+<ComponentPreview name="transform-normalize" sourceFiles={['transform-normalize.data.ts']} />
+
+Normalize plus stack is a percentage stack: first convert each group to shares, then stack those shares.
+
+| prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `field` | `string` | — | Numeric field to convert to a share |
+| `groupBy` | `Array<string>?` | One global group | Grouping keys; composite keys are supported |
+| `basis` | `'fraction' \| 'percent'?` | `'fraction'` | Output scale |
+| `as` | `string?` | Overwrite input | Output field name |
+
+## Annotate
+
+`annotate` groups rows, computes reducer metrics or selector-picked representative values, and broadcasts those fields back onto every row in the group. Use it when detail rows need group-level context such as mean lines, median bands, or threshold overlays.
+
+<ComponentPreview name="transform-annotate" sourceFiles={['transform-annotate.data.ts']} />
+
+The example writes each store's average revenue into `storeMean`. Points still draw the raw `revenue`; the path reads the broadcast mean.
+
+| prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `groupBy` | `Array<string>?` | One global group | Grouping keys; composite keys are supported |
+| `metrics` | `Array<Reducer>?` | — | Statistic fields broadcast to every row |
+| `selectors` | `Array<{ selector: Selector; as: string }>?` | — | Representative values broadcast to every row; `min` / `max` / `top` / `bottom` read the selector's `by` field, while other selectors broadcast the selected rank |
+
+Common reducer / selector form:
+
+```tsx
+<Transform
+  kind="annotate"
+  groupBy={['store']}
+  metrics={[{ op: 'mean', field: 'revenue', as: 'storeMean' }]}
+  selectors={[{ selector: { op: 'max', by: 'revenue' }, as: 'storeMax' }]}
+/>
+```

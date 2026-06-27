@@ -1,15 +1,12 @@
 import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, JsonObjectSchema, defineComposite } from '@retikz/core';
-import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type Mark, type MarkOperation, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, isBuiltinMark } from '../schemas';
-import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyFieldResolver, applyTransforms, assertAllValuesValid, assertBaselineScaleCompatible, assertScaleFieldCompatible, channelKindsForMark, channelValue, collectFormatFields, createPositionChannelDefinitions, deriveScale, lowerMark, makeColorSchemeResolver, normalizeRows, orderedCategoryDomain, resolveChannelRegistry, resolveCoordinateRegistry, resolveFieldPath, resolveFieldTypes, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkChannels, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, scaleTicks, validateBoundData } from '../providers';
+import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type MarkOperation, PathClosureKind, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, type TransformOperation, isBuiltinMark } from '../schemas';
+import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, DEFAULT_TRANSFORM_CONTEXT, type ScaleDescriptor, applyFieldResolver, applyTransforms, assertAllValuesValid, assertBaselineScaleCompatible, assertScaleFieldCompatible, buildProportionalIntervals, channelKindsForMark, channelValue, collectFormatFields, createPositionChannelDefinitions, deriveScale, lowerMark, makeColorSchemeResolver, normalizeRows, orderedCategoryDomain, proportionalIntervalDomainValues, resolveChannelRegistry, resolveCoordinateRegistry, resolveFieldPath, resolveFieldTypes, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkChannels, resolveMarkRegistry, resolvePositionScale, resolveRowSelectorRegistry, resolveScaleRegistry, resolveSqrtScale, resolveStatReducerRegistry, resolveTransformRegistry, scaleTicks, validateBoundData } from '../providers';
 import { type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../features';
-import { type AnyChannelDefinition, type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, type ResolveField, type ResolveLabel, isBuiltinScaleOperation } from '../contract';
+import { type AnchorIdGenerator, type AnyChannelDefinition, type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyRowSelectorDefinition, type AnyScaleDefinition, type AnyStatReducerDefinition, type AnyTransformDefinition, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, type ResolveField, type ResolveLabel, type TickSet, type TransformContext, isBuiltinScaleOperation } from '../contract';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect } from './layout';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
+import { createAnchorRegistry } from './anchors';
 import { collectSourceFields } from './source-fields';
-
-/** link 的 target 端通道（source 端走 x/yChannelOf；两端都须纳入位置 scale 域，否则 target 投影越界） */
-const linkTargetChannelOf = (mark: Mark, role: 'x' | 'y'): Channel | undefined =>
-  mark.type === PlotMark.Link ? (role === 'x' ? mark.target.x : mark.target.y) : undefined;
 
 /**
  * interval mark 在某位置 role 对 scale 域的贡献值（按 bounds 来源）
@@ -19,6 +16,7 @@ const linkTargetChannelOf = (mark: Mark, role: 'x' | 'y'): Channel | undefined =
 const intervalRoleValues = (mark: IntervalMark, axis: 'primary' | 'secondary', pick: (mark: MarkOperation) => Channel | undefined, rows: Array<ExternalRow>): Array<unknown> => {
   const bound = resolveIntervalBound(mark, axis === 'primary' ? 'x' : 'y');
   if (bound.kind === IntervalBoundKind.Extent) return rows.flatMap(row => [resolveFieldPath(row, bound.from), resolveFieldPath(row, bound.to)]);
+  if (bound.kind === IntervalBoundKind.Proportional) return proportionalIntervalDomainValues(bound.field, rows);
   if (bound.kind === IntervalBoundKind.Full) return [];
   const channel = pick(mark);
   if (channel === undefined) return [];
@@ -28,12 +26,54 @@ const intervalRoleValues = (mark: IntervalMark, axis: 'primary' | 'secondary', p
 /** interval mark 在某 role 是否需把 baseline 0 纳入连续域（span / extent 值轴含 0；band / full 不需） */
 const intervalContributesBaseline = (mark: IntervalMark, axis: 'primary' | 'secondary'): boolean => {
   const bound = resolveIntervalBound(mark, axis === 'primary' ? 'x' : 'y');
-  return bound.kind === IntervalBoundKind.Span || bound.kind === IntervalBoundKind.Extent;
+  return bound.kind === IntervalBoundKind.Span || bound.kind === IntervalBoundKind.Extent || bound.kind === IntervalBoundKind.Proportional;
+};
+
+const intervalBoundConsumesRoleChannel = (mark: IntervalMark, role: DimensionRole): boolean => {
+  const bound = resolveIntervalBound(mark, role);
+  return bound.kind === IntervalBoundKind.Band || bound.kind === IntervalBoundKind.Span;
+};
+
+const intervalProportionalAxisTicks = (mark: IntervalMark, role: DimensionRole, rows: Array<ExternalRow>): TickSet | undefined => {
+  const bound = resolveIntervalBound(mark, role);
+  if (bound.kind !== IntervalBoundKind.Proportional) return undefined;
+  const channel = (mark.encoding as Record<string, Channel | undefined>)[role];
+  if (channel?.field === undefined) return undefined;
+  const intervals = buildProportionalIntervals(bound.field, rows);
+  const values: TickSet['values'] = [];
+  const labels: TickSet['labels'] = [];
+  for (const row of rows) {
+    const interval = intervals.get(row);
+    if (interval === undefined) continue;
+    const center = (interval[0] + interval[1]) / 2;
+    if (!Number.isFinite(center)) continue;
+    values.push(center);
+    const label = channelValue(channel, row);
+    labels.push(label === null || label === undefined ? '' : String(label));
+  }
+  return values.length > 0 ? { values, labels } : undefined;
 };
 
 const defaultColorOf = (node: PlotSpec, markIndex: number): string => {
   const colors = node.colors ?? DEFAULT_PLOT_COLORS;
   return colors[markIndex % colors.length];
+};
+
+export type MarkDataView = {
+  mark: MarkOperation;
+  rows: Array<ExternalRow>;
+};
+
+const relationTargetRoleValues = (mark: MarkOperation, role: DimensionRole, rows: Array<ExternalRow>): Array<unknown> => {
+  if (!isBuiltinMark(mark) || mark.type !== PlotMark.Relation) return [];
+  const refs = [
+    mark.source,
+    mark.target,
+    ...(mark.via ?? []),
+    ...(mark.route ?? []).flatMap(step => (step.to === undefined ? [] : [step.to])),
+  ];
+  const fields = refs.flatMap(ref => ('project' in ref && Object.prototype.hasOwnProperty.call(ref.project, role) ? [ref.project[role]] : []));
+  return fields.flatMap(field => rows.map(row => resolveFieldPath(row, field)));
 };
 
 /** 读 mark 的 encoding（内置与自定义共享 EncodingSchema 形态）；自定义 mark 缺 encoding 时 undefined。 */
@@ -54,7 +94,7 @@ const NON_POSITION_ENCODING_KEYS = new Set<string>(['color', 'text', 'channels']
 const assertKnownPositionEncodingRoles = (coordinateType: string, roles: ReadonlyArray<DimensionRole>, marks: ReadonlyArray<MarkOperation>): void => {
   const roleSet = new Set<string>(roles);
   for (const mark of marks) {
-    if (!isBuiltinMark(mark) || mark.type === PlotMark.Link) continue;
+    if (!isBuiltinMark(mark)) continue;
     const encoding = markEncoding(mark);
     if (encoding === undefined) continue;
     for (const key of Object.keys(encoding)) {
@@ -89,22 +129,19 @@ const assertRequiredPositionChannels = (coordinateType: string, roles: ReadonlyA
     // 自定义 mark：必填位置通道由其 MarkDefinition.lower 自行 fail-loud，不在通用校验内强制
     if (!isBuiltinMark(mark)) continue;
     // reference 取向由 encoding.x XOR y 决定（绑一个、缺一个）；其取向校验在 lowerReference fail-loud
-    if (mark.type === PlotMark.Reference) continue;
-    // link 位置来自 source / target 字段对（非 encoding.x/y）；端点缺失校验在 lowerLink fail-loud
-    if (mark.type === PlotMark.Link) continue;
+    if (mark.type === PlotMark.Reference || mark.type === PlotMark.Relation) continue;
     // interval：band / span bounds 需对应 encoding 位置通道；extent（字段区间）/ full（满域）从字段 / 坐标系取位置，豁免该角色
     if (mark.type === PlotMark.Interval) {
       const encoding = mark.encoding as Record<string, Channel | undefined>;
       for (const channel of required) {
-        const bound = resolveIntervalBound(mark, channel);
-        if (bound.kind === IntervalBoundKind.Extent || bound.kind === IntervalBoundKind.Full) continue;
+        if (!intervalBoundConsumesRoleChannel(mark, channel)) continue;
         if (encoding[channel] === undefined) {
           throw new Error(`lowerPlots: ${coordinateType} coordinate system requires the "${channel}" position channel on ${mark.type} marks, but it is missing`);
         }
       }
       continue;
     }
-    // point / path / region：所有必填位置角色都要对应 encoding 通道
+    // point / path：所有必填位置角色都要对应 encoding 通道
     const encoding = mark.encoding as Record<string, Channel | undefined>;
     for (const channel of required) {
       if (encoding[channel] === undefined) {
@@ -134,6 +171,8 @@ export type LowerPlotsOptions = {
   datumProvenance?: boolean;
   /** 数据属性名：把该字段值绑成 `<plotId>.datum.<值>` 的 Node.id（opt-in 可连接；缺字段 / 重复值 fail loud） */
   datumIdField?: string;
+  /** Runtime-only functions referenced by AnchorIdSpec.generator; PlotSpec stores only generator keys. */
+  anchorIdGenerators?: Record<string, AnchorIdGenerator>;
   /** 逻辑字段 → 物理数据路径映射（按数据集 reference 键，不进 IR）；需 data.model；缺省恒等 */
   fieldMaps?: Record<string, Record<string, string>>;
   /** 抽样校验绑定数据（字段缺失 / 不可强制 → fail-loud）；默认关、不 warn */
@@ -162,6 +201,16 @@ export type LowerPlotsOptions = {
    * @description 内置 transform 恒可用；自定义 kind 未注册 / kind 冲突会 fail-loud，避免静默跳过结构性数据变换。
    */
   transformDefinitions?: Array<AnyTransformDefinition>;
+  /**
+   * 自定义统计 reducer definition 数组（运行时函数，不进 IR）：summarize / annotate / bin 的 `{op:<customOp>, ...config}` 据此校验并规约。
+   * @description 内置 reducer 恒可用；自定义 op 未注册 / op 冲突会 fail-loud。
+   */
+  statReducerDefinitions?: Array<AnyStatReducerDefinition>;
+  /**
+   * 自定义 row selector definition 数组（运行时函数，不进 IR）：select / annotate / relate 的 `{op:<customOp>, ...config}` 据此校验并选择代表行。
+   * @description 内置 selector 恒可用；自定义 op 未注册 / op 冲突会 fail-loud。
+   */
+  rowSelectorDefinitions?: Array<AnyRowSelectorDefinition>;
   /**
    * 自定义 scale definition 数组（运行时函数，不进 IR）：spec.scales 的 `{type:<customType>, name, ...config}` 据此校验并解析。
    * @description 内置 13 个 scale 恒可用；自定义 type 未注册 / type 冲突会 fail-loud。position 族喂 coordinate 投影 + guide，channel 族喂 color 通道 + legend。
@@ -223,6 +272,8 @@ export type ResolveFrameParams = {
   coordinates?: Array<AnyCoordinateDefinition>;
   /** scale registry（内置 13 + 自定义 scaleDefinitions）；position 投影 / channel 取色 / compat 共用单一真源，保 locator parity */
   scaleRegistry: Map<string, AnyScaleDefinition>;
+  /** 每个 mark 实际使用的数据视图；普通 mark 用全图 rows，relation 可使用 mark-scoped transform rows。 */
+  markDataViews?: Array<MarkDataView>;
 };
 
 /**
@@ -232,6 +283,7 @@ export type ResolveFrameParams = {
  */
 export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolution => {
   const { node, rows, fieldTypes, width, height, fontSize, margin, provenance, coordinates, scaleRegistry } = params;
+  const markDataViews = params.markDataViews ?? node.marks.map(mark => ({ mark, rows }));
   const coordinateOperation = node.coordinate;
   const coordinateRegistry = resolveCoordinateRegistry(coordinates);
   const coordinateDefinition = coordinateRegistry.get(coordinateOperation.type);
@@ -252,48 +304,66 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   //   连续 scale 内部过滤为有限数求 extent、分类 scale 按数据序去重推断 domain。
   // role 决定从哪个通道取值：cartesian 用 x/y；polar 用 angle??x / radius??y（mark 不写死笛卡尔）。
   const collectValues = (
+    role: DimensionRole,
     axis: 'primary' | 'secondary' | undefined,
     pick: (mark: MarkOperation) => Channel | undefined,
     includeBaseline: boolean,
-    ribbonRole?: 'x' | 'y',
   ): Array<unknown> => {
     const out: Array<unknown> = [];
-    for (const mark of node.marks) {
+    for (const { mark, rows: markRows } of markDataViews) {
+      out.push(...relationTargetRoleValues(mark, role, markRows));
       // interval：域贡献按 bounds 来源（band/span → 位置通道值、extent → 两字段、full → 不贡献），统一替代旧 histogram / stack / sector 特判
       if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && axis !== undefined) {
-        out.push(...intervalRoleValues(mark, axis, pick, rows));
-        continue;
-      }
-      // link 两端都进位置 scale 域：source 端走 pick（= source.x/y），target 端单独收（否则 target 投影越界）
-      if (ribbonRole !== undefined && isBuiltinMark(mark) && mark.type === PlotMark.Link) {
-        const sourceChannel = pick(mark);
-        const targetChannel = linkTargetChannelOf(mark, ribbonRole);
-        for (const row of rows) {
-          if (sourceChannel !== undefined) out.push(channelValue(sourceChannel, row));
-          if (targetChannel !== undefined) out.push(channelValue(targetChannel, row));
-        }
+        out.push(...intervalRoleValues(mark, axis, pick, markRows));
         continue;
       }
       const channel = pick(mark);
       if (channel === undefined) continue;
-      for (const row of rows) {
+      for (const row of markRows) {
         out.push(channelValue(channel, row));
       }
     }
-    // 值轴从 baseline 起：interval span / extent + region 把 baseline 纳入连续域（即便所有值同号）
+    // 值轴从 baseline 起：interval span / extent 按实际 role 纳入 0；path closure 仍由调用方显式请求。
+    if (axis !== undefined && node.marks.some(mark => isBuiltinMark(mark) && mark.type === PlotMark.Interval && intervalContributesBaseline(mark, axis))) out.push(0);
     if (includeBaseline) {
-      if (axis !== undefined && node.marks.some(mark => isBuiltinMark(mark) && mark.type === PlotMark.Interval && intervalContributesBaseline(mark, axis))) out.push(0);
       for (const mark of node.marks) {
-        if (isBuiltinMark(mark) && mark.type === PlotMark.Region) out.push(mark.baseline ?? 0);
+        if (isBuiltinMark(mark) && mark.type === PlotMark.Path) {
+          if (mark.closure?.kind === PathClosureKind.Baseline) {
+            out.push(mark.closure.baseline ?? 0);
+          } else if (mark.closure?.kind === PathClosureKind.Stack) {
+            const markRows = markDataViews.find(view => view.mark === mark)?.rows ?? rows;
+            for (const row of markRows) out.push(resolveFieldPath(row, mark.closure.baselineField));
+          }
+        }
       }
     }
     return out;
   };
 
+  const collectAxisTicks = (role: DimensionRole): TickSet | undefined => {
+    const hasRegularRoleTicks = node.marks.some(mark => {
+      const channel = markEncoding(mark)?.[role];
+      if (channel === undefined) return false;
+      return !(isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role));
+    });
+    if (hasRegularRoleTicks) return undefined;
+    const values: TickSet['values'] = [];
+    const labels: TickSet['labels'] = [];
+    for (const { mark, rows: markRows } of markDataViews) {
+      if (!isBuiltinMark(mark) || mark.type !== PlotMark.Interval) continue;
+      const ticks = intervalProportionalAxisTicks(mark, role, markRows);
+      if (ticks === undefined) continue;
+      values.push(...ticks.values);
+      labels.push(...ticks.labels);
+    }
+    return values.length > 0 ? { values, labels } : undefined;
+  };
+
   // 某角色（跨所有 mark）绑定字段的全部类型——多 mark 共用一角色时须校验 / 派生全部，不能只看首个
-  const roleFieldTypes = (pick: (mark: MarkOperation) => Channel | undefined): Array<PlotFieldTypeValue> => {
+  const roleFieldTypes = (role: DimensionRole, pick: (mark: MarkOperation) => Channel | undefined): Array<PlotFieldTypeValue> => {
     const types: Array<PlotFieldTypeValue> = [];
     for (const mark of node.marks) {
+      if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role)) continue;
       const channel = pick(mark);
       if (channel?.field === undefined) continue;
       const type = fieldTypes.get(channel.field);
@@ -313,9 +383,10 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
    * @description 收集该 role 各绑定字段的非默认 order（!=='data'）：非分类字段配 order → throw；
    *   ≥2 个不同非默认 order → throw；恰好 1 个 → 返回它；0 个 → undefined（保持现状出现序）。
    */
-  const resolveRoleOrder = (role: string, pick: (mark: MarkOperation) => Channel | undefined): CategoryOrder | undefined => {
+  const resolveRoleOrder = (role: DimensionRole, pick: (mark: MarkOperation) => Channel | undefined): CategoryOrder | undefined => {
     const found: Array<CategoryOrder> = [];
     for (const mark of node.marks) {
+      if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role)) continue;
       const channel = pick(mark);
       if (channel?.field === undefined) continue;
       const order = fieldOrders.get(channel.field);
@@ -337,7 +408,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   // 解析角色 scale（ADR-03）：显式绑定 → 查表（未声明仍抛，typo 守卫）+ 对该 role **全部**字段做兼容校验；
   //   省略 → 按字段类型派生（要求该 role 字段类型一致，混类型 fail-loud）。兼容校验只对「声明 model 的类型」生效。
   const resolveScaleForRole = (role: DimensionRole, scaleName: string | undefined, pick: (mark: MarkOperation) => Channel | undefined, values: Array<unknown>): ScaleOperation => {
-    const types = roleFieldTypes(pick);
+    const types = roleFieldTypes(role, pick);
     // 解析该 role 有效 order（含「非分类配 order」「冲突 order」两道 fail-loud），无论 scale 显式与否都先校验
     const order = resolveRoleOrder(role, pick);
     let def: ScaleOperation;
@@ -362,16 +433,16 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     return def;
   };
 
-  const roleChannelOf = (role: DimensionRole, includeLinkSource = false) => {
+  const roleChannelOf = (role: DimensionRole) => {
     const def = positionChannels.get(role);
     if (def === undefined) {
       throw new Error(`lowerPlots: ${coordinateOperation.type} coordinate system does not support encoding role "${role}" (valid roles: ${roles.join(', ')})`);
     }
-    return def.pickWithOptions({ includeLinkSource });
+    return def.pickWithOptions();
   };
 
-  const resolveScaleForDefinitionRole = (role: DimensionRole, scaleName: string | undefined, values: Array<unknown>, opts?: { includeLinkSource?: boolean }): ScaleOperation =>
-    resolveScaleForRole(role, scaleName, roleChannelOf(role, opts?.includeLinkSource ?? false), values);
+  const resolveScaleForDefinitionRole = (role: DimensionRole, scaleName: string | undefined, values: Array<unknown>): ScaleOperation =>
+    resolveScaleForRole(role, scaleName, roleChannelOf(role), values);
 
   // legend 预留：按 position 在对应边让出带宽，plotArea 据此收窄（决策 ⑩）
   const legendReserve = legendReserveOf((node.guides ?? []).filter(isLegendGuide));
@@ -386,14 +457,15 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     ...(margin !== undefined ? { margin } : {}),
     legendReserve,
     ...(provenance !== undefined ? { provenance } : {}),
-    collectRoleValues: (role, opts) => collectValues(undefined, roleChannelOf(role), opts?.includeBaseline ?? false),
+    collectRoleValues: (role, opts) => collectValues(role, undefined, roleChannelOf(role), opts?.includeBaseline ?? false),
     collectPositionValues: (role, opts) =>
       collectValues(
+        role,
         opts?.axis,
-        roleChannelOf(role, opts?.includeLinkSource ?? false),
+        roleChannelOf(role),
         opts?.includeBaseline ?? false,
-        opts?.includeLinkTargets === true && (role === 'x' || role === 'y') ? role : undefined,
       ),
+    collectAxisTicks,
     resolveScaleForRole: resolveScaleForDefinitionRole,
     buildPositionScale: (def, values, range) => resolvePositionScale(def, values, [range[0], range[1]], scaleRegistry),
     assertBaselineScaleCompatible: (scaleType, marks) => assertBaselineScaleCompatible(scaleType, marks, scaleRegistry),
@@ -421,13 +493,20 @@ const collectChannelDescriptors = (
   channelCtx: { node: PlotSpec; rows: Array<ExternalRow>; fieldTypes: PlotFieldTypeMap; scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>; resolveColorScheme: (name: string) => (t: number) => string },
   channelRegistry: ReadonlyMap<string, AnyChannelDefinition>,
   markRegistry: ReadonlyMap<string, AnyMarkDefinition>,
+  markDataViews?: ReadonlyArray<MarkDataView>,
 ): Array<ScaleDescriptor> => {
   const out: Array<ScaleDescriptor> = [];
   const register = (descriptor: ScaleDescriptor | undefined): void => {
     if (descriptor) out.push(descriptor);
   };
-  for (const mark of node.marks) {
-    const markChannels = resolveMarkChannels(mark, channelCtx, channelRegistry, DEFAULT_PLOT_COLORS[0], channelKindsForMark(mark, markRegistry));
+  for (const view of markDataViews ?? node.marks.map(mark => ({ mark, rows: channelCtx.rows }))) {
+    const markChannels = resolveMarkChannels(
+      view.mark,
+      { ...channelCtx, rows: view.rows },
+      channelRegistry,
+      DEFAULT_PLOT_COLORS[0],
+      channelKindsForMark(view.mark, markRegistry),
+    );
     for (const descriptor of markChannels.descriptors ?? []) register(descriptor);
   }
   return out;
@@ -653,6 +732,17 @@ const buildLegendLayers = (
   });
 };
 
+const resolveMarkRows = (
+  mark: MarkOperation,
+  rows: Array<ExternalRow>,
+  transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
+  transformContext: TransformContext,
+): Array<ExternalRow> => {
+  const transform = (mark as { transform?: Array<TransformOperation> }).transform;
+  if (transform === undefined) return rows;
+  return applyTransforms(rows, transform, transformRegistry, transformContext);
+};
+
 /**
  * 校验 fieldMaps（fail-loud）：ref∈datasets；本 plot 的 map 需 model + 逻辑名∈model
  * @description 抽出供 expandPlot 与 createPlotLocator 共用，保证「render 抛错 ⟺ locator 抛错」的 parity（评审 P2）
@@ -686,12 +776,17 @@ export const prepareRows = (
   datasets: ExternalDatasets,
   options: LowerPlotsOptions,
   ingested: Array<ExternalRow>,
-): { fieldTypes: PlotFieldTypeMap; normalized: Array<ExternalRow>; transformRegistry: Map<string, AnyTransformDefinition>; scaleRegistry: Map<string, AnyScaleDefinition>; markRegistry: Map<string, AnyMarkDefinition> } => {
+): { fieldTypes: PlotFieldTypeMap; normalized: Array<ExternalRow>; transformRegistry: Map<string, AnyTransformDefinition>; transformContext: TransformContext; scaleRegistry: Map<string, AnyScaleDefinition>; markRegistry: Map<string, AnyMarkDefinition> } => {
   validateFieldMaps(spec, datasets, options.fieldMaps);
   const transformRegistry = resolveTransformRegistry(options.transformDefinitions);
+  const transformContext: TransformContext = {
+    ...DEFAULT_TRANSFORM_CONTEXT,
+    statReducerRegistry: resolveStatReducerRegistry(options.statReducerDefinitions),
+    rowSelectorRegistry: resolveRowSelectorRegistry(options.rowSelectorDefinitions),
+  };
   const scaleRegistry = resolveScaleRegistry(options.scaleDefinitions);
   const markRegistry = resolveMarkRegistry(options.markDefinitions);
-  const userSourceFields = collectSourceFields(spec, transformRegistry, markRegistry);
+  const userSourceFields = collectSourceFields(spec, transformRegistry, markRegistry, transformContext);
   // strict + 声明/推断（ADR-01/05）；strict 在 applyFieldResolver 之前先校验，resolver 不绕过（ADR-04）
   const baseTypes = resolveFieldTypes(spec.data.model, ingested, userSourceFields);
   const fieldMap = options.fieldMaps?.[spec.data.reference];
@@ -713,7 +808,7 @@ export const prepareRows = (
   // 恒归一化（ADR-08 去门控）：无论有无 model / resolver 命中，总按解析出的 fieldTypes 跑 normalizeRows
   //   →下游统一读 canonical、无第二处 coerce。干净数据产物与旧门控路径逐字段等价。
   const normalized = normalizeRows(ingested, fieldTypes, fieldMap, parsers);
-  return { fieldTypes, normalized, transformRegistry, scaleRegistry, markRegistry };
+  return { fieldTypes, normalized, transformRegistry, transformContext, scaleRegistry, markRegistry };
 };
 
 /**
@@ -754,7 +849,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
   // ADR-01/02/08：fieldMaps 校验 + 用户源字段类型解析（strict）+ ingest 恒归一化。与 locator 共用 prepareRows 保 parity。
   // 类型 Map 是 type-driven scale（ADR-03）/ coercion 的单一真源；归一化置于 transform 前、无论有无 model 都跑（恒 canonical）。
-  const { fieldTypes, normalized, transformRegistry, scaleRegistry, markRegistry } = prepareRows(node, datasets, options, ingested);
+  const { fieldTypes, normalized, transformRegistry, transformContext, scaleRegistry, markRegistry } = prepareRows(node, datasets, options, ingested);
   // scheme 解析器：内置 scheme + options.colorSchemes；channel scale 取色 / legend ramp 共用。
   const resolveColorScheme = makeColorSchemeResolver(options.colorSchemes);
   if (options.validateData) {
@@ -767,7 +862,11 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     assertAllValuesValid(normalized, fieldTypes);
   }
 
-  const rows = applyTransforms(normalized, node.transform, transformRegistry);
+  const rows = applyTransforms(normalized, node.transform, transformRegistry, transformContext);
+  const markDataViews: Array<MarkDataView> = node.marks.map(mark => ({
+    mark,
+    rows: resolveMarkRows(mark, rows, transformRegistry, transformContext),
+  }));
 
   const { frame, gridLayers, axisLayers, plotArea } = resolveFrame({
     node,
@@ -780,6 +879,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     provenance,
     coordinates: options.coordinates,
     scaleRegistry,
+    markDataViews,
   });
 
   const channelCtx = { node, rows, fieldTypes, scaleRegistry, resolveColorScheme };
@@ -795,28 +895,36 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     provenance && provenance.datumIdField !== undefined && provenance.plotId !== undefined
       ? createDatumIdRegistrar(provenance.datumIdField, provenance.plotId)
       : undefined;
+  const anchorRegistry = createAnchorRegistry({ plotId: node.id, generators: options.anchorIdGenerators });
 
   // 每个 mark 下沉成一个图层 Scope（样式上提到 nodeDefault/pathDefault）；空图层（无可绘制点）丢弃
   // provenance 开 → 传 markProvenance（plotId / markIndex / datum 开关 + 共享 registerDatumId），各层 / datum 绑 id + 来源 meta
   const markLayers: Array<IRChild> = node.marks
     .map((mark, markIndex) => {
+      const markRows = markDataViews[markIndex]?.rows ?? rows;
       return lowerMark(
         mark,
-        rows,
+        markRows,
         frame,
-        resolveMarkChannels(mark, channelCtx, channelRegistry, defaultColorOf(node, markIndex), channelKindsForMark(mark, markRegistry)),
-        provenance ? { context: provenance, markIndex, registerDatumId } : undefined,
+        resolveMarkChannels(mark, { ...channelCtx, rows: markRows }, channelRegistry, defaultColorOf(node, markIndex), channelKindsForMark(mark, markRegistry)),
+        {
+          markIndex,
+          plotId: node.id,
+          ...(provenance !== undefined ? { provenance: { context: provenance, markIndex, registerDatumId } } : {}),
+          anchors: anchorRegistry,
+        },
         markRegistry,
       );
     })
     .filter((layer): layer is IRChild => layer !== null);
+  anchorRegistry.assertResolved();
 
   // legend（ADR-03）：收 legend guide → 据通道 + scale 类型选形态下沉成独立 scope，落 position 预留带。
   // 占位（band 计算 / plotArea 收窄）见 reserveLegendBands；fail-loud（多 scale 未消歧 / scale 不存在）在 buildLegendLayers 内。
   const legendGuides = (node.guides ?? []).filter(isLegendGuide);
   const legendLayers: Array<IRScope> = [];
   if (legendGuides.length > 0) {
-    const channelDescriptors = collectChannelDescriptors(node, channelCtx, channelRegistry, markRegistry);
+    const channelDescriptors = collectChannelDescriptors(node, channelCtx, channelRegistry, markRegistry, markDataViews);
     const bands = reserveLegendBands(legendGuides, width, height, plotArea);
     legendLayers.push(...buildLegendLayers(node, channelDescriptors, legendGuides, options.fontSize ?? DEFAULT_FONT_SIZE, bands, scaleRegistry));
   }

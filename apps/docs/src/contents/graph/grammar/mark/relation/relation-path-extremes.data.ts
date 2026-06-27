@@ -1,0 +1,23 @@
+/** A 20-point trend line; RelationMark derives the min-to-max relation from these rows. */
+export const pathExtremeRelations: Array<Record<string, string | number>> = [
+  { id: 'm01', order: 1, x: 1, y: 42 },
+  { id: 'm02', order: 2, x: 2, y: 38 },
+  { id: 'm03', order: 3, x: 3, y: 44 },
+  { id: 'm04', order: 4, x: 4, y: 47 },
+  { id: 'm05', order: 5, x: 5, y: 40 },
+  { id: 'm06', order: 6, x: 6, y: 35 },
+  { id: 'm07', order: 7, x: 7, y: 39 },
+  { id: 'm08', order: 8, x: 8, y: 45 },
+  { id: 'm09', order: 9, x: 9, y: 52 },
+  { id: 'm10', order: 10, x: 10, y: 58 },
+  { id: 'm11', order: 11, x: 11, y: 61 },
+  { id: 'm12', order: 12, x: 12, y: 67 },
+  { id: 'm13', order: 13, x: 13, y: 64 },
+  { id: 'm14', order: 14, x: 14, y: 72 },
+  { id: 'm15', order: 15, x: 15, y: 76 },
+  { id: 'm16', order: 16, x: 16, y: 81 },
+  { id: 'm17', order: 17, x: 17, y: 88 },
+  { id: 'm18', order: 18, x: 18, y: 84 },
+  { id: 'm19', order: 19, x: 19, y: 91 },
+  { id: 'm20', order: 20, x: 20, y: 96 },
+];

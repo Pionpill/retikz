@@ -13,6 +13,8 @@ export type TickSet = { values: Array<ScalarValue>; labels: Array<string> };
 export type PositionScale = {
   /** 数据值 → 坐标（连续=scale(value)；band=band 中心；point=点位）；非法值返回 NaN，调用方据此跳过 */
   coordinate: (value: unknown) => number;
+  /** 当前输入域；连续 scale 返回 [min, max]，分类 scale 返回类别序列。 */
+  domain: () => ReadonlyArray<ScalarValue>;
   /** band 宽（连续 / point = 0；band = scale.bandwidth()）；getter 反映 setRange 后的最新值 */
   readonly bandwidth: number;
   /** 刻度 + 标签（连续走 scaleTicks；band / point = 每类别一刻度，落 band 中心 / 点位） */

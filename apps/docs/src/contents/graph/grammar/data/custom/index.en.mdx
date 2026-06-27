@@ -1,0 +1,51 @@
+---
+title: Custom Data
+description: Centralize data-layer runtime extensions: custom field formats and field resolvers.
+---
+
+The data layer has two extension styles. Some extensions still persist with the PlotSpec, such as named `format` values. Others are runtime functions, such as `resolveField`. Use the first when the config should serialize well; use the second when the behavior belongs to application code.
+
+| Case | Recommended Entry | Enters IR |
+| --- | --- | --- |
+| Reusable field format | `defineFieldFormat` + `formatDefinitions` | Yes, only the format name |
+| Arbitrary field parsing | `resolveField` | No, runtime function only |
+
+## Custom Named Formats
+
+Beyond the built-in `format` vocabulary, common reusable formats such as currency strings, regional dates, or unit-suffixed numbers like `'1.2万'` can be registered with `defineFieldFormat`. The `model` still stores only a format-name string; the parser lives in a runtime definition.
+
+<ComponentPreview name="processing-custom-format" sourceFiles={['processing-custom-format.data.ts']} />
+
+Definition contract:
+
+| Field | Purpose |
+| --- | --- |
+| `name` | Registration key = the `format` string in `model`; must be non-empty and must not collide with a built-in format. |
+| `impliedType` | The single measurement type this format implies; fills in `type` when the field omits it. |
+| `parse` | Raw value → canonical value; return `undefined` / `NaN` to mark the value invalid downstream. |
+
+Custom and built-in formats share one registry: built-ins are always available, custom names cannot collide with built-ins or each other, and a `model` that names an unregistered format fails loud.
+
+## Runtime Field Parsing
+
+For arbitrary formats outside the vocabulary, such as a `'2026Q1'` quarter string, or when a field must be forced to a specific type, use `resolveField`. It is a function and never enters IR, so it is the escape hatch for hand-written application code.
+
+<ComponentPreview name="processing-resolve" sourceFiles={['processing-resolve.data.ts']} />
+
+Rules:
+
+- Returning `{ type }` overrides the field type, ahead of the model and inference.
+- Returning `{ parse }` overrides value parsing; with `parse` but no `type`, the type must come from the model.
+- `resolveField` does not bypass strict mode: with a model declared, unlisted fields still error.
+- The second argument provides `{ dataReference, physicalPath, declaredType }`, so one logical field can branch by data source or physical path.
+
+## Choosing One
+
+| Need | Use |
+| --- | --- |
+| Enumerable format, persisted with the spec | `defineFieldFormat` |
+| One-off parsing, application state, or data-source branching | `resolveField` |
+| Only map logical fields to renamed source fields | `fieldMap`; see [Processing](/graph/grammar/data/processing) |
+| Drive a new node property from a field | `defineNodeChannel`; see [Custom Channels](/graph/grammar/channel/custom) |
+
+Prefer declarative capability that can enter IR. Use `resolveField` or the relevant runtime definition only when the behavior truly needs a function.

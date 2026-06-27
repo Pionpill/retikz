@@ -5,7 +5,7 @@ import { DataRefSchema } from '../data';
 import { GuideSchema } from '../guide';
 import { MarkOperationSchema } from '../mark';
 import { ScaleOperationSchema } from '../scale';
-import { TransformOperationSchema } from '../transform';
+import { TransformSchema } from '../transform';
 import { PLOT_NAMESPACE, PlotComposite } from './constants';
 
 export const PlotSpecSchema = CompositeBaseSchema.extend({
@@ -26,7 +26,7 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
     'Data binding: a named reference to an externally-supplied dataset plus an optional data model. The dataset values never enter the IR; they are injected at compile time via lowerPlots(datasets).',
   ),
   transform: z
-    .array(TransformOperationSchema)
+    .array(TransformSchema)
     .optional()
     .describe('Ordered data-transform operation pipeline applied to the bound dataset before scale inference and mark lowering; omit for no transform'),
   scales: z

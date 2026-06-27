@@ -1,7 +1,4 @@
-export * from './axis';
-export * from './cartesian';
-export * from './constants';
-export * from './guards';
-export * from './polar';
+export * from './features';
 export * from './registry';
-export * from './ternary';
+export * from './shared';
+export { BUILTIN_COORDINATES } from './private';

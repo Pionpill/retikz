@@ -1,0 +1,217 @@
+---
+title: Path
+description: Kernel 路径容器——`<Step>` 子节点序列定义折线 / 曲线 / 弧形，最少 2 个 step；Sugar 的 `<Draw>` 编译后就是它。
+---
+
+`<Path>` 是底层路径容器：children 必须是若干 `<Step>`（至少 2 个），定义路径的 move / line / fold（折角）/ cycle（闭合）/ curve / cubic / bend（曲线）/ arc / circlePath / ellipsePath（圆 / 椭圆）/ rectangle（矩形）等动作序列；另有 IR 级的 generator step（[路径生成器](/kernel/reference/extending/path-generator)）。日常连线用 `<Draw>` 更简洁，需要折角、闭合、曲线、自定义 stroke、不同 step kind 时回到 `<Path>`。
+
+它最适合三类场景：一条 path 里有多个子路径（多次 `move`）、不同段要混用不同 `kind` / label / 控制点、或者你希望 JSX 结构和 IR `path.children` 几乎一一对应，方便调试和生成。
+
+## 用法
+
+```tsx
+import { Path, Step } from '@retikz/react';
+```
+
+```tsx
+<Path stroke="currentColor">
+  <Step kind="move" to="a" />
+  <Step kind="line" to="b" />
+</Path>
+```
+
+`<Draw>` 编译后就是 `<Path>`，覆盖日常连线的 step / 折角 / 曲线 / 弧形需求；但 `<Path>` 还多出 `color` / `rotate` / `scale` / `marks` / `id` / `meta` / `animations` 等元素级能力，`<Draw>` 不暴露这些。日常连线用 `<Draw>` 一行 way 数组更省，需要显式 Step 序列、多次 `move`、逐段混用 `kind` / label / 控制点，或要用上述 Path 专属能力时用 `<Path>`：
+
+| | `<Draw>` | `<Path>` + `<Step>` |
+| --- | --- | --- |
+| 写法 | 一行 way 数组 | 容器 + 子节点 |
+| step / 曲线 / 折角 / 弧形 | 支持 | 支持 |
+| `color` / `rotate` / `scale` / `marks` / `id` / `meta` / `animations` | 不暴露 | 支持 |
+| 适用 | 90% 连线场景 | 显式 Step 序列、元素级能力 |
+
+## 组合
+
+`<Path>` 必须搭配 `<Step>` 子节点（至少 2 个）；首个非 `move` 时编译器会强制改成 `move`：
+
+```tsx
+<Path>
+  <Step kind="move" to={...} />     {/* 第 1 个：必为 move */}
+  <Step kind="line" to={...} />     {/* 之后任意多个 line / move / step */}
+  ...
+</Path>
+```
+
+`<Step>` 支持 12 种 kind——`move` / `line` 处理直线，`fold` 走直角折角，`cycle` 闭合回起点，`curve` / `cubic` 画贝塞尔曲线，`bend` 是弧形简记（可带 out/in 角与自环），`smooth` 画穿过点列的平滑曲线，`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧 / 整圆 / 整椭圆，`rectangle` 画对角矩形，详见 [Step](/kernel/components/draw/step)。此外还有 IR 级的 `generator` step（外部曲线生成器，无 JSX DSL、走 IR 直传，见 [路径生成器](/kernel/reference/extending/path-generator)）。
+
+## 例子
+
+### 折线
+
+<ComponentPreview name="path-basic" size="xs" />
+
+### 折角
+
+`<Step kind="fold" via="-|" \| "\|-">` 在两端之间插一个直角拐点——流程图、UML 关系线刚需。下面这条 path 混合 `line` + 两种 `via` 折角：
+
+<ComponentPreview name="path-fold" size="md" />
+
+### 闭合
+
+`<Step kind="cycle" />` 把当前路径闭合回最近一次 `move` 的起点——比手动 `line` 回起点少写一个端点，对应 SVG 路径的 `Z`：
+
+<ComponentPreview name="path-cycle" size="sm" />
+
+### 填充
+
+`fill` 给闭合区域填色（缺省 `'none'` = 仅描边，向后兼容）；`fillRule` 控制自交 / 嵌套子路径的填充规则（`'nonzero'` 默认 / `'evenodd'` 环形孔洞场景）。配合 cycle 步使用：
+
+<ComponentPreview name="path-fill" size="sm" />
+
+### 箭头
+
+`arrow` 控制方向（`'->'` / `'<-'` / `'<->'` / `'none'`），`arrowDetail` 一个对象统管全部视觉规格（shape / scale / length / width / color / fill / opacity / lineWidth）+ 可选 `start` / `end` 起末分别配置。详细规则、8 种内置 shape、起末 merge、颜色 / 缩放 / 半透明配置以及完整 API 参考见 **[Arrow](/kernel/components/draw/arrow)** 专页。
+
+### 端点连接面（boundary）
+
+端点引用节点时（`{ id }` 对象形态，或 way 里的 id），可加 `boundary` 字段，**只对这一个端点**覆盖目标节点的 [`boundary`](/kernel/components/node/overview)（连接面）。取值与节点 `boundary` 同形：`'shape'`（视觉形状自身）/ `'circle'`（真圆）/ 任意注册 shape 名 / `{ type, params }`。
+
+```tsx
+<Path arrow="->">
+  <Step kind="move" to="a" />
+  <Step kind="line" to={{ id: 'star', boundary: 'shape' }} />
+</Path>
+```
+
+`boundary` 只在"连接面有意义"的地方生效：端点自动贴边（未显式给 `anchor`）以及该端点的 compass / 角度锚点。在没有方向引用的场合——`between` 端点、`offset` 的 `of`、节点中心——它是 no-op。节点默认连接面写在 [`<Node boundary>`](/kernel/components/node/overview)，端点 `boundary` 是单边覆盖。
+
+下例同一五角星（未设节点 `boundary`），两条边各自在端点选连接面：实线默认贴真实尖端，虚线 `boundary="circle"` 改贴外接圆——连接面由边自己决定。
+
+<ComponentPreview name="path-boundary" size="sm" />
+
+### 样式
+
+`stroke` / `strokeWidth` / `dashPattern` 与 `<Draw>` 完全一致：
+
+<ComponentPreview name="path-dashed" size="xs" />
+
+#### 渐变描边
+
+`stroke` 除纯色字符串外还接 `PaintSpec`。线性 / 径向渐变、pattern、image 会进入同一份 paint 资源表；`dashPattern`、`lineCap`、`drawOpacity` 等描边样式照常作用在这条线本身。
+
+<ComponentPreview name="path-stroke-paint" size="sm" />
+
+带箭头的路径如果用渐变描边，需要给 `arrowDetail.color` 或端点 `color` 一个显式纯色；箭头 marker 不能继承资源型描边。
+
+#### 描边端点 / 拐点
+
+`lineCap` 控制描边端点形状：`'butt'` 默认（直角端）/ `'round'` 半圆 / `'square'` 方头外扩半个 stroke。`lineJoin` 控制拐点形状：`'miter'` 默认（尖角）/ `'round'` 圆角 / `'bevel'` 切角。
+
+<Comparison target="tikz" title="描边端点 / 拐点">
+
+`lineCap` / `lineJoin` 对应 TikZ 的 `line cap` / `line join` 选项。
+
+</Comparison>
+
+<ComponentPreview name="path-line-style" />
+
+#### 语义 stroke 档位
+
+`thickness` 是语义化描边档位——`'ultraThin'` / `'veryThin'` / `'thin'` / `'semithick'` / `'thick'` / `'veryThick'` / `'ultraThick'`，编译期映射到具体数值（`thin = 1` 与默认 strokeWidth 对齐）。**显式 `strokeWidth` 始终优先**——`thickness` 仅在 `strokeWidth` 缺省时生效：
+
+<Comparison target="tikz" title="语义 stroke 档位">
+
+这些档位沿用 TikZ 从 `ultra thin` 到 `ultra thick` 的命名；retikz 使用 camelCase prop 值，例如 `ultraThin` / `veryThick`。
+
+</Comparison>
+
+<ComponentPreview name="path-thickness" size="md" />
+
+#### 透明度
+
+三个独立通道：`opacity` 整体（同时作用于 stroke 与 fill），`fillOpacity` 仅 fill，`drawOpacity` 仅 stroke。三者可叠加：
+
+<Comparison target="tikz" title="drawOpacity 命名">
+
+`drawOpacity` 对应 TikZ 的 `draw opacity`，并与 `<Node>` 的描边透明字段保持一致。
+
+</Comparison>
+
+<ComponentPreview name="path-opacity" />
+
+#### 栈序（zIndex）
+
+默认层叠 = 声明顺序。`zIndex` 显式覆盖：大者在上、缺省 0、同值保持声明顺序；只在同层（同 scope / 顶层）子节点间生效。下面两个填充矩形声明顺序蓝先红后（默认红压上），给先声明的蓝色 path 设 `zIndex={1}` 即可把它抬到红色之上：
+
+<ComponentPreview name="path-z-index" size="sm" />
+
+### 曲线与变换
+
+#### 出 / 入射角与自环
+
+`<Step kind="bend">` 除对称的 `bendDirection` + `bendAngle` 外，还可用 `outAngle` / `inAngle` 指定起点出射角与终点入射角，画非对称曲线（对应 TikZ `out=` / `in=`）；`looseness` 调控制点距离（松紧，缺省 ≈1）。**out/in 给定时优先于 `bendDirection`**。当 `from == to`（同节点 / 同坐标）时退化为**自环**——这是 out/in 最大价值场景（状态机自跳转），对称 bend 画不出。
+
+<ComponentPreview name="path-outin-loop" size="sm" />
+
+#### 整体变换（rotate / scale）
+
+`rotate`（度）/ `scale`（数字等比，或 `{ x, y }` 非等比）把整条 path 绕**包围盒中心**变换，免去为单条 path 包一层 `<Scope transforms>`。变换顺序有硬契约：path 端点先 resolve、箭头 shrink 在**未变换的几何**上算，最后整体包进 group——故箭头方向随变换正确、不错位。
+
+<ComponentPreview name="path-transform" size="sm" />
+
+#### 中段标记（marks）
+
+`marks` 沿路径放方向标记：每项 `{ pos, mark }`，`pos ∈ [0, 1]`（越界 schema 拒），`mark` 首批为 `{ kind: 'arrow', shape, ... }`（复用已注册箭头名 + 视觉子集，见 [自定义箭头](/kernel/reference/extending/custom-arrow)），**朝向由该点切线决定**（不是固定方向）。直线 / 贝塞尔 / 弧段都按切线定向。尺寸与端点箭头同口径**随 `strokeWidth` 缩放**（TikZ 语义）：线越粗、标记越大。
+
+<ComponentPreview name="path-marks" size="xs" />
+
+#### 折线圆角（roundedCorners）
+
+`roundedCorners` 给整条 path 的每个 **line↔line 内拐角**倒一个半径相同的圆角弧——画流程图、布线、折线连接时把硬尖角磨圆。缺省 / 省略 = 全尖角（行为不变）。首点 / 末点保持尖；接缝一侧是曲线 / 弧 / 贝塞尔 / 折角（`fold`）时该接缝也保持尖。半径过大时按相邻段长**逐拐角夹紧**到可行最大值。`cycle` 闭合后，闭合接缝也参与倒圆。
+
+<ComponentPreview name="path-rounded-corners" size="sm" />
+
+`roundedCorners` 改的是**路径几何**——它把拐角顶点回退并插入一段相切圆弧，因此影响包围盒、弧长、路径级 `marks` 的归一化定位和连接点解析。这和 `lineJoin` 是两码事：`lineJoin` 只改**描边视觉**，路径中心线仍是尖折。（注：step 边标注 `label` 当前仍定位在该 step 自身线段上，不随接缝倒角缩短重算。）下例用很粗的描边对照——上方 `lineJoin="round"`（只磨描边、中心线仍尖），下方 `roundedCorners`（中心线本身就是圆弧）：
+
+<ComponentPreview name="path-rounded-vs-linejoin" size="sm" />
+
+<Comparison target="tikz" title="roundedCorners">
+
+`roundedCorners` 对应 TikZ 的路径选项 `rounded corners=<r>`，一个半径管全路径所有合格拐角。
+
+</Comparison>
+
+## API 参考
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `id` | `string` | — | 可选稳定 id：供其它元素 anchor 引用，也是[水合](/kernel/reference/hydration)事件绑定的挂点（带 `id` 才能给 path 绑 `onClick` 等 handler） |
+| `meta` | `Record<string, JSON 值>` | — | provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 plot 等高层 lowering 注入（标记来自哪个 datum / series / layer），供交互层命中后反查来源。须为 JSON 可序列化对象 |
+| `color` | `string` | — | 主色（TikZ `color=`）；`stroke` / 箭头 / step label 未单设则随它（跟主色不跟 `stroke`） |
+| `stroke` | `string \| PaintSpec` | `currentColor` | 描边 paint：CSS 颜色或 PaintSpec（渐变 / pattern / image）；箭头继承时需给箭头显式纯色 |
+| `strokeWidth` | `number` | `1` | 描边宽度 |
+| `dashPattern` | `Array<number>` | — | dash/gap 长度序列（如 `[4, 2]`） |
+| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | 描边端点形状 |
+| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | 描边拐点形状（仅视觉，不改几何） |
+| `roundedCorners` | `number`（≥0） | — | 几何圆角半径：把每个 line↔line 内拐角倒成相切圆弧，改路径几何（区别于 `lineJoin`）；非 line 接缝保持尖，逐拐角按段长夹紧；省略 = 尖角 |
+| `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | 语义 stroke 档位（`thin = 1`）；显式 `strokeWidth` 始终优先 |
+| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | 路径级箭头方向（详见 [Arrow](/kernel/components/draw/arrow)） |
+| `arrowDetail` | `ArrowDetail` 对象 | — | 箭头视觉详细配置；字段详见 [Arrow](/kernel/components/draw/arrow) |
+| `fill` | `string \| PaintSpec` | `'none'` | 闭合区域填充：任意 CSS 颜色，或 PaintSpec（渐变 / 图案 / 图片） |
+| `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | 填充规则；环形 / 孔洞场景用 `'evenodd'` |
+| `opacity` | `number` | — | 整 path 透明度 0~1（同时作用于 stroke 与 fill） |
+| `fillOpacity` | `number` | — | 仅 fill 透明度 0~1 |
+| `drawOpacity` | `number` | — | 仅 stroke 透明度 0~1 |
+| `shadow` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none' \| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | — | 主路径投影：预设字符串或对象；图元级，端点箭头随主路径一起投影。详见 [视觉效果](/kernel/components/effects) |
+| `blendMode` | `'normal' \| 'multiply' \| 'screen' \| ...`（16 个 W3C 分离模式） | `'normal'` | 主路径与其下方已绘内容的混合模式；图元级，端点箭头随主路径一起混合。详见 [视觉效果](/kernel/components/effects) |
+| `zIndex` | `number`（整数） | `0` | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效 |
+| `rotate` | `number` | — | 整条 path 旋转角（度，绕包围盒中心） |
+| `scale` | `number \| { x, y }` | — | 整条 path 缩放（数字等比 / `{ x, y }` 非等比，绕包围盒中心） |
+| `marks` | `Array<{ pos, mark }>` | — | 沿路径标记：`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线 |
+| `animations` | `Array<AnimationTrack>` | — | 时间轴动画 tracks，透传进本 path emit 的图元，renderer 播放或降级静态；见 [动画](/kernel/components/effects/animation) |
+| `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `fold`（折角）/ `cycle`（闭合）/ `curve` / `cubic`（贝塞尔曲线）/ `bend`（弧形简记，可带 out/in 角与自环）/ `smooth`（过点平滑曲线）/ `arc` / `circlePath` / `ellipsePath`（圆 / 椭圆）/ `rectangle`（对角矩形）；IR 另有 `generator`（路径生成器，无 JSX DSL） |
+
+## 相关
+
+- [Draw](/kernel/components/draw/overview)：日常连线优先使用的 Sugar
+- [Step](/kernel/components/draw/step)：`<Path>` 子节点的完整字段和 kind 说明
+- [Arrow](/kernel/components/draw/arrow)：路径箭头的详细配置

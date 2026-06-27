@@ -3,7 +3,7 @@ import type { FC } from 'react';
 
 /**
  * Core-philosophy article illustration: IR-centered pipeline
- * @description Mirrors the ir-centric diagram on /core/introduction — 4 inputs → IR ↔ Scene → 4 outputs (hourglass); nodes use stroke="none" as text anchors with Draw still snapping to bbox; bidirectional arrow between IR and "persistence / edit" marks IR as a read/write durable layer.
+ * @description Mirrors the ir-centric diagram on /kernel/introduction — 4 inputs → IR ↔ Scene → 4 outputs (hourglass); nodes use stroke="none" as text anchors with Draw still snapping to bbox; bidirectional arrow between IR and "persistence / edit" marks IR as a read/write durable layer.
  *   Shipped parts use the default color (currentColor); planned / unimplemented ones (Text DSL, adapters other than React) are dimmed to gray.
  */
 const Demo: FC = () => (

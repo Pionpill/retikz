@@ -19,7 +19,7 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'path') out.push(node);
+      if (node.type === 'path') out.push(child as IRPath);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -185,7 +185,7 @@ describe('scale family · L1 baseline guard (alpha.7 ADR-01)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'x' }, { ...yScale, name: 'y' }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'region', order: 'i', encoding: { x: { field: 'i' }, y: { field: 'v' } } }],
+      marks: [{ type: 'path', order: 'i', closure: { kind: 'baseline' }, encoding: { x: { field: 'i' }, y: { field: 'v' } } }],
     });
 
   // baseline guard 现按具体 scale type 报错（log / pow / sqrt / symlog 各自命名；承自定义 allowsBaseline=false 的 scale）

@@ -34,7 +34,6 @@ import {
   type PointStrokeWidthStyle,
   type PointZIndexStyle,
   type TextChannel,
-  type Transform,
   type TransformOperation,
 } from '@retikz/plot';
 import { Axis, type AxisProps, Legend, type LegendProps } from './guides';
@@ -45,16 +44,14 @@ import {
   type ExtensionChannelProp,
   IntervalMark,
   type IntervalMarkProps,
-  LinkMark,
-  type LinkMarkProps,
   PathMark,
   type PathMarkProps,
   PointMark,
   type PointMarkProps,
   ReferenceMark,
   type ReferenceMarkProps,
-  RegionMark,
-  type RegionMarkProps,
+  RelationMark,
+  type RelationMarkProps,
 } from './marks';
 import { type PositionScaleType, Scale, type ScaleDimension, type ScaleProps } from './scales';
 import { Transform as TransformComponent, type TransformProps } from './transform';
@@ -124,9 +121,15 @@ export type BuildPlotSpecOptions = {
   model?: DataModel;
   /**
    * 直传数据 transform IR（拼到 <Transform> 收集结果之前、自动装配 stack 之前）；与 <Transform> 声明组件共用同一管线。
-   * @description 程序化构造 spec 时完全掌控 transform 顺序的入口；含 stack 时同样抑制 mark auto-stack（B4 去重）。
+   * @description 程序化构造 spec 时完全掌控 transform 顺序的入口；含 stack 时同样抑制 mark shortcut stack（B4 去重）。
    */
   transforms?: Array<TransformOperation>;
+  /**
+   * Mark-level transform shortcuts.
+   * @description Shortcuts convert a mark shape into ordinary plot-level transform operations. They do not consume
+   * mark.transform; mark-local transforms still run later as that layer's private row view.
+   */
+  markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
   /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
   colors?: Array<string>;
   /** 当前数据集可见字段名集合；用于把样式字符串糖优先解析成字段通道 */
@@ -136,6 +139,17 @@ export type BuildPlotSpecOptions = {
    * @description 供 `<Plot data>` 入口使用；直接调用 buildPlotSpec 时缺省保持旧的 AUTO linear/band 行为。
    */
   deferPositionScaleInference?: boolean;
+};
+
+export type MarkTransformShortcutContext = {
+  mark: Mark;
+  markIndex: number;
+  marks: ReadonlyArray<Mark>;
+};
+
+export type MarkTransformShortcutDefinition = {
+  markType: string;
+  build: (context: MarkTransformShortcutContext) => Array<TransformOperation> | undefined;
 };
 
 /** 默认 guide（供 decorateDefaultGuides 复用，薄 <Plot> 本身不补）：x 轴 + y 轴（y 带网格，横线读数值、不过密） */
@@ -159,8 +173,8 @@ type Collected = {
   guides: Array<Guide>;
   /** 显式 transform（<Transform> 声明组件收集，按声明序） */
   transforms: Array<TransformOperation>;
-  /** mark-prop 自动装配的 stack（<IntervalMark stack> / <IntervalMark angle>）；显式 stack 存在时抑制（B4 去重） */
-  autoStacks: Array<Transform>;
+  /** mark shortcut 自动装配的 transform；显式 stack 存在时同签名抑制（B4 去重） */
+  shortcutTransforms: Array<TransformOperation>;
   /** 显式声明的位置 scale */
   scales: Array<ScaleProps>;
   /** 按 mark id 收集的运行时 resolveLabel（不进 IR；ADR-04） */
@@ -173,6 +187,8 @@ type Collected = {
   hasBar: boolean;
   /** 是否有 <IntervalMark>（heatmap → x / y 双轴强制 band scale） */
   hasRect: boolean;
+  /** 是否有横向 <IntervalMark> 快捷入口（仅 cartesian2D） */
+  hasHorizontalBar: boolean;
   /** 是否有 <IntervalMark angle> 饼/环图入口（→ 角向 linear scale） */
   hasSector: boolean;
   /** 是否有闭合 <PathMark>（雷达 → 角向 point scale） */
@@ -204,6 +220,7 @@ const CSS_COLOR_KEYWORDS = new Set([
   'teal',
   'aqua',
   'orange',
+  'none',
   'transparent',
   'currentcolor',
   'rebeccapurple',
@@ -453,29 +470,45 @@ const positionEncoding = (x: string, y: string): Pick<Encoding, 'x' | 'y'> => ({
 const ruleChannel = (value: number | string): { value: number } | { field: string } => (typeof value === 'number' ? { value } : { field: value });
 
 /**
- * 把 <ReferenceMark> 扁平 props 装配进 rule IR（取向 / band 上界 / extent / color 校验 fail-loud）
+ * 把 <ReferenceMark> 扁平 props 装配进 reference IR（line / band / region / extent / color 校验 fail-loud）
  * @description 取向由给 x（竖直）还是 y（水平）决定，二选一（皆给 / 皆缺 → fail-loud）；
- *   band 上界 xTo 须配 x、yTo 须配 y（不匹配 / 单飞 → fail-loud）；extent 须成对（单设 → fail-loud）。
+ *   band 上界 xTo 须配 x、yTo 须配 y（不匹配 / 单飞 → fail-loud）。kind="region" 时 x/y/xTo/yTo 必填；
+ *   extent 须成对（单设 → fail-loud），且 region 不接收 extent。
  *   常量 rule（x/y 为数字）→ color 作 value 常量；per-datum rule（x/y 为字段串）→ color 作 field（AUTO_COLOR）。
  */
 const collectReference = (props: ReferenceMarkProps, into: Collected, styleContext: StyleSugarContext): void => {
-  const { x, y, xTo, yTo, extentField, extentToField, color, id, channels, strokeWidth, fillOpacity, opacity } = props;
+  const { kind, x, y, z, xTo, yTo, zTo, extentField, extentToField, color, id, transform, channels, strokeWidth, fillOpacity, opacity } = props;
+  const region = kind === 'region';
   const hasX = x !== undefined;
   const hasY = y !== undefined;
-  if (hasX === hasY) {
+  const hasZ = z !== undefined;
+  if (region) {
+    if (!hasX || !hasY || xTo === undefined || yTo === undefined) {
+      throw new Error('buildPlotSpec: <ReferenceMark kind="region"> requires x, xTo, y, and yTo to define a bounded reference area');
+    }
+    if (hasZ !== (zTo !== undefined)) {
+      throw new Error('buildPlotSpec: <ReferenceMark kind="region"> z and zTo must be set together for z-role reference areas');
+    }
+    if (extentField !== undefined || extentToField !== undefined) {
+      throw new Error('buildPlotSpec: <ReferenceMark kind="region"> does not support extentField / extentToField; set x/xTo/y/yTo bounds directly');
+    }
+  } else if (hasX === hasY) {
     throw new Error('buildPlotSpec: <ReferenceMark> must bind exactly one of x (vertical) or y (horizontal); set one, not both / neither');
   }
-  if (hasX && yTo !== undefined) {
+  if (!region && hasX && yTo !== undefined) {
     throw new Error('buildPlotSpec: <ReferenceMark> binds x (vertical) but sets yTo; the band upper bound must match the bound dimension (use xTo)');
   }
-  if (hasY && xTo !== undefined) {
+  if (!region && hasY && xTo !== undefined) {
     throw new Error('buildPlotSpec: <ReferenceMark> binds y (horizontal) but sets xTo; the band upper bound must match the bound dimension (use yTo)');
+  }
+  if (!region && (hasZ || zTo !== undefined)) {
+    throw new Error('buildPlotSpec: <ReferenceMark> z / zTo are only valid with kind="region"');
   }
   if ((extentField === undefined) !== (extentToField === undefined)) {
     throw new Error('buildPlotSpec: <ReferenceMark> extentField / extentToField must be set together (a partial-length span needs both start and end)');
   }
   // 常量 rule（数字常量轴）→ color 作 value；per-datum（字段串）→ color 作 field（AUTO_COLOR）
-  const constantRule = typeof (hasX ? x : y) === 'number';
+  const constantRule = region ? typeof x === 'number' && typeof y === 'number' && typeof xTo === 'number' && typeof yTo === 'number' && (!hasZ || (typeof z === 'number' && typeof zTo === 'number')) : typeof (hasX ? x : y) === 'number';
   let colorEnc: { color: { value: string } | { field: string; scale: string } } | undefined;
   if (color !== undefined) {
     colorEnc = constantRule ? { color: { value: color } } : { color: { field: color, scale: AUTO_COLOR } };
@@ -483,10 +516,18 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
   const positional: Encoding = {};
   if (hasX) {
     positional.x = ruleChannel(x);
-  } else {
-    positional.y = ruleChannel(y as number | string);
   }
-  const upper = hasX ? (xTo !== undefined ? { xTo } : {}) : yTo !== undefined ? { yTo } : {};
+  if (hasY) {
+    positional.y = ruleChannel(y);
+  }
+  if (hasZ) {
+    positional.z = ruleChannel(z);
+  }
+  const upper = {
+    ...(xTo !== undefined ? { xTo } : {}),
+    ...(yTo !== undefined ? { yTo } : {}),
+    ...(zTo !== undefined ? { zTo } : {}),
+  };
   const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
   const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
   const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
@@ -508,7 +549,9 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
   };
   into.marks.push({
     type: PlotMark.Reference,
+    ...(kind !== undefined ? { kind } : {}),
     ...(id !== undefined ? { id } : {}),
+    ...(transform !== undefined ? { transform } : {}),
     ...upper,
     ...(extentField !== undefined ? { extentField } : {}),
     ...(extentToField !== undefined ? { extentToField } : {}),
@@ -536,7 +579,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
     }
     if (child.type === PathMark) {
       const props = child.props as PathMarkProps;
-      const { x, y, order, series, color, closed, curve, id, channels, strokeWidth, opacity, lineCap, lineJoin, roundedCorners } = props;
+      const { x, y, order, series, color, closed, connectNulls, closure, curve, id, transform, anchorId, channels, strokeWidth, opacity, lineCap, lineJoin, roundedCorners } = props;
       const colorEnc = colorChannel(color, series);
       const markLabel = buildMarkLabel(props);
       const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
@@ -547,9 +590,13 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       into.marks.push({
         type: PlotMark.Path,
         ...(id !== undefined ? { id } : {}),
+        ...(transform !== undefined ? { transform } : {}),
+        ...(anchorId !== undefined ? { anchorId } : {}),
         ...(order !== undefined ? { order } : {}),
         ...(series !== undefined ? { series } : {}),
-        ...(closed ? { closed: true } : {}),
+        ...(closed !== undefined ? { closed } : {}),
+        ...(connectNulls !== undefined ? { connectNulls } : {}),
+        ...(closure !== undefined ? { closure } : {}),
         ...(curve !== undefined ? { curve } : {}),
         ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
         ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
@@ -562,7 +609,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       });
       recordColor(into, colorEnc);
       recordResolveLabel(into, id, props.resolveLabel);
-      if (closed) into.hasClosedLine = true;
+      if (closed || closure !== undefined) into.hasClosedLine = true;
     } else if (child.type === PointMark) {
       const props = child.props as PointMarkProps;
       const {
@@ -590,6 +637,8 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         dx,
         dy,
         id,
+        transform,
+        anchorId,
         channels,
       } = props;
       const markLabel = buildMarkLabel(props);
@@ -614,6 +663,8 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       into.marks.push({
         type: PlotMark.Point,
         ...(id !== undefined ? { id } : {}),
+        ...(transform !== undefined ? { transform } : {}),
+        ...(anchorId !== undefined ? { anchorId } : {}),
         ...(colorStyle !== undefined ? { color: colorStyle } : {}),
         ...(textColorStyle !== undefined ? { textColor: textColorStyle } : {}),
         ...(sizeStyle !== undefined ? { size: sizeStyle } : {}),
@@ -646,7 +697,16 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       recordResolveLabel(into, id, props.resolveLabel);
     } else if (child.type === IntervalMark) {
       const props = child.props as IntervalMarkProps;
-      const { x, y, angle, x0, x1, color, series, stack, bounds: explicitBounds, id, channels, fill, stroke, strokeWidth, fillOpacity, opacity } = props;
+      const { x, y, angle, x0, x1, width, direction: rawDirection, color, series, group, arrangement: explicitArrangement, stackOffset, percent, stack, bounds: explicitBounds, id, transform, anchorId, channels, fill, stroke, strokeWidth, fillOpacity, opacity, padAngle } = props;
+      const direction = rawDirection ?? 'vertical';
+      const arrangementGroup = group ?? series;
+      if (percent === true && explicitArrangement !== undefined && explicitArrangement !== 'normalize-stack') {
+        throw new Error('buildPlotSpec: <IntervalMark percent> cannot be mixed with an arrangement other than "normalize-stack"');
+      }
+      if (stackOffset !== undefined && explicitArrangement === 'normalize-stack') {
+        throw new Error('buildPlotSpec: <IntervalMark stackOffset> cannot be mixed with arrangement="normalize-stack"; use percent for percentage stacks');
+      }
+      const arrangement = explicitArrangement ?? (percent === true ? 'normalize-stack' : stack ? 'stack' : arrangementGroup !== undefined ? 'dodge' : undefined);
       const markLabel = buildMarkLabel(props);
       const fillStyle = paintStyleOf<PointFillStyle>(fill, 'fill', styleContext);
       const strokeStyle = strokeStyleOf(stroke, styleContext);
@@ -659,18 +719,21 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
         ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
         ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
+        ...(padAngle !== undefined ? { padAngle } : {}),
         ...nodeStylePropsOf(props, styleContext),
       };
       // pie / donut：angle → 自动累积 stack transform（产 y0/y1）+ extent×full bounds
       if (angle !== undefined) {
-        if (y !== undefined || x !== undefined || x0 !== undefined || x1 !== undefined || stack !== undefined || explicitBounds !== undefined) {
-          throw new Error('buildPlotSpec: <IntervalMark angle> is the polar pie/donut form; do not mix it with x/y/x0/x1/stack/bounds');
+        if (y !== undefined || x !== undefined || x0 !== undefined || x1 !== undefined || width !== undefined || rawDirection !== undefined || stack !== undefined || explicitBounds !== undefined) {
+          throw new Error('buildPlotSpec: <IntervalMark angle> is the polar pie/donut form; do not mix it with x/y/x0/x1/width/direction/stack/bounds');
         }
-        into.autoStacks.push({ kind: PlotTransform.Stack, y: angle, ...(series !== undefined ? { groupBy: series } : {}) });
-        const colorEnc = colorChannel(color, series) ?? colorChannel(angle, undefined);
+        into.shortcutTransforms.push({ kind: PlotTransform.Stack, y: angle, ...(series !== undefined ? { groupBy: series } : {}) });
+        const colorEnc = colorChannel(color, series ?? group) ?? colorChannel(angle, undefined);
         into.marks.push({
           type: PlotMark.Interval,
           ...(id !== undefined ? { id } : {}),
+          ...(transform !== undefined ? { transform } : {}),
+          ...(anchorId !== undefined ? { anchorId } : {}),
           ...intervalStyle,
           bounds: { x: { kind: IntervalBoundKind.Extent, from: 'y0', to: 'y1' }, y: { kind: IntervalBoundKind.Full } },
           encoding: { ...colorEnc, ...extensionChannelEncoding(channels) },
@@ -681,10 +744,18 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       }
       // 显式 bounds（heatmap 双 band / 高级）：直接落 IR；band bound → 强制对应轴 band scale
       if (explicitBounds !== undefined) {
-        const colorEnc = colorChannel(color, series);
+        if (rawDirection !== undefined) {
+          throw new Error('buildPlotSpec: <IntervalMark direction> cannot be mixed with explicit bounds; encode the orientation through bounds directly');
+        }
+        if (width !== undefined) {
+          throw new Error('buildPlotSpec: <IntervalMark width> cannot be mixed with explicit bounds; use bounds.<role>={kind:"proportional"} directly');
+        }
+        const colorEnc = colorChannel(color, series ?? group);
         into.marks.push({
           type: PlotMark.Interval,
           ...(id !== undefined ? { id } : {}),
+          ...(transform !== undefined ? { transform } : {}),
+          ...(anchorId !== undefined ? { anchorId } : {}),
           ...(series !== undefined ? { series } : {}),
           ...intervalStyle,
           bounds: explicitBounds,
@@ -699,86 +770,114 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       }
       // histogram：x0/x1 → bounds.x = extent（连续 x，不强制 band）；普通 / 分组 / 堆叠柱：band x
       const histogram = x0 !== undefined && x1 !== undefined;
+      const proportional = width !== undefined;
+      if (proportional && histogram) {
+        throw new Error('buildPlotSpec: <IntervalMark width> cannot be mixed with x0/x1 histogram bounds');
+      }
+      if (proportional && arrangement !== undefined) {
+        throw new Error('buildPlotSpec: <IntervalMark width> cannot be mixed with arrangement/stack/percent/group/series; use precomputed extent bounds for custom layouts');
+      }
+      if (proportional && stackOffset !== undefined) {
+        throw new Error('buildPlotSpec: <IntervalMark width> cannot be mixed with stackOffset; use precomputed extent bounds for custom layouts');
+      }
+      if (proportional && (group !== undefined || series !== undefined)) {
+        throw new Error('buildPlotSpec: <IntervalMark width> cannot be mixed with group or series; use color for visual grouping');
+      }
+      if (histogram && direction === 'horizontal') {
+        throw new Error('buildPlotSpec: <IntervalMark direction="horizontal"> cannot be mixed with x0/x1 histogram bounds');
+      }
+      if (histogram && arrangement !== undefined) {
+        throw new Error('buildPlotSpec: <IntervalMark arrangement> cannot be mixed with x0/x1 histogram bounds');
+      }
       if ((x0 === undefined) !== (x1 === undefined)) {
         throw new Error('buildPlotSpec: <IntervalMark> x0 / x1 must be set together for continuous-interval bars');
       }
-      if (!histogram && x === undefined) {
-        throw new Error('buildPlotSpec: <IntervalMark> requires x for categorical bars, x0/x1 for histogram, or angle for the polar pie/donut form');
+      if (!histogram && !proportional && x === undefined) {
+        throw new Error('buildPlotSpec: <IntervalMark> requires x for categorical bars, x0/x1 for histogram, width for proportional bars, or angle for the polar pie/donut form');
       }
-      if (y === undefined) {
-        throw new Error('buildPlotSpec: <IntervalMark> requires y (the value/height), or use angle for the polar pie/donut form');
+      const valueField = direction === 'horizontal' ? x : y;
+      if (valueField === undefined) {
+        throw new Error('buildPlotSpec: <IntervalMark> requires the value field on y (vertical) or x (horizontal), or use angle for the polar pie/donut form');
       }
-      const colorEnc = colorChannel(color, series);
-      // series + stack → 堆叠（装 stack transform + bounds.y=extent(y0,y1)）；series 无 stack → dodge（bounds.x=band{group}）
+      const colorEnc = colorChannel(color, series ?? group);
+      const categoryField = direction === 'horizontal' ? y : x;
+      if (!histogram && !proportional && categoryField === undefined) {
+        throw new Error('buildPlotSpec: <IntervalMark> requires the category field on x (vertical) or y (horizontal), x0/x1 for histogram, width for proportional bars, or angle for the polar pie/donut form');
+      }
+      const bandRole = direction === 'horizontal' ? 'y' : 'x';
+      const valueRole = direction === 'horizontal' ? 'x' : 'y';
+      const bandBound = { kind: IntervalBoundKind.Band, ...(arrangement === 'dodge' && arrangementGroup !== undefined ? { group: arrangementGroup } : {}) };
+      if ((arrangement === 'stack' || arrangement === 'normalize-stack') && arrangementGroup === undefined) {
+        throw new Error('buildPlotSpec: <IntervalMark arrangement="stack"> requires group or series to identify stacked segments');
+      }
+      if (arrangement === 'normalize-stack') {
+        into.shortcutTransforms.push({ kind: PlotTransform.Normalize, field: valueField, groupBy: [categoryField], basis: 'percent' });
+      }
+      if ((arrangement === 'stack' || arrangement === 'normalize-stack') && arrangementGroup !== undefined) {
+        into.shortcutTransforms.push({
+          kind: PlotTransform.Stack,
+          x: categoryField,
+          y: valueField,
+          groupBy: arrangementGroup,
+          ...(arrangement === 'stack' && stackOffset !== undefined ? { offset: stackOffset } : {}),
+        });
+      }
+      // arrangement → bounds：dodge 切 band 子带；stack / normalize-stack 读 y0/y1 extent。
       let bounds: IntervalBounds | undefined;
-      if (series !== undefined && stack) {
-        into.autoStacks.push({ kind: PlotTransform.Stack, x, y, groupBy: series });
-        bounds = { y: { kind: IntervalBoundKind.Extent, from: 'y0', to: 'y1' } };
-      } else if (series !== undefined && !histogram) {
-        bounds = { x: { kind: IntervalBoundKind.Band, group: series } };
+      if (proportional) {
+        bounds = { [bandRole]: { kind: IntervalBoundKind.Proportional, field: width } };
+      } else if (!histogram && (direction === 'horizontal' || arrangement === 'dodge')) {
+        bounds = { [bandRole]: bandBound };
+      }
+      if (arrangement === 'stack' || arrangement === 'normalize-stack') {
+        bounds = { ...(bounds ?? {}), [valueRole]: { kind: IntervalBoundKind.Extent, from: 'y0', to: 'y1' } };
+      } else if (direction === 'horizontal') {
+        bounds = { ...(bounds ?? {}), x: { kind: IntervalBoundKind.Span } };
       }
       if (histogram) bounds = { ...(bounds ?? {}), x: { kind: IntervalBoundKind.Extent, from: x0, to: x1 } };
       into.marks.push({
         type: PlotMark.Interval,
         ...(id !== undefined ? { id } : {}),
+        ...(transform !== undefined ? { transform } : {}),
+        ...(anchorId !== undefined ? { anchorId } : {}),
         ...(series !== undefined ? { series } : {}),
         ...intervalStyle,
         ...(bounds !== undefined ? { bounds } : {}),
         ...(markLabel !== undefined ? { label: markLabel } : {}),
         // histogram：仅 y（高度），x 来自 x0/x1 区间；普通柱：x（分类 band）+ y（值）
-        encoding: histogram ? { y: { field: y }, ...colorEnc, ...extensionChannelEncoding(channels) } : { x: { field: x }, y: { field: y }, ...colorEnc, ...extensionChannelEncoding(channels) },
+        encoding: histogram
+          ? { y: { field: y }, ...colorEnc, ...extensionChannelEncoding(channels) }
+          : proportional
+            ? { ...(x !== undefined ? { x: { field: x } } : {}), ...(y !== undefined ? { y: { field: y } } : {}), ...colorEnc, ...extensionChannelEncoding(channels) }
+            : { x: { field: x }, y: { field: y }, ...colorEnc, ...extensionChannelEncoding(channels) },
       });
-      if (!histogram) into.hasBar = true;
+      if (!histogram && !proportional) {
+        if (bandRole === 'x') into.hasBar = true;
+        else into.hasRect = true;
+      }
+      if (direction === 'horizontal') into.hasHorizontalBar = true;
       recordColor(into, colorEnc);
       recordResolveLabel(into, id, props.resolveLabel);
-    } else if (child.type === RegionMark) {
-      const props = child.props as RegionMarkProps;
-      const { x, y, order, series, baseline, closed, color, id, channels, strokeWidth, fillOpacity, opacity } = props;
-      const colorEnc = colorChannel(color, series);
-      const markLabel = buildMarkLabel(props);
-      const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
-      const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
-      const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
-      into.marks.push({
-        type: PlotMark.Region,
-        ...(id !== undefined ? { id } : {}),
-        ...(order !== undefined ? { order } : {}),
-        ...(series !== undefined ? { series } : {}),
-        ...(baseline !== undefined ? { baseline } : {}),
-        ...(closed ? { closed: true } : {}),
-        ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
-        ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
-        ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
-        ...pathStylePropsOf(props, styleContext),
-        ...(markLabel !== undefined ? { label: markLabel } : {}),
-        encoding: { ...positionEncoding(x, y), ...colorEnc, ...extensionChannelEncoding(channels) },
-      });
-      recordColor(into, colorEnc);
-      recordResolveLabel(into, id, props.resolveLabel);
-      if (closed) into.hasClosedLine = true;
-    } else if (child.type === LinkMark) {
-      const { sourceX, sourceY, targetX, targetY, value, endWidth, curvature, orientation, color, id, channels, fillOpacity, opacity } = child.props as LinkMarkProps;
-      // 扁平端点 props → 嵌套 IR source/target 字段对；color 走 colorChannel（无 series）
-      const colorEnc = colorChannel(color, undefined);
-      const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
-      const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
-      into.marks.push({
-        type: PlotMark.Link,
-        ...(id !== undefined ? { id } : {}),
-        source: { x: { field: sourceX }, y: { field: sourceY } },
-        target: { x: { field: targetX }, y: { field: targetY } },
-        value,
-        ...(endWidth !== undefined ? { endWidth } : {}),
-        ...(curvature !== undefined ? { curvature } : {}),
-        ...(orientation !== undefined ? { orientation } : {}),
-        ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
-        ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
-        ...pathStylePropsOf(child.props as LinkMarkProps, styleContext),
-        encoding: { ...colorEnc, ...extensionChannelEncoding(channels) },
-      });
-      recordColor(into, colorEnc);
     } else if (child.type === ReferenceMark) {
       collectReference(child.props as ReferenceMarkProps, into, styleContext);
+    } else if (child.type === RelationMark) {
+      const { id, transform, source, target, via, route, routing, label, path, color, channels } = child.props as RelationMarkProps;
+      const colorEnc = colorChannel(color, undefined);
+      const encoding = { ...colorEnc, ...extensionChannelEncoding(channels) };
+      into.marks.push({
+        type: PlotMark.Relation,
+        ...(id !== undefined ? { id } : {}),
+        ...(transform !== undefined ? { transform } : {}),
+        source,
+        target,
+        ...(via !== undefined ? { via } : {}),
+        ...(route !== undefined ? { route } : {}),
+        ...(routing !== undefined ? { routing } : {}),
+        ...(label !== undefined ? { label } : {}),
+        ...(path !== undefined ? { path } : {}),
+        ...(Object.keys(encoding).length > 0 ? { encoding } : {}),
+      });
+      recordColor(into, colorEnc);
     } else if (child.type === Axis) {
       const { dimension, scale, tickCount, tickLabels, grid, id } = child.props as AxisProps;
       if (scale !== undefined) {
@@ -932,6 +1031,15 @@ const collectExplicitScales = (declared: Array<ScaleProps>, coordKind: ReturnTyp
   return out;
 };
 
+const buildShortcutTransforms = (marks: ReadonlyArray<Mark>, definitions: ReadonlyArray<MarkTransformShortcutDefinition> | undefined): Array<TransformOperation> => {
+  if (definitions === undefined || definitions.length === 0) return [];
+  return marks.flatMap((mark, markIndex) =>
+    definitions
+      .filter(definition => definition.markType === mark.type)
+      .flatMap(definition => definition.build({ mark, markIndex, marks }) ?? []),
+  );
+};
+
 /** polar coordinate IR 的角向区间 / 内半径默认值（与 Polar2DSchema 的 .default() 一致，buildPlotSpec 即填满，等价手写无需再补） */
 const POLAR_DEFAULT_START_ANGLE = 0;
 const POLAR_DEFAULT_END_ANGLE = 360;
@@ -972,22 +1080,31 @@ const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | u
  *   产出须等价于手写 PlotSpec（仿 core Sugar = Kernel 等价性）。data 不进 IR，仅存 reference
  */
 export const buildPlotSpec = (children: ReactNode, dataRef: string, options: BuildPlotSpecOptions = {}): PlotSpec => {
-  const collected: Collected = { marks: [], guides: [], transforms: [], autoStacks: [], scales: [], resolveLabels: {}, colored: false, colorFields: [], hasBar: false, hasRect: false, hasSector: false, hasClosedLine: false };
+  const collected: Collected = { marks: [], guides: [], transforms: [], shortcutTransforms: [], scales: [], resolveLabels: {}, colored: false, colorFields: [], hasBar: false, hasRect: false, hasHorizontalBar: false, hasSector: false, hasClosedLine: false };
   collectInto(children, collected, styleSugarContext(options));
 
-  // transform 装配序：<Plot transforms> 直传 → <Transform> 收集 → auto-stack（B4 去重）
-  // B4 按 stack 签名（x / y / groupBy）去重：仅抑制与某条显式 stack 完全同签名的 auto-stack（那条会二次堆叠），
-  // 不同签名的 auto-stack 保留——否则该 mark 仍是 arrangement='stack' 却没有对应 y0/y1，lower 阶段读空累积界出错。
+  // transform 装配序：<Plot transforms> 直传 → <Transform> 收集 → mark shortcut transforms（B4 去重）
+  // B4 按 stack 签名（x / y / groupBy）去重：仅抑制与某条显式 stack 完全同签名的 shortcut stack（那条会二次堆叠），
+  // 不同签名的 shortcut stack 保留——否则该 mark 仍是 arrangement='stack' 却没有对应 y0/y1，lower 阶段读空累积界出错。
   const explicitTransforms: Array<TransformOperation> = [...(options.transforms ?? []), ...collected.transforms];
+  const shortcutTransforms = [...collected.shortcutTransforms, ...buildShortcutTransforms(collected.marks, options.markTransformShortcuts)];
   const stackSignature = (transform: TransformOperation): string =>
-    transform.kind === PlotTransform.Stack ? JSON.stringify([transform.x ?? null, transform.y, transform.groupBy ?? null]) : '';
+    transform.kind === PlotTransform.Stack
+      ? JSON.stringify([transform.x ?? null, transform.y, transform.groupBy ?? null, transform.offset ?? 'zero', transform.startField ?? null, transform.endField ?? null])
+      : '';
   const explicitStackSignatures = new Set(explicitTransforms.filter(transform => transform.kind === PlotTransform.Stack).map(stackSignature));
-  const dedupedAutoStacks = collected.autoStacks.filter(autoStack => !explicitStackSignatures.has(stackSignature(autoStack)));
-  const transforms: Array<TransformOperation> = [...explicitTransforms, ...dedupedAutoStacks];
+  const dedupedShortcutTransforms = shortcutTransforms.filter(transform => transform.kind !== PlotTransform.Stack || !explicitStackSignatures.has(stackSignature(transform)));
+  const transforms: Array<TransformOperation> = [...explicitTransforms, ...dedupedShortcutTransforms];
 
   const coordKind = coordinateTypeOf(options.coordinate);
   if (collected.hasSector && coordKind !== 'polar2D') {
     throw new Error('buildPlotSpec: <IntervalMark angle> is only valid under coordinate="polar2D"');
+  }
+  if (collected.hasHorizontalBar && coordKind !== 'cartesian2D') {
+    throw new Error('buildPlotSpec: <IntervalMark direction="horizontal"> is only valid under coordinate="cartesian2D"');
+  }
+  if (coordKind === 'polar2D' && collected.marks.some(mark => mark.type === PlotMark.Path && mark.closed !== false)) {
+    collected.hasClosedLine = true;
   }
   const explicitScales = collectExplicitScales(collected.scales, coordKind);
 
@@ -1045,7 +1162,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     coordinate = CoordinateOperationSchema.parse({ ...options.coordinate });
     scales = [];
   } else {
-    const xScale = buildCartesianXScale(collected.hasBar || collected.hasRect, explicitScales.x);
+    const xScale = buildCartesianXScale(collected.hasBar, explicitScales.x);
     const yScale = buildCartesianYScale(collected.hasRect, explicitScales.y);
     coordinate = shouldDeferPositionScales
       ? {

@@ -332,7 +332,6 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
           rendererMode={rendererMode}
           toggleRendererMode={toggleRendererMode}
           pinned={toolbarPinned}
-          alwaysVisible={actionsAlwaysVisible && (actions?.length ?? 0) > 0}
         />
       </div>
       {hasCode ? (

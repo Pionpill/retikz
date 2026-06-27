@@ -1,0 +1,133 @@
+---
+title: Karl's Unit Circle
+description: Academic illustration example — sin / cos / tan geometry for a 30° angle; start from a circle and grow the figure in seven steps, exercising Path / Draw / Coordinate / Node side by side
+---
+
+## Introduction
+
+This is the final figure from the [TikZ tutorial](https://tikz.dev/tutorial) — "Karl teaching his daughter trigonometry": a unit circle plus the sin / cos / tan geometry around a 30° angle.
+
+The page breaks it into 7 accumulative steps. From a single naked circle each step adds one visible element and one retikz capability — by the end you have the full figure and have also seen the three most beginner-friendly sugars: [Circle](/kernel/components/shapes/circle-ellipse) / [Grid](/kernel/components/helpers/grid) / [Sector](/kernel/components/shapes/arc-sector). They shorten the hand-written Path / Step pieces, while [Draw](/kernel/components/draw/overview) / [Coordinate](/kernel/components/node/coordinate) / [Node](/kernel/components/node/overview) keep building the full figure, plus polar positions, multi-Draw coordination, and multi-line / multi-color Node text.
+
+<ComponentPreview name="karl-circle-07-info" size="lg" interactive />
+
+If you are coming from TikZ, watch five differences in this page: retikz coordinates grow downward on y; circle / grid / sector now have dedicated sugar; projections / intersections are currently hand-computed or named with Coordinate; `foreach`-style repeated primitives are usually generated with React `.map()`; and formulas are no longer plain-text fallbacks but LaTeX written as [@retikz/tex](/kernel/packages/tex) `$...$` / `$$...$$` inline math (text-with-math and per-run color both supported).
+
+## Prompt
+
+Send the prompt below to the AI chat panel — the LLM will produce retikz IR / JSX for this figure directly. For variants (different angle, colors, radius), edit the prompt inside the chat panel after sending and resend.
+
+<ExamplePrompt
+  short="**Draw a 30° angle sin / cos / tan geometry diagram**: unit circle + axes with arrows + ticks (−1, −1/2, 1/2, 1) + green-stroked wedge + red / dodgerblue / darkorange function lines + a right-hand multi-color info box."
+  detailed={`**Draw the unit-circle trigonometry diagram**
+
+**Geometry**
+
+- Unit circle, r = 100px
+- Axes x / y from −1.5 to 1.5, with arrows
+- Ticks: x at −1 / −1/2 / 1; y at −1 / −1/2 / 1/2 / 1
+- Light background grid, 50px spacing
+- 30° wedge centered at the origin, radius 30px
+
+**Function lines**
+
+- sin α (red): from (cos30°, sin30°) down to the x-axis
+- cos α (dodgerblue): from the projection point back to the origin
+- tan α (darkorange): from (1, 0) up to (1, tan30°); a ray from the origin through that point
+
+**Colors**
+
+- Wedge: lightgray fill, green stroke
+- sin: red, cos: dodgerblue, tan: darkorange
+
+**Labels**
+
+- formulas (axis x / y, tick fractions, α, the right-hand legend) are written as @retikz/tex $...$ / $$...$$ inside Node text; start MathJax and inject it into Layout via useLowerTex
+- α inside the wedge (polar 15°, 22px from origin)
+- each function line carries its own name label, edge labels use $...$ formulas ($\sin\alpha$ / $\cos\alpha$ / $\tan\alpha=\frac{\sin\alpha}{\cos\alpha}$)
+- right-hand info box is one Node, mirroring the tikz tutorial's information text: each line's runs mix a colored text run for the line name (red/blue/orange) with a tex run for its value (α=π/6, sin=1/2, cos=√3/2, tan=1/√3), framed by the node's own dashed rectangle`}
+  extensions={[
+    "**Switch to an obtuse angle (120°)**: change the angle from 30° to 120° and see what it looks like geometrically when cos goes negative — the sin projection lands on the left side of the y-axis, and the tan tangent flips with it.",
+    "**Draw all six trig functions**: add sec / csc / cot to the same figure following their geometric definitions — sec as the x-axis intercept, csc as the y-axis intercept, cot as the distance from (0, 1) along the horizontal tangent to where the origin ray hits.",
+    "**Side-by-side angle comparison**: render three ComponentPreviews in a row for 30° / 60° / 120° using the same diagram, so the geometric change in sin / cos / tan across angles is visible at a glance.",
+  ]}
+/>
+
+## Steps
+
+### Step 1 — Unit circle
+
+Minimal start — one circle centered at the origin. Use [Circle](/kernel/components/shapes/circle-ellipse) here: `center + radius` keeps the first step short, and it still expands to the same underlying Path / Step shape, but the code reads like “this is a circle” at a glance. `lineCap="round"` softens the line endpoints.
+
+<ComponentPreview name="karl-circle-01-circle" size="lg" />
+
+### Step 2 — Axes + endpoint labels + named anchors
+
+x and y axes use [Draw](/kernel/components/draw/overview) with `arrow="->"` to get arrow-tipped segments. The `x` / `y` labels at the axis ends are now written as [@retikz/tex](/kernel/packages/tex) `$x$` / `$y$` inline formulas (`$...$` inside a [Node](/kernel/components/node/overview)'s text), rendering math-italic letters (`stroke="none"` hides the default border). This is the first formula on the page, so **from this step on every demo calls `useLowerTex()` to start MathJax and injects `<Layout lowerTex>`**; without it `$...$` stays literal and math content degrades silently instead of crashing. [Coordinate](/kernel/components/node/coordinate) names the two endpoints (`x-axis` / `y-axis`) so later steps could reference them by id string — this example doesn't end up using them, but we keep them for fidelity to TikZ's `coordinate(x axis)` idiom.
+
+<ComponentPreview name="karl-circle-02-axes" diffFrom="karl-circle-01-circle" size="lg" interactive />
+
+### Step 3 — Grid + ticks
+
+The background grid now uses [Grid](/kernel/components/helpers/grid) sugar, which expands to many lines for you. Ticks are also array-driven: a short segment plus a transparent [Node](/kernel/components/node/overview) per tick, its text written as `$-\frac{1}{2}$` and friends; `−1/2` / `1/2` are no longer the plain string `-1/2` but real rendered fractions. The label sits **slightly offset** from its tick (x-axis labels nudged 10px left, y-axis labels 10px down) so they don't clash with the circle or axis lines, and the step reads like “give me a grid” instead of “assemble 10 lines.”
+retikz coordinates are SVG pixels with y pointing downward — so "1 unit up" is written as `[0, -100]` (this example uses 100px = unit-circle radius as the length basis). The top-level `<Layout>` has no picture-level scale or y-flip, so math coordinates from the TikZ tutorial need their y manually negated.
+
+<ComponentPreview name="karl-circle-03-ticks" diffFrom="karl-circle-02-axes" size="lg" interactive />
+
+### Step 4 — 30° wedge + α label
+
+The wedge is the trickiest step. Use [Sector](/kernel/components/shapes/arc-sector) here: it starts from the center, draws the arc, and closes back to the center, so the intent reads more directly than a hand-written `arc` + `line` path, and it is easier for a first-time reader to remember as one clear API.
+
+The α label is written as the `$\alpha$` inline formula (a real Greek letter) at a polar position (`{ angle, radius }`) — `{ angle: -15, radius: 22 }` places it visually centered in the wedge (a negative angle points toward the top of the screen). Its color comes from the node's `textColor` (the whole formula follows `textColor`; for per-segment colors see the `runs` in Step 7).
+
+<ComponentPreview name="karl-circle-04-wedge" diffFrom="karl-circle-03-ticks" size="lg" interactive />
+
+### Step 5 — sin α red line + cos α dodgerblue line
+
+`sin` drops from (30°, 100px) vertically to the x-axis; `cos` goes from that foot back to the origin. Both use [Draw](/kernel/components/draw/overview), with a `{ label: { text, side } }` operator threaded into the `way` array to attach an edge label — and the label's `text` also accepts `$...$`, so we write `$\sin\alpha$` / `$\cos\alpha$` directly (matching the [TikZ tutorial](https://tikz.dev/tutorial)'s `node {$\sin \alpha$}`). `thickness="thick"` is a semantic stroke preset — saves having to pick a numeric width.
+
+Note: the original TikZ uses `(30:1cm |- x axis)` to express "horizontal projection of (30°, 1cm) onto the x-axis" directly. retikz has no projection target yet — geometrically that equals (cos30°, 0), so we hand-compute the coordinate.
+
+<ComponentPreview name="karl-circle-05-sin-cos" diffFrom="karl-circle-04-wedge" size="lg" interactive />
+
+### Step 6 — tan α darkorange line + auxiliary ray
+
+The tan line goes from (1, 0) up to (1, tan30°). The original uses TikZ's `name path` + `name intersections` to compute "intersection of x=1 vertical and 30° ray from origin"; retikz has no such constructs, so we hand-compute (1, tan30°) and name it `t` via [Coordinate](/kernel/components/node/coordinate). The auxiliary ray from the origin through `t` then just references the id.
+
+The pattern here — multiple [Draw](/kernel/components/draw/overview)s coordinating through shared named anchors — is retikz's standard way to wire up a multi-segment figure.
+
+<ComponentPreview name="karl-circle-06-tan" diffFrom="karl-circle-05-sin-cos" size="lg" interactive />
+
+### Step 7 — Right-hand multi-color info box
+
+Finally, mirroring the [TikZ tutorial](https://tikz.dev/tutorial)'s "information text" box, a **regular-text + formula** info box on the right. The whole box is **one [Node](/kernel/components/node/overview)**: its `text` is an array of lines, each a `{ runs: [...] }` — the line name (red / blue / orange line) is a text run with its own `fill`, the value is a `{ tex }` formula run, laid out together on the line. This is exactly inline text+math mixing with per-run color: prose / CJK go in text runs (measured via measureText), formulas in tex runs, never `\text{}` (which would tofu out in MathJax).
+
+The frame is just this node's own `shape="rectangle"` + `dashed` + `stroke="lightgray"` + `cornerRadius` (no fill, visible in both themes), auto-sized to the content bbox with `align="left"` — one node is both the mixed text+formula block and its frame.
+
+<ComponentPreview name="karl-circle-07-info" diffFrom="karl-circle-06-tan" size="lg" interactive />
+
+## Capabilities
+
+| Component | Role in this example | Main steps |
+| --- | --- | --- |
+| [Circle](/kernel/components/shapes/circle-ellipse) | Unit circle | [1](#step-1--unit-circle), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label) |
+| [Sector](/kernel/components/shapes/arc-sector) | 30° wedge | [4](#step-4--30-wedge--α-label), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |
+| [Grid](/kernel/components/helpers/grid) | Background grid | [3](#step-3--grid--ticks) |
+| [Draw](/kernel/components/draw/overview) | Axes + tick marks + sin/cos/tan colored lines (edge labels use `$...$` formulas) + auxiliary ray | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |
+| [Node](/kernel/components/node/overview) + [`$...$`](/kernel/packages/tex) | Axis x / y, tick fractions, α (inline formulas) + right info box (multi-line `{ runs }` mixing text + formula, per-run color, self-framed) | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label), [7](#step-7--right-hand-multi-color-info-box) |
+| [Coordinate](/kernel/components/node/coordinate) | Named x/y axis endpoints + tan intersection `t` | [2](#step-2--axes--endpoint-labels--named-anchors), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |
+
+## Limitations
+
+| Capability | Plan | Status / fallback |
+| --- | --- | --- |
+| Math y-up axis | 🚧 Planned | scaling itself works via a Scope `scale` transform, but there's no `<Layout>`-level y-up switch yet (a negative `y` scale flips text too); the example writes pixel coordinates with manual y negation |
+| Projection target (`(A \|- B)`) | 🚧 Planned | hand-compute `[cos30 * 100, 0]` |
+| Named path + intersection target | 🚧 Planned | hand-compute `[100, -tan30 * 100]` |
+| LaTeX math (inline / display / framed / mixed) | ✅ Supported | [@retikz/tex](/kernel/packages/tex): `$...$` / `$$...$$` in text, or explicit `{ runs }` with per-run color; used here for x / y, ticks, α, and the legend |
+| Per-run / per-line color | ✅ Supported | explicit `{ runs: [{ tex, fill }, { text }] }`, each segment its own `fill` (see the legend); `\color{}` is still ignored — use the run's `fill` |
+
+## Further reading
+
+- [Path](/kernel/components/draw/path) · [Step](/kernel/components/draw/step) · [Draw](/kernel/components/draw/overview) · [Node](/kernel/components/node/overview) · [Coordinate](/kernel/components/node/coordinate) · [TeX formulas](/kernel/packages/tex)
+- [Positioning](/kernel/concepts/basic/position) · [Primitive Relations](/kernel/concepts/kernel/primitive-relations)

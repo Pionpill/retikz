@@ -31,7 +31,7 @@ description: retikz 交叉测试 / 缺陷挖掘技能。用于基于 packages �
 - 目标范围：一个包、一个模块、一个 TODO、一个 ADR、一个 bug 线索，或整个 `packages/`。
 - 现有实现：`packages/kernel/core/src/**`、`packages/kernel/render/src/**`、`packages/kernel/react/src/**`、`packages/kernel/vanilla/src/**`、`packages/graph/*/src/**`。
 - 现有测试：`packages/*/*/tests/**`。
-- 可选上下文：`notes/decisions/core/**`、`notes/decisions/core/**`、`apps/docs/**`。
+- 可选上下文：`notes/decisions/kernel/**`、`notes/decisions/kernel/**`、`apps/docs/**`。
 
 若用户没有指定目标范围，默认从 `packages/` 做广义扫描，但先聚焦高风险区域：
 
@@ -268,7 +268,7 @@ notes/reports/cross-test-YYYY-MM-DD-<scope>.md
 
 如果发现的问题暂不适合立即修：
 
-- beta 非破坏优化：追加到 `notes/decisions/core/v0/v0.1/beta.1/roadmap.md` 或当前 beta plan。
+- beta 非破坏优化：追加到 `notes/decisions/kernel/v0/v0.1/beta.1/roadmap.md` 或当前 beta plan。
 - 需要改 IR schema / public API：不要塞进 beta，登记为下次 alpha 候选。
 - 文档不一致：登记 docs TODO；若当轮改了用户可见行为，必须同步 docs。
 

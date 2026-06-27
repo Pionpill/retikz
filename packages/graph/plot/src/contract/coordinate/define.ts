@@ -5,7 +5,7 @@ import type { GuideContext, LoweredGuide } from '../../features';
 import type { LegendReserve, Margins } from '../../pipeline';
 import type { AxisGuide, CoordinateOperation, ExternalRow, MarkOperation, ScaleOperation } from '../../schemas';
 import type { ProvenanceContext } from '../provenance';
-import type { PositionScale } from '../scale';
+import type { PositionScale, TickSet } from '../scale';
 import type { Cell, CellGeometry } from './cell';
 import type { AxisFrame, CoordinateFrame, DimensionRole } from './types';
 
@@ -57,13 +57,15 @@ export type CoordinateResolveContext = {
   provenance?: ProvenanceContext;
   /** 按定位角色收集 mark 通道原始值；includeBaseline 用于需要把 baseline 纳入连续域的值轴。 */
   collectRoleValues: (role: DimensionRole, opts?: { includeBaseline?: boolean }) => Array<unknown>;
-  /** 按内置坐标系语义收集定位值；会保留 interval bounds / link endpoint / baseline 的既有特殊域贡献。 */
+  /** 按内置坐标系语义收集定位值；会保留 interval bounds / baseline 的既有特殊域贡献。 */
   collectPositionValues: (
     role: DimensionRole,
-    opts?: { axis?: 'primary' | 'secondary'; includeBaseline?: boolean; includeLinkSource?: boolean; includeLinkTargets?: boolean },
+    opts?: { axis?: 'primary' | 'secondary'; includeBaseline?: boolean },
   ) => Array<unknown>;
+  /** Override axis ticks for marks whose role position is derived from interval bounds. */
+  collectAxisTicks: (role: DimensionRole) => TickSet | undefined;
   /** 解析某个定位角色的 scale operation；未指定 scaleName 时按数据推导默认 scale（含自定义 type）。 */
-  resolveScaleForRole: (role: DimensionRole, scaleName: string | undefined, values: Array<unknown>, opts?: { includeLinkSource?: boolean }) => ScaleOperation;
+  resolveScaleForRole: (role: DimensionRole, scaleName: string | undefined, values: Array<unknown>) => ScaleOperation;
   /** 把 scale operation 与数据域、屏幕 range 组合成可投影的位置 scale。 */
   buildPositionScale: (def: ScaleOperation, values: Array<unknown>, range: readonly [number, number]) => PositionScale;
   /** 校验 interval / area 等依赖 baseline 的 mark 是否可安全使用当前 scale 类型（type 串，含自定义）。 */

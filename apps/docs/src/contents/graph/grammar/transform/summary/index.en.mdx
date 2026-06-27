@@ -1,0 +1,78 @@
+---
+title: Summaries & Selection
+description: Summary and selection transforms change data granularity by producing bins, group statistic rows, or representative source rows.
+---
+
+These transforms generate new rows from detail data. `bin` and `summarize` emit statistic rows, while `select` keeps representative original rows. Use them when the rows drawn by a mark should be prepared before rendering.
+
+| kind | Output rows | Typical use |
+| --- | --- | --- |
+| `bin` | One row per interval | Histograms and distribution overviews |
+| `summarize` | One row per group | Grouped bars, mean lines, summary tables |
+| `select` | One or more original rows per group | Extremes, top-N, nth row in a group |
+
+## Bin
+
+`bin` partitions a continuous field into intervals and emits one row per interval. Each output row contains lower and upper bin edges plus metric fields; the default metric is `{ op: 'count', as: 'binCount' }`.
+
+<ComponentPreview name="transform-histogram" sourceFiles={['transform-histogram.data.ts']} />
+
+`IntervalMark` reads `x0` / `x1` from the bin edges to draw contiguous bars on a continuous x scale. `y` reads `binCount` or another metric field for height.
+
+| prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `field` | `string` | — | Continuous source field to bin |
+| `count` | `number?` | `10` | Target bin count; mutually exclusive with `step` / `thresholds` |
+| `step` | `number?` | — | Fixed bin width; mutually exclusive with `count` / `thresholds` |
+| `thresholds` | `Array<number>?` | — | Explicit interior boundaries; mutually exclusive with `count` / `step` |
+| `extent` | `[number, number]?` | Observed min/max | Override the binning domain |
+| `metrics` | `Array<Reducer>?` | `count → binCount` | Per-bin statistics |
+| `startField` / `endField` | `string?` | `binStart` / `binEnd` | Output edge fields |
+
+## Summarize
+
+`summarize` groups by `groupBy` and uses `metrics` to reduce each group into one row. Output rows keep the group keys, and every reducer must name its output with `as`.
+
+<ComponentPreview name="transform-summarize" sourceFiles={['transform-summarize.data.ts']} />
+
+`count` does not need `field`; `sum` / `mean` / `median` / `min` / `max` / `quantile` do. Omitting `groupBy` or passing an empty array means one global group.
+
+| prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `groupBy` | `Array<string>?` | One global group | Grouping keys; composite keys are supported |
+| `metrics` | `Array<Reducer>` | — | Group reducers; every reducer must provide `as` |
+
+```tsx
+<Transform
+  kind="summarize"
+  groupBy={['region']}
+  metrics={[
+    { op: 'sum', field: 'revenue', as: 'total' },
+    { op: 'median', field: 'revenue', as: 'median' },
+    { op: 'count', as: 'orders' },
+  ]}
+/>
+```
+
+## Select
+
+`select` runs a selector per group and emits the selected original rows. It does not reduce values into a new statistic, so fields such as city names, ids, and anchors remain available on the selected rows.
+
+<ComponentPreview name="transform-select" sourceFiles={['transform-select.data.ts']} />
+
+Built-in selectors include `min` / `max` / `first` / `last` / `top` / `bottom` / `nth`. `rankAs` can write the selected one-based rank into the output row.
+
+| prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `groupBy` | `Array<string>?` | One global group | Grouping keys |
+| `selector` | `Selector` | — | Representative row rule |
+| `rankAs` | `string?` | — | Optional field for one-based rank |
+
+```tsx
+<Transform
+  kind="select"
+  groupBy={['region']}
+  selector={{ op: 'top', by: 'revenue', n: 3 }}
+  rankAs="rank"
+/>
+```

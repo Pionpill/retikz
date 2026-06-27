@@ -1,14 +1,26 @@
-import type { IRNode, IRScope } from '@retikz/core';
+import type { IRNode, IRScope, ScenePrimitive } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
+import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema, type ReferenceMark } from '../../src/schemas';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { lowerMark } from '../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../src/providers';
-import type { PositionScale } from '../../src/contract';
+import { type Cell, type PositionScale, createCoordinateFrame, defineCoordinate, densifyCellContour } from '../../src/contract';
 
 /** core Path 的最小形态（鸭子类型断言端点；避免引入 core 内部 IRPath 类型耦合） */
-type RulePath = { type: 'path'; children: Array<{ kind: string; to: [number, number] }>; pathDefault?: unknown };
+type RulePath = {
+  type: 'path';
+  children: Array<{
+    kind: string;
+    to?: [number, number];
+    radius?: number;
+    startAngle?: number;
+    endAngle?: number;
+    closed?: string;
+  }>;
+  pathDefault?: unknown;
+};
 
 /**
  * ADR-03（alpha.11）：rule mark（参考标注；line 下沉 core Path、band 复用 ADR-01 projectCell）下沉契约测试。
@@ -33,6 +45,7 @@ const linearStub = (domain: [number, number], range: [number, number]): Position
   const [d0, d1] = domain;
   return {
     coordinate: (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? r[0] + ((value - d0) / (d1 - d0)) * (r[1] - r[0]) : NaN),
+    domain: () => [d0, d1],
     get bandwidth() {
       return 0;
     },
@@ -64,7 +77,7 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'node') out.push(node);
+      if (node.type === 'node') out.push(child as IRNode);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -72,11 +85,22 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
   return out;
 };
 
+const flattenPrimitives = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
+  const out: Array<ScenePrimitive> = [];
+  for (const primitive of primitives) {
+    out.push(primitive);
+    if (primitive.type === 'group') out.push(...flattenPrimitives(primitive.children));
+  }
+  return out;
+};
+
 /** 取一条 path 的 [move 点, line 点]（move + 单 line step 的两端） */
 const endpointsOf = (path: RulePath): [[number, number], [number, number]] => {
   const steps = path.children;
-  const move = steps.find(s => s.kind === 'move')!;
-  const lines = steps.filter(s => s.kind === 'line');
+  const hasPointTarget = (step: (typeof steps)[number]): step is (typeof steps)[number] & { to: [number, number] } =>
+    step.to !== undefined;
+  const move = steps.find((s): s is (typeof steps)[number] & { to: [number, number] } => s.kind === 'move' && hasPointTarget(s))!;
+  const lines = steps.filter((s): s is (typeof steps)[number] & { to: [number, number] } => s.kind === 'line' && hasPointTarget(s));
   return [move.to, lines[lines.length - 1].to];
 };
 
@@ -176,6 +200,23 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
     expect(nodes).toHaveLength(2);
   });
 
+  it('rule-region-cartesian-rect', () => {
+    // region x∈[2,5] 且 y∈[70,90] → rect Node。x 像素 80..200，y 像素 120..40。
+    const mark: ReferenceMark = { type: 'reference', kind: 'region', encoding: { x: { value: 2 }, y: { value: 70 } }, xTo: 5, yTo: 90 };
+    const nodes = nodesOf(lowerMark(mark, [{}], cartFrame()) as IRScope);
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0].minimumWidth).toBe(120);
+    expect(nodes[0].minimumHeight).toBe(80);
+    expect(nodes[0].position).toEqual([140, 80]);
+  });
+
+  it('rule-region-per-datum-field', () => {
+    // per-datum region 四边界均可来自字段；每行一个区域 Node。
+    const mark: ReferenceMark = { type: 'reference', kind: 'region', encoding: { x: { field: 'x0' }, y: { field: 'y0' } }, xTo: 'x1', yTo: 'y1' };
+    const rows = [{ x0: 1, x1: 2, y0: 20, y1: 30 }, { x0: 4, x1: 6, y0: 40, y1: 70 }];
+    expect(nodesOf(lowerMark(mark, rows, cartFrame()) as IRScope)).toHaveLength(2);
+  });
+
   it('rule-band-color-value-fill', () => {
     const mark: ReferenceMark = { type: 'reference', encoding: { y: { value: 70 }, color: { value: 'amber' } }, yTo: 90 };
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
@@ -253,6 +294,24 @@ describe('rule fail-loud', () => {
     expect(() => lowerMark(mark, [{}], cartFrame())).toThrow(/xTo|match the bound dimension|yTo/i);
   });
 
+  it('rule-region-requires-four-bounds', () => {
+    const mark = { type: 'reference', kind: 'region', xTo: 5, encoding: { x: { value: 2 }, y: { value: 70 } } } as ReferenceMark;
+    expect(() => lowerMark(mark, [{}], cartFrame())).toThrow(/region|required|yTo/i);
+  });
+
+  it('rule-region-rejects-extent', () => {
+    const mark = {
+      type: 'reference',
+      kind: 'region',
+      xTo: 5,
+      yTo: 90,
+      extentField: 'lo',
+      extentToField: 'hi',
+      encoding: { x: { value: 2 }, y: { value: 70 } },
+    } as ReferenceMark;
+    expect(() => lowerMark(mark, [{ lo: 0, hi: 10 }], cartFrame())).toThrow(/region|extentField|extentToField/i);
+  });
+
   it('rule-coord-1d-fail-loud', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
@@ -302,10 +361,12 @@ describe('rule polar', () => {
   });
 
   it('rule-polar-constant-radius-ring', () => {
-    // 水平 rule y=50（常量半径）→ 常半径环，沿角向 [0,360] 段采样（多 line step 弯成弧）
+    // 水平 rule y=50（常量半径）→ 常半径环，用 core circlePath 表达，避免采样成多边形。
     const mark: ReferenceMark = { type: 'reference', encoding: { y: { value: 50 } } };
     const layer = lowerMark(mark, [{}], polarFrame(true)) as IRScope;
-    expect(pathsOf(layer)[0].children.filter(s => s.kind === 'line').length).toBeGreaterThan(1);
+    const steps = pathsOf(layer)[0].children;
+    expect(steps.map(s => s.kind)).toEqual(['move', 'circlePath']);
+    expect(steps[1].radius).toBeCloseTo(75, 6);
   });
 
   it('rule-band-polar-ring-sector', () => {
@@ -315,6 +376,87 @@ describe('rule polar', () => {
     const node = nodesOf(layer)[0];
     const shape = node.shape as { type: string; params: { innerRadius: number; outerRadius: number } };
     expect(shape.type).toBe('sector');
+    expect(shape.params.innerRadius).toBeGreaterThan(0);
+    expect(shape.params.innerRadius).toBeCloseTo(60, 6);
+    expect(shape.params.outerRadius).toBeCloseTo(90, 6);
+  });
+
+  it('rule-band-polar-demo-categorical-angle-keeps-inner-radius', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: {
+        reference: 'd',
+        model: [{ name: 'name', type: 'categorical' }, { name: 'score', type: 'continuous' }],
+      },
+      coordinate: { type: 'polar2D' },
+      scales: [],
+      marks: [
+        { type: 'reference', encoding: { y: { value: 60 }, color: { value: '#fde68a' } }, yTo: 80 },
+        { type: 'point', encoding: { x: { field: 'name' }, y: { field: 'score' } } },
+      ],
+    });
+    const layer = expandOf(
+      spec,
+      {
+        d: [
+          { name: 'Amy', score: 52 },
+          { name: 'Ben', score: 74 },
+          { name: 'Cara', score: 61 },
+          { name: 'Dan', score: 88 },
+          { name: 'Eve', score: 45 },
+          { name: 'Fay', score: 93 },
+        ],
+      },
+      cartOpts,
+    ).children[0] as IRScope;
+    const shape = nodesOf(layer)[0].shape as { type: string; params: { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number } };
+    expect(shape.type).toBe('sector');
+    expect(shape.params.innerRadius).toBeGreaterThan(0);
+    expect(shape.params.outerRadius).toBeGreaterThan(shape.params.innerRadius);
+    expect(shape.params.startAngle).toBe(0);
+    expect(shape.params.endAngle).toBe(360);
+
+    const scene = compileToScene({ version: 1, type: 'scene', children: [layer] });
+    const filledRing = flattenPrimitives(scene.primitives).find(
+      (p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path' && p.fill === '#fde68a',
+    );
+    expect(filledRing?.type).toBe('path');
+    expect(filledRing?.fillRule).toBe('evenodd');
+  });
+
+  it('rule-polar-field-radius-rings-use-circle-path', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: {
+        reference: 'd',
+        model: [{ name: 'tier', type: 'categorical' }, { name: 'threshold', type: 'continuous' }],
+      },
+      coordinate: { type: 'polar2D' },
+      scales: [],
+      marks: [{ type: 'reference', encoding: { y: { field: 'threshold' }, color: { field: 'tier' } } }],
+    });
+    const layer = expandOf(
+      spec,
+      { d: [{ tier: 'low', threshold: 30 }, { tier: 'mid', threshold: 60 }, { tier: 'high', threshold: 90 }] },
+      cartOpts,
+    ).children[0] as IRScope;
+    const paths = pathsOf(layer);
+    expect(paths).toHaveLength(3);
+    for (const path of paths) {
+      expect(path.children.map(s => s.kind)).toEqual(['move', 'circlePath']);
+    }
+  });
+
+  it('rule-region-polar-sector', () => {
+    // region x∈[30,120] 且 y∈[40,60] → projectCell 环扇区。
+    const mark: ReferenceMark = { type: 'reference', kind: 'region', encoding: { x: { value: 30 }, y: { value: 40 } }, xTo: 120, yTo: 60 };
+    const node = nodesOf(lowerMark(mark, [{}], polarFrame()) as IRScope)[0];
+    const shape = node.shape as { type: string; params: { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number } };
+    expect(shape.type).toBe('sector');
+    expect(shape.params.startAngle).toBeCloseTo(30, 6);
+    expect(shape.params.endAngle).toBeCloseTo(120, 6);
     expect(shape.params.innerRadius).toBeCloseTo(60, 6);
     expect(shape.params.outerRadius).toBeCloseTo(90, 6);
   });
@@ -333,6 +475,80 @@ describe('rule polar', () => {
       ],
     };
     expect(() => compileToScene(scene)).not.toThrow();
+  });
+});
+
+describe('rule region projectCell 坐标系', () => {
+  it('rule-region-ternary-contour', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      coordinate: { type: 'ternary2D' },
+      scales: [],
+      marks: [{ type: 'reference', kind: 'region', xTo: 0.75, yTo: 0.55, zTo: 0.7, encoding: { x: { value: 0.15 }, y: { value: 0.1 }, z: { value: 0.1 } } }],
+    });
+    const layer = expandOf(spec, { d: [{}] }, cartOpts).children[0] as IRScope;
+    const node = nodesOf(layer)[0];
+    const shape = node.shape as { type?: string; params?: { points?: Array<[number, number]> } } | undefined;
+    expect(shape?.type).toBe('contour');
+    expect(shape?.params?.points?.length ?? 0).toBeGreaterThanOrEqual(3);
+  });
+
+  it('rule-region-custom-projectcell-contour', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      coordinate: { type: 'curved-reference' },
+      scales: [],
+      marks: [{ type: 'reference', kind: 'region', xTo: 6, yTo: 8, encoding: { x: { value: 2 }, y: { value: 3 } } }],
+    });
+    const options: LowerPlotsOptions = {
+      width: WIDTH,
+      height: HEIGHT,
+      coordinates: [
+        defineCoordinate({
+          schema: z.object({ type: z.literal('curved-reference').describe('Discriminator: reference region custom coordinate operation') }),
+          roles: ['x', 'y'],
+          resolve: (_operation, ctx) => {
+            const xScale = linearStub([0, 10], [0, ctx.width]);
+            const yScale = linearStub([0, 10], [ctx.height, 0]);
+            const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
+              const x = xScale.coordinate(values[0]);
+              const y = yScale.coordinate(values[1]);
+              return Number.isFinite(x) && Number.isFinite(y) ? [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)] : null;
+            };
+            return {
+              frame: createCoordinateFrame('curved-reference', ['x', 'y'], projectRoles, {
+                roleScales: { x: xScale, y: yScale },
+                projectCell: (cell: Cell) => ({ kind: 'contour', points: densifyCellContour(cell, (x, y) => [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)], { curvedPrimary: true }) }),
+              }),
+              plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
+              gridLayers: [],
+              axisLayers: [],
+            };
+          },
+        }),
+      ],
+    };
+    const layer = expandOf(spec, { d: [{}] }, options).children[0] as IRScope;
+    const node = nodesOf(layer)[0];
+    const shape = node.shape as { type?: string; params?: { points?: Array<[number, number]> } } | undefined;
+    expect(shape?.type).toBe('contour');
+    expect(shape?.params?.points?.length ?? 0).toBeGreaterThanOrEqual(4);
+  });
+
+  it('rule-region-ternary-missing-z-fails-loud', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      coordinate: { type: 'ternary2D' },
+      scales: [],
+      marks: [{ type: 'reference', kind: 'region', xTo: 0.8, yTo: 0.7, encoding: { x: { value: 0.1 }, y: { value: 0.1 } } }],
+    });
+    expect(() => expandOf(spec, { d: [{}] }, cartOpts)).toThrow(/reference region|encoding\.z|zTo/i);
   });
 });
 

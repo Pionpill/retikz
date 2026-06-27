@@ -30,7 +30,7 @@ authoring API 有两套用户入口——`@retikz/react`（JSX DSL）与 `@retik
 
 ## 输入
 
-- ADR 路径：`notes/decisions/core/<NNNN>-*.md`，状态 Proposed
+- ADR 路径：`notes/decisions/kernel/<NNNN>-*.md`，状态 Proposed
 - ADR 实现契约段已填全（Level / Schema 改动 / 文件 scope / 测试象限）
 
 ## 启动前自动判级

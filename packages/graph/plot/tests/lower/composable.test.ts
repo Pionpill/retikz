@@ -70,7 +70,7 @@ describe('ADR-02 L1-b · 外部可见面板 anchor（gated on id）', () => {
   it('plotarea_carrier_present', () => {
     // 不可见矩形 carrier，id=`<plotId>.plotArea`
     const outer = expandOf(pointSpec({ id: 'p' }), opts);
-    const carrier = outer.children.find(c => (c as IRNode).id === 'p.plotArea');
+    const carrier = outer.children.find((c): c is IRNode => (c as { type?: string; id?: string }).type === 'node' && (c as { id?: string }).id === 'p.plotArea');
     expect(carrier).toBeTruthy();
     expect(carrier!.type).toBe('node');
     expect(carrier!.shape).toBe('rectangle');
@@ -85,7 +85,8 @@ describe('ADR-02 L1-b · 外部可见面板 anchor（gated on id）', () => {
       pointSpec({ id: 'p', guides: [{ type: 'axis', dimension: 'x' }, { type: 'axis', dimension: 'y' }] }),
       opts,
     );
-    const carrier = guided.children.find(c => (c as IRNode).id === 'p.plotArea') as IRNode;
+    const carrier = guided.children.find((c): c is IRNode => (c as { type?: string; id?: string }).type === 'node' && (c as { id?: string }).id === 'p.plotArea');
+    if (carrier === undefined) throw new Error('Expected p.plotArea carrier node');
     expect(carrier.minimumWidth).toBeLessThan(480);
     expect(carrier.minimumHeight).toBeLessThan(300);
   });

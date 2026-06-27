@@ -1,0 +1,67 @@
+---
+title: 保行标注
+description: 保行标注保留每一条明细行，同时根据分组、顺序或统计结果补出新的派生字段。
+---
+
+保行标注适合“图元仍然画明细行，但每行需要额外上下文”的场景。它们不会把多行压成一行，也不会丢掉原始行；输出行仍然可以被点、线、柱或自定义图元直接消费。
+
+| kind | 行数 | 常见输出 |
+| --- | --- | --- |
+| `stack` | N → N | `y0` / `y1` |
+| `normalize` | N → N | 占比字段或覆盖原字段 |
+| `annotate` | N → N | 组内均值、中位数、极值等统计字段 |
+
+## 堆叠 stack
+
+`stack` 在每个 `x` 分组内按系列累加数值，给每行补出下界和上界。默认输出是 `y0` / `y1`，正好对接 `IntervalMark` 的区间消费方式。
+
+<ComponentPreview name="transform-stack" sourceFiles={['transform-stack.data.ts']} />
+
+`<IntervalMark stack>` / `<IntervalMark angle>` 的自动堆叠只是快捷写法；当管线里已经存在匹配的显式 `stack` 时，自动堆叠会被抑制，避免二次堆叠。
+
+| prop | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| `x` | `string?` | 单组累积 | 分组键；同一值内累积 |
+| `y` | `string` | — | 被累加的数值字段 |
+| `groupBy` | `string?` | 数据行顺序 | 系列字段，按系列出现序决定段顺序 |
+| `startField` / `endField` | `string?` | `y0` / `y1` | 输出上下界字段 |
+
+## 归一化 normalize
+
+`normalize` 把每行的数值除以所在组的总和，得到组内占比。`basis` 可以是 `fraction`（0 到 1）或 `percent`（0 到 100）；`as` 省略时原位覆盖输入字段。
+
+<ComponentPreview name="transform-normalize" sourceFiles={['transform-normalize.data.ts']} />
+
+normalize 和 stack 组合就是百分比堆叠：先把每组转成占比，再对占比做堆叠。
+
+| prop | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| `field` | `string` | — | 求组内占比的数值字段 |
+| `groupBy` | `Array<string>?` | 全行单组 | 分组键，支持复合键 |
+| `basis` | `'fraction' \| 'percent'?` | `'fraction'` | 输出比例尺度 |
+| `as` | `string?` | 原位覆盖 | 输出字段名 |
+
+## 统计标注 annotate
+
+`annotate` 先按 `groupBy` 分组，再把 reducer 结果或 selector 选中的代表值回填到组内每一行。它适合在明细点旁边画组均值线、组中位数带、分组阈值等上下文层。
+
+<ComponentPreview name="transform-annotate" sourceFiles={['transform-annotate.data.ts']} />
+
+下面的示例把每个门店的平均收入写成 `storeMean`，点仍然画原始 `revenue`，线则读取同一组内广播回来的平均值。
+
+| prop | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| `groupBy` | `Array<string>?` | 全局单组 | 分组键，支持复合键 |
+| `metrics` | `Array<Reducer>?` | — | 要广播回每行的统计指标 |
+| `selectors` | `Array<{ selector: Selector; as: string }>?` | — | 要广播回每行的代表行取值；`min` / `max` / `top` / `bottom` 读取 selector 的 `by` 字段，其余 selector 回填选中名次 |
+
+常用 reducer / selector 写法：
+
+```tsx
+<Transform
+  kind="annotate"
+  groupBy={['store']}
+  metrics={[{ op: 'mean', field: 'revenue', as: 'storeMean' }]}
+  selectors={[{ selector: { op: 'max', by: 'revenue' }, as: 'storeMax' }]}
+/>
+```

@@ -2,7 +2,7 @@ import type { IRChild } from '@retikz/core';
 import type { ExternalRow, Mark, MarkOperation } from '../schemas';
 import type { ChannelDefinitionKindValue, FieldCollector, MarkChannels } from './channel';
 import type { Cell, CoordinateFrame } from './coordinate';
-import type { MarkProvenance } from './provenance';
+import type { MarkLoweringContext } from './anchor';
 
 /**
  * 区间柱（interval mark）摆放上下文：lowering 与 locator 共享的一次性派生量
@@ -10,14 +10,24 @@ import type { MarkProvenance } from './provenance';
  *   （seriesRank / subWidth）收进一处，杜绝两处各算各的漂移。堆叠经 extent bounds 表达、不再走 ctx。
  */
 export type IntervalContext = {
-  /** 类别带宽（primary.bandwidth；group 切子带、plain 直接用） */
-  bandwidth: number;
-  /** band group 子带字段（bounds.x = band{group} 时有值；否则 undefined = 整带） */
-  group?: string;
-  /** group 值 → 子带序号（按数据序去重推断，与 lowering 一致） */
-  seriesRank: Map<string | number, number>;
-  /** 单子带宽（bandwidth / 子带数；无 group 下 = bandwidth） */
-  subWidth: number;
+  /** 按 role 保存的 band 子带上下文；仅 interval lowering / locator 共享，不进 IR */
+  byRole: Partial<
+    Record<
+      string,
+      {
+        /** 类别带宽（group 切子带、plain 直接用） */
+        bandwidth: number;
+        /** band group 子带字段（bounds.<role> = band{group} 时有值；否则 undefined = 整带） */
+        group?: string;
+        /** group 值 → 子带序号（按数据序去重推断，与 lowering 一致） */
+        seriesRank: Map<string | number, number>;
+        /** 单子带宽（bandwidth / 子带数；无 group 下 = bandwidth） */
+        subWidth: number;
+      }
+    >
+  >;
+  /** 按 role 保存的比例宽度累积区间；供 variable-width interval lowering / locator 共享，不进 IR */
+  proportionalByRole?: Partial<Record<string, Map<ExternalRow, [number, number]>>>;
 };
 
 /**
@@ -39,7 +49,7 @@ export type MarkDefinition<T extends MarkOperation = Mark> = {
   /** 区间类 mark：某行 → 正交 Cell（interval 用；非区间类省略） */
   buildCell?: (mark: T, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
   /** 下沉到 core IR 图层（无可绘制图元返回 null；不支持的 mark × coordinate 由实现 fail-loud） */
-  lower: (mark: T, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, prov?: MarkProvenance) => IRChild | null;
+  lower: (mark: T, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, ctx?: MarkLoweringContext) => IRChild | null;
 };
 
 /**
@@ -60,5 +70,5 @@ export type AnyMarkDefinition = Omit<MarkDefinition<Mark>, 'collectFields' | 'bu
   /** 内部宽类型占位；按 type 取出后调用方已知具体 mark。 */
   buildCell?: (mark: never, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
   /** 内部宽类型占位；按 type 取出后调用方已知具体 mark。 */
-  lower: (mark: never, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, prov?: MarkProvenance) => IRChild | null;
+  lower: (mark: never, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, ctx?: MarkLoweringContext) => IRChild | null;
 };

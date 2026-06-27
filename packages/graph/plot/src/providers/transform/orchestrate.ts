@@ -21,16 +21,22 @@ const transformDefinitionOf = (operation: TransformOperation, registry: Readonly
 };
 
 /** 收集 transform 读取的源字段，并登记 transform 派生输出字段以供 strict model 排除。 */
-export const collectTransformFields = (transform: TransformOperation, fields: FieldCollector, derivedOutputs: Set<string>, registry: ReadonlyMap<string, AnyTransformDefinition> = resolveTransformRegistry()): void => {
+export const collectTransformFields = (
+  transform: TransformOperation,
+  fields: FieldCollector,
+  derivedOutputs: Set<string>,
+  registry: ReadonlyMap<string, AnyTransformDefinition> = resolveTransformRegistry(),
+  context: TransformContext = DEFAULT_TRANSFORM_CONTEXT,
+): void => {
   const definition = transformDefinitionOf(transform, registry);
   const parsed = parseTransformOperation(definition, transform);
-  fields.addFields(...(definition.inputFields?.(parsed) ?? []));
-  for (const output of definition.outputFields?.(parsed) ?? []) derivedOutputs.add(output);
+  fields.addFields(...(definition.inputFields?.(parsed, context) ?? []));
+  for (const output of definition.outputFields?.(parsed, context) ?? []) derivedOutputs.add(output);
 };
 
 /**
  * 按声明顺序折叠应用 transform。
- * @description sort / stack / normalize / derive-interval / jitter 保行数；bin / aggregate 改行数。
+ * @description sort / stack / normalize / derive-interval / jitter 保行数；bin / summarize 改行数。
  */
 export const applyTransforms = (
   rows: Array<ExternalRow>,

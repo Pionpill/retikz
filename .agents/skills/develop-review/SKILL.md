@@ -229,7 +229,7 @@ git status --short    # 与输入段留底的基线对比：应只多出新增�
 本 skill 终点是**报告**，不是改动。下游由人工驱动：
 
 1. **人工 triage 报告** → 决定哪些 finding 值得修、优先级、走哪条流程
-2. 选中要修的 → 人工登记到**所属模块的 beta milestone roadmap**（路径按被审模块走：core 分组在 `notes/decisions/core/v<MAJOR>/.../v<MAJOR>.<MINOR>-beta.<N>/roadmap.md`，plot 分组在 `notes/decisions/plot/...`）→ 交 [`flow-beta`](../flow-beta/SKILL.md) 逐条消费
+2. 选中要修的 → 人工登记到**所属模块的 beta milestone roadmap**（路径按被审模块走：core 分组在 `notes/decisions/kernel/v<MAJOR>/.../v<MAJOR>.<MINOR>-beta.<N>/roadmap.md`，plot 分组在 `notes/decisions/graph/...`）→ 交 [`flow-beta`](../flow-beta/SKILL.md) 逐条消费
 3. **高风险 finding 的坐实出口**：
    - 不确定是不是真 bug / 重构怕引入回归 → [`cross-review`](../cross-review/SKILL.md) 拉多模型背书
    - 疑似 BLOCKING bug → [`cross-test`](../cross-test/SKILL.md) 写 fail 测试坐实再修

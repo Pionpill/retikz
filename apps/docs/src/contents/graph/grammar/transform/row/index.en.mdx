@@ -1,0 +1,55 @@
+---
+title: Row Transforms
+description: Row transforms keep the input row count unchanged. They reorder rows or derive values from each row before scales and marks consume the data.
+---
+
+Row transforms still produce one output row for every input row. They do not summarize groups or choose representative rows. Use them when a mark only needs a steadier row order, normalized interval fields, or deterministic positional noise.
+
+| kind | Row count | Typical use |
+| --- | --- | --- |
+| `sort` | N → N | Control line order or stack input order |
+| `derive-interval` | N → N | Turn per-row values into `[start,end]` intervals |
+| `jitter` | N → N | Separate overlapping points in data space |
+
+## Sort
+
+`sort` stably reorders rows by one field. Ties keep their original relative order, which is useful before `PathMark` or before an explicit stack.
+
+Keep it separate from [`order`](/graph/grammar/data/model#category-order) in the data model: `sort` reorders data rows, while `order` reorders a categorical domain.
+
+<ComponentPreview name="transform-sort" sourceFiles={['transform-sort.data.ts']} />
+
+| prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `field` | `string` | — | Field used for sorting |
+| `order` | `'ascending' \| 'descending'?` | `'ascending'` | Sort direction |
+
+## Derive Interval
+
+`derive-interval` computes one interval for each row. It does not inspect neighboring rows, so it works well for task bars, explicit ranges, and bars with a non-zero baseline.
+
+<ComponentPreview name="transform-derive-interval" sourceFiles={['transform-derive-interval.data.ts']} />
+
+Both `derive-interval` and `stack` default to `y0` / `y1`, but they mean different things: `derive-interval` is per-row derivation, while `stack` is cross-row accumulation.
+
+| prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `from` | `string?` | — | Value field for baseline-to-value mode |
+| `baseline` | `number?` | `0` | Start value in `from` mode |
+| `startFrom` / `endFrom` | `string?` | — | Two-field interval mode; must appear together |
+| `startField` / `endField` | `string?` | `y0` / `y1` | Output field names |
+
+## Jitter
+
+`jitter` adds deterministic pseudo-random offsets to continuous numeric position fields. The offset happens in data space before scaling; the integer `seed` keeps SSR and browser hydration aligned.
+
+<ComponentPreview name="transform-jitter" sourceFiles={['transform-jitter.data.ts']} />
+
+Current `jitter` works on continuous numeric fields. Screen-space jitter inside categorical bands belongs to a different layer.
+
+| prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `axis` | `'x' \| 'y' \| 'both'?` | `'x'` | Axis to jitter |
+| `xField` / `yField` | `string?` | `x` / `y` | Continuous numeric field to offset |
+| `amount` | `number?` | `1` | Maximum absolute offset in data units |
+| `seed` | `number?` | `0` | Deterministic PRNG seed |

@@ -373,6 +373,44 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
     expect(xs[1] - xs[0]).toBeCloseTo(xs[2] - xs[1], 6);
   });
 
+  it('proportional_interval_axis_uses_role_channel_as_labels', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'labor' },
+      scales: [
+        { type: 'linear', name: 'xWidth' },
+        { type: 'linear', name: 'yCost' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xWidth', y: 'yCost' },
+      marks: [
+        {
+          type: 'interval',
+          bounds: { x: { kind: 'proportional', field: 'gdp' } },
+          encoding: { x: { field: 'country' }, y: { field: 'cost' } },
+        },
+      ],
+      guides: [{ type: 'axis', dimension: 'x' }],
+    });
+    const outer = expandOf(
+      spec,
+      {
+        labor: [
+          { country: 'Norway', cost: 52, gdp: 3 },
+          { country: 'France', cost: 42, gdp: 8 },
+          { country: 'Germany', cost: 41, gdp: 10 },
+        ],
+      },
+      opts,
+    );
+    const xAxis = outer.children[1] as IRScope;
+    const labels = xAxis.children.filter((child): child is IRNode => (child as IRNode).text !== undefined);
+    expect(labels.map(label => label.text)).toEqual(['Norway', 'France', 'Germany']);
+    const xs = labels.map(label => (label.position as [number, number])[0]);
+    expect(xs[0]).toBeLessThan(xs[1]);
+    expect(xs[1]).toBeLessThan(xs[2]);
+  });
+
   it('bar_missing_value_skipped', () => {
     const rows = [
       { month: 0, revenue: 10 },
@@ -638,7 +676,7 @@ describe('lowerPlots mark paint', () => {
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
-  it('region_constant_paint_lowers_to_path_default_and_compiles', () => {
+  it('path_closure_constant_paint_lowers_to_path_default_and_compiles', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -650,8 +688,9 @@ describe('lowerPlots mark paint', () => {
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [
         {
-          type: 'region',
+          type: 'path',
           order: 'month',
+          closure: { kind: 'baseline' },
           fill: { kind: 'constant', value: paintGradient },
           stroke: { kind: 'constant', value: paintGradient },
           encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
@@ -694,35 +733,6 @@ describe('lowerPlots mark paint', () => {
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
-  it('link_constant_paint_lowers_to_path_default_and_compiles', () => {
-    const spec = PlotSpecSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'links' },
-      scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
-      ],
-      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [
-        {
-          type: 'link',
-          source: { x: { field: 'sourceX' }, y: { field: 'sourceY' } },
-          target: { x: { field: 'targetX' }, y: { field: 'targetY' } },
-          value: 'value',
-          fill: { kind: 'constant', value: paintGradient },
-          stroke: { kind: 'constant', value: paintGradient },
-          encoding: {},
-        },
-      ],
-    });
-    const layer = firstLayer(spec, { links: [{ sourceX: 0, sourceY: 0, targetX: 1, targetY: 1, value: 4 }] }, opts);
-    expect(layer.pathDefault?.fill).toEqual(paintGradient);
-    expect(layer.pathDefault?.stroke).toEqual(paintGradient);
-
-    const scene = compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots({ links: [{ sourceX: 0, sourceY: 0, targetX: 1, targetY: 1, value: 4 }] }, opts) });
-    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
-  });
 });
 
 // ADR-05：relation（series / dodge / stack / 多系列折线）
@@ -829,8 +839,8 @@ describe('lowerPlots relation (ADR-05)', () => {
     // 2 系列 → 2 条 Path，各自一色
     expect(layer.children).toHaveLength(2);
     expect((layer.children[0] as IRPath).type).toBe('path');
-    expect((layer.children[0]).stroke).toBe('#aa');
-    expect((layer.children[1]).stroke).toBe('#bb');
+    expect((layer.children[0] as IRPath).stroke).toBe('#aa');
+    expect((layer.children[1] as IRPath).stroke).toBe('#bb');
   });
 
   it('series_omitted_single_bar_layer', () => {
