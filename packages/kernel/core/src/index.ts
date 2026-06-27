@@ -76,6 +76,8 @@ export {
   JsonObjectSchema,
   ClipSpecSchema,
   ViewBoxSchema,
+  DrawableGeometryStyleSchema,
+  DrawableElementMetadataSchema,
 } from './schemas';
 export type {
   IRPosition,
@@ -169,6 +171,9 @@ export type {
   IRJsonObject,
   IRClipSpec,
   IRViewBox,
+  IRDrawableGeometryStyle,
+  IRDrawableElementMetadata,
+  IRDrawableSharedStyle,
 } from './schemas';
 export {
   ArrowShape,

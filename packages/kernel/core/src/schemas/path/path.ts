@@ -1,8 +1,5 @@
 import { z } from 'zod';
-import { AnimationTrackSchema } from '../animation';
-import { BlendMode, DropShadowSchema, ShadowPreset } from '../effects';
-import { JsonObjectSchema } from '../json';
-import { PaintSpecSchema } from '../paint';
+import { DrawableElementMetadataSchema, DrawableGeometryStyleSchema } from '../drawable';
 import { ArrowDetailSchema, ArrowEndDetailSchema } from './arrow';
 import { StepSchema } from './step';
 
@@ -55,43 +52,9 @@ export type IRArrowMark = z.infer<typeof ArrowMarkSchema>;
 
 export const PathSchema = z
   .object({
-    type: z
-      .literal('path')
-      .describe('Discriminator marking this child as a path'),
-    id: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Optional stable id; required if another path needs to reference this path by string, and used as the hydration hook so client-side event handlers can be bound to the primitives this path emits.',
-      ),
-    meta: JsonObjectSchema.optional().describe(
-      'Opaque provenance metadata carried by this element (e.g. a Tier 2 lowering tagging which datum / series / layer it came from). Provenance passthrough: preserved verbatim into the Scene primitive(s) this element emits, ignored by renderers, and never interpreted by the compiler — it does not affect layout, connection, style, or bounding box. Must be a JSON object (fully serializable). Not inherited across scopes; not part of the every-X style defaults.',
-    ),
-    animations: z
-      .array(AnimationTrackSchema)
-      .optional()
-      .describe(
-        'Declarative timeline animation tracks for this path (drawOn / fadeIn / …). Each track animates one renderer-agnostic property over normalized time; the base value is the settled (animation-end) state. Carried verbatim into the emitted Scene primitive; renderers play them or render the static settled state with a diagnosable warning when unable. Does not affect layout / bounding box. Not inherited across scopes; not part of the every-X style defaults.',
-      ),
-    color: z
-      .string()
-      .optional()
-      .describe(
-        'Master color (TikZ `color=`). When set, the stroke, arrow tips, and step labels default to it unless individually overridden. Following the master color (not the stroke) is how a colored line shares its color with its labels and arrows — `stroke=` alone only paints the line.',
-      ),
-    stroke: z
-      .union([z.string(), PaintSpecSchema])
-      .optional()
-      .describe(
-        'Stroke paint of the path; any CSS color string or a PaintSpec (linear / radial gradient, pattern, or image). Defaults to currentColor when omitted.',
-      ),
-    strokeWidth: z
-      .number()
-      .finite()
-      .nonnegative()
-      .optional()
-      .describe('Stroke width in user units; defaults to 1 when omitted'),
+    type: z.literal('path').describe('Discriminator marking this child as a path.'),
+    ...DrawableElementMetadataSchema.shape,
+    ...DrawableGeometryStyleSchema.shape,
     dashPattern: z
       .array(z.number().finite().nonnegative())
       .min(1)
@@ -108,12 +71,6 @@ export const PathSchema = z
     arrowDetail: ArrowDetailSchema.optional().describe(
       'Detailed arrow visual config (shape / scale / length / width / color / fill / opacity / lineWidth) with optional `start` / `end` per-end overrides. Omitted = built-in defaults (shape `stealth`, all visuals inherit from path stroke / opacity).',
     ),
-    fill: z
-      .union([z.string(), PaintSpecSchema])
-      .optional()
-      .describe(
-        'Fill of the closed region: any CSS color string, or a PaintSpec (linear / radial gradient, pattern, or image). Omitted = no fill (stroke only). Pairs with `cycle` step for filled shapes.',
-      ),
     fillRule: z
       .enum(['nonzero', 'evenodd'])
       .optional()
@@ -154,46 +111,6 @@ export const PathSchema = z
       .describe(
         'Semantic stroke thickness preset (TikZ `ultra thin` … `ultra thick`). Compiled to a numeric stroke-width if `strokeWidth` is omitted. Explicit `strokeWidth` always wins.',
       ),
-    opacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Whole-path opacity 0..1; multiplies onto stroke and fill.'),
-    shadow: z
-      .union([z.enum(ShadowPreset), DropShadowSchema])
-      .optional()
-      .describe(
-        'Drop shadow on the path’s primary geometry only (the main PathPrim; not its step labels / marks / endpoint arrows). A preset keyword (`sm`/`md`/`lg`/`xl`/`2xl`/`none`), or an object `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }` where explicit fields override the preset. Renderer-agnostic (feDropShadow / ctx.shadow*).',
-      ),
-    blendMode: z
-      .enum(BlendMode)
-      .optional()
-      .describe(
-        'How the path’s primary geometry blends with the content already drawn beneath it (W3C separable blend modes); maps to CSS mix-blend-mode (SVG) and ctx.globalCompositeOperation (Canvas). Omitted / `normal` = ordinary source-over. Does not affect step labels / marks / endpoint arrows.',
-      ),
-    fillOpacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Fill opacity 0..1; affects only the closed-region fill.'),
-    drawOpacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe(
-        'Stroke opacity 0..1 (TikZ `draw opacity`); affects only the path stroke.',
-      ),
-    zIndex: z
-      .number()
-      .int()
-      .finite()
-      .optional()
-      .describe(
-        'Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable: same zIndex keeps source order. Scoped per group (a path inside a scope only restacks within that scope).',
-      ),
     rotate: z
       .number()
       .finite()
@@ -206,18 +123,20 @@ export const PathSchema = z
     ),
     marks: z
       .array(
-        z.object({
-          pos: z
-            .number()
-            .min(0)
-            .max(1)
-            .describe(
-              'Normalized position along the path in [0, 1] (0 = start, 1 = end). Values outside [0, 1] are rejected by schema. The geometric meaning of the parameter matches step labels: arc length for line/step, Bezier parameter for curve/cubic/bend.',
+        z
+          .object({
+            pos: z
+              .number()
+              .min(0)
+              .max(1)
+              .describe(
+                'Normalized position along the path in [0, 1] (0 = start, 1 = end). Values outside [0, 1] are rejected by schema. The geometric meaning of the parameter matches step labels: arc length for line/step, Bezier parameter for curve/cubic/bend.',
+              ),
+            mark: ArrowMarkSchema.describe(
+              'The mark to place at this position; currently an arrow tip oriented by the path tangent.',
             ),
-          mark: ArrowMarkSchema.describe(
-            'The mark to place at this position; currently an arrow tip oriented by the path tangent.',
-          ),
-        }),
+          })
+          .describe('One mark placement along the path.'),
       )
       .optional()
       .describe(

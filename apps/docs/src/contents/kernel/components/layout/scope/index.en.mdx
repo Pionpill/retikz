@@ -205,7 +205,7 @@ The master color also tints node `fill`; the anchor nodes above set `fill="white
 
 #### Typed defaults
 
-`nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` each attach defaults to one element type, flat and independent. `nodeDefault` carries node-only fields like shape / spacing (a bare `color` can't reach `shape` — use `nodeDefault`); arrows go through the separate `arrowDefault`, so `pathDefault` excludes them:
+`nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` each attach defaults to one element family, flat and independent. `nodeDefault` carries node-only fields like shape / spacing (a bare `color` can't reach `shape` — use `nodeDefault`); `pathDefault` applies to Path and passes its shared geometry style fields to Ribbon; arrows go through the separate `arrowDefault`, so `pathDefault` excludes them:
 
 <ComponentPreview name="scope-style-typed-defaults" size="xs" />
 
@@ -389,7 +389,7 @@ Inner overrides outer; within one frame the typed default overrides the cascade.
 | `fillOpacity` | `number` | — | Cascading default fill opacity 0–1 |
 | `drawOpacity` | `number` | — | Cascading default stroke opacity 0–1 |
 | `nodeDefault` | `object` | — | Node default style (shape / spacing / color), applied to every node in the scope |
-| `pathDefault` | `object` | — | Path default style (excludes arrows — see `arrowDefault`) |
+| `pathDefault` | `object` | — | Path-like default style. Path uses the full field set; Ribbon uses only shared geometry style fields. Arrows use `arrowDefault` |
 | `labelDefault` | `object` | — | Label default style (node label + step label) |
 | `arrowDefault` | `object` | — | Arrow default style (shape / scale / color) |
 | `resetStyle` | `boolean \| Array` | `false` | Inheritance barrier: cut outer channels; details in § How it works §「Style inheritance resolution」 |

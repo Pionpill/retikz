@@ -205,7 +205,7 @@ Scope 兼作样式默认值挂点，给内部元素提供三组样式表面：**
 
 #### 分类默认
 
-`nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` 各给一类元素挂默认样式，扁平独立、互不干涉。`nodeDefault` 含形状 / 间距等节点专属字段（直接写 `color` 染不到 `shape`，得走 `nodeDefault`）；箭头走独立 `arrowDefault`，`pathDefault` 不含箭头：
+`nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` 各给一类元素挂默认样式，扁平独立、互不干涉。`nodeDefault` 含形状 / 间距等节点专属字段（直接写 `color` 染不到 `shape`，得走 `nodeDefault`）；`pathDefault` 会作用到 Path，也会把共享几何样式字段传给 Ribbon；箭头走独立 `arrowDefault`，`pathDefault` 不含箭头：
 
 <ComponentPreview name="scope-style-typed-defaults" size="xs" />
 
@@ -389,7 +389,7 @@ compile 维护一个 style frame 栈，进入每层 scope 压一帧，每个元�
 | `fillOpacity` | `number` | — | 级联默认填充透明度 0~1 |
 | `drawOpacity` | `number` | — | 级联默认描边透明度 0~1 |
 | `nodeDefault` | `object` | — | node 默认样式（形状 / 间距 / 色等），作用于 scope 内每个 node |
-| `pathDefault` | `object` | — | path 默认样式（不含箭头，箭头走 `arrowDefault`） |
+| `pathDefault` | `object` | — | path-like 默认样式；Path 使用完整字段，Ribbon 只使用共享几何样式字段；箭头走 `arrowDefault` |
 | `labelDefault` | `object` | — | label 默认样式（node label + step label 共享） |
 | `arrowDefault` | `object` | — | arrow 默认样式（shape / scale / 色等） |
 | `resetStyle` | `boolean \| Array` | `false` | 继承屏障：切外层对应通道；详见 § 技术原理 §「样式继承解析」 |

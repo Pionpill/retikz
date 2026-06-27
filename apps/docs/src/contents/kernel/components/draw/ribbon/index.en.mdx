@@ -116,7 +116,7 @@ When layout already emitted the upper and lower sides, `kind="boundary"` lowers 
 
 ### Ribbon Style
 
-Ribbon is a closed area, so styling focuses on `fill`, outline stroke, opacity, and shadow.
+Ribbon is a closed area, so styling focuses on `fill`, outline stroke, opacity, and shadow. It also reads the Path-shared geometry fields from `<Scope pathDefault>`; path-only fields such as `dashPattern`, `arrow`, and `lineCap` do not apply to Ribbon.
 
 <ComponentPreview name="ribbon-style" size="md" />
 
@@ -158,6 +158,7 @@ IR cannot store functions. Custom rules use `width={{ kind: 'profile', name, par
 | `shadow` | `ShadowPreset \| DropShadow` | — | Shadow applied to the emitted closed path. |
 | `blendMode` | `BlendMode` | — | Blend mode applied to the emitted closed path. |
 | `zIndex` | `number` | — | Explicit stacking order among sibling children. |
+| `pathDefault` shared fields | `color` / `fill` / `stroke` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` / `shadow` / `blendMode` | — | Inherited from an outer `<Scope pathDefault={...}>`. Ribbon consumes only these shared geometry style fields, not Path-only arrow, dash, or line-cap fields. |
 | `children` | `Array<Step>` | — | Open centerline step sequence for centerline mode, at least 2 steps. |
 | `upper` / `lower` | `Array<Step>` | — | Open upper and lower boundaries for `boundary` mode; React DSL uses `<Ribbon.Upper>` / `<Ribbon.Lower>`. |
 

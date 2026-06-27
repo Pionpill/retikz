@@ -115,7 +115,7 @@ import { Ribbon, Step } from '@retikz/react';
 
 ### 流带样式
 
-Ribbon 是闭合面，样式集中在 `fill`、外轮廓描边、透明度和阴影上。
+Ribbon 是闭合面，样式集中在 `fill`、外轮廓描边、透明度和阴影上。它也会读取 `<Scope pathDefault>` 中和 Path 共享的几何样式字段；`dashPattern`、`arrow`、`lineCap` 等 Path 专属字段不会作用到 Ribbon。
 
 <ComponentPreview name="ribbon-style" size="md" />
 
@@ -157,6 +157,7 @@ IR 不能保存函数；自定义变化规则通过 `width={{ kind: 'profile', n
 | `shadow` | `ShadowPreset \| DropShadow` | — | 编译后闭合 path 的阴影。 |
 | `blendMode` | `BlendMode` | — | 编译后闭合 path 的混合模式。 |
 | `zIndex` | `number` | — | 同层子节点的显式栈序。 |
+| `pathDefault` 共享字段 | `color` / `fill` / `stroke` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` / `shadow` / `blendMode` | — | 通过外层 `<Scope pathDefault={...}>` 继承；Ribbon 只消费这些共享几何样式字段，不消费箭头、虚线或线帽等 Path 专属字段。 |
 | `children` | `Array<Step>` | — | 中心线模式的开放 step 序列，至少 2 个。 |
 | `upper` / `lower` | `Array<Step>` | — | `boundary` 模式的上下开放边界；React DSL 对应 `<Ribbon.Upper>` / `<Ribbon.Lower>`。 |
 

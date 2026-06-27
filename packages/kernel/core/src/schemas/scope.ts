@@ -237,7 +237,7 @@ export const ScopeSchema = z
       'Default style applied to every node in this scope (TikZ `every node`). Flat channel, independent from the other defaults.',
     ),
     pathDefault: PathDefaultSchema.optional().describe(
-      'Default style applied to every path in this scope (TikZ `every path`); arrows use the separate arrowDefault channel.',
+      'Default style applied to path-like drawables in this scope (TikZ `every path`). Path consumes the full schema; ribbon consumes only the shared drawable geometry subset. Arrows use the separate arrowDefault channel.',
     ),
     labelDefault: LabelDefaultSchema.optional().describe(
       'Default style applied to every label (node label + step label) in this scope (TikZ `every label`).',

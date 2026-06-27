@@ -35,6 +35,37 @@ description: 笔画外壳、step 动作序列与 step 目标点
   children: 'step 动作序列；首项通常应是 `move`',
 }} />
 
+<span id="drawablegeometrystyle"></span>
+
+## 可绘制几何样式
+
+`DrawableGeometryStyleSchema` 是 Path 与 Ribbon 共享的几何样式字段。Path 会把 `color` 默认映射到描边，Ribbon 会把 `color` 默认映射到填充；`pathDefault` 也按这组字段给 path-like 图元分发默认样式。
+
+<ZodSchema name="DrawableGeometryStyleSchema" description="Path 与 Ribbon 共享的几何样式字段。" descriptions={{
+  color: '主色；Path 默认映射到 stroke，Ribbon 默认映射到 fill，标签和箭头也可跟随它',
+  fill: '填充 paint；Path 用于闭合区域，Ribbon 用于流带面',
+  fillOpacity: '填充不透明度 0..1',
+  stroke: '描边 paint；Path 用于主线，Ribbon 用于可选外轮廓',
+  strokeWidth: '描边宽度（用户单位）',
+  drawOpacity: '描边不透明度 0..1',
+  opacity: '主几何整体不透明度 0..1',
+  shadow: '主几何阴影预设或显式阴影对象',
+  blendMode: '主几何与下方内容的混合模式',
+}} />
+
+<span id="drawableelementmetadata"></span>
+
+## 可绘制元素元数据
+
+`DrawableElementMetadataSchema` 收拢 Path 与 Ribbon 共享的身份、provenance、动画和栈序字段。`id` / `meta` / `animations` 是实例元数据，不进入 `pathDefault`；`zIndex` 参与同层排序，也不作为默认样式继承。
+
+<ZodSchema name="DrawableElementMetadataSchema" description="Path 与 Ribbon 共享的身份、来源、动画和栈序字段。" descriptions={{
+  id: '可选稳定 id；供引用和水合事件绑定使用',
+  meta: 'provenance 元数据；原样透传到 Scene 图元，必须是 JSON 对象',
+  animations: '声明式动画 track 数组；原样透传到 Scene 图元',
+  zIndex: '同层子节点的显式栈序；大者在上，同值保持声明顺序',
+}} />
+
 <span id="step"></span>
 
 ## 动作

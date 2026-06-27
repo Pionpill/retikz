@@ -9,6 +9,18 @@ A `path` is the outer container for a drawn line. Its `children` field is an ord
 
 <ZodSchema name="PathSchema" />
 
+## DrawableGeometryStyle
+
+`DrawableGeometryStyleSchema` is the shared geometry-style field set for Path and Ribbon. Path maps `color` to its default stroke; Ribbon maps `color` to its default fill. `pathDefault` also uses this subset when it styles path-like drawables.
+
+<ZodSchema name="DrawableGeometryStyleSchema" />
+
+## DrawableElementMetadata
+
+`DrawableElementMetadataSchema` groups shared identity, provenance, animation, and stacking fields for Path and Ribbon. `id` / `meta` / `animations` are instance metadata and do not enter `pathDefault`; `zIndex` participates in sibling ordering but is not inherited as a default style.
+
+<ZodSchema name="DrawableElementMetadataSchema" />
+
 ## Step
 
 `StepSchema` is a discriminated union — `Path.children` is an array of these. The `kind` field picks the variant:

@@ -1,6 +1,7 @@
 import type {
   IRArrowDetail,
   IRArrowEndDetail,
+  IRDrawableGeometryStyle,
   IRFont,
   IRGeometryLabel,
   IRLabelDefault,
@@ -48,6 +49,28 @@ const pickDefinedKeys = <T extends object>(src: T): Partial<T> => {
     if (value !== undefined) out[key] = value;
   }
   return out;
+};
+
+const DRAWABLE_GEOMETRY_STYLE_KEYS = [
+  'color',
+  'fill',
+  'fillOpacity',
+  'stroke',
+  'strokeWidth',
+  'drawOpacity',
+  'opacity',
+  'shadow',
+  'blendMode',
+] as const satisfies ReadonlyArray<keyof IRDrawableGeometryStyle>;
+
+const pickDrawableGeometryStyle = (
+  src: Partial<IRDrawableGeometryStyle>,
+): Partial<IRDrawableGeometryStyle> => {
+  const entries = DRAWABLE_GEOMETRY_STYLE_KEYS.flatMap(key => {
+    const value = src[key];
+    return value === undefined ? [] : ([[key, value]] as const);
+  });
+  return Object.fromEntries(entries);
 };
 
 /**
@@ -374,19 +397,7 @@ export const resolveEffectiveRibbon = (
       if (frame.pathDefault.color !== undefined) masterColor = frame.pathDefault.color;
       acc = {
         ...acc,
-        ...pickDefinedKeys(
-          expandRibbonColor({
-            color: frame.pathDefault.color,
-            fill: frame.pathDefault.fill,
-            fillOpacity: frame.pathDefault.fillOpacity,
-            stroke: frame.pathDefault.stroke,
-            strokeWidth: frame.pathDefault.strokeWidth,
-            drawOpacity: frame.pathDefault.drawOpacity,
-            opacity: frame.pathDefault.opacity,
-            shadow: frame.pathDefault.shadow,
-            blendMode: frame.pathDefault.blendMode,
-          }),
-        ),
+        ...pickDefinedKeys(expandRibbonColor(pickDrawableGeometryStyle(frame.pathDefault))),
       };
     }
   }

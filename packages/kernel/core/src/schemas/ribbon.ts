@@ -1,8 +1,6 @@
 import { z } from 'zod';
-import { AnimationTrackSchema } from './animation';
-import { BlendMode, DropShadowSchema, ShadowPreset } from './effects';
+import { DrawableElementMetadataSchema, DrawableGeometryStyleSchema } from './drawable';
 import { JsonObjectSchema } from './json';
-import { PaintSpecSchema } from './paint';
 import { GeometryLabelSchema, type IRGeometryLabel, StepSchema } from './path';
 import { PolarPositionSchema, PositionSchema, Vector2Schema } from './position';
 import type { PolarPosition } from '../geometry/polar';
@@ -186,70 +184,8 @@ const RibbonSharedSchema = z.object({
     .enum(RibbonKind)
     .optional()
     .describe('Ribbon construction mode; omitted means centerline.'),
-  id: z
-    .string()
-    .min(1)
-    .optional()
-    .describe('Optional stable id used as the hydration hook on the emitted primitive.'),
-  meta: JsonObjectSchema.optional().describe(
-    'Opaque provenance metadata preserved verbatim into emitted Scene primitives.',
-  ),
-  animations: z
-    .array(AnimationTrackSchema)
-    .optional()
-    .describe('Declarative animation tracks carried into the emitted Scene primitive.'),
-  color: z
-    .string()
-    .optional()
-    .describe('Master color; when fill is omitted, the ribbon fill follows this color.'),
-  fill: z
-    .union([z.string(), PaintSpecSchema])
-    .optional()
-    .describe(
-      'Fill paint of the ribbon polygon; omitted means currentColor after style resolution.',
-    ),
-  fillOpacity: z
-    .number()
-    .min(0)
-    .max(1)
-    .optional()
-    .describe('Fill opacity 0..1; affects only the ribbon fill.'),
-  stroke: z
-    .union([z.string(), PaintSpecSchema])
-    .optional()
-    .describe('Optional outline stroke paint for the ribbon polygon.'),
-  strokeWidth: z
-    .number()
-    .finite()
-    .nonnegative()
-    .optional()
-    .describe('Optional outline stroke width in user units.'),
-  drawOpacity: z
-    .number()
-    .min(0)
-    .max(1)
-    .optional()
-    .describe('Outline stroke opacity 0..1.'),
-  opacity: z
-    .number()
-    .min(0)
-    .max(1)
-    .optional()
-    .describe('Whole-ribbon opacity 0..1.'),
-  shadow: z
-    .union([z.enum(ShadowPreset), DropShadowSchema])
-    .optional()
-    .describe('Drop shadow on the emitted ribbon polygon.'),
-  blendMode: z
-    .enum(BlendMode)
-    .optional()
-    .describe('Blend mode for the emitted ribbon polygon.'),
-  zIndex: z
-    .number()
-    .int()
-    .finite()
-    .optional()
-    .describe('Explicit stacking order among sibling IR children.'),
+  ...DrawableElementMetadataSchema.shape,
+  ...DrawableGeometryStyleSchema.shape,
   samples: z
     .union([z.boolean(), z.number().int().min(2).max(512)])
     .optional()
