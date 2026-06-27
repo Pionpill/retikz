@@ -1,6 +1,6 @@
 import { scaleLinear as d3ScaleLinear } from 'd3-scale';
 import { isFiniteNumber } from '@retikz/math';
-import { type AnnotateTransform, type BinTransform, type ExternalRow, type RelateTransform, type SelectTransform, type SummarizeTransform } from '../../schemas';
+import { type AnnotateSelector, type AnnotateTransform, type BinTransform, type ExternalRow, type RelateTransform, type SelectTransform, type SummarizeTransform } from '../../schemas';
 import { type TransformContext } from '../../contract';
 import { applyReducerOperation, applySelectorOperation } from '../statistics';
 import { resolveFieldPath } from '../data';
@@ -105,6 +105,24 @@ const applyReducerMetrics = (
   return out;
 };
 
+const selectorValueFieldOf = (selector: AnnotateSelector['selector']): string | undefined => {
+  if (!('by' in selector)) return undefined;
+  const field = selector.by;
+  return typeof field === 'string' ? field : undefined;
+};
+
+const applySelectorAnnotations = (rows: Array<ExternalRow>, operation: AnnotateTransform, context: TransformContext): ExternalRow => {
+  const out: ExternalRow = {};
+  for (const annotation of operation.selectors ?? []) {
+    const selections = applySelectorOperation(rows, annotation.selector, context);
+    if (selections.length === 0) continue;
+    const selection = selections[0];
+    const field = selectorValueFieldOf(annotation.selector);
+    out[annotation.as] = field === undefined ? selection.rank : resolveFieldPath(selection.row, field);
+  }
+  return out;
+};
+
 /**
  * bin：连续 field 分箱，输出每箱一行，包含空箱。
  * @description 半开区间 [edge_i, edge_{i+1})，末箱包含上界；metrics 缺省输出 binCount。
@@ -169,7 +187,8 @@ export const applySelect = (rows: Array<ExternalRow>, operation: SelectTransform
 export const applyAnnotate = (rows: Array<ExternalRow>, operation: AnnotateTransform, context: TransformContext): Array<ExternalRow> =>
   groupRows(rows, operation.groupBy).flatMap(group => {
     const metricFields = operation.metrics === undefined ? {} : applyReducerMetrics(group.rows, operation.metrics, context);
-    return group.rows.map(row => ({ ...row, ...metricFields }));
+    const selectorFields = operation.selectors === undefined ? {} : applySelectorAnnotations(group.rows, operation, context);
+    return group.rows.map(row => ({ ...row, ...metricFields, ...selectorFields }));
   });
 
 const capitalize = (value: string): string => `${value.charAt(0).toUpperCase()}${value.slice(1)}`;

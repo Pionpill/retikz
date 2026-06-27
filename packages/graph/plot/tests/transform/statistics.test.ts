@@ -99,6 +99,24 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
     ]);
   });
 
+  it('annotate_selector_broadcasts_selected_value', () => {
+    const out = applyTransforms(ORDERS, [
+      {
+        kind: 'annotate',
+        groupBy: ['region'],
+        selectors: [{ selector: { op: 'max', by: 'revenue' }, as: 'regionMax' }],
+      },
+    ]);
+
+    expect(out.length).toBe(ORDERS.length);
+    expect(out.map(row => [row.region, row.revenue, row.regionMax])).toEqual([
+      ['N', 3, 5],
+      ['N', 5, 5],
+      ['S', 2, 4],
+      ['S', 4, 4],
+    ]);
+  });
+
   it('relate_min_to_max_per_group', () => {
     const out = applyTransforms(
       [

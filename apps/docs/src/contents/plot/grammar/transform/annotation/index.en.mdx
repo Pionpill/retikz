@@ -43,7 +43,7 @@ Normalize plus stack is a percentage stack: first convert each group to shares, 
 
 ## Annotate
 
-`annotate` groups rows, computes reducer metrics, and broadcasts those metric fields back onto every row in the group. Use it when detail rows need group-level context such as mean lines, median bands, or threshold overlays.
+`annotate` groups rows, computes reducer metrics or selector-picked representative values, and broadcasts those fields back onto every row in the group. Use it when detail rows need group-level context such as mean lines, median bands, or threshold overlays.
 
 <ComponentPreview name="transform-annotate" sourceFiles={['transform-annotate.data.ts']} />
 
@@ -53,13 +53,15 @@ The example writes each store's average revenue into `storeMean`. Points still d
 | --- | --- | --- | --- |
 | `groupBy` | `Array<string>?` | One global group | Grouping keys; composite keys are supported |
 | `metrics` | `Array<Reducer>?` | — | Statistic fields broadcast to every row |
+| `selectors` | `Array<{ selector: Selector; as: string }>?` | — | Representative values broadcast to every row; `min` / `max` / `top` / `bottom` read the selector's `by` field, while other selectors broadcast the selected rank |
 
-Common reducer form:
+Common reducer / selector form:
 
 ```tsx
 <Transform
   kind="annotate"
   groupBy={['store']}
   metrics={[{ op: 'mean', field: 'revenue', as: 'storeMean' }]}
+  selectors={[{ selector: { op: 'max', by: 'revenue' }, as: 'storeMax' }]}
 />
 ```
