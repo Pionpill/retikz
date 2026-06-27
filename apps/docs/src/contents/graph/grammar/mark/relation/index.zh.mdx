@@ -1,11 +1,11 @@
 ---
 title: RelationMark
-description: RelationMark 把数据行里的 source / target 关系下沉为 core Path 或 Ribbon，复用目标引用、路径路由、标签和带宽能力。
+description: RelationMark 把数据行里的 source / target 关系下沉为 core Path，并通过 kind 区分线状路径与带状关系。
 ---
 
 `<RelationMark>` 用来绘制两个目标之间的关系。目标可以是已有 core id，也可以是 `PointMark` / `IntervalMark` / `PathMark` 通过 `anchorId` 生成的稳定 id，还可以是从当前关系数据行投影出来的坐标点。
 
-它不是早期设计文档里 group / stack / dodge 那类数据组合 relation。这里的 relation 是可绘制的 source-target 图元：每一行 relation 数据默认生成一条 core `Path`，也可以在 `kind="ribbon"` 时生成一条 core `Ribbon`。
+它不是早期设计文档里 group / stack / dodge 那类数据组合 relation。这里的 relation 是可绘制的 source-target 图元：每一行 relation 数据都会生成一条 core `Path`；默认是线状路径，`kind="ribbon"` 时则生成 `kind: 'ribbon'` 的带状 Path。
 
 ## 用法
 
@@ -37,7 +37,7 @@ RelationMark 是底层关系路径 mark：它不重新发明箭头、标签或�
 | 带中间点路径 | `path.via` / `path.route[].to` | 中间投影点会生成 core `Coordinate`，后续也能继续被 id 引用 |
 | 路径标签 | `path.label` / `path.route[].label` | 降低到 core step label；显式 step label 优先于 shorthand |
 | core Path 能力 | `path.options` | 透传箭头、圆角、marks 等 path-only 能力 |
-| core Ribbon 能力 | `kind="ribbon"` / `ribbon` | 把 source-target 行降低成 core `Ribbon` centerline，用来画桑基带状关系 |
+| Path ribbon kind | `kind="ribbon"` / `ribbon` | 把 source-target 行降低成 `kind: 'ribbon'` 的 core `Path`，用来画桑基带状关系 |
 | 共享样式 | `style` | path 和 ribbon 都能复用的填充、描边和透明度字段 |
 
 ## 例子
@@ -74,7 +74,7 @@ RelationMark 是底层关系路径 mark：它不重新发明箭头、标签或�
 
 ## 技术原理
 
-React 里的 `<RelationMark>` 本身不渲染 DOM；`<Plot>` 构造 `PlotSpec` 时把它收集成 `type: 'relation'` 的 mark IR。lowering 阶段会解析 `source`、`target`、`path.via` 和 `path.route[].to`。path 关系会把每一行数据降低为一条 core `Path`，ribbon 关系会把每一行数据降低为一条 core `Ribbon` centerline；必要时额外生成 core `Coordinate`。
+React 里的 `<RelationMark>` 本身不渲染 DOM；`<Plot>` 构造 `PlotSpec` 时把它收集成 `type: 'relation'` 的 mark IR。lowering 阶段会解析 `source`、`target`、`path.via` 和 `path.route[].to`。两种几何都会降低为 core `Path`：path 关系省略 `kind`，ribbon 关系写入 `kind: 'ribbon'` 与 `ribbon` options；必要时额外生成 core `Coordinate`。
 
 `transform` 在 plot 级 transform 之后执行，只把结果交给当前 relation mark。`sourceId`、`targetId`、`deltaLabel` 这类派生字段可以继续被 `source`、`target`、`path.label`、`style`、`ribbon.width` 和 relation 通道消费，不需要写进根数据模型。
 
@@ -101,7 +101,7 @@ React 里的 `<RelationMark>` 本身不渲染 DOM；`<Plot>` 构造 `PlotSpec` �
 | 目标 | `source` | `PlotTargetRef` | 必填 | 关系起点，可以是 direct id、generated anchor id 或 projected coordinate |
 |  | `target` | `PlotTargetRef` | 必填 | 关系终点，结构同 `source` |
 | 数据 | `transform` | `Array<Transform>?` | - | mark 局部 transform 管线，用于从 plot rows 派生当前关系层的 rows；各类型见下方变化 API |
-| 几何 | `kind` | `'path' / 'ribbon'` | `path` | 选择每一行关系降低成 core `Path` 还是 core `Ribbon` |
+| 几何 | `kind` | `'path' / 'ribbon'` | `path` | 选择每一行关系降低成默认 Path 还是 `kind: 'ribbon'` 的 Path |
 | 路径 | `path.via` | `Array<PlotTargetRef>` | - | 默认 route 下的中间点；每个投影点会生成 core `Coordinate` |
 |  | `path.route` | `Array<RelationRouteStep>` | - | 显式 step 序列；最后一个 step 省略 `to` 时默认指向 `target` |
 |  | `path.routing` | `RelationRoutingSpec?` | `line` | 算法路由策略：`line`、`bend` 或 `orthogonal`；与 `path.route` 互斥 |

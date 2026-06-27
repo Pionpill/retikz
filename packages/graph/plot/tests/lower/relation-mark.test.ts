@@ -1,9 +1,32 @@
 import type { IRCoordinate, IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
+import { definePathChannel } from '../../src/contract';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 200, height: 100 };
+
+const extensionChannelsOf = (mark: { encoding?: { channels?: Partial<Record<string, { field?: string; value?: unknown }>> } }): Partial<Record<string, { field?: string; value?: unknown }>> =>
+  mark.encoding?.channels ?? {};
+
+const lineWeightChannel = definePathChannel<number>({
+  channel: 'lineWeight',
+  output: { outputKind: 'number', range: [1, 6] },
+  resolve: () => mark => {
+    const binding = extensionChannelsOf(mark).lineWeight;
+    if (binding?.field === undefined) return undefined;
+    const field = binding.field;
+    return {
+      resolver: row => {
+        const value = Number(row[field]);
+        return Number.isFinite(value) ? value : undefined;
+      },
+    };
+  },
+  deliver: (path, value) => {
+    path.strokeWidth = value;
+  },
+});
 
 const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options: LowerPlotsOptions = opts): IRScope => {
   const [def] = lowerPlots(datasets, options);
@@ -458,5 +481,31 @@ describe('RelationMark and anchorId lowering', () => {
       fillOpacity: 0.55,
       stroke: 'none',
     });
+  });
+
+  it('delivers custom path channels to ribbon relation paths', () => {
+    const root = expandOf(baseSpec([
+      {
+        type: 'relation',
+        kind: 'ribbon',
+        source: { project: { x: 'sourceX', y: 'sourceY' } },
+        target: { project: { x: 'targetX', y: 'targetY' } },
+        ribbon: {
+          width: { kind: 'field', value: 'width' },
+        },
+        encoding: {
+          channels: {
+            lineWeight: { field: 'lineWeight' },
+          },
+        },
+      },
+    ]), {
+      d: [{ sourceX: 0, sourceY: 0, targetX: 1, targetY: 1, width: 12, lineWeight: 5 }],
+    }, {
+      ...opts,
+      channelDefinitions: [lineWeightChannel],
+    });
+    const [ribbon] = collectRibbons(markLayer(root, 0));
+    expect(ribbon.strokeWidth).toBe(5);
   });
 });

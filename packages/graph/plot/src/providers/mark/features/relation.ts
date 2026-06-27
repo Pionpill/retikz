@@ -391,24 +391,29 @@ export const lowerRelation = (
       const endWidth = resolveMarkValue<number>(mark.ribbon?.endWidth, row);
       const ribbonOptions = (mark.ribbon?.options ?? {}) as Partial<IRPathRibbonOptions>;
       const direction = horizontalRibbonEndpointDirection(source.target, target.target);
-      const ribbon: IRPath = {
-        type: 'path',
-        kind: 'ribbon',
-        ...style,
-        ribbon: {
-          ...ribbonOptions,
-          ...(endWidth === undefined
-            ? {
-                width,
-                ...(direction !== undefined ? { start: { direction }, end: { direction } } : {}),
-              }
-            : {
-                start: { width, ...(direction !== undefined ? { direction } : {}) },
-                end: { width: endWidth, ...(direction !== undefined ? { direction } : {}) },
-              }),
+      const ribbon: IRPath = applyPathChannelDeliveries(
+        {
+          type: 'path',
+          kind: 'ribbon',
+          ...style,
+          ribbon: {
+            ...ribbonOptions,
+            ...(endWidth === undefined
+              ? {
+                  width,
+                  ...(direction !== undefined ? { start: { direction }, end: { direction } } : {}),
+                }
+              : {
+                  start: { width, ...(direction !== undefined ? { direction } : {}) },
+                  end: { width: endWidth, ...(direction !== undefined ? { direction } : {}) },
+                }),
+          },
+          children: horizontalRibbonSteps(source.target, target.target),
         },
-        children: horizontalRibbonSteps(source.target, target.target),
-      };
+        mark,
+        row,
+        channels,
+      );
       children.push(...coordinates, ribbon);
       continue;
     }

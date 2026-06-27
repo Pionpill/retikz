@@ -267,7 +267,7 @@ export const RelationPrimitiveStyleSchema = z
     zIndex: PointZIndexStyleSchema.optional().describe('Shared relation zIndex: field-bound datum channel or constant integer'),
   })
   .strict()
-  .describe('Style fields shared by RelationMark path and ribbon geometries');
+  .describe('Style fields shared by RelationMark path kinds');
 
 const PathCycleClosureSchema = z
   .object({
@@ -596,13 +596,13 @@ export const RelationRibbonSpecificOptionsSchema = z
       });
     }
   })
-  .describe('Core Ribbon options used only by ribbon relations');
+  .describe('Core Path kind=ribbon options used only by ribbon relations');
 
 export const RelationRibbonOptionsSchema = z
   .object({
     width: PointNonnegativeNumberStyleSchema.describe('Ribbon width at the source side, or the whole width when endWidth is omitted'),
     endWidth: PointNonnegativeNumberStyleSchema.optional().describe('Optional ribbon width at the target side; set together with width for tapered ribbons'),
-    options: RelationRibbonSpecificOptionsSchema.optional().describe('Core Ribbon options used only by ribbon relations'),
+    options: RelationRibbonSpecificOptionsSchema.optional().describe('Core Path kind=ribbon options used only by ribbon relations'),
   })
   .strict()
   .superRefine((ribbon, ctx) => {
@@ -618,13 +618,13 @@ export const RelationRibbonOptionsSchema = z
 
 export const RelationMarkSchema = z
   .object({
-    type: z.literal(PlotMark.Relation).describe('Discriminator: source-target relation lowered to a core Path or Ribbon'),
+    type: z.literal(PlotMark.Relation).describe('Discriminator: source-target relation lowered to a core Path'),
     kind: z.enum(RelationGeometryKind).optional().describe('Relation geometry kind; omitted means path'),
     source: PlotTargetRefSchema.describe('Relation source target'),
     target: PlotTargetRefSchema.describe('Relation target target'),
-    style: RelationPrimitiveStyleSchema.optional().describe('Style fields shared by path and ribbon relation geometries'),
+    style: RelationPrimitiveStyleSchema.optional().describe('Style fields shared by stroke and ribbon relation path kinds'),
     path: RelationPathGeometrySchema.optional().describe('Path-specific relation geometry and core Path options'),
-    ribbon: RelationRibbonOptionsSchema.optional().describe('Ribbon-specific relation geometry and core Ribbon options'),
+    ribbon: RelationRibbonOptionsSchema.optional().describe('Ribbon-specific relation geometry and core Path kind=ribbon options'),
     ...markBase,
     encoding: z
       .object({
@@ -659,7 +659,7 @@ export const RelationMarkSchema = z
       });
     }
   })
-  .describe('Relation mark: connects source and target targets through a core Path or core Ribbon');
+  .describe('Relation mark: connects source and target targets through a core Path; kind selects stroke or ribbon path semantics');
 
 export const MarkSchema = z
   .discriminatedUnion('type', [PointMarkSchema, PathMarkSchema, IntervalMarkSchema, ReferenceMarkSchema, RelationMarkSchema])
