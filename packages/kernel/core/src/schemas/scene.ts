@@ -4,13 +4,14 @@ import { CompositeNodeSchema, type IRComposite } from './composite';
 import { CoordinateSchema, type IRCoordinate } from './coordinate';
 import { type IRNode, NodeSchema } from './node';
 import { type IRPath, PathSchema } from './path';
+import { type IRRibbon, RibbonSchema } from './ribbon';
 import { type IRScope, ScopeSchema, __registerChildSchema } from './scope';
 
 /**
  * 顶层 Scene 的子节点：tier1 node / path / coordinate / scope，或 tier2 composite（有 namespace）
  * @description 手写而非 z.infer 派生，与 ScopeSchema 互递归（scope.children 也是 IRChild[]）
  */
-export type IRChild = IRNode | IRPath | IRCoordinate | IRScope | IRComposite;
+export type IRChild = IRNode | IRPath | IRRibbon | IRCoordinate | IRScope | IRComposite;
 
 /**
  * ChildSchema：tier1 四类 discriminatedUnion（按 type）+ tier2 开放节点（有 namespace）
@@ -21,7 +22,7 @@ export type IRChild = IRNode | IRPath | IRCoordinate | IRScope | IRComposite;
 export const ChildSchema: z.ZodType<IRChild> = z.lazy(() =>
   z.union([
     z
-      .discriminatedUnion('type', [NodeSchema, PathSchema, CoordinateSchema, ScopeSchema])
+      .discriminatedUnion('type', [NodeSchema, PathSchema, RibbonSchema, CoordinateSchema, ScopeSchema])
       .describe(
         'Tier 1 scene child: a node, a path, a coordinate placeholder, or a scope container; discriminator field is `type`',
       ),

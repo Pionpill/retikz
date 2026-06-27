@@ -1,11 +1,12 @@
 import { type ReactNode, createElement } from 'react';
-import type { IR, IRChild, IRNode, IRScope, IRStep } from '@retikz/core';
+import type { IR, IRChild, IRNode, IRRibbon, IRScope, IRStep } from '@retikz/core';
 import { Coordinate } from './Coordinate';
 import { Node, type NodeProps } from './Node';
 import { Path } from './Path';
+import { Ribbon, type RibbonProps } from './Ribbon';
 import { Scope, type ScopeProps } from './Scope';
 import { Step } from './Step';
-import { NODE_FIELDS, PATH_FIELDS, SCOPE_FIELDS, pickDefined } from './_fields';
+import { NODE_FIELDS, PATH_FIELDS, RIBBON_FIELDS, SCOPE_FIELDS, pickDefined } from './_fields';
 
 /**
  * IR 'node' child → NodeProps；过滤 undefined 字段，不污染 React DevTools 显示
@@ -15,6 +16,29 @@ const nodePropsFromIR = (n: IRNode): NodeProps => {
   const props: NodeProps = { position: n.position, ...pickDefined(n, NODE_FIELDS) };
   if (n.text !== undefined) props.text = n.text;
   if (n.label !== undefined) props.label = n.label;
+  return props;
+};
+
+const ribbonPropsFromIR = (ribbon: IRRibbon): RibbonProps => {
+  const props = pickDefined(ribbon, RIBBON_FIELDS) as RibbonProps;
+  delete props.upper;
+  delete props.lower;
+  if (ribbon.kind === 'boundary') {
+    props.children = [
+      createElement(
+        Ribbon.Upper,
+        { key: 'upper' },
+        ...(ribbon.upper ?? []).map((s, j) => stepToElement(s, j)),
+      ),
+      createElement(
+        Ribbon.Lower,
+        { key: 'lower' },
+        ...(ribbon.lower ?? []).map((s, j) => stepToElement(s, j)),
+      ),
+    ];
+    return props;
+  }
+  props.children = (ribbon.children ?? []).map((s, j) => stepToElement(s, j));
   return props;
 };
 
@@ -160,6 +184,8 @@ const childToElement = (child: IRChild, key: number): ReactNode => {
         ...pickDefined(child, PATH_FIELDS),
         children: child.children.map((s, j) => stepToElement(s, j)),
       });
+    case 'ribbon':
+      return createElement(Ribbon, { key, ...ribbonPropsFromIR(child) });
     case 'coordinate':
       return createElement(Coordinate, {
         key,

@@ -1,6 +1,7 @@
 import { coordinate } from './coordinate';
 import { draw } from './draw';
 import { node } from './node';
+import { ribbon } from './ribbon';
 import type { Child, ScopeConfig } from './types';
 
 /**
@@ -11,6 +12,7 @@ import type { Child, ScopeConfig } from './types';
 export type ScopeBuilder = {
   node: (...args: Parameters<typeof node>) => ScopeBuilder;
   draw: (...args: Parameters<typeof draw>) => ScopeBuilder;
+  ribbon: (...args: Parameters<typeof ribbon>) => ScopeBuilder;
   coordinate: (...args: Parameters<typeof coordinate>) => ScopeBuilder;
   scope: (config: ScopeConfig, arg: Array<Child> | ((s: ScopeBuilder) => void)) => ScopeBuilder;
 };
@@ -23,6 +25,10 @@ const createScopeBuilder = (sink: Array<Child>): ScopeBuilder => {
     },
     draw(...args) {
       sink.push(draw(...args));
+      return self;
+    },
+    ribbon(...args) {
+      sink.push(ribbon(...args));
       return self;
     },
     coordinate(...args) {

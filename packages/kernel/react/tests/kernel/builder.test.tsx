@@ -5,6 +5,7 @@ import { Draw } from '../../src/sugar/Draw';
 import { EdgeLabel } from '../../src/sugar/EdgeLabel';
 import { Node } from '../../src/kernel/Node';
 import { Path } from '../../src/kernel/Path';
+import { Ribbon } from '../../src/kernel/Ribbon';
 import { Scope } from '../../src/kernel/Scope';
 import { Step } from '../../src/kernel/Step';
 import { Text } from '../../src/kernel/Text';
@@ -266,6 +267,59 @@ after`;
       children: [
         { type: 'step', kind: 'move', to: { id: 'A' } },
         { type: 'step', kind: 'line', to: [100, 100] },
+      ],
+    });
+  });
+
+  it('<Ribbon><Step/><Step/></Ribbon> collects a variable-width centerline', () => {
+    const ir = buildIR(
+      <Ribbon
+        start={{ width: 8, direction: 0 }}
+        end={{ width: 2, direction: [1, 0] }}
+        fill="steelblue"
+        samples
+      >
+        <Step kind="move" to={[0, 0]} />
+        <Step to={[10, 0]} />
+      </Ribbon>,
+    );
+    expect(ir.children[0]).toEqual({
+      type: 'ribbon',
+      start: { width: 8, direction: 0 },
+      end: { width: 2, direction: [1, 0] },
+      fill: 'steelblue',
+      samples: true,
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [10, 0] },
+      ],
+    });
+  });
+
+  it('<Ribbon kind="boundary"> collects upper and lower boundary steps', () => {
+    const ir = buildIR(
+      <Ribbon kind="boundary" fill="#bfdbfe">
+        <Ribbon.Upper>
+          <Step kind="move" to={[0, 0]} />
+          <Step to={[10, 0]} />
+        </Ribbon.Upper>
+        <Ribbon.Lower>
+          <Step kind="move" to={[0, 4]} />
+          <Step to={[10, 4]} />
+        </Ribbon.Lower>
+      </Ribbon>,
+    );
+    expect(ir.children[0]).toEqual({
+      type: 'ribbon',
+      kind: 'boundary',
+      fill: '#bfdbfe',
+      upper: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [10, 0] },
+      ],
+      lower: [
+        { type: 'step', kind: 'move', to: [0, 4] },
+        { type: 'step', kind: 'line', to: [10, 4] },
       ],
     });
   });

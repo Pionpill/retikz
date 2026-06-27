@@ -6,6 +6,7 @@
 // Schemas
 export {
   PositionSchema,
+  Vector2Schema,
   PolarPositionSchema,
   AtPositionSchema,
   OffsetPositionSchema,
@@ -42,6 +43,12 @@ export {
   LineSpecSchema,
   PathSchema,
   PathScaleSchema,
+  RibbonDirectionSchema,
+  RibbonArcCapSchema,
+  RibbonCapSchema,
+  RibbonSchema,
+  RibbonWidthSchema,
+  RibbonWidthStopSchema,
   ArrowMarkSchema,
   ArrowDetailSchema,
   ArrowEndDetailSchema,
@@ -66,6 +73,7 @@ export {
 } from './schemas';
 export type {
   IRPosition,
+  IRVector2,
   IRAtPosition,
   IROffsetPosition,
   AtDirectionValue,
@@ -101,6 +109,14 @@ export type {
   IRTextBlock,
   IRPath,
   IRPathScale,
+  IRRibbon,
+  IRRibbonArcCap,
+  IRRibbonCap,
+  IRRibbonDirection,
+  IRRibbonWidth,
+  IRRibbonWidthStop,
+  RibbonArcCapSweepValue,
+  RibbonCapValue,
   IRArrowMark,
   IRScope,
   IRComposite,
@@ -152,6 +168,8 @@ export {
   ShadowPreset,
   SHADOW_PRESETS,
   BlendMode,
+  RibbonArcCapSweep,
+  RibbonCap,
   NodeTextAlign,
   PatternShape,
   Boundary,
@@ -285,6 +303,7 @@ export type {
 
 export type {
   Position,
+  Vector2,
   CompassAnchorValue,
   AnchorInput,
   WebAnchorValue,
@@ -324,6 +343,15 @@ export { BUILTIN_PATTERNS } from './providers/pattern';
 // Path Generators (Path Generator Registry 扩展面：第三方曲线生成器注入；core 无内置)
 export type { PathGeneratorDefinition, PathGeneratorContext } from './contract/path';
 export { definePathGenerator } from './contract/path';
+
+// Ribbons (Ribbon width profile extension surface)
+export type {
+  RibbonWidthProfileContext,
+  RibbonWidthProfileDefinition,
+  RibbonWidthProfileInput,
+} from './contract/ribbon';
+export { defineRibbonWidthProfile } from './contract/ribbon';
+export { BUILTIN_RIBBON_WIDTH_PROFILES } from './providers/ribbon';
 
 // Composites (Tier 2 注册面：domain 节点 schema + 展开逻辑；core 无内置)
 export type { CompositeDefinition } from './contract/composite';

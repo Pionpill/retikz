@@ -8,6 +8,7 @@ import type {
   IREllipsePathStep,
   IRNode,
   IRPath,
+  IRRibbon,
   IRScope,
   IRStep,
 } from '@retikz/core';
@@ -203,6 +204,36 @@ const drawCode = (path: IRPath, indent: number, ctx: Ctx): string => {
   return hasConfig ? `draw(${wayStr}, ${formatObject(config, indent)})` : `draw(${wayStr})`;
 };
 
+const ribbonCode = (ribbon: IRRibbon, indent: number, ctx: Ctx): string => {
+  if (ribbon.kind === 'boundary') {
+    if (
+      ribbon.upper === undefined ||
+      ribbon.lower === undefined ||
+      !ribbon.upper.every(isWayRepresentableStep) ||
+      !ribbon.lower.every(isWayRepresentableStep)
+    ) {
+      return rawIrChildCode(ribbon, indent, 'not vanilla boundary way sugar');
+    }
+    ctx.used.add('ribbon');
+    const config = {
+      ...stripKeys(ribbon, ['type', 'upper', 'lower']),
+      upper: stepsToWay(ribbon.upper, ctx, indent + 1),
+      lower: stepsToWay(ribbon.lower, ctx, indent + 1),
+    };
+    return `ribbon(${formatObject(config, indent)})`;
+  }
+  if (ribbon.children === undefined) {
+    return rawIrChildCode(ribbon, indent, 'missing ribbon centerline');
+  }
+  if (!ribbon.children.every(isWayRepresentableStep)) {
+    return rawIrChildCode(ribbon, indent, 'not vanilla way sugar');
+  }
+  ctx.used.add('ribbon');
+  const config = stripKeys(ribbon, ['type', 'children']);
+  const wayStr = formatWay(stepsToWay(ribbon.children, ctx, indent + 1), indent);
+  return `ribbon(${wayStr}, ${formatObject(config, indent)})`;
+};
+
 const scopeCode = (scope: IRScope, indent: number, ctx: Ctx): string => {
   ctx.used.add('scope');
   const config = stripKeys(scope, ['type', 'children']);
@@ -222,6 +253,8 @@ const childCode = (child: IRChild, indent: number, ctx: Ctx): string => {
       return coordinateCode(child, indent, ctx);
     case 'path':
       return drawCode(child, indent, ctx);
+    case 'ribbon':
+      return ribbonCode(child, indent, ctx);
     case 'scope':
       return scopeCode(child, indent, ctx);
   }
@@ -234,7 +267,7 @@ const childListCode = (children: ReadonlyArray<IRChild>, indent: number, ctx: Ct
   return `[\n${lines.join('\n')}\n${pad(indent)}]`;
 };
 
-const BUILDER_ORDER: ReadonlyArray<string> = ['figure', 'node', 'draw', 'coordinate', 'scope'];
+const BUILDER_ORDER: ReadonlyArray<string> = ['figure', 'node', 'draw', 'ribbon', 'coordinate', 'scope'];
 
 export const irToVanillaCode = (ir: IR): string => {
   const ctx: Ctx = { used: new Set(['figure']), usesDrawWay: false };

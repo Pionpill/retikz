@@ -1,0 +1,383 @@
+import { z } from 'zod';
+import { AnimationTrackSchema } from './animation';
+import { BlendMode, DropShadowSchema, ShadowPreset } from './effects';
+import { JsonObjectSchema } from './json';
+import { PaintSpecSchema } from './paint';
+import { StepSchema } from './path';
+import { PolarPositionSchema, PositionSchema, Vector2Schema } from './position';
+import type { PolarPosition } from '../geometry/polar';
+import type { Vector2 } from '../geometry/point';
+import type { ValueOf } from '../types';
+
+export const RibbonKind = {
+  Centerline: 'centerline',
+  Boundary: 'boundary',
+} as const;
+
+export type RibbonKindValue = ValueOf<typeof RibbonKind>;
+
+export const RibbonAlignment = {
+  Center: 'center',
+  Left: 'left',
+  Right: 'right',
+} as const;
+
+export type RibbonAlignmentValue = ValueOf<typeof RibbonAlignment>;
+
+export const RibbonCap = {
+  Butt: 'butt',
+  Round: 'round',
+  Square: 'square',
+} as const;
+
+export type RibbonCapValue = ValueOf<typeof RibbonCap>;
+
+export const RibbonArcCapSweep = {
+  Short: 'short',
+  Long: 'long',
+} as const;
+
+export type RibbonArcCapSweepValue = ValueOf<typeof RibbonArcCapSweep>;
+
+export const RibbonArcCapSchema = z
+  .object({
+    type: z.literal('arc').describe('Discriminator for an explicit circular arc cap.'),
+    center: z
+      .union([PositionSchema, PolarPositionSchema])
+      .describe('Arc center as a Cartesian position or PolarPosition sugar.'),
+    radius: z
+      .number()
+      .finite()
+      .positive()
+      .describe('Arc radius in user units; both ribbon side endpoints must lie on this circle.'),
+    sweep: z
+      .enum(RibbonArcCapSweep)
+      .optional()
+      .describe('Which circular sweep connects the two ribbon sides; omitted means short.'),
+  })
+  .strict()
+  .describe('Endpoint cap closed by an explicit circular arc.');
+
+export const RibbonCapSchema = z
+  .union([z.enum(RibbonCap), RibbonArcCapSchema])
+  .describe('Ribbon endpoint cap: built-in cap name or explicit circular arc cap.');
+
+export const RibbonWidthStopSchema = z
+  .object({
+    offset: z
+      .number()
+      .finite()
+      .min(0)
+      .max(1)
+      .describe('Normalized position along the centerline in [0, 1].'),
+    value: z
+      .number()
+      .finite()
+      .nonnegative()
+      .describe('Ribbon width in user units at this stop.'),
+  })
+  .strict()
+  .describe('One stop in a sampled ribbon width curve.');
+
+export const RibbonWidthSchema = z
+  .union([
+    z.number().finite().nonnegative(),
+    z
+      .object({
+        kind: z.literal('stops').describe('Discriminator for stop-based width rules.'),
+        stops: z
+          .array(RibbonWidthStopSchema)
+          .min(2)
+          .describe('Width stops; compile sorts them by offset before interpolation.'),
+        interpolation: z
+          .enum(['linear', 'smooth', 'step'])
+          .optional()
+          .describe('Interpolation curve between adjacent stops.'),
+      })
+      .strict()
+      .describe('A multi-stop ribbon width rule.'),
+    z
+      .object({
+        kind: z.literal('profile').describe('Discriminator for registered runtime profiles.'),
+        name: z
+          .string()
+          .min(1)
+          .describe('Registered ribbon width profile name from CompileOptions.ribbonWidthProfiles.'),
+        params: JsonObjectSchema.optional().describe('JSON-safe profile parameters.'),
+      })
+      .strict()
+      .describe('A runtime-registered width profile reference.'),
+  ])
+  .describe(
+    'Ribbon width rule: fixed number, stop curve, or registered profile reference. Endpoint taper widths live on start.width and end.width.',
+  );
+
+export type IRRibbonDirection = number | Vector2 | PolarPosition;
+
+export const RibbonDirectionSchema: z.ZodType<IRRibbonDirection> = z
+  .union([
+    z.number().finite().describe('Direction angle in degrees, where 0 points to the positive x axis.'),
+    Vector2Schema.refine(([x, y]) => x !== 0 || y !== 0, {
+        message: 'Ribbon direction vector must not be zero length.',
+      })
+      .describe('Direction vector [x, y]; Position tuples share the same shape and are treated as vectors from the origin.'),
+    PolarPositionSchema.describe('PolarPosition sugar converted to a vector before normalization.'),
+  ])
+  .describe('Endpoint tangent direction override as an angle, Vector2/Position tuple, or PolarPosition sugar.');
+
+export const RibbonEndpointSchema = z
+  .object({
+    width: z
+      .number()
+      .finite()
+      .nonnegative()
+      .optional()
+      .describe('Ribbon width in user units at this endpoint.'),
+    direction: RibbonDirectionSchema.optional().describe(
+      'Optional tangent direction override at this endpoint; omitted means the start-to-end connection direction.',
+    ),
+    cap: RibbonCapSchema
+      .optional()
+      .describe('Cap style used at this endpoint of the emitted ribbon polygon.'),
+  })
+  .strict()
+  .describe('Endpoint-local ribbon properties such as width, tangent direction, and cap.');
+
+export const RibbonSamplingSchema = z
+  .union([
+    z
+      .object({
+        kind: z.literal('fixed').describe('Use a fixed number of cross-section samples.'),
+        samples: z
+          .number()
+          .int()
+          .min(2)
+          .max(512)
+          .describe('Number of cross-section samples used to approximate the ribbon polygon.'),
+      })
+      .strict()
+      .describe('Fixed ribbon sampling strategy.'),
+    z
+      .object({
+        kind: z.literal('adaptive').describe('Choose a sample count from path length and tolerance.'),
+        tolerance: z
+          .number()
+          .finite()
+          .positive()
+          .describe('Approximate target segment length in user units.'),
+        maxSamples: z
+          .number()
+          .int()
+          .min(2)
+          .max(512)
+          .optional()
+          .describe('Optional upper bound for generated samples.'),
+      })
+      .strict()
+      .describe('Length-aware adaptive ribbon sampling strategy.'),
+  ])
+  .describe('Ribbon boundary sampling strategy; `samples` is retained as a shorthand for fixed sampling.');
+
+const RibbonSharedSchema = z.object({
+  type: z
+    .literal('ribbon')
+    .describe('Discriminator marking this child as a variable-width ribbon.'),
+  kind: z
+    .enum(RibbonKind)
+    .optional()
+    .describe('Ribbon construction mode; omitted means centerline.'),
+  id: z
+    .string()
+    .min(1)
+    .optional()
+    .describe('Optional stable id used as the hydration hook on the emitted primitive.'),
+  meta: JsonObjectSchema.optional().describe(
+    'Opaque provenance metadata preserved verbatim into emitted Scene primitives.',
+  ),
+  animations: z
+    .array(AnimationTrackSchema)
+    .optional()
+    .describe('Declarative animation tracks carried into the emitted Scene primitive.'),
+  color: z
+    .string()
+    .optional()
+    .describe('Master color; when fill is omitted, the ribbon fill follows this color.'),
+  fill: z
+    .union([z.string(), PaintSpecSchema])
+    .optional()
+    .describe(
+      'Fill paint of the ribbon polygon; omitted means currentColor after style resolution.',
+    ),
+  fillOpacity: z
+    .number()
+    .min(0)
+    .max(1)
+    .optional()
+    .describe('Fill opacity 0..1; affects only the ribbon fill.'),
+  stroke: z
+    .union([z.string(), PaintSpecSchema])
+    .optional()
+    .describe('Optional outline stroke paint for the ribbon polygon.'),
+  strokeWidth: z
+    .number()
+    .finite()
+    .nonnegative()
+    .optional()
+    .describe('Optional outline stroke width in user units.'),
+  drawOpacity: z
+    .number()
+    .min(0)
+    .max(1)
+    .optional()
+    .describe('Outline stroke opacity 0..1.'),
+  opacity: z
+    .number()
+    .min(0)
+    .max(1)
+    .optional()
+    .describe('Whole-ribbon opacity 0..1.'),
+  shadow: z
+    .union([z.enum(ShadowPreset), DropShadowSchema])
+    .optional()
+    .describe('Drop shadow on the emitted ribbon polygon.'),
+  blendMode: z
+    .enum(BlendMode)
+    .optional()
+    .describe('Blend mode for the emitted ribbon polygon.'),
+  zIndex: z
+    .number()
+    .int()
+    .finite()
+    .optional()
+    .describe('Explicit stacking order among sibling IR children.'),
+  samples: z
+    .union([z.boolean(), z.number().int().min(2).max(512)])
+    .optional()
+    .describe(
+      'Sampling override for centerline lowering; true uses 64 samples, a number uses that fixed sample count, omitted keeps automatic lowering.',
+    ),
+  sampling: RibbonSamplingSchema.optional().describe(
+    'Explicit sampling strategy. Cannot be combined with samples.',
+  ),
+});
+
+export const RibbonSchema = z
+  .object({
+    ...RibbonSharedSchema.shape,
+    width: RibbonWidthSchema.optional().describe(
+      'Whole-ribbon width rule applied along the centerline; use start.width/end.width for two-end taper.',
+    ),
+    start: RibbonEndpointSchema.optional().describe(
+      'Start endpoint properties: width, tangent direction, and cap.',
+    ),
+    end: RibbonEndpointSchema.optional().describe(
+      'End endpoint properties: width, tangent direction, and cap.',
+    ),
+    interpolation: z
+      .enum(['linear', 'smooth'])
+      .optional()
+      .describe('Interpolation curve between start.width and end.width.'),
+    align: z
+      .enum(RibbonAlignment)
+      .optional()
+      .describe('Which side of the generated band stays on the centerline.'),
+    children: z
+      .array(StepSchema)
+      .min(2)
+      .optional()
+      .describe('Open centerline step sequence; compile rejects closed or multi-subpath results.'),
+    upper: z
+      .array(StepSchema)
+      .min(2)
+      .optional()
+      .describe('Explicit upper boundary path used when kind is boundary.'),
+    lower: z
+      .array(StepSchema)
+      .min(2)
+      .optional()
+      .describe('Explicit lower boundary path used when kind is boundary.'),
+  })
+  .strict()
+  .superRefine((ribbon, ctx) => {
+    if (ribbon.samples !== undefined && ribbon.sampling !== undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['sampling'],
+        message: 'Use either `samples` or `sampling`, not both.',
+      });
+    }
+    if (ribbon.kind === 'boundary') {
+      if (ribbon.upper === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['upper'],
+          message: 'Boundary ribbons require `upper` steps.',
+        });
+      }
+      if (ribbon.lower === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['lower'],
+          message: 'Boundary ribbons require `lower` steps.',
+        });
+      }
+      for (const field of ['width', 'children', 'align', 'start', 'end', 'interpolation'] as const) {
+        if (ribbon[field] !== undefined) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [field],
+            message: `Boundary ribbons do not use \`${field}\`.`,
+          });
+        }
+      }
+      return;
+    }
+    const hasStartWidth = ribbon.start?.width !== undefined;
+    const hasEndWidth = ribbon.end?.width !== undefined;
+    if (ribbon.width !== undefined && (hasStartWidth || hasEndWidth)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['width'],
+        message: 'Use either top-level `width` or `start.width` + `end.width`, not both.',
+      });
+    }
+    if (ribbon.width === undefined && (!hasStartWidth || !hasEndWidth)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['start'],
+        message: 'Centerline ribbons require either top-level `width` or both `start.width` and `end.width`.',
+      });
+    }
+    if (ribbon.width !== undefined && ribbon.interpolation !== undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['interpolation'],
+        message: '`interpolation` only applies to start.width/end.width taper.',
+      });
+    }
+    if (ribbon.children === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['children'],
+        message: 'Centerline ribbons require centerline `children` steps.',
+      });
+    }
+    for (const field of ['upper', 'lower'] as const) {
+      if (ribbon[field] !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [field],
+          message: `Centerline ribbons do not use \`${field}\`.`,
+        });
+      }
+    }
+  })
+  .describe('A variable-width filled path lowered from a centerline into a closed polygon.');
+
+export type IRRibbonWidthStop = z.infer<typeof RibbonWidthStopSchema>;
+export type IRRibbonWidth = z.infer<typeof RibbonWidthSchema>;
+export type IRRibbonArcCap = z.infer<typeof RibbonArcCapSchema>;
+export type IRRibbonCap = z.infer<typeof RibbonCapSchema>;
+export type IRRibbonEndpoint = z.infer<typeof RibbonEndpointSchema>;
+export type IRRibbonSampling = z.infer<typeof RibbonSamplingSchema>;
+export type IRRibbon = z.infer<typeof RibbonSchema>;

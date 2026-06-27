@@ -137,6 +137,7 @@ const LAYOUT_OWN_PROPS = new Set([
   'arrows',
   'patterns',
   'pathGenerators',
+  'ribbonWidthProfiles',
   'animate',
   'animations',
   'easings',

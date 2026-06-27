@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type Position, isFiniteNumber, isInfiniteNumber, lerp, point } from '../../src/geometry/point';
+import { type Position, type Vector2, isFiniteNumber, isInfiniteNumber, lerp, point, vector2 } from '../../src/geometry/point';
 
 describe('point 向量运算', () => {
   it('区分 finite / infinite number', () => {
@@ -36,6 +36,14 @@ describe('point 向量运算', () => {
   it('shiftToward 沿方向移动 dist', () => {
     expect(point.shiftToward([0, 0], [10, 0], 3)).toEqual([3, 0]);
     expect(point.shiftToward([0, 0], [0, 0], 3)).toEqual([0, 0]);
+  });
+  it('Vector2 与 Position 共享 tuple 表示', () => {
+    const p: Position = [0, 5];
+    const v: Vector2 = vector2.fromPosition(p);
+    expect(v).toEqual([0, 5]);
+    expect(vector2.fromAngleDegrees(90)[0]).toBeCloseTo(0);
+    expect(vector2.fromAngleDegrees(90)[1]).toBeCloseTo(1);
+    expect(vector2.normalize([0, 5])).toEqual([0, 1]);
   });
   it('lerp 线性插值（含 t=0/t=1 端点）', () => {
     const r: Position = lerp([0, 0], [10, 20], 0.5);

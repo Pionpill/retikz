@@ -1,0 +1,54 @@
+---
+title: Blend
+description: Element-level blend mode — blends the primary geometry with the content already drawn beneath it via the 16 W3C separable formulas, consistent across backends and stackable.
+---
+
+`blendMode` is an element-level visual-effect prop you can set directly on `<Node>` and `<Path>`. It applies to **the primitive itself** — the Node shape, the Path main path (including its endpoint arrows). A Node's text / label / pin are separate primitives and are not blended. It is renderer-agnostic: SVG and Canvas each translate it to native capabilities with the same result.
+
+## Usage
+
+```tsx
+import { Node, Path, Step } from '@retikz/react';
+```
+
+```tsx
+<Node shape="circle" fill="magenta" blendMode="multiply" />
+```
+
+`blendMode` blends the primary geometry with the **content already drawn beneath it** using the W3C separable formulas: `multiply` darkens, `screen` lightens, `overlay` boosts contrast, and so on. The value is one of the 16 W3C separable modes:
+
+`normal` / `multiply` / `screen` / `overlay` / `darken` / `lighten` / `color-dodge` / `color-burn` / `hard-light` / `soft-light` / `difference` / `exclusion` / `hue` / `saturation` / `color` / `luminosity`.
+
+Omitted or `'normal'` = ordinary source-over, unchanged.
+
+## Overlapping colors with multiply
+
+With two or more overlapping elements, set `blendMode` on the upper one to see the blend in the overlap. `multiply` darkens the overlap over a light backdrop:
+
+<ComponentPreview name="blend-multiply" size="sm" />
+
+<span style={{ color: '#888' }}>Three overlapping circles, upper ones multiply — colors multiply darker where they overlap.</span>
+
+## Overlapping colors with screen
+
+`screen` does the opposite, lightening the overlap over a dark backdrop:
+
+<ComponentPreview name="blend-screen" size="sm" />
+
+<span style={{ color: '#888' }}>Two circles screened over a dark backdrop — overlaps lighten and add.</span>
+
+<ComponentAlert title="First cut is element-level blending" description="blendMode applies to a single element, blending it with content drawn before it in the same Scene, without introducing an extra isolation group. On flat scenes, SVG and Canvas agree; isolation differences in nested groups belong to group-level blending, which is not yet supported." />
+
+## API Reference
+
+`blendMode` is a shared style prop on `<Node>` and `<Path>`, written the same way on both.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `blendMode` | `'normal' \| 'multiply' \| 'screen' \| 'overlay' \| 'darken' \| 'lighten' \| 'color-dodge' \| 'color-burn' \| 'hard-light' \| 'soft-light' \| 'difference' \| 'exclusion' \| 'hue' \| 'saturation' \| 'color' \| 'luminosity'` | `'normal'` | How the primary geometry blends with the content drawn beneath it (the 16 W3C separable modes); omitted / `'normal'` = ordinary source-over. Element-level: a Node's text / label / pin (separate primitives) are not blended; a Path's endpoint arrows blend with the main path |
+
+## Related
+
+- [Shadow](/kernel/components/effects/shadow): the element-level `shadow`
+- [Node](/kernel/components/node/overview): full props for a node
+- [Path](/kernel/components/draw/path): full props for a path

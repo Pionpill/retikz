@@ -64,10 +64,10 @@ apps/docs/src/
    - `i18n/locales/zh.json`：在 `core` 命名空间下加 `"getStart": "快速开始"`
    - `i18n/locales/en.json`：相同位置加 `"getStart": "Get Started"`
 2. **加内容**
-   - `contents/core/profile/get-start/index.zh.mdx` + `index.en.mdx`
+   - `contents/kernel/profile/get-start/index.zh.mdx` + `index.en.mdx`
    - 顶部 frontmatter：`title`（与 i18n label 一致）+ `description`（一句话，渲染在 H1 下方）
 3. **注册数据**
-   - `data/core.ts` 找到 `id: 'profile'` 的 section，往 `pages` 里加：
+   - `data/kernel.ts` 找到 `id: 'profile'` 的 section，往 `pages` 里加：
      ```ts
      { id: 'get-start', label: 'core.getStart' }
      ```
@@ -227,7 +227,7 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 ## Reference 词典页 (`<ZodSchema>`)
 
-`apps/docs/src/contents/core/reference/schema/<page>/index.{zh,en}.mdx` 用 `<ZodSchema name="XxxSchema" descriptions={{...}} />` 渲染字段表。Reference 只做 schema 查询入口：字段完整、可扫描、可链接；教程、JSON walkthrough、ComponentPreview 放组件页/概念页/示例页。
+`apps/docs/src/contents/kernel/reference/schema/<page>/index.{zh,en}.mdx` 用 `<ZodSchema name="XxxSchema" descriptions={{...}} />` 渲染字段表。Reference 只做 schema 查询入口：字段完整、可扫描、可链接；教程、JSON walkthrough、ComponentPreview 放组件页/概念页/示例页。
 
 规则：
 
@@ -248,7 +248,7 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 1. 确认 schema 在 `@retikz/core` `index.ts` 已 export
 2. `apps/docs/src/lib/schema-registry.ts` 加一行（含 schema instance + label + URL；URL 是合并页 + `#anchor` 或独立页）
 3. 在合适的合并页 mdx 加 H2/H3 + `<ZodSchema name="..." descriptions={{...}} />`；zh 必须含所有字段（+ 嵌套点路径）；en 只写 `<ZodSchema name="..." />`
-4. **如果是新增独立页**（不属于现有 4 合并页）：在 `data/core.ts` reference section 加 children 条目 + i18n 加 `core.refXxxSchema` key
+4. **如果是新增独立页**（不属于现有 4 合并页）：在 `data/kernel.ts` reference section 加 children 条目 + i18n 加 `core.refXxxSchema` key
 5. 按下方「验证」里的分级规则检查：schema registry 属于结构化改动，通常要跑 `pnpm --filter @retikz/docs exec tsc --noEmit`，再起 dev 看控制台 warn；需要验证站点产物时再跑 `pnpm --filter @retikz/docs build`
 
 ## 与 shadcn 的差异
@@ -328,7 +328,7 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 | 改正文 | `contents/.../index.{zh,en}.mdx`（双语都要；blog 例外按 blog skill） | — |
 | 改菜单 / 标题文案 | `i18n/locales/{zh,en}.json`（双语都要） | — |
 | 加一个 demo | 同级写 `<name>.demo.tsx` + 在 mdx 里 `<ComponentPreview name="<name>" />` | — |
-| 加菜单图标 | `data/core.ts` 的 `Page.icon`（仅一级 Page 支持） | — |
+| 加菜单图标 | `data/kernel.ts` 的 `Page.icon`（仅一级 Page 支持） | — |
 | 新建 module | `data/module.ts` 加条目 + 新建 `data/<module>.ts` + i18n 加新命名空间 | — |
 | 加分组节点 | 父节点加 `children` + 写分组落地页 `index.{zh,en}.mdx` | [`docs-doc-group`](../docs-doc-group/SKILL.md) |
 | 加新 IR schema 字典 | 注册到 `lib/schema-registry.ts` + 合适合并页加 `<ZodSchema>` 块（含 zh 嵌套点路径） | — |

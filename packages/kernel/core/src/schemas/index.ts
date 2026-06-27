@@ -8,6 +8,7 @@ export * from './tex';
 export * from './clip';
 export * from './text';
 export * from './path';
+export * from './ribbon';
 export * from './shape';
 export * from './boundary';
 export * from './node';

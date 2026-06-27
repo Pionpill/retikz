@@ -48,6 +48,7 @@
     "drawWay": "Way",
     "arrow": "Arrow",
     "path": "Path",
+    "ribbon": "Ribbon",
     "step": "Step",
     "shapes": "形状",
     "shapesCircleEllipse": "Circle / Ellipse",

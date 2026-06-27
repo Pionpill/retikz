@@ -17,15 +17,15 @@ describe('SCHEMA_REGISTRY', () => {
     for (const [name, entry] of Object.entries(SCHEMA_REGISTRY)) {
       expect(entry.schema, name).toBeDefined();
       expect(entry.label, name).toMatch(/^[A-Z]/);
-      expect(entry.url, name).toMatch(/^\/core\/reference\//);
+      expect(entry.url, name).toMatch(/^\/kernel\/reference\//);
     }
   });
 
   it('lookupSchema resolves a registered schema by identity', () => {
     expect(lookupSchema(SceneSchema)?.label).toBe('Scene');
-    expect(lookupSchema(CoordinateSchema)?.url).toBe('/core/reference/schema/entity#coordinate');
-    expect(lookupSchema(MoveStepSchema)?.url).toBe('/core/reference/schema/path#move');
-    expect(lookupSchema(RelativeTargetSchema)?.url).toBe('/core/reference/schema/path#relative');
+    expect(lookupSchema(CoordinateSchema)?.url).toBe('/kernel/reference/schema/entity#coordinate');
+    expect(lookupSchema(MoveStepSchema)?.url).toBe('/kernel/reference/schema/path#move');
+    expect(lookupSchema(RelativeTargetSchema)?.url).toBe('/kernel/reference/schema/path#relative');
   });
 
   it('returns undefined for unregistered schemas', () => {

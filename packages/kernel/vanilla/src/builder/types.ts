@@ -5,6 +5,7 @@ import type {
   IRCoordinate,
   IRNode,
   IRPath,
+  IRRibbon,
   IRScope,
   IRViewBox,
   WayDSL,
@@ -18,6 +19,16 @@ export type NodeConfig = Omit<IRNode, 'type' | 'id'>;
 
 /** draw 的 config：从 IRPath 派生，剔除 type 与由 way 生成的 children（steps） */
 export type DrawConfig = Omit<IRPath, 'type' | 'children'>;
+
+/** ribbon 的 config：从 IRRibbon 派生，剔除 type 与由 way 生成的 children（steps） */
+export type RibbonConfig = Omit<IRRibbon, 'type' | 'children' | 'upper' | 'lower'>;
+
+/** boundary ribbon config：upper/lower 由 way DSL 生成 steps */
+export type RibbonBoundaryConfig = Omit<IRRibbon, 'type' | 'children' | 'upper' | 'lower'> & {
+  kind: 'boundary';
+  upper: Way;
+  lower: Way;
+};
 
 /** coordinate 的 config：从 IRCoordinate 派生，剔除 type 与 positional 的 id（剩 position 必填） */
 export type CoordinateConfig = Omit<IRCoordinate, 'type' | 'id'>;
