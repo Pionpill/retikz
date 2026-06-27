@@ -1,7 +1,7 @@
 # plot v0.1-alpha.13 Roadmap：Relation ribbon + Statistics 进阶最小闭环
 
 > 上游：[plot v0.1 roadmap](../roadmap.md)「Statistics 进阶 + stat-geom」行。
-> 主题：先补齐 `RelationMark kind="ribbon"`，让关系 rows 能下沉为 core Ribbon；再收敛实现高级统计的三条可渲染薄片：`quartile → boxplot`、`density → density-area`、`smooth/regression → trend path`。统计能力仍遵守 alpha.12 已落地的统计代数：先进入 transform / reducer / selector 层，mark 只消费派生 rows，不新增平行 chart IR。
+> 主题：先补齐 `RelationMark kind="ribbon"`，让关系 rows 能下沉为 core Ribbon；再收敛实现高级统计的三条可渲染薄片：`quantile-band → boxplot`、`density → density-area`、`smooth/regression → trend path`。统计能力仍遵守 alpha.12 已落地的统计代数：先进入 transform / reducer / selector 层，mark 只消费派生 rows，不新增平行 chart IR。
 
 ## 定位
 
@@ -20,7 +20,7 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 本轮按收敛版执行，避免把 alpha.13 扩成“统计算法库 + chart preset + 极坐标样式”三线并行：
 
 - **先补关系流带**：RelationMark 支持 `kind="ribbon"`，复用 source / target / anchorId / transform；不新增独立 `RibbonMark`，不做 Sankey 自动布局。
-- **必须闭环**：quartile / density / smooth 三条统计薄片各自要有 transform、三包 authoring 表面、docs demo 与测试。
+- **必须闭环**：quantile-band / density / smooth 三条统计薄片各自要有 transform、三包 authoring 表面、docs demo 与测试。
 - **算法先保守**：KDE 与回归都选 deterministic、JSON-safe、可测试的最小形态；复杂算法作为后续扩展点。
 - **几何不造新 mark**：boxplot / density-area / regression line 都由抽象 mark 组合表达。
 - **sector explode / pull 不阻塞统计主线**：作为最后 ADR 决策。若牵涉 per-datum 偏移、anchor 语义或交互命中，就明确顺延。
@@ -30,18 +30,18 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 | ADR | 主题 | 目标 | 状态 |
 | --- | --- | --- | --- |
 | ADR-01 | **RelationMark ribbon geometry kind** | 在 `RelationMark` 内新增 `kind="ribbon"`，复用 source / target / anchorId / transform，把关系 rows 下沉为 core Ribbon；Sankey layout 不进入本轮 | [Proposed](./01-relation-ribbon.md) |
-| ADR-02 | **quartile statistics + boxplot composition** | 用现有 reducer / selector 组合箱线图所需统计量，定义 whisker / outlier 策略；React / Vanilla 薄适配映射到 `IntervalMark` + `ReferenceMark` + `PointMark` | 待起草 |
+| ADR-02 | **quantile-band statistics + boxplot composition** | 新增参数化 quantile-band reducer 与 outside-quantile-band selector；boxplot 只是 0.25/0.75 band + 0.5 point + spread fence 的组合实例 | [Proposed](./02-quantile-band-boxplot.md) |
 | ADR-03 | **density transform + density-area** | 新增内置 `density` transform，KDE 输出采样 rows；几何消费走 `RegionMark` / `PathMark`，不新增 density mark | 待起草 |
 | ADR-04 | **smooth / regression transform** | 新增内置 `smooth` transform，首轮只做 deterministic linear regression；输出预测线采样 rows，置信区间可选或顺延 | 待起草 |
 | ADR-05 | **stat-geom structural surface + docs** | 收敛 React / Vanilla 薄适配、docs 信息架构与示例，证明三条统计薄片都能按 transform + abstract marks 表达；不做 chart 级便利 API | 待起草 |
 | ADR-06 | **sector explode / pull decision** | 判断极坐标 interval 的 `explode` / `pull` 是否可作为轻量视觉参数落地；若影响 anchor / locator 语义则顺延 | 待起草 |
 
-> 建议文件名：`01-relation-ribbon.md`、`02-quartile-boxplot.md`、`03-density-transform.md`、`04-smooth-regression.md`、`05-stat-geom-surface.md`、`06-sector-explode-pull.md`。
+> 建议文件名：`01-relation-ribbon.md`、`02-quantile-band-boxplot.md`、`03-density-transform.md`、`04-smooth-regression.md`、`05-stat-geom-surface.md`、`06-sector-explode-pull.md`。
 
 ## 依赖与顺序
 
 1. **ADR-01 独立优先**：RelationMark ribbon 是关系几何补洞，直接服务 docs 关系页面 Sankey demo；不依赖统计主线，但应先做，避免 demo 绕开 graph 层。
-2. **ADR-02 → ADR-05**：boxplot 是最小 stat-geom 验收。它复用 alpha.12 的 `quantile` / `median` reducer 与 selector，不要求先有 density / smooth。
+2. **ADR-02 → ADR-05**：boxplot 是最小 stat-geom 验收。它复用 alpha.12 的 `quantile` 算法，把固定 q1 / q3 提升为可配置 quantile band，不要求先有 density / smooth。
 3. **ADR-03 → ADR-05**：density 需要新增 transform kind，输出采样 rows；docs demo 用 density area 验收 `RegionMark` 消费统计 rows。
 4. **ADR-04 → ADR-05**：smooth / regression 需要新增 transform kind，输出趋势线 rows；首轮不承诺多算法矩阵。
 5. **ADR-05 依赖 02–04**：统一三包薄适配、docs 章节和示例命名，防止每条统计能力各自发明表面；不追求 chart 级易用封装。
@@ -52,7 +52,7 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 - **transform 是统计入口**：KDE、回归、箱线图统计量都应先产生 plain data rows；mark 不在 lowering 期临时算统计。
 - **relation 是关系入口**：source-target 关系的 path / ribbon 几何都应复用 `RelationMark` 的 target resolving、anchor registry 与 mark-local transform；不要为同一批关系 rows 新增平行 `RibbonMark`。
 - **IR 100% JSON-safe**：算法选择、带宽、采样数、whisker 策略都必须是可序列化字段；函数只允许存在于 runtime definition / options 中。
-- **AI 友好字段命名**：使用完整词，如 `bandwidth`、`sampleCount`、`whisker`、`outlier`、`confidence`，避免缩写和位置敏感数组。
+- **AI 友好字段命名**：使用完整词，如 `bandwidth`、`sampleCount`、`whisker`、`outside`、`confidence`，避免缩写和位置敏感数组。
 - **内置与自定义同机制**：内置 density / smooth 若进入 transform registry，就要与自定义 transform 共用 `defineTransform` 分派；若只是 reducer / selector 子语义，则走对应 registry。
 - **抽象 mark 不退化**：不得新增 `BoxPlotMark` / `DensityMark` / `RegressionMark` 之类底层 IR。若 adapter 提供结构性便捷入口，也必须能还原成手写 transform + abstract mark。
 - **三包 lockstep，但 plot 优先抽象**：`@retikz/plot`、`@retikz/plot-react`、`@retikz/plot-vanilla` 与 docs 同步设计、同步验收；React / Vanilla 不另造更顺手但平行的 chart API。
@@ -72,15 +72,15 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 
 不在本 ADR 范围：Sankey / alluvial 自动布局、节点堆叠 slot 分配、crossing reduction、edge bundling、独立 `RibbonMark`。
 
-### ADR-02：quartile statistics + boxplot composition
+### ADR-02：quantile-band statistics + boxplot composition
 
-目标是定义从原始 rows 得到每组 boxplot 所需统计行的底层能力，并用现有 mark 组合画出箱体、须线、中位数与离群点。
+目标是定义从原始 rows 得到每组 quantile band 统计行的底层能力，并用 boxplot 作为第一个验收组合：箱体、须线、中位数与区间外点都由现有 mark 表达。
 
 设计倾向：
 
-- 首选复用 `summarize.metrics[]` 的 `quantile` / `median` / `min` / `max`，必要时补一个 boxplot 专用 transform operation，但底层仍落到统计代数。
-- whisker 策略先支持 `minMax` 与 `iqr` 两类；`iqr` 用 `q1 - 1.5 * IQR` / `q3 + 1.5 * IQR` 判断。
-- outlier 输出可用 `select` / mark-local transform 派生，避免在单个 summarize row 里塞数组。
+- 新增 `quantile-band` reducer：`lowerP` / `upperP` 可配置，`outputs.points[]` 可声明任意额外分位点；boxplot 只是 `0.25` / `0.75` + `p=0.5`。
+- whisker 策略先支持 `minMax` 与 `spread` 两类；`spread` 用 `lower - factor * (upper - lower)` / `upper + factor * (upper - lower)` 判断。
+- 区间外 rows 输出用 `outside-quantile-band` selector / mark-local transform 派生，避免在单个 summarize row 里塞数组。
 - 几何组合：箱体用 `IntervalMark`，中位数 / 须线用 `ReferenceMark`，离群点用 `PointMark`。
 
 不在本 ADR 范围：小提琴图、notched boxplot、复杂分组 dodging、交互 tooltip。
@@ -164,7 +164,7 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 建议分布：
 
 - **relation geometry 断言**：`RelationMark kind="ribbon"` 复用 anchor / project / transform，并下沉为 core `Ribbon`。
-- **transform 数据断言**：quartile / density / smooth 输出字段、行数、分组、provenance、稳定排序。
+- **transform 数据断言**：quantile-band / density / smooth 输出字段、行数、分组、provenance、稳定排序。
 - **schema reject**：非法 bandwidth、sampleCount、unknown method、冲突字段、非 JSON-safe external operation。
 - **lowering / geometry**：boxplot 组合下沉成 interval / reference / point；density area 下沉成 region；regression 下沉成 path。
 - **交互点**：locator 与 render 共用 transform registry；mark-local transform 与 root transform 组合一致。
