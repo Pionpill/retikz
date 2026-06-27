@@ -740,6 +740,32 @@ after`;
       expect(ir.children[0]).toMatchObject({ type: 'node', cornerRadius: 8 });
     });
 
+    it('<Node label> 透传 inside placement 与 boundary position', () => {
+      const ir = buildIR(
+        <Node
+          id="A"
+          position={[0, 0]}
+          label={{
+            text: 'L',
+            position: { boundary: 'top', t: 0.25 },
+            placement: 'inside',
+            distance: 6,
+          }}
+        >
+          A
+        </Node>,
+      );
+      expect(ir.children[0]).toMatchObject({
+        type: 'node',
+        label: {
+          text: 'L',
+          position: { boundary: 'top', t: 0.25 },
+          placement: 'inside',
+          distance: 6,
+        },
+      });
+    });
+
     it('<Path color> 主色透传到 IR', () => {
       const ir = buildIR(
         <Path color="crimson">
