@@ -96,7 +96,7 @@ For each shape's parameters, anchors, and examples, see its shape page:
 | polygon / diamond | `{ type:'polygon', params }` / `'diamond'` | [Polygon](/kernel/components/shapes/polygon) |
 | star | `{ type:'star', params }` | [Star](/kernel/components/shapes/star) |
 
-`shape` also accepts registered names beyond the built-ins (hexagon / cylinder / cloud…) — any string passes schema validation, the definition is injected via `CompileOptions.shapes` / `<Layout shapes>`, and unregistered names throw at compile time. Parametric registered shapes pass their params through `{ type, params }`. See [Custom Shapes](/kernel/reference/extending/shape-registry).
+`shape` also accepts registered names beyond the built-ins (hexagon / cylinder / cloud…) — any string passes schema validation, the definition is injected via `CompileOptions.shapes` / `<Layout shapes>`, and unregistered names throw at compile time. Parametric registered shapes pass their params through `{ type, params }`. See [Custom Shapes](/kernel/components/extend/shape-registry).
 
 #### Connection surface (boundary)
 

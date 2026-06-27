@@ -3,7 +3,7 @@ title: Path
 description: Kernel 路径容器——`<Step>` 子节点序列定义折线 / 曲线 / 弧形，最少 2 个 step；Sugar 的 `<Draw>` 编译后就是它。
 ---
 
-`<Path>` 是底层路径容器：children 必须是若干 `<Step>`（至少 2 个），定义路径的 move / line / fold（折角）/ cycle（闭合）/ curve / cubic / bend（曲线）/ arc / circlePath / ellipsePath（圆 / 椭圆）/ rectangle（矩形）等动作序列；另有 IR 级的 generator step（[路径生成器](/kernel/reference/extending/path-generator)）。日常连线用 `<Draw>` 更简洁，需要折角、闭合、曲线、自定义 stroke、不同 step kind 时回到 `<Path>`。
+`<Path>` 是底层路径容器：children 必须是若干 `<Step>`（至少 2 个），定义路径的 move / line / fold（折角）/ cycle（闭合）/ curve / cubic / bend（曲线）/ arc / circlePath / ellipsePath（圆 / 椭圆）/ rectangle（矩形）等动作序列；另有 IR 级的 generator step（[路径生成器](/kernel/components/extend/path-generator)）。日常连线用 `<Draw>` 更简洁，需要折角、闭合、曲线、自定义 stroke、不同 step kind 时回到 `<Path>`。
 
 它最适合三类场景：一条 path 里有多个子路径（多次 `move`）、不同段要混用不同 `kind` / label / 控制点、或者你希望 JSX 结构和 IR `path.children` 几乎一一对应，方便调试和生成。
 
@@ -41,7 +41,7 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`<Step>` 支持 12 种 kind——`move` / `line` 处理直线，`fold` 走直角折角，`cycle` 闭合回起点，`curve` / `cubic` 画贝塞尔曲线，`bend` 是弧形简记（可带 out/in 角与自环），`smooth` 画穿过点列的平滑曲线，`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧 / 整圆 / 整椭圆，`rectangle` 画对角矩形，详见 [Step](/kernel/components/draw/step)。此外还有 IR 级的 `generator` step（外部曲线生成器，无 JSX DSL、走 IR 直传，见 [路径生成器](/kernel/reference/extending/path-generator)）。
+`<Step>` 支持 12 种 kind——`move` / `line` 处理直线，`fold` 走直角折角，`cycle` 闭合回起点，`curve` / `cubic` 画贝塞尔曲线，`bend` 是弧形简记（可带 out/in 角与自环），`smooth` 画穿过点列的平滑曲线，`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧 / 整圆 / 整椭圆，`rectangle` 画对角矩形，详见 [Step](/kernel/components/draw/step)。此外还有 IR 级的 `generator` step（外部曲线生成器，无 JSX DSL、走 IR 直传，见 [路径生成器](/kernel/components/extend/path-generator)）。
 
 ## 例子
 
@@ -160,7 +160,7 @@ import { Path, Step } from '@retikz/react';
 
 #### 中段标记（marks）
 
-`marks` 沿路径放方向标记：每项 `{ pos, mark }`，`pos ∈ [0, 1]`（越界 schema 拒），`mark` 首批为 `{ kind: 'arrow', shape, ... }`（复用已注册箭头名 + 视觉子集，见 [自定义箭头](/kernel/reference/extending/custom-arrow)），**朝向由该点切线决定**（不是固定方向）。直线 / 贝塞尔 / 弧段都按切线定向。尺寸与端点箭头同口径**随 `strokeWidth` 缩放**（TikZ 语义）：线越粗、标记越大。
+`marks` 沿路径放方向标记：每项 `{ pos, mark }`，`pos ∈ [0, 1]`（越界 schema 拒），`mark` 首批为 `{ kind: 'arrow', shape, ... }`（复用已注册箭头名 + 视觉子集，见 [自定义箭头](/kernel/components/extend/custom-arrow)），**朝向由该点切线决定**（不是固定方向）。直线 / 贝塞尔 / 弧段都按切线定向。尺寸与端点箭头同口径**随 `strokeWidth` 缩放**（TikZ 语义）：线越粗、标记越大。
 
 <ComponentPreview name="path-marks" size="xs" />
 

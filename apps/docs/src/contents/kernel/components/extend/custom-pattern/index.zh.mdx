@@ -3,7 +3,7 @@ title: 自定义图案
 description: pattern.shape 是开放字符串；内置 lines / dots / grid 之外，用 definePattern / PatternDefinition 注册任意 motif——emit 在局部 tile 坐标产 MarkerPrimitive，emit-in-compile 写进 Scene 资源，adapter 物化 <pattern>。
 ---
 
-`fill` 的 `PaintSpec` 里 `pattern.shape` 是**开放字符串**:内置三种 motif(`lines` 斜纹 / `dots` 网点 / `grid` 网格)之外,可以注册自己的图案。注册面对齐 [自定义形状](/kernel/reference/extending/shape-registry) / [自定义箭头](/kernel/reference/extending/custom-arrow)——内置 3 种本身也是注册项,没有特权。
+`fill` 的 `PaintSpec` 里 `pattern.shape` 是**开放字符串**:内置三种 motif(`lines` 斜纹 / `dots` 网点 / `grid` 网格)之外,可以注册自己的图案。注册面对齐 [自定义形状](/kernel/components/extend/shape-registry) / [自定义箭头](/kernel/components/extend/custom-arrow)——内置 3 种本身也是注册项,没有特权。
 
 注册靠 `CompileOptions.patterns`(React 里是 `<Layout patterns={...}>`):IR 的 `fill={{ kind:'pattern', shape:'...' }}` 仍只写字符串名,motif 几何定义在此注入。未注册名编译期报错(带可用名列表);同名覆盖内置发 `PATTERN_OVERRIDES_BUILTIN` 警告。
 
@@ -36,7 +36,7 @@ description: pattern.shape 是开放字符串；内置 lines / dots / grid 之�
 
 `emit` 在 **compile 阶段**调用(与 shape / arrow 的 emit 同位):产出的 motif `MarkerPrimitive[]` 连同 tile 参数(`size` / `background` / `rotation`)解析成 `ResolvedPatternTile`,写进 Scene 资源(`SceneResource.tile`);adapter 只**物化** `<pattern>`,不认识 pattern 注册表、也不重算几何。
 
-motif 几何复用 [自定义箭头](/kernel/reference/extending/custom-arrow) 的 `MarkerPrimitive` **窄子集**——`path` / `ellipse` / `rect` / `group`,`fill` / `stroke` 限纯色串或 `{ kind:'contextStroke' }`;禁 `text` / 外部 `resourceRef` / 函数;坐标须 finite(非 finite 编译期报错,守 Scene JSON 可序列化)。
+motif 几何复用 [自定义箭头](/kernel/components/extend/custom-arrow) 的 `MarkerPrimitive` **窄子集**——`path` / `ellipse` / `rect` / `group`,`fill` / `stroke` 限纯色串或 `{ kind:'contextStroke' }`;禁 `text` / 外部 `resourceRef` / 函数;坐标须 finite(非 finite 编译期报错,守 Scene JSON 可序列化)。
 
 ## size 与颜色
 

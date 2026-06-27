@@ -96,7 +96,7 @@ import { Node } from '@retikz/react';
 | polygon / diamond | `{ type:'polygon', params }` / `'diamond'` | [Polygon](/kernel/components/shapes/polygon) |
 | star | `{ type:'star', params }` | [Star](/kernel/components/shapes/star) |
 
-`shape` 还接受内置之外的注册名（hexagon / cylinder / cloud…）——任意字符串通过 schema 校验，定义经 `CompileOptions.shapes` / `<Layout shapes>` 注入，未注册名编译期报错。带参注册形状用 `{ type, params }` 把参数传进去。见 [自定义形状](/kernel/reference/extending/shape-registry)。
+`shape` 还接受内置之外的注册名（hexagon / cylinder / cloud…）——任意字符串通过 schema 校验，定义经 `CompileOptions.shapes` / `<Layout shapes>` 注入，未注册名编译期报错。带参注册形状用 `{ type, params }` 把参数传进去。见 [自定义形状](/kernel/components/extend/shape-registry)。
 
 #### 连接面 boundary
 
