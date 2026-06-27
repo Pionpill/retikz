@@ -34,7 +34,6 @@ import {
   type PointStrokeWidthStyle,
   type PointZIndexStyle,
   type TextChannel,
-  type Transform,
   type TransformOperation,
 } from '@retikz/plot';
 import { Axis, type AxisProps, Legend, type LegendProps } from './guides';
@@ -122,9 +121,15 @@ export type BuildPlotSpecOptions = {
   model?: DataModel;
   /**
    * 直传数据 transform IR（拼到 <Transform> 收集结果之前、自动装配 stack 之前）；与 <Transform> 声明组件共用同一管线。
-   * @description 程序化构造 spec 时完全掌控 transform 顺序的入口；含 stack 时同样抑制 mark auto-stack（B4 去重）。
+   * @description 程序化构造 spec 时完全掌控 transform 顺序的入口；含 stack 时同样抑制 mark shortcut stack（B4 去重）。
    */
   transforms?: Array<TransformOperation>;
+  /**
+   * Mark-level transform shortcuts.
+   * @description Shortcuts convert a mark shape into ordinary plot-level transform operations. They do not consume
+   * mark.transform; mark-local transforms still run later as that layer's private row view.
+   */
+  markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
   /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
   colors?: Array<string>;
   /** 当前数据集可见字段名集合；用于把样式字符串糖优先解析成字段通道 */
@@ -134,6 +139,17 @@ export type BuildPlotSpecOptions = {
    * @description 供 `<Plot data>` 入口使用；直接调用 buildPlotSpec 时缺省保持旧的 AUTO linear/band 行为。
    */
   deferPositionScaleInference?: boolean;
+};
+
+export type MarkTransformShortcutContext = {
+  mark: Mark;
+  markIndex: number;
+  marks: ReadonlyArray<Mark>;
+};
+
+export type MarkTransformShortcutDefinition = {
+  markType: string;
+  build: (context: MarkTransformShortcutContext) => Array<TransformOperation> | undefined;
 };
 
 /** 默认 guide（供 decorateDefaultGuides 复用，薄 <Plot> 本身不补）：x 轴 + y 轴（y 带网格，横线读数值、不过密） */
@@ -157,8 +173,8 @@ type Collected = {
   guides: Array<Guide>;
   /** 显式 transform（<Transform> 声明组件收集，按声明序） */
   transforms: Array<TransformOperation>;
-  /** mark-prop 自动装配的 stack（<IntervalMark stack> / <IntervalMark angle>）；显式 stack 存在时抑制（B4 去重） */
-  autoStacks: Array<Transform>;
+  /** mark shortcut 自动装配的 transform；显式 stack 存在时同签名抑制（B4 去重） */
+  shortcutTransforms: Array<TransformOperation>;
   /** 显式声明的位置 scale */
   scales: Array<ScaleProps>;
   /** 按 mark id 收集的运行时 resolveLabel（不进 IR；ADR-04） */
@@ -711,7 +727,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         if (y !== undefined || x !== undefined || x0 !== undefined || x1 !== undefined || width !== undefined || rawDirection !== undefined || stack !== undefined || explicitBounds !== undefined) {
           throw new Error('buildPlotSpec: <IntervalMark angle> is the polar pie/donut form; do not mix it with x/y/x0/x1/width/direction/stack/bounds');
         }
-        into.autoStacks.push({ kind: PlotTransform.Stack, y: angle, ...(series !== undefined ? { groupBy: series } : {}) });
+        into.shortcutTransforms.push({ kind: PlotTransform.Stack, y: angle, ...(series !== undefined ? { groupBy: series } : {}) });
         const colorEnc = colorChannel(color, series ?? group) ?? colorChannel(angle, undefined);
         into.marks.push({
           type: PlotMark.Interval,
@@ -795,10 +811,10 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         throw new Error('buildPlotSpec: <IntervalMark arrangement="stack"> requires group or series to identify stacked segments');
       }
       if (arrangement === 'normalize-stack') {
-        into.autoStacks.push({ kind: PlotTransform.Normalize, field: valueField, groupBy: [categoryField], basis: 'percent' });
+        into.shortcutTransforms.push({ kind: PlotTransform.Normalize, field: valueField, groupBy: [categoryField], basis: 'percent' });
       }
       if ((arrangement === 'stack' || arrangement === 'normalize-stack') && arrangementGroup !== undefined) {
-        into.autoStacks.push({
+        into.shortcutTransforms.push({
           kind: PlotTransform.Stack,
           x: categoryField,
           y: valueField,
@@ -1015,6 +1031,15 @@ const collectExplicitScales = (declared: Array<ScaleProps>, coordKind: ReturnTyp
   return out;
 };
 
+const buildShortcutTransforms = (marks: ReadonlyArray<Mark>, definitions: ReadonlyArray<MarkTransformShortcutDefinition> | undefined): Array<TransformOperation> => {
+  if (definitions === undefined || definitions.length === 0) return [];
+  return marks.flatMap((mark, markIndex) =>
+    definitions
+      .filter(definition => definition.markType === mark.type)
+      .flatMap(definition => definition.build({ mark, markIndex, marks }) ?? []),
+  );
+};
+
 /** polar coordinate IR 的角向区间 / 内半径默认值（与 Polar2DSchema 的 .default() 一致，buildPlotSpec 即填满，等价手写无需再补） */
 const POLAR_DEFAULT_START_ANGLE = 0;
 const POLAR_DEFAULT_END_ANGLE = 360;
@@ -1055,20 +1080,21 @@ const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | u
  *   产出须等价于手写 PlotSpec（仿 core Sugar = Kernel 等价性）。data 不进 IR，仅存 reference
  */
 export const buildPlotSpec = (children: ReactNode, dataRef: string, options: BuildPlotSpecOptions = {}): PlotSpec => {
-  const collected: Collected = { marks: [], guides: [], transforms: [], autoStacks: [], scales: [], resolveLabels: {}, colored: false, colorFields: [], hasBar: false, hasRect: false, hasHorizontalBar: false, hasSector: false, hasClosedLine: false };
+  const collected: Collected = { marks: [], guides: [], transforms: [], shortcutTransforms: [], scales: [], resolveLabels: {}, colored: false, colorFields: [], hasBar: false, hasRect: false, hasHorizontalBar: false, hasSector: false, hasClosedLine: false };
   collectInto(children, collected, styleSugarContext(options));
 
-  // transform 装配序：<Plot transforms> 直传 → <Transform> 收集 → auto-stack（B4 去重）
-  // B4 按 stack 签名（x / y / groupBy）去重：仅抑制与某条显式 stack 完全同签名的 auto-stack（那条会二次堆叠），
-  // 不同签名的 auto-stack 保留——否则该 mark 仍是 arrangement='stack' 却没有对应 y0/y1，lower 阶段读空累积界出错。
+  // transform 装配序：<Plot transforms> 直传 → <Transform> 收集 → mark shortcut transforms（B4 去重）
+  // B4 按 stack 签名（x / y / groupBy）去重：仅抑制与某条显式 stack 完全同签名的 shortcut stack（那条会二次堆叠），
+  // 不同签名的 shortcut stack 保留——否则该 mark 仍是 arrangement='stack' 却没有对应 y0/y1，lower 阶段读空累积界出错。
   const explicitTransforms: Array<TransformOperation> = [...(options.transforms ?? []), ...collected.transforms];
+  const shortcutTransforms = [...collected.shortcutTransforms, ...buildShortcutTransforms(collected.marks, options.markTransformShortcuts)];
   const stackSignature = (transform: TransformOperation): string =>
     transform.kind === PlotTransform.Stack
       ? JSON.stringify([transform.x ?? null, transform.y, transform.groupBy ?? null, transform.offset ?? 'zero', transform.startField ?? null, transform.endField ?? null])
       : '';
   const explicitStackSignatures = new Set(explicitTransforms.filter(transform => transform.kind === PlotTransform.Stack).map(stackSignature));
-  const dedupedAutoStacks = collected.autoStacks.filter(autoStack => !explicitStackSignatures.has(stackSignature(autoStack)));
-  const transforms: Array<TransformOperation> = [...explicitTransforms, ...dedupedAutoStacks];
+  const dedupedShortcutTransforms = shortcutTransforms.filter(transform => transform.kind !== PlotTransform.Stack || !explicitStackSignatures.has(stackSignature(transform)));
+  const transforms: Array<TransformOperation> = [...explicitTransforms, ...dedupedShortcutTransforms];
 
   const coordKind = coordinateTypeOf(options.coordinate);
   if (collected.hasSector && coordKind !== 'polar2D') {

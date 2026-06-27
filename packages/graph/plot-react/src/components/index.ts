@@ -8,4 +8,4 @@ export type { ScaleProps, ScaleDimension, PositionScaleType } from './scales';
 export { Transform } from './transform';
 export type { TransformProps } from './transform';
 export { buildPlotSpec, resolveLabelOf } from './build-plot-spec';
-export type { BuildPlotSpecOptions, CoordinateInput, ResolveLabelMap } from './build-plot-spec';
+export type { BuildPlotSpecOptions, CoordinateInput, MarkTransformShortcutContext, MarkTransformShortcutDefinition, ResolveLabelMap } from './build-plot-spec';

@@ -285,10 +285,10 @@ describe('RelationMark and anchorId lowering', () => {
         type: 'relation',
         transform: [
           {
-            kind: 'derive-relation',
-            source: { select: 'min', by: 'value', fields: { id: 'id' } },
-            target: { select: 'max', by: 'value', fields: { id: 'id' } },
-            measure: { kind: 'difference', field: 'value', labelAs: 'deltaLabel', labelPrefix: '+' },
+            kind: 'relate',
+            source: { selector: { op: 'min', by: 'value' }, fields: { id: 'id' } },
+            target: { selector: { op: 'max', by: 'value' }, fields: { id: 'id' } },
+            measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
           },
         ],
         source: { anchorId: { prefix: 'trend', field: 'sourceId' } },
@@ -317,9 +317,9 @@ describe('RelationMark and anchorId lowering', () => {
         type: 'relation',
         transform: [
           {
-            kind: 'derive-relation',
-            source: { select: 'first', fields: { x: 'x', y: 'value' } },
-            target: { select: 'last', fields: { x: 'x', y: 'value' } },
+            kind: 'relate',
+            source: { selector: { op: 'first' }, fields: { x: 'x', y: 'value' } },
+            target: { selector: { op: 'last' }, fields: { x: 'x', y: 'value' } },
           },
         ],
         source: { project: { x: 'sourceX', y: 'sourceY' } },
@@ -346,10 +346,10 @@ describe('RelationMark and anchorId lowering', () => {
           id: 'delta',
           transform: [
             {
-              kind: 'derive-relation',
-              source: { select: 'first', fields: { x: 'x', y: 'value' } },
-              target: { select: 'last', fields: { x: 'x', y: 'value' } },
-              measure: { kind: 'difference', field: 'value', labelAs: 'deltaLabel', labelPrefix: '+' },
+              kind: 'relate',
+              source: { selector: { op: 'first' }, fields: { x: 'x', y: 'value' } },
+              target: { selector: { op: 'last' }, fields: { x: 'x', y: 'value' } },
+              measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
             },
           ],
           source: { project: { x: 'sourceX', y: 'sourceY' } },

@@ -369,13 +369,13 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 's' },
-      transform: [{ kind: 'bin', field: 'm', step: 2, reduce: 'count' }],
+      transform: [{ kind: 'bin', field: 'm', step: 2 }],
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } }, encoding: { y: { field: 'binValue' } } }],
+      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } }, encoding: { y: { field: 'binCount' } } }],
     };
     const svg = renderPlot(histogramSpec, histData, { width: 480, height: 300 });
     expect(svg).toContain('<svg');
@@ -384,8 +384,8 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect((svg.match(/<rect/g) ?? []).length).toBeGreaterThanOrEqual(2);
   });
 
-  // alpha.12 ADR-01：分组聚合柱（aggregate transform → band 柱）SSR
-  it('aggregate groupBy sum → SSR 出聚合柱（<path）', () => {
+  // alpha.12 ADR-01：分组聚合柱（summarize transform → band 柱）SSR
+  it('summarize groupBy sum → SSR 出聚合柱（<path）', () => {
     const orders: ExternalDatasets = {
       o: [
         { region: 'N', revenue: 3 },
@@ -397,7 +397,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'o' },
-      transform: [{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }],
+      transform: [{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] }],
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },

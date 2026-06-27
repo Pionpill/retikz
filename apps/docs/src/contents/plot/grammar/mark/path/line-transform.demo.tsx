@@ -12,7 +12,7 @@ const Demo: FC = () => (
       order="day"
       stroke="#0f172a"
       strokeWidth={2.5}
-      transform={[{ kind: 'aggregate', groupBy: ['day'], reduce: 'sum', field: 'value', as: 'totalValue' }]}
+      transform={[{ kind: 'summarize', groupBy: ['day'], metrics: [{ op: 'sum', field: 'value', as: 'totalValue' }] }]}
     />
     <Axis dimension="x" />
     <Axis dimension="y" grid />

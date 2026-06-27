@@ -5,4 +5,5 @@ export * from './data';
 export * from './mark';
 export * from './provenance';
 export * from './scale';
+export * from './statistics';
 export * from './transform';

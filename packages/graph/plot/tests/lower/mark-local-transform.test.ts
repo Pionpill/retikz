@@ -32,7 +32,7 @@ const groupPointSpec = (): PlotSpec =>
     marks: [
       {
         type: 'point',
-        transform: [{ kind: 'aggregate', groupBy: ['category'], reduce: 'sum', field: 'value', as: 'total' }],
+        transform: [{ kind: 'summarize', groupBy: ['category'], metrics: [{ op: 'sum', field: 'value', as: 'total' }] }],
         encoding: { x: { field: 'category' }, y: { field: 'total' } },
       },
     ],
@@ -98,7 +98,7 @@ describe('mark-local transform', () => {
       marks: [
         {
           type: 'dot',
-          transform: [{ kind: 'aggregate', groupBy: ['category'], reduce: 'sum', field: 'value', as: 'total' }],
+          transform: [{ kind: 'summarize', groupBy: ['category'], metrics: [{ op: 'sum', field: 'value', as: 'total' }] }],
           encoding: { x: { field: 'category' }, y: { field: 'total' } },
         },
       ],

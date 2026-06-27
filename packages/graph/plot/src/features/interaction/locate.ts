@@ -3,7 +3,7 @@ import { type ExternalDatasets, type ExternalRow, type Mark, type MarkOperation,
 import { applyTransforms, buildIntervalContext, datumAnchor, resolveFieldPath } from '../../providers';
 import { type LowerPlotsOptions, type MarkDataView, prepareRows, resolveFrame } from '../../pipeline/expand';
 import { DEFAULT_FONT_SIZE } from '../../pipeline/layout';
-import type { AnyTransformDefinition, CoordinateFrame, IntervalContext } from '../../contract';
+import type { AnyTransformDefinition, CoordinateFrame, IntervalContext, TransformContext } from '../../contract';
 import { type ProvenanceContext, createDatumIdRegistrar, datumMeta, readSourceIndex, readSourceIndices, tagSourceIndex } from '../../pipeline/provenance';
 
 /** 默认整图尺寸（与 expand.ts 对齐，保 locator 投影与 lowering 一致） */
@@ -57,10 +57,11 @@ const resolveMarkRows = (
   mark: MarkOperation,
   rows: Array<ExternalRow>,
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
+  transformContext: TransformContext,
 ): Array<ExternalRow> => {
   const transform = (mark as { transform?: Array<TransformOperation> }).transform;
   if (transform === undefined) return rows;
-  return applyTransforms(rows, transform, transformRegistry);
+  return applyTransforms(rows, transform, transformRegistry, transformContext);
 };
 
 /**
@@ -88,11 +89,11 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
   // 与 expandPlot 共用 prepareRows（fieldMaps 校验 + 类型解析 + 归一化），保证 render 抛错 ⟺ locator 抛错（评审 P2 parity）。
   // tagSourceIndex（clone，不动入参）→ prepareRows → applyTransforms，与 lowering 完全同序，否则 locator 落点漂移。
   const ingested = tagSourceIndex(dataset);
-  const { fieldTypes, normalized, transformRegistry, scaleRegistry } = prepareRows(spec, datasets, options, ingested);
-  const rows = applyTransforms(normalized, spec.transform, transformRegistry);
+  const { fieldTypes, normalized, transformRegistry, transformContext, scaleRegistry } = prepareRows(spec, datasets, options, ingested);
+  const rows = applyTransforms(normalized, spec.transform, transformRegistry, transformContext);
   const markDataViews: Array<MarkDataView> = spec.marks.map(mark => ({
     mark,
-    rows: resolveMarkRows(mark, rows, transformRegistry),
+    rows: resolveMarkRows(mark, rows, transformRegistry, transformContext),
   }));
   const rowsOfMark = (markIndex: number): Array<ExternalRow> => markDataViews[markIndex]?.rows ?? rows;
 

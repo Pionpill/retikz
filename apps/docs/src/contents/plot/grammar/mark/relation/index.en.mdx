@@ -48,13 +48,13 @@ Each scatter row declares both `id` and `target`. `PointMark` generates node ids
 
 ### Bubble Relation
 
-Bubble charts often need to highlight one business relationship inside a broader distribution. This example uses 20 bubbles for the distribution, and the bubble layer generates reusable Node ids with `anchorId`. The relation layer does not hand-write an edge row; its `transform` runs `derive-relation`: source selects the bubble with the largest `value`, target selects the bubble with the highest `y`, and the transform emits `sourceId`, `targetId`, and the path label. Source / target then reference those derived ids with `boundary`, so the connector stops at the bubble boundary.
+Bubble charts often need to highlight one business relationship inside a broader distribution. This example uses 20 bubbles for the distribution, and the bubble layer generates reusable Node ids with `anchorId`. The relation layer does not hand-write an edge row; its `transform` runs `relate`: source selects the bubble with the largest `value`, target selects the bubble with the highest `y`, and the transform emits `sourceId`, `targetId`, and the path label. Source / target then reference those derived ids with `boundary`, so the connector stops at the bubble boundary.
 
 <ComponentPreview name="relation-bubble" sourceFiles={['relation-bubble.data.ts']} size="lg" />
 
 ### Path Extremes
 
-The path mark draws 20 ordered points and registers each vertex with `anchorId`. This example also avoids a separate edge table: `RelationMark.transform` runs `derive-relation` over the same points, selects the minimum `y` row as source and the maximum `y` row as target, then emits `sourceId`, `targetId`, and `deltaLabel`. Source / target connect to those derived vertex ids, and `routing={{ kind: 'bend' }}` draws the low-to-high relationship as a curve.
+The path mark draws 20 ordered points and registers each vertex with `anchorId`. This example also avoids a separate edge table: `RelationMark.transform` runs `relate` over the same points, selects the minimum `y` row as source and the maximum `y` row as target, then emits `sourceId`, `targetId`, and `deltaLabel`. Source / target connect to those derived vertex ids, and `routing={{ kind: 'bend' }}` draws the low-to-high relationship as a curve.
 
 <ComponentPreview name="relation-path-extremes" sourceFiles={['relation-path-extremes.data.ts']} size="lg" />
 
@@ -113,7 +113,7 @@ When a relation uses generated `anchorId` and the target does not exist, lowerin
 
 | Type | Row count | Meaning |
 | --- | --- | --- |
-| `derive-relation` | N → relation rows | Selects source / target rows and emits relation rows, usually for `RelationMark.transform` |
+| `relate` | N → relation rows | Reuses common selectors to choose source / target rows, usually for `RelationMark.transform`, and can also feed other marks |
 
 ## Related
 

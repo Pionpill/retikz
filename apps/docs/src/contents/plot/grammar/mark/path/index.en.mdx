@@ -55,7 +55,7 @@ With no `series`, giving `color` a categorical field also splits PathMark implic
 
 ### Mark-Local Transforms
 
-When `transform` is placed on PathMark, only that path layer sees the changed rows. The point layer below keeps the original channel values, while the dark path layer aggregates by `day`, creates `totalValue`, and connects those transformed rows into a total trend.
+When `transform` is placed on PathMark, only that path layer sees the changed rows. The point layer below keeps the original channel values, while the dark path layer summarizes by `day`, creates `totalValue`, and connects those transformed rows into a total trend.
 
 <ComponentPreview name="line-transform" sourceFiles={['line-transform.data.ts']} />
 

@@ -9,7 +9,7 @@ const Demo: FC = () => (
   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
     <Plot data={measurements} width={360} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
       <Transform kind="bin" field="measurement" count={8} />
-      <IntervalMark x0="binStart" x1="binEnd" y="binValue" />
+      <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>

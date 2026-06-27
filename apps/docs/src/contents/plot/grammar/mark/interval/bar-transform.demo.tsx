@@ -11,7 +11,7 @@ const Demo: FC = () => (
       y="totalRevenue"
       color="segment"
       label="segment"
-      transform={[{ kind: 'aggregate', groupBy: ['segment'], reduce: 'sum', field: 'revenue', as: 'totalRevenue' }]}
+      transform={[{ kind: 'summarize', groupBy: ['segment'], metrics: [{ op: 'sum', field: 'revenue', as: 'totalRevenue' }] }]}
     />
     <Axis dimension="x" />
     <Axis dimension="y" grid />

@@ -48,13 +48,13 @@ RelationMark 是底层关系路径 mark：它不重新发明箭头、标签或�
 
 ### 气泡关系
 
-气泡图里常见的用法是只强调某两个点之间的业务关系。这个例子用 20 个气泡承载整体分布，气泡层通过 `anchorId` 生成可引用 Node id。relation 层没有手写边数据，而是在 `transform` 里运行 `derive-relation`：source 选择 `value` 最大的气泡，target 选择 `y` 最高的气泡，同时派生 `sourceId`、`targetId` 和路径标签。最后 source / target 再按这些派生 id 引用气泡，并启用 `boundary`，让连接线停在气泡边界上。
+气泡图里常见的用法是只强调某两个点之间的业务关系。这个例子用 20 个气泡承载整体分布，气泡层通过 `anchorId` 生成可引用 Node id。relation 层没有手写边数据，而是在 `transform` 里运行 `relate`：source 选择 `value` 最大的气泡，target 选择 `y` 最高的气泡，同时派生 `sourceId`、`targetId` 和路径标签。最后 source / target 再按这些派生 id 引用气泡，并启用 `boundary`，让连接线停在气泡边界上。
 
 <ComponentPreview name="relation-bubble" sourceFiles={['relation-bubble.data.ts']} size="lg" />
 
 ### 路径极值
 
-路径 mark 负责画 20 个有序点，并通过 `anchorId` 给每个顶点注册可引用坐标。这个例子的 relation 也不需要额外边表：`RelationMark.transform` 用 `derive-relation` 在同一批点里找 `y` 最小的 source 和 `y` 最大的 target，派生 `sourceId`、`targetId` 与 `deltaLabel`。随后 source / target 按派生 id 连到路径顶点，`routing={{ kind: 'bend' }}` 再把这段最低点到最高点的关系画成曲线。
+路径 mark 负责画 20 个有序点，并通过 `anchorId` 给每个顶点注册可引用坐标。这个例子的 relation 也不需要额外边表：`RelationMark.transform` 用 `relate` 在同一批点里找 `y` 最小的 source 和 `y` 最大的 target，派生 `sourceId`、`targetId` 与 `deltaLabel`。随后 source / target 按派生 id 连到路径顶点，`routing={{ kind: 'bend' }}` 再把这段最低点到最高点的关系画成曲线。
 
 <ComponentPreview name="relation-path-extremes" sourceFiles={['relation-path-extremes.data.ts']} size="lg" />
 
@@ -113,7 +113,7 @@ React 里的 `<RelationMark>` 本身不渲染 DOM；`<Plot>` 构造 `PlotSpec` �
 
 | 类型 | 行数变化 | 含义 |
 | --- | --- | --- |
-| `derive-relation` | N → relation rows | 按选择规则派生 source / target 关系行，适合写在 `RelationMark.transform` |
+| `relate` | N → relation rows | 复用通用 selector 选择 source / target 行，适合写在 `RelationMark.transform`，也可被其它 mark 消费 |
 
 ## 相关
 

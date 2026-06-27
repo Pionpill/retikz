@@ -3,24 +3,24 @@ import { PlotSpecSchema, TransformSchema } from '../../src/schemas';
 import { applyTransforms, resolveTransformRegistry } from '../../src/providers';
 import { collectSourceFields } from '../../src/pipeline/source-fields';
 
-describe('derive-relation transform', () => {
+describe('relate transform', () => {
   const operation = {
-    kind: 'derive-relation',
-    source: { select: 'min', by: 'value', fields: { x: 'x', y: 'value', id: 'id' } },
-    target: { select: 'max', by: 'value', fields: { x: 'x', y: 'value', id: 'id' } },
-    measure: { kind: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' },
+    kind: 'relate',
+    source: { selector: { op: 'min', by: 'value' }, fields: { x: 'x', y: 'value', id: 'id' } },
+    target: { selector: { op: 'max', by: 'value' }, fields: { x: 'x', y: 'value', id: 'id' } },
+    measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
   };
 
-  it('accepts derive-relation schema and preserves JSON round trip', () => {
+  it('accepts relate schema and preserves JSON round trip', () => {
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 
   it('rejects min/max selectors without by', () => {
     expect(() =>
       TransformSchema.parse({
-        kind: 'derive-relation',
-        source: { select: 'min', fields: { id: 'id' } },
-        target: { select: 'max', by: 'value', fields: { id: 'id' } },
+        kind: 'relate',
+        source: { selector: { op: 'min' }, fields: { id: 'id' } },
+        target: { selector: { op: 'max', by: 'value' }, fields: { id: 'id' } },
       }),
     ).toThrow();
   });
@@ -28,9 +28,9 @@ describe('derive-relation transform', () => {
   it('rejects endpoint selectors with empty fields', () => {
     expect(() =>
       TransformSchema.parse({
-        kind: 'derive-relation',
-        source: { select: 'first', fields: {} },
-        target: { select: 'last', fields: { id: 'id' } },
+        kind: 'relate',
+        source: { selector: { op: 'first' }, fields: {} },
+        target: { selector: { op: 'last' }, fields: { id: 'id' } },
       }),
     ).toThrow();
   });
@@ -85,10 +85,10 @@ describe('derive-relation transform', () => {
       ],
       [
         {
-          kind: 'derive-relation',
+          kind: 'relate',
           groupBy: ['group'],
-          source: { select: 'max', by: 'value', tie: 'last', fields: { id: 'id' } },
-          target: { select: 'first', fields: { id: 'id' } },
+          source: { selector: { op: 'max', by: 'value', tie: 'last' }, fields: { id: 'id' } },
+          target: { selector: { op: 'first' }, fields: { id: 'id' } },
         },
       ],
       resolveTransformRegistry(),

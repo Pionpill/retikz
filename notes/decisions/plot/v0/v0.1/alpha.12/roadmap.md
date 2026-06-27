@@ -22,6 +22,7 @@
 | [13](./13-relation-mark-anchor.md) | **RelationMark + anchor id contract**：删除旧 `LinkMark` 方向，新增 source-target 关系图元；point/path/interval 通过 `anchorId` 暴露稳定 Node/Coordinate id，RelationMark 复用 core Path target / boundary / arrow / label / route 能力。 | Proposed |
 | [14](./14-relation-derived-data-routing.md) | **RelationMark derived data and routing strategy**：relation 通过 mark-local transform 从当前 rows 派生 source-target relation rows，并新增 line / bend / orthogonal routing strategy；复用 transform registry、AnchorRegistry 与 core Path target / step 能力。 | Proposed |
 | [15](./15-mark-local-transform.md) | **Mark-local transform for all marks**：把 relation 专属 `transform` 提升为所有 mark 的公共字段；root transform 后每个 mark 可独立运行局部 transform，内置和自定义 mark 共用同一 `MarkDataView` / transform registry / locator parity。 | Proposed |
+| [16](./16-statistical-transform-algebra.md) | **Statistical transform algebra**：把 aggregate / derive-relation / bin 私有 reduce 收敛为 reducer、selector、annotate、relate 四类统计代数；所有 mark 与 root / mark-local transform 共用同一统计子算子 registry。⚠️ BREAKING transform schema | Proposed |
 
 ## 排序与依赖
 

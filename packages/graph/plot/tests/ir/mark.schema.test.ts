@@ -84,7 +84,7 @@ describe('MarkSchema (ADR-05)', () => {
 
   // alpha.12 ADR-01：histogram 连续 x 区间柱（extent bound）
   it('mark_interval_extent_histogram_valid', () => {
-    const m = { type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } }, encoding: { x: { field: 'binStart' }, y: { field: 'binValue' } } };
+    const m = { type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } }, encoding: { x: { field: 'binStart' }, y: { field: 'binCount' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
@@ -548,7 +548,7 @@ describe('MarkSchema (ADR-05)', () => {
   it('mark_path_accepts_local_transform', () => {
     const m = {
       type: 'path',
-      transform: [{ kind: 'aggregate', groupBy: ['series'], reduce: 'sum', field: 'value', as: 'total' }],
+      transform: [{ kind: 'summarize', groupBy: ['series'], metrics: [{ op: 'sum', field: 'value', as: 'total' }] }],
       order: 'series',
       encoding: { x: { field: 'series' }, y: { field: 'total' } },
     };

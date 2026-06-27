@@ -1,6 +1,6 @@
 import { createFieldCollector } from '../providers';
 import { type MarkOperation, type PlotSpec, type TransformOperation } from '../schemas';
-import { type AnyMarkDefinition, type AnyTransformDefinition } from '../contract';
+import { type AnyMarkDefinition, type AnyTransformDefinition, type TransformContext } from '../contract';
 import { collectMarkFields, collectTransformFields, resolveMarkRegistry, resolveTransformRegistry } from '../providers';
 
 const markTransformOf = (mark: MarkOperation): Array<TransformOperation> | undefined =>
@@ -11,15 +11,16 @@ export const collectSourceFields = (
   spec: PlotSpec,
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition> = resolveTransformRegistry(),
   markRegistry: ReadonlyMap<string, AnyMarkDefinition> = resolveMarkRegistry(),
+  transformContext?: TransformContext,
 ): Set<string> => {
   const fields = new Set<string>();
   const collector = createFieldCollector(fields);
   const derivedOutputs = new Set<string>();
 
   for (const mark of spec.marks) collectMarkFields(mark, collector, markRegistry);
-  for (const transform of spec.transform ?? []) collectTransformFields(transform, collector, derivedOutputs, transformRegistry);
+  for (const transform of spec.transform ?? []) collectTransformFields(transform, collector, derivedOutputs, transformRegistry, transformContext);
   for (const mark of spec.marks) {
-    for (const transform of markTransformOf(mark) ?? []) collectTransformFields(transform, collector, derivedOutputs, transformRegistry);
+    for (const transform of markTransformOf(mark) ?? []) collectTransformFields(transform, collector, derivedOutputs, transformRegistry, transformContext);
   }
   for (const derived of derivedOutputs) fields.delete(derived);
 

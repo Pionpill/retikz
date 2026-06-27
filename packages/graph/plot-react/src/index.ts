@@ -18,5 +18,7 @@ export type {
   TransformProps,
   BuildPlotSpecOptions,
   CoordinateInput,
+  MarkTransformShortcutContext,
+  MarkTransformShortcutDefinition,
   ResolveLabelMap,
 } from './components';

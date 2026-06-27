@@ -9,6 +9,8 @@ A custom mark's `type` is any non-built-in discriminator; its `encoding` reuses 
 
 Custom marks can also put `transform` on the operation. That mark-local pipeline runs after the plot-level transform, and `lower(mark, rows, ...)` receives the rows for this mark after its own transform; the custom definition does not need to call `applyTransforms` again.
 
+When an authoring shortcut needs to prepare data automatically, do not hide that data change inside `lower`. The React DSL can use `markTransformShortcuts` to expand higher-level syntax into ordinary transforms; `<Transform>`, `dataTransforms`, mark-local `transform`, and those shortcuts all feed the same transform pipeline. The mark definition only consumes prepared rows.
+
 ## Diamond glyph
 
 The `diamond` mark below projects each row into a diamond. It is registered in `markDefinitions`; a custom mark has **no dedicated React component**, so it is authored via the `<Plot spec={...}>` entry — write `{ type: 'diamond', ... }` directly in the `marks` array.
@@ -35,7 +37,7 @@ A mark spans three layers, with the same boundary as built-in marks:
 | Layer | Holds | In IR | Responsibility |
 | --- | --- | --- | --- |
 | schema | `type`, `encoding`, `transform`, and other serializable fields | yes | validation, persistence, AI generation, cross-runtime transfer |
-| authoring | built-in via React components; custom via the spec entry | no | assemble user input into JSON-safe mark IR |
+| authoring | built-in via React components; custom via the spec entry; shortcuts expand into ordinary transforms | no | assemble user input into JSON-safe mark IR and transforms |
 | registry | `lower(mark, rows, frame, channels)` behavior | no | lower into core IR at compile time |
 
 Built-in and custom marks dispatch through the same `resolveMarkRegistry`: built-in marks go through the strict discriminated union, custom marks through `type` passthrough, and lowering uses the mark definition contract to separate built-in-specific geometry, relation targets, and generic position channels.

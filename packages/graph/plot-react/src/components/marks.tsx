@@ -222,7 +222,7 @@ export type PointMarkProps = MarkTransformProps & DatumLabelProps & CoreNodeChan
 export type IntervalMarkProps = MarkTransformProps & DatumLabelProps & CoreNodeChannelProps & {
   /** 绑 x 位置通道的字段路径（分类，自动 band scale；polar 下作角向类别）；直方连续 x 用 x0/x1 取代 */
   x?: FieldName;
-  /** 绑 y 位置通道的字段路径（数值；polar 下作径向值；直方下作箱高度 binValue） */
+  /** 绑 y 位置通道的字段路径（数值；polar 下作径向值；直方下作箱高度 binCount 或自定义 metric 字段） */
   y?: FieldName;
   /** polar 饼图 / 环图的份额值字段；设置后自动累积成角界（extent×full bounds），下沉为扇区 */
   angle?: FieldName;

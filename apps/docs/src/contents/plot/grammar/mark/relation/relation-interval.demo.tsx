@@ -19,11 +19,11 @@ const Demo: FC = () => (
     <RelationMark
       transform={[
         {
-          kind: 'derive-relation',
+          kind: 'relate',
           groupBy: ['pair'],
-          source: { select: 'min', by: 'decreaseOrder', fields: { x: 'slot', y: 'value', viaY: 'routeY' } },
-          target: { select: 'max', by: 'decreaseOrder', fields: { x: 'slot', y: 'value' } },
-          measure: { kind: 'difference', field: 'value', labelAs: 'deltaLabel', labelPrefix: '+' },
+          source: { selector: { op: 'min', by: 'decreaseOrder' }, fields: { x: 'slot', y: 'value', viaY: 'routeY' } },
+          target: { selector: { op: 'max', by: 'decreaseOrder' }, fields: { x: 'slot', y: 'value' } },
+          measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
         },
       ]}
       source={{ project: { x: 'sourceX', y: 'sourceY' } }}
@@ -36,11 +36,11 @@ const Demo: FC = () => (
     <RelationMark
       transform={[
         {
-          kind: 'derive-relation',
+          kind: 'relate',
           groupBy: ['pair'],
-          source: { select: 'min', by: 'increaseOrder', fields: { x: 'slot', y: 'value', viaY: 'routeY' } },
-          target: { select: 'max', by: 'increaseOrder', fields: { x: 'slot', y: 'value' } },
-          measure: { kind: 'difference', field: 'value', labelAs: 'deltaLabel', labelPrefix: '+' },
+          source: { selector: { op: 'min', by: 'increaseOrder' }, fields: { x: 'slot', y: 'value', viaY: 'routeY' } },
+          target: { selector: { op: 'max', by: 'increaseOrder' }, fields: { x: 'slot', y: 'value' } },
+          measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
         },
       ]}
       source={{ project: { x: 'sourceX', y: 'sourceY' } }}

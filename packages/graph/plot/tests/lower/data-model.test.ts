@@ -164,11 +164,11 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
     expect(() => resolveFieldTypes([{ name: 'month' }, { name: 'revenue' }], [{ month: 1, revenue: 2, note: 'x' }], userFields)).toThrow(/unknown field/i);
   });
 
-  // alpha.12 ADR-01：bin / aggregate 输入字段进、派生输出字段不进
+  // alpha.12 ADR-16：bin / summarize 输入字段进、派生输出字段不进
   it('bin_inputs_in_outputs_out', () => {
     const spec = buildSpec({
-      transform: [{ kind: 'bin', field: 'measurement', reduce: 'sum', reduceField: 'weight' }],
-      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } }, encoding: { y: { field: 'binValue' } } }],
+      transform: [{ kind: 'bin', field: 'measurement', metrics: [{ op: 'sum', field: 'weight', as: 'totalWeight' }] }],
+      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } }, encoding: { y: { field: 'totalWeight' } } }],
     });
     const fields = collectSourceFields(spec);
     // 输入字段进
@@ -177,12 +177,12 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
     // 派生输出字段不进（即便被 mark 的 encoding.y / x0Field / x1Field 引用）
     expect(fields.has('binStart')).toBe(false);
     expect(fields.has('binEnd')).toBe(false);
-    expect(fields.has('binValue')).toBe(false);
+    expect(fields.has('totalWeight')).toBe(false);
   });
 
   it('bin_custom_output_fields_not_collected', () => {
     const spec = buildSpec({
-      transform: [{ kind: 'bin', field: 'm', startField: 'lo', endField: 'hi', valueField: 'n' }],
+      transform: [{ kind: 'bin', field: 'm', startField: 'lo', endField: 'hi', metrics: [{ op: 'count', as: 'n' }] }],
       marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'lo', to: 'hi' } }, encoding: { y: { field: 'n' } } }],
     });
     const fields = collectSourceFields(spec);
@@ -192,9 +192,9 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
     expect(fields.has('n')).toBe(false);
   });
 
-  it('aggregate_inputs_in_output_out', () => {
+  it('summarize_inputs_in_output_out', () => {
     const spec = buildSpec({
-      transform: [{ kind: 'aggregate', groupBy: ['region', 'product'], reduce: 'sum', field: 'revenue', as: 'total' }],
+      transform: [{ kind: 'summarize', groupBy: ['region', 'product'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] }],
       marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'total' } } }],
     });
     const fields = collectSourceFields(spec);
@@ -205,13 +205,13 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
     expect(fields.has('total')).toBe(false);
   });
 
-  it('aggregate_default_as_not_collected', () => {
+  it('summarize_count_output_not_collected', () => {
     const spec = buildSpec({
-      transform: [{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue' }],
-      marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'sumRevenue' } } }],
+      transform: [{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'count', as: 'count' }] }],
+      marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'count' } } }],
     });
     const fields = collectSourceFields(spec);
-    expect(fields.has('sumRevenue')).toBe(false);
+    expect(fields.has('count')).toBe(false);
   });
 
   // alpha.12 ADR-02：normalize / derive-interval / jitter 输入字段进、派生输出不进

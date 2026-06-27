@@ -1,25 +1,29 @@
 import { type AnyTransformDefinition, type TransformContext, defineTransform, extractTransformKind } from '../../contract';
 import { readSourceIndex, readSourceIndices, withGroupProvenance } from '../../pipeline';
 import {
-  type AggregateTransform,
-  AggregateTransformSchema,
+  type AnnotateTransform,
+  AnnotateTransformSchema,
   type BinTransform,
   BinTransformSchema,
   type DeriveIntervalTransform,
   DeriveIntervalTransformSchema,
-  type DeriveRelationTransform,
-  DeriveRelationTransformSchema,
   type JitterTransform,
   JitterTransformSchema,
   type NormalizeTransform,
   NormalizeTransformSchema,
+  type RelateTransform,
+  RelateTransformSchema,
+  type SelectTransform,
+  SelectTransformSchema,
   type SortTransform,
   SortTransformSchema,
   type StackTransform,
   StackTransformSchema,
+  type SummarizeTransform,
+  SummarizeTransformSchema,
 } from '../../schemas';
-import { applyDeriveRelation, deriveRelationInputFields, deriveRelationOutputFields } from './derive-relation';
-import { aggregateOutputField, applyAggregate, applyBin, binOutputFields } from './group';
+import { reducerInputFields, reducerOutputFields, selectorInputFields } from '../statistics';
+import { applyAnnotate, applyBin, applyRelate, applySelect, applySummarize, binMetricOperations, binOutputFields, relationEndpointOutputField } from './group';
 import { DEFAULT_DERIVE_END_FIELD, DEFAULT_DERIVE_START_FIELD, DEFAULT_END_FIELD, DEFAULT_JITTER_X_FIELD, DEFAULT_JITTER_Y_FIELD, DEFAULT_START_FIELD, applyDeriveInterval, applyJitter, applyNormalize, applySort, applyStack } from './row';
 
 /** 默认 transform 上下文：使用 plot provenance symbol 标记，不把来源信息写进 JSON IR。 */
@@ -44,19 +48,49 @@ const stackTransformDefinition = defineTransform<StackTransform>({
 
 const binTransformDefinition = defineTransform<BinTransform>({
   schema: BinTransformSchema,
-  inputFields: operation => [operation.field, ...(operation.reduceField !== undefined ? [operation.reduceField] : [])],
-  outputFields: operation => {
+  inputFields: (operation, context) => [
+    operation.field,
+    ...binMetricOperations(operation).flatMap(metric => reducerInputFields(metric, context.statReducerRegistry)),
+  ],
+  outputFields: (operation, context) => {
     const out = binOutputFields(operation);
-    return [out.startField, out.endField, out.valueField];
+    return [out.startField, out.endField, ...binMetricOperations(operation).flatMap(metric => reducerOutputFields(metric, context.statReducerRegistry))];
   },
   apply: (rows, operation, context) => applyBin(rows, operation, context),
 });
 
-const aggregateTransformDefinition = defineTransform<AggregateTransform>({
-  schema: AggregateTransformSchema,
-  inputFields: operation => [...operation.groupBy, ...(operation.field !== undefined ? [operation.field] : [])],
-  outputFields: operation => [aggregateOutputField(operation)],
-  apply: (rows, operation, context) => applyAggregate(rows, operation, context),
+const summarizeTransformDefinition = defineTransform<SummarizeTransform>({
+  schema: SummarizeTransformSchema,
+  inputFields: (operation, context) => [
+    ...(operation.groupBy ?? []),
+    ...operation.metrics.flatMap(metric => reducerInputFields(metric, context.statReducerRegistry)),
+  ],
+  outputFields: (operation, context) => operation.metrics.flatMap(metric => reducerOutputFields(metric, context.statReducerRegistry)),
+  apply: (rows, operation, context) => applySummarize(rows, operation, context),
+});
+
+const selectTransformDefinition = defineTransform<SelectTransform>({
+  schema: SelectTransformSchema,
+  inputFields: (operation, context) => [
+    ...(operation.groupBy ?? []),
+    ...selectorInputFields(operation.selector, context.rowSelectorRegistry),
+  ],
+  outputFields: operation => (operation.rankAs !== undefined ? [operation.rankAs] : []),
+  apply: (rows, operation, context) => applySelect(rows, operation, context),
+});
+
+const annotateTransformDefinition = defineTransform<AnnotateTransform>({
+  schema: AnnotateTransformSchema,
+  inputFields: (operation, context) => [
+    ...(operation.groupBy ?? []),
+    ...(operation.metrics ?? []).flatMap(metric => reducerInputFields(metric, context.statReducerRegistry)),
+    ...(operation.selectors ?? []).flatMap(selector => selectorInputFields(selector.selector, context.rowSelectorRegistry)),
+  ],
+  outputFields: (operation, context) => [
+    ...(operation.metrics ?? []).flatMap(metric => reducerOutputFields(metric, context.statReducerRegistry)),
+    ...(operation.selectors ?? []).map(selector => selector.as),
+  ],
+  apply: (rows, operation, context) => applyAnnotate(rows, operation, context),
 });
 
 const normalizeTransformDefinition = defineTransform<NormalizeTransform>({
@@ -73,11 +107,22 @@ const deriveIntervalTransformDefinition = defineTransform<DeriveIntervalTransfor
   apply: (rows, operation) => applyDeriveInterval(rows, operation),
 });
 
-const deriveRelationTransformDefinition = defineTransform<DeriveRelationTransform>({
-  schema: DeriveRelationTransformSchema,
-  inputFields: deriveRelationInputFields,
-  outputFields: deriveRelationOutputFields,
-  apply: (rows, operation) => applyDeriveRelation(rows, operation),
+const relateTransformDefinition = defineTransform<RelateTransform>({
+  schema: RelateTransformSchema,
+  inputFields: (operation, context) => [
+    ...(operation.groupBy ?? []),
+    ...selectorInputFields(operation.source.selector, context.rowSelectorRegistry),
+    ...selectorInputFields(operation.target.selector, context.rowSelectorRegistry),
+    ...Object.values(operation.source.fields),
+    ...Object.values(operation.target.fields),
+    ...(operation.measures ?? []).map(measure => measure.field),
+  ],
+  outputFields: operation => [
+    ...Object.keys(operation.source.fields).map(field => relationEndpointOutputField('source', field)),
+    ...Object.keys(operation.target.fields).map(field => relationEndpointOutputField('target', field)),
+    ...(operation.measures ?? []).flatMap(measure => [measure.as, measure.labelAs].filter((field): field is string => field !== undefined)),
+  ],
+  apply: (rows, operation, context) => applyRelate(rows, operation, context),
 });
 
 const jitterTransformDefinition = defineTransform<JitterTransform>({
@@ -92,15 +137,17 @@ const jitterTransformDefinition = defineTransform<JitterTransform>({
   apply: (rows, operation) => applyJitter(rows, operation),
 });
 
-/** 内置 transform definition 列表；内置 7 个与自定义 transform 共享同一 registry 分派流程。 */
+/** 内置 transform definition 列表；内置 transform 与自定义 transform 共享同一 registry 分派流程。 */
 export const BUILTIN_TRANSFORMS: ReadonlyArray<AnyTransformDefinition> = [
   sortTransformDefinition,
   stackTransformDefinition,
   binTransformDefinition,
-  aggregateTransformDefinition,
+  summarizeTransformDefinition,
+  selectTransformDefinition,
+  annotateTransformDefinition,
   normalizeTransformDefinition,
   deriveIntervalTransformDefinition,
-  deriveRelationTransformDefinition,
+  relateTransformDefinition,
   jitterTransformDefinition,
 ] as ReadonlyArray<AnyTransformDefinition>;
 

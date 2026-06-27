@@ -1,60 +1,89 @@
 ---
 title: Transforms
-description: Transforms are the statistics layer of the grammar: they rewrite rows before scales and marks. A transform pipeline can preserve row count or emit new rows per bin or group.
+description: transform is the statistical layer of the plot grammar: it rewrites rows before scales and marks, preserving detail rows or producing statistic, representative, or paired rows.
 ---
 
-`transform` is the **statistics layer** of the grammar: after data is aligned into a field model and before scales and marks, it rewrites data rows into a shape that marks consume more easily. It is independent of the final mark type — sorting, deriving fields, stacking, binning, and grouped summaries all happen here.
+`transform` is the statistical layer of the plot grammar. After data is normalized into canonical rows and before scales or marks consume it, transforms rewrite those rows into a shape that is easier to draw.
 
-In the pipeline, transforms sit **downstream of the canonical rows produced by the [data layer](/plot/grammar/data) and upstream of scale inference, mark lowering, and locators**. Multiple `<Transform>` children fold into a pipeline in declaration order: the output rows of one transform are the input rows of the next. Each transform either preserves the row count or changes it per bin or group, and the derived fields it produces do not need to appear in `model`.
+Transforms sit between the [data layer](/plot/grammar/data) and scale inference, mark lowering, and locators. Multiple `<Transform>` declarations compose in order: the output rows from one transform become the input rows for the next.
 
 <ComponentPreview name="transform-pipeline" size="sm" hideCode />
 
 ## Responsibilities
 
-| Category | Members | Row Count | Use It When |
-| --- | --- | --- | --- |
-| Row transforms | `sort` / `stack` / `normalize` / `derive-interval` / `jitter` | N rows → N rows | Reorder, derive fields, stack, compute shares, or spread overlapping points |
-| Group transforms | `bin` / `aggregate` | N rows → M bins / groups | Build histograms, grouped summaries, or detail-to-summary views |
-| Relation-local derivation | `derive-relation` | N rows → relation rows | Select source / target rows for `RelationMark.transform` |
+| Group | Members | Rows | Primitive | Good for |
+| --- | --- | --- | --- | --- |
+| Row rewrite | `sort` / `derive-interval` / `jitter` | N → N | row rewrite | Sorting, per-row intervals, deterministic jitter |
+| Row annotation | `stack` / `normalize` / `annotate` | N → N | reducer / row context | Stack bounds, shares, group means |
+| Summary & selection | `bin` / `summarize` / `select` | N → M/K | reducer / selector | Histograms, group statistics, extremes, top-N |
+| Row pairing | `relate` | N → P | selector / projection | Source/target relation fields |
+| Extensions | custom transform / reducer / selector | Depends on definition | definition registry | Custom processing or statistic sub-operations |
+
+The grouping follows the output row shape. `summarize` and `annotate` both use reducers, but one collapses rows into statistic rows while the other broadcasts statistics back onto source rows. `select` and `relate` both use selectors, but one emits representative source rows while the other emits source/target pair rows.
 
 ## Declaration
 
-Declare a transform with `<Transform kind="...">`; `kind` is the discriminator and the remaining props map to that transform's fields. Multiple `<Transform>` children fold into a pipeline in **declaration order**:
+Use `<Transform kind="...">` for plot-level transforms. `kind` selects the transform type and the remaining props match that transform's fields. Multiple transforms run in declaration order:
 
 ```tsx
 <Plot data={rows} model={model}>
-  <Transform kind="aggregate" groupBy={['region']} reduce="sum" field="revenue" as="total" />
+  <Transform kind="summarize" groupBy={['region']} metrics={[{ op: 'sum', field: 'revenue', as: 'total' }]} />
   <IntervalMark x="region" y="total" />
 </Plot>
 ```
 
-Transform outputs are **derived fields**, such as `binStart` / `binEnd` / `binValue`, `total`, or `y0` / `y1`. They are produced by the transform and do not need to appear in `model`; fields consumed by transforms still go through model and data validation.
+The same transform array can also live on any mark, giving only that layer a local data view:
 
-For programmatic construction, `<Plot dataTransforms={[...]}>` can pass a transform array directly. It shares the same pipeline as `<Transform>` children; direct-pass entries come before child transforms.
+```tsx
+<Plot data={rows} model={model}>
+  <PointMark x="region" y="raw" />
+  <IntervalMark
+    x="region"
+    y="total"
+    transform={[{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'raw', as: 'total' }] }]}
+  />
+</Plot>
+```
 
-> The prop is named `dataTransforms`, not `transforms`, to avoid colliding with core container geometric transforms such as translate / rotate.
+Fields produced by transforms are derived fields: `binStart` / `binEnd` / `binCount`, `total`, `sourceId` / `targetId`, `y0` / `y1`, and so on. They do not need to be listed in `model`; fields read by transforms still go through model and data validation.
+
+For programmatic construction, `<Plot dataTransforms={[...]}>` passes an array directly. It shares the same pipeline as `<Transform>` children; direct arrays run before child declarations.
+
+> The prop is named `dataTransforms` instead of `transforms` to avoid colliding with core geometric transforms such as translate and rotate.
+
+React DSL shortcuts still lower to ordinary transforms. For example, `IntervalMark` `angle` / `stack` / `percent` expands to `stack` or `normalize + stack`; custom authoring layers can use `markTransformShortcuts` to generate the same transform operations. Shortcuts do not add new data semantics.
 
 ## How It Works
 
-During lowering, Plot collects source fields read by transforms and records output fields derived by transforms. Strict model validation then checks only real input fields and does not require derived fields to be declared ahead of time.
+During lowering, Plot collects the source fields read by transforms and registers the fields they derive. That lets strict models validate true input fields without requiring derived fields to be declared early.
 
-Transforms are applied in declaration order: the output rows from one transform become the input rows for the next. The final row set then feeds scale inference, mark lowering, and locators.
+`bin`, `summarize`, and `annotate` reuse reducers such as `count` / `sum` / `mean` / `median` / `quantile`. `select` and `relate` reuse selectors such as `min` / `max` / `first` / `last` / `top`. For long-tail statistics, use `defineTransform` for a full transform or register reducer / selector definitions for the built-in statistical transforms.
 
-`derive-relation` is usually used inside `RelationMark.transform`, not as a plot-level transform. It derives relation rows such as minimum-to-maximum connectors while leaving point, path, and interval marks on the original row set.
+Plot-level transforms affect the whole chart: scales, guides, and every mark. Mark-local transforms only affect the rows seen by that one mark, which is useful for local summary layers or relation rows.
 
-## Topics
+`relate` is often placed on `RelationMark.transform`, but it is not private to RelationMark. Its output fields such as `sourceId` / `targetId` / `delta` are ordinary fields that can be consumed by PointMark, ReferenceMark, or custom marks.
+
+## Sections
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/plot/grammar/transform/row">
     <span className="font-semibold">Row Transforms</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Preserve row count for sorting, stacking, normalization, per-row intervals, and deterministic jitter.</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Keep row count unchanged while sorting, deriving intervals, or applying deterministic jitter.</span>
   </LinkedCard>
-  <LinkedCard href="/plot/grammar/transform/group">
-    <span className="font-semibold">Group Transforms</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Change row count by reducing details into bins or grouped summary rows.</span>
+  <LinkedCard href="/plot/grammar/transform/annotation">
+    <span className="font-semibold">Row Annotations</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Keep detail rows and add stack bounds, shares, or group statistic fields.</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/transform/summary">
+    <span className="font-semibold">Summaries & Selection</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Create bins, group statistic rows, or representative source rows.</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/transform/relate">
+    <span className="font-semibold">Pairing Rows</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Select source and target rows and project relation fields.</span>
   </LinkedCard>
   <LinkedCard href="/plot/grammar/transform/custom">
     <span className="font-semibold">Custom Transforms</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Register your own data processor with defineTransform; the op enters IR, the executor stays at runtime.</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Register full transforms or extend reducer / selector sub-operations.</span>
   </LinkedCard>
 </div>

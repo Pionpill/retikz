@@ -20,10 +20,10 @@ const Demo: FC = () => (
     <RelationMark
       transform={[
         {
-          kind: 'derive-relation',
-          source: { select: 'max', by: 'value', fields: { id: 'id' } },
-          target: { select: 'max', by: 'y', fields: { id: 'id' } },
-          measure: { kind: 'difference', field: 'y', labelAs: 'relLabel', labelPrefix: 'lift +' },
+          kind: 'relate',
+          source: { selector: { op: 'max', by: 'value' }, fields: { id: 'id' } },
+          target: { selector: { op: 'max', by: 'y' }, fields: { id: 'id' } },
+          measures: [{ op: 'difference', field: 'y', as: 'delta', labelAs: 'relLabel', labelPrefix: 'lift +' }],
         },
       ]}
       source={{ anchorId: { prefix: 'bubble', field: 'sourceId' }, boundary: true }}

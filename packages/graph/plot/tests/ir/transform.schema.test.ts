@@ -125,7 +125,7 @@ describe('TransformSchema external operations (alpha.12 ADR-06)', () => {
 
 describe('BinTransformSchema (alpha.12 ADR-01)', () => {
   it('bin_count_strategy_valid', () => {
-    const t = { kind: 'bin', field: 'measurement', count: 20, reduce: 'count' };
+    const t = { kind: 'bin', field: 'measurement', count: 20, metrics: [{ op: 'count', as: 'binCount' }] };
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
@@ -146,11 +146,9 @@ describe('BinTransformSchema (alpha.12 ADR-01)', () => {
       count: 10,
       extent: [0, 100] as [number, number],
       nice: false,
-      reduce: 'mean',
-      reduceField: 'weight',
       startField: 'lo',
       endField: 'hi',
-      valueField: 'avg',
+      metrics: [{ op: 'mean', field: 'weight', as: 'avg' }],
     };
     expect(TransformSchema.parse(t)).toEqual(t);
   });
@@ -172,46 +170,128 @@ describe('BinTransformSchema (alpha.12 ADR-01)', () => {
     expect(() => TransformSchema.parse({ kind: 'bin', field: 'x', step: 0 })).toThrow();
   });
 
-  it('bin_bad_reduce_rejected', () => {
-    expect(() => TransformSchema.parse({ kind: 'bin', field: 'x', reduce: 'median' })).toThrow();
+  it('bin_old_reduce_shape_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'bin', field: 'x', reduce: 'sum', reduceField: 'weight' })).toThrow();
   });
 
   it('bin_json_roundtrip_equivalent', () => {
-    const t = { kind: 'bin', field: 'measurement', thresholds: [1, 2, 3], reduce: 'sum', reduceField: 'w' };
+    const t = { kind: 'bin', field: 'measurement', thresholds: [1, 2, 3], metrics: [{ op: 'sum', field: 'w', as: 'totalWeight' }] };
     const round = TransformSchema.parse(JSON.parse(JSON.stringify(t)));
     expect(round).toEqual(t);
   });
 });
 
-describe('AggregateTransformSchema (alpha.12 ADR-01)', () => {
-  it('aggregate_sum_valid', () => {
-    const t = { kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'totalRevenue' };
+describe('Statistical transform algebra schema (alpha.12 ADR-16)', () => {
+  it('summarize_multiple_metrics_valid', () => {
+    const operation = {
+      kind: 'summarize',
+      groupBy: ['region'],
+      metrics: [
+        { op: 'mean', field: 'revenue', as: 'avgRevenue' },
+        { op: 'median', field: 'revenue', as: 'medianRevenue' },
+        { op: 'count', as: 'orders' },
+      ],
+    };
+    expect(TransformSchema.parse(operation)).toEqual(operation);
+  });
+
+  it('summarize_requires_metric_as', () => {
+    expect(() =>
+      TransformSchema.parse({
+        kind: 'summarize',
+        groupBy: ['region'],
+        metrics: [{ op: 'mean', field: 'revenue' }],
+      }),
+    ).toThrow();
+  });
+
+  it('select_max_requires_by', () => {
+    expect(() =>
+      TransformSchema.parse({
+        kind: 'select',
+        groupBy: ['series'],
+        selector: { op: 'max' },
+      }),
+    ).toThrow();
+  });
+
+  it('relate_json_roundtrip_equivalent', () => {
+    const operation = {
+      kind: 'relate',
+      groupBy: ['series'],
+      source: { selector: { op: 'min', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
+      target: { selector: { op: 'max', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
+      measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel' }],
+    };
+    expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
+  });
+
+  it('bin_uses_shared_metrics_and_rejects_old_reduce_shape', () => {
+    const operation = {
+      kind: 'bin',
+      field: 'measurement',
+      step: 10,
+      metrics: [
+        { op: 'count', as: 'binCount' },
+        { op: 'mean', field: 'weight', as: 'binMean' },
+      ],
+    };
+    expect(TransformSchema.parse(operation)).toEqual(operation);
+    expect(() => TransformSchema.parse({ kind: 'bin', field: 'measurement', reduce: 'sum', reduceField: 'weight' })).toThrow();
+  });
+
+  it('old_aggregate_and_derive_relation_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' })).toThrow();
+    expect(() =>
+      TransformSchema.parse({
+        kind: 'derive-relation',
+        source: { select: 'min', by: 'value', fields: { id: 'id' } },
+        target: { select: 'max', by: 'value', fields: { id: 'id' } },
+      }),
+    ).toThrow();
+  });
+});
+
+describe('SummarizeTransformSchema (alpha.12 ADR-16)', () => {
+  it('summarize_sum_valid', () => {
+    const t = { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 'totalRevenue' }] };
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
-  it('aggregate_count_valid', () => {
-    const t = { kind: 'aggregate', groupBy: ['region', 'product'], reduce: 'count' };
+  it('summarize_count_valid', () => {
+    const t = { kind: 'summarize', groupBy: ['region', 'product'], metrics: [{ op: 'count', as: 'count' }] };
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
-  it('aggregate_missing_groupby_rejected', () => {
-    expect(() => TransformSchema.parse({ kind: 'aggregate', reduce: 'sum', field: 'r' })).toThrow();
+  it('summarize_global_group_valid', () => {
+    const t = { kind: 'summarize', metrics: [{ op: 'sum', field: 'revenue', as: 'totalRevenue' }] };
+    expect(TransformSchema.parse(t)).toEqual(t);
   });
 
-  it('aggregate_empty_groupby_rejected', () => {
-    expect(() => TransformSchema.parse({ kind: 'aggregate', groupBy: [], reduce: 'sum', field: 'r' })).toThrow();
+  it('summarize_empty_groupby_valid', () => {
+    const t = { kind: 'summarize', groupBy: [], metrics: [{ op: 'sum', field: 'r', as: 'total' }] };
+    expect(TransformSchema.parse(t)).toEqual(t);
   });
 
-  it('aggregate_groupby_non_array_rejected', () => {
-    expect(() => TransformSchema.parse({ kind: 'aggregate', groupBy: 'region', reduce: 'sum', field: 'r' })).toThrow();
+  it('summarize_groupby_non_array_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'summarize', groupBy: 'region', metrics: [{ op: 'sum', field: 'r', as: 'total' }] })).toThrow();
   });
 
-  it('aggregate_bad_reduce_rejected', () => {
-    expect(() => TransformSchema.parse({ kind: 'aggregate', groupBy: ['r'], reduce: 'median', field: 'x' })).toThrow();
+  it('summarize_duplicate_metric_output_rejected', () => {
+    expect(() =>
+      TransformSchema.parse({
+        kind: 'summarize',
+        groupBy: ['r'],
+        metrics: [
+          { op: 'sum', field: 'x', as: 'value' },
+          { op: 'mean', field: 'x', as: 'value' },
+        ],
+      }),
+    ).toThrow();
   });
 
-  it('aggregate_json_roundtrip_equivalent', () => {
-    const t = { kind: 'aggregate', groupBy: ['region'], reduce: 'mean', field: 'revenue' };
+  it('summarize_json_roundtrip_equivalent', () => {
+    const t = { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'mean', field: 'revenue', as: 'avgRevenue' }] };
     const round = TransformSchema.parse(JSON.parse(JSON.stringify(t)));
     expect(round).toEqual(t);
   });

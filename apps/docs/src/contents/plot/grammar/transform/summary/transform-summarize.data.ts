@@ -1,4 +1,4 @@
-/** demo 自造数据集：订单明细（每笔一行：region 地区 + revenue 金额），喂 aggregate 按地区求和（不进 IR） */
+/** demo 自造数据集：订单明细（每笔一行：region 地区 + revenue 金额），喂 summarize 按地区求和（不进 IR） */
 export const orders: Array<Record<string, string | number>> = [
   { region: 'North', revenue: 12 },
   { region: 'North', revenue: 8 },

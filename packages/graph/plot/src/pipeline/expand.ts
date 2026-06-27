@@ -1,8 +1,8 @@
 import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, JsonObjectSchema, defineComposite } from '@retikz/core';
 import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type MarkOperation, PathClosureKind, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, type TransformOperation, isBuiltinMark } from '../schemas';
-import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type ScaleDescriptor, applyFieldResolver, applyTransforms, assertAllValuesValid, assertBaselineScaleCompatible, assertScaleFieldCompatible, buildProportionalIntervals, channelKindsForMark, channelValue, collectFormatFields, createPositionChannelDefinitions, deriveScale, lowerMark, makeColorSchemeResolver, normalizeRows, orderedCategoryDomain, proportionalIntervalDomainValues, resolveChannelRegistry, resolveCoordinateRegistry, resolveFieldPath, resolveFieldTypes, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkChannels, resolveMarkRegistry, resolvePositionScale, resolveScaleRegistry, resolveSqrtScale, resolveTransformRegistry, scaleTicks, validateBoundData } from '../providers';
+import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, DEFAULT_TRANSFORM_CONTEXT, type ScaleDescriptor, applyFieldResolver, applyTransforms, assertAllValuesValid, assertBaselineScaleCompatible, assertScaleFieldCompatible, buildProportionalIntervals, channelKindsForMark, channelValue, collectFormatFields, createPositionChannelDefinitions, deriveScale, lowerMark, makeColorSchemeResolver, normalizeRows, orderedCategoryDomain, proportionalIntervalDomainValues, resolveChannelRegistry, resolveCoordinateRegistry, resolveFieldPath, resolveFieldTypes, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkChannels, resolveMarkRegistry, resolvePositionScale, resolveRowSelectorRegistry, resolveScaleRegistry, resolveSqrtScale, resolveStatReducerRegistry, resolveTransformRegistry, scaleTicks, validateBoundData } from '../providers';
 import { type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../features';
-import { type AnchorIdGenerator, type AnyChannelDefinition, type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyScaleDefinition, type AnyTransformDefinition, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, type ResolveField, type ResolveLabel, type TickSet, isBuiltinScaleOperation } from '../contract';
+import { type AnchorIdGenerator, type AnyChannelDefinition, type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyRowSelectorDefinition, type AnyScaleDefinition, type AnyStatReducerDefinition, type AnyTransformDefinition, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, type ResolveField, type ResolveLabel, type TickSet, type TransformContext, isBuiltinScaleOperation } from '../contract';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect } from './layout';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { createAnchorRegistry } from './anchors';
@@ -201,6 +201,16 @@ export type LowerPlotsOptions = {
    * @description 内置 transform 恒可用；自定义 kind 未注册 / kind 冲突会 fail-loud，避免静默跳过结构性数据变换。
    */
   transformDefinitions?: Array<AnyTransformDefinition>;
+  /**
+   * 自定义统计 reducer definition 数组（运行时函数，不进 IR）：summarize / annotate / bin 的 `{op:<customOp>, ...config}` 据此校验并规约。
+   * @description 内置 reducer 恒可用；自定义 op 未注册 / op 冲突会 fail-loud。
+   */
+  statReducerDefinitions?: Array<AnyStatReducerDefinition>;
+  /**
+   * 自定义 row selector definition 数组（运行时函数，不进 IR）：select / annotate / relate 的 `{op:<customOp>, ...config}` 据此校验并选择代表行。
+   * @description 内置 selector 恒可用；自定义 op 未注册 / op 冲突会 fail-loud。
+   */
+  rowSelectorDefinitions?: Array<AnyRowSelectorDefinition>;
   /**
    * 自定义 scale definition 数组（运行时函数，不进 IR）：spec.scales 的 `{type:<customType>, name, ...config}` 据此校验并解析。
    * @description 内置 13 个 scale 恒可用；自定义 type 未注册 / type 冲突会 fail-loud。position 族喂 coordinate 投影 + guide，channel 族喂 color 通道 + legend。
@@ -726,10 +736,11 @@ const resolveMarkRows = (
   mark: MarkOperation,
   rows: Array<ExternalRow>,
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
+  transformContext: TransformContext,
 ): Array<ExternalRow> => {
   const transform = (mark as { transform?: Array<TransformOperation> }).transform;
   if (transform === undefined) return rows;
-  return applyTransforms(rows, transform, transformRegistry);
+  return applyTransforms(rows, transform, transformRegistry, transformContext);
 };
 
 /**
@@ -765,12 +776,17 @@ export const prepareRows = (
   datasets: ExternalDatasets,
   options: LowerPlotsOptions,
   ingested: Array<ExternalRow>,
-): { fieldTypes: PlotFieldTypeMap; normalized: Array<ExternalRow>; transformRegistry: Map<string, AnyTransformDefinition>; scaleRegistry: Map<string, AnyScaleDefinition>; markRegistry: Map<string, AnyMarkDefinition> } => {
+): { fieldTypes: PlotFieldTypeMap; normalized: Array<ExternalRow>; transformRegistry: Map<string, AnyTransformDefinition>; transformContext: TransformContext; scaleRegistry: Map<string, AnyScaleDefinition>; markRegistry: Map<string, AnyMarkDefinition> } => {
   validateFieldMaps(spec, datasets, options.fieldMaps);
   const transformRegistry = resolveTransformRegistry(options.transformDefinitions);
+  const transformContext: TransformContext = {
+    ...DEFAULT_TRANSFORM_CONTEXT,
+    statReducerRegistry: resolveStatReducerRegistry(options.statReducerDefinitions),
+    rowSelectorRegistry: resolveRowSelectorRegistry(options.rowSelectorDefinitions),
+  };
   const scaleRegistry = resolveScaleRegistry(options.scaleDefinitions);
   const markRegistry = resolveMarkRegistry(options.markDefinitions);
-  const userSourceFields = collectSourceFields(spec, transformRegistry, markRegistry);
+  const userSourceFields = collectSourceFields(spec, transformRegistry, markRegistry, transformContext);
   // strict + 声明/推断（ADR-01/05）；strict 在 applyFieldResolver 之前先校验，resolver 不绕过（ADR-04）
   const baseTypes = resolveFieldTypes(spec.data.model, ingested, userSourceFields);
   const fieldMap = options.fieldMaps?.[spec.data.reference];
@@ -792,7 +808,7 @@ export const prepareRows = (
   // 恒归一化（ADR-08 去门控）：无论有无 model / resolver 命中，总按解析出的 fieldTypes 跑 normalizeRows
   //   →下游统一读 canonical、无第二处 coerce。干净数据产物与旧门控路径逐字段等价。
   const normalized = normalizeRows(ingested, fieldTypes, fieldMap, parsers);
-  return { fieldTypes, normalized, transformRegistry, scaleRegistry, markRegistry };
+  return { fieldTypes, normalized, transformRegistry, transformContext, scaleRegistry, markRegistry };
 };
 
 /**
@@ -833,7 +849,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
   // ADR-01/02/08：fieldMaps 校验 + 用户源字段类型解析（strict）+ ingest 恒归一化。与 locator 共用 prepareRows 保 parity。
   // 类型 Map 是 type-driven scale（ADR-03）/ coercion 的单一真源；归一化置于 transform 前、无论有无 model 都跑（恒 canonical）。
-  const { fieldTypes, normalized, transformRegistry, scaleRegistry, markRegistry } = prepareRows(node, datasets, options, ingested);
+  const { fieldTypes, normalized, transformRegistry, transformContext, scaleRegistry, markRegistry } = prepareRows(node, datasets, options, ingested);
   // scheme 解析器：内置 scheme + options.colorSchemes；channel scale 取色 / legend ramp 共用。
   const resolveColorScheme = makeColorSchemeResolver(options.colorSchemes);
   if (options.validateData) {
@@ -846,10 +862,10 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     assertAllValuesValid(normalized, fieldTypes);
   }
 
-  const rows = applyTransforms(normalized, node.transform, transformRegistry);
+  const rows = applyTransforms(normalized, node.transform, transformRegistry, transformContext);
   const markDataViews: Array<MarkDataView> = node.marks.map(mark => ({
     mark,
-    rows: resolveMarkRows(mark, rows, transformRegistry),
+    rows: resolveMarkRows(mark, rows, transformRegistry, transformContext),
   }));
 
   const { frame, gridLayers, axisLayers, plotArea } = resolveFrame({

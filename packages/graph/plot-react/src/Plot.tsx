@@ -1,7 +1,7 @@
 import type { FC, ReactNode } from 'react';
 import { type EmbeddableContribution, type EmbeddableTier2Adapter, Layout, type LayoutProps, type ScopeProps } from '@retikz/react';
 import { type DataModel, type ExternalDatasets, type ExternalRow, type LowerPlotsOptions, type PlotSpec, PlotSpecSchema, type TransformOperation, lowerPlots } from '@retikz/plot';
-import { type CoordinateInput, type ResolveLabelMap, buildPlotSpec, resolveLabelOf } from './components';
+import { type CoordinateInput, type MarkTransformShortcutDefinition, type ResolveLabelMap, buildPlotSpec, resolveLabelOf } from './components';
 
 /** <Plot> 作为 Layout 子面板时可直接承接的 core scope 属性 */
 export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip'> & {
@@ -48,9 +48,15 @@ export type PlotDslProps = PlotCommonProps & PlotColorProps & {
   /**
    * 数据变换 IR 直传（快捷入口）：拼到 `<Transform>` 子组件收集结果之前、自动装配 stack 之前。
    * @description 与 `<Transform kind="...">` 声明组件共用同一管线、可混用；程序化构造变换链时的便捷入口。
-   *   命名 `dataTransforms` 以区别于 core scope 的几何 `transforms`（translate / rotate）。含 stack 时按签名抑制同款 mark auto-stack。
+   *   命名 `dataTransforms` 以区别于 core scope 的几何 `transforms`（translate / rotate）。含 stack 时按签名抑制同款 mark shortcut stack。
    */
   dataTransforms?: Array<TransformOperation>;
+  /**
+   * Mark-level transform shortcuts for DSL children.
+   * @description A shortcut observes assembled mark IR and emits ordinary plot-level transform operations.
+   * It is useful for custom authoring sugar; explicit mark.transform remains a separate mark-local row view.
+   */
+  markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
 };
 
 /** <Plot> props：spec 入口与组合 DSL 入口二选一（按 spec/children 分流） */
@@ -76,7 +82,7 @@ const lowerPlotOptionsOf = (
   effectiveFieldMaps: LowerPlotsOptions['fieldMaps'],
   collectedResolveLabel: ResolveLabelMap | undefined,
 ): LowerPlotsOptions => {
-  const { width, height, fontSize, margin, provenance, datumProvenance, datumIdField, validateData, resolveField, resolveLabel, invalid, coordinates, transformDefinitions, scaleDefinitions, channelDefinitions, colorSchemes, markDefinitions, formatDefinitions } = props;
+  const { width, height, fontSize, margin, provenance, datumProvenance, datumIdField, validateData, resolveField, resolveLabel, invalid, coordinates, transformDefinitions, statReducerDefinitions, rowSelectorDefinitions, scaleDefinitions, channelDefinitions, colorSchemes, markDefinitions, formatDefinitions } = props;
   // DSL 入口 <PointMark resolveLabel> / <IntervalMark resolveLabel> 收集的 per-mark 函数，与显式 props.resolveLabel 合并（显式优先）
   const mergedResolveLabel = collectedResolveLabel !== undefined || resolveLabel !== undefined ? { ...collectedResolveLabel, ...resolveLabel } : undefined;
   return {
@@ -94,6 +100,8 @@ const lowerPlotOptionsOf = (
     invalid,
     coordinates,
     transformDefinitions,
+    statReducerDefinitions,
+    rowSelectorDefinitions,
     scaleDefinitions,
     channelDefinitions,
     colorSchemes,
@@ -170,6 +178,7 @@ const resolvePlotRuntime = (
       dataFieldNames: dataFieldNamesOf(props.data),
       colors: props.colors,
       transforms: props.dataTransforms,
+      markTransformShortcuts: props.markTransformShortcuts,
       deferPositionScaleInference: props.model === undefined,
     });
     collectedResolveLabel = resolveLabelOf(spec);

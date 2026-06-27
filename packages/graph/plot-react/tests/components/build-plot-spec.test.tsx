@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type DeriveRelationTransform, type IRPaintSpec, type PlotSpec, PlotSpecSchema, type Transform as PlotTransformOperation, type RelationRoutingSpec, isBuiltinMark, lowerPlots } from '@retikz/plot';
+import { type IRPaintSpec, type PlotSpec, PlotSpecSchema, type Transform as PlotTransformOperation, type RelateTransform, type RelationRoutingSpec, isBuiltinMark, lowerPlots } from '@retikz/plot';
 import { buildPlotSpec, decorateDefaultGuides } from '../../src/components/build-plot-spec';
 import { Axis, Legend } from '../../src/components/guides';
 import { IntervalMark, PathMark, PointMark, ReferenceMark, RelationMark } from '../../src/components/marks';
@@ -294,12 +294,12 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
   });
 
   it('relation mark forwards mark-scoped transform and routing strategy', () => {
-    const transform: Array<DeriveRelationTransform> = [
+    const transform: Array<RelateTransform> = [
       {
-        kind: 'derive-relation',
-        source: { select: 'min', by: 'value', fields: { id: 'id' } },
-        target: { select: 'max', by: 'value', fields: { id: 'id' } },
-        measure: { kind: 'difference', field: 'value', labelAs: 'deltaLabel', labelPrefix: '+' },
+        kind: 'relate',
+        source: { selector: { op: 'min', by: 'value' }, fields: { id: 'id' } },
+        target: { selector: { op: 'max', by: 'value' }, fields: { id: 'id' } },
+        measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
       },
     ];
     const routing: RelationRoutingSpec = { kind: 'bend', bendDirection: 'left', bendAngle: 20 };
@@ -496,6 +496,21 @@ describe('buildPlotSpec mark-local transform', () => {
   it('reference_mark_forwards_local_transform', () => {
     const spec = buildPlotSpec(<ReferenceMark y={80} transform={markTransform} />, '__plot');
     expect(spec.marks[0]).toMatchObject({ type: 'reference', transform: markTransform });
+  });
+
+  it('mark_transform_shortcut_definitions_append_plot_transforms_without_consuming_mark_local_transform', () => {
+    const shortcutTransform: PlotTransformOperation = { kind: 'jitter', axis: 'x', xField: 'x', amount: 0.2, seed: 9 };
+    const spec = buildPlotSpec(<PointMark x="x" y="score" transform={markTransform} />, '__plot', {
+      markTransformShortcuts: [
+        {
+          markType: 'point',
+          build: ({ mark }) => (mark.type === 'point' ? [shortcutTransform] : []),
+        },
+      ],
+    });
+
+    expect(spec.transform).toEqual([shortcutTransform]);
+    expect(spec.marks[0]).toMatchObject({ type: 'point', transform: markTransform });
   });
 });
 
@@ -1147,12 +1162,12 @@ describe('buildPlotSpec rule 装配（alpha.11 ADR-03）', () => {
   });
 });
 
-describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x1）', () => {
+describe('buildPlotSpec alpha.12（<Transform> / bin / summarize / histogram x0x1）', () => {
   it('transform_bin_declared_to_ir', () => {
     const spec = buildPlotSpec(
       <>
         <Transform kind="bin" field="measurement" count={20} />
-        <IntervalMark x0="binStart" x1="binEnd" y="binValue" />
+        <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
       </>,
       '__plot',
     );
@@ -1163,7 +1178,7 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x
     const spec = buildPlotSpec(
       <>
         <Transform kind="bin" field="m" step={5} />
-        <IntervalMark x0="binStart" x1="binEnd" y="binValue" />
+        <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
       </>,
       '__plot',
     );
@@ -1171,7 +1186,7 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x
     expect(mark).toMatchObject({ type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } } });
     if (!isBuiltinMark(mark) || mark.type !== 'interval') throw new Error('expected interval mark');
     // histogram：仅 y 高度通道、无 encoding.x
-    expect(mark.encoding.y).toEqual({ field: 'binValue' });
+    expect(mark.encoding.y).toEqual({ field: 'binCount' });
     expect(mark.encoding.x).toBeUndefined();
     // 连续 x linear scale（非 band）
     expect(spec.scales).toContainEqual({ type: 'linear', name: '__x' });
@@ -1189,28 +1204,28 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x
     expect(spec.scales.find(scale => scale.name === '__x')?.type).toBe('linear');
   });
 
-  it('transform_aggregate_declared_to_ir', () => {
+  it('transform_summarize_declared_to_ir', () => {
     const spec = buildPlotSpec(
       <>
-        <Transform kind="aggregate" groupBy={['region']} reduce="sum" field="revenue" as="totalRevenue" />
+        <Transform kind="summarize" groupBy={['region']} metrics={[{ op: 'sum', field: 'revenue', as: 'totalRevenue' }]} />
         <IntervalMark x="region" y="totalRevenue" />
       </>,
       '__plot',
     );
-    expect(spec.transform).toEqual([{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'totalRevenue' }]);
+    expect(spec.transform).toEqual([{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 'totalRevenue' }] }]);
     // 普通分类柱（x band）
     expect(spec.marks[0]).toMatchObject({ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'totalRevenue' } } });
   });
 
   it('plot_transforms_option_direct_pass', () => {
     const spec = buildPlotSpec(<IntervalMark x="region" y="total" />, '__plot', {
-      transforms: [{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }],
+      transforms: [{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] }],
     });
-    expect(spec.transform).toEqual([{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }]);
+    expect(spec.transform).toEqual([{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] }]);
   });
 
-  it('explicit_stack_suppresses_auto_stack_no_double', () => {
-    // 显式 <Transform kind="stack"> 存在时，<IntervalMark stack> 的 auto-stack 不再注入（B4 去重）
+  it('explicit_stack_suppresses_shortcut_stack_no_double', () => {
+    // 显式 <Transform kind="stack"> 存在时，<IntervalMark stack> 的 shortcut stack 不再注入（B4 去重）
     const spec = buildPlotSpec(
       <>
         <Transform kind="stack" x="month" y="revenue" groupBy="product" />
@@ -1224,23 +1239,23 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x
     expect(spec.marks[0]).toMatchObject({ type: 'interval', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } } });
   });
 
-  it('options_transforms_with_stack_suppresses_auto_stack', () => {
+  it('options_transforms_with_stack_suppresses_shortcut_stack', () => {
     const spec = buildPlotSpec(<IntervalMark x="month" y="revenue" series="product" stack />, '__plot', {
       transforms: [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
     });
     expect((spec.transform ?? []).filter(t => t.kind === 'stack')).toHaveLength(1);
   });
 
-  it('transform_order_explicit_before_auto_stack', () => {
-    // aggregate（显式）在前、无显式 stack → auto-stack 补在后
+  it('transform_order_explicit_before_shortcut_stack', () => {
+    // summarize（显式）在前、无显式 stack → shortcut stack 补在后
     const spec = buildPlotSpec(
       <>
-        <Transform kind="aggregate" groupBy={['month', 'product']} reduce="sum" field="revenue" as="total" />
+        <Transform kind="summarize" groupBy={['month', 'product']} metrics={[{ op: 'sum', field: 'revenue', as: 'total' }]} />
         <IntervalMark x="month" y="total" series="product" stack />
       </>,
       '__plot',
     );
-    expect(spec.transform?.[0]).toMatchObject({ kind: 'aggregate' });
+    expect(spec.transform?.[0]).toMatchObject({ kind: 'summarize' });
     expect(spec.transform?.[1]).toMatchObject({ kind: 'stack' });
   });
 
@@ -1248,7 +1263,7 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x
     const spec = buildPlotSpec(
       <>
         <Transform kind="bin" field="m" count={10} />
-        <IntervalMark x0="binStart" x1="binEnd" y="binValue" />
+        <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
       </>,
       '__plot',
     );
@@ -1259,7 +1274,7 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x
 describe('buildPlotSpec alpha.12 ADR-02（normalize / derive-interval / jitter 经同一 <Transform> 透传）', () => {
   it('normalize_then_stack_percentage_via_transform', () => {
     // 百分比堆叠：显式 [normalize, stack] 两步链 + <IntervalMark stack>（柱读累积界 y0/y1）；
-    // 显式 stack 与 mark auto-stack 同签名 → auto-stack 被去重抑制（最终只一条 stack，不二次堆叠）
+    // 显式 stack 与 mark shortcut stack 同签名 → shortcut stack 被去重抑制（最终只一条 stack，不二次堆叠）
     const spec = buildPlotSpec(
       <>
         <Transform kind="normalize" field="amount" groupBy={['quarter']} basis="percent" as="share" />
@@ -1272,25 +1287,25 @@ describe('buildPlotSpec alpha.12 ADR-02（normalize / derive-interval / jitter �
       { kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' },
       { kind: 'stack', x: 'quarter', y: 'share', groupBy: 'product' },
     ]);
-    // 只剩一条 stack（auto-stack 被同签名去重），且 mark 确为 stacked interval（lower 会读 y0/y1）
+    // 只剩一条 stack（shortcut stack 被同签名去重），且 mark 确为 stacked interval（lower 会读 y0/y1）
     expect((spec.transform ?? []).filter(t => t.kind === 'stack')).toHaveLength(1);
     expect(spec.marks[0]).toMatchObject({ type: 'interval', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } } });
   });
 
-  it('auto_stack_with_different_signature_is_kept', () => {
-    // P1 回归：显式 stack 只去重「同签名」的 auto-stack；签名不同的 <IntervalMark series stack> 的 auto-stack 必须保留，
+  it('shortcut_stack_with_different_signature_is_kept', () => {
+    // P1 回归：显式 stack 只去重「同签名」的 shortcut stack；签名不同的 <IntervalMark series stack> 的 shortcut stack 必须保留，
     // 否则该 mark 仍是 stacked interval 却无对应 y0/y1，lower 阶段读空累积界出错
     const spec = buildPlotSpec(
       <>
         <Transform kind="stack" x="quarter" y="share" groupBy="product" />
         <IntervalMark x="quarter" y="share" series="product" stack />
-        {/* 不同 y/groupBy 签名的另一组堆叠柱：其 auto-stack 不能被误删 */}
+        {/* 不同 y/groupBy 签名的另一组堆叠柱：其 shortcut stack 不能被误删 */}
         <IntervalMark x="month" y="revenue" series="region" stack />
       </>,
       '__plot',
     );
     const stacks = (spec.transform ?? []).filter(t => t.kind === 'stack');
-    // 显式 stack(quarter/share/product) 去重了第一根柱的同签名 auto-stack；第二根柱(month/revenue/region)的 auto-stack 保留 → 共两条
+    // 显式 stack(quarter/share/product) 去重了第一根柱的同签名 shortcut stack；第二根柱(month/revenue/region)的 shortcut stack 保留 → 共两条
     expect(stacks).toHaveLength(2);
     expect(stacks).toContainEqual({ kind: 'stack', x: 'quarter', y: 'share', groupBy: 'product' });
     expect(stacks).toContainEqual({ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'region' });

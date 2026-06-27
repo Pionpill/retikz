@@ -12,7 +12,7 @@ const Demo: FC = () => (
       size="totalOrders"
       color="region"
       label="region"
-      transform={[{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'orders', as: 'totalOrders' }]}
+      transform={[{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'orders', as: 'totalOrders' }] }]}
     />
     <Axis dimension="x" />
     <Axis dimension="y" grid />
