@@ -50,11 +50,11 @@ const binTransformDefinition = defineTransform<BinTransform>({
   schema: BinTransformSchema,
   inputFields: (operation, context) => [
     operation.field,
-    ...binMetricOperations(operation).flatMap(metric => reducerInputFields(metric, context.statReducerRegistry)),
+    ...binMetricOperations(operation).flatMap(metric => reducerInputFields(metric, context.statisticsReducerRegistry)),
   ],
   outputFields: (operation, context) => {
     const out = binOutputFields(operation);
-    return [out.startField, out.endField, ...binMetricOperations(operation).flatMap(metric => reducerOutputFields(metric, context.statReducerRegistry))];
+    return [out.startField, out.endField, ...binMetricOperations(operation).flatMap(metric => reducerOutputFields(metric, context.statisticsReducerRegistry))];
   },
   apply: (rows, operation, context) => applyBin(rows, operation, context),
 });
@@ -63,9 +63,9 @@ const summarizeTransformDefinition = defineTransform<SummarizeTransform>({
   schema: SummarizeTransformSchema,
   inputFields: (operation, context) => [
     ...(operation.groupBy ?? []),
-    ...operation.metrics.flatMap(metric => reducerInputFields(metric, context.statReducerRegistry)),
+    ...operation.metrics.flatMap(metric => reducerInputFields(metric, context.statisticsReducerRegistry)),
   ],
-  outputFields: (operation, context) => operation.metrics.flatMap(metric => reducerOutputFields(metric, context.statReducerRegistry)),
+  outputFields: (operation, context) => operation.metrics.flatMap(metric => reducerOutputFields(metric, context.statisticsReducerRegistry)),
   apply: (rows, operation, context) => applySummarize(rows, operation, context),
 });
 
@@ -83,11 +83,11 @@ const annotateTransformDefinition = defineTransform<AnnotateTransform>({
   schema: AnnotateTransformSchema,
   inputFields: (operation, context) => [
     ...(operation.groupBy ?? []),
-    ...(operation.metrics ?? []).flatMap(metric => reducerInputFields(metric, context.statReducerRegistry)),
+    ...(operation.metrics ?? []).flatMap(metric => reducerInputFields(metric, context.statisticsReducerRegistry)),
     ...(operation.selectors ?? []).flatMap(selector => selectorInputFields(selector.selector, context.rowSelectorRegistry)),
   ],
   outputFields: (operation, context) => [
-    ...(operation.metrics ?? []).flatMap(metric => reducerOutputFields(metric, context.statReducerRegistry)),
+    ...(operation.metrics ?? []).flatMap(metric => reducerOutputFields(metric, context.statisticsReducerRegistry)),
     ...(operation.selectors ?? []).map(selector => selector.as),
   ],
   apply: (rows, operation, context) => applyAnnotate(rows, operation, context),

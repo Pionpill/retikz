@@ -49,7 +49,7 @@ export const OrderBySchema = z
   .strict()
   .describe('Ordering rule used by row selectors');
 
-const BuiltinReducerOps = ['count', 'sum', 'mean', 'median', 'min', 'max', 'extent', 'quantile'] as const;
+const BuiltinReducerOps = ['count', 'sum', 'mean', 'median', 'min', 'max', 'extent', 'quantile', 'quantile-band'] as const;
 
 const CountReducerOperationSchema = z
   .object({
@@ -78,6 +78,86 @@ const QuantileReducerOperationSchema = z
   .strict()
   .describe('Quantile reducer operation');
 
+export const QuantileBandPointOutputSchema = z
+  .object({
+    p: z.number().min(0).max(1).describe('Quantile probability in [0, 1] for an additional point emitted from the same sorted values'),
+    as: z.string().min(1).describe('Output field for this quantile point'),
+  })
+  .strict()
+  .describe('Quantile-band point output');
+
+export const QuantileBandWhiskerSpecSchema = z
+  .discriminatedUnion('kind', [
+    z
+      .object({
+        kind: z.literal('minMax').describe('Whisker strategy discriminator: use finite min and max as whiskers'),
+      })
+      .strict()
+      .describe('Min/max whisker strategy'),
+    z
+      .object({
+        kind: z.literal('spread').describe('Whisker strategy discriminator: derive fences from lower and upper quantile band boundaries'),
+        factor: z.number().nonnegative().optional().describe('Multiplier applied to the quantile band spread; default 1.5'),
+      })
+      .strict()
+      .describe('Spread fence whisker strategy'),
+  ])
+  .describe('Quantile-band whisker strategy');
+
+export const QuantileBandOutputsSchema = z
+  .object({
+    lower: z.string().min(1).describe('Output field for the lower quantile band boundary'),
+    upper: z.string().min(1).describe('Output field for the upper quantile band boundary'),
+    points: z.array(QuantileBandPointOutputSchema).min(1).optional().describe('Additional quantile points emitted from the same sorted values'),
+    spread: z.string().min(1).optional().describe('Optional output field for upper minus lower'),
+    lowerFence: z.string().min(1).optional().describe('Optional output field for the lower spread fence'),
+    upperFence: z.string().min(1).optional().describe('Optional output field for the upper spread fence'),
+    whiskerMin: z.string().min(1).optional().describe('Optional output field for the finite minimum or the minimum value inside the lower fence'),
+    whiskerMax: z.string().min(1).optional().describe('Optional output field for the finite maximum or the maximum value inside the upper fence'),
+    min: z.string().min(1).optional().describe('Optional output field for the finite minimum value'),
+    max: z.string().min(1).optional().describe('Optional output field for the finite maximum value'),
+    count: z.string().min(1).optional().describe('Optional output field for the count of finite values'),
+  })
+  .strict()
+  .superRefine((outputs, ctx) => {
+    const seen = new Map<string, Array<string | number>>();
+    const addField = (field: string, path: Array<string | number>): void => {
+      const previous = seen.get(field);
+      if (previous !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path,
+          message: `duplicate quantile-band output field "${field}"`,
+        });
+      }
+      seen.set(field, path);
+    };
+    addField(outputs.lower, ['lower']);
+    addField(outputs.upper, ['upper']);
+    outputs.points?.forEach((point, index) => addField(point.as, ['points', index, 'as']));
+    for (const key of ['spread', 'lowerFence', 'upperFence', 'whiskerMin', 'whiskerMax', 'min', 'max', 'count'] as const) {
+      const field = outputs[key];
+      if (field !== undefined) addField(field, [key]);
+    }
+  })
+  .describe('Quantile-band output field mapping');
+
+export const QuantileBandReducerOperationSchema = z
+  .object({
+    op: z.literal('quantile-band').describe('Reducer discriminator: parameterized quantile band within the group'),
+    field: z.string().min(1).describe('Numeric source field reduced within the group'),
+    lowerP: z.number().min(0).max(1).describe('Lower quantile probability in [0, 1]; must be less than upperP'),
+    upperP: z.number().min(0).max(1).describe('Upper quantile probability in [0, 1]; must be greater than lowerP'),
+    outputs: QuantileBandOutputsSchema.describe('Explicit output field names for the quantile band reducer'),
+    whisker: QuantileBandWhiskerSpecSchema.optional().describe('Optional whisker strategy; omitted means no whisker or fence values are derived'),
+  })
+  .strict()
+  .refine(operation => operation.lowerP < operation.upperP, {
+    message: 'lowerP must be less than upperP',
+    path: ['lowerP'],
+  })
+  .describe('Quantile-band reducer operation');
+
 const ExternalReducerOperationSchema = z
   .object({
     op: z
@@ -98,19 +178,32 @@ const ExternalReducerOperationSchema = z
       });
     }
   })
-  .describe('Externally registered reducer operation validated by a runtime StatReducerDefinition');
+  .describe('Externally registered reducer operation validated by a runtime StatisticsReducerDefinition');
 
 export const BuiltinReducerOperationSchema = z
-  .union([CountReducerOperationSchema, FieldReducerOperationSchema, QuantileReducerOperationSchema])
+  .union([CountReducerOperationSchema, FieldReducerOperationSchema, QuantileReducerOperationSchema, QuantileBandReducerOperationSchema])
   .describe('Built-in statistic reducer operation');
 
 export const ReducerOperationSchema = z
   .union([BuiltinReducerOperationSchema, ExternalReducerOperationSchema])
   .describe('Statistic reducer operation used by summarize, annotate, and bin transforms');
 
-const reducerOutputFieldOf = (operation: z.infer<typeof ReducerOperationSchema>): string | undefined => {
-  const maybeField = (operation as { as?: unknown }).as;
-  return typeof maybeField === 'string' ? maybeField : undefined;
+const reducerOutputFieldsOf = (operation: z.infer<typeof ReducerOperationSchema>): Array<{ field: string; path: Array<string | number> }> => {
+  if (operation.op === 'quantile-band') {
+    const quantileBandOperation = QuantileBandReducerOperationSchema.parse(operation);
+    const fields: Array<{ field: string; path: Array<string | number> }> = [
+      { field: quantileBandOperation.outputs.lower, path: ['outputs', 'lower'] },
+      { field: quantileBandOperation.outputs.upper, path: ['outputs', 'upper'] },
+    ];
+    quantileBandOperation.outputs.points?.forEach((point, pointIndex) => fields.push({ field: point.as, path: ['outputs', 'points', pointIndex, 'as'] }));
+    for (const key of ['spread', 'lowerFence', 'upperFence', 'whiskerMin', 'whiskerMax', 'min', 'max', 'count'] as const) {
+      const field = quantileBandOperation.outputs[key];
+      if (field !== undefined) fields.push({ field, path: ['outputs', key] });
+    }
+    return fields;
+  }
+  if ('as' in operation && typeof operation.as === 'string') return [{ field: operation.as, path: ['as'] }];
+  return [];
 };
 
 const ReducerMetricsSchema = z
@@ -119,21 +212,21 @@ const ReducerMetricsSchema = z
   .superRefine((metrics, ctx) => {
     const seen = new Set<string>();
     for (let index = 0; index < metrics.length; index++) {
-      const field = reducerOutputFieldOf(metrics[index]);
-      if (field === undefined) continue;
-      if (seen.has(field)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: [index, 'as'],
-          message: `duplicate reducer output field "${field}"`,
-        });
+      for (const { field, path } of reducerOutputFieldsOf(metrics[index])) {
+        if (seen.has(field)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [index, ...path],
+            message: `duplicate reducer output field "${field}"`,
+          });
+        }
+        seen.add(field);
       }
-      seen.add(field);
     }
   })
   .describe('One or more reducer metrics; output field names must be unique within the transform');
 
-const BuiltinSelectorOps = ['min', 'max', 'first', 'last', 'top', 'bottom', 'nth'] as const;
+const BuiltinSelectorOps = ['min', 'max', 'first', 'last', 'top', 'bottom', 'nth', 'outside-quantile-band'] as const;
 
 const MinMaxSelectorOperationSchema = z
   .object({
@@ -171,6 +264,39 @@ const NthSelectorOperationSchema = z
   .strict()
   .describe('Nth row selector operation');
 
+export const OutsideQuantileBandBoundarySpecSchema = z
+  .discriminatedUnion('kind', [
+    z
+      .object({
+        kind: z.literal('band').describe('Boundary strategy discriminator: select rows outside the lower and upper quantile band boundaries'),
+      })
+      .strict()
+      .describe('Quantile band boundary strategy'),
+    z
+      .object({
+        kind: z.literal('spread').describe('Boundary strategy discriminator: select rows outside spread-derived fences'),
+        factor: z.number().nonnegative().optional().describe('Multiplier applied to the quantile band spread; default 1.5'),
+      })
+      .strict()
+      .describe('Spread fence boundary strategy'),
+  ])
+  .describe('Outside quantile-band boundary strategy');
+
+export const OutsideQuantileBandSelectorOperationSchema = z
+  .object({
+    op: z.literal('outside-quantile-band').describe('Selector discriminator: choose rows outside a parameterized quantile band'),
+    field: z.string().min(1).describe('Numeric source field used to compute quantile band boundaries'),
+    lowerP: z.number().min(0).max(1).describe('Lower quantile probability in [0, 1]; must be less than upperP'),
+    upperP: z.number().min(0).max(1).describe('Upper quantile probability in [0, 1]; must be greater than lowerP'),
+    boundary: OutsideQuantileBandBoundarySpecSchema.optional().describe('Boundary strategy; omitted means quantile band boundaries'),
+  })
+  .strict()
+  .refine(operation => operation.lowerP < operation.upperP, {
+    message: 'lowerP must be less than upperP',
+    path: ['lowerP'],
+  })
+  .describe('Outside quantile-band row selector operation');
+
 const ExternalSelectorOperationSchema = z
   .object({
     op: z
@@ -194,7 +320,13 @@ const ExternalSelectorOperationSchema = z
   .describe('Externally registered selector operation validated by a runtime RowSelectorDefinition');
 
 export const BuiltinSelectorOperationSchema = z
-  .union([MinMaxSelectorOperationSchema, FirstLastSelectorOperationSchema, TopBottomSelectorOperationSchema, NthSelectorOperationSchema])
+  .union([
+    MinMaxSelectorOperationSchema,
+    FirstLastSelectorOperationSchema,
+    TopBottomSelectorOperationSchema,
+    NthSelectorOperationSchema,
+    OutsideQuantileBandSelectorOperationSchema,
+  ])
   .describe('Built-in row selector operation');
 
 export const SelectorOperationSchema = z

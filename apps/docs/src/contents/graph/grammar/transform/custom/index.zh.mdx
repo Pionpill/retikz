@@ -7,7 +7,7 @@ description: 自定义扩展可以注册完整 transform，也可以只扩展 re
 
 | 扩展层级 | 用在哪里 | 适合场景 |
 | --- | --- | --- |
-| `defineStatReducer` | `bin` / `summarize` / `annotate` 的 `metrics` | 加权平均、业务分位、风险分数 |
+| `defineStatisticsReducer` | `bin` / `summarize` / `annotate` 的 `metrics` | 加权平均、业务分位、风险分数 |
 | `defineRowSelector` | `select` / `relate` 的 `selector` | 最近点、阈值穿越点、自定义排名 |
 | `defineTransform` | 独立 `kind` | 自定义行结构、跨数据源派生、特殊输出形态 |
 
@@ -24,7 +24,7 @@ description: 自定义扩展可以注册完整 transform，也可以只扩展 re
 reducer 是统计值子算子。注册后，它可以被 `summarize`、`annotate` 和 `bin.metrics` 复用，不需要再写新的 transform kind。
 
 ```tsx
-const weightedMean = defineStatReducer({
+const weightedMean = defineStatisticsReducer({
   schema: z.object({
     op: z.literal('weighted-mean'),
     field: z.string().min(1),
@@ -41,7 +41,7 @@ const weightedMean = defineStatReducer({
 });
 ```
 
-然后在 `<Plot statReducerDefinitions={[weightedMean]}>` 里注入，并在 `metrics` 中写 `{ op: 'weighted-mean', ... }`。
+然后在 `<Plot statisticsReducerDefinitions={[weightedMean]}>` 里注入，并在 `metrics` 中写 `{ op: 'weighted-mean', ... }`。
 
 ## selector 扩展
 

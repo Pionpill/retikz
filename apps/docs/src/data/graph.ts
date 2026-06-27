@@ -47,6 +47,7 @@ export const graphSection: Array<Section> = [
           { id: 'row', label: 'plot.grammarTransformRow' },
           { id: 'annotation', label: 'plot.grammarTransformAnnotation' },
           { id: 'summary', label: 'plot.grammarTransformSummary' },
+          { id: 'statistics', label: 'plot.grammarTransformStatistics' },
           { id: 'relate', label: 'plot.grammarTransformRelate' },
           { id: 'custom', label: 'plot.grammarTransformCustom' },
         ],

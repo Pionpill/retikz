@@ -123,6 +123,7 @@
     "grammarTransformRow": "Row Transforms",
     "grammarTransformAnnotation": "Row Annotations",
     "grammarTransformSummary": "Summaries & Selection",
+    "grammarTransformStatistics": "Statistic Operations",
     "grammarTransformRelate": "Pairing Rows",
     "grammarTransformCustom": "Custom Transforms",
     "grammarScale": "Scales",

@@ -7,7 +7,7 @@ Built-in transforms cover common statistical pipelines. Long-tail logic has thre
 
 | Extension level | Used by | Good for |
 | --- | --- | --- |
-| `defineStatReducer` | `bin` / `summarize` / `annotate` `metrics` | Weighted means, business quantiles, risk scores |
+| `defineStatisticsReducer` | `bin` / `summarize` / `annotate` `metrics` | Weighted means, business quantiles, risk scores |
 | `defineRowSelector` | `select` / `relate` `selector` | Nearest row, threshold crossing, custom ranking |
 | `defineTransform` | Independent `kind` | Custom row structures, cross-source derivation, special output shapes |
 
@@ -24,7 +24,7 @@ The `double-x` transform below doubles `field` into `as`. It is registered throu
 A reducer is a statistic sub-operation. Once registered, it can be reused by `summarize`, `annotate`, and `bin.metrics` without adding a new transform kind.
 
 ```tsx
-const weightedMean = defineStatReducer({
+const weightedMean = defineStatisticsReducer({
   schema: z.object({
     op: z.literal('weighted-mean'),
     field: z.string().min(1),
@@ -41,7 +41,7 @@ const weightedMean = defineStatReducer({
 });
 ```
 
-Inject it through `<Plot statReducerDefinitions={[weightedMean]}>`, then use `{ op: 'weighted-mean', ... }` inside `metrics`.
+Inject it through `<Plot statisticsReducerDefinitions={[weightedMean]}>`, then use `{ op: 'weighted-mean', ... }` inside `metrics`.
 
 ## Selector Extensions
 

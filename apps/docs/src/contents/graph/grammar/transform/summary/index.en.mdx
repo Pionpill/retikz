@@ -35,7 +35,7 @@ These transforms generate new rows from detail data. `bin` and `summarize` emit 
 
 <ComponentPreview name="transform-summarize" sourceFiles={['transform-summarize.data.ts']} />
 
-`count` does not need `field`; `sum` / `mean` / `median` / `min` / `max` / `quantile` do. Omitting `groupBy` or passing an empty array means one global group.
+`count` does not need `field`; `sum` / `mean` / `median` / `min` / `max` / `quantile` / `quantile-band` do. Omitting `groupBy` or passing an empty array means one global group. See [Statistic Operations](/graph/grammar/transform/statistics) for the full reducer list.
 
 | prop | Type | Default | Notes |
 | --- | --- | --- | --- |
@@ -60,7 +60,7 @@ These transforms generate new rows from detail data. `bin` and `summarize` emit 
 
 <ComponentPreview name="transform-select" sourceFiles={['transform-select.data.ts']} />
 
-Built-in selectors include `min` / `max` / `first` / `last` / `top` / `bottom` / `nth`. `rankAs` can write the selected one-based rank into the output row.
+Built-in selectors include `min` / `max` / `first` / `last` / `top` / `bottom` / `nth` / `outside-quantile-band`. `rankAs` can write the selected one-based rank into the output row. See [Statistic Operations](/graph/grammar/transform/statistics) for the full selector list.
 
 | prop | Type | Default | Notes |
 | --- | --- | --- | --- |

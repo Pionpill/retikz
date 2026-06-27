@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { type ExternalRow, type TransformOperation } from '../schemas';
-import type { AnyRowSelectorDefinition, AnyStatReducerDefinition } from './statistics';
+import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition } from './statistics';
 
 /**
  * transform apply 上下文。
@@ -16,7 +16,7 @@ export type TransformContext = {
   /** 给一个改行数输出行打组级源序标记；成员行无标记时原样返回。 */
   groupProvenance: (out: ExternalRow, members: Array<ExternalRow>) => ExternalRow;
   /** 统计 reducer registry；缺省时使用内置 reducer。 */
-  statReducerRegistry?: ReadonlyMap<string, AnyStatReducerDefinition>;
+  statisticsReducerRegistry?: ReadonlyMap<string, AnyStatisticsReducerDefinition>;
   /** row selector registry；缺省时使用内置 selector。 */
   rowSelectorRegistry?: ReadonlyMap<string, AnyRowSelectorDefinition>;
 };

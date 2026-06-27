@@ -48,6 +48,7 @@ Normalize plus stack is a percentage stack: first convert each group to shares, 
 <ComponentPreview name="transform-annotate" sourceFiles={['transform-annotate.data.ts']} />
 
 The example writes each store's average revenue into `storeMean`. Points still draw the raw `revenue`; the path reads the broadcast mean.
+Available reducers and selectors are covered in [Statistic Operations](/graph/grammar/transform/statistics); `annotate` only decides to broadcast their results back onto detail rows.
 
 | prop | Type | Default | Notes |
 | --- | --- | --- | --- |

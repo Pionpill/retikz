@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_TRANSFORM_CONTEXT, applyTransforms, defineRowSelector, defineStatReducer, resolveRowSelectorRegistry, resolveStatReducerRegistry } from '../../src';
+import { DEFAULT_TRANSFORM_CONTEXT, applyTransforms, defineRowSelector, defineStatisticsReducer, resolveRowSelectorRegistry, resolveStatisticsReducerRegistry } from '../../src';
 import type { ExternalRow } from '../../src/schemas';
 import { readSourceIndex, readSourceIndices, tagSourceIndex } from '../../src/pipeline/provenance';
 
@@ -183,7 +183,7 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
   });
 
   it('custom_stat_reducer_in_summarize', () => {
-    const weightedMean = defineStatReducer({
+    const weightedMean = defineStatisticsReducer({
       schema: z.object({
         op: z.literal('weighted-mean'),
         field: z.string().min(1),
@@ -206,7 +206,7 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
       ],
       [{ kind: 'summarize', groupBy: ['group'], metrics: [{ op: 'weighted-mean', field: 'value', weight: 'weight', as: 'weightedValue' }] }],
       undefined,
-      { ...DEFAULT_TRANSFORM_CONTEXT, statReducerRegistry: resolveStatReducerRegistry([weightedMean]) },
+      { ...DEFAULT_TRANSFORM_CONTEXT, statisticsReducerRegistry: resolveStatisticsReducerRegistry([weightedMean]) },
     );
 
     expect(out).toEqual([expect.objectContaining({ group: 'A', weightedValue: 17.5 })]);

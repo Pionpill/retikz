@@ -57,7 +57,7 @@ React DSL shortcuts still lower to ordinary transforms. For example, `IntervalMa
 
 During lowering, Plot collects the source fields read by transforms and registers the fields they derive. That lets strict models validate true input fields without requiring derived fields to be declared early.
 
-`bin`, `summarize`, and `annotate` reuse reducers such as `count` / `sum` / `mean` / `median` / `quantile`. `select` and `relate` reuse selectors such as `min` / `max` / `first` / `last` / `top`. For long-tail statistics, use `defineTransform` for a full transform or register reducer / selector definitions for the built-in statistical transforms.
+`bin`, `summarize`, and `annotate` reuse [reducer / selector statistic operations](/graph/grammar/transform/statistics), such as `count` / `sum` / `mean` / `median` / `quantile-band`. `select` and `relate` reuse selectors such as `min` / `max` / `first` / `last` / `top`. For long-tail statistics, use `defineTransform` for a full transform or register reducer / selector definitions for the built-in statistical transforms.
 
 Plot-level transforms affect the whole chart: scales, guides, and every mark. Mark-local transforms only affect the rows seen by that one mark, which is useful for local summary layers or relation rows.
 
@@ -77,6 +77,10 @@ Plot-level transforms affect the whole chart: scales, guides, and every mark. Ma
   <LinkedCard href="/graph/grammar/transform/summary">
     <span className="font-semibold">Summaries & Selection</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Create bins, group statistic rows, or representative source rows.</span>
+  </LinkedCard>
+  <LinkedCard href="/graph/grammar/transform/statistics">
+    <span className="font-semibold">Statistic Operations</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Reuse reducers and selectors for statistic values, representative rows, and parameterized quantile bands.</span>
   </LinkedCard>
   <LinkedCard href="/graph/grammar/transform/relate">
     <span className="font-semibold">Pairing Rows</span>

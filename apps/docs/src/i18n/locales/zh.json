@@ -123,6 +123,7 @@
     "grammarTransformRow": "行级变换",
     "grammarTransformAnnotation": "保行标注",
     "grammarTransformSummary": "规约与选择",
+    "grammarTransformStatistics": "统计子算子",
     "grammarTransformRelate": "行配对",
     "grammarTransformCustom": "自定义变换",
     "grammarScale": "比例尺",
