@@ -32,21 +32,27 @@ export {
   RectangleStepSchema,
   GeneratorStepSchema,
   ControlPointSchema,
+  GeometryLabelPlacement,
+  GeometryLabelSchema,
   StepLabelSchema,
   StepSchema,
   NodeSchema,
   NodeLabelSchema,
+  NodeLabelBoundaryPositionSchema,
+  NodeLabelPlacement,
+  NodeLabelBoundarySide,
   ShapeRefSchema,
   CoordinateSchema,
   FontSchema,
   TextBlockSchema,
   LineSpecSchema,
+  PathBaseSchema,
   PathSchema,
   PathScaleSchema,
   RibbonDirectionSchema,
   RibbonArcCapSchema,
   RibbonCapSchema,
-  RibbonSchema,
+  PathRibbonOptionsSchema,
   RibbonWidthSchema,
   RibbonWidthStopSchema,
   ArrowMarkSchema,
@@ -70,6 +76,8 @@ export {
   JsonObjectSchema,
   ClipSpecSchema,
   ViewBoxSchema,
+  DrawableStyleSchema,
+  DrawableMetaSchema,
 } from './schemas';
 export type {
   IRPosition,
@@ -98,21 +106,27 @@ export type {
   IRRectangleStep,
   IRGeneratorStep,
   IRControlPoint,
+  GeometryLabelPlacementValue,
+  IRGeometryLabel,
   IRStepLabel,
   IRStep,
   IRNode,
   IRNodeLabel,
+  IRNodeLabelBoundaryPosition,
+  NodeLabelPlacementValue,
+  NodeLabelBoundarySideValue,
   IRShapeRef,
   IRCoordinate,
   IRFont,
   IRLineSpec,
   IRTextBlock,
+  IRPathBase,
   IRPath,
   IRPathScale,
-  IRRibbon,
   IRRibbonArcCap,
   IRRibbonCap,
   IRRibbonDirection,
+  IRPathRibbonOptions,
   IRRibbonWidth,
   IRRibbonWidthStop,
   RibbonArcCapSweepValue,
@@ -157,6 +171,9 @@ export type {
   IRJsonObject,
   IRClipSpec,
   IRViewBox,
+  IRDrawableStyle,
+  IRDrawableMeta,
+  IRDrawableSharedStyle,
 } from './schemas';
 export {
   ArrowShape,
@@ -340,10 +357,17 @@ export type { PatternDefinition, PatternEmitContext } from './contract/pattern';
 export { definePattern } from './contract/pattern';
 export { BUILTIN_PATTERNS } from './providers/pattern';
 
-// Path Generators (Path Generator Registry 扩展面：第三方曲线生成器注入；core 无内置)
-export type { PathGeneratorDefinition, PathGeneratorContext } from './contract/path';
-export { definePathGenerator } from './contract/path';
-
+// Path (generator + kind provider extension surface)
+export type {
+  PathGeneratorDefinition,
+  PathGeneratorContext,
+  PathKindCompileContext,
+  PathKindCompileResult,
+  PathKindDefinition,
+  PathKindDefinitionInput,
+} from './contract/path';
+export { definePathGenerator, definePathKind } from './contract/path';
+export { BUILTIN_PATH_KINDS } from './providers/path-kind';
 // Ribbons (Ribbon width profile extension surface)
 export type {
   RibbonWidthProfileContext,

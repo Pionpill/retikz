@@ -5,7 +5,6 @@ import { Draw } from '../../src/sugar/Draw';
 import { EdgeLabel } from '../../src/sugar/EdgeLabel';
 import { Node } from '../../src/kernel/Node';
 import { Path } from '../../src/kernel/Path';
-import { Ribbon } from '../../src/kernel/Ribbon';
 import { Scope } from '../../src/kernel/Scope';
 import { Step } from '../../src/kernel/Step';
 import { Text } from '../../src/kernel/Text';
@@ -271,24 +270,30 @@ after`;
     });
   });
 
-  it('<Ribbon><Step/><Step/></Ribbon> collects a variable-width centerline', () => {
+  it('<Path kind="ribbon"><Step/><Step/></Path> collects a variable-width centerline', () => {
     const ir = buildIR(
-      <Ribbon
-        start={{ width: 8, direction: 0 }}
-        end={{ width: 2, direction: [1, 0] }}
+      <Path
+        kind="ribbon"
         fill="steelblue"
-        samples
+        ribbon={{
+          start: { width: 8, direction: 0 },
+          end: { width: 2, direction: [1, 0] },
+          samples: true,
+        }}
       >
         <Step kind="move" to={[0, 0]} />
         <Step to={[10, 0]} />
-      </Ribbon>,
+      </Path>,
     );
     expect(ir.children[0]).toEqual({
-      type: 'ribbon',
-      start: { width: 8, direction: 0 },
-      end: { width: 2, direction: [1, 0] },
+      type: 'path',
+      kind: 'ribbon',
       fill: 'steelblue',
-      samples: true,
+      ribbon: {
+        start: { width: 8, direction: 0 },
+        end: { width: 2, direction: [1, 0] },
+        samples: true,
+      },
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [10, 0] },
@@ -296,31 +301,68 @@ after`;
     });
   });
 
-  it('<Ribbon kind="boundary"> collects upper and lower boundary steps', () => {
+  it('<Path kind="ribbon" label> forwards a path-like geometry label', () => {
     const ir = buildIR(
-      <Ribbon kind="boundary" fill="#bfdbfe">
-        <Ribbon.Upper>
-          <Step kind="move" to={[0, 0]} />
-          <Step to={[10, 0]} />
-        </Ribbon.Upper>
-        <Ribbon.Lower>
-          <Step kind="move" to={[0, 4]} />
-          <Step to={[10, 4]} />
-        </Ribbon.Lower>
-      </Ribbon>,
+      <Path
+        kind="ribbon"
+        ribbon={{ width: 12 }}
+        label={{
+          text: '128',
+          position: 'midway',
+          sloped: true,
+          textColor: '#0f172a',
+        }}
+      >
+        <Step kind="move" to={[0, 0]} />
+        <Step to={[10, 0]} />
+      </Path>,
+    );
+    expect(ir.children[0]).toMatchObject({
+      type: 'path',
+      kind: 'ribbon',
+      ribbon: { width: 12 },
+      label: {
+        text: '128',
+        position: 'midway',
+        sloped: true,
+        textColor: '#0f172a',
+      },
+    });
+  });
+
+  it('<Path kind="ribbon" mode="boundary"> collects upper and lower boundary steps as a path ribbon', () => {
+    const ir = buildIR(
+      <Path
+        kind="ribbon"
+        fill="#bfdbfe"
+        ribbon={{
+          mode: 'boundary',
+          upper: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+          lower: [
+            { type: 'step', kind: 'move', to: [0, 4] },
+            { type: 'step', kind: 'line', to: [10, 4] },
+          ],
+        }}
+      />,
     );
     expect(ir.children[0]).toEqual({
-      type: 'ribbon',
-      kind: 'boundary',
+      type: 'path',
+      kind: 'ribbon',
       fill: '#bfdbfe',
-      upper: [
-        { type: 'step', kind: 'move', to: [0, 0] },
-        { type: 'step', kind: 'line', to: [10, 0] },
-      ],
-      lower: [
-        { type: 'step', kind: 'move', to: [0, 4] },
-        { type: 'step', kind: 'line', to: [10, 4] },
-      ],
+      ribbon: {
+        mode: 'boundary',
+        upper: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'line', to: [10, 0] },
+        ],
+        lower: [
+          { type: 'step', kind: 'move', to: [0, 4] },
+          { type: 'step', kind: 'line', to: [10, 4] },
+        ],
+      },
     });
   });
 
@@ -334,6 +376,11 @@ after`;
       type: 'path',
       children: [{ type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6] }],
     });
+  });
+
+  it('@retikz/react public API does not expose standalone Ribbon', async () => {
+    const api = await import('../../src');
+    expect(api).not.toHaveProperty('Ribbon');
   });
 
   it('<Path> 仅一个非自包含 step（单 line）→ 仍抛 "requires at least 2"', () => {
@@ -738,6 +785,32 @@ after`;
     it('<Node cornerRadius> 顶层圆角透传到 IR node.cornerRadius', () => {
       const ir = buildIR(<Node id="A" position={[0, 0]} cornerRadius={8}>A</Node>);
       expect(ir.children[0]).toMatchObject({ type: 'node', cornerRadius: 8 });
+    });
+
+    it('<Node label> 透传 inside placement 与 boundary position', () => {
+      const ir = buildIR(
+        <Node
+          id="A"
+          position={[0, 0]}
+          label={{
+            text: 'L',
+            position: { boundary: 'top', t: 0.25 },
+            placement: 'inside',
+            distance: 6,
+          }}
+        >
+          A
+        </Node>,
+      );
+      expect(ir.children[0]).toMatchObject({
+        type: 'node',
+        label: {
+          text: 'L',
+          position: { boundary: 'top', t: 0.25 },
+          placement: 'inside',
+          distance: 6,
+        },
+      });
     });
 
     it('<Path color> 主色透传到 IR', () => {

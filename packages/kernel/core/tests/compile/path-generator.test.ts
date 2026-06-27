@@ -434,7 +434,7 @@ describe('Path generator step — JSON round-trip & zod 校验', () => {
     const parsed = PathSchema.parse(roundTripped);
     expect(parsed).toEqual(PathSchema.parse(path));
     // params JSON 内容保真
-    const genStep = parsed.children[1];
+    const genStep = parsed.children![1];
     expect(genStep.kind === 'generator' && genStep.params).toEqual({
       bend: { id: 'C' },
       coeff: 2.5,

@@ -2,7 +2,7 @@ import type { Position } from '../geometry/point';
 import { arcEndPoint } from '@retikz/math';
 import { normalizeCompassAnchor } from '../geometry/anchor';
 import type { Rect } from '../geometry/rect';
-import type { IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue, NodeLabelPositionValue } from '../schemas';
+import type { IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRNodeLabelBoundaryPosition, IRPaintSpec, IRShapeRef, JsonValue, NodeLabelPlacementValue, NodeLabelPositionValue } from '../schemas';
 import { JsonObjectSchema } from '../schemas';
 import type { BlendModeValue, DropShadow } from '../schemas/effects';
 import { resolveShadow } from './effects';
@@ -240,8 +240,10 @@ export type NodeLabelLayout = {
   text: string;
   /** 含公式时的混排行布局（emit 走 laid）；纯文本时 undefined */
   laid?: LaidLine;
-  /** 8 方向枚举、center 或数字角度 */
-  position: NodeLabelPositionValue | number;
+  /** 8 方向枚举、center、数字角度，或 box-like boundary 上的归一位置 */
+  position: NodeLabelPositionValue | number | IRNodeLabelBoundaryPosition;
+  /** label 相对附着点向外或向内偏移 */
+  placement: NodeLabelPlacementValue;
   /** 已应用默认值 */
   distance: number;
   textColor?: string;
@@ -359,10 +361,54 @@ export const anchorOf = (
  *   若用带 rotate 的 rect，label 位置会被 anchorOf / angleBoundaryOf 旋转一次、再被外层 group 旋转一次（双重旋转）。
  *   anchorOf / angleBoundaryOf 本身不改（path anchor `'A.north'` / `'A.30'` 仍需带 rotate 的 rect）。
  */
+const isLabelBoundaryPosition = (
+  position: NodeLabelLayout['position'],
+): position is IRNodeLabelBoundaryPosition =>
+  typeof position === 'object';
+
+const ensureBoxLikeLabelBoundary = (layout: NodeLayout): void => {
+  if (layout.shapeName !== 'rectangle') {
+    throw new Error(
+      `Node label boundary position requires a box-like boundary; shape '${layout.shapeName}' is not supported.`,
+    );
+  }
+};
+
+const labelBoundaryPoint = (
+  layout: NodeLayout,
+  position: IRNodeLabelBoundaryPosition,
+): Position => {
+  ensureBoxLikeLabelBoundary(layout);
+  const t = position.t ?? 0.5;
+  const left = layout.rect.x - layout.rect.width / 2;
+  const right = layout.rect.x + layout.rect.width / 2;
+  const top = layout.rect.y - layout.rect.height / 2;
+  const bottom = layout.rect.y + layout.rect.height / 2;
+  if (position.boundary === 'top') return [left + layout.rect.width * t, top];
+  if (position.boundary === 'right') return [right, top + layout.rect.height * t];
+  if (position.boundary === 'bottom') return [left + layout.rect.width * t, bottom];
+  return [left, top + layout.rect.height * t];
+};
+
+const labelBoundaryDirection = (
+  position: IRNodeLabelBoundaryPosition,
+): Position => {
+  if (position.boundary === 'top') return [0, -1];
+  if (position.boundary === 'right') return [1, 0];
+  if (position.boundary === 'bottom') return [0, 1];
+  return [-1, 0];
+};
+
+const labelPlacementSign = (label: NodeLabelLayout): number =>
+  label.placement === 'inside' ? -1 : 1;
+
 /** label 在 node 边界上的附着点（未旋转局部系；pin 引线起点 = 此点） */
 const labelBorderPoint = (layout: NodeLayout, label: NodeLabelLayout): Position => {
   if (label.position === 'center') return [layout.rect.x, layout.rect.y];
   const aaLayout: NodeLayout = { ...layout, rect: { ...layout.rect, rotate: 0 } };
+  if (isLabelBoundaryPosition(label.position)) {
+    return labelBoundaryPoint(aaLayout, label.position);
+  }
   if (typeof label.position === 'number') {
     return angleBoundaryOf(aaLayout, label.position);
   }
@@ -372,11 +418,16 @@ const labelBorderPoint = (layout: NodeLayout, label: NodeLabelLayout): Position 
 const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
   if (label.position === 'center') return [layout.rect.x, layout.rect.y];
   const [bx, by] = labelBorderPoint(layout, label);
+  const sign = labelPlacementSign(label);
+  if (isLabelBoundaryPosition(label.position)) {
+    const vec = labelBoundaryDirection(label.position);
+    return [bx + vec[0] * label.distance * sign, by + vec[1] * label.distance * sign];
+  }
   if (typeof label.position === 'number') {
-    return arcEndPoint([bx, by], label.distance, label.position);
+    return arcEndPoint([bx, by], label.distance * sign, label.position);
   }
   const vec = DirectionVectorByAtDirection[label.position];
-  return [bx + vec[0] * label.distance, by + vec[1] * label.distance];
+  return [bx + vec[0] * label.distance * sign, by + vec[1] * label.distance * sign];
 };
 
 /** 从 label 中心朝 border 方向，求 label 框（halfW×halfH）边界交点（pin 引线终点 = label 框近 node 边） */
@@ -708,6 +759,7 @@ export const layoutNode = (
       text: plainText,
       laid,
       position: lab.position ?? 'above',
+      placement: lab.placement ?? 'outside',
       distance: lab.distance ?? DEFAULT_LABEL_DISTANCE,
       textColor: labTextColor,
       opacity: labOpacity,

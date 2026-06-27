@@ -20,7 +20,6 @@ import { CURRENT_IR_VERSION, parseTargetSugar } from '@retikz/core';
 import type { CoordinateProps } from './Coordinate';
 import type { NodeProps } from './Node';
 import type { PathProps } from './Path';
-import type { RibbonProps } from './Ribbon';
 import { Scope, type ScopeProps } from './Scope';
 import {
   type EmbeddableContributionRecord,
@@ -35,9 +34,6 @@ import {
   TIKZ_EDGE_LABEL,
   TIKZ_NODE,
   TIKZ_PATH,
-  TIKZ_RIBBON,
-  TIKZ_RIBBON_LOWER,
-  TIKZ_RIBBON_UPPER,
   TIKZ_SCOPE,
   TIKZ_STEP,
   TIKZ_TEXT,
@@ -46,7 +42,6 @@ import {
 import {
   NODE_FIELDS,
   PATH_FIELDS,
-  RIBBON_FIELDS,
   SCOPE_FIELDS,
   SCOPE_STYLE_FIELDS,
   type ScopeStyleProps,
@@ -484,69 +479,15 @@ const buildScopeFromProps = (props: ScopeProps, ctx?: BuildContext): IRScope => 
 });
 
 /** `<Path>` props → IRChild；step 序列由 readPathChildren 收集 */
-const buildPathFromProps = (props: PathProps): IRChild => ({
-  type: 'path',
-  ...pickDefined(props, PATH_FIELDS),
-  children: readPathChildren(props.children),
-});
-
-const readRibbonChildren = (
-  children: ReactNode,
-): {
-  centerline?: Array<IRStep>;
-  upper?: Array<IRStep>;
-  lower?: Array<IRStep>;
-} => {
-  const centerlineNodes: Array<ReactNode> = [];
-  let upper: Array<IRStep> | undefined;
-  let lower: Array<IRStep> | undefined;
-  const visit = (node: ReactNode): void => {
-    Children.forEach(node, child => {
-      if (!isValidElement(child)) return;
-      if (child.type === Fragment) {
-        visit((child.props as { children?: ReactNode }).children);
-        return;
-      }
-      const name = getDisplayName(child);
-      if (name === TIKZ_RIBBON_UPPER) {
-        upper = readPathChildren((child.props as { children?: ReactNode }).children);
-        return;
-      }
-      if (name === TIKZ_RIBBON_LOWER) {
-        lower = readPathChildren((child.props as { children?: ReactNode }).children);
-        return;
-      }
-      centerlineNodes.push(child);
-    });
+const buildPathFromProps = (props: PathProps): IRChild => {
+  const path: IRChild = {
+    type: 'path',
+    ...pickDefined(props, PATH_FIELDS),
   };
-  visit(children);
-  return {
-    ...(centerlineNodes.length > 0 ? { centerline: readPathChildren(centerlineNodes) } : {}),
-    ...(upper !== undefined ? { upper } : {}),
-    ...(lower !== undefined ? { lower } : {}),
-  };
-};
-
-/** `<Ribbon>` props → IRChild；step 序列由 readPathChildren 收集 */
-const buildRibbonFromProps = (props: RibbonProps): IRChild => {
-  const picked = pickDefined(props, RIBBON_FIELDS);
-  const parsed = readRibbonChildren(props.children);
-  const upper = props.upper ?? parsed.upper;
-  const lower = props.lower ?? parsed.lower;
-  if (props.kind === 'boundary' || upper !== undefined || lower !== undefined) {
-    return {
-      type: 'ribbon',
-      ...picked,
-      kind: 'boundary',
-      ...(upper !== undefined ? { upper } : {}),
-      ...(lower !== undefined ? { lower } : {}),
-    };
+  if (props.children !== undefined) {
+    path.children = readPathChildren(props.children);
   }
-  return {
-    type: 'ribbon',
-    ...picked,
-    ...(parsed.centerline !== undefined ? { children: parsed.centerline } : {}),
-  };
+  return path;
 };
 
 /**
@@ -572,9 +513,6 @@ const readSceneChildren = (children: ReactNode, ctx?: BuildContext): Array<IRChi
         return;
       case TIKZ_PATH:
         out.push(buildPathFromProps(child.props as PathProps));
-        return;
-      case TIKZ_RIBBON:
-        out.push(buildRibbonFromProps(child.props as RibbonProps));
         return;
       case TIKZ_COORDINATE:
         out.push(buildCoordinateFromProps(child.props as CoordinateProps));

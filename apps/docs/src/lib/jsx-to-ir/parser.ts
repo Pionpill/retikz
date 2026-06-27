@@ -33,7 +33,7 @@ const JsxParser = Parser.extend(jsx());
 const COMPONENT_REGISTRY: Record<string, FC<Record<string, unknown>> | undefined> = {
   Layout,
   Node: Node as unknown as FC<Record<string, unknown>>,
-  Path: Path as unknown as FC<Record<string, unknown>>,
+  Path,
   Step: Step as unknown as FC<Record<string, unknown>>,
   Text: Text as unknown as FC<Record<string, unknown>>,
   Coordinate: Coordinate as unknown as FC<Record<string, unknown>>,

@@ -70,7 +70,7 @@ The gray block is the content box and the dashed rectangle is the inner frame; t
 
 Text-container shapes behave like buttons or DOM boxes: longer text makes the node grow. Param-driven shapes behave more like geometric glyphs: radius, angle, and point count already define the size, and text is attached to that geometry.
 
-To extend shapes yourself, `defineShape` must supply the same geometry answers — how the shape is enclosed, where a ray hits it, where named anchors live, and how it emits primitives — so the Node stays measurable, connectable, referenceable, and renderable like any built-in. Read [Custom Shapes](/kernel/reference/extending/shape-registry) for the implementation contract.
+To extend shapes yourself, `defineShape` must supply the same geometry answers — how the shape is enclosed, where a ray hits it, where named anchors live, and how it emits primitives — so the Node stays measurable, connectable, referenceable, and renderable like any built-in. Read [Custom Shapes](/kernel/components/extend/shape-registry) for the implementation contract.
 
 ## Outer Boundaries
 
@@ -145,7 +145,7 @@ When a node has `rotate`, all 9 anchors rotate with it. `WebAnchor` aliases norm
 
 </Comparison>
 
-Custom shapes define their anchor behavior through `ShapeDefinition`. Supporting these 9 standard compass anchors is recommended so the shape can substitute for built-ins; if a registered shape does not support a requested anchor, compilation reports the corresponding error. See [shape registry](/kernel/reference/extending/shape-registry).
+Custom shapes define their anchor behavior through `ShapeDefinition`. Supporting these 9 standard compass anchors is recommended so the shape can substitute for built-ins; if a registered shape does not support a requested anchor, compilation reports the corresponding error. See [shape registry](/kernel/components/extend/shape-registry).
 
 Edge-proportional `{ side, t }` takes the point at proportion `t ∈ [0, 1]` along an edge of the shape's **real boundary** — direction north/south west→east, east/west north→south: rectangle along the straight edge, circle / ellipse along that side's visible perimeter arc, diamond along the visible slanted edges. `{ side: 'west', t: 1/3 }` is the left edge's one-third point; `{ side: 'north', t: 0.5 }` is the top-edge midpoint (equals the named `'north'`).
 
@@ -164,7 +164,7 @@ For how these points are referenced by another primitive, and how connection end
     <span className="font-semibold">Node</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">The Node component's full props, shapes, styling, and positioning</span>
   </LinkedCard>
-  <LinkedCard href="/kernel/reference/extending/shape-registry">
+  <LinkedCard href="/kernel/components/extend/shape-registry">
     <span className="font-semibold">Custom Shapes</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Supply the bounding / ray / anchor / emit geometry answers to register a new shape</span>
   </LinkedCard>

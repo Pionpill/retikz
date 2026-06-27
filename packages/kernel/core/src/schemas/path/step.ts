@@ -6,11 +6,18 @@ import { MixedLineSchema } from '../text';
 import type { ValueOf } from '../../types';
 import { TargetSchema } from './target';
 
+export const GeometryLabelPlacement = {
+  Outside: 'outside',
+  Inside: 'inside',
+} as const;
+
+export type GeometryLabelPlacementValue = ValueOf<typeof GeometryLabelPlacement>;
+
 /**
  * 边标注：画线 step 上的 label
  * @description 按段几何 + side 偏移翻译为 TextPrim；move/cycle 不挂 label
  */
-export const StepLabelSchema = z
+export const GeometryLabelSchema = z
   .object({
     text: z
       .union([z.string(), MixedLineSchema])
@@ -38,8 +45,25 @@ export const StepLabelSchema = z
       .enum(['above', 'below', 'left', 'right', 'sloped'])
       .optional()
       .describe(
-        'Side relative to segment direction. `above` / `below` / `left` / `right` offset along segment normal; `sloped` rotates label along the tangent (no normal offset). Default `above`.',
+        'Side relative to the label anchor. `above` / `below` / `left` / `right` place the label around the anchor; legacy `sloped` rotates label along the tangent with no side offset. Default `above`.',
       ),
+    sloped: z
+      .boolean()
+      .optional()
+      .describe(
+        'Rotate the label along the sampled tangent while keeping `side` responsible for label placement.',
+      ),
+    placement: z
+      .enum(GeometryLabelPlacement)
+      .optional()
+      .describe(
+        'Placement mode for path-like labels. `outside` keeps the default Path label behavior; `inside` lets area-like hosts such as Ribbon place labels in the band when no side is specified.',
+      ),
+    distance: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe('Side offset distance in user units. Defaults to the same distance as Path step labels.'),
     textColor: z
       .string()
       .optional()
@@ -58,12 +82,19 @@ export const StepLabelSchema = z
       'Label font overrides (family / size / weight / style); missing fields inherit from the scope labelDefault, then the renderer default.',
     ),
   })
+  .strict()
   .describe(
-    'Edge label spec attached to a drawn step; compiled to a TextPrim positioned along the segment.',
+    'Geometry label spec attached to a path-like host; compiled to a TextPrim positioned from a centerline sample.',
   );
 
 /** 边标注 IR 类型 */
-export type IRStepLabel = z.infer<typeof StepLabelSchema>;
+export const StepLabelSchema = GeometryLabelSchema;
+
+/** Shared path-like geometry label IR type. */
+export type IRGeometryLabel = z.infer<typeof GeometryLabelSchema>;
+
+/** Path step label IR type. */
+export type IRStepLabel = IRGeometryLabel;
 
 export const MoveStepSchema = z
   .object({

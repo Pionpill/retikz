@@ -5,7 +5,6 @@ import { coordinate } from './builder/coordinate';
 import { draw } from './builder/draw';
 import { FIGURE_BRAND } from './builder/is-figure';
 import { node } from './builder/node';
-import { ribbon } from './builder/ribbon';
 import { scope } from './builder/scope';
 import type { ScopeBuilder } from './builder/scope';
 import { FIGURE_ROOT_STYLE_FIELDS } from './builder/types';
@@ -15,8 +14,6 @@ import type {
   DrawConfig,
   FigureConfig,
   FigureRootStyle,
-  RibbonBoundaryConfig,
-  RibbonConfig,
   ScopeConfig,
   Way,
 } from './builder/types';
@@ -41,10 +38,6 @@ export type Figure = {
   toCanvas: (canvas: HTMLCanvasElement, options?: RenderOptions) => void;
   node: (...args: Parameters<typeof node>) => Figure;
   draw: (way: Way, config?: DrawConfig) => Figure;
-  ribbon: {
-    (way: Way, config: RibbonConfig): Figure;
-    (config: RibbonBoundaryConfig): Figure;
-  };
   coordinate: (id: string, config: CoordinateConfig) => Figure;
   scope: (config: ScopeConfig, arg: Array<Child> | ((s: ScopeBuilder) => void)) => Figure;
 };
@@ -124,14 +117,6 @@ export const createFigure = (config: FigureConfig, children: Array<Child>): Figu
     },
     draw(way, drawConfig) {
       children.push(draw(way, drawConfig));
-      return fig;
-    },
-    ribbon(...args: [Way, RibbonConfig] | [RibbonBoundaryConfig]) {
-      if (args.length === 1) {
-        children.push(ribbon(args[0]));
-      } else {
-        children.push(ribbon(args[0], args[1]));
-      }
       return fig;
     },
     coordinate(id, coordConfig) {

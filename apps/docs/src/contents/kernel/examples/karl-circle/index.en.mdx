@@ -69,7 +69,7 @@ x and y axes use [Draw](/kernel/components/draw/overview) with `arrow="->"` to g
 
 ### Step 3 — Grid + ticks
 
-The background grid now uses [Grid](/kernel/components/helpers/grid) sugar, which expands to many lines for you. Ticks are also array-driven: a short segment plus a transparent [Node](/kernel/components/node/overview) per tick, its text written as `$-\frac{1}{2}$` and friends; `−1/2` / `1/2` are no longer the plain string `-1/2` but real rendered fractions. The label sits **slightly offset** from its tick (x-axis labels nudged 10px left, y-axis labels 10px down) so they don't clash with the circle or axis lines, and the step reads like “give me a grid” instead of “assemble 10 lines.” 
+The background grid now uses [Grid](/kernel/components/helpers/grid) sugar, which expands to many lines for you. Ticks are also array-driven: a short segment plus a transparent [Node](/kernel/components/node/overview) per tick, its text written as `$-\frac{1}{2}$` and friends; `−1/2` / `1/2` are no longer the plain string `-1/2` but real rendered fractions. The label sits **slightly offset** from its tick (x-axis labels nudged 10px left, y-axis labels 10px down) so they don't clash with the circle or axis lines, and the step reads like “give me a grid” instead of “assemble 10 lines.”
 retikz coordinates are SVG pixels with y pointing downward — so "1 unit up" is written as `[0, -100]` (this example uses 100px = unit-circle radius as the length basis). The top-level `<Layout>` has no picture-level scale or y-flip, so math coordinates from the TikZ tutorial need their y manually negated.
 
 <ComponentPreview name="karl-circle-03-ticks" diffFrom="karl-circle-02-axes" size="lg" interactive />

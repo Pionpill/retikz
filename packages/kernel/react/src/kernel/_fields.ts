@@ -1,4 +1,4 @@
-import type { AssertEqual, IRNode, IRPath, IRRibbon, IRScope } from '@retikz/core';
+import type { AssertEqual, IRNode, IRPath, IRScope } from '@retikz/core';
 
 /**
  * IRNode 纯透传字段表（除 type / position / text / label 特化字段外）
@@ -56,6 +56,10 @@ void _assertNodeFieldsCheck;
  * @description 同 NODE_FIELDS 互锁防漂移
  */
 export const PATH_FIELDS = [
+  'kind',
+  'kindOptions',
+  'ribbon',
+  'label',
   'id',
   'meta',
   'animations',
@@ -89,38 +93,7 @@ type _PathFieldsCheck = AssertEqual<
 const _assertPathFieldsCheck: _PathFieldsCheck = true;
 void _assertPathFieldsCheck;
 
-export const RIBBON_FIELDS = [
-  'kind',
-  'id',
-  'meta',
-  'animations',
-  'color',
-  'width',
-  'start',
-  'end',
-  'interpolation',
-  'align',
-  'samples',
-  'sampling',
-  'fill',
-  'fillOpacity',
-  'stroke',
-  'strokeWidth',
-  'drawOpacity',
-  'opacity',
-  'shadow',
-  'blendMode',
-  'zIndex',
-  'upper',
-  'lower',
-] as const satisfies ReadonlyArray<keyof IRRibbon>;
 
-type _RibbonFieldsCheck = AssertEqual<
-  (typeof RIBBON_FIELDS)[number],
-  Exclude<keyof IRRibbon, 'type' | 'children'>
->;
-const _assertRibbonFieldsCheck: _RibbonFieldsCheck = true;
-void _assertRibbonFieldsCheck;
 
 /**
  * IRScope 纯透传字段表（除 type / children 特化字段外）

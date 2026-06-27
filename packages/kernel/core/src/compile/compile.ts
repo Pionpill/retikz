@@ -1,5 +1,5 @@
 import { rect as rectOps } from '../geometry/rect';
-import type { IR, IRAnimationTrack, IRChild, IRPath, IRPosition, IRRibbon, IRTransform } from '../schemas';
+import { type IR, type IRAnimationTrack, type IRChild, type IRPathBase, type IRPosition, type IRTransform, JsonObjectSchema } from '../schemas';
 import { ScopeBoundingShape } from '../schemas';
 import type { DropShadow, GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
 import type { ShapeDefinition } from '../contract/shape';
@@ -7,11 +7,13 @@ import type { ArrowDefinition } from '../contract/arrow';
 import type { PatternDefinition } from '../contract/pattern';
 import type { PathGeneratorDefinition } from '../contract/path';
 import type { CompositeDefinition } from '../contract/composite';
+import type { PathKindCompileResult, PathKindDefinition } from '../contract/path';
 import type { RibbonWidthProfileDefinition } from '../contract/ribbon';
 import { resolveShapeRegistry } from '../providers/shape';
 import { resolveArrowRegistry } from '../providers/arrow';
 import { resolvePatternRegistry } from '../providers/pattern';
 import { resolvePathGeneratorRegistry } from '../providers/path';
+import { resolvePathKindRegistry } from '../providers/path-kind';
 import { resolveRibbonWidthProfileRegistry } from '../providers/ribbon';
 import { resolveCompositeRegistry } from '../providers/composite';
 import {
@@ -25,7 +27,7 @@ import { type NodeLayout, emitNodePrimitives, labelExtentPoints, layoutNode, out
 import { createPaintRegistry } from './paint';
 import { createClipRegistry } from './clip';
 import { emitPathPrimitive, refPointOfTarget } from './path';
-import { emitRibbonPrimitive } from './ribbon';
+import { emitRibbonPrimitive } from './path/ribbon';
 import { resolvePosition } from './position';
 import { DEFAULT_PRECISION, createRound } from './precision';
 import {
@@ -41,7 +43,6 @@ import {
   type StyleFrame,
   createStyleFrame,
   resolveEffectivePath,
-  resolveEffectiveRibbon,
   resolveLabelDefault,
   resolveNodeStyle,
 } from './style';
@@ -194,6 +195,10 @@ export type CompileOptions = {
    *   `generator.name` 仍是字符串；generator 函数本身只在此运行时注入面、不进 IR。
    */
   pathGenerators?: Record<string, PathGeneratorDefinition>;
+  /**
+   * Runtime path kind providers. Built-in kinds are `stroke` and `ribbon`; custom kinds are keyed by Path.kind.
+   */
+  pathKinds?: Record<string, PathKindDefinition>;
   /**
    * Runtime ribbon width profiles.
    * @description IR stores only `{ kind:"profile", name, params }`; profile functions are injected here and never enter IR.
@@ -355,23 +360,13 @@ const collectPlaceholderLocators = (
   return locators;
 };
 
-type PendingDrawing =
-  | {
-      kind: 'path';
-      item: IRPath;
-      irPath: string;
-      scopeChain: ReadonlyArray<Transform>;
-      slot?: { sink: Array<InternalScenePrimitive>; placeholder: PathPlaceholder };
-      zIndex?: number;
-    }
-  | {
-      kind: 'ribbon';
-      item: IRRibbon;
-      irPath: string;
-      scopeChain: ReadonlyArray<Transform>;
-      slot?: { sink: Array<InternalScenePrimitive>; placeholder: PathPlaceholder };
-      zIndex?: number;
-    };
+type PendingDrawing = {
+  item: IRPathBase;
+  irPath: string;
+  scopeChain: ReadonlyArray<Transform>;
+  slot?: { sink: Array<InternalScenePrimitive>; placeholder: PathPlaceholder };
+  zIndex?: number;
+};
 
 /** 据**实际解析失败**的那个 transform 的成因映射 warn code（由 lowerScopeTransforms 的 onUnresolved 回调给出） */
 const transformWarnCode = (failed: IRTransform | undefined): CompileWarning['code'] => {
@@ -425,6 +420,8 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const effectiveShapes: Record<string, ShapeDefinition> = resolveShapeRegistry(options.shapes, onWarn);
   const effectivePathGenerators: Record<string, PathGeneratorDefinition> =
     resolvePathGeneratorRegistry(options.pathGenerators);
+  const effectivePathKinds: Partial<Record<string, PathKindDefinition>> =
+    resolvePathKindRegistry(options.pathKinds);
   const effectiveRibbonWidthProfiles: Partial<Record<string, RibbonWidthProfileDefinition>> =
     resolveRibbonWidthProfileRegistry(options.ribbonWidthProfiles);
   const effectiveArrows: Record<string, ArrowDefinition> = resolveArrowRegistry(options.arrows, onWarn);
@@ -458,6 +455,59 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   // clip 登记表：scope.clip 去重 + 派稳定 id（clip-N）→ Scene.resources（与 paint 同表，id 命名空间不撞）
   const clip = createClipRegistry(round);
 
+  const emitStrokePath = (
+    path: IRPathBase,
+    irPath: string,
+    scopeChain: ReadonlyArray<Transform>,
+  ): PathKindCompileResult | null =>
+    emitPathPrimitive(path, nameStack, round, measureText, {
+      onWarn,
+      irPath,
+      scopeChain,
+      resolvePaint: paint.resolve,
+      effectiveArrows,
+      effectivePathGenerators,
+      lowerTex: options.lowerTex,
+    });
+
+  const emitRibbonPath = (
+    path: IRPathBase,
+    irPath: string,
+    scopeChain: ReadonlyArray<Transform>,
+  ): PathKindCompileResult | null =>
+    emitRibbonPrimitive(path, nameStack, round, measureText, {
+      onWarn,
+      irPath,
+      scopeChain,
+      resolvePaint: paint.resolve,
+      effectiveArrows,
+      effectivePathGenerators,
+      lowerTex: options.lowerTex,
+      ribbonWidthProfiles: effectiveRibbonWidthProfiles,
+    });
+
+  const emitPathKindPrimitive = (
+    path: IRPathBase,
+    irPath: string,
+    scopeChain: ReadonlyArray<Transform>,
+  ): PathKindCompileResult | null => {
+    const kind = path.kind ?? 'stroke';
+    const definition = effectivePathKinds[kind];
+    if (definition === undefined) {
+      const available = Object.keys(effectivePathKinds).sort().join(', ');
+      throw new Error(`Unknown path kind '${kind}'. Available path kinds: ${available || '(none)'}.`);
+    }
+    const optionsValue = definition.optionsSchema
+      ? definition.optionsSchema.parse(path.kindOptions ?? {})
+      : JsonObjectSchema.parse(path.kindOptions ?? {});
+    return definition.compile({
+      path,
+      options: optionsValue,
+      emitStroke: nextPath => emitStrokePath(nextPath ?? path, irPath, scopeChain),
+      emitRibbon: nextPath => emitRibbonPath(nextPath ?? path, irPath, scopeChain),
+    });
+  };
+
   /**
    * 解析一批本层收集的 pending paths（lookup-only 阶段）
    * @description 两种落点：有 `slot`（scopeChain 为空）→ 原位 splice 回填该 path 在本层 sink 占的位（按引用定位免索引漂移），保住与同层 node 的 IR 声明序；无 `slot`（scopeChain 非空）→ hoist 到顶层 `primitives`，因端点已是全局坐标、进 transformed GroupPrim 会被 scope.transform 二次 apply。NameStack 切到 pass2 守门：path 解析中误调 register 抛 internal error；解析完切回 pass1 让上层 scope 子树继续 register 子节点。
@@ -469,27 +519,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     nameStack.enterLookupPhase();
     try {
       for (const item of pending) {
-        const result =
-          item.kind === 'path'
-            ? emitPathPrimitive(item.item, nameStack, round, measureText, {
-                onWarn,
-                irPath: item.irPath,
-                scopeChain: item.scopeChain,
-                resolvePaint: paint.resolve,
-                effectiveArrows,
-                effectivePathGenerators,
-                lowerTex: options.lowerTex,
-              })
-            : emitRibbonPrimitive(item.item, nameStack, round, measureText, {
-                onWarn,
-                irPath: item.irPath,
-                scopeChain: item.scopeChain,
-                resolvePaint: paint.resolve,
-                effectiveArrows,
-                effectivePathGenerators,
-                lowerTex: options.lowerTex,
-                ribbonWidthProfiles: effectiveRibbonWidthProfiles,
-              });
+        const result = emitPathKindPrimitive(item.item, item.irPath, item.scopeChain);
         if (item.slot) {
           // 原位回填：按引用定位占位再 splice 替换为真 primitive（result 为 null 时替换成 0 个 = 删占位）
           const idx = item.slot.sink.indexOf(item.slot.placeholder);
@@ -716,34 +746,16 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         // 原位回填）保住与同层 node 的声明序；chain 非空时维持 hoist 到顶层 primitives，避免被 scope.transform 二次 apply。
         // `chain` 同时记录 path 所属 scope 累积 transform，让 step.to 内的 polar/at/offset 字面量
         // 按"当前 scope 局部度量 + 末端 apply chain"投影回全局
-        const pending: PendingDrawing =
-          child.type === 'path'
-            ? (() => {
-                const effectivePath = resolveEffectivePath(child, styleStack);
-                return {
-                  kind: 'path',
-                  item: {
-                    ...effectivePath,
-                    animations: filterAnimations(effectivePath.animations, 'element', onWarn, `${locatorPrefix}children[${i}].path`),
-                  },
-                  irPath: `${locatorPrefix}children[${i}].path`,
-                  scopeChain: chain,
-                  zIndex: child.zIndex,
-                };
-              })()
-            : (() => {
-                const effectiveRibbon = resolveEffectiveRibbon(child, styleStack);
-                return {
-                  kind: 'ribbon',
-                  item: {
-                    ...effectiveRibbon,
-                    animations: filterAnimations(effectiveRibbon.animations, 'element', onWarn, `${locatorPrefix}children[${i}].ribbon`),
-                  },
-                  irPath: `${locatorPrefix}children[${i}].ribbon`,
-                  scopeChain: chain,
-                  zIndex: child.zIndex,
-                };
-              })();
+        const effectivePath = resolveEffectivePath(child, styleStack);
+        const pending: PendingDrawing = {
+          item: {
+            ...effectivePath,
+            animations: filterAnimations(effectivePath.animations, 'element', onWarn, `${locatorPrefix}children[${i}].path`),
+          },
+          irPath: `${locatorPrefix}children[${i}].path`,
+          scopeChain: chain,
+          zIndex: child.zIndex,
+        };
         if (chain.length === 0) {
           const placeholder = makePathPlaceholder();
           sink.push(placeholder);

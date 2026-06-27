@@ -65,7 +65,6 @@ export const kernelSection: Array<Section> = [
           { id: 'overview', label: 'core.drawOverview' },
           { id: 'way', label: 'core.drawWay' },
           { id: 'path', label: 'core.path' },
-          { id: 'ribbon', label: 'core.ribbon' },
           { id: 'arrow', label: 'core.arrow' },
           { id: 'step', label: 'core.step' },
         ],
@@ -98,6 +97,18 @@ export const kernelSection: Array<Section> = [
           { id: 'animation', label: 'core.effectsAnimation' },
         ],
       },
+      {
+        id: 'extend',
+        label: 'core.refExtending',
+        children: [
+          { id: 'shape-registry', label: 'core.refShapeRegistry' },
+          { id: 'custom-arrow', label: 'core.refCustomArrow' },
+          { id: 'custom-pattern', label: 'core.refCustomPattern' },
+          { id: 'custom-path', label: 'core.refCustomPath' },
+          { id: 'path-generator', label: 'core.refPathGenerator' },
+          { id: 'custom-animation', label: 'core.refCustomAnimation' },
+        ],
+      },
     ],
   },
   {
@@ -128,17 +139,6 @@ export const kernelSection: Array<Section> = [
     id: 'reference',
     label: 'core.reference',
     pages: [
-      {
-        id: 'extending',
-        label: 'core.refExtending',
-        children: [
-          { id: 'shape-registry', label: 'core.refShapeRegistry' },
-          { id: 'custom-arrow', label: 'core.refCustomArrow' },
-          { id: 'custom-pattern', label: 'core.refCustomPattern' },
-          { id: 'path-generator', label: 'core.refPathGenerator' },
-          { id: 'custom-animation', label: 'core.refCustomAnimation' },
-        ],
-      },
       {
         id: 'composites',
         label: 'core.refComposites',
