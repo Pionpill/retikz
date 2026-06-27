@@ -11,7 +11,7 @@ tags: [设计, 起点]
 
 <ComponentPreview name="unit-circle" size="lg" />
 
-这是 [karl-circle 示例](/core/examples/karl-circle)的最终图。示例页把它拆成 7 步演进，从一个圆开始一步步搭出来。
+这是 [karl-circle 示例](/kernel/examples/karl-circle)的最终图。示例页把它拆成 7 步演进，从一个圆开始一步步搭出来。
 
 图里每一根线、每一个标签都是 retikz 原语（Node / Path / Step）拼出来的，不是手写的 SVG——所以你能直接拿 React 代码改它。
 
@@ -132,11 +132,11 @@ v0.1 把架构整个翻过来——核心是一份 IR（JSON 序列化的图描�
 
 两个具体例子说明这种「prompt 改图」的实际形态。
 
-任何 demo 卡片右上角的 **Ask AI** 都把当前图喂给站内 AI——把 [karl-circle 示例](/core/examples/karl-circle) 的 prompt 加一句「画齐六个三角函数：把 sec / csc / cot 也按几何定义画出来」，模型在原图基础上加一条切线（同时承担 sec / csc 两段）+ 一条顶部水平切线（cot），右侧信息框扩到 6 个公式：
+任何 demo 卡片右上角的 **Ask AI** 都把当前图喂给站内 AI——把 [karl-circle 示例](/kernel/examples/karl-circle) 的 prompt 加一句「画齐六个三角函数：把 sec / csc / cot 也按几何定义画出来」，模型在原图基础上加一条切线（同时承担 sec / csc 两段）+ 一条顶部水平切线（cot），右侧信息框扩到 6 个公式：
 
 <ComponentPreview name="unit-circle-six" hideCode size="xxl" />
 
-[AI 专家路线图示例](/core/examples/learning-path) 则是另一个综合例——按坐标 1:1 复刻 [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap) 的 intro.svg 封面，演示 RoadmapNode 抽象 + AtPosition 紧贴堆叠 + Draw way 的 line / curve / dashPattern / arrow / label 一套组合：
+[AI 专家路线图示例](/kernel/examples/learning-path) 则是另一个综合例——按坐标 1:1 复刻 [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap) 的 intro.svg 封面，演示 RoadmapNode 抽象 + AtPosition 紧贴堆叠 + Draw way 的 line / curve / dashPattern / arrow / label 一套组合：
 
 <ComponentPreview name="ai-roadmap" hideCode size="lg" />
 
@@ -159,7 +159,7 @@ v0.1 这一阶段证明了独立开发者配 AI 工具能跑通这套架构；�
 
 ## 引用
 
-- [karl-circle 示例](/core/examples/karl-circle)：v0.1 标志性例子的 7 步演进
+- [karl-circle 示例](/kernel/examples/karl-circle)：v0.1 标志性例子的 7 步演进
 - [LaTeX 学习笔记](https://github.com/Pionpill/Notebook/tree/Pionpill/Language/Academic/Latex)：大学整理的系统性 LaTeX 笔记
 - [TikZ 基础语法 PDF](https://github.com/Pionpill/Notebook/blob/Pionpill/Language/Academic/Latex/TikZ/Latex/TikZNotebook.pdf)：自译的 TikZ 中文手册
 - [pionpill.github.io/article](https://pionpill.github.io/article)：个人笔记，全程 LaTeX 写

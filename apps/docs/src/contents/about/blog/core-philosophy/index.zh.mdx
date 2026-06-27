@@ -41,7 +41,7 @@ IR 是这三件事的公约数。一旦它存在，JSX 就是 IR 的一种"输�
 }
 ```
 
-`version` 字段强制存在，破坏性改动时递增；schema 用 zod 单源定义（`packages/kernel/core/src/schemas/scene.ts`），TS 类型靠 `z.infer` 派生，JSON Schema 靠 `zod-to-json-schema` 导出喂给 LLM。每个字段必须带 `.describe(...)` 英文说明——这影响 LLM 生成质量，不是文档。
+`version` 字段强制存在，破坏性改动时递增；schema 用 zod 单源定义（`packages/kernel/kernel/src/schemas/scene.ts`），TS 类型靠 `z.infer` 派生，JSON Schema 靠 `zod-to-json-schema` 导出喂给 LLM。每个字段必须带 `.describe(...)` 英文说明——这影响 LLM 生成质量，不是文档。
 
 中间层是 **Node** 和 **Path**：
 
@@ -69,7 +69,7 @@ IR 是这三件事的公约数。一旦它存在，JSX 就是 IR 的一种"输�
 
 ## Scene 编译器：两 pass 在做什么
 
-`compileToScene(ir, options)` 是 core 包最重的资产（`packages/kernel/core/src/compile/compile.ts`），两 pass 设计：
+`compileToScene(ir, options)` 是 core 包最重的资产（`packages/kernel/kernel/src/compile/compile.ts`），两 pass 设计：
 
 - **Pass 1**：遍历所有 Node，解析相对定位（如 `{ direction: 'right', of: 'A', distance: 2 }`），登记到 `nodeIndex` 表里——节点 id 到已知坐标 + 锚点表的映射。
 - **Pass 2**：按 JSX 源码顺序发 primitive。Path 里的 Step 这时才解析 `to`——节点引用 `"A.east"` / `"A.45"` 都查 nodeIndex；相对 / 累积相对则跟踪游标位置。
@@ -152,6 +152,6 @@ retikz 的语法**采用** TikZ 子集，而不是另起一套 DSL。这条决�
 
 ## 引用
 
-- 站内：[karl-circle 示例](/core/examples/karl-circle)——retikz v0.1 标志性图，演示 Kernel 原语组合
-- 站内：[欧姆定律电路示例](/core/examples/ohms-law-circuit)——自定义形状、Scope 复制与折角连线，一步步搭出完整电路图
+- 站内：[karl-circle 示例](/kernel/examples/karl-circle)——retikz v0.1 标志性图，演示 Kernel 原语组合
+- 站内：[欧姆定律电路示例](/kernel/examples/ohms-law-circuit)——自定义形状、Scope 复制与折角连线，一步步搭出完整电路图
 - 站内：[retikz 的起点](/about/blog/origin)——项目灵感来源、路线图与版本节奏

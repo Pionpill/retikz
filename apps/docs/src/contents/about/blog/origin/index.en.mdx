@@ -11,7 +11,7 @@ Here's the signature example from retikz v0.1—a unit circle, axes, ticks, a sh
 
 <ComponentPreview name="unit-circle" size="lg" />
 
-This is the final figure from the [karl-circle example](/core/examples/karl-circle). The example page breaks it into 7 progressive steps, starting from a single circle and building up.
+This is the final figure from the [karl-circle example](/kernel/examples/karl-circle). The example page breaks it into 7 progressive steps, starting from a single circle and building up.
 
 Every line and every label in this figure is composed from retikz primitives (Node / Path / Step)—not hand-written SVG—so you can edit it directly with React code.
 
@@ -132,11 +132,11 @@ In-site Ask AI lets readers pipe any demo to an AI for remixing; llms.txt lets e
 
 Two concrete examples show what "prompt-driven remixing" looks like.
 
-The **Ask AI** button on any demo card sends the current figure to the in-site AI. Tweak the [karl-circle example](/core/examples/karl-circle)'s prompt with one extra line — "draw all six trig functions: add sec / csc / cot by their geometric definitions" — and the model adds a tangent line (carrying both sec and csc) plus a horizontal top tangent (cot), and expands the info card to six formulas:
+The **Ask AI** button on any demo card sends the current figure to the in-site AI. Tweak the [karl-circle example](/kernel/examples/karl-circle)'s prompt with one extra line — "draw all six trig functions: add sec / csc / cot by their geometric definitions" — and the model adds a tangent line (carrying both sec and csc) plus a horizontal top tangent (cot), and expands the info card to six formulas:
 
 <ComponentPreview name="unit-circle-six" hideCode size="xxl" />
 
-The [AI Expert Roadmap example](/core/examples/learning-path) is another comprehensive piece — a pixel-perfect retikz replica of [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap)'s intro.svg cover, exercising the RoadmapNode abstraction + AtPosition tight stacking + Draw way's line / curve / dashPattern / arrow / label combo:
+The [AI Expert Roadmap example](/kernel/examples/learning-path) is another comprehensive piece — a pixel-perfect retikz replica of [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap)'s intro.svg cover, exercising the RoadmapNode abstraction + AtPosition tight stacking + Draw way's line / curve / dashPattern / arrow / label combo:
 
 <ComponentPreview name="ai-roadmap" hideCode size="lg" />
 
@@ -159,7 +159,7 @@ The v0.1 stage proved that one developer plus AI tools can deliver this architec
 
 ## References
 
-- [karl-circle example](/core/examples/karl-circle): 7-step buildup of v0.1's signature example
+- [karl-circle example](/kernel/examples/karl-circle): 7-step buildup of v0.1's signature example
 - [LaTeX study notebook](https://github.com/Pionpill/Notebook/tree/Pionpill/Language/Academic/Latex): systematic LaTeX notes compiled in college
 - [TikZ syntax PDF](https://github.com/Pionpill/Notebook/blob/Pionpill/Language/Academic/Latex/TikZ/Latex/TikZNotebook.pdf): TikZ manual I translated for myself
 - [pionpill.github.io/article](https://pionpill.github.io/article): personal notes site, written entirely in LaTeX

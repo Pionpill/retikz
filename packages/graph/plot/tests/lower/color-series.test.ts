@@ -18,7 +18,7 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'path') out.push(node);
+      if (node.type === 'path') out.push(child as IRPath);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -31,7 +31,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'node') out.push(node);
+      if (node.type === 'node') out.push(child as IRNode);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -81,8 +81,8 @@ describe('color × series · B/C 收口（alpha.7 ADR-03）', () => {
   });
 
   // Happy path：area 同理隐式拆
-  it('single_area_categorical_color_implicitly_splits', () => {
-    const spec = specOf({ type: 'region', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
+  it('single_closed_path_categorical_color_implicitly_splits', () => {
+    const spec = specOf({ type: 'path', order: 't', closure: { kind: 'baseline' }, encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
     const paths = collectPaths(firstLayer(spec, { d: SERIES_DATA }));
     expect(paths).toHaveLength(2);
   });

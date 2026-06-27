@@ -153,6 +153,20 @@ describe('sector — 边界 AABB / 角度', () => {
     expect(halfHeight).toBeCloseTo(60, 1);
   });
 
+  it('sector_full_annulus_keeps_inner_arc：innerRadius>0 且 0→360 → 输出外弧与反向内弧', () => {
+    const compiled = compileToScene(
+      scene([wedgeNode({ innerRadius: 20, outerRadius: 60, startAngle: 0, endAngle: 360 })]),
+    );
+    const path = findByType(compiled.primitives, 'path');
+    expect(path).toBeDefined();
+    expect(path!.fillRule).toBe('evenodd');
+    const arcCmds = path!.commands.filter(c => c.kind === 'arc');
+    expect(arcCmds).toHaveLength(2);
+    expect(arcCmds[0]).toMatchObject({ radius: 60, startAngle: 0, endAngle: 360 });
+    expect(arcCmds[1]).toMatchObject({ radius: 20, counterClockwise: true });
+    expect(Math.abs(arcCmds[1].endAngle - arcCmds[1].startAngle)).toBeCloseTo(360, 6);
+  });
+
   it('sector_end_before_start：endAngle<startAngle → 按约定产合法环楔（emit 不抛、AABB 非退化）', () => {
     const compiled = compileToScene(
       scene([wedgeNode({ innerRadius: 20, outerRadius: 60, startAngle: 120, endAngle: 30 })]),

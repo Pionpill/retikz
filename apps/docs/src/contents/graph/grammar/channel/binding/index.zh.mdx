@@ -1,0 +1,66 @@
+---
+title: 通道绑定
+description: 通道绑定描述字段或常量如何进入 x、y、color、size、text 等通道；React 写法会把它们展开成 Plot IR 里的 encoding。
+---
+
+数据模型说明字段是什么，数据处理说明真实数据怎么接进来；通道绑定说明字段**用在哪里**。在 React 写法里没有单独的 `<Encoding>` 组件，通道通常直接写在 mark props 上。
+
+```tsx
+<PointMark x="gdp" y="life" color="region" size="population" />
+<PointMark x="gdp" y="life" text="abbr" />
+```
+
+这些 props 就是通道的展示形态：`x` 是位置通道，`color` 是颜色通道，`size` 是样式通道。用户写 props，Plot 在内部把它们装配成 JSON 安全的 channel binding。
+
+上面的写法会在内部形成 mark 的 `encoding`：`x`、`y` 走位置通道，`color`、`size` 走样式通道，`text` 走文本内容通道。
+
+## 字段到通道
+
+<ComponentPreview name="data-channel" sourceFiles={['data-channel.data.ts']} />
+
+同一行数据可以同时绑定到多个通道：`gdp` 决定横向位置，`life` 决定纵向位置，`region` 决定颜色，`population` 决定点半径，`abbr` 决定文字标注。通道读取的是数据准备阶段得到的 canonical 值（规范化值：`fieldMap`、`format`、`resolveField` 都已生效后写回逻辑字段名的标准值），然后 Plot 再按字段类型和显式 scale 配置派生比例尺。
+
+## 通道使用
+
+<ComponentPreview name="channel-usage" />
+
+Plot 的 GOG 层会各自消费自己理解的通道。上面的例子里，`PathMark` 使用 `x` / `y` / `order` / `series` / `color` / `strokeWidth` 生成两条折线；`PointMark` 使用同一批数据行里的 `x` / `y` / `color` / `size` / `shape` 生成散点。`Axis` 消费位置通道派生出的坐标尺度，`Legend` 消费颜色和尺寸通道派生出的 guide 信息。
+
+通道本身只描述“读哪个值”和“这个值属于哪个语义入口”。不同 GOG 层不会直接抢同一份渲染结果，而是从同一份绑定中取出自己需要的部分。
+
+## 字段与常量
+
+React DSL 里字符串通常表示字段名：
+
+```tsx
+<PointMark x="gdp" y="life" color="region" />
+```
+
+少数通道也接受常量。最典型的是 `ReferenceMark`：
+
+```tsx
+<ReferenceMark y={80} color="crimson" />
+```
+
+在 IR 里，字段会变成 `{ field: 'gdp' }`，常量会变成 `{ value: 80 }`。一个通道只能二选一：要么来自字段，要么来自常量。
+
+字段名解析遵循和 model 相同的规则：先查整段字段名是不是行上的直接 key，再按 `.` 下钻。因为 canonical 行会把规范化值写回逻辑字段名，所以 mark 只需要引用逻辑字段，不需要关心真实数据字段名或存储格式。
+
+## 技术原理
+
+React 写法里的 mark props 会在构建 Plot spec 时转成通道配置。字段通道进入 `encoding`，常量通道保留为固定值；lowering 时再从 canonical 行读取字段值。
+
+| 写法 | 内部含义 |
+| --- | --- |
+| `<PointMark x="gdp" />` | `x` 是字段通道，读取 canonical 行里的 `gdp` |
+| `<PointMark color="region" />` | `color` 是字段通道，会按字段类型派生颜色比例尺 |
+| `<ReferenceMark y={80} />` | `y` 是常量通道，不读取数据行 |
+| `<PathMark order="month" />` | `order` 不在 `encoding` 对象里，但仍按字段读取，用于 datum 排序 |
+
+通道只回答“读哪个值”；至于值怎么映射成绘图空间、位置通道怎么被坐标系解释，交给比例尺和坐标系。
+
+## 比例尺与坐标系
+
+通道只负责“取哪个值”。比例尺负责把值映射到绘图空间或视觉属性；坐标系负责解释位置通道的角色。例如同样的 `x="quarter"`、`y="value"`，在 `cartesian2D` 下是横向分类 + 纵向数值，在 `polar2D` 下会变成角向分类 + 径向数值。
+
+继续阅读[内置通道](/graph/grammar/channel/builtin)可以看到样式通道如何落到 core 元素属性；阅读[比例尺](/graph/grammar/scale)可以看到字段类型如何派生 scale；阅读[坐标系](/graph/grammar/coordinate)可以看到位置通道如何被不同坐标系重解释。

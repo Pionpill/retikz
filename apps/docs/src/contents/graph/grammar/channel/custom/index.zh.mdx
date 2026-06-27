@@ -1,0 +1,29 @@
+---
+title: 自定义通道
+description: 用 channelDefinitions 注册新的通道 definition，让自定义通道与内置通道共用同一套解析、registry 和交付路径。
+---
+
+常用通道（`size`、`opacity`、`shape`、`strokeWidth`、`lineCap` 等）有命名属性。要扩展自己的通道，用 `defineScopeChannel`、`defineNodeChannel`、`definePathChannel` 或 `defineChannel` 声明运行时 definition，再通过 `<Plot channelDefinitions={...}>` 注册。
+
+在 React DSL 里，自定义通道绑定写在 mark 的 `channels` prop 上，例如 `<PointMark channels={{ intensity: 'score' }} />`。这会装配成 PlotSpec 里的 `encoding.channels.intensity = { field: 'score' }`；PlotSpec 仍只保存字段或常量绑定，definition 本身不会进入 IR。
+
+下面的 demo 定义了 `intensity`：它读取 `score` 字段，把数值映射到 `[0.3, 1]`，再交付给 core `IRNode.opacity`。definition 不判断 `mark.type`；某个 mark 是否消费 Node / Path / Scope 通道，由 mark definition 自己声明。
+
+<ComponentPreview name="custom-channel" size="md" />
+
+definition 是运行时能力。内置通道和自定义通道合并进同一个 registry，再按 definition kind 统一进入 position / mark / scope / node / path 的消费路径。
+
+channel definition 不应该判断 `mark.type` 来限制哪些 mark 可用。definition 只负责“有没有这个绑定、如何解析值、如何交付到 core 属性”；某个 mark 是否消费 node / path / scope 通道，由 mark definition 声明。这样自定义 mark 也能复用同一套 channel。
+
+自定义通道名不能覆盖内置通道名，绑定了未注册的通道会在 lowering 时报错。字符串值在 `channels` prop 里默认表示字段名；如果要绑定字符串常量，写 `{ value: 'literal' }` 或 `{ kind: 'constant', value: 'literal' }`。JSON 常量也可以进入自定义通道，例如 `channels={{ badge: { kind: 'constant', value: { preset: 'warn' } } }}` 可以把对象值交给自定义 resolver。
+
+## 契约边界
+
+| 规则 | 原因 |
+| --- | --- |
+| `channel` 不能撞内置通道名 | 内置和自定义共享 registry，避免同名覆盖 |
+| `resolve` 只构造逐行求值器 | 保持渲染值、图例 descriptor 与数据行同源 |
+| `deliver` 只写 core scope / node / path 既有属性 | 新渲染能力应先补 core，不在 plot 绕开底层能力 |
+| definition 不进 IR | 函数不可序列化；IR 只保存字段 / 常量绑定 |
+
+如果你要扩展的是字段解析或具名格式，回到[自定义数据](/graph/grammar/data/custom)。如果你要扩展值到颜色 / 半径的映射方式，优先看[自定义比例尺](/graph/grammar/scale/custom)。

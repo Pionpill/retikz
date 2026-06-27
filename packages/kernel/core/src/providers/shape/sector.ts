@@ -176,7 +176,9 @@ export const sector = defineShape({
     // 轮廓段（emit 收轴对齐 rect，rotate 由外层 group 施加）→ rounded-contour 命令 → path
     const { segments, fillets } = createSectorContour(rect, params);
     const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius, fillets), round);
-    yield contourToPathPrimitive(commands, style);
+    const path = contourToPathPrimitive(commands, style);
+    if (params.innerRadius > 0) path.fillRule = 'evenodd';
+    yield path;
   },
   // 半径 / cornerRadius 是长度，随几何均值因子缩；角度是方向，不缩。
   scaleParams: (params: SectorParams, sx: number, sy: number): SectorParams => {

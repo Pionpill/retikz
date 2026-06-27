@@ -1,0 +1,23 @@
+/** Twenty scatter nodes; each row also declares one data-driven relation to another node. */
+export const scatterRelations: Array<Record<string, string | number>> = [
+  { id: 'N01', x: 8, y: 42, group: 'A', target: 'N06', label: '01', relation: 'handoff' },
+  { id: 'N02', x: 15, y: 74, group: 'B', target: 'N07', label: '02' },
+  { id: 'N03', x: 19, y: 22, group: 'A', target: 'N09', label: '03' },
+  { id: 'N04', x: 28, y: 58, group: 'C', target: 'N10', label: '04' },
+  { id: 'N05', x: 32, y: 86, group: 'B', target: 'N12', label: '05', relation: 'blocked' },
+  { id: 'N06', x: 40, y: 38, group: 'A', target: 'N14', label: '06' },
+  { id: 'N07', x: 45, y: 70, group: 'C', target: 'N03', label: '07' },
+  { id: 'N08', x: 49, y: 16, group: 'B', target: 'N15', label: '08' },
+  { id: 'N09', x: 55, y: 50, group: 'A', target: 'N16', label: '09', relation: 'review' },
+  { id: 'N10', x: 60, y: 78, group: 'C', target: 'N18', label: '10' },
+  { id: 'N11', x: 64, y: 27, group: 'B', target: 'N01', label: '11' },
+  { id: 'N12', x: 69, y: 61, group: 'A', target: 'N17', label: '12' },
+  { id: 'N13', x: 73, y: 91, group: 'C', target: 'N04', label: '13', relation: 'shares' },
+  { id: 'N14', x: 78, y: 35, group: 'A', target: 'N20', label: '14' },
+  { id: 'N15', x: 82, y: 12, group: 'B', target: 'N11', label: '15' },
+  { id: 'N16', x: 86, y: 52, group: 'C', target: 'N02', label: '16' },
+  { id: 'N17', x: 91, y: 72, group: 'A', target: 'N08', label: '17', relation: 'alerts' },
+  { id: 'N18', x: 94, y: 88, group: 'B', target: 'N13', label: '18' },
+  { id: 'N19', x: 97, y: 44, group: 'C', target: 'N05', label: '19' },
+  { id: 'N20', x: 99, y: 24, group: 'A', target: 'N19', label: '20' },
+];

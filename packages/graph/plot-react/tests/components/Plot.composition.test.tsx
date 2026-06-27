@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { PlotSpec } from '@retikz/plot';
-import { Axis, IntervalMark, PathMark, Plot, PointMark, RegionMark, Scale } from '../../src';
+import { Axis, IntervalMark, PathMark, Plot, PointMark, Scale } from '../../src';
 
 const rows = [
   { month: 0, revenue: 10 },
@@ -111,6 +111,30 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     expect(svg).toMatch(/<rect/);
   });
 
+  it('horizontal_barmark_renders_rect：<IntervalMark direction="horizontal"> 渲出矩形', () => {
+    const svg = renderToStaticMarkup(
+      <Plot data={rows} width={480} height={300}>
+        <IntervalMark x="revenue" y="month" direction="horizontal" />
+      </Plot>,
+    );
+    expect(svg).toMatch(/<rect/);
+  });
+
+  it('horizontal_grouped_bar_renders：横向 dodge 在 y band 内切子带', () => {
+    const sales = [
+      { month: 'Jan', product: 'A', revenue: 3 },
+      { month: 'Jan', product: 'B', revenue: 5 },
+      { month: 'Feb', product: 'A', revenue: 2 },
+      { month: 'Feb', product: 'B', revenue: 4 },
+    ];
+    const svg = renderToStaticMarkup(
+      <Plot data={sales} width={480} height={300}>
+        <IntervalMark x="revenue" y="month" direction="horizontal" group="product" />
+      </Plot>,
+    );
+    expect(svg).toMatch(/<rect/);
+  });
+
   it('stacked_bar_renders：分组数据堆叠柱端到端', () => {
     const sales = [
       { month: 'Jan', product: 'A', revenue: 3 },
@@ -204,13 +228,13 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     ];
     const svg = renderToStaticMarkup(
       <Plot data={spiral} coordinate="polar2D" width={360} height={360}>
-        <PathMark x="theta" y="r" order="theta" />
+        <PathMark x="theta" y="r" order="theta" closed={false} />
       </Plot>,
     );
     expect(svg).toContain('<path');
   });
 
-  it('polar_area_renders：填充雷达（<RegionMark closed>）渲染不崩', () => {
+  it('polar_area_renders：填充雷达（<PathMark closed>）渲染不崩', () => {
     const metrics = [
       { dim: 'a', value: 4 },
       { dim: 'b', value: 7 },
@@ -218,7 +242,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     ];
     const svg = renderToStaticMarkup(
       <Plot data={metrics} coordinate="polar2D" width={360} height={360}>
-        <RegionMark x="dim" y="value" closed />
+        <PathMark x="dim" y="value" closure={{ kind: 'cycle' }} />
       </Plot>,
     );
     expect(svg).toContain('<path');

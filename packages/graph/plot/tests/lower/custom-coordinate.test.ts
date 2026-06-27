@@ -402,9 +402,12 @@ const sineAxisSpec = (type = 'sineFramed'): PlotSpec =>
 // 轴层 = root 下含 path 子节点的 scope（point mark 层只有 node、被过滤掉）
 type StepLike = { kind?: string; to?: [number, number] };
 type PathLike = { type?: string; children?: Array<StepLike> };
-type LayerLike = { type?: string; children?: Array<{ type?: string }> };
 const axisLayersOf = (root: IRScope): Array<IRScope> =>
-  (root.children as ReadonlyArray<unknown> as Array<LayerLike>).filter(child => child.type === 'scope' && (child.children ?? []).some(grandchild => grandchild.type === 'path'));
+  (root.children as ReadonlyArray<unknown>).filter(
+    (child): child is IRScope =>
+      (child as { type?: string; children?: Array<{ type?: string }> }).type === 'scope' &&
+      ((child as { children?: Array<{ type?: string }> }).children ?? []).some(grandchild => grandchild.type === 'path'),
+  );
 const pathsOf = (layer: IRScope): Array<PathLike> => (layer.children as Array<PathLike>).filter(child => child.type === 'path');
 const moveCount = (path: PathLike): number => (path.children ?? []).filter(step => step.kind === 'move').length;
 /** 轴线 polyline（恰 1 个 move 的 path）的步数 */

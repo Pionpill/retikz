@@ -1,0 +1,74 @@
+---
+title: 阴影
+description: 图元级投影（shadow）——作用于 Node 形状 / Path 主路径，跨后端校准、可叠加；预设字符串或对象写法。
+---
+
+`shadow` 是图元级的视觉效果属性，`<Node>` 和 `<Path>` 都能直接写。它作用于**该图元本身**——Node 的 shape、Path 的主路径（含其端点箭头）。Node 的文字 / 标签 / 引脚是独立图元，不带投影。它是 renderer 无关的：SVG 与 Canvas 两端各自翻译成原生能力，并把视觉口径校准到接近。
+
+## 用法
+
+```tsx
+import { Node, Path, Step } from '@retikz/react';
+```
+
+```tsx
+<Node shape="rectangle" fill="white" shadow="md" />
+```
+
+`shadow` 给主几何加一层 drop shadow。两种写法是同一个字段的两种填法。
+
+## 预设档位
+
+最简写法是 Tailwind 风格的预设字符串：`'sm'` / `'md'` / `'lg'` / `'xl'` / `'2xl'` / `'none'`。档位越大，投影越远、越柔。`'none'` 表示显式无阴影（等价于不写）。
+
+<ComponentPreview name="shadow-presets" size="sm" />
+
+<span style={{ color: '#888' }}>同一张白卡分设五个预设档位。</span>
+
+## 对象写法
+
+需要精确控制时，用对象 `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }`：
+
+- 给了 `preset`，就以该档位为**默认基底**，任意同时出现的字段逐项覆盖——`{ preset: 'md', color: '#3b82f6' }` 就是「md 的位移和模糊 + 换个颜色」的快捷调色。
+- 不给 `preset`，则必须自定 `offsetX` + `offsetY`（完整显式）。
+
+优先级始终是：**显式字段 > preset > 默认**。颜色默认是半透明黑 `rgba(0,0,0,0.5)`；给了 `opacity` 会相乘到颜色的有效 alpha 上。
+
+<ComponentPreview name="shadow-object" size="sm" />
+
+<span style={{ color: '#888' }}>左：preset 调色（md 基底 + 蓝色）；右：Path 主路径的完整显式投影。</span>
+
+## 图元级，不是组级
+
+`shadow` 跟随图元本身。Node 的文字 / 标签 / 引脚是**独立图元**，不带投影——需要「整张卡片连文字一起浮起」时，本字段做不到（它是图元级、不是组级效果）。但 Path 的端点箭头属于主路径这一图元，会**随主路径一起投影**（与 SVG 元素级 filter / Canvas 同一绘制过程的原生语义一致）。
+
+<ComponentPreview name="shadow-primary-only" size="sm" />
+
+<span style={{ color: '#888' }}>shadow 落在矩形上；旁边的 text 与 label 是独立图元，不带投影。</span>
+
+<ComponentAlert title="blur 是可诊断近似" description="blur 是用户单位的模糊半径，SVG 与 Canvas 会按各自原生阴影 API 做内部校准，并随预览尺寸 / 变换保持接近；不追求逐像素一致。blur=0 为硬边。" />
+
+## API 参考
+
+`shadow` 是 `<Node>` 与 `<Path>` 共有的样式属性，写法一致。
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `shadow` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'`<br />`\| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | — | 主几何投影：预设字符串，或对象（preset 出默认 + 显式字段覆盖；无 preset 须给 offsetX + offsetY）。优先级：显式 > preset > 默认；color 默认 `rgba(0,0,0,0.5)`，`opacity` 相乘到 color alpha。图元级：Node 文字 / 标签 / 引脚（独立图元）不带；Path 端点箭头随主路径一起投影 |
+
+### shadow 对象字段
+
+| 字段 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `preset` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'` | — | Tailwind 风格档位，作为 offsetX / offsetY / blur / color 的默认基底；显式字段覆盖之 |
+| `offsetX` | `number` | `0`（preset 提供） | 水平位移（用户单位） |
+| `offsetY` | `number` | preset 提供 | 垂直位移（用户单位，正值向下） |
+| `blur` | `number`（≥0） | preset 提供 | 模糊半径（用户单位）；`0` = 硬边 |
+| `color` | `string` | `rgba(0,0,0,0.5)` | 阴影颜色，任意 CSS 颜色 |
+| `opacity` | `number`（0~1） | — | 阴影不透明度，相乘到 color 的有效 alpha 上 |
+
+## 相关
+
+- [混合](/kernel/components/effects/blend)：图元级混合模式 `blendMode`
+- [Node](/kernel/components/node/overview)：节点的完整属性
+- [Path](/kernel/components/draw/path)：路径的完整属性

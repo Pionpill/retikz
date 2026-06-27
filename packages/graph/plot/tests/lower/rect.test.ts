@@ -34,7 +34,7 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'node') out.push(node);
+      if (node.type === 'node') out.push(child as IRNode);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -52,6 +52,7 @@ const bandStub = (categories: Array<string>, range: [number, number]): PositionS
       const i = typeof value === 'string' ? index.get(value) : undefined;
       return i === undefined ? NaN : r0 + step * (i + 0.5);
     },
+    domain: () => categories,
     get bandwidth() {
       return Math.abs(step);
     },
@@ -67,6 +68,7 @@ const linearStub = (domain: [number, number], range: [number, number]): Position
   const [r0, r1] = range;
   return {
     coordinate: (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? r0 + ((value - d0) / (d1 - d0)) * (r1 - r0) : NaN),
+    domain: () => [d0, d1],
     get bandwidth() {
       return 0;
     },
@@ -103,6 +105,7 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
     const frame = createCartesianCoordinate(bandStub(['r0', 'r1'], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
     const mark = rectMark();
     const ctx = buildIntervalContext(mark, frame, [{ rk: 'r0', ck: 'c0' }]);
+    if (ctx === undefined) throw new Error('expected interval context');
     const cell = intervalCell(mark, { rk: 'r0', ck: 'c0' }, frame, ctx);
     expect(cell).not.toBeNull();
     const geometry = frame.projectCell(cell as Cell);

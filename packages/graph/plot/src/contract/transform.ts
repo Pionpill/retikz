@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { type ExternalRow, type TransformOperation } from '../schemas';
+import type { AnyRowSelectorDefinition, AnyStatReducerDefinition } from './statistics';
 
 /**
  * transform apply 上下文。
@@ -10,10 +11,14 @@ import { type ExternalRow, type TransformOperation } from '../schemas';
 export type TransformContext = {
   /** 读单行源序标记；未开启 provenance 或行未打标记时返回 undefined。 */
   readSourceIndex: (row: ExternalRow) => number | undefined;
-  /** 读组级源序标记；bin / aggregate 或自定义改行数 transform 输出行可能携带。 */
+  /** 读组级源序标记；bin / summarize 或自定义改行数 transform 输出行可能携带。 */
   readSourceIndices: (row: ExternalRow) => Array<number> | undefined;
   /** 给一个改行数输出行打组级源序标记；成员行无标记时原样返回。 */
   groupProvenance: (out: ExternalRow, members: Array<ExternalRow>) => ExternalRow;
+  /** 统计 reducer registry；缺省时使用内置 reducer。 */
+  statReducerRegistry?: ReadonlyMap<string, AnyStatReducerDefinition>;
+  /** row selector registry；缺省时使用内置 selector。 */
+  rowSelectorRegistry?: ReadonlyMap<string, AnyRowSelectorDefinition>;
 };
 
 /**
@@ -24,9 +29,9 @@ export type TransformDefinition<TTransformOperation extends TransformOperation =
   /** 完整 transform operation schema；必须含非空 z.literal('kind') 供 registry 提取注册键。 */
   schema: z.ZodType<TTransformOperation>;
   /** 该 transform 消费的源字段名；参与 data.model strict 校验。 */
-  inputFields?: (operation: TTransformOperation) => Array<string>;
+  inputFields?: (operation: TTransformOperation, context: TransformContext) => Array<string>;
   /** 该 transform 产出的派生字段名；从 data.model strict 校验的源字段集中排除。 */
-  outputFields?: (operation: TTransformOperation) => Array<string>;
+  outputFields?: (operation: TTransformOperation, context: TransformContext) => Array<string>;
   /** 执行 transform；必须纯且确定；改行数且代表源行集合时要用 context.groupProvenance 保留 provenance。 */
   apply: (rows: Array<ExternalRow>, operation: TTransformOperation, context: TransformContext) => Array<ExternalRow>;
 };
@@ -47,9 +52,9 @@ export type AnyTransformDefinition = Omit<TransformDefinition<TransformOperation
   /** 不同 definition 的 schema 泛型不同，registry 只关心能从中提取 kind 并执行 parse。 */
   schema: z.ZodType;
   /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation。 */
-  inputFields?: (operation: never) => Array<string>;
+  inputFields?: (operation: never, context: TransformContext) => Array<string>;
   /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation。 */
-  outputFields?: (operation: never) => Array<string>;
+  outputFields?: (operation: never, context: TransformContext) => Array<string>;
   /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation。 */
   apply: (rows: Array<ExternalRow>, operation: never, context: TransformContext) => Array<ExternalRow>;
 };

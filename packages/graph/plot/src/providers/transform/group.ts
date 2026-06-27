@@ -1,38 +1,54 @@
 import { scaleLinear as d3ScaleLinear } from 'd3-scale';
 import { isFiniteNumber } from '@retikz/math';
-import { type AggregateTransform, type BinTransform, type ExternalRow } from '../../schemas';
+import { type AnnotateSelector, type AnnotateTransform, type BinTransform, type ExternalRow, type RelateTransform, type SelectTransform, type SummarizeTransform } from '../../schemas';
+import { type TransformContext } from '../../contract';
+import { applyReducerOperation, applySelectorOperation } from '../statistics';
 import { resolveFieldPath } from '../data';
-import type { TransformContext } from '../../contract';
 
-/** bin 默认输出字段名，对齐 IntervalMark 的 x0Field / x1Field 消费方。 */
+/** bin 默认输出字段名，对齐 IntervalMark 的区间消费方。 */
 const DEFAULT_BIN_START_FIELD = 'binStart';
 const DEFAULT_BIN_END_FIELD = 'binEnd';
-const DEFAULT_BIN_VALUE_FIELD = 'binValue';
+const DEFAULT_BIN_COUNT_FIELD = 'binCount';
 
 /** bin 默认目标箱数。 */
 const DEFAULT_BIN_COUNT = 10;
 
-/** bin 的输出字段名，validate 剔除派生字段时复用。 */
-export const binOutputFields = (operation: BinTransform): { startField: string; endField: string; valueField: string } => ({
-  startField: operation.startField ?? DEFAULT_BIN_START_FIELD,
-  endField: operation.endField ?? DEFAULT_BIN_END_FIELD,
-  valueField: operation.valueField ?? DEFAULT_BIN_VALUE_FIELD,
-});
-
-/** aggregate 输出字段名：as 缺省时 count -> count，否则 reduce + 首字母大写 field。 */
-export const aggregateOutputField = (operation: AggregateTransform): string => {
-  if (operation.as !== undefined) return operation.as;
-  if (operation.reduce === 'count') return 'count';
-  const field = operation.field ?? '';
-  return `${operation.reduce}${field.charAt(0).toUpperCase()}${field.slice(1)}`;
+type GroupBucket = {
+  key: string;
+  rows: Array<ExternalRow>;
+  values: ExternalRow;
 };
 
-const reduceValues = (reduce: 'sum' | 'mean' | 'min' | 'max', values: Array<number>): number => {
-  if (values.length === 0) return 0;
-  if (reduce === 'sum') return values.reduce((a, b) => a + b, 0);
-  if (reduce === 'mean') return values.reduce((a, b) => a + b, 0) / values.length;
-  if (reduce === 'min') return Math.min(...values);
-  return Math.max(...values);
+/** bin 的边界输出字段名，validate 剔除派生字段时复用。 */
+export const binOutputFields = (operation: BinTransform): { startField: string; endField: string } => ({
+  startField: operation.startField ?? DEFAULT_BIN_START_FIELD,
+  endField: operation.endField ?? DEFAULT_BIN_END_FIELD,
+});
+
+export const binMetricOperations = (operation: BinTransform): NonNullable<BinTransform['metrics']> =>
+  operation.metrics ?? [{ op: 'count', as: DEFAULT_BIN_COUNT_FIELD }];
+
+const groupFieldsOf = (groupBy?: Array<string>): Array<string> => groupBy ?? [];
+
+const groupKeyOf = (row: ExternalRow, groupBy: ReadonlyArray<string>): string =>
+  JSON.stringify(groupBy.map(field => resolveFieldPath(row, field) ?? null));
+
+const groupRows = (rows: Array<ExternalRow>, groupBy?: Array<string>): Array<GroupBucket> => {
+  const fields = groupFieldsOf(groupBy);
+  if (fields.length === 0) return [{ key: '__all__', rows, values: {} }];
+  const groups = new Map<string, GroupBucket>();
+  for (const row of rows) {
+    const key = groupKeyOf(row, fields);
+    const found = groups.get(key);
+    if (found !== undefined) {
+      found.rows.push(row);
+      continue;
+    }
+    const values: ExternalRow = {};
+    for (const field of fields) values[field] = resolveFieldPath(row, field);
+    groups.set(key, { key, rows: [row], values });
+  }
+  return [...groups.values()];
 };
 
 /** 取一组行某字段的有限数值；规约只看有限值。 */
@@ -79,17 +95,42 @@ const binEdges = (operation: BinTransform, values: Array<number>): Array<number>
   return edges;
 };
 
+const applyReducerMetrics = (
+  rows: Array<ExternalRow>,
+  metrics: ReadonlyArray<NonNullable<BinTransform['metrics']>[number]>,
+  context: TransformContext,
+): ExternalRow => {
+  const out: ExternalRow = {};
+  for (const metric of metrics) Object.assign(out, applyReducerOperation(rows, metric, context));
+  return out;
+};
+
+const selectorValueFieldOf = (selector: AnnotateSelector['selector']): string | undefined => {
+  if (!('by' in selector)) return undefined;
+  const field = selector.by;
+  return typeof field === 'string' ? field : undefined;
+};
+
+const applySelectorAnnotations = (rows: Array<ExternalRow>, operation: AnnotateTransform, context: TransformContext): ExternalRow => {
+  const out: ExternalRow = {};
+  for (const annotation of operation.selectors ?? []) {
+    const selections = applySelectorOperation(rows, annotation.selector, context);
+    if (selections.length === 0) continue;
+    const selection = selections[0];
+    const field = selectorValueFieldOf(annotation.selector);
+    out[annotation.as] = field === undefined ? selection.rank : resolveFieldPath(selection.row, field);
+  }
+  return out;
+};
+
 /**
  * bin：连续 field 分箱，输出每箱一行，包含空箱。
- * @description 半开区间 [edge_i, edge_{i+1})，末箱包含上界；reduce=count 输出频数。
+ * @description 半开区间 [edge_i, edge_{i+1})，末箱包含上界；metrics 缺省输出 binCount。
  */
-export const applyBin = (rows: Array<ExternalRow>, operation: BinTransform, context: Pick<TransformContext, 'groupProvenance'>): Array<ExternalRow> => {
-  if (operation.reduce !== undefined && operation.reduce !== 'count' && operation.reduceField === undefined) {
-    throw new Error(`lowerPlots: bin transform reduce "${operation.reduce}" requires reduceField (the numeric field reduced per bin)`);
-  }
+export const applyBin = (rows: Array<ExternalRow>, operation: BinTransform, context: TransformContext): Array<ExternalRow> => {
   if (rows.length === 0) return [];
-  const { startField, endField, valueField } = binOutputFields(operation);
-  const reduce = operation.reduce ?? 'count';
+  const { startField, endField } = binOutputFields(operation);
+  const metrics = binMetricOperations(operation);
   const observed = finiteValuesOf(rows, operation.field);
   const edges = binEdges(operation, observed);
   const binCount = edges.length - 1;
@@ -111,39 +152,89 @@ export const applyBin = (rows: Array<ExternalRow>, operation: BinTransform, cont
   return buckets.map((members, i) => {
     const start = edges[i];
     const end = edges[i + 1];
-    const value = reduce === 'count' ? members.length : members.length === 0 ? 0 : reduceValues(reduce, finiteValuesOf(members, operation.reduceField as string));
-    const out: ExternalRow = { [startField]: start, [endField]: end, [valueField]: value, [operation.field]: (start + end) / 2 };
+    const out: ExternalRow = {
+      [startField]: start,
+      [endField]: end,
+      [operation.field]: (start + end) / 2,
+      ...applyReducerMetrics(members, metrics, context),
+    };
     return context.groupProvenance(out, members);
   });
 };
 
-/**
- * aggregate：按 groupBy 全键分组并规约，每组输出一行。
- * @description 输出行携带 groupBy 键原值与规约值；provenance 开启时打组级源序标记。
- */
-export const applyAggregate = (rows: Array<ExternalRow>, operation: AggregateTransform, context: Pick<TransformContext, 'groupProvenance'>): Array<ExternalRow> => {
-  if (operation.reduce !== 'count' && operation.field === undefined) {
-    throw new Error(`lowerPlots: aggregate transform reduce "${operation.reduce}" requires field (the numeric field reduced per group)`);
+/** summarize：按 groupBy 分组并执行多个 reducer，每组输出一行。 */
+export const applySummarize = (rows: Array<ExternalRow>, operation: SummarizeTransform, context: TransformContext): Array<ExternalRow> =>
+  groupRows(rows, operation.groupBy).map(group =>
+    context.groupProvenance(
+      {
+        ...group.values,
+        ...applyReducerMetrics(group.rows, operation.metrics, context),
+      },
+      group.rows,
+    ),
+  );
+
+/** select：按 groupBy 分组并输出 selector 选中的原始行。 */
+export const applySelect = (rows: Array<ExternalRow>, operation: SelectTransform, context: TransformContext): Array<ExternalRow> =>
+  groupRows(rows, operation.groupBy).flatMap(group =>
+    applySelectorOperation(group.rows, operation.selector, context).map(selection => ({
+      ...selection.row,
+      ...(operation.rankAs !== undefined && selection.rank !== undefined ? { [operation.rankAs]: selection.rank } : {}),
+    })),
+  );
+
+/** annotate：按 groupBy 分组，把 reducer 结果回填到组内每一行。 */
+export const applyAnnotate = (rows: Array<ExternalRow>, operation: AnnotateTransform, context: TransformContext): Array<ExternalRow> =>
+  groupRows(rows, operation.groupBy).flatMap(group => {
+    const metricFields = operation.metrics === undefined ? {} : applyReducerMetrics(group.rows, operation.metrics, context);
+    const selectorFields = operation.selectors === undefined ? {} : applySelectorAnnotations(group.rows, operation, context);
+    return group.rows.map(row => ({ ...row, ...metricFields, ...selectorFields }));
+  });
+
+const capitalize = (value: string): string => `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
+
+export const relationEndpointOutputField = (prefix: 'source' | 'target', suffix: string): string => `${prefix}${capitalize(suffix)}`;
+
+const endpointFieldsOf = (prefix: 'source' | 'target', projection: RelateTransform['source'], row: ExternalRow): ExternalRow => {
+  const out: ExternalRow = {};
+  for (const [suffix, sourceField] of Object.entries(projection.fields)) {
+    out[relationEndpointOutputField(prefix, suffix)] = resolveFieldPath(row, sourceField);
   }
-  const as = aggregateOutputField(operation);
-  const order: Array<string> = [];
-  const groups = new Map<string, Array<ExternalRow>>();
-  for (const row of rows) {
-    const keyValues = operation.groupBy.map(field => resolveFieldPath(row, field));
-    const key = JSON.stringify(keyValues.map(v => (v === undefined ? null : v)));
-    const bucket = groups.get(key);
-    if (bucket) bucket.push(row);
-    else {
-      order.push(key);
-      groups.set(key, [row]);
+  return out;
+};
+
+const pairMeasureFieldsOf = (operation: RelateTransform, source: ExternalRow, target: ExternalRow): ExternalRow => {
+  const out: ExternalRow = {};
+  for (const measure of operation.measures ?? []) {
+    const sourceValue = Number(resolveFieldPath(source, measure.field));
+    const targetValue = Number(resolveFieldPath(target, measure.field));
+    const delta = targetValue - sourceValue;
+    out[measure.as] = delta;
+    if (measure.labelAs !== undefined) {
+      const prefix = measure.labelPrefix !== undefined && delta >= 0 ? measure.labelPrefix : '';
+      out[measure.labelAs] = `${prefix}${delta}`;
     }
   }
-  return order.map(key => {
-    const members = groups.get(key) as Array<ExternalRow>;
-    const first = members[0];
-    const value = operation.reduce === 'count' ? members.length : reduceValues(operation.reduce, finiteValuesOf(members, operation.field as string));
-    const carried: ExternalRow = {};
-    for (const field of operation.groupBy) carried[field] = resolveFieldPath(first, field);
-    return context.groupProvenance({ ...carried, [as]: value }, members);
-  });
+  return out;
 };
+
+/** relate：按 groupBy 选择 source / target 行并输出 relation rows。 */
+export const applyRelate = (rows: Array<ExternalRow>, operation: RelateTransform, context: TransformContext): Array<ExternalRow> =>
+  groupRows(rows, operation.groupBy).flatMap(group => {
+    const sources = applySelectorOperation(group.rows, operation.source.selector, context);
+    const targets = applySelectorOperation(group.rows, operation.target.selector, context);
+    if (sources.length === 0 || targets.length === 0) return [];
+    const source = sources[0].row;
+    const target = targets[0].row;
+    return [
+      context.groupProvenance(
+        {
+          ...group.values,
+          ...endpointFieldsOf('source', operation.source, source),
+          ...endpointFieldsOf('target', operation.target, target),
+          ...pairMeasureFieldsOf(operation, source, target),
+        },
+        [source, target],
+      ),
+    ];
+  });

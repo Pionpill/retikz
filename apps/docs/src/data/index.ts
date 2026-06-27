@@ -1,5 +1,6 @@
 export * from './about';
-export * from './core';
+export * from './graph';
 export * from './interface';
+export * from './kernel';
 export * from './module';
 export * from './sections';
