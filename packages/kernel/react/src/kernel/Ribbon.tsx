@@ -16,6 +16,7 @@ export type RibbonProps = HydrationEventProps & {
   align?: IRRibbon['align'];
   samples?: IRRibbon['samples'];
   sampling?: IRRibbon['sampling'];
+  label?: IRRibbon['label'];
   fill?: IRRibbon['fill'];
   fillOpacity?: IRRibbon['fillOpacity'];
   stroke?: IRRibbon['stroke'];

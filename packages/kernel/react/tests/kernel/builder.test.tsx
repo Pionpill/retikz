@@ -296,6 +296,33 @@ after`;
     });
   });
 
+  it('<Ribbon label> forwards a path-like geometry label', () => {
+    const ir = buildIR(
+      <Ribbon
+        width={12}
+        label={{
+          text: '128',
+          position: 'midway',
+          sloped: true,
+          textColor: '#0f172a',
+        }}
+      >
+        <Step kind="move" to={[0, 0]} />
+        <Step to={[10, 0]} />
+      </Ribbon>,
+    );
+    expect(ir.children[0]).toMatchObject({
+      type: 'ribbon',
+      width: 12,
+      label: {
+        text: '128',
+        position: 'midway',
+        sloped: true,
+        textColor: '#0f172a',
+      },
+    });
+  });
+
   it('<Ribbon kind="boundary"> collects upper and lower boundary steps', () => {
     const ir = buildIR(
       <Ribbon kind="boundary" fill="#bfdbfe">

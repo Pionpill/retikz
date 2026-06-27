@@ -98,6 +98,32 @@ describe('step.label：line 段的 label 几何', () => {
     expect(visualBottom(inner!)).toBeCloseTo(0, 2);
   });
 
+  it('sloped=true → 外裹 group 旋转，同时保留 side 定位', () => {
+    const scene = compileToScene(linePathIR({ text: 'x', side: 'below', sloped: true }));
+    const grp = findGroupPrim(scene.primitives);
+    expect(grp).toBeDefined();
+    expect(grp!.transforms).toEqual([{ kind: 'rotate', degrees: 0, cx: 5, cy: 0 }]);
+    const inner = grp!.children.find((c): c is TextPrim => c.type === 'text');
+    expect(inner).toBeDefined();
+    expect(visualTop(inner!)).toBeGreaterThan(0);
+  });
+
+  it('sloped=true 未显式 side 时不使用默认 above 偏移', () => {
+    const scene = compileToScene(linePathIR({ text: 'x', sloped: true }));
+    const grp = findGroupPrim(scene.primitives);
+    expect(grp).toBeDefined();
+    expect(grp!.transforms).toEqual([{ kind: 'rotate', degrees: 0, cx: 5, cy: 0 }]);
+    const inner = grp!.children.find((c): c is TextPrim => c.type === 'text');
+    expect(inner).toBeDefined();
+    expect(visualMiddle(inner!)).toBeCloseTo(0, 2);
+  });
+
+  it('side distance 覆盖默认 above 偏移距离', () => {
+    const scene = compileToScene(linePathIR({ text: 'x', side: 'above', distance: 10 }));
+    const t = findTextPrims(scene.primitives)[0];
+    expect(visualBottom(t)).toBeCloseTo(-10, 2);
+  });
+
   it('sloped 在垂直段上 angle=90', () => {
     const ir: IR = {
       version: 1,

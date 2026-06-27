@@ -3,7 +3,7 @@ import { AnimationTrackSchema } from './animation';
 import { BlendMode, DropShadowSchema, ShadowPreset } from './effects';
 import { JsonObjectSchema } from './json';
 import { PaintSpecSchema } from './paint';
-import { StepSchema } from './path';
+import { GeometryLabelSchema, type IRGeometryLabel, StepSchema } from './path';
 import { PolarPositionSchema, PositionSchema, Vector2Schema } from './position';
 import type { PolarPosition } from '../geometry/polar';
 import type { Vector2 } from '../geometry/point';
@@ -259,7 +259,15 @@ const RibbonSharedSchema = z.object({
   sampling: RibbonSamplingSchema.optional().describe(
     'Explicit sampling strategy. Cannot be combined with samples.',
   ),
+  label: z
+    .union([GeometryLabelSchema, z.array(GeometryLabelSchema).min(1)])
+    .optional()
+    .describe(
+      'Flow label attached to the ribbon host; its inner contract is the same as Path step labels.',
+    ),
 });
+
+export const RibbonLabelSchema = GeometryLabelSchema;
 
 export const RibbonSchema = z
   .object({
@@ -380,4 +388,5 @@ export type IRRibbonArcCap = z.infer<typeof RibbonArcCapSchema>;
 export type IRRibbonCap = z.infer<typeof RibbonCapSchema>;
 export type IRRibbonEndpoint = z.infer<typeof RibbonEndpointSchema>;
 export type IRRibbonSampling = z.infer<typeof RibbonSamplingSchema>;
+export type IRRibbonLabel = IRGeometryLabel;
 export type IRRibbon = z.infer<typeof RibbonSchema>;

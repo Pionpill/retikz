@@ -76,6 +76,13 @@ import { Ribbon, Step } from '@retikz/react';
 
 <ComponentPreview name="ribbon-width-stops" size="xs" />
 
+### 流带标签
+
+`label` 使用和 Path step label 相同的定位契约：`position` 可以是 `near-start` / `midway` / `near-end` 等关键字，也可以是 `0..1` 的数值；`side` 默认像 Path 一样带 4px 偏移，Ribbon 会把这个距离量到流带边界外侧，`distance` 可以覆盖它。`placement="inside"` 不写 `side` 时把标签放在流带内部，`sloped: true` 会让文字沿中心线切线旋转。
+当前版本只支持 `centerline` ribbon 的标签，`boundary` ribbon 的上下边界没有唯一中心线，因此会在编译时报错。
+
+<ComponentPreview name="ribbon-label" size="sm" />
+
 ### 先直后曲
 
 中心线可以由多段 `<Step>` 组成；先用 `line` 保持一段平行方向，再接 `curve` 转向。
@@ -140,6 +147,7 @@ IR 不能保存函数；自定义变化规则通过 `width={{ kind: 'profile', n
 | `align` | `'center' \| 'left' \| 'right'` | `'center'` | 中心线相对流带的位置；`left` / `right` 让中心线成为一侧边界。 |
 | `samples` | `boolean \| number` | 自动 | 采样覆盖项；`true` 使用 64 个截面，数字使用指定截面数 `2..512`。不传时优先解析为结构化 path，遇到 `stops` / profile 等宽度规则会自动采样。 |
 | `sampling` | `{ kind: 'fixed', samples } \| { kind: 'adaptive', tolerance, maxSamples? }` | — | 显式采样策略；不能和 `samples` 同时使用。 |
+| `label` | `GeometryLabel \| Array<GeometryLabel>` | — | 附在中心线上的标签，字段与 Path step label 共用；支持关键字位置、`0..1` 数值位置、`placement="inside"`、`distance` 与 `sloped: true`。仅 `centerline` 模式可用。 |
 | `fill` | `string \| PaintSpec` | `currentColor` | Ribbon 面的填充，可用纯色、渐变、pattern、image。 |
 | `fillOpacity` | `number` | — | 只作用于填充的透明度。 |
 | `stroke` | `string \| PaintSpec` | — | 外轮廓描边颜色；省略时不描边。 |

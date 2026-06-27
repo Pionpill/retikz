@@ -18,6 +18,7 @@ import type { NameStack } from './name-stack';
 import type { TextMeasurer } from './text-metrics';
 import type { PaintResolver } from './paint';
 import { type EmitPathWarnHook, emitPathPrimitive } from './path';
+import { emitLabelPrimitive, tForLabelPosition } from './path/label';
 import {
   type SegmentSample,
   arcSegmentSample,
@@ -1199,6 +1200,9 @@ export const emitRibbonPrimitive = (
   const resolvePaint: PaintResolver =
     options.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
   if (ribbon.kind === 'boundary') {
+    if (ribbon.label !== undefined) {
+      throw new Error('Ribbon label first version only supports centerline ribbon labels.');
+    }
     if (ribbon.upper === undefined || ribbon.lower === undefined) {
       throw new Error('Boundary ribbon requires `upper` and `lower` steps.');
     }
@@ -1303,9 +1307,43 @@ export const emitRibbonPrimitive = (
           round,
         );
 
+  const labelPrimitives: Array<ScenePrimitive> = [];
+  const labelPoints: Array<IRPosition> = [];
+  const labels = ribbon.label === undefined ? [] : Array.isArray(ribbon.label) ? ribbon.label : [ribbon.label];
+  for (const label of labels) {
+    const t = tForLabelPosition(label.position);
+    const sample = sampleAtDistance(segments, totalLength, t * totalLength);
+    const offset = t * totalLength;
+    const normalizedOffset = totalLength === 0 ? 0 : offset / totalLength;
+    const section = ribbonCrossSection(
+      sample,
+      normalizedOffset,
+      widthAt,
+      endpointTangents,
+      ribbon.align ?? 'center',
+      round,
+    );
+    const result = emitLabelPrimitive(
+      label,
+      sample,
+      measureText,
+      round,
+      ribbon.opacity,
+      {
+        lowerTex: options.lowerTex,
+        gatingOn: options.lowerTex !== undefined,
+        warn: (code, message) =>
+          options.onWarn?.({ code, message, path: `${options.irPath ?? 'ribbon'}.label` }),
+      },
+      { boundaryOffset: section.width / 2 },
+    );
+    labelPrimitives.push(result.primitive);
+    labelPoints.push(...result.points);
+  }
+
   return {
-    primitives: [styledPrimitiveFromOutline(ribbon, outline, resolvePaint)],
-    points: outline.points,
+    primitives: [styledPrimitiveFromOutline(ribbon, outline, resolvePaint), ...labelPrimitives],
+    points: [...outline.points, ...labelPoints],
   };
 };
 

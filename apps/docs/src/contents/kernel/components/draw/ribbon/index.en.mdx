@@ -76,6 +76,13 @@ The same centerline and start/end widths are repeated while only `interpolation`
 
 <ComponentPreview name="ribbon-width-stops" size="xs" />
 
+### Flow Labels
+
+`label` uses the same placement contract as Path step labels: `position` can be a keyword such as `near-start`, `midway`, or `near-end`, or a numeric value in `0..1`; `side` uses the same 4px default offset as Path, measured outside the ribbon boundary, and `distance` can override it. `placement="inside"` with no `side` places the label inside the band, and `sloped: true` rotates the text along the centerline tangent.
+This version only supports labels on `centerline` ribbons. `boundary` ribbons do not have a unique centerline, so compile reports an error when they carry `label`.
+
+<ComponentPreview name="ribbon-label" size="sm" />
+
 ### Straight Then Curved
 
 The centerline can be built from multiple `<Step>` segments: keep one straight section with `line`, then turn with `curve`.
@@ -141,6 +148,7 @@ IR cannot store functions. Custom rules use `width={{ kind: 'profile', name, par
 | `align` | `'center' \| 'left' \| 'right'` | `'center'` | Where the centerline sits relative to the band; `left` / `right` makes it one boundary. |
 | `samples` | `boolean \| number` | automatic | Sampling override; `true` uses 64 cross-sections, a number uses that fixed count in `2..512`. Omitted means structured path lowering is tried first, while `stops` / profile width rules auto-sample. |
 | `sampling` | `{ kind: 'fixed', samples } \| { kind: 'adaptive', tolerance, maxSamples? }` | — | Explicit sampling strategy. Cannot be combined with `samples`. |
+| `label` | `GeometryLabel \| Array<GeometryLabel>` | — | Label attached to the centerline. It shares the Path step label fields and accepts keyword positions, numeric `0..1` positions, `placement="inside"`, `distance`, and `sloped: true`. Available only in `centerline` mode. |
 | `fill` | `string \| PaintSpec` | `currentColor` | Fill for the ribbon area: solid color, gradient, pattern, or image. |
 | `fillOpacity` | `number` | — | Opacity for fill only. |
 | `stroke` | `string \| PaintSpec` | — | Optional outline stroke paint; omitted means no outline. |

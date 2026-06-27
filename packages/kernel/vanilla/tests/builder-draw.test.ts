@@ -63,6 +63,25 @@ describe('@retikz/vanilla ribbon()', () => {
     expect(r.children).toEqual(parseWay(['a', 'b']));
   });
 
+  it('ribbon-label-forwards：ribbon(way, { label }) 透传 path-like geometry label', () => {
+    const r = ribbon(['a', 'b'], {
+      width: 8,
+      label: {
+        text: '128',
+        position: 'midway',
+        sloped: true,
+      },
+    });
+
+    expect(r.type).toBe('ribbon');
+    if (r.type !== 'ribbon') throw new Error('unreachable');
+    expect(r.label).toEqual({
+      text: '128',
+      position: 'midway',
+      sloped: true,
+    });
+  });
+
   it('ribbon-boundary-reuses-core：boundary upper/lower 复用 core parseWay', () => {
     const r = ribbon({
       kind: 'boundary',

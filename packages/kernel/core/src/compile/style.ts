@@ -2,13 +2,13 @@ import type {
   IRArrowDetail,
   IRArrowEndDetail,
   IRFont,
+  IRGeometryLabel,
   IRLabelDefault,
   IRNode,
   IRPath,
   IRRibbon,
   IRScope,
   IRStep,
-  IRStepLabel,
   StyleChannel,
 } from '../schemas';
 
@@ -211,12 +211,12 @@ const mergeFont = (a: IRFont | undefined, b: IRFont | undefined): IRFont | undef
  *   跟随的是宿主 path 主色（不是 stroke）；font 逐字段回退 labelDefault；opacity 与 path opacity 相乘在 emit 阶段。
  *   masterColor 是 host 轴（结构关系），不受 resetStyle('label') 影响——label 仍跟所属线，不成孤岛。
  */
-const resolveStepLabel = (
-  label: IRStepLabel,
+const resolveGeometryLabel = (
+  label: IRGeometryLabel,
   labelDefault: IRLabelDefault,
   masterColor: string | undefined,
-): IRStepLabel => {
-  const out: IRStepLabel = { ...label };
+): IRGeometryLabel => {
+  const out: IRGeometryLabel = { ...label };
   const textColor =
     label.textColor ?? labelDefault.textColor ?? labelDefault.color ?? masterColor;
   if (textColor !== undefined) out.textColor = textColor;
@@ -303,10 +303,22 @@ const resolveStepLabels = (
 ): Array<IRStep> =>
   children.map(step => {
     if ('label' in step && step.label !== undefined) {
-      return { ...step, label: resolveStepLabel(step.label, labelDefault, masterColor) };
+      return { ...step, label: resolveGeometryLabel(step.label, labelDefault, masterColor) };
     }
     return step;
   });
+
+const resolveGeometryLabelField = (
+  label: IRGeometryLabel | Array<IRGeometryLabel> | undefined,
+  labelDefault: IRLabelDefault,
+  masterColor: string | undefined,
+): IRGeometryLabel | Array<IRGeometryLabel> | undefined => {
+  if (label === undefined) return undefined;
+  if (Array.isArray(label)) {
+    return label.map(item => resolveGeometryLabel(item, labelDefault, masterColor));
+  }
+  return resolveGeometryLabel(label, labelDefault, masterColor);
+};
 
 /**
  * 解析 path 最终样式——fold frame 栈 + 元素显式 + arrow / step-label 跟宿主主色
@@ -350,12 +362,16 @@ export const resolveEffectiveRibbon = (
   stack: ReadonlyArray<StyleFrame>,
 ): IRRibbon => {
   let acc: Partial<IRRibbon> = {};
+  let masterColor: string | undefined;
   for (const frame of stack) {
     if (cuts(frame.resetStyle, 'path')) {
       acc = {};
+      masterColor = undefined;
     }
+    if (frame.cascade.color !== undefined) masterColor = frame.cascade.color;
     acc = { ...acc, ...pickDefinedKeys(cascadeToRibbon(frame.cascade)) };
     if (frame.pathDefault) {
+      if (frame.pathDefault.color !== undefined) masterColor = frame.pathDefault.color;
       acc = {
         ...acc,
         ...pickDefinedKeys(
@@ -374,6 +390,11 @@ export const resolveEffectiveRibbon = (
       };
     }
   }
+  if (ribbon.color !== undefined) masterColor = ribbon.color;
   acc = { ...acc, ...pickDefinedKeys(expandRibbonColor(ribbon)) };
-  return acc as IRRibbon;
+  const effective = acc as IRRibbon;
+  const labelDefault = resolveLabelDefault(stack);
+  const label = resolveGeometryLabelField(effective.label, labelDefault, masterColor);
+  if (label !== undefined) effective.label = label;
+  return effective;
 };

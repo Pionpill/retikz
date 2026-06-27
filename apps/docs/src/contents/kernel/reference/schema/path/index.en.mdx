@@ -63,11 +63,12 @@ A `path` is the outer container for a drawn line. Its `children` field is an ord
 
 <ZodSchema name="GeneratorStepSchema" />
 
-## StepLabel
+## GeometryLabel
 
-`StepLabelSchema` is shared by every drawn step except move and cycle. It describes edge-label text, position along the segment, and offset side.
+`GeometryLabelSchema` is the shared label contract for path-like hosts. `StepLabelSchema` and `RibbonLabelSchema` are aliases of this schema: steps use it for drawn segments, and centerline ribbons use it for flow labels.
+It describes label text, normalized position along the host segment or centerline, and tangent / normal-side placement.
 
-<ZodSchema name="StepLabelSchema" />
+<ZodSchema name="GeometryLabelSchema" />
 
 ## ControlPoint
 

@@ -102,6 +102,7 @@ export const RIBBON_FIELDS = [
   'align',
   'samples',
   'sampling',
+  'label',
   'fill',
   'fillOpacity',
   'stroke',
