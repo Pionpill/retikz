@@ -24,10 +24,10 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 | `precision` | `number` | `2` | 输出 Scene primitive / path d / layout 的小数位；内部几何计算保持双精度 |
 | `nodeDistance` | `number` | `1` | `AtPosition` 未写 `distance` 时使用的默认距离 |
 | `onWarn` | `(warning) => void` | dev: `console.warn`<br />production: silent | 收集可恢复的编译期 warning |
-| `shapes` | `Record<string, ShapeDefinition>` | `—` | 运行时注入自定义 node shape；同名覆盖内置发 `SHAPE_OVERRIDES_BUILTIN`。见 [自定义形状](/kernel/reference/extending/shape-registry) |
-| `arrows` | `Record<string, ArrowDefinition>` | `—` | 运行时注入自定义箭头；同名覆盖内置发 `ARROW_OVERRIDES_BUILTIN`。见 [自定义箭头](/kernel/reference/extending/custom-arrow) |
-| `patterns` | `Record<string, PatternDefinition>` | `—` | 运行时注入自定义填充图案 motif；同名覆盖内置发 `PATTERN_OVERRIDES_BUILTIN`。见 [自定义图案](/kernel/reference/extending/custom-pattern) |
-| `pathGenerators` | `Record<string, PathGeneratorDefinition>` | `—` | 运行时注入自定义曲线生成器；generator step 按 `name` 查表，未注册编译期 throw。见 [路径生成器](/kernel/reference/extending/path-generator) |
+| `shapes` | `Record<string, ShapeDefinition>` | `—` | 运行时注入自定义 node shape；同名覆盖内置发 `SHAPE_OVERRIDES_BUILTIN`。见 [自定义形状](/kernel/components/extend/shape-registry) |
+| `arrows` | `Record<string, ArrowDefinition>` | `—` | 运行时注入自定义箭头；同名覆盖内置发 `ARROW_OVERRIDES_BUILTIN`。见 [自定义箭头](/kernel/components/extend/custom-arrow) |
+| `patterns` | `Record<string, PatternDefinition>` | `—` | 运行时注入自定义填充图案 motif；同名覆盖内置发 `PATTERN_OVERRIDES_BUILTIN`。见 [自定义图案](/kernel/components/extend/custom-pattern) |
+| `pathGenerators` | `Record<string, PathGeneratorDefinition>` | `—` | 运行时注入自定义曲线生成器；generator step 按 `name` 查表，未注册编译期 throw。见 [路径生成器](/kernel/components/extend/path-generator) |
 | `composites` | `Array<CompositeDefinition>` | `—` | 运行时注入 Tier 2 composite 展开逻辑；编译第一步把 composite 节点展开成 Tier 1，未注册发 `COMPOSITE_NOT_REGISTERED` 并跳过该节点 |
 | `maxCompositeDepth` | `number` | `32` | composite 嵌套展开的最大深度（防环 / 防失控递归），超限或成环 throw |
 

@@ -1,4 +1,4 @@
-import { type IRChild, type IRCoordinate, type IRNodeTarget, type IRPath, type IRRibbon, type IRStep, type IRStepLabel, type IRTarget } from '@retikz/core';
+import { type IRChild, type IRCoordinate, type IRNodeTarget, type IRPath, type IRPathRibbonOptions, type IRStep, type IRStepLabel, type IRTarget } from '@retikz/core';
 import { type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkLoweringContext } from '../../../contract';
 import { resolveFieldPath } from '../../data';
 import { type ExternalRow, type MarkValueType, PlotMark, type PlotTargetRef, RelationGeometryKind, type RelationMark, type RelationPrimitiveStyle, type RelationRouteStep, type RelationRoutingSpec, type RelationStepLabel } from '../../../schemas';
@@ -389,21 +389,24 @@ export const lowerRelation = (
       const width = resolveMarkValue<number>(mark.ribbon?.width, row);
       if (width === undefined) continue;
       const endWidth = resolveMarkValue<number>(mark.ribbon?.endWidth, row);
-      const ribbonOptions = (mark.ribbon?.options ?? {}) as Partial<IRRibbon>;
+      const ribbonOptions = (mark.ribbon?.options ?? {}) as Partial<IRPathRibbonOptions>;
       const direction = horizontalRibbonEndpointDirection(source.target, target.target);
-      const ribbon: IRRibbon = {
-        type: 'ribbon',
-        ...ribbonOptions,
+      const ribbon: IRPath = {
+        type: 'path',
+        kind: 'ribbon',
         ...style,
-        ...(endWidth === undefined
-          ? {
-              width,
-              ...(direction !== undefined ? { start: { direction }, end: { direction } } : {}),
-            }
-          : {
-              start: { width, ...(direction !== undefined ? { direction } : {}) },
-              end: { width: endWidth, ...(direction !== undefined ? { direction } : {}) },
-            }),
+        ribbon: {
+          ...ribbonOptions,
+          ...(endWidth === undefined
+            ? {
+                width,
+                ...(direction !== undefined ? { start: { direction }, end: { direction } } : {}),
+              }
+            : {
+                start: { width, ...(direction !== undefined ? { direction } : {}) },
+                end: { width: endWidth, ...(direction !== undefined ? { direction } : {}) },
+              }),
+        },
         children: horizontalRibbonSteps(source.target, target.target),
       };
       children.push(...coordinates, ribbon);

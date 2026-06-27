@@ -2578,15 +2578,15 @@ export const changelog: Array<Release> = [
           {
             label: { zh: '形状注册', en: 'Shape registry' },
             content: {
-              zh: 'ShapeDefinition 四方法,内置 4 形状改注册项,可发第三方形状库 [自定义形状](/kernel/reference/extending/shape-registry)',
-              en: 'Four-method ShapeDefinition; the 4 built-ins become registry entries; third-party shape libs possible [shape registry](/kernel/reference/extending/shape-registry)',
+              zh: 'ShapeDefinition 四方法,内置 4 形状改注册项,可发第三方形状库 [自定义形状](/kernel/components/extend/shape-registry)',
+              en: 'Four-method ShapeDefinition; the 4 built-ins become registry entries; third-party shape libs possible [shape registry](/kernel/components/extend/shape-registry)',
             },
           },
           {
             label: { zh: '箭头 / 图案 / 生成器注册面', en: 'Arrow / pattern / generator registries' },
             content: {
-              zh: 'ArrowDefinition(自定义箭头,emit-in-compile,内置 7 降注册项)+ PatternDefinition(自定义图案 motif,复用 MarkerPrimitive)+ PathGeneratorDefinition(外部曲线包,JSON params 双 parse 护栏),与形状注册面同构 [自定义箭头](/kernel/reference/extending/custom-arrow)',
-              en: 'ArrowDefinition (custom arrows, emit-in-compile, the 7 built-ins demoted to entries) + PatternDefinition (custom pattern motifs, reusing MarkerPrimitive) + PathGeneratorDefinition (external curve packages, JSON params with a double-parse guard), isomorphic to the shape registry [custom arrows](/kernel/reference/extending/custom-arrow)',
+              zh: 'ArrowDefinition(自定义箭头,emit-in-compile,内置 7 降注册项)+ PatternDefinition(自定义图案 motif,复用 MarkerPrimitive)+ PathGeneratorDefinition(外部曲线包,JSON params 双 parse 护栏),与形状注册面同构 [自定义箭头](/kernel/components/extend/custom-arrow)',
+              en: 'ArrowDefinition (custom arrows, emit-in-compile, the 7 built-ins demoted to entries) + PatternDefinition (custom pattern motifs, reusing MarkerPrimitive) + PathGeneratorDefinition (external curve packages, JSON params with a double-parse guard), isomorphic to the shape registry [custom arrows](/kernel/components/extend/custom-arrow)',
             },
           },
           {
@@ -3168,8 +3168,8 @@ export const changelog: Array<Release> = [
           {
             label: { zh: '自定义形状参考页', en: 'Custom-shape reference page' },
             content: {
-              zh: '注入 / 覆盖 / 未知名行为 + hexagon live demo [自定义形状](/kernel/reference/extending/shape-registry)',
-              en: 'inject / override / unknown-name behavior + a hexagon live demo [shape registry](/kernel/reference/extending/shape-registry)',
+              zh: '注入 / 覆盖 / 未知名行为 + hexagon live demo [自定义形状](/kernel/components/extend/shape-registry)',
+              en: 'inject / override / unknown-name behavior + a hexagon live demo [shape registry](/kernel/components/extend/shape-registry)',
             },
           },
         ],
@@ -3219,8 +3219,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '注册面概念页 + Path 扩展', en: 'Registry concept pages + Path extension' },
                 content: {
-                  zh: '[自定义箭头](/kernel/reference/extending/custom-arrow)(注册 + ArrowDefinition 契约 + emit/MarkerPrimitive + 颜色继承 + Bracket demo)、[路径生成器](/kernel/reference/extending/path-generator)(契约 + 双 parse + targetParams + parabola/sin demo)、[自定义图案](/kernel/reference/extending/custom-pattern)(PatternDefinition + emit-in-compile tile + cross/size demo);[Path 页](/kernel/components/draw/path)补 out/in·自环 / rotate·scale / marks 三 demo 与 API 行',
-                  en: '[Custom Arrows](/kernel/reference/extending/custom-arrow) (registration + ArrowDefinition contract + emit/MarkerPrimitive + color inheritance + a Bracket demo), [Path Generators](/kernel/reference/extending/path-generator) (contract + double-parse + targetParams + parabola/sin demos), [Custom Patterns](/kernel/reference/extending/custom-pattern) (PatternDefinition + emit-in-compile tile + cross/size demos); the [Path page](/kernel/components/draw/path) gains out/in·self-loop / rotate·scale / marks demos plus API rows',
+                  zh: '[自定义箭头](/kernel/components/extend/custom-arrow)(注册 + ArrowDefinition 契约 + emit/MarkerPrimitive + 颜色继承 + Bracket demo)、[路径生成器](/kernel/components/extend/path-generator)(契约 + 双 parse + targetParams + parabola/sin demo)、[自定义图案](/kernel/components/extend/custom-pattern)(PatternDefinition + emit-in-compile tile + cross/size demo);[Path 页](/kernel/components/draw/path)补 out/in·自环 / rotate·scale / marks 三 demo 与 API 行',
+                  en: '[Custom Arrows](/kernel/components/extend/custom-arrow) (registration + ArrowDefinition contract + emit/MarkerPrimitive + color inheritance + a Bracket demo), [Path Generators](/kernel/components/extend/path-generator) (contract + double-parse + targetParams + parabola/sin demos), [Custom Patterns](/kernel/components/extend/custom-pattern) (PatternDefinition + emit-in-compile tile + cross/size demos); the [Path page](/kernel/components/draw/path) gains out/in·self-loop / rotate·scale / marks demos plus API rows',
                 },
               },
               {

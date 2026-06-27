@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   type IR,
+  type IRPathBase,
+  type IRPathRibbonOptions,
+  type IRStep,
   type PathPrim,
-  RibbonSchema,
+  PathSchema,
   type ScenePrimitive,
   compileToScene,
   defineRibbonWidthProfile,
@@ -34,24 +37,82 @@ const ribbonCenterAt = (
   return [(left[0] + right[0]) / 2, (left[1] + right[1]) / 2];
 };
 
-const ribbon = (
-  overrides: Partial<Extract<IR['children'][number], { type: 'ribbon' }>> = {},
-): Extract<IR['children'][number], { type: 'ribbon' }> => ({
-  type: 'ribbon',
-  width: 4,
-  samples: 2,
-  children: [
-    { type: 'step', kind: 'move', to: [0, 0] },
-    { type: 'step', kind: 'line', to: [10, 0] },
-  ],
-  ...overrides,
-});
+type RibbonInput = Partial<Omit<IRPathBase, 'kind' | 'ribbon' | 'type'>> &
+  IRPathRibbonOptions & {
+    kind?: IRPathRibbonOptions['mode'];
+    type?: 'path' | 'ribbon';
+    ribbon?: IRPathRibbonOptions;
+  };
+
+const defaultRibbonChildren: Array<IRStep> = [
+  { type: 'step', kind: 'move', to: [0, 0] },
+  { type: 'step', kind: 'line', to: [10, 0] },
+];
+
+const normalizeRibbonInput = (input: Record<string, unknown> = {}): IRPathBase => {
+  const raw = input as RibbonInput;
+  const {
+    type: inputType,
+    kind,
+    ribbon: nestedRibbon,
+    width,
+    start,
+    end,
+    interpolation,
+    align,
+    samples,
+    sampling,
+    upper,
+    lower,
+    children,
+    ...pathProps
+  } = raw;
+  void inputType;
+  const options: IRPathRibbonOptions = { ...(nestedRibbon ?? {}) };
+  const mode = kind === 'boundary' || kind === 'centerline' ? kind : options.mode;
+  if (mode !== undefined) options.mode = mode;
+  if (width !== undefined) options.width = width;
+  if (start !== undefined) options.start = start;
+  if (end !== undefined) options.end = end;
+  if (interpolation !== undefined) options.interpolation = interpolation;
+  if (align !== undefined) options.align = align;
+  if (samples !== undefined) options.samples = samples;
+  if (sampling !== undefined) options.sampling = sampling;
+  if (upper !== undefined) options.upper = upper;
+  if (lower !== undefined) options.lower = lower;
+
+  const path: IRPathBase = {
+    type: 'path',
+    kind: 'ribbon',
+    ...pathProps,
+    ribbon: options,
+  };
+  if (options.mode !== 'boundary') {
+    path.children = children ?? defaultRibbonChildren;
+  }
+  return path;
+};
+
+const RibbonSchema = {
+  parse: (value: unknown): IRPathBase =>
+    PathSchema.parse(typeof value === 'object' && value !== null ? normalizeRibbonInput(value as Record<string, unknown>) : value),
+  safeParse: (value: unknown) =>
+    PathSchema.safeParse(typeof value === 'object' && value !== null ? normalizeRibbonInput(value as Record<string, unknown>) : value),
+};
+
+const ribbon = (overrides: Record<string, unknown> = {}): IRPathBase =>
+  normalizeRibbonInput({
+    ...(overrides.kind === 'boundary' ? {} : { width: 4 }),
+    samples: 2,
+    children: defaultRibbonChildren,
+    ...overrides,
+  });
 
 const ribbonWithoutSamples = (
-  overrides: Partial<Extract<IR['children'][number], { type: 'ribbon' }>> = {},
-): Extract<IR['children'][number], { type: 'ribbon' }> => {
+  overrides: RibbonInput = {},
+): IRPathBase => {
   const next = ribbon(overrides);
-  delete next.samples;
+  if (next.ribbon !== undefined) delete next.ribbon.samples;
   return next;
 };
 
@@ -63,7 +124,7 @@ describe('compile ribbon', () => {
       RibbonSchema.parse(ribbon({ width: undefined, start: { width: -1 }, end: { width: 2 } })),
     ).toThrow();
     expect(() => RibbonSchema.parse(ribbon({ start: { direction: [0, 0] } }))).toThrow();
-    expect(RibbonSchema.parse(ribbon({ start: { direction: { angle: 90, radius: 1 } } })).start?.direction).toEqual({
+    expect(RibbonSchema.parse(ribbon({ start: { direction: { angle: 90, radius: 1 } } })).ribbon?.start?.direction).toEqual({
       angle: 90,
       radius: 1,
     });
@@ -74,8 +135,10 @@ describe('compile ribbon', () => {
         end: { cap: { type: 'arc', center: [10, 0], radius: 2 } },
       }),
     ).toMatchObject({
-      start: { cap: { type: 'arc', center: [0, 0], radius: 2, sweep: 'long' } },
-      end: { cap: { type: 'arc', center: [10, 0], radius: 2 } },
+      ribbon: {
+        start: { cap: { type: 'arc', center: [0, 0], radius: 2, sweep: 'long' } },
+        end: { cap: { type: 'arc', center: [10, 0], radius: 2 } },
+      },
     });
     expect(() =>
       RibbonSchema.parse({
@@ -454,7 +517,7 @@ describe('compile ribbon', () => {
   });
 
   it('normalizes angle, vector, and polar endpoint directions through the same path', () => {
-    type RibbonDirection = NonNullable<Extract<IR['children'][number], { type: 'ribbon' }>['start']>['direction'];
+    type RibbonDirection = NonNullable<IRPathRibbonOptions['start']>['direction'];
     const commandsFor = (startDirection: RibbonDirection, endDirection: RibbonDirection) =>
       pathPrim(
         compileToScene(
@@ -480,7 +543,7 @@ describe('compile ribbon', () => {
   });
 
   it('uses endpoint directions to reshape curved centerline tangents', () => {
-    const children: Extract<IR['children'][number], { type: 'ribbon' }>['children'] = [
+    const children: Array<IRStep> = [
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'curve', control: [30, -40], to: [80, 20] },
     ];
@@ -607,9 +670,8 @@ describe('compile ribbon', () => {
   });
 
   it('lowers explicit boundary ribbons from upper and lower open paths', () => {
-    const boundary = {
-      type: 'ribbon' as const,
-      kind: 'boundary' as const,
+    const boundary = ribbon({
+      kind: 'boundary',
       samples: 2,
       upper: [
         { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -620,7 +682,7 @@ describe('compile ribbon', () => {
         { type: 'step' as const, kind: 'line' as const, to: [10, 4] as [number, number] },
       ],
       fill: '#bfdbfe',
-    };
+    });
     expect(RibbonSchema.parse(boundary)).toEqual(boundary);
     expect(() => RibbonSchema.parse({ ...boundary, width: 4 })).toThrow(/Boundary/);
 

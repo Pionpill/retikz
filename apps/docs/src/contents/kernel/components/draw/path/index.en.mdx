@@ -3,7 +3,7 @@ title: Path
 description: Kernel path container — children are a sequence of `<Step>` (≥ 2) defining a polyline / curve / arc; `<Draw>` compiles down to this.
 ---
 
-`<Path>` is the low-level path container: children must be `<Step>` nodes (at least 2) defining a sequence of move / line / fold (right-angle) / cycle (close) / curve / cubic / bend (curves) / arc / circlePath / ellipsePath (circle / ellipse) / rectangle actions; plus an IR-level generator step ([path generators](/kernel/reference/extending/path-generator)). For everyday connections `<Draw>` is shorter; reach for `<Path>` when you need folds, closes, curves, custom stroke, or different step kinds.
+`<Path>` is the low-level path container: children must be `<Step>` nodes (at least 2) defining a sequence of move / line / fold (right-angle) / cycle (close) / curve / cubic / bend (curves) / arc / circlePath / ellipsePath (circle / ellipse) / rectangle actions; plus an IR-level generator step ([path generators](/kernel/components/extend/path-generator)). For everyday connections `<Draw>` is shorter; reach for `<Path>` when you need folds, closes, curves, custom stroke, or different step kinds.
 
 It is strongest in three cases: one path contains multiple subpaths (multiple `move`s), individual segments need different `kind` / label / control-point behavior, or you want the JSX structure to mirror IR `path.children` closely for debugging and generation.
 
@@ -41,7 +41,7 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`<Step>` supports twelve kinds — `move` / `line` for straight segments, `fold` for the right-angle fold, `cycle` to close back, `curve` / `cubic` for Bezier curves, `bend` as the arc shorthand (with out/in angles and self-loops), `smooth` for a smooth curve through a list of points, `arc` / `circlePath` / `ellipsePath` for arcs / full circles / full ellipses centered on the cursor, and `rectangle` for a diagonal rectangle. See [Step](/kernel/components/draw/step) for details. There is also an IR-level `generator` step (external curve generators, no JSX DSL, fed via IR — see [path generators](/kernel/reference/extending/path-generator)).
+`<Step>` supports twelve kinds — `move` / `line` for straight segments, `fold` for the right-angle fold, `cycle` to close back, `curve` / `cubic` for Bezier curves, `bend` as the arc shorthand (with out/in angles and self-loops), `smooth` for a smooth curve through a list of points, `arc` / `circlePath` / `ellipsePath` for arcs / full circles / full ellipses centered on the cursor, and `rectangle` for a diagonal rectangle. See [Step](/kernel/components/draw/step) for details. There is also an IR-level `generator` step (external curve generators, no JSX DSL, fed via IR — see [path generators](/kernel/components/extend/path-generator)).
 
 ## Examples
 
@@ -71,7 +71,7 @@ import { Path, Step } from '@retikz/react';
 
 `arrow` picks direction (`'->'` / `'<-'` / `'<->'` / `'none'`); `arrowDetail` is a single object covering every visual spec (shape / scale / length / width / color / fill / opacity / lineWidth) plus optional `start` / `end` sub-objects for per-end overrides. The full reference — eight built-in shapes, per-end merge semantics, color / sizing / opacity, and the complete API table — lives on the **[Arrow](/kernel/components/draw/arrow)** page.
 
-### Endpoint connection surface (boundary)
+### Endpoint connection surface
 
 When an endpoint references a node (the `{ id }` object form, or an id inside a way), you can add a `boundary` field to override the target node's [`boundary`](/kernel/components/node/overview) (connection surface) **for that endpoint only**. It takes the same forms as the node's `boundary`: `'shape'` (the visual shape itself) / `'circle'` (a true circle) / any registered shape name / `{ type, params }`.
 
@@ -160,7 +160,7 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 
 #### Mid-path marks
 
-`marks` places directional marks along the path: each `{ pos, mark }` has `pos ∈ [0, 1]` (out-of-range rejected by the schema), and `mark` is initially `{ kind: 'arrow', shape, ... }` (a registered arrow name + visual subset, see [Custom Arrows](/kernel/reference/extending/custom-arrow)), **oriented by the tangent at that point** (not a fixed direction). Lines, Béziers, and arcs are all tangent-oriented. Their size **scales with `strokeWidth`** (TikZ semantics, same as endpoint arrows): the thicker the line, the larger the mark.
+`marks` places directional marks along the path: each `{ pos, mark }` has `pos ∈ [0, 1]` (out-of-range rejected by the schema), and `mark` is initially `{ kind: 'arrow', shape, ... }` (a registered arrow name + visual subset, see [Custom Arrows](/kernel/components/extend/custom-arrow)), **oriented by the tangent at that point** (not a fixed direction). Lines, Béziers, and arcs are all tangent-oriented. Their size **scales with `strokeWidth`** (TikZ semantics, same as endpoint arrows): the thicker the line, the larger the mark.
 
 <ComponentPreview name="path-marks" size="xs" />
 
@@ -180,12 +180,70 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 
 </Comparison>
 
+### Ribbon path
+
+`<Path kind="ribbon">` uses the same Path host to draw a fillable relation band. The centerline is still described with `<Step>`, while width, caps, sampling, and boundary mode live under `ribbon={{ ... }}`. Host fields such as `fill`, `stroke`, `opacity`, `label`, and `zIndex` stay on the Path itself.
+
+```tsx
+<Path
+  kind="ribbon"
+  ribbon={{ start: { width: 32 }, end: { width: 12 } }}
+  fill="#60a5fa"
+>
+  <Step kind="move" to={[-120, 0]} />
+  <Step kind="cubic" control1={[-40, -48]} control2={[40, 48]} to={[120, 0]} />
+</Path>
+```
+
+#### Basic band
+
+Centerline mode offsets both sides of the open path by `width` and emits a closed Path primitive. `stroke` outlines the band boundary; it does not draw the centerline.
+
+<ComponentPreview name="ribbon-basic" size="xs" />
+
+#### Width and interpolation
+
+`width` can be fixed, split across start/end endpoints, or expressed as `kind: 'stops'` along the path. `interpolation` controls how width changes between those values.
+
+<ComponentPreview name="ribbon-interpolation" size="md" />
+
+<ComponentPreview name="ribbon-width-stops" size="xs" />
+
+#### Label placement
+
+Ribbon labels use the same GeometryLabel contract. `position` accepts keywords or a numeric `0..1` offset; `side` keeps the same default outside distance as Path labels; `placement="inside"` places the label inside the band, and `sloped: true` rotates along the centerline tangent.
+
+<ComponentPreview name="ribbon-label" size="sm" />
+
+#### Endpoints and caps
+
+`start` / `end` configure endpoint width, direction, and cap. `align` controls where the centerline sits inside the band width, and `samples` can switch complex curves to sampled construction.
+
+<ComponentPreview name="ribbon-direction" size="md" />
+
+<ComponentPreview name="ribbon-align-cap" size="md" />
+
+#### Precomputed boundaries
+
+When a layout algorithm has already computed both sides, use `ribbon.mode = 'boundary'` and provide `upper` / `lower` as two open step sequences. This mode does not need `children`, and it does not accept `width`.
+
+<ComponentPreview name="ribbon-boundary" size="sm" />
+
+#### Styling
+
+Ribbon is a closed area, so styling focuses on `fill`, outline `stroke`, opacity, shadows, and blend modes. `pathDefault` forwards the Path-shared drawable style fields to ribbon kind; arrows, dashes, line caps, and other stroke-only semantics belong to the default `stroke` kind.
+
+<ComponentPreview name="ribbon-style" size="md" />
+
 ## API Reference
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `id` | `string` | — | Optional stable id: lets other elements anchor to the path and serves as the attach point for [hydration](/kernel/reference/hydration) event binding (a path needs an `id` before you can bind `onClick` and friends) |
 | `meta` | `Record<string, JSON value>` | — | Provenance metadata, passed through verbatim onto the Scene primitives this path emits; ignored by renderers and never part of layout / style. Typically injected by a higher-level lowering (e.g. plot) to tag which datum / series / layer it came from, so an interaction layer can trace a hit primitive back to its source. Must be a JSON-serializable object |
+| `kind` | `string` | `'stroke'` | Path kind provider. Built-ins are `'stroke'` and `'ribbon'`; custom kinds are registered through the Path kind contract |
+| `kindOptions` | `Record<string, JSON value>` | — | JSON options passed to a custom Path kind provider. Built-in `stroke` / `ribbon` do not use it |
+| `ribbon` | `PathRibbonOptions` | — | Required when `kind="ribbon"`; holds width, caps, sampling, and boundary mode options |
 | `color` | `string` | — | Master color (TikZ `color=`); `stroke` / arrow / step label default to it unless individually set (follows the master color, not `stroke`) |
 | `stroke` | `string \| PaintSpec` | `currentColor` | Stroke paint: CSS color or PaintSpec (gradient / pattern / image); arrows that inherit stroke need an explicit solid arrow color |
 | `strokeWidth` | `number` | `1` | Stroke width |
@@ -207,8 +265,9 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 | `rotate` | `number` | — | Whole-path rotation in degrees (around the bounding-box center) |
 | `scale` | `number \| { x, y }` | — | Whole-path scale (number = uniform / `{ x, y }` = non-uniform, around the bounding-box center) |
 | `marks` | `Array<{ pos, mark }>` | — | Marks along the path: `pos∈[0,1]`, `mark.kind:'arrow'` + a registered arrow name, oriented by the tangent at that point |
+| `label` | `GeometryLabel \| Array<GeometryLabel>` | — | Host label for path kinds that expose a centerline, including built-in ribbon centerline mode |
 | `animations` | `Array<AnimationTrack>` | — | Timeline animation tracks, passed through onto the primitives this path emits; renderers play them or fall back to static. See [Animation](/kernel/components/effects/animation) |
-| `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `fold` (right-angle) / `cycle` (close) / `curve` / `cubic` (Bezier) / `bend` (arc shorthand, with out/in angles and self-loops) / `smooth` (smooth curve through points) / `arc` / `circlePath` / `ellipsePath` (circle / ellipse) / `rectangle` (diagonal rectangle); the IR also has `generator` (path generators, no JSX DSL) |
+| `children` | `Array<<Step>>` | — | Required for `stroke` and centerline `ribbon`; omitted for boundary `ribbon`. If the first isn't `move`, the compiler coerces it to `move` |
 
 ## Related
 

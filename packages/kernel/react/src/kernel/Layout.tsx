@@ -20,6 +20,7 @@ import {
   type IRViewBox,
   type LowerTex,
   type PathGeneratorDefinition,
+  type PathKindDefinition,
   type PatternDefinition,
   type RibbonWidthProfileDefinition,
   type ShapeDefinition,
@@ -225,6 +226,11 @@ export type LayoutProps = ScopeStyleProps & {
    *   未注册名编译期 throw（错误列出可用名）。`params` 经 generator 的 paramsSchema + JsonObjectSchema 双 parse 守 JSON 可序列化
    */
   pathGenerators?: Record<string, PathGeneratorDefinition>;
+  /**
+   * 运行时注入的第三方 / 自定义 Path kind provider（透传给 `compileToScene` 的 `CompileOptions.pathKinds`）
+   * @description IR 里只保存 `kind` / `kindOptions`；provider 定义在这里注入，并接管整条 Path 的编译。
+   */
+  pathKinds?: Record<string, PathKindDefinition>;
   /** Runtime ribbon width profiles passed through to `compileToScene`. */
   ribbonWidthProfiles?: Partial<Record<string, RibbonWidthProfileDefinition>>;
   /**
@@ -302,7 +308,7 @@ const useSvgRootBinding = (
  *   `@retikz/render/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, animate: animateProp, snapshotAt, animationRef, animations: rootAnimations, easings, animationProperties, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, ribbonWidthProfiles, composites, lowerTex, embeddables, handlers } = props;
+  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, animate: animateProp, snapshotAt, animationRef, animations: rootAnimations, easings, animationProperties, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, pathKinds, ribbonWidthProfiles, composites, lowerTex, embeddables, handlers } = props;
   const animate = animateProp !== false;
   const { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault } = props;
   // 渲染目标：显式 prop > 祖先 RendererModeProvider 注入的 context > 默认 svg（hook 必须无条件调用）
@@ -359,6 +365,7 @@ export const Layout: FC<LayoutProps> = props => {
         arrows,
         patterns,
         pathGenerators,
+        pathKinds,
         ribbonWidthProfiles,
         composites: aggregatedComposites,
         lowerTex,
@@ -371,6 +378,7 @@ export const Layout: FC<LayoutProps> = props => {
       arrows,
       patterns,
       pathGenerators,
+      pathKinds,
       ribbonWidthProfiles,
       aggregatedComposites,
       lowerTex,

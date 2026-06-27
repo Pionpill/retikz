@@ -1,6 +1,6 @@
 ﻿import { JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
 import { z } from 'zod';
-import { AnchorRefSchema, PathSchema, PositionSchema, StepLabelSchema } from '@retikz/core';
+import { AnchorRefSchema, PathBaseSchema, PositionSchema, StepLabelSchema } from '@retikz/core';
 import { ArrowDetailSchema, BlendMode, BoundarySchema, DropShadowSchema, FontSchema, PathScaleSchema, ShadowPreset, ShapeRefSchema } from '@retikz/core';
 import { EncodingSchema, MarkLabelSchema, PointEncodingSchema } from '../encoding';
 import { TransformSchema } from '../transform';
@@ -99,7 +99,7 @@ export const RelationStepLabelSchema = StepLabelSchema.extend({
   text: relationLabelTextSchema.describe('Constant core step label text, mixed text, or a data-field binding'),
 }).describe('Relation path step label; lowered to core StepLabelSchema after field bindings are resolved');
 
-export const RelationPathSpecificOptionsSchema = PathSchema.pick({
+export const RelationPathSpecificOptionsSchema = PathBaseSchema.pick({
   dashPattern: true,
   arrow: true,
   arrowDetail: true,

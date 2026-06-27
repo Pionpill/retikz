@@ -35,6 +35,56 @@ description: 笔画外壳、step 动作序列与 step 目标点
   children: 'step 动作序列；首项通常应是 `move`',
 }} />
 
+<span id="drawablestyle"></span>
+
+## 可绘制几何样式
+
+`DrawableStyleSchema` 是 Path kind 共享的几何样式字段。默认 `stroke` kind 会把 `color` 映射到描边，内置 `ribbon` kind 会把 `color` 映射到填充；`pathDefault` 也按这组字段给 path-like 图元分发默认样式。
+
+<ZodSchema name="DrawableStyleSchema" description="Path kind 共享的几何样式字段。" descriptions={{
+  color: '主色；Path 默认映射到 stroke，Ribbon 默认映射到 fill，标签和箭头也可跟随它',
+  fill: '填充 paint；Path 用于闭合区域，Ribbon 用于流带面',
+  fillOpacity: '填充不透明度 0..1',
+  stroke: '描边 paint；Path 用于主线，Ribbon 用于可选外轮廓',
+  strokeWidth: '描边宽度（用户单位）',
+  drawOpacity: '描边不透明度 0..1',
+  opacity: '主几何整体不透明度 0..1',
+  shadow: '主几何阴影预设或显式阴影对象',
+  blendMode: '主几何与下方内容的混合模式',
+}} />
+
+<span id="drawablemeta"></span>
+
+## 可绘制元素元数据
+
+`DrawableMetaSchema` 收拢 Path 共享的身份、provenance、动画和栈序字段。`id` / `meta` / `animations` 是实例元数据，不进入 `pathDefault`；`zIndex` 参与同层排序，也不作为默认样式继承。
+
+<ZodSchema name="DrawableMetaSchema" description="Path 共享的身份、来源、动画和栈序字段。" descriptions={{
+  id: '可选稳定 id；供引用和水合事件绑定使用',
+  meta: 'provenance 元数据；原样透传到 Scene 图元，必须是 JSON 对象',
+  animations: '声明式动画 track 数组；原样透传到 Scene 图元',
+  zIndex: '同层子节点的显式栈序；大者在上，同值保持声明顺序',
+}} />
+
+<span id="pathribbonoptions"></span>
+
+## PathRibbonOptions
+
+`PathRibbonOptionsSchema` 配置内置 `kind: 'ribbon'` path provider。中心线模式读取 Path 的 `children`；boundary 模式读取这个对象里的 `upper` / `lower` 两条 step 数组，不再使用 `children`。
+
+<ZodSchema name="PathRibbonOptionsSchema" description="Path 内置 ribbon kind 的专属参数。" descriptions={{
+  mode: 'Ribbon 构造模式：centerline 使用 Path children，boundary 使用 upper / lower 两条边界',
+  width: '中心线模式的带宽；可为固定数值、沿路径 stops 或运行时 profile 引用',
+  start: '起点宽度、方向和 cap 配置',
+  end: '终点宽度、方向和 cap 配置',
+  interpolation: '起末宽度之间的插值方式',
+  align: '中心线在带宽中的对齐位置：center / left / right',
+  samples: '是否启用采样，或指定采样点数',
+  sampling: '显式采样策略',
+  upper: 'boundary 模式的上边界开放 step 序列',
+  lower: 'boundary 模式的下边界开放 step 序列',
+}} />
+
 <span id="step"></span>
 
 ## 动作
@@ -196,16 +246,21 @@ description: 笔画外壳、step 动作序列与 step 目标点
   label: '边标注：附在生成段上的文字标签',
 }} />
 
+<span id="geometrylabel"></span>
 <span id="steplabel"></span>
 
-## 边标注
+## 几何标签
 
-`StepLabelSchema` 复用于除 move / cycle 之外的绘制 step；它描述边标注文字、段上位置与相对段方向的偏移方式。
+`GeometryLabelSchema` 是 path-like 宿主共用的几何标签契约。`StepLabelSchema` 是这个 schema 的别名；除 move / cycle 之外的绘制 step 与 `centerline` ribbon 标签都复用同一套字段。
+它描述标签文字、沿宿主中心线或段的归一化位置，以及相对切线 / 法线的偏移方式。
 
-<ZodSchema name="StepLabelSchema" description="边标注：附着在绘制 step 上的文本与定位规格。" descriptions={{
+<ZodSchema name="GeometryLabelSchema" description="几何标签：附着在 path step 或 centerline ribbon 上的文本与定位规格。" descriptions={{
   text: '标签文字内容（单行；多行需 \\n）',
   position: '沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway',
-  side: '相对段方向的偏移：above / below / left / right 沿法线偏移；sloped 沿切线旋转',
+  side: '标签相对锚点的方位：above / below / left / right；兼容旧写法 sloped（无方位偏移地沿切线旋转）',
+  sloped: '是否沿采样点切线旋转标签；为 true 时仍可用 side 控制方位',
+  placement: '标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Ribbon 等面状宿主在未指定 side 时放在内部',
+  distance: 'side 偏移距离，默认与 Path step label 一致',
   textColor: '标签文字色；缺省回退 scope labelDefault → 宿主 path 主色 color → currentColor（跟主色不跟 stroke）',
   opacity: '标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合）',
   font: '标签字体覆盖（family / size / weight / style 均可选）；逐字段回退 labelDefault → 渲染端默认',

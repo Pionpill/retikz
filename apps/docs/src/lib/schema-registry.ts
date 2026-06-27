@@ -24,7 +24,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
 
   // Path / Step / Target
   PathSchema:          { schema: IR.PathSchema,          label: 'Path',          url: '/kernel/reference/schema/path#path' },
+  DrawableStyleSchema: { schema: IR.DrawableStyleSchema, label: 'DrawableStyle', url: '/kernel/reference/schema/path#drawablestyle' },
+  DrawableMetaSchema:  { schema: IR.DrawableMetaSchema,  label: 'DrawableMeta',  url: '/kernel/reference/schema/path#drawablemeta' },
+  PathRibbonOptionsSchema: { schema: IR.PathRibbonOptionsSchema, label: 'PathRibbonOptions', url: '/kernel/reference/schema/path#pathribbonoptions' },
   StepSchema:          { schema: IR.StepSchema,          label: 'Step',          url: '/kernel/reference/schema/path#step' },
+  GeometryLabelSchema: { schema: IR.GeometryLabelSchema, label: 'GeometryLabel', url: '/kernel/reference/schema/path#geometrylabel' },
   StepLabelSchema:     { schema: IR.StepLabelSchema,     label: 'StepLabel',     url: '/kernel/reference/schema/path#steplabel' },
   ControlPointSchema:  { schema: IR.ControlPointSchema,  label: 'ControlPoint',  url: '/kernel/reference/schema/path#controlpoint' },
   TargetSchema:        { schema: IR.TargetSchema,        label: 'Target',        url: '/kernel/reference/schema/path#target' },

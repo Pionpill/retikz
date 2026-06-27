@@ -3,7 +3,7 @@ import { createElement, isValidElement, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { docPathSegments, useDocLocation } from '@/layout/doc-layout/doc-location';
-import type { IR } from '@retikz/core';
+import type { IR, PathKindDefinition } from '@retikz/core';
 import { Layout, Scope, convertReactNodeToIR } from '@retikz/react';
 
 import { ComponentRender } from './ComponentRender';
@@ -137,6 +137,7 @@ const LAYOUT_OWN_PROPS = new Set([
   'arrows',
   'patterns',
   'pathGenerators',
+  'pathKinds',
   'ribbonWidthProfiles',
   'animate',
   'animations',
@@ -145,7 +146,12 @@ const LAYOUT_OWN_PROPS = new Set([
 ]);
 
 /** buildPreviewIR 产物：派生的 IR + 根 `<Layout>` 的尺寸（供 IR 视图真渲染时对齐 demo 尺寸） */
-type PreviewIR = { ir: IR; width?: number | string; height?: number | string };
+type PreviewIR = {
+  ir: IR;
+  width?: number | string;
+  height?: number | string;
+  pathKinds?: Record<string, PathKindDefinition>;
+};
 
 const buildPreviewIR = (Component: FC): PreviewIR => {
   const rootElement = resolvePreviewRootElement(Component({}));
@@ -171,7 +177,8 @@ const buildPreviewIR = (Component: FC): PreviewIR => {
   if (rootAnimations !== undefined) ir = { ...ir, animations: rootAnimations };
   const width = isLayout ? (props.width as number | string | undefined) : undefined;
   const height = isLayout ? (props.height as number | string | undefined) : undefined;
-  return { ir, width, height };
+  const pathKinds = isLayout ? (props.pathKinds as Record<string, PathKindDefinition> | undefined) : undefined;
+  return { ir, width, height, pathKinds };
 };
 
 /** 节点（含子树）是否带 namespace（Tier 2 composite 标记）——composite 可嵌在 scope 下，故递归 */
@@ -383,7 +390,13 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
                 render:
                   previewIr !== null && !irHasComposite(previewIr.ir)
                     ? (mode: RendererMode) => (
-                        <Layout ir={previewIr.ir} renderer={mode} width={previewIr.width} height={previewIr.height} />
+                        <Layout
+                          ir={previewIr.ir}
+                          renderer={mode}
+                          width={previewIr.width}
+                          height={previewIr.height}
+                          pathKinds={previewIr.pathKinds}
+                        />
                       )
                     : undefined,
               },

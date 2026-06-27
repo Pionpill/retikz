@@ -54,7 +54,7 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 
 <Comparison target="tikz" title="Node 字段对照">
 
-`drawOpacity` 对应 TikZ `draw opacity`；`dashed` / `dotted` 对应 TikZ 的虚线 / 点线预设；`label` 的 `{ text, position }` 形态对应 `[label=above:foo]` / `[label=30:foo]`。
+`drawOpacity` 对应 TikZ `draw opacity`；`dashed` / `dotted` 对应 TikZ 的虚线 / 点线预设；`label` 的 `{ text, position }` 形态对应 `[label=above:foo]` / `[label=30:foo]`。`placement: 'inside'` 是 retikz 对节点内部标签的结构化扩展。
 
 </Comparison>
 
@@ -84,7 +84,8 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 
 <ZodSchema name="NodeLabelSchema" description="附着在节点上的额外文本标签。" descriptions={{
   text: '标签文字内容，按单行文本渲染',
-  position: '标签相对节点边界的位置：8 向枚举、center 或数字角度；默认 above；center 直接画在节点中心',
+  position: '标签相对节点边界的位置：8 向枚举、center、数字角度，或 `{ boundary, t }` 矩形边界比例点；默认 above；center 直接画在节点中心',
+  placement: '标签相对附着点的偏移方向：outside（默认）向外，inside 向节点内部偏移；inside 不支持 pin',
   distance: '节点边界到标签中心的间距（用户单位），默认 12',
   textColor: '标签文字颜色，省略时使用 currentColor',
   opacity: '标签自身不透明度 0..1；会与节点 opacity 相乘',
@@ -93,6 +94,8 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
   keepUpright: '为 true 时若旋转后文字会倒着读（偏离正立超 90°）则翻转 180°；默认 false（严格几何角度）',
   pin: '从节点边界到标签画一条引线（TikZ `pin`）：`true` = 默认细实线；对象 = 带样式覆盖的引线（`stroke` / `strokeWidth` / `dashPattern`）；省略 / `false` = 无引线。标签位置不受影响',
 }} />
+
+`position: { boundary, t }` 目前用于 box-like 节点边界：`boundary` 取 `'top'` / `'right'` / `'bottom'` / `'left'`，`t` 是该边上的 0..1 比例位置，缺省 `0.5`。
 
 <span id="textblock"></span>
 

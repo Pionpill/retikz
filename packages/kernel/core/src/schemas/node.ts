@@ -51,6 +51,39 @@ export const NodeLabelPosition = {
 
 export type NodeLabelPositionValue = ValueOf<typeof NodeLabelPosition>;
 
+export const NodeLabelPlacement = {
+  Outside: 'outside',
+  Inside: 'inside',
+} as const;
+
+export type NodeLabelPlacementValue = ValueOf<typeof NodeLabelPlacement>;
+
+export const NodeLabelBoundarySide = {
+  Top: 'top',
+  Right: 'right',
+  Bottom: 'bottom',
+  Left: 'left',
+} as const;
+
+export type NodeLabelBoundarySideValue = ValueOf<typeof NodeLabelBoundarySide>;
+
+export const NodeLabelBoundaryPositionSchema = z
+  .object({
+    boundary: z
+      .enum(NodeLabelBoundarySide)
+      .describe('Box-like node boundary side used as the label attachment line.'),
+    t: z
+      .number()
+      .min(0)
+      .max(1)
+      .optional()
+      .describe('Normalized position along the selected boundary. Defaults to 0.5.'),
+  })
+  .strict()
+  .describe('Label position on a box-like node boundary.');
+
+export type IRNodeLabelBoundaryPosition = z.infer<typeof NodeLabelBoundaryPositionSchema>;
+
 /**
  * 节点附属标签 label（TikZ `[label=above:foo]` 同义）
  * @description 可挂多个；label 不参与 layout。position 支持 8 方向枚举或数字角度（polar 约定：0°=+x，90°=+y 屏幕下方）；默认 position='above'，distance=12
@@ -63,10 +96,16 @@ export const NodeLabelSchema = z
         'Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ runs }` mixed text+math line. Rendered as a single line.',
       ),
     position: z
-      .union([z.enum(NodeLabelPosition), z.number()])
+      .union([z.enum(NodeLabelPosition), z.number(), NodeLabelBoundaryPositionSchema])
       .optional()
       .describe(
-        'Placement around the node border: 8-direction enum (above / right / above-left / ...), `center`, or numeric angle in degrees (`label=30:foo` for radial placement). Default `above`. `center` draws the label at the node center. Numeric uses the polar convention (0° = +x, 90° = +y, screen-down).',
+        'Placement around the node border: 8-direction enum (above / right / above-left / ...), `center`, numeric angle in degrees, or `{ boundary, t }` on a box-like boundary. Default `above`. `center` draws the label at the node center. Numeric uses the polar convention (0° = +x, 90° = +y, screen-down).',
+      ),
+    placement: z
+      .enum(NodeLabelPlacement)
+      .optional()
+      .describe(
+        'Whether the label is offset outside or inside the selected attachment point. Default `outside`.',
       ),
     distance: z
       .number()
@@ -113,6 +152,15 @@ export const NodeLabelSchema = z
       .describe(
         'Draw a leader line from the node border to the label (TikZ `pin`). `true` = default thin solid line; an object = leader with style overrides (`stroke` / `strokeWidth` / `dashPattern`); omitted / `false` = no leader. Label placement is unchanged either way.',
       ),
+  })
+  .superRefine((label, ctx) => {
+    if (label.placement === NodeLabelPlacement.Inside && label.pin) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['pin'],
+        message: 'Node label pin is only supported for outside placement.',
+      });
+    }
   })
   .describe(
     'Extra text attached around a node border. Multiple labels supported via array form on `Node.label`.',

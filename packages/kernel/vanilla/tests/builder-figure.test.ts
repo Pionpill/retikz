@@ -4,7 +4,6 @@ import { coordinate } from '../src/builder/coordinate';
 import { draw } from '../src/builder/draw';
 import { figure } from '../src/builder/figure';
 import { node } from '../src/builder/node';
-import { ribbon } from '../src/builder/ribbon';
 
 describe('@retikz/vanilla figure() — IR 装配', () => {
   it('figure-ir：hyperscript 把 children 装进 { version:1, type:scene }', () => {
@@ -31,13 +30,13 @@ describe('@retikz/vanilla figure() — IR 装配', () => {
     const hyper = figure({ width: 400, height: 300 }, [
       node('a', { position: [0, 0], text: 'A' }),
       draw(['a', 'b'], { arrow: '->' }),
-      ribbon(['a', 'b'], { width: 3 }),
+      draw(['a', 'b'], { kind: 'ribbon', ribbon: { width: 3 } }),
       coordinate('mid', { position: [60, 40] }),
     ]);
     const fluent = figure({ width: 400, height: 300 })
       .node('a', { position: [0, 0], text: 'A' })
       .draw(['a', 'b'], { arrow: '->' })
-      .ribbon(['a', 'b'], { width: 3 })
+      .draw(['a', 'b'], { kind: 'ribbon', ribbon: { width: 3 } })
       .coordinate('mid', { position: [60, 40] });
     expect(fluent.ir).toEqual(hyper.ir);
   });
@@ -93,7 +92,7 @@ describe('@retikz/vanilla 公开导出', () => {
     expect(typeof api.figure).toBe('function');
     expect(typeof api.node).toBe('function');
     expect(typeof api.draw).toBe('function');
-    expect(typeof api.ribbon).toBe('function');
+    expect(api).not.toHaveProperty('ribbon');
     expect(typeof api.coordinate).toBe('function');
     expect(typeof api.scope).toBe('function');
   });

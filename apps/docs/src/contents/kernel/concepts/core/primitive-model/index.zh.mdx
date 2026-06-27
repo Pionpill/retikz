@@ -70,7 +70,7 @@ shape 不是简单的 CSS border-radius。它是一套几何定义：给定内�
 
 文本容器形状更像按钮或 DOM 盒子：文字变长，节点会变大。参数驱动形状更像一个几何 glyph：半径、角度、尖角数量已经定义了大小，文本只是附着在它上面。
 
-用 `defineShape` 扩展 shape 时，要补齐 shape 的几何回答——外接框怎么包住自己、射线打到哪、具名 anchor 在哪、如何 emit 成基础图元——让 Node 在可测量、可连接、可引用、可渲染上和内置 shape 一样。实现细节见 [自定义形状](/kernel/reference/extending/shape-registry)。
+用 `defineShape` 扩展 shape 时，要补齐 shape 的几何回答——外接框怎么包住自己、射线打到哪、具名 anchor 在哪、如何 emit 成基础图元——让 Node 在可测量、可连接、可引用、可渲染上和内置 shape 一样。实现细节见 [自定义形状](/kernel/components/extend/shape-registry)。
 
 ## 外层边界 Boundary
 
@@ -145,7 +145,7 @@ Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都�
 
 </Comparison>
 
-自定义 shape 的 anchor 行为由它的 `ShapeDefinition` 提供：推荐支持这 9 个标准方位 anchor，方便与内置形状互换；如果某个注册形状不支持某个 anchor，编译期会给出对应错误。见 [自定义形状](/kernel/reference/extending/shape-registry)。
+自定义 shape 的 anchor 行为由它的 `ShapeDefinition` 提供：推荐支持这 9 个标准方位 anchor，方便与内置形状互换；如果某个注册形状不支持某个 anchor，编译期会给出对应错误。见 [自定义形状](/kernel/components/extend/shape-registry)。
 
 边上比例点 `{ side, t }` 取 shape **真实边界**某条边上从约定起点起 `t ∈ [0, 1]` 比例处——方向 north/south 西→东、east/west 北→南：rectangle 沿直边、circle / ellipse 沿该侧可见周长弧段、diamond 沿可见斜边。`{ side: 'west', t: 1/3 }` = 左边三等分点，`{ side: 'north', t: 0.5 }` = 上边中点（等于命名 `'north'`）。
 
@@ -164,7 +164,7 @@ Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都�
     <span className="font-semibold">Node</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Node 组件的完整 props、形状、样式与定位用法</span>
   </LinkedCard>
-  <LinkedCard href="/kernel/reference/extending/shape-registry">
+  <LinkedCard href="/kernel/components/extend/shape-registry">
     <span className="font-semibold">自定义形状</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">补齐外接框 / 射线 / anchor / emit 这套几何回答，注册新 shape</span>
   </LinkedCard>

@@ -555,8 +555,8 @@ describe('[ADV] 与既有交叉 / round-trip', () => {
     expect(a.success).toBe(true);
     expect(b.success).toBe(true);
     if (a.success && b.success) {
-      const ga = a.data.children[1];
-      const gb = b.data.children[1];
+      const ga = a.data.children![1];
+      const gb = b.data.children![1];
       expect(ga.kind === 'generator' && ga.params).toEqual(gb.kind === 'generator' ? gb.params : undefined);
     }
   });

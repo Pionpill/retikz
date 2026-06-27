@@ -1,4 +1,4 @@
-import type { IRCoordinate, IRNode, IRPath, IRRibbon, IRScope } from '@retikz/core';
+import type { IRCoordinate, IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
@@ -25,12 +25,12 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
   return out;
 };
 
-const collectRibbons = (layer: IRScope): Array<IRRibbon> => {
-  const out: Array<IRRibbon> = [];
+const collectRibbons = (layer: IRScope): Array<IRPath> => {
+  const out: Array<IRPath> = [];
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
-      const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'ribbon') out.push(node as IRRibbon);
+      const node = child as { type?: string; kind?: string; children?: ReadonlyArray<unknown> };
+      if (node.type === 'path' && node.kind === 'ribbon') out.push(node as IRPath);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -419,7 +419,7 @@ describe('RelationMark and anchorId lowering', () => {
     ])).toThrow(/via/);
   });
 
-  it('lowers ribbon relation kind to core Ribbon with shared style and field-bound width', () => {
+  it('lowers ribbon relation kind to core ribbon path with shared style and field-bound width', () => {
     const root = expandOf(baseSpec([
       {
         type: 'relation',
@@ -442,18 +442,21 @@ describe('RelationMark and anchorId lowering', () => {
     });
     const [ribbon] = collectRibbons(markLayer(root, 0));
     expect(ribbon).toMatchObject({
-      type: 'ribbon',
+      type: 'path',
+      kind: 'ribbon',
       children: [
         { kind: 'move', to: [0, 100] },
         { kind: 'cubic', control1: [100, 100], control2: [100, 0], to: [200, 0] },
       ],
-      start: { width: 12, direction: 0 },
-      end: { width: 8, direction: 0 },
+      ribbon: {
+        start: { width: 12, direction: 0 },
+        end: { width: 8, direction: 0 },
+        interpolation: 'smooth',
+        align: 'center',
+      },
       fill: '#38bdf8',
       fillOpacity: 0.55,
       stroke: 'none',
-      interpolation: 'smooth',
-      align: 'center',
     });
   });
 });

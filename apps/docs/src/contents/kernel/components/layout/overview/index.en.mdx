@@ -1,4 +1,4 @@
-﻿---
+---
 title: Layout
 description: Top-level container — accepts a component tree or IR, compiles to Scene, and produces rendered output.
 ---
@@ -140,10 +140,10 @@ If a diagram looks clipped or has too much empty space, inspect **View Code → 
 | `idPrefix` | `string` | — | Overrides the `<defs>` resource id prefix; pass the same value to SSR output and client `<Layout>` to keep reference ids aligned |
 | `renderer` | `'svg' \| 'canvas'` | `'svg'` | Render backend; when omitted, falls back to the nearest `RendererModeProvider` context value (prop > context > svg) |
 | `nodeDistance` | `number` | `1` | Default distance for relative positioning (`position = { direction, of }`); a node's own `distance` wins |
-| `shapes` | `Record<string, ShapeDefinition>` | — | Runtime-injected custom shapes (forwarded to `CompileOptions.shapes`); overriding a built-in emits `SHAPE_OVERRIDES_BUILTIN`, an unregistered name throws at compile. See [Extending](/kernel/reference/extending/shape-registry) |
-| `arrows` | `Record<string, ArrowDefinition>` | — | Runtime-injected custom arrows (forwarded to `CompileOptions.arrows`); overriding a built-in emits `ARROW_OVERRIDES_BUILTIN`. See [Extending](/kernel/reference/extending/custom-arrow) |
-| `patterns` | `Record<string, PatternDefinition>` | — | Runtime-injected custom pattern motifs (forwarded to `CompileOptions.patterns`); overriding a built-in emits `PATTERN_OVERRIDES_BUILTIN`. See [Extending](/kernel/reference/extending/custom-pattern) |
-| `pathGenerators` | `Record<string, PathGeneratorDefinition>` | — | Runtime-injected custom path generators (forwarded to `CompileOptions.pathGenerators`); core ships no curves, an unregistered name throws at compile. See [Extending](/kernel/reference/extending/path-generator) |
+| `shapes` | `Record<string, ShapeDefinition>` | — | Runtime-injected custom shapes (forwarded to `CompileOptions.shapes`); overriding a built-in emits `SHAPE_OVERRIDES_BUILTIN`, an unregistered name throws at compile. See [Extending](/kernel/components/extend/shape-registry) |
+| `arrows` | `Record<string, ArrowDefinition>` | — | Runtime-injected custom arrows (forwarded to `CompileOptions.arrows`); overriding a built-in emits `ARROW_OVERRIDES_BUILTIN`. See [Extending](/kernel/components/extend/custom-arrow) |
+| `patterns` | `Record<string, PatternDefinition>` | — | Runtime-injected custom pattern motifs (forwarded to `CompileOptions.patterns`); overriding a built-in emits `PATTERN_OVERRIDES_BUILTIN`. See [Extending](/kernel/components/extend/custom-pattern) |
+| `pathGenerators` | `Record<string, PathGeneratorDefinition>` | — | Runtime-injected custom path generators (forwarded to `CompileOptions.pathGenerators`); core ships no curves, an unregistered name throws at compile. See [Extending](/kernel/components/extend/path-generator) |
 | `composites` | `Array<CompositeDefinition>` | — | Runtime-injected Tier 2 composite expansion logic (forwarded to `CompileOptions.composites`); expanded to Tier 1 in compile's first step, an unregistered namespace/type warns and is skipped |
 | `embeddables` | `Array<EmbeddableTier2Adapter>` | — | Optional escape hatch: explicitly inject embeddable Tier 2 adapters; the primary path is the component static marker, matched by displayName and overriding the marker. See [Composites](/kernel/concepts/design/composite#embeddable-tier-2-writing-tier-2-components-inside-layout) |
 | `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` | same as [`<Scope>`](/kernel/components/layout/scope) | — | Whole-figure cascade graphic state; when set, wraps children in an implicit root `<Scope>` |
@@ -152,8 +152,8 @@ If a diagram looks clipped or has too much empty space, inspect **View Code → 
 | `snapshotAt` | `number` | — | Static-snapshot time (ms): freeze one frame at that instant (no playback), overrides `animate`; SSR poster frames / thumbnails |
 | `animations` | `Array<AnimationTrack>` | — | Scene-root (camera) animation tracks (`viewBox` channel), paired with [`cameraTo()`](/kernel/components/effects/animation) |
 | `animationRef` | `Ref<AnimationControls \| null>` | — | Imperative animation handle out-port: receives `play` / `pause` / `seek` after mount (svg=WAAPI, canvas=rAF clock); `null` when there's no animation |
-| `easings` | `EasingRegistry` | — | Custom easing registry (name → cubic-bezier tuple / function). See [Custom Animation](/kernel/reference/extending/custom-animation) |
-| `animationProperties` | `AnimationPropertyRegistry` | — | Custom animation property-channel interpolators (e.g. `blur`); Canvas-only for now. See [Custom Animation](/kernel/reference/extending/custom-animation) |
+| `easings` | `EasingRegistry` | — | Custom easing registry (name → cubic-bezier tuple / function). See [Custom Animation](/kernel/components/extend/custom-animation) |
+| `animationProperties` | `AnimationPropertyRegistry` | — | Custom animation property-channel interpolators (e.g. `blur`); Canvas-only for now. See [Custom Animation](/kernel/components/extend/custom-animation) |
 | `handlers` | `HydrationHandlers` | — | Hydration handler registry keyed by id for `ir` mode (JSX mode uses component `on<Event>` props). See [Hydration](/kernel/packages/render/hydration) |
 
 ## Related

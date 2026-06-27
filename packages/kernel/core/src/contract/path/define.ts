@@ -1,4 +1,9 @@
-import type { PathGeneratorDefinition } from './types';
+import type { IRJsonObject } from '../../schemas';
+import type {
+  PathGeneratorDefinition,
+  PathKindDefinition,
+  PathKindDefinitionInput,
+} from './types';
 
 /**
  * 注册一个 path generator（注册时 best-effort 元校验）
@@ -40,3 +45,8 @@ export const definePathGenerator = (
   }
   return def;
 };
+
+export const definePathKind = <TOptions = IRJsonObject>(
+  definition: PathKindDefinitionInput<TOptions>,
+): PathKindDefinition<TOptions> & PathKindDefinition =>
+  definition as PathKindDefinition<TOptions> & PathKindDefinition;

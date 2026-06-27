@@ -24,10 +24,10 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a laid-out `Sce
 | `precision` | `number` | `2` | Decimal precision for output Scene primitives / path d / layout; internal geometry keeps double precision |
 | `nodeDistance` | `number` | `1` | Default distance for `AtPosition` when `distance` is omitted |
 | `onWarn` | `(warning) => void` | dev: `console.warn`<br />production: silent | Collects recoverable compile-time warnings |
-| `shapes` | `Record<string, ShapeDefinition>` | `—` | Inject custom node shapes at runtime; overriding a built-in emits `SHAPE_OVERRIDES_BUILTIN`. See [Custom Shapes](/kernel/reference/extending/shape-registry) |
-| `arrows` | `Record<string, ArrowDefinition>` | `—` | Inject custom arrows at runtime; overriding a built-in emits `ARROW_OVERRIDES_BUILTIN`. See [Custom Arrows](/kernel/reference/extending/custom-arrow) |
-| `patterns` | `Record<string, PatternDefinition>` | `—` | Inject custom fill pattern motifs at runtime; overriding a built-in emits `PATTERN_OVERRIDES_BUILTIN`. See [Custom Patterns](/kernel/reference/extending/custom-pattern) |
-| `pathGenerators` | `Record<string, PathGeneratorDefinition>` | `—` | Inject custom curve generators at runtime; a generator step looks up by `name`, unregistered names throw at compile time. See [Path Generators](/kernel/reference/extending/path-generator) |
+| `shapes` | `Record<string, ShapeDefinition>` | `—` | Inject custom node shapes at runtime; overriding a built-in emits `SHAPE_OVERRIDES_BUILTIN`. See [Custom Shapes](/kernel/components/extend/shape-registry) |
+| `arrows` | `Record<string, ArrowDefinition>` | `—` | Inject custom arrows at runtime; overriding a built-in emits `ARROW_OVERRIDES_BUILTIN`. See [Custom Arrows](/kernel/components/extend/custom-arrow) |
+| `patterns` | `Record<string, PatternDefinition>` | `—` | Inject custom fill pattern motifs at runtime; overriding a built-in emits `PATTERN_OVERRIDES_BUILTIN`. See [Custom Patterns](/kernel/components/extend/custom-pattern) |
+| `pathGenerators` | `Record<string, PathGeneratorDefinition>` | `—` | Inject custom curve generators at runtime; a generator step looks up by `name`, unregistered names throw at compile time. See [Path Generators](/kernel/components/extend/path-generator) |
 | `composites` | `Array<CompositeDefinition>` | `—` | Inject Tier 2 composite expansion logic at runtime; the first compile pass expands composite nodes into Tier 1. Unregistered ones emit `COMPOSITE_NOT_REGISTERED` and the node is skipped |
 | `maxCompositeDepth` | `number` | `32` | Max depth for nested composite expansion (cycle / runaway-recursion guard); exceeding it or a cycle throws |
 

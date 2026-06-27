@@ -13,6 +13,7 @@ const LABEL_FONT_SIZE = 14;
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
 const LABEL_SIDE_OFFSET = 4;
 const RAD_TO_DEG = 180 / Math.PI;
+type LabelSide = 'above' | 'below' | 'left' | 'right' | 'sloped' | 'center';
 
 /** 边标注公式上下文（注入的 lowerTex + gating + warn）；缺省 = 无 tex 能力 */
 export type LabelTexContext = {
@@ -20,6 +21,11 @@ export type LabelTexContext = {
   /** `$...$` 解析门控（= lowerTex 已注入） */
   gatingOn: boolean;
   warn: (code: CompileWarningCodeValue, message: string) => void;
+};
+
+export type LabelPlacementContext = {
+  /** Area-like host half extent from centerline to boundary at the sampled point. */
+  boundaryOffset?: number;
 };
 
 /** keyword → t 数值映射；含旧 3 keyword（midway/near-start/near-end）+ 新 4 keyword */
@@ -63,6 +69,7 @@ export const emitLabelPrimitive = (
   round: (n: number) => number,
   hostOpacity?: number,
   texCtx?: LabelTexContext,
+  placementCtx?: LabelPlacementContext,
 ): { primitive: ScenePrimitive; points: Array<IRPosition> } => {
   // label.font / textColor / opacity 已由 compile/style 解析（fold scope labelDefault + 宿主 path 主色）
   const fontSize = label.font?.size ?? LABEL_FONT_SIZE;
@@ -70,7 +77,14 @@ export const emitLabelPrimitive = (
   const fontWeight = label.font?.weight;
   const fontStyle = label.font?.style;
   const font: FontSpec = { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle };
-  const side = label.side ?? 'above';
+  const side: LabelSide = label.side ?? (label.sloped === true || label.placement === 'inside' ? 'center' : 'above');
+  const sloped = label.sloped === true || side === 'sloped';
+  const sideDistance = label.distance ?? LABEL_SIDE_OFFSET;
+  const boundaryOffset = placementCtx?.boundaryOffset ?? 0;
+  const sideOffset =
+    label.placement === 'inside'
+      ? Math.max(0, boundaryOffset - sideDistance)
+      : boundaryOffset + sideDistance;
   const labelOpacity = resolveLabelOpacity(label.opacity, hostOpacity);
 
   const gatingOn = texCtx?.gatingOn ?? false;
@@ -100,22 +114,25 @@ export const emitLabelPrimitive = (
     let baselineY: number;
     if (side === 'below') {
       originX = ax - laid.width / 2;
-      baselineY = ay + LABEL_SIDE_OFFSET + laid.ascent;
+      baselineY = ay + sideOffset + laid.ascent;
     } else if (side === 'left') {
-      originX = ax - LABEL_SIDE_OFFSET - laid.width;
+      originX = ax - sideOffset - laid.width;
       baselineY = ay + (laid.ascent - laid.descent) / 2;
     } else if (side === 'right') {
-      originX = ax + LABEL_SIDE_OFFSET;
+      originX = ax + sideOffset;
+      baselineY = ay + (laid.ascent - laid.descent) / 2;
+    } else if (side === 'center') {
+      originX = ax - laid.width / 2;
       baselineY = ay + (laid.ascent - laid.descent) / 2;
     } else {
       // above / sloped：横向居中、坐在线上方（above 偏移 offset，sloped 锚点不偏移）
       originX = ax - laid.width / 2;
-      baselineY = (side === 'sloped' ? ay : ay - LABEL_SIDE_OFFSET) - laid.descent;
+      baselineY = (side === 'sloped' ? ay : ay - sideOffset) - laid.descent;
     }
     const children = laid.emit(originX, baselineY, round);
     const group: GroupPrim = { type: 'group', children };
 
-    if (side === 'sloped') {
+    if (sloped) {
       const angleDeg = Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG;
       const rotated: GroupPrim = {
         type: 'group',
@@ -161,17 +178,19 @@ export const emitLabelPrimitive = (
   let baseline: 'top' | 'middle' | 'bottom' | 'alphabetic' = 'middle';
 
   if (side === 'above') {
-    y -= LABEL_SIDE_OFFSET;
+    y -= sideOffset;
     baseline = 'bottom';
   } else if (side === 'below') {
-    y += LABEL_SIDE_OFFSET;
+    y += sideOffset;
     baseline = 'top';
   } else if (side === 'left') {
-    x -= LABEL_SIDE_OFFSET;
+    x -= sideOffset;
     align = 'end';
   } else if (side === 'right') {
-    x += LABEL_SIDE_OFFSET;
+    x += sideOffset;
     align = 'start';
+  } else if (side === 'center') {
+    baseline = 'middle';
   } else {
     // sloped：锚点不偏移；baseline=bottom 视觉上"在线上方"
     baseline = 'bottom';
@@ -196,11 +215,18 @@ export const emitLabelPrimitive = (
   if (fontStyle !== undefined) textPrim.fontStyle = fontStyle;
   if (labelOpacity !== undefined) textPrim.opacity = labelOpacity;
 
-  if (side === 'sloped') {
+  if (sloped) {
     const angleDeg = Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG;
     const groupPrim: ScenePrimitive = {
       type: 'group',
-      transforms: [{ kind: 'rotate', degrees: round(angleDeg), cx: round(x), cy: round(y) }],
+      transforms: [
+        {
+          kind: 'rotate',
+          degrees: round(angleDeg),
+          cx: round(sample.point[0]),
+          cy: round(sample.point[1]),
+        },
+      ],
       children: [textPrim],
     };
     // sloped 旋转后用半径外接近似四角点

@@ -1,7 +1,8 @@
-import type { ZodType } from 'zod';
+import type { ZodType, z } from 'zod';
 import type { Position } from '../../geometry/point';
-import type { IRJsonObject } from '../../schemas/json';
+import type { IRJsonObject, IRPathBase, IRPosition } from '../../schemas';
 import type { PathCommand } from '../../primitive/path';
+import type { ScenePrimitive } from '../../primitive';
 
 /**
  * generate 拿到的运行时上下文
@@ -44,3 +45,23 @@ export type PathGeneratorDefinition = {
   /** 据 from / to / params / resolvedTargets 产低层 path 命令；可含 move 形成 sub-path */
   generate: (ctx: PathGeneratorContext) => Array<PathCommand>;
 };
+
+export type PathKindCompileResult = {
+  primitives: Array<ScenePrimitive>;
+  points: Array<IRPosition>;
+};
+
+export type PathKindCompileContext<TOptions = IRJsonObject> = {
+  path: IRPathBase;
+  options: TOptions;
+  emitStroke: (path?: IRPathBase) => PathKindCompileResult | null;
+  emitRibbon: (path?: IRPathBase) => PathKindCompileResult | null;
+};
+
+export type PathKindDefinition<TOptions = IRJsonObject> = {
+  kind: string;
+  optionsSchema?: z.ZodType<TOptions>;
+  compile: (context: PathKindCompileContext<TOptions>) => PathKindCompileResult | null;
+};
+
+export type PathKindDefinitionInput<TOptions = IRJsonObject> = PathKindDefinition<TOptions>;

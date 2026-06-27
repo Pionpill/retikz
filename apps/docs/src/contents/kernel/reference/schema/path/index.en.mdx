@@ -9,6 +9,24 @@ A `path` is the outer container for a drawn line. Its `children` field is an ord
 
 <ZodSchema name="PathSchema" />
 
+## DrawableStyle
+
+`DrawableStyleSchema` is the shared geometry-style field set for Path kinds. The default `stroke` kind maps `color` to stroke; the built-in `ribbon` kind maps `color` to fill. `pathDefault` also uses this subset when it styles path-like drawables.
+
+<ZodSchema name="DrawableStyleSchema" />
+
+## DrawableMeta
+
+`DrawableMetaSchema` groups shared identity, provenance, animation, and stacking fields for Path. `id` / `meta` / `animations` are instance metadata and do not enter `pathDefault`; `zIndex` participates in sibling ordering but is not inherited as a default style.
+
+<ZodSchema name="DrawableMetaSchema" />
+
+## PathRibbonOptions
+
+`PathRibbonOptionsSchema` configures the built-in `kind: 'ribbon'` path provider. Centerline mode reads normal Path children; boundary mode reads `upper` / `lower` step arrays from this object and does not use `children`.
+
+<ZodSchema name="PathRibbonOptionsSchema" />
+
 ## Step
 
 `StepSchema` is a discriminated union — `Path.children` is an array of these. The `kind` field picks the variant:
@@ -63,11 +81,12 @@ A `path` is the outer container for a drawn line. Its `children` field is an ord
 
 <ZodSchema name="GeneratorStepSchema" />
 
-## StepLabel
+## GeometryLabel
 
-`StepLabelSchema` is shared by every drawn step except move and cycle. It describes edge-label text, position along the segment, and offset side.
+`GeometryLabelSchema` is the shared label contract for path-like hosts. `StepLabelSchema` is an alias of this schema; drawn steps and centerline ribbon labels reuse the same fields.
+It describes label text, normalized position along the host segment or centerline, and tangent / normal-side placement.
 
-<ZodSchema name="StepLabelSchema" />
+<ZodSchema name="GeometryLabelSchema" />
 
 ## ControlPoint
 

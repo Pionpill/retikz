@@ -92,7 +92,6 @@ export type {
 export { figure } from './builder/figure';
 export { node } from './builder/node';
 export { draw } from './builder/draw';
-export { ribbon } from './builder/ribbon';
 export { coordinate } from './builder/coordinate';
 export { scope } from './builder/scope';
 export type { Figure } from './figure';
@@ -101,7 +100,6 @@ export type {
   Child,
   NodeConfig,
   DrawConfig,
-  RibbonConfig,
   CoordinateConfig,
   ScopeConfig,
   FigureConfig,

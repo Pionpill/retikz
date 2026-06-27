@@ -1,9 +1,9 @@
 ---
 title: 绘制
-description: 绘制家族——从日常连线的 Sugar 到逐段精确控制的 Kernel 路径，外加共用的箭头配置。
+description: 绘制家族：从日常连线的 Sugar 到逐段精确控制的 Kernel Path，并共享箭头配置。
 ---
 
-这一分组讲怎么「画线」：节点到节点、折线、曲线、弧形、闭合填充。日常连线首选 Sugar 的 `<Draw>`；需要逐段精确控制或最贴近 IR 时，落到 Kernel 的 `<Path>` + `<Step>`；箭头的细节规格单独成页，被 Draw 和 Path 共用。
+这一组页面讲怎么“画关系”：节点到节点、折线、曲线、弧、闭合填充，以及带状关系面。日常连线首选 Sugar `<Draw>`；需要逐段控制或最贴近 IR 时，落到 Kernel `<Path>` + `<Step>`；带宽关系也由 `<Path kind="ribbon">` 承载；箭头细节单独成页，被 Draw 和 Path 共享。
 
 <ComponentPreview name="draw-anatomy" size="md" hideCode />
 
@@ -11,12 +11,11 @@ description: 绘制家族——从日常连线的 Sugar 到逐段精确控制的
 
 | 组件 | 类型 | 职责 | 适合场景 |
 | --- | --- | --- | --- |
-| Draw | Sugar | way 数组串起目标点 / 折角 / 曲线 / 闭合 / 边标注 / 样式，编译期展开为 Path + Step | 日常连线、流程图边、带箭头连接（首选）|
-| Way | Sugar | Draw 的 way item 形态、DrawWay 常量、折角、闭合、相对坐标 | 查 way 数组里到底能写什么 |
-| Path | Kernel | 路径容器，由 Step 子节点序列定义折线 / 曲线 / 弧形 | 需要多次 move、逐段精确控制、最贴近 IR |
-| Ribbon | Kernel | 沿开放中心线扫出的可变宽度带状面，编译成闭合 Path | 桑基 / alluvial 流带、头尾宽度不同的连接面 |
-| Step | Kernel | 一个 step = 一个动作（move / line / curve / arc / cycle…）| 逐段控制每一段的路径动作语义 |
-| Arrow | 通用 | Path / Draw 共用的箭头：`arrow` 定方向、`arrowDetail` 管视觉规格 | 需要精细的箭头 shape / 尺寸 / 颜色 / 起末 |
+| Draw | Sugar | way 数组串起目标点、折角、曲线、闭合、边标注和样式，编译期展开为 Path + Step | 日常连线、流程图边、带箭头连接 |
+| Way | Sugar | Draw 的 way item 形态、DrawWay 常量、折角、闭合、相对坐标 | 查询 way 数组里能写什么 |
+| Path | Kernel | 路径容器，由 Step 子节点定义折线、曲线、弧形；`kind="ribbon"` 绘制可填充带状关系面 | 多次 move、逐段精确控制、贴近 IR、关系流带 |
+| Step | Kernel | 一个 step = 一个动作：move / line / curve / arc / cycle 等 | 逐段控制每一段路径动作语义 |
+| Arrow | 通用 | Path / Draw 共享的箭头：`arrow` 定方向，`arrowDetail` 管视觉规格 | 精细控制箭头 shape、尺寸、颜色、起末差异 |
 
 ## 章节内容
 
@@ -31,11 +30,7 @@ description: 绘制家族——从日常连线的 Sugar 到逐段精确控制的
   </LinkedCard>
   <LinkedCard href="/kernel/components/draw/path">
     <span className="font-semibold">Path</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Kernel 路径容器与完整描边字段</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/draw/ribbon">
-    <span className="font-semibold">Ribbon</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">开放中心线生成可填充的变宽带状面</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Kernel 路径容器、stroke 字段与 ribbon kind</span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/draw/step">
     <span className="font-semibold">Step</span>

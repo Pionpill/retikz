@@ -1,7 +1,6 @@
 export * from './Layout';
 export * from './Node';
 export * from './Path';
-export * from './Ribbon';
 export * from './Step';
 export * from './Text';
 export * from './Coordinate';
