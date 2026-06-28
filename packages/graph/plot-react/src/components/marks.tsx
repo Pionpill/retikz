@@ -14,6 +14,8 @@ import type {
   IRShapeRef,
   IntervalBounds,
   JsonValue,
+  MarkGeometryLabel,
+  MarkNodeLabel,
   MarkValueType,
   NodeBooleanStyle,
   NodeBoundaryStyle,
@@ -40,10 +42,10 @@ import type {
   PointStrokeStyle,
   PointStrokeWidthStyle,
   PointZIndexStyle,
-  RelationPathOptions,
-  RelationRouteStep,
-  RelationRoutingSpec,
-  RelationStepLabel,
+  RelationGeometryKindValue,
+  RelationPathGeometry,
+  RelationPrimitiveStyle,
+  RelationRibbonOptions,
   ShadowPresetValue,
   ShadowStyle,
   Transform,
@@ -130,7 +132,7 @@ export type DatumLabelProps = {
 };
 
 /** <PathMark> props：折线图层，按 order（缺省按数据顺序）连点成一维轨迹 */
-export type PathMarkProps = MarkTransformProps & DatumLabelProps & CorePathChannelProps & {
+export type PathMarkProps = MarkTransformProps & CorePathChannelProps & {
   /** 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值） */
   x: FieldName;
   /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
@@ -141,6 +143,8 @@ export type PathMarkProps = MarkTransformProps & DatumLabelProps & CorePathChann
   series?: FieldName;
   /** 颜色字段（categorical，自动 ordinal 色 scale）：无显式 series 时按此字段隐式拆多条线；缺省取 series。连续 / 时间字段报错 */
   color?: FieldName;
+  label?: MarkGeometryLabel | Array<MarkGeometryLabel>;
+  resolveLabel?: (row: ExternalRow) => string;
   strokeWidth?: MarkValueProp<number> | PointStrokeWidthStyle;
   opacity?: MarkValueProp<number> | PointOpacityStyle;
   lineCap?: FieldName | LineCapValue | MarkValueType<LineCapValue>;
@@ -157,6 +161,8 @@ export type PathMarkProps = MarkTransformProps & DatumLabelProps & CorePathChann
   /** 可选 mark 句柄（预留 scope/anchor） */
   id?: string;
   anchorId?: AnchorIdSpec;
+  /** Extension channel bindings forwarded to `encoding.channels`; string values are field names. */
+  channels?: Record<string, ExtensionChannelProp>;
 };
 
 /** <PointMark> props：散点 / 文本图层，每行一个 glyph（给 text → 无边框文本 Node） */
@@ -257,6 +263,8 @@ export type IntervalMarkProps = MarkTransformProps & DatumLabelProps & CoreNodeC
   opacity?: MarkValueProp<number> | PointOpacityStyle;
   /** Angular gap in degrees for polar sector / donut interval cells. */
   padAngle?: number;
+  /** Static radial visual offset for polar sector cells. */
+  pull?: MarkValueProp<number> | PointNonnegativeNumberStyle;
   /** 可选 mark 句柄（预留 scope/anchor） */
   id?: string;
   anchorId?: AnchorIdSpec;
@@ -264,17 +272,18 @@ export type IntervalMarkProps = MarkTransformProps & DatumLabelProps & CoreNodeC
 
 export type RelationMarkProps = MarkTransformProps & {
   id?: string;
+  kind?: RelationGeometryKindValue;
   source: PlotTargetRef;
   target: PlotTargetRef;
-  via?: Array<PlotTargetRef>;
-  route?: Array<RelationRouteStep>;
-  routing?: RelationRoutingSpec;
-  label?: RelationStepLabel;
-  path?: RelationPathOptions;
+  label?: MarkGeometryLabel | Array<MarkGeometryLabel>;
+  style?: RelationPrimitiveStyle;
+  path?: RelationPathGeometry;
+  ribbon?: RelationRibbonOptions;
   color?: FieldName;
   channels?: Record<string, ExtensionChannelProp>;
 };
 
+type ReferenceMarkLabel = MarkNodeLabel | Array<MarkNodeLabel> | MarkGeometryLabel | Array<MarkGeometryLabel>;
 
 /**
  * <ReferenceMark> props：参考标注图层（阈值线 / 容差带 / 参考区域）。
@@ -303,6 +312,7 @@ export type ReferenceMarkProps = MarkTransformProps & Omit<CoreNodeChannelProps,
   extentToField?: FieldName;
   /** 颜色：数字 / 颜色串常量 → value（line→stroke / band→fill）；字段名 → field（per-datum 按色分组） */
   color?: string;
+  label?: ReferenceMarkLabel;
   strokeWidth?: MarkValueProp<number> | PointStrokeWidthStyle;
   fillOpacity?: MarkValueProp<number> | PointOpacityStyle;
   opacity?: MarkValueProp<number> | PointOpacityStyle;

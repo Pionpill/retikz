@@ -92,7 +92,7 @@ Rules:
 
 ### Custom Parsing
 
-Beyond the built-in `format` vocabulary, common reusable formats can be registered with `defineFieldFormat`; one-off parsing or data-source branching goes through `resolveField`. See [Custom Data](/graph/grammar/data/custom) for the full contracts, examples, and choosing guide.
+Beyond the built-in `format` vocabulary, common reusable formats can be registered with `defineFieldFormat`; one-off parsing or data-source branching goes through `resolveField`. See [Custom Data](/graph/grammar/extend/data) for the full contracts, examples, and choosing guide.
 
 Parsing and normalization happen before transforms, scales, and marks. Plot writes parsed values back under logical field names into the canonical row (the standardized row after parsing and coercion); every later stage reads that value. So `fieldMap={{ revenue: 'finance.amount' }}`, `format: 'percent'`, and custom parsing only affect preparation; the mark still says `y="revenue"`.
 

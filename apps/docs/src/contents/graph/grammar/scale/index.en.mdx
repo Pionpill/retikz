@@ -22,7 +22,7 @@ Which scale within each family is auto-picked by `<Plot>` from the field's measu
 | `temporal` | `time` | `sequential` (time is continuous too) |
 | `categorical` | `band` (`point` for lines) | `ordinal` |
 
-See [Data Model](/graph/grammar/data/model) for how to declare field types. The long tail beyond the 15 built-ins (brand ramps, domain-specific mappings…) goes through [Custom scales](/graph/grammar/scale/custom).
+See [Data Model](/graph/grammar/data/model) for how to declare field types. The long tail beyond the 15 built-ins (brand ramps, domain-specific mappings…) goes through [Custom scales](/graph/grammar/extend/scale).
 
 ## Overriding explicitly
 
@@ -49,9 +49,5 @@ Under polar, use `dimension="angle"` / `dimension="radius"`; `x` / `y` aliases a
   <LinkedCard href="/graph/grammar/scale/color">
     <span className="font-semibold">Color scales</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">ordinal one-color-per-category, sequential / diverging continuous bands, quantize / threshold / quantile binning</span>
-  </LinkedCard>
-  <LinkedCard href="/graph/grammar/scale/custom">
-    <span className="font-semibold">Custom scales</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">defineScale injects runtime position / channel definitions; colorSchemes adds custom palettes</span>
   </LinkedCard>
 </div>

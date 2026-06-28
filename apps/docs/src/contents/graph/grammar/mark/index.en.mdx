@@ -31,7 +31,7 @@ plot marks do not own renderer primitives directly; after lowering, they become 
 | `PathMark` | [Path](/kernel/components/draw/path) + [Coordinate](/kernel/components/layout/coordinate) | Ordered projected points produce a Path; with `anchorId`, each valid vertex also produces a referenceable Coordinate |
 | `IntervalMark` | [Node](/kernel/components/node/overview) | The coordinate frame projects each cell into rect / sector / contour geometry, then packs it into a sized or shaped Node |
 | `ReferenceMark` | [Path](/kernel/components/draw/path) / [Node](/kernel/components/node/overview) | Reference lines lower to Paths; reference bands lower to interval Nodes |
-| `RelationMark` | [Path](/kernel/components/draw/path) + [Coordinate](/kernel/components/layout/coordinate) | source / target resolve into core targets; via and projected targets can generate addressable Coordinates |
+| `RelationMark` | [Path](/kernel/components/draw/path) + [Coordinate](/kernel/components/layout/coordinate) | source / target resolve into core targets; default relations lower to Paths, while `kind="ribbon"` lowers to ribbon Paths |
 
 ## Anchor IDs
 
@@ -73,6 +73,5 @@ Gradients, patterns, and image paint are handled by the core resource table. plo
   <LinkedCard href="/graph/grammar/mark/path"><strong>PathMark</strong><span>1D trajectories: connect data points in order for trends, paths, and radar outlines.</span></LinkedCard>
   <LinkedCard href="/graph/grammar/mark/interval"><strong>IntervalMark</strong><span>Interval products: bars, histograms, heatmaps, radial bars, pies, and donuts.</span></LinkedCard>
   <LinkedCard href="/graph/grammar/mark/reference"><strong>ReferenceMark</strong><span>Reference constraints: lines, rings, sectors, and tolerance bands at fixed positions.</span></LinkedCard>
-  <LinkedCard href="/graph/grammar/mark/relation"><strong>RelationMark</strong><span>Lower source / target relations into core Paths with arrows, bends, folds, and step labels.</span></LinkedCard>
-  <LinkedCard href="/graph/grammar/mark/custom"><strong>Custom Marks</strong><span>Register your own glyph with defineMark + markDefinitions; lower projects via frame into core IR.</span></LinkedCard>
+  <LinkedCard href="/graph/grammar/mark/relation"><strong>RelationMark</strong><span>Lower source / target relations into core Paths or ribbon Paths while reusing path labels and target resolution.</span></LinkedCard>
 </div>

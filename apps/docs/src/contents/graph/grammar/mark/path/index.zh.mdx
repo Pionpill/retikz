@@ -165,7 +165,7 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 
 ## API
 
-`PathMark` 的 API 按位置、专属、路径、标签、通用和自定义分组：位置字段决定轨迹点，专属字段负责拆系列、连接方式和闭合路径，路径字段下沉到 core `Path`。表里的 `FieldName` 表示数据字段名或字段路径，例如 `month` / `city`。
+`PathMark` 的 API 按位置、专属、路径、标签、通用和自定义分组：位置字段决定轨迹点，专属字段负责拆系列、连接方式和闭合路径，路径字段下沉到 core `Path`。表里的 `FieldName` 表示数据字段名或字段路径，例如 `month` / `city`。路径标签是 core geometry label 宿主，`label` 不写 `kind`，由 PathMark 自己推断。
 
 | 分类 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- | --- |
@@ -185,8 +185,8 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 |  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | 路径缩放、填充规则和厚度预设 |
 |  | `arrow` / `arrowDetail` | `PathArrowStyle?`<br />`PathArrowDetailStyle?` | —<br />— | 箭头方向与细节 |
 |  | `dashPattern`<br />`shadow` / `blendMode` | `NodeDashPatternStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?` | —<br />—<br />— | 虚线、阴影和混合模式 |
-| 标签 | `label` / `labelDisplayFormat` | `FieldName?`<br />`string?` | —<br />— | 给路径数据点挂标签 |
-|  | `labelPosition`<br />`labelDistance`<br />`labelPin` | `string / number`<br />`number`<br />`boolean / LabelPin` | `above`<br />`12`<br />`false` | 标签方位、距离和引线 |
+| 标签 | `label` | `MarkGeometryLabel`<br />`Array<MarkGeometryLabel>?` | — | 给路径段挂几何标签；内容写在 `content.field` / `content.value`，`position`、`side`、`distance` 复用 core geometry label |
+|  | `resolveLabel` | `(row) => string?` | — | 运行时覆盖标签内容；需要同时设置 `id`，不进入 PlotSpec |
 | 通用 | `id` | `string?` | — | 可选 mark 句柄，用于图层 id / 运行时标签解析 |
 |  | `transform` | `Array<Transform>?` | — | 当前图元局部的数据变换；在 plot 级 transform 之后执行，只影响这一层看到的 rows |
 | 自定义 | `channels` | `Record<string, Channel>` | — | 自定义通道入口；交给注册的 channel definition 解析 |

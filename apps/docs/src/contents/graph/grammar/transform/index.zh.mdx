@@ -15,7 +15,7 @@ description: transform 是图形语法的统计层：在比例尺和图元之前
 | --- | --- | --- | --- | --- |
 | 保行重写 | `sort` / `derive-interval` / `jitter` | N → N | row rewrite | 排序、单行区间、确定性抖点 |
 | 保行标注 | `stack` / `normalize` / `annotate` | N → N | reducer / row context | 堆叠区间、占比、组均值回填 |
-| 规约与选择 | `bin` / `summarize` / `select` | N → M/K | reducer / selector | 直方图、分组统计、极值点、top-N |
+| 规约与选择 | `bin` / `summarize` / `select` / `density` / `smooth` | N → M/K | reducer / selector / sampled transform | 直方图、箱线图、密度面积、趋势线 |
 | 行配对 | `relate` | N → P | selector / projection | 从 source / target 行生成关系字段 |
 | 扩展能力 | custom transform / reducer / selector | 取决于定义 | definition registry | 自定义数据处理或统计子算子 |
 
@@ -57,7 +57,7 @@ React DSL 里的高级快捷写法也会落成普通 transform。例如 `Interva
 
 lowering 时，Plot 先收集 transform 读取的源字段，同时登记 transform 派生出来的输出字段。这样 strict model 只校验真实输入字段，不要求你把派生字段提前声明。
 
-`bin`、`summarize` 和 `annotate` 复用 reducer，例如 `count` / `sum` / `mean` / `median` / `quantile`。`select` 和 `relate` 复用 selector，例如 `min` / `max` / `first` / `last` / `top`。自定义长尾统计可以继续用 `defineTransform`，也可以通过 reducer / selector definition 嵌入这些通用 transform。
+`bin`、`summarize` 和 `annotate` 复用 [reducer / selector 统计子算子](/graph/grammar/transform/statistics)，例如 `count` / `sum` / `mean` / `median` / `quantile-band`。`select` 和 `relate` 复用 selector，例如 `min` / `max` / `first` / `last` / `top`。`density` 与 `smooth` 会生成采样行，再交给 `PathMark` 画密度面积或趋势线。自定义长尾统计可以继续用 `defineTransform`，也可以通过 reducer / selector definition 嵌入这些通用 transform。
 
 plot 级 transform 会影响整张图的 scale、guide 和所有 mark。mark-local transform 只影响当前图元看到的 rows，适合派生局部统计层或 relation 行。
 
@@ -78,12 +78,12 @@ plot 级 transform 会影响整张图的 scale、guide 和所有 mark。mark-loc
     <span className="font-semibold">规约与选择</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">把明细行变成分箱、分组统计行，或组内代表行。</span>
   </LinkedCard>
+  <LinkedCard href="/graph/grammar/transform/statistics">
+    <span className="font-semibold">统计子算子</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">复用 reducer / selector，表达统计值、代表行和参数化分位区间。</span>
+  </LinkedCard>
   <LinkedCard href="/graph/grammar/transform/relate">
     <span className="font-semibold">行配对</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">选择 source / target 行并投影出关系字段。</span>
-  </LinkedCard>
-  <LinkedCard href="/graph/grammar/transform/custom">
-    <span className="font-semibold">自定义变换</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">注册完整 transform，或扩展 reducer / selector 子算子。</span>
   </LinkedCard>
 </div>

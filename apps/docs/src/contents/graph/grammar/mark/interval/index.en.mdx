@@ -85,9 +85,13 @@ The same `x` / `y` interval under `coordinate="polar2D"` maps the `x` band to an
 
 <ComponentPreview name="bar-pie-donut" size="sm" sourceFiles={['bar-pie.data.ts']} interactive />
 
+`pull` is a static radial offset for polar sectors, measured in canvas user units. A number applies the same offset to every sector, while a string binds a data field; it only applies to polar sector geometry and is not a hover / selected interaction state.
+
+<ComponentPreview name="interval-pull" size="sm" sourceFiles={['interval-pull.data.ts']} interactive />
+
 ### Style Props
 
-IntervalMark visual styles lower onto the core `Node` for each cell. Common entries include `cornerRadius`, `stroke`, `strokeWidth`, `fillOpacity`, `shadow`, and label styling; polar sectors can also use `padAngle` for a real angular gap. The left chart is cartesian, and the right chart switches the same data into a rounded polar donut.
+IntervalMark visual styles lower onto the core `Node` for each cell. Common entries include `cornerRadius`, `stroke`, `strokeWidth`, `fillOpacity`, `shadow`, and label styling; polar sectors can also use `padAngle` for a real angular gap and `pull` to move along the sector midline. The left chart is cartesian, and the right chart switches the same data into a rounded polar donut.
 
 <ComponentPreview name="bar-style" sourceFiles={['bar-basic.data.ts']} interactive />
 
@@ -95,7 +99,7 @@ IntervalMark visual styles lower onto the core `Node` for each cell. Common entr
 
 `IntervalMark` is a built-in registered mark. The React `<IntervalMark>` does not render DOM by itself; `<Plot>` collects it into a `type: 'interval'` mark IR while filling in `bounds`, automatic stack transforms, and color scales from the shortcut props.
 
-At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `IntervalMark` hits the `PlotMark.Interval` entry and calls `lowerIntervalLayer`; that function requires the current coordinate frame to provide `projectCell`, then calls `markCell` and the frame's `projectCell` for each row. cartesian2D / polar2D also build an `IntervalContext` for bands, grouped sub-bands, and proportional intervals; a custom coordinate that wants interval support must provide both `roleScales` and `projectCell` on its frame. The coordinate frame decides whether the cell becomes a rectangle, sector, or contour; IntervalMark itself does not branch by chart form.
+At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `IntervalMark` hits the `PlotMark.Interval` entry and calls `lowerIntervalLayer`; that function requires the current coordinate frame to provide `projectCell`, then calls `markCell` and the frame's `projectCell` for each row. cartesian2D / polar2D also build an `IntervalContext` for bands, grouped sub-bands, and proportional intervals; a custom coordinate that wants interval support must provide both `roleScales` and `projectCell` on its frame. The coordinate frame decides whether the cell becomes a rectangle, sector, or contour; IntervalMark only applies sector-only visual parameters such as `padAngle` / `pull`, and runtime locating reuses the same geometry helper.
 
 The important registration line and lowering excerpt are:
 
@@ -108,28 +112,23 @@ const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: Coordin
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
   const ctx = buildIntervalContext(mark, frame, rows);
-  const layer = lowerCells(mark, rows, frame, frame.projectCell, ctx, channels.colorOf, channels.defaultColor, markProvenance, channels.labelOf);
+  const layer = lowerCells(mark, rows, frame, ctx, channels.colorOf, channels.defaultColor, markProvenance, channels.labelOf);
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
 
-const lowerCells = (
-  mark: Mark,
-  rows: Array<ExternalRow>,
-  frame: CoordinateFrame,
-  projectCell: (cell: Cell) => CellGeometry,
-  ctx: IntervalContext | undefined,
-  colorOf: ColorOf | undefined,
-  defaultColor: string | undefined,
-  markProvenance: MarkProvenance | undefined,
-  labelOf: LabelOf | undefined,
-): IRScope | null => {
+const intervalCellGeometry = (mark: IntervalMark, row: ExternalRow, frame: CoordinateFrame, ctx: IntervalContext | undefined): CellGeometry | null => {
+  if (!hasProjectCell(frame)) return null;
+  const cell = markCell(mark, row, frame, ctx);
+  return cell === null ? null : applyIntervalCellVisualParams(frame.projectCell(cell), mark, row);
+};
+
+const lowerCells = (...): IRScope | null => {
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   let kind: CellGeometry['kind'] | undefined;
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
-    const cell = markCell(mark, row, frame, ctx);
-    if (!cell) continue;
-    const geometry = projectCell(cell);
+    const geometry = intervalCellGeometry(mark, row, frame, ctx);
+    if (!geometry) continue;
     if (!isRenderableCellGeometry(geometry)) continue;
     kind = geometry.kind;
     const node = attachDatumLabel(
@@ -149,6 +148,7 @@ const lowerCells = (
 | Coordinate guard | IntervalMark needs the coordinate frame to provide `projectCell`; frames without cell projection fail loudly |
 | Interval construction | `markCell` builds the logical cell from `bounds`, position channels, `series`, and stack-derived fields; custom frames also need `roleScales` |
 | Projection | `frame.projectCell` projects the logical cell into `rect`, `sector`, or `contour` geometry |
+| Sector visual parameters | `padAngle` shrinks sector angles; `pull` moves the sector center along the final mid angle; locators read the same geometry |
 | Core lowering | `cellGeometryNode` turns renderable geometry into a core Node, skips empty contours, and groups color channels upward into Scopes |
 
 ## API
@@ -164,6 +164,7 @@ const lowerCells = (
 |  | `direction` | `'vertical' \| 'horizontal'` | `vertical` | Ordinary bar direction; `horizontal` uses an x value span and y categorical band |
 |  | `angle` | `FieldName?` | — | Pie / donut shortcut: share field accumulated into angular intervals |
 |  | `padAngle` | `number?` | — | Angular gap in degrees for polar sectors; each sector shrinks by half the gap on each side |
+|  | `pull` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | `0` | Static radial offset for polar sectors; numbers are constants, strings bind fields, and only sector geometry supports it |
 |  | `bounds` | `IntervalBounds?` | inferred by role | Explicit band / span / extent / proportional / full source for each role |
 |  | `group` | `FieldName?` | `series` | Arrangement grouping field; dodge cuts sub-bands by it, stack uses it for segments |
 |  | `arrangement` | `'dodge' \| 'stack' \| 'normalize-stack'` | inferred from `group` / `series` / `stack` | Multi-segment interval arrangement |

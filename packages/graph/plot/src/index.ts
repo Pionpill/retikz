@@ -1,4 +1,4 @@
-﻿// @retikz/plot public API barrel.
+// @retikz/plot public API barrel.
 // Built-in concrete coordinate frames are internal lowering objects; expose
 // CoordinateDefinition/frame helpers here, not built-in frame constructors.
 export {
@@ -71,7 +71,7 @@ export { BUILTIN_COLOR_SCHEMES, PlotColorScheme } from './providers';
 export type { ColorSchemeResolver, PlotColorSchemeValue } from './providers';
 export type { PositionScale } from './contract';
 // Transform / mark extension surface: factory + types from contract; registry helpers from providers.
-export { defineFieldFormat, defineMark, defineRowSelector, defineStatReducer, defineTransform, extractStatisticOperation, extractTransformKind } from './contract';
-export type { AnyMarkDefinition, AnyRowSelectorDefinition, AnyStatReducerDefinition, AnyTransformDefinition, FieldFormatDefinition, MarkDefinition, RowSelectorDefinition, RowSelection, StatReducerDefinition, TransformContext, TransformDefinition } from './contract';
-export { BUILTIN_FIELD_FORMATS, BUILTIN_FORMATS, BUILTIN_FORMAT_DEFINITIONS_BY_NAME, BUILTIN_ROW_SELECTORS, BUILTIN_STAT_REDUCERS, BUILTIN_TRANSFORMS, BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND, DEFAULT_TRANSFORM_CONTEXT, PlotFieldFormat, applyTransforms, binMetricOperations, binOutputFields, collectFormatFields, collectTransformFields, isBuiltinFieldFormat, resolveFormatRegistry, resolveMarkRegistry, resolveRowSelectorRegistry, resolveStatReducerRegistry, resolveTransformRegistry } from './providers';
+export { defineFieldFormat, defineMark, defineRowSelector, defineStatisticsReducer, defineTransform, extractStatisticOperation, extractTransformKind } from './contract';
+export type { AnyMarkDefinition, AnyRowSelectorDefinition, AnyStatisticsReducerDefinition, AnyTransformDefinition, FieldFormatDefinition, MarkDefinition, RowSelectorDefinition, RowSelection, StatisticsReducerDefinition, TransformContext, TransformDefinition } from './contract';
+export { BUILTIN_FIELD_FORMATS, BUILTIN_FORMATS, BUILTIN_FORMAT_DEFINITIONS_BY_NAME, BUILTIN_ROW_SELECTORS, BUILTIN_STATISTICS_REDUCERS, BUILTIN_TRANSFORMS, BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND, DEFAULT_TRANSFORM_CONTEXT, PlotFieldFormat, applyTransforms, binMetricOperations, binOutputFields, collectFormatFields, collectTransformFields, isBuiltinFieldFormat, resolveFormatRegistry, resolveMarkRegistry, resolveRowSelectorRegistry, resolveStatisticsReducerRegistry, resolveTransformRegistry } from './providers';
 export type { PlotFieldFormatValue } from './providers';

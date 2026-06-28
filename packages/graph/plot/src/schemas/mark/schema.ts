@@ -2,9 +2,9 @@
 import { z } from 'zod';
 import { AnchorRefSchema, PathBaseSchema, PositionSchema, StepLabelSchema } from '@retikz/core';
 import { ArrowDetailSchema, BlendMode, BoundarySchema, DropShadowSchema, FontSchema, PathScaleSchema, ShadowPreset, ShapeRefSchema } from '@retikz/core';
-import { EncodingSchema, MarkLabelSchema, PointEncodingSchema } from '../encoding';
+import { EncodingSchema, MarkGeometryLabelListSchema, MarkNodeLabelListSchema, PointEncodingSchema } from '../encoding';
 import { TransformSchema } from '../transform';
-import { BUILTIN_MARK_TYPES, IntervalBoundKind, MarkValueKind, PathClosureKind, PathCurve, PlotMark } from './constants';
+import { BUILTIN_MARK_TYPES, IntervalBoundKind, MarkValueKind, PathClosureKind, PathCurve, PlotMark, RelationGeometryKind } from './constants';
 
 export const MarkTransformSchema = z
   .array(TransformSchema)
@@ -99,9 +99,21 @@ export const RelationStepLabelSchema = StepLabelSchema.extend({
   text: relationLabelTextSchema.describe('Constant core step label text, mixed text, or a data-field binding'),
 }).describe('Relation path step label; lowered to core StepLabelSchema after field bindings are resolved');
 
-export const RelationPathOptionsSchema = PathBaseSchema.omit({ type: true, children: true })
+export const RelationPathSpecificOptionsSchema = PathBaseSchema.pick({
+  dashPattern: true,
+  arrow: true,
+  arrowDetail: true,
+  fillRule: true,
+  lineCap: true,
+  lineJoin: true,
+  roundedCorners: true,
+  thickness: true,
+  rotate: true,
+  scale: true,
+  marks: true,
+})
   .partial()
-  .describe('Core Path options passed through by RelationMark, excluding type and children');
+  .describe('Core Path options used only when RelationMark kind is path');
 
 export const RelationRouteStepSchema = z
   .object({
@@ -165,9 +177,14 @@ export const RelationRoutingSpecSchema = z
 /** 位置 mark（point / path / interval）的 encoding：x / y 可选（必填性下放 coordinate 级校验）+ 样式 */
 const positionalEncoding = { encoding: EncodingSchema };
 
-/** 位置 mark 的可选 datum label（priority-1 宿主路径）：lowering 时挂到该 mark 每个 datum Node 的 label */
-const positionalLabel = {
-  label: MarkLabelSchema.optional().describe('priority-1 datum label: lowered onto each datum Node.label (core border-relative placement)'),
+/** node-host mark 的可选 datum label：lowering 时挂到该 mark 每个 datum Node 的 label */
+const nodeHostLabel = {
+  label: MarkNodeLabelListSchema.optional().describe('Node-host label: lowered onto each datum Node.label (core border-relative placement)'),
+};
+
+/** geometry-host mark 的可选 label：lowering 时挂到生成的 path-like host label */
+const geometryHostLabel = {
+  label: MarkGeometryLabelListSchema.optional().describe('Geometry-host label: lowered onto the generated core Path.label'),
 };
 
 const markValueFieldVariant = (description: string): z.ZodObject<{ kind: z.ZodLiteral<'field'>; value: z.ZodString; scale: z.ZodOptional<z.ZodString> }> =>
@@ -240,6 +257,22 @@ export const PathThicknessStyleSchema = markValueSchema(
 export const PathArrowStyleSchema = markValueSchema(z.enum(['none', '->', '<-', '<->']), 'Data field path bound to path arrow direction', 'Constant core Path arrow direction', 'path arrow style value');
 export const PathScaleStyleSchema = markValueSchema(PathScaleSchema, 'Data field path bound to path scale', 'Constant core Path scale', 'path scale style value');
 export const PathArrowDetailStyleSchema = markValueSchema(ArrowDetailSchema, 'Data field path bound to path arrowDetail', 'Constant core Path arrowDetail', 'path arrowDetail style value');
+
+export const RelationPrimitiveStyleSchema = z
+  .object({
+    color: PointColorStyleSchema.optional().describe('Shared relation master color: field-bound datum channel or constant color'),
+    fill: PointFillStyleSchema.optional().describe('Shared relation fill paint: field-bound datum channel or constant CSS color / PaintSpec'),
+    fillOpacity: PointOpacityStyleSchema.optional().describe('Shared relation fill opacity: field-bound datum channel or constant opacity 0..1'),
+    stroke: PointStrokeStyleSchema.optional().describe('Shared relation stroke paint: field-bound datum channel or constant CSS color / PaintSpec'),
+    strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe('Shared relation stroke width: field-bound datum channel or constant non-negative value'),
+    drawOpacity: PointOpacityStyleSchema.optional().describe('Shared relation stroke opacity: field-bound datum channel or constant opacity 0..1'),
+    opacity: PointOpacityStyleSchema.optional().describe('Shared relation whole opacity: field-bound datum channel or constant opacity 0..1'),
+    shadow: ShadowStyleSchema.optional().describe('Shared relation shadow: field-bound datum channel or constant preset / object'),
+    blendMode: BlendModeStyleSchema.optional().describe('Shared relation blendMode: field-bound datum channel or constant blend mode'),
+    zIndex: PointZIndexStyleSchema.optional().describe('Shared relation zIndex: field-bound datum channel or constant integer'),
+  })
+  .strict()
+  .describe('Style fields shared by RelationMark path kinds');
 
 const PathCycleClosureSchema = z
   .object({
@@ -338,7 +371,7 @@ export const PointMarkSchema = z
       .describe('Fine-tuning vertical offset (user units) from the projected anchor; positive = screen-down. Mainly for text points. Default 0'),
     anchorId: AnchorIdSpecSchema.optional().describe('Stable id rule written to each generated core Node; takes precedence over datumIdField for the node id'),
     ...markBase,
-    ...positionalLabel,
+    ...nodeHostLabel,
     encoding: PointEncodingSchema,
   })
   .describe('Point mark: scatter glyph or borderless text label (encoding.text set → text Node); supports optional size / opacity / shape glyph channels');
@@ -373,7 +406,7 @@ export const PathMarkSchema = z
     ...corePathStyle,
     anchorId: AnchorIdSpecSchema.optional().describe('Stable id rule for generated per-datum core Coordinates along this path'),
     ...markBase,
-    ...positionalLabel,
+    ...geometryHostLabel,
     ...positionalEncoding,
   })
   .describe('Path mark: connects records in order into a 1D trajectory (line / radar outline)');
@@ -457,10 +490,13 @@ export const IntervalMarkSchema = z
       .nonnegative()
       .optional()
       .describe('Angular gap in degrees applied to polar sector cells; each sector shrinks by half this angle on both sides. Cartesian cells ignore it'),
+    pull: PointNonnegativeNumberStyleSchema.optional().describe(
+      'Static radial offset in user units for polar sector cells; moves the sector center along the final mid angle. Only sector geometry supports it',
+    ),
     anchorId: AnchorIdSpecSchema.optional().describe('Stable id rule written to each generated core interval Node; takes precedence over datumIdField for the node id'),
     ...coreNodeStyle,
     ...markBase,
-    ...positionalLabel,
+    ...nodeHostLabel,
     ...positionalEncoding,
   })
   .describe('Interval mark: orthogonal interval product realized per bounds × coordinate (bar / histogram / heatmap cell / radial bar / pie-donut sector)');
@@ -499,23 +535,122 @@ export const ReferenceMarkSchema = z
     strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe('Reference line stroke width: field-bound datum channel or constant core Path stroke width'),
     opacity: PointOpacityStyleSchema.optional().describe('Reference mark whole opacity: field-bound datum channel or constant opacity 0..1'),
     fillOpacity: PointOpacityStyleSchema.optional().describe('Reference band fill opacity: field-bound datum channel or constant opacity 0..1'),
+    label: z
+      .union([MarkNodeLabelListSchema, MarkGeometryLabelListSchema])
+      .optional()
+      .describe('Host label for the generated reference primitive: line uses geometry label, band / region use node label'),
     ...coreNodeStyle,
     ...corePathStyle,
     ...markBase,
     ...positionalEncoding,
   })
+  .strict()
+  .superRefine((mark, ctx) => {
+    if (mark.label === undefined) return;
+    const usesNodeHost = mark.kind === 'region' || mark.xTo !== undefined || mark.yTo !== undefined || mark.zTo !== undefined;
+    const result = usesNodeHost ? MarkNodeLabelListSchema.safeParse(mark.label) : MarkGeometryLabelListSchema.safeParse(mark.label);
+    if (!result.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['label'],
+        message: usesNodeHost ? 'reference band / region expects node label fields' : 'reference line expects geometry label fields',
+      });
+    }
+  })
   .describe('Reference mark: a constant-position reference constraint. Bind x (vertical) or y (horizontal) for a line or one-axis band; set kind=region with lower/upper bounds for the active coordinate roles. Field → per-datum, value → constant. Use extentField / extentToField for partial-length one-axis spans');
 
-export const RelationMarkSchema = z
+export const RelationPathGeometrySchema = z
   .object({
-    type: z.literal(PlotMark.Relation).describe('Discriminator: source-target relation path lowered to a core Path'),
-    source: PlotTargetRefSchema.describe('Relation source target'),
-    target: PlotTargetRefSchema.describe('Relation target target'),
     via: z.array(PlotTargetRefSchema).optional().describe('Optional intermediate waypoints; each projected waypoint may generate a core Coordinate'),
     route: z.array(RelationRouteStepSchema).min(1).optional().describe('Explicit route steps after the initial move(source) step'),
     routing: RelationRoutingSpecSchema.optional().describe('Optional algorithmic route strategy; omitted means straight line routing'),
     label: RelationStepLabelSchema.optional().describe('Convenience label attached to the default route or the final drawable explicit route step'),
-    path: RelationPathOptionsSchema.optional().describe('Core Path options passed through to the lowered relation path'),
+    options: RelationPathSpecificOptionsSchema.optional().describe('Core Path options used only by path relations'),
+  })
+  .strict()
+  .superRefine((path, ctx) => {
+    if (path.route !== undefined && path.routing !== undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['routing'],
+        message: 'relation mark cannot use route and routing together; use explicit route steps or a routing strategy',
+      });
+    }
+    if (path.via !== undefined && path.route !== undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['via'],
+        message: 'relation mark cannot use via and route together; encode waypoints as route steps when route is explicit',
+      });
+    }
+  })
+  .describe('Path geometry configuration for RelationMark');
+
+const RelationRibbonSamplingSchema = z
+  .union([
+    z
+      .object({
+        kind: z.literal('fixed').describe('Use a fixed number of cross-section samples'),
+        samples: z.number().int().min(2).max(512).describe('Number of cross-section samples'),
+      })
+      .strict(),
+    z
+      .object({
+        kind: z.literal('adaptive').describe('Choose samples from path length and tolerance'),
+        tolerance: z.number().finite().positive().describe('Approximate target segment length in user units'),
+        maxSamples: z.number().int().min(2).max(512).optional().describe('Optional upper bound for generated samples'),
+      })
+      .strict(),
+  ])
+  .describe('Ribbon boundary sampling strategy');
+
+export const RelationRibbonSpecificOptionsSchema = z
+  .object({
+    interpolation: z.enum(['linear', 'smooth']).optional().describe('Interpolation curve between start.width and end.width'),
+    align: z.enum(['center', 'left', 'right']).optional().describe('Which side of the generated band stays on the centerline'),
+    samples: z.union([z.boolean(), z.number().int().min(2).max(512)]).optional().describe('Sampling shorthand for centerline lowering'),
+    sampling: RelationRibbonSamplingSchema.optional().describe('Explicit sampling strategy'),
+  })
+  .strict()
+  .superRefine((options, ctx) => {
+    if (options.samples !== undefined && options.sampling !== undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['sampling'],
+        message: 'Use either `samples` or `sampling`, not both.',
+      });
+    }
+  })
+  .describe('Core Path kind=ribbon options used only by ribbon relations');
+
+export const RelationRibbonOptionsSchema = z
+  .object({
+    width: PointNonnegativeNumberStyleSchema.describe('Ribbon width at the source side, or the whole width when endWidth is omitted'),
+    endWidth: PointNonnegativeNumberStyleSchema.optional().describe('Optional ribbon width at the target side; set together with width for tapered ribbons'),
+    options: RelationRibbonSpecificOptionsSchema.optional().describe('Core Path kind=ribbon options used only by ribbon relations'),
+  })
+  .strict()
+  .superRefine((ribbon, ctx) => {
+    if (ribbon.options?.interpolation !== undefined && ribbon.endWidth === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['options', 'interpolation'],
+        message: 'ribbon interpolation only applies when endWidth is set',
+      });
+    }
+  })
+  .describe('Ribbon geometry configuration for RelationMark');
+
+export const RelationMarkSchema = z
+  .object({
+    type: z.literal(PlotMark.Relation).describe('Discriminator: source-target relation lowered to a core Path'),
+    kind: z.enum(RelationGeometryKind).optional().describe('Relation geometry kind; omitted means path'),
+    source: PlotTargetRefSchema.describe('Relation source target'),
+    target: PlotTargetRefSchema.describe('Relation target target'),
+    style: RelationPrimitiveStyleSchema.optional().describe('Style fields shared by stroke and ribbon relation path kinds'),
+    path: RelationPathGeometrySchema.optional().describe('Path-specific relation geometry and core Path options'),
+    ribbon: RelationRibbonOptionsSchema.optional().describe('Ribbon-specific relation geometry and core Path kind=ribbon options'),
+    ...geometryHostLabel,
     ...markBase,
     encoding: z
       .object({
@@ -527,22 +662,30 @@ export const RelationMarkSchema = z
   })
   .strict()
   .superRefine((mark, ctx) => {
-    if (mark.route !== undefined && mark.routing !== undefined) {
+    const kind = mark.kind ?? RelationGeometryKind.Path;
+    if (kind === RelationGeometryKind.Path && mark.ribbon !== undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ['routing'],
-        message: 'relation mark cannot use route and routing together; use explicit route steps or a routing strategy',
+        path: ['ribbon'],
+        message: 'path relation marks cannot use ribbon options',
       });
     }
-    if (mark.via !== undefined && mark.route !== undefined) {
+    if (kind === RelationGeometryKind.Ribbon && mark.path !== undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ['via'],
-        message: 'relation mark cannot use via and route together; encode waypoints as route steps when route is explicit',
+        path: ['path'],
+        message: 'ribbon relation marks cannot use path options',
+      });
+    }
+    if (kind === RelationGeometryKind.Ribbon && mark.ribbon === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['ribbon'],
+        message: 'ribbon relation marks require ribbon options',
       });
     }
   })
-  .describe('Relation mark: connects source and target targets through a core Path, including arrows, bends, folds, marks, animations, and step labels');
+  .describe('Relation mark: connects source and target targets through a core Path; kind selects stroke or ribbon path semantics');
 
 export const MarkSchema = z
   .discriminatedUnion('type', [PointMarkSchema, PathMarkSchema, IntervalMarkSchema, ReferenceMarkSchema, RelationMarkSchema])

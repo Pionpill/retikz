@@ -1,11 +1,11 @@
 ---
 title: RelationMark
-description: RelationMark 把数据行里的 source / target 关系下沉为 core Path，复用 Path 的 target、箭头、弯曲、折线和 step label 能力。
+description: RelationMark 把数据行里的 source / target 关系下沉为 core Path，并通过 kind 区分线状路径与带状关系。
 ---
 
 `<RelationMark>` 用来绘制两个目标之间的关系。目标可以是已有 core id，也可以是 `PointMark` / `IntervalMark` / `PathMark` 通过 `anchorId` 生成的稳定 id，还可以是从当前关系数据行投影出来的坐标点。
 
-它不是早期设计文档里 group / stack / dodge 那类数据组合 relation。这里的 relation 是可绘制的 source-target 图元：每一行 relation 数据默认生成一条 core `Path`，从 source 出发，经过可选中间点，最后到 target。
+它不是早期设计文档里 group / stack / dodge 那类数据组合 relation。这里的 relation 是可绘制的 source-target 图元：每一行 relation 数据都会生成一条 core `Path`；默认是线状路径，`kind="ribbon"` 时则生成 `kind: 'ribbon'` 的带状 Path。
 
 ## 用法
 
@@ -20,7 +20,7 @@ import { Plot, PointMark, RelationMark } from '@retikz/plot-react';
   <RelationMark
     source={{ anchorId: { prefix: 'node', field: 'sourceId' } }}
     target={{ anchorId: { prefix: 'node', field: 'targetId' } }}
-    path={{ arrow: '->' }}
+    path={{ options: { arrow: '->' } }}
   />
 </Plot>
 ```
@@ -34,9 +34,12 @@ RelationMark 是底层关系路径 mark：它不重新发明箭头、标签或�
 | 表现形态 | 关键属性 | 说明 |
 | --- | --- | --- |
 | 点到点关系 | `source` / `target` | 按 id 或生成规则引用已有节点，再用默认 `move -> line` 路径连接 |
-| 带中间点路径 | `via` / `route[].to` | 中间投影点会生成 core `Coordinate`，后续也能继续被 id 引用 |
-| 路径标签 | `label` / `route[].label` | 降低到 core step label；显式 step label 优先于 shorthand |
-| core Path 能力 | `path` | 透传箭头、弯曲、折线、marks、animations、颜色等 Path 顶层能力 |
+| 带中间点路径 | `path.via` / `path.route[].to` | 中间投影点会生成 core `Coordinate`，后续也能继续被 id 引用 |
+| 几何标签 | `label` | 降低到 core `Path.label`；path 和 ribbon 共享同一套 host label |
+| step 标签 | `path.label` / `path.route[].label` | 降低到 core step label；显式 step label 优先于 shorthand |
+| core Path 能力 | `path.options` | 透传箭头、圆角、marks 等 path-only 能力 |
+| Path ribbon kind | `kind="ribbon"` / `ribbon` | 把 source-target 行降低成 `kind: 'ribbon'` 的 core `Path`，用来画桑基带状关系 |
+| 共享样式 | `style` | path 和 ribbon 都能复用的填充、描边和透明度字段 |
 
 ## 例子
 
@@ -46,6 +49,12 @@ RelationMark 是底层关系路径 mark：它不重新发明箭头、标签或�
 
 <ComponentPreview name="relation-scatter" sourceFiles={['relation-scatter.data.ts']} size="lg" />
 
+### 桑基带状关系
+
+桑基图仍然使用同一套 `source` / `target` 目标引用，只是把 `kind` 设为 `ribbon`，并在 `ribbon.width` 里声明每条带的宽度。填充、描边和透明度放在共享的 `style` 对象里，所以同一个 RelationMark 可以在 path 和 ribbon 几何之间切换，而不需要移动视觉字段。
+
+<ComponentPreview name="relation-sankey" sourceFiles={['relation-sankey.data.ts']} size="lg" />
+
 ### 气泡关系
 
 气泡图里常见的用法是只强调某两个点之间的业务关系。这个例子用 20 个气泡承载整体分布，气泡层通过 `anchorId` 生成可引用 Node id。relation 层没有手写边数据，而是在 `transform` 里运行 `relate`：source 选择 `value` 最大的气泡，target 选择 `y` 最高的气泡，同时派生 `sourceId`、`targetId` 和路径标签。最后 source / target 再按这些派生 id 引用气泡，并启用 `boundary`，让连接线停在气泡边界上。
@@ -54,21 +63,21 @@ RelationMark 是底层关系路径 mark：它不重新发明箭头、标签或�
 
 ### 路径极值
 
-路径 mark 负责画 20 个有序点，并通过 `anchorId` 给每个顶点注册可引用坐标。这个例子的 relation 也不需要额外边表：`RelationMark.transform` 用 `relate` 在同一批点里找 `y` 最小的 source 和 `y` 最大的 target，派生 `sourceId`、`targetId` 与 `deltaLabel`。随后 source / target 按派生 id 连到路径顶点，`routing={{ kind: 'bend' }}` 再把这段最低点到最高点的关系画成曲线。
+路径 mark 负责画 20 个有序点，并通过 `anchorId` 给每个顶点注册可引用坐标。这个例子的 relation 也不需要额外边表：`RelationMark.transform` 用 `relate` 在同一批点里找 `y` 最小的 source 和 `y` 最大的 target，派生 `sourceId`、`targetId` 与 `deltaLabel`。随后 source / target 按派生 id 连到路径顶点，`path.routing={{ kind: 'bend' }}` 再把这段最低点到最高点的关系画成曲线。
 
 <ComponentPreview name="relation-path-extremes" sourceFiles={['relation-path-extremes.data.ts']} size="lg" />
 
 ### 区间关系
 
-柱形 / 区间图里可以把关系线连到两个图元的顶部，说明阶段之间的交接或差值。这个例子只保留 before / after 区间行，没有手写 5 条关系线。两个 `RelationMark.transform` 分别处理减少组和增加组：减少组读取 `decreaseOrder`，增加组读取 `increaseOrder`，并按 `pair` 分组派生 source / target 坐标、`sourceViaY` 中间高度和 `deltaLabel`。最后 `routing={{ kind: 'orthogonal' }}` 根据这些派生字段画先向上再正交转折的连接线；减少关系用红色，增加关系用绿色。
+柱形 / 区间图里可以把关系线连到两个图元的顶部，说明阶段之间的交接或差值。这个例子只保留 before / after 区间行，没有手写 5 条关系线。两个 `RelationMark.transform` 分别处理减少组和增加组：减少组读取 `decreaseOrder`，增加组读取 `increaseOrder`，并按 `pair` 分组派生 source / target 坐标、`sourceViaY` 中间高度和 `deltaLabel`。最后 `path.routing={{ kind: 'orthogonal' }}` 根据这些派生字段画先向上再正交转折的连接线；减少关系用红色，增加关系用绿色。
 
 <ComponentPreview name="relation-interval" sourceFiles={['relation-interval.data.ts']} size="lg" />
 
 ## 技术原理
 
-React 里的 `<RelationMark>` 本身不渲染 DOM；`<Plot>` 构造 `PlotSpec` 时把它收集成 `type: 'relation'` 的 mark IR。lowering 阶段会解析 `source`、`target`、`via` 和 `route[].to`，把每一行数据降低为一条 core `Path`，必要时额外生成 core `Coordinate`。
+React 里的 `<RelationMark>` 本身不渲染 DOM；`<Plot>` 构造 `PlotSpec` 时把它收集成 `type: 'relation'` 的 mark IR。lowering 阶段会解析 `source`、`target`、`label`、`path.via` 和 `path.route[].to`。两种几何都会降低为 core `Path`：path 关系省略 `kind`，ribbon 关系写入 `kind: 'ribbon'` 与 `ribbon` options；必要时额外生成 core `Coordinate`。
 
-`transform` 在 plot 级 transform 之后执行，只把结果交给当前 relation mark。`sourceId`、`targetId`、`deltaLabel` 这类派生字段可以继续被 `source`、`target`、`label` 和 relation 通道消费，不需要写进根数据模型。
+`transform` 在 plot 级 transform 之后执行，只把结果交给当前 relation mark。`sourceId`、`targetId`、`deltaLabel` 这类派生字段可以继续被 `source`、`target`、`label`、`path.label`、`style`、`ribbon.width` 和 relation 通道消费，不需要写进根数据模型。
 
 目标引用统一使用 `PlotTargetRef`：
 
@@ -78,34 +87,38 @@ React 里的 `<RelationMark>` 本身不渲染 DOM；`<Plot>` 构造 `PlotSpec` �
 | `{ anchorId }` | 按当前 relation 行生成目标 id | 规则和位置 mark 的 `anchorId` 一致，适合用数据字段 join |
 | `{ project }` | 从当前 relation 行投影一个点 | `project` 把坐标 role 映射到字段；需要复用 id 时再加 `anchorId` |
 
-不写 `route` 时，默认路径是 `move(source) -> line(target)`；写了 `via` 时，中间点按顺序插入为 `line(via)`。`routing` 是路由策略：`line` 保持直线段，`bend` 生成 core bend step，`orthogonal` 会在端点是投影坐标时生成显式正交折线。写了 `route` 时，route step 对齐 core path step，支持 `line`、`fold`、`curve`、`cubic`、`bend`；`route` 和 `routing` 互斥。`label` 是便捷写法，会落到默认路径、routing 选中的线段或显式 route 的最后一个可绘制 step；如果某个 `route[].label` 已经显式设置，则显式 step label 优先。RelationMark 生成的 step label 默认 `side: 'sloped'`，会沿路径方向旋转；显式传入 `side` 时以用户配置为准。
+不写 `path.route` 时，默认路径是 `move(source) -> line(target)`；写了 `path.via` 时，中间点按顺序插入为 `line(via)`。`path.routing` 是路由策略：`line` 保持直线段，`bend` 生成 core bend step，`orthogonal` 会在端点是投影坐标时生成显式正交折线。写了 `path.route` 时，route step 对齐 core path step，支持 `line`、`fold`、`curve`、`cubic`、`bend`；`path.route` 和 `path.routing` 互斥。顶层 `label` 是 host label，会挂到最终 core `Path.label`，path 与 ribbon 都共享这一个位置；它不写 `kind`，内容放在 `content.field` / `content.value`。`path.label` 是 step label 便捷写法，会落到默认路径、routing 选中的线段或显式 route 的最后一个可绘制 step；如果某个 `path.route[].label` 已经显式设置，则显式 step label 优先。RelationMark 生成的 step label 默认 `side: 'sloped'`，会沿路径方向旋转；显式传入 `side` 时以用户配置为准。ribbon 关系不使用路径路由，会直接从 source 到 target 生成一条带状 centerline。
 
 如果 relation 使用生成式 `anchorId` 指向不存在的目标，lowering 会在 plot 结束时报错，并带上 relation mark id / index、数据行 index 和生成出的 id。重复生成同一个 anchor id 也会 fail-loud。
 
 ## API
 
-`RelationMark` 的 API 按目标、路由、路径、标签、通用和自定义分组。表里的 `FieldName` 表示数据字段名或字段路径，例如 `sourceId` / `meta.to`。
+`RelationMark` 的 API 按目标、路由、路径、标签、通用和自定义分组。表里的 `FieldName` 表示数据字段名或字段路径，例如 `sourceId` / `meta.to`。顶层 `label` 是整条几何的标签；`path.label` 和 `path.route[].label` 是 step 标签。
 
 ### 图元 API
 
 | 分类 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- | --- |
-| 目标 | `source` | `PlotTargetRef` | 必填 | 关系路径起点，可以是 direct id、generated anchor id 或 projected coordinate |
-|  | `target` | `PlotTargetRef` | 必填 | 关系路径终点，结构同 `source` |
-|  | `via` | `Array<PlotTargetRef>` | - | 默认 route 下的中间点；每个投影点会生成 core `Coordinate` |
+| 目标 | `source` | `PlotTargetRef` | 必填 | 关系起点，可以是 direct id、generated anchor id 或 projected coordinate |
+|  | `target` | `PlotTargetRef` | 必填 | 关系终点，结构同 `source` |
 | 数据 | `transform` | `Array<Transform>?` | - | mark 局部 transform 管线，用于从 plot rows 派生当前关系层的 rows；各类型见下方变化 API |
-| 路由 | `route` | `Array<RelationRouteStep>` | - | 显式 step 序列；最后一个 step 省略 `to` 时默认指向 `target` |
-|  | `routing` | `RelationRoutingSpec?` | `line` | 算法路由策略：`line`、`bend` 或 `orthogonal`；与 `route` 互斥 |
-|  | `route[].kind` | `'move' / 'line' / 'fold' / 'curve' / 'cubic' / 'bend'` | - | 对齐 core path step kind |
-|  | `route[].to` | `PlotTargetRef?` | 最后一步为 `target` | 当前 step 的落点 |
-|  | `route[].label` | `RelationStepLabel?` | - | 当前 step 的路径标签，优先级高于 `label` shorthand |
-| 标签 | `label` | `RelationStepLabel?` | - | 便捷路径标签，落到默认路径或最后一个可绘制 route step；未指定 `side` 时默认 `sloped` |
-| 路径 | `path` | `RelationPathOptions?` | - | core `Path` 顶层能力透传，排除 `type` / `children` |
+| 几何 | `kind` | `'path' / 'ribbon'` | `path` | 选择每一行关系降低成默认 Path 还是 `kind: 'ribbon'` 的 Path |
+| 标签 | `label` | `MarkGeometryLabel`<br />`Array<MarkGeometryLabel>?` | - | 整条关系几何的标签；path / ribbon 都降低到 core `Path.label`，内容写在 `content.field` / `content.value` |
+| 路径 | `path.via` | `Array<PlotTargetRef>` | - | 默认 route 下的中间点；每个投影点会生成 core `Coordinate` |
+|  | `path.route` | `Array<RelationRouteStep>` | - | 显式 step 序列；最后一个 step 省略 `to` 时默认指向 `target` |
+|  | `path.routing` | `RelationRoutingSpec?` | `line` | 算法路由策略：`line`、`bend` 或 `orthogonal`；与 `path.route` 互斥 |
+|  | `path.route[].label` | `RelationStepLabel?` | - | 当前 step 的路径标签，优先级高于 `path.label` shorthand |
+|  | `path.label` | `RelationStepLabel?` | - | 便捷路径标签，落到默认路径或最后一个可绘制 route step；未指定 `side` 时默认 `sloped` |
+|  | `path.options` | `RelationPathSpecificOptions?` | - | path-only 选项，例如 `arrow`、`arrowDetail`、`marks`、`dashPattern`、`roundedCorners`、`lineCap`、`lineJoin` |
+| Ribbon | `ribbon.width` | `MarkValue<number>` | `kind="ribbon"` 时必填 | source 侧宽度；省略 `endWidth` 时也是整条带宽 |
+|  | `ribbon.endWidth` | `MarkValue<number>?` | - | target 侧宽度，用于渐变宽度 ribbon |
+|  | `ribbon.options` | `RelationRibbonSpecificOptions?` | - | ribbon-only 选项：`align`、`samples`、`sampling` 和渐变宽度 `interpolation` |
+| 样式 | `style` | `RelationPrimitiveStyle?` | - | 共享样式：`color`、`fill`、`fillOpacity`、`stroke`、`strokeWidth`、`drawOpacity`、`opacity`、`shadow`、`blendMode`、`zIndex` |
 |  | `color` | `FieldName?` | - | 字段驱动的关系颜色通道 |
 | 通用 | `id` | `string?` | - | 可选 mark 句柄，用于图层 id、错误信息和运行时定位 |
 | 自定义 | `channels` | `Record<string, Channel>` | - | 自定义通道入口，交给注册的 channel definition 解析 |
 
-`RelationPathOptions` 适合放常量型 Path 能力，例如 `arrow`、`arrowDetail`、`marks`、`bend` / `fold` / `curve`、`animations`、`roundedCorners`、`strokeWidth`、`color`。字段驱动的视觉样式继续走 plot 通道，例如 `color="kind"`。
+path-only 字段放在 `path.options`，path 和 ribbon 都能复用的字段放在 `style`。这样 `strokeWidth`、`fillOpacity`、`opacity`、`fill`、`stroke` 有同一个位置，而箭头和路径路由不会混进 ribbon 配置。
 
 ### 变化 API
 

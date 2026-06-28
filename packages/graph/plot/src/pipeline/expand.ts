@@ -1,8 +1,8 @@
 import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, JsonObjectSchema, defineComposite } from '@retikz/core';
 import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, IntervalBoundKind, type IntervalMark, type LegendChannelValue, type LegendGuide, type MarkOperation, PathClosureKind, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type ScaleOperation, type TransformOperation, isBuiltinMark } from '../schemas';
-import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, DEFAULT_TRANSFORM_CONTEXT, type ScaleDescriptor, applyFieldResolver, applyTransforms, assertAllValuesValid, assertBaselineScaleCompatible, assertScaleFieldCompatible, buildProportionalIntervals, channelKindsForMark, channelValue, collectFormatFields, createPositionChannelDefinitions, deriveScale, lowerMark, makeColorSchemeResolver, normalizeRows, orderedCategoryDomain, proportionalIntervalDomainValues, resolveChannelRegistry, resolveCoordinateRegistry, resolveFieldPath, resolveFieldTypes, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkChannels, resolveMarkRegistry, resolvePositionScale, resolveRowSelectorRegistry, resolveScaleRegistry, resolveSqrtScale, resolveStatReducerRegistry, resolveTransformRegistry, scaleTicks, validateBoundData } from '../providers';
+import { type CategoryOrder, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, DEFAULT_TRANSFORM_CONTEXT, type ScaleDescriptor, applyFieldResolver, applyTransforms, assertAllValuesValid, assertBaselineScaleCompatible, assertScaleFieldCompatible, buildProportionalIntervals, channelKindsForMark, channelValue, collectFormatFields, createPositionChannelDefinitions, deriveScale, lowerMark, makeColorSchemeResolver, normalizeRows, orderedCategoryDomain, proportionalIntervalDomainValues, resolveChannelRegistry, resolveCoordinateRegistry, resolveFieldPath, resolveFieldTypes, resolveFormatRegistry, resolveIntervalBound, resolveLinearScale, resolveMarkChannels, resolveMarkRegistry, resolvePositionScale, resolveRowSelectorRegistry, resolveScaleRegistry, resolveSqrtScale, resolveStatisticsReducerRegistry, resolveTransformRegistry, scaleTicks, validateBoundData } from '../providers';
 import { type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from '../features';
-import { type AnchorIdGenerator, type AnyChannelDefinition, type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyRowSelectorDefinition, type AnyScaleDefinition, type AnyStatReducerDefinition, type AnyTransformDefinition, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, type ResolveField, type ResolveLabel, type TickSet, type TransformContext, isBuiltinScaleOperation } from '../contract';
+import { type AnchorIdGenerator, type AnyChannelDefinition, type AnyCoordinateDefinition, type AnyMarkDefinition, type AnyRowSelectorDefinition, type AnyScaleDefinition, type AnyStatisticsReducerDefinition, type AnyTransformDefinition, type CoordinateFrame, type DimensionRole, type FieldFormatDefinition, type ResolveField, type ResolveLabel, type TickSet, type TransformContext, isBuiltinScaleOperation } from '../contract';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect } from './layout';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { createAnchorRegistry } from './anchors';
@@ -69,8 +69,8 @@ const relationTargetRoleValues = (mark: MarkOperation, role: DimensionRole, rows
   const refs = [
     mark.source,
     mark.target,
-    ...(mark.via ?? []),
-    ...(mark.route ?? []).flatMap(step => (step.to === undefined ? [] : [step.to])),
+    ...(mark.path?.via ?? []),
+    ...(mark.path?.route ?? []).flatMap(step => (step.to === undefined ? [] : [step.to])),
   ];
   const fields = refs.flatMap(ref => ('project' in ref && Object.prototype.hasOwnProperty.call(ref.project, role) ? [ref.project[role]] : []));
   return fields.flatMap(field => rows.map(row => resolveFieldPath(row, field)));
@@ -205,7 +205,7 @@ export type LowerPlotsOptions = {
    * 自定义统计 reducer definition 数组（运行时函数，不进 IR）：summarize / annotate / bin 的 `{op:<customOp>, ...config}` 据此校验并规约。
    * @description 内置 reducer 恒可用；自定义 op 未注册 / op 冲突会 fail-loud。
    */
-  statReducerDefinitions?: Array<AnyStatReducerDefinition>;
+  statisticsReducerDefinitions?: Array<AnyStatisticsReducerDefinition>;
   /**
    * 自定义 row selector definition 数组（运行时函数，不进 IR）：select / annotate / relate 的 `{op:<customOp>, ...config}` 据此校验并选择代表行。
    * @description 内置 selector 恒可用；自定义 op 未注册 / op 冲突会 fail-loud。
@@ -781,7 +781,7 @@ export const prepareRows = (
   const transformRegistry = resolveTransformRegistry(options.transformDefinitions);
   const transformContext: TransformContext = {
     ...DEFAULT_TRANSFORM_CONTEXT,
-    statReducerRegistry: resolveStatReducerRegistry(options.statReducerDefinitions),
+    statisticsReducerRegistry: resolveStatisticsReducerRegistry(options.statisticsReducerDefinitions),
     rowSelectorRegistry: resolveRowSelectorRegistry(options.rowSelectorDefinitions),
   };
   const scaleRegistry = resolveScaleRegistry(options.scaleDefinitions);

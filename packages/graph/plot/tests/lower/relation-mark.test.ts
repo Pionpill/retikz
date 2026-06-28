@@ -1,9 +1,32 @@
 import type { IRCoordinate, IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
+import { definePathChannel } from '../../src/contract';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 200, height: 100 };
+
+const extensionChannelsOf = (mark: { encoding?: { channels?: Partial<Record<string, { field?: string; value?: unknown }>> } }): Partial<Record<string, { field?: string; value?: unknown }>> =>
+  mark.encoding?.channels ?? {};
+
+const lineWeightChannel = definePathChannel<number>({
+  channel: 'lineWeight',
+  output: { outputKind: 'number', range: [1, 6] },
+  resolve: () => mark => {
+    const binding = extensionChannelsOf(mark).lineWeight;
+    if (binding?.field === undefined) return undefined;
+    const field = binding.field;
+    return {
+      resolver: row => {
+        const value = Number(row[field]);
+        return Number.isFinite(value) ? value : undefined;
+      },
+    };
+  },
+  deliver: (path, value) => {
+    path.strokeWidth = value;
+  },
+});
 
 const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options: LowerPlotsOptions = opts): IRScope => {
   const [def] = lowerPlots(datasets, options);
@@ -18,6 +41,19 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
       if (node.type === 'path') out.push(node as IRPath);
+      else if (node.type === 'scope' && node.children) walk(node.children);
+    }
+  };
+  walk(layer.children);
+  return out;
+};
+
+const collectRibbons = (layer: IRScope): Array<IRPath> => {
+  const out: Array<IRPath> = [];
+  const walk = (children: ReadonlyArray<unknown>): void => {
+    for (const child of children) {
+      const node = child as { type?: string; kind?: string; children?: ReadonlyArray<unknown> };
+      if (node.type === 'path' && node.kind === 'ribbon') out.push(node as IRPath);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -76,7 +112,7 @@ describe('RelationMark and anchorId lowering', () => {
         type: 'relation',
         source: { id: 'A' },
         target: { id: 'B' },
-        path: { arrow: '->', arrowDetail: { end: { length: 8 } } },
+        path: { options: { arrow: '->', arrowDetail: { end: { length: 8 } } } },
       },
     ])).not.toThrow();
 
@@ -89,8 +125,10 @@ describe('RelationMark and anchorId lowering', () => {
         type: 'relation',
         source: { id: 'A' },
         target: { id: 'B' },
-        via: [{ id: 'C' }],
-        route: [{ kind: 'line' }],
+        path: {
+          via: [{ id: 'C' }],
+          route: [{ kind: 'line' }],
+        },
       },
     ])).toThrow(/cannot use via and route together/);
   });
@@ -156,7 +194,7 @@ describe('RelationMark and anchorId lowering', () => {
         type: 'relation',
         source: { id: 'A', anchor: 'east' },
         target: { id: 'B', anchor: 'west' },
-        path: { arrow: '->', arrowDetail: { end: { length: 10, width: 7 } } },
+        path: { options: { arrow: '->', arrowDetail: { end: { length: 10, width: 7 } } } },
       },
     ]), { d: [rows[0]] });
     const [path] = collectPaths(markLayer(root, 0));
@@ -173,8 +211,11 @@ describe('RelationMark and anchorId lowering', () => {
         type: 'relation',
         source: { anchorId: { prefix: 'pt', field: 'source' } },
         target: { anchorId: { prefix: 'pt', field: 'target' } },
-        label: { text: { field: 'label' }, position: 'midway' },
-        path: { arrow: '->', color: '#2563eb', marks: [{ pos: 0.5, mark: { kind: 'arrow' } }] },
+        style: { color: { kind: 'constant', value: '#2563eb' } },
+        path: {
+          label: { text: { field: 'label' }, position: 'midway' },
+          options: { arrow: '->', marks: [{ pos: 0.5, mark: { kind: 'arrow' } }] },
+        },
       },
     ]), { d: rows });
     const [path] = collectPaths(markLayer(root, 1));
@@ -192,12 +233,14 @@ describe('RelationMark and anchorId lowering', () => {
         type: 'relation',
         source: { anchorId: { prefix: 'pt', field: 'source' } },
         target: { anchorId: { prefix: 'pt', field: 'target' } },
-        route: [
-          { kind: 'fold', via: '-|', to: { project: { x: 'x', y: 'y' } }, label: { text: { field: 'label' }, position: 0.25 } },
-          { kind: 'bend', bendDirection: 'left', bendAngle: 25 },
-        ],
-        label: { text: 'fallback' },
-        path: { roundedCorners: 6 },
+        path: {
+          route: [
+            { kind: 'fold', via: '-|', to: { project: { x: 'x', y: 'y' } }, label: { text: { field: 'label' }, position: 0.25 } },
+            { kind: 'bend', bendDirection: 'left', bendAngle: 25 },
+          ],
+          label: { text: 'fallback' },
+          options: { roundedCorners: 6 },
+        },
       },
     ]), { d: rows });
     const [path] = collectPaths(markLayer(root, 1));
@@ -214,7 +257,7 @@ describe('RelationMark and anchorId lowering', () => {
         type: 'relation',
         source: { anchorId: { prefix: 'pt', field: 'source' } },
         target: { anchorId: { prefix: 'pt', field: 'target' } },
-        label: { text: { field: 'label' }, side: 'above' },
+        path: { label: { text: { field: 'label' }, side: 'above' } },
       },
     ]), { d: rows });
     const [path] = collectPaths(markLayer(root, 1));
@@ -228,7 +271,7 @@ describe('RelationMark and anchorId lowering', () => {
         type: 'relation',
         source: { anchorId: { prefix: 'pt', field: 'source' }, boundary: true },
         target: { anchorId: { prefix: 'pt', field: 'target' }, boundary: true },
-        label: { text: { field: 'label' } },
+        path: { label: { text: { field: 'label' } } },
       },
     ]), {
       d: [
@@ -251,7 +294,7 @@ describe('RelationMark and anchorId lowering', () => {
         id: 'rel',
         source: { anchorId: { prefix: 'pt', field: 'source' } },
         target: { anchorId: { prefix: 'pt', field: 'target' } },
-        via: [{ project: { x: 'x', y: 'y' } }],
+        path: { via: [{ project: { x: 'x', y: 'y' } }] },
       },
     ]), { d: rows });
     const relationLayer = markLayer(root, 1);
@@ -293,9 +336,11 @@ describe('RelationMark and anchorId lowering', () => {
         ],
         source: { anchorId: { prefix: 'trend', field: 'sourceId' } },
         target: { anchorId: { prefix: 'trend', field: 'targetId' } },
-        routing: { kind: 'bend', bendDirection: 'left', bendAngle: 20 },
-        label: { text: { field: 'deltaLabel' }, position: 0.5 },
-        path: { arrow: '->' },
+        path: {
+          routing: { kind: 'bend', bendDirection: 'left', bendAngle: 20 },
+          label: { text: { field: 'deltaLabel' }, position: 0.5 },
+          options: { arrow: '->' },
+        },
       },
     ]), {
       d: [
@@ -324,7 +369,7 @@ describe('RelationMark and anchorId lowering', () => {
         ],
         source: { project: { x: 'sourceX', y: 'sourceY' } },
         target: { project: { x: 'targetX', y: 'targetY' } },
-        routing: { kind: 'line' },
+        path: { routing: { kind: 'line' } },
       },
     ]), {
       d: [
@@ -354,8 +399,10 @@ describe('RelationMark and anchorId lowering', () => {
           ],
           source: { project: { x: 'sourceX', y: 'sourceY' } },
           target: { project: { x: 'targetX', y: 'targetY' } },
-          routing: { kind: 'orthogonal', via: '|-', labelStep: 'main' },
-          label: { text: { field: 'deltaLabel' }, position: 0.5 },
+          path: {
+            routing: { kind: 'orthogonal', via: '|-', labelStep: 'main' },
+            label: { text: { field: 'deltaLabel' }, position: 0.5 },
+          },
         },
       ]),
       {
@@ -378,8 +425,10 @@ describe('RelationMark and anchorId lowering', () => {
         type: 'relation',
         source: { id: 'A' },
         target: { id: 'B' },
-        route: [{ kind: 'line' }],
-        routing: { kind: 'line' },
+        path: {
+          route: [{ kind: 'line' }],
+          routing: { kind: 'line' },
+        },
       },
     ])).toThrow(/route and routing/);
 
@@ -388,8 +437,75 @@ describe('RelationMark and anchorId lowering', () => {
         type: 'relation',
         source: { id: 'A' },
         target: { id: 'B' },
-        routing: { kind: 'orthogonal' },
+        path: { routing: { kind: 'orthogonal' } },
       },
     ])).toThrow(/via/);
+  });
+
+  it('lowers ribbon relation kind to core ribbon path with shared style and field-bound width', () => {
+    const root = expandOf(baseSpec([
+      {
+        type: 'relation',
+        kind: 'ribbon',
+        source: { project: { x: 'sourceX', y: 'sourceY' } },
+        target: { project: { x: 'targetX', y: 'targetY' } },
+        style: {
+          fill: { kind: 'field', value: 'fill' },
+          fillOpacity: { kind: 'constant', value: 0.55 },
+          stroke: { kind: 'constant', value: 'none' },
+        },
+        ribbon: {
+          width: { kind: 'field', value: 'width' },
+          endWidth: { kind: 'constant', value: 8 },
+          options: { interpolation: 'smooth', align: 'center' },
+        },
+      },
+    ]), {
+      d: [{ sourceX: 0, sourceY: 0, targetX: 1, targetY: 1, fill: '#38bdf8', width: 12 }],
+    });
+    const [ribbon] = collectRibbons(markLayer(root, 0));
+    expect(ribbon).toMatchObject({
+      type: 'path',
+      kind: 'ribbon',
+      children: [
+        { kind: 'move', to: [0, 100] },
+        { kind: 'cubic', control1: [100, 100], control2: [100, 0], to: [200, 0] },
+      ],
+      ribbon: {
+        start: { width: 12, direction: 0 },
+        end: { width: 8, direction: 0 },
+        interpolation: 'smooth',
+        align: 'center',
+      },
+      fill: '#38bdf8',
+      fillOpacity: 0.55,
+      stroke: 'none',
+    });
+  });
+
+  it('delivers custom path channels to ribbon relation paths', () => {
+    const root = expandOf(baseSpec([
+      {
+        type: 'relation',
+        kind: 'ribbon',
+        source: { project: { x: 'sourceX', y: 'sourceY' } },
+        target: { project: { x: 'targetX', y: 'targetY' } },
+        ribbon: {
+          width: { kind: 'field', value: 'width' },
+        },
+        encoding: {
+          channels: {
+            lineWeight: { field: 'lineWeight' },
+          },
+        },
+      },
+    ]), {
+      d: [{ sourceX: 0, sourceY: 0, targetX: 1, targetY: 1, width: 12, lineWeight: 5 }],
+    }, {
+      ...opts,
+      channelDefinitions: [lineWeightChannel],
+    });
+    const [ribbon] = collectRibbons(markLayer(root, 0));
+    expect(ribbon.strokeWidth).toBe(5);
   });
 });

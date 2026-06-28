@@ -86,9 +86,13 @@ IntervalMark 也可以直接通过自己的 `transform` 获取派生数据。下
 
 <ComponentPreview name="bar-pie-donut" size="sm" sourceFiles={['bar-pie.data.ts']} interactive />
 
+`pull` 是极坐标扇区的静态径向偏移，单位是画布 user units。数字会作为常量作用到所有扇区，字符串会绑定数据字段；它只对 polar sector 有效，不是 hover / selected 之类的交互状态。
+
+<ComponentPreview name="interval-pull" size="sm" sourceFiles={['interval-pull.data.ts']} interactive />
+
 ### 样式属性
 
-IntervalMark 的视觉样式会下沉到每个 cell 的 core `Node`。常用入口包括 `cornerRadius`、`stroke`、`strokeWidth`、`fillOpacity`、`shadow` 和标签样式；极坐标 sector 还可以用 `padAngle` 留出真实角向间隔。左侧是笛卡尔柱，右侧是同一份数据切到极坐标后的圆角环形图。
+IntervalMark 的视觉样式会下沉到每个 cell 的 core `Node`。常用入口包括 `cornerRadius`、`stroke`、`strokeWidth`、`fillOpacity`、`shadow` 和标签样式；极坐标 sector 还可以用 `padAngle` 留出真实角向间隔，用 `pull` 沿扇区中线外移。左侧是笛卡尔柱，右侧是同一份数据切到极坐标后的圆角环形图。
 
 <ComponentPreview name="bar-style" sourceFiles={['bar-basic.data.ts']} interactive />
 
@@ -96,7 +100,7 @@ IntervalMark 的视觉样式会下沉到每个 cell 的 core `Node`。常用入�
 
 `IntervalMark` 是一个内置注册图元。React 里的 `<IntervalMark>` 本身不渲染 DOM；`<Plot>` 会在构造 `PlotSpec` 时把它收集成 `type: 'interval'` 的 mark IR，并根据便捷 props 补出 `bounds`、自动 stack transform 和颜色 scale。
 
-编译时，`lowerMark` 按 `mark.type` 查询 `MARK_REGISTRY`。`IntervalMark` 命中 `PlotMark.Interval` 对应的 `lowerIntervalLayer`；该函数要求当前坐标帧提供 `projectCell`，然后逐行调用 `markCell` 与当前坐标系的 `projectCell`。cartesian2D / polar2D 会额外构造 `IntervalContext` 处理 band、分组子带与比例宽度区间；自定义坐标系若要支持 interval，需要在 frame 上同时提供 `roleScales` 与 `projectCell`。坐标系决定 cell 最后是矩形、扇区还是 contour，IntervalMark 本身不分叉处理这些形态。
+编译时，`lowerMark` 按 `mark.type` 查询 `MARK_REGISTRY`。`IntervalMark` 命中 `PlotMark.Interval` 对应的 `lowerIntervalLayer`；该函数要求当前坐标帧提供 `projectCell`，然后逐行调用 `markCell` 与当前坐标系的 `projectCell`。cartesian2D / polar2D 会额外构造 `IntervalContext` 处理 band、分组子带与比例宽度区间；自定义坐标系若要支持 interval，需要在 frame 上同时提供 `roleScales` 与 `projectCell`。坐标系决定 cell 最后是矩形、扇区还是 contour，IntervalMark 只在 sector 几何上叠加 `padAngle` / `pull` 这类视觉参数，并让运行时定位复用同一个几何入口。
 
 注册行和核心下沉函数的关键部分如下：
 
@@ -109,28 +113,23 @@ const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: Coordin
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
   const ctx = buildIntervalContext(mark, frame, rows);
-  const layer = lowerCells(mark, rows, frame, frame.projectCell, ctx, channels.colorOf, channels.defaultColor, markProvenance, channels.labelOf);
+  const layer = lowerCells(mark, rows, frame, ctx, channels.colorOf, channels.defaultColor, markProvenance, channels.labelOf);
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
 
-const lowerCells = (
-  mark: Mark,
-  rows: Array<ExternalRow>,
-  frame: CoordinateFrame,
-  projectCell: (cell: Cell) => CellGeometry,
-  ctx: IntervalContext | undefined,
-  colorOf: ColorOf | undefined,
-  defaultColor: string | undefined,
-  markProvenance: MarkProvenance | undefined,
-  labelOf: LabelOf | undefined,
-): IRScope | null => {
+const intervalCellGeometry = (mark: IntervalMark, row: ExternalRow, frame: CoordinateFrame, ctx: IntervalContext | undefined): CellGeometry | null => {
+  if (!hasProjectCell(frame)) return null;
+  const cell = markCell(mark, row, frame, ctx);
+  return cell === null ? null : applyIntervalCellVisualParams(frame.projectCell(cell), mark, row);
+};
+
+const lowerCells = (...): IRScope | null => {
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   let kind: CellGeometry['kind'] | undefined;
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
-    const cell = markCell(mark, row, frame, ctx);
-    if (!cell) continue;
-    const geometry = projectCell(cell);
+    const geometry = intervalCellGeometry(mark, row, frame, ctx);
+    if (!geometry) continue;
     if (!isRenderableCellGeometry(geometry)) continue;
     kind = geometry.kind;
     const node = attachDatumLabel(
@@ -150,6 +149,7 @@ const lowerCells = (
 | 坐标系守卫 | IntervalMark 需要坐标帧提供 `projectCell`；无 cell 投影能力时 fail-loud |
 | 区间构造 | `markCell` 根据 `bounds`、位置通道、`series` 和 stack 派生字段构造逻辑 cell；自定义 frame 还需提供 `roleScales` |
 | 坐标投影 | `frame.projectCell` 把逻辑 cell 投影成 `rect`、`sector` 或 `contour` |
+| 扇区视觉参数 | `padAngle` 收缩 sector 的起止角；`pull` 按最终中线移动 sector 中心，locator 也读取同一份几何 |
 | core 下沉 | `cellGeometryNode` 把可渲染几何装配成 core Node，空 contour 会被跳过，颜色通道按颜色分组上提到 Scope |
 
 ## API
@@ -165,6 +165,7 @@ const lowerCells = (
 |  | `direction` | `'vertical' \| 'horizontal'` | `vertical` | 普通柱方向；`horizontal` 使用 x 数值 span 与 y 分类 band |
 |  | `angle` | `FieldName?` | — | 饼图 / 环图入口：份额字段会累积成角区间 |
 |  | `padAngle` | `number?` | — | 极坐标 sector 的角向间隔（度）；每个扇区两侧各收半个间隔角 |
+|  | `pull` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | `0` | 极坐标 sector 的静态径向偏移；数字是常量，字符串绑定字段；只对 sector 几何有效 |
 |  | `bounds` | `IntervalBounds?` | 按 role 推断 | 显式声明每个 role 的 band / span / extent / proportional / full |
 |  | `group` | `FieldName?` | `series` | 编排分组字段；dodge 按它切子带，stack 按它生成堆叠段 |
 |  | `arrangement` | `'dodge' \| 'stack' \| 'normalize-stack'` | 由 `group` / `series` / `stack` 推断 | 多系列区间编排方式 |

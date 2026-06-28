@@ -1,14 +1,16 @@
-import { type IRChild, type IRCoordinate, type IRNodeTarget, type IRPath, type IRStep, type IRStepLabel, type IRTarget } from '@retikz/core';
+import { type IRChild, type IRCoordinate, type IRNodeLabel, type IRNodeTarget, type IRPath, type IRPathRibbonOptions, type IRStep, type IRStepLabel, type IRTarget } from '@retikz/core';
 import { type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkLoweringContext } from '../../../contract';
 import { resolveFieldPath } from '../../data';
-import { type ExternalRow, PlotMark, type PlotTargetRef, type RelationMark, type RelationRouteStep, type RelationRoutingSpec, type RelationStepLabel } from '../../../schemas';
+import { type ExternalRow, type MarkValueType, PlotMark, type PlotTargetRef, RelationGeometryKind, type RelationMark, type RelationPrimitiveStyle, type RelationRouteStep, type RelationRoutingSpec, type RelationStepLabel } from '../../../schemas';
 import {
   applyPathChannelDeliveries,
   attachMarkLayer,
   channelDefaultOf,
   channelValueOf,
   collectAnchorIdFields,
+  collectMarkLabelFields,
   pathChannelKinds,
+  resolveGeometryMarkLabels,
 } from '../shared';
 
 type ResolvedTarget = {
@@ -126,6 +128,34 @@ const anchorInputMissing = (ref: PlotTargetRef, row: ExternalRow): boolean => {
 
 const withDefaultLabelSide = (label: IRStepLabel): IRStepLabel => ({ side: 'sloped', ...label });
 
+const resolveMarkValue = <T>(value: MarkValueType<T> | undefined, row: ExternalRow): T | undefined => {
+  if (value === undefined) return undefined;
+  if (value.kind === 'constant') return value.value;
+  return resolveFieldPath(row, value.value) as T | undefined;
+};
+
+const relationStyleValue = (
+  style: RelationPrimitiveStyle | undefined,
+  key: keyof RelationPrimitiveStyle,
+  row: ExternalRow,
+): unknown => resolveMarkValue((style as Partial<Record<keyof RelationPrimitiveStyle, MarkValueType<unknown>>> | undefined)?.[key], row);
+
+const relationPrimitiveStyle = (
+  mark: RelationMark,
+  row: ExternalRow,
+  colorOf: ((row: ExternalRow) => string | undefined) | undefined,
+  defaultColor: string | undefined,
+): Record<string, unknown> => {
+  const out: Record<string, unknown> = {};
+  const color = relationStyleValue(mark.style, 'color', row) ?? colorOf?.(row) ?? defaultColor;
+  if (color !== undefined) out.color = color;
+  for (const key of ['fill', 'fillOpacity', 'stroke', 'strokeWidth', 'drawOpacity', 'opacity', 'shadow', 'blendMode', 'zIndex'] as const) {
+    const value = relationStyleValue(mark.style, key, row);
+    if (value !== undefined) out[key] = value;
+  }
+  return out;
+};
+
 const resolveLabel = (label: RelationStepLabel | undefined, row: ExternalRow): IRStepLabel | undefined => {
   if (label === undefined) return undefined;
   const text = label.text;
@@ -166,6 +196,37 @@ const lineRoute = (targets: Array<IRTarget>): Array<IRStep> => [
   { type: 'step', kind: 'move', to: targets[0] },
   ...targets.slice(1).map((to): IRStep => ({ type: 'step', kind: 'line', to })),
 ];
+
+const horizontalRibbonSteps = (source: IRTarget, target: IRTarget): Array<IRStep> => {
+  const sourcePosition = positionOf(source);
+  const targetPosition = positionOf(target);
+  if (sourcePosition === undefined || targetPosition === undefined || sourcePosition[0] === targetPosition[0]) {
+    return [
+      { type: 'step', kind: 'move', to: source },
+      { type: 'step', kind: 'line', to: target },
+    ];
+  }
+  const dx = targetPosition[0] - sourcePosition[0];
+  const handle = Math.abs(dx) / 2;
+  const sign = dx >= 0 ? 1 : -1;
+  return [
+    { type: 'step', kind: 'move', to: source },
+    {
+      type: 'step',
+      kind: 'cubic',
+      control1: [sourcePosition[0] + sign * handle, sourcePosition[1]],
+      control2: [targetPosition[0] - sign * handle, targetPosition[1]],
+      to: target,
+    },
+  ];
+};
+
+const horizontalRibbonEndpointDirection = (source: IRTarget, target: IRTarget): number | undefined => {
+  const sourcePosition = positionOf(source);
+  const targetPosition = positionOf(target);
+  if (sourcePosition === undefined || targetPosition === undefined || sourcePosition[0] === targetPosition[0]) return undefined;
+  return targetPosition[0] >= sourcePosition[0] ? 0 : 180;
+};
 
 const bendRoute = (routing: Extract<RelationRoutingSpec, { kind: 'bend' }>, targets: Array<IRTarget>): Array<IRStep> => [
   { type: 'step', kind: 'move', to: targets[0] },
@@ -289,7 +350,7 @@ const explicitRoute = (
   source: IRTarget,
   target: IRTarget,
 ): { steps: Array<IRStep>; coordinates: Array<IRCoordinate> } => {
-  const route = mark.route ?? [];
+  const route = mark.path?.route ?? [];
   const coordinates: Array<IRCoordinate> = [];
   const steps: Array<IRStep> = [{ type: 'step', kind: 'move', to: source }];
   for (let index = 0; index < route.length; index += 1) {
@@ -305,7 +366,7 @@ const explicitRoute = (
     coordinates.push(...resolved.coordinates);
     steps.push(routeStepToIr(step, resolved.target, row));
   }
-  return { steps: applyStepLabel(steps, resolveLabel(mark.label, row)), coordinates };
+  return { steps: applyStepLabel(steps, resolveLabel(mark.path?.label, row)), coordinates };
 };
 
 export const lowerRelation = (
@@ -317,6 +378,7 @@ export const lowerRelation = (
 ): IRChild | null => {
   const colorOf = channelValueOf<string>(channels, 'color');
   const defaultColor = channelDefaultOf<string>(channels, 'color');
+  const labelOf = channelValueOf<IRNodeLabel['text']>(channels, 'label');
   const children: Array<IRChild> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex += 1) {
     const row = rows[transformedIndex];
@@ -325,30 +387,67 @@ export const lowerRelation = (
     const target = resolveTarget(mark, mark.target, row, frame, ctx, transformedIndex, 'target');
     if (source === null || target === null) continue;
     const coordinates: Array<IRCoordinate> = [...source.coordinates, ...target.coordinates];
-    const color = colorOf?.(row) ?? (mark.path?.color === undefined ? defaultColor : undefined);
+    const style = relationPrimitiveStyle(mark, row, colorOf, defaultColor);
+    if ((mark.kind ?? RelationGeometryKind.Path) === RelationGeometryKind.Ribbon) {
+      const width = resolveMarkValue<number>(mark.ribbon?.width, row);
+      if (width === undefined) continue;
+      const endWidth = resolveMarkValue<number>(mark.ribbon?.endWidth, row);
+      const ribbonOptions = (mark.ribbon?.options ?? {}) as Partial<IRPathRibbonOptions>;
+      const direction = horizontalRibbonEndpointDirection(source.target, target.target);
+      const label = resolveGeometryMarkLabels(mark.label, row, labelOf);
+      const ribbon: IRPath = applyPathChannelDeliveries(
+        {
+          type: 'path',
+          kind: 'ribbon',
+          ...style,
+          ...(label !== undefined ? { label } : {}),
+          ribbon: {
+            ...ribbonOptions,
+            ...(endWidth === undefined
+              ? {
+                  width,
+                  ...(direction !== undefined ? { start: { direction }, end: { direction } } : {}),
+                }
+              : {
+                  start: { width, ...(direction !== undefined ? { direction } : {}) },
+                  end: { width: endWidth, ...(direction !== undefined ? { direction } : {}) },
+                }),
+          },
+          children: horizontalRibbonSteps(source.target, target.target),
+        },
+        mark,
+        row,
+        channels,
+      );
+      children.push(...coordinates, ribbon);
+      continue;
+    }
     let steps: Array<IRStep>;
-    if (mark.route !== undefined) {
+    if (mark.path?.route !== undefined) {
       const routed = explicitRoute(mark, row, frame, ctx, transformedIndex, source.target, target.target);
       if (routed.steps.length === 0) continue;
       coordinates.push(...routed.coordinates);
       steps = routed.steps;
     } else {
       const viaTargets: Array<IRTarget> = [];
-      for (let index = 0; index < (mark.via?.length ?? 0); index += 1) {
-        const via = resolveTarget(mark, mark.via?.[index] as PlotTargetRef, row, frame, ctx, transformedIndex, `via.${index}`, true);
+      for (let index = 0; index < (mark.path?.via?.length ?? 0); index += 1) {
+        const via = resolveTarget(mark, mark.path?.via?.[index] as PlotTargetRef, row, frame, ctx, transformedIndex, `via.${index}`, true);
         if (via === null) continue;
         coordinates.push(...via.coordinates);
         viaTargets.push(via.target);
       }
-      steps = mark.routing === undefined
-        ? defaultRoute(source.target, viaTargets, target.target, resolveLabel(mark.label, row))
-        : routedSteps(mark.routing, source.target, viaTargets, target.target, resolveLabel(mark.label, row));
+      steps = mark.path?.routing === undefined
+        ? defaultRoute(source.target, viaTargets, target.target, resolveLabel(mark.path?.label, row))
+        : routedSteps(mark.path.routing, source.target, viaTargets, target.target, resolveLabel(mark.path.label, row));
     }
+    const pathOptions = (mark.path?.options ?? {}) as Partial<IRPath>;
+    const label = resolveGeometryMarkLabels(mark.label, row, labelOf);
     const path: IRPath = applyPathChannelDeliveries(
       {
         type: 'path',
-        ...(mark.path ?? {}),
-        ...(color !== undefined ? { color } : {}),
+        ...pathOptions,
+        ...style,
+        ...(label !== undefined ? { label } : {}),
         children: steps,
       },
       mark,
@@ -371,18 +470,26 @@ const collectLabelFields = (label: RelationStepLabel | undefined, fields: FieldC
   if (label !== undefined && typeof label.text === 'object' && 'field' in label.text) fields.addField(label.text.field);
 };
 
+const collectRelationStyleFields = (style: RelationPrimitiveStyle | undefined, fields: FieldCollector): void => {
+  for (const value of Object.values(style ?? {})) fields.addChannel(value);
+};
+
 export const relationMarkDefinition: MarkDefinition<RelationMark> = {
   type: PlotMark.Relation,
   channelKinds: pathChannelKinds,
   collectFields: (mark, fields) => {
     collectTargetFields(mark.source, fields);
     collectTargetFields(mark.target, fields);
-    mark.via?.forEach(ref => collectTargetFields(ref, fields));
-    mark.route?.forEach(step => {
+    collectRelationStyleFields(mark.style, fields);
+    mark.path?.via?.forEach(ref => collectTargetFields(ref, fields));
+    mark.path?.route?.forEach(step => {
       if (step.to !== undefined) collectTargetFields(step.to, fields);
       collectLabelFields(step.label, fields);
     });
-    collectLabelFields(mark.label, fields);
+    collectLabelFields(mark.path?.label, fields);
+    collectMarkLabelFields(mark.label, fields);
+    fields.addChannel(mark.ribbon?.width);
+    fields.addChannel(mark.ribbon?.endWidth);
     fields.addChannel(mark.encoding?.color);
     for (const channel of Object.values(mark.encoding?.channels ?? {})) fields.addChannel(channel);
   },

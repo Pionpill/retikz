@@ -1,7 +1,5 @@
-﻿import { AtDirection } from '@retikz/core';
 import { z } from 'zod';
-import { FontSchema } from '@retikz/core';
-import { JsonValueSchema } from '@retikz/core';
+import { GeometryLabelSchema, JsonValueSchema, NodeLabelSchema } from '@retikz/core';
 
 export const ChannelSchema = z
   .object({
@@ -128,22 +126,64 @@ export const PointEncodingSchema = PositionEncodingSchema.extend({
   ...MarkChannelEncodingSchema.shape,
 }).describe('PointMark encoding: positional channels plus optional text and extension channel bindings; built-in node properties live on the mark as MarkValueType fields');
 
-export const MarkLabelSchema = z
+export const MarkLabelContentSchema = z
   .object({
-    content: TextChannelSchema.describe('Label content channel (field / value / displayFormat)'),
-    position: z
-      .union([z.enum(AtDirection), z.number()])
+    field: z.string().min(1).optional().describe('Data path whose row value becomes the label text; mutually exclusive with value'),
+    value: NodeLabelSchema.shape.text.optional().describe('Constant label text for every datum; mutually exclusive with field'),
+    displayFormat: z
+      .string()
+      .min(1)
       .optional()
-      .describe('Placement around the host datum node border: 8-direction enum or numeric angle (degrees); mirrors core NodeLabelSchema.position. Default above'),
-    distance: z.number().nonnegative().optional().describe('Gap between the host node border and the label center (user units); mirrors core NodeLabelSchema.distance. Default 12'),
-    textColor: z.string().min(1).optional().describe('Label text color; mirrors core NodeLabelSchema.textColor'),
-    opacity: z.number().min(0).max(1).optional().describe('Label-only opacity 0..1; mirrors core NodeLabelSchema.opacity'),
-    font: FontSchema.optional().describe('Label font overrides; mirrors core NodeLabelSchema.font'),
-    rotate: z
-      .union([z.enum(['none', 'radial', 'tangent']), z.number()])
-      .optional()
-      .describe('Label text rotation: none / radial / tangent / explicit degrees; mirrors core NodeLabelSchema.rotate'),
-    keepUpright: z.boolean().optional().describe('Flip rotated labels that would otherwise read upside-down; mirrors core NodeLabelSchema.keepUpright'),
-    pin: z.union([z.boolean(), LabelPinStyleSchema]).optional().describe('Draw a leader line from the host node border to the label; true uses defaults, object overrides leader style'),
+      .describe('Optional JSON-safe display format string applied to a field value before stringification; only meaningful together with field'),
   })
-  .describe('Datum label attached to a positional mark: lowered onto each datum Node.label (core border-relative placement), the preferred path over a standalone TextMark');
+  .strict()
+  .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'label content must set exactly one of `field` or `value`' })
+  .describe('Plot label content binding: exactly one of field (data-driven) or value (constant), plus optional displayFormat');
+
+const omitText = <T extends Record<string, unknown>>(shape: T): Omit<T, 'text'> =>
+  Object.fromEntries(Object.entries(shape).filter(([key]) => key !== 'text')) as Omit<T, 'text'>;
+
+const nodeLabelShape = omitText(NodeLabelSchema.shape);
+const geometryLabelShape = omitText(GeometryLabelSchema.shape);
+
+export const MarkNodeLabelSchema = z
+  .object({
+    ...nodeLabelShape,
+    content: MarkLabelContentSchema.describe('Node label content binding (field / value / displayFormat)'),
+  })
+  .strict()
+  .superRefine((label, ctx) => {
+    if (label.placement === 'inside' && label.pin) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['pin'],
+        message: 'Node label pin is only supported for outside placement.',
+      });
+    }
+  })
+  .describe('Plot label attached to a core Node.label host; all geometry fields are inherited from core NodeLabelSchema');
+
+export const MarkGeometryLabelSchema = z
+  .object({
+    ...geometryLabelShape,
+    content: MarkLabelContentSchema.describe('Geometry label content binding (field / value / displayFormat)'),
+  })
+  .strict()
+  .describe('Plot label attached to a path-like GeometryLabel host; all geometry fields are inherited from core GeometryLabelSchema');
+
+export const MarkNodeLabelListSchema = z
+  .union([MarkNodeLabelSchema, z.array(MarkNodeLabelSchema).min(1)])
+  .describe('Single or multiple node-host labels; array order is preserved');
+
+export const MarkGeometryLabelListSchema = z
+  .union([MarkGeometryLabelSchema, z.array(MarkGeometryLabelSchema).min(1)])
+  .describe('Single or multiple geometry-host labels; array order is preserved');
+
+export const MarkLabelSchema = z
+  .union([MarkNodeLabelSchema, MarkGeometryLabelSchema])
+  .describe('Host-inferred plot label input; mark definitions choose node or geometry host schema');
+
+export const MarkLabelSchemaByHost = {
+  node: MarkNodeLabelListSchema,
+  geometry: MarkGeometryLabelListSchema,
+} as const;

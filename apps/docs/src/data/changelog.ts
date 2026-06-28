@@ -1669,6 +1669,44 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.13',
+            date: '2026-06-28',
+            summary: {
+              zh: 'Statistics 进阶与 stat-geom 闭环：RelationMark 支持 ribbon，统计层新增 quantile-band、density 与 smooth，抽象 mark 可组合出 boxplot、density area、趋势线；同时收口 mark label 宿主语义与 polar sector pull。',
+              en: 'Advanced statistics and the stat-geom loop: RelationMark supports ribbons, the statistics layer adds quantile-band, density, and smooth, abstract marks compose boxplots, density areas, and trend lines; mark labels and polar sector pull are also consolidated.',
+            },
+            items: [
+              {
+                label: { zh: 'RelationMark ribbon', en: 'RelationMark ribbon' },
+                content: {
+                  zh: '`RelationMark kind="ribbon"` 复用 source / target / transform / color / label 契约，把关系 rows 下沉为 core `Path kind="ribbon"`；不引入独立 RibbonMark 或 Sankey layout。',
+                  en: '`RelationMark kind="ribbon"` reuses source / target / transform / color / label contracts and lowers relation rows into core `Path kind="ribbon"`; no separate RibbonMark or Sankey layout is introduced.',
+                },
+              },
+              {
+                label: { zh: '统计子算子与采样 transform', en: 'Statistic operations and sampled transforms' },
+                content: {
+                  zh: '新增 `quantile-band` reducer、`outside-quantile-band` selector、`density` KDE transform 与 `smooth` linear regression transform，统计步骤先产出 plain rows，再交给 mark 消费。',
+                  en: 'Adds the `quantile-band` reducer, `outside-quantile-band` selector, `density` KDE transform, and `smooth` linear-regression transform; statistic steps produce plain rows before marks consume them.',
+                },
+              },
+              {
+                label: { zh: 'stat + geom 组合', en: 'stat + geom composition' },
+                content: {
+                  zh: 'boxplot、density area 与 regression path 都由现有 `IntervalMark` / `ReferenceMark` / `PointMark` / `PathMark` 组合表达，不新增 BoxPlotMark / DensityMark / RegressionMark。',
+                  en: 'Boxplots, density areas, and regression paths are composed from existing `IntervalMark` / `ReferenceMark` / `PointMark` / `PathMark`, without BoxPlotMark / DensityMark / RegressionMark.',
+                },
+              },
+              {
+                label: { zh: 'label 与 sector pull', en: 'Labels and sector pull' },
+                content: {
+                  zh: 'mark label 按 node / geometry 宿主下沉到 core label；`IntervalMark.pull` 为 polar sector 提供静态径向偏移，locator anchor 跟随同一几何。',
+                  en: 'Mark labels lower onto node / geometry core label hosts; `IntervalMark.pull` adds static radial offsets for polar sectors, with locator anchors following the same geometry.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.12',
             date: '2026-06-17',
             summary: {
@@ -2109,6 +2147,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.13',
+            date: '2026-06-28',
+            summary: {
+              zh: 'React DSL 透传 alpha.13 的 ribbon、统计 transform、host label 与 sector pull；仍保持薄适配，只装配同一份 PlotSpec。',
+              en: 'The React DSL exposes alpha.13 ribbons, statistic transforms, host labels, and sector pull while staying a thin adapter that assembles the same PlotSpec.',
+            },
+            items: [
+              {
+                label: { zh: '薄组件表面', en: 'Thin component surface' },
+                content: {
+                  zh: '`<RelationMark kind="ribbon">`、`<Transform kind="density" | "smooth">`、boxplot 组合写法、mark label props 与 `<IntervalMark pull>` 都映射到 Plot IR，不新增 chart preset。',
+                  en: '`<RelationMark kind="ribbon">`, `<Transform kind="density" | "smooth">`, boxplot composition, mark label props, and `<IntervalMark pull>` all map to Plot IR with no chart preset.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.12',
             date: '2026-06-17',
             summary: {
@@ -2436,6 +2491,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.13',
+            date: '2026-06-28',
+            summary: {
+              zh: 'Vanilla SSR 继续纯 spec 驱动，自动渲染 alpha.13 的 ribbon、boxplot、density area、smooth path、host label 与 pulled sector。',
+              en: 'Vanilla SSR remains purely spec-driven and renders alpha.13 ribbons, boxplots, density areas, smooth paths, host labels, and pulled sectors automatically.',
+            },
+            items: [
+              {
+                label: { zh: 'renderPlot 零新入口', en: 'No new renderPlot entry' },
+                content: {
+                  zh: '`renderPlot(spec, datasets)` 消费同一 PlotSpec；新增能力都经共享 lowering 与 core renderer 出 SVG 字符串。',
+                  en: '`renderPlot(spec, datasets)` consumes the same PlotSpec; all new capabilities flow through shared lowering and the core renderer to SVG strings.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.12',
             date: '2026-06-17',

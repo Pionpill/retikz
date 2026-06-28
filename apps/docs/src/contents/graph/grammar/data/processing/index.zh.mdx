@@ -92,7 +92,7 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 
 ### 自定义解析
 
-内置 `format` 词表之外，常见且可复用的格式用 `defineFieldFormat` 注册成具名格式；一次性、按数据源分支的任意解析用 `resolveField`。两者的完整定义契约、示例和选择建议见[自定义数据](/graph/grammar/data/custom)。
+内置 `format` 词表之外，常见且可复用的格式用 `defineFieldFormat` 注册成具名格式；一次性、按数据源分支的任意解析用 `resolveField`。两者的完整定义契约、示例和选择建议见[自定义数据](/graph/grammar/extend/data)。
 
 解析和归一化发生在 transform、scale、mark 之前。Plot 会把解析后的值按逻辑字段名写入 canonical 行（规范化行：解析、归一后写回逻辑字段名的标准行）；后续所有环节都读这份值。因此 `fieldMap={{ revenue: 'finance.amount' }}`、`format: 'percent'` 和自定义解析都只影响数据准备阶段，mark 里仍然写 `y="revenue"`。
 

@@ -1,4 +1,4 @@
-import { type IRChild, type IRCoordinate, type IRPath, type IRScope, type IRStep } from '@retikz/core';
+import { type IRChild, type IRCoordinate, type IRNodeLabel, type IRPath, type IRScope, type IRStep } from '@retikz/core';
 import { type ChannelValueResolver, type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkLoweringContext, type MarkProvenance } from '../../../contract';
 import { channelValue, compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../../data';
 import {
@@ -21,6 +21,7 @@ import {
   collectPathChannelFields,
   failLoudMessage,
   pathChannelKinds,
+  resolveGeometryMarkLabels,
   roleAnchor,
 } from '../shared';
 import { seriesPathMeta, slug } from '../../../pipeline';
@@ -431,7 +432,9 @@ export const buildSeriesPaths = (
     const segments = buildSteps(seriesRows);
     for (let index = 0; index < segments.length; index += 1) {
       const segment = segments[index];
-      const path: IRPathChild = applyPathChannelDeliveries({ type: 'path', ...paintOf(segment.rows), children: segment.steps }, mark, segment.rows[0] ?? {}, channels);
+      const row = segment.rows[0] ?? {};
+      const label = resolveGeometryMarkLabels(mark.label, row, channelValueOf<IRNodeLabel['text']>(channels, 'label'));
+      const path: IRPathChild = applyPathChannelDeliveries({ type: 'path', ...paintOf(segment.rows), ...(label !== undefined ? { label } : {}), children: segment.steps }, mark, row, channels);
       if (markProvenance) {
         if (plotId !== undefined && seenIds) {
           const baseId = `${plotId}.series.${slug(series)}`;
@@ -534,7 +537,11 @@ const lowerPath = (
   return {
     type: 'scope',
     pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH, ...(defaultFill !== undefined ? { fill: defaultFill } : {}) },
-    children: segments.map(segment => applyPathChannelDeliveries({ type: 'path', children: segment.steps }, mark, segment.rows[0] ?? {}, channels)),
+    children: segments.map(segment => {
+      const row = segment.rows[0] ?? {};
+      const label = resolveGeometryMarkLabels(mark.label, row, channelValueOf<IRNodeLabel['text']>(channels, 'label'));
+      return applyPathChannelDeliveries({ type: 'path', ...(label !== undefined ? { label } : {}), children: segment.steps }, mark, row, channels);
+    }),
   };
 };
 

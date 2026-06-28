@@ -124,6 +124,37 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
+  it('mark_sector_pull_constant_valid', () => {
+    const m = {
+      type: 'interval',
+      bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+      pull: { kind: 'constant', value: 12 },
+      encoding: { color: { field: 'label' } },
+    };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_sector_pull_field_json_round_trip', () => {
+    const m = {
+      type: 'interval',
+      bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+      pull: { kind: 'field', value: 'offset' },
+      encoding: { color: { field: 'label' } },
+    };
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
+  });
+
+  it('mark_sector_pull_negative_rejected', () => {
+    expect(() =>
+      MarkSchema.parse({
+        type: 'interval',
+        bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+        pull: { kind: 'constant', value: -1 },
+        encoding: { color: { field: 'label' } },
+      }),
+    ).toThrow();
+  });
+
   it('mark_sector_missing_encoding_rejected', () => {
     expect(() => MarkSchema.parse({ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } } })).toThrow();
   });
@@ -457,6 +488,11 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
+  it('mark_path_host_geometry_label_valid', () => {
+    const m = { type: 'path', label: { content: { value: 'trend' }, position: 'midway', side: 'above', sloped: true }, encoding: { x: { field: 'x' }, y: { field: 'y' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
   it('mark_label_core_style_fields_valid', () => {
     const m = {
       type: 'interval',
@@ -531,9 +567,22 @@ describe('MarkSchema (ADR-05)', () => {
     expect(() => MarkSchema.parse({ type: 'interval', label: { content: {} }, encoding: { x: { field: 'm' }, y: { field: 'r' } } })).toThrow();
   });
 
-  it('mark_reference_strips_label', () => {
-    const parsed = MarkSchema.parse({ type: 'reference', label: { content: { value: 'x' } }, encoding: { y: { value: 80 } } });
-    expect((parsed as { label?: unknown }).label).toBeUndefined();
+  it('mark_path_rejects_node_only_label_pin', () => {
+    expect(() => MarkSchema.parse({ type: 'path', label: { content: { value: 'trend' }, pin: true }, encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
+  });
+
+  it('mark_reference_line_label_valid', () => {
+    const m = { type: 'reference', label: { content: { value: 'target' }, position: 'near-end', side: 'above' }, encoding: { y: { value: 80 } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_reference_band_rejects_geometry_only_side', () => {
+    expect(() => MarkSchema.parse({ type: 'reference', label: { content: { value: 'band' }, side: 'above' }, yTo: 90, encoding: { y: { value: 80 } } })).toThrow();
+  });
+
+  it('mark_relation_label_valid_and_json_round_trip', () => {
+    const m = { type: 'relation', source: { id: 'A' }, target: { id: 'B' }, label: { content: { field: 'label' }, position: 0.5, placement: 'inside' } };
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
   it('mark_point_accepts_local_transform', () => {

@@ -1,4 +1,4 @@
-import { type IRChild, type IRNode, type IRNodeDefault, type IRScope } from '@retikz/core';
+import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope } from '@retikz/core';
 import { type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkLoweringContext } from '../../../contract';
 import { type ExternalRow, type Mark, PlotMark, type PointMark } from '../../../schemas';
 import {
@@ -84,9 +84,10 @@ export const lowerPoint = (
   const colorOf = channelValueOf<string>(channels, 'color');
   const fillOf = mark.fill?.kind === 'field' && !colorOf ? channelValueOf<MarkPaint>(channels, 'fill') : undefined;
   const strokeOf = mark.stroke?.kind === 'field' ? channelValueOf<MarkPaint>(channels, 'stroke') : undefined;
-  const labelOf = channelValueOf<string>(channels, 'label');
   const defaultColor = channelDefaultOf<string>(channels, 'color') ?? DEFAULT_FILL;
   const isText = mark.encoding.text !== undefined;
+  const textOf = isText ? channelValueOf<NonNullable<IRNode['text']>>(channels, 'label') : undefined;
+  const labelOf = !isText ? channelValueOf<IRNodeLabel['text']>(channels, 'label') : undefined;
   const textColorConstant = mark.textColor?.kind === 'constant' ? mark.textColor.value : undefined;
   const dx = mark.dx ?? 0;
   const dy = mark.dy ?? 0;
@@ -105,7 +106,7 @@ export const lowerPoint = (
       // 文本 glyph：投影同 point（roleValues + projectRoles，坐标系无关）；内容缺失跳过；dx/dy 锚点像素微调
       const point = frame.projectRoles(roleValues(mark, row, frame));
       if (!point) continue;
-      const text = labelOf?.(row);
+      const text = textOf?.(row);
       if (text === undefined) continue;
       const position: [number, number] = dx === 0 && dy === 0 ? point : [point[0] + dx, point[1] + dy];
       const base: IRNode = { type: 'node', position, text };
