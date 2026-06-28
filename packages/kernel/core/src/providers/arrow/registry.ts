@@ -1,5 +1,5 @@
 import type { MarkerPrimitive } from '../../primitive/marker';
-import type { BuiltinArrowName } from '../../schemas/path/arrow';
+import type { BuiltinArrowShapeValue } from '../../schemas/path/arrow';
 import type { ArrowDefinition, ArrowEmitContext } from '../../contract/arrow';
 import type { CompileWarning } from '../../compile/constant';
 import { CompileWarningCode } from '../../compile/constant';
@@ -36,7 +36,7 @@ const hollowPath = (
 });
 
 /** 内置 8 arrow 注册项；与 `CompileOptions.arrows` 合并时被同名注入覆盖 */
-export const BUILTIN_ARROWS: Record<BuiltinArrowName, ArrowDefinition> = {
+export const BUILTIN_ARROWS: Record<BuiltinArrowShapeValue, ArrowDefinition> = {
   normal: {
     lineContactX: 0,
     emit: ctx => [filledPath(ctx, [[0, 0], [10, 5], [0, 10]])],

@@ -1,4 +1,4 @@
-import type { ArrowShapeName } from '../schemas/path/arrow';
+import type { ArrowShapeValue } from '../schemas/path/arrow';
 import type { IRAnimationTrack } from '../schemas/animation';
 import type { BlendModeValue, DropShadow } from '../schemas/effects';
 import type { IRJsonObject } from '../schemas/json';
@@ -109,7 +109,7 @@ export type PathCommand =
  */
 export type ArrowEndSpec = {
   /** 形状名：内置 8 或经 `CompileOptions.arrows` 注册的扩展名；标识 / 调试用，已解析后渲染不依赖（保留） */
-  shape: ArrowShapeName;
+  shape: ArrowShapeValue;
   /** marker viewBox 边长（`def.baseSize ?? 10`）；adapter 据此推 viewBox `0 0 baseSize baseSize` 与 refY = baseSize/2 */
   baseSize: number;
   /** 线接触点（marker refX）；hollow 已在 compile 解析阶段减 lineWidth/2（adapter 不再算） */

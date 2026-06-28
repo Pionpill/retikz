@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ArrowDetailSchema,
   ArrowEndDetailSchema,
+  BuiltinArrowShape,
   PathSchema,
 } from '../../src/schemas';
 
@@ -10,6 +11,20 @@ import {
  * @description 顶层 8 字段（shape/scale/length/width/color/fill/opacity/lineWidth）全 optional + start/end 子对象（同字段集，无递归）；compile/render merge 语义由 compile 测试覆盖
  */
 describe('ArrowDetailSchema：字段合法 / optional', () => {
+  it('内置箭头形状常量使用 BuiltinArrowShape 命名', () => {
+    expect(BuiltinArrowShape.Stealth).toBe('stealth');
+    expect(Object.values(BuiltinArrowShape)).toEqual([
+      'normal',
+      'open',
+      'stealth',
+      'openStealth',
+      'diamond',
+      'openDiamond',
+      'circle',
+      'openCircle',
+    ]);
+  });
+
   it('空对象合法', () => {
     expect(ArrowDetailSchema.safeParse({}).success).toBe(true);
   });

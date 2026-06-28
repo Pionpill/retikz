@@ -149,9 +149,8 @@ export type {
   IRScaleTransform,
   IRChild,
   IR,
+  BuiltinArrowShapeValue,
   ArrowShapeValue,
-  BuiltinArrowName,
-  ArrowShapeName,
   IRArrowDetail,
   IRArrowEndDetail,
   NodeShape,
@@ -176,9 +175,8 @@ export type {
   IRDrawableSharedStyle,
 } from './schemas';
 export {
-  ArrowShape,
+  BuiltinArrowShape,
   DEFAULT_ARROW_SHAPE,
-  HOLLOW_ARROW_SHAPES,
   ARROW_MARKER_DEFAULT_SIZE,
   ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
   BuiltinShape,
