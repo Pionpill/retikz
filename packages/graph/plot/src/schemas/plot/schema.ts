@@ -1,4 +1,4 @@
-import { CompositeBaseSchema, JsonObjectSchema } from '@retikz/core';
+﻿import { CompositeBaseSchema, JsonObjectSchema } from '@retikz/core';
 import { z } from 'zod';
 
 import { CoordinateOperationSchema } from '../coordinate';
@@ -8,6 +8,111 @@ import { MarkOperationSchema } from '../mark';
 import { ScaleOperationSchema } from '../scale';
 import { TransformSchema } from '../transform';
 import { PLOT_NAMESPACE, PlotComposite } from './constants';
+
+const CoordinateScopeRootPlacementSchema = z
+  .object({
+    kind: z.literal('root').describe('Placement kind: this scope occupies the root plot area'),
+  })
+  .strict()
+  .describe('Root coordinate scope placement');
+
+const CoordinateScopePanelPlacementSchema = z
+  .object({
+    kind: z.literal('panel').describe('Placement kind: this scope occupies a named panel slot'),
+    slot: z.string().min(1).optional().describe('Panel slot key; detailed facet placement is defined by later ADRs'),
+  })
+  .strict()
+  .describe('Panel coordinate scope placement placeholder');
+
+const CoordinateScopeOverlayPlacementSchema = z
+  .object({
+    kind: z.literal('overlay').describe('Placement kind: this scope overlays another coordinate scope'),
+    target: z.string().min(1).describe('Target coordinate scope id this scope overlays'),
+  })
+  .strict()
+  .describe('Overlay coordinate scope placement');
+
+const CoordinateScopeTrackPlacementSchema = z
+  .object({
+    kind: z.literal('track').describe('Placement kind: this scope occupies a track on a shared scaffold'),
+    scaffold: z.string().min(1).describe('Shared scaffold id this track belongs to'),
+    track: z.string().min(1).describe('Track id within the shared scaffold'),
+  })
+  .strict()
+  .describe('Track coordinate scope placement placeholder');
+
+export const CoordinateScopePlacementSchema = z
+  .discriminatedUnion('kind', [
+    CoordinateScopeRootPlacementSchema,
+    CoordinateScopePanelPlacementSchema,
+    CoordinateScopeOverlayPlacementSchema,
+    CoordinateScopeTrackPlacementSchema,
+  ])
+  .describe('Minimal coordinate scope placement classification; later ADRs extend each kind payload');
+
+export const CoordinateScopeSchema = z
+  .object({
+    id: z.string().min(1).describe('Stable coordinate scope id referenced by marks and axis guides'),
+    coordinate: CoordinateOperationSchema.describe('Coordinate operation owned by this scope'),
+    placement: CoordinateScopePlacementSchema.optional().describe(
+      'Optional placement of this coordinate scope in the plot composition; omit means root placement during normalization',
+    ),
+    meta: JsonObjectSchema.optional().describe('Free-form JSON-serializable metadata for this coordinate scope'),
+  })
+  .strict()
+  .describe('Coordinate scope registered inside a plot composition');
+
+export const CoordinateCompositionSchema = z
+  .object({
+    defaultScope: z
+      .string()
+      .min(1)
+      .describe('Coordinate scope id used when a mark or axis guide omits coordinateScope'),
+    scopes: z
+      .array(CoordinateScopeSchema)
+      .min(1)
+      .describe('Coordinate scopes registered by this PlotSpec; ids must be unique'),
+  })
+  .strict()
+  .superRefine((composition, ctx) => {
+    const ids = new Set<string>();
+    for (let index = 0; index < composition.scopes.length; index += 1) {
+      const scope = composition.scopes[index];
+      if (ids.has(scope.id)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['scopes', index, 'id'],
+          message: `duplicate coordinate scope id "${scope.id}"`,
+        });
+      }
+      ids.add(scope.id);
+    }
+    if (!ids.has(composition.defaultScope)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['defaultScope'],
+        message: `defaultScope "${composition.defaultScope}" does not reference a registered coordinate scope`,
+      });
+    }
+    for (let index = 0; index < composition.scopes.length; index += 1) {
+      const scope = composition.scopes[index];
+      if (scope.placement?.kind === 'overlay' && !ids.has(scope.placement.target)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['scopes', index, 'placement', 'target'],
+          message: `overlay target "${scope.placement.target}" does not reference a registered coordinate scope`,
+        });
+      }
+      if (scope.placement?.kind === 'overlay' && scope.placement.target === scope.id) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['scopes', index, 'placement', 'target'],
+          message: `overlay target "${scope.placement.target}" cannot reference the same coordinate scope`,
+        });
+      }
+    }
+  })
+  .describe('Plot-level coordinate scope registry used by marks and axis guides');
 
 export const PlotSpecSchema = CompositeBaseSchema.extend({
   namespace: z
@@ -60,8 +165,11 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
     .describe(
       "The panel's intrinsic height in user units, used as the plot area sizing basis when this node is composed alongside others. Omit to fall back to the lowerPlots global height, then the built-in default.",
     ),
-  coordinate: CoordinateOperationSchema.describe(
-    'The coordinate system operation; built-ins are statically validated, custom types are validated against runtime coordinate definitions',
+  coordinate: CoordinateOperationSchema.optional().describe(
+    'Single-coordinate shorthand; required when composition is omitted and forbidden when composition is present',
+  ),
+  composition: CoordinateCompositionSchema.optional().describe(
+    'Coordinate composition registry for Plot-internal coordinate scopes referenced by marks and axis guides',
   ),
   marks: z
     .array(MarkOperationSchema)
@@ -78,6 +186,46 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
   meta: JsonObjectSchema.optional().describe(
     'Free-form JSON-serializable source metadata passthrough; reserved so lowering can preserve provenance into core IR meta',
   ),
-}).describe(
-  'Plot IR root: a JSON-serializable, data-free grammar-of-graphics composite node (namespace "plot"); bound to external data and lowered to core Scope/Node/Path/Step/Coordinate at compile time via lowerPlots',
-);
+})
+  .superRefine((spec, ctx) => {
+    if (spec.coordinate === undefined && spec.composition === undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['coordinate'],
+        message: 'PlotSpec requires either coordinate shorthand or composition',
+      });
+    }
+    if (spec.coordinate !== undefined && spec.composition !== undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['composition'],
+        message: 'PlotSpec cannot use coordinate shorthand and composition together',
+      });
+    }
+    const scopeIds =
+      spec.composition !== undefined
+        ? new Set(spec.composition.scopes.map(scope => scope.id))
+        : new Set(['default']);
+    spec.marks.forEach((mark, index) => {
+      if (mark.coordinateScope !== undefined && !scopeIds.has(mark.coordinateScope)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['marks', index, 'coordinateScope'],
+          message: `coordinateScope "${mark.coordinateScope}" does not reference a registered coordinate scope`,
+        });
+      }
+    });
+    spec.guides?.forEach((guide, index) => {
+      if (guide.type !== 'axis') return;
+      if (guide.coordinateScope !== undefined && !scopeIds.has(guide.coordinateScope)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['guides', index, 'coordinateScope'],
+          message: `coordinateScope "${guide.coordinateScope}" does not reference a registered coordinate scope`,
+        });
+      }
+    });
+  })
+  .describe(
+    'Plot IR root: a JSON-serializable, data-free grammar-of-graphics composite node (namespace "plot"); bound to external data and lowered to core Scope/Node/Path/Step/Coordinate at compile time via lowerPlots',
+  );

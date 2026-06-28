@@ -20,6 +20,13 @@ export const AxisGuideSchema = z
       .describe(
         'Optional guide handle; reserved scope/anchor target (e.g. plot.xAxis / plot.yAxis region), resolution deferred to alpha.5',
       ),
+    coordinateScope: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'Coordinate scope id this axis is bound to; omit to use the plot composition default scope',
+      ),
     tickCount: z
       .number()
       .int()

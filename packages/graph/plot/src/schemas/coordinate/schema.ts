@@ -1,4 +1,4 @@
-import { JsonObjectSchema } from '@retikz/core';
+﻿import { JsonObjectSchema } from '@retikz/core';
 import { z } from 'zod';
 
 import { BUILTIN_COORDINATE_TYPES, Cartesian1DOrientation, PlotCoordinate } from './constants';
@@ -155,7 +155,7 @@ export const CustomCoordinateSchema = z
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message:
           'custom coordinate operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
       });

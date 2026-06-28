@@ -17,7 +17,7 @@ alpha.14 不是跨域组合容器，也不是 chart preset 层。它只处理 `@
 
 | ADR | 主题 | 目标 | 状态 |
 | --- | --- | --- | --- |
-| ADR-01 | **coordinate composition registry + guide binding** | 给 PlotSpec 内部 coordinate scope / composition 建立统一 identity、registry、layout slot 与 guide 绑定契约，为 facet、overlay、track 共用；不新增跨域容器 | 待建 |
+| ADR-01 | **coordinate composition registry + guide binding** | 给 PlotSpec 内部 coordinate scope / composition 建立统一 identity、registry、layout slot 与 guide 绑定契约，为 facet、overlay、track 共用；不新增跨域容器 | [Proposed](./01-coordinate-composition-registry.md) |
 | ADR-02 | **facet grid data routing** | 按字段生成 facet panels，拆分 rows，确定 panel key / 排序 / 空 panel 策略；支持共享或独立 position scales；每个 panel lower 成 core `Scope` | 待建 |
 | ADR-03 | **same-panel multi-axis overlay** | 支持同一 panel 内多个位置 scale / coordinate 叠加，例如左右 y 轴；mark 可显式选择自己的 coordinate / y scale；guide 绑定对应 axis | 待建 |
 | ADR-04 | **shared scaffold tracks** | 定义坐标系无关的共享骨架 + 局部 track：polar rings（共享 center / angle，不同 radius band）、cartesian lanes（共享 x，不同 y band）、混合 coordinate scope 的共享 anchor / bbox | 待建 |

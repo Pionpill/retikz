@@ -24,6 +24,7 @@ import type { CategoryOrder, ScaleDescriptor } from '../providers';
 import type {
   AxisGuide,
   Channel,
+  CoordinateOperation,
   ExternalDatasets,
   ExternalRow,
   Guide,
@@ -190,6 +191,42 @@ const markEncoding = (mark: MarkOperation): Record<string, Channel | undefined> 
 /** guide 谓词：按 type 判别串收窄成 axis / legend 子集 */
 const isAxisGuide = (guide: Guide): guide is AxisGuide => guide.type === PlotGuide.Axis;
 const isLegendGuide = (guide: Guide): guide is LegendGuide => guide.type === PlotGuide.Legend;
+
+const DEFAULT_COORDINATE_SCOPE_ID = 'default';
+
+export type CoordinateScopeRegistryEntry = {
+  id: string;
+  coordinate: CoordinateOperation;
+};
+
+export type CoordinateScopeRegistry = {
+  defaultScope: string;
+  scopes: Array<CoordinateScopeRegistryEntry>;
+};
+
+export const resolveCoordinateScopeRegistry = (node: PlotSpec): CoordinateScopeRegistry => {
+  if (node.composition !== undefined) {
+    return {
+      defaultScope: node.composition.defaultScope,
+      scopes: node.composition.scopes.map(scope => ({ id: scope.id, coordinate: scope.coordinate })),
+    };
+  }
+  if (node.coordinate === undefined) {
+    throw new Error('lowerPlots: PlotSpec requires either coordinate shorthand or composition');
+  }
+  return {
+    defaultScope: DEFAULT_COORDINATE_SCOPE_ID,
+    scopes: [{ id: DEFAULT_COORDINATE_SCOPE_ID, coordinate: node.coordinate }],
+  };
+};
+
+export const coordinateScopeIdOf = (
+  operation: { coordinateScope?: string },
+  defaultScope: string,
+): string => operation.coordinateScope ?? defaultScope;
+
+const axisGuideScopeIdOf = (guide: AxisGuide, defaultScope: string): string =>
+  guide.coordinateScope ?? defaultScope;
 
 /** 非位置 encoding key：这些键有专属语义，不参与 CoordinateDefinition.roles 校验。 */
 const NON_POSITION_ENCODING_KEYS = new Set<string>(['color', 'text', 'channels']);
@@ -412,7 +449,11 @@ export type ResolveFrameParams = {
 export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolution => {
   const { node, rows, fieldTypes, width, height, fontSize, margin, provenance, coordinates, scaleRegistry } = params;
   const markDataViews = params.markDataViews ?? node.marks.map(mark => ({ mark, rows }));
-  const coordinateOperation = node.coordinate;
+  const registry = resolveCoordinateScopeRegistry(node);
+  const coordinateOperation = node.coordinate ?? registry.scopes.find(scope => scope.id === registry.defaultScope)?.coordinate;
+  if (coordinateOperation === undefined) {
+    throw new Error(`lowerPlots: default coordinate scope "${registry.defaultScope}" is not registered`);
+  }
   const coordinateRegistry = resolveCoordinateRegistry(coordinates);
   const coordinateDefinition = coordinateRegistry.get(coordinateOperation.type);
   if (coordinateDefinition === undefined) {
@@ -1144,19 +1185,42 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     rows: resolveMarkRows(mark, rows, transformRegistry, transformContext),
   }));
 
-  const { frame, gridLayers, axisLayers, plotArea } = resolveFrame({
-    node,
-    rows,
-    fieldTypes,
-    width,
-    height,
-    fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-    margin: options.margin,
-    provenance,
-    coordinates: options.coordinates,
-    scaleRegistry,
-    markDataViews,
+  const coordinateScopes = resolveCoordinateScopeRegistry(node);
+  const scopedFrames = coordinateScopes.scopes.map(scope => {
+    const scopedMarkDataViews = markDataViews.filter(
+      view => coordinateScopeIdOf(view.mark, coordinateScopes.defaultScope) === scope.id,
+    );
+    const scopedGuides = (node.guides ?? []).filter(
+      guide => !isAxisGuide(guide) || axisGuideScopeIdOf(guide, coordinateScopes.defaultScope) === scope.id,
+    );
+    const scopedNode: PlotSpec = {
+      ...node,
+      coordinate: scope.coordinate,
+      composition: undefined,
+      marks: scopedMarkDataViews.map(view => view.mark),
+      guides: scopedGuides,
+    };
+    return {
+      scopeId: scope.id,
+      ...resolveFrame({
+        node: scopedNode,
+        rows,
+        fieldTypes,
+        width,
+        height,
+        fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+        margin: options.margin,
+        provenance,
+        coordinates: options.coordinates,
+        scaleRegistry,
+        markDataViews: scopedMarkDataViews,
+      }),
+    };
   });
+  const frameByScope = new Map(scopedFrames.map(scopeFrame => [scopeFrame.scopeId, scopeFrame.frame] as const));
+  const gridLayers = scopedFrames.flatMap(scopeFrame => scopeFrame.gridLayers);
+  const axisLayers = scopedFrames.flatMap(scopeFrame => scopeFrame.axisLayers);
+  const plotArea = scopedFrames[0]?.plotArea ?? { x: 0, y: 0, width, height };
 
   const channelCtx = { node, rows, fieldTypes, scaleRegistry, resolveColorScheme };
   // 通道 registry：内置 definition 先注册，自定义 definition 再合并；mark / node / path 通道统一解析。
@@ -1178,6 +1242,11 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   const markLayers: Array<IRChild> = node.marks
     .map((mark, markIndex) => {
       const markRows = markDataViews[markIndex]?.rows ?? rows;
+      const coordinateScopeId = coordinateScopeIdOf(mark, coordinateScopes.defaultScope);
+      const frame = frameByScope.get(coordinateScopeId);
+      if (frame === undefined) {
+        throw new Error(`lowerPlots: coordinateScope "${coordinateScopeId}" is not registered`);
+      }
       return lowerMark(
         mark,
         markRows,

@@ -1,4 +1,4 @@
-import { GeometryLabelSchema, JsonValueSchema, NodeLabelSchema } from '@retikz/core';
+﻿import { GeometryLabelSchema, JsonValueSchema, NodeLabelSchema } from '@retikz/core';
 import { z } from 'zod';
 
 export const ChannelSchema = z
@@ -232,7 +232,7 @@ export const MarkNodeLabelSchema = z
   .superRefine((label, ctx) => {
     if (label.placement === 'inside' && label.pin) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['pin'],
         message: 'Node label pin is only supported for outside placement.',
       });
