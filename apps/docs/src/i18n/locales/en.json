@@ -24,8 +24,8 @@
     "expandSection": "Expand",
     "collapseSection": "Collapse"
   },
-  "core": {
-    "label": "Core",
+  "kernel": {
+    "label": "Kernel",
     "introduction": "Introduction",
     "getStart": "Get Started",
     "releases": "Releases",
@@ -103,8 +103,8 @@
     "refComposites": "Composite",
     "refPlot": "Plotting"
   },
-  "plot": {
-    "label": "Plot",
+  "graph": {
+    "label": "Graph",
     "introduction": "Introduction",
     "getStart": "Get Started",
     "releases": "Releases",

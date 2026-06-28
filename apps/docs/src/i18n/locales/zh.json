@@ -24,8 +24,8 @@
     "expandSection": "展开",
     "collapseSection": "收起"
   },
-  "core": {
-    "label": "核心",
+  "kernel": {
+    "label": "内核",
     "introduction": "简介",
     "getStart": "快速开始",
     "releases": "发布",
@@ -103,8 +103,8 @@
     "refComposites": "复合",
     "refPlot": "绘图"
   },
-  "plot": {
-    "label": "绘图",
+  "graph": {
+    "label": "图形",
     "introduction": "简介",
     "getStart": "快速开始",
     "releases": "发布",
