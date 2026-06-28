@@ -371,7 +371,7 @@ plot / chart 留在主 monorepo，不拆 `retikz-plot` 独立仓——至少贯�
 
 需要区分两个层级的「组合」：
 
-- **plot 内多坐标**：一个 plot 图内部的多个 coordinate scope（facet 小多图、inset、双轴等）。这是 plot 的职责，模型见下。
+- **plot 内坐标复合**：一个 plot 图内部的多个 coordinate scope（facet 小多图、inset、双轴、共享坐标骨架的 radial rings / cartesian lanes 等）。这是 plot 的职责，模型见下。
 - **跨域内容组合**：把整个 plot 与 uml / table / 任意业务内容拼到一起。这 **不由 plot 负责**，而是基于 core 现有 `Scope` 的通用能力——任意 Tier 2 内容都 lower 进可引用的 scope，由通用组合层编排。plot 对它的唯一义务是「可被组合」：lower 进可引用 scope 并暴露下列 anchor（见 §14）。
 
 推荐模型：
@@ -396,6 +396,14 @@ Scope 的职责：
 - 挂局部 transform / clip / style defaults。
 - 提供 bbox 与 anchor，供外层 annotation / connector 引用。
 - 可共享 data / scale，也可定义局部 data / scale。
+
+坐标复合还需要一个比单个 coordinate scope 更高的共享骨架（shared scaffold）：多个 scope 可以共享一部分坐标基底，再各自拥有局部 range / guide / clip。典型形态：
+
+- facet grid：共享 mark / encoding 定义，按字段拆 panel，每个 panel 有自己的 coordinate scope。
+- same-panel overlay：共享 plot area 或 x scale，不同 mark 选择不同 y scale / guide。
+- radial tracks：共享 polar center / angle domain / orientation，不同 ring 拥有自己的 radius band 与 mark。
+- cartesian lanes：共享 x domain，不同 lane 拥有自己的 y band / local y scale。
+- mixed overlay：不同 coordinate 类型共享 anchor / bbox / data / guide 语义，但仍 lower 成各自的 core `Scope`。
 
 多坐标组合需要预留 semantic anchor：
 
@@ -633,14 +641,14 @@ intent
 
 `@retikz/plot` 有自身独立的版本演进，**不与 core 版本号对齐**；它只消费 core 能力、不反向依赖，因此每个里程碑由「所需 core 能力是否就绪」gating。模块名见 §11，首批细节见 §12。
 
-> ⚠️ **版本主题真源以 [plot v0 roadmap](../decisions/plot/v0/roadmap.md) 为准**：路线已重组——**v0.1 承载整套图形语法（GoG 8 组件）**，分阶段一（alpha.1–5 基础架构，已完成）+ 阶段二（alpha.6–14 完善语法：Data → Aesthetics+Scales → Coordinates/Geometry → Statistics → Facets → Theme）；交互 / 动画 / AI 渐进 / 性能等**能力轴**留 v0.1 之后的 minor。下文 §13.1~§13.6 是早期里程碑设计草案，**版本编号已过时**（原按 v0.1–v0.5 多 minor 设想），保留作各组件的**设计参考**；实际 alpha 序列见 [v0.1/roadmap](../decisions/plot/v0/v0.1/roadmap.md)。
+> ⚠️ **版本主题真源以 [plot v0 roadmap](../decisions/plot/v0/roadmap.md) 为准**：路线已重组——**v0.1 承载整套图形语法（GoG 8 组件）**，分阶段一（alpha.1–5 基础架构，已完成）+ 阶段二（alpha.6–9 / 11–15 完善语法：Data → Aesthetics+Scales → Coordinates/Geometry → Statistics → Coordinate composition → Theme）；交互 / 动画 / AI 渐进 / 性能等**能力轴**留 v0.1 之后的 minor。下文 §13.1~§13.6 是早期里程碑设计草案，**版本编号已过时**（原按 v0.1–v0.5 多 minor 设想），保留作各组件的**设计参考**；实际 alpha 序列见 [v0.1/roadmap](../decisions/plot/v0/v0.1/roadmap.md)。
 
 主线（阶段一）：纵向闭环 → 横向铺 mark → 动态 → AI 渐进 → 组合。
 
 > **贯穿原则**：v0.1 的 IR 与 lowering 必须预留两样东西，即便功能要到后面才露出——
 >
 > - **semantic anchor / datum locator**（v0.3 交互命中要用，§7）；
-> - **scope-aware IR**（v0.5 组合与 facet 要用，§7）。
+> - **scope-aware IR**（v0.5 组合与坐标复合要用，§7）。
 >
 > 现在预留近乎零成本，事后补极痛。
 
@@ -679,12 +687,12 @@ intent
 - 顺序说明：与 v0.3 互相独立（都只需 v0.1–v0.2 打底）；排在 v0.3 之后，是因为它依赖的 core Progressive IR 比交互依赖的 hydration 晚就绪——plot 里程碑随 core 能力就绪排序。
 - 包：`@retikz/plot`（+ 框架绑定承接增量渲染）。
 
-### 13.6 v0.5 — facet 小多图 + 组合就绪
+### 13.6 v0.5 — 坐标复合 + 组合就绪
 
-- 目标：(1) plot 内 **facet** 小多图（按字段拆多个 coordinate scope，scale 可共享或独立）；(2) 跨图 connector / ribbon；(3) 验证 plot 能被 **通用组合能力** 正常编排。
-- 关键：**跨域内容组合（plot 与 uml / table / 任意业务内容混排）不由 plot 实现**——它是基于 core 现有 `Scope` 的通用能力（§7 / §14），任意 Tier 2 内容共用同一套。plot 的职责仅是「可被组合」，而这在 v0.1 已通过「lower 进可引用 scope + 暴露 anchor」满足；本版只新增 facet / connector 与对接验证。
+- 目标：(1) plot 内 **coordinate composition** 坐标复合：facet 小多图、同 panel 多坐标轴 / 多位置 scale 叠加、共享坐标骨架的 tracks / rings / lanes；(2) 跨图 connector / ribbon；(3) 验证 plot 能被 **通用组合能力** 正常编排。
+- 关键：**跨域内容组合（plot 与 uml / table / 任意业务内容混排）不由 plot 实现**——它是基于 core 现有 `Scope` 的通用能力（§7 / §14），任意 Tier 2 内容共用同一套。plot 的职责仅是「可被组合」，而这在 v0.1 已通过「lower 进可引用 scope + 暴露 anchor」满足；本版只新增 plot 内坐标复合 / connector 与对接验证。
 - 依赖 core 能力：core `Scope`、已预留的 plot anchor（组合编排本身复用现有 `Scope`，无需 plot 新建容器）。
-- 包：`@retikz/plot`（facet / connector）；组合容器属 core / 跨域，不在 plot。
+- 包：`@retikz/plot`（coordinate composition / connector）；组合容器属 core / 跨域，不在 plot。
 
 ## 14. 明确不做
 

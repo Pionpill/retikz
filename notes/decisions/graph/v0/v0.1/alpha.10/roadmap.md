@@ -8,7 +8,7 @@
 
 本 milestone **不属图形语法 8 组件**，是 **Plot 作为容器的角色收敛**：先把 `<Plot>` 退化成「薄容器」，再让这个薄绘图块可嵌入 core `<Layout>` 做多面板组合。封板实现期同时收口 `<Scale>` 子组件、Plot 级 `colors` 调色板、面板 `id` / `dataRef` / `x` / `y` 等组合入口。
 
-编号取 **alpha.10**（2026-06-13 决策插入），原语法里程碑 Geometry / Statistics / Facets / Theme 顺延 **alpha.11–15**（见 [v0.1 roadmap Milestones](../roadmap.md)）。各 Accepted ADR 中对这些语法 milestone 的按号引用同步 +1。
+编号取 **alpha.10**（2026-06-13 决策插入），原语法里程碑 Geometry / Statistics / Coordinate composition / Theme 顺延 **alpha.11–15**（见 [v0.1 roadmap Milestones](../roadmap.md)）。各 Accepted ADR 中对这些语法 milestone 的按号引用同步 +1。
 
 **与 v0.2 chart 的关系**：本轮只做 `<Plot>` 退化（移除自动装饰）；开箱即用的自动轴 / 图例 / 网格 + 主题由 **v0.2 的 `<Chart>`** 上层封装承担（见 [plot v0.2 roadmap](../../v0.2/roadmap.md)）。即：**v0.1 让 Plot 变薄，v0.2 在薄 Plot 之上加 Chart**。
 
@@ -38,7 +38,7 @@
 | [01](./01-plot-thin-container.md) | **退化 `<Plot>` 为薄容器**：移除 cartesian2D 默认轴注入、保留 scale/coord 推断、删除 `bare` / `scaleX` / `scaleY`、新增 `<Scale>` 与 `colors`；breaking + demo 迁移 | red | — | Accepted |
 | [02](./02-plot-composable.md) | **让 `<Plot>` 可被组合**：单 svg 多坐标信息图——PlotSpec 自描述尺寸 + plot lowering 暴露外部可见面板 anchor（bbox + plotArea，gated on id）；`<Plot>` 改可嵌入、直接作 core `<Layout>` 子组件（嵌入态不自渲染、lower 时处理）；组合 MVP 从 v0.5 前移 | red | 01 + core-react 机制 | Accepted |
 
-> 两 ADR 同一主题线：**Plot 作为容器的角色**。01 把 `<Plot>` 降成薄绘图块（角色单一），02 顺势让薄块「可被嵌入与组合」进同一张 svg。02 是组合 MVP（plot-design §7 L1+L2），从原 roadmap v0.5 前移——L1（自描述尺寸 + 可嵌入）不依赖 facet，可独立先行；v0.5 收口 facet 内多坐标 + series/datum 锚 + 相对摆位。装饰逻辑去向（供 v0.2 chart 复用）见 ADR-01。
+> 两 ADR 同一主题线：**Plot 作为容器的角色**。01 把 `<Plot>` 降成薄绘图块（角色单一），02 顺势让薄块「可被嵌入与组合」进同一张 svg。02 是组合 MVP（plot-design §7 L1+L2），从原 roadmap v0.5 前移——L1（自描述尺寸 + 可嵌入）不依赖 Coordinate composition，可独立先行；v0.5 收口 plot 内坐标复合 + series/datum 锚 + 相对摆位。装饰逻辑去向（供 v0.2 chart 复用）见 ADR-01。
 
 > ✅ **2026-06-15 alpha.10 封口**：ADR-01/02 全部 `Accepted`；`@retikz/plot` / `@retikz/plot-react` / docs 类型检查与测试全绿（plot 838、plot-react 95、docs 101），`pnpm lint` 与 `git diff --check` 通过。changelog 已同步。重复面板 id 遵循当前 core duplicate-id 语义（warning + last-wins），不在 plot 层额外 fail-loud。
 

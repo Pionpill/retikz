@@ -5,12 +5,12 @@
 
 ## 定位
 
-**v0.1 承载 `@retikz/plot` 的整套图形语法**（GoG 8 组件：Data / Aesthetics / Geometry / Statistics / Scales / Coordinates / Facets / Theme，除交互 / 动画）。它经两个阶段、**都在 v0.1 的 alpha 线**完成（版本结构真源见 [v0 roadmap](../roadmap.md)）：
+**v0.1 承载 `@retikz/plot` 的整套图形语法**（GoG 8 组件：Data / Aesthetics / Geometry / Statistics / Scales / Coordinates / Facets / Theme，除交互 / 动画；retikz 把 Facets 扩展为更通用的 Coordinate composition 坐标复合能力）。它经两个阶段、**都在 v0.1 的 alpha 线**完成（版本结构真源见 [v0 roadmap](../roadmap.md)）：
 
 - **阶段一 · 基础架构搭建（alpha.1–5，✅ 已完成）**：对 ≥1 个 mark 跑通全 8 段管线（transform → encoding → scale → coordinate → mark → guide → scope → lowering），cartesian + polar 双系成立，端到端出带轴网格的折线 / 柱状图；并搭起 6 个组件的**最小骨架** + anchor·scope 预留。验证 grammar 与 lowering 真正打通，不求语法完备。
-- **阶段二 · 完善图形语法（alpha.6–9 / 11–15）**：补全全部 8 组件——含全新 **Facets / Theme**。详见下方 Milestones。（**alpha.10 为 2026-06-13 插入的绑定层 milestone**、非 GoG 组件，故语法 milestone 顺延 11–15。）
+- **阶段二 · 完善图形语法（alpha.6–9 / 11–15）**：补全全部 8 组件——含全新 **Coordinate composition / Theme**。详见下方 Milestones。（**alpha.10 为 2026-06-13 插入的绑定层 milestone**、非 GoG 组件，故语法 milestone 顺延 11–15。）
 
-**阶段一贯穿原则（已兑现）**：v0.1 的 IR 与 lowering 从 **alpha.1 起**预留两样东西——**semantic anchor / datum locator**（v0.1 之后交互命中要用）与 **scope-aware IR**（Facets / 组合要用）；预留零成本、alpha.5 已接通可用，事后补极痛。
+**阶段一贯穿原则（已兑现）**：v0.1 的 IR 与 lowering 从 **alpha.1 起**预留两样东西——**semantic anchor / datum locator**（v0.1 之后交互命中要用）与 **scope-aware IR**（Coordinate composition / 组合要用）；预留零成本、alpha.5 已接通可用，事后补极痛。
 
 ## 拆分策略
 
@@ -32,7 +32,7 @@
 
 ### 阶段二 · 完善图形语法（alpha.6–9 / 11–15，GoG 8 组件补全；alpha.10 为插入的绑定层 milestone、非 GoG 组件）
 
-> 排序原则：上游先于下游、结构性先于增量、地基先于铺面（Data → Aesthetics+Scales → Coordinates / Geometry → Statistics → Facets → Theme）。每 alpha 一个可渲染薄片，延续「纵向薄片 + 三包 lockstep」。**越远越是草案**，临近开发先起 ADR 草案、外部 LLM 评审，再进实现（同 alpha.1–5 流程）。
+> 排序原则：上游先于下游、结构性先于增量、地基先于铺面（Data → Aesthetics+Scales → Coordinates / Geometry → Statistics → Coordinate composition → Theme）。每 alpha 一个可渲染薄片，延续「纵向薄片 + 三包 lockstep」。**越远越是草案**，临近开发先起 ADR 草案、外部 LLM 评审，再进实现（同 alpha.1–5 流程）。
 
 | Milestone     | 组件 / 主题                     | 模块 / 产出                                                                                                                                                                                                                                                      | 记录                                                                   |
 | ------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
@@ -44,7 +44,7 @@
 | v0.1-alpha.11 | **Geometry 基础**               | mark 补 **rect**（heatmap 格）+ **rule**（参考 / 阈值线）+ **text**（datum label）+ **ribbon**（sankey / alluvial 流量、跨 scope connector）。并落地**区间类几何的坐标系无关下沉**（interval / rect / sector 共用，含曲线 / 自定义坐标系）——契约与决策见表后「区间几何下沉」备注。**依赖 core 补 `contour` shape**（core 已实现 contour shape）。契约与决策见表后「区间几何下沉」备注 | [`alpha.11/`](./alpha.11/roadmap.md)（5 ADR 全部实现 + Accepted） |
 | v0.1-alpha.12 | **Statistics 基础**             | `transform` 补 **bin / histogram** + **aggregate**（sum / mean / count / min / max）+ **normalize**（百分比堆叠）+ **derive interval**（字段算 start/end）+ **jitter**                                                                                           | [`alpha.12/`](./alpha.12/roadmap.md)（2 ADR 全部实现 + Accepted）       |
 | v0.1-alpha.13 | **Statistics 进阶 + stat-geom** | **density**（KDE）+ **smooth / 回归** + **quantile-band**；配对几何 **boxplot / density-area**（geom×stat 成对落地）；RelationMark **ribbon**、mark label 宿主与 sector **pull** 收口                                                                           | [`alpha.13/`](./alpha.13/roadmap.md)（7 ADR 全部实现 + Accepted）       |
-| v0.1-alpha.14 | **Facets 分面**                 | 按字段拆多 coordinate scope（小多图）；scale 共享 / 独立；统一轴 / 网格 / 间距；**复用 core `Scope`**（不自建容器，见 [plot-design §7](../../../../architecture/plot-design.md)）                                                                                | 待建                                                                   |
+| v0.1-alpha.14 | **Coordinate composition 坐标复合** | plot 内多个 coordinate scope 的统一地基：facet 小多图；同 panel 多 y 轴 / 多位置 scale 叠加；共享坐标骨架的 tracks / rings / lanes（如共享圆心/角度但半径分轨，或共享 x 但 y-range 分带）；mark 可选择自己的 coordinate / scale / track；**复用 core `Scope`**（不自建跨域容器，见 [plot-design §7](../../../../architecture/plot-design.md)） | [`alpha.14/`](./alpha.14/roadmap.md)                                  |
 | v0.1-alpha.15 | **Theme 主题样式**              | 标题 / 字体 / 背景 / 网格线 / 图例外观；调色板（categorical / sequential / diverging）；默认样式 token；series / sector 配色。`theme` 模块（[plot-design §11.1](../../../../architecture/plot-design.md)）                                                       | 待建                                                                   |
 
 > 阶段二依赖链：alpha.9 ternary ← alpha.6 proportion；alpha.8 legend ← alpha.7 非位置 scale（size/opacity/shape/color 全在 alpha.7 就位）+ alpha.8 gradient；alpha.13 boxplot ← alpha.12/13 stat；**alpha.11 任意坐标系区间几何 ← core `contour` shape（ADR `ADR-core-contour-shape.md`，已送 core 分支，gate 于 core 落地）**。
@@ -76,6 +76,7 @@
 - **样式通道（补进 `StyleEncodingSchema`）** — *【alpha.7–8】*：encoding 已拆出 `PositionEncodingSchema`（x/y，必填）+ `StyleEncodingSchema`（当前仅 color）；后续在 `StyleEncodingSchema` 补 **size（alpha.7）/ 透明度（fill / stroke opacity）/ shape（alpha.8）** 等非位置通道，mark 据此着色 / 缩放 / 改形
 - **单系列 line / area 的 color field 静默丢弃**（cross-review P2）— *【alpha.7，随 series 一等化】*：`expand.ts` 的 `resolveColor` 支持字段编码，但 `lowerLine` / `lowerArea` 单系列路径只读常量 `encoding.color.value`，`color={field}` 无 series 时被静默忽略、回退 `currentColor`，而 React props / 文档把 `color` 写成「颜色字段」。排期时定向：① 文档明确 color field 仅在 series 拆分时生效；② color field 隐式触发 series 分组（GoG 语义）；③ 单系列取首行颜色。与 legend / 样式通道相关，建议合并排。落点 `src/lower/mark.ts`（单系列 stroke / fill 解析）+ `expand.ts` resolveColor
 - **更多坐标系** — *【alpha.9；ternary 依赖 alpha.6 proportion；3D gating 于 core】*：当前仅 `cartesian2D` / `polar2D`。后续补全坐标系族——cartesian / polar 的 **1D**（`cartesian1D` rug / timeline、角向 1D 等）与其余 **2D** 变体、**ternary（三元图，2D 约束投影）**；判别串延续含维度命名（`cartesian1D` / `ternary2D` …）。**地图坐标不进 plot**（§2 独立 domain）。**3D 坐标系（`cartesian3D` / `polar3D` 等）须先等 core 支持三维坐标**——plot 只消费 core 能力、不自造几何（见 AGENTS.md「子组遇 core 能力不足先补 core」），故 3D 坐标系 gating 于 core 三维坐标就绪，core 没有之前不在 plot 里做。
+- **Coordinate composition 坐标复合** — *【alpha.14】*：它是 Facets 的上位地基，不只处理“按字段拆小图”。同一套机制也要支撑 same-panel dual-axis / overlay（共享 x 或 plot area）、shared scaffold tracks（共享某些坐标基底但局部 range 不同，如极坐标共享 center / angle、半径分 ring；笛卡尔共享 x、y 分 lane；混合 coordinate scope 共享 anchor / guide / scale）。alpha.14 需拆 ADR：facet 负责“按字段拆 panel”，dual-axis / overlay 负责“同 panel 多坐标 / mark 选择 coordinate 或 position scale”，shared scaffold / track 负责“共享坐标骨架 + 局部轨道”。三者共享 scale registry、guide 绑定 coordinate scope、locator / provenance 的 scope 语义；不扩展为跨域组合容器。后续 v0.3 composite / chart preset 可复用这套地基做高层封装，但不得绕开 plot primitive。
 - ~~**cartesian 不校验 guide dimension**（cross-review P2）~~ — ✅ **alpha.9 已修**：`expand.ts` 的 `assertValidGuideDimensions` 按 `coordinate-meta` 的 `VALID_GUIDE_DIMENSIONS` 逐坐标系校验 guide dimension（cartesian2D 只许 x/y…），非法维度 fail-loud（不再渲杂散轴线）。
 - **mark 视觉细节** — *【alpha.7–8 描边 / alpha.11 text mark·datum label】*：描边细节；数据标签（datum label）/ text mark
 - **sector 间隔与静态外拉**（见 alpha.4 [ADR-02](./alpha.4/02-sector-geometry.md) 与 alpha.13 ADR-06）— *【alpha.13 已收口】*：`padAngle` 作为 sector / interval mark 层角向间隔；`IntervalMark.pull` 作为 polar sector 静态径向偏移，anchor / locator 跟随同一几何；hover / selected 动画态顺延到交互轴。
