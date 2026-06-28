@@ -8,7 +8,7 @@ export const EasingSchema = z
     z.tuple([z.number(), z.number(), z.number(), z.number()]),
   ])
   .describe(
-    'Easing: a named preset (built-in linear / ease / ease-in / ease-out / ease-in-out, or a custom name resolved by a renderer-registered easing) or a cubic-bezier control-point tuple [x1, y1, x2, y2]. Defaults to linear when omitted.',
+    'Easing curve: built-in easing name, custom easing name, or cubic-bezier tuple [x1, y1, x2, y2]. Omitted fields use linear easing.',
   );
 
 export const KeyframeSchema = z
@@ -18,16 +18,16 @@ export const KeyframeSchema = z
       .min(0)
       .max(1)
       .describe(
-        'Normalized keyframe time in [0, 1] (WAAPI offset, decoupled from duration). Keyframes within a track must be sorted ascending by `at`.',
+        'Normalized keyframe time. Keyframes in one track must be sorted by this field.',
       ),
     value: JsonValueSchema.describe(
-      'Keyframe value (any JSON value). For built-in properties it is narrowed by the track-level refinement: a finite number (opacity / scale / rotate / translateX|Y / strokeWidth / pathDraw 0..1), a color string (fill / stroke, interpolated in oklch), or a 4-number array [x, y, w, h] (viewBox). Custom (non-built-in) properties accept any JSON value, interpreted by a renderer-registered interpolator.',
+      'Absolute property value at this keyframe. Built-in properties are refined by track property; custom properties accept any JSON value.',
     ),
     easing: EasingSchema.optional().describe(
-      'Per-segment easing from this keyframe to the next; overrides the track-level easing.',
+      'Easing from this keyframe to the next. Overrides track-level easing for that segment.',
     ),
   })
-  .describe('A single animation keyframe: a value at a normalized time, with optional per-segment easing.');
+  .describe('One animation keyframe: normalized time, absolute value, and optional segment easing.');
 
 export const TriggerSchema = z
   .union([
@@ -36,11 +36,11 @@ export const TriggerSchema = z
       onEvent: z
         .string()
         .min(1)
-        .describe('Event name (e.g. "click") the runtime binds to start playback; the handler function never enters the IR.'),
+        .describe('Runtime event name that starts playback. Only the event name enters the IR.'),
     }),
   ])
   .describe(
-    'When playback starts: "load" (on render, SSR-friendly) / "visible" (runtime IntersectionObserver) / "manual" (runtime API) / { onEvent } (bridge to hydration; only the event name is stored, never a callback). Defaults to "load".',
+    'Playback trigger: load, visible, manual, or a named runtime event. Omitted fields use load.',
   );
 
 export const OriginSchema = z
@@ -49,14 +49,14 @@ export const OriginSchema = z
       .string()
       .min(1)
       .describe(
-        'Named transform pivot reusing the node anchor vocabulary (center / north / south / east / west / north-east / ... / south-west), resolved against the element boundary by the renderer.',
+        'Named transform pivot using the node anchor vocabulary, resolved against the animated element.',
       ),
     z
       .tuple([z.number(), z.number()])
-      .describe('Explicit pivot in the element local coordinate space [x, y].'),
+      .describe('Explicit transform pivot in element-local coordinates [x, y].'),
   ])
   .describe(
-    'Transform pivot for scale / scaleX / scaleY / rotate channels: a named anchor or an explicit local-space point. Ignored by non-transform channels. Defaults to the element geometric center.',
+    'Transform pivot for scale, scaleX, scaleY, and rotate. Non-transform properties ignore it; omitted fields use the element center.',
   );
 
 export const AnimationTrackSchema = z
@@ -65,7 +65,7 @@ export const AnimationTrackSchema = z
       .string()
       .min(1)
       .describe(
-        'Renderer-agnostic animated channel. Built-in: opacity / fill / stroke / strokeWidth / translateX / translateY / rotate / scale (uniform) / scaleX / scaleY (non-uniform) / pathDraw (0..1 reveal) / viewBox (scene-root camera only). Any other string is a custom channel that passes through to a renderer-registered interpolator. `viewBox` is valid only at the scene root (enforced at compile).',
+        'Animated property name. Built-ins are opacity, fill, stroke, strokeWidth, translateX, translateY, rotate, scale, scaleX, scaleY, pathDraw, and viewBox. Other names are custom properties. viewBox is scene-root only.',
       ),
     keyframes: z
       .array(KeyframeSchema)
@@ -74,39 +74,39 @@ export const AnimationTrackSchema = z
         message: 'keyframes must be sorted ascending by `at`',
       })
       .describe(
-        'Ordered keyframes (at least one), sorted ascending by `at` within [0, 1]. Each keyframe gives the absolute display value at that time (NOT a delta on top of the base). By convention the final keyframe equals the element base (settled) state, so ignoring the animation renders the complete base figure.',
+        'Keyframes sorted by `at`. Each value is absolute, not a delta. The final keyframe should represent the settled value.',
       ),
     duration: z
       .number()
 
       .positive()
-      .describe('One-iteration duration in milliseconds (> 0).'),
+      .describe('Duration of one animation iteration in milliseconds.'),
     delay: z
       .number()
 
       .nonnegative()
       .optional()
-      .describe('Delay before the first iteration, in milliseconds (>= 0). Group-level stagger is compiled by sugar into per-track delays.'),
+      .describe('Delay before playback starts, in milliseconds.'),
     easing: EasingSchema.optional().describe(
-      'Track-level easing applied to each segment that lacks its own keyframe easing. Defaults to linear.',
+      'Default easing for keyframe segments without keyframe-level easing. Omitted fields use linear easing.',
     ),
     iterations: z
       .union([z.number().positive(), z.literal('infinite')])
       .optional()
-      .describe('Total play count (WAAPI iterations): a positive number (may be fractional) or "infinite". Omitted = 1 = play once.'),
+      .describe('Iteration count: a positive number or "infinite". Omitted fields play once.'),
     direction: z
       .enum(AnimationDirection)
       .optional()
-      .describe('Per-iteration playback direction (WAAPI / CSS animation-direction). Defaults to "normal".'),
+      .describe('Playback direction for each iteration. Omitted fields use normal.'),
     fill: z
       .enum(AnimationFill)
       .optional()
       .describe(
-        'Value held outside the active interval (WAAPI / CSS fill-mode). Defaults to "forwards" so the element settles at its base (end) state, matching the static-settled invariant.',
+        'Value mode outside the active interval. Omitted fields use forwards so static rendering matches the settled value.',
       ),
-    trigger: TriggerSchema.optional().describe('Playback trigger; defaults to "load".'),
+    trigger: TriggerSchema.optional().describe('Playback trigger. Omitted fields use load.'),
     origin: OriginSchema.optional().describe(
-      'Transform pivot for scale / scaleX / scaleY / rotate channels; ignored by other channels. Defaults to the element geometric center.',
+      'Transform pivot for scale, scaleX, scaleY, and rotate. Other properties ignore it.',
     ),
   })
   // 内置 property 的 keyframe value 类型校验；自定义 property（非内置名）value 宽松（任意 JSON），交 renderer 注册的插值器
@@ -141,5 +141,5 @@ export const AnimationTrackSchema = z
     });
   })
   .describe(
-    'A declarative timeline animation track on a single renderer-agnostic property: keyframes over normalized time plus WAAPI-style timing options. The `property` is open (built-in channels or a custom name resolved by a renderer-registered interpolator). Fully JSON-serializable (no functions); playback control and callbacks live in the runtime, not the IR. Renderers that cannot animate render the static settled state and emit a diagnosable warning.',
+    'Declarative animation track for one property. Stores JSON-safe keyframes and timing options only; callbacks and playback state stay outside the IR.',
   );
