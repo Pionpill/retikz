@@ -22,7 +22,7 @@ import {
   PlotCoordinate,
   PlotScale,
 } from '../../../schemas';
-import { assertUniqueAxisDimension } from '../shared';
+import { assertUniqueAxisPlacement } from '../shared';
 
 type Cartesian2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Cartesian2D }>;
 
@@ -159,7 +159,7 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
     const xScale = ctx.buildPositionScale(xScaleDef, xValues, [0, ctx.width]);
     const yScale = ctx.buildPositionScale(yScaleDef, yValues, [ctx.height, 0]);
 
-    assertUniqueAxisDimension(ctx.axisGuides);
+    assertUniqueAxisPlacement(ctx.axisGuides);
     const xAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
     const yAxis = ctx.axisGuides.find(guide => guide.dimension === 'y');
     const xTicks: TickSet | undefined = xAxis
@@ -181,7 +181,7 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
       },
       { fontSize: ctx.fontSize, margin: ctx.margin },
     );
-    const plotArea = computed.plotArea;
+    const plotArea = ctx.plotAreaOverride ?? computed.plotArea;
 
     if (!hasExplicitContinuousRange(xScaleDef)) xScale.setRange([plotArea.x, plotArea.x + plotArea.width]);
     if (!hasExplicitContinuousRange(yScaleDef)) yScale.setRange([plotArea.y + plotArea.height, plotArea.y]);
@@ -222,7 +222,7 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
     const values = ctx.collectPositionValues('x', { axis: 'primary' });
     const scaleDef = ctx.resolveScaleForRole('x', coordinate.x, values);
 
-    assertUniqueAxisDimension(ctx.axisGuides);
+    assertUniqueAxisPlacement(ctx.axisGuides);
     const axis = ctx.axisGuides.find(guide => guide.dimension === 'x');
 
     const provisional: [number, number] = horizontal ? [0, ctx.width] : [ctx.height, 0];
@@ -240,7 +240,7 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
       },
       { fontSize: ctx.fontSize, margin: ctx.margin },
     );
-    const plotArea = computed.plotArea;
+    const plotArea = ctx.plotAreaOverride ?? computed.plotArea;
     if (horizontal) scale.setRange([plotArea.x, plotArea.x + plotArea.width]);
     else scale.setRange([plotArea.y + plotArea.height, plotArea.y]);
     const baseline = horizontal ? plotArea.y + plotArea.height : plotArea.x;

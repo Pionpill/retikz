@@ -1,6 +1,43 @@
 ﻿import { z } from 'zod';
 
-import { LegendOrient, LegendPosition, PlotGuide } from './constants';
+import { AxisCardinalSide, AxisPlacementKind, LegendOrient, LegendPosition, PlotGuide } from './constants';
+
+const AxisAutoPlacementSchema = z
+  .object({
+    kind: z.literal(AxisPlacementKind.Auto).describe('Placement discriminator: infer the axis position from the coordinate system and dimension'),
+  })
+  .strict()
+  .describe('Automatic axis placement');
+
+const AxisSidePlacementSchema = z
+  .object({
+    kind: z.literal(AxisPlacementKind.Side).describe('Placement discriminator: place the axis on a cardinal side of the plot area'),
+    side: z.enum(AxisCardinalSide).describe('Cardinal side of the plot area: top, right, bottom, or left'),
+    offset: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe('Additional outward offset in user units for axes sharing the same placement key; omit = 0'),
+  })
+  .strict()
+  .describe('Cardinal-side axis placement');
+
+const AxisEdgePlacementSchema = z
+  .object({
+    kind: z.literal(AxisPlacementKind.Edge).describe('Placement discriminator: place the axis on a coordinate-native edge'),
+    edge: z.string().min(1).describe('Coordinate-native edge id; interpreted by the active coordinate definition'),
+    offset: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe('Additional outward offset in user units for axes sharing the same native edge; omit = 0'),
+  })
+  .strict()
+  .describe('Coordinate-native edge axis placement');
+
+export const AxisPlacementSchema = z
+  .discriminatedUnion('kind', [AxisAutoPlacementSchema, AxisSidePlacementSchema, AxisEdgePlacementSchema])
+  .describe('Axis placement mode: automatic coordinate default, cardinal plot-area side, or coordinate-native edge');
 
 export const AxisGuideSchema = z
   .object({
@@ -27,6 +64,9 @@ export const AxisGuideSchema = z
       .describe(
         'Coordinate scope id this axis is bound to; omit to use the plot composition default scope',
       ),
+    placement: AxisPlacementSchema.optional().describe(
+      'Axis placement mode; omit to infer an automatic placement from the active coordinate system and dimension',
+    ),
     tickCount: z
       .number()
       .int()

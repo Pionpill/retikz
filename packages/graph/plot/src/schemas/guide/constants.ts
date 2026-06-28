@@ -15,6 +15,40 @@ export const PlotGuide = {
 export type PlotGuideValue = ValueOf<typeof PlotGuide>;
 
 /**
+ * 坐标轴摆放方式关键字。
+ * @description auto 由坐标系按维度推断；side 使用笛卡尔式四边；edge 使用坐标系原生边。
+ */
+export const AxisPlacementKind = {
+  /** 由坐标系和 dimension 自动推断。 */
+  Auto: 'auto',
+  /** 放在 plotArea 的四个方向之一。 */
+  Side: 'side',
+  /** 放在坐标系原生 edge 上，供 ternary / custom coordinate 使用。 */
+  Edge: 'edge',
+} as const;
+
+/** 坐标轴摆放方式。 */
+export type AxisPlacementKindValue = ValueOf<typeof AxisPlacementKind>;
+
+/**
+ * 笛卡尔式四方向轴位置。
+ * @description 只表达 top/right/bottom/left；非四边形坐标系应使用 auto 或 edge。
+ */
+export const AxisCardinalSide = {
+  /** plotArea 上边。 */
+  Top: 'top',
+  /** plotArea 右边。 */
+  Right: 'right',
+  /** plotArea 下边。 */
+  Bottom: 'bottom',
+  /** plotArea 左边。 */
+  Left: 'left',
+} as const;
+
+/** 笛卡尔式四方向轴位置。 */
+export type AxisCardinalSideValue = ValueOf<typeof AxisCardinalSide>;
+
+/**
  * 图例绑定的非位置通道名。
  * @description schema 只要求非空字符串；该通道是否存在、是否产出 legend descriptor，由 channel registry 在 lowering 时解析。
  */

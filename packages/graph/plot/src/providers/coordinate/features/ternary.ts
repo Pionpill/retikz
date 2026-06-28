@@ -16,7 +16,7 @@ import type { Ternary2DCoordinate } from '../../../schemas';
 import { cellInterval } from '../../../contract';
 import { computeTernaryFrame } from '../../../pipeline';
 import { PlotCoordinate, PlotScale, Ternary2DSchema } from '../../../schemas';
-import { assertUniqueAxisDimension } from '../shared';
+import { assertUniqueAxisPlacement } from '../shared';
 
 /** 空刻度集：三角 guide 的 x/y 位置 scale 占位不会被实际读取。 */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
@@ -162,7 +162,10 @@ const ternary2DCoordinateDefinition: CoordinateDefinition<Ternary2DCoordinate> =
   schema: Ternary2DSchema,
   roles: ['x', 'y', 'z'],
   resolve: (coordinate, ctx) => {
-    assertUniqueAxisDimension(ctx.axisGuides);
+    if (ctx.axisGuides.some(guide => guide.placement?.kind === 'side')) {
+      throw new Error('lowerPlots: ternary2D axis does not support cardinal side placement; use auto or edge');
+    }
+    assertUniqueAxisPlacement(ctx.axisGuides);
     const hasAxis = ctx.axisGuides.length > 0;
     const showAnyLabels = ctx.axisGuides.some(guide => guide.tickLabels !== false);
     const layout = computeTernaryFrame(

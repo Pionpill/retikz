@@ -170,7 +170,7 @@ describe('lowerPlots guide orchestration (ADR-04)', () => {
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
-  it('duplicate_axis_dimension_rejected', () => {
+  it('duplicate_axis_placement_rejected', () => {
     expect(() =>
       expandOf(
         guidedSpec([
@@ -178,7 +178,7 @@ describe('lowerPlots guide orchestration (ADR-04)', () => {
           { type: 'axis', dimension: 'y' },
         ]),
       ),
-    ).toThrow(/dimension/);
+    ).toThrow(/placement/);
   });
 
   it('explicit_range_axis_line_aligns_with_ticks', () => {

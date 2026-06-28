@@ -28,6 +28,10 @@ const CoordinateScopeOverlayPlacementSchema = z
   .object({
     kind: z.literal('overlay').describe('Placement kind: this scope overlays another coordinate scope'),
     target: z.string().min(1).describe('Target coordinate scope id this scope overlays'),
+    zIndex: z
+      .number()
+      .optional()
+      .describe('Relative mark-layer z-order hint inside the shared overlay panel; omit to use scope declaration order'),
   })
   .strict()
   .describe('Overlay coordinate scope placement');
@@ -173,6 +177,28 @@ export const CoordinateCompositionSchema = z
           path: ['scopes', index, 'placement', 'target'],
           message: `overlay target "${scope.placement.target}" cannot reference the same coordinate scope`,
         });
+      }
+    }
+    const overlayTargetOf = new Map(
+      composition.scopes.flatMap(scope =>
+        scope.placement?.kind === 'overlay' ? [[scope.id, scope.placement.target] as const] : [],
+      ),
+    );
+    for (const scope of composition.scopes) {
+      const visiting = new Set<string>();
+      let current: string | undefined = scope.id;
+      while (current !== undefined) {
+        if (visiting.has(current)) {
+          const index = composition.scopes.findIndex(candidate => candidate.id === scope.id);
+          ctx.addIssue({
+            code: 'custom',
+            path: ['scopes', index, 'placement'],
+            message: `overlay placement cycle detected at coordinate scope "${current}"`,
+          });
+          break;
+        }
+        visiting.add(current);
+        current = overlayTargetOf.get(current);
       }
     }
     const facetIds = new Set<string>();

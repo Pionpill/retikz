@@ -11,6 +11,7 @@ import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionVa
 
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, estimateLabelWidth } from '../../pipeline/layout';
 import { guideLayerId, guideLayerMeta } from '../../pipeline/provenance';
+import { AxisCardinalSide, AxisPlacementKind } from '../../schemas';
 
 /** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 arcEndPoint。 */
 const DEG_TO_RAD = Math.PI / 180;
@@ -75,6 +76,46 @@ const segmentsToPath = (segments: Array<Segment>): IRPath | null => {
 /** 某 dimension 是否为 primary 角色（cartesian x / polar angle）；否则 secondary（y / radius） */
 const isPrimaryDimension = (dimension: string): boolean => dimension === 'x';
 
+type CartesianAxisSide = 'top' | 'right' | 'bottom' | 'left';
+
+const cartesianAxisSideFromEdge = (edge: string): CartesianAxisSide => {
+  if (
+    edge !== AxisCardinalSide.Top &&
+    edge !== AxisCardinalSide.Right &&
+    edge !== AxisCardinalSide.Bottom &&
+    edge !== AxisCardinalSide.Left
+  ) {
+    throw new Error(
+      `lowerPlots: cartesian axis edge placement must be one of top, right, bottom, or left (got "${edge}")`,
+    );
+  }
+  return edge;
+};
+
+const assertCartesianAxisSideCompatible = (side: CartesianAxisSide, isX: boolean): void => {
+  if (isX && side !== AxisCardinalSide.Top && side !== AxisCardinalSide.Bottom) {
+    throw new Error(`lowerPlots: cartesian x axis only supports top or bottom side placement (got "${side}")`);
+  }
+  if (!isX && side !== AxisCardinalSide.Left && side !== AxisCardinalSide.Right) {
+    throw new Error(`lowerPlots: cartesian y axis only supports left or right side placement (got "${side}")`);
+  }
+};
+
+const cartesianAxisSideOf = (guide: AxisGuide, isX: boolean): CartesianAxisSide => {
+  const placement = guide.placement;
+  if (placement === undefined || placement.kind === AxisPlacementKind.Auto) {
+    return isX ? AxisCardinalSide.Bottom : AxisCardinalSide.Left;
+  }
+  const side = placement.kind === AxisPlacementKind.Edge ? cartesianAxisSideFromEdge(placement.edge) : placement.side;
+  assertCartesianAxisSideCompatible(side, isX);
+  return side;
+};
+
+const axisPlacementOffsetOf = (guide: AxisGuide): number =>
+  guide.placement?.kind === AxisPlacementKind.Side || guide.placement?.kind === AxisPlacementKind.Edge
+    ? (guide.placement.offset ?? 0)
+    : 0;
+
 /**
  * 极坐标点投影的窄返回值 helper。
  * @description guide lowering 的 IR step 需要确定 Position；若上游 scale/tick 契约被破坏，则返回 [NaN, NaN] 让问题显性暴露。
@@ -116,27 +157,32 @@ const lowerCartesianGuide = (
   const isX = ctx.axisOrientation !== undefined ? ctx.axisOrientation === 'horizontal' : guide.dimension === 'x';
   const ticks = isX ? ctx.xTicks : ctx.yTicks;
   const project = isX ? ctx.projectX : ctx.projectY;
+  const side = cartesianAxisSideOf(guide, isX);
+  const offset = axisPlacementOffsetOf(guide);
+  const axisY = side === AxisCardinalSide.Top ? top - offset : bottom + offset;
+  const axisX = side === AxisCardinalSide.Right ? right + offset : left - offset;
+  const tickDirection = side === AxisCardinalSide.Top || side === AxisCardinalSide.Left ? -1 : 1;
 
   // ---- 轴层 ----
   const axisLine: Segment = isX
     ? [
-        [left, bottom],
-        [right, bottom],
+        [left, axisY],
+        [right, axisY],
       ]
     : [
-        [left, top],
-        [left, bottom],
+        [axisX, top],
+        [axisX, bottom],
       ];
   const tickSegments: Array<Segment> = ticks.values.map(value => {
     const p = project.coordinate(value);
     return isX
       ? [
-          [p, bottom],
-          [p, bottom + AXIS_TICK_LENGTH],
+          [p, axisY],
+          [p, axisY + tickDirection * AXIS_TICK_LENGTH],
         ]
       : [
-          [left, p],
-          [left - AXIS_TICK_LENGTH, p],
+          [axisX, p],
+          [axisX + tickDirection * AXIS_TICK_LENGTH, p],
         ];
   });
   const linePath = segmentsToPath([axisLine, ...tickSegments]);
@@ -145,8 +191,12 @@ const lowerCartesianGuide = (
         const p = project.coordinate(value);
         const text = ticks.labels[index];
         const position: [number, number] = isX
-          ? [p, bottom + AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2]
-          : [left - AXIS_TICK_LENGTH - AXIS_LABEL_GAP - estimateLabelWidth(text, fontSize) / 2, p];
+          ? [p, axisY + tickDirection * (AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2)]
+          : [
+              axisX +
+                tickDirection * (AXIS_TICK_LENGTH + AXIS_LABEL_GAP + estimateLabelWidth(text, fontSize) / 2),
+              p,
+            ];
         return { type: 'node', position, text };
       })
     : [];

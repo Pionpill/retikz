@@ -17,7 +17,7 @@ import type { Coordinate, Polar1DCoordinate } from '../../../schemas';
 import { cellInterval, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../contract';
 import { computePolarCoordinate } from '../../../pipeline';
 import { PlotCoordinate, PlotScale, Polar1DSchema, Polar2DSchema } from '../../../schemas';
-import { assertUniqueAxisDimension } from '../shared';
+import { assertUniqueAxisPlacement } from '../shared';
 
 type Polar2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Polar2D }>;
 
@@ -276,7 +276,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     const radiusScaleDef = ctx.resolveScaleForRole('y', coordinate.radius, radiusValues);
     ctx.assertBaselineScaleCompatible(radiusScaleDef.type, ctx.marks);
 
-    assertUniqueAxisDimension(ctx.axisGuides, axisRole);
+    assertUniqueAxisPlacement(ctx.axisGuides, axisRole);
     const angularAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
     const radialAxis = ctx.axisGuides.find(guide => guide.dimension === 'y');
 
@@ -340,7 +340,7 @@ const polar1DCoordinateDefinition: CoordinateDefinition<Polar1DCoordinate> = {
     const angleValues = ctx.collectPositionValues('x', { axis: 'primary' });
     const angleScaleDef = ctx.resolveScaleForRole('x', coordinate.angle, angleValues);
 
-    assertUniqueAxisDimension(ctx.axisGuides, axisRole);
+    assertUniqueAxisPlacement(ctx.axisGuides, axisRole);
     const angularAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
 
     const angleScale = ctx.buildPositionScale(angleScaleDef, angleValues, [startAngle, endAngle]);

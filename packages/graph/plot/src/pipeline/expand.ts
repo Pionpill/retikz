@@ -166,6 +166,8 @@ export type MarkDataView = {
   rows: Array<ExternalRow>;
 };
 
+type CoordinateScopePlacement = NonNullable<NonNullable<PlotSpec['composition']>['scopes'][number]['placement']>;
+
 const relationTargetRoleValues = (
   mark: MarkOperation,
   role: DimensionRole,
@@ -197,6 +199,7 @@ const DEFAULT_COORDINATE_SCOPE_ID = 'default';
 export type CoordinateScopeRegistryEntry = {
   id: string;
   coordinate: CoordinateOperation;
+  placement?: CoordinateScopePlacement;
 };
 
 export type CoordinateScopeRegistry = {
@@ -208,7 +211,11 @@ export const resolveCoordinateScopeRegistry = (node: PlotSpec): CoordinateScopeR
   if (node.composition !== undefined) {
     return {
       defaultScope: node.composition.defaultScope,
-      scopes: node.composition.scopes.map(scope => ({ id: scope.id, coordinate: scope.coordinate })),
+      scopes: node.composition.scopes.map(scope => ({
+        id: scope.id,
+        coordinate: scope.coordinate,
+        ...(scope.placement !== undefined ? { placement: scope.placement } : {}),
+      })),
     };
   }
   if (node.coordinate === undefined) {
@@ -529,6 +536,8 @@ export type ResolveFrameParams = {
   fontSize: number;
   /** 逐边覆盖自动估算的 margin */
   margin?: Partial<Margins>;
+  /** overlay scope 共享 target scope 的 plotArea；省略时由坐标系自行计算。 */
+  plotAreaOverride?: Rect;
   /** provenance 上下文（开 → guide 层带 `<plotId>.` id + 来源 meta；undefined → alpha.2 行为） */
   provenance?: ProvenanceContext;
   /** 自定义坐标系 definition 数组（运行时函数，不进 IR）；coordinate {type:<customType>, ...config} 据此解析投影 */
@@ -546,7 +555,19 @@ export type ResolveFrameParams = {
  *   抽成纯函数使 mark 下沉与 ADR-02 locator 共用同一投影（杜绝两套投影漂移）；产物与内联版等价。
  */
 export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolution => {
-  const { node, rows, fieldTypes, width, height, fontSize, margin, provenance, coordinates, scaleRegistry } = params;
+  const {
+    node,
+    rows,
+    fieldTypes,
+    width,
+    height,
+    fontSize,
+    margin,
+    plotAreaOverride,
+    provenance,
+    coordinates,
+    scaleRegistry,
+  } = params;
   const markDataViews = params.markDataViews ?? node.marks.map(mark => ({ mark, rows }));
   const markDataViewsForRole = (role: DimensionRole): Array<MarkDataView> =>
     params.roleMarkDataViews?.[role] ?? markDataViews;
@@ -764,6 +785,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     fontSize,
     ...(margin !== undefined ? { margin } : {}),
     legendReserve,
+    ...(plotAreaOverride !== undefined ? { plotAreaOverride } : {}),
     ...(provenance !== undefined ? { provenance } : {}),
     collectRoleValues: (role, opts) =>
       collectValues(role, undefined, roleChannelOf(role), opts?.includeBaseline ?? false),
@@ -1288,7 +1310,20 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   }));
 
   const coordinateScopes = resolveCoordinateScopeRegistry(node);
-  const scopedFrames = coordinateScopes.scopes.map(scope => {
+  const scopeById = new Map(coordinateScopes.scopes.map(scope => [scope.id, scope] as const));
+  const resolvedFrames = new Map<string, CoordinateFrameResolution & { scopeId: string }>();
+  const resolvingFrames = new Set<string>();
+  const resolveScopedFrame = (scope: CoordinateScopeRegistryEntry): CoordinateFrameResolution & { scopeId: string } => {
+    const cached = resolvedFrames.get(scope.id);
+    if (cached !== undefined) return cached;
+    if (resolvingFrames.has(scope.id)) {
+      throw new Error(`lowerPlots: overlay coordinate scope cycle detected at "${scope.id}"`);
+    }
+    resolvingFrames.add(scope.id);
+    const targetPlotArea =
+      scope.placement?.kind === 'overlay'
+        ? resolveScopedFrame(scopeById.get(scope.placement.target) ?? scope).plotArea
+        : undefined;
     const scopedMarkDataViews = markDataViews.filter(
       view => coordinateScopeIdOf(view.mark, coordinateScopes.defaultScope) === scope.id,
     );
@@ -1302,7 +1337,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       marks: scopedMarkDataViews.map(view => view.mark),
       guides: scopedGuides,
     };
-    return {
+    const resolved = {
       scopeId: scope.id,
       ...resolveFrame({
         node: scopedNode,
@@ -1312,13 +1347,18 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         height,
         fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
         margin: options.margin,
+        ...(targetPlotArea !== undefined ? { plotAreaOverride: targetPlotArea } : {}),
         provenance,
         coordinates: options.coordinates,
         scaleRegistry,
         markDataViews: scopedMarkDataViews,
       }),
     };
-  });
+    resolvingFrames.delete(scope.id);
+    resolvedFrames.set(scope.id, resolved);
+    return resolved;
+  };
+  const scopedFrames = coordinateScopes.scopes.map(resolveScopedFrame);
   const frameByScope = new Map(scopedFrames.map(scopeFrame => [scopeFrame.scopeId, scopeFrame.frame] as const));
   const gridLayers = scopedFrames.flatMap(scopeFrame => scopeFrame.gridLayers);
   const axisLayers = scopedFrames.flatMap(scopeFrame => scopeFrame.axisLayers);
@@ -1449,7 +1489,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
   // 每个 mark 下沉成一个图层 Scope（样式上提到 nodeDefault/pathDefault）；空图层（无可绘制点）丢弃
   // provenance 开 → 传 markProvenance（plotId / markIndex / datum 开关 + 共享 registerDatumId），各层 / datum 绑 id + 来源 meta
-  const markLayers: Array<IRChild> = node.marks
+  const scopeOrderById = new Map(coordinateScopes.scopes.map((scope, index) => [scope.id, index] as const));
+  const markLayerEntries = node.marks
     .map((mark, markIndex) => {
       const markRows = markDataViews[markIndex]?.rows ?? rows;
       const coordinateScopeId = coordinateScopeIdOf(mark, coordinateScopes.defaultScope);
@@ -1457,7 +1498,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       if (frame === undefined) {
         throw new Error(`lowerPlots: coordinateScope "${coordinateScopeId}" is not registered`);
       }
-      return lowerMark(
+      const layer = lowerMark(
         mark,
         markRows,
         frame,
@@ -1476,8 +1517,17 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         },
         markRegistry,
       );
+      if (layer === null) return null;
+      const scope = scopeById.get(coordinateScopeId);
+      const declarationOrder = scopeOrderById.get(coordinateScopeId) ?? markIndex;
+      const zIndex =
+        scope?.placement?.kind === 'overlay' ? (scope.placement.zIndex ?? declarationOrder) : declarationOrder;
+      return { layer, markIndex, zIndex };
     })
-    .filter((layer): layer is IRChild => layer !== null);
+    .filter((entry): entry is { layer: IRChild; markIndex: number; zIndex: number } => entry !== null);
+  const markLayers: Array<IRChild> = markLayerEntries
+    .sort((a, b) => a.zIndex - b.zIndex || a.markIndex - b.markIndex)
+    .map(entry => entry.layer);
   anchorRegistry.assertResolved();
 
   // legend（ADR-03）：收 legend guide → 据通道 + scale 类型选形态下沉成独立 scope，落 position 预留带。
