@@ -34,14 +34,11 @@ const Demo: FC = () => (
       strokeWidth={0.9}
       minimumWidth={8}
       minimumHeight={{ kind: 'field', value: 'nodeHeight' }}
-    />
-    <PointMark
-      x="labelX"
-      y="labelY"
-      text="nodeLabel"
-      textColor="#0f172a"
-      font={{ size: 11, weight: 'bold' }}
-      align="center"
+      label="nodeLabel"
+      labelPosition="left"
+      labelDistance={10}
+      labelTextColor="#0f172a"
+      labelFont={{ size: 11, weight: 'bold' }}
     />
   </Plot>
 );

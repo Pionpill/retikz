@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { Axis, IntervalMark, Plot, PointMark, RelationMark } from '@retikz/plot-react';
+import { Axis, IntervalMark, Plot, RelationMark } from '@retikz/plot-react';
 
 import { intervalRelations } from './relation-interval.data';
 
@@ -7,14 +7,17 @@ const Demo: FC = () => (
   <Plot data={intervalRelations} width={620} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
     <Axis dimension="x" tickLabels={false} />
     <Axis dimension="y" grid tickCount={4} />
-    <IntervalMark x="slot" y="value" color="phase" stroke="#ffffff" strokeWidth={0.8} />
-    <PointMark
+    <IntervalMark
       x="slot"
-      y="labelY"
-      text="label"
-      textColor="#ffffff"
-      font={{ size: 10, weight: 'bold' }}
-      align="center"
+      y="value"
+      color="phase"
+      stroke="#ffffff"
+      strokeWidth={0.8}
+      label="label"
+      labelPosition="above"
+      labelDistance={4}
+      labelTextColor="#0f172a"
+      labelFont={{ size: 10, weight: 'bold' }}
     />
     <RelationMark
       transform={[

@@ -40,8 +40,6 @@ const nodeRows = (nodes: Array<PositionedNode>): Array<SankeyDatum> =>
     nodeHeight: node.value,
     nodeFill: node.fill,
     nodeLabel: node.label,
-    labelX: xOf(node.x + (node.column === 'left' ? -28 : node.column === 'right' ? 28 : -24)),
-    labelY: yOf(node.y),
   }));
 
 const domainSentinels = (): Array<SankeyDatum> => [
