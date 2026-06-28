@@ -1,5 +1,5 @@
 import { type IRChild, type IRNode, type IRNodeLabel, type IRScope } from '@retikz/core';
-import { isFiniteNumber } from '@retikz/math';
+import { arcEndPoint, isFiniteNumber } from '@retikz/math';
 import {
   type Cell,
   type CellGeometry,
@@ -395,31 +395,52 @@ export const markCell = (mark: Mark, row: ExternalRow, frame: CoordinateFrame, c
 const cellSeriesValue = (mark: Mark, row: ExternalRow): unknown =>
   mark.type === PlotMark.Interval && mark.series !== undefined ? resolveFieldPath(row, mark.series) : undefined;
 
-const applySectorStyleParams = (node: IRNode, mark: Mark): void => {
-  if (typeof node.shape !== 'object' || node.shape.type !== 'sector') return;
-  const params = node.shape.params ?? {};
-  const startAngle = params.startAngle;
-  const endAngle = params.endAngle;
-  const padAngle = mark.type === PlotMark.Interval ? mark.padAngle : undefined;
-  const nextParams = { ...params };
-  if (node.cornerRadius !== undefined) {
-    nextParams.cornerRadius = node.cornerRadius;
-    delete node.cornerRadius;
+const resolveSectorPull = (mark: IntervalMark, row: ExternalRow): number => {
+  const pull = mark.pull;
+  if (pull === undefined) return 0;
+  const value = pull.kind === 'field' ? resolveFieldPath(row, pull.value) : pull.value;
+  if (!isFiniteNumber(value) || value < 0) {
+    throw new Error('lowerPlots: interval pull requires a finite non-negative numeric value for polar sector geometry');
   }
-  if (padAngle !== undefined && typeof startAngle === 'number' && typeof endAngle === 'number') {
+  return value;
+};
+
+export const applyIntervalCellVisualParams = (geometry: CellGeometry, mark: IntervalMark, row: ExternalRow): CellGeometry => {
+  if (geometry.kind !== 'sector') {
+    if (mark.pull !== undefined) {
+      throw new Error('lowerPlots: interval pull is only supported for polar sector geometry');
+    }
+    return geometry;
+  }
+  const startAngle = geometry.startAngle;
+  const endAngle = geometry.endAngle;
+  const padAngle = mark.padAngle;
+  let nextStartAngle = startAngle;
+  let nextEndAngle = endAngle;
+  if (padAngle !== undefined) {
     const sweep = endAngle - startAngle;
     const maxInset = Math.max(0, Math.abs(sweep) - 1e-6);
     const inset = Math.min(padAngle, maxInset);
     if (inset > 0) {
       const direction = sweep >= 0 ? 1 : -1;
-      nextParams.startAngle = startAngle + (direction * inset) / 2;
-      nextParams.endAngle = endAngle - (direction * inset) / 2;
+      nextStartAngle = startAngle + (direction * inset) / 2;
+      nextEndAngle = endAngle - (direction * inset) / 2;
     }
   }
-  node.shape = {
-    ...node.shape,
-    params: nextParams,
+  const pull = resolveSectorPull(mark, row);
+  return {
+    ...geometry,
+    center: pull > 0 ? arcEndPoint(geometry.center, pull, (nextStartAngle + nextEndAngle) / 2) : geometry.center,
+    startAngle: nextStartAngle,
+    endAngle: nextEndAngle,
   };
+};
+
+export const intervalCellGeometry = (mark: IntervalMark, row: ExternalRow, frame: CoordinateFrame, ctx: IntervalContext | undefined): CellGeometry | null => {
+  if (!hasProjectCell(frame)) return null;
+  const cell = markCell(mark, row, frame, ctx);
+  if (!cell) return null;
+  return applyIntervalCellVisualParams(frame.projectCell(cell), mark, row);
 };
 
 /**
@@ -431,7 +452,6 @@ const lowerCells = (
   mark: IntervalMark,
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
-  projectCell: (cell: Cell) => CellGeometry,
   intervalContext: IntervalContext | undefined,
   colorOf: ChannelValueResolver<string> | undefined,
   defaultColor: string | undefined,
@@ -445,9 +465,8 @@ const lowerCells = (
   let kind: CellGeometry['kind'] | undefined;
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
-    const cell = markCell(mark, row, frame, intervalContext);
-    if (!cell) continue;
-    const geometry = projectCell(cell);
+    const geometry = intervalCellGeometry(mark, row, frame, intervalContext);
+    if (!geometry) continue;
     if (!isRenderableCellGeometry(geometry)) continue;
     kind = geometry.kind;
     const cellNode = cellGeometryNode(geometry);
@@ -457,7 +476,6 @@ const lowerCells = (
     const stroke = strokeOf?.(row);
     if (stroke !== undefined) cellNode.stroke = stroke;
     applyNodeChannelDeliveries(cellNode, mark, row, channels, 'cell');
-    applySectorStyleParams(cellNode, mark);
     const node = attachDatumLabel(
       attachDatumAnchor(decorateDatum(cellNode, row, transformedIndex, mark.type, markContext?.provenance, cellSeriesValue(mark, row)), mark, row, transformedIndex, markContext),
       mark,
@@ -483,7 +501,6 @@ export const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: 
     mark,
     rows,
     frame,
-    frame.projectCell,
     intervalContext,
     channelValueOf<string>(channels, 'color'),
     channelDefaultOf<string>(channels, 'color'),
@@ -497,6 +514,7 @@ export const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: 
 /** 收集 interval mark 独有字段：series 分组与显式 extent bounds。 */
 const collectIntervalChannelFields = (mark: IntervalMark, fields: FieldCollector): void => {
   fields.addField(mark.series);
+  if (mark.pull?.kind === 'field') fields.addField(mark.pull.value);
   if (mark.bounds !== undefined) {
     for (const bound of Object.values(mark.bounds)) {
       if (bound.kind === 'extent') fields.addFields(bound.from, bound.to);

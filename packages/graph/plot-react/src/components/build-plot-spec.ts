@@ -327,6 +327,12 @@ const numberStyleOf = <T extends MarkValueType<number>>(
   return undefined;
 };
 
+const intervalPullStyleOf = (value: IntervalMarkProps['pull']): PointNonnegativeNumberStyle | undefined => {
+  if (value === undefined) return undefined;
+  if (isMarkValue(value)) return value;
+  return typeof value === 'number' ? { kind: 'constant', value } : { kind: 'field', value };
+};
+
 const enumStyleOf = <T extends string>(
   value: string | MarkValueType<T> | undefined,
   prop: string,
@@ -697,7 +703,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       recordResolveLabel(into, id, props.resolveLabel);
     } else if (child.type === IntervalMark) {
       const props = child.props as IntervalMarkProps;
-      const { x, y, angle, x0, x1, width, direction: rawDirection, color, series, group, arrangement: explicitArrangement, stackOffset, percent, stack, bounds: explicitBounds, id, transform, anchorId, channels, fill, stroke, strokeWidth, fillOpacity, opacity, padAngle } = props;
+      const { x, y, angle, x0, x1, width, direction: rawDirection, color, series, group, arrangement: explicitArrangement, stackOffset, percent, stack, bounds: explicitBounds, id, transform, anchorId, channels, fill, stroke, strokeWidth, fillOpacity, opacity, padAngle, pull } = props;
       const direction = rawDirection ?? 'vertical';
       const arrangementGroup = group ?? series;
       if (percent === true && explicitArrangement !== undefined && explicitArrangement !== 'normalize-stack') {
@@ -713,6 +719,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
       const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
       const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
+      const pullStyle = intervalPullStyleOf(pull);
       const intervalStyle = {
         ...(fillStyle !== undefined ? { fill: fillStyle } : {}),
         ...(strokeStyle !== undefined ? { stroke: strokeStyle } : {}),
@@ -720,6 +727,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
         ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
         ...(padAngle !== undefined ? { padAngle } : {}),
+        ...(pullStyle !== undefined ? { pull: pullStyle } : {}),
         ...nodeStylePropsOf(props, styleContext),
       };
       // pie / donut：angle → 自动累积 stack transform（产 y0/y1）+ extent×full bounds

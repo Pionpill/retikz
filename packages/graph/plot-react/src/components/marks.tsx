@@ -263,6 +263,8 @@ export type IntervalMarkProps = MarkTransformProps & DatumLabelProps & CoreNodeC
   opacity?: MarkValueProp<number> | PointOpacityStyle;
   /** Angular gap in degrees for polar sector / donut interval cells. */
   padAngle?: number;
+  /** Static radial visual offset for polar sector cells. */
+  pull?: MarkValueProp<number> | PointNonnegativeNumberStyle;
   /** 可选 mark 句柄（预留 scope/anchor） */
   id?: string;
   anchorId?: AnchorIdSpec;

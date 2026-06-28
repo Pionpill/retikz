@@ -490,6 +490,9 @@ export const IntervalMarkSchema = z
       .nonnegative()
       .optional()
       .describe('Angular gap in degrees applied to polar sector cells; each sector shrinks by half this angle on both sides. Cartesian cells ignore it'),
+    pull: PointNonnegativeNumberStyleSchema.optional().describe(
+      'Static radial offset in user units for polar sector cells; moves the sector center along the final mid angle. Only sector geometry supports it',
+    ),
     anchorId: AnchorIdSpecSchema.optional().describe('Stable id rule written to each generated core interval Node; takes precedence over datumIdField for the node id'),
     ...coreNodeStyle,
     ...markBase,

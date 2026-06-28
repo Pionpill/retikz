@@ -263,6 +263,20 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     });
   });
 
+  it('interval pull forwards numeric and field values to interval mark', () => {
+    const numeric = buildPlotSpec(<IntervalMark angle="value" pull={12} />, '__plot', { coordinate: 'polar2D' });
+    expect(numeric.marks[0]).toMatchObject({
+      type: 'interval',
+      pull: { kind: 'constant', value: 12 },
+    });
+
+    const field = buildPlotSpec(<IntervalMark angle="value" pull="offset" />, '__plot', { coordinate: 'polar2D' });
+    expect(field.marks[0]).toMatchObject({
+      type: 'interval',
+      pull: { kind: 'field', value: 'offset' },
+    });
+  });
+
   it('relation mark assembles source-target refs, top-level label, path passthrough, and color channel', () => {
     const spec = buildPlotSpec(
       <>

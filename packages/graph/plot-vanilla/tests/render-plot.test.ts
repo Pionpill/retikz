@@ -129,6 +129,32 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(renderPlot(donutSpec, share, { width: 360, height: 360 })).toContain('<path');
   });
 
+  it('polar pulled sector spec → SVG 含 path', () => {
+    const pulledSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'share' },
+      transform: [{ kind: 'stack', y: 'value' }],
+      scales: [
+        { type: 'linear', name: 'angle' },
+        { type: 'linear', name: 'radius' },
+        { type: 'ordinal', name: 'color' },
+      ],
+      coordinate: { type: 'polar2D', angle: 'angle', radius: 'radius', startAngle: 0, endAngle: 360, innerRadius: 0 },
+      marks: [
+        {
+          type: 'interval',
+          bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+          pull: { kind: 'field', value: 'offset' },
+          encoding: { color: { field: 'label', scale: 'color' } },
+        },
+      ],
+    };
+    const svg = renderPlot(pulledSpec, { share: share.share.map((row, index) => ({ ...row, offset: index === 1 ? 16 : 0 })) }, { width: 360, height: 360 });
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('<path');
+  });
+
   it('polar 径向柱 spec（interval + band 角向）→ SVG 含 path', () => {
     const radialBarSpec: PlotSpec = {
       namespace: 'plot',

@@ -124,6 +124,37 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
+  it('mark_sector_pull_constant_valid', () => {
+    const m = {
+      type: 'interval',
+      bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+      pull: { kind: 'constant', value: 12 },
+      encoding: { color: { field: 'label' } },
+    };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_sector_pull_field_json_round_trip', () => {
+    const m = {
+      type: 'interval',
+      bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+      pull: { kind: 'field', value: 'offset' },
+      encoding: { color: { field: 'label' } },
+    };
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
+  });
+
+  it('mark_sector_pull_negative_rejected', () => {
+    expect(() =>
+      MarkSchema.parse({
+        type: 'interval',
+        bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+        pull: { kind: 'constant', value: -1 },
+        encoding: { color: { field: 'label' } },
+      }),
+    ).toThrow();
+  });
+
   it('mark_sector_missing_encoding_rejected', () => {
     expect(() => MarkSchema.parse({ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } } })).toThrow();
   });

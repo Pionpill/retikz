@@ -55,6 +55,8 @@ The same polar coordinate system pairs with different marks to cover common roun
 
 `<IntervalMark angle="value" />` accumulates the `angle` value field into sector angular bounds. Add `innerRadius` to turn a pie into a donut.
 
+To emphasize one sector, set `pull` on `<IntervalMark>` for a static radial offset; it is a sector mark style, not a polar coordinate option.
+
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <ComponentPreview name="coordinate-pie" sourceFiles={['coordinate-pie.data.ts']} size="sm" />
   <ComponentPreview name="coordinate-donut" sourceFiles={['coordinate-pie.data.ts']} size="sm" />
