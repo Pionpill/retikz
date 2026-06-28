@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { PROVIDERS, availableProviderIds, createClients } from '../../src/llm/registry';
+
+import { availableProviderIds, createClients, PROVIDERS } from '../../src/llm/registry';
 
 const ENV = [
   'ANTHROPIC_API_KEY',
@@ -13,7 +14,7 @@ const ENV = [
 describe('provider registry gating', () => {
   let saved: Record<string, string | undefined>;
   beforeEach(() => {
-    saved = Object.fromEntries(ENV.map((k) => [k, process.env[k]]));
+    saved = Object.fromEntries(ENV.map(k => [k, process.env[k]]));
     for (const k of ENV) delete process.env[k];
   });
   afterEach(() => {
@@ -24,7 +25,7 @@ describe('provider registry gating', () => {
   });
 
   it('登记三家 provider', () => {
-    expect(PROVIDERS.map((p) => p.id).sort()).toEqual(['anthropic', 'deepseek', 'openai']);
+    expect(PROVIDERS.map(p => p.id).sort()).toEqual(['anthropic', 'deepseek', 'openai']);
   });
 
   it('无 key 时无可用 provider', () => {
@@ -52,6 +53,6 @@ describe('provider registry gating', () => {
     process.env.ANTHROPIC_API_KEY = 'x';
     process.env.EVAL_ANTHROPIC_BASE_URL = 'https://proxy.example.com/v1';
     const clients = createClients();
-    expect(clients.map((c) => c.id)).toEqual(['anthropic:claude-opus-4-8']);
+    expect(clients.map(c => c.id)).toEqual(['anthropic:claude-opus-4-8']);
   });
 });

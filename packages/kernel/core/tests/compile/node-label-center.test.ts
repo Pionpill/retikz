@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
+
 import type { ScenePrimitive, TextPrim } from '../../src/primitive';
 import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
 
 const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrim> => {
   const out: Array<TextPrim> = [];
@@ -13,8 +15,7 @@ const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrim> => {
   return out;
 };
 
-const visualMiddle = (t: TextPrim): number =>
-  t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
+const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
 
 describe('Node label position center', () => {
   it('draws the label at the node center', () => {
@@ -33,7 +34,9 @@ describe('Node label position center', () => {
     };
 
     const scene = compileToScene(ir);
-    const label = collectTexts(scene.primitives).find(t => t.lines.some(l => (typeof l === 'string' ? l : l.text) === 'center label'));
+    const label = collectTexts(scene.primitives).find(t =>
+      t.lines.some(l => (typeof l === 'string' ? l : l.text) === 'center label'),
+    );
 
     expect(label).toBeDefined();
     expect(label?.x).toBeCloseTo(20);

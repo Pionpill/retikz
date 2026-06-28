@@ -1,4 +1,6 @@
-import { type Cell, type CoordinateFrame, cellGeometryAnchor, hasProjectCell } from '../../../contract';
+import type { Cell, CoordinateFrame } from '../../../contract';
+
+import { cellGeometryAnchor, hasProjectCell } from '../../../contract';
 import { type ExternalRow, type Mark } from '../../../schemas';
 import { roleValues } from './roles';
 

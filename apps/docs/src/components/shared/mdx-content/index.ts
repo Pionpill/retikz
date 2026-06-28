@@ -1,7 +1,7 @@
-export { InlineMdx } from './InlineMdx';
 export type { InlineMdxProps } from './InlineMdx';
-export { MdxContent } from './MdxContent';
+export { InlineMdx } from './InlineMdx';
 export type { MdxContentProps, MdxFrontmatter } from './MdxContent';
-export { MdxToc } from './MdxToc';
+export { MdxContent } from './MdxContent';
 export type { MdxTocProps } from './MdxToc';
+export { MdxToc } from './MdxToc';
 export { mdxHasToc } from './toc-headings';

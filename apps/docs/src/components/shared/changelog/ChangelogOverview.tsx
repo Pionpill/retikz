@@ -1,12 +1,14 @@
-import { ChevronRight } from 'lucide-react';
 import type { FC } from 'react';
+
+import { ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
-import { InlineMdx } from '@/components/shared/mdx-content';
-import { changelogVersionSlug } from '@/data/changelog';
 import type { PackageId, Release } from '@/data/changelog.types';
 import type { Lang } from '@/i18n';
+
+import { InlineMdx } from '@/components/shared/mdx-content';
+import { changelogVersionSlug } from '@/data/changelog';
 
 export type ChangelogOverviewProps = {
   /** 当前模块的 changelog 切片（倒序） */

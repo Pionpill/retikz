@@ -1,7 +1,8 @@
-import type { ElementHandlers, HydrationHandlers, Locate, RetikzEventValue } from './events';
-import { EVENT_DOM_TYPE, RetikzEvent } from './events';
 import type { BuildContext, HydrationContext } from './context';
+import type { ElementHandlers, HydrationHandlers, Locate, RetikzEventValue } from './events';
+
 import { noopAnimationControls } from './context';
+import { EVENT_DOM_TYPE, RetikzEvent } from './events';
 
 /** 水合控制器：根级委托 + enter/leave 合成 + dispose 解绑 */
 export type HydrationController = {
@@ -48,8 +49,7 @@ const invoke = (
 };
 
 /** 判断 root 是否为可挂 pointerleave/pointerout 的 EventTarget（dispatcher 只需 addEventListener，故恒成立） */
-const hasContains = (target: EventTarget): target is Node =>
-  typeof (target as Partial<Node>).contains === 'function';
+const hasContains = (target: EventTarget): target is Node => typeof (target as Partial<Node>).contains === 'function';
 
 /**
  * 创建水合控制器：在 root 上挂根级委托，把命中图元 id 的事件分发给 handlers
@@ -100,8 +100,10 @@ export const createHydrationController = (
       if (currentId === lastHitId) return;
       const previousId = lastHitId;
       lastHitId = currentId;
-      if (previousId !== null) invoke(handlers, previousId, RetikzEvent.PointerLeave, event, root, buildContext, renderer);
-      if (currentId !== null) invoke(handlers, currentId, RetikzEvent.PointerEnter, event, root, buildContext, renderer);
+      if (previousId !== null)
+        invoke(handlers, previousId, RetikzEvent.PointerLeave, event, root, buildContext, renderer);
+      if (currentId !== null)
+        invoke(handlers, currentId, RetikzEvent.PointerEnter, event, root, buildContext, renderer);
     });
 
     // 离开整图：清空命中态、把 lastHitId 的 leave 补一次（同样先清状态再 invoke）。

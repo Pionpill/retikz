@@ -1,9 +1,15 @@
-import { type FC, Fragment, useEffect, useState } from 'react';
+import type { CompositeDefinition } from '@retikz/core';
+import type { FC } from 'react';
+
+import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { Fragment, useEffect, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { CompositeBaseSchema, type CompositeDefinition, defineComposite } from '@retikz/core';
-import { type EmbeddableTier2Adapter, collectHydrationHandlers } from '../../src';
+
+import type { EmbeddableTier2Adapter } from '../../src';
+
+import { collectHydrationHandlers } from '../../src';
 import { buildIRWithContributions } from '../../src/kernel/builder';
 import { Layout } from '../../src/kernel/Layout';
 
@@ -41,7 +47,7 @@ const makePanelComposite = (namespace: string): CompositeDefinition => {
   });
   return defineComposite({
     schema,
-    expand: (node) => ({ type: 'node', id: `panel-${node.panelId}`, position: [0, 0], text: node.panelId }),
+    expand: node => ({ type: 'node', id: `panel-${node.panelId}`, position: [0, 0], text: node.panelId }),
   });
 };
 
@@ -50,14 +56,12 @@ const makePanelComposite = (namespace: string): CompositeDefinition => {
  * @description body throw 是护栏核心：组件被标记 isTier2Embeddable 且带可用 adapter，
  *   所以两条静态遍历链都应只读 adapter 静态贡献、绝不调用函数体；一旦被误调即抛、测试失败。
  */
-const makeThrowingFixture = (
-  options: { namespace?: string; displayName?: string } = {},
-): EmbeddableFixture => {
+const makeThrowingFixture = (options: { namespace?: string; displayName?: string } = {}): EmbeddableFixture => {
   const { namespace = 'demo', displayName = 'ThrowingPanel' } = options;
   const adapter: EmbeddableTier2Adapter<FixtureProps> = {
     displayName,
     namespace,
-    contribute: (props) => ({
+    contribute: props => ({
       node: { namespace, type: 'panel', panelId: props.id },
       datasets: { [props.id]: props.data },
       makeComposites: () => [makePanelComposite(namespace)],
@@ -78,7 +82,7 @@ const makeThrowingFixture = (
  *   若可嵌入函数体被静态遍历误调并触发自身 hook，将污染本宿主的 hook 顺序。label prop 模拟
  *   i18n 文案，bump prop 模拟一次 state 变更后的重渲染。
  */
-const StatefulHost: FC<{ label: string; bump?: number }> = (props) => {
+const StatefulHost: FC<{ label: string; bump?: number }> = props => {
   const { label, bump = 0 } = props;
   // useState + useEffect 让宿主持有真实 hook 序列；bump 进 state 初值，模拟「上次 state 变更」后的渲染。
   const [count] = useState(() => bump);

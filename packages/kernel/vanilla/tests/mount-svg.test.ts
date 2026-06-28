@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
-import { compileToScene } from '@retikz/core';
 import type { IR, Scene } from '@retikz/core';
+
+import { compileToScene } from '@retikz/core';
+import { describe, expect, it } from 'vitest';
+
 import { mountSvg, renderToSvgString } from '../src';
 
 /**
@@ -45,7 +47,13 @@ describe('@retikz/vanilla mountSvg', () => {
           shape: 'rectangle',
           minimumWidth: 40,
           minimumHeight: 20,
-          fill: { kind: 'linearGradient', stops: [{ offset: 0, color: '#f00' }, { offset: 1, color: '#00f' }] },
+          fill: {
+            kind: 'linearGradient',
+            stops: [
+              { offset: 0, color: '#f00' },
+              { offset: 1, color: '#00f' },
+            ],
+          },
         },
       ],
     };

@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import type { IRStep, IRTarget } from '../../src/schemas';
+
 import type { WayDSL } from '../../src/parsers/way';
+import type { IRStep, IRTarget } from '../../src/schemas';
+
 import { DrawWay, parseWay } from '../../src/parsers/way';
 
 /** 测试 helper：cycle / arc / circlePath / ellipsePath 没 to，统一返回 undefined；其他 kind 返回 .to */
-const toOf = (s: IRStep): IRTarget | undefined =>
-  'to' in s ? s.to : undefined;
+const toOf = (s: IRStep): IRTarget | undefined => ('to' in s ? s.to : undefined);
 
 describe('parseWay', () => {
   describe('基本形态', () => {
@@ -78,7 +79,12 @@ describe('parseWay', () => {
 
     it('首段 kind 永远是 "move"', () => {
       expect(parseWay(['A', 'B'])[0].kind).toBe('move');
-      expect(parseWay([[0, 0], [1, 1]])[0].kind).toBe('move');
+      expect(
+        parseWay([
+          [0, 0],
+          [1, 1],
+        ])[0].kind,
+      ).toBe('move');
       expect(parseWay([{ angle: 0, radius: 1 }, 'B'])[0].kind).toBe('move');
     });
 
@@ -139,22 +145,16 @@ describe('parseWay', () => {
     });
 
     it("DrawWay.Hv / DrawWay.Vh 与裸 '-|' / '|-' 算子等价", () => {
-      expect(parseWay(['A', DrawWay.Hv, 'B', DrawWay.Vh, 'C'])).toEqual(
-        parseWay(['A', '-|', 'B', '|-', 'C']),
-      );
+      expect(parseWay(['A', DrawWay.Hv, 'B', DrawWay.Vh, 'C'])).toEqual(parseWay(['A', '-|', 'B', '|-', 'C']));
     });
 
-    it("折角算子在 way 末尾（无下一项）抛错", () => {
+    it('折角算子在 way 末尾（无下一项）抛错', () => {
       expect(() => parseWay(['A', '-|'])).toThrow(/via operator '-\|' at end/);
     });
 
-    it("折角算子后接另一个算子 / cycle 抛错", () => {
-      expect(() => parseWay(['A', '-|', '|-', 'B'])).toThrow(
-        /via operator '-\|' must be followed by a target/,
-      );
-      expect(() => parseWay(['A', '-|', DrawWay.Cycle])).toThrow(
-        /via operator '-\|' must be followed by a target/,
-      );
+    it('折角算子后接另一个算子 / cycle 抛错', () => {
+      expect(() => parseWay(['A', '-|', '|-', 'B'])).toThrow(/via operator '-\|' must be followed by a target/);
+      expect(() => parseWay(['A', '-|', DrawWay.Cycle])).toThrow(/via operator '-\|' must be followed by a target/);
     });
   });
 
@@ -203,18 +203,23 @@ describe('parseWay', () => {
   });
 
   describe('曲线算子 (infix)', () => {
-    it("{ curve } 在两个 target 之间产出 curve step", () => {
+    it('{ curve } 在两个 target 之间产出 curve step', () => {
       expect(parseWay(['A', { curve: [5, 8] }, 'B'])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         { type: 'step', kind: 'curve', to: { id: 'B' }, control: [5, 8] },
       ]);
     });
 
-    it("{ cubic } 在两个 target 之间产出 cubic step", () => {
+    it('{ cubic } 在两个 target 之间产出 cubic step', () => {
       expect(
         parseWay([
           'A',
-          { cubic: [[3, 5], [7, 5]] },
+          {
+            cubic: [
+              [3, 5],
+              [7, 5],
+            ],
+          },
           'B',
         ]),
       ).toEqual([
@@ -243,18 +248,8 @@ describe('parseWay', () => {
       ]);
     });
 
-    it("曲线算子可与 line / 折角 / cycle 混用", () => {
-      expect(
-        parseWay([
-          'A',
-          { curve: [50, -30] },
-          'B',
-          [10, 10],
-          { bend: 'right' },
-          'C',
-          DrawWay.Cycle,
-        ]),
-      ).toEqual([
+    it('曲线算子可与 line / 折角 / cycle 混用', () => {
+      expect(parseWay(['A', { curve: [50, -30] }, 'B', [10, 10], { bend: 'right' }, 'C', DrawWay.Cycle])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         { type: 'step', kind: 'curve', to: { id: 'B' }, control: [50, -30] },
         { type: 'step', kind: 'line', to: [10, 10] },
@@ -263,28 +258,24 @@ describe('parseWay', () => {
       ]);
     });
 
-    it("曲线算子在 way 末尾（无下一项）抛错", () => {
-      expect(() => parseWay(['A', { curve: [1, 2] }])).toThrow(
-        /curve operator at end/,
+    it('曲线算子在 way 末尾（无下一项）抛错', () => {
+      expect(() => parseWay(['A', { curve: [1, 2] }])).toThrow(/curve operator at end/);
+      expect(() => parseWay(['A', { bend: 'left' }])).toThrow(/curve operator at end/);
+    });
+
+    it('曲线算子后接另一个算子 / cycle 抛错', () => {
+      expect(() => parseWay(['A', { curve: [1, 2] }, '-|', 'B'])).toThrow(
+        /curve operator must be followed by a target/,
       );
-      expect(() => parseWay(['A', { bend: 'left' }])).toThrow(
-        /curve operator at end/,
+      expect(() => parseWay(['A', { bend: 'left' }, DrawWay.Cycle])).toThrow(
+        /curve operator must be followed by a target/,
+      );
+      expect(() => parseWay(['A', { curve: [1, 2] }, { bend: 'right' }, 'B'])).toThrow(
+        /curve operator must be followed by a target/,
       );
     });
 
-    it("曲线算子后接另一个算子 / cycle 抛错", () => {
-      expect(() =>
-        parseWay(['A', { curve: [1, 2] }, '-|', 'B']),
-      ).toThrow(/curve operator must be followed by a target/);
-      expect(() =>
-        parseWay(['A', { bend: 'left' }, DrawWay.Cycle]),
-      ).toThrow(/curve operator must be followed by a target/);
-      expect(() =>
-        parseWay(['A', { curve: [1, 2] }, { bend: 'right' }, 'B']),
-      ).toThrow(/curve operator must be followed by a target/);
-    });
-
-    it("折角算子后接曲线算子也抛错（互不允许相邻）", () => {
+    it('折角算子后接曲线算子也抛错（互不允许相邻）', () => {
       expect(() => parseWay(['A', '-|', { curve: [1, 2] }, 'B'])).toThrow(
         /via operator '-\|' must be followed by a target/,
       );
@@ -292,59 +283,37 @@ describe('parseWay', () => {
   });
 
   describe('形状算子 (infix)', () => {
-    it("{ arc: {...} } 产出 arc step（不消耗下一项）", () => {
-      expect(
-        parseWay([
-          'A',
-          { arc: { startAngle: 0, endAngle: 90, radius: 10 } },
-        ]),
-      ).toEqual([
+    it('{ arc: {...} } 产出 arc step（不消耗下一项）', () => {
+      expect(parseWay(['A', { arc: { startAngle: 0, endAngle: 90, radius: 10 } }])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10 },
       ]);
     });
 
-    it("{ circle: { radius } } 产出 circlePath step", () => {
+    it('{ circle: { radius } } 产出 circlePath step', () => {
       expect(parseWay(['A', { circle: { radius: 5 } }])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         { type: 'step', kind: 'circlePath', radius: 5 },
       ]);
     });
 
-    it("{ ellipse: { radiusX, radiusY } } 产出 ellipsePath step", () => {
-      expect(
-        parseWay(['A', { ellipse: { radiusX: 8, radiusY: 4 } }]),
-      ).toEqual([
+    it('{ ellipse: { radiusX, radiusY } } 产出 ellipsePath step', () => {
+      expect(parseWay(['A', { ellipse: { radiusX: 8, radiusY: 4 } }])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         { type: 'step', kind: 'ellipsePath', radiusX: 8, radiusY: 4 },
       ]);
     });
 
-    it("形状算子不消耗下一项：后续 way item 正常解析", () => {
-      expect(
-        parseWay([
-          'A',
-          { arc: { startAngle: 0, endAngle: 90, radius: 5 } },
-          'B',
-        ]),
-      ).toEqual([
+    it('形状算子不消耗下一项：后续 way item 正常解析', () => {
+      expect(parseWay(['A', { arc: { startAngle: 0, endAngle: 90, radius: 5 } }, 'B'])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 5 },
         { type: 'step', kind: 'line', to: { id: 'B' } },
       ]);
     });
 
-    it("形状算子可与 line / 曲线 / 折角 / cycle 混用", () => {
-      expect(
-        parseWay([
-          'A',
-          { circle: { radius: 3 } },
-          [10, 0],
-          { bend: 'left' },
-          'B',
-          DrawWay.Cycle,
-        ]),
-      ).toEqual([
+    it('形状算子可与 line / 曲线 / 折角 / cycle 混用', () => {
+      expect(parseWay(['A', { circle: { radius: 3 } }, [10, 0], { bend: 'left' }, 'B', DrawWay.Cycle])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         { type: 'step', kind: 'circlePath', radius: 3 },
         { type: 'step', kind: 'line', to: [10, 0] },
@@ -368,14 +337,14 @@ describe('parseWay', () => {
     it("way 里 '+1,0' / '++1,0' 解析为 { relative } / { relativeAccumulate } step", () => {
       expect(parseWay(['A', '+1,0', '++2,3'])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
-        { type: 'step', kind: 'line', to: { relative:[1, 0] } },
-        { type: 'step', kind: 'line', to: { relativeAccumulate:[2, 3] } },
+        { type: 'step', kind: 'line', to: { relative: [1, 0] } },
+        { type: 'step', kind: 'line', to: { relativeAccumulate: [2, 3] } },
       ]);
     });
 
     it("首项是 '+1,0' 时 move 的 to 也走 sugar 解析", () => {
       expect(parseWay(['+5,0', 'B'])).toEqual([
-        { type: 'step', kind: 'move', to: { relative:[5, 0] } },
+        { type: 'step', kind: 'move', to: { relative: [5, 0] } },
         { type: 'step', kind: 'line', to: { id: 'B' } },
       ]);
     });
@@ -383,7 +352,7 @@ describe('parseWay', () => {
     it("'+1,0' 与折角算子混用：折角算子的 next target 也走 sugar", () => {
       expect(parseWay(['A', '-|', '+5,3'])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
-        { type: 'step', kind: 'fold', via: '-|', to: { relative:[5, 3] } },
+        { type: 'step', kind: 'fold', via: '-|', to: { relative: [5, 3] } },
       ]);
     });
 
@@ -393,7 +362,7 @@ describe('parseWay', () => {
         {
           type: 'step',
           kind: 'curve',
-          to: { relative:[10, 0] },
+          to: { relative: [10, 0] },
           control: [5, 8],
         },
       ]);
@@ -401,59 +370,44 @@ describe('parseWay', () => {
   });
 
   describe('Sugar 相对坐标对象形态 WayRelativeItem', () => {
-    it("{ position, type: DrawWay.Relative } / DrawWay.Accumulate 解析为 { relative } / { relativeAccumulate }", () => {
+    it('{ position, type: DrawWay.Relative } / DrawWay.Accumulate 解析为 { relative } / { relativeAccumulate }', () => {
       expect(
-        parseWay([
-          'A',
-          { position: [1, 0], type: DrawWay.Relative },
-          { position: [2, 3], type: DrawWay.Accumulate },
-        ]),
+        parseWay(['A', { position: [1, 0], type: DrawWay.Relative }, { position: [2, 3], type: DrawWay.Accumulate }]),
       ).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
-        { type: 'step', kind: 'line', to: { relative:[1, 0] } },
-        { type: 'step', kind: 'line', to: { relativeAccumulate:[2, 3] } },
+        { type: 'step', kind: 'line', to: { relative: [1, 0] } },
+        { type: 'step', kind: 'line', to: { relativeAccumulate: [2, 3] } },
       ]);
     });
 
     it('WayRelativeItem.type 拼写错误时直接抛错', () => {
-      const way = [
-        'A',
-        { position: [1, 0], type: 'retikz-keyword_relatvie' },
-      ] as unknown as Parameters<typeof parseWay>[0];
+      const way = ['A', { position: [1, 0], type: 'retikz-keyword_relatvie' }] as unknown as Parameters<
+        typeof parseWay
+      >[0];
       expect(() => parseWay(way)).toThrow(/WayRelativeItem\.type/);
     });
 
     it('首项是 WayRelativeItem 时 move 的 to 也走 desugar', () => {
-      expect(
-        parseWay([{ position: [5, 0], type: DrawWay.Relative }, 'B']),
-      ).toEqual([
-        { type: 'step', kind: 'move', to: { relative:[5, 0] } },
+      expect(parseWay([{ position: [5, 0], type: DrawWay.Relative }, 'B'])).toEqual([
+        { type: 'step', kind: 'move', to: { relative: [5, 0] } },
         { type: 'step', kind: 'line', to: { id: 'B' } },
       ]);
     });
 
     it('与折角算子混用：折角算子的 next 也支持 WayRelativeItem', () => {
-      expect(
-        parseWay(['A', '-|', { position: [5, 3], type: DrawWay.Accumulate }]),
-      ).toEqual([
+      expect(parseWay(['A', '-|', { position: [5, 3], type: DrawWay.Accumulate }])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
-        { type: 'step', kind: 'fold', via: '-|', to: { relativeAccumulate:[5, 3] } },
+        { type: 'step', kind: 'fold', via: '-|', to: { relativeAccumulate: [5, 3] } },
       ]);
     });
 
     it('曲线算子的 next 也支持 WayRelativeItem', () => {
-      expect(
-        parseWay([
-          'A',
-          { curve: [5, 8] },
-          { position: [10, 0], type: DrawWay.Relative },
-        ]),
-      ).toEqual([
+      expect(parseWay(['A', { curve: [5, 8] }, { position: [10, 0], type: DrawWay.Relative }])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         {
           type: 'step',
           kind: 'curve',
-          to: { relative:[10, 0] },
+          to: { relative: [10, 0] },
           control: [5, 8],
         },
       ]);
@@ -461,11 +415,7 @@ describe('parseWay', () => {
 
     it('对象形态与字符串形态结果完全一致', () => {
       expect(
-        parseWay([
-          'A',
-          { position: [1, 0], type: DrawWay.Relative },
-          { position: [2, 3], type: DrawWay.Accumulate },
-        ]),
+        parseWay(['A', { position: [1, 0], type: DrawWay.Relative }, { position: [2, 3], type: DrawWay.Accumulate }]),
       ).toEqual(parseWay(['A', '+1,0', '++2,3']));
     });
   });
@@ -479,19 +429,11 @@ describe('parseWay', () => {
     });
 
     it('字符串简记 { label: "x" } 等价 { label: { text: "x" } }', () => {
-      expect(parseWay(['A', { label: 'accept' }, 'B'])).toEqual(
-        parseWay(['A', { label: { text: 'accept' } }, 'B']),
-      );
+      expect(parseWay(['A', { label: 'accept' }, 'B'])).toEqual(parseWay(['A', { label: { text: 'accept' } }, 'B']));
     });
 
     it('label 完整字段透传：position + side', () => {
-      expect(
-        parseWay([
-          'A',
-          { label: { text: 'q', position: 'near-end', side: 'sloped' } },
-          'B',
-        ]),
-      ).toEqual([
+      expect(parseWay(['A', { label: { text: 'q', position: 'near-end', side: 'sloped' } }, 'B'])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         {
           type: 'step',
@@ -530,7 +472,12 @@ describe('parseWay', () => {
         parseWay([
           'A',
           { label: 'c' },
-          { cubic: [[3, 5], [7, 5]] },
+          {
+            cubic: [
+              [3, 5],
+              [7, 5],
+            ],
+          },
           'B',
         ]),
       ).toEqual([
@@ -544,9 +491,7 @@ describe('parseWay', () => {
           label: { text: 'c' },
         },
       ]);
-      expect(
-        parseWay(['A', { label: 'b' }, { bend: 'left', angle: 45 }, 'B']),
-      ).toEqual([
+      expect(parseWay(['A', { label: 'b' }, { bend: 'left', angle: 45 }, 'B'])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         {
           type: 'step',
@@ -560,13 +505,7 @@ describe('parseWay', () => {
     });
 
     it('arc / circle / ellipse 形状算子（不消耗 next）也接受前置 label', () => {
-      expect(
-        parseWay([
-          'A',
-          { label: 'a' },
-          { arc: { startAngle: 0, endAngle: 90, radius: 5 } },
-        ]),
-      ).toEqual([
+      expect(parseWay(['A', { label: 'a' }, { arc: { startAngle: 0, endAngle: 90, radius: 5 } }])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         {
           type: 'step',
@@ -577,9 +516,7 @@ describe('parseWay', () => {
           label: { text: 'a' },
         },
       ]);
-      expect(
-        parseWay(['A', { label: 'o' }, { circle: { radius: 5 } }]),
-      ).toEqual([
+      expect(parseWay(['A', { label: 'o' }, { circle: { radius: 5 } }])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         {
           type: 'step',
@@ -588,13 +525,7 @@ describe('parseWay', () => {
           label: { text: 'o' },
         },
       ]);
-      expect(
-        parseWay([
-          'A',
-          { label: 'e' },
-          { ellipse: { radiusX: 6, radiusY: 3 } },
-        ]),
-      ).toEqual([
+      expect(parseWay(['A', { label: 'e' }, { ellipse: { radiusX: 6, radiusY: 3 } }])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         {
           type: 'step',
@@ -607,15 +538,7 @@ describe('parseWay', () => {
     });
 
     it('多段独立 label：每段一个 label，互不干扰', () => {
-      expect(
-        parseWay([
-          'A',
-          { label: 'one' },
-          'B',
-          { label: 'two' },
-          'C',
-        ]),
-      ).toEqual([
+      expect(parseWay(['A', { label: 'one' }, 'B', { label: 'two' }, 'C'])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         { type: 'step', kind: 'line', to: { id: 'B' }, label: { text: 'one' } },
         { type: 'step', kind: 'line', to: { id: 'C' }, label: { text: 'two' } },
@@ -634,37 +557,29 @@ describe('parseWay', () => {
     });
 
     it('way[0] 是 label 算子时抛错（没有段可挂）', () => {
-      expect(() => parseWay([{ label: 'x' }, 'A', 'B'])).toThrow(
-        /way\[0\] must be a target/,
-      );
+      expect(() => parseWay([{ label: 'x' }, 'A', 'B'])).toThrow(/way\[0\] must be a target/);
     });
 
     it('连续两个 label 算子抛错', () => {
-      expect(() =>
-        parseWay(['A', { label: 'x' }, { label: 'y' }, 'B']),
-      ).toThrow(/cannot directly follow another label operator/);
+      expect(() => parseWay(['A', { label: 'x' }, { label: 'y' }, 'B'])).toThrow(
+        /cannot directly follow another label operator/,
+      );
     });
 
     it('cycle 上的 label 抛错（IR 不允许）', () => {
-      expect(() =>
-        parseWay(['A', 'B', { label: 'x' }, DrawWay.Cycle]),
-      ).toThrow(/cycle step cannot carry a label/);
+      expect(() => parseWay(['A', 'B', { label: 'x' }, DrawWay.Cycle])).toThrow(/cycle step cannot carry a label/);
     });
 
     it('way 末尾未消费的 label 算子抛错', () => {
-      expect(() => parseWay(['A', 'B', { label: 'x' }])).toThrow(
-        /label operator at end of way/,
-      );
+      expect(() => parseWay(['A', 'B', { label: 'x' }])).toThrow(/label operator at end of way/);
     });
 
     it('via / curve 算子之后直接接 label 算子抛错（label 必须在段定义算子之前）', () => {
       // '-|' 期待 next target，得到 label op 应被识别为 operator → 触发原"must be followed by a target"
-      expect(() => parseWay(['A', '-|', { label: 'x' }, 'B'])).toThrow(
-        /must be followed by a target/,
+      expect(() => parseWay(['A', '-|', { label: 'x' }, 'B'])).toThrow(/must be followed by a target/);
+      expect(() => parseWay(['A', { curve: [5, 8] }, { label: 'x' }, 'B'])).toThrow(
+        /curve operator must be followed by a target/,
       );
-      expect(() =>
-        parseWay(['A', { curve: [5, 8] }, { label: 'x' }, 'B']),
-      ).toThrow(/curve operator must be followed by a target/);
     });
   });
 });

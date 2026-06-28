@@ -1,10 +1,18 @@
-import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { type ExternalRow, TransformSchema } from '../../src/schemas';
+import { z } from 'zod';
+
+import type { ExternalRow } from '../../src/schemas';
+
 import { defineTransform } from '../../src';
-import { applyTransforms, collectTransformFields, createFieldCollector, resolveTransformRegistry } from '../../src/providers';
-import { collectSourceFields } from '../../src/pipeline/source-fields';
 import { readSourceIndices, tagSourceIndex } from '../../src/pipeline/provenance';
+import { collectSourceFields } from '../../src/pipeline/source-fields';
+import {
+  applyTransforms,
+  collectTransformFields,
+  createFieldCollector,
+  resolveTransformRegistry,
+} from '../../src/providers';
+import { TransformSchema } from '../../src/schemas';
 import { PlotSpecSchema } from '../../src/schemas/plot';
 
 const smoothOperation = (operation: unknown) => TransformSchema.parse(operation);
@@ -27,9 +35,22 @@ describe('smooth transform schema (alpha.13 ADR-04)', () => {
   });
 
   it('rejects malformed smooth JSON with useful zod errors', () => {
-    expect(() => TransformSchema.parse({ kind: 'smooth', x: 'time', y: 'value', sampleCount: 1, xAs: 'x', yAs: 'y' })).toThrow();
-    expect(() => TransformSchema.parse({ kind: 'smooth', x: 'time', y: 'value', extent: [4, 4], xAs: 'x', yAs: 'y' })).toThrow();
-    expect(() => TransformSchema.parse({ kind: 'smooth', x: 'time', y: 'value', method: { kind: 'movingAverage' }, xAs: 'x', yAs: 'y' })).toThrow();
+    expect(() =>
+      TransformSchema.parse({ kind: 'smooth', x: 'time', y: 'value', sampleCount: 1, xAs: 'x', yAs: 'y' }),
+    ).toThrow();
+    expect(() =>
+      TransformSchema.parse({ kind: 'smooth', x: 'time', y: 'value', extent: [4, 4], xAs: 'x', yAs: 'y' }),
+    ).toThrow();
+    expect(() =>
+      TransformSchema.parse({
+        kind: 'smooth',
+        x: 'time',
+        y: 'value',
+        method: { kind: 'movingAverage' },
+        xAs: 'x',
+        yAs: 'y',
+      }),
+    ).toThrow();
   });
 });
 
@@ -124,9 +145,12 @@ describe('smooth transform behavior (alpha.13 ADR-04)', () => {
   });
 
   it('fails loud for too few finite pairs and vertical x variance', () => {
-    expect(() => applyTransforms([{ time: 1, value: 2 }], [smoothOperation({ kind: 'smooth', x: 'time', y: 'value', xAs: 'x', yAs: 'y' })])).toThrow(
-      /finite|two/i,
-    );
+    expect(() =>
+      applyTransforms(
+        [{ time: 1, value: 2 }],
+        [smoothOperation({ kind: 'smooth', x: 'time', y: 'value', xAs: 'x', yAs: 'y' })],
+      ),
+    ).toThrow(/finite|two/i);
     expect(() =>
       applyTransforms(
         [
@@ -196,7 +220,14 @@ describe('smooth transform behavior (alpha.13 ADR-04)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'path', series: 'series', order: 'trendX', encoding: { x: { field: 'trendX' }, y: { field: 'trendY' } } }],
+      marks: [
+        {
+          type: 'path',
+          series: 'series',
+          order: 'trendX',
+          encoding: { x: { field: 'trendX' }, y: { field: 'trendY' } },
+        },
+      ],
     });
 
     expect([...collectSourceFields(spec, resolveTransformRegistry())].sort()).toEqual(['series', 'time', 'value']);

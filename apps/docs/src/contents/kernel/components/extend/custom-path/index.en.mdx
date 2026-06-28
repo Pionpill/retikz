@@ -15,18 +15,18 @@ The `highlight` kind below reuses the built-in stroke compiler, then turns the w
 
 ## API
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `kind` | `string` | Registry name; `Path.kind` uses it to find the provider |
-| `optionsSchema` | `ZodType<IRJsonObject>` | Optional; validates `kindOptions`, whose output still must be JSON-safe |
-| `compile` | `(context) => PathKindCompileResult \| null` | Compiles the whole Path into Scene primitives and sampled points; `null` means no output |
+| Field           | Type                                         | Description                                                                              |
+| --------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `kind`          | `string`                                     | Registry name; `Path.kind` uses it to find the provider                                  |
+| `optionsSchema` | `ZodType<IRJsonObject>`                      | Optional; validates `kindOptions`, whose output still must be JSON-safe                  |
+| `compile`       | `(context) => PathKindCompileResult \| null` | Compiles the whole Path into Scene primitives and sampled points; `null` means no output |
 
 The `PathKindCompileContext` passed to `compile`:
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `path` | `IRPathBase` | Full IR data for the current Path |
-| `options` | `TOptions` | `kindOptions` after `optionsSchema` validation |
+| Field        | Type                                       | Description                                                       |
+| ------------ | ------------------------------------------ | ----------------------------------------------------------------- |
+| `path`       | `IRPathBase`                               | Full IR data for the current Path                                 |
+| `options`    | `TOptions`                                 | `kindOptions` after `optionsSchema` validation                    |
 | `emitStroke` | `(path?) => PathKindCompileResult \| null` | Reuse the built-in stroke lowerer, optionally with a patched Path |
 | `emitRibbon` | `(path?) => PathKindCompileResult \| null` | Reuse the built-in ribbon lowerer, optionally with a patched Path |
 

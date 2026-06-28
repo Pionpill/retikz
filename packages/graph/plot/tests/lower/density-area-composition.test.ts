@@ -1,17 +1,29 @@
 import type { IRPath, IRScope } from '@retikz/core';
+
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
-const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options?: LowerPlotsOptions,
+): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
 
-const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options?: LowerPlotsOptions): IRScope =>
-  expandOf(spec, datasets, options).children[0] as IRScope;
+const firstLayer = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options?: LowerPlotsOptions,
+): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
 describe('density area composition (alpha.13 ADR-03)', () => {
   const samples = [
@@ -78,7 +90,16 @@ describe('density area composition (alpha.13 ADR-03)', () => {
         { type: 'point', encoding: { x: { field: 'value' }, y: { value: 0 } } },
         {
           type: 'path',
-          transform: [{ kind: 'density', field: 'value', bandwidth: { kind: 'value', value: 2 }, sampleCount: 5, xAs: 'densityX', densityAs: 'density' }],
+          transform: [
+            {
+              kind: 'density',
+              field: 'value',
+              bandwidth: { kind: 'value', value: 2 },
+              sampleCount: 5,
+              xAs: 'densityX',
+              densityAs: 'density',
+            },
+          ],
           order: 'densityX',
           encoding: { x: { field: 'densityX' }, y: { field: 'density' } },
         },

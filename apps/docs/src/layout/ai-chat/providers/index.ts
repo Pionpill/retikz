@@ -1,7 +1,8 @@
+import type { ChatProvider, ProviderId } from './types';
+
 import { anthropicProvider } from './anthropic';
 import { deepseekProvider } from './deepseek';
 import { openaiProvider } from './openai';
-import type { ChatProvider, ProviderId } from './types';
 
 const PROVIDERS: Record<ProviderId, ChatProvider> = {
   deepseek: deepseekProvider,

@@ -1,7 +1,12 @@
 import type { IRNode, IRScope } from '@retikz/core';
+
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 /**
  * ADR-04（alpha.11）：text mark / datum label 下沉契约测试。
@@ -15,7 +20,11 @@ type Datasets = Record<string, Array<Record<string, unknown>>>;
 const WIDTH = 400;
 const HEIGHT = 300;
 
-const expandOf = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions = { width: WIDTH, height: HEIGHT }): IRScope => {
+const expandOf = (
+  spec: PlotSpec,
+  datasets: Datasets,
+  options: LowerPlotsOptions = { width: WIDTH, height: HEIGHT },
+): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
@@ -27,7 +36,7 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
       if (node.type === 'node') out.push(child as IRNode);
-      else if ((node.type === 'scope') && node.children) walk(node.children);
+      else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
   walk(layer.children);
@@ -71,8 +80,18 @@ const textSpec = (encoding: Record<string, unknown>, extra: Record<string, unkno
     guides: [],
   });
 
-const BAR_ROWS: Datasets = { d: [{ month: 'Jan', revenue: 1234.5 }, { month: 'Feb', revenue: 980 }] };
-const POINT_ROWS: Datasets = { d: [{ px: 1, py: 2, label: 'A', cat: 'x' }, { px: 3, py: 4, label: 'B', cat: 'y' }] };
+const BAR_ROWS: Datasets = {
+  d: [
+    { month: 'Jan', revenue: 1234.5 },
+    { month: 'Feb', revenue: 980 },
+  ],
+};
+const POINT_ROWS: Datasets = {
+  d: [
+    { px: 1, py: 2, label: 'A', cat: 'x' },
+    { px: 3, py: 4, label: 'B', cat: 'y' },
+  ],
+};
 
 describe('ADR-04 priority-1 宿主 label（填 datum Node.label）', () => {
   it('label-host-node：interval label → 每个 datum Node.label 被填上 NodeLabelSchema，不新建额外 Node', () => {
@@ -114,7 +133,11 @@ describe('ADR-04 priority-1 宿主 label（填 datum Node.label）', () => {
 
   it('label-resolve-runtime：resolveLabel(row) 覆盖 field/displayFormat，且 IR 内不含函数', () => {
     const spec = intervalSpec({ content: { field: 'revenue', displayFormat: ',.0f' } }, 'bars');
-    const layer = expandOf(spec, BAR_ROWS, { width: WIDTH, height: HEIGHT, resolveLabel: { bars: row => `${row.month}=${row.revenue}` } });
+    const layer = expandOf(spec, BAR_ROWS, {
+      width: WIDTH,
+      height: HEIGHT,
+      resolveLabel: { bars: row => `${row.month}=${row.revenue}` },
+    });
     const nodes = nodesOf(layer);
     expect((nodes[0].label as { text: string }).text).toBe('Jan=1234.5');
     // IR 序列化往返不变（不含函数）
@@ -124,7 +147,12 @@ describe('ADR-04 priority-1 宿主 label（填 datum Node.label）', () => {
 
   it('label-field-null-skip：label.content.field 解析 null 的行不挂 label（datum Node 仍在）', () => {
     const spec = intervalSpec({ content: { field: 'note' } });
-    const layer = expandOf(spec, { d: [{ month: 'Jan', revenue: 10, note: 'hi' }, { month: 'Feb', revenue: 20 }] });
+    const layer = expandOf(spec, {
+      d: [
+        { month: 'Jan', revenue: 10, note: 'hi' },
+        { month: 'Feb', revenue: 20 },
+      ],
+    });
     const nodes = nodesOf(layer);
     expect(nodes).toHaveLength(2);
     expect(nodes[0].label).toBeDefined();
@@ -151,7 +179,10 @@ describe('ADR-04 priority-2 兜底自由 TextMark（新建带 text 的 Node）',
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'px' }, y: { field: 'py' } } }],
       guides: [],
@@ -161,7 +192,14 @@ describe('ADR-04 priority-2 兜底自由 TextMark（新建带 text 的 Node）',
   });
 
   it('text-field-null-skip：text.field 解析 null 的行被跳过（不产 Node）', () => {
-    const nodes = nodesOf(expandOf(textSpec({ text: { field: 'label' } }), { d: [{ px: 1, py: 2, label: 'A' }, { px: 3, py: 4 }] }));
+    const nodes = nodesOf(
+      expandOf(textSpec({ text: { field: 'label' } }), {
+        d: [
+          { px: 1, py: 2, label: 'A' },
+          { px: 3, py: 4 },
+        ],
+      }),
+    );
     expect(nodes).toHaveLength(1);
     expect(nodes[0].text).toBe('A');
   });
@@ -183,9 +221,19 @@ describe('ADR-04 priority-2 兜底自由 TextMark（新建带 text 的 Node）',
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'c' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'c' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'cat', scale: 'c' }, encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'cat', scale: 'c' },
+          encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label' } },
+        },
+      ],
       guides: [],
     });
     const layer = expandOf(spec, POINT_ROWS);
@@ -216,7 +264,10 @@ describe('ADR-04 priority-2 兜底自由 TextMark（新建带 text 的 Node）',
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'a' }, { type: 'linear', name: 'r' }],
+      scales: [
+        { type: 'linear', name: 'a' },
+        { type: 'linear', name: 'r' },
+      ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r', startAngle: 0, endAngle: 360, innerRadius: 0 },
       marks: [{ type: 'point', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label' } } }],
       guides: [],
@@ -232,7 +283,11 @@ describe('ADR-04 priority-2 兜底自由 TextMark（新建带 text 的 Node）',
 
   it('text-resolve-runtime：resolveLabel(row) 覆盖 text.field（按 mark id 注入）', () => {
     const nodes = nodesOf(
-      expandOf(textSpec({ text: { field: 'label' } }, { id: 't1' }), POINT_ROWS, { width: WIDTH, height: HEIGHT, resolveLabel: { t1: row => `<${row.label}>` } }),
+      expandOf(textSpec({ text: { field: 'label' } }, { id: 't1' }), POINT_ROWS, {
+        width: WIDTH,
+        height: HEIGHT,
+        resolveLabel: { t1: row => `<${row.label}>` },
+      }),
     );
     expect(nodes[0].text).toBe('<A>');
     expect(nodes[1].text).toBe('<B>');
@@ -254,7 +309,10 @@ describe('ADR-04 schema accept/reject', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'px' }, y: { field: 'py' } } }],
       guides: [],

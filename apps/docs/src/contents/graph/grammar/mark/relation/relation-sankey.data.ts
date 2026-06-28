@@ -53,12 +53,7 @@ const domainSentinels = (): Array<SankeyDatum> => [
   },
 ];
 
-const stackColumn = (
-  specs: Array<NodeSpec>,
-  x: number,
-  top: number,
-  gap: number,
-): Array<PositionedNode> => {
+const stackColumn = (specs: Array<NodeSpec>, x: number, top: number, gap: number): Array<PositionedNode> => {
   let cursor = top;
   return specs.map(spec => {
     const node: PositionedNode = {
@@ -84,10 +79,7 @@ const nextSlotY = (node: PositionedNode, side: 'source' | 'target', width: numbe
   return y;
 };
 
-const buildFlowRows = (
-  flows: Array<FlowSpec>,
-  nodesById: Map<string, PositionedNode>,
-): Array<SankeyDatum> =>
+const buildFlowRows = (flows: Array<FlowSpec>, nodesById: Map<string, PositionedNode>): Array<SankeyDatum> =>
   flows.map(flow => {
     const source = nodesById.get(flow.source);
     const target = nodesById.get(flow.target);

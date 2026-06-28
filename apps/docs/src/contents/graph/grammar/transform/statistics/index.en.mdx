@@ -5,10 +5,10 @@ description: Reducers and selectors are the shared statistical primitives behind
 
 Statistic operations are not a new pipeline stage. They live inside existing transforms: reducers compute statistic values, while selectors choose representative rows. That lets `summarize`, `annotate`, `bin`, `select`, and `relate` reuse one statistical layer instead of baking special fields into each chart shape.
 
-| Operation | Returns | Reused by | Good for |
-| --- | --- | --- | --- |
-| reducer | Field fragment | `bin` / `summarize` / `annotate` | Counts, means, quantile bands, risk scores |
-| selector | Source rows | `select` / `annotate` / `relate` | Extremes, top-N, outliers, relation endpoints |
+| Operation | Returns        | Reused by                        | Good for                                      |
+| --------- | -------------- | -------------------------------- | --------------------------------------------- |
+| reducer   | Field fragment | `bin` / `summarize` / `annotate` | Counts, means, quantile bands, risk scores    |
+| selector  | Source rows    | `select` / `annotate` / `relate` | Extremes, top-N, outliers, relation endpoints |
 
 ## Full Transforms
 
@@ -18,14 +18,14 @@ Some statistics generate a new sampled row set, so they do not fit inside a redu
 
 <ComponentPreview name="transform-density" sourceFiles={['transform-density.data.ts']} />
 
-| prop | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `field` | `string` | — | One-dimensional continuous field used for density estimation |
-| `groupBy` | `Array<string>?` | One global group | Estimate density independently per group |
-| `bandwidth` | `{ kind: 'silverman' }`<br />`{ kind: 'value'; value: number }` | `silverman` | KDE bandwidth; explicit values must be positive |
-| `sampleCount` | `number?` | `64` | Number of sample points emitted per group, at least 2 |
-| `extent` | `[number, number]?` | Padded observed range | Sampling interval |
-| `xAs` / `densityAs` | `string` | — | Output fields for sample position and density value |
+| prop                | Type                                                            | Default               | Notes                                                        |
+| ------------------- | --------------------------------------------------------------- | --------------------- | ------------------------------------------------------------ |
+| `field`             | `string`                                                        | —                     | One-dimensional continuous field used for density estimation |
+| `groupBy`           | `Array<string>?`                                                | One global group      | Estimate density independently per group                     |
+| `bandwidth`         | `{ kind: 'silverman' }`<br />`{ kind: 'value'; value: number }` | `silverman`           | KDE bandwidth; explicit values must be positive              |
+| `sampleCount`       | `number?`                                                       | `64`                  | Number of sample points emitted per group, at least 2        |
+| `extent`            | `[number, number]?`                                             | Padded observed range | Sampling interval                                            |
+| `xAs` / `densityAs` | `string`                                                        | —                     | Output fields for sample position and density value          |
 
 `density` emits ordinary rows. Use `PathMark` for a density curve; use the same `PathMark` with `closure={{ kind: 'baseline' }}` and `fill` for an area. Do not add a dedicated density mark for this layer.
 
@@ -35,14 +35,14 @@ Some statistics generate a new sampled row set, so they do not fit inside a redu
 
 <ComponentPreview name="transform-smooth" sourceFiles={['transform-smooth.data.ts']} />
 
-| prop | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `x` / `y` | `string` | — | Regression input fields |
-| `groupBy` | `Array<string>?` | One global group | Fit a separate trend line per group |
-| `method` | `{ kind: 'linear' }?` | `linear` | Smoothing method; the first pass only supports linear regression |
-| `sampleCount` | `number?` | `64` | Number of predicted sample points emitted per group, at least 2 |
-| `extent` | `[number, number]?` | Finite observed x range | Sampling interval; pass an explicit extent to extrapolate |
-| `xAs` / `yAs` | `string` | — | Output fields for predicted sample position and y value |
+| prop          | Type                  | Default                 | Notes                                                            |
+| ------------- | --------------------- | ----------------------- | ---------------------------------------------------------------- |
+| `x` / `y`     | `string`              | —                       | Regression input fields                                          |
+| `groupBy`     | `Array<string>?`      | One global group        | Fit a separate trend line per group                              |
+| `method`      | `{ kind: 'linear' }?` | `linear`                | Smoothing method; the first pass only supports linear regression |
+| `sampleCount` | `number?`             | `64`                    | Number of predicted sample points emitted per group, at least 2  |
+| `extent`      | `[number, number]?`   | Finite observed x range | Sampling interval; pass an explicit extent to extrapolate        |
+| `xAs` / `yAs` | `string`              | —                       | Output fields for predicted sample position and y value          |
 
 `smooth` fails loudly for inputs that cannot be fitted: each group needs at least two finite `(x, y)` pairs, and x cannot be constant. Keep the raw points and the trend line as separate mark layers: points read the source data, while the trend line reads rows generated by `smooth`.
 
@@ -50,14 +50,14 @@ Some statistics generate a new sampled row set, so they do not fit inside a redu
 
 A reducer receives a group of rows and returns the fields to write onto a summary row or annotation row. It answers “what statistic does this group have?” without deciding whether the outer transform preserves rows or emits new rows.
 
-| op | Input | Output | Notes |
-| --- | --- | --- | --- |
-| `count` | Row group | `as` | Number of rows |
-| `sum` / `mean` | `field` | `as` | Sum or average |
-| `median` | `field` | `as` | Median value |
-| `min` / `max` | `field` | `as` | Finite numeric extrema |
-| `extent` | `field` | `as` | `[min, max]` |
-| `quantile` | `field` / `p` | `as` | One quantile point |
+| op              | Input                         | Output    | Notes                           |
+| --------------- | ----------------------------- | --------- | ------------------------------- |
+| `count`         | Row group                     | `as`      | Number of rows                  |
+| `sum` / `mean`  | `field`                       | `as`      | Sum or average                  |
+| `median`        | `field`                       | `as`      | Median value                    |
+| `min` / `max`   | `field`                       | `as`      | Finite numeric extrema          |
+| `extent`        | `field`                       | `as`      | `[min, max]`                    |
+| `quantile`      | `field` / `p`                 | `as`      | One quantile point              |
 | `quantile-band` | `field` / `lowerP` / `upperP` | `outputs` | Parameterized quantile interval |
 
 The same reducer can appear in several transforms. In `summarize.metrics`, it collapses each group into one row. In `annotate.metrics`, it broadcasts the statistic back to every row in the group. In `bin.metrics`, it reduces each bin independently.
@@ -66,13 +66,13 @@ The same reducer can appear in several transforms. In `summarize.metrics`, it co
 
 A selector receives a group of rows and returns selected source rows plus an optional rank. Use it when the output still needs original ids, labels, or anchor fields, because the result row is copied from source data rather than synthesized as a statistic object.
 
-| op | Input | Output | Notes |
-| --- | --- | --- | --- |
-| `min` / `max` | `by` | Source row | Row with smallest or largest numeric value |
-| `first` / `last` | `orderBy?` | Source row | First or last row in current or sorted order |
-| `top` / `bottom` | `by` / `n` | Source rows | Top or bottom N rows |
-| `nth` | `orderBy` / `index` | Source row | Zero-based row after ordering |
-| `outside-quantile-band` | `field` / `lowerP` / `upperP` | Source rows | Rows outside a quantile interval |
+| op                      | Input                         | Output      | Notes                                        |
+| ----------------------- | ----------------------------- | ----------- | -------------------------------------------- |
+| `min` / `max`           | `by`                          | Source row  | Row with smallest or largest numeric value   |
+| `first` / `last`        | `orderBy?`                    | Source row  | First or last row in current or sorted order |
+| `top` / `bottom`        | `by` / `n`                    | Source rows | Top or bottom N rows                         |
+| `nth`                   | `orderBy` / `index`           | Source row  | Zero-based row after ordering                |
+| `outside-quantile-band` | `field` / `lowerP` / `upperP` | Source rows | Rows outside a quantile interval             |
 
 `select` emits the selected rows directly. `annotate.selectors` broadcasts representative values back onto detail rows. `relate` runs source and target selectors, then projects endpoint fields into relation rows.
 
@@ -103,14 +103,14 @@ A selector receives a group of rows and returns selected source rows plus an opt
 
 `whisker` is an optional strategy, not the interval itself. `{ kind: 'minMax' }` emits finite min/max values. `{ kind: 'spread', factor: 1.5 }` derives fences from `(upper - lower) * factor`, then emits the whiskers inside those fences.
 
-| outputs field | Role |
-| --- | --- |
-| `lower` / `upper` | Required interval boundaries |
-| `points` | Optional extra quantile points, such as median or p95 |
-| `spread` | Optional `upper - lower` |
-| `lowerFence` / `upperFence` | Optional fences from spread whiskers |
-| `whiskerMin` / `whiskerMax` | Optional min/max or in-fence whiskers |
-| `min` / `max` / `count` | Optional finite extrema and count |
+| outputs field               | Role                                                  |
+| --------------------------- | ----------------------------------------------------- |
+| `lower` / `upper`           | Required interval boundaries                          |
+| `points`                    | Optional extra quantile points, such as median or p95 |
+| `spread`                    | Optional `upper - lower`                              |
+| `lowerFence` / `upperFence` | Optional fences from spread whiskers                  |
+| `whiskerMin` / `whiskerMax` | Optional min/max or in-fence whiskers                 |
+| `min` / `max` / `count`     | Optional finite extrema and count                     |
 
 ## Outside Selection
 
@@ -139,11 +139,11 @@ When adding a new statistic value, prefer `defineStatisticsReducer`. When adding
 
 Definitions do not enter JSON IR. The IR only stores `{ op, ...config }`; runtime definitions are injected through `<Plot statisticsReducerDefinitions={...}>` or `<Plot rowSelectorDefinitions={...}>`.
 
-| definition | Declares | In IR |
-| --- | --- | --- |
-| `schema` | Validates `{ op, ...config }` and extracts the registry key | No |
-| `inputFields` | Source fields read by strict model validation | No |
-| `outputFields` | Derived fields excluded from strict model validation | No |
-| `reduce` / `select` | Runtime calculation | No |
+| definition          | Declares                                                    | In IR |
+| ------------------- | ----------------------------------------------------------- | ----- |
+| `schema`            | Validates `{ op, ...config }` and extracts the registry key | No    |
+| `inputFields`       | Source fields read by strict model validation               | No    |
+| `outputFields`      | Derived fields excluded from strict model validation        | No    |
+| `reduce` / `select` | Runtime calculation                                         | No    |
 
 See [Custom Transforms](/graph/grammar/extend/transform) for extension examples.

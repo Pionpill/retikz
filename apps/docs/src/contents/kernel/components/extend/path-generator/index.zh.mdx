@@ -15,31 +15,31 @@ step 的内置 kind 是固定 12 种（move / line / fold / cycle / curve / cubi
 
 `PathGeneratorDefinition` 是普通对象（不进 IR，可由工厂返回），建议用 `definePathGenerator` 包一层（注册时 best-effort 元校验）：
 
-| 字段 | 类型 | 描述 |
-| --- | --- | --- |
-| `paramsSchema` | `ZodType<IRJsonObject>` | params 的 zod schema；类型约束输出 JSON-safe（运行时另有第二道护栏，见下） |
-| `generate` | `(ctx) => Array<PathCommand>` | 据 ctx 产低层路径命令（line / quad / cubic / move…），不再走 step 编译 |
-| `targetParams` | `Array<string>` | 哪些 params **顶层 key** 是 Target，compile 先 resolve 成世界坐标 |
+| 字段           | 类型                          | 描述                                                                       |
+| -------------- | ----------------------------- | -------------------------------------------------------------------------- |
+| `paramsSchema` | `ZodType<IRJsonObject>`       | params 的 zod schema；类型约束输出 JSON-safe（运行时另有第二道护栏，见下） |
+| `generate`     | `(ctx) => Array<PathCommand>` | 据 ctx 产低层路径命令（line / quad / cubic / move…），不再走 step 编译     |
+| `targetParams` | `Array<string>`               | 哪些 params **顶层 key** 是 Target，compile 先 resolve 成世界坐标          |
 
 `generate` 拿到的 `PathGeneratorContext`：
 
-| 字段 | 类型 | 描述 |
-| --- | --- | --- |
-| `from` | `Position` | 当前游标世界坐标（上一段终点 / sub-path 起点） |
-| `to` | `Position?` | step.to resolve 后的世界坐标；step 无 `to` 时为 undefined |
-| `params` | `Record<string, unknown>` | paramsSchema 校验后的参数 |
-| `resolvedTargets` | `Record<string, Position>` | targetParams 顶层 key → 已 resolve 的世界坐标 |
-| `round` | `(n) => number` | 精度取整（与 compile / render 同一函数） |
+| 字段              | 类型                       | 描述                                                      |
+| ----------------- | -------------------------- | --------------------------------------------------------- |
+| `from`            | `Position`                 | 当前游标世界坐标（上一段终点 / sub-path 起点）            |
+| `to`              | `Position?`                | step.to resolve 后的世界坐标；step 无 `to` 时为 undefined |
+| `params`          | `Record<string, unknown>`  | paramsSchema 校验后的参数                                 |
+| `resolvedTargets` | `Record<string, Position>` | targetParams 顶层 key → 已 resolve 的世界坐标             |
+| `round`           | `(n) => number`            | 精度取整（与 compile / render 同一函数）                  |
 
 IR 里的 generator step：
 
-| 字段 | 类型 | 描述 |
-| --- | --- | --- |
-| `kind` | `'generator'` | step 鉴别 |
-| `name` | `string` | 注册名；未注册编译期 throw |
-| `to` | `Target?` | 可选终点，作 `ctx.to` |
-| `params` | `JsonObject` | JSON-only（守 IR 可序列化）；外部 paramsSchema 在此子树上 refine |
-| `label` | `StepLabel?` | 边标注 |
+| 字段     | 类型          | 描述                                                             |
+| -------- | ------------- | ---------------------------------------------------------------- |
+| `kind`   | `'generator'` | step 鉴别                                                        |
+| `name`   | `string`      | 注册名；未注册编译期 throw                                       |
+| `to`     | `Target?`     | 可选终点，作 `ctx.to`                                            |
+| `params` | `JsonObject`  | JSON-only（守 IR 可序列化）；外部 paramsSchema 在此子树上 refine |
+| `label`  | `StepLabel?`  | 边标注                                                           |
 
 ## params 限 JSON（双 parse 护栏）
 

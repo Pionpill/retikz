@@ -33,7 +33,7 @@ const fig = figure([
   draw(['a', 'b'], { arrow: '->' }),
 ]);
 
-const svg = fig.toSvgString();   // also: fig.mount(el) / fig.toCanvas(canvas)
+const svg = fig.toSvgString(); // also: fig.mount(el) / fig.toCanvas(canvas)
 ```
 
 ## Exports

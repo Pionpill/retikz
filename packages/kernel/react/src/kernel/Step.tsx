@@ -1,5 +1,6 @@
-import type { FC, ReactNode } from 'react';
 import type { IRControlPoint, IRStepLabel, IRTarget } from '@retikz/core';
+import type { FC, ReactNode } from 'react';
+
 import { TIKZ_STEP } from './_displayNames';
 
 /**

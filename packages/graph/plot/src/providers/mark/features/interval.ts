@@ -1,27 +1,35 @@
 import { type IRChild, type IRNode, type IRNodeLabel, type IRScope } from '@retikz/core';
 import { arcEndPoint, isFiniteNumber } from '@retikz/math';
-import {
-  type Cell,
-  type CellGeometry,
-  type ChannelValueResolver,
-  type CoordinateFrame,
-  type DimensionRole,
-  type FieldCollector,
-  type IntervalContext,
-  type MarkChannels,
-  type MarkDefinition,
-  type MarkLoweringContext,
-  type PositionScale,
-  hasProjectCell,
-  isRenderableCellGeometry,
+
+import type {
+  Cell,
+  CellGeometry,
+  ChannelValueResolver,
+  CoordinateFrame,
+  DimensionRole,
+  FieldCollector,
+  IntervalContext,
+  MarkChannels,
+  MarkDefinition,
+  MarkLoweringContext,
+  PositionScale,
 } from '../../../contract';
+import type { ExternalRow, IntervalBound, IntervalMark, Mark } from '../../../schemas';
+import type { CartesianCoordinateFrame, PolarCoordinateFrame } from '../../coordinate';
+import type { MarkPaint } from '../shared';
+
+import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';
+import { IntervalBoundKind, PlotCoordinate, PlotMark } from '../../../schemas';
+import {
+  isCartesianCoordinateFrame,
+  isGenericCoordinateFrame,
+  isPolarCoordinateFrame,
+  isTernary2DCoordinateFrame,
+} from '../../coordinate';
 import { channelValue, inferCategoryDomain, resolveFieldPath } from '../../data';
-import { type CartesianCoordinateFrame, type PolarCoordinateFrame, isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame, isTernary2DCoordinateFrame } from '../../coordinate';
-import { type ExternalRow, type IntervalBound, IntervalBoundKind, type IntervalMark, type Mark, PlotCoordinate, PlotMark } from '../../../schemas';
 import { cellGeometryNode, cellLayer } from '../private';
 import { channelForRole } from '../shared';
 import {
-  type MarkPaint,
   applyNodeChannelDeliveries,
   attachDatumAnchor,
   attachDatumLabel,
@@ -53,7 +61,11 @@ export const resolveIntervalBound = (mark: IntervalMark, role: DimensionRole): I
  * @description group 取自 bounds.<role> band 的 group 字段；据其切等分子带（dodge）。
  *   seriesRank / subWidth 走 inferCategoryDomain（按数据序去重），与旧 dodge 同算法。
  */
-const buildBandContext = (bandwidth: number, group: string | undefined, rows: Array<ExternalRow>): IntervalRoleContext => {
+const buildBandContext = (
+  bandwidth: number,
+  group: string | undefined,
+  rows: Array<ExternalRow>,
+): IntervalRoleContext => {
   const seriesValues = group ? inferCategoryDomain(rows.map(row => resolveFieldPath(row, group))) : [];
   const seriesRank = new Map(seriesValues.map((series, index) => [series, index] as const));
   const subCount = seriesValues.length || 1;
@@ -69,7 +81,10 @@ const assertProportionalWidth = (field: string, value: unknown): number | null =
   return value;
 };
 
-export const buildProportionalIntervals = (field: string, rows: Array<ExternalRow>): Map<ExternalRow, [number, number]> => {
+export const buildProportionalIntervals = (
+  field: string,
+  rows: Array<ExternalRow>,
+): Map<ExternalRow, [number, number]> => {
   let cursor = 0;
   const intervals = new Map<ExternalRow, [number, number]>();
   for (const row of rows) {
@@ -80,7 +95,9 @@ export const buildProportionalIntervals = (field: string, rows: Array<ExternalRo
     }
     const next = cursor + width;
     if (!Number.isFinite(next)) {
-      throw new Error(`lowerPlots: interval proportional bound overflows while accumulating ${field}; use smaller magnitudes`);
+      throw new Error(
+        `lowerPlots: interval proportional bound overflows while accumulating ${field}; use smaller magnitudes`,
+      );
     }
     intervals.set(row, [cursor, next]);
     cursor = next;
@@ -96,7 +113,9 @@ export const proportionalIntervalDomainValues = (field: string, rows: Array<Exte
     if (width === null) continue;
     const next = cursor + width;
     if (!Number.isFinite(next)) {
-      throw new Error(`lowerPlots: interval proportional bound overflows while accumulating ${field}; use smaller magnitudes`);
+      throw new Error(
+        `lowerPlots: interval proportional bound overflows while accumulating ${field}; use smaller magnitudes`,
+      );
     }
     values.push(cursor, next);
     cursor = next;
@@ -104,7 +123,11 @@ export const proportionalIntervalDomainValues = (field: string, rows: Array<Exte
   return values;
 };
 
-const buildProportionalContext = (mark: IntervalMark, roles: ReadonlyArray<DimensionRole>, rows: Array<ExternalRow>): IntervalContext['proportionalByRole'] => {
+const buildProportionalContext = (
+  mark: IntervalMark,
+  roles: ReadonlyArray<DimensionRole>,
+  rows: Array<ExternalRow>,
+): IntervalContext['proportionalByRole'] => {
   const byRole: NonNullable<IntervalContext['proportionalByRole']> = {};
   for (const role of roles) {
     const bound = resolveIntervalBound(mark, role);
@@ -118,14 +141,29 @@ const buildProportionalContext = (mark: IntervalMark, roles: ReadonlyArray<Dimen
  * @description 内置 cartesian / polar frame 有固定 x/y role，因此总能建立 role band 上下文；
  *   generic frame 只在 `bounds.<role>=band{group}` 时需要上下文，其余 interval 直接由 roleScales 构造 cell。
  */
-export const buildIntervalContext = (mark: IntervalMark, frame: CoordinateFrame, rows: Array<ExternalRow>): IntervalContext | undefined => {
+export const buildIntervalContext = (
+  mark: IntervalMark,
+  frame: CoordinateFrame,
+  rows: Array<ExternalRow>,
+): IntervalContext | undefined => {
   if (isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame)) {
     const xBound = resolveIntervalBound(mark, 'x');
     const yBound = resolveIntervalBound(mark, 'y');
-    const xContext = buildBandContext(frame.primary.bandwidth, xBound.kind === IntervalBoundKind.Band ? xBound.group : undefined, rows);
-    const yContext = buildBandContext(frame.secondary.bandwidth, yBound.kind === IntervalBoundKind.Band ? yBound.group : undefined, rows);
+    const xContext = buildBandContext(
+      frame.primary.bandwidth,
+      xBound.kind === IntervalBoundKind.Band ? xBound.group : undefined,
+      rows,
+    );
+    const yContext = buildBandContext(
+      frame.secondary.bandwidth,
+      yBound.kind === IntervalBoundKind.Band ? yBound.group : undefined,
+      rows,
+    );
     const proportionalByRole = buildProportionalContext(mark, ['x', 'y'], rows);
-    return { byRole: { x: xContext, y: yContext }, ...(proportionalByRole !== undefined ? { proportionalByRole } : {}) };
+    return {
+      byRole: { x: xContext, y: yContext },
+      ...(proportionalByRole !== undefined ? { proportionalByRole } : {}),
+    };
   }
   if (isGenericCoordinateFrame(frame)) {
     const byRole: IntervalContext['byRole'] = {};
@@ -136,11 +174,15 @@ export const buildIntervalContext = (mark: IntervalMark, frame: CoordinateFrame,
       if (group === undefined) continue;
       const scale = frame.roleScales?.[role];
       if (!scale) {
-        throw new Error(`lowerPlots: interval mark under the ${frame.type} coordinate system requires roleScales.${role} to build grouped band cells`);
+        throw new Error(
+          `lowerPlots: interval mark under the ${frame.type} coordinate system requires roleScales.${role} to build grouped band cells`,
+        );
       }
       byRole[role] = buildBandContext(scale.bandwidth, group, rows);
     }
-    return Object.values(byRole)[0] === undefined && proportionalByRole === undefined ? undefined : { byRole, ...(proportionalByRole !== undefined ? { proportionalByRole } : {}) };
+    return Object.values(byRole)[0] === undefined && proportionalByRole === undefined
+      ? undefined
+      : { byRole, ...(proportionalByRole !== undefined ? { proportionalByRole } : {}) };
   }
   return undefined;
 };
@@ -190,7 +232,9 @@ const boundOutputInterval = (
       const rawLo = resolveFieldPath(row, bound.from);
       const rawHi = resolveFieldPath(row, bound.to);
       if (!isFiniteNumber(rawLo) || !isFiniteNumber(rawHi)) {
-        throw new Error(`lowerPlots: interval extent bound requires numeric ${bound.from} / ${bound.to} fields (run the stack / bin / derive-interval transform first)`);
+        throw new Error(
+          `lowerPlots: interval extent bound requires numeric ${bound.from} / ${bound.to} fields (run the stack / bin / derive-interval transform first)`,
+        );
       }
       const lo = scale.coordinate(rawLo);
       const hi = scale.coordinate(rawHi);
@@ -219,10 +263,23 @@ const boundOutputInterval = (
  * @description primary = bounds.x、secondary = bounds.y 各经 boundOutputInterval 解析。任一非有限 → null（跳过该行）；
  *   polar 下 primary（角度）或 secondary（半径）跨度退化（< 1e-9）→ null（与旧 sector / radial bar 守卫一致）。
  */
-export const intervalCell = (mark: IntervalMark, row: ExternalRow, frame: CartesianCoordinateFrame | PolarCoordinateFrame, ctx: IntervalContext): Cell | null => {
+export const intervalCell = (
+  mark: IntervalMark,
+  row: ExternalRow,
+  frame: CartesianCoordinateFrame | PolarCoordinateFrame,
+  ctx: IntervalContext,
+): Cell | null => {
   const primary = boundOutputInterval(resolveIntervalBound(mark, 'x'), 'primary', frame.primary, mark, row, frame, ctx);
   if (primary === null) return null;
-  const secondary = boundOutputInterval(resolveIntervalBound(mark, 'y'), 'secondary', frame.secondary, mark, row, frame, ctx);
+  const secondary = boundOutputInterval(
+    resolveIntervalBound(mark, 'y'),
+    'secondary',
+    frame.secondary,
+    mark,
+    row,
+    frame,
+    ctx,
+  );
   if (secondary === null) return null;
   if (frame.type === PlotCoordinate.Polar2D) {
     if (Math.abs(primary[1] - primary[0]) < 1e-9) return null;
@@ -252,7 +309,9 @@ const normalizedTernaryComponents = (mark: IntervalMark, row: ExternalRow): Reco
     throw new Error(`lowerPlots: ternary interval requires x+y+z > 0 (got x=${x}, y=${y}, z=${z})`);
   }
   if (!Number.isFinite(sum)) {
-    throw new Error(`lowerPlots: ternary interval components overflow when summed (got x=${x}, y=${y}, z=${z}); use proportions or smaller magnitudes`);
+    throw new Error(
+      `lowerPlots: ternary interval components overflow when summed (got x=${x}, y=${y}, z=${z}); use proportions or smaller magnitudes`,
+    );
   }
   return { x: x / sum, y: y / sum, z: z / sum };
 };
@@ -271,19 +330,25 @@ const ternaryBoundOutputInterval = (
 ): [number, number] | null => {
   switch (bound.kind) {
     case IntervalBoundKind.Band:
-      throw new Error(`lowerPlots: ternary interval does not support band bounds on ${role}; use span, extent, or full`);
+      throw new Error(
+        `lowerPlots: ternary interval does not support band bounds on ${role}; use span, extent, or full`,
+      );
     case IntervalBoundKind.Span:
       return [bound.baseline ?? 0, components[role]];
     case IntervalBoundKind.Extent: {
       const lo = resolveFieldPath(row, bound.from);
       const hi = resolveFieldPath(row, bound.to);
       if (!isFiniteNumber(lo) || !isFiniteNumber(hi)) {
-        throw new Error(`lowerPlots: ternary interval extent bound requires numeric ${bound.from} / ${bound.to} fields`);
+        throw new Error(
+          `lowerPlots: ternary interval extent bound requires numeric ${bound.from} / ${bound.to} fields`,
+        );
       }
       return [lo, hi];
     }
     case IntervalBoundKind.Proportional:
-      throw new Error(`lowerPlots: ternary interval does not support proportional bounds on ${role}; use span, extent, or full`);
+      throw new Error(
+        `lowerPlots: ternary interval does not support proportional bounds on ${role}; use span, extent, or full`,
+      );
     case IntervalBoundKind.Full:
       return [0, 1];
   }
@@ -294,10 +359,19 @@ const ternaryBoundOutputInterval = (
  * @description 自定义 frame 若要支持 interval，必须同时提供 projectCell 与 roleScales；
  *   mark 侧只负责把 encoding/bounds 解析成正交 cell，最终几何仍交给 frame.projectCell。
  */
-const genericBoundOutputInterval = (bound: IntervalBound, role: DimensionRole, mark: IntervalMark, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext): [number, number] | null => {
+const genericBoundOutputInterval = (
+  bound: IntervalBound,
+  role: DimensionRole,
+  mark: IntervalMark,
+  row: ExternalRow,
+  frame: CoordinateFrame,
+  ctx?: IntervalContext,
+): [number, number] | null => {
   const scale = frame.roleScales?.[role];
   if (!scale) {
-    throw new Error(`lowerPlots: interval mark under the ${frame.type} coordinate system requires roleScales.${role} to build cells`);
+    throw new Error(
+      `lowerPlots: interval mark under the ${frame.type} coordinate system requires roleScales.${role} to build cells`,
+    );
   }
   const channel = channelForRole(mark, role);
   switch (bound.kind) {
@@ -306,11 +380,15 @@ const genericBoundOutputInterval = (bound: IntervalBound, role: DimensionRole, m
       if (!Number.isFinite(center)) return null;
       if (bound.group !== undefined) {
         if (ctx === undefined) {
-          throw new Error(`lowerPlots: interval mark under the ${frame.type} coordinate system requires grouped band context for bounds.${role}.group`);
+          throw new Error(
+            `lowerPlots: interval mark under the ${frame.type} coordinate system requires grouped band context for bounds.${role}.group`,
+          );
         }
         const bandCtx = ctx.byRole[role];
         if (bandCtx === undefined) {
-          throw new Error(`lowerPlots: interval mark under the ${frame.type} coordinate system requires grouped band context for bounds.${role}.group`);
+          throw new Error(
+            `lowerPlots: interval mark under the ${frame.type} coordinate system requires grouped band context for bounds.${role}.group`,
+          );
         }
         const index = subBandIndexOf(bandCtx, row);
         const start = center - bandCtx.bandwidth / 2 + index * bandCtx.subWidth;
@@ -338,7 +416,9 @@ const genericBoundOutputInterval = (bound: IntervalBound, role: DimensionRole, m
     case IntervalBoundKind.Proportional: {
       const raw = ctx?.proportionalByRole?.[role]?.get(row);
       if (raw === undefined) {
-        throw new Error(`lowerPlots: interval proportional bound under the ${frame.type} coordinate system requires proportional context for bounds.${role}`);
+        throw new Error(
+          `lowerPlots: interval proportional bound under the ${frame.type} coordinate system requires proportional context for bounds.${role}`,
+        );
       }
       const lo = scale.coordinate(raw[0]);
       const hi = scale.coordinate(raw[1]);
@@ -351,7 +431,12 @@ const genericBoundOutputInterval = (bound: IntervalBound, role: DimensionRole, m
 };
 
 /** 带 projectCell 的通用坐标帧：按 frame.roles 和各 role scale 构造正交 cell。 */
-const genericIntervalCell = (mark: IntervalMark, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext): Cell | null => {
+const genericIntervalCell = (
+  mark: IntervalMark,
+  row: ExternalRow,
+  frame: CoordinateFrame,
+  ctx?: IntervalContext,
+): Cell | null => {
   const intervals: Cell['intervals'] = {};
   for (const role of frame.roles) {
     const interval = genericBoundOutputInterval(resolveIntervalBound(mark, role), role, mark, row, frame, ctx);
@@ -386,7 +471,8 @@ export const ternaryIntervalCell = (mark: IntervalMark, row: ExternalRow): Cell 
 export const markCell = (mark: Mark, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext): Cell | null => {
   if (mark.type !== PlotMark.Interval) return null;
   if (isTernary2DCoordinateFrame(frame)) return ternaryIntervalCell(mark, row);
-  if (isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame)) return ctx ? intervalCell(mark, row, frame, ctx) : null;
+  if (isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame))
+    return ctx ? intervalCell(mark, row, frame, ctx) : null;
   if (isGenericCoordinateFrame(frame) && hasProjectCell(frame)) return genericIntervalCell(mark, row, frame, ctx);
   return null;
 };
@@ -405,7 +491,11 @@ const resolveSectorPull = (mark: IntervalMark, row: ExternalRow): number => {
   return value;
 };
 
-export const applyIntervalCellVisualParams = (geometry: CellGeometry, mark: IntervalMark, row: ExternalRow): CellGeometry => {
+export const applyIntervalCellVisualParams = (
+  geometry: CellGeometry,
+  mark: IntervalMark,
+  row: ExternalRow,
+): CellGeometry => {
   if (geometry.kind !== 'sector') {
     if (mark.pull !== undefined) {
       throw new Error('lowerPlots: interval pull is only supported for polar sector geometry');
@@ -436,7 +526,12 @@ export const applyIntervalCellVisualParams = (geometry: CellGeometry, mark: Inte
   };
 };
 
-export const intervalCellGeometry = (mark: IntervalMark, row: ExternalRow, frame: CoordinateFrame, ctx: IntervalContext | undefined): CellGeometry | null => {
+export const intervalCellGeometry = (
+  mark: IntervalMark,
+  row: ExternalRow,
+  frame: CoordinateFrame,
+  ctx: IntervalContext | undefined,
+): CellGeometry | null => {
   if (!hasProjectCell(frame)) return null;
   const cell = markCell(mark, row, frame, ctx);
   if (!cell) return null;
@@ -460,8 +555,10 @@ const lowerCells = (
   labelOf: ChannelValueResolver<IRNodeLabel['text']> | undefined,
 ): IRScope | null => {
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
-  const fillOf = 'fill' in mark && mark.fill?.kind === 'field' && !colorOf ? channelValueOf<MarkPaint>(channels, 'fill') : undefined;
-  const strokeOf = 'stroke' in mark && mark.stroke?.kind === 'field' ? channelValueOf<MarkPaint>(channels, 'stroke') : undefined;
+  const fillOf =
+    'fill' in mark && mark.fill?.kind === 'field' && !colorOf ? channelValueOf<MarkPaint>(channels, 'fill') : undefined;
+  const strokeOf =
+    'stroke' in mark && mark.stroke?.kind === 'field' ? channelValueOf<MarkPaint>(channels, 'stroke') : undefined;
   let kind: CellGeometry['kind'] | undefined;
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
@@ -477,7 +574,13 @@ const lowerCells = (
     if (stroke !== undefined) cellNode.stroke = stroke;
     applyNodeChannelDeliveries(cellNode, mark, row, channels, 'cell');
     const node = attachDatumLabel(
-      attachDatumAnchor(decorateDatum(cellNode, row, transformedIndex, mark.type, markContext?.provenance, cellSeriesValue(mark, row)), mark, row, transformedIndex, markContext),
+      attachDatumAnchor(
+        decorateDatum(cellNode, row, transformedIndex, mark.type, markContext?.provenance, cellSeriesValue(mark, row)),
+        mark,
+        row,
+        transformedIndex,
+        markContext,
+      ),
       mark,
       row,
       labelOf,
@@ -486,11 +589,19 @@ const lowerCells = (
   }
   const defaultFill = channelDefaultOf<MarkPaint>(channels, 'fill') ?? defaultColor ?? undefined;
   const defaultStroke = channelDefaultOf<MarkPaint>(channels, 'stroke');
-  return placed.length === 0 || kind === undefined ? null : cellLayer(placed, kind, mark, colorOf, defaultFill, defaultStroke);
+  return placed.length === 0 || kind === undefined
+    ? null
+    : cellLayer(placed, kind, mark, colorOf, defaultFill, defaultStroke);
 };
 
 /** interval mark 图层下沉：坐标系守卫 + IntervalContext + lowerCells（cell 类单路径）。 */
-export const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, ctx: MarkLoweringContext | undefined): IRChild | null => {
+export const lowerIntervalLayer = (
+  mark: Mark,
+  rows: Array<ExternalRow>,
+  frame: CoordinateFrame,
+  channels: MarkChannels,
+  ctx: MarkLoweringContext | undefined,
+): IRChild | null => {
   if (mark.type !== PlotMark.Interval) return null;
   // interval 需要坐标帧提供 cell 几何投影；内置和自定义帧都走同一 projectCell 契约。
   if (!hasProjectCell(frame)) {

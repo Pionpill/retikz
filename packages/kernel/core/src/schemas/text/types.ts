@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+
 import type { LineSpecSchema, MathRunSchema, MixedLineSchema, TextBlockSchema, TextRunSchema } from './schema';
 
 /** 混排文字段 IR 类型 */

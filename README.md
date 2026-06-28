@@ -31,11 +31,11 @@ retikz's architecture starts with one durable drawing contract: Sugar JSX, Kerne
 
 AI friendliness is not an add-on. It is the reason the IR exists.
 
-| Design choice | Why it matters |
-| --- | --- |
-| JSON-only IR | Models can emit structured data instead of source code text |
-| Schema-backed fields | Runtime validation catches invalid diagrams early |
-| Patchable document shape | AI can edit a small part of a diagram without rewriting the whole figure |
+| Design choice              | Why it matters                                                                                |
+| -------------------------- | --------------------------------------------------------------------------------------------- |
+| JSON-only IR               | Models can emit structured data instead of source code text                                   |
+| Schema-backed fields       | Runtime validation catches invalid diagrams early                                             |
+| Patchable document shape   | AI can edit a small part of a diagram without rewriting the whole figure                      |
 | Framework-neutral contract | Human JSX, native JS objects, future Vue adapters, and AI output can share one drawing format |
 
 ## See it in action
@@ -113,17 +113,17 @@ One level deeper, the stable boundary is the IR: create JSON IR directly with pl
 
 retikz 0.3 focuses on general diagram primitives, now with multi-backend rendering, animation, and interactivity:
 
-| Capability | What it gives you |
-| --- | --- |
-| Named nodes and coordinates | Stable references for later paths and edits |
-| Paths, steps, arrows, and edge labels | Relationship lines that attach to anchors instead of raw text centers |
-| Scopes and transforms | Grouping, local movement, rotation, scale, and inherited style |
-| Shapes, fills, and registries | Built-in shapes plus extensible shapes, arrows, patterns, and path generators |
-| JSON IR and Scene output | A portable contract for persistence, AI editing, and multiple renderers |
-| Multi-backend rendering (SVG / Canvas 2D) | The same IR compiles to either an SVG or a Canvas 2D backend |
-| Animation | Declare animations on `<Layout>`, played by both SVG and Canvas backends; freeze a static frame for SSR poster shots |
-| Interactivity, events, and hydration | Node / path events and hit-testing; hydrate on the client after SSR |
-| Framework-free / SSR | `@retikz/vanilla`'s `mountSvg` / `mountCanvas` and `renderToSvgString` |
+| Capability                                | What it gives you                                                                                                    |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Named nodes and coordinates               | Stable references for later paths and edits                                                                          |
+| Paths, steps, arrows, and edge labels     | Relationship lines that attach to anchors instead of raw text centers                                                |
+| Scopes and transforms                     | Grouping, local movement, rotation, scale, and inherited style                                                       |
+| Shapes, fills, and registries             | Built-in shapes plus extensible shapes, arrows, patterns, and path generators                                        |
+| JSON IR and Scene output                  | A portable contract for persistence, AI editing, and multiple renderers                                              |
+| Multi-backend rendering (SVG / Canvas 2D) | The same IR compiles to either an SVG or a Canvas 2D backend                                                         |
+| Animation                                 | Declare animations on `<Layout>`, played by both SVG and Canvas backends; freeze a static frame for SSR poster shots |
+| Interactivity, events, and hydration      | Node / path events and hit-testing; hydrate on the client after SSR                                                  |
+| Framework-free / SSR                      | `@retikz/vanilla`'s `mountSvg` / `mountCanvas` and `renderToSvgString`                                               |
 
 Data-driven charts are handled by the emerging Tier 2 layer `@retikz/plot` (a standalone package, currently alpha); for flow layout, codecs, and additional render targets, see the [roadmap](https://pionpill.github.io/retikz/about/releases/roadmap).
 
@@ -139,23 +139,23 @@ React JSX / plain JS objects / future DSL / AI JSON
 
 The important design choice is that React JSX is only one input format. Once a diagram becomes IR, the same data can be saved, validated, patched by an LLM, compiled, and rendered by any compatible adapter.
 
-| Integration path | Status |
-| --- | --- |
-| React components via `@retikz/react` | Official API |
-| Framework-free imperative mounting via `@retikz/vanilla` (incl. SSR) | Official API |
-| Plain JavaScript or TypeScript IR objects | Supported at the `@retikz/core` boundary |
-| SVG / Canvas 2D render backends (`@retikz/render`) | Available |
-| Vue / Svelte / other framework adapters | Architecturally intended, not packaged yet |
-| native / PDF renderers | Future renderer direction |
+| Integration path                                                     | Status                                     |
+| -------------------------------------------------------------------- | ------------------------------------------ |
+| React components via `@retikz/react`                                 | Official API                               |
+| Framework-free imperative mounting via `@retikz/vanilla` (incl. SSR) | Official API                               |
+| Plain JavaScript or TypeScript IR objects                            | Supported at the `@retikz/core` boundary   |
+| SVG / Canvas 2D render backends (`@retikz/render`)                   | Available                                  |
+| Vue / Svelte / other framework adapters                              | Architecturally intended, not packaged yet |
+| native / PDF renderers                                               | Future renderer direction                  |
 
 ## Packages
 
-| Package | Role | Runtime dependencies |
-| --- | --- | --- |
-| [`@retikz/core`](https://www.npmjs.com/package/@retikz/core) | Framework-neutral JSON IR, schemas, pure parsers, and the IR-to-Scene compiler | `zod` |
-| [`@retikz/render`](https://www.npmjs.com/package/@retikz/render) | Scene render-backend namespace: `./svg` (Scene → SVG descriptor / string), `./canvas` (Scene → Canvas 2D), plus animation and hydration runtimes | `@retikz/core` |
-| [`@retikz/react`](https://www.npmjs.com/package/@retikz/react) | Official React components and JSX-to-IR builder, mounting both SVG and Canvas backends | `@retikz/core`, `@retikz/render`, peer `react >=18` |
-| [`@retikz/vanilla`](https://www.npmjs.com/package/@retikz/vanilla) | Official framework-free runtime: imperative `mountSvg` / `mountCanvas`, `renderToSvgString` (SSR), and a named builder | `@retikz/core`, `@retikz/render` |
+| Package                                                            | Role                                                                                                                                             | Runtime dependencies                                |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------- |
+| [`@retikz/core`](https://www.npmjs.com/package/@retikz/core)       | Framework-neutral JSON IR, schemas, pure parsers, and the IR-to-Scene compiler                                                                   | `zod`                                               |
+| [`@retikz/render`](https://www.npmjs.com/package/@retikz/render)   | Scene render-backend namespace: `./svg` (Scene → SVG descriptor / string), `./canvas` (Scene → Canvas 2D), plus animation and hydration runtimes | `@retikz/core`                                      |
+| [`@retikz/react`](https://www.npmjs.com/package/@retikz/react)     | Official React components and JSX-to-IR builder, mounting both SVG and Canvas backends                                                           | `@retikz/core`, `@retikz/render`, peer `react >=18` |
+| [`@retikz/vanilla`](https://www.npmjs.com/package/@retikz/vanilla) | Official framework-free runtime: imperative `mountSvg` / `mountCanvas`, `renderToSvgString` (SSR), and a named builder                           | `@retikz/core`, `@retikz/render`                    |
 
 The four Tier 1 packages — core / render / react / vanilla — ship in lockstep under the same version.
 

@@ -5,11 +5,11 @@ description: 自定义扩展可以注册完整 transform，也可以只扩展 re
 
 内置 transform 覆盖常见统计流程；长尾逻辑有三种扩展层级。能表达成“统计值”的逻辑优先写 reducer，能表达成“代表行”的逻辑优先写 selector；只有输入/输出形态本身不同，才注册完整 transform。
 
-| 扩展层级 | 用在哪里 | 适合场景 |
-| --- | --- | --- |
-| `defineStatisticsReducer` | `bin` / `summarize` / `annotate` 的 `metrics` | 加权平均、业务分位、风险分数 |
-| `defineRowSelector` | `select` / `relate` 的 `selector` | 最近点、阈值穿越点、自定义排名 |
-| `defineTransform` | 独立 `kind` | 自定义行结构、跨数据源派生、特殊输出形态 |
+| 扩展层级                  | 用在哪里                                      | 适合场景                                 |
+| ------------------------- | --------------------------------------------- | ---------------------------------------- |
+| `defineStatisticsReducer` | `bin` / `summarize` / `annotate` 的 `metrics` | 加权平均、业务分位、风险分数             |
+| `defineRowSelector`       | `select` / `relate` 的 `selector`             | 最近点、阈值穿越点、自定义排名           |
+| `defineTransform`         | 独立 `kind`                                   | 自定义行结构、跨数据源派生、特殊输出形态 |
 
 ## 完整 transform
 
@@ -74,13 +74,16 @@ const nearest = defineRowSelector({
 
 ## 定义契约
 
-| 字段 | 作用 |
-| --- | --- |
-| `schema` | 校验 `{ kind/op, ...config }` operation；配置必须保持 JSON 可序列化 |
-| `inputFields` | 返回会读取的源字段，这些字段会进入 model 和字段解析流程 |
-| `outputFields` | 返回会产生的派生字段，下游消费时不需要提前写进 `model` |
-| `apply` / `reduce` / `select` | 执行逻辑，必须确定性，避免渲染和 locator 结果不一致 |
+| 字段                          | 作用                                                                |
+| ----------------------------- | ------------------------------------------------------------------- |
+| `schema`                      | 校验 `{ kind/op, ...config }` operation；配置必须保持 JSON 可序列化 |
+| `inputFields`                 | 返回会读取的源字段，这些字段会进入 model 和字段解析流程             |
+| `outputFields`                | 返回会产生的派生字段，下游消费时不需要提前写进 `model`              |
+| `apply` / `reduce` / `select` | 执行逻辑，必须确定性，避免渲染和 locator 结果不一致                 |
 
 完整 transform 的 `apply` 第三个参数是 transform context。保行数 transform 通常 `{ ...row, newField }` 就能保留行级来源；改行数 transform 如果输出行代表一组源行，需要用 `context.groupProvenance(out, members)` 给输出行挂上 `sourceIndices`。
 
-<ComponentAlert title="扩展逻辑必须确定" description="渲染和 locator 命中各会运行一次数据管线。若扩展逻辑依赖随机数、时间或外部可变状态，两次结果不一致会导致点击命中错位。需要随机效果时，使用固定 seed 的确定性算法。" />
+<ComponentAlert
+  title="扩展逻辑必须确定"
+  description="渲染和 locator 命中各会运行一次数据管线。若扩展逻辑依赖随机数、时间或外部可变状态，两次结果不一致会导致点击命中错位。需要随机效果时，使用固定 seed 的确定性算法。"
+/>

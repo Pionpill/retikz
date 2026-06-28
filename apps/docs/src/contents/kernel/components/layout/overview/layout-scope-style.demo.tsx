@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * 全图默认样式：<Layout> 直接挂级联样式 props
@@ -14,9 +15,15 @@ const Demo: FC = () => (
     nodeDefault={{ shape: 'circle', minimumSize: 34, fill: 'white', dashed: true }}
     pathDefault={{ lineCap: 'round' }}
   >
-    <Node id="A" position={[0, 0]}>A</Node>
-    <Node id="B" position={[130, 0]}>B</Node>
-    <Node id="C" position={[260, 0]}>C</Node>
+    <Node id="A" position={[0, 0]}>
+      A
+    </Node>
+    <Node id="B" position={[130, 0]}>
+      B
+    </Node>
+    <Node id="C" position={[260, 0]}>
+      C
+    </Node>
     <Draw way={['A', 'B']} arrow="->" />
     <Draw way={['B', 'C']} arrow="->" />
   </Layout>

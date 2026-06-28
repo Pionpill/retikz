@@ -1,5 +1,6 @@
-import { Layout, Node, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node, Path, Step } from '@retikz/react';
 
 const Demo: FC = () => (
   <Layout width={300} height={300} nodeDefault={{ stroke: 'gray', dashed: true }}>
@@ -9,11 +10,7 @@ const Demo: FC = () => (
     {/* circlePath：t=0 在 angle 0（+x），CCW 增长；0.25→90°(下) 0.5→180°(-x) 0.75→270°(上) */}
     <Path stroke="currentColor">
       <Step kind="move" to="center" />
-      <Step
-        kind="circlePath"
-        radius={100}
-        label={{ text: 't=0.25', position: 0.25, side: 'below' }}
-      />
+      <Step kind="circlePath" radius={100} label={{ text: 't=0.25', position: 0.25, side: 'below' }} />
     </Path>
   </Layout>
 );

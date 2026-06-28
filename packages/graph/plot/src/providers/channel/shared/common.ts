@@ -1,6 +1,6 @@
 import { type ChannelResolution } from '../../../contract';
-import { resolveFieldPath } from '../../data';
 import { type MarkValueType, type PlotFieldTypeMap, type PlotFieldTypeValue } from '../../../schemas';
+import { resolveFieldPath } from '../../data';
 export type { ChannelResolution, ScaleDescriptor } from '../../../contract';
 
 export type MarkValueResolution<T> = ChannelResolution<T> & {
@@ -35,7 +35,9 @@ export const makeMarkValueResolver = <T>(
   const field = value.value;
   const fieldType = fieldTypes.get(field);
   if (options.expectedFieldType !== undefined && fieldType !== undefined && fieldType !== options.expectedFieldType) {
-    throw new Error(`lowerPlots: ${options.channelName} channel field "${field}" is ${fieldType}; ${options.channelName} requires a ${options.expectedFieldType} field`);
+    throw new Error(
+      `lowerPlots: ${options.channelName} channel field "${field}" is ${fieldType}; ${options.channelName} requires a ${options.expectedFieldType} field`,
+    );
   }
   return {
     field,

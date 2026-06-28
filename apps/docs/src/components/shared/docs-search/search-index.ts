@@ -4,14 +4,15 @@
  */
 
 import type { Lang } from '@/i18n';
+
 import { LANGS } from '@/i18n';
 
 type MdxLoader = () => Promise<string>;
 
-const mdxLoaders: Record<string, MdxLoader | undefined> = import.meta.glob<string>(
-  '../../../contents/**/*.mdx',
-  { query: '?raw', import: 'default' },
-);
+const mdxLoaders: Record<string, MdxLoader | undefined> = import.meta.glob<string>('../../../contents/**/*.mdx', {
+  query: '?raw',
+  import: 'default',
+});
 
 /** glob key → 路由路径与语言；语言不在 LANGS 列表时返回 null */
 const parseKey = (key: string): { path: string; lang: Lang } | null => {

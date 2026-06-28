@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { TransformSchema } from '../../src/schemas';
-import { applyTransforms, collectTransformFields, createFieldCollector, resolveTransformRegistry } from '../../src/providers';
+
 import { collectSourceFields } from '../../src/pipeline/source-fields';
+import {
+  applyTransforms,
+  collectTransformFields,
+  createFieldCollector,
+  resolveTransformRegistry,
+} from '../../src/providers';
+import { TransformSchema } from '../../src/schemas';
 import { PlotSpecSchema } from '../../src/schemas/plot';
 
 describe('quantile-band statistics schema (alpha.13 ADR-02)', () => {
@@ -280,7 +286,14 @@ describe('quantile-band statistics behavior (alpha.13 ADR-02)', () => {
               field: 'value',
               lowerP: 0.25,
               upperP: 0.75,
-              outputs: { lower: 'low', upper: 'high', points: [{ p: 0.5, as: 'mid' }], whiskerMin: 'min', whiskerMax: 'max', count: 'count' },
+              outputs: {
+                lower: 'low',
+                upper: 'high',
+                points: [{ p: 0.5, as: 'mid' }],
+                whiskerMin: 'min',
+                whiskerMax: 'max',
+                count: 'count',
+              },
               whisker: { kind: 'spread' },
             },
           ],
@@ -325,7 +338,13 @@ describe('quantile-band statistics behavior (alpha.13 ADR-02)', () => {
         {
           kind: 'select',
           groupBy: ['group'],
-          selector: { op: 'outside-quantile-band', field: 'value', lowerP: 0.25, upperP: 0.75, boundary: { kind: 'spread', factor: 1.5 } },
+          selector: {
+            op: 'outside-quantile-band',
+            field: 'value',
+            lowerP: 0.25,
+            upperP: 0.75,
+            boundary: { kind: 'spread', factor: 1.5 },
+          },
         },
       ],
     );

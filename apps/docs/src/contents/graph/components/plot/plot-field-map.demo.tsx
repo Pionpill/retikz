@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
 
 import { renamedVisits } from './plot-field-map.data';

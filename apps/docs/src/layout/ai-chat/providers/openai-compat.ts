@@ -1,5 +1,6 @@
-import { readSse } from './sse';
 import type { ChatChunk, ChatErrorKind, ChatProvider, ChatRequestOptions, ProviderId } from './types';
+
+import { readSse } from './sse';
 
 /**
  * 工厂：构建 OpenAI-Compatible provider（OpenAI 本家 / DeepSeek 都用这个）

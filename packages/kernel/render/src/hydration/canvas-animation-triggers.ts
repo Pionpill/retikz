@@ -1,13 +1,18 @@
 import type { Scene, ScenePrimitive } from '@retikz/core';
+
 import type { HydrationHandlers, RetikzEventValue } from './events';
-import { RetikzEvent } from './events';
+
 import { geometryOf } from './context';
+import { RetikzEvent } from './events';
 
 const EVENT_NAMES = new Set<string>(Object.values(RetikzEvent));
 
 const isRetikzEventName = (event: string): event is RetikzEventValue => EVENT_NAMES.has(event);
 
-const walkPrimitives = (primitives: ReadonlyArray<ScenePrimitive>, visit: (primitive: ScenePrimitive) => void): void => {
+const walkPrimitives = (
+  primitives: ReadonlyArray<ScenePrimitive>,
+  visit: (primitive: ScenePrimitive) => void,
+): void => {
   for (const primitive of primitives) {
     visit(primitive);
     if (primitive.type === 'group') walkPrimitives(primitive.children, visit);

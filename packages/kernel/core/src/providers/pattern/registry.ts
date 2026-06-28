@@ -1,22 +1,17 @@
-import type { BuiltinPatternName } from '../../schemas/paint';
-import type { MarkerPrimitive } from '../../primitive/marker';
-import type { PatternDefinition, PatternEmitContext } from '../../contract/pattern';
 import type { CompileWarning } from '../../compile/constant';
+import type { PatternDefinition, PatternEmitContext } from '../../contract/pattern';
+import type { MarkerPrimitive } from '../../primitive/marker';
+import type { BuiltinPatternName } from '../../schemas/paint';
+
 import { CompileWarningCode } from '../../compile/constant';
 
 const DEFAULT_PATTERN_SIZE = 8;
 const DEFAULT_STROKE_WIDTH = 1;
 
-const withBackground = (
-  ctx: PatternEmitContext,
-  motif: ReadonlyArray<MarkerPrimitive>,
-): Array<MarkerPrimitive> =>
+const withBackground = (ctx: PatternEmitContext, motif: ReadonlyArray<MarkerPrimitive>): Array<MarkerPrimitive> =>
   ctx.background === undefined
     ? [...motif]
-    : [
-        { type: 'rect', x: 0, y: 0, width: ctx.size, height: ctx.size, fill: ctx.background },
-        ...motif,
-      ];
+    : [{ type: 'rect', x: 0, y: 0, width: ctx.size, height: ctx.size, fill: ctx.background }, ...motif];
 
 export const BUILTIN_PATTERNS: Record<BuiltinPatternName, PatternDefinition> = {
   lines: {

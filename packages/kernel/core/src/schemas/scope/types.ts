@@ -1,16 +1,18 @@
 import type { z } from 'zod';
-import { type IRAnimationTrack } from '../animation';
-import { type IRClipSpec } from '../clip';
+
+import type { ValueOf } from '../../types';
 import type { IRComposite } from '../composite';
 import type { IRCoordinate } from '../coordinate';
+import type { ScopeBoundingShape } from './constants';
+import type { ArrowDefaultSchema, LabelDefaultSchema, NodeDefaultSchema, PathDefaultSchema } from './schema';
+
+import { type IRAnimationTrack } from '../animation';
+import { type IRClipSpec } from '../clip';
 import { type IRJsonObject } from '../json';
-import { type IRPaintSpec } from '../paint';
 import { type IRNode } from '../node';
+import { type IRPaintSpec } from '../paint';
 import { type IRPathBase } from '../path';
 import { type IRTransform } from '../transform';
-import type { ArrowDefaultSchema, LabelDefaultSchema, NodeDefaultSchema, PathDefaultSchema } from './schema';
-import type { ScopeBoundingShape } from './constants';
-import type { ValueOf } from '../../types';
 
 /** every node 默认样式（排除 type / id / position / text / label 的全部 node 样式字段） */
 export type IRNodeDefault = z.infer<typeof NodeDefaultSchema>;

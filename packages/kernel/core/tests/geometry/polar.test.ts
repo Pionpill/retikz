@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { polar } from '../../src/geometry/polar';
 
 describe('polar.toPosition 极坐标 → 笛卡尔', () => {
@@ -54,9 +55,7 @@ describe('polar.toPosition 极坐标 → 笛卡尔', () => {
   });
 
   it('origin 是字符串（节点 id）→ 抛错', () => {
-    expect(() =>
-      polar.toPosition({ origin: 'A', angle: 0, radius: 1 }),
-    ).toThrow(/string origin/);
+    expect(() => polar.toPosition({ origin: 'A', angle: 0, radius: 1 })).toThrow(/string origin/);
   });
 });
 
@@ -124,12 +123,7 @@ describe('polar.equal 跨坐标系相等判断', () => {
   });
 
   it('极坐标 vs 极坐标：先转笛卡尔再比较', () => {
-    expect(
-      polar.equal(
-        { angle: 45, radius: Math.SQRT2 },
-        { angle: 45, radius: Math.SQRT2 },
-      ),
-    ).toBe(true);
+    expect(polar.equal({ angle: 45, radius: Math.SQRT2 }, { angle: 45, radius: Math.SQRT2 })).toBe(true);
   });
 
   it('precision=2 下小差异被忽略', () => {

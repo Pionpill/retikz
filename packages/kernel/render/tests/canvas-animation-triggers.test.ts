@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from 'vitest';
 import type { Scene } from '@retikz/core';
+
+import { describe, expect, it, vi } from 'vitest';
+
+import type { HydrationContext, HydrationHandlers } from '../src/hydration';
+
 import {
-  type HydrationContext,
-  type HydrationHandlers,
   collectCanvasAnimationEventTriggers,
   collectCanvasVisibleAnimationIds,
   isCanvasAnimationIdVisible,
@@ -22,8 +24,24 @@ const scene: Scene = {
       height: 20,
       fill: '#0a0',
       animations: [
-        { property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 200, trigger: { onEvent: 'click' } },
-        { property: 'strokeWidth', keyframes: [{ at: 0, value: 1 }, { at: 1, value: 4 }], duration: 200, trigger: 'visible' },
+        {
+          property: 'opacity',
+          keyframes: [
+            { at: 0, value: 0 },
+            { at: 1, value: 1 },
+          ],
+          duration: 200,
+          trigger: { onEvent: 'click' },
+        },
+        {
+          property: 'strokeWidth',
+          keyframes: [
+            { at: 0, value: 1 },
+            { at: 1, value: 4 },
+          ],
+          duration: 200,
+          trigger: 'visible',
+        },
       ],
     },
   ],

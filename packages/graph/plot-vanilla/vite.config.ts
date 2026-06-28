@@ -9,8 +9,7 @@ import pkg from './package.json' with { type: 'json' };
  * （同时支持 'foo' 和 'foo/sub' 子路径）。
  */
 const runtimeDeps = [...Object.keys(pkg.dependencies)];
-const external = (id: string) =>
-  runtimeDeps.some(p => id === p || id.startsWith(`${p}/`));
+const external = (id: string) => runtimeDeps.some(p => id === p || id.startsWith(`${p}/`));
 
 export default defineConfig({
   plugins: [

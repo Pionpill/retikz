@@ -22,7 +22,12 @@ import { Node } from '@retikz/react';
   shape={{
     type: 'contour',
     params: {
-      points: [[-30, 44], [30, 30], [30, -44], [-30, -44]],
+      points: [
+        [-30, 44],
+        [30, 30],
+        [30, -44],
+        [-30, -44],
+      ],
       cornerRadius: 8,
     },
   }}
@@ -42,18 +47,21 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="contour-connect" size="sm" />
 
-<ComponentAlert title="anchor 回退 AABB" description="命名 / 罗盘 anchor（north / center …）在曲边块上没有有意义的方位，contour 让它们回退到外接 AABB 矩形；指向式连接（boundaryPoint）始终精确命中轮廓。需要精确贴边时用「连一条线指向它」而非取具名 anchor。" />
+<ComponentAlert
+  title="anchor 回退 AABB"
+  description="命名 / 罗盘 anchor（north / center …）在曲边块上没有有意义的方位，contour 让它们回退到外接 AABB 矩形；指向式连接（boundaryPoint）始终精确命中轮廓。需要精确贴边时用「连一条线指向它」而非取具名 anchor。"
+/>
 
 ### API 参考
 
-| `shape` | 边界 | 参数 |
-| --- | --- | --- |
+| `shape`                       | 边界                                            | 参数                             |
+| ----------------------------- | ----------------------------------------------- | -------------------------------- |
 | `{ type: 'contour', params }` | `points` 连成的闭合轮廓（自动按 AABB 中心居中） | `points`（≥3） / `cornerRadius?` |
 
-| 参数 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `points` | `Array<[number, number]>`（≥3） | — | 闭合局部系顶点环（任意原点，core 按 AABB 中心自动居中），隐式闭合，边为直线 |
-| `cornerRadius` | `number`（≥0） | — | 逐顶点统一 fillet 半径（用户单位），省略 / `0` = 尖角，逐角夹紧到最大不自交半径 |
+| 参数           | 类型                            | 默认值 | 描述                                                                            |
+| -------------- | ------------------------------- | ------ | ------------------------------------------------------------------------------- |
+| `points`       | `Array<[number, number]>`（≥3） | —      | 闭合局部系顶点环（任意原点，core 按 AABB 中心自动居中），隐式闭合，边为直线     |
+| `cornerRadius` | `number`（≥0）                  | —      | 逐顶点统一 fillet 半径（用户单位），省略 / `0` = 尖角，逐角夹紧到最大不自交半径 |
 
 ## 技术原理
 

@@ -1,9 +1,12 @@
-import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
+
+import type { AnyCoordinateDefinition } from '../../src/contract';
+
 import * as plot from '../../src';
-import { PlotCoordinate } from '../../src/schemas';
-import { type AnyCoordinateDefinition, createCoordinateFrame, defineCoordinate, extractCoordinateType } from '../../src/contract';
+import { createCoordinateFrame, defineCoordinate, extractCoordinateType } from '../../src/contract';
 import { BUILTIN_COORDINATES, resolveCoordinateRegistry } from '../../src/providers';
+import { PlotCoordinate } from '../../src/schemas';
 
 const archDefinition = defineCoordinate({
   schema: z
@@ -49,11 +52,15 @@ describe('coordinate registry（alpha.12 ADR-05 spec）', () => {
   });
 
   it('builtin_coordinate_definitions_cover_public_builtin_types', () => {
-    expect(BUILTIN_COORDINATES.map(def => extractCoordinateType(def.schema)).sort()).toEqual(Object.values(PlotCoordinate).sort());
+    expect(BUILTIN_COORDINATES.map(def => extractCoordinateType(def.schema)).sort()).toEqual(
+      Object.values(PlotCoordinate).sort(),
+    );
   });
 
   it('duplicate_coordinate_type_throws', () => {
-    expect(() => resolveCoordinateRegistry([archDefinition, archDefinition])).toThrow(/duplicate coordinate registration: "arch"/);
+    expect(() => resolveCoordinateRegistry([archDefinition, archDefinition])).toThrow(
+      /duplicate coordinate registration: "arch"/,
+    );
   });
 
   it('duplicate_builtin_coordinate_type_throws', () => {

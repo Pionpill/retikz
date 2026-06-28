@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { PlotSpecSchema } from '../../src/schemas/plot';
 
 const baseLine = {
@@ -95,7 +96,10 @@ describe('PlotSpecSchema (ADR-01)', () => {
   });
 
   it('legacy_custom_coordinate_shape_rejected', () => {
-    const spec = { ...baseLine, coordinate: { type: 'custom', name: 'arch', roles: ['x'], params: { archHeight: 30 } } };
+    const spec = {
+      ...baseLine,
+      coordinate: { type: 'custom', name: 'arch', roles: ['x'], params: { archHeight: 30 } },
+    };
     expect(() => PlotSpecSchema.parse(spec)).toThrow();
   });
 

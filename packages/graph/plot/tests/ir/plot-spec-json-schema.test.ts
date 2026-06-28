@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+
 import { PlotSpecSchema } from '../../src/schemas/plot';
 
 describe('PlotSpecSchema 可导出 JSON Schema（喂 LLM / 工具链的结构化 schema 出口）', () => {

@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+
 import { Layout, Node, Path, Step } from '@retikz/react';
 import { useLowerTex } from '@retikz/tex/react';
 

@@ -1,8 +1,9 @@
-import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 import type { FC } from 'react';
 
-import { matrix } from './rect-heatmap.data';
+import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
+
 import { slots } from './rect-grid.data';
+import { matrix } from './rect-heatmap.data';
 
 const Demo: FC = () => (
   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

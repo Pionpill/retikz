@@ -1,7 +1,8 @@
-import { Layout, Scope } from '@retikz/react';
 import type { FC } from 'react';
 
-import { Battery, Resistor, Rheostat, Switch, circuitShapes } from './circuit-shapes';
+import { Layout, Scope } from '@retikz/react';
+
+import { Battery, circuitShapes, Resistor, Rheostat, Switch } from './circuit-shapes';
 
 const FONT = { family: 'Arial, sans-serif' } as const;
 

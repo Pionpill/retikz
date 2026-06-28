@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { intersect } from '../../src/geometry/intersect';
 
 describe('intersect', () => {

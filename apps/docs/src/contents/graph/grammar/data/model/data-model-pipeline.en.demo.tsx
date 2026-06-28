@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Text } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /**
  * 数据模型页 "技术原理" 流程插图（英文）

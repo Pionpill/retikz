@@ -5,7 +5,10 @@
  *   viewBox 有值时覆盖自动算 layout、忽略 padding 等属于编译期运行时语义，见 compile 测试。
  */
 import { describe, expect, it } from 'vitest';
-import { type IRViewBox, SceneSchema, ViewBoxSchema } from '../../src';
+
+import type { IRViewBox } from '../../src';
+
+import { SceneSchema, ViewBoxSchema } from '../../src';
 
 describe('ViewBoxSchema 合法形态', () => {
   it('正常四字段视框被接受', () => {

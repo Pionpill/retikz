@@ -3,12 +3,14 @@
  * 目标：让 LLM 真实生成 / 边角 IR 暴露实现 bug。不修代码，仅报告。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
-import type { IR } from '../../src/schemas';
-import { arc, polygon, sector, star } from '../../src/providers/shape';
-import { normalizeAngularRange } from '../../src/contract/shape/shared';
+
 import type { ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { normalizeAngularRange } from '../../src/contract/shape/shared';
+import { arc, polygon, sector, star } from '../../src/providers/shape';
+import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
@@ -42,7 +44,9 @@ describe('[adversarial] 几何极端：角度环绕死循环 / DoS', () => {
       compileNode({
         shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 1e7, endAngle: 0 } },
       });
-    } catch { threw = true; }
+    } catch {
+      threw = true;
+    }
     const ms = performance.now() - start;
     // 1e7 → ~27778 次循环，应快；记录退化趋势（量级 +1 → 耗时 ×10）
     expect({ ms: Math.round(ms), threw }).toMatchObject({ threw: false });
@@ -65,7 +69,9 @@ describe('[adversarial] 几何极端：角度环绕死循环 / DoS', () => {
   it('[adversarial] sector innerRadius===outerRadius 被 refine 拦（outer>inner）→ 错误信息应清晰', () => {
     let msg = '';
     try {
-      compileNode({ shape: { type: 'sector', params: { innerRadius: 30, outerRadius: 30, startAngle: 0, endAngle: 90 } } });
+      compileNode({
+        shape: { type: 'sector', params: { innerRadius: 30, outerRadius: 30, startAngle: 0, endAngle: 90 } },
+      });
     } catch (e) {
       msg = e instanceof Error ? e.message : String(e);
     }
@@ -74,7 +80,11 @@ describe('[adversarial] 几何极端：角度环绕死循环 / DoS', () => {
   });
 
   it('[adversarial] sector outerRadius=0 被 positive 拦', () => {
-    expect(() => compileNode({ shape: { type: 'sector', params: { innerRadius: 0, outerRadius: 0, startAngle: 0, endAngle: 90 } } })).toThrow();
+    expect(() =>
+      compileNode({
+        shape: { type: 'sector', params: { innerRadius: 0, outerRadius: 0, startAngle: 0, endAngle: 90 } },
+      }),
+    ).toThrow();
   });
 
   it('[adversarial] star points 上限 1024：满额产 2048 顶点闭合 path 且不卡死', () => {
@@ -170,7 +180,9 @@ describe('[adversarial] JSON round-trip 自描述', () => {
 
   it('[adversarial] sector nested params round-trip 等价（params 全在 IR）', () => {
     const node = {
-      type: 'node', id: 's', position: [0, 0],
+      type: 'node',
+      id: 's',
+      position: [0, 0],
       shape: { type: 'sector', params: { innerRadius: 20, outerRadius: 60, startAngle: 0, endAngle: 90 } },
     };
     const parsed = NodeSchema.parse(node);
@@ -185,20 +197,32 @@ describe('[adversarial] params 双护栏 + 错误信息可读性', () => {
   it('[adversarial] sector params.startAngle=NaN → 应被 number schema 拦（NaN 在 JSON.stringify 变 null）', () => {
     let threw = false;
     try {
-      compileNode({ shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: NaN, endAngle: 90 } } });
-    } catch { threw = true; }
+      compileNode({
+        shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: NaN, endAngle: 90 } },
+      });
+    } catch {
+      threw = true;
+    }
     expect(threw).toBe(true);
   });
 
   it('[adversarial] sector startAngle=Infinity → number schema 拦', () => {
-    expect(() => compileNode({ shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: Infinity, endAngle: 90 } } })).toThrow();
+    expect(() =>
+      compileNode({
+        shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: Infinity, endAngle: 90 } },
+      }),
+    ).toThrow();
   });
 
   it('[adversarial] LLM 把数字写成字符串：outerRadius:"60" → 报错应指明字段+期望类型', () => {
     let msg = '';
     try {
-      compileNode({ shape: { type: 'sector', params: { innerRadius: 10, outerRadius: '60', startAngle: 0, endAngle: 90 } } });
-    } catch (e) { msg = e instanceof Error ? e.message : String(e); }
+      compileNode({
+        shape: { type: 'sector', params: { innerRadius: 10, outerRadius: '60', startAngle: 0, endAngle: 90 } },
+      });
+    } catch (e) {
+      msg = e instanceof Error ? e.message : String(e);
+    }
     // BLOCKING 判据：错误应能让 LLM 定位到 outerRadius
     expect(msg.toLowerCase()).toMatch(/outerradius|expected number|received string/);
   });
@@ -206,8 +230,12 @@ describe('[adversarial] params 双护栏 + 错误信息可读性', () => {
   it('[adversarial] LLM 字段拼错 inner_radius（snake_case）→ strictObject 应报 unrecognized key', () => {
     let msg = '';
     try {
-      compileNode({ shape: { type: 'sector', params: { inner_radius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } } });
-    } catch (e) { msg = e instanceof Error ? e.message : String(e); }
+      compileNode({
+        shape: { type: 'sector', params: { inner_radius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } },
+      });
+    } catch (e) {
+      msg = e instanceof Error ? e.message : String(e);
+    }
     // 既缺 innerRadius 又多 inner_radius，错误应提两者
     expect(msg.toLowerCase()).toMatch(/innerradius|unrecognized|inner_radius/);
   });
@@ -217,7 +245,9 @@ describe('[adversarial] params 双护栏 + 错误信息可读性', () => {
     let threw = false;
     try {
       compileNode({ shape: { type: 'rectangle', params: { cornerRadius: undefined } } });
-    } catch { threw = true; }
+    } catch {
+      threw = true;
+    }
     // cornerRadius 可选，undefined 应被 strictObject 视为缺省 OR JsonObjectSchema 拦；二者之一
     expect(typeof threw).toBe('boolean');
   });
@@ -226,9 +256,17 @@ describe('[adversarial] params 双护栏 + 错误信息可读性', () => {
     let threw = false;
     try {
       compileNode({
-        shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90, evil: () => 1 } as Record<string, unknown> },
+        shape: {
+          type: 'sector',
+          params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90, evil: () => 1 } as Record<
+            string,
+            unknown
+          >,
+        },
       });
-    } catch { threw = true; }
+    } catch {
+      threw = true;
+    }
     expect(threw).toBe(true);
   });
 });
@@ -239,8 +277,12 @@ describe('[adversarial] shape type 失稳', () => {
   it('[adversarial] 未注册 type:"sektor"（拼错）→ 错误应列出可用 shape 名', () => {
     let msg = '';
     try {
-      compileNode({ shape: { type: 'sektor', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } } });
-    } catch (e) { msg = e instanceof Error ? e.message : String(e); }
+      compileNode({
+        shape: { type: 'sektor', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } },
+      });
+    } catch (e) {
+      msg = e instanceof Error ? e.message : String(e);
+    }
     expect(msg).toContain('sektor');
     expect(msg).toMatch(/sector/); // 应列出真实名供 LLM 改
   });
@@ -254,7 +296,10 @@ describe('[adversarial] shape type 失稳', () => {
   });
 
   it('[adversarial] shape: { type:"ellipse", params:{ circumscribe:"equal" } } 显式 = circle，应编译且 rx==ry', () => {
-    const compiled = compileNode({ shape: { type: 'ellipse', params: { circumscribe: 'equal' } }, text: 'wide text here' });
+    const compiled = compileNode({
+      shape: { type: 'ellipse', params: { circumscribe: 'equal' } },
+      text: 'wide text here',
+    });
     const el = findByType(compiled.primitives, 'ellipse');
     expect(el).toBeDefined();
     expect(el!.rx).toBe(el!.ry);
@@ -271,7 +316,11 @@ describe('[adversarial] scaleParams：角度/计数不该被缩', () => {
       shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } },
     });
     const path = findByType(compiled.primitives, 'path');
-    const arcCmd = path!.commands.find(c => c.kind === 'arc') as { startAngle: number; endAngle: number; radius: number };
+    const arcCmd = path!.commands.find(c => c.kind === 'arc') as {
+      startAngle: number;
+      endAngle: number;
+      radius: number;
+    };
     expect(arcCmd.startAngle).toBe(0);
     expect(arcCmd.endAngle).toBe(90);
     // 半径应被缩为 60（30×2）
@@ -303,7 +352,8 @@ describe('[adversarial] scaleParams：角度/计数不该被缩', () => {
 
   it('[adversarial] sector × 非均匀 xScale:2,yScale:1 → scaleParams 用 sqrt(sx·sy) 半径均值，角度不缩', () => {
     const compiled = compileNode({
-      xScale: 2, yScale: 1,
+      xScale: 2,
+      yScale: 1,
       shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } },
     });
     const path = findByType(compiled.primitives, 'path');
@@ -328,11 +378,20 @@ describe('[adversarial] anchor 放宽：未知 anchor 错误清晰度', () => {
   it('[adversarial] sector 给不认识的 anchor "tip-0"（star 专属）→ 错误应指明 shape+anchor', () => {
     let msg = '';
     try {
-      compileToScene(scene([
-        { type: 'node', id: 'w', position: [0, 0], shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } } },
-        pathTo('tip-0', 'w'),
-      ] as IR['children']));
-    } catch (e) { msg = e instanceof Error ? e.message : String(e); }
+      compileToScene(
+        scene([
+          {
+            type: 'node',
+            id: 'w',
+            position: [0, 0],
+            shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } },
+          },
+          pathTo('tip-0', 'w'),
+        ] as IR['children']),
+      );
+    } catch (e) {
+      msg = e instanceof Error ? e.message : String(e);
+    }
     // 期望错误同时含 anchor 名与 shape 名
     expect(msg).toMatch(/tip-0/);
     expect(msg).toMatch(/sector/);
@@ -341,11 +400,15 @@ describe('[adversarial] anchor 放宽：未知 anchor 错误清晰度', () => {
   it('[adversarial] 空字符串 anchor "" → AnchorRefSchema min(1) 应拦（放宽后是否漏过）', () => {
     let threw = false;
     try {
-      compileToScene(scene([
-        { type: 'node', id: 'w', position: [0, 0], shape: 'rectangle', text: 'x' },
-        pathTo('', 'w'),
-      ] as IR['children']));
-    } catch { threw = true; }
+      compileToScene(
+        scene([
+          { type: 'node', id: 'w', position: [0, 0], shape: 'rectangle', text: 'x' },
+          pathTo('', 'w'),
+        ] as IR['children']),
+      );
+    } catch {
+      threw = true;
+    }
     // AnchorRefSchema 的 string 分支是 min(1)，但 union 还有 number 分支——"" 应被拒
     expect(threw).toBe(true);
   });
@@ -353,11 +416,15 @@ describe('[adversarial] anchor 放宽：未知 anchor 错误清晰度', () => {
   it('[adversarial] polygon 给 anchor "vertex-0"（不存在）→ 报 Unknown anchor', () => {
     let msg = '';
     try {
-      compileToScene(scene([
-        { type: 'node', id: 'p', position: [0, 0], text: 'hex', shape: { type: 'polygon', params: { sides: 6 } } },
-        pathTo('vertex-0', 'p'),
-      ] as IR['children']));
-    } catch (e) { msg = e instanceof Error ? e.message : String(e); }
+      compileToScene(
+        scene([
+          { type: 'node', id: 'p', position: [0, 0], text: 'hex', shape: { type: 'polygon', params: { sides: 6 } } },
+          pathTo('vertex-0', 'p'),
+        ] as IR['children']),
+      );
+    } catch (e) {
+      msg = e instanceof Error ? e.message : String(e);
+    }
     expect(msg).toMatch(/vertex-0|Unknown anchor/);
   });
 });
@@ -366,10 +433,23 @@ describe('[adversarial] anchor 放宽：未知 anchor 错误清晰度', () => {
 
 describe('[adversarial] boundaryPoint / AABB 数值稳定', () => {
   it('[adversarial] 退化扇形 start≈end (1e-7 差) → boundaryPoint 不返回 NaN', () => {
-    const compiled = compileToScene(scene([
-      { type: 'node', id: 'w', position: [0, 0], shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 45, endAngle: 45.0000001 } } },
-      { type: 'path', children: [{ type: 'step', kind: 'move', to: [100, 100] }, { type: 'step', kind: 'line', to: { id: 'w', anchor: 'outer-arc-mid' } }] },
-    ] as IR['children']));
+    const compiled = compileToScene(
+      scene([
+        {
+          type: 'node',
+          id: 'w',
+          position: [0, 0],
+          shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 45, endAngle: 45.0000001 } },
+        },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [100, 100] },
+            { type: 'step', kind: 'line', to: { id: 'w', anchor: 'outer-arc-mid' } },
+          ],
+        },
+      ] as IR['children']),
+    );
     const nums = numericLeaves(compiled.primitives);
     expect(nums.filter(n => !Number.isFinite(n))).toEqual([]);
   });
@@ -386,10 +466,23 @@ describe('[adversarial] boundaryPoint / AABB 数值稳定', () => {
   });
 
   it('[adversarial] arc close:true 弓形 boundaryPoint 永远返回弧中点（忽略 toward）→ 验证不抛', () => {
-    const compiled = compileToScene(scene([
-      { type: 'node', id: 'a', position: [0, 0], shape: { type: 'arc', params: { radius: 50, startAngle: 0, endAngle: 180, close: true } } },
-      { type: 'path', children: [{ type: 'step', kind: 'move', to: [200, 0] }, { type: 'step', kind: 'line', to: { id: 'a', anchor: 'arc-mid' } }] },
-    ] as IR['children']));
+    const compiled = compileToScene(
+      scene([
+        {
+          type: 'node',
+          id: 'a',
+          position: [0, 0],
+          shape: { type: 'arc', params: { radius: 50, startAngle: 0, endAngle: 180, close: true } },
+        },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [200, 0] },
+            { type: 'step', kind: 'line', to: { id: 'a', anchor: 'arc-mid' } },
+          ],
+        },
+      ] as IR['children']),
+    );
     expect(numericLeaves(compiled.primitives).every(Number.isFinite)).toBe(true);
   });
 });
@@ -398,10 +491,20 @@ describe('[adversarial] boundaryPoint / AABB 数值稳定', () => {
 
 describe('[adversarial] 别名 × anchor / scale 交叉', () => {
   it('[adversarial] diamond（→polygon 4/0）的 anchor "north" 应与 rect anchor 一致、不抛', () => {
-    expect(() => compileToScene(scene([
-      { type: 'node', id: 'd', position: [0, 0], text: 'X', shape: 'diamond' },
-      { type: 'path', children: [{ type: 'step', kind: 'move', to: [100, 0] }, { type: 'step', kind: 'line', to: { id: 'd', anchor: 'north' } }] },
-    ] as IR['children']))).not.toThrow();
+    expect(() =>
+      compileToScene(
+        scene([
+          { type: 'node', id: 'd', position: [0, 0], text: 'X', shape: 'diamond' },
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [100, 0] },
+              { type: 'step', kind: 'line', to: { id: 'd', anchor: 'north' } },
+            ],
+          },
+        ] as IR['children']),
+      ),
+    ).not.toThrow();
   });
 
   it('[adversarial] circle × scale:2 仍正圆（rx==ry）', () => {

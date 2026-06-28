@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { point } from '../../src/geometry/point';
 
 describe('point 基础向量运算', () => {

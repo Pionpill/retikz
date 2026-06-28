@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * 嵌套 localNamespace shadowing：每层都注册同名 id="A"，path 从最内层引用 'A' 命中最内层
@@ -9,12 +10,18 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={600} height={160}>
-    <Node id="A" position={[0, 0]} shape="circle" padding={6}>outer A</Node>
+    <Node id="A" position={[0, 0]} shape="circle" padding={6}>
+      outer A
+    </Node>
     <Scope localNamespace transforms={[{ kind: 'translate', x: 220, y: 0 }]}>
-      <Node id="A" position={[0, 0]} shape="circle" padding={6}>middle A</Node>
+      <Node id="A" position={[0, 0]} shape="circle" padding={6}>
+        middle A
+      </Node>
       <Draw way={[[0, -60], 'A']} arrow="->" />
       <Scope localNamespace transforms={[{ kind: 'translate', x: 200, y: 0 }]}>
-        <Node id="A" position={[0, 0]} shape="circle" padding={6}>inner A</Node>
+        <Node id="A" position={[0, 0]} shape="circle" padding={6}>
+          inner A
+        </Node>
         <Draw way={[[0, 60], 'A']} arrow="->" />
       </Scope>
     </Scope>

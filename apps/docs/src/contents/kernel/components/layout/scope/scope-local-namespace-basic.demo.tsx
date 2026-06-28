@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * localNamespace 基础隔离：外层 id="A" 与 scope 内 id="A" 各自独立
@@ -7,9 +8,13 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={560} height={140}>
-    <Node id="A" position={[0, 0]}>outer A</Node>
+    <Node id="A" position={[0, 0]}>
+      outer A
+    </Node>
     <Scope localNamespace transforms={[{ kind: 'translate', x: 280, y: 0 }]}>
-      <Node id="A" position={[0, 0]}>inner A</Node>
+      <Node id="A" position={[0, 0]}>
+        inner A
+      </Node>
       <Draw way={[[0, 50], 'A']} arrow="->" />
     </Scope>
     <Draw way={[[0, -50], 'A']} arrow="->" />

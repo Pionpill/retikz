@@ -1,5 +1,6 @@
-import { Axis, IntervalMark, Plot, Transform } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, IntervalMark, Plot, Transform } from '@retikz/plot-react';
 
 import { tasks } from './transform-derive-interval.data';
 

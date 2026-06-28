@@ -1,5 +1,6 @@
-import { Axis, PathMark, Plot } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, PathMark, Plot } from '@retikz/plot-react';
 
 import { wind } from './coordinate-polar-line.data';
 

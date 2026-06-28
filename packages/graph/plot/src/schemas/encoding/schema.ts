@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import { GeometryLabelSchema, JsonValueSchema, NodeLabelSchema } from '@retikz/core';
+import { z } from 'zod';
 
 export const ChannelSchema = z
   .object({
@@ -10,7 +10,9 @@ export const ChannelSchema = z
       .describe(
         'Path accessor into a data row bound to this channel (e.g. "month" or "user.age"); resolved against the externally-supplied dataset at lowering and must yield a scalar',
       ),
-    value: JsonValueSchema.optional().describe('Constant JSON literal for this channel (mutually exclusive with field)'),
+    value: JsonValueSchema.optional().describe(
+      'Constant JSON literal for this channel (mutually exclusive with field)',
+    ),
     scale: z
       .string()
       .min(1)
@@ -22,7 +24,9 @@ export const ChannelSchema = z
   .refine(c => (c.field === undefined) !== (c.value === undefined), {
     message: 'channel must set exactly one of `field` or `value`',
   })
-  .describe('A channel binding: exactly one of field (data-driven) / value (constant), plus an optional scale reference');
+  .describe(
+    'A channel binding: exactly one of field (data-driven) / value (constant), plus an optional scale reference',
+  );
 
 export const PositionEncodingSchema = z
   .object({
@@ -71,34 +75,89 @@ export const SizeChannelSchema = z
       .string()
       .min(1)
       .optional()
-      .describe('Data path bound to the size channel; resolves to a numeric magnitude mapped through a radius (sqrt) scale'),
-    value: z.number().nonnegative().optional().describe('Constant final radius in px, bypassing the scale entirely (mutually exclusive with field)'),
-    scale: z.string().min(1).optional().describe('Optional sqrt-scale name (only meaningful with field); omitted means a default radius (sqrt) scale is synthesized'),
+      .describe(
+        'Data path bound to the size channel; resolves to a numeric magnitude mapped through a radius (sqrt) scale',
+      ),
+    value: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe('Constant final radius in px, bypassing the scale entirely (mutually exclusive with field)'),
+    scale: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'Optional sqrt-scale name (only meaningful with field); omitted means a default radius (sqrt) scale is synthesized',
+      ),
   })
-  .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'size channel must set exactly one of `field` or `value`' })
-  .describe('Size channel (PointMark): field maps glyph radius via a sqrt scale; value is a constant final radius (px) that bypasses the scale');
+  .refine(c => (c.field === undefined) !== (c.value === undefined), {
+    message: 'size channel must set exactly one of `field` or `value`',
+  })
+  .describe(
+    'Size channel (PointMark): field maps glyph radius via a sqrt scale; value is a constant final radius (px) that bypasses the scale',
+  );
 
 export const OpacityChannelSchema = z
   .object({
-    field: z.string().min(1).optional().describe('Data path bound to opacity; continuous, mapped through a clamped linear scale to [minOpacity, 1]'),
-    value: z.number().min(0).max(1).optional().describe('Constant opacity 0..1, bypassing the scale (mutually exclusive with field)'),
-    scale: z.string().min(1).optional().describe('Optional linear-scale name (only meaningful with field); omitted means a default opacity scale is synthesized'),
+    field: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Data path bound to opacity; continuous, mapped through a clamped linear scale to [minOpacity, 1]'),
+    value: z
+      .number()
+      .min(0)
+      .max(1)
+      .optional()
+      .describe('Constant opacity 0..1, bypassing the scale (mutually exclusive with field)'),
+    scale: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'Optional linear-scale name (only meaningful with field); omitted means a default opacity scale is synthesized',
+      ),
   })
-  .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'opacity channel must set exactly one of `field` or `value`' })
-  .describe('Opacity channel (PointMark): field maps glyph opacity via a clamped linear scale; value is a constant opacity that bypasses the scale');
+  .refine(c => (c.field === undefined) !== (c.value === undefined), {
+    message: 'opacity channel must set exactly one of `field` or `value`',
+  })
+  .describe(
+    'Opacity channel (PointMark): field maps glyph opacity via a clamped linear scale; value is a constant opacity that bypasses the scale',
+  );
 
 export const ShapeChannelSchema = z
   .object({
-    field: z.string().min(1).optional().describe('Data path bound to shape; categorical, mapped to a built-in glyph palette'),
-    value: z.string().min(1).optional().describe('Constant glyph shape name: a core / registered node shape (mutually exclusive with field)'),
+    field: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Data path bound to shape; categorical, mapped to a built-in glyph palette'),
+    value: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Constant glyph shape name: a core / registered node shape (mutually exclusive with field)'),
   })
-  .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'shape channel must set exactly one of `field` or `value`' })
-  .describe('Shape channel (PointMark): field maps glyph shape via the built-in shape palette; value is a constant core shape name');
+  .refine(c => (c.field === undefined) !== (c.value === undefined), {
+    message: 'shape channel must set exactly one of `field` or `value`',
+  })
+  .describe(
+    'Shape channel (PointMark): field maps glyph shape via the built-in shape palette; value is a constant core shape name',
+  );
 
 export const TextChannelSchema = z
   .object({
-    field: z.string().min(1).optional().describe('Data path whose row value becomes the label string; mutually exclusive with value'),
-    value: z.string().min(1).optional().describe('Constant label string for every datum (mutually exclusive with field)'),
+    field: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Data path whose row value becomes the label string; mutually exclusive with value'),
+    value: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Constant label string for every datum (mutually exclusive with field)'),
     displayFormat: z
       .string()
       .min(1)
@@ -108,8 +167,12 @@ export const TextChannelSchema = z
       ),
   })
   .strict()
-  .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'text channel must set exactly one of `field` or `value`' })
-  .describe('Text content channel: field is a per-datum label string, value is a constant label, displayFormat is a display format string for a numeric or temporal field');
+  .refine(c => (c.field === undefined) !== (c.value === undefined), {
+    message: 'text channel must set exactly one of `field` or `value`',
+  })
+  .describe(
+    'Text content channel: field is a per-datum label string, value is a constant label, displayFormat is a display format string for a numeric or temporal field',
+  );
 
 export const LabelPinStyleSchema = z
   .object({
@@ -124,21 +187,35 @@ export const PointEncodingSchema = PositionEncodingSchema.extend({
     'Optional text content channel: when set the point lowers to a borderless core Node carrying text (free-text / datum label) instead of a glyph; field is a per-datum string, value is constant, displayFormat handles numeric / temporal display formatting',
   ),
   ...MarkChannelEncodingSchema.shape,
-}).describe('PointMark encoding: positional channels plus optional text and extension channel bindings; built-in node properties live on the mark as MarkValueType fields');
+}).describe(
+  'PointMark encoding: positional channels plus optional text and extension channel bindings; built-in node properties live on the mark as MarkValueType fields',
+);
 
 export const MarkLabelContentSchema = z
   .object({
-    field: z.string().min(1).optional().describe('Data path whose row value becomes the label text; mutually exclusive with value'),
-    value: NodeLabelSchema.shape.text.optional().describe('Constant label text for every datum; mutually exclusive with field'),
+    field: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Data path whose row value becomes the label text; mutually exclusive with value'),
+    value: NodeLabelSchema.shape.text
+      .optional()
+      .describe('Constant label text for every datum; mutually exclusive with field'),
     displayFormat: z
       .string()
       .min(1)
       .optional()
-      .describe('Optional JSON-safe display format string applied to a field value before stringification; only meaningful together with field'),
+      .describe(
+        'Optional JSON-safe display format string applied to a field value before stringification; only meaningful together with field',
+      ),
   })
   .strict()
-  .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'label content must set exactly one of `field` or `value`' })
-  .describe('Plot label content binding: exactly one of field (data-driven) or value (constant), plus optional displayFormat');
+  .refine(c => (c.field === undefined) !== (c.value === undefined), {
+    message: 'label content must set exactly one of `field` or `value`',
+  })
+  .describe(
+    'Plot label content binding: exactly one of field (data-driven) or value (constant), plus optional displayFormat',
+  );
 
 const omitText = <T extends Record<string, unknown>>(shape: T): Omit<T, 'text'> =>
   Object.fromEntries(Object.entries(shape).filter(([key]) => key !== 'text')) as Omit<T, 'text'>;
@@ -161,7 +238,9 @@ export const MarkNodeLabelSchema = z
       });
     }
   })
-  .describe('Plot label attached to a core Node.label host; all geometry fields are inherited from core NodeLabelSchema');
+  .describe(
+    'Plot label attached to a core Node.label host; all geometry fields are inherited from core NodeLabelSchema',
+  );
 
 export const MarkGeometryLabelSchema = z
   .object({
@@ -169,7 +248,9 @@ export const MarkGeometryLabelSchema = z
     content: MarkLabelContentSchema.describe('Geometry label content binding (field / value / displayFormat)'),
   })
   .strict()
-  .describe('Plot label attached to a path-like GeometryLabel host; all geometry fields are inherited from core GeometryLabelSchema');
+  .describe(
+    'Plot label attached to a path-like GeometryLabel host; all geometry fields are inherited from core GeometryLabelSchema',
+  );
 
 export const MarkNodeLabelListSchema = z
   .union([MarkNodeLabelSchema, z.array(MarkNodeLabelSchema).min(1)])

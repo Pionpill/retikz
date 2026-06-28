@@ -23,23 +23,23 @@ import { Star } from '@retikz/react';
 
 `points` is the number of star points. Give `innerRadius` directly, or use `innerRatio` to derive it from the outer radius.
 
-| Form | Best for |
-| --- | --- |
-| `{ center, outerRadius, innerRadius, points }` | Control both radii |
+| Form                                           | Best for                         |
+| ---------------------------------------------- | -------------------------------- |
+| `{ center, outerRadius, innerRadius, points }` | Control both radii               |
 | `{ center, outerRadius, points, innerRatio? }` | Derive inner radius from a ratio |
 
 <ComponentPreview name="star-basic" size="sm" />
 
 ### API Reference
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `center` | `[number, number]` | — | Star center |
-| `outerRadius` | `number` | — | Outer radius |
-| `innerRadius` | `number` | — | Inner radius; wins when provided |
-| `innerRatio` | `number` | `0.5` | Inner radius as a ratio of `outerRadius` when `innerRadius` is omitted |
-| `points` | `number` | — | Number of star points |
-| `rotate` | `number` | `-90` | Starting angle |
+| Prop          | Type               | Default | Description                                                            |
+| ------------- | ------------------ | ------- | ---------------------------------------------------------------------- |
+| `center`      | `[number, number]` | —       | Star center                                                            |
+| `outerRadius` | `number`           | —       | Outer radius                                                           |
+| `innerRadius` | `number`           | —       | Inner radius; wins when provided                                       |
+| `innerRatio`  | `number`           | `0.5`   | Inner radius as a ratio of `outerRadius` when `innerRadius` is omitted |
+| `points`      | `number`           | —       | Number of star points                                                  |
+| `rotate`      | `number`           | `-90`   | Starting angle                                                         |
 
 ## As a node shape
 
@@ -57,9 +57,9 @@ import { Node } from '@retikz/react';
 
 ### Examples
 
-| shape | params | Notes |
-| --- | --- | --- |
-| star | `{ points, innerRadius, outerRadius, rotate? }` | Star with alternating inner / outer radii |
+| shape | params                                          | Notes                                     |
+| ----- | ----------------------------------------------- | ----------------------------------------- |
+| star  | `{ points, innerRadius, outerRadius, rotate? }` | Star with alternating inner / outer radii |
 
 > Node `star` constraints: `points` is an integer ≥ 3, and `outerRadius` must be > `innerRadius` (a compile-time refine throws otherwise). Note the minimums differ from the Sugar `<Star>`, which allows `points ≥ 2`.
 
@@ -73,8 +73,8 @@ Besides the node's 9 standard anchors (`north` / `center` …), the star provide
 
 ### API Reference
 
-| `shape` | params | Boundary / use |
-| --- | --- | --- |
+| `shape`                    | params                                                                 | Boundary / use         |
+| -------------------------- | ---------------------------------------------------------------------- | ---------------------- |
 | `{ type: 'star', params }` | `points` / `innerRadius` / `outerRadius` / `rotate?` / `cornerRadius?` | Connectable star glyph |
 
 `cornerRadius` (user units) rounds both tips and notches; omitted / `0` = sharp corners, clamped per corner.

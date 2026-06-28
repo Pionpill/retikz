@@ -8,12 +8,10 @@ export type Position = Vector2;
 export const DEFAULT_EPSILON = 1e-9;
 
 /** Finite number guard; rejects Infinity and NaN. */
-export const isFiniteNumber = (value: unknown): value is number =>
-  typeof value === 'number' && Number.isFinite(value);
+export const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 
 /** Infinite number guard; accepts only positive or negative Infinity. */
-export const isInfiniteNumber = (value: unknown): value is number =>
-  value === Infinity || value === -Infinity;
+export const isInfiniteNumber = (value: unknown): value is number => value === Infinity || value === -Infinity;
 
 /** Basic 2D point/vector operations. */
 export const point = {
@@ -53,7 +51,7 @@ export const vector2 = {
   fromPosition: (p: Position): Vector2 => [p[0], p[1]],
   /** Angle in degrees -> unit vector. */
   fromAngleDegrees: (angle: number): Vector2 => {
-    const radians = angle * Math.PI / 180;
+    const radians = (angle * Math.PI) / 180;
     return [Math.cos(radians), Math.sin(radians)];
   },
   /** Normalize a vector; zero-length vectors return fallback. */

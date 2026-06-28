@@ -1,5 +1,6 @@
-import { Draw, DrawWay, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, DrawWay, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * 分组连接：引用 Scope 的合成边界
@@ -8,16 +9,38 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={440} height={150}>
-    <Node id="ext" position={[-170, 0]} stroke="none">ext</Node>
+    <Node id="ext" position={[-170, 0]} stroke="none">
+      ext
+    </Node>
     <Scope id="cluster" transforms={[{ kind: 'translate', x: 90, y: 0 }]}>
-      <Node id="A" position={[0, -20]} stroke="none">a</Node>
-      <Node id="B" position={[70, -20]} stroke="none">b</Node>
-      <Node id="C" position={[35, 30]} stroke="none">c</Node>
+      <Node id="A" position={[0, -20]} stroke="none">
+        a
+      </Node>
+      <Node id="B" position={[70, -20]} stroke="none">
+        b
+      </Node>
+      <Node id="C" position={[35, 30]} stroke="none">
+        c
+      </Node>
     </Scope>
     {/* cluster 合成外接框：4 个角锚点连成轮廓，纯示意 */}
-    <Draw way={['cluster.north-west', 'cluster.north-east', 'cluster.south-east', 'cluster.south-west', DrawWay.Cycle]} stroke="lightgray" dashPattern={[4, 3]} />
-    <Draw way={['ext', { label: { text: 'cluster', side: 'below', textColor: 'gray', font: { size: 12 } } }, 'cluster']} arrow="->" />
-    <Draw way={['ext', { label: { text: 'cluster.north', side: 'above', textColor: 'gray', font: { size: 12 } } }, 'cluster.north']} arrow="->" />
+    <Draw
+      way={['cluster.north-west', 'cluster.north-east', 'cluster.south-east', 'cluster.south-west', DrawWay.Cycle]}
+      stroke="lightgray"
+      dashPattern={[4, 3]}
+    />
+    <Draw
+      way={['ext', { label: { text: 'cluster', side: 'below', textColor: 'gray', font: { size: 12 } } }, 'cluster']}
+      arrow="->"
+    />
+    <Draw
+      way={[
+        'ext',
+        { label: { text: 'cluster.north', side: 'above', textColor: 'gray', font: { size: 12 } } },
+        'cluster.north',
+      ]}
+      arrow="->"
+    />
   </Layout>
 );
 

@@ -31,16 +31,16 @@ Every computation function receives a final, **already-validated** `params` argu
 
 A `ShapeDefinition` is just a plain object: one `paramsSchema` plus a set of computation functions, with no inheritance or registration ceremony. Wrap it at the definition site with `defineShape<TParams>()` to get type safety — the parameter type `TParams` inferred from `paramsSchema` flows into the final `params` of every function; the registry actually stores the form with `TParams` erased to `IRJsonObject` (so `TParams` in the signatures below means “the parameter type inferred from `paramsSchema`”).
 
-| Method | Purpose | Required · Optional |
-| --- | --- | --- |
-| `paramsSchema` | zod schema for the shape params, validates `shape.params` at compile time | Required |
-| `circumscribe` | derives the bounding-box half-axes that enclose the whole shape from the content half-axes | Required |
-| `circumscribeOffset` | offset of the bbox center relative to `position` (when the reference point ≠ bbox center) | Optional |
-| `boundaryPoint` | intersection of the ray from the center toward `toward` with the boundary | Required |
-| `anchor` | world coordinate of a named anchor; `undefined` for unknown names | Required |
-| `edgePoint` | the point at a 0..1 ratio along a given edge | Optional |
-| `emit` | the primitives to draw in axis-aligned space | Required |
-| `scaleParams` | how a node scale applies to params | Optional |
+| Method               | Purpose                                                                                    | Required · Optional |
+| -------------------- | ------------------------------------------------------------------------------------------ | ------------------- |
+| `paramsSchema`       | zod schema for the shape params, validates `shape.params` at compile time                  | Required            |
+| `circumscribe`       | derives the bounding-box half-axes that enclose the whole shape from the content half-axes | Required            |
+| `circumscribeOffset` | offset of the bbox center relative to `position` (when the reference point ≠ bbox center)  | Optional            |
+| `boundaryPoint`      | intersection of the ray from the center toward `toward` with the boundary                  | Required            |
+| `anchor`             | world coordinate of a named anchor; `undefined` for unknown names                          | Required            |
+| `edgePoint`          | the point at a 0..1 ratio along a given edge                                               | Optional            |
+| `emit`               | the primitives to draw in axis-aligned space                                               | Required            |
+| `scaleParams`        | how a node scale applies to params                                                         | Optional            |
 
 Each method is given below with its full signature and an example.
 
@@ -64,11 +64,10 @@ paramsSchema: z.strictObject({
 ### circumscribe
 
 ```ts
-circumscribe: (
-  innerHalfWidth: number,
-  innerHalfHeight: number,
-  params: TParams,
-) => { halfWidth: number; halfHeight: number };
+circumscribe: (innerHalfWidth: number, innerHalfHeight: number, params: TParams) => {
+  halfWidth: number;
+  halfHeight: number;
+};
 ```
 
 Called during node layout to answer “how large must the outer rectangle be to contain text and padding”. `innerHalfWidth` / `innerHalfHeight` are the half-width and half-height already occupied by text and padding; the return value must be the **exact bounding-box (AABB) half-axes that enclose the full shape** — the compiler accumulates the viewBox and bbox only from those four corners. A rectangle returns them unchanged, a circle takes the diagonal half-length on both axes, a diamond expands.
@@ -160,12 +159,7 @@ edgePoint: (rect, side, t) => rectOps.edgePoint(rect, side, t),
 ### emit
 
 ```ts
-emit: (
-  rect: Rect,
-  style: ShapeStyle,
-  round: (n: number) => number,
-  params: TParams,
-) => Iterable<ScenePrimitive>;
+emit: (rect: Rect, style: ShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>;
 ```
 
 Called when compiling the visible node body; returns one or more primitives to draw. Note that `rect` here is **axis-aligned** (`rotate` is applied later by the compiler through an outer group), so just draw the shape around the center as if on ordinary graph paper. Use `round` for consistent coordinate precision, and forward the fill, stroke, opacity, and related fields from `style`. Simple shapes return one path or rect; complex shapes can return several primitives.
@@ -243,7 +237,9 @@ const createPolygonShape = (sides: number): ShapeDefinition =>
     *emit(rect, style, round) {
       yield {
         type: 'path',
-        commands: [/* n vertices + close */],
+        commands: [
+          /* n vertices + close */
+        ],
         fill: style.fill ?? 'transparent',
         fillOpacity: style.fillOpacity,
         stroke: style.stroke ?? 'currentColor',

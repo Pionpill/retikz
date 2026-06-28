@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * 跨 scope anchor 引用：外层 path 取 scope 内 node 的命名 anchor 端点
@@ -9,9 +10,13 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={560} height={140}>
-    <Node id="ext" position={[0, 0]}>ext</Node>
+    <Node id="ext" position={[0, 0]}>
+      ext
+    </Node>
     <Scope transforms={[{ kind: 'translate', x: 260, y: 0 }]}>
-      <Node id="hub" position={[0, 0]} shape="circle" padding={8}>hub</Node>
+      <Node id="hub" position={[0, 0]} shape="circle" padding={8}>
+        hub
+      </Node>
     </Scope>
     <Draw way={['ext', 'hub.north']} arrow="->" />
     <Draw way={['ext', 'hub.south-west']} arrow="->" />

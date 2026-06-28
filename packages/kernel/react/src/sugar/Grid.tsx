@@ -1,7 +1,10 @@
 import type { FC, ReactElement } from 'react';
+
+import type { PathVisualProps } from './_shared';
+
 import { Path } from '../kernel/Path';
 import { Step } from '../kernel/Step';
-import { type PathVisualProps, pickPathVisual, requireXY } from './_shared';
+import { pickPathVisual, requireXY } from './_shared';
 
 type BorderRenderOrder = 'before' | 'after';
 
@@ -236,14 +239,10 @@ const pushUnique = (values: Array<number>, value: number): void => {
   }
 };
 
-const isMajorLine = (
-  index: number,
-  majorEvery: number | undefined,
-  majorOffset: number | undefined,
-): boolean => {
+const isMajorLine = (index: number, majorEvery: number | undefined, majorOffset: number | undefined): boolean => {
   if (majorEvery === undefined) return false;
   const offset = majorOffset ?? 0;
-  return ((index - offset) % majorEvery + majorEvery) % majorEvery === 0;
+  return (((index - offset) % majorEvery) + majorEvery) % majorEvery === 0;
 };
 
 const getMajorVisual = (props: GridProps, base: PathVisualProps): PathVisualProps => ({

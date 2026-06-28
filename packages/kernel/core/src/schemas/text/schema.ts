@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { FontSchema } from '../font';
 
 /**
@@ -8,19 +9,9 @@ import { FontSchema } from '../font';
 export const TextRunSchema = z
   .object({
     text: z.string().describe('Text segment content within a mixed text+math line.'),
-    fill: z
-      .string()
-      .optional()
-      .describe('Per-run text color; overrides the line / block default.'),
-    opacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Per-run opacity.'),
-    font: FontSchema.optional().describe(
-      'Per-run font overrides; missing fields inherit from the line / block font.',
-    ),
+    fill: z.string().optional().describe('Per-run text color; overrides the line / block default.'),
+    opacity: z.number().min(0).max(1).optional().describe('Per-run opacity.'),
+    font: FontSchema.optional().describe('Per-run font overrides; missing fields inherit from the line / block font.'),
   })
   .strict()
   .describe('A text segment in a mixed line (same fields as a line object).');
@@ -46,12 +37,7 @@ export const MathRunSchema = z
       .string()
       .optional()
       .describe('Glyph color for this formula segment; overrides the line / block text color.'),
-    opacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Per-run opacity.'),
+    opacity: z.number().min(0).max(1).optional().describe('Per-run opacity.'),
   })
   .strict()
   .describe(
@@ -84,19 +70,9 @@ export const LineSpecSchema = z
     z.string(),
     z.object({
       text: z.string().describe('Line content'),
-      fill: z
-        .string()
-        .optional()
-        .describe('Per-line text color; overrides block default'),
-      opacity: z
-        .number()
-        .min(0)
-        .max(1)
-        .optional()
-        .describe('Per-line opacity.'),
-      font: FontSchema.optional().describe(
-        'Per-line font overrides; missing fields inherit from block-level `font`',
-      ),
+      fill: z.string().optional().describe('Per-line text color; overrides block default'),
+      opacity: z.number().min(0).max(1).optional().describe('Per-line opacity.'),
+      font: FontSchema.optional().describe('Per-line font overrides; missing fields inherit from block-level `font`'),
     }),
     MixedLineSchema,
   ])

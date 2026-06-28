@@ -1,11 +1,16 @@
 import type { IRScope } from '@retikz/core';
-import { z } from 'zod';
+
 import { describe, expect, it } from 'vitest';
-import { type CustomMark, type ExternalRow, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { z } from 'zod';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { CustomMark, ExternalRow, PlotSpec } from '../../src/schemas';
+
 import { defineMark, defineTransform } from '../../src/contract';
+import { lowerPlots } from '../../src/pipeline/expand';
 import { collectSourceFields } from '../../src/pipeline/source-fields';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 import { resolveTransformRegistry } from '../../src/providers';
+import { PlotSpecSchema } from '../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
@@ -32,7 +37,9 @@ const groupPointSpec = (): PlotSpec =>
     marks: [
       {
         type: 'point',
-        transform: [{ kind: 'summarize', groupBy: ['category'], metrics: [{ op: 'sum', field: 'value', as: 'total' }] }],
+        transform: [
+          { kind: 'summarize', groupBy: ['category'], metrics: [{ op: 'sum', field: 'value', as: 'total' }] },
+        ],
         encoding: { x: { field: 'category' }, y: { field: 'total' } },
       },
     ],
@@ -98,7 +105,9 @@ describe('mark-local transform', () => {
       marks: [
         {
           type: 'dot',
-          transform: [{ kind: 'summarize', groupBy: ['category'], metrics: [{ op: 'sum', field: 'value', as: 'total' }] }],
+          transform: [
+            { kind: 'summarize', groupBy: ['category'], metrics: [{ op: 'sum', field: 'value', as: 'total' }] },
+          ],
           encoding: { x: { field: 'category' }, y: { field: 'total' } },
         },
       ],

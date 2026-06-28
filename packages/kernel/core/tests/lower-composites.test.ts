@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { CompositeBaseSchema, compileToScene, defineComposite } from '../src';
+
 import type { CompileWarning, IR, ScenePrimitive } from '../src';
+
+import { compileToScene, CompositeBaseSchema, defineComposite } from '../src';
 import { flattenPrims } from './helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
@@ -98,17 +100,29 @@ describe('lowerComposites — 边界', () => {
         { type: 'node', id: 'A', position: [0, 0], text: 'A' },
       ],
     };
-    const irOnlyA: IR = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }] };
+    const irOnlyA: IR = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
+    };
     expect(() => compileToScene(ir, { composites: [vanishing] })).not.toThrow();
     expect(compileToScene(ir, { composites: [vanishing] })).toEqual(compileToScene(irOnlyA));
   });
 
   it('namespace-discriminates: 无 namespace 走 tier1（core4 不受影响）；有 namespace 走 tier2', () => {
-    const tier1Ir: IR = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }] };
+    const tier1Ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
+    };
     // tier1 IR 不传 composites 也正常（不受 lowering 影响）
     expect(compileToScene(tier1Ir)).toEqual(compileToScene(tier1Ir, { composites: [labeledBox] }));
     // 有 namespace 的节点被当 tier2 展开
-    const tier2Ir: IR = { version: 1, type: 'scene', children: [{ namespace: 'example', type: 'labeledBox', text: 'x' }] };
+    const tier2Ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [{ namespace: 'example', type: 'labeledBox', text: 'x' }],
+    };
     expect(findByType(compileToScene(tier2Ir, { composites: [labeledBox] }).primitives, 'rect')).toBeDefined();
   });
 });

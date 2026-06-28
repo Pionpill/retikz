@@ -4,11 +4,12 @@
  *   方向约定 north/south=西→东、east/west=北→南；端点与现有 9-anchor 重合；含旋转
  */
 import { describe, expect, it } from 'vitest';
-import { rect } from '../../src/geometry/rect';
+
 import { circle } from '../../src/geometry/circle';
-import { ellipse } from '../../src/geometry/ellipse';
 import { diamond } from '../../src/geometry/diamond';
 import { EDGE_ENDS, edgeAngleDeg, lerpPoint } from '../../src/geometry/edge';
+import { ellipse } from '../../src/geometry/ellipse';
+import { rect } from '../../src/geometry/rect';
 
 const near = (p: readonly [number, number], x: number, y: number, d = 6): void => {
   expect(p[0]).toBeCloseTo(x, d);

@@ -5,15 +5,14 @@
  *   缺省 boundingShape（矩形 AABB）逐字不变。boundingShape 是受控枚举（'rectangle' | 'circle'），
  *   枚举外的值由 schema 在 parse 边界拒绝，compile 不再做运行时回退 warn。
  */
-import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import {
-  collectScopeCornerPoints,
-  registerScopeCircleLayout,
-} from '../../src/compile/scope';
 import { minimalEnclosingCircle } from '@retikz/math';
+import { describe, expect, it } from 'vitest';
+
 import type { CompileWarning, IR, ScenePrimitive } from '../../src';
 import type { NodeLayout } from '../../src/compile/node';
+
+import { compileToScene } from '../../src/compile/compile';
+import { collectScopeCornerPoints, registerScopeCircleLayout } from '../../src/compile/scope';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const scene = (children: IR['children']): IR => ({

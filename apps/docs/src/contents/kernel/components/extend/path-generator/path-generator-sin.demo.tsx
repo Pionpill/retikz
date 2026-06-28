@@ -1,7 +1,8 @@
 import type { IR, PathCommand } from '@retikz/core';
+import type { FC } from 'react';
+
 import { definePathGenerator } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import type { FC } from 'react';
 import { z } from 'zod';
 
 /**

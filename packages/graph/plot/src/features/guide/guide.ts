@@ -1,10 +1,16 @@
 import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
-import { type Position, arcEndPoint } from '@retikz/math';
+import type { Position } from '@retikz/math';
+
+import { arcEndPoint } from '@retikz/math';
+
 import type { CoordinateFrame, DimensionRole, PositionScale, TickSet } from '../../contract';
-import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from '../../pipeline/layout';
-import { type ProvenanceContext, guideLayerId, guideLayerMeta } from '../../pipeline/provenance';
+import type { Rect } from '../../pipeline/layout';
+import type { ProvenanceContext } from '../../pipeline/provenance';
 import type { PolarCoordinateFrame, TernaryVertices } from '../../providers';
 import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../../schemas';
+
+import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, estimateLabelWidth } from '../../pipeline/layout';
+import { guideLayerId, guideLayerMeta } from '../../pipeline/provenance';
 
 /** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 arcEndPoint。 */
 const DEG_TO_RAD = Math.PI / 180;
@@ -94,7 +100,11 @@ const guideScopeProps = (
 };
 
 /** cartesian guide：直线轴 + 竖 / 横刻度 + grid 跨绘图区直线（alpha.2 几何，逐字保持） */
-const lowerCartesianGuide = (guide: AxisGuide, ctx: GuideContext, context: ProvenanceContext | undefined): LoweredGuide => {
+const lowerCartesianGuide = (
+  guide: AxisGuide,
+  ctx: GuideContext,
+  context: ProvenanceContext | undefined,
+): LoweredGuide => {
   const { plotArea, fontSize } = ctx;
   const left = plotArea.x;
   const right = plotArea.x + plotArea.width;
@@ -108,10 +118,26 @@ const lowerCartesianGuide = (guide: AxisGuide, ctx: GuideContext, context: Prove
   const project = isX ? ctx.projectX : ctx.projectY;
 
   // ---- 轴层 ----
-  const axisLine: Segment = isX ? [[left, bottom], [right, bottom]] : [[left, top], [left, bottom]];
+  const axisLine: Segment = isX
+    ? [
+        [left, bottom],
+        [right, bottom],
+      ]
+    : [
+        [left, top],
+        [left, bottom],
+      ];
   const tickSegments: Array<Segment> = ticks.values.map(value => {
     const p = project.coordinate(value);
-    return isX ? [[p, bottom], [p, bottom + AXIS_TICK_LENGTH]] : [[left, p], [left - AXIS_TICK_LENGTH, p]];
+    return isX
+      ? [
+          [p, bottom],
+          [p, bottom + AXIS_TICK_LENGTH],
+        ]
+      : [
+          [left, p],
+          [left - AXIS_TICK_LENGTH, p],
+        ];
   });
   const linePath = segmentsToPath([axisLine, ...tickSegments]);
   const labels: Array<IRNode> = showLabels
@@ -140,7 +166,15 @@ const lowerCartesianGuide = (guide: AxisGuide, ctx: GuideContext, context: Prove
   if (guide.grid) {
     const gridSegments: Array<Segment> = ticks.values.map(value => {
       const p = project.coordinate(value);
-      return isX ? [[p, top], [p, bottom]] : [[left, p], [right, p]];
+      return isX
+        ? [
+            [p, top],
+            [p, bottom],
+          ]
+        : [
+            [left, p],
+            [right, p],
+          ];
     });
     const gridPath = segmentsToPath(gridSegments);
     if (gridPath) {
@@ -180,7 +214,12 @@ const arcPath = (frame: PolarCoordinateFrame, radius: number): IRPath => {
  * @description 轴线 = arc step（半径 outerRadius）；刻度 = 圆周点向外 AXIS_TICK_LENGTH 短线；
  *   标签 = center + (outerRadius+gap)·(cosθ,sinθ) 处 Node text。grid:true → 每刻度一条圆心→外圆辐条。
  */
-const lowerAngularAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarCoordinateFrame, context: ProvenanceContext | undefined): LoweredGuide => {
+const lowerAngularAxis = (
+  guide: AxisGuide,
+  ctx: GuideContext,
+  frame: PolarCoordinateFrame,
+  context: ProvenanceContext | undefined,
+): LoweredGuide => {
   const { fontSize } = ctx;
   const ticks = ctx.angularTicks ?? { values: [], labels: [] };
   const scale = frame.primary;
@@ -190,7 +229,10 @@ const lowerAngularAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarCoord
   // ---- 轴层 ----
   const tickSegments: Array<Segment> = ticks.values.map(value => {
     const theta = scale.coordinate(value);
-    return [finitePolarPoint(frame.center, theta, outer), finitePolarPoint(frame.center, theta, outer + AXIS_TICK_LENGTH)];
+    return [
+      finitePolarPoint(frame.center, theta, outer),
+      finitePolarPoint(frame.center, theta, outer + AXIS_TICK_LENGTH),
+    ];
   });
   const tickPath = segmentsToPath(tickSegments);
   const axisChildren: Array<IRPath | IRNode> = [arcPath(frame, outer)];
@@ -198,7 +240,11 @@ const lowerAngularAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarCoord
   const labels: Array<IRNode> = showLabels
     ? ticks.values.map((value, index): IRNode => {
         const theta = scale.coordinate(value);
-        const position = finitePolarPoint(frame.center, theta, outer + AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2);
+        const position = finitePolarPoint(
+          frame.center,
+          theta,
+          outer + AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2,
+        );
         return { type: 'node', position, text: ticks.labels[index] };
       })
     : [];
@@ -237,7 +283,12 @@ const lowerAngularAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarCoord
  * @description 轴线 = center→外圆 直段（基准角 = startAngle）；刻度 = 辐条上每径向刻度短切向横线；
  *   标签 = 刻度点旁 Node text。grid:true → 每径向刻度一个同心圆环（arc step）。
  */
-const lowerRadialAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarCoordinateFrame, context: ProvenanceContext | undefined): LoweredGuide => {
+const lowerRadialAxis = (
+  guide: AxisGuide,
+  ctx: GuideContext,
+  frame: PolarCoordinateFrame,
+  context: ProvenanceContext | undefined,
+): LoweredGuide => {
   const { fontSize } = ctx;
   const ticks = ctx.radialTicks ?? { values: [], labels: [] };
   const scale = frame.secondary;
@@ -326,7 +377,12 @@ const ternaryAxisRoles = (
  * @description 轴线 = baseP→apex 三角边（三条 x/y/z 轴合起来 = 完整三角外框）；刻度沿该边、标签外法向偏移；
  *   grid:true → 内部刻度处画平行 0 边的等值线（lerp(baseP,apex,t)–lerp(baseQ,apex,t)）。
  */
-const lowerTernaryGuide = (guide: AxisGuide, ctx: GuideContext, vertices: TernaryVertices, context: ProvenanceContext | undefined): LoweredGuide => {
+const lowerTernaryGuide = (
+  guide: AxisGuide,
+  ctx: GuideContext,
+  vertices: TernaryVertices,
+  context: ProvenanceContext | undefined,
+): LoweredGuide => {
   const { fontSize } = ctx;
   const ticks = ctx.ternaryTicks ?? { values: [], labels: [] };
   const showLabels = guide.tickLabels !== false;
@@ -353,7 +409,11 @@ const lowerTernaryGuide = (guide: AxisGuide, ctx: GuideContext, vertices: Ternar
     tickSegments.push([point, [point[0] + out[0] * AXIS_TICK_LENGTH, point[1] + out[1] * AXIS_TICK_LENGTH]]);
     if (showLabels) {
       const offset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2;
-      labels.push({ type: 'node', position: [point[0] + out[0] * offset, point[1] + out[1] * offset], text: ticks.labels[index] });
+      labels.push({
+        type: 'node',
+        position: [point[0] + out[0] * offset, point[1] + out[1] * offset],
+        text: ticks.labels[index],
+      });
     }
   });
   const linePath = segmentsToPath([axisLine, ...tickSegments]);
@@ -409,11 +469,18 @@ const CUSTOM_AXIS_SAMPLES = 40;
  *   得轴线（任意曲线）与刻度点；刻度短线 / 标签沿局部切向的法线摆。frame 无 roleScales[dimension] → 不画（返回空）。
  *   通用性即「轴 = 参数路径」：直线 / 拱 / 圆 / 螺旋同一套画法。无网格（自定义网格几何因投影而异，留后续）。
  */
-export const lowerCustomAxis = (frame: CoordinateFrame, guide: AxisGuide, fontSize: number, context: ProvenanceContext | undefined): LoweredGuide => {
+export const lowerCustomAxis = (
+  frame: CoordinateFrame,
+  guide: AxisGuide,
+  fontSize: number,
+  context: ProvenanceContext | undefined,
+): LoweredGuide => {
   const scale = frame.roleScales?.[guide.dimension];
   if (!scale) return { gridLayer: null, axisLayer: null };
   const ticks = scale.ticks(guide.tickCount);
-  const numericTicks = ticks.values.map((value, index) => ({ value: Number(value), label: ticks.labels[index] })).filter(tick => Number.isFinite(tick.value));
+  const numericTicks = ticks.values
+    .map((value, index) => ({ value: Number(value), label: ticks.labels[index] }))
+    .filter(tick => Number.isFinite(tick.value));
   if (numericTicks.length === 0) return { gridLayer: null, axisLayer: null };
   const showLabels = guide.tickLabels !== false;
 
@@ -422,7 +489,8 @@ export const lowerCustomAxis = (frame: CoordinateFrame, guide: AxisGuide, fontSi
     const roleScale = frame.roleScales?.[role];
     return roleScale ? roleScale.ticks().values[0] : 0;
   };
-  const projectAt = (value: number): [number, number] | null => frame.projectRoles(frame.roles.map(role => (role === guide.dimension ? value : anchorFor(role))));
+  const projectAt = (value: number): [number, number] | null =>
+    frame.projectRoles(frame.roles.map(role => (role === guide.dimension ? value : anchorFor(role))));
 
   const lo = numericTicks[0].value;
   const hi = numericTicks[numericTicks.length - 1].value;
@@ -438,7 +506,8 @@ export const lowerCustomAxis = (frame: CoordinateFrame, guide: AxisGuide, fontSi
 
   // 刻度 + 标签：沿局部切向的法线摆。切向优先取工厂回传的解析 frameAlong（ADR-05），缺则邻近采样数值差分回落
   const epsilon = span === 0 ? 1 : span * 1e-3;
-  const valuesAt = (value: number): Array<unknown> => frame.roles.map(role => (role === guide.dimension ? value : anchorFor(role)));
+  const valuesAt = (value: number): Array<unknown> =>
+    frame.roles.map(role => (role === guide.dimension ? value : anchorFor(role)));
   // 该刻度点的 [屏幕点, 切向]：有 frameAlong 用解析切向，否则中心差分；非有限 → null
   const pointAndTangent = (value: number): [[number, number], [number, number]] | null => {
     if (frame.frameAlong) {
@@ -462,7 +531,11 @@ export const lowerCustomAxis = (frame: CoordinateFrame, guide: AxisGuide, fontSi
     tickSegments.push([point, [point[0] + normal[0] * AXIS_TICK_LENGTH, point[1] + normal[1] * AXIS_TICK_LENGTH]]);
     if (showLabels) {
       const offset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2;
-      labels.push({ type: 'node', position: [point[0] + normal[0] * offset, point[1] + normal[1] * offset], text: tick.label });
+      labels.push({
+        type: 'node',
+        position: [point[0] + normal[0] * offset, point[1] + normal[1] * offset],
+        text: tick.label,
+      });
     }
   }
 
@@ -597,7 +670,11 @@ export const lowerLegend = (input: LegendInput): IRScope => {
   // 标题占一行（顶部），条目区从标题下方起
   let cursorY = band.y;
   if (input.title !== undefined) {
-    children.push({ type: 'node', position: [band.x + estimateLabelWidth(input.title, fontSize) / 2, cursorY + fontSize / 2], text: input.title });
+    children.push({
+      type: 'node',
+      position: [band.x + estimateLabelWidth(input.title, fontSize) / 2, cursorY + fontSize / 2],
+      text: input.title,
+    });
     cursorY += fontSize + LEGEND_TITLE_GAP;
   }
 
@@ -608,7 +685,9 @@ export const lowerLegend = (input: LegendInput): IRScope => {
     const rampThickness = LEGEND_RAMP_THICKNESS;
     const rampX = band.x;
     const rampY = cursorY;
-    const ramp = vertical ? rectNode(rampX, rampY, rampThickness, rampLength) : rectNode(rampX, rampY, rampLength, rampThickness);
+    const ramp = vertical
+      ? rectNode(rampX, rampY, rampThickness, rampLength)
+      : rectNode(rampX, rampY, rampLength, rampThickness);
     // 垂直色带：offset 0 在顶（小值上 / 大值下，与轴一致需翻转）；这里 0 在带起点，stops 直接用
     const angle = vertical ? 90 : 0;
     ramp.fill = { kind: 'linearGradient', stops: input.ramp.stops, angle };
@@ -616,7 +695,10 @@ export const lowerLegend = (input: LegendInput): IRScope => {
     // 沿带刻度标签
     for (const tick of input.ramp.ticks) {
       const position: [number, number] = vertical
-        ? [rampX + rampThickness + LEGEND_LABEL_GAP + estimateLabelWidth(tick.label, fontSize) / 2, rampY + tick.offset * rampLength]
+        ? [
+            rampX + rampThickness + LEGEND_LABEL_GAP + estimateLabelWidth(tick.label, fontSize) / 2,
+            rampY + tick.offset * rampLength,
+          ]
         : [rampX + tick.offset * rampLength, rampY + rampThickness + LEGEND_LABEL_GAP + fontSize / 2];
       children.push({ type: 'node', position, text: tick.label });
     }
@@ -628,7 +710,13 @@ export const lowerLegend = (input: LegendInput): IRScope => {
     for (const entry of input.entries) {
       if (entry.shape !== undefined) {
         // shape 图例：swatch 本身就是编码的 glyph（circle / rectangle / diamond…），不画矩形框
-        children.push({ type: 'node', position: [cursorX + LEGEND_SWATCH_SIZE / 2, rowY + LEGEND_SWATCH_SIZE / 2], shape: entry.shape, minimumSize: LEGEND_SWATCH_SIZE, fill: entry.color ?? 'currentColor' });
+        children.push({
+          type: 'node',
+          position: [cursorX + LEGEND_SWATCH_SIZE / 2, rowY + LEGEND_SWATCH_SIZE / 2],
+          shape: entry.shape,
+          minimumSize: LEGEND_SWATCH_SIZE,
+          fill: entry.color ?? 'currentColor',
+        });
       } else {
         // color / 分箱 / opacity / size：矩形色块（size 再叠圆点）
         const swatch = rectNode(cursorX, rowY, LEGEND_SWATCH_SIZE, LEGEND_SWATCH_SIZE);
@@ -640,7 +728,13 @@ export const lowerLegend = (input: LegendInput): IRScope => {
         children.push(swatch);
         // size 梯度符号：在格内画一个代表半径的圆点 Node（覆盖 swatch 框，给出比例感）
         if (entry.radius !== undefined) {
-          children.push({ type: 'node', position: [cursorX + LEGEND_SWATCH_SIZE / 2, rowY + LEGEND_SWATCH_SIZE / 2], shape: 'circle', minimumSize: entry.radius * Math.SQRT2, fill: 'currentColor' });
+          children.push({
+            type: 'node',
+            position: [cursorX + LEGEND_SWATCH_SIZE / 2, rowY + LEGEND_SWATCH_SIZE / 2],
+            shape: 'circle',
+            minimumSize: entry.radius * Math.SQRT2,
+            fill: 'currentColor',
+          });
         }
       }
       // 标签：swatch 右侧

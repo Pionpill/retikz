@@ -1,6 +1,7 @@
+import { type ExternalDatasets, type PlotSpec } from '@retikz/plot';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { type ExternalDatasets, type PlotSpec } from '@retikz/plot';
+
 import { IntervalMark, Plot } from '../src';
 
 /**
@@ -69,7 +70,9 @@ describe('<Plot dataTransforms> 快捷数据变换直传 (alpha.12)', () => {
         data={orders}
         width={480}
         height={300}
-        dataTransforms={[{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] }]}
+        dataTransforms={[
+          { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] },
+        ]}
       >
         <IntervalMark x="region" y="total" />
       </Plot>,
@@ -80,7 +83,12 @@ describe('<Plot dataTransforms> 快捷数据变换直传 (alpha.12)', () => {
   it('data_transforms_compose_with_transform_children', () => {
     // dataTransforms（直传）拼在 <Transform> 子组件之前；与子组件混用同一管线（此处仅直传一条 summarize）
     const svg = renderToStaticMarkup(
-      <Plot data={orders} width={480} height={300} dataTransforms={[{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'count', as: 'n' }] }]}>
+      <Plot
+        data={orders}
+        width={480}
+        height={300}
+        dataTransforms={[{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'count', as: 'n' }] }]}
+      >
         <IntervalMark x="region" y="n" />
       </Plot>,
     );

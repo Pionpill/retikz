@@ -50,8 +50,8 @@ export const createIdClockRegistry = (): IdClockRegistry => {
       if (!entry) return globalTime;
       return entry.pausedAt ?? globalTime - entry.offset;
     },
-    isActive: id => (id === undefined ? false : map.get(id)?.active ?? false),
-    isStopped: id => (id === undefined ? false : map.get(id)?.stopped ?? false),
+    isActive: id => (id === undefined ? false : (map.get(id)?.active ?? false)),
+    isStopped: id => (id === undefined ? false : (map.get(id)?.stopped ?? false)),
     play: (id, globalTime) => {
       const entry = ensure(id);
       if (entry.pausedAt !== null) {

@@ -1,12 +1,15 @@
-import { ChevronRight } from 'lucide-react';
 import type { FC } from 'react';
+
+import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { InlineMdx } from '@/components/shared/mdx-content';
-import { cn } from '@/lib/utils';
+import type { PackageBlock } from '@/data/changelog.types';
 import type { Lang } from '@/i18n';
-import { PACKAGE_LABEL, type PackageBlock } from '@/data/changelog.types';
+
+import { InlineMdx } from '@/components/shared/mdx-content';
+import { PACKAGE_LABEL } from '@/data/changelog.types';
+import { cn } from '@/lib/utils';
 
 import { ChangelogItems } from './ChangelogItems';
 import { ChangelogSubVersions } from './ChangelogSubVersions';

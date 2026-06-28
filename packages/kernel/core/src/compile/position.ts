@@ -1,8 +1,10 @@
-import type { IRAtPosition, IRBetweenPosition, IROffsetPosition, IRPosition, PolarPosition } from '../schemas';
 import { arcEndPoint } from '@retikz/math';
+
 import type { Transform } from '../primitive';
-import { DirectionVectorByAtDirection } from './direction';
+import type { IRAtPosition, IRBetweenPosition, IROffsetPosition, IRPosition, PolarPosition } from '../schemas';
 import type { NameStack } from './name-stack';
+
+import { DirectionVectorByAtDirection } from './direction';
 import { inverseTransformChain } from './scope';
 
 /**
@@ -58,8 +60,7 @@ export const resolvePosition = (
     const ref = nameStack.lookup(pos.of);
     if (!ref) return null;
     const refGlobal: IRPosition = [ref.rect.x, ref.rect.y];
-    const refLocal =
-      scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
+    const refLocal = scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
     const distance = pos.distance ?? nodeDistance;
     const [dx, dy] = DirectionVectorByAtDirection[pos.direction];
     return [refLocal[0] + dx * distance, refLocal[1] + dy * distance];

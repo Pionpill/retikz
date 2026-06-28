@@ -25,8 +25,14 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 
 ```tsx
 // 数据里叫 period / amount，配置里仍用 month / revenue
-<Plot data={rows} model={[{ name: 'month', type: 'temporal' }, { name: 'revenue', type: 'continuous' }]}
-      fieldMap={{ month: 'period', revenue: 'amount' }}>
+<Plot
+  data={rows}
+  model={[
+    { name: 'month', type: 'temporal' },
+    { name: 'revenue', type: 'continuous' },
+  ]}
+  fieldMap={{ month: 'period', revenue: 'amount' }}
+>
   <PathMark x="month" y="revenue" order="month" />
 </Plot>
 ```
@@ -49,23 +55,28 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 
 内置解析只认固定形态：`temporal` 收 `Date` / 毫秒 / 严格 ISO，`continuous` 收数字 / 严格数字串。词表外的格式需要你点名怎么解析——常见格式用声明式 `format`，真正任意的逻辑用 `resolveField` 兜底。
 
-| 场景 | 写法 | 进 IR |
-| --- | --- | --- |
-| 默认格式 | 只写 `type` / 省略解析 | 是 |
-| 常见非默认格式 | 在 `model` 字段上写内置 `format` | 是 |
-| 可复用的自定义格式 | `defineFieldFormat` + `formatDefinitions` | 是，IR 只存格式名串 |
-| 任意运行时逻辑 | `resolveField` | 否，函数只在运行时使用 |
+| 场景               | 写法                                      | 进 IR                  |
+| ------------------ | ----------------------------------------- | ---------------------- |
+| 默认格式           | 只写 `type` / 省略解析                    | 是                     |
+| 常见非默认格式     | 在 `model` 字段上写内置 `format`          | 是                     |
+| 可复用的自定义格式 | `defineFieldFormat` + `formatDefinitions` | 是，IR 只存格式名串    |
+| 任意运行时逻辑     | `resolveField`                            | 否，函数只在运行时使用 |
 
 ### 声明式解析格式
 
 碰上 `'2024/01/01'`、epoch 秒、`'50%'` 这类常见的非默认格式，不必动用函数——给字段一个声明式 `format`，它**进 IR、可序列化、LLM 也能生成**：
 
 ```tsx
-<Plot data={rows} model={[
-  { name: 'createdAt', type: 'temporal',  format: 'slashDate' },    // '2024/01/01' → 时间
-  { name: 'ts',        type: 'temporal',  format: 'epochSeconds' }, // 1700000000 → 毫秒
-  { name: 'ratio',     type: 'continuous', format: 'percent' },     // '50%' → 0.5
-]}>{/* … */}</Plot>
+<Plot
+  data={rows}
+  model={[
+    { name: 'createdAt', type: 'temporal', format: 'slashDate' }, // '2024/01/01' → 时间
+    { name: 'ts', type: 'temporal', format: 'epochSeconds' }, // 1700000000 → 毫秒
+    { name: 'ratio', type: 'continuous', format: 'percent' }, // '50%' → 0.5
+  ]}
+>
+  {/* … */}
+</Plot>
 ```
 
 下面的右图用同一组业务字段接入报表数据：日期是 `YYYY/MM/DD`，比例是百分比字符串。`format` 把它们先规范化，再交给时间轴和线性轴。
@@ -74,14 +85,14 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 
 可选的 `format`（每个绑定一种类型）：
 
-| `format` | 适用类型 | 解析 |
-| --- | --- | --- |
-| `iso` | temporal | 严格 ISO（等价不写） |
-| `epochSeconds` | temporal | epoch 秒 → 毫秒 |
-| `epochMillis` | temporal | epoch 毫秒 |
-| `slashDate` | temporal | 严格 `YYYY/MM/DD`（按 UTC 零点） |
+| `format`       | 适用类型   | 解析                              |
+| -------------- | ---------- | --------------------------------- |
+| `iso`          | temporal   | 严格 ISO（等价不写）              |
+| `epochSeconds` | temporal   | epoch 秒 → 毫秒                   |
+| `epochMillis`  | temporal   | epoch 毫秒                        |
+| `slashDate`    | temporal   | 严格 `YYYY/MM/DD`（按 UTC 零点）  |
 | `numberString` | continuous | 宽松数字串（容空白 / 千分位逗号） |
-| `percent` | continuous | 百分比串 `'50%'` → 0.5 |
+| `percent`      | continuous | 百分比串 `'50%'` → 0.5            |
 
 规则：
 
@@ -104,21 +115,21 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 
 <ComponentPreview name="processing-invalid" sourceFiles={['processing-invalid.data.ts']} />
 
-| 情形 | 行为 |
-| --- | --- |
-| 某行缺这个字段 | 跳过该数据点（异构数据常态，不报错） |
-| 叶子是对象 / 数组（非标量） | 跳过该数据点（绝不把对象塞进图） |
-| 同类型不同存储格式 | 自动转换（见上「换数据源」） |
+| 情形                              | 行为                                            |
+| --------------------------------- | ----------------------------------------------- |
+| 某行缺这个字段                    | 跳过该数据点（异构数据常态，不报错）            |
+| 叶子是对象 / 数组（非标量）       | 跳过该数据点（绝不把对象塞进图）                |
+| 同类型不同存储格式                | 自动转换（见上「换数据源」）                    |
 | 字段是 `bigint`（如数据库 int64） | 自动转 number（仅安全整数；超出范围按非法处理） |
-| 路径中途是数组（需展开） | 暂不支持自动展开，请先在数据层 flatten |
+| 路径中途是数组（需展开）          | 暂不支持自动展开，请先在数据层 flatten          |
 
 校验选项按“多严格”选择：
 
-| 配置 | 检查方式 | 适合场景 |
-| --- | --- | --- |
-| 默认 / `invalid="skip"` | 不报错，非法点跳过 | 生产图容忍少量脏数据 |
-| `validateData` | 抽样检查绑定字段 | 开发期排查空图 / 字段映射错误 |
-| `invalid="error"` | 全量检查参与字段 | 数据准入、测试、需要 fail-loud 的图 |
+| 配置                    | 检查方式           | 适合场景                            |
+| ----------------------- | ------------------ | ----------------------------------- |
+| 默认 / `invalid="skip"` | 不报错，非法点跳过 | 生产图容忍少量脏数据                |
+| `validateData`          | 抽样检查绑定字段   | 开发期排查空图 / 字段映射错误       |
+| `invalid="error"`       | 全量检查参与字段   | 数据准入、测试、需要 fail-loud 的图 |
 
 校验发生在解析 / 归一化之后，只检查当前图真正参与的字段。默认「跳过」可能让你对着一张空图摸不着头脑。打开 `validateData` 让 retikz **抽样**校验、有问题直接报错，并指出**哪个字段、多少非法 / 缺失**（如 `field "x": 3/100 invalid`），把「为什么图是空的」变成明确提示：
 
@@ -142,13 +153,13 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 
 数据处理发生在 mark lowering 之前，目标是把不同来源、不同存储格式的外部行变成统一的 canonical 行。后续 transform、scale、mark 和 locator 都只读这份结果。
 
-| 顺序 | 处理 |
-| --- | --- |
-| 1 | 收集当前配置引用的字段，得到本次真正需要处理的字段集合 |
-| 2 | 用 `fieldMap` 把逻辑字段对齐到真实数据路径；没有映射时，真实路径等于逻辑字段名 |
-| 3 | 解析字段类型：`resolveField.type` 优先，其次 model / format / 自动推断 |
-| 4 | 解析字段值：`resolveField.parse` 优先，其次声明式 `format`（内置或 `formatDefinitions` 注册的自定义），最后走内置转换 |
-| 5 | 把解析后的值写回 canonical 行的逻辑字段名，供后续阶段统一读取 |
-| 6 | 按 `validateData` / `invalid` 对参与字段做抽样或全量校验 |
+| 顺序 | 处理                                                                                                                  |
+| ---- | --------------------------------------------------------------------------------------------------------------------- |
+| 1    | 收集当前配置引用的字段，得到本次真正需要处理的字段集合                                                                |
+| 2    | 用 `fieldMap` 把逻辑字段对齐到真实数据路径；没有映射时，真实路径等于逻辑字段名                                        |
+| 3    | 解析字段类型：`resolveField.type` 优先，其次 model / format / 自动推断                                                |
+| 4    | 解析字段值：`resolveField.parse` 优先，其次声明式 `format`（内置或 `formatDefinitions` 注册的自定义），最后走内置转换 |
+| 5    | 把解析后的值写回 canonical 行的逻辑字段名，供后续阶段统一读取                                                         |
+| 6    | 按 `validateData` / `invalid` 对参与字段做抽样或全量校验                                                              |
 
 `model` 和 `format` 会进入 PlotSpec，适合随图形配置持久化。`fieldMap` 虽然是可序列化映射，但属于 lowering 选项，按数据集 reference 注入，不写进 PlotSpec；`resolveField` 是函数，只在运行时参与编译。如果要复用 `resolveField` 这类逻辑，需要在应用代码里复用同一个 resolver，而不是期待它被写进 IR。

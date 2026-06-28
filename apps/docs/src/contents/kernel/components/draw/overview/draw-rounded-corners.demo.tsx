@@ -1,5 +1,6 @@
-import { Draw, Layout } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout } from '@retikz/react';
 
 // 同一条折线（两个 line-line 内拐角）：上方尖角，下方 roundedCorners 把拐角倒成相切圆弧。
 // roundedCorners 改的是路径几何（顶点回退 + 插弧），区别于只磨描边的 lineJoin。

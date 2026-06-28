@@ -36,12 +36,12 @@ intersect.lineCircle(origin: Position, dir: Position, center: Position, radius: 
 intersect.circleCircle(cA: Position, rA: number, cB: Position, rB: number): Array<Position>;
 ```
 
-| 函数 | 返回 / 退化 |
-| --- | --- |
-| `lineLine` | 交点 `Position`；平行或共线 → `null` |
+| 函数             | 返回 / 退化                                                                    |
+| ---------------- | ------------------------------------------------------------------------------ |
+| `lineLine`       | 交点 `Position`；平行或共线 → `null`                                           |
 | `segmentSegment` | 真交叉的交点；不相交 / 平行 / 共线（含重叠）→ `null`（首切不细分共线重叠区间） |
-| `lineCircle` | 0 个（相离）或 2 个交点；相切时返回 2 个重合点 |
-| `circleCircle` | 2 个交点；相离 / 内含 / 重合 → `[]`；相切时返回 2 个重合点 |
+| `lineCircle`     | 0 个（相离）或 2 个交点；相切时返回 2 个重合点                                 |
+| `circleCircle`   | 2 个交点；相离 / 内含 / 重合 → `[]`；相切时返回 2 个重合点                     |
 
 射线 ∩ 圆弧用 [`rayArc`](/kernel/packages/math/primitives)（在原语页，返回参数而非点）。
 

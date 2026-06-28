@@ -1,15 +1,10 @@
-import {
-  ARROW_MARKER_DEFAULT_SIZE,
-  ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
-  DEFAULT_ARROW_SHAPE,
-  type IRArrowDetail,
-  type IRArrowEndDetail,
-  type IRArrowMark,
-  type IRPosition,
-} from '../../schemas';
-import type { ArrowDefinition, ArrowEmitContext } from '../../contract/arrow';
 import { arcEndPoint, ellipseArcPoint } from '@retikz/math';
+
+import type { ArrowDefinition, ArrowEmitContext } from '../../contract/arrow';
 import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathCommand } from '../../primitive';
+import type { IRArrowDetail, IRArrowEndDetail, IRArrowMark, IRPosition } from '../../schemas';
+
+import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH, DEFAULT_ARROW_SHAPE } from '../../schemas';
 import { validateMarkerPrimitives } from '../marker-prim';
 import { shiftToward } from './anchor';
 
@@ -37,10 +32,7 @@ type ResolvedArrowVisual = {
 };
 
 /** 查 effective 表取 def；未注册名编译期 throw（消息含字母序可用名列表） */
-const lookupArrowDef = (
-  shape: string,
-  effective: EffectiveArrows,
-): ArrowDefinition => {
+const lookupArrowDef = (shape: string, effective: EffectiveArrows): ArrowDefinition => {
   if (Object.prototype.hasOwnProperty.call(effective, shape)) return effective[shape];
   const available = Object.keys(effective).sort().join(', ');
   throw new Error(`Unknown arrow shape '${shape}'; available: ${available}`);
@@ -95,9 +87,7 @@ const assertFiniteGeometry = (shape: string, def: ArrowDefinition): void => {
     );
   }
   if (def.tipX !== undefined && !Number.isFinite(def.tipX)) {
-    throw new Error(
-      `Arrow '${shape}' has a non-finite tipX (${String(def.tipX)}); it must be a finite number.`,
-    );
+    throw new Error(`Arrow '${shape}' has a non-finite tipX (${String(def.tipX)}); it must be a finite number.`);
   }
   if (def.outerInset !== undefined && !Number.isFinite(def.outerInset)) {
     throw new Error(
@@ -111,11 +101,7 @@ const assertFiniteGeometry = (shape: string, def: ArrowDefinition): void => {
  * @description emit 缺失 / 非函数 / 抛错 / 返回非 iterable 都包成含 shape 名的清晰错（便于第三方 / LLM 自修），
  *   不泄漏内部变量名；产物逐个过共享 `validateMarkerPrimitives`（窄子集 + 深度无函数检查，与 pattern motif 同套）。
  */
-const callEmit = (
-  shape: string,
-  def: ArrowDefinition,
-  ctx: ArrowEmitContext,
-): Array<MarkerPrimitive> => {
+const callEmit = (shape: string, def: ArrowDefinition, ctx: ArrowEmitContext): Array<MarkerPrimitive> => {
   if (typeof def.emit !== 'function') {
     throw new Error(`Arrow '${shape}' is missing an emit function (ArrowDefinition.emit is required).`);
   }
@@ -149,10 +135,7 @@ type ResolvedArrowGeometry = {
 };
 
 /** 据 def + 视觉输入解析端点几何（baseSize / tipX / contactX / resolved length·width） */
-const resolveGeometry = (
-  visual: ResolvedArrowVisual,
-  effective: EffectiveArrows,
-): ResolvedArrowGeometry => {
+const resolveGeometry = (visual: ResolvedArrowVisual, effective: EffectiveArrows): ResolvedArrowGeometry => {
   const def = lookupArrowDef(visual.shape, effective);
   assertFiniteGeometry(visual.shape, def);
   const baseSize = def.baseSize ?? ARROW_GEOMETRY_BASE_SIZE;
@@ -198,9 +181,7 @@ const buildEmitContext = (
 ): ArrowEmitContext => {
   const contextStroke: MarkerFill = { kind: 'contextStroke' };
   const stroke: MarkerFill = visual.color ?? contextStroke;
-  const fill: MarkerFill = geometry.def.hollow
-    ? contextStroke
-    : (visual.fill ?? visual.color ?? contextStroke);
+  const fill: MarkerFill = geometry.def.hollow ? contextStroke : (visual.fill ?? visual.color ?? contextStroke);
   return { stroke, fill, lineWidth: geometry.lineWidth, round };
 };
 
@@ -367,17 +348,11 @@ export const applyArrowShrinks = (
     const firstIdx = commands.findIndex(o => o.kind === 'move');
     if (firstIdx >= 0) {
       const cur = commands[firstIdx];
-      const nextIdx = commands.findIndex(
-        (o, idx) => idx > firstIdx && o.kind !== 'close',
-      );
+      const nextIdx = commands.findIndex((o, idx) => idx > firstIdx && o.kind !== 'close');
       if (cur.kind === 'move' && nextIdx >= 0) {
         const nextPt = endpointOf(commands[nextIdx]);
         if (nextPt) {
-          const shifted = shiftToward(
-            [cur.to[0], cur.to[1]],
-            nextPt,
-            shrinkStart * strokeWidth,
-          );
+          const shifted = shiftToward([cur.to[0], cur.to[1]], nextPt, shrinkStart * strokeWidth);
           setEndpoint(commands, firstIdx, shifted, round);
         }
       }

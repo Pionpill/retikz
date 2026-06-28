@@ -1,11 +1,14 @@
 // @vitest-environment jsdom
+import type { IRAnimationTrack } from '@retikz/core';
+
 import { createRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IRAnimationTrack } from '@retikz/core';
+
 import type { AnimationControls } from '../src';
-import { Layout, Node, cameraTo, fadeIn, spin } from '../src';
+
+import { cameraTo, fadeIn, Layout, Node, spin } from '../src';
 import { convertReactNodeToIR } from '../src';
 
 /**
@@ -15,7 +18,13 @@ let animateSpy: ReturnType<typeof vi.fn>;
 let rafSpy: ReturnType<typeof vi.fn>;
 
 const createRecordingContext = (): CanvasRenderingContext2D => {
-  const target: Record<string | symbol, unknown> = { canvas: null, fillStyle: '#000', strokeStyle: '#000', lineWidth: 1, lineDashOffset: 0 };
+  const target: Record<string | symbol, unknown> = {
+    canvas: null,
+    fillStyle: '#000',
+    strokeStyle: '#000',
+    lineWidth: 1,
+    lineDashOffset: 0,
+  };
   return new Proxy(target, {
     get: (t, p) => (p in t ? t[p] : () => undefined),
     set: (t, p, v) => ((t[p] = v), true),
@@ -37,8 +46,27 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const FADE: Array<IRAnimationTrack> = [{ property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 400 }];
-const MANUAL: Array<IRAnimationTrack> = [{ property: 'strokeWidth', keyframes: [{ at: 0, value: 1 }, { at: 1, value: 4 }], duration: 300, trigger: 'manual' }];
+const FADE: Array<IRAnimationTrack> = [
+  {
+    property: 'opacity',
+    keyframes: [
+      { at: 0, value: 0 },
+      { at: 1, value: 1 },
+    ],
+    duration: 400,
+  },
+];
+const MANUAL: Array<IRAnimationTrack> = [
+  {
+    property: 'strokeWidth',
+    keyframes: [
+      { at: 0, value: 1 },
+      { at: 1, value: 4 },
+    ],
+    duration: 300,
+    trigger: 'manual',
+  },
+];
 
 const mount = async (node: React.ReactElement): Promise<HTMLElement> => {
   const container = document.createElement('div');

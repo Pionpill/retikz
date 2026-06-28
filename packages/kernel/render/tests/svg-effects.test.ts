@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
 import type { ArrowEndSpec, EllipsePrim, PathPrim, RectPrim, Scene } from '@retikz/core';
+
+import { describe, expect, it } from 'vitest';
+
 import { renderToSvgString } from '../src/svg/serialize/to-string';
 
 /** 最小可渲染的端点箭头规格（用于断言箭头与主路径同元素受效果牵连） */
@@ -84,7 +86,9 @@ describe('[svg-effects] drop shadow', () => {
       shadow: { offsetX: 0, offsetY: 2, blur: 4, color: '#000' },
     };
     const out = renderToSvgString(sceneOf([line]), { idPrefix: 'd1' });
-    expect(out).toMatch(/<filter [^>]*filterUnits="userSpaceOnUse"[^>]*x="-4"[^>]*y="-4"[^>]*width="108"[^>]*height="110"/);
+    expect(out).toMatch(
+      /<filter [^>]*filterUnits="userSpaceOnUse"[^>]*x="-4"[^>]*y="-4"[^>]*width="108"[^>]*height="110"/,
+    );
     expect(out).toMatch(/<path [^>]*filter="url\(#retikz-shadow-/);
   });
 
@@ -134,9 +138,7 @@ describe('[svg-effects] drop shadow', () => {
     };
     const out = renderToSvgString(sceneOf([path]), { idPrefix: 'd1' });
     // SVG filter / mix-blend-mode 是元素级：marker-end 与 filter 落在同一 <path> 上 → 箭头随主路径一起进滤镜
-    expect(out).toMatch(
-      /<path\b[^>]*\bmarker-end="url\(#retikz-arrow-[^"]+"[^>]*\bfilter="url\(#retikz-shadow-[^"]+"/,
-    );
+    expect(out).toMatch(/<path\b[^>]*\bmarker-end="url\(#retikz-arrow-[^"]+"[^>]*\bfilter="url\(#retikz-shadow-[^"]+"/);
   });
 
   it('shadow on ellipse + path 也注入 filter', () => {

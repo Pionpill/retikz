@@ -2,9 +2,7 @@ import type { Section } from './interface';
 
 export const aboutSection: Array<Section> = [
   {
-    pages: [
-      { id: 'overview', label: 'about.overview' },
-    ],
+    pages: [{ id: 'overview', label: 'about.overview' }],
   },
   {
     id: 'blog',

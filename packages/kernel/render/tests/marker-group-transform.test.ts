@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
 import type { MarkerPrimitive } from '@retikz/core';
+
+import { describe, expect, it } from 'vitest';
+
 import { buildMarkerPrim } from '../src/svg/builders/marker-prim';
 
 /**

@@ -1,7 +1,9 @@
-import { BUILTIN_SHAPES, type ShapeDefinition, defineShape } from '@retikz/core';
+import type { ShapeDefinition } from '@retikz/core';
+import type { FC } from 'react';
+
+import { BUILTIN_SHAPES, defineShape } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
 import { z } from 'zod';
-import type { FC } from 'react';
 
 /**
  * 多 primitive 自定义 shape：子程序框（外框 + 左右两道竖条）
@@ -58,7 +60,16 @@ const subroutine: ShapeDefinition = defineShape({
 
 const Demo: FC = () => (
   <Layout width={320} height={130} shapes={{ subroutine }}>
-    <Node id="p" shape="subroutine" position={[0, 0]} text="f(x)" fill="lightgray" stroke="darkorange" strokeWidth={2} padding={16} />
+    <Node
+      id="p"
+      shape="subroutine"
+      position={[0, 0]}
+      text="f(x)"
+      fill="lightgray"
+      stroke="darkorange"
+      strokeWidth={2}
+      padding={16}
+    />
   </Layout>
 );
 

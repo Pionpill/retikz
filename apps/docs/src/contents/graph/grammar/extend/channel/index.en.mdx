@@ -19,11 +19,11 @@ A custom channel cannot override a built-in channel name, and binding an unregis
 
 ## Contract Boundaries
 
-| Rule | Reason |
-| --- | --- |
-| `channel` cannot collide with built-in channel names | Built-in and custom channels share one registry, so names must not override each other |
-| `resolve` only builds per-row resolvers | Rendered values, legend descriptors, and rows stay in sync |
+| Rule                                                               | Reason                                                                                             |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `channel` cannot collide with built-in channel names               | Built-in and custom channels share one registry, so names must not override each other             |
+| `resolve` only builds per-row resolvers                            | Rendered values, legend descriptors, and rows stay in sync                                         |
 | `deliver` only writes existing core scope / node / path properties | New rendering capability should be added to core first instead of bypassing the foundation in plot |
-| Definitions do not enter IR | Functions are not serializable; IR stores only field / constant bindings |
+| Definitions do not enter IR                                        | Functions are not serializable; IR stores only field / constant bindings                           |
 
 If you are extending field parsing or named formats, return to [Custom Data](/graph/grammar/extend/data). If you are extending how values map to colors or radii, start with [Custom Scales](/graph/grammar/extend/scale).

@@ -1,8 +1,10 @@
+import type { IR } from '@retikz/core';
+
+import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { CompositeBaseSchema, defineComposite } from '@retikz/core';
-import type { IR } from '@retikz/core';
+
 import { Layout } from '../src/kernel/Layout';
 
 /**

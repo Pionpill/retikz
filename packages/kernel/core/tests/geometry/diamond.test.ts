@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { type Diamond, diamond } from '../../src/geometry/diamond';
+
+import type { Diamond } from '../../src/geometry/diamond';
+
+import { diamond } from '../../src/geometry/diamond';
 
 const d: Diamond = { x: 0, y: 0, halfA: 10, halfB: 5 };
 

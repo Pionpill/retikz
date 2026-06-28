@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+
 import type { TransformSchema } from './schema';
 
 /** IR 层 transform 类型——7 变体 discriminated union（5 translate + rotate + scale） */

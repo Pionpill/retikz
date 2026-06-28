@@ -1,8 +1,9 @@
 import { z } from 'zod';
+
 import { DrawableMetaSchema, DrawableStyleSchema } from '../../drawable';
 import { JsonObjectSchema } from '../../json';
-import { PathRibbonOptionsSchema } from '../ribbon';
 import { ArrowDetailSchema, ArrowEndDetailSchema } from '../arrow';
+import { PathRibbonOptionsSchema } from '../ribbon';
 import { GeometryLabelSchema } from '../step';
 import { StepSchema } from '../step';
 
@@ -50,17 +51,11 @@ export const ArrowMarkSchema = ArrowEndDetailSchema.extend({
 export const PathBaseSchema = z
   .object({
     type: z.literal('path').describe('Discriminator marking this child as a path.'),
-    kind: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Path kind provider name. Omitted means built-in `stroke`.'),
+    kind: z.string().min(1).optional().describe('Path kind provider name. Omitted means built-in `stroke`.'),
     kindOptions: JsonObjectSchema.optional().describe(
       'JSON-safe option object for custom path kind providers. Built-in `stroke` and `ribbon` do not use this field.',
     ),
-    ribbon: PathRibbonOptionsSchema.optional().describe(
-      'Ribbon-specific options. Valid only when kind is `ribbon`.',
-    ),
+    ribbon: PathRibbonOptionsSchema.optional().describe('Ribbon-specific options. Valid only when kind is `ribbon`.'),
     label: z
       .union([GeometryLabelSchema, z.array(GeometryLabelSchema).min(1)])
       .optional()
@@ -71,9 +66,7 @@ export const PathBaseSchema = z
       .array(z.number().nonnegative())
       .min(1)
       .optional()
-      .describe(
-        'Stroke dash pattern lengths in user units. Omitted fields mean solid line.',
-      ),
+      .describe('Stroke dash pattern lengths in user units. Omitted fields mean solid line.'),
     arrow: z
       .enum(['none', '->', '<-', '<->'])
       .optional()
@@ -98,9 +91,7 @@ export const PathBaseSchema = z
     lineJoin: z
       .enum(['miter', 'round', 'bevel'])
       .optional()
-      .describe(
-        'Stroke corner shape. Omitted fields use miter; round rounds the join and bevel cuts the corner flat.',
-      ),
+      .describe('Stroke corner shape. Omitted fields use miter; round rounds the join and bevel cuts the corner flat.'),
     roundedCorners: z
       .number()
 
@@ -110,19 +101,9 @@ export const PathBaseSchema = z
         'Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.',
       ),
     thickness: z
-      .enum([
-        'ultraThin',
-        'veryThin',
-        'thin',
-        'semithick',
-        'thick',
-        'veryThick',
-        'ultraThick',
-      ])
+      .enum(['ultraThin', 'veryThin', 'thin', 'semithick', 'thick', 'veryThick', 'ultraThick'])
       .optional()
-      .describe(
-        'Semantic stroke thickness preset. Used only when `strokeWidth` is omitted.',
-      ),
+      .describe('Semantic stroke thickness preset. Used only when `strokeWidth` is omitted.'),
     rotate: z
       .number()
 
@@ -158,73 +139,20 @@ export const PathBaseSchema = z
       .array(StepSchema)
       .min(2)
       .optional()
-      .describe(
-        'Sequence of step actions defining the path; the first should usually be a `move`',
-      ),
+      .describe('Sequence of step actions defining the path; the first should usually be a `move`'),
   })
   .strict()
-  .describe(
-    'Base fields for a path-like relation before kind-specific structural refinement.',
-  );
+  .describe('Base fields for a path-like relation before kind-specific structural refinement.');
 
-export const PathSchema = PathBaseSchema
-  .superRefine((path, ctx) => {
-    const kind = path.kind ?? 'stroke';
-    if (kind === 'stroke') {
-      if (path.children === undefined) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['children'],
-          message: 'Stroke paths require `children` steps.',
-        });
-      }
-      if (path.ribbon !== undefined) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['ribbon'],
-          message: '`ribbon` options are only valid when `kind` is `ribbon`.',
-        });
-      }
-      if (path.kindOptions !== undefined) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['kindOptions'],
-          message: '`kindOptions` is only valid for custom path kinds.',
-        });
-      }
-      return;
-    }
-    if (kind === 'ribbon') {
-      if (path.ribbon === undefined) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['ribbon'],
-          message: 'Ribbon paths require a `ribbon` options object.',
-        });
-      }
-      if (path.kindOptions !== undefined) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['kindOptions'],
-          message: '`kindOptions` is only valid for custom path kinds.',
-        });
-      }
-      if (path.ribbon?.mode === 'boundary') {
-        if (path.children !== undefined) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ['children'],
-            message: 'Boundary ribbon paths use `ribbon.upper` and `ribbon.lower`, not top-level `children`.',
-          });
-        }
-      } else if (path.children === undefined) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['children'],
-          message: 'Centerline ribbon paths require top-level `children` steps.',
-        });
-      }
-      return;
+export const PathSchema = PathBaseSchema.superRefine((path, ctx) => {
+  const kind = path.kind ?? 'stroke';
+  if (kind === 'stroke') {
+    if (path.children === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['children'],
+        message: 'Stroke paths require `children` steps.',
+      });
     }
     if (path.ribbon !== undefined) {
       ctx.addIssue({
@@ -233,7 +161,52 @@ export const PathSchema = PathBaseSchema
         message: '`ribbon` options are only valid when `kind` is `ribbon`.',
       });
     }
-  })
-  .describe(
-    'A drawn path composed of a sequence of step actions (move / line / ...)',
-  );
+    if (path.kindOptions !== undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['kindOptions'],
+        message: '`kindOptions` is only valid for custom path kinds.',
+      });
+    }
+    return;
+  }
+  if (kind === 'ribbon') {
+    if (path.ribbon === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['ribbon'],
+        message: 'Ribbon paths require a `ribbon` options object.',
+      });
+    }
+    if (path.kindOptions !== undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['kindOptions'],
+        message: '`kindOptions` is only valid for custom path kinds.',
+      });
+    }
+    if (path.ribbon?.mode === 'boundary') {
+      if (path.children !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['children'],
+          message: 'Boundary ribbon paths use `ribbon.upper` and `ribbon.lower`, not top-level `children`.',
+        });
+      }
+    } else if (path.children === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['children'],
+        message: 'Centerline ribbon paths require top-level `children` steps.',
+      });
+    }
+    return;
+  }
+  if (path.ribbon !== undefined) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['ribbon'],
+      message: '`ribbon` options are only valid when `kind` is `ribbon`.',
+    });
+  }
+}).describe('A drawn path composed of a sequence of step actions (move / line / ...)');

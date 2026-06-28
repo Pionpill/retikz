@@ -1,4 +1,5 @@
 import type { ComponentProps, FC } from 'react';
+
 import { Layout, Node } from '@retikz/react';
 
 // 配色 — 节点底 / 边 / 必填白字用字面色（离线 SVG 下不会变黑）；

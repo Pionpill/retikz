@@ -1,5 +1,6 @@
-import { Layout, RegularPolygon } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, RegularPolygon } from '@retikz/react';
 
 const Demo: FC = () => (
   <Layout width={320} height={130}>

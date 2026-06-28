@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { fakeClient } from './llm/fake';
-import { runEval } from '../src/run';
+
 import { type CorpusPrompt } from '../src/corpus/types';
 import { type LlmClient } from '../src/llm/types';
+import { runEval } from '../src/run';
+import { fakeClient } from './llm/fake';
 
 const corpus: Array<CorpusPrompt> = [
   { id: 'c1', category: 'core', difficulty: 'single', prompt: 'p1' },
@@ -79,8 +80,8 @@ describe('runEval L2', () => {
   it('有断言时跑 L2，无断言时 l2=null', async () => {
     const clients = [fakeClient('fake:hello', [helloIr, helloIr])];
     const records = await runEval({ clients, corpus: l2Corpus, schemaJson: '{}', k: 1 });
-    const p1 = records.find((r) => r.promptId === 'p1');
-    const p2 = records.find((r) => r.promptId === 'p2');
+    const p1 = records.find(r => r.promptId === 'p1');
+    const p2 = records.find(r => r.promptId === 'p2');
     expect(p1?.l2).toEqual({ total: 2, passed: 1, results: expect.any(Array) });
     expect(p2?.l2).toBeNull();
   });

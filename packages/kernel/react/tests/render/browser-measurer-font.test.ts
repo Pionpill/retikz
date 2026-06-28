@@ -20,9 +20,11 @@ describe('browserMeasurer 默认字体族', () => {
       font: '',
       measureText,
     };
-    const getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((contextId: string) =>
-      (contextId === '2d' ? (context as unknown as CanvasRenderingContext2D) : null),
-    );
+    const getContextSpy = vi
+      .spyOn(HTMLCanvasElement.prototype, 'getContext')
+      .mockImplementation((contextId: string) =>
+        contextId === '2d' ? (context as unknown as CanvasRenderingContext2D) : null,
+      );
 
     try {
       const { browserMeasurer } = await import('../../src/render/browser-measurer');
@@ -49,9 +51,11 @@ describe('browserMeasurer 默认字体族', () => {
       font: '',
       measureText,
     };
-    const getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((contextId: string) =>
-      (contextId === '2d' ? (context as unknown as CanvasRenderingContext2D) : null),
-    );
+    const getContextSpy = vi
+      .spyOn(HTMLCanvasElement.prototype, 'getContext')
+      .mockImplementation((contextId: string) =>
+        contextId === '2d' ? (context as unknown as CanvasRenderingContext2D) : null,
+      );
 
     try {
       const { browserMeasurer } = await import('../../src/render/browser-measurer');

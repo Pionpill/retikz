@@ -1,7 +1,17 @@
 import type { IRNode, IRPath, IRScope, JsonValue, ValueOf } from '@retikz/core';
+
+import type {
+  Channel,
+  ExternalRow,
+  LegendChannelValue,
+  MarkOperation,
+  PlotFieldTypeMap,
+  PlotFieldTypeValue,
+  PlotSpec,
+  ScalarValue,
+} from '../schemas';
 import type { DimensionRole } from './coordinate';
 import type { AnyScaleDefinition, ChannelScaleResolution } from './scale';
-import type { Channel, ExternalRow, LegendChannelValue, MarkOperation, PlotFieldTypeMap, PlotFieldTypeValue, PlotSpec, ScalarValue } from '../schemas';
 
 /**
  * 通道解析器的输出值。
@@ -217,7 +227,9 @@ export type PositionChannelDefinition = BaseChannelDefinition<typeof ChannelDefi
 };
 
 /** Mark 通道定义：解析成 MarkChannels.values/defaults，供 mark definition 消费。 */
-export type MarkChannelDefinition<T extends ChannelValue = ChannelValue> = BaseChannelDefinition<typeof ChannelDefinitionKind.Mark> & {
+export type MarkChannelDefinition<T extends ChannelValue = ChannelValue> = BaseChannelDefinition<
+  typeof ChannelDefinitionKind.Mark
+> & {
   /** 建逐 mark 解析器（行→通道值 + 可选 legend descriptor）。 */
   resolve: (ctx: ChannelContext) => (mark: MarkOperation) => MarkChannelResolution<T> | undefined;
 };
@@ -226,7 +238,9 @@ export type MarkChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
  * Node 通道定义（运行时对象，不进 IR）。
  * @description 解析通道值后直接落到 core IRNode 既有属性。`size`、`shape`、`opacity` 这类点图元属性属于这一类。
  */
-export type NodeChannelDefinition<T extends ChannelValue = ChannelValue> = BaseChannelDefinition<typeof ChannelDefinitionKind.Node> & {
+export type NodeChannelDefinition<T extends ChannelValue = ChannelValue> = BaseChannelDefinition<
+  typeof ChannelDefinitionKind.Node
+> & {
   /** 输出空间 + 默认范围 / 调色板。 */
   output: ChannelOutputSpace;
   /** legend 形态（size→梯度气泡 / opacity→ramp / shape→symbol）；无 legend 的通道省略。 */
@@ -245,7 +259,9 @@ export type NodeChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
  * @description 用于一一落到 core IRScope 既有属性，或写入 `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`。
  *   它表达“这一层共享默认值”；逐 datum 的属性应使用 NodeChannelDefinition / PathChannelDefinition。
  */
-export type ScopeChannelDefinition<T extends ChannelValue = ChannelValue> = BaseChannelDefinition<typeof ChannelDefinitionKind.Scope> & {
+export type ScopeChannelDefinition<T extends ChannelValue = ChannelValue> = BaseChannelDefinition<
+  typeof ChannelDefinitionKind.Scope
+> & {
   /** 输出空间 + 默认范围 / 调色板。 */
   output: ChannelOutputSpace;
   /** legend 形态；无 legend 的通道省略。 */
@@ -261,7 +277,9 @@ export type ScopeChannelDefinition<T extends ChannelValue = ChannelValue> = Base
  * @description 用于一一落到 core IRPath 既有标量属性的通道，例如 strokeWidth / opacity 这类路径级属性。
  *   `color` 这种不同 mark 会映射到 node fill、path stroke 或 path fill 的通道应保持为 MarkChannelDefinition。
  */
-export type PathChannelDefinition<T extends ChannelValue = ChannelValue> = BaseChannelDefinition<typeof ChannelDefinitionKind.Path> & {
+export type PathChannelDefinition<T extends ChannelValue = ChannelValue> = BaseChannelDefinition<
+  typeof ChannelDefinitionKind.Path
+> & {
   /** 输出空间 + 默认范围 / 调色板。 */
   output: ChannelOutputSpace;
   /** legend 形态（opacity→ramp / strokeWidth→size）；无 legend 的通道省略。 */

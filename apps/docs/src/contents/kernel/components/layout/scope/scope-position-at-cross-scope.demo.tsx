@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * scope rotate 下 AtPosition 跨 scope referent：right 方向跟着 scope rotate 旋转
@@ -9,11 +10,24 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={400} height={200}>
-    <Node id="A" position={[0, 0]} shape="circle" padding={4}>A</Node>
+    <Node id="A" position={[0, 0]} shape="circle" padding={4}>
+      A
+    </Node>
     <Scope transforms={[{ kind: 'rotate', degrees: 90 }]}>
-      <Node id="B" position={{ direction: 'right', of: 'A', distance: 60 }} shape="circle" padding={4}>B</Node>
+      <Node id="B" position={{ direction: 'right', of: 'A', distance: 60 }} shape="circle" padding={4}>
+        B
+      </Node>
     </Scope>
-    <Node id="B-ref" position={{ direction: 'right', of: 'A', distance: 60 }} shape="circle" padding={4} stroke="gray" dashed>B-ref</Node>
+    <Node
+      id="B-ref"
+      position={{ direction: 'right', of: 'A', distance: 60 }}
+      shape="circle"
+      padding={4}
+      stroke="gray"
+      dashed
+    >
+      B-ref
+    </Node>
     <Draw way={['A', 'B']} arrow="->" stroke="gray" dashPattern={[4, 2]} />
     <Draw way={['A', 'B-ref']} arrow="->" stroke="gray" dashPattern={[4, 2]} />
   </Layout>

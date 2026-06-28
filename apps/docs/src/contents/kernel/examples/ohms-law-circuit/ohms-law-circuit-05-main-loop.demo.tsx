@@ -1,8 +1,9 @@
-import { Draw, Layout, Scope } from '@retikz/react';
 import type { FC } from 'react';
 
-import { Battery, Resistor, Rheostat, Switch, at, circuitShapes } from './circuit-shapes';
-import { Meter, circuitMeter } from './circuit-01-meters.meter';
+import { Draw, Layout, Scope } from '@retikz/react';
+
+import { circuitMeter, Meter } from './circuit-01-meters.meter';
+import { at, Battery, circuitShapes, Resistor, Rheostat, Switch } from './circuit-shapes';
 
 const INK = 'currentColor';
 const FONT = { family: 'Arial, sans-serif' } as const;

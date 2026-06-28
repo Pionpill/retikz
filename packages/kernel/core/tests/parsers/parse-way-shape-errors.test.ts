@@ -1,14 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { ArcStepSchema, CirclePathStepSchema, EllipsePathStepSchema } from '../../src/schemas';
+
 import { parseWay } from '../../src/parsers/way';
+import { ArcStepSchema, CirclePathStepSchema, EllipsePathStepSchema } from '../../src/schemas';
 
 describe('parseWay 形状算子边界', () => {
   it('正常路径：target → arc 算子（以前 target 为圆心，不消耗下一项）', () => {
-    const steps = parseWay([
-      [10, 10],
-      { arc: { startAngle: 0, endAngle: 90, radius: 5 } },
-      [50, 50],
-    ]);
+    const steps = parseWay([[10, 10], { arc: { startAngle: 0, endAngle: 90, radius: 5 } }, [50, 50]]);
     expect(steps).toHaveLength(3);
     expect(steps[0]).toMatchObject({ kind: 'move', to: [10, 10] });
     expect(steps[1]).toMatchObject({ kind: 'arc', startAngle: 0, endAngle: 90, radius: 5 });
@@ -26,10 +23,7 @@ describe('parseWay 形状算子边界', () => {
   });
 
   it('arc startAngle === endAngle → parseWay 不报错；schema 接受（0 长度弧由 renderer 处理）', () => {
-    const steps = parseWay([
-      [0, 0],
-      { arc: { startAngle: 90, endAngle: 90, radius: 10 } },
-    ]);
+    const steps = parseWay([[0, 0], { arc: { startAngle: 90, endAngle: 90, radius: 10 } }]);
     expect(steps[1]).toMatchObject({ kind: 'arc', startAngle: 90, endAngle: 90, radius: 10 });
     expect(
       ArcStepSchema.safeParse({

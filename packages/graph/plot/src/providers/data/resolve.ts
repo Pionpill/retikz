@@ -15,7 +15,9 @@ export const applyFieldResolver = (
 ): { fieldTypes: PlotFieldTypeMap; parsers: Map<string, (raw: unknown) => ParsedFieldValue>; resolverHit: boolean } => {
   const parsers = new Map<string, (raw: unknown) => ParsedFieldValue>();
   if (resolveField === undefined) return { fieldTypes: baseTypes, parsers, resolverHit: false };
-  const declaredType = new Map((model ?? []).flatMap(field => (field.type !== undefined ? [[field.name, field.type] as const] : [])));
+  const declaredType = new Map(
+    (model ?? []).flatMap(field => (field.type !== undefined ? [[field.name, field.type] as const] : [])),
+  );
   const fieldTypes: PlotFieldTypeMap = new Map(baseTypes);
   let resolverHit = false;
   for (const field of userSourceFields) {
@@ -27,7 +29,9 @@ export const applyFieldResolver = (
     if (resolution === undefined) continue;
     resolverHit = true;
     if (resolution.parse !== undefined && resolution.type === undefined && !declaredType.has(field)) {
-      throw new Error(`lowerPlots: resolveField parse for "${field}" needs a type (declare it in data.model or return type from the resolver)`);
+      throw new Error(
+        `lowerPlots: resolveField parse for "${field}" needs a type (declare it in data.model or return type from the resolver)`,
+      );
     }
     if (resolution.type !== undefined) fieldTypes.set(field, resolution.type);
     if (resolution.parse !== undefined) parsers.set(field, resolution.parse);

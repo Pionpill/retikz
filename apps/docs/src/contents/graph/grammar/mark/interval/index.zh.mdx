@@ -25,17 +25,17 @@ import { IntervalMark, Plot } from '@retikz/plot-react';
 
 IntervalMark 是底层 cell mark：它只负责把每行数据变成一个正交区间 cell，再由坐标系把 cell 投影成矩形、扇区或轮廓。柱、直方、热图、径向柱、饼图和环图不是不同的底层 mark，而是同一个 IntervalMark 在不同 `bounds`、`series`、`stack` 和 `coordinate` 下的表现形态。
 
-| 表现形态 | 关键属性 | 说明 |
-| --- | --- | --- |
-| 柱 | `x` / `y` | `x` 分类槽给宽度，`y` 从 `0` 延伸到数值 |
-| 横向柱 | `direction="horizontal"` | `x` 改为数值长度，`y` 改为分类 band |
-| 可变宽柱 | `x` / `width` | `width` 按数据顺序累加成连续比例区间，`x` 提供轴标签 |
-| 分组柱 | `arrangement="dodge"` / `group` | 同一分类槽内按分组字段切子带 |
-| 堆叠柱 | `arrangement="stack"` / `group` | stack transform 产出 `y0` / `y1`，数值 role 改为 extent |
-| 百分比堆叠柱 | `arrangement="normalize-stack"` / `group` | 先按分类归一化为百分比，再堆叠 |
-| 直方 | `x0` / `x1` / `y` | `x0` / `x1` 提供连续 x 区间，`y` 提供高度 |
-| 热图 / 网格 | `bounds` | `bounds.x` 和 `bounds.y` 都声明为 `band` |
-| 饼 / 环 | `angle` / `coordinate` | `angle` 累积成角向 extent，半径方向使用 full |
+| 表现形态     | 关键属性                                  | 说明                                                    |
+| ------------ | ----------------------------------------- | ------------------------------------------------------- |
+| 柱           | `x` / `y`                                 | `x` 分类槽给宽度，`y` 从 `0` 延伸到数值                 |
+| 横向柱       | `direction="horizontal"`                  | `x` 改为数值长度，`y` 改为分类 band                     |
+| 可变宽柱     | `x` / `width`                             | `width` 按数据顺序累加成连续比例区间，`x` 提供轴标签    |
+| 分组柱       | `arrangement="dodge"` / `group`           | 同一分类槽内按分组字段切子带                            |
+| 堆叠柱       | `arrangement="stack"` / `group`           | stack transform 产出 `y0` / `y1`，数值 role 改为 extent |
+| 百分比堆叠柱 | `arrangement="normalize-stack"` / `group` | 先按分类归一化为百分比，再堆叠                          |
+| 直方         | `x0` / `x1` / `y`                         | `x0` / `x1` 提供连续 x 区间，`y` 提供高度               |
+| 热图 / 网格  | `bounds`                                  | `bounds.x` 和 `bounds.y` 都声明为 `band`                |
+| 饼 / 环      | `angle` / `coordinate`                    | `angle` 累积成角向 extent，半径方向使用 full            |
 
 ## 例子
 
@@ -53,7 +53,11 @@ IntervalMark 是底层 cell mark：它只负责把每行数据变成一个正交
 
 `x0` / `x1` 是连续区间写法。下面左侧直方图先用 bin transform 产出 `binStart` / `binEnd`，再由 IntervalMark 把它们作为 `bounds.x=extent(x0,x1)`；右侧示例使用 `width` 表达按 GDP 比例分配的柱宽，并用 `x` 显示国家标签。
 
-<ComponentPreview name="interval-histogram" sourceFiles={['interval-histogram.data.ts', 'bar-variable-width.data.ts']} interactive />
+<ComponentPreview
+  name="interval-histogram"
+  sourceFiles={['interval-histogram.data.ts', 'bar-variable-width.data.ts']}
+  interactive
+/>
 
 ### 区间属性
 
@@ -144,50 +148,50 @@ const lowerCells = (...): IRScope | null => {
 };
 ```
 
-| 步骤 | 说明 |
-| --- | --- |
-| 坐标系守卫 | IntervalMark 需要坐标帧提供 `projectCell`；无 cell 投影能力时 fail-loud |
-| 区间构造 | `markCell` 根据 `bounds`、位置通道、`series` 和 stack 派生字段构造逻辑 cell；自定义 frame 还需提供 `roleScales` |
-| 坐标投影 | `frame.projectCell` 把逻辑 cell 投影成 `rect`、`sector` 或 `contour` |
-| 扇区视觉参数 | `padAngle` 收缩 sector 的起止角；`pull` 按最终中线移动 sector 中心，locator 也读取同一份几何 |
-| core 下沉 | `cellGeometryNode` 把可渲染几何装配成 core Node，空 contour 会被跳过，颜色通道按颜色分组上提到 Scope |
+| 步骤         | 说明                                                                                                            |
+| ------------ | --------------------------------------------------------------------------------------------------------------- |
+| 坐标系守卫   | IntervalMark 需要坐标帧提供 `projectCell`；无 cell 投影能力时 fail-loud                                         |
+| 区间构造     | `markCell` 根据 `bounds`、位置通道、`series` 和 stack 派生字段构造逻辑 cell；自定义 frame 还需提供 `roleScales` |
+| 坐标投影     | `frame.projectCell` 把逻辑 cell 投影成 `rect`、`sector` 或 `contour`                                            |
+| 扇区视觉参数 | `padAngle` 收缩 sector 的起止角；`pull` 按最终中线移动 sector 中心，locator 也读取同一份几何                    |
+| core 下沉    | `cellGeometryNode` 把可渲染几何装配成 core Node，空 contour 会被跳过，颜色通道按颜色分组上提到 Scope            |
 
 ## API
 
 `IntervalMark` 的 API 按位置、专属、节点、标签、通用和自定义分组：位置字段决定 cell 的角色值，专属字段负责区间构造和系列关系，节点字段下沉到 core `Node`。表里的 `FieldName` 表示数据字段名或字段路径，例如 `quarter` / `sales.revenue`。
 
-| 分类 | 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- | --- |
-| 位置 | `x` / `y` / `z` | `FieldName?` | — | 坐标角色字段；cartesian2D / polar2D 用 `x` / `y`，ternary2D 还需要 `z` |
-| 专属 | `color` | `FieldName?` | `series` | 颜色字段；字段绑定会生成颜色通道和图例 |
-|  | `x0` / `x1` | `FieldName?` | — | 连续 x 区间上下界；组件层会构造 `bounds.x = extent(x0, x1)` |
-|  | `width` | `FieldName?` | — | 比例宽度字段；组件层会构造 `bounds.<bandRole> = proportional(width)`；同 role 的 `x` / `y` 字段可作为轴标签 |
-|  | `direction` | `'vertical' \| 'horizontal'` | `vertical` | 普通柱方向；`horizontal` 使用 x 数值 span 与 y 分类 band |
-|  | `angle` | `FieldName?` | — | 饼图 / 环图入口：份额字段会累积成角区间 |
-|  | `padAngle` | `number?` | — | 极坐标 sector 的角向间隔（度）；每个扇区两侧各收半个间隔角 |
-|  | `pull` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | `0` | 极坐标 sector 的静态径向偏移；数字是常量，字符串绑定字段；只对 sector 几何有效 |
-|  | `bounds` | `IntervalBounds?` | 按 role 推断 | 显式声明每个 role 的 band / span / extent / proportional / full |
-|  | `group` | `FieldName?` | `series` | 编排分组字段；dodge 按它切子带，stack 按它生成堆叠段 |
-|  | `arrangement` | `'dodge' \| 'stack' \| 'normalize-stack'` | 由 `group` / `series` / `stack` 推断 | 多系列区间编排方式 |
-|  | `stackOffset` | `'zero' \| 'normalize' \| 'diverging' \| 'center' \| 'overlap'` | `zero` | stack transform 的基线偏移；仅直接作用于 `arrangement="stack"` |
-|  | `percent` | `boolean?` | `false` | 百分比堆叠快捷入口；等价于 `arrangement="normalize-stack"` |
-|  | `series` | `FieldName?` | — | 兼容快捷字段；未写 `group` / `color` 时作为默认编排和颜色字段 |
-|  | `stack` | `boolean?` | `false` | 兼容快捷字段；`true` 等价于 `arrangement="stack"` |
-| 节点 | `fill` / `stroke` | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?` / `PointStrokeStyle?` | `currentColor` / — | cell Node 填充和描边样式 |
-|  | `opacity` / `fillOpacity` | `PointOpacityStyle?` | — | cell Node 整体和填充透明度 |
-|  | `strokeWidth` | `PointNonnegativeNumberStyle?` | — | cell Node 描边宽度 |
-|  | `padding` / `minimumSize` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | cell Node 内边距和最小视觉尺寸 |
-|  | `minimumWidth` / `minimumHeight` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | cell Node 最小视觉宽 / 高 |
-|  | `align`<br />`lineHeight` / `maxTextWidth` | `MarkValueProp<NodeTextAlignValue>`<br />`NodeTextAlignStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />— | 文本排版通道 |
-|  | `cornerRadius`<br />`scale` / `xScale` / `yScale` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />— | cell Node 圆角与缩放 |
-|  | `innerXSep` / `innerYSep`<br />`outerSep` / `margin` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | cell Node 间距通道 |
-|  | `dashed` / `dotted`<br />`dashPattern` | `MarkValueProp<boolean>`<br />`NodeBooleanStyle`<br />`MarkValueProp<Array<number>>`<br />`NodeDashPatternStyle` | —<br />— | cell Node 描边虚线 |
-|  | `font`<br />`boundary`<br />`shadow`<br />`blendMode` | `NodeFontStyle?`<br />`NodeBoundaryStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?` | —<br />—<br />—<br />— | 字体、边界、阴影和混合模式 |
-| 标签 | `label` / `labelDisplayFormat` | `FieldName?`<br />`string?` | —<br />— | 给每个 cell 挂标签 |
-|  | `labelPosition`<br />`labelDistance`<br />`labelPin` | `string / number`<br />`number`<br />`boolean / LabelPin` | `above`<br />`12`<br />`false` | 标签方位、距离和引线 |
-| 通用 | `id` | `string?` | — | 可选 mark 句柄，用于图层 id / 运行时标签解析 |
-|  | `transform` | `Array<Transform>?` | — | 当前图元局部的数据变换；在 plot 级 transform 之后执行，只影响这一层看到的 rows |
-| 自定义 | `channels` | `Record<string, Channel>` | — | 自定义通道入口；交给注册的 channel definition 解析 |
+| 分类   | 属性                                                  | 类型                                                                                                                      | 默认值                               | 描述                                                                                                        |
+| ------ | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| 位置   | `x` / `y` / `z`                                       | `FieldName?`                                                                                                              | —                                    | 坐标角色字段；cartesian2D / polar2D 用 `x` / `y`，ternary2D 还需要 `z`                                      |
+| 专属   | `color`                                               | `FieldName?`                                                                                                              | `series`                             | 颜色字段；字段绑定会生成颜色通道和图例                                                                      |
+|        | `x0` / `x1`                                           | `FieldName?`                                                                                                              | —                                    | 连续 x 区间上下界；组件层会构造 `bounds.x = extent(x0, x1)`                                                 |
+|        | `width`                                               | `FieldName?`                                                                                                              | —                                    | 比例宽度字段；组件层会构造 `bounds.<bandRole> = proportional(width)`；同 role 的 `x` / `y` 字段可作为轴标签 |
+|        | `direction`                                           | `'vertical' \| 'horizontal'`                                                                                              | `vertical`                           | 普通柱方向；`horizontal` 使用 x 数值 span 与 y 分类 band                                                    |
+|        | `angle`                                               | `FieldName?`                                                                                                              | —                                    | 饼图 / 环图入口：份额字段会累积成角区间                                                                     |
+|        | `padAngle`                                            | `number?`                                                                                                                 | —                                    | 极坐标 sector 的角向间隔（度）；每个扇区两侧各收半个间隔角                                                  |
+|        | `pull`                                                | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`                                                                | `0`                                  | 极坐标 sector 的静态径向偏移；数字是常量，字符串绑定字段；只对 sector 几何有效                              |
+|        | `bounds`                                              | `IntervalBounds?`                                                                                                         | 按 role 推断                         | 显式声明每个 role 的 band / span / extent / proportional / full                                             |
+|        | `group`                                               | `FieldName?`                                                                                                              | `series`                             | 编排分组字段；dodge 按它切子带，stack 按它生成堆叠段                                                        |
+|        | `arrangement`                                         | `'dodge' \| 'stack' \| 'normalize-stack'`                                                                                 | 由 `group` / `series` / `stack` 推断 | 多系列区间编排方式                                                                                          |
+|        | `stackOffset`                                         | `'zero' \| 'normalize' \| 'diverging' \| 'center' \| 'overlap'`                                                           | `zero`                               | stack transform 的基线偏移；仅直接作用于 `arrangement="stack"`                                              |
+|        | `percent`                                             | `boolean?`                                                                                                                | `false`                              | 百分比堆叠快捷入口；等价于 `arrangement="normalize-stack"`                                                  |
+|        | `series`                                              | `FieldName?`                                                                                                              | —                                    | 兼容快捷字段；未写 `group` / `color` 时作为默认编排和颜色字段                                               |
+|        | `stack`                                               | `boolean?`                                                                                                                | `false`                              | 兼容快捷字段；`true` 等价于 `arrangement="stack"`                                                           |
+| 节点   | `fill` / `stroke`                                     | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?` / `PointStrokeStyle?`                                               | `currentColor` / —                   | cell Node 填充和描边样式                                                                                    |
+|        | `opacity` / `fillOpacity`                             | `PointOpacityStyle?`                                                                                                      | —                                    | cell Node 整体和填充透明度                                                                                  |
+|        | `strokeWidth`                                         | `PointNonnegativeNumberStyle?`                                                                                            | —                                    | cell Node 描边宽度                                                                                          |
+|        | `padding` / `minimumSize`                             | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`                                                                | —                                    | cell Node 内边距和最小视觉尺寸                                                                              |
+|        | `minimumWidth` / `minimumHeight`                      | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`                                                                | —                                    | cell Node 最小视觉宽 / 高                                                                                   |
+|        | `align`<br />`lineHeight` / `maxTextWidth`            | `MarkValueProp<NodeTextAlignValue>`<br />`NodeTextAlignStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />—                             | 文本排版通道                                                                                                |
+|        | `cornerRadius`<br />`scale` / `xScale` / `yScale`     | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle`    | —<br />—                             | cell Node 圆角与缩放                                                                                        |
+|        | `innerXSep` / `innerYSep`<br />`outerSep` / `margin`  | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`                                                                | —                                    | cell Node 间距通道                                                                                          |
+|        | `dashed` / `dotted`<br />`dashPattern`                | `MarkValueProp<boolean>`<br />`NodeBooleanStyle`<br />`MarkValueProp<Array<number>>`<br />`NodeDashPatternStyle`          | —<br />—                             | cell Node 描边虚线                                                                                          |
+|        | `font`<br />`boundary`<br />`shadow`<br />`blendMode` | `NodeFontStyle?`<br />`NodeBoundaryStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?`                                     | —<br />—<br />—<br />—               | 字体、边界、阴影和混合模式                                                                                  |
+| 标签   | `label` / `labelDisplayFormat`                        | `FieldName?`<br />`string?`                                                                                               | —<br />—                             | 给每个 cell 挂标签                                                                                          |
+|        | `labelPosition`<br />`labelDistance`<br />`labelPin`  | `string / number`<br />`number`<br />`boolean / LabelPin`                                                                 | `above`<br />`12`<br />`false`       | 标签方位、距离和引线                                                                                        |
+| 通用   | `id`                                                  | `string?`                                                                                                                 | —                                    | 可选 mark 句柄，用于图层 id / 运行时标签解析                                                                |
+|        | `transform`                                           | `Array<Transform>?`                                                                                                       | —                                    | 当前图元局部的数据变换；在 plot 级 transform 之后执行，只影响这一层看到的 rows                              |
+| 自定义 | `channels`                                            | `Record<string, Channel>`                                                                                                 | —                                    | 自定义通道入口；交给注册的 channel definition 解析                                                          |
 
 ## 相关
 

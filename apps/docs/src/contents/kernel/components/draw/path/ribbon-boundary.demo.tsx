@@ -3,12 +3,7 @@ import type { FC } from 'react';
 import { Layout, Path } from '@retikz/react';
 
 const Demo: FC = () => (
-  <Layout
-    width={560}
-    height={240}
-    viewBox={{ x: -280, y: -120, width: 560, height: 240 }}
-    color="#172033"
-  >
+  <Layout width={560} height={240} viewBox={{ x: -280, y: -120, width: 560, height: 240 }} color="#172033">
     <Path
       kind="ribbon"
       ribbon={{

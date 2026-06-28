@@ -1,33 +1,23 @@
-import {
-  type CSSProperties,
-  type FC,
-  type MutableRefObject,
-  type ReactElement,
-  type ReactNode,
-  type Ref,
-  cloneElement,
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-} from 'react';
-import {
-  type ArrowDefinition,
-  type CompositeDefinition,
-  type IR,
-  type IRAnimationTrack,
-  type IRViewBox,
-  type LowerTex,
-  type PathGeneratorDefinition,
-  type PathKindDefinition,
-  type PatternDefinition,
-  type RibbonWidthProfileDefinition,
-  type ShapeDefinition,
-  type TextMeasurer,
-  compileToScene,
+import type {
+  ArrowDefinition,
+  CompositeDefinition,
+  IR,
+  IRAnimationTrack,
+  IRViewBox,
+  LowerTex,
+  PathGeneratorDefinition,
+  PathKindDefinition,
+  PatternDefinition,
+  RibbonWidthProfileDefinition,
+  ShapeDefinition,
+  TextMeasurer,
 } from '@retikz/core';
+import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
+import type { CSSProperties, FC, MutableRefObject, ReactElement, ReactNode, Ref } from 'react';
+
+import { compileToScene } from '@retikz/core';
+import { bindWaapiDescriptors, sceneHasAnimations } from '@retikz/render/animation';
 import {
   createContextBuilder,
   createHydrationController,
@@ -37,16 +27,17 @@ import {
   resolveSvgElement,
 } from '@retikz/render/hydration';
 import { buildSvgDocument } from '@retikz/render/svg';
-import { bindWaapiDescriptors, sceneHasAnimations } from '@retikz/render/animation';
-import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
-import { buildIRWithContributions, pickScopeStyle, wrapRootScope } from './builder';
-import { collectHydrationHandlers } from './collect-hydration-handlers';
-import type { EmbeddableContributionRecord, EmbeddableTier2Adapter } from './embeddable';
-import { useRendererMode } from './renderer-context';
+import { cloneElement, useCallback, useEffect, useId, useMemo, useRef } from 'react';
+
 import type { ScopeStyleProps } from './_fields';
+import type { EmbeddableContributionRecord, EmbeddableTier2Adapter } from './embeddable';
+
 import { browserMeasurer } from '../render/browser-measurer';
 import { CanvasHost } from '../render/canvas-host';
 import { svgToReact } from '../render/svg-to-react';
+import { buildIRWithContributions, pickScopeStyle, wrapRootScope } from './builder';
+import { collectHydrationHandlers } from './collect-hydration-handlers';
+import { useRendererMode } from './renderer-context';
 
 const styleFontFamily = (style: CSSProperties | undefined): string | undefined => {
   const fontFamily = style?.fontFamily;
@@ -61,10 +52,7 @@ const warnOnce = (message: string): void => {
   console.warn(message);
 };
 
-const withDefaultFontFamily = (
-  measureText: TextMeasurer,
-  defaultFontFamily: string | undefined,
-): TextMeasurer => {
+const withDefaultFontFamily = (measureText: TextMeasurer, defaultFontFamily: string | undefined): TextMeasurer => {
   if (defaultFontFamily === undefined) return measureText;
   return (text, font) =>
     measureText(text, {
@@ -308,15 +296,78 @@ const useSvgRootBinding = (
  *   `@retikz/render/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, animate: animateProp, snapshotAt, animationRef, animations: rootAnimations, easings, animationProperties, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, pathKinds, ribbonWidthProfiles, composites, lowerTex, embeddables, handlers } = props;
+  const {
+    ir: irFromProp,
+    children,
+    width,
+    height,
+    viewBox,
+    className,
+    style,
+    renderer: rendererProp,
+    animate: animateProp,
+    snapshotAt,
+    animationRef,
+    animations: rootAnimations,
+    easings,
+    animationProperties,
+    idPrefix,
+    nodeDistance,
+    shapes,
+    arrows,
+    patterns,
+    pathGenerators,
+    pathKinds,
+    ribbonWidthProfiles,
+    composites,
+    lowerTex,
+    embeddables,
+    handlers,
+  } = props;
   const animate = animateProp !== false;
-  const { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault } = props;
+  const {
+    color,
+    stroke,
+    fill,
+    strokeWidth,
+    opacity,
+    fillOpacity,
+    drawOpacity,
+    nodeDefault,
+    pathDefault,
+    labelDefault,
+    arrowDefault,
+  } = props;
   // 渲染目标：显式 prop > 祖先 RendererModeProvider 注入的 context > 默认 svg（hook 必须无条件调用）
   const contextRenderer = useRendererMode();
   const renderer = rendererProp ?? contextRenderer ?? 'svg';
   const scopeStyle: ScopeStyleProps = useMemo(
-    () => ({ color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault }),
-    [color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault],
+    () => ({
+      color,
+      stroke,
+      fill,
+      strokeWidth,
+      opacity,
+      fillOpacity,
+      drawOpacity,
+      nodeDefault,
+      pathDefault,
+      labelDefault,
+      arrowDefault,
+    }),
+    [
+      color,
+      stroke,
+      fill,
+      strokeWidth,
+      opacity,
+      fillOpacity,
+      drawOpacity,
+      nodeDefault,
+      pathDefault,
+      labelDefault,
+      arrowDefault,
+    ],
   );
   const hasScopeStyle = Object.keys(pickScopeStyle(scopeStyle)).length > 0;
 
@@ -352,10 +403,7 @@ export const Layout: FC<LayoutProps> = props => {
     return composites !== undefined ? [...fromEmbeddables, ...composites] : fromEmbeddables;
   }, [built.contributions, composites]);
   const defaultFontFamily = styleFontFamily(style);
-  const measureText = useMemo(
-    () => withDefaultFontFamily(browserMeasurer, defaultFontFamily),
-    [defaultFontFamily],
-  );
+  const measureText = useMemo(() => withDefaultFontFamily(browserMeasurer, defaultFontFamily), [defaultFontFamily]);
   const scene = useMemo(
     () =>
       compileToScene(ir, {
@@ -389,7 +437,10 @@ export const Layout: FC<LayoutProps> = props => {
   const rawId = useId();
   const resolvedIdPrefix = idPrefix ?? rawId.replace(/[^a-zA-Z0-9]/g, '');
   const doc = useMemo(
-    () => (renderer === 'canvas' ? null : buildSvgDocument(scene, { idPrefix: resolvedIdPrefix, animate, snapshotAt, easings })),
+    () =>
+      renderer === 'canvas'
+        ? null
+        : buildSvgDocument(scene, { idPrefix: resolvedIdPrefix, animate, snapshotAt, easings }),
     [renderer, scene, resolvedIdPrefix, animate, snapshotAt, easings],
   );
 
@@ -402,7 +453,10 @@ export const Layout: FC<LayoutProps> = props => {
   // svg root 的 callback ref——水合控制器（createHydrationController + locateSvg）+ 交互动画 WAAPI 桥绑定的 figure root
   const hasAnimations = renderer !== 'canvas' && animate && sceneHasAnimations(scene);
   // 命令式动画句柄出口（与 vanilla view.animation 对等）；svg 走 WAAPI 句柄、canvas 走 CanvasHost 的 rAF 时钟
-  const publishAnimation = useCallback((controls: AnimationControls | null) => assignRef(animationRef, controls), [animationRef]);
+  const publishAnimation = useCallback(
+    (controls: AnimationControls | null) => assignRef(animationRef, controls),
+    [animationRef],
+  );
   const setRoot = useSvgRootBinding(resolvedHandlers, scene, hasAnimations, publishAnimation);
 
   if (renderer === 'canvas') {

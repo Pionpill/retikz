@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+
 import type { CoordinateSchema } from './schema';
 
 /** Coordinate IR 类型 `{ type:'coordinate', id, position }` */

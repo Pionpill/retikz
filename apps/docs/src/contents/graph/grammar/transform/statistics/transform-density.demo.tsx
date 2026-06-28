@@ -1,5 +1,6 @@
-import { Axis, PathMark, Plot, Transform } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, PathMark, Plot, Transform } from '@retikz/plot-react';
 
 import { measurements } from './transform-density.data';
 

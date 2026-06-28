@@ -1,13 +1,16 @@
 import { z } from 'zod';
-import { localToWorld } from '../../geometry/transform';
+
+import type { ContourSegment } from '../../geometry/contour';
 import type { Position } from '../../geometry/point';
-import { normalizeCompassAnchor } from '../../geometry/anchor';
-import { rect as rectOps } from '../../geometry/rect';
 import type { Rect } from '../../geometry/rect';
-import { type ContourSegment, boundaryFromContour } from '../../geometry/contour';
 import type { ScenePrimitive } from '../../primitive';
+
 import { verticesToSegments } from '../../contract/shape/contour';
 import { defineShape } from '../../contract/shape/define';
+import { normalizeCompassAnchor } from '../../geometry/anchor';
+import { boundaryFromContour } from '../../geometry/contour';
+import { rect as rectOps } from '../../geometry/rect';
+import { localToWorld } from '../../geometry/transform';
 
 /**
  * rectangle shape 的 per-instance params 类型
@@ -62,7 +65,7 @@ export const rectangle = defineShape({
     return a ? rectOps.anchor(r, a) : undefined;
   },
   edgePoint: (r, side, t) => rectOps.edgePoint(r, side, t),
-  *emit (r, style, round, params: RectangleParams): Iterable<ScenePrimitive> {
+  *emit(r, style, round, params: RectangleParams): Iterable<ScenePrimitive> {
     const halfW = r.width / 2;
     const halfH = r.height / 2;
     // compile 已把顶层 Node.cornerRadius 合进 params（见 compile/node.ts），故与 boundaryPoint 一致只读 params.cornerRadius
@@ -86,7 +89,5 @@ export const rectangle = defineShape({
     };
   },
   scaleParams: (params: RectangleParams, sx: number, sy: number): RectangleParams =>
-    params.cornerRadius === undefined
-      ? params
-      : { ...params, cornerRadius: params.cornerRadius * Math.sqrt(sx * sy) },
+    params.cornerRadius === undefined ? params : { ...params, cornerRadius: params.cornerRadius * Math.sqrt(sx * sy) },
 });

@@ -1,5 +1,6 @@
-import { Circle, Layout, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Circle, Layout, Path, Step } from '@retikz/react';
 
 const KNOTS: Array<[number, number]> = [
   [-150, 30],

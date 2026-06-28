@@ -1,10 +1,18 @@
-import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { type ExternalRow, TransformSchema } from '../../src/schemas';
+import { z } from 'zod';
+
+import type { ExternalRow } from '../../src/schemas';
+
 import { defineTransform } from '../../src';
-import { applyTransforms, collectTransformFields, createFieldCollector, resolveTransformRegistry } from '../../src/providers';
-import { collectSourceFields } from '../../src/pipeline/source-fields';
 import { readSourceIndices, tagSourceIndex } from '../../src/pipeline/provenance';
+import { collectSourceFields } from '../../src/pipeline/source-fields';
+import {
+  applyTransforms,
+  collectTransformFields,
+  createFieldCollector,
+  resolveTransformRegistry,
+} from '../../src/providers';
+import { TransformSchema } from '../../src/schemas';
 import { PlotSpecSchema } from '../../src/schemas/plot';
 
 const densityOperation = (operation: unknown) => TransformSchema.parse(operation);
@@ -26,9 +34,21 @@ describe('density transform schema (alpha.13 ADR-03)', () => {
   });
 
   it('rejects malformed density JSON with useful zod errors', () => {
-    expect(() => TransformSchema.parse({ kind: 'density', field: 'value', sampleCount: 1, xAs: 'x', densityAs: 'density' })).toThrow();
-    expect(() => TransformSchema.parse({ kind: 'density', field: 'value', extent: [4, 4], xAs: 'x', densityAs: 'density' })).toThrow();
-    expect(() => TransformSchema.parse({ kind: 'density', field: 'value', bandwidth: { kind: 'value', value: -1 }, xAs: 'x', densityAs: 'density' })).toThrow();
+    expect(() =>
+      TransformSchema.parse({ kind: 'density', field: 'value', sampleCount: 1, xAs: 'x', densityAs: 'density' }),
+    ).toThrow();
+    expect(() =>
+      TransformSchema.parse({ kind: 'density', field: 'value', extent: [4, 4], xAs: 'x', densityAs: 'density' }),
+    ).toThrow();
+    expect(() =>
+      TransformSchema.parse({
+        kind: 'density',
+        field: 'value',
+        bandwidth: { kind: 'value', value: -1 },
+        xAs: 'x',
+        densityAs: 'density',
+      }),
+    ).toThrow();
   });
 });
 
@@ -55,7 +75,9 @@ describe('density transform behavior (alpha.13 ADR-03)', () => {
 
     expect(out.map(row => row.densityX)).toEqual([0, 2, 4, 6, 8]);
     expect(out).toHaveLength(5);
-    expect(out.every(row => typeof row.density === 'number' && Number.isFinite(row.density) && (row.density) >= 0)).toBe(true);
+    expect(out.every(row => typeof row.density === 'number' && Number.isFinite(row.density) && row.density >= 0)).toBe(
+      true,
+    );
     expect(out[0].density).toBeCloseTo(out[2].density as number, 6);
     expect(out[1].density).toBeGreaterThan(out[4].density as number);
   });
@@ -103,22 +125,55 @@ describe('density transform behavior (alpha.13 ADR-03)', () => {
   it('allows explicit bandwidth for single-value and identical-value groups', () => {
     const single = applyTransforms(
       [{ value: 5 }],
-      [densityOperation({ kind: 'density', field: 'value', bandwidth: { kind: 'value', value: 1 }, sampleCount: 3, xAs: 'x', densityAs: 'd' })],
+      [
+        densityOperation({
+          kind: 'density',
+          field: 'value',
+          bandwidth: { kind: 'value', value: 1 },
+          sampleCount: 3,
+          xAs: 'x',
+          densityAs: 'd',
+        }),
+      ],
     );
     expect(single.map(row => row.x)).toEqual([2, 5, 8]);
     expect(single[1].d).toBeGreaterThan(single[0].d as number);
 
     const identical = applyTransforms(
       [{ value: 4 }, { value: 4 }],
-      [densityOperation({ kind: 'density', field: 'value', bandwidth: { kind: 'value', value: 2 }, sampleCount: 2, xAs: 'x', densityAs: 'd' })],
+      [
+        densityOperation({
+          kind: 'density',
+          field: 'value',
+          bandwidth: { kind: 'value', value: 2 },
+          sampleCount: 2,
+          xAs: 'x',
+          densityAs: 'd',
+        }),
+      ],
     );
     expect(identical.map(row => row.x)).toEqual([-2, 10]);
   });
 
   it('fails loud when default Silverman bandwidth cannot be computed', () => {
-    expect(() => applyTransforms([{ value: 5 }], [densityOperation({ kind: 'density', field: 'value', xAs: 'x', densityAs: 'd' })])).toThrow(/bandwidth|sample/i);
-    expect(() => applyTransforms([{ value: 5 }, { value: 5 }], [densityOperation({ kind: 'density', field: 'value', xAs: 'x', densityAs: 'd' })])).toThrow(/bandwidth|identical/i);
-    expect(() => applyTransforms([{ value: 'NA' }], [densityOperation({ kind: 'density', field: 'value', xAs: 'x', densityAs: 'd' })])).toThrow(/finite/i);
+    expect(() =>
+      applyTransforms(
+        [{ value: 5 }],
+        [densityOperation({ kind: 'density', field: 'value', xAs: 'x', densityAs: 'd' })],
+      ),
+    ).toThrow(/bandwidth|sample/i);
+    expect(() =>
+      applyTransforms(
+        [{ value: 5 }, { value: 5 }],
+        [densityOperation({ kind: 'density', field: 'value', xAs: 'x', densityAs: 'd' })],
+      ),
+    ).toThrow(/bandwidth|identical/i);
+    expect(() =>
+      applyTransforms(
+        [{ value: 'NA' }],
+        [densityOperation({ kind: 'density', field: 'value', xAs: 'x', densityAs: 'd' })],
+      ),
+    ).toThrow(/finite/i);
   });
 
   it('records group-level provenance source indices', () => {
@@ -177,7 +232,14 @@ describe('density transform behavior (alpha.13 ADR-03)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'path', series: 'species', order: 'densityX', encoding: { x: { field: 'densityX' }, y: { field: 'density' } } }],
+      marks: [
+        {
+          type: 'path',
+          series: 'species',
+          order: 'densityX',
+          encoding: { x: { field: 'densityX' }, y: { field: 'density' } },
+        },
+      ],
     });
 
     expect([...collectSourceFields(spec, resolveTransformRegistry())].sort()).toEqual(['species', 'value']);

@@ -1,12 +1,9 @@
-import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import {
-  type IR,
-  type PathPrim,
-  type ScenePrimitive,
-  compileToScene,
-  definePathKind,
-} from '../../src';
+import { z } from 'zod';
+
+import type { IR, PathPrim, ScenePrimitive } from '../../src';
+
+import { compileToScene, definePathKind } from '../../src';
 
 const steps = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -87,9 +84,7 @@ describe('Path kind registry', () => {
 
   it('throws for unknown path kinds until a provider is registered', () => {
     expect(() =>
-      compileToScene(
-        scene([{ type: 'path', kind: 'missing', kindOptions: {}, children: steps }] as IR['children']),
-      ),
+      compileToScene(scene([{ type: 'path', kind: 'missing', kindOptions: {}, children: steps }] as IR['children'])),
     ).toThrow(/Unknown path kind 'missing'/);
   });
 
@@ -103,9 +98,7 @@ describe('Path kind registry', () => {
         return {
           ...base,
           primitives: base.primitives.map(primitive =>
-            primitive.type === 'path'
-              ? { ...primitive, stroke: context.options.stroke }
-              : primitive,
+            primitive.type === 'path' ? { ...primitive, stroke: context.options.stroke } : primitive,
           ),
         };
       },

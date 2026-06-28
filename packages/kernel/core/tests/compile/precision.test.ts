@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_PRECISION, createRound } from '../../src/compile/precision';
+
+import { createRound, DEFAULT_PRECISION } from '../../src/compile/precision';
 
 describe('DEFAULT_PRECISION', () => {
   it('默认 2 位小数——所有 Scene 输出走这个精度', () => {

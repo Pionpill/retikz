@@ -1,6 +1,7 @@
-import { Plot } from '@retikz/plot-react';
 import type { PlotSpec } from '@retikz/plot';
 import type { FC } from 'react';
+
+import { Plot } from '@retikz/plot-react';
 
 import { stations } from './scale-discretization.data';
 
@@ -15,13 +16,21 @@ const spec: PlotSpec = {
     { type: 'quantize', name: 'col', domain: [0, 100], count: 5, scheme: 'blues' },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'point', color: { kind: 'field', value: 'density', scale: 'col' }, encoding: { x: { field: 'lng' }, y: { field: 'lat' } } }],
+  marks: [
+    {
+      type: 'point',
+      color: { kind: 'field', value: 'density', scale: 'col' },
+      encoding: { x: { field: 'lng' }, y: { field: 'lat' } },
+    },
+  ],
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y' },
   ],
 };
 
-const Demo: FC = () => <Plot spec={spec} data={{ d: stations }} width={360} height={240} style={{ maxWidth: '100%', height: 'auto' }} />;
+const Demo: FC = () => (
+  <Plot spec={spec} data={{ d: stations }} width={360} height={240} style={{ maxWidth: '100%', height: 'auto' }} />
+);
 
 export default Demo;

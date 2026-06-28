@@ -1,6 +1,8 @@
-import { type DataModel, defineTransform } from '@retikz/plot';
-import { Axis, Plot, PointMark, Transform } from '@retikz/plot-react';
+import type { DataModel } from '@retikz/plot';
 import type { FC } from 'react';
+
+import { defineTransform } from '@retikz/plot';
+import { Axis, Plot, PointMark, Transform } from '@retikz/plot-react';
 import { z } from 'zod';
 
 import { customTransformRows } from './transform-custom.data';

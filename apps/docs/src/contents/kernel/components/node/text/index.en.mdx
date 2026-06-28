@@ -7,14 +7,18 @@ description: Per-line marker component inside <Node> — overrides fill / opacit
 
 It's an **equivalent** alternative to writing LineSpec objects directly into the `text` prop:
 
-| Path | Form | Strength |
-|---|---|---|
-| `<Text>` Sugar | `<Node><Text fill="red">x</Text>...</Node>` | Natural JSX, mixes well with string children |
-| `text` array | `<Node text={[{ text: 'x', fill: 'red' }, ...]} />` | JSON-friendly; LLMs can emit IR JSON directly |
+| Path           | Form                                                | Strength                                      |
+| -------------- | --------------------------------------------------- | --------------------------------------------- |
+| `<Text>` Sugar | `<Node><Text fill="red">x</Text>...</Node>`         | Natural JSX, mixes well with string children  |
+| `text` array   | `<Node text={[{ text: 'x', fill: 'red' }, ...]} />` | JSON-friendly; LLMs can emit IR JSON directly |
 
 > Block-level props (`align` / `lineHeight`) go on `<Node>`; per-line overrides (`fill` / `opacity` / `font`) go on `<Text>`.
 
-<ComponentAlert type="warn" title="A Text is one whole line, not an inline span" description="Think of it as adding one styled line to a Node; it can't mix several colors within a single line — split the content into separate lines or use multiple independent Nodes for that." />
+<ComponentAlert
+  type="warn"
+  title="A Text is one whole line, not an inline span"
+  description="Think of it as adding one styled line to a Node; it can't mix several colors within a single line — split the content into separate lines or use multiple independent Nodes for that."
+/>
 
 ## Usage
 
@@ -24,7 +28,9 @@ import { Node, Text } from '@retikz/react';
 
 ```tsx
 <Node>
-  <Text fill="red" font={{ weight: 'bold' }}>Heading</Text>
+  <Text fill="red" font={{ weight: 'bold' }}>
+    Heading
+  </Text>
   body line
 </Node>
 ```
@@ -57,12 +63,12 @@ These two nodes compile to identical output:
 
 ## API Reference
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `children` | `string \| number` | — | Line content; a single string or number (numbers render as text); other child types are ignored |
-| `fill` | `string` | — | Per-line color override; falls back to Node `textColor` block default |
-| `opacity` | `number` | — | Per-line opacity 0..1 |
-| `font` | `{ family?, size?, weight?, style? }` | — | Per-line font override; missing fields inherit Node block-level `font` |
+| Prop       | Type                                  | Default | Description                                                                                     |
+| ---------- | ------------------------------------- | ------- | ----------------------------------------------------------------------------------------------- |
+| `children` | `string \| number`                    | —       | Line content; a single string or number (numbers render as text); other child types are ignored |
+| `fill`     | `string`                              | —       | Per-line color override; falls back to Node `textColor` block default                           |
+| `opacity`  | `number`                              | —       | Per-line opacity 0..1                                                                           |
+| `font`     | `{ family?, size?, weight?, style? }` | —       | Per-line font override; missing fields inherit Node block-level `font`                          |
 
 ### Constraints
 

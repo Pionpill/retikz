@@ -1,6 +1,8 @@
 import { z } from 'zod';
-import { type ExternalRow, type ReducerOperation, type SelectorOperation } from '../schemas';
+
 import type { TransformContext } from './transform';
+
+import { type ExternalRow, type ReducerOperation, type SelectorOperation } from '../schemas';
 
 export type StatisticsReducerContext = TransformContext;
 
@@ -25,7 +27,10 @@ export const defineStatisticsReducer = <TReducerOperation extends ReducerOperati
 ): StatisticsReducerDefinition<TReducerOperation> => def;
 
 /** 注册表内部使用的 reducer 宽类型；调用前必须先用 schema 解析收窄。 */
-export type AnyStatisticsReducerDefinition = Omit<StatisticsReducerDefinition<ReducerOperation>, 'schema' | 'inputFields' | 'outputFields' | 'reduce'> & {
+export type AnyStatisticsReducerDefinition = Omit<
+  StatisticsReducerDefinition<ReducerOperation>,
+  'schema' | 'inputFields' | 'outputFields' | 'reduce'
+> & {
   schema: z.ZodType;
   inputFields?: (operation: never) => Array<string>;
   outputFields?: (operation: never) => Array<string>;
@@ -58,7 +63,10 @@ export const defineRowSelector = <TSelectorOperation extends SelectorOperation>(
 ): RowSelectorDefinition<TSelectorOperation> => def;
 
 /** 注册表内部使用的 selector 宽类型；调用前必须先用 schema 解析收窄。 */
-export type AnyRowSelectorDefinition = Omit<RowSelectorDefinition<SelectorOperation>, 'schema' | 'inputFields' | 'select'> & {
+export type AnyRowSelectorDefinition = Omit<
+  RowSelectorDefinition<SelectorOperation>,
+  'schema' | 'inputFields' | 'select'
+> & {
   schema: z.ZodType;
   inputFields?: (operation: never) => Array<string>;
   select: (rows: Array<ExternalRow>, operation: never) => Array<RowSelection>;

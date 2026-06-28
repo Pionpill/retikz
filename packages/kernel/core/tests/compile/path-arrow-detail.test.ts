@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/schemas';
+
 import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
   const p = prims.find((x): x is PathPrim => x.type === 'path');
@@ -16,8 +18,7 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
  */
 const markerPaint = (spec: ArrowEndSpec | undefined): string | undefined => {
   if (!spec) return undefined;
-  const pickFill = (f: MarkerFill | undefined): string | undefined =>
-    typeof f === 'string' ? f : undefined;
+  const pickFill = (f: MarkerFill | undefined): string | undefined => (typeof f === 'string' ? f : undefined);
   const walk = (prims: ReadonlyArray<MarkerPrimitive>): string | undefined => {
     for (const p of prims) {
       if (p.type === 'group') {
@@ -93,7 +94,7 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
     expect(path.arrowEnd?.shape).toBe('stealth');
   });
 
-  it("arrowDetail={} 等同未传 arrowDetail（空对象 merge 不引入字段）", () => {
+  it('arrowDetail={} 等同未传 arrowDetail（空对象 merge 不引入字段）', () => {
     const irEmpty: IR = {
       version: 1,
       type: 'scene',
@@ -150,8 +151,8 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
   });
 });
 
-describe("compile arrowDetail：顶层默认 + start/end merge", () => {
-  it("arrowDetail.shape 透传起末共享", () => {
+describe('compile arrowDetail：顶层默认 + start/end merge', () => {
+  it('arrowDetail.shape 透传起末共享', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -172,7 +173,7 @@ describe("compile arrowDetail：顶层默认 + start/end merge", () => {
     expect(path.arrowEnd?.shape).toBe('stealth');
   });
 
-  it("color / scale / opacity 视觉输入解析进 marker 几何 / wrapper 参数（起末共享）", () => {
+  it('color / scale / opacity 视觉输入解析进 marker 几何 / wrapper 参数（起末共享）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -250,7 +251,7 @@ describe("compile arrowDetail：顶层默认 + start/end merge", () => {
     expect(markerPaint(path.arrowEnd)).toBeUndefined();
   });
 
-  it("起末异色（顶层 shape 共享）", () => {
+  it('起末异色（顶层 shape 共享）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -345,7 +346,7 @@ describe('compile arrowDetail：空心 shape silent fill ignore', () => {
   });
 
   it.each(['open', 'openStealth', 'openDiamond', 'openCircle'] as const)(
-    "空心 shape %s 上 fill 全部丢弃（red 不进 marker）",
+    '空心 shape %s 上 fill 全部丢弃（red 不进 marker）',
     shape => {
       const ir: IR = {
         version: 1,
@@ -367,32 +368,29 @@ describe('compile arrowDetail：空心 shape silent fill ignore', () => {
     },
   );
 
-  it.each(['normal', 'stealth', 'diamond', 'circle'] as const)(
-    "实心 shape %s 上 fill 保留进 marker",
-    shape => {
-      const ir: IR = {
-        version: 1,
-        type: 'scene',
-        children: [
-          {
-            type: 'path',
-            arrow: '->',
-            arrowDetail: { shape, fill: 'red' },
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'line', to: [10, 0] },
-            ],
-          },
-        ],
-      };
-      const path = findPathPrim(compileToScene(ir).primitives);
-      expect(markerPaint(path.arrowEnd)).toBe('red');
-    },
-  );
+  it.each(['normal', 'stealth', 'diamond', 'circle'] as const)('实心 shape %s 上 fill 保留进 marker', shape => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '->',
+          arrowDetail: { shape, fill: 'red' },
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).primitives);
+    expect(markerPaint(path.arrowEnd)).toBe('red');
+  });
 });
 
 describe('compile arrowDetail：scale × length / width 解析进 wrapper 参数', () => {
-  it("顶层 length=10 scale=1.5 → markerWidth = 10 × 1.5 = 15（compile 已乘）", () => {
+  it('顶层 length=10 scale=1.5 → markerWidth = 10 × 1.5 = 15（compile 已乘）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -412,7 +410,7 @@ describe('compile arrowDetail：scale × length / width 解析进 wrapper 参数
     expect(path.arrowEnd?.markerWidth).toBeCloseTo(15, 5);
   });
 
-  it("顶层 width=8 scale=2 → markerHeight = 8 × 2 = 16", () => {
+  it('顶层 width=8 scale=2 → markerHeight = 8 × 2 = 16', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',

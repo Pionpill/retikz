@@ -1,4 +1,7 @@
-import { type IR, type Scene, compileToScene } from '@retikz/core';
+import type { IR, Scene } from '@retikz/core';
+
+import { compileToScene } from '@retikz/core';
+
 import type { CommonOptions } from './types';
 
 /**

@@ -1,9 +1,16 @@
+import type { IRPaintSpec } from '@retikz/core';
+
+import { PaintSpecSchema } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
-import { type IRPaintSpec, PaintSpecSchema } from '@retikz/core';
-import { ChannelDefinitionKind, type ChannelResolveContext, type MarkChannelDefinition, isBuiltinScaleOperation } from '../../../contract';
+
+import type { ChannelResolveContext, MarkChannelDefinition } from '../../../contract';
+import type { Channel, MarkOperation, PlotFieldTypeMap, PlotSpec, ScaleOperation } from '../../../schemas';
+import type { CategoryOrder } from '../../scale';
+
+import { ChannelDefinitionKind, isBuiltinScaleOperation } from '../../../contract';
+import { PlotFieldType, PlotScale } from '../../../schemas';
 import { coerceTimestamp, resolveFieldPath } from '../../data';
-import { type CategoryOrder, orderedCategoryDomain, resolveChannelScale } from '../../scale';
-import { type Channel, type MarkOperation, PlotFieldType, type PlotFieldTypeMap, PlotScale, type PlotSpec, type ScaleOperation } from '../../../schemas';
+import { orderedCategoryDomain, resolveChannelScale } from '../../scale';
 
 export type ColorChannelDefinitionOptions = {
   channel: string;
@@ -19,14 +26,18 @@ const parsePaintConstant = (channelName: string, value: unknown, allowPaintSpec:
     const result = PaintSpecSchema.safeParse(value);
     if (result.success) return result.data;
   }
-  throw new Error(`lowerPlots: constant ${channelName} channel must be a CSS color string${allowPaintSpec ? ' or core PaintSpec' : ''}`);
+  throw new Error(
+    `lowerPlots: constant ${channelName} channel must be a CSS color string${allowPaintSpec ? ' or core PaintSpec' : ''}`,
+  );
 };
 
 /**
  * 创建 color-like mark 通道（color / fill / stroke）。
  * @description 常量 value 直返；字段值经 channel scale registry 取色。连续 / temporal 字段必须显式引用 color scale。
  */
-export const makeColorChannelDefinition = (options: ColorChannelDefinitionOptions): MarkChannelDefinition<PlotPaint> => ({
+export const makeColorChannelDefinition = (
+  options: ColorChannelDefinitionOptions,
+): MarkChannelDefinition<PlotPaint> => ({
   channel: options.channel,
   kind: ChannelDefinitionKind.Mark,
   resolve: ctx => {
@@ -44,27 +55,45 @@ export const makeColorChannelDefinition = (options: ColorChannelDefinitionOption
       }
       if (channel.field === undefined) return undefined;
       if (ctx.scaleRegistry === undefined || ctx.resolveColorScheme === undefined) {
-        throw new Error(`lowerPlots: ${options.channel} channel resolution requires scaleRegistry and resolveColorScheme in ChannelContext`);
+        throw new Error(
+          `lowerPlots: ${options.channel} channel resolution requires scaleRegistry and resolveColorScheme in ChannelContext`,
+        );
       }
       const field = channel.field;
       const colorFieldType = ctx.fieldTypes.get(field);
-      if ((colorFieldType === PlotFieldType.Continuous || colorFieldType === PlotFieldType.Temporal) && channel.scale === undefined) {
-        throw new Error(`lowerPlots: continuous/temporal ${options.channel} field "${field}" requires an explicit sequential/diverging/quantize/threshold/quantile color scale reference`);
+      if (
+        (colorFieldType === PlotFieldType.Continuous || colorFieldType === PlotFieldType.Temporal) &&
+        channel.scale === undefined
+      ) {
+        throw new Error(
+          `lowerPlots: continuous/temporal ${options.channel} field "${field}" requires an explicit sequential/diverging/quantize/threshold/quantile color scale reference`,
+        );
       }
       let scaleOperation: ScaleOperation;
       if (channel.scale !== undefined) {
         const found = scaleByName.get(channel.scale);
-        if (!found) throw new Error(`lowerPlots: ${options.channel} channel references unknown scale "${channel.scale}"`);
+        if (!found)
+          throw new Error(`lowerPlots: ${options.channel} channel references unknown scale "${channel.scale}"`);
         scaleOperation = found;
       } else {
         scaleOperation = { type: PlotScale.Ordinal, name: `__${options.channel}_${field}` };
       }
       const rawValues = ctx.rows.map(row => resolveFieldPath(row, field));
-      if (isBuiltinScaleOperation(scaleOperation) && scaleOperation.type === PlotScale.Ordinal && scaleOperation.domain === undefined) {
+      if (
+        isBuiltinScaleOperation(scaleOperation) &&
+        scaleOperation.type === PlotScale.Ordinal &&
+        scaleOperation.domain === undefined
+      ) {
         const order = fieldOrders.get(field);
-        if (order !== undefined && order !== 'data') scaleOperation = { ...scaleOperation, domain: orderedCategoryDomain(rawValues, order) };
+        if (order !== undefined && order !== 'data')
+          scaleOperation = { ...scaleOperation, domain: orderedCategoryDomain(rawValues, order) };
       }
-      const resolution = resolveChannelScale(scaleOperation, rawValues, colorResolveContext(ctx.node, ctx.fieldTypes, field, ctx.resolveColorScheme), ctx.scaleRegistry);
+      const resolution = resolveChannelScale(
+        scaleOperation,
+        rawValues,
+        colorResolveContext(ctx.node, ctx.fieldTypes, field, ctx.resolveColorScheme),
+        ctx.scaleRegistry,
+      );
       return {
         resolver: row => resolution.of(resolveFieldPath(row, field)),
         descriptor: {
@@ -82,7 +111,12 @@ export const makeColorChannelDefinition = (options: ColorChannelDefinitionOption
   },
 });
 
-const colorResolveContext = (node: PlotSpec, fieldTypes: PlotFieldTypeMap, field: string, resolveColorScheme: (name: string) => (t: number) => string): ChannelResolveContext => ({
+const colorResolveContext = (
+  node: PlotSpec,
+  fieldTypes: PlotFieldTypeMap,
+  field: string,
+  resolveColorScheme: (name: string) => (t: number) => string,
+): ChannelResolveContext => ({
   fieldType: fieldTypes.get(field),
   toNumber: value => (isFiniteNumber(value) ? value : null),
   coerceTimestamp,
@@ -100,7 +134,11 @@ const markValueChannel = (value: unknown): Channel | undefined => {
   if (value === undefined) return undefined;
   if (value === null || typeof value !== 'object') return undefined;
   const candidate = value as { kind?: unknown; value?: unknown; scale?: unknown };
-  if (candidate.kind === 'field') return { field: String(candidate.value), ...(typeof candidate.scale === 'string' ? { scale: candidate.scale } : {}) };
+  if (candidate.kind === 'field')
+    return {
+      field: String(candidate.value),
+      ...(typeof candidate.scale === 'string' ? { scale: candidate.scale } : {}),
+    };
   if (candidate.kind === 'constant') return { value: candidate.value as Channel['value'] };
   return undefined;
 };

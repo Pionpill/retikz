@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from 'vitest';
 import type { Scene } from '@retikz/core';
+
+import { describe, expect, it, vi } from 'vitest';
+
 import { hitTest } from '../src/canvas';
 
 /**

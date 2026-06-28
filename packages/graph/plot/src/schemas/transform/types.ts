@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+
 import type {
   AnnotateSelectorSchema,
   AnnotateTransformSchema,
@@ -16,8 +17,8 @@ import type {
   QuantileBandReducerOperationSchema,
   ReducerOperationSchema,
   RelateTransformSchema,
-  SelectTransformSchema,
   SelectorOperationSchema,
+  SelectTransformSchema,
   SmoothMethodSpecSchema,
   SmoothTransformSchema,
   SortTransformSchema,

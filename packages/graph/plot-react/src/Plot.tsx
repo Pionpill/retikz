@@ -1,7 +1,20 @@
+import type {
+  DataModel,
+  ExternalDatasets,
+  ExternalRow,
+  LowerPlotsOptions,
+  PlotSpec,
+  TransformOperation,
+} from '@retikz/plot';
+import type { EmbeddableContribution, EmbeddableTier2Adapter, LayoutProps, ScopeProps } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
-import { type EmbeddableContribution, type EmbeddableTier2Adapter, Layout, type LayoutProps, type ScopeProps } from '@retikz/react';
-import { type DataModel, type ExternalDatasets, type ExternalRow, type LowerPlotsOptions, type PlotSpec, PlotSpecSchema, type TransformOperation, lowerPlots } from '@retikz/plot';
-import { type CoordinateInput, type MarkTransformShortcutDefinition, type ResolveLabelMap, buildPlotSpec, resolveLabelOf } from './components';
+
+import { lowerPlots, PlotSpecSchema } from '@retikz/plot';
+import { Layout } from '@retikz/react';
+
+import type { CoordinateInput, MarkTransformShortcutDefinition, ResolveLabelMap } from './components';
+
+import { buildPlotSpec, resolveLabelOf } from './components';
 
 /** <Plot> 作为 Layout 子面板时可直接承接的 core scope 属性 */
 export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip'> & {
@@ -12,7 +25,9 @@ export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip'> 
 };
 
 /** <Plot> 两条入口共享的展示 props + lowerPlots 选项 */
-export type PlotCommonProps = Pick<LayoutProps, 'className' | 'style' | 'renderer'> & PlotPanelProps & LowerPlotsOptions;
+export type PlotCommonProps = Pick<LayoutProps, 'className' | 'style' | 'renderer'> &
+  PlotPanelProps &
+  LowerPlotsOptions;
 
 export type PlotColorProps = {
   /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
@@ -20,44 +35,46 @@ export type PlotColorProps = {
 };
 
 /** spec 入口（薄包装）：给已构造好的完整 PlotSpec + 数据集表 */
-export type PlotSpecProps = PlotCommonProps & PlotColorProps & {
-  /** 已构造好的 Plot IR 根节点（手写 / 生成） */
-  spec: PlotSpec;
-  /** 外部数据集表（data.reference 按名查）；数据不进 IR，编译期经 lowerPlots 注入 */
-  data: ExternalDatasets;
-  children?: never;
-};
+export type PlotSpecProps = PlotCommonProps &
+  PlotColorProps & {
+    /** 已构造好的 Plot IR 根节点（手写 / 生成） */
+    spec: PlotSpec;
+    /** 外部数据集表（data.reference 按名查）；数据不进 IR，编译期经 lowerPlots 注入 */
+    data: ExternalDatasets;
+    children?: never;
+  };
 
 /** 组合 DSL 入口：给裸数据行 + <PathMark>/<PointMark>/<Axis> 子组件 */
-export type PlotDslProps = PlotCommonProps & PlotColorProps & {
-  spec?: never;
-  /** 面板 id：写入 PlotSpec.id，作为外部 anchor 句柄；嵌入态未显式 dataRef 时也作为默认数据集引用 */
-  id?: string;
-  /** 嵌入态/DSL 入口的数据集引用名；多 plot 共享同一数据源时可显式设成同名 */
-  dataRef?: string;
-  /** 裸数据行数组；内部包成单数据集注入，不进 IR */
-  data: Array<ExternalRow>;
-  /** mark / guide 子组件（<PathMark> / <PointMark> / <IntervalMark> / <Axis>） */
-  children: ReactNode;
-  /** 数据模型（字段名 + 类型）：声明则 strict 校验 + type-driven scale/guide；注入构造 spec 的 data.model */
-  model?: DataModel;
-  /** 逻辑字段 → 物理数据路径（扁平，单数据集）；需 model；内部映射到固定数据集名 */
-  fieldMap?: Record<string, string>;
-  /** 坐标系：缺省 cartesian2D；"polar2D" 简写或 polar2D 对象配置（innerRadius / startAngle / endAngle） */
-  coordinate?: CoordinateInput;
-  /**
-   * 数据变换 IR 直传（快捷入口）：拼到 `<Transform>` 子组件收集结果之前、自动装配 stack 之前。
-   * @description 与 `<Transform kind="...">` 声明组件共用同一管线、可混用；程序化构造变换链时的便捷入口。
-   *   命名 `dataTransforms` 以区别于 core scope 的几何 `transforms`（translate / rotate）。含 stack 时按签名抑制同款 mark shortcut stack。
-   */
-  dataTransforms?: Array<TransformOperation>;
-  /**
-   * Mark-level transform shortcuts for DSL children.
-   * @description A shortcut observes assembled mark IR and emits ordinary plot-level transform operations.
-   * It is useful for custom authoring sugar; explicit mark.transform remains a separate mark-local row view.
-   */
-  markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
-};
+export type PlotDslProps = PlotCommonProps &
+  PlotColorProps & {
+    spec?: never;
+    /** 面板 id：写入 PlotSpec.id，作为外部 anchor 句柄；嵌入态未显式 dataRef 时也作为默认数据集引用 */
+    id?: string;
+    /** 嵌入态/DSL 入口的数据集引用名；多 plot 共享同一数据源时可显式设成同名 */
+    dataRef?: string;
+    /** 裸数据行数组；内部包成单数据集注入，不进 IR */
+    data: Array<ExternalRow>;
+    /** mark / guide 子组件（<PathMark> / <PointMark> / <IntervalMark> / <Axis>） */
+    children: ReactNode;
+    /** 数据模型（字段名 + 类型）：声明则 strict 校验 + type-driven scale/guide；注入构造 spec 的 data.model */
+    model?: DataModel;
+    /** 逻辑字段 → 物理数据路径（扁平，单数据集）；需 model；内部映射到固定数据集名 */
+    fieldMap?: Record<string, string>;
+    /** 坐标系：缺省 cartesian2D；"polar2D" 简写或 polar2D 对象配置（innerRadius / startAngle / endAngle） */
+    coordinate?: CoordinateInput;
+    /**
+     * 数据变换 IR 直传（快捷入口）：拼到 `<Transform>` 子组件收集结果之前、自动装配 stack 之前。
+     * @description 与 `<Transform kind="...">` 声明组件共用同一管线、可混用；程序化构造变换链时的便捷入口。
+     *   命名 `dataTransforms` 以区别于 core scope 的几何 `transforms`（translate / rotate）。含 stack 时按签名抑制同款 mark shortcut stack。
+     */
+    dataTransforms?: Array<TransformOperation>;
+    /**
+     * Mark-level transform shortcuts for DSL children.
+     * @description A shortcut observes assembled mark IR and emits ordinary plot-level transform operations.
+     * It is useful for custom authoring sugar; explicit mark.transform remains a separate mark-local row view.
+     */
+    markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
+  };
 
 /** <Plot> props：spec 入口与组合 DSL 入口二选一（按 spec/children 分流） */
 export type PlotProps = PlotSpecProps | PlotDslProps;
@@ -82,9 +99,33 @@ const lowerPlotOptionsOf = (
   effectiveFieldMaps: LowerPlotsOptions['fieldMaps'],
   collectedResolveLabel: ResolveLabelMap | undefined,
 ): LowerPlotsOptions => {
-  const { width, height, fontSize, margin, provenance, datumProvenance, datumIdField, validateData, resolveField, resolveLabel, invalid, coordinates, transformDefinitions, statisticsReducerDefinitions, rowSelectorDefinitions, scaleDefinitions, channelDefinitions, colorSchemes, markDefinitions, formatDefinitions } = props;
+  const {
+    width,
+    height,
+    fontSize,
+    margin,
+    provenance,
+    datumProvenance,
+    datumIdField,
+    validateData,
+    resolveField,
+    resolveLabel,
+    invalid,
+    coordinates,
+    transformDefinitions,
+    statisticsReducerDefinitions,
+    rowSelectorDefinitions,
+    scaleDefinitions,
+    channelDefinitions,
+    colorSchemes,
+    markDefinitions,
+    formatDefinitions,
+  } = props;
   // DSL 入口 <PointMark resolveLabel> / <IntervalMark resolveLabel> 收集的 per-mark 函数，与显式 props.resolveLabel 合并（显式优先）
-  const mergedResolveLabel = collectedResolveLabel !== undefined || resolveLabel !== undefined ? { ...collectedResolveLabel, ...resolveLabel } : undefined;
+  const mergedResolveLabel =
+    collectedResolveLabel !== undefined || resolveLabel !== undefined
+      ? { ...collectedResolveLabel, ...resolveLabel }
+      : undefined;
   return {
     width,
     height,
@@ -157,7 +198,14 @@ const resolvePlotRuntime = (
   props: PlotProps,
   options: { embedded?: boolean } = {},
 ): { spec: PlotSpec; datasets: ExternalDatasets; lowerOptions: LowerPlotsOptions } => {
-  const dataRef = !props.spec ? props.dataRef ?? (options.embedded && props.id !== undefined ? props.id : options.embedded ? embeddedDataRefFor(props.data) : DSL_DATA_REF) : DSL_DATA_REF;
+  const dataRef = !props.spec
+    ? (props.dataRef ??
+      (options.embedded && props.id !== undefined
+        ? props.id
+        : options.embedded
+          ? embeddedDataRefFor(props.data)
+          : DSL_DATA_REF))
+    : DSL_DATA_REF;
   let spec: PlotSpec;
   let datasets: ExternalDatasets;
   let effectiveFieldMaps = props.fieldMaps;
@@ -187,7 +235,11 @@ const resolvePlotRuntime = (
   }
   // 入口校验：非法 spec（缺判别字段等）抛清晰 ZodError，而非落到 core 内部崩
   const validated = PlotSpecSchema.parse(withIntrinsicSize(spec, props.width, props.height));
-  return { spec: validated, datasets, lowerOptions: lowerPlotOptionsOf(props, effectiveFieldMaps, collectedResolveLabel) };
+  return {
+    spec: validated,
+    datasets,
+    lowerOptions: lowerPlotOptionsOf(props, effectiveFieldMaps, collectedResolveLabel),
+  };
 };
 
 const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {

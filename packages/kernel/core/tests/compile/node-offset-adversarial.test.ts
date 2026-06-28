@@ -3,17 +3,17 @@
  * @description bug hunter 视角：聚焦"应该失败但可能误通过"的输入——zod union 选错分支、循环引用、特殊数值、首步前向、polar.origin 误纳 OffsetPosition 等
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import { type IR, OffsetPositionSchema, PolarPositionSchema, TargetSchema } from '../../src/schemas';
+
 import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { OffsetPositionSchema, PolarPositionSchema, TargetSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 const rects = (prims: Array<ScenePrimitive>): Array<RectPrim> =>
   flattenPrims(prims).filter((p): p is RectPrim => p.type === 'rect');
-const rectCenter = (r: RectPrim): [number, number] => [
-  r.x + r.width / 2,
-  r.y + r.height / 2,
-];
+const rectCenter = (r: RectPrim): [number, number] => [r.x + r.width / 2, r.y + r.height / 2];
 const findPath = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
   prims.find((x): x is PathPrim => x.type === 'path');
 const lastLineEnd = (prim: PathPrim): [number, number] => {
@@ -26,9 +26,7 @@ const lastLineEnd = (prim: PathPrim): [number, number] => {
 
 describe('OffsetPosition adversarial: schema union 边界', () => {
   it('of 是 RelativeTarget（{ relative }）→ 应被 zod 拒绝（of union 仅 string|Position|Polar）', () => {
-    expect(() =>
-      OffsetPositionSchema.parse({ of: { relative: [1, 2] }, offset: [0, 0] }),
-    ).toThrow();
+    expect(() => OffsetPositionSchema.parse({ of: { relative: [1, 2] }, offset: [0, 0] })).toThrow();
   });
 
   it('of 是 AtPosition（{ direction, of }）→ 应被 zod 拒绝（at 不属 of union）', () => {
@@ -45,27 +43,19 @@ describe('OffsetPosition adversarial: schema union 边界', () => {
   });
 
   it('offset 是数字而非二元组 → 应被 zod 拒绝', () => {
-    expect(() =>
-      OffsetPositionSchema.parse({ of: 'A', offset: 10 }),
-    ).toThrow();
+    expect(() => OffsetPositionSchema.parse({ of: 'A', offset: 10 })).toThrow();
   });
 
   it('offset 元素混类型（[number, string]）→ 应被 zod 拒绝', () => {
-    expect(() =>
-      OffsetPositionSchema.parse({ of: 'A', offset: [1, 'two'] }),
-    ).toThrow();
+    expect(() => OffsetPositionSchema.parse({ of: 'A', offset: [1, 'two'] })).toThrow();
   });
 
   it('of 是 null → 应被 zod 拒绝', () => {
-    expect(() =>
-      OffsetPositionSchema.parse({ of: null, offset: [0, 0] }),
-    ).toThrow();
+    expect(() => OffsetPositionSchema.parse({ of: null, offset: [0, 0] })).toThrow();
   });
 
   it('of 是 undefined（缺字段）→ 应被 zod 拒绝', () => {
-    expect(() =>
-      OffsetPositionSchema.parse({ of: undefined, offset: [0, 0] }),
-    ).toThrow();
+    expect(() => OffsetPositionSchema.parse({ of: undefined, offset: [0, 0] })).toThrow();
   });
 
   it('整 OffsetPosition 是 null → 应被 zod 拒绝', () => {
@@ -94,9 +84,7 @@ describe('OffsetPosition adversarial: 循环 / 自引用', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [
-        { type: 'node', id: 'X', position: { of: 'X', offset: [10, 0] } },
-      ],
+      children: [{ type: 'node', id: 'X', position: { of: 'X', offset: [10, 0] } }],
     };
     expect(() => compileToScene(ir)).toThrow(/Cannot resolve position/);
   });
@@ -105,9 +93,7 @@ describe('OffsetPosition adversarial: 循环 / 自引用', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [
-        { type: 'coordinate', id: 'a', position: { of: 'a', offset: [0, 0] } },
-      ],
+      children: [{ type: 'coordinate', id: 'a', position: { of: 'a', offset: [0, 0] } }],
     };
     expect(() => compileToScene(ir)).toThrow(/Cannot resolve position/);
   });

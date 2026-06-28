@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { type Position, type Vector2, isFiniteNumber, isInfiniteNumber, lerp, point, vector2 } from '../../src/geometry/point';
+
+import type { Position, Vector2 } from '../../src/geometry/point';
+
+import { isFiniteNumber, isInfiniteNumber, lerp, point, vector2 } from '../../src/geometry/point';
 
 describe('point 向量运算', () => {
   it('区分 finite / infinite number', () => {

@@ -17,20 +17,20 @@ description: pattern.shape 是开放字符串；内置 lines / dots / grid 之�
 
 `PatternDefinition` 是普通对象(不进 IR、可由工厂返回);推荐在定义点用 `definePattern({...})` 包一层，让自定义图案与 shape / arrow / path generator 的扩展写法保持一致:
 
-| 字段 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `emit` | `(ctx) => Iterable<MarkerPrimitive>` | 必填 | 在局部 tile 坐标系(`0..size`)产 motif 几何 |
-| `defaultSize` | `number` | `8` | tile 周期默认(user units);用户 `pattern.size` 覆盖 |
+| 字段          | 类型                                 | 默认值 | 描述                                               |
+| ------------- | ------------------------------------ | ------ | -------------------------------------------------- |
+| `emit`        | `(ctx) => Iterable<MarkerPrimitive>` | 必填   | 在局部 tile 坐标系(`0..size`)产 motif 几何         |
+| `defaultSize` | `number`                             | `8`    | tile 周期默认(user units);用户 `pattern.size` 覆盖 |
 
 `emit` 拿到的 `PatternEmitContext`:
 
-| 字段 | 类型 | 描述 |
-| --- | --- | --- |
-| `size` | `number` | 解析后 tile 周期(`spec.size ?? defaultSize ?? 8`) |
-| `color` | `string` | motif 主色;缺省 `currentColor`(继承 svg color,主题反应) |
-| `background` | `string?` | tile 背景(缺省透明) |
-| `lineWidth` | `number?` | 描边宽;`undefined` 时各 motif 自定缺省(lines / grid 用 1,dots 半径用 `size/5`) |
-| `round` | `(n) => number` | 精度取整(与 compile / render 同一函数) |
+| 字段         | 类型            | 描述                                                                           |
+| ------------ | --------------- | ------------------------------------------------------------------------------ |
+| `size`       | `number`        | 解析后 tile 周期(`spec.size ?? defaultSize ?? 8`)                              |
+| `color`      | `string`        | motif 主色;缺省 `currentColor`(继承 svg color,主题反应)                        |
+| `background` | `string?`       | tile 背景(缺省透明)                                                            |
+| `lineWidth`  | `number?`       | 描边宽;`undefined` 时各 motif 自定缺省(lines / grid 用 1,dots 半径用 `size/5`) |
+| `round`      | `(n) => number` | 精度取整(与 compile / render 同一函数)                                         |
 
 ## emit 与 tile
 

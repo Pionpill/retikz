@@ -1,6 +1,7 @@
+import type { FC } from 'react';
+
 import { PlotFieldType } from '@retikz/plot';
 import { Axis, Legend, PathMark, Plot, PointMark } from '@retikz/plot-react';
-import type { FC } from 'react';
 
 const rows = [
   { month: 1, value: 12, segment: 'A', volume: 18 },
@@ -26,7 +27,16 @@ const Demo: FC = () => (
     height={280}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <PathMark x="month" y="value" order="month" series="segment" color="segment" strokeWidth={3} lineCap="round" opacity={0.7} />
+    <PathMark
+      x="month"
+      y="value"
+      order="month"
+      series="segment"
+      color="segment"
+      strokeWidth={3}
+      lineCap="round"
+      opacity={0.7}
+    />
     <PointMark x="month" y="value" color="segment" size="volume" shape="segment" stroke="#1f2937" strokeWidth={0.8} />
     <Axis dimension="x" />
     <Axis dimension="y" grid />

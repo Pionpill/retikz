@@ -1,7 +1,9 @@
-import { type Side, polylineViaVertex } from './edge';
-import { localToWorld, worldToLocal } from './transform';
 import type { CompassAnchorValue } from './anchor';
+import type { Side } from './edge';
 import type { Position } from './point';
+
+import { polylineViaVertex } from './edge';
+import { localToWorld, worldToLocal } from './transform';
 
 /** 每条 side 的过顶点折线三 anchor：[邻边中点, cardinal 顶点, 邻边中点]（方向 north/south=西→东、east/west=北→南） */
 const DIAMOND_EDGE = {
@@ -77,10 +79,10 @@ export const diamond = {
     }
     return localToWorld(d, [lx, ly]);
   },
-/**
- * 从中心向 toward 方向射线与菱形 4 边的交点
- * @description 菱形方程 |x|/halfA + |y|/halfB = 1；沿方向 (lx,ly) 缩放 t 倍命中：t = 1 / (|lx|/halfA + |ly|/halfB)
- */
+  /**
+   * 从中心向 toward 方向射线与菱形 4 边的交点
+   * @description 菱形方程 |x|/halfA + |y|/halfB = 1；沿方向 (lx,ly) 缩放 t 倍命中：t = 1 / (|lx|/halfA + |ly|/halfB)
+   */
   boundaryPoint: (d: Diamond, toward: Position): Position => {
     if (d.halfA === 0 || d.halfB === 0) return [d.x, d.y]; // 退化菱形（零半轴）：边界塌缩到中心，避免除零产 NaN
     const [lx, ly] = worldToLocal(d, toward);
@@ -92,11 +94,6 @@ export const diamond = {
   /** 边上比例点：side 过 cardinal 顶点的两段折线 t∈[0,1] 处（落真实斜边；含旋转） */
   edgePoint: (d: Diamond, side: Side, t: number): Position => {
     const [mid0, vertex, mid1] = DIAMOND_EDGE[side];
-    return polylineViaVertex(
-      diamond.anchor(d, mid0),
-      diamond.anchor(d, vertex),
-      diamond.anchor(d, mid1),
-      t,
-    );
+    return polylineViaVertex(diamond.anchor(d, mid0), diamond.anchor(d, vertex), diamond.anchor(d, mid1), t);
   },
 };

@@ -77,7 +77,10 @@ export type PackageGroup = {
   members: ReadonlyArray<PackageId>;
 };
 export const PACKAGE_GROUPS: ReadonlyArray<PackageGroup> = [
-  { id: 'kernel', members: ['@retikz/math', '@retikz/core', '@retikz/render', '@retikz/react', '@retikz/vanilla', '@retikz/tex'] },
+  {
+    id: 'kernel',
+    members: ['@retikz/math', '@retikz/core', '@retikz/render', '@retikz/react', '@retikz/vanilla', '@retikz/tex'],
+  },
   { id: 'graph', members: ['@retikz/plot', '@retikz/plot-react', '@retikz/plot-vanilla'] },
   { id: 'other', members: ['docs'] },
 ];

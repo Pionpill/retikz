@@ -1,6 +1,8 @@
+import type { ArrowEndSpec, GroupPrim, PathPrim, RectPrim, ScenePrimitive, TextPrim } from '@retikz/core';
+
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
-import type { ArrowEndSpec, GroupPrim, PathPrim, RectPrim, ScenePrimitive, TextPrim } from '@retikz/core';
+
 import { renderPrim } from '../../src/render/render-prim';
 
 /** 测试在 node env 跑，不实际挂载——只检查返回的 React element 类型 / props 是否正确 */
@@ -31,7 +33,15 @@ describe('renderPrim: rect', () => {
   it('rect prim → <rect> element，几何 / 样式字段透传', () => {
     const el = renderPrim(base, 0) as AnyEl;
     expect(el.type).toBe('rect');
-    expect(el.props).toMatchObject({ x: 1, y: 2, width: 30, height: 20, fill: '#fff', stroke: '#000', strokeWidth: 1.5 });
+    expect(el.props).toMatchObject({
+      x: 1,
+      y: 2,
+      width: 30,
+      height: 20,
+      fill: '#fff',
+      stroke: '#000',
+      strokeWidth: 1.5,
+    });
   });
 
   it('cornerRadius → rx / ry 双向写入（SVG 圆角）', () => {
@@ -43,19 +53,13 @@ describe('renderPrim: rect', () => {
 
 describe('renderPrim: ellipse', () => {
   it('rotate 缺省时 transform=undefined（避免冗余属性）', () => {
-    const el = renderPrim(
-      { type: 'ellipse', cx: 0, cy: 0, rx: 10, ry: 5 },
-      0,
-    ) as AnyEl;
+    const el = renderPrim({ type: 'ellipse', cx: 0, cy: 0, rx: 10, ry: 5 }, 0) as AnyEl;
     expect(el.type).toBe('ellipse');
     expect(el.props.transform).toBeUndefined();
   });
 
   it('rotate 存在时 transform=`rotate(deg cx cy)`，围绕椭圆中心旋转', () => {
-    const el = renderPrim(
-      { type: 'ellipse', cx: 50, cy: 30, rx: 10, ry: 5, rotate: 45 },
-      0,
-    ) as AnyEl;
+    const el = renderPrim({ type: 'ellipse', cx: 50, cy: 30, rx: 10, ry: 5, rotate: 45 }, 0) as AnyEl;
     expect(el.props.transform).toBe('rotate(45 50 30)');
   });
 });
@@ -80,11 +84,9 @@ describe('renderPrim: path', () => {
   });
 
   it('arrowStart / arrowEnd 通过 ctx.arrowMarkerIdFor 映射为 url(#id)', () => {
-    const el = renderPrim(
-      { ...base, arrowStart: resolvedSpec('normal'), arrowEnd: resolvedSpec('stealth') },
-      0,
-      { arrowMarkerIdFor: spec => `mk-${spec.shape}` },
-    ) as AnyEl;
+    const el = renderPrim({ ...base, arrowStart: resolvedSpec('normal'), arrowEnd: resolvedSpec('stealth') }, 0, {
+      arrowMarkerIdFor: spec => `mk-${spec.shape}`,
+    }) as AnyEl;
     expect(el.props.markerStart).toBe('url(#mk-normal)');
     expect(el.props.markerEnd).toBe('url(#mk-stealth)');
   });
@@ -111,7 +113,7 @@ describe('renderPrim: text', () => {
 
   it('baseline=middle 的 3 行块：首行 dy = -(n-1)/2 × lineHeight 让整块在 y 居中', () => {
     const el = renderPrim(base, 0) as AnyEl;
-    const tspans = (el.props.children as Array<AnyEl>);
+    const tspans = el.props.children as Array<AnyEl>;
     expect(tspans).toHaveLength(3);
     expect(tspans[0].props.dy).toBe(-16); // -(3-1)/2 × 16 = -16
     expect(tspans[1].props.dy).toBe(16);

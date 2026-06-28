@@ -1,5 +1,6 @@
-import { IntervalMark, Plot } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { IntervalMark, Plot } from '@retikz/plot-react';
 
 import { pulledTraffic } from './interval-pull.data';
 

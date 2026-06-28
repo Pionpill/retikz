@@ -1,10 +1,11 @@
-import {
-  type AnyRowSelectorDefinition,
-  type AnyStatisticsReducerDefinition,
-  type RowSelection,
-  type StatisticsReducerContext,
-  extractStatisticOperation,
+import type {
+  AnyRowSelectorDefinition,
+  AnyStatisticsReducerDefinition,
+  RowSelection,
+  StatisticsReducerContext,
 } from '../../contract';
+
+import { extractStatisticOperation } from '../../contract';
 import { type ExternalRow, type ReducerOperation, type SelectorOperation } from '../../schemas';
 import { BUILTIN_STATISTICS_REDUCERS } from './reducers';
 import { BUILTIN_ROW_SELECTORS } from './selectors';
@@ -13,7 +14,9 @@ export { BUILTIN_STATISTICS_REDUCERS } from './reducers';
 export { BUILTIN_ROW_SELECTORS } from './selectors';
 
 /** 合并内置与自定义统计 reducer 定义，并检查 op 冲突。 */
-export const resolveStatisticsReducerRegistry = (custom?: ReadonlyArray<AnyStatisticsReducerDefinition>): Map<string, AnyStatisticsReducerDefinition> => {
+export const resolveStatisticsReducerRegistry = (
+  custom?: ReadonlyArray<AnyStatisticsReducerDefinition>,
+): Map<string, AnyStatisticsReducerDefinition> => {
   const registry = new Map<string, AnyStatisticsReducerDefinition>();
   for (const def of BUILTIN_STATISTICS_REDUCERS) registry.set(extractStatisticOperation(def.schema), def);
   for (const def of custom ?? []) {
@@ -25,7 +28,9 @@ export const resolveStatisticsReducerRegistry = (custom?: ReadonlyArray<AnyStati
 };
 
 /** 合并内置与自定义 row selector 定义，并检查 op 冲突。 */
-export const resolveRowSelectorRegistry = (custom?: ReadonlyArray<AnyRowSelectorDefinition>): Map<string, AnyRowSelectorDefinition> => {
+export const resolveRowSelectorRegistry = (
+  custom?: ReadonlyArray<AnyRowSelectorDefinition>,
+): Map<string, AnyRowSelectorDefinition> => {
   const registry = new Map<string, AnyRowSelectorDefinition>();
   for (const def of BUILTIN_ROW_SELECTORS) registry.set(extractStatisticOperation(def.schema), def);
   for (const def of custom ?? []) {
@@ -51,7 +56,9 @@ const reducerDefinitionOf = (
 ): AnyStatisticsReducerDefinition => {
   const definition = registry.get(operation.op);
   if (definition === undefined) {
-    throw new Error(`lowerPlots: reducer op "${operation.op}" is not registered; pass a StatisticsReducerDefinition via options.statisticsReducerDefinitions`);
+    throw new Error(
+      `lowerPlots: reducer op "${operation.op}" is not registered; pass a StatisticsReducerDefinition via options.statisticsReducerDefinitions`,
+    );
   }
   return definition;
 };
@@ -63,7 +70,9 @@ const selectorDefinitionOf = (
 ): AnyRowSelectorDefinition => {
   const definition = registry.get(operation.op);
   if (definition === undefined) {
-    throw new Error(`lowerPlots: selector op "${operation.op}" is not registered; pass a RowSelectorDefinition via options.rowSelectorDefinitions`);
+    throw new Error(
+      `lowerPlots: selector op "${operation.op}" is not registered; pass a RowSelectorDefinition via options.rowSelectorDefinitions`,
+    );
   }
   return definition;
 };

@@ -1,5 +1,6 @@
-import { Coordinate, Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Coordinate, Draw, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * scope.id boundingShape='circle'：synthetic 包络取子树最小外接圆，连线落圆周而非矩形角
@@ -13,9 +14,15 @@ const Demo: FC = () => (
   <Layout width={560} height={220}>
     <Coordinate id="external" position={[0, 50]} />
     <Scope id="cluster" boundingShape="circle" transforms={[{ kind: 'translate', x: 240, y: 0 }]}>
-      <Node id="A" position={[0, 0]}>A</Node>
-      <Node id="B" position={[80, 0]}>B</Node>
-      <Node id="C" position={[40, 60]}>C</Node>
+      <Node id="A" position={[0, 0]}>
+        A
+      </Node>
+      <Node id="B" position={[80, 0]}>
+        B
+      </Node>
+      <Node id="C" position={[40, 60]}>
+        C
+      </Node>
     </Scope>
     <Draw way={RING} stroke="gray" dashPattern={[4, 3]} />
     <Draw way={['external', 'cluster.west']} arrow="->" />

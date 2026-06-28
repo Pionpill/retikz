@@ -1,11 +1,16 @@
-import { Ban, Infinity as InfinityIcon, type LucideIcon, Wrench } from 'lucide-react';
-import { type FC, useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import type { FC } from 'react';
+
+import { Ban, Infinity as InfinityIcon, Wrench } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
+import type { AutoRepairMode } from '@/store/use-ai-chat-store';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { type AutoRepairMode, useAiChatStore } from '@/store/use-ai-chat-store';
+import { useAiChatStore } from '@/store/use-ai-chat-store';
 
 const MODES: ReadonlyArray<AutoRepairMode> = ['off', 'limited', 'always'];
 

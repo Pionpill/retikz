@@ -29,7 +29,7 @@ pipeline        Tier 2 → Kernel IR 下沉编排，调 providers + contract + f
 - `pipeline` 是编排层（Tier 2 → Kernel IR 下沉），调用各层 `resolveXxxRegistry` + dispatch 函数；具体规则应放回拥有该概念的层。
 - 新增共享逻辑先放到最小合理归属层；多个语法层都需要时优先抽到更底层或 `@retikz/math` / `@retikz/core`。
 
-### features/* 暂无 define 机制；data 的可扩展缝 format 已抽走（ADR-09）
+### features/\* 暂无 define 机制；data 的可扩展缝 format 已抽走（ADR-09）
 
 `features/data` / `features/guide` / `features/interaction` 是必须但**还没有 `defineXxx` / `resolveXxxRegistry` 扩展机制**的内置子系统——它们不是 contract/providers 那种「内置 ∪ 自定义同表分派」的可扩展语法层，早期设计未细化到这一层，先作为内部实现归在 `features/`。后续某层确认值得开放扩展时，再把它从 `features/` 抽成 contract/providers 对（补 `defineXxx` + registry + `lowerPlots` 选项 + React 透传四件套）。
 

@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC, ReactElement } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 const DIRS: Array<{ id: string; pos: [number, number]; label: string }> = [
   { id: 'n', pos: [0, -65], label: 'N' },
@@ -14,7 +15,15 @@ const DIRS: Array<{ id: string; pos: [number, number]; label: string }> = [
 
 // 一组：中心节点（gray 虚线 boundary）+ 8 个方位锚点 + 8 条自动贴边的 Draw
 const renderScene = (tag: string, cx: number, shape: 'rectangle' | 'ellipse'): Array<ReactElement> => [
-  <Node key={`${tag}-o`} id={`${tag}-o`} position={[cx, 0]} shape={shape} padding={12} stroke="gray" dashPattern={[4, 3]}>
+  <Node
+    key={`${tag}-o`}
+    id={`${tag}-o`}
+    position={[cx, 0]}
+    shape={shape}
+    padding={12}
+    stroke="gray"
+    dashPattern={[4, 3]}
+  >
     Node
   </Node>,
   ...DIRS.map(d => (

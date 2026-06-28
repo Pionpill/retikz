@@ -1,4 +1,4 @@
-import type { I18nKey } from "./interface";
+import type { I18nKey } from './interface';
 
 export type ModuleEntry = {
   id: string;

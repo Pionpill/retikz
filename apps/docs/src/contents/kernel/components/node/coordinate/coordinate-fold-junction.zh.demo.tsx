@@ -1,5 +1,6 @@
-import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 
 /**
  * Coordinate 作为命名拐点汇聚
@@ -7,10 +8,16 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={320} height={200}>
-    <Node id="A" position={[-110, -55]}>A</Node>
-    <Node id="B" position={[-110, 55]}>B</Node>
+    <Node id="A" position={[-110, -55]}>
+      A
+    </Node>
+    <Node id="B" position={[-110, 55]}>
+      B
+    </Node>
     <Coordinate id="junction" position={[0, 0]} />
-    <Node id="out" position={[110, 0]} shape="diamond">汇合后</Node>
+    <Node id="out" position={[110, 0]} shape="diamond">
+      汇合后
+    </Node>
     {/* 两条线先各自走到 junction，再合并到 out */}
     <Draw way={['A', 'junction']} stroke="gray" />
     <Draw way={['B', 'junction']} stroke="gray" />

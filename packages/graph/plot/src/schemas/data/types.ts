@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+
 import type { PlotFieldTypeValue } from './constants';
 import type { DataModelSchema, DataRefSchema, FieldDefSchema, FieldFormatSchema, ScalarValueSchema } from './schema';
 

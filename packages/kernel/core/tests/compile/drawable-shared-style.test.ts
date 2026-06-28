@@ -1,12 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import {
-  type IR,
-  PathDefaultSchema,
-  type PathPrim,
-  type ScenePrimitive,
-  ScopeSchema,
-  compileToScene,
-} from '../../src';
+
+import type { IR, PathPrim, ScenePrimitive } from '../../src';
+
+import { compileToScene, PathDefaultSchema, ScopeSchema } from '../../src';
 
 const steps = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -102,7 +98,9 @@ describe('Drawable shared style resolution', () => {
   });
 
   it('drawable-shared-z-index-relation-style：zIndex 排序对 path 和 ribbon 采用同一语义', () => {
-    const prims = pathPrims(scene([ribbon({ id: 'front-ribbon', zIndex: 3 }), linePath({ id: 'back-path', zIndex: 0 })]));
+    const prims = pathPrims(
+      scene([ribbon({ id: 'front-ribbon', zIndex: 3 }), linePath({ id: 'back-path', zIndex: 0 })]),
+    );
 
     expect(prims.map(prim => prim.id)).toEqual(['back-path', 'front-ribbon']);
   });

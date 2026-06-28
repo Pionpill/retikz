@@ -9,7 +9,10 @@ A retikz figure is drawn first and made interactive second: the server (or a sta
 
 The two-step split exists because an event handler is a function and cannot be serialized — it never enters the IR and lives only at runtime. The IR keeps just one stable attach point: each element's `id`. At render time that id is carried onto the element (SVG emits it as `data-retikz-id`, Canvas keeps it as the return value of a hit query), so the client can bind functions by id + event name. SVG and Canvas share the **same binding semantics**; they differ only in how a pointer event gets located to an element.
 
-<ComponentAlert title="The attach point is the id" description="Only elements with an id can bind a handler. A handler given to an element without an id is warned about and skipped in development." />
+<ComponentAlert
+  title="The attach point is the id"
+  description="Only elements with an id can bind a handler. A handler given to an element without an id is warned about and skipped in development."
+/>
 
 ## React: event props on components
 
@@ -17,7 +20,9 @@ Add `on<Event>` props to `<Node>` / `<Path>` / `<Scope>` — as long as the elem
 
 <ComponentPreview name="hydration-click" size="md" interactive />
 
-<p className="text-center text-sm text-muted-foreground">Click the orange node to toggle the highlight; the counter next to it ticks up.</p>
+<p className="text-center text-sm text-muted-foreground">
+  Click the orange node to toggle the highlight; the counter next to it ticks up.
+</p>
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
@@ -26,20 +31,20 @@ import { Layout, Node } from '@retikz/react';
   <Node id="box" onClick={event => toggle('box')} onPointerEnter={highlight}>
     Click me
   </Node>
-</Layout>
+</Layout>;
 ```
 
 Available event props:
 
-| Prop | Fires on |
-| --- | --- |
-| `onClick` | Single click on the element |
-| `onDoubleClick` | Double click on the element |
-| `onRightClick` | Right click (does not suppress the browser menu — call `event.preventDefault()` yourself) |
-| `onPointerDown` / `onPointerUp` | Pointer pressed / released on the element |
-| `onPointerMove` | Pointer moving over the element |
-| `onPointerEnter` / `onPointerLeave` | Pointer entering / leaving the element (no repeat across child elements) |
-| `onWheel` | Wheel over the element |
+| Prop                                | Fires on                                                                                  |
+| ----------------------------------- | ----------------------------------------------------------------------------------------- |
+| `onClick`                           | Single click on the element                                                               |
+| `onDoubleClick`                     | Double click on the element                                                               |
+| `onRightClick`                      | Right click (does not suppress the browser menu — call `event.preventDefault()` yourself) |
+| `onPointerDown` / `onPointerUp`     | Pointer pressed / released on the element                                                 |
+| `onPointerMove`                     | Pointer moving over the element                                                           |
+| `onPointerEnter` / `onPointerLeave` | Pointer entering / leaving the element (no repeat across child elements)                  |
+| `onWheel`                           | Wheel over the element                                                                    |
 
 A few constraints:
 
@@ -108,17 +113,17 @@ hydrate(root, { handlers, scene });
 
 The handler's second arg `context` fills in "the semantic element that was hit" as a renderer-agnostic object — the same shape whether SVG or Canvas. It represents the **semantic element aggregated by `id`** (the several primitives of one multi-shape Node share an id and count as "one element"), not a single underlying primitive.
 
-| Field | Meaning |
-| --- | --- |
-| `id` | The hit semantic element's id |
-| `meta` | The element's provenance (from `<Node meta={…}>` — datum / series / layer); `undefined` if none |
-| `renderer` | `'svg'` \| `'canvas'` |
-| `element` | The hit DOM element: SVG = the `data-retikz-id` primitive clicked; Canvas = `null` (no per-element DOM) |
-| `root` | The figure root (`<svg>` or `<canvas>`) |
-| `point` | The pointer position in scene user units (inverse meet-fit); `null` for non-pointer events |
-| `geometry` | Union bounding box `bbox` + `center` of all primitives sharing this id (scene user units); `undefined` without a scene |
+| Field       | Meaning                                                                                                                               |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`        | The hit semantic element's id                                                                                                         |
+| `meta`      | The element's provenance (from `<Node meta={…}>` — datum / series / layer); `undefined` if none                                       |
+| `renderer`  | `'svg'` \| `'canvas'`                                                                                                                 |
+| `element`   | The hit DOM element: SVG = the `data-retikz-id` primitive clicked; Canvas = `null` (no per-element DOM)                               |
+| `root`      | The figure root (`<svg>` or `<canvas>`)                                                                                               |
+| `point`     | The pointer position in scene user units (inverse meet-fit); `null` for non-pointer events                                            |
+| `geometry`  | Union bounding box `bbox` + `center` of all primitives sharing this id (scene user units); `undefined` without a scene                |
 | `animation` | Animation controls: `play` / `pause` / `restart` / `stop` / `seek` (default target is the hit element; pass an id to control another) |
-| `scene` | The current Scene (escape hatch); `undefined` when standalone `hydrate` got no scene |
+| `scene`     | The current Scene (escape hatch); `undefined` when standalone `hydrate` got no scene                                                  |
 
 **Triggering animation from a callback**: give an element a `trigger: 'manual'` animation (no autoplay, waits for a command), then call `context.animation.restart()` inside the handler to replay it on click:
 
@@ -133,26 +138,33 @@ import { Layout, Node, pulse } from '@retikz/react';
     meta={{ label: 'ball' }}
     animations={[{ ...pulse({ peak: 1.4 }), trigger: 'manual', iterations: 1 }]}
     onClick={(event, context) => {
-      console.log(context.meta);     // { label: 'ball' }
-      context.animation.restart();   // replay this node's animation on click
+      console.log(context.meta); // { label: 'ball' }
+      context.animation.restart(); // replay this node's animation on click
     }}
   >
     click me
   </Node>
-</Layout>
+</Layout>;
 ```
 
-<ComponentAlert title="context is always passed" description="Incomplete information shows up only as missing fields (meta / geometry / scene may be undefined, animation is a no-op without a scene), never as a missing context. Handlers that only use event can ignore it entirely." />
+<ComponentAlert
+  title="context is always passed"
+  description="Incomplete information shows up only as missing fields (meta / geometry / scene may be undefined, animation is a no-op without a scene), never as a missing context. Handlers that only use event can ignore it entirely."
+/>
 
 ## Same behavior in both modes
 
 The same `handlers` table behaves identically under `renderer="svg"` and `renderer="canvas"` — they share one registry and one dispatch path, differing only in how an element is located: SVG looks up the nearest ancestor carrying `data-retikz-id`, Canvas returns an element id from a geometric hit query. Switching renderer requires no handler changes.
 
-| Mode | Locating |
-| --- | --- |
-| `renderer="svg"` | Walk up from the event target to the nearest ancestor with `data-retikz-id` |
-| `renderer="canvas"` | Map the pointer coordinate through a hit query to an element id |
+| Mode                | Locating                                                                    |
+| ------------------- | --------------------------------------------------------------------------- |
+| `renderer="svg"`    | Walk up from the event target to the nearest ancestor with `data-retikz-id` |
+| `renderer="canvas"` | Map the pointer coordinate through a hit query to an element id             |
 
 The context `id` / `meta` / `geometry` / `point` agree across both backends; `context.animation` is also **precise per-id control** on both (defaults to the hit element, pass an id to target another): SVG drives that element's WAAPI / CSS animations via `getAnimations()`, Canvas uses a per-id virtual clock (layering an independent offset / pause / active state per id on top of the single shared rAF clock). The only difference: Canvas has no per-element DOM, so `context.element` is always `null` (use `root` + `point`).
 
-<ComponentAlert type="warn" title="The context menu is not suppressed for you" description="onRightClick / rightClick leaves the browser context menu in place by default; to take it over, call event.preventDefault() inside the handler." />
+<ComponentAlert
+  type="warn"
+  title="The context menu is not suppressed for you"
+  description="onRightClick / rightClick leaves the browser context menu in place by default; to take it over, call event.preventDefault() inside the handler."
+/>

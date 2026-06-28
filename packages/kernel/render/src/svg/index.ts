@@ -10,7 +10,7 @@
  */
 
 // ============ 描述树类型 ============
-export type { SvgNode, SvgAttrs, SvgStructuralAttrs, SvgStyle, SvgTag } from './types';
+export type { SvgAttrs, SvgNode, SvgStructuralAttrs, SvgStyle, SvgTag } from './types';
 
 // ============ builder（总装入口 + 粒度化）/ 字符串序列化 ============
 export * from './builders';
@@ -22,5 +22,5 @@ export { buildTransform } from './transform-builder';
 export { formatViewBox } from './view-box';
 
 // ============ 动画播放（SVG 后端）：CSS @keyframes + WAAPI 描述类型 ============
-export * from './animation';
 export type { CubicBezier, EasingFn, EasingRegistry } from '../animation/types';
+export * from './animation';

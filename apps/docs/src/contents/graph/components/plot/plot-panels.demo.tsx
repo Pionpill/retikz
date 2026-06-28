@@ -1,6 +1,7 @@
 import type { FC } from 'react';
-import { Layout } from '@retikz/react';
+
 import { Axis, IntervalMark, PathMark, Plot } from '@retikz/plot-react';
+import { Layout } from '@retikz/react';
 
 import { revenue } from './plot-cartesian.data';
 

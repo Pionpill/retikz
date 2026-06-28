@@ -1,7 +1,8 @@
-import type { FC } from 'react';
-import { Layout } from '@retikz/react';
 import type { DataModel } from '@retikz/plot';
+import type { FC } from 'react';
+
 import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
+import { Layout } from '@retikz/react';
 
 import { currentSales, forecastSales } from './processing-same.data';
 

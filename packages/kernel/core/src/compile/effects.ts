@@ -1,4 +1,5 @@
 import type { DropShadow, ShadowPresetValue } from '../schemas/effects';
+
 import { SHADOW_PRESETS } from '../schemas/effects';
 
 /** shadow color 缺省（半透明黑）；preset 与显式 color 均未给时兜底 */
@@ -10,9 +11,7 @@ const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';
  *   `{ ...(preset ? SHADOW_PRESETS[preset] : {}), ...显式出现的字段 }`（显式字段逐项覆盖 preset，输出去掉 `preset` key）。
  *   合并后若仍无 offsetX/offsetY（preset 为 `none` 且无显式偏移）→ undefined。color 缺省补 `rgba(0,0,0,0.5)`。
  */
-export const resolveShadow = (
-  shadow: ShadowPresetValue | DropShadow | undefined,
-): DropShadow | undefined => {
+export const resolveShadow = (shadow: ShadowPresetValue | DropShadow | undefined): DropShadow | undefined => {
   if (shadow === undefined) return undefined;
 
   if (typeof shadow === 'string') {

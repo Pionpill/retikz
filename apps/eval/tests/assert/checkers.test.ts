@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
 import type { Scene } from '@retikz/core';
+
+import { describe, expect, it } from 'vitest';
+
 import { CHECKERS } from '../../src/assert/checkers';
 
 const scene = {
@@ -35,18 +37,15 @@ describe('CHECKERS.textPresent', () => {
     expect(CHECKERS.textPresent(scene, { kind: 'textPresent', text: 'Hell' }).pass).toBe(true);
   });
   it('exact 不命中子串', () => {
-    expect(
-      CHECKERS.textPresent(scene, { kind: 'textPresent', text: 'Hell', match: 'exact' }).pass,
-    ).toBe(false);
+    expect(CHECKERS.textPresent(scene, { kind: 'textPresent', text: 'Hell', match: 'exact' }).pass).toBe(false);
   });
 });
 
 describe('CHECKERS.primitiveCount', () => {
   it('rect >= 2 通过', () => {
-    expect(
-      CHECKERS.primitiveCount(scene, { kind: 'primitiveCount', primitive: 'rect', op: '>=', value: 2 })
-        .pass,
-    ).toBe(true);
+    expect(CHECKERS.primitiveCount(scene, { kind: 'primitiveCount', primitive: 'rect', op: '>=', value: 2 }).pass).toBe(
+      true,
+    );
   });
   it('rect == 3 失败', () => {
     const r = CHECKERS.primitiveCount(scene, {

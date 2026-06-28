@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * 另一条 Path 连到 contour 节点（可连接性）
@@ -18,7 +19,12 @@ const Demo: FC = () => (
     <Node id="src" position={[-130, 0]} fill="lightgray">
       起点
     </Node>
-    <Node id="flag" position={[110, 0]} shape={{ type: 'contour', params: { points: FLAG, cornerRadius: 6 } }} fill="steelblue" />
+    <Node
+      id="flag"
+      position={[110, 0]}
+      shape={{ type: 'contour', params: { points: FLAG, cornerRadius: 6 } }}
+      fill="steelblue"
+    />
     <Draw way={['src', 'flag']} arrow="->" stroke="gray" />
   </Layout>
 );

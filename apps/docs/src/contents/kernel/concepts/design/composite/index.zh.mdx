@@ -7,7 +7,11 @@ retikz 的 IR 子节点分两层：**Tier 1**（`node` / `path` / `coordinate` /
 
 复合像 `Node` 一样有自己**完整的 zod schema**（字段一等、每字段带说明），在 compile 第一步经注册的展开函数下沉成 Tier 1，之后布局 / anchor / zIndex / renderer 全自动复用。core 不内置任何 composite，也不懂任何 chart / domain 语义。
 
-<ComponentAlert type="tip" title="先画图的人可以先跳过" description="本页讲 Tier 2 扩展机制——domain 包如何注册高层节点、在 compile 期下沉成 Tier 1。只想用现成组件画图的读者可以先跳过，等需要自定义高层节点、或想懂 @retikz/plot 怎么接入时再回来。" />
+<ComponentAlert
+  type="tip"
+  title="先画图的人可以先跳过"
+  description="本页讲 Tier 2 扩展机制——domain 包如何注册高层节点、在 compile 期下沉成 Tier 1。只想用现成组件画图的读者可以先跳过，等需要自定义高层节点、或想懂 @retikz/plot 怎么接入时再回来。"
+/>
 
 ## composite 的意义
 
@@ -31,10 +35,10 @@ composite 是「带语义的高层 IR 节点」。相比直接手写一堆 Tier 
 
 <ComponentPreview name="composite-basic" size="sm" />
 
-| 字段 | 类型 | 描述 |
-| --- | --- | --- |
-| `schema` | `ZodType` | 完整节点 schema：`CompositeBaseSchema.extend({ namespace: z.literal(...), type: z.literal(...), ...字段 })`；core 从两个 literal 提取 `namespace.type` 作注册 key |
-| `expand` | `(node) => IRChild \| IRChild[]` | 据节点字段展开成 Tier 1（纯函数、props 驱动；可产多个、可嵌套 composite） |
+| 字段     | 类型                             | 描述                                                                                                                                                              |
+| -------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `schema` | `ZodType`                        | 完整节点 schema：`CompositeBaseSchema.extend({ namespace: z.literal(...), type: z.literal(...), ...字段 })`；core 从两个 literal 提取 `namespace.type` 作注册 key |
+| `expand` | `(node) => IRChild \| IRChild[]` | 据节点字段展开成 Tier 1（纯函数、props 驱动；可产多个、可嵌套 composite）                                                                                         |
 
 > `namespace` / `type` **不在 definition 顶层重复写**——core 从 `schema` 的 `z.literal` 提取。schema 必须是 extend `CompositeBaseSchema` 的 ZodObject、且两者为 `z.literal`，否则注册期报错。
 
@@ -49,11 +53,11 @@ composite 是「带语义的高层 IR 节点」。相比直接手写一堆 Tier 
 
 ## 与 Sugar 的区别
 
-| | Sugar（`<Draw>` 等） | Tier 2 composite |
-| --- | --- | --- |
-| 进 IR | ❌ adapter 期展平为 Kernel | ✅ 作为高层节点进 IR、可持久化 / AI 生成 |
-| 展开时机 | 框架构建期 | core compile 期（所有 renderer / runtime 共享） |
-| 适用 | 可 1:1 反推的简写 | 含算法（auto-tick / 布局 / scale）的高层结构 |
+|          | Sugar（`<Draw>` 等）       | Tier 2 composite                                |
+| -------- | -------------------------- | ----------------------------------------------- |
+| 进 IR    | ❌ adapter 期展平为 Kernel | ✅ 作为高层节点进 IR、可持久化 / AI 生成        |
+| 展开时机 | 框架构建期                 | core compile 期（所有 renderer / runtime 共享） |
+| 适用     | 可 1:1 反推的简写          | 含算法（auto-tick / 布局 / scale）的高层结构    |
 
 展开**始终在 core**、不在框架层——svg / canvas / vanilla / SSR / AI 都自动获得，无需各自实现。
 
@@ -65,7 +69,7 @@ PGFPlots 之于 TikZ ≈ Tier 2 之于 retikz Tier 1：图表（PGFPlots 的 `ax
 
 ## 可嵌入 Tier2：把 Tier2 组件写进 `<Layout>`
 
-上面讲的是「一个 Tier2 *节点* 怎么下沉成 Tier 1」。这一节讲一个相邻问题：当你想把多个 Tier2 *React 组件*（如未来的 `<Plot>`）写进同一个 `<Layout>`、收进同一张图时，它们各自的高层节点和展开逻辑怎么进到这张图的 compile。
+上面讲的是「一个 Tier2 _节点_ 怎么下沉成 Tier 1」。这一节讲一个相邻问题：当你想把多个 Tier2 _React 组件_（如未来的 `<Plot>`）写进同一个 `<Layout>`、收进同一张图时，它们各自的高层节点和展开逻辑怎么进到这张图的 compile。
 
 ```tsx
 <Layout width={800} height={600}>
@@ -84,10 +88,10 @@ core 只定义一个 TS 接口 `EmbeddableTier2Adapter`，不认识任何具体 
 ```ts
 type EmbeddableTier2Adapter<TProps> = {
   displayName: string; // 匹配组件 displayName
-  namespace: string;   // = composite namespace，core 据此分组贡献
+  namespace: string; // = composite namespace，core 据此分组贡献
   contribute: (props: TProps) => {
-    node: IRChild;                       // 放进 scene 的 composite 节点（adapter 可自裹 translate <Scope> 摆位）
-    datasets: Record<string, unknown>;   // 按 reference 键的外部数据，**不进 IR**
+    node: IRChild; // 放进 scene 的 composite 节点（adapter 可自裹 translate <Scope> 摆位）
+    datasets: Record<string, unknown>; // 按 reference 键的外部数据，**不进 IR**
     makeComposites: (mergedDatasets: Record<string, unknown>) => Array<CompositeDefinition>;
   };
 };
@@ -112,13 +116,13 @@ Panel.embeddableAdapter = {
 
 `<Layout>` 收齐所有贡献后，按 `namespace` 分组：
 
-| 步骤 | 行为 |
-| --- | --- |
-| 合并 datasets | 同 namespace 的 `datasets` 并成一份；同一 `reference` 在两处出现时**必须是同一对象引用**，否则 fail-loud |
-| 调 makeComposites | 每个 namespace 用合并后的 datasets 调一次，得到该 domain 的 composite |
-| 拼装 | 各 namespace 的结果 concat，再与用户显式 `composites` prop 合并，一起交 compile |
+| 步骤              | 行为                                                                                                     |
+| ----------------- | -------------------------------------------------------------------------------------------------------- |
+| 合并 datasets     | 同 namespace 的 `datasets` 并成一份；同一 `reference` 在两处出现时**必须是同一对象引用**，否则 fail-loud |
+| 调 makeComposites | 每个 namespace 用合并后的 datasets 调一次，得到该 domain 的 composite                                    |
+| 拼装              | 各 namespace 的结果 concat，再与用户显式 `composites` prop 合并，一起交 compile                          |
 
-也就是说，可嵌入 Tier2 把上文的 lowering 链路接到了 `<Layout>` 的声明式表面：composite 解决「Tier2 *节点* 怎么下沉」，可嵌入 adapter 解决「Tier2 *组件* 怎么把这个节点和它的展开逻辑交进共享的 `<Layout>`」。数据始终留在 IR 之外，在 compile 期经 composite 注入——和 `composites` prop、和 `<Plot>` 单独使用时的做法一致。
+也就是说，可嵌入 Tier2 把上文的 lowering 链路接到了 `<Layout>` 的声明式表面：composite 解决「Tier2 _节点_ 怎么下沉」，可嵌入 adapter 解决「Tier2 _组件_ 怎么把这个节点和它的展开逻辑交进共享的 `<Layout>`」。数据始终留在 IR 之外，在 compile 期经 composite 注入——和 `composites` prop、和 `<Plot>` 单独使用时的做法一致。
 
 <ComponentPreview name="embeddable-flow" size="sm" hideCode />
 
@@ -134,25 +138,37 @@ Panel.embeddableAdapter = {
 - **数据不进 IR**：`datasets` 留在 IR 之外，在 compile 期经 composite 注入——和 `composites` prop 一致。
 - **无 IR schema 改动**：这是 core react 层的机制，composite 节点和展开管线都已存在。
 
-<ComponentAlert type="tip" title="plot 的一等嵌入即将到来" description="本节描述的是 core 的通用机制与 adapter 契约。把 displayName + adapter 挂到 <Plot> 上、以及 x / y / width / height 等嵌入 props，由 plot 侧实现、尚未就位——所以 <Layout><Plot/></Layout> 暂时还不能直接运行。上面的 <Panel> 仅作示意，展示 domain 作者要实现的契约。" />
+<ComponentAlert
+  type="tip"
+  title="plot 的一等嵌入即将到来"
+  description="本节描述的是 core 的通用机制与 adapter 契约。把 displayName + adapter 挂到 <Plot> 上、以及 x / y / width / height 等嵌入 props，由 plot 侧实现、尚未就位——所以 <Layout><Plot/></Layout> 暂时还不能直接运行。上面的 <Panel> 仅作示意，展示 domain 作者要实现的契约。"
+/>
 
 ## 延伸阅读
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/kernel/concepts/design/layers">
     <span className="font-semibold">分层</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">DSL / IR / Scene 三层模型，composite 在架构里的位置</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      DSL / IR / Scene 三层模型，composite 在架构里的位置
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/extend">
     <span className="font-semibold">扩展</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">composite 与 shape / arrow / pattern / generator 同属可注册扩展面</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      composite 与 shape / arrow / pattern / generator 同属可注册扩展面
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/layout/overview">
     <span className="font-semibold">Layout</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">汇总可嵌入 Tier2 贡献的容器：composites / embeddables prop</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      汇总可嵌入 Tier2 贡献的容器：composites / embeddables prop
+    </span>
   </LinkedCard>
   <LinkedCard href="/graph/introduction">
     <span className="font-semibold">@retikz/plot</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">首个 composite 消费者：grammar-of-graphics 统计图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      首个 composite 消费者：grammar-of-graphics 统计图
+    </span>
   </LinkedCard>
 </div>

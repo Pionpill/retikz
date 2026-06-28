@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { triangle } from '../../src/geometry/triangle';
 
 describe('triangle', () => {

@@ -35,22 +35,27 @@ Under polar, use `dimension="x"` (angular tick labels) and `dimension="y"` (radi
 
 <ComponentPreview name="axis-polar" sourceFiles={['axis-polar.data.ts']} />
 
-<p className="text-sm text-muted-foreground">The x axis labels angular dimensions; the y axis with grid draws concentric rings.</p>
+<p className="text-sm text-muted-foreground">
+  The x axis labels angular dimensions; the y axis with grid draws concentric rings.
+</p>
 
 ## API
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `dimension` | `'x' \| 'y' \| 'z'` | — | Which dimension to decorate: cartesian x / y, polar x / y, ternary x / y / z (triangle edges); must match the coordinate's valid set or it errors |
-| `scale` | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt'` | auto-derived | Positional scale shortcut; equivalent to `<Scale dimension="..." type="..." />` for the same dimension, and only applies to x / y / z |
-| `tickCount` | `number?` | default tick count | Target tick count; grid lines reuse the same ticks |
-| `tickLabels` | `boolean?` | `true` | Whether to render tick labels |
-| `grid` | `boolean?` | `false` | Draw grid lines aligned to this axis's ticks (concentric rings for polar y) |
-| `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
+| Prop         | Type                                               | Default            | Description                                                                                                                                       |
+| ------------ | -------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dimension`  | `'x' \| 'y' \| 'z'`                                | —                  | Which dimension to decorate: cartesian x / y, polar x / y, ternary x / y / z (triangle edges); must match the coordinate's valid set or it errors |
+| `scale`      | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt'` | auto-derived       | Positional scale shortcut; equivalent to `<Scale dimension="..." type="..." />` for the same dimension, and only applies to x / y / z             |
+| `tickCount`  | `number?`                                          | default tick count | Target tick count; grid lines reuse the same ticks                                                                                                |
+| `tickLabels` | `boolean?`                                         | `true`             | Whether to render tick labels                                                                                                                     |
+| `grid`       | `boolean?`                                         | `false`            | Draw grid lines aligned to this axis's ticks (concentric rings for polar y)                                                                       |
+| `id`         | `string?`                                          | —                  | Optional handle (reserved, not yet resolved)                                                                                                      |
 
 ## Related
 
 - [Coordinates](/graph/grammar/coordinate) — the polar switch and channel roles
 - [Plot](/graph/components/plot) — `<Plot>` draws no axes by default
 
-<ComponentAlert title="Reference lines / bands are not axes" description="To draw a threshold line, mean line, or tolerance band at a value / interval, use <ReferenceMark> (a data-driven annotation that joins mark draw order), not <Axis>. <Axis> only renders the tick body of a scale." />
+<ComponentAlert
+  title="Reference lines / bands are not axes"
+  description="To draw a threshold line, mean line, or tolerance band at a value / interval, use <ReferenceMark> (a data-driven annotation that joins mark draw order), not <Axis>. <Axis> only renders the tick body of a scale."
+/>

@@ -1,7 +1,9 @@
-import { type PathCommand, type Position, type ShapeDefinition, defineShape, localToWorld, worldToLocal } from '@retikz/core';
+import type { PathCommand, Position, ShapeDefinition } from '@retikz/core';
+import type { FC } from 'react';
+
+import { defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
 import { z } from 'zod';
-import type { FC } from 'react';
 
 /**
  * 自定义 hexagon shape 注入 demo
@@ -45,45 +47,45 @@ const createHexagon = (): ShapeDefinition =>
   defineShape({
     paramsSchema: z.strictObject({}),
     circumscribe: (hw, hh) => {
-    const corners: Array<Position> = [
-      [hw, hh],
-      [hw, -hh],
-      [-hw, hh],
-      [-hw, -hh],
-    ];
-    const halfAxis = corners.reduce((radius, corner) => {
-      const unitBoundary = findHexagonBoundaryPoint(1, corner);
-      const scale = Math.hypot(corner[0], corner[1]) / Math.hypot(unitBoundary[0], unitBoundary[1]);
-      return Math.max(radius, scale);
-    }, 1);
-    return { halfWidth: halfAxis, halfHeight: halfAxis };
-  },
-  boundaryPoint: (rect, toward) => {
-    const localToward = worldToLocal(rect, toward);
-    const boundary = findHexagonBoundaryPoint(rect.width / 2, localToward);
-    return localToWorld(rect, boundary);
-  },
-  anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
-  *emit(rect, style, round) {
-    const vertices = createHexagonVertices(rect.width / 2);
-    const commands: Array<PathCommand> = vertices.map((vertex, index) => {
-      const to: Position = [round(rect.x + vertex[0]), round(rect.y + vertex[1])];
-      return index === 0 ? { kind: 'move', to } : { kind: 'line', to };
-    });
-    commands.push({ kind: 'close' });
-    yield {
-      type: 'path',
-      commands,
-      fill: style.fill ?? 'transparent',
-      fillOpacity: style.fillOpacity,
-      stroke: style.stroke ?? 'currentColor',
-      strokeOpacity: style.strokeOpacity,
-      strokeWidth: style.strokeWidth ?? 1,
-      dashPattern: style.dashPattern,
-      opacity: style.opacity,
-    };
-  },
-});
+      const corners: Array<Position> = [
+        [hw, hh],
+        [hw, -hh],
+        [-hw, hh],
+        [-hw, -hh],
+      ];
+      const halfAxis = corners.reduce((radius, corner) => {
+        const unitBoundary = findHexagonBoundaryPoint(1, corner);
+        const scale = Math.hypot(corner[0], corner[1]) / Math.hypot(unitBoundary[0], unitBoundary[1]);
+        return Math.max(radius, scale);
+      }, 1);
+      return { halfWidth: halfAxis, halfHeight: halfAxis };
+    },
+    boundaryPoint: (rect, toward) => {
+      const localToward = worldToLocal(rect, toward);
+      const boundary = findHexagonBoundaryPoint(rect.width / 2, localToward);
+      return localToWorld(rect, boundary);
+    },
+    anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+    *emit(rect, style, round) {
+      const vertices = createHexagonVertices(rect.width / 2);
+      const commands: Array<PathCommand> = vertices.map((vertex, index) => {
+        const to: Position = [round(rect.x + vertex[0]), round(rect.y + vertex[1])];
+        return index === 0 ? { kind: 'move', to } : { kind: 'line', to };
+      });
+      commands.push({ kind: 'close' });
+      yield {
+        type: 'path',
+        commands,
+        fill: style.fill ?? 'transparent',
+        fillOpacity: style.fillOpacity,
+        stroke: style.stroke ?? 'currentColor',
+        strokeOpacity: style.strokeOpacity,
+        strokeWidth: style.strokeWidth ?? 1,
+        dashPattern: style.dashPattern,
+        opacity: style.opacity,
+      };
+    },
+  });
 
 const hexagon = createHexagon();
 

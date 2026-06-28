@@ -1,6 +1,8 @@
 import { z } from 'zod';
-import { type ExternalRow, type TransformOperation } from '../schemas';
+
 import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition } from './statistics';
+
+import { type ExternalRow, type TransformOperation } from '../schemas';
 
 /**
  * transform apply 上下文。
@@ -48,7 +50,10 @@ export const defineTransform = <TTransformOperation extends TransformOperation>(
  * registry 内部使用的宽类型。
  * @description registry 需要存放不同 operation 泛型的 definition；真正调用前必须用对应 schema parse 收窄。
  */
-export type AnyTransformDefinition = Omit<TransformDefinition<TransformOperation>, 'schema' | 'inputFields' | 'outputFields' | 'apply'> & {
+export type AnyTransformDefinition = Omit<
+  TransformDefinition<TransformOperation>,
+  'schema' | 'inputFields' | 'outputFields' | 'apply'
+> & {
   /** 不同 definition 的 schema 泛型不同，registry 只关心能从中提取 kind 并执行 parse。 */
   schema: z.ZodType;
   /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation。 */

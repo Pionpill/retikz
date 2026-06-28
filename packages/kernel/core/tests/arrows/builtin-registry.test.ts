@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { CompileOptions, CompileWarning } from '../../src/compile/compile';
-import { defineArrow } from '../../src/contract/arrow';
-import { BUILTIN_ARROWS } from '../../src/providers/arrow';
 import type { ArrowDefinition } from '../../src/contract/arrow';
-import { PathSchema } from '../../src/schemas';
-import type { IR } from '../../src/schemas';
 import type {
   ArrowEndSpec,
   MarkerEllipsePrim,
@@ -15,6 +11,12 @@ import type {
   PathPrim,
   ScenePrimitive,
 } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { defineArrow } from '../../src/contract/arrow';
+import { BUILTIN_ARROWS } from '../../src/providers/arrow';
+import { PathSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 /**
@@ -29,10 +31,7 @@ import { flattenPrims } from '../helpers/flatten';
  */
 
 /** 水平直线 path（end 箭头作用在末端 [100,0]，start 作用在首端 [0,0]）的 IR 工厂 */
-const horizontalPathIR = (
-  arrow: '->' | '<-' | '<->',
-  detail: Record<string, unknown> = {},
-): IR => ({
+const horizontalPathIR = (arrow: '->' | '<-' | '<->', detail: Record<string, unknown> = {}): IR => ({
   version: 1,
   type: 'scene',
   children: [
@@ -85,16 +84,13 @@ const firstMarkerPath = (marker: ReadonlyArray<MarkerPrimitive>): MarkerPathPrim
   marker.find((m): m is MarkerPathPrim => m.type === 'path');
 
 /** 取 marker 数组里首个 ellipse 原语 */
-const firstMarkerEllipse = (
-  marker: ReadonlyArray<MarkerPrimitive>,
-): MarkerEllipsePrim | undefined =>
+const firstMarkerEllipse = (marker: ReadonlyArray<MarkerPrimitive>): MarkerEllipsePrim | undefined =>
   marker.find((m): m is MarkerEllipsePrim => m.type === 'ellipse');
 
 /** marker 主导颜色（实心 fill / 空心 stroke；contextStroke / 无 → undefined） */
 const markerPaint = (spec: ArrowEndSpec | undefined): string | undefined => {
   if (!spec) return undefined;
-  const pickFill = (f: MarkerFill | undefined): string | undefined =>
-    typeof f === 'string' ? f : undefined;
+  const pickFill = (f: MarkerFill | undefined): string | undefined => (typeof f === 'string' ? f : undefined);
   const walk = (prims: ReadonlyArray<MarkerPrimitive>): string | undefined => {
     for (const p of prims) {
       if (p.type === 'group') {
@@ -111,21 +107,22 @@ const markerPaint = (spec: ArrowEndSpec | undefined): string | undefined => {
 };
 
 /** 一个最小自定义 arrow：lineContactX=2、tipX 缺省（=baseSize 10）、emit 产单 path marker */
-const customArrow = (): ArrowDefinition => defineArrow({
-  lineContactX: 2,
-  emit: ({ stroke }): Array<MarkerPrimitive> => [
-    {
-      type: 'path',
-      commands: [
-        { kind: 'move', to: [0, 0] },
-        { kind: 'line', to: [10, 5] },
-        { kind: 'line', to: [0, 10] },
-        { kind: 'close' },
-      ],
-      fill: typeof stroke === 'string' ? stroke : { kind: 'contextStroke' },
-    },
-  ],
-});
+const customArrow = (): ArrowDefinition =>
+  defineArrow({
+    lineContactX: 2,
+    emit: ({ stroke }): Array<MarkerPrimitive> => [
+      {
+        type: 'path',
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [10, 5] },
+          { kind: 'line', to: [0, 10] },
+          { kind: 'close' },
+        ],
+        fill: typeof stroke === 'string' ? stroke : { kind: 'contextStroke' },
+      },
+    ],
+  });
 
 describe('Arrow registry — happy path', () => {
   it('builtin_8_via_registry：内置 8 经 compileToScene 末端坐标 shrink 后逐一等价旧行为', () => {
@@ -241,9 +238,7 @@ describe('Arrow registry — happy path', () => {
 describe('Arrow registry — boundary', () => {
   it('hollow_linewidth：空心箭头 lineWidth 影响 shrink（open lineWidth 1 → 末端 95.1）', () => {
     // open: tipX 9, lineContactX = 1 - lineWidth/2; lineWidth 1 → lineContactX 0.5 → shrink (9-0.5)*6/10 = 5.1
-    const path = firstPath(
-      compileToScene(horizontalPathIR('->', { shape: 'open', lineWidth: 1 })).primitives,
-    );
+    const path = firstPath(compileToScene(horizontalPathIR('->', { shape: 'open', lineWidth: 1 })).primitives);
     expect(path && endpointTo(path)).toEqual([94.9, 0]);
   });
 
@@ -256,24 +251,18 @@ describe('Arrow registry — boundary', () => {
 
   it('scale_length_width：scale 乘 length → markerWidth + shrink 翻倍', () => {
     // normal length 10 → shrink 10 → 末端 90
-    const longPath = firstPath(
-      compileToScene(horizontalPathIR('->', { shape: 'normal', length: 10 })).primitives,
-    );
+    const longPath = firstPath(compileToScene(horizontalPathIR('->', { shape: 'normal', length: 10 })).primitives);
     expect(longPath && endpointTo(longPath)).toEqual([90, 0]);
     // stealth default length 6 × scale 2 → shrink 8.4 → 末端 91.6；markerWidth = 6×2 = 12
     const scaled = endSpecOf('->', { shape: 'stealth', scale: 2 });
     expect(scaled?.markerWidth).toBeCloseTo(12, 5);
-    const scaledPath = firstPath(
-      compileToScene(horizontalPathIR('->', { shape: 'stealth', scale: 2 })).primitives,
-    );
+    const scaledPath = firstPath(compileToScene(horizontalPathIR('->', { shape: 'stealth', scale: 2 })).primitives);
     expect(scaledPath && endpointTo(scaledPath)).toEqual([91.6, 0]);
   });
 
   it('start_end_override：<-> 起末端 def 各自 resolve（不同 shape）', () => {
     const path = firstPath(
-      compileToScene(
-        horizontalPathIR('<->', { start: { shape: 'open' }, end: { shape: 'stealth' } }),
-      ).primitives,
+      compileToScene(horizontalPathIR('<->', { start: { shape: 'open' }, end: { shape: 'stealth' } })).primitives,
     );
     expect(path?.arrowStart?.shape).toBe('open');
     expect(path?.arrowEnd?.shape).toBe('stealth');
@@ -464,9 +453,16 @@ describe('Arrow registry — JSON round-trip / zod parse', () => {
 
 describe('Arrow registry — BUILTIN_ARROWS 注册表结构', () => {
   it('内置 8 注册键穷尽（normal/open/stealth/openStealth/diamond/openDiamond/circle/openCircle）', () => {
-    expect(Object.keys(BUILTIN_ARROWS).sort()).toEqual(
-      ['circle', 'diamond', 'normal', 'open', 'openCircle', 'openDiamond', 'openStealth', 'stealth'],
-    );
+    expect(Object.keys(BUILTIN_ARROWS).sort()).toEqual([
+      'circle',
+      'diamond',
+      'normal',
+      'open',
+      'openCircle',
+      'openDiamond',
+      'openStealth',
+      'stealth',
+    ]);
   });
 
   it('内置 8 几何字段对齐 ADR 几何契约（lineContactX 静态 base / tipX / hollow）', () => {

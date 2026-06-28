@@ -5,13 +5,13 @@ description: Summary and selection transforms change data granularity by produci
 
 These transforms generate new rows from detail data. `bin` and `summarize` emit statistic rows, while `select` keeps representative original rows. Use them when the rows drawn by a mark should be prepared before rendering.
 
-| kind | Output rows | Typical use |
-| --- | --- | --- |
-| `bin` | One row per interval | Histograms and distribution overviews |
-| `summarize` | One row per group | Grouped bars, mean lines, boxplots |
-| `select` | One or more original rows per group | Extremes, top-N, nth row in a group |
-| `density` | Sampled rows per group | Density curves and density areas |
-| `smooth` | Predicted sampled rows per group | Trend lines and regression paths |
+| kind        | Output rows                         | Typical use                           |
+| ----------- | ----------------------------------- | ------------------------------------- |
+| `bin`       | One row per interval                | Histograms and distribution overviews |
+| `summarize` | One row per group                   | Grouped bars, mean lines, boxplots    |
+| `select`    | One or more original rows per group | Extremes, top-N, nth row in a group   |
+| `density`   | Sampled rows per group              | Density curves and density areas      |
+| `smooth`    | Predicted sampled rows per group    | Trend lines and regression paths      |
 
 ## Bin
 
@@ -21,15 +21,15 @@ These transforms generate new rows from detail data. `bin` and `summarize` emit 
 
 `IntervalMark` reads `x0` / `x1` from the bin edges to draw contiguous bars on a continuous x scale. `y` reads `binCount` or another metric field for height.
 
-| prop | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `field` | `string` | — | Continuous source field to bin |
-| `count` | `number?` | `10` | Target bin count; mutually exclusive with `step` / `thresholds` |
-| `step` | `number?` | — | Fixed bin width; mutually exclusive with `count` / `thresholds` |
-| `thresholds` | `Array<number>?` | — | Explicit interior boundaries; mutually exclusive with `count` / `step` |
-| `extent` | `[number, number]?` | Observed min/max | Override the binning domain |
-| `metrics` | `Array<Reducer>?` | `count → binCount` | Per-bin statistics |
-| `startField` / `endField` | `string?` | `binStart` / `binEnd` | Output edge fields |
+| prop                      | Type                | Default               | Notes                                                                  |
+| ------------------------- | ------------------- | --------------------- | ---------------------------------------------------------------------- |
+| `field`                   | `string`            | —                     | Continuous source field to bin                                         |
+| `count`                   | `number?`           | `10`                  | Target bin count; mutually exclusive with `step` / `thresholds`        |
+| `step`                    | `number?`           | —                     | Fixed bin width; mutually exclusive with `count` / `thresholds`        |
+| `thresholds`              | `Array<number>?`    | —                     | Explicit interior boundaries; mutually exclusive with `count` / `step` |
+| `extent`                  | `[number, number]?` | Observed min/max      | Override the binning domain                                            |
+| `metrics`                 | `Array<Reducer>?`   | `count → binCount`    | Per-bin statistics                                                     |
+| `startField` / `endField` | `string?`           | `binStart` / `binEnd` | Output edge fields                                                     |
 
 ## Summarize
 
@@ -39,10 +39,10 @@ These transforms generate new rows from detail data. `bin` and `summarize` emit 
 
 `count` does not need `field`; `sum` / `mean` / `median` / `min` / `max` / `quantile` / `quantile-band` do. Omitting `groupBy` or passing an empty array means one global group. See [Statistic Operations](/graph/grammar/transform/statistics) for the full reducer list.
 
-| prop | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `groupBy` | `Array<string>?` | One global group | Grouping keys; composite keys are supported |
-| `metrics` | `Array<Reducer>` | — | Group reducers; every reducer must provide `as` |
+| prop      | Type             | Default          | Notes                                           |
+| --------- | ---------------- | ---------------- | ----------------------------------------------- |
+| `groupBy` | `Array<string>?` | One global group | Grouping keys; composite keys are supported     |
+| `metrics` | `Array<Reducer>` | —                | Group reducers; every reducer must provide `as` |
 
 ```tsx
 <Transform
@@ -72,19 +72,14 @@ There is no dedicated `BoxPlotMark` here. The box uses `IntervalMark`, the media
 
 Built-in selectors include `min` / `max` / `first` / `last` / `top` / `bottom` / `nth` / `outside-quantile-band`. `rankAs` can write the selected one-based rank into the output row. See [Statistic Operations](/graph/grammar/transform/statistics) for the full selector list.
 
-| prop | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `groupBy` | `Array<string>?` | One global group | Grouping keys |
-| `selector` | `Selector` | — | Representative row rule |
-| `rankAs` | `string?` | — | Optional field for one-based rank |
+| prop       | Type             | Default          | Notes                             |
+| ---------- | ---------------- | ---------------- | --------------------------------- |
+| `groupBy`  | `Array<string>?` | One global group | Grouping keys                     |
+| `selector` | `Selector`       | —                | Representative row rule           |
+| `rankAs`   | `string?`        | —                | Optional field for one-based rank |
 
 ```tsx
-<Transform
-  kind="select"
-  groupBy={['region']}
-  selector={{ op: 'top', by: 'revenue', n: 3 }}
-  rankAs="rank"
-/>
+<Transform kind="select" groupBy={['region']} selector={{ op: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
 ```
 
 ## Density

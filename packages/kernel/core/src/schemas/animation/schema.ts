@@ -1,12 +1,10 @@
 import { z } from 'zod';
+
 import { JsonValueSchema } from '../json';
 import { AnimationDirection, AnimationFill, AnimationProperty, AnimationTrigger } from './constants';
 
 export const EasingSchema = z
-  .union([
-    z.string().min(1),
-    z.tuple([z.number(), z.number(), z.number(), z.number()]),
-  ])
+  .union([z.string().min(1), z.tuple([z.number(), z.number(), z.number(), z.number()])])
   .describe(
     'Easing curve: built-in easing name, custom easing name, or cubic-bezier tuple [x1, y1, x2, y2]. Omitted fields use linear easing.',
   );
@@ -17,9 +15,7 @@ export const KeyframeSchema = z
       .number()
       .min(0)
       .max(1)
-      .describe(
-        'Normalized keyframe time. Keyframes in one track must be sorted by this field.',
-      ),
+      .describe('Normalized keyframe time. Keyframes in one track must be sorted by this field.'),
     value: JsonValueSchema.describe(
       'Absolute property value at this keyframe. Built-in properties are refined by track property; custom properties accept any JSON value.',
     ),
@@ -39,21 +35,15 @@ export const TriggerSchema = z
         .describe('Runtime event name that starts playback. Only the event name enters the IR.'),
     }),
   ])
-  .describe(
-    'Playback trigger: load, visible, manual, or a named runtime event. Omitted fields use load.',
-  );
+  .describe('Playback trigger: load, visible, manual, or a named runtime event. Omitted fields use load.');
 
 export const OriginSchema = z
   .union([
     z
       .string()
       .min(1)
-      .describe(
-        'Named transform pivot using the node anchor vocabulary, resolved against the animated element.',
-      ),
-    z
-      .tuple([z.number(), z.number()])
-      .describe('Explicit transform pivot in element-local coordinates [x, y].'),
+      .describe('Named transform pivot using the node anchor vocabulary, resolved against the animated element.'),
+    z.tuple([z.number(), z.number()]).describe('Explicit transform pivot in element-local coordinates [x, y].'),
   ])
   .describe(
     'Transform pivot for scale, scaleX, scaleY, and rotate. Non-transform properties ignore it; omitted fields use the element center.',
@@ -127,7 +117,11 @@ export const AnimationTrackSchema = z
       const path: Array<string | number> = ['keyframes', index, 'value'];
       if (track.property === AnimationProperty.ViewBox) {
         if (!Array.isArray(value) || value.length !== 4) {
-          ctx.addIssue({ code: 'custom', path, message: 'viewBox keyframe value must be a 4-number array [x, y, w, h]' });
+          ctx.addIssue({
+            code: 'custom',
+            path,
+            message: 'viewBox keyframe value must be a 4-number array [x, y, w, h]',
+          });
         }
       } else if (track.property === AnimationProperty.Fill || track.property === AnimationProperty.Stroke) {
         if (typeof value !== 'string') {

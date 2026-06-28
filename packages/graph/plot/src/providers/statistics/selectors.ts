@@ -1,5 +1,8 @@
 import { z } from 'zod';
-import { type AnyRowSelectorDefinition, defineRowSelector } from '../../contract';
+
+import type { AnyRowSelectorDefinition } from '../../contract';
+
+import { defineRowSelector } from '../../contract';
 import { OutsideQuantileBandSelectorOperationSchema } from '../../schemas';
 import { resolveFieldPath } from '../data';
 import { orderRows, quantileBandStatsOf, rankedByNumericField, spreadFactorOf } from './helpers';
@@ -17,11 +20,18 @@ const minSelectorDefinition = defineRowSelector({
     if (ranked.length === 0) return [];
     if (operation.tie === 'all') {
       const value = resolveFieldPath(ranked[0], operation.by);
-      return ranked.filter(row => resolveFieldPath(row, operation.by) === value).map((row, index) => ({ row, rank: index + 1 }));
+      return ranked
+        .filter(row => resolveFieldPath(row, operation.by) === value)
+        .map((row, index) => ({ row, rank: index + 1 }));
     }
-    const row = operation.tie === 'last'
-      ? [...ranked].reverse().find(candidate => resolveFieldPath(candidate, operation.by) === resolveFieldPath(ranked[0], operation.by)) ?? ranked[0]
-      : ranked[0];
+    const row =
+      operation.tie === 'last'
+        ? ([...ranked]
+            .reverse()
+            .find(
+              candidate => resolveFieldPath(candidate, operation.by) === resolveFieldPath(ranked[0], operation.by),
+            ) ?? ranked[0])
+        : ranked[0];
     return [{ row, rank: 1 }];
   },
 });
@@ -39,11 +49,18 @@ const maxSelectorDefinition = defineRowSelector({
     if (ranked.length === 0) return [];
     if (operation.tie === 'all') {
       const value = resolveFieldPath(ranked[0], operation.by);
-      return ranked.filter(row => resolveFieldPath(row, operation.by) === value).map((row, index) => ({ row, rank: index + 1 }));
+      return ranked
+        .filter(row => resolveFieldPath(row, operation.by) === value)
+        .map((row, index) => ({ row, rank: index + 1 }));
     }
-    const row = operation.tie === 'last'
-      ? [...ranked].reverse().find(candidate => resolveFieldPath(candidate, operation.by) === resolveFieldPath(ranked[0], operation.by)) ?? ranked[0]
-      : ranked[0];
+    const row =
+      operation.tie === 'last'
+        ? ([...ranked]
+            .reverse()
+            .find(
+              candidate => resolveFieldPath(candidate, operation.by) === resolveFieldPath(ranked[0], operation.by),
+            ) ?? ranked[0])
+        : ranked[0];
     return [{ row, rank: 1 }];
   },
 });
@@ -52,7 +69,10 @@ const maxSelectorDefinition = defineRowSelector({
 const firstSelectorDefinition = defineRowSelector({
   schema: z.object({
     op: z.literal('first'),
-    orderBy: z.array(z.object({ field: z.string().min(1), order: z.enum(['ascending', 'descending']).optional() })).min(1).optional(),
+    orderBy: z
+      .array(z.object({ field: z.string().min(1), order: z.enum(['ascending', 'descending']).optional() }))
+      .min(1)
+      .optional(),
   }),
   inputFields: operation => operation.orderBy?.map(order => order.field) ?? [],
   select: (rows, operation) => {
@@ -65,7 +85,10 @@ const firstSelectorDefinition = defineRowSelector({
 const lastSelectorDefinition = defineRowSelector({
   schema: z.object({
     op: z.literal('last'),
-    orderBy: z.array(z.object({ field: z.string().min(1), order: z.enum(['ascending', 'descending']).optional() })).min(1).optional(),
+    orderBy: z
+      .array(z.object({ field: z.string().min(1), order: z.enum(['ascending', 'descending']).optional() }))
+      .min(1)
+      .optional(),
   }),
   inputFields: operation => operation.orderBy?.map(order => order.field) ?? [],
   select: (rows, operation) => {
@@ -124,7 +147,9 @@ const bottomSelectorDefinition = defineRowSelector({
 const nthSelectorDefinition = defineRowSelector({
   schema: z.object({
     op: z.literal('nth'),
-    orderBy: z.array(z.object({ field: z.string().min(1), order: z.enum(['ascending', 'descending']).optional() })).min(1),
+    orderBy: z
+      .array(z.object({ field: z.string().min(1), order: z.enum(['ascending', 'descending']).optional() }))
+      .min(1),
     index: z.number().int().nonnegative(),
   }),
   inputFields: operation => operation.orderBy.map(order => order.field),

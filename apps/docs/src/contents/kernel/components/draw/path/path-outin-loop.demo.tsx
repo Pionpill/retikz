@@ -1,5 +1,6 @@
-import { Layout, Node, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node, Path, Step } from '@retikz/react';
 
 /**
  * out/in 出入射角：bend step 用 outAngle/inAngle 画非对称曲线；from==to 同节点时退化为自环。

@@ -1,10 +1,13 @@
-import { type ReactNode, useMemo } from 'react';
+import type { ReactNode } from 'react';
+
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Page } from '@/data/interface';
+import type { Lang } from '@/i18n';
+
 import { modules } from '@/data/module';
 import { getSectionsByModule } from '@/data/sections';
-import type { Lang } from '@/i18n';
 
 import { type IndexedPage, type SearchIndex } from './search-index';
 

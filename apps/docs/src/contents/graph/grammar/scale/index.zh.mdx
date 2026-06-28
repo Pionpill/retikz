@@ -16,11 +16,11 @@ description: 比例尺（scale）把数据值映射成视觉量。按产出分�
 
 两族下具体选哪种，`<Plot>` 按字段的测量类型自动决定：
 
-| 字段类型 | 位置默认 | 颜色（按 datum 着色） |
-| --- | --- | --- |
-| `continuous` | `linear`（可换 `log` / `sqrt` / `pow` / `symlog` / `radial`） | `sequential` / `diverging` + 离散化色阶 |
-| `temporal` | `time` | `sequential`（时间也是连续量） |
-| `categorical` | `band`（折线用 `point`） | `ordinal` |
+| 字段类型      | 位置默认                                                      | 颜色（按 datum 着色）                   |
+| ------------- | ------------------------------------------------------------- | --------------------------------------- |
+| `continuous`  | `linear`（可换 `log` / `sqrt` / `pow` / `symlog` / `radial`） | `sequential` / `diverging` + 离散化色阶 |
+| `temporal`    | `time`                                                        | `sequential`（时间也是连续量）          |
+| `categorical` | `band`（折线用 `point`）                                      | `ordinal`                               |
 
 字段类型怎么声明见[数据模型](/graph/grammar/data/model)。内置 15 个 scale 之外的长尾（品牌色阶、领域专用映射……）走[自定义比例尺](/graph/grammar/extend/scale)。
 
@@ -44,10 +44,14 @@ polar 图里用 `dimension="angle"` / `dimension="radius"`，也可用 `x` / `y`
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/graph/grammar/scale/position">
     <span className="font-semibold">位置比例尺</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">数值轴 linear / log / sqrt / pow / symlog / radial、时间轴 time、分类轴 band / point</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      数值轴 linear / log / sqrt / pow / symlog / radial、时间轴 time、分类轴 band / point
+    </span>
   </LinkedCard>
   <LinkedCard href="/graph/grammar/scale/color">
     <span className="font-semibold">颜色比例尺</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">ordinal 一类一色、sequential / diverging 连续色带、quantize / threshold / quantile 离散化分箱</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      ordinal 一类一色、sequential / diverging 连续色带、quantize / threshold / quantile 离散化分箱
+    </span>
   </LinkedCard>
 </div>

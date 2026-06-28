@@ -1,5 +1,6 @@
-import { Layout, Node, definePattern } from '@retikz/react';
 import type { FC } from 'react';
+
+import { definePattern, Layout, Node } from '@retikz/react';
 
 /**
  * 自定义 pattern motif：十字（cross）图案，与内置 lines / dots / grid 不同。
@@ -11,8 +12,24 @@ const cross = definePattern({
     const lw = lineWidth ?? 1.5;
     const c = size / 2;
     return [
-      { type: 'path', commands: [{ kind: 'move', to: [c, 2] }, { kind: 'line', to: [c, size - 2] }], stroke: color, strokeWidth: lw },
-      { type: 'path', commands: [{ kind: 'move', to: [2, c] }, { kind: 'line', to: [size - 2, c] }], stroke: color, strokeWidth: lw },
+      {
+        type: 'path',
+        commands: [
+          { kind: 'move', to: [c, 2] },
+          { kind: 'line', to: [c, size - 2] },
+        ],
+        stroke: color,
+        strokeWidth: lw,
+      },
+      {
+        type: 'path',
+        commands: [
+          { kind: 'move', to: [2, c] },
+          { kind: 'line', to: [size - 2, c] },
+        ],
+        stroke: color,
+        strokeWidth: lw,
+      },
     ];
   },
 });

@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * scope rotate 下 polar referent：referent 取全局，relative (angle/radius) 在 scope 局部度量
@@ -9,11 +10,17 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={400} height={200}>
-    <Node id="hub" position={[0, 0]} shape="circle" padding={4}>hub</Node>
+    <Node id="hub" position={[0, 0]} shape="circle" padding={4}>
+      hub
+    </Node>
     <Scope transforms={[{ kind: 'rotate', degrees: 45 }]}>
-      <Node id="orbit" position={{ origin: 'hub', angle: 0, radius: 80 }} shape="circle" padding={4}>orbit</Node>
+      <Node id="orbit" position={{ origin: 'hub', angle: 0, radius: 80 }} shape="circle" padding={4}>
+        orbit
+      </Node>
     </Scope>
-    <Node id="ref" position={{ origin: 'hub', angle: 0, radius: 80 }} shape="circle" padding={4} stroke="gray" dashed>ref</Node>
+    <Node id="ref" position={{ origin: 'hub', angle: 0, radius: 80 }} shape="circle" padding={4} stroke="gray" dashed>
+      ref
+    </Node>
     <Draw way={['hub', 'orbit']} arrow="->" stroke="gray" dashPattern={[4, 2]} />
     <Draw way={['hub', 'ref']} arrow="->" stroke="gray" dashPattern={[4, 2]} />
   </Layout>

@@ -1,5 +1,6 @@
-import { Axis, IntervalMark, Plot, PointMark, ReferenceMark } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, IntervalMark, Plot, PointMark, ReferenceMark } from '@retikz/plot-react';
 
 import { boxplotSamples } from './transform-boxplot.data';
 
@@ -41,7 +42,10 @@ const Demo: FC = () => (
     <Axis dimension="x" />
     <Axis dimension="y" grid />
     <IntervalMark
-      bounds={{ x: { kind: 'extent', from: 'boxX0', to: 'boxX1' }, y: { kind: 'extent', from: 'boxLow', to: 'boxHigh' } }}
+      bounds={{
+        x: { kind: 'extent', from: 'boxX0', to: 'boxX1' },
+        y: { kind: 'extent', from: 'boxLow', to: 'boxHigh' },
+      }}
       fill="#93c5fd"
       fillOpacity={0.32}
       stroke="#2563eb"
@@ -50,8 +54,22 @@ const Demo: FC = () => (
       x="boxX"
       y="boxHigh"
     />
-    <ReferenceMark color="#1d4ed8" extentField="boxX0" extentToField="boxX1" strokeWidth={2} transform={[boxSummary]} y="median" />
-    <ReferenceMark color="#475569" extentField="whiskerMin" extentToField="whiskerMax" strokeWidth={1.2} transform={[boxSummary]} x="boxX" />
+    <ReferenceMark
+      color="#1d4ed8"
+      extentField="boxX0"
+      extentToField="boxX1"
+      strokeWidth={2}
+      transform={[boxSummary]}
+      y="median"
+    />
+    <ReferenceMark
+      color="#475569"
+      extentField="whiskerMin"
+      extentToField="whiskerMax"
+      strokeWidth={1.2}
+      transform={[boxSummary]}
+      x="boxX"
+    />
     <PointMark fill="#0f172a" opacity={0.82} size={18} transform={[outsideBoxRows]} x="boxX" y="value" />
   </Plot>
 );

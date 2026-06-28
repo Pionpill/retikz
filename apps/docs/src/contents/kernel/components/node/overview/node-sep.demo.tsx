@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * 分轴 inner sep 与 outer sep 差异
@@ -7,10 +8,18 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={540} height={140}>
-    <Node id="def" position={[-200, 0]}>default</Node>
-    <Node id="sym" position={[-70, 0]} padding={16}>padding=16</Node>
-    <Node id="wide" position={[80, 0]} innerXSep={24} innerYSep={4}>button</Node>
-    <Node id="outer" position={[220, 0]} outerSep={12}>outerSep=12</Node>
+    <Node id="def" position={[-200, 0]}>
+      default
+    </Node>
+    <Node id="sym" position={[-70, 0]} padding={16}>
+      padding=16
+    </Node>
+    <Node id="wide" position={[80, 0]} innerXSep={24} innerYSep={4}>
+      button
+    </Node>
+    <Node id="outer" position={[220, 0]} outerSep={12}>
+      outerSep=12
+    </Node>
     <Draw way={['outer', 'wide']} arrow="->" stroke="gray" />
   </Layout>
 );

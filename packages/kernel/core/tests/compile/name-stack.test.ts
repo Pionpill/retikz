@@ -3,8 +3,11 @@
  * @description 覆盖 register / lookup 基本行为、push/pop frame 隔离、inside-out shadowing、duplicate 回调 + last-wins、register 返回 boolean、pop 根 frame 防御性 throw、Pass 2 phase 禁止 register
  */
 import { describe, expect, it, vi } from 'vitest';
-import { type DuplicateRegisterInfo, NameStack } from '../../src/compile/name-stack';
+
+import type { DuplicateRegisterInfo } from '../../src/compile/name-stack';
 import type { NodeLayout } from '../../src/compile/node';
+
+import { NameStack } from '../../src/compile/name-stack';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const makeLayout = (id: string, x = 0, y = 0): NodeLayout => ({

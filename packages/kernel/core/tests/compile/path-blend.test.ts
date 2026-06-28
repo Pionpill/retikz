@@ -3,11 +3,13 @@
  * 跨端像素 parity 留 render 测试。
  */
 import { describe, expect, it } from 'vitest';
+
+import type { PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
 import { compileToScene } from '../../src/compile/compile';
 import { PathSchema } from '../../src/schemas';
 import { BlendMode } from '../../src/schemas/effects';
-import type { IR } from '../../src/schemas';
-import type { PathPrim, ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 
 const silent = { onWarn: () => {} };
@@ -24,10 +26,7 @@ const move = (to: [number, number]): unknown => ({ type: 'step', kind: 'move', t
 const line = (to: [number, number]): unknown => ({ type: 'step', kind: 'line', to });
 
 const compilePath = (extra: Record<string, unknown>): ReturnType<typeof compileToScene> =>
-  compileToScene(
-    scene([{ type: 'path', children: [move([0, 0]), line([10, 0])], ...extra } as never]),
-    silent,
-  );
+  compileToScene(scene([{ type: 'path', children: [move([0, 0]), line([10, 0])], ...extra } as never]), silent);
 
 // ════════════════ Happy ════════════════
 

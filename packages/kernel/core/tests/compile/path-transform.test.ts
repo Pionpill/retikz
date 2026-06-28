@@ -6,13 +6,13 @@
  *   编译实现尚未消费 path rotate/scale，故本组用例当前应失败（待实现 Agent 落地编译）。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { GroupPrim, IR, PathPrim, RotateTransform, ScaleTransform, ScenePrimitive } from '../../src';
 
+import { compileToScene } from '../../src/compile/compile';
+
 /** 找顶层第一个带 transforms 的 GroupPrim */
-const findTransformGroup = (
-  prims: ReadonlyArray<ScenePrimitive>,
-): GroupPrim | undefined => {
+const findTransformGroup = (prims: ReadonlyArray<ScenePrimitive>): GroupPrim | undefined => {
   for (const p of prims) {
     if (p.type === 'group' && p.transforms && p.transforms.length > 0) return p;
   }

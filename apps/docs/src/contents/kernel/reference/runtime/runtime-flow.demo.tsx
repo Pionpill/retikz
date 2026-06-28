@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * 运行时管线示意
@@ -30,12 +31,26 @@ const Demo: FC = () => (
     <Node id="capParser" position={[-238, 60]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
       Parser
     </Node>
-    <Draw way={[[-238, 42], [-238, 8]]} arrow="->" stroke="gray" />
+    <Draw
+      way={[
+        [-238, 42],
+        [-238, 8],
+      ]}
+      arrow="->"
+      stroke="gray"
+    />
 
     <Node id="capCompile" position={[-103, 60]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
       Compile
     </Node>
-    <Draw way={[[-103, 42], [-103, 8]]} arrow="->" stroke="gray" />
+    <Draw
+      way={[
+        [-103, 42],
+        [-103, 8],
+      ]}
+      arrow="->"
+      stroke="gray"
+    />
 
     <Node id="capPrimitive" position={[-30, 60]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
       Primitive
@@ -45,7 +60,14 @@ const Demo: FC = () => (
     <Node id="capRender" position={[65, 60]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
       {['render', '@retikz/react']}
     </Node>
-    <Draw way={[[65, 42], [65, 8]]} arrow="->" stroke="gray" />
+    <Draw
+      way={[
+        [65, 42],
+        [65, 8],
+      ]}
+      arrow="->"
+      stroke="gray"
+    />
   </Layout>
 );
 

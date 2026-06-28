@@ -1,6 +1,7 @@
+import type { FC } from 'react';
+
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
-import type { FC } from 'react';
 
 import { team } from './line-radar.data';
 

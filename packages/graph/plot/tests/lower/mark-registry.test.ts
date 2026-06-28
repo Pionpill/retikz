@@ -1,10 +1,15 @@
-import { describe, expect, it } from 'vitest';
 import type { IRScope } from '@retikz/core';
+
+import { describe, expect, it } from 'vitest';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { CustomMark, PlotSpec } from '../../src/schemas';
+
 import * as plot from '../../src';
-import { BUILTIN_MARK_TYPES, type CustomMark, MarkOperationSchema, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
 import { defineMark } from '../../src/contract';
+import { lowerPlots } from '../../src/pipeline/expand';
 import { BUILTIN_MARKS, resolveMarkRegistry } from '../../src/providers';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { BUILTIN_MARK_TYPES, MarkOperationSchema, PlotSpecSchema } from '../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
@@ -92,7 +97,11 @@ describe('mark registry（alpha.12 ADR-08：自定义 mark）', () => {
 
   it('custom_mark_lower_dispatched_with_transformed_rows', () => {
     const record = { calls: 0, rows: 0 };
-    const rows = [{ cat: 'A', val: 3 }, { cat: 'B', val: 6 }, { cat: 'C', val: 9 }];
+    const rows = [
+      { cat: 'A', val: 3 },
+      { cat: 'B', val: 6 },
+      { cat: 'C', val: 9 },
+    ];
     expandOf(dotSpec(), { d: rows }, { ...opts, markDefinitions: [makeDotMark(record)] });
     expect(record.calls).toBe(1);
     expect(record.rows).toBe(rows.length);
@@ -105,18 +114,39 @@ describe('mark registry（alpha.12 ADR-08：自定义 mark）', () => {
 
   it('custom_mark_fields_collected_for_strict_model', () => {
     const record = { calls: 0, rows: 0 };
-    const rows = [{ cat: 'A', val: 3 }, { cat: 'B', val: 6 }];
+    const rows = [
+      { cat: 'A', val: 3 },
+      { cat: 'B', val: 6 },
+    ];
     // strict model：custom mark 的 collectFields 登记 x=cat / y=val，否则严格校验会因未声明字段失败
-    const spec = dotSpec({ data: { reference: 'd', model: [{ name: 'cat', type: 'categorical' }, { name: 'val', type: 'continuous' }] } });
-    expect(() => expandOf(spec, { d: rows }, { ...opts, markDefinitions: [makeDotMark(record)], validateData: true })).not.toThrow();
+    const spec = dotSpec({
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'cat', type: 'categorical' },
+          { name: 'val', type: 'continuous' },
+        ],
+      },
+    });
+    expect(() =>
+      expandOf(spec, { d: rows }, { ...opts, markDefinitions: [makeDotMark(record)], validateData: true }),
+    ).not.toThrow();
     expect(record.calls).toBe(1);
   });
 
   it('custom_and_builtin_marks_share_scale', () => {
     const record = { calls: 0, rows: 0 };
-    const rows = [{ cat: 'A', val: 3 }, { cat: 'B', val: 6 }];
+    const rows = [
+      { cat: 'A', val: 3 },
+      { cat: 'B', val: 6 },
+    ];
     // 自定义 dot + 内置 point 同 plot，共用同一坐标 / scale；lowering 不抛、两 mark 各产一层
-    const spec = dotSpec({ marks: [{ type: 'dot', encoding: { x: { field: 'cat' }, y: { field: 'val' } } }, { type: 'point', encoding: { x: { field: 'cat' }, y: { field: 'val' } } }] });
+    const spec = dotSpec({
+      marks: [
+        { type: 'dot', encoding: { x: { field: 'cat' }, y: { field: 'val' } } },
+        { type: 'point', encoding: { x: { field: 'cat' }, y: { field: 'val' } } },
+      ],
+    });
     const scope = expandOf(spec, { d: rows }, { ...opts, markDefinitions: [makeDotMark(record)] });
     expect(record.calls).toBe(1);
     expect(scope.children.length).toBeGreaterThanOrEqual(2);

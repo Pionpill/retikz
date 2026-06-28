@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 const Demo: FC = () => (
   <Layout width={520} height={220} nodeDefault={{ stroke: 'gray', dashed: true }}>
@@ -35,10 +36,7 @@ const Demo: FC = () => (
     <Node id="g" position={[470, 35]}>
       g
     </Node>
-    <Draw
-      way={['f', { label: { text: 'distance = 12', side: 'sloped' } }, 'g']}
-      arrow="->"
-    />
+    <Draw way={['f', { label: { text: 'distance = 12', side: 'sloped' } }, 'g']} arrow="->" />
   </Layout>
 );
 

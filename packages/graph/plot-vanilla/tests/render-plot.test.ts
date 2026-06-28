@@ -1,8 +1,11 @@
+import type { ExternalDatasets, PlotSpec, Transform } from '@retikz/plot';
+
+import { compileToScene } from '@retikz/core';
+import { lowerPlots } from '@retikz/plot';
+import { renderToSvgString } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
-import { compileToScene } from '@retikz/core';
-import { type ExternalDatasets, type PlotSpec, type Transform, lowerPlots } from '@retikz/plot';
-import { renderToSvgString } from '@retikz/vanilla';
+
 import { renderPlot } from '../src';
 
 const spec: PlotSpec = {
@@ -103,7 +106,13 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { type: 'ordinal', name: 'color' },
       ],
       coordinate: { type: 'polar2D', angle: 'angle', radius: 'radius', startAngle: 0, endAngle: 360, innerRadius: 0 },
-      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label', scale: 'color' } } }],
+      marks: [
+        {
+          type: 'interval',
+          bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+          encoding: { color: { field: 'label', scale: 'color' } },
+        },
+      ],
     };
     const svg = renderPlot(pieSpec, share, { width: 360, height: 360 });
     expect(svg).toContain('<svg');
@@ -124,7 +133,13 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { type: 'ordinal', name: 'color' },
       ],
       coordinate: { type: 'polar2D', angle: 'angle', radius: 'radius', startAngle: 0, endAngle: 360, innerRadius: 0.5 },
-      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label', scale: 'color' } } }],
+      marks: [
+        {
+          type: 'interval',
+          bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+          encoding: { color: { field: 'label', scale: 'color' } },
+        },
+      ],
     };
     expect(renderPlot(donutSpec, share, { width: 360, height: 360 })).toContain('<path');
   });
@@ -150,7 +165,11 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         },
       ],
     };
-    const svg = renderPlot(pulledSpec, { share: share.share.map((row, index) => ({ ...row, offset: index === 1 ? 16 : 0 })) }, { width: 360, height: 360 });
+    const svg = renderPlot(
+      pulledSpec,
+      { share: share.share.map((row, index) => ({ ...row, offset: index === 1 ? 16 : 0 })) },
+      { width: 360, height: 360 },
+    );
     expect(svg).toContain('<svg');
     expect(svg).toContain('<path');
   });
@@ -166,7 +185,12 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { type: 'ordinal', name: 'color' },
       ],
       coordinate: { type: 'polar2D', angle: 'angle', radius: 'radius', startAngle: 0, endAngle: 360, innerRadius: 0 },
-      marks: [{ type: 'interval', encoding: { x: { field: 'label' }, y: { field: 'value' }, color: { field: 'label', scale: 'color' } } }],
+      marks: [
+        {
+          type: 'interval',
+          encoding: { x: { field: 'label' }, y: { field: 'value' }, color: { field: 'label', scale: 'color' } },
+        },
+      ],
     };
     expect(renderPlot(radialBarSpec, share, { width: 360, height: 360 })).toContain('<path');
   });
@@ -200,7 +224,11 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'h' } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
     };
-    const svg = renderPlot(ringSpec, { hours: [{ h: 0 }, { h: 90 }, { h: 180 }, { h: 270 }] }, { width: 320, height: 320 });
+    const svg = renderPlot(
+      ringSpec,
+      { hours: [{ h: 0 }, { h: 90 }, { h: 180 }, { h: 270 }] },
+      { width: 320, height: 320 },
+    );
     expect(svg).toContain('<ellipse');
   });
 
@@ -211,7 +239,13 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       data: { reference: 'soils' },
       scales: [{ type: 'ordinal', name: 'col' }],
       coordinate: { type: 'ternary2D' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'region', scale: 'col' }, encoding: { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'region', scale: 'col' },
+          encoding: { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' } },
+        },
+      ],
       guides: [
         { type: 'axis', dimension: 'x' },
         { type: 'axis', dimension: 'y' },
@@ -242,14 +276,27 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     const heatmapSpec: PlotSpec = {
       namespace: 'plot',
       type: 'plot',
-      data: { reference: 'heat', model: [{ name: 'rk', type: 'categorical' }, { name: 'ck', type: 'categorical' }, { name: 'v', type: 'continuous' }] },
+      data: {
+        reference: 'heat',
+        model: [
+          { name: 'rk', type: 'categorical' },
+          { name: 'ck', type: 'categorical' },
+          { name: 'v', type: 'continuous' },
+        ],
+      },
       scales: [
         { type: 'band', name: 'rk' },
         { type: 'band', name: 'ck' },
         { type: 'sequential', name: 'heat', domain: [0, 9] },
       ],
       coordinate: { type: 'cartesian2D', x: 'rk', y: 'ck' },
-      marks: [{ type: 'interval', bounds: { x: { kind: 'band' }, y: { kind: 'band' } }, encoding: { x: { field: 'rk' }, y: { field: 'ck' }, color: { field: 'v', scale: 'heat' } } }],
+      marks: [
+        {
+          type: 'interval',
+          bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
+          encoding: { x: { field: 'rk' }, y: { field: 'ck' }, color: { field: 'v', scale: 'heat' } },
+        },
+      ],
     };
     const svg = renderPlot(heatmapSpec, heatmap, { width: 360, height: 360 });
     expect(svg).toContain('<svg');
@@ -275,7 +322,13 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { type: 'band', name: 'hour' },
       ],
       coordinate: { type: 'cartesian2D', x: 'day', y: 'hour' },
-      marks: [{ type: 'interval', bounds: { x: { kind: 'band' }, y: { kind: 'band' } }, encoding: { x: { field: 'day' }, y: { field: 'hour' } } }],
+      marks: [
+        {
+          type: 'interval',
+          bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
+          encoding: { x: { field: 'day' }, y: { field: 'hour' } },
+        },
+      ],
     };
     expect(renderPlot(gridSpec, grid, { width: 320, height: 320 })).toMatch(/<rect/);
   });
@@ -324,7 +377,13 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     const perDatumSpec: PlotSpec = {
       namespace: 'plot',
       type: 'plot',
-      data: { reference: 'limits', model: [{ name: 'threshold', type: 'continuous' }, { name: 'category', type: 'categorical' }] },
+      data: {
+        reference: 'limits',
+        model: [
+          { name: 'threshold', type: 'continuous' },
+          { name: 'category', type: 'categorical' },
+        ],
+      },
       scales: [
         { type: 'linear', name: 'y' },
         { type: 'ordinal', name: 'c' },
@@ -401,7 +460,13 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } }, encoding: { y: { field: 'binCount' } } }],
+      marks: [
+        {
+          type: 'interval',
+          bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } },
+          encoding: { y: { field: 'binCount' } },
+        },
+      ],
     };
     const svg = renderPlot(histogramSpec, histData, { width: 480, height: 300 });
     expect(svg).toContain('<svg');
@@ -535,10 +600,23 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
-        { type: 'point', encoding: { x: { field: 'time' }, y: { field: 'value' }, color: { field: 'series', scale: 'color' } } },
+        {
+          type: 'point',
+          encoding: { x: { field: 'time' }, y: { field: 'value' }, color: { field: 'series', scale: 'color' } },
+        },
         {
           type: 'path',
-          transform: [{ kind: 'smooth', x: 'time', y: 'value', groupBy: ['series'], sampleCount: 8, xAs: 'trendX', yAs: 'trendY' }],
+          transform: [
+            {
+              kind: 'smooth',
+              x: 'time',
+              y: 'value',
+              groupBy: ['series'],
+              sampleCount: 8,
+              xAs: 'trendX',
+              yAs: 'trendY',
+            },
+          ],
           series: 'series',
           order: 'trendX',
           encoding: { x: { field: 'trendX' }, y: { field: 'trendY' }, color: { field: 'series', scale: 'color' } },
@@ -575,7 +653,13 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
           field: 'value',
           lowerP: 0.25,
           upperP: 0.75,
-          outputs: { lower: 'boxLow', upper: 'boxHigh', points: [{ p: 0.5, as: 'median' }], whiskerMin: 'whiskerMin', whiskerMax: 'whiskerMax' },
+          outputs: {
+            lower: 'boxLow',
+            upper: 'boxHigh',
+            points: [{ p: 0.5, as: 'median' }],
+            whiskerMin: 'whiskerMin',
+            whiskerMax: 'whiskerMax',
+          },
           whisker: { kind: 'spread', factor: 1.5 },
         },
       ],
@@ -583,7 +667,13 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     const boxOutside: Transform = {
       kind: 'select',
       groupBy: ['group'],
-      selector: { op: 'outside-quantile-band', field: 'value', lowerP: 0.25, upperP: 0.75, boundary: { kind: 'spread', factor: 1.5 } },
+      selector: {
+        op: 'outside-quantile-band',
+        field: 'value',
+        lowerP: 0.25,
+        upperP: 0.75,
+        boundary: { kind: 'spread', factor: 1.5 },
+      },
     };
     const boxSpec: PlotSpec = {
       namespace: 'plot',
@@ -598,13 +688,28 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         {
           type: 'interval',
           transform: [boxSummary],
-          bounds: { x: { kind: 'extent', from: 'boxX0', to: 'boxX1' }, y: { kind: 'extent', from: 'boxLow', to: 'boxHigh' } },
+          bounds: {
+            x: { kind: 'extent', from: 'boxX0', to: 'boxX1' },
+            y: { kind: 'extent', from: 'boxLow', to: 'boxHigh' },
+          },
           fill: { kind: 'constant', value: '#93c5fd' },
           fillOpacity: { kind: 'constant', value: 0.32 },
           encoding: { x: { field: 'boxX' }, y: { field: 'boxHigh' } },
         },
-        { type: 'reference', transform: [boxSummary], extentField: 'boxX0', extentToField: 'boxX1', encoding: { y: { field: 'median' } } },
-        { type: 'reference', transform: [boxSummary], extentField: 'whiskerMin', extentToField: 'whiskerMax', encoding: { x: { field: 'boxX' } } },
+        {
+          type: 'reference',
+          transform: [boxSummary],
+          extentField: 'boxX0',
+          extentToField: 'boxX1',
+          encoding: { y: { field: 'median' } },
+        },
+        {
+          type: 'reference',
+          transform: [boxSummary],
+          extentField: 'whiskerMin',
+          extentToField: 'whiskerMax',
+          encoding: { x: { field: 'boxX' } },
+        },
         { type: 'point', transform: [boxOutside], encoding: { x: { field: 'boxX' }, y: { field: 'value' } } },
       ],
     };

@@ -9,9 +9,11 @@
  *   - path transform 顺序：端点先 resolve → shrink 在原始几何 → 最后包 GroupPrim（bbox center 支点）
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { IR, IRPath, ScenePrimitive } from '../../src';
 import type { Scene } from '../../src/primitive';
+
+import { compileToScene } from '../../src/compile/compile';
 
 /** 递归收集 Scene 里所有数值坐标（commands / transforms / layout），判 finite */
 const collectNumbers = (value: unknown, out: Array<number> = []): Array<number> => {
@@ -273,7 +275,11 @@ describe('ATTACK 5: 退化 bbox + path transform', () => {
     let warned = false;
     const scene = compileToScene(
       pathIR([{ type: 'step', kind: 'move', to: [0, 0] }] as IRPath['children'], { rotate: 30 }),
-      { onWarn: w => { if (w.code === 'PATH_TOO_SHORT') warned = true; } },
+      {
+        onWarn: w => {
+          if (w.code === 'PATH_TOO_SHORT') warned = true;
+        },
+      },
     );
     expect(warned).toBe(true);
     expect(expectAllFinite(scene).ok).toBe(true);
@@ -300,9 +306,7 @@ describe('ATTACK 5: 退化 bbox + path transform', () => {
 describe('ATTACK 6: marks + path transform 交互（二次变换 / 定向污染）', () => {
   it('marks + rotate 同给：mark marker 坐标进 group 还是裸坐标（二次旋转风险）', () => {
     // 无 transform 基准
-    const baseScene = compileToScene(
-      linePath({ marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] }),
-    );
+    const baseScene = compileToScene(linePath({ marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] }));
     // 加 rotate
     const rotScene = compileToScene(
       linePath({ rotate: 90, marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] }),

@@ -1,12 +1,10 @@
 import type { FC } from 'react';
+
+import type { PathVisualProps } from './_shared';
+
 import { Path } from '../kernel/Path';
 import { Step } from '../kernel/Step';
-import {
-  type PathVisualProps,
-  pickPathVisual,
-  regularPolygonVertices,
-  requireXY,
-} from './_shared';
+import { pickPathVisual, regularPolygonVertices, requireXY } from './_shared';
 
 /** `<RegularPolygon>` 形态：中心 + 外接圆半径（或边长）+ 边数 */
 export type RegularPolygonProps = PathVisualProps & {
@@ -31,10 +29,7 @@ export const RegularPolygon: FC<RegularPolygonProps> = props => {
   if (!Number.isInteger(sides) || sides < 3) {
     throw new Error('<RegularPolygon> 的 sides 需为 >= 3 的整数');
   }
-  const radius =
-    'radius' in props
-      ? props.radius
-      : props.sideLength / (2 * Math.sin(Math.PI / sides));
+  const radius = 'radius' in props ? props.radius : props.sideLength / (2 * Math.sin(Math.PI / sides));
   const rotate = props.rotate ?? DEFAULT_ROTATE;
   const verts = regularPolygonVertices(center, radius, radius, sides, rotate);
 

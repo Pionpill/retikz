@@ -1,8 +1,11 @@
 /* eslint-disable react-refresh/only-export-components -- 此文件导出 MDX 元素映射表（对象），不是 fast-refresh 边界 */
-import { cn } from '@/lib/utils';
 import type { MDXComponents } from 'mdx/types';
 import type { ComponentPropsWithoutRef, FC, ReactNode } from 'react';
+
 import { Link } from 'react-router';
+
+import { cn } from '@/lib/utils';
+
 import { CodeBlockCommand } from '../code-block-command';
 import { Comparison } from '../comparison';
 import { ComponentAlert } from '../component-alert';
@@ -137,10 +140,7 @@ export const mdxComponents: MDXComponents = {
   table: ({ className, ...props }) => (
     <div className="my-6 w-full overflow-x-auto">
       <table
-        className={cn(
-          'w-full table-auto border-collapse text-sm [&_tbody_tr:last-child]:border-b-0',
-          className,
-        )}
+        className={cn('w-full table-auto border-collapse text-sm [&_tbody_tr:last-child]:border-b-0', className)}
         {...props}
       />
     </div>

@@ -1,6 +1,8 @@
-import type { FC } from 'react';
 import type { SceneResource } from '@retikz/core';
+import type { FC } from 'react';
+
 import { buildClipDef } from '@retikz/render/svg';
+
 import { svgToReact } from './svg-to-react';
 
 /**
@@ -11,10 +13,4 @@ import { svgToReact } from './svg-to-react';
 export const ClipDefs: FC<{ resources: Array<SceneResource>; idFor: (id: string) => string }> = ({
   resources,
   idFor,
-}) => (
-  <>
-    {resources.map(r =>
-      r.kind === 'clip' ? svgToReact(buildClipDef(r, idFor(r.id)), r.id) : null,
-    )}
-  </>
-);
+}) => <>{resources.map(r => (r.kind === 'clip' ? svgToReact(buildClipDef(r, idFor(r.id)), r.id) : null))}</>;

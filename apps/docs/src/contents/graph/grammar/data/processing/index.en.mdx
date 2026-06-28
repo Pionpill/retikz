@@ -25,8 +25,14 @@ When the data's field names don't line up with the config's logical names, suppl
 
 ```tsx
 // the data calls them period / amount, the config still says month / revenue
-<Plot data={rows} model={[{ name: 'month', type: 'temporal' }, { name: 'revenue', type: 'continuous' }]}
-      fieldMap={{ month: 'period', revenue: 'amount' }}>
+<Plot
+  data={rows}
+  model={[
+    { name: 'month', type: 'temporal' },
+    { name: 'revenue', type: 'continuous' },
+  ]}
+  fieldMap={{ month: 'period', revenue: 'amount' }}
+>
   <PathMark x="month" y="revenue" order="month" />
 </Plot>
 ```
@@ -49,23 +55,28 @@ The right-hand chart below deliberately mixes `Date`, epoch milliseconds, ISO st
 
 Built-in parsing only accepts fixed shapes: `temporal` takes `Date` / epoch-ms / strict ISO, `continuous` takes numbers / strict numeric strings. Formats outside that table need you to spell out how to parse them — use a declarative `format` for common shapes, and `resolveField` for truly arbitrary logic.
 
-| Case | Write | Enters IR |
-| --- | --- | --- |
-| Default formats | declare `type`, or omit parsing | Yes |
-| Common non-default formats | add a built-in `format` on a model field | Yes |
-| Reusable custom format | `defineFieldFormat` + `formatDefinitions` | Yes, only the format name |
-| Arbitrary runtime logic | `resolveField` | No, runtime function only |
+| Case                       | Write                                     | Enters IR                 |
+| -------------------------- | ----------------------------------------- | ------------------------- |
+| Default formats            | declare `type`, or omit parsing           | Yes                       |
+| Common non-default formats | add a built-in `format` on a model field  | Yes                       |
+| Reusable custom format     | `defineFieldFormat` + `formatDefinitions` | Yes, only the format name |
+| Arbitrary runtime logic    | `resolveField`                            | No, runtime function only |
 
 ### format
 
 For common non-default formats like `'2024/01/01'`, epoch seconds, or `'50%'`, you don't need a function — give the field a declarative `format`, which **enters the IR, is serializable, and an LLM can generate it**:
 
 ```tsx
-<Plot data={rows} model={[
-  { name: 'createdAt', type: 'temporal',  format: 'slashDate' },    // '2024/01/01' → time
-  { name: 'ts',        type: 'temporal',  format: 'epochSeconds' }, // 1700000000 → ms
-  { name: 'ratio',     type: 'continuous', format: 'percent' },     // '50%' → 0.5
-]}>{/* … */}</Plot>
+<Plot
+  data={rows}
+  model={[
+    { name: 'createdAt', type: 'temporal', format: 'slashDate' }, // '2024/01/01' → time
+    { name: 'ts', type: 'temporal', format: 'epochSeconds' }, // 1700000000 → ms
+    { name: 'ratio', type: 'continuous', format: 'percent' }, // '50%' → 0.5
+  ]}
+>
+  {/* … */}
+</Plot>
 ```
 
 In the right-hand chart below, the same business fields come from report-shaped data: dates use `YYYY/MM/DD`, and ratios are percent strings. `format` normalizes both before they reach the time and linear axes.
@@ -74,14 +85,14 @@ In the right-hand chart below, the same business fields come from report-shaped 
 
 Available `format` values (each binds to one type):
 
-| `format` | Type | Parsing |
-| --- | --- | --- |
-| `iso` | temporal | strict ISO (same as omitting) |
-| `epochSeconds` | temporal | epoch seconds → ms |
-| `epochMillis` | temporal | epoch milliseconds |
-| `slashDate` | temporal | strict `YYYY/MM/DD` (at UTC midnight) |
+| `format`       | Type       | Parsing                                                       |
+| -------------- | ---------- | ------------------------------------------------------------- |
+| `iso`          | temporal   | strict ISO (same as omitting)                                 |
+| `epochSeconds` | temporal   | epoch seconds → ms                                            |
+| `epochMillis`  | temporal   | epoch milliseconds                                            |
+| `slashDate`    | temporal   | strict `YYYY/MM/DD` (at UTC midnight)                         |
 | `numberString` | continuous | lenient numeric string (allows whitespace / thousands commas) |
-| `percent` | continuous | percent string `'50%'` → 0.5 |
+| `percent`      | continuous | percent string `'50%'` → 0.5                                  |
 
 Rules:
 
@@ -104,21 +115,21 @@ In the right-hand chart below, `Feb` is an unparseable string, `Mar` is missing,
 
 <ComponentPreview name="processing-invalid" sourceFiles={['processing-invalid.data.ts']} />
 
-| Situation | Behavior |
-| --- | --- |
-| A row is missing the field | that datum is skipped (normal for heterogeneous data, no error) |
-| The leaf is an object / array (non-scalar) | that datum is skipped (objects never enter the chart) |
-| Same type, different storage format | converted automatically (see "Swapping data sources" above) |
-| The field is a `bigint` (e.g. a database int64) | converted to a number automatically (safe integers only; out-of-range is treated as invalid) |
-| The path passes through an array (needs unwinding) | not auto-unwound yet — flatten in the data layer first |
+| Situation                                          | Behavior                                                                                     |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| A row is missing the field                         | that datum is skipped (normal for heterogeneous data, no error)                              |
+| The leaf is an object / array (non-scalar)         | that datum is skipped (objects never enter the chart)                                        |
+| Same type, different storage format                | converted automatically (see "Swapping data sources" above)                                  |
+| The field is a `bigint` (e.g. a database int64)    | converted to a number automatically (safe integers only; out-of-range is treated as invalid) |
+| The path passes through an array (needs unwinding) | not auto-unwound yet — flatten in the data layer first                                       |
 
 Choose validation by how strict you want the chart to be:
 
-| Option | Check | Good for |
-| --- | --- | --- |
+| Option                     | Check                                | Good for                                           |
+| -------------------------- | ------------------------------------ | -------------------------------------------------- |
 | Default / `invalid="skip"` | no error; invalid points are skipped | production charts that tolerate a few dirty values |
-| `validateData` | sample-checks bound fields | debugging blank charts / bad field maps |
-| `invalid="error"` | full check of participating fields | data intake, tests, fail-loud charts |
+| `validateData`             | sample-checks bound fields           | debugging blank charts / bad field maps            |
+| `invalid="error"`          | full check of participating fields   | data intake, tests, fail-loud charts               |
 
 Validation happens after parsing / normalization and only checks fields used by the current plot. The default "skip" can leave you staring at a blank chart. Turn on `validateData` to have retikz **sample-check** the binding and throw on problems, pointing at **which field and how many invalid / missing** (e.g. `field "x": 3/100 invalid`), turning "why is it empty" into a clear message:
 
@@ -142,13 +153,13 @@ For a stricter **full** check, pass `invalid="error"` — any invalid value (a m
 
 Data processing runs before mark lowering. Its job is to turn external rows from different sources and storage formats into one canonical row shape. Later transforms, scales, marks, and locators all read that result.
 
-| Order | Processing |
-| --- | --- |
-| 1 | Collect fields referenced by the current config, producing the field set that actually needs work |
-| 2 | Use `fieldMap` to align logical fields with physical data paths; without a mapping, the physical path is the logical field name |
-| 3 | Resolve field types: `resolveField.type` first, then model / format / inference |
-| 4 | Parse field values: `resolveField.parse` first, then declarative `format` (built-in or custom registered via `formatDefinitions`), then built-in coercion |
-| 5 | Write parsed values back into the canonical row under logical field names |
-| 6 | Use `validateData` / `invalid` to sample-check or fully check participating fields |
+| Order | Processing                                                                                                                                                |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Collect fields referenced by the current config, producing the field set that actually needs work                                                         |
+| 2     | Use `fieldMap` to align logical fields with physical data paths; without a mapping, the physical path is the logical field name                           |
+| 3     | Resolve field types: `resolveField.type` first, then model / format / inference                                                                           |
+| 4     | Parse field values: `resolveField.parse` first, then declarative `format` (built-in or custom registered via `formatDefinitions`), then built-in coercion |
+| 5     | Write parsed values back into the canonical row under logical field names                                                                                 |
+| 6     | Use `validateData` / `invalid` to sample-check or fully check participating fields                                                                        |
 
 `model` and `format` enter the PlotSpec and are suitable for persistence with the chart config. `fieldMap` is a serializable mapping, but it is a lowering option injected by dataset reference and is not written into the PlotSpec; `resolveField` is a function and participates only at runtime. To reuse `resolveField` logic, reuse the same resolver in application code rather than expecting it to be written into IR.

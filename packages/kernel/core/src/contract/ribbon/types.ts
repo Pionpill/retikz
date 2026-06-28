@@ -1,4 +1,5 @@
 import type { ZodType } from 'zod';
+
 import type { IRJsonObject } from '../../schemas/json';
 
 export type RibbonWidthProfileContext<TParams extends IRJsonObject = IRJsonObject> = {
@@ -10,9 +11,7 @@ export type RibbonWidthProfileContext<TParams extends IRJsonObject = IRJsonObjec
   params: TParams;
 };
 
-export type RibbonWidthProfileInput<
-  TParams extends IRJsonObject = IRJsonObject,
-> = {
+export type RibbonWidthProfileInput<TParams extends IRJsonObject = IRJsonObject> = {
   /** Registry key referenced by IR `width: { kind: "profile", name }`. */
   name: string;
   /** Optional JSON-safe params schema; compile parses `width.params` before sampling. */

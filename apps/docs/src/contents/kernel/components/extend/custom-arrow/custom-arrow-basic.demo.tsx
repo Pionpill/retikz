@@ -1,6 +1,7 @@
+import type { FC } from 'react';
+
 import { defineArrow } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
-import type { FC } from 'react';
 
 /**
  * 自定义箭头：TikZ Bracket 样式（空心方括号 [）——一条 stroke 路径勾出"┌…└"括号，与内置三角形箭头明显不同。

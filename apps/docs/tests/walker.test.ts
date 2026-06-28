@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+
 import { walk, walkType } from '@/components/shared/zod-schema/walker';
 
 describe('walker — primitives & literal', () => {

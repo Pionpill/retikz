@@ -1,4 +1,5 @@
 import type { DocLocation } from '@/layout/doc-layout/doc-location';
+
 import { docPathSegments } from '@/layout/doc-layout/doc-location';
 
 /** 仓库与分支常量：复制 markdown / 在 GitHub 查看 / 喂给 AI 的 raw URL 都要用 */
@@ -9,8 +10,7 @@ export const DOC_BRANCH = 'main';
 export const buildContentRelativePath = (segments: Array<string>, lang: string): string =>
   `apps/docs/src/contents/${segments.join('/')}/index.${lang}.mdx`;
 
-export const buildBlobUrl = (relPath: string): string =>
-  `https://github.com/${DOC_REPO}/blob/${DOC_BRANCH}/${relPath}`;
+export const buildBlobUrl = (relPath: string): string => `https://github.com/${DOC_REPO}/blob/${DOC_BRANCH}/${relPath}`;
 export const buildRawUrl = (relPath: string): string =>
   `https://raw.githubusercontent.com/${DOC_REPO}/${DOC_BRANCH}/${relPath}`;
 

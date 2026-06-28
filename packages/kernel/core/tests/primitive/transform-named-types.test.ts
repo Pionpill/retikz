@@ -1,10 +1,6 @@
 import { describe, expectTypeOf, it } from 'vitest';
-import type {
-  RotateTransform,
-  ScaleTransform,
-  Transform,
-  TranslateTransform,
-} from '../../src';
+
+import type { RotateTransform, ScaleTransform, Transform, TranslateTransform } from '../../src';
 
 describe('Transform named types', () => {
   it('每个 named type 的 kind 字面量与命名对照一致', () => {
@@ -14,9 +10,7 @@ describe('Transform named types', () => {
   });
 
   it('Transform 是 3 个 named type 的并集', () => {
-    expectTypeOf<Transform>().toEqualTypeOf<
-      TranslateTransform | RotateTransform | ScaleTransform
-    >();
+    expectTypeOf<Transform>().toEqualTypeOf<TranslateTransform | RotateTransform | ScaleTransform>();
   });
 
   it('字段类型签名稳定', () => {

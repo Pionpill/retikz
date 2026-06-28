@@ -1,10 +1,25 @@
-import { Braces, Brush, Check, ChevronDown, Copy, Database, FileCode2, FileSymlink, LineDotRightHorizontal } from 'lucide-react';
+import {
+  Braces,
+  Brush,
+  Check,
+  ChevronDown,
+  Copy,
+  Database,
+  FileCode2,
+  FileSymlink,
+  LineDotRightHorizontal,
+} from 'lucide-react';
 import { type ComponentProps, type FC, type ReactNode } from 'react';
 
 import { JsonIcon, ReactIcon } from '@/components/icons';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
 import type { ComponentSourceFile, RendererMode, SourceView } from './_shared';
@@ -66,7 +81,11 @@ const VIEW_META: Record<SourceView, { label: string; text: string; icon: ReactNo
 const DATA_FILE_PATTERN = /\.data\.tsx?$/;
 
 /** 文件类型图标：数据文件（`*.data.ts`）用 Database，主 demo 文件用 FileCode2，其他 sourceFiles 用 FileSymlink */
-const FileKindIcon: FC<{ filename: string; isMain?: boolean; className?: string }> = ({ filename, isMain, className }) =>
+const FileKindIcon: FC<{ filename: string; isMain?: boolean; className?: string }> = ({
+  filename,
+  isMain,
+  className,
+}) =>
   DATA_FILE_PATTERN.test(filename) ? (
     <Database className={className} />
   ) : isMain ? (
@@ -94,7 +113,10 @@ const ViewButton: FC<ViewButtonProps> = props => {
       variant={active || grouped ? 'outline' : 'ghost'}
       aria-pressed={active}
       aria-label={meta.label}
-      className={cn('h-8 cursor-pointer gap-1.5', active ? 'bg-muted text-foreground' : 'border border-transparent text-muted-foreground')}
+      className={cn(
+        'h-8 cursor-pointer gap-1.5',
+        active ? 'bg-muted text-foreground' : 'border border-transparent text-muted-foreground',
+      )}
       onClick={onClick}
     >
       {meta.icon}
@@ -135,7 +157,11 @@ const FileMenu: FC<FileMenuProps> = props => {
             title={file.filename}
             onSelect={() => onFileChange(index)}
           >
-            <FileKindIcon filename={file.filename} isMain={file.isMain} className="size-3.5 shrink-0 text-muted-foreground" />
+            <FileKindIcon
+              filename={file.filename}
+              isMain={file.isMain}
+              className="size-3.5 shrink-0 text-muted-foreground"
+            />
             <span className="truncate font-mono text-xs">{file.filename}</span>
             <Check className={cn('ml-auto size-3.5 shrink-0', index !== activeFileIndex && 'opacity-0')} />
           </DropdownMenuItem>

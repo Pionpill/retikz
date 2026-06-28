@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { FontSchema } from '../../font';
 import { JsonObjectSchema } from '../../json';
 import { PositionSchema } from '../../position';
@@ -19,15 +20,7 @@ export const GeometryLabelSchema = z
       ),
     position: z
       .union([
-        z.enum([
-          'at-start',
-          'very-near-start',
-          'near-start',
-          'midway',
-          'near-end',
-          'very-near-end',
-          'at-end',
-        ]),
+        z.enum(['at-start', 'very-near-start', 'near-start', 'midway', 'near-end', 'very-near-end', 'at-end']),
         z.number().min(0).max(1),
       ])
       .optional()
@@ -43,9 +36,7 @@ export const GeometryLabelSchema = z
     sloped: z
       .boolean()
       .optional()
-      .describe(
-        'Rotate the label along the sampled tangent while keeping `side` responsible for label placement.',
-      ),
+      .describe('Rotate the label along the sampled tangent while keeping `side` responsible for label placement.'),
     placement: z
       .enum(GeometryLabelPlacement)
       .optional()
@@ -68,12 +59,8 @@ export const GeometryLabelSchema = z
       .min(0)
       .max(1)
       .optional()
-      .describe(
-        'Label-only opacity, multiplied with the owning path opacity.',
-      ),
-    font: FontSchema.optional().describe(
-      'Label font overrides. Missing fields inherit from scope label defaults.',
-    ),
+      .describe('Label-only opacity, multiplied with the owning path opacity.'),
+    font: FontSchema.optional().describe('Label font overrides. Missing fields inherit from scope label defaults.'),
   })
   .strict()
   .describe(
@@ -86,9 +73,7 @@ export const StepLabelSchema = GeometryLabelSchema;
 export const MoveStepSchema = z
   .object({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
-    kind: z
-      .literal('move')
-      .describe('Move the cursor to the target without drawing.'),
+    kind: z.literal('move').describe('Move the cursor to the target without drawing.'),
     to: TargetSchema.describe('Destination point of the move'),
   })
   .describe('Move action: relocate the path cursor without drawing');
@@ -96,9 +81,7 @@ export const MoveStepSchema = z
 export const LineStepSchema = z
   .object({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
-    kind: z
-      .literal('line')
-      .describe('Draw a straight line from the current cursor to the target.'),
+    kind: z.literal('line').describe('Draw a straight line from the current cursor to the target.'),
     to: TargetSchema.describe('Destination point of the line segment'),
     label: StepLabelSchema.optional().describe('Edge label attached to this line segment'),
   })
@@ -109,35 +92,23 @@ export const FoldStepSchema = z
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('fold')
-      .describe(
-        'Folded right-angle segment from cursor to target through one intermediate point.',
-      ),
+      .describe('Folded right-angle segment from cursor to target through one intermediate point.'),
     via: z
       .enum(FoldStepVia)
-      .describe(
-        'Folding direction: `-|` first horizontal then vertical; `|-` first vertical then horizontal',
-      ),
+      .describe('Folding direction: `-|` first horizontal then vertical; `|-` first vertical then horizontal'),
     to: TargetSchema.describe('Destination point of the folded segment'),
     label: StepLabelSchema.optional().describe(
       'Edge label attached to this folded segment; positioned along the corresponding leg by `position`.',
     ),
   })
-  .describe(
-    'Fold action: right-angle segment with a single intermediate point chosen by `via`.',
-  );
+  .describe('Fold action: right-angle segment with a single intermediate point chosen by `via`.');
 
 export const CycleStepSchema = z
   .object({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
-    kind: z
-      .literal('cycle')
-      .describe(
-        'Close the path back to the most recent move target.',
-      ),
+    kind: z.literal('cycle').describe('Close the path back to the most recent move target.'),
   })
-  .describe(
-    'Cycle action: close the current sub-path back to its starting point; carries no `to` field',
-  );
+  .describe('Cycle action: close the current sub-path back to its starting point; carries no `to` field');
 
 /**
  * 控制点 schema 别名
@@ -150,11 +121,7 @@ export const ControlPointSchema = PositionSchema.describe(
 export const CurveStepSchema = z
   .object({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
-    kind: z
-      .literal('curve')
-      .describe(
-        'Quadratic Bezier curve from cursor to target with one control point.',
-      ),
+    kind: z.literal('curve').describe('Quadratic Bezier curve from cursor to target with one control point.'),
     to: TargetSchema.describe('Destination point of the curve'),
     control: ControlPointSchema.describe('Single control point for the quadratic Bezier'),
     label: StepLabelSchema.optional().describe('Edge label attached to this quadratic Bezier'),
@@ -164,19 +131,13 @@ export const CurveStepSchema = z
 export const CubicStepSchema = z
   .object({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
-    kind: z
-      .literal('cubic')
-      .describe(
-        'Cubic Bezier curve from cursor to target with two control points.',
-      ),
+    kind: z.literal('cubic').describe('Cubic Bezier curve from cursor to target with two control points.'),
     to: TargetSchema.describe('Destination point of the cubic curve'),
     control1: ControlPointSchema.describe('First control point (influences the start tangent)'),
     control2: ControlPointSchema.describe('Second control point (influences the end tangent)'),
     label: StepLabelSchema.optional().describe('Edge label attached to this cubic Bezier'),
   })
-  .describe(
-    'Cubic action: cubic Bezier; two control points give precise tangent control at both ends',
-  );
+  .describe('Cubic action: cubic Bezier; two control points give precise tangent control at both ends');
 
 export const BendStepSchema = z
   .object({
@@ -226,10 +187,7 @@ export const BendStepSchema = z
   })
   .describe('Bend action: shorthand for an arc-like cubic; control points computed at compile time');
 
-const refineArcStep = (
-  step: { radius?: number; radiusX?: number; radiusY?: number },
-  ctx: z.RefinementCtx,
-): void => {
+const refineArcStep = (step: { radius?: number; radiusX?: number; radiusY?: number }, ctx: z.RefinementCtx): void => {
   const hasRadius = step.radius !== undefined;
   const hasRadiusX = step.radiusX !== undefined;
   const hasRadiusY = step.radiusY !== undefined;
@@ -284,11 +242,15 @@ const ArcStepBaseSchema = z
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('arc')
-      .describe('Arc segment sweeping from startAngle to endAngle around a center. Use either radius or radiusX/radiusY.'),
+      .describe(
+        'Arc segment sweeping from startAngle to endAngle around a center. Use either radius or radiusX/radiusY.',
+      ),
     startAngle: z
       .number()
 
-      .describe('Arc start angle in degrees, measured from +x axis. 0° = +x, 90° = +y = screen-down (visual clockwise under screen y-down); matches polar / Node label angle convention.'),
+      .describe(
+        'Arc start angle in degrees, measured from +x axis. 0° = +x, 90° = +y = screen-down (visual clockwise under screen y-down); matches polar / Node label angle convention.',
+      ),
     endAngle: z
       .number()
 
@@ -298,25 +260,33 @@ const ArcStepBaseSchema = z
 
       .positive()
       .optional()
-      .describe('Circular arc radius in user units. Give either radius (circular) or both radiusX and radiusY (elliptical), never both.'),
+      .describe(
+        'Circular arc radius in user units. Give either radius (circular) or both radiusX and radiusY (elliptical), never both.',
+      ),
     radiusX: z
       .number()
 
       .positive()
       .optional()
-      .describe('Elliptical arc x-axis radius; requires radiusX and radiusY together (mutually exclusive with radius).'),
+      .describe(
+        'Elliptical arc x-axis radius; requires radiusX and radiusY together (mutually exclusive with radius).',
+      ),
     radiusY: z
       .number()
 
       .positive()
       .optional()
-      .describe('Elliptical arc y-axis radius; requires radiusX and radiusY together (mutually exclusive with radius).'),
+      .describe(
+        'Elliptical arc y-axis radius; requires radiusX and radiusY together (mutually exclusive with radius).',
+      ),
     center: TargetSchema.optional().describe(
       'Explicit arc center. Defaults to the cursor (previous step anchor) for backward compatibility; set it to anchor the arc independently of the cursor (used by <Sector> to draw a correct wedge).',
     ),
     label: StepLabelSchema.optional().describe('Edge label attached to this arc'),
   })
-  .describe('Arc action: circular (radius) or elliptical (radiusX/radiusY) arc around a center (cursor by default, or explicit). Pen is left at the arc endpoint.');
+  .describe(
+    'Arc action: circular (radius) or elliptical (radiusX/radiusY) arc around a center (cursor by default, or explicit). Pen is left at the arc endpoint.',
+  );
 
 export const ArcStepSchema = ArcStepBaseSchema.superRefine(refineArcStep);
 
@@ -325,7 +295,9 @@ const CirclePathStepBaseSchema = z
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('circlePath')
-      .describe('Circle centered at the cursor. Without angles, emits a full circle; with angles, emits a partial arc closed by `closed`.'),
+      .describe(
+        'Circle centered at the cursor. Without angles, emits a full circle; with angles, emits a partial arc closed by `closed`.',
+      ),
     radius: z
       .number()
 
@@ -335,7 +307,9 @@ const CirclePathStepBaseSchema = z
       .number()
 
       .optional()
-      .describe('Partial-circle start angle in degrees (same convention as arc: 0°=+x, 90°=+y screen-down). Give both startAngle and endAngle for a partial circle, or neither for a full circle.'),
+      .describe(
+        'Partial-circle start angle in degrees (same convention as arc: 0°=+x, 90°=+y screen-down). Give both startAngle and endAngle for a partial circle, or neither for a full circle.',
+      ),
     endAngle: z
       .number()
 
@@ -344,10 +318,14 @@ const CirclePathStepBaseSchema = z
     closed: z
       .enum(['closed', 'chord', 'open', 'sector'])
       .optional()
-      .describe("Closing mode for a circle path: closed, chord, sector, or open. With angles, omitted fields use chord."),
+      .describe(
+        'Closing mode for a circle path: closed, chord, sector, or open. With angles, omitted fields use chord.',
+      ),
     label: StepLabelSchema.optional().describe('Edge label attached to this circle'),
   })
-  .describe('CirclePath action: full circle (no angles, pen returns to center) or partial arc (with angles, closed per chord/open).');
+  .describe(
+    'CirclePath action: full circle (no angles, pen returns to center) or partial arc (with angles, closed per chord/open).',
+  );
 
 export const CirclePathStepSchema = CirclePathStepBaseSchema.superRefine((step, ctx) =>
   refinePartialAngles(step, ctx, 'circlePath'),
@@ -358,7 +336,9 @@ const EllipsePathStepBaseSchema = z
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('ellipsePath')
-      .describe('Ellipse centered at the cursor. Without angles, emits a full ellipse; with angles, emits a partial arc closed by `closed`.'),
+      .describe(
+        'Ellipse centered at the cursor. Without angles, emits a full ellipse; with angles, emits a partial arc closed by `closed`.',
+      ),
     radiusX: z
       .number()
 
@@ -373,7 +353,9 @@ const EllipsePathStepBaseSchema = z
       .number()
 
       .optional()
-      .describe('Partial-ellipse start angle in degrees (parametric, same convention as arc). Give both startAngle and endAngle for a partial ellipse, or neither for a full ellipse.'),
+      .describe(
+        'Partial-ellipse start angle in degrees (parametric, same convention as arc). Give both startAngle and endAngle for a partial ellipse, or neither for a full ellipse.',
+      ),
     endAngle: z
       .number()
 
@@ -382,10 +364,14 @@ const EllipsePathStepBaseSchema = z
     closed: z
       .enum(['closed', 'chord', 'open', 'sector'])
       .optional()
-      .describe("Closing mode for an ellipse path: closed, chord, sector, or open. With angles, omitted fields use chord."),
+      .describe(
+        'Closing mode for an ellipse path: closed, chord, sector, or open. With angles, omitted fields use chord.',
+      ),
     label: StepLabelSchema.optional().describe('Edge label attached to this ellipse'),
   })
-  .describe('EllipsePath action: full ellipse (no angles, pen returns to center) or partial elliptical arc (with angles, closed per chord/open).');
+  .describe(
+    'EllipsePath action: full ellipse (no angles, pen returns to center) or partial elliptical arc (with angles, closed per chord/open).',
+  );
 
 export const EllipsePathStepSchema = EllipsePathStepBaseSchema.superRefine((step, ctx) =>
   refinePartialAngles(step, ctx, 'ellipsePath'),
@@ -396,14 +382,18 @@ export const RectangleStepSchema = z
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('rectangle')
-      .describe('Axis-aligned rectangle between two opposite corners. Corners come from `from` and `to`, not the cursor.'),
+      .describe(
+        'Axis-aligned rectangle between two opposite corners. Corners come from `from` and `to`, not the cursor.',
+      ),
     from: TargetSchema.describe('One corner of the rectangle'),
     to: TargetSchema.describe('The opposite corner; order is irrelevant (compile normalizes to min/max)'),
     cornerRadius: z
       .number()
       .nonnegative()
       .optional()
-      .describe('Single corner radius applied to all four corners; omitted = sharp corners. Clamped to half the smaller side at compile time.'),
+      .describe(
+        'Single corner radius applied to all four corners; omitted = sharp corners. Clamped to half the smaller side at compile time.',
+      ),
   })
   .describe('Rectangle action: closed axis-aligned rectangle (optionally rounded) drawn between two opposite corners.');
 
@@ -426,16 +416,12 @@ export const SmoothStepSchema = z
       .positive()
 
       .optional()
-      .describe(
-        'Tangent-length multiplier controlling curve slackness. Omitted fields use 1.',
-      ),
+      .describe('Tangent-length multiplier controlling curve slackness. Omitted fields use 1.'),
     label: StepLabelSchema.optional().describe(
       'Edge label attached to the generated curve; positioned along the produced cubic commands by Bezier parameter (same as curve / cubic step labels).',
     ),
   })
-  .describe(
-    'Smooth action: a curve passing through the cursor and the given points, compiled to cubic Beziers.',
-  );
+  .describe('Smooth action: a curve passing through the cursor and the given points, compiled to cubic Beziers.');
 
 export const GeneratorStepSchema = z
   .object({
@@ -446,14 +432,10 @@ export const GeneratorStepSchema = z
         'Delegate this segment to a registered path generator looked up by `name` in CompileOptions.pathGenerators; the generator turns `from` / `to` / `params` into low-level path commands at compile time',
       ),
     name: z
-        .string()
-        .min(1)
-        .describe(
-          'Path generator provider name. Custom names must be registered via CompileOptions.pathGenerators.',
-        ),
-    to: TargetSchema.optional().describe(
-      'Optional destination point passed to the generator as the segment end.',
-    ),
+      .string()
+      .min(1)
+      .describe('Path generator provider name. Custom names must be registered via CompileOptions.pathGenerators.'),
+    to: TargetSchema.optional().describe('Optional destination point passed to the generator as the segment end.'),
     params: JsonObjectSchema.describe(
       'JSON parameter object passed to the generator. The registered generator validates its own parameter fields.',
     ),

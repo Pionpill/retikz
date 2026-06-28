@@ -1,6 +1,9 @@
-import type { I18nKey, Page, Section, SubPage } from '@/data/interface';
-import { getSectionsByModule } from '@/data/sections';
 import { useMemo } from 'react';
+
+import type { I18nKey, Page, Section, SubPage } from '@/data/interface';
+
+import { getSectionsByModule } from '@/data/sections';
+
 import { docPathSegments, useDocLocation } from './doc-location';
 
 export type LeafNode = {
@@ -43,12 +46,7 @@ const collectFromSubPage = (
 };
 
 /** 把一个 Page（一级页，可能有 children）拍平 */
-const collectFromPage = (
-  moduleId: string,
-  sectionId: string | null,
-  page: Page,
-  acc: Array<LeafNode>,
-): void => {
+const collectFromPage = (moduleId: string, sectionId: string | null, page: Page, acc: Array<LeafNode>): void => {
   if (page.children) {
     for (const child of page.children) {
       collectFromSubPage(moduleId, sectionId, page.id, child, acc);
@@ -67,7 +65,7 @@ const collectFromPage = (
 export const flattenLeaves = (moduleId: string, sections: Array<Section>): Array<LeafNode> => {
   const acc: Array<LeafNode> = [];
   for (const section of sections) {
-    const sectionId = section.label ? section.id ?? null : null;
+    const sectionId = section.label ? (section.id ?? null) : null;
     for (const page of section.pages) {
       collectFromPage(moduleId, sectionId, page, acc);
     }

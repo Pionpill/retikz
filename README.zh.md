@@ -31,12 +31,12 @@ retikz 的架构从一份稳定的图形契约开始：Sugar JSX、Kernel JSX、
 
 AI 友好不是 retikz 后补的能力，而是 IR 存在的理由。
 
-| 设计选择 | 意义 |
-| --- | --- |
-| 纯 JSON IR | 模型输出结构化数据，而不是源码文本 |
-| schema 约束字段 | runtime 能尽早发现非法图形 |
-| 可 patch 的文档形态 | AI 可以局部编辑图形，不必重写整张图 |
-| 框架无关契约 | 人写的 JSX、原生 JS 对象、未来 Vue adapter、AI 输出可以共用一份图形格式 |
+| 设计选择            | 意义                                                                    |
+| ------------------- | ----------------------------------------------------------------------- |
+| 纯 JSON IR          | 模型输出结构化数据，而不是源码文本                                      |
+| schema 约束字段     | runtime 能尽早发现非法图形                                              |
+| 可 patch 的文档形态 | AI 可以局部编辑图形，不必重写整张图                                     |
+| 框架无关契约        | 人写的 JSX、原生 JS 对象、未来 Vue adapter、AI 输出可以共用一份图形格式 |
 
 ## 看看效果
 
@@ -113,17 +113,17 @@ fig.mount(document.querySelector('#diagram')); // 也可 fig.toSvgString() / fig
 
 retikz 0.3 聚焦通用图形原语，并补齐了多后端渲染、动画与交互：
 
-| 能力 | 作用 |
-| --- | --- |
-| 命名节点与坐标 | 给后续路径和编辑提供稳定引用 |
-| 路径、step、箭头、边标签 | 关系线可以贴到 anchor，而不是粗暴连到文字中心 |
-| Scope 与 transform | 分组、局部移动、旋转、缩放和样式继承 |
-| 形状、填充与注册表 | 内置形状，以及可扩展的形状、箭头、图案和路径生成器 |
-| JSON IR 与 Scene 输出 | 面向持久化、AI 编辑和多 renderer 的可移植契约 |
-| 多后端渲染（SVG / Canvas 2D） | 同一份 IR 可编译到 SVG 或 Canvas 2D 两种后端 |
-| 动画 | 在 `<Layout>` 上声明动画，SVG / Canvas 双后端播放；可静态截帧用于 SSR 海报帧 |
-| 交互、事件与水合 | 节点 / 路径事件与 hit-test；SSR 输出后在客户端水合 |
-| 无框架 / SSR | `@retikz/vanilla` 的 `mountSvg` / `mountCanvas` 与 `renderToSvgString` |
+| 能力                          | 作用                                                                         |
+| ----------------------------- | ---------------------------------------------------------------------------- |
+| 命名节点与坐标                | 给后续路径和编辑提供稳定引用                                                 |
+| 路径、step、箭头、边标签      | 关系线可以贴到 anchor，而不是粗暴连到文字中心                                |
+| Scope 与 transform            | 分组、局部移动、旋转、缩放和样式继承                                         |
+| 形状、填充与注册表            | 内置形状，以及可扩展的形状、箭头、图案和路径生成器                           |
+| JSON IR 与 Scene 输出         | 面向持久化、AI 编辑和多 renderer 的可移植契约                                |
+| 多后端渲染（SVG / Canvas 2D） | 同一份 IR 可编译到 SVG 或 Canvas 2D 两种后端                                 |
+| 动画                          | 在 `<Layout>` 上声明动画，SVG / Canvas 双后端播放；可静态截帧用于 SSR 海报帧 |
+| 交互、事件与水合              | 节点 / 路径事件与 hit-test；SSR 输出后在客户端水合                           |
+| 无框架 / SSR                  | `@retikz/vanilla` 的 `mountSvg` / `mountCanvas` 与 `renderToSvgString`       |
 
 数据驱动图表由新兴的 Tier 2 层 `@retikz/plot`（独立包，当前 alpha）承接；流程布局、codec 和更多渲染目标见[路线图](https://pionpill.github.io/retikz/about/releases/roadmap)。
 
@@ -139,23 +139,23 @@ React JSX / plain JS objects / future DSL / AI JSON
 
 关键设计选择是：React JSX 只是输入格式之一。图形一旦变成 IR，同一份数据就可以被保存、校验、由 LLM patch、编译，并交给任何兼容 adapter 渲染。
 
-| 接入方式 | 状态 |
-| --- | --- |
-| 通过 `@retikz/react` 使用 React 组件 | 官方 API |
-| 通过 `@retikz/vanilla` 无框架命令式挂载（含 SSR） | 官方 API |
-| 原生 JavaScript 或 TypeScript IR 对象 | 可在 `@retikz/core` 边界接入 |
-| SVG / Canvas 2D 渲染后端（`@retikz/render`） | 已提供 |
-| Vue / Svelte / 其它框架 adapter | 架构上预留，尚未打包发布 |
-| native / PDF renderer | 未来 renderer 方向 |
+| 接入方式                                          | 状态                         |
+| ------------------------------------------------- | ---------------------------- |
+| 通过 `@retikz/react` 使用 React 组件              | 官方 API                     |
+| 通过 `@retikz/vanilla` 无框架命令式挂载（含 SSR） | 官方 API                     |
+| 原生 JavaScript 或 TypeScript IR 对象             | 可在 `@retikz/core` 边界接入 |
+| SVG / Canvas 2D 渲染后端（`@retikz/render`）      | 已提供                       |
+| Vue / Svelte / 其它框架 adapter                   | 架构上预留，尚未打包发布     |
+| native / PDF renderer                             | 未来 renderer 方向           |
 
 ## 包
 
-| 包 | 职责 | 运行时依赖 |
-| --- | --- | --- |
-| [`@retikz/core`](https://www.npmjs.com/package/@retikz/core) | 框架无关的 JSON IR、schema、纯 parser、IR 到 Scene 的编译器 | `zod` |
-| [`@retikz/render`](https://www.npmjs.com/package/@retikz/render) | Scene 渲染后端命名空间：`./svg`（Scene → SVG descriptor / 字符串）、`./canvas`（Scene → Canvas 2D），以及动画与水合 runtime | `@retikz/core` |
-| [`@retikz/react`](https://www.npmjs.com/package/@retikz/react) | 官方 React 组件、JSX 到 IR 的 builder，挂载 SVG / Canvas 双后端 | `@retikz/core`、`@retikz/render`，peer `react >=18` |
-| [`@retikz/vanilla`](https://www.npmjs.com/package/@retikz/vanilla) | 官方无框架 runtime：命令式 `mountSvg` / `mountCanvas`、`renderToSvgString`（SSR）与具名 builder | `@retikz/core`、`@retikz/render` |
+| 包                                                                 | 职责                                                                                                                        | 运行时依赖                                          |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| [`@retikz/core`](https://www.npmjs.com/package/@retikz/core)       | 框架无关的 JSON IR、schema、纯 parser、IR 到 Scene 的编译器                                                                 | `zod`                                               |
+| [`@retikz/render`](https://www.npmjs.com/package/@retikz/render)   | Scene 渲染后端命名空间：`./svg`（Scene → SVG descriptor / 字符串）、`./canvas`（Scene → Canvas 2D），以及动画与水合 runtime | `@retikz/core`                                      |
+| [`@retikz/react`](https://www.npmjs.com/package/@retikz/react)     | 官方 React 组件、JSX 到 IR 的 builder，挂载 SVG / Canvas 双后端                                                             | `@retikz/core`、`@retikz/render`，peer `react >=18` |
+| [`@retikz/vanilla`](https://www.npmjs.com/package/@retikz/vanilla) | 官方无框架 runtime：命令式 `mountSvg` / `mountCanvas`、`renderToSvgString`（SSR）与具名 builder                             | `@retikz/core`、`@retikz/render`                    |
 
 core / render / react / vanilla 四个 Tier 1 包按同一版本号 lockstep 发布。
 

@@ -1,6 +1,8 @@
-import { type ReactElement, type ReactNode, isValidElement } from 'react';
-import { describe, expect, it } from 'vitest';
+import type { ReactElement, ReactNode } from 'react';
+
 import { convertReactNodeToIR } from '@retikz/react';
+import { isValidElement } from 'react';
+import { describe, expect, it } from 'vitest';
 
 import { parseRetikzJsx } from '@/lib/jsx-to-ir';
 
@@ -58,9 +60,7 @@ describe('parseRetikzJsx — happy path', () => {
   });
 
   it('字面量 props：string / number / boolean / null / undefined', () => {
-    const element = parseOk(
-      '<Layout a="x" b={1} c={true} d={false} e={null} f={undefined} g />',
-    );
+    const element = parseOk('<Layout a="x" b={1} c={true} d={false} e={null} f={undefined} g />');
     const props = element.props as Record<string, unknown>;
     expect(props.a).toBe('x');
     expect(props.b).toBe(1);

@@ -1,5 +1,6 @@
-import { Layout, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Path, Step } from '@retikz/react';
 
 /**
  * 路径整体变换：rotate / scale 把整条 path 绕包围盒中心变换（免包 Scope）。

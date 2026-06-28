@@ -1,6 +1,7 @@
+import type { Section } from './interface';
+
 import { aboutSection } from './about';
 import { graphSection } from './graph';
-import type { Section } from './interface';
 import { kernelSection } from './kernel';
 
 /** 按 :moduleId 查对应的 sections；未实装的模块返回空数组。 */

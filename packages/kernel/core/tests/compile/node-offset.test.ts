@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import {
-  type IR,
-  type IROffsetPosition,
-  OffsetPositionSchema,
-} from '../../src/schemas';
+
 import type { EllipsePrim, RectPrim, ScenePrimitive } from '../../src/primitive';
+import type { IR, IROffsetPosition } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { OffsetPositionSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 /** 取所有 RectPrim（默认 rectangle 节点；带文本节点包 group，flatten 穿透） */
@@ -16,10 +15,7 @@ const ellipses = (prims: Array<ScenePrimitive>): Array<EllipsePrim> =>
   flattenPrims(prims).filter((p): p is EllipsePrim => p.type === 'ellipse');
 
 /** rect 中心点 */
-const rectCenter = (r: RectPrim): [number, number] => [
-  r.x + r.width / 2,
-  r.y + r.height / 2,
-];
+const rectCenter = (r: RectPrim): [number, number] => [r.x + r.width / 2, r.y + r.height / 2];
 
 const ellipseCenter = (e: EllipsePrim): [number, number] => [e.cx, e.cy];
 
@@ -63,27 +59,19 @@ describe('OffsetPosition: schema 校验', () => {
   });
 
   it('offset 非二元组（三元组）→ 抛错', () => {
-    expect(() =>
-      OffsetPositionSchema.parse({ of: 'A', offset: [1, 2, 3] }),
-    ).toThrow();
+    expect(() => OffsetPositionSchema.parse({ of: 'A', offset: [1, 2, 3] })).toThrow();
   });
 
   it('offset 非二元组（字符串）→ 抛错', () => {
-    expect(() =>
-      OffsetPositionSchema.parse({ of: 'A', offset: 'invalid' }),
-    ).toThrow();
+    expect(() => OffsetPositionSchema.parse({ of: 'A', offset: 'invalid' })).toThrow();
   });
 
   it('of 类型不在三态 union 中（object 形状错乱）→ 抛错', () => {
-    expect(() =>
-      OffsetPositionSchema.parse({ of: { foo: 'bar' }, offset: [0, 0] }),
-    ).toThrow();
+    expect(() => OffsetPositionSchema.parse({ of: { foo: 'bar' }, offset: [0, 0] })).toThrow();
   });
 
   it('of=空字符串 → 抛错（z.string().min(1)）', () => {
-    expect(() =>
-      OffsetPositionSchema.parse({ of: '', offset: [0, 0] }),
-    ).toThrow();
+    expect(() => OffsetPositionSchema.parse({ of: '', offset: [0, 0] })).toThrow();
   });
 });
 
@@ -107,9 +95,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
-        children: [
-          { type: 'node', position: { of: [50, 50], offset: [10, 0] }, text: 'X' },
-        ],
+        children: [{ type: 'node', position: { of: [50, 50], offset: [10, 0] }, text: 'X' }],
       };
       const [x] = rects(compileToScene(ir).primitives).map(rectCenter);
       expect(x[0]).toBeCloseTo(60);
@@ -215,9 +201,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
-        children: [
-          { type: 'node', position: { of: [0, 0], offset: [10, 0] }, text: 'X' },
-        ],
+        children: [{ type: 'node', position: { of: [0, 0], offset: [10, 0] }, text: 'X' }],
       };
       const [x] = rects(compileToScene(ir).primitives).map(rectCenter);
       expect(x[0]).toBeCloseTo(10);
@@ -300,9 +284,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
-        children: [
-          { type: 'node', id: 'B', position: { of: 'nonexistent', offset: [0, 0] } },
-        ],
+        children: [{ type: 'node', id: 'B', position: { of: 'nonexistent', offset: [0, 0] } }],
       };
       expect(() => compileToScene(ir)).toThrow(/Cannot resolve position/);
     });

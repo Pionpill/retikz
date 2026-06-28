@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  ASCENT_FACTOR,
-  DESCENT_FACTOR,
-  toAlphabeticBaselineY,
-} from '../../src/compile/text-baseline';
+
+import { ASCENT_FACTOR, DESCENT_FACTOR, toAlphabeticBaselineY } from '../../src/compile/text-baseline';
 
 /**
  * 任意 baseline 锚点 → 首行 alphabetic 基线 y 的折算

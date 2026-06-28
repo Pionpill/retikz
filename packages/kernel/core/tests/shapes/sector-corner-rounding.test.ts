@@ -13,11 +13,13 @@
  *   - circumscribe 不随 cornerRadius 变；scaleParams 缩 cornerRadius。
  */
 import { describe, expect, it } from 'vitest';
-import { sector } from '../../src/providers/shape';
+
 import type { Rect } from '../../src/contract/shape';
 import type { Position } from '../../src/geometry/point';
-import { localToWorld, worldToLocal } from '../../src/geometry/transform';
+
 import { sectorGeometry, sectorPolarPoint } from '../../src/contract/shape/shared';
+import { localToWorld, worldToLocal } from '../../src/geometry/transform';
+import { sector } from '../../src/providers/shape';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 const identity = (n: number): number => n;
@@ -172,7 +174,14 @@ describe('sector cornerRadius — r=0 emit equivalence', () => {
   };
 
   const expectEmitMatchesReference = (
-    got: Array<{ kind: string; to?: [number, number]; center?: [number, number]; radius?: number; startAngle?: number; endAngle?: number }>,
+    got: Array<{
+      kind: string;
+      to?: [number, number];
+      center?: [number, number];
+      radius?: number;
+      startAngle?: number;
+      endAngle?: number;
+    }>,
     ref: Array<Record<string, unknown>>,
   ): void => {
     expect(got.map(c => c.kind)).toEqual(ref.map(c => c.kind));

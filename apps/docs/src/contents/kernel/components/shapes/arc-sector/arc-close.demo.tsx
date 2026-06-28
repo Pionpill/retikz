@@ -1,5 +1,6 @@
-import { Arc, Layout } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Arc, Layout } from '@retikz/react';
 
 /**
  * Arc 闭合方式：缺省开放弧；close="chord" 两端连弦成弓形；close="sector" 连回圆心成扇形。

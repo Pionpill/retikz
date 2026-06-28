@@ -1,5 +1,6 @@
-import { Axis, PathMark, Plot, PointMark, Transform } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, PathMark, Plot, PointMark, Transform } from '@retikz/plot-react';
 
 import { storeRevenue } from './transform-annotate.data';
 

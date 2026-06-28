@@ -1,7 +1,9 @@
-import { EDGE_ENDS, type Side, lerpPoint } from './edge';
-import { localToWorld, worldToLocal } from './transform';
 import type { CompassAnchorValue } from './anchor';
+import type { Side } from './edge';
 import type { Position } from './point';
+
+import { EDGE_ENDS, lerpPoint } from './edge';
+import { localToWorld, worldToLocal } from './transform';
 
 /** 轴对齐矩形：几何中心 + 宽高 + 可选绕中心旋转 */
 export type Rect = {
@@ -94,19 +96,12 @@ export type RectOutlineOp =
  *   圆角 = 4 line + 4 quarter-arc + close（起点 (x0+r, y0)）。cornerRadius clamp 到 min(w,h)/2。
  *   角度约定同 @retikz/math arc（y-down：0=+x, 90=+y/下, 180=-x, 270=-y/上）。
  */
-export const rectOutline = (
-  from: Position,
-  to: Position,
-  cornerRadius?: number,
-): Array<RectOutlineOp> => {
+export const rectOutline = (from: Position, to: Position, cornerRadius?: number): Array<RectOutlineOp> => {
   const x0 = Math.min(from[0], to[0]);
   const x1 = Math.max(from[0], to[0]);
   const y0 = Math.min(from[1], to[1]);
   const y1 = Math.max(from[1], to[1]);
-  const r =
-    cornerRadius === undefined
-      ? 0
-      : Math.min(cornerRadius, (x1 - x0) / 2, (y1 - y0) / 2);
+  const r = cornerRadius === undefined ? 0 : Math.min(cornerRadius, (x1 - x0) / 2, (y1 - y0) / 2);
 
   if (r <= 0) {
     return [

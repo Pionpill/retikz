@@ -1,11 +1,9 @@
-import { describe, expect, it } from 'vitest';
 import { arcAngleInRange, rayArc } from '@retikz/math';
-import {
-  type ContourSegment,
-  boundaryFromContour,
-  contourCommands,
-  filletContour,
-} from '../../src/geometry/contour';
+import { describe, expect, it } from 'vitest';
+
+import type { ContourSegment } from '../../src/geometry/contour';
+
+import { boundaryFromContour, contourCommands, filletContour } from '../../src/geometry/contour';
 
 /*
  * 角度约定（与 @retikz/math arc、ir/path arc 一致，SVG y-down）：
@@ -179,9 +177,7 @@ describe('filletContour line-arc：直边↔圆弧接缝', () => {
     const onLine = [seam0.tangentInPoint, seam0.tangentOutPoint].some(
       p => Math.abs(p[1]) < 1e-6 && p[0] < 20 && p[0] > 0,
     );
-    const onArc = [seam0.tangentInPoint, seam0.tangentOutPoint].some(
-      p => Math.abs(Math.hypot(p[0], p[1]) - 20) < 1e-4,
-    );
+    const onArc = [seam0.tangentInPoint, seam0.tangentOutPoint].some(p => Math.abs(Math.hypot(p[0], p[1]) - 20) < 1e-4);
     expect(onLine).toBe(true);
     expect(onArc).toBe(true);
     // fillet 圆心距 line 与 arc 圆周均为 5

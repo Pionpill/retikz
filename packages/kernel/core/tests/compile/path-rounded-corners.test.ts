@@ -5,11 +5,13 @@
  *   组当前应通过。坐标无法稳妥手算处用「与参考 IR 比对」或「断言命令 kind 序列 + arc 半径」结构化断言。
  */
 import { describe, expect, it } from 'vitest';
+
+import type { GroupPrim, IR, ScenePrimitive } from '../../src';
+import type { PathPrim } from '../../src/primitive';
+import type { IRPath } from '../../src/schemas/path/path';
+
 import { compileToScene } from '../../src/compile/compile';
 import { PathSchema } from '../../src/schemas/path/path';
-import type { GroupPrim, IR, ScenePrimitive } from '../../src';
-import type { IRPath } from '../../src/schemas/path/path';
-import type { PathPrim } from '../../src/primitive';
 import { close } from '../helpers/path-command-factory';
 
 const silent = { onWarn: () => {} };
@@ -28,8 +30,7 @@ const pathWith = (config: Record<string, unknown>, ...steps: Array<unknown>): IR
   scene([{ type: 'path', ...config, children: steps as never }]);
 
 /** 取编译后首个 PathPrim 的 commands 的 kind 序列（结构化断言用） */
-const kinds = (ir: IR): Array<string> =>
-  findPathPrim(compileToScene(ir, silent).primitives).commands.map(c => c.kind);
+const kinds = (ir: IR): Array<string> => findPathPrim(compileToScene(ir, silent).primitives).commands.map(c => c.kind);
 
 // ───────────────────────── Happy path ─────────────────────────
 
@@ -146,10 +147,7 @@ describe('roundedCorners 边界', () => {
   });
 
   it('仅 2 点单 line（无内拐角）+ roundedCorners → 无 op（命令与尖角一致）', () => {
-    const sharp = path(
-      { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'line', to: [10, 0] },
-    );
+    const sharp = path({ type: 'step', kind: 'move', to: [0, 0] }, { type: 'step', kind: 'line', to: [10, 0] });
     const rounded = pathWith(
       { roundedCorners: 3 },
       { type: 'step', kind: 'move', to: [0, 0] },
@@ -236,9 +234,7 @@ describe('roundedCorners 交互', () => {
     ];
     const marks: IRPath['marks'] = [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }];
     const sharp = scene([{ type: 'path', marks, children: steps as never }]);
-    const rounded = scene([
-      { type: 'path', roundedCorners: 3, marks, children: steps as never },
-    ]);
+    const rounded = scene([{ type: 'path', roundedCorners: 3, marks, children: steps as never }]);
     // mark 沿弧长归一化定位；倒角缩短了路径总弧长并改变中点几何，
     // 故倒角后 mark group 的 transforms（平移/旋转）应与尖角不同。
     const markGroup = (ir: IR): GroupPrim | undefined => {
@@ -269,9 +265,7 @@ describe('roundedCorners 交互', () => {
       { type: 'step', kind: 'line', to: [10, 10] },
     ];
     const roundedNoRot = scene([{ type: 'path', roundedCorners: 2, children: steps as never }]);
-    const roundedRot = scene([
-      { type: 'path', roundedCorners: 2, rotate: 90, children: steps as never },
-    ]);
+    const roundedRot = scene([{ type: 'path', roundedCorners: 2, rotate: 90, children: steps as never }]);
     // 变换顺序硬契约：几何先倒角（内层 path commands 不被 path transform 污染），
     // 旋转由外层 group 承担 → 旋转版内层 path commands 应与未旋转版逐字一致。
     const findPath = (list: ReadonlyArray<ScenePrimitive>): PathPrim | undefined => {
@@ -303,9 +297,7 @@ describe('roundedCorners 交互', () => {
       { type: 'step', kind: 'line', to: [10, 10] },
     ];
     const roundedNoScale = scene([{ type: 'path', roundedCorners: 2, children: steps as never }]);
-    const roundedScale = scene([
-      { type: 'path', roundedCorners: 2, scale: 2, children: steps as never },
-    ]);
+    const roundedScale = scene([{ type: 'path', roundedCorners: 2, scale: 2, children: steps as never }]);
     const findPath = (list: ReadonlyArray<ScenePrimitive>): PathPrim | undefined => {
       for (const p of list) {
         if (p.type === 'path') return p;

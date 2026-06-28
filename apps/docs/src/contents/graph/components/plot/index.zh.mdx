@@ -49,7 +49,9 @@ import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 
 <ComponentPreview name="plot-scale" sourceFiles={['plot-scale.data.ts']} size="md" />
 
-<p className="text-sm text-muted-foreground">左：默认 linear y 轴，前几个点挤在底部；右：显式 log y 轴，同一组指数级数据被均匀展开。</p>
+<p className="text-sm text-muted-foreground">
+  左：默认 linear y 轴，前几个点挤在底部；右：显式 log y 轴，同一组指数级数据被均匀展开。
+</p>
 
 ### 颜色系
 
@@ -57,7 +59,9 @@ import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 
 <ComponentPreview name="plot-colors" sourceFiles={['plot-cartesian.data.ts']} size="md" />
 
-<p className="text-sm text-muted-foreground">左：默认 schemeCategory10；右：同一份数据改用 d3-scale-chromatic 的 schemeTableau10。</p>
+<p className="text-sm text-muted-foreground">
+  左：默认 schemeCategory10；右：同一份数据改用 d3-scale-chromatic 的 schemeTableau10。
+</p>
 
 ### 数据模型
 
@@ -81,10 +85,10 @@ import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 
 `<Plot>` 有两条入口，按是否传 `spec` 分流：
 
-| 入口 | 必填 | 适用 |
-| --- | --- | --- |
-| 组合 DSL | `data`（裸数组）+ `children` | 手写 JSX 声明 mark / guide / scale（最常用） |
-| spec 入口 | `spec`（已构造 PlotSpec）+ `data`（数据集表） | 持久化 / 外部生成的完整 spec 直喂 |
+| 入口      | 必填                                          | 适用                                         |
+| --------- | --------------------------------------------- | -------------------------------------------- |
+| 组合 DSL  | `data`（裸数组）+ `children`                  | 手写 JSX 声明 mark / guide / scale（最常用） |
+| spec 入口 | `spec`（已构造 PlotSpec）+ `data`（数据集表） | 持久化 / 外部生成的完整 spec 直喂            |
 
 当图表配置来自持久化 JSON 或外部生成结果时，可以直接传 `spec`。数据仍然单独通过 `data` 表注入，不写进 PlotSpec。
 
@@ -104,13 +108,13 @@ import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 
 数据与 PlotSpec 一起进入下沉，按下表逐步变成 Tier 1：
 
-| 步骤 | 输入 | 产物 |
-| --- | --- | --- |
-| 解析数据 | `data.reference` 取数据集 + `model` / `fieldMap` | 归一化数据行（类型推断、改名、transform） |
-| 推断 scale | 各通道绑定字段 + 坐标系 | band / linear / time / log… scale 与投影帧 |
-| 逐 mark 成层 | 每个 `<PathMark>` / `<IntervalMark>` … | 一个 core `<Scope>` 图层（内含 `<Node>` / `<Path>`） |
-| 轴 / 网格 / 图例成层 | 显式 `<Axis>` / `<Legend>` | 网格层、轴层、图例层（各是 `<Scope>`） |
-| 编排 z-order | 上面所有层 | 网格垫底 → mark → 轴 → 图例 |
+| 步骤                 | 输入                                             | 产物                                                 |
+| -------------------- | ------------------------------------------------ | ---------------------------------------------------- |
+| 解析数据             | `data.reference` 取数据集 + `model` / `fieldMap` | 归一化数据行（类型推断、改名、transform）            |
+| 推断 scale           | 各通道绑定字段 + 坐标系                          | band / linear / time / log… scale 与投影帧           |
+| 逐 mark 成层         | 每个 `<PathMark>` / `<IntervalMark>` …           | 一个 core `<Scope>` 图层（内含 `<Node>` / `<Path>`） |
+| 轴 / 网格 / 图例成层 | 显式 `<Axis>` / `<Legend>`                       | 网格层、轴层、图例层（各是 `<Scope>`）               |
+| 编排 z-order         | 上面所有层                                       | 网格垫底 → mark → 轴 → 图例                          |
 
 所有层包进一个隔离命名空间的 `<Scope>`，每张图的内部 id（datum / series）互不串扰。
 
@@ -120,26 +124,26 @@ import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 
 ## API
 
-| 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `data` | `Array<Row>` | — | 裸数据行数组（组合 DSL 入口）；数据不进 IR |
-| `children` | `ReactNode` | — | mark / guide / scale 子组件（组合 DSL 入口） |
-| `model` | `DataModel` | — | 数据模型（字段名 + 类型）：声明则启用 strict 校验与 type-driven scale / guide 派生；详见[数据模型](/graph/grammar/data/model) |
-| `fieldMap` | `Record<string, string>` | — | 逻辑字段名 → 数据里的实际路径（需配合 `model`）；只改名、不变换值；详见[数据处理](/graph/grammar/data/processing) |
-| `coordinate` | 见[坐标系](/graph/grammar/coordinate) | cartesian2D | 坐标系：`"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` 简写或对应对象配置；缺省平面直角 |
-| `colors` | `Array<string>` | `schemeCategory10` | 默认调色板。分类颜色 scale 会把它作为 range；没有颜色编码的 mark 按图层顺序取色，超过后循环。写 `'currentColor'` 表示保持 core 继承色 |
-| `id` | `string` | — | 面板 id：写入 PlotSpec.id，作为外部 anchor 句柄；嵌入态未显式 `dataRef` 时也作为默认数据集引用 |
-| `dataRef` | `string` | — | DSL 入口的数据集引用名；多张 Plot 共享同一数据源时可显式设为同名 |
-| `width` | `number` | — | 外框宽度（含轴与标签）；也写入 PlotSpec 自描述尺寸 |
-| `height` | `number` | — | 外框高度（含轴与标签）；也写入 PlotSpec 自描述尺寸 |
-| `x` / `y` | `number` | — | 父级 `<Layout>` 内的面板左上角位置；会转成外层 `translate` |
-| `transforms` | `Array<IRTransform>` | — | 面板级变换；与 `x` / `y` 可叠加，常用于更细摆位 |
-| `zIndex` | `number` | `0` | 面板在父级层级中的绘制顺序 |
-| `clip` | `IRClipSpec` | — | 面板级裁剪区域 |
-| `fontSize` | `number?` | — | 刻度标签字号 |
-| `margin` | `{ top?; right?; bottom?; left? }` | — | 覆盖四周留白 |
-| `channelDefinitions` | `Array<AnyChannelDefinition>` | — | 自定义通道运行时定义；配合 spec 里的 `encoding.channels` 使用，详见[自定义通道](/graph/grammar/extend/channel) |
-| `spec` | `PlotSpec` | — | spec 入口：已构造好的 Plot IR 根（与 `children` 二选一） |
+| 属性                 | 类型                                  | 默认值             | 描述                                                                                                                                  |
+| -------------------- | ------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`               | `Array<Row>`                          | —                  | 裸数据行数组（组合 DSL 入口）；数据不进 IR                                                                                            |
+| `children`           | `ReactNode`                           | —                  | mark / guide / scale 子组件（组合 DSL 入口）                                                                                          |
+| `model`              | `DataModel`                           | —                  | 数据模型（字段名 + 类型）：声明则启用 strict 校验与 type-driven scale / guide 派生；详见[数据模型](/graph/grammar/data/model)         |
+| `fieldMap`           | `Record<string, string>`              | —                  | 逻辑字段名 → 数据里的实际路径（需配合 `model`）；只改名、不变换值；详见[数据处理](/graph/grammar/data/processing)                     |
+| `coordinate`         | 见[坐标系](/graph/grammar/coordinate) | cartesian2D        | 坐标系：`"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` 简写或对应对象配置；缺省平面直角                                  |
+| `colors`             | `Array<string>`                       | `schemeCategory10` | 默认调色板。分类颜色 scale 会把它作为 range；没有颜色编码的 mark 按图层顺序取色，超过后循环。写 `'currentColor'` 表示保持 core 继承色 |
+| `id`                 | `string`                              | —                  | 面板 id：写入 PlotSpec.id，作为外部 anchor 句柄；嵌入态未显式 `dataRef` 时也作为默认数据集引用                                        |
+| `dataRef`            | `string`                              | —                  | DSL 入口的数据集引用名；多张 Plot 共享同一数据源时可显式设为同名                                                                      |
+| `width`              | `number`                              | —                  | 外框宽度（含轴与标签）；也写入 PlotSpec 自描述尺寸                                                                                    |
+| `height`             | `number`                              | —                  | 外框高度（含轴与标签）；也写入 PlotSpec 自描述尺寸                                                                                    |
+| `x` / `y`            | `number`                              | —                  | 父级 `<Layout>` 内的面板左上角位置；会转成外层 `translate`                                                                            |
+| `transforms`         | `Array<IRTransform>`                  | —                  | 面板级变换；与 `x` / `y` 可叠加，常用于更细摆位                                                                                       |
+| `zIndex`             | `number`                              | `0`                | 面板在父级层级中的绘制顺序                                                                                                            |
+| `clip`               | `IRClipSpec`                          | —                  | 面板级裁剪区域                                                                                                                        |
+| `fontSize`           | `number?`                             | —                  | 刻度标签字号                                                                                                                          |
+| `margin`             | `{ top?; right?; bottom?; left? }`    | —                  | 覆盖四周留白                                                                                                                          |
+| `channelDefinitions` | `Array<AnyChannelDefinition>`         | —                  | 自定义通道运行时定义；配合 spec 里的 `encoding.channels` 使用，详见[自定义通道](/graph/grammar/extend/channel)                        |
+| `spec`               | `PlotSpec`                            | —                  | spec 入口：已构造好的 Plot IR 根（与 `children` 二选一）                                                                              |
 
 此外 `renderer` / `className` / `style` 透传给底层 `<Layout>`，分别选渲染后端、附加类名、内联样式。
 

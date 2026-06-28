@@ -1,11 +1,20 @@
 import type { IRPath, IRScope } from '@retikz/core';
+
 import { describe, expect, it } from 'vitest';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
-const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options?: LowerPlotsOptions,
+): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
@@ -74,7 +83,10 @@ describe('stat-geom composition surface (alpha.13 ADR-05)', () => {
         {
           type: 'interval',
           transform: [boxSummary],
-          bounds: { x: { kind: 'extent', from: 'boxX0', to: 'boxX1' }, y: { kind: 'extent', from: 'boxLow', to: 'boxHigh' } },
+          bounds: {
+            x: { kind: 'extent', from: 'boxX0', to: 'boxX1' },
+            y: { kind: 'extent', from: 'boxLow', to: 'boxHigh' },
+          },
           fillOpacity: { kind: 'constant', value: 0.28 },
           encoding: { x: { field: 'boxX' }, y: { field: 'boxHigh' } },
         },
@@ -137,7 +149,16 @@ describe('stat-geom composition surface (alpha.13 ADR-05)', () => {
         },
         {
           type: 'path',
-          transform: [{ kind: 'density', field: 'value', bandwidth: { kind: 'value', value: 2 }, sampleCount: 4, xAs: 'densityX', densityAs: 'density' }],
+          transform: [
+            {
+              kind: 'density',
+              field: 'value',
+              bandwidth: { kind: 'value', value: 2 },
+              sampleCount: 4,
+              xAs: 'densityX',
+              densityAs: 'density',
+            },
+          ],
           closure: { kind: 'baseline', baseline: 0 },
           order: 'densityX',
           encoding: { x: { field: 'densityX' }, y: { field: 'density' } },
@@ -148,6 +169,9 @@ describe('stat-geom composition surface (alpha.13 ADR-05)', () => {
     const outer = expandOf(spec, { samples }, opts);
     expect((outer.children[0] as IRScope).children).toHaveLength(3);
     expect(((outer.children[1] as IRScope).children[0] as IRPath).children).toHaveLength(5);
-    expect(((outer.children[2] as IRScope).children[0] as IRPath).children.at(-1)).toEqual({ type: 'step', kind: 'cycle' });
+    expect(((outer.children[2] as IRScope).children[0] as IRPath).children.at(-1)).toEqual({
+      type: 'step',
+      kind: 'cycle',
+    });
   });
 });

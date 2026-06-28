@@ -1,4 +1,6 @@
-import { type PathKindDefinition, definePathKind } from '../../contract/path';
+import type { PathKindDefinition } from '../../contract/path';
+
+import { definePathKind } from '../../contract/path';
 
 export const BUILTIN_PATH_KINDS: Record<string, PathKindDefinition> = {
   stroke: definePathKind({

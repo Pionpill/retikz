@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
 import { PlotSpecSchema } from '@retikz/plot';
+import { describe, expect, it } from 'vitest';
+
 import { buildPlotSpec, resolveLabelOf } from '../../src/components/build-plot-spec';
 import { IntervalMark, PointMark } from '../../src/components/marks';
 
@@ -11,10 +12,24 @@ import { IntervalMark, PointMark } from '../../src/components/marks';
 
 describe('priority-1 宿主 mark label 扁平 props → IR mark.label', () => {
   it('react-mark-label-assembly：IntervalMark label* → interval mark.label，与手写 IR 等价', () => {
-    const spec = buildPlotSpec(<IntervalMark x="month" y="revenue" label="revenue" labelPosition="above" labelDistance={6} labelDisplayFormat=",.0f" />, '__plot');
+    const spec = buildPlotSpec(
+      <IntervalMark
+        x="month"
+        y="revenue"
+        label="revenue"
+        labelPosition="above"
+        labelDistance={6}
+        labelDisplayFormat=",.0f"
+      />,
+      '__plot',
+    );
     const mark = spec.marks[0] as { type: string; label?: unknown };
     expect(mark.type).toBe('interval');
-    expect(mark.label).toEqual({ content: { field: 'revenue', displayFormat: ',.0f' }, position: 'above', distance: 6 });
+    expect(mark.label).toEqual({
+      content: { field: 'revenue', displayFormat: ',.0f' },
+      position: 'above',
+      distance: 6,
+    });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
@@ -64,14 +79,24 @@ describe('priority-1 宿主 mark label 扁平 props → IR mark.label', () => {
   });
 
   it('resolveLabel prop 无 id → fail-loud', () => {
-    expect(() => buildPlotSpec(<IntervalMark x="month" y="revenue" resolveLabel={() => 'x'} />, '__plot')).toThrow(/mark id/i);
+    expect(() => buildPlotSpec(<IntervalMark x="month" y="revenue" resolveLabel={() => 'x'} />, '__plot')).toThrow(
+      /mark id/i,
+    );
   });
 });
 
 describe('priority-2 PointMark text 扁平 props → IR point mark', () => {
   it('react-textmark-encoding-assembly：PointMark text → type point、encoding.text、x/y/color、dx/dy 落顶层', () => {
-    const spec = buildPlotSpec(<PointMark x="month" y="revenue" text="revenue" color="cat" dy={-8} />, '__plot', { dataFieldNames: new Set(['cat']) });
-    const mark = spec.marks[0] as { type: string; dx?: number; dy?: number; color?: unknown; encoding: Record<string, unknown> };
+    const spec = buildPlotSpec(<PointMark x="month" y="revenue" text="revenue" color="cat" dy={-8} />, '__plot', {
+      dataFieldNames: new Set(['cat']),
+    });
+    const mark = spec.marks[0] as {
+      type: string;
+      dx?: number;
+      dy?: number;
+      color?: unknown;
+      encoding: Record<string, unknown>;
+    };
     expect(mark.type).toBe('point');
     expect(mark.encoding.text).toEqual({ field: 'revenue' });
     expect(mark.encoding.x).toEqual({ field: 'month' });

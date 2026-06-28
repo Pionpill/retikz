@@ -5,7 +5,10 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 
 一张图有两类输入：**配置**（画什么——mark / 坐标系 / 比例尺）和**数据**（画哪些值）。retikz 把两者分开：数据**不进**图的配置（IR），而是在编译时单独传入。这让同一份配置可以复用到不同数据上。
 
-<ComponentAlert title="为什么数据不进 IR？" description="数据通常比图表配置大得多；把每行数据塞进 IR 会让 JSON 与持久化内容迅速膨胀，难以 diff、复用和维护。配置与数据也天然解耦：IR 只描述图怎么画，数据在编译时按 model 接入；只要字段契约能对应，同一份配置就可以切换到另一份数据源。" />
+<ComponentAlert
+  title="为什么数据不进 IR？"
+  description="数据通常比图表配置大得多；把每行数据塞进 IR 会让 JSON 与持久化内容迅速膨胀，难以 diff、复用和维护。配置与数据也天然解耦：IR 只描述图怎么画，数据在编译时按 model 接入；只要字段契约能对应，同一份配置就可以切换到另一份数据源。"
+/>
 
 最简单的用法：把数据行数组交给 `<Plot data>`，mark 用字段名引用列。
 
@@ -25,20 +28,20 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 
 字段类型与默认推断：
 
-| 类型 | 含义 | 例子 | 默认推断与显式声明场景 |
-| --- | --- | --- | --- |
-| `continuous` | 连续可度量数值 | 销量、价格、温度 | 默认：样本值是有限 number 或 bigint<br />显式：数字串、数值枚举、编号、状态码要改成连续或分类 |
-| `temporal` | 日期 / 时间 | 日期、时间戳 | 默认：`Date` 或无歧义 ISO 日期 / 时间字符串<br />显式：非默认日期格式、无时区时间 |
-| `categorical` | 离散类别 | 国家、颜色名、评级 | 默认：其余字符串、布尔值、混合类型或无法判断字段<br />显式：需要固定分类顺序或控制轴与图例顺序 |
+| 类型          | 含义           | 例子               | 默认推断与显式声明场景                                                                         |
+| ------------- | -------------- | ------------------ | ---------------------------------------------------------------------------------------------- |
+| `continuous`  | 连续可度量数值 | 销量、价格、温度   | 默认：样本值是有限 number 或 bigint<br />显式：数字串、数值枚举、编号、状态码要改成连续或分类  |
+| `temporal`    | 日期 / 时间    | 日期、时间戳       | 默认：`Date` 或无歧义 ISO 日期 / 时间字符串<br />显式：非默认日期格式、无时区时间              |
+| `categorical` | 离散类别       | 国家、颜色名、评级 | 默认：其余字符串、布尔值、混合类型或无法判断字段<br />显式：需要固定分类顺序或控制轴与图例顺序 |
 
 想覆盖默认推断、解析非默认格式，或让配置脱离数据也能自描述时，就自定义 `model`。每个字段声明可以包含这些配置：
 
-| 字段 | 作用 |
-| --- | --- |
-| `name` | 逻辑字段名，也是 mark / transform 引用的名字 |
-| `type` | 测量类型；省略时从数据推断 |
+| 字段     | 作用                                                                                       |
+| -------- | ------------------------------------------------------------------------------------------ |
+| `name`   | 逻辑字段名，也是 mark / transform 引用的名字                                               |
+| `type`   | 测量类型；省略时从数据推断                                                                 |
 | `format` | 声明式解析格式，如 `slashDate` / `percent`；详见[数据处理](/graph/grammar/data/processing) |
-| `order` | 分类字段的类别顺序；只对 `categorical` 有效 |
+| `order`  | 分类字段的类别顺序；只对 `categorical` 有效                                                |
 
 下面的左右对比使用同一份漏斗数据：左图不声明 `model`，数值 `stage` 被推断成连续 x 轴；右图把 `stage` 声明为分类字段，并用 `format: 'percent'` 把百分比字符串解析成连续数值。
 
@@ -51,18 +54,24 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 **`type` 可选——部分声明**：字段类型可省略，只写 `{ name }`。这样该字段仍然进入严格模式，也保留可移植的字段契约；只有类型留给数据推断。适合「大部分字段一目了然、只有少数要点名」的场景：数值枚举写 `type`，非默认日期 / 百分比写 `format`，其余留空。
 
 ```tsx
-<Plot data={sales} model={[
-  { name: 'createdAt',  format: 'slashDate' }, // '2024/01/01' → temporal
-  { name: 'statusCode', type: 'categorical' }, // 数值枚举，点名为分类
-  { name: 'revenue' },                         // 仅 name → 推断 continuous
-]}>
+<Plot
+  data={sales}
+  model={[
+    { name: 'createdAt', format: 'slashDate' }, // '2024/01/01' → temporal
+    { name: 'statusCode', type: 'categorical' }, // 数值枚举，点名为分类
+    { name: 'revenue' }, // 仅 name → 推断 continuous
+  ]}
+>
   {/* … */}
 </Plot>
 ```
 
 省略 `type` 的字段要到 lowering 时看数据才能定类型；写了 `format` 的字段由格式蕴含类型，例如 `format: 'percent'` 会把字段当作 `continuous`。如果要让 spec 不看数据也完全自描述（LLM 友好 / 完全可移植），就把 `type` 或 `format` 填清楚。
 
-<ComponentAlert title="推断是尽力而为，model 才是契约" description="不声明 model（或字段省略 type / format）时类型靠抽样猜测：时间只认无歧义的 ISO 格式（YYYY-MM-DD、带时区的 ISO datetime，含空格分隔的 SQL 时间戳如 '2024-01-01 12:00:00Z'），'2024/01/01'、无时区时间不会被当成时间；裸数字串也不会被自动当成 continuous。bigint 会推断为 continuous，但只有安全整数能归一化。要精确、要校验、要让 LLM 不看数据就懂字段，就声明 model；非默认存储格式再加 format 或 resolveField。" />
+<ComponentAlert
+  title="推断是尽力而为，model 才是契约"
+  description="不声明 model（或字段省略 type / format）时类型靠抽样猜测：时间只认无歧义的 ISO 格式（YYYY-MM-DD、带时区的 ISO datetime，含空格分隔的 SQL 时间戳如 '2024-01-01 12:00:00Z'），'2024/01/01'、无时区时间不会被当成时间；裸数字串也不会被自动当成 continuous。bigint 会推断为 continuous，但只有安全整数能归一化。要精确、要校验、要让 LLM 不看数据就懂字段，就声明 model；非默认存储格式再加 format 或 resolveField。"
+/>
 
 ## 类型驱动的比例尺
 
@@ -82,11 +91,11 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 
 这里的 `order` 排的是**分类域**：轴刻度、图例和分类颜色会按它走；它不会重排数据行，也不会改变折线连接顺序。要重排行，用[行级变换里的排序](/graph/grammar/transform/row#排序-sort)。
 
-| `order` | 效果 |
-| --- | --- |
-| 不写 / `'data'` | 按数据出现序（默认） |
-| `'ascending'` / `'descending'` | 对类别排序：全数值按数值比，否则按字符串 |
-| `Array`（如 `['S','M','L']`） | 以数组为顺序；数据里有、数组没有的类别追加到末尾 |
+| `order`                        | 效果                                             |
+| ------------------------------ | ------------------------------------------------ |
+| 不写 / `'data'`                | 按数据出现序（默认）                             |
+| `'ascending'` / `'descending'` | 对类别排序：全数值按数值比，否则按字符串         |
+| `Array`（如 `['S','M','L']`）  | 以数组为顺序；数据里有、数组没有的类别追加到末尾 |
 
 规则：
 
@@ -109,12 +118,12 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 
 **第一步，逐值判类**：扫描该字段的样本值，每个值先单独定一个类型。
 
-| 样本值 | 判为 |
-| --- | --- |
-| `Date` 实例 | `temporal` |
-| ISO 日期 / 时间字符串 | `temporal` |
-| 有限 `number`、`bigint` | `continuous` |
-| 其它字符串、布尔值 | `categorical` |
+| 样本值                                                | 判为             |
+| ----------------------------------------------------- | ---------------- |
+| `Date` 实例                                           | `temporal`       |
+| ISO 日期 / 时间字符串                                 | `temporal`       |
+| 有限 `number`、`bigint`                               | `continuous`     |
+| 其它字符串、布尔值                                    | `categorical`    |
 | `null` / `undefined`、`NaN` / `Infinity`、对象 / 数组 | 跳过，不计入样本 |
 
 ISO 只认无歧义格式：`YYYY-MM-DD`，以及带时区的日期时间（`T` 或空格分隔、且必须带 `Z` 或 `±HH:MM`，如 `2024-01-01 12:00:00Z`）。`2024/01/01`、无时区时间、裸数字串都不算。
@@ -133,11 +142,11 @@ ISO 只认无歧义格式：`YYYY-MM-DD`，以及带时区的日期时间（`T` 
 
 **位置通道**（x / y / z，坐标系没给该通道显式 scale 时）：
 
-| 字段类型 | 派生 scale |
-| --- | --- |
-| `continuous` | `linear` |
-| `temporal` | `time` |
-| `categorical` | `band` |
+| 字段类型                   | 派生 scale       |
+| -------------------------- | ---------------- |
+| `continuous`               | `linear`         |
+| `temporal`                 | `time`           |
+| `categorical`              | `band`           |
 | 无字段绑定（如全常量通道） | `linear`（兜底） |
 
 同一位置通道绑定的字段类型必须一致；省略 scale 又混用了多种类型会报错，提示显式声明 scale。若字段带非默认 `order` 且派生出 `band` / `point`，分类域按 `order` 排。

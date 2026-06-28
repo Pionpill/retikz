@@ -1,20 +1,25 @@
 import { z } from 'zod';
+
 import { AnimationTrackSchema } from '../animation';
 import { BoundarySchema } from '../boundary';
 import { BlendMode, DropShadowSchema, ShadowPreset } from '../effects';
 import { FontSchema } from '../font';
 import { JsonObjectSchema } from '../json';
 import { PaintSpecSchema } from '../paint';
-import { AtPositionSchema, BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from '../position';
+import {
+  AtPositionSchema,
+  BetweenPositionSchema,
+  OffsetPositionSchema,
+  PolarPositionSchema,
+  PositionSchema,
+} from '../position';
 import { ShapeRefSchema } from '../shape';
 import { MixedLineSchema, TextBlockSchema } from '../text';
 import { NodeLabelBoundarySide, NodeLabelPlacement, NodeLabelPosition, NodeTextAlign } from './constants';
 
 export const NodeLabelBoundaryPositionSchema = z
   .object({
-    boundary: z
-      .enum(NodeLabelBoundarySide)
-      .describe('Box-like node boundary side used as the label attachment line.'),
+    boundary: z.enum(NodeLabelBoundarySide).describe('Box-like node boundary side used as the label attachment line.'),
     t: z
       .number()
       .min(0)
@@ -45,29 +50,20 @@ export const NodeLabelSchema = z
     placement: z
       .enum(NodeLabelPlacement)
       .optional()
-      .describe(
-        'Whether the label is offset outside or inside the selected attachment point. Default `outside`.',
-      ),
+      .describe('Whether the label is offset outside or inside the selected attachment point. Default `outside`.'),
     distance: z
       .number()
       .nonnegative()
       .optional()
-      .describe(
-        'Gap between the node border and the label center, in user units. Default 12.',
-      ),
-    textColor: z
-      .string()
-      .optional()
-      .describe('Label text color; falls back to currentColor.'),
+      .describe('Gap between the node border and the label center, in user units. Default 12.'),
+    textColor: z.string().optional().describe('Label text color; falls back to currentColor.'),
     opacity: z
       .number()
       .min(0)
       .max(1)
       .optional()
       .describe('Label-only opacity, multiplied with node opacity when both are set.'),
-    font: FontSchema.optional().describe(
-      'Label font overrides. Missing fields inherit from the parent node font.',
-    ),
+    font: FontSchema.optional().describe('Label font overrides. Missing fields inherit from the parent node font.'),
     rotate: z
       .union([z.enum(['none', 'radial', 'tangent']), z.number()])
       .optional()
@@ -103,22 +99,16 @@ export const NodeLabelSchema = z
       });
     }
   })
-  .describe(
-    'Extra text attached around a node border. Multiple labels supported via array form on `Node.label`.',
-  );
+  .describe('Extra text attached around a node border. Multiple labels supported via array form on `Node.label`.');
 
 export const NodeSchema = z
   .object({
-    type: z
-      .literal('node')
-      .describe('Discriminator marking this child as a node'),
+    type: z.literal('node').describe('Discriminator marking this child as a node'),
     id: z
       .string()
       .min(1)
       .optional()
-      .describe(
-        'Optional unique id; required if any path needs to reference this node by string',
-      ),
+      .describe('Optional unique id; required if any path needs to reference this node by string'),
     shape: z
       .union([z.string().min(1), ShapeRefSchema])
       .optional()
@@ -138,13 +128,7 @@ export const NodeSchema = z
         'Declarative animation tracks for this node. Tracks are carried into emitted Scene primitives, do not affect layout, and are not inherited across scopes.',
       ),
     position: z
-      .union([
-        PositionSchema,
-        PolarPositionSchema,
-        AtPositionSchema,
-        OffsetPositionSchema,
-        BetweenPositionSchema,
-      ])
+      .union([PositionSchema, PolarPositionSchema, AtPositionSchema, OffsetPositionSchema, BetweenPositionSchema])
       .describe(
         'Center point of the node content box: Cartesian [x, y], polar, relative-to-node, offset, or between two endpoints. Non-Cartesian forms resolve at compile time.',
       ),
@@ -152,33 +136,25 @@ export const NodeSchema = z
       .number()
 
       .optional()
-      .describe(
-        'Rotation in degrees around the node center; positive is visually clockwise.',
-      ),
+      .describe('Rotation in degrees around the node center; positive is visually clockwise.'),
     text: TextBlockSchema.optional().describe(
       'Optional node text content. Accepts a string, an array of lines, styled line objects, or mixed text/math runs. Newlines are hard line breaks; math sugar requires lowerTex.',
     ),
     align: z
       .enum(NodeTextAlign)
       .optional()
-      .describe(
-        'Multi-line text alignment within the text block. Omitted fields use center.',
-      ),
+      .describe('Multi-line text alignment within the text block. Omitted fields use center.'),
     lineHeight: z
       .number()
       .positive()
       .optional()
-      .describe(
-        'Line height in user units; falls back to `font.size × 1.2` when omitted.',
-      ),
+      .describe('Line height in user units; falls back to `font.size × 1.2` when omitted.'),
     maxTextWidth: z
       .number()
 
       .positive()
       .optional()
-      .describe(
-        'Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.',
-      ),
+      .describe('Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.'),
     color: z
       .string()
       .optional()
@@ -188,41 +164,23 @@ export const NodeSchema = z
     fill: z
       .union([z.string(), PaintSpecSchema])
       .optional()
-      .describe(
-        'Node background paint: CSS color string or PaintSpec.',
-      ),
-    fillOpacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Fill-only opacity for the node shape.'),
+      .describe('Node background paint: CSS color string or PaintSpec.'),
+    fillOpacity: z.number().min(0).max(1).optional().describe('Fill-only opacity for the node shape.'),
     stroke: z
       .union([z.string(), PaintSpecSchema])
       .optional()
       .describe(
         'Border paint of the node shape; any CSS color string or a PaintSpec (linear / radial gradient, pattern, or image). Defaults to currentColor when omitted.',
       ),
-    drawOpacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Stroke-only opacity for the node border.'),
+    drawOpacity: z.number().min(0).max(1).optional().describe('Stroke-only opacity for the node border.'),
     strokeWidth: z
       .number()
 
       .nonnegative()
       .optional()
       .describe('Border width in user units; defaults to 1 when omitted'),
-    dashed: z
-      .boolean()
-      .optional()
-      .describe('Dashed border preset. `dashPattern` takes precedence.'),
-    dotted: z
-      .boolean()
-      .optional()
-      .describe('Dotted border preset. `dashPattern` and `dashed` take precedence.'),
+    dashed: z.boolean().optional().describe('Dashed border preset. `dashPattern` takes precedence.'),
+    dotted: z.boolean().optional().describe('Dotted border preset. `dashPattern` and `dashed` take precedence.'),
     dashPattern: z
       .array(z.number().nonnegative())
       .min(1)
@@ -254,27 +212,13 @@ export const NodeSchema = z
       .number()
       .positive()
       .optional()
-      .describe('Uniform scale factor; multiplies all node dimensions (border, padding, text, fontSize) at layout time. Affects path attachment positions.'),
-    xScale: z
-      .number()
-      .positive()
-      .optional()
-      .describe('Horizontal scale factor; overrides `scale` for the X axis.'),
-    yScale: z
-      .number()
-      .positive()
-      .optional()
-      .describe('Vertical scale factor; overrides `scale` for the Y axis.'),
-    textColor: z
-      .string()
-      .optional()
-      .describe('Text label color; any CSS color. Defaults to `currentColor`.'),
-    opacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Whole-node opacity applied uniformly to shape and text.'),
+      .describe(
+        'Uniform scale factor; multiplies all node dimensions (border, padding, text, fontSize) at layout time. Affects path attachment positions.',
+      ),
+    xScale: z.number().positive().optional().describe('Horizontal scale factor; overrides `scale` for the X axis.'),
+    yScale: z.number().positive().optional().describe('Vertical scale factor; overrides `scale` for the Y axis.'),
+    textColor: z.string().optional().describe('Text label color; any CSS color. Defaults to `currentColor`.'),
+    opacity: z.number().min(0).max(1).optional().describe('Whole-node opacity applied uniformly to shape and text.'),
     shadow: z
       .union([z.enum(ShadowPreset), DropShadowSchema])
       .optional()
@@ -291,16 +235,12 @@ export const NodeSchema = z
       .number()
       .nonnegative()
       .optional()
-      .describe(
-        'Inner horizontal padding from text to border in user units. Falls back to `padding` then default.',
-      ),
+      .describe('Inner horizontal padding from text to border in user units. Falls back to `padding` then default.'),
     innerYSep: z
       .number()
       .nonnegative()
       .optional()
-      .describe(
-        'Inner vertical padding from text to border in user units. Falls back to `padding` then default.',
-      ),
+      .describe('Inner vertical padding from text to border in user units. Falls back to `padding` then default.'),
     outerSep: z
       .number()
       .nonnegative()
@@ -312,19 +252,13 @@ export const NodeSchema = z
       .number()
       .nonnegative()
       .optional()
-      .describe(
-        'Symmetric inner padding (alias for `innerXSep` + `innerYSep`); axis-specific fields take precedence.',
-      ),
+      .describe('Symmetric inner padding (alias for `innerXSep` + `innerYSep`); axis-specific fields take precedence.'),
     margin: z
       .number()
       .nonnegative()
       .optional()
-      .describe(
-        'Symmetric outer offset alias for `outerSep`; `outerSep` takes precedence.',
-      ),
-    font: FontSchema.optional().describe(
-      'Font spec for the inner text label. Missing fields use text defaults.',
-    ),
+      .describe('Symmetric outer offset alias for `outerSep`; `outerSep` takes precedence.'),
+    font: FontSchema.optional().describe('Font spec for the inner text label. Missing fields use text defaults.'),
     label: z
       .union([NodeLabelSchema, z.array(NodeLabelSchema)])
       .optional()
@@ -341,6 +275,4 @@ export const NodeSchema = z
       ),
   })
   .strict()
-  .describe(
-    'Node primitive: a positioned, optionally textual shape (rectangle / circle / ellipse / diamond)',
-  );
+  .describe('Node primitive: a positioned, optionally textual shape (rectangle / circle / ellipse / diamond)');

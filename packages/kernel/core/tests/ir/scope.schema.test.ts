@@ -4,6 +4,7 @@
  *   localNamespace 隔离、duplicate id warn、scope.id bbox、scope 下相对 position 等行为属于 schema 之外的运行时语义，留待后续实现
  */
 import { describe, expect, it } from 'vitest';
+
 import { ChildSchema, ScopeSchema, TransformSchema } from '../../src/schemas';
 
 describe('ScopeSchema 合法形态', () => {
@@ -181,12 +182,8 @@ describe('ChildSchema discriminated union 含 scope', () => {
   });
 
   it('node / path / coordinate 兼容性维持', () => {
-    expect(
-      ChildSchema.safeParse({ type: 'node', position: [0, 0] }).success,
-    ).toBe(true);
-    expect(
-      ChildSchema.safeParse({ type: 'coordinate', id: 'A', position: [0, 0] }).success,
-    ).toBe(true);
+    expect(ChildSchema.safeParse({ type: 'node', position: [0, 0] }).success).toBe(true);
+    expect(ChildSchema.safeParse({ type: 'coordinate', id: 'A', position: [0, 0] }).success).toBe(true);
   });
 });
 
@@ -363,7 +360,10 @@ describe('TransformSchema 各变体拒绝缺字段', () => {
   it('between-translate 缺 t 拒绝', () => {
     const parsed = TransformSchema.safeParse({
       kind: 'between-translate',
-      between: [[0, 0], [10, 0]],
+      between: [
+        [0, 0],
+        [10, 0],
+      ],
     });
     expect(parsed.success).toBe(false);
   });
@@ -371,7 +371,10 @@ describe('TransformSchema 各变体拒绝缺字段', () => {
   it('between-translate t 越界拒绝', () => {
     const parsed = TransformSchema.safeParse({
       kind: 'between-translate',
-      between: [[0, 0], [10, 0]],
+      between: [
+        [0, 0],
+        [10, 0],
+      ],
       t: 1.5,
     });
     expect(parsed.success).toBe(false);

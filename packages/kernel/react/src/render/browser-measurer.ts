@@ -1,4 +1,5 @@
 import type { TextMeasurer } from '@retikz/core';
+
 import { fallbackMeasurer } from '@retikz/core';
 
 let canvas: HTMLCanvasElement | null = null;

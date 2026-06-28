@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * margin 对不同 boundary 形状的作用
@@ -12,15 +13,40 @@ const M = 18;
 const Demo: FC = () => (
   <Layout width={520} height={200}>
     {/* 椭圆：rect 驱动，margin 外扩 → 端点退开 margin */}
-    <Node id="ell" position={[-165, 16]} shape="ellipse" minimumWidth={52} minimumHeight={40} margin={M} stroke="gray" dashPattern={[4, 3]} />
+    <Node
+      id="ell"
+      position={[-165, 16]}
+      shape="ellipse"
+      minimumWidth={52}
+      minimumHeight={40}
+      margin={M}
+      stroke="gray"
+      dashPattern={[4, 3]}
+    />
     <Draw way={[[-165, -78], 'ell']} arrow="->" />
 
     {/* 五角星：params 驱动，margin 不外扩 → 端点贴真实尖角 */}
-    <Node id="star" position={[0, 16]} shape={{ type: 'star', params: { points: 5, innerRadius: 15, outerRadius: 36 } }} margin={M} stroke="gray" dashPattern={[4, 3]} />
+    <Node
+      id="star"
+      position={[0, 16]}
+      shape={{ type: 'star', params: { points: 5, innerRadius: 15, outerRadius: 36 } }}
+      margin={M}
+      stroke="gray"
+      dashPattern={[4, 3]}
+    />
     <Draw way={[[0, -78], 'star']} arrow="->" />
 
     {/* 正五边形：rect 驱动，margin 外扩 */}
-    <Node id="pent" position={[165, 16]} shape={{ type: 'polygon', params: { sides: 5, rotate: -90 } }} minimumWidth={56} minimumHeight={52} margin={M} stroke="gray" dashPattern={[4, 3]} />
+    <Node
+      id="pent"
+      position={[165, 16]}
+      shape={{ type: 'polygon', params: { sides: 5, rotate: -90 } }}
+      minimumWidth={56}
+      minimumHeight={52}
+      margin={M}
+      stroke="gray"
+      dashPattern={[4, 3]}
+    />
     <Draw way={[[165, -78], 'pent']} arrow="->" />
 
     <Node position={[-165, 86]} stroke="none" padding={0} textColor="gray">

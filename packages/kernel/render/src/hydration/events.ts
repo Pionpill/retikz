@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/core';
+
 import type { HydrationContext } from './context';
 
 /**
@@ -36,10 +37,7 @@ export type RetikzEventValue = ValueOf<typeof RetikzEvent>;
  *   addEventListener——它们由控制器经 pointermove + 「上一帧命中 id」状态机合成（renderer 无关，经 locate），
  *   故类型用 Exclude 把这两个排除掉。
  */
-export const EVENT_DOM_TYPE: Record<
-  Exclude<RetikzEventValue, 'pointerEnter' | 'pointerLeave'>,
-  string
-> = {
+export const EVENT_DOM_TYPE: Record<Exclude<RetikzEventValue, 'pointerEnter' | 'pointerLeave'>, string> = {
   click: 'click',
   doubleClick: 'dblclick',
   rightClick: 'contextmenu',

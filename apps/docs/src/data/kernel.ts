@@ -84,9 +84,7 @@ export const kernelSection: Array<Section> = [
       {
         id: 'helpers',
         label: 'kernel.helpers',
-        children: [
-          { id: 'grid', label: 'kernel.helpersGrid' },
-        ],
+        children: [{ id: 'grid', label: 'kernel.helpersGrid' }],
       },
       {
         id: 'effects',
@@ -142,17 +140,15 @@ export const kernelSection: Array<Section> = [
       {
         id: 'composites',
         label: 'kernel.refComposites',
-        children: [
-          { id: 'plot', label: 'kernel.refPlot' },
-        ],
+        children: [{ id: 'plot', label: 'kernel.refPlot' }],
       },
       {
         id: 'schema',
         label: 'kernel.refSchema',
         children: [
-          { id: 'scene',     label: 'kernel.refSceneSchema' },
-          { id: 'entity',    label: 'kernel.refEntity' },
-          { id: 'path',      label: 'kernel.refPathSchema' },
+          { id: 'scene', label: 'kernel.refSceneSchema' },
+          { id: 'entity', label: 'kernel.refEntity' },
+          { id: 'path', label: 'kernel.refPathSchema' },
           { id: 'placement', label: 'kernel.refPlacement' },
         ],
       },

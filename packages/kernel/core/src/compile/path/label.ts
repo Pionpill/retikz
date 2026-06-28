@@ -1,12 +1,14 @@
 import type { SegmentSample } from '../../geometry/segment';
-import type { IRPosition, IRStepLabel } from '../../schemas';
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../primitive';
-import { CompileWarningCode } from '../constant';
+import type { IRPosition, IRStepLabel } from '../../schemas';
 import type { CompileWarningCodeValue } from '../constant';
 import type { LowerTex } from '../lower-tex';
-import { toAlphabeticBaselineY } from '../text-baseline';
-import { type LineLayoutContext, layoutInlineLine, resolveLineRuns } from '../text-layout';
+import type { LineLayoutContext } from '../text-layout';
 import type { FontSpec, TextMeasurer } from '../text-metrics';
+
+import { CompileWarningCode } from '../constant';
+import { toAlphabeticBaselineY } from '../text-baseline';
+import { layoutInlineLine, resolveLineRuns } from '../text-layout';
 
 /** 边标注默认字号 / 偏移量 */
 const LABEL_FONT_SIZE = 14;
@@ -51,11 +53,7 @@ export const tForLabelPosition = (pos: IRStepLabel['position']): number => {
 
 /** label-only opacity 与宿主 path opacity 相乘（元素内轴）；label 缺省则跟随宿主 */
 const resolveLabelOpacity = (labelOpacity?: number, hostOpacity?: number): number | undefined =>
-  labelOpacity !== undefined
-    ? hostOpacity !== undefined
-      ? labelOpacity * hostOpacity
-      : labelOpacity
-    : hostOpacity;
+  labelOpacity !== undefined ? (hostOpacity !== undefined ? labelOpacity * hostOpacity : labelOpacity) : hostOpacity;
 
 /**
  * step.label + 段采样 → 单行 primitive（纯文本走 TextPrim、含公式走 GroupPrim；sloped 时再裹一层 group 旋转）
@@ -82,9 +80,7 @@ export const emitLabelPrimitive = (
   const sideDistance = label.distance ?? LABEL_SIDE_OFFSET;
   const boundaryOffset = placementCtx?.boundaryOffset ?? 0;
   const sideOffset =
-    label.placement === 'inside'
-      ? Math.max(0, boundaryOffset - sideDistance)
-      : boundaryOffset + sideDistance;
+    label.placement === 'inside' ? Math.max(0, boundaryOffset - sideDistance) : boundaryOffset + sideDistance;
   const labelOpacity = resolveLabelOpacity(label.opacity, hostOpacity);
 
   const gatingOn = texCtx?.gatingOn ?? false;

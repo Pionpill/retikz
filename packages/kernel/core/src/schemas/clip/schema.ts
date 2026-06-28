@@ -45,6 +45,4 @@ export const ClipSpecSchema = z
       })
       .describe('Polygon clip region (arbitrary straight-edge area)'),
   ])
-  .describe(
-    'Clip region for `Scope.clip`: rect, circle, ellipse, or polygon in scope-local coordinates.',
-  );
+  .describe('Clip region for `Scope.clip`: rect, circle, ellipse, or polygon in scope-local coordinates.');

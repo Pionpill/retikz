@@ -1,5 +1,6 @@
-import { Layout, Star } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Star } from '@retikz/react';
 
 const Demo: FC = () => (
   <Layout width={300} height={140}>

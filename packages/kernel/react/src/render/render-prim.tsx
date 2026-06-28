@@ -1,6 +1,9 @@
-import type { Key, ReactElement } from 'react';
 import type { ScenePrimitive } from '@retikz/core';
-import { type BuildContext, buildPrim } from '@retikz/render/svg';
+import type { BuildContext } from '@retikz/render/svg';
+import type { Key, ReactElement } from 'react';
+
+import { buildPrim } from '@retikz/render/svg';
+
 import { svgToReact } from './svg-to-react';
 
 /**
@@ -14,8 +17,5 @@ export type RenderContext = BuildContext;
  * @description Scene→SVG 的全部逻辑在 `@retikz/render/svg` 的 `buildPrim`（产中性 `SvgNode`）；本层只把 `SvgNode`
  *   映射成 React element（`svgToReact`，呈现属性 kebab→camelCase）。不读 IR，不复制渲染逻辑。
  */
-export const renderPrim = (
-  p: ScenePrimitive,
-  key: Key,
-  context: RenderContext = {},
-): ReactElement => svgToReact(buildPrim(p, context), key) as ReactElement;
+export const renderPrim = (p: ScenePrimitive, key: Key, context: RenderContext = {}): ReactElement =>
+  svgToReact(buildPrim(p, context), key) as ReactElement;

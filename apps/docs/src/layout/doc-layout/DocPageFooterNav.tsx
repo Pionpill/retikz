@@ -1,7 +1,9 @@
-import { ArrowLeft, ArrowRight } from 'lucide-react';
 import type { FC } from 'react';
+
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
+
 import { usePageNavigation } from './use-page-navigation';
 
 const cardClass =

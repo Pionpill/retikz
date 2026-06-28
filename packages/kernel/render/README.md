@@ -19,8 +19,8 @@ Framework-neutral, zero React. Build an `SvgNode` descriptor tree or serialize s
 ```ts
 import { renderToSvgString, buildSvgDocument } from '@retikz/render/svg';
 
-const svg = renderToSvgString(scene);          // string, no DOM
-const node = buildSvgDocument(scene);          // SvgNode tree
+const svg = renderToSvgString(scene); // string, no DOM
+const node = buildSvgDocument(scene); // SvgNode tree
 ```
 
 Exports: `SvgNode` / `SvgAttrs` / `SvgStyle` types, `buildSvgDocument` / `buildSvgFragment`, `renderToSvgString`, plus the neutral helpers `buildPathD` / `buildTransform` / `formatViewBox`.
@@ -32,8 +32,8 @@ Draws a `Scene` to a Canvas 2D context — gradients, patterns, images, clips an
 ```ts
 import { drawScene, renderToCanvas } from '@retikz/render/canvas';
 
-drawScene(ctx, scene);                          // low-level: draw into a 2D context
-renderToCanvas(canvasElement, scene);           // convenience
+drawScene(ctx, scene); // low-level: draw into a 2D context
+renderToCanvas(canvasElement, scene); // convenience
 ```
 
 ## Docs

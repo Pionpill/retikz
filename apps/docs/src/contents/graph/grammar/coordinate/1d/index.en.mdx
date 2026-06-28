@@ -7,10 +7,10 @@ Sometimes data has only one positional dimension: a list of samples, event times
 
 ## Two Forms
 
-| coordinate | Shape | Binding | Typical use |
-| --- | --- | --- | --- |
-| `"cartesian1D"` | Line | binds `x` only | rug ticks, timeline, 1D strip |
-| `"polar1D"` | Circle | binds `x` only (as the angle) | 24-hour clock, weekday wheel, cyclic data |
+| coordinate      | Shape  | Binding                       | Typical use                               |
+| --------------- | ------ | ----------------------------- | ----------------------------------------- |
+| `"cartesian1D"` | Line   | binds `x` only                | rug ticks, timeline, 1D strip             |
+| `"polar1D"`     | Circle | binds `x` only (as the angle) | 24-hour clock, weekday wheel, cyclic data |
 
 1D coordinates are scale-agnostic: like a 2D axis they accept linear / log / time. Below, left is a `cartesian1D` rug, and right is `polar1D` wrapping a day of event times into a circle.
 
@@ -19,7 +19,9 @@ Sometimes data has only one positional dimension: a list of samples, event times
   <ComponentPreview name="coordinate-polar1d" sourceFiles={['coordinate-polar1d.data.ts']} size="sm" />
 </div>
 
-<p className="text-sm text-muted-foreground">Left: <code>cartesian1D</code> line rug; right: <code>polar1D</code> wrapping 24 hours around a circle.</p>
+<p className="text-sm text-muted-foreground">
+  Left: <code>cartesian1D</code> line rug; right: <code>polar1D</code> wrapping 24 hours around a circle.
+</p>
 
 ## Options
 
@@ -35,13 +37,12 @@ Sometimes data has only one positional dimension: a list of samples, event times
 <Plot coordinate={{ type: 'polar1D', radius: 0.8, startAngle: 180, endAngle: 360 }}>
 ```
 
-| Coordinate | Field | Description |
-| --- | --- | --- |
-| `cartesian1D` | `orientation` | `'horizontal'` or `'vertical'`, choosing how the 1D axis is placed |
-| `polar1D` | `radius` | Circle radius as a fraction of the plot radius |
-| `polar1D` | `startAngle` / `endAngle` | Angular range in degrees |
+| Coordinate    | Field                     | Description                                                        |
+| ------------- | ------------------------- | ------------------------------------------------------------------ |
+| `cartesian1D` | `orientation`             | `'horizontal'` or `'vertical'`, choosing how the 1D axis is placed |
+| `polar1D`     | `radius`                  | Circle radius as a fraction of the plot radius                     |
+| `polar1D`     | `startAngle` / `endAngle` | Angular range in degrees                                           |
 
 ## Limits
 
 This round, 1D coordinates support `<PointMark>` only, for rug ticks, timeline points, or circular event points. Bars, sectors, areas, and other marks that need a 2D cell or region have no 1D geometry and fail loudly instead of drawing a misleading chart.
-

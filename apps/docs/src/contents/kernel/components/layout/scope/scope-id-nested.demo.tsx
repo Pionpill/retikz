@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * 嵌套 scope.id：outer.bbox 包内层 inner 全部 node，inner.bbox 仅含 inner 子集
@@ -10,10 +11,16 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout width={460} height={130}>
     <Scope id="outer" transforms={[{ kind: 'translate', x: 80, y: 20 }]}>
-      <Node id="A" position={[0, 0]}>A</Node>
+      <Node id="A" position={[0, 0]}>
+        A
+      </Node>
       <Scope id="inner" transforms={[{ kind: 'translate', x: 140, y: 0 }]}>
-        <Node id="B" position={[0, 0]}>B</Node>
-        <Node id="C" position={[80, 0]}>C</Node>
+        <Node id="B" position={[0, 0]}>
+          B
+        </Node>
+        <Node id="C" position={[80, 0]}>
+          C
+        </Node>
       </Scope>
     </Scope>
     <Draw way={[[60, 110], 'outer.south']} arrow="->" />

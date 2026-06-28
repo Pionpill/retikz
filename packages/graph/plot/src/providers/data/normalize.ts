@@ -1,6 +1,9 @@
 import { isFiniteNumber } from '@retikz/math';
+
 import type { ParsedFieldValue } from '../../contract';
-import { type ExternalRow, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue } from '../../schemas';
+import type { ExternalRow, PlotFieldTypeMap, PlotFieldTypeValue } from '../../schemas';
+
+import { PlotFieldType } from '../../schemas';
 import { coerceValue } from './coerce';
 import { resolveFieldPath } from './field';
 
@@ -72,7 +75,10 @@ export const assertAllValuesValid = (normalized: Array<ExternalRow>, fieldTypes:
     for (let index = 0; index < normalized.length; index++) {
       const value = normalized[index][logical];
       if (isCoercedValid(value, type)) continue;
-      const shown = isMissingRaw(value) || (typeof value === 'number' && Number.isNaN(value)) ? 'missing or invalid' : `invalid value ${JSON.stringify(value)}`;
+      const shown =
+        isMissingRaw(value) || (typeof value === 'number' && Number.isNaN(value))
+          ? 'missing or invalid'
+          : `invalid value ${JSON.stringify(value)}`;
       throw new Error(`lowerPlots: field "${logical}" has ${shown} at row ${index} (invalid:'error')`);
     }
   }

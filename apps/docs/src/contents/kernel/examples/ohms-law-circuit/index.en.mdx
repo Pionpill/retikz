@@ -41,11 +41,11 @@ You can send the prompt below to the AI chat panel to draw a similar circuit. It
 - Keep the necessary labels: E, S, A, R1, R2, V, U1, U2, sliding rheostat
 - Prose will explain that the series current is shared and that the two voltmeters measure the two resistor sections`}
   extensions={[
-    'Change the circuit to three series resistors and reuse the same measurement unit for each section.',
-    'Move the sliding rheostat to the right side while keeping the reading order clear.',
-    'Render a darker handout variant, but keep the wires and labels readable.',
+  'Change the circuit to three series resistors and reuse the same measurement unit for each section.',
+  'Move the sliding rheostat to the right side while keeping the reading order clear.',
+  'Render a darker handout variant, but keep the wires and labels readable.',
   ]}
-/>
+  />
 
 ## Process
 
@@ -53,21 +53,13 @@ You can send the prompt below to the AI chat panel to draw a similar circuit. It
 
 The voltmeter and ammeter are a round meter head with a lead on each side, wiring only at the left/right terminals (the same idea as the "semantic terminals: diode" in the [Shape Registry](/kernel/components/extend/shape-registry)). Build it as a custom `circuit-meter` shape and flatten two of them (A / V) to start.
 
-<ComponentPreview
-  name="circuit-01-meters"
-  sourceFiles={['circuit-01-meters.meter.tsx']}
-  size="xs"
-/>
+<ComponentPreview name="circuit-01-meters" sourceFiles={['circuit-01-meters.meter.tsx']} size="xs" />
 
 ### Step 2: Flatten the remaining custom symbols
 
 The battery, switch, resistor, and rheostat are not built into core either, so they are custom shapes in the [Shape Registry](/kernel/components/extend/shape-registry), collected in `circuitShapes.tsx`. They each expose only left-right terminals (the battery's long plate is the positive on the right, the short plate the negative on the left); the plates, contacts, rectangles, and arrow are all drawn inside the shape.
 
-<ComponentPreview
-  name="ohms-law-circuit-02-custom-shapes"
-  sourceFiles={['circuitShapes.tsx']}
-  size="xs"
-/>
+<ComponentPreview name="ohms-law-circuit-02-custom-shapes" sourceFiles={['circuitShapes.tsx']} size="xs" />
 
 ### Step 3: Place the elements on the circuit
 
@@ -114,21 +106,21 @@ Finish with the `E`, `S`, `R1` / `R2`, `U1` / `U2`, and rheostat-name text label
 
 ## Capabilities
 
-| Component | Role in this example | Main steps |
-| --- | --- | --- |
-| [Layout](/kernel/components/layout/overview) | Fixes the 1280 x 760 view so every demo shares one coordinate system | [1](#step-1-build-the-meter-as-a-custom-shape), [2](#step-2-flatten-the-remaining-custom-symbols), [3](#step-3-place-the-elements-on-the-circuit) |
-| [Scope](/kernel/components/layout/scope) | Sets style defaults and duplicates the measurement unit by translation | [4](#step-4-compose-and-reuse-the-measurement-unit-with-scope) |
-| [Node](/kernel/components/node/overview) | Holds the meters, battery, switch, resistors, rheostat, and text labels | [1](#step-1-build-the-meter-as-a-custom-shape), [3](#step-3-place-the-elements-on-the-circuit), [4](#step-4-compose-and-reuse-the-measurement-unit-with-scope), [6](#step-6-label-the-components) |
-| [Draw](/kernel/components/draw/overview) | Wires each measurement unit and joins the main loop with explicit corner points | [4](#step-4-compose-and-reuse-the-measurement-unit-with-scope), [5](#step-5-wire-a-closed-loop-with-elbow-connectors) |
-| [ShapeDefinition](/kernel/components/extend/shape-registry) | Turns the meter, battery, switch, resistor, and rheostat into custom shapes with fixed terminals | [1](#step-1-build-the-meter-as-a-custom-shape), [2](#step-2-flatten-the-remaining-custom-symbols) |
+| Component                                                   | Role in this example                                                                             | Main steps                                                                                                                                                                                        |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Layout](/kernel/components/layout/overview)                | Fixes the 1280 x 760 view so every demo shares one coordinate system                             | [1](#step-1-build-the-meter-as-a-custom-shape), [2](#step-2-flatten-the-remaining-custom-symbols), [3](#step-3-place-the-elements-on-the-circuit)                                                 |
+| [Scope](/kernel/components/layout/scope)                    | Sets style defaults and duplicates the measurement unit by translation                           | [4](#step-4-compose-and-reuse-the-measurement-unit-with-scope)                                                                                                                                    |
+| [Node](/kernel/components/node/overview)                    | Holds the meters, battery, switch, resistors, rheostat, and text labels                          | [1](#step-1-build-the-meter-as-a-custom-shape), [3](#step-3-place-the-elements-on-the-circuit), [4](#step-4-compose-and-reuse-the-measurement-unit-with-scope), [6](#step-6-label-the-components) |
+| [Draw](/kernel/components/draw/overview)                    | Wires each measurement unit and joins the main loop with explicit corner points                  | [4](#step-4-compose-and-reuse-the-measurement-unit-with-scope), [5](#step-5-wire-a-closed-loop-with-elbow-connectors)                                                                             |
+| [ShapeDefinition](/kernel/components/extend/shape-registry) | Turns the meter, battery, switch, resistor, and rheostat into custom shapes with fixed terminals | [1](#step-1-build-the-meter-as-a-custom-shape), [2](#step-2-flatten-the-remaining-custom-symbols)                                                                                                 |
 
 ## Limitations
 
-| Capability / limitation | Plan | Status / fallback |
-| --- | --- | --- |
-| Dedicated circuit component library | ❌ Won't support | these symbols are custom shapes for this example — good for the low-level hooks, not a large circuit editor |
-| Resistor / rheostat drawing as a path generator | 🔧 Optimization | the rectangle and arrow are drawn inside the shape emitter; could move to a [path generator](/kernel/components/extend/path-generator) or a dedicated component, left inline here to focus on terminal wiring |
-| Electrical validation | ❌ Won't support | retikz handles geometry and rendering, not whether the voltmeter wiring or switch state is physically correct |
+| Capability / limitation                         | Plan             | Status / fallback                                                                                                                                                                                             |
+| ----------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dedicated circuit component library             | ❌ Won't support | these symbols are custom shapes for this example — good for the low-level hooks, not a large circuit editor                                                                                                   |
+| Resistor / rheostat drawing as a path generator | 🔧 Optimization  | the rectangle and arrow are drawn inside the shape emitter; could move to a [path generator](/kernel/components/extend/path-generator) or a dedicated component, left inline here to focus on terminal wiring |
+| Electrical validation                           | ❌ Won't support | retikz handles geometry and rendering, not whether the voltmeter wiring or switch state is physically correct                                                                                                 |
 
 ## Further reading
 

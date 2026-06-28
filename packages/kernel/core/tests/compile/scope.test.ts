@@ -3,8 +3,10 @@
  * @description 只覆盖 scope.transforms 5 个 translate 变体 lower + 累积 chain、嵌套 scope、prune、跨 scope path 引用、scope.transforms 失败时的 warn
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { CompileWarning, GroupPrim, IR, ScenePrimitive, Transform } from '../../src';
+
+import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
 const scene = (children: IR['children']): IR => ({
@@ -14,9 +16,7 @@ const scene = (children: IR['children']): IR => ({
 });
 
 /** 第一层 GroupPrim（顶层第一个 scope 对应的 group），便于断言其 transforms */
-const findTopScopeGroup = (
-  primitives: ReadonlyArray<ScenePrimitive>,
-): GroupPrim | undefined => {
+const findTopScopeGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrim | undefined => {
   for (const p of primitives) {
     if (p.type === 'group') return p;
   }
@@ -77,10 +77,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
       },
     ]);
     const compiled = compileToScene(ir);
-    const group = findScopeStyleGroup(
-      compiled.primitives,
-      ts => ts[0]?.kind === 'translate',
-    );
+    const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate');
     const t = group?.transforms?.[0] as { x: number; y: number };
     expect(t.x).toBeCloseTo(40, 6);
     expect(t.y).toBeCloseTo(0, 6);
@@ -111,10 +108,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
       },
     ]);
     const compiled = compileToScene(ir);
-    const group = findScopeStyleGroup(
-      compiled.primitives,
-      ts => ts[0]?.kind === 'translate',
-    );
+    const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate');
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 20, y: 0 });
   });
 
@@ -128,10 +122,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
       },
     ]);
     const compiled = compileToScene(ir, { nodeDistance: 15 });
-    const group = findScopeStyleGroup(
-      compiled.primitives,
-      ts => ts[0]?.kind === 'translate',
-    );
+    const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate');
     // above direction = y -15
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 0, y: -15 });
   });
@@ -146,10 +137,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
       },
     ]);
     const compiled = compileToScene(ir);
-    const group = findScopeStyleGroup(
-      compiled.primitives,
-      ts => ts[0]?.kind === 'translate',
-    );
+    const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate');
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 10, y: 5 });
   });
 
@@ -163,10 +151,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
       },
     ]);
     const compiled = compileToScene(ir);
-    const group = findScopeStyleGroup(
-      compiled.primitives,
-      ts => ts[0]?.kind === 'translate',
-    );
+    const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate');
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 100, y: 100 });
   });
 
@@ -181,10 +166,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
       },
     ]);
     const compiled = compileToScene(ir);
-    const group = findScopeStyleGroup(
-      compiled.primitives,
-      ts => ts[0]?.kind === 'translate' && ts[0].x === 50,
-    );
+    const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate' && ts[0].x === 50);
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 50, y: 20 });
   });
 
@@ -585,9 +567,7 @@ describe('scope empty / prune 行为', () => {
     const compiled = compileToScene(ir);
     const groups = compiled.primitives.filter(p => p.type === 'group');
     // 空 transforms + 非空 children → 仍 emit；transforms 字段缺省
-    const scopeGroup = groups.find(
-      g => g.transforms === undefined || g.transforms.length === 0,
-    );
+    const scopeGroup = groups.find(g => g.transforms === undefined || g.transforms.length === 0);
     expect(scopeGroup).toBeDefined();
   });
 

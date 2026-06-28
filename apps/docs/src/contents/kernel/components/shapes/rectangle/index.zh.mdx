@@ -23,24 +23,24 @@ import { Rectangle } from '@retikz/react';
 
 `<Rectangle>` 可以直接给两个角，也可以从中心和尺寸算出四个角。`cornerRadius` 用来画圆角。
 
-| 写法 | 适合 |
-| --- | --- |
-| `{ corner1, corner2 }` | 已知两个对角 |
-| `{ center, width, height }` | 已知中心和尺寸 |
-| `{ center, side }` | 正方形 |
+| 写法                         | 适合               |
+| ---------------------------- | ------------------ |
+| `{ corner1, corner2 }`       | 已知两个对角       |
+| `{ center, width, height }`  | 已知中心和尺寸     |
+| `{ center, side }`           | 正方形             |
 | `{ corner1, width, height }` | 从一个角向右下展开 |
 
 <ComponentPreview name="rectangle-basic" size="sm" />
 
 ### API 参考
 
-| 组件 | 组合 | 含义 |
-| --- | --- | --- |
-| `<Rectangle>` | `corner1` + `corner2` | 通过两个对角确定矩形 |
-| | `center` + `width` + `height` | 通过中心和宽高确定矩形 |
-| | `center` + `side` | 通过中心和边长确定正方形 |
-| | `corner1` + `width` + `height` | 通过一个角和宽高确定矩形 |
-| | + `cornerRadius?` | 圆角矩形（会限制到边长的一半以内） |
+| 组件          | 组合                           | 含义                               |
+| ------------- | ------------------------------ | ---------------------------------- |
+| `<Rectangle>` | `corner1` + `corner2`          | 通过两个对角确定矩形               |
+|               | `center` + `width` + `height`  | 通过中心和宽高确定矩形             |
+|               | `center` + `side`              | 通过中心和边长确定正方形           |
+|               | `corner1` + `width` + `height` | 通过一个角和宽高确定矩形           |
+|               | + `cornerRadius?`              | 圆角矩形（会限制到边长的一半以内） |
 
 ## 作为 Node 形状
 
@@ -67,8 +67,8 @@ import { Node } from '@retikz/react';
 
 ### API 参考
 
-| `shape` | 边界 | 参数 |
-| --- | --- | --- |
+| `shape`              | 边界                         | 参数                        |
+| -------------------- | ---------------------------- | --------------------------- |
 | 缺省 / `"rectangle"` | 包住「文字 + padding」的内框 | `cornerRadius?`（圆角半径） |
 
 ## 技术原理

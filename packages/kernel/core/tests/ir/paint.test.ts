@@ -4,6 +4,7 @@
  *   stops 最少 2、offset/opacity 0..1、angle/radius finite；纯 JSON 可序列化。
  */
 import { describe, expect, it } from 'vitest';
+
 import { NodeSchema, PaintSpecSchema, PathSchema, ScopeSchema } from '../../src/schemas';
 
 describe('PaintSpecSchema — linear gradient', () => {
@@ -74,9 +75,7 @@ describe('PaintSpecSchema — radial gradient', () => {
 
 describe('PaintSpecSchema — 错误路径', () => {
   it('stops 少于 2 被拒', () => {
-    expect(() =>
-      PaintSpecSchema.parse({ kind: 'linearGradient', stops: [{ offset: 0, color: 'red' }] }),
-    ).toThrow();
+    expect(() => PaintSpecSchema.parse({ kind: 'linearGradient', stops: [{ offset: 0, color: 'red' }] })).toThrow();
   });
 
   it('offset 越界被拒（< 0 / > 1）', () => {
@@ -255,8 +254,6 @@ describe('stroke PaintSpec schema', () => {
   });
 
   it('invalid-stroke-type：非字符串且非 PaintSpec 的 stroke 被 schema 拒绝', () => {
-    expect(() =>
-      NodeSchema.parse({ type: 'node', position: [0, 0], stroke: 123 }),
-    ).toThrow();
+    expect(() => NodeSchema.parse({ type: 'node', position: [0, 0], stroke: 123 })).toThrow();
   });
 });

@@ -2,9 +2,9 @@ import { type AssertionResult } from './assert/types';
 import { type CorpusPrompt } from './corpus/types';
 import { extractJson } from './extract/json';
 import { type LlmClient } from './llm/types';
+import { buildPrompt } from './prompt/build';
 import { scoreL1 } from './score/l1';
 import { scoreL2 } from './score/l2';
-import { buildPrompt } from './prompt/build';
 
 /** 单次（一条 prompt × 一个 model × 一个 K）的扁平评测记录 */
 export type RunRecord = {
@@ -47,10 +47,7 @@ const scoreText = (
     };
   }
   const l1 = scoreL1(candidate);
-  const l2 =
-    l1.compileOk && l1.scene && assertions && assertions.length > 0
-      ? scoreL2(l1.scene, assertions)
-      : null;
+  const l2 = l1.compileOk && l1.scene && assertions && assertions.length > 0 ? scoreL2(l1.scene, assertions) : null;
   return { zodOk: l1.zodOk, compileOk: l1.compileOk, failure: l1.failure, l2 };
 };
 

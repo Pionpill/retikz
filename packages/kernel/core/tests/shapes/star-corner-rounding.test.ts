@@ -13,9 +13,11 @@
  *   奇 k 取 innerRadius（凹角 notch）；0°=+x、90°=+y(屏幕下)、−90 基准使默认第一尖角朝上（−y）。
  */
 import { describe, expect, it } from 'vitest';
-import { star } from '../../src/providers/shape';
+
 import type { Rect } from '../../src/contract/shape';
 import type { Position } from '../../src/geometry/point';
+
+import { star } from '../../src/providers/shape';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 const identity = (n: number): number => n;
@@ -91,7 +93,7 @@ describe('star cornerRadius — notch (凹角专测)', () => {
     // notch-0 = 顶点 1（凹角）方向；朝该方向发射线
     const notch0 = star.anchor(rect, 'notch-0', sharpParams)!;
     const dir = Math.hypot(notch0[0], notch0[1]);
-    const toward: Position = [notch0[0] / dir * 1000, notch0[1] / dir * 1000];
+    const toward: Position = [(notch0[0] / dir) * 1000, (notch0[1] / dir) * 1000];
     const sharp = star.boundaryPoint(rect, toward, sharpParams);
     const rounded = star.boundaryPoint(rect, toward, { ...sharpParams, cornerRadius: 6 });
     // r=0 命中凹角顶点（innerRadius 处）
@@ -140,10 +142,7 @@ describe('star cornerRadius — r=0 equivalence to current sharp-corner output',
       const angle = (rotate + k * step - 90) * DEG;
       const radius = k % 2 === 0 ? params.outerRadius : params.innerRadius;
       // 局部点 + rect 中心平移（rotate=0 时 localToWorld = 平移）
-      const v: [number, number] = [
-        round(rect.x + radius * Math.cos(angle)),
-        round(rect.y + radius * Math.sin(angle)),
-      ];
+      const v: [number, number] = [round(rect.x + radius * Math.cos(angle)), round(rect.y + radius * Math.sin(angle))];
       out.push({ kind: k === 0 ? 'move' : 'line', to: v });
     }
     out.push({ kind: 'close' });
@@ -205,9 +204,7 @@ describe('star cornerRadius — scaleParams', () => {
       cornerRadius: 12,
     });
     // 几何均值因子：sx=4 sy=1 → factor=2
-    expect(
-      star.scaleParams!({ points: 5, innerRadius: 16, outerRadius: 40, cornerRadius: 6 }, 4, 1),
-    ).toEqual({
+    expect(star.scaleParams!({ points: 5, innerRadius: 16, outerRadius: 40, cornerRadius: 6 }, 4, 1)).toEqual({
       points: 5,
       innerRadius: 32,
       outerRadius: 80,

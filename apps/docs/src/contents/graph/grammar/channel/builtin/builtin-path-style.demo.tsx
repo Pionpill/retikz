@@ -1,6 +1,7 @@
+import type { FC } from 'react';
+
 import { PlotFieldType } from '@retikz/plot';
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
-import type { FC } from 'react';
 
 const rows = [
   { step: 1, smooth: 10, sharp: 6 },
@@ -22,8 +23,26 @@ const Demo: FC = () => (
     height={250}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <PathMark x="step" y="smooth" order="step" strokeWidth={5} lineCap="round" lineJoin="round" roundedCorners={10} opacity={0.8} />
-    <PathMark x="step" y="sharp" order="step" strokeWidth={2} lineCap="square" lineJoin="bevel" dashPattern={[7, 4]} opacity={0.9} />
+    <PathMark
+      x="step"
+      y="smooth"
+      order="step"
+      strokeWidth={5}
+      lineCap="round"
+      lineJoin="round"
+      roundedCorners={10}
+      opacity={0.8}
+    />
+    <PathMark
+      x="step"
+      y="sharp"
+      order="step"
+      strokeWidth={2}
+      lineCap="square"
+      lineJoin="bevel"
+      dashPattern={[7, 4]}
+      opacity={0.9}
+    />
     <Axis dimension="x" />
     <Axis dimension="y" grid />
   </Plot>

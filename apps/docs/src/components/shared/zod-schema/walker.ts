@@ -1,6 +1,8 @@
 import { z } from 'zod';
-import type { ObjectField, SchemaRepr, TypeRepr } from './types';
+
 import { lookupSchema } from '@/lib/schema-registry';
+
+import type { ObjectField, SchemaRepr, TypeRepr } from './types';
 
 /** walker 通行的 schema 类型：v4 里 shape / options / element / unwrap 给出的都是 core 类型，classic 是其子类型 */
 type AnySchema = z.core.$ZodType;
@@ -16,7 +18,9 @@ const isMinLength = (def: z.core.$ZodCheckDef): def is z.core.$ZodCheckMinLength
 const isMaxLength = (def: z.core.$ZodCheckDef): def is z.core.$ZodCheckMaxLengthDef => def.check === 'max_length';
 
 /** 取 schema 上挂的 check def 列表（min / max / length 等约束的单一来源） */
-function checkDefsOf(schema: { def: { checks?: ReadonlyArray<z.core.$ZodCheck<never>> | undefined } }): Array<z.core.$ZodCheckDef> {
+function checkDefsOf(schema: {
+  def: { checks?: ReadonlyArray<z.core.$ZodCheck<never>> | undefined };
+}): Array<z.core.$ZodCheckDef> {
   return (schema.def.checks ?? []).map(check => check._zod.def);
 }
 
@@ -50,8 +54,8 @@ function walkTypeImpl(schema: AnySchema, skipRegistry: boolean, ctx: WalkCtx = R
   if (ctx.seen.has(schema) || ctx.depth >= MAX_DEPTH) return truncated(schema);
   const next: WalkCtx = { seen: new Set(ctx.seen).add(schema), depth: ctx.depth + 1 };
 
-  if (schema instanceof z.ZodString)  return { kind: 'primitive', name: 'string' };
-  if (schema instanceof z.ZodNumber)  return { kind: 'primitive', name: 'number' };
+  if (schema instanceof z.ZodString) return { kind: 'primitive', name: 'string' };
+  if (schema instanceof z.ZodNumber) return { kind: 'primitive', name: 'number' };
   if (schema instanceof z.ZodBoolean) return { kind: 'primitive', name: 'boolean' };
   if (schema instanceof z.ZodLiteral) {
     // v4 ZodLiteral 可承载多值；本仓 literal 均为单值，取第一个并窄化到可渲染类型

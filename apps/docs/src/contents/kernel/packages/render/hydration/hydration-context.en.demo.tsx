@@ -1,5 +1,7 @@
+import type { FC } from 'react';
+
 import { Layout, Node, pulse } from '@retikz/react';
-import { type FC, useState } from 'react';
+import { useState } from 'react';
 
 /**
  * Hydration context demo: the handler's second arg reads meta + imperatively triggers animation

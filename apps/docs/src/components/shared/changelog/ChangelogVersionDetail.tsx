@@ -1,8 +1,9 @@
 import type { FC } from 'react';
+
 import { useTranslation } from 'react-i18next';
 
-import type { Lang } from '@/i18n';
 import type { Release } from '@/data/changelog.types';
+import type { Lang } from '@/i18n';
 
 import { ChangelogPackageBlock } from './ChangelogPackageBlock';
 
@@ -20,9 +21,7 @@ export const ChangelogVersionDetail: FC<ChangelogVersionDetailProps> = ({ releas
   const lang: Lang = (i18n.resolvedLanguage ?? 'zh').startsWith('en') ? 'en' : 'zh';
   return (
     <div className="space-y-6">
-      <p className="text-sm tabular-nums text-muted-foreground">
-        {release.stableDate ?? t('changelog.inDevelopment')}
-      </p>
+      <p className="text-sm tabular-nums text-muted-foreground">{release.stableDate ?? t('changelog.inDevelopment')}</p>
       <div className="space-y-6">
         {release.packages.map(block => (
           <ChangelogPackageBlock key={block.pkg} block={block} lang={lang} />

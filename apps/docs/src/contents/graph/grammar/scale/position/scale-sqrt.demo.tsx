@@ -1,5 +1,6 @@
-import { Axis, PathMark, Plot, PointMark, Scale } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, PathMark, Plot, PointMark, Scale } from '@retikz/plot-react';
 
 import { growth } from './scale-continuous.data';
 

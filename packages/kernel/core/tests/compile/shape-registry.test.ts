@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { CompileWarning } from '../../src/compile/compile';
+import type { ShapeDefinition } from '../../src/contract/shape';
+import type { ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 import { defineShape, localToWorld, worldToLocal } from '../../src/contract/shape';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
-import type { ShapeDefinition } from '../../src/contract/shape';
 import { NodeSchema } from '../../src/schemas';
-import type { IR } from '../../src/schemas';
-import type { ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
@@ -31,7 +33,7 @@ const radialShape = (): ShapeDefinition =>
       return localToWorld(rect, [(lx / len) * r, (ly / len) * r]);
     },
     anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
-    *emit (rect, style): Iterable<ScenePrimitive> {
+    *emit(rect, style): Iterable<ScenePrimitive> {
       yield {
         type: 'ellipse',
         cx: rect.x,
@@ -52,17 +54,45 @@ const chipShape = (): ShapeDefinition =>
     circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
     boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
     anchor: BUILTIN_SHAPES.rectangle.anchor,
-    *emit (rect): Iterable<ScenePrimitive> {
+    *emit(rect): Iterable<ScenePrimitive> {
       const hw = rect.width / 2;
-      yield { type: 'rect', x: rect.x - hw, y: rect.y - rect.height / 2, width: rect.width, height: rect.height, stroke: 'currentColor', strokeWidth: 1 };
-      yield { type: 'path', commands: [{ kind: 'move', to: [rect.x - hw - 4, rect.y] }, { kind: 'line', to: [rect.x - hw, rect.y] }], stroke: 'currentColor', strokeWidth: 1 };
-      yield { type: 'path', commands: [{ kind: 'move', to: [rect.x + hw, rect.y] }, { kind: 'line', to: [rect.x + hw + 4, rect.y] }], stroke: 'currentColor', strokeWidth: 1 };
+      yield {
+        type: 'rect',
+        x: rect.x - hw,
+        y: rect.y - rect.height / 2,
+        width: rect.width,
+        height: rect.height,
+        stroke: 'currentColor',
+        strokeWidth: 1,
+      };
+      yield {
+        type: 'path',
+        commands: [
+          { kind: 'move', to: [rect.x - hw - 4, rect.y] },
+          { kind: 'line', to: [rect.x - hw, rect.y] },
+        ],
+        stroke: 'currentColor',
+        strokeWidth: 1,
+      };
+      yield {
+        type: 'path',
+        commands: [
+          { kind: 'move', to: [rect.x + hw, rect.y] },
+          { kind: 'line', to: [rect.x + hw + 4, rect.y] },
+        ],
+        stroke: 'currentColor',
+        strokeWidth: 1,
+      };
     },
   });
 
 describe('Shape registry — injection (happy path)', () => {
   it('inject_custom_shape_compiles: shapes:{hexagon} + node.shape=hexagon → emits custom prim', () => {
-    const ir: IR = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', shape: 'hexagon', position: [0, 0] }] };
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', shape: 'hexagon', position: [0, 0] }],
+    };
     const scene = compileToScene(ir, { shapes: { hexagon: radialShape() } });
     expect(findByType(scene.primitives, 'ellipse')).toBeDefined();
   });
@@ -73,7 +103,13 @@ describe('Shape registry — injection (happy path)', () => {
       type: 'scene',
       children: [
         { type: 'node', id: 'A', shape: 'hexagon', position: [0, 0] },
-        { type: 'path', children: [{ type: 'step', kind: 'move', to: { id: 'A', anchor: 30 } }, { type: 'step', kind: 'line', to: [100, 50] }] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'A', anchor: 30 } },
+            { type: 'step', kind: 'line', to: [100, 50] },
+          ],
+        },
       ],
     };
     const scene = compileToScene(ir, { shapes: { hexagon: radialShape() } });
@@ -83,7 +119,11 @@ describe('Shape registry — injection (happy path)', () => {
   });
 
   it('shape_emits_multiple_primitives: emit yielding body + 2 pins → all prims in Scene', () => {
-    const ir: IR = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', shape: 'chip', position: [0, 0] }] };
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', shape: 'chip', position: [0, 0] }],
+    };
     const scene = compileToScene(ir, { shapes: { chip: chipShape() } });
     expect(scene.primitives.filter(p => p.type === 'rect' || p.type === 'path')).toHaveLength(3);
   });
@@ -98,7 +138,7 @@ describe('Shape registry — injection (happy path)', () => {
     };
     const cachedShape: ShapeDefinition = {
       ...BUILTIN_SHAPES.rectangle,
-      *emit (): Iterable<ScenePrimitive> {
+      *emit(): Iterable<ScenePrimitive> {
         yield cachedPrim;
       },
     };
@@ -111,9 +151,7 @@ describe('Shape registry — injection (happy path)', () => {
       ],
     };
     const scene = compileToScene(ir, { shapes: { cached: cachedShape } });
-    const rects = scene.primitives.filter(
-      (p): p is Extract<ScenePrimitive, { type: 'rect' }> => p.type === 'rect',
-    );
+    const rects = scene.primitives.filter((p): p is Extract<ScenePrimitive, { type: 'rect' }> => p.type === 'rect');
     expect(rects).toHaveLength(2);
     expect(rects[0]).not.toBe(rects[1]);
     expect(rects.map(p => p.id)).toEqual(['A', 'B']);
@@ -128,7 +166,13 @@ describe('Shape registry — boundary', () => {
       children: [
         { type: 'node', id: 'a', shape: 'circle', position: [0, 0], text: 'a' },
         { type: 'node', id: 'b', shape: 'diamond', position: [60, 0], rotate: 20 },
-        { type: 'path', children: [{ type: 'step', kind: 'move', to: { id: 'a' } }, { type: 'step', kind: 'line', to: { id: 'b' } }] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'a' } },
+            { type: 'step', kind: 'line', to: { id: 'b' } },
+          ],
+        },
       ],
     };
     expect(compileToScene(ir, { shapes: {} })).toEqual(compileToScene(ir));
@@ -145,14 +189,26 @@ describe('Shape registry — boundary', () => {
       type: 'scene',
       children: [
         { type: 'coordinate', id: 'co', position: [50, 50] },
-        { type: 'scope', id: 's', transforms: [], children: [{ type: 'node', id: 'inner', position: [0, 0], text: 'x' }] },
+        {
+          type: 'scope',
+          id: 's',
+          transforms: [],
+          children: [{ type: 'node', id: 'inner', position: [0, 0], text: 'x' }],
+        },
         // coordinate center (0×0 rect → boundary == center) and scope.id.north must not crash
-        { type: 'path', children: [{ type: 'step', kind: 'move', to: { id: 'co' } }, { type: 'step', kind: 'line', to: { id: 's', anchor: 'north' } }] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'co' } },
+            { type: 'step', kind: 'line', to: { id: 's', anchor: 'north' } },
+          ],
+        },
       ],
     };
     const scene = compileToScene(ir);
     const linePath = scene.primitives.find(
-      (p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
+      (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
+        p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
     );
     expect(linePath).toBeDefined();
     if (linePath?.type === 'path' && linePath.commands[0].kind === 'move') {
@@ -163,14 +219,21 @@ describe('Shape registry — boundary', () => {
   it('synthetic_layouts_use_effective_rectangle_shape: scope.id 自定义 anchor 走注入后的 rectangle', () => {
     const sentinelRect: ShapeDefinition = {
       ...BUILTIN_SHAPES.rectangle,
-      anchor: (rect, name) => (name === 'sentinel' ? [rect.x + 77, rect.y + 88] : BUILTIN_SHAPES.rectangle.anchor(rect, name, {})),
+      anchor: (rect, name) =>
+        name === 'sentinel' ? [rect.x + 77, rect.y + 88] : BUILTIN_SHAPES.rectangle.anchor(rect, name, {}),
     };
     const ir: IR = {
       version: 1,
       type: 'scene',
       children: [
         { type: 'scope', id: 's', children: [{ type: 'node', id: 'inner', position: [0, 0], text: 'x' }] },
-        { type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }, { type: 'step', kind: 'line', to: { id: 's', anchor: 'sentinel' } }] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: { id: 's', anchor: 'sentinel' } },
+          ],
+        },
       ],
     };
     const scene = compileToScene(ir, {
@@ -178,7 +241,8 @@ describe('Shape registry — boundary', () => {
       onWarn: () => {},
     });
     const linePath = scene.primitives.find(
-      (p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
+      (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
+        p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
     );
     const line = linePath?.commands.find(c => c.kind === 'line');
     expect(line?.to).toEqual([77, 88]);
@@ -187,7 +251,11 @@ describe('Shape registry — boundary', () => {
 
 describe('Shape registry — error path', () => {
   it('unknown_shape_throws_with_list: unregistered shape → throw with sorted available names', () => {
-    const ir: IR = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', shape: 'cloud', position: [0, 0] }] };
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', shape: 'cloud', position: [0, 0] }],
+    };
     expect(() => compileToScene(ir)).toThrow(/Unknown shape 'cloud'/);
     // circle 已收为 ellipse 等轴 preset，不在注册表（裸 'circle' 由 normalizeShape 先消解为 ellipse，不走查表）
     // 注册表含 polygon（ADR-04）：排序后落在 ellipse 与 rectangle 之间
@@ -207,7 +275,13 @@ describe('Shape registry — error path', () => {
       type: 'scene',
       children: [
         { type: 'node', id: 'A', shape: 'dot', position: [0, 0] },
-        { type: 'path', children: [{ type: 'step', kind: 'move', to: { id: 'A', anchor: 'north' } }, { type: 'step', kind: 'line', to: [0, -100] }] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'A', anchor: 'north' } },
+            { type: 'step', kind: 'line', to: [0, -100] },
+          ],
+        },
       ],
     };
     // north 是 compass 名，上提后走 AABB rectangle，不再 throw
@@ -221,10 +295,18 @@ describe('Shape registry — error path', () => {
       type: 'scene',
       children: [
         { type: 'node', id: 'A', shape: 'dot', position: [0, 0] },
-        { type: 'path', children: [{ type: 'step', kind: 'move', to: { id: 'A', anchor: 'tip' } }, { type: 'step', kind: 'line', to: [0, -100] }] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'A', anchor: 'tip' } },
+            { type: 'step', kind: 'line', to: [0, -100] },
+          ],
+        },
       ],
     };
-    expect(() => compileToScene(ir, { shapes: { dot: radialShape() } })).toThrow(/Unknown anchor 'tip' for shape 'dot'/);
+    expect(() => compileToScene(ir, { shapes: { dot: radialShape() } })).toThrow(
+      /Unknown anchor 'tip' for shape 'dot'/,
+    );
   });
 });
 
@@ -232,8 +314,17 @@ describe('Shape registry — interaction', () => {
   it('inject_overrides_builtin_emits_warn: override rectangle → custom emit + SHAPE_OVERRIDES_BUILTIN', () => {
     const ovalRect: ShapeDefinition = {
       ...BUILTIN_SHAPES.rectangle,
-      *emit (rect, style): Iterable<ScenePrimitive> {
-        yield { type: 'ellipse', cx: rect.x, cy: rect.y, rx: rect.width / 2, ry: rect.height / 2, fill: style.fill ?? 'transparent', stroke: style.stroke ?? 'currentColor', strokeWidth: style.strokeWidth ?? 1 };
+      *emit(rect, style): Iterable<ScenePrimitive> {
+        yield {
+          type: 'ellipse',
+          cx: rect.x,
+          cy: rect.y,
+          rx: rect.width / 2,
+          ry: rect.height / 2,
+          fill: style.fill ?? 'transparent',
+          stroke: style.stroke ?? 'currentColor',
+          strokeWidth: style.strokeWidth ?? 1,
+        };
       },
     };
     const warnings: Array<CompileWarning> = [];
@@ -251,7 +342,7 @@ describe('Shape registry — interaction', () => {
       const warnings: Array<CompileWarning> = [];
       const ovalRect: ShapeDefinition = {
         ...BUILTIN_SHAPES.rectangle,
-        *emit (rect): Iterable<ScenePrimitive> {
+        *emit(rect): Iterable<ScenePrimitive> {
           yield { type: 'ellipse', cx: rect.x, cy: rect.y, rx: rect.width / 2, ry: rect.height / 2 };
         },
       };
@@ -264,7 +355,11 @@ describe('Shape registry — interaction', () => {
   });
 
   it('diamond_rotate_via_outer_group: rotated diamond → axis-aligned path under a rotate group', () => {
-    const ir: IR = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', shape: 'diamond', position: [0, 0], text: 'D', rotate: 45 }] };
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', shape: 'diamond', position: [0, 0], text: 'D', rotate: 45 }],
+    };
     const group = findByType(compileToScene(ir).primitives, 'group');
     expect(group).toBeDefined();
     expect(group?.transforms?.[0]).toMatchObject({ kind: 'rotate', degrees: 45 });
@@ -277,7 +372,13 @@ describe('Shape registry — interaction', () => {
       type: 'scene',
       children: [
         { type: 'node', id: 'A', shape: 'hexagon', position: [0, 0], outerSep: 10 },
-        { type: 'path', children: [{ type: 'step', kind: 'move', to: { id: 'A' } }, { type: 'step', kind: 'line', to: [100, 0] }] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
       ],
     };
     const scene = compileToScene(ir, { shapes: { hexagon: radialShape() } });

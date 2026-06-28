@@ -1,5 +1,6 @@
-import { Layout, Node, Sector } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node, Sector } from '@retikz/react';
 
 /**
  * 实心扇形圆心可接节点 id（center="hub"）；startAngle + sweepAngle 给扇区；label 沿弧标注。

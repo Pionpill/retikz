@@ -1,4 +1,5 @@
 import { isFiniteNumber } from '@retikz/math';
+
 import { type ExternalRow, type OrderBy } from '../../schemas';
 import { resolveFieldPath } from '../data';
 
@@ -54,7 +55,11 @@ export const quantileOfSorted = (sorted: Array<number>, p: number): number => {
 };
 
 /** 对未排序数组计算分位点。 */
-export const quantileOf = (values: Array<number>, p: number): number => quantileOfSorted([...values].sort((a, b) => a - b), p);
+export const quantileOf = (values: Array<number>, p: number): number =>
+  quantileOfSorted(
+    [...values].sort((a, b) => a - b),
+    p,
+  );
 
 /** 计算有限数值范围；空集合按统计变换的零值约定返回 `[0, 0]`。 */
 export const finiteExtentOf = (values: Array<number>): { min: number; max: number; count: number } => ({
@@ -109,7 +114,10 @@ export const orderRows = (rows: Array<ExternalRow>, orderBy?: Array<OrderBy>): A
     .sort((left, right) => {
       for (const order of orderBy) {
         const direction = order.order === 'descending' ? -1 : 1;
-        const compared = compareValues(resolveFieldPath(left.row, order.field), resolveFieldPath(right.row, order.field));
+        const compared = compareValues(
+          resolveFieldPath(left.row, order.field),
+          resolveFieldPath(right.row, order.field),
+        );
         if (compared !== 0) return compared * direction;
       }
       return left.index - right.index;
@@ -118,7 +126,11 @@ export const orderRows = (rows: Array<ExternalRow>, orderBy?: Array<OrderBy>): A
 };
 
 /** 按数值字段稳定排名，并自动剔除非有限数值行。 */
-export const rankedByNumericField = (rows: Array<ExternalRow>, field: string, direction: 'ascending' | 'descending'): Array<ExternalRow> =>
+export const rankedByNumericField = (
+  rows: Array<ExternalRow>,
+  field: string,
+  direction: 'ascending' | 'descending',
+): Array<ExternalRow> =>
   rows
     .map((row, index) => ({ row, index, value: resolveFieldPath(row, field) }))
     .filter((entry): entry is { row: ExternalRow; index: number; value: number } => isFiniteNumber(entry.value))

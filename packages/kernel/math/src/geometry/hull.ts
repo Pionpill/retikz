@@ -1,4 +1,6 @@
-import { type Position, point } from './point';
+import type { Position } from './point';
+
+import { point } from './point';
 
 /**
  * 凸包（Andrew's monotone chain）

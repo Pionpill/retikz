@@ -1,8 +1,19 @@
 import { isFiniteNumber } from '@retikz/math';
 import { format as d3Format } from 'd3-format';
 import { utcFormat as d3UtcFormat } from 'd3-time-format';
+
 import type { FieldCollector, ResolveLabel } from '../../contract';
-import { type Channel, type DataModel, type ExternalRow, type MarkLabelContent, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, type TextChannel } from '../../schemas';
+import type {
+  Channel,
+  DataModel,
+  ExternalRow,
+  MarkLabelContent,
+  PlotFieldTypeMap,
+  PlotFieldTypeValue,
+  TextChannel,
+} from '../../schemas';
+
+import { PlotFieldType } from '../../schemas';
 
 /**
  * 解析字段路径 a.b.c，返回叶子值（任一段缺失返回 undefined）
@@ -42,7 +53,11 @@ export const compareRowsByFieldPath = (a: ExternalRow, b: ExternalRow, path: str
  * @description fieldType 为 temporal（值是 epoch ms canonical）→ d3UtcFormat；其余按数值走 d3-format。
  *   非有限数值无法格式化 → 回退 String(value)；format 串非法 → 同样回退（不 fail-loud，标签是展示层）。
  */
-const applyDisplayFormat = (value: unknown, displayFormat: string, fieldType: PlotFieldTypeValue | undefined): string => {
+const applyDisplayFormat = (
+  value: unknown,
+  displayFormat: string,
+  fieldType: PlotFieldTypeValue | undefined,
+): string => {
   try {
     if (fieldType === PlotFieldType.Temporal) {
       if (!isFiniteNumber(value)) return String(value);
@@ -71,7 +86,9 @@ export const labelOf = (
   if (content.field !== undefined) {
     const value = resolveFieldPath(row, content.field);
     if (value === null || value === undefined) return undefined;
-    return content.displayFormat !== undefined ? applyDisplayFormat(value, content.displayFormat, fieldType) : String(value);
+    return content.displayFormat !== undefined
+      ? applyDisplayFormat(value, content.displayFormat, fieldType)
+      : String(value);
   }
   if (content.value !== undefined) return content.value;
   return undefined;
@@ -173,7 +190,9 @@ export const resolveFieldTypes = (
     }
     for (const field of sourceFields) {
       if (!declaredNameMap.has(field)) {
-        throw new Error(`lowerPlots: unknown field "${field}" (data.model is declared; all referenced source fields must be listed)`);
+        throw new Error(
+          `lowerPlots: unknown field "${field}" (data.model is declared; all referenced source fields must be listed)`,
+        );
       }
       fieldTypeMap.set(field, declaredTypeMap.get(field) ?? inferFieldType(rows, field));
     }

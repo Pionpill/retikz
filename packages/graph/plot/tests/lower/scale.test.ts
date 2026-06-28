@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
+
 import { DEFAULT_TICK_COUNT, resolveLinearScale, scaleTicks } from '../../src/providers';
-import { type ScaleOperation } from '../../src/schemas';
 import { resolvePositionScale as resolvePositionScaleOp, resolveScaleRegistry } from '../../src/providers';
 import { coerceTimestamp, inferCategoryDomain } from '../../src/providers';
+import { type ScaleOperation } from '../../src/schemas';
 
 // 内置 scale registry：position 分派经 registry，测试包一层省去逐处传参。
 const scaleRegistry = resolveScaleRegistry();
-const resolvePositionScale = (operation: ScaleOperation, values: Array<unknown>, range: readonly [number, number]) => resolvePositionScaleOp(operation, values, range, scaleRegistry);
+const resolvePositionScale = (operation: ScaleOperation, values: Array<unknown>, range: readonly [number, number]) =>
+  resolvePositionScaleOp(operation, values, range, scaleRegistry);
 
 describe('resolveLinearScale (ADR-02 d3-scale)', () => {
   // Happy path
@@ -208,7 +210,9 @@ describe('resolveTimeScale / coerceTimestamp (ADR-06, UTC)', () => {
   it('time_ticks_month_boundary_utc', () => {
     const lo = Date.UTC(2024, 0, 1);
     const hi = Date.UTC(2024, 3, 1);
-    const { values, labels } = resolvePositionScale({ type: 'time', name: 'x', domain: [lo, hi] }, [], [0, 300]).ticks(3);
+    const { values, labels } = resolvePositionScale({ type: 'time', name: 'x', domain: [lo, hi] }, [], [0, 300]).ticks(
+      3,
+    );
     // UTC 确定性：Feb 1 在刻度里（值用 epoch ms）
     expect(values).toContain(Date.UTC(2024, 1, 1));
     expect(labels).toHaveLength(values.length);

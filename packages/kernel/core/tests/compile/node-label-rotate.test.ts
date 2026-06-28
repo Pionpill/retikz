@@ -1,29 +1,26 @@
 import { describe, expect, it } from 'vitest';
+
+import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
 import { compileToScene } from '../../src/compile/compile';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
 import { NodeLabelSchema } from '../../src/schemas';
-import type { IR } from '../../src/schemas';
-import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 
 // core emit alphabetic 基线，按字体度量从基线还原单行文本视觉中心（= label 旋转中心 ly）
-const visualMiddle = (t: TextPrim): number =>
-  t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
+const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
 
 const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
 const silent = { onWarn: () => {} };
 
 const labelText = (prims: Array<ScenePrimitive>, text: string): TextPrim | undefined =>
   flattenPrims(prims).find(
-    (p): p is TextPrim =>
-      p.type === 'text' && p.lines.some(l => (typeof l === 'string' ? l : l.text) === text),
+    (p): p is TextPrim => p.type === 'text' && p.lines.some(l => (typeof l === 'string' ? l : l.text) === text),
   );
 
 /** 找包住指定 label 文本的 rotate group（深度优先；group 仅含该 text 且带 rotate transform） */
-const findLabelRotateGroup = (
-  prims: Array<ScenePrimitive>,
-  text: string,
-): GroupPrim | undefined => {
+const findLabelRotateGroup = (prims: Array<ScenePrimitive>, text: string): GroupPrim | undefined => {
   for (const p of prims) {
     if (p.type === 'group') {
       const only = p.children.length === 1 ? p.children[0] : undefined;
@@ -53,7 +50,8 @@ describe('Node label rotate', () => {
       { type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'right', rotate: 30 } },
     ]);
     const g = findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')!;
-    const rot = g.transforms!.find(t => t.kind === 'rotate')!;    expect(rot.degrees).toBe(30);
+    const rot = g.transforms!.find(t => t.kind === 'rotate')!;
+    expect(rot.degrees).toBe(30);
     const txt = g.children[0] as TextPrim;
     // 绕 label 视觉中心自旋：cx = 文本水平锚点，cy = 文本视觉中心（alphabetic 基线上推回中心）
     expect(rot.cx).toBe(txt.x);
@@ -65,7 +63,8 @@ describe('Node label rotate', () => {
       { type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'below', rotate: 'radial' } },
     ]);
     const g = findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')!;
-    const rot = g.transforms!.find(t => t.kind === 'rotate')!;    expect(rot.degrees).toBeCloseTo(90);
+    const rot = g.transforms!.find(t => t.kind === 'rotate')!;
+    expect(rot.degrees).toBeCloseTo(90);
   });
 
   it("radial：position='right'（+x 方向）→ 0° = 无旋转 = 不包 group", () => {
@@ -81,14 +80,13 @@ describe('Node label rotate', () => {
       { type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'right', rotate: 'tangent' } },
     ]);
     const g = findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')!;
-    const rot = g.transforms!.find(t => t.kind === 'rotate')!;    expect(rot.degrees).toBeCloseTo(90);
+    const rot = g.transforms!.find(t => t.kind === 'rotate')!;
+    expect(rot.degrees).toBeCloseTo(90);
   });
 
   // 边界
   it("rotate 'none' 显式 = 缺省 → 不包 group", () => {
-    const ir = scene([
-      { type: 'node', position: [0, 0], text: 'A', label: { text: 'L', rotate: 'none' } },
-    ]);
+    const ir = scene([{ type: 'node', position: [0, 0], text: 'A', label: { text: 'L', rotate: 'none' } }]);
     expect(findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')).toBeUndefined();
   });
 
@@ -102,7 +100,8 @@ describe('Node label rotate', () => {
       },
     ]);
     const g = findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')!;
-    const rot = g.transforms!.find(t => t.kind === 'rotate')!;    const norm = ((rot.degrees % 360) + 360) % 360;
+    const rot = g.transforms!.find(t => t.kind === 'rotate')!;
+    const norm = ((rot.degrees % 360) + 360) % 360;
     expect(Math.min(norm, 360 - norm)).toBeCloseTo(0);
   });
 
@@ -116,7 +115,8 @@ describe('Node label rotate', () => {
       },
     ]);
     const g = findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')!;
-    const rot = g.transforms!.find(t => t.kind === 'rotate')!;    const norm = ((rot.degrees % 360) + 360) % 360;
+    const rot = g.transforms!.find(t => t.kind === 'rotate')!;
+    const norm = ((rot.degrees % 360) + 360) % 360;
     expect(norm).toBeCloseTo(180);
   });
 

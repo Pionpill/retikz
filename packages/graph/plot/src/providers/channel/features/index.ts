@@ -13,10 +13,14 @@ export {
   STROKE_WIDTH_MAX,
   STROKE_WIDTH_MIN,
 } from './node';
-export { BUILTIN_PATH_CHANNELS, PATH_CHANNELS } from './path';
 export * from './paint';
+export { BUILTIN_PATH_CHANNELS, PATH_CHANNELS } from './path';
 export * from './position';
 export { BUILTIN_SCOPE_CHANNELS, SCOPE_CHANNELS } from './scope';
 export * from './text';
 
-export const DELIVERY_CHANNELS: ReadonlyArray<AnyChannelDefinition> = [...NODE_CHANNELS, ...PATH_CHANNELS, ...SCOPE_CHANNELS];
+export const DELIVERY_CHANNELS: ReadonlyArray<AnyChannelDefinition> = [
+  ...NODE_CHANNELS,
+  ...PATH_CHANNELS,
+  ...SCOPE_CHANNELS,
+];

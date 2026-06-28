@@ -1,5 +1,8 @@
 import { minimalEnclosingCircle } from '@retikz/math';
-import { type Rect, rect as rectOps } from '../geometry/rect';
+
+import type { ShapeDefinition } from '../contract/shape';
+import type { Rect } from '../geometry/rect';
+import type { Transform } from '../primitive';
 import type {
   IRAtPosition,
   IRBetweenPosition,
@@ -8,12 +11,14 @@ import type {
   IRTransform,
   PolarPosition,
 } from '../schemas';
-import type { Transform } from '../primitive';
-import { BUILTIN_SHAPES } from '../providers/shape';
-import type { ShapeDefinition } from '../contract/shape';
 import type { NameStack } from './name-stack';
-import { type NodeLayout, outerRectOf } from './node';
-import { type ResolveBetweenGlobal, resolvePosition } from './position';
+import type { NodeLayout } from './node';
+import type { ResolveBetweenGlobal } from './position';
+
+import { rect as rectOps } from '../geometry/rect';
+import { BUILTIN_SHAPES } from '../providers/shape';
+import { outerRectOf } from './node';
+import { resolvePosition } from './position';
 
 /**
  * 把 IR 7 变体 transforms 展平为 Scene 3 变体（Cartesian translate / rotate / scale）
@@ -104,10 +109,7 @@ export const lowerScopeTransforms = (
  *   即对局部点 P，结果 = t0(t1(t2(P)))。实现上从数组尾部往头部迭代依次 apply。
  *   只接受已被 `lowerScopeTransforms` 展平后的 3 变体（translate / rotate / scale）
  */
-export const applyTransformChain = (
-  local: IRPosition,
-  chain: ReadonlyArray<Transform>,
-): IRPosition => {
+export const applyTransformChain = (local: IRPosition, chain: ReadonlyArray<Transform>): IRPosition => {
   let x = local[0];
   let y = local[1];
   for (let i = chain.length - 1; i >= 0; i--) {
@@ -143,10 +145,7 @@ export const applyTransformChain = (
  *   作用：referent 全局点 → 当前 scope 局部坐标系，配合 `applyTransformChain` 实现
  *   "referent 全局 + relative 部分在当前 scope 局部度量 + 末端正向投影回全局" 的语义。
  */
-export const inverseTransformChain = (
-  global: IRPosition,
-  chain: ReadonlyArray<Transform>,
-): IRPosition => {
+export const inverseTransformChain = (global: IRPosition, chain: ReadonlyArray<Transform>): IRPosition => {
   let x = global[0];
   let y = global[1];
   for (const t of chain) {
@@ -187,10 +186,7 @@ export const inverseTransformChain = (
  *   非均匀 scale 与 rotate 在 chain 中混合时，按"累加 rotate + 分量相乘 scale"近似（uniform scale 精确，
  *   anisotropic + rotate 的剪切耦合不展开——当前投影模型限制）。
  */
-export const projectLayoutToGlobal = (
-  layout: NodeLayout,
-  chain: ReadonlyArray<Transform>,
-): NodeLayout => {
+export const projectLayoutToGlobal = (layout: NodeLayout, chain: ReadonlyArray<Transform>): NodeLayout => {
   const [gx, gy] = applyTransformChain([layout.rect.x, layout.rect.y], chain);
   let rotateAccumRad = 0;
   let scaleX = 1;
@@ -233,9 +229,7 @@ export type ScopeBoundingBox = {
 };
 
 /** 收集一组 NodeLayout 的全局 4 角点（rotate-aware outerRect 四角），供 AABB / MEC 等包络复用 */
-export const collectScopeCornerPoints = (
-  layouts: ReadonlyArray<NodeLayout>,
-): Array<IRPosition> => {
+export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Array<IRPosition> => {
   const points: Array<IRPosition> = [];
   for (const layout of layouts) {
     const outerRect = outerRectOf(layout);
@@ -257,11 +251,12 @@ export const collectScopeCornerPoints = (
  *   layout 是 0×0（coordinate / 空 scope 占位）时退化为单点也合法；
  *   空 layouts 数组返回 null（调用方按"empty scope + fallback origin"退化为 0×0 占位）
  */
-export const computeScopeBoundingBox = (
-  layouts: ReadonlyArray<NodeLayout>,
-): ScopeBoundingBox | null => {
+export const computeScopeBoundingBox = (layouts: ReadonlyArray<NodeLayout>): ScopeBoundingBox | null => {
   if (layouts.length === 0) return null;
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
   for (const [cx, cy] of collectScopeCornerPoints(layouts)) {
     if (cx < minX) minX = cx;
     if (cy < minY) minY = cy;
@@ -283,8 +278,7 @@ export const registerScopeAsLayout = (
   fallbackOrigin: IRPosition,
   shapes: Record<string, ShapeDefinition> = BUILTIN_SHAPES,
 ): NodeLayout => {
-  const box: ScopeBoundingBox =
-    bbox ?? { x: fallbackOrigin[0], y: fallbackOrigin[1], width: 0, height: 0 };
+  const box: ScopeBoundingBox = bbox ?? { x: fallbackOrigin[0], y: fallbackOrigin[1], width: 0, height: 0 };
   return {
     id,
     shapeName: 'rectangle',

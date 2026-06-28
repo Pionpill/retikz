@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { CorpusPromptSchema } from '../../src/corpus/types';
+
 import { loadCorpus } from '../../src/corpus/load';
+import { CorpusPromptSchema } from '../../src/corpus/types';
 
 describe('corpus assertions', () => {
   const corpus = loadCorpus(new URL('../../corpus/core.json', import.meta.url));

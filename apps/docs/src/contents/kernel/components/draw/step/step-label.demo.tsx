@@ -1,5 +1,6 @@
-import { EdgeLabel, Layout, Node, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
+
+import { EdgeLabel, Layout, Node, Path, Step } from '@retikz/react';
 
 const Demo: FC = () => (
   <Layout width={520} height={220} nodeDefault={{ stroke: 'gray', dashed: true }}>

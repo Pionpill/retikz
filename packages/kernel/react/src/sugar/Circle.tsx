@@ -1,12 +1,11 @@
-import type { FC } from 'react';
 import type { IRTarget } from '@retikz/core';
+import type { FC } from 'react';
+
+import type { AngleInput, BoxAdjustmentProps, PathVisualProps, ShapeBox } from './_shared';
+
 import { Path } from '../kernel/Path';
 import { Step } from '../kernel/Step';
 import {
-  type AngleInput,
-  type BoxAdjustmentProps,
-  type PathVisualProps,
-  type ShapeBox,
   adjustShapeBox,
   boxCenter,
   boxSize,

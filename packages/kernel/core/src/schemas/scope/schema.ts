@@ -1,17 +1,21 @@
 import { z } from 'zod';
-import { AnimationTrackSchema } from '../animation';
-import { ClipSpecSchema } from '../clip';
+
 import type { IRComposite } from '../composite';
 import type { IRCoordinate } from '../coordinate';
+import type { IRNode } from '../node';
+import type { IRPathBase } from '../path';
+import type { IRScope } from './types';
+
+import { AnimationTrackSchema } from '../animation';
+import { ClipSpecSchema } from '../clip';
 import { FontSchema } from '../font';
 import { JsonObjectSchema } from '../json';
+import { NodeSchema } from '../node';
 import { PaintSpecSchema } from '../paint';
-import { type IRNode, NodeSchema } from '../node';
-import { type IRPathBase, PathBaseSchema } from '../path';
+import { PathBaseSchema } from '../path';
 import { ArrowDetailSchema } from '../path/arrow';
 import { TransformSchema } from '../transform';
 import { ScopeBoundingShape } from './constants';
-import type { IRScope } from './types';
 
 // ===========================================================================
 // every-X 四通道默认 schema —— 各从对应元素 schema `.omit()` 派生（单一真源，禁手抄）
@@ -61,28 +65,13 @@ export const PathDefaultSchema = PathBaseSchema.omit({
  */
 export const LabelDefaultSchema = z
   .object({
-    color: z
-      .string()
-      .optional()
-      .describe('Master color for labels in this scope; textColor falls back to it.'),
-    textColor: z
-      .string()
-      .optional()
-      .describe('Default text color for node labels and step labels in this scope.'),
-    opacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Default label opacity.'),
-    font: FontSchema.optional().describe(
-      'Default label font (family / size / weight / style); per-field fallback.',
-    ),
+    color: z.string().optional().describe('Master color for labels in this scope; textColor falls back to it.'),
+    textColor: z.string().optional().describe('Default text color for node labels and step labels in this scope.'),
+    opacity: z.number().min(0).max(1).optional().describe('Default label opacity.'),
+    font: FontSchema.optional().describe('Default label font (family / size / weight / style); per-field fallback.'),
   })
   .strict()
-  .describe(
-    'Default style applied to node labels and step labels in this scope.',
-  );
+  .describe('Default style applied to node labels and step labels in this scope.');
 
 /**
  * every arrow 默认样式 schema
@@ -115,16 +104,12 @@ export const __registerChildSchema = (schema: z.ZodType<ScopeChild>): void => {
  */
 export const ScopeSchema = z
   .object({
-    type: z
-      .literal('scope')
-      .describe('Discriminator marking this child as a scope container.'),
+    type: z.literal('scope').describe('Discriminator marking this child as a scope container.'),
     id: z
       .string()
       .min(1)
       .optional()
-      .describe(
-        'Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.',
-      ),
+      .describe('Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.'),
     localNamespace: z
       .boolean()
       .optional()
@@ -152,7 +137,9 @@ export const ScopeSchema = z
     fill: z
       .union([z.string(), PaintSpecSchema])
       .optional()
-      .describe('Cascading default fill (CSS color or PaintSpec: gradient / pattern / image) for inner nodes and paths.'),
+      .describe(
+        'Cascading default fill (CSS color or PaintSpec: gradient / pattern / image) for inner nodes and paths.',
+      ),
     strokeWidth: z
       .number()
 
@@ -164,15 +151,8 @@ export const ScopeSchema = z
       .min(0)
       .max(1)
       .optional()
-      .describe(
-        'Cascading whole-element opacity. Nested scopes replace it rather than compounding it.',
-      ),
-    fillOpacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Cascading fill-only opacity for inner nodes and paths.'),
+      .describe('Cascading whole-element opacity. Nested scopes replace it rather than compounding it.'),
+    fillOpacity: z.number().min(0).max(1).optional().describe('Cascading fill-only opacity for inner nodes and paths.'),
     drawOpacity: z
       .number()
       .min(0)
@@ -188,9 +168,7 @@ export const ScopeSchema = z
     labelDefault: LabelDefaultSchema.optional().describe(
       'Default style applied to node labels and step labels in this scope.',
     ),
-    arrowDefault: ArrowDefaultSchema.optional().describe(
-      'Default style applied to arrows in this scope.',
-    ),
+    arrowDefault: ArrowDefaultSchema.optional().describe('Default style applied to arrows in this scope.'),
     resetStyle: z
       .union([z.boolean(), z.array(z.enum(['node', 'path', 'label', 'arrow']))])
       .optional()
@@ -227,9 +205,7 @@ export const ScopeSchema = z
       .array(
         z.lazy(() => {
           if (!childSchemaRef) {
-            throw new Error(
-              'ScopeSchema: ChildSchema not registered yet; ensure scene.ts loaded',
-            );
+            throw new Error('ScopeSchema: ChildSchema not registered yet; ensure scene.ts loaded');
           }
           return childSchemaRef;
         }),

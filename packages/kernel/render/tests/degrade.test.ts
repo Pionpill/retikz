@@ -1,7 +1,9 @@
-import { describe, expect, it, vi } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
 import type { Scene } from '@retikz/core';
+
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { describe, expect, it, vi } from 'vitest';
+
 import { drawScene } from '../src/canvas';
 
 type CanvasCall = {
@@ -22,9 +24,11 @@ type SpyCanvasContext = Pick<
 
 const createSpyCanvasContext = (): SpyCanvasContext => {
   const calls: Array<CanvasCall> = [];
-  const record = (name: string) => (...args: Array<unknown>) => {
-    calls.push({ name, args });
-  };
+  const record =
+    (name: string) =>
+    (...args: Array<unknown>) => {
+      calls.push({ name, args });
+    };
 
   return {
     calls,
@@ -86,7 +90,12 @@ describe('canvas 降级与边界规格', () => {
 
     expect(() => drawScene(context as unknown as CanvasRenderingContext2D, scene)).not.toThrow();
     expect(warn).toHaveBeenCalledWith(expect.stringMatching(/paint|image|skipped/i));
-    expect(context.calls.map(call => call.name).filter(name => name !== 'save' && name !== 'restore')).toEqual(['beginPath', 'rect', 'setLineDash', 'stroke']);
+    expect(context.calls.map(call => call.name).filter(name => name !== 'save' && name !== 'restore')).toEqual([
+      'beginPath',
+      'rect',
+      'setLineDash',
+      'stroke',
+    ]);
 
     warn.mockRestore();
   });

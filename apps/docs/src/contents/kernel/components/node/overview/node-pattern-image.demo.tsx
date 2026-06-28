@@ -1,5 +1,6 @@
-import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node } from '@retikz/react';
 
 // 自包含 data URI（橙底白圆），免联网，演示 image 填充
 const IMG =

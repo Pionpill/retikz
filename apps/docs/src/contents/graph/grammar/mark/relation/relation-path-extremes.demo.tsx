@@ -1,11 +1,19 @@
 import type { FC } from 'react';
+
 import { Axis, PathMark, Plot, PointMark, RelationMark } from '@retikz/plot-react';
 
 import { pathExtremeRelations } from './relation-path-extremes.data';
 
 const Demo: FC = () => (
   <Plot data={pathExtremeRelations} width={620} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
-    <PathMark x="x" y="y" order="order" stroke="#0f766e" strokeWidth={2.2} anchorId={{ prefix: 'trend', field: 'id' }} />
+    <PathMark
+      x="x"
+      y="y"
+      order="order"
+      stroke="#0f766e"
+      strokeWidth={2.2}
+      anchorId={{ prefix: 'trend', field: 'id' }}
+    />
     <PointMark x="x" y="y" fill="#ffffff" stroke="#0f766e" strokeWidth={1} size={4.5} />
     <RelationMark
       transform={[
@@ -24,7 +32,13 @@ const Demo: FC = () => (
       }}
       path={{
         routing: { kind: 'bend', bendDirection: 'left', bendAngle: 32 },
-        label: { text: { field: 'deltaLabel' }, position: 0.5, side: 'sloped', textColor: '#ea580c', font: { size: 11, weight: 'bold' } },
+        label: {
+          text: { field: 'deltaLabel' },
+          position: 0.5,
+          side: 'sloped',
+          textColor: '#ea580c',
+          font: { size: 11, weight: 'bold' },
+        },
         options: { arrow: '->' },
       }}
     />

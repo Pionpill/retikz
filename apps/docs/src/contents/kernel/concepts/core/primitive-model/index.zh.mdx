@@ -1,6 +1,6 @@
 ---
 title: 图元模型
-description: "像理解 DOM 盒模型一样理解 retikz Node：内容、padding、shape、外接框、boundary 与 anchor 如何分工。"
+description: '像理解 DOM 盒模型一样理解 retikz Node：内容、padding、shape、外接框、boundary 与 anchor 如何分工。'
 ---
 
 图元（primitive）是 retikz 里可被绘制和引用的最小单位。**图元模型**描述一个图元在几何上如何被搭起来——从内容、内框、shape，到外接框、boundary 与 anchor——使它能被测量、布局、连接和引用。它是一层抽象概念，不绑定某个具体组件。
@@ -19,14 +19,14 @@ Node 是这套图元模型最常用的具体实现。你可以把它想成一个
 
 图里从内到外是这套 Node 的分层：最内是内容盒，往外依次是内框、shape 视觉轮廓、外接框、boundary，最外是 anchor。实际渲染时你通常只会看到橙色 shape；其余几层是编译与连线阶段使用的几何信息。
 
-| 层 | 由什么决定 | 影响什么 |
-| --- | --- | --- |
-| 内容盒<br />content box | `text` / children / font | 文本测量的基础尺寸 |
-| 内框<br />inner frame | 文本测量 + `innerXSep` / `innerYSep` + 最小尺寸 | 传给 shape 的基础半轴 |
-| 形状<br />shape | `shape.circumscribe` 与 `shape.emit` | 节点真正画出来的轮廓 |
-| 外接框<br />bounding box | shape 对内框的包围结果（视觉包围矩形，不含 `margin`） | 渲染裁剪的基础；+`margin` 后即布局占位 / viewBox |
-| 连接面<br />boundary | `boundary`，默认跟随 shape | border 锚点（自动连线 / compass / 角度）贴的连接面形状 |
-| 锚点<br />anchor | compass / angle / shape-specific / edge point | 精确引用节点上的点 |
+| 层                       | 由什么决定                                            | 影响什么                                               |
+| ------------------------ | ----------------------------------------------------- | ------------------------------------------------------ |
+| 内容盒<br />content box  | `text` / children / font                              | 文本测量的基础尺寸                                     |
+| 内框<br />inner frame    | 文本测量 + `innerXSep` / `innerYSep` + 最小尺寸       | 传给 shape 的基础半轴                                  |
+| 形状<br />shape          | `shape.circumscribe` 与 `shape.emit`                  | 节点真正画出来的轮廓                                   |
+| 外接框<br />bounding box | shape 对内框的包围结果（视觉包围矩形，不含 `margin`） | 渲染裁剪的基础；+`margin` 后即布局占位 / viewBox       |
+| 连接面<br />boundary     | `boundary`，默认跟随 shape                            | border 锚点（自动连线 / compass / 角度）贴的连接面形状 |
+| 锚点<br />anchor         | compass / angle / shape-specific / edge point         | 精确引用节点上的点                                     |
 
 读这张图的顺序也就是编译顺序：
 
@@ -48,10 +48,10 @@ Node 是这套图元模型最常用的具体实现。你可以把它想成一个
 
 内框决定“这个节点至少要多大”，是后续所有几何的起点：shape 拿它算外接框，连线与 anchor 最终都落在由它派生的边界上。空文本节点也有内框——inner sep 与最小尺寸保证它不会塌成一个点。
 
-| 属性 | 改的是 | 结果 |
-| --- | --- | --- |
-| `padding`（innerSep） | 内容盒到 shape 的距离 | shape 变大，外接框也变大 |
-| `margin`（outerSep） | 连接面外的均匀外偏移（TikZ outer sep） | shape 不变；所有 border 锚点与连线端点外移、布局占位含 margin |
+| 属性                  | 改的是                                 | 结果                                                          |
+| --------------------- | -------------------------------------- | ------------------------------------------------------------- |
+| `padding`（innerSep） | 内容盒到 shape 的距离                  | shape 变大，外接框也变大                                      |
+| `margin`（outerSep）  | 连接面外的均匀外偏移（TikZ outer sep） | shape 不变；所有 border 锚点与连线端点外移、布局占位含 margin |
 
 padding 撑大 shape 本身；margin 不动 shape，而是把节点的外边界（锚点 / 连线 / 占位）整体外推——和 TikZ `outer sep` 一致。缺省 0，不设则零影响。
 
@@ -59,10 +59,10 @@ padding 撑大 shape 本身；margin 不动 shape，而是把节点的外边界�
 
 shape 不是简单的 CSS border-radius。它是一套几何定义：给定内框半轴和参数后，shape 会回答“我要多大的外接框才能装下自己”，并负责画出最终的视觉轮廓。
 
-| shape 类型 | 尺寸来源 | 例子 |
-| --- | --- | --- |
+| shape 类型   | 尺寸来源                  | 例子                                         |
+| ------------ | ------------------------- | -------------------------------------------- |
 | 文本容器形状 | 文字 + padding + 最小尺寸 | rectangle、circle、ellipse、polygon、diamond |
-| 参数驱动形状 | shape params 自己决定几何 | sector、arc、star |
+| 参数驱动形状 | shape params 自己决定几何 | sector、arc、star                            |
 
 <ComponentPreview name="shapes" size="md" hideCode />
 
@@ -86,11 +86,11 @@ shape 不是简单的 CSS border-radius。它是一套几何定义：给定内�
 
 借用其它 boundary 时，retikz 会把它套在当前 Node 的视觉外接框上，不会重新调用那个 boundary shape 的 `circumscribe`。例如 `boundary="circle"` 的半径来自当前外接框的长半轴；它可能伸出外接框，但仍然不参与布局占位。
 
-| 设置 | 改变什么 | 不改变什么 |
-| --- | --- | --- |
-| `shape` | 视觉轮廓、外接框、shape anchor | 节点中心语义 |
-| `boundary` | border 锚点（自动连线 / compass / 角度）贴的连接面形状 | 节点视觉、外接框、布局占位 |
-| 单条边覆盖 boundary | 当前路径端点 | 节点默认设置 |
+| 设置                | 改变什么                                               | 不改变什么                 |
+| ------------------- | ------------------------------------------------------ | -------------------------- |
+| `shape`             | 视觉轮廓、外接框、shape anchor                         | 节点中心语义               |
+| `boundary`          | border 锚点（自动连线 / compass / 角度）贴的连接面形状 | 节点视觉、外接框、布局占位 |
+| 单条边覆盖 boundary | 当前路径端点                                           | 节点默认设置               |
 
 因此，外接框是“渲染 / 视觉包围矩形”（再加 `margin` 即布局占位），连接面更接近“连接用的 hit surface”——都不是“画出来的外壳”。
 
@@ -104,13 +104,13 @@ shape 不是简单的 CSS border-radius。它是一套几何定义：给定内�
 
 Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都可以通过 anchor 找到节点上的稳定位置。
 
-| anchor 类型 | 例子 | 适合用途 |
-| --- | --- | --- |
-| 中心点 | `center` | 对齐、旋转、放射关系 |
-| 方位点 | `north`、`east`、`south-west` | 常规连线和布局 |
-| 角度点 | `'A.35'` / `{ id: 'A', anchor: 35 }` | 沿射线找边界交点 |
-| shape 专属点 | star 的尖角、sector 的圆弧端点 | 复杂形状的语义连接 |
-| 边比例点 | `{ side: 'north', t: 0.25 }` | 表格、泳道、框图边缘定位 |
+| anchor 类型  | 例子                                 | 适合用途                 |
+| ------------ | ------------------------------------ | ------------------------ |
+| 中心点       | `center`                             | 对齐、旋转、放射关系     |
+| 方位点       | `north`、`east`、`south-west`        | 常规连线和布局           |
+| 角度点       | `'A.35'` / `{ id: 'A', anchor: 35 }` | 沿射线找边界交点         |
+| shape 专属点 | star 的尖角、sector 的圆弧端点       | 复杂形状的语义连接       |
+| 边比例点     | `{ side: 'north', t: 0.25 }`         | 表格、泳道、框图边缘定位 |
 
 <ComponentPreview name="anchors" size="lg" hideCode />
 
@@ -118,26 +118,26 @@ Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都�
 
 方位锚点有两套名字：`CompassAnchor` 是 canonical 名称，沿用 TikZ 风格；`WebAnchor` 是面向 Web / CSS 心智的输入别名，编译时归一到对应的 `CompassAnchor`。
 
-| CompassAnchor | 位置 |
-| --- | --- |
-| `center` | 节点几何中心 |
-| `north` / `south` / `east` / `west` | 上 / 下 / 右 / 左 4 个方位的边界点 |
-| `north-east` / `north-west` / `south-east` / `south-west` | 4 个对角方位的边界点 |
+| CompassAnchor                                             | 位置                               |
+| --------------------------------------------------------- | ---------------------------------- |
+| `center`                                                  | 节点几何中心                       |
+| `north` / `south` / `east` / `west`                       | 上 / 下 / 右 / 左 4 个方位的边界点 |
+| `north-east` / `north-west` / `south-east` / `south-west` | 4 个对角方位的边界点               |
 
 内置 [`shape`](/kernel/components/node) 都遵守这套命名，但解析连接面分两类：圆 / 椭圆落在真实曲线上，其余形状（含 diamond 这种 polygon 预设，以及无 compass 的 star / sector / arc）统一落在视觉外接框（AABB）的对应方位上——与 TikZ 把多边形 compass 取在 bbox 上一致：
 
-| | rectangle | circle | ellipse | diamond（polygon） |
-| --- | --- | --- | --- | --- |
-| `north` / 等 4 方位 | 边中点（= AABB 边中点） | 圆周 4 方位 | 椭圆轴端 | AABB 边中点 |
-| `north-east` / 等 4 对角 | 4 角 | 圆周 45° 处 | 椭圆参数 t=π/4 处 | AABB 4 角 |
+|                          | rectangle               | circle      | ellipse           | diamond（polygon） |
+| ------------------------ | ----------------------- | ----------- | ----------------- | ------------------ |
+| `north` / 等 4 方位      | 边中点（= AABB 边中点） | 圆周 4 方位 | 椭圆轴端          | AABB 边中点        |
+| `north-east` / 等 4 对角 | 4 角                    | 圆周 45° 处 | 椭圆参数 t=π/4 处 | AABB 4 角          |
 
 节点 `rotate` 时 9 个锚点跟着旋转。`WebAnchor` 别名归一如下：
 
-| WebAnchor | 等价 CompassAnchor |
-| --- | --- |
+| WebAnchor                           | 等价 CompassAnchor                  |
+| ----------------------------------- | ----------------------------------- |
 | `top` / `bottom` / `right` / `left` | `north` / `south` / `east` / `west` |
-| `top-right` / `top-left` | `north-east` / `north-west` |
-| `bottom-right` / `bottom-left` | `south-east` / `south-west` |
+| `top-right` / `top-left`            | `north-east` / `north-west`         |
+| `bottom-right` / `bottom-left`      | `south-east` / `south-west`         |
 
 <Comparison target="tikz" title="锚点命名">
 
@@ -166,6 +166,8 @@ Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都�
   </LinkedCard>
   <LinkedCard href="/kernel/components/extend/shape-registry">
     <span className="font-semibold">自定义形状</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">补齐外接框 / 射线 / anchor / emit 这套几何回答，注册新 shape</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      补齐外接框 / 射线 / anchor / emit 这套几何回答，注册新 shape
+    </span>
   </LinkedCard>
 </div>

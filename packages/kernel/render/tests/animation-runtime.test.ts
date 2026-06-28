@@ -1,5 +1,7 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { GroupPrim, IRAnimationTrack, RectPrim, Scene, ScenePrimitive } from '@retikz/core';
+
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import {
   createClock,
   prefersReducedMotion,
@@ -20,11 +22,26 @@ const scene = (primitives: Array<ScenePrimitive>, animations?: Array<IRAnimation
   layout,
   ...(animations ? { animations } : {}),
 });
-const rect = (extra: Partial<RectPrim> = {}): RectPrim => ({ type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: '#f00', ...extra });
-const group = (children: Array<ScenePrimitive>, extra: Partial<GroupPrim> = {}): GroupPrim => ({ type: 'group', children, ...extra });
+const rect = (extra: Partial<RectPrim> = {}): RectPrim => ({
+  type: 'rect',
+  x: 0,
+  y: 0,
+  width: 10,
+  height: 10,
+  fill: '#f00',
+  ...extra,
+});
+const group = (children: Array<ScenePrimitive>, extra: Partial<GroupPrim> = {}): GroupPrim => ({
+  type: 'group',
+  children,
+  ...extra,
+});
 const track = (extra: Partial<IRAnimationTrack> = {}): IRAnimationTrack => ({
   property: 'opacity',
-  keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }],
+  keyframes: [
+    { at: 0, value: 0 },
+    { at: 1, value: 1 },
+  ],
   duration: 400,
   ...extra,
 });
@@ -100,7 +117,9 @@ describe('sceneAnimationDurationMs', () => {
   });
 
   it('delay + 多次迭代叠加', () => {
-    expect(sceneAnimationDurationMs(scene([rect({ animations: [track({ duration: 200, delay: 100, iterations: 3 })] })]))).toBe(700);
+    expect(
+      sceneAnimationDurationMs(scene([rect({ animations: [track({ duration: 200, delay: 100, iterations: 3 })] })])),
+    ).toBe(700);
   });
 
   it('多 track 取最大结束时刻（元素级 + 根镜头）', () => {

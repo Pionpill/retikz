@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/schemas';
+
 import type { ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 import { line, move } from '../helpers/path-command-factory';
 
-const findRect = (prims: Array<ScenePrimitive>) =>
-  prims.find(p => p.type === 'rect');
+const findRect = (prims: Array<ScenePrimitive>) => prims.find(p => p.type === 'rect');
 
 const rectSize = (ir: IR) => {
   const r = findRect(compileToScene(ir).primitives);

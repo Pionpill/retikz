@@ -1,8 +1,22 @@
-import { type Position, arcEndPoint, isFiniteNumber } from '@retikz/math';
-import { type AnyCoordinateDefinition, type Cell, type CellGeometry, type CoordinateDefinition, type DimensionRole, type PositionScale, RETIKZ_POLAR_SEGMENT_SAMPLES, type TickSet, cellInterval } from '../../../contract';
+import type { Position } from '@retikz/math';
+
+import { arcEndPoint, isFiniteNumber } from '@retikz/math';
+
+import type {
+  AnyCoordinateDefinition,
+  Cell,
+  CellGeometry,
+  CoordinateDefinition,
+  DimensionRole,
+  PositionScale,
+  TickSet,
+} from '../../../contract';
 import type { GuideContext } from '../../../features';
+import type { Coordinate, Polar1DCoordinate } from '../../../schemas';
+
+import { cellInterval, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../contract';
 import { computePolarCoordinate } from '../../../pipeline';
-import { type Coordinate, PlotCoordinate, PlotScale, type Polar1DCoordinate, Polar1DSchema, Polar2DSchema } from '../../../schemas';
+import { PlotCoordinate, PlotScale, Polar1DSchema, Polar2DSchema } from '../../../schemas';
 import { assertUniqueAxisDimension } from '../shared';
 
 type Polar2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Polar2D }>;
@@ -98,7 +112,8 @@ export type PolarCoordinateSpec = {
  *   frame 同时提供 projectCell，将 x/y 输出区间闭式投影为 sector，供 interval / reference band 使用。
  */
 export const createPolarCoordinate = (input: PolarCoordinateSpec): PolarCoordinateFrame => {
-  const projectPolar = (thetaDeg: number, radius: number): Position | null => polarPoint(input.center, thetaDeg, radius);
+  const projectPolar = (thetaDeg: number, radius: number): Position | null =>
+    polarPoint(input.center, thetaDeg, radius);
   const project = (angleValue: unknown, radiusValue: unknown): Position | null => {
     const theta = input.primary.coordinate(angleValue);
     const radius = input.secondary.coordinate(radiusValue);
@@ -180,7 +195,8 @@ export type Polar1DCoordinateSpec = {
  *   不提供 projectCell；需要面积 cell 时必须使用 polar2D 或自定义带 projectCell 的 frame。
  */
 export const createPolar1DCoordinate = (input: Polar1DCoordinateSpec): Polar1DCoordinateFrame => {
-  const projectPolar = (thetaDeg: number, radius: number): Position | null => polarPoint(input.center, thetaDeg, radius);
+  const projectPolar = (thetaDeg: number, radius: number): Position | null =>
+    polarPoint(input.center, thetaDeg, radius);
   const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
     const theta = input.primary.coordinate(values[0]);
     return projectPolar(theta, input.radius);
@@ -208,7 +224,11 @@ export type PolarVertex = { theta: number; radius: number };
  * @description PolarVertex 保留的是 scale 输出空间的 θ（度）和 r（user units），还不是屏幕点；
  *   path 会先收集顶点，再决定是否按连续角轴 densify 成弧线。非有限值返回 null。
  */
-export const toPolarVertex = (frame: PolarCoordinateFrame, angleValue: unknown, radiusValue: unknown): PolarVertex | null => {
+export const toPolarVertex = (
+  frame: PolarCoordinateFrame,
+  angleValue: unknown,
+  radiusValue: unknown,
+): PolarVertex | null => {
   const theta = frame.primary.coordinate(angleValue);
   const radius = frame.secondary.coordinate(radiusValue);
   if (!isFiniteNumber(theta) || !isFiniteNumber(radius)) return null;
@@ -221,7 +241,10 @@ export const toPolarVertex = (frame: PolarCoordinateFrame, angleValue: unknown, 
  *   使数据空间「常半径变角」的直边在屏幕弯成弧。顶点数 < 2 时直接返回各顶点投影点（不采样）。
  *   调用方只应在 frame.continuousAngle 为 true 时使用；分类角轴的相邻类别应保持弦连接。
  */
-export const densifyPolarSegments = (frame: PolarCoordinateFrame, vertices: ReadonlyArray<PolarVertex>): Array<Position> => {
+export const densifyPolarSegments = (
+  frame: PolarCoordinateFrame,
+  vertices: ReadonlyArray<PolarVertex>,
+): Array<Position> => {
   if (vertices.length < 2) {
     return vertices.map(v => frame.projectPolar(v.theta, v.radius)).filter((p): p is Position => p !== null);
   }
@@ -258,16 +281,23 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     const radialAxis = ctx.axisGuides.find(guide => guide.dimension === 'y');
 
     const angleScale = ctx.buildPositionScale(angleScaleDef, angleValues, [coordinate.startAngle, coordinate.endAngle]);
-    const angularTicks: TickSet | undefined = angularAxis ? ctx.collectAxisTicks('x') ?? angleScale.ticks(angularAxis.tickCount) : undefined;
+    const angularTicks: TickSet | undefined = angularAxis
+      ? (ctx.collectAxisTicks('x') ?? angleScale.ticks(angularAxis.tickCount))
+      : undefined;
     const layout = computePolarCoordinate(
       ctx.width,
       ctx.height,
-      { hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false), angularLabels: angularTicks?.labels ?? [] },
+      {
+        hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false),
+        angularLabels: angularTicks?.labels ?? [],
+      },
       { fontSize: ctx.fontSize, margin: ctx.margin },
     );
     const innerRadiusUnits = coordinate.innerRadius * layout.outerRadius;
     const radiusScale = ctx.buildPositionScale(radiusScaleDef, radiusValues, [innerRadiusUnits, layout.outerRadius]);
-    const radialTicks: TickSet | undefined = radialAxis ? ctx.collectAxisTicks('y') ?? radiusScale.ticks(radialAxis.tickCount) : undefined;
+    const radialTicks: TickSet | undefined = radialAxis
+      ? (ctx.collectAxisTicks('y') ?? radiusScale.ticks(radialAxis.tickCount))
+      : undefined;
     const frame = createPolarCoordinate({
       center: layout.center,
       innerRadius: innerRadiusUnits,
@@ -314,16 +344,28 @@ const polar1DCoordinateDefinition: CoordinateDefinition<Polar1DCoordinate> = {
     const angularAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
 
     const angleScale = ctx.buildPositionScale(angleScaleDef, angleValues, [startAngle, endAngle]);
-    const angularTicks: TickSet | undefined = angularAxis ? ctx.collectAxisTicks('x') ?? angleScale.ticks(angularAxis.tickCount) : undefined;
+    const angularTicks: TickSet | undefined = angularAxis
+      ? (ctx.collectAxisTicks('x') ?? angleScale.ticks(angularAxis.tickCount))
+      : undefined;
     const layout = computePolarCoordinate(
       ctx.width,
       ctx.height,
-      { hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false), angularLabels: angularTicks?.labels ?? [] },
+      {
+        hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false),
+        angularLabels: angularTicks?.labels ?? [],
+      },
       { fontSize: ctx.fontSize, margin: ctx.margin },
     );
     const radius = radiusFraction * layout.outerRadius;
     const continuousAngle = isContinuousAngleScale(angleScaleDef.type);
-    const frame = createPolar1DCoordinate({ center: layout.center, radius, startAngle, endAngle, continuousAngle, primary: angleScale });
+    const frame = createPolar1DCoordinate({
+      center: layout.center,
+      radius,
+      startAngle,
+      endAngle,
+      continuousAngle,
+      primary: angleScale,
+    });
 
     const guidePolarCoordinate = createPolarCoordinate({
       center: layout.center,
@@ -357,4 +399,7 @@ const polar1DCoordinateDefinition: CoordinateDefinition<Polar1DCoordinate> = {
 };
 
 /** 极坐标内置坐标系 definitions。 */
-export const POLAR_COORDINATES: ReadonlyArray<AnyCoordinateDefinition> = [polar2DCoordinateDefinition, polar1DCoordinateDefinition] as ReadonlyArray<AnyCoordinateDefinition>;
+export const POLAR_COORDINATES: ReadonlyArray<AnyCoordinateDefinition> = [
+  polar2DCoordinateDefinition,
+  polar1DCoordinateDefinition,
+] as ReadonlyArray<AnyCoordinateDefinition>;

@@ -1,11 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import { type Report, aggregate } from '../../src/report/aggregate';
+
+import type { Report } from '../../src/report/aggregate';
+
+import { aggregate } from '../../src/report/aggregate';
 import { formatMarkdown } from '../../src/report/format';
 import { type RunRecord } from '../../src/run';
 
 const records: Array<RunRecord> = [
-  { promptId: 'c1', category: 'core', difficulty: 'single', model: 'anthropic:claude-opus-4-8', kIndex: 0, zodOk: true, compileOk: true, l2: null },
-  { promptId: 'c2', category: 'core', difficulty: 'complex', model: 'anthropic:claude-opus-4-8', kIndex: 0, zodOk: false, compileOk: false, failure: { stage: 'zod', reason: 'bad version' }, l2: null },
+  {
+    promptId: 'c1',
+    category: 'core',
+    difficulty: 'single',
+    model: 'anthropic:claude-opus-4-8',
+    kIndex: 0,
+    zodOk: true,
+    compileOk: true,
+    l2: null,
+  },
+  {
+    promptId: 'c2',
+    category: 'core',
+    difficulty: 'complex',
+    model: 'anthropic:claude-opus-4-8',
+    kIndex: 0,
+    zodOk: false,
+    compileOk: false,
+    failure: { stage: 'zod', reason: 'bad version' },
+    l2: null,
+  },
 ];
 
 describe('formatMarkdown', () => {
@@ -29,7 +51,16 @@ describe('formatMarkdown', () => {
 
   it('无失败时不渲染明细段', () => {
     const ok: Array<RunRecord> = [
-      { promptId: 'c1', category: 'core', difficulty: 'single', model: 'm', kIndex: 0, zodOk: true, compileOk: true, l2: null },
+      {
+        promptId: 'c1',
+        category: 'core',
+        difficulty: 'single',
+        model: 'm',
+        kIndex: 0,
+        zodOk: true,
+        compileOk: true,
+        l2: null,
+      },
     ];
     const md = formatMarkdown(aggregate(ok), { generatedAt: 't' });
     expect(md).not.toContain('失败明细');
@@ -53,9 +84,7 @@ describe('formatMarkdown L2', () => {
       assertionsPassed: 3,
       byKind: { textPresent: { passed: 2, total: 2 }, primitiveCount: { passed: 1, total: 2 } },
     },
-    assertionFailures: [
-      { promptId: 'p2', model: 'm', kIndex: 0, kind: 'primitiveCount', actual: 'rect=0' },
-    ],
+    assertionFailures: [{ promptId: 'p2', model: 'm', kIndex: 0, kind: 'primitiveCount', actual: 'rect=0' }],
   };
 
   it('含 L2 段、断言级通过率与断言失败明细', () => {
@@ -67,10 +96,7 @@ describe('formatMarkdown L2', () => {
   });
 
   it('reached=0 时省略 L2 段', () => {
-    const md = formatMarkdown(
-      { ...base, l2: { ...base.l2, reached: 0 }, assertionFailures: [] },
-      { generatedAt: 'x' },
-    );
+    const md = formatMarkdown({ ...base, l2: { ...base.l2, reached: 0 }, assertionFailures: [] }, { generatedAt: 'x' });
     expect(md).not.toContain('L2 语义断言');
   });
 });

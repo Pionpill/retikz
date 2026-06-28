@@ -1,7 +1,9 @@
 import type { IRChild, IRNode } from '@retikz/core';
-import { type CustomMark, type PlotSpec, defineMark } from '@retikz/plot';
-import { Plot } from '@retikz/plot-react';
+import type { CustomMark, PlotSpec } from '@retikz/plot';
 import type { FC } from 'react';
+
+import { defineMark } from '@retikz/plot';
+import { Plot } from '@retikz/plot-react';
 
 import { glyphRows } from './mark-custom.data';
 
@@ -24,7 +26,14 @@ const diamondMark = defineMark<CustomMark>({
     for (const row of rows) {
       const point = frame.projectRoles([row[xField], row[yField]]);
       if (!point) continue;
-      nodes.push({ type: 'node', position: point, shape: 'diamond', minimumSize: 16, fill: 'darkorange', strokeWidth: 0 });
+      nodes.push({
+        type: 'node',
+        position: point,
+        shape: 'diamond',
+        minimumSize: 16,
+        fill: 'darkorange',
+        strokeWidth: 0,
+      });
     }
     return nodes.length === 0 ? null : ({ type: 'scope', children: nodes } satisfies IRChild);
   },
@@ -48,7 +57,14 @@ const spec: PlotSpec = {
 };
 
 const Demo: FC = () => (
-  <Plot spec={spec} data={{ glyphs: glyphRows }} width={420} height={260} markDefinitions={[diamondMark]} style={{ maxWidth: '100%', height: 'auto' }} />
+  <Plot
+    spec={spec}
+    data={{ glyphs: glyphRows }}
+    width={420}
+    height={260}
+    markDefinitions={[diamondMark]}
+    style={{ maxWidth: '100%', height: 'auto' }}
+  />
 );
 
 export default Demo;

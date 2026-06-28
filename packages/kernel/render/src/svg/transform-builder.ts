@@ -32,9 +32,7 @@ export const buildTransform = (
       }
       default: {
         const exhaustive: never = t;
-        throw new Error(
-          `buildTransform: unknown Transform kind: ${String((exhaustive as { kind: string }).kind)}`,
-        );
+        throw new Error(`buildTransform: unknown Transform kind: ${String((exhaustive as { kind: string }).kind)}`);
       }
     }
   }

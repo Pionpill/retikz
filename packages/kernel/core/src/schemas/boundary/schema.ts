@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { ShapeRefSchema } from '../shape';
 
 /** 连接面引用：保留字 'shape'/'circle' 或借用已注册 shape（裸名 / {type, params}） */

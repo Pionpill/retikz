@@ -30,7 +30,10 @@ const Diagram = () => {
 };
 ```
 
-<ComponentAlert title="需要注入 lowerTex" description="$...$ 仅在注入了 lowerTex（React 经 Layout，vanilla 经 toScene/renderToString）时解析；未注入时 $ 一律字面（现有含 $ 的文本零行为变化），含公式的内容降级不渲染并发出诊断 warn，不会崩。" />
+<ComponentAlert
+  title="需要注入 lowerTex"
+  description="$...$ 仅在注入了 lowerTex（React 经 Layout，vanilla 经 toScene/renderToString）时解析；未注入时 $ 一律字面（现有含 $ 的文本零行为变化），含公式的内容降级不渲染并发出诊断 warn，不会崩。"
+/>
 
 ## 行内与 display 公式
 
@@ -49,12 +52,13 @@ const Diagram = () => {
 需要**逐段单独着色 / 样式**时，写显式 `runs`：每个 run 是 `{ text, fill?, font? }` 或 `{ tex, displayMode?, fill? }`：
 
 ```tsx
-<Node
-  text={[{ runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: '（红线长度）' }] }]}
-/>
+<Node text={[{ runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: '（红线长度）' }] }]} />
 ```
 
-<ComponentAlert title="中文注释建议走 text run" description="彩色公式 + 中文注释同一行时，把中文写成 text run（经 measureText 正确度量 CJK），不要塞进 \text{}——MathJax 的 \text 排中文依赖字体、易出豆腐块。" />
+<ComponentAlert
+  title="中文注释建议走 text run"
+  description="彩色公式 + 中文注释同一行时，把中文写成 text run（经 measureText 正确度量 CJK），不要塞进 \text{}——MathJax 的 \text 排中文依赖字体、易出豆腐块。"
+/>
 
 ## 多行公式
 
@@ -83,27 +87,25 @@ import { figure, node, renderToString } from '@retikz/vanilla';
 import { createMathJaxEngine, createLowerTex } from '@retikz/tex';
 
 const lowerTex = createLowerTex(await createMathJaxEngine());
-const fig = figure([
-  node('eq', { position: [0, 0], text: '$\\frac{a}{b} = c$' }),
-]);
+const fig = figure([node('eq', { position: [0, 0], text: '$\\frac{a}{b} = c$' })]);
 
 const svg = renderToString(fig, { lowerTex });
 ```
 
 ## 语法
 
-| 写法 | 含义 |
-| --- | --- |
-| `$...$` | 行内公式（inline 度量，贴文字基线） |
-| `$$...$$` | display 公式（block 度量；独占一个 node 时 = 独立 / 带框公式） |
-| `\$` | 字面美元符号（不作分隔符） |
-| `{ runs: [...] }` | 显式 run 序列（canonical）；每 run 可单独 `fill` / `font` |
+| 写法              | 含义                                                           |
+| ----------------- | -------------------------------------------------------------- |
+| `$...$`           | 行内公式（inline 度量，贴文字基线）                            |
+| `$$...$$`         | display 公式（block 度量；独占一个 node 时 = 独立 / 带框公式） |
+| `\$`              | 字面美元符号（不作分隔符）                                     |
+| `{ runs: [...] }` | 显式 run 序列（canonical）；每 run 可单独 `fill` / `font`      |
 
 ## API 参考
 
-| API | 类型 | 描述 |
-| --- | --- | --- |
-| `useLowerTex`（`@retikz/tex/react`） | `() => LowerTex \| undefined` | React hook：启动 MathJax，返回可注入 `<Layout lowerTex>` 的函数；未就绪时为 `undefined`。 |
-| `createMathJaxEngine` | `() => Promise<MathJaxSvgEngine>` | 创建 MathJax SVG 引擎。 |
-| `createLowerTex` | `(engine) => LowerTex` | 把引擎转换成 core 的 `lowerTex` 注入函数，按 `fontSize\|display\|tex` 缓存。 |
-| `LowerTex`（`@retikz/core`） | `(content, style) => LoweredTex \| null` | core 注入点类型；失败返回 `null`，compile 发出 `TEX_INVALID`。 |
+| API                                  | 类型                                     | 描述                                                                                      |
+| ------------------------------------ | ---------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `useLowerTex`（`@retikz/tex/react`） | `() => LowerTex \| undefined`            | React hook：启动 MathJax，返回可注入 `<Layout lowerTex>` 的函数；未就绪时为 `undefined`。 |
+| `createMathJaxEngine`                | `() => Promise<MathJaxSvgEngine>`        | 创建 MathJax SVG 引擎。                                                                   |
+| `createLowerTex`                     | `(engine) => LowerTex`                   | 把引擎转换成 core 的 `lowerTex` 注入函数，按 `fontSize\|display\|tex` 缓存。              |
+| `LowerTex`（`@retikz/core`）         | `(content, style) => LoweredTex \| null` | core 注入点类型；失败返回 `null`，compile 发出 `TEX_INVALID`。                            |

@@ -1,24 +1,19 @@
+import type { FC, ReactNode, Ref } from 'react';
+
 import { X } from 'lucide-react';
-import { type FC, Fragment, type ReactNode, type Ref, useRef, useState } from 'react';
+import { Fragment, useRef, useState } from 'react';
 
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { cn } from '@/lib/utils';
 
+import type { AlignKey, PreviewAction, PreviewActionContext, PreviewOverlay, RendererMode } from './_shared';
+import type { ComponentRenderSource } from './ComponentRender';
+
 import { HighlightedCode } from '../highlight-code';
 import { CopyButton, RendererModeButton, SourceViewBar, ToolbarIconButton } from './_parts';
-import {
-  type AlignKey,
-  type PreviewAction,
-  type PreviewActionContext,
-  PreviewActionStateContext,
-  type PreviewOverlay,
-  type RendererMode,
-  alignClass,
-  filterDiffByMode,
-} from './_shared';
+import { alignClass, filterDiffByMode, PreviewActionStateContext } from './_shared';
 import { ANIM_PAUSE_ID, buildAnimationActions } from './animation-actions';
-import type { ComponentRenderSource } from './ComponentRender';
 import { DemoRenderer } from './DemoRenderer';
 import { PreviewActionBar } from './PreviewActionBar';
 import { usePanZoom } from './use-pan-zoom';

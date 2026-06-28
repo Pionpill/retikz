@@ -1,8 +1,10 @@
 import { z } from 'zod';
+
 import type { CompositeDefinition } from '../contract/composite';
 import type { IR, IRChild } from '../schemas';
-import { CompileWarningCode } from './constant';
 import type { CompileWarning } from './constant';
+
+import { CompileWarningCode } from './constant';
 
 /** composite 嵌套展开的默认最大深度（防环 / 防失控递归）；可经 CompileOptions.maxCompositeDepth 覆盖 */
 export const DEFAULT_MAX_COMPOSITE_DEPTH = 32;
@@ -44,11 +46,7 @@ const extractKey = (schema: CompositeDefinition['schema']): { namespace: string;
  *   ——这些是"定位 / 布局类"基元，节点引用了不存在的 shape 根本无法布局，必须 fail-fast。两类策略按"数据结构
  *   + 语义分层"区分，不强行统一。
  */
-export const lowerComposites = (
-  ir: IR,
-  composites: Array<CompositeDefinition>,
-  options: LowerOptions,
-): IR => {
+export const lowerComposites = (ir: IR, composites: Array<CompositeDefinition>, options: LowerOptions): IR => {
   const { onWarn, maxDepth = DEFAULT_MAX_COMPOSITE_DEPTH } = options;
   const registry = new Map<string, CompositeDefinition>();
   for (const definition of composites) {

@@ -47,11 +47,11 @@ Send the prompt below to the AI chat panel — the LLM will produce retikz IR / 
 - each function line carries its own name label, edge labels use $...$ formulas ($\sin\alpha$ / $\cos\alpha$ / $\tan\alpha=\frac{\sin\alpha}{\cos\alpha}$)
 - right-hand info box is one Node, mirroring the tikz tutorial's information text: each line's runs mix a colored text run for the line name (red/blue/orange) with a tex run for its value (α=π/6, sin=1/2, cos=√3/2, tan=1/√3), framed by the node's own dashed rectangle`}
   extensions={[
-    "**Switch to an obtuse angle (120°)**: change the angle from 30° to 120° and see what it looks like geometrically when cos goes negative — the sin projection lands on the left side of the y-axis, and the tan tangent flips with it.",
-    "**Draw all six trig functions**: add sec / csc / cot to the same figure following their geometric definitions — sec as the x-axis intercept, csc as the y-axis intercept, cot as the distance from (0, 1) along the horizontal tangent to where the origin ray hits.",
-    "**Side-by-side angle comparison**: render three ComponentPreviews in a row for 30° / 60° / 120° using the same diagram, so the geometric change in sin / cos / tan across angles is visible at a glance.",
+  "**Switch to an obtuse angle (120°)**: change the angle from 30° to 120° and see what it looks like geometrically when cos goes negative — the sin projection lands on the left side of the y-axis, and the tan tangent flips with it.",
+  "**Draw all six trig functions**: add sec / csc / cot to the same figure following their geometric definitions — sec as the x-axis intercept, csc as the y-axis intercept, cot as the distance from (0, 1) along the horizontal tangent to where the origin ray hits.",
+  "**Side-by-side angle comparison**: render three ComponentPreviews in a row for 30° / 60° / 120° using the same diagram, so the geometric change in sin / cos / tan across angles is visible at a glance.",
   ]}
-/>
+  />
 
 ## Steps
 
@@ -108,24 +108,24 @@ The frame is just this node's own `shape="rectangle"` + `dashed` + `stroke="ligh
 
 ## Capabilities
 
-| Component | Role in this example | Main steps |
-| --- | --- | --- |
-| [Circle](/kernel/components/shapes/circle-ellipse) | Unit circle | [1](#step-1--unit-circle), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label) |
-| [Sector](/kernel/components/shapes/arc-sector) | 30° wedge | [4](#step-4--30-wedge--α-label), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |
-| [Grid](/kernel/components/helpers/grid) | Background grid | [3](#step-3--grid--ticks) |
-| [Draw](/kernel/components/draw/overview) | Axes + tick marks + sin/cos/tan colored lines (edge labels use `$...$` formulas) + auxiliary ray | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |
-| [Node](/kernel/components/node/overview) + [`$...$`](/kernel/packages/tex) | Axis x / y, tick fractions, α (inline formulas) + right info box (multi-line `{ runs }` mixing text + formula, per-run color, self-framed) | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label), [7](#step-7--right-hand-multi-color-info-box) |
-| [Coordinate](/kernel/components/node/coordinate) | Named x/y axis endpoints + tan intersection `t` | [2](#step-2--axes--endpoint-labels--named-anchors), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |
+| Component                                                                  | Role in this example                                                                                                                       | Main steps                                                                                                                                                                             |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Circle](/kernel/components/shapes/circle-ellipse)                         | Unit circle                                                                                                                                | [1](#step-1--unit-circle), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label)                                                                                                  |
+| [Sector](/kernel/components/shapes/arc-sector)                             | 30° wedge                                                                                                                                  | [4](#step-4--30-wedge--α-label), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-darkorange-line--auxiliary-ray)                                               |
+| [Grid](/kernel/components/helpers/grid)                                    | Background grid                                                                                                                            | [3](#step-3--grid--ticks)                                                                                                                                                              |
+| [Draw](/kernel/components/draw/overview)                                   | Axes + tick marks + sin/cos/tan colored lines (edge labels use `$...$` formulas) + auxiliary ray                                           | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |
+| [Node](/kernel/components/node/overview) + [`$...$`](/kernel/packages/tex) | Axis x / y, tick fractions, α (inline formulas) + right info box (multi-line `{ runs }` mixing text + formula, per-run color, self-framed) | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label), [7](#step-7--right-hand-multi-color-info-box)                          |
+| [Coordinate](/kernel/components/node/coordinate)                           | Named x/y axis endpoints + tan intersection `t`                                                                                            | [2](#step-2--axes--endpoint-labels--named-anchors), [6](#step-6--tan-α-darkorange-line--auxiliary-ray)                                                                                 |
 
 ## Limitations
 
-| Capability | Plan | Status / fallback |
-| --- | --- | --- |
-| Math y-up axis | 🚧 Planned | scaling itself works via a Scope `scale` transform, but there's no `<Layout>`-level y-up switch yet (a negative `y` scale flips text too); the example writes pixel coordinates with manual y negation |
-| Projection target (`(A \|- B)`) | 🚧 Planned | hand-compute `[cos30 * 100, 0]` |
-| Named path + intersection target | 🚧 Planned | hand-compute `[100, -tan30 * 100]` |
-| LaTeX math (inline / display / framed / mixed) | ✅ Supported | [@retikz/tex](/kernel/packages/tex): `$...$` / `$$...$$` in text, or explicit `{ runs }` with per-run color; used here for x / y, ticks, α, and the legend |
-| Per-run / per-line color | ✅ Supported | explicit `{ runs: [{ tex, fill }, { text }] }`, each segment its own `fill` (see the legend); `\color{}` is still ignored — use the run's `fill` |
+| Capability                                     | Plan         | Status / fallback                                                                                                                                                                                      |
+| ---------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Math y-up axis                                 | 🚧 Planned   | scaling itself works via a Scope `scale` transform, but there's no `<Layout>`-level y-up switch yet (a negative `y` scale flips text too); the example writes pixel coordinates with manual y negation |
+| Projection target (`(A \|- B)`)                | 🚧 Planned   | hand-compute `[cos30 * 100, 0]`                                                                                                                                                                        |
+| Named path + intersection target               | 🚧 Planned   | hand-compute `[100, -tan30 * 100]`                                                                                                                                                                     |
+| LaTeX math (inline / display / framed / mixed) | ✅ Supported | [@retikz/tex](/kernel/packages/tex): `$...$` / `$$...$$` in text, or explicit `{ runs }` with per-run color; used here for x / y, ticks, α, and the legend                                             |
+| Per-run / per-line color                       | ✅ Supported | explicit `{ runs: [{ tex, fill }, { text }] }`, each segment its own `fill` (see the legend); `\color{}` is still ignored — use the run's `fill`                                                       |
 
 ## Further reading
 

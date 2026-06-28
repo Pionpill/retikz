@@ -253,7 +253,8 @@ export const composeSystem = async (
       ? '你是 retikz（TikZ React 适配库）的文档助手。基于下面提供的当前页内容回答用户的问题，回答用中文。需要引用其他文档页时给出对应的 markdown 链接，链接 path 用站内绝对路径（以 / 开头）。'
       : 'You are a documentation assistant for retikz (a TikZ React adapter). Answer user questions based on the current page content provided below. Respond in English. When referencing other documentation pages, include a markdown link using a site-relative path (starting with /).';
 
-  const diagramBlock = '\n\n' + (lang === 'zh' ? diagramProtocolZh(diagramFormatPreference) : diagramProtocolEn(diagramFormatPreference));
+  const diagramBlock =
+    '\n\n' + (lang === 'zh' ? diagramProtocolZh(diagramFormatPreference) : diagramProtocolEn(diagramFormatPreference));
 
   const pageBlock = page ? `\n\n## Current page: ${page.title}\n\n${page.mdx}` : '';
 

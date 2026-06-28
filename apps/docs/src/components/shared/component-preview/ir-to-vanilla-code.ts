@@ -143,7 +143,8 @@ const nodeCode = (node: IRNode, indent: number, ctx: Ctx): string => {
   const config = stripKeys(node, ['type', 'id']);
   const hasConfig = Object.keys(config).length > 0;
   const cfg = formatObject(config, indent);
-  if (node.id !== undefined) return hasConfig ? `node(${formatString(node.id)}, ${cfg})` : `node(${formatString(node.id)})`;
+  if (node.id !== undefined)
+    return hasConfig ? `node(${formatString(node.id)}, ${cfg})` : `node(${formatString(node.id)})`;
   return hasConfig ? `node(${cfg})` : 'node()';
 };
 
@@ -163,7 +164,10 @@ const isWayEllipsePathStep = (step: IREllipsePathStep): boolean =>
   step.startAngle === undefined && step.endAngle === undefined && step.closed === undefined;
 
 const isWayBendStep = (step: IRBendStep): boolean =>
-  step.bendDirection !== undefined && step.outAngle === undefined && step.inAngle === undefined && step.looseness === undefined;
+  step.bendDirection !== undefined &&
+  step.outAngle === undefined &&
+  step.inAngle === undefined &&
+  step.looseness === undefined;
 
 const isWayRepresentableStep = (step: IRStep): boolean => {
   switch (step.kind) {
@@ -266,13 +270,7 @@ export const irToVanillaCode = (ir: IR): string => {
   const configStr = ir.viewBox ? formatObject({ viewBox: ir.viewBox }, 0) : null;
   const hasChildren = ir.children.length > 0;
   const figureArgs =
-    configStr !== null
-      ? hasChildren
-        ? `${configStr}, ${childrenStr}`
-        : configStr
-      : hasChildren
-        ? childrenStr
-        : '';
+    configStr !== null ? (hasChildren ? `${configStr}, ${childrenStr}` : configStr) : hasChildren ? childrenStr : '';
 
   const builders = BUILDER_ORDER.filter(name => ctx.used.has(name));
   const imports = [`import { ${builders.join(', ')} } from '@retikz/vanilla';`];

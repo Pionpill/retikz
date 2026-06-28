@@ -1,5 +1,6 @@
-import { Axis, Plot, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, Plot, PointMark } from '@retikz/plot-react';
 
 import { regionOrders } from './point-transform.data';
 
@@ -12,7 +13,9 @@ const Demo: FC = () => (
       size="totalOrders"
       color="region"
       label="region"
-      transform={[{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'orders', as: 'totalOrders' }] }]}
+      transform={[
+        { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'orders', as: 'totalOrders' }] },
+      ]}
     />
     <Axis dimension="x" />
     <Axis dimension="y" grid />

@@ -168,21 +168,21 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 
 ## 能力
 
-| 组件                                     | 在本例中扮演的角色                                                                                                                               | 主要 step                                                                                                                    |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| [Draw](/kernel/components/draw/overview)   | 全部 12 条连线（2 spine line / 3 子列短 line / 2 quadratic 合并 / 1 推荐虚线 / 2 short dashed / 2 红 X）+ stroke / strokeWidth / dashPattern / arrow | [2](#步骤-2中段-spine--2-条-draw-line), [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x) |
-| [Way 算子](/kernel/components/draw/way)    | `{ curve }` infix 走 quadratic / `{ label }` infix 挂边标注 / 节点 id 自动锚 border                                                              | [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x)                                         |
-| [Node](/kernel/components/node/overview)   | 全部 16 个 roadmap 节点（title / header / required / optional）—— 4 variant 抽成 `RoadmapNode`                                                   | [1](#步骤-1title--roadmapnode-4-variant), [3](#步骤-3两侧色块条--atposition-紧贴堆叠)                                        |
-| [AtPosition](/kernel/concepts/basic/position) | 三个色块段内的紧贴堆叠（`{ direction: 'below', of: prevId }` + 全局 `nodeDistance`）                                                             | [3](#步骤-3两侧色块条--atposition-紧贴堆叠), [4](#步骤-45-路径按钮--curve-合并曲线)                                          |
+| 组件                                          | 在本例中扮演的角色                                                                                                                                   | 主要 step                                                                                                                    |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| [Draw](/kernel/components/draw/overview)      | 全部 12 条连线（2 spine line / 3 子列短 line / 2 quadratic 合并 / 1 推荐虚线 / 2 short dashed / 2 红 X）+ stroke / strokeWidth / dashPattern / arrow | [2](#步骤-2中段-spine--2-条-draw-line), [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x) |
+| [Way 算子](/kernel/components/draw/way)       | `{ curve }` infix 走 quadratic / `{ label }` infix 挂边标注 / 节点 id 自动锚 border                                                                  | [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x)                                         |
+| [Node](/kernel/components/node/overview)      | 全部 16 个 roadmap 节点（title / header / required / optional）—— 4 variant 抽成 `RoadmapNode`                                                       | [1](#步骤-1title--roadmapnode-4-variant), [3](#步骤-3两侧色块条--atposition-紧贴堆叠)                                        |
+| [AtPosition](/kernel/concepts/basic/position) | 三个色块段内的紧贴堆叠（`{ direction: 'below', of: prevId }` + 全局 `nodeDistance`）                                                                 | [3](#步骤-3两侧色块条--atposition-紧贴堆叠), [4](#步骤-45-路径按钮--curve-合并曲线)                                          |
 
 ## 限制
 
-| 能力 | 计划 | 现状 / 兜底 |
-| --- | --- | --- |
-| 数学 y-up 坐标系 | 🚧 未来支持 | 缩放本身可用 Scope 的 `scale` 变换；但 [`<Layout>`](/kernel/components/layout) 还没有「y 轴朝上」开关（`scale` 的 y 取负会连文字翻转），本例直接用 intro.svg 原始像素坐标 |
-| 节点超链接 | 🚧 未来支持 | [`<Node>`](/kernel/components/node/overview) 暂不支持 `href`，intro.svg 的 `<a xlink:href>` 丢失（按钮可见不可点）；需要时外层包 `<a>` 或另放 link 列表 |
-| 节点阴影 / drop shadow | 🚧 未来支持 | [`<Node>`](/kernel/components/node/overview) 暂无 shadow，本例省略 intro.svg 按钮的双 rect 阴影 |
-| 曲线箭头沿 chord 缩短 | 🚧 未来支持 | 当前 arrow shrink 沿弦方向缩短，curve / cubic 箭头偏出边框几像素（直线 / 折角不受影响）；后续改成沿 tangent 缩短 |
+| 能力                   | 计划        | 现状 / 兜底                                                                                                                                                               |
+| ---------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 数学 y-up 坐标系       | 🚧 未来支持 | 缩放本身可用 Scope 的 `scale` 变换；但 [`<Layout>`](/kernel/components/layout) 还没有「y 轴朝上」开关（`scale` 的 y 取负会连文字翻转），本例直接用 intro.svg 原始像素坐标 |
+| 节点超链接             | 🚧 未来支持 | [`<Node>`](/kernel/components/node/overview) 暂不支持 `href`，intro.svg 的 `<a xlink:href>` 丢失（按钮可见不可点）；需要时外层包 `<a>` 或另放 link 列表                   |
+| 节点阴影 / drop shadow | 🚧 未来支持 | [`<Node>`](/kernel/components/node/overview) 暂无 shadow，本例省略 intro.svg 按钮的双 rect 阴影                                                                           |
+| 曲线箭头沿 chord 缩短  | 🚧 未来支持 | 当前 arrow shrink 沿弦方向缩短，curve / cubic 箭头偏出边框几像素（直线 / 折角不受影响）；后续改成沿 tangent 缩短                                                          |
 
 ## 扩展阅读
 

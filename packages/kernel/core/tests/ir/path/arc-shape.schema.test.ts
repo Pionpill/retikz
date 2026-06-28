@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { ArcStepSchema, CirclePathStepSchema, EllipsePathStepSchema, StepSchema } from '../../../src/schemas';
 
 describe('arc / circlePath / ellipsePath schema refinement', () => {
@@ -97,7 +98,9 @@ describe('arc / circlePath / ellipsePath schema refinement', () => {
   });
 
   it('ellipsePath 要求角度同给或同省，并拒绝 partial closed', () => {
-    expect(EllipsePathStepSchema.safeParse({ type: 'step', kind: 'ellipsePath', radiusX: 12, radiusY: 8 }).success).toBe(true);
+    expect(
+      EllipsePathStepSchema.safeParse({ type: 'step', kind: 'ellipsePath', radiusX: 12, radiusY: 8 }).success,
+    ).toBe(true);
     expect(
       EllipsePathStepSchema.safeParse({
         type: 'step',
