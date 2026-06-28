@@ -167,6 +167,8 @@ export type MarkDataView = {
 };
 
 type CoordinateScopePlacement = NonNullable<NonNullable<PlotSpec['composition']>['scopes'][number]['placement']>;
+type SharedScaffold = NonNullable<NonNullable<PlotSpec['composition']>['scaffolds']>[number];
+type ScaffoldTrack = SharedScaffold['tracks'][number];
 
 const relationTargetRoleValues = (
   mark: MarkOperation,
@@ -200,6 +202,8 @@ export type CoordinateScopeRegistryEntry = {
   id: string;
   coordinate: CoordinateOperation;
   placement?: CoordinateScopePlacement;
+  scaffold?: string;
+  track?: string;
 };
 
 export type CoordinateScopeRegistry = {
@@ -209,13 +213,23 @@ export type CoordinateScopeRegistry = {
 
 export const resolveCoordinateScopeRegistry = (node: PlotSpec): CoordinateScopeRegistry => {
   if (node.composition !== undefined) {
+    const scaffoldById = new Map((node.composition.scaffolds ?? []).map(scaffold => [scaffold.id, scaffold] as const));
     return {
       defaultScope: node.composition.defaultScope,
-      scopes: node.composition.scopes.map(scope => ({
-        id: scope.id,
-        coordinate: scope.coordinate,
-        ...(scope.placement !== undefined ? { placement: scope.placement } : {}),
-      })),
+      scopes: node.composition.scopes.map(scope => {
+        const placement = scope.placement;
+        const scaffold = placement?.kind === 'track' ? scaffoldById.get(placement.scaffold) : undefined;
+        const coordinate = scope.coordinate ?? scaffold?.coordinate;
+        if (coordinate === undefined) {
+          throw new Error(`lowerPlots: coordinate scope "${scope.id}" must declare coordinate or inherit one from scaffold`);
+        }
+        return {
+          id: scope.id,
+          coordinate,
+          ...(placement !== undefined ? { placement } : {}),
+          ...(placement?.kind === 'track' ? { scaffold: placement.scaffold, track: placement.track } : {}),
+        };
+      }),
     };
   }
   if (node.coordinate === undefined) {
@@ -538,6 +552,8 @@ export type ResolveFrameParams = {
   margin?: Partial<Margins>;
   /** overlay scope 共享 target scope 的 plotArea；省略时由坐标系自行计算。 */
   plotAreaOverride?: Rect;
+  /** 指定 role 的最终 range；用于 scaffold track 把局部 role 映射进 track band。 */
+  roleRangeOverrides?: Partial<Record<DimensionRole, readonly [number, number]>>;
   /** provenance 上下文（开 → guide 层带 `<plotId>.` id + 来源 meta；undefined → alpha.2 行为） */
   provenance?: ProvenanceContext;
   /** 自定义坐标系 definition 数组（运行时函数，不进 IR）；coordinate {type:<customType>, ...config} 据此解析投影 */
@@ -564,6 +580,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     fontSize,
     margin,
     plotAreaOverride,
+    roleRangeOverrides,
     provenance,
     coordinates,
     scaleRegistry,
@@ -786,6 +803,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     ...(margin !== undefined ? { margin } : {}),
     legendReserve,
     ...(plotAreaOverride !== undefined ? { plotAreaOverride } : {}),
+    ...(roleRangeOverrides !== undefined ? { roleRangeOverrides } : {}),
     ...(provenance !== undefined ? { provenance } : {}),
     collectRoleValues: (role, opts) =>
       collectValues(role, undefined, roleChannelOf(role), opts?.includeBaseline ?? false),
@@ -1311,8 +1329,86 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
   const coordinateScopes = resolveCoordinateScopeRegistry(node);
   const scopeById = new Map(coordinateScopes.scopes.map(scope => [scope.id, scope] as const));
+  const compositionScaffolds = node.composition?.scaffolds ?? [];
+  const scaffoldById = new Map(compositionScaffolds.map(scaffold => [scaffold.id, scaffold] as const));
+  const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
+  const rolesOf = (coordinate: CoordinateOperation): ReadonlySet<DimensionRole> => {
+    const definition = coordinateRegistry.get(coordinate.type);
+    if (definition === undefined) {
+      throw new Error(
+        `lowerPlots: coordinate type "${coordinate.type}" is not registered; pass a CoordinateDefinition via options.coordinates`,
+      );
+    }
+    return new Set(definition.roles);
+  };
+  const assertScaffoldRole = (role: DimensionRole, roles: ReadonlySet<DimensionRole>, scaffoldId: string): void => {
+    if (!roles.has(role)) {
+      throw new Error(`lowerPlots: scaffold "${scaffoldId}" shared role "${role}" is not supported by its coordinate`);
+    }
+  };
+  const assertTrackRole = (role: DimensionRole, roles: ReadonlySet<DimensionRole>, scopeId: string): void => {
+    if (!roles.has(role)) {
+      throw new Error(`lowerPlots: coordinate scope "${scopeId}" track band role "${role}" is not supported by its coordinate`);
+    }
+  };
+  const roleRangeOf = (
+    frameResolution: CoordinateFrameResolution,
+    role: DimensionRole,
+    context: string,
+  ): readonly [number, number] => {
+    const range = frameResolution.frame.roleScales?.[role]?.range();
+    if (range === undefined) {
+      throw new Error(`lowerPlots: ${context} does not expose a scale range for role "${role}"`);
+    }
+    return range;
+  };
+  const bandRangeOf = (range: readonly [number, number], track: ScaffoldTrack): readonly [number, number] => {
+    const delta = range[1] - range[0];
+    return [range[0] + delta * track.band.start, range[0] + delta * track.band.end];
+  };
+  const trackScopesByScaffold = new Map<string, Array<CoordinateScopeRegistryEntry>>();
+  for (const scope of coordinateScopes.scopes) {
+    if (scope.placement?.kind !== 'track') continue;
+    const entries = trackScopesByScaffold.get(scope.placement.scaffold) ?? [];
+    entries.push(scope);
+    trackScopesByScaffold.set(scope.placement.scaffold, entries);
+  }
   const resolvedFrames = new Map<string, CoordinateFrameResolution & { scopeId: string }>();
+  const scaffoldFrames = new Map<string, CoordinateFrameResolution>();
   const resolvingFrames = new Set<string>();
+  const resolveScaffoldFrame = (scaffold: SharedScaffold): CoordinateFrameResolution => {
+    const cached = scaffoldFrames.get(scaffold.id);
+    if (cached !== undefined) return cached;
+    const scaffoldRoles = rolesOf(scaffold.coordinate);
+    for (const role of scaffold.sharedRoles) assertScaffoldRole(role, scaffoldRoles, scaffold.id);
+    for (const track of scaffold.tracks) assertTrackRole(track.band.role, scaffoldRoles, scaffold.id);
+    const scaffoldScopeIds = new Set((trackScopesByScaffold.get(scaffold.id) ?? []).map(scope => scope.id));
+    const scaffoldMarkDataViews = markDataViews.filter(view =>
+      scaffoldScopeIds.has(coordinateScopeIdOf(view.mark, coordinateScopes.defaultScope)),
+    );
+    const scaffoldNode: PlotSpec = {
+      ...node,
+      coordinate: scaffold.coordinate,
+      composition: undefined,
+      marks: scaffoldMarkDataViews.map(view => view.mark),
+      guides: [],
+    };
+    const resolved = resolveFrame({
+      node: scaffoldNode,
+      rows,
+      fieldTypes,
+      width,
+      height,
+      fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+      margin: options.margin,
+      provenance,
+      coordinates: options.coordinates,
+      scaleRegistry,
+      markDataViews: scaffoldMarkDataViews,
+    });
+    scaffoldFrames.set(scaffold.id, resolved);
+    return resolved;
+  };
   const resolveScopedFrame = (scope: CoordinateScopeRegistryEntry): CoordinateFrameResolution & { scopeId: string } => {
     const cached = resolvedFrames.get(scope.id);
     if (cached !== undefined) return cached;
@@ -1324,6 +1420,30 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       scope.placement?.kind === 'overlay'
         ? resolveScopedFrame(scopeById.get(scope.placement.target) ?? scope).plotArea
         : undefined;
+    const trackPlacement = scope.placement?.kind === 'track' ? scope.placement : undefined;
+    const scaffold = trackPlacement !== undefined ? scaffoldById.get(trackPlacement.scaffold) : undefined;
+    const track =
+      scaffold !== undefined && trackPlacement !== undefined
+        ? scaffold.tracks.find(candidate => candidate.id === trackPlacement.track)
+        : undefined;
+    const scaffoldFrame = scaffold !== undefined ? resolveScaffoldFrame(scaffold) : undefined;
+    const roleMarkDataViews: Record<string, Array<MarkDataView>> = {};
+    const roleRangeOverrides: Partial<Record<DimensionRole, readonly [number, number]>> = {};
+    if (scaffold !== undefined && track !== undefined && scaffoldFrame !== undefined) {
+      const scopeRoles = rolesOf(scope.coordinate);
+      const scaffoldScopeIds = new Set((trackScopesByScaffold.get(scaffold.id) ?? []).map(entry => entry.id));
+      const scaffoldMarkDataViews = markDataViews.filter(view =>
+        scaffoldScopeIds.has(coordinateScopeIdOf(view.mark, coordinateScopes.defaultScope)),
+      );
+      for (const role of scaffold.sharedRoles) {
+        assertScaffoldRole(role, scopeRoles, scaffold.id);
+        roleMarkDataViews[role] = scaffoldMarkDataViews;
+        roleRangeOverrides[role] = roleRangeOf(scaffoldFrame, role, `scaffold "${scaffold.id}"`);
+      }
+      assertTrackRole(track.band.role, scopeRoles, scope.id);
+      const baseBandRange = roleRangeOf(scaffoldFrame, track.band.role, `scaffold "${scaffold.id}"`);
+      roleRangeOverrides[track.band.role] = bandRangeOf(baseBandRange, track);
+    }
     const scopedMarkDataViews = markDataViews.filter(
       view => coordinateScopeIdOf(view.mark, coordinateScopes.defaultScope) === scope.id,
     );
@@ -1348,10 +1468,15 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
         margin: options.margin,
         ...(targetPlotArea !== undefined ? { plotAreaOverride: targetPlotArea } : {}),
+        ...(scaffoldFrame !== undefined && (scaffold?.frame ?? 'shared') === 'shared'
+          ? { plotAreaOverride: scaffoldFrame.plotArea }
+          : {}),
+        ...(Object.keys(roleRangeOverrides).length > 0 ? { roleRangeOverrides } : {}),
         provenance,
         coordinates: options.coordinates,
         scaleRegistry,
         markDataViews: scopedMarkDataViews,
+        ...(Object.keys(roleMarkDataViews).length > 0 ? { roleMarkDataViews } : {}),
       }),
     };
     resolvingFrames.delete(scope.id);
@@ -1519,10 +1644,17 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       );
       if (layer === null) return null;
       const scope = scopeById.get(coordinateScopeId);
+      const layerWithTrackMeta =
+        scope?.placement?.kind === 'track' && layer.type === 'scope'
+          ? {
+              ...layer,
+              meta: { ...(layer.meta ?? {}), scaffold: scope.placement.scaffold, track: scope.placement.track },
+            }
+          : layer;
       const declarationOrder = scopeOrderById.get(coordinateScopeId) ?? markIndex;
       const zIndex =
         scope?.placement?.kind === 'overlay' ? (scope.placement.zIndex ?? declarationOrder) : declarationOrder;
-      return { layer, markIndex, zIndex };
+      return { layer: layerWithTrackMeta, markIndex, zIndex };
     })
     .filter((entry): entry is { layer: IRChild; markIndex: number; zIndex: number } => entry !== null);
   const markLayers: Array<IRChild> = markLayerEntries

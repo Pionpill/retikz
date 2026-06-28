@@ -7,7 +7,7 @@ import { GuideSchema } from '../guide';
 import { MarkOperationSchema } from '../mark';
 import { ScaleOperationSchema } from '../scale';
 import { TransformSchema } from '../transform';
-import { FacetEmptyPolicy, FacetScaleSharing, PLOT_NAMESPACE, PlotComposite } from './constants';
+import { FacetEmptyPolicy, FacetScaleSharing, PLOT_NAMESPACE, PlotComposite, ScaffoldFrameMode } from './constants';
 
 const CoordinateScopeRootPlacementSchema = z
   .object({
@@ -57,7 +57,9 @@ export const CoordinateScopePlacementSchema = z
 export const CoordinateScopeSchema = z
   .object({
     id: z.string().min(1).describe('Stable coordinate scope id referenced by marks and axis guides'),
-    coordinate: CoordinateOperationSchema.describe('Coordinate operation owned by this scope'),
+    coordinate: CoordinateOperationSchema.optional().describe(
+      'Coordinate operation owned by this scope; track scopes may omit it to inherit their scaffold coordinate',
+    ),
     placement: CoordinateScopePlacementSchema.optional().describe(
       'Optional placement of this coordinate scope in the plot composition; omit means root placement during normalization',
     ),
@@ -126,6 +128,40 @@ export const FacetGridSchema = z
   })
   .describe('Facet grid generator that derives panel coordinate scopes from data rows');
 
+const ScaffoldTrackBandSchema = z
+  .object({
+    role: z.string().min(1).describe('Coordinate role localized into this track band'),
+    start: z.number().min(0).max(1).describe('Track band start fraction in scaffold-local coordinates'),
+    end: z.number().min(0).max(1).describe('Track band end fraction in scaffold-local coordinates'),
+  })
+  .strict()
+  .describe('Fractional role band occupied by one scaffold track');
+
+export const ScaffoldTrackSchema = z
+  .object({
+    id: z.string().min(1).describe('Stable track id referenced by coordinate scope placement'),
+    band: ScaffoldTrackBandSchema.describe('Local role band assigned to this track'),
+    order: z.number().optional().describe('Optional track ordering hint; omit to use declaration order'),
+  })
+  .strict()
+  .describe('Track registered under a shared coordinate scaffold');
+
+export const SharedScaffoldSchema = z
+  .object({
+    id: z.string().min(1).describe('Stable scaffold id referenced by track scope placement'),
+    coordinate: CoordinateOperationSchema.describe('Base coordinate operation owned by this scaffold'),
+    sharedRoles: z
+      .array(z.string().min(1))
+      .describe('Coordinate roles whose scale domain and range are managed by the scaffold'),
+    frame: z
+      .enum(ScaffoldFrameMode)
+      .optional()
+      .describe('Frame sharing mode for track scopes; omit to share the scaffold frame'),
+    tracks: z.array(ScaffoldTrackSchema).min(1).describe('Tracks mounted on this scaffold'),
+  })
+  .strict()
+  .describe('Shared coordinate scaffold registry entry');
+
 export const CoordinateCompositionSchema = z
   .object({
     defaultScope: z
@@ -140,6 +176,10 @@ export const CoordinateCompositionSchema = z
       .array(FacetGridSchema)
       .optional()
       .describe('Facet grid generators that derive panel coordinate scopes from data rows'),
+    scaffolds: z
+      .array(SharedScaffoldSchema)
+      .optional()
+      .describe('Shared coordinate scaffolds that provide track bands for coordinate scopes'),
   })
   .strict()
   .superRefine((composition, ctx) => {
@@ -155,6 +195,67 @@ export const CoordinateCompositionSchema = z
       }
       ids.add(scope.id);
     }
+    const scaffoldById = new Map<string, NonNullable<typeof composition.scaffolds>[number]>();
+    composition.scaffolds?.forEach((scaffold, scaffoldIndex) => {
+      if (scaffoldById.has(scaffold.id)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['scaffolds', scaffoldIndex, 'id'],
+          message: `duplicate scaffold id "${scaffold.id}"`,
+        });
+      }
+      scaffoldById.set(scaffold.id, scaffold);
+      if (scaffold.sharedRoles.length === 0 && scaffold.frame === ScaffoldFrameMode.Independent) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['scaffolds', scaffoldIndex, 'sharedRoles'],
+          message: `scaffold "${scaffold.id}" with independent frame must declare at least one shared role`,
+        });
+      }
+      const trackIds = new Set<string>();
+      const tracksByRole = new Map<string, Array<(typeof scaffold.tracks)[number]>>();
+      scaffold.tracks.forEach((track, trackIndex) => {
+        if (trackIds.has(track.id)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['scaffolds', scaffoldIndex, 'tracks', trackIndex, 'id'],
+            message: `duplicate track id "${track.id}" in scaffold "${scaffold.id}"`,
+          });
+        }
+        trackIds.add(track.id);
+        if (track.band.start >= track.band.end) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['scaffolds', scaffoldIndex, 'tracks', trackIndex, 'band'],
+            message: `track "${track.id}" band start must be less than end`,
+          });
+        }
+        if (scaffold.sharedRoles.includes(track.band.role)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['scaffolds', scaffoldIndex, 'tracks', trackIndex, 'band', 'role'],
+            message: `track "${track.id}" band role "${track.band.role}" must not appear in sharedRoles`,
+          });
+        }
+        const roleTracks = tracksByRole.get(track.band.role) ?? [];
+        roleTracks.push(track);
+        tracksByRole.set(track.band.role, roleTracks);
+      });
+      for (const [role, tracks] of tracksByRole) {
+        const sorted = [...tracks].sort((a, b) => a.band.start - b.band.start || a.band.end - b.band.end);
+        for (let trackIndex = 1; trackIndex < sorted.length; trackIndex += 1) {
+          const previous = sorted[trackIndex - 1];
+          const current = sorted[trackIndex];
+          if (current.band.start < previous.band.end) {
+            ctx.addIssue({
+              code: 'custom',
+              path: ['scaffolds', scaffoldIndex, 'tracks'],
+              message: `tracks "${previous.id}" and "${current.id}" overlap on band role "${role}"`,
+            });
+          }
+        }
+      }
+    });
     if (!ids.has(composition.defaultScope)) {
       ctx.addIssue({
         code: 'custom',
@@ -164,6 +265,13 @@ export const CoordinateCompositionSchema = z
     }
     for (let index = 0; index < composition.scopes.length; index += 1) {
       const scope = composition.scopes[index];
+      if (scope.placement?.kind !== 'track' && scope.coordinate === undefined) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['scopes', index, 'coordinate'],
+          message: `coordinate scope "${scope.id}" must declare coordinate unless it is mounted on a scaffold track`,
+        });
+      }
       if (scope.placement?.kind === 'overlay' && !ids.has(scope.placement.target)) {
         ctx.addIssue({
           code: 'custom',
@@ -177,6 +285,23 @@ export const CoordinateCompositionSchema = z
           path: ['scopes', index, 'placement', 'target'],
           message: `overlay target "${scope.placement.target}" cannot reference the same coordinate scope`,
         });
+      }
+      if (scope.placement?.kind === 'track') {
+        const placement = scope.placement;
+        const scaffold = scaffoldById.get(placement.scaffold);
+        if (scaffold === undefined) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['scopes', index, 'placement', 'scaffold'],
+            message: `track placement scaffold "${placement.scaffold}" does not reference a registered scaffold`,
+          });
+        } else if (!scaffold.tracks.some(track => track.id === placement.track)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['scopes', index, 'placement', 'track'],
+            message: `track placement track "${placement.track}" does not reference a track on scaffold "${placement.scaffold}"`,
+          });
+        }
       }
     }
     const overlayTargetOf = new Map(

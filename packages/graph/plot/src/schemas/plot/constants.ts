@@ -36,3 +36,17 @@ export const FacetScaleSharing = {
 
 /** 分面 scale domain 共享模式取值。 */
 export type FacetScaleSharingValue = ValueOf<typeof FacetScaleSharing>;
+
+/**
+ * scaffold frame 共享模式。
+ * @description shared 表示 track scope 共享 scaffold 的 frame / bbox；independent 表示只复用 scaffold registry。
+ */
+export const ScaffoldFrameMode = {
+  /** 共享 scaffold frame / bbox。 */
+  Shared: 'shared',
+  /** 各 track scope 独立解析自己的 frame。 */
+  Independent: 'independent',
+} as const;
+
+/** scaffold frame 共享模式取值。 */
+export type ScaffoldFrameModeValue = ValueOf<typeof ScaffoldFrameMode>;
