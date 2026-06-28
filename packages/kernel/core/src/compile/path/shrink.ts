@@ -4,12 +4,13 @@ import type { ArrowDefinition, ArrowEmitContext } from '../../contract/arrow';
 import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathCommand } from '../../primitive';
 import type { IRArrowDetail, IRArrowEndDetail, IRArrowMark, IRPosition } from '../../schemas';
 
+import { providerDefinitionOf } from '../../providers/registry';
 import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH, DEFAULT_ARROW_SHAPE } from '../../schemas';
 import { validateMarkerPrimitives } from '../marker-prim';
 import { shiftToward } from './anchor';
 
-/** 有效 arrow 表：内置 8 + 注入（同名注入覆盖内置） */
-export type EffectiveArrows = Record<string, ArrowDefinition>;
+/** 有效 arrow 表：内置 8 + 注入 */
+export type EffectiveArrows = ReadonlyMap<string, ArrowDefinition>;
 
 /** 默认 baseSize（marker 局部基准边长，viewBox `0 0 baseSize baseSize`） */
 const ARROW_GEOMETRY_BASE_SIZE = 10;
@@ -32,11 +33,8 @@ type ResolvedArrowVisual = {
 };
 
 /** 查 effective 表取 def；未注册名编译期 throw（消息含字母序可用名列表） */
-const lookupArrowDef = (shape: string, effective: EffectiveArrows): ArrowDefinition => {
-  if (Object.prototype.hasOwnProperty.call(effective, shape)) return effective[shape];
-  const available = Object.keys(effective).sort().join(', ');
-  throw new Error(`Unknown arrow shape '${shape}'; available: ${available}`);
-};
+const lookupArrowDef = (shape: string, effective: EffectiveArrows): ArrowDefinition =>
+  providerDefinitionOf(effective, shape, { capability: 'arrow shape', optionName: 'arrows' });
 
 /**
  * 端点级视觉输入：顶层默认 ⊕ end-side override（逐字段 merge）

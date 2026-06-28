@@ -28,6 +28,7 @@ import {
   lineSegmentSample,
   quadSegmentSample,
 } from '../../geometry/segment';
+import { providerDefinitionOf } from '../../providers/registry';
 import { JsonObjectSchema } from '../../schemas';
 import { resolveShadow } from '../effects';
 import { resolvePosition } from '../position';
@@ -94,7 +95,7 @@ type RibbonCrossSection = {
 };
 
 type RibbonEmitOptions = EmitPathWarnHook & {
-  ribbonWidthProfiles?: Partial<Record<string, RibbonWidthProfileDefinition>>;
+  ribbonWidthProfiles?: ReadonlyMap<string, RibbonWidthProfileDefinition>;
 };
 
 const stripStepLabel = (step: IRStep): IRStep => {
@@ -200,7 +201,7 @@ const interpolate = (a: number, b: number, t: number, mode: 'linear' | 'smooth' 
 
 const widthFunction = (
   width: IRRibbonWidth,
-  profiles: Partial<Record<string, RibbonWidthProfileDefinition>>,
+  profiles: ReadonlyMap<string, RibbonWidthProfileDefinition>,
   totalLength: number,
 ): ((offset: number) => number) => {
   if (typeof width === 'number') {
@@ -228,11 +229,10 @@ const widthFunction = (
     };
   }
 
-  const profile = profiles[width.name];
-  if (profile === undefined) {
-    const available = Object.keys(profiles).sort().join(', ') || '(none)';
-    throw new Error(`Ribbon width profile "${width.name}" is not registered. Available profiles: ${available}.`);
-  }
+  const profile = providerDefinitionOf(profiles, width.name, {
+    capability: 'ribbon width profile',
+    optionName: 'ribbonWidthProfiles',
+  });
   const rawParams = width.params ?? {};
   const params = profile.paramsSchema ? profile.paramsSchema.parse(rawParams) : JsonObjectSchema.parse(rawParams);
   JsonObjectSchema.parse(params);
@@ -245,7 +245,7 @@ const widthFunction = (
 
 const centerlineWidthFunction = (
   ribbon: RibbonLike,
-  profiles: Partial<Record<string, RibbonWidthProfileDefinition>>,
+  profiles: ReadonlyMap<string, RibbonWidthProfileDefinition>,
   totalLength: number,
 ): ((offset: number) => number) => {
   if (ribbon.width !== undefined) {
@@ -1105,7 +1105,7 @@ export const emitRibbonPrimitive = (
   if (!Number.isFinite(totalLength) || totalLength <= 0) {
     throw new Error('Ribbon centerline has zero length; at least one nonzero segment is required.');
   }
-  const widthAt = centerlineWidthFunction(ribbon, options.ribbonWidthProfiles ?? {}, totalLength);
+  const widthAt = centerlineWidthFunction(ribbon, options.ribbonWidthProfiles ?? new Map(), totalLength);
   const samples = resolveSampleCount(ribbon.samples, ribbon.sampling, totalLength);
   const sampleCount = samples ?? (centerlineWidthRequiresSampling(ribbon) ? DEFAULT_RIBBON_SAMPLES : undefined);
   const outline =

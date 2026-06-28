@@ -546,8 +546,9 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
     };
     const path = findPathPrim(
       compileToScene(ir, {
-        arrows: {
-          customOpen: {
+        arrows: [
+          {
+            name: 'customOpen',
             hollow: true,
             lineContactX: 1,
             tipX: 9,
@@ -563,7 +564,7 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
               },
             ],
           },
-        },
+        ],
       }).primitives,
     );
     const last = path.commands[path.commands.length - 1];

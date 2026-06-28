@@ -182,7 +182,8 @@ describe('resolveEdgePoint 边上比例点（ADR-02）', () => {
 
   it('不支持 edgePoint 的自定义 shape → 抛明确错', () => {
     const noEdge: ShapeDefinition = defineShape({
-      paramsSchema: z.strictObject({}),
+      name: 'noEdge',
+paramsSchema: z.strictObject({}),
       circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
       boundaryPoint: r => [r.x, r.y],
       anchor: (r, name) => (name === 'center' ? [r.x, r.y] : undefined),

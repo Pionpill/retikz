@@ -620,7 +620,7 @@ describe('compile ribbon', () => {
           samples: 2,
         }),
       ]),
-      { ribbonWidthProfiles: { taper }, padding: 0 },
+      { ribbonWidthProfiles: [taper], padding: 0 },
     );
     const prim = pathPrim(compiled.primitives[0]);
 
@@ -640,7 +640,7 @@ describe('compile ribbon', () => {
 
     expect(() =>
       compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'bad' } })]), {
-        ribbonWidthProfiles: { bad },
+        ribbonWidthProfiles: [bad],
       }),
     ).toThrow(/profile "bad"/);
   });

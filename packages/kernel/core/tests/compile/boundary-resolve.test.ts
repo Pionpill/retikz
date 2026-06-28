@@ -6,7 +6,7 @@ import { boundaryKey, resolveBoundary } from '../../src/compile/boundary';
 import { ellipse, rectangle } from '../../src/providers/shape';
 
 const visualRect: Rect = { x: 0, y: 0, width: 40, height: 20, rotate: 0 };
-const registry = { rectangle, ellipse };
+const registry = [rectangle, ellipse];
 
 describe('resolveBoundary', () => {
   it("'shape' / undefined → visual def + rect", () => {
@@ -31,8 +31,8 @@ describe('resolveBoundary', () => {
     expect(r.def).toBe(ellipse);
   });
   it('reserved keyword beats registered same-name shape', () => {
-    const fakeCircle = { ...ellipse };
-    const r = resolveBoundary('circle', rectangle, visualRect, {}, { ...registry, circle: fakeCircle });
+    const fakeCircle = { ...ellipse, name: 'circle' };
+    const r = resolveBoundary('circle', rectangle, visualRect, {}, [...registry, fakeCircle]);
     expect(r.def).toBe(ellipse);
     expect(r.rect.height).toBe(40);
   });

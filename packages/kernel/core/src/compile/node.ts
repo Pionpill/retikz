@@ -4,6 +4,7 @@ import type { ShapeDefinition, ShapeStyle } from '../contract/shape';
 import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';
 import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
+import type { ProviderCollection } from '../providers/registry';
 import type {
   IRAnimationTrack,
   IRBoundary,
@@ -29,7 +30,8 @@ import type { LaidLine, LineLayoutContext } from './text-layout';
 import type { FontSpec, TextMeasurer } from './text-metrics';
 
 import { normalizeCompassAnchor } from '../geometry/anchor';
-import { BUILTIN_SHAPES } from '../providers/shape';
+import { providerDefinitionOf } from '../providers/registry';
+import { resolveShapeRegistry } from '../providers/shape';
 import { JsonObjectSchema } from '../schemas';
 import { resolveBoundary } from './boundary';
 import { CompileWarningCode } from './constant';
@@ -242,7 +244,7 @@ export type NodeLayout = {
   /** 时间轴动画 tracks（来自 IR `node.animations`）；emit 时原样 stamp 到 node 的 top-level 图元，renderer 播放 / 降级 */
   animations?: Array<IRAnimationTrack>;
   /** 构建本 layout 的 shape 注册表引用——借用连接面（borrowed boundary）查表用 */
-  shapes: Record<string, ShapeDefinition>;
+  shapes: ProviderCollection<ShapeDefinition>;
 };
 
 /** 节点附属标签 layout（layoutNode 已合并默认值与样式继承） */
@@ -513,7 +515,7 @@ export const layoutNode = (
   nodeDistance?: number,
   scopeChain: ReadonlyArray<Transform> = [],
   labelDefault?: IRLabelDefault,
-  shapes: Record<string, ShapeDefinition> = BUILTIN_SHAPES,
+  shapes: ProviderCollection<ShapeDefinition> = resolveShapeRegistry(),
   resolveBetweenGlobal?: ResolveBetweenGlobal,
   texLowering?: TexLoweringContext,
 ): NodeLayout => {
@@ -521,10 +523,7 @@ export const layoutNode = (
   const { type: shapeName, params: rawShapeParams } = normalizeShape(node.shape);
   // own-property 校验：既得到 `ShapeDefinition | undefined` 类型（让未注册分支成立），又避开
   // `'toString'` 等原型链 key 被 Record 索引误命中（开放字符串 shape 名的边界安全）
-  const shapeDef = Object.prototype.hasOwnProperty.call(shapes, shapeName) ? shapes[shapeName] : undefined;
-  if (!shapeDef) {
-    throw new Error(`Unknown shape '${shapeName}'; registered shapes: ${Object.keys(shapes).sort().join(', ')}`);
-  }
+  const shapeDef = providerDefinitionOf(shapes, shapeName, { capability: 'shape', optionName: 'shapes' });
   // 双护栏（抄 path generator）：① paramsSchema.parse 校验形状字段；② JsonObjectSchema.parse 守 JSON-safe。
   // JSON-safe 这道跑在**原始 params** 上——宽松 schema（如 `z.object({}).passthrough()`）会在 parse 时
   // 静默剥掉 `undefined` 值的键，若只校验其输出就漏过非 JSON 输入；校验原始入参才能稳拦 function / undefined。

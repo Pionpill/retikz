@@ -1,8 +1,10 @@
 import type { ShapeDefinition } from '../contract/shape';
 import type { Rect } from '../geometry/rect';
+import type { ProviderCollection } from '../providers/registry';
 import type { IRBoundary } from '../schemas';
 import type { IRJsonObject } from '../schemas/json';
 
+import { providerDefinitionOf } from '../providers/registry';
 import { ellipse, rectangle } from '../providers/shape';
 
 /** 保留字：连接面 = 节点自身视觉形状 */
@@ -28,7 +30,7 @@ export const resolveBoundary = (
   visualDef: ShapeDefinition,
   visualRect: Rect,
   visualParams: IRJsonObject,
-  registry: Record<string, ShapeDefinition>,
+  registry: ProviderCollection<ShapeDefinition>,
 ): { def: ShapeDefinition; rect: Rect; params: IRJsonObject } => {
   if (boundary === undefined || boundary === SELF) {
     return { def: visualDef, rect: visualRect, params: visualParams };
@@ -44,12 +46,7 @@ export const resolveBoundary = (
   }
   const type = typeof boundary === 'string' ? boundary : boundary.type;
   const rawParams = typeof boundary === 'string' ? {} : (boundary.params ?? {});
-  const def = Object.prototype.hasOwnProperty.call(registry, type) ? registry[type] : undefined;
-  if (!def) {
-    throw new Error(
-      `Unknown connection surface '${type}'; reserved: shape/circle, registered: ${Object.keys(registry).sort().join(', ')}`,
-    );
-  }
+  const def = providerDefinitionOf(registry, type, { capability: 'connection surface', optionName: 'shapes' });
   const params = def.paramsSchema.parse(rawParams);
   return { def, rect: visualRect, params };
 };

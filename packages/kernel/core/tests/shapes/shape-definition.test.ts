@@ -100,6 +100,7 @@ describe('emit runs in axis-aligned space and returns Iterable<ScenePrimitive>',
 describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
   const createPolygonShape = (): ShapeDefinition =>
     defineShape({
+      name: 'customPolygon',
       paramsSchema: z.strictObject({}),
       circumscribe: (hw, hh) => {
         const r = Math.sqrt(hw * hw + hh * hh);
