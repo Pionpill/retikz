@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { IR } from '../../src/schemas';
-import { line, move } from '../helpers/path-command-factory';
+
+import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
+import { line, move } from '../helpers/path-command-factory';
 
 describe('Coordinate placeholder', () => {
   it('coordinate 自身不发任何 primitive', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [
-        { type: 'coordinate', id: 'm', position: [3, 2] },
-      ],
+      children: [{ type: 'coordinate', id: 'm', position: [3, 2] }],
     };
     const scene = compileToScene(ir);
     expect(scene.primitives).toHaveLength(0);
@@ -113,9 +113,7 @@ describe('Coordinate placeholder', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [
-        { type: 'coordinate', id: 'b', position: { direction: 'right', of: 'a' } },
-      ],
+      children: [{ type: 'coordinate', id: 'b', position: { direction: 'right', of: 'a' } }],
     };
     expect(() => compileToScene(ir)).toThrow(/Cannot resolve position for coordinate/);
   });

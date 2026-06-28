@@ -1,8 +1,21 @@
-import { type Position, isFiniteNumber } from '@retikz/math';
-import { type AnyCoordinateDefinition, type Cell, type CellGeometry, type CoordinateDefinition, type DimensionRole, type TickSet, cellInterval } from '../../../contract';
+import type { Position } from '@retikz/math';
+
+import { isFiniteNumber } from '@retikz/math';
+
+import type {
+  AnyCoordinateDefinition,
+  Cell,
+  CellGeometry,
+  CoordinateDefinition,
+  DimensionRole,
+  TickSet,
+} from '../../../contract';
 import type { GuideContext } from '../../../features';
+import type { Ternary2DCoordinate } from '../../../schemas';
+
+import { cellInterval } from '../../../contract';
 import { computeTernaryFrame } from '../../../pipeline';
-import { PlotCoordinate, PlotScale, type Ternary2DCoordinate, Ternary2DSchema } from '../../../schemas';
+import { PlotCoordinate, PlotScale, Ternary2DSchema } from '../../../schemas';
 import { assertUniqueAxisDimension } from '../shared';
 
 /** 空刻度集：三角 guide 的 x/y 位置 scale 占位不会被实际读取。 */
@@ -25,7 +38,12 @@ const sortedInterval = (interval: [number, number]): [number, number] =>
   interval[0] <= interval[1] ? interval : [interval[1], interval[0]];
 
 /** 在 barycentric 多边形边上求与某个分量边界的交点。 */
-const interpolateBarycentric = (a: BarycentricPoint, b: BarycentricPoint, roleIndex: number, boundary: number): BarycentricPoint => {
+const interpolateBarycentric = (
+  a: BarycentricPoint,
+  b: BarycentricPoint,
+  roleIndex: number,
+  boundary: number,
+): BarycentricPoint => {
   const delta = b[roleIndex] - a[roleIndex];
   if (Math.abs(delta) < TERNARY_EPSILON) return a;
   const t = (boundary - a[roleIndex]) / delta;
@@ -63,7 +81,11 @@ const clampUnitInterval = (interval: [number, number]): [number, number] => {
  * @description 这是三元坐标专属的 barycentric clipping；通用 cell 模块只保存 cell 数据结构。
  */
 const ternaryCellContour = (cell: Cell, vertices: TernaryVertices): Array<Position> => {
-  const intervals = [clampUnitInterval(cellInterval(cell, 'x')), clampUnitInterval(cellInterval(cell, 'y')), clampUnitInterval(cellInterval(cell, 'z'))];
+  const intervals = [
+    clampUnitInterval(cellInterval(cell, 'x')),
+    clampUnitInterval(cellInterval(cell, 'y')),
+    clampUnitInterval(cellInterval(cell, 'z')),
+  ];
   if (intervals.some(([lo, hi]) => lo > hi)) return [];
   let polygon: Array<BarycentricPoint> = [
     [1, 0, 0],
@@ -117,7 +139,9 @@ export const createTernary2DCoordinate = (vertices: TernaryVertices): Ternary2DC
     }
     // 各分量有限但和上溢 Infinity（分量数量级过大）→ 归一化系数塌成 0、点静默落原点；fail-loud 不静默出怪图
     if (!Number.isFinite(sum)) {
-      throw new Error(`lowerPlots: ternary coordinate components overflow when summed (got x=${x}, y=${y}, z=${z}); use proportions or smaller magnitudes`);
+      throw new Error(
+        `lowerPlots: ternary coordinate components overflow when summed (got x=${x}, y=${y}, z=${z}); use proportions or smaller magnitudes`,
+      );
     }
     const nx = x / sum;
     const ny = y / sum;
@@ -141,9 +165,18 @@ const ternary2DCoordinateDefinition: CoordinateDefinition<Ternary2DCoordinate> =
     assertUniqueAxisDimension(ctx.axisGuides);
     const hasAxis = ctx.axisGuides.length > 0;
     const showAnyLabels = ctx.axisGuides.some(guide => guide.tickLabels !== false);
-    const layout = computeTernaryFrame(ctx.width, ctx.height, { hasAxis, labels: hasAxis && showAnyLabels ? TERNARY_TICKS.labels : [] }, { fontSize: ctx.fontSize, margin: ctx.margin });
+    const layout = computeTernaryFrame(
+      ctx.width,
+      ctx.height,
+      { hasAxis, labels: hasAxis && showAnyLabels ? TERNARY_TICKS.labels : [] },
+      { fontSize: ctx.fontSize, margin: ctx.margin },
+    );
     const frame = createTernary2DCoordinate(layout.vertices);
-    const placeholderScale = ctx.buildPositionScale({ type: PlotScale.Linear, name: '__ternary', domain: [0, 1] }, [], [0, 1]);
+    const placeholderScale = ctx.buildPositionScale(
+      { type: PlotScale.Linear, name: '__ternary', domain: [0, 1] },
+      [],
+      [0, 1],
+    );
     const guideContext: GuideContext = {
       plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
       projectX: placeholderScale,
@@ -165,4 +198,6 @@ const ternary2DCoordinateDefinition: CoordinateDefinition<Ternary2DCoordinate> =
 };
 
 /** 三元内置坐标系 definitions。 */
-export const TERNARY_COORDINATES: ReadonlyArray<AnyCoordinateDefinition> = [ternary2DCoordinateDefinition] as ReadonlyArray<AnyCoordinateDefinition>;
+export const TERNARY_COORDINATES: ReadonlyArray<AnyCoordinateDefinition> = [
+  ternary2DCoordinateDefinition,
+] as ReadonlyArray<AnyCoordinateDefinition>;

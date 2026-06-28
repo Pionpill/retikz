@@ -8,23 +8,20 @@
  *   - 交互：内层 `<Scope>` 覆盖 / 图元显式属性胜出 / 内层 `<Scope resetStyle>` 屏障切断继承
  *   断言层：wrapRootScope（Layout 实际调用的合成函数）+ buildIR 出 IR 形态；compileToScene 出已解析 primitive 样式
  */
+import type { IR } from '@retikz/core';
+import type { EllipsePrim, PathPrim, RectPrim, ScenePrimitive, TextPrim } from '@retikz/core';
 import type { ReactNode } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { compileToScene } from '@retikz/core';
 import { SceneSchema } from '@retikz/core';
-import type { IR } from '@retikz/core';
-import type {
-  EllipsePrim,
-  PathPrim,
-  RectPrim,
-  ScenePrimitive,
-  TextPrim,
-} from '@retikz/core';
-import { Draw, EdgeLabel, Layout, Node, Scope, Step } from '../../src';
-import { Path } from '../../src/kernel/Path';
-import { buildIR, wrapRootScope } from '../../src/kernel/builder';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import type { ScopeStyleProps } from '../../src/kernel/_fields';
+
+import { Draw, EdgeLabel, Layout, Node, Scope, Step } from '../../src';
+import { buildIR, wrapRootScope } from '../../src/kernel/builder';
+import { Path } from '../../src/kernel/Path';
 
 // --- helpers ---------------------------------------------------------------
 
@@ -39,8 +36,7 @@ const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
 };
 
 /** 复刻 Layout 的 IR 构造：wrapRootScope（按需包合成根 Scope）→ buildIR */
-const layoutIR = (style: ScopeStyleProps, children: ReactNode): IR =>
-  buildIR(wrapRootScope(children, style));
+const layoutIR = (style: ScopeStyleProps, children: ReactNode): IR => buildIR(wrapRootScope(children, style));
 
 /** Layout 流水线编译后的全部叶子 primitive */
 const layoutPrims = (style: ScopeStyleProps, children: ReactNode): Array<ScenePrimitive> =>
@@ -51,17 +47,19 @@ const rectOf = (prims: Array<ScenePrimitive>): RectPrim | undefined =>
 const ellipseOf = (prims: Array<ScenePrimitive>): EllipsePrim | undefined =>
   prims.find((p): p is EllipsePrim => p.type === 'ellipse');
 const linePathOf = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
-  prims.find(
-    (p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
-  );
+  prims.find((p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'));
 const textWith = (prims: Array<ScenePrimitive>, content: string): TextPrim | undefined =>
   prims.find((p): p is TextPrim => p.type === 'text' && p.lines[0]?.text === content);
 
 /** 两端点 + 一条 Draw，供 path / 边 label 级联测试复用 */
 const twoNodesAndDraw = (drawProps: Record<string, unknown> = {}): ReactNode => (
   <>
-    <Node id="a" position={[0, 0]}>a</Node>
-    <Node id="b" position={[80, 0]}>b</Node>
+    <Node id="a" position={[0, 0]}>
+      a
+    </Node>
+    <Node id="b" position={[80, 0]}>
+      b
+    </Node>
     <Draw way={['a', 'b']} {...drawProps} />
   </>
 );
@@ -78,7 +76,9 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
   it('layout_nodedefault_inherits：nodeDefault={{fill, stroke:none}} → 子 Node 未单设时继承', () => {
     const prims = layoutPrims(
       { nodeDefault: { fill: 'lightblue', stroke: 'none' } },
-      <Node id="A" position={[0, 0]}>A</Node>,
+      <Node id="A" position={[0, 0]}>
+        A
+      </Node>,
     );
     const rect = rectOf(prims);
     expect(rect?.fill).toBe('lightblue');
@@ -86,10 +86,7 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
   });
 
   it('layout_pathdefault_inherits：pathDefault={{strokeWidth:5, lineCap:round}} → 子 Draw 继承', () => {
-    const prims = layoutPrims(
-      { pathDefault: { strokeWidth: 5, lineCap: 'round' } },
-      twoNodesAndDraw(),
-    );
+    const prims = layoutPrims({ pathDefault: { strokeWidth: 5, lineCap: 'round' } }, twoNodesAndDraw());
     const path = linePathOf(prims);
     expect(path?.strokeWidth).toBe(5);
     expect(path?.strokeLinecap).toBe('round');
@@ -104,7 +101,9 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
     // 端到端：真实 <Layout> 组件渲染也应把主色透出到 SVG
     const svg = renderToStaticMarkup(
       <Layout color="blue">
-        <Node id="A" position={[0, 0]}>A</Node>
+        <Node id="A" position={[0, 0]}>
+          A
+        </Node>
       </Layout>,
     );
     expect(svg).toContain('blue');
@@ -114,8 +113,12 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
     const prims = layoutPrims(
       { labelDefault: { textColor: 'green' } },
       <>
-        <Node id="a" position={[0, 0]}>a</Node>
-        <Node id="b" position={[80, 0]}>b</Node>
+        <Node id="a" position={[0, 0]}>
+          a
+        </Node>
+        <Node id="b" position={[80, 0]}>
+          b
+        </Node>
         <Path>
           <Step kind="move" to="a" />
           <Step kind="line" to="b">
@@ -136,8 +139,12 @@ describe('边界：无样式 / 空 children / 单通道', () => {
   it('layout_no_style_prop_ir_unchanged：不带样式 prop → IR 与 buildIR(children) 逐字段一致（不包空 scope）', () => {
     const children = (
       <>
-        <Node id="A" position={[0, 0]}>A</Node>
-        <Node id="B" position={[80, 0]}>B</Node>
+        <Node id="A" position={[0, 0]}>
+          A
+        </Node>
+        <Node id="B" position={[80, 0]}>
+          B
+        </Node>
       </>
     );
     const wrapped = layoutIR({}, children);
@@ -155,12 +162,13 @@ describe('边界：无样式 / 空 children / 单通道', () => {
   });
 
   it('layout_empty_object_default_no_wrap：空对象 default（nodeDefault={{}}）不携带样式指令 → 不包合成 scope', () => {
-    const children = <Node id="A" position={[0, 0]}>A</Node>;
-    // 空对象 default 是 no-op，不应无谓包一层空 scope 改变 IR 拓扑（避免无谓的空 scope）
-    const emptyDefaults = layoutIR(
-      { nodeDefault: {}, pathDefault: {}, labelDefault: {}, arrowDefault: {} },
-      children,
+    const children = (
+      <Node id="A" position={[0, 0]}>
+        A
+      </Node>
     );
+    // 空对象 default 是 no-op，不应无谓包一层空 scope 改变 IR 拓扑（避免无谓的空 scope）
+    const emptyDefaults = layoutIR({ nodeDefault: {}, pathDefault: {}, labelDefault: {}, arrowDefault: {} }, children);
     expect(emptyDefaults).toEqual(buildIR(children));
     expect(emptyDefaults.children.every(c => c.type !== 'scope')).toBe(true);
     // 但标量 falsy-defined 值（strokeWidth=0）是有意义样式 → 仍包 scope
@@ -169,7 +177,12 @@ describe('边界：无样式 / 空 children / 单通道', () => {
   });
 
   it('layout_single_style_channel：只设 stroke → 合成 scope 只进 stroke 通道，其余不出现', () => {
-    const ir = layoutIR({ stroke: 'red' }, <Node id="A" position={[0, 0]}>A</Node>);
+    const ir = layoutIR(
+      { stroke: 'red' },
+      <Node id="A" position={[0, 0]}>
+        A
+      </Node>,
+    );
     const scope = ir.children[0];
     expect(scope).toMatchObject({ type: 'scope', stroke: 'red' });
     expect(scope).not.toHaveProperty('color');
@@ -203,7 +216,9 @@ describe('错误路径：ir + 样式并用 / 非法 nodeDefault', () => {
     // fill 期望 string | PaintSpec，给 number 是非法结构（模拟无类型 JS 调用方 / LLM 生成）
     const badIr = layoutIR(
       { nodeDefault: { fill: 42 } as never },
-      <Node id="A" position={[0, 0]}>A</Node>,
+      <Node id="A" position={[0, 0]}>
+        A
+      </Node>,
     );
     // Layout / buildIR 原样透传，不在自己这层 sanitize
     expect(badIr.children[0]).toMatchObject({ type: 'scope', nodeDefault: { fill: 42 } });
@@ -212,7 +227,9 @@ describe('错误路径：ir + 样式并用 / 非法 nodeDefault', () => {
     // 对照：合法 fill 同路径通过
     const okIr = layoutIR(
       { nodeDefault: { fill: 'lightblue' } },
-      <Node id="A" position={[0, 0]}>A</Node>,
+      <Node id="A" position={[0, 0]}>
+        A
+      </Node>,
     );
     expect(SceneSchema.safeParse(okIr).success).toBe(true);
   });
@@ -234,7 +251,9 @@ describe('交互：内层 Scope 覆盖 / 显式属性胜出 / resetStyle 屏障'
   it('layout_style_overridden_by_node_prop：Node 显式 stroke 胜过 Layout nodeDefault', () => {
     const prims = layoutPrims(
       { nodeDefault: { stroke: 'none' } },
-      <Node id="A" position={[0, 0]} stroke="red">A</Node>,
+      <Node id="A" position={[0, 0]} stroke="red">
+        A
+      </Node>,
     );
     const shape = rectOf(prims) ?? ellipseOf(prims);
     expect(shape?.stroke).toBe('red');
@@ -244,7 +263,9 @@ describe('交互：内层 Scope 覆盖 / 显式属性胜出 / resetStyle 屏障'
     const prims = layoutPrims(
       { color: 'red' },
       <Scope resetStyle>
-        <Node id="A" position={[0, 0]}>A</Node>
+        <Node id="A" position={[0, 0]}>
+          A
+        </Node>
       </Scope>,
     );
     const rect = rectOf(prims);
@@ -262,8 +283,12 @@ describe('等价性：合成根 scope 与手写根 <Scope> 同 IR', () => {
   it('layout_synthetic_scope_equals_manual：<Layout stroke nodeDefault> 与 <Scope stroke nodeDefault> 包同 children → 同一 scene.children', () => {
     const children = (
       <>
-        <Node id="A" position={[0, 0]}>A</Node>
-        <Node id="B" position={[80, 0]}>B</Node>
+        <Node id="A" position={[0, 0]}>
+          A
+        </Node>
+        <Node id="B" position={[80, 0]}>
+          B
+        </Node>
       </>
     );
     const synthetic = layoutIR({ stroke: 'currentColor', nodeDefault: { fill: 'none' } }, children);

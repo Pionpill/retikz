@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+
 import { Link, useLocation } from 'react-router';
 
 import { resolveModule } from '@/data/module';

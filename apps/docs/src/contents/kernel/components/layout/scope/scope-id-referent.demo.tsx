@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * scope.id 作为另一 node 的 referent（at.of / offset.of）
@@ -10,19 +11,17 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout width={560} height={220}>
     <Scope id="left-cluster" transforms={[{ kind: 'translate', x: 60, y: 30 }]}>
-      <Node id="L1" position={[0, 0]}>L1</Node>
-      <Node id="L2" position={[60, 40]}>L2</Node>
+      <Node id="L1" position={[0, 0]}>
+        L1
+      </Node>
+      <Node id="L2" position={[60, 40]}>
+        L2
+      </Node>
     </Scope>
-    <Node
-      id="follower"
-      position={{ direction: 'right', of: 'left-cluster', distance: 200 }}
-    >
+    <Node id="follower" position={{ direction: 'right', of: 'left-cluster', distance: 200 }}>
       right-of-cluster
     </Node>
-    <Node
-      id="below"
-      position={{ of: 'left-cluster', offset: [0, 120] }}
-    >
+    <Node id="below" position={{ of: 'left-cluster', offset: [0, 120] }}>
       below-cluster
     </Node>
     <Draw way={['left-cluster', 'follower']} arrow="->" />

@@ -1,4 +1,5 @@
 import { JsonObjectSchema } from '@retikz/core';
+
 import { type AnyTransformDefinition, type FieldCollector, type TransformContext } from '../../contract';
 import { type ExternalRow, type TransformOperation } from '../../schemas';
 import { DEFAULT_TRANSFORM_CONTEXT, resolveTransformRegistry } from './definitions';
@@ -12,10 +13,15 @@ const parseTransformOperation = (definition: AnyTransformDefinition, operation: 
 };
 
 /** 查找 transform definition；未知 kind 必须 fail-loud，避免静默跳过结构性数据变换。 */
-const transformDefinitionOf = (operation: TransformOperation, registry: ReadonlyMap<string, AnyTransformDefinition>): AnyTransformDefinition => {
+const transformDefinitionOf = (
+  operation: TransformOperation,
+  registry: ReadonlyMap<string, AnyTransformDefinition>,
+): AnyTransformDefinition => {
   const definition = registry.get(operation.kind);
   if (definition === undefined) {
-    throw new Error(`lowerPlots: transform kind "${operation.kind}" is not registered; pass a TransformDefinition via options.transformDefinitions`);
+    throw new Error(
+      `lowerPlots: transform kind "${operation.kind}" is not registered; pass a TransformDefinition via options.transformDefinitions`,
+    );
   }
   return definition;
 };

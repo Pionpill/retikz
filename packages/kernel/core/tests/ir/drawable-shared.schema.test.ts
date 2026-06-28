@@ -1,12 +1,12 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
+
+import type { IRDrawableMeta, IRDrawableSharedStyle, IRDrawableStyle } from '../../src';
+
 import {
   ChildSchema,
   DrawableMetaSchema,
   DrawableStyleSchema,
   GeometryLabelSchema,
-  type IRDrawableMeta,
-  type IRDrawableSharedStyle,
-  type IRDrawableStyle,
   PathSchema,
   StepLabelSchema,
 } from '../../src';
@@ -100,9 +100,7 @@ describe('Drawable shared schema', () => {
 
   it('keeps shared style type separate from metadata except zIndex', () => {
     expectTypeOf<IRDrawableSharedStyle>().toMatchTypeOf<IRDrawableStyle>();
-    expectTypeOf<IRDrawableSharedStyle>().toHaveProperty('zIndex').toEqualTypeOf<
-      IRDrawableMeta['zIndex']
-    >();
+    expectTypeOf<IRDrawableSharedStyle>().toHaveProperty('zIndex').toEqualTypeOf<IRDrawableMeta['zIndex']>();
     expectTypeOf<IRDrawableSharedStyle>().not.toHaveProperty('id');
     expectTypeOf<IRDrawableSharedStyle>().not.toHaveProperty('meta');
     expectTypeOf<IRDrawableSharedStyle>().not.toHaveProperty('animations');

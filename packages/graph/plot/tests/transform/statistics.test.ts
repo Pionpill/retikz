@@ -1,7 +1,16 @@
-import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_TRANSFORM_CONTEXT, applyTransforms, defineRowSelector, defineStatisticsReducer, resolveRowSelectorRegistry, resolveStatisticsReducerRegistry } from '../../src';
+import { z } from 'zod';
+
 import type { ExternalRow } from '../../src/schemas';
+
+import {
+  applyTransforms,
+  DEFAULT_TRANSFORM_CONTEXT,
+  defineRowSelector,
+  defineStatisticsReducer,
+  resolveRowSelectorRegistry,
+  resolveStatisticsReducerRegistry,
+} from '../../src';
 import { readSourceIndex, readSourceIndices, tagSourceIndex } from '../../src/pipeline/provenance';
 
 const ORDERS: Array<ExternalRow> = [
@@ -138,8 +147,28 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
     );
 
     expect(out).toEqual([
-      expect.objectContaining({ series: 'A', sourceX: 2, sourceY: 4, sourceId: 'a2', targetX: 3, targetY: 15, targetId: 'a3', delta: 11, deltaLabel: '+11' }),
-      expect.objectContaining({ series: 'B', sourceX: 1, sourceY: 8, sourceId: 'b1', targetX: 2, targetY: 12, targetId: 'b2', delta: 4, deltaLabel: '+4' }),
+      expect.objectContaining({
+        series: 'A',
+        sourceX: 2,
+        sourceY: 4,
+        sourceId: 'a2',
+        targetX: 3,
+        targetY: 15,
+        targetId: 'a3',
+        delta: 11,
+        deltaLabel: '+11',
+      }),
+      expect.objectContaining({
+        series: 'B',
+        sourceX: 1,
+        sourceY: 8,
+        sourceId: 'b1',
+        targetX: 2,
+        targetY: 12,
+        targetId: 'b2',
+        delta: 4,
+        deltaLabel: '+4',
+      }),
     ]);
   });
 
@@ -170,7 +199,11 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
   });
 
   it('old_transform_kinds_fail_loud', () => {
-    expect(() => applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }])).toThrow();
+    expect(() =>
+      applyTransforms(ORDERS, [
+        { kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' },
+      ]),
+    ).toThrow();
     expect(() =>
       applyTransforms(ORDERS, [
         {
@@ -193,7 +226,10 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
       inputFields: operation => [operation.field, operation.weight],
       outputFields: operation => [operation.as],
       reduce: (rows, operation) => {
-        const weighted = rows.reduce((sum, row) => sum + Number(row[operation.field]) * Number(row[operation.weight]), 0);
+        const weighted = rows.reduce(
+          (sum, row) => sum + Number(row[operation.field]) * Number(row[operation.weight]),
+          0,
+        );
         const weights = rows.reduce((sum, row) => sum + Number(row[operation.weight]), 0);
         return { [operation.as]: weighted / weights };
       },
@@ -204,7 +240,13 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
         { group: 'A', value: 10, weight: 1 },
         { group: 'A', value: 20, weight: 3 },
       ],
-      [{ kind: 'summarize', groupBy: ['group'], metrics: [{ op: 'weighted-mean', field: 'value', weight: 'weight', as: 'weightedValue' }] }],
+      [
+        {
+          kind: 'summarize',
+          groupBy: ['group'],
+          metrics: [{ op: 'weighted-mean', field: 'value', weight: 'weight', as: 'weightedValue' }],
+        },
+      ],
       undefined,
       { ...DEFAULT_TRANSFORM_CONTEXT, statisticsReducerRegistry: resolveStatisticsReducerRegistry([weightedMean]) },
     );
@@ -221,7 +263,11 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
       }),
       inputFields: operation => [operation.field],
       select: (rows, operation) => {
-        const ranked = [...rows].sort((left, right) => Math.abs(Number(left[operation.field]) - operation.target) - Math.abs(Number(right[operation.field]) - operation.target));
+        const ranked = [...rows].sort(
+          (left, right) =>
+            Math.abs(Number(left[operation.field]) - operation.target) -
+            Math.abs(Number(right[operation.field]) - operation.target),
+        );
         return ranked.length === 0 ? [] : [{ row: ranked[0], rank: 1 }];
       },
     });

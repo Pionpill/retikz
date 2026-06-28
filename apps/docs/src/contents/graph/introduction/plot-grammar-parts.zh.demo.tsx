@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Text } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /**
  * 简介页 "core + 图形语法" 插图

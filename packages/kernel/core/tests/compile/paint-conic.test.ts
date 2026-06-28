@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { RectPrim, ScenePrimitive } from '../../src/primitive';
 import type { IR, IRPaintSpec } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
 const conicGrad: IRPaintSpec = {

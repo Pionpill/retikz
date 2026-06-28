@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IR } from '@retikz/core';
-import { type HydrationContext, mountCanvas } from '../src';
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { HydrationContext } from '../src';
+
+import { mountCanvas } from '../src';
 
 /**
  * @retikz/vanilla mountCanvas 的 canvas 水合（client 坐标 → 逆 meet-fit → hitTest 命中 → handler）
@@ -103,7 +107,9 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
         const ang = start + ((end - start) * i) / 24;
         const ex = Math.cos(ang) * rx;
         const ey = Math.sin(ang) * ry;
-        sp.points.push(apply(cx + ex * Math.cos(rot) - ey * Math.sin(rot), cy + ex * Math.sin(rot) + ey * Math.cos(rot)));
+        sp.points.push(
+          apply(cx + ex * Math.cos(rot) - ey * Math.sin(rot), cy + ex * Math.sin(rot) + ey * Math.cos(rot)),
+        );
       }
       sp.closed = true;
     },
@@ -198,20 +204,17 @@ beforeEach(() => {
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => geometryCtx);
   vi.spyOn(globalThis, 'devicePixelRatio', 'get').mockReturnValue(1);
   // CSS 显示盒固定 200×100，位于 (RECT_LEFT, RECT_TOP)
-  vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockImplementation(
-    () =>
-      ({
-        x: RECT_LEFT,
-        y: RECT_TOP,
-        left: RECT_LEFT,
-        top: RECT_TOP,
-        right: RECT_LEFT + CSS_WIDTH,
-        bottom: RECT_TOP + CSS_HEIGHT,
-        width: CSS_WIDTH,
-        height: CSS_HEIGHT,
-        toJSON: () => ({}),
-      }),
-  );
+  vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockImplementation(() => ({
+    x: RECT_LEFT,
+    y: RECT_TOP,
+    left: RECT_LEFT,
+    top: RECT_TOP,
+    right: RECT_LEFT + CSS_WIDTH,
+    bottom: RECT_TOP + CSS_HEIGHT,
+    width: CSS_WIDTH,
+    height: CSS_HEIGHT,
+    toJSON: () => ({}),
+  }));
 });
 
 afterEach(() => {
@@ -266,14 +269,31 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'box', position: [SCENE_SIZE / 2, SCENE_SIZE / 2], shape: 'rectangle', minimumWidth: SCENE_SIZE, minimumHeight: SCENE_SIZE, fill: '#0a0', meta: { series: 'sales', i: 3 } },
+        {
+          type: 'node',
+          id: 'box',
+          position: [SCENE_SIZE / 2, SCENE_SIZE / 2],
+          shape: 'rectangle',
+          minimumWidth: SCENE_SIZE,
+          minimumHeight: SCENE_SIZE,
+          fill: '#0a0',
+          meta: { series: 'sales', i: 3 },
+        },
       ],
     };
     const container = document.createElement('div');
     document.body.appendChild(container);
     const view = mountCanvas(container, metaBoxIr, { width: CSS_WIDTH, height: CSS_HEIGHT });
     let context: HydrationContext | undefined;
-    view.hydrate({ handlers: { box: { click: (_event, received) => { context = received; } } } });
+    view.hydrate({
+      handlers: {
+        box: {
+          click: (_event, received) => {
+            context = received;
+          },
+        },
+      },
+    });
 
     const { clientX, clientY } = sceneToClient(50, 50);
     view.root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
@@ -300,7 +320,9 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     view.hydrate({ handlers: { box: { click: onClick } } });
 
     // client x 落左侧 letterbox 黑边（Scene x < 0）
-    view.root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: RECT_LEFT + 10, clientY: RECT_TOP + 50 }));
+    view.root.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, clientX: RECT_LEFT + 10, clientY: RECT_TOP + 50 }),
+    );
     expect(onClick).not.toHaveBeenCalled();
 
     container.remove();
@@ -315,14 +337,20 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
 
     // canvas 是单 <canvas>、图元间移动不产生 over/out；新机制经 pointermove + 命中 id 状态机合成。
     // 先在 letterbox 黑边（Scene 外、命中 null），再移到图元中心 → 跨 id（null→box）触发 enter 一次。
-    view.root.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: RECT_LEFT + 10, clientY: RECT_TOP + 50 }));
+    view.root.dispatchEvent(
+      new MouseEvent('pointermove', { bubbles: true, clientX: RECT_LEFT + 10, clientY: RECT_TOP + 50 }),
+    );
     expect(onEnter).not.toHaveBeenCalled();
     const center = sceneToClient(50, 50);
-    view.root.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: center.clientX, clientY: center.clientY }));
+    view.root.dispatchEvent(
+      new MouseEvent('pointermove', { bubbles: true, clientX: center.clientX, clientY: center.clientY }),
+    );
     expect(onEnter).toHaveBeenCalledTimes(1);
 
     // 图元内部继续 move（命中仍是 box）→ 不重复触发
-    view.root.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: center.clientX + 1, clientY: center.clientY + 1 }));
+    view.root.dispatchEvent(
+      new MouseEvent('pointermove', { bubbles: true, clientX: center.clientX + 1, clientY: center.clientY + 1 }),
+    );
     expect(onEnter).toHaveBeenCalledTimes(1);
 
     container.remove();
@@ -336,9 +364,13 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     view.hydrate({ handlers: { box: { pointerLeave: onLeave } } });
 
     const center = sceneToClient(50, 50);
-    view.root.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: center.clientX, clientY: center.clientY }));
+    view.root.dispatchEvent(
+      new MouseEvent('pointermove', { bubbles: true, clientX: center.clientX, clientY: center.clientY }),
+    );
     // 移到 letterbox 黑边（命中 null）→ box 的 leave 一次
-    view.root.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: RECT_LEFT + 10, clientY: RECT_TOP + 50 }));
+    view.root.dispatchEvent(
+      new MouseEvent('pointermove', { bubbles: true, clientX: RECT_LEFT + 10, clientY: RECT_TOP + 50 }),
+    );
     expect(onLeave).toHaveBeenCalledTimes(1);
 
     container.remove();
@@ -378,7 +410,10 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
           animations: [
             {
               property: 'opacity',
-              keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }],
+              keyframes: [
+                { at: 0, value: 0 },
+                { at: 1, value: 1 },
+              ],
               duration: 300,
               trigger: { onEvent: 'click' },
             },
@@ -427,7 +462,15 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
           minimumHeight: SCENE_SIZE,
           fill: '#0a0',
           animations: [
-            { property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 300, trigger: { onEvent: 'click' } },
+            {
+              property: 'opacity',
+              keyframes: [
+                { at: 0, value: 0 },
+                { at: 1, value: 1 },
+              ],
+              duration: 300,
+              trigger: { onEvent: 'click' },
+            },
           ],
         },
       ],

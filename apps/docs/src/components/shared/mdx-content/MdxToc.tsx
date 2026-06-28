@@ -1,7 +1,9 @@
-import { cn } from '@/lib/utils';
 import type { FC } from 'react';
+
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
+
+import { cn } from '@/lib/utils';
 
 import { parseHeadings } from './toc-headings';
 
@@ -48,9 +50,12 @@ export const MdxToc: FC<MdxTocProps> = ({ source }) => {
   }, [items]);
 
   /** 走 react-router 改 URL hash；MdxContent 的 hash useEffect 接管滚动（统一一套行为） */
-  const handleClick = useCallback((id: string) => {
-    navigate(`#${id}`);
-  }, [navigate]);
+  const handleClick = useCallback(
+    (id: string) => {
+      navigate(`#${id}`);
+    },
+    [navigate],
+  );
 
   if (items.length === 0) return null;
 

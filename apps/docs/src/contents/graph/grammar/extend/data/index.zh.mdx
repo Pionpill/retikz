@@ -5,10 +5,10 @@ description: 把数据层的运行时扩展集中管理：自定义字段格式�
 
 数据层有两类扩展：一类仍然能写进 PlotSpec，例如具名 `format`；另一类是运行时函数，例如 `resolveField`。前者适合持久化和 AI 生成，后者适合接入应用代码里的业务逻辑。
 
-| 场景 | 推荐入口 | 是否进 IR |
-| --- | --- | --- |
-| 可复用字段格式 | `defineFieldFormat` + `formatDefinitions` | 是，IR 只存格式名 |
-| 任意字段解析 | `resolveField` | 否，函数只在运行时使用 |
+| 场景           | 推荐入口                                  | 是否进 IR              |
+| -------------- | ----------------------------------------- | ---------------------- |
+| 可复用字段格式 | `defineFieldFormat` + `formatDefinitions` | 是，IR 只存格式名      |
+| 任意字段解析   | `resolveField`                            | 否，函数只在运行时使用 |
 
 ## 自定义具名格式
 
@@ -18,11 +18,11 @@ description: 把数据层的运行时扩展集中管理：自定义字段格式�
 
 定义契约：
 
-| 字段 | 作用 |
-| --- | --- |
-| `name` | 注册键 = 写进 `model` 的 `format` 串；必须非空，且不与内置格式名冲突。 |
-| `impliedType` | 这个格式唯一蕴含的测量类型；字段省略 `type` 时由它补上。 |
-| `parse` | 原始值 → canonical 值；返回 `undefined` / `NaN` 表示非法，下游按非有限值跳过。 |
+| 字段          | 作用                                                                           |
+| ------------- | ------------------------------------------------------------------------------ |
+| `name`        | 注册键 = 写进 `model` 的 `format` 串；必须非空，且不与内置格式名冲突。         |
+| `impliedType` | 这个格式唯一蕴含的测量类型；字段省略 `type` 时由它补上。                       |
+| `parse`       | 原始值 → canonical 值；返回 `undefined` / `NaN` 表示非法，下游按非有限值跳过。 |
 
 自定义格式与内置格式共用同一注册表：内置格式恒可用，自定义 `name` 撞内置名或两个自定义同名都会报错；`model` 写了未注册格式名也会 fail-loud。
 
@@ -41,11 +41,11 @@ description: 把数据层的运行时扩展集中管理：自定义字段格式�
 
 ## 怎么选择
 
-| 需求 | 用法 |
-| --- | --- |
-| 格式可枚举、要随 spec 持久化 | `defineFieldFormat` |
-| 一次性解析、依赖应用状态或数据源 | `resolveField` |
-| 只是在已有通道上换字段名 | `fieldMap`，见[数据处理](/graph/grammar/data/processing) |
-| 让字段驱动新的 node 属性 | `defineNodeChannel`，见[自定义通道](/graph/grammar/extend/channel) |
+| 需求                             | 用法                                                               |
+| -------------------------------- | ------------------------------------------------------------------ |
+| 格式可枚举、要随 spec 持久化     | `defineFieldFormat`                                                |
+| 一次性解析、依赖应用状态或数据源 | `resolveField`                                                     |
+| 只是在已有通道上换字段名         | `fieldMap`，见[数据处理](/graph/grammar/data/processing)           |
+| 让字段驱动新的 node 属性         | `defineNodeChannel`，见[自定义通道](/graph/grammar/extend/channel) |
 
 优先选择能进入 IR 的声明式能力；只有确实需要函数时，再把逻辑放进 `resolveField` 或对应的 runtime definition。

@@ -1,11 +1,10 @@
 import type { FC } from 'react';
+
 import { describe, expect, it, vi } from 'vitest';
-import {
-  type EmbeddableTier2Adapter,
-  Node,
-  Scope,
-  collectHydrationHandlers,
-} from '../../src';
+
+import type { EmbeddableTier2Adapter } from '../../src';
+
+import { collectHydrationHandlers, Node, Scope } from '../../src';
 
 /**
  * 水合：collectHydrationHandlers 对可嵌入 Tier2 子组件的处理
@@ -101,8 +100,6 @@ describe('collectHydrationHandlers + 可嵌入 Tier2', () => {
       withAdapter: false,
     });
 
-    expect(() => collectHydrationHandlers(<Component id="a" />)).toThrow(
-      /isTier2Embeddable/,
-    );
+    expect(() => collectHydrationHandlers(<Component id="a" />)).toThrow(/isTier2Embeddable/);
   });
 });

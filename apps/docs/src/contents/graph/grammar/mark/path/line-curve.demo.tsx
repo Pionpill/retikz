@@ -1,6 +1,8 @@
-import { PathCurve, type PathCurveValue } from '@retikz/plot';
-import { Axis, PathMark, Plot } from '@retikz/plot-react';
+import type { PathCurveValue } from '@retikz/plot';
 import type { FC } from 'react';
+
+import { PathCurve } from '@retikz/plot';
+import { Axis, PathMark, Plot } from '@retikz/plot-react';
 
 import { usePreviewActionValue } from '@/components/shared/component-preview/_shared';
 
@@ -17,7 +19,13 @@ const Demo: FC = () => {
         <Axis dimension="x" />
         <Axis dimension="y" grid />
       </Plot>
-      <Plot data={curveSamples} width={280} height={280} coordinate="polar2D" style={{ maxWidth: '100%', height: 'auto' }}>
+      <Plot
+        data={curveSamples}
+        width={280}
+        height={280}
+        coordinate="polar2D"
+        style={{ maxWidth: '100%', height: 'auto' }}
+      >
         <PathMark x="category" y="value" order="index" curve={curve} />
         <Axis dimension="x" />
         <Axis dimension="y" grid />

@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
 import type { Scene } from '@retikz/core';
+
+import { describe, expect, it } from 'vitest';
+
 import { allText, flattenPrimitives } from '../../src/assert/primitives';
 
 const scene = {
@@ -30,7 +32,7 @@ const scene = {
 describe('flattenPrimitives', () => {
   it('递归下钻 group 收齐全部原语', () => {
     const types = flattenPrimitives(scene)
-      .map((p) => p.type)
+      .map(p => p.type)
       .sort();
     expect(types).toEqual(['ellipse', 'group', 'rect', 'text']);
   });

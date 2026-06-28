@@ -30,7 +30,10 @@ const Diagram = () => {
 };
 ```
 
-<ComponentAlert title="lowerTex injection required" description="$...$ is only parsed when lowerTex is injected (React via Layout, vanilla via toScene/renderToString); without it a $ stays literal (existing text with $ is unchanged), and content carrying math degrades to no formula with a diagnosable warning instead of crashing." />
+<ComponentAlert
+  title="lowerTex injection required"
+  description="$...$ is only parsed when lowerTex is injected (React via Layout, vanilla via toScene/renderToString); without it a $ stays literal (existing text with $ is unchanged), and content carrying math degrades to no formula with a diagnosable warning instead of crashing."
+/>
 
 ## Inline vs display
 
@@ -49,12 +52,13 @@ The most natural math reads as text with formulas mixed in. Just write them toge
 For **per-segment color / style**, use explicit `runs`: each run is `{ text, fill?, font? }` or `{ tex, displayMode?, fill? }`:
 
 ```tsx
-<Node
-  text={[{ runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: ' (red segment length)' }] }]}
-/>
+<Node text={[{ runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: ' (red segment length)' }] }]} />
 ```
 
-<ComponentAlert title="Prefer a text run for CJK captions" description="For a colored formula plus a CJK caption on one line, put the caption in a text run (measured via measureText) — don't wrap it in \text{}, since MathJax's \text relies on its math fonts and tends to tofu out CJK." />
+<ComponentAlert
+  title="Prefer a text run for CJK captions"
+  description="For a colored formula plus a CJK caption on one line, put the caption in a text run (measured via measureText) — don't wrap it in \text{}, since MathJax's \text relies on its math fonts and tends to tofu out CJK."
+/>
 
 ## Multiline formulas
 
@@ -83,27 +87,25 @@ import { figure, node, renderToString } from '@retikz/vanilla';
 import { createMathJaxEngine, createLowerTex } from '@retikz/tex';
 
 const lowerTex = createLowerTex(await createMathJaxEngine());
-const fig = figure([
-  node('eq', { position: [0, 0], text: '$\\frac{a}{b} = c$' }),
-]);
+const fig = figure([node('eq', { position: [0, 0], text: '$\\frac{a}{b} = c$' })]);
 
 const svg = renderToString(fig, { lowerTex });
 ```
 
 ## Syntax
 
-| Form | Meaning |
-| --- | --- |
-| `$...$` | Inline formula (inline metrics, on the text baseline) |
-| `$$...$$` | Display formula (block metrics; alone in a node = standalone / framed formula) |
-| `\$` | A literal dollar sign (not a delimiter) |
-| `{ runs: [...] }` | Explicit run sequence (canonical); each run can carry its own `fill` / `font` |
+| Form              | Meaning                                                                        |
+| ----------------- | ------------------------------------------------------------------------------ |
+| `$...$`           | Inline formula (inline metrics, on the text baseline)                          |
+| `$$...$$`         | Display formula (block metrics; alone in a node = standalone / framed formula) |
+| `\$`              | A literal dollar sign (not a delimiter)                                        |
+| `{ runs: [...] }` | Explicit run sequence (canonical); each run can carry its own `fill` / `font`  |
 
 ## API reference
 
-| API | Type | Description |
-| --- | --- | --- |
-| `useLowerTex` (`@retikz/tex/react`) | `() => LowerTex \| undefined` | React hook: boots MathJax, returns the function to inject into `<Layout lowerTex>`; `undefined` until ready. |
-| `createMathJaxEngine` | `() => Promise<MathJaxSvgEngine>` | Create a MathJax SVG engine. |
-| `createLowerTex` | `(engine) => LowerTex` | Turn the engine into core's `lowerTex` injection function, cached by `fontSize\|display\|tex`. |
-| `LowerTex` (`@retikz/core`) | `(content, style) => LoweredTex \| null` | Core injection-point type; returns `null` on failure, compile emits `TEX_INVALID`. |
+| API                                 | Type                                     | Description                                                                                                  |
+| ----------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `useLowerTex` (`@retikz/tex/react`) | `() => LowerTex \| undefined`            | React hook: boots MathJax, returns the function to inject into `<Layout lowerTex>`; `undefined` until ready. |
+| `createMathJaxEngine`               | `() => Promise<MathJaxSvgEngine>`        | Create a MathJax SVG engine.                                                                                 |
+| `createLowerTex`                    | `(engine) => LowerTex`                   | Turn the engine into core's `lowerTex` injection function, cached by `fontSize\|display\|tex`.               |
+| `LowerTex` (`@retikz/core`)         | `(content, style) => LoweredTex \| null` | Core injection-point type; returns `null` on failure, compile emits `TEX_INVALID`.                           |

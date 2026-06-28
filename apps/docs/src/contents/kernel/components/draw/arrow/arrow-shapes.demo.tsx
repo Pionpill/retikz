@@ -1,6 +1,7 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { ArrowShapeValue } from '@retikz/core';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * 4 行 × 2 列对照实心 vs 空心箭头

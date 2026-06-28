@@ -50,12 +50,12 @@ React DSL 里字符串通常表示字段名：
 
 React 写法里的 mark props 会在构建 Plot spec 时转成通道配置。字段通道进入 `encoding`，常量通道保留为固定值；lowering 时再从 canonical 行读取字段值。
 
-| 写法 | 内部含义 |
-| --- | --- |
-| `<PointMark x="gdp" />` | `x` 是字段通道，读取 canonical 行里的 `gdp` |
-| `<PointMark color="region" />` | `color` 是字段通道，会按字段类型派生颜色比例尺 |
-| `<ReferenceMark y={80} />` | `y` 是常量通道，不读取数据行 |
-| `<PathMark order="month" />` | `order` 不在 `encoding` 对象里，但仍按字段读取，用于 datum 排序 |
+| 写法                           | 内部含义                                                        |
+| ------------------------------ | --------------------------------------------------------------- |
+| `<PointMark x="gdp" />`        | `x` 是字段通道，读取 canonical 行里的 `gdp`                     |
+| `<PointMark color="region" />` | `color` 是字段通道，会按字段类型派生颜色比例尺                  |
+| `<ReferenceMark y={80} />`     | `y` 是常量通道，不读取数据行                                    |
+| `<PathMark order="month" />`   | `order` 不在 `encoding` 对象里，但仍按字段读取，用于 datum 排序 |
 
 通道只回答“读哪个值”；至于值怎么映射成绘图空间、位置通道怎么被坐标系解释，交给比例尺和坐标系。
 

@@ -1,5 +1,6 @@
-import { Layout, Node, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node, Path, Step } from '@retikz/react';
 
 /**
  * 阴影对象写法：preset 调色 + 完整显式
@@ -18,11 +19,7 @@ const Demo: FC = () => (
     />
 
     {/* 无 preset：完整显式 offsetX / offsetY / blur / color */}
-    <Path
-      stroke="steelblue"
-      strokeWidth={4}
-      shadow={{ offsetX: 2, offsetY: 2, blur: 3, color: 'rgba(0,0,0,0.4)' }}
-    >
+    <Path stroke="steelblue" strokeWidth={4} shadow={{ offsetX: 2, offsetY: 2, blur: 3, color: 'rgba(0,0,0,0.4)' }}>
       <Step kind="move" to={[60, -30]} />
       <Step kind="line" to={[140, -30]} />
       <Step kind="line" to={[140, 40]} />

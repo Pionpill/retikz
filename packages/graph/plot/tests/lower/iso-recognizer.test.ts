@@ -1,12 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { PlotFieldType } from '../../src/schemas/data';
-import { coerceTimestamp, inferFieldType, isIsoDateString } from '../../src/providers';
-import { type LowerPlotsOptions, prepareRows } from '../../src/pipeline/expand';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { prepareRows } from '../../src/pipeline/expand';
 import { tagSourceIndex } from '../../src/pipeline/provenance';
+import { coerceTimestamp, inferFieldType, isIsoDateString } from '../../src/providers';
+import { PlotSpecSchema } from '../../src/schemas';
+import { PlotFieldType } from '../../src/schemas/data';
 
 /** 单字段行 → 推断类型（无 model，纯抽样推断） */
-const inferOne = (values: Array<unknown>): string => inferFieldType(values.map(v => ({ v })), 'v');
+const inferOne = (values: Array<unknown>): string =>
+  inferFieldType(
+    values.map(v => ({ v })),
+    'v',
+  );
 
 /** 构造引用逻辑字段 `v` 的最小 spec（绑 x），取 prepareRows 后 normalized[0].v */
 const specWithField = (field: { name: string } & Record<string, unknown>): PlotSpec =>
@@ -14,7 +22,10 @@ const specWithField = (field: { name: string } & Record<string, unknown>): PlotS
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd', model: [field, { name: 'y', type: 'continuous' }] },
-    scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+    scales: [
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [{ type: 'point', encoding: { x: { field: field.name }, y: { field: 'y' } } }],
   });

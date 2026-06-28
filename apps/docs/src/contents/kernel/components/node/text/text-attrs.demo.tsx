@@ -1,5 +1,6 @@
-import { Layout, Node, Text } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node, Text } from '@retikz/react';
 
 /**
  * <Text> 行级覆盖字段并排

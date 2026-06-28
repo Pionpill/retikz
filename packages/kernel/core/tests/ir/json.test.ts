@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { JsonObjectSchema, JsonValueSchema } from '../../src/schemas';
+
 import type { IRJsonObject } from '../../src/schemas';
+
+import { JsonObjectSchema, JsonValueSchema } from '../../src/schemas';
 
 describe('JsonObjectSchema 接受合法 JSON', () => {
   it('接受字符串 / 有限数字 / 布尔 / null 标量值', () => {

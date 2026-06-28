@@ -1,5 +1,6 @@
-import { Draw, DrawWay, Layout } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, DrawWay, Layout } from '@retikz/react';
 
 /**
  * `{ position, type }` sugar 对象 vs 裸字符串
@@ -8,11 +9,7 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout width={320} height={200}>
     <Draw
-      way={[
-        [20, 60],
-        { position: [80, 0], type: DrawWay.Relative },
-        { position: [80, 40], type: DrawWay.Relative },
-      ]}
+      way={[[20, 60], { position: [80, 0], type: DrawWay.Relative }, { position: [80, 40], type: DrawWay.Relative }]}
     />
     <Draw
       way={[

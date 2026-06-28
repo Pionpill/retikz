@@ -24,9 +24,9 @@ import { Arc, Sector } from '@retikz/react';
 
 `<Arc>` 默认画一段不闭合的弧。它适合做箭头弧线、环形标记或装饰线。
 
-| 写法 | 适合 |
-| --- | --- |
-| `{ center, radius, startAngle, endAngle }` | 圆弧 |
+| 写法                                                 | 适合   |
+| ---------------------------------------------------- | ------ |
+| `{ center, radius, startAngle, endAngle }`           | 圆弧   |
 | `{ center, radiusX, radiusY, startAngle, endAngle }` | 椭圆弧 |
 
 角度从 +x 方向开始；`90` 指向屏幕下方。角度三选二：`startAngle` / `endAngle` / `sweepAngle`（扫掠角）任给两个即可，例如 `{ startAngle: 30, sweepAngle: 90 }`。`center` 接任意 target（节点 id / 极坐标 / 笛卡尔）。
@@ -43,11 +43,11 @@ import { Arc, Sector } from '@retikz/react';
 
 默认是开放弧；给 `close` 可把弧闭合成可填充区域：
 
-| `close` | 含义 |
-| --- | --- |
+| `close`         | 含义                   |
+| --------------- | ---------------------- |
 | 缺省 / `'open'` | 开放弧，不闭合、不填充 |
-| `'chord'` | 两端点连弦闭合，成弓形 |
-| `'sector'` | 两端连回圆心，成扇形 |
+| `'chord'`       | 两端点连弦闭合，成弓形 |
+| `'sector'`      | 两端连回圆心，成扇形   |
 
 <ComponentPreview name="arc-close" size="sm" />
 
@@ -59,12 +59,12 @@ import { Arc, Sector } from '@retikz/react';
 
 `<Sector>` 会从圆心出发，画弧，再回到圆心。给 `innerRadius` 可以画空心扇形；椭圆空心写法用 `innerRadiusX` + `innerRadiusY`。
 
-| 写法 | 适合 |
-| --- | --- |
-| `{ center, radius, startAngle, endAngle }` | 圆扇形 |
-| `{ center, radiusX, radiusY, startAngle, endAngle }` | 椭圆扇形 |
-| 加 `innerRadius` | 空心圆扇形 |
-| 加 `innerRadiusX` + `innerRadiusY` | 空心椭圆扇形 |
+| 写法                                                 | 适合         |
+| ---------------------------------------------------- | ------------ |
+| `{ center, radius, startAngle, endAngle }`           | 圆扇形       |
+| `{ center, radiusX, radiusY, startAngle, endAngle }` | 椭圆扇形     |
+| 加 `innerRadius`                                     | 空心圆扇形   |
+| 加 `innerRadiusX` + `innerRadiusY`                   | 空心椭圆扇形 |
 
 <ComponentPreview name="sector-basic" size="sm" />
 
@@ -84,26 +84,26 @@ import { Arc, Sector } from '@retikz/react';
 
 ### API 参考
 
-| 组件 | 组合 | 含义 |
-| --- | --- | --- |
-| `<Arc>` | `center` + `radius` + 角度 | 圆弧（默认开放；角度必填） |
-| | `center` + `radiusX` + `radiusY` + 角度 | 椭圆弧 |
-| `<Sector>` | `center` + `radius` + 角度 | 圆扇形（角度必填） |
-| | `center` + `radiusX` + `radiusY` + 角度 | 椭圆扇形 |
-| | + `innerRadius?` | 空心圆扇形 |
-| | + `innerRadiusX?` + `innerRadiusY?` | 空心椭圆扇形 |
+| 组件       | 组合                                    | 含义                       |
+| ---------- | --------------------------------------- | -------------------------- |
+| `<Arc>`    | `center` + `radius` + 角度              | 圆弧（默认开放；角度必填） |
+|            | `center` + `radiusX` + `radiusY` + 角度 | 椭圆弧                     |
+| `<Sector>` | `center` + `radius` + 角度              | 圆扇形（角度必填）         |
+|            | `center` + `radiusX` + `radiusY` + 角度 | 椭圆扇形                   |
+|            | + `innerRadius?`                        | 空心圆扇形                 |
+|            | + `innerRadiusX?` + `innerRadiusY?`     | 空心椭圆扇形               |
 
 共用属性（透传到底层 `<Path>`）：
 
-| 属性 | 类型 | 适用 | 说明 |
-| --- | --- | --- | --- |
-| 角度 | `startAngle` / `endAngle` / `sweepAngle` | Arc / Sector | 三选二，单位度；`0`=+x、`90`=屏幕下方 |
-| `center` | target | Arc / 实心 Sector | 接节点 id / 极坐标 / 笛卡尔；空心 Sector 须 literal `[x, y]` |
-| `close` | `'open' \| 'chord' \| 'sector'` | Arc | 闭合方式，缺省 `'open'` |
-| `label` | 边标注对象 | Arc / Sector | 沿弧定位，`position` 缺省 `midway` |
-| `rotate` / `scale` | `number` / `{ x, y }` | Arc / Sector | 绕包围盒中心整体变换 |
-| `marks` | `{ pos, mark }[]` | Arc / Sector | 沿路径中段放方向标记 |
-| 视觉 | `stroke` / `strokeWidth` / `dashPattern` / `arrow` / `fill` / `opacity` … | Arc / Sector | 透传 `<Path>` 全套视觉属性 |
+| 属性               | 类型                                                                      | 适用              | 说明                                                         |
+| ------------------ | ------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------ |
+| 角度               | `startAngle` / `endAngle` / `sweepAngle`                                  | Arc / Sector      | 三选二，单位度；`0`=+x、`90`=屏幕下方                        |
+| `center`           | target                                                                    | Arc / 实心 Sector | 接节点 id / 极坐标 / 笛卡尔；空心 Sector 须 literal `[x, y]` |
+| `close`            | `'open' \| 'chord' \| 'sector'`                                           | Arc               | 闭合方式，缺省 `'open'`                                      |
+| `label`            | 边标注对象                                                                | Arc / Sector      | 沿弧定位，`position` 缺省 `midway`                           |
+| `rotate` / `scale` | `number` / `{ x, y }`                                                     | Arc / Sector      | 绕包围盒中心整体变换                                         |
+| `marks`            | `{ pos, mark }[]`                                                         | Arc / Sector      | 沿路径中段放方向标记                                         |
+| 视觉               | `stroke` / `strokeWidth` / `dashPattern` / `arrow` / `fill` / `opacity` … | Arc / Sector      | 透传 `<Path>` 全套视觉属性                                   |
 
 ## 作为 Node 形状
 
@@ -122,10 +122,10 @@ import { Node } from '@retikz/react';
 
 ### 例子
 
-| shape | params | 说明 |
-| --- | --- | --- |
-| sector | `{ innerRadius, outerRadius, startAngle, endAngle }` | 环楔；`innerRadius:0` 为实心扇片 |
-| arc | `{ radius, startAngle, endAngle, close? }` | 单半径弧；`close:true` 闭合成弓形 |
+| shape  | params                                               | 说明                              |
+| ------ | ---------------------------------------------------- | --------------------------------- |
+| sector | `{ innerRadius, outerRadius, startAngle, endAngle }` | 环楔；`innerRadius:0` 为实心扇片  |
+| arc    | `{ radius, startAngle, endAngle, close? }`           | 单半径弧；`close:true` 闭合成弓形 |
 
 <ComponentPreview name="node-arc-sector" size="md" />
 
@@ -142,10 +142,10 @@ import { Node } from '@retikz/react';
 
 ### API 参考
 
-| `shape` | params | 边界 / 用途 |
-| --- | --- | --- |
+| `shape`                      | params                                                                      | 边界 / 用途                                |
+| ---------------------------- | --------------------------------------------------------------------------- | ------------------------------------------ |
 | `{ type: 'sector', params }` | `innerRadius` / `outerRadius` / `startAngle` / `endAngle` / `cornerRadius?` | 环楔（可连接，`innerRadius:0` 为实心扇片） |
-| `{ type: 'arc', params }` | `radius` / `startAngle` / `endAngle` / `close?` | 弧形 glyph（可连接） |
+| `{ type: 'arc', params }`    | `radius` / `startAngle` / `endAngle` / `close?`                             | 弧形 glyph（可连接）                       |
 
 sector 的 `cornerRadius`（用户单位）给环楔四角倒角，省略 / `0` = 硬角，逐角夹紧；`apex` / `*-arc-mid` 等命名锚点不随它移动。
 

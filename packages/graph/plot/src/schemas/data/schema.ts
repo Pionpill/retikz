@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { PlotFieldType } from './constants';
 
 export const FieldFormatSchema = z
@@ -10,14 +11,13 @@ export const FieldFormatSchema = z
 
 export const FieldDefSchema = z
   .object({
-    name: z
-      .string()
-      .min(1)
-      .describe('Field name as referenced by encoding channels (a path accessor like "a.b.c")'),
+    name: z.string().min(1).describe('Field name as referenced by encoding channels (a path accessor like "a.b.c")'),
     type: z
       .enum(PlotFieldType)
       .optional()
-      .describe('Field measurement type; omit to infer from the bound dataset at lowering. When given, drives type-driven scale selection and guide formatting without seeing the data'),
+      .describe(
+        'Field measurement type; omit to infer from the bound dataset at lowering. When given, drives type-driven scale selection and guide formatting without seeing the data',
+      ),
     format: FieldFormatSchema.optional().describe(
       'Declarative value-parsing format name; each resolved definition binds to one measurement type and must be compatible with type (it also implies type when type is omitted). Omit for the built-in default coercion',
     ),
@@ -25,10 +25,12 @@ export const FieldDefSchema = z
       .union([z.enum(['data', 'ascending', 'descending']), z.array(z.union([z.string(), z.number()])).min(1)])
       .optional()
       .describe(
-        "Category order for a categorical field: data appearance (default), ascending/descending sort, or an explicit value list. A non-default order marks the field as ordered. Drives the categorical domain for both band/point position and ordinal color, keeping position and color in the same order. Only valid on categorical fields; values present in the data but absent from an explicit list are appended at the end",
+        'Category order for a categorical field: data appearance (default), ascending/descending sort, or an explicit value list. A non-default order marks the field as ordered. Drives the categorical domain for both band/point position and ordinal color, keeping position and color in the same order. Only valid on categorical fields; values present in the data but absent from an explicit list are appended at the end',
       ),
   })
-  .describe('One field declaration: a field name, optionally its measurement type (inferred from data when omitted) and a declarative value-parsing format');
+  .describe(
+    'One field declaration: a field name, optionally its measurement type (inferred from data when omitted) and a declarative value-parsing format',
+  );
 
 export const DataModelSchema = z
   .array(FieldDefSchema)

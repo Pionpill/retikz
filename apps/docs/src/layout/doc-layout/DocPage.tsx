@@ -1,16 +1,20 @@
-import { BlogFrontmatter } from '@/components/shared/blog-frontmatter';
-import { ChangelogOverview, ChangelogVersionDetail, changelogToMarkdown } from '@/components/shared/changelog';
+import type { FC, HTMLAttributes } from 'react';
+
+import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
 import type { MdxFrontmatter } from '@/components/shared/mdx-content';
-import { InlineMdx, MdxContent, MdxToc, mdxHasToc } from '@/components/shared/mdx-content';
+
+import { BlogFrontmatter } from '@/components/shared/blog-frontmatter';
+import { ChangelogOverview, changelogToMarkdown, ChangelogVersionDetail } from '@/components/shared/changelog';
+import { InlineMdx, MdxContent, mdxHasToc, MdxToc } from '@/components/shared/mdx-content';
 import { changelogForModule, changelogPageDescription, changelogVersionSlug } from '@/data/changelog';
 import { getSectionsByModule } from '@/data/sections';
 import { buildDocPageLinks } from '@/lib/doc-links';
 import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/use-ai-chat-store';
 import { useTocStore } from '@/store/use-toc-store';
-import type { FC, HTMLAttributes } from 'react';
-import { useEffect, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+
 import { docPathSegments, isChangelogLocation, useDocLocation } from './doc-location';
 import { DocPageActions } from './DocPageActions';
 import { DocPageFooterNav } from './DocPageFooterNav';

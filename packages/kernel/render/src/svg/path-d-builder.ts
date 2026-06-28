@@ -22,13 +22,7 @@ const arcSvgFlags = (
 };
 
 /** 椭圆 polar 投影：未旋转椭圆上 angle 处的点（与 polar.ts 同约定，y-down，CW=正） */
-const ellipsePointAt = (
-  cx: number,
-  cy: number,
-  rx: number,
-  ry: number,
-  angleDeg: number,
-): [number, number] => {
+const ellipsePointAt = (cx: number, cy: number, rx: number, ry: number, angleDeg: number): [number, number] => {
   const rad = angleDeg * DEG_TO_RAD;
   return [cx + Math.cos(rad) * rx, cy + Math.sin(rad) * ry];
 };
@@ -86,9 +80,7 @@ export const buildPathD = (
         tokens.push(`L ${round(cmd.to[0])} ${round(cmd.to[1])}`);
         break;
       case 'quad':
-        tokens.push(
-          `Q ${round(cmd.control[0])} ${round(cmd.control[1])} ${round(cmd.to[0])} ${round(cmd.to[1])}`,
-        );
+        tokens.push(`Q ${round(cmd.control[0])} ${round(cmd.control[1])} ${round(cmd.to[0])} ${round(cmd.to[1])}`);
         break;
       case 'cubic':
         tokens.push(
@@ -99,13 +91,7 @@ export const buildPathD = (
         tokens.push('Z');
         break;
       case 'arc': {
-        const startPt = ellipsePointAt(
-          cmd.center[0],
-          cmd.center[1],
-          cmd.radius,
-          cmd.radius,
-          cmd.startAngle,
-        );
+        const startPt = ellipsePointAt(cmd.center[0], cmd.center[1], cmd.radius, cmd.radius, cmd.startAngle);
         // 第一段如果是 arc，需要先 move 到起点（path 起头单段调用场景）；
         // 否则由上游显式 move 命令保证 cursor 在 startPt——这里仍主动 emit M 让 buildPathD 单独可用
         if (tokens.length === 0) {
@@ -125,13 +111,7 @@ export const buildPathD = (
         break;
       }
       case 'ellipseArc': {
-        const startPt = ellipsePointAt(
-          cmd.center[0],
-          cmd.center[1],
-          cmd.radiusX,
-          cmd.radiusY,
-          cmd.startAngle,
-        );
+        const startPt = ellipsePointAt(cmd.center[0], cmd.center[1], cmd.radiusX, cmd.radiusY, cmd.startAngle);
         if (tokens.length === 0) {
           tokens.push(`M ${round(startPt[0])} ${round(startPt[1])}`);
         }
@@ -151,9 +131,7 @@ export const buildPathD = (
       default: {
         // exhaustive 防御：新增 kind 必须在此扩展
         const exhaustive: never = cmd;
-        throw new Error(
-          `buildPathD: unknown PathCommand kind: ${String((exhaustive as { kind: string }).kind)}`,
-        );
+        throw new Error(`buildPathD: unknown PathCommand kind: ${String((exhaustive as { kind: string }).kind)}`);
       }
     }
   }

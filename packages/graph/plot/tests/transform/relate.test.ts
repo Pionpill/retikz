@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { PlotSpecSchema, TransformSchema } from '../../src/schemas';
-import { applyTransforms, resolveTransformRegistry } from '../../src/providers';
+
 import { collectSourceFields } from '../../src/pipeline/source-fields';
+import { applyTransforms, resolveTransformRegistry } from '../../src/providers';
+import { PlotSpecSchema, TransformSchema } from '../../src/schemas';
 
 describe('relate transform', () => {
   const operation = {

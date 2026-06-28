@@ -31,15 +31,15 @@ import { Plot, PointMark, RelationMark } from '@retikz/plot-react';
 
 RelationMark is the low-level relationship path mark. It does not reinvent arrows, labels, or routed lines; it turns relationship data into a core `Path.children` step sequence. Dependency lines, flow lines, reference lines, and labeled connectors are all different configurations of the same source-target path.
 
-| Presentation | Key props | Notes |
-| --- | --- | --- |
-| Point-to-point relation | `source` / `target` | Reference existing nodes by id or generated anchor rules, then connect with the default `move -> line` path |
-| Waypoint path | `path.via` / `path.route[].to` | Projected waypoints generate core `Coordinate` elements, so later ids can reference them |
-| Geometry label | `label` | Lowers to core `Path.label`; path and ribbon relations share the same host label |
-| Step label | `path.label` / `path.route[].label` | Lowers to core step label; explicit step labels win over shorthand |
-| Core Path capabilities | `path.options` | Passes through path-only options such as arrows, rounded corners, and marks |
-| Path ribbon kind | `kind="ribbon"` / `ribbon` | Lowers source-target rows into core `Path` objects with `kind: 'ribbon'` for Sankey-style bands |
-| Shared style | `style` | Shared paint and opacity fields used by both path and ribbon relations |
+| Presentation            | Key props                           | Notes                                                                                                       |
+| ----------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Point-to-point relation | `source` / `target`                 | Reference existing nodes by id or generated anchor rules, then connect with the default `move -> line` path |
+| Waypoint path           | `path.via` / `path.route[].to`      | Projected waypoints generate core `Coordinate` elements, so later ids can reference them                    |
+| Geometry label          | `label`                             | Lowers to core `Path.label`; path and ribbon relations share the same host label                            |
+| Step label              | `path.label` / `path.route[].label` | Lowers to core step label; explicit step labels win over shorthand                                          |
+| Core Path capabilities  | `path.options`                      | Passes through path-only options such as arrows, rounded corners, and marks                                 |
+| Path ribbon kind        | `kind="ribbon"` / `ribbon`          | Lowers source-target rows into core `Path` objects with `kind: 'ribbon'` for Sankey-style bands             |
+| Shared style            | `style`                             | Shared paint and opacity fields used by both path and ribbon relations                                      |
 
 ## Examples
 
@@ -81,11 +81,11 @@ In a bar or interval chart, a relation can connect the tops of two interval elem
 
 Target references share the `PlotTargetRef` structure:
 
-| Form | Use | Notes |
-| --- | --- | --- |
-| `{ id }` | Reference an existing core target directly | Can also carry `anchor` / `offset` / `boundary` |
-| `{ anchorId }` | Generate the target id from the current relation row | Uses the same rule shape as positional mark `anchorId`; useful for joining by data fields |
-| `{ project }` | Project a point from the current relation row | `project` maps coordinate roles to fields; add `anchorId` only when the point needs a reusable id |
+| Form           | Use                                                  | Notes                                                                                             |
+| -------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `{ id }`       | Reference an existing core target directly           | Can also carry `anchor` / `offset` / `boundary`                                                   |
+| `{ anchorId }` | Generate the target id from the current relation row | Uses the same rule shape as positional mark `anchorId`; useful for joining by data fields         |
+| `{ project }`  | Project a point from the current relation row        | `project` maps coordinate roles to fields; add `anchorId` only when the point needs a reusable id |
 
 Without `path.route`, the default path is `move(source) -> line(target)`. With `path.via`, intermediate points are inserted as `line(via)` in order. `path.routing` is a route strategy: `line` keeps straight segments, `bend` emits core bend steps, and `orthogonal` emits explicit right-angle line steps when the endpoints are projected coordinates. With `path.route`, route steps align with core path steps and support `line`, `fold`, `curve`, `cubic`, and `bend`. `path.route` and `path.routing` are mutually exclusive. Top-level `label` is the host label and attaches to the final core `Path.label`, shared by path and ribbon relations; it carries no `kind`, and its text source lives in `content.field` / `content.value`. `path.label` is shorthand for a step label: it lands on the default path, the selected routing segment, or the final drawable explicit route step. If a `path.route[].label` is already set, that explicit step label wins. Step labels generated by RelationMark default to `side: 'sloped'`, so they rotate along the path; an explicit `side` still takes priority. Ribbon relations do not use path routing; they draw a direct ribbon centerline from source to target.
 
@@ -97,26 +97,26 @@ When a relation uses generated `anchorId` and the target does not exist, lowerin
 
 ### Mark API
 
-| Group | Prop | Type | Default | Description |
-| --- | --- | --- | --- | --- |
-| Target | `source` | `PlotTargetRef` | Required | Start target of the relationship: direct id, generated anchor id, or projected coordinate |
-|  | `target` | `PlotTargetRef` | Required | End target of the relationship, using the same structure as `source` |
-| Data | `transform` | `Array<Transform>?` | - | Mark-local transform pipeline for deriving the current relation layer's rows from plot rows; see the transform table below for each type |
-| Geometry | `kind` | `'path' / 'ribbon'` | `path` | Chooses whether each relation row lowers to the default Path or a Path with `kind: 'ribbon'` |
-| Label | `label` | `MarkGeometryLabel`<br />`Array<MarkGeometryLabel>?` | - | Label for the whole relation geometry; path and ribbon both lower it to core `Path.label`, with content in `content.field` / `content.value` |
-| Path | `path.via` | `Array<PlotTargetRef>` | - | Waypoints for the default route; each projected waypoint generates a core `Coordinate` |
-|  | `path.route` | `Array<RelationRouteStep>` | - | Explicit step sequence; the last step may omit `to` and default to `target` |
-|  | `path.routing` | `RelationRoutingSpec?` | `line` | Algorithmic route strategy: `line`, `bend`, or `orthogonal`; mutually exclusive with `path.route` |
-|  | `path.route[].label` | `RelationStepLabel?` | - | Label for the current step; higher priority than `path.label` shorthand |
-|  | `path.label` | `RelationStepLabel?` | - | Shorthand path label for the default path or the final drawable route step; defaults to `sloped` when `side` is omitted |
-|  | `path.options` | `RelationPathSpecificOptions?` | - | Path-only options such as `arrow`, `arrowDetail`, `marks`, `dashPattern`, `roundedCorners`, `lineCap`, and `lineJoin` |
-| Ribbon | `ribbon.width` | `MarkValue<number>` | Required for `kind="ribbon"` | Ribbon width at the source side, or the whole width when `endWidth` is omitted |
-|  | `ribbon.endWidth` | `MarkValue<number>?` | - | Optional target-side width for tapered ribbons |
-|  | `ribbon.options` | `RelationRibbonSpecificOptions?` | - | Ribbon-only options: `align`, `samples`, `sampling`, and taper `interpolation` |
-| Style | `style` | `RelationPrimitiveStyle?` | - | Shared style: `color`, `fill`, `fillOpacity`, `stroke`, `strokeWidth`, `drawOpacity`, `opacity`, `shadow`, `blendMode`, `zIndex` |
-|  | `color` | `FieldName?` | - | Field-driven relation color channel |
-| Common | `id` | `string?` | - | Optional mark handle for layer ids, errors, and runtime lookup |
-| Custom | `channels` | `Record<string, Channel>` | - | Custom channel entry point, resolved by registered channel definitions |
+| Group    | Prop                 | Type                                                 | Default                      | Description                                                                                                                                  |
+| -------- | -------------------- | ---------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Target   | `source`             | `PlotTargetRef`                                      | Required                     | Start target of the relationship: direct id, generated anchor id, or projected coordinate                                                    |
+|          | `target`             | `PlotTargetRef`                                      | Required                     | End target of the relationship, using the same structure as `source`                                                                         |
+| Data     | `transform`          | `Array<Transform>?`                                  | -                            | Mark-local transform pipeline for deriving the current relation layer's rows from plot rows; see the transform table below for each type     |
+| Geometry | `kind`               | `'path' / 'ribbon'`                                  | `path`                       | Chooses whether each relation row lowers to the default Path or a Path with `kind: 'ribbon'`                                                 |
+| Label    | `label`              | `MarkGeometryLabel`<br />`Array<MarkGeometryLabel>?` | -                            | Label for the whole relation geometry; path and ribbon both lower it to core `Path.label`, with content in `content.field` / `content.value` |
+| Path     | `path.via`           | `Array<PlotTargetRef>`                               | -                            | Waypoints for the default route; each projected waypoint generates a core `Coordinate`                                                       |
+|          | `path.route`         | `Array<RelationRouteStep>`                           | -                            | Explicit step sequence; the last step may omit `to` and default to `target`                                                                  |
+|          | `path.routing`       | `RelationRoutingSpec?`                               | `line`                       | Algorithmic route strategy: `line`, `bend`, or `orthogonal`; mutually exclusive with `path.route`                                            |
+|          | `path.route[].label` | `RelationStepLabel?`                                 | -                            | Label for the current step; higher priority than `path.label` shorthand                                                                      |
+|          | `path.label`         | `RelationStepLabel?`                                 | -                            | Shorthand path label for the default path or the final drawable route step; defaults to `sloped` when `side` is omitted                      |
+|          | `path.options`       | `RelationPathSpecificOptions?`                       | -                            | Path-only options such as `arrow`, `arrowDetail`, `marks`, `dashPattern`, `roundedCorners`, `lineCap`, and `lineJoin`                        |
+| Ribbon   | `ribbon.width`       | `MarkValue<number>`                                  | Required for `kind="ribbon"` | Ribbon width at the source side, or the whole width when `endWidth` is omitted                                                               |
+|          | `ribbon.endWidth`    | `MarkValue<number>?`                                 | -                            | Optional target-side width for tapered ribbons                                                                                               |
+|          | `ribbon.options`     | `RelationRibbonSpecificOptions?`                     | -                            | Ribbon-only options: `align`, `samples`, `sampling`, and taper `interpolation`                                                               |
+| Style    | `style`              | `RelationPrimitiveStyle?`                            | -                            | Shared style: `color`, `fill`, `fillOpacity`, `stroke`, `strokeWidth`, `drawOpacity`, `opacity`, `shadow`, `blendMode`, `zIndex`             |
+|          | `color`              | `FieldName?`                                         | -                            | Field-driven relation color channel                                                                                                          |
+| Common   | `id`                 | `string?`                                            | -                            | Optional mark handle for layer ids, errors, and runtime lookup                                                                               |
+| Custom   | `channels`           | `Record<string, Channel>`                            | -                            | Custom channel entry point, resolved by registered channel definitions                                                                       |
 
 Path-only fields live under `path.options`, while fields that both path and ribbon can use live under `style`. This keeps `strokeWidth`, `fillOpacity`, `opacity`, `fill`, and `stroke` in one shared place and keeps arrow / route-only behavior out of ribbon configs.
 
@@ -124,8 +124,8 @@ Path-only fields live under `path.options`, while fields that both path and ribb
 
 `transform` is the mark-local data entry shared by all marks, and it reuses the plot transform structure; see [Transform](/graph/grammar/transform) for common transform types. Inside `RelationMark`, it only feeds the current relation mark and does not rewrite the rows seen by sibling marks. This table lists the relation-oriented transform that is most often used here.
 
-| Type | Row count | Meaning |
-| --- | --- | --- |
+| Type     | Row count         | Meaning                                                                                                                     |
+| -------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `relate` | N → relation rows | Reuses common selectors to choose source / target rows, usually for `RelationMark.transform`, and can also feed other marks |
 
 ## Related

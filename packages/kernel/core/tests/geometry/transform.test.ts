@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+
 import type { CenteredShape } from '../../src/geometry/transform';
+
 import { localToWorld, worldToLocal } from '../../src/geometry/transform';
 
 /*

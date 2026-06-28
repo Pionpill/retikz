@@ -1,7 +1,20 @@
 import { z } from 'zod';
-import { type AnyStatisticsReducerDefinition, defineStatisticsReducer } from '../../contract';
-import { type ExternalRow, QuantileBandReducerOperationSchema } from '../../schemas';
-import { finiteExtentOf, finiteValuesOf, medianOf, quantileBandStatsOf, quantileOf, quantileOfSorted, spreadFactorOf, valuesWithin } from './helpers';
+
+import type { AnyStatisticsReducerDefinition } from '../../contract';
+import type { ExternalRow } from '../../schemas';
+
+import { defineStatisticsReducer } from '../../contract';
+import { QuantileBandReducerOperationSchema } from '../../schemas';
+import {
+  finiteExtentOf,
+  finiteValuesOf,
+  medianOf,
+  quantileBandStatsOf,
+  quantileOf,
+  quantileOfSorted,
+  spreadFactorOf,
+  valuesWithin,
+} from './helpers';
 
 /** `count` reducer：统计组内行数。 */
 const countReducerDefinition = defineStatisticsReducer({
@@ -22,7 +35,9 @@ const sumReducerDefinition = defineStatisticsReducer({
   }),
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
-  reduce: (rows, operation) => ({ [operation.as]: finiteValuesOf(rows, operation.field).reduce((sum, value) => sum + value, 0) }),
+  reduce: (rows, operation) => ({
+    [operation.as]: finiteValuesOf(rows, operation.field).reduce((sum, value) => sum + value, 0),
+  }),
 });
 
 /** `mean` reducer：对有限数值求平均。 */
@@ -120,7 +135,16 @@ const quantileBandReducerDefinition = defineStatisticsReducer({
       operation.outputs.upper,
       ...(operation.outputs.points?.map(point => point.as) ?? []),
     ];
-    for (const key of ['spread', 'lowerFence', 'upperFence', 'whiskerMin', 'whiskerMax', 'min', 'max', 'count'] as const) {
+    for (const key of [
+      'spread',
+      'lowerFence',
+      'upperFence',
+      'whiskerMin',
+      'whiskerMax',
+      'min',
+      'max',
+      'count',
+    ] as const) {
       const field = operation.outputs[key];
       if (field !== undefined) outputs.push(field);
     }

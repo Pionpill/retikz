@@ -9,13 +9,13 @@ description: 绘制家族：从日常连线的 Sugar 到逐段精确控制的 Ke
 
 ## 职责一览
 
-| 组件 | 类型 | 职责 | 适合场景 |
-| --- | --- | --- | --- |
-| Draw | Sugar | way 数组串起目标点、折角、曲线、闭合、边标注和样式，编译期展开为 Path + Step | 日常连线、流程图边、带箭头连接 |
-| Way | Sugar | Draw 的 way item 形态、DrawWay 常量、折角、闭合、相对坐标 | 查询 way 数组里能写什么 |
-| Path | Kernel | 路径容器，由 Step 子节点定义折线、曲线、弧形；`kind="ribbon"` 绘制可填充带状关系面 | 多次 move、逐段精确控制、贴近 IR、关系流带 |
-| Step | Kernel | 一个 step = 一个动作：move / line / curve / arc / cycle 等 | 逐段控制每一段路径动作语义 |
-| Arrow | 通用 | Path / Draw 共享的箭头：`arrow` 定方向，`arrowDetail` 管视觉规格 | 精细控制箭头 shape、尺寸、颜色、起末差异 |
+| 组件  | 类型   | 职责                                                                               | 适合场景                                   |
+| ----- | ------ | ---------------------------------------------------------------------------------- | ------------------------------------------ |
+| Draw  | Sugar  | way 数组串起目标点、折角、曲线、闭合、边标注和样式，编译期展开为 Path + Step       | 日常连线、流程图边、带箭头连接             |
+| Way   | Sugar  | Draw 的 way item 形态、DrawWay 常量、折角、闭合、相对坐标                          | 查询 way 数组里能写什么                    |
+| Path  | Kernel | 路径容器，由 Step 子节点定义折线、曲线、弧形；`kind="ribbon"` 绘制可填充带状关系面 | 多次 move、逐段精确控制、贴近 IR、关系流带 |
+| Step  | Kernel | 一个 step = 一个动作：move / line / curve / arc / cycle 等                         | 逐段控制每一段路径动作语义                 |
+| Arrow | 通用   | Path / Draw 共享的箭头：`arrow` 定方向，`arrowDetail` 管视觉规格                   | 精细控制箭头 shape、尺寸、颜色、起末差异   |
 
 ## 章节内容
 

@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * "IR 居中" 架构插图

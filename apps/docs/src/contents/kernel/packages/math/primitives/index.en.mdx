@@ -22,9 +22,9 @@ const DEFAULT_EPSILON = 1e-9;
 
 /** "Center + optional rotation" shape contract, used by affine transforms */
 type CenteredShape = {
-  x: number;        // center x
-  y: number;        // center y
-  rotate?: number;  // rotation in radians about the center; omitted / 0 = no rotation
+  x: number; // center x
+  y: number; // center y
+  rotate?: number; // rotation in radians about the center; omitted / 0 = no rotation
 };
 ```
 
@@ -42,10 +42,10 @@ point.normalize  (a: Position, fallback?: Position, epsilon?: number): Position
 point.shiftToward(p: Position, target: Position, dist: number): Position
 ```
 
-| Function | Params / behavior |
-| --- | --- |
-| `normalize` | `fallback` is returned for a zero-length vector, default `[1, 0]`; `epsilon` is the zero threshold, default `DEFAULT_EPSILON` |
-| `shiftToward` | moves `p` along the `p→target` unit direction by `dist`; returns `p` unchanged when `dist=0` or `p===target` |
+| Function      | Params / behavior                                                                                                             |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `normalize`   | `fallback` is returned for a zero-length vector, default `[1, 0]`; `epsilon` is the zero threshold, default `DEFAULT_EPSILON` |
+| `shiftToward` | moves `p` along the `p→target` unit direction by `dist`; returns `p` unchanged when `dist=0` or `p===target`                  |
 
 ## lerp
 
@@ -83,4 +83,7 @@ arcBoundingPoints(center: Position, radius: number, startDeg: number, endDeg: nu
 ellipseArcBoundingPoints(center: Position, rx: number, ry: number, startDeg: number, endDeg: number): Array<Position>;
 ```
 
-<ComponentAlert title="rayArc returns parameters, not points" description="rayArc returns an array of scalar distances along the ray (hit point = origin + s·dir), handy for picking the nearest hit — unlike intersect.* in Algorithms, which return coordinate points." />
+<ComponentAlert
+  title="rayArc returns parameters, not points"
+  description="rayArc returns an array of scalar distances along the ray (hit point = origin + s·dir), handy for picking the nearest hit — unlike intersect.* in Algorithms, which return coordinate points."
+/>

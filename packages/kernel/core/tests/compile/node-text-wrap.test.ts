@@ -5,10 +5,12 @@
  *   用确定性 measureText（width = 字符数）让断点可精确断言。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { CompileOptions } from '../../src/compile/compile';
-import type { IR } from '../../src/schemas';
 import type { ScenePrimitive, TextPrim } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
 const findText = (prims: Array<ScenePrimitive>): TextPrim | undefined =>
@@ -18,7 +20,11 @@ const findText = (prims: Array<ScenePrimitive>): TextPrim | undefined =>
 const opts: CompileOptions = { measureText: text => ({ width: [...text].length, height: 14 }) };
 
 const compileNode = (node: Record<string, unknown>): TextPrim => {
-  const ir: IR = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', position: [0, 0], ...node }] as never };
+  const ir: IR = {
+    version: 1,
+    type: 'scene',
+    children: [{ type: 'node', id: 'A', position: [0, 0], ...node }] as never,
+  };
   const t = findText(compileToScene(ir, opts).primitives);
   if (!t) throw new Error('expected TextPrim');
   return t;

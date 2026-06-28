@@ -1,5 +1,6 @@
-import { Circle, Draw, DrawWay, Layout, Node, Rectangle } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Circle, Draw, DrawWay, Layout, Node, Rectangle } from '@retikz/react';
 
 const FONT = { size: 10 };
 const RECT = { fill: 'none', stroke: 'darkorange', strokeWidth: 2 } as const;
@@ -8,7 +9,10 @@ const TITLE = { stroke: 'none', textColor: 'gray' } as const;
 const TAG = { stroke: 'none', textColor: 'gray' } as const;
 const DEG = Math.PI / 180;
 
-const polar = (cx: number, cy: number, r: number, deg: number): [number, number] => [cx + r * Math.cos(deg * DEG), cy + r * Math.sin(deg * DEG)];
+const polar = (cx: number, cy: number, r: number, deg: number): [number, number] => [
+  cx + r * Math.cos(deg * DEG),
+  cy + r * Math.sin(deg * DEG),
+];
 const arcPts = (cx: number, cy: number, r: number, a: number, b: number, n: number): Array<[number, number]> =>
   Array.from({ length: n + 1 }, (_unused, i): [number, number] => polar(cx, cy, r, a + ((b - a) * i) / n));
 
@@ -34,7 +38,9 @@ const EDGE_PT: [number, number] = [RB.x - RB.w + 0.25 * 2 * RB.w, RB.y - RB.h];
 
 // 第二排：有 shape 专属 anchor 的非矩形 —— star / sector / arc
 const STAR_C = { x: -130, y: 88, ro: 34, ri: 14 };
-const STAR: Array<[number, number]> = Array.from({ length: 10 }, (_unused, j): [number, number] => polar(STAR_C.x, STAR_C.y, j % 2 === 0 ? STAR_C.ro : STAR_C.ri, -90 + j * 36));
+const STAR: Array<[number, number]> = Array.from({ length: 10 }, (_unused, j): [number, number] =>
+  polar(STAR_C.x, STAR_C.y, j % 2 === 0 ? STAR_C.ro : STAR_C.ri, -90 + j * 36),
+);
 const TIPS = [0, 2, 4, 6, 8].map(j => STAR[j]);
 
 const SEC = { x: 0, y: 110, ro: 44, ri: 0, a: -150, b: -30 };
@@ -53,7 +59,12 @@ const ARC_TIPS: Array<[number, number]> = [
 ];
 
 const Demo: FC = () => (
-  <Layout width={520} height={333} viewBox={{ x: -200, y: -106, width: 400, height: 256 }} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout
+    width={520}
+    height={333}
+    viewBox={{ x: -200, y: -106, width: 400, height: 256 }}
+    style={{ maxWidth: '100%', height: 'auto' }}
+  >
     {/* 第一排 · 左：8 方位 anchor */}
     <Rectangle center={[RA.x, RA.y]} width={RA.w * 2} height={RA.h * 2} {...RECT} />
     <Circle center={[RA.x, RA.y]} radius={3} fill="dodgerblue" stroke="none" />
@@ -61,7 +72,13 @@ const Demo: FC = () => (
       <Circle key={`a-${l}`} center={[RA.x + dx * RA.w, RA.y + dy * RA.h]} radius={3} fill="dodgerblue" stroke="none" />
     ))}
     {COMPASS.map(({ dx, dy, l }) => (
-      <Node key={`al-${l}`} id={`al-${l}`} position={[RA.x + dx * (RA.w + 15), RA.y + dy * (RA.h + 12)]} {...TAG} font={FONT}>
+      <Node
+        key={`al-${l}`}
+        id={`al-${l}`}
+        position={[RA.x + dx * (RA.w + 15), RA.y + dy * (RA.h + 12)]}
+        {...TAG}
+        font={FONT}
+      >
         {l}
       </Node>
     ))}

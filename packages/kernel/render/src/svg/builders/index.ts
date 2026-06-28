@@ -4,9 +4,9 @@
  *   `arrowCollect`（collectArrowSpecs / stableSpecKey / hashKey）与 `attrs`（compact）只供包内直接 import
  *   （如 `document.ts` 走 `./arrowCollect`），不属于公开 API。
  */
-export * from './prim';
+export * from './arrow-markers';
+export * from './clip-defs';
+export * from './document';
 export * from './marker-prim';
 export * from './paint-defs';
-export * from './clip-defs';
-export * from './arrow-markers';
-export * from './document';
+export * from './prim';

@@ -1,5 +1,5 @@
-import type { FC } from 'react';
 import type { TransformOperation } from '@retikz/plot';
+import type { FC } from 'react';
 
 /**
  * <Transform> props：通用数据 transform 声明（按 kind 判别的扁平 props，与 IR Transform 一一对应）

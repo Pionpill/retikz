@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * Node `at` 相对定位
@@ -7,15 +8,21 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={420} height={200} nodeDistance={100}>
-    <Node id="A" position={[0, 0]}>A</Node>
-    <Node id="B" position={{ direction: 'right', of: 'A' }}>B</Node>
-    <Node id="C" position={{ direction: 'right', of: 'B' }}>C</Node>
-    <Node id="D" position={{ direction: 'below', of: 'B', distance: 56 }} shape="circle">D</Node>
-    <Node
-      id="E"
-      shape="diamond"
-      position={{ direction: 'below-right', of: 'C', distance: 70 }}
-    >E</Node>
+    <Node id="A" position={[0, 0]}>
+      A
+    </Node>
+    <Node id="B" position={{ direction: 'right', of: 'A' }}>
+      B
+    </Node>
+    <Node id="C" position={{ direction: 'right', of: 'B' }}>
+      C
+    </Node>
+    <Node id="D" position={{ direction: 'below', of: 'B', distance: 56 }} shape="circle">
+      D
+    </Node>
+    <Node id="E" shape="diamond" position={{ direction: 'below-right', of: 'C', distance: 70 }}>
+      E
+    </Node>
     <Draw way={['A', 'B']} arrow="->" stroke="gray" />
     <Draw way={['B', 'C']} arrow="->" stroke="gray" />
     <Draw way={['B', 'D']} arrow="->" stroke="gray" />

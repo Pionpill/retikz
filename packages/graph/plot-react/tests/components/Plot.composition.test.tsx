@@ -1,6 +1,8 @@
+import type { PlotSpec } from '@retikz/plot';
+
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import type { PlotSpec } from '@retikz/plot';
+
 import { Axis, IntervalMark, PathMark, Plot, PointMark, Scale } from '../../src';
 
 const rows = [
@@ -56,7 +58,9 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
       ],
       guides: [],
     };
-    const viaSpec = renderToStaticMarkup(<Plot spec={equivalentSpec} data={{ __plot: rows }} width={480} height={300} />);
+    const viaSpec = renderToStaticMarkup(
+      <Plot spec={equivalentSpec} data={{ __plot: rows }} width={480} height={300} />,
+    );
     expect(geometry(viaDsl)).toEqual(geometry(viaSpec));
   });
 
@@ -264,11 +268,26 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
         { type: 'linear', name: '__radius' },
         { type: 'ordinal', name: '__color' },
       ],
-      coordinate: { type: 'polar2D', angle: '__angle', radius: '__radius', startAngle: 0, endAngle: 360, innerRadius: 0 },
-      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label', scale: '__color' } } }],
+      coordinate: {
+        type: 'polar2D',
+        angle: '__angle',
+        radius: '__radius',
+        startAngle: 0,
+        endAngle: 360,
+        innerRadius: 0,
+      },
+      marks: [
+        {
+          type: 'interval',
+          bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+          encoding: { color: { field: 'label', scale: '__color' } },
+        },
+      ],
       guides: [],
     };
-    const viaSpec = renderToStaticMarkup(<Plot spec={equivalentSpec} data={{ __plot: share }} width={360} height={360} />);
+    const viaSpec = renderToStaticMarkup(
+      <Plot spec={equivalentSpec} data={{ __plot: share }} width={360} height={360} />,
+    );
     expect(geometry(viaDsl)).toEqual(geometry(viaSpec));
   });
 });

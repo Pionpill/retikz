@@ -1,15 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import {
-  type IR,
-  type IRPathBase,
-  type IRPathRibbonOptions,
-  type IRStep,
-  type PathPrim,
-  PathSchema,
-  type ScenePrimitive,
-  compileToScene,
-  defineRibbonWidthProfile,
-} from '../../src';
+
+import type { IR, IRPathBase, IRPathRibbonOptions, IRStep, PathPrim, ScenePrimitive } from '../../src';
+
+import { compileToScene, defineRibbonWidthProfile, PathSchema } from '../../src';
 
 const scene = (children: IR['children']): IR => ({
   version: 1,
@@ -27,11 +20,7 @@ const commandPoint = (command: PathPrim['commands'][number]): [number, number] =
   return command.to;
 };
 
-const ribbonCenterAt = (
-  prim: PathPrim,
-  sampleCount: number,
-  sampleIndex: number,
-): [number, number] => {
+const ribbonCenterAt = (prim: PathPrim, sampleCount: number, sampleIndex: number): [number, number] => {
   const left = commandPoint(prim.commands[sampleIndex]);
   const right = commandPoint(prim.commands[sampleCount * 2 - 1 - sampleIndex]);
   return [(left[0] + right[0]) / 2, (left[1] + right[1]) / 2];
@@ -95,9 +84,13 @@ const normalizeRibbonInput = (input: Record<string, unknown> = {}): IRPathBase =
 
 const RibbonSchema = {
   parse: (value: unknown): IRPathBase =>
-    PathSchema.parse(typeof value === 'object' && value !== null ? normalizeRibbonInput(value as Record<string, unknown>) : value),
+    PathSchema.parse(
+      typeof value === 'object' && value !== null ? normalizeRibbonInput(value as Record<string, unknown>) : value,
+    ),
   safeParse: (value: unknown) =>
-    PathSchema.safeParse(typeof value === 'object' && value !== null ? normalizeRibbonInput(value as Record<string, unknown>) : value),
+    PathSchema.safeParse(
+      typeof value === 'object' && value !== null ? normalizeRibbonInput(value as Record<string, unknown>) : value,
+    ),
 };
 
 const ribbon = (overrides: Record<string, unknown> = {}): IRPathBase =>
@@ -108,9 +101,7 @@ const ribbon = (overrides: Record<string, unknown> = {}): IRPathBase =>
     ...overrides,
   });
 
-const ribbonWithoutSamples = (
-  overrides: RibbonInput = {},
-): IRPathBase => {
+const ribbonWithoutSamples = (overrides: RibbonInput = {}): IRPathBase => {
   const next = ribbon(overrides);
   if (next.ribbon !== undefined) delete next.ribbon.samples;
   return next;
@@ -120,11 +111,11 @@ describe('compile ribbon', () => {
   it('schema accepts JSON round-trip numeric width and rejects negative widths', () => {
     expect(RibbonSchema.parse(JSON.parse(JSON.stringify(ribbon())))).toEqual(ribbon());
     expect(() => RibbonSchema.parse(ribbon({ width: -1 }))).toThrow();
-    expect(() =>
-      RibbonSchema.parse(ribbon({ width: undefined, start: { width: -1 }, end: { width: 2 } })),
-    ).toThrow();
+    expect(() => RibbonSchema.parse(ribbon({ width: undefined, start: { width: -1 }, end: { width: 2 } }))).toThrow();
     expect(() => RibbonSchema.parse(ribbon({ start: { direction: [0, 0] } }))).toThrow();
-    expect(RibbonSchema.parse(ribbon({ start: { direction: { angle: 90, radius: 1 } } })).ribbon?.start?.direction).toEqual({
+    expect(
+      RibbonSchema.parse(ribbon({ start: { direction: { angle: 90, radius: 1 } } })).ribbon?.start?.direction,
+    ).toEqual({
       angle: 90,
       radius: 1,
     });
@@ -190,13 +181,7 @@ describe('compile ribbon', () => {
     );
     const prim = pathPrim(compiled.primitives[0]);
 
-    expect(prim.commands.map(command => command.kind)).toEqual([
-      'move',
-      'quad',
-      'line',
-      'quad',
-      'close',
-    ]);
+    expect(prim.commands.map(command => command.kind)).toEqual(['move', 'quad', 'line', 'quad', 'close']);
   });
 
   it('samples true uses the default fixed sampling count', () => {
@@ -402,12 +387,8 @@ describe('compile ribbon', () => {
   });
 
   it('aligns centerline ribbons to the left or right side', () => {
-    const left = pathPrim(
-      compileToScene(scene([ribbon({ align: 'left' })]), { padding: 0 }).primitives[0],
-    );
-    const right = pathPrim(
-      compileToScene(scene([ribbon({ align: 'right' })]), { padding: 0 }).primitives[0],
-    );
+    const left = pathPrim(compileToScene(scene([ribbon({ align: 'left' })]), { padding: 0 }).primitives[0]);
+    const right = pathPrim(compileToScene(scene([ribbon({ align: 'right' })]), { padding: 0 }).primitives[0]);
 
     expect(left.commands).toEqual([
       { kind: 'move', to: [0, 4] },
@@ -511,9 +492,9 @@ describe('compile ribbon', () => {
     );
 
     expect(prim.commands).toHaveLength(7);
-    expect(() =>
-      RibbonSchema.parse(ribbon({ samples: 2, sampling: { kind: 'fixed', samples: 3 } })),
-    ).toThrow(/samples/);
+    expect(() => RibbonSchema.parse(ribbon({ samples: 2, sampling: { kind: 'fixed', samples: 3 } }))).toThrow(
+      /samples/,
+    );
   });
 
   it('normalizes angle, vector, and polar endpoint directions through the same path', () => {
@@ -537,9 +518,7 @@ describe('compile ribbon', () => {
       ).commands;
 
     expect(commandsFor([0, 1], [0, 1])).toEqual(commandsFor(90, 90));
-    expect(commandsFor({ angle: 90, radius: 1 }, { angle: 90, radius: 1 })).toEqual(
-      commandsFor(90, 90),
-    );
+    expect(commandsFor({ angle: 90, radius: 1 }, { angle: 90, radius: 1 })).toEqual(commandsFor(90, 90));
   });
 
   it('uses endpoint directions to reshape curved centerline tangents', () => {
@@ -551,10 +530,9 @@ describe('compile ribbon', () => {
       compileToScene(scene([ribbon({ children, samples: 5 })]), { padding: 0 }).primitives[0],
     );
     const withDirection = pathPrim(
-      compileToScene(
-        scene([ribbon({ children, samples: 5, start: { direction: 0 }, end: { direction: 0 } })]),
-        { padding: 0 },
-      ).primitives[0],
+      compileToScene(scene([ribbon({ children, samples: 5, start: { direction: 0 }, end: { direction: 0 } })]), {
+        padding: 0,
+      }).primitives[0],
     );
 
     expect(ribbonCenterAt(withoutDirection, 5, 1)[1]).toBeLessThan(0);
@@ -651,9 +629,7 @@ describe('compile ribbon', () => {
   });
 
   it('throws for an unregistered width profile', () => {
-    expect(() =>
-      compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'missing' } })])),
-    ).toThrow(/missing/);
+    expect(() => compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'missing' } })]))).toThrow(/missing/);
   });
 
   it('throws when a registered width profile returns a non-finite width', () => {
@@ -779,13 +755,9 @@ describe('compile ribbon', () => {
   });
 
   it('uses ribbon zIndex when sorting lowered path primitives', () => {
-    const compiled = compileToScene(
-      scene([
-        ribbon({ id: 'front', zIndex: 2 }),
-        ribbon({ id: 'back', zIndex: 0 }),
-      ]),
-      { padding: 0 },
-    );
+    const compiled = compileToScene(scene([ribbon({ id: 'front', zIndex: 2 }), ribbon({ id: 'back', zIndex: 0 })]), {
+      padding: 0,
+    });
 
     expect(compiled.primitives.map(prim => prim.id)).toEqual(['back', 'front']);
   });

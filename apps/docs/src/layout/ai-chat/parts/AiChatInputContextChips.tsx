@@ -1,5 +1,7 @@
+import type { FC } from 'react';
+
 import { FileText, X } from 'lucide-react';
-import { type FC, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useAiChatStore } from '@/store/use-ai-chat-store';

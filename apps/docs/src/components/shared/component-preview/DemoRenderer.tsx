@@ -1,5 +1,8 @@
-import { Children, type FC, type ReactElement, type ReactNode, cloneElement, isValidElement } from 'react';
-import { Layout, type LayoutProps, RendererModeProvider } from '@retikz/react';
+import type { LayoutProps } from '@retikz/react';
+import type { FC, ReactElement, ReactNode } from 'react';
+
+import { Layout, RendererModeProvider } from '@retikz/react';
+import { Children, cloneElement, isValidElement } from 'react';
 
 import type { RendererMode } from './_shared';
 

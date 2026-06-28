@@ -16,7 +16,7 @@ import { Layout, Node } from '@retikz/react';
 
 <Layout renderer="canvas">
   <Node id="a">hello</Node>
-</Layout>
+</Layout>;
 ```
 
 **Vanilla (browser)** — `mountCanvas` mounts the figure as a `<canvas>`; its view adds canvas-side hydration and coordinate mapping on top of what `mountSvg` returns:
@@ -44,7 +44,10 @@ const handle = view.hydrate({
 
 The same `handlers` table behaves identically under SVG and Canvas — see [Hydration](/kernel/packages/render/hydration).
 
-<ComponentAlert title="Low-level drawing / hit-testing (for custom integrations)" description="@retikz/render/canvas exposes renderToCanvas(canvas, scene) (paints straight into an HTMLCanvasElement), drawScene (paints into a 2D context), and hitTest(scene, point) (coordinate → primitive id). Reach for this when managing the canvas, offscreen rendering, or hit-testing yourself; ordinary usage only needs mountCanvas above." />
+<ComponentAlert
+  title="Low-level drawing / hit-testing (for custom integrations)"
+  description="@retikz/render/canvas exposes renderToCanvas(canvas, scene) (paints straight into an HTMLCanvasElement), drawScene (paints into a 2D context), and hitTest(scene, point) (coordinate → primitive id). Reach for this when managing the canvas, offscreen rendering, or hit-testing yourself; ordinary usage only needs mountCanvas above."
+/>
 
 ## Node image export
 
@@ -72,12 +75,12 @@ const png = await renderSceneToImage(scene, {
 
 ## Canvas or SVG
 
-| | Canvas | SVG |
-| --- | --- | --- |
-| Output | Raster bitmap | Vector DOM nodes |
-| Many primitives | Immediate mode stays steady | Slows as nodes pile up |
-| Scaling | Bound by resolution | Crisp at any zoom |
-| CSS / selectors | One opaque canvas | Every primitive hit-testable |
-| Default | Explicit `renderer="canvas"` | Yes |
+|                 | Canvas                       | SVG                          |
+| --------------- | ---------------------------- | ---------------------------- |
+| Output          | Raster bitmap                | Vector DOM nodes             |
+| Many primitives | Immediate mode stays steady  | Slows as nodes pile up       |
+| Scaling         | Bound by resolution          | Crisp at any zoom            |
+| CSS / selectors | One opaque canvas            | Every primitive hit-testable |
+| Default         | Explicit `renderer="canvas"` | Yes                          |
 
 Use Canvas for hundreds of primitives or frequent repaints / animation; use the default [SVG](/kernel/packages/render/svg) for a modest number of primitives, crisp vectors, or CSS interaction. Both render the same Scene and share the same hydration code — switch any time.

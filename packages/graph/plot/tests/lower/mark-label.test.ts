@@ -1,11 +1,20 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
+
 import { describe, expect, it } from 'vitest';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 200, height: 100 };
 
-const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options: LowerPlotsOptions = opts): IRScope => {
+const expandOf = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options: LowerPlotsOptions = opts,
+): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
@@ -54,13 +63,21 @@ const baseSpec = (marks: PlotSpec['marks']): PlotSpec =>
 
 describe('ADR-07 mark host label lowering', () => {
   it('path-mark-host-geometry-label：PathMark label lowering 到 core Path.label', () => {
-    const root = expandOf(baseSpec([
+    const root = expandOf(
+      baseSpec([
+        {
+          type: 'path',
+          label: { content: { value: 'trend' }, position: 'midway', side: 'above', sloped: true },
+          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        },
+      ]),
       {
-        type: 'path',
-        label: { content: { value: 'trend' }, position: 'midway', side: 'above', sloped: true },
-        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        d: [
+          { x: 0, y: 0 },
+          { x: 1, y: 1 },
+        ],
       },
-    ]), { d: [{ x: 0, y: 0 }, { x: 1, y: 1 }] });
+    );
 
     const [path] = collectPaths(markLayer(root, 0));
     expect(path.label).toEqual({ text: 'trend', position: 'midway', side: 'above', sloped: true });
@@ -68,43 +85,52 @@ describe('ADR-07 mark host label lowering', () => {
   });
 
   it('reference-line-geometry-label：ReferenceMark line 使用 geometry label', () => {
-    const root = expandOf(baseSpec([
-      {
-        type: 'reference',
-        label: { content: { field: 'name' }, position: 'near-end', side: 'below' },
-        encoding: { y: { value: 5 } },
-      },
-    ]), { d: [{ name: 'target' }] });
+    const root = expandOf(
+      baseSpec([
+        {
+          type: 'reference',
+          label: { content: { field: 'name' }, position: 'near-end', side: 'below' },
+          encoding: { y: { value: 5 } },
+        },
+      ]),
+      { d: [{ name: 'target' }] },
+    );
 
     const [path] = collectPaths(markLayer(root, 0));
     expect(path.label).toEqual({ text: 'target', position: 'near-end', side: 'below' });
   });
 
   it('reference-band-node-label：ReferenceMark band 使用 node label', () => {
-    const root = expandOf(baseSpec([
-      {
-        type: 'reference',
-        label: { content: { value: 'safe zone' }, position: { boundary: 'top', t: 0.5 }, placement: 'inside' },
-        yTo: 7,
-        encoding: { y: { value: 3 } },
-      },
-    ]), { d: [{}] });
+    const root = expandOf(
+      baseSpec([
+        {
+          type: 'reference',
+          label: { content: { value: 'safe zone' }, position: { boundary: 'top', t: 0.5 }, placement: 'inside' },
+          yTo: 7,
+          encoding: { y: { value: 3 } },
+        },
+      ]),
+      { d: [{}] },
+    );
 
     const [node] = collectNodes(markLayer(root, 0));
     expect(node.label).toEqual({ text: 'safe zone', position: { boundary: 'top', t: 0.5 }, placement: 'inside' });
   });
 
   it('relation-path-host-label：RelationMark 顶层 label lowering 到 core Path.label', () => {
-    const root = expandOf(baseSpec([
+    const root = expandOf(
+      baseSpec([
+        {
+          type: 'relation',
+          source: { project: { x: 'sourceX', y: 'sourceY' } },
+          target: { project: { x: 'targetX', y: 'targetY' } },
+          label: { content: { field: 'label' }, position: 0.5, side: 'above' },
+        },
+      ]),
       {
-        type: 'relation',
-        source: { project: { x: 'sourceX', y: 'sourceY' } },
-        target: { project: { x: 'targetX', y: 'targetY' } },
-        label: { content: { field: 'label' }, position: 0.5, side: 'above' },
+        d: [{ sourceX: 0, sourceY: 0, targetX: 1, targetY: 1, label: 'A to B' }],
       },
-    ]), {
-      d: [{ sourceX: 0, sourceY: 0, targetX: 1, targetY: 1, label: 'A to B' }],
-    });
+    );
 
     const [path] = collectPaths(markLayer(root, 0));
     expect(path.label).toEqual({ text: 'A to B', position: 0.5, side: 'above' });
@@ -112,18 +138,21 @@ describe('ADR-07 mark host label lowering', () => {
   });
 
   it('relation-ribbon-host-label：RelationMark 顶层 label lowering 到 core ribbon Path.label', () => {
-    const root = expandOf(baseSpec([
+    const root = expandOf(
+      baseSpec([
+        {
+          type: 'relation',
+          kind: 'ribbon',
+          source: { project: { x: 'sourceX', y: 'sourceY' } },
+          target: { project: { x: 'targetX', y: 'targetY' } },
+          ribbon: { width: { kind: 'constant', value: 12 } },
+          label: { content: { value: 'flow' }, position: 'midway', placement: 'inside', sloped: true },
+        },
+      ]),
       {
-        type: 'relation',
-        kind: 'ribbon',
-        source: { project: { x: 'sourceX', y: 'sourceY' } },
-        target: { project: { x: 'targetX', y: 'targetY' } },
-        ribbon: { width: { kind: 'constant', value: 12 } },
-        label: { content: { value: 'flow' }, position: 'midway', placement: 'inside', sloped: true },
+        d: [{ sourceX: 0, sourceY: 0, targetX: 1, targetY: 1 }],
       },
-    ]), {
-      d: [{ sourceX: 0, sourceY: 0, targetX: 1, targetY: 1 }],
-    });
+    );
 
     const [ribbon] = collectPaths(markLayer(root, 0));
     expect(ribbon.kind).toBe('ribbon');

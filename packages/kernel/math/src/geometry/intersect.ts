@@ -1,4 +1,6 @@
-import { DEFAULT_EPSILON, type Position, point } from './point';
+import type { Position } from './point';
+
+import { DEFAULT_EPSILON, point } from './point';
 
 /** 两条无限直线（各由两点定）的交点；平行 / 共线返回 null */
 const lineLine = (a1: Position, a2: Position, b1: Position, b2: Position): Position | null => {
@@ -43,7 +45,10 @@ const circleCircle = (cA: Position, rA: number, cB: Position, rB: number): Array
   const my = cA[1] + (a * dy) / d;
   const rx = (-dy * h) / d;
   const ry = (dx * h) / d;
-  return [[mx + rx, my + ry], [mx - rx, my - ry]];
+  return [
+    [mx + rx, my + ry],
+    [mx - rx, my - ry],
+  ];
 };
 
 /** 线段 ∩ 线段：真交叉返回交点；平行 / 共线（含重叠）/ 不相交返回 null（首切简化，见 ADR 待议） */

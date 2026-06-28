@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * Source-guide 数据流向插图（dogfood）

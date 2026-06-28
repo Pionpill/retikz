@@ -1,14 +1,16 @@
 import type { Scene } from '@retikz/core';
+
+import type { BuildDocumentOptions } from '../builders/document';
 import type { SvgNode, SvgStyle } from '../types';
-import { type BuildDocumentOptions, buildSvgDocument } from '../builders/document';
+
+import { buildSvgDocument } from '../builders/document';
 
 /** 转义 attribute 值里的 XML 特殊字符（`&` 必须先转，避免二次转义） */
 const escapeAttr = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 
 /** 转义文本内容里的 XML 特殊字符 */
-const escapeText = (value: string): string =>
-  value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const escapeText = (value: string): string => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 /** inline style 对象 → `"k:v;k2:v2"`（键已是 CSS kebab 拼写，逐字拼） */
 const serializeStyle = (style: SvgStyle): string =>

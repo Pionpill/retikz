@@ -1,4 +1,5 @@
 import type { ComponentProps, FC } from 'react';
+
 import { Draw, Layout, Node } from '@retikz/react';
 
 const REQUIRED_FILL = '#1f6286';
@@ -75,7 +76,13 @@ const Demo: FC = () => (
     <RoadmapNode id="semver" position={{ direction: 'below', of: 'git' }} variant="required" width={210} height={30}>
       Semantic Versioning
     </RoadmapNode>
-    <RoadmapNode id="changelog" position={{ direction: 'below', of: 'semver' }} variant="required" width={210} height={30}>
+    <RoadmapNode
+      id="changelog"
+      position={{ direction: 'below', of: 'semver' }}
+      variant="required"
+      width={210}
+      height={30}
+    >
       Keep a Changelog
     </RoadmapNode>
 
@@ -86,7 +93,13 @@ const Demo: FC = () => (
     <RoadmapNode id="legend-blue" position={[705, 68]} variant="required" width={210} height={30}>
       Personal Recommendation!
     </RoadmapNode>
-    <RoadmapNode id="legend-gray" position={{ direction: 'below', of: 'legend-blue' }} variant="optional" width={210} height={30}>
+    <RoadmapNode
+      id="legend-gray"
+      position={{ direction: 'below', of: 'legend-blue' }}
+      variant="optional"
+      width={210}
+      height={30}
+    >
       Available Options
     </RoadmapNode>
   </Layout>

@@ -1,7 +1,9 @@
 import type { DropShadow, Layout, ScenePrimitive } from '@retikz/core';
+
 import type { SvgNode } from '../types';
-import { compact } from './attrs';
+
 import { hashKey } from './arrow-collect';
+import { compact } from './attrs';
 
 /** shadow color 缺省（半透明黑）；compile 通常已补，渲染端再兜一层 */
 const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';

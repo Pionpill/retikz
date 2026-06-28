@@ -16,7 +16,7 @@ import { Layout, Node } from '@retikz/react';
 
 <Layout renderer="canvas">
   <Node id="a">hello</Node>
-</Layout>
+</Layout>;
 ```
 
 **Vanilla(浏览器)**——`mountCanvas` 把图挂成 `<canvas>`,返回的 view 比 `mountSvg` 多了 canvas 侧的水合与坐标映射:
@@ -44,7 +44,10 @@ const handle = view.hydrate({
 
 同一张 `handlers` 表在 SVG 与 Canvas 下行为完全一致——详见 [水合](/kernel/packages/render/hydration)。
 
-<ComponentAlert title="底层绘制 / 命中(自定义集成用)" description="@retikz/render/canvas 暴露 renderToCanvas(canvas, scene)（直接画进 HTMLCanvasElement）、drawScene（往 2D context 画）、hitTest(scene, point)（坐标 → 图元 id）。自己管理画布 / 离屏渲染 / 命中逻辑时用这层;普通用法用上面的 mountCanvas 即可。" />
+<ComponentAlert
+  title="底层绘制 / 命中(自定义集成用)"
+  description="@retikz/render/canvas 暴露 renderToCanvas(canvas, scene)（直接画进 HTMLCanvasElement）、drawScene（往 2D context 画）、hitTest(scene, point)（坐标 → 图元 id）。自己管理画布 / 离屏渲染 / 命中逻辑时用这层;普通用法用上面的 mountCanvas 即可。"
+/>
 
 ## Node 图片导出
 
@@ -72,12 +75,12 @@ const png = await renderSceneToImage(scene, {
 
 ## Canvas 还是 SVG
 
-| | Canvas | SVG |
-| --- | --- | --- |
-| 输出 | 像素位图 | 矢量 DOM 节点 |
-| 大量图元 | 即时模式更稳 | 节点多时变慢 |
-| 缩放 | 受分辨率限制 | 任意倍数清晰 |
-| CSS / 选择器 | 整块画布 | 每个图元可命中 |
-| 默认 | 显式 `renderer="canvas"` | 是 |
+|              | Canvas                   | SVG            |
+| ------------ | ------------------------ | -------------- |
+| 输出         | 像素位图                 | 矢量 DOM 节点  |
+| 大量图元     | 即时模式更稳             | 节点多时变慢   |
+| 缩放         | 受分辨率限制             | 任意倍数清晰   |
+| CSS / 选择器 | 整块画布                 | 每个图元可命中 |
+| 默认         | 显式 `renderer="canvas"` | 是             |
 
 图元成百上千或要高频重绘 / 动画时用 Canvas;图元不多、要清晰矢量或 CSS 交互时用默认的 [SVG](/kernel/packages/render/svg)。两者渲染同一份 Scene、水合写法也一样,可以随时切换。

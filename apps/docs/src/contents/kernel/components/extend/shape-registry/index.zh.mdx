@@ -31,16 +31,16 @@ retikz 自带的 `rectangle` / `ellipse` / `sector` / `arc` / `polygon` / `star`
 
 `ShapeDefinition` 本身只是一份普通对象：一个 `paramsSchema` 加一组计算函数，没有任何继承或注册仪式。在定义点用 `defineShape<TParams>()` 包一层就能拿到类型安全——`paramsSchema` 推出的参数类型 `TParams` 会贯穿到每个函数末位的 `params`；registry 里实际存的是把 `TParams` 擦成 `IRJsonObject` 的形态（下文签名里的 `TParams` 即“`paramsSchema` 推出的参数类型”）。
 
-| 方法 | 作用 | 必填 · 可选 |
-| --- | --- | --- |
-| `paramsSchema` | 形状参数的 zod schema，编译期校验 `shape.params` | 必填 |
-| `circumscribe` | 由内容半轴算出能包住整个形状的外接框半轴 | 必填 |
-| `circumscribeOffset` | 外接框中心相对 `position` 的偏移（参考点 ≠ 框中心时） | 可选 |
-| `boundaryPoint` | 中心朝 `toward` 的射线与边界的交点 | 必填 |
-| `anchor` | 命名锚点的世界坐标，未知名返回 `undefined` | 必填 |
-| `edgePoint` | 某条边上 0..1 比例处的点 | 可选 |
-| `emit` | 轴对齐空间里要画出的基础图元 | 必填 |
-| `scaleParams` | node 缩放如何作用到 params | 可选 |
+| 方法                 | 作用                                                  | 必填 · 可选 |
+| -------------------- | ----------------------------------------------------- | ----------- |
+| `paramsSchema`       | 形状参数的 zod schema，编译期校验 `shape.params`      | 必填        |
+| `circumscribe`       | 由内容半轴算出能包住整个形状的外接框半轴              | 必填        |
+| `circumscribeOffset` | 外接框中心相对 `position` 的偏移（参考点 ≠ 框中心时） | 可选        |
+| `boundaryPoint`      | 中心朝 `toward` 的射线与边界的交点                    | 必填        |
+| `anchor`             | 命名锚点的世界坐标，未知名返回 `undefined`            | 必填        |
+| `edgePoint`          | 某条边上 0..1 比例处的点                              | 可选        |
+| `emit`               | 轴对齐空间里要画出的基础图元                          | 必填        |
+| `scaleParams`        | node 缩放如何作用到 params                            | 可选        |
 
 下面逐个方法给出完整签名与例子。
 
@@ -54,21 +54,20 @@ paramsSchema: z.ZodType<TParams>;
 
 ```ts
 paramsSchema: z.strictObject({
-  innerRadius: z.number().finite().nonnegative(),
-  outerRadius: z.number().finite().positive(),
-  startAngle: z.number().finite(),
-  endAngle: z.number().finite(),
+  innerRadius: z.number().nonnegative(),
+  outerRadius: z.number().positive(),
+  startAngle: z.number(),
+  endAngle: z.number(),
 }),
 ```
 
 ### circumscribe
 
 ```ts
-circumscribe: (
-  innerHalfWidth: number,
-  innerHalfHeight: number,
-  params: TParams,
-) => { halfWidth: number; halfHeight: number };
+circumscribe: (innerHalfWidth: number, innerHalfHeight: number, params: TParams) => {
+  halfWidth: number;
+  halfHeight: number;
+};
 ```
 
 节点布局时调用，回答“为了包住文字和 padding，形状外接矩形需要多大”。`innerHalfWidth` / `innerHalfHeight` 是文字和 padding 已经占用的半宽、半高；返回值必须是**能包住完整形状的精确外接矩形（AABB）半轴**——编译器只靠这四个角累积 viewBox 和 bbox。矩形原样返回，圆形两轴都取对角线半长，菱形要放大。
@@ -160,12 +159,7 @@ edgePoint: (rect, side, t) => rectOps.edgePoint(rect, side, t),
 ### emit
 
 ```ts
-emit: (
-  rect: Rect,
-  style: ShapeStyle,
-  round: (n: number) => number,
-  params: TParams,
-) => Iterable<ScenePrimitive>;
+emit: (rect: Rect, style: ShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>;
 ```
 
 编译节点视觉内容时调用，返回一个或多个要画出来的基础图元。注意这里的 `rect` 是**轴对齐的**（`rotate` 由编译器在外层 group 统一施加），你只需像在普通坐标纸上一样把形状画在中心点周围。用 `round` 统一坐标精度，并尽量透传 `style` 里的填充、描边、透明度等字段。简单形状返回一个 path 或 rect，复杂形状可以返回多个 primitive。
@@ -243,7 +237,9 @@ const createPolygonShape = (sides: number): ShapeDefinition =>
     *emit(rect, style, round) {
       yield {
         type: 'path',
-        commands: [/* n 顶点 + close */],
+        commands: [
+          /* n 顶点 + close */
+        ],
         fill: style.fill ?? 'transparent',
         fillOpacity: style.fillOpacity,
         stroke: style.stroke ?? 'currentColor',

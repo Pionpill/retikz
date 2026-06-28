@@ -1,7 +1,10 @@
+import type { LanguageModel } from 'ai';
+
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createDeepSeek } from '@ai-sdk/deepseek';
 import { createOpenAI } from '@ai-sdk/openai';
-import { type LanguageModel, generateText } from 'ai';
+import { generateText } from 'ai';
+
 import { type LlmClient } from './types';
 
 /**
@@ -32,11 +35,11 @@ const modelIdFor = (provider: (typeof PROVIDERS)[number]): string | null =>
 
 /** 当前环境里「有 key 且能定到模型 id」的 provider id 列表（保持 PROVIDERS 顺序） */
 export const availableProviderIds = (): Array<string> =>
-  PROVIDERS.filter((p) => Boolean(process.env[p.envKey]) && modelIdFor(p) !== null).map((p) => p.id);
+  PROVIDERS.filter(p => Boolean(process.env[p.envKey]) && modelIdFor(p) !== null).map(p => p.id);
 
 /** 为所有可用 provider 建 LlmClient；底层走 Vercel AI SDK 单发 generateText；baseURL 可经 env 覆盖 */
 export const createClients = (): Array<LlmClient> =>
-  PROVIDERS.flatMap((p) => {
+  PROVIDERS.flatMap(p => {
     const modelId = modelIdFor(p);
     if (!process.env[p.envKey] || modelId === null) return [];
     const provider = p.create({ baseURL: envOf(p, 'BASE_URL') });

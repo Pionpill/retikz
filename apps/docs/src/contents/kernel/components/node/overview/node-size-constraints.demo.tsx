@@ -1,5 +1,6 @@
-import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node } from '@retikz/react';
 
 /**
  * 尺寸约束 + 圆角
@@ -13,7 +14,15 @@ const Demo: FC = () => (
     <Node id="msize" position={[-70, 0]} minimumSize={60} fill="lightgray">
       hi
     </Node>
-    <Node id="btn" position={[80, 0]} minimumWidth={120} minimumHeight={28} cornerRadius={6} fill="darkorange" textColor="white">
+    <Node
+      id="btn"
+      position={[80, 0]}
+      minimumWidth={120}
+      minimumHeight={28}
+      cornerRadius={6}
+      fill="darkorange"
+      textColor="white"
+    >
       Submit
     </Node>
     <Node id="big" position={[230, 0]} scale={1.5} fill="lightgray">

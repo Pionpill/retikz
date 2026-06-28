@@ -1,7 +1,9 @@
+import type { IR } from '@retikz/core';
+
+import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { CompositeBaseSchema, defineComposite } from '@retikz/core';
-import type { IR } from '@retikz/core';
+
 import { renderToSvgString } from '../src';
 
 /**

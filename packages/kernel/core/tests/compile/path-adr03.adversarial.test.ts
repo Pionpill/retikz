@@ -9,9 +9,11 @@
  *   - path transform 顺序：端点先 resolve → shrink 在原始几何 → 最后包 GroupPrim（bbox center 支点）
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { IR, IRPath, ScenePrimitive } from '../../src';
 import type { Scene } from '../../src/primitive';
+
+import { compileToScene } from '../../src/compile/compile';
 
 /** 递归收集 Scene 里所有数值坐标（commands / transforms / layout），判 finite */
 const collectNumbers = (value: unknown, out: Array<number> = []): Array<number> => {
@@ -82,7 +84,7 @@ const firstCubic = (prims: ReadonlyArray<ScenePrimitive>) => {
 // =====================================================================
 // 攻击面 1：bendAngle 非 finite 越界（schema 未守 bendAngle）→ tan 爆 / 控制点非 finite
 // =====================================================================
-describe('ATTACK 1: bendAngle 边角值（finite 守卫：schema .finite() + emit 控制点守卫）', () => {
+describe('ATTACK 1: bendAngle 边角值（finite 守卫：schema number 校验 + emit 控制点守卫）', () => {
   it('bendAngle=180 → tan(90°) 巨大控制点；Scene 是否仍 finite', () => {
     const scene = compileToScene(
       pathIR([
@@ -95,7 +97,7 @@ describe('ATTACK 1: bendAngle 边角值（finite 守卫：schema .finite() + emi
     expect(fin.ok).toBe(true);
   });
 
-  it('bendAngle=NaN → 编译期抛（emit 守卫拦非 finite 控制点；schema .finite() 拦校验路径）', () => {
+  it('bendAngle=NaN → 编译期抛（emit 守卫拦非 finite 控制点；schema number 校验拦校验路径）', () => {
     const ir = pathIR([
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'bend', to: [10, 0], bendDirection: 'left', bendAngle: Number.NaN },
@@ -273,7 +275,11 @@ describe('ATTACK 5: 退化 bbox + path transform', () => {
     let warned = false;
     const scene = compileToScene(
       pathIR([{ type: 'step', kind: 'move', to: [0, 0] }] as IRPath['children'], { rotate: 30 }),
-      { onWarn: w => { if (w.code === 'PATH_TOO_SHORT') warned = true; } },
+      {
+        onWarn: w => {
+          if (w.code === 'PATH_TOO_SHORT') warned = true;
+        },
+      },
     );
     expect(warned).toBe(true);
     expect(expectAllFinite(scene).ok).toBe(true);
@@ -300,9 +306,7 @@ describe('ATTACK 5: 退化 bbox + path transform', () => {
 describe('ATTACK 6: marks + path transform 交互（二次变换 / 定向污染）', () => {
   it('marks + rotate 同给：mark marker 坐标进 group 还是裸坐标（二次旋转风险）', () => {
     // 无 transform 基准
-    const baseScene = compileToScene(
-      linePath({ marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] }),
-    );
+    const baseScene = compileToScene(linePath({ marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] }));
     // 加 rotate
     const rotScene = compileToScene(
       linePath({ rotate: 90, marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] }),

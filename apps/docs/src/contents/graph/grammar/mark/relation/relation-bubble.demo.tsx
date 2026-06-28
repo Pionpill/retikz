@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+
 import { Axis, Plot, PointMark, RelationMark } from '@retikz/plot-react';
 
 import { bubbleNodes } from './relation-bubble.data';

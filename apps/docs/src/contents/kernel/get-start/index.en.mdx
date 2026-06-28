@@ -17,13 +17,13 @@ The underlying `@retikz/core` (IR + compiler, zero React / zero DOM) is pulled i
 
 Start by getting this page working, then read in the order “mental model → component details → complete examples → reference contracts”:
 
-| Section | What to read |
-| --- | --- |
-| Introduction / Get Started | Build the overall picture and see why retikz centers on Node, Path, and IR. |
-| Concepts | Learn positioning, anchors, layers, and animation — the shared rules behind every figure. |
-| Components | Look up `<Layout>`, `<Node>`, `<Draw>`, shapes, and helper components. |
-| Examples | See how a full figure is broken down from a prompt or idea into primitives. |
-| Reference | Use extending, IR schema, renderer, and runtime pages when writing adapters, persistence, or low-level debugging code. |
+| Section                    | What to read                                                                                                           |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Introduction / Get Started | Build the overall picture and see why retikz centers on Node, Path, and IR.                                            |
+| Concepts                   | Learn positioning, anchors, layers, and animation — the shared rules behind every figure.                              |
+| Components                 | Look up `<Layout>`, `<Node>`, `<Draw>`, shapes, and helper components.                                                 |
+| Examples                   | See how a full figure is broken down from a prompt or idea into primitives.                                            |
+| Reference                  | Use extending, IR schema, renderer, and runtime pages when writing adapters, persistence, or low-level debugging code. |
 
 You can also open the AI panel from the top AI button and ask about the current page, selected code, or an API name. The docs site is fully static and does not provide an LLM service; enter your own API key in the panel, and the site only forwards requests from your browser to the model provider you choose.
 
@@ -45,11 +45,11 @@ A minimal diagram starts with a container and a primitive. `<Layout>` holds the 
 
 Add more `<Node>`s to place the entities in the diagram before drawing relationships between them. You can add as many nodes as you like, but each `id` must be unique — `<Draw>` will find them by id later. `position` is the node center in canvas coordinates.
 
-| Prop | Meaning |
-| --- | --- |
-| `id` | Unique identifier, referenced by `<Path>` / `<Draw>` |
-| `position` | `[x, y]` user-unit coordinates for the node center |
-| children | The node's visible content (label) |
+| Prop       | Meaning                                              |
+| ---------- | ---------------------------------------------------- |
+| `id`       | Unique identifier, referenced by `<Path>` / `<Draw>` |
+| `position` | `[x, y]` user-unit coordinates for the node center   |
+| children   | The node's visible content (label)                   |
 
 <ComponentPreview name="get-start-step-2" size="xs" />
 
@@ -81,26 +81,38 @@ Keep four rules in mind before moving on:
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/kernel/components/layout">
     <span className="font-semibold">Layout</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Learn the top-level container, canvas sizing, and direct IR rendering</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Learn the top-level container, canvas sizing, and direct IR rendering
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/node/overview">
     <span className="font-semibold">Node</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Learn shapes, text, styling, positioning, and node labels</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Learn shapes, text, styling, positioning, and node labels
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/draw/overview">
     <span className="font-semibold">Draw</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Continue with folds, curves, arrows, fills, and edge labels</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Continue with folds, curves, arrows, fills, and edge labels
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/effects/animation">
     <span className="font-semibold">Animation</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Understand tracks, presets, playback controls, and static fallback</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Understand tracks, presets, playback controls, and static fallback
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/packages/render/hydration">
     <span className="font-semibold">Hydration</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Learn event callbacks, context, and vanilla binding</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Learn event callbacks, context, and vanilla binding
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/examples/karl-circle">
     <span className="font-semibold">Karl's Unit Circle</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">See a richer geometry diagram built step by step</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      See a richer geometry diagram built step by step
+    </span>
   </LinkedCard>
 </div>

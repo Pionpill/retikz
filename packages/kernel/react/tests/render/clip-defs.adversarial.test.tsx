@@ -1,8 +1,10 @@
+import type { GroupPrim, SceneResource } from '@retikz/core';
+
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
-import type { GroupPrim, SceneResource } from '@retikz/core';
-import { renderPrim } from '../../src/render/render-prim';
+
 import { ClipDefs } from '../../src/render/clip-defs';
+import { renderPrim } from '../../src/render/render-prim';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
@@ -48,7 +50,13 @@ describe('ClipDefs 对抗：非 clip / 空 / 混合资源', () => {
       {
         kind: 'paint',
         id: 'paint-1',
-        spec: { kind: 'linearGradient', stops: [{ offset: 0, color: '#000' }, { offset: 1, color: '#fff' }] },
+        spec: {
+          kind: 'linearGradient',
+          stops: [
+            { offset: 0, color: '#000' },
+            { offset: 1, color: '#fff' },
+          ],
+        },
       } as unknown as SceneResource,
       clipResource('clip-2', { kind: 'circle', cx: 0, cy: 0, r: 5 }),
     ]);
@@ -60,7 +68,11 @@ describe('ClipDefs 对抗：非 clip / 空 / 混合资源', () => {
     const [cp] = clipPathsOf([
       clipResource('clip-1', {
         kind: 'polygon',
-        points: [[-5, -10], [40, 0], [20, 40]],
+        points: [
+          [-5, -10],
+          [40, 0],
+          [20, 40],
+        ],
       }),
     ]);
     const shape = (Array.isArray(cp.props.children) ? cp.props.children[0] : cp.props.children) as AnyEl;

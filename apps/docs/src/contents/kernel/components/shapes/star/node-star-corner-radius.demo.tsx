@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * 星形节点圆角（凸尖 + 凹角都倒，连接感知贴边）

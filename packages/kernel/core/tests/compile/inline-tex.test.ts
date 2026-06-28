@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { type CompileWarning, CompileWarningCode } from '../../src/compile/constant';
-import { compileToScene } from '../../src/compile/compile';
+
+import type { CompileWarning } from '../../src/compile/constant';
 import type { LowerTex } from '../../src/compile/lower-tex';
-import type { IR } from '../../src/schemas';
 import type { PathPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { CompileWarningCode } from '../../src/compile/constant';
 import { flattenPrims } from '../helpers/flatten';
 
 const lowerTexCalls: Array<{ tex: string; displayMode?: boolean }> = [];
@@ -42,9 +45,7 @@ const compile = (
 };
 
 const glyphPaths = (prims: Array<ScenePrimitive>): Array<PathPrim> =>
-  flattenPrims(prims).filter(
-    (p): p is PathPrim => p.type === 'path' && p.fillRule === 'evenodd',
-  );
+  flattenPrims(prims).filter((p): p is PathPrim => p.type === 'path' && p.fillRule === 'evenodd');
 const textPrims = (prims: Array<ScenePrimitive>): Array<TextPrim> =>
   flattenPrims(prims).filter((p): p is TextPrim => p.type === 'text');
 
@@ -96,10 +97,7 @@ f'(x) &= 2ax + b
 f(x) &= ax^2 + bx + c\\
 f'(x) &= 2ax + b
 \end{array}$$`;
-    const { primitives, warnings } = compile(
-      [{ type: 'node', id: 'a', position: [0, 0], text } as never],
-      false,
-    );
+    const { primitives, warnings } = compile([{ type: 'node', id: 'a', position: [0, 0], text } as never], false);
     expect(glyphPaths(primitives).length).toBe(0);
     expect(textPrims(primitives)[0].lines.map(line => line.text)).toEqual(text.split('\n'));
     expect(warnings.length).toBe(0);

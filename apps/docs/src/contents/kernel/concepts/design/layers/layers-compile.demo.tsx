@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 const Demo: FC = () => (
   <Layout width={760} height={120} style={{ maxWidth: '100%', height: 'auto' }}>
@@ -20,18 +21,9 @@ const Demo: FC = () => (
     </Node>
 
     <Draw way={['ir', 'nodes']} arrow="->" />
-    <Draw
-      way={['nodes', { label: { text: 'anchors', side: 'above', textColor: 'gray' } }, 'paths']}
-      arrow="->"
-    />
-    <Draw
-      way={['paths', { label: { text: 'primitives', side: 'above', textColor: 'gray' } }, 'bounds']}
-      arrow="->"
-    />
-    <Draw
-      way={['bounds', { label: { text: 'viewBox', side: 'above', textColor: 'gray' } }, 'scene']}
-      arrow="->"
-    />
+    <Draw way={['nodes', { label: { text: 'anchors', side: 'above', textColor: 'gray' } }, 'paths']} arrow="->" />
+    <Draw way={['paths', { label: { text: 'primitives', side: 'above', textColor: 'gray' } }, 'bounds']} arrow="->" />
+    <Draw way={['bounds', { label: { text: 'viewBox', side: 'above', textColor: 'gray' } }, 'scene']} arrow="->" />
   </Layout>
 );
 

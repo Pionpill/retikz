@@ -1,7 +1,7 @@
 import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
+
 import type { MarkValueKind, PathCurve } from './constants';
-import { BUILTIN_MARK_TYPES } from './constants';
 import type {
   AnchorIdSpecSchema,
   BlendModeStyleSchema,
@@ -49,6 +49,8 @@ import type {
   RelationTransformSchema,
   ShadowStyleSchema,
 } from './schema';
+
+import { BUILTIN_MARK_TYPES } from './constants';
 
 /** point mark（散点 + 文本标签） */
 export type PointMark = z.infer<typeof PointMarkSchema>;

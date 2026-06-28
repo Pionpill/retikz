@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+
 import { Plot, PointMark, RelationMark } from '@retikz/plot-react';
 
 import { sankeyNodeColors, sankeyRelations } from './relation-sankey.data';

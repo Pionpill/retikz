@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Text } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /**
  * 变换落地页 "变换在图形语法中的位置" 插图

@@ -1,5 +1,7 @@
+import type { FC } from 'react';
+
 import { Draw, Layout, Node, pulse } from '@retikz/react';
-import { type FC, useState } from 'react';
+import { useState } from 'react';
 
 const GetStartStep4: FC = () => {
   const [count, setCount] = useState(0);

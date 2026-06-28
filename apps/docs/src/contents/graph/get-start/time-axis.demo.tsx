@@ -1,5 +1,6 @@
-import { Axis, PathMark, Plot, Scale } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, PathMark, Plot, Scale } from '@retikz/plot-react';
 
 import { visits } from './time-axis.data';
 

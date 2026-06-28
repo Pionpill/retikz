@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * 基础平移：scope 包一组节点 + 一条 path，整体右移 180
@@ -11,9 +12,15 @@ const Demo: FC = () => (
       0
     </Node>
     <Scope transforms={[{ kind: 'translate', x: 180, y: 0 }]}>
-      <Node id="A" position={[0, 0]}>A</Node>
-      <Node id="B" position={[80, 0]}>B</Node>
-      <Node id="C" position={[160, 0]}>C</Node>
+      <Node id="A" position={[0, 0]}>
+        A
+      </Node>
+      <Node id="B" position={[80, 0]}>
+        B
+      </Node>
+      <Node id="C" position={[160, 0]}>
+        C
+      </Node>
       <Draw way={['A', 'B', 'C']} arrow="->" />
     </Scope>
   </Layout>

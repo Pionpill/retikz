@@ -38,10 +38,7 @@ export type ScaleTransform = {
  * Group transform：结构化变换（3 分支 discriminated union）
  * @description 按数组顺序应用（与 SVG transform 多操作列表语义一致）；角度=度，缩放 y 缺省等比 x，rotate cx/cy 缺省绕原点。每个 kind 有对应 named type export。
  */
-export type Transform =
-  | TranslateTransform
-  | RotateTransform
-  | ScaleTransform;
+export type Transform = TranslateTransform | RotateTransform | ScaleTransform;
 
 /** 编组：把若干 primitive 用结构化 transforms 包起来 */
 export type GroupPrim = {

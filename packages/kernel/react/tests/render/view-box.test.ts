@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { formatViewBox } from '../../src/render/view-box';
 
 describe('formatViewBox', () => {

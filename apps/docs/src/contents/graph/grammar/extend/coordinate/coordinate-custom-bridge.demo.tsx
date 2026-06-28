@@ -1,6 +1,7 @@
+import type { FC } from 'react';
+
 import { createCoordinateFrame, defineCoordinate } from '@retikz/plot';
 import { Axis, Plot, PointMark } from '@retikz/plot-react';
-import type { FC } from 'react';
 import { z } from 'zod';
 
 import { grid } from './coordinate-custom-bridge.data';
@@ -13,14 +14,20 @@ import { grid } from './coordinate-custom-bridge.data';
 const bridge = defineCoordinate({
   schema: z.object({
     type: z.literal('bridge').describe('Discriminator: bridge custom coordinate op'),
-    archHeight: z.number().finite().optional().describe('Arch height in user units'),
+    archHeight: z.number().optional().describe('Arch height in user units'),
   }),
   roles: ['x', 'y'],
   resolve: (op, context) => {
     const xValues = context.collectRoleValues('x');
     const yValues = context.collectRoleValues('y');
-    const xScale = context.buildPositionScale(context.resolveScaleForRole('x', undefined, xValues), xValues, [0, context.width]);
-    const yScale = context.buildPositionScale(context.resolveScaleForRole('y', undefined, yValues), yValues, [context.height - 30, 30]);
+    const xScale = context.buildPositionScale(context.resolveScaleForRole('x', undefined, xValues), xValues, [
+      0,
+      context.width,
+    ]);
+    const yScale = context.buildPositionScale(context.resolveScaleForRole('y', undefined, yValues), yValues, [
+      context.height - 30,
+      30,
+    ]);
     const archHeight = op.archHeight ?? 60;
     const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
       const screenX = xScale.coordinate(values[0]);

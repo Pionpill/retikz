@@ -1,6 +1,7 @@
+import type { FC } from 'react';
+
 import { defineArrow } from '@retikz/core';
 import { Draw, Layout } from '@retikz/react';
-import type { FC } from 'react';
 
 /**
  * 颜色继承：Bracket 箭头是空心 stroke，emit 把 ctx.stroke 原样交给 marker。
@@ -30,8 +31,26 @@ const bracket = defineArrow({
 
 const Demo: FC = () => (
   <Layout width={320} height={90} arrows={{ bracket }}>
-    <Draw way={[[0, 0], [140, 0]]} arrow="->" arrowDetail={{ shape: 'bracket' }} stroke="red" strokeWidth={1.5} />
-    <Draw way={[[0, 40], [140, 40]]} arrow="->" arrowDetail={{ shape: 'bracket' }} stroke="green" strokeWidth={1.5} />
+    <Draw
+      way={[
+        [0, 0],
+        [140, 0],
+      ]}
+      arrow="->"
+      arrowDetail={{ shape: 'bracket' }}
+      stroke="red"
+      strokeWidth={1.5}
+    />
+    <Draw
+      way={[
+        [0, 40],
+        [140, 40],
+      ]}
+      arrow="->"
+      arrowDetail={{ shape: 'bracket' }}
+      stroke="green"
+      strokeWidth={1.5}
+    />
   </Layout>
 );
 

@@ -1,5 +1,6 @@
-import { Draw, DrawWay, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, DrawWay, Layout, Node } from '@retikz/react';
 
 /**
  * 连线方式：直线 / 曲线 / 折线
@@ -8,18 +9,30 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout width={520} height={170}>
     {/* 直线 */}
-    <Node id="A1" position={[-205, -10]} stroke="none">a</Node>
-    <Node id="B1" position={[-125, -10]} stroke="none">b</Node>
+    <Node id="A1" position={[-205, -10]} stroke="none">
+      a
+    </Node>
+    <Node id="B1" position={[-125, -10]} stroke="none">
+      b
+    </Node>
     <Draw way={['A1', 'B1']} arrow="->" />
 
     {/* 曲线 */}
-    <Node id="A2" position={[-40, -10]} stroke="none">a</Node>
-    <Node id="B2" position={[40, -10]} stroke="none">b</Node>
+    <Node id="A2" position={[-40, -10]} stroke="none">
+      a
+    </Node>
+    <Node id="B2" position={[40, -10]} stroke="none">
+      b
+    </Node>
     <Draw way={['A2', { bend: 'left' }, 'B2']} arrow="->" />
 
     {/* 折线 */}
-    <Node id="A3" position={[120, -35]} stroke="none">a</Node>
-    <Node id="B3" position={[205, 25]} stroke="none">b</Node>
+    <Node id="A3" position={[120, -35]} stroke="none">
+      a
+    </Node>
+    <Node id="B3" position={[205, 25]} stroke="none">
+      b
+    </Node>
     <Draw way={['A3', DrawWay.Hv, 'B3']} arrow="->" />
 
     <Node position={[-165, 58]} stroke="none" padding={0} textColor="gray">

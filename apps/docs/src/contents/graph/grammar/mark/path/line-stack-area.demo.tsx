@@ -1,7 +1,9 @@
-import { PathCurve, type PathCurveValue } from '@retikz/plot';
+import type { PathCurveValue } from '@retikz/plot';
+import type { FC } from 'react';
+
+import { PathCurve } from '@retikz/plot';
 import { Axis, Legend, PathMark, Plot } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
-import type { FC } from 'react';
 
 import { usePreviewActionValue } from '@/components/shared/component-preview/_shared';
 
@@ -24,20 +26,20 @@ const Demo: FC = () => {
           closure={{ kind: 'stack', baselineField: 'y0' }}
           stroke="none"
         />
-        <PathMark
-          x="month"
-          y="y1"
-          order="order"
-          series="segment"
-          color="segment"
-          curve={curve}
-          strokeWidth={2}
-        />
+        <PathMark x="month" y="y1" order="order" series="segment" color="segment" curve={curve} strokeWidth={2} />
         <Axis dimension="x" />
         <Axis dimension="y" grid />
         <Legend channel="color" />
       </Plot>
-      <Plot data={stackArea} width={280} height={280} coordinate="polar2D" x={410} y={10} colors={['#2563eb', '#f97316']}>
+      <Plot
+        data={stackArea}
+        width={280}
+        height={280}
+        coordinate="polar2D"
+        x={410}
+        y={10}
+        colors={['#2563eb', '#f97316']}
+      >
         <PathMark
           x="month"
           y="y1"
@@ -49,15 +51,7 @@ const Demo: FC = () => {
           closure={{ kind: 'stack', baselineField: 'y0' }}
           stroke="none"
         />
-        <PathMark
-          x="month"
-          y="y1"
-          order="order"
-          series="segment"
-          color="segment"
-          curve={curve}
-          strokeWidth={2}
-        />
+        <PathMark x="month" y="y1" order="order" series="segment" color="segment" curve={curve} strokeWidth={2} />
         <Axis dimension="x" />
         <Axis dimension="y" grid />
       </Plot>

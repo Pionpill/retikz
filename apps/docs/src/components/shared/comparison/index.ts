@@ -1,9 +1,4 @@
-export { Comparison } from './Comparison';
 export type { ComparisonProps } from './Comparison';
-export {
-  ComparisonTargetList,
-  ComparisonTargetLabelKeys,
-  ComparisonTarget,
-  isComparisonTarget,
-} from './targets';
-export type { ComparisonTargetValue, ComparisonTargetLabelKey } from './targets';
+export { Comparison } from './Comparison';
+export type { ComparisonTargetLabelKey, ComparisonTargetValue } from './targets';
+export { ComparisonTarget, ComparisonTargetLabelKeys, ComparisonTargetList, isComparisonTarget } from './targets';

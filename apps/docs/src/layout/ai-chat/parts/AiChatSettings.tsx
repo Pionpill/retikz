@@ -1,5 +1,7 @@
+import type { FC } from 'react';
+
 import { AlertTriangle, ChevronLeft, Eye, EyeOff, Pencil, Plus, Trash2 } from 'lucide-react';
-import { type FC, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -7,9 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/use-ai-chat-store';
-import { DEFAULT_BASE_URLS, PROVIDER_LABEL } from '../models';
+
 import type { CustomProvider } from '../providers/resolve';
 import type { ProviderId } from '../providers/types';
+
+import { DEFAULT_BASE_URLS, PROVIDER_LABEL } from '../models';
 import { PROVIDER_IDS } from '../providers/types';
 
 const KEY_HELP_URL: Record<ProviderId, string> = {
@@ -70,9 +74,7 @@ export const AiChatSettings: FC = () => {
   const [draft, setDraft] = useState<CustomProviderDraft | null>(null);
 
   // segmented 当前 provider 切换：仅在 PROVIDER_IDS 内（自定义 provider 切换走 Model picker）
-  const builtInProviderId = PROVIDER_IDS.includes(providerId as ProviderId)
-    ? (providerId as ProviderId)
-    : 'deepseek';
+  const builtInProviderId = PROVIDER_IDS.includes(providerId as ProviderId) ? (providerId as ProviderId) : 'deepseek';
   const apiKey = apiKeys[builtInProviderId];
   const baseUrl = baseUrls[builtInProviderId];
 

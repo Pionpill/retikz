@@ -1,18 +1,16 @@
+import type { FC, KeyboardEvent } from 'react';
+
 import { ChevronLeft, Plus, Trash2 } from 'lucide-react';
-import { type FC, type KeyboardEvent, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button } from '@/components/ui/button';
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from '@/components/ui/context-menu';
-import { Skeleton } from '@/components/ui/skeleton';
 import { MarkdownInline } from '@/components/shared/inline-markdown';
+import { Button } from '@/components/ui/button';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/use-ai-chat-store';
+
 import type { Conversation } from '../conversations-storage';
 
 /**
@@ -33,10 +31,7 @@ export const AiChatHistory: FC = () => {
   const deleteConversation = useAiChatStore(s => s.deleteConversation);
   const renameConversation = useAiChatStore(s => s.renameConversation);
 
-  const sorted = useMemo(
-    () => Object.values(conversations).sort((a, b) => b.updatedAt - a.updatedAt),
-    [conversations],
-  );
+  const sorted = useMemo(() => Object.values(conversations).sort((a, b) => b.updatedAt - a.updatedAt), [conversations]);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState('');
@@ -90,8 +85,7 @@ export const AiChatHistory: FC = () => {
     void deleteConversation(conv.id);
   };
 
-  const displayTitle = (conv: Conversation): string =>
-    conv.title.trim() || t('ai.historyUntitledLabel');
+  const displayTitle = (conv: Conversation): string => conv.title.trim() || t('ai.historyUntitledLabel');
 
   const formatRelative = (timestamp: number): string => formatRelativeTime(timestamp, i18n.language);
 
@@ -109,13 +103,7 @@ export const AiChatHistory: FC = () => {
         </Button>
         <span className="text-sm font-medium">{t('ai.historyLabel')}</span>
         <div className="ml-auto">
-          <Button
-            type="button"
-            size="sm"
-            className="h-7 gap-1.5"
-            onClick={handleNewChat}
-            disabled={isGenerating}
-          >
+          <Button type="button" size="sm" className="h-7 gap-1.5" onClick={handleNewChat} disabled={isGenerating}>
             <Plus className="size-3.5" />
             {t('ai.historyNewChatLabel')}
           </Button>

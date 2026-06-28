@@ -1,16 +1,18 @@
-import {
-  type AnyChannelDefinition,
-  type ChannelContext,
-  ChannelDefinitionKind,
-  type ChannelDefinitionKindValue,
-  type MarkChannels,
-  type NodeChannelDelivery,
-  type PathChannelDelivery,
-  type ScaleDescriptor,
-  type ScopeChannelDelivery,
+import type {
+  AnyChannelDefinition,
+  ChannelContext,
+  ChannelDefinitionKindValue,
+  MarkChannels,
+  NodeChannelDelivery,
+  PathChannelDelivery,
+  ScaleDescriptor,
+  ScopeChannelDelivery,
 } from '../../contract';
+import type { BuiltinTextChannelOptions } from './features';
+
+import { ChannelDefinitionKind } from '../../contract';
 import { type MarkOperation } from '../../schemas';
-import { type BuiltinTextChannelOptions, DELIVERY_CHANNELS, createBuiltinPaintChannels, createBuiltinTextChannels } from './features';
+import { createBuiltinPaintChannels, createBuiltinTextChannels, DELIVERY_CHANNELS } from './features';
 
 /**
  * 保留的内置通道名集：扩展通道的 `channel` 不得撞这些。
@@ -100,8 +102,15 @@ export const resolveChannelRegistry = (options: ChannelRegistryOptions = {}): Ch
     if (definitions.some(registered => registered.channel === def.channel)) {
       throw new Error(`lowerPlots: duplicate custom channel registration: "${def.channel}"`);
     }
-    if ((def.kind === ChannelDefinitionKind.Scope || def.kind === ChannelDefinitionKind.Node || def.kind === ChannelDefinitionKind.Path) && typeof def.deliver !== 'function') {
-      throw new Error(`lowerPlots: custom ${def.kind} channel "${def.channel}" must provide deliver (how its resolved value lands on the core ${def.kind})`);
+    if (
+      (def.kind === ChannelDefinitionKind.Scope ||
+        def.kind === ChannelDefinitionKind.Node ||
+        def.kind === ChannelDefinitionKind.Path) &&
+      typeof def.deliver !== 'function'
+    ) {
+      throw new Error(
+        `lowerPlots: custom ${def.kind} channel "${def.channel}" must provide deliver (how its resolved value lands on the core ${def.kind})`,
+      );
     }
     addDefinition(def);
   }
@@ -122,10 +131,14 @@ export const resolveMarkChannels = (
 ): MarkChannels => {
   for (const channel of Object.keys(extensionChannelsOf(mark))) {
     if (BUILTIN_CHANNEL_NAMES.has(channel)) {
-      throw new Error(`lowerPlots: encoding.channels.${channel} collides with a built-in channel; use the named mark property instead`);
+      throw new Error(
+        `lowerPlots: encoding.channels.${channel} collides with a built-in channel; use the named mark property instead`,
+      );
     }
     if (!registry.has(channel)) {
-      throw new Error(`lowerPlots: channel "${channel}" is not registered; pass a ChannelDefinition via options.channelDefinitions`);
+      throw new Error(
+        `lowerPlots: channel "${channel}" is not registered; pass a ChannelDefinition via options.channelDefinitions`,
+      );
     }
   }
   const values: Record<string, NonNullable<MarkChannels['values']>[string]> = {};

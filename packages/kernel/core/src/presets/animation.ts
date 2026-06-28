@@ -3,7 +3,9 @@
  * @description 纯函数、产 `IRAnimationTrack`，用于 `animations={[fadeIn(), scaleIn()]}`。不引入新能力——
  *   产出逐字段等于手写 track（Sugar=Kernel 等价），播放 / 降级全走 renderer 既有通路。默认值 = 配方表，单一真源。
  */
-import { AnimationProperty, type IRAnimationOrigin, type IRAnimationTrack } from '../schemas/animation';
+import type { IRAnimationOrigin, IRAnimationTrack } from '../schemas/animation';
+
+import { AnimationProperty } from '../schemas/animation';
 
 /** preset 公共可调项（各 preset 在此之上加专有项；默认值由各 preset 给） */
 export type AnimationPresetOptions = {
@@ -31,14 +33,20 @@ const applyBase = (
 /** 淡入：`opacity` 0→1（末帧 = base，降级见完整图） */
 export const fadeIn = (opts: AnimationPresetOptions = {}): IRAnimationTrack => ({
   property: AnimationProperty.Opacity,
-  keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }],
+  keyframes: [
+    { at: 0, value: 0 },
+    { at: 1, value: 1 },
+  ],
   ...applyBase({ duration: 400, easing: 'ease-out' }, opts),
 });
 
 /** 描边画出：`pathDraw` 0→1（仅对有描边元素有效） */
 export const drawOn = (opts: AnimationPresetOptions = {}): IRAnimationTrack => ({
   property: AnimationProperty.PathDraw,
-  keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }],
+  keyframes: [
+    { at: 0, value: 0 },
+    { at: 1, value: 1 },
+  ],
   ...applyBase({ duration: 600, easing: 'ease-in-out' }, opts),
 });
 
@@ -53,14 +61,16 @@ export type ScaleInOptions = AnimationPresetOptions & {
 /** 缩放入场：`scale` from→1（均匀，绕 origin） */
 export const scaleIn = (opts: ScaleInOptions = {}): IRAnimationTrack => ({
   property: AnimationProperty.Scale,
-  keyframes: [{ at: 0, value: opts.from ?? 0.8 }, { at: 1, value: 1 }],
+  keyframes: [
+    { at: 0, value: opts.from ?? 0.8 },
+    { at: 1, value: 1 },
+  ],
   ...(opts.origin !== undefined ? { origin: opts.origin } : {}),
   ...applyBase({ duration: 400, easing: 'ease-out' }, opts),
 });
 
 /** 从无到有放大：`scaleIn` 的 `from: 0` 别名 */
-export const grow = (opts: Omit<ScaleInOptions, 'from'> = {}): IRAnimationTrack =>
-  scaleIn({ ...opts, from: 0 });
+export const grow = (opts: Omit<ScaleInOptions, 'from'> = {}): IRAnimationTrack => scaleIn({ ...opts, from: 0 });
 
 /** `growUp` 选项：支点 `origin`（缺省底边中点，柱状图从基线长出） */
 export type GrowUpOptions = AnimationPresetOptions & {
@@ -71,7 +81,10 @@ export type GrowUpOptions = AnimationPresetOptions & {
 /** 从基线长出：`scaleY` 0→1，支点底边（柱状图入场） */
 export const growUp = (opts: GrowUpOptions = {}): IRAnimationTrack => ({
   property: AnimationProperty.ScaleY,
-  keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }],
+  keyframes: [
+    { at: 0, value: 0 },
+    { at: 1, value: 1 },
+  ],
   origin: opts.origin ?? 'south',
   ...applyBase({ duration: 500, easing: 'ease-out' }, opts),
 });
@@ -87,7 +100,10 @@ export type SlideInOptions = AnimationPresetOptions & {
 /** 滑入：`translateX|Y` offset→0 */
 export const slideIn = (opts: SlideInOptions = {}): IRAnimationTrack => ({
   property: (opts.axis ?? 'x') === 'y' ? AnimationProperty.TranslateY : AnimationProperty.TranslateX,
-  keyframes: [{ at: 0, value: opts.offset ?? -20 }, { at: 1, value: 0 }],
+  keyframes: [
+    { at: 0, value: opts.offset ?? -20 },
+    { at: 1, value: 0 },
+  ],
   ...applyBase({ duration: 400, easing: 'ease-out' }, opts),
 });
 
@@ -110,7 +126,10 @@ export const colorShift = (opts: ColorShiftOptions): IRAnimationTrack => {
   }
   return {
     property: (opts.channel ?? 'fill') === 'stroke' ? AnimationProperty.Stroke : AnimationProperty.Fill,
-    keyframes: [{ at: 0, value: from }, { at: 1, value: to }],
+    keyframes: [
+      { at: 0, value: from },
+      { at: 1, value: to },
+    ],
     ...applyBase({ duration: 400, easing: 'ease-in-out' }, opts),
   };
 };
@@ -126,13 +145,19 @@ export type CameraToOptions = AnimationPresetOptions & {
 /** 镜头：scene 根 `viewBox` from→to（挂 `<Layout animations>` / IR 根 `animations`） */
 export const cameraTo = (opts: CameraToOptions): IRAnimationTrack => {
   // 运行时守 JS 调用方漏传（类型已要求必填，故读为可空视图以做防御校验）
-  const { from, to } = opts as { from?: [number, number, number, number] | null; to?: [number, number, number, number] | null };
+  const { from, to } = opts as {
+    from?: [number, number, number, number] | null;
+    to?: [number, number, number, number] | null;
+  };
   if (from == null || to == null) {
     throw new Error('cameraTo: `from` and `to` viewBox [x, y, w, h] are required.');
   }
   return {
     property: AnimationProperty.ViewBox,
-    keyframes: [{ at: 0, value: from }, { at: 1, value: to }],
+    keyframes: [
+      { at: 0, value: from },
+      { at: 1, value: to },
+    ],
     ...applyBase({ duration: 800, easing: 'ease-in-out' }, opts),
   };
 };
@@ -148,7 +173,11 @@ export type PulseOptions = AnimationPresetOptions & {
 /** 脉冲：`scale` 1→peak→1 无限循环（强调 / 心跳） */
 export const pulse = (opts: PulseOptions = {}): IRAnimationTrack => ({
   property: AnimationProperty.Scale,
-  keyframes: [{ at: 0, value: 1 }, { at: 0.5, value: opts.peak ?? 1.1 }, { at: 1, value: 1 }],
+  keyframes: [
+    { at: 0, value: 1 },
+    { at: 0.5, value: opts.peak ?? 1.1 },
+    { at: 1, value: 1 },
+  ],
   iterations: 'infinite',
   ...(opts.origin !== undefined ? { origin: opts.origin } : {}),
   ...applyBase({ duration: 1000, easing: 'ease-in-out' }, opts),
@@ -163,7 +192,10 @@ export type SpinOptions = AnimationPresetOptions & {
 /** 旋转：`rotate` 0→360 无限循环、匀速（loader） */
 export const spin = (opts: SpinOptions = {}): IRAnimationTrack => ({
   property: AnimationProperty.Rotate,
-  keyframes: [{ at: 0, value: 0 }, { at: 1, value: 360 }],
+  keyframes: [
+    { at: 0, value: 0 },
+    { at: 1, value: 360 },
+  ],
   iterations: 'infinite',
   ...(opts.origin !== undefined ? { origin: opts.origin } : {}),
   ...applyBase({ duration: 1000, easing: 'linear' }, opts),
@@ -195,7 +227,11 @@ export type FlashOptions = AnimationPresetOptions & {
 /** 闪一下强调：`opacity` 1→dim→1，默认闪 2 次（末帧 = base = 完整可见） */
 export const flash = (opts: FlashOptions = {}): IRAnimationTrack => ({
   property: AnimationProperty.Opacity,
-  keyframes: [{ at: 0, value: 1 }, { at: 0.5, value: opts.dim ?? 0 }, { at: 1, value: 1 }],
+  keyframes: [
+    { at: 0, value: 1 },
+    { at: 0.5, value: opts.dim ?? 0 },
+    { at: 1, value: 1 },
+  ],
   iterations: opts.iterations ?? 2,
   ...applyBase({ duration: 300, easing: 'ease-in-out' }, opts),
 });
@@ -211,7 +247,11 @@ export type BlinkOptions = AnimationPresetOptions & {
 /** 持续闪烁：`opacity` 1→dim→1 无限循环（blink = 无限版 flash） */
 export const blink = (opts: BlinkOptions = {}): IRAnimationTrack => ({
   property: AnimationProperty.Opacity,
-  keyframes: [{ at: 0, value: 1 }, { at: 0.5, value: opts.dim ?? 0 }, { at: 1, value: 1 }],
+  keyframes: [
+    { at: 0, value: 1 },
+    { at: 0.5, value: opts.dim ?? 0 },
+    { at: 1, value: 1 },
+  ],
   iterations: opts.iterations ?? 'infinite',
   ...applyBase({ duration: 800, easing: 'ease-in-out' }, opts),
 });

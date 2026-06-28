@@ -3,8 +3,24 @@ import type { FC } from 'react';
 import { Layout, Node, Path, Step } from '@retikz/react';
 
 const rows = [
-  { label: 'linear', y: -78, width: undefined, start: { width: 14 }, end: { width: 42 }, interpolation: 'linear' as const, fill: '#5dade2' },
-  { label: 'smooth', y: 0, width: undefined, start: { width: 14 }, end: { width: 42 }, interpolation: 'smooth' as const, fill: '#8ac926' },
+  {
+    label: 'linear',
+    y: -78,
+    width: undefined,
+    start: { width: 14 },
+    end: { width: 42 },
+    interpolation: 'linear' as const,
+    fill: '#5dade2',
+  },
+  {
+    label: 'smooth',
+    y: 0,
+    width: undefined,
+    start: { width: 14 },
+    end: { width: 42 },
+    interpolation: 'smooth' as const,
+    fill: '#8ac926',
+  },
   {
     label: 'step',
     y: 78,
@@ -25,12 +41,7 @@ const rows = [
 ];
 
 const Demo: FC = () => (
-  <Layout
-    width={560}
-    height={300}
-    viewBox={{ x: -280, y: -150, width: 560, height: 300 }}
-    color="#172033"
-  >
+  <Layout width={560} height={300} viewBox={{ x: -280, y: -150, width: 560, height: 300 }} color="#172033">
     {rows.map(row => (
       <Path
         key={row.label}

@@ -17,12 +17,12 @@ L3 视觉保真后置。
 
 v1 词汇 4 类：
 
-| kind | 测什么 |
-| --- | --- |
-| `textPresent` | 某段文字在不在（`match: contains`(默认)/`exact`） |
+| kind             | 测什么                                                                        |
+| ---------------- | ----------------------------------------------------------------------------- |
+| `textPresent`    | 某段文字在不在（`match: contains`(默认)/`exact`）                             |
 | `primitiveCount` | 某类原语（rect/ellipse/text/path/group）数量满足 `op value`（计数下钻 group） |
-| `arrowCount` | 带箭头的 path 数量满足 `op value` |
-| `stylePresent` | 至少一个原语带某样式（fill / dashed / stroke） |
+| `arrowCount`     | 带箭头的 path 数量满足 `op value`                                             |
+| `stylePresent`   | 至少一个原语带某样式（fill / dashed / stroke）                                |
 
 指标：**候选级通过率**（一条候选所有断言都过）+ **断言级通过率**（pass 断言 / 总断言，主区分信号）+ 按 kind 通过率 + 断言失败明细。L1 挂或 prompt 无断言的候选不进 L2 分母（计 skipped）。
 

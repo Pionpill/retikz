@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { CompileWarning, IR, ScenePrimitive } from '../../src';
 import type { RectPrim } from '../../src/primitive';
+
+import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
 /** 取所有 RectPrim（默认 rectangle 节点；带文本节点包 group，flatten 穿透） */
@@ -9,10 +11,7 @@ const rects = (prims: Array<ScenePrimitive>): Array<RectPrim> =>
   flattenPrims(prims).filter((p): p is RectPrim => p.type === 'rect');
 
 /** rect 几何中心 [cx, cy] */
-const rectCenter = (r: RectPrim): [number, number] => [
-  r.x + r.width / 2,
-  r.y + r.height / 2,
-];
+const rectCenter = (r: RectPrim): [number, number] => [r.x + r.width / 2, r.y + r.height / 2];
 
 /** 取顶层 path primitive */
 const topPath = (prims: ReadonlyArray<ScenePrimitive>): ScenePrimitive | undefined =>
@@ -56,7 +55,13 @@ describe('Node 中心落两端点之间', () => {
       {
         type: 'node',
         id: 'mid',
-        position: { between: [[-40, -40], [40, 40]], t: 0.5 },
+        position: {
+          between: [
+            [-40, -40],
+            [40, 40],
+          ],
+          t: 0.5,
+        },
         text: 'm',
       },
     ]);
@@ -72,7 +77,13 @@ describe('Coordinate 注册位置落两端点之间', () => {
       {
         type: 'coordinate',
         id: 'm',
-        position: { between: [[0, 0], [90, 0]], t: 0.333 },
+        position: {
+          between: [
+            [0, 0],
+            [90, 0],
+          ],
+          t: 0.333,
+        },
       },
       {
         type: 'path',
@@ -161,10 +172,7 @@ describe('嵌套 between 解析', () => {
         type: 'node',
         id: 'p',
         position: {
-          between: [
-            { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 },
-            { id: 'C' },
-          ],
+          between: [{ between: [{ id: 'A' }, { id: 'B' }], t: 0.5 }, { id: 'C' }],
           t: 0.5,
         },
         text: 'p',

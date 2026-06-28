@@ -1,5 +1,6 @@
-import { ChevronRight } from 'lucide-react';
 import type { FC } from 'react';
+
+import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
@@ -33,9 +34,7 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
   const hasChildren = Boolean(item.children?.length);
   const isActive = pathname.toLowerCase() === path.toLowerCase();
 
-  const [open, setOpen] = useState(
-    () => hasChildren && pathname.toLowerCase().startsWith(`${path.toLowerCase()}/`),
-  );
+  const [open, setOpen] = useState(() => hasChildren && pathname.toLowerCase().startsWith(`${path.toLowerCase()}/`));
 
   if (!hasChildren) {
     return (
@@ -76,21 +75,14 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
               aria-label={open ? t('common.collapseSection') : t('common.expandSection')}
               className="-my-1 ml-1"
             >
-              <ChevronRight
-                className="transition-transform"
-                style={{ transform: `rotate(${open ? 90 : 0}deg)` }}
-              />
+              <ChevronRight className="transition-transform" style={{ transform: `rotate(${open ? 90 : 0}deg)` }} />
             </Button>
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent>
           <ul className="ml-3 mt-0.5 flex flex-col gap-0.5 pl-3">
             {item.children!.map(child => (
-              <AppSidebarMenuItem
-                key={child.value}
-                item={child}
-                path={`${path}/${child.value.toLowerCase()}`}
-              />
+              <AppSidebarMenuItem key={child.value} item={child} path={`${path}/${child.value.toLowerCase()}`} />
             ))}
           </ul>
         </CollapsibleContent>

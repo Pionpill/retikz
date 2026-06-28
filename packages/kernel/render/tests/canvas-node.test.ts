@@ -1,5 +1,6 @@
-import { Buffer } from 'node:buffer';
 import type { Scene } from '@retikz/core';
+
+import { Buffer } from 'node:buffer';
 import { describe, expect, it, vi } from 'vitest';
 
 type CanvasCall = {
@@ -33,7 +34,10 @@ const encodes: Array<{ width: number; height: number; format: string; quality?: 
 
 const createContext = (): SpyCanvasContext => {
   const calls: Array<CanvasCall> = [];
-  const record = (name: string) => (...args: Array<unknown>) => calls.push({ name, args });
+  const record =
+    (name: string) =>
+    (...args: Array<unknown>) =>
+      calls.push({ name, args });
   const context: SpyCanvasContext = {
     calls,
     fillStyle: '#000',
@@ -56,23 +60,20 @@ const createContext = (): SpyCanvasContext => {
   return context;
 };
 
-vi.mock(
-  '@napi-rs/canvas',
-  () => ({
-    createCanvas: (width: number, height: number) => {
-      const context = createContext();
-      return {
-        width,
-        height,
-        getContext: (contextId: string) => (contextId === '2d' ? context : null),
-        encode: (format: string, quality?: number) => {
-          encodes.push({ width, height, format, quality });
-          return Buffer.from(`retikz:${format}:${width}x${height}`);
-        },
-      };
-    },
-  }),
-);
+vi.mock('@napi-rs/canvas', () => ({
+  createCanvas: (width: number, height: number) => {
+    const context = createContext();
+    return {
+      width,
+      height,
+      getContext: (contextId: string) => (contextId === '2d' ? context : null),
+      encode: (format: string, quality?: number) => {
+        encodes.push({ width, height, format, quality });
+        return Buffer.from(`retikz:${format}:${width}x${height}`);
+      },
+    };
+  },
+}));
 
 const scene: Scene = {
   layout: { x: 10, y: 20, width: 100, height: 50 },
@@ -104,6 +105,8 @@ describe('renderSceneToImage', () => {
   it('validates output dimensions before loading the optional peer', async () => {
     const { renderSceneToImage } = await import('../src/canvas-node');
 
-    await expect(renderSceneToImage(scene, { width: 0, height: 100 })).rejects.toThrow(/width must be a positive finite number/);
+    await expect(renderSceneToImage(scene, { width: 0, height: 100 })).rejects.toThrow(
+      /width must be a positive finite number/,
+    );
   });
 });

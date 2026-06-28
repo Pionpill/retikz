@@ -1,4 +1,6 @@
-import { DEFAULT_EPSILON, type Position, point } from './point';
+import type { Position } from './point';
+
+import { DEFAULT_EPSILON, point } from './point';
 
 /** 圆：圆心 + 半径 */
 export type Circle = { center: Position; radius: number };
@@ -33,10 +35,7 @@ export const triangle = {
     if (perim < DEFAULT_EPSILON) return null;
     const area = Math.abs(point.cross([b[0] - a[0], b[1] - a[1]], [c[0] - a[0], c[1] - a[1]])) / 2;
     if (area < DEFAULT_EPSILON) return null;
-    const center: Position = [
-      (la * a[0] + lb * b[0] + lc * c[0]) / perim,
-      (la * a[1] + lb * b[1] + lc * c[1]) / perim,
-    ];
+    const center: Position = [(la * a[0] + lb * b[0] + lc * c[0]) / perim, (la * a[1] + lb * b[1] + lc * c[1]) / perim];
     return { center, radius: area / (perim / 2) };
   },
 };

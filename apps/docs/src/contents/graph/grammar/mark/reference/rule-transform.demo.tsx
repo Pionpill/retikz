@@ -1,5 +1,6 @@
-import { Axis, Plot, PointMark, ReferenceMark } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, Plot, PointMark, ReferenceMark } from '@retikz/plot-react';
 
 import { sampleScores } from './rule-transform.data';
 
@@ -10,7 +11,9 @@ const Demo: FC = () => (
       y="meanScore"
       color="#dc2626"
       strokeWidth={2}
-      transform={[{ kind: 'summarize', groupBy: ['cohort'], metrics: [{ op: 'mean', field: 'score', as: 'meanScore' }] }]}
+      transform={[
+        { kind: 'summarize', groupBy: ['cohort'], metrics: [{ op: 'mean', field: 'score', as: 'meanScore' }] },
+      ]}
     />
     <Axis dimension="x" />
     <Axis dimension="y" grid />

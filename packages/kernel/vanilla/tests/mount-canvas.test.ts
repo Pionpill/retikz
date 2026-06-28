@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IR } from '@retikz/core';
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { figure, mountCanvas, node } from '../src';
 
 /**
@@ -13,7 +15,12 @@ import { figure, mountCanvas, node } from '../src';
 /** 录制型 fake 2d context：记录调用名，供断言 drawScene 链路被走（setTransform 等） */
 const createRecordingContext = (): { ctx: CanvasRenderingContext2D; calls: Array<string> } => {
   const calls: Array<string> = [];
-  const target: Record<string | symbol, unknown> = { canvas: null, fillStyle: '#000', strokeStyle: '#000', lineWidth: 1 };
+  const target: Record<string | symbol, unknown> = {
+    canvas: null,
+    fillStyle: '#000',
+    strokeStyle: '#000',
+    lineWidth: 1,
+  };
   const ctx = new Proxy(target, {
     get(t, prop) {
       if (prop in t) return t[prop];

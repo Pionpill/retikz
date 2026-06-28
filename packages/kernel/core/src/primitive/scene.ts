@@ -1,14 +1,14 @@
+import type { IRAnimationTrack } from '../schemas/animation';
 import type { EllipsePrim } from './ellipse';
 import type { GroupPrim } from './group';
+import type { Layout } from './layout';
+import type { SceneResource } from './paint';
 import type { PathPrim } from './path';
 import type { RectPrim } from './rect';
 import type { TextPrim } from './text';
-import type { Layout } from './layout';
-import type { SceneResource } from './paint';
-import type { IRAnimationTrack } from '../schemas/animation';
 
-export type { PaintValue, SceneResource, PaintResource, ResolvedPatternTile } from './paint';
-export type { ClipShape, ClipResource } from './clip';
+export type { ClipResource, ClipShape } from './clip';
+export type { PaintResource, PaintValue, ResolvedPatternTile, SceneResource } from './paint';
 
 /**
  * Scene primitive：渲染目标无关的最大公约子集

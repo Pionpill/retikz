@@ -1,6 +1,8 @@
-import { type PlotSpec, defineScale } from '@retikz/plot';
-import { Plot } from '@retikz/plot-react';
+import type { PlotSpec } from '@retikz/plot';
 import type { FC } from 'react';
+
+import { defineScale } from '@retikz/plot';
+import { Plot } from '@retikz/plot-react';
 import { z } from 'zod';
 
 import { scaleCustomRows } from './scale-custom.data';
@@ -54,6 +56,15 @@ const spec: PlotSpec = {
   ],
 };
 
-const Demo: FC = () => <Plot spec={spec} data={{ pts: scaleCustomRows }} scaleDefinitions={[brandColor]} width={420} height={260} style={{ maxWidth: '100%', height: 'auto' }} />;
+const Demo: FC = () => (
+  <Plot
+    spec={spec}
+    data={{ pts: scaleCustomRows }}
+    scaleDefinitions={[brandColor]}
+    width={420}
+    height={260}
+    style={{ maxWidth: '100%', height: 'auto' }}
+  />
+);
 
 export default Demo;

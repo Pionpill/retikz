@@ -1,5 +1,6 @@
-import type { FC } from 'react';
 import type { IRPaintSpec } from '@retikz/plot';
+import type { FC } from 'react';
+
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
@@ -28,19 +29,20 @@ const fillPaint: IRPaintSpec = {
 const Demo: FC = () => (
   <Layout width={700} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
     <Plot data={revenue} width={315} height={220} x={0} y={30}>
-      <PathMark x="month" y="revenue" order="month" stroke={strokePaint} strokeWidth={5} lineCap="round" lineJoin="round" />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
-    </Plot>
-    <Plot data={revenue} width={315} height={220} x={370} y={30}>
       <PathMark
         x="month"
         y="revenue"
         order="month"
-        closure={{ kind: 'baseline' }}
-        fill={fillPaint}
-        stroke="none"
+        stroke={strokePaint}
+        strokeWidth={5}
+        lineCap="round"
+        lineJoin="round"
       />
+      <Axis dimension="x" />
+      <Axis dimension="y" grid />
+    </Plot>
+    <Plot data={revenue} width={315} height={220} x={370} y={30}>
+      <PathMark x="month" y="revenue" order="month" closure={{ kind: 'baseline' }} fill={fillPaint} stroke="none" />
       <PathMark
         x="month"
         y="revenue"

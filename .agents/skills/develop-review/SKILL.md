@@ -116,6 +116,7 @@ git status --short            # 工作区基线：审计前已有的改动清单
 按 cross-review 必查的第 2 / 3 / 4 项逐条对照：
 
 - **zod `.describe` 完整性**：每个字段（含顶层 object、`type` / `kind`）都有英文、写含义不复述字段名的 describe
+- **zod `.describe` 质量**：describe 面向 LLM / schema registry 精准识别 IR 契约，而不是写给人类读实现故事。保持英文、简洁、干练；优先说明字段含义、允许值 / 开放 custom、默认值、compile/runtime 责任边界；避免重复已经由 schema 表达的约束（如 `.min(0).max(1)` 后再长篇写范围），避免后端 / 场景化 / 实现细节（如 SSR、IntersectionObserver、WAAPI、hydration、某个 renderer 的具体策略），除非该细节就是字段契约本身。
 - **const 风格枚举**：可枚举取值用 `as const` 对象 + `ValueOf` 派生，不裸字符串、不用 TS `enum`
 - **非法状态不可表达**：共现 / 互斥约束用子结构复合 / discriminated union / `.refine` 表达，而非一堆全可选字段靠运行时假设成对出现
 - **命名是否自解释、抽象是否对 LLM 友好**：相邻 schema 抽象度是否一致；模型能否据 description 自我纠错

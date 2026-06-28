@@ -1,5 +1,7 @@
 export * from './compile';
+export * from './composite';
 export * from './constant';
+export * from './layout';
 export * from './lower-tex';
 export * from './node';
 export * from './path';
@@ -7,5 +9,3 @@ export * from './position';
 export * from './precision';
 export * from './scope';
 export * from './text-metrics';
-export * from './layout';
-export * from './composite';

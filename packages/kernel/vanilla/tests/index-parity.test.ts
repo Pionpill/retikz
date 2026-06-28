@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+
 import * as vanilla from '../src';
-import { DrawWay, defineArrow, definePathGenerator, definePattern } from '../src';
+import { defineArrow, definePathGenerator, definePattern, DrawWay } from '../src';
 
 /**
  * 入口对等性：vanilla 单包应能 import 折角 way 常量 + 扩展面注册器，无需再从 @retikz/core 双包取。

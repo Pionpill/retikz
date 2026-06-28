@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  arcAngleInRange,
-  arcBoundingPoints,
-  arcEndPoint,
-  rayArc,
-} from '../../src/geometry/arc';
+
+import { arcAngleInRange, arcBoundingPoints, arcEndPoint, rayArc } from '../../src/geometry/arc';
 
 /*
  * 约定（与 polar.ts 一致）：
@@ -62,15 +58,8 @@ describe('arcEndPoint 圆周点投影', () => {
 
 describe('arcBoundingPoints 弧 bbox 极值候选点', () => {
   // 工具：粗略验证某点是否在结果集合里
-  const containsPoint = (
-    list: Array<[number, number]>,
-    target: [number, number],
-    eps = 1e-9,
-  ): boolean =>
-    list.some(
-      ([x, y]) =>
-        Math.abs(x - target[0]) < eps && Math.abs(y - target[1]) < eps,
-    );
+  const containsPoint = (list: Array<[number, number]>, target: [number, number], eps = 1e-9): boolean =>
+    list.some(([x, y]) => Math.abs(x - target[0]) < eps && Math.abs(y - target[1]) < eps);
 
   it('0°→90° 无穿越基本方向：仅返回端点', () => {
     const pts = arcBoundingPoints([0, 0], 10, 0, 90);

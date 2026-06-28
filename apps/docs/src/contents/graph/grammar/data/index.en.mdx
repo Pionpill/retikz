@@ -13,14 +13,14 @@ Data itself **does not enter IR**. The grammar only describes which fields to re
 
 During compilation, Plot first collects the fields actually referenced by the current configuration, then normalizes external rows into canonical rows (the standardized row after field mapping, parsing, and type coercion, written back under logical field names). Transforms, scales, marks, and locators all read that normalized result instead of repeatedly reading raw input rows.
 
-| Step | What Happens | Main Configuration |
-| --- | --- | --- |
-| Data reference | Select the external dataset for this plot; rows themselves stay out of IR | `<Plot data>` / `data.reference` |
-| Field contract | Decide logical field names, types, category order, and declarative formats; otherwise infer from samples | `model` |
-| Source alignment | Map logical fields to physical data paths, including renamed fields and nested paths | `fieldMap` / `fieldMaps` |
+| Step                | What Happens                                                                                                           | Main Configuration                     |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Data reference      | Select the external dataset for this plot; rows themselves stay out of IR                                              | `<Plot data>` / `data.reference`       |
+| Field contract      | Decide logical field names, types, category order, and declarative formats; otherwise infer from samples               | `model`                                |
+| Source alignment    | Map logical fields to physical data paths, including renamed fields and nested paths                                   | `fieldMap` / `fieldMaps`               |
 | Parse and normalize | Parse values with `resolveField`, `format`, or built-in coercion, then write canonical values back under logical names | `resolveField` / `format` / field type |
-| Validation | Sample-check or fully check participating fields, and decide whether invalid values skip or throw | `validateData` / `invalid` |
-| Channel consumption | Mark channels such as `x`, `y`, `color`, `size`, and `text` read canonical values | mark props / `encoding` |
+| Validation          | Sample-check or fully check participating fields, and decide whether invalid values skip or throw                      | `validateData` / `invalid`             |
+| Channel consumption | Mark channels such as `x`, `y`, `color`, `size`, and `text` read canonical values                                      | mark props / `encoding`                |
 
 `model` and `format` are persisted with the PlotSpec. `fieldMap` is a serializable lowering option injected by dataset reference. Function options such as `resolveField` participate only at runtime and do not enter IR. See [Custom Data](/graph/grammar/extend/data) when you need custom field formats or field parsing.
 
@@ -37,6 +37,9 @@ The data layer only turns external rows into canonical rows. How a field or cons
   </LinkedCard>
   <LinkedCard href="/graph/grammar/data/processing">
     <strong>Data Processing</strong>
-    <span>Handle field names, storage formats, custom parsing functions, and reusable processing logic before data reaches Plot.</span>
+    <span>
+      Handle field names, storage formats, custom parsing functions, and reusable processing logic before data reaches
+      Plot.
+    </span>
   </LinkedCard>
 </div>

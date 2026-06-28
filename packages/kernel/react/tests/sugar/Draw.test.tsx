@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest';
 import { DrawWay } from '@retikz/core';
-import { Draw } from '../../src/sugar/Draw';
+import { describe, expect, it } from 'vitest';
+
+import { buildIR } from '../../src/kernel/builder';
 import { Path } from '../../src/kernel/Path';
 import { Step } from '../../src/kernel/Step';
-import { buildIR } from '../../src/kernel/builder';
+import { Draw } from '../../src/sugar/Draw';
 
 /**
  * Draw 是 Sugar：调一次它得到 <Path><Step.../></Path> 子树。
@@ -114,7 +115,20 @@ describe('Draw: 各 step kind 分派', () => {
   });
 
   it('cubic 算子 → kind=cubic + control1 / control2', () => {
-    const out = ir(<Draw way={['a', { cubic: [[10, 0], [10, 20]] }, 'b']} />);
+    const out = ir(
+      <Draw
+        way={[
+          'a',
+          {
+            cubic: [
+              [10, 0],
+              [10, 20],
+            ],
+          },
+          'b',
+        ]}
+      />,
+    );
     const steps = (out.children[0] as { children: Array<{ kind: string }> }).children;
     expect(steps[1]).toMatchObject({ kind: 'cubic', to: { id: 'b' }, control1: [10, 0], control2: [10, 20] });
   });
@@ -167,17 +181,13 @@ describe('Draw: 边标注 label 透传', () => {
 
 describe('Draw: 相对偏移', () => {
   it('对象形态 { position, type: Relative } → IR target.relative', () => {
-    const out = ir(
-      <Draw way={['a', { position: [10, 0], type: DrawWay.Relative }]} />,
-    );
+    const out = ir(<Draw way={['a', { position: [10, 0], type: DrawWay.Relative }]} />);
     const steps = (out.children[0] as { children: Array<{ to: { relative?: [number, number] } }> }).children;
     expect(steps[1].to).toMatchObject({ relative: [10, 0] });
   });
 
   it('对象形态 { position, type: Accumulate } → IR target.relativeAccumulate', () => {
-    const out = ir(
-      <Draw way={['a', { position: [10, 0], type: DrawWay.Accumulate }]} />,
-    );
+    const out = ir(<Draw way={['a', { position: [10, 0], type: DrawWay.Accumulate }]} />);
     const steps = (out.children[0] as { children: Array<{ to: { relativeAccumulate?: [number, number] } }> }).children;
     expect(steps[1].to).toMatchObject({ relativeAccumulate: [10, 0] });
   });

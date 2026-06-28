@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import { ComparisonTarget, type ComparisonTargetValue } from '@/components/shared/comparison/targets';
+import type { ComparisonTargetValue } from '@/components/shared/comparison/targets';
+
+import { ComparisonTarget } from '@/components/shared/comparison/targets';
 
 /** 对照对象可见性表。 */
 export type ComparisonTargetVisibility = Record<ComparisonTargetValue, boolean>;
@@ -23,7 +25,9 @@ export type ComparisonState = {
 
 const mergeComparisonState = (persistedState: unknown, currentState: ComparisonState): ComparisonState => {
   const persistedComparisonState =
-    typeof persistedState === 'object' && persistedState !== null ? (persistedState as Partial<ComparisonState>) : undefined;
+    typeof persistedState === 'object' && persistedState !== null
+      ? (persistedState as Partial<ComparisonState>)
+      : undefined;
 
   return {
     ...currentState,
@@ -39,7 +43,9 @@ const migrateComparisonState = (persistedState: unknown, version: number): unkno
   if (version > 0) return persistedState;
 
   const persistedComparisonState =
-    typeof persistedState === 'object' && persistedState !== null ? (persistedState as Partial<ComparisonState>) : undefined;
+    typeof persistedState === 'object' && persistedState !== null
+      ? (persistedState as Partial<ComparisonState>)
+      : undefined;
 
   return {
     ...persistedComparisonState,

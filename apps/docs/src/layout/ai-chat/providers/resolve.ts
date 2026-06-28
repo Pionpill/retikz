@@ -1,7 +1,8 @@
+import type { ChatChunk, ChatRequestOptions, ProviderId } from './types';
+
 import { anthropicProvider } from './anthropic';
 import { getProvider } from './index';
 import { createOpenAiCompatProvider } from './openai-compat';
-import type { ChatChunk, ChatRequestOptions, ProviderId } from './types';
 import { PROVIDER_IDS } from './types';
 
 /**

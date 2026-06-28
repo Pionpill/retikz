@@ -1,10 +1,14 @@
+import type { FC } from 'react';
+
 import { AlertCircle } from 'lucide-react';
-import { type FC, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStickToBottom } from 'use-stick-to-bottom';
 
 import { useAiChatStore } from '@/store/use-ai-chat-store';
+
 import type { ChatErrorKind } from '../providers/types';
+
 import { AiChatConversationEmpty } from './AiChatConversationEmpty';
 import { AiChatInput } from './AiChatInput';
 import { AiChatMessage } from './AiChatMessage';

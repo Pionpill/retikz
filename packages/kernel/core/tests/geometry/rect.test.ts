@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { CompassAnchor, WebAnchor, normalizeCompassAnchor } from '../../src/geometry/anchor';
-import { type Rect, rect } from '../../src/geometry/rect';
+
+import type { Rect } from '../../src/geometry/rect';
+
+import { CompassAnchor, normalizeCompassAnchor, WebAnchor } from '../../src/geometry/anchor';
+import { rect } from '../../src/geometry/rect';
 
 const r10x6: Rect = { x: 0, y: 0, width: 10, height: 6 };
 
@@ -97,9 +100,7 @@ describe('rect.anchor 9 个标准锚点', () => {
   });
 
   it('用 CompassAnchor 常量取值与字面量一致', () => {
-    expect(rect.anchor(r10x6, CompassAnchor.NorthEast)).toEqual(
-      rect.anchor(r10x6, 'north-east'),
-    );
+    expect(rect.anchor(r10x6, CompassAnchor.NorthEast)).toEqual(rect.anchor(r10x6, 'north-east'));
   });
 
   it('non-origin 中心矩形：anchor 基于 (x, y) 偏移', () => {

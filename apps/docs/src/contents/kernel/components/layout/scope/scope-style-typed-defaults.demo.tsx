@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * 四通道 every-X：node / path / label / arrow 各自独立默认

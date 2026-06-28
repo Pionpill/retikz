@@ -1,5 +1,6 @@
-import { Layout, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Path, Step } from '@retikz/react';
 
 /**
  * 几何圆角 vs 描边 round join

@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+
 import { Ellipse, Layout, Node } from '@retikz/react';
 
 const Demo: FC = () => (
@@ -8,21 +9,12 @@ const Demo: FC = () => (
       radii
     </Node>
 
-    <Ellipse
-      corner1={[112, 22]}
-      corner2={[178, 78]}
-      inset={8}
-      strokeWidth={2}
-    />
+    <Ellipse corner1={[112, 22]} corner2={[178, 78]} inset={8} strokeWidth={2} />
     <Node position={[145, 105]} stroke="none" textColor="gray" font={{ size: 11 }}>
       inset box
     </Node>
 
-    <Ellipse
-      box={{ x: 210, y: 27, width: 48, height: 46 }}
-      outset={7}
-      strokeWidth={2}
-    />
+    <Ellipse box={{ x: 210, y: 27, width: 48, height: 46 }} outset={7} strokeWidth={2} />
     <Node position={[234, 105]} stroke="none" textColor="gray" font={{ size: 11 }}>
       outset
     </Node>

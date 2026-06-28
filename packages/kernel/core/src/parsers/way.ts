@@ -14,6 +14,7 @@ import type {
   IRStepLabel,
   IRTarget,
 } from '../schemas';
+
 import { parseTargetSugar } from './target-sugar';
 
 /**
@@ -109,8 +110,7 @@ export type WayDSL = Array<WayItem>;
 
 const isWayCycle = (item: WayItem): item is WayCycle => item === DrawWay.Cycle;
 
-const isWayVia = (item: WayItem): item is WayVia =>
-  item === DrawWay.Hv || item === DrawWay.Vh;
+const isWayVia = (item: WayItem): item is WayVia => item === DrawWay.Hv || item === DrawWay.Vh;
 
 const isPlainObject = (item: unknown): item is Record<string, unknown> =>
   typeof item === 'object' && item !== null && !Array.isArray(item);
@@ -118,47 +118,31 @@ const isPlainObject = (item: unknown): item is Record<string, unknown> =>
 const isWayRelativeItem = (item: unknown): item is WayRelativeInput =>
   isPlainObject(item) && 'position' in item && 'type' in item;
 
-const isWayCurveOp = (item: WayItem): item is WayCurveOp =>
-  isPlainObject(item) && 'curve' in item;
+const isWayCurveOp = (item: WayItem): item is WayCurveOp => isPlainObject(item) && 'curve' in item;
 
-const isWayCubicOp = (item: WayItem): item is WayCubicOp =>
-  isPlainObject(item) && 'cubic' in item;
+const isWayCubicOp = (item: WayItem): item is WayCubicOp => isPlainObject(item) && 'cubic' in item;
 
-const isWayBendOp = (item: WayItem): item is WayBendOp =>
-  isPlainObject(item) && 'bend' in item;
+const isWayBendOp = (item: WayItem): item is WayBendOp => isPlainObject(item) && 'bend' in item;
 
-const isWayCurveLike = (
-  item: WayItem,
-): item is WayCurveOp | WayCubicOp | WayBendOp =>
+const isWayCurveLike = (item: WayItem): item is WayCurveOp | WayCubicOp | WayBendOp =>
   isWayCurveOp(item) || isWayCubicOp(item) || isWayBendOp(item);
 
-const isWayArcOp = (item: WayItem): item is WayArcOp =>
-  isPlainObject(item) && 'arc' in item;
+const isWayArcOp = (item: WayItem): item is WayArcOp => isPlainObject(item) && 'arc' in item;
 
-const isWayCircleOp = (item: WayItem): item is WayCircleOp =>
-  isPlainObject(item) && 'circle' in item;
+const isWayCircleOp = (item: WayItem): item is WayCircleOp => isPlainObject(item) && 'circle' in item;
 
-const isWayEllipseOp = (item: WayItem): item is WayEllipseOp =>
-  isPlainObject(item) && 'ellipse' in item;
+const isWayEllipseOp = (item: WayItem): item is WayEllipseOp => isPlainObject(item) && 'ellipse' in item;
 
-const isWayShapeOp = (
-  item: WayItem,
-): item is WayArcOp | WayCircleOp | WayEllipseOp =>
+const isWayShapeOp = (item: WayItem): item is WayArcOp | WayCircleOp | WayEllipseOp =>
   isWayArcOp(item) || isWayCircleOp(item) || isWayEllipseOp(item);
 
-const isWayLabelOp = (item: WayItem): item is WayLabelOp =>
-  isPlainObject(item) && 'label' in item;
+const isWayLabelOp = (item: WayItem): item is WayLabelOp => isPlainObject(item) && 'label' in item;
 
 const isWayOperator = (item: WayItem): boolean =>
-  isWayCycle(item) ||
-  isWayVia(item) ||
-  isWayCurveLike(item) ||
-  isWayShapeOp(item) ||
-  isWayLabelOp(item);
+  isWayCycle(item) || isWayVia(item) || isWayCurveLike(item) || isWayShapeOp(item) || isWayLabelOp(item);
 
 /** sugar 字符串/对象 → IR step.label（字符串 = `{text:s}`） */
-const normalizeLabel = (l: WayLabel): IRStepLabel =>
-  typeof l === 'string' ? { text: l } : { ...l };
+const normalizeLabel = (l: WayLabel): IRStepLabel => (typeof l === 'string' ? { text: l } : { ...l });
 
 /** sugar `{position,type}` → IR `{relative}|{relativeAccumulate}`；其它形态原样返回 */
 const desugarRelativeItem = (item: WayItem): WayItem => {
@@ -170,9 +154,7 @@ const desugarRelativeItem = (item: WayItem): WayItem => {
   if (candidate.type === DrawWay.Relative) {
     return { relative: candidate.position };
   }
-  throw new Error(
-    `parseWay: WayRelativeItem.type must be DrawWay.Relative or DrawWay.Accumulate`,
-  );
+  throw new Error(`parseWay: WayRelativeItem.type must be DrawWay.Relative or DrawWay.Accumulate`);
 };
 
 /** WayItem 归约为"目标点"，算子/关键字返回 null */
@@ -200,15 +182,11 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
   };
 
   if (isWayLabelOp(way[0])) {
-    throw new Error(
-      `parseWay: way[0] must be a target (move start), got label operator`,
-    );
+    throw new Error(`parseWay: way[0] must be a target (move start), got label operator`);
   }
   const rawMove = targetOf(way[0]);
   if (rawMove === null) {
-    throw new Error(
-      `parseWay: way[0] must be a target (move start), got operator`,
-    );
+    throw new Error(`parseWay: way[0] must be a target (move start), got operator`);
   }
   const moveTarget: IRTarget = parseTargetSugar(rawMove);
   const moveStep: IRMoveStep = { type: 'step', kind: 'move', to: moveTarget };
@@ -217,18 +195,14 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
     const item = way[i];
     if (isWayLabelOp(item)) {
       if (pendingLabel) {
-        throw new Error(
-          `parseWay: label operator at index ${i} cannot directly follow another label operator`,
-        );
+        throw new Error(`parseWay: label operator at index ${i} cannot directly follow another label operator`);
       }
       pendingLabel = normalizeLabel(item.label);
       continue;
     }
     if (isWayCycle(item)) {
       if (pendingLabel) {
-        throw new Error(
-          `parseWay: cycle step cannot carry a label (label operator at index ${i - 1})`,
-        );
+        throw new Error(`parseWay: cycle step cannot carry a label (label operator at index ${i - 1})`);
       }
       const cycle: IRCycleStep = { type: 'step', kind: 'cycle' };
       out.push(cycle);
@@ -236,15 +210,11 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
     }
     if (isWayVia(item)) {
       if (i + 1 >= way.length) {
-        throw new Error(
-          `parseWay: via operator '${item}' at end of way must be followed by a target`,
-        );
+        throw new Error(`parseWay: via operator '${item}' at end of way must be followed by a target`);
       }
       const next = way[i + 1];
       if (isWayOperator(next)) {
-        throw new Error(
-          `parseWay: via operator '${item}' must be followed by a target, got '${String(next)}'`,
-        );
+        throw new Error(`parseWay: via operator '${item}' must be followed by a target, got '${String(next)}'`);
       }
       const fold: IRFoldStep = {
         type: 'step',
@@ -260,15 +230,11 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
     }
     if (isWayCurveLike(item)) {
       if (i + 1 >= way.length) {
-        throw new Error(
-          `parseWay: curve operator at end of way must be followed by a target`,
-        );
+        throw new Error(`parseWay: curve operator at end of way must be followed by a target`);
       }
       const next = way[i + 1];
       if (isWayOperator(next)) {
-        throw new Error(
-          `parseWay: curve operator must be followed by a target, got operator/keyword`,
-        );
+        throw new Error(`parseWay: curve operator must be followed by a target, got operator/keyword`);
       }
       const target: IRTarget = parseTargetSugar(desugarRelativeItem(next));
       const label = consumeLabel();
@@ -348,9 +314,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
     out.push(lineStep);
   }
   if (pendingLabel) {
-    throw new Error(
-      `parseWay: label operator at end of way must be followed by a step`,
-    );
+    throw new Error(`parseWay: label operator at end of way must be followed by a step`);
   }
   return out;
 };

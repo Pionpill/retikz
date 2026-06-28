@@ -1,4 +1,6 @@
-import { type AnyChannelDefinition, type ScopeChannelDefinition, defineScopeChannel } from '../../../contract';
+import type { AnyChannelDefinition, ScopeChannelDefinition } from '../../../contract';
+
+import { defineScopeChannel } from '../../../contract';
 import { type MarkOperation, type ScaledMarkValueType } from '../../../schemas';
 import { OPACITY_MIN, STROKE_WIDTH_MAX, STROKE_WIDTH_MIN } from './node';
 
@@ -61,15 +63,13 @@ export const BUILTIN_SCOPE_CHANNELS = {
       scope.drawOpacity = value;
     },
   ),
-  zIndex: numericScopeChannel(
-    'zIndex',
-    { outputKind: 'number', range: [0, 0] },
-    (scope, value) => {
-      scope.zIndex = Math.trunc(value);
-    },
-  ),
+  zIndex: numericScopeChannel('zIndex', { outputKind: 'number', range: [0, 0] }, (scope, value) => {
+    scope.zIndex = Math.trunc(value);
+  }),
 };
 
 const eraseScopeChannelDefinition = (def: unknown): AnyChannelDefinition => def as AnyChannelDefinition;
 
-export const SCOPE_CHANNELS: ReadonlyArray<AnyChannelDefinition> = Object.values(BUILTIN_SCOPE_CHANNELS).map(def => eraseScopeChannelDefinition(def));
+export const SCOPE_CHANNELS: ReadonlyArray<AnyChannelDefinition> = Object.values(BUILTIN_SCOPE_CHANNELS).map(def =>
+  eraseScopeChannelDefinition(def),
+);

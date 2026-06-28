@@ -1,5 +1,6 @@
-import { Circle, Draw, DrawWay, Ellipse, Layout, Node, Rectangle } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Circle, Draw, DrawWay, Ellipse, Layout, Node, Rectangle } from '@retikz/react';
 
 const IHW = 28; // 内框半宽（共享）
 const IHH = 17; // 内框半高（共享）
@@ -19,13 +20,29 @@ const R1 = [C.rect, C.ellipse, C.diamond];
 const R2 = [C.polygon, C.circle];
 
 // diamond / pentagon 顶点（绕原点），circumscribe 共享内框；用 cycle 闭合，不复制首顶点
-const DIAMOND: Array<[number, number]> = [[0, -IHH * 2], [IHW * 2, 0], [0, IHH * 2], [-IHW * 2, 0]];
-const PENTAGON: Array<[number, number]> = [[0, -39.4], [37.47, -12.18], [23.16, 31.87], [-23.16, 31.87], [-37.47, -12.18]];
+const DIAMOND: Array<[number, number]> = [
+  [0, -IHH * 2],
+  [IHW * 2, 0],
+  [0, IHH * 2],
+  [-IHW * 2, 0],
+];
+const PENTAGON: Array<[number, number]> = [
+  [0, -39.4],
+  [37.47, -12.18],
+  [23.16, 31.87],
+  [-23.16, 31.87],
+  [-37.47, -12.18],
+];
 const shift = (cx: number, cy: number, pts: Array<[number, number]>): Array<[number, number]> =>
   pts.map(([x, y]): [number, number] => [cx + x, cy + y]);
 
 const Demo: FC = () => (
-  <Layout width={560} height={271} viewBox={{ x: -225, y: -96, width: 450, height: 218 }} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout
+    width={560}
+    height={271}
+    viewBox={{ x: -225, y: -96, width: 450, height: 218 }}
+    style={{ maxWidth: '100%', height: 'auto' }}
+  >
     {/* 内容盒（灰块）—— 共享 */}
     {R1.map(cx => (
       <Rectangle key={`c1-${cx}`} center={[cx, ROW1]} width={CHW * 2} height={CHH * 2} fill="lightgray" stroke="none" />
@@ -43,10 +60,26 @@ const Demo: FC = () => (
 
     {/* 内框（虚线）—— 共享，置顶可见 */}
     {R1.map(cx => (
-      <Rectangle key={`f1-${cx}`} center={[cx, ROW1]} width={IHW * 2} height={IHH * 2} fill="none" stroke="currentColor" dashPattern={[4, 3]} />
+      <Rectangle
+        key={`f1-${cx}`}
+        center={[cx, ROW1]}
+        width={IHW * 2}
+        height={IHH * 2}
+        fill="none"
+        stroke="currentColor"
+        dashPattern={[4, 3]}
+      />
     ))}
     {R2.map(cx => (
-      <Rectangle key={`f2-${cx}`} center={[cx, ROW2]} width={IHW * 2} height={IHH * 2} fill="none" stroke="currentColor" dashPattern={[4, 3]} />
+      <Rectangle
+        key={`f2-${cx}`}
+        center={[cx, ROW2]}
+        width={IHW * 2}
+        height={IHH * 2}
+        fill="none"
+        stroke="currentColor"
+        dashPattern={[4, 3]}
+      />
     ))}
 
     {/* 标签 */}

@@ -18,8 +18,12 @@ import { Layout, Node, Draw } from '@retikz/react';
 
 export const Diagram = () => (
   <Layout renderer="svg">
-    <Node id="a" position={[0, 0]}>A</Node>
-    <Node id="b" position={[120, 0]}>B</Node>
+    <Node id="a" position={[0, 0]}>
+      A
+    </Node>
+    <Node id="b" position={[120, 0]}>
+      B
+    </Node>
     <Draw way={['a', 'b']} arrow="->" />
   </Layout>
 );

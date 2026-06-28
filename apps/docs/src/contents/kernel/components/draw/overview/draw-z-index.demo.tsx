@@ -1,5 +1,6 @@
-import { Draw, DrawWay, Layout } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, DrawWay, Layout } from '@retikz/react';
 
 /**
  * Draw zIndex 显式栈序
@@ -16,12 +17,7 @@ const Demo: FC = () => (
       zIndex={1}
     />
     {/* 红：后声明，默认应在上，但被蓝压住 */}
-    <Draw
-      way={[[70, 70], [170, 70], [170, 170], [70, 170], DrawWay.Cycle]}
-      fill="red"
-      stroke="red"
-      strokeWidth={2}
-    />
+    <Draw way={[[70, 70], [170, 70], [170, 170], [70, 170], DrawWay.Cycle]} fill="red" stroke="red" strokeWidth={2} />
   </Layout>
 );
 

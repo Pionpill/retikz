@@ -1,20 +1,26 @@
-import { z } from 'zod';
-import { describe, expect, it } from 'vitest';
 import type { IRNode, IRScope } from '@retikz/core';
+
+import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
+
+import type { AnyScaleDefinition, ChannelResolveContext } from '../../src/contract';
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
 import * as plot from '../../src';
-import { BUILTIN_SCALE_TYPES, PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
-import { type AnyScaleDefinition, type ChannelResolveContext, defineScale, extractScaleType } from '../../src/contract';
+import { defineScale, extractScaleType } from '../../src/contract';
+import { lowerPlots } from '../../src/pipeline/expand';
 import {
-  BUILTIN_SCALES,
   assertBaselineScaleCompatible,
   assertScaleFieldCompatible,
+  BUILTIN_SCALES,
   linearPositionScale,
   resolveChannelScale,
   resolveLinearScale,
   resolvePositionScale,
   resolveScaleRegistry,
 } from '../../src/providers';
+import { BUILTIN_SCALE_TYPES, PlotFieldType, PlotSpecSchema } from '../../src/schemas';
 
 /** 自定义 position scale：把内置 linear 包一层，仅验证 registry 分派（type 'unit'，固定 domain [0,1]） */
 const unitScale = defineScale({
@@ -22,7 +28,14 @@ const unitScale = defineScale({
   schema: z.object({ type: z.literal('unit'), name: z.string().min(1) }),
   isFieldCompatible: fieldType => fieldType !== PlotFieldType.Categorical,
   allowsBaseline: true,
-  resolve: (_def, values, range) => linearPositionScale(resolveLinearScale({ domain: [0, 1] }, values.filter((value): value is number => typeof value === 'number'), range)),
+  resolve: (_def, values, range) =>
+    linearPositionScale(
+      resolveLinearScale(
+        { domain: [0, 1] },
+        values.filter((value): value is number => typeof value === 'number'),
+        range,
+      ),
+    ),
 }) as AnyScaleDefinition;
 
 /** 自定义 channel scale：分类值 → 黑白两色轮转，legendForm swatch（type 'mono'） */
@@ -31,7 +44,11 @@ const monoScale = defineScale({
   schema: z.object({ type: z.literal('mono'), name: z.string().min(1) }),
   isFieldCompatible: fieldType => fieldType === undefined || fieldType === PlotFieldType.Categorical,
   resolve: (_def, values) => {
-    const domain = [...new Set(values.filter((value): value is string | number => typeof value === 'string' || typeof value === 'number'))];
+    const domain = [
+      ...new Set(
+        values.filter((value): value is string | number => typeof value === 'string' || typeof value === 'number'),
+      ),
+    ];
     const colors = domain.map((_category, index) => (index % 2 === 0 ? '#111111' : '#eeeeee'));
     const colorByCategory = new Map(domain.map((category, index) => [category, colors[index]] as const));
     return {
@@ -64,7 +81,11 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
   return out;
 };
 
-const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options: LowerPlotsOptions): IRScope => {
+const expandOf = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options: LowerPlotsOptions,
+): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
@@ -95,7 +116,10 @@ describe('scale registry（alpha.12 ADR-07 spec）', () => {
   });
 
   it('duplicate_scale_type_throws（自定义撞内置）', () => {
-    const collide = { ...unitScale, schema: z.object({ type: z.literal('linear'), name: z.string().min(1) }) } as AnyScaleDefinition;
+    const collide = {
+      ...unitScale,
+      schema: z.object({ type: z.literal('linear'), name: z.string().min(1) }),
+    } as AnyScaleDefinition;
     expect(() => resolveScaleRegistry([collide])).toThrow(/duplicate scale registration: "linear"/);
   });
 
@@ -110,7 +134,9 @@ describe('scale registry（alpha.12 ADR-07 spec）', () => {
 
   it('unknown_scale_type_throws', () => {
     const registry = resolveScaleRegistry();
-    expect(() => resolvePositionScale({ type: 'nope', name: 'x' }, [], [0, 1], registry)).toThrow(/scale type "nope" is not registered/);
+    expect(() => resolvePositionScale({ type: 'nope', name: 'x' }, [], [0, 1], registry)).toThrow(
+      /scale type "nope" is not registered/,
+    );
   });
 
   it('custom_position_scale_projects', () => {
@@ -123,17 +149,26 @@ describe('scale registry（alpha.12 ADR-07 spec）', () => {
 
   it('channel_scale_as_position_fails_loud', () => {
     const registry = resolveScaleRegistry();
-    expect(() => resolvePositionScale({ type: 'ordinal', name: 'c' }, [], [0, 1], registry)).toThrow(/cannot drive a positional/);
+    expect(() => resolvePositionScale({ type: 'ordinal', name: 'c' }, [], [0, 1], registry)).toThrow(
+      /cannot drive a positional/,
+    );
   });
 
   it('position_scale_as_color_fails_loud', () => {
     const registry = resolveScaleRegistry();
-    expect(() => resolveChannelScale({ type: 'linear', name: 'x' }, [], channelCtx(), registry)).toThrow(/is not a color scale/);
+    expect(() => resolveChannelScale({ type: 'linear', name: 'x' }, [], channelCtx(), registry)).toThrow(
+      /is not a color scale/,
+    );
   });
 
   it('custom_channel_scale_resolves_with_legend_form', () => {
     const registry = resolveScaleRegistry([monoScale]);
-    const resolution = resolveChannelScale({ type: 'mono', name: 'c' }, ['a', 'b', 'a'], channelCtx({ fieldType: PlotFieldType.Categorical }), registry);
+    const resolution = resolveChannelScale(
+      { type: 'mono', name: 'c' },
+      ['a', 'b', 'a'],
+      channelCtx({ fieldType: PlotFieldType.Categorical }),
+      registry,
+    );
     expect(resolution.legendForm).toBe('swatch');
     expect(resolution.of('a')).toBe('#111111');
     expect(resolution.of('b')).toBe('#eeeeee');
@@ -142,25 +177,39 @@ describe('scale registry（alpha.12 ADR-07 spec）', () => {
 
   it('custom_channel_field_incompatible_fails', () => {
     const registry = resolveScaleRegistry([monoScale]);
-    expect(() => resolveChannelScale({ type: 'mono', name: 'c' }, [1, 2], channelCtx({ fieldType: PlotFieldType.Continuous }), registry)).toThrow(/incompatible/i);
+    expect(() =>
+      resolveChannelScale(
+        { type: 'mono', name: 'c' },
+        [1, 2],
+        channelCtx({ fieldType: PlotFieldType.Continuous }),
+        registry,
+      ),
+    ).toThrow(/incompatible/i);
   });
 
   it('custom_color_scheme_resolves', () => {
     const registry = resolveScaleRegistry();
-    const ctx = channelCtx({ fieldType: PlotFieldType.Continuous, resolveColorScheme: name => (name === 'brand' ? () => '#ff00ff' : () => '#000000') });
+    const ctx = channelCtx({
+      fieldType: PlotFieldType.Continuous,
+      resolveColorScheme: name => (name === 'brand' ? () => '#ff00ff' : () => '#000000'),
+    });
     const resolution = resolveChannelScale({ type: 'sequential', name: 'c', scheme: 'brand' }, [0, 1], ctx, registry);
     expect(resolution.of(0.5)).toBe('#ff00ff');
   });
 
   it('isFieldCompatible 谓词驱动 position compat', () => {
     const registry = resolveScaleRegistry();
-    expect(() => assertScaleFieldCompatible('x', 'linear', PlotFieldType.Categorical, 'xs', registry)).toThrow(/incompatible/i);
+    expect(() => assertScaleFieldCompatible('x', 'linear', PlotFieldType.Categorical, 'xs', registry)).toThrow(
+      /incompatible/i,
+    );
     expect(() => assertScaleFieldCompatible('x', 'band', PlotFieldType.Continuous, 'xs', registry)).not.toThrow();
   });
 
   it('allowsBaseline 谓词驱动 baseline guard', () => {
     const registry = resolveScaleRegistry();
-    expect(() => assertBaselineScaleCompatible('log', [{ type: 'interval' }], registry)).toThrow(/cannot be used with interval\/area/);
+    expect(() => assertBaselineScaleCompatible('log', [{ type: 'interval' }], registry)).toThrow(
+      /cannot be used with interval\/area/,
+    );
     expect(() => assertBaselineScaleCompatible('linear', [{ type: 'interval' }], registry)).not.toThrow();
   });
 
@@ -169,11 +218,23 @@ describe('scale registry（alpha.12 ADR-07 spec）', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'unit', name: 'x' }, { type: 'linear', name: 'y' }],
+      scales: [
+        { type: 'unit', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     };
-    const layer = expandOf(spec, { d: [{ x: 0, y: 0 }, { x: 1, y: 1 }] }, { width: 200, height: 200, scaleDefinitions: [unitScale] }).children[0] as IRScope;
+    const layer = expandOf(
+      spec,
+      {
+        d: [
+          { x: 0, y: 0 },
+          { x: 1, y: 1 },
+        ],
+      },
+      { width: 200, height: 200, scaleDefinitions: [unitScale] },
+    ).children[0] as IRScope;
     const nodes = collectNodes(layer);
     expect(nodes.length).toBe(2);
     for (const node of nodes) {
@@ -187,11 +248,30 @@ describe('scale registry（alpha.12 ADR-07 spec）', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'mono', name: 'col' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'mono', name: 'col' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'g', scale: 'col' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'g', scale: 'col' },
+          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        },
+      ],
     };
-    const layer = expandOf(spec, { d: [{ x: 0, y: 0, g: 'a' }, { x: 1, y: 1, g: 'b' }] }, { width: 200, height: 200, scaleDefinitions: [monoScale] }).children[0] as IRScope;
+    const layer = expandOf(
+      spec,
+      {
+        d: [
+          { x: 0, y: 0, g: 'a' },
+          { x: 1, y: 1, g: 'b' },
+        ],
+      },
+      { width: 200, height: 200, scaleDefinitions: [monoScale] },
+    ).children[0] as IRScope;
     const json = JSON.stringify(layer);
     expect(json).toContain('#111111');
     expect(json).toContain('#eeeeee');
@@ -202,7 +282,10 @@ describe('scale registry（alpha.12 ADR-07 spec）', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'unit', name: 'x', foo: 7 }, { type: 'linear', name: 'y' }],
+      scales: [
+        { type: 'unit', name: 'x', foo: 7 },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     };

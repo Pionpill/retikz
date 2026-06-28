@@ -1,16 +1,23 @@
 ﻿import type { IRNode, IRPath, IRScope } from '@retikz/core';
+
 import { describe, expect, it } from 'vitest';
-import { type AnyChannelDefinition, ChannelDefinitionKind, defineNodeChannel, definePathChannel, defineScopeChannel } from '../../src/contract';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+
+import type { AnyChannelDefinition } from '../../src/contract';
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { ChannelDefinitionKind, defineNodeChannel, definePathChannel, defineScopeChannel } from '../../src/contract';
+import { lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 /**
  * 自定义 `intensity`（→ node.opacity）经 options.channelDefinitions 注册，
  * 与内置通道共享 channel registry / delivery。
  */
 
-const extensionChannelsOf = (mark: { encoding?: { channels?: Partial<Record<string, { field?: string; value?: unknown }>> } }): Partial<Record<string, { field?: string; value?: unknown }>> =>
-  mark.encoding?.channels ?? {};
+const extensionChannelsOf = (mark: {
+  encoding?: { channels?: Partial<Record<string, { field?: string; value?: unknown }>> };
+}): Partial<Record<string, { field?: string; value?: unknown }>> => mark.encoding?.channels ?? {};
 
 /** 自定义 intensity 通道：score 字段线性映射到 [0.3, 1]，落到 node.opacity */
 const intensityChannel = defineNodeChannel<number>({
@@ -31,15 +38,20 @@ const intensityChannel = defineNodeChannel<number>({
         const v = valueOf(row);
         return Number.isFinite(v) ? map(v) : undefined;
       },
-      descriptor: { channel: 'intensity', scaleType: 'linear', domain: [lo, hi], range: [0.3, 1], field, fieldType: ctx.fieldTypes.get(field) },
+      descriptor: {
+        channel: 'intensity',
+        scaleType: 'linear',
+        domain: [lo, hi],
+        range: [0.3, 1],
+        field,
+        fieldType: ctx.fieldTypes.get(field),
+      },
     };
   },
   deliver: (node, value) => {
     node.opacity = value;
   },
 });
-
-
 
 const scopeTintChannel = defineScopeChannel<string>({
   channel: 'scopeTint',
@@ -73,14 +85,21 @@ const lineWeightChannel = definePathChannel<number>({
   },
 });
 
-const opts = (defs?: Array<AnyChannelDefinition>): LowerPlotsOptions => ({ width: 480, height: 300, channelDefinitions: defs });
+const opts = (defs?: Array<AnyChannelDefinition>): LowerPlotsOptions => ({
+  width: 480,
+  height: 300,
+  channelDefinitions: defs,
+});
 
 const scatterSpec = (channels?: Record<string, unknown>): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
-    scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+    scales: [
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, ...(channels ? { channels } : {}) } }],
   });
@@ -123,18 +142,30 @@ const scopesOf = (scope: IRScope): Array<IRScope> => {
   return out;
 };
 
-const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options: LowerPlotsOptions): IRScope => {
+const firstLayer = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options: LowerPlotsOptions,
+): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return (def.expand(spec) as IRScope).children[0] as IRScope;
 };
 
-const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options: LowerPlotsOptions): IRScope => {
+const expandOf = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options: LowerPlotsOptions,
+): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
 
 describe('custom node channel registry', () => {
-  const rows = [{ x: 0, y: 0, score: 0 }, { x: 1, y: 1, score: 5 }, { x: 2, y: 2, score: 10 }];
+  const rows = [
+    { x: 0, y: 0, score: 0 },
+    { x: 1, y: 1, score: 5 },
+    { x: 2, y: 2, score: 10 },
+  ];
 
   // Happy path：score 0/5/10 → opacity 0.3 / 0.65 / 1.0，落到各 node
   it('custom_intensity_delivers_to_node_opacity', () => {
@@ -161,19 +192,33 @@ describe('custom node channel registry', () => {
 
   // 错误路径：自定义通道撞内置名 → fail-loud
   it('collision_with_builtin_channel_fails_loud', () => {
-    const bad = defineNodeChannel<number>({ channel: 'size', output: { outputKind: 'number', range: [1, 2] }, resolve: () => () => undefined, deliver: () => {} });
-    expect(() => lowerPlots({ d: rows }, opts([bad]))[0].expand(scatterSpec())).toThrow(/collides with a built-in channel/);
+    const bad = defineNodeChannel<number>({
+      channel: 'size',
+      output: { outputKind: 'number', range: [1, 2] },
+      resolve: () => () => undefined,
+      deliver: () => {},
+    });
+    expect(() => lowerPlots({ d: rows }, opts([bad]))[0].expand(scatterSpec())).toThrow(
+      /collides with a built-in channel/,
+    );
   });
 
   // 错误路径：缺 deliver → fail-loud
   it('missing_deliver_fails_loud', () => {
-    const bad = { channel: 'glow', kind: ChannelDefinitionKind.Node, output: { outputKind: 'number' as const, range: [0, 1] as const }, resolve: () => () => undefined } as unknown as AnyChannelDefinition;
+    const bad = {
+      channel: 'glow',
+      kind: ChannelDefinitionKind.Node,
+      output: { outputKind: 'number' as const, range: [0, 1] as const },
+      resolve: () => () => undefined,
+    } as unknown as AnyChannelDefinition;
     expect(() => lowerPlots({ d: rows }, opts([bad]))[0].expand(scatterSpec())).toThrow(/must provide deliver/);
   });
 
   // 错误路径：两个自定义通道同名 → fail-loud
   it('duplicate_custom_channel_fails_loud', () => {
-    expect(() => lowerPlots({ d: rows }, opts([intensityChannel, intensityChannel]))[0].expand(scatterSpec())).toThrow(/duplicate custom channel/);
+    expect(() => lowerPlots({ d: rows }, opts([intensityChannel, intensityChannel]))[0].expand(scatterSpec())).toThrow(
+      /duplicate custom channel/,
+    );
   });
 
   // 交互：自定义通道 + 内置 size 同图各自生效（size→radius、intensity→opacity）
@@ -182,9 +227,18 @@ describe('custom node channel registry', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', size: { kind: 'field', value: 'score' }, encoding: { x: { field: 'x' }, y: { field: 'y' }, channels: { intensity: { field: 'score' } } } }],
+      marks: [
+        {
+          type: 'point',
+          size: { kind: 'field', value: 'score' },
+          encoding: { x: { field: 'x' }, y: { field: 'y' }, channels: { intensity: { field: 'score' } } },
+        },
+      ],
     });
     const nodes = nodesOf(firstLayer(spec, { d: rows }, opts([intensityChannel])));
     expect(nodes.every(n => (n as { opacity?: number }).opacity !== undefined)).toBe(true);
@@ -202,11 +256,28 @@ describe('custom node channel registry', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'path', encoding: { x: { field: 'x' }, y: { field: 'y' }, channels: { lineWeight: { field: 'weight' } } } }],
+      marks: [
+        {
+          type: 'path',
+          encoding: { x: { field: 'x' }, y: { field: 'y' }, channels: { lineWeight: { field: 'weight' } } },
+        },
+      ],
     });
-    const layer = firstLayer(spec, { d: [{ x: 0, y: 0, weight: 3 }, { x: 1, y: 1, weight: 3 }] }, opts([lineWeightChannel]));
+    const layer = firstLayer(
+      spec,
+      {
+        d: [
+          { x: 0, y: 0, weight: 3 },
+          { x: 1, y: 1, weight: 3 },
+        ],
+      },
+      opts([lineWeightChannel]),
+    );
     expect(pathsOf(layer)[0]?.strokeWidth).toBe(3);
   });
 
@@ -216,9 +287,17 @@ describe('custom node channel registry', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, channels: { intensity: { field: 'score' } } } }],
+      marks: [
+        {
+          type: 'point',
+          encoding: { x: { field: 'x' }, y: { field: 'y' }, channels: { intensity: { field: 'score' } } },
+        },
+      ],
       guides: [{ type: 'legend', channel: 'intensity' }],
     });
     const root = expandOf(spec, { d: rows }, opts([intensityChannel]));

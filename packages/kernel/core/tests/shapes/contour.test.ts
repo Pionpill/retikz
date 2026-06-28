@@ -8,11 +8,13 @@
  *   - JSON round-trip：{type:'contour', params} 经 NodeSchema 序列化往返等价。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import { NodeSchema } from '../../src/schemas';
-import type { IR } from '../../src/schemas';
-import { contour } from '../../src/contract/shape';
+
 import type { ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { contour } from '../../src/contract/shape';
+import { NodeSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
@@ -27,8 +29,7 @@ const compileNode = (n: Record<string, unknown>): ReturnType<typeof compileToSce
   compileToScene(scene([{ type: 'node', position: [0, 0], ...n }]));
 
 /** 收集 path commands 的 kind 序列 */
-const kindsOf = (path: Extract<ScenePrimitive, { type: 'path' }>): Array<string> =>
-  path.commands.map(c => c.kind);
+const kindsOf = (path: Extract<ScenePrimitive, { type: 'path' }>): Array<string> => path.commands.map(c => c.kind);
 
 // ════════════════ Happy path ════════════════
 
@@ -122,9 +123,7 @@ describe('contour — 边界', () => {
       [10, 10],
       [-10, 10],
     ];
-    expect(() =>
-      compileNode({ shape: { type: 'contour', params: { points, cornerRadius: 10000 } } }),
-    ).not.toThrow();
+    expect(() => compileNode({ shape: { type: 'contour', params: { points, cornerRadius: 10000 } } })).not.toThrow();
     const compiled = compileNode({ shape: { type: 'contour', params: { points, cornerRadius: 10000 } } });
     const path = findByType(compiled.primitives, 'path');
     expect(path).toBeDefined();
@@ -136,15 +135,34 @@ describe('contour — 边界', () => {
 
 describe('contour — 错误路径', () => {
   it('contour-reject-too-few：points.length<3 → paramsSchema 拒绝', () => {
-    expect(contour.paramsSchema.safeParse({ points: [[0, 0], [1, 1]] }).success).toBe(false);
+    expect(
+      contour.paramsSchema.safeParse({
+        points: [
+          [0, 0],
+          [1, 1],
+        ],
+      }).success,
+    ).toBe(false);
   });
 
   it('contour-reject-non-finite：NaN/Infinity 顶点 → paramsSchema 拒绝', () => {
     expect(
-      contour.paramsSchema.safeParse({ points: [[0, 0], [1, 1], [NaN, 2]] }).success,
+      contour.paramsSchema.safeParse({
+        points: [
+          [0, 0],
+          [1, 1],
+          [NaN, 2],
+        ],
+      }).success,
     ).toBe(false);
     expect(
-      contour.paramsSchema.safeParse({ points: [[0, 0], [1, 1], [Infinity, 2]] }).success,
+      contour.paramsSchema.safeParse({
+        points: [
+          [0, 0],
+          [1, 1],
+          [Infinity, 2],
+        ],
+      }).success,
     ).toBe(false);
   });
 

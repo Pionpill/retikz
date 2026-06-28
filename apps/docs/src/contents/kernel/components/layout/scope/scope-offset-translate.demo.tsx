@@ -1,5 +1,6 @@
-import { Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node, Scope } from '@retikz/react';
 
 /**
  * 偏移平移：scope 原点对齐到 referent + 任意 (dx, dy)
@@ -7,11 +8,19 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={560} height={120}>
-    <Node id="A" position={[0, 0]}>A</Node>
+    <Node id="A" position={[0, 0]}>
+      A
+    </Node>
     <Scope transforms={[{ kind: 'offset-translate', of: 'A', offset: [160, 0] }]}>
-      <Node position={[0, 0]} shape="circle">p</Node>
-      <Node position={[70, 0]} shape="circle">q</Node>
-      <Node position={[140, 0]} shape="circle">r</Node>
+      <Node position={[0, 0]} shape="circle">
+        p
+      </Node>
+      <Node position={[70, 0]} shape="circle">
+        q
+      </Node>
+      <Node position={[140, 0]} shape="circle">
+        r
+      </Node>
     </Scope>
   </Layout>
 );

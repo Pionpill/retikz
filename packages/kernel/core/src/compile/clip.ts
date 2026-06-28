@@ -1,5 +1,5 @@
-import type { IRClipSpec } from '../schemas';
 import type { ClipResource, ClipShape } from '../primitive';
+import type { IRClipSpec } from '../schemas';
 
 /** clip 登记表：编译期收集裁剪区、去重派稳定 id（`clip-1`…），最后产出 Scene clip 资源 */
 export type ClipRegistry = {
@@ -11,7 +11,7 @@ export type ClipRegistry = {
 
 /**
  * 裁剪区 finite 守卫 + round
- * @description schema 的 `.finite().positive()` 只在 IR parse 守门；compileToScene 直接收手搓 / LLM IR 会绕过，
+ * @description schema 的 `.positive()` 只在 IR parse 守门；compileToScene 直接收手搓 / LLM IR 会绕过，
  *   故 compile 是唯一真实关口——非 finite / 非正尺寸会污染 Scene round-trip（JSON.stringify(NaN/Infinity)=null）。
  *   在此抛清晰错（含 kind），对齐 arrow / pattern 的 finite 守卫。坐标 / 尺寸按 Scene precision round。
  */

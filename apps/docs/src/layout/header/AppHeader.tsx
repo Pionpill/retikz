@@ -1,4 +1,6 @@
-import { type FC, useEffect, useRef, useState } from 'react';
+import type { FC } from 'react';
+
+import { useEffect, useRef, useState } from 'react';
 
 import { DocsSearch } from '@/components/shared/docs-search';
 import { ButtonGroup } from '@/components/ui/button-group';
@@ -7,7 +9,6 @@ import { useLayoutStore } from '@/store/use-layout-store';
 
 import { AiChatTrigger } from '../ai-chat';
 import { MobileNav } from '../mobile/MobileNav';
-
 import { BrandLink } from './BrandLink';
 import { HeaderActions } from './HeaderActions';
 import { ModuleNav } from './ModuleNav';

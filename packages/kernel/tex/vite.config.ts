@@ -9,8 +9,7 @@ import pkg from './package.json' with { type: 'json' };
  * 打包进库产物（mathjax-full 是 optional peer，只在运行时动态 import）。
  */
 const runtimeDeps = [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)];
-const external = (id: string) =>
-  runtimeDeps.some(p => id === p || id.startsWith(`${p}/`));
+const external = (id: string) => runtimeDeps.some(p => id === p || id.startsWith(`${p}/`));
 
 export default defineConfig({
   plugins: [

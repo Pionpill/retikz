@@ -1,4 +1,5 @@
 ﻿import { describe, expect, it } from 'vitest';
+
 import { buildPrompt } from '../../src/prompt/build';
 
 const task = {

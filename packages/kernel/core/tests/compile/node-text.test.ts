@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/schemas';
+
 import type { ScenePrimitive, TextPrim } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
 const findText = (prims: Array<ScenePrimitive>): TextPrim | undefined =>
@@ -75,7 +77,7 @@ describe('Node multi-line text', () => {
     expect(t?.lines).toEqual([{ text: 'a' }, { text: 'b' }, { text: 'c' }]);
   });
 
-  it("多行 text 的 measuredWidth = max(per-line width)，height = lines × lineHeight", () => {
+  it('多行 text 的 measuredWidth = max(per-line width)，height = lines × lineHeight', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -89,11 +91,7 @@ describe('Node multi-line text', () => {
       ],
     };
     const t = findText(compileToScene(ir).primitives);
-    expect(t?.lines).toEqual([
-      { text: 'ab' },
-      { text: 'longer line' },
-      { text: 'c' },
-    ]);
+    expect(t?.lines).toEqual([{ text: 'ab' }, { text: 'longer line' }, { text: 'c' }]);
     // fallback measurer: width = text.length × 14 × 0.55；'longer line' 11 字符 → 84.7
     // 多行高度 = 3 × (14 × 1.2) = 50.4
     expect(t?.measuredWidth).toBeCloseTo(84.7, 1);
@@ -143,16 +141,14 @@ describe('Node multi-line text', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [
-        { type: 'node', id: 'A', position: [50, 50], text: ['hi', 'there'] },
-      ],
+      children: [{ type: 'node', id: 'A', position: [50, 50], text: ['hi', 'there'] }],
     };
     const t = findText(compileToScene(ir).primitives);
     expect(t?.align).toBe('middle');
     expect(t?.x).toBe(50);
   });
 
-  it("lineHeight 默认 = font.size × 1.2", () => {
+  it('lineHeight 默认 = font.size × 1.2', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -170,7 +166,7 @@ describe('Node multi-line text', () => {
     expect(t?.lineHeight).toBeCloseTo(20 * 1.2, 1);
   });
 
-  it("lineHeight 显式覆盖 font.size × 1.2 默认", () => {
+  it('lineHeight 显式覆盖 font.size × 1.2 默认', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -188,7 +184,7 @@ describe('Node multi-line text', () => {
     expect(t?.lineHeight).toBe(30);
   });
 
-  it("多行节点 height 大于单行节点 height（外接 bbox 跟着 textHeight 长）", () => {
+  it('多行节点 height 大于单行节点 height（外接 bbox 跟着 textHeight 长）', () => {
     const single: IR = {
       version: 1,
       type: 'scene',
@@ -197,9 +193,7 @@ describe('Node multi-line text', () => {
     const multi: IR = {
       version: 1,
       type: 'scene',
-      children: [
-        { type: 'node', id: 'A', position: [0, 0], text: ['a', 'b', 'c'] },
-      ],
+      children: [{ type: 'node', id: 'A', position: [0, 0], text: ['a', 'b', 'c'] }],
     };
     const r1 = compileToScene(single).primitives.find(p => p.type === 'rect');
     const r3 = compileToScene(multi).primitives.find(p => p.type === 'rect');
@@ -208,7 +202,7 @@ describe('Node multi-line text', () => {
     }
   });
 
-  it("不传 text 时不 emit TextPrim（保留 alpha.1 行为）", () => {
+  it('不传 text 时不 emit TextPrim（保留 alpha.1 行为）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -217,7 +211,7 @@ describe('Node multi-line text', () => {
     expect(findText(compileToScene(ir).primitives)).toBeUndefined();
   });
 
-  it("行级 LineSpec 对象可覆盖 fill / opacity（emit 写入对应字段）", () => {
+  it('行级 LineSpec 对象可覆盖 fill / opacity（emit 写入对应字段）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -226,23 +220,15 @@ describe('Node multi-line text', () => {
           type: 'node',
           id: 'A',
           position: [0, 0],
-          text: [
-            { text: 'red', fill: 'red' },
-            { text: 'half', opacity: 0.5 },
-            'plain',
-          ],
+          text: [{ text: 'red', fill: 'red' }, { text: 'half', opacity: 0.5 }, 'plain'],
         },
       ],
     };
     const t = findText(compileToScene(ir).primitives);
-    expect(t?.lines).toEqual([
-      { text: 'red', fill: 'red' },
-      { text: 'half', opacity: 0.5 },
-      { text: 'plain' },
-    ]);
+    expect(t?.lines).toEqual([{ text: 'red', fill: 'red' }, { text: 'half', opacity: 0.5 }, { text: 'plain' }]);
   });
 
-  it("行级 font 部分覆盖：未填字段不写入（让下游走块级默认）", () => {
+  it('行级 font 部分覆盖：未填字段不写入（让下游走块级默认）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -252,10 +238,7 @@ describe('Node multi-line text', () => {
           id: 'A',
           position: [0, 0],
           font: { size: 12, family: 'monospace' },
-          text: [
-            { text: 'big', font: { size: 20, weight: 'bold' } },
-            'normal',
-          ],
+          text: [{ text: 'big', font: { size: 20, weight: 'bold' } }, 'normal'],
         },
       ],
     };
@@ -272,7 +255,7 @@ describe('Node multi-line text', () => {
     expect(t?.fontFamily).toBe('monospace');
   });
 
-  it("行级 font.size 影响该行宽度度量（max 取所有行）", () => {
+  it('行级 font.size 影响该行宽度度量（max 取所有行）', () => {
     // 同样字符数，行级大字号那行胜出 max 宽度
     const ir: IR = {
       version: 1,
@@ -304,10 +287,7 @@ describe('Node multi-line text', () => {
           id: 'A',
           position: [0, 0],
           scale: 2,
-          text: [
-            { text: 'scaled', font: { size: 14 } },
-            'plain',
-          ],
+          text: [{ text: 'scaled', font: { size: 14 } }, 'plain'],
         },
       ],
     };

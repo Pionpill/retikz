@@ -1,7 +1,9 @@
-import { type IRNodeLabel, type Position, type ShapeDefinition, defineShape, localToWorld, worldToLocal } from '@retikz/core';
+import type { IRNodeLabel, Position, ShapeDefinition } from '@retikz/core';
+import type { FC } from 'react';
+
+import { defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { Node } from '@retikz/react';
 import { z } from 'zod';
-import type { FC } from 'react';
 
 const INK = 'currentColor';
 const FONT = { family: 'Arial, sans-serif' } as const;

@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * 相对位置连接：way 用 ++ 偏移从上一段终点接力
@@ -7,7 +8,9 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={360} height={150}>
-    <Node id="A" position={[-120, 40]} stroke="none">a</Node>
+    <Node id="A" position={[-120, 40]} stroke="none">
+      a
+    </Node>
     <Draw
       way={[
         'A',

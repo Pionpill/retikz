@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * 矩形节点（默认形状）+ 圆角
@@ -10,12 +11,7 @@ const Demo: FC = () => (
     <Node id="r1" position={[-90, 0]}>
       rectangle
     </Node>
-    <Node
-      id="r2"
-      position={[90, 0]}
-      shape={{ type: 'rectangle', params: { cornerRadius: 10 } }}
-      fill="aliceblue"
-    >
+    <Node id="r2" position={[90, 0]} shape={{ type: 'rectangle', params: { cornerRadius: 10 } }} fill="aliceblue">
       rounded
     </Node>
     <Draw way={['r1', 'r2']} arrow="->" stroke="gray" />

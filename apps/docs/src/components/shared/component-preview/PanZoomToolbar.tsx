@@ -1,12 +1,25 @@
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  Download,
+  Hand,
+  Maximize2,
+  RotateCcw,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react';
 import { type FC } from 'react';
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Download, Hand, Maximize2, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 
+import type { RendererMode, SizeKey, Transform } from './_shared';
+
 import { RendererModeButton, ToolbarIconButton } from './_parts';
-import { type RendererMode, SIZE_KEYS, type SizeKey, type Transform } from './_shared';
+import { SIZE_KEYS } from './_shared';
 import { PAN_STEP, ZOOM_FACTOR, ZOOM_MAX, ZOOM_MIN } from './use-pan-zoom';
 
 export type PanZoomToolbarProps = {
@@ -103,7 +116,11 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
         <ToolbarIconButton label="Zoom in" disabled={transform.scale >= ZOOM_MAX} onClick={() => zoomBy(ZOOM_FACTOR)}>
           <ZoomIn className="size-3.5" />
         </ToolbarIconButton>
-        <ToolbarIconButton label="Zoom out" disabled={transform.scale <= ZOOM_MIN} onClick={() => zoomBy(1 / ZOOM_FACTOR)}>
+        <ToolbarIconButton
+          label="Zoom out"
+          disabled={transform.scale <= ZOOM_MIN}
+          onClick={() => zoomBy(1 / ZOOM_FACTOR)}
+        >
           <ZoomOut className="size-3.5" />
         </ToolbarIconButton>
         {/* 小预览（xs/sm）无 d-pad，Reset 放底排；md+ 的 Reset 在上方 d-pad 中心 */}

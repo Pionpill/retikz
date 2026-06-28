@@ -1,7 +1,12 @@
 // @vitest-environment jsdom
+import type { IR } from '@retikz/core';
+
+import { compileToScene } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
-import { type IR, compileToScene } from '@retikz/core';
-import { type HydrationContext, hydrate, mountSvg, renderToSvgString } from '../src';
+
+import type { HydrationContext } from '../src';
+
+import { hydrate, mountSvg, renderToSvgString } from '../src';
 
 /**
  * @retikz/vanilla hydrate（SVG 水合，jsdom 环境）
@@ -13,9 +18,7 @@ import { type HydrationContext, hydrate, mountSvg, renderToSvgString } from '../
 const idIr: IR = {
   version: 1,
   type: 'scene',
-  children: [
-    { type: 'node', id: 'a', position: [0, 0], shape: 'rectangle', minimumWidth: 40, minimumHeight: 20 },
-  ],
+  children: [{ type: 'node', id: 'a', position: [0, 0], shape: 'rectangle', minimumWidth: 40, minimumHeight: 20 }],
 };
 
 /** 带 meta provenance 的 Node IR（验 context.meta / context.geometry） */
@@ -23,7 +26,15 @@ const metaIr: IR = {
   version: 1,
   type: 'scene',
   children: [
-    { type: 'node', id: 'a', position: [0, 0], shape: 'rectangle', minimumWidth: 40, minimumHeight: 20, meta: { series: 'sales', i: 3 } },
+    {
+      type: 'node',
+      id: 'a',
+      position: [0, 0],
+      shape: 'rectangle',
+      minimumWidth: 40,
+      minimumHeight: 20,
+      meta: { series: 'sales', i: 3 },
+    },
   ],
 };
 
@@ -76,7 +87,15 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
     document.body.appendChild(container);
     const view = mountSvg(container, metaIr);
     let context: HydrationContext | undefined;
-    view.hydrate({ handlers: { a: { click: (_event, received) => { context = received; } } } });
+    view.hydrate({
+      handlers: {
+        a: {
+          click: (_event, received) => {
+            context = received;
+          },
+        },
+      },
+    });
 
     const target = findById(view.root, 'a');
     target!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -97,7 +116,16 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
     richContainer.innerHTML = svg;
     const richRoot = richContainer.querySelector('svg')!;
     let richCtx: HydrationContext | undefined;
-    hydrate(richRoot, { handlers: { a: { click: (_e, c) => { richCtx = c; } } }, scene: compileToScene(metaIr) });
+    hydrate(richRoot, {
+      handlers: {
+        a: {
+          click: (_e, c) => {
+            richCtx = c;
+          },
+        },
+      },
+      scene: compileToScene(metaIr),
+    });
     findById(richRoot, 'a')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(richCtx?.meta).toEqual({ series: 'sales', i: 3 });
     expect(richCtx?.geometry).toBeDefined();
@@ -107,7 +135,15 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
     minContainer.innerHTML = svg;
     const minRoot = minContainer.querySelector('svg')!;
     let minCtx: HydrationContext | undefined;
-    hydrate(minRoot, { handlers: { a: { click: (_e, c) => { minCtx = c; } } } });
+    hydrate(minRoot, {
+      handlers: {
+        a: {
+          click: (_e, c) => {
+            minCtx = c;
+          },
+        },
+      },
+    });
     findById(minRoot, 'a')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(minCtx?.id).toBe('a');
     expect(minCtx?.meta).toBeUndefined();

@@ -3,5 +3,4 @@ import type { RibbonWidthProfileDefinition, RibbonWidthProfileInput } from './ty
 
 export const defineRibbonWidthProfile = <TParams extends IRJsonObject = IRJsonObject>(
   definition: RibbonWidthProfileInput<TParams>,
-): RibbonWidthProfileDefinition =>
-  definition as unknown as RibbonWidthProfileDefinition;
+): RibbonWidthProfileDefinition => definition as unknown as RibbonWidthProfileDefinition;

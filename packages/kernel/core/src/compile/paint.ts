@@ -1,6 +1,7 @@
-import type { IRPaintSpec } from '../schemas';
 import type { PatternDefinition, PatternEmitContext } from '../contract/pattern';
 import type { MarkerPrimitive, PaintValue, ResolvedPatternTile, SceneResource } from '../primitive';
+import type { IRPaintSpec } from '../schemas';
+
 import { validateMarkerPrimitives } from './marker-prim';
 
 /** paint 解析器：纯色 string 原样返回；PaintSpec 去重 + 派稳定 id → `{ kind:'resourceRef', id }`；undefined 透传 */
@@ -22,10 +23,7 @@ const DEFAULT_MOTIF_COLOR = 'currentColor';
  * 查有效 pattern 表取 def；未注册名编译期 throw（消息含字母序可用名列表）
  * @description 仿 arrow / shape 的未注册 throw 风格——错误带可用名便于第三方 / LLM 自修。
  */
-const lookupPatternDef = (
-  shape: string,
-  effective: Record<string, PatternDefinition>,
-): PatternDefinition => {
+const lookupPatternDef = (shape: string, effective: Record<string, PatternDefinition>): PatternDefinition => {
   if (Object.prototype.hasOwnProperty.call(effective, shape)) return effective[shape];
   const available = Object.keys(effective).sort().join(', ');
   throw new Error(`Unknown pattern shape '${shape}'; available: ${available}`);
@@ -44,7 +42,7 @@ const resolvePatternTile = (
   round: (n: number) => number,
 ): ResolvedPatternTile => {
   const def = lookupPatternDef(spec.shape, effectivePatterns);
-  // size / lineWidth / rotation 的 schema `.finite().positive()` 只在 PathSchema.parse 守门；compileToScene
+  // size / lineWidth / rotation 的 schema `.positive()` 只在 PathSchema.parse 守门；compileToScene
   // 直接收 IR（手搓 / LLM 写法）会绕过，故 compile 是唯一真实关口——非 finite / 非正会污染 tile + Scene
   // round-trip（JSON.stringify(NaN/Infinity)=null），在此抛清晰错（含 shape 名），对齐 arrow finite 守卫。
   const rawSize = spec.size ?? def.defaultSize ?? FALLBACK_PATTERN_SIZE;

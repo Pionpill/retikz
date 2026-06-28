@@ -1,6 +1,9 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { Layout, type LayoutProps, Node } from '../../src';
+
+import type { LayoutProps } from '../../src';
+
+import { Layout, Node } from '../../src';
 
 describe('Layout public API', () => {
   it('exports Layout and LayoutProps from package entry', () => {

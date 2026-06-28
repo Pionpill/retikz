@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 const Demo: FC = () => (
   <Layout width={660} height={190} style={{ maxWidth: '100%', height: 'auto' }}>

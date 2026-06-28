@@ -1,5 +1,6 @@
-import { Layout, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Path, Step } from '@retikz/react';
 
 /**
  * Path zIndex 显式栈序

@@ -1,5 +1,6 @@
 import { CompositeBaseSchema, JsonObjectSchema } from '@retikz/core';
 import { z } from 'zod';
+
 import { CoordinateOperationSchema } from '../coordinate';
 import { DataRefSchema } from '../data';
 import { GuideSchema } from '../guide';
@@ -11,7 +12,9 @@ import { PLOT_NAMESPACE, PlotComposite } from './constants';
 export const PlotSpecSchema = CompositeBaseSchema.extend({
   namespace: z
     .literal(PLOT_NAMESPACE)
-    .describe('Tier 2 domain namespace; routes this node to the plot lowering registered via CompileOptions.composites'),
+    .describe(
+      'Tier 2 domain namespace; routes this node to the plot lowering registered via CompileOptions.composites',
+    ),
   type: z
     .literal(PlotComposite.Plot)
     .describe('Composite type within the plot namespace: the top-level grammar-of-graphics spec node'),
@@ -28,10 +31,14 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
   transform: z
     .array(TransformSchema)
     .optional()
-    .describe('Ordered data-transform operation pipeline applied to the bound dataset before scale inference and mark lowering; omit for no transform'),
+    .describe(
+      'Ordered data-transform operation pipeline applied to the bound dataset before scale inference and mark lowering; omit for no transform',
+    ),
   scales: z
     .array(ScaleOperationSchema)
-    .describe('Named scale ops; built-ins are statically validated, custom types are validated at lowering against runtime scale definitions. Referenced by coordinate roles and non-positional channels by name'),
+    .describe(
+      'Named scale ops; built-ins are statically validated, custom types are validated at lowering against runtime scale definitions. Referenced by coordinate roles and non-positional channels by name',
+    ),
   colors: z
     .array(z.string().min(1))
     .min(1)
@@ -53,8 +60,15 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
     .describe(
       "The panel's intrinsic height in user units, used as the plot area sizing basis when this node is composed alongside others. Omit to fall back to the lowerPlots global height, then the built-in default.",
     ),
-  coordinate: CoordinateOperationSchema.describe('The coordinate system operation; built-ins are statically validated, custom types are validated against runtime coordinate definitions'),
-  marks: z.array(MarkOperationSchema).min(1).describe('Mark layers, drawn in array order (stable z-order); built-in mark configs or custom type passthrough validated by a runtime MarkDefinition'),
+  coordinate: CoordinateOperationSchema.describe(
+    'The coordinate system operation; built-ins are statically validated, custom types are validated against runtime coordinate definitions',
+  ),
+  marks: z
+    .array(MarkOperationSchema)
+    .min(1)
+    .describe(
+      'Mark layers, drawn in array order (stable z-order); built-in mark configs or custom type passthrough validated by a runtime MarkDefinition',
+    ),
   guides: z
     .array(GuideSchema)
     .optional()

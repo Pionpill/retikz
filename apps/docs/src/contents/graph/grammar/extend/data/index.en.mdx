@@ -5,10 +5,10 @@ description: Centralize data-layer runtime extensions: custom field formats and 
 
 The data layer has two extension styles. Some extensions still persist with the PlotSpec, such as named `format` values. Others are runtime functions, such as `resolveField`. Use the first when the config should serialize well; use the second when the behavior belongs to application code.
 
-| Case | Recommended Entry | Enters IR |
-| --- | --- | --- |
-| Reusable field format | `defineFieldFormat` + `formatDefinitions` | Yes, only the format name |
-| Arbitrary field parsing | `resolveField` | No, runtime function only |
+| Case                    | Recommended Entry                         | Enters IR                 |
+| ----------------------- | ----------------------------------------- | ------------------------- |
+| Reusable field format   | `defineFieldFormat` + `formatDefinitions` | Yes, only the format name |
+| Arbitrary field parsing | `resolveField`                            | No, runtime function only |
 
 ## Custom Named Formats
 
@@ -18,11 +18,11 @@ Beyond the built-in `format` vocabulary, common reusable formats such as currenc
 
 Definition contract:
 
-| Field | Purpose |
-| --- | --- |
-| `name` | Registration key = the `format` string in `model`; must be non-empty and must not collide with a built-in format. |
-| `impliedType` | The single measurement type this format implies; fills in `type` when the field omits it. |
-| `parse` | Raw value → canonical value; return `undefined` / `NaN` to mark the value invalid downstream. |
+| Field         | Purpose                                                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `name`        | Registration key = the `format` string in `model`; must be non-empty and must not collide with a built-in format. |
+| `impliedType` | The single measurement type this format implies; fills in `type` when the field omits it.                         |
+| `parse`       | Raw value → canonical value; return `undefined` / `NaN` to mark the value invalid downstream.                     |
 
 Custom and built-in formats share one registry: built-ins are always available, custom names cannot collide with built-ins or each other, and a `model` that names an unregistered format fails loud.
 
@@ -41,11 +41,11 @@ Rules:
 
 ## Choosing One
 
-| Need | Use |
-| --- | --- |
-| Enumerable format, persisted with the spec | `defineFieldFormat` |
-| One-off parsing, application state, or data-source branching | `resolveField` |
-| Only map logical fields to renamed source fields | `fieldMap`; see [Processing](/graph/grammar/data/processing) |
-| Drive a new node property from a field | `defineNodeChannel`; see [Custom Channels](/graph/grammar/extend/channel) |
+| Need                                                         | Use                                                                       |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| Enumerable format, persisted with the spec                   | `defineFieldFormat`                                                       |
+| One-off parsing, application state, or data-source branching | `resolveField`                                                            |
+| Only map logical fields to renamed source fields             | `fieldMap`; see [Processing](/graph/grammar/data/processing)              |
+| Drive a new node property from a field                       | `defineNodeChannel`; see [Custom Channels](/graph/grammar/extend/channel) |
 
 Prefer declarative capability that can enter IR. Use `resolveField` or the relevant runtime definition only when the behavior truly needs a function.

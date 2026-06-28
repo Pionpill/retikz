@@ -1,4 +1,5 @@
 import { isFiniteNumber } from '@retikz/math';
+
 import { type TransformContext } from '../../contract';
 import { type ExternalRow, type SmoothTransform } from '../../schemas';
 import { resolveFieldPath } from '../data';
@@ -59,7 +60,9 @@ const linearModelOf = (pairs: Array<SmoothPair>): LinearModel => {
   const meanY = pairs.reduce((sum, pair) => sum + pair.y, 0) / pairs.length;
   const varianceX = pairs.reduce((sum, pair) => sum + (pair.x - meanX) ** 2, 0);
   if (!isFiniteNumber(varianceX) || varianceX <= 0) {
-    throw new Error('lowerPlots: smooth transform linear regression x variance is zero; vertical lines cannot be fitted');
+    throw new Error(
+      'lowerPlots: smooth transform linear regression x variance is zero; vertical lines cannot be fitted',
+    );
   }
   const covarianceXY = pairs.reduce((sum, pair) => sum + (pair.x - meanX) * (pair.y - meanY), 0);
   const slope = covarianceXY / varianceX;
@@ -84,15 +87,25 @@ const sampleExtentOf = (operation: SmoothTransform, pairs: Array<SmoothPair>): [
 const samplePositionsOf = (extent: [number, number], sampleCount: number): Array<number> => {
   if (sampleCount === 2) return [extent[0], extent[1]];
   const step = (extent[1] - extent[0]) / (sampleCount - 1);
-  return Array.from({ length: sampleCount }, (_, index) => (index === sampleCount - 1 ? extent[1] : extent[0] + step * index));
+  return Array.from({ length: sampleCount }, (_, index) =>
+    index === sampleCount - 1 ? extent[1] : extent[0] + step * index,
+  );
 };
 
-export const smoothInputFields = (operation: SmoothTransform): Array<string> => [operation.x, operation.y, ...(operation.groupBy ?? [])];
+export const smoothInputFields = (operation: SmoothTransform): Array<string> => [
+  operation.x,
+  operation.y,
+  ...(operation.groupBy ?? []),
+];
 
 export const smoothOutputFields = (operation: SmoothTransform): Array<string> => [operation.xAs, operation.yAs];
 
 /** smooth：首轮只做普通最小二乘线性回归，每组输出 sampleCount 个预测点。 */
-export const applySmooth = (rows: Array<ExternalRow>, operation: SmoothTransform, context: TransformContext): Array<ExternalRow> =>
+export const applySmooth = (
+  rows: Array<ExternalRow>,
+  operation: SmoothTransform,
+  context: TransformContext,
+): Array<ExternalRow> =>
   groupRows(rows, operation.groupBy).flatMap(group => {
     const pairs = finitePairsOf(group.rows, operation.x, operation.y);
     const model = linearModelOf(pairs);

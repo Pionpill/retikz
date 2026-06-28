@@ -9,19 +9,21 @@ This group is the data contract of the IR (intermediate representation): the JSO
 
 ## What each part covers
 
-| Topic | Responsibility | Reach for it when |
-| --- | --- | --- |
-| Scene | The IR root: a JSON-serializable description of one figure | Understanding the top-level structure, serializing a whole figure |
-| Entity | Named members in a scene: Node and Coordinate | Working with the IR shape of nodes / coordinates |
-| Path | The stroke shell, step action sequence, and step targets | Working with the IR shape of paths / connectors |
-| Placement | The five forms of a position field: Cartesian / polar / relative / offset / proportional partway | Parsing or generating any positioning field |
+| Topic     | Responsibility                                                                                   | Reach for it when                                                 |
+| --------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| Scene     | The IR root: a JSON-serializable description of one figure                                       | Understanding the top-level structure, serializing a whole figure |
+| Entity    | Named members in a scene: Node and Coordinate                                                    | Working with the IR shape of nodes / coordinates                  |
+| Path      | The stroke shell, step action sequence, and step targets                                         | Working with the IR shape of paths / connectors                   |
+| Placement | The five forms of a position field: Cartesian / polar / relative / offset / proportional partway | Parsing or generating any positioning field                       |
 
 ## In this section
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/kernel/reference/schema/scene">
     <span className="font-semibold">Scene</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">The IR root, a JSON description of one figure</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      The IR root, a JSON description of one figure
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/reference/schema/entity">
     <span className="font-semibold">Entity</span>

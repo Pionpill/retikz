@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * 布局家族示意图
@@ -25,7 +26,12 @@ const Demo: FC = () => (
     </Node>
 
     {/* 右：同一组包进 Scope，整组 translate + rotate */}
-    <Scope transforms={[{ kind: 'translate', x: 90, y: 0 }, { kind: 'rotate', degrees: -15 }]}>
+    <Scope
+      transforms={[
+        { kind: 'translate', x: 90, y: 0 },
+        { kind: 'rotate', degrees: -15 },
+      ]}
+    >
       <Node id="a1" position={[0, 0]}>
         A
       </Node>

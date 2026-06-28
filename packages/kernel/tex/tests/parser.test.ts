@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { parsePathD } from '../src/svg/path-d';
+
 import { parseMathJaxSvg } from '../src/svg/parse-svg';
+import { parsePathD } from '../src/svg/path-d';
 
 /**
  * alpha.5 ADR-01：SVG path-d 解析 + MathJax SVG → 字形 LoweredMath。
@@ -89,9 +90,7 @@ describe('[parse-svg] parseMathJaxSvg', () => {
   });
 
   it('嵌套 translate 字形偏移累积', () => {
-    const s =
-      '<svg viewBox="0 0 100 100"><g transform="translate(10,20)">' +
-      '<path d="M0 0 L5 0"></path></g></svg>';
+    const s = '<svg viewBox="0 0 100 100"><g transform="translate(10,20)">' + '<path d="M0 0 L5 0"></path></g></svg>';
     const r = parseMathJaxSvg(s, 1000)!;
     expect(r.commands).toEqual([
       { kind: 'move', to: [10, 20] },
@@ -100,8 +99,7 @@ describe('[parse-svg] parseMathJaxSvg', () => {
   });
 
   it('rect（分数线）→ 矩形子路径', () => {
-    const s =
-      '<svg viewBox="0 0 100 100"><g><rect x="0" y="0" width="50" height="4"></rect></g></svg>';
+    const s = '<svg viewBox="0 0 100 100"><g><rect x="0" y="0" width="50" height="4"></rect></g></svg>';
     const r = parseMathJaxSvg(s, 1000)!;
     expect(r.commands.filter(c => c.kind === 'move')).toHaveLength(1);
     expect(r.commands.some(c => c.kind === 'close')).toBe(true);

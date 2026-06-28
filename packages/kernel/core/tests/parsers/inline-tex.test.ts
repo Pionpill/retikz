@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { parseInlineRuns } from '../../src/parsers/inline-tex';
 
 describe('[inline-tex] parseInlineRuns', () => {

@@ -1,5 +1,6 @@
-import { Axis, Plot, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, Plot, PointMark } from '@retikz/plot-react';
 
 import { samples } from './coordinate-rug.data';
 

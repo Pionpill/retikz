@@ -107,20 +107,20 @@ scope 取包或分组名，不带 `@retikz/`：`core` / `render` / `react` / `va
 
 常用 emoji：
 
-| 符号 | slug | 用途 |
-| --- | --- | --- |
-| 🚧 | `:construction:` | 开发中 / 增量修改 |
-| ✨ | `:sparkles:` | 新功能或组件 |
-| 🐛 | `:bug:` | bug 修复 |
-| ♻️ | `:recycle:` | 重构 |
-| 🚚 | `:truck:` | 移动 / 重命名 |
-| 📝 | `:pencil:` | 文档 / 注释 |
-| 🔧 | `:wrench:` | 工程 / 配置 |
-| 📦 | `:package:` | 打包 / 发布配置 |
-| ➕ | `:heavy_plus_sign:` | 新增依赖 |
-| 🔥 | `:fire:` | 删除 |
-| 🔖 | `:bookmark:` | 发布版本 |
-| ✅ | `:white_check_mark:` | 测试 |
+| 符号 | slug                 | 用途              |
+| ---- | -------------------- | ----------------- |
+| 🚧   | `:construction:`     | 开发中 / 增量修改 |
+| ✨   | `:sparkles:`         | 新功能或组件      |
+| 🐛   | `:bug:`              | bug 修复          |
+| ♻️   | `:recycle:`          | 重构              |
+| 🚚   | `:truck:`            | 移动 / 重命名     |
+| 📝   | `:pencil:`           | 文档 / 注释       |
+| 🔧   | `:wrench:`           | 工程 / 配置       |
+| 📦   | `:package:`          | 打包 / 发布配置   |
+| ➕   | `:heavy_plus_sign:`  | 新增依赖          |
+| 🔥   | `:fire:`             | 删除              |
+| 🔖   | `:bookmark:`         | 发布版本          |
+| ✅   | `:white_check_mark:` | 测试              |
 
 示例：
 
@@ -182,6 +182,7 @@ Tailwind：
 - IR 必须 100% JSON 可序列化，禁止函数 / ReactNode / class 实例
 - zod schema 是单一真源，TS 类型用 `z.infer`
 - schema 字段 `.describe(...)` 用英文，描述含义和用途
+- schema `.describe(...)` 面向 LLM / schema registry 准确识别 IR 契约，保持简洁干练；优先说明字段含义、允许值 / custom 扩展、默认值、compile/runtime 边界；避免重复 schema 已表达的约束，避免 SSR / IntersectionObserver / WAAPI / hydration / 具体 renderer 策略等场景化或后端实现细节，除非该细节本身就是字段契约
 - IR schema 内不写 JSDoc；派生类型、常量、函数、类写中文 JSDoc
 - 顶层实体判别字段用 `type`，内部子变体用 `kind`
 
@@ -189,11 +190,11 @@ Tailwind：
 
 新增 DSL / IR 能力前先归类：
 
-| 层 | 例子 | 进 IR | 归属 |
-| --- | --- | --- | --- |
-| Kernel | `<Layout>` `<Node>` `<Path>` `<Step>` `<Coordinate>` `<Scope>` | 是 | core / react kernel |
-| Sugar | `<Draw way={[...]}>`、`cycle`、简单几何便捷写法 | 否，编译期展开为 Kernel | react sugar 或 core parser |
-| Tier 2 | `<Axis>` `<BarPlot>` `<Tree>` | 是，高层节点经 lowering 下沉 | 独立分组，如 plot |
+| 层     | 例子                                                           | 进 IR                        | 归属                       |
+| ------ | -------------------------------------------------------------- | ---------------------------- | -------------------------- |
+| Kernel | `<Layout>` `<Node>` `<Path>` `<Step>` `<Coordinate>` `<Scope>` | 是                           | core / react kernel        |
+| Sugar  | `<Draw way={[...]}>`、`cycle`、简单几何便捷写法                | 否，编译期展开为 Kernel      | react sugar 或 core parser |
+| Tier 2 | `<Axis>` `<BarPlot>` `<Tree>`                                  | 是，高层节点经 lowering 下沉 | 独立分组，如 plot          |
 
 Sugar vs Tier 2 判断：展开后是否无法 1:1 反推？是否涉及布局 / scale / tick / 采样等算法？参数是否会改变节点数量或关系结构？任一是，则按 Tier 2。Sugar 不引入新能力，必须与手写 Kernel IR 等价，并配等价性测试。
 

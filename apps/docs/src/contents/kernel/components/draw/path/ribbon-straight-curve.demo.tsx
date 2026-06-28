@@ -3,12 +3,7 @@ import type { FC } from 'react';
 import { Layout, Node, Path, Step } from '@retikz/react';
 
 const Demo: FC = () => (
-  <Layout
-    width={560}
-    height={240}
-    viewBox={{ x: -280, y: -120, width: 560, height: 240 }}
-    color="#172033"
-  >
+  <Layout width={560} height={240} viewBox={{ x: -280, y: -120, width: 560, height: 240 }} color="#172033">
     <Path
       kind="ribbon"
       ribbon={{
@@ -29,22 +24,10 @@ const Demo: FC = () => (
       <Step kind="line" to={[220, 50]} />
     </Path>
 
-    <Node
-      position={[-158, -88]}
-      fill="none"
-      stroke="none"
-      textColor="#5f6c7b"
-      font={{ size: 13, weight: 'bold' }}
-    >
+    <Node position={[-158, -88]} fill="none" stroke="none" textColor="#5f6c7b" font={{ size: 13, weight: 'bold' }}>
       line
     </Node>
-    <Node
-      position={[0, 82]}
-      fill="none"
-      stroke="none"
-      textColor="#5f6c7b"
-      font={{ size: 13, weight: 'bold' }}
-    >
+    <Node position={[0, 82]} fill="none" stroke="none" textColor="#5f6c7b" font={{ size: 13, weight: 'bold' }}>
       curve
     </Node>
   </Layout>

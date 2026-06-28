@@ -1,9 +1,12 @@
+import type { ScenePrimitive, ShapeDefinition } from '@retikz/core';
+
+import { defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { type ScenePrimitive, type ShapeDefinition, defineShape, localToWorld, worldToLocal } from '@retikz/core';
-import { Node } from '../../src/kernel/Node';
+
 import { Layout } from '../../src/kernel/Layout';
+import { Node } from '../../src/kernel/Node';
 
 /**
  * <Layout shapes={...}> 自定义 shape 注入透传

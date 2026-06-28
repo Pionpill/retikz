@@ -4,11 +4,15 @@
  *   origin 支点 ctx.translate/rotate/scale；pathDraw → stroke-dashoffset 揭示（dashPattern 覆盖 + lineDashOffset）；
  *   自定义通道 → 注册表 interpolate + applyCanvas，未注册 warn+skip。viewBox 是 scene 根镜头、不在元素级。
  */
-import { AnimationProperty, type ScenePrimitive } from '@retikz/core';
+import type { ScenePrimitive } from '@retikz/core';
+
+import { AnimationProperty } from '@retikz/core';
+
+import type { AnimationPropertyRegistry } from '../animation/registry';
+import type { EasingRegistry } from '../animation/types';
+
 import { classifyProperty, isAutoplayTrigger, primHasStroke, resolveTransformOrigin } from '../animation/channels';
 import { evaluateTrack } from '../animation/evaluate';
-import type { EasingRegistry } from '../animation/types';
-import type { AnimationPropertyRegistry } from '../animation/registry';
 import { commandEndpoint } from '../shared';
 import { DEG_TO_RAD } from './path-geometry';
 
@@ -69,7 +73,9 @@ export const applyPrimAnimations = (
     if (cls === 'custom') {
       const def = context.animationProperties?.[track.property];
       if (!def) {
-        context.warn(`Canvas animation: custom property "${track.property}" is not registered; skipping (rendering base).`);
+        context.warn(
+          `Canvas animation: custom property "${track.property}" is not registered; skipping (rendering base).`,
+        );
         continue;
       }
       const result = evaluateTrack(track, time, { easings: context.easings, interpolateCustom: def.interpolate });
@@ -128,5 +134,5 @@ export const applyPrimAnimations = (
       }
     }
   }
-  return Object.keys(overrides).length > 0 ? ({ ...prim, ...overrides }) : prim;
+  return Object.keys(overrides).length > 0 ? { ...prim, ...overrides } : prim;
 };

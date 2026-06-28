@@ -1,6 +1,7 @@
 import type { FC } from 'react';
-import { Layout } from '@retikz/react';
+
 import { Axis, IntervalMark, PathMark, Plot, PointMark } from '@retikz/plot-react';
+import { Layout } from '@retikz/react';
 
 import { acquisition, sales, segments } from './data-model.data';
 

@@ -1,6 +1,7 @@
+import type { FC } from 'react';
+
 import { PlotFieldType } from '@retikz/plot';
 import { Axis, Plot, PointMark } from '@retikz/plot-react';
-import type { FC } from 'react';
 
 const rows = [
   { x: 1, y: 11, city: 'Tokyo' },
@@ -21,7 +22,18 @@ const Demo: FC = () => (
     height={250}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <PointMark x="x" y="y" size={9} fill="#dbeafe" stroke="#1d4ed8" label="city" labelPosition="above" labelPin labelDistance={16} labelTextColor="#1e3a8a" />
+    <PointMark
+      x="x"
+      y="y"
+      size={9}
+      fill="#dbeafe"
+      stroke="#1d4ed8"
+      label="city"
+      labelPosition="above"
+      labelPin
+      labelDistance={16}
+      labelTextColor="#1e3a8a"
+    />
     <Axis dimension="x" />
     <Axis dimension="y" grid />
   </Plot>

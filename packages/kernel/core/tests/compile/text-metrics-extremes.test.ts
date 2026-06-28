@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { fallbackMeasurer } from '../../src/compile/text-metrics';
 
 describe('fallbackMeasurer 边界', () => {

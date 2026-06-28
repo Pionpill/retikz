@@ -5,9 +5,11 @@
  *   跟随的是宿主 path 主色 color（不是 stroke）——与 TikZ `color=` 一致。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/schemas';
+
 import type { ScenePrimitive, TextPrim } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 
 const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
   const out: Array<ScenePrimitive> = [];
@@ -22,10 +24,7 @@ const labelOf = (ir: IR): TextPrim | undefined =>
   flatten(compileToScene(ir).primitives).find((p): p is TextPrim => p.type === 'text');
 
 /** 构造单 line 段 path（可选 path 级字段 + label 字段） */
-const pathWithLabel = (
-  pathProps: Record<string, unknown>,
-  label: Record<string, unknown>,
-): IR => ({
+const pathWithLabel = (pathProps: Record<string, unknown>, label: Record<string, unknown>): IR => ({
   version: 1,
   type: 'scene',
   children: [

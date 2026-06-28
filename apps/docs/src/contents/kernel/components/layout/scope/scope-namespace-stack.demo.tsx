@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * 命名空间栈：localNamespace 屏障 vs 默认透传（叙述性插图）
@@ -22,28 +23,52 @@ const Demo: FC = () => (
 
     {/* === 标签（各自落在所属 box 内部） === */}
     {/* B */}
-    <Node position={[-220, -100]} stroke="none">scope B</Node>
-    <Node position={[-80, -100]} stroke="none" textColor="gray">id &quot;b&quot;</Node>
+    <Node position={[-220, -100]} stroke="none">
+      scope B
+    </Node>
+    <Node position={[-80, -100]} stroke="none" textColor="gray">
+      id &quot;b&quot;
+    </Node>
 
     {/* A */}
-    <Node position={[-220, -45]} stroke="none">scope A</Node>
-    <Node position={[-80, -45]} stroke="none" textColor="gray">id &quot;a&quot;</Node>
-    <Node position={[-210, -20]} stroke="none" textColor="gray">localNamespace</Node>
+    <Node position={[-220, -45]} stroke="none">
+      scope A
+    </Node>
+    <Node position={[-80, -45]} stroke="none" textColor="gray">
+      id &quot;a&quot;
+    </Node>
+    <Node position={[-210, -20]} stroke="none" textColor="gray">
+      localNamespace
+    </Node>
     <Node position={[-80, -20]} stroke="none" textColor="gray">{`access: {a, b}`}</Node>
 
     {/* Y */}
-    <Node position={[90, -100]} stroke="none">scope Y</Node>
-    <Node position={[230, -100]} stroke="none" textColor="gray">id &quot;y&quot;</Node>
+    <Node position={[90, -100]} stroke="none">
+      scope Y
+    </Node>
+    <Node position={[230, -100]} stroke="none" textColor="gray">
+      id &quot;y&quot;
+    </Node>
 
     {/* X */}
-    <Node position={[90, -45]} stroke="none">scope X</Node>
-    <Node position={[230, -45]} stroke="none" textColor="gray">id &quot;x&quot;</Node>
+    <Node position={[90, -45]} stroke="none">
+      scope X
+    </Node>
+    <Node position={[230, -45]} stroke="none" textColor="gray">
+      id &quot;x&quot;
+    </Node>
     <Node position={[230, -20]} stroke="none" textColor="gray">{`access: {x, y}`}</Node>
 
     {/* root */}
-    <Node position={[0, 45]} stroke="none">root frame</Node>
-    <Node position={[-155, 65]} stroke="none" textColor="gray">a, b hidden by A</Node>
-    <Node position={[155, 65]} stroke="none" textColor="gray">x, y cascade to root</Node>
+    <Node position={[0, 45]} stroke="none">
+      root frame
+    </Node>
+    <Node position={[-155, 65]} stroke="none" textColor="gray">
+      a, b hidden by A
+    </Node>
+    <Node position={[155, 65]} stroke="none" textColor="gray">
+      x, y cascade to root
+    </Node>
 
     {/* === Cascade 箭头 === */}
     {/* B → A、Y → X：自然垂直，用 id 引用 */}
@@ -51,12 +76,41 @@ const Demo: FC = () => (
     <Draw way={['Y', 'X']} arrow="->" stroke="gray" />
 
     {/* X → root、A → root：用坐标对保证垂直（root 居中、id 引用会成对角） */}
-    <Draw way={[[155, 0], [155, 30]]} arrow="->" stroke="gray" />
-    <Draw way={[[-155, 0], [-155, 30]]} arrow="->" stroke="gray" dashPattern={[3, 2]} />
+    <Draw
+      way={[
+        [155, 0],
+        [155, 30],
+      ]}
+      arrow="->"
+      stroke="gray"
+    />
+    <Draw
+      way={[
+        [-155, 0],
+        [-155, 30],
+      ]}
+      arrow="->"
+      stroke="gray"
+      dashPattern={[3, 2]}
+    />
 
     {/* 红 × 标记，叠在 A→root 箭头中点 (-155, 15)；两条短粗线交叉 */}
-    <Draw way={[[-163, 7], [-147, 23]]} stroke="red" strokeWidth={2} />
-    <Draw way={[[-147, 7], [-163, 23]]} stroke="red" strokeWidth={2} />
+    <Draw
+      way={[
+        [-163, 7],
+        [-147, 23],
+      ]}
+      stroke="red"
+      strokeWidth={2}
+    />
+    <Draw
+      way={[
+        [-147, 7],
+        [-163, 23],
+      ]}
+      stroke="red"
+      strokeWidth={2}
+    />
   </Layout>
 );
 

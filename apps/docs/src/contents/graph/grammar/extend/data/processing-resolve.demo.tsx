@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+
 import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
 
 import { quarterlyRows } from './processing-resolve.data';

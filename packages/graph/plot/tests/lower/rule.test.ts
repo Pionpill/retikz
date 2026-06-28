@@ -1,12 +1,18 @@
 import type { IRNode, IRScope, ScenePrimitive } from '@retikz/core';
+
 import { compileToScene } from '@retikz/core';
-import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema, type ReferenceMark } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { z } from 'zod';
+
+import type { Cell, PositionScale } from '../../src/contract';
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec, ReferenceMark } from '../../src/schemas';
+
+import { createCoordinateFrame, defineCoordinate, densifyCellContour } from '../../src/contract';
+import { lowerPlots } from '../../src/pipeline/expand';
 import { lowerMark } from '../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../src/providers';
-import { type Cell, type PositionScale, createCoordinateFrame, defineCoordinate, densifyCellContour } from '../../src/contract';
+import { PlotSpecSchema } from '../../src/schemas';
 
 /** core Path 的最小形态（鸭子类型断言端点；避免引入 core 内部 IRPath 类型耦合） */
 type RulePath = {
@@ -44,7 +50,8 @@ const linearStub = (domain: [number, number], range: [number, number]): Position
   let r: [number, number] = range;
   const [d0, d1] = domain;
   return {
-    coordinate: (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? r[0] + ((value - d0) / (d1 - d0)) * (r[1] - r[0]) : NaN),
+    coordinate: (value: unknown) =>
+      typeof value === 'number' && Number.isFinite(value) ? r[0] + ((value - d0) / (d1 - d0)) * (r[1] - r[0]) : NaN,
     domain: () => [d0, d1],
     get bandwidth() {
       return 0;
@@ -99,8 +106,12 @@ const endpointsOf = (path: RulePath): [[number, number], [number, number]] => {
   const steps = path.children;
   const hasPointTarget = (step: (typeof steps)[number]): step is (typeof steps)[number] & { to: [number, number] } =>
     step.to !== undefined;
-  const move = steps.find((s): s is (typeof steps)[number] & { to: [number, number] } => s.kind === 'move' && hasPointTarget(s))!;
-  const lines = steps.filter((s): s is (typeof steps)[number] & { to: [number, number] } => s.kind === 'line' && hasPointTarget(s));
+  const move = steps.find(
+    (s): s is (typeof steps)[number] & { to: [number, number] } => s.kind === 'move' && hasPointTarget(s),
+  )!;
+  const lines = steps.filter(
+    (s): s is (typeof steps)[number] & { to: [number, number] } => s.kind === 'line' && hasPointTarget(s),
+  );
   return [move.to, lines[lines.length - 1].to];
 };
 
@@ -142,7 +153,13 @@ describe('rule cartesian line 几何', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference: 'd', model: [{ name: 'limit', type: 'continuous' }, { name: 'cat', type: 'categorical' }] },
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'limit', type: 'continuous' },
+          { name: 'cat', type: 'categorical' },
+        ],
+      },
       coordinate: { type: 'cartesian2D', y: '__y' },
       scales: [
         { type: 'linear', name: '__y' },
@@ -150,9 +167,21 @@ describe('rule cartesian line 几何', () => {
       ],
       marks: [{ type: 'reference', encoding: { y: { field: 'limit' }, color: { field: 'cat', scale: '__color' } } }],
     });
-    const layer = expandOf(spec, { d: [{ limit: 20, cat: 'a' }, { limit: 50, cat: 'b' }, { limit: 90, cat: 'a' }] }, cartOpts).children[0] as IRScope;
+    const layer = expandOf(
+      spec,
+      {
+        d: [
+          { limit: 20, cat: 'a' },
+          { limit: 50, cat: 'b' },
+          { limit: 90, cat: 'a' },
+        ],
+      },
+      cartOpts,
+    ).children[0] as IRScope;
     // 2 色 → 2 个分色子 Scope（各带 pathDefault.stroke）
-    const colorScopes = (layer.children as Array<{ type?: string; pathDefault?: { stroke?: string } }>).filter(c => c.type === 'scope' && c.pathDefault?.stroke !== undefined);
+    const colorScopes = (layer.children as Array<{ type?: string; pathDefault?: { stroke?: string } }>).filter(
+      c => c.type === 'scope' && c.pathDefault?.stroke !== undefined,
+    );
     expect(colorScopes).toHaveLength(2);
     expect(pathsOf(layer)).toHaveLength(3);
   });
@@ -165,7 +194,10 @@ describe('rule cartesian line 几何', () => {
 
   it('constant-rule-with-color-field-fail-loud', () => {
     // 常量 rule（单条 full-span）+ color 字段 = 一条线配 N 色，语义矛盾 → fail-loud（不静默塌成 row0 色）
-    const mark: ReferenceMark = { type: 'reference', encoding: { y: { value: 80 }, color: { field: 'cat', scale: '__color' } } };
+    const mark: ReferenceMark = {
+      type: 'reference',
+      encoding: { y: { value: 80 }, color: { field: 'cat', scale: '__color' } },
+    };
     expect(() => lowerMark(mark, [{ cat: 'a' }, { cat: 'b' }], cartFrame())).toThrow(/constant rule|color field/i);
   });
 });
@@ -195,14 +227,23 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
   it('rule-band-per-datum-field', () => {
     // per-datum band y∈[lo,hi]，多行 → 每行一个 band Node
     const mark: ReferenceMark = { type: 'reference', encoding: { y: { field: 'lo' } }, yTo: 'hi' };
-    const rows = [{ lo: 10, hi: 30 }, { lo: 60, hi: 80 }];
+    const rows = [
+      { lo: 10, hi: 30 },
+      { lo: 60, hi: 80 },
+    ];
     const nodes = nodesOf(lowerMark(mark, rows, cartFrame()) as IRScope);
     expect(nodes).toHaveLength(2);
   });
 
   it('rule-region-cartesian-rect', () => {
     // region x∈[2,5] 且 y∈[70,90] → rect Node。x 像素 80..200，y 像素 120..40。
-    const mark: ReferenceMark = { type: 'reference', kind: 'region', encoding: { x: { value: 2 }, y: { value: 70 } }, xTo: 5, yTo: 90 };
+    const mark: ReferenceMark = {
+      type: 'reference',
+      kind: 'region',
+      encoding: { x: { value: 2 }, y: { value: 70 } },
+      xTo: 5,
+      yTo: 90,
+    };
     const nodes = nodesOf(lowerMark(mark, [{}], cartFrame()) as IRScope);
     expect(nodes).toHaveLength(1);
     expect(nodes[0].minimumWidth).toBe(120);
@@ -212,13 +253,26 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
 
   it('rule-region-per-datum-field', () => {
     // per-datum region 四边界均可来自字段；每行一个区域 Node。
-    const mark: ReferenceMark = { type: 'reference', kind: 'region', encoding: { x: { field: 'x0' }, y: { field: 'y0' } }, xTo: 'x1', yTo: 'y1' };
-    const rows = [{ x0: 1, x1: 2, y0: 20, y1: 30 }, { x0: 4, x1: 6, y0: 40, y1: 70 }];
+    const mark: ReferenceMark = {
+      type: 'reference',
+      kind: 'region',
+      encoding: { x: { field: 'x0' }, y: { field: 'y0' } },
+      xTo: 'x1',
+      yTo: 'y1',
+    };
+    const rows = [
+      { x0: 1, x1: 2, y0: 20, y1: 30 },
+      { x0: 4, x1: 6, y0: 40, y1: 70 },
+    ];
     expect(nodesOf(lowerMark(mark, rows, cartFrame()) as IRScope)).toHaveLength(2);
   });
 
   it('rule-band-color-value-fill', () => {
-    const mark: ReferenceMark = { type: 'reference', encoding: { y: { value: 70 }, color: { value: 'amber' } }, yTo: 90 };
+    const mark: ReferenceMark = {
+      type: 'reference',
+      encoding: { y: { value: 70 }, color: { value: 'amber' } },
+      yTo: 90,
+    };
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
     expect((layer.nodeDefault as { fill?: string }).fill).toBe('amber');
   });
@@ -234,7 +288,12 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
 describe('rule 边界', () => {
   it('rule-extent-partial', () => {
     // 竖直 rule x=5，y 从 extent [20,60] 截断（非满铺）；y 像素 20→320、60→160
-    const mark: ReferenceMark = { type: 'reference', extentField: 'lo', extentToField: 'hi', encoding: { x: { value: 5 } } };
+    const mark: ReferenceMark = {
+      type: 'reference',
+      extentField: 'lo',
+      extentToField: 'hi',
+      encoding: { x: { value: 5 } },
+    };
     const layer = lowerMark(mark, [{ lo: 20, hi: 60 }], cartFrame()) as IRScope;
     const [a, b] = endpointsOf(pathsOf(layer)[0]);
     expect(a).toEqual([200, 320]);
@@ -243,7 +302,13 @@ describe('rule 边界', () => {
 
   it('rule-band-extent-partial', () => {
     // 水平 band y∈[70,90]，x 从 extent [2,8] 截断；x 像素 80..320 → 宽 240、中心 200
-    const mark: ReferenceMark = { type: 'reference', extentField: 'a', extentToField: 'b', encoding: { y: { value: 70 } }, yTo: 90 };
+    const mark: ReferenceMark = {
+      type: 'reference',
+      extentField: 'a',
+      extentToField: 'b',
+      encoding: { y: { value: 70 } },
+      yTo: 90,
+    };
     const nodes = nodesOf(lowerMark(mark, [{ a: 2, b: 8 }], cartFrame()) as IRScope);
     expect(nodes[0].minimumWidth).toBe(240);
     expect(nodes[0].position).toEqual([200, 80]);
@@ -261,7 +326,12 @@ describe('rule 边界', () => {
   });
 
   it('rule-nonfinite-extent-skipped', () => {
-    const mark: ReferenceMark = { type: 'reference', extentField: 'lo', extentToField: 'hi', encoding: { x: { value: 5 } } };
+    const mark: ReferenceMark = {
+      type: 'reference',
+      extentField: 'lo',
+      extentToField: 'hi',
+      encoding: { x: { value: 5 } },
+    };
     // 缺 extent 字段 → coordinate NaN → 跳过 → null
     expect(lowerMark(mark, [{}], cartFrame())).toBeNull();
   });
@@ -295,7 +365,12 @@ describe('rule fail-loud', () => {
   });
 
   it('rule-region-requires-four-bounds', () => {
-    const mark = { type: 'reference', kind: 'region', xTo: 5, encoding: { x: { value: 2 }, y: { value: 70 } } } as ReferenceMark;
+    const mark = {
+      type: 'reference',
+      kind: 'region',
+      xTo: 5,
+      encoding: { x: { value: 2 }, y: { value: 70 } },
+    } as ReferenceMark;
     expect(() => lowerMark(mark, [{}], cartFrame())).toThrow(/region|required|yTo/i);
   });
 
@@ -387,7 +462,10 @@ describe('rule polar', () => {
       type: 'plot',
       data: {
         reference: 'd',
-        model: [{ name: 'name', type: 'categorical' }, { name: 'score', type: 'continuous' }],
+        model: [
+          { name: 'name', type: 'categorical' },
+          { name: 'score', type: 'continuous' },
+        ],
       },
       coordinate: { type: 'polar2D' },
       scales: [],
@@ -410,7 +488,10 @@ describe('rule polar', () => {
       },
       cartOpts,
     ).children[0] as IRScope;
-    const shape = nodesOf(layer)[0].shape as { type: string; params: { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number } };
+    const shape = nodesOf(layer)[0].shape as {
+      type: string;
+      params: { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number };
+    };
     expect(shape.type).toBe('sector');
     expect(shape.params.innerRadius).toBeGreaterThan(0);
     expect(shape.params.outerRadius).toBeGreaterThan(shape.params.innerRadius);
@@ -431,7 +512,10 @@ describe('rule polar', () => {
       type: 'plot',
       data: {
         reference: 'd',
-        model: [{ name: 'tier', type: 'categorical' }, { name: 'threshold', type: 'continuous' }],
+        model: [
+          { name: 'tier', type: 'categorical' },
+          { name: 'threshold', type: 'continuous' },
+        ],
       },
       coordinate: { type: 'polar2D' },
       scales: [],
@@ -439,7 +523,13 @@ describe('rule polar', () => {
     });
     const layer = expandOf(
       spec,
-      { d: [{ tier: 'low', threshold: 30 }, { tier: 'mid', threshold: 60 }, { tier: 'high', threshold: 90 }] },
+      {
+        d: [
+          { tier: 'low', threshold: 30 },
+          { tier: 'mid', threshold: 60 },
+          { tier: 'high', threshold: 90 },
+        ],
+      },
       cartOpts,
     ).children[0] as IRScope;
     const paths = pathsOf(layer);
@@ -451,9 +541,18 @@ describe('rule polar', () => {
 
   it('rule-region-polar-sector', () => {
     // region x∈[30,120] 且 y∈[40,60] → projectCell 环扇区。
-    const mark: ReferenceMark = { type: 'reference', kind: 'region', encoding: { x: { value: 30 }, y: { value: 40 } }, xTo: 120, yTo: 60 };
+    const mark: ReferenceMark = {
+      type: 'reference',
+      kind: 'region',
+      encoding: { x: { value: 30 }, y: { value: 40 } },
+      xTo: 120,
+      yTo: 60,
+    };
     const node = nodesOf(lowerMark(mark, [{}], polarFrame()) as IRScope)[0];
-    const shape = node.shape as { type: string; params: { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number } };
+    const shape = node.shape as {
+      type: string;
+      params: { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number };
+    };
     expect(shape.type).toBe('sector');
     expect(shape.params.startAngle).toBeCloseTo(30, 6);
     expect(shape.params.endAngle).toBeCloseTo(120, 6);
@@ -471,7 +570,13 @@ describe('rule polar', () => {
       type: 'scene' as const,
       children: [
         { type: 'scope' as const, nodeDefault: { padding: 0, strokeWidth: 0 }, children: [node] },
-        { type: 'path' as const, children: [{ type: 'step' as const, kind: 'move' as const, to: [-200, -200] as [number, number] }, { type: 'step' as const, kind: 'line' as const, to: { id: 'ring' } }] },
+        {
+          type: 'path' as const,
+          children: [
+            { type: 'step' as const, kind: 'move' as const, to: [-200, -200] as [number, number] },
+            { type: 'step' as const, kind: 'line' as const, to: { id: 'ring' } },
+          ],
+        },
       ],
     };
     expect(() => compileToScene(scene)).not.toThrow();
@@ -486,7 +591,16 @@ describe('rule region projectCell 坐标系', () => {
       data: { reference: 'd' },
       coordinate: { type: 'ternary2D' },
       scales: [],
-      marks: [{ type: 'reference', kind: 'region', xTo: 0.75, yTo: 0.55, zTo: 0.7, encoding: { x: { value: 0.15 }, y: { value: 0.1 }, z: { value: 0.1 } } }],
+      marks: [
+        {
+          type: 'reference',
+          kind: 'region',
+          xTo: 0.75,
+          yTo: 0.55,
+          zTo: 0.7,
+          encoding: { x: { value: 0.15 }, y: { value: 0.1 }, z: { value: 0.1 } },
+        },
+      ],
     });
     const layer = expandOf(spec, { d: [{}] }, cartOpts).children[0] as IRScope;
     const node = nodesOf(layer)[0];
@@ -509,7 +623,9 @@ describe('rule region projectCell 坐标系', () => {
       height: HEIGHT,
       coordinates: [
         defineCoordinate({
-          schema: z.object({ type: z.literal('curved-reference').describe('Discriminator: reference region custom coordinate operation') }),
+          schema: z.object({
+            type: z.literal('curved-reference').describe('Discriminator: reference region custom coordinate operation'),
+          }),
           roles: ['x', 'y'],
           resolve: (_operation, ctx) => {
             const xScale = linearStub([0, 10], [0, ctx.width]);
@@ -517,12 +633,19 @@ describe('rule region projectCell 坐标系', () => {
             const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
               const x = xScale.coordinate(values[0]);
               const y = yScale.coordinate(values[1]);
-              return Number.isFinite(x) && Number.isFinite(y) ? [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)] : null;
+              return Number.isFinite(x) && Number.isFinite(y)
+                ? [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)]
+                : null;
             };
             return {
               frame: createCoordinateFrame('curved-reference', ['x', 'y'], projectRoles, {
                 roleScales: { x: xScale, y: yScale },
-                projectCell: (cell: Cell) => ({ kind: 'contour', points: densifyCellContour(cell, (x, y) => [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)], { curvedPrimary: true }) }),
+                projectCell: (cell: Cell) => ({
+                  kind: 'contour',
+                  points: densifyCellContour(cell, (x, y) => [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)], {
+                    curvedPrimary: true,
+                  }),
+                }),
               }),
               plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
               gridLayers: [],
@@ -546,7 +669,9 @@ describe('rule region projectCell 坐标系', () => {
       data: { reference: 'd' },
       coordinate: { type: 'ternary2D' },
       scales: [],
-      marks: [{ type: 'reference', kind: 'region', xTo: 0.8, yTo: 0.7, encoding: { x: { value: 0.1 }, y: { value: 0.1 } } }],
+      marks: [
+        { type: 'reference', kind: 'region', xTo: 0.8, yTo: 0.7, encoding: { x: { value: 0.1 }, y: { value: 0.1 } } },
+      ],
     });
     expect(() => expandOf(spec, { d: [{}] }, cartOpts)).toThrow(/reference region|encoding\.z|zTo/i);
   });
@@ -569,7 +694,16 @@ describe('rule + bar z-order', () => {
         { type: 'reference', encoding: { y: { value: 5 } } },
       ],
     });
-    const expanded = expandOf(spec, { d: [{ cat: 'a', v: 3 }, { cat: 'b', v: 8 }] }, cartOpts);
+    const expanded = expandOf(
+      spec,
+      {
+        d: [
+          { cat: 'a', v: 3 },
+          { cat: 'b', v: 8 },
+        ],
+      },
+      cartOpts,
+    );
     // 图层序 = 声明序：bar 在前、rule 在后
     const barLayer = expanded.children[0] as IRScope;
     const ruleLayer = expanded.children[1] as IRScope;

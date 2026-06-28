@@ -1,6 +1,10 @@
-import { Button } from '@/components/ui/button';
+import type { FC } from 'react';
+
 import { Check, Copy } from 'lucide-react';
-import { type FC, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import { Button } from '@/components/ui/button';
+
 import { HighlightCode } from './HighlightCode';
 
 export type CodeBlockProps = {

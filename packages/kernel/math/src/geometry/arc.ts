@@ -19,7 +19,7 @@ const DEG_TO_RAD = Math.PI / 180;
  */
 const axisAngles = (lo: number, hi: number): Array<number> => {
   const kStart = Math.ceil(lo / 90); // 第一个 >= lo 的 90°·k
-  const kEnd = Math.floor(hi / 90);  // 最后一个 <= hi 的 90°·k
+  const kEnd = Math.floor(hi / 90); // 最后一个 <= hi 的 90°·k
   const span = kEnd - kStart;
   // span 非 finite / 过大（巨型角度落入浮点无整数分辨率区，k++ 不前进）→ 端点已定界，无需轴向点
   if (!Number.isFinite(span) || span < 0 || span > 1_000_000) return [];
@@ -29,16 +29,9 @@ const axisAngles = (lo: number, hi: number): Array<number> => {
 };
 
 /** 圆心、半径、角度（度，与 polar.toPosition 同约定）→ 圆周上对应点 */
-export const arcEndPoint = (
-  center: Position,
-  radius: number,
-  angleDeg: number,
-): Position => {
+export const arcEndPoint = (center: Position, radius: number, angleDeg: number): Position => {
   const rad = angleDeg * DEG_TO_RAD;
-  return [
-    center[0] + Math.cos(rad) * radius,
-    center[1] + Math.sin(rad) * radius,
-  ];
+  return [center[0] + Math.cos(rad) * radius, center[1] + Math.sin(rad) * radius];
 };
 
 /**
@@ -138,17 +131,9 @@ export const rayArc = (
  * @description 与 arcEndPoint 同角度约定（SVG y-down）；endpoint = [cx + rx·cosθ, cy + ry·sinθ]。
  *   θ 是参数角（非真实极角，rx≠ry 时两者不等）
  */
-export const ellipseArcPoint = (
-  center: Position,
-  radiusX: number,
-  radiusY: number,
-  angleDeg: number,
-): Position => {
+export const ellipseArcPoint = (center: Position, radiusX: number, radiusY: number, angleDeg: number): Position => {
   const rad = angleDeg * DEG_TO_RAD;
-  return [
-    center[0] + Math.cos(rad) * radiusX,
-    center[1] + Math.sin(rad) * radiusY,
-  ];
+  return [center[0] + Math.cos(rad) * radiusX, center[1] + Math.sin(rad) * radiusY];
 };
 
 /**

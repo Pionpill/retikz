@@ -50,12 +50,12 @@ Field lookup follows the same rule as the model: first check whether the whole f
 
 In React, mark props are converted into channel configuration while building the Plot spec. Field channels enter `encoding`, constant channels stay as fixed values, and lowering later reads field values from canonical rows.
 
-| Form | Internal Meaning |
-| --- | --- |
-| `<PointMark x="gdp" />` | `x` is a field channel that reads `gdp` from the canonical row |
-| `<PointMark color="region" />` | `color` is a field channel, and its field type derives the color scale |
-| `<ReferenceMark y={80} />` | `y` is a constant channel and does not read data rows |
-| `<PathMark order="month" />` | `order` is not inside the `encoding` object, but still reads a field to sort datums |
+| Form                           | Internal Meaning                                                                    |
+| ------------------------------ | ----------------------------------------------------------------------------------- |
+| `<PointMark x="gdp" />`        | `x` is a field channel that reads `gdp` from the canonical row                      |
+| `<PointMark color="region" />` | `color` is a field channel, and its field type derives the color scale              |
+| `<ReferenceMark y={80} />`     | `y` is a constant channel and does not read data rows                               |
+| `<PathMark order="month" />`   | `order` is not inside the `encoding` object, but still reads a field to sort datums |
 
 A channel only answers "which value to read"; scales map that value into drawing space or visual attributes, and coordinates interpret positional channel roles.
 

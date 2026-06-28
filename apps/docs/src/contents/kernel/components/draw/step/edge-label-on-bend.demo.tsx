@@ -1,5 +1,6 @@
-import { Layout, Node, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node, Path, Step } from '@retikz/react';
 
 const Demo: FC = () => (
   <Layout width={420} height={200} nodeDefault={{ stroke: 'gray', dashed: true }}>
@@ -12,13 +13,7 @@ const Demo: FC = () => (
     {/* Bend：内部 lower 为 cubic，t 解释与 cubic 一致 */}
     <Path stroke="currentColor" arrow="->">
       <Step kind="move" to="a" />
-      <Step
-        kind="bend"
-        to="b"
-        bendDirection="left"
-        bendAngle={45}
-        label={{ text: 't=0.25', position: 0.25 }}
-      />
+      <Step kind="bend" to="b" bendDirection="left" bendAngle={45} label={{ text: 't=0.25', position: 0.25 }} />
     </Path>
   </Layout>
 );

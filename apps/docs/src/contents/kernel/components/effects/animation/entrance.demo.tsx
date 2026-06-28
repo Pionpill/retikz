@@ -1,5 +1,6 @@
-import { Layout, Node, Path, Step, drawOn, fadeIn, grow, growUp, scaleIn, slideIn } from '@retikz/react';
 import type { FC } from 'react';
+
+import { drawOn, fadeIn, grow, growUp, Layout, Node, Path, scaleIn, slideIn, Step } from '@retikz/react';
 
 // 入场合集：fadeIn / scaleIn / grow / slideIn / growUp 各一个节点 + drawOn 一条路径，加载时各播一次
 const Demo: FC = () => (
@@ -17,10 +18,30 @@ const Demo: FC = () => (
       slideIn
     </Node>
     {/* growUp：scaleY 0→1，支点底边——柱状图从基线长出 */}
-    <Node id="bar1" position={[-150, 55]} shape="rectangle" minimumWidth={24} minimumHeight={36} fill="#0ea5e9" animations={[growUp()]} />
-    <Node id="bar2" position={[-110, 45]} shape="rectangle" minimumWidth={24} minimumHeight={56} fill="#0ea5e9" animations={[growUp()]} />
-    <Node id="a" position={[-40, 60]}>a</Node>
-    <Node id="b" position={[160, 60]}>b</Node>
+    <Node
+      id="bar1"
+      position={[-150, 55]}
+      shape="rectangle"
+      minimumWidth={24}
+      minimumHeight={36}
+      fill="#0ea5e9"
+      animations={[growUp()]}
+    />
+    <Node
+      id="bar2"
+      position={[-110, 45]}
+      shape="rectangle"
+      minimumWidth={24}
+      minimumHeight={56}
+      fill="#0ea5e9"
+      animations={[growUp()]}
+    />
+    <Node id="a" position={[-40, 60]}>
+      a
+    </Node>
+    <Node id="b" position={[160, 60]}>
+      b
+    </Node>
     <Path stroke="#10b981" strokeWidth={3} animations={[drawOn()]}>
       <Step kind="move" to="a" />
       <Step kind="line" to={[60, 60]} />

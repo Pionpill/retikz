@@ -1,15 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { CompileOptions, CompileWarning } from '../../src/compile/compile';
-import type { IR, IRPaintSpec } from '../../src/schemas';
-import type { MarkerPathPrim, MarkerPrimitive, PaintResource, ResolvedPatternTile, SceneResource } from '../../src/primitive';
 import type { PatternDefinition } from '../../src/contract/pattern';
+import type {
+  MarkerPathPrim,
+  MarkerPrimitive,
+  PaintResource,
+  ResolvedPatternTile,
+  SceneResource,
+} from '../../src/primitive';
+import type { IR, IRPaintSpec } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 
 /**
  * Pattern 注册面（ADR-04 emit-in-compile）对抗回归
  *
  * 来自 Bug Hunter 的边角 IR / pattern def。`compileToScene` 直接消费 IR、不再跑 zod schema，故
- * size / lineWidth / rotation 的 `.finite().positive()` 在手搓 IR 时被绕过——现在 compile 是唯一关口，
+ * size / lineWidth / rotation 的 number / positive 校验在手搓 IR 时被绕过——现在 compile 是唯一关口，
  * 非 finite / 非正 size / rotation 在 `resolvePatternTile` 抛清晰错，motif 非 finite 坐标由共享
  * `validateMarkerPrimitives` 的 finite 栅栏拦下（与 arrow 路径对齐），守 Scene 100% JSON 可序列化。
  * 可接受的边角（空 motif / dedup / override / 错误质量 / 交叉资源 / background 透传）保持稳定行为。
@@ -44,14 +52,10 @@ const compilePattern = (spec: IRPaintSpec, opts?: CompileOptions): void => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe('ADV — 非 finite size / lineWidth / rotation 抛', () => {
   it('size_infinity → 抛 invalid size', () => {
-    expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: Infinity })).toThrow(
-      /invalid size/i,
-    );
+    expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: Infinity })).toThrow(/invalid size/i);
   });
   it('size_nan → 抛 invalid size', () => {
-    expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: NaN })).toThrow(
-      /invalid size/i,
-    );
+    expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: NaN })).toThrow(/invalid size/i);
   });
   it('linewidth_infinity → 抛 invalid lineWidth', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'lines', lineWidth: Infinity })).toThrow(
@@ -59,14 +63,10 @@ describe('ADV — 非 finite size / lineWidth / rotation 抛', () => {
     );
   });
   it('dots_linewidth_infinity → 抛 invalid lineWidth', () => {
-    expect(() => compilePattern({ kind: 'pattern', shape: 'dots', lineWidth: Infinity })).toThrow(
-      /invalid lineWidth/i,
-    );
+    expect(() => compilePattern({ kind: 'pattern', shape: 'dots', lineWidth: Infinity })).toThrow(/invalid lineWidth/i);
   });
   it('rotation_nan → 抛 non-finite rotation', () => {
-    expect(() => compilePattern({ kind: 'pattern', shape: 'lines', rotation: NaN })).toThrow(
-      /non-finite rotation/i,
-    );
+    expect(() => compilePattern({ kind: 'pattern', shape: 'lines', rotation: NaN })).toThrow(/non-finite rotation/i);
   });
   it('rotation_infinity → 抛 non-finite rotation', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'lines', rotation: Infinity })).toThrow(
@@ -95,25 +95,22 @@ describe('ADV — JSON round-trip', () => {
 describe('ADV — 极端 / 非正 size', () => {
   it('size_huge_overflow：size=1e308 + emit 做 size×1e10 溢出 Infinity 坐标 → finite 栅栏抛', () => {
     const overflowPattern: PatternDefinition = {
-      emit: ({ size }): Array<MarkerPrimitive> => [
-        { type: 'rect', x: 0, y: 0, width: size * 1e10, height: size },
-      ],
+      emit: ({ size }): Array<MarkerPrimitive> => [{ type: 'rect', x: 0, y: 0, width: size * 1e10, height: size }],
     };
     expect(() =>
-      compilePattern({ kind: 'pattern', shape: 'huge', size: 1e308 }, {
-        patterns: { huge: overflowPattern },
-      }),
+      compilePattern(
+        { kind: 'pattern', shape: 'huge', size: 1e308 },
+        {
+          patterns: { huge: overflowPattern },
+        },
+      ),
     ).toThrow(/non-finite number/i);
   });
   it('size_negative：size=-8 → 抛 invalid size（compile 是 positive 的唯一关口）', () => {
-    expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: -8 })).toThrow(
-      /invalid size/i,
-    );
+    expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: -8 })).toThrow(/invalid size/i);
   });
   it('size_zero：size=0 → 抛 invalid size', () => {
-    expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: 0 })).toThrow(
-      /invalid size/i,
-    );
+    expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: 0 })).toThrow(/invalid size/i);
   });
 });
 
@@ -158,9 +155,9 @@ describe('ADV — emit 产物栅栏', () => {
     const fnPattern = {
       emit: () => [{ type: 'rect', x: 0, y: 0, width: 4, height: 4, fill: 'red', onClick: () => 1 }],
     } as unknown as PatternDefinition;
-    expect(() =>
-      compilePattern({ kind: 'pattern', shape: 'fn' }, { patterns: { fn: fnPattern } }),
-    ).toThrow(/function/i);
+    expect(() => compilePattern({ kind: 'pattern', shape: 'fn' }, { patterns: { fn: fnPattern } })).toThrow(
+      /function/i,
+    );
   });
 
   it('empty_motif：emit 返回 [] → 空 tile，不崩', () => {
@@ -207,7 +204,9 @@ describe('ADV — dedup / override / 交叉', () => {
     const scene = compileToScene(
       patternNodeIR({ kind: 'pattern', shape: 'lines', size: 6 }, { kind: 'pattern', shape: 'lines', size: 10 }),
     );
-    const pats = (scene.resources ?? []).filter((r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern');
+    const pats = (scene.resources ?? []).filter(
+      (r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern',
+    );
     expect(pats).toHaveLength(2);
     expect(pats.map(p => p.tile?.size).sort((a, b) => (a ?? 0) - (b ?? 0))).toEqual([6, 10]);
   });
@@ -216,7 +215,14 @@ describe('ADV — dedup / override / 交叉', () => {
     const customLines: PatternDefinition = {
       defaultSize: 8,
       emit: ({ size, color }): Array<MarkerPrimitive> => [
-        { type: 'path', commands: [{ kind: 'move', to: [0, 0] }, { kind: 'line', to: [0, size] }], stroke: color },
+        {
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'line', to: [0, size] },
+          ],
+          stroke: color,
+        },
       ],
     };
     const tile = tileOf({ kind: 'pattern', shape: 'lines' }, { patterns: { lines: customLines } });
@@ -229,7 +235,10 @@ describe('ADV — dedup / override / 交叉', () => {
   it('cross_feature_ids：pattern + gradient + image 同场景 → id 不撞、仅 pattern 带 tile', () => {
     const grad: IRPaintSpec = {
       kind: 'linearGradient',
-      stops: [{ offset: 0, color: '#000' }, { offset: 1, color: '#fff' }],
+      stops: [
+        { offset: 0, color: '#000' },
+        { offset: 1, color: '#fff' },
+      ],
     };
     const img: IRPaintSpec = { kind: 'image', href: 'data:image/png;base64,AAAA' };
     const pat: IRPaintSpec = { kind: 'pattern', shape: 'grid' };
@@ -246,7 +255,9 @@ describe('ADV — dedup / override / 交叉', () => {
     const ids = (scene.resources ?? []).map(r => r.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids.length).toBe(3);
-    const withTile = (scene.resources ?? []).filter((r): r is PaintResource => r.kind === 'paint' && r.tile !== undefined);
+    const withTile = (scene.resources ?? []).filter(
+      (r): r is PaintResource => r.kind === 'paint' && r.tile !== undefined,
+    );
     expect(withTile).toHaveLength(1);
     expect(withTile[0].spec.kind).toBe('pattern');
   });

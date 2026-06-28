@@ -1,4 +1,5 @@
 import type { Position } from '../geometry/point';
+
 import { DEFAULT_EPSILON } from '../geometry/point';
 
 /** 一段三次贝塞尔：两控制点 + 终点（起点为上一段终点 / 首段为第一个 knot） */

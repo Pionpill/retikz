@@ -1,6 +1,6 @@
 {
   "name": "@retikz/tex",
-  "version": "0.4.0-alpha.6",
+  "version": "0.4.0-alpha.7",
   "description": "retikz tex: LaTeX math via MathJax SVG, lowered to renderer-agnostic glyph paths for @retikz/core.",
   "type": "module",
   "author": "Pionpill",

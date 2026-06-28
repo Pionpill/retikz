@@ -41,8 +41,7 @@ const asMaybeEmbeddable = (type: unknown): MaybeEmbeddableType | null => {
 };
 
 /** 读组件 type 的可嵌入静态标记（Component.isTier2Embeddable === true） */
-export const isEmbeddableMarked = (type: unknown): boolean =>
-  asMaybeEmbeddable(type)?.isTier2Embeddable === true;
+export const isEmbeddableMarked = (type: unknown): boolean => asMaybeEmbeddable(type)?.isTier2Embeddable === true;
 
 /**
  * 解析一个元素的可嵌入适配器。
@@ -56,7 +55,7 @@ export const resolveEmbeddableAdapter = (
   embeddables?: ReadonlyArray<EmbeddableTier2Adapter>,
 ): EmbeddableTier2Adapter | null => {
   if (embeddables && displayName !== undefined) {
-    const matched = embeddables.find((entry) => entry.displayName === displayName);
+    const matched = embeddables.find(entry => entry.displayName === displayName);
     if (matched) return matched;
   }
 
@@ -65,9 +64,7 @@ export const resolveEmbeddableAdapter = (
     const adapter = candidate.embeddableAdapter;
     if (typeof adapter === 'object') return adapter;
     const name = candidate.displayName ?? candidate.name ?? '匿名组件';
-    throw new Error(
-      `[retikz] <${name}> 标记了 isTier2Embeddable 但未提供 embeddableAdapter`,
-    );
+    throw new Error(`[retikz] <${name}> 标记了 isTier2Embeddable 但未提供 embeddableAdapter`);
   }
 
   return null;

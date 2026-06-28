@@ -5,6 +5,7 @@
  *   并验证 Scope schema 接受可选 clip 字段（向后兼容、缺省合法）。
  */
 import { describe, expect, it } from 'vitest';
+
 import { ClipSpecSchema, ScopeSchema } from '../../src/schemas';
 
 describe('ClipSpecSchema 合法形态', () => {

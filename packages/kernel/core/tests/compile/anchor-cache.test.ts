@@ -5,12 +5,14 @@
  */
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';
+
 import type { NodeLayout } from '../../src/compile/node';
-import { defineShape } from '../../src/contract/shape';
-import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import type { ShapeDefinition } from '../../src/contract/shape';
 import type { BuiltinShapeName } from '../../src/schemas';
+
+import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';
+import { defineShape } from '../../src/contract/shape';
+import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 /** 构造一个最简 NodeLayout，rect 已是全局坐标 */
 const makeLayout = (
@@ -23,20 +25,12 @@ const makeLayout = (
 ): NodeLayout => {
   // circle / diamond 无独立 shapeDef（收为 preset）：circle → ellipse 等轴、diamond → polygon 4/0。
   const def =
-    shape === 'circle'
-      ? BUILTIN_SHAPES.ellipse
-      : shape === 'diamond'
-        ? BUILTIN_SHAPES.polygon
-        : BUILTIN_SHAPES[shape];
+    shape === 'circle' ? BUILTIN_SHAPES.ellipse : shape === 'diamond' ? BUILTIN_SHAPES.polygon : BUILTIN_SHAPES[shape];
   return {
     shapeName: shape,
     shapeDef: def,
     shapeParams:
-      shape === 'circle'
-        ? { circumscribe: 'equal' }
-        : shape === 'diamond'
-          ? { sides: 4, rotate: 0 }
-          : undefined,
+      shape === 'circle' ? { circumscribe: 'equal' } : shape === 'diamond' ? { sides: 4, rotate: 0 } : undefined,
     rect: { x: cx, y: cy, width, height, rotate },
     rotateDeg: (rotate * 180) / Math.PI,
     margin: 0,
@@ -238,7 +232,7 @@ describe('resolveAnchor boundary no cross-pollination', () => {
     // 5 角星 outerRadius=30，外径尖角在 0°/72°/144°... 凹角在 36°/108°...
     // 36° 方向：星形轮廓落在内径（innerRadius=10）附近；圆落在半径 30 的圆周
     // → 两者数值必然不同，正确体现 boundary 差异
-    const asShape = resolveAnchor(starLayout, '36', 'shape');   // 36° 走真实星形轮廓
+    const asShape = resolveAnchor(starLayout, '36', 'shape'); // 36° 走真实星形轮廓
     const asCircle = resolveAnchor(starLayout, '36', 'circle'); // 36° 走真圆
 
     // 星形 36° 轮廓距离中心远小于真圆（凹角 vs 圆周），两者不等

@@ -1,19 +1,28 @@
+import type { IRBoundary, IRFont, IRShapeRef, JsonValue } from '@retikz/core';
+
+import { BoundarySchema, DropShadowSchema, FontSchema, JsonValueSchema, ShapeRefSchema } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
-import { BoundarySchema, DropShadowSchema, FontSchema, type IRBoundary, type IRFont, type IRShapeRef, type JsonValue, JsonValueSchema, ShapeRefSchema } from '@retikz/core';
-import { type AnyChannelDefinition, type ChannelResolution, type NodeChannelContext, type NodeChannelDefinition, defineNodeChannel, isBuiltinScaleOperation } from '../../../contract';
-import { inferCategoryDomain, resolveFieldPath } from '../../data';
-import {
-  type ExternalRow,
-  type LinearScale,
-  type MarkOperation,
-  type OrdinalScale,
-  PlotFieldType,
-  type PlotFieldTypeMap,
-  PlotScale,
-  type PlotSpec,
-  type ScaledMarkValueType,
-  type SqrtScale,
+
+import type {
+  AnyChannelDefinition,
+  ChannelResolution,
+  NodeChannelContext,
+  NodeChannelDefinition,
+} from '../../../contract';
+import type {
+  ExternalRow,
+  LinearScale,
+  MarkOperation,
+  OrdinalScale,
+  PlotFieldTypeMap,
+  PlotSpec,
+  ScaledMarkValueType,
+  SqrtScale,
 } from '../../../schemas';
+
+import { defineNodeChannel, isBuiltinScaleOperation } from '../../../contract';
+import { PlotFieldType, PlotScale } from '../../../schemas';
+import { inferCategoryDomain, resolveFieldPath } from '../../data';
 import { resolveLinearScale, resolveOrdinalScale, resolveSqrtScale } from '../../scale';
 import { makeMarkValueResolver } from '../shared';
 
@@ -48,9 +57,11 @@ const pickStyleChannel = <T>(mark: MarkOperation, channel: string): ScaledMarkVa
   return isScaledMarkValue<T>(value) ? value : undefined;
 };
 
-const jsonValue = (value: unknown): JsonValue | undefined => (JsonValueSchema.safeParse(value).success ? (value as JsonValue) : undefined);
+const jsonValue = (value: unknown): JsonValue | undefined =>
+  JsonValueSchema.safeParse(value).success ? (value as JsonValue) : undefined;
 const positiveNumber = (value: unknown): number | undefined => (isFiniteNumber(value) && value > 0 ? value : undefined);
-const nonnegativeNumber = (value: unknown): number | undefined => (isFiniteNumber(value) && value >= 0 ? value : undefined);
+const nonnegativeNumber = (value: unknown): number | undefined =>
+  isFiniteNumber(value) && value >= 0 ? value : undefined;
 const booleanValue = (value: unknown): boolean | undefined => {
   if (typeof value === 'boolean') return value;
   if (value === 'true') return true;
@@ -58,7 +69,9 @@ const booleanValue = (value: unknown): boolean | undefined => {
   return undefined;
 };
 const dashPatternValue = (value: unknown): Array<number> | undefined =>
-  Array.isArray(value) && value.length > 0 && value.every(item => isFiniteNumber(item) && item >= 0) ? value : undefined;
+  Array.isArray(value) && value.length > 0 && value.every(item => isFiniteNumber(item) && item >= 0)
+    ? value
+    : undefined;
 const schemaValue =
   <T>(schema: { safeParse: (value: unknown) => { success: boolean; data?: T } }) =>
   (value: unknown): T | undefined => {
@@ -113,11 +126,18 @@ export const makeNumericNodeResolver = (
     const numeric = rows.map(row => resolveFieldPath(row, field)).filter(isFiniteNumber);
     let scale: ((value: number) => number) | undefined;
     if (channel.scale !== undefined || options.range !== undefined) {
-      let def: LinearScale = { type: PlotScale.Linear, name: channel.scale ?? `__${channelName}_${field}`, ...(options.range !== undefined ? { range: [options.range[0], options.range[1]] as [number, number] } : {}), ...(options.clamp !== undefined ? { clamp: options.clamp } : {}) };
+      let def: LinearScale = {
+        type: PlotScale.Linear,
+        name: channel.scale ?? `__${channelName}_${field}`,
+        ...(options.range !== undefined ? { range: [options.range[0], options.range[1]] as [number, number] } : {}),
+        ...(options.clamp !== undefined ? { clamp: options.clamp } : {}),
+      };
       if (channel.scale !== undefined) {
         const found = scaleByName.get(channel.scale);
-        if (!found) throw new Error(`lowerPlots: ${channelName} node channel references unknown scale "${channel.scale}"`);
-        if (!isBuiltinScaleOperation(found) || found.type !== PlotScale.Linear) throw new Error(`lowerPlots: ${channelName} node channel scale "${channel.scale}" must be a linear scale`);
+        if (!found)
+          throw new Error(`lowerPlots: ${channelName} node channel references unknown scale "${channel.scale}"`);
+        if (!isBuiltinScaleOperation(found) || found.type !== PlotScale.Linear)
+          throw new Error(`lowerPlots: ${channelName} node channel scale "${channel.scale}" must be a linear scale`);
         def = { ...found, range: found.range ?? def.range, clamp: found.clamp ?? def.clamp };
       }
       scale = resolveLinearScale(def, numeric, options.range ?? [0, 1]);
@@ -125,7 +145,14 @@ export const makeNumericNodeResolver = (
     const domain: [number, number] = numeric.length === 0 ? [0, 1] : [Math.min(...numeric), Math.max(...numeric)];
     const descriptor =
       channelName === 'opacity' && options.range !== undefined
-        ? { channel: 'opacity' as const, scaleType: PlotScale.Linear, domain, range: [options.range[0], options.range[1]], field, fieldType }
+        ? {
+            channel: 'opacity' as const,
+            scaleType: PlotScale.Linear,
+            domain,
+            range: [options.range[0], options.range[1]],
+            field,
+            fieldType,
+          }
         : undefined;
     return {
       resolver: row => {
@@ -145,7 +172,9 @@ export const makeNumericNodeResolver = (
  *   （显式 sqrt scale 引用或自动合成），domain 默认 [0, maxPositive]、range [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS]。
  *   边界：无正值 → 全 SIZE_MIN_RADIUS；单正值 → range 上界；负值 fail-loud。
  */
-export const resolveSizeChannel = (ctx: NodeChannelContext): ((mark: MarkOperation) => ChannelResolution<number> | undefined) => {
+export const resolveSizeChannel = (
+  ctx: NodeChannelContext,
+): ((mark: MarkOperation) => ChannelResolution<number> | undefined) => {
   const { node, rows, fieldTypes } = ctx;
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   return (mark: MarkOperation): ChannelResolution<number> | undefined => {
@@ -158,23 +187,44 @@ export const resolveSizeChannel = (ctx: NodeChannelContext): ((mark: MarkOperati
     const field = channel.value;
     const numeric = rows.map(row => resolveFieldPath(row, field)).filter(isFiniteNumber);
     if (numeric.some(value => value < 0)) {
-      throw new Error(`lowerPlots: size channel field "${field}" has negative values; size requires non-negative magnitudes`);
+      throw new Error(
+        `lowerPlots: size channel field "${field}" has negative values; size requires non-negative magnitudes`,
+      );
     }
     const positives = numeric.filter(value => value > 0);
     // 无正值（全 0 / 空）→ 退化为常量最小半径，不建 scale（避免退化 domain）；descriptor 仍给退化 domain 供 legend 不崩
     if (positives.length === 0) {
       return {
         resolver: () => SIZE_MIN_RADIUS,
-        descriptor: { channel: 'size', scaleType: PlotScale.Sqrt, domain: [0, 0], range: [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS], field, fieldType: fieldTypes.get(field) },
+        descriptor: {
+          channel: 'size',
+          scaleType: PlotScale.Sqrt,
+          domain: [0, 0],
+          range: [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS],
+          field,
+          fieldType: fieldTypes.get(field),
+        },
       };
     }
     const maxPositive = Math.max(...positives);
-    let def: SqrtScale = { type: PlotScale.Sqrt, name: channel.scale ?? `__size_${field}`, domain: [0, maxPositive], range: [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS] };
+    let def: SqrtScale = {
+      type: PlotScale.Sqrt,
+      name: channel.scale ?? `__size_${field}`,
+      domain: [0, maxPositive],
+      range: [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS],
+    };
     if (channel.scale !== undefined) {
       const found = scaleByName.get(channel.scale);
       if (!found) throw new Error(`lowerPlots: size channel references unknown scale "${channel.scale}"`);
-      if (!isBuiltinScaleOperation(found) || found.type !== PlotScale.Sqrt) throw new Error(`lowerPlots: size channel scale "${channel.scale}" must be a sqrt scale (size is a radius / area-perceptual channel)`);
-      def = { ...found, domain: found.domain ?? [0, maxPositive], range: found.range ?? [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS] };
+      if (!isBuiltinScaleOperation(found) || found.type !== PlotScale.Sqrt)
+        throw new Error(
+          `lowerPlots: size channel scale "${channel.scale}" must be a sqrt scale (size is a radius / area-perceptual channel)`,
+        );
+      def = {
+        ...found,
+        domain: found.domain ?? [0, maxPositive],
+        range: found.range ?? [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS],
+      };
     }
     const scale = resolveSqrtScale(def, numeric, [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS]);
     // domain/range 取已解析的 def（与逐行 scale 同源）：legend 梯度符号据此选代表值 + 算半径
@@ -185,7 +235,14 @@ export const resolveSizeChannel = (ctx: NodeChannelContext): ((mark: MarkOperati
         const value = resolveFieldPath(row, field);
         return isFiniteNumber(value) && value >= 0 ? scale(value) : undefined;
       },
-      descriptor: { channel: 'size', scaleType: PlotScale.Sqrt, domain: [...domain], range: [...range], field, fieldType: fieldTypes.get(field) },
+      descriptor: {
+        channel: 'size',
+        scaleType: PlotScale.Sqrt,
+        domain: [...domain],
+        range: [...range],
+        field,
+        fieldType: fieldTypes.get(field),
+      },
     };
   };
 };
@@ -195,7 +252,9 @@ export const resolveSizeChannel = (ctx: NodeChannelContext): ((mark: MarkOperati
  * @description 读取 mark 上结构化的 shape 字段。常量 value 直用（core / 注册 shape 名）；categorical 字段经 ordinal 映射到
  *   `PLOT_SHAPE_PALETTE`（复用 ordinal 数学：调色板换成 glyph 名，循环复用）。非 categorical 字段 fail-loud（形状是分类编码）。
  */
-export const resolveShapeChannel = (ctx: NodeChannelContext): ((mark: MarkOperation) => ChannelResolution<JsonValue> | undefined) => {
+export const resolveShapeChannel = (
+  ctx: NodeChannelContext,
+): ((mark: MarkOperation) => ChannelResolution<JsonValue> | undefined) => {
   const { rows, fieldTypes } = ctx;
   return (mark: MarkOperation): ChannelResolution<JsonValue> | undefined => {
     const channel = pickStyleChannel<string | IRShapeRef>(mark, 'shape');
@@ -275,7 +334,15 @@ const numericNodeChannels: {
   drawOpacity: defineNodeChannel<number>({
     channel: 'drawOpacity',
     output: { outputKind: 'number', range: [0.2, 1], clamp: true },
-    resolve: ctx => makeNumericNodeResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => pickStyleChannel<number>(mark, 'drawOpacity'), 'drawOpacity', { range: [0.2, 1], clamp: true }),
+    resolve: ctx =>
+      makeNumericNodeResolver(
+        ctx.node,
+        ctx.rows,
+        ctx.fieldTypes,
+        mark => pickStyleChannel<number>(mark, 'drawOpacity'),
+        'drawOpacity',
+        { range: [0.2, 1], clamp: true },
+      ),
     deliver: (node, value) => {
       node.drawOpacity = value;
     },
@@ -283,7 +350,14 @@ const numericNodeChannels: {
   rotate: defineNodeChannel<number>({
     channel: 'rotate',
     output: { outputKind: 'number', range: [0, 0] },
-    resolve: ctx => makeNumericNodeResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => pickStyleChannel<number>(mark, 'rotate'), 'rotate'),
+    resolve: ctx =>
+      makeNumericNodeResolver(
+        ctx.node,
+        ctx.rows,
+        ctx.fieldTypes,
+        mark => pickStyleChannel<number>(mark, 'rotate'),
+        'rotate',
+      ),
     deliver: (node, value) => {
       node.rotate = value;
     },
@@ -291,7 +365,14 @@ const numericNodeChannels: {
   padding: defineNodeChannel<number>({
     channel: 'padding',
     output: { outputKind: 'number', range: [0, 0] },
-    resolve: ctx => makeNumericNodeResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => pickStyleChannel<number>(mark, 'padding'), 'padding'),
+    resolve: ctx =>
+      makeNumericNodeResolver(
+        ctx.node,
+        ctx.rows,
+        ctx.fieldTypes,
+        mark => pickStyleChannel<number>(mark, 'padding'),
+        'padding',
+      ),
     deliver: (node, value) => {
       node.padding = value;
     },
@@ -299,7 +380,14 @@ const numericNodeChannels: {
   minimumSize: defineNodeChannel<number>({
     channel: 'minimumSize',
     output: { outputKind: 'number', range: [0, 0] },
-    resolve: ctx => makeNumericNodeResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => pickStyleChannel<number>(mark, 'minimumSize'), 'minimumSize'),
+    resolve: ctx =>
+      makeNumericNodeResolver(
+        ctx.node,
+        ctx.rows,
+        ctx.fieldTypes,
+        mark => pickStyleChannel<number>(mark, 'minimumSize'),
+        'minimumSize',
+      ),
     deliver: (node, value) => {
       node.minimumSize = value;
     },
@@ -307,7 +395,14 @@ const numericNodeChannels: {
   minimumWidth: defineNodeChannel<number>({
     channel: 'minimumWidth',
     output: { outputKind: 'number', range: [0, 0] },
-    resolve: ctx => makeNumericNodeResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => pickStyleChannel<number>(mark, 'minimumWidth'), 'minimumWidth'),
+    resolve: ctx =>
+      makeNumericNodeResolver(
+        ctx.node,
+        ctx.rows,
+        ctx.fieldTypes,
+        mark => pickStyleChannel<number>(mark, 'minimumWidth'),
+        'minimumWidth',
+      ),
     deliver: (node, value) => {
       node.minimumWidth = value;
     },
@@ -315,7 +410,14 @@ const numericNodeChannels: {
   minimumHeight: defineNodeChannel<number>({
     channel: 'minimumHeight',
     output: { outputKind: 'number', range: [0, 0] },
-    resolve: ctx => makeNumericNodeResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => pickStyleChannel<number>(mark, 'minimumHeight'), 'minimumHeight'),
+    resolve: ctx =>
+      makeNumericNodeResolver(
+        ctx.node,
+        ctx.rows,
+        ctx.fieldTypes,
+        mark => pickStyleChannel<number>(mark, 'minimumHeight'),
+        'minimumHeight',
+      ),
     deliver: (node, value) => {
       node.minimumHeight = value;
     },
@@ -323,7 +425,15 @@ const numericNodeChannels: {
   zIndex: defineNodeChannel<number>({
     channel: 'zIndex',
     output: { outputKind: 'number', range: [0, 0] },
-    resolve: ctx => makeNumericNodeResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => pickStyleChannel<number>(mark, 'zIndex'), 'zIndex', { integer: true }),
+    resolve: ctx =>
+      makeNumericNodeResolver(
+        ctx.node,
+        ctx.rows,
+        ctx.fieldTypes,
+        mark => pickStyleChannel<number>(mark, 'zIndex'),
+        'zIndex',
+        { integer: true },
+      ),
     deliver: (node, value) => {
       node.zIndex = value;
     },
@@ -347,67 +457,155 @@ const numericNodeChannels: {
 };
 
 const textAlignValues = new Set(['left', 'center', 'right']);
-const blendModeValues = new Set(['normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference', 'exclusion', 'hue', 'saturation', 'color', 'luminosity']);
+const blendModeValues = new Set([
+  'normal',
+  'multiply',
+  'screen',
+  'overlay',
+  'darken',
+  'lighten',
+  'color-dodge',
+  'color-burn',
+  'hard-light',
+  'soft-light',
+  'difference',
+  'exclusion',
+  'hue',
+  'saturation',
+  'color',
+  'luminosity',
+]);
 const shadowPresetValues = new Set(['none', 'sm', 'md', 'lg', 'xl', '2xl']);
 
 const directNodeChannels = {
   align: defineSimpleNodeChannel<'left' | 'center' | 'right'>(
     'align',
     { outputKind: 'symbol', palette: [...textAlignValues] },
-    value => (typeof value === 'string' && textAlignValues.has(value) ? (value as 'left' | 'center' | 'right') : undefined),
+    value =>
+      typeof value === 'string' && textAlignValues.has(value) ? (value as 'left' | 'center' | 'right') : undefined,
     (node, value) => {
       node.align = value;
     },
   ),
-  lineHeight: defineSimpleNodeChannel<number>('lineHeight', { outputKind: 'number', range: [0, 0] }, positiveNumber, (node, value) => {
-    node.lineHeight = value;
-  }),
-  maxTextWidth: defineSimpleNodeChannel<number>('maxTextWidth', { outputKind: 'number', range: [0, 0] }, positiveNumber, (node, value) => {
-    node.maxTextWidth = value;
-  }),
-  cornerRadius: defineSimpleNodeChannel<number>('cornerRadius', { outputKind: 'number', range: [0, 0] }, nonnegativeNumber, (node, value) => {
-    node.cornerRadius = value;
-  }),
-  scale: defineSimpleNodeChannel<number>('scale', { outputKind: 'number', range: [0, 0] }, positiveNumber, (node, value) => {
-    node.scale = value;
-  }),
-  xScale: defineSimpleNodeChannel<number>('xScale', { outputKind: 'number', range: [0, 0] }, positiveNumber, (node, value) => {
-    node.xScale = value;
-  }),
-  yScale: defineSimpleNodeChannel<number>('yScale', { outputKind: 'number', range: [0, 0] }, positiveNumber, (node, value) => {
-    node.yScale = value;
-  }),
-  innerXSep: defineSimpleNodeChannel<number>('innerXSep', { outputKind: 'number', range: [0, 0] }, nonnegativeNumber, (node, value) => {
-    node.innerXSep = value;
-  }),
-  innerYSep: defineSimpleNodeChannel<number>('innerYSep', { outputKind: 'number', range: [0, 0] }, nonnegativeNumber, (node, value) => {
-    node.innerYSep = value;
-  }),
-  outerSep: defineSimpleNodeChannel<number>('outerSep', { outputKind: 'number', range: [0, 0] }, nonnegativeNumber, (node, value) => {
-    node.outerSep = value;
-  }),
-  margin: defineSimpleNodeChannel<number>('margin', { outputKind: 'number', range: [0, 0] }, nonnegativeNumber, (node, value) => {
-    node.margin = value;
-  }),
+  lineHeight: defineSimpleNodeChannel<number>(
+    'lineHeight',
+    { outputKind: 'number', range: [0, 0] },
+    positiveNumber,
+    (node, value) => {
+      node.lineHeight = value;
+    },
+  ),
+  maxTextWidth: defineSimpleNodeChannel<number>(
+    'maxTextWidth',
+    { outputKind: 'number', range: [0, 0] },
+    positiveNumber,
+    (node, value) => {
+      node.maxTextWidth = value;
+    },
+  ),
+  cornerRadius: defineSimpleNodeChannel<number>(
+    'cornerRadius',
+    { outputKind: 'number', range: [0, 0] },
+    nonnegativeNumber,
+    (node, value) => {
+      node.cornerRadius = value;
+    },
+  ),
+  scale: defineSimpleNodeChannel<number>(
+    'scale',
+    { outputKind: 'number', range: [0, 0] },
+    positiveNumber,
+    (node, value) => {
+      node.scale = value;
+    },
+  ),
+  xScale: defineSimpleNodeChannel<number>(
+    'xScale',
+    { outputKind: 'number', range: [0, 0] },
+    positiveNumber,
+    (node, value) => {
+      node.xScale = value;
+    },
+  ),
+  yScale: defineSimpleNodeChannel<number>(
+    'yScale',
+    { outputKind: 'number', range: [0, 0] },
+    positiveNumber,
+    (node, value) => {
+      node.yScale = value;
+    },
+  ),
+  innerXSep: defineSimpleNodeChannel<number>(
+    'innerXSep',
+    { outputKind: 'number', range: [0, 0] },
+    nonnegativeNumber,
+    (node, value) => {
+      node.innerXSep = value;
+    },
+  ),
+  innerYSep: defineSimpleNodeChannel<number>(
+    'innerYSep',
+    { outputKind: 'number', range: [0, 0] },
+    nonnegativeNumber,
+    (node, value) => {
+      node.innerYSep = value;
+    },
+  ),
+  outerSep: defineSimpleNodeChannel<number>(
+    'outerSep',
+    { outputKind: 'number', range: [0, 0] },
+    nonnegativeNumber,
+    (node, value) => {
+      node.outerSep = value;
+    },
+  ),
+  margin: defineSimpleNodeChannel<number>(
+    'margin',
+    { outputKind: 'number', range: [0, 0] },
+    nonnegativeNumber,
+    (node, value) => {
+      node.margin = value;
+    },
+  ),
   dashed: defineSimpleNodeChannel<boolean>('dashed', { outputKind: 'boolean' }, booleanValue, (node, value) => {
     node.dashed = value;
   }),
   dotted: defineSimpleNodeChannel<boolean>('dotted', { outputKind: 'boolean' }, booleanValue, (node, value) => {
     node.dotted = value;
   }),
-  dashPattern: defineSimpleNodeChannel<Array<number>>('dashPattern', { outputKind: 'array' }, dashPatternValue, (node, value) => {
-    node.dashPattern = value;
-  }),
-  font: defineSimpleNodeChannel<JsonValue>('font', { outputKind: 'object' }, value => schemaValue<IRFont>(FontSchema)(value), (node, value) => {
-    node.font = value as IRFont;
-  }),
-  boundary: defineSimpleNodeChannel<JsonValue>('boundary', { outputKind: 'json' }, value => schemaValue<IRBoundary>(BoundarySchema)(value), (node, value) => {
-    node.boundary = value as IRBoundary;
-  }),
+  dashPattern: defineSimpleNodeChannel<Array<number>>(
+    'dashPattern',
+    { outputKind: 'array' },
+    dashPatternValue,
+    (node, value) => {
+      node.dashPattern = value;
+    },
+  ),
+  font: defineSimpleNodeChannel<JsonValue>(
+    'font',
+    { outputKind: 'object' },
+    value => schemaValue<IRFont>(FontSchema)(value),
+    (node, value) => {
+      node.font = value as IRFont;
+    },
+  ),
+  boundary: defineSimpleNodeChannel<JsonValue>(
+    'boundary',
+    { outputKind: 'json' },
+    value => schemaValue<IRBoundary>(BoundarySchema)(value),
+    (node, value) => {
+      node.boundary = value as IRBoundary;
+    },
+  ),
   shadow: defineSimpleNodeChannel<JsonValue>(
     'shadow',
     { outputKind: 'json' },
-    value => (typeof value === 'string' && shadowPresetValues.has(value) ? value : (DropShadowSchema.safeParse(value).success ? jsonValue(value) : undefined)),
+    value =>
+      typeof value === 'string' && shadowPresetValues.has(value)
+        ? value
+        : DropShadowSchema.safeParse(value).success
+          ? jsonValue(value)
+          : undefined,
     (node, value) => {
       node.shadow = value as never;
     },
@@ -486,4 +684,6 @@ export const BUILTIN_NODE_CHANNELS: BuiltinNodeChannels = {
 
 const eraseNodeChannelDefinition = (def: unknown): AnyChannelDefinition => def as AnyChannelDefinition;
 
-export const NODE_CHANNELS: ReadonlyArray<AnyChannelDefinition> = Object.values(BUILTIN_NODE_CHANNELS).map(def => eraseNodeChannelDefinition(def));
+export const NODE_CHANNELS: ReadonlyArray<AnyChannelDefinition> = Object.values(BUILTIN_NODE_CHANNELS).map(def =>
+  eraseNodeChannelDefinition(def),
+);

@@ -36,12 +36,12 @@ intersect.lineCircle(origin: Position, dir: Position, center: Position, radius: 
 intersect.circleCircle(cA: Position, rA: number, cB: Position, rB: number): Array<Position>;
 ```
 
-| Function | Returns / degeneracy |
-| --- | --- |
-| `lineLine` | the intersection `Position`; parallel or collinear → `null` |
+| Function         | Returns / degeneracy                                                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `lineLine`       | the intersection `Position`; parallel or collinear → `null`                                                                    |
 | `segmentSegment` | the crossing point; disjoint / parallel / collinear (incl. overlap) → `null` (no collinear-overlap interval in this first cut) |
-| `lineCircle` | 0 (disjoint) or 2 hits; tangency returns 2 coincident points |
-| `circleCircle` | 2 hits; disjoint / contained / coincident → `[]`; tangency returns 2 coincident points |
+| `lineCircle`     | 0 (disjoint) or 2 hits; tangency returns 2 coincident points                                                                   |
+| `circleCircle`   | 2 hits; disjoint / contained / coincident → `[]`; tangency returns 2 coincident points                                         |
 
 For ray ∩ arc use [`rayArc`](/kernel/packages/math/primitives) (in Primitives; returns parameters, not points).
 

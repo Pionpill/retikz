@@ -1,6 +1,8 @@
-import { type DataModel, defineFieldFormat } from '@retikz/plot';
-import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
+import type { DataModel } from '@retikz/plot';
 import type { FC } from 'react';
+
+import { defineFieldFormat } from '@retikz/plot';
+import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
 
 import { wanRows } from './processing-custom-format.data';
 
@@ -28,7 +30,14 @@ const model: DataModel = [
 ];
 
 const Demo: FC = () => (
-  <Plot data={wanRows} model={model} width={460} height={280} formatDefinitions={[wan]} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Plot
+    data={wanRows}
+    model={model}
+    width={460}
+    height={280}
+    formatDefinitions={[wan]}
+    style={{ maxWidth: '100%', height: 'auto' }}
+  >
     <PathMark x="month" y="revenue" order="month" />
     <PointMark x="month" y="revenue" />
     <Axis dimension="x" />

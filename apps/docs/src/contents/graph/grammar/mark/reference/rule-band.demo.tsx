@@ -1,6 +1,7 @@
+import type { FC } from 'react';
+
 import { Axis, Plot, PointMark, ReferenceMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
-import type { FC } from 'react';
 
 import { scores } from './rule-threshold.data';
 

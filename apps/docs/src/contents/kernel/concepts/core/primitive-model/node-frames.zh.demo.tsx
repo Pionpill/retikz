@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Rectangle } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Rectangle } from '@retikz/react';
 
 const CONTENT_WIDTH = 86;
 const CONTENT_HEIGHT = 34;
@@ -12,11 +13,30 @@ const OUTER_HEIGHT = INNER_HEIGHT + OUTER_SEP * 2;
 const FONT = { size: 10 }; // 与「模型解剖」图字号视觉一致（viewBox 更小，故缩小字号）
 
 const Demo: FC = () => (
-  <Layout width={480} height={272} viewBox={{ x: -185, y: -105, width: 370, height: 210 }} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout
+    width={480}
+    height={272}
+    viewBox={{ x: -185, y: -105, width: 370, height: 210 }}
+    style={{ maxWidth: '100%', height: 'auto' }}
+  >
     {/* 外框：内框 + outerSep（margin），自动连线端点的边界 */}
-    <Rectangle center={[0, 0]} width={OUTER_WIDTH} height={OUTER_HEIGHT} fill="none" stroke="gray" dashPattern={[4, 3]} />
+    <Rectangle
+      center={[0, 0]}
+      width={OUTER_WIDTH}
+      height={OUTER_HEIGHT}
+      fill="none"
+      stroke="gray"
+      dashPattern={[4, 3]}
+    />
     {/* 内框：内容盒 + innerSep，矩形节点的 shape */}
-    <Rectangle center={[0, 0]} width={INNER_WIDTH} height={INNER_HEIGHT} fill="none" stroke="currentColor" dashPattern={[4, 3]} />
+    <Rectangle
+      center={[0, 0]}
+      width={INNER_WIDTH}
+      height={INNER_HEIGHT}
+      fill="none"
+      stroke="currentColor"
+      dashPattern={[4, 3]}
+    />
     {/* 内容盒：文本测量出的基础尺寸 */}
     <Rectangle center={[0, 0]} width={CONTENT_WIDTH} height={CONTENT_HEIGHT} fill="lightgray" stroke="none" />
 

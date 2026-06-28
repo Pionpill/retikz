@@ -1,26 +1,25 @@
-import { FoldStepVia } from '../../schemas';
+import type { Transform } from '../../primitive';
 import type { FoldStepViaValue, IRBetweenPosition, IRNodeTarget, IRPosition, IRTarget } from '../../schemas';
 import type { IRBoundary } from '../../schemas';
-import type { Transform } from '../../primitive';
+import type { NameStack } from '../name-stack';
+import type { NodeLayout } from '../node';
+
 import { lerpPoint } from '../../geometry/edge';
 import { point } from '../../geometry/point';
+import { FoldStepVia } from '../../schemas';
 import { resolveAnchor, resolveEdgePoint } from '../anchor-cache';
-import type { NameStack } from '../name-stack';
 import { boundaryPointOf } from '../node';
-import type { NodeLayout } from '../node';
 import { resolvePosition } from '../position';
 import { applyTransformChain } from '../scope';
 
 /** target 是否对象形态 NodeTarget（`{ id, anchor?, offset? }`）；与 Position(array) / Polar / Offset(of) / Relative 区分（独有 `id`） */
-const isNodeTarget = (t: IRTarget): t is IRNodeTarget =>
-  typeof t === 'object' && !Array.isArray(t) && 'id' in t;
+const isNodeTarget = (t: IRTarget): t is IRNodeTarget => typeof t === 'object' && !Array.isArray(t) && 'id' in t;
 
 export const isAutoBoundaryTarget = (target: IRTarget): boolean =>
   isNodeTarget(target) && target.anchor === undefined && target.offset === undefined;
 
 /** target 是否 between 比例点（`{ between, t }`）；独有 `between` 字段 */
-const isBetween = (t: IRTarget): t is IRBetweenPosition =>
-  typeof t === 'object' && !Array.isArray(t) && 'between' in t;
+const isBetween = (t: IRTarget): t is IRBetweenPosition => typeof t === 'object' && !Array.isArray(t) && 'between' in t;
 
 /** 解析 NodeTarget 的 anchor（非 undefined）到世界坐标：命名 / 角度走 resolveAnchor（可选连接面），`{ side, t }` 恒走视觉形状（不传 boundary） */
 const resolveAnchorRef = (
@@ -72,7 +71,11 @@ export const refPointOfTarget = (
     return mid;
   }
   // relative/relativeAccumulate 已被 normalizeRelativeTargets 预解析；防御性守卫给 TS narrowing 用
-  if (typeof target === 'object' && !Array.isArray(target) && ('relative' in target || 'relativeAccumulate' in target)) {
+  if (
+    typeof target === 'object' &&
+    !Array.isArray(target) &&
+    ('relative' in target || 'relativeAccumulate' in target)
+  ) {
     return null;
   }
   const local = resolvePosition(target, nameStack, undefined, scopeChain);
@@ -81,11 +84,7 @@ export const refPointOfTarget = (
 };
 
 /** 折角中间点：`-|` → (curr.x, prev.y)；`|-` → (prev.x, curr.y) */
-export const cornerOf = (
-  prev: IRPosition,
-  curr: IRPosition,
-  via: FoldStepViaValue,
-): IRPosition =>
+export const cornerOf = (prev: IRPosition, curr: IRPosition, via: FoldStepViaValue): IRPosition =>
   via === FoldStepVia.HorizontalThenVertical ? [curr[0], prev[1]] : [prev[0], curr[1]];
 
 /**
@@ -116,7 +115,11 @@ export const clipForTarget = (
     return refPointOfTarget(target, nameStack, scopeChain);
   }
   // relative/relativeAccumulate 已被预解析；防御性守卫给 TS narrowing 用
-  if (typeof target === 'object' && !Array.isArray(target) && ('relative' in target || 'relativeAccumulate' in target)) {
+  if (
+    typeof target === 'object' &&
+    !Array.isArray(target) &&
+    ('relative' in target || 'relativeAccumulate' in target)
+  ) {
     return null;
   }
   const local = resolvePosition(target, nameStack, undefined, scopeChain);
@@ -125,8 +128,7 @@ export const clipForTarget = (
 };
 
 /** 两个 IRPosition 两分量精确相等（未 round） */
-export const samePoint = (a: IRPosition | null, b: IRPosition | null): boolean =>
-  !!a && !!b && point.equal(a, b);
+export const samePoint = (a: IRPosition | null, b: IRPosition | null): boolean => !!a && !!b && point.equal(a, b);
 
 /** 把 p 朝 target 方向移动 dist */
 export const shiftToward = (p: IRPosition, target: IRPosition, dist: number): IRPosition =>

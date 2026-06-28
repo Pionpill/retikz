@@ -1,7 +1,9 @@
-import { type FC, useEffect, useState } from 'react';
 import type { LowerTex } from '@retikz/core';
+import type { FC } from 'react';
+
 import { Layout, Node } from '@retikz/react';
 import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
+import { useEffect, useState } from 'react';
 
 const formula = String.raw`$$\int_0^1 x^2\,dx = \frac{1}{3}$$`;
 

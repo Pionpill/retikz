@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/schemas';
+
 import type { PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 import { close, ellipseArc, line, move } from '../helpers/path-command-factory';
 
 const silent = { onWarn: () => {} };
@@ -14,8 +16,7 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
 
 const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
 
-const path = (...steps: Array<unknown>): IR =>
-  scene([{ type: 'path', children: steps as never }]);
+const path = (...steps: Array<unknown>): IR => scene([{ type: 'path', children: steps as never }]);
 
 describe('部分 circlePath', () => {
   it('半圆（0→180, chord 默认）→ M, ellipseArc, close', () => {
@@ -55,10 +56,7 @@ describe('部分 circlePath', () => {
   });
 
   it('整圆（无角度）输出与改造前一致', () => {
-    const ir = path(
-      { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'circlePath', radius: 10 },
-    );
+    const ir = path({ type: 'step', kind: 'move', to: [0, 0] }, { type: 'step', kind: 'circlePath', radius: 10 });
     expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
       move([10, 0]),
       ellipseArc([0, 0], 10, 10, 0, 360),
@@ -185,9 +183,7 @@ describe('错误 / 回退（sugar+compile 而非 safeParse）', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'circlePath', radius: 10, startAngle: 0 },
     );
-    const cmds = findPathPrim(
-      compileToScene(ir, { onWarn: w => warnings.push(w.code) }).primitives,
-    ).commands;
+    const cmds = findPathPrim(compileToScene(ir, { onWarn: w => warnings.push(w.code) }).primitives).commands;
     expect(cmds).toEqual([move([10, 0]), ellipseArc([0, 0], 10, 10, 0, 360)]);
     expect(warnings).toContain('PARTIAL_ARC_NEEDS_BOTH_ANGLES');
   });
@@ -198,9 +194,7 @@ describe('错误 / 回退（sugar+compile 而非 safeParse）', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'circlePath', radius: 10, startAngle: 0, endAngle: 180, closed: 'closed' },
     );
-    const cmds = findPathPrim(
-      compileToScene(ir, { onWarn: w => warnings.push(w.code) }).primitives,
-    ).commands;
+    const cmds = findPathPrim(compileToScene(ir, { onWarn: w => warnings.push(w.code) }).primitives).commands;
     expect(cmds).toEqual([move([10, 0]), ellipseArc([0, 0], 10, 10, 0, 180), close()]);
     expect(warnings).toContain('PARTIAL_ARC_CLOSED_INVALID');
   });

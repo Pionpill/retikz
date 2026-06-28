@@ -1,6 +1,7 @@
 import type { FC } from 'react';
-import { Layout } from '@retikz/react';
+
 import { Axis, PathMark, Plot, Scale } from '@retikz/plot-react';
+import { Layout } from '@retikz/react';
 
 import { growth } from './plot-scale.data';
 

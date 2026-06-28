@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+
 import { Circle, Layout } from '@retikz/react';
 
 const Demo: FC = () => (

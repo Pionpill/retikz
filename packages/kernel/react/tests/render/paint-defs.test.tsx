@@ -1,8 +1,10 @@
+import type { PathPrim, RectPrim, SceneResource } from '@retikz/core';
+
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
-import type { PathPrim, RectPrim, SceneResource } from '@retikz/core';
-import { renderPrim } from '../../src/render/render-prim';
+
 import { PaintDefs } from '../../src/render/paint-defs';
+import { renderPrim } from '../../src/render/render-prim';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
@@ -175,9 +177,7 @@ describe('PaintDefs — 渐变物化', () => {
   });
 
   it('image：<pattern> 套 <image>，fit cover → slice', () => {
-    const [p] = childrenOf([
-      { kind: 'paint', id: 'paint-1', spec: { kind: 'image', href: 'a.png' } },
-    ]);
+    const [p] = childrenOf([{ kind: 'paint', id: 'paint-1', spec: { kind: 'image', href: 'a.png' } }]);
     expect(p.type).toBe('pattern');
     const img = (p.props.children as Array<AnyEl>)[0];
     expect(img.type).toBe('image');

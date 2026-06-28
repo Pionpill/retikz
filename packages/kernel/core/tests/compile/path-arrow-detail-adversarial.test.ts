@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/schemas';
-import { ArrowDetailSchema } from '../../src/schemas';
+
 import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { ArrowDetailSchema } from '../../src/schemas';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
   const p = prims.find((x): x is PathPrim => x.type === 'path');
@@ -17,8 +19,7 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
  */
 const markerPaint = (spec: ArrowEndSpec | undefined): string | undefined => {
   if (!spec) return undefined;
-  const pickFill = (f: MarkerFill | undefined): string | undefined =>
-    typeof f === 'string' ? f : undefined;
+  const pickFill = (f: MarkerFill | undefined): string | undefined => (typeof f === 'string' ? f : undefined);
   const walk = (prims: ReadonlyArray<MarkerPrimitive>): string | undefined => {
     for (const p of prims) {
       if (p.type === 'group') {
@@ -110,7 +111,7 @@ describe('adv 2: merge 语义 = 逐字段（不是"完全替换"）', () => {
     expect(markerPaint(path.arrowStart)).toBe('blue');
   });
 
-  it("end 完全空对象 + 顶层全填 → end 拿到全部顶层字段（不丢失）", () => {
+  it('end 完全空对象 + 顶层全填 → end 拿到全部顶层字段（不丢失）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -133,7 +134,7 @@ describe('adv 2: merge 语义 = 逐字段（不是"完全替换"）', () => {
     expect(markerPaint(path.arrowEnd)).toBe('red');
   });
 
-  it("end.shape 显式 override 顶层 shape（不被吞）", () => {
+  it('end.shape 显式 override 顶层 shape（不被吞）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -156,7 +157,7 @@ describe('adv 2: merge 语义 = 逐字段（不是"完全替换"）', () => {
 });
 
 describe('adv 3: scale × length / width 关系（compile 已乘进 markerWidth / markerHeight）', () => {
-  it("length=10 scale=1.5 → markerWidth = 10 × 1.5 = 15（compile 乘，scale/length 不再挂 spec）", () => {
+  it('length=10 scale=1.5 → markerWidth = 10 × 1.5 = 15（compile 乘，scale/length 不再挂 spec）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -176,7 +177,7 @@ describe('adv 3: scale × length / width 关系（compile 已乘进 markerWidth 
     expect(path.arrowEnd?.markerWidth).toBeCloseTo(15, 5);
   });
 
-  it("width=8 scale=2 → markerHeight = 8 × 2 = 16", () => {
+  it('width=8 scale=2 → markerHeight = 8 × 2 = 16', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -223,28 +224,25 @@ describe('adv 4: 空心 shape silent fill no-op（4 子象限：实/空 × 有/�
     },
   );
 
-  it.each(['normal', 'stealth', 'diamond', 'circle'] as const)(
-    "实心 %s + fill='red' → fill 保留进 marker",
-    shape => {
-      const ir: IR = {
-        version: 1,
-        type: 'scene',
-        children: [
-          {
-            type: 'path',
-            arrow: '->',
-            arrowDetail: { shape, fill: 'red' },
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'line', to: [10, 0] },
-            ],
-          },
-        ],
-      };
-      const path = findPathPrim(compileToScene(ir).primitives);
-      expect(markerPaint(path.arrowEnd)).toBe('red');
-    },
-  );
+  it.each(['normal', 'stealth', 'diamond', 'circle'] as const)("实心 %s + fill='red' → fill 保留进 marker", shape => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '->',
+          arrowDetail: { shape, fill: 'red' },
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).primitives);
+    expect(markerPaint(path.arrowEnd)).toBe('red');
+  });
 
   it("空心 shape + end.fill='red'（end 子对象上写）也被丢", () => {
     const ir: IR = {
@@ -267,7 +265,7 @@ describe('adv 4: 空心 shape silent fill no-op（4 子象限：实/空 × 有/�
     expect(markerPaint(path.arrowEnd)).not.toBe('red');
   });
 
-  it("起末异形：start 实心 + end 空心，各端 fill 行为独立", () => {
+  it('起末异形：start 实心 + end 空心，各端 fill 行为独立', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -347,7 +345,7 @@ describe('adv 6: schema 边界（NaN / Infinity / 字符串数字 / boolean）',
   it('scale=NaN 拒绝', () => {
     expect(ArrowDetailSchema.safeParse({ scale: NaN }).success).toBe(false);
   });
-  it('scale=Infinity 拒绝（.finite() 守 IR JSON 可序列化）', () => {
+  it('scale=Infinity 拒绝（number schema 守 IR JSON 可序列化）', () => {
     expect(ArrowDetailSchema.safeParse({ scale: Number.POSITIVE_INFINITY }).success).toBe(false);
   });
   it('opacity=NaN 拒绝（min(0) 检查 NaN 失败）', () => {
@@ -416,7 +414,7 @@ describe('adv 7: arrowDetail 与 arrow direction 交互（单端配置不漏到�
     expect(path.arrowEnd).toBeUndefined();
   });
 
-  it("arrow 缺省（undefined）+ arrowDetail={...} → 两端都不挂（arrow 主导）", () => {
+  it('arrow 缺省（undefined）+ arrowDetail={...} → 两端都不挂（arrow 主导）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',

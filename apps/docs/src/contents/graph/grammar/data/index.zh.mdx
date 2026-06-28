@@ -13,14 +13,14 @@ description: 数据是图形语法的首要成员。数据层把外部数据源�
 
 编译时，Plot 会先收集当前配置真正用到的字段，再把外部行整理成 canonical 行（规范化行：字段对齐、解析、类型归一后写回逻辑字段名的标准行）。后续 transform、scale、mark 和 locator 都读取这份规范化结果，而不是反复直接读原始数据。
 
-| 步骤 | 做什么 | 主要配置 |
-| --- | --- | --- |
-| 数据引用 | 选择当前图使用哪份外部数据，数据本身不进入 IR | `<Plot data>` / `data.reference` |
-| 字段契约 | 确定逻辑字段名、类型、分类顺序与声明式格式；未声明时按样本推断 | `model` |
-| 源字段对齐 | 把逻辑字段映射到真实数据路径，支持字段改名与嵌套路径 | `fieldMap` / `fieldMaps` |
-| 解析与归一化 | 按 `resolveField`、`format`、内置规则解析值，并写回逻辑字段名 | `resolveField` / `format` / 字段类型 |
-| 数据校验 | 对参与字段做抽样或全量校验，决定非法值跳过还是报错 | `validateData` / `invalid` |
-| 通道消费 | mark 的 `x` / `y` / `color` / `size` / `text` 等通道读取 canonical 值 | mark props / `encoding` |
+| 步骤         | 做什么                                                                | 主要配置                             |
+| ------------ | --------------------------------------------------------------------- | ------------------------------------ |
+| 数据引用     | 选择当前图使用哪份外部数据，数据本身不进入 IR                         | `<Plot data>` / `data.reference`     |
+| 字段契约     | 确定逻辑字段名、类型、分类顺序与声明式格式；未声明时按样本推断        | `model`                              |
+| 源字段对齐   | 把逻辑字段映射到真实数据路径，支持字段改名与嵌套路径                  | `fieldMap` / `fieldMaps`             |
+| 解析与归一化 | 按 `resolveField`、`format`、内置规则解析值，并写回逻辑字段名         | `resolveField` / `format` / 字段类型 |
+| 数据校验     | 对参与字段做抽样或全量校验，决定非法值跳过还是报错                    | `validateData` / `invalid`           |
+| 通道消费     | mark 的 `x` / `y` / `color` / `size` / `text` 等通道读取 canonical 值 | mark props / `encoding`              |
 
 `model`、`format` 会随 PlotSpec 持久化；`fieldMap` 是可序列化的 lowering 选项，按数据集 reference 注入；`resolveField` 这类函数只在运行时参与编译，不进入 IR。需要自定义字段格式或字段解析时，见[自定义数据](/graph/grammar/extend/data)。
 

@@ -1,4 +1,9 @@
 import { describe, expect, it } from 'vitest';
+
+import { buildIR } from '../../src/kernel/builder';
+import { Path } from '../../src/kernel/Path';
+import { Step } from '../../src/kernel/Step';
+import { polarXY, regularPolygonVertices, starVertices } from '../../src/sugar/_shared';
 import { Arc } from '../../src/sugar/Arc';
 import { Circle } from '../../src/sugar/Circle';
 import { Ellipse } from '../../src/sugar/Ellipse';
@@ -7,10 +12,6 @@ import { Rectangle } from '../../src/sugar/Rectangle';
 import { RegularPolygon } from '../../src/sugar/RegularPolygon';
 import { Sector } from '../../src/sugar/Sector';
 import { Star } from '../../src/sugar/Star';
-import { polarXY, regularPolygonVertices, starVertices } from '../../src/sugar/_shared';
-import { Path } from '../../src/kernel/Path';
-import { Step } from '../../src/kernel/Step';
-import { buildIR } from '../../src/kernel/builder';
 
 const ir = (jsx: React.ReactNode) => buildIR(jsx);
 
@@ -128,8 +129,7 @@ describe('Ellipse equivalence', () => {
 
   it('partial ellipse can close as sector', () => {
     expect(
-      ir(<Ellipse center={[0, 0]} radiusX={15} radiusY={10} startAngle={0} endAngle={90} closed="sector" />)
-        .children,
+      ir(<Ellipse center={[0, 0]} radiusX={15} radiusY={10} startAngle={0} endAngle={90} closed="sector" />).children,
     ).toEqual(
       ir(
         <Path>
@@ -202,9 +202,7 @@ describe('Sector equivalence', () => {
   });
 
   it('elliptical filled wedge uses ellipsePath sector close', () => {
-    expect(
-      ir(<Sector center={[0, 0]} radiusX={15} radiusY={10} startAngle={0} endAngle={90} />).children,
-    ).toEqual(
+    expect(ir(<Sector center={[0, 0]} radiusX={15} radiusY={10} startAngle={0} endAngle={90} />).children).toEqual(
       ir(
         <Path>
           <Step kind="move" to={[0, 0]} />
@@ -227,9 +225,7 @@ describe('Sector equivalence', () => {
 
   it('donut sector', () => {
     const c: [number, number] = [0, 0];
-    expect(
-      ir(<Sector center={c} radius={60} innerRadius={30} startAngle={0} endAngle={90} />).children,
-    ).toEqual(
+    expect(ir(<Sector center={c} radius={60} innerRadius={30} startAngle={0} endAngle={90} />).children).toEqual(
       ir(
         <Path>
           <Step kind="move" to={polarXY(c, 60, 60, 0)} />
@@ -278,12 +274,30 @@ describe('Grid equivalence', () => {
     expect(ir(<Grid corner1={[0, 0]} corner2={[2, 2]} step={1} />).children).toEqual(
       ir(
         <>
-          <Path><Step kind="move" to={[0, 0]} /><Step kind="line" to={[0, 2]} /></Path>
-          <Path><Step kind="move" to={[1, 0]} /><Step kind="line" to={[1, 2]} /></Path>
-          <Path><Step kind="move" to={[2, 0]} /><Step kind="line" to={[2, 2]} /></Path>
-          <Path><Step kind="move" to={[0, 0]} /><Step kind="line" to={[2, 0]} /></Path>
-          <Path><Step kind="move" to={[0, 1]} /><Step kind="line" to={[2, 1]} /></Path>
-          <Path><Step kind="move" to={[0, 2]} /><Step kind="line" to={[2, 2]} /></Path>
+          <Path>
+            <Step kind="move" to={[0, 0]} />
+            <Step kind="line" to={[0, 2]} />
+          </Path>
+          <Path>
+            <Step kind="move" to={[1, 0]} />
+            <Step kind="line" to={[1, 2]} />
+          </Path>
+          <Path>
+            <Step kind="move" to={[2, 0]} />
+            <Step kind="line" to={[2, 2]} />
+          </Path>
+          <Path>
+            <Step kind="move" to={[0, 0]} />
+            <Step kind="line" to={[2, 0]} />
+          </Path>
+          <Path>
+            <Step kind="move" to={[0, 1]} />
+            <Step kind="line" to={[2, 1]} />
+          </Path>
+          <Path>
+            <Step kind="move" to={[0, 2]} />
+            <Step kind="line" to={[2, 2]} />
+          </Path>
         </>,
       ).children,
     );
@@ -303,7 +317,9 @@ describe('Grid equivalence', () => {
 
   it('includeBoundary 在不整除时补一条边界线', () => {
     expect(gridLineCount(<Grid corner1={[0, 0]} corner2={[2.5, 2]} step={1} showHorizontal={false} />)).toBe(3); // x=0,1,2
-    expect(gridLineCount(<Grid corner1={[0, 0]} corner2={[2.5, 2]} step={1} showHorizontal={false} includeBoundary />)).toBe(4); // + x=2.5
+    expect(
+      gridLineCount(<Grid corner1={[0, 0]} corner2={[2.5, 2]} step={1} showHorizontal={false} includeBoundary />),
+    ).toBe(4); // + x=2.5
   });
 });
 
@@ -370,9 +386,7 @@ describe('Star equivalence', () => {
         <Step kind="cycle" />
       </Path>,
     );
-    expect(ir(<Star center={[0, 0]} outerRadius={30} innerRadius={12} points={5} />).children).toEqual(
-      hand.children,
-    );
+    expect(ir(<Star center={[0, 0]} outerRadius={30} innerRadius={12} points={5} />).children).toEqual(hand.children);
   });
 
   it('points=6（顶点数随 points 变：2×points）', () => {
@@ -387,9 +401,7 @@ describe('Star equivalence', () => {
         <Step kind="cycle" />
       </Path>,
     );
-    expect(ir(<Star center={[0, 0]} outerRadius={30} innerRadius={12} points={6} />).children).toEqual(
-      hand.children,
-    );
+    expect(ir(<Star center={[0, 0]} outerRadius={30} innerRadius={12} points={6} />).children).toEqual(hand.children);
   });
 
   it('显式 rotate 只烘焙进顶点、不再透传给 Path（不二次旋转）', () => {
@@ -417,7 +429,14 @@ describe('Star equivalence', () => {
         innerRadius={12}
         points={5}
         animations={[
-          { property: 'opacity', duration: 100, keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }] },
+          {
+            property: 'opacity',
+            duration: 100,
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 1 },
+            ],
+          },
         ]}
       />,
     );

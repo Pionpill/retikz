@@ -16,18 +16,16 @@ scale 按 **family 两族**判别，产出契约不同：
 
 <ComponentPreview name="scale-custom" sourceFiles={['scale-custom.data.ts']} />
 
-<p className="text-sm text-muted-foreground">自定义 `brand` channel scale：分类 `tier` → 固定品牌色板，图例按 `legendForm: 'swatch'` 渲染色块。</p>
+<p className="text-sm text-muted-foreground">
+  自定义 `brand` channel scale：分类 `tier` → 固定品牌色板，图例按 `legendForm: 'swatch'` 渲染色块。
+</p>
 
 ## 自定义配色
 
 自定义命名配色单独走 `colorSchemes`（`name → interpolator` 纯函数表，不进 IR；IR 只存 scheme 名串）。内置 / 离散化色阶都能引用自定义 scheme 名，求值期先查内置、再查 `colorSchemes`，未注册即报错：
 
 ```tsx
-<Plot
-  spec={spec}
-  data={datasets}
-  colorSchemes={{ brand: t => `hsl(210, 80%, ${100 - t * 60}%)` }}
-/>;
+<Plot spec={spec} data={datasets} colorSchemes={{ brand: t => `hsl(210, 80%, ${100 - t * 60}%)` }} />
 ```
 
 几条约束：
@@ -36,4 +34,7 @@ scale 按 **family 两族**判别，产出契约不同：
 - 自定义 scale **不参与 React 字段类型自动派生**（避免歧义），只在 spec 显式引用。
 - scale `type` 字段排除内置判别串：含自定义 type 的 spec 仍能过 `PlotSpecSchema.parse` 并 JSON round-trip 不丢字段，配置精确校验延到 lowering（按 definition 的 schema）。
 
-<ComponentAlert title="React 声明式 Scale 暂不接自定义 type" description="本轮自定义 scale 经程序化路径完整可用——Plot 的 spec / scaleDefinitions / colorSchemes props，或 vanilla renderPlot(spec, data, options)。声明式 Scale 组件的自定义 type + 扁平 config 透传按 ADR-07 staged，后续单列。" />
+<ComponentAlert
+  title="React 声明式 Scale 暂不接自定义 type"
+  description="本轮自定义 scale 经程序化路径完整可用——Plot 的 spec / scaleDefinitions / colorSchemes props，或 vanilla renderPlot(spec, data, options)。声明式 Scale 组件的自定义 type + 扁平 config 透传按 ADR-07 staged，后续单列。"
+/>

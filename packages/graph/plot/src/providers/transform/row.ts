@@ -1,6 +1,14 @@
 import { isFiniteNumber } from '@retikz/math';
+
+import {
+  type DeriveIntervalTransform,
+  type ExternalRow,
+  type JitterTransform,
+  type NormalizeTransform,
+  type SortTransform,
+  type StackTransform,
+} from '../../schemas';
 import { compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../data';
-import { type DeriveIntervalTransform, type ExternalRow, type JitterTransform, type NormalizeTransform, type SortTransform, type StackTransform } from '../../schemas';
 
 /** 默认堆叠下界 / 上界输出字段名，对齐 IntervalMark 的 y0Field / y1Field 默认值。 */
 export const DEFAULT_START_FIELD = 'y0';
@@ -31,7 +39,8 @@ export const applyStack = (rows: Array<ExternalRow>, operation: StackTransform):
   const endField = operation.endField ?? DEFAULT_END_FIELD;
   const offset: StackOffset = operation.offset ?? 'zero';
   const groupByField = operation.groupBy;
-  const seriesOrder = groupByField === undefined ? [] : inferCategoryDomain(rows.map(row => resolveFieldPath(row, groupByField)));
+  const seriesOrder =
+    groupByField === undefined ? [] : inferCategoryDomain(rows.map(row => resolveFieldPath(row, groupByField)));
   const seriesRank = new Map(seriesOrder.map((series, index) => [series, index] as const));
   const rankOf = (row: ExternalRow): number => {
     if (groupByField === undefined) return 0;
@@ -113,7 +122,9 @@ export const applyNormalize = (rows: Array<ExternalRow>, operation: NormalizeTra
   const scale = operation.basis === 'percent' ? 100 : 1;
   const sums = new Map<string, number>();
   const keyOf = (row: ExternalRow): string =>
-    operation.groupBy === undefined ? '' : JSON.stringify(operation.groupBy.map(field => resolveFieldPath(row, field) ?? null));
+    operation.groupBy === undefined
+      ? ''
+      : JSON.stringify(operation.groupBy.map(field => resolveFieldPath(row, field) ?? null));
   for (const row of rows) {
     const value = resolveFieldPath(row, operation.field);
     const segment = isFiniteNumber(value) ? value : 0;
@@ -133,13 +144,18 @@ export const applyNormalize = (rows: Array<ExternalRow>, operation: NormalizeTra
  * derive-interval：每行独立算 [start, end]，保持行数。
  * @description 两字段模式 startFrom + endFrom 优先；否则 from 模式派生 [baseline, fromValue]。
  */
-export const applyDeriveInterval = (rows: Array<ExternalRow>, operation: DeriveIntervalTransform): Array<ExternalRow> => {
+export const applyDeriveInterval = (
+  rows: Array<ExternalRow>,
+  operation: DeriveIntervalTransform,
+): Array<ExternalRow> => {
   const startField = operation.startField ?? DEFAULT_DERIVE_START_FIELD;
   const endField = operation.endField ?? DEFAULT_DERIVE_END_FIELD;
   const baseline = operation.baseline ?? 0;
   const twoField = operation.startFrom !== undefined && operation.endFrom !== undefined;
   if (!twoField && operation.from === undefined) {
-    throw new Error('lowerPlots: derive-interval transform requires either `from` (baseline->value) or both `startFrom` and `endFrom`');
+    throw new Error(
+      'lowerPlots: derive-interval transform requires either `from` (baseline->value) or both `startFrom` and `endFrom`',
+    );
   }
   const finiteOr = (value: unknown, fallback: number): number => (isFiniteNumber(value) ? value : fallback);
   return rows.map(row => {

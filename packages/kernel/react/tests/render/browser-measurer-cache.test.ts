@@ -7,9 +7,7 @@ describe('browser-measurer 模块级 canvas 单例', () => {
     // mock getContext → null：避免 jsdom 未实现 canvas 2d 触发 stderr 噪音；
     // browserMeasurer 见 ctx=null 走 fallbackMeasurer，但模块级 canvas 仍 createElement 一次，
     // 后续调用复用同一 canvas 不再 createElement——这正是要验证的单例契约
-    const getContextSpy = vi
-      .spyOn(HTMLCanvasElement.prototype, 'getContext')
-      .mockReturnValue(null);
+    const getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
     const createElementSpy = vi.spyOn(document, 'createElement');
     try {
       const { browserMeasurer } = await import('../../src/render/browser-measurer');

@@ -1,7 +1,8 @@
-import type { FC } from 'react';
-import { Layout } from '@retikz/react';
 import type { DataModel } from '@retikz/plot';
+import type { FC } from 'react';
+
 import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
+import { Layout } from '@retikz/react';
 
 import { cleanRows, dirtyRows } from './processing-invalid.data';
 

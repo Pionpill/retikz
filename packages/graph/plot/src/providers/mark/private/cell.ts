@@ -1,7 +1,11 @@
 import { type IRNode, type IRNodeDefault, type IRScope } from '@retikz/core';
-import { type CellGeometry, type ChannelValueResolver, cellGeometryAnchor } from '../../../contract';
+
+import type { CellGeometry, ChannelValueResolver } from '../../../contract';
+import type { MarkPaint } from '../shared';
+
+import { cellGeometryAnchor } from '../../../contract';
 import { type Mark } from '../../../schemas';
-import { DEFAULT_FILL, type MarkPaint, colorGroupedScope, constantNodeStyleOverrides } from '../shared';
+import { colorGroupedScope, constantNodeStyleOverrides, DEFAULT_FILL } from '../shared';
 
 /** 柱 node 样式（rectangle + padding0 + 无描边，使 minimumWidth/Height 即真实柱尺寸）。 */
 const barStyle = (fill: MarkPaint, stroke: MarkPaint | undefined): IRNodeDefault => ({
@@ -23,7 +27,10 @@ const shapeStyle = (fill: MarkPaint, stroke: MarkPaint | undefined): IRNodeDefau
 });
 
 /** 某 geometry kind 对应的 node 样式工厂（rect → 矩形 barStyle；sector / contour → shapeStyle）。 */
-export const styleForGeometry = (kind: CellGeometry['kind'], mark: Mark): ((fill: MarkPaint, stroke?: MarkPaint) => IRNodeDefault) => {
+export const styleForGeometry = (
+  kind: CellGeometry['kind'],
+  mark: Mark,
+): ((fill: MarkPaint, stroke?: MarkPaint) => IRNodeDefault) => {
   const base = kind === 'rect' ? barStyle : shapeStyle;
   return (fill, stroke) => ({ ...base(fill, stroke), ...constantNodeStyleOverrides(mark) });
 };

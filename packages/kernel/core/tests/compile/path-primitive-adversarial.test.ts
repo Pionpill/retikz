@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/schemas';
+
 import type { PathCommand, PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 import { close, line, move } from '../helpers/path-command-factory';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
@@ -35,15 +37,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
   });
 
   it('commands 数组只包含 move/line/quad/cubic/arc/ellipseArc/close 七种 kind', () => {
-    const allKinds = new Set([
-      'move',
-      'line',
-      'quad',
-      'cubic',
-      'arc',
-      'ellipseArc',
-      'close',
-    ]);
+    const allKinds = new Set(['move', 'line', 'quad', 'cubic', 'arc', 'ellipseArc', 'close']);
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -180,7 +174,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [1.234567, 2.345678] },
-            { type: 'step', kind: 'line', to: [3.456789, 4.567890] },
+            { type: 'step', kind: 'line', to: [3.456789, 4.56789] },
           ],
         },
       ],
@@ -215,9 +209,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
       ],
     };
     const p = findPathPrim(compileToScene(ir).primitives)!;
-    const quad = p.commands.find(
-      (c): c is Extract<PathCommand, { kind: 'quad' }> => c.kind === 'quad',
-    );
+    const quad = p.commands.find((c): c is Extract<PathCommand, { kind: 'quad' }> => c.kind === 'quad');
     expect(quad).toBeDefined();
     expect(quad!.control).toEqual([5, 5]);
     expect(quad!.to).toEqual([10, 0]);
@@ -238,9 +230,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
       ],
     };
     const p = findPathPrim(compileToScene(ir).primitives)!;
-    const cubic = p.commands.find(
-      (c): c is Extract<PathCommand, { kind: 'cubic' }> => c.kind === 'cubic',
-    );
+    const cubic = p.commands.find((c): c is Extract<PathCommand, { kind: 'cubic' }> => c.kind === 'cubic');
     expect(cubic).toBeDefined();
   });
 });
@@ -250,9 +240,7 @@ describe('GroupPrim.transforms：结构化形态约束', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [
-        { type: 'node', id: 'A', position: [10, 20], text: 'A', rotate: 30 },
-      ],
+      children: [{ type: 'node', id: 'A', position: [10, 20], text: 'A', rotate: 30 }],
     };
     const scene = compileToScene(ir);
     const grp = scene.primitives.find(p => p.type === 'group');
@@ -312,7 +300,7 @@ describe('GroupPrim.transforms：结构化形态约束', () => {
     }
   });
 
-  it("sloped label group 的 transforms 含 rotate kind（绕标签锚点）", () => {
+  it('sloped label group 的 transforms 含 rotate kind（绕标签锚点）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -343,16 +331,12 @@ describe('交互：rotated node 与 path 在 rotated parent 中', () => {
     const irNoRot: IR = {
       version: 1,
       type: 'scene',
-      children: [
-        { type: 'node', id: 'A', position: [10, 20], shape: 'diamond' },
-      ],
+      children: [{ type: 'node', id: 'A', position: [10, 20], shape: 'diamond' }],
     };
     const irRot: IR = {
       version: 1,
       type: 'scene',
-      children: [
-        { type: 'node', id: 'A', position: [10, 20], shape: 'diamond', rotate: 45 },
-      ],
+      children: [{ type: 'node', id: 'A', position: [10, 20], shape: 'diamond', rotate: 45 }],
     };
     const noRotPath = findPathPrim(compileToScene(irNoRot).primitives);
     const rotScene = compileToScene(irRot);
@@ -419,11 +403,6 @@ describe('边界 / 错误路径', () => {
       ],
     };
     const p = findPathPrim(compileToScene(ir).primitives)!;
-    expect(p.commands).toEqual([
-      move([0, 0]),
-      line([10, 0]),
-      line([10, 10]),
-      close(),
-    ]);
+    expect(p.commands).toEqual([move([0, 0]), line([10, 0]), line([10, 10]), close()]);
   });
 });

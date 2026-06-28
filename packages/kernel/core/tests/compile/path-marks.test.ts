@@ -6,19 +6,16 @@
  *   段的切线方向正确（marks 定向所依赖的机器），当前应通过。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import type { ArrowDefinition } from '../../src/contract/arrow';
+
 import type { IR, IRPath, ScenePrimitive } from '../../src';
-import {
-  arcSegmentSample,
-  cubicSegmentSample,
-  lineSegmentSample,
-} from '../../src/geometry/segment';
+import type { ArrowDefinition } from '../../src/contract/arrow';
+
+import { compileToScene } from '../../src/compile/compile';
+import { arcSegmentSample, cubicSegmentSample, lineSegmentSample } from '../../src/geometry/segment';
 import { flattenPrims } from '../helpers/flatten';
 
 /** flatten 后非 group 的叶子 primitive 数（marker 产出体现为新增叶子 / group） */
-const leafCount = (prims: ReadonlyArray<ScenePrimitive>): number =>
-  flattenPrims(prims).length;
+const leafCount = (prims: ReadonlyArray<ScenePrimitive>): number => flattenPrims(prims).length;
 
 const linePathIR = (marks?: IRPath['marks']): IR => ({
   version: 1,
@@ -39,19 +36,13 @@ describe('marks → 中段 marker primitive', () => {
   it('单个中点 mark 比无 mark 多产 primitive', () => {
     const without = leafCount(compileToScene(linePathIR()).primitives);
     const withMark = leafCount(
-      compileToScene(
-        linePathIR([{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }]),
-      ).primitives,
+      compileToScene(linePathIR([{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }])).primitives,
     );
     expect(withMark).toBeGreaterThan(without);
   });
 
   it('两个 mark 比一个 mark 再多产 primitive', () => {
-    const one = leafCount(
-      compileToScene(
-        linePathIR([{ pos: 0.5, mark: { kind: 'arrow' } }]),
-      ).primitives,
-    );
+    const one = leafCount(compileToScene(linePathIR([{ pos: 0.5, mark: { kind: 'arrow' } }])).primitives);
     const two = leafCount(
       compileToScene(
         linePathIR([
@@ -83,9 +74,7 @@ describe('marks → 中段 marker primitive', () => {
       },
     };
     const without = leafCount(compileToScene(linePathIR()).primitives);
-    const withMark = leafCount(
-      compileToScene(ir, { arrows: customArrow }).primitives,
-    );
+    const withMark = leafCount(compileToScene(ir, { arrows: customArrow }).primitives);
     expect(withMark).toBeGreaterThan(without);
   });
 });

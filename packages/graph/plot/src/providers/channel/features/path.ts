@@ -1,9 +1,22 @@
+import type { IRArrowDetail, IRPathScale, JsonValue } from '@retikz/core';
+
+import { ArrowDetailSchema, DropShadowSchema, JsonValueSchema, PathScaleSchema } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
-import { ArrowDetailSchema, DropShadowSchema, type IRArrowDetail, type IRPathScale, type JsonValue, JsonValueSchema, PathScaleSchema } from '@retikz/core';
-import { type AnyChannelDefinition, type ChannelResolution, type PathChannelDefinition, definePathChannel, isBuiltinScaleOperation } from '../../../contract';
+
+import type { AnyChannelDefinition, ChannelResolution, PathChannelDefinition } from '../../../contract';
+import type {
+  ExternalRow,
+  LinearScale,
+  MarkOperation,
+  PlotFieldTypeMap,
+  PlotSpec,
+  ScaledMarkValueType,
+} from '../../../schemas';
+
+import { definePathChannel, isBuiltinScaleOperation } from '../../../contract';
+import { PlotFieldType, PlotScale } from '../../../schemas';
 import { resolveFieldPath } from '../../data';
 import { resolveLinearScale } from '../../scale';
-import { type ExternalRow, type LinearScale, type MarkOperation, PlotFieldType, type PlotFieldTypeMap, PlotScale, type PlotSpec, type ScaledMarkValueType } from '../../../schemas';
 import { makeMarkValueResolver } from '../shared';
 import { OPACITY_MIN, STROKE_WIDTH_MAX, STROKE_WIDTH_MIN } from './node';
 
@@ -23,12 +36,16 @@ const pickStyleChannel = <T>(mark: MarkOperation, channel: string): ScaledMarkVa
   return isScaledMarkValue<T>(value) ? value : undefined;
 };
 
-const jsonValue = (value: unknown): JsonValue | undefined => (JsonValueSchema.safeParse(value).success ? (value as JsonValue) : undefined);
+const jsonValue = (value: unknown): JsonValue | undefined =>
+  JsonValueSchema.safeParse(value).success ? (value as JsonValue) : undefined;
 const finiteNumber = (value: unknown): number | undefined => (isFiniteNumber(value) ? value : undefined);
-const opacityNumber = (value: unknown): number | undefined => (isFiniteNumber(value) && value >= 0 && value <= 1 ? value : undefined);
+const opacityNumber = (value: unknown): number | undefined =>
+  isFiniteNumber(value) && value >= 0 && value <= 1 ? value : undefined;
 const integerNumber = (value: unknown): number | undefined => (isFiniteNumber(value) ? Math.trunc(value) : undefined);
 const dashPatternValue = (value: unknown): Array<number> | undefined =>
-  Array.isArray(value) && value.length > 0 && value.every(item => isFiniteNumber(item) && item >= 0) ? value : undefined;
+  Array.isArray(value) && value.length > 0 && value.every(item => isFiniteNumber(item) && item >= 0)
+    ? value
+    : undefined;
 
 const defineSimplePathChannel = <T extends JsonValue>(
   channel: string,
@@ -78,8 +95,10 @@ const makeNumericPathResolver = (
       };
       if (channel.scale !== undefined) {
         const found = scaleByName.get(channel.scale);
-        if (!found) throw new Error(`lowerPlots: ${channelName} path channel references unknown scale "${channel.scale}"`);
-        if (!isBuiltinScaleOperation(found) || found.type !== PlotScale.Linear) throw new Error(`lowerPlots: ${channelName} path channel scale "${channel.scale}" must be a linear scale`);
+        if (!found)
+          throw new Error(`lowerPlots: ${channelName} path channel references unknown scale "${channel.scale}"`);
+        if (!isBuiltinScaleOperation(found) || found.type !== PlotScale.Linear)
+          throw new Error(`lowerPlots: ${channelName} path channel scale "${channel.scale}" must be a linear scale`);
         def = { ...found, range: found.range ?? def.range, clamp: found.clamp ?? def.clamp };
       }
       scale = resolveLinearScale(def, numeric, options.range ?? [0, 1]);
@@ -95,11 +114,14 @@ const makeNumericPathResolver = (
   };
 };
 
-const pickPathStrokeWidth = (mark: MarkOperation): ScaledMarkValueType<number> | undefined => pickStyleChannel<number>(mark, 'strokeWidth');
+const pickPathStrokeWidth = (mark: MarkOperation): ScaledMarkValueType<number> | undefined =>
+  pickStyleChannel<number>(mark, 'strokeWidth');
 
-const pickPathOpacity = (mark: MarkOperation): ScaledMarkValueType<number> | undefined => pickStyleChannel<number>(mark, 'opacity');
+const pickPathOpacity = (mark: MarkOperation): ScaledMarkValueType<number> | undefined =>
+  pickStyleChannel<number>(mark, 'opacity');
 
-const pickPathFillOpacity = (mark: MarkOperation): ScaledMarkValueType<number> | undefined => pickStyleChannel<number>(mark, 'fillOpacity');
+const pickPathFillOpacity = (mark: MarkOperation): ScaledMarkValueType<number> | undefined =>
+  pickStyleChannel<number>(mark, 'fillOpacity');
 
 const pathNumericChannels: {
   strokeWidth: PathChannelDefinition<number>;
@@ -110,7 +132,11 @@ const pathNumericChannels: {
   strokeWidth: definePathChannel<number>({
     channel: 'strokeWidth',
     output: { outputKind: 'number', range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true },
-    resolve: ctx => makeNumericPathResolver(ctx.node, ctx.rows, ctx.fieldTypes, pickPathStrokeWidth, 'strokeWidth', { range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true }),
+    resolve: ctx =>
+      makeNumericPathResolver(ctx.node, ctx.rows, ctx.fieldTypes, pickPathStrokeWidth, 'strokeWidth', {
+        range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX],
+        clamp: true,
+      }),
     deliver: (path, value) => {
       path.strokeWidth = value;
     },
@@ -119,7 +145,11 @@ const pathNumericChannels: {
     channel: 'opacity',
     output: { outputKind: 'number', range: [OPACITY_MIN, 1], clamp: true },
     legend: 'ramp',
-    resolve: ctx => makeNumericPathResolver(ctx.node, ctx.rows, ctx.fieldTypes, pickPathOpacity, 'opacity', { range: [OPACITY_MIN, 1], clamp: true }),
+    resolve: ctx =>
+      makeNumericPathResolver(ctx.node, ctx.rows, ctx.fieldTypes, pickPathOpacity, 'opacity', {
+        range: [OPACITY_MIN, 1],
+        clamp: true,
+      }),
     deliver: (path, value) => {
       path.opacity = value;
     },
@@ -127,7 +157,11 @@ const pathNumericChannels: {
   fillOpacity: definePathChannel<number>({
     channel: 'fillOpacity',
     output: { outputKind: 'number', range: [0.2, 1], clamp: true },
-    resolve: ctx => makeNumericPathResolver(ctx.node, ctx.rows, ctx.fieldTypes, pickPathFillOpacity, 'fillOpacity', { range: [0.2, 1], clamp: true }),
+    resolve: ctx =>
+      makeNumericPathResolver(ctx.node, ctx.rows, ctx.fieldTypes, pickPathFillOpacity, 'fillOpacity', {
+        range: [0.2, 1],
+        clamp: true,
+      }),
     deliver: (path, value) => {
       path.fillOpacity = value;
     },
@@ -135,7 +169,14 @@ const pathNumericChannels: {
   roundedCorners: definePathChannel<number>({
     channel: 'roundedCorners',
     output: { outputKind: 'number', range: [0, 0] },
-    resolve: ctx => makeNumericPathResolver(ctx.node, ctx.rows, ctx.fieldTypes, mark => pickStyleChannel<number>(mark, 'roundedCorners'), 'roundedCorners'),
+    resolve: ctx =>
+      makeNumericPathResolver(
+        ctx.node,
+        ctx.rows,
+        ctx.fieldTypes,
+        mark => pickStyleChannel<number>(mark, 'roundedCorners'),
+        'roundedCorners',
+      ),
     deliver: (path, value) => {
       path.roundedCorners = value;
     },
@@ -148,18 +189,50 @@ const fillRuleValues = new Set(['nonzero', 'evenodd']);
 const thicknessValues = new Set(['ultraThin', 'veryThin', 'thin', 'semithick', 'thick', 'veryThick', 'ultraThick']);
 const arrowValues = new Set(['none', '->', '<-', '<->']);
 const shadowPresetValues = new Set(['none', 'sm', 'md', 'lg', 'xl', '2xl']);
-const blendModeValues = new Set(['normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference', 'exclusion', 'hue', 'saturation', 'color', 'luminosity']);
+const blendModeValues = new Set([
+  'normal',
+  'multiply',
+  'screen',
+  'overlay',
+  'darken',
+  'lighten',
+  'color-dodge',
+  'color-burn',
+  'hard-light',
+  'soft-light',
+  'difference',
+  'exclusion',
+  'hue',
+  'saturation',
+  'color',
+  'luminosity',
+]);
 
 const directPathChannels = {
-  drawOpacity: defineSimplePathChannel<number>('drawOpacity', { outputKind: 'number', range: [0.2, 1], clamp: true }, opacityNumber, (path, value) => {
-    path.drawOpacity = value;
-  }),
-  zIndex: defineSimplePathChannel<number>('zIndex', { outputKind: 'number', range: [0, 0] }, integerNumber, (path, value) => {
-    path.zIndex = value;
-  }),
-  rotate: defineSimplePathChannel<number>('rotate', { outputKind: 'number', range: [0, 0] }, finiteNumber, (path, value) => {
-    path.rotate = value;
-  }),
+  drawOpacity: defineSimplePathChannel<number>(
+    'drawOpacity',
+    { outputKind: 'number', range: [0.2, 1], clamp: true },
+    opacityNumber,
+    (path, value) => {
+      path.drawOpacity = value;
+    },
+  ),
+  zIndex: defineSimplePathChannel<number>(
+    'zIndex',
+    { outputKind: 'number', range: [0, 0] },
+    integerNumber,
+    (path, value) => {
+      path.zIndex = value;
+    },
+  ),
+  rotate: defineSimplePathChannel<number>(
+    'rotate',
+    { outputKind: 'number', range: [0, 0] },
+    finiteNumber,
+    (path, value) => {
+      path.rotate = value;
+    },
+  ),
   scale: defineSimplePathChannel<JsonValue>(
     'scale',
     { outputKind: 'json' },
@@ -187,14 +260,20 @@ const directPathChannels = {
   arrow: defineSimplePathChannel<'none' | '->' | '<-' | '<->'>(
     'arrow',
     { outputKind: 'symbol', palette: [...arrowValues] },
-    value => (typeof value === 'string' && arrowValues.has(value) ? (value as 'none' | '->' | '<-' | '<->') : undefined),
+    value =>
+      typeof value === 'string' && arrowValues.has(value) ? (value as 'none' | '->' | '<-' | '<->') : undefined,
     (path, value) => {
       path.arrow = value;
     },
   ),
-  dashPattern: defineSimplePathChannel<Array<number>>('dashPattern', { outputKind: 'array' }, dashPatternValue, (path, value) => {
-    path.dashPattern = value;
-  }),
+  dashPattern: defineSimplePathChannel<Array<number>>(
+    'dashPattern',
+    { outputKind: 'array' },
+    dashPatternValue,
+    (path, value) => {
+      path.dashPattern = value;
+    },
+  ),
   arrowDetail: defineSimplePathChannel<JsonValue>(
     'arrowDetail',
     { outputKind: 'object' },
@@ -206,7 +285,12 @@ const directPathChannels = {
   shadow: defineSimplePathChannel<JsonValue>(
     'shadow',
     { outputKind: 'json' },
-    value => (typeof value === 'string' && shadowPresetValues.has(value) ? value : (DropShadowSchema.safeParse(value).success ? jsonValue(value) : undefined)),
+    value =>
+      typeof value === 'string' && shadowPresetValues.has(value)
+        ? value
+        : DropShadowSchema.safeParse(value).success
+          ? jsonValue(value)
+          : undefined,
     (path, value) => {
       path.shadow = value as never;
     },
@@ -228,10 +312,15 @@ export const BUILTIN_PATH_CHANNELS = {
     channel: 'lineCap',
     output: { outputKind: 'symbol', palette: [...lineCapValues] },
     resolve: ctx => mark => {
-      return makeMarkValueResolver<'butt' | 'round' | 'square'>(pickStyleChannel<'butt' | 'round' | 'square'>(mark, 'lineCap'), ctx.fieldTypes, {
-        channelName: 'lineCap',
-        parse: value => (typeof value === 'string' && lineCapValues.has(value) ? (value as 'butt' | 'round' | 'square') : undefined),
-      });
+      return makeMarkValueResolver<'butt' | 'round' | 'square'>(
+        pickStyleChannel<'butt' | 'round' | 'square'>(mark, 'lineCap'),
+        ctx.fieldTypes,
+        {
+          channelName: 'lineCap',
+          parse: value =>
+            typeof value === 'string' && lineCapValues.has(value) ? (value as 'butt' | 'round' | 'square') : undefined,
+        },
+      );
     },
     deliver: (path, value) => {
       path.lineCap = value;
@@ -241,10 +330,15 @@ export const BUILTIN_PATH_CHANNELS = {
     channel: 'lineJoin',
     output: { outputKind: 'symbol', palette: [...lineJoinValues] },
     resolve: ctx => mark => {
-      return makeMarkValueResolver<'miter' | 'round' | 'bevel'>(pickStyleChannel<'miter' | 'round' | 'bevel'>(mark, 'lineJoin'), ctx.fieldTypes, {
-        channelName: 'lineJoin',
-        parse: value => (typeof value === 'string' && lineJoinValues.has(value) ? (value as 'miter' | 'round' | 'bevel') : undefined),
-      });
+      return makeMarkValueResolver<'miter' | 'round' | 'bevel'>(
+        pickStyleChannel<'miter' | 'round' | 'bevel'>(mark, 'lineJoin'),
+        ctx.fieldTypes,
+        {
+          channelName: 'lineJoin',
+          parse: value =>
+            typeof value === 'string' && lineJoinValues.has(value) ? (value as 'miter' | 'round' | 'bevel') : undefined,
+        },
+      );
     },
     deliver: (path, value) => {
       path.lineJoin = value;
@@ -254,4 +348,6 @@ export const BUILTIN_PATH_CHANNELS = {
 
 const erasePathChannelDefinition = (def: unknown): AnyChannelDefinition => def as AnyChannelDefinition;
 
-export const PATH_CHANNELS: ReadonlyArray<AnyChannelDefinition> = Object.values(BUILTIN_PATH_CHANNELS).map(def => erasePathChannelDefinition(def));
+export const PATH_CHANNELS: ReadonlyArray<AnyChannelDefinition> = Object.values(BUILTIN_PATH_CHANNELS).map(def =>
+  erasePathChannelDefinition(def),
+);

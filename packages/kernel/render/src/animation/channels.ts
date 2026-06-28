@@ -2,7 +2,9 @@
  * renderer 无关的动画通道工具：property 分类、transform 支点解析、描边判定
  * @description SVG（svg/animation）与 Canvas（canvas/drawScene）共用，避免两端通道语义漂移。
  */
-import { AnimationProperty, type IRAnimationOrigin, type IRAnimationTrack, type ScenePrimitive } from '@retikz/core';
+import type { IRAnimationOrigin, IRAnimationTrack, ScenePrimitive } from '@retikz/core';
+
+import { AnimationProperty } from '@retikz/core';
 
 /** transform 类通道（落 transform，需支点 origin） */
 const TRANSFORM_PROPERTIES = new Set<string>([
@@ -52,16 +54,26 @@ const anchorOnBBox = (
   const top = bbox.y;
   const bottom = bbox.y + bbox.h;
   switch (name) {
-    case 'center': return [cx, cy];
-    case 'north': return [cx, top];
-    case 'south': return [cx, bottom];
-    case 'east': return [right, cy];
-    case 'west': return [left, cy];
-    case 'north-east': return [right, top];
-    case 'north-west': return [left, top];
-    case 'south-east': return [right, bottom];
-    case 'south-west': return [left, bottom];
-    default: return undefined;
+    case 'center':
+      return [cx, cy];
+    case 'north':
+      return [cx, top];
+    case 'south':
+      return [cx, bottom];
+    case 'east':
+      return [right, cy];
+    case 'west':
+      return [left, cy];
+    case 'north-east':
+      return [right, top];
+    case 'north-west':
+      return [left, top];
+    case 'south-east':
+      return [right, bottom];
+    case 'south-west':
+      return [left, bottom];
+    default:
+      return undefined;
   }
 };
 

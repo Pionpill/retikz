@@ -1,7 +1,9 @@
 import type { IRJsonObject, JsonValue } from '@retikz/core';
+
 import type { DatumIdRegistrar, ProvenanceContext } from '../contract/provenance';
 import type { ExternalRow } from '../schemas';
-import { resolveFieldPath } from '../providers';
+
+import { resolveFieldPath } from '../providers/data';
 
 export type { DatumIdRegistrar, ProvenanceContext } from '../contract/provenance';
 
@@ -68,7 +70,8 @@ const PLOT_SOURCE = 'plot';
 
 /** 把 series / datum 值收成 JsonValue（标量直用，其余 String() 兜底，保 meta JSON-safe） */
 const toJsonValue = (value: unknown): JsonValue => {
-  if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value;
+  if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
+    return value;
   return String(value);
 };
 
@@ -127,7 +130,11 @@ export const datumMeta = (
 };
 
 /** mark 图层 scope.id：用户给 mark.id → `<plotId>.<markId>`；缺省 → `<plotId>.mark.<markIndex>`（plotId 缺 → undefined） */
-export const markLayerId = (plotId: string | undefined, markId: string | undefined, markIndex: number): string | undefined => {
+export const markLayerId = (
+  plotId: string | undefined,
+  markId: string | undefined,
+  markIndex: number,
+): string | undefined => {
   if (plotId === undefined) return undefined;
   return markId !== undefined ? `${plotId}.${markId}` : `${plotId}.mark.${markIndex}`;
 };
@@ -141,15 +148,21 @@ export const createDatumIdRegistrar = (datumIdField: string, plotId: string): Da
   return (row: ExternalRow): string => {
     const raw = resolveFieldPath(row, datumIdField);
     if (raw === undefined) {
-      throw new Error(`lowerPlots: datumIdField "${datumIdField}" missing on a row; every row must carry the id field (cannot synthesize a stable anchor)`);
+      throw new Error(
+        `lowerPlots: datumIdField "${datumIdField}" missing on a row; every row must carry the id field (cannot synthesize a stable anchor)`,
+      );
     }
     const id = `${plotId}.datum.${slug(raw)}`;
     const prior = seenIds.get(id);
     if (prior !== undefined && prior !== raw) {
-      throw new Error(`lowerPlots: datumIdField "${datumIdField}" values "${String(prior)}" and "${String(raw)}" collide to the same datum id "${id}"; anchors must be unique`);
+      throw new Error(
+        `lowerPlots: datumIdField "${datumIdField}" values "${String(prior)}" and "${String(raw)}" collide to the same datum id "${id}"; anchors must be unique`,
+      );
     }
     if (seenIds.has(id)) {
-      throw new Error(`lowerPlots: duplicate datumIdField "${datumIdField}" value "${String(raw)}" → duplicate datum id "${id}"; anchors must be unique`);
+      throw new Error(
+        `lowerPlots: duplicate datumIdField "${datumIdField}" value "${String(raw)}" → duplicate datum id "${id}"; anchors must be unique`,
+      );
     }
     seenIds.set(id, raw);
     return id;

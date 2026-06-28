@@ -1,18 +1,16 @@
 import { z } from 'zod';
-import { localToWorld } from '../../geometry/transform';
+
+import type { SectorGeometry } from '../../contract/shape/shared';
+import type { ContourSegment, FilletSolution } from '../../geometry/contour';
 import type { Position } from '../../geometry/point';
 import type { Rect } from '../../geometry/rect';
-import {
-  type ContourSegment,
-  type FilletSolution,
-  boundaryFromContour,
-  contourCommands,
-  filletContour,
-} from '../../geometry/contour';
 import type { ScenePrimitive } from '../../primitive';
+
 import { contourToPathCommands, contourToPathPrimitive } from '../../contract/shape/contour';
 import { defineShape } from '../../contract/shape/define';
-import { type SectorGeometry, sectorGeometry, sectorPolarPoint } from '../../contract/shape/shared';
+import { sectorGeometry, sectorPolarPoint } from '../../contract/shape/shared';
+import { boundaryFromContour, contourCommands, filletContour } from '../../geometry/contour';
+import { localToWorld } from '../../geometry/transform';
 
 /**
  * sector shape 的 per-instance params 类型
@@ -31,10 +29,7 @@ type SectorParams = {
 /** sector 局部 AABB 系点（圆心为原点偏移后）→ 世界系（含 rect 旋转 / 平移） */
 const toWorld = (rect: Rect, geo: SectorGeometry, localFromApex: Position): Position => {
   // localFromApex 是「相对圆心」的局部点；先平移到「相对 AABB 中心」（加 apexOffset），再经 rect 投世界
-  const fromAabbCenter: Position = [
-    localFromApex[0] + geo.apexOffset[0],
-    localFromApex[1] + geo.apexOffset[1],
-  ];
+  const fromAabbCenter: Position = [localFromApex[0] + geo.apexOffset[0], localFromApex[1] + geo.apexOffset[1]];
   return localToWorld(rect, fromAabbCenter);
 };
 
@@ -84,7 +79,10 @@ const getSectorGeometry = (params: SectorParams): SectorGeometry => {
   return geo;
 };
 
-const createSectorContour = (rect: Rect, params: SectorParams): {
+const createSectorContour = (
+  rect: Rect,
+  params: SectorParams,
+): {
   geo: SectorGeometry;
   segments: Array<ContourSegment>;
   fillets: Array<FilletSolution>;
@@ -106,34 +104,35 @@ const createSectorContour = (rect: Rect, params: SectorParams): {
  *   闭合 path（innerRadius=0 时径向边交于圆心、无内弧）。scaleParams 只缩半径、不缩角度。
  */
 export const sector = defineShape({
-  paramsSchema: z.strictObject({
-    innerRadius: z
-      .number()
-      .finite()
-      .nonnegative()
-      .describe('Inner radius (user units); 0 = solid pie slice.'),
-    outerRadius: z
-      .number()
-      .finite()
-      .positive()
-      .describe('Outer radius (user units); must be > innerRadius.'),
-    startAngle: z
-      .number()
-      .finite()
-      .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
-    endAngle: z
-      .number()
-      .finite()
-      .describe('End angle in degrees; swept clockwise in screen space from startAngle.'),
-    cornerRadius: z
-      .number()
-      .finite()
-      .nonnegative()
-      .optional()
-      .describe(
-        'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
-      ),
-  })
+  paramsSchema: z
+    .strictObject({
+      innerRadius: z
+        .number()
+
+        .nonnegative()
+        .describe('Inner radius (user units); 0 = solid pie slice.'),
+      outerRadius: z
+        .number()
+
+        .positive()
+        .describe('Outer radius (user units); must be > innerRadius.'),
+      startAngle: z
+        .number()
+
+        .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
+      endAngle: z
+        .number()
+
+        .describe('End angle in degrees; swept clockwise in screen space from startAngle.'),
+      cornerRadius: z
+        .number()
+
+        .nonnegative()
+        .optional()
+        .describe(
+          'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+        ),
+    })
     .refine(p => p.outerRadius > p.innerRadius, {
       message: 'outerRadius must be greater than innerRadius',
     }),
@@ -172,7 +171,7 @@ export const sector = defineShape({
         return undefined;
     }
   },
-  *emit (rect: Rect, style, round, params: SectorParams): Iterable<ScenePrimitive> {
+  *emit(rect: Rect, style, round, params: SectorParams): Iterable<ScenePrimitive> {
     // 轮廓段（emit 收轴对齐 rect，rotate 由外层 group 施加）→ rounded-contour 命令 → path
     const { segments, fillets } = createSectorContour(rect, params);
     const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius, fillets), round);

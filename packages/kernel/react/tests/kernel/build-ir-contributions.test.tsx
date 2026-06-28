@@ -1,9 +1,13 @@
-import { type FC, createElement } from 'react';
+import type { FC } from 'react';
+
+import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
+
 import type { EmbeddableTier2Adapter } from '../../src';
+
+import { buildIR, buildIRWithContributions } from '../../src/kernel/builder';
 import { Node } from '../../src/kernel/Node';
 import { Scope } from '../../src/kernel/Scope';
-import { buildIR, buildIRWithContributions } from '../../src/kernel/builder';
 
 /** 可嵌入 fixture 的 props 形状 */
 type FixtureProps = { id: string; data: unknown };
@@ -19,16 +23,14 @@ type EmbeddableFixture = FC<FixtureProps> & {
  * @description fixture body 被调用时翻转闭包 flag（应保持 false——可嵌入路径不调用组件本身）；
  *   adapter.contribute 据 props 产出 IR 节点 + datasets，供测试断言
  */
-const makeFixture = (
-  options: { marked?: boolean; withAdapter?: boolean } = {},
-) => {
+const makeFixture = (options: { marked?: boolean; withAdapter?: boolean } = {}) => {
   const { marked = true, withAdapter = true } = options;
   const state = { bodyCalled: false };
   const displayName = 'DemoFixture';
   const adapter: EmbeddableTier2Adapter<FixtureProps> = {
     displayName,
     namespace: 'demo',
-    contribute: (props) => ({
+    contribute: props => ({
       node: { type: 'node', id: props.id, position: [0, 0] },
       datasets: { [props.id]: props.data },
       makeComposites: () => [],
@@ -48,9 +50,7 @@ describe('buildIRWithContributions', () => {
   it('单个可嵌入子组件 → 贡献节点入 IR、记录入 contributions、fixture body 不被调用', () => {
     const { Fixture, state } = makeFixture();
     const result = buildIRWithContributions(<Fixture id="a" data={{ value: 1 }} />);
-    expect(result.ir.children).toEqual([
-      expect.objectContaining({ type: 'node', id: 'a' }),
-    ]);
+    expect(result.ir.children).toEqual([expect.objectContaining({ type: 'node', id: 'a' })]);
     expect(result.contributions).toHaveLength(1);
     expect(result.contributions[0]).toMatchObject({ namespace: 'demo' });
     expect(result.contributions[0].datasets).toHaveProperty('a');
@@ -67,9 +67,7 @@ describe('buildIRWithContributions', () => {
     const scope = result.ir.children[0];
     expect(scope.type).toBe('scope');
     if (scope.type !== 'scope') throw new Error('expected scope');
-    expect(scope.children).toEqual([
-      expect.objectContaining({ type: 'node', id: 'b' }),
-    ]);
+    expect(scope.children).toEqual([expect.objectContaining({ type: 'node', id: 'b' })]);
     expect(result.contributions).toHaveLength(1);
     expect(result.contributions[0]).toMatchObject({ namespace: 'demo' });
     expect(state.bodyCalled).toBe(false);
@@ -77,19 +75,14 @@ describe('buildIRWithContributions', () => {
 
   it('标记 isTier2Embeddable 但缺 embeddableAdapter → fail-loud throw', () => {
     const { Fixture } = makeFixture({ marked: true, withAdapter: false });
-    expect(() =>
-      buildIRWithContributions(<Fixture id="c" data={null} />),
-    ).toThrow(/embeddableAdapter/);
+    expect(() => buildIRWithContributions(<Fixture id="c" data={null} />)).toThrow(/embeddableAdapter/);
   });
 
   it('普通 Sugar 函数组件（返回 <Node>）仍正常展开、不记录贡献（回归）', () => {
-    const Sugar: FC<{ id: string }> = (props) =>
-      createElement(Node, { id: props.id, position: [3, 4] });
+    const Sugar: FC<{ id: string }> = props => createElement(Node, { id: props.id, position: [3, 4] });
     Sugar.displayName = 'Sugar';
     const result = buildIRWithContributions(<Sugar id="s" />);
-    expect(result.ir.children).toEqual([
-      expect.objectContaining({ type: 'node', id: 's', position: [3, 4] }),
-    ]);
+    expect(result.ir.children).toEqual([expect.objectContaining({ type: 'node', id: 's', position: [3, 4] })]);
     expect(result.contributions).toHaveLength(0);
   });
 
@@ -100,19 +93,14 @@ describe('buildIRWithContributions', () => {
     const adapter: EmbeddableTier2Adapter<FixtureProps> = {
       displayName,
       namespace: 'demo',
-      contribute: (props) => ({
+      contribute: props => ({
         node: { type: 'node', id: props.id, position: [0, 0] },
         datasets: { [props.id]: props.data },
         makeComposites: () => [],
       }),
     };
-    const result = buildIRWithContributions(
-      <Plain id="d" data={{ value: 4 }} />,
-      [adapter as EmbeddableTier2Adapter],
-    );
-    expect(result.ir.children).toEqual([
-      expect.objectContaining({ type: 'node', id: 'd' }),
-    ]);
+    const result = buildIRWithContributions(<Plain id="d" data={{ value: 4 }} />, [adapter as EmbeddableTier2Adapter]);
+    expect(result.ir.children).toEqual([expect.objectContaining({ type: 'node', id: 'd' })]);
     expect(result.contributions).toHaveLength(1);
     expect(result.contributions[0]).toMatchObject({ namespace: 'demo' });
   });
@@ -123,8 +111,6 @@ describe('buildIR（公开路径）', () => {
     const { Fixture } = makeFixture();
     const ir = buildIR(<Fixture id="a" data={{ value: 1 }} />);
     expect(ir.type).toBe('scene');
-    expect(ir.children).toEqual([
-      expect.objectContaining({ type: 'node', id: 'a' }),
-    ]);
+    expect(ir.children).toEqual([expect.objectContaining({ type: 'node', id: 'a' })]);
   });
 });

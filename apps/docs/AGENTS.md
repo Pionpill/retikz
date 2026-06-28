@@ -108,7 +108,7 @@ docs 站是全仓**唯一**用 Tailwind 的子包，版本为 v4（`tailwindcss@
 - 探测顺序：`localStorage('retikz-lang')` → `navigator`
 - **zh 是 source of truth**：`I18nResources = typeof zh`，`en.ts: I18nResources = ...` 反向约束；缺 key 编译报错
 - `t(key)` 类型安全：`i18next.d.ts` 把资源结构注进 `CustomTypeOptions`，IDE 自动补全
-- 数据层 `label` 用完整路径（如 `'core.introduction'`），调用方 `t(label)` 直接用，**不要拼接** `` t(`<ns>.${id}`) ``
+- 数据层 `label` 用完整路径（如 `'core.introduction'`），调用方 `t(label)` 直接用，**不要拼接** ``t(`<ns>.${id}`)``
 
 ## UI 组件分层
 
@@ -189,12 +189,12 @@ pnpm --filter @retikz/docs lint     # ESLint
 
 docs 改动按类型验证，不要把纯文案改动一律升级成完整类型检查：
 
-| 改动类型 | 最小验证 |
-| --- | --- |
-| 只改 MDX 正文、表格、说明文字、站内链接 | `git diff --check` + 打开页面 / 关键链接 200 |
-| 新增 / 修改 demo、data、helper、MDX import | `pnpm --filter @retikz/docs exec tsc --noEmit` + 浏览器确认 demo |
-| 修改 `src/data` sidebar、`src/i18n`、schema registry | `pnpm --filter @retikz/docs exec tsc --noEmit` + 对应路由可访问 |
-| 验证 CI / 发布产物等价路径 | `pnpm --filter @retikz/docs build` |
+| 改动类型                                             | 最小验证                                                         |
+| ---------------------------------------------------- | ---------------------------------------------------------------- |
+| 只改 MDX 正文、表格、说明文字、站内链接              | `git diff --check` + 打开页面 / 关键链接 200                     |
+| 新增 / 修改 demo、data、helper、MDX import           | `pnpm --filter @retikz/docs exec tsc --noEmit` + 浏览器确认 demo |
+| 修改 `src/data` sidebar、`src/i18n`、schema registry | `pnpm --filter @retikz/docs exec tsc --noEmit` + 对应路由可访问  |
+| 验证 CI / 发布产物等价路径                           | `pnpm --filter @retikz/docs build`                               |
 
 如果 `tsc` 被无关的未提交源码改动挡住，不要顺手修不相关范围；在汇报中标明阻塞文件和错误即可。
 

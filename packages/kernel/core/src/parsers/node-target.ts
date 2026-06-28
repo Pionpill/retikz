@@ -9,17 +9,11 @@
  *   放 parser 层（非 compile）避免 adapter 反向依赖 compile。
  */
 
-import {
-  CompassAnchor,
-  WebAnchor,
-  normalizeCompassAnchor,
-} from '../geometry/anchor';
 import type { IRNodeTarget } from '../schemas';
 
-const SUPPORTED_ANCHOR_NAMES = [
-  ...Object.values(CompassAnchor),
-  ...Object.values(WebAnchor),
-];
+import { CompassAnchor, normalizeCompassAnchor, WebAnchor } from '../geometry/anchor';
+
+const SUPPORTED_ANCHOR_NAMES = [...Object.values(CompassAnchor), ...Object.values(WebAnchor)];
 
 /** 纯数字识别 `A.30` / `A.-45` / `A.180.5` */
 const ANGLE_RE = /^-?\d+(\.\d+)?$/;

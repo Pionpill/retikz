@@ -1,9 +1,14 @@
 import type { IRNode, IRScope } from '@retikz/core';
+
 import { arcEndPoint } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
 import { createPlotLocator } from '../../src/features';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+import { lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 400, height: 400 };
 
@@ -12,13 +17,20 @@ const share = [
   { label: 'B', value: 75, offset: 18 },
 ];
 
-const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options: LowerPlotsOptions = opts): IRScope => {
+const expandOf = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options: LowerPlotsOptions = opts,
+): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
 
-const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options: LowerPlotsOptions = opts): IRScope =>
-  expandOf(spec, datasets, options).children[0] as IRScope;
+const firstLayer = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options: LowerPlotsOptions = opts,
+): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
 const sectorNodes = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
@@ -33,7 +45,9 @@ const sectorNodes = (layer: IRScope): Array<IRNode> => {
   return out;
 };
 
-const sectorParams = (node: IRNode): { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number } => {
+const sectorParams = (
+  node: IRNode,
+): { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number } => {
   const shape = node.shape as { type?: string; params?: Record<string, number> } | undefined;
   expect(shape?.type).toBe('sector');
   return shape!.params as { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number };
@@ -124,7 +138,13 @@ describe('IntervalMark.pull sector geometry', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', pull: { kind: 'constant', value: 8 }, encoding: { x: { field: 'label' }, y: { field: 'value' } } }],
+      marks: [
+        {
+          type: 'interval',
+          pull: { kind: 'constant', value: 8 },
+          encoding: { x: { field: 'label' }, y: { field: 'value' } },
+        },
+      ],
     });
     expect(() => expandOf(spec, { share })).toThrow(/pull|sector/i);
   });

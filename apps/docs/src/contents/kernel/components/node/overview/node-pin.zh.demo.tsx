@@ -1,5 +1,6 @@
-import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node } from '@retikz/react';
 
 /**
  * pin 引脚：带引线的标签

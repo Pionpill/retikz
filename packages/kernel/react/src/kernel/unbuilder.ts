@@ -1,11 +1,17 @@
-import { type ReactNode, createElement } from 'react';
 import type { IR, IRChild, IRNode, IRScope, IRStep } from '@retikz/core';
+import type { ReactNode } from 'react';
+
+import { createElement } from 'react';
+
+import type { NodeProps } from './Node';
+import type { ScopeProps } from './Scope';
+
+import { NODE_FIELDS, PATH_FIELDS, pickDefined, SCOPE_FIELDS } from './_fields';
 import { Coordinate } from './Coordinate';
-import { Node, type NodeProps } from './Node';
+import { Node } from './Node';
 import { Path } from './Path';
-import { Scope, type ScopeProps } from './Scope';
+import { Scope } from './Scope';
 import { Step } from './Step';
-import { NODE_FIELDS, PATH_FIELDS, SCOPE_FIELDS, pickDefined } from './_fields';
 
 /**
  * IR 'node' child → NodeProps；过滤 undefined 字段，不污染 React DevTools 显示
@@ -123,9 +129,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
   }
   if (step.kind === 'generator') {
     // generator step 暂无对应 React DSL <Step> kind（React sugar 另行实现）；IR→React 反构尚不支持
-    throw new Error(
-      'convertIRToReactNode: generator step has no React DSL representation yet',
-    );
+    throw new Error('convertIRToReactNode: generator step has no React DSL representation yet');
   }
   // line（默认）
   return createElement(Step, {
@@ -174,10 +178,7 @@ const childToElement = (child: IRChild, key: number): ReactNode => {
 };
 
 /** IR 'scope' child → ScopeProps；样式 / 容器字段走 SCOPE_FIELDS 透传，递归把 scope.children 还原为 Kernel element 数组 */
-const scopePropsFromIR = (
-  s: IRScope,
-  key: number,
-): ScopeProps & { key: number } => ({
+const scopePropsFromIR = (s: IRScope, key: number): ScopeProps & { key: number } => ({
   key,
   ...pickDefined(s, SCOPE_FIELDS),
   children: s.children.map((c, i) => childToElement(c, i)),
@@ -187,5 +188,4 @@ const scopePropsFromIR = (
  * 把 IR JSON 反向还原为 Kernel element 数组（带 key、不裹外壳）
  * @description 调用方可 `<Layout>{convertIRToReactNode(ir)}</Layout>` 或用 `<Layout ir={ir}/>`；Sugar 不可逆——buildIR 在收集阶段已把 <Draw/> 求值展开为 Path+Step，IR 里没有"原本是 Draw"的痕迹，本函数永远只产 Kernel 三件套
  */
-export const convertIRToReactNode = (ir: IR): ReactNode =>
-  ir.children.map((child, i) => childToElement(child, i));
+export const convertIRToReactNode = (ir: IR): ReactNode => ir.children.map((child, i) => childToElement(child, i));

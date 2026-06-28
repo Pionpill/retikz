@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * 同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + 后定义覆盖
@@ -7,8 +8,12 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={520} height={140}>
-    <Node id="dup" position={[80, 0]}>first dup</Node>
-    <Node id="dup" position={[360, 0]}>second dup</Node>
+    <Node id="dup" position={[80, 0]}>
+      first dup
+    </Node>
+    <Node id="dup" position={[360, 0]}>
+      second dup
+    </Node>
     <Draw way={[[0, 50], 'dup']} arrow="->" />
   </Layout>
 );

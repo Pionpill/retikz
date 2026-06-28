@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * scope scale 下 OffsetPosition 跟着 scope 缩放：offset (dx, dy) 在 scope 局部度量
@@ -9,11 +10,17 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={460} height={220}>
-    <Node id="anchor" position={[-130, 0]} shape="circle" padding={4}>anchor</Node>
+    <Node id="anchor" position={[-130, 0]} shape="circle" padding={4}>
+      anchor
+    </Node>
     <Scope transforms={[{ kind: 'scale', x: 2 }]}>
-      <Node id="B" position={{ of: 'anchor', offset: [40, 0] }} shape="circle" padding={4}>B</Node>
+      <Node id="B" position={{ of: 'anchor', offset: [40, 0] }} shape="circle" padding={4}>
+        B
+      </Node>
     </Scope>
-    <Node id="B-ref" position={{ of: 'anchor', offset: [40, 64] }} shape="circle" padding={4} stroke="gray" dashed>B-ref</Node>
+    <Node id="B-ref" position={{ of: 'anchor', offset: [40, 64] }} shape="circle" padding={4} stroke="gray" dashed>
+      B-ref
+    </Node>
     <Draw way={['anchor', 'B']} arrow="->" stroke="gray" dashPattern={[4, 2]} />
     <Draw way={['anchor', 'B-ref']} arrow="->" stroke="gray" dashPattern={[4, 2]} />
   </Layout>

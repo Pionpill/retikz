@@ -1,7 +1,12 @@
 import type { IRNode, IRScope } from '@retikz/core';
+
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 /**
  * ADR-01 polar 投影 lowering 测试。
@@ -103,7 +108,9 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
       { theta: 45, value: 7 },
       { theta: 200, value: 3 },
     ];
-    const positions = positionsOf(firstLayer(polarPointSpec({ x: { field: 'theta' }, y: { field: 'value' } }), { d: rows }, opts));
+    const positions = positionsOf(
+      firstLayer(polarPointSpec({ x: { field: 'theta' }, y: { field: 'value' } }), { d: rows }, opts),
+    );
     expect(positions).toHaveLength(2);
     for (const [px, py] of positions) {
       expect(Number.isFinite(px)).toBe(true);
@@ -219,7 +226,9 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
       { theta: 1, value: 'oops' }, // 非有限径向 → 跳过
       { theta: 2, value: 9 },
     ];
-    expect(positionsOf(firstLayer(polarPointSpec({ x: { field: 'theta' }, y: { field: 'value' } }), { d: rows }, opts))).toHaveLength(2);
+    expect(
+      positionsOf(firstLayer(polarPointSpec({ x: { field: 'theta' }, y: { field: 'value' } }), { d: rows }, opts)),
+    ).toHaveLength(2);
   });
 
   // 端到端：多行 point 各落对应极坐标点（结构完整）
@@ -229,7 +238,14 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
       { theta: 90, value: 6 },
       { theta: 180, value: 8 },
     ];
-    const layer = firstLayer(polarPointSpec({ x: { field: 'theta' }, y: { field: 'value' } }, { angle: 'a', radius: 'r', startAngle: 0, endAngle: 360 }), { d: rows }, opts);
+    const layer = firstLayer(
+      polarPointSpec(
+        { x: { field: 'theta' }, y: { field: 'value' } },
+        { angle: 'a', radius: 'r', startAngle: 0, endAngle: 360 },
+      ),
+      { d: rows },
+      opts,
+    );
     expect(layer.nodeDefault?.shape).toBe('circle');
     expect(positionsOf(layer)).toHaveLength(3);
     expect(positionsOf(layer).every(p => Number.isFinite(p[0]) && Number.isFinite(p[1]))).toBe(true);
@@ -247,7 +263,13 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
         { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'g', scale: 'col' }, encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'g', scale: 'col' },
+          encoding: { x: { field: 'theta' }, y: { field: 'value' } },
+        },
+      ],
     });
     const rows = [
       { theta: 0, value: 5, g: 'X' },

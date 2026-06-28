@@ -1,8 +1,14 @@
-import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
+import { Coordinate, Draw, Layout, Node } from '@retikz/react';
+
 const Demo: FC = () => (
-  <Layout width={430} height={230} viewBox={{ x: -40, y: -45, width: 260, height: 170 }} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout
+    width={430}
+    height={230}
+    viewBox={{ x: -40, y: -45, width: 260, height: 170 }}
+    style={{ maxWidth: '100%', height: 'auto' }}
+  >
     <Coordinate id="O" position={[0, 0]} />
     <Coordinate id="X" position={[160, 0]} />
     <Coordinate id="Y" position={[0, 105]} />
@@ -24,8 +30,22 @@ const Demo: FC = () => (
 
     <Draw way={['O', 'X']} arrow="->" stroke="gray" />
     <Draw way={['O', 'Y']} arrow="->" stroke="gray" />
-    <Draw way={[[120, 0], [120, 70]]} stroke="lightgray" dashPattern={[4, 3]} />
-    <Draw way={[[0, 70], [120, 70]]} stroke="lightgray" dashPattern={[4, 3]} />
+    <Draw
+      way={[
+        [120, 0],
+        [120, 70],
+      ]}
+      stroke="lightgray"
+      dashPattern={[4, 3]}
+    />
+    <Draw
+      way={[
+        [0, 70],
+        [120, 70],
+      ]}
+      stroke="lightgray"
+      dashPattern={[4, 3]}
+    />
   </Layout>
 );
 

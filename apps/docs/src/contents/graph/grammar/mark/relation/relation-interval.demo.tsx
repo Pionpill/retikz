@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+
 import { Axis, IntervalMark, Plot, RelationMark } from '@retikz/plot-react';
 
 import { intervalRelations } from './relation-interval.data';
@@ -38,7 +39,13 @@ const Demo: FC = () => (
       path={{
         via: [{ project: { x: 'sourceX', y: 'sourceViaY' } }],
         routing: { kind: 'orthogonal', via: '-|', labelStep: 'main' },
-        label: { text: { field: 'deltaLabel' }, position: 0.5, side: 'sloped', textColor: '#7f1d1d', font: { size: 10, weight: 'bold' } },
+        label: {
+          text: { field: 'deltaLabel' },
+          position: 0.5,
+          side: 'sloped',
+          textColor: '#7f1d1d',
+          font: { size: 10, weight: 'bold' },
+        },
         options: { arrow: '->', dashPattern: [5, 4] },
       }}
     />
@@ -61,7 +68,13 @@ const Demo: FC = () => (
       path={{
         via: [{ project: { x: 'sourceX', y: 'sourceViaY' } }],
         routing: { kind: 'orthogonal', via: '-|', labelStep: 'main' },
-        label: { text: { field: 'deltaLabel' }, position: 0.5, side: 'sloped', textColor: '#166534', font: { size: 10, weight: 'bold' } },
+        label: {
+          text: { field: 'deltaLabel' },
+          position: 0.5,
+          side: 'sloped',
+          textColor: '#166534',
+          font: { size: 10, weight: 'bold' },
+        },
         options: { arrow: '->', dashPattern: [5, 4] },
       }}
     />

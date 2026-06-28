@@ -4,8 +4,11 @@
  *   `data-retikz-anim`，runtime 读它调 `element.animate(keyframes, timing)` 并按 trigger 接驱动。
  */
 import type { IRAnimationTrack } from '@retikz/core';
+
 import type { EasingRegistry } from '../../animation/types';
-import { type ExpandedTrack, easingToCss } from './shared';
+import type { ExpandedTrack } from './shared';
+
+import { easingToCss } from './shared';
 
 /** WAAPI keyframe：offset + 该 CSS 属性值（camelCase 键，直接喂 element.animate）+ 可选段 easing */
 export type WaapiKeyframe = { offset: number; easing?: string } & Record<string, string | number>;
@@ -38,9 +41,7 @@ export type WaapiDescriptor = {
 const toCamel = (cssProperty: string): string => cssProperty.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
 /** track.trigger（非 load）→ descriptor trigger 形态 */
-const toDescriptorTrigger = (
-  trigger: IRAnimationTrack['trigger'],
-): WaapiDescriptor['trigger'] => {
+const toDescriptorTrigger = (trigger: IRAnimationTrack['trigger']): WaapiDescriptor['trigger'] => {
   if (trigger === 'visible' || trigger === 'manual') return trigger;
   if (trigger && typeof trigger === 'object') return { onEvent: trigger.onEvent };
   return 'manual';

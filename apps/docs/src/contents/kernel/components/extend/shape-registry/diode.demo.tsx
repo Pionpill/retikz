@@ -1,7 +1,9 @@
-import { type PathCommand, type Position, type ShapeDefinition, defineShape, localToWorld, worldToLocal } from '@retikz/core';
+import type { PathCommand, Position, ShapeDefinition } from '@retikz/core';
+import type { FC } from 'react';
+
+import { defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
 import { z } from 'zod';
-import type { FC } from 'react';
 
 const diode: ShapeDefinition = defineShape({
   paramsSchema: z.strictObject({}),

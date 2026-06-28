@@ -1,6 +1,15 @@
 ﻿import { describe, expect, it } from 'vitest';
+
 import { ChannelDefinitionKind } from '../../src/contract';
-import { OPACITY_MIN, PLOT_SHAPE_PALETTE, SIZE_MAX_RADIUS, SIZE_MIN_RADIUS, STROKE_WIDTH_MAX, STROKE_WIDTH_MIN, resolveChannelRegistry } from '../../src/providers';
+import {
+  OPACITY_MIN,
+  PLOT_SHAPE_PALETTE,
+  resolveChannelRegistry,
+  SIZE_MAX_RADIUS,
+  SIZE_MIN_RADIUS,
+  STROKE_WIDTH_MAX,
+  STROKE_WIDTH_MIN,
+} from '../../src/providers';
 
 /**
  * 内置 Node 通道（size / opacity / strokeWidth / shape）收敛为 NodeChannelDefinition 内部 registry。
@@ -39,7 +48,11 @@ describe('node channel registry', () => {
   it('strokeWidth：number 输出 + [MIN, MAX] clamp + 无 legend（无 descriptor 不进图例）', () => {
     const strokeWidth = registry.get('strokeWidth');
     if (strokeWidth?.kind !== ChannelDefinitionKind.Node) throw new Error('strokeWidth should be a node channel');
-    expect(strokeWidth.output).toEqual({ outputKind: 'number', range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true });
+    expect(strokeWidth.output).toEqual({
+      outputKind: 'number',
+      range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX],
+      clamp: true,
+    });
     expect(strokeWidth.legend).toBeUndefined();
   });
 
@@ -54,7 +67,14 @@ describe('node channel registry', () => {
     const size = registry.get('size');
     if (size?.kind !== ChannelDefinitionKind.Node) throw new Error('size should be a node channel');
     const resolve = size.resolve({
-      node: { namespace: 'plot', type: 'plot', data: { reference: 'd' }, scales: [], coordinate: { type: 'cartesian2D', x: 'x', y: 'y' }, marks: [] },
+      node: {
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [],
+        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+        marks: [],
+      },
       rows: [],
       fieldTypes: new Map(),
     });
@@ -63,4 +83,3 @@ describe('node channel registry', () => {
     expect(resolution?.descriptor).toBeUndefined();
   });
 });
-

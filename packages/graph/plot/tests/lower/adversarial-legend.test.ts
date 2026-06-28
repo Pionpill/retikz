@@ -1,7 +1,13 @@
-import { ChildSchema, type IRChild, type IRNode, type IRScope, compileToScene } from '@retikz/core';
+import type { IRChild, IRNode, IRScope } from '@retikz/core';
+
+import { ChildSchema, compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 /**
  * ADR-03 legend guide 对抗测试（Adversarial Bug Hunter）。
@@ -12,7 +18,11 @@ import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions = { width: 480, height: 300 }): IRScope => {
+const expandOf = (
+  spec: PlotSpec,
+  datasets: Datasets,
+  options: LowerPlotsOptions = { width: 480, height: 300 },
+): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
@@ -20,8 +30,10 @@ const expandOf = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
 const isNode = (child: IRChild): child is IRNode => child.type === 'node';
 /** legend swatch / glyph / ramp Node（shape rectangle 等，无 text）；标签 Node 有 text */
-const swatchNodesOf = (scope: IRScope): Array<IRNode> => scope.children.filter(isNode).filter(node => node.text === undefined);
-const labelNodesOf = (scope: IRScope): Array<IRNode> => scope.children.filter(isNode).filter(node => node.text !== undefined);
+const swatchNodesOf = (scope: IRScope): Array<IRNode> =>
+  scope.children.filter(isNode).filter(node => node.text === undefined);
+const labelNodesOf = (scope: IRScope): Array<IRNode> =>
+  scope.children.filter(isNode).filter(node => node.text !== undefined);
 
 const allScopes = (root: IRScope): Array<IRScope> => {
   const out: Array<IRScope> = [];
@@ -77,13 +89,35 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference: 'd', model: [{ name: 'lon', type: 'continuous' }, { name: 'lat', type: 'continuous' }, { name: 't', type: 'continuous' }] },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'sequential', name: 'c' }],
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'lon', type: 'continuous' },
+          { name: 'lat', type: 'continuous' },
+          { name: 't', type: 'continuous' },
+        ],
+      },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'sequential', name: 'c' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 't', scale: 'c' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 't', scale: 'c' },
+          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
+      ],
       guides: [{ type: 'legend', channel: 'color', scale: 'c' }],
     });
-    const outer = expandOf(spec, { d: [{ lon: 0, lat: 0, t: 7 }, { lon: 1, lat: 1, t: 7 }] });
+    const outer = expandOf(spec, {
+      d: [
+        { lon: 0, lat: 0, t: 7 },
+        { lon: 1, lat: 1, t: 7 },
+      ],
+    });
     const legend = legendScopes(outer)[0];
     expect(legend).toBeDefined();
     const nums: Array<number> = [];
@@ -99,9 +133,19 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'kc' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'kc' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kc' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'kind', scale: 'kc' },
+          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
+      ],
       guides: [{ type: 'legend', channel: 'color', scale: 'kc' }],
     });
     const outer = expandOf(spec, { d: ORDINAL_ROWS });
@@ -118,13 +162,38 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference: 'd', model: [{ name: 'lon', type: 'continuous' }, { name: 'lat', type: 'continuous' }, { name: 't', type: 'continuous' }] },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'sequential', name: 'c' }],
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'lon', type: 'continuous' },
+          { name: 'lat', type: 'continuous' },
+          { name: 't', type: 'continuous' },
+        ],
+      },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'sequential', name: 'c' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 't', scale: 'c' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 't', scale: 'c' },
+          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
+      ],
       guides: [{ type: 'legend', channel: 'color', scale: 'c' }],
     });
-    const composites = lowerPlots({ d: [{ lon: 0, lat: 0, t: 5 }, { lon: 1, lat: 1, t: 20 }] }, { width: 480, height: 300 });
+    const composites = lowerPlots(
+      {
+        d: [
+          { lon: 0, lat: 0, t: 5 },
+          { lon: 1, lat: 1, t: 20 },
+        ],
+      },
+      { width: 480, height: 300 },
+    );
     expect(() => compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites })).not.toThrow();
   });
 });
@@ -135,10 +204,24 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'kc' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'kc' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kc' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
-      guides: [{ type: 'axis', dimension: 'x' }, { type: 'axis', dimension: 'y' }, { type: 'legend', channel: 'color', scale: 'kc', position: 'right' }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'kind', scale: 'kc' },
+          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
+      ],
+      guides: [
+        { type: 'axis', dimension: 'x' },
+        { type: 'axis', dimension: 'y' },
+        { type: 'legend', channel: 'color', scale: 'kc', position: 'right' },
+      ],
     });
     // 画布 90×60：legend reserve 80 + axis margin 会逼近 / 超出宽度
     let outer: IRScope | undefined;
@@ -170,9 +253,20 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'kc' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'kc' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kc' }, size: { kind: 'field', value: 'lon' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'kind', scale: 'kc' },
+          size: { kind: 'field', value: 'lon' },
+          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
+      ],
       guides: [
         { type: 'legend', channel: 'color', scale: 'kc', position: 'right' },
         { type: 'legend', channel: 'size', position: 'right' },
@@ -188,10 +282,22 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
 
   it('[adversarial] tickCount 非整数 / 负数被 schema 拒绝（zod 报错可定位）', () => {
     const bad = {
-      namespace: 'plot', type: 'plot', data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'sequential', name: 'c' }],
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'sequential', name: 'c' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 't', scale: 'c' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 't', scale: 'c' },
+          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
+      ],
       guides: [{ type: 'legend', channel: 'color', scale: 'c', tickCount: -3 }],
     };
     const parsed = PlotSpecSchema.safeParse(bad);
@@ -200,8 +306,13 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
 
   it('[adversarial] 拼错 channel 在 lowering 阶段 fail-loud', () => {
     const bad = {
-      namespace: 'plot', type: 'plot', data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'colour' }],
@@ -212,8 +323,13 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
 
   it('[adversarial] legend 缺 channel 被 schema 拒绝', () => {
     const bad = {
-      namespace: 'plot', type: 'plot', data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend' }],
@@ -225,8 +341,13 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
 describe('[adversarial] legend — channel 未编码 / 消歧（攻击面 5）', () => {
   it('[adversarial] legend channel=size 但无 mark 编码 size → 应 fail-loud（可定位）', () => {
     const spec = PlotSpecSchema.parse({
-      namespace: 'plot', type: 'plot', data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'size' }],
@@ -236,8 +357,13 @@ describe('[adversarial] legend — channel 未编码 / 消歧（攻击面 5）',
 
   it('[adversarial] legend channel=color 但无任何 color 编码 → fail-loud', () => {
     const spec = PlotSpecSchema.parse({
-      namespace: 'plot', type: 'plot', data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'color' }],
@@ -248,10 +374,22 @@ describe('[adversarial] legend — channel 未编码 / 消歧（攻击面 5）',
   it('[adversarial] legend.scale 指向存在但通道不匹配的 scale（color legend 指向 x linear scale）', () => {
     // guide.scale='x' 存在（是个 linear 位置 scale），但不是 color scale。
     const spec = PlotSpecSchema.parse({
-      namespace: 'plot', type: 'plot', data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'kc' }],
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'kc' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kc' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'kind', scale: 'kc' },
+          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
+      ],
       guides: [{ type: 'legend', channel: 'color', scale: 'x' }],
     });
     // 期望：要么 fail-loud（scale 类型不符），要么产出无 field 的退化 swatch；不应崩出无意义内部错误
@@ -274,14 +412,38 @@ describe('[adversarial] legend — channel 未编码 / 消歧（攻击面 5）',
 describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻击面 7/8）', () => {
   it('[adversarial] threshold legend 无 range 无 scheme：分箱标签有限、可序列化', () => {
     const spec = PlotSpecSchema.parse({
-      namespace: 'plot', type: 'plot',
-      data: { reference: 'd', model: [{ name: 'lon', type: 'continuous' }, { name: 'lat', type: 'continuous' }, { name: 'v', type: 'continuous' }] },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'threshold', name: 'c', breakpoints: [10, 20, 30] }],
+      namespace: 'plot',
+      type: 'plot',
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'lon', type: 'continuous' },
+          { name: 'lat', type: 'continuous' },
+          { name: 'v', type: 'continuous' },
+        ],
+      },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'threshold', name: 'c', breakpoints: [10, 20, 30] },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'v', scale: 'c' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'v', scale: 'c' },
+          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
+      ],
       guides: [{ type: 'legend', channel: 'color', scale: 'c' }],
     });
-    const outer = expandOf(spec, { d: [{ lon: 0, lat: 0, v: 5 }, { lon: 1, lat: 1, v: 25 }, { lon: 2, lat: 0, v: 35 }] });
+    const outer = expandOf(spec, {
+      d: [
+        { lon: 0, lat: 0, v: 5 },
+        { lon: 1, lat: 1, v: 25 },
+        { lon: 2, lat: 0, v: 35 },
+      ],
+    });
     const legend = legendScopes(outer)[0];
     expect(legend).toBeDefined();
     const labels = labelNodesOf(legend);
@@ -293,14 +455,38 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
 
   it('[adversarial] quantize legend 全相同值（domain 退化）：分箱边界不产 NaN', () => {
     const spec = PlotSpecSchema.parse({
-      namespace: 'plot', type: 'plot',
-      data: { reference: 'd', model: [{ name: 'lon', type: 'continuous' }, { name: 'lat', type: 'continuous' }, { name: 'v', type: 'continuous' }] },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'quantize', name: 'c' }],
+      namespace: 'plot',
+      type: 'plot',
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'lon', type: 'continuous' },
+          { name: 'lat', type: 'continuous' },
+          { name: 'v', type: 'continuous' },
+        ],
+      },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'quantize', name: 'c' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'v', scale: 'c' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'v', scale: 'c' },
+          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
+      ],
       guides: [{ type: 'legend', channel: 'color', scale: 'c' }],
     });
-    const outer = expandOf(spec, { d: [{ lon: 0, lat: 0, v: 3 }, { lon: 1, lat: 1, v: 3 }, { lon: 2, lat: 0, v: 3 }] });
+    const outer = expandOf(spec, {
+      d: [
+        { lon: 0, lat: 0, v: 3 },
+        { lon: 1, lat: 1, v: 3 },
+        { lon: 2, lat: 0, v: 3 },
+      ],
+    });
     const legend = legendScopes(outer)[0];
     expect(legend).toBeDefined();
     const nums: Array<number> = [];
@@ -313,10 +499,22 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
   it('[adversarial] ordinal legend 50 大量类别：swatch 数正确、坐标有限', () => {
     const rows = Array.from({ length: 60 }, (_u, i) => ({ lon: i, lat: i % 5, kind: `cat${i % 50}` }));
     const spec = PlotSpecSchema.parse({
-      namespace: 'plot', type: 'plot', data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'kc' }],
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'kc' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kc' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'kind', scale: 'kc' },
+          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
+      ],
       guides: [{ type: 'legend', channel: 'color', scale: 'kc' }],
     });
     const outer = expandOf(spec, { d: rows });
@@ -332,14 +530,26 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
 
   it('[adversarial] size legend 单一正值（domain 退化 [0,0] 或 [0,v]）：半径有限、无 NaN', () => {
     const spec = PlotSpecSchema.parse({
-      namespace: 'plot', type: 'plot', data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', size: { kind: 'field', value: 'p' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [
+        { type: 'point', size: { kind: 'field', value: 'p' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } },
+      ],
       guides: [{ type: 'legend', channel: 'size' }],
     });
     // 所有 population 为 0 → makeSizeResolver descriptor domain [0,0]
-    const outer = expandOf(spec, { d: [{ lon: 0, lat: 0, p: 0 }, { lon: 1, lat: 1, p: 0 }] });
+    const outer = expandOf(spec, {
+      d: [
+        { lon: 0, lat: 0, p: 0 },
+        { lon: 1, lat: 1, p: 0 },
+      ],
+    });
     const legend = legendScopes(outer)[0];
     expect(legend).toBeDefined();
     const nums: Array<number> = [];
@@ -349,14 +559,36 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
 
   it('[adversarial] opacity legend domain 退化（span 0）：opacity 落 [0,1]', () => {
     const spec = PlotSpecSchema.parse({
-      namespace: 'plot', type: 'plot',
-      data: { reference: 'd', model: [{ name: 'lon', type: 'continuous' }, { name: 'lat', type: 'continuous' }, { name: 'o', type: 'continuous' }] },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      namespace: 'plot',
+      type: 'plot',
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'lon', type: 'continuous' },
+          { name: 'lat', type: 'continuous' },
+          { name: 'o', type: 'continuous' },
+        ],
+      },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', opacity: { kind: 'field', value: 'o' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [
+        {
+          type: 'point',
+          opacity: { kind: 'field', value: 'o' },
+          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
+      ],
       guides: [{ type: 'legend', channel: 'opacity' }],
     });
-    const outer = expandOf(spec, { d: [{ lon: 0, lat: 0, o: 5 }, { lon: 1, lat: 1, o: 5 }] });
+    const outer = expandOf(spec, {
+      d: [
+        { lon: 0, lat: 0, o: 5 },
+        { lon: 1, lat: 1, o: 5 },
+      ],
+    });
     const legend = legendScopes(outer)[0];
     expect(legend).toBeDefined();
     for (const swatch of swatchNodesOf(legend)) {
@@ -371,14 +603,37 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
 describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
   it('[adversarial] sequential ramp tickCount=1：刻度不崩、stops 仍合法', () => {
     const spec = PlotSpecSchema.parse({
-      namespace: 'plot', type: 'plot',
-      data: { reference: 'd', model: [{ name: 'lon', type: 'continuous' }, { name: 'lat', type: 'continuous' }, { name: 't', type: 'continuous' }] },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'sequential', name: 'c' }],
+      namespace: 'plot',
+      type: 'plot',
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'lon', type: 'continuous' },
+          { name: 'lat', type: 'continuous' },
+          { name: 't', type: 'continuous' },
+        ],
+      },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'sequential', name: 'c' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 't', scale: 'c' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 't', scale: 'c' },
+          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
+      ],
       guides: [{ type: 'legend', channel: 'color', scale: 'c', tickCount: 1 }],
     });
-    const outer = expandOf(spec, { d: [{ lon: 0, lat: 0, t: 1 }, { lon: 1, lat: 1, t: 100 }] });
+    const outer = expandOf(spec, {
+      d: [
+        { lon: 0, lat: 0, t: 1 },
+        { lon: 1, lat: 1, t: 100 },
+      ],
+    });
     const legend = legendScopes(outer)[0];
     expect(legend).toBeDefined();
     expect(hasNonJsonValue(legend)).toBe(false);
@@ -396,15 +651,38 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
 
   it('[adversarial] sequential ramp tickCount 极大（1000）：刻度不死循环 / 不爆栈', () => {
     const spec = PlotSpecSchema.parse({
-      namespace: 'plot', type: 'plot',
-      data: { reference: 'd', model: [{ name: 'lon', type: 'continuous' }, { name: 'lat', type: 'continuous' }, { name: 't', type: 'continuous' }] },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'sequential', name: 'c' }],
+      namespace: 'plot',
+      type: 'plot',
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'lon', type: 'continuous' },
+          { name: 'lat', type: 'continuous' },
+          { name: 't', type: 'continuous' },
+        ],
+      },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'sequential', name: 'c' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 't', scale: 'c' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 't', scale: 'c' },
+          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
+      ],
       guides: [{ type: 'legend', channel: 'color', scale: 'c', tickCount: 1000 }],
     });
     const start = Date.now();
-    const outer = expandOf(spec, { d: [{ lon: 0, lat: 0, t: 0.001 }, { lon: 1, lat: 1, t: 0.002 }] });
+    const outer = expandOf(spec, {
+      d: [
+        { lon: 0, lat: 0, t: 0.001 },
+        { lon: 1, lat: 1, t: 0.002 },
+      ],
+    });
     expect(Date.now() - start).toBeLessThan(2000);
     expect(legendScopes(outer)[0]).toBeDefined();
   });
@@ -412,13 +690,30 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
   it('[adversarial] 超长类别名（千字符）：legend 不崩、label 文本保留', () => {
     const longName = 'x'.repeat(2000);
     const spec = PlotSpecSchema.parse({
-      namespace: 'plot', type: 'plot', data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'kc' }],
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'kc' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kc' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'kind', scale: 'kc' },
+          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
+      ],
       guides: [{ type: 'legend', channel: 'color', scale: 'kc' }],
     });
-    const outer = expandOf(spec, { d: [{ lon: 0, lat: 0, kind: longName }, { lon: 1, lat: 1, kind: 'B' }] });
+    const outer = expandOf(spec, {
+      d: [
+        { lon: 0, lat: 0, kind: longName },
+        { lon: 1, lat: 1, kind: 'B' },
+      ],
+    });
     const legend = legendScopes(outer)[0];
     expect(legend).toBeDefined();
     const nums: Array<number> = [];
@@ -430,14 +725,28 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
 describe('[adversarial] legend × 默认 axes / polar（攻击面 9）', () => {
   it('[adversarial] polar plot + legend：占位不崩、产合法 IR', () => {
     const spec = PlotSpecSchema.parse({
-      namespace: 'plot', type: 'plot', data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'angle' }, { type: 'linear', name: 'radius' }, { type: 'ordinal', name: 'kc' }],
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'angle' },
+        { type: 'linear', name: 'radius' },
+        { type: 'ordinal', name: 'kc' },
+      ],
       coordinate: { type: 'polar2D', angle: 'angle', radius: 'radius', startAngle: 0, endAngle: 360, innerRadius: 0 },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'kind', scale: 'kc' }, encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'kind', scale: 'kc' },
+          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
+      ],
       guides: [{ type: 'legend', channel: 'color', scale: 'kc', position: 'right' }],
     });
     let outer: IRScope | undefined;
-    expect(() => { outer = expandOf(spec, { d: ORDINAL_ROWS }); }).not.toThrow();
+    expect(() => {
+      outer = expandOf(spec, { d: ORDINAL_ROWS });
+    }).not.toThrow();
     if (outer) {
       const legend = legendScopes(outer)[0];
       expect(legend).toBeDefined();

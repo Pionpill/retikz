@@ -180,10 +180,7 @@ const expandRibbonColor = (src: Partial<IRPathBase>): Partial<IRPathBase> => {
  *   > scope 级联分项 > scope color > 内置（layoutNode 兜底）。同 frame 内 nodeDefault 优先于级联。
  *   resetStyle('node') 丢外层累积；position / id / text / label 取元素自身（不参与继承）。
  */
-export const resolveNodeStyle = (
-  node: IRNode,
-  stack: ReadonlyArray<StyleFrame>,
-): IRNode => {
+export const resolveNodeStyle = (node: IRNode, stack: ReadonlyArray<StyleFrame>): IRNode => {
   let acc: Partial<IRNode> = {};
   for (const frame of stack) {
     if (cuts(frame.resetStyle, 'node')) acc = {};
@@ -198,9 +195,7 @@ export const resolveNodeStyle = (
 };
 
 /** fold labelDefault 通道（node label + step label 共享）；resetStyle('label') 丢外层 */
-export const resolveLabelDefault = (
-  stack: ReadonlyArray<StyleFrame>,
-): IRLabelDefault => {
+export const resolveLabelDefault = (stack: ReadonlyArray<StyleFrame>): IRLabelDefault => {
   let acc: IRLabelDefault = {};
   for (const frame of stack) {
     if (cuts(frame.resetStyle, 'label')) acc = {};
@@ -237,8 +232,7 @@ const resolveGeometryLabel = (
   masterColor: string | undefined,
 ): IRGeometryLabel => {
   const out: IRGeometryLabel = { ...label };
-  const textColor =
-    label.textColor ?? labelDefault.textColor ?? labelDefault.color ?? masterColor;
+  const textColor = label.textColor ?? labelDefault.textColor ?? labelDefault.color ?? masterColor;
   if (textColor !== undefined) out.textColor = textColor;
   else delete out.textColor;
   const font = mergeFont(label.font, labelDefault.font);
@@ -345,10 +339,7 @@ const resolveGeometryLabelField = (
  * @description 返回 effective IRPath：base 样式 fold（优先级链同 node）；arrowDetail 消费 arrowDefault 通道 + 跟主色；
  *   每个 step.label 消费 labelDefault 通道 + 跟主色。masterColor = path 已解析主色（就近 color），arrow / step-label 跟它（不跟 stroke）。
  */
-export const resolveEffectivePath = (
-  path: IRPathBase,
-  stack: ReadonlyArray<StyleFrame>,
-): IRPathBase => {
+export const resolveEffectivePath = (path: IRPathBase, stack: ReadonlyArray<StyleFrame>): IRPathBase => {
   let acc: Partial<IRPathBase> = {};
   let masterColor: string | undefined;
   const pathKind = path.kind ?? 'stroke';
@@ -368,9 +359,7 @@ export const resolveEffectivePath = (
       acc = {
         ...acc,
         ...pickDefinedKeys(
-          isRibbon
-            ? expandRibbonColor(pickDrawableStyle(frame.pathDefault))
-            : expandPathColor(frame.pathDefault),
+          isRibbon ? expandRibbonColor(pickDrawableStyle(frame.pathDefault)) : expandPathColor(frame.pathDefault),
         ),
       };
     }

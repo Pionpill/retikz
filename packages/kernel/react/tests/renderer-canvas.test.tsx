@@ -1,11 +1,14 @@
 // @vitest-environment jsdom
-import { createRoot } from 'react-dom/client';
-import { act } from 'react-dom/test-utils';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Scene } from '@retikz/core';
+import type { RenderOptions } from '@retikz/render/canvas';
+
+import { renderToCanvas } from '@retikz/render/canvas';
 import { buildSvgDocument } from '@retikz/render/svg';
-import { type RenderOptions, renderToCanvas } from '@retikz/render/canvas';
+import { createRoot } from 'react-dom/client';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { act } from 'react-dom/test-utils';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { Layout, Node } from '../src';
 
 const svgScenes: Array<Scene> = [];
@@ -70,7 +73,7 @@ describe('Layout renderer 规格', () => {
     const getContext = vi
       .spyOn(HTMLCanvasElement.prototype, 'getContext')
       .mockImplementation((contextId: string) =>
-        (contextId === '2d' ? (context as unknown as CanvasRenderingContext2D) : null)
+        contextId === '2d' ? (context as unknown as CanvasRenderingContext2D) : null,
       );
     const container = document.createElement('div');
     const root = createRoot(container);
@@ -104,7 +107,7 @@ describe('Layout renderer 规格', () => {
     const getContext = vi
       .spyOn(HTMLCanvasElement.prototype, 'getContext')
       .mockImplementation((contextId: string) =>
-        (contextId === '2d' ? (context as unknown as CanvasRenderingContext2D) : null)
+        contextId === '2d' ? (context as unknown as CanvasRenderingContext2D) : null,
       );
     const container = document.createElement('div');
     const root = createRoot(container);
@@ -133,7 +136,7 @@ describe('Layout renderer 规格', () => {
     const getContext = vi
       .spyOn(HTMLCanvasElement.prototype, 'getContext')
       .mockImplementation((contextId: string) =>
-        (contextId === '2d' ? (context as unknown as CanvasRenderingContext2D) : null)
+        contextId === '2d' ? (context as unknown as CanvasRenderingContext2D) : null,
       );
     const container = document.createElement('div');
     const root = createRoot(container);
@@ -166,7 +169,7 @@ describe('Layout renderer 规格', () => {
     const getContext = vi
       .spyOn(HTMLCanvasElement.prototype, 'getContext')
       .mockImplementation((contextId: string) =>
-        (contextId === '2d' ? (context as unknown as CanvasRenderingContext2D) : null)
+        contextId === '2d' ? (context as unknown as CanvasRenderingContext2D) : null,
       );
     const container = document.createElement('div');
     const root = createRoot(container);
@@ -191,7 +194,7 @@ describe('Layout renderer 规格', () => {
     const getContext = vi
       .spyOn(HTMLCanvasElement.prototype, 'getContext')
       .mockImplementation((contextId: string) =>
-        (contextId === '2d' ? (createTestCanvasContext() as unknown as CanvasRenderingContext2D) : null)
+        contextId === '2d' ? (createTestCanvasContext() as unknown as CanvasRenderingContext2D) : null,
       );
 
     const markup = renderToStaticMarkup(
@@ -214,7 +217,7 @@ describe('Layout renderer 规格', () => {
     const getContext = vi
       .spyOn(HTMLCanvasElement.prototype, 'getContext')
       .mockImplementation((contextId: string) =>
-        (contextId === '2d' ? (createTestCanvasContext() as unknown as CanvasRenderingContext2D) : null)
+        contextId === '2d' ? (createTestCanvasContext() as unknown as CanvasRenderingContext2D) : null,
       );
 
     renderToStaticMarkup(
@@ -249,7 +252,7 @@ describe('Layout renderer 规格', () => {
     const getContext = vi
       .spyOn(HTMLCanvasElement.prototype, 'getContext')
       .mockImplementation((contextId: string) =>
-        (contextId === '2d' ? (createTestCanvasContext() as unknown as CanvasRenderingContext2D) : null)
+        contextId === '2d' ? (createTestCanvasContext() as unknown as CanvasRenderingContext2D) : null,
       );
     const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'devicePixelRatio');
     Object.defineProperty(globalThis, 'devicePixelRatio', { configurable: true, value: Number.NaN });

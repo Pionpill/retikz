@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
+
+import type { Rect } from '../../src/geometry/rect';
+
 import { boundaryKey, resolveBoundary } from '../../src/compile/boundary';
 import { ellipse, rectangle } from '../../src/providers/shape';
-import type { Rect } from '../../src/geometry/rect';
 
 const visualRect: Rect = { x: 0, y: 0, width: 40, height: 20, rotate: 0 };
 const registry = { rectangle, ellipse };

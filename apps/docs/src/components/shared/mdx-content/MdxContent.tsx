@@ -1,7 +1,8 @@
 import type { CompileOptions } from '@mdx-js/mdx';
-import { compile, run } from '@mdx-js/mdx';
 import type { MDXContent as MDXContentType } from 'mdx/types';
 import type { FC } from 'react';
+
+import { compile, run } from '@mdx-js/mdx';
 import { useEffect, useState } from 'react';
 import * as jsxDevRuntime from 'react/jsx-dev-runtime';
 import * as jsxRuntime from 'react/jsx-runtime';
@@ -12,8 +13,8 @@ import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 
-import { Skeleton } from '@/components/ui/skeleton';
 import { DemoLocationContext } from '@/components/shared/component-preview/demo-location-context';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import { mdxComponents } from './components';
 

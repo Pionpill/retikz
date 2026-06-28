@@ -1,7 +1,35 @@
-import { type IRChild, type IRCoordinate, type IRNodeLabel, type IRNodeTarget, type IRPath, type IRPathRibbonOptions, type IRStep, type IRStepLabel, type IRTarget } from '@retikz/core';
-import { type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkLoweringContext } from '../../../contract';
+import {
+  type IRChild,
+  type IRCoordinate,
+  type IRNodeLabel,
+  type IRNodeTarget,
+  type IRPath,
+  type IRPathRibbonOptions,
+  type IRStep,
+  type IRStepLabel,
+  type IRTarget,
+} from '@retikz/core';
+
+import type {
+  ExternalRow,
+  MarkValueType,
+  PlotTargetRef,
+  RelationMark,
+  RelationPrimitiveStyle,
+  RelationRouteStep,
+  RelationRoutingSpec,
+  RelationStepLabel,
+} from '../../../schemas';
+
+import {
+  type CoordinateFrame,
+  type FieldCollector,
+  type MarkChannels,
+  type MarkDefinition,
+  type MarkLoweringContext,
+} from '../../../contract';
+import { PlotMark, RelationGeometryKind } from '../../../schemas';
 import { resolveFieldPath } from '../../data';
-import { type ExternalRow, type MarkValueType, PlotMark, type PlotTargetRef, RelationGeometryKind, type RelationMark, type RelationPrimitiveStyle, type RelationRouteStep, type RelationRoutingSpec, type RelationStepLabel } from '../../../schemas';
 import {
   applyPathChannelDeliveries,
   attachMarkLayer,
@@ -62,7 +90,9 @@ const resolveProjectedTarget = (
   for (const frameRole of frame.roles) {
     const field = (ref.project as Partial<Record<string, string>>)[frameRole];
     if (field === undefined) {
-      throw new Error(`lowerPlots: relation projected ${role} target is missing field mapping for coordinate role "${frameRole}"`);
+      throw new Error(
+        `lowerPlots: relation projected ${role} target is missing field mapping for coordinate role "${frameRole}"`,
+      );
     }
     values.push(resolveFieldPath(row, field));
   }
@@ -104,7 +134,8 @@ const resolveTarget = (
   forceCoordinate = false,
 ): ResolvedTarget | null => {
   if ('id' in ref) return { target: { id: ref.id, ...targetExtras(ref) }, coordinates: [] };
-  if ('project' in ref) return resolveProjectedTarget(mark, ref, row, frame, ctx, transformedIndex, role, forceCoordinate);
+  if ('project' in ref)
+    return resolveProjectedTarget(mark, ref, row, frame, ctx, transformedIndex, role, forceCoordinate);
   if (ctx?.anchors === undefined) {
     throw new Error(`lowerPlots: relation ${role} target uses generated anchorId but no AnchorRegistry is available`);
   }
@@ -138,7 +169,11 @@ const relationStyleValue = (
   style: RelationPrimitiveStyle | undefined,
   key: keyof RelationPrimitiveStyle,
   row: ExternalRow,
-): unknown => resolveMarkValue((style as Partial<Record<keyof RelationPrimitiveStyle, MarkValueType<unknown>>> | undefined)?.[key], row);
+): unknown =>
+  resolveMarkValue(
+    (style as Partial<Record<keyof RelationPrimitiveStyle, MarkValueType<unknown>>> | undefined)?.[key],
+    row,
+  );
 
 const relationPrimitiveStyle = (
   mark: RelationMark,
@@ -149,7 +184,17 @@ const relationPrimitiveStyle = (
   const out: Record<string, unknown> = {};
   const color = relationStyleValue(mark.style, 'color', row) ?? colorOf?.(row) ?? defaultColor;
   if (color !== undefined) out.color = color;
-  for (const key of ['fill', 'fillOpacity', 'stroke', 'strokeWidth', 'drawOpacity', 'opacity', 'shadow', 'blendMode', 'zIndex'] as const) {
+  for (const key of [
+    'fill',
+    'fillOpacity',
+    'stroke',
+    'strokeWidth',
+    'drawOpacity',
+    'opacity',
+    'shadow',
+    'blendMode',
+    'zIndex',
+  ] as const) {
     const value = relationStyleValue(mark.style, key, row);
     if (value !== undefined) out[key] = value;
   }
@@ -180,7 +225,12 @@ const applyStepLabel = (steps: Array<IRStep>, label: IRStepLabel | undefined): A
   return steps;
 };
 
-const defaultRoute = (source: IRTarget, via: Array<IRTarget>, target: IRTarget, label: IRStepLabel | undefined): Array<IRStep> =>
+const defaultRoute = (
+  source: IRTarget,
+  via: Array<IRTarget>,
+  target: IRTarget,
+  label: IRStepLabel | undefined,
+): Array<IRStep> =>
   applyStepLabel(
     [
       { type: 'step', kind: 'move', to: source },
@@ -190,7 +240,11 @@ const defaultRoute = (source: IRTarget, via: Array<IRTarget>, target: IRTarget, 
     label,
   );
 
-const routeTargets = (source: IRTarget, via: Array<IRTarget>, target: IRTarget): Array<IRTarget> => [source, ...via, target];
+const routeTargets = (source: IRTarget, via: Array<IRTarget>, target: IRTarget): Array<IRTarget> => [
+  source,
+  ...via,
+  target,
+];
 
 const lineRoute = (targets: Array<IRTarget>): Array<IRStep> => [
   { type: 'step', kind: 'move', to: targets[0] },
@@ -224,28 +278,35 @@ const horizontalRibbonSteps = (source: IRTarget, target: IRTarget): Array<IRStep
 const horizontalRibbonEndpointDirection = (source: IRTarget, target: IRTarget): number | undefined => {
   const sourcePosition = positionOf(source);
   const targetPosition = positionOf(target);
-  if (sourcePosition === undefined || targetPosition === undefined || sourcePosition[0] === targetPosition[0]) return undefined;
+  if (sourcePosition === undefined || targetPosition === undefined || sourcePosition[0] === targetPosition[0])
+    return undefined;
   return targetPosition[0] >= sourcePosition[0] ? 0 : 180;
 };
 
-const bendRoute = (routing: Extract<RelationRoutingSpec, { kind: 'bend' }>, targets: Array<IRTarget>): Array<IRStep> => [
+const bendRoute = (
+  routing: Extract<RelationRoutingSpec, { kind: 'bend' }>,
+  targets: Array<IRTarget>,
+): Array<IRStep> => [
   { type: 'step', kind: 'move', to: targets[0] },
-  ...targets.slice(1).map((to): IRStep => ({
-    type: 'step',
-    kind: 'bend',
-    to,
-    ...(routing.bendDirection !== undefined ? { bendDirection: routing.bendDirection } : {}),
-    ...(routing.bendAngle !== undefined ? { bendAngle: routing.bendAngle } : {}),
-    ...(routing.outAngle !== undefined ? { outAngle: routing.outAngle } : {}),
-    ...(routing.inAngle !== undefined ? { inAngle: routing.inAngle } : {}),
-    ...(routing.looseness !== undefined ? { looseness: routing.looseness } : {}),
-  })),
+  ...targets.slice(1).map(
+    (to): IRStep => ({
+      type: 'step',
+      kind: 'bend',
+      to,
+      ...(routing.bendDirection !== undefined ? { bendDirection: routing.bendDirection } : {}),
+      ...(routing.bendAngle !== undefined ? { bendAngle: routing.bendAngle } : {}),
+      ...(routing.outAngle !== undefined ? { outAngle: routing.outAngle } : {}),
+      ...(routing.inAngle !== undefined ? { inAngle: routing.inAngle } : {}),
+      ...(routing.looseness !== undefined ? { looseness: routing.looseness } : {}),
+    }),
+  ),
 ];
 
 const positionOf = (target: IRTarget): [number, number] | undefined =>
   Array.isArray(target) && typeof target[0] === 'number' && typeof target[1] === 'number' ? target : undefined;
 
-const segmentLength = (from: [number, number], to: [number, number]): number => Math.hypot(to[0] - from[0], to[1] - from[1]);
+const segmentLength = (from: [number, number], to: [number, number]): number =>
+  Math.hypot(to[0] - from[0], to[1] - from[1]);
 
 const applyOrthogonalLabel = (
   steps: Array<IRStep>,
@@ -306,11 +367,7 @@ const routedSteps = (
   return orthogonalRoute(routing, targets, label);
 };
 
-const routeStepToIr = (
-  step: RelationRouteStep,
-  target: IRTarget,
-  row: ExternalRow,
-): IRStep => {
+const routeStepToIr = (step: RelationRouteStep, target: IRTarget, row: ExternalRow): IRStep => {
   const label = resolveLabel(step.label, row);
   switch (step.kind) {
     case 'move':
@@ -322,10 +379,24 @@ const routeStepToIr = (
       return { type: 'step', kind: 'fold', via: step.via, to: target, ...(label !== undefined ? { label } : {}) };
     case 'curve':
       if (step.control === undefined) throw new Error('lowerPlots: relation route curve step requires control');
-      return { type: 'step', kind: 'curve', control: step.control, to: target, ...(label !== undefined ? { label } : {}) };
+      return {
+        type: 'step',
+        kind: 'curve',
+        control: step.control,
+        to: target,
+        ...(label !== undefined ? { label } : {}),
+      };
     case 'cubic':
-      if (step.control1 === undefined || step.control2 === undefined) throw new Error('lowerPlots: relation route cubic step requires control1 and control2');
-      return { type: 'step', kind: 'cubic', control1: step.control1, control2: step.control2, to: target, ...(label !== undefined ? { label } : {}) };
+      if (step.control1 === undefined || step.control2 === undefined)
+        throw new Error('lowerPlots: relation route cubic step requires control1 and control2');
+      return {
+        type: 'step',
+        kind: 'cubic',
+        control1: step.control1,
+        control2: step.control2,
+        to: target,
+        ...(label !== undefined ? { label } : {}),
+      };
     case 'bend':
       return {
         type: 'step',
@@ -357,11 +428,14 @@ const explicitRoute = (
     const step = route[index];
     const stepTargetRef = step.to;
     if (stepTargetRef === undefined && index !== route.length - 1) {
-      throw new Error(`lowerPlots: relation route step ${index} requires to; only the last explicit route step may omit to and default to target`);
+      throw new Error(
+        `lowerPlots: relation route step ${index} requires to; only the last explicit route step may omit to and default to target`,
+      );
     }
-    const resolved = stepTargetRef === undefined
-      ? { target, coordinates: [] }
-      : resolveTarget(mark, stepTargetRef, row, frame, ctx, transformedIndex, `route.${index}`, true);
+    const resolved =
+      stepTargetRef === undefined
+        ? { target, coordinates: [] }
+        : resolveTarget(mark, stepTargetRef, row, frame, ctx, transformedIndex, `route.${index}`, true);
     if (resolved === null) return { steps: [], coordinates: [] };
     coordinates.push(...resolved.coordinates);
     steps.push(routeStepToIr(step, resolved.target, row));
@@ -431,14 +505,30 @@ export const lowerRelation = (
     } else {
       const viaTargets: Array<IRTarget> = [];
       for (let index = 0; index < (mark.path?.via?.length ?? 0); index += 1) {
-        const via = resolveTarget(mark, mark.path?.via?.[index] as PlotTargetRef, row, frame, ctx, transformedIndex, `via.${index}`, true);
+        const via = resolveTarget(
+          mark,
+          mark.path?.via?.[index] as PlotTargetRef,
+          row,
+          frame,
+          ctx,
+          transformedIndex,
+          `via.${index}`,
+          true,
+        );
         if (via === null) continue;
         coordinates.push(...via.coordinates);
         viaTargets.push(via.target);
       }
-      steps = mark.path?.routing === undefined
-        ? defaultRoute(source.target, viaTargets, target.target, resolveLabel(mark.path?.label, row))
-        : routedSteps(mark.path.routing, source.target, viaTargets, target.target, resolveLabel(mark.path.label, row));
+      steps =
+        mark.path?.routing === undefined
+          ? defaultRoute(source.target, viaTargets, target.target, resolveLabel(mark.path?.label, row))
+          : routedSteps(
+              mark.path.routing,
+              source.target,
+              viaTargets,
+              target.target,
+              resolveLabel(mark.path.label, row),
+            );
     }
     const pathOptions = (mark.path?.options ?? {}) as Partial<IRPath>;
     const label = resolveGeometryMarkLabels(mark.label, row, labelOf);

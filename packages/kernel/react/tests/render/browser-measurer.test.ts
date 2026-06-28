@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
 import { fallbackMeasurer } from '@retikz/core';
+import { describe, expect, it } from 'vitest';
+
 import { browserMeasurer } from '../../src/render/browser-measurer';
 
 /**

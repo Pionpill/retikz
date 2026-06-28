@@ -23,23 +23,23 @@ import { Star } from '@retikz/react';
 
 `points` 是星角数量。你可以显式给 `innerRadius`，也可以用 `innerRatio` 按比例自动算内半径。
 
-| 写法 | 适合 |
-| --- | --- |
-| `{ center, outerRadius, innerRadius, points }` | 自己控制内外半径 |
+| 写法                                           | 适合                 |
+| ---------------------------------------------- | -------------------- |
+| `{ center, outerRadius, innerRadius, points }` | 自己控制内外半径     |
 | `{ center, outerRadius, points, innerRatio? }` | 用比例自动计算内半径 |
 
 <ComponentPreview name="star-basic" size="sm" />
 
 ### API 参考
 
-| 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `center` | `[number, number]` | — | 星形中心 |
-| `outerRadius` | `number` | — | 外半径 |
-| `innerRadius` | `number` | — | 内半径；显式给出时优先 |
-| `innerRatio` | `number` | `0.5` | 未给 `innerRadius` 时，内半径相对外半径的比例 |
-| `points` | `number` | — | 星角数量 |
-| `rotate` | `number` | `-90` | 起始角度 |
+| 属性          | 类型               | 默认值 | 描述                                          |
+| ------------- | ------------------ | ------ | --------------------------------------------- |
+| `center`      | `[number, number]` | —      | 星形中心                                      |
+| `outerRadius` | `number`           | —      | 外半径                                        |
+| `innerRadius` | `number`           | —      | 内半径；显式给出时优先                        |
+| `innerRatio`  | `number`           | `0.5`  | 未给 `innerRadius` 时，内半径相对外半径的比例 |
+| `points`      | `number`           | —      | 星角数量                                      |
+| `rotate`      | `number`           | `-90`  | 起始角度                                      |
 
 ## 作为 Node 形状
 
@@ -57,9 +57,9 @@ import { Node } from '@retikz/react';
 
 ### 例子
 
-| shape | params | 说明 |
-| --- | --- | --- |
-| star | `{ points, innerRadius, outerRadius, rotate? }` | 内外半径交替的星形 |
+| shape | params                                          | 说明               |
+| ----- | ----------------------------------------------- | ------------------ |
+| star  | `{ points, innerRadius, outerRadius, rotate? }` | 内外半径交替的星形 |
 
 > Node `star` 的约束：`points` 为 ≥3 的整数，`outerRadius` 必须 > `innerRadius`（违反编译期 refine 报错）。注意与 Sugar `<Star>` 的最小值不同——`<Star>` 允许 `points ≥ 2`。
 
@@ -73,8 +73,8 @@ import { Node } from '@retikz/react';
 
 ### API 参考
 
-| `shape` | params | 边界 / 用途 |
-| --- | --- | --- |
+| `shape`                    | params                                                                 | 边界 / 用途        |
+| -------------------------- | ---------------------------------------------------------------------- | ------------------ |
 | `{ type: 'star', params }` | `points` / `innerRadius` / `outerRadius` / `rotate?` / `cornerRadius?` | 可连接的星形 glyph |
 
 `cornerRadius`（用户单位）同时给尖角与凹角倒角，省略 / `0` = 硬角，逐角夹紧。

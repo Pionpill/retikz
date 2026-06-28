@@ -1,5 +1,6 @@
-import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 
 import { temperature } from './coordinate-cartesian.data';
 

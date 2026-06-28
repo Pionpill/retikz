@@ -1,10 +1,28 @@
 import { type IRChild, type IRScope } from '@retikz/core';
-import { type AnyMarkDefinition, type CoordinateFrame, type FieldCollector, type IntervalContext, type MarkChannels, type MarkDefinition, type MarkLoweringContext } from '../../contract';
-import { type ExternalRow, type Mark, type MarkOperation, PlotMark, type PlotMarkValue } from '../../schemas';
-import { intervalMarkDefinition, pathMarkDefinition, pointMarkDefinition, referenceMarkDefinition, relationMarkDefinition } from './features';
+
+import type { ExternalRow, Mark, MarkOperation, PlotMarkValue } from '../../schemas';
+
+import {
+  type AnyMarkDefinition,
+  type CoordinateFrame,
+  type FieldCollector,
+  type IntervalContext,
+  type MarkChannels,
+  type MarkDefinition,
+  type MarkLoweringContext,
+} from '../../contract';
+import { PlotMark } from '../../schemas';
+import {
+  intervalMarkDefinition,
+  pathMarkDefinition,
+  pointMarkDefinition,
+  referenceMarkDefinition,
+  relationMarkDefinition,
+} from './features';
 import { cellAnchor, roleAnchor } from './shared';
 
-const asAnyMarkDefinition = <T extends MarkOperation>(def: MarkDefinition<T>): AnyMarkDefinition => def as unknown as AnyMarkDefinition;
+const asAnyMarkDefinition = <T extends MarkOperation>(def: MarkDefinition<T>): AnyMarkDefinition =>
+  def as unknown as AnyMarkDefinition;
 
 /**
  * mark lowering 行为注册表：内置 6 个 mark = 6 个内置注册项（lowerMark 按 type 查表分发）。
@@ -20,7 +38,9 @@ export const MARK_REGISTRY: Record<PlotMarkValue, AnyMarkDefinition> = {
 };
 
 /** 内置 mark definition registry（按 type 索引）；内置与自定义 mark 共享同一分派流程。 */
-const BUILTIN_MARK_REGISTRY: ReadonlyMap<string, AnyMarkDefinition> = new Map(Object.values(MARK_REGISTRY).map(def => [def.type, def] as const));
+const BUILTIN_MARK_REGISTRY: ReadonlyMap<string, AnyMarkDefinition> = new Map(
+  Object.values(MARK_REGISTRY).map(def => [def.type, def] as const),
+);
 
 /** 内置 mark definition 列表；主要供诊断与测试确认内置覆盖。自定义 definition 不写入此表，而是在每次 lowering 时合并。 */
 export const BUILTIN_MARKS: ReadonlyArray<AnyMarkDefinition> = Object.values(MARK_REGISTRY);
@@ -44,19 +64,26 @@ export const resolveMarkRegistry = (custom?: ReadonlyArray<AnyMarkDefinition>): 
 const markDefinitionOf = (mark: MarkOperation, registry: ReadonlyMap<string, AnyMarkDefinition>): AnyMarkDefinition => {
   const def = registry.get(mark.type);
   if (def === undefined) {
-    throw new Error(`lowerPlots: mark type "${mark.type}" is not registered; pass a MarkDefinition via options.markDefinitions`);
+    throw new Error(
+      `lowerPlots: mark type "${mark.type}" is not registered; pass a MarkDefinition via options.markDefinitions`,
+    );
   }
   return def;
 };
 
-export const collectMarkFields = (mark: MarkOperation, fields: FieldCollector, registry: ReadonlyMap<string, AnyMarkDefinition> = BUILTIN_MARK_REGISTRY): void => {
+export const collectMarkFields = (
+  mark: MarkOperation,
+  fields: FieldCollector,
+  registry: ReadonlyMap<string, AnyMarkDefinition> = BUILTIN_MARK_REGISTRY,
+): void => {
   markDefinitionOf(mark, registry).collectFields?.(mark as never, fields);
 };
 
 export const channelKindsForMark = (
   mark: MarkOperation,
   registry: ReadonlyMap<string, AnyMarkDefinition> = BUILTIN_MARK_REGISTRY,
-): ReturnType<NonNullable<AnyMarkDefinition['channelKinds']>> | undefined => markDefinitionOf(mark, registry).channelKinds?.(mark as never);
+): ReturnType<NonNullable<AnyMarkDefinition['channelKinds']>> | undefined =>
+  markDefinitionOf(mark, registry).channelKinds?.(mark as never);
 
 /**
  * 解析 datum 锚点：cell 类 mark 通过 definition.buildCell 取逻辑 cell，其余内置 mark 走 role 投影。
@@ -79,7 +106,12 @@ export const datumAnchor = (
 const isScopeLayer = (layer: IRChild | null): layer is IRScope =>
   layer !== null && layer.type === 'scope' && 'children' in layer;
 
-const applyScopeChannelDeliveries = (layer: IRChild | null, mark: MarkOperation, rows: Array<ExternalRow>, channels: MarkChannels): IRChild | null => {
+const applyScopeChannelDeliveries = (
+  layer: IRChild | null,
+  mark: MarkOperation,
+  rows: Array<ExternalRow>,
+  channels: MarkChannels,
+): IRChild | null => {
   if (!isScopeLayer(layer)) return layer;
   for (const entry of channels.scopeDeliveries ?? []) {
     entry.deliver(layer, entry.value, { mark, rows });
@@ -100,4 +132,10 @@ export const lowerMark = (
   channels: MarkChannels = {},
   markContext?: MarkLoweringContext,
   registry: ReadonlyMap<string, AnyMarkDefinition> = BUILTIN_MARK_REGISTRY,
-): IRChild | null => applyScopeChannelDeliveries(markDefinitionOf(mark, registry).lower(mark as never, rows, frame, channels, markContext), mark, rows, channels);
+): IRChild | null =>
+  applyScopeChannelDeliveries(
+    markDefinitionOf(mark, registry).lower(mark as never, rows, frame, channels, markContext),
+    mark,
+    rows,
+    channels,
+  );

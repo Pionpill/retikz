@@ -19,14 +19,14 @@ Each shape page documents both faces as two self-contained halves: "As a Path sh
 
 ## What each part does
 
-| Shape | As a Path (sugar) | As a Node shape |
-| --- | --- | --- |
-| Circle / Ellipse | `<Circle>` · `<Ellipse>` | `shape="circle"` · `"ellipse"` |
-| Arc / Sector | `<Arc>` · `<Sector>` | `shape="sector"` · `"arc"` (params) |
-| Rectangle | `<Rectangle>` | default / `shape="rectangle"` |
-| Polygon | `<RegularPolygon>` | `shape={{ type:'polygon', params }}` (params) · `"diamond"` |
-| Star | `<Star>` | `shape={{ type:'star', params }}` (params) |
-| Contour | — (draw with `<Path>`) | `shape={{ type:'contour', params }}` (arbitrary vertex ring) |
+| Shape            | As a Path (sugar)        | As a Node shape                                              |
+| ---------------- | ------------------------ | ------------------------------------------------------------ |
+| Circle / Ellipse | `<Circle>` · `<Ellipse>` | `shape="circle"` · `"ellipse"`                               |
+| Arc / Sector     | `<Arc>` · `<Sector>`     | `shape="sector"` · `"arc"` (params)                          |
+| Rectangle        | `<Rectangle>`            | default / `shape="rectangle"`                                |
+| Polygon          | `<RegularPolygon>`       | `shape={{ type:'polygon', params }}` (params) · `"diamond"`  |
+| Star             | `<Star>`                 | `shape={{ type:'star', params }}` (params)                   |
+| Contour          | — (draw with `<Path>`)   | `shape={{ type:'contour', params }}` (arbitrary vertex ring) |
 
 > Background grids and reference lines — **a field of regular lines** rather than a single closed shape — are not in this group; see `<Grid>` under [Helpers](/kernel/components/helpers).
 
@@ -35,7 +35,9 @@ Each shape page documents both faces as two self-contained halves: "As a Path sh
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/kernel/components/shapes/circle-ellipse">
     <span className="font-semibold">Circle / Ellipse</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Circles, ellipses, half circles, and segments</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Circles, ellipses, half circles, and segments
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/shapes/arc-sector">
     <span className="font-semibold">Arc / Sector</span>
@@ -43,7 +45,9 @@ Each shape page documents both faces as two self-contained halves: "As a Path sh
   </LinkedCard>
   <LinkedCard href="/kernel/components/shapes/rectangle">
     <span className="font-semibold">Rectangle</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Rectangles and rounded rectangles (node default)</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Rectangles and rounded rectangles (node default)
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/shapes/polygon">
     <span className="font-semibold">Polygon</span>
@@ -55,6 +59,8 @@ Each shape page documents both faces as two self-contained halves: "As a Path sh
   </LinkedCard>
   <LinkedCard href="/kernel/components/shapes/contour">
     <span className="font-semibold">Contour</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Connectable node from an arbitrary closed vertex ring</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Connectable node from an arbitrary closed vertex ring
+    </span>
   </LinkedCard>
 </div>

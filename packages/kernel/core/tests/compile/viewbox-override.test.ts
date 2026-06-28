@@ -5,10 +5,12 @@
  *   compileToScene 抛清晰错（不泄漏 Infinity / 0 宽进 Scene）。所有 IR 手搓 `{version,type,children,viewBox}`。
  */
 import { describe, expect, it } from 'vitest';
+
+import type { IR, IRChild } from '../../src';
+
 import { compileToScene } from '../../src/compile/compile';
 import { computeLayout } from '../../src/compile/layout';
 import { createRound } from '../../src/compile/precision';
-import type { IR, IRChild } from '../../src';
 
 /** 一个尺寸固定、与文字度量无关的稳定内容节点（circle + minimumSize），落在给定中心 */
 const circleNode = (id: string, position: [number, number], minimumSize = 40): IRChild => ({

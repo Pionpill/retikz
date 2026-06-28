@@ -1,8 +1,11 @@
+import type { ExternalDatasets, PlotSpec } from '@retikz/plot';
+
+import { lowerPlots } from '@retikz/plot';
+import { Layout } from '@retikz/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
-import { Layout } from '@retikz/react';
-import { type ExternalDatasets, type PlotSpec, lowerPlots } from '@retikz/plot';
+
 import { Axis, IntervalMark, PathMark, Plot, PointMark } from '../src';
 
 const spec: PlotSpec = {

@@ -1,5 +1,6 @@
-import { Layout, Node, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node, Path, Step } from '@retikz/react';
 
 const Demo: FC = () => (
   <Layout width={420} height={200} nodeDefault={{ stroke: 'gray', dashed: true }}>
@@ -12,12 +13,7 @@ const Demo: FC = () => (
     {/* Quadratic Bezier：t 是 Bezier 参数（非弧长）；t=0.5 通常不是视觉中点 */}
     <Path stroke="currentColor" arrow="->">
       <Step kind="move" to="a" />
-      <Step
-        kind="curve"
-        control={[210, 20]}
-        to="b"
-        label={{ text: 't=0.25', position: 0.25 }}
-      />
+      <Step kind="curve" control={[210, 20]} to="b" label={{ text: 't=0.25', position: 0.25 }} />
     </Path>
   </Layout>
 );

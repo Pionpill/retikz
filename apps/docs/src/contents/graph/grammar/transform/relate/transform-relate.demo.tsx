@@ -1,11 +1,19 @@
-import { Axis, PathMark, Plot, PointMark, RelationMark } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, PathMark, Plot, PointMark, RelationMark } from '@retikz/plot-react';
 
 import { monthlyTrend } from './transform-relate.data';
 
 const Demo: FC = () => (
   <Plot data={monthlyTrend} width={520} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
-    <PathMark x="month" y="value" order="month" stroke="#0f766e" strokeWidth={2.2} anchorId={{ prefix: 'trend', field: 'id' }} />
+    <PathMark
+      x="month"
+      y="value"
+      order="month"
+      stroke="#0f766e"
+      strokeWidth={2.2}
+      anchorId={{ prefix: 'trend', field: 'id' }}
+    />
     <PointMark x="month" y="value" fill="#ffffff" stroke="#0f766e" strokeWidth={1.2} size={5} />
     <RelationMark
       transform={[
@@ -24,7 +32,13 @@ const Demo: FC = () => (
       }}
       path={{
         routing: { kind: 'bend', bendDirection: 'left', bendAngle: 28 },
-        label: { text: { field: 'deltaLabel' }, position: 0.5, side: 'sloped', textColor: '#ea580c', font: { size: 11, weight: 'bold' } },
+        label: {
+          text: { field: 'deltaLabel' },
+          position: 0.5,
+          side: 'sloped',
+          textColor: '#ea580c',
+          font: { size: 11, weight: 'bold' },
+        },
         options: { arrow: '->' },
       }}
     />

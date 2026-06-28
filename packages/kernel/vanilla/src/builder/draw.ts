@@ -1,4 +1,5 @@
 import { parseWay } from '@retikz/core';
+
 import type { Child, DrawConfig, Way } from './types';
 
 /**

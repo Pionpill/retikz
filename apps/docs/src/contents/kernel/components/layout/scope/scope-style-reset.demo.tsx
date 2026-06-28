@@ -1,5 +1,6 @@
-import { Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node, Scope } from '@retikz/react';
 
 /**
  * resetStyle 继承屏障：切外层 scope 继承轴

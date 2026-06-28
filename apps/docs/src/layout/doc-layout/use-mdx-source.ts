@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import type { Lang } from '@/i18n';
+
 import { LANGS } from '@/i18n';
+
 import { docPathSegments, useDocLocation } from './doc-location';
 
 type MdxLoader = () => Promise<string>;
@@ -10,13 +13,12 @@ type MdxLoader = () => Promise<string>;
  * 收集 src/contents 下全部 mdx 源码字符串
  * @description 按需异步加载；key 形如 `../../contents/<module>/<...segments>/index.<lang>.mdx`
  */
-const mdxLoaders: Record<string, MdxLoader | undefined> = import.meta.glob<string>(
-  '../../contents/**/*.mdx',
-  { query: '?raw', import: 'default' },
-);
+const mdxLoaders: Record<string, MdxLoader | undefined> = import.meta.glob<string>('../../contents/**/*.mdx', {
+  query: '?raw',
+  import: 'default',
+});
 
-const buildKey = (segments: Array<string>, lang: string) =>
-  `../../contents/${segments.join('/')}/index.${lang}.mdx`;
+const buildKey = (segments: Array<string>, lang: string) => `../../contents/${segments.join('/')}/index.${lang}.mdx`;
 
 type ResolvedLoader = { loader: MdxLoader; lang: Lang };
 

@@ -1,10 +1,12 @@
 import type { ArrowEndSpec, BlendModeValue, DropShadow, PaintValue, ScenePrimitive } from '@retikz/core';
+
 import type { SvgNode, SvgStyle } from '../types';
+
+import { firstLineDy } from '../../shared';
 import { buildPathD } from '../path-d-builder';
 import { buildTransform } from '../transform-builder';
 import { compact } from './attrs';
 import { shadowHash } from './shadow-defs';
-import { firstLineDy } from '../../shared';
 
 type DominantBaseline = 'text-before-edge' | 'central' | 'text-after-edge' | 'alphabetic';
 
@@ -50,9 +52,7 @@ const paintToSvg = (
 ): { attr: string | undefined; stylePaint: string | undefined } => {
   if (paint === undefined) return { attr: undefined, stylePaint: undefined };
   if (typeof paint === 'string') {
-    return paint.includes('var(')
-      ? { attr: undefined, stylePaint: paint }
-      : { attr: paint, stylePaint: undefined };
+    return paint.includes('var(') ? { attr: undefined, stylePaint: paint } : { attr: paint, stylePaint: undefined };
   }
   if (paint.kind === 'resourceRef') return { attr: paintRefUrl(paint.id), stylePaint: undefined };
   return { attr: 'context-stroke', stylePaint: undefined };
@@ -67,10 +67,7 @@ const paintAttr = (value: string | undefined): string | undefined =>
   value === undefined || value.includes('var(') ? undefined : value;
 
 /** 合并 fill / stroke（PaintValue 解析出的 var 值）的 inline style */
-const mergeFillStrokeStyle = (
-  styleFill: string | undefined,
-  styleStroke: string | undefined,
-): SvgStyle | undefined => {
+const mergeFillStrokeStyle = (styleFill: string | undefined, styleStroke: string | undefined): SvgStyle | undefined => {
   const out: SvgStyle = {};
   if (styleFill !== undefined) out.fill = styleFill;
   if (styleStroke !== undefined) out.stroke = styleStroke;
@@ -82,17 +79,13 @@ const fillOnlyStyle = (fill: string | undefined): SvgStyle | undefined =>
   fill !== undefined && fill.includes('var(') ? { fill } : undefined;
 
 /** 给 SvgNode 可选挂 style（仅在有值时写 style 字段，保持节点干净） */
-const withStyle = (node: SvgNode, style: SvgStyle | undefined): SvgNode =>
-  style ? { ...node, style } : node;
+const withStyle = (node: SvgNode, style: SvgStyle | undefined): SvgNode => (style ? { ...node, style } : node);
 
 /**
  * 把可选 blendMode 合进（可能已含 fill/stroke 的）几何图元 style
  * @description `normal` / 省略不出 `mix-blend-mode`（逐字不变）；其余 emit CSS `mix-blend-mode`，与 var() 颜色共存。
  */
-const mergeBlendStyle = (
-  style: SvgStyle | undefined,
-  blendMode: BlendModeValue | undefined,
-): SvgStyle | undefined => {
+const mergeBlendStyle = (style: SvgStyle | undefined, blendMode: BlendModeValue | undefined): SvgStyle | undefined => {
   if (blendMode === undefined || blendMode === 'normal') return style;
   return { ...(style ?? {}), 'mix-blend-mode': blendMode };
 };
@@ -108,9 +101,7 @@ const shadowFilterRef = (
   shadow: DropShadow | undefined,
   shadowIdFor: ((shadow: DropShadow) => string) | undefined,
 ): string | undefined =>
-  shadow
-    ? `url(#${shadowIdFor ? shadowIdFor(shadow) : `retikz-shadow-${shadowHash(shadow)}`})`
-    : undefined;
+  shadow ? `url(#${shadowIdFor ? shadowIdFor(shadow) : `retikz-shadow-${shadowHash(shadow)}`})` : undefined;
 
 /**
  * Scene primitive → `SvgNode`
@@ -219,10 +210,8 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
       );
     }
     case 'path': {
-      const startId =
-        p.arrowStart && context.arrowMarkerIdFor ? context.arrowMarkerIdFor(p.arrowStart) : undefined;
-      const endId =
-        p.arrowEnd && context.arrowMarkerIdFor ? context.arrowMarkerIdFor(p.arrowEnd) : undefined;
+      const startId = p.arrowStart && context.arrowMarkerIdFor ? context.arrowMarkerIdFor(p.arrowStart) : undefined;
+      const endId = p.arrowEnd && context.arrowMarkerIdFor ? context.arrowMarkerIdFor(p.arrowEnd) : undefined;
       const f = paintToSvg(p.fill, paintRefUrl);
       const s = paintToSvg(p.stroke, paintRefUrl);
       return withStyle(
@@ -253,9 +242,7 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
       const clipRefUrl = context.clipRefUrl ?? ((id: string) => `url(#${id})`);
       const clipPath = p.clipRef !== undefined ? clipRefUrl(p.clipRef) : undefined;
       // 防御：跳过 undefined 子槽位（非法 Scene 不致抛）
-      const children = p.children
-        .filter((c): c is ScenePrimitive => Boolean(c))
-        .map(c => buildPrim(c, context));
+      const children = p.children.filter((c): c is ScenePrimitive => Boolean(c)).map(c => buildPrim(c, context));
       return {
         tag: 'g',
         attrs: compact({

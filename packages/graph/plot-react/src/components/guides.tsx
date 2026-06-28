@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+
 import type { PositionScaleType } from './scales';
 
 /** <Axis> props：坐标轴配置；网格走 `grid` 布尔 prop（与 IR axis.grid 对应，非独立 <Grid> 组件） */

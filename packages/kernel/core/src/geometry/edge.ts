@@ -1,4 +1,5 @@
 import { lerp } from '@retikz/math';
+
 import type { CompassAnchorValue } from './anchor';
 import type { Position } from './point';
 
@@ -42,9 +43,5 @@ export const edgeAngleDeg = (side: Side, t: number): number => {
  * @description t∈[0,0.5] 走 p0→vertex、t∈[0.5,1] 走 vertex→p1；t=0.5 恰落 vertex。
  *   p0/p1 为相邻边中点 anchor、vertex 为 cardinal 顶点 anchor——全落真实斜边
  */
-export const polylineViaVertex = (
-  p0: Position,
-  vertex: Position,
-  p1: Position,
-  t: number,
-): Position => (t <= 0.5 ? lerp(p0, vertex, t * 2) : lerp(vertex, p1, (t - 0.5) * 2));
+export const polylineViaVertex = (p0: Position, vertex: Position, p1: Position, t: number): Position =>
+  t <= 0.5 ? lerp(p0, vertex, t * 2) : lerp(vertex, p1, (t - 0.5) * 2);

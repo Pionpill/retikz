@@ -1,16 +1,12 @@
+import { CoordinateSchema, MoveStepSchema, RelativeTargetSchema, SceneSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { SCHEMA_REGISTRY, lookupSchema } from '@/lib/schema-registry';
-import {
-  CoordinateSchema,
-  MoveStepSchema,
-  RelativeTargetSchema,
-  SceneSchema,
-} from '@retikz/core';
+
+import { lookupSchema, SCHEMA_REGISTRY } from '@/lib/schema-registry';
 
 describe('SCHEMA_REGISTRY', () => {
-  it('contains 35 entries (19 primary + 12 step variants + 2 target variants + 2 arrow detail variants)', () => {
-    expect(Object.keys(SCHEMA_REGISTRY)).toHaveLength(35);
+  it('contains 39 entries (23 primary + 12 step variants + 2 target variants + 2 arrow detail variants)', () => {
+    expect(Object.keys(SCHEMA_REGISTRY)).toHaveLength(39);
   });
 
   it('each entry has non-empty schema / label / url', () => {

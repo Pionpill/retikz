@@ -1,5 +1,6 @@
-import type { FC } from 'react';
 import type { IRPaintSpec } from '@retikz/plot';
+import type { FC } from 'react';
+
 import { Axis, Plot, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
@@ -25,7 +26,16 @@ const strokePaint: IRPaintSpec = {
 const Demo: FC = () => (
   <Layout width={620} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
     <Plot data={points} width={560} height={220} x={30} y={20}>
-      <PointMark x="x" y="y" size="pop" shape="region" fill={fillPaint} stroke={strokePaint} strokeWidth={3} fillOpacity={0.9} />
+      <PointMark
+        x="x"
+        y="y"
+        size="pop"
+        shape="region"
+        fill={fillPaint}
+        stroke={strokePaint}
+        strokeWidth={3}
+        fillOpacity={0.9}
+      />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>

@@ -1,11 +1,13 @@
-import type { IRFont, IRLineSpec } from '../schemas';
+import type { IRInlineRun } from '../parsers/inline-tex';
 import type { GroupPrim, PathCommand, PathPrim, ScenePrimitive, TextPrim } from '../primitive';
-import { type IRInlineRun, isMathRun, parseInlineRuns } from '../parsers/inline-tex';
-import { CompileWarningCode } from './constant';
+import type { IRFont, IRLineSpec } from '../schemas';
 import type { CompileWarningCodeValue } from './constant';
 import type { LowerTex } from './lower-tex';
-import { ASCENT_FACTOR, DESCENT_FACTOR } from './text-baseline';
 import type { FontSpec, TextMeasurer } from './text-metrics';
+
+import { isMathRun, parseInlineRuns } from '../parsers/inline-tex';
+import { CompileWarningCode } from './constant';
+import { ASCENT_FACTOR, DESCENT_FACTOR } from './text-baseline';
 
 /** 行高近似系数（与 node.ts 的 DEFAULT_LINE_HEIGHT_FACTOR 同口径） */
 const LINE_HEIGHT_FACTOR = 1.2;
@@ -60,15 +62,16 @@ export const resolveLineRuns = (
     return { runs: spec.runs, hasMath: spec.runs.some(isMathRun), warn: false };
   }
   const parsed = parseInlineRuns(spec.text, gatingOn);
-  const runs = parsed.runs.map((r): IRInlineRun =>
-    isMathRun(r)
-      ? { ...r, fill: r.fill ?? spec.fill, opacity: r.opacity ?? spec.opacity }
-      : {
-          ...r,
-          fill: r.fill ?? spec.fill,
-          opacity: r.opacity ?? spec.opacity,
-          font: r.font ?? spec.font,
-        },
+  const runs = parsed.runs.map(
+    (r): IRInlineRun =>
+      isMathRun(r)
+        ? { ...r, fill: r.fill ?? spec.fill, opacity: r.opacity ?? spec.opacity }
+        : {
+            ...r,
+            fill: r.fill ?? spec.fill,
+            opacity: r.opacity ?? spec.opacity,
+            font: r.font ?? spec.font,
+          },
   );
   return { runs, hasMath: parsed.hasMath, warn: parsed.warn };
 };
@@ -200,9 +203,7 @@ export const layoutInlineLine = (runs: Array<IRInlineRun>, ctx: LineLayoutContex
           if (gop !== undefined) glyph.opacity = gop;
           const group: GroupPrim = {
             type: 'group',
-            transforms: [
-              { kind: 'translate', x: round(originX + p.x), y: round(baselineY - (p.height - p.depth)) },
-            ],
+            transforms: [{ kind: 'translate', x: round(originX + p.x), y: round(baselineY - (p.height - p.depth)) }],
             children: [glyph],
           };
           out.push(group);

@@ -1,6 +1,6 @@
 ---
 title: 图例
-description: "用 <Legend> 把非位置通道（颜色 / 尺寸 / 透明度 / 形状）可视化成图例；channel 选可视化哪个通道，形态据 scale 类型自动选。"
+description: '用 <Legend> 把非位置通道（颜色 / 尺寸 / 透明度 / 形状）可视化成图例；channel 选可视化哪个通道，形态据 scale 类型自动选。'
 ---
 
 `<Legend>` 是 scale 的可视化身。坐标轴（`<Axis>`）解释 x / y 这两个位置通道；图例解释剩下的非位置通道——`color`（颜色）、`size`（尺寸）、`opacity`（透明度）、`shape`（形状）。两者并列，都是图表的 guide。
@@ -53,15 +53,15 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
 
 ## API
 
-| 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `channel` | `'color' \| 'size' \| 'opacity' \| 'shape'` | — | 图例解释哪个非位置通道；形态据绑定 scale 类型自动选 |
-| `scale` | `string?` | — | 消歧 scale name：同通道被多个 scale 驱动时指定；省略 = 该通道唯一 scale |
-| `title` | `string?` | 无 | 图例标题（渲染在条目上方）；省略则不画标题 |
-| `position` | `'right' \| 'left' \| 'top' \| 'bottom'` | `'right'` | 图例所在边（在该边预留带宽放图例） |
-| `orient` | `'vertical' \| 'horizontal'` | 按 `position` | 条目排布方向；左右默认 vertical、上下默认 horizontal |
-| `tickCount` | `number?` | 默认刻度数 | 连续色带刻度数提示；离散图例忽略 |
-| `tickLabels` | `boolean?` | `true` | 是否出 swatch / 刻度旁标签 |
+| 属性         | 类型                                        | 默认值        | 描述                                                                    |
+| ------------ | ------------------------------------------- | ------------- | ----------------------------------------------------------------------- |
+| `channel`    | `'color' \| 'size' \| 'opacity' \| 'shape'` | —             | 图例解释哪个非位置通道；形态据绑定 scale 类型自动选                     |
+| `scale`      | `string?`                                   | —             | 消歧 scale name：同通道被多个 scale 驱动时指定；省略 = 该通道唯一 scale |
+| `title`      | `string?`                                   | 无            | 图例标题（渲染在条目上方）；省略则不画标题                              |
+| `position`   | `'right' \| 'left' \| 'top' \| 'bottom'`    | `'right'`     | 图例所在边（在该边预留带宽放图例）                                      |
+| `orient`     | `'vertical' \| 'horizontal'`                | 按 `position` | 条目排布方向；左右默认 vertical、上下默认 horizontal                    |
+| `tickCount`  | `number?`                                   | 默认刻度数    | 连续色带刻度数提示；离散图例忽略                                        |
+| `tickLabels` | `boolean?`                                  | `true`        | 是否出 swatch / 刻度旁标签                                              |
 
 ## 相关
 

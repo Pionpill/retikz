@@ -1,5 +1,6 @@
-import { Coordinate, Draw, Layout, Node, Text } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Coordinate, Draw, Layout, Node, Text } from '@retikz/react';
 
 /**
  * 节点家族三件套

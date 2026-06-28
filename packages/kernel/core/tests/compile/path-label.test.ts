@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
+
+import type { TextMeasurer } from '../../src';
+import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
 import { compileToScene } from '../../src/compile/compile';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
-import type { TextMeasurer } from '../../src';
-import type { IR } from '../../src/schemas';
-import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
 
 const findTextPrims = (prims: Array<ScenePrimitive>): Array<TextPrim> =>
   prims.filter((p): p is TextPrim => p.type === 'text');
@@ -15,8 +17,7 @@ const findGroupPrim = (prims: Array<ScenePrimitive>): GroupPrim | undefined =>
 // 用于验证 label 实际落点（与 baseline 编码方式解耦）
 const visualTop = (t: TextPrim): number => t.y - t.fontSize * ASCENT_FACTOR;
 const visualBottom = (t: TextPrim): number => t.y + t.fontSize * DESCENT_FACTOR;
-const visualMiddle = (t: TextPrim): number =>
-  t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
+const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
 
 const linePathIR = (label: NonNullable<Parameters<typeof JSON.stringify>[0]>): IR => ({
   version: 1,
@@ -945,15 +946,7 @@ describe('label.position schema 边界：异常值由 zod 拒绝（不在 compil
   });
   it('label_all_7_keywords_accepted：7 个新 keyword 全部合法', async () => {
     const { StepLabelSchema } = await import('../../src/schemas/path/step');
-    const keywords = [
-      'at-start',
-      'very-near-start',
-      'near-start',
-      'midway',
-      'near-end',
-      'very-near-end',
-      'at-end',
-    ];
+    const keywords = ['at-start', 'very-near-start', 'near-start', 'midway', 'near-end', 'very-near-end', 'at-end'];
     for (const k of keywords) {
       const result = StepLabelSchema.safeParse({ text: 'x', position: k });
       expect(result.success).toBe(true);

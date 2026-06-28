@@ -1,5 +1,6 @@
-import { Circle, Draw, Ellipse, Layout, Node, Rectangle } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Circle, Draw, Ellipse, Layout, Node, Rectangle } from '@retikz/react';
 
 const CONTENT_WIDTH = 82;
 const CONTENT_HEIGHT = 30;
@@ -15,10 +16,29 @@ const SHAPE_TARGET: [number, number] = [
 ];
 
 const Demo: FC = () => (
-  <Layout width={520} height={300} viewBox={{ x: -250, y: -145, width: 500, height: 285 }} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout
+    width={520}
+    height={300}
+    viewBox={{ x: -250, y: -145, width: 500, height: 285 }}
+    style={{ maxWidth: '100%', height: 'auto' }}
+  >
     <Rectangle center={[0, 0]} width={CONTENT_WIDTH} height={CONTENT_HEIGHT} fill="lightgray" stroke="none" />
-    <Rectangle center={[0, 0]} width={INNER_WIDTH} height={INNER_HEIGHT} fill="none" stroke="currentColor" dashPattern={[4, 3]} />
-    <Ellipse center={[0, 0]} radiusX={BBOX_WIDTH / 2} radiusY={BBOX_HEIGHT / 2} fill="none" stroke="darkorange" strokeWidth={2} />
+    <Rectangle
+      center={[0, 0]}
+      width={INNER_WIDTH}
+      height={INNER_HEIGHT}
+      fill="none"
+      stroke="currentColor"
+      dashPattern={[4, 3]}
+    />
+    <Ellipse
+      center={[0, 0]}
+      radiusX={BBOX_WIDTH / 2}
+      radiusY={BBOX_HEIGHT / 2}
+      fill="none"
+      stroke="darkorange"
+      strokeWidth={2}
+    />
     <Rectangle center={[0, 0]} width={BBOX_WIDTH} height={BBOX_HEIGHT} fill="none" stroke="gray" dashPattern={[4, 3]} />
     <Circle center={[0, 0]} radius={BOUNDARY_RADIUS} fill="none" stroke="dodgerblue" dashPattern={[4, 3]} />
 
@@ -26,10 +46,42 @@ const Demo: FC = () => (
       内容
     </Node>
 
-    <Node id="anchor-n" position={[0, -BOUNDARY_RADIUS]} shape="circle" padding={0} minimumSize={4} fill="dodgerblue" stroke="none" />
-    <Node id="anchor-e" position={[BOUNDARY_RADIUS, 0]} shape="circle" padding={0} minimumSize={4} fill="dodgerblue" stroke="none" />
-    <Node id="anchor-s" position={[0, BOUNDARY_RADIUS]} shape="circle" padding={0} minimumSize={4} fill="dodgerblue" stroke="none" />
-    <Node id="anchor-w" position={[-BOUNDARY_RADIUS, 0]} shape="circle" padding={0} minimumSize={4} fill="dodgerblue" stroke="none" />
+    <Node
+      id="anchor-n"
+      position={[0, -BOUNDARY_RADIUS]}
+      shape="circle"
+      padding={0}
+      minimumSize={4}
+      fill="dodgerblue"
+      stroke="none"
+    />
+    <Node
+      id="anchor-e"
+      position={[BOUNDARY_RADIUS, 0]}
+      shape="circle"
+      padding={0}
+      minimumSize={4}
+      fill="dodgerblue"
+      stroke="none"
+    />
+    <Node
+      id="anchor-s"
+      position={[0, BOUNDARY_RADIUS]}
+      shape="circle"
+      padding={0}
+      minimumSize={4}
+      fill="dodgerblue"
+      stroke="none"
+    />
+    <Node
+      id="anchor-w"
+      position={[-BOUNDARY_RADIUS, 0]}
+      shape="circle"
+      padding={0}
+      minimumSize={4}
+      fill="dodgerblue"
+      stroke="none"
+    />
 
     <Node id="padding-label" position={[-178, -58]} stroke="none" textColor="gray">
       {'内边距\npadding'}

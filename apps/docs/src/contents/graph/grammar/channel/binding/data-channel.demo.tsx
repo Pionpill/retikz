@@ -1,6 +1,7 @@
+import type { FC } from 'react';
+
 import { PlotFieldType } from '@retikz/plot';
 import { Axis, Legend, Plot, PointMark } from '@retikz/plot-react';
-import type { FC } from 'react';
 
 import { cities } from './data-channel.data';
 

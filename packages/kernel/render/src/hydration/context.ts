@@ -7,7 +7,9 @@
  *   Scene-派生字段（meta / geometry / scene）在无 scene 时缺省、animation 在无 runtime 时 no-op。
  */
 import type { IRJsonObject, Layout, Scene, ScenePrimitive } from '@retikz/core';
+
 import type { IdClockRegistry } from '../animation/id-clock';
+
 import { pathControlPoints } from '../shared/path-command';
 
 /**
@@ -146,7 +148,12 @@ const includePoints = (bbox: BBox | undefined, m: Matrix, points: Array<[number,
     const [x, y] = applyMatrix(m, px, py);
     if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
     out = out
-      ? { minX: Math.min(out.minX, x), minY: Math.min(out.minY, y), maxX: Math.max(out.maxX, x), maxY: Math.max(out.maxY, y) }
+      ? {
+          minX: Math.min(out.minX, x),
+          minY: Math.min(out.minY, y),
+          maxX: Math.max(out.maxX, x),
+          maxY: Math.max(out.maxY, y),
+        }
       : { minX: x, minY: y, maxX: x, maxY: y };
   }
   return out;
@@ -181,8 +188,18 @@ const leafCorners = (prim: ScenePrimitive): Array<[number, number]> => {
       });
     }
     case 'text': {
-      const left = prim.align === 'middle' ? prim.x - prim.measuredWidth / 2 : prim.align === 'end' ? prim.x - prim.measuredWidth : prim.x;
-      const top = prim.baseline === 'top' ? prim.y : prim.baseline === 'middle' ? prim.y - prim.measuredHeight / 2 : prim.y - prim.measuredHeight;
+      const left =
+        prim.align === 'middle'
+          ? prim.x - prim.measuredWidth / 2
+          : prim.align === 'end'
+            ? prim.x - prim.measuredWidth
+            : prim.x;
+      const top =
+        prim.baseline === 'top'
+          ? prim.y
+          : prim.baseline === 'middle'
+            ? prim.y - prim.measuredHeight / 2
+            : prim.y - prim.measuredHeight;
       return [
         [left, top],
         [left + prim.measuredWidth, top],
@@ -201,7 +218,8 @@ const leafCorners = (prim: ScenePrimitive): Array<[number, number]> => {
 /** 把图元子树（叶子角点）经累积矩阵并入 bbox；group 复合自身 transforms 再下钻全部后代 */
 const accumulateSubtree = (prim: ScenePrimitive, m: Matrix, bbox: BBox | undefined): BBox | undefined => {
   if (prim.type === 'group') {
-    const childMatrix = prim.transforms && prim.transforms.length > 0 ? multiply(m, transformsToMatrix(prim.transforms)) : m;
+    const childMatrix =
+      prim.transforms && prim.transforms.length > 0 ? multiply(m, transformsToMatrix(prim.transforms)) : m;
     let out = bbox;
     for (const child of prim.children) out = accumulateSubtree(child, childMatrix, out);
     return out;
@@ -221,7 +239,8 @@ export const geometryOf = (scene: Scene, id: string): HydrationGeometry | undefi
     for (const prim of prims) {
       if (prim.id === id) bbox = accumulateSubtree(prim, m, bbox);
       if (prim.type === 'group') {
-        const childMatrix = prim.transforms && prim.transforms.length > 0 ? multiply(m, transformsToMatrix(prim.transforms)) : m;
+        const childMatrix =
+          prim.transforms && prim.transforms.length > 0 ? multiply(m, transformsToMatrix(prim.transforms)) : m;
         walk(prim.children, childMatrix);
       }
     }

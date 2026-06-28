@@ -1,6 +1,6 @@
 ---
 title: Path Generators
-description: "The generator step lets external packages register custom curves (parabola / sin-cos / quadratic…). core ships no curves — only an IR-level injection surface: JSON-only params, top-level targetParams resolution, generate returns low-level PathCommands."
+description: 'The generator step lets external packages register custom curves (parabola / sin-cos / quadratic…). core ships no curves — only an IR-level injection surface: JSON-only params, top-level targetParams resolution, generate returns low-level PathCommands.'
 ---
 
 A step's built-in kinds are a fixed set of 12 (move / line / fold / cycle / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle / generator). Among them, **`generator`** is the open injection point: "curve steps" like parabola, sin-cos, or quadratic curves are registered by **external packages** — **core ships no concrete curve**.
@@ -15,31 +15,31 @@ Below registers a `parabola` — `from → to` plus a top-level Target `bend` as
 
 A `PathGeneratorDefinition` is a plain object (not part of the IR, can be returned by a factory); wrap it in `definePathGenerator` for a best-effort registration-time meta-check:
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `paramsSchema` | `ZodType<IRJsonObject>` | zod schema for params; type-constrains the output to be JSON-safe (a second runtime guard exists too, see below) |
-| `generate` | `(ctx) => Array<PathCommand>` | Produces low-level path commands (line / quad / cubic / move…) from ctx; does not re-enter step compilation |
-| `targetParams` | `Array<string>` | Which **top-level** params keys are Targets, resolved to world coordinates by compile first |
+| Field          | Type                          | Description                                                                                                      |
+| -------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `paramsSchema` | `ZodType<IRJsonObject>`       | zod schema for params; type-constrains the output to be JSON-safe (a second runtime guard exists too, see below) |
+| `generate`     | `(ctx) => Array<PathCommand>` | Produces low-level path commands (line / quad / cubic / move…) from ctx; does not re-enter step compilation      |
+| `targetParams` | `Array<string>`               | Which **top-level** params keys are Targets, resolved to world coordinates by compile first                      |
 
 The `PathGeneratorContext` passed to `generate`:
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `from` | `Position` | Current cursor in world coords (previous segment end / sub-path start) |
-| `to` | `Position?` | step.to resolved to world coords; undefined when the step has no `to` |
-| `params` | `Record<string, unknown>` | Params after paramsSchema validation |
-| `resolvedTargets` | `Record<string, Position>` | targetParams top-level keys → resolved world coordinates |
-| `round` | `(n) => number` | Precision rounding (same function as compile / render) |
+| Field             | Type                       | Description                                                            |
+| ----------------- | -------------------------- | ---------------------------------------------------------------------- |
+| `from`            | `Position`                 | Current cursor in world coords (previous segment end / sub-path start) |
+| `to`              | `Position?`                | step.to resolved to world coords; undefined when the step has no `to`  |
+| `params`          | `Record<string, unknown>`  | Params after paramsSchema validation                                   |
+| `resolvedTargets` | `Record<string, Position>` | targetParams top-level keys → resolved world coordinates               |
+| `round`           | `(n) => number`            | Precision rounding (same function as compile / render)                 |
 
 The generator step in the IR:
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `kind` | `'generator'` | step discriminant |
-| `name` | `string` | registered name; unregistered throws at compile time |
-| `to` | `Target?` | optional destination, passed as `ctx.to` |
-| `params` | `JsonObject` | JSON-only (keeps the IR serializable); the external paramsSchema refines this subtree |
-| `label` | `StepLabel?` | edge label |
+| Field    | Type          | Description                                                                           |
+| -------- | ------------- | ------------------------------------------------------------------------------------- |
+| `kind`   | `'generator'` | step discriminant                                                                     |
+| `name`   | `string`      | registered name; unregistered throws at compile time                                  |
+| `to`     | `Target?`     | optional destination, passed as `ctx.to`                                              |
+| `params` | `JsonObject`  | JSON-only (keeps the IR serializable); the external paramsSchema refines this subtree |
+| `label`  | `StepLabel?`  | edge label                                                                            |
 
 ## JSON-only params (double-parse guard)
 

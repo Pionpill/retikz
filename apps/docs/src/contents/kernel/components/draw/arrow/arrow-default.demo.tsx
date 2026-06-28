@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * arrow='->' 无 arrowDetail：默认 stealth 倒钩三角，视觉继承路径描边

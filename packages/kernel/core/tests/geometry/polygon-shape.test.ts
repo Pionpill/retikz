@@ -16,11 +16,13 @@
  *   paramsSchema / emit 拓扑 / round-trip / zod 错误 / scaleParams 类 case 此刻应通过。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
-import type { IR } from '../../src/schemas';
-import { polygon } from '../../src/providers/shape';
+
 import type { ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { polygon } from '../../src/providers/shape';
+import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
@@ -145,10 +147,7 @@ describe('polygon — 交互（self-rotate + Node.rotate）', () => {
     //   ① 外层 group 带 rotate 15° transform；
     //   ② emit 顶点（轴对齐空间，未含 group rotate）已含 self-rotate 30°——
     //      对 sides=4 取首顶点相对中心方向角应 ≈ 30°（mod 360）。
-    const compiled = compileToScene(
-      scene([polyNode({ sides: 4, rotate: 30 }, { rotate: 15 })]),
-      { precision: 6 },
-    );
+    const compiled = compileToScene(scene([polyNode({ sides: 4, rotate: 30 }, { rotate: 15 })]), { precision: 6 });
     const group = findByType(compiled.primitives, 'group');
     expect(group).toBeDefined();
     expect(group!.transforms?.some(t => t.kind === 'rotate' && t.degrees === 15)).toBe(true);

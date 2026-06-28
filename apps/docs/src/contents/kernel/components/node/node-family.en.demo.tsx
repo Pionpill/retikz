@@ -1,5 +1,6 @@
-import { Coordinate, Draw, Layout, Node, Text } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Coordinate, Draw, Layout, Node, Text } from '@retikz/react';
 
 /**
  * The node family at a glance

@@ -1,5 +1,7 @@
-import { type CSSProperties, type Key, type ReactElement, createElement } from 'react';
 import type { SvgNode, SvgStyle } from '@retikz/render/svg';
+import type { CSSProperties, Key, ReactElement } from 'react';
+
+import { createElement } from 'react';
 
 /**
  * 呈现属性 kebab → React camelCase 映射表（手工小表，零依赖）
@@ -35,8 +37,7 @@ const ATTR_KEBAB_TO_CAMEL: Record<string, string> = {
 const toReactPropName = (key: string): string => ATTR_KEBAB_TO_CAMEL[key] ?? key;
 
 /** kebab CSS 属性名 → React style camelCase（`fill`/`stroke` 单词无连字符，原样） */
-const styleKeyToCamel = (key: string): string =>
-  key.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
+const styleKeyToCamel = (key: string): string => key.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
 /** SvgNode.style（kebab）→ React style 对象（camelCase） */
 const toReactStyle = (style: SvgStyle): CSSProperties => {
@@ -63,7 +64,5 @@ export const svgToReact = (node: SvgNode | string, key?: Key): ReactElement | st
   const children = (node.children ?? []).map((c, i) => svgToReact(c, i));
   // 以「数组」整体传 children（保持与旧 renderPrim 的 `{lines.map(...)}` 同语义：单子节点也是数组），
   // 让 `props.children` 形态稳定（数组），下游断言 / 渲染不因子节点数量改变结构
-  return children.length > 0
-    ? createElement(node.tag, props, children)
-    : createElement(node.tag, props);
+  return children.length > 0 ? createElement(node.tag, props, children) : createElement(node.tag, props);
 };

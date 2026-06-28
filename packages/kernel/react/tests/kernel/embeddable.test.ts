@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+
 import type { EmbeddableContribution, EmbeddableTier2Adapter } from '../../src';
+
 import { isEmbeddableMarked, resolveEmbeddableAdapter } from '../../src';
 
 const makeContribution = (): EmbeddableContribution => ({

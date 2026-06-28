@@ -1,6 +1,7 @@
+import type { FC } from 'react';
+
 import { Axis, Legend, PathMark, Plot } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
-import type { FC } from 'react';
 
 import { interruptedArea } from './line-interruption.data';
 
@@ -18,14 +19,7 @@ const Demo: FC = () => (
         stroke="none"
         opacity={0.48}
       />
-      <PathMark
-        x="year"
-        y="amount"
-        order="year"
-        series="name"
-        color="name"
-        strokeWidth={2.4}
-      />
+      <PathMark x="year" y="amount" order="year" series="name" color="name" strokeWidth={2.4} />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
       <Legend channel="color" />

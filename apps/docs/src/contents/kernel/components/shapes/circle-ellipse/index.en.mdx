@@ -24,50 +24,50 @@ import { Circle, Ellipse } from '@retikz/react';
 
 The common form is `center + radius`. If you already have a rectangular area, you can also use `corner1 + corner2` or `box`.
 
-| Form | Best for |
-| --- | --- |
-| `{ center, radius }` | Known center and radius |
-| `{ center, diameter }` | Known diameter |
-| `{ from, to }` | Diameter endpoints |
-| `{ corner1, corner2 }` | Fit inside a box |
-| `{ box }` | Describe the box with `x/y/origin + width + height` |
-| + `fit="contain" \| "cover"` | Fit the circle inside or outside the box |
-| + `inset` / `outset` | Shrink or expand the box before fitting |
+| Form                         | Best for                                                   |
+| ---------------------------- | ---------------------------------------------------------- |
+| `{ center, radius }`         | Known center and radius                                    |
+| `{ center, diameter }`       | Known diameter                                             |
+| `{ from, to }`               | Diameter endpoints                                         |
+| `{ corner1, corner2 }`       | Fit inside a box                                           |
+| `{ box }`                    | Describe the box with `x/y/origin + width + height`        |
+| + `fit="contain" \| "cover"` | Fit the circle inside or outside the box                   |
+| + `inset` / `outset`         | Shrink or expand the box before fitting                    |
 | + angles + `closed="sector"` | Draw a partial circle whose arc ends connect to the center |
 
 <ComponentPreview name="circle-basic" size="sm" />
 
 Ellipse works like Circle, but the radius is split into `radiusX` and `radiusY`. It also supports `corner1 + corner2` and `box`.
 
-| Form | Best for |
-| --- | --- |
-| `{ center, radiusX, radiusY }` | Known center and radii |
-| `{ center, diameterX, diameterY }` | Known diameters |
-| `{ corner1, corner2 }` | Fit inside a box |
-| `{ box }` | Describe the box with `x/y/origin + width + height` |
-| + `inset` / `outset` | Shrink or expand the box before fitting |
-| + angles + `closed="sector"` | Draw a partial ellipse whose arc ends connect to the center |
+| Form                               | Best for                                                    |
+| ---------------------------------- | ----------------------------------------------------------- |
+| `{ center, radiusX, radiusY }`     | Known center and radii                                      |
+| `{ center, diameterX, diameterY }` | Known diameters                                             |
+| `{ corner1, corner2 }`             | Fit inside a box                                            |
+| `{ box }`                          | Describe the box with `x/y/origin + width + height`         |
+| + `inset` / `outset`               | Shrink or expand the box before fitting                     |
+| + angles + `closed="sector"`       | Draw a partial ellipse whose arc ends connect to the center |
 
 <ComponentPreview name="ellipse-basic" size="sm" />
 
 ### API Reference
 
-| Component | Combination | Meaning |
-| --- | --- | --- |
-| `<Circle>` | `center` + `radius` | Circle from center and radius |
-| | `center` + `diameter` | Circle from center and diameter |
-| | `from` + `to` | Circle from two points (diameter endpoints) |
-| | `corner1` + `corner2` | Largest circle inscribed in the box |
-| | `box` | Circle from a box, with `fit` / `inset` / `outset` |
-| | + `fit?` | `contain` uses the shorter side, `cover` uses the longer side |
-| | + `inset?` / `outset?` | Shrink or expand the box before fitting |
-| | + angles (`startAngle` / `endAngle` / `sweepAngle`, any two) + `closed?` | Partial circle: `chord` / `sector` / `open` |
-| `<Ellipse>` | `center` + `radiusX` + `radiusY` | Ellipse from center and two radii |
-| | `center` + `diameterX` + `diameterY` | Ellipse from center and two diameters |
-| | `corner1` + `corner2` | Ellipse inscribed in the box |
-| | `box` | Ellipse from a box, with `inset` / `outset` |
-| | + `inset?` / `outset?` | Shrink or expand the box before fitting |
-| | + angles + `closed?` | Partial ellipse: `chord` / `sector` / `open` |
+| Component   | Combination                                                              | Meaning                                                       |
+| ----------- | ------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| `<Circle>`  | `center` + `radius`                                                      | Circle from center and radius                                 |
+|             | `center` + `diameter`                                                    | Circle from center and diameter                               |
+|             | `from` + `to`                                                            | Circle from two points (diameter endpoints)                   |
+|             | `corner1` + `corner2`                                                    | Largest circle inscribed in the box                           |
+|             | `box`                                                                    | Circle from a box, with `fit` / `inset` / `outset`            |
+|             | + `fit?`                                                                 | `contain` uses the shorter side, `cover` uses the longer side |
+|             | + `inset?` / `outset?`                                                   | Shrink or expand the box before fitting                       |
+|             | + angles (`startAngle` / `endAngle` / `sweepAngle`, any two) + `closed?` | Partial circle: `chord` / `sector` / `open`                   |
+| `<Ellipse>` | `center` + `radiusX` + `radiusY`                                         | Ellipse from center and two radii                             |
+|             | `center` + `diameterX` + `diameterY`                                     | Ellipse from center and two diameters                         |
+|             | `corner1` + `corner2`                                                    | Ellipse inscribed in the box                                  |
+|             | `box`                                                                    | Ellipse from a box, with `inset` / `outset`                   |
+|             | + `inset?` / `outset?`                                                   | Shrink or expand the box before fitting                       |
+|             | + angles + `closed?`                                                     | Partial ellipse: `chord` / `sector` / `open`                  |
 
 ## As a node shape
 
@@ -94,10 +94,10 @@ Connection endpoints snap to the circle / ellipse edge, and the node's 9 standar
 
 ### API Reference
 
-| `shape` | Boundary | Parameters |
-| --- | --- | --- |
-| `"circle"` | Circle circumscribing the text (= the `circumscribe:'equal'` preset of `ellipse`) | None |
-| `"ellipse"` or `{ type:'ellipse', params }` | Circumscribed ellipse | `circumscribe?`: `'proportional'` (default, each axis × √2) / `'equal'` (isotropic, radius = half the inner box diagonal) |
+| `shape`                                     | Boundary                                                                          | Parameters                                                                                                                |
+| ------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `"circle"`                                  | Circle circumscribing the text (= the `circumscribe:'equal'` preset of `ellipse`) | None                                                                                                                      |
+| `"ellipse"` or `{ type:'ellipse', params }` | Circumscribed ellipse                                                             | `circumscribe?`: `'proportional'` (default, each axis × √2) / `'equal'` (isotropic, radius = half the inner box diagonal) |
 
 ## How it works
 
@@ -124,11 +124,11 @@ Passing a node id to a computed `<Circle>` form throws an error; `<Ellipse>`'s c
 
 When angles are present, `closed` decides how the arc ends are connected:
 
-| Value | Effect |
-| --- | --- |
-| `chord` | Default, draw a straight chord between the arc ends |
+| Value    | Effect                                                          |
+| -------- | --------------------------------------------------------------- |
+| `chord`  | Default, draw a straight chord between the arc ends             |
 | `sector` | Draw from the arc end to the center, then back to the arc start |
-| `open` | Draw only the arc |
+| `open`   | Draw only the arc                                               |
 
 ### Sugar and Node are two routes
 

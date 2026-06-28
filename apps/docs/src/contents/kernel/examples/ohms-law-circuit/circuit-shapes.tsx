@@ -1,19 +1,18 @@
 /* eslint-disable react-refresh/only-export-components -- 形状定义、注册表与元件组件成组放在一处便于各 step 复用；本文件不是 HMR 热点 */
-import {
-  type IRAnchorRef,
-  type IRNodeLabel,
-  type IRNodeTarget,
-  type Position,
-  type Rect,
-  type ScenePrimitive,
-  type ShapeDefinition,
-  defineShape,
-  localToWorld,
-  worldToLocal,
+import type {
+  IRAnchorRef,
+  IRNodeLabel,
+  IRNodeTarget,
+  Position,
+  Rect,
+  ScenePrimitive,
+  ShapeDefinition,
 } from '@retikz/core';
+import type { FC } from 'react';
+
+import { defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { Node } from '@retikz/react';
 import { z } from 'zod';
-import type { FC } from 'react';
 
 /** 元件可选标签（透传给内部 Node 的 label，TikZ `[label=above:foo]` 同义） */
 type CircuitLabel = IRNodeLabel | Array<IRNodeLabel>;
@@ -183,8 +182,24 @@ const circuitSwitch: ShapeDefinition = defineShape({
       strokeLinecap: 'round',
       ...shared,
     };
-    yield { type: 'ellipse', cx: round(leftContactX), cy: round(rect.y), rx: contactRadius, ry: contactRadius, fill: 'none', ...shared };
-    yield { type: 'ellipse', cx: round(rightContactX), cy: round(rect.y), rx: contactRadius, ry: contactRadius, fill: 'none', ...shared };
+    yield {
+      type: 'ellipse',
+      cx: round(leftContactX),
+      cy: round(rect.y),
+      rx: contactRadius,
+      ry: contactRadius,
+      fill: 'none',
+      ...shared,
+    };
+    yield {
+      type: 'ellipse',
+      cx: round(rightContactX),
+      cy: round(rect.y),
+      rx: contactRadius,
+      ry: contactRadius,
+      fill: 'none',
+      ...shared,
+    };
     yield {
       type: 'path',
       commands: [
@@ -350,7 +365,12 @@ export const circuitShapes = {
 };
 
 /** 电源（电池）：横向符号，长板阳极在右、短板阴极在左；rotate 旋转整只电池（如 90° 竖放） */
-export const Battery: FC<{ id?: string; position: Position; rotate?: number; label?: CircuitLabel }> = ({ id, position, rotate, label }) => (
+export const Battery: FC<{ id?: string; position: Position; rotate?: number; label?: CircuitLabel }> = ({
+  id,
+  position,
+  rotate,
+  label,
+}) => (
   <Node
     id={id}
     position={position}
@@ -367,15 +387,45 @@ export const Battery: FC<{ id?: string; position: Position; rotate?: number; lab
 
 /** 开关（断开态） */
 export const Switch: FC<{ id?: string; position: Position; label?: CircuitLabel }> = ({ id, position, label }) => (
-  <Node id={id} position={position} label={label} shape="circuit-switch" minimumWidth={156} minimumHeight={52} stroke={INK} strokeWidth={STROKE_WIDTH} fill="none" />
+  <Node
+    id={id}
+    position={position}
+    label={label}
+    shape="circuit-switch"
+    minimumWidth={156}
+    minimumHeight={52}
+    stroke={INK}
+    strokeWidth={STROKE_WIDTH}
+    fill="none"
+  />
 );
 
 /** 定值电阻 */
 export const Resistor: FC<{ id?: string; position: Position; label?: CircuitLabel }> = ({ id, position, label }) => (
-  <Node id={id} position={position} label={label} shape="circuit-resistor" minimumWidth={182} minimumHeight={48} stroke={INK} strokeWidth={STROKE_WIDTH} fill="none" />
+  <Node
+    id={id}
+    position={position}
+    label={label}
+    shape="circuit-resistor"
+    minimumWidth={182}
+    minimumHeight={48}
+    stroke={INK}
+    strokeWidth={STROKE_WIDTH}
+    fill="none"
+  />
 );
 
 /** 滑动变阻器：尺寸与定值电阻一致 */
 export const Rheostat: FC<{ id?: string; position: Position; label?: CircuitLabel }> = ({ id, position, label }) => (
-  <Node id={id} position={position} label={label} shape="circuit-rheostat" minimumWidth={182} minimumHeight={48} stroke={INK} strokeWidth={STROKE_WIDTH} fill="none" />
+  <Node
+    id={id}
+    position={position}
+    label={label}
+    shape="circuit-rheostat"
+    minimumWidth={182}
+    minimumHeight={48}
+    stroke={INK}
+    strokeWidth={STROKE_WIDTH}
+    fill="none"
+  />
 );

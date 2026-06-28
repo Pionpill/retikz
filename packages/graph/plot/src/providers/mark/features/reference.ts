@@ -1,33 +1,28 @@
 import { type IRChild, type IRNode, type IRNodeLabel, type IRScope, type IRStep } from '@retikz/core';
-import {
-  type Cell,
-  type CellGeometry,
-  type ChannelValueResolver,
-  type CoordinateFrame,
-  type FieldCollector,
-  type MarkChannels,
-  type MarkDefinition,
-  type MarkLoweringContext,
-  type MarkProvenance,
-  type PositionScale,
-  hasProjectCell,
-  isRenderableCellGeometry,
+
+import type {
+  Cell,
+  CellGeometry,
+  ChannelValueResolver,
+  CoordinateFrame,
+  FieldCollector,
+  MarkChannels,
+  MarkDefinition,
+  MarkLoweringContext,
+  MarkProvenance,
+  PositionScale,
 } from '../../../contract';
+import type { ExternalRow, Mark, MarkGeometryLabel, MarkNodeLabel, ReferenceMark } from '../../../schemas';
+import type { CartesianCoordinateFrame, PolarCoordinateFrame } from '../../coordinate';
+import type { MarkPaint } from '../shared';
+
+import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';
+import { ChannelDefinitionKind } from '../../../contract';
+import { PlotMark } from '../../../schemas';
+import { isCartesianCoordinateFrame, isPolarCoordinateFrame, isTernary2DCoordinateFrame } from '../../coordinate';
 import { channelValue, resolveFieldPath } from '../../data';
-import {
-  type CartesianCoordinateFrame,
-  type PolarCoordinateFrame,
-  isCartesianCoordinateFrame,
-  isPolarCoordinateFrame,
-  isTernary2DCoordinateFrame,
-} from '../../coordinate';
-import { type ExternalRow, type Mark, type MarkGeometryLabel, type MarkNodeLabel, PlotMark, type ReferenceMark } from '../../../schemas';
 import { cellGeometryNode, cellLayer, styleForGeometry } from '../private';
-import { pointsToSteps } from './path';
 import {
-  DEFAULT_FILL,
-  LINE_STROKE_WIDTH,
-  type MarkPaint,
   applyNodeChannelDeliveries,
   applyPathChannelDeliveries,
   attachMarkLayer,
@@ -37,20 +32,20 @@ import {
   collectNodeChannelFields,
   collectPathChannelFields,
   decorateDatum,
+  DEFAULT_FILL,
   failLoudMessage,
+  LINE_STROKE_WIDTH,
   resolveGeometryMarkLabels,
   resolveNodeMarkLabels,
 } from '../shared';
-import { ChannelDefinitionKind } from '../../../contract';
+import { pointsToSteps } from './path';
 
 /** reference 描边宽度（参考线；与 path mark 同宽，视觉一致）。 */
 const REFERENCE_STROKE_WIDTH = LINE_STROKE_WIDTH;
 
 type ReferenceOrientation = 'x' | 'y';
 
-type ReferenceShape =
-  | { kind: 'axis'; orientation: ReferenceOrientation; band: boolean }
-  | { kind: 'region' };
+type ReferenceShape = { kind: 'axis'; orientation: ReferenceOrientation; band: boolean } | { kind: 'region' };
 
 const isReferenceRegion = (mark: ReferenceMark): boolean => mark.kind === 'region';
 
@@ -61,7 +56,9 @@ const referenceOrientation = (mark: ReferenceMark): ReferenceOrientation => {
   const hasX = mark.encoding.x !== undefined;
   const hasY = mark.encoding.y !== undefined;
   if (hasX === hasY) {
-    throw new Error('lowerPlots: reference mark must bind exactly one of encoding.x (vertical) or encoding.y (horizontal); set one, not both / neither');
+    throw new Error(
+      'lowerPlots: reference mark must bind exactly one of encoding.x (vertical) or encoding.y (horizontal); set one, not both / neither',
+    );
   }
   return hasX ? 'x' : 'y';
 };
@@ -69,11 +66,18 @@ const referenceOrientation = (mark: ReferenceMark): ReferenceOrientation => {
 /**
  * reference 的对侧维（垂直于常量轴）输出区间：默认满铺该轴 range，extent 字段给定时截成 [extentLo, extentTo] 输出坐标。
  */
-const referenceSpanInterval = (mark: ReferenceMark, row: ExternalRow, oppositeCoordinate: (value: unknown) => number, oppositeRange: [number, number]): [number, number] | null => {
+const referenceSpanInterval = (
+  mark: ReferenceMark,
+  row: ExternalRow,
+  oppositeCoordinate: (value: unknown) => number,
+  oppositeRange: [number, number],
+): [number, number] | null => {
   const hasFrom = mark.extentField !== undefined;
   const hasTo = mark.extentToField !== undefined;
   if (hasFrom !== hasTo) {
-    throw new Error('lowerPlots: reference mark extentField / extentToField must be set together (a partial-length span needs both start and end)');
+    throw new Error(
+      'lowerPlots: reference mark extentField / extentToField must be set together (a partial-length span needs both start and end)',
+    );
   }
   if (!hasFrom) return oppositeRange;
   const lo = oppositeCoordinate(resolveFieldPath(row, mark.extentField as string));
@@ -97,10 +101,14 @@ const referenceUpperValue = (mark: ReferenceMark, row: ExternalRow, orientation:
 /** reference 是否 band 形态（绑定维度上给了匹配的上界 xTo / yTo）；并校验上界与所绑维度匹配（不匹配 / 单飞 → fail-loud）。 */
 const isReferenceBand = (mark: ReferenceMark, orientation: ReferenceOrientation): boolean => {
   if (orientation === 'x' && mark.yTo !== undefined) {
-    throw new Error('lowerPlots: reference mark binds x (vertical) but sets yTo; the band upper bound must match the bound dimension (use xTo)');
+    throw new Error(
+      'lowerPlots: reference mark binds x (vertical) but sets yTo; the band upper bound must match the bound dimension (use xTo)',
+    );
   }
   if (orientation === 'y' && mark.xTo !== undefined) {
-    throw new Error('lowerPlots: reference mark binds y (horizontal) but sets xTo; the band upper bound must match the bound dimension (use yTo)');
+    throw new Error(
+      'lowerPlots: reference mark binds y (horizontal) but sets xTo; the band upper bound must match the bound dimension (use yTo)',
+    );
   }
   return (orientation === 'x' ? mark.xTo : mark.yTo) !== undefined;
 };
@@ -111,7 +119,9 @@ const referenceShape = (mark: ReferenceMark): ReferenceShape => {
     return { kind: 'axis', orientation, band: isReferenceBand(mark, orientation) };
   }
   if (mark.extentField !== undefined || mark.extentToField !== undefined) {
-    throw new Error('lowerPlots: reference region does not support extentField / extentToField; set x/xTo/y/yTo bounds directly');
+    throw new Error(
+      'lowerPlots: reference region does not support extentField / extentToField; set x/xTo/y/yTo bounds directly',
+    );
   }
   return { kind: 'region' };
 };
@@ -125,14 +135,24 @@ const referenceRegionUpperRaw = (mark: ReferenceMark, role: string): number | st
 
 const referenceRegionRequireRole = (mark: ReferenceMark, role: string, frame: CoordinateFrame): void => {
   if (!Object.prototype.hasOwnProperty.call(mark.encoding, role) || referenceRegionUpperRaw(mark, role) === undefined) {
-    throw new Error(`lowerPlots: reference region under the ${frame.type} coordinate system requires encoding.${role} and ${role}To bounds`);
+    throw new Error(
+      `lowerPlots: reference region under the ${frame.type} coordinate system requires encoding.${role} and ${role}To bounds`,
+    );
   }
 };
 
-const referenceRegionCoordinate = (value: unknown, role: string, scale: PositionScale | undefined, frame: CoordinateFrame): number => {
-  if (isTernary2DCoordinateFrame(frame)) return typeof value === 'number' && Number.isFinite(value) ? value : Number.NaN;
+const referenceRegionCoordinate = (
+  value: unknown,
+  role: string,
+  scale: PositionScale | undefined,
+  frame: CoordinateFrame,
+): number => {
+  if (isTernary2DCoordinateFrame(frame))
+    return typeof value === 'number' && Number.isFinite(value) ? value : Number.NaN;
   if (scale === undefined) {
-    throw new Error(`lowerPlots: reference region under the ${frame.type} coordinate system requires roleScales.${role} to build cells`);
+    throw new Error(
+      `lowerPlots: reference region under the ${frame.type} coordinate system requires roleScales.${role} to build cells`,
+    );
   }
   return scale.coordinate(value);
 };
@@ -166,11 +186,20 @@ const isReferenceConstant = (mark: ReferenceMark, shape: ReferenceShape, frame: 
 };
 
 /** reference 的有效迭代行：全常量 → 单行代表（任取首行，无行则空对象）；per-datum → 原数据行。 */
-const referenceRows = (mark: ReferenceMark, rows: Array<ExternalRow>, shape: ReferenceShape, frame: CoordinateFrame): Array<ExternalRow> =>
-  isReferenceConstant(mark, shape, frame) ? [rows[0] ?? {}] : rows;
+const referenceRows = (
+  mark: ReferenceMark,
+  rows: Array<ExternalRow>,
+  shape: ReferenceShape,
+  frame: CoordinateFrame,
+): Array<ExternalRow> => (isReferenceConstant(mark, shape, frame) ? [rows[0] ?? {}] : rows);
 
 /** reference line 某行 → core Path steps（cartesian 直连两端点；polar 竖直径向线直连、水平常半径环段采样）；退化 → null。 */
-const referenceLineSteps = (mark: ReferenceMark, row: ExternalRow, frame: CartesianCoordinateFrame | PolarCoordinateFrame, orientation: ReferenceOrientation): Array<IRStep> | null => {
+const referenceLineSteps = (
+  mark: ReferenceMark,
+  row: ExternalRow,
+  frame: CartesianCoordinateFrame | PolarCoordinateFrame,
+  orientation: ReferenceOrientation,
+): Array<IRStep> | null => {
   const constantValue = referenceConstantValue(mark, row, orientation);
   if (isCartesianCoordinateFrame(frame)) {
     const constant = frame[orientation === 'x' ? 'primary' : 'secondary'].coordinate(constantValue);
@@ -203,7 +232,12 @@ const referenceLineSteps = (mark: ReferenceMark, row: ExternalRow, frame: Cartes
 };
 
 /** reference band 某行 → 正交 Cell（cartesian primary/secondary 为像素带、polar primary 为角度带 / secondary 为半径带）；退化 → null。 */
-const referenceAxisBandCell = (mark: ReferenceMark, row: ExternalRow, frame: CartesianCoordinateFrame | PolarCoordinateFrame, orientation: ReferenceOrientation): Cell | null => {
+const referenceAxisBandCell = (
+  mark: ReferenceMark,
+  row: ExternalRow,
+  frame: CartesianCoordinateFrame | PolarCoordinateFrame,
+  orientation: ReferenceOrientation,
+): Cell | null => {
   const lo = referenceConstantValue(mark, row, orientation);
   const hi = referenceUpperValue(mark, row, orientation);
   if (isCartesianCoordinateFrame(frame)) {
@@ -227,7 +261,10 @@ const referenceAxisBandCell = (mark: ReferenceMark, row: ExternalRow, frame: Car
   const a0 = frame.primary.coordinate(lo);
   const a1 = frame.primary.coordinate(hi);
   if (!Number.isFinite(a0) || !Number.isFinite(a1)) return null;
-  const radiusSpan = referenceSpanInterval(mark, row, frame.secondary.coordinate, [frame.innerRadius, frame.outerRadius]);
+  const radiusSpan = referenceSpanInterval(mark, row, frame.secondary.coordinate, [
+    frame.innerRadius,
+    frame.outerRadius,
+  ]);
   if (radiusSpan === null) return null;
   return { intervals: { x: [a0, a1], y: radiusSpan } };
 };
@@ -291,7 +328,12 @@ const lowerReference = (
     let kind: CellGeometry['kind'] | undefined;
     for (let transformedIndex = 0; transformedIndex < effectiveRows.length; transformedIndex++) {
       const row = effectiveRows[transformedIndex];
-      const cell = shape.kind === 'region' ? referenceRegionCell(mark, row, frame) : isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame) ? referenceAxisBandCell(mark, row, frame, shape.orientation) : null;
+      const cell =
+        shape.kind === 'region'
+          ? referenceRegionCell(mark, row, frame)
+          : isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame)
+            ? referenceAxisBandCell(mark, row, frame, shape.orientation)
+            : null;
       if (!cell) continue;
       const geometry = frame.projectCell(cell);
       if (!isRenderableCellGeometry(geometry)) continue;
@@ -302,7 +344,11 @@ const lowerReference = (
       if (fill !== undefined) cellNode.fill = fill;
       const stroke = strokeOf?.(row);
       if (stroke !== undefined) cellNode.stroke = stroke;
-      const label = resolveNodeMarkLabels(mark.label as MarkNodeLabel | ReadonlyArray<MarkNodeLabel> | undefined, row, labelOf);
+      const label = resolveNodeMarkLabels(
+        mark.label as MarkNodeLabel | ReadonlyArray<MarkNodeLabel> | undefined,
+        row,
+        labelOf,
+      );
       if (label !== undefined) cellNode.label = label;
       applyNodeChannelDeliveries(cellNode, mark, row, channels, 'cell');
       const node = decorateDatum(cellNode, row, transformedIndex, mark.type, markProvenance, undefined);
@@ -312,12 +358,17 @@ const lowerReference = (
     if (!colorOf) {
       const colorValue = mark.encoding.color?.value;
       const fill = colorValue !== undefined ? String(colorValue) : defaultFill;
-      return { type: 'scope', nodeDefault: styleForGeometry(kind, mark)(fill, channelDefaultOf<MarkPaint>(channels, 'stroke')), children: placed.map(p => p.node) };
+      return {
+        type: 'scope',
+        nodeDefault: styleForGeometry(kind, mark)(fill, channelDefaultOf<MarkPaint>(channels, 'stroke')),
+        children: placed.map(p => p.node),
+      };
     }
     return cellLayer(placed, kind, mark, colorOf, undefined, channelDefaultOf<MarkPaint>(channels, 'stroke'));
   }
 
-  const placed: Array<{ color: string | undefined; steps: Array<IRStep>; row: ExternalRow; transformedIndex: number }> = [];
+  const placed: Array<{ color: string | undefined; steps: Array<IRStep>; row: ExternalRow; transformedIndex: number }> =
+    [];
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
@@ -335,8 +386,17 @@ const lowerReference = (
       type: 'scope',
       pathDefault: { stroke, strokeWidth: REFERENCE_STROKE_WIDTH },
       children: placed.map(p => {
-        const label = resolveGeometryMarkLabels(mark.label as MarkGeometryLabel | ReadonlyArray<MarkGeometryLabel> | undefined, p.row, labelOf);
-        return applyPathChannelDeliveries({ type: 'path', ...(label !== undefined ? { label } : {}), children: p.steps }, mark, p.row, channels);
+        const label = resolveGeometryMarkLabels(
+          mark.label as MarkGeometryLabel | ReadonlyArray<MarkGeometryLabel> | undefined,
+          p.row,
+          labelOf,
+        );
+        return applyPathChannelDeliveries(
+          { type: 'path', ...(label !== undefined ? { label } : {}), children: p.steps },
+          mark,
+          p.row,
+          channels,
+        );
       }),
     };
   }
@@ -344,13 +404,31 @@ const lowerReference = (
   for (const { color, row, steps } of placed) {
     const stroke = color ?? DEFAULT_FILL;
     const directStroke = strokeOf?.(row);
-    const label = resolveGeometryMarkLabels(mark.label as MarkGeometryLabel | ReadonlyArray<MarkGeometryLabel> | undefined, row, labelOf);
-    const path: IRChild = applyPathChannelDeliveries({ type: 'path', ...(directStroke !== undefined ? { stroke: directStroke } : {}), ...(label !== undefined ? { label } : {}), children: steps }, mark, row, channels);
+    const label = resolveGeometryMarkLabels(
+      mark.label as MarkGeometryLabel | ReadonlyArray<MarkGeometryLabel> | undefined,
+      row,
+      labelOf,
+    );
+    const path: IRChild = applyPathChannelDeliveries(
+      {
+        type: 'path',
+        ...(directStroke !== undefined ? { stroke: directStroke } : {}),
+        ...(label !== undefined ? { label } : {}),
+        children: steps,
+      },
+      mark,
+      row,
+      channels,
+    );
     const bucket = groups.get(stroke);
     if (bucket) bucket.push(path);
     else groups.set(stroke, [path]);
   }
-  const children: Array<IRChild> = [...groups].map(([stroke, paths]) => ({ type: 'scope', pathDefault: { stroke }, children: paths }));
+  const children: Array<IRChild> = [...groups].map(([stroke, paths]) => ({
+    type: 'scope',
+    pathDefault: { stroke },
+    children: paths,
+  }));
   return { type: 'scope', pathDefault: { strokeWidth: REFERENCE_STROKE_WIDTH }, children };
 };
 
@@ -371,7 +449,15 @@ export const lowerReferenceLayer = (
   } else if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
-  const layer = lowerReference(mark, rows, frame, channels, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'), ctx?.provenance);
+  const layer = lowerReference(
+    mark,
+    rows,
+    frame,
+    channels,
+    channelValueOf<string>(channels, 'color'),
+    channelDefaultOf<string>(channels, 'color'),
+    ctx?.provenance,
+  );
   return layer === null ? null : attachMarkLayer(layer, mark, ctx?.provenance);
 };
 
@@ -388,12 +474,24 @@ const collectReferenceEncodingFields = (mark: ReferenceMark, fields: FieldCollec
 
 /** 收集 reference mark 独有字段：band 上界与部分 span 范围。 */
 const collectReferenceChannelFields = (mark: ReferenceMark, fields: FieldCollector): void => {
-  fields.addFields(typeof mark.xTo === 'string' ? mark.xTo : undefined, typeof mark.yTo === 'string' ? mark.yTo : undefined, typeof mark.zTo === 'string' ? mark.zTo : undefined, mark.extentField, mark.extentToField);
+  fields.addFields(
+    typeof mark.xTo === 'string' ? mark.xTo : undefined,
+    typeof mark.yTo === 'string' ? mark.yTo : undefined,
+    typeof mark.zTo === 'string' ? mark.zTo : undefined,
+    mark.extentField,
+    mark.extentToField,
+  );
 };
 
 export const referenceMarkDefinition: MarkDefinition<ReferenceMark> = {
   type: PlotMark.Reference,
-  channelKinds: () => new Set([ChannelDefinitionKind.Mark, ChannelDefinitionKind.Scope, ChannelDefinitionKind.Node, ChannelDefinitionKind.Path]),
+  channelKinds: () =>
+    new Set([
+      ChannelDefinitionKind.Mark,
+      ChannelDefinitionKind.Scope,
+      ChannelDefinitionKind.Node,
+      ChannelDefinitionKind.Path,
+    ]),
   collectFields: (mark, fields: FieldCollector) => {
     collectReferenceEncodingFields(mark, fields);
     collectNodeChannelFields(mark, fields);
@@ -401,6 +499,9 @@ export const referenceMarkDefinition: MarkDefinition<ReferenceMark> = {
     collectReferenceChannelFields(mark, fields);
     collectMarkLabelFields(mark.label, fields);
   },
-  buildCell: (mark, row, frame) => (isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame) || hasProjectCell(frame) ? referenceCell(mark, row, frame) : null),
+  buildCell: (mark, row, frame) =>
+    isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame) || hasProjectCell(frame)
+      ? referenceCell(mark, row, frame)
+      : null,
   lower: lowerReferenceLayer,
 };

@@ -11,11 +11,11 @@ tags: [architecture, design]
 
 Four input paths — Sugar JSX, Kernel JSX, the future Text DSL, and AI / LLM — all translate into one and the same IR; IR is compiled into Scene, which adapters then route to React + SVG, pure SVG strings, Canvas (further rasterized to PNG / JPEG / WebP), Native (Skia / RN), or PDF. The arrow between IR and "persistence / edit" is bidirectional: IR is a read/write durable layer where user edits, AI patches, and serialization all live.
 
-| Layer | What it is | Key constraint |
-|---|---|---|
-| IR | Declarative JSON schema (single source: zod) | Data only — no functions, ReactNode, or closures |
-| Scene | Compiled product with geometry resolved | Greatest-common subset of vector graphics (rect / ellipse / text / path / group) |
-| Adapter | Scene → concrete runtime (React/SVG, Canvas, SSR…) | Thin translation layer, zero layout logic |
+| Layer   | What it is                                         | Key constraint                                                                   |
+| ------- | -------------------------------------------------- | -------------------------------------------------------------------------------- |
+| IR      | Declarative JSON schema (single source: zod)       | Data only — no functions, ReactNode, or closures                                 |
+| Scene   | Compiled product with geometry resolved            | Greatest-common subset of vector graphics (rect / ellipse / text / path / group) |
+| Adapter | Scene → concrete runtime (React/SVG, Canvas, SSR…) | Thin translation layer, zero layout logic                                        |
 
 Lock down the schema of those two middle layers, and the outer rings can evolve freely — that's retikz's core bet.
 
@@ -50,20 +50,20 @@ The middle layer is **Node** and **Path**:
 
 The bottom layer is **Step**: 12 `kind`s cover the full set of path actions:
 
-| kind | Params | Semantics |
-|---|---|---|
-| `move` | `to` | Move the cursor, no drawing |
-| `line` | `to`, `label?` | Straight line |
-| `step` | `via`, `to`, `label?` | Elbow (one right-angle mid-point) |
-| `cycle` | — | Close back to the start point |
-| `curve` | `to`, `control`, `label?` | Quadratic Bézier |
-| `cubic` | `to`, `control1`, `control2`, `label?` | Cubic Bézier |
-| `bend` | `to`, `bendDirection?` / `outAngle?` `inAngle?`, `looseness?` | Arc shorthand (bend angle or out/in angles, self-loops supported; compiled to cubic) |
-| `arc` | `startAngle`, `endAngle`, `radius` or `radiusX`/`radiusY`, `center?` | Circular / elliptical arc (cursor as center by default, or explicit `center`) |
-| `circlePath` | `radius`, `startAngle?`, `endAngle?`, `closed?` | Full circle or partial arc (chord / sector / open) |
-| `ellipsePath` | `radiusX`, `radiusY`, `startAngle?`, `endAngle?`, `closed?` | Full ellipse or partial arc |
-| `rectangle` | `from`, `to`, `cornerRadius?` | Axis-aligned rectangle (two corners, self-contained) |
-| `generator` | `name`, `to?`, `params` | Delegates to a registered path generator (parabola / sin…; none built into core) |
+| kind          | Params                                                               | Semantics                                                                            |
+| ------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `move`        | `to`                                                                 | Move the cursor, no drawing                                                          |
+| `line`        | `to`, `label?`                                                       | Straight line                                                                        |
+| `step`        | `via`, `to`, `label?`                                                | Elbow (one right-angle mid-point)                                                    |
+| `cycle`       | —                                                                    | Close back to the start point                                                        |
+| `curve`       | `to`, `control`, `label?`                                            | Quadratic Bézier                                                                     |
+| `cubic`       | `to`, `control1`, `control2`, `label?`                               | Cubic Bézier                                                                         |
+| `bend`        | `to`, `bendDirection?` / `outAngle?` `inAngle?`, `looseness?`        | Arc shorthand (bend angle or out/in angles, self-loops supported; compiled to cubic) |
+| `arc`         | `startAngle`, `endAngle`, `radius` or `radiusX`/`radiusY`, `center?` | Circular / elliptical arc (cursor as center by default, or explicit `center`)        |
+| `circlePath`  | `radius`, `startAngle?`, `endAngle?`, `closed?`                      | Full circle or partial arc (chord / sector / open)                                   |
+| `ellipsePath` | `radiusX`, `radiusY`, `startAngle?`, `endAngle?`, `closed?`          | Full ellipse or partial arc                                                          |
+| `rectangle`   | `from`, `to`, `cornerRadius?`                                        | Axis-aligned rectangle (two corners, self-contained)                                 |
+| `generator`   | `name`, `to?`, `params`                                              | Delegates to a registered path generator (parabola / sin…; none built into core)     |
 
 These 12 are the result of repeated trimming — TikZ has dozens of native path actions, and most can be expressed by composing these 12. More `kind`s push up LLM learning cost and adapter implementation cost; fewer and the sugar layer can't paper over the gap.
 
@@ -99,10 +99,10 @@ All three No → Sugar (still Tier 1); any Yes → Tier 2; low-level primitive �
 
 ### Tier 1: Kernel / Sugar (shipped)
 
-| Layer | Examples | IR form | Expansion time |
-|---|---|---|---|
-| Kernel | `<Node>` `<Path>` `<Step>` | Directly maps to an IR node | Not expanded |
-| Sugar | `<Draw way={['A', '-\|', 'B']}>` | Flattened to Kernel | Synchronous in builder (never enters IR) |
+| Layer  | Examples                         | IR form                     | Expansion time                           |
+| ------ | -------------------------------- | --------------------------- | ---------------------------------------- |
+| Kernel | `<Node>` `<Path>` `<Step>`       | Directly maps to an IR node | Not expanded                             |
+| Sugar  | `<Draw way={['A', '-\|', 'B']}>` | Flattened to Kernel         | Synchronous in builder (never enters IR) |
 
 Kernel is the React-direct mapping of IR, 1:1; Sugar is syntactic sugar over Kernel, flattened during the builder phase, and never appears in IR. Both layers live inside `@retikz/react`, with zero extra dependencies.
 
@@ -112,8 +112,8 @@ The iron rule: **Sugar introduces no new capability**. Anything Sugar can expres
 
 Tier 2 isn't implemented in core yet; the plan is for `@retikz/flow` / `@retikz/plot` and other domain packages to carry it:
 
-| Layer | Examples | IR form | Expansion time |
-|---|---|---|---|
+| Layer  | Examples                                        | IR form                   | Expansion time          |
+| ------ | ----------------------------------------------- | ------------------------- | ----------------------- |
 | Tier 2 | `<Axis>` `<BarPlot>` `<Tree>` (domain packages) | High-level form preserved | Inside `compileToScene` |
 
 The shared trait is that they involve algorithmic decisions (dagre layout, auto-ticks, scale calculation) and must be preserved as high-level forms through the compile pipeline until `compileToScene`, where a `lowerComposites` hook lowers them into Kernel primitives. That keeps core's schema slim, the LLM learning surface flat, and adding a new chart type doesn't require core changes — this tier kicks off once core 1.0 stabilizes.

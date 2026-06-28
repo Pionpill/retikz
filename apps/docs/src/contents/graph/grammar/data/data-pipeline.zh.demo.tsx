@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Text } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /**
  * 数据落地页 "数据流水线" 插图

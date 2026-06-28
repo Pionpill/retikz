@@ -23,20 +23,20 @@ import { RegularPolygon } from '@retikz/react';
 
 `<RegularPolygon>` uses either a circumradius or a side length. `sides` must be at least `3`, and `rotate` changes the overall orientation.
 
-| Form | Best for |
-| --- | --- |
-| `{ center, radius, sides }` | Known circumradius |
-| `{ center, sideLength, sides }` | Known side length |
+| Form                            | Best for           |
+| ------------------------------- | ------------------ |
+| `{ center, radius, sides }`     | Known circumradius |
+| `{ center, sideLength, sides }` | Known side length  |
 
 <ComponentPreview name="regular-polygon-basic" size="xs" />
 
 ### API Reference
 
-| Component | Combination | Meaning |
-| --- | --- | --- |
-| `<RegularPolygon>` | `center` + `radius` + `sides` | Polygon from circumradius and side count |
-| | `center` + `sideLength` + `sides` | Polygon from side length and side count |
-| | + `rotate?` | Overall start angle; default `-90` (one vertex points up) |
+| Component          | Combination                       | Meaning                                                   |
+| ------------------ | --------------------------------- | --------------------------------------------------------- |
+| `<RegularPolygon>` | `center` + `radius` + `sides`     | Polygon from circumradius and side count                  |
+|                    | `center` + `sideLength` + `sides` | Polygon from side length and side count                   |
+|                    | + `rotate?`                       | Overall start angle; default `-90` (one vertex points up) |
 
 ## As a node shape
 
@@ -67,10 +67,10 @@ Connection endpoints snap to the polygon edge, and the node's 9 standard anchors
 
 ### API Reference
 
-| `shape` | Boundary | Parameters |
-| --- | --- | --- |
+| `shape`                       | Boundary                                | Parameters                                 |
+| ----------------------------- | --------------------------------------- | ------------------------------------------ |
 | `{ type: 'polygon', params }` | Regular polygon circumscribing the text | `sides` (≥3) / `rotate?` / `cornerRadius?` |
-| `"diamond"` | = `polygon{ sides:4, rotate:0 }` preset | None |
+| `"diamond"`                   | = `polygon{ sides:4, rotate:0 }` preset | None                                       |
 
 `cornerRadius` (user units) rounds every vertex; omitted / `0` = sharp corners, clamped per corner to the largest non-self-intersecting radius.
 

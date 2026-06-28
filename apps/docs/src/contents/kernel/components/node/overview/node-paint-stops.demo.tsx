@@ -1,5 +1,6 @@
-import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node } from '@retikz/react';
 
 /**
  * 渐变 stops：opacity 渐隐 + currentColor

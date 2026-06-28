@@ -1,5 +1,6 @@
-import { Fragment } from 'react';
 import type { FC, ReactNode } from 'react';
+
+import { Fragment } from 'react';
 import { Link } from 'react-router';
 
 import { CodeBlock } from '@/components/shared/highlight-code';

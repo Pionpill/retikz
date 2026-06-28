@@ -1,5 +1,7 @@
+import type { FC, KeyboardEvent } from 'react';
+
 import { Send, Square } from 'lucide-react';
-import { type FC, type KeyboardEvent, useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';

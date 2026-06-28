@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
 import type { Transform } from '@retikz/core';
+
+import { describe, expect, it } from 'vitest';
+
 import { buildTransform } from '../../src/render/transform-builder';
 
 describe('buildTransform: 单 kind', () => {
@@ -14,9 +16,7 @@ describe('buildTransform: 单 kind', () => {
   });
 
   it('rotate 带 cx/cy → "rotate(deg cx cy)"', () => {
-    const transforms: Array<Transform> = [
-      { kind: 'rotate', degrees: 30, cx: 5, cy: 10 },
-    ];
+    const transforms: Array<Transform> = [{ kind: 'rotate', degrees: 30, cx: 5, cy: 10 }];
     expect(buildTransform(transforms)).toBe('rotate(30 5 10)');
   });
 
@@ -72,9 +72,7 @@ describe('buildTransform: 边界 / 错误路径', () => {
   });
 
   it('未识别 kind 抛错（exhaustive switch 防御）', () => {
-    const bad = [
-      { kind: 'unknown', x: 0, y: 0 } as unknown as Transform,
-    ];
+    const bad = [{ kind: 'unknown', x: 0, y: 0 } as unknown as Transform];
     expect(() => buildTransform(bad)).toThrow();
   });
 

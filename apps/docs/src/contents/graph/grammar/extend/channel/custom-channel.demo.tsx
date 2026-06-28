@@ -1,6 +1,7 @@
+import type { FC } from 'react';
+
 import { defineNodeChannel } from '@retikz/plot';
 import { Axis, Legend, Plot, PointMark } from '@retikz/plot-react';
-import type { FC } from 'react';
 
 const points = [
   { x: 0, y: 2.2, score: 10 },
@@ -50,7 +51,13 @@ const intensity = defineNodeChannel<number>({
 });
 
 const Demo: FC = () => (
-  <Plot data={points} channelDefinitions={[intensity]} width={440} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Plot
+    data={points}
+    channelDefinitions={[intensity]}
+    width={440}
+    height={260}
+    style={{ maxWidth: '100%', height: 'auto' }}
+  >
     <PointMark x="x" y="y" size={8} fill="#2563eb" stroke="#1d4ed8" channels={{ intensity: 'score' }} />
     <Axis dimension="x" />
     <Axis dimension="y" grid />

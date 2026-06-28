@@ -1,10 +1,15 @@
-import { compileToScene } from '@retikz/core';
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
+
+import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { lowerPlots } from '../../src/pipeline/expand';
-import { type GuideContext, lowerGuide } from '../../src/features';
+
 import type { PositionScale } from '../../src/contract';
+import type { GuideContext } from '../../src/features';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerGuide } from '../../src/features';
+import { lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 /** 测试用最小 PositionScale：guide 只调 coordinate，其余成员给占位 */
 const fakeScale = (coordinate: (value: number) => number): PositionScale => ({
@@ -139,7 +144,12 @@ const expandOf = (spec: PlotSpec): IRScope => {
 
 describe('lowerPlots guide orchestration (ADR-04)', () => {
   it('zorder_grid_mark_axis', () => {
-    const outer = expandOf(guidedSpec([{ type: 'axis', dimension: 'x' }, { type: 'axis', dimension: 'y', grid: true }]));
+    const outer = expandOf(
+      guidedSpec([
+        { type: 'axis', dimension: 'x' },
+        { type: 'axis', dimension: 'y', grid: true },
+      ]),
+    );
     // children = [y 网格层, mark 层, x 轴层, y 轴层]
     expect(outer.children).toHaveLength(4);
     // 第一个是网格层（带 drawOpacity）
@@ -149,7 +159,10 @@ describe('lowerPlots guide orchestration (ADR-04)', () => {
   });
 
   it('compile_with_guides_scene', () => {
-    const spec = guidedSpec([{ type: 'axis', dimension: 'x' }, { type: 'axis', dimension: 'y', grid: true }]);
+    const spec = guidedSpec([
+      { type: 'axis', dimension: 'x' },
+      { type: 'axis', dimension: 'y', grid: true },
+    ]);
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, { width: 480, height: 300 }) },
@@ -158,7 +171,14 @@ describe('lowerPlots guide orchestration (ADR-04)', () => {
   });
 
   it('duplicate_axis_dimension_rejected', () => {
-    expect(() => expandOf(guidedSpec([{ type: 'axis', dimension: 'y' }, { type: 'axis', dimension: 'y' }]))).toThrow(/dimension/);
+    expect(() =>
+      expandOf(
+        guidedSpec([
+          { type: 'axis', dimension: 'y' },
+          { type: 'axis', dimension: 'y' },
+        ]),
+      ),
+    ).toThrow(/dimension/);
   });
 
   it('explicit_range_axis_line_aligns_with_ticks', () => {

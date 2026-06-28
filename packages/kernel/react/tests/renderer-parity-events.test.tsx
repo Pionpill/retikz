@@ -2,6 +2,7 @@
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { Layout, Node } from '../src';
 import { createGeometryContext } from './helpers/geometry-context';
 
@@ -16,14 +17,18 @@ const SIZE = 200;
 const installCanvasHarness = (): { restore: () => void } => {
   const getContext = vi
     .spyOn(HTMLCanvasElement.prototype, 'getContext')
-    .mockImplementation((contextId: string) =>
-      contextId === '2d' ? (createGeometryContext()) : null,
-    );
-  const getRect = vi
-    .spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect')
-    .mockImplementation(
-      () => ({ left: 0, top: 0, right: SIZE, bottom: SIZE, width: SIZE, height: SIZE, x: 0, y: 0, toJSON: () => ({}) }),
-    );
+    .mockImplementation((contextId: string) => (contextId === '2d' ? createGeometryContext() : null));
+  const getRect = vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockImplementation(() => ({
+    left: 0,
+    top: 0,
+    right: SIZE,
+    bottom: SIZE,
+    width: SIZE,
+    height: SIZE,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
+  }));
   return {
     restore: () => {
       getContext.mockRestore();
@@ -43,9 +48,7 @@ afterEach(() => {
 describe('renderer 双模事件等价', () => {
   it('同一 <Node onClick> 在 svg 与 canvas 下点击 → 同一 spy 各触发一次', async () => {
     const onClick = vi.fn();
-    const figure = (
-      <Node id="a" position={[0, 0]} fill="red" minimumSize={2} onClick={onClick} />
-    );
+    const figure = <Node id="a" position={[0, 0]} fill="red" minimumSize={2} onClick={onClick} />;
 
     // ── svg ──
     const svgContainer = document.createElement('div');
@@ -83,9 +86,7 @@ describe('renderer 双模事件等价', () => {
     const canvas = canvasContainer.querySelector('canvas');
     expect(canvas).not.toBeNull();
     await act(() => {
-      canvas!.dispatchEvent(
-        new MouseEvent('click', { bubbles: true, clientX: SIZE / 2, clientY: SIZE / 2 }),
-      );
+      canvas!.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: SIZE / 2, clientY: SIZE / 2 }));
     });
     canvasRoot.unmount();
     canvasContainer.remove();

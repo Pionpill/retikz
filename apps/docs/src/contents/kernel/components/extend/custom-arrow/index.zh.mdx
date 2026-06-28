@@ -17,16 +17,16 @@ description: arrow shape 是开放字符串；内置 8 种之外，用 defineArr
 
 `ArrowDefinition` 是个普通对象（不进 IR、不需序列化，可由工厂函数返回）；推荐在定义点用 `defineArrow({...})` 包一层，让自定义箭头与 shape / pattern / path generator 的扩展写法保持一致：
 
-| 字段 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `lineContactX` | `number` | 必填 | 线接触点 x（局部坐标）：决定 path 端点收缩量 + marker `refX`。空心箭头框架再自动减 `lineWidth/2` |
-| `emit` | `(ctx) => Iterable<MarkerPrimitive>` | 必填 | 在局部 `baseSize` 坐标系产箭头几何 |
-| `baseSize` | `number` | `10` | marker 局部基准边长（viewBox `0 0 baseSize baseSize`，`refY = baseSize/2`） |
-| `tipX` | `number` | `= baseSize` | 尖端 x（算 path 收缩用） |
-| `hollow` | `boolean` | `false` | 空心：框架丢 `fill`、`color` 主导描边、启用 `lineWidth` |
-| `defaultLength` | `number` | `6` | 默认尖长（`length` 缺省值，user units） |
-| `defaultWidth` | `number` | `6` | 默认尖宽（`width` 缺省值，user units） |
-| `outerInset` | `number` | 空心箭头 `lineWidth/2`，实心箭头 `0` | 自动连接到 Node 边界时的外轮廓补偿量（局部坐标）；自定义空心箭头可以显式传入，让端点更精确地避开外描边 |
+| 字段            | 类型                                 | 默认值                               | 描述                                                                                                   |
+| --------------- | ------------------------------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `lineContactX`  | `number`                             | 必填                                 | 线接触点 x（局部坐标）：决定 path 端点收缩量 + marker `refX`。空心箭头框架再自动减 `lineWidth/2`       |
+| `emit`          | `(ctx) => Iterable<MarkerPrimitive>` | 必填                                 | 在局部 `baseSize` 坐标系产箭头几何                                                                     |
+| `baseSize`      | `number`                             | `10`                                 | marker 局部基准边长（viewBox `0 0 baseSize baseSize`，`refY = baseSize/2`）                            |
+| `tipX`          | `number`                             | `= baseSize`                         | 尖端 x（算 path 收缩用）                                                                               |
+| `hollow`        | `boolean`                            | `false`                              | 空心：框架丢 `fill`、`color` 主导描边、启用 `lineWidth`                                                |
+| `defaultLength` | `number`                             | `6`                                  | 默认尖长（`length` 缺省值，user units）                                                                |
+| `defaultWidth`  | `number`                             | `6`                                  | 默认尖宽（`width` 缺省值，user units）                                                                 |
+| `outerInset`    | `number`                             | 空心箭头 `lineWidth/2`，实心箭头 `0` | 自动连接到 Node 边界时的外轮廓补偿量（局部坐标）；自定义空心箭头可以显式传入，让端点更精确地避开外描边 |
 
 `length` / `width` / `scale` / `opacity` 这些视觉字段由框架统一处理（`markerWidth = (length ?? defaultLength) × scale`）；`hollow` / `lineWidth` / 具体几何交给 `def`。
 
@@ -36,21 +36,21 @@ description: arrow shape 是开放字符串；内置 8 种之外，用 defineArr
 
 `MarkerPrimitive` 是 `ScenePrimitive` 的**窄子集**——只允许 marker 局部几何，杜绝"marker 内递归引用 marker / clip / 文本布局"：
 
-| 允许 | 说明 |
-| --- | --- |
+| 允许                        | 说明                                                                 |
+| --------------------------- | -------------------------------------------------------------------- |
 | `path` / `ellipse` / `rect` | 局部几何；`fill` 限 `string`（CSS 色）或 `{ kind: 'contextStroke' }` |
-| `group` | 可带 `transforms` 的复合箭头；`children` 只能再套 `MarkerPrimitive` |
+| `group`                     | 可带 `transforms` 的复合箭头；`children` 只能再套 `MarkerPrimitive`  |
 
 禁 `text`、禁 `arrowStart` / `arrowEnd`（不递归）、禁外部 `resourceRef`（marker 内无 paint server 引用）。违反者编译期报错。
 
 `emit` 拿到的 `ArrowEmitContext`：
 
-| 字段 | 类型 | 描述 |
-| --- | --- | --- |
-| `fill` | `MarkerFill` | 填充色（实心主导）；无 `color` override 时 = `{ kind: 'contextStroke' }` |
-| `stroke` | `MarkerFill` | 描边色（空心主导）；无 override 时 = `{ kind: 'contextStroke' }` |
-| `lineWidth` | `number` | 空心描边宽 |
-| `round` | `(n) => number` | 精度取整（与 compile / render 同一函数，保几何一致） |
+| 字段        | 类型            | 描述                                                                     |
+| ----------- | --------------- | ------------------------------------------------------------------------ |
+| `fill`      | `MarkerFill`    | 填充色（实心主导）；无 `color` override 时 = `{ kind: 'contextStroke' }` |
+| `stroke`    | `MarkerFill`    | 描边色（空心主导）；无 override 时 = `{ kind: 'contextStroke' }`         |
+| `lineWidth` | `number`        | 空心描边宽                                                               |
+| `round`     | `(n) => number` | 精度取整（与 compile / render 同一函数，保几何一致）                     |
 
 ## 颜色继承
 

@@ -2,10 +2,14 @@
  * SVG 动画播放共享映射（纯函数）：property 分类、value→SVG、origin 支点解析、easing→CSS、prim 几何
  * @description CSS @keyframes（keyframes.ts）与 WAAPI 描述（waapi.ts）共用本模块，避免两端映射漂移。
  */
-import { AnimationProperty, type IRAnimationTrack, type ScenePrimitive } from '@retikz/core';
+import type { IRAnimationTrack, ScenePrimitive } from '@retikz/core';
+
+import { AnimationProperty } from '@retikz/core';
+
 import type { CubicBezier, EasingRegistry } from '../../animation/types';
-import { sampleColorOklch } from '../../animation/oklch';
+
 import { classifyProperty, primHasStroke, resolveTransformOrigin } from '../../animation/channels';
+import { sampleColorOklch } from '../../animation/oklch';
 
 /** CSS 直属通道 → SVG/CSS 属性名（opacity / fill / stroke / stroke-width） */
 export const cssPropertyName = (property: string): string =>
@@ -49,7 +53,9 @@ export const easingToCss = (
   const custom = registry?.[easing];
   if (Array.isArray(custom)) return `cubic-bezier(${custom.join(', ')})`;
   if (typeof custom === 'function') {
-    onWarn(`SVG animation: custom easing "${easing}" is a function and cannot be expressed in CSS; falling back to linear.`);
+    onWarn(
+      `SVG animation: custom easing "${easing}" is a function and cannot be expressed in CSS; falling back to linear.`,
+    );
     return 'linear';
   }
   onWarn(`SVG animation: unknown easing "${easing}"; falling back to linear.`);
@@ -109,7 +115,10 @@ export const expandTrack = (
     const cssProperty = cssPropertyName(track.property);
     const isColor = track.property === AnimationProperty.Fill || track.property === AnimationProperty.Stroke;
     if (!isColor) {
-      return { cssProperty, frames: track.keyframes.map(kf => ({ offset: kf.at, value: String(asNumber(kf.value)), ...ease(kf) })) };
+      return {
+        cssProperty,
+        frames: track.keyframes.map(kf => ({ offset: kf.at, value: String(asNumber(kf.value)), ...ease(kf) })),
+      };
     }
     // 颜色：相邻 keyframe 段在 oklch 预采样成多帧
     const frames: Array<ExpandedFrame> = [];
@@ -131,7 +140,11 @@ export const expandTrack = (
     const origin = resolveTransformOrigin(prim, track.origin);
     return {
       cssProperty: 'transform',
-      frames: track.keyframes.map(kf => ({ offset: kf.at, value: transformValue(track.property, asNumber(kf.value)), ...ease(kf) })),
+      frames: track.keyframes.map(kf => ({
+        offset: kf.at,
+        value: transformValue(track.property, asNumber(kf.value)),
+        ...ease(kf),
+      })),
       ...(origin ? { transformOrigin: `${origin[0]}px ${origin[1]}px` } : {}),
     };
   }
