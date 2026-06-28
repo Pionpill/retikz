@@ -2,7 +2,7 @@ import { isFiniteNumber } from '@retikz/math';
 import { format as d3Format } from 'd3-format';
 import { utcFormat as d3UtcFormat } from 'd3-time-format';
 import type { FieldCollector, ResolveLabel } from '../../contract';
-import { type Channel, type DataModel, type ExternalRow, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, type TextChannel } from '../../schemas';
+import { type Channel, type DataModel, type ExternalRow, type MarkLabelContent, PlotFieldType, type PlotFieldTypeMap, type PlotFieldTypeValue, type TextChannel } from '../../schemas';
 
 /**
  * 解析字段路径 a.b.c，返回叶子值（任一段缺失返回 undefined）
@@ -62,11 +62,11 @@ const applyDisplayFormat = (value: unknown, displayFormat: string, fieldType: Pl
  *   fieldType 供 format 分派（temporal 走时间格式、数值走 d3-format）；由调用方按 content.field 查 fieldTypes 传入。
  */
 export const labelOf = (
-  content: TextChannel,
+  content: TextChannel | MarkLabelContent,
   row: ExternalRow,
   fieldType?: PlotFieldTypeValue,
   resolveLabel?: ResolveLabel,
-): string | undefined => {
+): MarkLabelContent['value'] | string | undefined => {
   if (resolveLabel !== undefined) return String(resolveLabel(row));
   if (content.field !== undefined) {
     const value = resolveFieldPath(row, content.field);

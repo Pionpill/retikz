@@ -165,7 +165,7 @@ The logic has four parts:
 
 ## API
 
-`PathMark` props are grouped as Position, Specific, Path, Label, General, and Custom: position fields decide trajectory points, specific fields split series or close the path, and path fields lower onto the core `Path`. `FieldName` means a data field name or field path, such as `month` / `city`.
+`PathMark` props are grouped as Position, Specific, Path, Label, General, and Custom: position fields decide trajectory points, specific fields split series or close the path, and path fields lower onto the core `Path`. `FieldName` means a data field name or field path, such as `month` / `city`. Path labels use the core geometry-label host; `label` does not carry `kind`, because PathMark infers the host.
 
 | Category | Prop | Type | Default | Description |
 | --- | --- | --- | --- | --- |
@@ -185,8 +185,8 @@ The logic has four parts:
 |  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | Path scaling, fill rule, and thickness preset |
 |  | `arrow` / `arrowDetail` | `PathArrowStyle?`<br />`PathArrowDetailStyle?` | —<br />— | Arrow direction and details |
 |  | `dashPattern`<br />`shadow` / `blendMode` | `NodeDashPatternStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?` | —<br />—<br />— | Dash pattern, shadow, and blend mode |
-| Label | `label` / `labelDisplayFormat` | `FieldName?`<br />`string?` | —<br />— | Attach datum labels to path data |
-|  | `labelPosition`<br />`labelDistance`<br />`labelPin` | `string / number`<br />`number`<br />`boolean / LabelPin` | `above`<br />`12`<br />`false` | Label side, spacing, and leader line |
+| Label | `label` | `MarkGeometryLabel`<br />`Array<MarkGeometryLabel>?` | — | Attach geometry labels to path segments; content lives in `content.field` / `content.value`, while `position`, `side`, and `distance` reuse core geometry labels |
+|  | `resolveLabel` | `(row) => string?` | — | Runtime override for label content; requires `id` and is not stored in PlotSpec |
 | General | `id` | `string?` | — | Optional mark handle for layer ids / runtime label resolution |
 |  | `transform` | `Array<Transform>?` | — | Mark-local data transform; runs after the plot-level transform and only changes the rows seen by this layer |
 | Custom | `channels` | `Record<string, Channel>` | — | Custom channel bindings; resolved by registered channel definitions |

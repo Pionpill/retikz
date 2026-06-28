@@ -263,14 +263,15 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     });
   });
 
-  it('relation mark assembles source-target refs, label, path passthrough, and color channel', () => {
+  it('relation mark assembles source-target refs, top-level label, path passthrough, and color channel', () => {
     const spec = buildPlotSpec(
       <>
         <PointMark x="x" y="y" anchorId={{ prefix: 'pt', field: 'id' }} />
         <RelationMark
           source={{ anchorId: { prefix: 'pt', field: 'from' } }}
           target={{ anchorId: { prefix: 'pt', field: 'to' } }}
-          path={{ label: { text: { field: 'label' }, position: 'midway' }, options: { arrow: '->', roundedCorners: 6 } }}
+          label={{ content: { field: 'label' }, position: 'midway' }}
+          path={{ options: { arrow: '->', roundedCorners: 6 } }}
           color="kind"
         />
       </>,
@@ -285,7 +286,8 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
       type: 'relation',
       source: { anchorId: { prefix: 'pt', field: 'from' } },
       target: { anchorId: { prefix: 'pt', field: 'to' } },
-      path: { label: { text: { field: 'label' }, position: 'midway' }, options: { arrow: '->', roundedCorners: 6 } },
+      label: { content: { field: 'label' }, position: 'midway' },
+      path: { options: { arrow: '->', roundedCorners: 6 } },
       encoding: { color: { field: 'kind', scale: '__color' } },
     });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
@@ -306,7 +308,8 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
         transform={transform}
         source={{ anchorId: { prefix: 'trend', field: 'sourceId' } }}
         target={{ anchorId: { prefix: 'trend', field: 'targetId' } }}
-        path={{ routing, label: { text: { field: 'deltaLabel' }, position: 0.5 } }}
+        label={{ content: { field: 'deltaLabel' }, position: 0.5 }}
+        path={{ routing }}
       />,
       '__plot',
     );
@@ -315,7 +318,8 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
       transform,
       source: { anchorId: { prefix: 'trend', field: 'sourceId' } },
       target: { anchorId: { prefix: 'trend', field: 'targetId' } },
-      path: { routing, label: { text: { field: 'deltaLabel' }, position: 0.5 } },
+      label: { content: { field: 'deltaLabel' }, position: 0.5 },
+      path: { routing },
     });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });

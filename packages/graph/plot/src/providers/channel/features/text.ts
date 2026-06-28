@@ -1,19 +1,21 @@
+import { type IRNodeLabel } from '@retikz/core';
 import { ChannelDefinitionKind, type MarkChannelDefinition, type ResolveLabel } from '../../../contract';
 import { labelOf } from '../../data';
-import { type MarkOperation, type TextChannel } from '../../../schemas';
+import { type MarkLabelContent, type MarkOperation, type TextChannel } from '../../../schemas';
 
 export type BuiltinTextChannels = {
-  label: MarkChannelDefinition<string>;
+  label: MarkChannelDefinition<IRNodeLabel['text']>;
 };
 
 export type BuiltinTextChannelOptions = {
   resolveLabel?: Record<string, ResolveLabel>;
 };
 
-const labelContentChannel = (mark: MarkOperation): TextChannel | undefined => {
+const labelContentChannel = (mark: MarkOperation): TextChannel | MarkLabelContent | undefined => {
   const encodingText = (mark as { encoding?: { text?: TextChannel } }).encoding?.text;
   if (encodingText !== undefined) return encodingText;
-  return (mark as { label?: { content?: TextChannel } }).label?.content;
+  const label = (mark as { label?: { content?: MarkLabelContent } | Array<{ content?: MarkLabelContent }> }).label;
+  return Array.isArray(label) ? label[0]?.content : label?.content;
 };
 
 /** 创建内置 text channel definitions。 */

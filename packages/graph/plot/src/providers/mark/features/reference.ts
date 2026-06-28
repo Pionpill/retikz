@@ -1,4 +1,4 @@
-import { type IRChild, type IRNode, type IRScope, type IRStep } from '@retikz/core';
+import { type IRChild, type IRNode, type IRNodeLabel, type IRScope, type IRStep } from '@retikz/core';
 import {
   type Cell,
   type CellGeometry,
@@ -21,7 +21,7 @@ import {
   isPolarCoordinateFrame,
   isTernary2DCoordinateFrame,
 } from '../../coordinate';
-import { type ExternalRow, type Mark, PlotMark, type ReferenceMark } from '../../../schemas';
+import { type ExternalRow, type Mark, type MarkGeometryLabel, type MarkNodeLabel, PlotMark, type ReferenceMark } from '../../../schemas';
 import { cellGeometryNode, cellLayer, styleForGeometry } from '../private';
 import { pointsToSteps } from './path';
 import {
@@ -33,10 +33,13 @@ import {
   attachMarkLayer,
   channelDefaultOf,
   channelValueOf,
+  collectMarkLabelFields,
   collectNodeChannelFields,
   collectPathChannelFields,
   decorateDatum,
   failLoudMessage,
+  resolveGeometryMarkLabels,
+  resolveNodeMarkLabels,
 } from '../shared';
 import { ChannelDefinitionKind } from '../../../contract';
 
@@ -278,6 +281,7 @@ const lowerReference = (
   const defaultStroke = channelDefaultOf<MarkPaint>(channels, 'stroke') ?? defaultColor ?? DEFAULT_FILL;
   const fillOf = mark.fill?.kind === 'field' && !colorOf ? channelValueOf<MarkPaint>(channels, 'fill') : undefined;
   const strokeOf = mark.stroke?.kind === 'field' ? channelValueOf<MarkPaint>(channels, 'stroke') : undefined;
+  const labelOf = channelValueOf<IRNodeLabel['text']>(channels, 'label');
 
   if (cellForm) {
     if (!hasProjectCell(frame)) {
@@ -298,6 +302,8 @@ const lowerReference = (
       if (fill !== undefined) cellNode.fill = fill;
       const stroke = strokeOf?.(row);
       if (stroke !== undefined) cellNode.stroke = stroke;
+      const label = resolveNodeMarkLabels(mark.label as MarkNodeLabel | ReadonlyArray<MarkNodeLabel> | undefined, row, labelOf);
+      if (label !== undefined) cellNode.label = label;
       applyNodeChannelDeliveries(cellNode, mark, row, channels, 'cell');
       const node = decorateDatum(cellNode, row, transformedIndex, mark.type, markProvenance, undefined);
       placed.push({ color: colorOf?.(row), node });
@@ -325,13 +331,21 @@ const lowerReference = (
   if (!colorOf) {
     const colorValue = mark.encoding.color?.value;
     const stroke = colorValue !== undefined ? String(colorValue) : defaultStroke;
-    return { type: 'scope', pathDefault: { stroke, strokeWidth: REFERENCE_STROKE_WIDTH }, children: placed.map(p => applyPathChannelDeliveries({ type: 'path', children: p.steps }, mark, p.row, channels)) };
+    return {
+      type: 'scope',
+      pathDefault: { stroke, strokeWidth: REFERENCE_STROKE_WIDTH },
+      children: placed.map(p => {
+        const label = resolveGeometryMarkLabels(mark.label as MarkGeometryLabel | ReadonlyArray<MarkGeometryLabel> | undefined, p.row, labelOf);
+        return applyPathChannelDeliveries({ type: 'path', ...(label !== undefined ? { label } : {}), children: p.steps }, mark, p.row, channels);
+      }),
+    };
   }
   const groups = new Map<string, Array<IRChild>>();
   for (const { color, row, steps } of placed) {
     const stroke = color ?? DEFAULT_FILL;
     const directStroke = strokeOf?.(row);
-    const path: IRChild = applyPathChannelDeliveries({ type: 'path', ...(directStroke !== undefined ? { stroke: directStroke } : {}), children: steps }, mark, row, channels);
+    const label = resolveGeometryMarkLabels(mark.label as MarkGeometryLabel | ReadonlyArray<MarkGeometryLabel> | undefined, row, labelOf);
+    const path: IRChild = applyPathChannelDeliveries({ type: 'path', ...(directStroke !== undefined ? { stroke: directStroke } : {}), ...(label !== undefined ? { label } : {}), children: steps }, mark, row, channels);
     const bucket = groups.get(stroke);
     if (bucket) bucket.push(path);
     else groups.set(stroke, [path]);
@@ -385,6 +399,7 @@ export const referenceMarkDefinition: MarkDefinition<ReferenceMark> = {
     collectNodeChannelFields(mark, fields);
     collectPathChannelFields(mark, fields);
     collectReferenceChannelFields(mark, fields);
+    collectMarkLabelFields(mark.label, fields);
   },
   buildCell: (mark, row, frame) => (isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame) || hasProjectCell(frame) ? referenceCell(mark, row, frame) : null),
   lower: lowerReferenceLayer,

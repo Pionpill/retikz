@@ -119,7 +119,7 @@ describe('relate transform', () => {
           transform: [operation],
           source: { project: { x: 'sourceX', y: 'sourceY' } },
           target: { project: { x: 'targetX', y: 'targetY' } },
-          label: { text: { field: 'deltaLabel' } },
+          label: { content: { field: 'deltaLabel' } },
         },
       ],
     });

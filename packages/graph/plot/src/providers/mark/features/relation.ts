@@ -1,4 +1,4 @@
-import { type IRChild, type IRCoordinate, type IRNodeTarget, type IRPath, type IRPathRibbonOptions, type IRStep, type IRStepLabel, type IRTarget } from '@retikz/core';
+import { type IRChild, type IRCoordinate, type IRNodeLabel, type IRNodeTarget, type IRPath, type IRPathRibbonOptions, type IRStep, type IRStepLabel, type IRTarget } from '@retikz/core';
 import { type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkLoweringContext } from '../../../contract';
 import { resolveFieldPath } from '../../data';
 import { type ExternalRow, type MarkValueType, PlotMark, type PlotTargetRef, RelationGeometryKind, type RelationMark, type RelationPrimitiveStyle, type RelationRouteStep, type RelationRoutingSpec, type RelationStepLabel } from '../../../schemas';
@@ -8,7 +8,9 @@ import {
   channelDefaultOf,
   channelValueOf,
   collectAnchorIdFields,
+  collectMarkLabelFields,
   pathChannelKinds,
+  resolveGeometryMarkLabels,
 } from '../shared';
 
 type ResolvedTarget = {
@@ -376,6 +378,7 @@ export const lowerRelation = (
 ): IRChild | null => {
   const colorOf = channelValueOf<string>(channels, 'color');
   const defaultColor = channelDefaultOf<string>(channels, 'color');
+  const labelOf = channelValueOf<IRNodeLabel['text']>(channels, 'label');
   const children: Array<IRChild> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex += 1) {
     const row = rows[transformedIndex];
@@ -391,11 +394,13 @@ export const lowerRelation = (
       const endWidth = resolveMarkValue<number>(mark.ribbon?.endWidth, row);
       const ribbonOptions = (mark.ribbon?.options ?? {}) as Partial<IRPathRibbonOptions>;
       const direction = horizontalRibbonEndpointDirection(source.target, target.target);
+      const label = resolveGeometryMarkLabels(mark.label, row, labelOf);
       const ribbon: IRPath = applyPathChannelDeliveries(
         {
           type: 'path',
           kind: 'ribbon',
           ...style,
+          ...(label !== undefined ? { label } : {}),
           ribbon: {
             ...ribbonOptions,
             ...(endWidth === undefined
@@ -436,11 +441,13 @@ export const lowerRelation = (
         : routedSteps(mark.path.routing, source.target, viaTargets, target.target, resolveLabel(mark.path.label, row));
     }
     const pathOptions = (mark.path?.options ?? {}) as Partial<IRPath>;
+    const label = resolveGeometryMarkLabels(mark.label, row, labelOf);
     const path: IRPath = applyPathChannelDeliveries(
       {
         type: 'path',
         ...pathOptions,
         ...style,
+        ...(label !== undefined ? { label } : {}),
         children: steps,
       },
       mark,
@@ -480,6 +487,7 @@ export const relationMarkDefinition: MarkDefinition<RelationMark> = {
       collectLabelFields(step.label, fields);
     });
     collectLabelFields(mark.path?.label, fields);
+    collectMarkLabelFields(mark.label, fields);
     fields.addChannel(mark.ribbon?.width);
     fields.addChannel(mark.ribbon?.endWidth);
     fields.addChannel(mark.encoding?.color);

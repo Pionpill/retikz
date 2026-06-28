@@ -79,7 +79,7 @@ Constant references use color strings such as `color="crimson"`; field reference
 
 `ReferenceMark` is a built-in registered mark. The React `<ReferenceMark>` component does not render DOM; `<Plot>` assembles the flat props into mark IR with `type: 'reference'`, puts `x` / `y` / `z` under `encoding`, and keeps `kind` / `xTo` / `yTo` / `zTo` / `extentField` / `extentToField` on the mark itself.
 
-At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `ReferenceMark` resolves to the `PlotMark.Reference` entry, which calls `lowerReferenceLayer`. The default line / band form accepts cartesian2D / polar2D; `kind="region"` follows the cell path and accepts any coordinate frame with `projectCell`. Lines lower into core `Path`, while bands / regions first build a coordinate-independent `Cell`, then use `frame.projectCell(...)` and lower into core `Node` geometry.
+At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `ReferenceMark` resolves to the `PlotMark.Reference` entry, which calls `lowerReferenceLayer`. The default line / band form accepts cartesian2D / polar2D; `kind="region"` follows the cell path and accepts any coordinate frame with `projectCell`. Lines lower into core `Path`, while bands / regions first build a coordinate-independent `Cell`, then use `frame.projectCell(...)` and lower into core `Node` geometry. `label` infers its host from the actual form: lines use geometry-label fields, while bands / regions use node-label fields, so users do not write `kind`.
 
 For registration, focus on the `ReferenceMark` registry entry and the `lowerReferenceLayer` / `lowerReference` functions that perform the lowering:
 
@@ -132,7 +132,7 @@ The logic breaks down into four steps:
 
 ## API
 
-`ReferenceMark` covers lines, bands, and regions, with props grouped as Position, Specific, Path, Node, General, and Custom: position fields bind the reference axes, specific fields describe the span, path fields style reference lines, and node fields style reference bands / regions. `FieldName` means a field name or field path, such as `threshold` / `limits.lo`; `number` means an inline constant axis value.
+`ReferenceMark` covers lines, bands, and regions, with props grouped as Position, Specific, Path, Node, Label, General, and Custom: position fields bind the reference axes, specific fields describe the span, path fields style reference lines, and node fields style reference bands / regions. `FieldName` means a field name or field path, such as `threshold` / `limits.lo`; `number` means an inline constant axis value. `label` does not carry `kind`; line / band / region form decides whether it uses core geometry-label fields or node-label fields.
 
 | Category | Prop | Type | Default | Description |
 | --- | --- | --- | --- | --- |
@@ -145,6 +145,7 @@ The logic breaks down into four steps:
 |  | `yTo` | `number`<br />`FieldName?` | — | Upper bound along y; by default pairs with `y` to create a horizontal band, and acts as the region y upper bound |
 |  | `z` / `zTo` | `number`<br />`FieldName?` | — | Lower / upper bound along z; only used by `kind="region"` when the active coordinate consumes a z role, such as `ternary2D` |
 |  | `extentField` / `extentToField` | `FieldName?` | full opposite domain | Start / end fields for a partial span along the opposite axis; must appear together |
+| Label | `label` | `MarkGeometryLabel`<br />`MarkNodeLabel`<br />`Array<...>?` | — | Lines use geometry-label fields; bands / regions use node-label fields; content lives in `content.field` / `content.value` |
 | Path / reference band | `fill` / `stroke` | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?` / `PointStrokeStyle?` | `currentColor` / — | Reference lines use `stroke`; reference bands / regions use `fill` / `stroke` paint |
 |  | `strokeWidth`<br />`opacity` / `drawOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | Reference-line stroke width, whole opacity, and stroke opacity |
 |  | `zIndex` / `rotate` | `PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />— | Reference-line draw order and rotation |

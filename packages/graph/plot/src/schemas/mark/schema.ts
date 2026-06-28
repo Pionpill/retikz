@@ -2,7 +2,7 @@
 import { z } from 'zod';
 import { AnchorRefSchema, PathBaseSchema, PositionSchema, StepLabelSchema } from '@retikz/core';
 import { ArrowDetailSchema, BlendMode, BoundarySchema, DropShadowSchema, FontSchema, PathScaleSchema, ShadowPreset, ShapeRefSchema } from '@retikz/core';
-import { EncodingSchema, MarkLabelSchema, PointEncodingSchema } from '../encoding';
+import { EncodingSchema, MarkGeometryLabelListSchema, MarkNodeLabelListSchema, PointEncodingSchema } from '../encoding';
 import { TransformSchema } from '../transform';
 import { BUILTIN_MARK_TYPES, IntervalBoundKind, MarkValueKind, PathClosureKind, PathCurve, PlotMark, RelationGeometryKind } from './constants';
 
@@ -177,9 +177,14 @@ export const RelationRoutingSpecSchema = z
 /** 位置 mark（point / path / interval）的 encoding：x / y 可选（必填性下放 coordinate 级校验）+ 样式 */
 const positionalEncoding = { encoding: EncodingSchema };
 
-/** 位置 mark 的可选 datum label（priority-1 宿主路径）：lowering 时挂到该 mark 每个 datum Node 的 label */
-const positionalLabel = {
-  label: MarkLabelSchema.optional().describe('priority-1 datum label: lowered onto each datum Node.label (core border-relative placement)'),
+/** node-host mark 的可选 datum label：lowering 时挂到该 mark 每个 datum Node 的 label */
+const nodeHostLabel = {
+  label: MarkNodeLabelListSchema.optional().describe('Node-host label: lowered onto each datum Node.label (core border-relative placement)'),
+};
+
+/** geometry-host mark 的可选 label：lowering 时挂到生成的 path-like host label */
+const geometryHostLabel = {
+  label: MarkGeometryLabelListSchema.optional().describe('Geometry-host label: lowered onto the generated core Path.label'),
 };
 
 const markValueFieldVariant = (description: string): z.ZodObject<{ kind: z.ZodLiteral<'field'>; value: z.ZodString; scale: z.ZodOptional<z.ZodString> }> =>
@@ -366,7 +371,7 @@ export const PointMarkSchema = z
       .describe('Fine-tuning vertical offset (user units) from the projected anchor; positive = screen-down. Mainly for text points. Default 0'),
     anchorId: AnchorIdSpecSchema.optional().describe('Stable id rule written to each generated core Node; takes precedence over datumIdField for the node id'),
     ...markBase,
-    ...positionalLabel,
+    ...nodeHostLabel,
     encoding: PointEncodingSchema,
   })
   .describe('Point mark: scatter glyph or borderless text label (encoding.text set → text Node); supports optional size / opacity / shape glyph channels');
@@ -401,7 +406,7 @@ export const PathMarkSchema = z
     ...corePathStyle,
     anchorId: AnchorIdSpecSchema.optional().describe('Stable id rule for generated per-datum core Coordinates along this path'),
     ...markBase,
-    ...positionalLabel,
+    ...geometryHostLabel,
     ...positionalEncoding,
   })
   .describe('Path mark: connects records in order into a 1D trajectory (line / radar outline)');
@@ -488,7 +493,7 @@ export const IntervalMarkSchema = z
     anchorId: AnchorIdSpecSchema.optional().describe('Stable id rule written to each generated core interval Node; takes precedence over datumIdField for the node id'),
     ...coreNodeStyle,
     ...markBase,
-    ...positionalLabel,
+    ...nodeHostLabel,
     ...positionalEncoding,
   })
   .describe('Interval mark: orthogonal interval product realized per bounds × coordinate (bar / histogram / heatmap cell / radial bar / pie-donut sector)');
@@ -527,10 +532,27 @@ export const ReferenceMarkSchema = z
     strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe('Reference line stroke width: field-bound datum channel or constant core Path stroke width'),
     opacity: PointOpacityStyleSchema.optional().describe('Reference mark whole opacity: field-bound datum channel or constant opacity 0..1'),
     fillOpacity: PointOpacityStyleSchema.optional().describe('Reference band fill opacity: field-bound datum channel or constant opacity 0..1'),
+    label: z
+      .union([MarkNodeLabelListSchema, MarkGeometryLabelListSchema])
+      .optional()
+      .describe('Host label for the generated reference primitive: line uses geometry label, band / region use node label'),
     ...coreNodeStyle,
     ...corePathStyle,
     ...markBase,
     ...positionalEncoding,
+  })
+  .strict()
+  .superRefine((mark, ctx) => {
+    if (mark.label === undefined) return;
+    const usesNodeHost = mark.kind === 'region' || mark.xTo !== undefined || mark.yTo !== undefined || mark.zTo !== undefined;
+    const result = usesNodeHost ? MarkNodeLabelListSchema.safeParse(mark.label) : MarkGeometryLabelListSchema.safeParse(mark.label);
+    if (!result.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['label'],
+        message: usesNodeHost ? 'reference band / region expects node label fields' : 'reference line expects geometry label fields',
+      });
+    }
   })
   .describe('Reference mark: a constant-position reference constraint. Bind x (vertical) or y (horizontal) for a line or one-axis band; set kind=region with lower/upper bounds for the active coordinate roles. Field → per-datum, value → constant. Use extentField / extentToField for partial-length one-axis spans');
 
@@ -625,6 +647,7 @@ export const RelationMarkSchema = z
     style: RelationPrimitiveStyleSchema.optional().describe('Style fields shared by stroke and ribbon relation path kinds'),
     path: RelationPathGeometrySchema.optional().describe('Path-specific relation geometry and core Path options'),
     ribbon: RelationRibbonOptionsSchema.optional().describe('Ribbon-specific relation geometry and core Path kind=ribbon options'),
+    ...geometryHostLabel,
     ...markBase,
     encoding: z
       .object({

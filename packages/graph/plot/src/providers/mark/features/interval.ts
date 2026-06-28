@@ -1,4 +1,4 @@
-import { type IRChild, type IRNode, type IRScope } from '@retikz/core';
+import { type IRChild, type IRNode, type IRNodeLabel, type IRScope } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
 import {
   type Cell,
@@ -437,7 +437,7 @@ const lowerCells = (
   defaultColor: string | undefined,
   channels: MarkChannels,
   markContext: MarkLoweringContext | undefined,
-  labelOf: ChannelValueResolver<string> | undefined,
+  labelOf: ChannelValueResolver<IRNodeLabel['text']> | undefined,
 ): IRScope | null => {
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   const fillOf = 'fill' in mark && mark.fill?.kind === 'field' && !colorOf ? channelValueOf<MarkPaint>(channels, 'fill') : undefined;
@@ -489,7 +489,7 @@ export const lowerIntervalLayer = (mark: Mark, rows: Array<ExternalRow>, frame: 
     channelDefaultOf<string>(channels, 'color'),
     channels,
     ctx,
-    channelValueOf<string>(channels, 'label'),
+    channelValueOf<IRNodeLabel['text']>(channels, 'label'),
   );
   return layer === null ? null : attachMarkLayer(layer, mark, ctx?.provenance);
 };

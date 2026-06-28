@@ -11,7 +11,7 @@ import {
   IntervalBoundKind,
   type IntervalBounds,
   type Mark,
-  type MarkLabel,
+  type MarkNodeLabel,
   type MarkValueType,
   PLOT_NAMESPACE,
   PlotComposite,
@@ -434,7 +434,7 @@ const recordMarkColor = (into: Collected, color: PointColorStyle | undefined): v
  * @description label 顶层 string 默认按字段（content.field）；labelDisplayFormat 进 IR；labelPosition / labelDistance / labelPin
  *   摊进对齐 core NodeLabelSchema 的字段。无 label 字段 → undefined（不挂标签）。
  */
-const buildMarkLabel = (props: DatumLabelProps): MarkLabel | undefined => {
+const buildMarkLabel = (props: DatumLabelProps): MarkNodeLabel | undefined => {
   const { label, labelDisplayFormat, labelPosition, labelDistance, labelPin, labelTextColor, labelOpacity, labelFont, labelRotate, labelKeepUpright } = props;
   if (label === undefined) return undefined;
   const content: TextChannel = { field: label, ...(labelDisplayFormat !== undefined ? { displayFormat: labelDisplayFormat } : {}) };
@@ -477,7 +477,7 @@ const ruleChannel = (value: number | string): { value: number } | { field: strin
  *   常量 rule（x/y 为数字）→ color 作 value 常量；per-datum rule（x/y 为字段串）→ color 作 field（AUTO_COLOR）。
  */
 const collectReference = (props: ReferenceMarkProps, into: Collected, styleContext: StyleSugarContext): void => {
-  const { kind, x, y, z, xTo, yTo, zTo, extentField, extentToField, color, id, transform, channels, strokeWidth, fillOpacity, opacity } = props;
+  const { kind, x, y, z, xTo, yTo, zTo, extentField, extentToField, color, label, id, transform, channels, strokeWidth, fillOpacity, opacity } = props;
   const region = kind === 'region';
   const hasX = x !== undefined;
   const hasY = y !== undefined;
@@ -558,6 +558,7 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
     ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
     ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
     ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
+    ...(label !== undefined ? { label } : {}),
     ...nodeStylePropsOf(referenceNodeStyleProps, styleContext),
     ...pathStylePropsOf(props, styleContext),
     encoding: { ...positional, ...colorEnc, ...extensionChannelEncoding(channels) },
@@ -579,9 +580,8 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
     }
     if (child.type === PathMark) {
       const props = child.props as PathMarkProps;
-      const { x, y, order, series, color, closed, connectNulls, closure, curve, id, transform, anchorId, channels, strokeWidth, opacity, lineCap, lineJoin, roundedCorners } = props;
+      const { x, y, order, series, color, label, closed, connectNulls, closure, curve, id, transform, anchorId, channels, strokeWidth, opacity, lineCap, lineJoin, roundedCorners } = props;
       const colorEnc = colorChannel(color, series);
-      const markLabel = buildMarkLabel(props);
       const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
       const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
       const lineCapStyle = enumStyleOf(lineCap, 'lineCap', new Set(['butt', 'round', 'square']), styleContext);
@@ -604,7 +604,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(lineJoinStyle !== undefined ? { lineJoin: lineJoinStyle } : {}),
         ...(roundedCornersStyle !== undefined ? { roundedCorners: roundedCornersStyle } : {}),
         ...pathStylePropsOf(props, styleContext),
-        ...(markLabel !== undefined ? { label: markLabel } : {}),
+        ...(label !== undefined ? { label } : {}),
         encoding: { ...positionEncoding(x, y), ...colorEnc, ...extensionChannelEncoding(channels) },
       });
       recordColor(into, colorEnc);
@@ -861,7 +861,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
     } else if (child.type === ReferenceMark) {
       collectReference(child.props as ReferenceMarkProps, into, styleContext);
     } else if (child.type === RelationMark) {
-      const { id, kind, transform, source, target, style, path, ribbon, color, channels } = child.props as RelationMarkProps;
+      const { id, kind, transform, source, target, label, style, path, ribbon, color, channels } = child.props as RelationMarkProps;
       const colorEnc = colorChannel(color, undefined);
       const encoding = { ...colorEnc, ...extensionChannelEncoding(channels) };
       into.marks.push({
@@ -871,6 +871,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(transform !== undefined ? { transform } : {}),
         source,
         target,
+        ...(label !== undefined ? { label } : {}),
         ...(style !== undefined ? { style } : {}),
         ...(path !== undefined ? { path } : {}),
         ...(ribbon !== undefined ? { ribbon } : {}),
