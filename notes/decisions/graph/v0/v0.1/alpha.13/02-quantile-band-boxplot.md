@@ -1,6 +1,6 @@
 # ADR-02：quantile-band statistics + boxplot composition
 
-状态：Proposed
+状态：Accepted
 决策日期：2026-06-27
 关联：[plot v0.1-alpha.13 roadmap](./roadmap.md) · [alpha.12 ADR-16 Statistical transform algebra](../alpha.12/16-statistical-transform-algebra.md) · [alpha.12 ADR-06 transform registry](../alpha.12/06-transform-registry.md) · [plot transform docs](../../../../../../apps/docs/src/contents/graph/grammar/transform/index.zh.mdx) · [plot-design.md §13.1](../../../../../architecture/plot-design.md)
 

@@ -1,7 +1,7 @@
 # plot v0.1-alpha.13 Roadmap：Relation ribbon + Statistics 进阶最小闭环
 
 > 上游：[plot v0.1 roadmap](../roadmap.md)「Statistics 进阶 + stat-geom」行。
-> 主题：先补齐 `RelationMark kind="ribbon"`，让关系 rows 能下沉为 core Ribbon；再收敛实现高级统计的三条可渲染薄片：`quantile-band → boxplot`、`density → density-area`、`smooth/regression → trend path`。统计能力仍遵守 alpha.12 已落地的统计代数：先进入 transform / reducer / selector 层，mark 只消费派生 rows，不新增平行 chart IR。
+> 主题：先补齐 `RelationMark kind="ribbon"`，让关系 rows 能下沉为 core `Path kind="ribbon"`；再收敛实现高级统计的三条可渲染薄片：`quantile-band → boxplot`、`density → density-area`、`smooth/regression → trend path`。统计能力仍遵守 alpha.12 已落地的统计代数：先进入 transform / reducer / selector 层，mark 只消费派生 rows，不新增平行 chart IR。
 
 ## 定位
 
@@ -9,10 +9,10 @@ alpha.12 已把 `RelationMark` 的 source-target path、anchor id contract 与 m
 
 alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `select` / `annotate` / `relate` / `bin` 等统计代数，并开放 `defineTransform`、`defineStatReducer`、`defineRowSelector`。alpha.13 不再继续扩一批业务动词，而是验证这套地基能承载更接近真实图表的高级统计。
 
-本 milestone 的目标是“关系几何补洞 + 统计 transform 到抽象 mark 的闭环”，不是 chart preset 层，也不以用户 API 舒适度为首要目标。Plot 在 v0.1-alpha.13 只交付底层语法能力：IR / schema / registry / lowering / 三包薄适配保持一致；更顺手的 chart 级 API 留给后续 chart 分区。Relation ribbon 只处理 source / target / width rows 到 core Ribbon 的下沉，不做 Sankey layout。箱线图、密度图、回归线都应能被拆成：
+本 milestone 的目标是“关系几何补洞 + 统计 transform 到抽象 mark 的闭环”，不是 chart preset 层，也不以用户 API 舒适度为首要目标。Plot 在 v0.1-alpha.13 只交付底层语法能力：IR / schema / registry / lowering / 三包薄适配保持一致；更顺手的 chart 级 API 留给后续 chart 分区。Relation ribbon 只处理 source / target / width rows 到 core `Path kind="ribbon"` 的下沉，不做 Sankey layout。箱线图、密度图、回归线都应能被拆成：
 
 1. 数据经 root 或 mark-local transform 派生统计 rows。
-2. 派生 rows 被现有 `PointMark` / `PathMark` / `RegionMark` / `IntervalMark` / `ReferenceMark` 消费。
+2. 派生 rows 被现有 `PointMark` / `PathMark` / `IntervalMark` / `ReferenceMark` 消费；密度面积走 `PathMark closure={{ kind: 'baseline' }}`。
 3. React / Vanilla 只提供薄适配与结构性等价表达，把能力映射到同一份 PlotSpec，不新增与 IR 平行的 chart 语义。
 
 ## 收敛边界
@@ -29,13 +29,13 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 
 | ADR | 主题 | 目标 | 状态 |
 | --- | --- | --- | --- |
-| ADR-01 | **RelationMark ribbon geometry kind** | 在 `RelationMark` 内新增 `kind="ribbon"`，复用 source / target / anchorId / transform，把关系 rows 下沉为 core Ribbon；Sankey layout 不进入本轮 | [Proposed](./01-relation-ribbon.md) |
-| ADR-02 | **quantile-band statistics + boxplot composition** | 新增参数化 quantile-band reducer 与 outside-quantile-band selector；boxplot 只是 0.25/0.75 band + 0.5 point + spread fence 的组合实例 | [Proposed](./02-quantile-band-boxplot.md) |
-| ADR-03 | **density transform + density-area** | 新增内置 `density` transform，KDE 输出采样 rows；几何消费走 `PathMark` baseline closure，不新增 density mark | [Proposed](./03-density-transform.md) |
-| ADR-04 | **smooth / regression transform** | 新增内置 `smooth` transform，首轮只做 deterministic linear regression；输出预测线采样 rows，置信区间顺延 | [Proposed](./04-smooth-regression.md) |
-| ADR-05 | **stat-geom structural surface + docs** | 收敛 React / Vanilla 薄适配、docs 信息架构与示例，证明三条统计薄片都能按 transform + abstract marks 表达；不做 chart 级便利 API | [Proposed](./05-stat-geom-surface.md) |
-| ADR-06 | **sector explode / pull decision** | 判断极坐标 interval 的 `explode` / `pull` 是否可作为轻量视觉参数落地；若影响 anchor / locator 语义则顺延 | [Proposed](./06-sector-explode-pull.md) |
-| ADR-07 | **mark label surface follows core label hosts** | 让 Point / Interval / Path / Reference / Relation 共用 `MarkLabelSchema`，按 node 或 geometry host 投递到 core label；同步 mark demos 不再用纯文字 PointMark 绕开 label | [Proposed](./07-mark-label-surface.md) |
+| ADR-01 | **RelationMark ribbon geometry kind** | 在 `RelationMark` 内新增 `kind="ribbon"`，复用 source / target / anchorId / transform，把关系 rows 下沉为 core `Path kind="ribbon"`；Sankey layout 不进入本轮 | [Accepted](./01-relation-ribbon.md) |
+| ADR-02 | **quantile-band statistics + boxplot composition** | 新增参数化 quantile-band reducer 与 outside-quantile-band selector；boxplot 只是 0.25/0.75 band + 0.5 point + spread fence 的组合实例 | [Accepted](./02-quantile-band-boxplot.md) |
+| ADR-03 | **density transform + density-area** | 新增内置 `density` transform，KDE 输出采样 rows；几何消费走 `PathMark` baseline closure，不新增 density mark | [Accepted](./03-density-transform.md) |
+| ADR-04 | **smooth / regression transform** | 新增内置 `smooth` transform，首轮只做 deterministic linear regression；输出预测线采样 rows，置信区间顺延 | [Accepted](./04-smooth-regression.md) |
+| ADR-05 | **stat-geom structural surface + docs** | 收敛 React / Vanilla 薄适配、docs 信息架构与示例，证明三条统计薄片都能按 transform + abstract marks 表达；不做 chart 级便利 API | [Accepted](./05-stat-geom-surface.md) |
+| ADR-06 | **sector explode / pull decision** | 新增 `IntervalMark.pull` 作为 polar sector 静态径向偏移；anchor / locator 跟随同一几何，交互 explode 顺延 | [Accepted](./06-sector-explode-pull.md) |
+| ADR-07 | **mark label surface follows core label hosts** | 让 Point / Interval / Path / Reference / Relation 共用 `MarkLabelSchema`，按 node 或 geometry host 投递到 core label；同步 mark demos 不再用纯文字 PointMark 绕开 label | [Accepted](./07-mark-label-surface.md) |
 
 > 建议文件名：`01-relation-ribbon.md`、`02-quantile-band-boxplot.md`、`03-density-transform.md`、`04-smooth-regression.md`、`05-stat-geom-surface.md`、`06-sector-explode-pull.md`、`07-mark-label-surface.md`。
 
@@ -43,7 +43,7 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 
 1. **ADR-01 独立优先**：RelationMark ribbon 是关系几何补洞，直接服务 docs 关系页面 Sankey demo；不依赖统计主线，但应先做，避免 demo 绕开 graph 层。
 2. **ADR-02 → ADR-05**：boxplot 是最小 stat-geom 验收。它复用 alpha.12 的 `quantile` 算法，把固定 q1 / q3 提升为可配置 quantile band，不要求先有 density / smooth。
-3. **ADR-03 → ADR-05**：density 需要新增 transform kind，输出采样 rows；docs demo 用 density area 验收 `RegionMark` 消费统计 rows。
+3. **ADR-03 → ADR-05**：density 需要新增 transform kind，输出采样 rows；docs demo 用 density area 验收 `PathMark` baseline closure 消费统计 rows。
 4. **ADR-04 → ADR-05**：smooth / regression 需要新增 transform kind，输出趋势线 rows；首轮不承诺多算法矩阵。
 5. **ADR-05 依赖 02–04**：统一三包薄适配、docs 章节和示例命名，防止每条统计能力各自发明表面；不追求 chart 级易用封装。
 6. **ADR-06 独立且最后**：只在统计主线闭环后处理 sector backlog；不得反向阻塞 01–05。
@@ -90,14 +90,14 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 
 ### ADR-03：density transform + density-area
 
-目标是从一维连续字段生成 KDE 采样行，让 `RegionMark` / `PathMark` 可直接画密度面积或密度曲线。
+目标是从一维连续字段生成 KDE 采样行，让 `PathMark` 可直接画密度面积或密度曲线。
 
 设计倾向：
 
 - 新增内置 `density` transform：输入 `field`、可选 `groupBy`、`bandwidth`、`sampleCount`、`extent`、输出 `xAs` / `densityAs`。
 - 首轮 kernel 只选一种确定性默认，如 Gaussian kernel + Silverman / Scott 之一；具体默认在 ADR 中拍板。
 - 输出 rows 保留组字段与 provenance。空组、单点组、全相同值要 fail-loud 或给出明确退化策略。
-- geometry 不新增专用 mark：面积图用 `RegionMark`，曲线用 `PathMark`。
+- geometry 不新增专用 mark：面积图用 `PathMark closure={{ kind: 'baseline' }}`，曲线用普通 `PathMark`。
 
 不在本 ADR 范围：二维 KDE、加权 KDE、自适应带宽、FFT / 大数据性能优化。
 
@@ -109,7 +109,7 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 
 - 新增内置 `smooth` transform，首轮 `method: 'linear'`。`loess`、`polynomial`、`movingAverage` 只作为后续扩展点。
 - 输入 `x` / `y`、可选 `groupBy`、`sampleCount`、`extent`、输出 `xAs` / `yAs`。
-- 若支持置信区间，输出 `yLowerAs` / `yUpperAs` 并由 `RegionMark` 消费；若实现成本过高，ADR 明确顺延，首轮只画趋势线。
+- 置信区间顺延；首轮只输出 `xAs` / `yAs` 并由 `PathMark` 消费趋势线。
 - 非 finite 输入、样本不足、垂直线等退化必须 fail-loud 或有稳定策略。
 
 不在本 ADR 范围：非线性模型、时间窗口平滑、预测外推、模型诊断指标展示。

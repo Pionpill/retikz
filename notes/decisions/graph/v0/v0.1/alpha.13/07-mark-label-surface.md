@@ -1,6 +1,6 @@
 # ADR-07：mark label surface follows core label hosts
 
-状态：Proposed
+状态：Accepted
 决策日期：2026-06-28
 关联：[plot v0.1-alpha.13 roadmap](./roadmap.md) · [kernel v0.4-alpha.6 ADR-04 Node label inside placement](../../../../kernel/v0/v0.4/alpha.6/04-node-label-inside-placement.md) · [kernel v0.4-alpha.6 ADR-05 Ribbon host label](../../../../kernel/v0/v0.4/alpha.6/05-ribbon-label.md) · [plot-design.md §13](../../../../../architecture/plot-design.md) · [core-design.md §7](../../../../../architecture/core-design.md)
 

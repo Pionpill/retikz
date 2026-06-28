@@ -1,6 +1,6 @@
 # ADR-06：sector pull visual offset
 
-状态：Proposed
+状态：Accepted
 决策日期：2026-06-28
 关联：[plot v0.1-alpha.13 roadmap](./roadmap.md) · [alpha.13 ADR-02 quantile-band statistics + boxplot composition](./02-quantile-band-boxplot.md) · [alpha.13 ADR-05 stat-geom structural surface](./05-stat-geom-surface.md) · [plot-design.md §13](../../../../../architecture/plot-design.md) · [core-design.md §7](../../../../../architecture/core-design.md)
 

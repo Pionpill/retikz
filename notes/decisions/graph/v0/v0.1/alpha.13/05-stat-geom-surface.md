@@ -1,6 +1,6 @@
 # ADR-05：stat-geom structural surface + docs
 
-状态：Proposed
+状态：Accepted
 决策日期：2026-06-28
 关联：[plot v0.1-alpha.13 roadmap](./roadmap.md) · [alpha.13 ADR-02 quantile-band statistics + boxplot composition](./02-quantile-band-boxplot.md) · [alpha.13 ADR-03 density transform](./03-density-transform.md) · [alpha.13 ADR-04 smooth transform](./04-smooth-regression.md) · [alpha.12 ADR-16 Statistical transform algebra](../alpha.12/16-statistical-transform-algebra.md) · [plot-design.md §13.1](../../../../../architecture/plot-design.md)
 

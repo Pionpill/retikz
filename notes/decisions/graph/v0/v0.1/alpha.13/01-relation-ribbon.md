@@ -1,22 +1,22 @@
 # ADR-01：RelationMark ribbon geometry kind
 
-状态：Proposed
+状态：Accepted
 决策日期：2026-06-27
-关联：[plot v0.1-alpha.13 roadmap](./roadmap.md) · [alpha.12 ADR-13 RelationMark](../alpha.12/13-relation-mark-anchor.md) · [alpha.12 ADR-14 relation routing](../alpha.12/14-relation-derived-data-routing.md) · [core Ribbon schema](../../../../../../packages/kernel/core/src/schemas/ribbon.ts) · [plot-design.md §8](../../../../../architecture/plot-design.md)
+关联：[plot v0.1-alpha.13 roadmap](./roadmap.md) · [alpha.12 ADR-13 RelationMark](../alpha.12/13-relation-mark-anchor.md) · [alpha.12 ADR-14 relation routing](../alpha.12/14-relation-derived-data-routing.md) · [core Path ribbon schema](../../../../../../packages/kernel/core/src/schemas/path/ribbon.ts) · [plot-design.md §8](../../../../../architecture/plot-design.md)
 
 ## 背景
 
 alpha.12 的 `RelationMark` 已经把“source / target 关系行”收敛成一个统一入口：它复用 position mark 生成的 `anchorId`、支持 projected target、mark-local transform、颜色通道和 provenance，最后把每行关系降低为 core `Path`。
 
-但真实的关系图不总是线。Sankey / alluvial / flow map 这类图形把同样的 source-target 关系画成有面积的流带，宽度表达流量。kernel 侧已经有 `<Ribbon>` / `IRRibbon` 能力，plot 层如果让文档 demo 直接绕到 kernel `<Ribbon>`，就会形成一条平行 authoring 路径：source / target、transform、anchorId、颜色通道都无法复用 `RelationMark` 已有契约。
+但真实的关系图不总是线。Sankey / alluvial / flow map 这类图形把同样的 source-target 关系画成有面积的流带，宽度表达流量。kernel 侧已经把 ribbon 收敛为 `<Path kind="ribbon">` / `IRPath.kind="ribbon"` 能力，plot 层如果让文档 demo 直接绕到 kernel `<Path kind="ribbon">`，就会形成一条平行 authoring 路径：source / target、transform、anchorId、颜色通道都无法复用 `RelationMark` 已有契约。
 
 新增独立 `RibbonMark` 也能解决问题，但第一版要表达的并不是完整 Sankey layout，而是“同一批关系 rows 的几何表现从 path 改成 ribbon”。若另起 mark，会复制 `RelationMark` 的 target 解析、field collection、mark-local transform 和 anchor 错误诊断，违背内置能力复用同一套 definition / lowering 机制的原则。
 
 ## 决策：RelationMark 增加 `kind="ribbon"`
 
-`RelationMark` 保持顶层 `type: 'relation'` 不变，新增内部几何子类型字段 `kind?: 'path' | 'ribbon'`。省略 `kind` 时等价于 `kind: 'path'`；path lowering 语义保持现有行为，但 path-only props 从顶层收进 `path` 对象。`kind: 'ribbon'` 时，source / target / transform / color / channels 继续复用 relation 契约，但 lowering 输出 core `ribbon` 子节点，而不是 core `path`。
+`RelationMark` 保持顶层 `type: 'relation'` 不变，新增内部几何子类型字段 `kind?: 'path' | 'ribbon'`。省略 `kind` 时等价于 `kind: 'path'`；path lowering 语义保持现有行为，但 path-only props 从顶层收进 `path` 对象。`kind: 'ribbon'` 时，source / target / transform / color / channels 继续复用 relation 契约，但 lowering 输出 core `Path` 且写入 `kind: 'ribbon'`，而不是普通 path line。
 
-几何专属字段必须进入对应对象：`path` 承载 path-only 的 route / routing / label / arrow 等语义，`ribbon` 承载 ribbon-only 的 width / taper / sampling 等语义。两者共同能消费的 core 视觉字段由 `style` 对象承载。按 core `PathSchema` 与 `RibbonSchema` 当前交集，共享视觉字段是 `color`、`fill`、`fillOpacity`、`stroke`、`strokeWidth`、`drawOpacity`、`opacity`、`shadow`、`blendMode`、`zIndex`。core 交集里也有 `id`、`meta`、`animations`，但 relation 每行会生成一个 primitive，首轮不把这些作为用户共享样式开放，避免多行 relation 产生重复 id 或覆盖 provenance。
+几何专属字段必须进入对应对象：`path` 承载 path-only 的 route / routing / label / arrow 等语义，`ribbon` 承载 ribbon-only 的 width / taper / sampling 等语义。两者共同能消费的 core 视觉字段由 `style` 对象承载。按 core `PathSchema` 与 `Path kind="ribbon"` 当前交集，共享视觉字段是 `color`、`fill`、`fillOpacity`、`stroke`、`strokeWidth`、`drawOpacity`、`opacity`、`shadow`、`blendMode`、`zIndex`。core 交集里也有 `id`、`meta`、`animations`，但 relation 每行会生成一个 primitive，首轮不把这些作为用户共享样式开放，避免多行 relation 产生重复 id 或覆盖 provenance。
 
 ```ts
 RelationMarkSchema = {
@@ -38,7 +38,6 @@ RelationMarkSchema = {
   ribbon?: {
     width: MarkValue<number>,
     endWidth?: MarkValue<number>,
-    curvature?: number,
     options?: RelationRibbonSpecificOptions,
   },
 
@@ -52,9 +51,9 @@ RelationMarkSchema = {
 
 `RelationPathSpecificOptions` 只包含 core Path 专属字段：`dashPattern`、`arrow`、`arrowDetail`、`fillRule`、`lineCap`、`lineJoin`、`roundedCorners`、`thickness`、`rotate`、`scale`、`marks`。共享视觉字段不再放在 `path.options` 中，统一走 `style`。
 
-`RelationRibbonSpecificOptions` 只包含 core Ribbon 专属字段：`interpolation`、`align`、`samples`、`sampling`，以及后续若需要可扩展 endpoint `start` / `end` 的 `direction` / `cap`。`width` 与 `endWidth` 由 relation ribbon 几何直接消费，lowering 映射为 core `start.width` / `end.width` 或等价 centerline width。
+`RelationRibbonSpecificOptions` 只包含 core `Path kind="ribbon"` 专属字段：`interpolation`、`align`、`samples`、`sampling`，以及后续若需要可扩展 endpoint `start` / `end` 的 `direction` / `cap`。`width` 与 `endWidth` 由 relation ribbon 几何直接消费，lowering 映射为 core ribbon path 的 `ribbon.start.width` / `ribbon.end.width`。
 
-`kind: 'ribbon'` 第一版只支持 source -> target 的单段流带。lowering 解析 source / target 后生成一条 centerline ribbon：`move(source) -> cubic(target)`。`curvature` 控制 S 形控制点张力，默认 `0.5`；`width` 是必填流量宽度，`endWidth` 缺省等于 `width`。`fill` 缺省优先取 `style.fill`，其次取 relation `encoding.color` 通道并写入 core ribbon `color` / `fill`，最后交给 core 级默认样式。
+`kind: 'ribbon'` 第一版只支持 source -> target 的单段流带。lowering 解析 source / target 后生成一条 core `Path kind="ribbon"`，centerline 使用当前 relation 的默认路径语义。`width` 是必填流量宽度，`endWidth` 缺省等于 `width`；若设置 `options.interpolation`，必须同时设置 `endWidth`。`fill` 缺省优先取 `style.fill`，其次取 relation `encoding.color` 通道并写入 core path color / fill，最后交给 core 级默认样式。
 
 `kind: 'ribbon'` 不支持 `path` 对象。`path.via`、`path.route`、`path.routing`、`path.label` 和 `path.options` 都是 path 几何语义：中间折点、step label、arrow、line cap / join 与 ribbon 的面积几何并不等价。需要多段流带或自动 routing 时，后续另起 ADR 扩展 ribbon 子语义。
 
@@ -86,10 +85,7 @@ React：
       fill: { kind: 'field', value: 'category' },
       fillOpacity: { kind: 'constant', value: 0.52 },
     }}
-    ribbon={{
-      width: { kind: 'field', value: 'amount' },
-      curvature: 0.58,
-    }}
+    ribbon={{ width: { kind: 'field', value: 'amount' } }}
   />
 </Plot>
 ```
@@ -119,7 +115,6 @@ renderPlot(
         },
         ribbon: {
           width: { kind: 'field', value: 'amount' },
-          curvature: 0.58,
         },
         encoding: { color: { field: 'category', scale: '__color' } },
       },
@@ -152,7 +147,7 @@ renderPlot(
 - 不新增独立 `RibbonMark` / `FlowMark`。
 - 不支持 `kind="ribbon"` 的 `path` 对象，也不支持 ribbon route / routing / via / step label。
 - 不新增 graph layout、edge bundling、obstacle avoidance。
-- 不改变 core `IRRibbon` schema；plot 只消费既有 kernel ribbon 能力。
+- 不改变 core `Path kind="ribbon"` schema；plot 只消费既有 kernel ribbon path 能力。
 - 不改交互 hit-test、tooltip 或 hover highlight。
 
 ---
@@ -170,11 +165,11 @@ renderPlot(
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
 | `packages/graph/plot/src/schemas/mark/constants.ts` | 加 | `RelationGeometryKind` | `{ Path: 'path', Ribbon: 'ribbon' } as const` | — | RelationMark 内部几何子类型，顶层 mark type 仍为 relation |
-| `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `RelationPrimitiveStyleSchema` | `z.object({...}).strict()` | — | core Path / Ribbon 共同支持的视觉字段：color / fill / fillOpacity / stroke / strokeWidth / drawOpacity / opacity / shadow / blendMode / zIndex |
+| `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `RelationPrimitiveStyleSchema` | `z.object({...}).strict()` | — | 普通 core Path / ribbon Path 共同支持的视觉字段：color / fill / fillOpacity / stroke / strokeWidth / drawOpacity / opacity / shadow / blendMode / zIndex |
 | `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `RelationPathGeometrySchema` | `z.object({...}).strict()` | — | path 几何配置：via / route / routing / label / path-only core options |
 | `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `RelationPathSpecificOptionsSchema` | Path 专属字段 object | — | core Path 专属字段，不含 shared style，也不含 type / children |
-| `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `RelationRibbonOptionsSchema` | `z.object({...}).strict()` | — | relation ribbon 几何配置，下沉为 core `IRRibbon` |
-| `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `RelationRibbonSpecificOptionsSchema` | Ribbon 专属字段 object | — | core Ribbon 专属字段，不含 shared style，也不含 type / children / width |
+| `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `RelationRibbonOptionsSchema` | `z.object({...}).strict()` | — | relation ribbon 几何配置，下沉为 core `Path kind="ribbon"` |
+| `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `RelationRibbonSpecificOptionsSchema` | ribbon Path 专属字段 object | — | core `Path kind="ribbon"` 专属字段，不含 shared style，也不含 type / children / width |
 | `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `RelationMarkSchema.kind` | `z.enum(RelationGeometryKind).optional()` | `path` | relation 的几何输出：path 或 ribbon |
 | `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `RelationMarkSchema.style` | `RelationPrimitiveStyleSchema.optional()` | — | path / ribbon 共同可用的视觉样式 |
 | `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `RelationMarkSchema.path` | `RelationPathGeometrySchema.optional()` | — | `kind: 'path'` 时可用的 path 几何配置 |
@@ -248,7 +243,7 @@ renderPlot(
 - `PlotTargetRef`（`packages/graph/plot/src/schemas/mark/schema.ts`）——扩展使用；ribbon source / target 与 path relation 共用同一 target ref。
 - `RelationMark` lowering helpers（`packages/graph/plot/src/providers/mark/features/relation.ts`）——修改；拆出公共 target resolving，分派 path / ribbon geometry。
 - `AnchorRegistry`（`packages/graph/plot/src/pipeline/anchors.ts`）——引用；ribbon 复用 anchor 生成、引用和错误诊断。
-- `IRRibbon` / `RibbonSchema`（`packages/kernel/core/src/schemas/ribbon.ts`）——引用；plot lowering 输出既有 core ribbon，不改 core schema。
+- `IRPath.kind="ribbon"` / `PathRibbonSchema`（`packages/kernel/core/src/schemas/path/ribbon.ts`）——引用；plot lowering 输出既有 core ribbon path，不改 core schema。
 - `Path / Step target`（`@retikz/core`）——引用；ribbon centerline 仍由 core step target 解析。
 - `MarkValueType` style schema（`packages/graph/plot/src/schemas/mark/schema.ts`）——扩展；ribbon width 与 shared style 使用既有 field-bound / constant 风格值模式。
 - `RelationMark` docs 页面（`apps/docs/src/contents/graph/grammar/mark/relation/`）——修改；新增 Sankey ribbon demo，说明 layout 不在本 ADR 范围。

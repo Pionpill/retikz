@@ -1,6 +1,6 @@
 # ADR-04：smooth transform + linear regression path
 
-状态：Proposed
+状态：Accepted
 决策日期：2026-06-28
 关联：[plot v0.1-alpha.13 roadmap](./roadmap.md) · [alpha.12 ADR-06 transform registry](../alpha.12/06-transform-registry.md) · [alpha.12 ADR-16 Statistical transform algebra](../alpha.12/16-statistical-transform-algebra.md) · [alpha.13 ADR-03 density transform](./03-density-transform.md) · [PathMark docs](../../../../../../apps/docs/src/contents/graph/grammar/mark/path/index.zh.mdx) · [plot-design.md §13.1](../../../../../architecture/plot-design.md)
 
