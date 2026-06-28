@@ -6,9 +6,9 @@ import { z } from 'zod';
  */
 export const GradientStopSchema = z
   .object({
-    offset: z.number().min(0).max(1).describe('Stop position along the gradient axis, 0..1'),
-    color: z.string().describe('Any CSS color (e.g. "#08f", "navy", "currentColor")'),
-    opacity: z.number().min(0).max(1).optional().describe('Stop opacity 0..1; omitted = fully opaque'),
+    offset: z.number().min(0).max(1).describe('Stop position along the gradient axis.'),
+    color: z.string().describe('CSS color for this stop.'),
+    opacity: z.number().min(0).max(1).optional().describe('Stop opacity. Omitted fields are fully opaque.'),
   })
   .describe('A single gradient color stop');
 
@@ -27,7 +27,7 @@ export const PaintSpecSchema = z
           .number()
 
           .optional()
-          .describe('Gradient direction in degrees (polar convention; 0°=+x, 90°=+y screen-down); omitted = renderer default (left→right)'),
+          .describe('Gradient direction angle in degrees. Omitted fields use the paint backend default.'),
       })
       .describe('Linear gradient paint server'),
     z
@@ -37,13 +37,13 @@ export const PaintSpecSchema = z
         center: z
           .tuple([z.number(), z.number()])
           .optional()
-          .describe('Center in objectBoundingBox units (0..1 relative to the filled shape); omitted = (0.5, 0.5)'),
+          .describe('Center in object-bounding-box coordinates. Omitted fields use [0.5, 0.5].'),
         radius: z
           .number()
 
           .positive()
           .optional()
-          .describe('Radius in objectBoundingBox units (0..1); omitted = 0.5'),
+          .describe('Radius in object-bounding-box units. Omitted fields use 0.5.'),
       })
       .describe('Radial gradient paint server'),
     z
@@ -53,12 +53,12 @@ export const PaintSpecSchema = z
         center: z
           .tuple([z.number(), z.number()])
           .optional()
-          .describe('Center in objectBoundingBox units (0..1 relative to the filled shape); omitted = (0.5, 0.5)'),
+          .describe('Center in object-bounding-box coordinates. Omitted fields use [0.5, 0.5].'),
         angle: z
           .number()
 
           .optional()
-          .describe('Start angle in degrees (polar convention; 0°=+x, 90°=+y screen-down); omitted = 0'),
+          .describe('Start angle in degrees. Omitted fields use 0.'),
       })
       .describe('Conic gradient paint server'),
     z
@@ -68,7 +68,7 @@ export const PaintSpecSchema = z
           .string()
           .min(1)
           .describe(
-            'Registered pattern motif name; built-in `lines` (hatching) / `dots` / `grid` (crosshatch), or an extension motif registered via `CompileOptions.patterns`. Any non-empty string passes schema validation; unregistered names are rejected at compile time.',
+            'Pattern motif provider name. Built-ins are `lines`, `dots`, and `grid`; custom names must be registered via CompileOptions.patterns.',
           ),
         color: z.string().optional().describe('Motif color; any CSS color, defaults to `currentColor`'),
         background: z.string().optional().describe('Tile background fill; omitted = transparent'),

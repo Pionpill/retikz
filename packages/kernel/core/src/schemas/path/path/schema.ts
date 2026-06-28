@@ -19,17 +19,17 @@ export const PathScaleSchema = z
           .number()
 
           .positive()
-          .describe('Scale factor on the x axis (finite, positive).'),
+          .describe('Scale factor on the x axis.'),
         y: z
           .number()
 
           .positive()
-          .describe('Scale factor on the y axis (finite, positive).'),
+          .describe('Scale factor on the y axis.'),
       })
       .describe('Anisotropic scale with independent x / y factors.'),
   ])
   .describe(
-    'Whole-path scale: a single finite positive number for uniform scaling, or an { x, y } object for anisotropic scaling. Applied around the path bounding-box center together with rotate.',
+    'Whole-path scale: a single number for uniform scaling, or an { x, y } object for anisotropic scaling. Applied around the path bounding-box center with rotate.',
   );
 
 /**
@@ -44,7 +44,7 @@ export const ArrowMarkSchema = ArrowEndDetailSchema.extend({
       'Discriminator marking this mark as an arrow tip. Only `arrow` is supported in the first batch; other kinds are rejected by schema.',
     ),
 }).describe(
-  'Arrow mark placed along the path: an arrow tip whose direction follows the path tangent at the mark position. Reuses the per-end arrow visual subset (shape / scale / length / width / color / fill / opacity / lineWidth); `shape` is a registered arrow name, NOT a `->` direction token.',
+  'Arrow mark placed along the path. Direction follows the path tangent; `shape` is an arrow provider name, not a direction token.',
 );
 
 export const PathBaseSchema = z
@@ -72,7 +72,7 @@ export const PathBaseSchema = z
       .min(1)
       .optional()
       .describe(
-        'Stroke dash pattern lengths in user units (e.g. [4, 2]); omitted means solid line',
+        'Stroke dash pattern lengths in user units. Omitted fields mean solid line.',
       ),
     arrow: z
       .enum(['none', '->', '<-', '<->'])
@@ -81,7 +81,7 @@ export const PathBaseSchema = z
         'Path-level arrow direction. omitted/`none` = no arrows; `->` = arrow at end; `<-` = at start; `<->` = both.',
       ),
     arrowDetail: ArrowDetailSchema.optional().describe(
-      'Detailed arrow visual config (shape / scale / length / width / color / fill / opacity / lineWidth) with optional `start` / `end` per-end overrides. Omitted = built-in defaults (shape `stealth`, all visuals inherit from path stroke / opacity).',
+      'Detailed arrow visual config with optional `start` and `end` per-end overrides. Omitted fields use arrow definition defaults.',
     ),
     fillRule: z
       .enum(['nonzero', 'evenodd'])
@@ -93,13 +93,13 @@ export const PathBaseSchema = z
       .enum(['butt', 'round', 'square'])
       .optional()
       .describe(
-        'Stroke endpoint shape (`butt` / `round` / `square`; matches TikZ `line cap`). Default `butt` (sharp end); `round` adds a half-disc cap; `square` extends a half-stroke past the endpoint.',
+        'Stroke endpoint shape. Omitted fields use butt; round adds a half-disc cap and square extends past the endpoint.',
       ),
     lineJoin: z
       .enum(['miter', 'round', 'bevel'])
       .optional()
       .describe(
-        'Stroke corner shape (`miter` / `round` / `bevel`; matches TikZ `line join`). Default `miter` (sharp corner); `round` rounds the join; `bevel` cuts the corner flat.',
+        'Stroke corner shape. Omitted fields use miter; round rounds the join and bevel cuts the corner flat.',
       ),
     roundedCorners: z
       .number()
@@ -107,7 +107,7 @@ export const PathBaseSchema = z
       .nonnegative()
       .optional()
       .describe(
-        'Geometric corner radius (TikZ `rounded corners=`) applied to every line-to-line joint of the path. This rounds the path GEOMETRY (pulls the joint vertices back and inserts a tangent arc) — distinct from `lineJoin` which only styles the stroke render. Joints touching a curve / arc / bezier / fold segment stay sharp. Per-joint radius is clamped to what the adjacent segment lengths allow. Omitted = sharp corners (current behavior, unchanged).',
+        'Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.',
       ),
     thickness: z
       .enum([
@@ -121,17 +121,17 @@ export const PathBaseSchema = z
       ])
       .optional()
       .describe(
-        'Semantic stroke thickness preset (TikZ `ultra thin` … `ultra thick`). Compiled to a numeric stroke-width if `strokeWidth` is omitted. Explicit `strokeWidth` always wins.',
+        'Semantic stroke thickness preset. Used only when `strokeWidth` is omitted.',
       ),
     rotate: z
       .number()
 
       .optional()
       .describe(
-        'Rotate the whole path by this many degrees about its bounding-box center (positive = visually clockwise under screen y-down). Equivalent to wrapping the path in a Scope with a rotate transform centered on the path. Endpoints are resolved in the current scope first; the rotation wraps the resulting geometry.',
+        'Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.',
       ),
     scale: PathScaleSchema.optional().describe(
-      'Scale the whole path about its bounding-box center: a finite positive number (uniform) or { x, y } (anisotropic). Applied together with rotate around the same center.',
+      'Scale the whole path around its bounding-box center. Applied with rotate around the same center.',
     ),
     marks: z
       .array(
@@ -142,7 +142,7 @@ export const PathBaseSchema = z
               .min(0)
               .max(1)
               .describe(
-                'Normalized position along the path in [0, 1] (0 = start, 1 = end). Values outside [0, 1] are rejected by schema. The geometric meaning of the parameter matches step labels: arc length for line/step, Bezier parameter for curve/cubic/bend.',
+                'Normalized position along the path. Parameter meaning matches step labels: arc length for line-like steps and Bezier parameter for curve-like steps.',
               ),
             mark: ArrowMarkSchema.describe(
               'The mark to place at this position; currently an arrow tip oriented by the path tangent.',

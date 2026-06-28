@@ -10,18 +10,18 @@ export const PolarPositionSchema: z.ZodType<PolarPosition> = z.lazy(() =>
         .union([z.string().min(1), PositionSchema, PolarPositionSchema])
         .optional()
         .describe(
-          'Origin reference: node id string, Cartesian [x, y], or nested PolarPosition (chained); defaults to [0, 0] when omitted',
+          'Origin reference: node id string, Cartesian [x, y], or nested PolarPosition. Omitted fields use [0, 0].',
         ),
       angle: z
         .number()
 
         .describe(
-          'Angle in degrees, measured from +x axis (0°). 90° = +y = screen-down (visual clockwise under screen y-down); negative angles go upward. Matches retikz convention used by ArcStep / Node label.',
+          'Angle in degrees measured from the positive x axis. Positive angles follow the screen y-down convention.',
         ),
       radius: z
         .number()
 
-        .describe('Radius / distance in user units'),
+        .describe('Radius or distance in user units.'),
     })
     .describe(
       'Polar coordinate position; resolved to Cartesian at Scene compile time',

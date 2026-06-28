@@ -14,7 +14,7 @@ export const DropShadowSchema = z
 
       .optional()
       .describe(
-        'Horizontal shadow offset in user units (overrides preset); SVG feDropShadow dx / Canvas shadowOffsetX.',
+        'Horizontal shadow offset in user units. Overrides the preset value.',
       ),
     offsetY: z
       .number()
@@ -29,7 +29,7 @@ export const DropShadowSchema = z
       .nonnegative()
       .optional()
       .describe(
-        'Shadow blur radius in user units (overrides preset); 0 = hard-edged. Renderers calibrate it to their native shadow APIs.',
+        'Shadow blur radius in user units. Overrides the preset value; 0 means hard-edged.',
       ),
     color: z
       .string()
@@ -42,7 +42,7 @@ export const DropShadowSchema = z
       .min(0)
       .max(1)
       .optional()
-      .describe('Shadow opacity 0..1 multiplied onto the effective color alpha.'),
+      .describe('Shadow opacity multiplier applied to the resolved shadow color.'),
   })
   .refine(s => s.preset !== undefined || (s.offsetX !== undefined && s.offsetY !== undefined), {
     message: 'Provide a `preset`, or explicit `offsetX` + `offsetY`.',

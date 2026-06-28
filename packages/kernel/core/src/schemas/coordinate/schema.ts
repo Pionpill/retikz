@@ -30,5 +30,5 @@ export const CoordinateSchema = z
   })
   .strict()
   .describe(
-    'Coordinate placeholder: a named point with no visual; usable as a target for paths and as an anchor for relative positioning. Mirrors TikZ `\\coordinate (id) at (...);`',
+    'Coordinate placeholder: a named point with no visual, usable as a path target or relative-position anchor.',
   );

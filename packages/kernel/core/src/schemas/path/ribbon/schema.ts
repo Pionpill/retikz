@@ -35,7 +35,7 @@ export const RibbonWidthStopSchema = z
 
       .min(0)
       .max(1)
-      .describe('Normalized position along the centerline in [0, 1].'),
+      .describe('Normalized position along the centerline.'),
     value: z
       .number()
 
@@ -64,7 +64,7 @@ export const RibbonWidthSchema = z
       .describe('A multi-stop ribbon width rule.'),
     z
       .object({
-        kind: z.literal('profile').describe('Discriminator for registered runtime profiles.'),
+        kind: z.literal('profile').describe('Discriminator for registered width profiles.'),
         name: z
           .string()
           .min(1)
@@ -72,7 +72,7 @@ export const RibbonWidthSchema = z
         params: JsonObjectSchema.optional().describe('JSON-safe profile parameters.'),
       })
       .strict()
-      .describe('A runtime-registered width profile reference.'),
+      .describe('A registered width profile reference.'),
   ])
   .describe(
     'Ribbon width rule: fixed number, stop curve, or registered profile reference. Endpoint taper widths live on start.width and end.width.',

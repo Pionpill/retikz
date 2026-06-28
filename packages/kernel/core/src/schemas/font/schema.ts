@@ -7,14 +7,14 @@ export const FontSchema = z
       .string()
       .optional()
       .describe(
-        'CSS font-family string, e.g. "serif", "monospace", "Inter, sans-serif"',
+        'CSS font-family string such as "serif", "monospace", or "Inter, sans-serif".',
       ),
     size: z
       .number()
       .positive()
 
       .optional()
-      .describe('Font size in user units; falls back to the renderer default when omitted'),
+      .describe('Font size in user units. Omitted fields use inherited text defaults.'),
     weight: z
       .union([z.enum(['normal', 'bold']), z.number()])
       .optional()
@@ -25,5 +25,5 @@ export const FontSchema = z
       .describe('CSS font-style'),
   })
   .describe(
-    'Font properties (family / size / weight / style). All fields optional; consumed by Node text / Node label / LineSpec / future TikZ / Scope font defaults.',
+    'Font properties shared by node text, labels, line specs, and scope defaults.',
   );

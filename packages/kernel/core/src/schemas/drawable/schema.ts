@@ -10,7 +10,7 @@ export const DrawableStyleSchema = z
       .string()
       .optional()
       .describe(
-        'Master color (TikZ `color=`) for path-like drawable geometry. Path stroke, ribbon fill, attached labels, and arrow tips may use it as their default color unless individually overridden.',
+        'Master color for path-like drawable geometry. Path stroke, ribbon fill, labels, and arrow tips may inherit it unless individually overridden.',
       ),
     fill: z
       .union([z.string(), PaintSpecSchema])
@@ -23,7 +23,7 @@ export const DrawableStyleSchema = z
       .min(0)
       .max(1)
       .optional()
-      .describe('Fill opacity 0..1; affects only filled areas.'),
+      .describe('Fill-only opacity for filled regions.'),
     stroke: z
       .union([z.string(), PaintSpecSchema])
       .optional()
@@ -41,13 +41,13 @@ export const DrawableStyleSchema = z
       .min(0)
       .max(1)
       .optional()
-      .describe('Stroke opacity 0..1 (TikZ `draw opacity`); affects only stroked outlines.'),
+      .describe('Stroke-only opacity for outlines.'),
     opacity: z
       .number()
       .min(0)
       .max(1)
       .optional()
-      .describe('Whole drawable opacity 0..1; applies to the emitted primary geometry.'),
+      .describe('Whole-drawable opacity applied to the emitted primary geometry.'),
     shadow: z
       .union([z.enum(ShadowPreset), DropShadowSchema])
       .optional()
@@ -71,10 +71,10 @@ export const DrawableMetaSchema = z
       .min(1)
       .optional()
       .describe(
-        'Optional stable id used as a reference target and hydration hook for the Scene primitive(s) emitted by this drawable element.',
+        'Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.',
       ),
     meta: JsonObjectSchema.optional().describe(
-      'Opaque provenance metadata carried by this drawable element. Preserved verbatim into emitted Scene primitive(s), ignored by renderers, and never interpreted by the compiler. Must be a JSON object. Not inherited across scopes.',
+      'Opaque JSON metadata carried by this drawable element. Preserved into emitted Scene primitives and ignored by the compiler.',
     ),
     animations: z
       .array(AnimationTrackSchema)

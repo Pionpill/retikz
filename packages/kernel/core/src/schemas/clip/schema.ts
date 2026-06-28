@@ -14,8 +14,8 @@ export const ClipSpecSchema = z
         kind: z.literal('rect'),
         x: z.number().describe('Rect left-top x in scope-local coords'),
         y: z.number().describe('Rect left-top y in scope-local coords'),
-        width: z.number().positive().describe('Rect width (> 0)'),
-        height: z.number().positive().describe('Rect height (> 0)'),
+        width: z.number().positive().describe('Rect width in user units.'),
+        height: z.number().positive().describe('Rect height in user units.'),
       })
       .describe('Rectangular clip region'),
     z
@@ -23,7 +23,7 @@ export const ClipSpecSchema = z
         kind: z.literal('circle'),
         cx: z.number().describe('Circle center x'),
         cy: z.number().describe('Circle center y'),
-        r: z.number().positive().describe('Circle radius (> 0)'),
+        r: z.number().positive().describe('Circle radius in user units.'),
       })
       .describe('Circular clip region'),
     z
@@ -31,8 +31,8 @@ export const ClipSpecSchema = z
         kind: z.literal('ellipse'),
         cx: z.number().describe('Ellipse center x'),
         cy: z.number().describe('Ellipse center y'),
-        rx: z.number().positive().describe('Ellipse x radius (> 0)'),
-        ry: z.number().positive().describe('Ellipse y radius (> 0)'),
+        rx: z.number().positive().describe('Ellipse x radius in user units.'),
+        ry: z.number().positive().describe('Ellipse y radius in user units.'),
       })
       .describe('Elliptical clip region'),
     z
@@ -41,10 +41,10 @@ export const ClipSpecSchema = z
         points: z
           .array(z.tuple([z.number(), z.number()]))
           .min(3)
-          .describe('Polygon vertices [x, y][]; at least 3 points, each finite'),
+          .describe('Polygon vertices as [x, y] tuples.'),
       })
       .describe('Polygon clip region (arbitrary straight-edge area)'),
   ])
   .describe(
-    'Clip region: one of rect / circle / ellipse / polygon, in scope-local coordinates. Used by `Scope.clip`; compiled into a renderer-agnostic ClipResource and referenced via the group `clipRef`.',
+    'Clip region for `Scope.clip`: rect, circle, ellipse, or polygon in scope-local coordinates.',
   );

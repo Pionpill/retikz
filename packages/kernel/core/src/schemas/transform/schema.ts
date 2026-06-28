@@ -8,7 +8,7 @@ const TranslateSchema = z
   .object({
     kind: z
       .literal('translate')
-      .describe('Discriminator: Cartesian translate (the 3-variant Scene transform shape).'),
+      .describe('Discriminator for Cartesian translate.'),
     x: z.number().describe('Cartesian x translation in user units.'),
     y: z
       .number()
@@ -16,25 +16,25 @@ const TranslateSchema = z
       .describe('Cartesian y translation in user units (screen y-down).'),
   })
   .describe(
-    'Cartesian translate transform; mirrors the Position [x, y] literal. Lowered directly to Scene `GroupPrim` translate.',
+    'Cartesian translate transform using user-unit x and y offsets.',
   );
 
 const PolarTranslateSchema = z
   .object({
     kind: z
       .literal('polar-translate')
-      .describe('Discriminator: polar translate; mirrors PolarPosition.'),
+      .describe('Discriminator for polar translate.'),
     origin: z
       .union([z.string().min(1), PositionSchema, PolarPositionSchema])
       .optional()
       .describe(
-        'Origin reference (same union as PolarPosition.origin): node id string / Cartesian [x, y] / nested PolarPosition; omit = origin at (0, 0) so this acts as an absolute polar shift.',
+        'Origin reference: node id string, Cartesian [x, y], or nested PolarPosition. Omitted fields use [0, 0].',
       ),
     angle: z
       .number()
 
       .describe(
-        'Angle in degrees; 0° = +x, 90° = +y (screen-down); matches PolarPosition.angle convention.',
+        'Angle in degrees measured from the positive x axis.',
       ),
     radius: z
       .number()
@@ -44,14 +44,14 @@ const PolarTranslateSchema = z
       ),
   })
   .describe(
-    'Polar translate transform; mirrors PolarPosition. Lowered to Cartesian translate at compile time via resolvePosition.',
+    'Polar translate transform lowered to Cartesian translate at compile time.',
   );
 
 const AtTranslateSchema = z
   .object({
     kind: z
       .literal('at-translate')
-      .describe('Discriminator: direction-relative translate; mirrors AtPosition.'),
+      .describe('Discriminator for direction-relative translate.'),
     direction: z
       .enum(AtDirection)
       .describe('Direction enum (8 values, shared with AtPosition.direction).'),
@@ -66,22 +66,22 @@ const AtTranslateSchema = z
       .positive()
       .optional()
       .describe(
-        'Distance along direction in user units; omit → falls back to CompileOptions.nodeDistance (same default chain as AtPosition.distance).',
+        'Distance along direction in user units. Omitted fields use CompileOptions.nodeDistance, then 1.',
       ),
   })
   .describe(
-    'Direction-relative translate transform; mirrors AtPosition. Lowered to Cartesian translate at compile time via resolvePosition.',
+    'Direction-relative translate transform lowered to Cartesian translate at compile time.',
   );
 
 const OffsetTranslateSchema = z
   .object({
     kind: z
       .literal('offset-translate')
-      .describe('Discriminator: offset-from-referent translate; mirrors OffsetPosition.'),
+      .describe('Discriminator for offset-from-reference translate.'),
     of: z
       .union([z.string().min(1), PositionSchema, PolarPositionSchema])
       .describe(
-        'Referent base point (same union as OffsetPosition.of): node id (forward references rejected) / Cartesian [x, y] / PolarPosition.',
+        'Reference base point: node id string, Cartesian [x, y], or PolarPosition.',
       ),
     offset: z
       .tuple([z.number(), z.number()])
@@ -91,25 +91,25 @@ const OffsetTranslateSchema = z
       ),
   })
   .describe(
-    'Offset translate transform; mirrors OffsetPosition. Lowered to Cartesian translate at compile time via resolvePosition.',
+    'Offset translate transform lowered to Cartesian translate at compile time.',
   );
 
 const BetweenTranslateSchema = z
   .object({
     kind: z
       .literal('between-translate')
-      .describe('Discriminator: proportional translate between two endpoints; mirrors BetweenPosition.'),
+      .describe('Discriminator for proportional translate between two endpoints.'),
     between: z
       .tuple([AbsoluteTargetSchema, AbsoluteTargetSchema])
-      .describe('Two endpoints (AbsoluteTarget each; path-relative excluded), same as BetweenPosition.between.'),
+      .describe('Two absolute endpoints; path-relative targets are excluded.'),
     t: z
       .number()
       .min(0)
       .max(1)
-      .describe('Proportion along A→B, 0..1 (0 = A, 1 = B); same as BetweenPosition.t.'),
+      .describe('Proportion from the first endpoint to the second endpoint.'),
   })
   .describe(
-    'Proportional translate transform; mirrors BetweenPosition. Lowered to Cartesian translate at compile time via resolvePosition.',
+    'Proportional translate transform lowered to Cartesian translate at compile time.',
   );
 
 const RotateSchema = z
@@ -133,7 +133,7 @@ const RotateSchema = z
       .describe('Rotation center y in user units; omit = 0 (rotate about local origin).'),
   })
   .describe(
-    'Rotation transform; identical shape to Scene `RotateTransform`. Passed through to GroupPrim without further lowering.',
+    'Rotation transform around an optional local-origin offset.',
   );
 
 const ScaleSchema = z
@@ -145,18 +145,18 @@ const ScaleSchema = z
       .number()
 
       .describe(
-        'Scale factor on the x axis. Zero scale collapses the coordinate system and is not invertible — relative positions inside the scope degrade to the local origin (0, 0). Avoid zero in practice; use a tiny positive value if a "near-invisible" effect is desired.',
+        'Scale factor on the x axis.',
       ),
     y: z
       .number()
 
       .optional()
       .describe(
-        'Scale factor on the y axis; omit = x (uniform scaling). Zero scale falls back to (0, 0) for relative position inverse projection (see `x`).',
+        'Scale factor on the y axis. Omitted fields use x for uniform scaling.',
       ),
   })
   .describe(
-    'Scale transform; identical shape to Scene `ScaleTransform`. Passed through to GroupPrim without further lowering.',
+    'Scale transform with x and optional y factors.',
   );
 
 export const TransformSchema = z
@@ -170,5 +170,5 @@ export const TransformSchema = z
     ScaleSchema,
   ])
   .describe(
-    'IR-level transform; 7 variants. The 5 translate variants (translate / polar-translate / at-translate / offset-translate / between-translate) mirror the Node.position union one-for-one; rotate and scale match the Scene `Transform` shape. At compile time the 5 translate variants are lowered to Cartesian translate via resolvePosition before being pushed onto the cumulative chain emitted to Scene `GroupPrim` (which stays at 3 variants).',
+    'IR-level transform union. Translate variants resolve to Cartesian translate at compile time; rotate and scale pass through as transform primitives.',
   );

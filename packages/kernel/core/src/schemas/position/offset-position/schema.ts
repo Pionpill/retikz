@@ -7,12 +7,12 @@ export const OffsetPositionSchema = z
     of: z
       .union([z.string().min(1), PositionSchema, PolarPositionSchema])
       .describe(
-        'Reference base point: node id string (forward references rejected), Cartesian [x, y] literal (no pre-definition needed), or PolarPosition (recursive polar chain via its own origin). Mirrors PolarPosition.origin union shape.',
+        'Reference base point: node id string, Cartesian [x, y], or PolarPosition.',
       ),
     offset: z
       .tuple([z.number(), z.number()])
-      .describe('Offset (dx, dy) from the reference point in user units; rejects NaN / ±Infinity'),
+      .describe('Offset [dx, dy] from the reference point in user units.'),
   })
   .describe(
-    'Offset position: base point `of` plus a Cartesian `(dx, dy)` offset. Mirrors TikZ `calc` syntax `($(of) + (dx, dy)$)`. The base point may itself be a node id, a literal coordinate, or a polar expression — covering all referent shapes available to PolarPosition.origin.',
+    'Offset position: base point `of` plus a Cartesian offset.',
   );

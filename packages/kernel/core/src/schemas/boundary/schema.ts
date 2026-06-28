@@ -5,5 +5,5 @@ import { ShapeRefSchema } from '../shape';
 export const BoundarySchema = z
   .union([z.string().min(1), ShapeRefSchema])
   .describe(
-    'Connection surface: how edges meet this node and how compass anchors resolve, independent of the visual `shape`. Reserved keywords: "shape" (default — the node\'s own visual shape) and "circle" (true circle, radius = larger AABB half-axis). Any other registered shape name ("rectangle" / "ellipse" / "polygon" / …) or `{ type, params }` borrows that shape\'s boundary over this node\'s bounding box. Layout-neutral: never changes the node footprint. Named shape-specific anchors and edge proportional points always resolve against the visual shape.',
+    'Connection surface for edge endpoints and compass anchors, independent of the visual `shape`. Reserved names: "shape" and "circle"; other names use registered shape boundaries. Does not change node layout.',
   );

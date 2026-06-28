@@ -27,9 +27,9 @@ export const BetweenPositionSchema: z.ZodType<IRBetweenPosition> = z.lazy(() =>
         .number()
         .min(0)
         .max(1)
-        .describe('Proportion along A→B, 0..1 (0 = A, 1 = B); extrapolation not supported'),
+        .describe('Proportion from the first endpoint to the second endpoint.'),
     })
     .describe(
-      'Proportional point between two endpoints (TikZ `($(A)!t!(B)$)`); resolved to `lerp(A, B, t)` at compile time. Admitted into Node/Coordinate position and path Step.to.',
+      'Proportional point between two endpoints, resolved at compile time. Allowed in node, coordinate, and path endpoint positions.',
     ),
 );

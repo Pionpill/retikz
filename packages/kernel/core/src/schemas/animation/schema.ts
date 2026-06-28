@@ -93,7 +93,7 @@ export const AnimationTrackSchema = z
     iterations: z
       .union([z.number().positive(), z.literal('infinite')])
       .optional()
-      .describe('Iteration count: a positive number or "infinite". Omitted fields play once.'),
+      .describe('Iteration count. Use "infinite" for endless playback. Omitted fields play once.'),
     direction: z
       .enum(AnimationDirection)
       .optional()

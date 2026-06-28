@@ -40,7 +40,7 @@ export const NodeLabelSchema = z
       .union([z.enum(NodeLabelPosition), z.number(), NodeLabelBoundaryPositionSchema])
       .optional()
       .describe(
-        'Placement around the node border: 8-direction enum (above / right / above-left / ...), `center`, numeric angle in degrees, or `{ boundary, t }` on a box-like boundary. Default `above`. `center` draws the label at the node center. Numeric uses the polar convention (0° = +x, 90° = +y, screen-down).',
+        'Placement around the node border: direction keyword, center, numeric angle, or `{ boundary, t }`. Omitted fields use above.',
       ),
     placement: z
       .enum(NodeLabelPlacement)
@@ -64,15 +64,15 @@ export const NodeLabelSchema = z
       .min(0)
       .max(1)
       .optional()
-      .describe('Label-only opacity 0..1; multiplied with the node opacity if both are set.'),
+      .describe('Label-only opacity, multiplied with node opacity when both are set.'),
     font: FontSchema.optional().describe(
-      'Label font overrides; missing fields inherit from the parent node font, then renderer defaults.',
+      'Label font overrides. Missing fields inherit from the parent node font.',
     ),
     rotate: z
       .union([z.enum(['none', 'radial', 'tangent']), z.number()])
       .optional()
       .describe(
-        'Rotate the label text around its own center. `none` (default) = horizontal; `radial` = along the node-center -> label-center direction; `tangent` = radial + 90 deg; a number = explicit degrees (screen y-down: 0 = +x, 90 = +y). Only changes text orientation, not placement.',
+        'Rotate label text around its own center: none, radial, tangent, or explicit degrees. Only changes orientation, not placement.',
       ),
     keepUpright: z
       .boolean()
@@ -86,12 +86,12 @@ export const NodeLabelSchema = z
         z.object({
           stroke: z.string().optional().describe('Leader line color; defaults to the label color / currentColor'),
           strokeWidth: z.number().positive().optional().describe('Leader line width (user units); default 1'),
-          dashPattern: z.array(z.number()).optional().describe('Leader dash pattern (e.g. [2, 2])'),
+          dashPattern: z.array(z.number()).optional().describe('Leader dash pattern lengths in user units.'),
         }),
       ])
       .optional()
       .describe(
-        'Draw a leader line from the node border to the label (TikZ `pin`). `true` = default thin solid line; an object = leader with style overrides (`stroke` / `strokeWidth` / `dashPattern`); omitted / `false` = no leader. Label placement is unchanged either way.',
+        'Leader line from the node border to the label. `true` uses the default line; an object provides line style overrides; omitted or `false` disables the leader.',
       ),
   })
   .superRefine((label, ctx) => {
@@ -123,19 +123,19 @@ export const NodeSchema = z
       .union([z.string().min(1), ShapeRefSchema])
       .optional()
       .describe(
-        'Node visual shape: a bare name string (parameterless, e.g. "rectangle") or `{ type, params }` carrying a JSON params object (e.g. `{ type:"sector", params:{ innerRadius, outerRadius, startAngle, endAngle } }`). Built-in or registered via CompileOptions.shapes; unregistered type rejected at compile time. Defaults to "rectangle".',
+        'Node visual shape: bare shape name or `{ type, params }`. Built-ins and registered shapes are allowed; unregistered names fail at compile time. Omitted fields use rectangle.',
       ),
     boundary: BoundarySchema.optional().describe(
-      'Default connection surface for edges meeting this node (see BoundarySchema). Defaults to "shape" (use the visual shape). Per-edge overridable via the edge endpoint `boundary` field.',
+      'Default connection surface for edges meeting this node. Per-edge endpoints may override it.',
     ),
     meta: JsonObjectSchema.optional().describe(
-      'Opaque provenance metadata carried by this element (e.g. a Tier 2 lowering tagging which datum / series / layer it came from). Provenance passthrough: preserved verbatim into the Scene primitive(s) this element emits, ignored by renderers, and never interpreted by the compiler — it does not affect layout, connection, style, or bounding box. Must be a JSON object (fully serializable). Not inherited across scopes; not part of the every-X style defaults.',
+      'Opaque JSON metadata carried by this node. Preserved into emitted Scene primitives and ignored by the compiler.',
     ),
     animations: z
       .array(AnimationTrackSchema)
       .optional()
       .describe(
-        'Declarative timeline animation tracks for this element (fadeIn / drawOn / pulse / …). Each track animates one renderer-agnostic property over normalized time; the element base value is the settled (animation-end) state. Carried verbatim into the Scene primitive(s) this element emits; renderers play them or, when unable, render the static settled state with a diagnosable warning. Does not affect layout / bounding box (animations may transiently overflow). Not inherited across scopes; not part of the every-X style defaults.',
+        'Declarative animation tracks for this node. Tracks are carried into emitted Scene primitives, do not affect layout, and are not inherited across scopes.',
       ),
     position: z
       .union([
@@ -146,23 +146,23 @@ export const NodeSchema = z
         BetweenPositionSchema,
       ])
       .describe(
-        'Center point of the node content box; Cartesian [x, y], polar, relative-to-another-node (`at`-style with `direction` / `of` / `distance?`), offset from a base point (`{ of, offset }` form mirroring TikZ `calc`), or between two endpoints (`{ between: [A, B], t }` proportional point). All non-Cartesian forms resolve at compile time.',
+        'Center point of the node content box: Cartesian [x, y], polar, relative-to-node, offset, or between two endpoints. Non-Cartesian forms resolve at compile time.',
       ),
     rotate: z
       .number()
 
       .optional()
       .describe(
-        'Rotation in degrees around the node center; positive = clockwise (matches TikZ rotate=...)',
+        'Rotation in degrees around the node center; positive is visually clockwise.',
       ),
     text: TextBlockSchema.optional().describe(
-      'Optional node text content; accepts a string, an array of lines, or styled text line objects. A literal newline ("\\n") inside any string is a hard line break, so one string with newlines renders as multiple lines. Strings may carry inline math via `$...$` (inline) and `$$...$$` (display) when a lowerTex capability is injected (from @retikz/tex); a node whose entire content is one `$$...$$` formula is sized by the glyph bbox. When omitted the node emits only its shape primitive.',
+      'Optional node text content. Accepts a string, an array of lines, styled line objects, or mixed text/math runs. Newlines are hard line breaks; math sugar requires lowerTex.',
     ),
     align: z
       .enum(NodeTextAlign)
       .optional()
       .describe(
-        'Multi-line text alignment within the text block; `left` / `center` / `right`. Defaults to `center` (matches TikZ).',
+        'Multi-line text alignment within the text block. Omitted fields use center.',
       ),
     lineHeight: z
       .number()
@@ -177,26 +177,26 @@ export const NodeSchema = z
       .positive()
       .optional()
       .describe(
-        'Max line width before wrapping (user units). The text box shrinks to the actual longest line for short text — this is a wrap threshold, NOT a fixed paragraph width. Western text wraps on word boundaries, CJK per character. Omitted = no auto-wrap (only manual line breaks).',
+        'Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.',
       ),
     color: z
       .string()
       .optional()
       .describe(
-        'Master color (TikZ `color=`). When set, stroke / fill / text default to it unless individually overridden, and it cascades to the inner text and edge labels. Individual fields (stroke / fill / textColor) always win over this within the same node.',
+        'Master color for this node. Stroke, fill, text, and labels may inherit it unless individually overridden.',
       ),
     fill: z
       .union([z.string(), PaintSpecSchema])
       .optional()
       .describe(
-        'Node background paint: any CSS color string (e.g. "lightblue", "#fafafa", "rgba(...)") or a PaintSpec (linear / radial gradient, pattern, or image).',
+        'Node background paint: CSS color string or PaintSpec.',
       ),
     fillOpacity: z
       .number()
       .min(0)
       .max(1)
       .optional()
-      .describe('Fill opacity 0..1; affects only the shape fill, leaves stroke / text alone.'),
+      .describe('Fill-only opacity for the node shape.'),
     stroke: z
       .union([z.string(), PaintSpecSchema])
       .optional()
@@ -208,7 +208,7 @@ export const NodeSchema = z
       .min(0)
       .max(1)
       .optional()
-      .describe('Stroke opacity 0..1 (TikZ `draw opacity`); affects only the border.'),
+      .describe('Stroke-only opacity for the node border.'),
     strokeWidth: z
       .number()
 
@@ -218,16 +218,16 @@ export const NodeSchema = z
     dashed: z
       .boolean()
       .optional()
-      .describe('Border style preset: dashed line (TikZ `dashed`); compiled to a default dash pattern. `dashPattern` takes precedence.'),
+      .describe('Dashed border preset. `dashPattern` takes precedence.'),
     dotted: z
       .boolean()
       .optional()
-      .describe('Border style preset: dotted line (TikZ `dotted`); compiled to a default dot pattern. `dashPattern` and `dashed` take precedence.'),
+      .describe('Dotted border preset. `dashPattern` and `dashed` take precedence.'),
     dashPattern: z
       .array(z.number().nonnegative())
       .min(1)
       .optional()
-      .describe('Explicit stroke dash pattern lengths in user units (e.g. [4, 2]); overrides `dashed` / `dotted`.'),
+      .describe('Explicit stroke dash pattern lengths in user units; overrides `dashed` and `dotted`.'),
     cornerRadius: z
       .number()
       .nonnegative()
@@ -274,18 +274,18 @@ export const NodeSchema = z
       .min(0)
       .max(1)
       .optional()
-      .describe('Whole-node opacity 0..1; applies uniformly to shape and text.'),
+      .describe('Whole-node opacity applied uniformly to shape and text.'),
     shadow: z
       .union([z.enum(ShadowPreset), DropShadowSchema])
       .optional()
       .describe(
-        'Drop shadow on the node’s primary shape geometry only (not its text / label / pin). A preset keyword (`sm`/`md`/`lg`/`xl`/`2xl`/`none`), or an object `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }` where explicit fields override the preset. Renderer-agnostic (feDropShadow / ctx.shadow*).',
+        'Drop shadow for the node primary shape only. Use a preset keyword or an object whose explicit fields override the preset.',
       ),
     blendMode: z
       .enum(BlendMode)
       .optional()
       .describe(
-        'How the node’s primary shape geometry blends with the content already drawn beneath it (W3C separable blend modes); maps to CSS mix-blend-mode (SVG) and ctx.globalCompositeOperation (Canvas). Omitted / `normal` = ordinary source-over. Does not affect the node text / label / pin.',
+        'Blend mode for the node primary shape against already drawn content. Does not affect text, labels, or leader lines.',
       ),
     innerXSep: z
       .number()
@@ -306,7 +306,7 @@ export const NodeSchema = z
       .nonnegative()
       .optional()
       .describe(
-        'Uniform outer offset (TikZ `outer sep`) around the node connection boundary, in user units. Applies to ALL border references — automatic edge endpoints AND explicit compass/angle anchors (e.g. `A.north`, `A.30`) — and is included in the node layout footprint / viewBox. Does NOT change the visible shape; center, shape-specific anchors, edge points, and label attachment stay on the visual shape. Default 0. Falls back to `margin`.',
+        'Uniform outer offset around the node connection boundary, in user units. Affects endpoints and anchors, contributes to layout, and falls back to `margin`.',
       ),
     padding: z
       .number()
@@ -320,16 +320,16 @@ export const NodeSchema = z
       .nonnegative()
       .optional()
       .describe(
-        'Symmetric outer offset, alias for `outerSep` (TikZ `outer sep`); the axis-specific `outerSep` field takes precedence.',
+        'Symmetric outer offset alias for `outerSep`; `outerSep` takes precedence.',
       ),
     font: FontSchema.optional().describe(
-      'Font spec for the inner text label (family / size / weight / style); all fields optional, all fall back to renderer defaults.',
+      'Font spec for the inner text label. Missing fields use text defaults.',
     ),
     label: z
       .union([NodeLabelSchema, z.array(NodeLabelSchema)])
       .optional()
       .describe(
-        'Extra label(s) attached around the node border (TikZ `[label=above:foo]`); single object or array form. Compiled into one TextPrim per label, positioned by `position` direction / angle and `distance`.',
+        'Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.',
       ),
     zIndex: z
       .number()
@@ -337,7 +337,7 @@ export const NodeSchema = z
 
       .optional()
       .describe(
-        'Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable: same zIndex keeps source order. Scoped per group (a node inside a scope only restacks within that scope).',
+        'Stacking order among sibling IR children. Higher draws on top; equal values keep source order within the same parent group.',
       ),
   })
   .strict()

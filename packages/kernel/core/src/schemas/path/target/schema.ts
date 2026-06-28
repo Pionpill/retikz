@@ -8,7 +8,7 @@ export const AnchorRefSchema = z
       .string()
       .min(1)
       .describe(
-        'Named anchor: one of the 9 standard compass anchors (center / north / ... / south-west), a Web alias (top / top-left / ...), or any anchor name interpreted by the referenced shape (e.g. sector apex / outer-arc-mid). Unrecognized names throw at compile time.',
+        'Named anchor: compass anchor, web alias, or shape-specific anchor. Unknown names fail at compile time.',
       ),
     z.number().describe('Angle anchor in degrees (boundary point in that direction)'),
     z
@@ -20,7 +20,7 @@ export const AnchorRefSchema = z
           .number()
           .min(0)
           .max(1)
-          .describe('Proportion along the edge (0..1); direction north/south = west→east, east/west = north→south'),
+          .describe('Proportion along the edge; north/south run west to east, east/west run north to south.'),
       })
       .describe('Proportional point on the real shape boundary edge'),
   ])
@@ -35,7 +35,7 @@ export const NodeTargetSchema = z
       .optional()
       .describe('Optional world-space 2D offset added after the anchor/edge point is resolved'),
     boundary: BoundarySchema.optional().describe(
-      'Per-edge override of the target node connection surface for THIS endpoint only; omitted = the node\'s `boundary` (default "shape"). Effective only where a connection surface is meaningful: path-endpoint auto-clip (no explicit anchor) and this endpoint\'s compass / angle anchor. In toward-less reference contexts (between endpoints, offset `of`, node center) it is a no-op.',
+      'Per-endpoint override of the target node connection surface. Used for auto-clipped endpoints and compass or angle anchors.',
     ),
   })
   .describe('Reference to a Node/Coordinate by id, with optional anchor and world-space offset');
@@ -47,7 +47,7 @@ export const RelativeTargetSchema = z
       .describe('Relative offset (dx, dy)'),
   })
   .describe(
-    'Relative offset from the previous step end point (does NOT update the cursor position; matches TikZ `(+x, +y)` syntax)',
+    'Relative offset from the previous step end point. Does not update the cursor position.',
   );
 
 export const RelativeAccumulateTargetSchema = z
@@ -57,7 +57,7 @@ export const RelativeAccumulateTargetSchema = z
       .describe('Accumulated relative offset (dx, dy)'),
   })
   .describe(
-    'Accumulated relative offset from the previous step end point (DOES update the cursor; matches TikZ `(++x, ++y)` syntax)',
+    'Accumulated relative offset from the previous step end point. Updates the cursor position.',
   );
 
 export const TargetSchema = z
@@ -72,5 +72,5 @@ export const TargetSchema = z
     z.lazy(() => BetweenPositionSchema),
   ])
   .describe(
-    'Path endpoint: Cartesian [x, y], polar position, node target object ({ id, anchor?, offset? }), relative offset object ({ relative } / { relativeAccumulate }), offset position ({ of, offset } mirroring TikZ `calc`), or between position ({ between: [A, B], t } proportional point) — all resolved at compile time. Node id string shorthand is React DSL only (parsed to a node target object before reaching the IR).',
+    'Path endpoint: Cartesian [x, y], polar position, node target, relative offset, accumulated relative offset, offset position, or between position. Non-Cartesian forms resolve at compile time.',
   );

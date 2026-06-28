@@ -11,7 +11,7 @@ export const ArrowEndDetailSchema = z
       .union([z.enum(BuiltinArrowShape), z.string().min(1)])
       .optional()
       .describe(
-        'Arrow shape provider name. Prefer built-ins: `normal`, `open`, `stealth`, `openStealth`, `diamond`, `openDiamond`, `circle`, `openCircle`. Custom names are allowed only when registered via `CompileOptions.arrows`; unregistered names fail at compile time. Defaults to `stealth`.',
+        'Arrow shape provider name. Built-ins: normal, open, stealth, openStealth, diamond, openDiamond, circle, openCircle. Custom names must be registered via CompileOptions.arrows.',
       ),
     scale: z
       .number()

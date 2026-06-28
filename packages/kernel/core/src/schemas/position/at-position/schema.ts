@@ -19,9 +19,9 @@ export const AtPositionSchema = z
       .positive()
       .optional()
       .describe(
-        'Distance from the referenced node center to this node center in user units. Falls back to the TikZ `nodeDistance` compile-time context, then to 1.',
+        'Distance from the referenced node center to this node center in user units. Falls back to the compile-time nodeDistance, then to 1.',
       ),
   })
   .describe(
-    'Relative position: place this node at `direction` direction from `of`, `distance` away. Mirrors TikZ `[<direction>=<distance> of <id>]` from the positioning library.',
+    'Relative position: place this node at `direction` from `of`, separated by `distance`.',
   );

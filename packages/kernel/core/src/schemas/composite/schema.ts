@@ -9,11 +9,11 @@ export const CompositeBaseSchema = z.object({
   namespace: z
     .string()
     .min(1)
-    .describe('Tier 2 domain namespace (e.g. "plot") routing which registered definition expands this node.'),
+    .describe('Tier 2 domain namespace that selects the registered definition.'),
   type: z
     .string()
     .min(1)
-    .describe('Composite type name within the namespace (e.g. "axis"); analogous to a Tier 1 node type.'),
+    .describe('Composite type name within the namespace.'),
 });
 
 /**

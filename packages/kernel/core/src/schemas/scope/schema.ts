@@ -74,14 +74,14 @@ export const LabelDefaultSchema = z
       .min(0)
       .max(1)
       .optional()
-      .describe('Default label opacity 0..1.'),
+      .describe('Default label opacity.'),
     font: FontSchema.optional().describe(
       'Default label font (family / size / weight / style); per-field fallback.',
     ),
   })
   .strict()
   .describe(
-    'Default style applied to every label (node label + step label) in this scope (TikZ `every label`). All fields optional; unknown keys are rejected.',
+    'Default style applied to node labels and step labels in this scope.',
   );
 
 /**
@@ -123,25 +123,25 @@ export const ScopeSchema = z
       .min(1)
       .optional()
       .describe(
-        'Optional reference id; when set, the scope registers a synthetic rectangle bbox node in the **parent** namespace frame so paths / positions can target the scope as a whole. scope.id always registers in the parent frame, regardless of `localNamespace` (it is the external handle).',
+        'Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.',
       ),
     localNamespace: z
       .boolean()
       .optional()
       .describe(
-        'When true, the scope creates a local namespace boundary — child node / coordinate / nested-scope ids registered inside do NOT propagate to the parent namespace; external lookups cannot see them. Default false (matches TikZ pgf default: child ids flow up to global). scope.id itself always registers in the parent frame regardless of this flag.',
+        'When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.',
       ),
     transforms: z
       .array(TransformSchema)
       .optional()
       .describe(
-        'Local transforms applied to all scope children; array order = application order (first element applied innermost, matching Scene `GroupPrim.transforms` / SVG transform list). Supports 7 variants; the 5 translate variants are lowered to Cartesian translate at compile time.',
+        'Local transforms applied to all scope children. Array order is application order; translate variants are lowered at compile time.',
       ),
     color: z
       .string()
       .optional()
       .describe(
-        'Cascading master color for all elements in this scope (TikZ scope `color=`). Stroke / fill / text of inner elements default to it unless individually overridden; cascades into edge labels and arrows.',
+        'Cascading master color for elements in this scope. Stroke, fill, text, labels, and arrows may inherit it unless overridden.',
       ),
     stroke: z
       .union([z.string(), PaintSpecSchema])
@@ -165,37 +165,37 @@ export const ScopeSchema = z
       .max(1)
       .optional()
       .describe(
-        'Cascading default whole-element opacity 0..1. Replaces (does NOT compound across nested scopes — TikZ default).',
+        'Cascading whole-element opacity. Nested scopes replace it rather than compounding it.',
       ),
     fillOpacity: z
       .number()
       .min(0)
       .max(1)
       .optional()
-      .describe('Cascading default fill opacity 0..1 for inner nodes and paths.'),
+      .describe('Cascading fill-only opacity for inner nodes and paths.'),
     drawOpacity: z
       .number()
       .min(0)
       .max(1)
       .optional()
-      .describe('Cascading default stroke opacity 0..1 (TikZ `draw opacity`) for inner nodes and paths.'),
+      .describe('Cascading stroke-only opacity for inner nodes and paths.'),
     nodeDefault: NodeDefaultSchema.optional().describe(
-      'Default style applied to every node in this scope (TikZ `every node`). Flat channel, independent from the other defaults.',
+      'Default style applied to nodes in this scope. Independent from the other default channels.',
     ),
     pathDefault: PathDefaultSchema.optional().describe(
-      'Default style applied to path-like drawables in this scope (TikZ `every path`). Path consumes the full schema; ribbon consumes only the shared drawable geometry subset. Arrows use the separate arrowDefault channel.',
+      'Default style applied to path-like drawables in this scope. Arrows use the separate `arrowDefault` channel.',
     ),
     labelDefault: LabelDefaultSchema.optional().describe(
-      'Default style applied to every label (node label + step label) in this scope (TikZ `every label`).',
+      'Default style applied to node labels and step labels in this scope.',
     ),
     arrowDefault: ArrowDefaultSchema.optional().describe(
-      'Default style applied to every arrow in this scope (TikZ `every arrow`).',
+      'Default style applied to arrows in this scope.',
     ),
     resetStyle: z
       .union([z.boolean(), z.array(z.enum(['node', 'path', 'label', 'arrow']))])
       .optional()
       .describe(
-        'Inheritance barrier: drop the outer scope cascade + every-X defaults for the listed channels (or all when true), falling back to the built-in baseline. Only cuts the scope-inheritance axis; labels / arrows still follow their host path / node resolved color (structural relation, not scope inheritance).',
+        'Inheritance barrier for style defaults. Use true for all channels, or list node, path, label, and arrow channels to reset.',
       ),
     zIndex: z
       .number()
@@ -203,25 +203,25 @@ export const ScopeSchema = z
 
       .optional()
       .describe(
-        'Explicit stacking order of this scope as a whole among its sibling IR children. Higher draws on top. Applies to the scope group as a single unit in the parent; does NOT affect how children stack inside the scope. Omitted = 0 = source order.',
+        'Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.',
       ),
     clip: ClipSpecSchema.optional().describe(
-      'Clip region (rect / circle / ellipse / polygon, in scope-local coords); when set, node children of this scope are clipped to it. Compiled into a renderer-agnostic ClipResource referenced via the group clipRef. Known limitation: a path child of a scope that ALSO has transforms is currently emitted at the top level (its geometry is already resolved to global coords) and is therefore NOT clipped by this region; tracked for the local-coordinate path-compile rework.',
+      'Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.',
     ),
     boundingShape: z
       .enum(ScopeBoundingShape)
       .optional()
       .describe(
-        "Shape of the synthetic bounding envelope for this scope's `id` layout. Controlled enum: 'rectangle' (axis-aligned bbox, default) or 'circle' (minimal enclosing circle). Unlike Node `shape` / `boundary`, this is a closed set, not an open shape reference — enclosing an arbitrary point set requires a per-shape minimal-enclosing algorithm, so it does not borrow from the shape registry. Lets external refs/anchors land on the real envelope boundary.",
+        "Shape of the synthetic bounding envelope for this scope's `id`: rectangle or circle. This is a closed enum, not a shape provider reference.",
       ),
     meta: JsonObjectSchema.optional().describe(
-      'Opaque provenance metadata carried by this element (e.g. a Tier 2 lowering tagging which datum / series / layer it came from). Provenance passthrough: preserved verbatim into the Scene primitive(s) this element emits, ignored by renderers, and never interpreted by the compiler — it does not affect layout, connection, style, or bounding box. Must be a JSON object (fully serializable). Not inherited across scopes; not part of the every-X style defaults.',
+      'Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.',
     ),
     animations: z
       .array(AnimationTrackSchema)
       .optional()
       .describe(
-        'Declarative timeline animation tracks for this scope as a whole (applied to its group). Each track animates one renderer-agnostic property over normalized time; the base value is the settled (animation-end) state. Carried verbatim into the emitted group primitive; renderers play them or render the static settled state with a diagnosable warning when unable. Does not affect layout / bounding box; not propagated to child elements; not part of the every-X style defaults. Known limitation: same as clip — path children of a scope that also has transforms are hoisted to the top level and do not receive these scope animations.',
+        'Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.',
       ),
     children: z
       .array(
@@ -240,5 +240,5 @@ export const ScopeSchema = z
   })
   .strict()
   .describe(
-    'Scope container: groups child IR elements, applies local transforms, and acts as a style-default anchor (cascading graphic state + every-X defaults + resetStyle barrier). Corresponds to TikZ `\\begin{scope}`.',
+    'Scope container: groups child IR elements, applies local transforms, and provides cascading style defaults.',
   );

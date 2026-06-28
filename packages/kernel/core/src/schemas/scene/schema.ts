@@ -18,10 +18,10 @@ export const ChildSchema: z.ZodType<IRChild> = z.lazy(() =>
     z
       .discriminatedUnion('type', [NodeSchema, PathSchema, CoordinateSchema, ScopeSchema])
       .describe(
-        'Tier 1 scene child: a node, a path, a coordinate placeholder, or a scope container; discriminator field is `type`',
+        'Tier 1 scene child: node, path, coordinate, or scope. Discriminator field is `type`.',
       ),
     CompositeNodeSchema.describe(
-      'Tier 2 composite node: carries `namespace` + `type`; precise field validation happens at compile via the registered domain schema',
+      'Tier 2 composite node with `namespace` and `type`. Registered domain schemas validate additional fields at compile time.',
     ),
   ]),
 );
@@ -38,8 +38,8 @@ export const ViewBoxSchema = z
   .object({
     x: z.number().describe('ViewBox left-top x'),
     y: z.number().describe('ViewBox left-top y'),
-    width: z.number().positive().describe('ViewBox width (> 0)'),
-    height: z.number().positive().describe('ViewBox height (> 0)'),
+    width: z.number().positive().describe('ViewBox width in user units.'),
+    height: z.number().positive().describe('ViewBox height in user units.'),
   })
   .describe(
     'Explicit viewBox overriding the auto-computed layout range (fixed size / clipping / multi-figure alignment). When set, Scene.layout uses it directly and padding is ignored.',
@@ -67,7 +67,7 @@ export const SceneSchema = z
       .array(AnimationTrackSchema)
       .optional()
       .describe(
-        'Scene-root (camera) timeline animation tracks; the `viewBox` property animates the framing (zoom / pan). Carried verbatim into the compiled Scene; renderers play them or render the static layout with a diagnosable warning when unable. The static `layout` is always the settled (rest) framing — camera animation never affects it.',
+        'Scene-root animation tracks. Use the `viewBox` property to animate framing; static layout remains the settled framing.',
       ),
   })
   .describe(

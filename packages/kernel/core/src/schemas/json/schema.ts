@@ -18,7 +18,7 @@ export const JsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
       JsonObjectSchema,
     ])
     .describe(
-      'A JSON value: string, finite number, boolean, null, an array of JSON values, or an object of JSON values. Recursive with no depth limit. Functions, undefined, Symbol, class instances, Map, and Set are rejected to keep the IR fully JSON-serializable.',
+      'Recursive JSON value allowed in IR payloads: string, number, boolean, null, array, or object.',
     ),
 );
 
@@ -31,5 +31,5 @@ export const JsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
 export const JsonObjectSchema = z
   .record(z.string(), JsonValueSchema)
   .describe(
-    'A JSON object: string keys mapping to recursive JSON values. Used as the params payload of a path generator step and as the runtime guard that the value is fully JSON-serializable. No maximum depth or size is enforced.',
+    'JSON object with string keys and recursive JSON values. Used for params and opaque metadata payloads.',
   );

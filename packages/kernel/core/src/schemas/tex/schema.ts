@@ -11,5 +11,5 @@ export const TexContentSchema = z
       .describe('Display (block) vs inline TeX metrics; default inline (false).'),
   })
   .describe(
-    'TeX formula payload (a math run / `lowerTex` input): tex source + inline/display metrics mode; rendered to glyph paths via an injected lowerTex capability (@retikz/tex). Pure JSON; core does not depend on MathJax.',
+    'TeX formula payload for lowerTex: source plus inline/display metrics mode.',
   );

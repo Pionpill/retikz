@@ -32,7 +32,7 @@ export const GeometryLabelSchema = z
       ])
       .optional()
       .describe(
-        'Normalized position t along the step (TikZ `pos`). Accepts a number 0..1 or one of 7 keyword sugars (at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1). Geometric meaning of t varies by step kind: line/step use normalized arc length (fold partitions t equally across N legs — corner sits at t=j/N); curve/cubic/bend use the Bezier parameter (NOT arc length, so t=0.5 is not always the visual midpoint); arc maps t linearly across startAngle..endAngle; circlePath/ellipsePath use angle parametrization with t=0 at angle 0 (+x axis), CCW growth. Default `midway` (t=0.5).',
+        'Position along the step. Use a normalized number or a keyword: at-start, very-near-start, near-start, midway, near-end, very-near-end, or at-end. Parameter meaning follows the step kind.',
       ),
     side: z
       .enum(['above', 'below', 'left', 'right', 'sloped'])
@@ -69,10 +69,10 @@ export const GeometryLabelSchema = z
       .max(1)
       .optional()
       .describe(
-        'Label-only opacity 0..1; multiplied with the owning path opacity (element-internal axis). Scope-level opacity does NOT compound.',
+        'Label-only opacity, multiplied with the owning path opacity.',
       ),
     font: FontSchema.optional().describe(
-      'Label font overrides (family / size / weight / style); missing fields inherit from the scope labelDefault, then the renderer default.',
+      'Label font overrides. Missing fields inherit from scope label defaults.',
     ),
   })
   .strict()
@@ -88,7 +88,7 @@ export const MoveStepSchema = z
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('move')
-      .describe('Move the cursor to the target without drawing (TikZ `(A)`, no drawing operation)'),
+      .describe('Move the cursor to the target without drawing.'),
     to: TargetSchema.describe('Destination point of the move'),
   })
   .describe('Move action: relocate the path cursor without drawing');
@@ -98,7 +98,7 @@ export const LineStepSchema = z
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('line')
-      .describe('Draw a straight line from the current cursor to the target (TikZ `(A) -- (B)`)'),
+      .describe('Draw a straight line from the current cursor to the target.'),
     to: TargetSchema.describe('Destination point of the line segment'),
     label: StepLabelSchema.optional().describe('Edge label attached to this line segment'),
   })
@@ -110,7 +110,7 @@ export const FoldStepSchema = z
     kind: z
       .literal('fold')
       .describe(
-        'Folded right-angle segment from cursor to target through one intermediate point (TikZ `-|` / `|-`)',
+        'Folded right-angle segment from cursor to target through one intermediate point.',
       ),
     via: z
       .enum(FoldStepVia)
@@ -123,7 +123,7 @@ export const FoldStepSchema = z
     ),
   })
   .describe(
-    'Fold action: TikZ-style right-angle fold with a single intermediate point chosen by `via`',
+    'Fold action: right-angle segment with a single intermediate point chosen by `via`.',
   );
 
 export const CycleStepSchema = z
@@ -132,7 +132,7 @@ export const CycleStepSchema = z
     kind: z
       .literal('cycle')
       .describe(
-        'Close the path back to the most recent move target (TikZ `cycle`)',
+        'Close the path back to the most recent move target.',
       ),
   })
   .describe(
@@ -153,7 +153,7 @@ export const CurveStepSchema = z
     kind: z
       .literal('curve')
       .describe(
-        'Quadratic Bezier curve from cursor to target with one control point (TikZ `.. controls (B) ..`)',
+        'Quadratic Bezier curve from cursor to target with one control point.',
       ),
     to: TargetSchema.describe('Destination point of the curve'),
     control: ControlPointSchema.describe('Single control point for the quadratic Bezier'),
@@ -167,7 +167,7 @@ export const CubicStepSchema = z
     kind: z
       .literal('cubic')
       .describe(
-        'Cubic Bezier curve from cursor to target with two control points (TikZ `.. controls (B) and (C) ..`)',
+        'Cubic Bezier curve from cursor to target with two control points.',
       ),
     to: TargetSchema.describe('Destination point of the cubic curve'),
     control1: ControlPointSchema.describe('First control point (influences the start tangent)'),
@@ -184,14 +184,14 @@ export const BendStepSchema = z
     kind: z
       .literal('bend')
       .describe(
-        'Arc-like bend from cursor to target by direction + angle (TikZ `to[bend left=N]` / `to[bend right=N]`); compiles to a cubic Bezier approximation',
+        'Arc-like bend from cursor to target by direction and angle; compiles to a cubic Bezier approximation.',
       ),
     to: TargetSchema.describe('Destination point of the bend'),
     bendDirection: z
       .enum(['left', 'right'])
       .optional()
       .describe(
-        'Bend side relative to from→to direction (visual left vs right of the chord). Optional: provide bendDirection/bendAngle for a symmetric bend, or outAngle/inAngle for an asymmetric curve / self-loop (out/in takes precedence when both are given).',
+        'Bend side relative to the from-to direction. Use with bendAngle unless outAngle and inAngle are provided.',
       ),
     bendAngle: z
       .number()
@@ -199,20 +199,20 @@ export const BendStepSchema = z
       .gt(-180)
       .lt(180)
       .optional()
-      .describe('Bend angle in degrees; default 30 (matches TikZ `bend left` without explicit angle). Restricted to (-180, 180): at ±180 the chord-tangent term tan(angle/2) diverges and control points blow up.'),
+      .describe('Bend angle in degrees. Omitted fields use 30.'),
     outAngle: z
       .number()
 
       .optional()
       .describe(
-        'Out angle in degrees at the start point (TikZ `out=`). Together with inAngle, compiles to a cubic Bezier whose start control point lies along this direction. When out/in angles are given they take precedence over bendDirection / bendAngle.',
+        'Outgoing tangent angle in degrees at the start point. With `inAngle`, takes precedence over bendDirection and bendAngle.',
       ),
     inAngle: z
       .number()
 
       .optional()
       .describe(
-        'In angle in degrees at the end point (TikZ `in=`). Together with outAngle, compiles to a cubic Bezier whose end control point lies along this direction.',
+        'Incoming tangent angle in degrees at the end point. Used with `outAngle` for explicit tangent control.',
       ),
     looseness: z
       .number()
@@ -220,7 +220,7 @@ export const BendStepSchema = z
       .positive()
       .optional()
       .describe(
-        'Curve looseness factor controlling control-point distance from the endpoints (TikZ `looseness=`); default ~1. Larger values push the control points further out for a slacker curve. Also scales the default self-loop size when from equals to.',
+        'Curve looseness factor controlling control-point distance from the endpoints. Larger values produce a looser curve.',
       ),
     label: StepLabelSchema.optional().describe('Edge label attached to this bend segment'),
   })
@@ -284,7 +284,7 @@ const ArcStepBaseSchema = z
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('arc')
-      .describe('Arc segment sweeping startAngle → endAngle around a center. Circular (radius) or elliptical (radiusX/radiusY). Center defaults to the cursor but can be set explicitly. Pen ends at the arc endpoint, not the center (TikZ `arc[start angle=…, end angle=…, radius=…]`).'),
+      .describe('Arc segment sweeping from startAngle to endAngle around a center. Use either radius or radiusX/radiusY.'),
     startAngle: z
       .number()
 
@@ -325,7 +325,7 @@ const CirclePathStepBaseSchema = z
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('circlePath')
-      .describe('Circle centered at the cursor. Without angles: a full circle (TikZ `circle[radius=…]`), pen returns to center. With startAngle + endAngle: a partial arc closed per `closed` (half circle / segment).'),
+      .describe('Circle centered at the cursor. Without angles, emits a full circle; with angles, emits a partial arc closed by `closed`.'),
     radius: z
       .number()
 
@@ -344,7 +344,7 @@ const CirclePathStepBaseSchema = z
     closed: z
       .enum(['closed', 'chord', 'open', 'sector'])
       .optional()
-      .describe("Closing mode. 'closed' = full circle (only valid with no angles; the default then). With angles: 'chord' (straight chord between the two arc ends; default), 'sector' (connect both arc ends to the center, then close), or 'open' (pure unclosed arc)."),
+      .describe("Closing mode for a circle path: closed, chord, sector, or open. With angles, omitted fields use chord."),
     label: StepLabelSchema.optional().describe('Edge label attached to this circle'),
   })
   .describe('CirclePath action: full circle (no angles, pen returns to center) or partial arc (with angles, closed per chord/open).');
@@ -358,7 +358,7 @@ const EllipsePathStepBaseSchema = z
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('ellipsePath')
-      .describe('Ellipse centered at the cursor. Without angles: a full ellipse (TikZ `ellipse[x radius=…, y radius=…]`), pen returns to center. With startAngle + endAngle: a partial elliptical arc closed per `closed`.'),
+      .describe('Ellipse centered at the cursor. Without angles, emits a full ellipse; with angles, emits a partial arc closed by `closed`.'),
     radiusX: z
       .number()
 
@@ -382,7 +382,7 @@ const EllipsePathStepBaseSchema = z
     closed: z
       .enum(['closed', 'chord', 'open', 'sector'])
       .optional()
-      .describe("Closing mode. 'closed' = full ellipse (only valid with no angles; default then). With angles: 'chord' (chord between arc ends; default), 'sector' (connect both arc ends to the center, then close), or 'open' (pure unclosed arc)."),
+      .describe("Closing mode for an ellipse path: closed, chord, sector, or open. With angles, omitted fields use chord."),
     label: StepLabelSchema.optional().describe('Edge label attached to this ellipse'),
   })
   .describe('EllipsePath action: full ellipse (no angles, pen returns to center) or partial elliptical arc (with angles, closed per chord/open).');
@@ -396,7 +396,7 @@ export const RectangleStepSchema = z
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('rectangle')
-      .describe('Axis-aligned rectangle between two opposite corners (TikZ `(a) rectangle (b)`); compiled to path commands (4 lines + close, or rounded corners via quarter arcs). Self-contained: corners come from from/to, not the cursor.'),
+      .describe('Axis-aligned rectangle between two opposite corners. Corners come from `from` and `to`, not the cursor.'),
     from: TargetSchema.describe('One corner of the rectangle'),
     to: TargetSchema.describe('The opposite corner; order is irrelevant (compile normalizes to min/max)'),
     cornerRadius: z
@@ -413,7 +413,7 @@ export const SmoothStepSchema = z
     kind: z
       .literal('smooth')
       .describe(
-        'Smooth curve (TikZ `plot[smooth]` / Hobby style) passing through the current cursor as the first knot and then each point in `points`, in order. Compiled at build time to a chain of cubic Bezier commands via centripetal Catmull-Rom. Requires a preceding step to set the cursor; the cursor ends at the last point.',
+        'Smooth curve passing through the current cursor and each point in `points`, in order. Compiles to cubic Bezier commands.',
       ),
     points: z
       .array(TargetSchema)
@@ -427,7 +427,7 @@ export const SmoothStepSchema = z
 
       .optional()
       .describe(
-        'Tangent-length multiplier controlling curve slackness (TikZ `tension`); omitted = 1 (standard centripetal Catmull-Rom). <1 pulls the curve tauter (straighter), >1 makes it loopier.',
+        'Tangent-length multiplier controlling curve slackness. Omitted fields use 1.',
       ),
     label: StepLabelSchema.optional().describe(
       'Edge label attached to the generated curve; positioned along the produced cubic commands by Bezier parameter (same as curve / cubic step labels).',
@@ -446,16 +446,16 @@ export const GeneratorStepSchema = z
         'Delegate this segment to a registered path generator looked up by `name` in CompileOptions.pathGenerators; the generator turns `from` / `to` / `params` into low-level path commands at compile time',
       ),
     name: z
-      .string()
-      .min(1)
-      .describe(
-        'Registered generator name; resolved against CompileOptions.pathGenerators at compile time. An unregistered name throws at compile time (the error lists the available names). The IR only stores the string; the generator function itself is injected at runtime and never enters the IR.',
-      ),
+        .string()
+        .min(1)
+        .describe(
+          'Path generator provider name. Custom names must be registered via CompileOptions.pathGenerators.',
+        ),
     to: TargetSchema.optional().describe(
-      'Optional destination point passed to the generator as the segment end; omit for pure parametric curves that need no end target (e.g. a closed loop or a fixed-extent wave).',
+      'Optional destination point passed to the generator as the segment end.',
     ),
     params: JsonObjectSchema.describe(
-      'JSON-only parameter object handed to the generator. Must be a plain JSON object (validated by JsonObjectSchema); the generator validates its own shape via paramsSchema. Top-level keys listed in the generator targetParams are resolved from node targets to world coordinates before the generator runs.',
+      'JSON parameter object passed to the generator. The registered generator validates its own parameter fields.',
     ),
     label: StepLabelSchema.optional().describe(
       'Edge label attached to the generated segment; positioned along the produced commands.',

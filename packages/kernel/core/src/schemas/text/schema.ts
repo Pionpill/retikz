@@ -17,7 +17,7 @@ export const TextRunSchema = z
       .min(0)
       .max(1)
       .optional()
-      .describe('Per-run opacity 0..1.'),
+      .describe('Per-run opacity.'),
     font: FontSchema.optional().describe(
       'Per-run font overrides; missing fields inherit from the line / block font.',
     ),
@@ -51,11 +51,11 @@ export const MathRunSchema = z
       .min(0)
       .max(1)
       .optional()
-      .describe('Per-run opacity 0..1.'),
+      .describe('Per-run opacity.'),
   })
   .strict()
   .describe(
-    'An inline math segment in a mixed line, baseline-aligned to surrounding text. Requires an injected lowerTex capability (@retikz/tex) to render; degrades with a diagnosable warning otherwise.',
+    'Inline math segment in a mixed line, baseline-aligned to surrounding text. Requires an injected lowerTex capability.',
   );
 
 /**
@@ -93,7 +93,7 @@ export const LineSpecSchema = z
         .min(0)
         .max(1)
         .optional()
-        .describe('Per-line opacity 0..1'),
+        .describe('Per-line opacity.'),
       font: FontSchema.optional().describe(
         'Per-line font overrides; missing fields inherit from block-level `font`',
       ),
