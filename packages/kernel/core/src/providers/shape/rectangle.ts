@@ -42,6 +42,7 @@ const rectVertices = (rect: Rect): Array<Position> => {
  *   scaleParams：cornerRadius 是长度，随 node scale 用 uniform 几何均值因子协同缩放（边数 / 角度类参数才不缩）。
  */
 export const rectangle = defineShape({
+  name: 'rectangle',
   paramsSchema: z.strictObject({
     cornerRadius: z
       .number()

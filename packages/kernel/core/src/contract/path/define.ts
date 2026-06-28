@@ -15,6 +15,9 @@ import type { PathGeneratorDefinition, PathKindDefinition, PathKindDefinitionInp
  * @throws 当 paramsSchema 不是可 parse 的 zod schema、generate 不是函数、或 targetParams 形态非法时
  */
 export const definePathGenerator = (def: PathGeneratorDefinition): PathGeneratorDefinition => {
+  if (typeof def.name !== 'string' || def.name.trim().length === 0) {
+    throw new Error('definePathGenerator: name must be a non-empty string.');
+  }
   const schema = def.paramsSchema as { safeParse?: unknown } | null | undefined;
   if (schema === null || typeof schema !== 'object' || typeof schema.safeParse !== 'function') {
     throw new Error('definePathGenerator: paramsSchema must be a zod schema (with a safeParse method).');
@@ -33,4 +36,10 @@ export const definePathGenerator = (def: PathGeneratorDefinition): PathGenerator
 
 export const definePathKind = <TOptions = IRJsonObject>(
   definition: PathKindDefinitionInput<TOptions>,
-): PathKindDefinition<TOptions> & PathKindDefinition => definition as PathKindDefinition<TOptions> & PathKindDefinition;
+): PathKindDefinition<TOptions> & PathKindDefinition => {
+  const kind = definition.schema.shape.kind.value;
+  if (typeof kind !== 'string' || kind.trim().length === 0) {
+    throw new Error('definePathKind: schema.shape.kind must be a non-empty z.literal string.');
+  }
+  return definition as PathKindDefinition<TOptions> & PathKindDefinition;
+};

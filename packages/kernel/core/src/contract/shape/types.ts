@@ -43,6 +43,8 @@ export type ShapeStyle = {
  *   - `emit` 收**轴对齐 Rect（rotate=0）**——旋转由编译器在外层 `GroupPrim` 统一施加。
  */
 export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
+  /** Registry key referenced by IR `node.shape`. */
+  name: string;
   /** params 的 zod schema；类型约束输出 JSON-safe（运行时双 parse 才是真正护栏，见编译期桥接） */
   paramsSchema: z.ZodType<TParams>;
   /**
@@ -94,6 +96,6 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
 /**
  * shape 定义的擦除形态：registry 存这个
  * @description 所有函数收 `IRJsonObject`（实际类型由 `paramsSchema.parse` 在编译期保证）；registry 同构
- *   `Record<string, ShapeDefinition>`、不泛型化（避免逆变 / 落 any）。定义点用 `defineShape<TParams>` 拿类型安全。
+ *   不泛型化（避免逆变 / 落 any）。定义点用 `defineShape<TParams>` 拿类型安全。
  */
 export type ShapeDefinition = ShapeDefinitionInput<IRJsonObject>;

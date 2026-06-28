@@ -25,6 +25,7 @@ const toEllipse = (r: Rect): Ellipse => ({
  *   `{ type: 'ellipse', params: { circumscribe: 'equal' } }`。
  */
 export const ellipse = defineShape({
+  name: 'ellipse',
   paramsSchema: z.strictObject({
     circumscribe: z
       .enum(['proportional', 'equal'])

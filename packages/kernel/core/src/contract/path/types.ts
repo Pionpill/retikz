@@ -39,6 +39,8 @@ export type PathGeneratorContext = {
  *     允许产含 `move` 的 sub-path（多段波形）。
  */
 export type PathGeneratorDefinition = {
+  /** Registry key referenced by generator steps. */
+  name: string;
   /** params 的 zod schema；类型约束输出 JSON-safe（运行时双 parse 才是真正护栏） */
   paramsSchema: ZodType<IRJsonObject>;
   /** 哪些 params 顶层 key 是 NodeTarget（compile resolve 成世界坐标）；仅顶层，嵌套不支持 */
@@ -60,7 +62,7 @@ export type PathKindCompileContext<TOptions = IRJsonObject> = {
 };
 
 export type PathKindDefinition<TOptions = IRJsonObject> = {
-  kind: string;
+  schema: z.ZodObject<{ kind: z.ZodLiteral<string> }>;
   optionsSchema?: z.ZodType<TOptions>;
   compile: (context: PathKindCompileContext<TOptions>) => PathKindCompileResult | null;
 };

@@ -27,6 +27,8 @@ export type ArrowEmitContext = {
  *   `lineWidth/2` 得到实际 refX / shrink 接触点（这条调整由编译器 / adapter 落，def 只声明静态 base）。
  */
 export type ArrowDefinition = {
+  /** Registry key referenced by IR `arrowDetail.shape`. */
+  name: string;
   /** marker 局部基准边长（viewBox `0 0 baseSize baseSize`，refY = baseSize/2）；缺省 10 */
   baseSize?: number;
   /** 空心标志：true 时 framework 丢 fill、color 主导描边、启用 lineWidth；并对 lineContactX 减 lineWidth/2 */

@@ -104,6 +104,7 @@ const createSectorContour = (
  *   闭合 path（innerRadius=0 时径向边交于圆心、无内弧）。scaleParams 只缩半径、不缩角度。
  */
 export const sector = defineShape({
+  name: 'sector',
   paramsSchema: z
     .strictObject({
       innerRadius: z

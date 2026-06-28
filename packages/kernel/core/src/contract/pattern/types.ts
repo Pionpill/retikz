@@ -32,6 +32,8 @@ export type PatternEmitContext = {
  *   resourceRef / 递归引用），compile 把产物写进 `SceneResource.tile`、adapter 物化成 `<pattern>`。
  */
 export type PatternDefinition = {
+  /** Registry key referenced by IR pattern paint `shape`. */
+  name: string;
   /** tile 周期默认（user units）；用户 `pattern.size` 覆盖；缺省 8 */
   defaultSize?: number;
   /** 局部 tile 坐标 motif 几何（renderer-agnostic）；adapter 把产物物化进 `<pattern>` */

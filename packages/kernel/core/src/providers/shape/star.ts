@@ -97,6 +97,7 @@ const worldVertices = (rect: Rect, geo: StarGeometry): Array<Position> => geo.ve
  *   不缩 points（计数）/ rotate（角度）。
  */
 export const star = defineShape({
+  name: 'star',
   paramsSchema: z
     .strictObject({
       points: z

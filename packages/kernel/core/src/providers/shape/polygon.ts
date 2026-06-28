@@ -93,6 +93,7 @@ const polygonVertices = (rect: Rect, radius: number, params: PolygonParams): Arr
  *   diamond ≡ `{ type: 'polygon', params: { sides: 4, rotate: 0 } }`，由 compile 规范化。
  */
 export const polygon = defineShape({
+  name: 'polygon',
   paramsSchema: z.strictObject({
     sides: z
       .number()

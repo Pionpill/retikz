@@ -62,6 +62,7 @@ const worldSegments = (rect: Rect, params: ContourParams): Array<ContourSegment>
  *   按轴各向异性缩，cornerRadius 是长度按几何均值因子缩（同 polygon）。
  */
 export const contour = defineShape({
+  name: 'contour',
   paramsSchema: z.strictObject({
     points: z
       .array(z.tuple([z.number(), z.number()]))
