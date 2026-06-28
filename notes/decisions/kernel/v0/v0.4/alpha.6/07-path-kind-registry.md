@@ -1,6 +1,6 @@
 # ADR-07: Path kind registry 与 Ribbon 合并
 
-- 状态：Proposed
+- 状态：已接受
 - 决策日期：2026-06-27
 - Owner：core
 - 关联：
@@ -12,6 +12,10 @@
   - [ADR-06 Path / Ribbon shared drawable contract](./06-path-ribbon-shared-contract.md)
   - [v0.4 roadmap](../roadmap.md)
   - [core design](../../../../../architecture/core-design.md)
+
+## 收尾备注
+
+本 ADR 已作为 alpha.6 的最终公开契约接受。早期独立 Ribbon ADR 保留为设计历史；实际发布的 relation path 扩展点是 `Path.kind`，内置 ribbon 实现是 `kind: "ribbon"`。
 
 ## 背景
 

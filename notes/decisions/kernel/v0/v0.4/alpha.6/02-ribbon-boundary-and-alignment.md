@@ -1,6 +1,6 @@
 # ADR-02: Ribbon 边界与对齐增强
 
-- Status: Proposed
+- Status: 被 ADR-07 收敛（已通过 `Path.ribbon` 落地）
 - Decision date: 2026-06-26
 - Owner: core
 - Related:
@@ -8,6 +8,10 @@
   - [ADR-01 Ribbon 可变宽度路径](./01-ribbon.md)
   - [v0.4 roadmap](../roadmap.md)
   - [core design](../../../../../architecture/core-design.md)
+
+## 收尾说明
+
+本 ADR 的对齐、端点、边界与采样能力已经通过最终的 [ADR-07 Path kind registry](./07-path-kind-registry.md) 模型落地。它们属于 `type: "path", kind: "ribbon"` 与 `ribbon` 参数对象，不再属于独立的 `Ribbon` IR 节点。
 
 ## Context
 

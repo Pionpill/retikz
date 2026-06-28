@@ -1,6 +1,6 @@
 # ADR-04: Node label inside placement and boundary position
 
-- Status: Proposed
+- Status: 已接受
 - Decision date: 2026-06-27
 - Owner: core
 - Related:
@@ -9,6 +9,10 @@
   - [core design](../../../../../architecture/core-design.md)
   - [v0.1-alpha.4 ADR-03 Node label](../../v0.1/alpha.4/03-node-label.md)
   - [v0.2-alpha.4 ADR-04 Node label rotate](../../v0.2/alpha.4/04-node-label-rotate.md)
+
+## 收尾说明
+
+本 ADR 已作为 alpha.6 的 node label 契约接受。`Node.label.placement` 与 `{ boundary, t }` position 已落地为 core schema / compile 行为，并同步记录在 Node overview 文档中。
 
 ## 背景
 

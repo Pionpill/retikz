@@ -86,8 +86,8 @@ export const changelog: Array<Release> = [
         pkg: '@retikz/core',
         version: 'v0.4',
         description: {
-          zh: 'v0.4 纵向底座深化：纯几何下沉 `@retikz/math`、Tier2 可嵌入机制、path 文法补强（折线圆角 + 过点平滑曲线）、任意轮廓 contour shape。',
-          en: 'v0.4 deepens the base: pure geometry sinks to `@retikz/math`, an embeddable-Tier2 mechanism, path-grammar reinforcement (rounded corners + smooth-through-points), plus an arbitrary-contour shape.',
+          zh: 'v0.4 纵向底座深化：纯几何下沉 `@retikz/math`、Tier2 可嵌入机制、path 文法补强（折线圆角 + 过点平滑曲线）、任意轮廓 contour shape，以及可扩展 Path kind / ribbon 带状关系路径。',
+          en: 'v0.4 deepens the base: pure geometry sinks to `@retikz/math`, an embeddable-Tier2 mechanism, path-grammar reinforcement (rounded corners + smooth-through-points), an arbitrary-contour shape, plus extensible Path kinds and ribbon relation paths.',
         },
         highlights: [
           {
@@ -104,8 +104,53 @@ export const changelog: Array<Release> = [
               en: 'An arbitrary closed vertex ring as a Node shape, auto-centered on its AABB center, as connectable as rectangle / sector via `boundaryPoint`.',
             },
           },
+          {
+            label: { zh: 'Path kind / ribbon', en: 'Path kind / ribbon' },
+            content: {
+              zh: '`Path.kind` 成为一等 provider contract；内置 `ribbon` kind 表达可变宽度带状关系路径，仍 lower 为普通 `PathPrim`。',
+              en: '`Path.kind` becomes a first-class provider contract; the built-in `ribbon` kind describes variable-width relation bands while still lowering to ordinary `PathPrim`.',
+            },
+          },
         ],
         subVersions: [
+          {
+            version: 'alpha.6',
+            date: '2026-06-28',
+            summary: {
+              zh: '关系路径底座收口：`Path.kind` 统一 stroke / ribbon / 自定义 provider；内置 `ribbon` 支持可变宽度、单侧对齐、端帽、显式边界、host label 与共享 drawable 契约。',
+              en: 'Relation-path foundation: `Path.kind` unifies stroke / ribbon / custom providers; the built-in `ribbon` supports variable width, one-sided alignment, caps, explicit boundaries, host labels, and the shared drawable contract.',
+            },
+            items: [
+              {
+                label: { zh: 'Path kind provider', en: 'Path kind provider' },
+                content: {
+                  zh: '`IRPath.kind` 选择几何 lowering 策略：省略即 `stroke`，`kind: "ribbon"` 使用 `ribbon` 参数对象，自定义 kind 通过 `CompileOptions.pathKinds` + `kindOptions` 注入；未知 kind 编译期 fail-loud。',
+                  en: '`IRPath.kind` selects the geometry-lowering strategy: omitted means `stroke`, `kind: "ribbon"` uses the `ribbon` option object, and custom kinds are injected through `CompileOptions.pathKinds` + `kindOptions`; unknown kinds fail loud at compile time.',
+                },
+              },
+              {
+                label: { zh: 'Ribbon 并入 Path', en: 'Ribbon folded into Path' },
+                content: {
+                  zh: '不再新增独立 `type: "ribbon"` IR；ribbon 是 `type: "path", kind: "ribbon"`。`PathRibbonOptions` 覆盖 fixed / stops / profile 宽度、start/end 宽度与方向、butt / round / square / arc 端帽、`align`、fixed sampling 与 boundary `upper` / `lower` 模式。',
+                  en: 'There is no standalone `type: "ribbon"` IR; ribbon is `type: "path", kind: "ribbon"`. `PathRibbonOptions` covers fixed / stops / profile width, start/end width and direction, butt / round / square / arc caps, `align`, fixed sampling, and boundary `upper` / `lower` mode.',
+                },
+              },
+              {
+                label: { zh: '共享 drawable / label 契约', en: 'Shared drawable / label contract' },
+                content: {
+                  zh: '`DrawableStyleSchema` / `DrawableMetaSchema` 显式导出 Path kind 共享样式与元数据；`GeometryLabelSchema` 同时服务 step label 与 Path host label。`pathDefault` 对 stroke Path 完整生效，对 ribbon 只消费共享 drawable 子集。',
+                  en: '`DrawableStyleSchema` / `DrawableMetaSchema` explicitly export the style and metadata shared by Path kinds; `GeometryLabelSchema` serves both step labels and Path host labels. `pathDefault` fully applies to stroke paths and only its shared drawable subset applies to ribbon.',
+                },
+              },
+              {
+                label: { zh: 'Node 内侧边界标签', en: 'Inside node boundary labels' },
+                content: {
+                  zh: '`Node.label` 增加 `placement: "inside"` 与 `{ boundary, t }` 位置，矩形 / box-like 节点可把标签放到内部边界比例点；inside + pin 被 schema 拒绝。',
+                  en: '`Node.label` gains `placement: "inside"` and `{ boundary, t }` positions, letting rectangle / box-like nodes place labels at proportional inner-boundary points; inside + pin is rejected by schema.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.5',
             date: '2026-06-19',
@@ -274,11 +319,35 @@ export const changelog: Array<Release> = [
         pkg: '@retikz/react',
         version: 'v0.4',
         description: {
-          zh: 'React adapter 跟进 core v0.4：`<Step kind="smooth">` 与 `<Draw>` / `<Path>` 的 `roundedCorners`，以及 `<Layout>` 可嵌入 Tier2 子组件。',
-          en: 'The React adapter follows core v0.4: `<Step kind="smooth">` and `roundedCorners` on `<Draw>` / `<Path>`, plus embeddable Tier2 children in `<Layout>`.',
+          zh: 'React adapter 跟进 core v0.4：`<Step kind="smooth">`、`roundedCorners`、`<Path kind="ribbon">`、`pathKinds` 注入，以及 `<Layout>` 可嵌入 Tier2 子组件。',
+          en: 'The React adapter follows core v0.4: `<Step kind="smooth">`, `roundedCorners`, `<Path kind="ribbon">`, `pathKinds` injection, plus embeddable Tier2 children in `<Layout>`.',
         },
         highlights: [],
         subVersions: [
+          {
+            version: 'alpha.6',
+            date: '2026-06-28',
+            summary: {
+              zh: '`<Path>` 透传 `kind` / `ribbon` / `kindOptions` / host `label`，`<Layout pathKinds>` 注入自定义 Path kind；不新增独立 Ribbon 组件面。',
+              en: '`<Path>` passes through `kind` / `ribbon` / `kindOptions` / host `label`, and `<Layout pathKinds>` injects custom Path kinds; no standalone Ribbon component surface is added.',
+            },
+            items: [
+              {
+                label: { zh: '<Path kind="ribbon">', en: '<Path kind="ribbon">' },
+                content: {
+                  zh: 'React authoring 直接使用 `<Path kind="ribbon" ribbon={{ ... }}>`；centerline children、boundary `upper` / `lower`、ribbon host label、arc cap 等字段与 core IR 同名透传，unbuilder 也回到 `<Path>`。',
+                  en: 'React authoring uses `<Path kind="ribbon" ribbon={{ ... }}>` directly; centerline children, boundary `upper` / `lower`, ribbon host labels, arc caps, and related fields pass through with the same names as core IR, and the unbuilder returns `<Path>`.',
+                },
+              },
+              {
+                label: { zh: 'pathKinds 注入', en: 'pathKinds injection' },
+                content: {
+                  zh: '`<Layout pathKinds>` 把自定义 `PathKindDefinition` 透传到 `compileToScene`，与 `shapes` / `arrows` / `patterns` / `pathGenerators` 同一注入模型。',
+                  en: '`<Layout pathKinds>` forwards custom `PathKindDefinition` objects to `compileToScene`, using the same injection model as `shapes` / `arrows` / `patterns` / `pathGenerators`.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.5',
             date: '2026-06-19',
@@ -360,11 +429,28 @@ export const changelog: Array<Release> = [
         pkg: '@retikz/vanilla',
         version: 'v0.4',
         description: {
-          zh: 'Vanilla DSL 跟进 core v0.4：`node` / `draw` config 经 `Omit<IR*>` 自动获得 `shadow` / `blendMode`，与 react 同一份 schema。',
-          en: 'The vanilla DSL follows core v0.4: `node` / `draw` config get `shadow` / `blendMode` automatically via `Omit<IR*>`, the same schema as react.',
+          zh: 'Vanilla DSL 跟进 core v0.4：`node` / `draw` config 经 `Omit<IR*>` 自动获得 `shadow` / `blendMode`、Path kind / ribbon 等核心字段。',
+          en: 'The vanilla DSL follows core v0.4: `node` / `draw` config get core fields such as `shadow` / `blendMode`, Path kind, and ribbon through `Omit<IR*>`.',
         },
         highlights: [],
         subVersions: [
+          {
+            version: 'alpha.6',
+            date: '2026-06-28',
+            summary: {
+              zh: '`draw` 支持 `kind: "ribbon"` 与 `ribbon` 参数，复用 core way DSL；vanilla builder 明确不暴露独立 `ribbon()` helper。',
+              en: '`draw` supports `kind: "ribbon"` with `ribbon` options and reuses the core way DSL; the vanilla builder deliberately does not expose a standalone `ribbon()` helper.',
+            },
+            items: [
+              {
+                label: { zh: 'draw(kind=ribbon)', en: 'draw(kind=ribbon)' },
+                content: {
+                  zh: '`draw(way, { kind: "ribbon", ribbon: { ... } })` 产出与 core `IRPath` 一致的 `type: "path", kind: "ribbon"`；host `label` 和 shared drawable style 随 `draw` config 透传。',
+                  en: '`draw(way, { kind: "ribbon", ribbon: { ... } })` emits the same `type: "path", kind: "ribbon"` `IRPath` shape as core; host `label` and shared drawable style pass through in the draw config.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.5',
             date: '2026-06-17',

@@ -1,12 +1,16 @@
 # ADR-01：Ribbon 可变宽度路径
 
-- Status: Proposed
+- Status: 被 ADR-07 收敛（已通过 `Path.kind="ribbon"` 落地）
 - Decision date: 2026-06-25
 - Owner: core
 - Related:
   - [alpha.6 roadmap](./roadmap.md)
   - [v0.4 roadmap](../roadmap.md)
   - [core design](../../../../../architecture/core-design.md)
+
+## 收尾说明
+
+本 ADR 引入可变宽度 ribbon 能力；其中的几何构造、宽度规则、profile registry 与 lowering 方向已经通过最终的 [ADR-07 Path kind registry](./07-path-kind-registry.md) 形态落地。下文描述的独立 `type: "ribbon"` / `IRRibbon` 公开面没有保留；已接受的公开 IR 是 `type: "path", kind: "ribbon"`，ribbon 专属参数放在 `ribbon` 对象中。
 
 ## Context
 

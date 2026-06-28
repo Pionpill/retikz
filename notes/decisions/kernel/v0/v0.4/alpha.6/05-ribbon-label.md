@@ -1,6 +1,6 @@
 # ADR-05: Ribbon host label
 
-- Status: Proposed
+- Status: 被 ADR-07 收敛（已通过共享 `Path.label` 落地）
 - Decision date: 2026-06-27
 - Owner: core
 - Related:
@@ -11,6 +11,10 @@
   - [ADR-06 Path / Ribbon 共享 drawable 契约](./06-path-ribbon-shared-contract.md)
   - [v0.4 roadmap](../roadmap.md)
   - [core design](../../../../../architecture/core-design.md)
+
+## 收尾说明
+
+本 ADR 的 host label 能力已经落地，但公开字段收敛为共享的 `Path.label`，不再保留 ribbon 专用 label API。最终 relation host 形态由 [ADR-07](./07-path-kind-registry.md) 定义。
 
 ## 背景
 

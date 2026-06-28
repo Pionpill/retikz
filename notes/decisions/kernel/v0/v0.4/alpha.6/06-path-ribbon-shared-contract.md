@@ -1,6 +1,6 @@
 # ADR-06: Path / Ribbon 共享 drawable 契约
 
-- Status: Proposed
+- Status: 被 ADR-07 收敛（已使用最终 shared drawable 命名落地）
 - Decision date: 2026-06-27
 - Owner: core
 - Related:
@@ -9,6 +9,10 @@
   - [ADR-05 Ribbon host label](./05-ribbon-label.md)
   - [v0.4 roadmap](../roadmap.md)
   - [core design](../../../../../architecture/core-design.md)
+
+## 收尾说明
+
+本 ADR 的 shared drawable 契约已经通过最终的 [ADR-07](./07-path-kind-registry.md) 命名与 relation host 模型落地。已接受的公开命名是 `DrawableStyleSchema` / `DrawableMetaSchema`，共享 label 来源是 `GeometryLabelSchema`。
 
 ## 背景
 

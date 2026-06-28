@@ -1,6 +1,6 @@
 # ADR-03: Ribbon 自定义圆弧端帽
 
-- Status: Proposed
+- Status: 被 ADR-07 收敛（已通过 `Path.ribbon.start/end.cap` 落地）
 - Decision date: 2026-06-27
 - Owner: core
 - Related:
@@ -9,6 +9,10 @@
   - [ADR-02 Ribbon 边界与对齐增强](./02-ribbon-boundary-and-alignment.md)
   - [v0.4 roadmap](../roadmap.md)
   - [core design](../../../../../architecture/core-design.md)
+
+## 收尾说明
+
+本 ADR 的显式圆弧端帽能力已经作为 `Path.ribbon.start.cap` / `Path.ribbon.end.cap` 的结构化 cap 选项落地。下文描述的独立 `Ribbon` 宿主已被 [ADR-07](./07-path-kind-registry.md) 收敛。
 
 ## 背景
 
