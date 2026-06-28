@@ -1,7 +1,10 @@
 import { z } from 'zod';
 
 import { BoundarySchema } from '../../boundary';
-import { BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from '../../position';
+import { BetweenPositionSchema } from '../../position/between-position/schema';
+import { OffsetPositionSchema } from '../../position/offset-position/schema';
+import { PolarPositionSchema } from '../../position/polar-position/schema';
+import { PositionSchema } from '../../position/position/schema';
 
 export const AnchorRefSchema = z
   .union([

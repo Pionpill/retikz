@@ -15,7 +15,7 @@ import type {
 } from '../../schemas';
 
 import { defineTransform, extractTransformKind } from '../../contract';
-import { readSourceIndex, readSourceIndices, withGroupProvenance } from '../../pipeline';
+import { readSourceIndex, readSourceIndices, withGroupProvenance } from '../../pipeline/provenance';
 import {
   AnnotateTransformSchema,
   BinTransformSchema,

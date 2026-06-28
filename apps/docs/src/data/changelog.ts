@@ -88,7 +88,7 @@ export const changelog: Array<Release> = [
         version: 'v0.4',
         description: {
           zh: 'v0.4 纵向底座深化：纯几何下沉 `@retikz/math`、Tier2 可嵌入机制、path 文法补强（折线圆角 + 过点平滑曲线）、任意轮廓 contour shape，以及可扩展 Path kind / ribbon 带状关系路径。',
-          en: 'v0.4 deepens the base: pure geometry sinks to `@retikz/math`, an embeddable-Tier2 mechanism, path-grammar reinforcement (rounded corners + smooth-through-points), an arbitrary-contour shape, plus extensible Path kinds and ribbon relation paths.',
+          en: 'v0.4 deepens the base: `@retikz/math` geometry, embeddable Tier2, stronger path grammar, contour shape, extensible Path kinds, and ribbon relation paths.',
         },
         highlights: [
           {

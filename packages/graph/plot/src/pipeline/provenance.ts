@@ -3,7 +3,7 @@ import type { IRJsonObject, JsonValue } from '@retikz/core';
 import type { DatumIdRegistrar, ProvenanceContext } from '../contract/provenance';
 import type { ExternalRow } from '../schemas';
 
-import { resolveFieldPath } from '../providers';
+import { resolveFieldPath } from '../providers/data';
 
 export type { DatumIdRegistrar, ProvenanceContext } from '../contract/provenance';
 

@@ -538,6 +538,20 @@ export const intervalCellGeometry = (
   return applyIntervalCellVisualParams(frame.projectCell(cell), mark, row);
 };
 
+const moveSectorCornerRadiusToShapeParams = (node: IRNode): void => {
+  const cornerRadius = node.cornerRadius;
+  const shape = node.shape;
+  if (cornerRadius === undefined || typeof shape !== 'object' || shape.type !== 'sector') return;
+  node.shape = {
+    ...shape,
+    params: {
+      ...(shape.params ?? {}),
+      cornerRadius,
+    },
+  };
+  delete node.cornerRadius;
+};
+
 /**
  * interval 单路径下沉：算 cell → frame.projectCell → CellGeometry → 装配 Node（坐标系无关）。
  * @description 判断挪进坐标系（frame.projectCell 产 rect / sector / contour），mark 侧零分叉。装配样式按 geometry
@@ -573,6 +587,7 @@ const lowerCells = (
     const stroke = strokeOf?.(row);
     if (stroke !== undefined) cellNode.stroke = stroke;
     applyNodeChannelDeliveries(cellNode, mark, row, channels, 'cell');
+    moveSectorCornerRadiusToShapeParams(cellNode);
     const node = attachDatumLabel(
       attachDatumAnchor(
         decorateDatum(cellNode, row, transformedIndex, mark.type, markContext?.provenance, cellSeriesValue(mark, row)),

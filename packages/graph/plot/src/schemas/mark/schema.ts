@@ -998,7 +998,7 @@ const RelationRibbonSamplingSchema = z
     z
       .object({
         kind: z.literal('adaptive').describe('Choose samples from path length and tolerance'),
-        tolerance: z.number().finite().positive().describe('Approximate target segment length in user units'),
+        tolerance: z.number().positive().describe('Approximate target segment length in user units'),
         maxSamples: z.number().int().min(2).max(512).optional().describe('Optional upper bound for generated samples'),
       })
       .strict(),

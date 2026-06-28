@@ -693,7 +693,7 @@ export const DensityBandwidthSpecSchema = z
         kind: z
           .literal('value')
           .describe('Bandwidth strategy discriminator: use an explicit positive numeric bandwidth'),
-        value: z.number().finite().positive().describe('Explicit positive finite KDE bandwidth in source data units'),
+        value: z.number().positive().describe('Explicit positive finite KDE bandwidth in source data units'),
       })
       .strict()
       .describe('Explicit bandwidth strategy'),
@@ -715,7 +715,7 @@ export const DensityTransformSchema = z
       .optional()
       .describe('Number of evenly spaced density samples emitted for each group; default 64'),
     extent: z
-      .tuple([z.number().finite(), z.number().finite()])
+      .tuple([z.number(), z.number()])
       .optional()
       .describe(
         'Optional density sampling extent [min, max]; omitted means observed extent padded by three bandwidths',
@@ -778,7 +778,7 @@ export const SmoothTransformSchema = z
       .optional()
       .describe('Number of evenly spaced trend samples emitted for each group; default 64'),
     extent: z
-      .tuple([z.number().finite(), z.number().finite()])
+      .tuple([z.number(), z.number()])
       .optional()
       .describe('Optional trend sampling extent [min, max]; omitted means the observed finite x range'),
     xAs: z.string().min(1).describe('Output field receiving each trend sample x position'),
