@@ -1,9 +1,8 @@
-import type { CompileWarning } from '../../compile/constant';
 import type { ArrowDefinition, ArrowEmitContext } from '../../contract/arrow';
 import type { MarkerPrimitive } from '../../primitive/marker';
 import type { BuiltinArrowShapeValue } from '../../schemas/path/arrow';
 
-import { CompileWarningCode } from '../../compile/constant';
+import { defineBuiltinProviderArray, resolveProviderRegistry } from '../registry';
 
 /** 实心闭合三角 / 菱形 / V 形的 path 工厂：填充走 ctx.fill（无 override = contextStroke） */
 const filledPath = (ctx: ArrowEmitContext, points: ReadonlyArray<[number, number]>): MarkerPrimitive => ({
@@ -34,8 +33,9 @@ const hollowPath = (
 });
 
 /** 内置 8 arrow 注册项；与 `CompileOptions.arrows` 合并时被同名注入覆盖 */
-export const BUILTIN_ARROWS: Record<BuiltinArrowShapeValue, ArrowDefinition> = {
-  normal: {
+export const BUILTIN_ARROWS = defineBuiltinProviderArray<ArrowDefinition, BuiltinArrowShapeValue>([
+  {
+    name: 'normal',
     lineContactX: 0,
     emit: ctx => [
       filledPath(ctx, [
@@ -45,7 +45,8 @@ export const BUILTIN_ARROWS: Record<BuiltinArrowShapeValue, ArrowDefinition> = {
       ]),
     ],
   },
-  open: {
+  {
+    name: 'open',
     hollow: true,
     lineContactX: 1,
     tipX: 9,
@@ -57,7 +58,8 @@ export const BUILTIN_ARROWS: Record<BuiltinArrowShapeValue, ArrowDefinition> = {
       ]),
     ],
   },
-  stealth: {
+  {
+    name: 'stealth',
     lineContactX: 3,
     emit: ctx => [
       filledPath(ctx, [
@@ -68,7 +70,8 @@ export const BUILTIN_ARROWS: Record<BuiltinArrowShapeValue, ArrowDefinition> = {
       ]),
     ],
   },
-  openStealth: {
+  {
+    name: 'openStealth',
     hollow: true,
     lineContactX: 3,
     tipX: 9,
@@ -85,7 +88,8 @@ export const BUILTIN_ARROWS: Record<BuiltinArrowShapeValue, ArrowDefinition> = {
       ),
     ],
   },
-  diamond: {
+  {
+    name: 'diamond',
     lineContactX: 0,
     emit: ctx => [
       filledPath(ctx, [
@@ -96,7 +100,8 @@ export const BUILTIN_ARROWS: Record<BuiltinArrowShapeValue, ArrowDefinition> = {
       ]),
     ],
   },
-  openDiamond: {
+  {
+    name: 'openDiamond',
     hollow: true,
     lineContactX: 1,
     tipX: 9,
@@ -113,7 +118,8 @@ export const BUILTIN_ARROWS: Record<BuiltinArrowShapeValue, ArrowDefinition> = {
       ),
     ],
   },
-  circle: {
+  {
+    name: 'circle',
     lineContactX: 0,
     emit: ctx => [
       {
@@ -126,7 +132,8 @@ export const BUILTIN_ARROWS: Record<BuiltinArrowShapeValue, ArrowDefinition> = {
       },
     ],
   },
-  openCircle: {
+  {
+    name: 'openCircle',
     hollow: true,
     lineContactX: 0.75,
     emit: ctx => [
@@ -141,21 +148,13 @@ export const BUILTIN_ARROWS: Record<BuiltinArrowShapeValue, ArrowDefinition> = {
       },
     ],
   },
-};
+]);
 
-export const resolveArrowRegistry = (
-  arrows: Record<string, ArrowDefinition> | undefined,
-  onWarn: (warning: CompileWarning) => void,
-): Record<string, ArrowDefinition> => {
-  if (!arrows) return BUILTIN_ARROWS;
-  for (const name of Object.keys(arrows)) {
-    if (Object.prototype.hasOwnProperty.call(BUILTIN_ARROWS, name)) {
-      onWarn({
-        code: CompileWarningCode.ArrowOverridesBuiltin,
-        message: `Injected arrow '${name}' overrides the built-in arrow of the same name.`,
-        path: `options.arrows.${name}`,
-      });
-    }
-  }
-  return { ...BUILTIN_ARROWS, ...arrows };
-};
+export const resolveArrowRegistry = (arrows?: ReadonlyArray<ArrowDefinition>): ReadonlyMap<string, ArrowDefinition> =>
+  resolveProviderRegistry({
+    capability: 'arrow',
+    builtins: BUILTIN_ARROWS,
+    custom: arrows,
+    keyOf: definition => definition.name,
+    optionName: 'arrows',
+  });

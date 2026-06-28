@@ -6,6 +6,7 @@ import type { PatternDefinition } from '../contract/pattern';
 import type { RibbonWidthProfileDefinition } from '../contract/ribbon';
 import type { ShapeDefinition } from '../contract/shape';
 import type { DropShadow, GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
+import type { ProviderCollection } from '../providers/registry';
 import type { IR, IRAnimationTrack, IRChild, IRPathBase, IRPosition, IRTransform } from '../schemas';
 import type { CompileWarning } from './constant';
 import type { LowerTex } from './lower-tex';
@@ -20,9 +21,9 @@ import { resolveCompositeRegistry } from '../providers/composite';
 import { resolvePathGeneratorRegistry } from '../providers/path';
 import { resolvePathKindRegistry } from '../providers/path-kind';
 import { resolvePatternRegistry } from '../providers/pattern';
+import { providerDefinitionOf } from '../providers/registry';
 import { resolveRibbonWidthProfileRegistry } from '../providers/ribbon';
 import { resolveShapeRegistry } from '../providers/shape';
-import { JsonObjectSchema } from '../schemas';
 import { ScopeBoundingShape } from '../schemas';
 import { createClipRegistry } from './clip';
 import { lowerComposites } from './composite';
@@ -56,10 +57,10 @@ export { CompileWarningCode } from './constant';
  * @description coordinate / scope.id 入场临时占位等"无形状只有位置"句柄共享此结构，
  *   让后续 path target / `at.of` / `offset.of` / `polar.origin` 引用时 boundaryPoint 命中中心。
  */
-const zeroSizeRectAt = (id: string, [cx, cy]: IRPosition, shapes: Record<string, ShapeDefinition>): NodeLayout => ({
+const zeroSizeRectAt = (id: string, [cx, cy]: IRPosition, shapes: ProviderCollection<ShapeDefinition>): NodeLayout => ({
   id,
   shapeName: 'rectangle',
-  shapeDef: shapes.rectangle,
+  shapeDef: providerDefinitionOf(shapes, 'rectangle', { capability: 'shape', optionName: 'shapes' }),
   rect: { x: cx, y: cy, width: 0, height: 0, rotate: 0 },
   rotateDeg: 0,
   margin: 0,
@@ -75,7 +76,7 @@ const zeroSizeRectAt = (id: string, [cx, cy]: IRPosition, shapes: Record<string,
  * 把 coordinate 注册成 0×0 NodeLayout
  * @description 让后续 path target / `at.of` 引用时 boundaryPoint 命中中心，符合"占位无形状边界"语义
  */
-const coordinateAsLayout = (id: string, center: IRPosition, shapes: Record<string, ShapeDefinition>): NodeLayout =>
+const coordinateAsLayout = (id: string, center: IRPosition, shapes: ProviderCollection<ShapeDefinition>): NodeLayout =>
   zeroSizeRectAt(id, center, shapes);
 
 /** shadow 是视觉效果，不改变锚点 / scope bbox；这里只把它的外溢纳入根自动 layout，避免根 viewBox 裁剪 */
@@ -122,7 +123,7 @@ const pushLayoutPoints = (target: Array<IRPosition>, points: ReadonlyArray<IRPos
 const scopePlaceholderLayout = (
   id: string,
   chain: ReadonlyArray<Transform>,
-  shapes: Record<string, ShapeDefinition>,
+  shapes: ProviderCollection<ShapeDefinition>,
 ): NodeLayout => {
   const globalOrigin: IRPosition = chain.length === 0 ? [0, 0] : applyTransformChain([0, 0], chain);
   return zeroSizeRectAt(id, globalOrigin, shapes);
@@ -152,22 +153,22 @@ export type CompileOptions = {
   /**
    * 运行时注入的第三方 shape（不进 IR）
    * @description 有效 shape 表 = `{ ...BUILTIN_SHAPES, ...shapes }`——同名 key 覆盖内置，经 `onWarn` 发
-   *   `SHAPE_OVERRIDES_BUILTIN`。IR 的 `node.shape` 仍是字符串；未注册名在编译期 throw。
+   *   Duplicate names fail at registration time. IR 的 `node.shape` 仍是字符串；未注册名在编译期 throw。
    */
-  shapes?: Record<string, ShapeDefinition>;
+  shapes?: ReadonlyArray<ShapeDefinition>;
   /**
    * 运行时注入的第三方 arrow（不进 IR）
    * @description 有效 arrow 表 = `{ ...BUILTIN_ARROWS, ...arrows }`——同名 key 覆盖内置，经 `onWarn` 发
-   *   `ARROW_OVERRIDES_BUILTIN`。IR 的 `arrowDetail.shape` 仍是字符串；未注册名在编译期 throw。
+   *   Duplicate names fail at registration time. IR 的 `arrowDetail.shape` 仍是字符串；未注册名在编译期 throw。
    */
-  arrows?: Record<string, ArrowDefinition>;
+  arrows?: ReadonlyArray<ArrowDefinition>;
   /**
    * 运行时注入的第三方 pattern motif（不进 IR）
    * @description 有效 pattern 表 = `{ ...BUILTIN_PATTERNS, ...patterns }`——同名 key 覆盖内置，经 `onWarn` 发
-   *   `PATTERN_OVERRIDES_BUILTIN`。IR 的 `pattern.shape` 仍是字符串；未注册名在编译期 throw。
+   *   Duplicate names fail at registration time. IR 的 `pattern.shape` 仍是字符串；未注册名在编译期 throw。
    *   compile 对 pattern 资源查本表 + 调 `PatternDefinition.emit` 产 tile，写进 `SceneResource.tile`。
    */
-  patterns?: Record<string, PatternDefinition>;
+  patterns?: ReadonlyArray<PatternDefinition>;
   /**
    * 运行时注入的第三方 path generator（不进 IR）
    * @description generator step 编译时按 `name` 查本表；core 不内置任何曲线生成器，故无内置合并。
@@ -176,22 +177,22 @@ export type CompileOptions = {
    *   resolve 成世界坐标 → 调 `generate(ctx)` → splice 产出的 `PathCommand[]` 进命令流。IR 的
    *   `generator.name` 仍是字符串；generator 函数本身只在此运行时注入面、不进 IR。
    */
-  pathGenerators?: Record<string, PathGeneratorDefinition>;
+  pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
   /**
    * Runtime path kind providers. Built-in kinds are `stroke` and `ribbon`; custom kinds are keyed by Path.kind.
    */
-  pathKinds?: Record<string, PathKindDefinition>;
+  pathKinds?: ReadonlyArray<PathKindDefinition>;
   /**
    * Runtime ribbon width profiles.
    * @description IR stores only `{ kind:"profile", name, params }`; profile functions are injected here and never enter IR.
    */
-  ribbonWidthProfiles?: Partial<Record<string, RibbonWidthProfileDefinition>>;
+  ribbonWidthProfiles?: ReadonlyArray<RibbonWidthProfileDefinition>;
   /**
    * 运行时注入的 Tier 2 composite 展开逻辑（不进 IR）
    * @description compileToScene 第一步据各 def 的 schema 提取的 `${namespace}.${type}` 把 IR 里的 composite
    *   节点展开成 Tier 1；core 无内置。未注册 namespace/type → `onWarn(COMPOSITE_NOT_REGISTERED)` + 跳过该节点。
    */
-  composites?: Array<CompositeDefinition>;
+  composites?: ReadonlyArray<CompositeDefinition>;
   /**
    * composite 嵌套展开的最大深度（防环 / 防失控递归）
    * @description 默认 32；composite 展开出 composite 时累加，超限或环 throw。
@@ -400,18 +401,17 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     maxDepth: options.maxCompositeDepth,
   });
 
-  // shape / arrow / pattern 三表策略一致：Record 注入（key 天然去重）→ 同名覆盖内置 warn + last-wins、
-  // 未注册名 throw（定位 / 布局类基元缺失无法继续）。与 composite（Array 注入、重名 throw、缺失 warn+skip）
-  // 的策略差异是有意的，理由见 lowerComposites JSDoc。
-  const effectiveShapes: Record<string, ShapeDefinition> = resolveShapeRegistry(options.shapes, onWarn);
-  const effectivePathGenerators: Record<string, PathGeneratorDefinition> = resolvePathGeneratorRegistry(
+  // provider registry 在 compile 入口统一 resolve：内置和自定义同表，duplicate key fail-loud。
+  // compile 主流程只消费 resolved Map；unknown string-reference provider 仍 fail-fast。
+  const effectiveShapes: ReadonlyMap<string, ShapeDefinition> = resolveShapeRegistry(options.shapes);
+  const effectivePathGenerators: ReadonlyMap<string, PathGeneratorDefinition> = resolvePathGeneratorRegistry(
     options.pathGenerators,
   );
-  const effectivePathKinds: Partial<Record<string, PathKindDefinition>> = resolvePathKindRegistry(options.pathKinds);
-  const effectiveRibbonWidthProfiles: Partial<Record<string, RibbonWidthProfileDefinition>> =
+  const effectivePathKinds: ReadonlyMap<string, PathKindDefinition> = resolvePathKindRegistry(options.pathKinds);
+  const effectiveRibbonWidthProfiles: ReadonlyMap<string, RibbonWidthProfileDefinition> =
     resolveRibbonWidthProfileRegistry(options.ribbonWidthProfiles);
-  const effectiveArrows: Record<string, ArrowDefinition> = resolveArrowRegistry(options.arrows, onWarn);
-  const effectivePatterns: Record<string, PatternDefinition> = resolvePatternRegistry(options.patterns, onWarn);
+  const effectiveArrows: ReadonlyMap<string, ArrowDefinition> = resolveArrowRegistry(options.arrows);
+  const effectivePatterns: ReadonlyMap<string, PatternDefinition> = resolvePatternRegistry(options.patterns);
 
   const primitives: Array<InternalScenePrimitive> = [];
   /** 已 push 但未回填的占位计数；compileToScene 返回前必须归零（无条件守 Scene 公开契约） */
@@ -478,14 +478,10 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     scopeChain: ReadonlyArray<Transform>,
   ): PathKindCompileResult | null => {
     const kind = path.kind ?? 'stroke';
-    const definition = effectivePathKinds[kind];
-    if (definition === undefined) {
-      const available = Object.keys(effectivePathKinds).sort().join(', ');
-      throw new Error(`Unknown path kind '${kind}'. Available path kinds: ${available || '(none)'}.`);
-    }
+    const definition = providerDefinitionOf(effectivePathKinds, kind, { capability: 'path kind', optionName: 'pathKinds' });
     const optionsValue = definition.optionsSchema
       ? definition.optionsSchema.parse(path.kindOptions ?? {})
-      : JsonObjectSchema.parse(path.kindOptions ?? {});
+      : path.kindOptions ?? {};
     return definition.compile({
       path,
       options: optionsValue,

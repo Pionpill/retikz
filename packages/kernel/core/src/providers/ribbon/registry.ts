@@ -1,7 +1,16 @@
 import type { RibbonWidthProfileDefinition } from '../../contract/ribbon';
 
-export const BUILTIN_RIBBON_WIDTH_PROFILES: Record<string, RibbonWidthProfileDefinition> = {};
+import { resolveProviderRegistry } from '../registry';
+
+export const BUILTIN_RIBBON_WIDTH_PROFILES: ReadonlyArray<RibbonWidthProfileDefinition> = [];
 
 export const resolveRibbonWidthProfileRegistry = (
-  profiles?: Partial<Record<string, RibbonWidthProfileDefinition>>,
-): Partial<Record<string, RibbonWidthProfileDefinition>> => profiles ?? BUILTIN_RIBBON_WIDTH_PROFILES;
+  profiles?: ReadonlyArray<RibbonWidthProfileDefinition>,
+): ReadonlyMap<string, RibbonWidthProfileDefinition> =>
+  resolveProviderRegistry({
+    capability: 'ribbon width profile',
+    builtins: BUILTIN_RIBBON_WIDTH_PROFILES,
+    custom: profiles,
+    keyOf: definition => definition.name,
+    optionName: 'ribbonWidthProfiles',
+  });
