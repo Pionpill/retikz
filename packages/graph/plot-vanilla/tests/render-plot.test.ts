@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
 import { compileToScene } from '@retikz/core';
-import { type ExternalDatasets, type PlotSpec, lowerPlots } from '@retikz/plot';
+import { type ExternalDatasets, type PlotSpec, type Transform, lowerPlots } from '@retikz/plot';
 import { renderToSvgString } from '@retikz/vanilla';
 import { renderPlot } from '../src';
 
@@ -521,6 +521,71 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     };
     const svg = renderPlot(smoothSpec, smoothData, { width: 480, height: 300 });
     expect(svg).toContain('<svg');
+    expect(svg).toContain('<path');
+    expect(svg).toContain('<ellipse');
+  });
+
+  it('stat-geom boxplot composition spec → SSR 复用 interval / reference / point', () => {
+    const boxData: ExternalDatasets = {
+      samples: [
+        { group: 'A', boxX: 1, boxX0: 0.74, boxX1: 1.26, value: 1 },
+        { group: 'A', boxX: 1, boxX0: 0.74, boxX1: 1.26, value: 2 },
+        { group: 'A', boxX: 1, boxX0: 0.74, boxX1: 1.26, value: 3 },
+        { group: 'A', boxX: 1, boxX0: 0.74, boxX1: 1.26, value: 4 },
+        { group: 'A', boxX: 1, boxX0: 0.74, boxX1: 1.26, value: 20 },
+        { group: 'B', boxX: 2, boxX0: 1.74, boxX1: 2.26, value: 4 },
+        { group: 'B', boxX: 2, boxX0: 1.74, boxX1: 2.26, value: 5 },
+        { group: 'B', boxX: 2, boxX0: 1.74, boxX1: 2.26, value: 6 },
+        { group: 'B', boxX: 2, boxX0: 1.74, boxX1: 2.26, value: 7 },
+        { group: 'B', boxX: 2, boxX0: 1.74, boxX1: 2.26, value: 30 },
+      ],
+    };
+    const boxSummary: Transform = {
+      kind: 'summarize',
+      groupBy: ['group', 'boxX', 'boxX0', 'boxX1'],
+      metrics: [
+        {
+          op: 'quantile-band',
+          field: 'value',
+          lowerP: 0.25,
+          upperP: 0.75,
+          outputs: { lower: 'boxLow', upper: 'boxHigh', points: [{ p: 0.5, as: 'median' }], whiskerMin: 'whiskerMin', whiskerMax: 'whiskerMax' },
+          whisker: { kind: 'spread', factor: 1.5 },
+        },
+      ],
+    };
+    const boxOutside: Transform = {
+      kind: 'select',
+      groupBy: ['group'],
+      selector: { op: 'outside-quantile-band', field: 'value', lowerP: 0.25, upperP: 0.75, boundary: { kind: 'spread', factor: 1.5 } },
+    };
+    const boxSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'samples' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'interval',
+          transform: [boxSummary],
+          bounds: { x: { kind: 'extent', from: 'boxX0', to: 'boxX1' }, y: { kind: 'extent', from: 'boxLow', to: 'boxHigh' } },
+          fill: { kind: 'constant', value: '#93c5fd' },
+          fillOpacity: { kind: 'constant', value: 0.32 },
+          encoding: { x: { field: 'boxX' }, y: { field: 'boxHigh' } },
+        },
+        { type: 'reference', transform: [boxSummary], extentField: 'boxX0', extentToField: 'boxX1', encoding: { y: { field: 'median' } } },
+        { type: 'reference', transform: [boxSummary], extentField: 'whiskerMin', extentToField: 'whiskerMax', encoding: { x: { field: 'boxX' } } },
+        { type: 'point', transform: [boxOutside], encoding: { x: { field: 'boxX' }, y: { field: 'value' } } },
+      ],
+    };
+
+    const svg = renderPlot(boxSpec, boxData, { width: 480, height: 300 });
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('<rect');
     expect(svg).toContain('<path');
     expect(svg).toContain('<ellipse');
   });

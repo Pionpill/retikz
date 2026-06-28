@@ -15,7 +15,7 @@ Transforms sit between the [data layer](/graph/grammar/data) and scale inference
 | --- | --- | --- | --- | --- |
 | Row rewrite | `sort` / `derive-interval` / `jitter` | N → N | row rewrite | Sorting, per-row intervals, deterministic jitter |
 | Row annotation | `stack` / `normalize` / `annotate` | N → N | reducer / row context | Stack bounds, shares, group means |
-| Summary & selection | `bin` / `summarize` / `select` / `density` | N → M/K | reducer / selector / KDE | Histograms, group statistics, extremes, density areas |
+| Summary & selection | `bin` / `summarize` / `select` / `density` / `smooth` | N → M/K | reducer / selector / sampled transform | Histograms, boxplots, density areas, trend lines |
 | Row pairing | `relate` | N → P | selector / projection | Source/target relation fields |
 | Extensions | custom transform / reducer / selector | Depends on definition | definition registry | Custom processing or statistic sub-operations |
 
@@ -57,7 +57,7 @@ React DSL shortcuts still lower to ordinary transforms. For example, `IntervalMa
 
 During lowering, Plot collects the source fields read by transforms and registers the fields they derive. That lets strict models validate true input fields without requiring derived fields to be declared early.
 
-`bin`, `summarize`, and `annotate` reuse [reducer / selector statistic operations](/graph/grammar/transform/statistics), such as `count` / `sum` / `mean` / `median` / `quantile-band`. `select` and `relate` reuse selectors such as `min` / `max` / `first` / `last` / `top`. For long-tail statistics, use `defineTransform` for a full transform or register reducer / selector definitions for the built-in statistical transforms.
+`bin`, `summarize`, and `annotate` reuse [reducer / selector statistic operations](/graph/grammar/transform/statistics), such as `count` / `sum` / `mean` / `median` / `quantile-band`. `select` and `relate` reuse selectors such as `min` / `max` / `first` / `last` / `top`. `density` and `smooth` generate sampled rows, then let `PathMark` draw density areas or trend lines. For long-tail statistics, use `defineTransform` for a full transform or register reducer / selector definitions for the built-in statistical transforms.
 
 Plot-level transforms affect the whole chart: scales, guides, and every mark. Mark-local transforms only affect the rows seen by that one mark, which is useful for local summary layers or relation rows.
 

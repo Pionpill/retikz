@@ -8,7 +8,7 @@ These transforms generate new rows from detail data. `bin` and `summarize` emit 
 | kind | Output rows | Typical use |
 | --- | --- | --- |
 | `bin` | One row per interval | Histograms and distribution overviews |
-| `summarize` | One row per group | Grouped bars, mean lines, summary tables |
+| `summarize` | One row per group | Grouped bars, mean lines, boxplots |
 | `select` | One or more original rows per group | Extremes, top-N, nth row in a group |
 | `density` | Sampled rows per group | Density curves and density areas |
 | `smooth` | Predicted sampled rows per group | Trend lines and regression paths |
@@ -55,6 +55,14 @@ These transforms generate new rows from detail data. `bin` and `summarize` emit 
   ]}
 />
 ```
+
+## Statistic Geometry Composition
+
+Statistic transforms prepare rows; ordinary marks still draw the geometry. A boxplot is a composition: `quantile-band` generates fields for the box, median, and whiskers, while `outside-quantile-band` keeps source rows outside the interval.
+
+<ComponentPreview name="transform-boxplot" sourceFiles={['transform-boxplot.data.ts']} />
+
+There is no dedicated `BoxPlotMark` here. The box uses `IntervalMark`, the median and whiskers use `ReferenceMark`, and outside points use `PointMark`. The same rule applies to `density` and `smooth`: generate sampled rows first, then let `PathMark` consume them.
 
 ## Select
 

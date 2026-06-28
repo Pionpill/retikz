@@ -15,7 +15,7 @@ description: transform 是图形语法的统计层：在比例尺和图元之前
 | --- | --- | --- | --- | --- |
 | 保行重写 | `sort` / `derive-interval` / `jitter` | N → N | row rewrite | 排序、单行区间、确定性抖点 |
 | 保行标注 | `stack` / `normalize` / `annotate` | N → N | reducer / row context | 堆叠区间、占比、组均值回填 |
-| 规约与选择 | `bin` / `summarize` / `select` / `density` | N → M/K | reducer / selector / KDE | 直方图、分组统计、极值点、密度面积 |
+| 规约与选择 | `bin` / `summarize` / `select` / `density` / `smooth` | N → M/K | reducer / selector / sampled transform | 直方图、箱线图、密度面积、趋势线 |
 | 行配对 | `relate` | N → P | selector / projection | 从 source / target 行生成关系字段 |
 | 扩展能力 | custom transform / reducer / selector | 取决于定义 | definition registry | 自定义数据处理或统计子算子 |
 
@@ -57,7 +57,7 @@ React DSL 里的高级快捷写法也会落成普通 transform。例如 `Interva
 
 lowering 时，Plot 先收集 transform 读取的源字段，同时登记 transform 派生出来的输出字段。这样 strict model 只校验真实输入字段，不要求你把派生字段提前声明。
 
-`bin`、`summarize` 和 `annotate` 复用 [reducer / selector 统计子算子](/graph/grammar/transform/statistics)，例如 `count` / `sum` / `mean` / `median` / `quantile-band`。`select` 和 `relate` 复用 selector，例如 `min` / `max` / `first` / `last` / `top`。自定义长尾统计可以继续用 `defineTransform`，也可以通过 reducer / selector definition 嵌入这些通用 transform。
+`bin`、`summarize` 和 `annotate` 复用 [reducer / selector 统计子算子](/graph/grammar/transform/statistics)，例如 `count` / `sum` / `mean` / `median` / `quantile-band`。`select` 和 `relate` 复用 selector，例如 `min` / `max` / `first` / `last` / `top`。`density` 与 `smooth` 会生成采样行，再交给 `PathMark` 画密度面积或趋势线。自定义长尾统计可以继续用 `defineTransform`，也可以通过 reducer / selector definition 嵌入这些通用 transform。
 
 plot 级 transform 会影响整张图的 scale、guide 和所有 mark。mark-local transform 只影响当前图元看到的 rows，适合派生局部统计层或 relation 行。
 

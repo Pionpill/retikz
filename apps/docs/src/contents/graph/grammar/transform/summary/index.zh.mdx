@@ -8,7 +8,7 @@ description: 规约与选择会改变数据粒度，把明细行变成分箱、�
 | kind | 输出行 | 常见用途 |
 | --- | --- | --- |
 | `bin` | 每个区间一行 | 直方图、分布概览 |
-| `summarize` | 每个分组一行 | 分组柱、均值线、汇总表 |
+| `summarize` | 每个分组一行 | 分组柱、均值线、箱线图 |
 | `select` | 每组一个或多个原始行 | 极值点、top-N、组内第 N 个点 |
 | `density` | 每组一批采样行 | 密度曲线、密度面积 |
 | `smooth` | 每组一批预测采样行 | 趋势线、回归路径 |
@@ -55,6 +55,14 @@ description: 规约与选择会改变数据粒度，把明细行变成分箱、�
   ]}
 />
 ```
+
+## 统计图形组合
+
+统计 transform 只负责产出 rows，图形仍由普通 mark 画出来。箱线图就是一个组合：`quantile-band` 先生成箱体、中位数和须线字段，`outside-quantile-band` 再保留区间外原始点。
+
+<ComponentPreview name="transform-boxplot" sourceFiles={['transform-boxplot.data.ts']} />
+
+这张图没有专用 `BoxPlotMark`。箱体用 `IntervalMark`，中位数和须线用 `ReferenceMark`，区间外点用 `PointMark`。同一原则也适用于 `density` 和 `smooth`：先生成采样 rows，再由 `PathMark` 消费。
 
 ## 代表行选择 select
 
