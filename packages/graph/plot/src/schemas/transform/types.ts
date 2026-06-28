@@ -18,6 +18,8 @@ import type {
   RelateTransformSchema,
   SelectTransformSchema,
   SelectorOperationSchema,
+  SmoothMethodSpecSchema,
+  SmoothTransformSchema,
   SortTransformSchema,
   StackTransformSchema,
   SummarizeTransformSchema,
@@ -64,7 +66,11 @@ export type JitterTransform = z.infer<typeof JitterTransformSchema>;
 export type DensityBandwidthSpec = z.infer<typeof DensityBandwidthSpecSchema>;
 /** density 变换（一维 KDE 采样，改行数）。 */
 export type DensityTransform = z.infer<typeof DensityTransformSchema>;
-/** 内置 transform operation（sort / stack / bin / summarize / select / annotate / normalize / derive-interval / relate / jitter / density）。 */
+/** smooth 方法策略（首轮为线性回归）。 */
+export type SmoothMethodSpec = z.infer<typeof SmoothMethodSpecSchema>;
+/** smooth 变换（线性趋势线采样，改行数）。 */
+export type SmoothTransform = z.infer<typeof SmoothTransformSchema>;
+/** 内置 transform operation（sort / stack / bin / summarize / select / annotate / normalize / derive-interval / relate / jitter / density / smooth）。 */
 export type BuiltinTransform = z.infer<typeof BuiltinTransformSchema>;
 /** transform operation（内置 ∪ 外部注册 kind passthrough）。 */
 export type Transform = z.infer<typeof TransformSchema>;

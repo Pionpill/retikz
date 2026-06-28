@@ -12,7 +12,9 @@ description: reducer 和 selector 是 transform 共享的统计底层能力，�
 
 ## 完整 transform
 
-有些统计会直接生成一批新的采样行，不能塞进 reducer 或 selector。`density` 就是这种完整 transform：它读取一维连续字段，用 KDE 生成 `xAs` / `densityAs` 两个输出字段，再交给 `PathMark` 画曲线或面积。
+有些统计会直接生成一批新的采样行，不能塞进 reducer 或 selector。`density` 读取一维连续字段，用 KDE 生成 `xAs` / `densityAs` 输出字段；`smooth` 读取 `(x, y)` 样本，用回归模型生成 `xAs` / `yAs` 预测字段。它们都输出普通 rows，再交给 `PathMark` 画曲线或面积。
+
+### 密度 density
 
 <ComponentPreview name="transform-density" sourceFiles={['transform-density.data.ts']} />
 
@@ -26,6 +28,23 @@ description: reducer 和 selector 是 transform 共享的统计底层能力，�
 | `xAs` / `densityAs` | `string` | — | 输出采样位置和 density 值的字段名 |
 
 `density` 输出的是普通 rows。密度曲线用 `PathMark`；密度面积用同一个 `PathMark` 加 `closure={{ kind: 'baseline' }}` 和 `fill`。不要为了 density 新增专用 mark。
+
+### 趋势 smooth
+
+`smooth` 把散点或时间序列中的 `(x, y)` 样本拟合成趋势线采样行。alpha.13 首轮只支持 `{ kind: 'linear' }`，默认不外推；输出行通常交给 `PathMark` 按 `order` 连接。
+
+<ComponentPreview name="transform-smooth" sourceFiles={['transform-smooth.data.ts']} />
+
+| prop | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| `x` / `y` | `string` | — | 回归输入字段 |
+| `groupBy` | `Array<string>?` | 全局单组 | 按组分别拟合趋势线 |
+| `method` | `{ kind: 'linear' }?` | `linear` | 平滑方法；首轮只支持线性回归 |
+| `sampleCount` | `number?` | `64` | 每组输出的预测采样点数量，至少为 2 |
+| `extent` | `[number, number]?` | 有限 x 观测范围 | 采样区间；显式传入可做外推 |
+| `xAs` / `yAs` | `string` | — | 输出预测采样位置和 y 值的字段名 |
+
+`smooth` 对不可拟合输入会 fail-loud：每组至少需要两个有限 `(x, y)` 点，并且 x 不能全相同。原始散点和趋势线应分成两层 mark：散点继续读源数据，趋势线读 `smooth` 生成的采样行。
 
 ## reducer
 

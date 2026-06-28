@@ -420,3 +420,55 @@ describe('DensityTransformSchema (alpha.13 ADR-03)', () => {
     expect(() => TransformSchema.parse({ kind: 'density', field: 'value', bandwidth: { kind: 'value', value: 0 }, xAs: 'x', densityAs: 'd' })).toThrow();
   });
 });
+
+describe('SmoothTransformSchema (alpha.13 ADR-04)', () => {
+  it('smooth_full_form_valid_and_json_roundtrip_equivalent', () => {
+    const operation = {
+      kind: 'smooth',
+      x: 'time',
+      y: 'value',
+      groupBy: ['series'],
+      method: { kind: 'linear' },
+      sampleCount: 96,
+      extent: [0, 10],
+      xAs: 'trendX',
+      yAs: 'trendY',
+    };
+    expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
+  });
+
+  it('smooth_minimal_linear_valid', () => {
+    const operation = {
+      kind: 'smooth',
+      x: 'time',
+      y: 'value',
+      xAs: 'trendX',
+      yAs: 'trendY',
+    };
+    expect(BuiltinTransformSchema.parse(operation)).toEqual(operation);
+  });
+
+  it('smooth_requires_output_fields', () => {
+    expect(() => TransformSchema.parse({ kind: 'smooth', x: 'time', y: 'value', yAs: 'trendY' })).toThrow();
+    expect(() => TransformSchema.parse({ kind: 'smooth', x: 'time', y: 'value', xAs: 'trendX' })).toThrow();
+  });
+
+  it('smooth_rejects_output_collisions', () => {
+    expect(() => TransformSchema.parse({ kind: 'smooth', x: 'time', y: 'value', xAs: 'trend', yAs: 'trend' })).toThrow();
+    expect(() =>
+      TransformSchema.parse({
+        kind: 'smooth',
+        x: 'time',
+        y: 'value',
+        groupBy: ['series'],
+        xAs: 'series',
+        yAs: 'trendY',
+      }),
+    ).toThrow();
+  });
+
+  it('smooth_rejects_invalid_extent_and_method', () => {
+    expect(() => TransformSchema.parse({ kind: 'smooth', x: 'time', y: 'value', extent: [10, 0], xAs: 'trendX', yAs: 'trendY' })).toThrow();
+    expect(() => TransformSchema.parse({ kind: 'smooth', x: 'time', y: 'value', method: { kind: 'loess' }, xAs: 'trendX', yAs: 'trendY' })).toThrow();
+  });
+});

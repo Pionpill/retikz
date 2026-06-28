@@ -486,4 +486,42 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(svg).toContain('<path');
     expect(svg).toMatch(/fill="#60a5fa"/);
   });
+
+  it('smooth transform + PathMark spec → SSR 出趋势线 path', () => {
+    const smoothData: ExternalDatasets = {
+      samples: [
+        { series: 'A', time: 0, value: 1 },
+        { series: 'A', time: 1, value: 3 },
+        { series: 'A', time: 2, value: 5 },
+        { series: 'B', time: 0, value: 10 },
+        { series: 'B', time: 1, value: 8 },
+        { series: 'B', time: 2, value: 6 },
+      ],
+    };
+    const smoothSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'samples' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'color' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        { type: 'point', encoding: { x: { field: 'time' }, y: { field: 'value' }, color: { field: 'series', scale: 'color' } } },
+        {
+          type: 'path',
+          transform: [{ kind: 'smooth', x: 'time', y: 'value', groupBy: ['series'], sampleCount: 8, xAs: 'trendX', yAs: 'trendY' }],
+          series: 'series',
+          order: 'trendX',
+          encoding: { x: { field: 'trendX' }, y: { field: 'trendY' }, color: { field: 'series', scale: 'color' } },
+        },
+      ],
+    };
+    const svg = renderPlot(smoothSpec, smoothData, { width: 480, height: 300 });
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('<path');
+    expect(svg).toContain('<ellipse');
+  });
 });

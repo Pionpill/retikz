@@ -27,6 +27,8 @@ export const PlotTransform = {
   Jitter: 'jitter',
   /** 一维 KDE 密度采样：连续样本 → x/density 采样 rows（改行数） */
   Density: 'density',
+  /** 统计平滑 / 趋势采样：连续 (x,y) 样本 → x/y 预测 rows（改行数） */
+  Smooth: 'smooth',
 } as const;
 
 /** transform 类型 */

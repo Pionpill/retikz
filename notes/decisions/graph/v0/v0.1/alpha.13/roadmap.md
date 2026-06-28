@@ -31,8 +31,8 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 | --- | --- | --- | --- |
 | ADR-01 | **RelationMark ribbon geometry kind** | 在 `RelationMark` 内新增 `kind="ribbon"`，复用 source / target / anchorId / transform，把关系 rows 下沉为 core Ribbon；Sankey layout 不进入本轮 | [Proposed](./01-relation-ribbon.md) |
 | ADR-02 | **quantile-band statistics + boxplot composition** | 新增参数化 quantile-band reducer 与 outside-quantile-band selector；boxplot 只是 0.25/0.75 band + 0.5 point + spread fence 的组合实例 | [Proposed](./02-quantile-band-boxplot.md) |
-| ADR-03 | **density transform + density-area** | 新增内置 `density` transform，KDE 输出采样 rows；几何消费走 `RegionMark` / `PathMark`，不新增 density mark | 待起草 |
-| ADR-04 | **smooth / regression transform** | 新增内置 `smooth` transform，首轮只做 deterministic linear regression；输出预测线采样 rows，置信区间可选或顺延 | 待起草 |
+| ADR-03 | **density transform + density-area** | 新增内置 `density` transform，KDE 输出采样 rows；几何消费走 `PathMark` baseline closure，不新增 density mark | [Proposed](./03-density-transform.md) |
+| ADR-04 | **smooth / regression transform** | 新增内置 `smooth` transform，首轮只做 deterministic linear regression；输出预测线采样 rows，置信区间顺延 | [Proposed](./04-smooth-regression.md) |
 | ADR-05 | **stat-geom structural surface + docs** | 收敛 React / Vanilla 薄适配、docs 信息架构与示例，证明三条统计薄片都能按 transform + abstract marks 表达；不做 chart 级便利 API | 待起草 |
 | ADR-06 | **sector explode / pull decision** | 判断极坐标 interval 的 `explode` / `pull` 是否可作为轻量视觉参数落地；若影响 anchor / locator 语义则顺延 | 待起草 |
 | ADR-07 | **mark label surface follows core label hosts** | 让 Point / Interval / Path / Reference / Relation 共用 `MarkLabelSchema`，按 node 或 geometry host 投递到 core label；同步 mark demos 不再用纯文字 PointMark 绕开 label | [Proposed](./07-mark-label-surface.md) |

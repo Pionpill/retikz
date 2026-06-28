@@ -557,6 +557,60 @@ export const DensityTransformSchema = z
   })
   .describe('Density transform: sample one-dimensional Gaussian KDE rows consumable by PathMark');
 
+export const SmoothMethodSpecSchema = z
+  .discriminatedUnion('kind', [
+    z
+      .object({
+        kind: z.literal('linear').describe('Smooth method discriminator: ordinary least-squares linear regression'),
+      })
+      .strict()
+      .describe('Linear regression smooth method'),
+  ])
+  .describe('Smooth transform method strategy');
+
+export const SmoothTransformSchema = z
+  .object({
+    kind: z.literal(PlotTransform.Smooth).describe('Discriminator: sample trend rows from a fitted smooth model'),
+    x: z.string().min(1).describe('Continuous source field used as the independent x value'),
+    y: z.string().min(1).describe('Continuous source field used as the dependent y value'),
+    groupBy: GroupBySchema,
+    method: SmoothMethodSpecSchema.optional().describe('Smooth method; default ordinary least-squares linear regression'),
+    sampleCount: z.number().int().min(2).optional().describe('Number of evenly spaced trend samples emitted for each group; default 64'),
+    extent: z
+      .tuple([z.number().finite(), z.number().finite()])
+      .optional()
+      .describe('Optional trend sampling extent [min, max]; omitted means the observed finite x range'),
+    xAs: z.string().min(1).describe('Output field receiving each trend sample x position'),
+    yAs: z.string().min(1).describe('Output field receiving each predicted y value'),
+  })
+  .strict()
+  .superRefine((operation, ctx) => {
+    if (operation.extent !== undefined && operation.extent[0] >= operation.extent[1]) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['extent'],
+        message: 'smooth extent lower bound must be less than upper bound',
+      });
+    }
+    if (operation.xAs === operation.yAs) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['yAs'],
+        message: 'smooth output fields xAs and yAs must be different',
+      });
+    }
+    for (const [index, field] of (operation.groupBy ?? []).entries()) {
+      if (field === operation.xAs || field === operation.yAs) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['groupBy', index],
+          message: `smooth output field must not overwrite groupBy field "${field}"`,
+        });
+      }
+    }
+  })
+  .describe('Smooth transform: sample linear regression trend rows consumable by PathMark');
+
 export const BuiltinTransformSchema = z
   .discriminatedUnion('kind', [
     SortTransformSchema,
@@ -570,6 +624,7 @@ export const BuiltinTransformSchema = z
     RelateTransformSchema,
     JitterTransformSchema,
     DensityTransformSchema,
+    SmoothTransformSchema,
   ])
   .describe('Built-in data transform operation applied before scale / mark; ordered pipeline');
 

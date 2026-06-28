@@ -11,6 +11,7 @@ These transforms generate new rows from detail data. `bin` and `summarize` emit 
 | `summarize` | One row per group | Grouped bars, mean lines, summary tables |
 | `select` | One or more original rows per group | Extremes, top-N, nth row in a group |
 | `density` | Sampled rows per group | Density curves and density areas |
+| `smooth` | Predicted sampled rows per group | Trend lines and regression paths |
 
 ## Bin
 
@@ -81,5 +82,11 @@ Built-in selectors include `min` / `max` / `first` / `last` / `top` / `bottom` /
 ## Density
 
 `density` turns one-dimensional continuous samples into KDE sample rows, emitting `xAs` and `densityAs` fields. It is meant to feed `PathMark`: a normal path draws a density curve, while `closure={{ kind: 'baseline' }}` plus `fill` draws a density area.
+
+See [Statistic Operations](/graph/grammar/transform/statistics) for the full field table and demo.
+
+## Smooth
+
+`smooth` generates sampled trend-line rows from `(x, y)` samples. The first method is `{ kind: 'linear' }`. It is meant to feed `PathMark` for regression paths; keep raw scatter points in a separate `PointMark` layer.
 
 See [Statistic Operations](/graph/grammar/transform/statistics) for the full field table and demo.

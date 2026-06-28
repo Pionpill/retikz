@@ -1322,6 +1322,56 @@ describe('buildPlotSpec alpha.13 ADR-03（density transform 透传）', () => {
   });
 });
 
+describe('buildPlotSpec alpha.13 ADR-04（smooth transform 透传）', () => {
+  it('smooth_declared_to_ir', () => {
+    const spec = buildPlotSpec(
+      <>
+        <PointMark x="time" y="value" color="series" />
+        <PathMark
+          x="trendX"
+          y="trendY"
+          series="series"
+          color="series"
+          order="trendX"
+          transform={[
+            {
+              kind: 'smooth',
+              x: 'time',
+              y: 'value',
+              groupBy: ['series'],
+              method: { kind: 'linear' },
+              sampleCount: 64,
+              xAs: 'trendX',
+              yAs: 'trendY',
+            },
+          ]}
+        />
+      </>,
+      '__plot',
+    );
+
+    expect(spec.marks[1]).toMatchObject({
+      type: 'path',
+      series: 'series',
+      order: 'trendX',
+      transform: [
+        {
+          kind: 'smooth',
+          x: 'time',
+          y: 'value',
+          groupBy: ['series'],
+          method: { kind: 'linear' },
+          sampleCount: 64,
+          xAs: 'trendX',
+          yAs: 'trendY',
+        },
+      ],
+      encoding: { x: { field: 'trendX' }, y: { field: 'trendY' }, color: { field: 'series', scale: '__color' } },
+    });
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+});
+
 describe('buildPlotSpec alpha.12 ADR-02（normalize / derive-interval / jitter 经同一 <Transform> 透传）', () => {
   it('normalize_then_stack_percentage_via_transform', () => {
     // 百分比堆叠：显式 [normalize, stack] 两步链 + <IntervalMark stack>（柱读累积界 y0/y1）；

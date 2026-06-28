@@ -11,6 +11,7 @@ description: 规约与选择会改变数据粒度，把明细行变成分箱、�
 | `summarize` | 每个分组一行 | 分组柱、均值线、汇总表 |
 | `select` | 每组一个或多个原始行 | 极值点、top-N、组内第 N 个点 |
 | `density` | 每组一批采样行 | 密度曲线、密度面积 |
+| `smooth` | 每组一批预测采样行 | 趋势线、回归路径 |
 
 ## 分箱 bin
 
@@ -81,5 +82,11 @@ description: 规约与选择会改变数据粒度，把明细行变成分箱、�
 ## 密度 density
 
 `density` 把一维连续样本变成 KDE 采样行，输出 `xAs` 和 `densityAs` 两个字段。它适合接 `PathMark`：普通路径画密度曲线，`closure={{ kind: 'baseline' }}` 加 `fill` 画密度面积。
+
+完整字段和 demo 见[统计子算子](/graph/grammar/transform/statistics)。
+
+## 趋势 smooth
+
+`smooth` 从 `(x, y)` 样本生成趋势线采样行，首轮 `method` 只有 `{ kind: 'linear' }`。它适合接 `PathMark` 画 regression path；原始散点可用另一层 `PointMark` 保留。
 
 完整字段和 demo 见[统计子算子](/graph/grammar/transform/statistics)。

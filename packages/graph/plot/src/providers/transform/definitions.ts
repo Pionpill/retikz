@@ -17,6 +17,8 @@ import {
   RelateTransformSchema,
   type SelectTransform,
   SelectTransformSchema,
+  type SmoothTransform,
+  SmoothTransformSchema,
   type SortTransform,
   SortTransformSchema,
   type StackTransform,
@@ -28,6 +30,7 @@ import { reducerInputFields, reducerOutputFields, selectorInputFields } from '..
 import { applyDensity, densityInputFields, densityOutputFields } from './density';
 import { applyAnnotate, applyBin, applyRelate, applySelect, applySummarize, binMetricOperations, binOutputFields, relationEndpointOutputField } from './group';
 import { DEFAULT_DERIVE_END_FIELD, DEFAULT_DERIVE_START_FIELD, DEFAULT_END_FIELD, DEFAULT_JITTER_X_FIELD, DEFAULT_JITTER_Y_FIELD, DEFAULT_START_FIELD, applyDeriveInterval, applyJitter, applyNormalize, applySort, applyStack } from './row';
+import { applySmooth, smoothInputFields, smoothOutputFields } from './smooth';
 
 /** 默认 transform 上下文：使用 plot provenance symbol 标记，不把来源信息写进 JSON IR。 */
 export const DEFAULT_TRANSFORM_CONTEXT: TransformContext = {
@@ -147,6 +150,13 @@ const densityTransformDefinition = defineTransform<DensityTransform>({
   apply: (rows, operation, context) => applyDensity(rows, operation, context),
 });
 
+const smoothTransformDefinition = defineTransform<SmoothTransform>({
+  schema: SmoothTransformSchema,
+  inputFields: operation => smoothInputFields(operation),
+  outputFields: operation => smoothOutputFields(operation),
+  apply: (rows, operation, context) => applySmooth(rows, operation, context),
+});
+
 /** 内置 transform definition 列表；内置 transform 与自定义 transform 共享同一 registry 分派流程。 */
 export const BUILTIN_TRANSFORMS: ReadonlyArray<AnyTransformDefinition> = [
   sortTransformDefinition,
@@ -160,6 +170,7 @@ export const BUILTIN_TRANSFORMS: ReadonlyArray<AnyTransformDefinition> = [
   relateTransformDefinition,
   jitterTransformDefinition,
   densityTransformDefinition,
+  smoothTransformDefinition,
 ] as ReadonlyArray<AnyTransformDefinition>;
 
 /**
