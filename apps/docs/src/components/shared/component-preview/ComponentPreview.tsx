@@ -152,7 +152,7 @@ type PreviewIR = {
   ir: IR;
   width?: number | string;
   height?: number | string;
-  pathKinds?: Record<string, PathKindDefinition>;
+  pathKinds?: ReadonlyArray<PathKindDefinition>;
 };
 
 const buildPreviewIR = (Component: FC): PreviewIR => {
@@ -179,7 +179,7 @@ const buildPreviewIR = (Component: FC): PreviewIR => {
   if (rootAnimations !== undefined) ir = { ...ir, animations: rootAnimations };
   const width = isLayout ? (props.width as number | string | undefined) : undefined;
   const height = isLayout ? (props.height as number | string | undefined) : undefined;
-  const pathKinds = isLayout ? (props.pathKinds as Record<string, PathKindDefinition> | undefined) : undefined;
+  const pathKinds = isLayout ? (props.pathKinds as ReadonlyArray<PathKindDefinition> | undefined) : undefined;
   return { ir, width, height, pathKinds };
 };
 

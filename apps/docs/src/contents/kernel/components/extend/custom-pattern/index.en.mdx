@@ -5,7 +5,7 @@ description: pattern.shape is an open string; beyond the built-in lines / dots /
 
 In a `fill` `PaintSpec`, `pattern.shape` is an **open string**: beyond the three built-in motifs (`lines` hatching / `dots` / `grid`), you can register your own pattern. The registry mirrors the [shape registry](/kernel/components/extend/shape-registry) / [custom arrows](/kernel/components/extend/custom-arrow) — the 3 built-ins are themselves registry entries, with no special privilege.
 
-Registration goes through `CompileOptions.patterns` (in React, `<Layout patterns={...}>`): the IR's `fill={{ kind:'pattern', shape:'...' }}` still only stores a string name; the motif geometry is injected here. Unregistered names throw at compile time (with the list of available names); overriding a built-in emits a `PATTERN_OVERRIDES_BUILTIN` warning.
+Registration goes through `CompileOptions.patterns` (in React, `<Layout patterns={...}>`): the IR's `fill={{ kind:'pattern', shape:'...' }}` still only stores a string name; the motif geometry is injected here. Unregistered names throw at compile time (with the list of available names); each definition carries `name`; built-in name collisions fail at registration time.
 
 ## Registering a motif
 
@@ -19,6 +19,7 @@ A `PatternDefinition` is a plain object (not part of the IR, can be returned by 
 
 | Field         | Type                                 | Default  | Description                                                             |
 | ------------- | ------------------------------------ | -------- | ----------------------------------------------------------------------- |
+| `name`        | `string`                             | Required | Registry name; `pattern.shape` looks up this motif by name, and built-in name collisions fail registration |
 | `emit`        | `(ctx) => Iterable<MarkerPrimitive>` | required | Produces motif geometry in the tile-local coordinate system (`0..size`) |
 | `defaultSize` | `number`                             | `8`      | Default tile period (user units); overridden by `pattern.size`          |
 

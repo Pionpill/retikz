@@ -82,6 +82,7 @@ const horizontalBoundaryPoint = (rect: Rect, toward: Position): Position => {
  *   整体相对竖式旋转 90°，落在水平的底部支路上
  */
 const circuitBattery: ShapeDefinition = defineShape({
+  name: 'circuit-battery',
   paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 8 + BATTERY_LEAD),
@@ -147,6 +148,7 @@ const circuitBattery: ShapeDefinition = defineShape({
 
 /** 开关（断开态）：左右各一段引线 + 两个触点 + 从左触点上翘的拉杆 */
 const circuitSwitch: ShapeDefinition = defineShape({
+  name: 'circuit-switch',
   paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 22 + SWITCH_LEAD),
@@ -214,6 +216,7 @@ const circuitSwitch: ShapeDefinition = defineShape({
 
 /** 定值电阻（IEC / 英式）：一个矩形框 + 左右两段引线 */
 const circuitResistor: ShapeDefinition = defineShape({
+  name: 'circuit-resistor',
   paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 52 + RESISTOR_LEAD),
@@ -267,6 +270,7 @@ const circuitResistor: ShapeDefinition = defineShape({
 
 /** 滑动变阻器（IEC variable resistor）：与定值电阻完全一致的矩形框 + 左右引线，额外多一条斜穿箭头表"可调" */
 const circuitRheostat: ShapeDefinition = defineShape({
+  name: 'circuit-rheostat',
   paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 52 + RESISTOR_LEAD),
@@ -357,12 +361,12 @@ const withGroup = (shape: ShapeDefinition): ShapeDefinition => ({
   },
 });
 
-export const circuitShapes = {
-  'circuit-battery': withGroup(circuitBattery),
-  'circuit-switch': withGroup(circuitSwitch),
-  'circuit-resistor': withGroup(circuitResistor),
-  'circuit-rheostat': withGroup(circuitRheostat),
-};
+export const circuitShapes = [
+  withGroup(circuitBattery),
+  withGroup(circuitSwitch),
+  withGroup(circuitResistor),
+  withGroup(circuitRheostat),
+];
 
 /** 电源（电池）：横向符号，长板阳极在右、短板阴极在左；rotate 旋转整只电池（如 90° 竖放） */
 export const Battery: FC<{ id?: string; position: Position; rotate?: number; label?: CircuitLabel }> = ({

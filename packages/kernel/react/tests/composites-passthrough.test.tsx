@@ -13,6 +13,8 @@ import { Layout } from '../src/kernel/Layout';
  *   展开始终在 core。本轮 Tier 2 节点经 <Layout ir={...}> 直喂。
  */
 const labeledBox = defineComposite({
+  namespace: 'example',
+  type: 'labeledBox',
   schema: CompositeBaseSchema.extend({
     namespace: z.literal('example'),
     type: z.literal('labeledBox'),

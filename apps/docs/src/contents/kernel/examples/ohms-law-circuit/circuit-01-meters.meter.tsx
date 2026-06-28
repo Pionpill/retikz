@@ -15,6 +15,7 @@ const FONT = { family: 'Arial, sans-serif' } as const;
  */
 // eslint-disable-next-line react-refresh/only-export-components -- 形状定义与电表组件同处一处，便于成组复用；本文件不是 HMR 热点
 export const circuitMeter: ShapeDefinition = defineShape({
+  name: 'circuit-meter',
   paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => {
     const radius = Math.sqrt(innerHalfWidth * innerHalfWidth + innerHalfHeight * innerHalfHeight);

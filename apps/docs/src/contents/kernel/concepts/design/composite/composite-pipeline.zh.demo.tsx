@@ -15,6 +15,8 @@ const STAGE_GAP = 165;
  * 图中画的正是 composite 自身经历的链路：Tier 2 DSL → composite IR →（lower）→ core IR →（render）→ graph。
  */
 const pipeline = defineComposite({
+  namespace: 'demo',
+  type: 'pipeline',
   schema: CompositeBaseSchema.extend({
     namespace: z.literal('demo'),
     type: z.literal('pipeline'),

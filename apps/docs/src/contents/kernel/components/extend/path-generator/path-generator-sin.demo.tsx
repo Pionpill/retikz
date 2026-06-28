@@ -10,6 +10,7 @@ import { z } from 'zod';
  * generate 返回低层 PathCommand[]，cursor 落最后命令终点。
  */
 const sin = definePathGenerator({
+  name: 'sin',
   paramsSchema: z.object({ amplitude: z.number(), waves: z.number() }),
   generate: ({ from, to, params }) => {
     const end = to ?? [from[0] + 200, from[1]];
@@ -44,6 +45,6 @@ const ir: IR = {
   ],
 };
 
-const Demo: FC = () => <Layout ir={ir} pathGenerators={{ sin }} width={320} height={90} />;
+const Demo: FC = () => <Layout ir={ir} pathGenerators={[sin]} width={320} height={90} />;
 
 export default Demo;

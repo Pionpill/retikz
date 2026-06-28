@@ -3,14 +3,17 @@ import type { FC } from 'react';
 import { definePathKind, Layout, Node, Path, Step } from '@retikz/react';
 import { z } from 'zod';
 
-const highlight = definePathKind({
-  kind: 'highlight',
-  optionsSchema: z
-    .object({
-      stroke: z.string().min(1),
-      strokeWidth: z.number().positive().optional(),
-    })
-    .strict(),
+const HighlightOptionsSchema = z
+  .object({
+    stroke: z.string().min(1),
+    strokeWidth: z.number().positive().optional(),
+  })
+  .strict();
+type HighlightOptions = z.infer<typeof HighlightOptionsSchema>;
+
+const highlight = definePathKind<HighlightOptions>({
+  schema: z.object({ kind: z.literal('highlight') }),
+  optionsSchema: HighlightOptionsSchema,
   compile: context => {
     const base = context.emitStroke({
       ...context.path,
@@ -34,7 +37,7 @@ const highlight = definePathKind({
 });
 
 const Demo: FC = () => (
-  <Layout width={360} height={120} pathKinds={{ highlight }}>
+  <Layout width={360} height={120} pathKinds={[highlight]}>
     <Path kind="highlight" kindOptions={{ stroke: '#facc15', strokeWidth: 14 }} zIndex={-1}>
       <Step kind="move" to="api" />
       <Step kind="line" to="core" />

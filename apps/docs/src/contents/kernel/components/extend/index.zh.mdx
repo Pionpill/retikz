@@ -24,7 +24,7 @@ description: 扩展 retikz——为内置能力之外的需求注册新形状等
 
 扩展点按机制分三类；判断一个能力属于哪类，就知道它怎么定义、何时生效：
 
-- **Definition 扩展**（形状 / 箭头 / 图案 / 自定义路径 / 路径生成器 / 复合）：用 `xxxDefinition` 定义，经 `CompileOptions` / `<Layout>` 注入，编译期生效，IR 里只留名字。形状 / 箭头 / 图案 / 自定义路径 / 路径生成器按名注入（`Record<string, …>`，内置同名被覆盖或替换）；复合是 `Array<CompositeDefinition>`，按 `namespace` + `type` 判别，重名直接报错。
+- **Definition 扩展**（形状 / 箭头 / 图案 / 自定义路径 / 路径生成器 / 复合）：用 `xxxDefinition` 定义，经 `CompileOptions` / `<Layout>` 注入，编译期生效，IR 里只留名字或 operation。provider 统一以 definition 数组注入；形状 / 箭头 / 图案 / 路径生成器用 `name` 做 key，path kind 用 schema 的 `kind` literal，复合用显式 `namespace` + `type`。任意同名 collision 都直接报错，内置名不可覆盖。
 - **Registry 扩展**（缓动 / 动画属性）：注入面是 `<Layout>` 的轻量 registry，运行时在渲染器内生效，不进 compile。缓动没有 `EasingDefinition`——值就是 cubic-bezier 元组或函数；动画属性要同时定义插值与后端落地，才用 `AnimationPropertyDefinition`。
 - **Host lowerer**（TeX 公式）：`CompileOptions.lowerTex` 是可选宿主能力，把公式在编译期降成基础 path，不属于通用图元扩展；缺失时可诊断降级。
 

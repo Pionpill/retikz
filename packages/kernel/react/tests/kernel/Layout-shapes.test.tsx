@@ -15,6 +15,7 @@ import { Node } from '../../src/kernel/Node';
  */
 const radialShape = (): ShapeDefinition =>
   defineShape({
+    name: 'hexagon',
     paramsSchema: z.strictObject({}),
     circumscribe: (hw, hh) => {
       const r = Math.hypot(hw, hh);
@@ -44,7 +45,7 @@ const radialShape = (): ShapeDefinition =>
 describe('<Layout shapes> 自定义 shape 注入', () => {
   it('注入 shapes 后 <Node shape="hexagon"> 渲染出自定义 emit（ellipse）', () => {
     const svg = renderToStaticMarkup(
-      <Layout width={100} height={100} shapes={{ hexagon: radialShape() }}>
+      <Layout width={100} height={100} shapes={[radialShape()]}>
         <Node id="A" shape="hexagon" position={[0, 0]} text="hex" />
       </Layout>,
     );

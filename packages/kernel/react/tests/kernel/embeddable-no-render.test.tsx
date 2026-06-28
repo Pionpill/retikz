@@ -46,6 +46,8 @@ const makePanelComposite = (namespace: string): CompositeDefinition => {
     panelId: z.string(),
   });
   return defineComposite({
+    namespace,
+    type: 'panel',
     schema,
     expand: node => ({ type: 'node', id: `panel-${node.panelId}`, position: [0, 0], text: node.panelId }),
   });

@@ -223,8 +223,9 @@ import { z } from 'zod';
 
 // factory 只是一个普通函数：传入参数，返回一份 ShapeDefinition
 // defineShape 在定义点提供类型安全：paramsSchema 的输出类型会贯穿到每个计算函数的 params
-const createPolygonShape = (sides: number): ShapeDefinition =>
+const createPolygonShape = (name: string, sides: number): ShapeDefinition =>
   defineShape({
+    name,
     paramsSchema: z.strictObject({}), // 无参形状
     circumscribe: (hw, hh) => {
       const r = Math.hypot(hw, hh);
@@ -233,7 +234,7 @@ const createPolygonShape = (sides: number): ShapeDefinition =>
     boundaryPoint: (rect, toward) => {
       /* 先把 toward 转到局部坐标，再计算射线和多边形边界的交点 */
     },
-    anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+    anchor: (rect, anchorName) => (anchorName === 'center' ? [rect.x, rect.y] : undefined),
     *emit(rect, style, round) {
       yield {
         type: 'path',
@@ -252,13 +253,13 @@ const createPolygonShape = (sides: number): ShapeDefinition =>
   });
 
 // IR 里只写 shape: 'hexagon'，具体定义由 options 提供
-const scene = compileToScene(ir, { shapes: { hexagon: createPolygonShape(6) } });
+const scene = compileToScene(ir, { shapes: [createPolygonShape('hexagon', 6)] });
 ```
 
 在 React 里，把同一份 `shapes` 传给 `<Layout>`：
 
 ```tsx
-<Layout shapes={{ hexagon: createPolygonShape(6) }}>
+<Layout shapes={[createPolygonShape('hexagon', 6)]}>
   <Node shape="hexagon" position={[0, 0]} text="准备" />
 </Layout>
 ```
@@ -267,7 +268,7 @@ const scene = compileToScene(ir, { shapes: { hexagon: createPolygonShape(6) } })
 
 ### 多边形 factory（单 path）
 
-`createPolygonShape(n)` 这类工厂只是返回 `ShapeDefinition` 的普通函数。下面注入一个正六边形；两节点之间连线时，路径端点会停在真实的六边形边界上，而不是停在节点中心：
+`createPolygonShape(name, n)` ???????? `ShapeDefinition` ?????????????????????????????????????????????????????
 
 <ComponentPreview name="custom-shape" size="sm" />
 
@@ -305,7 +306,7 @@ const scene = compileToScene(ir, { shapes: { hexagon: createPolygonShape(6) } })
 
 ## 覆盖内置与未知名
 
-- **同名覆盖**：如果写 `shapes: { rectangle: myRect }`，新的定义会覆盖内置 rectangle。编译期会通过 `onWarn` 发出 `SHAPE_OVERRIDES_BUILTIN`，提醒你正在替换内置行为。
+- **????**?????? definition ? `name` ?? `rectangle`????????? `duplicate shape registration`?????????????? warning ???
 - **未知 shape**：如果 `node.shape` 写了一个没有注册过的名字，compile 会抛出 `Unknown shape '<name>'; registered shapes: <sorted list>`。因为 retikz 不知道这个形状的边界和锚点，不能安全降级成别的形状。
 
 ## 公开导出

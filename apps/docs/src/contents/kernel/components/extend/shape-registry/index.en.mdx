@@ -223,8 +223,9 @@ import { z } from 'zod';
 
 // a factory is just a plain function: pass parameters in, return a ShapeDefinition
 // defineShape gives definition-site type safety: the paramsSchema output type flows into every function's params
-const createPolygonShape = (sides: number): ShapeDefinition =>
+const createPolygonShape = (name: string, sides: number): ShapeDefinition =>
   defineShape({
+    name,
     paramsSchema: z.strictObject({}), // parameterless shape
     circumscribe: (hw, hh) => {
       const r = Math.hypot(hw, hh);
@@ -233,7 +234,7 @@ const createPolygonShape = (sides: number): ShapeDefinition =>
     boundaryPoint: (rect, toward) => {
       /* map toward to local coordinates first, then intersect the ray with polygon edges */
     },
-    anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+    anchor: (rect, anchorName) => (anchorName === 'center' ? [rect.x, rect.y] : undefined),
     *emit(rect, style, round) {
       yield {
         type: 'path',
@@ -252,13 +253,13 @@ const createPolygonShape = (sides: number): ShapeDefinition =>
   });
 
 // the IR only writes shape: 'hexagon'; options supply the concrete definition
-const scene = compileToScene(ir, { shapes: { hexagon: createPolygonShape(6) } });
+const scene = compileToScene(ir, { shapes: [createPolygonShape('hexagon', 6)] });
 ```
 
 In React, pass the same `shapes` table to `<Layout>`:
 
 ```tsx
-<Layout shapes={{ hexagon: createPolygonShape(6) }}>
+<Layout shapes={[createPolygonShape('hexagon', 6)]}>
   <Node shape="hexagon" position={[0, 0]} text="Ready" />
 </Layout>
 ```
@@ -267,7 +268,7 @@ In React, pass the same `shapes` table to `<Layout>`:
 
 ### Polygon factory (single path)
 
-A factory like `createPolygonShape(n)` is just a plain function returning a `ShapeDefinition`. The example below injects a regular hexagon; when the two nodes are connected, the path endpoints stop on the actual hexagon boundary instead of the node center:
+A factory like `createPolygonShape(name, n)` is just a plain function returning a `ShapeDefinition`. The example below injects a regular hexagon; when the two nodes are connected, the path endpoints stop on the actual hexagon boundary instead of the node center:
 
 <ComponentPreview name="custom-shape" size="sm" />
 
@@ -305,7 +306,7 @@ When writing a third-party shape, check these points first:
 
 ## Overriding built-ins and unknown names
 
-- **Same-name override**: if you write `shapes: { rectangle: myRect }`, the new definition replaces the built-in rectangle. Compile emits `SHAPE_OVERRIDES_BUILTIN` through `onWarn` to make the replacement visible.
+- **Same-name collision**: if a custom definition uses `name: 'rectangle'`, registration throws `duplicate shape registration`. Built-in names are reserved instead of being overrideable through warnings.
 - **Unknown shape**: if `node.shape` names something that has not been registered, compile throws `Unknown shape '<name>'; registered shapes: <sorted list>`. retikz cannot safely fall back to another shape because it does not know the missing shape's boundary or anchors.
 
 ## Public helpers

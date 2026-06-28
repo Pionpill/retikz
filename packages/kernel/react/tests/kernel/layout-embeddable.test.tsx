@@ -38,6 +38,8 @@ const makePanelComposite = (namespace: string): CompositeDefinition => {
     panelId: z.string(),
   });
   return defineComposite({
+    namespace,
+    type: 'panel',
     schema,
     expand: node => ({ type: 'node', id: `panel-${node.panelId}`, position: [0, 0], text: node.panelId }),
   });
@@ -141,6 +143,8 @@ describe('<Layout> 可嵌入 Tier2 聚合', () => {
       panelId: z.string(),
     });
     const userComposite = defineComposite({
+      namespace: 'user',
+      type: 'panel',
       schema: userSchema,
       expand: node => ({ type: 'node', id: `user-${node.panelId}`, position: [2, 2], text: node.panelId }),
     });
