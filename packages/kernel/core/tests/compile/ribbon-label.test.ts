@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import {
-  type GroupPrim,
-  type IR,
-  type IRPathBase,
-  type IRPathRibbonOptions,
-  type IRStep,
-  type PathPrim,
-  PathSchema,
-  type ScenePrimitive,
-  StepLabelSchema,
-  type TextPrim,
-  compileToScene,
+
+import type {
+  GroupPrim,
+  IR,
+  IRPathBase,
+  IRPathRibbonOptions,
+  IRStep,
+  PathPrim,
+  ScenePrimitive,
+  TextPrim,
 } from '../../src';
+
+import { compileToScene, PathSchema, StepLabelSchema } from '../../src';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
 
 const scene = (children: IR['children']): IR => ({
@@ -76,9 +76,13 @@ const normalizeRibbonInput = (input: Record<string, unknown> = {}): IRPathBase =
 
 const RibbonSchema = {
   parse: (value: unknown): IRPathBase =>
-    PathSchema.parse(typeof value === 'object' && value !== null ? normalizeRibbonInput(value as Record<string, unknown>) : value),
+    PathSchema.parse(
+      typeof value === 'object' && value !== null ? normalizeRibbonInput(value as Record<string, unknown>) : value,
+    ),
   safeParse: (value: unknown) =>
-    PathSchema.safeParse(typeof value === 'object' && value !== null ? normalizeRibbonInput(value as Record<string, unknown>) : value),
+    PathSchema.safeParse(
+      typeof value === 'object' && value !== null ? normalizeRibbonInput(value as Record<string, unknown>) : value,
+    ),
 };
 
 const ribbon = (overrides: Record<string, unknown> = {}): IRPathBase =>
@@ -100,18 +104,13 @@ const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitiv
 
 const textOf = (primitives: ReadonlyArray<ScenePrimitive>, text: string): TextPrim | undefined =>
   flatten(primitives).find(
-    (primitive): primitive is TextPrim =>
-      primitive.type === 'text' && primitive.lines.some(line => line.text === text),
+    (primitive): primitive is TextPrim => primitive.type === 'text' && primitive.lines.some(line => line.text === text),
   );
 
 const visualBottom = (t: TextPrim): number => t.y + t.fontSize * DESCENT_FACTOR;
-const visualMiddle = (t: TextPrim): number =>
-  t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
+const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
 
-const slopedGroupOf = (
-  primitives: ReadonlyArray<ScenePrimitive>,
-  text: string,
-): GroupPrim | undefined =>
+const slopedGroupOf = (primitives: ReadonlyArray<ScenePrimitive>, text: string): GroupPrim | undefined =>
   flatten(primitives).find(
     (primitive): primitive is GroupPrim =>
       primitive.type === 'group' &&

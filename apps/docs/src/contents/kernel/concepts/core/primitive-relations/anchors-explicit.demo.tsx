@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC, ReactElement } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * 显式（锁定）anchor：通用方位 anchor 走盒模型；形状专属 anchor 走真实形状
@@ -52,7 +53,13 @@ const Demo: FC = () => (
     </Node>
     {ring('ell', 0, COMPASS)}
 
-    <Node id="star-o" position={[185, 0]} shape={{ type: 'star', params: { points: 5, innerRadius: 15, outerRadius: 38 } }} stroke="gray" dashPattern={[4, 3]}>
+    <Node
+      id="star-o"
+      position={[185, 0]}
+      shape={{ type: 'star', params: { points: 5, innerRadius: 15, outerRadius: 38 } }}
+      stroke="gray"
+      dashPattern={[4, 3]}
+    >
       Node
     </Node>
     {ring('star', 185, TIPS)}

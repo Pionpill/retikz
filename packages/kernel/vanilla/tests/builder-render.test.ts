@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
 import { BUILTIN_SHAPES } from '@retikz/core';
+import { describe, expect, it } from 'vitest';
+
+import { mountSvg, renderToSvgString } from '../src';
 import { coordinate } from '../src/builder/coordinate';
 import { draw } from '../src/builder/draw';
 import { figure } from '../src/builder/figure';
 import { node } from '../src/builder/node';
-import { mountSvg, renderToSvgString } from '../src';
 
 /** 自定义 shape：复用 builtin 定义、注册成新名 'hexagon'，仅验 figure({shapes}) 把表透传进 compileToScene */
 const hexagon = BUILTIN_SHAPES.rectangle;
@@ -36,7 +37,13 @@ describe('@retikz/vanilla builder ↔ render 管线', () => {
         shape: 'rectangle',
         minimumWidth: 40,
         minimumHeight: 20,
-        fill: { kind: 'linearGradient', stops: [{ offset: 0, color: '#f00' }, { offset: 1, color: '#00f' }] },
+        fill: {
+          kind: 'linearGradient',
+          stops: [
+            { offset: 0, color: '#f00' },
+            { offset: 1, color: '#00f' },
+          ],
+        },
       }),
     ]);
     const out = fig.toSvgString({ idPrefix: 'bbb' });
@@ -46,17 +53,23 @@ describe('@retikz/vanilla builder ↔ render 管线', () => {
 
   it('stroke-paint：vanilla draw() 结构化 stroke paint → SVG stroke url + paint defs', () => {
     const fig = figure({ width: 120, height: 80 }, [
-      draw([[0, 0], [80, 20]], {
-        stroke: {
-          kind: 'linearGradient',
-          angle: 90,
-          stops: [
-            { offset: 0, color: '#2563eb' },
-            { offset: 1, color: '#e11d48' },
-          ],
+      draw(
+        [
+          [0, 0],
+          [80, 20],
+        ],
+        {
+          stroke: {
+            kind: 'linearGradient',
+            angle: 90,
+            stops: [
+              { offset: 0, color: '#2563eb' },
+              { offset: 1, color: '#e11d48' },
+            ],
+          },
+          strokeWidth: 4,
         },
-        strokeWidth: 4,
-      }),
+      ),
     ]);
     const out = fig.toSvgString({ idPrefix: 'stroke' });
     expect(out).toContain('retikz-paint-stroke-');

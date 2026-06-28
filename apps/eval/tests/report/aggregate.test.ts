@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { aggregate } from '../../src/report/aggregate';
 import { type RunRecord } from '../../src/run';
 
@@ -54,7 +55,14 @@ describe('aggregate', () => {
   it('failures 明细：每条失败带 promptId/model/kIndex/stage/reason；通过项不进', () => {
     const r = aggregate([
       rec({ zodOk: true, compileOk: true }),
-      rec({ promptId: 'c2', model: 'b', kIndex: 1, zodOk: false, compileOk: false, failure: { stage: 'compile', reason: 'boom' } }),
+      rec({
+        promptId: 'c2',
+        model: 'b',
+        kIndex: 1,
+        zodOk: false,
+        compileOk: false,
+        failure: { stage: 'compile', reason: 'boom' },
+      }),
     ]);
     expect(r.failures).toHaveLength(1);
     expect(r.failures[0]).toEqual({ promptId: 'c2', model: 'b', kIndex: 1, stage: 'compile', reason: 'boom' });

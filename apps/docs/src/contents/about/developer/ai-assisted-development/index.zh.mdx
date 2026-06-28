@@ -39,13 +39,13 @@ retikz 的 node / path / anchor / step 等字段词汇有意贴近 TikZ 训练�
 
 5 阶段流程不是孤立约束，每阶段都为这条原则服务——
 
-| 阶段 | 如何守 AI 一等公民 |
-| --- | --- |
-| 1 设计 | ADR 选项分析时第一过 AI 友好性这一关；字段命名 / 默认值决策必须服务 LLM 生成 |
-| 2 实现 | Spec Writer 必须含 ≥ 1 个 JSON round-trip 测试 + ≥ 1 个 zod parse 错误路径测试；实现 Agent 不允许在 schema 中引入非 JSON 类型 |
+| 阶段   | 如何守 AI 一等公民                                                                                                                            |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 设计 | ADR 选项分析时第一过 AI 友好性这一关；字段命名 / 默认值决策必须服务 LLM 生成                                                                  |
+| 2 实现 | Spec Writer 必须含 ≥ 1 个 JSON round-trip 测试 + ≥ 1 个 zod parse 错误路径测试；实现 Agent 不允许在 schema 中引入非 JSON 类型                 |
 | 3 自测 | Bug Hunter 优先攻击四类契约破坏：JSON round-trip 失真、zod 报错含糊到 LLM 修不动、schema 不变量违反、discriminator 失稳——这些直接破坏立项理由 |
-| 4 文档 | mdx 描述与 schema `.describe` 必须语义等同；demo 可被 LLM 学习作 few-shot 范例 |
-| 5 收尾 | Contract Auditor 对账 ADR / changelog / mdx / 实际行为四方一致——任何"实现里有但 ADR 没列"的字段都是契约破坏 |
+| 4 文档 | mdx 描述与 schema `.describe` 必须语义等同；demo 可被 LLM 学习作 few-shot 范例                                                                |
+| 5 收尾 | Contract Auditor 对账 ADR / changelog / mdx / 实际行为四方一致——任何"实现里有但 ADR 没列"的字段都是契约破坏                                   |
 
 任何阶段产物**只能让人用、LLM 用不了**（如返回函数引用、依赖运行时上下文、字段名缩写到 LLM 猜不出语义），都是不合格的。
 
@@ -53,13 +53,13 @@ retikz 的 node / path / anchor / step 等字段词汇有意贴近 TikZ 训练�
 
 alpha 阶段每条 ADR / 每条新功能都按 5 阶段走，编排在 [`flow-alpha`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) SKILL：
 
-| 阶段 | 主体 | 输出 |
-| --- | --- | --- |
-| 1. 设计 | **人工**主导 / AI 辅助起草 | ADR（schema 字段表 / 文件 scope / 测试象限 / 选项决策） |
-| 2. 实现 | AI（红色改动走 Spec-First TDD） | spec test diff + 实现 diff（经人工授权后按粒度提交） |
-| 3. 自测 | AI（Adversarial Bug Hunter sub-Agent） | bug 修复 + 加固测试 |
-| 4. 文档 | AI（衔接 docs-doc-principle SKILL） | 双语 mdx + demo + API 表 |
-| 5. 收尾 | AI 起草 / Adversarial Contract Auditor / **人工**最终 ack | changelog + ADR 标 Accepted + roadmap 勾掉 |
+| 阶段    | 主体                                                      | 输出                                                    |
+| ------- | --------------------------------------------------------- | ------------------------------------------------------- |
+| 1. 设计 | **人工**主导 / AI 辅助起草                                | ADR（schema 字段表 / 文件 scope / 测试象限 / 选项决策） |
+| 2. 实现 | AI（红色改动走 Spec-First TDD）                           | spec test diff + 实现 diff（经人工授权后按粒度提交）    |
+| 3. 自测 | AI（Adversarial Bug Hunter sub-Agent）                    | bug 修复 + 加固测试                                     |
+| 4. 文档 | AI（衔接 docs-doc-principle SKILL）                       | 双语 mdx + demo + API 表                                |
+| 5. 收尾 | AI 起草 / Adversarial Contract Auditor / **人工**最终 ack | changelog + ADR 标 Accepted + roadmap 勾掉              |
 
 **人工只动 1 和 5**——中间的 2、3、4 由独立 sub-Agent 接力完成，每阶段设硬关卡（lint / tsc / 测试 / 对账报告）不过即 halt。
 
@@ -69,10 +69,10 @@ alpha 阶段每条 ADR / 每条新功能都按 5 阶段走，编排在 [`flow-al
 
 v0.2 以后，alpha 之外也有独立编排，但边界更窄：
 
-| 阶段 | 编排 | 边界 |
-| --- | --- | --- |
+| 阶段 | 编排                                                                                          | 边界                                                                                      |
+| ---- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | beta | [`flow-beta`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-beta/SKILL.md) | 不开新功能 ADR；做重构、命名、测试、性能、文档与最后一轮破坏性整理；核心关卡是多 LLM 评估 |
-| rc | [`flow-rc`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-rc/SKILL.md) | 公开 API 冻结；只做兼容 bug fix、文档站补齐、安装验收、迁移说明与 release notes |
+| rc   | [`flow-rc`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-rc/SKILL.md)     | 公开 API 冻结；只做兼容 bug fix、文档站补齐、安装验收、迁移说明与 release notes           |
 
 也就是说，AI 的自由度会随着版本通道逐步收窄：alpha 可以协助实现新契约；beta 主要帮人收敛和查回归；rc 只协助把已经冻结的 API 交付得可靠。
 
@@ -124,26 +124,26 @@ retikz 当前三个 sub-Agent 默认全部用 Claude Opus 4.7。同 model 同上
 
 项目工作流里的硬约束，AI 全程必须遵守：
 
-| 约束 | 说明 |
-| --- | --- |
-| 不缩写命名 | IR schema 字段 / public API / 函数 / 类型一律拼全（`direction` 不写 `dir`、`reference` 不写 `ref` 除非 React `useRef`） |
-| 不绕过 lint / tsc / 测试 | 不允许 `as any` / `@ts-ignore` / `it.skip`；不允许 `eslint-disable` 绕过；commit 前 lint + tsc + vitest 全过 |
-| 不自行 commit / push / publish | 写完代码停下来等人工授权；每次 commit 都要重新拿授权（一次授权 ≠ 永久授权） |
-| 文档随代码同步 | 用户可见改动（新 prop / 改默认值 / 删字段）必须同 commit 改文档；只改 zh 不改 en 视为未完成 |
-| IR Schema 全 `.describe` | zod schema 每个字段必须有英文 `.describe(...)`，给 LLM 工具调用作契约 |
+| 约束                                 | 说明                                                                                                                                 |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 不缩写命名                           | IR schema 字段 / public API / 函数 / 类型一律拼全（`direction` 不写 `dir`、`reference` 不写 `ref` 除非 React `useRef`）              |
+| 不绕过 lint / tsc / 测试             | 不允许 `as any` / `@ts-ignore` / `it.skip`；不允许 `eslint-disable` 绕过；commit 前 lint + tsc + vitest 全过                         |
+| 不自行 commit / push / publish       | 写完代码停下来等人工授权；每次 commit 都要重新拿授权（一次授权 ≠ 永久授权）                                                          |
+| 文档随代码同步                       | 用户可见改动（新 prop / 改默认值 / 删字段）必须同 commit 改文档；只改 zh 不改 en 视为未完成                                          |
+| IR Schema 全 `.describe`             | zod schema 每个字段必须有英文 `.describe(...)`，给 LLM 工具调用作契约                                                                |
 | ADR 永久保留 + 按 milestone 重置编号 | 被新版决策覆盖的 ADR 标 `Superseded by <milestone> ADR-NN`，不删；每个 milestone 目录下编号从 01 重新起，跨 milestone 引用带前缀消歧 |
 
 ## 仓库里看哪里
 
-| 想了解什么 | 看哪里 |
-| --- | --- |
-| 项目立项主张与第一设计原则 | [core-design.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/core-design.md) |
-| 全部 SKILL（开发流程、发版、文档写作） | [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills) |
-| alpha / beta / rc 编排器 | [flow-alpha](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) · [flow-beta](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-beta/SKILL.md) · [flow-rc](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-rc/SKILL.md) |
-| 设计 / 实现 / 测试 / 文档 / 收尾子 SKILL | [develop-design](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-design/SKILL.md) · [develop-implement](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-implement/SKILL.md) · [develop-test](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-test/SKILL.md) · [develop-document](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-document/SKILL.md) · [develop-wrapup](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-wrapup/SKILL.md) |
-| 发版 SKILL（版本号 / changelog / roadmap / npm 发布守门） | [package-publish SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/package-publish/SKILL.md) |
-| 文档写作 SKILL | [docs-doc-principle](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-principle/SKILL.md) · [docs-doc-component](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-component/SKILL.md) · [docs-doc-example](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-example/SKILL.md) |
-| ADR 决策档案 | [notes/decisions/kernel/](https://github.com/Pionpill/retikz/tree/main/notes/decisions/kernel)（含 [模板](https://github.com/Pionpill/retikz/blob/main/notes/decisions/kernel/_template.md) 与 [索引](https://github.com/Pionpill/retikz/blob/main/notes/README.md)） |
+| 想了解什么                                                | 看哪里                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 项目立项主张与第一设计原则                                | [core-design.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/core-design.md)                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 全部 SKILL（开发流程、发版、文档写作）                    | [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills)                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| alpha / beta / rc 编排器                                  | [flow-alpha](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) · [flow-beta](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-beta/SKILL.md) · [flow-rc](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-rc/SKILL.md)                                                                                                                                                                                                                                                       |
+| 设计 / 实现 / 测试 / 文档 / 收尾子 SKILL                  | [develop-design](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-design/SKILL.md) · [develop-implement](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-implement/SKILL.md) · [develop-test](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-test/SKILL.md) · [develop-document](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-document/SKILL.md) · [develop-wrapup](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-wrapup/SKILL.md) |
+| 发版 SKILL（版本号 / changelog / roadmap / npm 发布守门） | [package-publish SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/package-publish/SKILL.md)                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 文档写作 SKILL                                            | [docs-doc-principle](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-principle/SKILL.md) · [docs-doc-component](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-component/SKILL.md) · [docs-doc-example](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-example/SKILL.md)                                                                                                                                                                                                   |
+| ADR 决策档案                                              | [notes/decisions/kernel/](https://github.com/Pionpill/retikz/tree/main/notes/decisions/kernel)（含 [模板](https://github.com/Pionpill/retikz/blob/main/notes/decisions/kernel/_template.md) 与 [索引](https://github.com/Pionpill/retikz/blob/main/notes/README.md)）                                                                                                                                                                                                                                                                       |
 
 实际工作时主 AI 先对齐项目约束与对应 SKILL，再按 SKILL 流程派 sub-Agent。每个 sub-Agent 只看自己角色 prompt + 给定输入，互不交叉污染。
 

@@ -10,10 +10,12 @@
  *   r=0 / 省略时与现状矩形边射线求交（geometry/rect.boundaryPoint）逐数值等价。
  */
 import { describe, expect, it } from 'vitest';
-import { rectangle } from '../../src/providers/shape';
+
 import type { Rect } from '../../src/contract/shape';
-import { rect as rectOps } from '../../src/geometry/rect';
 import type { Position } from '../../src/geometry/point';
+
+import { rect as rectOps } from '../../src/geometry/rect';
+import { rectangle } from '../../src/providers/shape';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 const identity = (n: number): number => n;

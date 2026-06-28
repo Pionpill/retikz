@@ -5,10 +5,12 @@
  *   schema accept/reject + JSON round-trip 组当前应通过。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import { PathSchema, SmoothStepSchema } from '../../src/schemas';
+
 import type { CompileWarning, IR } from '../../src';
 import type { CubicPathCommand, PathPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
+
+import { compileToScene } from '../../src/compile/compile';
+import { PathSchema, SmoothStepSchema } from '../../src/schemas';
 import { move } from '../helpers/path-command-factory';
 
 const silent = { onWarn: () => {} };
@@ -30,7 +32,14 @@ describe('smooth step：happy path', () => {
   it('cursor + 2 points（3 knot）→ move + 2 cubic，每段 .to 命中对应 knot', () => {
     const ir = path(
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'smooth', points: [[10, 0], [10, 10]] },
+      {
+        type: 'step',
+        kind: 'smooth',
+        points: [
+          [10, 0],
+          [10, 10],
+        ],
+      },
     );
     const commands = findPathPrim(compileToScene(ir, silent).primitives).commands;
     expect(commands[0]).toEqual(move([0, 0]));
@@ -47,7 +56,12 @@ describe('smooth step：happy path', () => {
       {
         type: 'step',
         kind: 'smooth',
-        points: [[10, 0], [10, 10], [20, 10], [20, 0]],
+        points: [
+          [10, 0],
+          [10, 10],
+          [20, 10],
+          [20, 0],
+        ],
       },
     );
     const commands = findPathPrim(compileToScene(ir, silent).primitives).commands;
@@ -64,11 +78,26 @@ describe('smooth step：happy path', () => {
   it('tension 显式 vs 默认：控制点不同、.to 相同', () => {
     const base = path(
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'smooth', points: [[10, 0], [10, 10]] },
+      {
+        type: 'step',
+        kind: 'smooth',
+        points: [
+          [10, 0],
+          [10, 10],
+        ],
+      },
     );
     const loose = path(
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'smooth', points: [[10, 0], [10, 10]], tension: 2 },
+      {
+        type: 'step',
+        kind: 'smooth',
+        points: [
+          [10, 0],
+          [10, 10],
+        ],
+        tension: 2,
+      },
     );
     const baseCubics = findPathPrim(compileToScene(base, silent).primitives).commands.filter(
       (c): c is CubicPathCommand => c.kind === 'cubic',
@@ -79,18 +108,13 @@ describe('smooth step：happy path', () => {
     // .to 与 tension 无关
     expect(looseCubics.map(c => c.to)).toEqual(baseCubics.map(c => c.to));
     // 控制点应不同
-    expect(looseCubics.map(c => [c.control1, c.control2])).not.toEqual(
-      baseCubics.map(c => [c.control1, c.control2]),
-    );
+    expect(looseCubics.map(c => [c.control1, c.control2])).not.toEqual(baseCubics.map(c => [c.control1, c.control2]));
   });
 });
 
 describe('smooth step：边界', () => {
   it('cursor + 1 point（2 knot）→ 1 cubic，.to = 该点', () => {
-    const ir = path(
-      { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'smooth', points: [[4, 3]] },
-    );
+    const ir = path({ type: 'step', kind: 'move', to: [0, 0] }, { type: 'step', kind: 'smooth', points: [[4, 3]] });
     const commands = findPathPrim(compileToScene(ir, silent).primitives).commands;
     const cubics = commands.filter((c): c is CubicPathCommand => c.kind === 'cubic');
     expect(cubics).toHaveLength(1);
@@ -100,11 +124,26 @@ describe('smooth step：边界', () => {
   it('tension 省略 ≡ tension:1（两次编译逐字一致）', () => {
     const omitted = path(
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'smooth', points: [[10, 0], [10, 10]] },
+      {
+        type: 'step',
+        kind: 'smooth',
+        points: [
+          [10, 0],
+          [10, 10],
+        ],
+      },
     );
     const explicit = path(
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'smooth', points: [[10, 0], [10, 10]], tension: 1 },
+      {
+        type: 'step',
+        kind: 'smooth',
+        points: [
+          [10, 0],
+          [10, 10],
+        ],
+        tension: 1,
+      },
     );
     expect(findPathPrim(compileToScene(explicit, silent).primitives).commands).toEqual(
       findPathPrim(compileToScene(omitted, silent).primitives).commands,
@@ -114,9 +153,7 @@ describe('smooth step：边界', () => {
 
 describe('smooth step：错误路径', () => {
   it('points: [] → schema 拒绝（违反 min(1)）', () => {
-    expect(
-      SmoothStepSchema.safeParse({ type: 'step', kind: 'smooth', points: [] }).success,
-    ).toBe(false);
+    expect(SmoothStepSchema.safeParse({ type: 'step', kind: 'smooth', points: [] }).success).toBe(false);
   });
 
   it('tension <= 0 → schema 拒绝', () => {
@@ -171,7 +208,14 @@ describe('smooth step：错误路径', () => {
     // 无前置 move/cursor：findPrev() 为 null，整 path 应被跳过并发 PATH_TOO_SHORT（与 line 作首段一致）
     const warnings: Array<CompileWarning> = [];
     const ir = path(
-      { type: 'step', kind: 'smooth', points: [[10, 0], [10, 10]] },
+      {
+        type: 'step',
+        kind: 'smooth',
+        points: [
+          [10, 0],
+          [10, 10],
+        ],
+      },
       { type: 'step', kind: 'line', to: [20, 20] },
     );
     const result = compileToScene(ir, { onWarn: w => warnings.push(w) });
@@ -187,7 +231,10 @@ describe('smooth step：交互', () => {
       {
         type: 'step',
         kind: 'smooth',
-        points: [[10, 0], [10, 10]],
+        points: [
+          [10, 0],
+          [10, 10],
+        ],
         label: { text: 'flow' },
       },
     );
@@ -200,7 +247,14 @@ describe('smooth step：交互', () => {
   it('smooth 后接 line：cursor = points 末项，line 从此续接', () => {
     const ir = path(
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'smooth', points: [[10, 0], [10, 10]] },
+      {
+        type: 'step',
+        kind: 'smooth',
+        points: [
+          [10, 0],
+          [10, 10],
+        ],
+      },
       { type: 'step', kind: 'line', to: [20, 20] },
     );
     const commands = findPathPrim(compileToScene(ir, silent).primitives).commands;
@@ -214,21 +268,33 @@ describe('smooth step：交互', () => {
   it('smooth 后接 cycle：闭合回最近 move 起点', () => {
     const ir = path(
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'smooth', points: [[10, 0], [10, 10]] },
+      {
+        type: 'step',
+        kind: 'smooth',
+        points: [
+          [10, 0],
+          [10, 10],
+        ],
+      },
       { type: 'step', kind: 'cycle' },
     );
     const commands = findPathPrim(compileToScene(ir, silent).primitives).commands;
     // cycle 收尾：末命令为 close 或一条回到 (0,0) 的 line
     const last = commands[commands.length - 1];
-    expect(
-      last.kind === 'close' || (last.kind === 'line' && last.to[0] === 0 && last.to[1] === 0),
-    ).toBe(true);
+    expect(last.kind === 'close' || (last.kind === 'line' && last.to[0] === 0 && last.to[1] === 0)).toBe(true);
   });
 
   it('smooth + path-level marks → 多产 primitive（mark 沿曲线）', () => {
     const without = path(
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'smooth', points: [[10, 0], [10, 10]] },
+      {
+        type: 'step',
+        kind: 'smooth',
+        points: [
+          [10, 0],
+          [10, 10],
+        ],
+      },
     );
     const withMark: IR = scene([
       {
@@ -236,7 +302,14 @@ describe('smooth step：交互', () => {
         marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }],
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
-          { type: 'step', kind: 'smooth', points: [[10, 0], [10, 10]] },
+          {
+            type: 'step',
+            kind: 'smooth',
+            points: [
+              [10, 0],
+              [10, 10],
+            ],
+          },
         ],
       } as never,
     ]);
@@ -276,7 +349,11 @@ describe('smooth step：JSON round-trip', () => {
         {
           type: 'step',
           kind: 'smooth',
-          points: [[10, 0], [10, 10], [20, 5]],
+          points: [
+            [10, 0],
+            [10, 10],
+            [20, 5],
+          ],
           tension: 1.2,
           label: { text: 'flow' },
         },

@@ -28,12 +28,12 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 `arrowDetail.shape` 选形状，缺省 `'stealth'`：
 
-| 实心 | 空心 | 典型用途 |
-| --- | --- | --- |
-| `'normal'` 实心三角 | `'open'` 空心三角 | 基础三角 / UML 泛化 |
+| 实心                 | 空心                     | 典型用途             |
+| -------------------- | ------------------------ | -------------------- |
+| `'normal'` 实心三角  | `'open'` 空心三角        | 基础三角 / UML 泛化  |
 | `'stealth'` 倒钩三角 | `'openStealth'` 空心倒钩 | 默认箭头、现代流程图 |
-| `'diamond'` 实心菱形 | `'openDiamond'` 空心菱形 | UML 组合 / 聚合 |
-| `'circle'` 实心圆点 | `'openCircle'` 空心圆点 | 连接点 / 空心端点 |
+| `'diamond'` 实心菱形 | `'openDiamond'` 空心菱形 | UML 组合 / 聚合      |
+| `'circle'` 实心圆点  | `'openCircle'` 空心圆点  | 连接点 / 空心端点    |
 
 <ComponentPreview name="arrow-shapes" />
 
@@ -75,27 +75,27 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 ### arrow
 
-| 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | 路径级箭头方向 |
-| `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | — | 箭头详细配置；顶层 8 个视觉字段均可选，并支持 `start` / `end` 单端覆盖 |
+| 属性          | 类型                                                                                     | 默认值 | 描述                                                                   |
+| ------------- | ---------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------- |
+| `arrow`       | `'none' \| '->' \| '<-' \| '<->'`                                                        | —      | 路径级箭头方向                                                         |
+| `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | —      | 箭头详细配置；顶层 8 个视觉字段均可选，并支持 `start` / `end` 单端覆盖 |
 
 ### arrowDetail 字段
 
 `arrowDetail` 对象包含 8 个视觉字段 + 可选 `start` / `end` 子对象。`start` / `end` 子对象使用相同字段集（不递归），并与顶层默认逐字段合并：
 
-| 字段 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `shape` | `'normal' \| 'open' \| 'stealth' \| 'openStealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle' \| string` | `'stealth'` | 箭头形状；内置 8 种或经 `<Layout arrows>` / `CompileOptions.arrows` 注册的自定义箭头名 |
-| `scale` | `number > 0` | `1` | 等比缩放因子；乘到 `length` / `width` 之后（`length=10, scale=1.5` → 实际 15） |
-| `length` | `number ≥ 0` | `6` | 尖长（用户单位，沿路径方向） |
-| `width` | `number ≥ 0` | `6` | 尖宽（用户单位，垂直路径方向） |
-| `color` | `string` | — | 描边色覆盖；缺省继承路径描边色 |
-| `fill` | `string` | `color` 或路径描边色 | 填充色覆盖；**空心形状上静默无效**（写了被静默丢弃） |
-| `opacity` | `number ∈ [0, 1]` | — | 箭头独立透明度；缺省继承路径透明度 |
-| `lineWidth` | `number ≥ 0` | `1.5` | 空心形状描边粗细；实心形状忽略 |
-| `start` | `ArrowEndDetail`（同字段集，无 `start` / `end`） | — | 起端覆盖配置（仅 `arrow` 含起端时生效：`'<-'` / `'<->'`） |
-| `end` | `ArrowEndDetail`（同字段集，无 `start` / `end`） | — | 末端覆盖配置（仅 `arrow` 含末端时生效：`'->'` / `'<->'`） |
+| 字段        | 类型                                                                                                                   | 默认值               | 描述                                                                                   |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------- | -------------------------------------------------------------------------------------- |
+| `shape`     | `'normal' \| 'open' \| 'stealth' \| 'openStealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle' \| string` | `'stealth'`          | 箭头形状；内置 8 种或经 `<Layout arrows>` / `CompileOptions.arrows` 注册的自定义箭头名 |
+| `scale`     | `number > 0`                                                                                                           | `1`                  | 等比缩放因子；乘到 `length` / `width` 之后（`length=10, scale=1.5` → 实际 15）         |
+| `length`    | `number ≥ 0`                                                                                                           | `6`                  | 尖长（用户单位，沿路径方向）                                                           |
+| `width`     | `number ≥ 0`                                                                                                           | `6`                  | 尖宽（用户单位，垂直路径方向）                                                         |
+| `color`     | `string`                                                                                                               | —                    | 描边色覆盖；缺省继承路径描边色                                                         |
+| `fill`      | `string`                                                                                                               | `color` 或路径描边色 | 填充色覆盖；**空心形状上静默无效**（写了被静默丢弃）                                   |
+| `opacity`   | `number ∈ [0, 1]`                                                                                                      | —                    | 箭头独立透明度；缺省继承路径透明度                                                     |
+| `lineWidth` | `number ≥ 0`                                                                                                           | `1.5`                | 空心形状描边粗细；实心形状忽略                                                         |
+| `start`     | `ArrowEndDetail`（同字段集，无 `start` / `end`）                                                                       | —                    | 起端覆盖配置（仅 `arrow` 含起端时生效：`'<-'` / `'<->'`）                              |
+| `end`       | `ArrowEndDetail`（同字段集，无 `start` / `end`）                                                                       | —                    | 末端覆盖配置（仅 `arrow` 含末端时生效：`'->'` / `'<->'`）                              |
 
 ## 相关
 

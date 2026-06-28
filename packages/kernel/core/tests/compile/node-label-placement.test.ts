@@ -1,26 +1,23 @@
 import { describe, expect, it } from 'vitest';
+
+import type { ScenePrimitive, TextPrim } from '../../src/primitive';
+import type { IR, IRNode, IRNodeLabel } from '../../src/schemas';
+
 import { compileToScene } from '../../src/compile/compile';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
 import { NodeLabelSchema, SceneSchema } from '../../src/schemas';
-import type { IR, IRNode, IRNodeLabel } from '../../src/schemas';
-import type { ScenePrimitive, TextPrim } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 
 const silent = { onWarn: () => {} };
 
-const visualMiddle = (t: TextPrim): number =>
-  t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
+const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
 
 const labelText = (prims: Array<ScenePrimitive>, text: string): TextPrim | undefined =>
   flattenPrims(prims).find(
-    (p): p is TextPrim =>
-      p.type === 'text' && p.lines.some(l => (typeof l === 'string' ? l : l.text) === text),
+    (p): p is TextPrim => p.type === 'text' && p.lines.some(l => (typeof l === 'string' ? l : l.text) === text),
   );
 
-const sceneWithLabel = (
-  label: IRNodeLabel,
-  shape: IRNode['shape'] = 'rectangle',
-): IR => ({
+const sceneWithLabel = (label: IRNodeLabel, shape: IRNode['shape'] = 'rectangle'): IR => ({
   version: 1,
   type: 'scene',
   children: [

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/schemas';
+
 import type { RectPrim, ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
 /** 取所有 RectPrim（节点 shape=rectangle 默认走 RectPrim；带文本节点包 group，flatten 穿透） */
@@ -172,9 +174,7 @@ describe('Node at relative positioning', () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
-        children: [
-          { type: 'node', id: 'B', position: { direction: 'right', of: 'A' } },
-        ],
+        children: [{ type: 'node', id: 'B', position: { direction: 'right', of: 'A' } }],
       };
       expect(() => compileToScene(ir)).toThrow(/Cannot resolve position/);
     });

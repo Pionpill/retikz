@@ -1,5 +1,6 @@
-import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 
 /**
  * Coordinate as a named junction for path convergence
@@ -7,10 +8,16 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={320} height={200}>
-    <Node id="A" position={[-110, -55]}>A</Node>
-    <Node id="B" position={[-110, 55]}>B</Node>
+    <Node id="A" position={[-110, -55]}>
+      A
+    </Node>
+    <Node id="B" position={[-110, 55]}>
+      B
+    </Node>
     <Coordinate id="junction" position={[0, 0]} />
-    <Node id="out" position={[110, 0]} shape="diamond">merged</Node>
+    <Node id="out" position={[110, 0]} shape="diamond">
+      merged
+    </Node>
     {/* Two lines first reach junction, then merge into out */}
     <Draw way={['A', 'junction']} stroke="gray" />
     <Draw way={['B', 'junction']} stroke="gray" />

@@ -1,6 +1,7 @@
-import { Fragment } from 'react';
 import type { FC } from 'react';
+
 import { Coordinate, Draw, Layout, Node, Path, Step } from '@retikz/react';
+import { Fragment } from 'react';
 
 // 字面色而非 CSS var：SVG 下载后 CSS var 不在新上下文里解析，会 fallback 成黑
 const MATH_FONT = {
@@ -17,8 +18,22 @@ const Demo: FC = () => (
     {/* 背景网格 */}
     {[-100, -50, 0, 50, 100].map(v => (
       <Fragment key={`grid-${v}`}>
-        <Draw way={[[v, -140], [v, 140]]} stroke="lightgray" strokeWidth={0.5} />
-        <Draw way={[[-140, v], [140, v]]} stroke="lightgray" strokeWidth={0.5} />
+        <Draw
+          way={[
+            [v, -140],
+            [v, 140],
+          ]}
+          stroke="lightgray"
+          strokeWidth={0.5}
+        />
+        <Draw
+          way={[
+            [-140, v],
+            [140, v],
+          ]}
+          stroke="lightgray"
+          strokeWidth={0.5}
+        />
       </Fragment>
     ))}
 
@@ -29,11 +44,27 @@ const Demo: FC = () => (
     </Path>
 
     {/* 坐标轴 */}
-    <Draw way={[[-150, 0], [150, 0]]} arrow="->" />
-    <Node position={[162, 0]} stroke="none" padding={0} font={MATH_FONT}>x</Node>
+    <Draw
+      way={[
+        [-150, 0],
+        [150, 0],
+      ]}
+      arrow="->"
+    />
+    <Node position={[162, 0]} stroke="none" padding={0} font={MATH_FONT}>
+      x
+    </Node>
     <Coordinate id="x-axis" position={[150, 0]} />
-    <Draw way={[[0, 150], [0, -150]]} arrow="->" />
-    <Node position={[0, -162]} stroke="none" padding={0} font={MATH_FONT}>y</Node>
+    <Draw
+      way={[
+        [0, 150],
+        [0, -150],
+      ]}
+      arrow="->"
+    />
+    <Node position={[0, -162]} stroke="none" padding={0} font={MATH_FONT}>
+      y
+    </Node>
     <Coordinate id="y-axis" position={[0, -150]} />
 
     {/* 刻度 */}
@@ -43,7 +74,12 @@ const Demo: FC = () => (
       { x: 100, text: '1' },
     ].map(({ x, text }) => (
       <Fragment key={`tx-${x}`}>
-        <Draw way={[[x, -3], [x, 3]]} />
+        <Draw
+          way={[
+            [x, -3],
+            [x, 3],
+          ]}
+        />
         <Node position={[x - 10, 14]} stroke="none" padding={1}>
           {text}
         </Node>
@@ -56,7 +92,12 @@ const Demo: FC = () => (
       { y: -100, text: '1' },
     ].map(({ y, text }) => (
       <Fragment key={`ty-${y}`}>
-        <Draw way={[[-3, y], [3, y]]} />
+        <Draw
+          way={[
+            [-3, y],
+            [3, y],
+          ]}
+        />
         <Node position={[-18, y + 10]} stroke="none" padding={1}>
           {text}
         </Node>
@@ -106,13 +147,13 @@ const Demo: FC = () => (
       innerYSep={4}
       align="left"
       text={[
-        { text: '角 α = 30°', fill: "green" },
+        { text: '角 α = 30°', fill: 'green' },
         '即 π/6 弧度',
-        { text: 'sin α = 1/2', fill: "red" },
+        { text: 'sin α = 1/2', fill: 'red' },
         '（红线长度）',
-        { text: 'cos α = √3/2', fill: "dodgerblue" },
+        { text: 'cos α = √3/2', fill: 'dodgerblue' },
         '（蓝线长度）',
-        { text: 'tan α = 1/√3', fill: "darkorange" },
+        { text: 'tan α = 1/√3', fill: 'darkorange' },
         '（橙线长度）',
       ]}
     />

@@ -1,5 +1,6 @@
+import type { BuildContext } from '@retikz/render/hydration';
+
 import {
-  type BuildContext,
   createContextBuilder,
   createHydrationController,
   createSvgAnimationControls,
@@ -9,6 +10,7 @@ import {
   resolveSvgElement,
   resolveSvgPointViaCtm,
 } from '@retikz/render/hydration';
+
 import type { HydrateOptions, HydrationHandle } from './types';
 
 /**

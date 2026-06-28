@@ -1,5 +1,6 @@
-import { Axis, Legend, Plot, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, Legend, Plot, PointMark } from '@retikz/plot-react';
 
 import { cities } from './legend.data';
 

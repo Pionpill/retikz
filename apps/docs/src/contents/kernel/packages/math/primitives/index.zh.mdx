@@ -22,9 +22,9 @@ const DEFAULT_EPSILON = 1e-9;
 
 /** 「中心 + 可选旋转」形状契约，供仿射变换使用 */
 type CenteredShape = {
-  x: number;        // 中心 x
-  y: number;        // 中心 y
-  rotate?: number;  // 绕中心旋转弧度；省略 / 0 = 不旋转
+  x: number; // 中心 x
+  y: number; // 中心 y
+  rotate?: number; // 绕中心旋转弧度；省略 / 0 = 不旋转
 };
 ```
 
@@ -42,10 +42,10 @@ point.normalize  (a: Position, fallback?: Position, epsilon?: number): Position
 point.shiftToward(p: Position, target: Position, dist: number): Position
 ```
 
-| 函数 | 参数 / 行为 |
-| --- | --- |
-| `normalize` | `fallback` 零长向量的回退值，默认 `[1, 0]`；`epsilon` 判零阈值，默认 `DEFAULT_EPSILON` |
-| `shiftToward` | 把 `p` 沿 `p→target` 的单位方向移动 `dist`；`dist=0` 或 `p===target` 时原样返回 `p` |
+| 函数          | 参数 / 行为                                                                            |
+| ------------- | -------------------------------------------------------------------------------------- |
+| `normalize`   | `fallback` 零长向量的回退值，默认 `[1, 0]`；`epsilon` 判零阈值，默认 `DEFAULT_EPSILON` |
+| `shiftToward` | 把 `p` 沿 `p→target` 的单位方向移动 `dist`；`dist=0` 或 `p===target` 时原样返回 `p`    |
 
 ## lerp 线性插值
 
@@ -83,4 +83,7 @@ arcBoundingPoints(center: Position, radius: number, startDeg: number, endDeg: nu
 ellipseArcBoundingPoints(center: Position, rx: number, ry: number, startDeg: number, endDeg: number): Array<Position>;
 ```
 
-<ComponentAlert title="rayArc 返回参数不是点" description="rayArc 返回沿射线的标量距离数组（命中点 = origin + s·dir），便于取最近命中；与 algorithms 里返回坐标点的 intersect.* 不同。" />
+<ComponentAlert
+  title="rayArc 返回参数不是点"
+  description="rayArc 返回沿射线的标量距离数组（命中点 = origin + s·dir），便于取最近命中；与 algorithms 里返回坐标点的 intersect.* 不同。"
+/>

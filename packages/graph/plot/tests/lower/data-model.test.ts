@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { inferFieldType, isIsoDateString, resolveFieldTypes } from '../../src/providers';
+
+import type { PlotSpec } from '../../src/schemas';
+
 import { collectSourceFields } from '../../src/pipeline/source-fields';
+import { inferFieldType, isIsoDateString, resolveFieldTypes } from '../../src/providers';
+import { PlotFieldType, PlotSpecSchema } from '../../src/schemas';
 
 /** 构造最小可解析 PlotSpec（cartesian + 给定 marks / transform / model） */
 const buildSpec = (overrides: Record<string, unknown>): PlotSpec =>
@@ -86,7 +89,14 @@ describe('isIsoDateString — 严格 ISO guard（ADR-01）', () => {
 describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
   it('collect_encoding_order_series', () => {
     const spec = buildSpec({
-      marks: [{ type: 'path', order: 'idx', series: 'cat', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'cat' } } }],
+      marks: [
+        {
+          type: 'path',
+          order: 'idx',
+          series: 'cat',
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'cat' } },
+        },
+      ],
     });
     const fields = collectSourceFields(spec);
     expect(fields.has('month')).toBe(true);
@@ -112,7 +122,13 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
     // stack 输出 startField/endField、interval y0Field/y1Field 是派生字段，不应进用户源集
     const spec = buildSpec({
       transform: [{ kind: 'stack', x: 'month', y: 'revenue', startField: 'lo', endField: 'hi' }],
-      marks: [{ type: 'interval', bounds: { y: { kind: 'extent', from: 'lo', to: 'hi' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      marks: [
+        {
+          type: 'interval',
+          bounds: { y: { kind: 'extent', from: 'lo', to: 'hi' } },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+      ],
     });
     const fields = collectSourceFields(spec);
     expect(fields.has('lo')).toBe(false);
@@ -130,7 +146,11 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
     // 位置 mark 的 priority-1 datum label 内容字段 + TextMark 的 text 内容字段都进用户源集（alpha.11 P1 回归）
     const spec = buildSpec({
       marks: [
-        { type: 'interval', label: { content: { field: 'lbl' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        {
+          type: 'interval',
+          label: { content: { field: 'lbl' } },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
         { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, text: { field: 'note' } } },
       ],
     });
@@ -161,14 +181,22 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, text: { field: 'note' } } }],
     });
     const userFields = collectSourceFields(spec);
-    expect(() => resolveFieldTypes([{ name: 'month' }, { name: 'revenue' }], [{ month: 1, revenue: 2, note: 'x' }], userFields)).toThrow(/unknown field/i);
+    expect(() =>
+      resolveFieldTypes([{ name: 'month' }, { name: 'revenue' }], [{ month: 1, revenue: 2, note: 'x' }], userFields),
+    ).toThrow(/unknown field/i);
   });
 
   // alpha.12 ADR-16：bin / summarize 输入字段进、派生输出字段不进
   it('bin_inputs_in_outputs_out', () => {
     const spec = buildSpec({
       transform: [{ kind: 'bin', field: 'measurement', metrics: [{ op: 'sum', field: 'weight', as: 'totalWeight' }] }],
-      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } }, encoding: { y: { field: 'totalWeight' } } }],
+      marks: [
+        {
+          type: 'interval',
+          bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } },
+          encoding: { y: { field: 'totalWeight' } },
+        },
+      ],
     });
     const fields = collectSourceFields(spec);
     // 输入字段进
@@ -183,7 +211,9 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
   it('bin_custom_output_fields_not_collected', () => {
     const spec = buildSpec({
       transform: [{ kind: 'bin', field: 'm', startField: 'lo', endField: 'hi', metrics: [{ op: 'count', as: 'n' }] }],
-      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'lo', to: 'hi' } }, encoding: { y: { field: 'n' } } }],
+      marks: [
+        { type: 'interval', bounds: { x: { kind: 'extent', from: 'lo', to: 'hi' } }, encoding: { y: { field: 'n' } } },
+      ],
     });
     const fields = collectSourceFields(spec);
     expect(fields.has('m')).toBe(true);
@@ -194,7 +224,9 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
 
   it('summarize_inputs_in_output_out', () => {
     const spec = buildSpec({
-      transform: [{ kind: 'summarize', groupBy: ['region', 'product'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] }],
+      transform: [
+        { kind: 'summarize', groupBy: ['region', 'product'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] },
+      ],
       marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'total' } } }],
     });
     const fields = collectSourceFields(spec);
@@ -238,7 +270,13 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
   it('derive_interval_inputs_in_outputs_out', () => {
     const spec = buildSpec({
       transform: [{ kind: 'derive-interval', startFrom: 'start', endFrom: 'end', startField: 'lo', endField: 'hi' }],
-      marks: [{ type: 'interval', bounds: { y: { kind: 'extent', from: 'lo', to: 'hi' } }, encoding: { x: { field: 'task' }, y: { field: 'end' } } }],
+      marks: [
+        {
+          type: 'interval',
+          bounds: { y: { kind: 'extent', from: 'lo', to: 'hi' } },
+          encoding: { x: { field: 'task' }, y: { field: 'end' } },
+        },
+      ],
     });
     const fields = collectSourceFields(spec);
     expect(fields.has('start')).toBe(true);
@@ -274,18 +312,34 @@ describe('resolveFieldTypes — 类型解析 + strict 校验（ADR-01）', () =>
   });
 
   it('resolved_map_covers_all_fields', () => {
-    const map = resolveFieldTypes([{ name: 'month', type: 'temporal' }, { name: 'revenue', type: 'continuous' }], rows, new Set(['month', 'revenue']));
+    const map = resolveFieldTypes(
+      [
+        { name: 'month', type: 'temporal' },
+        { name: 'revenue', type: 'continuous' },
+      ],
+      rows,
+      new Set(['month', 'revenue']),
+    );
     expect(map.size).toBe(2);
   });
 
   // 错误路径
   it('strict_unknown_field_throws', () => {
-    expect(() => resolveFieldTypes([{ name: 'month', type: 'temporal' }], rows, new Set(['quater']))).toThrow(/unknown field/i);
+    expect(() => resolveFieldTypes([{ name: 'month', type: 'temporal' }], rows, new Set(['quater']))).toThrow(
+      /unknown field/i,
+    );
   });
 
   it('duplicate_field_name_throws', () => {
     expect(() =>
-      resolveFieldTypes([{ name: 'month', type: 'temporal' }, { name: 'month', type: 'categorical' }], rows, new Set(['month'])),
+      resolveFieldTypes(
+        [
+          { name: 'month', type: 'temporal' },
+          { name: 'month', type: 'categorical' },
+        ],
+        rows,
+        new Set(['month']),
+      ),
     ).toThrow(/duplicate field/i);
   });
 
@@ -300,7 +354,11 @@ describe('resolveFieldTypes — 部分声明 model（type 可选，ADR-05）', (
 
   it('partial_model_infers_untyped', () => {
     // month 显式 temporal、revenue 仅 name → 推断 continuous
-    const map = resolveFieldTypes([{ name: 'month', type: 'temporal' }, { name: 'revenue' }], rows, new Set(['month', 'revenue']));
+    const map = resolveFieldTypes(
+      [{ name: 'month', type: 'temporal' }, { name: 'revenue' }],
+      rows,
+      new Set(['month', 'revenue']),
+    );
     expect(map.get('month')).toBe(PlotFieldType.Temporal);
     expect(map.get('revenue')).toBe(PlotFieldType.Continuous);
   });
@@ -325,7 +383,11 @@ describe('resolveFieldTypes — 部分声明 model（type 可选，ADR-05）', (
 
   it('all_name_only_equals_infer', () => {
     // 全 name-only model → 类型结果与无 model 推断一致
-    const partial = resolveFieldTypes([{ name: 'month' }, { name: 'revenue' }, { name: 'cat' }], rows, new Set(['month', 'revenue', 'cat']));
+    const partial = resolveFieldTypes(
+      [{ name: 'month' }, { name: 'revenue' }, { name: 'cat' }],
+      rows,
+      new Set(['month', 'revenue', 'cat']),
+    );
     const inferred = resolveFieldTypes(undefined, rows, new Set(['month', 'revenue', 'cat']));
     expect(partial).toEqual(inferred);
   });

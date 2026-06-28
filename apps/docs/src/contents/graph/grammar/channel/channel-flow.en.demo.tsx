@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Text } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /**
  * Channel landing page "channel creation and consumption" figure.

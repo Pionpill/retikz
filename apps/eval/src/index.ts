@@ -1,10 +1,11 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { sceneContractString } from './schema/contract';
+
 import { loadCorpus } from './corpus/load';
 import { availableProviderIds, createClients } from './llm/registry';
-import { runEval } from './run';
 import { aggregate } from './report/aggregate';
 import { formatMarkdown } from './report/format';
+import { runEval } from './run';
+import { sceneContractString } from './schema/contract';
 
 /** 解析 EVAL_K：要求正整数，非法 fail fast（避免 0/负/NaN 产出「0 样本」却报成功） */
 const parseK = (raw: string | undefined): number => {
@@ -36,8 +37,7 @@ const main = async (): Promise<void> => {
     corpus,
     schemaJson,
     k,
-    onRecord: (r) =>
-      console.log(`  ${r.promptId} · ${r.model} · k${r.kIndex} → zod=${r.zodOk} compile=${r.compileOk}`),
+    onRecord: r => console.log(`  ${r.promptId} · ${r.model} · k${r.kIndex} → zod=${r.zodOk} compile=${r.compileOk}`),
   });
 
   const report = aggregate(records);

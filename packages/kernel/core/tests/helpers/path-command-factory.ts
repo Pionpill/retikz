@@ -17,10 +17,11 @@ export const move = (to: [number, number]): MovePathCommand => ({ kind: 'move', 
 
 export const line = (to: [number, number]): LinePathCommand => ({ kind: 'line', to });
 
-export const quad = (
-  control: [number, number],
-  to: [number, number],
-): QuadPathCommand => ({ kind: 'quad', control, to });
+export const quad = (control: [number, number], to: [number, number]): QuadPathCommand => ({
+  kind: 'quad',
+  control,
+  to,
+});
 
 export const cubic = (
   control1: [number, number],

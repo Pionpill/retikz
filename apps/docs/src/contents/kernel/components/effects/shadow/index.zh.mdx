@@ -46,26 +46,29 @@ import { Node, Path, Step } from '@retikz/react';
 
 <span style={{ color: '#888' }}>shadow 落在矩形上；旁边的 text 与 label 是独立图元，不带投影。</span>
 
-<ComponentAlert title="blur 是可诊断近似" description="blur 是用户单位的模糊半径，SVG 与 Canvas 会按各自原生阴影 API 做内部校准，并随预览尺寸 / 变换保持接近；不追求逐像素一致。blur=0 为硬边。" />
+<ComponentAlert
+  title="blur 是可诊断近似"
+  description="blur 是用户单位的模糊半径，SVG 与 Canvas 会按各自原生阴影 API 做内部校准，并随预览尺寸 / 变换保持接近；不追求逐像素一致。blur=0 为硬边。"
+/>
 
 ## API 参考
 
 `shadow` 是 `<Node>` 与 `<Path>` 共有的样式属性，写法一致。
 
-| 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `shadow` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'`<br />`\| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | — | 主几何投影：预设字符串，或对象（preset 出默认 + 显式字段覆盖；无 preset 须给 offsetX + offsetY）。优先级：显式 > preset > 默认；color 默认 `rgba(0,0,0,0.5)`，`opacity` 相乘到 color alpha。图元级：Node 文字 / 标签 / 引脚（独立图元）不带；Path 端点箭头随主路径一起投影 |
+| 属性     | 类型                                                                                                                 | 默认值 | 描述                                                                                                                                                                                                                                                                       |
+| -------- | -------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shadow` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'`<br />`\| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | —      | 主几何投影：预设字符串，或对象（preset 出默认 + 显式字段覆盖；无 preset 须给 offsetX + offsetY）。优先级：显式 > preset > 默认；color 默认 `rgba(0,0,0,0.5)`，`opacity` 相乘到 color alpha。图元级：Node 文字 / 标签 / 引脚（独立图元）不带；Path 端点箭头随主路径一起投影 |
 
 ### shadow 对象字段
 
-| 字段 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `preset` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'` | — | Tailwind 风格档位，作为 offsetX / offsetY / blur / color 的默认基底；显式字段覆盖之 |
-| `offsetX` | `number` | `0`（preset 提供） | 水平位移（用户单位） |
-| `offsetY` | `number` | preset 提供 | 垂直位移（用户单位，正值向下） |
-| `blur` | `number`（≥0） | preset 提供 | 模糊半径（用户单位）；`0` = 硬边 |
-| `color` | `string` | `rgba(0,0,0,0.5)` | 阴影颜色，任意 CSS 颜色 |
-| `opacity` | `number`（0~1） | — | 阴影不透明度，相乘到 color 的有效 alpha 上 |
+| 字段      | 类型                                              | 默认值             | 描述                                                                                |
+| --------- | ------------------------------------------------- | ------------------ | ----------------------------------------------------------------------------------- |
+| `preset`  | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'` | —                  | Tailwind 风格档位，作为 offsetX / offsetY / blur / color 的默认基底；显式字段覆盖之 |
+| `offsetX` | `number`                                          | `0`（preset 提供） | 水平位移（用户单位）                                                                |
+| `offsetY` | `number`                                          | preset 提供        | 垂直位移（用户单位，正值向下）                                                      |
+| `blur`    | `number`（≥0）                                    | preset 提供        | 模糊半径（用户单位）；`0` = 硬边                                                    |
+| `color`   | `string`                                          | `rgba(0,0,0,0.5)`  | 阴影颜色，任意 CSS 颜色                                                             |
+| `opacity` | `number`（0~1）                                   | —                  | 阴影不透明度，相乘到 color 的有效 alpha 上                                          |
 
 ## 相关
 

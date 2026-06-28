@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import type { Vector2 } from '../../../geometry/point';
 
 export const Vector2Schema: z.ZodType<Vector2> = z

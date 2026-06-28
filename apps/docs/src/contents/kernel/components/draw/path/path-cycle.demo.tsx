@@ -1,5 +1,6 @@
-import { Layout, Node, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node, Path, Step } from '@retikz/react';
 
 /**
  * cycle + line / step 混用画矩形回路

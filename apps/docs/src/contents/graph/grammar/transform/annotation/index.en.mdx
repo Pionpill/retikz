@@ -5,11 +5,11 @@ description: Row annotations keep every detail row while adding fields derived f
 
 Row annotations are for charts that still draw detail rows, but each row needs more context. They do not collapse many rows into one row and they do not discard source rows; the output can still feed points, paths, intervals, or custom marks directly.
 
-| kind | Row count | Common output |
-| --- | --- | --- |
-| `stack` | N → N | `y0` / `y1` |
-| `normalize` | N → N | A ratio field, or the original field overwritten |
-| `annotate` | N → N | Group mean, median, extrema, or other statistic fields |
+| kind        | Row count | Common output                                          |
+| ----------- | --------- | ------------------------------------------------------ |
+| `stack`     | N → N     | `y0` / `y1`                                            |
+| `normalize` | N → N     | A ratio field, or the original field overwritten       |
+| `annotate`  | N → N     | Group mean, median, extrema, or other statistic fields |
 
 ## Stack
 
@@ -19,12 +19,12 @@ Row annotations are for charts that still draw detail rows, but each row needs m
 
 The automatic stack used by `<IntervalMark stack>` / `<IntervalMark angle>` is only a shortcut. When an equivalent explicit `stack` already exists in the pipeline, the shortcut is suppressed to avoid stacking twice.
 
-| prop | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `x` | `string?` | Single group | Group key; rows with the same value accumulate together |
-| `y` | `string` | — | Numeric field to accumulate |
-| `groupBy` | `string?` | Row order | Series field; first appearance decides segment order |
-| `startField` / `endField` | `string?` | `y0` / `y1` | Output bound fields |
+| prop                      | Type      | Default      | Notes                                                   |
+| ------------------------- | --------- | ------------ | ------------------------------------------------------- |
+| `x`                       | `string?` | Single group | Group key; rows with the same value accumulate together |
+| `y`                       | `string`  | —            | Numeric field to accumulate                             |
+| `groupBy`                 | `string?` | Row order    | Series field; first appearance decides segment order    |
+| `startField` / `endField` | `string?` | `y0` / `y1`  | Output bound fields                                     |
 
 ## Normalize
 
@@ -34,12 +34,12 @@ The automatic stack used by `<IntervalMark stack>` / `<IntervalMark angle>` is o
 
 Normalize plus stack is a percentage stack: first convert each group to shares, then stack those shares.
 
-| prop | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `field` | `string` | — | Numeric field to convert to a share |
-| `groupBy` | `Array<string>?` | One global group | Grouping keys; composite keys are supported |
-| `basis` | `'fraction' \| 'percent'?` | `'fraction'` | Output scale |
-| `as` | `string?` | Overwrite input | Output field name |
+| prop      | Type                       | Default          | Notes                                       |
+| --------- | -------------------------- | ---------------- | ------------------------------------------- |
+| `field`   | `string`                   | —                | Numeric field to convert to a share         |
+| `groupBy` | `Array<string>?`           | One global group | Grouping keys; composite keys are supported |
+| `basis`   | `'fraction' \| 'percent'?` | `'fraction'`     | Output scale                                |
+| `as`      | `string?`                  | Overwrite input  | Output field name                           |
 
 ## Annotate
 
@@ -48,12 +48,13 @@ Normalize plus stack is a percentage stack: first convert each group to shares, 
 <ComponentPreview name="transform-annotate" sourceFiles={['transform-annotate.data.ts']} />
 
 The example writes each store's average revenue into `storeMean`. Points still draw the raw `revenue`; the path reads the broadcast mean.
+Available reducers and selectors are covered in [Statistic Operations](/graph/grammar/transform/statistics); `annotate` only decides to broadcast their results back onto detail rows.
 
-| prop | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `groupBy` | `Array<string>?` | One global group | Grouping keys; composite keys are supported |
-| `metrics` | `Array<Reducer>?` | — | Statistic fields broadcast to every row |
-| `selectors` | `Array<{ selector: Selector; as: string }>?` | — | Representative values broadcast to every row; `min` / `max` / `top` / `bottom` read the selector's `by` field, while other selectors broadcast the selected rank |
+| prop        | Type                                         | Default          | Notes                                                                                                                                                            |
+| ----------- | -------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `groupBy`   | `Array<string>?`                             | One global group | Grouping keys; composite keys are supported                                                                                                                      |
+| `metrics`   | `Array<Reducer>?`                            | —                | Statistic fields broadcast to every row                                                                                                                          |
+| `selectors` | `Array<{ selector: Selector; as: string }>?` | —                | Representative values broadcast to every row; `min` / `max` / `top` / `bottom` read the selector's `by` field, while other selectors broadcast the selected rank |
 
 Common reducer / selector form:
 

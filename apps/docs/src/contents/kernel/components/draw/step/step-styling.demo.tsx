@@ -1,5 +1,6 @@
-import { Layout, Node, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node, Path, Step } from '@retikz/react';
 
 /**
  * Step 没有 stroke 类视觉属性

@@ -1,5 +1,13 @@
 import type { z } from 'zod';
-import type { Cartesian1DSchema, CoordinateOperationSchema, CoordinateSchema, CustomCoordinateSchema, Polar1DSchema, Ternary2DSchema } from './schema';
+
+import type {
+  Cartesian1DSchema,
+  CoordinateOperationSchema,
+  CoordinateSchema,
+  CustomCoordinateSchema,
+  Polar1DSchema,
+  Ternary2DSchema,
+} from './schema';
 
 /** 内置坐标系（cartesian2D | polar2D | cartesian1D | polar1D | ternary2D） */
 export type Coordinate = z.infer<typeof CoordinateSchema>;

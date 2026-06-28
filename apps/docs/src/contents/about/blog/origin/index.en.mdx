@@ -21,11 +21,11 @@ The **Ask AI** button at the top-right of the demo card pipes the current figure
 
 retikz's long-term plan is a layered matrix of "low-level primitives + high-level domain packages". Core holds the universal primitives and IR standard, zero deps, framework-agnostic; the domain packages on top split by direction (flowchart / UML / charts, etc.), each carrying its own data and layout algorithms, all eventually rendered through core.
 
-| Package | Responsibility | Status |
-|---|---|---|
-| `@retikz/core` | Universal primitives (Node / Path / Step / Anchor)<br />+ IR + Scene compiler | Stable v0.1<br />(SemVer API) |
-| `@retikz/flow` | DAG-style high-level components (flowchart / UML)<br />+ layout algorithms (dagre / elkjs) | Planned |
-| `@retikz/plot` | Data-driven chart capabilities | Planned |
+| Package        | Responsibility                                                                             | Status                        |
+| -------------- | ------------------------------------------------------------------------------------------ | ----------------------------- |
+| `@retikz/core` | Universal primitives (Node / Path / Step / Anchor)<br />+ IR + Scene compiler              | Stable v0.1<br />(SemVer API) |
+| `@retikz/flow` | DAG-style high-level components (flowchart / UML)<br />+ layout algorithms (dagre / elkjs) | Planned                       |
+| `@retikz/plot` | Data-driven chart capabilities                                                             | Planned                       |
 
 At the v0.1 starting point, the layer above core exposed only a framework adapter that translated IR into framework-specific elements: `@retikz/react` shipped first, while Canvas / SSR and framework-free entry points were still on the roadmap. By v0.3, rendering has converged into `@retikz/render`, with `@retikz/vanilla` added for framework-free mounting and SSR; domain packages such as flow / plot continue to evolve separately.
 
@@ -52,13 +52,13 @@ After joining frontend work, I wanted to keep drawing figures—and found that L
 
 The libraries I looked at:
 
-| Library | I expected | Reality |
-|---|---|---|
-| **echarts / highcharts / antv** | Chart libs, just plot something | Type-driven charts<br />(line / bar / pie...) |
-| **react-flow** | Nodes + edges = universal | Locked to flowchart / DAG<br />Node shapes aren't generic |
-| **d3** | The universal low-level lib | Data-driven + low-level<br />API isn't primitive vocabulary |
-| **mermaid** | DSL is concise | Fixed diagram types<br />Few customization hooks |
-| **drawio** | Universal editor | A GUI tool, not a library |
+| Library                         | I expected                      | Reality                                                     |
+| ------------------------------- | ------------------------------- | ----------------------------------------------------------- |
+| **echarts / highcharts / antv** | Chart libs, just plot something | Type-driven charts<br />(line / bar / pie...)               |
+| **react-flow**                  | Nodes + edges = universal       | Locked to flowchart / DAG<br />Node shapes aren't generic   |
+| **d3**                          | The universal low-level lib     | Data-driven + low-level<br />API isn't primitive vocabulary |
+| **mermaid**                     | DSL is concise                  | Fixed diagram types<br />Few customization hooks            |
+| **drawio**                      | Universal editor                | A GUI tool, not a library                                   |
 
 What I wanted was `(node.south east) -- (other.north)`—anchor + relational coordinates. Chart libs don't offer it, d3 is too low-level, flow locks you to DAG topology. None matched.
 
@@ -104,25 +104,25 @@ The complete architectural principles (IR-centric / Sugar adds no new capability
 
 The development pipeline went fully AI-driven. Each feature passes through 5 stages from inception to merge, each governed by a SKILL constraining AI behavior:
 
-| Stage | Led by | Key actions |
-|---|---|---|
-| design | Human | ADR draft + implementation contract |
-| implement | AI | Spec-First TDD: sub-agent writes tests<br />implementer agent makes them pass |
-| test | AI | Dispatch an Adversarial Bug Hunter sub-agent to attack the implementation |
-| document | AI | Bilingual mdx + demo + i18n |
-| wrapup | AI + human | Contract Auditor cross-checks four-way consistency<br />Human ack required before commit |
+| Stage     | Led by     | Key actions                                                                              |
+| --------- | ---------- | ---------------------------------------------------------------------------------------- |
+| design    | Human      | ADR draft + implementation contract                                                      |
+| implement | AI         | Spec-First TDD: sub-agent writes tests<br />implementer agent makes them pass            |
+| test      | AI         | Dispatch an Adversarial Bug Hunter sub-agent to attack the implementation                |
+| document  | AI         | Bilingual mdx + demo + i18n                                                              |
+| wrapup    | AI + human | Contract Auditor cross-checks four-way consistency<br />Human ack required before commit |
 
 Humans anchor both ends (design + final ack); the middle stages are largely delegated to sub-agents running in independent sessions.
 
 ## Outcome
 
-| Metric | Number |
-|---|---|
+| Metric                       | Number                            |
+| ---------------------------- | --------------------------------- |
 | v0.1 rewrite start → alpha.0 | 2026-04-26 → 2026-05-08, ~2 weeks |
-| alpha.0 → rc.1 | 2026-05-08 → 2026-05-16, 1 week |
-| v0.1 era commits | 430+ |
-| Published packages | `@retikz/core` + `@retikz/react` |
-| Docs site mdx pages | 28 (56 bilingual files) |
+| alpha.0 → rc.1               | 2026-05-08 → 2026-05-16, 1 week   |
+| v0.1 era commits             | 430+                              |
+| Published packages           | `@retikz/core` + `@retikz/react`  |
+| Docs site mdx pages          | 28 (56 bilingual files)           |
 
 About a month total—what didn't get finished in v0.0's two years got done in this one month.
 

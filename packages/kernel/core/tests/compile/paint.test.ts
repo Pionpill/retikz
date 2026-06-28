@@ -4,9 +4,11 @@
  *   纯色 string 原样、不进资源表；同 spec 多处复用 → 1 条资源、同 id；scope fill 级联到内部 node；纯色与渐变同场景互不干扰。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import type { IR, IRPaintSpec } from '../../src/schemas';
+
 import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/primitive';
+import type { IR, IRPaintSpec } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
 const grad: IRPaintSpec = {

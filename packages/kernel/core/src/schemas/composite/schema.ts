@@ -6,14 +6,8 @@ import { z } from 'zod';
  *   产出像 Node 一样字段一等、每字段带 describe 的完整节点 schema。core 据 namespace + type 的 literal 路由展开。
  */
 export const CompositeBaseSchema = z.object({
-  namespace: z
-    .string()
-    .min(1)
-    .describe('Tier 2 domain namespace that selects the registered definition.'),
-  type: z
-    .string()
-    .min(1)
-    .describe('Composite type name within the namespace.'),
+  namespace: z.string().min(1).describe('Tier 2 domain namespace that selects the registered definition.'),
+  type: z.string().min(1).describe('Composite type name within the namespace.'),
 });
 
 /**

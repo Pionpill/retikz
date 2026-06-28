@@ -1,5 +1,6 @@
-import { Coordinate, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Coordinate, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * 极坐标平移：scope 以 hub 为 origin，按 angle / radius 偏移
@@ -9,14 +10,24 @@ const Demo: FC = () => (
   <Layout width={560} height={120}>
     <Coordinate id="hub" position={[0, 0]} />
     <Scope transforms={[{ kind: 'polar-translate', origin: 'hub', angle: 0, radius: 150 }]}>
-      <Node position={[0, 0]} shape="circle">1</Node>
-      <Node position={[60, 0]} shape="circle">2</Node>
+      <Node position={[0, 0]} shape="circle">
+        1
+      </Node>
+      <Node position={[60, 0]} shape="circle">
+        2
+      </Node>
     </Scope>
     <Scope transforms={[{ kind: 'polar-translate', origin: 'hub', angle: 180, radius: 150 }]}>
-      <Node position={[0, 0]} shape="circle">1</Node>
-      <Node position={[60, 0]} shape="circle">2</Node>
+      <Node position={[0, 0]} shape="circle">
+        1
+      </Node>
+      <Node position={[60, 0]} shape="circle">
+        2
+      </Node>
     </Scope>
-    <Node position={[0, 0]} shape="circle" padding={4} stroke="gray" dashed>hub</Node>
+    <Node position={[0, 0]} shape="circle" padding={4} stroke="gray" dashed>
+      hub
+    </Node>
   </Layout>
 );
 

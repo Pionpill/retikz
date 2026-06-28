@@ -1,7 +1,8 @@
+import type { Child, ScopeConfig } from './types';
+
 import { coordinate } from './coordinate';
 import { draw } from './draw';
 import { node } from './node';
-import type { Child, ScopeConfig } from './types';
 
 /**
  * scope 的 fluent 收集器

@@ -10,12 +10,11 @@
  *   - 交互场景（多层 scope + node rotate / nodeDistance / scale=0 退化）
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import {
-  applyTransformChain,
-  inverseTransformChain,
-} from '../../src/compile/scope';
+
 import type { CompileWarning, IR, IRPosition, ScenePrimitive } from '../../src';
+
+import { compileToScene } from '../../src/compile/compile';
+import { applyTransformChain, inverseTransformChain } from '../../src/compile/scope';
 
 const scene = (children: IR['children']): IR => ({
   version: 1,

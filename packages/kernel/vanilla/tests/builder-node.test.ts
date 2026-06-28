@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { node } from '../src/builder/node';
 
 describe('@retikz/vanilla node()', () => {

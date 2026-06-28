@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/schemas';
+
 import type { PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 import { arc, close, cubic, ellipseArc, line, move, quad } from '../helpers/path-command-factory';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
@@ -26,10 +28,7 @@ describe('compile path: line baseline', () => {
       ],
     };
     const scene = compileToScene(ir);
-    expect(findPathPrim(scene.primitives).commands).toEqual([
-      move([0, 0]),
-      line([10, 5]),
-    ]);
+    expect(findPathPrim(scene.primitives).commands).toEqual([move([0, 0]), line([10, 5])]);
   });
 });
 
@@ -193,11 +192,7 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
-      move([0, 8]),
-      line([0, 60]),
-      line([92, 60]),
-    ]);
+    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([move([0, 8]), line([0, 60]), line([92, 60])]);
   });
 });
 
@@ -256,9 +251,7 @@ describe("compile path: 'cycle' 闭合", () => {
         },
       ],
     };
-    expect(compileToScene(irWith).layout).toEqual(
-      compileToScene(irWithout).layout,
-    );
+    expect(compileToScene(irWith).layout).toEqual(compileToScene(irWithout).layout);
   });
 
   it('cycle 与节点 ref 配合：每段独立 clip，cycle 段不能用 Z（闭合点与 lastEnd 不同）', () => {
@@ -398,7 +391,7 @@ describe('compile path: fill / fillRule', () => {
   });
 });
 
-describe("compile path: arrow 箭头", () => {
+describe('compile path: arrow 箭头', () => {
   it("arrow: '->' → PathPrim arrowEnd shape='stealth'，arrowStart 不写", () => {
     const ir: IR = {
       version: 1,
@@ -479,7 +472,7 @@ describe("compile path: arrow 箭头", () => {
     expect(path.arrowEnd).toBeUndefined();
   });
 
-  it("多 sub-path + arrow → 拆成 GroupPrim：首段独占 arrowStart，末段独占 arrowEnd", () => {
+  it('多 sub-path + arrow → 拆成 GroupPrim：首段独占 arrowStart，末段独占 arrowEnd', () => {
     // A → B → C 多节点路径，'->'。期望产出 GroupPrim 内 2 个 PathPrim：
     //   首段 d="M ... L ..."（无 arrow）
     //   末段 d="M ... L ..."（arrowEnd shape='stealth'）
@@ -502,9 +495,7 @@ describe("compile path: arrow 箭头", () => {
       ],
     };
     const scene = compileToScene(ir);
-    const group = scene.primitives.find(
-      (p): p is Extract<ScenePrimitive, { type: 'group' }> => p.type === 'group',
-    );
+    const group = scene.primitives.find((p): p is Extract<ScenePrimitive, { type: 'group' }> => p.type === 'group');
     expect(group).toBeDefined();
     expect(group?.children).toHaveLength(2);
     const [first, last] = group!.children as Array<PathPrim>;
@@ -514,7 +505,7 @@ describe("compile path: arrow 箭头", () => {
     expect(last.arrowEnd?.shape).toBe('stealth');
   });
 
-  it("arrowDetail.shape 透传到 PathPrim 作为 arrowEnd / arrowStart 的 shape", () => {
+  it('arrowDetail.shape 透传到 PathPrim 作为 arrowEnd / arrowStart 的 shape', () => {
     for (const shape of ['normal', 'open', 'stealth', 'openStealth', 'diamond', 'circle'] as const) {
       const ir: IR = {
         version: 1,
@@ -536,7 +527,7 @@ describe("compile path: arrow 箭头", () => {
     }
   });
 
-  it("open shape 让 path 末端向内缩 5.25×strokeWidth（line 端点接在 back stroke 外缘）", () => {
+  it('open shape 让 path 末端向内缩 5.25×strokeWidth（line 端点接在 back stroke 外缘）', () => {
     // 默认 length=6, scale=1, lineWidth=1.5：shrink = (8 + 1.5/2) × 6 / 10 = 5.25 path 单位
     // 线段 (0,0) → (100,0)，shrink 后变 (0,0) → (94.75, 0)；line 端点不再贯穿 back outline
     const ir: IR = {
@@ -554,13 +545,10 @@ describe("compile path: arrow 箭头", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
-      move([0, 0]),
-      line([94.75, 0]),
-    ]);
+    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([move([0, 0]), line([94.75, 0])]);
   });
 
-  it("strokeWidth 翻倍时 shrink 也翻倍（5.25 × strokeWidth）", () => {
+  it('strokeWidth 翻倍时 shrink 也翻倍（5.25 × strokeWidth）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -578,38 +566,35 @@ describe("compile path: arrow 箭头", () => {
       ],
     };
     // shrink = 5.25 × 2 = 10.5 → (100 - 10.5, 0) = (89.5, 0)
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
-      move([0, 0]),
-      line([89.5, 0]),
-    ]);
+    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([move([0, 0]), line([89.5, 0])]);
   });
 
   it.each([
-    ['normal', 94],   // shrink = length × scale = 6
+    ['normal', 94], // shrink = length × scale = 6
     ['diamond', 94],
     ['circle', 94],
     ['stealth', 95.8], // shrink = 0.7 × length × scale = 4.2（V tip x=3，line 嵌进凹口）
-  ] as const)("实心 shape %s 也 shrink（line 端点接在 arrow 尾部，低 opacity 下不透出 line）", (shape, expectedEndX) => {
-    const ir: IR = {
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'path',
-          arrow: '->',
-          arrowDetail: { shape },
-          children: [
-            { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'line', to: [100, 0] },
-          ],
-        },
-      ],
-    };
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
-      move([0, 0]),
-      line([expectedEndX, 0]),
-    ]);
-  });
+  ] as const)(
+    '实心 shape %s 也 shrink（line 端点接在 arrow 尾部，低 opacity 下不透出 line）',
+    (shape, expectedEndX) => {
+      const ir: IR = {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            arrow: '->',
+            arrowDetail: { shape },
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [100, 0] },
+            ],
+          },
+        ],
+      };
+      expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([move([0, 0]), line([expectedEndX, 0])]);
+    },
+  );
 
   it("arrowDetail 缺省时 shape 回退 'stealth'", () => {
     const ir: IR = {
@@ -629,7 +614,7 @@ describe("compile path: arrow 箭头", () => {
     expect(findPathPrim(compileToScene(ir).primitives).arrowEnd?.shape).toBe('stealth');
   });
 
-  it("单 sub-path + arrow → 不拆 group，直接一个 PathPrim 挂 marker", () => {
+  it('单 sub-path + arrow → 不拆 group，直接一个 PathPrim 挂 marker', () => {
     // 直接坐标，无 boundary clip 差异，单 sub-path
     const ir: IR = {
       version: 1,
@@ -654,7 +639,7 @@ describe("compile path: arrow 箭头", () => {
 });
 
 describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo）', () => {
-  it("A → B → C → A：B 出口端点不同于 B 入口端点，路径在 B 处可见地断开", () => {
+  it('A → B → C → A：B 出口端点不同于 B 入口端点，路径在 B 处可见地断开', () => {
     // A=(0,0)、B=(120,0)、C=(60,60)，无文本默认 16x16
     // 段 A→B：A.east(8,0) → B.west(112,0)
     // 段 B→C：B.center=(120,0) 朝 C.center=(60,60)，方向 (-60,60) 等比例 → 角点 → B.south-west=(112,8)；
@@ -687,7 +672,7 @@ describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo
     expect(commands).toContainEqual(move([112, 8]));
   });
 
-  it("直接坐标点 + 折角混合：cursor 复用（无 clip 差异时不起新 sub-path）", () => {
+  it('直接坐标点 + 折角混合：cursor 复用（无 clip 差异时不起新 sub-path）', () => {
     // 全直接点，每段 fromClip 等于 lastEnd → 复用 cursor，全程一个 sub-path
     const ir: IR = {
       version: 1,
@@ -706,12 +691,7 @@ describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo
     const commands = findPathPrim(compileToScene(ir).primitives).commands;
     // 期望单 sub-path：move 一次 + line 三次
     expect(commands.filter(c => c.kind === 'move')).toHaveLength(1);
-    expect(commands).toEqual([
-      move([0, 0]),
-      line([10, 0]),
-      line([20, 0]),
-      line([20, 5]),
-    ]);
+    expect(commands).toEqual([move([0, 0]), line([10, 0]), line([20, 0]), line([20, 5])]);
   });
 });
 
@@ -730,10 +710,7 @@ describe("compile path: 'curve'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
-      move([0, 0]),
-      quad([5, 8], [10, 0]),
-    ]);
+    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([move([0, 0]), quad([5, 8], [10, 0])]);
   });
 
   it('curve 与 line 混用：line → curve → line 串联', () => {
@@ -982,10 +959,7 @@ describe("compile path: 'arc'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
-      move([10, 0]),
-      arc([0, 0], 10, 0, 90),
-    ]);
+    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([move([10, 0]), arc([0, 0], 10, 0, 90)]);
   });
 
   it('arc 0°→270°（large arc）→ largeArc flag = 1', () => {
@@ -1003,10 +977,7 @@ describe("compile path: 'arc'", () => {
       ],
     };
     // 结构化期望：move 到 startPt (10,0)，再 arc 段角度跨 270° → adapter 自行计算 largeArc=1
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
-      move([10, 0]),
-      arc([0, 0], 10, 0, 270),
-    ]);
+    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([move([10, 0]), arc([0, 0], 10, 0, 270)]);
   });
 
   it('arc 之后接 line：line 起点是弧的终点（不是圆心）', () => {
@@ -1047,10 +1018,7 @@ describe("compile path: 'arc'", () => {
       ],
     };
     // 起点 = (5+10, 5) = (15, 5)；圆心 = (5,5)，r=10
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
-      move([15, 5]),
-      arc([5, 5], 10, 0, 90),
-    ]);
+    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([move([15, 5]), arc([5, 5], 10, 0, 90)]);
   });
 });
 
@@ -1187,8 +1155,8 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
-            { type: 'step', kind: 'line', to: { relative:[5, 0] } },
-            { type: 'step', kind: 'line', to: { relative:[3, 0] } },
+            { type: 'step', kind: 'line', to: { relative: [5, 0] } },
+            { type: 'step', kind: 'line', to: { relative: [3, 0] } },
           ],
         },
       ],
@@ -1212,8 +1180,8 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
-            { type: 'step', kind: 'line', to: { relativeAccumulate:[5, 0] } },
-            { type: 'step', kind: 'line', to: { relativeAccumulate:[3, 0] } },
+            { type: 'step', kind: 'line', to: { relativeAccumulate: [5, 0] } },
+            { type: 'step', kind: 'line', to: { relativeAccumulate: [3, 0] } },
           ],
         },
       ],
@@ -1235,9 +1203,9 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'line', to: { relative:[10, 0] } },          // → (10,0)，prevEnd 留 (0,0)
-            { type: 'step', kind: 'line', to: { relativeAccumulate:[5, 5] } }, // → (5,5)，prevEnd → (5,5)
-            { type: 'step', kind: 'line', to: { relative:[-3, 0] } },          // → (2,5)，prevEnd 留 (5,5)
+            { type: 'step', kind: 'line', to: { relative: [10, 0] } }, // → (10,0)，prevEnd 留 (0,0)
+            { type: 'step', kind: 'line', to: { relativeAccumulate: [5, 5] } }, // → (5,5)，prevEnd → (5,5)
+            { type: 'step', kind: 'line', to: { relative: [-3, 0] } }, // → (2,5)，prevEnd 留 (5,5)
           ],
         },
       ],
@@ -1265,7 +1233,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
               to: [10, 0],
               control: [5, -5],
             },
-            { type: 'step', kind: 'line', to: { relative:[5, 0] } },
+            { type: 'step', kind: 'line', to: { relative: [5, 0] } },
           ],
         },
       ],
@@ -1294,7 +1262,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
               endAngle: 90,
               radius: 10,
             },
-            { type: 'step', kind: 'line', to: { relative:[5, 0] } },
+            { type: 'step', kind: 'line', to: { relative: [5, 0] } },
           ],
         },
       ],
@@ -1317,7 +1285,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'circlePath', radius: 10 },
-            { type: 'step', kind: 'line', to: { relative:[5, 5] } },
+            { type: 'step', kind: 'line', to: { relative: [5, 5] } },
           ],
         },
       ],
@@ -1342,16 +1310,13 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
           type: 'path',
           children: [
             // 首步 move 用 relative：prevEnd 为 null，回退到 [0,0]，relative 解析到 (5, 3)
-            { type: 'step', kind: 'move', to: { relative:[5, 3] } },
+            { type: 'step', kind: 'move', to: { relative: [5, 3] } },
             { type: 'step', kind: 'line', to: [10, 3] },
           ],
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
-      move([5, 3]),
-      line([10, 3]),
-    ]);
+    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([move([5, 3]), line([10, 3])]);
   });
 
   it('relative 与等价绝对坐标产 IR 不同但 SVG d 相同', () => {
@@ -1363,8 +1328,8 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'line', to: { relative:[10, 5] } },
-            { type: 'step', kind: 'line', to: { relativeAccumulate:[5, 0] } },
+            { type: 'step', kind: 'line', to: { relative: [10, 5] } },
+            { type: 'step', kind: 'line', to: { relativeAccumulate: [5, 0] } },
           ],
         },
       ],
@@ -1378,7 +1343,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 5] }, // relative 不更新 prevEnd → 但 line 自己更新；这里用绝对值刚好等价
-            { type: 'step', kind: 'line', to: [5, 0] },  // relativeAccumulate [5,0] 从 prevEnd (0,0)
+            { type: 'step', kind: 'line', to: [5, 0] }, // relativeAccumulate [5,0] 从 prevEnd (0,0)
           ],
         },
       ],

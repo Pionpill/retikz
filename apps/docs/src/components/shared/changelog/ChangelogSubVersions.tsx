@@ -1,8 +1,9 @@
 import type { FC } from 'react';
 
-import { InlineMdx } from '@/components/shared/mdx-content';
-import type { Lang } from '@/i18n';
 import type { SubVersion } from '@/data/changelog.types';
+import type { Lang } from '@/i18n';
+
+import { InlineMdx } from '@/components/shared/mdx-content';
 
 import { ChangelogItems } from './ChangelogItems';
 

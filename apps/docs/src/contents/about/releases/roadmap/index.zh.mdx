@@ -9,40 +9,40 @@ description: retikz 的当前与近未来版本路线：v0.3 beta 加固、v0.3 
 
 **v0.3.0-beta.1** — rc 前 beta 加固中。
 
-| 项目 | 状态 |
-| --- | --- |
-| renderer/runtime 拆分 | ✅ 已完工 |
-| 公开 API | ⏳ beta 复核中 |
-| parity / 文档 / 打包 | ⏳ beta 加固中 |
+| 项目                  | 状态           |
+| --------------------- | -------------- |
+| renderer/runtime 拆分 | ✅ 已完工      |
+| 公开 API              | ⏳ beta 复核中 |
+| parity / 文档 / 打包  | ⏳ beta 加固中 |
 
 ## 短期：v0.3.0 rc
 
 把 beta 线收口成发布候选。
 
-| 目标 | 内容 |
-| --- | --- |
+| 目标     | 内容                                            |
+| -------- | ----------------------------------------------- |
 | API 冻结 | 进入 rc 后不再新增组件、prop、IR 字段或公开导出 |
-| 安装验收 | npm 包、类型导出、示例与文档链接都能正常工作 |
-| 发布说明 | changelog、版本说明与迁移提示保持一致 |
+| 安装验收 | npm 包、类型导出、示例与文档链接都能正常工作    |
+| 发布说明 | changelog、版本说明与迁移提示保持一致           |
 
 ## 当前 v0.3 形态
 
 Scene 的输出与运行时已经拆成更清楚的 Tier 1 包。
 
-| 目标 | 内容 |
-| --- | --- |
-| `@retikz/render` | SVG 字符串渲染、Canvas 2D 绘制、水合 helper、动画 runtime、可选 Node 图片导出 |
-| `@retikz/vanilla` | 无框架挂载与 SSR 入口 |
-| `@retikz/react` | `renderer="svg"` / `renderer="canvas"` 的统一入口 |
-| 水合 | 稳定 id + 事件绑定语义 |
-| plot 支撑 | lowering、坐标化、layer、locator / anchor 接入面 |
+| 目标              | 内容                                                                          |
+| ----------------- | ----------------------------------------------------------------------------- |
+| `@retikz/render`  | SVG 字符串渲染、Canvas 2D 绘制、水合 helper、动画 runtime、可选 Node 图片导出 |
+| `@retikz/vanilla` | 无框架挂载与 SSR 入口                                                         |
+| `@retikz/react`   | `renderer="svg"` / `renderer="canvas"` 的统一入口                             |
+| 水合              | 稳定 id + 事件绑定语义                                                        |
+| plot 支撑         | lowering、坐标化、layer、locator / anchor 接入面                              |
 
 ## 远期
 
-| 主题 | 落点 |
-| --- | --- |
+| 主题 | 落点                                              |
+| ---- | ------------------------------------------------- |
 | v0.4 | 增量渲染、Progressive IR、AI 逐步更新、视角层实验 |
-| v1+ | `plot` / `graph` / `flow` 等领域包与更广生态 |
+| v1+  | `plot` / `graph` / `flow` 等领域包与更广生态      |
 
 ## 不在路线图
 

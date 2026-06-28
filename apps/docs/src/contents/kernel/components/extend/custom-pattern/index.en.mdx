@@ -17,20 +17,20 @@ If you only want to get a pattern working first, implement `emit`; `defaultSize`
 
 A `PatternDefinition` is a plain object (not part of the IR, can be returned by a factory); wrap it at the definition site with `definePattern({...})` so custom patterns follow the same extension style as shapes, arrows, and path generators:
 
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `emit` | `(ctx) => Iterable<MarkerPrimitive>` | required | Produces motif geometry in the tile-local coordinate system (`0..size`) |
-| `defaultSize` | `number` | `8` | Default tile period (user units); overridden by `pattern.size` |
+| Field         | Type                                 | Default  | Description                                                             |
+| ------------- | ------------------------------------ | -------- | ----------------------------------------------------------------------- |
+| `emit`        | `(ctx) => Iterable<MarkerPrimitive>` | required | Produces motif geometry in the tile-local coordinate system (`0..size`) |
+| `defaultSize` | `number`                             | `8`      | Default tile period (user units); overridden by `pattern.size`          |
 
 The `PatternEmitContext` passed to `emit`:
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `size` | `number` | Resolved tile period (`spec.size ?? defaultSize ?? 8`) |
-| `color` | `string` | Motif color; defaults to `currentColor` (inherits the svg color, theme-reactive) |
-| `background` | `string?` | Tile background (omitted = transparent) |
-| `lineWidth` | `number?` | Stroke width; when `undefined` each motif picks its own default (lines / grid use 1, dots use `size/5` for the radius) |
-| `round` | `(n) => number` | Precision rounding (same function as compile / render) |
+| Field        | Type            | Description                                                                                                            |
+| ------------ | --------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `size`       | `number`        | Resolved tile period (`spec.size ?? defaultSize ?? 8`)                                                                 |
+| `color`      | `string`        | Motif color; defaults to `currentColor` (inherits the svg color, theme-reactive)                                       |
+| `background` | `string?`       | Tile background (omitted = transparent)                                                                                |
+| `lineWidth`  | `number?`       | Stroke width; when `undefined` each motif picks its own default (lines / grid use 1, dots use `size/5` for the radius) |
+| `round`      | `(n) => number` | Precision rounding (same function as compile / render)                                                                 |
 
 ## emit and the tile
 

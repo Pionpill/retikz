@@ -1,5 +1,6 @@
-import { Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node, Scope } from '@retikz/react';
 
 /**
  * 轨道 + 自转朝向中心：6 个 satellite 绕 hub 排布，自身朝向始终指向圆心（潮汐锁定）
@@ -12,7 +13,9 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={300} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node id="hub" position={[0, 0]} stroke="none">hub</Node>
+    <Node id="hub" position={[0, 0]} stroke="none">
+      hub
+    </Node>
     {[0, 60, 120, 180, 240, 300].map(angle => (
       <Scope
         key={angle}

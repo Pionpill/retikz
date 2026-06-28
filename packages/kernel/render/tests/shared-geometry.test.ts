@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { gradientLineFromAngle } from '../src/shared/gradient';
-import { parseHexColor } from '../src/shared/color';
-import { commandEndpoint } from '../src/shared/path-command';
+
 import { sceneFitMatrix } from '../src/canvas/shared';
+import { parseHexColor } from '../src/shared/color';
+import { gradientLineFromAngle } from '../src/shared/gradient';
+import { commandEndpoint } from '../src/shared/path-command';
 
 /**
  * 后端无关 / canvas 族共享纯函数锁定测试：渐变线端点（SVG+Canvas 共用）、meet-fit 适配矩阵（canvas+canvas-node 共用）。
@@ -56,7 +57,14 @@ describe('commandEndpoint', () => {
   });
 
   it('ellipseArc 按 radiusX/radiusY 取末点', () => {
-    const p = commandEndpoint({ kind: 'ellipseArc', center: [0, 0], radiusX: 10, radiusY: 5, startAngle: 0, endAngle: 90 });
+    const p = commandEndpoint({
+      kind: 'ellipseArc',
+      center: [0, 0],
+      radiusX: 10,
+      radiusY: 5,
+      startAngle: 0,
+      endAngle: 90,
+    });
     expect(p?.[0]).toBeCloseTo(0);
     expect(p?.[1]).toBeCloseTo(5);
   });

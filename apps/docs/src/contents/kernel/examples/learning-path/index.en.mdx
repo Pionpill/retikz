@@ -58,12 +58,12 @@ Send the prompt below to the AI chat panel — the LLM will produce retikz IR / 
 
 Factor a `RoadmapNode` helper first — 4 variants sharing [Node](/kernel/components/node/overview)'s shape / corner radius / font, varying only in fill and font size:
 
-| variant    | use             | look                                                   |
-| ---------- | --------------- | ------------------------------------------------------ |
-| `title`    | top title       | 24px bold, `currentColor` (theme-aware), no background |
-| `header`   | sub-header      | 14px bold, `currentColor`, no background               |
-| `required` | required button | 12px white text, dodgerblue fill `#1f6286`, black border     |
-| `optional` | optional button | 12px white text, gray fill `#878787`, black border     |
+| variant    | use             | look                                                     |
+| ---------- | --------------- | -------------------------------------------------------- |
+| `title`    | top title       | 24px bold, `currentColor` (theme-aware), no background   |
+| `header`   | sub-header      | 14px bold, `currentColor`, no background                 |
+| `required` | required button | 12px white text, dodgerblue fill `#1f6286`, black border |
+| `optional` | optional button | 12px white text, gray fill `#878787`, black border       |
 
 Step 1 places one `title` — "AI Expert in 2022" — showing the `title` variant: bold + `currentColor` (theme-aware) + no background.
 
@@ -168,21 +168,21 @@ The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge 
 
 ## Capabilities
 
-| Component                                  | Role in this example                                                                                                                                                         | Main steps                                                                                                                                          |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Draw](/kernel/components/draw/overview)     | All 12 connectors (2 spine lines / 3 short sub-column lines / 2 quadratic merges / 1 recommended dashed / 2 short dashed / 2 red X) + stroke / strokeWidth / dashPattern / arrow | [2](#step-2-center-spine--2-draw-lines), [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x) |
-| [Way operators](/kernel/components/draw/way) | `{ curve }` infix → quadratic / `{ label }` infix → edge label / node id → auto border anchor                                                                                | [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x)                                          |
-| [Node](/kernel/components/node/overview)     | All 16 roadmap nodes (title / header / required / optional) — 4 variants factored into `RoadmapNode`                                                                         | [1](#step-1-title--roadmapnode-4-variants), [3](#step-3-side-stacks--atposition-tight-stacking)                                                     |
-| [AtPosition](/kernel/concepts/basic/position)   | Tight intra-stack stacking (`{ direction: 'below', of: prevId }` + global `nodeDistance`)                                                                                    | [3](#step-3-side-stacks--atposition-tight-stacking), [4](#step-4-5-path-buttons--curve-merge)                                                       |
+| Component                                     | Role in this example                                                                                                                                                             | Main steps                                                                                                                                          |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Draw](/kernel/components/draw/overview)      | All 12 connectors (2 spine lines / 3 short sub-column lines / 2 quadratic merges / 1 recommended dashed / 2 short dashed / 2 red X) + stroke / strokeWidth / dashPattern / arrow | [2](#step-2-center-spine--2-draw-lines), [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x) |
+| [Way operators](/kernel/components/draw/way)  | `{ curve }` infix → quadratic / `{ label }` infix → edge label / node id → auto border anchor                                                                                    | [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x)                                          |
+| [Node](/kernel/components/node/overview)      | All 16 roadmap nodes (title / header / required / optional) — 4 variants factored into `RoadmapNode`                                                                             | [1](#step-1-title--roadmapnode-4-variants), [3](#step-3-side-stacks--atposition-tight-stacking)                                                     |
+| [AtPosition](/kernel/concepts/basic/position) | Tight intra-stack stacking (`{ direction: 'below', of: prevId }` + global `nodeDistance`)                                                                                        | [3](#step-3-side-stacks--atposition-tight-stacking), [4](#step-4-5-path-buttons--curve-merge)                                                       |
 
 ## Limitations
 
-| Capability | Plan | Status / fallback |
-| --- | --- | --- |
-| Math y-up axis | 🚧 Planned | scaling itself works via a Scope `scale` transform, but [`<Layout>`](/kernel/components/layout) has no y-up switch yet (a negative `y` scale flips text too); this example uses intro.svg's raw pixel coordinates |
-| Node hyperlinks | 🚧 Planned | [`<Node>`](/kernel/components/node/overview) doesn't accept `href` today, so intro.svg's `<a xlink:href>` wrappers are lost (visible but not clickable); wrap externally in `<a>` or render a separate link list |
-| Node drop shadow | 🚧 Planned | [`<Node>`](/kernel/components/node/overview) has no shadow support yet, so the duplicated-rect drop shadow is omitted |
-| Curve arrow shrink along chord | 🚧 Planned | arrow shrink currently shortens along the chord, so arrows on `curve` / `cubic` drift a few pixels off the border (`line` / `fold` unaffected); tangent-direction shrink is on the roadmap |
+| Capability                     | Plan       | Status / fallback                                                                                                                                                                                                 |
+| ------------------------------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Math y-up axis                 | 🚧 Planned | scaling itself works via a Scope `scale` transform, but [`<Layout>`](/kernel/components/layout) has no y-up switch yet (a negative `y` scale flips text too); this example uses intro.svg's raw pixel coordinates |
+| Node hyperlinks                | 🚧 Planned | [`<Node>`](/kernel/components/node/overview) doesn't accept `href` today, so intro.svg's `<a xlink:href>` wrappers are lost (visible but not clickable); wrap externally in `<a>` or render a separate link list  |
+| Node drop shadow               | 🚧 Planned | [`<Node>`](/kernel/components/node/overview) has no shadow support yet, so the duplicated-rect drop shadow is omitted                                                                                             |
+| Curve arrow shrink along chord | 🚧 Planned | arrow shrink currently shortens along the chord, so arrows on `curve` / `cubic` drift a few pixels off the border (`line` / `fold` unaffected); tangent-direction shrink is on the roadmap                        |
 
 ## Further reading
 

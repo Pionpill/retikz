@@ -24,50 +24,50 @@ import { Circle, Ellipse } from '@retikz/react';
 
 最常见的是 `center + radius`。如果手上是一个矩形范围，也可以直接用 `corner1 + corner2` 或 `box`。
 
-| 写法 | 适合 |
-| --- | --- |
-| `{ center, radius }` | 已知圆心和半径 |
-| `{ center, diameter }` | 已知直径 |
-| `{ from, to }` | 直径两端点 |
-| `{ corner1, corner2 }` | 放进一个包围盒 |
-| `{ box }` | 用 `x/y/origin + width + height` 直接描述矩形范围 |
-| + `fit="contain" \| "cover"` | 让圆取范围短边之半（内切）或长边之半 |
-| + `inset` / `outset` | 在原范围基础上先收缩或扩展再绘制 |
-| + angles + `closed="sector"` | 画 1/4 圆、30° 圆这类连回圆心的残缺圆 |
+| 写法                         | 适合                                              |
+| ---------------------------- | ------------------------------------------------- |
+| `{ center, radius }`         | 已知圆心和半径                                    |
+| `{ center, diameter }`       | 已知直径                                          |
+| `{ from, to }`               | 直径两端点                                        |
+| `{ corner1, corner2 }`       | 放进一个包围盒                                    |
+| `{ box }`                    | 用 `x/y/origin + width + height` 直接描述矩形范围 |
+| + `fit="contain" \| "cover"` | 让圆取范围短边之半（内切）或长边之半              |
+| + `inset` / `outset`         | 在原范围基础上先收缩或扩展再绘制                  |
+| + angles + `closed="sector"` | 画 1/4 圆、30° 圆这类连回圆心的残缺圆             |
 
 <ComponentPreview name="circle-basic" size="sm" />
 
 椭圆和圆很像，只是半径拆成了 `radiusX` 和 `radiusY`。它也支持 `corner1 + corner2` 和 `box`。
 
-| 写法 | 适合 |
-| --- | --- |
-| `{ center, radiusX, radiusY }` | 已知中心和两个半轴 |
-| `{ center, diameterX, diameterY }` | 已知两个直径 |
-| `{ corner1, corner2 }` | 放进一个包围盒 |
-| `{ box }` | 用 `x/y/origin + width + height` 直接描述矩形范围 |
-| + `inset` / `outset` | 先收缩或扩展范围再画椭圆 |
-| + angles + `closed="sector"` | 画连回中心的部分椭圆 |
+| 写法                               | 适合                                              |
+| ---------------------------------- | ------------------------------------------------- |
+| `{ center, radiusX, radiusY }`     | 已知中心和两个半轴                                |
+| `{ center, diameterX, diameterY }` | 已知两个直径                                      |
+| `{ corner1, corner2 }`             | 放进一个包围盒                                    |
+| `{ box }`                          | 用 `x/y/origin + width + height` 直接描述矩形范围 |
+| + `inset` / `outset`               | 先收缩或扩展范围再画椭圆                          |
+| + angles + `closed="sector"`       | 画连回中心的部分椭圆                              |
 
 <ComponentPreview name="ellipse-basic" size="sm" />
 
 ### API 参考
 
-| 组件 | 组合 | 含义 |
-| --- | --- | --- |
-| `<Circle>` | `center` + `radius` | 用圆心和半径画圆 |
-| | `center` + `diameter` | 用圆心和直径画圆 |
-| | `from` + `to` | 用两点画圆 |
-| | `corner1` + `corner2` | 用包围盒画内切圆 |
-| | `box` | 用矩形范围描述圆，配合 `fit` / `inset` / `outset` |
-| | + `fit?` | `contain` 取短边之半（内切），`cover` 取长边之半 |
-| | + `inset?` / `outset?` | 收缩或扩展 box 范围后再计算 |
-| | + angles (`startAngle` / `endAngle` / `sweepAngle`, any two) + `closed?` | 部分圆：`chord` / `sector` / `open` |
-| `<Ellipse>` | `center` + `radiusX` + `radiusY` | 用中心和两个半轴画椭圆 |
-| | `center` + `diameterX` + `diameterY` | 用中心和两个直径画椭圆 |
-| | `corner1` + `corner2` | 用包围盒画内切椭圆 |
-| | `box` | 用矩形范围描述椭圆，配合 `inset` / `outset` |
-| | + `inset?` / `outset?` | 收缩或扩展 box 范围后再计算 |
-| | + angles + `closed?` | 部分椭圆：`chord` / `sector` / `open` |
+| 组件        | 组合                                                                     | 含义                                              |
+| ----------- | ------------------------------------------------------------------------ | ------------------------------------------------- |
+| `<Circle>`  | `center` + `radius`                                                      | 用圆心和半径画圆                                  |
+|             | `center` + `diameter`                                                    | 用圆心和直径画圆                                  |
+|             | `from` + `to`                                                            | 用两点画圆                                        |
+|             | `corner1` + `corner2`                                                    | 用包围盒画内切圆                                  |
+|             | `box`                                                                    | 用矩形范围描述圆，配合 `fit` / `inset` / `outset` |
+|             | + `fit?`                                                                 | `contain` 取短边之半（内切），`cover` 取长边之半  |
+|             | + `inset?` / `outset?`                                                   | 收缩或扩展 box 范围后再计算                       |
+|             | + angles (`startAngle` / `endAngle` / `sweepAngle`, any two) + `closed?` | 部分圆：`chord` / `sector` / `open`               |
+| `<Ellipse>` | `center` + `radiusX` + `radiusY`                                         | 用中心和两个半轴画椭圆                            |
+|             | `center` + `diameterX` + `diameterY`                                     | 用中心和两个直径画椭圆                            |
+|             | `corner1` + `corner2`                                                    | 用包围盒画内切椭圆                                |
+|             | `box`                                                                    | 用矩形范围描述椭圆，配合 `inset` / `outset`       |
+|             | + `inset?` / `outset?`                                                   | 收缩或扩展 box 范围后再计算                       |
+|             | + angles + `closed?`                                                     | 部分椭圆：`chord` / `sector` / `open`             |
 
 ## 作为 Node 形状
 
@@ -94,10 +94,10 @@ import { Node } from '@retikz/react';
 
 ### API 参考
 
-| `shape` | 边界 | 参数 |
-| --- | --- | --- |
-| `"circle"` | 能容纳文字的外接圆（= `ellipse` 的 `circumscribe:'equal'` 预设） | 无 |
-| `"ellipse"` 或 `{ type:'ellipse', params }` | 外接椭圆 | `circumscribe?`：`'proportional'`（默认，各轴 × √2）/ `'equal'`（等轴，半径取内框对角线之半） |
+| `shape`                                     | 边界                                                             | 参数                                                                                          |
+| ------------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `"circle"`                                  | 能容纳文字的外接圆（= `ellipse` 的 `circumscribe:'equal'` 预设） | 无                                                                                            |
+| `"ellipse"` 或 `{ type:'ellipse', params }` | 外接椭圆                                                         | `circumscribe?`：`'proportional'`（默认，各轴 × √2）/ `'equal'`（等轴，半径取内框对角线之半） |
 
 ## 技术原理
 
@@ -124,11 +124,11 @@ import { Node } from '@retikz/react';
 
 带角度时，`closed` 决定弧线两端怎么收口：
 
-| 值 | 效果 |
-| --- | --- |
-| `chord` | 默认值，直接连接两个弧端点 |
+| 值       | 效果                           |
+| -------- | ------------------------------ |
+| `chord`  | 默认值，直接连接两个弧端点     |
 | `sector` | 从弧终点连到中心，再回到弧起点 |
-| `open` | 只画弧线，不闭合 |
+| `open`   | 只画弧线，不闭合               |
 
 ### Sugar 和 Node 是两条路
 

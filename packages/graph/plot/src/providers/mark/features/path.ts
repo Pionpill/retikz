@@ -1,36 +1,57 @@
-import { type IRChild, type IRCoordinate, type IRPath, type IRScope, type IRStep } from '@retikz/core';
-import { type ChannelValueResolver, type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkLoweringContext, type MarkProvenance } from '../../../contract';
-import { channelValue, compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../../data';
 import {
-  type PolarVertex,
+  type IRChild,
+  type IRCoordinate,
+  type IRNodeLabel,
+  type IRPath,
+  type IRScope,
+  type IRStep,
+} from '@retikz/core';
+
+import type { ExternalRow, Mark, PathClosure, PathCurveValue, PathMark } from '../../../schemas';
+import type { PolarVertex } from '../../coordinate';
+import type { MarkPaint } from '../shared';
+
+import {
+  type ChannelValueResolver,
+  type CoordinateFrame,
+  type FieldCollector,
+  type MarkChannels,
+  type MarkDefinition,
+  type MarkLoweringContext,
+  type MarkProvenance,
+} from '../../../contract';
+import { seriesPathMeta, slug } from '../../../pipeline';
+import { PathClosureKind, PathCurve, PlotMark } from '../../../schemas';
+import {
   densifyPolarSegments,
   isCartesianCoordinateFrame,
   isPolarCoordinateFrame,
   toPolarVertex,
 } from '../../coordinate';
-import { type ExternalRow, type Mark, type PathClosure, PathClosureKind, PathCurve, type PathCurveValue, type PathMark, PlotMark } from '../../../schemas';
+import { channelValue, compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../../data';
 import {
-  DEFAULT_FILL,
-  LINE_STROKE_WIDTH,
-  type MarkPaint,
   applyPathChannelDeliveries,
   attachMarkLayer,
   channelDefaultOf,
   channelValueOf,
   collectCommonEncodingFields,
   collectPathChannelFields,
+  DEFAULT_FILL,
   failLoudMessage,
+  LINE_STROKE_WIDTH,
   pathChannelKinds,
+  resolveGeometryMarkLabels,
   roleAnchor,
 } from '../shared';
-import { seriesPathMeta, slug } from '../../../pipeline';
 
 /**
  * 取一行的位置通道值 → [xValue, yValue]（坐标系无关；投影交给 frame.project，frame 把 x/y 重解释为对应角色）。
  * @description x/y 是唯一位置通道（坐标系决定其含义）。
  */
-export const resolveRolePosition = (mark: PathMark, row: ExternalRow): [unknown, unknown] =>
-  [channelValue(mark.encoding.x, row), channelValue(mark.encoding.y, row)];
+export const resolveRolePosition = (mark: PathMark, row: ExternalRow): [unknown, unknown] => [
+  channelValue(mark.encoding.x, row),
+  channelValue(mark.encoding.y, row),
+];
 
 /** 把若干屏幕点连成 move + line steps（按需尾部加 cycle 闭合）；点数 < 2 返回 null。 */
 export const pointsToSteps = (points: ReadonlyArray<[number, number]>, closed: boolean): Array<IRStep> | null => {
@@ -53,7 +74,11 @@ const cubicStep = (
 const withClosingPoint = (points: ReadonlyArray<[number, number]>, closed: boolean): Array<[number, number]> =>
   closed ? [...points, points[0]] : [...points];
 
-const pointsToStepCurveSteps = (points: ReadonlyArray<[number, number]>, closed: boolean, curve: PathCurveValue): Array<IRStep> | null => {
+const pointsToStepCurveSteps = (
+  points: ReadonlyArray<[number, number]>,
+  closed: boolean,
+  curve: PathCurveValue,
+): Array<IRStep> | null => {
   const pathPoints = withClosingPoint(points, closed);
   if (pathPoints.length < 2) return null;
   const steps: Array<IRStep> = [{ type: 'step', kind: 'move', to: pathPoints[0] }];
@@ -75,7 +100,10 @@ const pointsToStepCurveSteps = (points: ReadonlyArray<[number, number]>, closed:
   return steps;
 };
 
-const cardinalSegments = (points: ReadonlyArray<[number, number]>, tension: number): Array<Extract<IRStep, { kind: 'cubic' }>> => {
+const cardinalSegments = (
+  points: ReadonlyArray<[number, number]>,
+  tension: number,
+): Array<Extract<IRStep, { kind: 'cubic' }>> => {
   const segments: Array<Extract<IRStep, { kind: 'cubic' }>> = [];
   const k = (1 - tension) / 6;
   for (let i = 0; i < points.length - 1; i++) {
@@ -83,11 +111,13 @@ const cardinalSegments = (points: ReadonlyArray<[number, number]>, tension: numb
     const p1 = points[i];
     const p2 = points[i + 1];
     const p3 = points[i + 2] ?? p2;
-    segments.push(cubicStep(
-      [p1[0] + (p2[0] - p0[0]) * k, p1[1] + (p2[1] - p0[1]) * k],
-      [p2[0] - (p3[0] - p1[0]) * k, p2[1] - (p3[1] - p1[1]) * k],
-      p2,
-    ));
+    segments.push(
+      cubicStep(
+        [p1[0] + (p2[0] - p0[0]) * k, p1[1] + (p2[1] - p0[1]) * k],
+        [p2[0] - (p3[0] - p1[0]) * k, p2[1] - (p3[1] - p1[1]) * k],
+        p2,
+      ),
+    );
   }
   return segments;
 };
@@ -97,27 +127,33 @@ const basisSegments = (points: ReadonlyArray<[number, number]>): Array<Extract<I
   const segments: Array<Extract<IRStep, { kind: 'cubic' }>> = [];
   let p0 = points[0];
   let p1 = points[1];
-  segments.push(cubicStep(
-    [(2 * p0[0] + p1[0]) / 3, (2 * p0[1] + p1[1]) / 3],
-    [(p0[0] + 2 * p1[0]) / 3, (p0[1] + 2 * p1[1]) / 3],
-    [(p0[0] + 4 * p1[0] + points[2][0]) / 6, (p0[1] + 4 * p1[1] + points[2][1]) / 6],
-  ));
-  for (let i = 2; i < points.length - 1; i++) {
-    const p2 = points[i];
-    segments.push(cubicStep(
+  segments.push(
+    cubicStep(
       [(2 * p0[0] + p1[0]) / 3, (2 * p0[1] + p1[1]) / 3],
       [(p0[0] + 2 * p1[0]) / 3, (p0[1] + 2 * p1[1]) / 3],
-      [(p0[0] + 4 * p1[0] + p2[0]) / 6, (p0[1] + 4 * p1[1] + p2[1]) / 6],
-    ));
+      [(p0[0] + 4 * p1[0] + points[2][0]) / 6, (p0[1] + 4 * p1[1] + points[2][1]) / 6],
+    ),
+  );
+  for (let i = 2; i < points.length - 1; i++) {
+    const p2 = points[i];
+    segments.push(
+      cubicStep(
+        [(2 * p0[0] + p1[0]) / 3, (2 * p0[1] + p1[1]) / 3],
+        [(p0[0] + 2 * p1[0]) / 3, (p0[1] + 2 * p1[1]) / 3],
+        [(p0[0] + 4 * p1[0] + p2[0]) / 6, (p0[1] + 4 * p1[1] + p2[1]) / 6],
+      ),
+    );
     p0 = p1;
     p1 = p2;
   }
   const last = points[points.length - 1];
-  segments.push(cubicStep(
-    [(2 * p0[0] + p1[0]) / 3, (2 * p0[1] + p1[1]) / 3],
-    [(p0[0] + 2 * p1[0]) / 3, (p0[1] + 2 * p1[1]) / 3],
-    last,
-  ));
+  segments.push(
+    cubicStep(
+      [(2 * p0[0] + p1[0]) / 3, (2 * p0[1] + p1[1]) / 3],
+      [(p0[0] + 2 * p1[0]) / 3, (p0[1] + 2 * p1[1]) / 3],
+      last,
+    ),
+  );
   return segments;
 };
 
@@ -151,7 +187,10 @@ const monotoneSlopes = (values: Array<number>, positions: Array<number>): Array<
   return slopes;
 };
 
-const monotoneSegments = (points: ReadonlyArray<[number, number]>, dimension: 'x' | 'y'): Array<Extract<IRStep, { kind: 'cubic' }>> => {
+const monotoneSegments = (
+  points: ReadonlyArray<[number, number]>,
+  dimension: 'x' | 'y',
+): Array<Extract<IRStep, { kind: 'cubic' }>> => {
   const primary = points.map(point => (dimension === 'x' ? point[0] : point[1]));
   const secondary = points.map(point => (dimension === 'x' ? point[1] : point[0]));
   const slopes = monotoneSlopes(secondary, primary);
@@ -180,7 +219,8 @@ const naturalSecondDerivatives = (values: Array<number>, positions: Array<number
     const sig = h0 / (h0 + h1);
     const p = sig * second[i - 1] + 2;
     second[i] = (sig - 1) / p;
-    temp[i] = (6 * ((values[i + 1] - values[i]) / h1 - (values[i] - values[i - 1]) / h0) / (h0 + h1) - sig * temp[i - 1]) / p;
+    temp[i] =
+      ((6 * ((values[i + 1] - values[i]) / h1 - (values[i] - values[i - 1]) / h0)) / (h0 + h1) - sig * temp[i - 1]) / p;
   }
   for (let k = n - 2; k >= 0; k--) second[k] = second[k] * second[k + 1] + temp[k];
   return second;
@@ -195,16 +235,28 @@ const naturalSegments = (points: ReadonlyArray<[number, number]>): Array<Extract
   const segments: Array<Extract<IRStep, { kind: 'cubic' }>> = [];
   for (let i = 0; i < points.length - 1; i++) {
     const h = t[i + 1] - t[i];
-    segments.push(cubicStep(
-      [xs[i] + h * (xs[i + 1] - xs[i]) / 3 - h * h * (2 * secondX[i] + secondX[i + 1]) / 18, ys[i] + h * (ys[i + 1] - ys[i]) / 3 - h * h * (2 * secondY[i] + secondY[i + 1]) / 18],
-      [xs[i + 1] - h * (xs[i + 1] - xs[i]) / 3 + h * h * (secondX[i] + 2 * secondX[i + 1]) / 18, ys[i + 1] - h * (ys[i + 1] - ys[i]) / 3 + h * h * (secondY[i] + 2 * secondY[i + 1]) / 18],
-      points[i + 1],
-    ));
+    segments.push(
+      cubicStep(
+        [
+          xs[i] + (h * (xs[i + 1] - xs[i])) / 3 - (h * h * (2 * secondX[i] + secondX[i + 1])) / 18,
+          ys[i] + (h * (ys[i + 1] - ys[i])) / 3 - (h * h * (2 * secondY[i] + secondY[i + 1])) / 18,
+        ],
+        [
+          xs[i + 1] - (h * (xs[i + 1] - xs[i])) / 3 + (h * h * (secondX[i] + 2 * secondX[i + 1])) / 18,
+          ys[i + 1] - (h * (ys[i + 1] - ys[i])) / 3 + (h * h * (secondY[i] + 2 * secondY[i + 1])) / 18,
+        ],
+        points[i + 1],
+      ),
+    );
   }
   return segments;
 };
 
-const pointsToCurveSteps = (points: ReadonlyArray<[number, number]>, closed: boolean, curve: PathCurveValue = PathCurve.Linear): Array<IRStep> | null => {
+const pointsToCurveSteps = (
+  points: ReadonlyArray<[number, number]>,
+  closed: boolean,
+  curve: PathCurveValue = PathCurve.Linear,
+): Array<IRStep> | null => {
   if (curve === PathCurve.Linear) return pointsToSteps(points, closed);
   if (curve === PathCurve.Step || curve === PathCurve.StepBefore || curve === PathCurve.StepAfter) {
     return pointsToStepCurveSteps(points, closed, curve);
@@ -212,7 +264,10 @@ const pointsToCurveSteps = (points: ReadonlyArray<[number, number]>, closed: boo
   const pathPoints = withClosingPoint(points, closed);
   if (pathPoints.length < 2) return null;
   if (curve === PathCurve.CatmullRom) {
-    const steps: Array<IRStep> = [{ type: 'step', kind: 'move', to: pathPoints[0] }, { type: 'step', kind: 'smooth', points: pathPoints.slice(1), tension: 1 }];
+    const steps: Array<IRStep> = [
+      { type: 'step', kind: 'move', to: pathPoints[0] },
+      { type: 'step', kind: 'smooth', points: pathPoints.slice(1), tension: 1 },
+    ];
     if (closed) steps.push({ type: 'step', kind: 'cycle' });
     return steps;
   }
@@ -247,7 +302,12 @@ export const orderRows = (rows: Array<ExternalRow>, order: string | undefined): 
  * 把一组有序行投影成上沿屏幕点（坐标系无关）。
  * @description cartesian / polar 分类角轴 / closed 走弦（顶点直连）；polar 连续角轴段内采样弯弧。
  */
-export const buildOutlinePoints = (mark: PathMark, ordered: Array<ExternalRow>, frame: CoordinateFrame, closed: boolean): Array<[number, number]> => {
+export const buildOutlinePoints = (
+  mark: PathMark,
+  ordered: Array<ExternalRow>,
+  frame: CoordinateFrame,
+  closed: boolean,
+): Array<[number, number]> => {
   if (isPolarCoordinateFrame(frame) && frame.continuousAngle && !closed) {
     const vertices = ordered
       .map(row => {
@@ -269,7 +329,9 @@ const ZERO_BASELINE = 0;
 
 const pathDefaultBaseline = (frame: CoordinateFrame): number => {
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) return ZERO_BASELINE;
-  const numericDomain = frame.secondary.domain().filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+  const numericDomain = frame.secondary
+    .domain()
+    .filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
   if (numericDomain.length < 2) return ZERO_BASELINE;
   const min = Math.min(...numericDomain);
   const max = Math.max(...numericDomain);
@@ -277,23 +339,31 @@ const pathDefaultBaseline = (frame: CoordinateFrame): number => {
   return Math.abs(min - ZERO_BASELINE) <= Math.abs(max - ZERO_BASELINE) ? min : max;
 };
 
-const pathClosureOf = (mark: PathMark): PathClosure | undefined =>
-  mark.closure;
+const pathClosureOf = (mark: PathMark): PathClosure | undefined => mark.closure;
 
 type PathRowSegment = Array<ExternalRow>;
 type PathStepSegment = { rows: PathRowSegment; steps: Array<IRStep> };
 
 const projectableTopPoint = (mark: PathMark, row: ExternalRow, frame: CoordinateFrame, closed: boolean): boolean => {
   const [primaryValue, secondaryValue] = resolveRolePosition(mark, row);
-  if (isPolarCoordinateFrame(frame) && frame.continuousAngle && !closed) return toPolarVertex(frame, primaryValue, secondaryValue) !== null;
+  if (isPolarCoordinateFrame(frame) && frame.continuousAngle && !closed)
+    return toPolarVertex(frame, primaryValue, secondaryValue) !== null;
   return frame.project(primaryValue, secondaryValue) !== null;
 };
 
-const projectableClosurePoint = (mark: PathMark, row: ExternalRow, frame: CoordinateFrame, closure: PathClosure, closed: boolean): boolean => {
+const projectableClosurePoint = (
+  mark: PathMark,
+  row: ExternalRow,
+  frame: CoordinateFrame,
+  closure: PathClosure,
+  closed: boolean,
+): boolean => {
   if (!projectableTopPoint(mark, row, frame, closed)) return false;
   const [primaryValue] = resolveRolePosition(mark, row);
-  if (closure.kind === PathClosureKind.Baseline) return frame.project(primaryValue, closure.baseline ?? pathDefaultBaseline(frame)) !== null;
-  if (closure.kind === PathClosureKind.Stack) return frame.project(primaryValue, resolveFieldPath(row, closure.baselineField)) !== null;
+  if (closure.kind === PathClosureKind.Baseline)
+    return frame.project(primaryValue, closure.baseline ?? pathDefaultBaseline(frame)) !== null;
+  if (closure.kind === PathClosureKind.Stack)
+    return frame.project(primaryValue, resolveFieldPath(row, closure.baselineField)) !== null;
   return true;
 };
 
@@ -320,15 +390,28 @@ const splitRowsByProjectability = (
   return segments;
 };
 
-const pathRowSegments = (mark: PathMark, rows: Array<ExternalRow>, frame: CoordinateFrame, closure: PathClosure | undefined, closed: boolean): Array<PathRowSegment> => {
+const pathRowSegments = (
+  mark: PathMark,
+  rows: Array<ExternalRow>,
+  frame: CoordinateFrame,
+  closure: PathClosure | undefined,
+  closed: boolean,
+): Array<PathRowSegment> => {
   const ordered = orderRows(rows, mark.order);
   const connectNulls = mark.connectNulls ?? false;
   const projectable = (row: ExternalRow): boolean =>
-    closure === undefined ? projectableTopPoint(mark, row, frame, closed) : projectableClosurePoint(mark, row, frame, closure, closed);
+    closure === undefined
+      ? projectableTopPoint(mark, row, frame, closed)
+      : projectableClosurePoint(mark, row, frame, closure, closed);
   return splitRowsByProjectability(ordered, projectable, connectNulls);
 };
 
-const buildConstantBaselinePoints = (mark: PathMark, ordered: Array<ExternalRow>, frame: CoordinateFrame, baseline: number): Array<[number, number]> =>
+const buildConstantBaselinePoints = (
+  mark: PathMark,
+  ordered: Array<ExternalRow>,
+  frame: CoordinateFrame,
+  baseline: number,
+): Array<[number, number]> =>
   ordered
     .map(row => {
       const [primaryValue] = resolveRolePosition(mark, row);
@@ -337,7 +420,12 @@ const buildConstantBaselinePoints = (mark: PathMark, ordered: Array<ExternalRow>
     .filter((point): point is [number, number] => point !== null)
     .reverse();
 
-const buildStackBaselinePoints = (mark: PathMark, ordered: Array<ExternalRow>, frame: CoordinateFrame, baselineField: string): Array<[number, number]> =>
+const buildStackBaselinePoints = (
+  mark: PathMark,
+  ordered: Array<ExternalRow>,
+  frame: CoordinateFrame,
+  baselineField: string,
+): Array<[number, number]> =>
   ordered
     .map(row => {
       const [primaryValue] = resolveRolePosition(mark, row);
@@ -346,7 +434,12 @@ const buildStackBaselinePoints = (mark: PathMark, ordered: Array<ExternalRow>, f
     .filter((point): point is [number, number] => point !== null)
     .reverse();
 
-const buildClosureReturnPoints = (mark: PathMark, ordered: Array<ExternalRow>, frame: CoordinateFrame, closure: PathClosure): Array<[number, number]> => {
+const buildClosureReturnPoints = (
+  mark: PathMark,
+  ordered: Array<ExternalRow>,
+  frame: CoordinateFrame,
+  closure: PathClosure,
+): Array<[number, number]> => {
   if (closure.kind === PathClosureKind.Baseline) {
     return buildConstantBaselinePoints(mark, ordered, frame, closure.baseline ?? pathDefaultBaseline(frame));
   }
@@ -356,7 +449,12 @@ const buildClosureReturnPoints = (mark: PathMark, ordered: Array<ExternalRow>, f
   return [];
 };
 
-const buildLineStepSegments = (mark: PathMark, rows: Array<ExternalRow>, frame: CoordinateFrame, closed: boolean): Array<PathStepSegment> =>
+const buildLineStepSegments = (
+  mark: PathMark,
+  rows: Array<ExternalRow>,
+  frame: CoordinateFrame,
+  closed: boolean,
+): Array<PathStepSegment> =>
   pathRowSegments(mark, rows, frame, undefined, closed).flatMap(segmentRows => {
     const steps = pointsToCurveSteps(
       buildOutlinePoints(mark, segmentRows, frame, closed),
@@ -373,7 +471,13 @@ const returnCurveSteps = (points: ReadonlyArray<[number, number]>, curve: PathCu
   return [{ type: 'step', kind: 'line', to: points[0] }, ...rest];
 };
 
-const buildClosureStepSegment = (mark: PathMark, segmentRows: PathRowSegment, frame: CoordinateFrame, closure: PathClosure, closed: boolean): PathStepSegment | null => {
+const buildClosureStepSegment = (
+  mark: PathMark,
+  segmentRows: PathRowSegment,
+  frame: CoordinateFrame,
+  closure: PathClosure,
+  closed: boolean,
+): PathStepSegment | null => {
   if (closure.kind === PathClosureKind.Cycle) {
     const steps = pointsToCurveSteps(
       buildOutlinePoints(mark, segmentRows, frame, true),
@@ -393,19 +497,23 @@ const buildClosureStepSegment = (mark: PathMark, segmentRows: PathRowSegment, fr
   if (!topSteps || !bottomSteps) return null;
   return {
     rows: segmentRows,
-    steps: [
-      ...topSteps,
-      ...bottomSteps,
-      { type: 'step', kind: 'cycle' },
-    ],
+    steps: [...topSteps, ...bottomSteps, { type: 'step', kind: 'cycle' }],
   };
 };
 
-const buildClosureStepSegments = (mark: PathMark, rows: Array<ExternalRow>, frame: CoordinateFrame, closure: PathClosure, closed: boolean): Array<PathStepSegment> =>
-  pathRowSegments(mark, rows, frame, closure, closure.kind === PathClosureKind.Cycle ? true : closed).flatMap(segmentRows => {
-    const segment = buildClosureStepSegment(mark, segmentRows, frame, closure, closed);
-    return segment === null ? [] : [segment];
-  });
+const buildClosureStepSegments = (
+  mark: PathMark,
+  rows: Array<ExternalRow>,
+  frame: CoordinateFrame,
+  closure: PathClosure,
+  closed: boolean,
+): Array<PathStepSegment> =>
+  pathRowSegments(mark, rows, frame, closure, closure.kind === PathClosureKind.Cycle ? true : closed).flatMap(
+    segmentRows => {
+      const segment = buildClosureStepSegment(mark, segmentRows, frame, closure, closed);
+      return segment === null ? [] : [segment];
+    },
+  );
 
 /** 多系列 series 拆分通用：每条 series 一条 Path，provenance 开时绑 `<plotId>.series.<slug>` + Path.meta（series 原值）。 */
 export type SeriesPathBuilder = (seriesRows: Array<ExternalRow>) => Array<PathStepSegment>;
@@ -431,14 +539,23 @@ export const buildSeriesPaths = (
     const segments = buildSteps(seriesRows);
     for (let index = 0; index < segments.length; index += 1) {
       const segment = segments[index];
-      const path: IRPathChild = applyPathChannelDeliveries({ type: 'path', ...paintOf(segment.rows), children: segment.steps }, mark, segment.rows[0] ?? {}, channels);
+      const row = segment.rows[0] ?? {};
+      const label = resolveGeometryMarkLabels(mark.label, row, channelValueOf<IRNodeLabel['text']>(channels, 'label'));
+      const path: IRPathChild = applyPathChannelDeliveries(
+        { type: 'path', ...paintOf(segment.rows), ...(label !== undefined ? { label } : {}), children: segment.steps },
+        mark,
+        row,
+        channels,
+      );
       if (markProvenance) {
         if (plotId !== undefined && seenIds) {
           const baseId = `${plotId}.series.${slug(series)}`;
           const id = segments.length === 1 ? baseId : `${baseId}.segment.${index + 1}`;
           const prior = seenIds.get(id);
           if (prior !== undefined && prior !== series) {
-            throw new Error(`lowerPlots: series values "${String(prior)}" and "${String(series)}" collide to the same series id "${id}"; series anchors must be unique`);
+            throw new Error(
+              `lowerPlots: series values "${String(prior)}" and "${String(series)}" collide to the same series id "${id}"; series anchors must be unique`,
+            );
           }
           seenIds.set(id, series);
           path.id = id;
@@ -451,7 +568,13 @@ export const buildSeriesPaths = (
   return paths;
 };
 
-export const markPaintOf = (mark: Mark, channels: MarkChannels, channel: 'fill' | 'stroke', rows: Array<ExternalRow>, fallback?: MarkPaint): MarkPaint | undefined => {
+export const markPaintOf = (
+  mark: Mark,
+  channels: MarkChannels,
+  channel: 'fill' | 'stroke',
+  rows: Array<ExternalRow>,
+  fallback?: MarkPaint,
+): MarkPaint | undefined => {
   const value = (mark as { fill?: { kind: string }; stroke?: { kind: string } })[channel];
   const resolver = value?.kind === 'field' ? channelValueOf<MarkPaint>(channels, channel) : undefined;
   return resolver?.(rows[0] ?? {}) ?? channelDefaultOf<MarkPaint>(channels, channel) ?? fallback;
@@ -514,32 +637,58 @@ const lowerPath = (
       mark,
       rows,
       seriesField,
-      seriesRows => (closure ? buildClosureStepSegments(mark, seriesRows, frame, closure, closed) : buildLineStepSegments(mark, seriesRows, frame, closed)),
+      seriesRows =>
+        closure
+          ? buildClosureStepSegments(mark, seriesRows, frame, closure, closed)
+          : buildLineStepSegments(mark, seriesRows, frame, closed),
       seriesRows => {
         const fill = markPaintOf(mark, channels, 'fill', seriesRows, undefined);
         return {
-          stroke: markPaintOf(mark, channels, 'stroke', seriesRows, colorOf?.(seriesRows[0]) ?? DEFAULT_FILL) ?? DEFAULT_FILL,
+          stroke:
+            markPaintOf(mark, channels, 'stroke', seriesRows, colorOf?.(seriesRows[0]) ?? DEFAULT_FILL) ?? DEFAULT_FILL,
           ...(fill !== undefined ? { fill } : {}),
         };
       },
       channels,
       markProvenance,
     );
-    return paths.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
+    return paths.length === 0
+      ? null
+      : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
   }
-  const segments = closure ? buildClosureStepSegments(mark, rows, frame, closure, closed) : buildLineStepSegments(mark, rows, frame, closed);
+  const segments = closure
+    ? buildClosureStepSegments(mark, rows, frame, closure, closed)
+    : buildLineStepSegments(mark, rows, frame, closed);
   if (segments.length === 0) return null;
   const colorValue = mark.encoding.color?.value;
   const stroke = colorValue !== undefined ? String(colorValue) : defaultStroke;
   return {
     type: 'scope',
-    pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH, ...(defaultFill !== undefined ? { fill: defaultFill } : {}) },
-    children: segments.map(segment => applyPathChannelDeliveries({ type: 'path', children: segment.steps }, mark, segment.rows[0] ?? {}, channels)),
+    pathDefault: {
+      stroke,
+      strokeWidth: LINE_STROKE_WIDTH,
+      ...(defaultFill !== undefined ? { fill: defaultFill } : {}),
+    },
+    children: segments.map(segment => {
+      const row = segment.rows[0] ?? {};
+      const label = resolveGeometryMarkLabels(mark.label, row, channelValueOf<IRNodeLabel['text']>(channels, 'label'));
+      return applyPathChannelDeliveries(
+        { type: 'path', ...(label !== undefined ? { label } : {}), children: segment.steps },
+        mark,
+        row,
+        channels,
+      );
+    }),
   };
 };
 
 /** path 图层下沉：仅 cartesian2D / polar2D 有上沿几何；其余坐标系 fail-loud + attachMarkLayer。 */
-const pathAnchorCoordinates = (mark: PathMark, rows: Array<ExternalRow>, frame: CoordinateFrame, ctx: MarkLoweringContext | undefined): Array<IRCoordinate> => {
+const pathAnchorCoordinates = (
+  mark: PathMark,
+  rows: Array<ExternalRow>,
+  frame: CoordinateFrame,
+  ctx: MarkLoweringContext | undefined,
+): Array<IRCoordinate> => {
   if (mark.anchorId === undefined || ctx?.anchors === undefined) return [];
   const coordinates: Array<IRCoordinate> = [];
   const ordered = orderRows(rows, mark.order);
@@ -559,11 +708,25 @@ const pathAnchorCoordinates = (mark: PathMark, rows: Array<ExternalRow>, frame: 
   return coordinates;
 };
 
-export const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, ctx: MarkLoweringContext | undefined): IRChild | null => {
+export const lowerPathLayer = (
+  mark: Mark,
+  rows: Array<ExternalRow>,
+  frame: CoordinateFrame,
+  channels: MarkChannels,
+  ctx: MarkLoweringContext | undefined,
+): IRChild | null => {
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
     throw new Error(failLoudMessage(mark.type, frame.type));
   }
-  const layer = lowerPath(mark, rows, frame, channels, channelValueOf<string>(channels, 'color'), channelDefaultOf<string>(channels, 'color'), ctx?.provenance);
+  const layer = lowerPath(
+    mark,
+    rows,
+    frame,
+    channels,
+    channelValueOf<string>(channels, 'color'),
+    channelDefaultOf<string>(channels, 'color'),
+    ctx?.provenance,
+  );
   if (layer === null || mark.type !== PlotMark.Path) return layer;
   const coordinates = pathAnchorCoordinates(mark, rows, frame, ctx);
   const anchoredLayer = coordinates.length === 0 ? layer : { ...layer, children: [...coordinates, ...layer.children] };
@@ -572,7 +735,11 @@ export const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: Coor
 
 /** 收集 path mark 独有字段：连接顺序与 series 拆分。 */
 const collectPathMarkChannelFields = (mark: PathMark, fields: FieldCollector): void => {
-  fields.addFields(mark.order, mark.series, mark.closure?.kind === PathClosureKind.Stack ? mark.closure.baselineField : undefined);
+  fields.addFields(
+    mark.order,
+    mark.series,
+    mark.closure?.kind === PathClosureKind.Stack ? mark.closure.baselineField : undefined,
+  );
 };
 
 export const pathMarkDefinition: MarkDefinition<PathMark> = {

@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+
 import { Circle, Layout, Node } from '@retikz/react';
 
 const Demo: FC = () => (
@@ -8,21 +9,12 @@ const Demo: FC = () => (
       radius
     </Node>
 
-    <Circle
-      corner1={[100, 22]}
-      corner2={[160, 78]}
-      inset={7}
-      strokeWidth={2}
-    />
+    <Circle corner1={[100, 22]} corner2={[160, 78]} inset={7} strokeWidth={2} />
     <Node position={[130, 105]} stroke="none" textColor="gray" font={{ size: 11 }}>
       inset box
     </Node>
 
-    <Circle
-      box={{ x: 190, y: 20, width: 68, height: 60 }}
-      fit="contain"
-      strokeWidth={2}
-    />
+    <Circle box={{ x: 190, y: 20, width: 68, height: 60 }} fit="contain" strokeWidth={2} />
     <Node position={[224, 105]} stroke="none" textColor="gray" font={{ size: 11 }}>
       fit contain
     </Node>

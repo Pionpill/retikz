@@ -1,0 +1,94 @@
+---
+title: Custom Coordinates
+description: Custom coordinates keep projection functions at runtime: the IR stores only the custom type and JSON config, while roles and projection functions come from defineCoordinate.
+---
+
+Every built-in coordinate is a projection: it maps position values to screen points. When the built-ins are not enough, define your own runtime coordinate with `defineCoordinate`, then pass it through `<Plot coordinates={[...]}>`.
+
+The custom coordinate op is still pure JSON. `coordinate={{ type: 'bridge', archHeight: 60 }}` enters the Plot IR; `roles`, scale construction, and the projection function live in the `bridge` definition and are never serialized.
+
+## Bridge Coordinate
+
+The "bridge" coordinate below arches the x-axis into a parabola while y stays vertical. The same regular grid gets its x-axis shape entirely from the definition's `resolve`; set `archHeight` to 0 and it falls back to plain cartesian.
+
+```tsx
+import { createCoordinateFrame, defineCoordinate } from '@retikz/plot';
+import { z } from 'zod';
+
+const bridge = defineCoordinate({
+  schema: z.object({
+    type: z.literal('bridge'),
+    archHeight: z.number().optional(),
+  }),
+  roles: ['x', 'y'],
+  resolve: (op, context) => {
+    const xValues = context.collectRoleValues('x');
+    const yValues = context.collectRoleValues('y');
+    const xScale = context.buildPositionScale(context.resolveScaleForRole('x', undefined, xValues), xValues, [
+      0,
+      context.width,
+    ]);
+    const yScale = context.buildPositionScale(context.resolveScaleForRole('y', undefined, yValues), yValues, [
+      context.height - 30,
+      30,
+    ]);
+    const archHeight = op.archHeight ?? 60;
+    const projectRoles = ([x, y]) => {
+      const screenX = xScale.coordinate(x);
+      const screenY = yScale.coordinate(y);
+      if (!Number.isFinite(screenX) || !Number.isFinite(screenY)) return null;
+      const t = screenX / context.width;
+      return [screenX, screenY - archHeight * (1 - (2 * t - 1) ** 2)];
+    };
+    const frame = createCoordinateFrame('bridge', ['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
+    const axisLayers = context.axisGuides.flatMap(guide => {
+      const lowered = context.lowerCustomAxis(frame, guide, context.fontSize, context.provenance);
+      return lowered.axisLayer ? [lowered.axisLayer] : [];
+    });
+    return {
+      frame,
+      plotArea: { x: 0, y: 0, width: context.width, height: context.height },
+      gridLayers: [],
+      axisLayers,
+    };
+  },
+});
+
+<Plot data={grid} coordinate={{ type: 'bridge', archHeight: 60 }} coordinates={[bridge]}>
+  <PointMark x="x" y="y" />
+  <Axis dimension="x" />
+  <Axis dimension="y" />
+</Plot>;
+```
+
+<ComponentPreview name="coordinate-custom-bridge" sourceFiles={['coordinate-custom-bridge.data.ts']} hideCode />
+
+## Definition Contract
+
+| Field     | Role                                                                                                                                                                                                                                                                    |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `schema`  | Validates the custom op that enters IR. `type` must be a non-built-in `z.literal(...)`, and all other fields must stay JSON-serializable.                                                                                                                               |
+| `roles`   | Declares the positional channels this coordinate needs. Built-ins use `x` / `y` / `z`, while custom coordinates may declare role names such as `u` / `v`. Missing required roles, or encoding keys not supported by the active coordinate, fail loudly during lowering. |
+| `resolve` | Builds the `frame` from domains, scales, and canvas size, then returns `plotArea` / guide layers. The function stays at runtime and never enters IR.                                                                                                                    |
+
+`CoordinateResolveContext` provides `collectRoleValues`, `resolveScaleForRole`, `buildPositionScale`, `axisGuides`, `lowerGuide`, and `lowerCustomAxis`. Custom coordinates v1 default to the whole canvas as `plotArea`; they do not automatically get cartesian-style margin / legend reservation.
+
+The fourth argument to `createCoordinateFrame` can add coordinate capabilities. `roleScales` lets custom axes and interval cell construction read each role's scale; `projectCell` projects that logical cell into `rect` / `sector` / `contour` geometry. Without `projectCell`, cell-shaped marks fail loudly. With `projectCell` but without the required `roleScales`, IntervalMark also fails loudly because the mark layer cannot invent output intervals from field values by itself.
+
+## Migration
+
+The old `{ type: 'custom', name, roles, params }` shape has been removed. Promote `name` into the real `type`, move `roles` into the definition, and flatten `params` into JSON config fields:
+
+| Old                                                                                              | New                                               |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| `coordinate={{ type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: 60 } }}` | `coordinate={{ type: 'bridge', archHeight: 60 }}` |
+| `coordinates={{ bridge }}`                                                                       | `coordinates={[bridge]}`                          |
+| `CustomCoordinateFactory`                                                                        | `defineCoordinate({ schema, roles, resolve })`    |
+
+## Limits
+
+<ComponentAlert
+  type="warn"
+  title="Advanced extension"
+  description="Custom coordinates support PointMark by default; if the frame provides both roleScales and projectCell, IntervalMark and other cell-shaped marks can also work. Curved axes can be drawn, but grids, automatic margin/legend reservation, 3D coordinates, and multi-plot composition are left for later."
+/>

@@ -1,5 +1,5 @@
-import type { IRClipSpec } from '../schemas';
 import type { ClipResource, ClipShape } from '../primitive';
+import type { IRClipSpec } from '../schemas';
 
 /** clip 登记表：编译期收集裁剪区、去重派稳定 id（`clip-1`…），最后产出 Scene clip 资源 */
 export type ClipRegistry = {

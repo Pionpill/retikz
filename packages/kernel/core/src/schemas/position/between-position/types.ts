@@ -1,5 +1,6 @@
 import type { PolarPosition } from '../../../geometry/polar';
 import type { IRNodeTarget } from '../../path/target';
+
 import { type IROffsetPosition } from '../offset-position';
 import { type IRPosition } from '../position';
 
@@ -9,12 +10,7 @@ import { type IRPosition } from '../position';
  *   （`{ relative }` / `{ relativeAccumulate }`——它们需要"上一段终点"游标，在两点之间取点的语境无意义）。
  *   自包含让 between 端点不引 `TargetSchema`，避免 `Position` ↔ `Target` schema 成环。
  */
-export type IRAbsoluteTarget =
-  | IRPosition
-  | PolarPosition
-  | IRNodeTarget
-  | IROffsetPosition
-  | IRBetweenPosition;
+export type IRAbsoluteTarget = IRPosition | PolarPosition | IRNodeTarget | IROffsetPosition | IRBetweenPosition;
 
 /**
  * 两端点之间按比例 t 取点（lerp）

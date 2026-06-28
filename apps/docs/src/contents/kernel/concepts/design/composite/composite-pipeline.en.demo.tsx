@@ -1,7 +1,8 @@
 import type { IR } from '@retikz/core';
+import type { FC } from 'react';
+
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import type { FC } from 'react';
 import { z } from 'zod';
 
 /** Horizontal step gap (user units): distance between adjacent stage-box centers */

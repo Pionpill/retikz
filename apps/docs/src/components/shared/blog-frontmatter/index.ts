@@ -1,2 +1,2 @@
-export { BlogFrontmatter } from './BlogFrontmatter';
 export type { BlogFrontmatterProps } from './BlogFrontmatter';
+export { BlogFrontmatter } from './BlogFrontmatter';

@@ -1,5 +1,6 @@
-import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
 
 const rows = [
   { step: 1, value: 10, series: 'A' },

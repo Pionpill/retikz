@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { CompileOptions, CompileWarning } from '../../src/compile/compile';
-import { definePattern } from '../../src/contract/pattern';
-import { BUILTIN_PATTERNS } from '../../src/providers/pattern';
 import type { PatternDefinition, PatternEmitContext } from '../../src/contract/pattern';
-import { PaintSpecSchema } from '../../src/schemas';
-import type { IR, IRPaintSpec } from '../../src/schemas';
 import type {
   MarkerEllipsePrim,
   MarkerPathPrim,
@@ -14,6 +10,12 @@ import type {
   ResolvedPatternTile,
   SceneResource,
 } from '../../src/primitive';
+import type { IR, IRPaintSpec } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { definePattern } from '../../src/contract/pattern';
+import { BUILTIN_PATTERNS } from '../../src/providers/pattern';
+import { PaintSpecSchema } from '../../src/schemas';
 
 /**
  * Pattern Registry core 侧测试（emit-in-compile 契约）
@@ -32,7 +34,9 @@ const patternNodeIR = (spec: IRPaintSpec, second?: IRPaintSpec): IR => ({
   type: 'scene',
   children: [
     { type: 'node', id: 'A', position: [0, 0], text: 'A', fill: spec },
-    ...(second ? [{ type: 'node' as const, id: 'B', position: [60, 0] as [number, number], text: 'B', fill: second }] : []),
+    ...(second
+      ? [{ type: 'node' as const, id: 'B', position: [60, 0] as [number, number], text: 'B', fill: second }]
+      : []),
   ],
 });
 
@@ -41,10 +45,8 @@ const firstPatternResource = (resources: Array<SceneResource> | undefined): Pain
   (resources ?? []).find((r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern');
 
 /** 从 Scene.resources 取首个 pattern 资源的 tile（已解析 motif） */
-const tileOf = (
-  spec: IRPaintSpec,
-  opts?: CompileOptions,
-): ResolvedPatternTile | undefined => firstPatternResource(compileToScene(patternNodeIR(spec), opts).resources)?.tile;
+const tileOf = (spec: IRPaintSpec, opts?: CompileOptions): ResolvedPatternTile | undefined =>
+  firstPatternResource(compileToScene(patternNodeIR(spec), opts).resources)?.tile;
 
 /** 取 tile.motif 里首个 path 原语 */
 const firstMotifPath = (tile: ResolvedPatternTile | undefined): MarkerPathPrim | undefined =>
@@ -66,37 +68,41 @@ const pathD = (prim: MarkerPathPrim): string =>
     .join(' ');
 
 /** 自定义 pattern：单 path motif（斜十字横段），size 默认 10 */
-const customPattern = (): PatternDefinition => definePattern({
-  defaultSize: 10,
-  emit: ({ size, color, lineWidth }): Array<MarkerPrimitive> => [
-    {
-      type: 'path',
-      commands: [
-        { kind: 'move', to: [0, 0] },
-        { kind: 'line', to: [size, size] },
-      ],
-      stroke: color,
-      strokeWidth: lineWidth,
-    },
-  ],
-});
+const customPattern = (): PatternDefinition =>
+  definePattern({
+    defaultSize: 10,
+    emit: ({ size, color, lineWidth }): Array<MarkerPrimitive> => [
+      {
+        type: 'path',
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [size, size] },
+        ],
+        stroke: color,
+        strokeWidth: lineWidth,
+      },
+    ],
+  });
 
 /** 多 primitive 自定义 pattern：背景 rect + 两 motif 元素 */
-const multiPrimPattern = (): PatternDefinition => definePattern({
-  defaultSize: 12,
-  emit: ({ size, color, background }): Array<MarkerPrimitive> => [
-    ...(background ? ([{ type: 'rect', x: 0, y: 0, width: size, height: size, fill: background }] as Array<MarkerPrimitive>) : []),
-    { type: 'ellipse', cx: size / 2, cy: size / 2, rx: 2, ry: 2, fill: color },
-    {
-      type: 'path',
-      commands: [
-        { kind: 'move', to: [0, 0] },
-        { kind: 'line', to: [size, 0] },
-      ],
-      stroke: color,
-    },
-  ],
-});
+const multiPrimPattern = (): PatternDefinition =>
+  definePattern({
+    defaultSize: 12,
+    emit: ({ size, color, background }): Array<MarkerPrimitive> => [
+      ...(background
+        ? ([{ type: 'rect', x: 0, y: 0, width: size, height: size, fill: background }] as Array<MarkerPrimitive>)
+        : []),
+      { type: 'ellipse', cx: size / 2, cy: size / 2, rx: 2, ry: 2, fill: color },
+      {
+        type: 'path',
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [size, 0] },
+        ],
+        stroke: color,
+      },
+    ],
+  });
 
 describe('Pattern registry — happy path', () => {
   it('builtin_3_via_registry：内置 lines/dots/grid 经 compileToScene → tile motif 等价旧 switch（golden）', () => {
@@ -135,7 +141,9 @@ describe('Pattern registry — happy path', () => {
   it('pattern_dedup：同 pattern spec 多处 → 1 资源 1 tile', () => {
     const spec: IRPaintSpec = { kind: 'pattern', shape: 'lines', size: 6 };
     const scene = compileToScene(patternNodeIR(spec, spec));
-    const patternResources = (scene.resources ?? []).filter((r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern');
+    const patternResources = (scene.resources ?? []).filter(
+      (r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern',
+    );
     expect(patternResources).toHaveLength(1);
     expect(patternResources[0].tile).toBeDefined();
   });
@@ -175,8 +183,12 @@ describe('Pattern registry — boundary', () => {
     const ids = (scene.resources ?? []).map(r => r.id);
     expect(new Set(ids).size).toBe(2);
     // gradient 资源无 tile、pattern 资源有 tile
-    const gradRes = (scene.resources ?? []).find((r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'linearGradient');
-    const patRes = (scene.resources ?? []).find((r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern');
+    const gradRes = (scene.resources ?? []).find(
+      (r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'linearGradient',
+    );
+    const patRes = (scene.resources ?? []).find(
+      (r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern',
+    );
     expect(gradRes?.tile).toBeUndefined();
     expect(patRes?.tile).toBeDefined();
   });

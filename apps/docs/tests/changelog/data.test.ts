@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+
 import { changelog } from '@/data/changelog';
 import { PACKAGE_IDS } from '@/data/changelog.types';
 

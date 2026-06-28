@@ -4,9 +4,11 @@
  *   leader 起点在 node 边界朝 label 方向；样式 leader.stroke/dashPattern；pin 缺省不画。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/schemas';
+
 import type { PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
 const findPaths = (prims: Array<ScenePrimitive>): Array<PathPrim> =>

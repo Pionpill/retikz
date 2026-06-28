@@ -1,6 +1,7 @@
 import type { FC } from 'react';
-import { Layout } from '@retikz/react';
+
 import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
+import { Layout } from '@retikz/react';
 
 import { defaultRows, reportRows } from './processing-format.data';
 

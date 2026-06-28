@@ -1,15 +1,18 @@
 import type { TFunction } from 'i18next';
 import type { FC } from 'react';
+
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
 
 import type { SubPage } from '@/data/interface';
+
 import { getSectionsByModule } from '@/data/sections';
 import { cn } from '@/lib/utils';
 
-import { AppSidebarMenu } from './AppSidebarMenu';
 import type { SidebarCategoryData, SidebarSubModuleData } from './interface';
+
+import { AppSidebarMenu } from './AppSidebarMenu';
 
 const mapChildren = (t: TFunction, children?: Array<SubPage>): Array<SidebarSubModuleData> | undefined =>
   children?.map(child => ({

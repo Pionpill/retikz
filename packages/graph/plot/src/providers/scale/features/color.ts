@@ -1,24 +1,43 @@
 import { isFiniteNumber } from '@retikz/math';
-import { scaleLinear as d3ScaleLinear, scaleOrdinal as d3ScaleOrdinal, scaleQuantile as d3ScaleQuantile, scaleQuantize as d3ScaleQuantize, scaleThreshold as d3ScaleThreshold } from 'd3-scale';
-import { type AnyScaleDefinition, type ChannelResolveContext, type ChannelScaleResolution, defineScale } from '../../../contract';
-import { inferCategoryDomain } from '../../data';
 import {
-  type DivergingColorScale,
+  scaleLinear as d3ScaleLinear,
+  scaleOrdinal as d3ScaleOrdinal,
+  scaleQuantile as d3ScaleQuantile,
+  scaleQuantize as d3ScaleQuantize,
+  scaleThreshold as d3ScaleThreshold,
+} from 'd3-scale';
+
+import type { AnyScaleDefinition, ChannelResolveContext, ChannelScaleResolution } from '../../../contract';
+import type {
+  DivergingColorScale,
+  OrdinalScale,
+  QuantileColorScale,
+  QuantizeColorScale,
+  SequentialColorScale,
+  ThresholdColorScale,
+} from '../../../schemas';
+import type { ColorScaleEvaluator, ColorSchemeResolver } from '../shared';
+
+import { defineScale } from '../../../contract';
+import {
   DivergingColorScaleSchema,
-  type OrdinalScale,
   OrdinalScaleSchema,
   PlotFieldType,
   PlotScale,
-  type QuantileColorScale,
   QuantileColorScaleSchema,
-  type QuantizeColorScale,
   QuantizeColorScaleSchema,
-  type SequentialColorScale,
   SequentialColorScaleSchema,
-  type ThresholdColorScale,
   ThresholdColorScaleSchema,
 } from '../../../schemas';
-import { type ColorScaleEvaluator, type ColorSchemeResolver, DEFAULT_PLOT_COLORS, PlotColorScheme, builtinColorSchemeInterpolator, safeExtent, sampleSchemeColors, toHexColor } from '../shared';
+import { inferCategoryDomain } from '../../data';
+import {
+  builtinColorSchemeInterpolator,
+  DEFAULT_PLOT_COLORS,
+  PlotColorScheme,
+  safeExtent,
+  sampleSchemeColors,
+  toHexColor,
+} from '../shared';
 
 /** sequential 缺省配色（感知均匀、色盲友好） */
 const DEFAULT_SEQUENTIAL_SCHEME = PlotColorScheme.Viridis;
@@ -47,8 +66,12 @@ export const resolveOrdinalScale = (
 // ── 连续 → 颜色（sequential / diverging）+ 离散化分箱（quantize / threshold / quantile）──
 
 /** 离散化档色：range 显式给则直用、否则从 scheme 采 binCount 档（range 长度即档数） */
-const discreteBinColors = (range: ReadonlyArray<string> | undefined, scheme: string | undefined, binCount: number, resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator): Array<string> =>
-  range ? [...range] : sampleSchemeColors(scheme, binCount, resolveScheme);
+const discreteBinColors = (
+  range: ReadonlyArray<string> | undefined,
+  scheme: string | undefined,
+  binCount: number,
+  resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
+): Array<string> => (range ? [...range] : sampleSchemeColors(scheme, binCount, resolveScheme));
 
 /**
  * sequential 颜色 scale 求值：单调量 domain [min, max] → 单方向色带
@@ -56,19 +79,24 @@ const discreteBinColors = (range: ReadonlyArray<string> | undefined, scheme: str
  *   range 给定（两端颜色）→ 经 scaleLinear 颜色插值覆盖 scheme；否则用命名 scheme interpolator（缺省 viridis）。
  *   单值数据（min == max 推断）退化为常量取色（端点），不崩。
  */
-export const resolveSequentialColorScale = (def: SequentialColorScale, values: Array<number>, resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator): ColorScaleEvaluator => {
+export const resolveSequentialColorScale = (
+  def: SequentialColorScale,
+  values: Array<number>,
+  resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
+): ColorScaleEvaluator => {
   const [lo, hi] = def.domain ?? safeExtent(values);
   if (def.domain && !(isFiniteNumber(def.domain[0]) && isFiniteNumber(def.domain[1]))) {
-    throw new Error(`lowerPlots: sequential color scale "${def.name}" domain endpoints must be finite numbers (got [${def.domain[0]}, ${def.domain[1]}])`);
+    throw new Error(
+      `lowerPlots: sequential color scale "${def.name}" domain endpoints must be finite numbers (got [${def.domain[0]}, ${def.domain[1]}])`,
+    );
   }
   if (def.domain && def.domain[0] >= def.domain[1]) {
-    throw new Error(`lowerPlots: sequential color scale "${def.name}" domain must satisfy min < max (got [${def.domain[0]}, ${def.domain[1]}])`);
+    throw new Error(
+      `lowerPlots: sequential color scale "${def.name}" domain must satisfy min < max (got [${def.domain[0]}, ${def.domain[1]}])`,
+    );
   }
   if (def.range) {
-    const scale = d3ScaleLinear<string, string>()
-      .domain([lo, hi])
-      .range([def.range[0], def.range[1]])
-      .clamp(true);
+    const scale = d3ScaleLinear<string, string>().domain([lo, hi]).range([def.range[0], def.range[1]]).clamp(true);
     return value => toHexColor(scale(value));
   }
   const interpolator = resolveScheme(def.scheme ?? DEFAULT_SEQUENTIAL_SCHEME);
@@ -86,17 +114,25 @@ export const resolveSequentialColorScale = (def: SequentialColorScale, values: A
  *   range 给定（三端点）→ 经三段 scaleLinear 颜色插值覆盖 scheme；否则用命名 diverging scheme（缺省 rdbu），
  *   把 [low, mid, high] 映射到 interpolator 的 [0, 0.5, 1]。
  */
-export const resolveDivergingColorScale = (def: DivergingColorScale, values: Array<number>, resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator): ColorScaleEvaluator => {
+export const resolveDivergingColorScale = (
+  def: DivergingColorScale,
+  values: Array<number>,
+  resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
+): ColorScaleEvaluator => {
   let low: number;
   let mid: number;
   let high: number;
   if (def.domain) {
     [low, mid, high] = def.domain;
     if (!(isFiniteNumber(low) && isFiniteNumber(mid) && isFiniteNumber(high))) {
-      throw new Error(`lowerPlots: diverging color scale "${def.name}" domain endpoints must be finite numbers (got [${low}, ${mid}, ${high}])`);
+      throw new Error(
+        `lowerPlots: diverging color scale "${def.name}" domain endpoints must be finite numbers (got [${low}, ${mid}, ${high}])`,
+      );
     }
     if (!(low < mid && mid < high)) {
-      throw new Error(`lowerPlots: diverging color scale "${def.name}" domain must satisfy low < mid < high (got [${low}, ${mid}, ${high}])`);
+      throw new Error(
+        `lowerPlots: diverging color scale "${def.name}" domain must satisfy low < mid < high (got [${low}, ${mid}, ${high}])`,
+      );
     }
   } else {
     const [lo, hi] = safeExtent(values);
@@ -128,11 +164,17 @@ export const resolveDivergingColorScale = (def: DivergingColorScale, values: Arr
  * @description domain 缺省从数据 [min, max] 推断；count 缺省 5（range 给定时档数 = range.length，覆盖 count）。
  *   range 显式给颜色数组、否则从 scheme 采 count 档。超出 domain 的值落首 / 末档（d3 clamp 语义）。
  */
-export const resolveQuantizeColorScale = (def: QuantizeColorScale, values: Array<number>, resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator): ColorScaleEvaluator => {
+export const resolveQuantizeColorScale = (
+  def: QuantizeColorScale,
+  values: Array<number>,
+  resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
+): ColorScaleEvaluator => {
   if (def.range && def.count !== undefined && def.range.length !== def.count) {
-    throw new Error(`lowerPlots: quantize color scale "${def.name}" range length (${def.range.length}) must equal count (${def.count}) when both are given`);
+    throw new Error(
+      `lowerPlots: quantize color scale "${def.name}" range length (${def.range.length}) must equal count (${def.count}) when both are given`,
+    );
   }
-  const binCount = def.range ? def.range.length : def.count ?? DEFAULT_DISCRETE_BIN_COUNT;
+  const binCount = def.range ? def.range.length : (def.count ?? DEFAULT_DISCRETE_BIN_COUNT);
   const colors = discreteBinColors(def.range, def.scheme, binCount, resolveScheme);
   const [lo, hi] = def.domain ?? safeExtent(values);
   const scale = d3ScaleQuantize<string>().domain([lo, hi]).range(colors);
@@ -145,18 +187,27 @@ export const resolveQuantizeColorScale = (def: QuantizeColorScale, values: Array
  *   range 显式给时长度须 = breakpoints.length + 1（违反 fail-loud）、否则从 scheme 采 breakpoints.length + 1 档。
  *   < 首断点落第 0 档、≥ 末断点落末档（d3 默认语义）。
  */
-export const resolveThresholdColorScale = (def: ThresholdColorScale, resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator): ColorScaleEvaluator => {
+export const resolveThresholdColorScale = (
+  def: ThresholdColorScale,
+  resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
+): ColorScaleEvaluator => {
   for (let index = 1; index < def.breakpoints.length; index++) {
     if (!(def.breakpoints[index - 1] < def.breakpoints[index])) {
-      throw new Error(`lowerPlots: threshold color scale "${def.name}" breakpoints must be strictly ascending (got [${def.breakpoints.join(', ')}])`);
+      throw new Error(
+        `lowerPlots: threshold color scale "${def.name}" breakpoints must be strictly ascending (got [${def.breakpoints.join(', ')}])`,
+      );
     }
   }
   const binCount = def.breakpoints.length + 1;
   if (def.range && def.range.length !== binCount) {
-    throw new Error(`lowerPlots: threshold color scale "${def.name}" range length (${def.range.length}) must equal breakpoints.length + 1 (${binCount})`);
+    throw new Error(
+      `lowerPlots: threshold color scale "${def.name}" range length (${def.range.length}) must equal breakpoints.length + 1 (${binCount})`,
+    );
   }
   const colors = discreteBinColors(def.range, def.scheme, binCount, resolveScheme);
-  const scale = d3ScaleThreshold<number, string>().domain([...def.breakpoints]).range(colors);
+  const scale = d3ScaleThreshold<number, string>()
+    .domain([...def.breakpoints])
+    .range(colors);
   return value => scale(value);
 };
 
@@ -165,13 +216,21 @@ export const resolveThresholdColorScale = (def: ThresholdColorScale, resolveSche
  * @description count 缺省 5（range 给定时档数 = range.length，覆盖 count）；分位边界纯由数据定（schema 已 strip 显式 domain，此处不读）。
  *   range 显式给颜色数组、否则从 scheme 采 count 档。
  */
-export const resolveQuantileColorScale = (def: QuantileColorScale, values: Array<number>, resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator): ColorScaleEvaluator => {
+export const resolveQuantileColorScale = (
+  def: QuantileColorScale,
+  values: Array<number>,
+  resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
+): ColorScaleEvaluator => {
   if (def.range && def.count !== undefined && def.range.length !== def.count) {
-    throw new Error(`lowerPlots: quantile color scale "${def.name}" range length (${def.range.length}) must equal count (${def.count}) when both are given`);
+    throw new Error(
+      `lowerPlots: quantile color scale "${def.name}" range length (${def.range.length}) must equal count (${def.count}) when both are given`,
+    );
   }
-  const binCount = def.range ? def.range.length : def.count ?? DEFAULT_DISCRETE_BIN_COUNT;
+  const binCount = def.range ? def.range.length : (def.count ?? DEFAULT_DISCRETE_BIN_COUNT);
   const colors = discreteBinColors(def.range, def.scheme, binCount, resolveScheme);
-  const scale = d3ScaleQuantile<string>().domain([...values]).range(colors);
+  const scale = d3ScaleQuantile<string>()
+    .domain([...values])
+    .range(colors);
   return value => scale(value);
 };
 
@@ -204,16 +263,21 @@ export const discretizedBins = (
     return { colors, edges };
   }
   const sorted = [...values].sort((a, b) => a - b);
-  const binCount = def.range ? def.range.length : def.count ?? DEFAULT_DISCRETE_BIN_COUNT;
+  const binCount = def.range ? def.range.length : (def.count ?? DEFAULT_DISCRETE_BIN_COUNT);
   if (def.type === PlotScale.Quantile) {
-    const edges = Array.from({ length: Math.max(0, binCount - 1) }, (_unused, index) => quantileAt(sorted, (index + 1) / binCount));
+    const edges = Array.from({ length: Math.max(0, binCount - 1) }, (_unused, index) =>
+      quantileAt(sorted, (index + 1) / binCount),
+    );
     const colors = def.range ? [...def.range] : sampleSchemeColors(def.scheme, binCount, resolveScheme);
     return { colors, edges };
   }
   // quantize：domain 等宽切
   const lo = def.domain ? def.domain[0] : sorted.length > 0 ? sorted[0] : 0;
   const hi = def.domain ? def.domain[1] : sorted.length > 0 ? sorted[sorted.length - 1] : 1;
-  const edges = Array.from({ length: Math.max(0, binCount - 1) }, (_unused, index) => lo + ((index + 1) * (hi - lo)) / binCount);
+  const edges = Array.from(
+    { length: Math.max(0, binCount - 1) },
+    (_unused, index) => lo + ((index + 1) * (hi - lo)) / binCount,
+  );
   const colors = def.range ? [...def.range] : sampleSchemeColors(def.scheme, binCount, resolveScheme);
   return { colors, edges };
 };
@@ -226,7 +290,10 @@ const numericValuesOf = (values: Array<unknown>, ctx: ChannelResolveContext): Ar
   return values.map(toNumber).filter((value): value is number => value !== null);
 };
 
-const continuousColorOf = (ctx: ChannelResolveContext, evaluate: ColorScaleEvaluator): ((value: unknown) => string | undefined) => {
+const continuousColorOf = (
+  ctx: ChannelResolveContext,
+  evaluate: ColorScaleEvaluator,
+): ((value: unknown) => string | undefined) => {
   const toNumber = ctx.fieldType === PlotFieldType.Temporal ? ctx.coerceTimestamp : ctx.toNumber;
   return value => {
     const numeric = toNumber(value);
@@ -241,7 +308,8 @@ const ordinalScaleDefinition = defineScale<OrdinalScale>({
   isFieldCompatible: fieldType => fieldType === undefined || fieldType === PlotFieldType.Categorical,
   resolve: (def, values, ctx) => {
     // range 缺省取 plot 默认调色板（与旧 withPlotColorRange 一致）；domain 缺省按数据序去重
-    const withPalette: OrdinalScale = def.range !== undefined ? def : ctx.defaultColors !== undefined ? { ...def, range: [...ctx.defaultColors] } : def;
+    const withPalette: OrdinalScale =
+      def.range !== undefined ? def : ctx.defaultColors !== undefined ? { ...def, range: [...ctx.defaultColors] } : def;
     const ordinal = resolveOrdinalScale(withPalette, values);
     const domain = withPalette.domain ?? inferCategoryDomain(values);
     return {
@@ -262,7 +330,13 @@ const sequentialScaleDefinition = defineScale<SequentialColorScale>({
     const numeric = numericValuesOf(values, ctx);
     const evaluate = resolveSequentialColorScale(def, numeric, ctx.resolveColorScheme);
     const [lo, hi] = def.domain ?? (numeric.length === 0 ? [0, 1] : [Math.min(...numeric), Math.max(...numeric)]);
-    return { of: continuousColorOf(ctx, evaluate), legendForm: 'ramp', domain: [lo, hi], range: [], scaleType: PlotScale.Sequential };
+    return {
+      of: continuousColorOf(ctx, evaluate),
+      legendForm: 'ramp',
+      domain: [lo, hi],
+      range: [],
+      scaleType: PlotScale.Sequential,
+    };
   },
 });
 
@@ -276,7 +350,13 @@ const divergingScaleDefinition = defineScale<DivergingColorScale>({
     const evaluate = resolveDivergingColorScale(def, numeric, ctx.resolveColorScheme);
     const extentRange: [number, number] = numeric.length === 0 ? [0, 1] : [Math.min(...numeric), Math.max(...numeric)];
     const [lo, hi] = def.domain ? [def.domain[0], def.domain[def.domain.length - 1]] : extentRange;
-    return { of: continuousColorOf(ctx, evaluate), legendForm: 'ramp', domain: [lo, hi], range: [], scaleType: PlotScale.Diverging };
+    return {
+      of: continuousColorOf(ctx, evaluate),
+      legendForm: 'ramp',
+      domain: [lo, hi],
+      range: [],
+      scaleType: PlotScale.Diverging,
+    };
   },
 });
 
@@ -296,21 +376,42 @@ const quantizeScaleDefinition = defineScale<QuantizeColorScale>({
   family: 'channel',
   schema: QuantizeColorScaleSchema,
   isFieldCompatible: fieldType => fieldType === PlotFieldType.Continuous || fieldType === PlotFieldType.Temporal,
-  resolve: (def, values, ctx) => discretizedResolution(PlotScale.Quantize, def, values, ctx, resolveQuantizeColorScale(def, numericValuesOf(values, ctx), ctx.resolveColorScheme)),
+  resolve: (def, values, ctx) =>
+    discretizedResolution(
+      PlotScale.Quantize,
+      def,
+      values,
+      ctx,
+      resolveQuantizeColorScale(def, numericValuesOf(values, ctx), ctx.resolveColorScheme),
+    ),
 });
 
 const thresholdScaleDefinition = defineScale<ThresholdColorScale>({
   family: 'channel',
   schema: ThresholdColorScaleSchema,
   isFieldCompatible: fieldType => fieldType === PlotFieldType.Continuous || fieldType === PlotFieldType.Temporal,
-  resolve: (def, values, ctx) => discretizedResolution(PlotScale.Threshold, def, values, ctx, resolveThresholdColorScale(def, ctx.resolveColorScheme)),
+  resolve: (def, values, ctx) =>
+    discretizedResolution(
+      PlotScale.Threshold,
+      def,
+      values,
+      ctx,
+      resolveThresholdColorScale(def, ctx.resolveColorScheme),
+    ),
 });
 
 const quantileScaleDefinition = defineScale<QuantileColorScale>({
   family: 'channel',
   schema: QuantileColorScaleSchema,
   isFieldCompatible: fieldType => fieldType === PlotFieldType.Continuous || fieldType === PlotFieldType.Temporal,
-  resolve: (def, values, ctx) => discretizedResolution(PlotScale.Quantile, def, values, ctx, resolveQuantileColorScale(def, numericValuesOf(values, ctx), ctx.resolveColorScheme)),
+  resolve: (def, values, ctx) =>
+    discretizedResolution(
+      PlotScale.Quantile,
+      def,
+      values,
+      ctx,
+      resolveQuantileColorScale(def, numericValuesOf(values, ctx), ctx.resolveColorScheme),
+    ),
 });
 
 /** channel 族 scale definition（分类 1 + 连续色 2 + 离散化 3 = 6）：产视觉量（颜色），喂 color 通道 + legend。 */

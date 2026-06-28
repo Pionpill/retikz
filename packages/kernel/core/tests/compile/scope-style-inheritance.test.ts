@@ -5,8 +5,7 @@
  *   断言层级：node → rect/ellipse fill/stroke + text fill；path → PathPrim.stroke + 已解析 marker 几何颜色（markerPaintColor）+ step-label TextPrim.fill
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/schemas';
+
 import type {
   ArrowEndSpec,
   EllipsePrim,
@@ -17,6 +16,9 @@ import type {
   ScenePrimitive,
   TextPrim,
 } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 
 /** 递归展开 GroupPrim，把所有叶子 primitive 拍平（scope 子元素在 GroupPrim 内） */
 const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
@@ -29,19 +31,13 @@ const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
 };
 
 const allPrims = (ir: IR): Array<ScenePrimitive> => flatten(compileToScene(ir).primitives);
-const rectOf = (ir: IR): RectPrim | undefined =>
-  allPrims(ir).find((p): p is RectPrim => p.type === 'rect');
-const ellipseOf = (ir: IR): EllipsePrim | undefined =>
-  allPrims(ir).find((p): p is EllipsePrim => p.type === 'ellipse');
+const rectOf = (ir: IR): RectPrim | undefined => allPrims(ir).find((p): p is RectPrim => p.type === 'rect');
+const ellipseOf = (ir: IR): EllipsePrim | undefined => allPrims(ir).find((p): p is EllipsePrim => p.type === 'ellipse');
 const linePathOf = (ir: IR): PathPrim | undefined =>
-  allPrims(ir).find(
-    (p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
-  );
-const textsOf = (ir: IR): Array<TextPrim> =>
-  allPrims(ir).filter((p): p is TextPrim => p.type === 'text');
+  allPrims(ir).find((p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'));
+const textsOf = (ir: IR): Array<TextPrim> => allPrims(ir).filter((p): p is TextPrim => p.type === 'text');
 /** 取指定文字内容的 TextPrim（node 文本 vs step label 文本区分） */
-const textWith = (ir: IR, content: string): TextPrim | undefined =>
-  textsOf(ir).find(t => t.lines[0]?.text === content);
+const textWith = (ir: IR, content: string): TextPrim | undefined => textsOf(ir).find(t => t.lines[0]?.text === content);
 
 /**
  * 从已解析 `ArrowEndSpec` 的 marker 几何里抽"主导箭头颜色"
@@ -52,8 +48,7 @@ const textWith = (ir: IR, content: string): TextPrim | undefined =>
  */
 const markerPaintColor = (spec: ArrowEndSpec | undefined): string | undefined => {
   if (!spec) return undefined;
-  const pickFill = (f: MarkerFill | undefined): string | undefined =>
-    typeof f === 'string' ? f : undefined;
+  const pickFill = (f: MarkerFill | undefined): string | undefined => (typeof f === 'string' ? f : undefined);
   const walk = (prims: ReadonlyArray<MarkerPrimitive>): string | undefined => {
     for (const p of prims) {
       if (p.type === 'group') {
@@ -179,9 +174,7 @@ describe('边界: 缺省 / 显式 / 内置', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [
-        { type: 'node', position: [0, 0], text: 'x', color: 'blue', stroke: 'red' },
-      ],
+      children: [{ type: 'node', position: [0, 0], text: 'x', color: 'blue', stroke: 'red' }],
     };
     expect(rectOf(ir)?.stroke).toBe('red');
     expect(rectOf(ir)?.fill).toBe('blue');
@@ -463,10 +456,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       ],
     };
     const arrowColors = allPrims(ir)
-      .filter(
-        (p): p is PathPrim =>
-          p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
-      )
+      .filter((p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'))
       .map(p => markerPaintColor(p.arrowEnd));
     // 第一条：主色 red 覆盖 arrowDefault green（host 轴 > every-X color）；第二条：元素 arrowDetail.color=purple 最高
     expect(arrowColors).toEqual(['red', 'purple']);
@@ -505,10 +495,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       ],
     };
     const arrowColors = allPrims(ir)
-      .filter(
-        (p): p is PathPrim =>
-          p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
-      )
+      .filter((p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'))
       .map(p => markerPaintColor(p.arrowEnd));
     // 第一条：主色 red 覆盖 arrowDefault.end.color=green（端点回退主色）；第二条：显式 arrowDetail.end.color=purple 最高
     expect(arrowColors).toEqual(['red', 'purple']);

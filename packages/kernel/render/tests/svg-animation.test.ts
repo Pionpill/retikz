@@ -1,7 +1,10 @@
-import { describe, expect, it } from 'vitest';
 import type { IRAnimationTrack, PathPrim, RectPrim, Scene, ScenePrimitive } from '@retikz/core';
-import { buildSvgFragment, renderToSvgString } from '../src/svg';
+
+import { describe, expect, it } from 'vitest';
+
 import type { SvgNode } from '../src/svg/types';
+
+import { buildSvgFragment, renderToSvgString } from '../src/svg';
 
 /**
  * ADR-02 SVG 动画播放：load→CSS @keyframes（SSR 零 JS）+ 交互→WAAPI 描述；property→SVG 映射；camera→group transform；
@@ -13,10 +16,35 @@ const scene = (primitives: Array<ScenePrimitive>, animations?: Array<IRAnimation
   layout,
   ...(animations ? { animations } : {}),
 });
-const rect = (extra: Partial<RectPrim> = {}): RectPrim => ({ type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: '#f00', ...extra });
+const rect = (extra: Partial<RectPrim> = {}): RectPrim => ({
+  type: 'rect',
+  x: 0,
+  y: 0,
+  width: 10,
+  height: 10,
+  fill: '#f00',
+  ...extra,
+});
 
-const FADE: IRAnimationTrack = { property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 400, trigger: 'load' };
-const GROW_UP: IRAnimationTrack = { property: 'scaleY', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 500, origin: 'south', easing: 'ease-out' };
+const FADE: IRAnimationTrack = {
+  property: 'opacity',
+  keyframes: [
+    { at: 0, value: 0 },
+    { at: 1, value: 1 },
+  ],
+  duration: 400,
+  trigger: 'load',
+};
+const GROW_UP: IRAnimationTrack = {
+  property: 'scaleY',
+  keyframes: [
+    { at: 0, value: 0 },
+    { at: 1, value: 1 },
+  ],
+  duration: 500,
+  origin: 'south',
+  easing: 'ease-out',
+};
 
 /** 在 SvgNode 树里深度优先找首个匹配 tag 的节点 */
 const findTag = (nodes: Array<SvgNode | string>, tag: string): SvgNode | undefined => {
@@ -51,7 +79,10 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
   it('keyframe 级 easing → @keyframes 内逐帧 animation-timing-function（非颜色通道，与 Canvas 一致）', () => {
     const t: IRAnimationTrack = {
       property: 'opacity',
-      keyframes: [{ at: 0, value: 0, easing: 'ease-in' }, { at: 1, value: 1 }],
+      keyframes: [
+        { at: 0, value: 0, easing: 'ease-in' },
+        { at: 1, value: 1 },
+      ],
       duration: 400,
       trigger: 'load',
     };
@@ -86,9 +117,30 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
   });
 
   it('strokeWidth + pathDraw 映射：pathLength/dasharray setup + stroke-dashoffset keyframes', () => {
-    const path: PathPrim = { type: 'path', commands: [{ kind: 'move', to: [0, 0] }, { kind: 'line', to: [10, 0] }], stroke: '#000' };
-    const draw: IRAnimationTrack = { property: 'pathDraw', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 600 };
-    const sw: IRAnimationTrack = { property: 'strokeWidth', keyframes: [{ at: 0, value: 1 }, { at: 1, value: 4 }], duration: 300 };
+    const path: PathPrim = {
+      type: 'path',
+      commands: [
+        { kind: 'move', to: [0, 0] },
+        { kind: 'line', to: [10, 0] },
+      ],
+      stroke: '#000',
+    };
+    const draw: IRAnimationTrack = {
+      property: 'pathDraw',
+      keyframes: [
+        { at: 0, value: 0 },
+        { at: 1, value: 1 },
+      ],
+      duration: 600,
+    };
+    const sw: IRAnimationTrack = {
+      property: 'strokeWidth',
+      keyframes: [
+        { at: 0, value: 1 },
+        { at: 1, value: 4 },
+      ],
+      duration: 300,
+    };
     const out = buildSvgFragment(scene([{ ...path, animations: [draw, sw] }]), { idPrefix: 't' });
     const p = findTag(out, 'path')!;
     expect(p.attrs.pathLength).toBe(1);
@@ -112,7 +164,14 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
   });
 
   it('camera（Scene.animations viewBox）→ 包一层 <g> transform 动画', () => {
-    const camera: IRAnimationTrack = { property: 'viewBox', keyframes: [{ at: 0, value: [0, 0, 100, 100] }, { at: 1, value: [25, 25, 50, 50] }], duration: 800 };
+    const camera: IRAnimationTrack = {
+      property: 'viewBox',
+      keyframes: [
+        { at: 0, value: [0, 0, 100, 100] },
+        { at: 1, value: [25, 25, 50, 50] },
+      ],
+      duration: 800,
+    };
     const out = buildSvgFragment(scene([rect()], [camera]), { idPrefix: 't' });
     const g = findTag(out, 'g')!;
     expect(g).toBeDefined();
@@ -123,8 +182,26 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
 });
 
 describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）', () => {
-  const LINEAR_FADE: IRAnimationTrack = { property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 400, easing: 'linear', trigger: 'load' };
-  const LINEAR_GROW: IRAnimationTrack = { property: 'scaleY', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 400, easing: 'linear', origin: 'south' };
+  const LINEAR_FADE: IRAnimationTrack = {
+    property: 'opacity',
+    keyframes: [
+      { at: 0, value: 0 },
+      { at: 1, value: 1 },
+    ],
+    duration: 400,
+    easing: 'linear',
+    trigger: 'load',
+  };
+  const LINEAR_GROW: IRAnimationTrack = {
+    property: 'scaleY',
+    keyframes: [
+      { at: 0, value: 0 },
+      { at: 1, value: 1 },
+    ],
+    duration: 400,
+    easing: 'linear',
+    origin: 'south',
+  };
 
   it('opacity 线性 at=200/400 → rect.opacity=0.5，且无 <style> / 无 data-retikz-anim', () => {
     const out = buildSvgFragment(scene([rect({ animations: [LINEAR_FADE] })]), { idPrefix: 't', snapshotAt: 200 });
@@ -148,8 +225,23 @@ describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）
   });
 
   it('pathDraw 线性 at=200 → stroke-dashoffset 静态属性（1−value）+ pathLength', () => {
-    const path: PathPrim = { type: 'path', commands: [{ kind: 'move', to: [0, 0] }, { kind: 'line', to: [10, 0] }], stroke: '#000' };
-    const draw: IRAnimationTrack = { property: 'pathDraw', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 400, easing: 'linear' };
+    const path: PathPrim = {
+      type: 'path',
+      commands: [
+        { kind: 'move', to: [0, 0] },
+        { kind: 'line', to: [10, 0] },
+      ],
+      stroke: '#000',
+    };
+    const draw: IRAnimationTrack = {
+      property: 'pathDraw',
+      keyframes: [
+        { at: 0, value: 0 },
+        { at: 1, value: 1 },
+      ],
+      duration: 400,
+      easing: 'linear',
+    };
     const out = buildSvgFragment(scene([{ ...path, animations: [draw] }]), { idPrefix: 't', snapshotAt: 200 });
     const p = findTag(out, 'path')!;
     expect(p.attrs.pathLength).toBe(1);
@@ -158,7 +250,15 @@ describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）
   });
 
   it('camera（scene viewBox 线性）at=200 → 外层 <g> 静态 transform 取景', () => {
-    const camera: IRAnimationTrack = { property: 'viewBox', keyframes: [{ at: 0, value: [0, 0, 100, 100] }, { at: 1, value: [0, 0, 50, 50] }], duration: 400, easing: 'linear' };
+    const camera: IRAnimationTrack = {
+      property: 'viewBox',
+      keyframes: [
+        { at: 0, value: [0, 0, 100, 100] },
+        { at: 1, value: [0, 0, 50, 50] },
+      ],
+      duration: 400,
+      easing: 'linear',
+    };
     const out = buildSvgFragment(scene([rect()], [camera]), { idPrefix: 't', snapshotAt: 200 });
     const g = findTag(out, 'g')!;
     expect(typeof g.style?.transform).toBe('string');
@@ -174,7 +274,10 @@ describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）
 
   it('混合 load + manual 同元素：仅 load track 被烘焙', () => {
     const manualGrow: IRAnimationTrack = { ...LINEAR_GROW, property: 'scaleX', trigger: 'manual' };
-    const out = buildSvgFragment(scene([rect({ animations: [LINEAR_FADE, manualGrow] })]), { idPrefix: 't', snapshotAt: 200 });
+    const out = buildSvgFragment(scene([rect({ animations: [LINEAR_FADE, manualGrow] })]), {
+      idPrefix: 't',
+      snapshotAt: 200,
+    });
     const r = findTag(out, 'rect')!;
     expect(r.attrs.opacity).toBe(0.5); // load fade 被烘焙
     // manual scaleX 不应产生 transform 包裹 <g>
@@ -185,7 +288,10 @@ describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）
 
 describe('边界', () => {
   it('{animate:false} → 无 <style>、无 data-retikz-anim，输出 = 静态 base', () => {
-    const animated = renderToSvgString(scene([rect({ animations: [FADE, GROW_UP] })]), { idPrefix: 't', animate: false });
+    const animated = renderToSvgString(scene([rect({ animations: [FADE, GROW_UP] })]), {
+      idPrefix: 't',
+      animate: false,
+    });
     const plain = renderToSvgString(scene([rect()]), { idPrefix: 't' });
     expect(animated).toBe(plain);
     expect(animated).not.toContain('<style');
@@ -199,7 +305,15 @@ describe('边界', () => {
   });
 
   it('混合 load + 交互 同元素：各走各载体（class + data-retikz-anim）', () => {
-    const interactive: IRAnimationTrack = { property: 'strokeWidth', keyframes: [{ at: 0, value: 1 }, { at: 1, value: 3 }], duration: 200, trigger: 'manual' };
+    const interactive: IRAnimationTrack = {
+      property: 'strokeWidth',
+      keyframes: [
+        { at: 0, value: 1 },
+        { at: 1, value: 3 },
+      ],
+      duration: 200,
+      trigger: 'manual',
+    };
     const out = buildSvgFragment(scene([rect({ stroke: '#000', animations: [FADE, interactive] })]), { idPrefix: 't' });
     const r = findTag(out, 'rect')!;
     expect(typeof r.attrs.class).toBe('string');
@@ -210,15 +324,32 @@ describe('边界', () => {
 describe('错误 / 降级', () => {
   it('pathDraw 挂无描边元素 → warn + skip（静态）', () => {
     const w = collectWarns();
-    const draw: IRAnimationTrack = { property: 'pathDraw', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 600 };
-    const out = buildSvgFragment(scene([{ type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: '#f00', animations: [draw] }]), { idPrefix: 't', ...w });
+    const draw: IRAnimationTrack = {
+      property: 'pathDraw',
+      keyframes: [
+        { at: 0, value: 0 },
+        { at: 1, value: 1 },
+      ],
+      duration: 600,
+    };
+    const out = buildSvgFragment(
+      scene([{ type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: '#f00', animations: [draw] }]),
+      { idPrefix: 't', ...w },
+    );
     expect(w.warnings.some(m => m.includes('pathDraw'))).toBe(true);
     expect(findTag(out, 'style')).toBeUndefined();
   });
 
   it('自定义 property 无映射 → warn + skip', () => {
     const w = collectWarns();
-    const blur: IRAnimationTrack = { property: 'blur', keyframes: [{ at: 0, value: 4 }, { at: 1, value: 0 }], duration: 300 };
+    const blur: IRAnimationTrack = {
+      property: 'blur',
+      keyframes: [
+        { at: 0, value: 4 },
+        { at: 1, value: 0 },
+      ],
+      duration: 300,
+    };
     const out = buildSvgFragment(scene([rect({ animations: [blur] })]), { idPrefix: 't', ...w });
     expect(w.warnings.some(m => m.includes('blur'))).toBe(true);
     expect(findTag(out, 'style')).toBeUndefined();
@@ -235,8 +366,17 @@ describe('错误 / 降级', () => {
 
 describe('交互', () => {
   it('oklch 颜色 track → 预采样多帧（>2 块）+ 端点色正确', () => {
-    const color: IRAnimationTrack = { property: 'fill', keyframes: [{ at: 0, value: '#ff0000' }, { at: 1, value: '#0000ff' }], duration: 400 };
-    const css = String(findTag(buildSvgFragment(scene([rect({ animations: [color] })]), { idPrefix: 't' }), 'style')!.children![0]);
+    const color: IRAnimationTrack = {
+      property: 'fill',
+      keyframes: [
+        { at: 0, value: '#ff0000' },
+        { at: 1, value: '#0000ff' },
+      ],
+      duration: 400,
+    };
+    const css = String(
+      findTag(buildSvgFragment(scene([rect({ animations: [color] })]), { idPrefix: 't' }), 'style')!.children![0],
+    );
     const blocks = css.match(/%\{/g) ?? [];
     expect(blocks.length).toBeGreaterThan(2); // 预采样 → 多于两端点
     expect(css).toContain('0%{fill:#ff0000'); // 起点原色
@@ -251,7 +391,19 @@ describe('交互', () => {
   });
 
   it('确定性：同 scene + idPrefix 两次 renderToSvgString 逐字一致', () => {
-    const s = scene([rect({ animations: [FADE, GROW_UP] })], [{ property: 'viewBox', keyframes: [{ at: 0, value: [0, 0, 100, 100] }, { at: 1, value: [10, 10, 50, 50] }], duration: 500 }]);
+    const s = scene(
+      [rect({ animations: [FADE, GROW_UP] })],
+      [
+        {
+          property: 'viewBox',
+          keyframes: [
+            { at: 0, value: [0, 0, 100, 100] },
+            { at: 1, value: [10, 10, 50, 50] },
+          ],
+          duration: 500,
+        },
+      ],
+    );
     expect(renderToSvgString(s, { idPrefix: 't' })).toBe(renderToSvgString(s, { idPrefix: 't' }));
   });
 });

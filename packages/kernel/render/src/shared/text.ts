@@ -9,7 +9,9 @@ import type { TextPrim } from '@retikz/core';
  *   middle（中心对齐）→ 首行上推 `(n-1)/2 × lineHeight`；bottom（块底对齐）→ 上推 `(n-1) × lineHeight`；
  *   top / alphabetic（块顶对齐）→ 0。SVG 与 Canvas 两端共用此式，钉死多行垂直对齐口径不漂移。
  */
-export const firstLineDy = (text: Pick<TextPrim, 'baseline' | 'lineHeight'> & { lines: { length: number } }): number => {
+export const firstLineDy = (
+  text: Pick<TextPrim, 'baseline' | 'lineHeight'> & { lines: { length: number } },
+): number => {
   const n = text.lines.length;
   if (text.baseline === 'middle') return (-(n - 1) / 2) * text.lineHeight;
   if (text.baseline === 'bottom') return -(n - 1) * text.lineHeight;

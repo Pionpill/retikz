@@ -1,6 +1,8 @@
+import type { SceneResource } from '@retikz/core';
+
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
-import type { SceneResource } from '@retikz/core';
+
 import { PaintDefs } from '../../src/render/paint-defs';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;

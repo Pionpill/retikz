@@ -1,26 +1,40 @@
-import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRPaintSpec, type IRPath, type IRScope } from '@retikz/core';
 import {
-  ChannelDefinitionKind,
-  type ChannelValue,
-  type ChannelValueResolver,
-  type FieldChannel,
-  type FieldCollector,
-  type MarkChannels,
-  type MarkDefinition,
-  type MarkLoweringContext,
-  type MarkProvenance,
+  type IRChild,
+  type IRGeometryLabel,
+  type IRNode,
+  type IRNodeDefault,
+  type IRNodeLabel,
+  type IRPaintSpec,
+  type IRPath,
+  type IRScope,
+} from '@retikz/core';
+
+import type {
+  ChannelValue,
+  ChannelValueResolver,
+  FieldChannel,
+  FieldCollector,
+  MarkChannels,
+  MarkDefinition,
+  MarkLoweringContext,
+  MarkProvenance,
 } from '../../../contract';
+
+import { ChannelDefinitionKind } from '../../../contract';
 import { datumMeta, markLayerId, markLayerMeta, readSourceIndex, readSourceIndices } from '../../../pipeline';
 import {
   type AnchorIdSpec,
   type ExternalRow,
   type IntervalMark,
   type Mark,
+  type MarkGeometryLabel,
+  type MarkNodeLabel,
   type MarkOperation,
   type PathMark,
   type PointMark,
 } from '../../../schemas';
 import { BUILTIN_NODE_CHANNELS, BUILTIN_PATH_CHANNELS } from '../../channel';
+import { labelOf as resolveLabelContent } from '../../data';
 
 /** 折线默认描边宽度（user units）。 */
 export const LINE_STROKE_WIDTH = 2;
@@ -30,10 +44,13 @@ export const DEFAULT_FILL = 'currentColor';
 
 export type MarkPaint = string | IRPaintSpec;
 
-export const channelValueOf = <T extends ChannelValue>(channels: MarkChannels, channel: string): ChannelValueResolver<T> | undefined =>
-  channels.values?.[channel] as ChannelValueResolver<T> | undefined;
+export const channelValueOf = <T extends ChannelValue>(
+  channels: MarkChannels,
+  channel: string,
+): ChannelValueResolver<T> | undefined => channels.values?.[channel] as ChannelValueResolver<T> | undefined;
 
-export const channelDefaultOf = <T extends ChannelValue>(channels: MarkChannels, channel: string): T | undefined => channels.defaults?.[channel] as T | undefined;
+export const channelDefaultOf = <T extends ChannelValue>(channels: MarkChannels, channel: string): T | undefined =>
+  channels.defaults?.[channel] as T | undefined;
 
 /**
  * 把若干「已就位 node + 其颜色」按颜色分组，每色一子 Scope（fill 上提到子 Scope 的 nodeDefault）。
@@ -60,8 +77,10 @@ export const colorGroupedScope = (
 
 export const constantNodeStyleOverrides = (mark: Mark): Partial<IRNodeDefault> => {
   const stroke = 'stroke' in mark && mark.stroke?.kind === 'constant' ? mark.stroke.value : undefined;
-  const strokeWidth = 'strokeWidth' in mark && mark.strokeWidth?.kind === 'constant' ? mark.strokeWidth.value : undefined;
-  const fillOpacity = 'fillOpacity' in mark && mark.fillOpacity?.kind === 'constant' ? mark.fillOpacity.value : undefined;
+  const strokeWidth =
+    'strokeWidth' in mark && mark.strokeWidth?.kind === 'constant' ? mark.strokeWidth.value : undefined;
+  const fillOpacity =
+    'fillOpacity' in mark && mark.fillOpacity?.kind === 'constant' ? mark.fillOpacity.value : undefined;
   const opacity = 'opacity' in mark && mark.opacity?.kind === 'constant' ? mark.opacity.value : undefined;
   return {
     ...(stroke !== undefined ? { stroke } : {}),
@@ -87,33 +106,121 @@ export const decorateDatum = (
   const { context, markIndex, registerDatumId } = markProvenance;
   const decorated: IRNode = { ...node };
   if (context.datumProvenance) {
-    decorated.meta = datumMeta(context, markType, markIndex, transformedIndex, readSourceIndex(row), seriesValue, readSourceIndices(row));
+    decorated.meta = datumMeta(
+      context,
+      markType,
+      markIndex,
+      transformedIndex,
+      readSourceIndex(row),
+      seriesValue,
+      readSourceIndices(row),
+    );
   }
   const datumId = registerDatumId?.(row);
   if (datumId !== undefined) decorated.id = datumId;
   return decorated;
 };
 
+type LabelText = IRNodeLabel['text'];
+type MarkLabelFieldSource =
+  | MarkNodeLabel
+  | MarkGeometryLabel
+  | ReadonlyArray<MarkNodeLabel>
+  | ReadonlyArray<MarkGeometryLabel>
+  | ReadonlyArray<MarkNodeLabel | MarkGeometryLabel>
+  | undefined;
+type MarkLabelFieldEntry = MarkNodeLabel | MarkGeometryLabel;
+
+const normalizeNodeLabels = (
+  labels: MarkNodeLabel | ReadonlyArray<MarkNodeLabel> | undefined,
+): Array<MarkNodeLabel> => {
+  if (labels === undefined) return [];
+  return Array.isArray(labels) ? [...(labels as ReadonlyArray<MarkNodeLabel>)] : [labels as MarkNodeLabel];
+};
+
+const normalizeGeometryLabels = (
+  labels: MarkGeometryLabel | ReadonlyArray<MarkGeometryLabel> | undefined,
+): Array<MarkGeometryLabel> => {
+  if (labels === undefined) return [];
+  return Array.isArray(labels) ? [...(labels as ReadonlyArray<MarkGeometryLabel>)] : [labels as MarkGeometryLabel];
+};
+
+const normalizeLabelFieldEntries = (labels: MarkLabelFieldSource): Array<MarkLabelFieldEntry> => {
+  if (labels === undefined) return [];
+  return Array.isArray(labels) ? [...(labels as ReadonlyArray<MarkLabelFieldEntry>)] : [labels as MarkLabelFieldEntry];
+};
+
+const omitContent = <T extends { content: unknown }>(label: T): Omit<T, 'content'> =>
+  Object.fromEntries(Object.entries(label).filter(([key]) => key !== 'content')) as Omit<T, 'content'>;
+
+const textForLabel = (
+  label: MarkNodeLabel | MarkGeometryLabel,
+  row: ExternalRow,
+  labelOf: ChannelValueResolver<LabelText> | undefined,
+  index: number,
+): LabelText | undefined => {
+  if (index === 0 && labelOf !== undefined) return labelOf(row);
+  return resolveLabelContent(label.content, row);
+};
+
+const normalizeResolvedLabels = <T>(labels: Array<T>): T | Array<T> | undefined => {
+  if (labels.length === 0) return undefined;
+  return labels.length === 1 ? labels[0] : labels;
+};
+
+export const resolveNodeMarkLabels = (
+  labels: MarkNodeLabel | ReadonlyArray<MarkNodeLabel> | undefined,
+  row: ExternalRow,
+  labelOf: ChannelValueResolver<LabelText> | undefined,
+): IRNode['label'] | undefined => {
+  const resolved = normalizeNodeLabels(labels).flatMap((label, index): Array<IRNodeLabel> => {
+    const text = textForLabel(label, row, labelOf, index);
+    if (text === undefined) return [];
+    return [
+      {
+        ...omitContent(label),
+        text,
+      },
+    ];
+  });
+  return normalizeResolvedLabels(resolved);
+};
+
+export const resolveGeometryMarkLabels = (
+  labels: MarkGeometryLabel | ReadonlyArray<MarkGeometryLabel> | undefined,
+  row: ExternalRow,
+  labelOf: ChannelValueResolver<LabelText> | undefined,
+): IRPath['label'] | undefined => {
+  const resolved = normalizeGeometryLabels(labels).flatMap((label, index): Array<IRGeometryLabel> => {
+    const text = textForLabel(label, row, labelOf, index);
+    if (text === undefined) return [];
+    return [
+      {
+        ...omitContent(label),
+        text,
+      },
+    ];
+  });
+  return normalizeResolvedLabels(resolved);
+};
+
 /**
  * priority-1 宿主 label：若位置 mark 带 `label` 且该行解析出内容，给 datum Node 填 core NodeLabelSchema。
  * @description 零新建 Node：position / distance / pin 直接落 core label（边框相对定位 + 引线由 core 负责）。
  */
-export const attachDatumLabel = (node: IRNode, mark: PositionEncodedMark, row: ExternalRow, labelOf: ChannelValueResolver<string> | undefined): IRNode => {
-  if (labelOf === undefined || !('label' in mark) || mark.label === undefined) return node;
-  const text = labelOf(row);
-  if (text === undefined) return node;
-  const label: IRNodeLabel = {
-    text,
-    ...(mark.label.position !== undefined ? { position: mark.label.position } : {}),
-    ...(mark.label.distance !== undefined ? { distance: mark.label.distance } : {}),
-    ...(mark.label.textColor !== undefined ? { textColor: mark.label.textColor } : {}),
-    ...(mark.label.opacity !== undefined ? { opacity: mark.label.opacity } : {}),
-    ...(mark.label.font !== undefined ? { font: mark.label.font } : {}),
-    ...(mark.label.rotate !== undefined ? { rotate: mark.label.rotate } : {}),
-    ...(mark.label.keepUpright !== undefined ? { keepUpright: mark.label.keepUpright } : {}),
-    ...(mark.label.pin !== undefined ? { pin: mark.label.pin } : {}),
-  };
-  return { ...node, label };
+export const attachDatumLabel = (
+  node: IRNode,
+  mark: PositionEncodedMark,
+  row: ExternalRow,
+  labelOf: ChannelValueResolver<LabelText> | undefined,
+): IRNode => {
+  if (!('label' in mark) || mark.label === undefined) return node;
+  const label = resolveNodeMarkLabels(
+    mark.label as MarkNodeLabel | ReadonlyArray<MarkNodeLabel> | undefined,
+    row,
+    labelOf,
+  );
+  return label === undefined ? node : { ...node, label };
 };
 
 export const applyNodeChannelDeliveries = (
@@ -129,7 +236,12 @@ export const applyNodeChannelDeliveries = (
   }
 };
 
-export const applyPathChannelDeliveries = (path: IRPath, mark: Mark, row: ExternalRow, channels: MarkChannels): IRPath => {
+export const applyPathChannelDeliveries = (
+  path: IRPath,
+  mark: Mark,
+  row: ExternalRow,
+  channels: MarkChannels,
+): IRPath => {
   for (const entry of channels.pathDeliveries ?? []) {
     const value = entry.resolver(row);
     if (value !== undefined) entry.deliver(path, value, { mark, row });
@@ -159,7 +271,12 @@ export const failLoudMessage = (markType: string, frameType: string): string =>
 
 type PositionEncodedMark = PointMark | PathMark | IntervalMark;
 
-const anchorOwnerOf = (mark: PositionEncodedMark, transformedIndex: number, ctx: MarkLoweringContext, role?: string) => ({
+const anchorOwnerOf = (
+  mark: PositionEncodedMark,
+  transformedIndex: number,
+  ctx: MarkLoweringContext,
+  role?: string,
+) => ({
   markType: mark.type,
   markId: mark.id,
   markIndex: ctx.markIndex,
@@ -215,7 +332,11 @@ export const collectEncodingChannelFields = (mark: PositionEncodedMark, fields: 
  * @description label 挂在 mark 顶层，但内容仍可能绑定数据字段；它不是位置 role，也不是 channel delivery。
  */
 export const collectDatumLabelFields = (mark: PositionEncodedMark, fields: FieldCollector): void => {
-  fields.addChannel(mark.label?.content);
+  for (const label of normalizeLabelFieldEntries(mark.label)) fields.addChannel(label.content);
+};
+
+export const collectMarkLabelFields = (label: MarkLabelFieldSource, fields: FieldCollector): void => {
+  for (const entry of normalizeLabelFieldEntries(label)) fields.addChannel(entry.content);
 };
 
 export const collectAnchorIdFields = (anchorId: AnchorIdSpec | undefined, fields: FieldCollector): void => {
@@ -242,7 +363,11 @@ type ChannelDefinitionMap = Readonly<Record<string, { channel: string }>>;
  * 根据 channel definition 的注册名收集 mark 顶层同名字段。
  * @description node/path 内置通道名由 channel 层单一维护；mark 侧只声明自己消费哪类 channel，避免再维护一份平行字段列表。
  */
-const collectChannelDefinitionFields = (mark: MarkOperation, fields: FieldCollector, definitions: ChannelDefinitionMap): void => {
+const collectChannelDefinitionFields = (
+  mark: MarkOperation,
+  fields: FieldCollector,
+  definitions: ChannelDefinitionMap,
+): void => {
   const record = mark as Record<string, FieldChannel | undefined>;
   for (const def of Object.values(definitions)) fields.addChannel(record[def.channel]);
 };

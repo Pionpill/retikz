@@ -1,7 +1,8 @@
 import type { z } from 'zod';
-import type { ArrowDetailSchema, ArrowEndDetailSchema } from './schema';
+
 import type { ValueOf } from '../../../types';
 import type { BuiltinArrowShape } from './constants';
+import type { ArrowDetailSchema, ArrowEndDetailSchema } from './schema';
 
 /** 端点级箭头视觉规格 */
 export type IRArrowEndDetail = z.infer<typeof ArrowEndDetailSchema>;

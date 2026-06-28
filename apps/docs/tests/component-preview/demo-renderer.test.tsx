@@ -1,11 +1,10 @@
+import { Layout } from '@retikz/react';
 import { type FC } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { Layout } from '@retikz/react';
-
-import { DemoRenderer } from '../../src/components/shared/component-preview/DemoRenderer';
 import { RendererModeButton } from '../../src/components/shared/component-preview/_parts';
+import { DemoRenderer } from '../../src/components/shared/component-preview/DemoRenderer';
 import { PanZoomToolbar } from '../../src/components/shared/component-preview/PanZoomToolbar';
 import { useComponentPreviewStore } from '../../src/store/use-component-preview-store';
 

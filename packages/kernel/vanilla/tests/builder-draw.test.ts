@@ -1,5 +1,8 @@
+import type { IRPathRibbonOptions } from '@retikz/core';
+
+import { DrawWay, parseWay } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { DrawWay, type IRPathRibbonOptions, parseWay } from '@retikz/core';
+
 import { draw } from '../src/builder/draw';
 
 describe('@retikz/vanilla draw()', () => {
@@ -12,9 +15,20 @@ describe('@retikz/vanilla draw()', () => {
   });
 
   it('draw-coords：way 接坐标点', () => {
-    const p = draw([[0, 0], [50, 50]], { dashPattern: [4, 2] });
+    const p = draw(
+      [
+        [0, 0],
+        [50, 50],
+      ],
+      { dashPattern: [4, 2] },
+    );
     if (p.type !== 'path') throw new Error('unreachable');
-    expect(p.children).toEqual(parseWay([[0, 0], [50, 50]]));
+    expect(p.children).toEqual(
+      parseWay([
+        [0, 0],
+        [50, 50],
+      ]),
+    );
     expect(p.dashPattern).toEqual([4, 2]);
   });
 
@@ -34,7 +48,14 @@ describe('@retikz/vanilla draw()', () => {
   });
 
   it('draw-rounded-corners：roundedCorners 透传进 path IR', () => {
-    const p = draw([[0, 0], [10, 0], [10, 10]], { roundedCorners: 8 });
+    const p = draw(
+      [
+        [0, 0],
+        [10, 0],
+        [10, 10],
+      ],
+      { roundedCorners: 8 },
+    );
     if (p.type !== 'path') throw new Error('unreachable');
     expect(p.roundedCorners).toBe(8);
   });

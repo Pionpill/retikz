@@ -1,5 +1,6 @@
-import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node } from '@retikz/react';
 
 /**
  * 描边样式预设
@@ -7,9 +8,15 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={460} height={100}>
-    <Node id="solid" position={[-160, 0]} strokeWidth={2}>solid</Node>
-    <Node id="dashed" position={[-50, 0]} strokeWidth={2} dashed>dashed</Node>
-    <Node id="dotted" position={[60, 0]} strokeWidth={2} dotted>dotted</Node>
+    <Node id="solid" position={[-160, 0]} strokeWidth={2}>
+      solid
+    </Node>
+    <Node id="dashed" position={[-50, 0]} strokeWidth={2} dashed>
+      dashed
+    </Node>
+    <Node id="dotted" position={[60, 0]} strokeWidth={2} dotted>
+      dotted
+    </Node>
     <Node id="custom" position={[180, 0]} strokeWidth={2} dashPattern={[6, 2, 1, 2]}>
       custom
     </Node>

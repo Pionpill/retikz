@@ -1,7 +1,8 @@
 import type { IR } from '@retikz/core';
+import type { FC } from 'react';
+
 import { definePathGenerator } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import type { FC } from 'react';
 import { z } from 'zod';
 
 /**
@@ -12,9 +13,7 @@ import { z } from 'zod';
 const parabola = definePathGenerator({
   paramsSchema: z.object({ bend: z.tuple([z.number(), z.number()]) }),
   targetParams: ['bend'],
-  generate: ({ from, to, resolvedTargets }) => [
-    { kind: 'quad', control: resolvedTargets.bend, to: to ?? from },
-  ],
+  generate: ({ from, to, resolvedTargets }) => [{ kind: 'quad', control: resolvedTargets.bend, to: to ?? from }],
 });
 
 const ir: IR = {

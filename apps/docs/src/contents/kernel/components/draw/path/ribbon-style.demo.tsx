@@ -10,12 +10,7 @@ const labelStyle = {
 } as const;
 
 const Demo: FC = () => (
-  <Layout
-    width={560}
-    height={300}
-    viewBox={{ x: -280, y: -150, width: 560, height: 300 }}
-    color="#172033"
-  >
+  <Layout width={560} height={300} viewBox={{ x: -280, y: -150, width: 560, height: 300 }} color="#172033">
     <Path
       kind="ribbon"
       ribbon={{

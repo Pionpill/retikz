@@ -1,6 +1,6 @@
 ---
 title: AI-assisted development
-description: "retikz runs on staged human / AI collaboration during v0.x: alpha is human-designed + AI-implemented, beta is human-led optimization + multi-LLM evaluation, and rc freezes APIs for docs, acceptance, and compatible fixes."
+description: 'retikz runs on staged human / AI collaboration during v0.x: alpha is human-designed + AI-implemented, beta is human-led optimization + multi-LLM evaluation, and rc freezes APIs for docs, acceptance, and compatible fixes.'
 ---
 
 Most of retikz's implementation work is done by AI — the IR-field code for nodes / paths / edge labels / coordinate placeholders, the test cases, the documentation paragraphs that come with them. The vast majority of commits carry `Co-Authored-By: Claude`. This is not a tech-blog gimmick — it's the actual working model the project has used since v0.1.
@@ -39,13 +39,13 @@ retikz intentionally keeps node / path / anchor / step vocabulary close to TikZ 
 
 The 5-stage flow isn't a set of isolated constraints — every stage serves this principle:
 
-| Stage | How it protects "AI-first" |
-| --- | --- |
-| 1 Design | ADR option analysis must first pass the AI-friendliness gate; field naming / default values must serve LLM generation |
-| 2 Implement | Spec Writer must include ≥ 1 JSON round-trip test + ≥ 1 zod parse error-path test; Implementation Agent cannot introduce non-JSON types into the schema |
+| Stage       | How it protects "AI-first"                                                                                                                                                                                                             |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 Design    | ADR option analysis must first pass the AI-friendliness gate; field naming / default values must serve LLM generation                                                                                                                  |
+| 2 Implement | Spec Writer must include ≥ 1 JSON round-trip test + ≥ 1 zod parse error-path test; Implementation Agent cannot introduce non-JSON types into the schema                                                                                |
 | 3 Self-test | Bug Hunter prioritizes four contract breakages: JSON round-trip drift, zod errors too vague for LLM to self-correct, schema invariant violations, discriminator failures — these directly contradict the project's reason for existing |
-| 4 Document | mdx descriptions must be semantically equivalent to the schema's `.describe`; demos must be learnable by LLMs as few-shot exemplars |
-| 5 Wrap-up | Contract Auditor reconciles ADR / changelog / mdx / actual behavior across all four — any field "in code but not in ADR" is a contract breakage |
+| 4 Document  | mdx descriptions must be semantically equivalent to the schema's `.describe`; demos must be learnable by LLMs as few-shot exemplars                                                                                                    |
+| 5 Wrap-up   | Contract Auditor reconciles ADR / changelog / mdx / actual behavior across all four — any field "in code but not in ADR" is a contract breakage                                                                                        |
 
 Any artifact at any stage that **only humans can use, LLMs can't** (e.g. returning function references, depending on runtime context, abbreviated field names that LLMs can't infer) is unacceptable.
 
@@ -53,13 +53,13 @@ Any artifact at any stage that **only humans can use, LLMs can't** (e.g. returni
 
 Every ADR / new feature in alpha goes through 5 stages, orchestrated by the [`flow-alpha`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) SKILL:
 
-| Stage | Driver | Output |
-| --- | --- | --- |
-| 1. Design | **Human-led**, AI assists drafting | ADR (schema field table / file scope / test quadrants / option decisions) |
-| 2. Implement | AI (red-level changes go through Spec-First TDD) | spec test diff + implementation diff (committed by granularity only after human authorization) |
-| 3. Self-test | AI (Adversarial Bug Hunter sub-agent) | bug fixes + hardened tests |
-| 4. Document | AI (delegates to docs-doc-principle SKILL) | bilingual mdx + demos + API table |
-| 5. Wrap-up | AI drafts / Adversarial Contract Auditor / **human** final ack | changelog + ADR marked Accepted + roadmap ticked |
+| Stage        | Driver                                                         | Output                                                                                         |
+| ------------ | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 1. Design    | **Human-led**, AI assists drafting                             | ADR (schema field table / file scope / test quadrants / option decisions)                      |
+| 2. Implement | AI (red-level changes go through Spec-First TDD)               | spec test diff + implementation diff (committed by granularity only after human authorization) |
+| 3. Self-test | AI (Adversarial Bug Hunter sub-agent)                          | bug fixes + hardened tests                                                                     |
+| 4. Document  | AI (delegates to docs-doc-principle SKILL)                     | bilingual mdx + demos + API table                                                              |
+| 5. Wrap-up   | AI drafts / Adversarial Contract Auditor / **human** final ack | changelog + ADR marked Accepted + roadmap ticked                                               |
 
 **Humans only act on stages 1 and 5** — stages 2, 3, 4 are handed off to independent sub-agents in sequence, with hard gates at each stage (lint / tsc / tests / reconciliation report) that halt the flow on failure.
 
@@ -69,10 +69,10 @@ Each stage has its own SKILL: [`develop-design`](https://github.com/Pionpill/ret
 
 After v0.2, alpha is no longer the only orchestrated phase, but the boundaries get narrower:
 
-| Phase | Orchestrator | Boundary |
-| --- | --- | --- |
-| beta | [`flow-beta`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-beta/SKILL.md) | No new feature ADRs; handles refactors, naming, tests, performance, docs, and the final breaking cleanup window; the key gate is multi-LLM evaluation |
-| rc | [`flow-rc`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-rc/SKILL.md) | Public APIs are frozen; only compatible bug fixes, docs completion, installation acceptance, migration notes, and release notes should land |
+| Phase | Orchestrator                                                                                  | Boundary                                                                                                                                              |
+| ----- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| beta  | [`flow-beta`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-beta/SKILL.md) | No new feature ADRs; handles refactors, naming, tests, performance, docs, and the final breaking cleanup window; the key gate is multi-LLM evaluation |
+| rc    | [`flow-rc`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-rc/SKILL.md)     | Public APIs are frozen; only compatible bug fixes, docs completion, installation acceptance, migration notes, and release notes should land           |
 
 In practice, AI freedom narrows with each channel: alpha can help implement new contracts; beta helps converge and check regressions; rc helps ship the frozen API reliably.
 
@@ -124,26 +124,26 @@ Users can also **manually paste the same input into another LLM** (e.g. ChatGPT)
 
 The workflow constraints AI must follow throughout:
 
-| Constraint | Meaning |
-| --- | --- |
-| No abbreviations | IR schema fields / public API / functions / types must be spelled out (`direction` not `dir`, `reference` not `ref` except React `useRef`) |
-| Don't bypass lint / tsc / tests | No `as any` / `@ts-ignore` / `it.skip`; no `eslint-disable` workarounds; lint + tsc + vitest must all pass before commit |
-| No self-commit / push / publish | Stop after coding and wait for human authorization; every commit needs fresh authorization (one approval ≠ permanent approval) |
-| Docs travel with code | User-visible changes (new prop / changed default / removed field) must update docs in the same commit; updating only zh (not en) is incomplete |
-| IR schema needs `.describe` everywhere | Every zod schema field must have an English `.describe(...)` — it's the contract for LLM tool definitions |
+| Constraint                                 | Meaning                                                                                                                                                                                                     |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No abbreviations                           | IR schema fields / public API / functions / types must be spelled out (`direction` not `dir`, `reference` not `ref` except React `useRef`)                                                                  |
+| Don't bypass lint / tsc / tests            | No `as any` / `@ts-ignore` / `it.skip`; no `eslint-disable` workarounds; lint + tsc + vitest must all pass before commit                                                                                    |
+| No self-commit / push / publish            | Stop after coding and wait for human authorization; every commit needs fresh authorization (one approval ≠ permanent approval)                                                                              |
+| Docs travel with code                      | User-visible changes (new prop / changed default / removed field) must update docs in the same commit; updating only zh (not en) is incomplete                                                              |
+| IR schema needs `.describe` everywhere     | Every zod schema field must have an English `.describe(...)` — it's the contract for LLM tool definitions                                                                                                   |
 | ADRs are forever + per-milestone numbering | ADRs superseded by new versions are marked `Superseded by <milestone> ADR-NN`, never deleted; each milestone directory restarts numbering from 01 and cross-milestone references carry the milestone prefix |
 
 ## Where to look in the repo
 
-| If you want to know about | Look here |
-| --- | --- |
-| Project thesis and first design principle | [core-design.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/core-design.md) |
-| All SKILLs (dev flow, releases, docs writing) | [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills) |
-| alpha / beta / rc orchestrators | [flow-alpha](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) · [flow-beta](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-beta/SKILL.md) · [flow-rc](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-rc/SKILL.md) |
-| Design / Implement / Test / Document / Wrap-up child SKILLs | [develop-design](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-design/SKILL.md) · [develop-implement](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-implement/SKILL.md) · [develop-test](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-test/SKILL.md) · [develop-document](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-document/SKILL.md) · [develop-wrapup](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-wrapup/SKILL.md) |
-| Release SKILL (version / changelog / roadmap / npm publish gates) | [package-publish SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/package-publish/SKILL.md) |
-| Docs-writing SKILL | [docs-doc-principle](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-principle/SKILL.md) · [docs-doc-component](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-component/SKILL.md) · [docs-doc-example](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-example/SKILL.md) |
-| ADR archive | [notes/decisions/kernel/](https://github.com/Pionpill/retikz/tree/main/notes/decisions/kernel) (with [template](https://github.com/Pionpill/retikz/blob/main/notes/decisions/kernel/_template.md) and [index](https://github.com/Pionpill/retikz/blob/main/notes/README.md)) |
+| If you want to know about                                         | Look here                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Project thesis and first design principle                         | [core-design.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/core-design.md)                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| All SKILLs (dev flow, releases, docs writing)                     | [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills)                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| alpha / beta / rc orchestrators                                   | [flow-alpha](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) · [flow-beta](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-beta/SKILL.md) · [flow-rc](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-rc/SKILL.md)                                                                                                                                                                                                                                                       |
+| Design / Implement / Test / Document / Wrap-up child SKILLs       | [develop-design](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-design/SKILL.md) · [develop-implement](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-implement/SKILL.md) · [develop-test](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-test/SKILL.md) · [develop-document](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-document/SKILL.md) · [develop-wrapup](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-wrapup/SKILL.md) |
+| Release SKILL (version / changelog / roadmap / npm publish gates) | [package-publish SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/package-publish/SKILL.md)                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Docs-writing SKILL                                                | [docs-doc-principle](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-principle/SKILL.md) · [docs-doc-component](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-component/SKILL.md) · [docs-doc-example](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-example/SKILL.md)                                                                                                                                                                                                   |
+| ADR archive                                                       | [notes/decisions/kernel/](https://github.com/Pionpill/retikz/tree/main/notes/decisions/kernel) (with [template](https://github.com/Pionpill/retikz/blob/main/notes/decisions/kernel/_template.md) and [index](https://github.com/Pionpill/retikz/blob/main/notes/README.md))                                                                                                                                                                                                                                                                |
 
 In practice the main AI aligns on the project constraints and the relevant SKILL when it picks up a task, then dispatches sub-agents per the SKILL flow. Each sub-agent only sees its own role prompt + the inputs it's given — no context cross-contamination.
 

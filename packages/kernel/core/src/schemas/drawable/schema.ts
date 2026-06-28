@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { AnimationTrackSchema } from '../animation';
 import { BlendMode, DropShadowSchema, ShadowPreset } from '../effects';
 import { JsonObjectSchema } from '../json';
@@ -18,12 +19,7 @@ export const DrawableStyleSchema = z
       .describe(
         'Fill paint for drawable geometry: any CSS color string or a PaintSpec (linear / radial gradient, pattern, or image). Path uses it for closed regions; ribbon uses it for the ribbon polygon.',
       ),
-    fillOpacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Fill-only opacity for filled regions.'),
+    fillOpacity: z.number().min(0).max(1).optional().describe('Fill-only opacity for filled regions.'),
     stroke: z
       .union([z.string(), PaintSpecSchema])
       .optional()
@@ -36,12 +32,7 @@ export const DrawableStyleSchema = z
       .nonnegative()
       .optional()
       .describe('Stroke width in user units.'),
-    drawOpacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Stroke-only opacity for outlines.'),
+    drawOpacity: z.number().min(0).max(1).optional().describe('Stroke-only opacity for outlines.'),
     opacity: z
       .number()
       .min(0)

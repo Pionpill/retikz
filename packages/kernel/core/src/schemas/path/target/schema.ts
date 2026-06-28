@@ -1,6 +1,10 @@
 import { z } from 'zod';
+
 import { BoundarySchema } from '../../boundary';
-import { BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from '../../position';
+import { BetweenPositionSchema } from '../../position/between-position/schema';
+import { OffsetPositionSchema } from '../../position/offset-position/schema';
+import { PolarPositionSchema } from '../../position/polar-position/schema';
+import { PositionSchema } from '../../position/position/schema';
 
 export const AnchorRefSchema = z
   .union([
@@ -13,9 +17,7 @@ export const AnchorRefSchema = z
     z.number().describe('Angle anchor in degrees (boundary point in that direction)'),
     z
       .object({
-        side: z
-          .enum(['north', 'south', 'east', 'west'])
-          .describe('Which edge of the shape boundary'),
+        side: z.enum(['north', 'south', 'east', 'west']).describe('Which edge of the shape boundary'),
         t: z
           .number()
           .min(0)
@@ -42,23 +44,15 @@ export const NodeTargetSchema = z
 
 export const RelativeTargetSchema = z
   .object({
-    relative: z
-      .tuple([z.number(), z.number()])
-      .describe('Relative offset (dx, dy)'),
+    relative: z.tuple([z.number(), z.number()]).describe('Relative offset (dx, dy)'),
   })
-  .describe(
-    'Relative offset from the previous step end point. Does not update the cursor position.',
-  );
+  .describe('Relative offset from the previous step end point. Does not update the cursor position.');
 
 export const RelativeAccumulateTargetSchema = z
   .object({
-    relativeAccumulate: z
-      .tuple([z.number(), z.number()])
-      .describe('Accumulated relative offset (dx, dy)'),
+    relativeAccumulate: z.tuple([z.number(), z.number()]).describe('Accumulated relative offset (dx, dy)'),
   })
-  .describe(
-    'Accumulated relative offset from the previous step end point. Updates the cursor position.',
-  );
+  .describe('Accumulated relative offset from the previous step end point. Updates the cursor position.');
 
 export const TargetSchema = z
   .union([

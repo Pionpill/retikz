@@ -1,14 +1,13 @@
 import { z } from 'zod';
-import { point } from '../../geometry/point';
+
+import type { ContourSegment } from '../../geometry/contour';
 import type { Position } from '../../geometry/point';
-import { localToWorld } from '../../geometry/transform';
 import type { Rect } from '../../geometry/rect';
-import {
-  type ContourSegment,
-  boundaryFromContour,
-  contourCommands,
-} from '../../geometry/contour';
 import type { ScenePrimitive } from '../../primitive';
+
+import { boundaryFromContour, contourCommands } from '../../geometry/contour';
+import { point } from '../../geometry/point';
+import { localToWorld } from '../../geometry/transform';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './contour';
 import { defineShape } from './define';
 
@@ -104,7 +103,7 @@ export const contour = defineShape({
     void params;
     return undefined;
   },
-  *emit (rect: Rect, style, round, params: ContourParams): Iterable<ScenePrimitive> {
+  *emit(rect: Rect, style, round, params: ContourParams): Iterable<ScenePrimitive> {
     const segments = worldSegments(rect, params);
     const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius), round);
     yield contourToPathPrimitive(commands, style);

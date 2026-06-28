@@ -6,9 +6,7 @@ export const FontSchema = z
     family: z
       .string()
       .optional()
-      .describe(
-        'CSS font-family string such as "serif", "monospace", or "Inter, sans-serif".',
-      ),
+      .describe('CSS font-family string such as "serif", "monospace", or "Inter, sans-serif".'),
     size: z
       .number()
       .positive()
@@ -19,11 +17,6 @@ export const FontSchema = z
       .union([z.enum(['normal', 'bold']), z.number()])
       .optional()
       .describe('CSS font-weight: keyword `normal` / `bold` or numeric 100..900'),
-    style: z
-      .enum(['normal', 'italic', 'oblique'])
-      .optional()
-      .describe('CSS font-style'),
+    style: z.enum(['normal', 'italic', 'oblique']).optional().describe('CSS font-style'),
   })
-  .describe(
-    'Font properties shared by node text, labels, line specs, and scope defaults.',
-  );
+  .describe('Font properties shared by node text, labels, line specs, and scope defaults.');

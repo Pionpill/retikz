@@ -1,4 +1,5 @@
 import type { PlotSpec } from '@retikz/plot';
+
 import { renderPlot } from '@retikz/plot-vanilla';
 
 import { sales } from './line-scatter.data';

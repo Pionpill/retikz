@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import type { IR, IRNode } from '../../src/schemas';
-import { NodeSchema } from '../../src/schemas';
+
 import type { ScenePrimitive } from '../../src/primitive';
-import { line, move } from '../helpers/path-command-factory';
+import type { IR, IRNode } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { NodeSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
+import { line, move } from '../helpers/path-command-factory';
 
 const findByType = <T extends ScenePrimitive['type']>(
   prims: Array<ScenePrimitive>,
@@ -12,8 +14,8 @@ const findByType = <T extends ScenePrimitive['type']>(
 ): Extract<ScenePrimitive, { type: T }> | undefined =>
   flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
 
-describe("Node shape multimorphism", () => {
-  it("默认 shape = rectangle，emit RectPrim", () => {
+describe('Node shape multimorphism', () => {
+  it('默认 shape = rectangle，emit RectPrim', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -28,9 +30,7 @@ describe("Node shape multimorphism", () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [
-        { type: 'node', id: 'A', shape: 'circle', position: [0, 0], text: 'A' },
-      ],
+      children: [{ type: 'node', id: 'A', shape: 'circle', position: [0, 0], text: 'A' }],
     };
     const scene = compileToScene(ir);
     const el = findByType(scene.primitives, 'ellipse');
@@ -57,9 +57,7 @@ describe("Node shape multimorphism", () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [
-        { type: 'node', id: 'A', shape: 'diamond', position: [0, 0], text: 'A' },
-      ],
+      children: [{ type: 'node', id: 'A', shape: 'diamond', position: [0, 0], text: 'A' }],
     };
     const scene = compileToScene(ir);
     const p = findByType(scene.primitives, 'path');
@@ -79,15 +77,13 @@ describe("Node shape multimorphism", () => {
     const ir2: IR = {
       version: 1,
       type: 'scene',
-      children: [
-        { type: 'node', id: 'A', shape: 'rectangle', position: [0, 0], text: 'A' },
-      ],
+      children: [{ type: 'node', id: 'A', shape: 'rectangle', position: [0, 0], text: 'A' }],
     };
     expect(compileToScene(ir1).primitives).toEqual(compileToScene(ir2).primitives);
   });
 });
 
-describe("Target 字符串锚点扩展", () => {
+describe('Target 字符串锚点扩展', () => {
   it("`'A.east'` → 端点固定在 east anchor，不受 toward 影响", () => {
     // 矩形 A=(0,0)，无文本，padding=8 → 16x16；east = (8, 0)
     const ir: IR = {
@@ -190,7 +186,7 @@ describe("Target 字符串锚点扩展", () => {
   });
 });
 
-describe("ellipse nested params IR round-trip", () => {
+describe('ellipse nested params IR round-trip', () => {
   it("含 ellipse {circumscribe:'equal'} 的 Node IR → JSON → parse 等价（params 全在 IR）", () => {
     const node = {
       type: 'node',
@@ -204,7 +200,7 @@ describe("ellipse nested params IR round-trip", () => {
     expect(roundTripped.shape).toEqual({ type: 'ellipse', params: { circumscribe: 'equal' } });
   });
 
-  it("非法 circumscribe 枚举 → NodeSchema 不 reject（shape 枚举校验在编译期 paramsSchema），但编译期 throw", () => {
+  it('非法 circumscribe 枚举 → NodeSchema 不 reject（shape 枚举校验在编译期 paramsSchema），但编译期 throw', () => {
     // ShapeRefSchema 的 params 是开放 JSON object（IR 层不知具体 shape 的 paramsSchema），
     // 枚举校验落在 compile 的 shapeDef.paramsSchema.parse —— 非法枚举编译期 throw。
     const ir: IR = {
@@ -223,7 +219,7 @@ describe("ellipse nested params IR round-trip", () => {
   });
 });
 
-describe("circle 收为 ellipse equal preset 别名", () => {
+describe('circle 收为 ellipse equal preset 别名', () => {
   // 以下 case 依赖实现 Agent 的 circle 规范化（compile/node.ts 把裸 'circle' →
   // { type: 'ellipse', params: { circumscribe: 'equal' } }，并删 circle.ts 独立几何）。
   // 规范化未落地前此刻 fail —— 预期。
@@ -249,7 +245,7 @@ describe("circle 收为 ellipse equal preset 别名", () => {
     expect(compileToScene(bareIr).primitives).toEqual(compileToScene(explicitIr).primitives);
   });
 
-  it("circle_emit_equivalent：circle 规范化后 emit EllipsePrim 且 rx == ry（等轴）", () => {
+  it('circle_emit_equivalent：circle 规范化后 emit EllipsePrim 且 rx == ry（等轴）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -278,7 +274,7 @@ describe("circle 收为 ellipse equal preset 别名", () => {
     expect(() => compileToScene(ir)).toThrow();
   });
 
-  it("circle_with_scale：circle 规范化后 × scale → 尺寸协同放大、仍正圆（rx == ry）", () => {
+  it('circle_with_scale：circle 规范化后 × scale → 尺寸协同放大、仍正圆（rx == ry）', () => {
     const base = compileToScene({
       version: 1,
       type: 'scene',
@@ -297,7 +293,7 @@ describe("circle 收为 ellipse equal preset 别名", () => {
     expect(scaledEl!.rx).toBeGreaterThan(baseEl!.rx); // 尺寸协同放大
   });
 
-  it("circle_anchor_matches_legacy：circle 各命名 anchor 与 ellipse equal 一致", () => {
+  it('circle_anchor_matches_legacy：circle 各命名 anchor 与 ellipse equal 一致', () => {
     // circle 与显式 ellipse-equal 在所有命名 anchor 落点一致（回归：收敛不改 anchor 几何）
     for (const anchor of [
       'center',
@@ -336,7 +332,7 @@ describe("circle 收为 ellipse equal preset 别名", () => {
   });
 });
 
-describe("diamond 收为 polygon preset 别名（ADR-04）", () => {
+describe('diamond 收为 polygon preset 别名（ADR-04）', () => {
   // 以下 case 依赖实现 Agent 的 diamond 规范化（compile/node.ts 把裸 'diamond' →
   // { type: 'polygon', params: { sides: 4, rotate: 0 } }，并删 diamond.ts 独立几何）。
   // 规范化 + polygon 真实几何（anchor / boundaryPoint）未落地前以下 case fail —— 预期。
@@ -362,7 +358,7 @@ describe("diamond 收为 polygon preset 别名（ADR-04）", () => {
     expect(compileToScene(bareIr).primitives).toEqual(compileToScene(explicitIr).primitives);
   });
 
-  it("diamond_emit_topology：diamond（规范化）emit 闭合 path（4 顶点 + close）", () => {
+  it('diamond_emit_topology：diamond（规范化）emit 闭合 path（4 顶点 + close）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -374,7 +370,7 @@ describe("diamond 收为 polygon preset 别名（ADR-04）", () => {
     expect(p!.commands.map(c => c.kind)).toEqual(['move', 'line', 'line', 'line', 'close']);
   });
 
-  it("diamond_anchor_matches_legacy：diamond（规范化）命名 anchor 与旧 diamond 一致", () => {
+  it('diamond_anchor_matches_legacy：diamond（规范化）命名 anchor 与旧 diamond 一致', () => {
     // diamond 规范化为 polygon 4/0 后，各命名 anchor 落点须与显式 polygon preset 一致。
     // 用 path 连接 'A.<anchor>' 比对两种 shape 写法的首端点（move 落点）。
     for (const anchor of [
@@ -414,8 +410,8 @@ describe("diamond 收为 polygon preset 别名（ADR-04）", () => {
   });
 });
 
-describe("Node shape boundary clip 在 path 端点贴边时按 shape 多态", () => {
-  it("circle 节点 path 端点贴圆周（距中心 = radius）", () => {
+describe('Node shape boundary clip 在 path 端点贴边时按 shape 多态', () => {
+  it('circle 节点 path 端点贴圆周（距中心 = radius）', () => {
     // A=(0,0) 圆形 + B=(100,0) 笛卡尔点；line 从 A 到 B
     // A 的圆周半径 = sqrt((textHalfW+p)² + (textHalfH+p)²)
     // 端点应该距 A 中心 = radius 且在朝向 B 的方向
@@ -444,7 +440,7 @@ describe("Node shape boundary clip 在 path 端点贴边时按 shape 多态", ()
     }
   });
 
-  it("diamond 节点 path 端点贴菱形边（满足 |x|/halfA + |y|/halfB = 1）", () => {
+  it('diamond 节点 path 端点贴菱形边（满足 |x|/halfA + |y|/halfB = 1）', () => {
     // A=(0,0) diamond + B=(100,100); line A→B 沿 (1,1) 方向
     // diamond 自身也是 PathPrim（"M ... Z"）；连接 line 是不带 Z 的 PathPrim
     const ir: IR = {

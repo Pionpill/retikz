@@ -1,8 +1,12 @@
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { PlotFieldType, type PlotSpec, PlotSpecSchema, ScalarValueSchema } from '../../src/schemas';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots, prepareRows } from '../../src/pipeline/expand';
 import { coerceValue, inferFieldType, normalizeRows, validateBoundData } from '../../src/providers';
-import { type LowerPlotsOptions, lowerPlots, prepareRows } from '../../src/pipeline/expand';
+import { PlotFieldType, PlotSpecSchema, ScalarValueSchema } from '../../src/schemas';
 
 /**
  * ADR-08 待实现字段的本地类型扩展：`LowerPlotsOptions.invalid` 现在还不存在（实现 Agent 的活），
@@ -21,7 +25,10 @@ const specNoModel = (): PlotSpec =>
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
-    scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+    scales: [
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
   });
@@ -31,8 +38,17 @@ const specWithModel = (): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
-    data: { reference: 'd', model: [{ name: 'a', type: 'continuous' }, { name: 'b', type: 'continuous' }] },
-    scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+    data: {
+      reference: 'd',
+      model: [
+        { name: 'a', type: 'continuous' },
+        { name: 'b', type: 'continuous' },
+      ],
+    },
+    scales: [
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
   });
@@ -43,7 +59,10 @@ const specTemporalNoModel = (): PlotSpec =>
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
-    scales: [{ type: 'time', name: 'x' }, { type: 'linear', name: 'y' }],
+    scales: [
+      { type: 'time', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [{ type: 'path', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
   });
@@ -53,11 +72,26 @@ const specStack = (): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
-    data: { reference: 'd', model: [{ name: 'm', type: 'categorical' }, { name: 'v', type: 'continuous' }] },
-    scales: [{ type: 'band', name: 'x' }, { type: 'linear', name: 'y' }],
+    data: {
+      reference: 'd',
+      model: [
+        { name: 'm', type: 'categorical' },
+        { name: 'v', type: 'continuous' },
+      ],
+    },
+    scales: [
+      { type: 'band', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     transform: [{ kind: 'stack', x: 'm', y: 'v' }],
-    marks: [{ type: 'interval', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } }, encoding: { x: { field: 'm' }, y: { field: 'v' } } }],
+    marks: [
+      {
+        type: 'interval',
+        bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } },
+        encoding: { x: { field: 'm' }, y: { field: 'v' } },
+      },
+    ],
   });
 
 /** 直接驱动 prepareRows（绕过 transform），取 normalized 行断言归一化产物 */
@@ -68,7 +102,10 @@ describe('ADR-08 数据健壮性 — bigint ingest', () => {
   it('bigint_ingested_as_continuous：无 model 下 bigint 推断 continuous 且归一化成数值', () => {
     // classify(bigint) → continuous（无 model 推断）；normalizeRows 把 42n coerce 成 42
     expect(inferFieldType([{ a: 42n }, { a: 7n }], 'a')).toBe(PlotFieldType.Continuous);
-    const { fieldTypes, normalized } = prepare(specNoModel(), [{ a: 42n, b: 1n }, { a: 7n, b: 2n }]);
+    const { fieldTypes, normalized } = prepare(specNoModel(), [
+      { a: 42n, b: 1n },
+      { a: 7n, b: 2n },
+    ]);
     expect(fieldTypes.get('a')).toBe(PlotFieldType.Continuous);
     expect(normalized[0].a).toBe(42);
     expect(normalized[1].a).toBe(7);
@@ -101,14 +138,35 @@ describe('ADR-08 数据健壮性 — bigint ingest', () => {
 describe('ADR-08 数据健壮性 — invalid 策略（skip / error）', () => {
   it('invalid_skip_default：默认 skip 遇脏值不抛，写 NaN 哨兵', () => {
     // 'abc' 非法 continuous → 默认 skip：归一化写 NaN，全链不抛
-    const { normalized } = prepare(specWithModel(), [{ a: 'abc', b: 1 }, { a: 5, b: 2 }]);
+    const { normalized } = prepare(specWithModel(), [
+      { a: 'abc', b: 1 },
+      { a: 5, b: 2 },
+    ]);
     expect(Number.isNaN(normalized[0].a as number)).toBe(true);
     expect(normalized[1].a).toBe(5);
-    expect(() => compile(specWithModel(), { d: [{ a: 'abc', b: 1 }, { a: 5, b: 2 }] })).not.toThrow();
+    expect(() =>
+      compile(specWithModel(), {
+        d: [
+          { a: 'abc', b: 1 },
+          { a: 5, b: 2 },
+        ],
+      }),
+    ).not.toThrow();
   });
 
   it('invalid_error_throws：invalid:error 遇任一非法值全量 fail-loud', () => {
-    expect(() => compile(specWithModel(), { d: [{ a: 'abc', b: 1 }, { a: 5, b: 2 }] }, { invalid: 'error' })).toThrow();
+    expect(() =>
+      compile(
+        specWithModel(),
+        {
+          d: [
+            { a: 'abc', b: 1 },
+            { a: 5, b: 2 },
+          ],
+        },
+        { invalid: 'error' },
+      ),
+    ).toThrow();
   });
 
   it('invalid_error_message_locates_field：error 报错指明出错字段', () => {
@@ -123,12 +181,27 @@ describe('ADR-08 数据健壮性 — invalid 策略（skip / error）', () => {
 
   it('invalid_error_scope_is_participating_fields：error 只校验 spec 参与字段，未引用脏字段不触发（cross-review #5）', () => {
     // spec 只参与 a / b；额外的脏字段 junk 不在 collectSourceFields 内 → invalid:error 不应因 junk 报错
-    expect(() => compile(specWithModel(), { d: [{ a: 1, b: 2, junk: 'garbage' }, { a: 3, b: 4, junk: {} }] }, { invalid: 'error' })).not.toThrow();
+    expect(() =>
+      compile(
+        specWithModel(),
+        {
+          d: [
+            { a: 1, b: 2, junk: 'garbage' },
+            { a: 3, b: 4, junk: {} },
+          ],
+        },
+        { invalid: 'error' },
+      ),
+    ).not.toThrow();
   });
 
   it('invalid_skip_keeps_row_for_transform：非法值被 skip 但整行仍参与 stack（不删行，cross-review #5）', () => {
     // 第二行 v 非法（'x'）→ skip 写 NaN 但不删行；stack 仍把它当作一组的成员（行序 / 全行集不被破坏）
-    const { normalized } = prepare(specStack(), [{ m: 'Q1', v: 3 }, { m: 'Q1', v: 'x' }, { m: 'Q1', v: 5 }]);
+    const { normalized } = prepare(specStack(), [
+      { m: 'Q1', v: 3 },
+      { m: 'Q1', v: 'x' },
+      { m: 'Q1', v: 5 },
+    ]);
     expect(normalized).toHaveLength(3); // 不删行
     expect(normalized[0].v).toBe(3);
     expect(Number.isNaN(normalized[1].v as number)).toBe(true); // 哨兵，整行保留
@@ -139,8 +212,15 @@ describe('ADR-08 数据健壮性 — invalid 策略（skip / error）', () => {
 describe('ADR-08 数据健壮性 — validateData 字段级报告', () => {
   it('validatedata_reports_field_counts：报错含字段级 invalid/missing 计数', () => {
     // 字段 a 全部非法 → validateBoundData 报错须带字段级计数（如 "field \"a\": N invalid"），不止二元 fail
-    const rows = [{ a: 'bad', b: 1 }, { a: undefined, b: 2 }, { a: 'nope', b: 3 }];
-    const fieldTypes = new Map([['a', PlotFieldType.Continuous], ['b', PlotFieldType.Continuous]]);
+    const rows = [
+      { a: 'bad', b: 1 },
+      { a: undefined, b: 2 },
+      { a: 'nope', b: 3 },
+    ];
+    const fieldTypes = new Map([
+      ['a', PlotFieldType.Continuous],
+      ['b', PlotFieldType.Continuous],
+    ]);
     let message = '';
     try {
       validateBoundData(rows, fieldTypes, 100);
@@ -158,7 +238,11 @@ describe('ADR-08 数据健壮性 — 恒归一化（去门控）', () => {
   it('no_model_normalize_equivalent：无 model 干净数据恒归一化后产物与现状等价（防回归）', () => {
     // 干净数据（数字是数、字符串分类）：恒归一化 normalizeRows 后逐字段等于手动 coerceValue 的结果
     const spec = specNoModel();
-    const rows = [{ a: 1, b: 10 }, { a: 2, b: 20 }, { a: 3, b: 30 }];
+    const rows = [
+      { a: 1, b: 10 },
+      { a: 2, b: 20 },
+      { a: 3, b: 30 },
+    ];
     const { fieldTypes, normalized } = prepare(spec, rows);
     const manual = normalizeRows(rows, fieldTypes);
     expect(normalized).toEqual(manual);
@@ -170,7 +254,10 @@ describe('ADR-08 数据健壮性 — 恒归一化（去门控）', () => {
   it('normalize_always_runs_with_inference：无 model 纯推断 → canonical 行已 coerce（time 字段成 epoch ms）', () => {
     // 无 model：t 推断 temporal，恒归一化把 ISO 串 coerce 成 epoch ms（不再走「无 model 即原始行」旧门控）
     const spec = specTemporalNoModel();
-    const { fieldTypes, normalized } = prepare(spec, [{ t: '2024-01-01', v: 5 }, { t: '2024-02-01', v: 7 }]);
+    const { fieldTypes, normalized } = prepare(spec, [
+      { t: '2024-01-01', v: 5 },
+      { t: '2024-02-01', v: 7 },
+    ]);
     expect(fieldTypes.get('t')).toBe(PlotFieldType.Temporal);
     expect(normalized[0].t).toBe(Date.parse('2024-01-01'));
     expect(normalized[1].t).toBe(Date.parse('2024-02-01'));

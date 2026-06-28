@@ -2,6 +2,7 @@
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { Layout, Node } from '../src';
 import { createGeometryContext } from './helpers/geometry-context';
 
@@ -19,14 +20,18 @@ const SIZE = 200;
 const installCanvasHarness = (): { restore: () => void } => {
   const getContext = vi
     .spyOn(HTMLCanvasElement.prototype, 'getContext')
-    .mockImplementation((contextId: string) =>
-      contextId === '2d' ? (createGeometryContext()) : null,
-    );
-  const getRect = vi
-    .spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect')
-    .mockImplementation(
-      () => ({ left: 0, top: 0, right: SIZE, bottom: SIZE, width: SIZE, height: SIZE, x: 0, y: 0, toJSON: () => ({}) }),
-    );
+    .mockImplementation((contextId: string) => (contextId === '2d' ? createGeometryContext() : null));
+  const getRect = vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockImplementation(() => ({
+    left: 0,
+    top: 0,
+    right: SIZE,
+    bottom: SIZE,
+    width: SIZE,
+    height: SIZE,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
+  }));
   return {
     restore: () => {
       getContext.mockRestore();
@@ -64,9 +69,7 @@ describe('Canvas 水合', () => {
 
     // 单节点即整图内容，bbox 中心映射到画布显示中心；点画布中心命中该节点
     await act(() => {
-      canvas!.dispatchEvent(
-        new MouseEvent('click', { bubbles: true, clientX: SIZE / 2, clientY: SIZE / 2 }),
-      );
+      canvas!.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: SIZE / 2, clientY: SIZE / 2 }));
     });
 
     expect(onClick).toHaveBeenCalledTimes(1);

@@ -19,14 +19,14 @@ import { Grid } from '@retikz/react';
 
 ### 什么时候用
 
-| 场景 | 推荐写法 |
-| --- | --- |
-| 普通背景网格 | `corner1` + `corner2` + `step` |
-| 已知中心和尺寸 | `center` + `width` + `height` + `step` |
-| 横纵间距不同 | `xStep` + `yStep` |
-| 只要横线或竖线 | `showHorizontal` / `showVertical` |
+| 场景               | 推荐写法                                          |
+| ------------------ | ------------------------------------------------- |
+| 普通背景网格       | `corner1` + `corner2` + `step`                    |
+| 已知中心和尺寸     | `center` + `width` + `height` + `step`            |
+| 横纵间距不同       | `xStep` + `yStep`                                 |
+| 只要横线或竖线     | `showHorizontal` / `showVertical`                 |
 | 每隔几条线强调一次 | `majorEvery` + `majorStroke` / `majorStrokeWidth` |
-| 网格外需要框线 | `border` + `border*` |
+| 网格外需要框线     | `border` + `border*`                              |
 
 ## 例子
 
@@ -74,56 +74,56 @@ import { Grid } from '@retikz/react';
 
 ### 范围与步长
 
-| 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `corner1` + `corner2` | `[number, number]` | — | 用两个对角点确定网格范围 |
-| `center` + `width` + `height` | `[number, number]` + `number` | — | 用中心和尺寸确定网格范围 |
-| `step` | `number` | — | 横纵方向共用的步长 |
-| `xStep` | `number` | — | x 方向步长；会覆盖 `step` |
-| `yStep` | `number` | — | y 方向步长；会覆盖 `step` |
-| `showVertical` | `boolean` | `true` | 是否绘制竖线 |
-| `showHorizontal` | `boolean` | `true` | 是否绘制横线 |
-| `origin` | `[number, number]` | 范围左上角 | 网格对齐基准点 |
-| `offset` | `[number, number]` | `[0, 0]` | 在 `origin` 基础上的相位偏移 |
-| `includeBoundary` | `boolean` | `false` | 范围不能被步长整除时，是否补上边界线 |
+| 属性                          | 类型                          | 默认值     | 描述                                 |
+| ----------------------------- | ----------------------------- | ---------- | ------------------------------------ |
+| `corner1` + `corner2`         | `[number, number]`            | —          | 用两个对角点确定网格范围             |
+| `center` + `width` + `height` | `[number, number]` + `number` | —          | 用中心和尺寸确定网格范围             |
+| `step`                        | `number`                      | —          | 横纵方向共用的步长                   |
+| `xStep`                       | `number`                      | —          | x 方向步长；会覆盖 `step`            |
+| `yStep`                       | `number`                      | —          | y 方向步长；会覆盖 `step`            |
+| `showVertical`                | `boolean`                     | `true`     | 是否绘制竖线                         |
+| `showHorizontal`              | `boolean`                     | `true`     | 是否绘制横线                         |
+| `origin`                      | `[number, number]`            | 范围左上角 | 网格对齐基准点                       |
+| `offset`                      | `[number, number]`            | `[0, 0]`   | 在 `origin` 基础上的相位偏移         |
+| `includeBoundary`             | `boolean`                     | `false`    | 范围不能被步长整除时，是否补上边界线 |
 
 ### 主线
 
-| 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `majorEvery` | `number` | — | 每隔几条线使用主线样式 |
-| `majorOffset` | `number` | `0` | 主线计数偏移 |
-| `majorColor` | `string` | — | 主线 `color` |
-| `majorStroke` | `string` | — | 主线描边 |
-| `majorStrokeWidth` | `number` | — | 主线描边宽度 |
-| `majorDashPattern` | `Array<number>` | — | 主线虚线段和间隔 |
-| `majorLineCap` | `'butt' \| 'round' \| 'square'` | — | 主线端点形状 |
-| `majorLineJoin` | `'miter' \| 'round' \| 'bevel'` | — | 主线拐点形状 |
-| `majorThickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | 主线语义粗细 |
-| `majorOpacity` | `number` | — | 主线整体透明度 |
-| `majorDrawOpacity` | `number` | — | 主线描边透明度 |
+| 属性               | 类型                                                                                           | 默认值 | 描述                   |
+| ------------------ | ---------------------------------------------------------------------------------------------- | ------ | ---------------------- |
+| `majorEvery`       | `number`                                                                                       | —      | 每隔几条线使用主线样式 |
+| `majorOffset`      | `number`                                                                                       | `0`    | 主线计数偏移           |
+| `majorColor`       | `string`                                                                                       | —      | 主线 `color`           |
+| `majorStroke`      | `string`                                                                                       | —      | 主线描边               |
+| `majorStrokeWidth` | `number`                                                                                       | —      | 主线描边宽度           |
+| `majorDashPattern` | `Array<number>`                                                                                | —      | 主线虚线段和间隔       |
+| `majorLineCap`     | `'butt' \| 'round' \| 'square'`                                                                | —      | 主线端点形状           |
+| `majorLineJoin`    | `'miter' \| 'round' \| 'bevel'`                                                                | —      | 主线拐点形状           |
+| `majorThickness`   | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —      | 主线语义粗细           |
+| `majorOpacity`     | `number`                                                                                       | —      | 主线整体透明度         |
+| `majorDrawOpacity` | `number`                                                                                       | —      | 主线描边透明度         |
 
 ### 外边框
 
-| 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `border` | `boolean` | `false` | 是否绘制外边框 |
-| `borderPadding` | `number` | `0` | 外边框与网格范围之间的距离 |
-| `borderRenderOrder` | `'before' \| 'after'` | `'after'` | 外边框绘制在网格线之前还是之后 |
-| `clipToBorder` | `boolean` | `false` | 网格线是否延伸到外边框 |
-| `borderColor` | `string` | — | 外边框 `color` |
-| `borderStroke` | `string` | — | 外边框描边 |
-| `borderStrokeWidth` | `number` | — | 外边框描边宽度 |
-| `borderDashPattern` | `Array<number>` | — | 外边框虚线段和间隔 |
-| `borderLineCap` | `'butt' \| 'round' \| 'square'` | — | 外边框端点形状 |
-| `borderLineJoin` | `'miter' \| 'round' \| 'bevel'` | — | 外边框拐点形状 |
-| `borderThickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | 外边框语义粗细 |
-| `borderFill` | `string \| PaintSpec` | — | 外边框闭合区域填充 |
-| `borderFillRule` | `'nonzero' \| 'evenodd'` | — | 外边框填充规则 |
-| `borderOpacity` | `number` | — | 外边框整体透明度 |
-| `borderFillOpacity` | `number` | — | 外边框填充透明度 |
-| `borderDrawOpacity` | `number` | — | 外边框描边透明度 |
-| `borderZIndex` | `number` | — | 外边框层级 |
+| 属性                | 类型                                                                                           | 默认值    | 描述                           |
+| ------------------- | ---------------------------------------------------------------------------------------------- | --------- | ------------------------------ |
+| `border`            | `boolean`                                                                                      | `false`   | 是否绘制外边框                 |
+| `borderPadding`     | `number`                                                                                       | `0`       | 外边框与网格范围之间的距离     |
+| `borderRenderOrder` | `'before' \| 'after'`                                                                          | `'after'` | 外边框绘制在网格线之前还是之后 |
+| `clipToBorder`      | `boolean`                                                                                      | `false`   | 网格线是否延伸到外边框         |
+| `borderColor`       | `string`                                                                                       | —         | 外边框 `color`                 |
+| `borderStroke`      | `string`                                                                                       | —         | 外边框描边                     |
+| `borderStrokeWidth` | `number`                                                                                       | —         | 外边框描边宽度                 |
+| `borderDashPattern` | `Array<number>`                                                                                | —         | 外边框虚线段和间隔             |
+| `borderLineCap`     | `'butt' \| 'round' \| 'square'`                                                                | —         | 外边框端点形状                 |
+| `borderLineJoin`    | `'miter' \| 'round' \| 'bevel'`                                                                | —         | 外边框拐点形状                 |
+| `borderThickness`   | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —         | 外边框语义粗细                 |
+| `borderFill`        | `string \| PaintSpec`                                                                          | —         | 外边框闭合区域填充             |
+| `borderFillRule`    | `'nonzero' \| 'evenodd'`                                                                       | —         | 外边框填充规则                 |
+| `borderOpacity`     | `number`                                                                                       | —         | 外边框整体透明度               |
+| `borderFillOpacity` | `number`                                                                                       | —         | 外边框填充透明度               |
+| `borderDrawOpacity` | `number`                                                                                       | —         | 外边框描边透明度               |
+| `borderZIndex`      | `number`                                                                                       | —         | 外边框层级                     |
 
 ## 相关
 

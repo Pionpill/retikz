@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { scoreL1 } from '../../src/score/l1';
 
 const emptyScene = { version: 1, type: 'scene', children: [] };

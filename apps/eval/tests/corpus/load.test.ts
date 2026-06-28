@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { CorpusPromptSchema } from '../../src/corpus/types';
+
 import { loadCorpus } from '../../src/corpus/load';
+import { CorpusPromptSchema } from '../../src/corpus/types';
 
 describe('CorpusPromptSchema', () => {
   it('接受合法种子条目', () => {
@@ -50,13 +51,13 @@ describe('loadCorpus', () => {
 
   it('语料覆盖全部四个难度档', () => {
     const corpus = loadCorpus(new URL('../../corpus/core.json', import.meta.url));
-    const tiers = new Set(corpus.map((c) => c.difficulty));
+    const tiers = new Set(corpus.map(c => c.difficulty));
     expect(tiers).toEqual(new Set(['single', 'composite', 'complex', 'advanced']));
   });
 
   it('语料 id 无重复', () => {
     const corpus = loadCorpus(new URL('../../corpus/core.json', import.meta.url));
-    const ids = corpus.map((c) => c.id);
+    const ids = corpus.map(c => c.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
 });

@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import { CompileWarningCode, formatCompileWarning } from '../../src';
+
 import type { CompileWarning, IR } from '../../src';
+
+import { CompileWarningCode, formatCompileWarning } from '../../src';
+import { compileToScene } from '../../src/compile/compile';
 
 const scene = (children: IR['children']): IR => ({
   version: 1,
@@ -47,7 +49,7 @@ describe('CompileOptions.onWarn', () => {
     expect(warnings[0].message).toContain('requires a previous position');
   });
 
-  it("UNRESOLVED_NODE_REFERENCE：step.to 引用未定义节点 id → warning + path locator 指向具体 step", () => {
+  it('UNRESOLVED_NODE_REFERENCE：step.to 引用未定义节点 id → warning + path locator 指向具体 step', () => {
     const ir = scene([
       {
         type: 'path',
@@ -65,7 +67,7 @@ describe('CompileOptions.onWarn', () => {
     expect(unresolved!.message).toContain("'bogus'");
   });
 
-  it("UNRESOLVED_NODE_REFERENCE：step.to 用 offset position { of } 引用未定义节点 → 不再静默丢弃", () => {
+  it('UNRESOLVED_NODE_REFERENCE：step.to 用 offset position { of } 引用未定义节点 → 不再静默丢弃', () => {
     const ir = scene([
       {
         type: 'path',
@@ -83,7 +85,7 @@ describe('CompileOptions.onWarn', () => {
     expect(unresolved!.message).toContain("'bogus'");
   });
 
-  it("UNRESOLVED_NODE_REFERENCE：step.to 用 polar position { origin } 引用未定义节点 → 不再静默丢弃", () => {
+  it('UNRESOLVED_NODE_REFERENCE：step.to 用 polar position { origin } 引用未定义节点 → 不再静默丢弃', () => {
     const ir = scene([
       {
         type: 'path',
@@ -161,9 +163,7 @@ describe('CompileOptions.onWarn 缺省行为', () => {
   });
 
   it('不传 onWarn + dev 模式 → 默认 console.warn 触发，含 code / path / message', () => {
-    const ir = scene([
-      { type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] },
-    ]);
+    const ir = scene([{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }]);
     compileToScene(ir);
     expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
     const msg = consoleWarnSpy.mock.calls[0][0] as string;
@@ -173,9 +173,7 @@ describe('CompileOptions.onWarn 缺省行为', () => {
   });
 
   it('不传 onWarn + 显式传 onWarn=空函数 → console.warn 不触发（用户接管）', () => {
-    const ir = scene([
-      { type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] },
-    ]);
+    const ir = scene([{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }]);
     compileToScene(ir, { onWarn: () => {} });
     expect(consoleWarnSpy).not.toHaveBeenCalled();
   });

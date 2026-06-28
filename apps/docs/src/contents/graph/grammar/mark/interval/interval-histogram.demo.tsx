@@ -1,5 +1,6 @@
-import { Axis, IntervalMark, Plot, Transform } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, IntervalMark, Plot, Transform } from '@retikz/plot-react';
 
 import { laborCosts } from './bar-variable-width.data';
 import { measurements } from './interval-histogram.data';

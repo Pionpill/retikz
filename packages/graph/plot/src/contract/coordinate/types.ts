@@ -1,4 +1,5 @@
 import type { Position } from '@retikz/math';
+
 import type { PositionScale } from '../scale';
 import type { Cell, CellGeometry } from './cell';
 

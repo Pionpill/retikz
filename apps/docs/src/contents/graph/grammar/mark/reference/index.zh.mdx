@@ -28,13 +28,13 @@ ReferenceMark 是底层参考 mark：它负责把一个固定轴值解释成 lin
 
 取向由绑定的轴决定，形态由是否给上界决定：
 
-| 表现形态 | 关键属性 | 说明 |
-| --- | --- | --- |
-| 水平参考线 | `y` | 固定 y 值，跨满 x 域 |
-| 竖直参考线 | `x` | 固定 x 值，跨满 y 域 |
-| 水平参考带 | `y` / `yTo` | 固定 y 区间，填充 `y∈[y,yTo]` |
-| 竖直参考带 | `x` / `xTo` | 固定 x 区间，填充 `x∈[x,xTo]` |
-| 二维参考区域 | `kind="region"` + `x` / `xTo` / `y` / `yTo` | 同时固定 x 与 y 区间，填充二者交集 |
+| 表现形态     | 关键属性                                                  | 说明                                      |
+| ------------ | --------------------------------------------------------- | ----------------------------------------- |
+| 水平参考线   | `y`                                                       | 固定 y 值，跨满 x 域                      |
+| 竖直参考线   | `x`                                                       | 固定 x 值，跨满 y 域                      |
+| 水平参考带   | `y` / `yTo`                                               | 固定 y 区间，填充 `y∈[y,yTo]`             |
+| 竖直参考带   | `x` / `xTo`                                               | 固定 x 区间，填充 `x∈[x,xTo]`             |
+| 二维参考区域 | `kind="region"` + `x` / `xTo` / `y` / `yTo`               | 同时固定 x 与 y 区间，填充二者交集        |
 | 三元参考区域 | `kind="region"` + `x` / `xTo` / `y` / `yTo` / `z` / `zTo` | 同时固定三个分量区间，并裁剪到 simplex 内 |
 
 在 `polar2D` 下，同一组属性会被坐标系重解释：`y` 是常半径参考环，`y` / `yTo` 是环带；`x` 是径向参考线，`x` / `xTo` 是扇形楔；`kind="region"` 同时限制角度和半径，得到一个环扇区。在 `ternary2D` 下，`kind="region"` 使用 `x/y/z` 三个分量区间，并通过三元坐标的 `projectCell` 裁剪成 contour。
@@ -79,7 +79,7 @@ ReferenceMark 的字段参考同样可以读取当前图元的变换后 rows。�
 
 `ReferenceMark` 是一个内置注册图元。React 里的 `<ReferenceMark>` 本身不渲染 DOM；`<Plot>` 会把扁平 props 装配成 `type: 'reference'` 的 mark IR，把 `x` / `y` / `z` 放进 `encoding`，并把 `kind` / `xTo` / `yTo` / `zTo` / `extentField` / `extentToField` 保留在 mark 顶层。
 
-编译时，`lowerMark` 按 `mark.type` 查询 `MARK_REGISTRY`，`ReferenceMark` 命中 `PlotMark.Reference` 对应的 `lowerReferenceLayer`。默认 line / band 只接受 cartesian2D / polar2D；`kind="region"` 走 cell 路径，接受所有带 `projectCell` 的坐标帧。line 下沉成 core `Path`，band / region 先构造坐标系无关的 `Cell`，再通过 `frame.projectCell(...)` 下沉成 core `Node` 几何。
+编译时，`lowerMark` 按 `mark.type` 查询 `MARK_REGISTRY`，`ReferenceMark` 命中 `PlotMark.Reference` 对应的 `lowerReferenceLayer`。默认 line / band 只接受 cartesian2D / polar2D；`kind="region"` 走 cell 路径，接受所有带 `projectCell` 的坐标帧。line 下沉成 core `Path`，band / region 先构造坐标系无关的 `Cell`，再通过 `frame.projectCell(...)` 下沉成 core `Node` 几何。`label` 会按实际形态推断宿主：line 使用 geometry label 字段，band / region 使用 node label 字段，用户不需要写 `kind`。
 
 注册部分只需要看 `ReferenceMark` 对应的注册行，以及真正执行下沉的 `lowerReferenceLayer` / `lowerReference`：
 
@@ -123,47 +123,51 @@ const lowerReference = (mark: ReferenceMark, rows: Array<ExternalRow>, frame: Co
 
 这段逻辑可以拆成四步：
 
-| 步骤 | 说明 |
-| --- | --- |
-| 取向校验 | 默认 line / band 要求 `encoding.x` / `encoding.y` 恰好存在一个；`kind="region"` 要求当前坐标系消费的 role 都有下界和上界 |
-| 形态判断 | 默认写法按上界判断 line / band；region 直接进入 cell 路径 |
-| 行迭代 | 完全常量参考只生成一条；字段轴值、字段上界或 extent 字段按数据行生成 |
-| core 下沉 | line 生成 core `Path`；band / region 通过坐标系 `projectCell` 生成可填充几何 Node |
+| 步骤      | 说明                                                                                                                     |
+| --------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 取向校验  | 默认 line / band 要求 `encoding.x` / `encoding.y` 恰好存在一个；`kind="region"` 要求当前坐标系消费的 role 都有下界和上界 |
+| 形态判断  | 默认写法按上界判断 line / band；region 直接进入 cell 路径                                                                |
+| 行迭代    | 完全常量参考只生成一条；字段轴值、字段上界或 extent 字段按数据行生成                                                     |
+| core 下沉 | line 生成 core `Path`；band / region 通过坐标系 `projectCell` 生成可填充几何 Node                                        |
 
 ## API
 
-`ReferenceMark` 的 API 同时覆盖 line、band 和 region，并按位置、专属、路径、节点、通用和自定义分组：位置字段绑定参考轴，专属字段描述参考范围，路径字段服务参考线，节点字段服务参考带 / 区域。表里的 `FieldName` 表示字段名或字段路径，例如 `threshold` / `limits.lo`；`number` 表示直接写入的常量轴值。
+`ReferenceMark` 的 API 同时覆盖 line、band 和 region，并按位置、专属、路径、节点、标签、通用和自定义分组：位置字段绑定参考轴，专属字段描述参考范围，路径字段服务参考线，节点字段服务参考带 / 区域。表里的 `FieldName` 表示字段名或字段路径，例如 `threshold` / `limits.lo`；`number` 表示直接写入的常量轴值。`label` 不写 `kind`，由 line / band / region 形态决定使用 core geometry label 还是 node label。
 
-| 分类 | 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- | --- |
-| 位置 | `x` | `number`<br />`FieldName?` | — | 竖直参考的常量轴；数字为常量，字段为 per-datum 参考 |
-|  | `y` | `number`<br />`FieldName?` | — | 水平参考的常量轴；数字为常量，字段为 per-datum 参考 |
-|  | `z` | `number`<br />`FieldName?` | — | z role 的区域下界；仅 `kind="region"` 且坐标系消费 z 时使用 |
-| 专属 | `kind` | `'region'?` | — | 设为 `region` 时按当前坐标系 role 构造区域；省略时推断 line / band |
-|  | `color` | `string?` | 默认图层色 | 常量参考时是颜色字符串；per-datum 参考时是颜色字段名 |
-|  | `xTo` | `number`<br />`FieldName?` | — | x 方向上界；默认与 `x` 配对生成竖直 band，region 中作为区域右边界 |
-|  | `yTo` | `number`<br />`FieldName?` | — | y 方向上界；默认与 `y` 配对生成水平 band，region 中作为区域上界 |
-|  | `z` / `zTo` | `number`<br />`FieldName?` | — | z 方向下界 / 上界；仅 `kind="region"` 且当前坐标系消费 z role 时使用，例如 `ternary2D` |
-|  | `extentField` / `extentToField` | `FieldName?` | 对侧轴满域 | 对侧维部分长度起止字段，必须成对出现 |
-| 路径 / 参考带 | `fill` / `stroke` | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?` / `PointStrokeStyle?` | `currentColor` / — | 参考线使用 `stroke`；参考带 / 区域使用 `fill` / `stroke` 样式 |
-|  | `strokeWidth`<br />`opacity` / `drawOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?` | —<br />— | 参考线描边宽度、整体透明度和描边透明度 |
-|  | `zIndex` / `rotate` | `PointZIndexStyle?`<br />`PointNumberStyle?` | —<br />— | 参考线绘制顺序和旋转 |
-|  | `scale`<br />`fillRule` / `thickness` | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?` | —<br />—<br />— | 参考线路径缩放、填充规则和厚度预设 |
-|  | `arrow` / `arrowDetail` | `PathArrowStyle?`<br />`PathArrowDetailStyle?` | —<br />— | 参考线箭头方向与细节 |
-|  | `dashPattern`<br />`shadow` / `blendMode` | `NodeDashPatternStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?` | —<br />—<br />— | 参考线虚线、阴影和混合模式 |
-| 节点 | `fillOpacity` | `PointOpacityStyle?` | — | 参考带 / 区域填充透明度 |
-|  | `padding` / `minimumSize` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | 参考带 / 区域 Node 内边距和最小视觉尺寸 |
-|  | `minimumWidth` / `minimumHeight` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | 参考带 / 区域 Node 最小视觉宽 / 高 |
-|  | `align`<br />`lineHeight` / `maxTextWidth` | `MarkValueProp<NodeTextAlignValue>`<br />`NodeTextAlignStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />— | 参考带 / 区域文本排版通道 |
-|  | `cornerRadius`<br />`xScale` / `yScale` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />— | 参考带 / 区域 Node 圆角与缩放通道 |
-|  | `innerXSep` / `innerYSep`<br />`outerSep` / `margin` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle` | — | 参考带 / 区域 Node 间距通道 |
-|  | `dashed` / `dotted` | `MarkValueProp<boolean>`<br />`NodeBooleanStyle` | — | 参考带 / 区域 Node 描边虚线快捷开关 |
-|  | `font` / `boundary` | `NodeFontStyle?`<br />`NodeBoundaryStyle?` | —<br />— | 参考带 / 区域 Node 字体和边界 |
-| 通用 | `id` | `string?` | — | 可选 mark 句柄，用于图层 id |
-|  | `transform` | `Array<Transform>?` | — | 当前图元局部的数据变换；在 plot 级 transform 之后执行，只影响这一层看到的 rows |
-| 自定义 | `channels` | `Record<string, Channel>` | — | 自定义通道入口；交给注册的 channel definition 解析 |
+| 分类          | 属性                                                 | 类型                                                                                                                      | 默认值             | 描述                                                                                                          |
+| ------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------- |
+| 位置          | `x`                                                  | `number`<br />`FieldName?`                                                                                                | —                  | 竖直参考的常量轴；数字为常量，字段为 per-datum 参考                                                           |
+|               | `y`                                                  | `number`<br />`FieldName?`                                                                                                | —                  | 水平参考的常量轴；数字为常量，字段为 per-datum 参考                                                           |
+|               | `z`                                                  | `number`<br />`FieldName?`                                                                                                | —                  | z role 的区域下界；仅 `kind="region"` 且坐标系消费 z 时使用                                                   |
+| 专属          | `kind`                                               | `'region'?`                                                                                                               | —                  | 设为 `region` 时按当前坐标系 role 构造区域；省略时推断 line / band                                            |
+|               | `color`                                              | `string?`                                                                                                                 | 默认图层色         | 常量参考时是颜色字符串；per-datum 参考时是颜色字段名                                                          |
+|               | `xTo`                                                | `number`<br />`FieldName?`                                                                                                | —                  | x 方向上界；默认与 `x` 配对生成竖直 band，region 中作为区域右边界                                             |
+|               | `yTo`                                                | `number`<br />`FieldName?`                                                                                                | —                  | y 方向上界；默认与 `y` 配对生成水平 band，region 中作为区域上界                                               |
+|               | `z` / `zTo`                                          | `number`<br />`FieldName?`                                                                                                | —                  | z 方向下界 / 上界；仅 `kind="region"` 且当前坐标系消费 z role 时使用，例如 `ternary2D`                        |
+|               | `extentField` / `extentToField`                      | `FieldName?`                                                                                                              | 对侧轴满域         | 对侧维部分长度起止字段，必须成对出现                                                                          |
+| 标签          | `label`                                              | `MarkGeometryLabel`<br />`MarkNodeLabel`<br />`Array<...>?`                                                               | —                  | line 使用 geometry label 字段；band / region 使用 node label 字段；内容写在 `content.field` / `content.value` |
+| 路径 / 参考带 | `fill` / `stroke`                                    | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?` / `PointStrokeStyle?`                                               | `currentColor` / — | 参考线使用 `stroke`；参考带 / 区域使用 `fill` / `stroke` 样式                                                 |
+|               | `strokeWidth`<br />`opacity` / `drawOpacity`         | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?`                                                                  | —<br />—           | 参考线描边宽度、整体透明度和描边透明度                                                                        |
+|               | `zIndex` / `rotate`                                  | `PointZIndexStyle?`<br />`PointNumberStyle?`                                                                              | —<br />—           | 参考线绘制顺序和旋转                                                                                          |
+|               | `scale`<br />`fillRule` / `thickness`                | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?`                                                    | —<br />—<br />—    | 参考线路径缩放、填充规则和厚度预设                                                                            |
+|               | `arrow` / `arrowDetail`                              | `PathArrowStyle?`<br />`PathArrowDetailStyle?`                                                                            | —<br />—           | 参考线箭头方向与细节                                                                                          |
+|               | `dashPattern`<br />`shadow` / `blendMode`            | `NodeDashPatternStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?`                                                        | —<br />—<br />—    | 参考线虚线、阴影和混合模式                                                                                    |
+| 节点          | `fillOpacity`                                        | `PointOpacityStyle?`                                                                                                      | —                  | 参考带 / 区域填充透明度                                                                                       |
+|               | `padding` / `minimumSize`                            | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`                                                                | —                  | 参考带 / 区域 Node 内边距和最小视觉尺寸                                                                       |
+|               | `minimumWidth` / `minimumHeight`                     | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`                                                                | —                  | 参考带 / 区域 Node 最小视觉宽 / 高                                                                            |
+|               | `align`<br />`lineHeight` / `maxTextWidth`           | `MarkValueProp<NodeTextAlignValue>`<br />`NodeTextAlignStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle` | —<br />—           | 参考带 / 区域文本排版通道                                                                                     |
+|               | `cornerRadius`<br />`xScale` / `yScale`              | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle`    | —<br />—           | 参考带 / 区域 Node 圆角与缩放通道                                                                             |
+|               | `innerXSep` / `innerYSep`<br />`outerSep` / `margin` | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`                                                                | —                  | 参考带 / 区域 Node 间距通道                                                                                   |
+|               | `dashed` / `dotted`                                  | `MarkValueProp<boolean>`<br />`NodeBooleanStyle`                                                                          | —                  | 参考带 / 区域 Node 描边虚线快捷开关                                                                           |
+|               | `font` / `boundary`                                  | `NodeFontStyle?`<br />`NodeBoundaryStyle?`                                                                                | —<br />—           | 参考带 / 区域 Node 字体和边界                                                                                 |
+| 通用          | `id`                                                 | `string?`                                                                                                                 | —                  | 可选 mark 句柄，用于图层 id                                                                                   |
+|               | `transform`                                          | `Array<Transform>?`                                                                                                       | —                  | 当前图元局部的数据变换；在 plot 级 transform 之后执行，只影响这一层看到的 rows                                |
+| 自定义        | `channels`                                           | `Record<string, Channel>`                                                                                                 | —                  | 自定义通道入口；交给注册的 channel definition 解析                                                            |
 
-<ComponentAlert title="默认取向二选一" description="<ReferenceMark> 的默认 line / band 写法必须恰好绑 x 或 y 之一；两者皆给或皆缺、或上界与所绑维度不匹配（绑 x 却给 yTo）都会报错。kind=&quot;region&quot; 是例外：它必须给齐当前坐标系 role 的下界 / 上界，且不接收 extentField / extentToField；只要坐标帧提供 projectCell，就可以下沉成区域。" />
+<ComponentAlert
+  title="默认取向二选一"
+  description='<ReferenceMark> 的默认 line / band 写法必须恰好绑 x 或 y 之一；两者皆给或皆缺、或上界与所绑维度不匹配（绑 x 却给 yTo）都会报错。kind="region" 是例外：它必须给齐当前坐标系 role 的下界 / 上界，且不接收 extentField / extentToField；只要坐标帧提供 projectCell，就可以下沉成区域。'
+/>
 
 ## 相关
 

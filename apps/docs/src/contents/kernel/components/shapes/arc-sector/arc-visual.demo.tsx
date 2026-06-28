@@ -1,5 +1,6 @@
-import { Arc, Layout } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Arc, Layout } from '@retikz/react';
 
 /**
  * Arc 透传整套 Path 视觉属性：arrow（箭头弧）/ dashPattern（虚线弧）/ marks（中段方向标记）。

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { AtDirection } from './constants';
 
 export const AtPositionSchema = z
@@ -22,6 +23,4 @@ export const AtPositionSchema = z
         'Distance from the referenced node center to this node center in user units. Falls back to the compile-time nodeDistance, then to 1.',
       ),
   })
-  .describe(
-    'Relative position: place this node at `direction` from `of`, separated by `distance`.',
-  );
+  .describe('Relative position: place this node at `direction` from `of`, separated by `distance`.');

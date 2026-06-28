@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+
 import type { AxisGuideSchema, GuideSchema, LegendGuideSchema } from './schema';
 
 /** guide（axis 或 legend） */

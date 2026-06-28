@@ -8,33 +8,38 @@ description: 给节点 / 路径 / 镜头按时间打关键帧——入场、强�
 ```tsx
 import { Layout, Node, fadeIn, scaleIn } from '@retikz/react';
 
-<Node position={[0, 0]} animations={[fadeIn(), scaleIn()]}>hi</Node>
+<Node position={[0, 0]} animations={[fadeIn(), scaleIn()]}>
+  hi
+</Node>;
 ```
 
 `animations` 可挂在 `<Node>` / `<Path>` / `<Scope>`（元素动画）与 `<Layout>`（镜头）。一个元素能挂多条，互不干扰。除包装器 `loop` 与编排 `stagger` 外，每个 preset 都接受公共项 `{ duration, delay, easing, trigger }`，部分另有专有项（`scaleIn.from` / `slideIn.axis,offset` / `growUp.origin` / `pulse.peak` …）。
 
-<ComponentAlert title="末帧 = 静止态，所以能降级" description="入场类动画的最后一帧就是元素本来的样子（fadeIn 的末帧 = 不透明）。于是不支持动画的环境、用户开了「减少动态效果」、或你传 animate={false} 时，直接渲染这个静止态——看到的是完整最终图，不是动画起点那个可能全透明的样子。例外：React + SVG（默认 renderer）路径当前不响应 prefers-reduced-motion，开了「减少动态效果」时仍会播放；vanilla 与 React Canvas 才会据此降级。" />
+<ComponentAlert
+  title="末帧 = 静止态，所以能降级"
+  description="入场类动画的最后一帧就是元素本来的样子（fadeIn 的末帧 = 不透明）。于是不支持动画的环境、用户开了「减少动态效果」、或你传 animate={false} 时，直接渲染这个静止态——看到的是完整最终图，不是动画起点那个可能全透明的样子。例外：React + SVG（默认 renderer）路径当前不响应 prefers-reduced-motion，开了「减少动态效果」时仍会播放；vanilla 与 React Canvas 才会据此降级。"
+/>
 
 ## 全部动画一览
 
-| 动画 | 家族 | 底层通道 | 说明 |
-| --- | --- | --- | --- |
-| `fadeIn` | 入场 | opacity | 渐入（0→1） |
-| `drawOn` | 入场 | pathDraw | 描边沿路径画出 |
-| `scaleIn` | 入场 | scale | 从略小弹入（0.8→1） |
-| `grow` | 入场 | scale | 从无到有放大（0→1） |
-| `growUp` | 入场 | scaleY | 从基线长出（柱状图） |
-| `slideIn` | 入场 | translateX/Y | 从偏移滑入 |
-| `colorShift` | 强调 | fill / stroke | 颜色过渡（oklch 插值） |
-| `flash` | 强调 | opacity | 闪一下（默认 2 次） |
-| `blink` | 强调 | opacity | 持续闪烁（无限） |
-| `wiggle` | 强调 | rotate | 左右抖动（默认 3 次） |
-| `pulse` | 循环 | scale | 脉冲缩放（无限） |
-| `spin` | 循环 | rotate | 匀速旋转（无限，loader） |
-| `loop` | 循环 | 任意 | 把任意 track 变成无限循环 |
-| `cameraTo` | 镜头 | viewBox | 镜头推拉 / 平移（挂 `<Layout>`） |
-| `stagger` | 编排 | — | 给一组动画依次叠加延迟 |
-| `snapshot` | 控制 | — | `snapshotAt` 把某时刻烘焙成静态帧 |
+| 动画         | 家族 | 底层通道      | 说明                              |
+| ------------ | ---- | ------------- | --------------------------------- |
+| `fadeIn`     | 入场 | opacity       | 渐入（0→1）                       |
+| `drawOn`     | 入场 | pathDraw      | 描边沿路径画出                    |
+| `scaleIn`    | 入场 | scale         | 从略小弹入（0.8→1）               |
+| `grow`       | 入场 | scale         | 从无到有放大（0→1）               |
+| `growUp`     | 入场 | scaleY        | 从基线长出（柱状图）              |
+| `slideIn`    | 入场 | translateX/Y  | 从偏移滑入                        |
+| `colorShift` | 强调 | fill / stroke | 颜色过渡（oklch 插值）            |
+| `flash`      | 强调 | opacity       | 闪一下（默认 2 次）               |
+| `blink`      | 强调 | opacity       | 持续闪烁（无限）                  |
+| `wiggle`     | 强调 | rotate        | 左右抖动（默认 3 次）             |
+| `pulse`      | 循环 | scale         | 脉冲缩放（无限）                  |
+| `spin`       | 循环 | rotate        | 匀速旋转（无限，loader）          |
+| `loop`       | 循环 | 任意          | 把任意 track 变成无限循环         |
+| `cameraTo`   | 镜头 | viewBox       | 镜头推拉 / 平移（挂 `<Layout>`）  |
+| `stagger`    | 编排 | —             | 给一组动画依次叠加延迟            |
+| `snapshot`   | 控制 | —             | `snapshotAt` 把某时刻烘焙成静态帧 |
 
 ## preset 与 AnimationTrack
 
@@ -44,19 +49,19 @@ preset 只是底层 `AnimationTrack`（property + keyframes + timing）的便捷
 
 ```ts
 type AnimationTrack = {
-  property: string;            // 动画通道：opacity / scale / scaleX|Y / rotate / translateX|Y / fill / stroke / pathDraw …
+  property: string; // 动画通道：opacity / scale / scaleX|Y / rotate / translateX|Y / fill / stroke / pathDraw …
   keyframes: Array<{
-    at: number;                // 归一化时间 0..1，与 duration 解耦；按 at 升序
-    value: JsonValue;          // 该时刻的「绝对展示值」（不是增量）：数字 / 颜色串 / [x,y,w,h]，按 property narrow
+    at: number; // 归一化时间 0..1，与 duration 解耦；按 at 升序
+    value: JsonValue; // 该时刻的「绝对展示值」（不是增量）：数字 / 颜色串 / [x,y,w,h]，按 property narrow
     easing?: string | [number, number, number, number]; // 段级缓动，覆盖 track 级
   }>;
-  duration: number;            // 单次迭代时长（毫秒，> 0）
-  delay?: number;              // 起播延迟（毫秒）
+  duration: number; // 单次迭代时长（毫秒，> 0）
+  delay?: number; // 起播延迟（毫秒）
   easing?: string | [number, number, number, number]; // track 级缓动，缺省 linear
-  iterations?: number | 'infinite';  // 播放次数，缺省 1
+  iterations?: number | 'infinite'; // 播放次数，缺省 1
   direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse'; // 缺省 normal
-  fill?: 'none' | 'forwards' | 'backwards' | 'both';   // 活动区间外取值，缺省 forwards
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };  // 缺省 load
+  fill?: 'none' | 'forwards' | 'backwards' | 'both'; // 活动区间外取值，缺省 forwards
+  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string }; // 缺省 load
   origin?: string | [number, number]; // scale / scaleX|Y / rotate 的支点，缺省几何中心
 };
 ```
@@ -69,16 +74,18 @@ type AnimationTrack = {
 
 <ComponentPreview name="entrance" size="md" />
 
-<span style={{ color: '#888' }}>一图集齐：fadeIn / scaleIn / grow / slideIn 四个节点、growUp 两根柱子、drawOn 一条路径。</span>
+<span style={{ color: '#888' }}>
+  一图集齐：fadeIn / scaleIn / grow / slideIn 四个节点、growUp 两根柱子、drawOn 一条路径。
+</span>
 
-| 动画 | 说明 | 专有项 |
-| --- | --- | --- |
-| `fadeIn` | 透明度 0→1，最常用的入场 | —（仅公共项） |
-| `scaleIn` | 均匀缩放 `from`→1，绕支点弹入 | `from`（起始缩放，缺省 `0.8`，末帧恒为 `1`）、`origin`（缩放支点，缺省几何中心） |
-| `grow` | `scaleIn` 的 `from: 0` 别名，从无到有放大 | `origin`（同 `scaleIn`） |
-| `growUp` | `scaleY` 0→1，支点底边——柱状图从基线长出 | `origin`（缺省 `'south'` 底边中点；可改成命名 anchor 或 `[x, y]`） |
-| `slideIn` | `translateX|Y` `offset`→0，从偏移滑回原位 | `axis`（`'x'`→`translateX` / `'y'`→`translateY`，缺省 `'x'`）、`offset`（起始位移，缺省 `-20`，末帧恒为 `0`） |
-| `drawOn` | `pathDraw` 0→1，描边沿路径逐渐画出；仅对**有描边**的 `<Path>` / 形状有效 | —（仅公共项） |
+| 动画      | 说明                                                                     | 专有项                                                                           |
+| --------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `fadeIn`  | 透明度 0→1，最常用的入场                                                 | —（仅公共项）                                                                    |
+| `scaleIn` | 均匀缩放 `from`→1，绕支点弹入                                            | `from`（起始缩放，缺省 `0.8`，末帧恒为 `1`）、`origin`（缩放支点，缺省几何中心） |
+| `grow`    | `scaleIn` 的 `from: 0` 别名，从无到有放大                                | `origin`（同 `scaleIn`）                                                         |
+| `growUp`  | `scaleY` 0→1，支点底边——柱状图从基线长出                                 | `origin`（缺省 `'south'` 底边中点；可改成命名 anchor 或 `[x, y]`）               |
+| `slideIn` | `translateX                                                              | Y` `offset`→0，从偏移滑回原位                                                    | `axis`（`'x'`→`translateX` / `'y'`→`translateY`，缺省 `'x'`）、`offset`（起始位移，缺省 `-20`，末帧恒为 `0`） |
+| `drawOn`  | `pathDraw` 0→1，描边沿路径逐渐画出；仅对**有描边**的 `<Path>` / 形状有效 | —（仅公共项）                                                                    |
 
 ## 强调与循环
 
@@ -86,17 +93,19 @@ type AnimationTrack = {
 
 <ComponentPreview name="emphasis" size="md" />
 
-<span style={{ color: '#888' }}>flash / blink / wiggle / pulse 四个节点，spin 旋转条、loop 往返、colorShift 变色三块形状。</span>
+<span style={{ color: '#888' }}>
+  flash / blink / wiggle / pulse 四个节点，spin 旋转条、loop 往返、colorShift 变色三块形状。
+</span>
 
-| 动画 | 说明 | 专有项 |
-| --- | --- | --- |
-| `colorShift` | `fill` / `stroke` 在 **oklch** 空间过渡（感知均匀、无灰带）；作用于形状自身的填充 / 描边 | `from` / `to`（起止色，**均必填**——纯工厂取不到 base 色）、`channel`（`'fill'` / `'stroke'`，缺省 `'fill'`） |
-| `flash` | `opacity` 1→dim→1 闪一下，默认闪 2 次；末帧回 base | `dim`（谷值不透明度，缺省 `0`）、`iterations`（闪烁次数，缺省 `2`） |
-| `blink` | 无限版 `flash`（`opacity` 持续闪烁） | `dim`（谷值不透明度，缺省 `0`）、`iterations`（缺省 `'infinite'`） |
-| `wiggle` | `rotate` 0→+a→−a→+a→0 左右抖动强调，绕几何中心 | `angle`（抖动幅度，度，缺省 `5`）、`iterations`（缺省 `3`）、`origin`（旋转支点，缺省几何中心） |
-| `pulse` | `scale` 1→peak→1 无限脉冲（强调 / 心跳） | `peak`（峰值缩放，缺省 `1.1`）、`origin`（缩放支点，缺省几何中心） |
-| `spin` | `rotate` 0→360 无限匀速，绕几何中心——典型 loader | `origin`（旋转支点，缺省几何中心） |
-| `loop` | `loop(track, { direction })`：把任意一次性 track 包成无限循环；不产新 track，给传入 track 叠加 `iterations` / `direction` | `iterations`（缺省 `'infinite'`）、`direction`（如 `'alternate'`，往返播） |
+| 动画         | 说明                                                                                                                      | 专有项                                                                                                       |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `colorShift` | `fill` / `stroke` 在 **oklch** 空间过渡（感知均匀、无灰带）；作用于形状自身的填充 / 描边                                  | `from` / `to`（起止色，**均必填**——纯工厂取不到 base 色）、`channel`（`'fill'` / `'stroke'`，缺省 `'fill'`） |
+| `flash`      | `opacity` 1→dim→1 闪一下，默认闪 2 次；末帧回 base                                                                        | `dim`（谷值不透明度，缺省 `0`）、`iterations`（闪烁次数，缺省 `2`）                                          |
+| `blink`      | 无限版 `flash`（`opacity` 持续闪烁）                                                                                      | `dim`（谷值不透明度，缺省 `0`）、`iterations`（缺省 `'infinite'`）                                           |
+| `wiggle`     | `rotate` 0→+a→−a→+a→0 左右抖动强调，绕几何中心                                                                            | `angle`（抖动幅度，度，缺省 `5`）、`iterations`（缺省 `3`）、`origin`（旋转支点，缺省几何中心）              |
+| `pulse`      | `scale` 1→peak→1 无限脉冲（强调 / 心跳）                                                                                  | `peak`（峰值缩放，缺省 `1.1`）、`origin`（缩放支点，缺省几何中心）                                           |
+| `spin`       | `rotate` 0→360 无限匀速，绕几何中心——典型 loader                                                                          | `origin`（旋转支点，缺省几何中心）                                                                           |
+| `loop`       | `loop(track, { direction })`：把任意一次性 track 包成无限循环；不产新 track，给传入 track 叠加 `iterations` / `direction` | `iterations`（缺省 `'infinite'`）、`direction`（如 `'alternate'`，往返播）                                   |
 
 ## 镜头与编排
 
@@ -120,12 +129,12 @@ type AnimationTrack = {
 
 **何时播**由 `trigger` 决定，默认 `load`（渲染即播）：
 
-| trigger | 行为 | 后端支持 |
-| --- | --- | --- |
-| `load`（默认） | 渲染即播 | SVG（内联 CSS 自播，SSR 零 JS）/ Canvas（起 rAF） |
-| `visible` | 进视口才播 | SVG（IntersectionObserver）；Canvas（按 id 的 bbox 与视口相交判定） |
-| `manual` | 不自动播，由运行时句柄控制 | SVG / Canvas |
-| `{ onEvent: 'click' }` | 命中事件才播 | SVG / Canvas（水合命中后激活） |
+| trigger                | 行为                       | 后端支持                                                            |
+| ---------------------- | -------------------------- | ------------------------------------------------------------------- |
+| `load`（默认）         | 渲染即播                   | SVG（内联 CSS 自播，SSR 零 JS）/ Canvas（起 rAF）                   |
+| `visible`              | 进视口才播                 | SVG（IntersectionObserver）；Canvas（按 id 的 bbox 与视口相交判定） |
+| `manual`               | 不自动播，由运行时句柄控制 | SVG / Canvas                                                        |
+| `{ onEvent: 'click' }` | 命中事件才播               | SVG / Canvas（水合命中后激活）                                      |
 
 给 `<Layout animationRef={ref}>` 传一个 ref，挂载后拿到 `AnimationControls`（`play` / `pause` / `seek`），即可在组件外用自己的按钮控制（配 `trigger: 'manual'` 最常见）：
 
@@ -151,7 +160,9 @@ const ref = useRef<AnimationControls | null>(null);
 ```tsx
 // grow（0→1，300ms）定格在 150ms ≈ 半大
 <Layout snapshotAt={150}>
-  <Node position={[0, 0]} animations={[grow({ duration: 300 })]}>150ms</Node>
+  <Node position={[0, 0]} animations={[grow({ duration: 300 })]}>
+    150ms
+  </Node>
 </Layout>
 ```
 

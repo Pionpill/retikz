@@ -6,9 +6,11 @@
  *   override 绝对。所有 IR 手搓 `{ version, type, children, viewBox }`，刻意构造 schema 不会拦的脏值。
  */
 import { describe, expect, it } from 'vitest';
+
+import type { IR, IRChild } from '../../src';
+
 import { compileToScene } from '../../src/compile/compile';
 import { createRound } from '../../src/compile/precision';
-import type { IR, IRChild } from '../../src';
 
 /** 尺寸固定、与文字度量无关的稳定内容节点（circle + minimumSize） */
 const circleNode = (id: string, position: [number, number], minimumSize = 40): IRChild => ({
@@ -24,13 +26,12 @@ const circleNode = (id: string, position: [number, number], minimumSize = 40): I
 const sceneWithViewBox = (
   children: ReadonlyArray<IRChild>,
   viewBox: { x: number; y: number; width: number; height: number },
-): IR =>
-  ({
-    version: 1,
-    type: 'scene',
-    children: [...children],
-    viewBox,
-  });
+): IR => ({
+  version: 1,
+  type: 'scene',
+  children: [...children],
+  viewBox,
+});
 
 /** 一个 layout 是否「干净」：四字段都 finite、宽高严格 > 0 */
 const isCleanLayout = (l: { x: number; y: number; width: number; height: number }): boolean =>

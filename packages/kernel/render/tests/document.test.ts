@@ -1,6 +1,8 @@
 import type { ArrowEndSpec, PathPrim, RectPrim, Scene, SceneResource } from '@retikz/core';
 import type { SvgNode } from '@retikz/render/svg';
+
 import { describe, expect, it } from 'vitest';
+
 import { buildSvgDocument } from '../src/svg/builders/document';
 import { renderToSvgString } from '../src/svg/serialize/to-string';
 
@@ -56,14 +58,10 @@ describe('buildSvgDocument —— 交互', () => {
     const doc = buildSvgDocument(scene, { idPrefix: 'd1' });
     const defs = childByTag(doc, 'defs');
     expect(defs).toBeDefined();
-    const markers = (defs?.children ?? []).filter(
-      (c): c is SvgNode => typeof c !== 'string' && c.tag === 'marker',
-    );
+    const markers = (defs?.children ?? []).filter((c): c is SvgNode => typeof c !== 'string' && c.tag === 'marker');
     expect(markers).toHaveLength(1);
     const markerId = markers[0].attrs.id;
-    const pathNode = (doc.children ?? []).find(
-      (c): c is SvgNode => typeof c !== 'string' && c.tag === 'path',
-    );
+    const pathNode = (doc.children ?? []).find((c): c is SvgNode => typeof c !== 'string' && c.tag === 'path');
     expect(pathNode?.attrs['marker-start']).toBe(`url(#${markerId})`);
     expect(pathNode?.attrs['marker-end']).toBe(`url(#${markerId})`);
   });

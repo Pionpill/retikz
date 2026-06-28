@@ -1,11 +1,7 @@
-import {
-  type ContourCommand,
-  type ContourSegment,
-  type FilletSolution,
-  contourCommands,
-  filletContour,
-} from '../../geometry/contour';
+import type { ContourCommand, ContourSegment, FilletSolution } from '../../geometry/contour';
 import type { PathCommand } from '../../primitive';
+
+import { contourCommands, filletContour } from '../../geometry/contour';
 
 /**
  * 折线几何圆角：把 path 内部「line step ↔ line step」接缝倒成切圆弧（ADR-01 `roundedCorners`）。
@@ -184,8 +180,7 @@ type Piece =
       len: number;
     };
 
-const dist = (a: [number, number], b: [number, number]): number =>
-  Math.hypot(b[0] - a[0], b[1] - a[1]);
+const dist = (a: [number, number], b: [number, number]): number => Math.hypot(b[0] - a[0], b[1] - a[1]);
 
 /**
  * 把（倒角后）commands 拆成可按弧长行走的片段序列
@@ -257,10 +252,7 @@ const samplePiece = (piece: Piece, u: number): CommandSample => {
  * @description 倒角缩短了路径总弧长并改变接缝几何 → 同一 pos 落点 / 切线与尖角不同（ADR-01「影响 marks 归一化参数」）。
  *   无可行片段（退化）时回退 { [0,0], [1,0] }。
  */
-export const sampleRoundedCommands = (
-  commands: ReadonlyArray<PathCommand>,
-  pos: number,
-): CommandSample => {
+export const sampleRoundedCommands = (commands: ReadonlyArray<PathCommand>, pos: number): CommandSample => {
   const pieces = piecesFromCommands(commands);
   const total = pieces.reduce((s, p) => s + p.len, 0);
   if (total <= 0 || pieces.length === 0) return { point: [0, 0], tangent: [1, 0] };

@@ -5,12 +5,12 @@ description: relate selects source and target rows from each group, then project
 
 `relate` first selects a source row and a target row, then projects fields from those rows into `sourceXxx` / `targetXxx` fields. It is often placed on `RelationMark.transform`, but it is not private to RelationMark; the output fields are ordinary transform-derived fields.
 
-| Step | Config | Output |
-| --- | --- | --- |
-| Select source | `source.selector` | One original source row |
-| Select target | `target.selector` | One original target row |
-| Project fields | `source.fields` / `target.fields` | Endpoint fields such as `sourceId` / `targetId` |
-| Compute measures | `measures` | Relation fields such as `delta` / `deltaLabel` |
+| Step             | Config                            | Output                                          |
+| ---------------- | --------------------------------- | ----------------------------------------------- |
+| Select source    | `source.selector`                 | One original source row                         |
+| Select target    | `target.selector`                 | One original target row                         |
+| Project fields   | `source.fields` / `target.fields` | Endpoint fields such as `sourceId` / `targetId` |
+| Compute measures | `measures`                        | Relation fields such as `delta` / `deltaLabel`  |
 
 ## Extremes With Relate
 
@@ -19,15 +19,16 @@ This example selects the minimum and maximum points on a trend line, projects `s
 <ComponentPreview name="transform-relate" sourceFiles={['transform-relate.data.ts']} />
 
 The input is still ordinary data rows. In the demo, `PathMark` and `PointMark` consume the original rows; the local transform on `RelationMark` generates one paired row only for the relation layer.
+The source and target selectors reuse the same [Statistic Operations](/graph/grammar/transform/statistics) as `select`, so they can choose top-N rows, ordered endpoints, or custom representative rows.
 
-| prop | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `groupBy` | `Array<string>?` | One global group | Generate pairs independently per group |
-| `source.selector` | `Selector` | — | Source endpoint selector |
-| `source.fields` | `Record<string,string>` | — | Output suffix → source row field |
-| `target.selector` | `Selector` | — | Target endpoint selector |
-| `target.fields` | `Record<string,string>` | — | Output suffix → target row field |
-| `measures` | `Array<PairMeasure>?` | — | Derived measures between source and target |
+| prop              | Type                    | Default          | Notes                                      |
+| ----------------- | ----------------------- | ---------------- | ------------------------------------------ |
+| `groupBy`         | `Array<string>?`        | One global group | Generate pairs independently per group     |
+| `source.selector` | `Selector`              | —                | Source endpoint selector                   |
+| `source.fields`   | `Record<string,string>` | —                | Output suffix → source row field           |
+| `target.selector` | `Selector`              | —                | Target endpoint selector                   |
+| `target.fields`   | `Record<string,string>` | —                | Output suffix → target row field           |
+| `measures`        | `Array<PairMeasure>?`   | —                | Derived measures between source and target |
 
 ```tsx
 <RelationMark

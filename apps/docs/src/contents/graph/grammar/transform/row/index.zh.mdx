@@ -5,11 +5,11 @@ description: 行级变换保持输入行数不变，只重排行或按单行字�
 
 行级变换的输出仍然是一行对应一行。它不会做分组统计，也不会挑代表行；如果后续 mark 需要的只是更稳定的行序、更统一的区间字段，或确定性的点位偏移，就放在这一组。
 
-| kind | 行数 | 常见用途 |
-| --- | --- | --- |
-| `sort` | N → N | 控制折线连接顺序、stack 输入顺序 |
+| kind              | 行数  | 常见用途                            |
+| ----------------- | ----- | ----------------------------------- |
+| `sort`            | N → N | 控制折线连接顺序、stack 输入顺序    |
 | `derive-interval` | N → N | 把单行数值整理成 `[start,end]` 区间 |
-| `jitter` | N → N | 在数据空间抖开重叠散点 |
+| `jitter`          | N → N | 在数据空间抖开重叠散点              |
 
 ## 排序 sort
 
@@ -19,9 +19,9 @@ description: 行级变换保持输入行数不变，只重排行或按单行字�
 
 <ComponentPreview name="transform-sort" sourceFiles={['transform-sort.data.ts']} />
 
-| prop | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `field` | `string` | — | 排序字段 |
+| prop    | 类型                           | 默认值        | 说明     |
+| ------- | ------------------------------ | ------------- | -------- |
+| `field` | `string`                       | —             | 排序字段 |
 | `order` | `'ascending' \| 'descending'?` | `'ascending'` | 排序方向 |
 
 ## 派生区间 derive-interval
@@ -32,12 +32,12 @@ description: 行级变换保持输入行数不变，只重排行或按单行字�
 
 它和 `stack` 都默认产出 `y0` / `y1`，但语义不同：`derive-interval` 是单行派生，`stack` 是跨行累积。
 
-| prop | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `from` | `string?` | — | baseline 到 value 模式的值字段 |
-| `baseline` | `number?` | `0` | `from` 模式的起点 |
-| `startFrom` / `endFrom` | `string?` | — | 两字段区间模式，必须成对出现 |
-| `startField` / `endField` | `string?` | `y0` / `y1` | 输出字段名 |
+| prop                      | 类型      | 默认值      | 说明                           |
+| ------------------------- | --------- | ----------- | ------------------------------ |
+| `from`                    | `string?` | —           | baseline 到 value 模式的值字段 |
+| `baseline`                | `number?` | `0`         | `from` 模式的起点              |
+| `startFrom` / `endFrom`   | `string?` | —           | 两字段区间模式，必须成对出现   |
+| `startField` / `endField` | `string?` | `y0` / `y1` | 输出字段名                     |
 
 ## 抖动 jitter
 
@@ -47,9 +47,9 @@ description: 行级变换保持输入行数不变，只重排行或按单行字�
 
 当前 `jitter` 只作用于连续数值字段。分类 band 内部的屏幕空间抖动不属于这层 transform。
 
-| prop | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `axis` | `'x' \| 'y' \| 'both'?` | `'x'` | 抖动作用轴 |
-| `xField` / `yField` | `string?` | `x` / `y` | 被抖动的连续数值字段 |
-| `amount` | `number?` | `1` | 最大绝对偏移，单位是数据单位 |
-| `seed` | `number?` | `0` | 确定性 PRNG 种子 |
+| prop                | 类型                    | 默认值    | 说明                         |
+| ------------------- | ----------------------- | --------- | ---------------------------- |
+| `axis`              | `'x' \| 'y' \| 'both'?` | `'x'`     | 抖动作用轴                   |
+| `xField` / `yField` | `string?`               | `x` / `y` | 被抖动的连续数值字段         |
+| `amount`            | `number?`               | `1`       | 最大绝对偏移，单位是数据单位 |
+| `seed`              | `number?`               | `0`       | 确定性 PRNG 种子             |

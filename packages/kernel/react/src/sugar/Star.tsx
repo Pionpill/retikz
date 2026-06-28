@@ -1,7 +1,10 @@
 import type { FC } from 'react';
+
+import type { PathVisualProps } from './_shared';
+
 import { Path } from '../kernel/Path';
 import { Step } from '../kernel/Step';
-import { type PathVisualProps, pickPathVisual, requireXY, starVertices } from './_shared';
+import { pickPathVisual, requireXY, starVertices } from './_shared';
 
 /** `<Star>` 形态：中心 + 外/内半径（或外半径 + 内半径比例）+ 角数 */
 export type StarProps = PathVisualProps & {
@@ -27,9 +30,7 @@ export const Star: FC<StarProps> = props => {
     throw new Error('<Star> 的 points 需为 >= 2 的整数');
   }
   const innerRadius =
-    'innerRadius' in props
-      ? props.innerRadius
-      : outerRadius * (props.innerRatio ?? DEFAULT_INNER_RATIO);
+    'innerRadius' in props ? props.innerRadius : outerRadius * (props.innerRatio ?? DEFAULT_INNER_RATIO);
   const rotate = props.rotate ?? DEFAULT_ROTATE;
   const verts = starVertices(center, outerRadius, innerRadius, points, rotate);
 

@@ -1,5 +1,5 @@
-import type { FC } from 'react';
 import type { IRPathRibbonOptions } from '@retikz/core';
+import type { FC } from 'react';
 
 import { Layout, Node, Path, Step } from '@retikz/react';
 
@@ -57,12 +57,7 @@ const rows = [
 ] satisfies Array<Row>;
 
 const Demo: FC = () => (
-  <Layout
-    width={560}
-    height={340}
-    viewBox={{ x: -280, y: -170, width: 560, height: 340 }}
-    color="#172033"
-  >
+  <Layout width={560} height={340} viewBox={{ x: -280, y: -170, width: 560, height: 340 }} color="#172033">
     {rows.map(row => (
       <Path
         key={row.label}

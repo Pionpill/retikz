@@ -1,12 +1,11 @@
-import type { FC } from 'react';
 import type { IRTarget } from '@retikz/core';
+import type { FC } from 'react';
+
+import type { AngleInput, BoxAdjustmentProps, PathVisualProps, ShapeBox } from './_shared';
+
 import { Path } from '../kernel/Path';
 import { Step } from '../kernel/Step';
 import {
-  type AngleInput,
-  type BoxAdjustmentProps,
-  type PathVisualProps,
-  type ShapeBox,
   adjustShapeBox,
   boxCenter,
   boxSize,
@@ -65,11 +64,7 @@ export const Ellipse: FC<EllipseProps> = props => {
     radiusX = props.diameterX / 2;
     radiusY = props.diameterY / 2;
   } else if ('corner1' in props) {
-    const normalized = adjustShapeBox(
-      normalizeCornerBox(props.corner1, props.corner2),
-      props,
-      'Ellipse',
-    );
+    const normalized = adjustShapeBox(normalizeCornerBox(props.corner1, props.corner2), props, 'Ellipse');
     center = boxCenter(normalized);
     [radiusX, radiusY] = boxSize(normalized).map(value => value / 2) as [number, number];
   } else {

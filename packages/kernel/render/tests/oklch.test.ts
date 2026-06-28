@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { lerpColorOklch, sampleColorOklch } from '../src/animation/oklch';
 
 /**

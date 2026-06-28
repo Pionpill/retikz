@@ -1,7 +1,12 @@
+import type { IR } from '@retikz/core';
+
+import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type IR, compileToScene } from '@retikz/core';
+
+import type { MathJaxSvgEngine } from '../src/mathjax/engine';
+
 import { createLowerTex } from '../src/lower/lower-tex';
-import { type MathJaxSvgEngine, createMathJaxEngine } from '../src/mathjax/engine';
+import { createMathJaxEngine } from '../src/mathjax/engine';
 
 const fakeSvg = (tex: string): string =>
   `<svg viewBox="0 -100 ${tex.length * 100} 110"><g transform="scale(1,-1)">` +
@@ -86,9 +91,7 @@ describe('[lower-tex] MathJax integration', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [
-        { type: 'node', id: 'eq', position: [0, 0], text: '$$\\frac{a}{b}$$' },
-      ],
+      children: [{ type: 'node', id: 'eq', position: [0, 0], text: '$$\\frac{a}{b}$$' }],
     };
     const scene = compileToScene(ir, { lowerTex });
     expect(JSON.stringify(scene.primitives)).toContain('"fillRule":"evenodd"');

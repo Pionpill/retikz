@@ -1,5 +1,6 @@
-import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node } from '@retikz/react';
 
 /**
  * Node `label` outside a node border
@@ -8,7 +9,9 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout width={500} height={260}>
     {/* Single label, default position='above' */}
-    <Node id="A" position={[-160, 0]} label={{ text: 'simple label' }}>A</Node>
+    <Node id="A" position={[-160, 0]} label={{ text: 'simple label' }}>
+      A
+    </Node>
     {/* Multiple labels, including a center label */}
     <Node
       id="B"
@@ -33,7 +36,9 @@ const Demo: FC = () => (
         { text: '120°', position: 120, textColor: 'crimson' },
         { text: '-110°', position: -110, textColor: 'crimson' },
       ]}
-    >C</Node>
+    >
+      C
+    </Node>
   </Layout>
 );
 

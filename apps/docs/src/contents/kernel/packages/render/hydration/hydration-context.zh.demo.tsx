@@ -1,5 +1,7 @@
+import type { FC } from 'react';
+
 import { Layout, Node, pulse } from '@retikz/react';
-import { type FC, useState } from 'react';
+import { useState } from 'react';
 
 /**
  * 水合 context demo：handler 第二参 context 读 meta + 命令式触发动画

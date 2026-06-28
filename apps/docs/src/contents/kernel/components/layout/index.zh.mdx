@@ -9,17 +9,19 @@ description: 布局家族——确立坐标语境的容器：每张图必需的�
 
 ## 职责一览
 
-| 组件 | 类型 | 职责 | 适合场景 |
-| --- | --- | --- | --- |
-| Layout | Kernel | 唯一必需的顶层容器：children / IR 入口，编译 Scene 并输出；`width` / `height` 控制显示尺寸 | 每张图的最外层包装 |
-| Scope | Kernel | 局部 transform 容器：把一组 children 当作整体平移 / 旋转 / 缩放，可凭 `id` 被整体引用 | 子图整体变换、局部坐标系、id 命名空间隔离 |
+| 组件   | 类型   | 职责                                                                                       | 适合场景                                  |
+| ------ | ------ | ------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| Layout | Kernel | 唯一必需的顶层容器：children / IR 入口，编译 Scene 并输出；`width` / `height` 控制显示尺寸 | 每张图的最外层包装                        |
+| Scope  | Kernel | 局部 transform 容器：把一组 children 当作整体平移 / 旋转 / 缩放，可凭 `id` 被整体引用      | 子图整体变换、局部坐标系、id 命名空间隔离 |
 
 ## 章节内容
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/kernel/components/layout/overview">
     <span className="font-semibold">Layout</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">顶层容器：children / IR 入口、编译管线与完整 props</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      顶层容器：children / IR 入口、编译管线与完整 props
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/layout/scope">
     <span className="font-semibold">Scope</span>

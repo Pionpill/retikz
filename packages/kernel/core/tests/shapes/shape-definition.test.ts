@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { defineShape, localToWorld, worldToLocal } from '../../src/contract/shape';
-import { BUILTIN_SHAPES } from '../../src/providers/shape';
+
 import type { ShapeDefinition, ShapeStyle } from '../../src/contract/shape';
 import type { Rect } from '../../src/geometry/rect';
 import type { PathCommand, ScenePrimitive } from '../../src/primitive';
+
+import { defineShape, localToWorld, worldToLocal } from '../../src/contract/shape';
+import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const SQRT2 = Math.SQRT2;
 const id = (n: number): number => n;
@@ -24,7 +26,10 @@ describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
     expect(BUILTIN_SHAPES.ellipse.circumscribe(10, 6, EQUAL_PARAMS)).toEqual({ halfWidth: r, halfHeight: r });
   });
   it('ellipse = inner × √2', () => {
-    expect(BUILTIN_SHAPES.ellipse.circumscribe(10, 6, NO_PARAMS)).toEqual({ halfWidth: 10 * SQRT2, halfHeight: 6 * SQRT2 });
+    expect(BUILTIN_SHAPES.ellipse.circumscribe(10, 6, NO_PARAMS)).toEqual({
+      halfWidth: 10 * SQRT2,
+      halfHeight: 6 * SQRT2,
+    });
   });
   it('diamond (= polygon 4/0) 外接 AABB：顶点在坐标轴上，AABB 半轴相等', () => {
     // polygon{4,0} 是视觉菱形：外接圆 R = (hw + hh)，顶点在东西南北方向。
@@ -107,7 +112,7 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
         return localToWorld(rect, [(lx / len) * r, (ly / len) * r]);
       },
       anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
-      *emit (rect, style): Iterable<ScenePrimitive> {
+      *emit(rect, style): Iterable<ScenePrimitive> {
         yield {
           type: 'path',
           commands: [{ kind: 'move', to: [rect.x, rect.y] }, { kind: 'close' }],

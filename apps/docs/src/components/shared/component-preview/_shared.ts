@@ -1,7 +1,8 @@
 /** ComponentPreview 套件内部共享：类型、对齐 class 表、IR 格式化 */
 
-import { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
+
+import { createContext, useContext } from 'react';
 
 export type Transform = { x: number; y: number; scale: number };
 

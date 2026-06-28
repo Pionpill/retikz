@@ -1,5 +1,6 @@
-import { Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node, Scope } from '@retikz/react';
 
 /**
  * Scope clip 圆形取景窗

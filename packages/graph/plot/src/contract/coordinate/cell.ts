@@ -1,4 +1,7 @@
-import { type Position, arcEndPoint } from '@retikz/math';
+import type { Position } from '@retikz/math';
+
+import { arcEndPoint } from '@retikz/math';
+
 import type { DimensionRole } from './types';
 
 /** polar 段内采样：相邻顶点间在 [θ, r] 空间插入的固定中间点数（每段定额，连续角轴弯弧） */
@@ -65,7 +68,8 @@ export const cellGeometryAnchor = (geometry: CellGeometry): Position | null => {
   if (geometry.kind === 'rect') return geometry.position;
   if (geometry.kind === 'sector') {
     const midAngle = (geometry.startAngle + geometry.endAngle) / 2;
-    const midRadius = (Math.min(geometry.innerRadius, geometry.outerRadius) + Math.max(geometry.innerRadius, geometry.outerRadius)) / 2;
+    const midRadius =
+      (Math.min(geometry.innerRadius, geometry.outerRadius) + Math.max(geometry.innerRadius, geometry.outerRadius)) / 2;
     return arcEndPoint(geometry.center, midRadius, midAngle);
   }
   return contourAabbCenter(geometry.points);
@@ -76,7 +80,8 @@ export const cellGeometryAnchor = (geometry: CellGeometry): Position | null => {
  * @description rect / sector 总能装配成 Node；contour 必须至少有 3 个点。所有 cell lowering 入口都应复用该判断，
  *   避免渲染侧跳过退化 contour、locator 或 reference 侧仍返回锚点。
  */
-export const isRenderableCellGeometry = (geometry: CellGeometry): boolean => geometry.kind !== 'contour' || contourAabbCenter(geometry.points) !== null;
+export const isRenderableCellGeometry = (geometry: CellGeometry): boolean =>
+  geometry.kind !== 'contour' || contourAabbCenter(geometry.points) !== null;
 
 /**
  * densifyCellContour 选项：标记哪条位置轴是曲线（曲边每边 N 段，直边每边 1 段），并声明 cell 中的 primary / secondary 角色。

@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+
 import type { DrawableMetaSchema, DrawableStyleSchema } from './schema';
 
 export type IRDrawableStyle = z.infer<typeof DrawableStyleSchema>;

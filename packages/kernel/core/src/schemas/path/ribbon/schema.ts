@@ -1,9 +1,11 @@
 import { z } from 'zod';
+
+import type { IRRibbonDirection } from './types';
+
 import { JsonObjectSchema } from '../../json';
 import { PolarPositionSchema, PositionSchema, Vector2Schema } from '../../position';
 import { StepSchema } from '../step';
 import { RibbonAlignment, RibbonArcCapSweep, RibbonCap, RibbonMode } from './constants';
-import type { IRRibbonDirection } from './types';
 
 export const RibbonArcCapSchema = z
   .object({
@@ -82,9 +84,10 @@ export const RibbonDirectionSchema: z.ZodType<IRRibbonDirection> = z
   .union([
     z.number().describe('Direction angle in degrees, where 0 points to the positive x axis.'),
     Vector2Schema.refine(([x, y]) => x !== 0 || y !== 0, {
-        message: 'Ribbon direction vector must not be zero length.',
-      })
-      .describe('Direction vector [x, y]; Position tuples share the same shape and are treated as vectors from the origin.'),
+      message: 'Ribbon direction vector must not be zero length.',
+    }).describe(
+      'Direction vector [x, y]; Position tuples share the same shape and are treated as vectors from the origin.',
+    ),
     PolarPositionSchema.describe('PolarPosition sugar converted to a vector before normalization.'),
   ])
   .describe('Endpoint tangent direction override as an angle, Vector2/Position tuple, or PolarPosition sugar.');
@@ -100,9 +103,7 @@ export const RibbonEndpointSchema = z
     direction: RibbonDirectionSchema.optional().describe(
       'Optional tangent direction override at this endpoint; omitted means the start-to-end connection direction.',
     ),
-    cap: RibbonCapSchema
-      .optional()
-      .describe('Cap style used at this endpoint of the emitted ribbon polygon.'),
+    cap: RibbonCapSchema.optional().describe('Cap style used at this endpoint of the emitted ribbon polygon.'),
   })
   .strict()
   .describe('Endpoint-local ribbon properties such as width, tangent direction, and cap.');
@@ -129,13 +130,7 @@ export const RibbonSamplingSchema = z
 
           .positive()
           .describe('Approximate target segment length in user units.'),
-        maxSamples: z
-          .number()
-          .int()
-          .min(2)
-          .max(512)
-          .optional()
-          .describe('Optional upper bound for generated samples.'),
+        maxSamples: z.number().int().min(2).max(512).optional().describe('Optional upper bound for generated samples.'),
       })
       .strict()
       .describe('Length-aware adaptive ribbon sampling strategy.'),
@@ -144,46 +139,26 @@ export const RibbonSamplingSchema = z
 
 export const PathRibbonOptionsSchema = z
   .object({
-    mode: z
-      .enum(RibbonMode)
-      .optional()
-      .describe('Ribbon construction mode; omitted means centerline.'),
+    mode: z.enum(RibbonMode).optional().describe('Ribbon construction mode; omitted means centerline.'),
     samples: z
       .union([z.boolean(), z.number().int().min(2).max(512)])
       .optional()
       .describe(
         'Sampling override for centerline lowering; true uses 64 samples, a number uses that fixed sample count, omitted keeps automatic lowering.',
       ),
-    sampling: RibbonSamplingSchema.optional().describe(
-      'Explicit sampling strategy. Cannot be combined with samples.',
-    ),
+    sampling: RibbonSamplingSchema.optional().describe('Explicit sampling strategy. Cannot be combined with samples.'),
     width: RibbonWidthSchema.optional().describe(
       'Whole-ribbon width rule applied along the centerline; use start.width/end.width for two-end taper.',
     ),
-    start: RibbonEndpointSchema.optional().describe(
-      'Start endpoint properties: width, tangent direction, and cap.',
-    ),
-    end: RibbonEndpointSchema.optional().describe(
-      'End endpoint properties: width, tangent direction, and cap.',
-    ),
+    start: RibbonEndpointSchema.optional().describe('Start endpoint properties: width, tangent direction, and cap.'),
+    end: RibbonEndpointSchema.optional().describe('End endpoint properties: width, tangent direction, and cap.'),
     interpolation: z
       .enum(['linear', 'smooth'])
       .optional()
       .describe('Interpolation curve between start.width and end.width.'),
-    align: z
-      .enum(RibbonAlignment)
-      .optional()
-      .describe('Which side of the generated band stays on the centerline.'),
-    upper: z
-      .array(StepSchema)
-      .min(2)
-      .optional()
-      .describe('Explicit upper boundary path used when kind is boundary.'),
-    lower: z
-      .array(StepSchema)
-      .min(2)
-      .optional()
-      .describe('Explicit lower boundary path used when kind is boundary.'),
+    align: z.enum(RibbonAlignment).optional().describe('Which side of the generated band stays on the centerline.'),
+    upper: z.array(StepSchema).min(2).optional().describe('Explicit upper boundary path used when kind is boundary.'),
+    lower: z.array(StepSchema).min(2).optional().describe('Explicit lower boundary path used when kind is boundary.'),
   })
   .strict()
   .superRefine((options, ctx) => {

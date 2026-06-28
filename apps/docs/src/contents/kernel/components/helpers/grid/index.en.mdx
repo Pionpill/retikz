@@ -19,14 +19,14 @@ import { Grid } from '@retikz/react';
 
 ### When to use
 
-| Scenario | Recommended form |
-| --- | --- |
-| Plain background grid | `corner1` + `corner2` + `step` |
-| Known center and size | `center` + `width` + `height` + `step` |
-| Different x / y spacing | `xStep` + `yStep` |
-| Horizontal-only or vertical-only lines | `showHorizontal` / `showVertical` |
-| Emphasize every few lines | `majorEvery` + `majorStroke` / `majorStrokeWidth` |
-| Add a frame around the grid | `border` + `border*` |
+| Scenario                               | Recommended form                                  |
+| -------------------------------------- | ------------------------------------------------- |
+| Plain background grid                  | `corner1` + `corner2` + `step`                    |
+| Known center and size                  | `center` + `width` + `height` + `step`            |
+| Different x / y spacing                | `xStep` + `yStep`                                 |
+| Horizontal-only or vertical-only lines | `showHorizontal` / `showVertical`                 |
+| Emphasize every few lines              | `majorEvery` + `majorStroke` / `majorStrokeWidth` |
+| Add a frame around the grid            | `border` + `border*`                              |
 
 ## Examples
 
@@ -74,56 +74,56 @@ Boundary lines are still grid lines, so they use the normal or major-line style.
 
 ### Range and spacing
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `corner1` + `corner2` | `[number, number]` | — | Grid range from two opposite corners |
-| `center` + `width` + `height` | `[number, number]` + `number` | — | Grid range from center and size |
-| `step` | `number` | — | Shared step for both axes |
-| `xStep` | `number` | — | x-axis step; overrides `step` |
-| `yStep` | `number` | — | y-axis step; overrides `step` |
-| `showVertical` | `boolean` | `true` | Whether to draw vertical lines |
-| `showHorizontal` | `boolean` | `true` | Whether to draw horizontal lines |
-| `origin` | `[number, number]` | top-left of range | Grid alignment base point |
-| `offset` | `[number, number]` | `[0, 0]` | Phase offset added to `origin` |
-| `includeBoundary` | `boolean` | `false` | Add range boundary lines when the range is not divisible by the step |
+| Prop                          | Type                          | Default           | Description                                                          |
+| ----------------------------- | ----------------------------- | ----------------- | -------------------------------------------------------------------- |
+| `corner1` + `corner2`         | `[number, number]`            | —                 | Grid range from two opposite corners                                 |
+| `center` + `width` + `height` | `[number, number]` + `number` | —                 | Grid range from center and size                                      |
+| `step`                        | `number`                      | —                 | Shared step for both axes                                            |
+| `xStep`                       | `number`                      | —                 | x-axis step; overrides `step`                                        |
+| `yStep`                       | `number`                      | —                 | y-axis step; overrides `step`                                        |
+| `showVertical`                | `boolean`                     | `true`            | Whether to draw vertical lines                                       |
+| `showHorizontal`              | `boolean`                     | `true`            | Whether to draw horizontal lines                                     |
+| `origin`                      | `[number, number]`            | top-left of range | Grid alignment base point                                            |
+| `offset`                      | `[number, number]`            | `[0, 0]`          | Phase offset added to `origin`                                       |
+| `includeBoundary`             | `boolean`                     | `false`           | Add range boundary lines when the range is not divisible by the step |
 
 ### Major lines
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `majorEvery` | `number` | — | Use major-line style every N lines |
-| `majorOffset` | `number` | `0` | Offset for major-line counting |
-| `majorColor` | `string` | — | Major-line `color` |
-| `majorStroke` | `string` | — | Major-line stroke |
-| `majorStrokeWidth` | `number` | — | Major-line stroke width |
-| `majorDashPattern` | `Array<number>` | — | Major-line dash and gap sequence |
-| `majorLineCap` | `'butt' \| 'round' \| 'square'` | — | Major-line endpoint shape |
-| `majorLineJoin` | `'miter' \| 'round' \| 'bevel'` | — | Major-line corner shape |
-| `majorThickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Major-line semantic stroke preset |
-| `majorOpacity` | `number` | — | Major-line whole-path opacity |
-| `majorDrawOpacity` | `number` | — | Major-line stroke opacity |
+| Prop               | Type                                                                                           | Default | Description                        |
+| ------------------ | ---------------------------------------------------------------------------------------------- | ------- | ---------------------------------- |
+| `majorEvery`       | `number`                                                                                       | —       | Use major-line style every N lines |
+| `majorOffset`      | `number`                                                                                       | `0`     | Offset for major-line counting     |
+| `majorColor`       | `string`                                                                                       | —       | Major-line `color`                 |
+| `majorStroke`      | `string`                                                                                       | —       | Major-line stroke                  |
+| `majorStrokeWidth` | `number`                                                                                       | —       | Major-line stroke width            |
+| `majorDashPattern` | `Array<number>`                                                                                | —       | Major-line dash and gap sequence   |
+| `majorLineCap`     | `'butt' \| 'round' \| 'square'`                                                                | —       | Major-line endpoint shape          |
+| `majorLineJoin`    | `'miter' \| 'round' \| 'bevel'`                                                                | —       | Major-line corner shape            |
+| `majorThickness`   | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —       | Major-line semantic stroke preset  |
+| `majorOpacity`     | `number`                                                                                       | —       | Major-line whole-path opacity      |
+| `majorDrawOpacity` | `number`                                                                                       | —       | Major-line stroke opacity          |
 
 ### Border
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `border` | `boolean` | `false` | Whether to draw an outer border |
-| `borderPadding` | `number` | `0` | Distance between the border and the grid range |
-| `borderRenderOrder` | `'before' \| 'after'` | `'after'` | Whether the border is drawn before or after the grid lines |
-| `clipToBorder` | `boolean` | `false` | Whether grid lines extend to the border |
-| `borderColor` | `string` | — | Border `color` |
-| `borderStroke` | `string` | — | Border stroke |
-| `borderStrokeWidth` | `number` | — | Border stroke width |
-| `borderDashPattern` | `Array<number>` | — | Border dash and gap sequence |
-| `borderLineCap` | `'butt' \| 'round' \| 'square'` | — | Border endpoint shape |
-| `borderLineJoin` | `'miter' \| 'round' \| 'bevel'` | — | Border corner shape |
-| `borderThickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Border semantic stroke preset |
-| `borderFill` | `string \| PaintSpec` | — | Fill for the closed border path |
-| `borderFillRule` | `'nonzero' \| 'evenodd'` | — | Border fill rule |
-| `borderOpacity` | `number` | — | Border whole-path opacity |
-| `borderFillOpacity` | `number` | — | Border fill opacity |
-| `borderDrawOpacity` | `number` | — | Border stroke opacity |
-| `borderZIndex` | `number` | — | Border stacking order |
+| Prop                | Type                                                                                           | Default   | Description                                                |
+| ------------------- | ---------------------------------------------------------------------------------------------- | --------- | ---------------------------------------------------------- |
+| `border`            | `boolean`                                                                                      | `false`   | Whether to draw an outer border                            |
+| `borderPadding`     | `number`                                                                                       | `0`       | Distance between the border and the grid range             |
+| `borderRenderOrder` | `'before' \| 'after'`                                                                          | `'after'` | Whether the border is drawn before or after the grid lines |
+| `clipToBorder`      | `boolean`                                                                                      | `false`   | Whether grid lines extend to the border                    |
+| `borderColor`       | `string`                                                                                       | —         | Border `color`                                             |
+| `borderStroke`      | `string`                                                                                       | —         | Border stroke                                              |
+| `borderStrokeWidth` | `number`                                                                                       | —         | Border stroke width                                        |
+| `borderDashPattern` | `Array<number>`                                                                                | —         | Border dash and gap sequence                               |
+| `borderLineCap`     | `'butt' \| 'round' \| 'square'`                                                                | —         | Border endpoint shape                                      |
+| `borderLineJoin`    | `'miter' \| 'round' \| 'bevel'`                                                                | —         | Border corner shape                                        |
+| `borderThickness`   | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —         | Border semantic stroke preset                              |
+| `borderFill`        | `string \| PaintSpec`                                                                          | —         | Fill for the closed border path                            |
+| `borderFillRule`    | `'nonzero' \| 'evenodd'`                                                                       | —         | Border fill rule                                           |
+| `borderOpacity`     | `number`                                                                                       | —         | Border whole-path opacity                                  |
+| `borderFillOpacity` | `number`                                                                                       | —         | Border fill opacity                                        |
+| `borderDrawOpacity` | `number`                                                                                       | —         | Border stroke opacity                                      |
+| `borderZIndex`      | `number`                                                                                       | —         | Border stacking order                                      |
 
 ## Related
 

@@ -1,15 +1,8 @@
-import { Layout, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
 
-const PRESETS = [
-  'ultraThin',
-  'veryThin',
-  'thin',
-  'semithick',
-  'thick',
-  'veryThick',
-  'ultraThick',
-] as const;
+import { Layout, Path, Step } from '@retikz/react';
+
+const PRESETS = ['ultraThin', 'veryThin', 'thin', 'semithick', 'thick', 'veryThick', 'ultraThick'] as const;
 
 const Demo: FC = () => (
   <Layout width={420} height={240}>

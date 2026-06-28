@@ -6,8 +6,10 @@
  *   （SSR / 老浏览器）优雅退化。
  */
 import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
-import { isAutoplayTrigger } from './channels';
+
 import type { WaapiDescriptor } from '../svg/animation/waapi';
+
+import { isAutoplayTrigger } from './channels';
 
 /** 可能缺席的运行时全局（SSR / 老浏览器）：lib.dom 把它们类型成必有，这里显式放宽成可选以正确降级 */
 type OptionalGlobals = {
@@ -133,7 +135,9 @@ export const sceneHasAnimations = (scene: Scene): boolean =>
 
 /** 递归判断 prim 树是否有自动播放（load/缺省）track */
 const primsHaveAutoplay = (prims: ReadonlyArray<ScenePrimitive>): boolean =>
-  prims.some(p => (p.animations ?? []).some(isAutoplayTrigger) || (p.type === 'group' && primsHaveAutoplay(p.children)));
+  prims.some(
+    p => (p.animations ?? []).some(isAutoplayTrigger) || (p.type === 'group' && primsHaveAutoplay(p.children)),
+  );
 
 /**
  * scene 是否含「自动播放」(load/缺省) track（元素级或根镜头）
@@ -144,7 +148,7 @@ export const sceneHasAutoplayTrigger = (scene: Scene): boolean =>
 
 /** 一条 track 的活动结束时刻（毫秒）；iterations infinite → Infinity */
 const trackEndMs = (track: IRAnimationTrack): number => {
-  const iterations = track.iterations === 'infinite' ? Infinity : track.iterations ?? 1;
+  const iterations = track.iterations === 'infinite' ? Infinity : (track.iterations ?? 1);
   return (track.delay ?? 0) + track.duration * iterations;
 };
 
@@ -213,7 +217,10 @@ export const bindWaapiDescriptors = (root: Element): AnimationControls => {
         fill: descriptor.timing.fill as FillMode,
       };
       const animate = (): Animation | undefined =>
-        (element as unknown as { animate?: (k: unknown, t: unknown) => Animation }).animate?.(descriptor.keyframes, timing);
+        (element as unknown as { animate?: (k: unknown, t: unknown) => Animation }).animate?.(
+          descriptor.keyframes,
+          timing,
+        );
       const trigger = descriptor.trigger;
       if (trigger === 'manual') {
         const animation = animate();

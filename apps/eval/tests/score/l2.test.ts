@@ -1,5 +1,6 @@
+import { compileToScene, SceneSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { SceneSchema, compileToScene } from '@retikz/core';
+
 import { scoreL2 } from '../../src/score/l2';
 
 const ir = SceneSchema.parse({

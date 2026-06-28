@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { LineSpecSchema, MathRunSchema, MixedLineSchema, NodeSchema, TextRunSchema } from '../../src/schemas';
 
 describe('[text-runs] run schemas', () => {
@@ -16,9 +17,7 @@ describe('[text-runs] run schemas', () => {
   });
 
   it('accepts a mixed line of text + math runs', () => {
-    expect(
-      MixedLineSchema.safeParse({ runs: [{ text: 'when ' }, { tex: 'v=d/t' }] }).success,
-    ).toBe(true);
+    expect(MixedLineSchema.safeParse({ runs: [{ text: 'when ' }, { tex: 'v=d/t' }] }).success).toBe(true);
   });
 
   it('rejects an empty runs array', () => {
@@ -34,7 +33,14 @@ describe('[text-runs] run schemas', () => {
       type: 'node',
       id: 'eq',
       position: [0, 0],
-      text: [{ runs: [{ text: 'E=', opacity: 0.9 }, { tex: 'mc^2', displayMode: false }] }],
+      text: [
+        {
+          runs: [
+            { text: 'E=', opacity: 0.9 },
+            { tex: 'mc^2', displayMode: false },
+          ],
+        },
+      ],
     });
     expect(NodeSchema.parse(JSON.parse(JSON.stringify(node)))).toEqual(node);
   });

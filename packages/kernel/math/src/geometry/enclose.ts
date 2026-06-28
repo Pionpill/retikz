@@ -1,5 +1,8 @@
-import { DEFAULT_EPSILON, type Position, point } from './point';
-import { type Circle, triangle } from './triangle';
+import type { Position } from './point';
+import type { Circle } from './triangle';
+
+import { DEFAULT_EPSILON, point } from './point';
+import { triangle } from './triangle';
 
 /** 两点为直径的圆（圆心 = 中点，半径 = 半距） */
 const circleFrom2 = (a: Position, b: Position): Circle => ({
@@ -27,10 +30,7 @@ const inCircle = (c: Circle, p: Position, epsilon: number): boolean =>
  * @description **确定性**实现（不 shuffle、不依赖 Math.random），可安全用于 compileToScene。
  *   空集返回 null；单点返回半径 0 的圆。O(n³) 最坏 / O(n) 期望，绘图量级点数够用。
  */
-export const minimalEnclosingCircle = (
-  points: Array<Position>,
-  epsilon = DEFAULT_EPSILON,
-): Circle | null => {
+export const minimalEnclosingCircle = (points: Array<Position>, epsilon = DEFAULT_EPSILON): Circle | null => {
   const n = points.length;
   if (n === 0) return null;
   let c: Circle = { center: [points[0][0], points[0][1]], radius: 0 };

@@ -1,14 +1,15 @@
 import { Fragment } from 'react';
 import { describe, expect, it } from 'vitest';
+
+import { buildIR } from '../../src/kernel/builder';
 import { Coordinate } from '../../src/kernel/Coordinate';
-import { Draw } from '../../src/sugar/Draw';
-import { EdgeLabel } from '../../src/sugar/EdgeLabel';
 import { Node } from '../../src/kernel/Node';
 import { Path } from '../../src/kernel/Path';
 import { Scope } from '../../src/kernel/Scope';
 import { Step } from '../../src/kernel/Step';
 import { Text } from '../../src/kernel/Text';
-import { buildIR } from '../../src/kernel/builder';
+import { Draw } from '../../src/sugar/Draw';
+import { EdgeLabel } from '../../src/sugar/EdgeLabel';
 
 describe('buildIR', () => {
   it('单个 <Node> → IR scene', () => {
@@ -40,7 +41,14 @@ describe('buildIR', () => {
   });
 
   it('animations prop（raw track）透传进 Node / Path / Scope 的 IR', () => {
-    const fade = { property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 400 };
+    const fade = {
+      property: 'opacity',
+      keyframes: [
+        { at: 0, value: 0 },
+        { at: 1, value: 1 },
+      ],
+      duration: 400,
+    };
     const ir = buildIR(
       <Fragment>
         <Node id="A" position={[0, 0]} animations={[fade]} />
@@ -122,7 +130,9 @@ describe('buildIR', () => {
 
   it("children 字符串带 '\\n' 自动拆成多行数组", () => {
     const ir = buildIR(
-      <Node id="A" position={[0, 0]}>{'Line 1\nLine 2'}</Node>,
+      <Node id="A" position={[0, 0]}>
+        {'Line 1\nLine 2'}
+      </Node>,
     );
     expect(ir.children[0]).toMatchObject({ type: 'node', text: ['Line 1', 'Line 2'] });
   });
@@ -132,7 +142,11 @@ describe('buildIR', () => {
 f(x) &= ax^2 + bx + c\\
 f'(x) &= 2ax + b
 \end{array}$$`;
-    const ir = buildIR(<Node id="A" position={[0, 0]}>{tex}</Node>);
+    const ir = buildIR(
+      <Node id="A" position={[0, 0]}>
+        {tex}
+      </Node>,
+    );
     expect(ir.children[0]).toMatchObject({ type: 'node', text: tex });
   });
 
@@ -141,20 +155,28 @@ f'(x) &= 2ax + b
 $$a
 b$$
 after`;
-    const ir = buildIR(<Node id="A" position={[0, 0]}>{tex}</Node>);
+    const ir = buildIR(
+      <Node id="A" position={[0, 0]}>
+        {tex}
+      </Node>,
+    );
     expect(ir.children[0]).toMatchObject({ type: 'node', text: ['before', '$$a\nb$$', 'after'] });
   });
 
   it('children 字符串数组按相邻 inline 拼成一行（对齐 React）', () => {
     const ir = buildIR(
-      <Node id="A" position={[0, 0]}>{['L1', 'L2', 'L3']}</Node>,
+      <Node id="A" position={[0, 0]}>
+        {['L1', 'L2', 'L3']}
+      </Node>,
     );
     expect(ir.children[0]).toMatchObject({ type: 'node', text: 'L1L2L3' });
   });
 
   it("children 数组带 '\\n' 元素时拆成多行", () => {
     const ir = buildIR(
-      <Node id="A" position={[0, 0]}>{['L1\n', 'L2\n', 'L3']}</Node>,
+      <Node id="A" position={[0, 0]}>
+        {['L1\n', 'L2\n', 'L3']}
+      </Node>,
     );
     expect(ir.children[0]).toMatchObject({ type: 'node', text: ['L1', 'L2', 'L3'] });
   });
@@ -169,23 +191,26 @@ after`;
   });
 
   it('children 单字符串无换行 → 单行 string（不是 string[]）', () => {
-    const ir = buildIR(<Node id="A" position={[0, 0]}>Hello world</Node>);
+    const ir = buildIR(
+      <Node id="A" position={[0, 0]}>
+        Hello world
+      </Node>,
+    );
     expect(ir.children[0]).toMatchObject({ type: 'node', text: 'Hello world' });
   });
 
   it('<Text> children 带样式 → 对象 LineSpec', () => {
     const ir = buildIR(
       <Node id="A" position={[0, 0]}>
-        <Text fill="red" font={{ weight: 'bold' }}>Heading</Text>
+        <Text fill="red" font={{ weight: 'bold' }}>
+          Heading
+        </Text>
         body line
       </Node>,
     );
     expect(ir.children[0]).toMatchObject({
       type: 'node',
-      text: [
-        { text: 'Heading', fill: 'red', font: { weight: 'bold' } },
-        'body line',
-      ],
+      text: [{ text: 'Heading', fill: 'red', font: { weight: 'bold' } }, 'body line'],
     });
   });
 
@@ -213,30 +238,47 @@ after`;
   });
 
   it('number 子节点当文本，与相邻字符串拼成一行', () => {
-    const ir = buildIR(<Node id="A" position={[0, 0]}>计数：{0}</Node>);
+    const ir = buildIR(
+      <Node id="A" position={[0, 0]}>
+        计数：{0}
+      </Node>,
+    );
     expect(ir.children[0]).toMatchObject({ type: 'node', text: '计数：0' });
   });
 
   it('非零 number 子节点拼接', () => {
-    const ir = buildIR(<Node id="A" position={[0, 0]}>计数：{5}</Node>);
+    const ir = buildIR(
+      <Node id="A" position={[0, 0]}>
+        计数：{5}
+      </Node>,
+    );
     expect(ir.children[0]).toMatchObject({ type: 'node', text: '计数：5' });
   });
 
   it('纯 number 子节点 → 单行字符串', () => {
-    const ir = buildIR(<Node id="A" position={[0, 0]}>{42}</Node>);
+    const ir = buildIR(
+      <Node id="A" position={[0, 0]}>
+        {42}
+      </Node>,
+    );
     expect(ir.children[0]).toMatchObject({ type: 'node', text: '42' });
   });
 
   it('相邻 inline（字符串 + number 交替）全拼成一行', () => {
     const ir = buildIR(
-      <Node id="A" position={[0, 0]}>a{1}b{2}</Node>,
+      <Node id="A" position={[0, 0]}>
+        a{1}b{2}
+      </Node>,
     );
     expect(ir.children[0]).toMatchObject({ type: 'node', text: 'a1b2' });
   });
 
   it("inline number 拼接，'\\n' 仍分行", () => {
     const ir = buildIR(
-      <Node id="A" position={[0, 0]}>第一行{1}{'\n'}第二行{2}</Node>,
+      <Node id="A" position={[0, 0]}>
+        第一行{1}
+        {'\n'}第二行{2}
+      </Node>,
     );
     expect(ir.children[0]).toMatchObject({ type: 'node', text: ['第一行1', '第二行2'] });
   });
@@ -417,7 +459,18 @@ after`;
 
   it('<Draw way={[..., { cubic }, ...]}> 等价于 Kernel cubic step', () => {
     const fromSugar = buildIR(
-      <Draw way={['A', { cubic: [[3, 5], [7, 5]] }, 'B']} />,
+      <Draw
+        way={[
+          'A',
+          {
+            cubic: [
+              [3, 5],
+              [7, 5],
+            ],
+          },
+          'B',
+        ]}
+      />,
     );
     const fromKernel = buildIR(
       <Path>
@@ -458,7 +511,13 @@ after`;
     const ir = buildIR(
       <Path>
         <Step kind="move" to={[0, 0]} />
-        <Step kind="smooth" points={[[10, 0], [10, 10]]} />
+        <Step
+          kind="smooth"
+          points={[
+            [10, 0],
+            [10, 10],
+          ]}
+        />
       </Path>,
     );
     const path = ir.children[0] as { children: Array<unknown> };
@@ -482,9 +541,7 @@ after`;
     );
     expect(sugarNoAngle).toEqual(kernelNoAngle);
 
-    const sugarWithAngle = buildIR(
-      <Draw way={['A', { bend: 'right', angle: 60 }, 'B']} />,
-    );
+    const sugarWithAngle = buildIR(<Draw way={['A', { bend: 'right', angle: 60 }, 'B']} />);
     const kernelWithAngle = buildIR(
       <Path>
         <Step kind="move" to="A" />
@@ -495,11 +552,7 @@ after`;
   });
 
   it('<Draw way={[..., { arc }, ...]}> 等价于 Kernel arc step', () => {
-    const fromSugar = buildIR(
-      <Draw
-        way={['A', { arc: { startAngle: 0, endAngle: 90, radius: 10 } }]}
-      />,
-    );
+    const fromSugar = buildIR(<Draw way={['A', { arc: { startAngle: 0, endAngle: 90, radius: 10 } }]} />);
     const fromKernel = buildIR(
       <Path>
         <Step kind="move" to="A" />
@@ -521,9 +574,7 @@ after`;
   });
 
   it('<Draw way={[..., { ellipse }, ...]}> 等价于 Kernel ellipsePath step', () => {
-    const fromSugar = buildIR(
-      <Draw way={['A', { ellipse: { radiusX: 8, radiusY: 4 } }]} />,
-    );
+    const fromSugar = buildIR(<Draw way={['A', { ellipse: { radiusX: 8, radiusY: 4 } }]} />);
     const fromKernel = buildIR(
       <Path>
         <Step kind="move" to="A" />
@@ -614,7 +665,9 @@ after`;
         <Path>
           <Step kind="move" to="A" />
           <Step to="B">
-            <EdgeLabel position="near-end" side="below">x</EdgeLabel>
+            <EdgeLabel position="near-end" side="below">
+              x
+            </EdgeLabel>
           </Step>
         </Path>,
       );
@@ -631,10 +684,7 @@ after`;
         </Path>,
       );
       expect(ir.children[0]).toMatchObject({
-        children: [
-          { kind: 'move' },
-          { kind: 'line', label: { text: 'from-prop' } },
-        ],
+        children: [{ kind: 'move' }, { kind: 'line', label: { text: 'from-prop' } }],
       });
     });
 
@@ -709,14 +759,7 @@ after`;
         />,
       );
       const fromKernel = buildIR(
-        <Path
-          lineCap="round"
-          lineJoin="bevel"
-          thickness="veryThick"
-          opacity={0.8}
-          fillOpacity={0.5}
-          drawOpacity={0.7}
-        >
+        <Path lineCap="round" lineJoin="bevel" thickness="veryThick" opacity={0.8} fillOpacity={0.5} drawOpacity={0.7}>
           <Step kind="move" to="A" />
           <Step to="B" />
         </Path>,
@@ -727,7 +770,9 @@ after`;
     it('<Scope> emit IRScope：transforms / id / localNamespace 透传', () => {
       const ir = buildIR(
         <Scope id="cluster" localNamespace transforms={[{ kind: 'translate', x: 50, y: 0 }]}>
-          <Node id="A" position={[0, 0]}>A</Node>
+          <Node id="A" position={[0, 0]}>
+            A
+          </Node>
         </Scope>,
       );
       expect(ir.children).toHaveLength(1);
@@ -742,10 +787,14 @@ after`;
     it('<Scope> 嵌套：scope 内 scope / node / coordinate / path 全部 emit 到 scope.children', () => {
       const ir = buildIR(
         <Scope transforms={[{ kind: 'translate', x: 10, y: 0 }]}>
-          <Node id="A" position={[0, 0]}>A</Node>
+          <Node id="A" position={[0, 0]}>
+            A
+          </Node>
           <Coordinate id="anchor" position={[5, 5]} />
           <Scope transforms={[{ kind: 'rotate', degrees: 45 }]}>
-            <Node id="inner" position={[0, 0]}>I</Node>
+            <Node id="inner" position={[0, 0]}>
+              I
+            </Node>
           </Scope>
           <Path>
             <Step kind="move" to="A" />
@@ -767,7 +816,9 @@ after`;
     it('<Scope> 缺省 transforms / id / localNamespace → IR 字段缺省（不写出空值）', () => {
       const ir = buildIR(
         <Scope>
-          <Node id="A" position={[0, 0]}>A</Node>
+          <Node id="A" position={[0, 0]}>
+            A
+          </Node>
         </Scope>,
       );
       const scope = ir.children[0];
@@ -778,12 +829,20 @@ after`;
     });
 
     it('<Node color> 主色透传到 IR', () => {
-      const ir = buildIR(<Node id="A" position={[0, 0]} color="blue">A</Node>);
+      const ir = buildIR(
+        <Node id="A" position={[0, 0]} color="blue">
+          A
+        </Node>,
+      );
       expect(ir.children[0]).toMatchObject({ type: 'node', color: 'blue' });
     });
 
     it('<Node cornerRadius> 顶层圆角透传到 IR node.cornerRadius', () => {
-      const ir = buildIR(<Node id="A" position={[0, 0]} cornerRadius={8}>A</Node>);
+      const ir = buildIR(
+        <Node id="A" position={[0, 0]} cornerRadius={8}>
+          A
+        </Node>,
+      );
       expect(ir.children[0]).toMatchObject({ type: 'node', cornerRadius: 8 });
     });
 
@@ -834,7 +893,9 @@ after`;
           arrowDefault={{ shape: 'stealth', scale: 1.5 }}
           resetStyle={['label']}
         >
-          <Node id="A" position={[0, 0]}>A</Node>
+          <Node id="A" position={[0, 0]}>
+            A
+          </Node>
         </Scope>,
       );
       expect(ir.children[0]).toMatchObject({
@@ -924,8 +985,12 @@ after`;
     it('Fragment 直接子元素被展开为 Layout 子级', () => {
       const ir = buildIR(
         <Fragment>
-          <Node id="A" position={[0, 0]}>a</Node>
-          <Node id="B" position={[10, 0]}>b</Node>
+          <Node id="A" position={[0, 0]}>
+            a
+          </Node>
+          <Node id="B" position={[10, 0]}>
+            b
+          </Node>
         </Fragment>,
       );
       expect(ir.children).toEqual([
@@ -943,20 +1008,20 @@ after`;
           </Fragment>
         )),
       );
-      expect(ir.children.map(c => c.type)).toEqual([
-        'node', 'coordinate',
-        'node', 'coordinate',
-        'node', 'coordinate',
-      ]);
+      expect(ir.children.map(c => c.type)).toEqual(['node', 'coordinate', 'node', 'coordinate', 'node', 'coordinate']);
     });
 
     it('嵌套 Fragment 也递归展开', () => {
       const ir = buildIR(
         <Fragment>
           <Fragment>
-            <Node id="A" position={[0, 0]}>a</Node>
+            <Node id="A" position={[0, 0]}>
+              a
+            </Node>
           </Fragment>
-          <Node id="B" position={[10, 0]}>b</Node>
+          <Node id="B" position={[10, 0]}>
+            b
+          </Node>
         </Fragment>,
       );
       expect(ir.children.map(c => (c as { id?: string }).id)).toEqual(['A', 'B']);
@@ -967,20 +1032,24 @@ after`;
         <>
           {[1, 2].map(i => (
             <Fragment key={`g${i}`}>
-              <Node id={`grid${i}`} position={[i, 0]}>g</Node>
+              <Node id={`grid${i}`} position={[i, 0]}>
+                g
+              </Node>
             </Fragment>
           ))}
-          <Node id="circle" position={[0, 0]}>c</Node>
+          <Node id="circle" position={[0, 0]}>
+            c
+          </Node>
           {[3].map(i => (
             <Fragment key={`t${i}`}>
-              <Node id={`tick${i}`} position={[i, 0]}>t</Node>
+              <Node id={`tick${i}`} position={[i, 0]}>
+                t
+              </Node>
             </Fragment>
           ))}
         </>,
       );
-      expect(ir.children.map(c => (c as { id?: string }).id)).toEqual([
-        'grid1', 'grid2', 'circle', 'tick3',
-      ]);
+      expect(ir.children.map(c => (c as { id?: string }).id)).toEqual(['grid1', 'grid2', 'circle', 'tick3']);
     });
   });
 

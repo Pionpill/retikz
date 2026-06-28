@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { boundaryPointOf, layoutNode } from '../../src/compile/node';
-import { NameStack } from '../../src/compile/name-stack';
+
+import type { ContourSegment } from '../../src/geometry/contour';
 import type { IRNode } from '../../src/schemas/node';
-import { type ContourSegment, filletContour } from '../../src/geometry/contour';
+
+import { NameStack } from '../../src/compile/name-stack';
+import { boundaryPointOf, layoutNode } from '../../src/compile/node';
+import { filletContour } from '../../src/geometry/contour';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const measureText = (): { width: number; height: number; ascent: number } => ({
@@ -45,9 +48,7 @@ describe('顶层 Node.cornerRadius 连接边界感知（P1）', () => {
 
     // 命中点到某个 fillet 圆心距离 ≈ 8（确实落在 r=8 的弧上）
     const fillets = filletContour(square40Segments(), 8);
-    const onArc = fillets.some(
-      f => Math.abs(Math.hypot(hit[0] - f.center[0], hit[1] - f.center[1]) - 8) < 1e-3,
-    );
+    const onArc = fillets.some(f => Math.abs(Math.hypot(hit[0] - f.center[0], hit[1] - f.center[1]) - 8) < 1e-3);
     expect(onArc).toBe(true);
   });
 

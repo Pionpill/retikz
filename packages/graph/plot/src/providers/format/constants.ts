@@ -26,4 +26,5 @@ export type PlotFieldFormatValue = ValueOf<typeof PlotFieldFormat>;
 export const BUILTIN_FIELD_FORMATS: ReadonlySet<string> = new Set<string>(Object.values(PlotFieldFormat));
 
 /** 是否内置格式名（收窄到 PlotFieldFormatValue）。 */
-export const isBuiltinFieldFormat = (format: string): format is PlotFieldFormatValue => BUILTIN_FIELD_FORMATS.has(format);
+export const isBuiltinFieldFormat = (format: string): format is PlotFieldFormatValue =>
+  BUILTIN_FIELD_FORMATS.has(format);

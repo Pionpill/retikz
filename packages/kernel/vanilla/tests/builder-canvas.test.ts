@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
+
 import { figure } from '../src/builder/figure';
 import { node } from '../src/builder/node';
 

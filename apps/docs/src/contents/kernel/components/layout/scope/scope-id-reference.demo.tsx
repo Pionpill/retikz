@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * scope.id 基础引用：scope 内 3 节点合成 bbox，外部 path 用 'cluster.<anchor>' 指到 bbox 视觉边界
@@ -9,15 +10,29 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={560} height={180}>
-    <Node id="external" position={[0, 20]}>external</Node>
+    <Node id="external" position={[0, 20]}>
+      external
+    </Node>
     <Scope id="cluster" transforms={[{ kind: 'translate', x: 220, y: 0 }]}>
-      <Node id="A" position={[0, 0]}>A</Node>
-      <Node id="B" position={[80, 0]}>B</Node>
-      <Node id="C" position={[40, 60]}>C</Node>
+      <Node id="A" position={[0, 0]}>
+        A
+      </Node>
+      <Node id="B" position={[80, 0]}>
+        B
+      </Node>
+      <Node id="C" position={[40, 60]}>
+        C
+      </Node>
     </Scope>
     {/* cluster bbox 灰虚线框：把 scope.id 作为整体的视觉边界画出来 */}
     <Draw
-      way={['cluster.north-west', 'cluster.north-east', 'cluster.south-east', 'cluster.south-west', 'cluster.north-west']}
+      way={[
+        'cluster.north-west',
+        'cluster.north-east',
+        'cluster.south-east',
+        'cluster.south-west',
+        'cluster.north-west',
+      ]}
       stroke="gray"
       dashPattern={[4, 3]}
     />

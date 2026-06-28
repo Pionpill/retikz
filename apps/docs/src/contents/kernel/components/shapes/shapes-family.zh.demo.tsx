@@ -1,5 +1,6 @@
-import { Circle, Draw, Layout, Node, Rectangle, RegularPolygon, Star } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Circle, Draw, Layout, Node, Rectangle, RegularPolygon, Star } from '@retikz/react';
 
 /**
  * 形状家族的两副面相
@@ -41,7 +42,18 @@ const Demo: FC = () => (
     <Node
       id="ncontour"
       position={[275, 55]}
-      shape={{ type: 'contour', params: { points: [[-26, 24], [26, 16], [26, -24], [-26, -24]], cornerRadius: 5 } }}
+      shape={{
+        type: 'contour',
+        params: {
+          points: [
+            [-26, 24],
+            [26, 16],
+            [26, -24],
+            [-26, -24],
+          ],
+          cornerRadius: 5,
+        },
+      }}
       fill="lavender"
     >
       轮廓

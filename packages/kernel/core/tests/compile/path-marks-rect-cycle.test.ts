@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
+
+import type { IR, ScenePrimitive } from '../../src';
+
 import { compileToScene } from '../../src/compile/compile';
 import { rectPerimeterSample } from '../../src/geometry/segment';
-import type { IR, ScenePrimitive } from '../../src';
 
 /**
  * C7：rectangle / cycle 段也注册段采样器，中段 marks 的 pos∈[0,1] 因此把它们计入段数，
@@ -13,13 +15,7 @@ const findMarkPoint = (prims: ReadonlyArray<ScenePrimitive>): [number, number] |
   for (const p of prims) {
     if (p.type !== 'group') continue;
     const t = p.transforms;
-    if (
-      t &&
-      t.length === 4 &&
-      t[0].kind === 'translate' &&
-      t[1].kind === 'rotate' &&
-      t[2].kind === 'scale'
-    ) {
+    if (t && t.length === 4 && t[0].kind === 'translate' && t[1].kind === 'rotate' && t[2].kind === 'scale') {
       return [t[0].x, t[0].y];
     }
     const inner = findMarkPoint(p.children);

@@ -71,23 +71,23 @@ Internally a Coordinate registers as a **0×0 point**, which gives three observa
 
 ## API Reference
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `id` | `string` | — | **Required** — a placeholder's entire purpose is to be referenced by id |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }` | — | Placeholder position; same shapes as `<Node position>` — includes the offset `{ of, offset }` and proportional partway `{ between: [A, B], t }` forms |
+| Prop       | Type                                                                                          | Default | Description                                                                                                                                           |
+| ---------- | --------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`       | `string`                                                                                      | —       | **Required** — a placeholder's entire purpose is to be referenced by id                                                                               |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }` | —       | Placeholder position; same shapes as `<Node position>` — includes the offset `{ of, offset }` and proportional partway `{ between: [A, B], t }` forms |
 
 ## Related
 
 ### Relationship with `<Node>` / `<Path>`
 
-| | `<Coordinate>` | `<Node>` |
-|---|---|---|
-| Renders shape | ❌ | ✅ (by `shape`) |
-| Participates in layout bounds | ❌ | ✅ |
-| Registered in nodeIndex | ✅ | ✅ |
-| Referenced as path target | ✅ | ✅ |
-| Referenced via relative / offset (`{ of }`) | ✅ | ✅ |
-| Required `id` | ✅ | optional |
+|                                             | `<Coordinate>` | `<Node>`        |
+| ------------------------------------------- | -------------- | --------------- |
+| Renders shape                               | ❌             | ✅ (by `shape`) |
+| Participates in layout bounds               | ❌             | ✅              |
+| Registered in nodeIndex                     | ✅             | ✅              |
+| Referenced as path target                   | ✅             | ✅              |
+| Referenced via relative / offset (`{ of }`) | ✅             | ✅              |
+| Required `id`                               | ✅             | optional        |
 
 Rule of thumb: need a shape + text → `<Node>`; need only a reference point → `<Coordinate>`.
 

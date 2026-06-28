@@ -1,35 +1,41 @@
-import { rect as rectOps } from '../geometry/rect';
-import { type IR, type IRAnimationTrack, type IRChild, type IRPathBase, type IRPosition, type IRTransform, JsonObjectSchema } from '../schemas';
-import { ScopeBoundingShape } from '../schemas';
-import type { DropShadow, GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
-import type { ShapeDefinition } from '../contract/shape';
 import type { ArrowDefinition } from '../contract/arrow';
-import type { PatternDefinition } from '../contract/pattern';
-import type { PathGeneratorDefinition } from '../contract/path';
 import type { CompositeDefinition } from '../contract/composite';
+import type { PathGeneratorDefinition } from '../contract/path';
 import type { PathKindCompileResult, PathKindDefinition } from '../contract/path';
+import type { PatternDefinition } from '../contract/pattern';
 import type { RibbonWidthProfileDefinition } from '../contract/ribbon';
-import { resolveShapeRegistry } from '../providers/shape';
+import type { ShapeDefinition } from '../contract/shape';
+import type { DropShadow, GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
+import type { IR, IRAnimationTrack, IRChild, IRPathBase, IRPosition, IRTransform } from '../schemas';
+import type { CompileWarning } from './constant';
+import type { LowerTex } from './lower-tex';
+import type { DuplicateRegisterInfo } from './name-stack';
+import type { NodeLayout } from './node';
+import type { StyleFrame } from './style';
+import type { TextMeasurer } from './text-metrics';
+
+import { rect as rectOps } from '../geometry/rect';
 import { resolveArrowRegistry } from '../providers/arrow';
-import { resolvePatternRegistry } from '../providers/pattern';
+import { resolveCompositeRegistry } from '../providers/composite';
 import { resolvePathGeneratorRegistry } from '../providers/path';
 import { resolvePathKindRegistry } from '../providers/path-kind';
+import { resolvePatternRegistry } from '../providers/pattern';
 import { resolveRibbonWidthProfileRegistry } from '../providers/ribbon';
-import { resolveCompositeRegistry } from '../providers/composite';
-import {
-  type CompileWarning,
-  CompileWarningCode,
-  formatCompileWarning,
-} from './constant';
-import { lowerComposites } from './composite';
-import { type DuplicateRegisterInfo, NameStack } from './name-stack';
-import { type NodeLayout, emitNodePrimitives, labelExtentPoints, layoutNode, outerRectOf } from './node';
-import { createPaintRegistry } from './paint';
+import { resolveShapeRegistry } from '../providers/shape';
+import { JsonObjectSchema } from '../schemas';
+import { ScopeBoundingShape } from '../schemas';
 import { createClipRegistry } from './clip';
+import { lowerComposites } from './composite';
+import { CompileWarningCode, formatCompileWarning } from './constant';
+import { resolveShadow } from './effects';
+import { computeLayout } from './layout';
+import { NameStack } from './name-stack';
+import { emitNodePrimitives, labelExtentPoints, layoutNode, outerRectOf } from './node';
+import { createPaintRegistry } from './paint';
 import { emitPathPrimitive, refPointOfTarget } from './path';
 import { emitRibbonPrimitive } from './path/ribbon';
 import { resolvePosition } from './position';
-import { DEFAULT_PRECISION, createRound } from './precision';
+import { createRound, DEFAULT_PRECISION } from './precision';
 import {
   applyTransformChain,
   collectScopeCornerPoints,
@@ -39,17 +45,8 @@ import {
   registerScopeAsLayout,
   registerScopeCircleLayout,
 } from './scope';
-import {
-  type StyleFrame,
-  createStyleFrame,
-  resolveEffectivePath,
-  resolveLabelDefault,
-  resolveNodeStyle,
-} from './style';
-import { type TextMeasurer, fallbackMeasurer } from './text-metrics';
-import type { LowerTex } from './lower-tex';
-import { computeLayout } from './layout';
-import { resolveShadow } from './effects';
+import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle } from './style';
+import { fallbackMeasurer } from './text-metrics';
 
 export type { CompileWarning } from './constant';
 export { CompileWarningCode } from './constant';
@@ -59,11 +56,7 @@ export { CompileWarningCode } from './constant';
  * @description coordinate / scope.id 入场临时占位等"无形状只有位置"句柄共享此结构，
  *   让后续 path target / `at.of` / `offset.of` / `polar.origin` 引用时 boundaryPoint 命中中心。
  */
-const zeroSizeRectAt = (
-  id: string,
-  [cx, cy]: IRPosition,
-  shapes: Record<string, ShapeDefinition>,
-): NodeLayout => ({
+const zeroSizeRectAt = (id: string, [cx, cy]: IRPosition, shapes: Record<string, ShapeDefinition>): NodeLayout => ({
   id,
   shapeName: 'rectangle',
   shapeDef: shapes.rectangle,
@@ -82,17 +75,11 @@ const zeroSizeRectAt = (
  * 把 coordinate 注册成 0×0 NodeLayout
  * @description 让后续 path target / `at.of` 引用时 boundaryPoint 命中中心，符合"占位无形状边界"语义
  */
-const coordinateAsLayout = (
-  id: string,
-  center: IRPosition,
-  shapes: Record<string, ShapeDefinition>,
-): NodeLayout => zeroSizeRectAt(id, center, shapes);
+const coordinateAsLayout = (id: string, center: IRPosition, shapes: Record<string, ShapeDefinition>): NodeLayout =>
+  zeroSizeRectAt(id, center, shapes);
 
 /** shadow 是视觉效果，不改变锚点 / scope bbox；这里只把它的外溢纳入根自动 layout，避免根 viewBox 裁剪 */
-const shadowOverflowPoints = (
-  points: ReadonlyArray<IRPosition>,
-  shadow: DropShadow | undefined,
-): Array<IRPosition> => {
+const shadowOverflowPoints = (points: ReadonlyArray<IRPosition>, shadow: DropShadow | undefined): Array<IRPosition> => {
   if (shadow === undefined || points.length === 0) return [];
 
   let minX = Infinity;
@@ -121,11 +108,7 @@ const shadowOverflowPoints = (
   ];
 };
 
-const pushLayoutPoints = (
-  target: Array<IRPosition>,
-  points: ReadonlyArray<IRPosition>,
-  shadow?: DropShadow,
-): void => {
+const pushLayoutPoints = (target: Array<IRPosition>, points: ReadonlyArray<IRPosition>, shadow?: DropShadow): void => {
   for (const p of points) target.push(p);
   for (const p of shadowOverflowPoints(points, shadow)) target.push(p);
 };
@@ -141,8 +124,7 @@ const scopePlaceholderLayout = (
   chain: ReadonlyArray<Transform>,
   shapes: Record<string, ShapeDefinition>,
 ): NodeLayout => {
-  const globalOrigin: IRPosition =
-    chain.length === 0 ? [0, 0] : applyTransformChain([0, 0], chain);
+  const globalOrigin: IRPosition = chain.length === 0 ? [0, 0] : applyTransformChain([0, 0], chain);
   return zeroSizeRectAt(id, globalOrigin, shapes);
 };
 
@@ -250,7 +232,14 @@ const viewBoxToLayout = (
   const y = round(vb.y);
   const width = round(vb.width);
   const height = round(vb.height);
-  if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(width) || width <= 0 || !Number.isFinite(height) || height <= 0) {
+  if (
+    !Number.isFinite(x) ||
+    !Number.isFinite(y) ||
+    !Number.isFinite(width) ||
+    width <= 0 ||
+    !Number.isFinite(height) ||
+    height <= 0
+  ) {
     throw new Error(
       `viewBox rounds to an invalid layout (x=${String(x)}, y=${String(y)}, width=${String(width)}, height=${String(height)}); check precision and coordinate magnitude.`,
     );
@@ -339,8 +328,7 @@ type InternalScenePrimitive = ScenePrimitive | PathPlaceholder;
 const makePathPlaceholder = (): PathPlaceholder => ({ type: 'path-placeholder' });
 
 /** 把内部 sink 收窄回公开 ScenePrimitive[]：占位已全部回填（compileToScene 末端 placeholderBalance 无条件校验兜底） */
-const sealSink = (sink: Array<InternalScenePrimitive>): Array<ScenePrimitive> =>
-  sink as Array<ScenePrimitive>;
+const sealSink = (sink: Array<InternalScenePrimitive>): Array<ScenePrimitive> => sink as Array<ScenePrimitive>;
 
 /** dev 诊断：递归找出残留占位的 index 路径，供末端无条件校验报错时定位 */
 const collectPlaceholderLocators = (
@@ -352,9 +340,7 @@ const collectPlaceholderLocators = (
     if (prim.type === 'path-placeholder') {
       locators.push(`${prefix}[${idx}]`);
     } else if (prim.type === 'group') {
-      locators.push(
-        ...collectPlaceholderLocators(prim.children, `${prefix}[${idx}].children`),
-      );
+      locators.push(...collectPlaceholderLocators(prim.children, `${prefix}[${idx}].children`));
     }
   });
   return locators;
@@ -418,10 +404,10 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   // 未注册名 throw（定位 / 布局类基元缺失无法继续）。与 composite（Array 注入、重名 throw、缺失 warn+skip）
   // 的策略差异是有意的，理由见 lowerComposites JSDoc。
   const effectiveShapes: Record<string, ShapeDefinition> = resolveShapeRegistry(options.shapes, onWarn);
-  const effectivePathGenerators: Record<string, PathGeneratorDefinition> =
-    resolvePathGeneratorRegistry(options.pathGenerators);
-  const effectivePathKinds: Partial<Record<string, PathKindDefinition>> =
-    resolvePathKindRegistry(options.pathKinds);
+  const effectivePathGenerators: Record<string, PathGeneratorDefinition> = resolvePathGeneratorRegistry(
+    options.pathGenerators,
+  );
+  const effectivePathKinds: Partial<Record<string, PathKindDefinition>> = resolvePathKindRegistry(options.pathKinds);
   const effectiveRibbonWidthProfiles: Partial<Record<string, RibbonWidthProfileDefinition>> =
     resolveRibbonWidthProfileRegistry(options.ribbonWidthProfiles);
   const effectiveArrows: Record<string, ArrowDefinition> = resolveArrowRegistry(options.arrows, onWarn);
@@ -579,7 +565,15 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
       if (child.type === 'node') {
         const effectiveNode = resolveNodeStyle(child, styleStack);
         const layout = layoutNode(
-          { ...effectiveNode, animations: filterAnimations(effectiveNode.animations, 'element', onWarn, `${locatorPrefix}children[${i}].node`) },
+          {
+            ...effectiveNode,
+            animations: filterAnimations(
+              effectiveNode.animations,
+              'element',
+              onWarn,
+              `${locatorPrefix}children[${i}].node`,
+            ),
+          },
           measureText,
           nameStack,
           nodeDistance,
@@ -591,8 +585,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           // 公式渲染注入 + 预绑路径的 warn（文本里的 `$...$` 行内公式编译用）
           {
             lowerTex: options.lowerTex,
-            warn: (code, message) =>
-              onWarn({ code, message, path: `${locatorPrefix}children[${i}].node` }),
+            warn: (code, message) => onWarn({ code, message, path: `${locatorPrefix}children[${i}].node` }),
           },
         );
         const globalLayout = chain.length === 0 ? layout : projectLayoutToGlobal(layout, chain);
@@ -629,11 +622,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         }
         const globalCenter = chain.length === 0 ? localCenter : applyTransformChain(localCenter, chain);
         const coordLayout = coordinateAsLayout(child.id, globalCenter, effectiveShapes);
-        nameStack.register(
-          child.id,
-          coordLayout,
-          `${locatorPrefix}children[${i}].coordinate.id`,
-        );
+        nameStack.register(child.id, coordLayout, `${locatorPrefix}children[${i}].coordinate.id`);
         // coordinate 0×0 layout 也算上层 scope.id bbox 输入（参与父 scope 子树 AABB 累积）
         layoutsAccumulator.push(coordLayout);
       } else if (child.type === 'scope') {
@@ -659,11 +648,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         let placeholderLayout: NodeLayout | undefined;
         if (child.id) {
           placeholderLayout = scopePlaceholderLayout(child.id, innerChain, effectiveShapes);
-          nameStack.register(
-            child.id,
-            placeholderLayout,
-            `${locatorPrefix}children[${i}].scope.id`,
-          );
+          nameStack.register(child.id, placeholderLayout, `${locatorPrefix}children[${i}].scope.id`);
         }
         // 进入 scope 子 frame：localNamespace=true 时隔离子树命名空间
         const pushedFrame = child.localNamespace === true;
@@ -699,7 +684,12 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
                 effectiveShapes,
               );
             } else {
-              bboxLayout = registerScopeAsLayout(child.id, computeScopeBoundingBox(innerLayouts), fallbackOrigin, effectiveShapes);
+              bboxLayout = registerScopeAsLayout(
+                child.id,
+                computeScopeBoundingBox(innerLayouts),
+                fallbackOrigin,
+                effectiveShapes,
+              );
             }
             // 用 replaceLayout 覆盖不触发 duplicate warn（placeholder → real bbox 是预期升级）
             nameStack.replaceLayout(child.id, bboxLayout, parentFrameDepth, placeholderLayout);
@@ -717,10 +707,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         }
         const hasOwnTransforms = ownTransforms.length > 0;
         const isPrunable =
-          innerSink.length === 0 &&
-          !hasOwnTransforms &&
-          child.id === undefined &&
-          child.clip === undefined;
+          innerSink.length === 0 && !hasOwnTransforms && child.id === undefined && child.clip === undefined;
         if (isPrunable) continue;
         const group: GroupPrim = {
           type: 'group',
@@ -732,7 +719,12 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         // meta provenance 与 id 同款：stamp 到 scope GroupPrim（不下传子元素；不进 prune 保留条件）
         if (child.meta !== undefined) group.meta = child.meta;
         // animations 与 meta 同款：stamp 到 scope GroupPrim（不下传子元素）；先过 viewBox⇔根 校验
-        const scopeAnimations = filterAnimations(child.animations, 'element', onWarn, `${locatorPrefix}children[${i}].scope`);
+        const scopeAnimations = filterAnimations(
+          child.animations,
+          'element',
+          onWarn,
+          `${locatorPrefix}children[${i}].scope`,
+        );
         if (scopeAnimations !== undefined) group.animations = scopeAnimations;
         if (hasOwnTransforms) group.transforms = [...ownTransforms];
         // scope.clip → 去重派 clip 资源 id 挂 group.clipRef；裁剪区裁该 group 内全部子原语
@@ -750,7 +742,12 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         const pending: PendingDrawing = {
           item: {
             ...effectivePath,
-            animations: filterAnimations(effectivePath.animations, 'element', onWarn, `${locatorPrefix}children[${i}].path`),
+            animations: filterAnimations(
+              effectivePath.animations,
+              'element',
+              onWarn,
+              `${locatorPrefix}children[${i}].path`,
+            ),
           },
           irPath: `${locatorPrefix}children[${i}].path`,
           scopeChain: chain,
@@ -779,9 +776,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
       typeof process !== 'undefined' && process.env.NODE_ENV !== 'production'
         ? ` at ${collectPlaceholderLocators(primitives).join(', ')}`
         : '';
-    throw new Error(
-      `internal: ${placeholderBalance} unresolved path placeholder(s) leaked into Scene output${detail}`,
-    );
+    throw new Error(`internal: ${placeholderBalance} unresolved path placeholder(s) leaked into Scene output${detail}`);
   }
 
   // paint（gradient / pattern / image）+ clip 资源同表（kind 判别，id 命名空间各自不撞）
@@ -792,7 +787,10 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     // sealSink 后对顶层按 zIndex 稳定排序（占位已回填）
     primitives: stableSortByZIndex(sealSink(primitives)),
     // 显式 viewBox 覆盖自动算（忽略 padding）；无则回退 AABB + padding
-    layout: loweredIr.viewBox !== undefined ? viewBoxToLayout(loweredIr.viewBox, round) : assertFiniteLayout(computeLayout(allPoints, layoutPadding, round)),
+    layout:
+      loweredIr.viewBox !== undefined
+        ? viewBoxToLayout(loweredIr.viewBox, round)
+        : assertFiniteLayout(computeLayout(allPoints, layoutPadding, round)),
     // 渲染无关资源（paint / clip）；无则省略，保 Scene 输出纯净
     ...(resources.length > 0 ? { resources } : {}),
     // scene 根（镜头）动画 tracks（viewBox property）；无则省略

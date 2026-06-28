@@ -1,14 +1,14 @@
-import { Children, Fragment, type ReactNode, isValidElement } from 'react';
 import type { ElementHandlers, HydrationHandler, HydrationHandlers } from '@retikz/render/hydration';
-import { EVENT_PROP_TO_NAME, type HydrationEventPropName } from './event-props';
-import { type EmbeddableTier2Adapter, resolveEmbeddableAdapter } from './embeddable';
-import {
-  TIKZ_COORDINATE,
-  TIKZ_NODE,
-  TIKZ_PATH,
-  TIKZ_SCOPE,
-  getDisplayName,
-} from './_displayNames';
+import type { ReactNode } from 'react';
+
+import { Children, Fragment, isValidElement } from 'react';
+
+import type { EmbeddableTier2Adapter } from './embeddable';
+import type { HydrationEventPropName } from './event-props';
+
+import { getDisplayName, TIKZ_COORDINATE, TIKZ_NODE, TIKZ_PATH, TIKZ_SCOPE } from './_displayNames';
+import { resolveEmbeddableAdapter } from './embeddable';
+import { EVENT_PROP_TO_NAME } from './event-props';
 
 /** 从一个元素 props 读出 `on<Event>` handler，翻译成 RetikzEventValue → handler 的 ElementHandlers（无 handler 返回空对象） */
 const readElementHandlers = (props: Record<string, unknown>): ElementHandlers => {
@@ -27,11 +27,7 @@ const readElementHandlers = (props: Record<string, unknown>): ElementHandlers =>
  * @description 有 handler 但无 `id` → dev warn + 跳过；有 `id`：重复 id 时合并不同事件、同事件后者覆盖（并 dev warn）。
  *   无 handler 的元素（即使有 id）不进注册表——注册表只收真正绑了 handler 的挂点。
  */
-const mergeElement = (
-  registry: HydrationHandlers,
-  id: unknown,
-  handlers: ElementHandlers,
-): void => {
+const mergeElement = (registry: HydrationHandlers, id: unknown, handlers: ElementHandlers): void => {
   const eventNames = Object.keys(handlers);
   if (eventNames.length === 0) return;
   if (typeof id !== 'string' || id.length === 0) {
@@ -47,9 +43,7 @@ const mergeElement = (
     return;
   }
   if (process.env.NODE_ENV !== 'production') {
-    console.warn(
-      `[retikz] 水合：重复 id "${id}"——合并各元素的事件 handler，同一事件以后出现者覆盖先出现者。`,
-    );
+    console.warn(`[retikz] 水合：重复 id "${id}"——合并各元素的事件 handler，同一事件以后出现者覆盖先出现者。`);
   }
   Object.assign(registry[id], handlers);
 };

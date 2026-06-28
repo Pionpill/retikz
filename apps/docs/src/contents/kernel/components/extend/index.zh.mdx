@@ -9,16 +9,16 @@ description: 扩展 retikz——为内置能力之外的需求注册新形状等
 
 ## 职责一览
 
-| 主题 | 扩展什么 | 何时用 |
-| --- | --- | --- |
-| 自定义形状 | 注册新的节点形状（`ShapeDefinition` + `CompileOptions.shapes`）| 内置 6 注册形状 + 2 preset 之外要 cylinder / cloud 等（hexagon 已可用内置 `polygon{ sides:6 }` 表达） |
-| 自定义箭头 | 注册新的箭头样式（`defineArrow` / `ArrowDefinition` + `CompileOptions.arrows`） | 需要 bracket / 业务箭头等新端点样式 |
-| 自定义图案 | 注册新的填充图案（`definePattern` / `PatternDefinition` + `CompileOptions.patterns`） | 需要 cross / 条纹 / 特殊 motif |
-| 自定义路径 | 注册新的 Path kind（`definePathKind` / `PathKindDefinition` + `CompileOptions.pathKinds`） | 需要把整条 Path 当作高亮、双线、业务关系或其它关系形态处理 |
-| 路径生成器 | 注册新的曲线生成器（`PathGeneratorDefinition` + `CompileOptions.pathGenerators`） | 需要 parabola / 波形 / 自定义曲线 |
-| 复合（Tier 2） | 注册 Tier 2 高层节点（`CompositeDefinition` + `CompileOptions.composites`） | domain 包把高层节点 lowering 成 Tier 1 基础图元，详见 [复合](/kernel/reference/composites) |
-| 自定义缓动 | 注册新的缓动曲线（`EasingRegistry` + `<Layout easings>`） | 需要 spring 等内置之外的缓动曲线 |
-| 自定义动画属性 | 注册新的动画属性通道（`AnimationPropertyDefinition` + `<Layout animationProperties>`） | 需要 blur 等内置之外的动画属性 |
+| 主题           | 扩展什么                                                                                   | 何时用                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| 自定义形状     | 注册新的节点形状（`ShapeDefinition` + `CompileOptions.shapes`）                            | 内置 6 注册形状 + 2 preset 之外要 cylinder / cloud 等（hexagon 已可用内置 `polygon{ sides:6 }` 表达） |
+| 自定义箭头     | 注册新的箭头样式（`defineArrow` / `ArrowDefinition` + `CompileOptions.arrows`）            | 需要 bracket / 业务箭头等新端点样式                                                                   |
+| 自定义图案     | 注册新的填充图案（`definePattern` / `PatternDefinition` + `CompileOptions.patterns`）      | 需要 cross / 条纹 / 特殊 motif                                                                        |
+| 自定义路径     | 注册新的 Path kind（`definePathKind` / `PathKindDefinition` + `CompileOptions.pathKinds`） | 需要把整条 Path 当作高亮、双线、业务关系或其它关系形态处理                                            |
+| 路径生成器     | 注册新的曲线生成器（`PathGeneratorDefinition` + `CompileOptions.pathGenerators`）          | 需要 parabola / 波形 / 自定义曲线                                                                     |
+| 复合（Tier 2） | 注册 Tier 2 高层节点（`CompositeDefinition` + `CompileOptions.composites`）                | domain 包把高层节点 lowering 成 Tier 1 基础图元，详见 [复合](/kernel/reference/composites)            |
+| 自定义缓动     | 注册新的缓动曲线（`EasingRegistry` + `<Layout easings>`）                                  | 需要 spring 等内置之外的缓动曲线                                                                      |
+| 自定义动画属性 | 注册新的动画属性通道（`AnimationPropertyDefinition` + `<Layout animationProperties>`）     | 需要 blur 等内置之外的动画属性                                                                        |
 
 ## 三类扩展模型
 
@@ -41,19 +41,27 @@ description: 扩展 retikz——为内置能力之外的需求注册新形状等
   </LinkedCard>
   <LinkedCard href="/kernel/components/extend/custom-pattern">
     <span className="font-semibold">自定义图案</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">注册 / 注入自定义填充图案的 PatternDefinition</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      注册 / 注入自定义填充图案的 PatternDefinition
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/extend/custom-path">
     <span className="font-semibold">自定义路径</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">注册 / 注入接管整条 Path 的 PathKindDefinition</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      注册 / 注入接管整条 Path 的 PathKindDefinition
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/extend/path-generator">
     <span className="font-semibold">路径生成器</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">注册 / 注入自定义曲线生成器的 PathGeneratorDefinition</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      注册 / 注入自定义曲线生成器的 PathGeneratorDefinition
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/reference/composites">
     <span className="font-semibold">复合（Tier 2）</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">注册 Tier 2 高层节点的 CompositeDefinition，经 lowering 下沉到 Tier 1</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      注册 Tier 2 高层节点的 CompositeDefinition，经 lowering 下沉到 Tier 1
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/extend/custom-animation">
     <span className="font-semibold">自定义动画</span>

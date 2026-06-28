@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+
 import type { Position } from '../../src/geometry/point';
+
 import { curve } from '../../src/curve/catmull-rom';
 
 /** 一段所有坐标皆有限 */

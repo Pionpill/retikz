@@ -7,13 +7,15 @@
  */
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { compileToScene } from '../../src/compile/compile';
-import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
-import type { IR, IRJsonObject } from '../../src/schemas';
-import { defineShape } from '../../src/contract/shape';
+
 import type { ShapeDefinition } from '../../src/contract/shape';
 import type { Position, Rect } from '../../src/geometry';
 import type { ScenePrimitive } from '../../src/primitive';
+import type { IR, IRJsonObject } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { defineShape } from '../../src/contract/shape';
+import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
@@ -29,7 +31,7 @@ const ringShape = (): ShapeDefinition =>
     circumscribe: (_hw, _hh, params) => ({ halfWidth: params.r, halfHeight: params.r }),
     boundaryPoint: (rect: Rect, _toward: Position, params): Position => [rect.x + params.r, rect.y],
     anchor: (rect: Rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
-    *emit (rect: Rect, _style, _round, params): Iterable<ScenePrimitive> {
+    *emit(rect: Rect, _style, _round, params): Iterable<ScenePrimitive> {
       yield {
         type: 'ellipse',
         cx: rect.x,
@@ -55,8 +57,16 @@ const looseShape = (): ShapeDefinition =>
     circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
     boundaryPoint: (rect: Rect): Position => [rect.x, rect.y],
     anchor: (rect: Rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
-    *emit (rect: Rect): Iterable<ScenePrimitive> {
-      yield { type: 'rect', x: rect.x, y: rect.y, width: rect.width, height: rect.height, stroke: 'currentColor', strokeWidth: 1 };
+    *emit(rect: Rect): Iterable<ScenePrimitive> {
+      yield {
+        type: 'rect',
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+        stroke: 'currentColor',
+        strokeWidth: 1,
+      };
     },
   });
 
@@ -73,7 +83,10 @@ describe('ShapeRefSchema / Node.shape — happy path 解析', () => {
   it('shape_nested_object_parses：{type} 与 {type, params} 均解析', () => {
     expect(ShapeRefSchema.parse({ type: 'rectangle' })).toEqual({ type: 'rectangle' });
     expect(
-      ShapeRefSchema.parse({ type: 'sector', params: { innerRadius: 20, outerRadius: 60, startAngle: 0, endAngle: 90 } }),
+      ShapeRefSchema.parse({
+        type: 'sector',
+        params: { innerRadius: 20, outerRadius: 60, startAngle: 0, endAngle: 90 },
+      }),
     ).toEqual({ type: 'sector', params: { innerRadius: 20, outerRadius: 60, startAngle: 0, endAngle: 90 } });
   });
 
@@ -105,8 +118,12 @@ describe('ShapeRefSchema / shape 桥接 — 边界', () => {
   });
 
   it('string_equals_nested："rectangle" 与 {type:"rectangle"} 编译产物逐字段相等', () => {
-    const stringScene = compileToScene(scene([{ type: 'node', id: 'A', position: [0, 0], shape: 'rectangle', text: 'X' }]));
-    const nestedScene = compileToScene(scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'rectangle' }, text: 'X' }]));
+    const stringScene = compileToScene(
+      scene([{ type: 'node', id: 'A', position: [0, 0], shape: 'rectangle', text: 'X' }]),
+    );
+    const nestedScene = compileToScene(
+      scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'rectangle' }, text: 'X' }]),
+    );
     expect(nestedScene.primitives).toEqual(stringScene.primitives);
   });
 });
@@ -152,20 +169,34 @@ describe('shape 错误路径', () => {
 
 describe('shape × Node 变换 / bbox 交互', () => {
   it('nested_shape_with_rotate：{type:"rectangle"} + rotate:30 → 仍编译出 rect', () => {
-    const ir = scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'rectangle' }, rotate: 30, text: 'X' }]);
+    const ir = scene([
+      { type: 'node', id: 'A', position: [0, 0], shape: { type: 'rectangle' }, rotate: 30, text: 'X' },
+    ]);
     const compiled = compileToScene(ir);
     expect(findByType(compiled.primitives, 'rect') ?? findByType(compiled.primitives, 'group')).toBeDefined();
   });
 
   it('nested_shape_with_scale：带 scale 的 Node × nested shape → 尺寸协同（与无 scale 不同）', () => {
-    const base = compileToScene(scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'ring', params: { r: 30 } } }]), { shapes: { ring: ringShape() } });
-    const scaled = compileToScene(scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'ring', params: { r: 30 } }, scale: 2 }]), { shapes: { ring: ringShape() } });
+    const base = compileToScene(
+      scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'ring', params: { r: 30 } } }]),
+      { shapes: { ring: ringShape() } },
+    );
+    const scaled = compileToScene(
+      scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'ring', params: { r: 30 } }, scale: 2 }]),
+      { shapes: { ring: ringShape() } },
+    );
     expect(findByType(scaled.primitives, 'ellipse')).not.toEqual(findByType(base.primitives, 'ellipse'));
   });
 
   it('circumscribe_aabb_drives_bbox：参数化形状 circumscribe 返回的 AABB 驱动 layout bbox', () => {
-    const small = compileToScene(scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'ring', params: { r: 10 } } }]), { shapes: { ring: ringShape() } });
-    const large = compileToScene(scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'ring', params: { r: 100 } } }]), { shapes: { ring: ringShape() } });
+    const small = compileToScene(
+      scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'ring', params: { r: 10 } } }]),
+      { shapes: { ring: ringShape() } },
+    );
+    const large = compileToScene(
+      scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'ring', params: { r: 100 } } }]),
+      { shapes: { ring: ringShape() } },
+    );
     // r 越大 → circumscribe 返回的 AABB 越大 → layout bbox 越大（compile.ts 只累积 layout.rect 四角）
     expect(large.layout.width).toBeGreaterThan(small.layout.width);
   });
@@ -180,7 +211,10 @@ describe('shape × Node 变换 / bbox 交互', () => {
     const parsed = NodeSchema.parse(node);
     const roundTripped = NodeSchema.parse(JSON.parse(JSON.stringify(parsed)));
     expect(roundTripped).toEqual(parsed);
-    expect(roundTripped.shape).toEqual({ type: 'sector', params: { innerRadius: 20, outerRadius: 60, startAngle: 0, endAngle: 90 } });
+    expect(roundTripped.shape).toEqual({
+      type: 'sector',
+      params: { innerRadius: 20, outerRadius: 60, startAngle: 0, endAngle: 90 },
+    });
   });
 
   it('ShapeRefSchema round-trip：{type, params} → JSON → parse 等价', () => {

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { PlotSpecSchema, TransformSchema } from '../../src/schemas';
-import { applyTransforms, resolveTransformRegistry } from '../../src/providers';
+
 import { collectSourceFields } from '../../src/pipeline/source-fields';
+import { applyTransforms, resolveTransformRegistry } from '../../src/providers';
+import { PlotSpecSchema, TransformSchema } from '../../src/schemas';
 
 describe('relate transform', () => {
   const operation = {
@@ -119,7 +120,7 @@ describe('relate transform', () => {
           transform: [operation],
           source: { project: { x: 'sourceX', y: 'sourceY' } },
           target: { project: { x: 'targetX', y: 'targetY' } },
-          label: { text: { field: 'deltaLabel' } },
+          label: { content: { field: 'deltaLabel' } },
         },
       ],
     });

@@ -1,11 +1,14 @@
-import { type ReactElement, isValidElement } from 'react';
-import { describe, expect, it } from 'vitest';
 import type { IR, IRChild } from '@retikz/core';
+import type { ReactElement } from 'react';
+
 import { CURRENT_IR_VERSION } from '@retikz/core';
-import { Draw } from '../../src/sugar/Draw';
+import { isValidElement } from 'react';
+import { describe, expect, it } from 'vitest';
+
 import { TIKZ_NODE, TIKZ_PATH, TIKZ_STEP } from '../../src/kernel/_displayNames';
 import { buildIR } from '../../src/kernel/builder';
 import { convertIRToReactNode } from '../../src/kernel/unbuilder';
+import { Draw } from '../../src/sugar/Draw';
 
 const emptyScene: IR = {
   version: CURRENT_IR_VERSION,
@@ -195,7 +198,7 @@ describe('convertIRToReactNode', () => {
     expect(back).toEqual(ir);
   });
 
-  it("Path fill / fillRule round-trip", () => {
+  it('Path fill / fillRule round-trip', () => {
     const ir: IR = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
@@ -241,7 +244,7 @@ describe('convertIRToReactNode', () => {
     expect(back).toEqual(ir);
   });
 
-  it("Node shape round-trip：4 种 shape 字段透传保留", () => {
+  it('Node shape round-trip：4 种 shape 字段透传保留', () => {
     for (const shape of ['rectangle', 'circle', 'ellipse', 'diamond'] as const) {
       const ir: IR = {
         version: CURRENT_IR_VERSION,
@@ -274,7 +277,7 @@ describe('convertIRToReactNode', () => {
     }
   });
 
-  it("cycle step round-trip：无 to / via 字段保留", () => {
+  it('cycle step round-trip：无 to / via 字段保留', () => {
     const ir: IR = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
@@ -360,7 +363,7 @@ describe('convertIRToReactNode', () => {
     expect(buildIR(convertIRToReactNode(irNoAngle))).toEqual(irNoAngle);
   });
 
-  it("arc step round-trip：startAngle / endAngle / radius 透传保留", () => {
+  it('arc step round-trip：startAngle / endAngle / radius 透传保留', () => {
     const ir: IR = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
@@ -377,7 +380,7 @@ describe('convertIRToReactNode', () => {
     expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
   });
 
-  it("circlePath step round-trip：radius 透传保留", () => {
+  it('circlePath step round-trip：radius 透传保留', () => {
     const ir: IR = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
@@ -394,7 +397,7 @@ describe('convertIRToReactNode', () => {
     expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
   });
 
-  it("ellipsePath step round-trip：radiusX / radiusY 透传保留", () => {
+  it('ellipsePath step round-trip：radiusX / radiusY 透传保留', () => {
     const ir: IR = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
@@ -701,38 +704,8 @@ describe('convertIRToReactNode', () => {
       expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
     });
 
-    it.each([
-      'at-start',
-      'very-near-start',
-      'near-start',
-      'midway',
-      'near-end',
-      'very-near-end',
-      'at-end',
-    ] as const)("round-trips StepLabel.position keyword '%s'", position => {
-      const ir: IR = {
-        version: CURRENT_IR_VERSION,
-        type: 'scene',
-        children: [
-          {
-            type: 'path',
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              {
-                type: 'step',
-                kind: 'line',
-                to: [100, 0],
-                label: { text: 'L', position },
-              },
-            ],
-          },
-        ],
-      };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
-    });
-
-    it.each([0, 0.25, 0.5, 0.75, 1])(
-      'round-trips StepLabel.position 数值 t = %s',
+    it.each(['at-start', 'very-near-start', 'near-start', 'midway', 'near-end', 'very-near-end', 'at-end'] as const)(
+      "round-trips StepLabel.position keyword '%s'",
       position => {
         const ir: IR = {
           version: CURRENT_IR_VERSION,
@@ -755,6 +728,28 @@ describe('convertIRToReactNode', () => {
         expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
       },
     );
+
+    it.each([0, 0.25, 0.5, 0.75, 1])('round-trips StepLabel.position 数值 t = %s', position => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              {
+                type: 'step',
+                kind: 'line',
+                to: [100, 0],
+                label: { text: 'L', position },
+              },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
 
     it('round-trips IRTarget `relative` / `relativeAccumulate`', () => {
       const ir: IR = {
@@ -825,9 +820,7 @@ describe('convertIRToReactNode', () => {
               {
                 type: 'scope',
                 transforms: [{ kind: 'rotate', degrees: 90 }],
-                children: [
-                  { type: 'node', id: 'inner', position: [0, 0], text: 'I' },
-                ],
+                children: [{ type: 'node', id: 'inner', position: [0, 0], text: 'I' }],
               },
             ],
           },
@@ -959,8 +952,21 @@ describe('convertIRToReactNode', () => {
   describe('补充能力新增形态 round-trip', () => {
     it('round-trips Node fill PaintSpec：linearGradient / radialGradient / pattern / image', () => {
       const fills = [
-        { kind: 'linearGradient' as const, angle: 90, stops: [{ offset: 0, color: '#000' }, { offset: 1, color: '#fff' }] },
-        { kind: 'radialGradient' as const, stops: [{ offset: 0, color: '#fff' }, { offset: 1, color: '#d33' }] },
+        {
+          kind: 'linearGradient' as const,
+          angle: 90,
+          stops: [
+            { offset: 0, color: '#000' },
+            { offset: 1, color: '#fff' },
+          ],
+        },
+        {
+          kind: 'radialGradient' as const,
+          stops: [
+            { offset: 0, color: '#fff' },
+            { offset: 1, color: '#d33' },
+          ],
+        },
         { kind: 'pattern' as const, shape: 'lines', color: '#08f', size: 8, rotation: 45 },
         { kind: 'image' as const, href: 'a.png', fit: 'cover' as const },
       ];
@@ -1000,7 +1006,14 @@ describe('convertIRToReactNode', () => {
         { kind: 'circle' as const, cx: 0, cy: 0, r: 80 },
         { kind: 'rect' as const, x: -10, y: -10, width: 40, height: 30 },
         { kind: 'ellipse' as const, cx: 0, cy: 0, rx: 30, ry: 20 },
-        { kind: 'polygon' as const, points: [[0, 0], [40, 0], [20, 40]] as Array<[number, number]> },
+        {
+          kind: 'polygon' as const,
+          points: [
+            [0, 0],
+            [40, 0],
+            [20, 40],
+          ] as Array<[number, number]>,
+        },
       ];
       for (const clip of clips) {
         const ir: IR = {
@@ -1020,7 +1033,17 @@ describe('convertIRToReactNode', () => {
           { type: 'node', id: 'A', position: [-50, 0], text: 'A' },
           { type: 'node', id: 'B', position: [50, 0], text: 'B' },
           { type: 'node', id: 'mid', position: { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 }, text: 'm' },
-          { type: 'coordinate', id: 'q', position: { between: [[0, 0], [90, 0]], t: 0.333 } },
+          {
+            type: 'coordinate',
+            id: 'q',
+            position: {
+              between: [
+                [0, 0],
+                [90, 0],
+              ],
+              t: 0.333,
+            },
+          },
           {
             type: 'path',
             children: [

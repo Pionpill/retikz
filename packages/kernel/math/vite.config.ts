@@ -7,16 +7,31 @@ const runtimeDeps = [...Object.keys((pkg as { dependencies?: Record<string, stri
 const external = (id: string) => runtimeDeps.some(p => id === p || id.startsWith(`${p}/`));
 
 export default defineConfig({
-  plugins: [dts({ entryRoot: 'src', tsconfigPath: path.resolve(__dirname, 'tsconfig.json'), outDir: ['dist/lib', 'dist/es'], exclude: ['tests/**'] })],
+  plugins: [
+    dts({
+      entryRoot: 'src',
+      tsconfigPath: path.resolve(__dirname, 'tsconfig.json'),
+      outDir: ['dist/lib', 'dist/es'],
+      exclude: ['tests/**'],
+    }),
+  ],
   resolve: { tsconfigPaths: true },
   build: {
-    outDir: 'dist', minify: false,
+    outDir: 'dist',
+    minify: false,
     lib: { entry: 'src/index.ts', name: 'retikz-math', fileName: '[name]', formats: ['es', 'cjs'] },
     rollupOptions: {
       external,
       output: [
         { format: 'es', dir: 'dist/es', exports: 'named', preserveModules: true, preserveModulesRoot: 'src' },
-        { format: 'cjs', dir: 'dist/lib', exports: 'named', preserveModules: true, preserveModulesRoot: 'src', entryFileNames: '[name].cjs' },
+        {
+          format: 'cjs',
+          dir: 'dist/lib',
+          exports: 'named',
+          preserveModules: true,
+          preserveModulesRoot: 'src',
+          entryFileNames: '[name].cjs',
+        },
       ],
     },
   },

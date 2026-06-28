@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+
 import type { StepSchema } from '../step';
 import type { ArrowMarkSchema, PathBaseSchema, PathScaleSchema } from './schema';
 

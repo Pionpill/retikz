@@ -7,13 +7,13 @@ For readers who want to understand how retikz works, contribute code, or write a
 
 The official repo currently ships five core packages:
 
-| Package | Role | Status |
-| --- | --- | --- |
-| [`@retikz/math`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/math) | Zero-dependency pure computational geometry (vectors / affine / arc / intersections / circles / hull); the compute base core depends on | Officially maintained |
-| [`@retikz/core`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/core) | IR schemas, geometry, parsers, and the Scene compiler; zero React, zero DOM | Officially maintained |
-| [`@retikz/render`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/render) | Renderer-neutral Scene output adapters: SVG descriptors/strings, Canvas 2D, hydration helpers, and animation runtime utilities | Officially maintained |
-| [`@retikz/react`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/react) | React adapter: JSX components that compile to IR, then render through SVG or Canvas | Officially maintained |
-| [`@retikz/vanilla`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/vanilla) | Framework-free runtime: builder functions, SVG/Canvas mounting, hydration, animation controls, and SVG string output | Officially maintained |
+| Package                                                                                   | Role                                                                                                                                    | Status                |
+| ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| [`@retikz/math`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/math)       | Zero-dependency pure computational geometry (vectors / affine / arc / intersections / circles / hull); the compute base core depends on | Officially maintained |
+| [`@retikz/core`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/core)       | IR schemas, geometry, parsers, and the Scene compiler; zero React, zero DOM                                                             | Officially maintained |
+| [`@retikz/render`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/render)   | Renderer-neutral Scene output adapters: SVG descriptors/strings, Canvas 2D, hydration helpers, and animation runtime utilities          | Officially maintained |
+| [`@retikz/react`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/react)     | React adapter: JSX components that compile to IR, then render through SVG or Canvas                                                     | Officially maintained |
+| [`@retikz/vanilla`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/vanilla) | Framework-free runtime: builder functions, SVG/Canvas mounting, hydration, animation controls, and SVG string output                    | Officially maintained |
 
 Vue / Svelte / Solid / Native adapters are still future or community surfaces, but the IR remains universal: a new framework adapter can reuse `@retikz/core` and most renderer work from `@retikz/render`, then supply its own component bridge and text measurer where needed.
 
@@ -31,15 +31,15 @@ Zero-React, zero-DOM. `zod` is the only runtime dependency.
 
 ### Package Layout
 
-| Module | Responsibility |
-| --- | --- |
-| [`schemas/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/schemas) | IR schema (zod) — position / node / coordinate / path / step / scope / paint / clip / scene, all defined with zod |
-| [`geometry/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/geometry) | Shape / boundary geometry — rect / circle / ellipse / diamond / polar / contour / bend / segment; pure compute primitives (vectors / affine / arc / intersections / circles / hull) sank to [`@retikz/math`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/math), re-exported by core |
-| [`primitive/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/primitive) | Scene data model — render-target-agnostic primitives, resources, markers, and clipping |
-| [`compile/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/compile) | IR → Scene compiler — node layout, path resolution, style cascade, resource collection, layout |
-| [`parsers/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/parsers) | DSL → IR parsers — currently the Sugar `way` array and `target` strings |
-| [`contract/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/contract) / [`providers/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/providers) | v0.2 extension surfaces — custom shapes, arrows, pattern motifs, and path generators |
-| [`index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/kernel/src/index.ts) | Public API surface — every adapter must import from this file only |
+| Module                                                                                                                                                                                              | Responsibility                                                                                                                                                                                                                                                                                       |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`schemas/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/schemas)                                                                                                       | IR schema (zod) — position / node / coordinate / path / step / scope / paint / clip / scene, all defined with zod                                                                                                                                                                                    |
+| [`geometry/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/geometry)                                                                                                     | Shape / boundary geometry — rect / circle / ellipse / diamond / polar / contour / bend / segment; pure compute primitives (vectors / affine / arc / intersections / circles / hull) sank to [`@retikz/math`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/math), re-exported by core |
+| [`primitive/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/primitive)                                                                                                   | Scene data model — render-target-agnostic primitives, resources, markers, and clipping                                                                                                                                                                                                               |
+| [`compile/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/compile)                                                                                                       | IR → Scene compiler — node layout, path resolution, style cascade, resource collection, layout                                                                                                                                                                                                       |
+| [`parsers/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/parsers)                                                                                                       | DSL → IR parsers — currently the Sugar `way` array and `target` strings                                                                                                                                                                                                                              |
+| [`contract/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/contract) / [`providers/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/providers) | v0.2 extension surfaces — custom shapes, arrows, pattern motifs, and path generators                                                                                                                                                                                                                 |
+| [`index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/kernel/src/index.ts)                                                                                                      | Public API surface — every adapter must import from this file only                                                                                                                                                                                                                                   |
 
 ### Recommended Reading Order
 
@@ -88,12 +88,12 @@ Keep these constraints in mind when reading core; they explain why some implemen
 
 ### Package Layout
 
-| Module | Responsibility |
-| --- | --- |
-| [`kernel/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/react/src/kernel) | Kernel JSX components — `<Layout>` / `<Node>` / `<Path>` / `<Step>` / `<Text>` / `<Coordinate>` / `<Scope>`, plus `builder` (JSX → IR) and `unbuilder` (IR → JSX) bridges |
-| [`sugar/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/react/src/sugar) | Sugar JSX components — `<Draw way={[...]}>`, `<EdgeLabel>`, and shape sugar; expand into Kernel at compile time, introduce no new capabilities |
-| [`render/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/react/src/render) | Scene → SVG elements — `renderPrim`, `paintDefs`, `clipDefs`, `arrowMarkers`, `browser-measurer`, SVG viewBox formatting |
-| [`index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/index.ts) | Public API surface — Kernel + Sugar components and the `convertReactNodeToIR` / `convertIRToReactNode` bridges |
+| Module                                                                                        | Responsibility                                                                                                                                                            |
+| --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`kernel/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/react/src/kernel)    | Kernel JSX components — `<Layout>` / `<Node>` / `<Path>` / `<Step>` / `<Text>` / `<Coordinate>` / `<Scope>`, plus `builder` (JSX → IR) and `unbuilder` (IR → JSX) bridges |
+| [`sugar/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/react/src/sugar)      | Sugar JSX components — `<Draw way={[...]}>`, `<EdgeLabel>`, and shape sugar; expand into Kernel at compile time, introduce no new capabilities                            |
+| [`render/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/react/src/render)    | Scene → SVG elements — `renderPrim`, `paintDefs`, `clipDefs`, `arrowMarkers`, `browser-measurer`, SVG viewBox formatting                                                  |
+| [`index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/index.ts) | Public API surface — Kernel + Sugar components and the `convertReactNodeToIR` / `convertIRToReactNode` bridges                                                            |
 
 ### Recommended Reading Order
 
@@ -125,32 +125,32 @@ Keep these constraints in mind when reading core; they explain why some implemen
 
 If you're building `@retikz/vue` / `@retikz/svelte` / etc., the React adapter maps over like this:
 
-| In React | Your new adapter needs |
-| --- | --- |
-| `kernel/*.tsx` components (declare `displayName`) | Equivalent component types in your framework (with a recognizable marker) |
-| `kernel/builder.ts` (JSX → IR) | A children / vnode → IR bridge for your framework |
-| `render/renderPrim.tsx` + defs components | Mapping Scene primitives and resources to your framework's native elements |
-| `render/browser-measurer.ts` | A measurer for your environment (browser / SSR / Native) — implement `TextMeasurer` |
+| In React                                          | Your new adapter needs                                                              |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `kernel/*.tsx` components (declare `displayName`) | Equivalent component types in your framework (with a recognizable marker)           |
+| `kernel/builder.ts` (JSX → IR)                    | A children / vnode → IR bridge for your framework                                   |
+| `render/renderPrim.tsx` + defs components         | Mapping Scene primitives and resources to your framework's native elements          |
+| `render/browser-measurer.ts`                      | A measurer for your environment (browser / SSR / Native) — implement `TextMeasurer` |
 
 `@retikz/core`'s IR, `compileToScene`, geometry, and Scene primitive types are reused unchanged — no need to rewrite them.
 
 ## Quick File Index
 
-| Looking for | File |
-| --- | --- |
-| IR root | [`core/schemas/scene.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/kernel/src/schemas/scene.ts) |
-| Node fields | [`core/schemas/node.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/kernel/src/schemas/node.ts) |
-| Path / Step types | [`core/schemas/path/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/schemas/path) |
-| Polar / relative position | [`core/schemas/position/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/schemas/position) |
-| Scene primitive types | [`core/primitive/scene.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/kernel/src/primitive/scene.ts) |
-| Compile pipeline | [`core/compile/compile.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/kernel/src/compile/compile.ts) |
+| Looking for               | File                                                                                                                              |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| IR root                   | [`core/schemas/scene.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/kernel/src/schemas/scene.ts)               |
+| Node fields               | [`core/schemas/node.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/kernel/src/schemas/node.ts)                 |
+| Path / Step types         | [`core/schemas/path/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/schemas/path)                      |
+| Polar / relative position | [`core/schemas/position/`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/kernel/src/schemas/position)              |
+| Scene primitive types     | [`core/primitive/scene.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/kernel/src/primitive/scene.ts)           |
+| Compile pipeline          | [`core/compile/compile.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/kernel/src/compile/compile.ts)           |
 | Text measurement contract | [`core/compile/text-metrics.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/kernel/src/compile/text-metrics.ts) |
-| boundaryPoint / anchor | [`core/geometry/rect.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/kernel/src/geometry/rect.ts) and siblings |
-| core public API | [`core/src/index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/kernel/src/index.ts) |
-| React top-level pipeline | [`react/kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/kernel/Layout.tsx) |
-| JSX → IR bridge | [`react/kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/kernel/builder.ts) |
-| Scene → SVG element | [`react/render/renderPrim.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/render/renderPrim.tsx) |
-| react public API | [`react/src/index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/index.ts) |
+| boundaryPoint / anchor    | [`core/geometry/rect.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/kernel/src/geometry/rect.ts) and siblings  |
+| core public API           | [`core/src/index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/kernel/src/index.ts)                           |
+| React top-level pipeline  | [`react/kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/kernel/Layout.tsx)             |
+| JSX → IR bridge           | [`react/kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/kernel/builder.ts)             |
+| Scene → SVG element       | [`react/render/renderPrim.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/render/renderPrim.tsx)     |
+| react public API          | [`react/src/index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/index.ts)                           |
 
 ## Further Reading
 

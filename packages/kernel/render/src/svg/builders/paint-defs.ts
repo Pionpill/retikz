@@ -1,5 +1,7 @@
 import type { IRPaintSpec, PaintResource, ResolvedPatternTile } from '@retikz/core';
+
 import type { SvgNode } from '../types';
+
 import { gradientLineFromAngle, parseHexColor } from '../../shared';
 import { compact } from './attrs';
 import { buildMarkerPrim } from './marker-prim';
@@ -9,9 +11,7 @@ const fitToPAR = (fit: 'fill' | 'contain' | 'cover' | undefined): string =>
   fit === 'fill' ? 'none' : fit === 'contain' ? 'xMidYMid meet' : 'xMidYMid slice';
 
 /** gradient stops → `<stop>` 子节点列表 */
-const buildStops = (
-  stops: ReadonlyArray<{ offset: number; color: string; opacity?: number }>,
-): Array<SvgNode> =>
+const buildStops = (stops: ReadonlyArray<{ offset: number; color: string; opacity?: number }>): Array<SvgNode> =>
   stops.map(s => ({
     tag: 'stop',
     attrs: compact({ offset: s.offset, 'stop-color': s.color, 'stop-opacity': s.opacity }),
@@ -26,15 +26,18 @@ const clamp01 = (n: number): number => Math.min(1, Math.max(0, n));
 
 const normalizeStops = (stops: ReadonlyArray<GradientStop>): Array<GradientStop> => {
   const sorted = [...stops].sort((a, b) => a.offset - b.offset);
-  if (sorted.length === 0) return [{ offset: 0, color: 'transparent' }, { offset: 1, color: 'transparent' }];
+  if (sorted.length === 0)
+    return [
+      { offset: 0, color: 'transparent' },
+      { offset: 1, color: 'transparent' },
+    ];
   const first = sorted[0];
   const last = sorted[sorted.length - 1];
   const out: Array<GradientStop> = first.offset > 0 ? [{ ...first, offset: 0 }, ...sorted] : sorted;
   return last.offset < 1 ? [...out, { ...last, offset: 1 }] : out;
 };
 
-const channelToHex = (n: number): string =>
-  Math.round(n).toString(16).padStart(2, '0');
+const channelToHex = (n: number): string => Math.round(n).toString(16).padStart(2, '0');
 
 const colorAt = (stops: ReadonlyArray<GradientStop>, t: number): { color: string; opacity?: number } => {
   const normalized = normalizeStops(stops);
@@ -68,17 +71,10 @@ const conicPoint = (cx: number, cy: number, radius: number, angleDeg: number): [
   return [cx + Math.cos(rad) * radius, cy + Math.sin(rad) * radius];
 };
 
-const buildConicGradient = (
-  spec: Extract<IRPaintSpec, { kind: 'conicGradient' }>,
-  id: string,
-): SvgNode => {
+const buildConicGradient = (spec: Extract<IRPaintSpec, { kind: 'conicGradient' }>, id: string): SvgNode => {
   const [cx, cy] = spec.center ?? [0.5, 0.5];
-  const radius = Math.max(
-    Math.hypot(cx, cy),
-    Math.hypot(1 - cx, cy),
-    Math.hypot(cx, 1 - cy),
-    Math.hypot(1 - cx, 1 - cy),
-  ) * 1.02;
+  const radius =
+    Math.max(Math.hypot(cx, cy), Math.hypot(1 - cx, cy), Math.hypot(cx, 1 - cy), Math.hypot(1 - cx, 1 - cy)) * 1.02;
   const startAngle = spec.angle ?? 0;
   const children: Array<SvgNode> = [];
   for (let i = 0; i < CONIC_SEGMENTS; i += 1) {
@@ -161,9 +157,7 @@ export const buildPaintDef = (resource: PaintResource, id: string): SvgNode => {
     case 'conicGradient':
       return buildConicGradient(spec, id);
     case 'pattern':
-      return resource.tile
-        ? buildPatternTile(resource.tile, id)
-        : { tag: 'pattern', attrs: { id } };
+      return resource.tile ? buildPatternTile(resource.tile, id) : { tag: 'pattern', attrs: { id } };
     case 'image':
       return {
         tag: 'pattern',

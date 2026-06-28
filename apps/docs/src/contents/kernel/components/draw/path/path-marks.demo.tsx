@@ -1,5 +1,6 @@
-import { Layout, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Path, Step } from '@retikz/react';
 
 /**
  * 中段 marking：marks 沿路径 pos∈[0,1] 处放方向箭头，朝向由该点切线决定（非固定方向）。

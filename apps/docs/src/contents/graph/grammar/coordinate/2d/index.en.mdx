@@ -14,16 +14,18 @@ The two charts below use the same monthly temperature data and the same `<Interv
   <ComponentPreview name="coordinate-polar-bar" sourceFiles={['coordinate-cartesian.data.ts']} size="sm" />
 </div>
 
-<p className="text-sm text-muted-foreground">Left: default cartesian bars; right: same chart with only <code>coordinate="polar2D"</code> added.</p>
+<p className="text-sm text-muted-foreground">
+  Left: default cartesian bars; right: same chart with only <code>coordinate="polar2D"</code> added.
+</p>
 
 ## Role Mapping
 
 In cartesian, `x` is horizontal and `y` is vertical. In polar, the same channels take different geometric roles while the binding syntax stays the same:
 
-| Channel | cartesian2D | polar2D |
-| --- | --- | --- |
-| `x` | horizontal position | angular, around the center |
-| `y` | vertical position | radial, away from the center |
+| Channel | cartesian2D         | polar2D                      |
+| ------- | ------------------- | ---------------------------- |
+| `x`     | horizontal position | angular, around the center   |
+| `y`     | vertical position   | radial, away from the center |
 
 So polar charts still use `x` / `y`. The coordinate system decides whether those values become cartesian positions or angle / radius; marks do not split into flat and polar variants.
 
@@ -35,11 +37,11 @@ So polar charts still use `x` / `y`. The coordinate system decides whether those
 <Plot coordinate={{ type: 'polar2D', innerRadius: 0.5, startAngle: 0, endAngle: 360 }}>
 ```
 
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `innerRadius` | `number?` | `0` | Inner radius as a fraction `0..1` of the outer radius; `0` is a solid pie, `> 0` carves a center hole into a donut |
-| `startAngle` | `number?` | `0` | Starting angle in degrees |
-| `endAngle` | `number?` | `360` | Ending angle in degrees; together with `startAngle` it controls full or partial rings |
+| Field         | Type      | Default | Description                                                                                                        |
+| ------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
+| `innerRadius` | `number?` | `0`     | Inner radius as a fraction `0..1` of the outer radius; `0` is a solid pie, `> 0` carves a center hole into a donut |
+| `startAngle`  | `number?` | `0`     | Starting angle in degrees                                                                                          |
+| `endAngle`    | `number?` | `360`   | Ending angle in degrees; together with `startAngle` it controls full or partial rings                              |
 
 ## Common Shapes
 
@@ -55,12 +57,16 @@ The same polar coordinate system pairs with different marks to cover common roun
 
 `<IntervalMark angle="value" />` accumulates the `angle` value field into sector angular bounds. Add `innerRadius` to turn a pie into a donut.
 
+To emphasize one sector, set `pull` on `<IntervalMark>` for a static radial offset; it is a sector mark style, not a polar coordinate option.
+
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <ComponentPreview name="coordinate-pie" sourceFiles={['coordinate-pie.data.ts']} size="sm" />
   <ComponentPreview name="coordinate-donut" sourceFiles={['coordinate-pie.data.ts']} size="sm" />
 </div>
 
-<p className="text-sm text-muted-foreground">Left: pie; right: same data with <code>innerRadius: 0.55</code> as a donut.</p>
+<p className="text-sm text-muted-foreground">
+  Left: pie; right: same data with <code>innerRadius: 0.55</code> as a donut.
+</p>
 
 ### Radar
 

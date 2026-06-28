@@ -1,18 +1,35 @@
-import { Children, Fragment, type ReactNode, isValidElement } from 'react';
+import type {
+  Channel,
+  CoordinateOperation,
+  DataModel,
+  Encoding,
+  ExternalRow,
+  Guide,
+  IntervalBounds,
+  IRPaintSpec,
+  Mark,
+  MarkNodeLabel,
+  MarkValueType,
+  PlotSpec,
+  PointColorStyle,
+  PointFillStyle,
+  PointNonnegativeNumberStyle,
+  PointNumberStyle,
+  PointOpacityStyle,
+  PointShapeStyle,
+  PointSizeStyle,
+  PointStrokeStyle,
+  PointStrokeWidthStyle,
+  PointZIndexStyle,
+  Scale as PlotScaleSpec,
+  TextChannel,
+  TransformOperation,
+} from '@retikz/plot';
+import type { ReactNode } from 'react';
+
 import {
-  type Channel,
-  type CoordinateOperation,
   CoordinateOperationSchema,
-  type DataModel,
-  type Encoding,
-  type ExternalRow,
-  type Guide,
-  type IRPaintSpec,
   IntervalBoundKind,
-  type IntervalBounds,
-  type Mark,
-  type MarkLabel,
-  type MarkValueType,
   PLOT_NAMESPACE,
   PlotComposite,
   PlotCoordinate,
@@ -20,41 +37,29 @@ import {
   PlotGuide,
   PlotMark,
   PlotScale,
-  type Scale as PlotScaleSpec,
-  type PlotSpec,
   PlotTransform,
-  type PointColorStyle,
-  type PointFillStyle,
-  type PointNonnegativeNumberStyle,
-  type PointNumberStyle,
-  type PointOpacityStyle,
-  type PointShapeStyle,
-  type PointSizeStyle,
-  type PointStrokeStyle,
-  type PointStrokeWidthStyle,
-  type PointZIndexStyle,
-  type TextChannel,
-  type TransformOperation,
 } from '@retikz/plot';
-import { Axis, type AxisProps, Legend, type LegendProps } from './guides';
-import {
-  type CoreNodeChannelProps,
-  type CorePathChannelProps,
-  type DatumLabelProps,
-  type ExtensionChannelProp,
-  IntervalMark,
-  type IntervalMarkProps,
-  PathMark,
-  type PathMarkProps,
-  PointMark,
-  type PointMarkProps,
-  ReferenceMark,
-  type ReferenceMarkProps,
-  RelationMark,
-  type RelationMarkProps,
+import { Children, Fragment, isValidElement } from 'react';
+
+import type { AxisProps, LegendProps } from './guides';
+import type {
+  CoreNodeChannelProps,
+  CorePathChannelProps,
+  DatumLabelProps,
+  ExtensionChannelProp,
+  IntervalMarkProps,
+  PathMarkProps,
+  PointMarkProps,
+  ReferenceMarkProps,
+  RelationMarkProps,
 } from './marks';
-import { type PositionScaleType, Scale, type ScaleDimension, type ScaleProps } from './scales';
-import { Transform as TransformComponent, type TransformProps } from './transform';
+import type { PositionScaleType, ScaleDimension, ScaleProps } from './scales';
+import type { TransformProps } from './transform';
+
+import { Axis, Legend } from './guides';
+import { IntervalMark, PathMark, PointMark, ReferenceMark, RelationMark } from './marks';
+import { Scale } from './scales';
+import { Transform as TransformComponent } from './transform';
 
 /** 自动建的 scale 名（用户不可见；需要显式 scale 配置时后续再加 <Scale>） */
 const AUTO_X = '__x';
@@ -196,7 +201,10 @@ type Collected = {
 };
 
 /** 颜色字段缺省取 series（分系列即按系列上色）；都无则不着色 */
-const colorChannel = (color: string | undefined, series: string | undefined): { color: { field: string; scale: string } } | undefined => {
+const colorChannel = (
+  color: string | undefined,
+  series: string | undefined,
+): { color: { field: string; scale: string } } | undefined => {
   const field = color ?? series;
   return field ? { color: { field, scale: AUTO_COLOR } } : undefined;
 };
@@ -243,7 +251,9 @@ const canUseCssColor = (value: string): boolean => {
 };
 
 const warnSkippedStyle = (prop: string, value: string): void => {
-  console.warn(`buildPlotSpec: <PointMark ${prop}="${value}"> is neither a known data field nor a valid constant for ${prop}; skipped`);
+  console.warn(
+    `buildPlotSpec: <PointMark ${prop}="${value}"> is neither a known data field nor a valid constant for ${prop}; skipped`,
+  );
 };
 
 type StyleSugarContext = {
@@ -257,7 +267,10 @@ const styleSugarContext = (options: BuildPlotSpecOptions): StyleSugarContext => 
 };
 
 const isMarkValue = (value: unknown): value is MarkValueType<unknown> =>
-  value !== null && typeof value === 'object' && 'kind' in value && ((value as { kind?: unknown }).kind === 'field' || (value as { kind?: unknown }).kind === 'constant');
+  value !== null &&
+  typeof value === 'object' &&
+  'kind' in value &&
+  ((value as { kind?: unknown }).kind === 'field' || (value as { kind?: unknown }).kind === 'constant');
 
 const isChannelBinding = (value: unknown): value is Channel =>
   value !== null &&
@@ -282,7 +295,11 @@ const extensionChannelEncoding = (channels: DatumLabelProps['channels']): Pick<E
 
 type PaintStyleInput = string | IRPaintSpec | MarkValueType<string | IRPaintSpec> | undefined;
 
-const paintStyleOf = <T extends PointFillStyle | PointStrokeStyle>(value: PaintStyleInput, prop: 'fill' | 'stroke', context: StyleSugarContext): T | undefined => {
+const paintStyleOf = <T extends PointFillStyle | PointStrokeStyle>(
+  value: PaintStyleInput,
+  prop: 'fill' | 'stroke',
+  context: StyleSugarContext,
+): T | undefined => {
   if (value === undefined) return undefined;
   if (isMarkValue(value)) return value as T;
   if (typeof value !== 'string') return { kind: 'constant', value } as T;
@@ -305,7 +322,10 @@ const strokeStyleOf = (stroke: PointMarkProps['stroke'], context: StyleSugarCont
   return paintStyleOf<PointStrokeStyle>(stroke, 'stroke', context);
 };
 
-const strokeWidthStyleOf = (strokeWidth: PointMarkProps['strokeWidth'], context: StyleSugarContext): PointStrokeWidthStyle | undefined => {
+const strokeWidthStyleOf = (
+  strokeWidth: PointMarkProps['strokeWidth'],
+  context: StyleSugarContext,
+): PointStrokeWidthStyle | undefined => {
   if (strokeWidth === undefined) return undefined;
   if (isMarkValue(strokeWidth)) return strokeWidth;
   if (typeof strokeWidth === 'number') return { kind: 'constant', value: strokeWidth };
@@ -327,6 +347,12 @@ const numberStyleOf = <T extends MarkValueType<number>>(
   return undefined;
 };
 
+const intervalPullStyleOf = (value: IntervalMarkProps['pull']): PointNonnegativeNumberStyle | undefined => {
+  if (value === undefined) return undefined;
+  if (isMarkValue(value)) return value;
+  return typeof value === 'number' ? { kind: 'constant', value } : { kind: 'field', value };
+};
+
 const enumStyleOf = <T extends string>(
   value: string | MarkValueType<T> | undefined,
   prop: string,
@@ -341,7 +367,11 @@ const enumStyleOf = <T extends string>(
   return undefined;
 };
 
-const booleanStyleOf = (value: string | boolean | MarkValueType<boolean> | undefined, prop: string, context: StyleSugarContext): MarkValueType<boolean> | undefined => {
+const booleanStyleOf = (
+  value: string | boolean | MarkValueType<boolean> | undefined,
+  prop: string,
+  context: StyleSugarContext,
+): MarkValueType<boolean> | undefined => {
   if (value === undefined) return undefined;
   if (isMarkValue(value)) return value;
   if (typeof value === 'boolean') return { kind: 'constant', value };
@@ -350,7 +380,11 @@ const booleanStyleOf = (value: string | boolean | MarkValueType<boolean> | undef
   return undefined;
 };
 
-const jsonStyleOf = <T>(value: string | T | MarkValueType<T> | undefined, prop: string, context: StyleSugarContext): MarkValueType<T> | undefined => {
+const jsonStyleOf = <T>(
+  value: string | T | MarkValueType<T> | undefined,
+  prop: string,
+  context: StyleSugarContext,
+): MarkValueType<T> | undefined => {
   if (value === undefined) return undefined;
   if (isMarkValue(value)) return value;
   if (typeof value === 'string') {
@@ -382,8 +416,38 @@ const nodeStylePropsOf = (props: CoreNodeChannelProps, context: StyleSugarContex
   put('dashPattern', jsonStyleOf(props.dashPattern, 'dashPattern', context));
   put('font', jsonStyleOf(props.font, 'font', context));
   put('boundary', jsonStyleOf(props.boundary, 'boundary', context));
-  put('shadow', typeof props.shadow === 'string' ? enumStyleOf(props.shadow, 'shadow', new Set(['none', 'sm', 'md', 'lg', 'xl', '2xl']), context) : jsonStyleOf(props.shadow, 'shadow', context));
-  put('blendMode', enumStyleOf(props.blendMode, 'blendMode', new Set(['normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference', 'exclusion', 'hue', 'saturation', 'color', 'luminosity']), context));
+  put(
+    'shadow',
+    typeof props.shadow === 'string'
+      ? enumStyleOf(props.shadow, 'shadow', new Set(['none', 'sm', 'md', 'lg', 'xl', '2xl']), context)
+      : jsonStyleOf(props.shadow, 'shadow', context),
+  );
+  put(
+    'blendMode',
+    enumStyleOf(
+      props.blendMode,
+      'blendMode',
+      new Set([
+        'normal',
+        'multiply',
+        'screen',
+        'overlay',
+        'darken',
+        'lighten',
+        'color-dodge',
+        'color-burn',
+        'hard-light',
+        'soft-light',
+        'difference',
+        'exclusion',
+        'hue',
+        'saturation',
+        'color',
+        'luminosity',
+      ]),
+      context,
+    ),
+  );
   return out;
 };
 
@@ -399,12 +463,50 @@ const pathStylePropsOf = (props: CorePathChannelProps, context: StyleSugarContex
   put('rotate', numberStyleOf(props.rotate, 'rotate', context));
   put('scale', jsonStyleOf(props.scale, 'scale', context));
   put('fillRule', enumStyleOf(props.fillRule, 'fillRule', new Set(['nonzero', 'evenodd']), context));
-  put('thickness', enumStyleOf(props.thickness, 'thickness', new Set(['ultraThin', 'veryThin', 'thin', 'semithick', 'thick', 'veryThick', 'ultraThick']), context));
+  put(
+    'thickness',
+    enumStyleOf(
+      props.thickness,
+      'thickness',
+      new Set(['ultraThin', 'veryThin', 'thin', 'semithick', 'thick', 'veryThick', 'ultraThick']),
+      context,
+    ),
+  );
   put('arrow', enumStyleOf(props.arrow, 'arrow', new Set(['none', '->', '<-', '<->']), context));
   put('dashPattern', jsonStyleOf(props.dashPattern, 'dashPattern', context));
   put('arrowDetail', jsonStyleOf(props.arrowDetail, 'arrowDetail', context));
-  put('shadow', typeof props.shadow === 'string' ? enumStyleOf(props.shadow, 'shadow', new Set(['none', 'sm', 'md', 'lg', 'xl', '2xl']), context) : jsonStyleOf(props.shadow, 'shadow', context));
-  put('blendMode', enumStyleOf(props.blendMode, 'blendMode', new Set(['normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference', 'exclusion', 'hue', 'saturation', 'color', 'luminosity']), context));
+  put(
+    'shadow',
+    typeof props.shadow === 'string'
+      ? enumStyleOf(props.shadow, 'shadow', new Set(['none', 'sm', 'md', 'lg', 'xl', '2xl']), context)
+      : jsonStyleOf(props.shadow, 'shadow', context),
+  );
+  put(
+    'blendMode',
+    enumStyleOf(
+      props.blendMode,
+      'blendMode',
+      new Set([
+        'normal',
+        'multiply',
+        'screen',
+        'overlay',
+        'darken',
+        'lighten',
+        'color-dodge',
+        'color-burn',
+        'hard-light',
+        'soft-light',
+        'difference',
+        'exclusion',
+        'hue',
+        'saturation',
+        'color',
+        'luminosity',
+      ]),
+      context,
+    ),
+  );
   return out;
 };
 
@@ -434,10 +536,24 @@ const recordMarkColor = (into: Collected, color: PointColorStyle | undefined): v
  * @description label 顶层 string 默认按字段（content.field）；labelDisplayFormat 进 IR；labelPosition / labelDistance / labelPin
  *   摊进对齐 core NodeLabelSchema 的字段。无 label 字段 → undefined（不挂标签）。
  */
-const buildMarkLabel = (props: DatumLabelProps): MarkLabel | undefined => {
-  const { label, labelDisplayFormat, labelPosition, labelDistance, labelPin, labelTextColor, labelOpacity, labelFont, labelRotate, labelKeepUpright } = props;
+const buildMarkLabel = (props: DatumLabelProps): MarkNodeLabel | undefined => {
+  const {
+    label,
+    labelDisplayFormat,
+    labelPosition,
+    labelDistance,
+    labelPin,
+    labelTextColor,
+    labelOpacity,
+    labelFont,
+    labelRotate,
+    labelKeepUpright,
+  } = props;
   if (label === undefined) return undefined;
-  const content: TextChannel = { field: label, ...(labelDisplayFormat !== undefined ? { displayFormat: labelDisplayFormat } : {}) };
+  const content: TextChannel = {
+    field: label,
+    ...(labelDisplayFormat !== undefined ? { displayFormat: labelDisplayFormat } : {}),
+  };
   return {
     content,
     ...(labelPosition !== undefined ? { position: labelPosition } : {}),
@@ -452,7 +568,11 @@ const buildMarkLabel = (props: DatumLabelProps): MarkLabel | undefined => {
 };
 
 /** 收集某 mark 的运行时 resolveLabel（不进 IR）：仅在配了 mark id 时按 id 注册，否则无从命中（与 ADR-04 注入点一致） */
-const recordResolveLabel = (into: Collected, id: string | undefined, resolveLabel: ((row: ExternalRow) => string) | undefined): void => {
+const recordResolveLabel = (
+  into: Collected,
+  id: string | undefined,
+  resolveLabel: ((row: ExternalRow) => string) | undefined,
+): void => {
   if (resolveLabel === undefined) return;
   if (id === undefined) {
     throw new Error('buildPlotSpec: resolveLabel needs a mark id to be injected at runtime; set the mark id prop');
@@ -467,7 +587,8 @@ const positionEncoding = (x: string, y: string): Pick<Encoding, 'x' | 'y'> => ({
 });
 
 /** rule 扁平 prop → IR 位置通道：数字 → 常量 value、字符串 → 字段 field */
-const ruleChannel = (value: number | string): { value: number } | { field: string } => (typeof value === 'number' ? { value } : { field: value });
+const ruleChannel = (value: number | string): { value: number } | { field: string } =>
+  typeof value === 'number' ? { value } : { field: value };
 
 /**
  * 把 <ReferenceMark> 扁平 props 装配进 reference IR（line / band / region / extent / color 校验 fail-loud）
@@ -477,38 +598,76 @@ const ruleChannel = (value: number | string): { value: number } | { field: strin
  *   常量 rule（x/y 为数字）→ color 作 value 常量；per-datum rule（x/y 为字段串）→ color 作 field（AUTO_COLOR）。
  */
 const collectReference = (props: ReferenceMarkProps, into: Collected, styleContext: StyleSugarContext): void => {
-  const { kind, x, y, z, xTo, yTo, zTo, extentField, extentToField, color, id, transform, channels, strokeWidth, fillOpacity, opacity } = props;
+  const {
+    kind,
+    x,
+    y,
+    z,
+    xTo,
+    yTo,
+    zTo,
+    extentField,
+    extentToField,
+    color,
+    label,
+    id,
+    transform,
+    channels,
+    strokeWidth,
+    fillOpacity,
+    opacity,
+  } = props;
   const region = kind === 'region';
   const hasX = x !== undefined;
   const hasY = y !== undefined;
   const hasZ = z !== undefined;
   if (region) {
     if (!hasX || !hasY || xTo === undefined || yTo === undefined) {
-      throw new Error('buildPlotSpec: <ReferenceMark kind="region"> requires x, xTo, y, and yTo to define a bounded reference area');
+      throw new Error(
+        'buildPlotSpec: <ReferenceMark kind="region"> requires x, xTo, y, and yTo to define a bounded reference area',
+      );
     }
     if (hasZ !== (zTo !== undefined)) {
-      throw new Error('buildPlotSpec: <ReferenceMark kind="region"> z and zTo must be set together for z-role reference areas');
+      throw new Error(
+        'buildPlotSpec: <ReferenceMark kind="region"> z and zTo must be set together for z-role reference areas',
+      );
     }
     if (extentField !== undefined || extentToField !== undefined) {
-      throw new Error('buildPlotSpec: <ReferenceMark kind="region"> does not support extentField / extentToField; set x/xTo/y/yTo bounds directly');
+      throw new Error(
+        'buildPlotSpec: <ReferenceMark kind="region"> does not support extentField / extentToField; set x/xTo/y/yTo bounds directly',
+      );
     }
   } else if (hasX === hasY) {
-    throw new Error('buildPlotSpec: <ReferenceMark> must bind exactly one of x (vertical) or y (horizontal); set one, not both / neither');
+    throw new Error(
+      'buildPlotSpec: <ReferenceMark> must bind exactly one of x (vertical) or y (horizontal); set one, not both / neither',
+    );
   }
   if (!region && hasX && yTo !== undefined) {
-    throw new Error('buildPlotSpec: <ReferenceMark> binds x (vertical) but sets yTo; the band upper bound must match the bound dimension (use xTo)');
+    throw new Error(
+      'buildPlotSpec: <ReferenceMark> binds x (vertical) but sets yTo; the band upper bound must match the bound dimension (use xTo)',
+    );
   }
   if (!region && hasY && xTo !== undefined) {
-    throw new Error('buildPlotSpec: <ReferenceMark> binds y (horizontal) but sets xTo; the band upper bound must match the bound dimension (use yTo)');
+    throw new Error(
+      'buildPlotSpec: <ReferenceMark> binds y (horizontal) but sets xTo; the band upper bound must match the bound dimension (use yTo)',
+    );
   }
   if (!region && (hasZ || zTo !== undefined)) {
     throw new Error('buildPlotSpec: <ReferenceMark> z / zTo are only valid with kind="region"');
   }
   if ((extentField === undefined) !== (extentToField === undefined)) {
-    throw new Error('buildPlotSpec: <ReferenceMark> extentField / extentToField must be set together (a partial-length span needs both start and end)');
+    throw new Error(
+      'buildPlotSpec: <ReferenceMark> extentField / extentToField must be set together (a partial-length span needs both start and end)',
+    );
   }
   // 常量 rule（数字常量轴）→ color 作 value；per-datum（字段串）→ color 作 field（AUTO_COLOR）
-  const constantRule = region ? typeof x === 'number' && typeof y === 'number' && typeof xTo === 'number' && typeof yTo === 'number' && (!hasZ || (typeof z === 'number' && typeof zTo === 'number')) : typeof (hasX ? x : y) === 'number';
+  const constantRule = region
+    ? typeof x === 'number' &&
+      typeof y === 'number' &&
+      typeof xTo === 'number' &&
+      typeof yTo === 'number' &&
+      (!hasZ || (typeof z === 'number' && typeof zTo === 'number'))
+    : typeof (hasX ? x : y) === 'number';
   let colorEnc: { color: { value: string } | { field: string; scale: string } } | undefined;
   if (color !== undefined) {
     colorEnc = constantRule ? { color: { value: color } } : { color: { field: color, scale: AUTO_COLOR } };
@@ -558,6 +717,7 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
     ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
     ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
     ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
+    ...(label !== undefined ? { label } : {}),
     ...nodeStylePropsOf(referenceNodeStyleProps, styleContext),
     ...pathStylePropsOf(props, styleContext),
     encoding: { ...positional, ...colorEnc, ...extensionChannelEncoding(channels) },
@@ -579,14 +739,37 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
     }
     if (child.type === PathMark) {
       const props = child.props as PathMarkProps;
-      const { x, y, order, series, color, closed, connectNulls, closure, curve, id, transform, anchorId, channels, strokeWidth, opacity, lineCap, lineJoin, roundedCorners } = props;
+      const {
+        x,
+        y,
+        order,
+        series,
+        color,
+        label,
+        closed,
+        connectNulls,
+        closure,
+        curve,
+        id,
+        transform,
+        anchorId,
+        channels,
+        strokeWidth,
+        opacity,
+        lineCap,
+        lineJoin,
+        roundedCorners,
+      } = props;
       const colorEnc = colorChannel(color, series);
-      const markLabel = buildMarkLabel(props);
       const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
       const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
       const lineCapStyle = enumStyleOf(lineCap, 'lineCap', new Set(['butt', 'round', 'square']), styleContext);
       const lineJoinStyle = enumStyleOf(lineJoin, 'lineJoin', new Set(['miter', 'round', 'bevel']), styleContext);
-      const roundedCornersStyle = numberStyleOf<PointNonnegativeNumberStyle>(roundedCorners, 'roundedCorners', styleContext);
+      const roundedCornersStyle = numberStyleOf<PointNonnegativeNumberStyle>(
+        roundedCorners,
+        'roundedCorners',
+        styleContext,
+      );
       into.marks.push({
         type: PlotMark.Path,
         ...(id !== undefined ? { id } : {}),
@@ -604,7 +787,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(lineJoinStyle !== undefined ? { lineJoin: lineJoinStyle } : {}),
         ...(roundedCornersStyle !== undefined ? { roundedCorners: roundedCornersStyle } : {}),
         ...pathStylePropsOf(props, styleContext),
-        ...(markLabel !== undefined ? { label: markLabel } : {}),
+        ...(label !== undefined ? { label } : {}),
         encoding: { ...positionEncoding(x, y), ...colorEnc, ...extensionChannelEncoding(channels) },
       });
       recordColor(into, colorEnc);
@@ -656,10 +839,17 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       const paddingStyle = numberStyleOf<PointNonnegativeNumberStyle>(padding, 'padding', styleContext);
       const minimumSizeStyle = numberStyleOf<PointNonnegativeNumberStyle>(minimumSize, 'minimumSize', styleContext);
       const minimumWidthStyle = numberStyleOf<PointNonnegativeNumberStyle>(minimumWidth, 'minimumWidth', styleContext);
-      const minimumHeightStyle = numberStyleOf<PointNonnegativeNumberStyle>(minimumHeight, 'minimumHeight', styleContext);
+      const minimumHeightStyle = numberStyleOf<PointNonnegativeNumberStyle>(
+        minimumHeight,
+        'minimumHeight',
+        styleContext,
+      );
       const zIndexStyle = numberStyleOf<PointZIndexStyle>(zIndex, 'zIndex', styleContext);
       // text 设 → point 下沉为无边框文本 Node（内容走 encoding.text）；否则散点 glyph。位置通道按坐标系角色（x / x/y / x/y/z）
-      const textEnc: { text: TextChannel } | undefined = text !== undefined ? { text: { field: text, ...(displayFormat !== undefined ? { displayFormat } : {}) } } : undefined;
+      const textEnc: { text: TextChannel } | undefined =
+        text !== undefined
+          ? { text: { field: text, ...(displayFormat !== undefined ? { displayFormat } : {}) } }
+          : undefined;
       into.marks.push({
         type: PlotMark.Point,
         ...(id !== undefined ? { id } : {}),
@@ -697,22 +887,56 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       recordResolveLabel(into, id, props.resolveLabel);
     } else if (child.type === IntervalMark) {
       const props = child.props as IntervalMarkProps;
-      const { x, y, angle, x0, x1, width, direction: rawDirection, color, series, group, arrangement: explicitArrangement, stackOffset, percent, stack, bounds: explicitBounds, id, transform, anchorId, channels, fill, stroke, strokeWidth, fillOpacity, opacity, padAngle } = props;
+      const {
+        x,
+        y,
+        angle,
+        x0,
+        x1,
+        width,
+        direction: rawDirection,
+        color,
+        series,
+        group,
+        arrangement: explicitArrangement,
+        stackOffset,
+        percent,
+        stack,
+        bounds: explicitBounds,
+        id,
+        transform,
+        anchorId,
+        channels,
+        fill,
+        stroke,
+        strokeWidth,
+        fillOpacity,
+        opacity,
+        padAngle,
+        pull,
+      } = props;
       const direction = rawDirection ?? 'vertical';
       const arrangementGroup = group ?? series;
       if (percent === true && explicitArrangement !== undefined && explicitArrangement !== 'normalize-stack') {
-        throw new Error('buildPlotSpec: <IntervalMark percent> cannot be mixed with an arrangement other than "normalize-stack"');
+        throw new Error(
+          'buildPlotSpec: <IntervalMark percent> cannot be mixed with an arrangement other than "normalize-stack"',
+        );
       }
       if (stackOffset !== undefined && explicitArrangement === 'normalize-stack') {
-        throw new Error('buildPlotSpec: <IntervalMark stackOffset> cannot be mixed with arrangement="normalize-stack"; use percent for percentage stacks');
+        throw new Error(
+          'buildPlotSpec: <IntervalMark stackOffset> cannot be mixed with arrangement="normalize-stack"; use percent for percentage stacks',
+        );
       }
-      const arrangement = explicitArrangement ?? (percent === true ? 'normalize-stack' : stack ? 'stack' : arrangementGroup !== undefined ? 'dodge' : undefined);
+      const arrangement =
+        explicitArrangement ??
+        (percent === true ? 'normalize-stack' : stack ? 'stack' : arrangementGroup !== undefined ? 'dodge' : undefined);
       const markLabel = buildMarkLabel(props);
       const fillStyle = paintStyleOf<PointFillStyle>(fill, 'fill', styleContext);
       const strokeStyle = strokeStyleOf(stroke, styleContext);
       const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
       const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
       const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
+      const pullStyle = intervalPullStyleOf(pull);
       const intervalStyle = {
         ...(fillStyle !== undefined ? { fill: fillStyle } : {}),
         ...(strokeStyle !== undefined ? { stroke: strokeStyle } : {}),
@@ -720,14 +944,30 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
         ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
         ...(padAngle !== undefined ? { padAngle } : {}),
+        ...(pullStyle !== undefined ? { pull: pullStyle } : {}),
         ...nodeStylePropsOf(props, styleContext),
       };
       // pie / donut：angle → 自动累积 stack transform（产 y0/y1）+ extent×full bounds
       if (angle !== undefined) {
-        if (y !== undefined || x !== undefined || x0 !== undefined || x1 !== undefined || width !== undefined || rawDirection !== undefined || stack !== undefined || explicitBounds !== undefined) {
-          throw new Error('buildPlotSpec: <IntervalMark angle> is the polar pie/donut form; do not mix it with x/y/x0/x1/width/direction/stack/bounds');
+        if (
+          y !== undefined ||
+          x !== undefined ||
+          x0 !== undefined ||
+          x1 !== undefined ||
+          width !== undefined ||
+          rawDirection !== undefined ||
+          stack !== undefined ||
+          explicitBounds !== undefined
+        ) {
+          throw new Error(
+            'buildPlotSpec: <IntervalMark angle> is the polar pie/donut form; do not mix it with x/y/x0/x1/width/direction/stack/bounds',
+          );
         }
-        into.shortcutTransforms.push({ kind: PlotTransform.Stack, y: angle, ...(series !== undefined ? { groupBy: series } : {}) });
+        into.shortcutTransforms.push({
+          kind: PlotTransform.Stack,
+          y: angle,
+          ...(series !== undefined ? { groupBy: series } : {}),
+        });
         const colorEnc = colorChannel(color, series ?? group) ?? colorChannel(angle, undefined);
         into.marks.push({
           type: PlotMark.Interval,
@@ -745,10 +985,14 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       // 显式 bounds（heatmap 双 band / 高级）：直接落 IR；band bound → 强制对应轴 band scale
       if (explicitBounds !== undefined) {
         if (rawDirection !== undefined) {
-          throw new Error('buildPlotSpec: <IntervalMark direction> cannot be mixed with explicit bounds; encode the orientation through bounds directly');
+          throw new Error(
+            'buildPlotSpec: <IntervalMark direction> cannot be mixed with explicit bounds; encode the orientation through bounds directly',
+          );
         }
         if (width !== undefined) {
-          throw new Error('buildPlotSpec: <IntervalMark width> cannot be mixed with explicit bounds; use bounds.<role>={kind:"proportional"} directly');
+          throw new Error(
+            'buildPlotSpec: <IntervalMark width> cannot be mixed with explicit bounds; use bounds.<role>={kind:"proportional"} directly',
+          );
         }
         const colorEnc = colorChannel(color, series ?? group);
         into.marks.push({
@@ -760,7 +1004,12 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
           ...intervalStyle,
           bounds: explicitBounds,
           ...(markLabel !== undefined ? { label: markLabel } : {}),
-          encoding: { ...(x !== undefined ? { x: { field: x } } : {}), ...(y !== undefined ? { y: { field: y } } : {}), ...colorEnc, ...extensionChannelEncoding(channels) },
+          encoding: {
+            ...(x !== undefined ? { x: { field: x } } : {}),
+            ...(y !== undefined ? { y: { field: y } } : {}),
+            ...colorEnc,
+            ...extensionChannelEncoding(channels),
+          },
         });
         if (explicitBounds.x?.kind === IntervalBoundKind.Band) into.hasBar = true;
         if (explicitBounds.y?.kind === IntervalBoundKind.Band) into.hasRect = true;
@@ -775,16 +1024,24 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         throw new Error('buildPlotSpec: <IntervalMark width> cannot be mixed with x0/x1 histogram bounds');
       }
       if (proportional && arrangement !== undefined) {
-        throw new Error('buildPlotSpec: <IntervalMark width> cannot be mixed with arrangement/stack/percent/group/series; use precomputed extent bounds for custom layouts');
+        throw new Error(
+          'buildPlotSpec: <IntervalMark width> cannot be mixed with arrangement/stack/percent/group/series; use precomputed extent bounds for custom layouts',
+        );
       }
       if (proportional && stackOffset !== undefined) {
-        throw new Error('buildPlotSpec: <IntervalMark width> cannot be mixed with stackOffset; use precomputed extent bounds for custom layouts');
+        throw new Error(
+          'buildPlotSpec: <IntervalMark width> cannot be mixed with stackOffset; use precomputed extent bounds for custom layouts',
+        );
       }
       if (proportional && (group !== undefined || series !== undefined)) {
-        throw new Error('buildPlotSpec: <IntervalMark width> cannot be mixed with group or series; use color for visual grouping');
+        throw new Error(
+          'buildPlotSpec: <IntervalMark width> cannot be mixed with group or series; use color for visual grouping',
+        );
       }
       if (histogram && direction === 'horizontal') {
-        throw new Error('buildPlotSpec: <IntervalMark direction="horizontal"> cannot be mixed with x0/x1 histogram bounds');
+        throw new Error(
+          'buildPlotSpec: <IntervalMark direction="horizontal"> cannot be mixed with x0/x1 histogram bounds',
+        );
       }
       if (histogram && arrangement !== undefined) {
         throw new Error('buildPlotSpec: <IntervalMark arrangement> cannot be mixed with x0/x1 histogram bounds');
@@ -793,25 +1050,41 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         throw new Error('buildPlotSpec: <IntervalMark> x0 / x1 must be set together for continuous-interval bars');
       }
       if (!histogram && !proportional && x === undefined) {
-        throw new Error('buildPlotSpec: <IntervalMark> requires x for categorical bars, x0/x1 for histogram, width for proportional bars, or angle for the polar pie/donut form');
+        throw new Error(
+          'buildPlotSpec: <IntervalMark> requires x for categorical bars, x0/x1 for histogram, width for proportional bars, or angle for the polar pie/donut form',
+        );
       }
       const valueField = direction === 'horizontal' ? x : y;
       if (valueField === undefined) {
-        throw new Error('buildPlotSpec: <IntervalMark> requires the value field on y (vertical) or x (horizontal), or use angle for the polar pie/donut form');
+        throw new Error(
+          'buildPlotSpec: <IntervalMark> requires the value field on y (vertical) or x (horizontal), or use angle for the polar pie/donut form',
+        );
       }
       const colorEnc = colorChannel(color, series ?? group);
       const categoryField = direction === 'horizontal' ? y : x;
       if (!histogram && !proportional && categoryField === undefined) {
-        throw new Error('buildPlotSpec: <IntervalMark> requires the category field on x (vertical) or y (horizontal), x0/x1 for histogram, width for proportional bars, or angle for the polar pie/donut form');
+        throw new Error(
+          'buildPlotSpec: <IntervalMark> requires the category field on x (vertical) or y (horizontal), x0/x1 for histogram, width for proportional bars, or angle for the polar pie/donut form',
+        );
       }
       const bandRole = direction === 'horizontal' ? 'y' : 'x';
       const valueRole = direction === 'horizontal' ? 'x' : 'y';
-      const bandBound = { kind: IntervalBoundKind.Band, ...(arrangement === 'dodge' && arrangementGroup !== undefined ? { group: arrangementGroup } : {}) };
+      const bandBound = {
+        kind: IntervalBoundKind.Band,
+        ...(arrangement === 'dodge' && arrangementGroup !== undefined ? { group: arrangementGroup } : {}),
+      };
       if ((arrangement === 'stack' || arrangement === 'normalize-stack') && arrangementGroup === undefined) {
-        throw new Error('buildPlotSpec: <IntervalMark arrangement="stack"> requires group or series to identify stacked segments');
+        throw new Error(
+          'buildPlotSpec: <IntervalMark arrangement="stack"> requires group or series to identify stacked segments',
+        );
       }
       if (arrangement === 'normalize-stack') {
-        into.shortcutTransforms.push({ kind: PlotTransform.Normalize, field: valueField, groupBy: [categoryField], basis: 'percent' });
+        into.shortcutTransforms.push({
+          kind: PlotTransform.Normalize,
+          field: valueField,
+          groupBy: [categoryField],
+          basis: 'percent',
+        });
       }
       if ((arrangement === 'stack' || arrangement === 'normalize-stack') && arrangementGroup !== undefined) {
         into.shortcutTransforms.push({
@@ -848,7 +1121,12 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         encoding: histogram
           ? { y: { field: y }, ...colorEnc, ...extensionChannelEncoding(channels) }
           : proportional
-            ? { ...(x !== undefined ? { x: { field: x } } : {}), ...(y !== undefined ? { y: { field: y } } : {}), ...colorEnc, ...extensionChannelEncoding(channels) }
+            ? {
+                ...(x !== undefined ? { x: { field: x } } : {}),
+                ...(y !== undefined ? { y: { field: y } } : {}),
+                ...colorEnc,
+                ...extensionChannelEncoding(channels),
+              }
             : { x: { field: x }, y: { field: y }, ...colorEnc, ...extensionChannelEncoding(channels) },
       });
       if (!histogram && !proportional) {
@@ -861,20 +1139,21 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
     } else if (child.type === ReferenceMark) {
       collectReference(child.props as ReferenceMarkProps, into, styleContext);
     } else if (child.type === RelationMark) {
-      const { id, transform, source, target, via, route, routing, label, path, color, channels } = child.props as RelationMarkProps;
+      const { id, kind, transform, source, target, label, style, path, ribbon, color, channels } =
+        child.props as RelationMarkProps;
       const colorEnc = colorChannel(color, undefined);
       const encoding = { ...colorEnc, ...extensionChannelEncoding(channels) };
       into.marks.push({
         type: PlotMark.Relation,
         ...(id !== undefined ? { id } : {}),
+        ...(kind !== undefined ? { kind } : {}),
         ...(transform !== undefined ? { transform } : {}),
         source,
         target,
-        ...(via !== undefined ? { via } : {}),
-        ...(route !== undefined ? { route } : {}),
-        ...(routing !== undefined ? { routing } : {}),
         ...(label !== undefined ? { label } : {}),
+        ...(style !== undefined ? { style } : {}),
         ...(path !== undefined ? { path } : {}),
+        ...(ribbon !== undefined ? { ribbon } : {}),
         ...(Object.keys(encoding).length > 0 ? { encoding } : {}),
       });
       recordColor(into, colorEnc);
@@ -919,7 +1198,11 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
  * @description 无 model 时一律 ordinal（运行时按推断当分类调色；连续字段会在 lowering fail-loud，提示声明 model 或显式色阶）。
  *   显式 scheme / diverging / midpoint 经 vanilla IR 全量可用，React 自动表面仅派生默认 sequential。
  */
-const buildColorScale = (colorFields: Array<string>, model: DataModel | undefined, colors: Array<string> | undefined): PlotScaleSpec => {
+const buildColorScale = (
+  colorFields: Array<string>,
+  model: DataModel | undefined,
+  colors: Array<string> | undefined,
+): PlotScaleSpec => {
   if (model !== undefined) {
     const typeByField = new Map(model.map(field => [field.name, field.type] as const));
     const anyContinuous = colorFields.some(field => {
@@ -958,7 +1241,9 @@ const buildPositionScale = (name: string, type: PositionScaleType): PlotScaleSpe
 /** cartesian x scale 类型：含 <IntervalMark> 或 <IntervalMark> → band；否则按 <Scale dimension="x"> 或缺省 linear */
 const buildCartesianXScale = (forceBand: boolean, explicit: PositionScaleType | undefined): PlotScaleSpec => {
   if (forceBand && explicit !== undefined) {
-    throw new Error('buildPlotSpec: <IntervalMark> (bar / heatmap) requires a band x scale; omit <Scale dimension="x" /> for automatic band inference');
+    throw new Error(
+      'buildPlotSpec: <IntervalMark> (bar / heatmap) requires a band x scale; omit <Scale dimension="x" /> for automatic band inference',
+    );
   }
   if (forceBand) return { type: PlotScale.Band, name: AUTO_X };
   return buildPositionScale(AUTO_X, explicit ?? 'linear');
@@ -967,7 +1252,9 @@ const buildCartesianXScale = (forceBand: boolean, explicit: PositionScaleType | 
 /** cartesian y（值轴）scale 类型：含 <IntervalMark>（heatmap 双 band）→ band；否则按 <Scale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
 const buildCartesianYScale = (hasRect: boolean, explicit: PositionScaleType | undefined): PlotScaleSpec => {
   if (hasRect && explicit !== undefined) {
-    throw new Error('buildPlotSpec: <IntervalMark> (heatmap) requires a band y scale; omit <Scale dimension="y" /> for automatic band inference');
+    throw new Error(
+      'buildPlotSpec: <IntervalMark> (heatmap) requires a band y scale; omit <Scale dimension="y" /> for automatic band inference',
+    );
   }
   if (hasRect) return { type: PlotScale.Band, name: AUTO_Y };
   return buildPositionScale(AUTO_Y, explicit ?? 'linear');
@@ -979,10 +1266,14 @@ const buildCartesianYScale = (hasRect: boolean, explicit: PositionScaleType | un
  */
 const buildAngleScale = (collected: Collected, explicit: PositionScaleType | undefined): PlotScaleSpec => {
   if (collected.hasBar && explicit !== undefined) {
-    throw new Error('buildPlotSpec: <IntervalMark> in polar coordinates requires a band angle scale; omit <Scale dimension="angle" /> for automatic band inference');
+    throw new Error(
+      'buildPlotSpec: <IntervalMark> in polar coordinates requires a band angle scale; omit <Scale dimension="angle" /> for automatic band inference',
+    );
   }
   if (collected.hasSector && explicit !== undefined && explicit !== 'linear') {
-    throw new Error('buildPlotSpec: <IntervalMark angle> requires a linear angle scale; omit <Scale dimension="angle" /> or use type="linear"');
+    throw new Error(
+      'buildPlotSpec: <IntervalMark angle> requires a linear angle scale; omit <Scale dimension="angle" /> or use type="linear"',
+    );
   }
   if (explicit !== undefined) return buildPositionScale(AUTO_ANGLE, explicit);
   if (collected.hasSector) return { type: PlotScale.Linear, name: AUTO_ANGLE };
@@ -1003,7 +1294,10 @@ const validScaleDimensionsOf = (coordKind: ReturnType<typeof coordinateTypeOf>):
   return [];
 };
 
-const scaleRoleOf = (dimension: ScaleDimension, coordKind: ReturnType<typeof coordinateTypeOf>): ScaleRole | undefined => {
+const scaleRoleOf = (
+  dimension: ScaleDimension,
+  coordKind: ReturnType<typeof coordinateTypeOf>,
+): ScaleRole | undefined => {
   if (coordKind === 'cartesian2D') return dimension === 'x' || dimension === 'y' ? dimension : undefined;
   if (coordKind === 'polar2D') {
     if (dimension === 'x') return 'angle';
@@ -1015,13 +1309,18 @@ const scaleRoleOf = (dimension: ScaleDimension, coordKind: ReturnType<typeof coo
   return undefined;
 };
 
-const collectExplicitScales = (declared: Array<ScaleProps>, coordKind: ReturnType<typeof coordinateTypeOf>): ExplicitScaleMap => {
+const collectExplicitScales = (
+  declared: Array<ScaleProps>,
+  coordKind: ReturnType<typeof coordinateTypeOf>,
+): ExplicitScaleMap => {
   const out: ExplicitScaleMap = {};
   const valid = validScaleDimensionsOf(coordKind);
   for (const scale of declared) {
     const role = scaleRoleOf(scale.dimension, coordKind);
     if (role === undefined) {
-      throw new Error(`buildPlotSpec: ${coordKind} coordinate system does not support scale dimension "${scale.dimension}" (valid dimensions: ${valid.join(', ') || 'none'})`);
+      throw new Error(
+        `buildPlotSpec: ${coordKind} coordinate system does not support scale dimension "${scale.dimension}" (valid dimensions: ${valid.join(', ') || 'none'})`,
+      );
     }
     if (out[role] !== undefined) {
       throw new Error(`buildPlotSpec: duplicate scale for "${role}" role (dimension "${scale.dimension}")`);
@@ -1031,7 +1330,10 @@ const collectExplicitScales = (declared: Array<ScaleProps>, coordKind: ReturnTyp
   return out;
 };
 
-const buildShortcutTransforms = (marks: ReadonlyArray<Mark>, definitions: ReadonlyArray<MarkTransformShortcutDefinition> | undefined): Array<TransformOperation> => {
+const buildShortcutTransforms = (
+  marks: ReadonlyArray<Mark>,
+  definitions: ReadonlyArray<MarkTransformShortcutDefinition> | undefined,
+): Array<TransformOperation> => {
   if (definitions === undefined || definitions.length === 0) return [];
   return marks.flatMap((mark, markIndex) =>
     definitions
@@ -1048,17 +1350,25 @@ const POLAR_DEFAULT_INNER_RADIUS = 0;
 /** coordinate 入口判别串（缺省 cartesian2D）；字符串简写与对象 .type 统一取值 */
 const BUILTIN_COORDINATE_INPUT_TYPES = new Set(['cartesian2D', 'polar2D', 'cartesian1D', 'polar1D', 'ternary2D']);
 
-const coordinateTypeOf = (input: CoordinateInput | undefined): 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'ternary2D' | 'custom' => {
+const coordinateTypeOf = (
+  input: CoordinateInput | undefined,
+): 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'ternary2D' | 'custom' => {
   if (input === undefined) return 'cartesian2D';
   const type = typeof input === 'string' ? input : input.type;
-  return BUILTIN_COORDINATE_INPUT_TYPES.has(type) ? (type as 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'ternary2D') : 'custom';
+  return BUILTIN_COORDINATE_INPUT_TYPES.has(type)
+    ? (type as 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'ternary2D')
+    : 'custom';
 };
 
 /** 归一化 polar2D coordinate 选项为配置（非 polar2D 返回 undefined），缺省字段填 schema 默认值 */
 type PolarConfig = { innerRadius: number; startAngle: number; endAngle: number };
 const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | undefined => {
   if (coordinate === 'polar2D') {
-    return { innerRadius: POLAR_DEFAULT_INNER_RADIUS, startAngle: POLAR_DEFAULT_START_ANGLE, endAngle: POLAR_DEFAULT_END_ANGLE };
+    return {
+      innerRadius: POLAR_DEFAULT_INNER_RADIUS,
+      startAngle: POLAR_DEFAULT_START_ANGLE,
+      endAngle: POLAR_DEFAULT_END_ANGLE,
+    };
   }
   if (typeof coordinate === 'object' && coordinate.type === 'polar2D') {
     const polar = coordinate as Polar2DCoordinateInput;
@@ -1080,20 +1390,48 @@ const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | u
  *   产出须等价于手写 PlotSpec（仿 core Sugar = Kernel 等价性）。data 不进 IR，仅存 reference
  */
 export const buildPlotSpec = (children: ReactNode, dataRef: string, options: BuildPlotSpecOptions = {}): PlotSpec => {
-  const collected: Collected = { marks: [], guides: [], transforms: [], shortcutTransforms: [], scales: [], resolveLabels: {}, colored: false, colorFields: [], hasBar: false, hasRect: false, hasHorizontalBar: false, hasSector: false, hasClosedLine: false };
+  const collected: Collected = {
+    marks: [],
+    guides: [],
+    transforms: [],
+    shortcutTransforms: [],
+    scales: [],
+    resolveLabels: {},
+    colored: false,
+    colorFields: [],
+    hasBar: false,
+    hasRect: false,
+    hasHorizontalBar: false,
+    hasSector: false,
+    hasClosedLine: false,
+  };
   collectInto(children, collected, styleSugarContext(options));
 
   // transform 装配序：<Plot transforms> 直传 → <Transform> 收集 → mark shortcut transforms（B4 去重）
   // B4 按 stack 签名（x / y / groupBy）去重：仅抑制与某条显式 stack 完全同签名的 shortcut stack（那条会二次堆叠），
   // 不同签名的 shortcut stack 保留——否则该 mark 仍是 arrangement='stack' 却没有对应 y0/y1，lower 阶段读空累积界出错。
   const explicitTransforms: Array<TransformOperation> = [...(options.transforms ?? []), ...collected.transforms];
-  const shortcutTransforms = [...collected.shortcutTransforms, ...buildShortcutTransforms(collected.marks, options.markTransformShortcuts)];
+  const shortcutTransforms = [
+    ...collected.shortcutTransforms,
+    ...buildShortcutTransforms(collected.marks, options.markTransformShortcuts),
+  ];
   const stackSignature = (transform: TransformOperation): string =>
     transform.kind === PlotTransform.Stack
-      ? JSON.stringify([transform.x ?? null, transform.y, transform.groupBy ?? null, transform.offset ?? 'zero', transform.startField ?? null, transform.endField ?? null])
+      ? JSON.stringify([
+          transform.x ?? null,
+          transform.y,
+          transform.groupBy ?? null,
+          transform.offset ?? 'zero',
+          transform.startField ?? null,
+          transform.endField ?? null,
+        ])
       : '';
-  const explicitStackSignatures = new Set(explicitTransforms.filter(transform => transform.kind === PlotTransform.Stack).map(stackSignature));
-  const dedupedShortcutTransforms = shortcutTransforms.filter(transform => transform.kind !== PlotTransform.Stack || !explicitStackSignatures.has(stackSignature(transform)));
+  const explicitStackSignatures = new Set(
+    explicitTransforms.filter(transform => transform.kind === PlotTransform.Stack).map(stackSignature),
+  );
+  const dedupedShortcutTransforms = shortcutTransforms.filter(
+    transform => transform.kind !== PlotTransform.Stack || !explicitStackSignatures.has(stackSignature(transform)),
+  );
   const transforms: Array<TransformOperation> = [...explicitTransforms, ...dedupedShortcutTransforms];
 
   const coordKind = coordinateTypeOf(options.coordinate);
@@ -1101,7 +1439,9 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     throw new Error('buildPlotSpec: <IntervalMark angle> is only valid under coordinate="polar2D"');
   }
   if (collected.hasHorizontalBar && coordKind !== 'cartesian2D') {
-    throw new Error('buildPlotSpec: <IntervalMark direction="horizontal"> is only valid under coordinate="cartesian2D"');
+    throw new Error(
+      'buildPlotSpec: <IntervalMark direction="horizontal"> is only valid under coordinate="cartesian2D"',
+    );
   }
   if (coordKind === 'polar2D' && collected.marks.some(mark => mark.type === PlotMark.Path && mark.closed !== false)) {
     collected.hasClosedLine = true;
@@ -1126,29 +1466,46 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
           endAngle: polar.endAngle,
           innerRadius: polar.innerRadius,
         }
-      : { type: PlotCoordinate.Polar2D, angle: AUTO_ANGLE, radius: AUTO_RADIUS, startAngle: polar.startAngle, endAngle: polar.endAngle, innerRadius: polar.innerRadius };
+      : {
+          type: PlotCoordinate.Polar2D,
+          angle: AUTO_ANGLE,
+          radius: AUTO_RADIUS,
+          startAngle: polar.startAngle,
+          endAngle: polar.endAngle,
+          innerRadius: polar.innerRadius,
+        };
     scales = [
       ...(!shouldDeferPositionScales || explicitScales.angle !== undefined ? [angleScale] : []),
       ...(!shouldDeferPositionScales || explicitScales.radius !== undefined ? [radiusScale] : []),
     ];
   } else if (coordKind === 'cartesian1D') {
     // 单维直线：orientation 取对象配置；单一位置 scale 可由 <Scale dimension="x"> 覆盖（rug 默认 linear、timeline 可 time）
-    const orientation = typeof options.coordinate === 'object' && options.coordinate.type === 'cartesian1D' ? options.coordinate.orientation : undefined;
+    const orientation =
+      typeof options.coordinate === 'object' && options.coordinate.type === 'cartesian1D'
+        ? options.coordinate.orientation
+        : undefined;
     const xScale = buildCartesianXScale(false, explicitScales.x);
     coordinate = shouldDeferPositionScales
-      ? { type: PlotCoordinate.Cartesian1D, ...(explicitScales.x !== undefined ? { x: AUTO_X } : {}), ...(orientation !== undefined ? { orientation } : {}) }
+      ? {
+          type: PlotCoordinate.Cartesian1D,
+          ...(explicitScales.x !== undefined ? { x: AUTO_X } : {}),
+          ...(orientation !== undefined ? { orientation } : {}),
+        }
       : { type: PlotCoordinate.Cartesian1D, x: AUTO_X, ...(orientation !== undefined ? { orientation } : {}) };
     scales = !shouldDeferPositionScales || explicitScales.x !== undefined ? [xScale] : [];
   } else if (coordKind === 'polar1D') {
     // 单角向圆周：半径占比 + 角向区间取对象配置；角向 scale 默认 linear（无 model；周期连续量）
-    const cfg = typeof options.coordinate === 'object' && options.coordinate.type === 'polar1D' ? options.coordinate : undefined;
+    const cfg =
+      typeof options.coordinate === 'object' && options.coordinate.type === 'polar1D' ? options.coordinate : undefined;
     const geom = {
       ...(cfg?.radius !== undefined ? { radius: cfg.radius } : {}),
       ...(cfg?.startAngle !== undefined ? { startAngle: cfg.startAngle } : {}),
       ...(cfg?.endAngle !== undefined ? { endAngle: cfg.endAngle } : {}),
     };
     const angleScale = buildPositionScale(AUTO_ANGLE, explicitScales.angle ?? 'linear');
-    coordinate = shouldDeferPositionScales ? { type: PlotCoordinate.Polar1D, ...(explicitScales.angle !== undefined ? { angle: AUTO_ANGLE } : {}), ...geom } : { type: PlotCoordinate.Polar1D, angle: AUTO_ANGLE, ...geom };
+    coordinate = shouldDeferPositionScales
+      ? { type: PlotCoordinate.Polar1D, ...(explicitScales.angle !== undefined ? { angle: AUTO_ANGLE } : {}), ...geom }
+      : { type: PlotCoordinate.Polar1D, angle: AUTO_ANGLE, ...geom };
     scales = !shouldDeferPositionScales || explicitScales.angle !== undefined ? [angleScale] : [];
   } else if (coordKind === 'ternary2D') {
     // 三元：coordinate 内自动归一化，无独立位置 scale
@@ -1156,8 +1513,14 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     scales = [];
   } else if (coordKind === 'custom') {
     // 自定义坐标系：IR 直接存 { type:<customType>, ...config }；roles / 投影函数来自运行时 CoordinateDefinition。
-    if (typeof options.coordinate !== 'object' || BUILTIN_COORDINATE_INPUT_TYPES.has(options.coordinate.type) || options.coordinate.type === 'custom') {
-      throw new Error('buildPlotSpec: custom coordinates must use a non-built-in type string, for example { type: "arch", archHeight: 30 }');
+    if (
+      typeof options.coordinate !== 'object' ||
+      BUILTIN_COORDINATE_INPUT_TYPES.has(options.coordinate.type) ||
+      options.coordinate.type === 'custom'
+    ) {
+      throw new Error(
+        'buildPlotSpec: custom coordinates must use a non-built-in type string, for example { type: "arch", archHeight: 30 }',
+      );
     }
     coordinate = CoordinateOperationSchema.parse({ ...options.coordinate });
     scales = [];

@@ -1,5 +1,6 @@
-import { Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node, Scope } from '@retikz/react';
 
 /**
  * 嵌套 scope：外层 translate + 内层 translate 链式累加
@@ -7,11 +8,17 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={560} height={120}>
-    <Node position={[0, 0]} shape="circle" padding={4} stroke="gray" dashed>0</Node>
+    <Node position={[0, 0]} shape="circle" padding={4} stroke="gray" dashed>
+      0
+    </Node>
     <Scope transforms={[{ kind: 'translate', x: 140, y: 0 }]}>
-      <Node position={[0, 0]} shape="circle" padding={4}>outer</Node>
+      <Node position={[0, 0]} shape="circle" padding={4}>
+        outer
+      </Node>
       <Scope transforms={[{ kind: 'translate', x: 140, y: 0 }]}>
-        <Node position={[0, 0]} shape="circle" padding={4}>inner</Node>
+        <Node position={[0, 0]} shape="circle" padding={4}>
+          inner
+        </Node>
       </Scope>
     </Scope>
   </Layout>

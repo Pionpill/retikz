@@ -1,7 +1,12 @@
 import type { IRNode, IRScope } from '@retikz/core';
+
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 /**
  * ADR-01（alpha.9）coordinate frame N 通道泛化 + 位置 encoding 角色化 + 维度校验测试。
@@ -122,16 +127,16 @@ describe('guide 维度校验 fail-loud (ADR-01, 修 cross-review P2)', () => {
   // 错误路径：cartesian 下 dimension 'angle' 非法 → fail-loud（曾静默丢弃 / 杂散轴线）
   it('angle_dimension_rejected_by_coordinate_definition_roles', () => {
     const spec = PlotSpecSchema.parse({
-        namespace: 'plot',
-        type: 'plot',
-        data: { reference: 'd' },
-        scales: [
-          { type: 'linear', name: 'x' },
-          { type: 'linear', name: 'y' },
-        ],
-        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-        marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
-        guides: [{ type: 'axis', dimension: 'angle' }],
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
+      guides: [{ type: 'axis', dimension: 'angle' }],
     });
     expect(() => expandOf(spec, { d: [{ a: 0, b: 0 }] }, opts)).toThrow(/does not support axis dimension "angle"/);
   });
@@ -139,16 +144,16 @@ describe('guide 维度校验 fail-loud (ADR-01, 修 cross-review P2)', () => {
   // 错误路径：cartesian 下 dimension 'radius'（polar 维度）非法 → fail-loud
   it('radius_dimension_rejected_by_coordinate_definition_roles', () => {
     const spec = PlotSpecSchema.parse({
-        namespace: 'plot',
-        type: 'plot',
-        data: { reference: 'd' },
-        scales: [
-          { type: 'linear', name: 'x' },
-          { type: 'linear', name: 'y' },
-        ],
-        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-        marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
-        guides: [{ type: 'axis', dimension: 'radius' }],
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
+      guides: [{ type: 'axis', dimension: 'radius' }],
     });
     expect(() => expandOf(spec, { d: [{ a: 0, b: 0 }] }, opts)).toThrow(/does not support axis dimension "radius"/);
   });

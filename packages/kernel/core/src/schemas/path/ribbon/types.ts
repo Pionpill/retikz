@@ -1,9 +1,18 @@
 import type { z } from 'zod';
-import type { PolarPosition } from '../../../geometry/polar';
+
 import type { Vector2 } from '../../../geometry/point';
-import type { PathRibbonOptionsSchema, RibbonArcCapSchema, RibbonCapSchema, RibbonEndpointSchema, RibbonSamplingSchema, RibbonWidthSchema, RibbonWidthStopSchema } from './schema';
+import type { PolarPosition } from '../../../geometry/polar';
 import type { ValueOf } from '../../../types';
 import type { RibbonAlignment, RibbonArcCapSweep, RibbonCap, RibbonMode } from './constants';
+import type {
+  PathRibbonOptionsSchema,
+  RibbonArcCapSchema,
+  RibbonCapSchema,
+  RibbonEndpointSchema,
+  RibbonSamplingSchema,
+  RibbonWidthSchema,
+  RibbonWidthStopSchema,
+} from './schema';
 
 export type IRRibbonDirection = number | Vector2 | PolarPosition;
 

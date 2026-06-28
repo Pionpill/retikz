@@ -1,4 +1,3 @@
-import type { FC, ReactNode } from 'react';
 import type {
   IRAtPosition,
   IRBetweenPosition,
@@ -12,8 +11,11 @@ import type {
   NodeTextAlignValue,
   PolarPosition,
 } from '@retikz/core';
-import { TIKZ_NODE } from './_displayNames';
+import type { FC, ReactNode } from 'react';
+
 import type { HydrationEventProps } from './event-props';
+
+import { TIKZ_NODE } from './_displayNames';
 
 /** <Node> 组件的 props */
 export type NodeProps = HydrationEventProps & {

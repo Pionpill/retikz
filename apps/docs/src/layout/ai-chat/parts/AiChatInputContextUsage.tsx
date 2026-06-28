@@ -1,10 +1,13 @@
+import type { FC } from 'react';
+
 import { Minimize2 } from 'lucide-react';
-import { type FC, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/use-ai-chat-store';
+
 import { FALLBACK_CONTEXT_LIMIT, MODEL_CONTEXT_LIMIT } from '../models';
 
 const CIRCLE_RADIUS = 4.5;

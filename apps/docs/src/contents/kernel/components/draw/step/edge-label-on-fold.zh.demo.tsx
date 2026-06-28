@@ -1,5 +1,6 @@
-import { Layout, Node, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node, Path, Step } from '@retikz/react';
 
 const Demo: FC = () => (
   <Layout width={420} height={260} nodeDefault={{ stroke: 'gray', dashed: true }}>
@@ -15,30 +16,15 @@ const Demo: FC = () => (
     </Path>
     <Path stroke="transparent">
       <Step kind="move" to="a" />
-      <Step
-        kind="fold"
-        via="-|"
-        to="b"
-        label={{ text: 'near-start', position: 'near-start', side: 'above' }}
-      />
+      <Step kind="fold" via="-|" to="b" label={{ text: 'near-start', position: 'near-start', side: 'above' }} />
     </Path>
     <Path stroke="transparent">
       <Step kind="move" to="a" />
-      <Step
-        kind="fold"
-        via="-|"
-        to="b"
-        label={{ text: 'midway', position: 'midway', side: 'above' }}
-      />
+      <Step kind="fold" via="-|" to="b" label={{ text: 'midway', position: 'midway', side: 'above' }} />
     </Path>
     <Path stroke="transparent">
       <Step kind="move" to="a" />
-      <Step
-        kind="fold"
-        via="-|"
-        to="b"
-        label={{ text: 'near-end', position: 'near-end', side: 'left' }}
-      />
+      <Step kind="fold" via="-|" to="b" label={{ text: 'near-end', position: 'near-end', side: 'left' }} />
     </Path>
     <Path stroke="currentColor" arrow="->" dashPattern={[4, 3]}>
       <Step kind="move" to="a" />
@@ -50,12 +36,7 @@ const Demo: FC = () => (
     </Path>
     <Path stroke="transparent">
       <Step kind="move" to="a" />
-      <Step
-        kind="fold"
-        via="|-"
-        to="b"
-        label={{ text: '0.5', position: 0.5, side: 'below' }}
-      />
+      <Step kind="fold" via="|-" to="b" label={{ text: '0.5', position: 0.5, side: 'below' }} />
     </Path>
     <Path stroke="transparent">
       <Step kind="move" to="a" />

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { computeLayout } from '../../src/compile/layout';
 import { createRound } from '../../src/compile/precision';
 
@@ -20,7 +21,16 @@ describe('computeLayout', () => {
   });
 
   it('两个对角点：bbox = 对角差 + padding 各两边', () => {
-    expect(computeLayout([[0, 0], [10, 20]], 5, noRound)).toEqual({
+    expect(
+      computeLayout(
+        [
+          [0, 0],
+          [10, 20],
+        ],
+        5,
+        noRound,
+      ),
+    ).toEqual({
       x: -5,
       y: -5,
       width: 20, // 10 + 2×5
@@ -29,7 +39,16 @@ describe('computeLayout', () => {
   });
 
   it('负坐标也参与 min/max', () => {
-    expect(computeLayout([[-10, -5], [10, 5]], 0, noRound)).toEqual({
+    expect(
+      computeLayout(
+        [
+          [-10, -5],
+          [10, 5],
+        ],
+        0,
+        noRound,
+      ),
+    ).toEqual({
       x: -10,
       y: -5,
       width: 20,
@@ -38,7 +57,16 @@ describe('computeLayout', () => {
   });
 
   it('round 回调被应用于全部 4 个字段', () => {
-    expect(computeLayout([[0.111, 0.222], [10.337, 20.448]], 1, round2)).toEqual({
+    expect(
+      computeLayout(
+        [
+          [0.111, 0.222],
+          [10.337, 20.448],
+        ],
+        1,
+        round2,
+      ),
+    ).toEqual({
       x: -0.89, // 0.111 - 1 = -0.889 → -0.89
       y: -0.78, // 0.222 - 1 = -0.778 → -0.78
       width: 12.23, // 10.337 - 0.111 + 2 = 12.226 → 12.23
@@ -47,7 +75,17 @@ describe('computeLayout', () => {
   });
 
   it('padding=0 时 bbox 紧贴极值点', () => {
-    expect(computeLayout([[1, 2], [3, 4], [5, 6]], 0, noRound)).toEqual({
+    expect(
+      computeLayout(
+        [
+          [1, 2],
+          [3, 4],
+          [5, 6],
+        ],
+        0,
+        noRound,
+      ),
+    ).toEqual({
       x: 1,
       y: 2,
       width: 4,
@@ -56,7 +94,16 @@ describe('computeLayout', () => {
   });
 
   it('所有点重合：bbox 为 0×0 + padding（不退化为兜底框）', () => {
-    expect(computeLayout([[3, 3], [3, 3]], 2, noRound)).toEqual({
+    expect(
+      computeLayout(
+        [
+          [3, 3],
+          [3, 3],
+        ],
+        2,
+        noRound,
+      ),
+    ).toEqual({
       x: 1,
       y: 1,
       width: 4,

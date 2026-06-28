@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from 'vitest';
 import type { Scene } from '@retikz/core';
+
+import { describe, expect, it, vi } from 'vitest';
+
+import type { HydrationContext, HydrationHandlers } from '../src/hydration';
+
 import {
-  type HydrationContext,
-  type HydrationHandlers,
   createClockAnimationControls,
   createContextBuilder,
   createHydrationController,
@@ -33,7 +35,13 @@ const setupRoot = (): { root: SVGSVGElement; element: SVGElement } => {
 };
 
 /** 造一个可断言 play/cancel/finish/currentTime 的假 Animation */
-const fakeAnimation = (): { play: ReturnType<typeof vi.fn>; pause: ReturnType<typeof vi.fn>; cancel: ReturnType<typeof vi.fn>; finish: ReturnType<typeof vi.fn>; currentTime: number } => ({
+const fakeAnimation = (): {
+  play: ReturnType<typeof vi.fn>;
+  pause: ReturnType<typeof vi.fn>;
+  cancel: ReturnType<typeof vi.fn>;
+  finish: ReturnType<typeof vi.fn>;
+  currentTime: number;
+} => ({
   play: vi.fn(),
   pause: vi.fn(),
   cancel: vi.fn(),
@@ -125,7 +133,13 @@ describe('createContextBuilder 经控制器注入 (event, context)', () => {
       makeAnimation: id => createSvgAnimationControls(root, id),
     });
     let received: HydrationContext | undefined;
-    const handlers: HydrationHandlers = { m: { click: (_event, context) => { received = context; } } };
+    const handlers: HydrationHandlers = {
+      m: {
+        click: (_event, context) => {
+          received = context;
+        },
+      },
+    };
     const controller = createHydrationController(root, handlers, locateSvg, buildContext);
 
     const event = new Event('click', { bubbles: true });
@@ -156,7 +170,13 @@ describe('createContextBuilder 经控制器注入 (event, context)', () => {
       makeAnimation: id => createSvgAnimationControls(root, id),
     });
     let received: HydrationContext | undefined;
-    const handlers: HydrationHandlers = { m: { click: (_event, context) => { received = context; } } };
+    const handlers: HydrationHandlers = {
+      m: {
+        click: (_event, context) => {
+          received = context;
+        },
+      },
+    };
     const controller = createHydrationController(root, handlers, locateSvg, buildContext);
 
     const event = new Event('click', { bubbles: true });
@@ -202,7 +222,9 @@ describe('SVG 动画 owner 双查（per-id 控制）', () => {
     const element = document.createElementNS(SVG_NS, 'rect');
     element.setAttribute('data-retikz-id', 'n');
     const throwing = fakeAnimation();
-    throwing.finish = vi.fn(() => { throw new Error('InvalidStateError'); });
+    throwing.finish = vi.fn(() => {
+      throw new Error('InvalidStateError');
+    });
     (element as unknown as { getAnimations: () => Array<unknown> }).getAnimations = () => [throwing];
     root.appendChild(element);
     document.body.appendChild(root);
@@ -217,7 +239,13 @@ describe('最小 context 降级（控制器无 buildContext）', () => {
   it('handler 仍收到 context：id + renderer + root，element null、animation no-op、不抛', () => {
     const { root, element } = setupRoot();
     let received: HydrationContext | undefined;
-    const handlers: HydrationHandlers = { m: { click: (_event, context) => { received = context; } } };
+    const handlers: HydrationHandlers = {
+      m: {
+        click: (_event, context) => {
+          received = context;
+        },
+      },
+    };
     const controller = createHydrationController(root, handlers, locateSvg);
 
     const event = new Event('click', { bubbles: true });
@@ -235,7 +263,13 @@ describe('最小 context 降级（控制器无 buildContext）', () => {
   it('传入 renderer=canvas → 最小 context 如实填 canvas（不再硬编码 svg）', () => {
     const { root, element } = setupRoot();
     let received: HydrationContext | undefined;
-    const handlers: HydrationHandlers = { m: { click: (_event, context) => { received = context; } } };
+    const handlers: HydrationHandlers = {
+      m: {
+        click: (_event, context) => {
+          received = context;
+        },
+      },
+    };
     const controller = createHydrationController(root, handlers, locateSvg, undefined, 'canvas');
 
     const event = new Event('click', { bubbles: true });

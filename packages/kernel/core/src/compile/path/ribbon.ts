@@ -1,4 +1,6 @@
-import { type Vector2, polar, vector2 } from '../../geometry';
+import type { RibbonWidthProfileDefinition } from '../../contract/ribbon';
+import type { Vector2 } from '../../geometry';
+import type { SegmentSample } from '../../geometry/segment';
 import type { PathCommand, PathPrim, ScenePrimitive } from '../../primitive';
 import type {
   IRPath,
@@ -13,23 +15,24 @@ import type {
   IRStep,
   RibbonAlignmentValue,
 } from '../../schemas';
-import { JsonObjectSchema } from '../../schemas';
-import type { RibbonWidthProfileDefinition } from '../../contract/ribbon';
 import type { NameStack } from '../name-stack';
-import type { TextMeasurer } from '../text-metrics';
 import type { PaintResolver } from '../paint';
-import { type EmitPathWarnHook, emitPathPrimitive } from '.';
-import { emitLabelPrimitive, tForLabelPosition } from './label';
+import type { TextMeasurer } from '../text-metrics';
+import type { EmitPathWarnHook } from '.';
+
+import { polar, vector2 } from '../../geometry';
 import {
-  type SegmentSample,
   arcSegmentSample,
   cubicSegmentSample,
   ellipseArcSegmentSample,
   lineSegmentSample,
   quadSegmentSample,
 } from '../../geometry/segment';
+import { JsonObjectSchema } from '../../schemas';
 import { resolveShadow } from '../effects';
 import { resolvePosition } from '../position';
+import { emitPathPrimitive } from '.';
+import { emitLabelPrimitive, tForLabelPosition } from './label';
 
 type RibbonLike = Omit<IRPathBase, 'kind' | 'kindOptions' | 'ribbon'> & IRPathRibbonOptions;
 
@@ -102,14 +105,9 @@ const stripStepLabel = (step: IRStep): IRStep => {
 
 const isPathPrim = (prim: ScenePrimitive): prim is PathPrim => prim.type === 'path';
 
-const assertCursor = (
-  cursor: IRPosition | undefined,
-  command: PathCommand,
-): IRPosition => {
+const assertCursor = (cursor: IRPosition | undefined, command: PathCommand): IRPosition => {
   if (cursor !== undefined) return cursor;
-  throw new Error(
-    `Ribbon centerline command "${command.kind}" has no current point; start with a move step.`,
-  );
+  throw new Error(`Ribbon centerline command "${command.kind}" has no current point; start with a move step.`);
 };
 
 const distance = (a: IRPosition, b: IRPosition): number => {
@@ -118,17 +116,15 @@ const distance = (a: IRPosition, b: IRPosition): number => {
   return Math.hypot(dx, dy);
 };
 
-const pointOnDirection = (
-  origin: IRPosition,
-  direction: Vector2,
-  length: number,
-): IRPosition => [origin[0] + direction[0] * length, origin[1] + direction[1] * length];
+const pointOnDirection = (origin: IRPosition, direction: Vector2, length: number): IRPosition => [
+  origin[0] + direction[0] * length,
+  origin[1] + direction[1] * length,
+];
 
-const pointAgainstDirection = (
-  origin: IRPosition,
-  direction: Vector2,
-  length: number,
-): IRPosition => [origin[0] - direction[0] * length, origin[1] - direction[1] * length];
+const pointAgainstDirection = (origin: IRPosition, direction: Vector2, length: number): IRPosition => [
+  origin[0] - direction[0] * length,
+  origin[1] - direction[1] * length,
+];
 
 const normalizeVector = (vector: Vector2, source: string): Vector2 => {
   const length = Math.hypot(vector[0], vector[1]);
@@ -143,19 +139,12 @@ const normalOf = (tangent: Vector2): Vector2 => [-tangent[1], tangent[0]];
 const alignTangentNormal = (tangent: Vector2, reference: Vector2): Vector2 => {
   const normal = normalOf(tangent);
   const referenceNormal = normalOf(reference);
-  return normal[0] * referenceNormal[0] + normal[1] * referenceNormal[1] < 0
-    ? [-tangent[0], -tangent[1]]
-    : tangent;
+  return normal[0] * referenceNormal[0] + normal[1] * referenceNormal[1] < 0 ? [-tangent[0], -tangent[1]] : tangent;
 };
 
 const smoothstep = (t: number): number => t * t * (3 - 2 * t);
 
-const blendTangent = (
-  endpointTangent: Vector2,
-  sampleTangent: Vector2,
-  t: number,
-  source: string,
-): Vector2 => {
+const blendTangent = (endpointTangent: Vector2, sampleTangent: Vector2, t: number, source: string): Vector2 => {
   const u = smoothstep(Math.max(0, Math.min(1, t)));
   return normalizeVector(
     [
@@ -166,11 +155,7 @@ const blendTangent = (
   );
 };
 
-const directionToTangent = (
-  direction: IRRibbonDirection | undefined,
-  fallback: Vector2,
-  source: string,
-): Vector2 => {
+const directionToTangent = (direction: IRRibbonDirection | undefined, fallback: Vector2, source: string): Vector2 => {
   if (direction === undefined) return fallback;
   if (typeof direction === 'number') {
     return vector2.fromAngleDegrees(direction);
@@ -198,24 +183,16 @@ const estimateLength = (sampleAt: (t: number) => SegmentSample): number => {
   return total;
 };
 
-const finitePoint = (p: IRPosition): boolean =>
-  Number.isFinite(p[0]) && Number.isFinite(p[1]);
+const finitePoint = (p: IRPosition): boolean => Number.isFinite(p[0]) && Number.isFinite(p[1]);
 
 const assertFiniteWidth = (width: number, source: string): number => {
   if (!Number.isFinite(width) || width < 0) {
-    throw new Error(
-      `Ribbon width ${source} produced ${String(width)}; width must be a finite nonnegative number.`,
-    );
+    throw new Error(`Ribbon width ${source} produced ${String(width)}; width must be a finite nonnegative number.`);
   }
   return width;
 };
 
-const interpolate = (
-  a: number,
-  b: number,
-  t: number,
-  mode: 'linear' | 'smooth' | 'step',
-): number => {
+const interpolate = (a: number, b: number, t: number, mode: 'linear' | 'smooth' | 'step'): number => {
   if (mode === 'step') return a;
   const u = mode === 'smooth' ? smoothstep(t) : t;
   return a + (b - a) * u;
@@ -254,14 +231,10 @@ const widthFunction = (
   const profile = profiles[width.name];
   if (profile === undefined) {
     const available = Object.keys(profiles).sort().join(', ') || '(none)';
-    throw new Error(
-      `Ribbon width profile "${width.name}" is not registered. Available profiles: ${available}.`,
-    );
+    throw new Error(`Ribbon width profile "${width.name}" is not registered. Available profiles: ${available}.`);
   }
   const rawParams = width.params ?? {};
-  const params = profile.paramsSchema
-    ? profile.paramsSchema.parse(rawParams)
-    : JsonObjectSchema.parse(rawParams);
+  const params = profile.paramsSchema ? profile.paramsSchema.parse(rawParams) : JsonObjectSchema.parse(rawParams);
   JsonObjectSchema.parse(params);
   return offset =>
     assertFiniteWidth(
@@ -281,16 +254,11 @@ const centerlineWidthFunction = (
   const startWidth = ribbon.start?.width;
   const endWidth = ribbon.end?.width;
   if (startWidth === undefined || endWidth === undefined) {
-    throw new Error(
-      'Centerline ribbon requires either top-level `width` or both `start.width` and `end.width`.',
-    );
+    throw new Error('Centerline ribbon requires either top-level `width` or both `start.width` and `end.width`.');
   }
   const mode = ribbon.interpolation ?? 'linear';
   return offset =>
-    assertFiniteWidth(
-      interpolate(startWidth, endWidth, offset, mode),
-      `endpoint width taper at offset ${offset}`,
-    );
+    assertFiniteWidth(interpolate(startWidth, endWidth, offset, mode), `endpoint width taper at offset ${offset}`);
 };
 
 const centerlineWidthRequiresSampling = (ribbon: RibbonLike): boolean =>
@@ -308,9 +276,7 @@ const commandsToSegmentInputs = (
       case 'move':
         moveCount += 1;
         if (moveCount > 1) {
-          throw new Error(
-            `Ribbon ${source} must be a single open subpath; multiple move commands are not supported.`,
-          );
+          throw new Error(`Ribbon ${source} must be a single open subpath; multiple move commands are not supported.`);
         }
         cursor = command.to;
         break;
@@ -323,8 +289,7 @@ const commandsToSegmentInputs = (
       }
       case 'quad': {
         const from = assertCursor(cursor, command);
-        const sampleAt = (t: number): SegmentSample =>
-          quadSegmentSample(from, command.control, command.to, t);
+        const sampleAt = (t: number): SegmentSample => quadSegmentSample(from, command.control, command.to, t);
         if (estimateLength(sampleAt) > 0) {
           inputs.push({ kind: 'quad', from, control: command.control, to: command.to });
         }
@@ -421,11 +386,7 @@ const assertSampleCount = (samples: number): number => {
   return samples;
 };
 
-const controlHandleLength = (
-  anchor: IRPosition,
-  control: IRPosition,
-  fallback: number,
-): number => {
+const controlHandleLength = (anchor: IRPosition, control: IRPosition, fallback: number): number => {
   const handle = distance(anchor, control);
   return handle > 0 ? handle : fallback;
 };
@@ -460,8 +421,7 @@ const segmentToSampler = (
               input.to[0] + ((input.control[0] - input.to[0]) * 2) / 3,
               input.to[1] + ((input.control[1] - input.to[1]) * 2) / 3,
             ] satisfies IRPosition);
-      return (t: number): SegmentSample =>
-        cubicSegmentSample(input.from, control1, control2, input.to, t);
+      return (t: number): SegmentSample => cubicSegmentSample(input.from, control1, control2, input.to, t);
     }
     return (t: number): SegmentSample => quadSegmentSample(input.from, input.control, input.to, t);
   }
@@ -477,28 +437,16 @@ const segmentToSampler = (
         : input.control1;
     const control2 =
       isLast && endpointTangents.end
-        ? pointAgainstDirection(
-            input.to,
-            endpointTangents.end,
-            controlHandleLength(input.to, input.control2, fallback),
-          )
+        ? pointAgainstDirection(input.to, endpointTangents.end, controlHandleLength(input.to, input.control2, fallback))
         : input.control2;
-    return (t: number): SegmentSample =>
-      cubicSegmentSample(input.from, control1, control2, input.to, t);
+    return (t: number): SegmentSample => cubicSegmentSample(input.from, control1, control2, input.to, t);
   }
   if (input.kind === 'arc') {
     return (t: number): SegmentSample =>
       arcSegmentSample(input.center, input.radius, input.startAngle, input.endAngle, t);
   }
   return (t: number): SegmentSample =>
-    ellipseArcSegmentSample(
-      input.center,
-      input.radiusX,
-      input.radiusY,
-      input.startAngle,
-      input.endAngle,
-      t,
-    );
+    ellipseArcSegmentSample(input.center, input.radiusX, input.radiusY, input.startAngle, input.endAngle, t);
 };
 
 const segmentInputsToSegments = (
@@ -555,10 +503,7 @@ const roundedArcPoints = (
   const points: Array<IRPosition> = [];
   for (let i = 1; i <= ARC_CAP_POINT_COUNT; i += 1) {
     const angle = start + (delta * i) / ARC_CAP_POINT_COUNT;
-    points.push([
-      round(center[0] + Math.cos(angle) * radius),
-      round(center[1] + Math.sin(angle) * radius),
-    ]);
+    points.push([round(center[0] + Math.cos(angle) * radius), round(center[1] + Math.sin(angle) * radius)]);
   }
   return points;
 };
@@ -607,10 +552,7 @@ const arcCapPoints = (
   const points: Array<IRPosition> = [];
   for (let i = 1; i <= ARC_CAP_POINT_COUNT; i += 1) {
     const angle = start + (delta * i) / ARC_CAP_POINT_COUNT;
-    points.push([
-      round(center[0] + Math.cos(angle) * cap.radius),
-      round(center[1] + Math.sin(angle) * cap.radius),
-    ]);
+    points.push([round(center[0] + Math.cos(angle) * cap.radius), round(center[1] + Math.sin(angle) * cap.radius)]);
   }
   return points;
 };
@@ -638,19 +580,9 @@ const ribbonCrossSection = (
   const endTangent = alignTangentNormal(endpointTangents.end, sample.tangent);
   const tangent =
     offset <= ENDPOINT_DIRECTION_BLEND_SPAN
-      ? blendTangent(
-          startTangent,
-          sample.tangent,
-          offset / ENDPOINT_DIRECTION_BLEND_SPAN,
-          'start blended',
-        )
+      ? blendTangent(startTangent, sample.tangent, offset / ENDPOINT_DIRECTION_BLEND_SPAN, 'start blended')
       : offset >= 1 - ENDPOINT_DIRECTION_BLEND_SPAN
-        ? blendTangent(
-            endTangent,
-            sample.tangent,
-            (1 - offset) / ENDPOINT_DIRECTION_BLEND_SPAN,
-            'end blended',
-          )
+        ? blendTangent(endTangent, sample.tangent, (1 - offset) / ENDPOINT_DIRECTION_BLEND_SPAN, 'end blended')
         : sample.tangent;
   const normal = normalOf(tangent);
   const leftOffset = align === 'right' ? 0 : align === 'left' ? width : width / 2;
@@ -738,10 +670,7 @@ const segmentInputToAnalyticSegment = (
   return null;
 };
 
-const analyticSegmentSample = (
-  segment: RibbonAnalyticSegment,
-  t: number,
-): SegmentSample => {
+const analyticSegmentSample = (segment: RibbonAnalyticSegment, t: number): SegmentSample => {
   if (segment.kind === 'line') return lineSegmentSample(segment.from, segment.to, t);
   if (segment.kind === 'quad') return quadSegmentSample(segment.from, segment.control, segment.to, t);
   return cubicSegmentSample(segment.from, segment.control1, segment.control2, segment.to, t);
@@ -798,40 +727,21 @@ const outlineCommands = (
 
   if (startEndpointCap === 'square') {
     const ext = capExtension(widths[0], align);
-    left[0] = [
-      round(left[0][0] - tangents[0][0] * ext),
-      round(left[0][1] - tangents[0][1] * ext),
-    ];
-    right[0] = [
-      round(right[0][0] - tangents[0][0] * ext),
-      round(right[0][1] - tangents[0][1] * ext),
-    ];
+    left[0] = [round(left[0][0] - tangents[0][0] * ext), round(left[0][1] - tangents[0][1] * ext)];
+    right[0] = [round(right[0][0] - tangents[0][0] * ext), round(right[0][1] - tangents[0][1] * ext)];
   }
   if (endEndpointCap === 'square') {
     const last = sampleCount - 1;
     const ext = capExtension(widths[last], align);
-    left[last] = [
-      round(left[last][0] + tangents[last][0] * ext),
-      round(left[last][1] + tangents[last][1] * ext),
-    ];
-    right[last] = [
-      round(right[last][0] + tangents[last][0] * ext),
-      round(right[last][1] + tangents[last][1] * ext),
-    ];
+    left[last] = [round(left[last][0] + tangents[last][0] * ext), round(left[last][1] + tangents[last][1] * ext)];
+    right[last] = [round(right[last][0] + tangents[last][0] * ext), round(right[last][1] + tangents[last][1] * ext)];
   }
 
   const commands: Array<PathCommand> = [{ kind: 'move', to: left[0] }];
   for (let i = 1; i < left.length; i += 1) commands.push({ kind: 'line', to: left[i] });
   if (isArcCap(endEndpointCap)) {
     const last = sampleCount - 1;
-    for (const point of arcCapPoints(
-      endEndpointCap,
-      left[last],
-      right[last],
-      'end',
-      nameStack,
-      round,
-    )) {
+    for (const point of arcCapPoints(endEndpointCap, left[last], right[last], 'end', nameStack, round)) {
       commands.push({ kind: 'line', to: point });
     }
   } else if (endEndpointCap === 'round') {
@@ -850,14 +760,7 @@ const outlineCommands = (
   }
   for (let i = right.length - 2; i >= 0; i -= 1) commands.push({ kind: 'line', to: right[i] });
   if (isArcCap(startEndpointCap)) {
-    for (const point of arcCapPoints(
-      startEndpointCap,
-      right[0],
-      left[0],
-      'start',
-      nameStack,
-      round,
-    )) {
+    for (const point of arcCapPoints(startEndpointCap, right[0], left[0], 'start', nameStack, round)) {
       commands.push({ kind: 'line', to: point });
     }
   } else if (startEndpointCap === 'round') {
@@ -892,12 +795,7 @@ const analyticOutlineCommands = (
 
   const analyticSegments: Array<RibbonAnalyticSegment> = [];
   for (let index = 0; index < inputs.length; index += 1) {
-    const analytic = segmentInputToAnalyticSegment(
-      inputs[index],
-      index,
-      inputs.length,
-      endpointTangentOverrides,
-    );
+    const analytic = segmentInputToAnalyticSegment(inputs[index], index, inputs.length, endpointTangentOverrides);
     if (analytic === null) return null;
     analyticSegments.push(analytic);
   }
@@ -906,30 +804,16 @@ const analyticOutlineCommands = (
   const rightCommands: Array<PathCommand> = [];
   const points: Array<IRPosition> = [];
   const offsetAt = (segmentIndex: number, t: number): number => {
-    const lengthBefore = segments
-      .slice(0, segmentIndex)
-      .reduce((sum, segment) => sum + segment.length, 0);
+    const lengthBefore = segments.slice(0, segmentIndex).reduce((sum, segment) => sum + segment.length, 0);
     return (lengthBefore + segments[segmentIndex].length * t) / totalLength;
   };
 
   const sectionAt = (segmentIndex: number, t: number): RibbonCrossSection => {
     const sample = analyticSegmentSample(analyticSegments[segmentIndex], t);
-    return ribbonCrossSection(
-      sample,
-      offsetAt(segmentIndex, t),
-      widthAt,
-      endpointTangents,
-      align,
-      round,
-    );
+    return ribbonCrossSection(sample, offsetAt(segmentIndex, t), widthAt, endpointTangents, align, round);
   };
 
-  const offsetControl = (
-    segmentIndex: number,
-    point: IRPosition,
-    t: number,
-    side: 'left' | 'right',
-  ): IRPosition =>
+  const offsetControl = (segmentIndex: number, point: IRPosition, t: number, side: 'left' | 'right'): IRPosition =>
     offsetAnalyticPoint(
       point,
       analyticSegmentSample(analyticSegments[segmentIndex], t),
@@ -968,14 +852,7 @@ const analyticOutlineCommands = (
       const rightControl = offsetControl(index, segment.control, 0.5, 'right');
       leftCommands.push({ kind: 'quad', control: leftControl, to: endSection.left });
       rightCommands.push({ kind: 'quad', control: rightControl, to: startSection.right });
-      points.push(
-        startSection.left,
-        leftControl,
-        endSection.left,
-        startSection.right,
-        rightControl,
-        endSection.right,
-      );
+      points.push(startSection.left, leftControl, endSection.left, startSection.right, rightControl, endSection.right);
     } else {
       const leftControl1 = offsetControl(index, segment.control1, 1 / 3, 'left');
       const leftControl2 = offsetControl(index, segment.control2, 2 / 3, 'left');
@@ -1013,25 +890,13 @@ const analyticOutlineCommands = (
 
   if (startEndpointCap === 'square') {
     const ext = capExtension(startWidth, align);
-    startLeft = [
-      round(startLeft[0] - startTangent[0] * ext),
-      round(startLeft[1] - startTangent[1] * ext),
-    ];
-    startRight = [
-      round(startRight[0] - startTangent[0] * ext),
-      round(startRight[1] - startTangent[1] * ext),
-    ];
+    startLeft = [round(startLeft[0] - startTangent[0] * ext), round(startLeft[1] - startTangent[1] * ext)];
+    startRight = [round(startRight[0] - startTangent[0] * ext), round(startRight[1] - startTangent[1] * ext)];
   }
   if (endEndpointCap === 'square') {
     const ext = capExtension(endWidth, align);
-    endLeft = [
-      round(endLeft[0] + endTangent[0] * ext),
-      round(endLeft[1] + endTangent[1] * ext),
-    ];
-    endRight = [
-      round(endRight[0] + endTangent[0] * ext),
-      round(endRight[1] + endTangent[1] * ext),
-    ];
+    endLeft = [round(endLeft[0] + endTangent[0] * ext), round(endLeft[1] + endTangent[1] * ext)];
+    endRight = [round(endRight[0] + endTangent[0] * ext), round(endRight[1] + endTangent[1] * ext)];
   }
 
   const commands: Array<PathCommand> = [{ kind: 'move', to: startLeft }];
@@ -1039,24 +904,11 @@ const analyticOutlineCommands = (
   const lastLeftCommand = commands[commands.length - 1];
   if ('to' in lastLeftCommand) lastLeftCommand.to = endLeft;
   if (isArcCap(endEndpointCap)) {
-    for (const point of arcCapPoints(
-      endEndpointCap,
-      endLeft,
-      endRight,
-      'end',
-      nameStack,
-      round,
-    )) {
+    for (const point of arcCapPoints(endEndpointCap, endLeft, endRight, 'end', nameStack, round)) {
       commands.push({ kind: 'line', to: point });
     }
   } else if (endEndpointCap === 'round') {
-    for (const point of roundedArcPoints(
-      midpoint(endLeft, endRight, round),
-      endLeft,
-      endRight,
-      endTangent,
-      round,
-    )) {
+    for (const point of roundedArcPoints(midpoint(endLeft, endRight, round), endLeft, endRight, endTangent, round)) {
       commands.push({ kind: 'line', to: point });
     }
   } else {
@@ -1068,14 +920,7 @@ const analyticOutlineCommands = (
     commands.push(command);
   }
   if (isArcCap(startEndpointCap)) {
-    for (const point of arcCapPoints(
-      startEndpointCap,
-      startRight,
-      startLeft,
-      'start',
-      nameStack,
-      round,
-    )) {
+    for (const point of arcCapPoints(startEndpointCap, startRight, startLeft, 'start', nameStack, round)) {
       commands.push({ kind: 'line', to: point });
     }
   } else if (startEndpointCap === 'round') {
@@ -1247,10 +1092,7 @@ export const emitRibbonPrimitive = (
   }
   const startPoint = sampleAtDistance(rawSegments, rawTotalLength, 0).point;
   const endPoint = sampleAtDistance(rawSegments, rawTotalLength, rawTotalLength).point;
-  const connectionTangent = normalizeVector(
-    [endPoint[0] - startPoint[0], endPoint[1] - startPoint[1]],
-    'connection',
-  );
+  const connectionTangent = normalizeVector([endPoint[0] - startPoint[0], endPoint[1] - startPoint[1]], 'connection');
   const endpointTangents = {
     start: directionToTangent(ribbon.start?.direction, connectionTangent, 'start'),
     end: directionToTangent(ribbon.end?.direction, connectionTangent, 'end'),
@@ -1263,17 +1105,12 @@ export const emitRibbonPrimitive = (
   if (!Number.isFinite(totalLength) || totalLength <= 0) {
     throw new Error('Ribbon centerline has zero length; at least one nonzero segment is required.');
   }
-  const widthAt = centerlineWidthFunction(
-    ribbon,
-    options.ribbonWidthProfiles ?? {},
-    totalLength,
-  );
+  const widthAt = centerlineWidthFunction(ribbon, options.ribbonWidthProfiles ?? {}, totalLength);
   const samples = resolveSampleCount(ribbon.samples, ribbon.sampling, totalLength);
-  const sampleCount =
-    samples ?? (centerlineWidthRequiresSampling(ribbon) ? DEFAULT_RIBBON_SAMPLES : undefined);
+  const sampleCount = samples ?? (centerlineWidthRequiresSampling(ribbon) ? DEFAULT_RIBBON_SAMPLES : undefined);
   const outline =
     sampleCount === undefined
-      ? analyticOutlineCommands(
+      ? (analyticOutlineCommands(
           segmentInputs,
           segments,
           totalLength,
@@ -1300,7 +1137,7 @@ export const emitRibbonPrimitive = (
           ribbon.end?.cap ?? 'butt',
           nameStack,
           round,
-        )
+        ))
       : outlineCommands(
           segments,
           totalLength,
@@ -1339,8 +1176,7 @@ export const emitRibbonPrimitive = (
       {
         lowerTex: options.lowerTex,
         gatingOn: options.lowerTex !== undefined,
-        warn: (code, message) =>
-          options.onWarn?.({ code, message, path: `${options.irPath ?? 'ribbon'}.label` }),
+        warn: (code, message) => options.onWarn?.({ code, message, path: `${options.irPath ?? 'ribbon'}.label` }),
       },
       { boundaryOffset: section.width / 2 },
     );

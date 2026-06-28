@@ -1,5 +1,6 @@
-import { Layout, Rectangle } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Rectangle } from '@retikz/react';
 
 const Demo: FC = () => (
   <Layout width={300} height={150}>

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { JsonObjectSchema } from '../json';
 
 export const ShapeRefSchema = z
@@ -13,6 +14,4 @@ export const ShapeRefSchema = z
       'JSON parameter object for parametric shapes. The registered shape validates its own parameter fields.',
     ),
   })
-  .describe(
-    'Shape reference: type name + optional JSON params, validated at compile time by the registered shape.',
-  );
+  .describe('Shape reference: type name + optional JSON params, validated at compile time by the registered shape.');

@@ -15,20 +15,20 @@ description: Path 的 kind 是开放字符串；除了内置 stroke / ribbon，�
 
 ## API
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `kind` | `string` | 注册名；`Path.kind` 用它查找 provider |
-| `optionsSchema` | `ZodType<IRJsonObject>` | 可选；校验 `kindOptions`，输出仍必须是 JSON-safe |
-| `compile` | `(context) => PathKindCompileResult \| null` | 编译整条 Path，返回 Scene primitives 与路径采样点；`null` 表示无法产出 |
+| 字段            | 类型                                         | 说明                                                                   |
+| --------------- | -------------------------------------------- | ---------------------------------------------------------------------- |
+| `kind`          | `string`                                     | 注册名；`Path.kind` 用它查找 provider                                  |
+| `optionsSchema` | `ZodType<IRJsonObject>`                      | 可选；校验 `kindOptions`，输出仍必须是 JSON-safe                       |
+| `compile`       | `(context) => PathKindCompileResult \| null` | 编译整条 Path，返回 Scene primitives 与路径采样点；`null` 表示无法产出 |
 
 `compile` 拿到的 `PathKindCompileContext`：
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `path` | `IRPathBase` | 当前 Path 的完整 IR 数据 |
-| `options` | `TOptions` | `kindOptions` 经 `optionsSchema` 校验后的结果 |
-| `emitStroke` | `(path?) => PathKindCompileResult \| null` | 复用内置 stroke lowerer，可传入改写后的 Path |
-| `emitRibbon` | `(path?) => PathKindCompileResult \| null` | 复用内置 ribbon lowerer，可传入改写后的 Path |
+| 字段         | 类型                                       | 说明                                          |
+| ------------ | ------------------------------------------ | --------------------------------------------- |
+| `path`       | `IRPathBase`                               | 当前 Path 的完整 IR 数据                      |
+| `options`    | `TOptions`                                 | `kindOptions` 经 `optionsSchema` 校验后的结果 |
+| `emitStroke` | `(path?) => PathKindCompileResult \| null` | 复用内置 stroke lowerer，可传入改写后的 Path  |
+| `emitRibbon` | `(path?) => PathKindCompileResult \| null` | 复用内置 ribbon lowerer，可传入改写后的 Path  |
 
 ## 与路径生成器的区别
 

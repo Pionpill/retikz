@@ -8,43 +8,34 @@
  */
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+
+import type { PathCommand, ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
 import { compileToScene } from '../../src/compile/compile';
 import { definePathGenerator } from '../../src/contract/path';
 import { JsonObjectSchema, PathSchema } from '../../src/schemas';
-import type { IR } from '../../src/schemas';
-import type { PathCommand, ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 
-const firstDrawnPath = (
-  prims: ReadonlyArray<ScenePrimitive>,
-): Extract<ScenePrimitive, { type: 'path' }> | undefined =>
-  flattenPrims(prims).find(
-    (p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path',
-  );
+const firstDrawnPath = (prims: ReadonlyArray<ScenePrimitive>): Extract<ScenePrimitive, { type: 'path' }> | undefined =>
+  flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path');
 
 /** 递归收集任意值里所有 number；用于 finite 审计 */
 const collectNumbers = (v: unknown, out: Array<number> = []): Array<number> => {
   if (typeof v === 'number') out.push(v);
   else if (Array.isArray(v)) for (const x of v) collectNumbers(x, out);
-  else if (v && typeof v === 'object')
-    for (const x of Object.values(v)) collectNumbers(x, out);
+  else if (v && typeof v === 'object') for (const x of Object.values(v)) collectNumbers(x, out);
   return out;
 };
 
-const wrapPath = (
-  steps: Array<Record<string, unknown>>,
-  extraChildren: Array<Record<string, unknown>> = [],
-): IR =>
+const wrapPath = (steps: Array<Record<string, unknown>>, extraChildren: Array<Record<string, unknown>> = []): IR =>
   ({
     version: 1,
     type: 'scene',
     children: [...extraChildren, { type: 'path', children: steps }],
   }) as unknown as IR;
 
-const catchCompile = (
-  ir: IR,
-  gens: Record<string, ReturnType<typeof definePathGenerator>>,
-): Error | undefined => {
+const catchCompile = (ir: IR, gens: Record<string, ReturnType<typeof definePathGenerator>>): Error | undefined => {
   try {
     compileToScene(ir, { pathGenerators: gens });
     return undefined;

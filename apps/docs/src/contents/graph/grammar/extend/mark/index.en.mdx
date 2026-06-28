@@ -1,0 +1,57 @@
+---
+title: Custom Marks
+description: A custom mark keeps its lowering function at runtime — the IR stores only a custom type and JSON config; field collection and lower come from defineMark, injected via markDefinitions.
+---
+
+Beyond the built-in marks, define your own glyph with `defineMark`. It follows the same paradigm as `defineCoordinate`, `defineScale`, and `defineTransform`: the spec still stores only a JSON operation, such as `{ type: 'diamond', encoding: { x: { field: 'month' }, y: { field: 'sales' } } }`; the field collection and lowering function live in a runtime definition injected through `<Plot markDefinitions={[...]}>`.
+
+A custom mark's `type` is any non-built-in discriminator; its `encoding` reuses the same channel shape as built-in marks. Common coordinates use `x` / `y` / `color`, and custom coordinates may declare their own position roles. Position channels feed scale inference, so the custom mark shares the same coordinate system and scales as built-in marks.
+
+Custom marks can also put `transform` on the operation. That mark-local pipeline runs after the plot-level transform, and `lower(mark, rows, ...)` receives the rows for this mark after its own transform; the custom definition does not need to call `applyTransforms` again.
+
+When an authoring shortcut needs to prepare data automatically, do not hide that data change inside `lower`. The React DSL can use `markTransformShortcuts` to expand higher-level syntax into ordinary transforms; `<Transform>`, `dataTransforms`, mark-local `transform`, and those shortcuts all feed the same transform pipeline. The mark definition only consumes prepared rows.
+
+## Diamond glyph
+
+The `diamond` mark below projects each row into a diamond. It is registered in `markDefinitions`; a custom mark has **no dedicated React component**, so it is authored via the `<Plot spec={...}>` entry — write `{ type: 'diamond', ... }` directly in the `marks` array.
+
+<ComponentPreview name="mark-custom" sourceFiles={['mark-custom.data.ts']} />
+
+The third argument to `lower` is the coordinate `frame`. It projects each row's `x` / `y` through `frame.projectRoles` into a screen point, then assembles a core `Node` (`shape: 'diamond'`). The `frame` hides cartesian / polar differences: the mark just asks for a projected point; how the coordinate system interprets `x` / `y` is decided by the coordinate layer.
+
+## Definition contract
+
+| Field           | Required | Purpose                                                                                                                                             |
+| --------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`          | required | Registration key = IR discriminator; must be a non-built-in identifier (no collision with `point` / `path` / `interval` / `reference` / `relation`) |
+| `lower`         | required | Lowers the mark + data rows + `frame` + channel resolvers into core IR; returns `null` when nothing is drawable                                     |
+| `collectFields` | optional | Registers the source fields this mark reads; strict model validation uses it so fields are not flagged as missing                                   |
+| `buildCell`     | optional | Per-row cell builder for interval-like marks (built-in `interval` uses this; plain glyphs do not)                                                   |
+
+Use `defineMark<MyMark>` to specify your own operation type, so `lower` / `collectFields` receive the precise `mark` shape (defaults to the built-in `Mark`).
+
+## Three-layer boundary
+
+A mark spans three layers, with the same boundary as built-in marks:
+
+| Layer     | Holds                                                                                               | In IR | Responsibility                                                 |
+| --------- | --------------------------------------------------------------------------------------------------- | ----- | -------------------------------------------------------------- |
+| schema    | `type`, `encoding`, `transform`, and other serializable fields                                      | yes   | validation, persistence, AI generation, cross-runtime transfer |
+| authoring | built-in via React components; custom via the spec entry; shortcuts expand into ordinary transforms | no    | assemble user input into JSON-safe mark IR and transforms      |
+| registry  | `lower(mark, rows, frame, channels)` behavior                                                       | no    | lower into core IR at compile time                             |
+
+Built-in and custom marks dispatch through the same `resolveMarkRegistry`: built-in marks go through the strict discriminated union, custom marks through `type` passthrough, and lowering uses the mark definition contract to separate built-in-specific geometry, relation targets, and generic position channels.
+
+## Current boundaries
+
+<ComponentAlert
+  type="tip"
+  title="Custom marks are authored via the spec entry"
+  description="v0.1 has no generic <Mark type=...> component; custom marks are written into the marks array via <Plot spec={...} markDefinitions={[...]}>. Position domains are contributed through the active coordinate roles; an encoding key unsupported by that coordinate fails loudly. Cases needing custom bounds / special domain contribution (e.g. a custom interval-like mark) are left for later."
+/>
+
+## Related
+
+- [Coordinate](/graph/grammar/coordinate) — how `frame.projectRoles` / `frame.projectCell` interpret position roles
+- [Scale](/graph/grammar/scale) — how field channels resolve into a scale before mark lowering
+- [Custom Transforms](/graph/grammar/extend/transform) — the same `defineXxx` + `options` injection paradigm

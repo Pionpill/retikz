@@ -1,6 +1,7 @@
 import type { CompileOptions, IR, Scene } from '@retikz/core';
-import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
+import type { HydrationHandlers } from '@retikz/render/hydration';
+
 import type { Figure } from './figure';
 
 export type { AnimationControls } from '@retikz/render/animation';

@@ -5,9 +5,11 @@
  *   编译实现尚未消费这些新字段，故本组用例当前应失败（待实现 Agent 落地编译）。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/schemas';
+
 import type { CubicPathCommand, PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 
 const findPathPrim = (prims: ReadonlyArray<ScenePrimitive>): PathPrim => {
   for (const p of prims) {
@@ -38,12 +40,11 @@ const firstMove = (path: PathPrim): [number, number] => {
 };
 
 /** 向量方向角（度，0°=+x，90°=+y screen-down，与 IR 角度约定一致） */
-const angleDeg = (dx: number, dy: number): number =>
-  (Math.atan2(dy, dx) * 180) / Math.PI;
+const angleDeg = (dx: number, dy: number): number => (Math.atan2(dy, dx) * 180) / Math.PI;
 
 /** 角度归一到 (-180, 180] 的差值绝对值 */
 const angleDiff = (a: number, b: number): number => {
-  const d = ((a - b) % 360 + 540) % 360 - 180;
+  const d = ((((a - b) % 360) + 540) % 360) - 180;
   return Math.abs(d);
 };
 
@@ -201,10 +202,7 @@ describe('self-loop（from==to）成环（非退化直线）', () => {
     const path = findPathPrim(compileToScene(ir).primitives);
     const cubic = firstCubic(path);
     // 控制点张角：自环时两控制点不应重合
-    const span = Math.hypot(
-      cubic.control1[0] - cubic.control2[0],
-      cubic.control1[1] - cubic.control2[1],
-    );
+    const span = Math.hypot(cubic.control1[0] - cubic.control2[0], cubic.control1[1] - cubic.control2[1]);
     expect(span).toBeGreaterThan(0.5);
   });
 });

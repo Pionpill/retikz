@@ -1,6 +1,8 @@
+import type { ArrowEndSpec, MarkerPrimitive, PathPrim } from '@retikz/core';
+
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
-import type { ArrowEndSpec, MarkerPrimitive, PathPrim } from '@retikz/core';
+
 import { renderPrim } from '../../src/render/render-prim';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
@@ -32,44 +34,31 @@ describe('renderPrim path: arrowStart / arrowEnd 是 ArrowEndSpec', () => {
     strokeWidth: 1,
   };
 
-  it("传已解析 spec 时 markerEnd id 反映 detail", () => {
+  it('传已解析 spec 时 markerEnd id 反映 detail', () => {
     const spec = resolvedSpec('normal');
-    const el = renderPrim(
-      { ...base, arrowEnd: spec },
-      0,
-      { arrowMarkerIdFor: markerIdFor },
-    ) as AnyEl;
+    const el = renderPrim({ ...base, arrowEnd: spec }, 0, { arrowMarkerIdFor: markerIdFor }) as AnyEl;
     expect(el.props.markerEnd).toBe(`url(#${markerIdFor(spec)})`);
   });
 
-  it("start / end 不同 detail → markerStart / markerEnd 不同 url", () => {
+  it('start / end 不同 detail → markerStart / markerEnd 不同 url', () => {
     const startSpec = resolvedSpec('normal', 'red');
     const endSpec = resolvedSpec('stealth', 'blue');
-    const el = renderPrim(
-      { ...base, arrowStart: startSpec, arrowEnd: endSpec },
-      0,
-      { arrowMarkerIdFor: markerIdFor },
-    ) as AnyEl;
+    const el = renderPrim({ ...base, arrowStart: startSpec, arrowEnd: endSpec }, 0, {
+      arrowMarkerIdFor: markerIdFor,
+    }) as AnyEl;
     expect(el.props.markerStart).not.toBe(el.props.markerEnd);
     expect(el.props.markerStart).toBe(`url(#${markerIdFor(startSpec)})`);
     expect(el.props.markerEnd).toBe(`url(#${markerIdFor(endSpec)})`);
   });
 
-  it("ctx.arrowMarkerIdFor 缺省 → markerEnd 静默 undefined（与旧行为一致）", () => {
-    const el = renderPrim(
-      { ...base, arrowEnd: resolvedSpec('normal') },
-      0,
-    ) as AnyEl;
+  it('ctx.arrowMarkerIdFor 缺省 → markerEnd 静默 undefined（与旧行为一致）', () => {
+    const el = renderPrim({ ...base, arrowEnd: resolvedSpec('normal') }, 0) as AnyEl;
     expect(el.props.markerEnd).toBeUndefined();
   });
 
-  it("起末同 detail → id 完全一致（dedup 复用同一个 defs）", () => {
+  it('起末同 detail → id 完全一致（dedup 复用同一个 defs）', () => {
     const spec = resolvedSpec('stealth', 'red');
-    const el = renderPrim(
-      { ...base, arrowStart: spec, arrowEnd: spec },
-      0,
-      { arrowMarkerIdFor: markerIdFor },
-    ) as AnyEl;
+    const el = renderPrim({ ...base, arrowStart: spec, arrowEnd: spec }, 0, { arrowMarkerIdFor: markerIdFor }) as AnyEl;
     expect(el.props.markerStart).toBe(el.props.markerEnd);
   });
 });
@@ -85,19 +74,15 @@ describe('renderPrim path: arrowEnd 字段顺序不影响 id', () => {
     ],
   };
 
-  it("renderPrim 把 arrowEnd spec 原样喂给 arrowMarkerIdFor", () => {
+  it('renderPrim 把 arrowEnd spec 原样喂给 arrowMarkerIdFor', () => {
     let captured: ArrowEndSpec | undefined;
     const spec = resolvedSpec('stealth', 'red');
-    renderPrim(
-      { ...base, arrowEnd: spec },
-      0,
-      {
-        arrowMarkerIdFor: s => {
-          captured = s;
-          return 'mk';
-        },
+    renderPrim({ ...base, arrowEnd: spec }, 0, {
+      arrowMarkerIdFor: s => {
+        captured = s;
+        return 'mk';
       },
-    );
+    });
     expect(captured).toBe(spec);
   });
 });

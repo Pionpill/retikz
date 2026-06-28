@@ -1,11 +1,15 @@
 import { compileToScene } from '@retikz/core';
-import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { type ExternalRow, type PlotSpec, PlotSpecSchema, PlotTransform } from '../../src/schemas';
-import { collectSourceFields } from '../../src/pipeline/source-fields';
-import { readSourceIndices, tagSourceIndex } from '../../src/pipeline/provenance';
-import { type AnyTransformDefinition, applyTransforms, defineTransform, extractTransformKind, resolveTransformRegistry } from '../../src';
+import { z } from 'zod';
+
+import type { AnyTransformDefinition } from '../../src';
+import type { ExternalRow, PlotSpec } from '../../src/schemas';
+
+import { applyTransforms, defineTransform, extractTransformKind, resolveTransformRegistry } from '../../src';
 import { lowerPlots } from '../../src/pipeline/expand';
+import { readSourceIndices, tagSourceIndex } from '../../src/pipeline/provenance';
+import { collectSourceFields } from '../../src/pipeline/source-fields';
+import { PlotSpecSchema, PlotTransform } from '../../src/schemas';
 
 const doubleDefinition = defineTransform({
   schema: z.object({
@@ -49,8 +53,15 @@ const groupSumDefinition = defineTransform({
   },
 });
 
-const compile = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, definitions = [doubleDefinition]) =>
-  compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, { transformDefinitions: definitions }) });
+const compile = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  definitions = [doubleDefinition],
+) =>
+  compileToScene(
+    { version: 1, type: 'scene', children: [spec] },
+    { composites: lowerPlots(datasets, { transformDefinitions: definitions }) },
+  );
 
 const pointSpec = (transform: PlotSpec['transform']): PlotSpec =>
   PlotSpecSchema.parse({
@@ -80,11 +91,17 @@ describe('transform registry (alpha.12 ADR-06)', () => {
 
   it('define_transform_preserves_schema_and_extracts_kind', () => {
     expect(extractTransformKind(doubleDefinition.schema)).toBe('double');
-    expect(doubleDefinition.schema.parse({ kind: 'double', field: 'x', as: 'x2' })).toEqual({ kind: 'double', field: 'x', as: 'x2' });
+    expect(doubleDefinition.schema.parse({ kind: 'double', field: 'x', as: 'x2' })).toEqual({
+      kind: 'double',
+      field: 'x',
+      as: 'x2',
+    });
   });
 
   it('duplicate_custom_or_builtin_registration_throws', () => {
-    expect(() => resolveTransformRegistry([doubleDefinition, doubleDefinition])).toThrow(/duplicate transform registration/i);
+    expect(() => resolveTransformRegistry([doubleDefinition, doubleDefinition])).toThrow(
+      /duplicate transform registration/i,
+    );
     const builtinCollision = defineTransform({
       schema: z.object({ kind: z.literal('sort') }),
       apply: rows => rows,
@@ -120,7 +137,9 @@ describe('transform registry (alpha.12 ADR-06)', () => {
   it('unknown_or_invalid_custom_operation_throws_at_lowering', () => {
     const spec = pointSpec([{ kind: 'double', field: 'x' }]);
     expect(() => compile(spec, { d: [{ x: 2, y: 5 }] })).toThrow();
-    expect(() => compile(pointSpec([{ kind: 'unknown-transform', field: 'x', as: 'x2' }]), { d: [{ x: 2, y: 5 }] })).toThrow(/not registered/i);
+    expect(() =>
+      compile(pointSpec([{ kind: 'unknown-transform', field: 'x', as: 'x2' }]), { d: [{ x: 2, y: 5 }] }),
+    ).toThrow(/not registered/i);
   });
 
   it('custom_output_fields_strict_model_passes_when_registered', () => {

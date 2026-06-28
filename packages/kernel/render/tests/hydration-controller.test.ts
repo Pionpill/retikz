@@ -1,10 +1,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
-import {
-  type HydrationHandlers,
-  createHydrationController,
-  locateSvg,
-} from '../src/hydration';
+
+import type { HydrationHandlers } from '../src/hydration';
+
+import { createHydrationController, locateSvg } from '../src/hydration';
 
 /**
  * ADR-01 水合：renderer 无关控制器（根级委托 + enter/leave 合成 + dispose）
@@ -14,7 +13,13 @@ import {
  */
 
 /** 构造一个挂载了带 data-retikz-id 子元素的根容器（含一个图元 a，内含两个子节点模拟分段） */
-const setupRoot = (): { root: HTMLElement; nodeA: SVGElement; childA1: SVGElement; childA2: SVGElement; nodeB: SVGElement } => {
+const setupRoot = (): {
+  root: HTMLElement;
+  nodeA: SVGElement;
+  childA1: SVGElement;
+  childA2: SVGElement;
+  nodeB: SVGElement;
+} => {
   const root = document.createElement('div');
   const svgNs = 'http://www.w3.org/2000/svg';
   const nodeA = document.createElementNS(svgNs, 'g');

@@ -1,6 +1,10 @@
 import type { LoweredTex, PathCommand } from '@retikz/core';
-import { IDENTITY, type Matrix, multiply, parseTransform } from './matrix';
-import { type PointMapper, parsePathD, transformCommands } from './path-d';
+
+import type { Matrix } from './matrix';
+import type { PointMapper } from './path-d';
+
+import { IDENTITY, multiply, parseTransform } from './matrix';
+import { parsePathD, transformCommands } from './path-d';
 
 /**
  * 从标签属性串里取某属性值（双 / 单引号；MathJax 属性值不含引号字符）

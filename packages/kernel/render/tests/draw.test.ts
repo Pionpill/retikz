@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
 import type { Scene } from '@retikz/core';
+
+import { describe, expect, it } from 'vitest';
+
 import { drawScene } from '../src/canvas';
 
 type CanvasCall = {
@@ -70,25 +72,32 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
     textAlign: 'start',
     textBaseline: 'alphabetic',
   } as SpyCanvasContext;
-  const record = (name: string) => (...args: Array<unknown>) => {
-    if (name === 'save') {
-      stack.push({ font: context.font, lineCap: context.lineCap, lineJoin: context.lineJoin, lineWidth: context.lineWidth });
-    }
-    if (name === 'restore') {
-      const snapshot = stack.pop();
-      if (snapshot) Object.assign(context, snapshot);
-    }
-    calls.push({
-      name,
-      args,
-      font: context.font,
-      fillStyle: context.fillStyle,
-      lineCap: context.lineCap,
-      lineJoin: context.lineJoin,
-      lineWidth: context.lineWidth,
-      strokeStyle: context.strokeStyle,
-    });
-  };
+  const record =
+    (name: string) =>
+    (...args: Array<unknown>) => {
+      if (name === 'save') {
+        stack.push({
+          font: context.font,
+          lineCap: context.lineCap,
+          lineJoin: context.lineJoin,
+          lineWidth: context.lineWidth,
+        });
+      }
+      if (name === 'restore') {
+        const snapshot = stack.pop();
+        if (snapshot) Object.assign(context, snapshot);
+      }
+      calls.push({
+        name,
+        args,
+        font: context.font,
+        fillStyle: context.fillStyle,
+        lineCap: context.lineCap,
+        lineJoin: context.lineJoin,
+        lineWidth: context.lineWidth,
+        strokeStyle: context.strokeStyle,
+      });
+    };
 
   const makeGradient = (): CanvasGradient => ({
     addColorStop: (...a: Array<unknown>) => {
@@ -693,9 +702,7 @@ describe('drawScene 渐变填充', () => {
           },
         },
       ],
-      primitives: [
-        { type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'paint-1' } },
-      ],
+      primitives: [{ type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'paint-1' } }],
     };
 
     drawScene(context as unknown as CanvasRenderingContext2D, s, {
@@ -730,9 +737,7 @@ describe('drawScene 渐变填充', () => {
           },
         },
       ],
-      primitives: [
-        { type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'g' } },
-      ],
+      primitives: [{ type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'g' } }],
     };
 
     drawScene(context as unknown as CanvasRenderingContext2D, s);
@@ -759,9 +764,7 @@ describe('drawScene 渐变填充', () => {
           },
         },
       ],
-      primitives: [
-        { type: 'rect', x: 0, y: 0, width: 80, height: 80, fill: { kind: 'resourceRef', id: 'r' } },
-      ],
+      primitives: [{ type: 'rect', x: 0, y: 0, width: 80, height: 80, fill: { kind: 'resourceRef', id: 'r' } }],
     };
 
     drawScene(context as unknown as CanvasRenderingContext2D, s);
@@ -791,9 +794,7 @@ describe('drawScene 渐变填充', () => {
           },
         },
       ],
-      primitives: [
-        { type: 'rect', x: 10, y: 20, width: 80, height: 40, fill: { kind: 'resourceRef', id: 'c' } },
-      ],
+      primitives: [{ type: 'rect', x: 10, y: 20, width: 80, height: 40, fill: { kind: 'resourceRef', id: 'c' } }],
     };
 
     drawScene(context as unknown as CanvasRenderingContext2D, s);
@@ -823,9 +824,7 @@ describe('drawScene 渐变填充', () => {
           },
         },
       ],
-      primitives: [
-        { type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'g' } },
-      ],
+      primitives: [{ type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'g' } }],
     };
 
     drawScene(context as unknown as CanvasRenderingContext2D, s);
@@ -852,9 +851,7 @@ describe('drawScene 渐变填充', () => {
           },
         },
       ],
-      primitives: [
-        { type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'g' } },
-      ],
+      primitives: [{ type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'g' } }],
     };
 
     drawScene(context as unknown as CanvasRenderingContext2D, s, {
@@ -903,7 +900,9 @@ describe('drawScene 渐变描边', () => {
 
     drawScene(context as unknown as CanvasRenderingContext2D, s);
 
-    expect((context.calls.find(c => c.name === 'createLinearGradient')?.args as Array<number>).map(n => Math.round(n))).toEqual([50, 0, 50, 50]);
+    expect(
+      (context.calls.find(c => c.name === 'createLinearGradient')?.args as Array<number>).map(n => Math.round(n)),
+    ).toEqual([50, 0, 50, 50]);
     expect(context.calls.filter(c => c.name === 'addColorStop').map(c => c.args)).toEqual([
       [0, '#000'],
       [1, '#fff'],

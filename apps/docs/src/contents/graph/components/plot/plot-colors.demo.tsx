@@ -1,7 +1,8 @@
 import type { FC } from 'react';
-import { schemeTableau10 } from 'd3-scale-chromatic';
-import { Layout } from '@retikz/react';
+
 import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
+import { Layout } from '@retikz/react';
+import { schemeTableau10 } from 'd3-scale-chromatic';
 
 import { revenue } from './plot-cartesian.data';
 

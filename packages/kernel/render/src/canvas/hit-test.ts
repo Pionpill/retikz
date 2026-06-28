@@ -1,5 +1,6 @@
 import type { ClipShape, Scene, ScenePrimitive } from '@retikz/core';
-import { DEG_TO_RAD, applyTransform, buildClipPath, buildPath, roundedRectPath } from './path-geometry';
+
+import { applyTransform, buildClipPath, buildPath, DEG_TO_RAD, roundedRectPath } from './path-geometry';
 
 /** hitTest 命中点（Scene user units 坐标系） */
 export type HitPoint = {
@@ -89,11 +90,7 @@ const hitPrim = (
 };
 
 /** 点是否落在 group 的裁剪区内（无裁剪 → 恒 true；裁剪资源缺失 → 按不裁处理） */
-const insideClip = (
-  ctx: CanvasRenderingContext2D,
-  shape: ClipShape | undefined,
-  point: HitPoint,
-): boolean => {
+const insideClip = (ctx: CanvasRenderingContext2D, shape: ClipShape | undefined, point: HitPoint): boolean => {
   if (shape === undefined) return true;
   buildClipPath(ctx, shape);
   return ctx.isPointInPath(point.x, point.y);
@@ -105,11 +102,7 @@ const insideClip = (
  *   isPointInStroke（描边线，按 strokeTolerance 加宽）判定；命中即返回该图元或其最近 id-bearing 祖先（group）
  *   的 id，空白处返回 null。函数不进 IR、纯 runtime 定位层。
  */
-export const hitTest = (
-  scene: Scene,
-  point: HitPoint,
-  options?: HitTestOptions,
-): string | null => {
+export const hitTest = (scene: Scene, point: HitPoint, options?: HitTestOptions): string | null => {
   const ctx = resolveContext(options);
   if (ctx === null) return null;
   const strokeTolerance = options?.strokeTolerance;
@@ -136,7 +129,7 @@ export const hitTest = (
       ctx.restore();
       return result;
     }
-    return hitPrim(ctx, prim, point, strokeTolerance) ? selfId ?? null : null;
+    return hitPrim(ctx, prim, point, strokeTolerance) ? (selfId ?? null) : null;
   };
 
   for (let i = scene.primitives.length - 1; i >= 0; i--) {

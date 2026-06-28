@@ -1,30 +1,52 @@
+import type {
+  ScaleBand as D3ScaleBand,
+  ScaleContinuousNumeric as D3ScaleContinuousNumeric,
+  ScaleLinear as D3ScaleLinear,
+  ScalePoint as D3ScalePoint,
+  ScaleTime as D3ScaleTime,
+} from 'd3-scale';
+
 import { isFiniteNumber } from '@retikz/math';
 import { extent as d3Extent } from 'd3-array';
-import { type ScaleBand as D3ScaleBand, type ScaleContinuousNumeric as D3ScaleContinuousNumeric, type ScaleLinear as D3ScaleLinear, type ScalePoint as D3ScalePoint, type ScaleTime as D3ScaleTime, scaleBand as d3ScaleBand, scaleLinear as d3ScaleLinear, scaleLog as d3ScaleLog, scalePoint as d3ScalePoint, scalePow as d3ScalePow, scaleRadial as d3ScaleRadial, scaleSymlog as d3ScaleSymlog, scaleUtc as d3ScaleUtc } from 'd3-scale';
-import { type AnyScaleDefinition, type PositionScale, type TickSet, defineScale } from '../../../contract';
-import { coerceTimestamp, inferCategoryDomain } from '../../data';
 import {
-  type BandScale,
+  scaleBand as d3ScaleBand,
+  scaleLinear as d3ScaleLinear,
+  scaleLog as d3ScaleLog,
+  scalePoint as d3ScalePoint,
+  scalePow as d3ScalePow,
+  scaleRadial as d3ScaleRadial,
+  scaleSymlog as d3ScaleSymlog,
+  scaleUtc as d3ScaleUtc,
+} from 'd3-scale';
+
+import type { AnyScaleDefinition, PositionScale, TickSet } from '../../../contract';
+import type {
+  BandScale,
+  FieldDef,
+  LinearScale,
+  LogScale,
+  PointScale,
+  PowScale,
+  RadialScale,
+  SqrtScale,
+  SymlogScale,
+  TimeScale,
+} from '../../../schemas';
+
+import { defineScale } from '../../../contract';
+import {
   BandScaleSchema,
-  type FieldDef,
-  type LinearScale,
   LinearScaleSchema,
-  type LogScale,
   LogScaleSchema,
   PlotFieldType,
-  type PointScale,
   PointScaleSchema,
-  type PowScale,
   PowScaleSchema,
-  type RadialScale,
   RadialScaleSchema,
-  type SqrtScale,
   SqrtScaleSchema,
-  type SymlogScale,
   SymlogScaleSchema,
-  type TimeScale,
   TimeScaleSchema,
 } from '../../../schemas';
+import { coerceTimestamp, inferCategoryDomain } from '../../data';
 import { DEFAULT_TICK_COUNT, safeExtent, scaleTicks } from '../shared';
 
 // ── 连续数值位置 scale（linear / log / pow / sqrt / symlog / radial）────────────────
@@ -59,7 +81,9 @@ export const resolveLogScale = (
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
   if (def.domain && (def.domain[0] <= 0 || def.domain[1] <= 0)) {
-    throw new Error(`lowerPlots: log scale "${def.name}" domain must be strictly positive (got [${def.domain[0]}, ${def.domain[1]}])`);
+    throw new Error(
+      `lowerPlots: log scale "${def.name}" domain must be strictly positive (got [${def.domain[0]}, ${def.domain[1]}])`,
+    );
   }
   const positives = values.filter(value => value > 0);
   const [lo, hi] = d3Extent(positives);
@@ -84,7 +108,9 @@ export const resolvePowScale = (
 ): D3ScaleContinuousNumeric<number, number> => {
   const exponent = def.exponent ?? 2;
   if (def.domain && !Number.isInteger(exponent) && (def.domain[0] < 0 || def.domain[1] < 0)) {
-    throw new Error(`lowerPlots: pow scale "${def.name}" with non-integer exponent ${exponent} requires a non-negative domain (got [${def.domain[0]}, ${def.domain[1]}])`);
+    throw new Error(
+      `lowerPlots: pow scale "${def.name}" with non-integer exponent ${exponent} requires a non-negative domain (got [${def.domain[0]}, ${def.domain[1]}])`,
+    );
   }
   const scale = d3ScalePow()
     .exponent(exponent)
@@ -105,7 +131,9 @@ export const resolveSqrtScale = (
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
   if (def.domain && (def.domain[0] < 0 || def.domain[1] < 0)) {
-    throw new Error(`lowerPlots: sqrt scale "${def.name}" domain must be non-negative (got [${def.domain[0]}, ${def.domain[1]}])`);
+    throw new Error(
+      `lowerPlots: sqrt scale "${def.name}" domain must be non-negative (got [${def.domain[0]}, ${def.domain[1]}])`,
+    );
   }
   const scale = d3ScalePow()
     .exponent(0.5)
@@ -122,7 +150,13 @@ export const resolveSqrtScale = (
  *   domain 缺省从值 extent 推断；负 / 零 domain 合法（symlog 全域有定义），不 fail-loud。
  */
 export const resolveSymlogScale = (
-  def: { domain?: readonly [number, number]; range?: readonly [number, number]; constant?: number; nice?: boolean; clamp?: boolean },
+  def: {
+    domain?: readonly [number, number];
+    range?: readonly [number, number];
+    constant?: number;
+    nice?: boolean;
+    clamp?: boolean;
+  },
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
@@ -268,12 +302,17 @@ export type CategoryOrder = NonNullable<FieldDef['order']>;
  * @description order='data'/undefined → 现状出现序去重；'ascending'/'descending' → 全数值按数值比、否则统一 String localeCompare（descending 反序）；
  *   Array → 以数组为类别序，数据出现但不在数组里的去重类别按出现序追加末尾（数组里有、数据无的值保留作空类别）。
  */
-export const orderedCategoryDomain = (values: Array<unknown>, order: CategoryOrder | undefined): Array<string | number> => {
+export const orderedCategoryDomain = (
+  values: Array<unknown>,
+  order: CategoryOrder | undefined,
+): Array<string | number> => {
   const deduped = inferCategoryDomain(values);
   if (order === undefined || order === 'data') return deduped;
   if (order === 'ascending' || order === 'descending') {
     const allNumber = deduped.every(value => typeof value === 'number');
-    const sorted = [...deduped].sort((a, b) => (allNumber ? (a as number) - (b as number) : String(a).localeCompare(String(b))));
+    const sorted = [...deduped].sort((a, b) =>
+      allNumber ? (a as number) - (b as number) : String(a).localeCompare(String(b)),
+    );
     return order === 'descending' ? sorted.reverse() : sorted;
   }
   // Array：数组序优先；数据出现但不在数组里的类别按出现序追加末尾
@@ -374,7 +413,11 @@ const logScaleDefinition = defineScale<LogScale>({
   schema: LogScaleSchema,
   isFieldCompatible: fieldType => fieldType !== PlotFieldType.Categorical,
   allowsBaseline: false,
-  resolve: (def, values, range) => continuousPositionScale(resolveLogScale(def, values.filter(isFiniteNumber), range), value => isFiniteNumber(value) && value > 0),
+  resolve: (def, values, range) =>
+    continuousPositionScale(
+      resolveLogScale(def, values.filter(isFiniteNumber), range),
+      value => isFiniteNumber(value) && value > 0,
+    ),
 });
 
 const powScaleDefinition = defineScale<PowScale>({
@@ -384,7 +427,9 @@ const powScaleDefinition = defineScale<PowScale>({
   allowsBaseline: false,
   resolve: (def, values, range) => {
     const integerExponent = Number.isInteger(def.exponent ?? 2);
-    const isValidInput = integerExponent ? isFiniteNumber : (value: unknown): boolean => isFiniteNumber(value) && value >= 0;
+    const isValidInput = integerExponent
+      ? isFiniteNumber
+      : (value: unknown): boolean => isFiniteNumber(value) && value >= 0;
     return continuousPositionScale(resolvePowScale(def, values.filter(isFiniteNumber), range), isValidInput);
   },
 });
@@ -394,7 +439,11 @@ const sqrtScaleDefinition = defineScale<SqrtScale>({
   schema: SqrtScaleSchema,
   isFieldCompatible: fieldType => fieldType !== PlotFieldType.Categorical,
   allowsBaseline: false,
-  resolve: (def, values, range) => continuousPositionScale(resolveSqrtScale(def, values.filter(isFiniteNumber), range), value => isFiniteNumber(value) && value >= 0),
+  resolve: (def, values, range) =>
+    continuousPositionScale(
+      resolveSqrtScale(def, values.filter(isFiniteNumber), range),
+      value => isFiniteNumber(value) && value >= 0,
+    ),
 });
 
 const symlogScaleDefinition = defineScale<SymlogScale>({
@@ -404,7 +453,8 @@ const symlogScaleDefinition = defineScale<SymlogScale>({
   // 与 log/pow/sqrt 同属非线性连续 scale → 不作 interval / area 值轴（柱 / 面积长度会失真）
   allowsBaseline: false,
   // symlog 全域有定义（含零 / 负），输入仅需有限数，沿用默认 isFiniteNumber 守门
-  resolve: (def, values, range) => continuousPositionScale(resolveSymlogScale(def, values.filter(isFiniteNumber), range)),
+  resolve: (def, values, range) =>
+    continuousPositionScale(resolveSymlogScale(def, values.filter(isFiniteNumber), range)),
 });
 
 const radialScaleDefinition = defineScale<RadialScale>({
@@ -413,7 +463,8 @@ const radialScaleDefinition = defineScale<RadialScale>({
   isFieldCompatible: fieldType => fieldType !== PlotFieldType.Categorical,
   // 面积感知半径，自 0 基线起算（南丁格尔 / 玫瑰图扇区面积编码值）→ 允许作 interval / path closure 值轴
   allowsBaseline: true,
-  resolve: (def, values, range) => continuousPositionScale(resolveRadialScale(def, values.filter(isFiniteNumber), range)),
+  resolve: (def, values, range) =>
+    continuousPositionScale(resolveRadialScale(def, values.filter(isFiniteNumber), range)),
 });
 
 const timeScaleDefinition = defineScale<TimeScale>({

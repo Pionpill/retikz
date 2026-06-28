@@ -1,21 +1,33 @@
 import type { IRNode, IRScope } from '@retikz/core';
+
 import { schemeCategory10 as d3SchemeCategory10 } from 'd3-scale-chromatic';
 import { describe, expect, it } from 'vitest';
-import { FieldDefSchema, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots } from '../../src/pipeline/expand';
+import { FieldDefSchema, PlotSpecSchema } from '../../src/schemas';
 import { DataModelSchema } from '../../src/schemas/data';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 /** 下沉一个 plot spec，取外层 plot scope */
-const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options: LowerPlotsOptions = opts): IRScope => {
+const expandOf = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options: LowerPlotsOptions = opts,
+): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
 
 /** 取第一个 mark 图层 scope */
-const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options: LowerPlotsOptions = opts): IRScope =>
-  expandOf(spec, datasets, options).children[0] as IRScope;
+const firstLayer = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options: LowerPlotsOptions = opts,
+): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
 /**
  * 构造一个 x=band 的散点 spec：x 绑 categorical 字段 cat（带 order）、y 绑 continuous 字段 val。
@@ -268,7 +280,13 @@ describe('FieldDef.order — 交互（ADR-07）', () => {
       },
       scales: [{ type: 'linear', name: 'yv' }],
       coordinate: { type: 'cartesian2D', y: 'yv' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'cat' }, encoding: { x: { field: 'cat' }, y: { field: 'val' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'cat' },
+          encoding: { x: { field: 'cat' }, y: { field: 'val' } },
+        },
+      ],
     });
     const rows = [
       { cat: 'L', val: 1 },
@@ -280,7 +298,9 @@ describe('FieldDef.order — 交互（ADR-07）', () => {
     // 每个 color 子 scope 内是同色一组 node；用每个 node 的 band x 反查类别（最左=S、中=M、右=L），核对该组 fill。
     const subScopes = layer.children.map(child => child as IRScope);
     // band 中心 x：S 最小、L 最大；按 x 升序映射域序 S,M,L
-    const allX = subScopes.flatMap(scope => (scope.children as Array<IRNode>).map(node => (node.position as [number, number])[0]));
+    const allX = subScopes.flatMap(scope =>
+      (scope.children as Array<IRNode>).map(node => (node.position as [number, number])[0]),
+    );
     const sortedX = [...new Set(allX)].sort((a, b) => a - b);
     const categoryByX = new Map<number, string>([
       [sortedX[0], 'S'],

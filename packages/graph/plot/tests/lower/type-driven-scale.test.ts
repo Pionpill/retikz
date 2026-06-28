@@ -1,21 +1,32 @@
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+
+import type { PlotFieldTypeValue } from '../../src/schemas';
+import type { PlotSpec } from '../../src/schemas';
+
 import { lowerPlots } from '../../src/pipeline/expand';
 import { deriveScale } from '../../src/providers';
 import { assertScaleFieldCompatible as assertScaleFieldCompatibleOp, resolveScaleRegistry } from '../../src/providers';
-import type { PlotFieldTypeValue } from '../../src/schemas';
+import { PlotFieldType, PlotSpecSchema } from '../../src/schemas';
 
 // 内置 scale registry：compat 校验经 registry isFieldCompatible 谓词，测试包一层省去逐处传参。
 const scaleRegistry = resolveScaleRegistry();
-const assertScaleFieldCompatible = (role: string, scaleType: string, fieldType: PlotFieldTypeValue, scaleName: string) =>
-  assertScaleFieldCompatibleOp(role, scaleType, fieldType, scaleName, scaleRegistry);
+const assertScaleFieldCompatible = (
+  role: string,
+  scaleType: string,
+  fieldType: PlotFieldTypeValue,
+  scaleName: string,
+) => assertScaleFieldCompatibleOp(role, scaleType, fieldType, scaleName, scaleRegistry);
 
 const compile = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>) =>
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) });
 
 /** cartesian spec，可选省略 coordinate 的 x/y 绑定（触发派生） */
-const spec = (coordinate: Record<string, unknown>, model: Array<{ name: string; type: string }>, scales: Array<unknown> = []): PlotSpec =>
+const spec = (
+  coordinate: Record<string, unknown>,
+  model: Array<{ name: string; type: string }>,
+  scales: Array<unknown> = [],
+): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -61,35 +72,75 @@ describe('assertScaleFieldCompatible — 类型↔scale 兼容', () => {
 describe('type-driven scale 集成', () => {
   it('derive_when_coordinate_binding_omitted', () => {
     // 省略 coordinate.x/y + model 声明类型 → 派生 scale，正常下沉
-    const scene = compile(spec({}, [{ name: 'a', type: 'temporal' }, { name: 'b', type: 'continuous' }]), {
-      d: [{ a: '2024-01-01', b: 10 }, { a: '2024-02-01', b: 14 }],
-    });
+    const scene = compile(
+      spec({}, [
+        { name: 'a', type: 'temporal' },
+        { name: 'b', type: 'continuous' },
+      ]),
+      {
+        d: [
+          { a: '2024-01-01', b: 10 },
+          { a: '2024-02-01', b: 14 },
+        ],
+      },
+    );
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
   it('derive_categorical_band', () => {
     expect(() =>
-      compile(spec({}, [{ name: 'a', type: 'categorical' }, { name: 'b', type: 'continuous' }]), { d: [{ a: 'x', b: 1 }, { a: 'y', b: 2 }] }),
+      compile(
+        spec({}, [
+          { name: 'a', type: 'categorical' },
+          { name: 'b', type: 'continuous' },
+        ]),
+        {
+          d: [
+            { a: 'x', b: 1 },
+            { a: 'y', b: 2 },
+          ],
+        },
+      ),
     ).not.toThrow();
   });
 
   it('explicit_scale_overrides_derive', () => {
     // 显式声明并绑定 → 用显式（不派生）；linear + continuous 兼容
     expect(() =>
-      compile(spec({ x: 'xs', y: 'ys' }, [{ name: 'a', type: 'continuous' }, { name: 'b', type: 'continuous' }], [
-        { type: 'linear', name: 'xs', domain: [0, 100] },
-        { type: 'linear', name: 'ys' },
-      ]), { d: [{ a: 5, b: 1 }] }),
+      compile(
+        spec(
+          { x: 'xs', y: 'ys' },
+          [
+            { name: 'a', type: 'continuous' },
+            { name: 'b', type: 'continuous' },
+          ],
+          [
+            { type: 'linear', name: 'xs', domain: [0, 100] },
+            { type: 'linear', name: 'ys' },
+          ],
+        ),
+        { d: [{ a: 5, b: 1 }] },
+      ),
     ).not.toThrow();
   });
 
   it('explicit_incompatible_throws', () => {
     // categorical 字段显式绑 linear → fail-loud
     expect(() =>
-      compile(spec({ x: 'xs', y: 'ys' }, [{ name: 'a', type: 'categorical' }, { name: 'b', type: 'continuous' }], [
-        { type: 'linear', name: 'xs' },
-        { type: 'linear', name: 'ys' },
-      ]), { d: [{ a: 'cat', b: 1 }] }),
+      compile(
+        spec(
+          { x: 'xs', y: 'ys' },
+          [
+            { name: 'a', type: 'categorical' },
+            { name: 'b', type: 'continuous' },
+          ],
+          [
+            { type: 'linear', name: 'xs' },
+            { type: 'linear', name: 'ys' },
+          ],
+        ),
+        { d: [{ a: 'cat', b: 1 }] },
+      ),
     ).toThrow(/incompatible/i);
   });
 
@@ -98,8 +149,18 @@ describe('type-driven scale 集成', () => {
     const s = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference: 'd', model: [{ name: 'a', type: 'continuous' }, { name: 'b', type: 'continuous' }, { name: 'c', type: 'categorical' }] },
-      scales: [{ type: 'linear', name: 'xs' }, { type: 'linear', name: 'ys' }],
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'a', type: 'continuous' },
+          { name: 'b', type: 'continuous' },
+          { name: 'c', type: 'categorical' },
+        ],
+      },
+      scales: [
+        { type: 'linear', name: 'xs' },
+        { type: 'linear', name: 'ys' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'xs', y: 'ys' },
       marks: [
         { type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } },
@@ -114,7 +175,14 @@ describe('type-driven scale 集成', () => {
     const s = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference: 'd', model: [{ name: 'a', type: 'continuous' }, { name: 'b', type: 'continuous' }, { name: 'c', type: 'categorical' }] },
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'a', type: 'continuous' },
+          { name: 'b', type: 'continuous' },
+          { name: 'c', type: 'categorical' },
+        ],
+      },
       scales: [],
       coordinate: { type: 'cartesian2D' },
       marks: [
@@ -128,9 +196,19 @@ describe('type-driven scale 集成', () => {
   it('undeclared_binding_name_still_throws', () => {
     // 提供了绑定名但未声明该 scale → 仍抛（typo 守卫，不静默派生）
     expect(() =>
-      compile(spec({ x: 'missing', y: 'ys' }, [{ name: 'a', type: 'continuous' }, { name: 'b', type: 'continuous' }], [{ type: 'linear', name: 'ys' }]), {
-        d: [{ a: 1, b: 2 }],
-      }),
+      compile(
+        spec(
+          { x: 'missing', y: 'ys' },
+          [
+            { name: 'a', type: 'continuous' },
+            { name: 'b', type: 'continuous' },
+          ],
+          [{ type: 'linear', name: 'ys' }],
+        ),
+        {
+          d: [{ a: 1, b: 2 }],
+        },
+      ),
     ).toThrow(/unknown scale/i);
   });
 });

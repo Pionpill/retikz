@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+
 import { Outlet } from 'react-router';
 
 import { cn } from '@/lib/utils';

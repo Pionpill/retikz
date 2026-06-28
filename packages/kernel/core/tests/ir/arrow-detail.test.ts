@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  ArrowDetailSchema,
-  ArrowEndDetailSchema,
-  BuiltinArrowShape,
-  PathSchema,
-} from '../../src/schemas';
+
+import { ArrowDetailSchema, ArrowEndDetailSchema, BuiltinArrowShape, PathSchema } from '../../src/schemas';
 
 /**
  * ArrowDetailSchema schema-level 测试
@@ -71,28 +67,20 @@ describe('ArrowDetailSchema：字段合法 / optional', () => {
 describe('ArrowDetailSchema：错误路径', () => {
   // shape 已开成开放字符串（z.string().min(1)）：任意非空名 schema 接受，
   // 未注册名的拒绝移到 compile 期（见 arrows/builtin-registry.test.ts 的 compile throw 用例）
-  it("任意非空 shape 名 schema 接受（顶层）", () => {
-    expect(
-      ArrowDetailSchema.safeParse({ shape: 'unknown' }).success,
-    ).toBe(true);
+  it('任意非空 shape 名 schema 接受（顶层）', () => {
+    expect(ArrowDetailSchema.safeParse({ shape: 'unknown' }).success).toBe(true);
   });
 
-  it("任意非空 shape 名 schema 接受（start 子对象）", () => {
-    expect(
-      ArrowDetailSchema.safeParse({ start: { shape: 'banana' } }).success,
-    ).toBe(true);
+  it('任意非空 shape 名 schema 接受（start 子对象）', () => {
+    expect(ArrowDetailSchema.safeParse({ start: { shape: 'banana' } }).success).toBe(true);
   });
 
-  it("空串 shape 拒绝（顶层，min(1)）", () => {
-    expect(
-      ArrowDetailSchema.safeParse({ shape: '' }).success,
-    ).toBe(false);
+  it('空串 shape 拒绝（顶层，min(1)）', () => {
+    expect(ArrowDetailSchema.safeParse({ shape: '' }).success).toBe(false);
   });
 
-  it("空串 shape 拒绝（start 子对象，min(1)）", () => {
-    expect(
-      ArrowDetailSchema.safeParse({ start: { shape: '' } }).success,
-    ).toBe(false);
+  it('空串 shape 拒绝（start 子对象，min(1)）', () => {
+    expect(ArrowDetailSchema.safeParse({ start: { shape: '' } }).success).toBe(false);
   });
 
   it('scale 负数拒绝', () => {
@@ -121,14 +109,12 @@ describe('ArrowDetailSchema：错误路径', () => {
   });
 
   it('end 子对象的 opacity > 1 也拒绝（继承顶层 schema 限制）', () => {
-    expect(
-      ArrowDetailSchema.safeParse({ end: { opacity: 2 } }).success,
-    ).toBe(false);
+    expect(ArrowDetailSchema.safeParse({ end: { opacity: 2 } }).success).toBe(false);
   });
 });
 
 describe('PathSchema：arrowDetail 嵌入 + arrowShape 删除', () => {
-  it("PathSchema 接受 arrowDetail", () => {
+  it('PathSchema 接受 arrowDetail', () => {
     const ok = PathSchema.safeParse({
       type: 'path',
       arrow: '->',
@@ -141,7 +127,7 @@ describe('PathSchema：arrowDetail 嵌入 + arrowShape 删除', () => {
     expect(ok.success).toBe(true);
   });
 
-  it("PathSchema strict：未知字段（如已删除的 arrowShape）被拒，不静默吞", () => {
+  it('PathSchema strict：未知字段（如已删除的 arrowShape）被拒，不静默吞', () => {
     // PathSchema 现为 .strict()：未知 / 拼错 / 已删除字段直接校验失败，与 NodeSchema 一致
     const result = PathSchema.safeParse({
       type: 'path',

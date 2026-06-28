@@ -1,5 +1,7 @@
+import type { FC } from 'react';
+
 import { Layout, Node } from '@retikz/react';
-import { type FC, useState } from 'react';
+import { useState } from 'react';
 
 /**
  * 水合交互 demo：点击节点切换高亮 + 计数

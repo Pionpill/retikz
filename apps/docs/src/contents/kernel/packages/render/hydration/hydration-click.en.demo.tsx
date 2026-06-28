@@ -1,5 +1,7 @@
+import type { FC } from 'react';
+
 import { Layout, Node } from '@retikz/react';
-import { type FC, useState } from 'react';
+import { useState } from 'react';
 
 /**
  * Hydration interaction demo: click a node to toggle highlight + count

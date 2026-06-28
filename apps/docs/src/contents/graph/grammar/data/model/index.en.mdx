@@ -5,7 +5,10 @@ description: Give <Plot> a set of rows, then declare a field contract with model
 
 A chart has two inputs: **config** (what to draw — marks / coordinate / scales) and **data** (which values). retikz keeps them apart: data does **not** enter the chart config (the IR); it is supplied separately at compile time. That lets one config be reused across different datasets.
 
-<ComponentAlert title="Why data stays out of the IR" description="Data is usually much larger than the chart config. Embedding every row into the IR would make JSON and persisted artifacts bulky, hard to diff, and hard to maintain. Config and data are naturally separate: the IR describes how to draw, while data is supplied at compile time through the model; as long as the field contract lines up, the same config can run against another data source." />
+<ComponentAlert
+  title="Why data stays out of the IR"
+  description="Data is usually much larger than the chart config. Embedding every row into the IR would make JSON and persisted artifacts bulky, hard to diff, and hard to maintain. Config and data are naturally separate: the IR describes how to draw, while data is supplied at compile time through the model; as long as the field contract lines up, the same config can run against another data source."
+/>
 
 The simplest form: hand a row array to `<Plot data>` and have marks reference columns by field name.
 
@@ -25,20 +28,20 @@ Declare field types through `<Plot model>`. The `model` is the field contract: w
 
 Field types and default inference:
 
-| Type | Meaning | Examples | Default inference and explicit declarations |
-| --- | --- | --- | --- |
-| `continuous` | continuous measurable numbers | sales, price, temperature | Default: sample values are finite numbers or bigints<br />Declare: numeric strings, numeric enums, ids, or status codes should behave as continuous values or categories |
-| `temporal` | date / time values | dates, timestamps | Default: `Date` or unambiguous ISO date / datetime strings<br />Declare: non-default date formats or timezone-less times |
-| `categorical` | discrete categories | countries, color names, ratings | Default: other strings, booleans, mixed values, or unknown fields<br />Declare: category order, axes, or legends need fixed ordering |
+| Type          | Meaning                       | Examples                        | Default inference and explicit declarations                                                                                                                              |
+| ------------- | ----------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `continuous`  | continuous measurable numbers | sales, price, temperature       | Default: sample values are finite numbers or bigints<br />Declare: numeric strings, numeric enums, ids, or status codes should behave as continuous values or categories |
+| `temporal`    | date / time values            | dates, timestamps               | Default: `Date` or unambiguous ISO date / datetime strings<br />Declare: non-default date formats or timezone-less times                                                 |
+| `categorical` | discrete categories           | countries, color names, ratings | Default: other strings, booleans, mixed values, or unknown fields<br />Declare: category order, axes, or legends need fixed ordering                                     |
 
 Customize `model` when you need to override inference, parse non-default storage formats, or make the config self-describing without the data. Each field declaration can contain:
 
-| Field | Purpose |
-| --- | --- |
-| `name` | logical field name, also the name referenced by marks / transforms |
-| `type` | measurement type; omitted fields are inferred from data |
+| Field    | Purpose                                                                                                       |
+| -------- | ------------------------------------------------------------------------------------------------------------- |
+| `name`   | logical field name, also the name referenced by marks / transforms                                            |
+| `type`   | measurement type; omitted fields are inferred from data                                                       |
 | `format` | declarative parsing format, such as `slashDate` / `percent`; see [Processing](/graph/grammar/data/processing) |
-| `order` | category order for categorical fields |
+| `order`  | category order for categorical fields                                                                         |
 
 The side-by-side demo below uses one funnel dataset. The left chart has no `model`, so numeric `stage` is inferred as a continuous x axis. The right chart declares `stage` as categorical, and parses percent strings into continuous values with `format: 'percent'`.
 
@@ -51,18 +54,24 @@ With no `model`, field types follow the default inference rules above, which is 
 **`type` is optional — partial models**: a field's type can be omitted, leaving just `{ name }`. The field still joins strict mode and keeps a portable field contract; only its type is left to inference. This is useful when most fields are obvious and only a few need pinning: give `type` to numeric enums, use `format` for non-default dates / percentages, and leave the rest bare.
 
 ```tsx
-<Plot data={sales} model={[
-  { name: 'createdAt',  format: 'slashDate' }, // '2024/01/01' → temporal
-  { name: 'statusCode', type: 'categorical' }, // numeric enum pinned as category
-  { name: 'revenue' },                         // name only → inferred continuous
-]}>
+<Plot
+  data={sales}
+  model={[
+    { name: 'createdAt', format: 'slashDate' }, // '2024/01/01' → temporal
+    { name: 'statusCode', type: 'categorical' }, // numeric enum pinned as category
+    { name: 'revenue' }, // name only → inferred continuous
+  ]}
+>
   {/* … */}
 </Plot>
 ```
 
 Fields with `type` omitted need the data at lowering to determine their type. Fields with `format` get their type from the format, so `format: 'percent'` is treated as `continuous`. To keep a spec fully self-describing without the data (LLM-friendly / fully portable), fill in `type` or `format`.
 
-<ComponentAlert title="Inference is best-effort; the model is the contract" description="Without a model (or with a field's type / format omitted), types are guessed from samples: time is only recognized in unambiguous ISO form (YYYY-MM-DD, an ISO datetime with a timezone, including the space-separated SQL form like '2024-01-01 12:00:00Z') — '2024/01/01' and timezone-less times are not treated as time; bare numeric strings are not inferred as continuous either. Bigints infer as continuous, but only safe integers can be normalized. Declare a model when you want precision, validation, or for an LLM to understand the fields without seeing the data; add format or resolveField for non-default storage formats." />
+<ComponentAlert
+  title="Inference is best-effort; the model is the contract"
+  description="Without a model (or with a field's type / format omitted), types are guessed from samples: time is only recognized in unambiguous ISO form (YYYY-MM-DD, an ISO datetime with a timezone, including the space-separated SQL form like '2024-01-01 12:00:00Z') — '2024/01/01' and timezone-less times are not treated as time; bare numeric strings are not inferred as continuous either. Bigints infer as continuous, but only safe integers can be normalized. Declare a model when you want precision, validation, or for an LLM to understand the fields without seeing the data; add format or resolveField for non-default storage formats."
+/>
 
 ## Type-driven scales
 
@@ -82,10 +91,10 @@ The two charts below use the same size data. The left chart follows data appeara
 
 This `order` sorts the **category domain**: axis ticks, legends, and categorical colors follow it. It does not reorder data rows or change the connection order of a line. To reorder rows, use [row sort](/graph/grammar/transform/row#sort).
 
-| `order` | Effect |
-| --- | --- |
-| omitted / `'data'` | data appearance order (default) |
-| `'ascending'` / `'descending'` | sort the categories: numeric when all numbers, else as strings |
+| `order`                        | Effect                                                                                                   |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| omitted / `'data'`             | data appearance order (default)                                                                          |
+| `'ascending'` / `'descending'` | sort the categories: numeric when all numbers, else as strings                                           |
 | `Array` (e.g. `['S','M','L']`) | the array is the order; categories present in the data but absent from the array are appended at the end |
 
 Rules:
@@ -109,12 +118,12 @@ When a field has neither `type` nor `format`, retikz infers it from data samples
 
 **Step 1, classify each value**: scan the field's sample values; each value is classified on its own first.
 
-| Sample value | Classified as |
-| --- | --- |
-| `Date` instance | `temporal` |
-| ISO date / datetime string | `temporal` |
-| Finite `number`, `bigint` | `continuous` |
-| Other strings, booleans | `categorical` |
+| Sample value                                             | Classified as                    |
+| -------------------------------------------------------- | -------------------------------- |
+| `Date` instance                                          | `temporal`                       |
+| ISO date / datetime string                               | `temporal`                       |
+| Finite `number`, `bigint`                                | `continuous`                     |
+| Other strings, booleans                                  | `categorical`                    |
 | `null` / `undefined`, `NaN` / `Infinity`, object / array | Skipped, not counted as a sample |
 
 ISO only accepts unambiguous formats: `YYYY-MM-DD`, and a datetime with a timezone (`T` or space separated, and a required `Z` or `±HH:MM`, e.g. `2024-01-01 12:00:00Z`). `2024/01/01`, timezone-less times, and bare number strings do not count.
@@ -133,11 +142,11 @@ Once a field type is resolved, channels that **omit scale configuration** derive
 
 **Position channels** (x / y / z, when the coordinate system gives no explicit scale for that channel):
 
-| Field type | Derived scale |
-| --- | --- |
-| `continuous` | `linear` |
-| `temporal` | `time` |
-| `categorical` | `band` |
+| Field type                                    | Derived scale       |
+| --------------------------------------------- | ------------------- |
+| `continuous`                                  | `linear`            |
+| `temporal`                                    | `time`              |
+| `categorical`                                 | `band`              |
 | No bound field (e.g. an all-constant channel) | `linear` (fallback) |
 
 The fields bound to one position channel must share a single type; omitting the scale while mixing types throws and asks for an explicit scale. If a field has a non-default `order` and derives `band` / `point`, the category domain follows that `order`.

@@ -27,12 +27,12 @@ import { Draw } from '@retikz/react';
 
 Draw has two curve families: `curve` / `cubic` / `bend` connect the previous target to the next target, while `arc` draws a circular arc around the previous point. In Bezier curves, control points are not necessarily points the curve passes through; they are handles that pull the curve's direction and amount of bend.
 
-| Form | Mental model | Good for |
-| --- | --- | --- |
-| `{ curve }` | One control point pulls a simple bend | Ordinary single-arc connectors |
-| `{ cubic }` | Two control points shape the start and end directions separately | S-curves, complex connectors, precise tangents |
-| `{ bend }` | Direction + angle shorthand; control points are computed for you | Quick curved links between two nodes |
-| `{ arc }` | Circular arc around the previous point by angles and radius | Angle marks, circle fragments, geometry diagrams |
+| Form        | Mental model                                                     | Good for                                         |
+| ----------- | ---------------------------------------------------------------- | ------------------------------------------------ |
+| `{ curve }` | One control point pulls a simple bend                            | Ordinary single-arc connectors                   |
+| `{ cubic }` | Two control points shape the start and end directions separately | S-curves, complex connectors, precise tangents   |
+| `{ bend }`  | Direction + angle shorthand; control points are computed for you | Quick curved links between two nodes             |
+| `{ arc }`   | Circular arc around the previous point by angles and radius      | Angle marks, circle fragments, geometry diagrams |
 
 > There is also a **smooth curve through points** — a smooth curve passing through a list of points (centripetal Catmull-Rom). It is a `<Step kind="smooth">`-only capability, not a `way` operator (`way` is a "previous → next" pairwise infix and cannot carry a multi-point curve), so use it inside `<Path>` / `<Step>`. See [Step §Smooth](/kernel/components/draw/step).
 
@@ -130,16 +130,16 @@ Folded segments divide t evenly across the folded legs. `midway` lands on the co
 
 ### Shape sugar
 
-| Component | Draws |
-| --- | --- |
-| `<Circle>` | circle / half circle / segment |
-| `<Ellipse>` | ellipse / partial ellipse |
-| `<Arc>` | open circular / elliptical arc |
-| `<Sector>` | wedge (closed through the center) |
-| `<Rectangle>` | rectangle / rounded rectangle |
-| `<Grid>` | background grid (expands to many lines) |
-| `<RegularPolygon>` | regular polygon |
-| `<Star>` | star |
+| Component          | Draws                                   |
+| ------------------ | --------------------------------------- |
+| `<Circle>`         | circle / half circle / segment          |
+| `<Ellipse>`        | ellipse / partial ellipse               |
+| `<Arc>`            | open circular / elliptical arc          |
+| `<Sector>`         | wedge (closed through the center)       |
+| `<Rectangle>`      | rectangle / rounded rectangle           |
+| `<Grid>`           | background grid (expands to many lines) |
+| `<RegularPolygon>` | regular polygon                         |
+| `<Star>`           | star                                    |
 
 One-line forms for circles, rectangles, and sectors live under the [Shapes](/kernel/components/shapes) group, while background line fields like Grid live under [Helpers](/kernel/components/helpers). They still expand to `<Path>` / `<Step>` and share the same visual props as `<Draw>` / `<Path>`. See [Geometry](/kernel/components/shapes/circle-ellipse) for geometric shapes and [Grid](/kernel/components/helpers/grid) for regular reference lines.
 
@@ -147,24 +147,24 @@ One-line forms for circles, rectangles, and sectors live under the [Shapes](/ker
 
 ### Props
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `way` | `Array<WayItem>` | — | At least 2 items; first is always `move`, rest become `line` / `fold` / `cycle` and related actions based on item form |
-| `stroke` | `string` | `currentColor` | Stroke color |
-| `strokeWidth` | `number` | `1` | Stroke width |
-| `dashPattern` | `Array<number>` | — | Dash / gap length sequence, for example `[4, 2]` |
-| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape |
-| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape (visual only, geometry unchanged) |
-| `roundedCorners` | `number` | — | **Geometric** corner radius for line-to-line joints (TikZ `rounded corners=`); changes the path geometry, unlike `lineJoin`. See [Path §Rounded corners](/kernel/components/draw/path) |
-| `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Semantic stroke preset; explicit `strokeWidth` wins |
-| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | Path-level arrow direction |
-| `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | — | Detailed arrow configuration; see [Arrow](/kernel/components/draw/arrow) |
-| `fill` | `string \| PaintSpec` | `'none'` | Fill for closed regions: plain color or PaintSpec (gradient / pattern / image) |
-| `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | Fill rule |
-| `opacity` | `number` | — | Whole-path opacity, 0..1 |
-| `fillOpacity` | `number` | — | Fill-only opacity, 0..1 |
-| `drawOpacity` | `number` | — | Stroke-only opacity, 0..1 |
-| `zIndex` | `number` (integer) | `0` | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level (forwarded to the underlying `<Path>`) |
+| Prop             | Type                                                                                           | Default        | Description                                                                                                                                                                            |
+| ---------------- | ---------------------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `way`            | `Array<WayItem>`                                                                               | —              | At least 2 items; first is always `move`, rest become `line` / `fold` / `cycle` and related actions based on item form                                                                 |
+| `stroke`         | `string`                                                                                       | `currentColor` | Stroke color                                                                                                                                                                           |
+| `strokeWidth`    | `number`                                                                                       | `1`            | Stroke width                                                                                                                                                                           |
+| `dashPattern`    | `Array<number>`                                                                                | —              | Dash / gap length sequence, for example `[4, 2]`                                                                                                                                       |
+| `lineCap`        | `'butt' \| 'round' \| 'square'`                                                                | `'butt'`       | Stroke endpoint shape                                                                                                                                                                  |
+| `lineJoin`       | `'miter' \| 'round' \| 'bevel'`                                                                | `'miter'`      | Stroke corner shape (visual only, geometry unchanged)                                                                                                                                  |
+| `roundedCorners` | `number`                                                                                       | —              | **Geometric** corner radius for line-to-line joints (TikZ `rounded corners=`); changes the path geometry, unlike `lineJoin`. See [Path §Rounded corners](/kernel/components/draw/path) |
+| `thickness`      | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —              | Semantic stroke preset; explicit `strokeWidth` wins                                                                                                                                    |
+| `arrow`          | `'none' \| '->' \| '<-' \| '<->'`                                                              | —              | Path-level arrow direction                                                                                                                                                             |
+| `arrowDetail`    | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }`       | —              | Detailed arrow configuration; see [Arrow](/kernel/components/draw/arrow)                                                                                                               |
+| `fill`           | `string \| PaintSpec`                                                                          | `'none'`       | Fill for closed regions: plain color or PaintSpec (gradient / pattern / image)                                                                                                         |
+| `fillRule`       | `'nonzero' \| 'evenodd'`                                                                       | `'nonzero'`    | Fill rule                                                                                                                                                                              |
+| `opacity`        | `number`                                                                                       | —              | Whole-path opacity, 0..1                                                                                                                                                               |
+| `fillOpacity`    | `number`                                                                                       | —              | Fill-only opacity, 0..1                                                                                                                                                                |
+| `drawOpacity`    | `number`                                                                                       | —              | Stroke-only opacity, 0..1                                                                                                                                                              |
+| `zIndex`         | `number` (integer)                                                                             | `0`            | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level (forwarded to the underlying `<Path>`)                      |
 
 <Comparison target="tikz" title="Style Naming">
 
@@ -174,27 +174,27 @@ One-line forms for circles, rectangles, and sectors live under the [Shapes](/ker
 
 ### Curve / Shape / Label Way Items
 
-| Way item | Parameters | Consumes next item | Equivalent Step | Description |
-| --- | --- | --- | --- | --- |
-| `{ curve }` | `[cx, cy]` | Yes | `kind="curve"` | Quadratic Bezier control point |
-| `{ cubic }` | `[[c1x, c1y], [c2x, c2y]]` | Yes | `kind="cubic"` | Two cubic Bezier control points |
-| `{ bend }` | `'left' \| 'right'` | Yes | `kind="bend"` | Bend direction, default angle 30 |
-| `{ bend, angle }` | `number` | Yes | `kind="bend"` | Override the bend angle |
-| `{ arc }` | `{ startAngle, endAngle, radius }` | No | `kind="arc"` | Draw an arc around the current point |
-| `{ circle }` | `{ radius }` | No | `kind="circlePath"` | Draw a full circle around the current point |
-| `{ ellipse }` | `{ radiusX, radiusY }` | No | `kind="ellipsePath"` | Draw a full ellipse centered on the current point |
-| `{ label }` | `string \| StepLabel` | Yes | `step.label` | Decorates the next segment; string shorthand equals `{ text }` |
+| Way item          | Parameters                         | Consumes next item | Equivalent Step      | Description                                                    |
+| ----------------- | ---------------------------------- | ------------------ | -------------------- | -------------------------------------------------------------- |
+| `{ curve }`       | `[cx, cy]`                         | Yes                | `kind="curve"`       | Quadratic Bezier control point                                 |
+| `{ cubic }`       | `[[c1x, c1y], [c2x, c2y]]`         | Yes                | `kind="cubic"`       | Two cubic Bezier control points                                |
+| `{ bend }`        | `'left' \| 'right'`                | Yes                | `kind="bend"`        | Bend direction, default angle 30                               |
+| `{ bend, angle }` | `number`                           | Yes                | `kind="bend"`        | Override the bend angle                                        |
+| `{ arc }`         | `{ startAngle, endAngle, radius }` | No                 | `kind="arc"`         | Draw an arc around the current point                           |
+| `{ circle }`      | `{ radius }`                       | No                 | `kind="circlePath"`  | Draw a full circle around the current point                    |
+| `{ ellipse }`     | `{ radiusX, radiusY }`             | No                 | `kind="ellipsePath"` | Draw a full ellipse centered on the current point              |
+| `{ label }`       | `string \| StepLabel`              | Yes                | `step.label`         | Decorates the next segment; string shorthand equals `{ text }` |
 
 ### StepLabel
 
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `text` | `string` | — | Label text (single line) |
-| `position` | one of 7 keywords or `number` (0..1) | `'midway'` | Normalized position t along the segment; keywords are sugar for t (at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1) |
-| `side` | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'` | Offset side relative to segment direction; `sloped` rotates along the tangent |
-| `textColor` | `string` | — | Label text color; falls back to scope `labelDefault` → host path master color → currentColor |
-| `opacity` | `number` | — | Label-only opacity 0..1; multiplied with the owning path opacity |
-| `font` | `object` | — | Label font overrides (family / size / weight / style) |
+| Field       | Type                                                  | Default    | Description                                                                                                                                                                            |
+| ----------- | ----------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `text`      | `string`                                              | —          | Label text (single line)                                                                                                                                                               |
+| `position`  | one of 7 keywords or `number` (0..1)                  | `'midway'` | Normalized position t along the segment; keywords are sugar for t (at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1) |
+| `side`      | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'`  | Offset side relative to segment direction; `sloped` rotates along the tangent                                                                                                          |
+| `textColor` | `string`                                              | —          | Label text color; falls back to scope `labelDefault` → host path master color → currentColor                                                                                           |
+| `opacity`   | `number`                                              | —          | Label-only opacity 0..1; multiplied with the owning path opacity                                                                                                                       |
+| `font`      | `object`                                              | —          | Label font overrides (family / size / weight / style)                                                                                                                                  |
 
 ## Related
 

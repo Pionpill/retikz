@@ -1,6 +1,8 @@
-import type { FC } from 'react';
 import type { IRPath, WayDSL } from '@retikz/core';
+import type { FC } from 'react';
+
 import { parseWay } from '@retikz/core';
+
 import { Path } from '../kernel/Path';
 import { Step } from '../kernel/Step';
 
@@ -103,21 +105,10 @@ export const Draw: FC<DrawProps> = props => {
       {steps.map((s, i) => {
         if (s.kind === 'cycle') return <Step key={i} kind="cycle" />;
         if (s.kind === 'move') return <Step key={i} kind="move" to={s.to} />;
-        if (s.kind === 'fold')
-          return <Step key={i} kind="fold" via={s.via} to={s.to} label={s.label} />;
-        if (s.kind === 'curve')
-          return <Step key={i} kind="curve" to={s.to} control={s.control} label={s.label} />;
+        if (s.kind === 'fold') return <Step key={i} kind="fold" via={s.via} to={s.to} label={s.label} />;
+        if (s.kind === 'curve') return <Step key={i} kind="curve" to={s.to} control={s.control} label={s.label} />;
         if (s.kind === 'cubic')
-          return (
-            <Step
-              key={i}
-              kind="cubic"
-              to={s.to}
-              control1={s.control1}
-              control2={s.control2}
-              label={s.label}
-            />
-          );
+          return <Step key={i} kind="cubic" to={s.to} control1={s.control1} control2={s.control2} label={s.label} />;
         if (s.kind === 'bend') {
           if (s.bendAngle !== undefined) {
             return (
@@ -131,15 +122,7 @@ export const Draw: FC<DrawProps> = props => {
               />
             );
           }
-          return (
-            <Step
-              key={i}
-              kind="bend"
-              to={s.to}
-              bendDirection={s.bendDirection}
-              label={s.label}
-            />
-          );
+          return <Step key={i} kind="bend" to={s.to} bendDirection={s.bendDirection} label={s.label} />;
         }
         if (s.kind === 'arc') {
           return (
@@ -157,15 +140,7 @@ export const Draw: FC<DrawProps> = props => {
           return <Step key={i} kind="circlePath" radius={s.radius} label={s.label} />;
         }
         if (s.kind === 'ellipsePath') {
-          return (
-            <Step
-              key={i}
-              kind="ellipsePath"
-              radiusX={s.radiusX}
-              radiusY={s.radiusY}
-              label={s.label}
-            />
-          );
+          return <Step key={i} kind="ellipsePath" radiusX={s.radiusX} radiusY={s.radiusY} label={s.label} />;
         }
         if (s.kind === 'line') {
           return <Step key={i} kind="line" to={s.to} label={s.label} />;

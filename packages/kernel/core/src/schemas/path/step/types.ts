@@ -1,7 +1,25 @@
 import type { z } from 'zod';
-import type { ArcStepSchema, BendStepSchema, CirclePathStepSchema, ControlPointSchema, CubicStepSchema, CurveStepSchema, CycleStepSchema, EllipsePathStepSchema, FoldStepSchema, GeneratorStepSchema, GeometryLabelSchema, LineStepSchema, MoveStepSchema, RectangleStepSchema, SmoothStepSchema, StepSchema } from './schema';
+
 import type { ValueOf } from '../../../types';
 import type { FoldStepVia, GeometryLabelPlacement } from './constants';
+import type {
+  ArcStepSchema,
+  BendStepSchema,
+  CirclePathStepSchema,
+  ControlPointSchema,
+  CubicStepSchema,
+  CurveStepSchema,
+  CycleStepSchema,
+  EllipsePathStepSchema,
+  FoldStepSchema,
+  GeneratorStepSchema,
+  GeometryLabelSchema,
+  LineStepSchema,
+  MoveStepSchema,
+  RectangleStepSchema,
+  SmoothStepSchema,
+  StepSchema,
+} from './schema';
 
 /** Shared path-like geometry label IR type. */
 export type IRGeometryLabel = z.infer<typeof GeometryLabelSchema>;

@@ -92,7 +92,10 @@ const linearToOklch = ({ r, g, b, alpha }: LinearRgb): Oklch => {
 };
 
 /** byte（0..255）→ 两位 hex */
-const byteToHex = (n: number): string => Math.round(clamp01(n) * 255).toString(16).padStart(2, '0');
+const byteToHex = (n: number): string =>
+  Math.round(clamp01(n) * 255)
+    .toString(16)
+    .padStart(2, '0');
 
 /** oklch → sRGB gamma hex（钳到 gamut）；alpha<1 时输出 `#rrggbbaa`，否则 `#rrggbb` */
 const oklchToHex = ({ L, C, H, alpha }: Oklch): string => {
@@ -120,7 +123,7 @@ const colorToOklch = (color: string): Oklch | null => {
 
 /** 取 from→to 的最短色相差（处理 360° 环绕） */
 const hueDelta = (from: number, to: number): number => {
-  const diff = ((to - from) % 360 + 540) % 360 - 180;
+  const diff = ((((to - from) % 360) + 540) % 360) - 180;
   return diff;
 };
 

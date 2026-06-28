@@ -1,5 +1,6 @@
-import { Draw, DrawWay, Layout } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, DrawWay, Layout } from '@retikz/react';
 
 /**
  * `DrawWay.Cycle` 闭合 + `fill` 填色
@@ -8,12 +9,7 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout width={360} height={160}>
     {/* 蓝色填充三角形 */}
-    <Draw
-      way={[[20, 20], [100, 20], [60, 110], DrawWay.Cycle]}
-      fill="dodgerblue"
-      stroke="dodgerblue"
-      strokeWidth={2}
-    />
+    <Draw way={[[20, 20], [100, 20], [60, 110], DrawWay.Cycle]} fill="dodgerblue" stroke="dodgerblue" strokeWidth={2} />
     {/* 绿色填充菱形 */}
     <Draw
       way={[[180, 65], [230, 20], [280, 65], [230, 110], DrawWay.Cycle]}

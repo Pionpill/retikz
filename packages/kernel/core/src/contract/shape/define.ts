@@ -10,6 +10,5 @@ import type { ShapeDefinition, ShapeDefinitionInput } from './types';
  * @param def shape 定义（paramsSchema / circumscribe / boundaryPoint / anchor / edgePoint? / emit）
  * @returns 擦除成 `ShapeDefinition` 的同一份 def（便于 `export const sector = defineShape({ ... })`）
  */
-export const defineShape = <TParams extends IRJsonObject>(
-  def: ShapeDefinitionInput<TParams>,
-): ShapeDefinition => def as unknown as ShapeDefinition;
+export const defineShape = <TParams extends IRJsonObject>(def: ShapeDefinitionInput<TParams>): ShapeDefinition =>
+  def as unknown as ShapeDefinition;

@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * 跨 scope 引用：scope 内 node id 可被 scope 外 path 引用
@@ -7,10 +8,16 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={560} height={120}>
-    <Node id="external" position={[0, 0]}>external</Node>
+    <Node id="external" position={[0, 0]}>
+      external
+    </Node>
     <Scope transforms={[{ kind: 'translate', x: 220, y: 0 }]}>
-      <Node id="inner" position={[0, 0]}>inner</Node>
-      <Node id="inner-2" position={[100, 0]}>inner-2</Node>
+      <Node id="inner" position={[0, 0]}>
+        inner
+      </Node>
+      <Node id="inner-2" position={[100, 0]}>
+        inner-2
+      </Node>
     </Scope>
     <Draw way={['external', 'inner']} arrow="->" />
     <Draw way={['inner', 'inner-2']} arrow="->" />

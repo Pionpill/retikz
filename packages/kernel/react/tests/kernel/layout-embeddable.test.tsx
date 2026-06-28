@@ -1,9 +1,14 @@
+import type { CompositeDefinition } from '@retikz/core';
+
+import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { type FC } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { CompositeBaseSchema, type CompositeDefinition, defineComposite } from '@retikz/core';
-import { type EmbeddableTier2Adapter, Node } from '../../src';
+
+import type { EmbeddableTier2Adapter } from '../../src';
+
+import { Node } from '../../src';
 import { Layout } from '../../src/kernel/Layout';
 
 /**
@@ -34,7 +39,7 @@ const makePanelComposite = (namespace: string): CompositeDefinition => {
   });
   return defineComposite({
     schema,
-    expand: (node) => ({ type: 'node', id: `panel-${node.panelId}`, position: [0, 0], text: node.panelId }),
+    expand: node => ({ type: 'node', id: `panel-${node.panelId}`, position: [0, 0], text: node.panelId }),
   });
 };
 
@@ -55,7 +60,7 @@ const makeFixture = (
   const adapter: EmbeddableTier2Adapter<FixtureProps> = {
     displayName,
     namespace,
-    contribute: (props) => ({
+    contribute: props => ({
       node: { namespace, type: 'panel', panelId: props.id },
       datasets: datasets ?? { [props.id]: props.data },
       makeComposites,
@@ -75,10 +80,13 @@ describe('<Layout> 可嵌入 Tier2 聚合', () => {
     const dataA = { a: [1, 2] };
     const dataB = { b: [3, 4] };
     const sharedMake = vi.fn(() => [makePanelComposite('demo')]);
-    const mkAdapter = (displayName: string, datasets: Record<string, unknown>): EmbeddableTier2Adapter<FixtureProps> => ({
+    const mkAdapter = (
+      displayName: string,
+      datasets: Record<string, unknown>,
+    ): EmbeddableTier2Adapter<FixtureProps> => ({
       displayName,
       namespace: 'demo',
-      contribute: (props) => ({
+      contribute: props => ({
         node: { namespace: 'demo', type: 'panel', panelId: props.id },
         datasets,
         makeComposites: sharedMake,
@@ -134,12 +142,12 @@ describe('<Layout> 可嵌入 Tier2 聚合', () => {
     });
     const userComposite = defineComposite({
       schema: userSchema,
-      expand: (node) => ({ type: 'node', id: `user-${node.panelId}`, position: [2, 2], text: node.panelId }),
+      expand: node => ({ type: 'node', id: `user-${node.panelId}`, position: [2, 2], text: node.panelId }),
     });
     const userAdapter: EmbeddableTier2Adapter<FixtureProps> = {
       displayName: 'UserFixture',
       namespace: 'user',
-      contribute: (props) => ({
+      contribute: props => ({
         node: { namespace: 'user', type: 'panel', panelId: props.id },
         datasets: {},
         makeComposites: () => [],
@@ -206,7 +214,7 @@ describe('<Layout> 可嵌入 Tier2 聚合', () => {
     const adapter: EmbeddableTier2Adapter<FixtureProps> = {
       displayName,
       namespace: 'demo',
-      contribute: (props) => ({
+      contribute: props => ({
         node: { namespace: 'demo', type: 'panel', panelId: props.id },
         datasets: { [props.id]: props.data },
         makeComposites,

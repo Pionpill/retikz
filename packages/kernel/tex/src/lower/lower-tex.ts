@@ -1,5 +1,7 @@
 import type { LowerTex } from '@retikz/core';
+
 import type { MathJaxSvgEngine } from '../mathjax/engine';
+
 import { parseMathJaxSvg } from '../svg/parse-svg';
 
 export const createLowerTex = (engine: MathJaxSvgEngine): LowerTex => {

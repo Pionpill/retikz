@@ -1,14 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { CompileWarning } from '../../src/compile/compile';
-import { PathSchema } from '../../src/schemas';
-import type { IR } from '../../src/schemas';
-import type {
-  PathCommand,
-  PathPrim,
-  ScenePrimitive,
-} from '../../src/primitive';
 import type { ArrowDefinition } from '../../src/contract/arrow';
+import type { PathCommand, PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { PathSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 /**
@@ -134,9 +132,7 @@ describe('ADV — def 几何 finite 守卫', () => {
   });
 
   it('length_huge_scale_huge：length=1e10 scale=1e10（有限）→ markerWidth finite，不抛', () => {
-    const scene = compileToScene(
-      horizontalPathIR('->', { shape: 'normal', length: 1e10, scale: 1e10 }),
-    );
+    const scene = compileToScene(horizontalPathIR('->', { shape: 'normal', length: 1e10, scale: 1e10 }));
     const path = firstPath(scene.primitives);
     expect(Number.isFinite(path?.arrowEnd?.markerWidth)).toBe(true);
   });
@@ -183,13 +179,9 @@ describe('ADV — emit 异常 / 窄子集栅栏', () => {
   it('emit_injects_text：emit 产含 text 的 primitive（绕窄子集 TS）→ 抛 invalid marker primitive type', () => {
     const def = {
       lineContactX: 0,
-      emit: () => [
-        { type: 'text', x: 0, y: 0, lines: ['<script>'], measuredWidth: 0, measuredHeight: 0 },
-      ],
+      emit: () => [{ type: 'text', x: 0, y: 0, lines: ['<script>'], measuredWidth: 0, measuredHeight: 0 }],
     } as unknown as ArrowDefinition;
-    expect(() => compileArrow({ shape: 'z' }, { z: def })).toThrow(
-      /invalid marker primitive type 'text'/,
-    );
+    expect(() => compileArrow({ shape: 'z' }, { z: def })).toThrow(/invalid marker primitive type 'text'/);
   });
 
   it('emit_injects_resourceRef_fill：emit 产 resourceRef fill（绕 MarkerFill）→ 抛 marker fill must be', () => {
@@ -209,9 +201,7 @@ describe('ADV — emit 异常 / 窄子集栅栏', () => {
   it('emit_injects_function：emit 产物含函数字段（绕 TS）→ 抛（守 Scene JSON 可序列化）', () => {
     const def = {
       lineContactX: 0,
-      emit: () => [
-        { type: 'path', commands: [{ kind: 'move', to: [0, 0] }], onClick: () => 'gotcha' },
-      ],
+      emit: () => [{ type: 'path', commands: [{ kind: 'move', to: [0, 0] }], onClick: () => 'gotcha' }],
     } as unknown as ArrowDefinition;
     expect(() => compileArrow({ shape: 'z' }, { z: def })).toThrow(/containing a function/i);
   });
@@ -263,9 +253,7 @@ describe('ADV — override 缺字段', () => {
 // ───────────────────────────────────────────────────────────────────────────
 describe('ADV — 未注册 shape 错误质量', () => {
   it('case_mismatch：shape="Stealth"（大写）→ throw，消息含可用名列表（LLM 可看出大小写错）', () => {
-    expect(() => compileToScene(horizontalPathIR('->', { shape: 'Stealth' }))).toThrow(
-      /Unknown arrow shape 'Stealth'/,
-    );
+    expect(() => compileToScene(horizontalPathIR('->', { shape: 'Stealth' }))).toThrow(/Unknown arrow shape 'Stealth'/);
     expect(() => compileToScene(horizontalPathIR('->', { shape: 'Stealth' }))).toThrow(/stealth/);
   });
 
@@ -288,10 +276,10 @@ describe('ADV — 未注册 shape 错误质量', () => {
       lineContactX: 2,
       emit: () => [{ type: 'path', commands: [{ kind: 'move', to: [0, 0] }] }],
     };
-    const scene = compileToScene(
-      horizontalPathIR('<->', { start: { shape: 'myTip' }, end: { shape: 'stealth' } }),
-      { arrows: { myTip: def }, onWarn: () => {} },
-    );
+    const scene = compileToScene(horizontalPathIR('<->', { start: { shape: 'myTip' }, end: { shape: 'stealth' } }), {
+      arrows: { myTip: def },
+      onWarn: () => {},
+    });
     const path = firstPath(scene.primitives);
     expect(path?.arrowStart?.shape).toBe('myTip');
     expect(path?.arrowEnd?.shape).toBe('stealth');
@@ -385,9 +373,7 @@ describe('ADV — Scene round-trip / contextStroke', () => {
   });
 
   it('contextStroke_no_color：默认 stealth marker fill 是 contextStroke 对象（主题不冻结）', () => {
-    const spec = firstPath(
-      compileToScene(horizontalPathIR('->', { shape: 'stealth' })).primitives,
-    )?.arrowEnd;
+    const spec = firstPath(compileToScene(horizontalPathIR('->', { shape: 'stealth' })).primitives)?.arrowEnd;
     const mp = spec?.marker[0] as { fill?: unknown };
     expect(mp.fill).toEqual({ kind: 'contextStroke' });
     expect(JSON.parse(JSON.stringify(spec))).toEqual(spec);

@@ -1,7 +1,8 @@
 import type { IR } from '@retikz/core';
+import type { FC } from 'react';
+
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import type { FC } from 'react';
 import { z } from 'zod';
 
 /** 横向步距（user units）：相邻阶段框中心的间距 */

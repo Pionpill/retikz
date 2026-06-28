@@ -1,5 +1,6 @@
-import { Layout, Node, Text } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node, Text } from '@retikz/react';
 
 /**
  * 行级样式覆盖
@@ -8,9 +9,10 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout width={520} height={160}>
     <Node id="left" position={[-180, 0]} align="left">
-      <Text fill="red" font={{ weight: 'bold', size: 16 }}>Heading</Text>
-      body line 1
-      body line 2
+      <Text fill="red" font={{ weight: 'bold', size: 16 }}>
+        Heading
+      </Text>
+      body line 1 body line 2
     </Node>
 
     <Node
@@ -27,7 +29,9 @@ const Demo: FC = () => (
     <Node id="right" position={[180, 0]} align="left">
       <Text fill="green">success</Text>
       <Text fill="darkorange">warning</Text>
-      <Text fill="red" opacity={0.8}>error</Text>
+      <Text fill="red" opacity={0.8}>
+        error
+      </Text>
     </Node>
   </Layout>
 );

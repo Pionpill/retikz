@@ -1,13 +1,25 @@
+import type { FC, ReactNode } from 'react';
+
 import { X } from 'lucide-react';
-import { type FC, type ReactNode, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { useComparisonStore } from '@/store/use-comparison-store';
 
-import { ComparisonTargetLabelKeys, type ComparisonTargetValue, isComparisonTarget } from './targets';
+import type { ComparisonTargetValue } from './targets';
+
+import { ComparisonTargetLabelKeys, isComparisonTarget } from './targets';
 
 /** 可选对照块 props。 */
 export type ComparisonProps = {

@@ -15,7 +15,11 @@ Ternary coordinates bind three channels: `x` / `y` / `z`; the number of supplied
 
 Add `<Axis dimension="x" />` / `"y"` / `"z"` to draw tick axes along the three edges; all three together form the full triangle outline. Ternary coordinates this round are `<PointMark>`-first, for scatter points inside the triangle.
 
-<ComponentAlert type="tip" title="Guide dimensions must match the coordinate" description="Each coordinate system accepts only its own dimensions: cartesian uses x / y, polar uses x / y (x is angular, y is radial), ternary uses x / y / z. A wrong dimension, such as <Axis dimension='angle'>, fails loudly instead of silently drawing an empty axis." />
+<ComponentAlert
+  type="tip"
+  title="Guide dimensions must match the coordinate"
+  description="Each coordinate system accepts only its own dimensions: cartesian uses x / y, polar uses x / y (x is angular, y is radial), ternary uses x / y / z. A wrong dimension, such as <Axis dimension='angle'>, fails loudly instead of silently drawing an empty axis."
+/>
 
 ## Good Fits
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { parseTargetSugar } from '../../src/parsers/target-sugar';
 
 describe('parseTargetSugar', () => {

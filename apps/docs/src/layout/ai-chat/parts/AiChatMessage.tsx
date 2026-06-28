@@ -1,7 +1,8 @@
 import type { TFunction } from 'i18next';
+import type { FC, ReactNode } from 'react';
+
 import { Bot, Code, Copy, Pencil, RefreshCw, Trash2 } from 'lucide-react';
 import { Fragment, useCallback } from 'react';
-import type { FC, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
@@ -16,8 +17,11 @@ import {
 } from '@/components/ui/context-menu';
 import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/use-ai-chat-store';
+
 import type { ChatMessage } from '../providers/types';
-import { RetikzPreview, type RetikzPreviewFormat, RetikzPreviewPending } from './RetikzPreview';
+import type { RetikzPreviewFormat } from './RetikzPreview';
+
+import { RetikzPreview, RetikzPreviewPending } from './RetikzPreview';
 
 export type AiChatMessageProps = {
   message: ChatMessage;
@@ -462,7 +466,9 @@ const renderListItem = (item: ListItem, idx: number): ReactNode => {
         readOnly
         className="mt-1 size-3.5 shrink-0 cursor-default accent-primary"
       />
-      <span className={cn(item.checked === true && 'text-muted-foreground line-through')}>{renderInline(item.text)}</span>
+      <span className={cn(item.checked === true && 'text-muted-foreground line-through')}>
+        {renderInline(item.text)}
+      </span>
     </span>
   ) : (
     renderInline(item.text)
@@ -533,10 +539,7 @@ const renderMarkdown = (src: string, options: RenderMarkdownOptions = {}): React
     }
     if (b.type === 'blockquote') {
       return (
-        <blockquote
-          key={i}
-          className="my-2 border-l-2 border-border pl-3 whitespace-pre-wrap text-muted-foreground"
-        >
+        <blockquote key={i} className="my-2 border-l-2 border-border pl-3 whitespace-pre-wrap text-muted-foreground">
           {renderInline(b.text)}
         </blockquote>
       );
@@ -545,8 +548,7 @@ const renderMarkdown = (src: string, options: RenderMarkdownOptions = {}): React
       return <hr key={i} className="my-3 border-border" />;
     }
     if (b.type === 'table') {
-      const alignCls = (a: TableAlign) =>
-        a === 'center' ? 'text-center' : a === 'right' ? 'text-right' : 'text-left';
+      const alignCls = (a: TableAlign) => (a === 'center' ? 'text-center' : a === 'right' ? 'text-right' : 'text-left');
       return (
         <div key={i} className="my-2 overflow-x-auto">
           <table className="w-full border-collapse text-sm">

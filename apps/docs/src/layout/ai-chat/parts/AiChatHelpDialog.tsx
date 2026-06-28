@@ -1,4 +1,4 @@
-import { Database, KeyRound, Keyboard, Lock } from 'lucide-react';
+import { Database, Keyboard, KeyRound, Lock } from 'lucide-react';
 import { type FC, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -25,10 +25,26 @@ export const AiChatHelpDialog: FC<AiChatHelpDialogProps> = ({ open, onOpenChange
           <DialogDescription>{t('ai.helpDialogSubtitle')}</DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4">
-          <HelpSection icon={<KeyRound className="size-4" />} title={t('ai.helpByokTitle')} desc={t('ai.helpByokDesc')} />
-          <HelpSection icon={<Database className="size-4" />} title={t('ai.helpStorageTitle')} desc={t('ai.helpStorageDesc')} />
-          <HelpSection icon={<Lock className="size-4" />} title={t('ai.helpPrivacyTitle')} desc={t('ai.helpPrivacyDesc')} />
-          <HelpSection icon={<Keyboard className="size-4" />} title={t('ai.helpShortcutsTitle')} desc={t('ai.helpShortcutsDesc')} />
+          <HelpSection
+            icon={<KeyRound className="size-4" />}
+            title={t('ai.helpByokTitle')}
+            desc={t('ai.helpByokDesc')}
+          />
+          <HelpSection
+            icon={<Database className="size-4" />}
+            title={t('ai.helpStorageTitle')}
+            desc={t('ai.helpStorageDesc')}
+          />
+          <HelpSection
+            icon={<Lock className="size-4" />}
+            title={t('ai.helpPrivacyTitle')}
+            desc={t('ai.helpPrivacyDesc')}
+          />
+          <HelpSection
+            icon={<Keyboard className="size-4" />}
+            title={t('ai.helpShortcutsTitle')}
+            desc={t('ai.helpShortcutsDesc')}
+          />
         </div>
       </DialogContent>
     </Dialog>

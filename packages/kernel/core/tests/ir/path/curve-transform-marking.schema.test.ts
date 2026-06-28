@@ -5,12 +5,8 @@
  *   编译行为（out/in→cubic、self-loop、path transform 包 GroupPrim、marks→marker）由 compile 测试覆盖。
  */
 import { describe, expect, it } from 'vitest';
-import {
-  ArrowMarkSchema,
-  BendStepSchema,
-  PathScaleSchema,
-  PathSchema,
-} from '../../../src/schemas';
+
+import { ArrowMarkSchema, BendStepSchema, PathScaleSchema, PathSchema } from '../../../src/schemas';
 
 /** 构造一条最小合法 path（两 step），便于叠加被测字段 */
 const basePath = (extra: Record<string, unknown>) => ({
@@ -210,9 +206,7 @@ describe('PathSchema：rotate / scale 合法', () => {
   });
 
   it('rotate + scale 同时设合法', () => {
-    expect(
-      PathSchema.safeParse(basePath({ rotate: 30, scale: { x: 1.5, y: 1 } })).success,
-    ).toBe(true);
+    expect(PathSchema.safeParse(basePath({ rotate: 30, scale: { x: 1.5, y: 1 } })).success).toBe(true);
   });
 
   it('rotate 为 NaN 拒（finite）', () => {
@@ -227,9 +221,7 @@ describe('PathSchema：rotate / scale 合法', () => {
 describe('PathSchema：marks 合法', () => {
   it('接受单个中点 mark', () => {
     expect(
-      PathSchema.safeParse(
-        basePath({ marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] }),
-      ).success,
+      PathSchema.safeParse(basePath({ marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] })).success,
     ).toBe(true);
   });
 
@@ -254,48 +246,30 @@ describe('PathSchema：marks 合法', () => {
 describe('PathSchema：marks 错误路径', () => {
   it('mark pos 1.5 拒（schema max(1)，非实现钳制）', () => {
     expect(
-      PathSchema.safeParse(
-        basePath({ marks: [{ pos: 1.5, mark: { kind: 'arrow', shape: 'stealth' } }] }),
-      ).success,
+      PathSchema.safeParse(basePath({ marks: [{ pos: 1.5, mark: { kind: 'arrow', shape: 'stealth' } }] })).success,
     ).toBe(false);
   });
 
   it('mark pos -0.1 拒（schema min(0)）', () => {
-    expect(
-      PathSchema.safeParse(
-        basePath({ marks: [{ pos: -0.1, mark: { kind: 'arrow' } }] }),
-      ).success,
-    ).toBe(false);
+    expect(PathSchema.safeParse(basePath({ marks: [{ pos: -0.1, mark: { kind: 'arrow' } }] })).success).toBe(false);
   });
 
   it('mark.kind 非 arrow 拒', () => {
-    expect(
-      PathSchema.safeParse(
-        basePath({ marks: [{ pos: 0.5, mark: { kind: 'dot' } }] }),
-      ).success,
-    ).toBe(false);
+    expect(PathSchema.safeParse(basePath({ marks: [{ pos: 0.5, mark: { kind: 'dot' } }] })).success).toBe(false);
   });
 
   it('mark 缺 pos 拒（结构错）', () => {
-    expect(
-      PathSchema.safeParse(
-        basePath({ marks: [{ mark: { kind: 'arrow', shape: 'stealth' } }] }),
-      ).success,
-    ).toBe(false);
+    expect(PathSchema.safeParse(basePath({ marks: [{ mark: { kind: 'arrow', shape: 'stealth' } }] })).success).toBe(
+      false,
+    );
   });
 
   it('marks 非数组拒（结构错）', () => {
-    expect(
-      PathSchema.safeParse(
-        basePath({ marks: { pos: 0.5, mark: { kind: 'arrow' } } }),
-      ).success,
-    ).toBe(false);
+    expect(PathSchema.safeParse(basePath({ marks: { pos: 0.5, mark: { kind: 'arrow' } } })).success).toBe(false);
   });
 
   it('mark 缺 mark 字段拒（结构错）', () => {
-    expect(
-      PathSchema.safeParse(basePath({ marks: [{ pos: 0.5 }] })).success,
-    ).toBe(false);
+    expect(PathSchema.safeParse(basePath({ marks: [{ pos: 0.5 }] })).success).toBe(false);
   });
 });
 

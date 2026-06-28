@@ -1,7 +1,14 @@
 import type { z } from 'zod';
-import type { AnimationTrackSchema, KeyframeSchema, OriginSchema, TriggerSchema } from './schema';
+
 import type { ValueOf } from '../../types';
-import type { AnimationDirection, AnimationEasing, AnimationFill, AnimationProperty, AnimationTrigger } from './constants';
+import type {
+  AnimationDirection,
+  AnimationEasing,
+  AnimationFill,
+  AnimationProperty,
+  AnimationTrigger,
+} from './constants';
+import type { AnimationTrackSchema, KeyframeSchema, OriginSchema, TriggerSchema } from './schema';
 
 /** 时间轴动画 track（renderer 无关、JSON 可序列化、无函数；keyframe 给绝对展示值、末帧 = 元素 base 终态） */
 export type IRAnimationTrack = z.infer<typeof AnimationTrackSchema>;

@@ -23,20 +23,20 @@ import { RegularPolygon } from '@retikz/react';
 
 `<RegularPolygon>` 用外接半径或边长确定大小。`sides` 至少为 `3`，`rotate` 可以调整整体朝向。
 
-| 写法 | 适合 |
-| --- | --- |
-| `{ center, radius, sides }` | 已知外接半径 |
-| `{ center, sideLength, sides }` | 已知边长 |
+| 写法                            | 适合         |
+| ------------------------------- | ------------ |
+| `{ center, radius, sides }`     | 已知外接半径 |
+| `{ center, sideLength, sides }` | 已知边长     |
 
 <ComponentPreview name="regular-polygon-basic" size="xs" />
 
 ### API 参考
 
-| 组件 | 组合 | 含义 |
-| --- | --- | --- |
-| `<RegularPolygon>` | `center` + `radius` + `sides` | 通过外接半径和边数确定正多边形 |
-| | `center` + `sideLength` + `sides` | 通过边长和边数确定正多边形 |
-| | + `rotate?` | 整体起始角；缺省 `-90`（一个顶点朝上） |
+| 组件               | 组合                              | 含义                                   |
+| ------------------ | --------------------------------- | -------------------------------------- |
+| `<RegularPolygon>` | `center` + `radius` + `sides`     | 通过外接半径和边数确定正多边形         |
+|                    | `center` + `sideLength` + `sides` | 通过边长和边数确定正多边形             |
+|                    | + `rotate?`                       | 整体起始角；缺省 `-90`（一个顶点朝上） |
 
 ## 作为 Node 形状
 
@@ -67,10 +67,10 @@ import { Node } from '@retikz/react';
 
 ### API 参考
 
-| `shape` | 边界 | 参数 |
-| --- | --- | --- |
-| `{ type: 'polygon', params }` | 能容纳文字的正多边形外接圆 | `sides`（≥3） / `rotate?` / `cornerRadius?` |
-| `"diamond"` | = `polygon{ sides:4, rotate:0 }` 预设 | 无 |
+| `shape`                       | 边界                                  | 参数                                        |
+| ----------------------------- | ------------------------------------- | ------------------------------------------- |
+| `{ type: 'polygon', params }` | 能容纳文字的正多边形外接圆            | `sides`（≥3） / `rotate?` / `cornerRadius?` |
+| `"diamond"`                   | = `polygon{ sides:4, rotate:0 }` 预设 | 无                                          |
 
 `cornerRadius`（用户单位）给每个顶点倒角，省略 / `0` = 直角，逐角夹紧到不自交的最大半径。
 

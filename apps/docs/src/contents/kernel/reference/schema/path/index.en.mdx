@@ -112,17 +112,17 @@ For the endpoint rules of proportional placement, see [Placement](/kernel/refere
 
 <Comparison target="tikz" title="Path / Step field mapping">
 
-| IR field | TikZ equivalent |
-| --- | --- |
-| `lineCap` / `lineJoin` | `line cap` / `line join` |
-| `thickness` | `ultra thin` … `ultra thick` |
-| `drawOpacity` | `draw opacity` |
-| `kind: 'fold'` | `-\|` / `\|-` |
-| `kind: 'cycle'` | `cycle` |
-| `kind: 'bend'` | `to[bend left=N]` / `to[bend right=N]` |
-| `kind: 'arc'` | `arc[start angle=…, end angle=…, radius=…]` |
+| IR field                                     | TikZ equivalent                                        |
+| -------------------------------------------- | ------------------------------------------------------ |
+| `lineCap` / `lineJoin`                       | `line cap` / `line join`                               |
+| `thickness`                                  | `ultra thin` … `ultra thick`                           |
+| `drawOpacity`                                | `draw opacity`                                         |
+| `kind: 'fold'`                               | `-\|` / `\|-`                                          |
+| `kind: 'cycle'`                              | `cycle`                                                |
+| `kind: 'bend'`                               | `to[bend left=N]` / `to[bend right=N]`                 |
+| `kind: 'arc'`                                | `arc[start angle=…, end angle=…, radius=…]`            |
 | `kind: 'circlePath'` / `kind: 'ellipsePath'` | `circle[radius=…]` / `ellipse[x radius=…, y radius=…]` |
-| `relative` / `relativeAccumulate` | `(+x, +y)` / `(++x, ++y)` |
+| `relative` / `relativeAccumulate`            | `(+x, +y)` / `(++x, ++y)`                              |
 
 </Comparison>
 

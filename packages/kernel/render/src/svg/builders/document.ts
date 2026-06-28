@@ -1,14 +1,17 @@
 import type { ArrowEndSpec, DropShadow, Scene, ScenePrimitive } from '@retikz/core';
-import type { SvgNode } from '../types';
+
 import type { EasingRegistry } from '../../animation/types';
-import { formatViewBox } from '../view-box';
-import { type BuildContext, buildPrim } from './prim';
-import { buildPaintDef } from './paint-defs';
-import { buildClipDef } from './clip-defs';
-import { buildArrowMarker } from './arrow-markers';
-import { collectArrowSpecs, hashKey, stableSpecKey } from './arrow-collect';
-import { buildShadowDef, collectShadows, shadowHash, stableShadowKey } from './shadow-defs';
+import type { SvgNode } from '../types';
+import type { BuildContext } from './prim';
+
 import { createSvgAnimationCollector } from '../animation/keyframes';
+import { formatViewBox } from '../view-box';
+import { collectArrowSpecs, hashKey, stableSpecKey } from './arrow-collect';
+import { buildArrowMarker } from './arrow-markers';
+import { buildClipDef } from './clip-defs';
+import { buildPaintDef } from './paint-defs';
+import { buildPrim } from './prim';
+import { buildShadowDef, collectShadows, shadowHash, stableShadowKey } from './shadow-defs';
 
 /** `buildSvgDocument` / `buildSvgFragment` 选项 */
 export type BuildDocumentOptions = {
@@ -44,8 +47,7 @@ const makeContext = (
   clipIdFor: (id: string) => string;
   shadowIdFor: (shadow: DropShadow) => string;
 } => {
-  const arrowMarkerIdFor = (spec: ArrowEndSpec): string =>
-    `retikz-arrow-${idPrefix}-${hashKey(stableSpecKey(spec))}`;
+  const arrowMarkerIdFor = (spec: ArrowEndSpec): string => `retikz-arrow-${idPrefix}-${hashKey(stableSpecKey(spec))}`;
   const paintIdFor = (id: string): string => `retikz-paint-${idPrefix}-${id}`;
   const clipIdFor = (id: string): string => `retikz-clip-${idPrefix}-${id}`;
   const shadowIdFor = (shadow: DropShadow): string => `retikz-shadow-${idPrefix}-${shadowHash(shadow)}`;
@@ -91,12 +93,7 @@ const buildDefs = (scene: Scene, idPrefix: string): SvgNode | undefined => {
   const resources = scene.resources ?? [];
   const paintResources = resources.filter(r => r.kind === 'paint');
   const clipResources = resources.filter(r => r.kind === 'clip');
-  if (
-    uniqueByKey.size === 0 &&
-    uniqueShadows.size === 0 &&
-    paintResources.length === 0 &&
-    clipResources.length === 0
-  ) {
+  if (uniqueByKey.size === 0 && uniqueShadows.size === 0 && paintResources.length === 0 && clipResources.length === 0) {
     return undefined;
   }
   const children: Array<SvgNode> = [];
@@ -113,10 +110,7 @@ const buildDefs = (scene: Scene, idPrefix: string): SvgNode | undefined => {
  * Scene → SVG 内容子树（`<defs>` + primitives，无 `<svg>` 外壳）
  * @description 给 Vanilla `mountSvg` 往已有容器塞、或需要自定义 `<svg>` 外壳的 caller 用。
  */
-export const buildSvgFragment = (
-  scene: Scene,
-  options: BuildDocumentOptions,
-): Array<SvgNode> => {
+export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): Array<SvgNode> => {
   const { context } = makeContext(options.idPrefix);
   // 截帧（snapshotAt 给定）→ 烘焙静态帧的收集器；否则按 animate 决定动画收集器 / 无（base）
   const collector =
@@ -136,9 +130,7 @@ export const buildSvgFragment = (
           });
   if (collector) context.decorate = collector.decorate;
   const defs = buildDefs(scene, options.idPrefix);
-  let prims = scene.primitives
-    .filter((p): p is ScenePrimitive => Boolean(p))
-    .map(p => buildPrim(p, context));
+  let prims = scene.primitives.filter((p): p is ScenePrimitive => Boolean(p)).map(p => buildPrim(p, context));
   if (collector) prims = collector.wrapCamera(prims, scene);
   const style = collector?.styleNode();
   // 顺序：<style>（动画）→ <defs>（资源）→ primitives

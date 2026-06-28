@@ -1,15 +1,12 @@
-import type { FC, ReactElement } from 'react';
 import type { IRStepLabel } from '@retikz/core';
+import type { FC, ReactElement } from 'react';
+
+import type { DslTarget } from '../kernel/Step';
+import type { AngleInput, PathVisualProps } from './_shared';
+
 import { Path } from '../kernel/Path';
-import { type DslTarget, Step } from '../kernel/Step';
-import {
-  type AngleInput,
-  type PathVisualProps,
-  pickPathVisual,
-  polarXY,
-  requireXY,
-  resolveAngles,
-} from './_shared';
+import { Step } from '../kernel/Step';
+import { pickPathVisual, polarXY, requireXY, resolveAngles } from './_shared';
 
 /**
  * `<Sector>` 形态：扇形（wedge 经圆心闭合）；圆 / 椭圆；必给角度（三选二）。

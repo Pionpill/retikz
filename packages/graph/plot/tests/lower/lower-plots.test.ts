@@ -1,9 +1,14 @@
-import { compileToScene } from '@retikz/core';
 import type { IRNode, IRPaintSpec, IRPath, IRScope } from '@retikz/core';
+
+import { compileToScene } from '@retikz/core';
 import { schemeCategory10 as d3SchemeCategory10 } from 'd3-scale-chromatic';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 const SALES = [
   { month: 0, revenue: 10 },
@@ -23,7 +28,7 @@ const paintGradient: IRPaintSpec = {
 const lineSpec: PlotSpec = PlotSpecSchema.parse({
   namespace: 'plot',
   type: 'plot',
-  data: { reference:'sales' },
+  data: { reference: 'sales' },
   scales: [
     { type: 'linear', name: 'xMonth' },
     { type: 'linear', name: 'yRevenue' },
@@ -36,7 +41,7 @@ const pointSpec = (): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
-    data: { reference:'sales' },
+    data: { reference: 'sales' },
     scales: [
       { type: 'linear', name: 'xMonth' },
       { type: 'linear', name: 'yRevenue' },
@@ -45,14 +50,21 @@ const pointSpec = (): PlotSpec =>
     marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
   });
 
-const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options?: LowerPlotsOptions,
+): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
-const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options?: LowerPlotsOptions): IRScope =>
-  expandOf(spec, datasets, options).children[0] as IRScope;
+const firstLayer = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options?: LowerPlotsOptions,
+): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
@@ -224,7 +236,9 @@ describe('lowerPlots (ADR-06)', () => {
   it('non_finite_size_throws', () => {
     // 非有限的绘图区尺寸会一路污染出 cx="NaN" 坏坐标——入口抛清晰错误而非静默出坏图
     expect(() => expandOf(lineSpec, { sales: SALES }, { width: Number.NaN, height: 300 })).toThrow(/width/);
-    expect(() => expandOf(lineSpec, { sales: SALES }, { width: 480, height: Number.POSITIVE_INFINITY })).toThrow(/height/);
+    expect(() => expandOf(lineSpec, { sales: SALES }, { width: 480, height: Number.POSITIVE_INFINITY })).toThrow(
+      /height/,
+    );
   });
 
   it('non_positive_size_throws', () => {
@@ -237,7 +251,7 @@ describe('lowerPlots (ADR-06)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference:'sales' },
+      data: { reference: 'sales' },
       scales: [
         { type: 'linear', name: 'xMonth', domain: [0, 10], range: [0, 100] },
         { type: 'linear', name: 'yRevenue', domain: [0, 100], range: [100, 0] },
@@ -266,7 +280,7 @@ describe('lowerPlots (ADR-06)', () => {
   const guidedLineSpec: PlotSpec = PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
-    data: { reference:'sales' },
+    data: { reference: 'sales' },
     scales: [
       { type: 'linear', name: 'xMonth' },
       { type: 'linear', name: 'yRevenue' },
@@ -304,14 +318,17 @@ describe('lowerPlots (ADR-06)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference:'sales' },
+      data: { reference: 'sales' },
       scales: [
         { type: 'linear', name: 'xMonth', domain: [0, 10], range: [0, 100] },
         { type: 'linear', name: 'yRevenue', domain: [0, 100], range: [100, 0] },
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
-      guides: [{ type: 'axis', dimension: 'x' }, { type: 'axis', dimension: 'y' }],
+      guides: [
+        { type: 'axis', dimension: 'x' },
+        { type: 'axis', dimension: 'y' },
+      ],
     });
     const layer = firstLayer(spec, { sales: [{ month: 5, revenue: 50 }] }, opts);
     expect((layer.children[0] as IRNode).position).toEqual([50, 50]);
@@ -323,7 +340,7 @@ const barSpec = (): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
-    data: { reference:'sales' },
+    data: { reference: 'sales' },
     scales: [
       { type: 'band', name: 'xMonth' },
       { type: 'linear', name: 'yRevenue' },
@@ -345,14 +362,18 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
   });
 
   it('bar_width_is_bandwidth_equal', () => {
-    const widths = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(n => n.minimumWidth as number);
+    const widths = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(
+      n => n.minimumWidth as number,
+    );
     expect(widths.every(w => w > 0)).toBe(true);
     expect(widths[0]).toBeCloseTo(widths[1], 6);
     expect(widths[1]).toBeCloseTo(widths[2], 6);
   });
 
   it('bar_height_reflects_value', () => {
-    const heights = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(n => n.minimumHeight as number);
+    const heights = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(
+      n => n.minimumHeight as number,
+    );
     // revenue 10/14/9 → 第二根最高、第三根最矮
     expect(heights[1]).toBeGreaterThan(heights[0]);
     expect(heights[2]).toBeLessThan(heights[0]);
@@ -367,7 +388,9 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
   });
 
   it('bar_centers_ascending_evenly', () => {
-    const xs = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(n => (n.position as [number, number])[0]);
+    const xs = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(
+      n => (n.position as [number, number])[0],
+    );
     expect(xs[0]).toBeLessThan(xs[1]);
     expect(xs[1]).toBeLessThan(xs[2]);
     expect(xs[1] - xs[0]).toBeCloseTo(xs[2] - xs[1], 6);
@@ -432,7 +455,7 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference:'sales' },
+      data: { reference: 'sales' },
       scales: [
         { type: 'band', name: 'xMonth' },
         { type: 'linear', name: 'yRevenue' },
@@ -462,10 +485,16 @@ describe('lowerPlots color (ADR-04)', () => {
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference:'c' },
+      data: { reference: 'c' },
       scales,
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'continent', scale: 'col' }, encoding: { x: { field: 'gdp' }, y: { field: 'life' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'continent', scale: 'col' },
+          encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
+        },
+      ],
     });
 
   it('point_color_groups_into_subscopes', () => {
@@ -508,13 +537,19 @@ describe('lowerPlots color (ADR-04)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference:'c' },
+      data: { reference: 'c' },
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'continent' }, encoding: { x: { field: 'gdp' }, y: { field: 'life' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'continent' },
+          encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
+        },
+      ],
     });
     const layer = firstLayer(spec, { c: COUNTRIES }, opts);
     expect(layer.children).toHaveLength(2);
@@ -525,13 +560,19 @@ describe('lowerPlots color (ADR-04)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference:'c' },
+      data: { reference: 'c' },
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', color: { kind: 'constant', value: '#333' }, encoding: { x: { field: 'gdp' }, y: { field: 'life' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'constant', value: '#333' },
+          encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
+        },
+      ],
     });
     const layer = firstLayer(spec, { c: COUNTRIES }, opts);
     expect(layer.children).toHaveLength(1);
@@ -560,13 +601,19 @@ describe('lowerPlots color (ADR-04)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference:'c' },
+      data: { reference: 'c' },
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'path', order: 'gdp', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { value: 'tomato' } } }],
+      marks: [
+        {
+          type: 'path',
+          order: 'gdp',
+          encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { value: 'tomato' } },
+        },
+      ],
     });
     expect(firstLayer(spec, { c: COUNTRIES }, opts).pathDefault?.stroke).toBe('tomato');
   });
@@ -575,14 +622,19 @@ describe('lowerPlots color (ADR-04)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference:'c' },
+      data: { reference: 'c' },
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },
         { type: 'ordinal', name: 'col' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { field: 'continent', scale: 'col' } } }],
+      marks: [
+        {
+          type: 'interval',
+          encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { field: 'continent', scale: 'col' } },
+        },
+      ],
     });
     const layer = firstLayer(spec, { c: COUNTRIES }, opts);
     expect(layer.children).toHaveLength(2);
@@ -619,7 +671,10 @@ describe('lowerPlots mark paint', () => {
     expect(layer.nodeDefault?.fill).toEqual(paintGradient);
     expect(layer.nodeDefault?.stroke).toEqual(paintGradient);
 
-    const scene = compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots({ sales: SALES }, opts) });
+    const scene = compileToScene(
+      { version: 1, type: 'scene', children: [spec] },
+      { composites: lowerPlots({ sales: SALES }, opts) },
+    );
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
@@ -645,7 +700,10 @@ describe('lowerPlots mark paint', () => {
     const layer = firstLayer(spec, { sales: SALES }, opts);
     expect(layer.pathDefault?.stroke).toEqual(paintGradient);
 
-    const scene = compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots({ sales: SALES }, opts) });
+    const scene = compileToScene(
+      { version: 1, type: 'scene', children: [spec] },
+      { composites: lowerPlots({ sales: SALES }, opts) },
+    );
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
@@ -672,7 +730,10 @@ describe('lowerPlots mark paint', () => {
     expect(layer.nodeDefault?.fill).toEqual(paintGradient);
     expect(layer.nodeDefault?.stroke).toEqual(paintGradient);
 
-    const scene = compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots({ sales: SALES }, opts) });
+    const scene = compileToScene(
+      { version: 1, type: 'scene', children: [spec] },
+      { composites: lowerPlots({ sales: SALES }, opts) },
+    );
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
@@ -701,7 +762,10 @@ describe('lowerPlots mark paint', () => {
     expect(layer.pathDefault?.fill).toEqual(paintGradient);
     expect(layer.pathDefault?.stroke).toEqual(paintGradient);
 
-    const scene = compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots({ sales: SALES }, opts) });
+    const scene = compileToScene(
+      { version: 1, type: 'scene', children: [spec] },
+      { composites: lowerPlots({ sales: SALES }, opts) },
+    );
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
@@ -729,10 +793,12 @@ describe('lowerPlots mark paint', () => {
     expect(layer.nodeDefault?.fill).toEqual(paintGradient);
     expect(layer.nodeDefault?.stroke).toEqual(paintGradient);
 
-    const scene = compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots({ sales: SALES }, opts) });
+    const scene = compileToScene(
+      { version: 1, type: 'scene', children: [spec] },
+      { composites: lowerPlots({ sales: SALES }, opts) },
+    );
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
-
 });
 
 // ADR-05：relation（series / dodge / stack / 多系列折线）
@@ -750,14 +816,21 @@ describe('lowerPlots relation (ADR-05)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference:'s' },
+      data: { reference: 's' },
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },
         { type: 'ordinal', name: 'col' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', series: 'product', bounds: { x: { kind: 'band', group: 'product' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
+      marks: [
+        {
+          type: 'interval',
+          series: 'product',
+          bounds: { x: { kind: 'band', group: 'product' } },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } },
+        },
+      ],
     });
     const layer = firstLayer(spec, { s: SALES2 }, opts);
     // 2 系列 → 2 子 Scope（按颜色），共 4 柱
@@ -779,7 +852,7 @@ describe('lowerPlots relation (ADR-05)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference:'s' },
+      data: { reference: 's' },
       transform: [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
       scales: [
         { type: 'band', name: 'x' },
@@ -787,7 +860,14 @@ describe('lowerPlots relation (ADR-05)', () => {
         { type: 'ordinal', name: 'col' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', series: 'product', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
+      marks: [
+        {
+          type: 'interval',
+          series: 'product',
+          bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } },
+        },
+      ],
     });
     const layer = firstLayer(spec, { s: SALES2 }, opts);
     const nodes = allNodes(layer);
@@ -805,13 +885,20 @@ describe('lowerPlots relation (ADR-05)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference:'s' },
+      data: { reference: 's' },
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', series: 'product', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      marks: [
+        {
+          type: 'interval',
+          series: 'product',
+          bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+      ],
     });
     expect(() => expandOf(spec, { s: SALES2 }, opts)).toThrow(/stack/);
   });
@@ -826,14 +913,21 @@ describe('lowerPlots relation (ADR-05)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference:'t' },
+      data: { reference: 't' },
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
         { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'path', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } }],
+      marks: [
+        {
+          type: 'path',
+          series: 'city',
+          order: 't',
+          encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } },
+        },
+      ],
     });
     const layer = firstLayer(spec, { t: TREND }, opts);
     // 2 系列 → 2 条 Path，各自一色
@@ -848,7 +942,7 @@ describe('lowerPlots relation (ADR-05)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference:'s' },
+      data: { reference: 's' },
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -864,7 +958,7 @@ describe('lowerPlots relation (ADR-05)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference:'s' },
+      data: { reference: 's' },
       transform: [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
       scales: [
         { type: 'band', name: 'x' },
@@ -872,8 +966,18 @@ describe('lowerPlots relation (ADR-05)', () => {
         { type: 'ordinal', name: 'col' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', series: 'product', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
-      guides: [{ type: 'axis', dimension: 'x' }, { type: 'axis', dimension: 'y', grid: true }],
+      marks: [
+        {
+          type: 'interval',
+          series: 'product',
+          bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } },
+        },
+      ],
+      guides: [
+        { type: 'axis', dimension: 'x' },
+        { type: 'axis', dimension: 'y', grid: true },
+      ],
     });
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },

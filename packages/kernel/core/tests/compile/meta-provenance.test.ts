@@ -6,9 +6,11 @@
  *   Coordinate 不加 meta（产 0 图元，schema 不含该字段）。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import { NodeDefaultSchema, NodeSchema, PathDefaultSchema, SceneSchema } from '../../src';
+
 import type { IR, ScenePrimitive } from '../../src';
+
+import { NodeDefaultSchema, NodeSchema, PathDefaultSchema, SceneSchema } from '../../src';
+import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
 const scene = (children: IR['children']): IR => ({
@@ -18,10 +20,8 @@ const scene = (children: IR['children']): IR => ({
 });
 const silent = { onWarn: () => {} };
 
-const allOfType = (
-  prims: ReadonlyArray<ScenePrimitive>,
-  type: ScenePrimitive['type'],
-): Array<ScenePrimitive> => flattenPrims(prims).filter(p => p.type === type);
+const allOfType = (prims: ReadonlyArray<ScenePrimitive>, type: ScenePrimitive['type']): Array<ScenePrimitive> =>
+  flattenPrims(prims).filter(p => p.type === type);
 
 const PROV = { source: 'plot', series: 'sales', datum: 3 } as const;
 
@@ -114,7 +114,9 @@ describe('错误路径：非 JSON meta / meta 不进 every-X 默认', () => {
     expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], meta: { d: new Date() } }).success).toBe(false);
     expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], meta: { m: new Map() } }).success).toBe(false);
     // 合法 JSON 对象通过
-    expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], meta: { a: 1, b: 'x', c: [true, null] } }).success).toBe(true);
+    expect(
+      NodeSchema.safeParse({ type: 'node', position: [0, 0], meta: { a: 1, b: 'x', c: [true, null] } }).success,
+    ).toBe(true);
   });
 
   it('meta_in_node_default_rejected：nodeDefault / pathDefault 写 meta 被 .strict() 拒', () => {

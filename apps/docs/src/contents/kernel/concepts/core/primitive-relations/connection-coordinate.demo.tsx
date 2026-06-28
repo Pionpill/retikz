@@ -1,5 +1,6 @@
-import { Circle, Coordinate, Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Circle, Coordinate, Draw, Layout, Node } from '@retikz/react';
 
 /**
  * 通过 Coordinate 定位再连接
@@ -8,8 +9,12 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={340} height={160}>
-    <Node id="A" position={[-110, 25]} stroke="none">a</Node>
-    <Node id="B" position={[110, 25]} stroke="none">b</Node>
+    <Node id="A" position={[-110, 25]} stroke="none">
+      a
+    </Node>
+    <Node id="B" position={[110, 25]} stroke="none">
+      b
+    </Node>
     <Coordinate id="via" position={[0, -40]} />
     <Draw way={['A', 'via', 'B']} arrow="->" />
     <Circle center={[0, -40]} radius={2.5} fill="gray" stroke="none" />

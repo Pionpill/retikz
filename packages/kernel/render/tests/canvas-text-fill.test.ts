@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
 import type { Scene } from '@retikz/core';
+
+import { describe, expect, it } from 'vitest';
+
 import { drawScene } from '../src/canvas/draw-scene';
 
 /**

@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
+
+import type { FieldFormatDefinition } from '../../src';
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
 import * as PlotPublic from '../../src';
-import { type FieldFormatDefinition, PlotFieldFormat, defineFieldFormat, resolveFormatRegistry } from '../../src';
-import { DataModelSchema, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { FieldDefSchema } from '../../src/schemas/data';
-import { type LowerPlotsOptions, prepareRows } from '../../src/pipeline/expand';
+import { defineFieldFormat, PlotFieldFormat, resolveFormatRegistry } from '../../src';
+import { prepareRows } from '../../src/pipeline/expand';
 import { tagSourceIndex } from '../../src/pipeline/provenance';
+import { DataModelSchema, PlotSpecSchema } from '../../src/schemas';
+import { FieldDefSchema } from '../../src/schemas/data';
 
 /**
  * 构造一个引用单个逻辑字段 `v`（绑 x 通道）的最小 spec
@@ -15,7 +20,10 @@ const specWithField = (field: { name: string } & Record<string, unknown>): PlotS
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd', model: [field, { name: 'y', type: 'continuous' }] },
-    scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+    scales: [
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [{ type: 'point', encoding: { x: { field: field.name }, y: { field: 'y' } } }],
   });
@@ -131,7 +139,9 @@ describe('FieldDef.format 自定义格式（ADR-09）', () => {
   it('custom_format_type_mismatch_throws', () => {
     // 显式 temporal + 自定义 impliedType continuous 冲突 → lowering fail-loud
     const spec = specWithField({ name: 'v', type: 'temporal', format: 'currency' });
-    expect(() => parseFirst(spec, { d: [{ v: '1.234,56', y: 1 }] }, 'v', { formatDefinitions: [currencyFormat] })).toThrow(/incompatible/);
+    expect(() =>
+      parseFirst(spec, { d: [{ v: '1.234,56', y: 1 }] }, 'v', { formatDefinitions: [currencyFormat] }),
+    ).toThrow(/incompatible/);
   });
 
   it('builtin_and_custom_share_registry', () => {
@@ -139,13 +149,27 @@ describe('FieldDef.format 自定义格式（ADR-09）', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference: 'd', model: [{ name: 'v', type: 'continuous', format: PlotFieldFormat.Percent }, { name: 'y', type: 'continuous', format: 'currency' }] },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'v', type: 'continuous', format: PlotFieldFormat.Percent },
+          { name: 'y', type: 'continuous', format: 'currency' },
+        ],
+      },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'v' }, y: { field: 'y' } } }],
     });
     const ingested = tagSourceIndex([{ v: '50%', y: '1.000,50' }]);
-    const { normalized } = prepareRows(spec, { d: [{ v: '50%', y: '1.000,50' }] }, { formatDefinitions: [currencyFormat] }, ingested);
+    const { normalized } = prepareRows(
+      spec,
+      { d: [{ v: '50%', y: '1.000,50' }] },
+      { formatDefinitions: [currencyFormat] },
+      ingested,
+    );
     expect(normalized[0].v).toBe(0.5);
     expect(normalized[0].y).toBe(1000.5);
   });
@@ -157,7 +181,9 @@ describe('FieldDef.format 自定义格式（ADR-09）', () => {
 
   it('custom_cannot_shadow_builtin', () => {
     // 自定义 name 撞内置 → resolveFormatRegistry fail-loud（内置先占位）
-    expect(() => resolveFormatRegistry([{ name: 'percent', impliedType: 'continuous', parse: () => 0 }])).toThrow(/duplicate/);
+    expect(() => resolveFormatRegistry([{ name: 'percent', impliedType: 'continuous', parse: () => 0 }])).toThrow(
+      /duplicate/,
+    );
   });
 
   it('resolveFormatRegistry_has_six_builtins', () => {
@@ -193,8 +219,17 @@ describe('FieldDef.format（ADR-06）— 交互', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference: 'd', model: [{ name: 'v', type: 'continuous', format: PlotFieldFormat.Percent }, { name: 'y', type: 'continuous' }] },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'v', type: 'continuous', format: PlotFieldFormat.Percent },
+          { name: 'y', type: 'continuous' },
+        ],
+      },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'v' }, y: { field: 'y' } } }],
     });

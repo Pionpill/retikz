@@ -1,5 +1,6 @@
-import { Axis, IntervalMark, Plot, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, IntervalMark, Plot, PointMark } from '@retikz/plot-react';
 
 import { storeRevenue } from './bar-transform.data';
 
@@ -11,7 +12,9 @@ const Demo: FC = () => (
       y="totalRevenue"
       color="segment"
       label="segment"
-      transform={[{ kind: 'summarize', groupBy: ['segment'], metrics: [{ op: 'sum', field: 'revenue', as: 'totalRevenue' }] }]}
+      transform={[
+        { kind: 'summarize', groupBy: ['segment'], metrics: [{ op: 'sum', field: 'revenue', as: 'totalRevenue' }] },
+      ]}
     />
     <Axis dimension="x" />
     <Axis dimension="y" grid />

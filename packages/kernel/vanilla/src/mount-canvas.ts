@@ -1,5 +1,17 @@
 import type { Scene } from '@retikz/core';
-import { type PrimAnimationResolution, hitTest, renderToCanvas } from '@retikz/render/canvas';
+import type { AnimationControls, IdClockRegistry } from '@retikz/render/animation';
+import type { PrimAnimationResolution } from '@retikz/render/canvas';
+import type { HydrationController } from '@retikz/render/hydration';
+
+import {
+  createClock,
+  createIdClockRegistry,
+  prefersReducedMotion,
+  sceneAnimationDurationMs,
+  sceneHasAnimations,
+  sceneHasAutoplayTrigger,
+} from '@retikz/render/animation';
+import { hitTest, renderToCanvas } from '@retikz/render/canvas';
 import {
   collectCanvasVisibleAnimationIds,
   createCanvasIdAnimationControls,
@@ -8,11 +20,11 @@ import {
   isCanvasAnimationIdVisible,
   withCanvasAnimationEventHandlers,
 } from '@retikz/render/hydration';
-import type { HydrationController } from '@retikz/render/hydration';
-import { type AnimationControls, type IdClockRegistry, createClock, createIdClockRegistry, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations, sceneHasAutoplayTrigger } from '@retikz/render/animation';
+
+import type { CanvasView, HydrateOptions, MountCanvasOptions, RenderInput, ScenePoint } from './types';
+
 import { isFigure } from './builder/is-figure';
 import { toScene } from './to-scene';
-import type { CanvasView, HydrateOptions, MountCanvasOptions, RenderInput, ScenePoint } from './types';
 
 /** 设备像素比：取有限正数、否则回退 1（镜像 react CanvasHost） */
 const resolveDevicePixelRatio = (override: number | undefined): number => {
@@ -29,11 +41,7 @@ const resolveDevicePixelRatio = (override: number | undefined): number => {
  *   进去（镜像 SVG `preserveAspectRatio=meet` + CanvasHost）。返回的 `CanvasView` 暴露 `hydrate`（hitTest 定位）
  *   与 `clientToScene`（逆 meet-fit 坐标映射）。DOM 仅在调用时惰性触碰，`import` 本模块不碰 DOM——守 SSR 导入安全。
  */
-export const mountCanvas = (
-  container: Element,
-  input: RenderInput,
-  options: MountCanvasOptions = {},
-): CanvasView => {
+export const mountCanvas = (container: Element, input: RenderInput, options: MountCanvasOptions = {}): CanvasView => {
   if (isFigure(input)) return input.mountCanvas(container, options);
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
     throw new Error('mountCanvas: container must be a DOM Element.');
@@ -238,7 +246,12 @@ export const mountCanvas = (
     const userHandlers = hydrateOptions.handlers;
     // onEvent 动画 handler 表按当下 scene 合成（决定注册哪些 listener）；update 换图后经 rebindHydrations 重建。
     const bind = (): HydrationController =>
-      createHydrationController(canvas, withCanvasAnimationEventHandlers(currentScene, userHandlers), locate, buildContext);
+      createHydrationController(
+        canvas,
+        withCanvasAnimationEventHandlers(currentScene, userHandlers),
+        locate,
+        buildContext,
+      );
     let controller = bind();
     const live: LiveHydration = {
       rebind: () => {

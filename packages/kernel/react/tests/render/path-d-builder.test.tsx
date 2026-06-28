@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
 import type { PathCommand } from '@retikz/core';
+
+import { describe, expect, it } from 'vitest';
+
 import { buildPathD } from '../../src/render/path-d-builder';
 
 describe('buildPathD: 单 kind 构造', () => {
@@ -121,9 +123,7 @@ describe('buildPathD: 单 kind 构造', () => {
         endAngle: 360,
       },
     ];
-    expect(buildPathD(commands)).toBe(
-      'M 15 0 A 15 10 0 0 1 -15 0 A 15 10 0 0 1 15 0',
-    );
+    expect(buildPathD(commands)).toBe('M 15 0 A 15 10 0 0 1 -15 0 A 15 10 0 0 1 15 0');
   });
 
   it('ellipseArc rx=ry 全 sweep 退化为圆全 sweep（仍拆半弧）', () => {
@@ -137,9 +137,7 @@ describe('buildPathD: 单 kind 构造', () => {
         endAngle: 360,
       },
     ];
-    expect(buildPathD(commands)).toBe(
-      'M 10 0 A 10 10 0 0 1 -10 0 A 10 10 0 0 1 10 0',
-    );
+    expect(buildPathD(commands)).toBe('M 10 0 A 10 10 0 0 1 -10 0 A 10 10 0 0 1 10 0');
   });
 
   it('ellipseArc rotation 字段透传到 SVG A 命令 x-axis-rotation', () => {
@@ -196,16 +194,12 @@ describe('buildPathD: 边界 / 错误路径', () => {
   });
 
   it('未识别 kind 抛错（exhaustive switch 防御）', () => {
-    const bad = [
-      { kind: 'unknown' as unknown as 'move', to: [0, 0] as [number, number] },
-    ] as Array<PathCommand>;
+    const bad = [{ kind: 'unknown' as unknown as 'move', to: [0, 0] as [number, number] }] as Array<PathCommand>;
     expect(() => buildPathD(bad)).toThrow();
   });
 
   it('默认 round 保留 2 位小数（与 compile precision 一致），不传 round 时浮点噪声被裁掉', () => {
-    const commands: Array<PathCommand> = [
-      { kind: 'move', to: [1.23456, 2.34567] },
-    ];
+    const commands: Array<PathCommand> = [{ kind: 'move', to: [1.23456, 2.34567] }];
     expect(buildPathD(commands)).toBe('M 1.23 2.35');
   });
 

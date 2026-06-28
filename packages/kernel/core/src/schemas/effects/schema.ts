@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { ShadowPreset } from './constants';
 
 export const DropShadowSchema = z
@@ -13,24 +14,18 @@ export const DropShadowSchema = z
       .number()
 
       .optional()
-      .describe(
-        'Horizontal shadow offset in user units. Overrides the preset value.',
-      ),
+      .describe('Horizontal shadow offset in user units. Overrides the preset value.'),
     offsetY: z
       .number()
 
       .optional()
-      .describe(
-        'Vertical shadow offset in user units (overrides preset); positive = downward under screen y-down.',
-      ),
+      .describe('Vertical shadow offset in user units (overrides preset); positive = downward under screen y-down.'),
     blur: z
       .number()
 
       .nonnegative()
       .optional()
-      .describe(
-        'Shadow blur radius in user units. Overrides the preset value; 0 means hard-edged.',
-      ),
+      .describe('Shadow blur radius in user units. Overrides the preset value; 0 means hard-edged.'),
     color: z
       .string()
       .optional()
@@ -47,6 +42,4 @@ export const DropShadowSchema = z
   .refine(s => s.preset !== undefined || (s.offsetX !== undefined && s.offsetY !== undefined), {
     message: 'Provide a `preset`, or explicit `offsetX` + `offsetY`.',
   })
-  .describe(
-    'Drop shadow: a `preset` (size defaults) with optional per-field overrides, or fully explicit offsets.',
-  );
+  .describe('Drop shadow: a `preset` (size defaults) with optional per-field overrides, or fully explicit offsets.');

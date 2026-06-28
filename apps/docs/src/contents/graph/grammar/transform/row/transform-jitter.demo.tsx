@@ -1,6 +1,7 @@
-import { Layout } from '@retikz/react';
-import { Axis, Plot, PointMark, Transform } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, Plot, PointMark, Transform } from '@retikz/plot-react';
+import { Layout } from '@retikz/react';
 
 import { samples } from './transform-jitter.data';
 

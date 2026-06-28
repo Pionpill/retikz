@@ -1,24 +1,40 @@
 import { compileToScene } from '@retikz/core';
-import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { coerceValue, normalizeRows, resolveFieldPath } from '../../src/providers';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
-import { createPlotLocator } from '../../src/features';
-import { readSourceIndex, tagSourceIndex } from '../../src/pipeline/provenance';
+import { z } from 'zod';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
 import { applyTransforms } from '../../src';
 import { defineTransform } from '../../src';
+import { createPlotLocator } from '../../src/features';
+import { lowerPlots } from '../../src/pipeline/expand';
+import { readSourceIndex, tagSourceIndex } from '../../src/pipeline/provenance';
+import { coerceValue, normalizeRows, resolveFieldPath } from '../../src/providers';
+import { PlotFieldType, PlotSpecSchema } from '../../src/schemas';
 
 /** 跑一次完整下沉（抛错路径用 expect(fn).toThrow） */
-const compile = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options?: LowerPlotsOptions) =>
-  compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) });
+const compile = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options?: LowerPlotsOptions,
+) => compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) });
 
 const specWithModel = (): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
-    data: { reference: 'd', model: [{ name: 'month', type: 'temporal' }, { name: 'revenue', type: 'continuous' }] },
-    scales: [{ type: 'time', name: 'x' }, { type: 'linear', name: 'y' }],
+    data: {
+      reference: 'd',
+      model: [
+        { name: 'month', type: 'temporal' },
+        { name: 'revenue', type: 'continuous' },
+      ],
+    },
+    scales: [
+      { type: 'time', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
   });
@@ -28,7 +44,10 @@ const specNoModel = (): PlotSpec =>
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
-    scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+    scales: [
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
   });
@@ -87,7 +106,10 @@ describe('coerceValue — 按 PlotFieldType 值强制（ADR-02）', () => {
 });
 
 describe('normalizeRows — ingest 归一化（ADR-02）', () => {
-  const fieldTypes = new Map([['month', PlotFieldType.Temporal], ['revenue', PlotFieldType.Continuous]]);
+  const fieldTypes = new Map([
+    ['month', PlotFieldType.Temporal],
+    ['revenue', PlotFieldType.Continuous],
+  ]);
 
   it('identity_coerces_in_place', () => {
     const out = normalizeRows([{ month: '2024-01-01', revenue: '120' }], fieldTypes);
@@ -96,13 +118,18 @@ describe('normalizeRows — ingest 归一化（ADR-02）', () => {
   });
 
   it('fieldmap_renames_then_coerces', () => {
-    const out = normalizeRows([{ period: '2024-01-01', amount: '90' }], fieldTypes, { month: 'period', revenue: 'amount' });
+    const out = normalizeRows([{ period: '2024-01-01', amount: '90' }], fieldTypes, {
+      month: 'period',
+      revenue: 'amount',
+    });
     expect(out[0].month).toBe(Date.parse('2024-01-01'));
     expect(out[0].revenue).toBe(90);
   });
 
   it('nested_physical_path_via_fieldmap', () => {
-    const out = normalizeRows([{ pricing: { amount: 42 } }], new Map([['revenue', PlotFieldType.Continuous]]), { revenue: 'pricing.amount' });
+    const out = normalizeRows([{ pricing: { amount: 42 } }], new Map([['revenue', PlotFieldType.Continuous]]), {
+      revenue: 'pricing.amount',
+    });
     expect(out[0].revenue).toBe(42);
   });
 
@@ -125,7 +152,10 @@ describe('coerce-before-transform（评审 P1 关键回归）', () => {
   it('numeric_string_stacks_correctly', () => {
     // 数字串先归一化成数值，再 stack 累加 → 得 8 而非 0
     const normalized = normalizeRows(
-      [{ m: 'Q1', v: '3' }, { m: 'Q1', v: '5' }],
+      [
+        { m: 'Q1', v: '3' },
+        { m: 'Q1', v: '5' },
+      ],
       new Map([['v', PlotFieldType.Continuous]]),
     );
     const stacked = applyTransforms(normalized, [{ kind: 'stack', x: 'm', y: 'v' }]);
@@ -135,24 +165,41 @@ describe('coerce-before-transform（评审 P1 关键回归）', () => {
 
 describe('fieldMaps 校验（ADR-02 集成）', () => {
   it('fieldmap_without_model_throws', () => {
-    expect(() => compile(specNoModel(), { d: [{ a: 1, b: 2 }] }, { fieldMaps: { d: { a: 'x' } } })).toThrow(/requires data\.model/i);
+    expect(() => compile(specNoModel(), { d: [{ a: 1, b: 2 }] }, { fieldMaps: { d: { a: 'x' } } })).toThrow(
+      /requires data\.model/i,
+    );
   });
 
   it('fieldmap_unknown_logical_throws', () => {
-    expect(() => compile(specWithModel(), { d: [{ month: '2024-01-01', revenue: 1 }] }, { fieldMaps: { d: { nope: 'x' } } })).toThrow(/unknown logical field/i);
+    expect(() =>
+      compile(specWithModel(), { d: [{ month: '2024-01-01', revenue: 1 }] }, { fieldMaps: { d: { nope: 'x' } } }),
+    ).toThrow(/unknown logical field/i);
   });
 
   it('fieldmap_unknown_dataset_throws', () => {
-    expect(() => compile(specWithModel(), { d: [{ month: '2024-01-01', revenue: 1 }] }, { fieldMaps: { other: { month: 'x' } } })).toThrow(/unknown dataset/i);
+    expect(() =>
+      compile(specWithModel(), { d: [{ month: '2024-01-01', revenue: 1 }] }, { fieldMaps: { other: { month: 'x' } } }),
+    ).toThrow(/unknown dataset/i);
   });
 
   it('identity_swap_same_model_compiles', () => {
     // 同名同类型换源（恒等）→ 正常下沉，不抛
-    expect(() => compile(specWithModel(), { d: [{ month: '2024-01-01', revenue: 10 }, { month: '2024-02-01', revenue: 14 }] })).not.toThrow();
+    expect(() =>
+      compile(specWithModel(), {
+        d: [
+          { month: '2024-01-01', revenue: 10 },
+          { month: '2024-02-01', revenue: 14 },
+        ],
+      }),
+    ).not.toThrow();
   });
 
   it('fieldmap_rename_compiles', () => {
-    const renamed = compile(specWithModel(), { d: [{ period: '2024-01-01', amount: 10 }] }, { fieldMaps: { d: { month: 'period', revenue: 'amount' } } });
+    const renamed = compile(
+      specWithModel(),
+      { d: [{ period: '2024-01-01', amount: 10 }] },
+      { fieldMaps: { d: { month: 'period', revenue: 'amount' } } },
+    );
     expect(renamed).toBeTruthy();
   });
 });
@@ -171,11 +218,19 @@ describe('validateData（ADR-02）', () => {
 describe('locator fieldMaps parity（评审 P2）', () => {
   it('locator_build_throws_like_render', () => {
     // 同 spec+options：render 抛 unknown logical field → locator build 也抛（不再静默返回结果）
-    expect(() => createPlotLocator(specWithModel(), { d: [{ month: '2024-01-01', revenue: 1 }] }, { fieldMaps: { d: { nope: 'x' } } })).toThrow(/unknown logical field/i);
+    expect(() =>
+      createPlotLocator(
+        specWithModel(),
+        { d: [{ month: '2024-01-01', revenue: 1 }] },
+        { fieldMaps: { d: { nope: 'x' } } },
+      ),
+    ).toThrow(/unknown logical field/i);
   });
 
   it('locator_build_throws_fieldmap_without_model', () => {
-    expect(() => createPlotLocator(specNoModel(), { d: [{ a: 1, b: 2 }] }, { fieldMaps: { d: { a: 'x' } } })).toThrow(/requires data\.model/i);
+    expect(() => createPlotLocator(specNoModel(), { d: [{ a: 1, b: 2 }] }, { fieldMaps: { d: { a: 'x' } } })).toThrow(
+      /requires data\.model/i,
+    );
   });
 });
 
@@ -201,7 +256,9 @@ describe('custom transform data portability（alpha.12 ADR-06）', () => {
     });
 
   it('strict_model_accepts_registered_custom_output_field', () => {
-    expect(() => compile(customSpec(), { d: [{ x: 2, y: 5 }] }, { transformDefinitions: [doubleDefinition] })).not.toThrow();
+    expect(() =>
+      compile(customSpec(), { d: [{ x: 2, y: 5 }] }, { transformDefinitions: [doubleDefinition] }),
+    ).not.toThrow();
   });
 
   it('strict_model_rejects_unregistered_custom_output_field', () => {
@@ -210,6 +267,8 @@ describe('custom transform data portability（alpha.12 ADR-06）', () => {
       inputFields: operation => [operation.field],
       apply: doubleDefinition.apply,
     });
-    expect(() => compile(customSpec(), { d: [{ x: 2, y: 5 }] }, { transformDefinitions: [missingOutputDefinition] })).toThrow(/x2/);
+    expect(() =>
+      compile(customSpec(), { d: [{ x: 2, y: 5 }] }, { transformDefinitions: [missingOutputDefinition] }),
+    ).toThrow(/x2/);
   });
 });

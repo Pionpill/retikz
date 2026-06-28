@@ -1,5 +1,6 @@
-import { Layout, Node, Path, Step, definePathKind } from '@retikz/react';
 import type { FC } from 'react';
+
+import { definePathKind, Layout, Node, Path, Step } from '@retikz/react';
 import { z } from 'zod';
 
 const highlight = definePathKind({

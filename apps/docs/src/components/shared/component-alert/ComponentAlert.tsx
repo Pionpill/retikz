@@ -1,7 +1,9 @@
+import type { FC } from 'react';
+
+import { CircleAlert, Info, TriangleAlert } from 'lucide-react';
+
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
-import { CircleAlert, Info, TriangleAlert } from 'lucide-react';
-import type { FC } from 'react';
 
 /** 文档提示块类型。 */
 export type ComponentAlertType = 'tip' | 'warn' | 'error';

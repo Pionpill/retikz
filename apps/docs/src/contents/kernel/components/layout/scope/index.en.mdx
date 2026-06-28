@@ -12,9 +12,7 @@ import { Scope } from '@retikz/react';
 ```
 
 ```tsx
-<Scope transforms={[{ kind: 'translate', x: 50, y: 0 }]}>
-  {/* Node / Path / Coordinate / nested Scope */}
-</Scope>
+<Scope transforms={[{ kind: 'translate', x: 50, y: 0 }]}>{/* Node / Path / Coordinate / nested Scope */}</Scope>
 ```
 
 If the scope subtree produces any primitive, or the scope carries one of `transforms` / `id` / `clip` → a `GroupPrim` is emitted; otherwise (no subtree output and none of those three) it is pruned and emits no Scene primitive, with no empty-container overhead. A scope that only sets style defaults / `meta` but whose subtree produces nothing is pruned too.
@@ -25,11 +23,11 @@ When your design has a "grouping" concept — a set of nodes / paths that concep
 
 On a first read, remember three common jobs:
 
-| Goal | Use |
-| --- | --- |
-| Move / rotate / scale a group of primitives | `transforms` |
-| Give a group shared default styling | `color` / `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` |
-| Let external paths connect to the group's boundary | `id` |
+| Goal                                               | Use                                                                       |
+| -------------------------------------------------- | ------------------------------------------------------------------------- |
+| Move / rotate / scale a group of primitives        | `transforms`                                                              |
+| Give a group shared default styling                | `color` / `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` |
+| Let external paths connect to the group's boundary | `id`                                                                      |
 
 <ComponentAlert
   type="warn"
@@ -47,15 +45,15 @@ Think of Scope as a "subdiagram container", not a plain div. Use it for geometry
 
 The 5 translate variants mirror the 5 `<Node position>` shapes (Cartesian / polar / direction-relative / offset / proportional between two endpoints) one-to-one.
 
-| kind | Fields | Semantics |
-|---|---|---|
-| `translate` | `{ x, y }` | Cartesian translation in user units |
-| `polar-translate` | `{ origin?, angle, radius }` | Polar translation; `origin` accepts `id` / `[x, y]` / `PolarPosition`; defaults to origin point |
-| `at-translate` | `{ direction, of, distance? }` | Place scope at `distance` from referent node along `direction`; `distance` defaults to `<Layout nodeDistance>` |
-| `offset-translate` | `{ of, offset? }` | Scope origin = referent global position + `[dx, dy]`; `offset` defaults to `[0, 0]` |
-| `between-translate` | `{ between, t }` | Scope origin = proportional point between two endpoints; endpoints support coordinates / node references / offset / nested between |
-| `rotate` | `{ degrees, cx?, cy? }` | Rotate by degrees; `cx/cy` default to scope local origin |
-| `scale` | `{ x, y? }` | Scale; `y` defaults to `x` (uniform) |
+| kind                | Fields                         | Semantics                                                                                                                          |
+| ------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `translate`         | `{ x, y }`                     | Cartesian translation in user units                                                                                                |
+| `polar-translate`   | `{ origin?, angle, radius }`   | Polar translation; `origin` accepts `id` / `[x, y]` / `PolarPosition`; defaults to origin point                                    |
+| `at-translate`      | `{ direction, of, distance? }` | Place scope at `distance` from referent node along `direction`; `distance` defaults to `<Layout nodeDistance>`                     |
+| `offset-translate`  | `{ of, offset? }`              | Scope origin = referent global position + `[dx, dy]`; `offset` defaults to `[0, 0]`                                                |
+| `between-translate` | `{ between, t }`               | Scope origin = proportional point between two endpoints; endpoints support coordinates / node references / offset / nested between |
+| `rotate`            | `{ degrees, cx?, cy? }`        | Rotate by degrees; `cx/cy` default to scope local origin                                                                           |
+| `scale`             | `{ x, y? }`                    | Scale; `y` defaults to `x` (uniform)                                                                                               |
 
 Array order is application order — the 0-th entry is the outermost (applied last to the local point) and the last entry is the innermost (applied first), matching SVG transform-list semantics. `transforms: [translate, rotate]` is equivalent to SVG `transform="translate(...) rotate(...)"`: rotate applies first, translate last; compile flattening / lowering details are in § How it works §「transforms lowering to Scene」.
 
@@ -234,9 +232,7 @@ The master `color` maps to TikZ `color=` (sets the current color; draw / fill / 
 `<Scope clip={...}>` clips every child of the scope to a region — inside is visible, outside is cut away (TikZ `\begin{scope}\clip ...`). The clip region is one of four structured shapes, in scope-local coordinates:
 
 ```tsx
-<Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 60 }}>
-  {/* children */}
-</Scope>
+<Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 60 }}>{/* children */}</Scope>
 ```
 
 <ComponentPreview name="scope-clip" size="md" />
@@ -261,23 +257,23 @@ TikZ pgf's `\begin{scope}` does not introduce a local namespace — a `\node (fo
 
 </Comparison>
 
-| Mechanism | Behavior |
-|---|---|
-| **Inside-out lookup** | An inner path's id lookup walks the frame stack from top to bottom — inner code **can** see outer ids; outer code **cannot** see inner ids |
-| **Shadowing** | Registering the same id in an inner frame is not a conflict and emits no warning; lookups hit the inner copy first; the outer id becomes visible again once the frame is popped |
+| Mechanism                                         | Behavior                                                                                                                                                                                                         |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Inside-out lookup**                             | An inner path's id lookup walks the frame stack from top to bottom — inner code **can** see outer ids; outer code **cannot** see inner ids                                                                       |
+| **Shadowing**                                     | Registering the same id in an inner frame is not a conflict and emits no warning; lookups hit the inner copy first; the outer id becomes visible again once the frame is popped                                  |
 | **scope.id always registers in the parent frame** | scope.id is the external handle and is **not** affected by its own `localNamespace`; outer paths can always reference `<Scope id="X">` as `X`, regardless of whether the scope uses local namespacing internally |
-| **Stack frames** | Every `<Scope localNamespace>` pushes a child frame; the frame is popped when the scope subtree finishes compiling — id references beyond the level naturally break |
+| **Stack frames**                                  | Every `<Scope localNamespace>` pushes a child frame; the frame is popped when the scope subtree finishes compiling — id references beyond the level naturally break                                              |
 
 ### Duplicate id and conflict handling
 
 When the same id is registered more than once in the same frame (any combination of node × node, node × coordinate, node × scope.id), compile emits a `DUPLICATE_NODE_ID` warning, and **the later definition overrides the earlier one** (last-wins).
 
-| Rule | Behavior |
-|---|---|
-| Trigger | The 2nd and subsequent registers of the same id within the same frame |
-| Handling | Warning is collected via `CompileOptions.onWarn`; compile **does not throw**; nodeIndex keeps the last definition |
-| Warn unit | Every duplicate emits its own warning (not merged); each carries two IR locators (earlier and current) plus the current frame depth |
-| Same id across frames | Counts as shadowing rather than duplicate, **no warning** is emitted |
+| Rule                    | Behavior                                                                                                                                                       |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Trigger                 | The 2nd and subsequent registers of the same id within the same frame                                                                                          |
+| Handling                | Warning is collected via `CompileOptions.onWarn`; compile **does not throw**; nodeIndex keeps the last definition                                              |
+| Warn unit               | Every duplicate emits its own warning (not merged); each carries two IR locators (earlier and current) plus the current frame depth                            |
+| Same id across frames   | Counts as shadowing rather than duplicate, **no warning** is emitted                                                                                           |
 | scope.id self-reference | bbox is computed only after the scope subtree finishes — `at.of='self'` / `offset.of='self'` etc. fail forward-resolution and throw (not subject to last-wins) |
 
 ### Relative positioning projection
@@ -298,30 +294,30 @@ Maps to TikZ `\begin{scope}[rotate=90] \node at ($(hub) + (50:0)$) {orbit}; \end
 
 Edge cases:
 
-| Case | Behavior |
-|---|---|
-| **Nested polar / nested offset** | The whole nested chain is measured in the **current node's enclosing scope's local frame** — the basis scope does not switch as you recurse |
-| **Cartesian `Position` literal** | Inside a scope, `position={[10, 0]}` keeps v0.1 behavior — `[10, 0]` is measured in the current scope's local frame and projected to global via the scope chain |
-| **Scope translate does not change relative vectors** | translate is neither rotation nor scaling — `relative=(10, 0)` inside a `translate(50, 0)` scope keeps the same visual direction and length |
-| **Scope `scale=0`** | The inverse projection is undefined; retikz falls back to local origin (0, 0) to avoid NaN — avoid zero scale in practice |
-| **Relative `Step.to` in a path** | Same rules as `Node.position` — when a step.to is polar / offset / `{ relative: [dx, dy] }`, the relative part is measured in the path's enclosing scope's local frame |
+| Case                                                 | Behavior                                                                                                                                                               |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Nested polar / nested offset**                     | The whole nested chain is measured in the **current node's enclosing scope's local frame** — the basis scope does not switch as you recurse                            |
+| **Cartesian `Position` literal**                     | Inside a scope, `position={[10, 0]}` keeps v0.1 behavior — `[10, 0]` is measured in the current scope's local frame and projected to global via the scope chain        |
+| **Scope translate does not change relative vectors** | translate is neither rotation nor scaling — `relative=(10, 0)` inside a `translate(50, 0)` scope keeps the same visual direction and length                            |
+| **Scope `scale=0`**                                  | The inverse projection is undefined; retikz falls back to local origin (0, 0) to avoid NaN — avoid zero scale in practice                                              |
+| **Relative `Step.to` in a path**                     | Same rules as `Node.position` — when a step.to is polar / offset / `{ relative: [dx, dy] }`, the relative part is measured in the path's enclosing scope's local frame |
 
 ### scope.id synthetic bbox
 
 When `<Scope id="X">` is set, compile collects the **global point set** of all child layouts (nodes / coordinates / nested scope.id bboxes) at the end of Pass 1 and registers a synthetic `NodeLayout` named `X` into the **parent** namespace frame: omitted / `boundingShape='rectangle'` takes the axis-aligned AABB (`rectangle` form); `boundingShape='circle'` takes the point set's **minimal enclosing circle** (`ellipse` + `circumscribe:'equal'` form, center + radius from the MEC).
 
-| Item | Behavior |
-|---|---|
-| **Compute timing** | End of Pass 1 recursion of the scope subtree (after every inner node / coordinate / nested scope.id is registered) |
-| **bbox input** | The 4 corners (with accumulated rotate / scale in global coordinates) of every `NodeLayout` in the subtree, fed into an AABB |
-| **Not counted in bbox** | Path endpoints (move / line `to`) — matches TikZ `local bounding box`'s default |
-| **Register location** | **Parent frame** (not affected by its own `localNamespace`) — scope.id is the external handle |
-| **Shape** | Default synthetic rectangle `NodeLayout` with `rect.rotate=0` (axis-aligned); with `boundingShape='circle'` it's an ellipse(`circumscribe:'equal'`) form whose rect is the MEC's square bounding box |
-| **boundingShape** | Optional envelope shape — a **controlled enum** (`'rectangle'` \| `'circle'`), not an open shape reference like Node `shape` / `boundary`: omitted / `'rectangle'` = AABB; `'circle'` = minimal enclosing circle of the subtree point set (consumes `@retikz/math`'s `minimalEnclosingCircle`). Other values are rejected by the schema at parse time. `polygon` / `ellipse` deferred (each needs its own minimal-enclosing algorithm) |
-| **As anchor referent** | All 9 named anchors plus numeric angles share the rect anchor path — `'X.north'` / `'X.30'` / no-suffix uses `boundaryPoint` clip |
-| **As polar / at / offset referent** | Resolves to bbox center, same as a normal rectangle node |
-| **Nesting** | Each scope.id keeps its own bbox — outer bbox covers all inner layouts; inner bbox covers only its own subtree |
-| **Empty scope.id** | If the subtree has no layouts, the bbox degenerates to a 0×0 placeholder (the scope's local origin projected to global via the chain) |
+| Item                                | Behavior                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Compute timing**                  | End of Pass 1 recursion of the scope subtree (after every inner node / coordinate / nested scope.id is registered)                                                                                                                                                                                                                                                                                                                     |
+| **bbox input**                      | The 4 corners (with accumulated rotate / scale in global coordinates) of every `NodeLayout` in the subtree, fed into an AABB                                                                                                                                                                                                                                                                                                           |
+| **Not counted in bbox**             | Path endpoints (move / line `to`) — matches TikZ `local bounding box`'s default                                                                                                                                                                                                                                                                                                                                                        |
+| **Register location**               | **Parent frame** (not affected by its own `localNamespace`) — scope.id is the external handle                                                                                                                                                                                                                                                                                                                                          |
+| **Shape**                           | Default synthetic rectangle `NodeLayout` with `rect.rotate=0` (axis-aligned); with `boundingShape='circle'` it's an ellipse(`circumscribe:'equal'`) form whose rect is the MEC's square bounding box                                                                                                                                                                                                                                   |
+| **boundingShape**                   | Optional envelope shape — a **controlled enum** (`'rectangle'` \| `'circle'`), not an open shape reference like Node `shape` / `boundary`: omitted / `'rectangle'` = AABB; `'circle'` = minimal enclosing circle of the subtree point set (consumes `@retikz/math`'s `minimalEnclosingCircle`). Other values are rejected by the schema at parse time. `polygon` / `ellipse` deferred (each needs its own minimal-enclosing algorithm) |
+| **As anchor referent**              | All 9 named anchors plus numeric angles share the rect anchor path — `'X.north'` / `'X.30'` / no-suffix uses `boundaryPoint` clip                                                                                                                                                                                                                                                                                                      |
+| **As polar / at / offset referent** | Resolves to bbox center, same as a normal rectangle node                                                                                                                                                                                                                                                                                                                                                                               |
+| **Nesting**                         | Each scope.id keeps its own bbox — outer bbox covers all inner layouts; inner bbox covers only its own subtree                                                                                                                                                                                                                                                                                                                         |
+| **Empty scope.id**                  | If the subtree has no layouts, the bbox degenerates to a 0×0 placeholder (the scope's local origin projected to global via the chain)                                                                                                                                                                                                                                                                                                  |
 
 <Comparison target="tikz" title="scope.id mapping">
 
@@ -333,15 +329,15 @@ When `<Scope id="X">` is set, compile collects the **global point set** of all c
 
 The 7 IR variants are uniformly flattened to 3 Scene variants (Cartesian translate / rotate / scale) at compile time, then lowered into `GroupPrim.transforms`:
 
-| IR shape | Compile handling | Scene shape |
-|---|---|---|
-| `translate` | Pass through | `translate(x, y)` |
-| `polar-translate` | `resolvePosition` resolves origin global + (angle, radius) → Cartesian (x, y) | `translate(x, y)` |
-| `at-translate` | `resolvePosition` resolves referent global + direction + distance → Cartesian (x, y) | `translate(x, y)` |
-| `offset-translate` | `resolvePosition` resolves referent global + (dx, dy) → Cartesian (x, y) | `translate(x, y)` |
-| `between-translate` | `resolvePosition` resolves both endpoints globally and interpolates by `t` → Cartesian (x, y) | `translate(x, y)` |
-| `rotate` | Pass through | `rotate(degrees, cx, cy)` |
-| `scale` | Pass through | `scale(x, y)` |
+| IR shape            | Compile handling                                                                              | Scene shape               |
+| ------------------- | --------------------------------------------------------------------------------------------- | ------------------------- |
+| `translate`         | Pass through                                                                                  | `translate(x, y)`         |
+| `polar-translate`   | `resolvePosition` resolves origin global + (angle, radius) → Cartesian (x, y)                 | `translate(x, y)`         |
+| `at-translate`      | `resolvePosition` resolves referent global + direction + distance → Cartesian (x, y)          | `translate(x, y)`         |
+| `offset-translate`  | `resolvePosition` resolves referent global + (dx, dy) → Cartesian (x, y)                      | `translate(x, y)`         |
+| `between-translate` | `resolvePosition` resolves both endpoints globally and interpolates by `t` → Cartesian (x, y) | `translate(x, y)`         |
+| `rotate`            | Pass through                                                                                  | `rotate(degrees, cx, cy)` |
+| `scale`             | Pass through                                                                                  | `scale(x, y)`             |
 
 The `transforms` array is applied in order — 0-th is the outermost (applied last to the local point), the last is the innermost (applied first), matching SVG `transform="t0 t1 t2"` / Scene `GroupPrim.transforms`. `transforms: [translate, rotate]` is equivalent to SVG `transform="translate(...) rotate(...)"`: rotate applies to the local point first, then translate.
 
@@ -357,13 +353,13 @@ element field > element color > typed-default field > typed-default color > scop
 
 Inner overrides outer; within one frame the typed default overrides the cascade.
 
-| Mechanism | Behavior |
-|---|---|
-| **Master-color expansion** | Within each style source, a sub-color (stroke / fill / textColor, arrow color) not set explicitly takes that source's `color` — same-source fields override the master |
-| **Color cascade** | A container's resolved color flows down as the child's color default: node.color → text / edge label; path.color → stroke / arrow / step label |
-| **Missing vs explicit** | Decided by presence (not truthiness): missing defers outward; explicit `none` / `0` / `false` cuts at this layer |
-| **opacity replaces, not compounds** | Nested scope opacity replaces (0.5 ⊃ 0.5 → 0.5 each, not 0.25), matching TikZ default; only label × element opacity multiplies within an element |
-| **resetStyle keeps the host axis** | Only the scope inheritance axis is cut; labels / arrows still follow the host path / node resolved color, never orphaned |
+| Mechanism                           | Behavior                                                                                                                                                               |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Master-color expansion**          | Within each style source, a sub-color (stroke / fill / textColor, arrow color) not set explicitly takes that source's `color` — same-source fields override the master |
+| **Color cascade**                   | A container's resolved color flows down as the child's color default: node.color → text / edge label; path.color → stroke / arrow / step label                         |
+| **Missing vs explicit**             | Decided by presence (not truthiness): missing defers outward; explicit `none` / `0` / `false` cuts at this layer                                                       |
+| **opacity replaces, not compounds** | Nested scope opacity replaces (0.5 ⊃ 0.5 → 0.5 each, not 0.25), matching TikZ default; only label × element opacity multiplies within an element                       |
+| **resetStyle keeps the host axis**  | Only the scope inheritance axis is cut; labels / arrows still follow the host path / node resolved color, never orphaned                                               |
 
 ### Clip resource materialization
 
@@ -373,29 +369,29 @@ Inner overrides outer; within one frame the typed default overrides the cascade.
 
 ## API Reference
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `transforms` | `Array<Transform>` | — | Local transform list, 7 variants; applied in array order (0-th outermost, last innermost, matching SVG transform-list); flattening / lowering details in § How it works §「transforms lowering to Scene」 |
-| `children` | `ReactNode` | — | Scope children: `<Node>` / `<Path>` / `<Coordinate>` / nested `<Scope>` |
-| `id` | `string` | — | Optional scope reference id; when set, the **axis-aligned global bounding box** of all child layouts is registered as a synthetic rectangle layout into the **parent frame**; external code can reference it as `'X'` / `'X.<anchor>'` / `'X.<deg>'`; details in § How it works §「scope.id synthetic bbox」 |
-| `boundingShape` | `'rectangle' \| 'circle'` | `'rectangle'` | Envelope shape of the scope.id handle — a controlled enum (not the open shape reference Node `shape` uses): default rectangle AABB; `'circle'` takes the subtree's minimal enclosing circle (anchors / connections land on the circle, suits round / polar panels). Other values are rejected by the schema. See § Examples §「Scope boundary polymorphism」 |
-| `localNamespace` | `boolean` | `false` | Whether to create a local namespace: `true` pushes a child frame and isolates child ids from the outside; details in § How it works §「Namespace stack and lookup」 |
-| `meta` | `Record<string, JSON value>` | — | Provenance metadata, passed through verbatim onto the `GroupPrim` this scope emits; ignored by renderers, never part of layout, and **not propagated to children**. Typically injected by a higher-level lowering (e.g. plot) to tag the series / layer. Must be a JSON-serializable object |
-| `color` | `string` | — | Cascading master color; inner stroke / fill / text / arrow / label default to it |
-| `stroke` | `string \| PaintSpec` | — | Cascading default stroke paint (CSS color or PaintSpec: gradient / pattern / image) |
-| `fill` | `string \| PaintSpec` | — | Cascading default fill (CSS color or PaintSpec: gradient / pattern / image) |
-| `strokeWidth` | `number` | — | Cascading default stroke width |
-| `opacity` | `number` | — | Cascading default whole-element opacity 0–1 (replaces, not compounds) |
-| `fillOpacity` | `number` | — | Cascading default fill opacity 0–1 |
-| `drawOpacity` | `number` | — | Cascading default stroke opacity 0–1 |
-| `nodeDefault` | `object` | — | Node default style (shape / spacing / color), applied to every node in the scope |
-| `pathDefault` | `object` | — | Path-like default style. Path uses the full field set; Ribbon uses only shared geometry style fields. Arrows use `arrowDefault` |
-| `labelDefault` | `object` | — | Label default style (node label + step label) |
-| `arrowDefault` | `object` | — | Arrow default style (shape / scale / color) |
-| `resetStyle` | `boolean \| Array` | `false` | Inheritance barrier: cut outer channels; details in § How it works §「Style inheritance resolution」 |
-| `zIndex` | `number` (integer) | `0` | Explicit stacking order: positions the scope as a whole (its GroupPrim) among its siblings without affecting the relative stacking inside it; higher draws on top, ties keep declaration order |
-| `clip` | `ClipSpec` | — | Clip region (rect / circle / ellipse / polygon, scope-local coords); clips every child of the scope |
-| `animations` | `Array<AnimationTrack>` | — | Timeline animation tracks applied to the scope as a whole (its GroupPrim); not propagated to children, not part of layout. See [Animation](/kernel/components/effects/animation) |
+| Prop             | Type                         | Default       | Description                                                                                                                                                                                                                                                                                                                                                  |
+| ---------------- | ---------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `transforms`     | `Array<Transform>`           | —             | Local transform list, 7 variants; applied in array order (0-th outermost, last innermost, matching SVG transform-list); flattening / lowering details in § How it works §「transforms lowering to Scene」                                                                                                                                                    |
+| `children`       | `ReactNode`                  | —             | Scope children: `<Node>` / `<Path>` / `<Coordinate>` / nested `<Scope>`                                                                                                                                                                                                                                                                                      |
+| `id`             | `string`                     | —             | Optional scope reference id; when set, the **axis-aligned global bounding box** of all child layouts is registered as a synthetic rectangle layout into the **parent frame**; external code can reference it as `'X'` / `'X.<anchor>'` / `'X.<deg>'`; details in § How it works §「scope.id synthetic bbox」                                                 |
+| `boundingShape`  | `'rectangle' \| 'circle'`    | `'rectangle'` | Envelope shape of the scope.id handle — a controlled enum (not the open shape reference Node `shape` uses): default rectangle AABB; `'circle'` takes the subtree's minimal enclosing circle (anchors / connections land on the circle, suits round / polar panels). Other values are rejected by the schema. See § Examples §「Scope boundary polymorphism」 |
+| `localNamespace` | `boolean`                    | `false`       | Whether to create a local namespace: `true` pushes a child frame and isolates child ids from the outside; details in § How it works §「Namespace stack and lookup」                                                                                                                                                                                          |
+| `meta`           | `Record<string, JSON value>` | —             | Provenance metadata, passed through verbatim onto the `GroupPrim` this scope emits; ignored by renderers, never part of layout, and **not propagated to children**. Typically injected by a higher-level lowering (e.g. plot) to tag the series / layer. Must be a JSON-serializable object                                                                  |
+| `color`          | `string`                     | —             | Cascading master color; inner stroke / fill / text / arrow / label default to it                                                                                                                                                                                                                                                                             |
+| `stroke`         | `string \| PaintSpec`        | —             | Cascading default stroke paint (CSS color or PaintSpec: gradient / pattern / image)                                                                                                                                                                                                                                                                          |
+| `fill`           | `string \| PaintSpec`        | —             | Cascading default fill (CSS color or PaintSpec: gradient / pattern / image)                                                                                                                                                                                                                                                                                  |
+| `strokeWidth`    | `number`                     | —             | Cascading default stroke width                                                                                                                                                                                                                                                                                                                               |
+| `opacity`        | `number`                     | —             | Cascading default whole-element opacity 0–1 (replaces, not compounds)                                                                                                                                                                                                                                                                                        |
+| `fillOpacity`    | `number`                     | —             | Cascading default fill opacity 0–1                                                                                                                                                                                                                                                                                                                           |
+| `drawOpacity`    | `number`                     | —             | Cascading default stroke opacity 0–1                                                                                                                                                                                                                                                                                                                         |
+| `nodeDefault`    | `object`                     | —             | Node default style (shape / spacing / color), applied to every node in the scope                                                                                                                                                                                                                                                                             |
+| `pathDefault`    | `object`                     | —             | Path-like default style. Path uses the full field set; Ribbon uses only shared geometry style fields. Arrows use `arrowDefault`                                                                                                                                                                                                                              |
+| `labelDefault`   | `object`                     | —             | Label default style (node label + step label)                                                                                                                                                                                                                                                                                                                |
+| `arrowDefault`   | `object`                     | —             | Arrow default style (shape / scale / color)                                                                                                                                                                                                                                                                                                                  |
+| `resetStyle`     | `boolean \| Array`           | `false`       | Inheritance barrier: cut outer channels; details in § How it works §「Style inheritance resolution」                                                                                                                                                                                                                                                         |
+| `zIndex`         | `number` (integer)           | `0`           | Explicit stacking order: positions the scope as a whole (its GroupPrim) among its siblings without affecting the relative stacking inside it; higher draws on top, ties keep declaration order                                                                                                                                                               |
+| `clip`           | `ClipSpec`                   | —             | Clip region (rect / circle / ellipse / polygon, scope-local coords); clips every child of the scope                                                                                                                                                                                                                                                          |
+| `animations`     | `Array<AnimationTrack>`      | —             | Timeline animation tracks applied to the scope as a whole (its GroupPrim); not propagated to children, not part of layout. See [Animation](/kernel/components/effects/animation)                                                                                                                                                                             |
 
 ## Related
 

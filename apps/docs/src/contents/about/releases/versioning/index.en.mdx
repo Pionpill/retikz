@@ -9,31 +9,31 @@ The current repository version is `0.3.0-beta.1`. That means v0.3 is in beta har
 
 ## Segment meanings
 
-| Segment | Bumped when | Upgrade guidance |
-| --- | --- | --- |
-| MAJOR | Backward-incompatible API change | Read the migration guide |
-| MINOR | Backward-compatible new capability | Upgrade freely |
-| PATCH | Backward-compatible bug fix | Upgrade freely |
+| Segment | Bumped when                        | Upgrade guidance         |
+| ------- | ---------------------------------- | ------------------------ |
+| MAJOR   | Backward-incompatible API change   | Read the migration guide |
+| MINOR   | Backward-compatible new capability | Upgrade freely           |
+| PATCH   | Backward-compatible bug fix        | Upgrade freely           |
 
 Tier 1 packages (`@retikz/core`, `@retikz/render`, `@retikz/react`, and `@retikz/vanilla`) normally share the same version and **ship together**. Unless release notes say otherwise, users should not need to upgrade one without the others.
 
 ## 0.x vs 1.x
 
-| Phase | API stability | Breaking change frequency |
-| --- | --- | --- |
-| `0.x` | Unstable, alpha / beta polish | May land in a MINOR |
-| `1.x` onwards | Strict SemVer | Only in MAJOR |
+| Phase         | API stability                 | Breaking change frequency |
+| ------------- | ----------------------------- | ------------------------- |
+| `0.x`         | Unstable, alpha / beta polish | May land in a MINOR       |
+| `1.x` onwards | Strict SemVer                 | Only in MAJOR             |
 
 Breaking changes before `1.0.0` **do not force a MAJOR bump**, but the changelog and release notes will call them out explicitly.
 
 ## Pre-release channels
 
-| Channel | Format | Main content | Main driver | Suitable for |
-| --- | --- | --- | --- | --- |
-| alpha | `0.3.0-alpha.x` | New features / new IR fields / API reshaping (schema in flux, IR unstable) | **Human-designed + AI-implemented** | Exploration / feedback |
-| beta | `0.3.0-beta.x` | Performance / readability / refactoring / test hardening / docs completion; final breaking renames are still allowed | **Human-led optimization and refactoring** | Integration testing |
-| rc | `0.3.0-rc.x` | Public API frozen; compatible bug fixes, docs, installation acceptance, and release notes only | Human-led | Pre-production rehearsal |
-| stable | `0.3.0` | Under SemVer; normal PATCH / MINOR / MAJOR cadence | — | Production |
+| Channel | Format          | Main content                                                                                                         | Main driver                                | Suitable for             |
+| ------- | --------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------ |
+| alpha   | `0.3.0-alpha.x` | New features / new IR fields / API reshaping (schema in flux, IR unstable)                                           | **Human-designed + AI-implemented**        | Exploration / feedback   |
+| beta    | `0.3.0-beta.x`  | Performance / readability / refactoring / test hardening / docs completion; final breaking renames are still allowed | **Human-led optimization and refactoring** | Integration testing      |
+| rc      | `0.3.0-rc.x`    | Public API frozen; compatible bug fixes, docs, installation acceptance, and release notes only                       | Human-led                                  | Pre-production rehearsal |
+| stable  | `0.3.0`         | Under SemVer; normal PATCH / MINOR / MAJOR cadence                                                                   | —                                          | Production               |
 
 Channels move forward only: alpha → beta → rc → stable. There's no rollback.
 
@@ -45,21 +45,21 @@ rc narrows the work again: public APIs no longer break, and npm uses the `next` 
 
 ## peerDependencies
 
-| Package | peer | Version |
-| --- | --- | --- |
-| `@retikz/react` | `react` / `react-dom` | `>=18` |
-| `@retikz/core` | (none) | — |
-| `@retikz/render` | `@napi-rs/canvas` (optional, Node export only) | catalog-managed |
-| `@retikz/vanilla` | (none) | — |
+| Package           | peer                                           | Version         |
+| ----------------- | ---------------------------------------------- | --------------- |
+| `@retikz/react`   | `react` / `react-dom`                          | `>=18`          |
+| `@retikz/core`    | (none)                                         | —               |
+| `@retikz/render`  | `@napi-rs/canvas` (optional, Node export only) | catalog-managed |
+| `@retikz/vanilla` | (none)                                         | —               |
 
 Bumping React's major version usually ships as a MINOR; we only bump MAJOR when the new React version is incompatible with our old API.
 
 ## Deprecation flow
 
-| Step | When | Marker |
-| --- | --- | --- |
-| Mark deprecated | Immediately | `@deprecated` type, `console.warn` at runtime |
-| Grace period | At least 2 MINORs | Changelog points to the replacement |
-| Removal | Next MAJOR | Listed under Removed |
+| Step            | When              | Marker                                        |
+| --------------- | ----------------- | --------------------------------------------- |
+| Mark deprecated | Immediately       | `@deprecated` type, `console.warn` at runtime |
+| Grace period    | At least 2 MINORs | Changelog points to the replacement           |
+| Removal         | Next MAJOR        | Listed under Removed                          |
 
 The deprecation flow is not enforced during `0.x`; it kicks in once `1.0` ships.

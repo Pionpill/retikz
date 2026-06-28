@@ -1,6 +1,7 @@
+import type { FC } from 'react';
+
 import { Axis, Legend, Plot, ReferenceMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
-import type { FC } from 'react';
 
 import { thresholds } from './rule-per-datum.data';
 

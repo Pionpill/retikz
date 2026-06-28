@@ -1,8 +1,13 @@
-import { describe, expect, it } from 'vitest';
-import { compileToScene } from '@retikz/core';
 import type { IR, IRNode, IRScope, IRTarget, ScenePrimitive } from '@retikz/core';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+
+import { compileToScene } from '@retikz/core';
+import { describe, expect, it } from 'vitest';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 // ADR-02：plot 可被组合 —— 自描述尺寸（L1-a）+ 外部可见面板 anchor（L1-b）
 
@@ -70,7 +75,10 @@ describe('ADR-02 L1-b · 外部可见面板 anchor（gated on id）', () => {
   it('plotarea_carrier_present', () => {
     // 不可见矩形 carrier，id=`<plotId>.plotArea`
     const outer = expandOf(pointSpec({ id: 'p' }), opts);
-    const carrier = outer.children.find((c): c is IRNode => (c as { type?: string; id?: string }).type === 'node' && (c as { id?: string }).id === 'p.plotArea');
+    const carrier = outer.children.find(
+      (c): c is IRNode =>
+        (c as { type?: string; id?: string }).type === 'node' && (c as { id?: string }).id === 'p.plotArea',
+    );
     expect(carrier).toBeTruthy();
     expect(carrier!.type).toBe('node');
     expect(carrier!.shape).toBe('rectangle');
@@ -82,10 +90,19 @@ describe('ADR-02 L1-b · 外部可见面板 anchor（gated on id）', () => {
   it('plotarea_carrier_matches_drawing_region', () => {
     // 有轴 → plotArea 扣边距，carrier 尺寸 < 整图（非整面板框、非 0×0）
     const guided = expandOf(
-      pointSpec({ id: 'p', guides: [{ type: 'axis', dimension: 'x' }, { type: 'axis', dimension: 'y' }] }),
+      pointSpec({
+        id: 'p',
+        guides: [
+          { type: 'axis', dimension: 'x' },
+          { type: 'axis', dimension: 'y' },
+        ],
+      }),
       opts,
     );
-    const carrier = guided.children.find((c): c is IRNode => (c as { type?: string; id?: string }).type === 'node' && (c as { id?: string }).id === 'p.plotArea');
+    const carrier = guided.children.find(
+      (c): c is IRNode =>
+        (c as { type?: string; id?: string }).type === 'node' && (c as { id?: string }).id === 'p.plotArea',
+    );
     if (carrier === undefined) throw new Error('Expected p.plotArea carrier node');
     expect(carrier.minimumWidth).toBeLessThan(480);
     expect(carrier.minimumHeight).toBeLessThan(300);
@@ -96,7 +113,9 @@ describe('ADR-02 L1-b · 外部可见面板 anchor（gated on id）', () => {
     const outer = expandOf(pointSpec(), opts);
     expect(outer.id).toBeUndefined();
     expect(outer.localNamespace).toBe(true);
-    expect(outer.children.some(c => (c as IRNode).id === undefined ? false : (c as IRNode).id!.endsWith('.plotArea'))).toBe(false);
+    expect(
+      outer.children.some(c => ((c as IRNode).id === undefined ? false : (c as IRNode).id!.endsWith('.plotArea'))),
+    ).toBe(false);
     expect((outer.children[0] as IRScope).type).toBe('scope');
   });
 
@@ -105,7 +124,16 @@ describe('ADR-02 L1-b · 外部可见面板 anchor（gated on id）', () => {
     const scene: IR = {
       version: 1,
       type: 'scene',
-      children: [plotNode, { type: 'path', children: [{ type: 'step', kind: 'move', to: [600, 150] }, { type: 'step', kind: 'line', to }] }],
+      children: [
+        plotNode,
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [600, 150] },
+            { type: 'step', kind: 'line', to },
+          ],
+        },
+      ],
     };
     const compiled = compileToScene(scene, { composites: lowerPlots({ sales: SALES }, opts) });
     const path = compiled.primitives.find((p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path');

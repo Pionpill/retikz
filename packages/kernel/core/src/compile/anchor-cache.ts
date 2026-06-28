@@ -12,10 +12,11 @@
 import type { Side } from '../geometry/edge';
 import type { Position } from '../geometry/point';
 import type { IRBoundary, IRPosition } from '../schemas';
-import { anchorOf, angleBoundaryOf, outerRectOf } from './node';
 import type { NodeLayout } from './node';
+
 import { normalizeCompassAnchor } from '../geometry/anchor';
 import { boundaryKey } from './boundary';
+import { anchorOf, angleBoundaryOf, outerRectOf } from './node';
 
 /**
  * (layout, anchorName) → IRPosition 缓存
@@ -39,11 +40,7 @@ const withOuterRect = (layout: NodeLayout): NodeLayout => ({
  *   形状专属命名 anchor（tip-N / apex 等）恒走视觉 rect、不外扩。`center` 在 inflate 下
  *   中心不变，走哪条路结果一致。
  */
-const computeAnchor = (
-  layout: NodeLayout,
-  anchorName: string,
-  boundary: IRBoundary | undefined,
-): IRPosition => {
+const computeAnchor = (layout: NodeLayout, anchorName: string, boundary: IRBoundary | undefined): IRPosition => {
   if (ANGLE_RE.test(anchorName)) {
     const angle = Number(anchorName);
     return positionToIR(angleBoundaryOf(withOuterRect(layout), angle, boundary));
@@ -95,21 +92,13 @@ export const resolveAnchor = (
  * @param layout 已 Pass 1 完成的 NodeLayout（rect 已是全局坐标）
  * @returns 全局坐标系下的 IRPosition `[x, y]`
  */
-export const resolveEdgePoint = (
-  layout: NodeLayout,
-  side: Side,
-  t: number,
-): IRPosition => {
+export const resolveEdgePoint = (layout: NodeLayout, side: Side, t: number): IRPosition => {
   const { edgePoint } = layout.shapeDef;
   if (!edgePoint) {
-    throw new Error(
-      `shape '${layout.shapeName}' does not support side anchors ({ side, t })`,
-    );
+    throw new Error(`shape '${layout.shapeName}' does not support side anchors ({ side, t })`);
   }
   if (layout.rect.width === 0 && layout.rect.height === 0) {
-    throw new Error(
-      `{ side, t } is not meaningful on a zero-size Coordinate (shape '${layout.shapeName}')`,
-    );
+    throw new Error(`{ side, t } is not meaningful on a zero-size Coordinate (shape '${layout.shapeName}')`);
   }
   let layoutCache = cache.get(layout);
   if (!layoutCache) {

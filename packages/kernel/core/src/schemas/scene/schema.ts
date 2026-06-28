@@ -1,11 +1,13 @@
 import { z } from 'zod';
+
+import type { IRChild } from './types';
+
 import { AnimationTrackSchema } from '../animation';
 import { CompositeNodeSchema } from '../composite';
 import { CoordinateSchema } from '../coordinate';
 import { NodeSchema } from '../node';
 import { PathSchema } from '../path';
-import { ScopeSchema, __registerChildSchema } from '../scope';
-import type { IRChild } from './types';
+import { __registerChildSchema, ScopeSchema } from '../scope';
 
 /**
  * ChildSchema：tier1 四类 discriminatedUnion（按 type）+ tier2 开放节点（有 namespace）
@@ -17,9 +19,7 @@ export const ChildSchema: z.ZodType<IRChild> = z.lazy(() =>
   z.union([
     z
       .discriminatedUnion('type', [NodeSchema, PathSchema, CoordinateSchema, ScopeSchema])
-      .describe(
-        'Tier 1 scene child: node, path, coordinate, or scope. Discriminator field is `type`.',
-      ),
+      .describe('Tier 1 scene child: node, path, coordinate, or scope. Discriminator field is `type`.'),
     CompositeNodeSchema.describe(
       'Tier 2 composite node with `namespace` and `type`. Registered domain schemas validate additional fields at compile time.',
     ),
@@ -47,19 +47,11 @@ export const ViewBoxSchema = z
 
 export const SceneSchema = z
   .object({
-    version: z
-      .literal(1)
-      .describe(
-        'IR major version number; bump only on breaking schema changes',
-      ),
-    type: z
-      .literal('scene')
-      .describe('Discriminator marking this object as the root scene'),
+    version: z.literal(1).describe('IR major version number; bump only on breaking schema changes'),
+    type: z.literal('scene').describe('Discriminator marking this object as the root scene'),
     children: z
       .array(ChildSchema)
-      .describe(
-        'Top-level children of the scene; nodes register ids that paths can reference',
-      ),
+      .describe('Top-level children of the scene; nodes register ids that paths can reference'),
     viewBox: ViewBoxSchema.optional().describe(
       'Optional explicit viewBox; when set, Scene.layout uses it (ignoring padding) instead of the auto-computed bounding box. Omitted = automatic AABB + padding.',
     ),
@@ -70,6 +62,4 @@ export const SceneSchema = z
         'Scene-root animation tracks. Use the `viewBox` property to animate framing; static layout remains the settled framing.',
       ),
   })
-  .describe(
-    'Top-level retikz IR scene — the canonical, JSON-serializable representation of a drawing',
-  );
+  .describe('Top-level retikz IR scene — the canonical, JSON-serializable representation of a drawing');

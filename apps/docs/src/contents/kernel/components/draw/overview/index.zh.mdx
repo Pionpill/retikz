@@ -27,12 +27,12 @@ import { Draw } from '@retikz/react';
 
 Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标点，`arc` 则以上一个点为圆心画一段圆弧。贝塞尔曲线里的控制点不是曲线必须经过的点，而是用来"拉动"曲线方向和弯曲程度的手柄。
 
-| 写法 | 直觉 | 适合场景 |
-| --- | --- | --- |
-| `{ curve }` | 一个控制点拉出一段简单弯曲 | 普通单弧连线 |
-| `{ cubic }` | 两个控制点分别控制起点和终点附近的方向 | S 形、复杂连接、需要更精确切线 |
-| `{ bend }` | 只指定向左 / 向右弯和角度，由编译器算控制点 | 两节点之间的快捷弧形连线 |
-| `{ arc }` | 以上一点为圆心，按角度和半径画圆弧 | 角度标注、圆周片段、几何示意 |
+| 写法        | 直觉                                        | 适合场景                       |
+| ----------- | ------------------------------------------- | ------------------------------ |
+| `{ curve }` | 一个控制点拉出一段简单弯曲                  | 普通单弧连线                   |
+| `{ cubic }` | 两个控制点分别控制起点和终点附近的方向      | S 形、复杂连接、需要更精确切线 |
+| `{ bend }`  | 只指定向左 / 向右弯和角度，由编译器算控制点 | 两节点之间的快捷弧形连线       |
+| `{ arc }`   | 以上一点为圆心，按角度和半径画圆弧          | 角度标注、圆周片段、几何示意   |
 
 > 还有一类**过点平滑曲线**——穿过一串点的光滑曲线（centripetal Catmull-Rom）。它是 `<Step kind="smooth">` 的专属能力，不是 `way` 算子（`way` 是"上一项→下一项"的点对 infix，承载不了多点曲线），故只在 `<Path>` / `<Step>` 里用。见 [Step §平滑曲线](/kernel/components/draw/step)。
 
@@ -132,16 +132,16 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 除了 `way` 数组连线，Draw 家族还提供一组**形状 sugar**——一行画常见几何形，同样编译期展开为 `<Path>`、与 `<Draw>` / `<Path>` 共用同一套视觉 prop（`fill` / `stroke` / `strokeWidth` / `dashPattern` / `arrow` / `zIndex` 等）：
 
-| 组件 | 画什么 |
-| --- | --- |
-| `<Circle>` | 圆 / 半圆 / 弓形 |
-| `<Ellipse>` | 椭圆 / 部分椭圆 |
-| `<Arc>` | 不闭合的圆弧 / 椭圆弧 |
-| `<Sector>` | 扇形（经圆心闭合） |
-| `<Rectangle>` | 矩形 / 圆角矩形 |
-| `<Grid>` | 网格底纹（展开为多条线） |
-| `<RegularPolygon>` | 正多边形 |
-| `<Star>` | 星形 |
+| 组件               | 画什么                   |
+| ------------------ | ------------------------ |
+| `<Circle>`         | 圆 / 半圆 / 弓形         |
+| `<Ellipse>`        | 椭圆 / 部分椭圆          |
+| `<Arc>`            | 不闭合的圆弧 / 椭圆弧    |
+| `<Sector>`         | 扇形（经圆心闭合）       |
+| `<Rectangle>`      | 矩形 / 圆角矩形          |
+| `<Grid>`           | 网格底纹（展开为多条线） |
+| `<RegularPolygon>` | 正多边形                 |
+| `<Star>`           | 星形                     |
 
 圆、矩形、扇形这些几何形的一行式写法收在 [形状](/kernel/components/shapes) 分组，网格底纹这类成片参考线收在 [辅助](/kernel/components/helpers) 分组。它们仍会展开为 `<Path>` / `<Step>`，并与 `<Draw>` / `<Path>` 共用同一套视觉 prop。几何图形见 [圆与椭圆](/kernel/components/shapes/circle-ellipse)，规则参考线见 [Grid](/kernel/components/helpers/grid)。
 
@@ -149,24 +149,24 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 ### Props
 
-| 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `way` | `Array<WayItem>` | — | 至少 2 个点；首项总是 `move`，其余按 item 形态决定 `line` / `fold` / `cycle` 等动作 |
-| `stroke` | `string` | `currentColor` | 描边色 |
-| `strokeWidth` | `number` | `1` | 描边宽度 |
-| `dashPattern` | `Array<number>` | — | dash / gap 长度序列，如 `[4, 2]` |
-| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | 描边端点形状 |
-| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | 描边拐点形状（仅视觉，不改几何） |
-| `roundedCorners` | `number` | — | 折线 line-line 接缝**几何**圆角半径（TikZ `rounded corners=`）；改路径几何，区别于 `lineJoin`。详见 [Path §圆角](/kernel/components/draw/path) |
-| `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | 语义化 stroke 档位；显式 `strokeWidth` 优先 |
-| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | 路径级箭头方向 |
-| `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | — | 箭头详细配置；详见 [Arrow](/kernel/components/draw/arrow) |
-| `fill` | `string \| PaintSpec` | `'none'` | 闭合区域填充色：纯色或 PaintSpec（渐变 / 图案 / 图片） |
-| `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | 填充规则 |
-| `opacity` | `number` | — | 整 path 透明度 0..1 |
-| `fillOpacity` | `number` | — | 仅 fill 透明度 0..1 |
-| `drawOpacity` | `number` | — | 仅 stroke 透明度 0..1 |
-| `zIndex` | `number`（整数） | `0` | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效（透传到底层 `<Path>`） |
+| 属性             | 类型                                                                                           | 默认值         | 描述                                                                                                                                           |
+| ---------------- | ---------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `way`            | `Array<WayItem>`                                                                               | —              | 至少 2 个点；首项总是 `move`，其余按 item 形态决定 `line` / `fold` / `cycle` 等动作                                                            |
+| `stroke`         | `string`                                                                                       | `currentColor` | 描边色                                                                                                                                         |
+| `strokeWidth`    | `number`                                                                                       | `1`            | 描边宽度                                                                                                                                       |
+| `dashPattern`    | `Array<number>`                                                                                | —              | dash / gap 长度序列，如 `[4, 2]`                                                                                                               |
+| `lineCap`        | `'butt' \| 'round' \| 'square'`                                                                | `'butt'`       | 描边端点形状                                                                                                                                   |
+| `lineJoin`       | `'miter' \| 'round' \| 'bevel'`                                                                | `'miter'`      | 描边拐点形状（仅视觉，不改几何）                                                                                                               |
+| `roundedCorners` | `number`                                                                                       | —              | 折线 line-line 接缝**几何**圆角半径（TikZ `rounded corners=`）；改路径几何，区别于 `lineJoin`。详见 [Path §圆角](/kernel/components/draw/path) |
+| `thickness`      | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —              | 语义化 stroke 档位；显式 `strokeWidth` 优先                                                                                                    |
+| `arrow`          | `'none' \| '->' \| '<-' \| '<->'`                                                              | —              | 路径级箭头方向                                                                                                                                 |
+| `arrowDetail`    | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }`       | —              | 箭头详细配置；详见 [Arrow](/kernel/components/draw/arrow)                                                                                      |
+| `fill`           | `string \| PaintSpec`                                                                          | `'none'`       | 闭合区域填充色：纯色或 PaintSpec（渐变 / 图案 / 图片）                                                                                         |
+| `fillRule`       | `'nonzero' \| 'evenodd'`                                                                       | `'nonzero'`    | 填充规则                                                                                                                                       |
+| `opacity`        | `number`                                                                                       | —              | 整 path 透明度 0..1                                                                                                                            |
+| `fillOpacity`    | `number`                                                                                       | —              | 仅 fill 透明度 0..1                                                                                                                            |
+| `drawOpacity`    | `number`                                                                                       | —              | 仅 stroke 透明度 0..1                                                                                                                          |
+| `zIndex`         | `number`（整数）                                                                               | `0`            | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效（透传到底层 `<Path>`）                                                              |
 
 <Comparison target="tikz" title="样式命名">
 
@@ -176,27 +176,27 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 ### 曲线 / 形状 / 标注 way item
 
-| Way item | 参数 | 消耗下一项 | 等价 Step | 描述 |
-| --- | --- | --- | --- | --- |
-| `{ curve }` | `[cx, cy]` | 是 | `kind="curve"` | 二次贝塞尔控制点 |
-| `{ cubic }` | `[[c1x, c1y], [c2x, c2y]]` | 是 | `kind="cubic"` | 三次贝塞尔两个控制点 |
-| `{ bend }` | `'left' \| 'right'` | 是 | `kind="bend"` | 弯曲方向，角度默认 30 |
-| `{ bend, angle }` | `number` | 是 | `kind="bend"` | 覆盖 bend 角度 |
-| `{ arc }` | `{ startAngle, endAngle, radius }` | 否 | `kind="arc"` | 以当前点为圆心画弧段 |
-| `{ circle }` | `{ radius }` | 否 | `kind="circlePath"` | 以当前点为圆心画整圆 |
-| `{ ellipse }` | `{ radiusX, radiusY }` | 否 | `kind="ellipsePath"` | 以当前点为中心画整椭圆 |
-| `{ label }` | `string \| StepLabel` | 是 | `step.label` | 标注下一段；字符串短写等价 `{ text }` |
+| Way item          | 参数                               | 消耗下一项 | 等价 Step            | 描述                                  |
+| ----------------- | ---------------------------------- | ---------- | -------------------- | ------------------------------------- |
+| `{ curve }`       | `[cx, cy]`                         | 是         | `kind="curve"`       | 二次贝塞尔控制点                      |
+| `{ cubic }`       | `[[c1x, c1y], [c2x, c2y]]`         | 是         | `kind="cubic"`       | 三次贝塞尔两个控制点                  |
+| `{ bend }`        | `'left' \| 'right'`                | 是         | `kind="bend"`        | 弯曲方向，角度默认 30                 |
+| `{ bend, angle }` | `number`                           | 是         | `kind="bend"`        | 覆盖 bend 角度                        |
+| `{ arc }`         | `{ startAngle, endAngle, radius }` | 否         | `kind="arc"`         | 以当前点为圆心画弧段                  |
+| `{ circle }`      | `{ radius }`                       | 否         | `kind="circlePath"`  | 以当前点为圆心画整圆                  |
+| `{ ellipse }`     | `{ radiusX, radiusY }`             | 否         | `kind="ellipsePath"` | 以当前点为中心画整椭圆                |
+| `{ label }`       | `string \| StepLabel`              | 是         | `step.label`         | 标注下一段；字符串短写等价 `{ text }` |
 
 ### StepLabel
 
-| 字段 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `text` | `string` | — | 标注文本（单行） |
-| `position` | 7 keyword 之一 或 `number`（0..1） | `'midway'` | 段上归一化位置 t；keyword 是 t 的语义糖（at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1） |
-| `side` | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'` | 文本相对段方向的偏移侧；`sloped` 沿切线旋转贴线 |
-| `textColor` | `string` | — | 标签文字色；缺省回退 scope `labelDefault` → 宿主 path 主色 → currentColor |
-| `opacity` | `number` | — | 标签独立透明度 0..1；与所属 path opacity 相乘 |
-| `font` | `object` | — | 标签字体覆盖（family / size / weight / style） |
+| 字段        | 类型                                                  | 默认值     | 描述                                                                                                                                                          |
+| ----------- | ----------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `text`      | `string`                                              | —          | 标注文本（单行）                                                                                                                                              |
+| `position`  | 7 keyword 之一 或 `number`（0..1）                    | `'midway'` | 段上归一化位置 t；keyword 是 t 的语义糖（at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1） |
+| `side`      | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'`  | 文本相对段方向的偏移侧；`sloped` 沿切线旋转贴线                                                                                                               |
+| `textColor` | `string`                                              | —          | 标签文字色；缺省回退 scope `labelDefault` → 宿主 path 主色 → currentColor                                                                                     |
+| `opacity`   | `number`                                              | —          | 标签独立透明度 0..1；与所属 path opacity 相乘                                                                                                                 |
+| `font`      | `object`                                              | —          | 标签字体覆盖（family / size / weight / style）                                                                                                                |
 
 ## 相关
 

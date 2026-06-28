@@ -1,7 +1,14 @@
 import type { z } from 'zod';
-import type { NodeLabelBoundaryPositionSchema, NodeLabelSchema, NodeSchema } from './schema';
+
 import type { ValueOf } from '../../types';
-import type { BuiltinShape, NodeLabelBoundarySide, NodeLabelPlacement, NodeLabelPosition, NodeTextAlign } from './constants';
+import type {
+  BuiltinShape,
+  NodeLabelBoundarySide,
+  NodeLabelPlacement,
+  NodeLabelPosition,
+  NodeTextAlign,
+} from './constants';
+import type { NodeLabelBoundaryPositionSchema, NodeLabelSchema, NodeSchema } from './schema';
 
 export type IRNodeLabelBoundaryPosition = z.infer<typeof NodeLabelBoundaryPositionSchema>;
 

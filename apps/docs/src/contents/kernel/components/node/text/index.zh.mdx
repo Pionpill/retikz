@@ -7,14 +7,18 @@ description: 写在 <Node> 内部的"行级"标记组件——给一行单独覆
 
 它和直接把 LineSpec 对象写进 `text` prop 是**等价**的两条路径：
 
-| 路径 | 写法 | 优点 |
-|---|---|---|
-| `<Text>` Sugar | `<Node><Text fill="red">x</Text>...</Node>` | JSX 顺手，混排字符串 children 自然 |
-| `text` 数组 | `<Node text={[{ text: 'x', fill: 'red' }, ...]} />` | JSON 友好；AI 直接生成 IR JSON |
+| 路径           | 写法                                                | 优点                               |
+| -------------- | --------------------------------------------------- | ---------------------------------- |
+| `<Text>` Sugar | `<Node><Text fill="red">x</Text>...</Node>`         | JSX 顺手，混排字符串 children 自然 |
+| `text` 数组    | `<Node text={[{ text: 'x', fill: 'red' }, ...]} />` | JSON 友好；AI 直接生成 IR JSON     |
 
 > 块级属性（`align` / `lineHeight`）写在 `<Node>` 上；行级覆盖（`fill` / `opacity` / `font`）写在 `<Text>` 上。
 
-<ComponentAlert type="warn" title="一个 Text 是一整行，不是 inline span" description="把它理解成给 Node 增加一整行带样式文本；同一行不能混多段颜色，需要多色时把内容拆成多行，或改用多个独立 Node。" />
+<ComponentAlert
+  type="warn"
+  title="一个 Text 是一整行，不是 inline span"
+  description="把它理解成给 Node 增加一整行带样式文本；同一行不能混多段颜色，需要多色时把内容拆成多行，或改用多个独立 Node。"
+/>
 
 ## 用法
 
@@ -24,7 +28,9 @@ import { Node, Text } from '@retikz/react';
 
 ```tsx
 <Node>
-  <Text fill="red" font={{ weight: 'bold' }}>Heading</Text>
+  <Text fill="red" font={{ weight: 'bold' }}>
+    Heading
+  </Text>
   body line
 </Node>
 ```
@@ -57,12 +63,12 @@ import { Node, Text } from '@retikz/react';
 
 ## API 参考
 
-| 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `children` | `string \| number` | — | 行内容；单个字符串或数字（数字按文本渲染）；其它子项忽略 |
-| `fill` | `string` | — | 行颜色覆盖；不填走 Node `textColor` 块级默认 |
-| `opacity` | `number` | — | 单行透明度 0~1 |
-| `font` | `{ family?, size?, weight?, style? }` | — | 行级字体覆盖；缺字段继承 Node 块级 `font` |
+| 属性       | 类型                                  | 默认值 | 描述                                                     |
+| ---------- | ------------------------------------- | ------ | -------------------------------------------------------- |
+| `children` | `string \| number`                    | —      | 行内容；单个字符串或数字（数字按文本渲染）；其它子项忽略 |
+| `fill`     | `string`                              | —      | 行颜色覆盖；不填走 Node `textColor` 块级默认             |
+| `opacity`  | `number`                              | —      | 单行透明度 0~1                                           |
+| `font`     | `{ family?, size?, weight?, style? }` | —      | 行级字体覆盖；缺字段继承 Node 块级 `font`                |
 
 ### 限制
 

@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * Draw 家族解剖图
@@ -25,7 +26,14 @@ const Demo: FC = () => (
     <Node id="capStep" position={[-100, 35]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
       Step
     </Node>
-    <Draw way={[[-100, 18], [-100, -22]]} arrow="->" stroke="gray" />
+    <Draw
+      way={[
+        [-100, 18],
+        [-100, -22],
+      ]}
+      arrow="->"
+      stroke="gray"
+    />
 
     <Node id="capWay" position={[0, 35]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
       Way
@@ -35,7 +43,14 @@ const Demo: FC = () => (
     <Node id="capArrow" position={[170, 35]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
       Arrow
     </Node>
-    <Draw way={[[170, 18], [183, -23]]} arrow="->" stroke="gray" />
+    <Draw
+      way={[
+        [170, 18],
+        [183, -23],
+      ]}
+      arrow="->"
+      stroke="gray"
+    />
 
     {/* 整条 = Draw (Sugar) / Path (Kernel) */}
     <Node id="capWhole" position={[0, 80]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>

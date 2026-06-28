@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * Node `offset` for arbitrary (dx, dy) relative positioning
@@ -7,8 +8,12 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={320} height={180}>
-    <Node id="B" position={[0, 0]}>b</Node>
-    <Node id="A" position={{ of: 'B', offset: [80, 50] }}>a</Node>
+    <Node id="B" position={[0, 0]}>
+      b
+    </Node>
+    <Node id="A" position={{ of: 'B', offset: [80, 50] }}>
+      a
+    </Node>
     <Draw way={['B', 'A']} arrow="->" stroke="gray" />
   </Layout>
 );

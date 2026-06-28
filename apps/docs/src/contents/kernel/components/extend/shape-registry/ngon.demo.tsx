@@ -1,7 +1,9 @@
-import { type PathCommand, type Position, defineShape, localToWorld, worldToLocal } from '@retikz/core';
+import type { PathCommand, Position } from '@retikz/core';
+import type { FC } from 'react';
+
+import { defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
 import { z } from 'zod';
-import type { FC } from 'react';
 
 /**
  * 带参正多边形 ngon：参数走 nested params（不是 factory 闭包）
@@ -45,11 +47,7 @@ const findNgonBoundaryPoint = (radius: number, sides: number, direction: Positio
 /** ngon 注册项：sides 走 nested params，单一注册名生成任意边数变体 */
 const ngon = defineShape({
   paramsSchema: z.strictObject({
-    sides: z
-      .number()
-      .int()
-      .min(3)
-      .describe('Number of sides of the regular polygon (>= 3).'),
+    sides: z.number().int().min(3).describe('Number of sides of the regular polygon (>= 3).'),
   }),
   circumscribe: (hw, hh, params) => {
     const corners: Array<Position> = [
@@ -99,10 +97,43 @@ const ngon = defineShape({
 
 const Demo: FC = () => (
   <Layout width={460} height={200} shapes={{ ngon }}>
-    <Node id="t" shape={{ type: 'ngon', params: { sides: 3 } }} position={[-150, 0]} text="3" fill="lightgray" stroke="dodgerblue" strokeWidth={2} />
-    <Node id="p" shape={{ type: 'ngon', params: { sides: 5 } }} position={[-30, 0]} text="5" fill="lightgray" stroke="seagreen" strokeWidth={2} />
-    <Node id="h" shape={{ type: 'ngon', params: { sides: 6 } }} position={[90, 0]} text="6" fill="lightgray" stroke="darkorange" strokeWidth={2} />
-    <Node id="big" shape={{ type: 'ngon', params: { sides: 6 } }} position={[210, 0]} text="6" scale={2} fill="lightgray" stroke="crimson" strokeWidth={2} />
+    <Node
+      id="t"
+      shape={{ type: 'ngon', params: { sides: 3 } }}
+      position={[-150, 0]}
+      text="3"
+      fill="lightgray"
+      stroke="dodgerblue"
+      strokeWidth={2}
+    />
+    <Node
+      id="p"
+      shape={{ type: 'ngon', params: { sides: 5 } }}
+      position={[-30, 0]}
+      text="5"
+      fill="lightgray"
+      stroke="seagreen"
+      strokeWidth={2}
+    />
+    <Node
+      id="h"
+      shape={{ type: 'ngon', params: { sides: 6 } }}
+      position={[90, 0]}
+      text="6"
+      fill="lightgray"
+      stroke="darkorange"
+      strokeWidth={2}
+    />
+    <Node
+      id="big"
+      shape={{ type: 'ngon', params: { sides: 6 } }}
+      position={[210, 0]}
+      text="6"
+      scale={2}
+      fill="lightgray"
+      stroke="crimson"
+      strokeWidth={2}
+    />
     <Draw way={['t', 'p']} arrow="->" />
     <Draw way={['p', 'h']} arrow="->" />
     <Draw way={['h', 'big']} arrow="->" />

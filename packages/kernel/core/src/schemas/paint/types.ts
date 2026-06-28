@@ -1,7 +1,8 @@
 import type { z } from 'zod';
-import type { GradientStopSchema, PaintSpecSchema } from './schema';
+
 import type { ValueOf } from '../../types';
 import type { PatternShape } from './constants';
+import type { GradientStopSchema, PaintSpecSchema } from './schema';
 
 /** 渐变 stop 类型 */
 export type IRGradientStop = z.infer<typeof GradientStopSchema>;

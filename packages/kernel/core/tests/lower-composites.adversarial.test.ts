@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { CompositeBaseSchema, compileToScene, defineComposite } from '../src';
+
 import type { CompileWarning, IR, ScenePrimitive } from '../src';
+
+import { compileToScene, CompositeBaseSchema, defineComposite } from '../src';
 import { flattenPrims } from './helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
@@ -79,7 +81,9 @@ describe('lowerComposites — adversarial', () => {
     const irManual: IR = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'scope', children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: 'Hi' }] }],
+      children: [
+        { type: 'scope', children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: 'Hi' }] },
+      ],
     };
     expect(compileToScene(irComposite, { composites: [labeledBox] })).toEqual(compileToScene(irManual));
   });

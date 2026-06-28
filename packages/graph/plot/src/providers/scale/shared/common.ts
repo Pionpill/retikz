@@ -1,5 +1,6 @@
-import { extent as d3Extent } from 'd3-array';
 import type { ScaleContinuousNumeric as D3ScaleContinuousNumeric } from 'd3-scale';
+
+import { extent as d3Extent } from 'd3-array';
 import {
   interpolateBlues as d3InterpolateBlues,
   interpolateBrBG as d3InterpolateBrBG,
@@ -9,9 +10,9 @@ import {
   interpolateInferno as d3InterpolateInferno,
   interpolateMagma as d3InterpolateMagma,
   interpolateOranges as d3InterpolateOranges,
-  interpolatePRGn as d3InterpolatePRGn,
   interpolatePiYG as d3InterpolatePiYG,
   interpolatePlasma as d3InterpolatePlasma,
+  interpolatePRGn as d3InterpolatePRGn,
   interpolatePuOr as d3InterpolatePuOr,
   interpolatePurples as d3InterpolatePurples,
   interpolateRdBu as d3InterpolateRdBu,
@@ -24,8 +25,11 @@ import {
   interpolateViridis as d3InterpolateViridis,
   schemeCategory10 as d3SchemeCategory10,
 } from 'd3-scale-chromatic';
+
 import type { TickSet } from '../../../contract';
-import { BUILTIN_COLOR_SCHEMES, PlotColorScheme, type PlotColorSchemeValue } from './constants';
+import type { PlotColorSchemeValue } from './constants';
+
+import { BUILTIN_COLOR_SCHEMES, PlotColorScheme } from './constants';
 
 /** 默认目标刻度数（d3 ticks 的提示值，非硬约束——实际数量按 nice 区间取整定） */
 export const DEFAULT_TICK_COUNT = 5;
@@ -45,7 +49,10 @@ export const safeExtent = (values: Array<number>): [number, number] => {
  * @description 刻度值 / 标签只依赖 domain + count（与 range 无关）——故可在 range 定下来前先算，供布局估算 margin（ADR-03）。
  *   axis 与同维 grid 复用同一 TickSet（同源）。
  */
-export const scaleTicks = (scale: D3ScaleContinuousNumeric<number, number>, count: number = DEFAULT_TICK_COUNT): TickSet => {
+export const scaleTicks = (
+  scale: D3ScaleContinuousNumeric<number, number>,
+  count: number = DEFAULT_TICK_COUNT,
+): TickSet => {
   const values = scale.ticks(count);
   const format = scale.tickFormat(count);
   return { values, labels: values.map(format) };
@@ -91,12 +98,14 @@ export const builtinColorSchemeInterpolator: ColorSchemeResolver = name => {
  * 建 scheme 解析器：先查内置 SCHEME_INTERPOLATORS、再查自定义 options.colorSchemes，未命中 throw。
  * @description interpolator 函数不进 IR；IR 只存 scheme 名串，求值期经此解析为函数（含自定义命名配色）。
  */
-export const makeColorSchemeResolver = (custom?: Record<string, (t: number) => string>): ColorSchemeResolver => name => {
-  if (BUILTIN_COLOR_SCHEMES.has(name)) return SCHEME_INTERPOLATORS[name as PlotColorSchemeValue];
-  const customInterpolator = custom?.[name];
-  if (customInterpolator !== undefined) return customInterpolator;
-  throw new Error(`lowerPlots: unknown color scheme "${name}"; register it via options.colorSchemes`);
-};
+export const makeColorSchemeResolver =
+  (custom?: Record<string, (t: number) => string>): ColorSchemeResolver =>
+  name => {
+    if (BUILTIN_COLOR_SCHEMES.has(name)) return SCHEME_INTERPOLATORS[name as PlotColorSchemeValue];
+    const customInterpolator = custom?.[name];
+    if (customInterpolator !== undefined) return customInterpolator;
+    throw new Error(`lowerPlots: unknown color scheme "${name}"; register it via options.colorSchemes`);
+  };
 
 /**
  * d3 颜色串（`rgb(r, g, b)` / `#rgb` / `#rrggbb`）归一化为 6 位十六进制
@@ -121,7 +130,11 @@ const DEFAULT_DISCRETE_SCHEME = PlotColorScheme.Viridis;
  * @description 离散化 scale（quantize / threshold / quantile）的档色单一来源：count 档 → count 个色。
  *   count==1 取 scheme 中点（0.5）；count≥2 端点含 0 与 1（首末档取 scheme 两端）。与 sequential 连续采样同源 interpolator。
  */
-export const sampleSchemeColors = (scheme: string | undefined, count: number, resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator): Array<string> => {
+export const sampleSchemeColors = (
+  scheme: string | undefined,
+  count: number,
+  resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
+): Array<string> => {
   const interpolator = resolveScheme(scheme ?? DEFAULT_DISCRETE_SCHEME);
   if (count <= 1) return [toHexColor(interpolator(0.5))];
   return Array.from({ length: count }, (_unused, index) => toHexColor(interpolator(index / (count - 1))));

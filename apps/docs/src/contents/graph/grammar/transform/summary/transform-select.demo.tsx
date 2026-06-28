@@ -1,5 +1,6 @@
-import { Axis, Plot, PointMark, Transform } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { Axis, Plot, PointMark, Transform } from '@retikz/plot-react';
 
 import { cityRevenue } from './transform-select.data';
 

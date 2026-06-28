@@ -12,12 +12,17 @@ export type AxisRoleOf = (dimension: string) => string;
  * @description definition.resolve 阶段调用，保证 guide lowering 不会为同一定位角色生成两套互相覆盖的轴层。
  *   roleOf 让不同坐标系在“IR 维度名”和“坐标角色名”之间做一次局部映射。
  */
-export const assertUniqueAxisDimension = (guides: ReadonlyArray<AxisGuide>, roleOf: AxisRoleOf = dimension => dimension): void => {
+export const assertUniqueAxisDimension = (
+  guides: ReadonlyArray<AxisGuide>,
+  roleOf: AxisRoleOf = dimension => dimension,
+): void => {
   const seen = new Set<string>();
   for (const guide of guides) {
     const role = roleOf(guide.dimension);
     if (seen.has(role)) {
-      throw new Error(`lowerPlots: duplicate axis for "${role}" role (dimension "${guide.dimension}"); one axis per positional role`);
+      throw new Error(
+        `lowerPlots: duplicate axis for "${role}" role (dimension "${guide.dimension}"); one axis per positional role`,
+      );
     }
     seen.add(role);
   }

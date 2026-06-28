@@ -1,8 +1,13 @@
 ﻿import type { IRNode, IRScope } from '@retikz/core';
+
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots } from '../../src/pipeline/expand';
 import { PLOT_SHAPE_PALETTE } from '../../src/providers';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
@@ -11,7 +16,8 @@ const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, 
   return def.expand(spec) as IRScope;
 };
 
-const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => expandOf(spec, datasets).children[0] as IRScope;
+const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
+  expandOf(spec, datasets).children[0] as IRScope;
 
 const collectNodes = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
@@ -28,19 +34,28 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
 
 const shapeOf = (node: IRNode): string | undefined => (node as { shape?: string }).shape;
 
-const pointSpec = (shape: { kind: 'field'; value: string } | { kind: 'constant'; value: string } | undefined): PlotSpec =>
+const pointSpec = (
+  shape: { kind: 'field'; value: string } | { kind: 'constant'; value: string } | undefined,
+): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
-    scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+    scales: [
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [{ type: 'point', ...(shape ? { shape } : {}), encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
   });
 
 describe('shape channel (alpha.7 ADR-05)', () => {
   it('shape_field_maps_categories_to_palette', () => {
-    const data = [{ x: 0, y: 0, g: 'A' }, { x: 1, y: 1, g: 'B' }, { x: 2, y: 2, g: 'A' }];
+    const data = [
+      { x: 0, y: 0, g: 'A' },
+      { x: 1, y: 1, g: 'B' },
+      { x: 2, y: 2, g: 'A' },
+    ];
     const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'g' }), { d: data }));
     expect(shapeOf(nodes[0])).toBe(PLOT_SHAPE_PALETTE[0]);
     expect(shapeOf(nodes[1])).toBe(PLOT_SHAPE_PALETTE[1]);
@@ -55,7 +70,10 @@ describe('shape channel (alpha.7 ADR-05)', () => {
   });
 
   it('shape_value_constant', () => {
-    const data = [{ x: 0, y: 0 }, { x: 1, y: 1 }];
+    const data = [
+      { x: 0, y: 0 },
+      { x: 1, y: 1 },
+    ];
     const nodes = collectNodes(firstLayer(pointSpec({ kind: 'constant', value: 'diamond' }), { d: data }));
     expect(nodes.every(n => shapeOf(n) === 'diamond')).toBe(true);
   });
@@ -68,13 +86,23 @@ describe('shape channel (alpha.7 ADR-05)', () => {
 
   // 閿欒璺緞锛歝ontinuous / temporal fail-loud
   it('shape_continuous_field_fails_loud', () => {
-    const data = [{ x: 0, y: 0, v: 1.5 }, { x: 1, y: 1, v: 2.5 }];
-    expect(() => expandOf(pointSpec({ kind: 'field', value: 'v' }), { d: data })).toThrow(/shape requires a categorical field/);
+    const data = [
+      { x: 0, y: 0, v: 1.5 },
+      { x: 1, y: 1, v: 2.5 },
+    ];
+    expect(() => expandOf(pointSpec({ kind: 'field', value: 'v' }), { d: data })).toThrow(
+      /shape requires a categorical field/,
+    );
   });
 
   it('shape_temporal_field_fails_loud', () => {
-    const data = [{ x: 0, y: 0, t: '2024-01-01' }, { x: 1, y: 1, t: '2024-02-01' }];
-    expect(() => expandOf(pointSpec({ kind: 'field', value: 't' }), { d: data })).toThrow(/shape requires a categorical field/);
+    const data = [
+      { x: 0, y: 0, t: '2024-01-01' },
+      { x: 1, y: 1, t: '2024-02-01' },
+    ];
+    expect(() => expandOf(pointSpec({ kind: 'field', value: 't' }), { d: data })).toThrow(
+      /shape requires a categorical field/,
+    );
   });
 
   // 浜や簰锛歴hape + color + size 鍏卞瓨
@@ -83,12 +111,29 @@ describe('shape channel (alpha.7 ADR-05)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'col' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'col' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', shape: { kind: 'field', value: 'g' }, size: { kind: 'field', value: 'p' }, color: { kind: 'field', value: 'g', scale: 'col' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      marks: [
+        {
+          type: 'point',
+          shape: { kind: 'field', value: 'g' },
+          size: { kind: 'field', value: 'p' },
+          color: { kind: 'field', value: 'g', scale: 'col' },
+          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        },
+      ],
     });
-    const data = [{ x: 0, y: 0, g: 'A', p: 1 }, { x: 1, y: 1, g: 'B', p: 4 }];
+    const data = [
+      { x: 0, y: 0, g: 'A', p: 1 },
+      { x: 1, y: 1, g: 'B', p: 4 },
+    ];
     const nodes = collectNodes(firstLayer(spec, { d: data }));
-    expect(nodes.every(n => shapeOf(n) !== undefined && (n as { minimumSize?: number }).minimumSize !== undefined)).toBe(true);
+    expect(
+      nodes.every(n => shapeOf(n) !== undefined && (n as { minimumSize?: number }).minimumSize !== undefined),
+    ).toBe(true);
   });
 });

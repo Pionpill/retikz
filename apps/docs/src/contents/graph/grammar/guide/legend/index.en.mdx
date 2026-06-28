@@ -1,6 +1,6 @@
 ---
 title: Legend
-description: "Visualize non-positional channels (color / size / opacity / shape) as a legend with <Legend>; channel picks which channel, form follows the scale type."
+description: 'Visualize non-positional channels (color / size / opacity / shape) as a legend with <Legend>; channel picks which channel, form follows the scale type.'
 ---
 
 `<Legend>` is the visual counterpart of a scale. An axis (`<Axis>`) explains the two positional channels x / y; a legend explains the rest — the non-positional channels `color`, `size`, `opacity`, and `shape`. Both are chart guides, side by side.
@@ -49,19 +49,21 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
 
 <ComponentPreview name="legend-size" sourceFiles={['legend.data.ts']} />
 
-<p className="text-sm text-muted-foreground">A few representative sizes map size to value; the legend sits at the bottom.</p>
+<p className="text-sm text-muted-foreground">
+  A few representative sizes map size to value; the legend sits at the bottom.
+</p>
 
 ## API
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `channel` | `'color' \| 'size' \| 'opacity' \| 'shape'` | — | Which non-positional channel the legend explains; form follows the bound scale type |
-| `scale` | `string?` | — | Disambiguating scale name when one channel is driven by several scales; omit = the channel's only scale |
-| `title` | `string?` | none | Legend title (rendered above the entries); omit for no title |
-| `position` | `'right' \| 'left' \| 'top' \| 'bottom'` | `'right'` | Which edge the legend sits on (a band is reserved there) |
-| `orient` | `'vertical' \| 'horizontal'` | by `position` | Item layout direction; left/right default to vertical, top/bottom to horizontal |
-| `tickCount` | `number?` | default tick count | Tick-count hint for continuous ramps; ignored for discrete legends |
-| `tickLabels` | `boolean?` | `true` | Whether to render swatch / tick labels |
+| Prop         | Type                                        | Default            | Description                                                                                             |
+| ------------ | ------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------- |
+| `channel`    | `'color' \| 'size' \| 'opacity' \| 'shape'` | —                  | Which non-positional channel the legend explains; form follows the bound scale type                     |
+| `scale`      | `string?`                                   | —                  | Disambiguating scale name when one channel is driven by several scales; omit = the channel's only scale |
+| `title`      | `string?`                                   | none               | Legend title (rendered above the entries); omit for no title                                            |
+| `position`   | `'right' \| 'left' \| 'top' \| 'bottom'`    | `'right'`          | Which edge the legend sits on (a band is reserved there)                                                |
+| `orient`     | `'vertical' \| 'horizontal'`                | by `position`      | Item layout direction; left/right default to vertical, top/bottom to horizontal                         |
+| `tickCount`  | `number?`                                   | default tick count | Tick-count hint for continuous ramps; ignored for discrete legends                                      |
+| `tickLabels` | `boolean?`                                  | `true`             | Whether to render swatch / tick labels                                                                  |
 
 ## Related
 

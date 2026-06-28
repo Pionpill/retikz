@@ -1,5 +1,6 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * 叙述图：可嵌入 Tier2 的静态贡献链路。
@@ -23,12 +24,20 @@ const Demo: FC = () => (
     </Node>
 
     <Draw
-      way={['child', { label: { text: 'static read', side: 'above', textColor: 'gray', font: { size: 12 } } }, 'contribute']}
+      way={[
+        'child',
+        { label: { text: 'static read', side: 'above', textColor: 'gray', font: { size: 12 } } },
+        'contribute',
+      ]}
       arrow="->"
     />
     <Draw way={['contribute', 'aggregate']} arrow="->" />
     <Draw
-      way={['aggregate', { label: { text: 'by namespace', side: 'above', textColor: 'gray', font: { size: 12 } } }, 'compile']}
+      way={[
+        'aggregate',
+        { label: { text: 'by namespace', side: 'above', textColor: 'gray', font: { size: 12 } } },
+        'compile',
+      ]}
       arrow="->"
     />
 

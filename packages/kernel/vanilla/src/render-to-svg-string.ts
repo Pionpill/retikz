@@ -1,8 +1,10 @@
 import { renderToSvgString as buildSvgString } from '@retikz/render/svg';
+
+import type { RenderInput, RenderToStringOptions } from './types';
+
 import { isFigure } from './builder/is-figure';
 import { DEFAULT_ID_PREFIX } from './constants';
 import { toScene } from './to-scene';
-import type { RenderInput, RenderToStringOptions } from './types';
 
 /**
  * 把 IR / Scene / Figure 渲染成 SVG 字符串（SSR / 构建期）

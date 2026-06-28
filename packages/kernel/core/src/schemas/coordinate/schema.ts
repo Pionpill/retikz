@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { AtPositionSchema, BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from '../position';
+
+import {
+  AtPositionSchema,
+  BetweenPositionSchema,
+  OffsetPositionSchema,
+  PolarPositionSchema,
+  PositionSchema,
+} from '../position';
 
 /**
  * Coordinate 占位节点（TikZ `\coordinate (m) at (3,2);` 同义）
@@ -7,23 +14,13 @@ import { AtPositionSchema, BetweenPositionSchema, OffsetPositionSchema, PolarPos
  */
 export const CoordinateSchema = z
   .object({
-    type: z
-      .literal('coordinate')
-      .describe('Discriminator marking this child as a coordinate placeholder'),
+    type: z.literal('coordinate').describe('Discriminator marking this child as a coordinate placeholder'),
     id: z
       .string()
       .min(1)
-      .describe(
-        'Required unique id; the whole point of a coordinate is to be referenced by paths or other nodes',
-      ),
+      .describe('Required unique id; the whole point of a coordinate is to be referenced by paths or other nodes'),
     position: z
-      .union([
-        PositionSchema,
-        PolarPositionSchema,
-        AtPositionSchema,
-        OffsetPositionSchema,
-        BetweenPositionSchema,
-      ])
+      .union([PositionSchema, PolarPositionSchema, AtPositionSchema, OffsetPositionSchema, BetweenPositionSchema])
       .describe(
         'Coordinate position; Cartesian [x, y], polar, relative-to-another-node (`at`-style), offset from a base point (`{ of, offset }` form), or between two endpoints (`{ between: [A, B], t }`). Resolved at compile time.',
       ),

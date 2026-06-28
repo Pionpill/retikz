@@ -13,7 +13,11 @@ export const bendControlPoints = (
   const dx = to[0] - from[0];
   const dy = to[1] - from[1];
   const chord = Math.hypot(dx, dy);
-  if (chord === 0) return [[from[0], from[1]], [from[0], from[1]]];
+  if (chord === 0)
+    return [
+      [from[0], from[1]],
+      [from[0], from[1]],
+    ];
 
   const sign = direction === 'left' ? 1 : -1;
   const nx = (dy / chord) * sign;

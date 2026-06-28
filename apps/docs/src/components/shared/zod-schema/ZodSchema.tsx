@@ -1,11 +1,14 @@
-import { type FC, useMemo } from 'react';
+import type { FC } from 'react';
+
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { SCHEMA_REGISTRY } from '@/lib/schema-registry';
 
+import type { ObjectField, TableRow } from './types';
+
 import { RenderTable } from './RenderTable';
 import { RenderType } from './RenderType';
-import type { ObjectField, TableRow } from './types';
 import { walk } from './walker';
 
 type Props = {
@@ -35,11 +38,7 @@ function flattenFields(fields: Array<ObjectField>): Array<TableRow> {
 }
 
 /** 递归应用 descriptions 覆盖；支持点路径如 'label.text' */
-function applyDescriptions(
-  fields: Array<ObjectField>,
-  descs: Record<string, string>,
-  prefix = '',
-): Array<ObjectField> {
+function applyDescriptions(fields: Array<ObjectField>, descs: Record<string, string>, prefix = ''): Array<ObjectField> {
   return fields.map(f => {
     const key = prefix === '' ? f.name : `${prefix}.${f.name}`;
     const override = Object.hasOwn(descs, key) ? descs[key] : undefined;
@@ -90,9 +89,7 @@ export const ZodSchema: FC<Props> = props => {
 
   let rows: Array<TableRow> | null = null;
   if (repr.kind === 'object') {
-    const overridden = descriptions != null
-      ? applyDescriptions(repr.fields, descriptions)
-      : repr.fields;
+    const overridden = descriptions != null ? applyDescriptions(repr.fields, descriptions) : repr.fields;
     rows = flattenFields(overridden);
 
     if (descriptions != null) {

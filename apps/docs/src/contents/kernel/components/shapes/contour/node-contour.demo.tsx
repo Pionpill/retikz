@@ -1,5 +1,6 @@
-import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Layout, Node } from '@retikz/react';
 
 /**
  * contour 形状作为 Node（任意轮廓 + 自动居中）
@@ -16,11 +17,7 @@ const FLAG: Array<[number, number]> = [
 
 const Demo: FC = () => (
   <Layout width={400} height={190}>
-    <Node
-      position={[-90, 0]}
-      shape={{ type: 'contour', params: { points: FLAG, cornerRadius: 8 } }}
-      fill="steelblue"
-    />
+    <Node position={[-90, 0]} shape={{ type: 'contour', params: { points: FLAG, cornerRadius: 8 } }} fill="steelblue" />
     <Node
       position={[90, 0]}
       shape={{

@@ -1,7 +1,7 @@
 import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
+
 import type { MarkValueKind, PathCurve } from './constants';
-import { BUILTIN_MARK_TYPES } from './constants';
 import type {
   AnchorIdSpecSchema,
   BlendModeStyleSchema,
@@ -38,13 +38,19 @@ import type {
   PointZIndexStyleSchema,
   ReferenceMarkSchema,
   RelationMarkSchema,
-  RelationPathOptionsSchema,
+  RelationPathGeometrySchema,
+  RelationPathSpecificOptionsSchema,
+  RelationPrimitiveStyleSchema,
+  RelationRibbonOptionsSchema,
+  RelationRibbonSpecificOptionsSchema,
   RelationRouteStepSchema,
   RelationRoutingSpecSchema,
   RelationStepLabelSchema,
   RelationTransformSchema,
   ShadowStyleSchema,
 } from './schema';
+
+import { BUILTIN_MARK_TYPES } from './constants';
 
 /** point mark（散点 + 文本标签） */
 export type PointMark = z.infer<typeof PointMarkSchema>;
@@ -109,7 +115,11 @@ export type RelationRouteStep = z.infer<typeof RelationRouteStepSchema>;
 export type MarkTransform = z.infer<typeof MarkTransformSchema>;
 export type RelationTransform = z.infer<typeof RelationTransformSchema>;
 export type RelationRoutingSpec = z.infer<typeof RelationRoutingSpecSchema>;
-export type RelationPathOptions = z.infer<typeof RelationPathOptionsSchema>;
+export type RelationPrimitiveStyle = z.infer<typeof RelationPrimitiveStyleSchema>;
+export type RelationPathSpecificOptions = z.infer<typeof RelationPathSpecificOptionsSchema>;
+export type RelationPathGeometry = z.infer<typeof RelationPathGeometrySchema>;
+export type RelationRibbonSpecificOptions = z.infer<typeof RelationRibbonSpecificOptionsSchema>;
+export type RelationRibbonOptions = z.infer<typeof RelationRibbonOptionsSchema>;
 export type RelationMark = z.infer<typeof RelationMarkSchema>;
 export type Mark = z.infer<typeof MarkSchema>;
 /** custom mark operation（自定义 type passthrough，由 runtime MarkDefinition 解释） */

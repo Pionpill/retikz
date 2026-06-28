@@ -1,9 +1,17 @@
-import { type IRChild, type IRNode, type IRNodeDefault, type IRScope } from '@retikz/core';
-import { type CoordinateFrame, type FieldCollector, type MarkChannels, type MarkDefinition, type MarkLoweringContext } from '../../../contract';
-import { type ExternalRow, type Mark, PlotMark, type PointMark } from '../../../schemas';
+import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope } from '@retikz/core';
+
+import type { ExternalRow, Mark, PointMark } from '../../../schemas';
+import type { MarkPaint } from '../shared';
+
 import {
-  DEFAULT_FILL,
-  type MarkPaint,
+  type CoordinateFrame,
+  type FieldCollector,
+  type MarkChannels,
+  type MarkDefinition,
+  type MarkLoweringContext,
+} from '../../../contract';
+import { PlotMark } from '../../../schemas';
+import {
   attachDatumAnchor,
   attachDatumLabel,
   attachMarkLayer,
@@ -13,6 +21,7 @@ import {
   collectNodeChannelFields,
   colorGroupedScope,
   decorateDatum,
+  DEFAULT_FILL,
   nodeChannelKinds,
   roleAnchor,
   roleValues,
@@ -84,9 +93,10 @@ export const lowerPoint = (
   const colorOf = channelValueOf<string>(channels, 'color');
   const fillOf = mark.fill?.kind === 'field' && !colorOf ? channelValueOf<MarkPaint>(channels, 'fill') : undefined;
   const strokeOf = mark.stroke?.kind === 'field' ? channelValueOf<MarkPaint>(channels, 'stroke') : undefined;
-  const labelOf = channelValueOf<string>(channels, 'label');
   const defaultColor = channelDefaultOf<string>(channels, 'color') ?? DEFAULT_FILL;
   const isText = mark.encoding.text !== undefined;
+  const textOf = isText ? channelValueOf<NonNullable<IRNode['text']>>(channels, 'label') : undefined;
+  const labelOf = !isText ? channelValueOf<IRNodeLabel['text']>(channels, 'label') : undefined;
   const textColorConstant = mark.textColor?.kind === 'constant' ? mark.textColor.value : undefined;
   const dx = mark.dx ?? 0;
   const dy = mark.dy ?? 0;
@@ -105,14 +115,20 @@ export const lowerPoint = (
       // 文本 glyph：投影同 point（roleValues + projectRoles，坐标系无关）；内容缺失跳过；dx/dy 锚点像素微调
       const point = frame.projectRoles(roleValues(mark, row, frame));
       if (!point) continue;
-      const text = labelOf?.(row);
+      const text = textOf?.(row);
       if (text === undefined) continue;
       const position: [number, number] = dx === 0 && dy === 0 ? point : [point[0] + dx, point[1] + dy];
       const base: IRNode = { type: 'node', position, text };
       applyChannelDeliveries(base, 'pointText');
       placed.push({
         color: colorOf?.(row),
-        node: attachDatumAnchor(decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined), mark, row, transformedIndex, ctx),
+        node: attachDatumAnchor(
+          decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined),
+          mark,
+          row,
+          transformedIndex,
+          ctx,
+        ),
       });
       continue;
     }
@@ -126,7 +142,13 @@ export const lowerPoint = (
     if (stroke !== undefined) base.stroke = stroke;
     applyChannelDeliveries(base, 'pointGlyph');
     const node = attachDatumLabel(
-      attachDatumAnchor(decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined), mark, row, transformedIndex, ctx),
+      attachDatumAnchor(
+        decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined),
+        mark,
+        row,
+        transformedIndex,
+        ctx,
+      ),
       mark,
       row,
       labelOf,
@@ -134,11 +156,14 @@ export const lowerPoint = (
     placed.push({ color: colorOf?.(row), node });
   }
   if (placed.length === 0) return null;
-  const fillConstant = channelDefaultOf<MarkPaint>(channels, 'fill') ?? (mark.fill?.kind === 'constant' ? mark.fill.value : undefined);
+  const fillConstant =
+    channelDefaultOf<MarkPaint>(channels, 'fill') ?? (mark.fill?.kind === 'constant' ? mark.fill.value : undefined);
   const layer: IRScope = !colorOf
     ? {
         type: 'scope',
-        nodeDefault: isText ? textStyle(textColorConstant ?? (typeof fillConstant === 'string' ? fillConstant : defaultColor), mark) : pointStyle(fillConstant ?? defaultColor, mark),
+        nodeDefault: isText
+          ? textStyle(textColorConstant ?? (typeof fillConstant === 'string' ? fillConstant : defaultColor), mark)
+          : pointStyle(fillConstant ?? defaultColor, mark),
         children: placed.map(p => p.node),
       }
     : colorGroupedScope(placed, fill => (isText ? textStyle(textColorConstant ?? fill, mark) : pointStyle(fill, mark)));

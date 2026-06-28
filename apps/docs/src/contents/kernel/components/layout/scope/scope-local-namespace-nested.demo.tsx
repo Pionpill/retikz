@@ -1,5 +1,6 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * 嵌套 localNamespace + inside-out lookup：内层 path 向外看到中层 / 根 frame
@@ -7,11 +8,17 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={600} height={140}>
-    <Node id="root-anchor" position={[0, 0]} shape="circle" padding={4}>root</Node>
+    <Node id="root-anchor" position={[0, 0]} shape="circle" padding={4}>
+      root
+    </Node>
     <Scope localNamespace transforms={[{ kind: 'translate', x: 180, y: 0 }]}>
-      <Node id="L1-node" position={[0, 0]} shape="circle" padding={4}>L1</Node>
+      <Node id="L1-node" position={[0, 0]} shape="circle" padding={4}>
+        L1
+      </Node>
       <Scope localNamespace transforms={[{ kind: 'translate', x: 180, y: 0 }]}>
-        <Node id="L2-node" position={[0, 0]} shape="circle" padding={4}>L2</Node>
+        <Node id="L2-node" position={[0, 0]} shape="circle" padding={4}>
+          L2
+        </Node>
         <Draw way={['L2-node', 'L1-node', 'root-anchor']} arrow="->" />
       </Scope>
     </Scope>

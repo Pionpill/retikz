@@ -19,10 +19,7 @@ export const localToWorld = (s: CenteredShape, local: Position): Position => {
   if (angle === 0) return [s.x + local[0], s.y + local[1]];
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
-  return [
-    s.x + local[0] * cos - local[1] * sin,
-    s.y + local[0] * sin + local[1] * cos,
-  ];
+  return [s.x + local[0] * cos - local[1] * sin, s.y + local[0] * sin + local[1] * cos];
 };
 
 /**

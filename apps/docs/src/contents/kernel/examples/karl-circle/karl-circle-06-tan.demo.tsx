@@ -1,7 +1,8 @@
-import { Fragment } from 'react';
 import type { FC } from 'react';
+
 import { Circle, Coordinate, Draw, Grid, Layout, Node, Sector } from '@retikz/react';
 import { useLowerTex } from '@retikz/tex/react';
+import { Fragment } from 'react';
 
 const COS30 = Math.cos((30 * Math.PI) / 180);
 const SIN30 = Math.sin((30 * Math.PI) / 180);
@@ -18,12 +19,24 @@ const Demo: FC = () => {
       <Circle center={[0, 0]} radius={100} lineCap="round" />
 
       {/* 坐标轴 */}
-      <Draw way={[[-150, 0], [150, 0]]} arrow="->" />
+      <Draw
+        way={[
+          [-150, 0],
+          [150, 0],
+        ]}
+        arrow="->"
+      />
       <Node position={[162, 0]} stroke="none" padding={0}>
         {'$x$'}
       </Node>
       <Coordinate id="x-axis" position={[150, 0]} />
-      <Draw way={[[0, 150], [0, -150]]} arrow="->" />
+      <Draw
+        way={[
+          [0, 150],
+          [0, -150],
+        ]}
+        arrow="->"
+      />
       <Node position={[0, -162]} stroke="none" padding={0}>
         {'$y$'}
       </Node>
@@ -36,7 +49,12 @@ const Demo: FC = () => {
         { x: 100, tex: '$1$' },
       ].map(({ x, tex }) => (
         <Fragment key={`tx-${x}`}>
-          <Draw way={[[x, -3], [x, 3]]} />
+          <Draw
+            way={[
+              [x, -3],
+              [x, 3],
+            ]}
+          />
           <Node position={[x - 10, 14]} stroke="none" padding={1}>
             {tex}
           </Node>
@@ -49,7 +67,12 @@ const Demo: FC = () => {
         { y: -100, tex: '$1$' },
       ].map(({ y, tex }) => (
         <Fragment key={`ty-${y}`}>
-          <Draw way={[[-3, y], [3, y]]} />
+          <Draw
+            way={[
+              [-3, y],
+              [3, y],
+            ]}
+          />
           <Node position={[-18, y + 10]} stroke="none" padding={1}>
             {tex}
           </Node>

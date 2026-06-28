@@ -1,5 +1,6 @@
-import { IntervalMark, Plot } from '@retikz/plot-react';
 import type { FC } from 'react';
+
+import { IntervalMark, Plot } from '@retikz/plot-react';
 
 import { traffic } from './bar-pie.data';
 

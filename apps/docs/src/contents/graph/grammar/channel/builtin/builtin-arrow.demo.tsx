@@ -1,6 +1,7 @@
+import type { FC } from 'react';
+
 import { PlotFieldType } from '@retikz/plot';
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
-import type { FC } from 'react';
 
 const rows = [
   { step: 1, up: 8, down: 22, both: 14 },

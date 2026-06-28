@@ -1,6 +1,7 @@
+import type { FC } from 'react';
+
 import { PlotFieldType } from '@retikz/plot';
 import { Axis, Plot, PointMark } from '@retikz/plot-react';
-import type { FC } from 'react';
 
 const rows = [
   { x: 1, y: 11, text: 'plain', ink: 'red', radius: 0, angle: 0, pad: 2 },

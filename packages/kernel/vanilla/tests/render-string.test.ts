@@ -1,7 +1,9 @@
-import { describe, expect, it } from 'vitest';
-import { compileToScene } from '@retikz/core';
 import type { IR } from '@retikz/core';
+
+import { compileToScene } from '@retikz/core';
 import { renderToSvgString as svgRenderToString } from '@retikz/render/svg';
+import { describe, expect, it } from 'vitest';
+
 import { renderToSvgString } from '../src';
 
 /**

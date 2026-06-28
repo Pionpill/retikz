@@ -1,8 +1,27 @@
 import type { Position } from '@retikz/math';
-import { type AnyCoordinateDefinition, type Cell, type CellGeometry, type CoordinateDefinition, type DimensionRole, type PositionScale, type TickSet, cellInterval } from '../../../contract';
+
+import type {
+  AnyCoordinateDefinition,
+  Cell,
+  CellGeometry,
+  CoordinateDefinition,
+  DimensionRole,
+  PositionScale,
+  TickSet,
+} from '../../../contract';
 import type { GuideContext } from '../../../features';
-import { type Rect, computePlotArea } from '../../../pipeline/layout';
-import { type Cartesian1DCoordinate, Cartesian1DOrientation, type Cartesian1DOrientationType, Cartesian1DSchema, Cartesian2DSchema, type Coordinate, PlotCoordinate, PlotScale, type ScaleOperation } from '../../../schemas';
+import type { Rect } from '../../../pipeline/layout';
+import type { Cartesian1DCoordinate, Cartesian1DOrientationType, Coordinate, ScaleOperation } from '../../../schemas';
+
+import { cellInterval } from '../../../contract';
+import { computePlotArea } from '../../../pipeline/layout';
+import {
+  Cartesian1DOrientation,
+  Cartesian1DSchema,
+  Cartesian2DSchema,
+  PlotCoordinate,
+  PlotScale,
+} from '../../../schemas';
 import { assertUniqueAxisDimension } from '../shared';
 
 type Cartesian2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Cartesian2D }>;
@@ -12,7 +31,12 @@ const EMPTY_TICKS: TickSet = { values: [], labels: [] };
 
 /** 仅连续数值 scale 的显式 range 会阻止坐标系把 range 收敛到 plotArea（自定义 type 无内置 range 语义、按可收敛处理）。 */
 const hasExplicitContinuousRange = (def: ScaleOperation): boolean =>
-  (def.type === PlotScale.Linear || def.type === PlotScale.Log || def.type === PlotScale.Pow || def.type === PlotScale.Sqrt || def.type === PlotScale.Symlog || def.type === PlotScale.Radial) &&
+  (def.type === PlotScale.Linear ||
+    def.type === PlotScale.Log ||
+    def.type === PlotScale.Pow ||
+    def.type === PlotScale.Sqrt ||
+    def.type === PlotScale.Symlog ||
+    def.type === PlotScale.Radial) &&
   'range' in def &&
   def.range !== undefined;
 
@@ -43,7 +67,10 @@ export type CartesianCoordinateFrame = {
  * @description primary 是 x 角色位置 scale，secondary 是 y 角色位置 scale；返回的 frame 同时提供点投影与 rect cell 快路。
  *   这是 lowering 内部的运行时对象，不进入 JSON IR，也不从根入口暴露给用户作为构造公共坐标系的主路径。
  */
-export const createCartesianCoordinate = (primary: PositionScale, secondary: PositionScale): CartesianCoordinateFrame => {
+export const createCartesianCoordinate = (
+  primary: PositionScale,
+  secondary: PositionScale,
+): CartesianCoordinateFrame => {
   const project = (primaryValue: unknown, secondaryValue: unknown): Position | null => {
     const x = primary.coordinate(primaryValue);
     const y = secondary.coordinate(secondaryValue);
@@ -97,7 +124,11 @@ export type Cartesian1DCoordinateFrame = {
  * @description 单 scale 沿 orientation 指定的轴投影，另一屏幕维度固定在 baseline。
  *   1D 坐标没有面积 cell 语义，因此不提供 projectCell，interval / reference band 等 cell 类 mark 会 fail-loud。
  */
-export const createCartesian1DCoordinate = (scale: PositionScale, orientation: Cartesian1DOrientationType, baseline: number): Cartesian1DCoordinateFrame => {
+export const createCartesian1DCoordinate = (
+  scale: PositionScale,
+  orientation: Cartesian1DOrientationType,
+  baseline: number,
+): Cartesian1DCoordinateFrame => {
   const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
     const position = scale.coordinate(values[0]);
     if (!Number.isFinite(position)) return null;
@@ -131,13 +162,23 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
     assertUniqueAxisDimension(ctx.axisGuides);
     const xAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
     const yAxis = ctx.axisGuides.find(guide => guide.dimension === 'y');
-    const xTicks: TickSet | undefined = xAxis ? ctx.collectAxisTicks('x') ?? xScale.ticks(xAxis.tickCount) : undefined;
-    const yTicks: TickSet | undefined = yAxis ? ctx.collectAxisTicks('y') ?? yScale.ticks(yAxis.tickCount) : undefined;
+    const xTicks: TickSet | undefined = xAxis
+      ? (ctx.collectAxisTicks('x') ?? xScale.ticks(xAxis.tickCount))
+      : undefined;
+    const yTicks: TickSet | undefined = yAxis
+      ? (ctx.collectAxisTicks('y') ?? yScale.ticks(yAxis.tickCount))
+      : undefined;
 
     const computed = computePlotArea(
       ctx.width,
       ctx.height,
-      { hasXAxis: !!xAxis, hasYAxis: !!yAxis, xLabels: xTicks?.labels ?? [], yLabels: yTicks?.labels ?? [], legendReserve: ctx.legendReserve },
+      {
+        hasXAxis: !!xAxis,
+        hasYAxis: !!yAxis,
+        xLabels: xTicks?.labels ?? [],
+        yLabels: yTicks?.labels ?? [],
+        legendReserve: ctx.legendReserve,
+      },
       { fontSize: ctx.fontSize, margin: ctx.margin },
     );
     const plotArea = computed.plotArea;
@@ -186,15 +227,15 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
 
     const provisional: [number, number] = horizontal ? [0, ctx.width] : [ctx.height, 0];
     const scale = ctx.buildPositionScale(scaleDef, values, provisional);
-    const ticks: TickSet | undefined = axis ? ctx.collectAxisTicks('x') ?? scale.ticks(axis.tickCount) : undefined;
+    const ticks: TickSet | undefined = axis ? (ctx.collectAxisTicks('x') ?? scale.ticks(axis.tickCount)) : undefined;
     const computed = computePlotArea(
       ctx.width,
       ctx.height,
       {
         hasXAxis: horizontal ? !!axis : false,
         hasYAxis: horizontal ? false : !!axis,
-        xLabels: horizontal ? ticks?.labels ?? [] : [],
-        yLabels: horizontal ? [] : ticks?.labels ?? [],
+        xLabels: horizontal ? (ticks?.labels ?? []) : [],
+        yLabels: horizontal ? [] : (ticks?.labels ?? []),
         legendReserve: ctx.legendReserve,
       },
       { fontSize: ctx.fontSize, margin: ctx.margin },
@@ -209,8 +250,8 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
       plotArea,
       projectX: scale,
       projectY: scale,
-      xTicks: horizontal ? ticks ?? EMPTY_TICKS : EMPTY_TICKS,
-      yTicks: horizontal ? EMPTY_TICKS : ticks ?? EMPTY_TICKS,
+      xTicks: horizontal ? (ticks ?? EMPTY_TICKS) : EMPTY_TICKS,
+      yTicks: horizontal ? EMPTY_TICKS : (ticks ?? EMPTY_TICKS),
       fontSize: ctx.fontSize,
       axisOrientation: horizontal ? 'horizontal' : 'vertical',
     };
@@ -225,4 +266,7 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
 };
 
 /** 笛卡尔内置坐标系 definitions。 */
-export const CARTESIAN_COORDINATES: ReadonlyArray<AnyCoordinateDefinition> = [cartesian2DCoordinateDefinition, cartesian1DCoordinateDefinition] as ReadonlyArray<AnyCoordinateDefinition>;
+export const CARTESIAN_COORDINATES: ReadonlyArray<AnyCoordinateDefinition> = [
+  cartesian2DCoordinateDefinition,
+  cartesian1DCoordinateDefinition,
+] as ReadonlyArray<AnyCoordinateDefinition>;

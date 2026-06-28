@@ -1,10 +1,12 @@
 import type { z } from 'zod';
+
+import type { SceneSchema, ViewBoxSchema } from './schema';
+
 import { type IRComposite } from '../composite';
 import { type IRCoordinate } from '../coordinate';
 import { type IRNode } from '../node';
 import { type IRPathBase } from '../path';
 import { type IRScope } from '../scope';
-import type { SceneSchema, ViewBoxSchema } from './schema';
 
 /**
  * 顶层 Scene 的子节点：tier1 node / path / coordinate / scope，或 tier2 composite（有 namespace）

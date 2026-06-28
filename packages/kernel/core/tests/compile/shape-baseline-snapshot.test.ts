@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 
 /**
  * Shape Registry 重构的「逐字节」回归网
@@ -43,11 +45,29 @@ const richIR: IR = {
       label: { text: 'tag', position: 'above' },
     },
     // boundary clip：r（带 margin）→ c
-    { type: 'path', children: [{ type: 'step', kind: 'move', to: { id: 'r' } }, { type: 'step', kind: 'line', to: { id: 'c' } }] },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'r' } },
+        { type: 'step', kind: 'line', to: { id: 'c' } },
+      ],
+    },
     // 命名 anchor：d.north → e.south
-    { type: 'path', children: [{ type: 'step', kind: 'move', to: { id: 'd', anchor: 'north' } }, { type: 'step', kind: 'line', to: { id: 'e', anchor: 'south' } }] },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'd', anchor: 'north' } },
+        { type: 'step', kind: 'line', to: { id: 'e', anchor: 'south' } },
+      ],
+    },
     // 数字角度：c.30
-    { type: 'path', children: [{ type: 'step', kind: 'move', to: { id: 'c', anchor: 30 } }, { type: 'step', kind: 'line', to: [300, 300] }] },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'c', anchor: 30 } },
+        { type: 'step', kind: 'line', to: [300, 300] },
+      ],
+    },
   ],
 };
 

@@ -1,5 +1,7 @@
+import type { ComponentType, FC, SVGProps } from 'react';
+
 import { Bot, Plus } from 'lucide-react';
-import { type ComponentType, type FC, type SVGProps, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ChatGptIcon, ClaudeIcon, DeepSeekIcon } from '@/components/icons';
@@ -7,9 +9,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/use-ai-chat-store';
+
+import type { ProviderId } from '../providers/types';
+
 import { MODEL_CHOICES, PROVIDER_LABEL } from '../models';
-import { PROVIDER_IDS, type ProviderId } from '../providers/types';
 import { isBuiltInProviderId } from '../providers/resolve';
+import { PROVIDER_IDS } from '../providers/types';
 
 type BrandIcon = ComponentType<SVGProps<SVGSVGElement> & { className?: string }>;
 
@@ -68,9 +73,7 @@ export const AiChatInputModelPicker: FC = () => {
 
   const currentModel = models[providerId] ?? '';
   const ActiveIcon: BrandIcon = isBuiltInProviderId(providerId) ? PROVIDER_ICON[providerId] : Bot;
-  const tooltipText = currentModel
-    ? `${t('ai.convModelLabel')} · ${currentModel}`
-    : t('ai.convModelLabel');
+  const tooltipText = currentModel ? `${t('ai.convModelLabel')} · ${currentModel}` : t('ai.convModelLabel');
 
   const handlePick = (nextProviderId: string, nextModel: string) => {
     if (nextProviderId !== providerId) setProvider(nextProviderId);
@@ -105,10 +108,7 @@ export const AiChatInputModelPicker: FC = () => {
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <PopoverContent
-        align="start"
-        className="w-[280px] max-h-[400px] overflow-y-auto p-0"
-      >
+      <PopoverContent align="start" className="w-[280px] max-h-[400px] overflow-y-auto p-0">
         {groups.length === 0 ? (
           <div className="px-3 py-4 text-center text-xs text-muted-foreground">
             {t('ai.settingsCustomProvidersHint')}
@@ -141,9 +141,7 @@ export const AiChatInputModelPicker: FC = () => {
                         <span className="truncate">{m}</span>
                         <span className="flex shrink-0 items-center gap-1">
                           {isCustomModel && (
-                            <span className="text-[10px] font-sans text-muted-foreground">
-                              {t('ai.convCustomTag')}
-                            </span>
+                            <span className="text-[10px] font-sans text-muted-foreground">{t('ai.convCustomTag')}</span>
                           )}
                           {isActive && <span className="text-xs">✓</span>}
                         </span>

@@ -1,4 +1,5 @@
 import type { ClipShape, SceneResource } from '@retikz/core';
+
 import type { SvgNode } from '../types';
 
 /** 一个裁剪区几何 → `<clipPath>` 内的形状子 SvgNode */

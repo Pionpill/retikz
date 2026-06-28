@@ -1,6 +1,7 @@
+import type { FC } from 'react';
+
 import { Draw, Layout, Node } from '@retikz/react';
 import { Fragment } from 'react';
-import type { FC } from 'react';
 
 const surfaces = ['shape', 'circle', 'rectangle', 'ellipse'] as const;
 

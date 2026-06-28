@@ -1,12 +1,14 @@
-import { PathCurve, type PathCurveValue } from '@retikz/plot';
+import type { PathCurveValue } from '@retikz/plot';
+import type { FC } from 'react';
+
+import { PathCurve } from '@retikz/plot';
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
-import type { FC } from 'react';
 
 import { usePreviewActionValue } from '@/components/shared/component-preview/_shared';
 
-import { PATH_CURVE_ACTION_ID } from './line-curve.actions';
 import { closureRadar, closureTrend } from './line-closure.data';
+import { PATH_CURVE_ACTION_ID } from './line-curve.actions';
 
 const Demo: FC = () => {
   const curve = usePreviewActionValue(PATH_CURVE_ACTION_ID, PathCurve.Linear) as PathCurveValue;
@@ -22,14 +24,7 @@ const Demo: FC = () => {
           fill="rgba(14, 165, 233, 0.22)"
           stroke="none"
         />
-        <PathMark
-          x="month"
-          y="value"
-          order="order"
-          curve={curve}
-          stroke="#0284c7"
-          strokeWidth={2.5}
-        />
+        <PathMark x="month" y="value" order="order" curve={curve} stroke="#0284c7" strokeWidth={2.5} />
         <Axis dimension="x" />
         <Axis dimension="y" grid />
       </Plot>
