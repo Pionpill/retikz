@@ -82,7 +82,7 @@ const firstCubic = (prims: ReadonlyArray<ScenePrimitive>) => {
 // =====================================================================
 // 攻击面 1：bendAngle 非 finite 越界（schema 未守 bendAngle）→ tan 爆 / 控制点非 finite
 // =====================================================================
-describe('ATTACK 1: bendAngle 边角值（finite 守卫：schema .finite() + emit 控制点守卫）', () => {
+describe('ATTACK 1: bendAngle 边角值（finite 守卫：schema number 校验 + emit 控制点守卫）', () => {
   it('bendAngle=180 → tan(90°) 巨大控制点；Scene 是否仍 finite', () => {
     const scene = compileToScene(
       pathIR([
@@ -95,7 +95,7 @@ describe('ATTACK 1: bendAngle 边角值（finite 守卫：schema .finite() + emi
     expect(fin.ok).toBe(true);
   });
 
-  it('bendAngle=NaN → 编译期抛（emit 守卫拦非 finite 控制点；schema .finite() 拦校验路径）', () => {
+  it('bendAngle=NaN → 编译期抛（emit 守卫拦非 finite 控制点；schema number 校验拦校验路径）', () => {
     const ir = pathIR([
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'bend', to: [10, 0], bendDirection: 'left', bendAngle: Number.NaN },

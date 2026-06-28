@@ -112,10 +112,10 @@ export const RelationRouteStepSchema = z
     control1: PositionSchema.optional().describe('First cubic Bezier control point for kind=cubic'),
     control2: PositionSchema.optional().describe('Second cubic Bezier control point for kind=cubic'),
     bendDirection: z.enum(['left', 'right']).optional().describe('Bend direction for kind=bend'),
-    bendAngle: z.number().finite().gt(-180).lt(180).optional().describe('Bend angle for kind=bend'),
-    outAngle: z.number().finite().optional().describe('Outgoing angle for kind=bend'),
-    inAngle: z.number().finite().optional().describe('Incoming angle for kind=bend'),
-    looseness: z.number().finite().positive().optional().describe('Curve looseness for kind=bend'),
+    bendAngle: z.number().gt(-180).lt(180).optional().describe('Bend angle for kind=bend'),
+    outAngle: z.number().optional().describe('Outgoing angle for kind=bend'),
+    inAngle: z.number().optional().describe('Incoming angle for kind=bend'),
+    looseness: z.number().positive().optional().describe('Curve looseness for kind=bend'),
     label: RelationStepLabelSchema.optional().describe('Optional label attached to this drawable step'),
   })
   .strict()
@@ -132,10 +132,10 @@ const RelationBendRoutingSchema = z
   .object({
     kind: z.literal('bend').describe('Discriminator: connect each segment with a core bend step'),
     bendDirection: z.enum(['left', 'right']).optional().describe('Bend side relative to each relation segment'),
-    bendAngle: z.number().finite().gt(-180).lt(180).optional().describe('Bend angle in degrees for each relation segment'),
-    outAngle: z.number().finite().optional().describe('Outgoing angle in degrees for bend routing'),
-    inAngle: z.number().finite().optional().describe('Incoming angle in degrees for bend routing'),
-    looseness: z.number().finite().positive().optional().describe('Curve looseness factor for bend routing'),
+    bendAngle: z.number().gt(-180).lt(180).optional().describe('Bend angle in degrees for each relation segment'),
+    outAngle: z.number().optional().describe('Outgoing angle in degrees for bend routing'),
+    inAngle: z.number().optional().describe('Incoming angle in degrees for bend routing'),
+    looseness: z.number().positive().optional().describe('Curve looseness factor for bend routing'),
   })
   .strict()
   .describe('Bend relation routing strategy');
@@ -191,9 +191,9 @@ const markValueSchema = <T extends z.ZodTypeAny>(constantValue: T, fieldDescript
     .describe(`${schemaDescription}: field-bound datum value or constant value`);
 
 const StylePaintSchema = z.union([z.string(), PaintSpecSchema]);
-const StyleNumberSchema = z.number().finite();
-const StyleNonnegativeNumberSchema = z.number().finite().nonnegative();
-const StylePositiveNumberSchema = z.number().finite().positive();
+const StyleNumberSchema = z.number();
+const StyleNonnegativeNumberSchema = z.number().nonnegative();
+const StylePositiveNumberSchema = z.number().positive();
 const StyleOpacitySchema = z.number().min(0).max(1);
 const StyleDashPatternSchema = z.array(StyleNonnegativeNumberSchema).min(1);
 const StyleShadowSchema = z.union([z.enum(ShadowPreset), DropShadowSchema]);
@@ -213,7 +213,7 @@ export const PointNonnegativeNumberStyleSchema = markValueSchema(
   'point non-negative numeric style value',
 );
 export const PointOpacityStyleSchema = markValueSchema(StyleOpacitySchema, 'Data field path bound to an opacity style value', 'Constant opacity value 0..1', 'point opacity style value');
-export const PointZIndexStyleSchema = markValueSchema(z.number().int().finite(), 'Data field path bound to zIndex', 'Constant integer zIndex value', 'point zIndex style value');
+export const PointZIndexStyleSchema = markValueSchema(z.number().int(), 'Data field path bound to zIndex', 'Constant integer zIndex value', 'point zIndex style value');
 export const NodePositiveNumberStyleSchema = markValueSchema(StylePositiveNumberSchema, 'Data field path bound to a positive node style value', 'Constant positive node style value', 'node positive numeric style value');
 export const NodeTextAlignStyleSchema = markValueSchema(z.enum(['left', 'center', 'right']), 'Data field path bound to node text align', 'Constant core Node align', 'node text align style value');
 export const NodeBooleanStyleSchema = markValueSchema(z.boolean(), 'Data field path bound to a boolean node style value', 'Constant boolean node style value', 'node boolean style value');
@@ -252,7 +252,7 @@ const PathBaselineClosureSchema = z
     kind: z.literal(PathClosureKind.Baseline).describe('Baseline closure: return from the upper outline to a baseline value'),
     baseline: z
       .number()
-      .finite()
+
       .optional()
       .describe('Constant baseline value for the return edge; omit to use 0 when it is inside the value-axis domain, otherwise the nearest value-axis domain edge. Finite-only to keep the IR JSON round-trippable'),
   })
@@ -328,12 +328,12 @@ export const PointMarkSchema = z
     ...coreNodeStyle,
     dx: z
       .number()
-      .finite()
+
       .optional()
       .describe('Fine-tuning horizontal offset (user units) from the projected anchor; positive = right. Mainly for text points; prefer label position/distance. Default 0'),
     dy: z
       .number()
-      .finite()
+
       .optional()
       .describe('Fine-tuning vertical offset (user units) from the projected anchor; positive = screen-down. Mainly for text points. Default 0'),
     anchorId: AnchorIdSpecSchema.optional().describe('Stable id rule written to each generated core Node; takes precedence over datumIdField for the node id'),
@@ -392,7 +392,7 @@ const BandBoundSchema = z
 const SpanBoundSchema = z
   .object({
     kind: z.literal(IntervalBoundKind.Span).describe('Span bound: from a baseline to the role position channel value'),
-    baseline: z.number().finite().optional().describe('Baseline the span starts from; the interval runs baseline→channel value. Default 0'),
+    baseline: z.number().optional().describe('Baseline the span starts from; the interval runs baseline→channel value. Default 0'),
   })
   .describe('Span bound: baseline→value interval (bar height, radial-bar radius)');
 
@@ -453,7 +453,7 @@ export const IntervalMarkSchema = z
     fillOpacity: PointOpacityStyleSchema.optional().describe('Interval cell fill opacity: field-bound datum channel or constant opacity 0..1'),
     padAngle: z
       .number()
-      .finite()
+
       .nonnegative()
       .optional()
       .describe('Angular gap in degrees applied to polar sector cells; each sector shrinks by half this angle on both sides. Cartesian cells ignore it'),

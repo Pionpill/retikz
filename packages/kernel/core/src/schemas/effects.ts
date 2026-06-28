@@ -28,21 +28,21 @@ export const DropShadowSchema = z
       ),
     offsetX: z
       .number()
-      .finite()
+
       .optional()
       .describe(
         'Horizontal shadow offset in user units (overrides preset); SVG feDropShadow dx / Canvas shadowOffsetX.',
       ),
     offsetY: z
       .number()
-      .finite()
+
       .optional()
       .describe(
         'Vertical shadow offset in user units (overrides preset); positive = downward under screen y-down.',
       ),
     blur: z
       .number()
-      .finite()
+
       .nonnegative()
       .optional()
       .describe(

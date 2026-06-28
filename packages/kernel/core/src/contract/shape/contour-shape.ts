@@ -65,14 +65,14 @@ const worldSegments = (rect: Rect, params: ContourParams): Array<ContourSegment>
 export const contour = defineShape({
   paramsSchema: z.strictObject({
     points: z
-      .array(z.tuple([z.number().finite(), z.number().finite()]))
+      .array(z.tuple([z.number(), z.number()]))
       .min(3)
       .describe(
         "Closed local-frame vertex ring (any local origin — core auto-centers on the points' AABB center so Node position aligns to the geometric center; no caller pre-centering needed), >=3 points; edges are straight lines, last point auto-connects to first.",
       ),
     cornerRadius: z
       .number()
-      .finite()
+
       .nonnegative()
       .optional()
       .describe(

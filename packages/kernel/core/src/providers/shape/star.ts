@@ -109,22 +109,22 @@ export const star = defineShape({
         .describe(`Number of star points (3..${MAX_STAR_POINTS}); capped to bound vertex count (mirrors polygon sides).`),
       innerRadius: z
         .number()
-        .finite()
+
         .positive()
         .describe('Inner (notch) radius in user units.'),
       outerRadius: z
         .number()
-        .finite()
+
         .positive()
         .describe('Outer (tip) radius in user units; must be > innerRadius.'),
       rotate: z
         .number()
-        .finite()
+
         .optional()
         .describe('Shape self-rotation in degrees; default 0 = first tip points up (screen -y / top); positive rotates clockwise (screen). Composes with Node.rotate.'),
       cornerRadius: z
         .number()
-        .finite()
+
         .nonnegative()
         .optional()
         .describe(

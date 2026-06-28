@@ -144,8 +144,8 @@ export const NodeLabelSchema = z
         z.boolean(),
         z.object({
           stroke: z.string().optional().describe('Leader line color; defaults to the label color / currentColor'),
-          strokeWidth: z.number().finite().positive().optional().describe('Leader line width (user units); default 1'),
-          dashPattern: z.array(z.number().finite()).optional().describe('Leader dash pattern (e.g. [2, 2])'),
+          strokeWidth: z.number().positive().optional().describe('Leader line width (user units); default 1'),
+          dashPattern: z.array(z.number()).optional().describe('Leader dash pattern (e.g. [2, 2])'),
         }),
       ])
       .optional()
@@ -212,7 +212,7 @@ export const NodeSchema = z
       ),
     rotate: z
       .number()
-      .finite()
+
       .optional()
       .describe(
         'Rotation in degrees around the node center; positive = clockwise (matches TikZ rotate=...)',
@@ -235,7 +235,7 @@ export const NodeSchema = z
       ),
     maxTextWidth: z
       .number()
-      .finite()
+
       .positive()
       .optional()
       .describe(
@@ -273,7 +273,7 @@ export const NodeSchema = z
       .describe('Stroke opacity 0..1 (TikZ `draw opacity`); affects only the border.'),
     strokeWidth: z
       .number()
-      .finite()
+
       .nonnegative()
       .optional()
       .describe('Border width in user units; defaults to 1 when omitted'),
@@ -286,7 +286,7 @@ export const NodeSchema = z
       .optional()
       .describe('Border style preset: dotted line (TikZ `dotted`); compiled to a default dot pattern. `dashPattern` and `dashed` take precedence.'),
     dashPattern: z
-      .array(z.number().finite().nonnegative())
+      .array(z.number().nonnegative())
       .min(1)
       .optional()
       .describe('Explicit stroke dash pattern lengths in user units (e.g. [4, 2]); overrides `dashed` / `dotted`.'),
@@ -396,7 +396,7 @@ export const NodeSchema = z
     zIndex: z
       .number()
       .int()
-      .finite()
+
       .optional()
       .describe(
         'Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable: same zIndex keeps source order. Scoped per group (a node inside a scope only restacks within that scope).',

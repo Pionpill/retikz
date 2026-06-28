@@ -212,7 +212,7 @@ export const ScopeSchema = z
       .describe('Cascading default fill (CSS color or PaintSpec: gradient / pattern / image) for inner nodes and paths.'),
     strokeWidth: z
       .number()
-      .finite()
+
       .nonnegative()
       .optional()
       .describe('Cascading default stroke width (user units) for inner nodes and paths.'),
@@ -257,7 +257,7 @@ export const ScopeSchema = z
     zIndex: z
       .number()
       .int()
-      .finite()
+
       .optional()
       .describe(
         'Explicit stacking order of this scope as a whole among its sibling IR children. Higher draws on top. Applies to the scope group as a single unit in the parent; does NOT affect how children stack inside the scope. Omitted = 0 = source order.',

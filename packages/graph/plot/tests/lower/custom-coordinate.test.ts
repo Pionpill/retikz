@@ -36,8 +36,8 @@ const CYCLES = 1.5;
 const sineCoordinate = defineCoordinate({
   schema: z.object({
     type: z.literal('sine').describe('Discriminator: sine custom coordinate operation'),
-    amplitude: z.number().finite().optional().describe('Sine amplitude in user units'),
-    cycles: z.number().finite().optional().describe('Number of sine cycles across the canvas'),
+    amplitude: z.number().optional().describe('Sine amplitude in user units'),
+    cycles: z.number().optional().describe('Number of sine cycles across the canvas'),
   }),
   roles: ['x'],
   resolve: (operation, context) => {
@@ -64,7 +64,7 @@ const ARCH_HEIGHT = 70;
 const bridgeCoordinate = defineCoordinate({
   schema: z.object({
     type: z.literal('bridge').describe('Discriminator: bridge custom coordinate operation'),
-    archHeight: z.number().finite().optional().describe('Arch height in user units'),
+    archHeight: z.number().optional().describe('Arch height in user units'),
   }),
   roles: ['x', 'y'],
   resolve: (operation, context) => {

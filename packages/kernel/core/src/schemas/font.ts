@@ -12,11 +12,11 @@ export const FontSchema = z
     size: z
       .number()
       .positive()
-      .finite()
+
       .optional()
       .describe('Font size in user units; falls back to the renderer default when omitted'),
     weight: z
-      .union([z.enum(['normal', 'bold']), z.number().finite()])
+      .union([z.enum(['normal', 'bold']), z.number()])
       .optional()
       .describe('CSS font-weight: keyword `normal` / `bold` or numeric 100..900'),
     style: z

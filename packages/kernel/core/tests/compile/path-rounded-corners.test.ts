@@ -179,11 +179,11 @@ describe('roundedCorners schema 拒绝非法半径', () => {
     expect(parsed.success).toBe(false);
   });
 
-  it('roundedCorners=NaN 被 .finite() 拒绝', () => {
+  it('roundedCorners=NaN 被 number schema 拒绝', () => {
     expect(PathSchema.safeParse(withRounded(Number.NaN)).success).toBe(false);
   });
 
-  it('roundedCorners=Infinity 被 .finite() 拒绝', () => {
+  it('roundedCorners=Infinity 被 number schema 拒绝', () => {
     expect(PathSchema.safeParse(withRounded(Number.POSITIVE_INFINITY)).success).toBe(false);
   });
 

@@ -12,17 +12,17 @@ import { StepSchema } from './step';
  */
 export const PathScaleSchema = z
   .union([
-    z.number().finite().positive(),
+    z.number().positive(),
     z
       .object({
         x: z
           .number()
-          .finite()
+
           .positive()
           .describe('Scale factor on the x axis (finite, positive).'),
         y: z
           .number()
-          .finite()
+
           .positive()
           .describe('Scale factor on the y axis (finite, positive).'),
       })
@@ -74,7 +74,7 @@ export const PathBaseSchema = z
     ...DrawableMetaSchema.shape,
     ...DrawableStyleSchema.shape,
     dashPattern: z
-      .array(z.number().finite().nonnegative())
+      .array(z.number().nonnegative())
       .min(1)
       .optional()
       .describe(
@@ -109,7 +109,7 @@ export const PathBaseSchema = z
       ),
     roundedCorners: z
       .number()
-      .finite()
+
       .nonnegative()
       .optional()
       .describe(
@@ -131,7 +131,7 @@ export const PathBaseSchema = z
       ),
     rotate: z
       .number()
-      .finite()
+
       .optional()
       .describe(
         'Rotate the whole path by this many degrees about its bounding-box center (positive = visually clockwise under screen y-down). Equivalent to wrapping the path in a Scope with a rotate transform centered on the path. Endpoints are resolved in the current scope first; the rotation wraps the resulting geometry.',

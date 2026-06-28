@@ -139,7 +139,7 @@ describe('[adversarial] 几何极端：角度环绕死循环 / DoS', () => {
     expect(towardStart[0]).not.toBeCloseTo(towardEnd[0], 3); // 两方向落点不同
   });
 
-  // outerRadius=1e308（.finite() 放行）→ AABB 半轴 5e307 仍 finite，但 layout 聚合 rect 四角
+  // outerRadius=1e308（number 校验放行）→ AABB 半轴 5e307 仍 finite，但 layout 聚合 rect 四角
   // （center±halfWidth → R+R=Infinity）会让 Infinity 漏进 Scene.layout（viewBox）；compile 自动 layout
   // finite 守卫拦截后抛清晰错（non-finite bounds），不让 Infinity 进 Scene。
   it('[adversarial] sector 半径极大 1e308 → 自动 layout finite 守卫拦截（throw，不漏 Infinity）', () => {
@@ -182,7 +182,7 @@ describe('[adversarial] JSON round-trip 自描述', () => {
 // ════════════════ 攻击面 2/3：zod 护栏 / 错误信息 / 非 JSON 偷渡 ════════════════
 
 describe('[adversarial] params 双护栏 + 错误信息可读性', () => {
-  it('[adversarial] sector params.startAngle=NaN → 应被 .finite() 拦（NaN 在 JSON.stringify 变 null）', () => {
+  it('[adversarial] sector params.startAngle=NaN → 应被 number schema 拦（NaN 在 JSON.stringify 变 null）', () => {
     let threw = false;
     try {
       compileNode({ shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: NaN, endAngle: 90 } } });
@@ -190,7 +190,7 @@ describe('[adversarial] params 双护栏 + 错误信息可读性', () => {
     expect(threw).toBe(true);
   });
 
-  it('[adversarial] sector startAngle=Infinity → .finite() 拦', () => {
+  it('[adversarial] sector startAngle=Infinity → number schema 拦', () => {
     expect(() => compileNode({ shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: Infinity, endAngle: 90 } } })).toThrow();
   });
 

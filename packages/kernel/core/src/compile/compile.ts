@@ -226,7 +226,7 @@ export type CompileOptions = {
 
 /**
  * 显式 viewBox → Scene.layout（finite 守卫 + round）
- * @description schema 的 `.finite().positive()` 只在 IR parse 守门；compileToScene 直接收手搓 / LLM IR 会绕过，
+ * @description schema 的 `.positive()` 只在 IR parse 守门；compileToScene 直接收手搓 / LLM IR 会绕过，
  *   故此处是唯一真实关口——非 finite / 非正尺寸会污染 Scene round-trip。非法即抛清晰错（不泄漏进 Scene）；
  *   四字段按 Scene precision round（与自动算 layout 同口径）。
  */
@@ -261,7 +261,7 @@ const viewBoxToLayout = (
 /**
  * 自动算 layout 的 finite 守卫：四值非全 finite 即抛清晰错（LLM 可读），不泄漏进 Scene
  * @description computeLayout 由 `center ± halfWidth` 等运算聚合——极端 shape 几何（如 outerRadius:1e308
- *   半轴 finite 但 center+halfWidth 溢出 Infinity）会让运算结果脏。schema 的 `.finite()` 只守单字段输入，
+ *   半轴 finite 但 center+halfWidth 溢出 Infinity）会让运算结果脏。schema 的 `` 只守单字段输入，
  *   守不住聚合后的溢出；此处复用 viewBoxToLayout 同款 finite 关口，是自动 layout 进 Scene 前的唯一兜底。
  */
 const assertFiniteLayout = (layout: {

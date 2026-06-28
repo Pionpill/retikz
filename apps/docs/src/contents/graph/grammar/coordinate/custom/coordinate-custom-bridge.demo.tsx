@@ -13,7 +13,7 @@ import { grid } from './coordinate-custom-bridge.data';
 const bridge = defineCoordinate({
   schema: z.object({
     type: z.literal('bridge').describe('Discriminator: bridge custom coordinate op'),
-    archHeight: z.number().finite().optional().describe('Arch height in user units'),
+    archHeight: z.number().optional().describe('Arch height in user units'),
   }),
   roles: ['x', 'y'],
   resolve: (op, context) => {

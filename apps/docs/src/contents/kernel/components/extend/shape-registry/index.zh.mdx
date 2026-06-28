@@ -54,10 +54,10 @@ paramsSchema: z.ZodType<TParams>;
 
 ```ts
 paramsSchema: z.strictObject({
-  innerRadius: z.number().finite().nonnegative(),
-  outerRadius: z.number().finite().positive(),
-  startAngle: z.number().finite(),
-  endAngle: z.number().finite(),
+  innerRadius: z.number().nonnegative(),
+  outerRadius: z.number().positive(),
+  startAngle: z.number(),
+  endAngle: z.number(),
 }),
 ```
 

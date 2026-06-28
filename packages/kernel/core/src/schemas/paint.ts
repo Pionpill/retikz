@@ -51,7 +51,7 @@ export const PaintSpecSchema = z
         stops: z.array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
         angle: z
           .number()
-          .finite()
+
           .optional()
           .describe('Gradient direction in degrees (polar convention; 0°=+x, 90°=+y screen-down); omitted = renderer default (left→right)'),
       })
@@ -61,12 +61,12 @@ export const PaintSpecSchema = z
         kind: z.literal('radialGradient'),
         stops: z.array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
         center: z
-          .tuple([z.number().finite(), z.number().finite()])
+          .tuple([z.number(), z.number()])
           .optional()
           .describe('Center in objectBoundingBox units (0..1 relative to the filled shape); omitted = (0.5, 0.5)'),
         radius: z
           .number()
-          .finite()
+
           .positive()
           .optional()
           .describe('Radius in objectBoundingBox units (0..1); omitted = 0.5'),
@@ -77,12 +77,12 @@ export const PaintSpecSchema = z
         kind: z.literal('conicGradient'),
         stops: z.array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
         center: z
-          .tuple([z.number().finite(), z.number().finite()])
+          .tuple([z.number(), z.number()])
           .optional()
           .describe('Center in objectBoundingBox units (0..1 relative to the filled shape); omitted = (0.5, 0.5)'),
         angle: z
           .number()
-          .finite()
+
           .optional()
           .describe('Start angle in degrees (polar convention; 0°=+x, 90°=+y screen-down); omitted = 0'),
       })
@@ -100,19 +100,19 @@ export const PaintSpecSchema = z
         background: z.string().optional().describe('Tile background fill; omitted = transparent'),
         size: z
           .number()
-          .finite()
+
           .positive()
           .optional()
           .describe('Tile period in user units (line gap / dot spacing); default 8'),
         lineWidth: z
           .number()
-          .finite()
+
           .positive()
           .optional()
           .describe('Line / grid stroke width; for dots, drives the dot radius. Default 1 (dots default to size/5)'),
         rotation: z
           .number()
-          .finite()
+
           .optional()
           .describe('Rotate the whole pattern, in degrees'),
       })

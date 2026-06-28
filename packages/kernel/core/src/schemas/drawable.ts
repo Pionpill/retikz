@@ -32,7 +32,7 @@ export const DrawableStyleSchema = z
       ),
     strokeWidth: z
       .number()
-      .finite()
+
       .nonnegative()
       .optional()
       .describe('Stroke width in user units.'),
@@ -85,7 +85,7 @@ export const DrawableMetaSchema = z
     zIndex: z
       .number()
       .int()
-      .finite()
+
       .optional()
       .describe(
         'Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.',

@@ -44,7 +44,7 @@ export const RibbonArcCapSchema = z
       .describe('Arc center as a Cartesian position or PolarPosition sugar.'),
     radius: z
       .number()
-      .finite()
+
       .positive()
       .describe('Arc radius in user units; both ribbon side endpoints must lie on this circle.'),
     sweep: z
@@ -63,13 +63,13 @@ export const RibbonWidthStopSchema = z
   .object({
     offset: z
       .number()
-      .finite()
+
       .min(0)
       .max(1)
       .describe('Normalized position along the centerline in [0, 1].'),
     value: z
       .number()
-      .finite()
+
       .nonnegative()
       .describe('Ribbon width in user units at this stop.'),
   })
@@ -78,7 +78,7 @@ export const RibbonWidthStopSchema = z
 
 export const RibbonWidthSchema = z
   .union([
-    z.number().finite().nonnegative(),
+    z.number().nonnegative(),
     z
       .object({
         kind: z.literal('stops').describe('Discriminator for stop-based width rules.'),
@@ -113,7 +113,7 @@ export type IRRibbonDirection = number | Vector2 | PolarPosition;
 
 export const RibbonDirectionSchema: z.ZodType<IRRibbonDirection> = z
   .union([
-    z.number().finite().describe('Direction angle in degrees, where 0 points to the positive x axis.'),
+    z.number().describe('Direction angle in degrees, where 0 points to the positive x axis.'),
     Vector2Schema.refine(([x, y]) => x !== 0 || y !== 0, {
         message: 'Ribbon direction vector must not be zero length.',
       })
@@ -126,7 +126,7 @@ export const RibbonEndpointSchema = z
   .object({
     width: z
       .number()
-      .finite()
+
       .nonnegative()
       .optional()
       .describe('Ribbon width in user units at this endpoint.'),
@@ -159,7 +159,7 @@ export const RibbonSamplingSchema = z
         kind: z.literal('adaptive').describe('Choose a sample count from path length and tolerance.'),
         tolerance: z
           .number()
-          .finite()
+
           .positive()
           .describe('Approximate target segment length in user units.'),
         maxSamples: z

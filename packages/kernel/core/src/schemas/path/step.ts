@@ -218,28 +218,28 @@ export const BendStepSchema = z
       ),
     bendAngle: z
       .number()
-      .finite()
+
       .gt(-180)
       .lt(180)
       .optional()
       .describe('Bend angle in degrees; default 30 (matches TikZ `bend left` without explicit angle). Restricted to (-180, 180): at ±180 the chord-tangent term tan(angle/2) diverges and control points blow up.'),
     outAngle: z
       .number()
-      .finite()
+
       .optional()
       .describe(
         'Out angle in degrees at the start point (TikZ `out=`). Together with inAngle, compiles to a cubic Bezier whose start control point lies along this direction. When out/in angles are given they take precedence over bendDirection / bendAngle.',
       ),
     inAngle: z
       .number()
-      .finite()
+
       .optional()
       .describe(
         'In angle in degrees at the end point (TikZ `in=`). Together with outAngle, compiles to a cubic Bezier whose end control point lies along this direction.',
       ),
     looseness: z
       .number()
-      .finite()
+
       .positive()
       .optional()
       .describe(
@@ -310,27 +310,27 @@ const ArcStepBaseSchema = z
       .describe('Arc segment sweeping startAngle → endAngle around a center. Circular (radius) or elliptical (radiusX/radiusY). Center defaults to the cursor but can be set explicitly. Pen ends at the arc endpoint, not the center (TikZ `arc[start angle=…, end angle=…, radius=…]`).'),
     startAngle: z
       .number()
-      .finite()
+
       .describe('Arc start angle in degrees, measured from +x axis. 0° = +x, 90° = +y = screen-down (visual clockwise under screen y-down); matches polar / Node label angle convention.'),
     endAngle: z
       .number()
-      .finite()
+
       .describe('Arc end angle in degrees; sweep direction inferred from startAngle vs endAngle'),
     radius: z
       .number()
-      .finite()
+
       .positive()
       .optional()
       .describe('Circular arc radius in user units. Give either radius (circular) or both radiusX and radiusY (elliptical), never both.'),
     radiusX: z
       .number()
-      .finite()
+
       .positive()
       .optional()
       .describe('Elliptical arc x-axis radius; requires radiusX and radiusY together (mutually exclusive with radius).'),
     radiusY: z
       .number()
-      .finite()
+
       .positive()
       .optional()
       .describe('Elliptical arc y-axis radius; requires radiusX and radiusY together (mutually exclusive with radius).'),
@@ -351,17 +351,17 @@ const CirclePathStepBaseSchema = z
       .describe('Circle centered at the cursor. Without angles: a full circle (TikZ `circle[radius=…]`), pen returns to center. With startAngle + endAngle: a partial arc closed per `closed` (half circle / segment).'),
     radius: z
       .number()
-      .finite()
+
       .positive()
       .describe('Circle radius in user units'),
     startAngle: z
       .number()
-      .finite()
+
       .optional()
       .describe('Partial-circle start angle in degrees (same convention as arc: 0°=+x, 90°=+y screen-down). Give both startAngle and endAngle for a partial circle, or neither for a full circle.'),
     endAngle: z
       .number()
-      .finite()
+
       .optional()
       .describe('Partial-circle end angle in degrees; sweep direction inferred from startAngle vs endAngle.'),
     closed: z
@@ -384,22 +384,22 @@ const EllipsePathStepBaseSchema = z
       .describe('Ellipse centered at the cursor. Without angles: a full ellipse (TikZ `ellipse[x radius=…, y radius=…]`), pen returns to center. With startAngle + endAngle: a partial elliptical arc closed per `closed`.'),
     radiusX: z
       .number()
-      .finite()
+
       .positive()
       .describe('Ellipse x-axis radius (semi-major or semi-minor on x)'),
     radiusY: z
       .number()
-      .finite()
+
       .positive()
       .describe('Ellipse y-axis radius (semi-major or semi-minor on y)'),
     startAngle: z
       .number()
-      .finite()
+
       .optional()
       .describe('Partial-ellipse start angle in degrees (parametric, same convention as arc). Give both startAngle and endAngle for a partial ellipse, or neither for a full ellipse.'),
     endAngle: z
       .number()
-      .finite()
+
       .optional()
       .describe('Partial-ellipse end angle in degrees.'),
     closed: z
@@ -447,7 +447,7 @@ export const SmoothStepSchema = z
     tension: z
       .number()
       .positive()
-      .finite()
+
       .optional()
       .describe(
         'Tangent-length multiplier controlling curve slackness (TikZ `tension`); omitted = 1 (standard centripetal Catmull-Rom). <1 pulls the curve tauter (straighter), >1 makes it loopier.',

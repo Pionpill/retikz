@@ -9,7 +9,7 @@ import type { PatternDefinition } from '../../src/contract/pattern';
  * Pattern 注册面（ADR-04 emit-in-compile）对抗回归
  *
  * 来自 Bug Hunter 的边角 IR / pattern def。`compileToScene` 直接消费 IR、不再跑 zod schema，故
- * size / lineWidth / rotation 的 `.finite().positive()` 在手搓 IR 时被绕过——现在 compile 是唯一关口，
+ * size / lineWidth / rotation 的 number / positive 校验在手搓 IR 时被绕过——现在 compile 是唯一关口，
  * 非 finite / 非正 size / rotation 在 `resolvePatternTile` 抛清晰错，motif 非 finite 坐标由共享
  * `validateMarkerPrimitives` 的 finite 栅栏拦下（与 arrow 路径对齐），守 Scene 100% JSON 可序列化。
  * 可接受的边角（空 motif / dedup / override / 错误质量 / 交叉资源 / background 透传）保持稳定行为。

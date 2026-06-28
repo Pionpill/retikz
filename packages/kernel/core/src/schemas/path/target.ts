@@ -10,7 +10,7 @@ export const AnchorRefSchema = z
       .describe(
         'Named anchor: one of the 9 standard compass anchors (center / north / ... / south-west), a Web alias (top / top-left / ...), or any anchor name interpreted by the referenced shape (e.g. sector apex / outer-arc-mid). Unrecognized names throw at compile time.',
       ),
-    z.number().finite().describe('Angle anchor in degrees (boundary point in that direction)'),
+    z.number().describe('Angle anchor in degrees (boundary point in that direction)'),
     z
       .object({
         side: z
@@ -31,7 +31,7 @@ export const NodeTargetSchema = z
     id: z.string().min(1).describe('Referenced Node/Coordinate id'),
     anchor: AnchorRefSchema.optional().describe('Optional anchor; omitted = auto clip to boundary'),
     offset: z
-      .tuple([z.number().finite(), z.number().finite()])
+      .tuple([z.number(), z.number()])
       .optional()
       .describe('Optional world-space 2D offset added after the anchor/edge point is resolved'),
     boundary: BoundarySchema.optional().describe(
@@ -49,7 +49,7 @@ export type IRNodeTarget = z.infer<typeof NodeTargetSchema>;
 export const RelativeTargetSchema = z
   .object({
     relative: z
-      .tuple([z.number().finite(), z.number().finite()])
+      .tuple([z.number(), z.number()])
       .describe('Relative offset (dx, dy)'),
   })
   .describe(
@@ -59,7 +59,7 @@ export const RelativeTargetSchema = z
 export const RelativeAccumulateTargetSchema = z
   .object({
     relativeAccumulate: z
-      .tuple([z.number().finite(), z.number().finite()])
+      .tuple([z.number(), z.number()])
       .describe('Accumulated relative offset (dx, dy)'),
   })
   .describe(

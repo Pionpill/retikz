@@ -9,10 +9,10 @@ const TranslateSchema = z
     kind: z
       .literal('translate')
       .describe('Discriminator: Cartesian translate (the 3-variant Scene transform shape).'),
-    x: z.number().finite().describe('Cartesian x translation in user units.'),
+    x: z.number().describe('Cartesian x translation in user units.'),
     y: z
       .number()
-      .finite()
+
       .describe('Cartesian y translation in user units (screen y-down).'),
   })
   .describe(
@@ -32,13 +32,13 @@ const PolarTranslateSchema = z
       ),
     angle: z
       .number()
-      .finite()
+
       .describe(
         'Angle in degrees; 0° = +x, 90° = +y (screen-down); matches PolarPosition.angle convention.',
       ),
     radius: z
       .number()
-      .finite()
+
       .describe(
         'Radius / distance in user units; negative values are accepted (equivalent to angle + 180°).',
       ),
@@ -84,7 +84,7 @@ const OffsetTranslateSchema = z
         'Referent base point (same union as OffsetPosition.of): node id (forward references rejected) / Cartesian [x, y] / PolarPosition.',
       ),
     offset: z
-      .tuple([z.number().finite(), z.number().finite()])
+      .tuple([z.number(), z.number()])
       .optional()
       .describe(
         'Additional [dx, dy] offset in user units; omit = [0, 0] so the transform translates exactly to the referent.',
@@ -119,16 +119,16 @@ const RotateSchema = z
       .describe('Discriminator: rotation about a point.'),
     degrees: z
       .number()
-      .finite()
+
       .describe('Rotation angle in degrees; positive = visually clockwise under screen y-down.'),
     cx: z
       .number()
-      .finite()
+
       .optional()
       .describe('Rotation center x in user units; omit = 0 (rotate about local origin).'),
     cy: z
       .number()
-      .finite()
+
       .optional()
       .describe('Rotation center y in user units; omit = 0 (rotate about local origin).'),
   })
@@ -143,13 +143,13 @@ const ScaleSchema = z
       .describe('Discriminator: uniform / anisotropic scale.'),
     x: z
       .number()
-      .finite()
+
       .describe(
         'Scale factor on the x axis. Zero scale collapses the coordinate system and is not invertible — relative positions inside the scope degrade to the local origin (0, 0). Avoid zero in practice; use a tiny positive value if a "near-invisible" effect is desired.',
       ),
     y: z
       .number()
-      .finite()
+
       .optional()
       .describe(
         'Scale factor on the y axis; omit = x (uniform scaling). Zero scale falls back to (0, 0) for relative position inverse projection (see `x`).',

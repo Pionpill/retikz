@@ -109,25 +109,25 @@ export const sector = defineShape({
   paramsSchema: z.strictObject({
     innerRadius: z
       .number()
-      .finite()
+
       .nonnegative()
       .describe('Inner radius (user units); 0 = solid pie slice.'),
     outerRadius: z
       .number()
-      .finite()
+
       .positive()
       .describe('Outer radius (user units); must be > innerRadius.'),
     startAngle: z
       .number()
-      .finite()
+
       .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
     endAngle: z
       .number()
-      .finite()
+
       .describe('End angle in degrees; swept clockwise in screen space from startAngle.'),
     cornerRadius: z
       .number()
-      .finite()
+
       .nonnegative()
       .optional()
       .describe(

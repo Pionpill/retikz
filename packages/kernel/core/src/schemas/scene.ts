@@ -36,15 +36,15 @@ __registerChildSchema(ChildSchema);
 
 /**
  * 显式视框 schema（覆盖自动算的 layout 范围）
- * @description 具名四字段（与 Scene.layout / SVG viewBox 同构）；width / height `.positive().finite()`、
- *   x / y `.finite()` 守 Scene JSON 可序列化。设值时 compile 直接用它作 Scene.layout、忽略 padding。
+ * @description 具名四字段（与 Scene.layout / SVG viewBox 同构）；width / height `.positive()`、
+ *   x / y `` 守 Scene JSON 可序列化。设值时 compile 直接用它作 Scene.layout、忽略 padding。
  */
 export const ViewBoxSchema = z
   .object({
-    x: z.number().finite().describe('ViewBox left-top x'),
-    y: z.number().finite().describe('ViewBox left-top y'),
-    width: z.number().finite().positive().describe('ViewBox width (> 0)'),
-    height: z.number().finite().positive().describe('ViewBox height (> 0)'),
+    x: z.number().describe('ViewBox left-top x'),
+    y: z.number().describe('ViewBox left-top y'),
+    width: z.number().positive().describe('ViewBox width (> 0)'),
+    height: z.number().positive().describe('ViewBox height (> 0)'),
   })
   .describe(
     'Explicit viewBox overriding the auto-computed layout range (fixed size / clipping / multi-figure alignment). When set, Scene.layout uses it directly and padding is ignored.',

@@ -44,7 +44,7 @@ const resolvePatternTile = (
   round: (n: number) => number,
 ): ResolvedPatternTile => {
   const def = lookupPatternDef(spec.shape, effectivePatterns);
-  // size / lineWidth / rotation 的 schema `.finite().positive()` 只在 PathSchema.parse 守门；compileToScene
+  // size / lineWidth / rotation 的 schema `.positive()` 只在 PathSchema.parse 守门；compileToScene
   // 直接收 IR（手搓 / LLM 写法）会绕过，故 compile 是唯一真实关口——非 finite / 非正会污染 tile + Scene
   // round-trip（JSON.stringify(NaN/Infinity)=null），在此抛清晰错（含 shape 名），对齐 arrow finite 守卫。
   const rawSize = spec.size ?? def.defaultSize ?? FALLBACK_PATTERN_SIZE;

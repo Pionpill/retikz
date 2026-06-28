@@ -17,13 +17,13 @@ export const Polar2DSchema = z
     radius: z.string().min(1).optional().describe('Scale name for the radius role; omit to derive from the bound field type. Its range is set to [innerRadius, outerRadius] units at lowering'),
     startAngle: z
       .number()
-      .finite()
+
       .default(0)
       .describe('Angular range start in degrees; 0 = +x (3 o\'clock), sweeping toward +y under screen y-down, matching core polar'),
-    endAngle: z.number().finite().default(360).describe('Angular range end in degrees; defaults to a full 360-degree circle'),
+    endAngle: z.number().default(360).describe('Angular range end in degrees; defaults to a full 360-degree circle'),
     innerRadius: z
       .number()
-      .finite()
+
       .min(0)
       .lt(1)
       .default(0)
@@ -48,17 +48,17 @@ export const Polar1DSchema = z
     angle: z.string().min(1).optional().describe('Scale name for the single angular dimension; omit to derive from the bound field type. Its range is set to [startAngle, endAngle] degrees at lowering. Reuses the polar x→angle alias'),
     radius: z
       .number()
-      .finite()
+
       .gt(0)
       .max(1)
       .optional()
       .describe('Circle radius as a fraction of the available radius, 0 < r ≤ 1; omit = 1 (outer circle, default applied during lowering)'),
     startAngle: z
       .number()
-      .finite()
+
       .optional()
       .describe("Angular range start in degrees; omit = 0 (default applied during lowering). 0 = +x (3 o'clock), sweeping toward +y under screen y-down, matching core polar"),
-    endAngle: z.number().finite().optional().describe('Angular range end in degrees; omit = 360 (full circle, default applied during lowering)'),
+    endAngle: z.number().optional().describe('Angular range end in degrees; omit = 360 (full circle, default applied during lowering)'),
   })
   .describe('1D polar coordinate system: a single angular dimension mapped onto a fixed-radius circle (clock face / weekday wheel / periodic rug); reuses the polar angular projection');
 

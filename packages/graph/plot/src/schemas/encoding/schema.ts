@@ -74,7 +74,7 @@ export const SizeChannelSchema = z
       .min(1)
       .optional()
       .describe('Data path bound to the size channel; resolves to a numeric magnitude mapped through a radius (sqrt) scale'),
-    value: z.number().finite().nonnegative().optional().describe('Constant final radius in px, bypassing the scale entirely (mutually exclusive with field)'),
+    value: z.number().nonnegative().optional().describe('Constant final radius in px, bypassing the scale entirely (mutually exclusive with field)'),
     scale: z.string().min(1).optional().describe('Optional sqrt-scale name (only meaningful with field); omitted means a default radius (sqrt) scale is synthesized'),
   })
   .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'size channel must set exactly one of `field` or `value`' })
@@ -116,8 +116,8 @@ export const TextChannelSchema = z
 export const LabelPinStyleSchema = z
   .object({
     stroke: z.string().optional().describe('Leader line color; defaults to the label color / currentColor'),
-    strokeWidth: z.number().finite().positive().optional().describe('Leader line width in user units; default 1'),
-    dashPattern: z.array(z.number().finite()).optional().describe('Leader dash pattern, e.g. [2, 2]'),
+    strokeWidth: z.number().positive().optional().describe('Leader line width in user units; default 1'),
+    dashPattern: z.array(z.number()).optional().describe('Leader dash pattern, e.g. [2, 2]'),
   })
   .describe('Styled label leader line options aligned with core NodeLabelSchema.pin');
 

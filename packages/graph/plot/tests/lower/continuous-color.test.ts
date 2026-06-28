@@ -225,7 +225,7 @@ describe('连续色 · temporal sequential（alpha.8 ADR-01）', () => {
 });
 
 describe('连续色 · 非有限 domain 端点 fail-loud（ADR-01 越界一致性，自 adversarial B1 提升）', () => {
-  // 非有限 domain 端点会被 scale schema 的 .finite() 静态拦截；此处刻意绕过静态校验，验证 lowering 期的纵深防御（resolve* finite 守卫）。
+  // 非有限 domain 端点会被 scale schema 的 number 校验静态拦截；此处刻意绕过静态校验，验证 lowering 期的纵深防御（resolve* finite 守卫）。
   const infinitySpec = (colorScale: Record<string, unknown>): PlotSpec =>
     ({
       namespace: 'plot',

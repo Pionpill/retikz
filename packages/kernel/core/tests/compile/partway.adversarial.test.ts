@@ -320,7 +320,7 @@ describe('深层嵌套 between + 端点混极坐标 / offset', () => {
 // ---------------------------------------------------------------------------
 describe('非 finite 端点不进 Scene；带 between 的 Scene round-trip', () => {
   it('端点极坐标 radius=Infinity（手搓绕过 schema）→ 不产生非 finite 进 Scene', () => {
-    // PolarPositionSchema.radius .finite() 会拒，但 compileToScene 直接吃手搓 IR 绕过。
+    // PolarPositionSchema.radius 的 number 校验会拒，但 compileToScene 直接吃手搓 IR 绕过。
     // 端点解析出 Infinity → lerp 出 Infinity；正确行为：要么 warn + 不进 Scene，
     // 绝不能让 Infinity 污染 Scene 坐标。
     const ir = {

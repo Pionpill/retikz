@@ -330,7 +330,7 @@ export const DeriveIntervalTransformSchema = z
       .min(1)
       .optional()
       .describe('Value field driving a baseline-to-value interval (start = baseline, end = field value); omit only when using explicit startFrom / endFrom'),
-    baseline: z.number().finite().optional().describe('Baseline the from-value interval starts at; default 0. Finite-only to keep the IR JSON round-trippable'),
+    baseline: z.number().optional().describe('Baseline the from-value interval starts at; default 0. Finite-only to keep the IR JSON round-trippable'),
     startFrom: z.string().min(1).optional().describe('Explicit two-field mode: field giving the interval start (pairs with endFrom; takes precedence over from / baseline)'),
     endFrom: z.string().min(1).optional().describe('Explicit two-field mode: field giving the interval end (pairs with startFrom)'),
     startField: z.string().min(1).optional().describe('Output field for the interval start; default "y0" (matches interval/sector consumers)'),
@@ -351,7 +351,7 @@ export const JitterTransformSchema = z
     yField: z.string().min(1).optional().describe('Continuous numeric field jittered on the y axis; default "y". Read when axis is "y" or "both"'),
     amount: z
       .number()
-      .finite()
+
       .nonnegative()
       .optional()
       .describe('Maximum absolute offset in DATA units added to each value pre-scale; offsets are drawn uniformly from [-amount, +amount]. Default 1. Data-space only'),

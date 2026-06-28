@@ -207,7 +207,7 @@ export const SequentialColorScaleSchema = z
     type: z.literal(PlotScale.Sequential).describe('Discriminator: continuous sequential color scale (monotone quantity to a one-directional color band)'),
     name: z.string().min(1).describe('Scale name; referenced by a non-positional color channel scale ref'),
     domain: z
-      .tuple([z.number().finite(), z.number().finite()])
+      .tuple([z.number(), z.number()])
       .optional()
       .describe('[min, max] input extent; omit to infer from the bound color field at lowering. Endpoints must be finite; min must be < max (rejected at lowering otherwise); temporal fields use a timestamp extent'),
     scheme: ColorSchemeNameSchema.optional().describe(
@@ -227,7 +227,7 @@ export const DivergingColorScaleSchema = z
     type: z.literal(PlotScale.Diverging).describe('Discriminator: continuous diverging color scale (a quantity with a meaningful midpoint to a two-sided color band)'),
     name: z.string().min(1).describe('Scale name; referenced by a non-positional color channel scale ref'),
     domain: z
-      .tuple([z.number().finite(), z.number().finite(), z.number().finite()])
+      .tuple([z.number(), z.number(), z.number()])
       .optional()
       .describe('[low, mid, high] input extent around a meaningful midpoint; omit to infer [min, (min+max)/2, max] from the bound field at lowering. Endpoints must be finite; must satisfy low < mid < high (rejected at lowering otherwise)'),
     scheme: ColorSchemeNameSchema.optional().describe(
@@ -247,7 +247,7 @@ export const QuantizeColorScaleSchema = z
     type: z.literal(PlotScale.Quantize).describe('Discriminator: quantize color scale (a continuous domain cut into equal-width bins, each bin a discrete color)'),
     name: z.string().min(1).describe('Scale name; referenced by a non-positional color channel scale ref'),
     domain: z
-      .tuple([z.number().finite(), z.number().finite()])
+      .tuple([z.number(), z.number()])
       .optional()
       .describe('[min, max] input extent cut into equal-width bins; omit to infer [min, max] from the bound color field at lowering. Endpoints must be finite'),
     count: z
@@ -272,7 +272,7 @@ export const ThresholdColorScaleSchema = z
     type: z.literal(PlotScale.Threshold).describe('Discriminator: threshold color scale (user-defined breakpoints cut the domain into bins, each bin a discrete color)'),
     name: z.string().min(1).describe('Scale name; referenced by a non-positional color channel scale ref'),
     breakpoints: z
-      .array(z.number().finite())
+      .array(z.number())
       .min(1)
       .describe('Strictly ascending finite breakpoints cutting the value range into breakpoints.length + 1 bins; required (a threshold scale has no default cut points). Ascending order is enforced at lowering'),
     scheme: ColorSchemeNameSchema.optional().describe(

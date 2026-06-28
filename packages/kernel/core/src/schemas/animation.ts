@@ -63,7 +63,7 @@ export type AnimationFillValue = ValueOf<typeof AnimationFill>;
 export const EasingSchema = z
   .union([
     z.string().min(1),
-    z.tuple([z.number().finite(), z.number().finite(), z.number().finite(), z.number().finite()]),
+    z.tuple([z.number(), z.number(), z.number(), z.number()]),
   ])
   .describe(
     'Easing: a named preset (built-in linear / ease / ease-in / ease-out / ease-in-out, or a custom name resolved by a renderer-registered easing) or a cubic-bezier control-point tuple [x1, y1, x2, y2]. Defaults to linear when omitted.',
@@ -115,7 +115,7 @@ export const OriginSchema = z
         'Named transform pivot reusing the node anchor vocabulary (center / north / south / east / west / north-east / ... / south-west), resolved against the element boundary by the renderer.',
       ),
     z
-      .tuple([z.number().finite(), z.number().finite()])
+      .tuple([z.number(), z.number()])
       .describe('Explicit pivot in the element local coordinate space [x, y].'),
   ])
   .describe(
@@ -141,12 +141,12 @@ export const AnimationTrackSchema = z
       ),
     duration: z
       .number()
-      .finite()
+
       .positive()
       .describe('One-iteration duration in milliseconds (> 0).'),
     delay: z
       .number()
-      .finite()
+
       .nonnegative()
       .optional()
       .describe('Delay before the first iteration, in milliseconds (>= 0). Group-level stagger is compiled by sugar into per-track delays.'),
@@ -154,7 +154,7 @@ export const AnimationTrackSchema = z
       'Track-level easing applied to each segment that lacks its own keyframe easing. Defaults to linear.',
     ),
     iterations: z
-      .union([z.number().finite().positive(), z.literal('infinite')])
+      .union([z.number().positive(), z.literal('infinite')])
       .optional()
       .describe('Total play count (WAAPI iterations): a positive number (may be fractional) or "infinite". Omitted = 1 = play once.'),
     direction: z

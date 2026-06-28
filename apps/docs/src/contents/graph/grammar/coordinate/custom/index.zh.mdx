@@ -18,7 +18,7 @@ import { z } from 'zod';
 const bridge = defineCoordinate({
   schema: z.object({
     type: z.literal('bridge'),
-    archHeight: z.number().finite().optional(),
+    archHeight: z.number().optional(),
   }),
   roles: ['x', 'y'],
   resolve: (op, context) => {

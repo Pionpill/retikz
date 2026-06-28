@@ -9,7 +9,7 @@ const archDefinition = defineCoordinate({
   schema: z
     .object({
       type: z.literal('arch').describe('Discriminator: custom arch coordinate operation'),
-      archHeight: z.number().finite().positive().describe('Arch height in user units'),
+      archHeight: z.number().positive().describe('Arch height in user units'),
     })
     .describe('Arch coordinate operation'),
   roles: ['x'],

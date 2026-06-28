@@ -15,7 +15,7 @@ export const ArrowEndDetailSchema = z
       ),
     scale: z
       .number()
-      .finite()
+
       .positive()
       .optional()
       .describe(
@@ -23,7 +23,7 @@ export const ArrowEndDetailSchema = z
       ),
     length: z
       .number()
-      .finite()
+
       .nonnegative()
       .optional()
       .describe(
@@ -31,7 +31,7 @@ export const ArrowEndDetailSchema = z
       ),
     width: z
       .number()
-      .finite()
+
       .nonnegative()
       .optional()
       .describe(
@@ -59,7 +59,7 @@ export const ArrowEndDetailSchema = z
       ),
     lineWidth: z
       .number()
-      .finite()
+
       .nonnegative()
       .optional()
       .describe(
