@@ -7,7 +7,7 @@ import { GuideSchema } from '../guide';
 import { MarkOperationSchema } from '../mark';
 import { ScaleOperationSchema } from '../scale';
 import { TransformSchema } from '../transform';
-import { PLOT_NAMESPACE, PlotComposite } from './constants';
+import { FacetEmptyPolicy, FacetScaleSharing, PLOT_NAMESPACE, PlotComposite } from './constants';
 
 const CoordinateScopeRootPlacementSchema = z
   .object({
@@ -62,6 +62,66 @@ export const CoordinateScopeSchema = z
   .strict()
   .describe('Coordinate scope registered inside a plot composition');
 
+const FacetValueSchema = z
+  .union([z.string(), z.number(), z.boolean(), z.null()])
+  .describe('JSON-safe scalar facet value used in facet ordering and panel keys');
+
+const FacetDimensionSchema = z
+  .object({
+    field: z.string().min(1).describe('Data field path used to split rows into facet panels'),
+    order: z
+      .array(FacetValueSchema)
+      .optional()
+      .describe('Explicit facet value order; values not listed are appended in first-seen order'),
+  })
+  .strict()
+  .describe('Facet dimension bound to a data field');
+
+const FacetScaleSharingSchema = z
+  .object({
+    roles: z
+      .record(z.string().min(1), z.enum(FacetScaleSharing))
+      .optional()
+      .describe('Per-coordinate-role scale domain sharing mode; omitted roles default to shared'),
+  })
+  .strict()
+  .describe('Facet position-role scale sharing policy');
+
+export const FacetGridSchema = z
+  .object({
+    id: z.string().min(1).describe('Stable facet grid id used to derive panel scope ids and provenance'),
+    row: FacetDimensionSchema.optional().describe('Facet row dimension; omit for a one-dimensional column facet'),
+    column: FacetDimensionSchema.optional().describe(
+      'Facet column dimension; omit for a one-dimensional row facet',
+    ),
+    empty: z
+      .enum(FacetEmptyPolicy)
+      .optional()
+      .describe('Empty-panel policy; omit to drop row/column combinations that have no rows'),
+    scales: FacetScaleSharingSchema.optional().describe(
+      'Position-role scale sharing policy for generated facet panels',
+    ),
+    coordinate: CoordinateOperationSchema.optional().describe(
+      'Coordinate operation used by every generated panel; omit to inherit the composition default scope coordinate',
+    ),
+    scopeIdTemplate: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Panel scope id template supporting {facet}, {row}, and {column} placeholders'),
+  })
+  .strict()
+  .superRefine((facet, ctx) => {
+    if (facet.row === undefined && facet.column === undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['row'],
+        message: 'facet grid requires at least one of row or column',
+      });
+    }
+  })
+  .describe('Facet grid generator that derives panel coordinate scopes from data rows');
+
 export const CoordinateCompositionSchema = z
   .object({
     defaultScope: z
@@ -72,6 +132,10 @@ export const CoordinateCompositionSchema = z
       .array(CoordinateScopeSchema)
       .min(1)
       .describe('Coordinate scopes registered by this PlotSpec; ids must be unique'),
+    facets: z
+      .array(FacetGridSchema)
+      .optional()
+      .describe('Facet grid generators that derive panel coordinate scopes from data rows'),
   })
   .strict()
   .superRefine((composition, ctx) => {
@@ -111,6 +175,24 @@ export const CoordinateCompositionSchema = z
         });
       }
     }
+    const facetIds = new Set<string>();
+    composition.facets?.forEach((facet, index) => {
+      if (facetIds.has(facet.id)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['facets', index, 'id'],
+          message: `duplicate facet id "${facet.id}"`,
+        });
+      }
+      facetIds.add(facet.id);
+      if (ids.has(facet.id)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['facets', index, 'id'],
+          message: `facet id "${facet.id}" conflicts with a registered coordinate scope id`,
+        });
+      }
+    });
   })
   .describe('Plot-level coordinate scope registry used by marks and axis guides');
 

@@ -14,3 +14,25 @@ export const PlotComposite = {
 
 /** plot composite 类型 */
 export type PlotCompositeValue = ValueOf<typeof PlotComposite>;
+
+/** 分面空面板生成策略。 */
+export const FacetEmptyPolicy = {
+  /** 只生成至少包含一行数据的面板。 */
+  Drop: 'drop',
+  /** 生成所有 row × column 面板组合。 */
+  Show: 'show',
+} as const;
+
+/** 分面空面板生成策略取值。 */
+export type FacetEmptyPolicyValue = ValueOf<typeof FacetEmptyPolicy>;
+
+/** 分面 scale domain 共享模式。 */
+export const FacetScaleSharing = {
+  /** 使用所有分面面板的数据训练对应 role 的 scale。 */
+  Shared: 'shared',
+  /** 使用每个面板自己的局部数据训练对应 role 的 scale。 */
+  Independent: 'independent',
+} as const;
+
+/** 分面 scale domain 共享模式取值。 */
+export type FacetScaleSharingValue = ValueOf<typeof FacetScaleSharing>;

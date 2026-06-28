@@ -1,4 +1,4 @@
-import type { CompositeDefinition, IRChild, IRNode, IRScope } from '@retikz/core';
+import type { CompositeDefinition, IRChild, IRJsonObject, IRNode, IRScope } from '@retikz/core';
 
 import { defineComposite, JsonObjectSchema } from '@retikz/core';
 
@@ -93,7 +93,7 @@ import {
 } from '../schemas';
 import { createAnchorRegistry } from './anchors';
 import { DEFAULT_FONT_SIZE } from './layout';
-import { createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
+import { createDatumIdRegistrar, rootMeta, slug, tagSourceIndex } from './provenance';
 import { collectSourceFields } from './source-fields';
 
 /**
@@ -227,6 +227,104 @@ export const coordinateScopeIdOf = (
 
 const axisGuideScopeIdOf = (guide: AxisGuide, defaultScope: string): string =>
   guide.coordinateScope ?? defaultScope;
+
+type FacetGrid = NonNullable<NonNullable<PlotSpec['composition']>['facets']>[number];
+type FacetDimension = NonNullable<FacetGrid['row']>;
+type FacetScalar = string | number | boolean | null;
+
+type FacetPanel = {
+  id: string;
+  facet: FacetGrid;
+  row: FacetScalar | undefined;
+  column: FacetScalar | undefined;
+  rowIndex: number;
+  columnIndex: number;
+  rows: Array<ExternalRow>;
+};
+
+const isFacetScalar = (value: unknown): value is FacetScalar =>
+  value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+
+const facetValueOf = (row: ExternalRow, field: string): FacetScalar => {
+  const value = resolveFieldPath(row, field);
+  if (value === undefined) throw new Error(`lowerPlots: facet field "${field}" is missing on a row`);
+  if (!isFacetScalar(value)) {
+    throw new Error(
+      `lowerPlots: facet field "${field}" must resolve to a JSON scalar (string, number, boolean, or null)`,
+    );
+  }
+  return value;
+};
+
+const facetValueKey = (value: FacetScalar | undefined): string => (value === undefined ? '' : JSON.stringify(value));
+
+const orderedFacetValues = (
+  dimension: FacetDimension | undefined,
+  rows: ReadonlyArray<ExternalRow>,
+): Array<FacetScalar | undefined> => {
+  if (dimension === undefined) return [undefined];
+  const out: Array<FacetScalar> = [];
+  const seen = new Set<string>();
+  const add = (value: FacetScalar): void => {
+    const key = facetValueKey(value);
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push(value);
+  };
+  for (const value of dimension.order ?? []) add(value);
+  for (const row of rows) add(facetValueOf(row, dimension.field));
+  return out;
+};
+
+const defaultFacetPanelId = (
+  facet: FacetGrid,
+  row: FacetScalar | undefined,
+  column: FacetScalar | undefined,
+): string => {
+  const parts = ['facet', facet.id];
+  if (row !== undefined) parts.push('row', slug(row));
+  if (column !== undefined) parts.push('column', slug(column));
+  return parts.join('.');
+};
+
+const facetPanelId = (facet: FacetGrid, row: FacetScalar | undefined, column: FacetScalar | undefined): string => {
+  const template = facet.scopeIdTemplate;
+  if (template === undefined) return defaultFacetPanelId(facet, row, column);
+  return template
+    .replaceAll('{facet}', facet.id)
+    .replaceAll('{row}', row === undefined ? '' : slug(row))
+    .replaceAll('{column}', column === undefined ? '' : slug(column));
+};
+
+const resolveFacetPanels = (
+  facet: FacetGrid,
+  rows: ReadonlyArray<ExternalRow>,
+  usedIds: Set<string>,
+): Array<FacetPanel> => {
+  const rowValues = orderedFacetValues(facet.row, rows);
+  const columnValues = orderedFacetValues(facet.column, rows);
+  const groups = new Map<string, Array<ExternalRow>>();
+  for (const row of rows) {
+    const rowValue = facet.row === undefined ? undefined : facetValueOf(row, facet.row.field);
+    const columnValue = facet.column === undefined ? undefined : facetValueOf(row, facet.column.field);
+    const key = `${facetValueKey(rowValue)}\u0000${facetValueKey(columnValue)}`;
+    groups.set(key, [...(groups.get(key) ?? []), row]);
+  }
+
+  const panels: Array<FacetPanel> = [];
+  for (const [rowIndex, rowValue] of rowValues.entries()) {
+    for (const [columnIndex, columnValue] of columnValues.entries()) {
+      const key = `${facetValueKey(rowValue)}\u0000${facetValueKey(columnValue)}`;
+      const panelRows = groups.get(key) ?? [];
+      if (panelRows.length === 0 && facet.empty !== 'show') continue;
+      const id = facetPanelId(facet, rowValue, columnValue);
+      if (usedIds.has(id)) throw new Error(`lowerPlots: facet panel scope id "${id}" is duplicated`);
+      usedIds.add(id);
+      panels.push({ id, facet, row: rowValue, column: columnValue, rowIndex, columnIndex, rows: panelRows });
+    }
+  }
+  return panels;
+};
 
 /** 非位置 encoding key：这些键有专属语义，不参与 CoordinateDefinition.roles 校验。 */
 const NON_POSITION_ENCODING_KEYS = new Set<string>(['color', 'text', 'channels']);
@@ -439,6 +537,7 @@ export type ResolveFrameParams = {
   scaleRegistry: Map<string, AnyScaleDefinition>;
   /** 每个 mark 实际使用的数据视图；普通 mark 用全图 rows，relation 可使用 mark-scoped transform rows。 */
   markDataViews?: Array<MarkDataView>;
+  roleMarkDataViews?: Record<string, Array<MarkDataView>>;
 };
 
 /**
@@ -449,6 +548,8 @@ export type ResolveFrameParams = {
 export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolution => {
   const { node, rows, fieldTypes, width, height, fontSize, margin, provenance, coordinates, scaleRegistry } = params;
   const markDataViews = params.markDataViews ?? node.marks.map(mark => ({ mark, rows }));
+  const markDataViewsForRole = (role: DimensionRole): Array<MarkDataView> =>
+    params.roleMarkDataViews?.[role] ?? markDataViews;
   const registry = resolveCoordinateScopeRegistry(node);
   const coordinateOperation = node.coordinate ?? registry.scopes.find(scope => scope.id === registry.defaultScope)?.coordinate;
   if (coordinateOperation === undefined) {
@@ -481,7 +582,8 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     includeBaseline: boolean,
   ): Array<unknown> => {
     const out: Array<unknown> = [];
-    for (const { mark, rows: markRows } of markDataViews) {
+    const sourceViews = markDataViewsForRole(role);
+    for (const { mark, rows: markRows } of sourceViews) {
       out.push(...relationTargetRoleValues(mark, role, markRows));
       // interval：域贡献按 bounds 来源（band/span → 位置通道值、extent → 两字段、full → 不贡献），统一替代旧 histogram / stack / sector 特判
       if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && axis !== undefined) {
@@ -508,7 +610,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
           if (mark.closure?.kind === PathClosureKind.Baseline) {
             out.push(mark.closure.baseline ?? 0);
           } else if (mark.closure?.kind === PathClosureKind.Stack) {
-            const markRows = markDataViews.find(view => view.mark === mark)?.rows ?? rows;
+            const markRows = sourceViews.find(view => view.mark === mark)?.rows ?? rows;
             for (const row of markRows) out.push(resolveFieldPath(row, mark.closure.baselineField));
           }
         }
@@ -526,7 +628,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     if (hasRegularRoleTicks) return undefined;
     const values: TickSet['values'] = [];
     const labels: TickSet['labels'] = [];
-    for (const { mark, rows: markRows } of markDataViews) {
+    for (const { mark, rows: markRows } of markDataViewsForRole(role)) {
       if (!isBuiltinMark(mark) || mark.type !== PlotMark.Interval) continue;
       const ticks = intervalProportionalAxisTicks(mark, role, markRows);
       if (ticks === undefined) continue;
@@ -1236,6 +1338,114 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       ? createDatumIdRegistrar(provenance.datumIdField, provenance.plotId)
       : undefined;
   const anchorRegistry = createAnchorRegistry({ plotId: node.id, generators: options.anchorIdGenerators });
+
+  const facets = node.composition?.facets ?? [];
+  if (facets.length > 0) {
+    const defaultScope = coordinateScopes.scopes.find(scope => scope.id === coordinateScopes.defaultScope);
+    if (defaultScope === undefined) {
+      throw new Error(`lowerPlots: default coordinate scope "${coordinateScopes.defaultScope}" is not registered`);
+    }
+
+    const usedFacetScopeIds = new Set(coordinateScopes.scopes.map(scope => scope.id));
+    const panels = facets.flatMap(facet => resolveFacetPanels(facet, rows, usedFacetScopeIds));
+    const facetGuides = (node.guides ?? []).filter(
+      guide => !isAxisGuide(guide) || axisGuideScopeIdOf(guide, coordinateScopes.defaultScope) === defaultScope.id,
+    );
+
+    const panelScopes: Array<IRScope> = panels.map(panel => {
+      const panelMarkDataViews: Array<MarkDataView> = node.marks.map(mark => ({
+        mark,
+        rows: resolveMarkRows(mark, panel.rows, transformRegistry, transformContext),
+      }));
+      const roleMarkDataViews: Record<string, Array<MarkDataView>> = {};
+      for (const [role, sharing] of Object.entries(panel.facet.scales?.roles ?? {})) {
+        if (sharing === 'independent') roleMarkDataViews[role] = panelMarkDataViews;
+      }
+      const panelNode: PlotSpec = {
+        ...node,
+        coordinate: panel.facet.coordinate ?? defaultScope.coordinate,
+        composition: undefined,
+        marks: node.marks,
+        guides: facetGuides,
+      };
+      const frameResolution = resolveFrame({
+        node: panelNode,
+        rows: panel.rows,
+        fieldTypes,
+        width,
+        height,
+        fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+        margin: options.margin,
+        provenance,
+        coordinates: options.coordinates,
+        scaleRegistry,
+        markDataViews,
+        roleMarkDataViews,
+      });
+      const markLayers: Array<IRChild> = node.marks
+        .map((mark, markIndex) => {
+          const markRows = panelMarkDataViews[markIndex]?.rows ?? panel.rows;
+          return lowerMark(
+            mark,
+            markRows,
+            frameResolution.frame,
+            resolveMarkChannels(
+              mark,
+              { ...channelCtx, rows: markRows },
+              channelRegistry,
+              defaultColorOf(node, markIndex),
+              channelKindsForMark(mark, markRegistry),
+            ),
+            {
+              markIndex,
+              plotId: node.id,
+              ...(provenance !== undefined ? { provenance: { context: provenance, markIndex, registerDatumId } } : {}),
+              anchors: anchorRegistry,
+            },
+            markRegistry,
+          );
+        })
+        .filter((layer): layer is IRChild => layer !== null);
+      const meta: IRJsonObject = { source: 'plot', layer: 'facetPanel', facet: panel.facet.id };
+      if (panel.row !== undefined) meta.row = panel.row;
+      if (panel.column !== undefined) meta.column = panel.column;
+      const base: IRScope = {
+        type: 'scope',
+        id: panel.id,
+        localNamespace: true,
+        meta,
+        children: [...frameResolution.gridLayers, ...markLayers, ...frameResolution.axisLayers],
+      };
+      if (panel.rowIndex === 0 && panel.columnIndex === 0) return base;
+      return {
+        ...base,
+        transforms: [{ kind: 'translate', x: panel.columnIndex * width, y: panel.rowIndex * height }],
+      };
+    });
+
+    anchorRegistry.assertResolved();
+    const children: Array<IRChild> = panelScopes;
+    if (node.id === undefined) {
+      const base: IRScope = { type: 'scope', localNamespace: true, children };
+      return provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
+    }
+
+    const maxColumnIndex = panels.reduce((max, panel) => Math.max(max, panel.columnIndex), 0);
+    const maxRowIndex = panels.reduce((max, panel) => Math.max(max, panel.rowIndex), 0);
+    const inner: IRScope = { type: 'scope', localNamespace: true, children };
+    const innerContent: IRScope = provenance ? { ...inner, meta: rootMeta(provenance.dataReference) } : inner;
+    const plotAreaCarrier: IRNode = {
+      type: 'node',
+      id: `${node.id}.plotArea`,
+      position: [((maxColumnIndex + 1) * width) / 2, ((maxRowIndex + 1) * height) / 2],
+      shape: 'rectangle',
+      minimumWidth: (maxColumnIndex + 1) * width,
+      minimumHeight: (maxRowIndex + 1) * height,
+      padding: 0,
+      opacity: 0,
+    };
+    return { type: 'scope', id: node.id, children: [innerContent, plotAreaCarrier] };
+  }
 
   // 每个 mark 下沉成一个图层 Scope（样式上提到 nodeDefault/pathDefault）；空图层（无可绘制点）丢弃
   // provenance 开 → 传 markProvenance（plotId / markIndex / datum 开关 + 共享 registerDatumId），各层 / datum 绑 id + 来源 meta
