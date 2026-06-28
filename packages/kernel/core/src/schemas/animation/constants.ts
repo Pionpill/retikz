@@ -1,5 +1,3 @@
-import type { ValueOf } from '../../types';
-
 /**
  * 可动画属性通道（renderer 无关；DrawWay 风格 const + 派生类型，裸字面量 'opacity' 仍第一形态）
  * @description `viewBox` 仅在 scene 根合法（镜头），元素级 viewBox track 由 compile / render 拒；
@@ -49,23 +47,3 @@ export const AnimationFill = {
 
 /** 播放触发器关键字（runtime 落地；DrawWay 风格 const + 派生类型，与其它 Animation 枚举单一真源一致） */
 export const AnimationTrigger = { Load: 'load', Visible: 'visible', Manual: 'manual' } as const;
-
-/** 内置可动画属性通道名联合 */
-export type AnimationPropertyValue = ValueOf<typeof AnimationProperty>;
-
-export type BuiltinAnimationProperty = AnimationPropertyValue;
-
-/** 属性名：内置 ∪ 任意自定义字符串（`& {}` 保内置自动补全，同 NodeShape 范式）；自定义通道由后续 renderer 注册的插值器解释 */
-export type AnimationPropertyRef = BuiltinAnimationProperty | (string & {});
-
-/** 缓动预设名联合 */
-export type AnimationEasingValue = ValueOf<typeof AnimationEasing>;
-
-/** 播放方向名联合 */
-export type AnimationDirectionValue = ValueOf<typeof AnimationDirection>;
-
-/** 填充模式名联合 */
-export type AnimationFillValue = ValueOf<typeof AnimationFill>;
-
-/** 触发器关键字联合（不含 { onEvent } 对象形态） */
-export type AnimationTriggerValue = ValueOf<typeof AnimationTrigger>;

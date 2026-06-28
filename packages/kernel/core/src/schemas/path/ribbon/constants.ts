@@ -1,5 +1,3 @@
-import type { ValueOf } from '../../../types';
-
 export const RibbonMode = {
   Centerline: 'centerline',
   Boundary: 'boundary',
@@ -21,11 +19,3 @@ export const RibbonArcCapSweep = {
   Short: 'short',
   Long: 'long',
 } as const;
-
-export type RibbonModeValue = ValueOf<typeof RibbonMode>;
-
-export type RibbonAlignmentValue = ValueOf<typeof RibbonAlignment>;
-
-export type RibbonCapValue = ValueOf<typeof RibbonCap>;
-
-export type RibbonArcCapSweepValue = ValueOf<typeof RibbonArcCapSweep>;

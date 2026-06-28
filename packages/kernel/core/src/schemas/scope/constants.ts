@@ -1,5 +1,3 @@
-import type { ValueOf } from '../../types';
-
 /**
  * scope.id synthetic 包络形状（受控枚举）
  * @description 'rectangle'（轴对齐外接矩形 AABB，默认）/ 'circle'（最小外接圆 Welzl）。
@@ -12,6 +10,3 @@ export const ScopeBoundingShape = {
   /** 最小外接圆 */
   Circle: 'circle',
 } as const;
-
-/** scope 包络形状名联合（'rectangle' | 'circle'） */
-export type ScopeBoundingShapeValue = ValueOf<typeof ScopeBoundingShape>;

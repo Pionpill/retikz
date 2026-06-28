@@ -1,5 +1,7 @@
 import type { z } from 'zod';
 import type { ArcStepSchema, BendStepSchema, CirclePathStepSchema, ControlPointSchema, CubicStepSchema, CurveStepSchema, CycleStepSchema, EllipsePathStepSchema, FoldStepSchema, GeneratorStepSchema, GeometryLabelSchema, LineStepSchema, MoveStepSchema, RectangleStepSchema, SmoothStepSchema, StepSchema } from './schema';
+import type { ValueOf } from '../../../types';
+import type { FoldStepVia, GeometryLabelPlacement } from './constants';
 
 /** Shared path-like geometry label IR type. */
 export type IRGeometryLabel = z.infer<typeof GeometryLabelSchema>;
@@ -54,3 +56,7 @@ export type IRGeneratorStep = z.infer<typeof GeneratorStepSchema>;
  * @description 十三种 kind：move / line / fold（折角）/ cycle / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle（矩形）/ smooth（过点平滑曲线）/ generator（注册生成器）；`to` 字段支持 relative / relativeAccumulate 变体；除 move/cycle/rectangle/smooth 外可挂 `label?` 边标注（smooth 用 `points` 而非 `to`，自身亦可挂 `label?`）
  */
 export type IRStep = z.infer<typeof StepSchema>;
+
+export type GeometryLabelPlacementValue = ValueOf<typeof GeometryLabelPlacement>;
+
+export type FoldStepViaValue = ValueOf<typeof FoldStepVia>;

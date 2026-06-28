@@ -9,7 +9,8 @@ import { type IRNode } from '../node';
 import { type IRPathBase } from '../path';
 import { type IRTransform } from '../transform';
 import type { ArrowDefaultSchema, LabelDefaultSchema, NodeDefaultSchema, PathDefaultSchema } from './schema';
-import type { ScopeBoundingShapeValue } from './constants';
+import type { ScopeBoundingShape } from './constants';
+import type { ValueOf } from '../../types';
 
 /** every node 默认样式（排除 type / id / position / text / label 的全部 node 样式字段） */
 export type IRNodeDefault = z.infer<typeof NodeDefaultSchema>;
@@ -55,3 +56,6 @@ export type IRScope = {
   animations?: Array<IRAnimationTrack>;
   children: Array<IRNode | IRPathBase | IRCoordinate | IRScope | IRComposite>;
 };
+
+/** scope 包络形状名联合（'rectangle' | 'circle'） */
+export type ScopeBoundingShapeValue = ValueOf<typeof ScopeBoundingShape>;

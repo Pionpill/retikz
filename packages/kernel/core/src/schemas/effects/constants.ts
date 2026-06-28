@@ -1,5 +1,4 @@
-import type { ValueOf } from '../../types';
-import type { DropShadow } from './types';
+import type { DropShadow, ShadowPresetValue } from './types';
 
 /**
  * 阴影预设档位关键字（Tailwind 风格刻度）
@@ -52,9 +51,3 @@ export const BlendMode = {
   Color: 'color',
   Luminosity: 'luminosity',
 } as const;
-
-/** 阴影预设档位值联合 */
-export type ShadowPresetValue = ValueOf<typeof ShadowPreset>;
-
-/** 混合模式值联合 */
-export type BlendModeValue = ValueOf<typeof BlendMode>;

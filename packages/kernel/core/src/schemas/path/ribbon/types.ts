@@ -2,6 +2,8 @@ import type { z } from 'zod';
 import type { PolarPosition } from '../../../geometry/polar';
 import type { Vector2 } from '../../../geometry/point';
 import type { PathRibbonOptionsSchema, RibbonArcCapSchema, RibbonCapSchema, RibbonEndpointSchema, RibbonSamplingSchema, RibbonWidthSchema, RibbonWidthStopSchema } from './schema';
+import type { ValueOf } from '../../../types';
+import type { RibbonAlignment, RibbonArcCapSweep, RibbonCap, RibbonMode } from './constants';
 
 export type IRRibbonDirection = number | Vector2 | PolarPosition;
 
@@ -18,3 +20,11 @@ export type IRRibbonEndpoint = z.infer<typeof RibbonEndpointSchema>;
 export type IRRibbonSampling = z.infer<typeof RibbonSamplingSchema>;
 
 export type IRPathRibbonOptions = z.infer<typeof PathRibbonOptionsSchema>;
+
+export type RibbonModeValue = ValueOf<typeof RibbonMode>;
+
+export type RibbonAlignmentValue = ValueOf<typeof RibbonAlignment>;
+
+export type RibbonCapValue = ValueOf<typeof RibbonCap>;
+
+export type RibbonArcCapSweepValue = ValueOf<typeof RibbonArcCapSweep>;
