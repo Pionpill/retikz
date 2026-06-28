@@ -5,7 +5,7 @@ description: arrow shape 是开放字符串；内置 8 种之外，用 defineArr
 
 `arrowDetail.shape` 是**开放字符串**：内置 8 种（`normal` / `open` / `stealth` / `openStealth` / `diamond` / `openDiamond` / `circle` / `openCircle`）之外，可以注册自己的箭头。注册面对齐 [shape 注册面](/kernel/components/extend/shape-registry)——内置 8 种本身也是注册项，没有特权。
 
-??? `CompileOptions.arrows`?? React ??? `<Layout arrows={...}>`??IR ? `arrowDetail.shape` ?????????????????????????????????????????definition ?? `name`??????????????
+注册通过 `CompileOptions.arrows`（React 里是 `<Layout arrows={...}>`）：IR 的 `arrowDetail.shape` 仍只保存字符串名，几何定义在这里注入。未注册名会在编译时报错（带可用名称列表）；每个 definition 都携带 `name`；与内置名冲突会在注册阶段失败。
 
 ## 注册一个箭头
 
@@ -19,7 +19,7 @@ description: arrow shape 是开放字符串；内置 8 种之外，用 defineArr
 
 | 字段            | 类型                                 | 默认值                               | 描述                                                                                                   |
 | --------------- | ------------------------------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------ |
-??? `CompileOptions.arrows`?? React ??? `<Layout arrows={...}>`??IR ? `arrowDetail.shape` ?????????????????????????????????????????definition ?? `name`??????????????
+| `name`          | `string`                             | 必填                                 | 注册名；`arrowDetail.shape` 按这个名字查找 definition，且不能与内置名冲突                                      |
 | `lineContactX`  | `number`                             | 必填                                 | 线接触点 x（局部坐标）：决定 path 端点收缩量 + marker `refX`。空心箭头框架再自动减 `lineWidth/2`       |
 | `emit`          | `(ctx) => Iterable<MarkerPrimitive>` | 必填                                 | 在局部 `baseSize` 坐标系产箭头几何                                                                     |
 | `baseSize`      | `number`                             | `10`                                 | marker 局部基准边长（viewBox `0 0 baseSize baseSize`，`refY = baseSize/2`）                            |
