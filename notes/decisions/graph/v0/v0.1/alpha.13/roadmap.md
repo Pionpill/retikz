@@ -35,8 +35,9 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 | ADR-04 | **smooth / regression transform** | 新增内置 `smooth` transform，首轮只做 deterministic linear regression；输出预测线采样 rows，置信区间可选或顺延 | 待起草 |
 | ADR-05 | **stat-geom structural surface + docs** | 收敛 React / Vanilla 薄适配、docs 信息架构与示例，证明三条统计薄片都能按 transform + abstract marks 表达；不做 chart 级便利 API | 待起草 |
 | ADR-06 | **sector explode / pull decision** | 判断极坐标 interval 的 `explode` / `pull` 是否可作为轻量视觉参数落地；若影响 anchor / locator 语义则顺延 | 待起草 |
+| ADR-07 | **mark label surface follows core label hosts** | 让 Point / Interval / Path / Reference / Relation 共用 `MarkLabelSchema`，按 node 或 geometry host 投递到 core label；同步 mark demos 不再用纯文字 PointMark 绕开 label | [Proposed](./07-mark-label-surface.md) |
 
-> 建议文件名：`01-relation-ribbon.md`、`02-quantile-band-boxplot.md`、`03-density-transform.md`、`04-smooth-regression.md`、`05-stat-geom-surface.md`、`06-sector-explode-pull.md`。
+> 建议文件名：`01-relation-ribbon.md`、`02-quantile-band-boxplot.md`、`03-density-transform.md`、`04-smooth-regression.md`、`05-stat-geom-surface.md`、`06-sector-explode-pull.md`、`07-mark-label-surface.md`。
 
 ## 依赖与顺序
 
@@ -46,6 +47,7 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 4. **ADR-04 → ADR-05**：smooth / regression 需要新增 transform kind，输出趋势线 rows；首轮不承诺多算法矩阵。
 5. **ADR-05 依赖 02–04**：统一三包薄适配、docs 章节和示例命名，防止每条统计能力各自发明表面；不追求 chart 级易用封装。
 6. **ADR-06 独立且最后**：只在统计主线闭环后处理 sector backlog；不得反向阻塞 01–05。
+7. **ADR-07 独立优先于 mark demo 清理**：依赖 core 已有 node / geometry label 能力，不依赖统计主线；应在更新 `graph/grammar/mark` demo 前完成，避免 demo 继续用文字 PointMark 绕开宿主 label。
 
 ## 关键设计约束
 
@@ -55,6 +57,7 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 - **AI 友好字段命名**：使用完整词，如 `bandwidth`、`sampleCount`、`whisker`、`outside`、`confidence`，避免缩写和位置敏感数组。
 - **内置与自定义同机制**：内置 density / smooth 若进入 transform registry，就要与自定义 transform 共用 `defineTransform` 分派；若只是 reducer / selector 子语义，则走对应 registry。
 - **抽象 mark 不退化**：不得新增 `BoxPlotMark` / `DensityMark` / `RegressionMark` 之类底层 IR。若 adapter 提供结构性便捷入口，也必须能还原成手写 transform + abstract mark。
+- **label 是图元附件**：纯说明文字优先落到已有 mark 的 node / geometry host label；不要为了写文字新增平行 `PointMark`。只有当 PointMark 本身表达数据点、锚点或文本点时才保留。
 - **三包 lockstep，但 plot 优先抽象**：`@retikz/plot`、`@retikz/plot-react`、`@retikz/plot-vanilla` 与 docs 同步设计、同步验收；React / Vanilla 不另造更顺手但平行的 chart API。
 
 ## ADR 草案要点
@@ -136,11 +139,25 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 
 不在本 ADR 范围：动画式 explode、hover highlight、per-datum interactive state。
 
+### ADR-07：mark label surface follows core label hosts
+
+目标是消费 core 已经具备的 `Node.label`、`Path.label` 与 `Path kind="ribbon"` label 能力，让 plot 内置 mark 共用一套可数据绑定的 label schema，并把 docs demo 里的纯文字说明收回到对应图元附件上。
+
+设计倾向：
+
+- 新 `MarkLabelSchema` 使用 `kind: 'node' | 'geometry'` 判别宿主类型，`content` 走 TextChannel 风格的 field / value / displayFormat 绑定，常量值对齐 core label text。
+- `PointMark` / `IntervalMark` 投递 node label；`PathMark` / `RelationMark path` / `RelationMark ribbon` 投递 geometry label；`ReferenceMark` 根据 line 或 band / region 宿主选择 geometry 或 node。
+- `RelationMark.ribbon.label` 是共享 schema，不新增 ribbon-only label schema；lowering 后写到 `IRPath.kind='ribbon'` 的顶层 label。
+- `label` 支持单个对象或数组，数组顺序稳定；不做自动避让、自动隐藏或 chart 级便利封装。
+
+不在本 ADR 范围：新增 TextMark / LabelMark、自动避让、tooltip、hover highlight、core label schema 改动。
+
 ## 文件 scope 预估
 
 后续各 ADR 可按自身范围细化，初步 scope 如下：
 
 - `packages/graph/plot/src/schemas/mark/**`
+- `packages/graph/plot/src/schemas/encoding/**`
 - `packages/graph/plot/src/schemas/transform/**`
 - `packages/graph/plot/src/contract/transform.ts`
 - `packages/graph/plot/src/contract/statistics.ts`
@@ -166,6 +183,7 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 - **relation geometry 断言**：`RelationMark kind="ribbon"` 复用 anchor / project / transform，并下沉为 core `Ribbon`。
 - **transform 数据断言**：quantile-band / density / smooth 输出字段、行数、分组、provenance、稳定排序。
 - **schema reject**：非法 bandwidth、sampleCount、unknown method、冲突字段、非 JSON-safe external operation。
+- **mark label 断言**：node / geometry label kind 与 Point / Interval / Path / Reference / Relation host 匹配；错误 kind fail-loud；field/value content 被解析到 core label text。
 - **lowering / geometry**：boxplot 组合下沉成 interval / reference / point；density area 下沉成 region；regression 下沉成 path。
 - **交互点**：locator 与 render 共用 transform registry；mark-local transform 与 root transform 组合一致。
 - **三包等价**：React 薄适配、Vanilla spec helper 与手写 PlotSpec 产物等价。
@@ -177,14 +195,15 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 - 不做二维 KDE、LOESS、多项式回归、移动平均、窗口函数、预测模型。
 - 不做 violin plot，除非 density-area 与 mirror 布局能在不增加新 IR 的情况下自然表达；否则顺延。
 - 不做交互 tooltip / hover highlight / animated explode。
-- 不新增底层专用 `BoxPlotMark` / `DensityMark` / `RegressionMark` / `RibbonMark`。
+- 不新增底层专用 `BoxPlotMark` / `DensityMark` / `RegressionMark` / `RibbonMark` / `TextMark` / `LabelMark`。
 
 ## 验收口径
 
 alpha.13 封口时应满足：
 
-- ADR-01–05 全部 Accepted，ADR-06 Accepted 或明确顺延且不阻塞主线。
+- ADR-01–05 全部 Accepted，ADR-06 Accepted 或明确顺延且不阻塞主线，ADR-07 Accepted 或其 demo 清理范围明确顺延。
 - `@retikz/plot` / `@retikz/plot-react` / `@retikz/plot-vanilla` 三包版本面一致。
 - 至少四组端到端 demo：sankey ribbon、boxplot、density-area、regression path。
+- `graph/grammar/mark` demo 中纯文字说明优先使用 mark label，而不是新增仅用于文字的 PointMark。
 - 统计 transform 渲染与 locator 使用同一 registry / rows 产物。
 - docs 能让用户理解“stat 是 transform，geom 是抽象 mark 消费统计 rows”。
