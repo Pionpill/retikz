@@ -438,4 +438,52 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(a).toBe(b);
     expect(a).toContain('<ellipse');
   });
+
+  it('density transform + PathMark area spec → SSR 出闭合密度面积 path', () => {
+    const densityData: ExternalDatasets = {
+      samples: [
+        { species: 'A', value: 0 },
+        { species: 'A', value: 4 },
+        { species: 'B', value: 10 },
+        { species: 'B', value: 14 },
+      ],
+    };
+    const densitySpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'samples' },
+      transform: [
+        {
+          kind: 'density',
+          field: 'value',
+          groupBy: ['species'],
+          bandwidth: { kind: 'value', value: 2 },
+          sampleCount: 8,
+          xAs: 'densityX',
+          densityAs: 'density',
+        },
+      ],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'color' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'path',
+          series: 'species',
+          order: 'densityX',
+          closure: { kind: 'baseline', baseline: 0 },
+          fill: { kind: 'constant', value: '#60a5fa' },
+          fillOpacity: { kind: 'constant', value: 0.28 },
+          encoding: { x: { field: 'densityX' }, y: { field: 'density' }, color: { field: 'species', scale: 'color' } },
+        },
+      ],
+    };
+    const svg = renderPlot(densitySpec, densityData, { width: 480, height: 300 });
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('<path');
+    expect(svg).toMatch(/fill="#60a5fa"/);
+  });
 });

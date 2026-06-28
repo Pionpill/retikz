@@ -15,7 +15,7 @@ Transforms sit between the [data layer](/graph/grammar/data) and scale inference
 | --- | --- | --- | --- | --- |
 | Row rewrite | `sort` / `derive-interval` / `jitter` | N → N | row rewrite | Sorting, per-row intervals, deterministic jitter |
 | Row annotation | `stack` / `normalize` / `annotate` | N → N | reducer / row context | Stack bounds, shares, group means |
-| Summary & selection | `bin` / `summarize` / `select` | N → M/K | reducer / selector | Histograms, group statistics, extremes, top-N |
+| Summary & selection | `bin` / `summarize` / `select` / `density` | N → M/K | reducer / selector / KDE | Histograms, group statistics, extremes, density areas |
 | Row pairing | `relate` | N → P | selector / projection | Source/target relation fields |
 | Extensions | custom transform / reducer / selector | Depends on definition | definition registry | Custom processing or statistic sub-operations |
 

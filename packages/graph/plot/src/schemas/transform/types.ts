@@ -4,6 +4,8 @@ import type {
   AnnotateTransformSchema,
   BinTransformSchema,
   BuiltinTransformSchema,
+  DensityBandwidthSpecSchema,
+  DensityTransformSchema,
   DeriveIntervalTransformSchema,
   EndpointProjectionSchema,
   JitterTransformSchema,
@@ -58,7 +60,11 @@ export type PairMeasureOperation = z.infer<typeof PairMeasureOperationSchema>;
 export type RelateTransform = z.infer<typeof RelateTransformSchema>;
 /** 抖点变换（确定性位置抖动，保行数）。 */
 export type JitterTransform = z.infer<typeof JitterTransformSchema>;
-/** 内置 transform operation（sort / stack / bin / summarize / select / annotate / normalize / derive-interval / relate / jitter）。 */
+/** density 带宽策略（Silverman 默认或显式正数带宽）。 */
+export type DensityBandwidthSpec = z.infer<typeof DensityBandwidthSpecSchema>;
+/** density 变换（一维 KDE 采样，改行数）。 */
+export type DensityTransform = z.infer<typeof DensityTransformSchema>;
+/** 内置 transform operation（sort / stack / bin / summarize / select / annotate / normalize / derive-interval / relate / jitter / density）。 */
 export type BuiltinTransform = z.infer<typeof BuiltinTransformSchema>;
 /** transform operation（内置 ∪ 外部注册 kind passthrough）。 */
 export type Transform = z.infer<typeof TransformSchema>;

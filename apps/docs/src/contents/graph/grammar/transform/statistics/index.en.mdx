@@ -10,6 +10,23 @@ Statistic operations are not a new pipeline stage. They live inside existing tra
 | reducer | Field fragment | `bin` / `summarize` / `annotate` | Counts, means, quantile bands, risk scores |
 | selector | Source rows | `select` / `annotate` / `relate` | Extremes, top-N, outliers, relation endpoints |
 
+## Full Transforms
+
+Some statistics generate a new sampled row set, so they do not fit inside a reducer or selector. `density` is a full transform: it reads one continuous field, uses KDE to emit `xAs` / `densityAs` fields, then lets `PathMark` draw the curve or area.
+
+<ComponentPreview name="transform-density" sourceFiles={['transform-density.data.ts']} />
+
+| prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `field` | `string` | — | One-dimensional continuous field used for density estimation |
+| `groupBy` | `Array<string>?` | One global group | Estimate density independently per group |
+| `bandwidth` | `{ kind: 'silverman' }`<br />`{ kind: 'value'; value: number }` | `silverman` | KDE bandwidth; explicit values must be positive |
+| `sampleCount` | `number?` | `64` | Number of sample points emitted per group, at least 2 |
+| `extent` | `[number, number]?` | Padded observed range | Sampling interval |
+| `xAs` / `densityAs` | `string` | — | Output fields for sample position and density value |
+
+`density` emits ordinary rows. Use `PathMark` for a density curve; use the same `PathMark` with `closure={{ kind: 'baseline' }}` and `fill` for an area. Do not add a dedicated density mark for this layer.
+
 ## Reducers
 
 A reducer receives a group of rows and returns the fields to write onto a summary row or annotation row. It answers “what statistic does this group have?” without deciding whether the outer transform preserves rows or emits new rows.

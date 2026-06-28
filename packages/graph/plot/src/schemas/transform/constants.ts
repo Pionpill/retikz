@@ -25,6 +25,8 @@ export const PlotTransform = {
   Relate: 'relate',
   /** 位置抖动：可序列化 seed + 确定性 PRNG 加随机偏移（v1 仅连续数值数据空间，保行数） */
   Jitter: 'jitter',
+  /** 一维 KDE 密度采样：连续样本 → x/density 采样 rows（改行数） */
+  Density: 'density',
 } as const;
 
 /** transform 类型 */

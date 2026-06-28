@@ -370,3 +370,53 @@ describe('JitterTransformSchema (alpha.12 ADR-02)', () => {
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(t)))).toEqual(t);
   });
 });
+
+describe('DensityTransformSchema (alpha.13 ADR-03)', () => {
+  it('density_full_form_valid_and_json_roundtrip_equivalent', () => {
+    const operation = {
+      kind: 'density',
+      field: 'value',
+      groupBy: ['species'],
+      bandwidth: { kind: 'silverman' },
+      sampleCount: 96,
+      extent: [0, 10],
+      xAs: 'densityX',
+      densityAs: 'density',
+    };
+    expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
+  });
+
+  it('density_explicit_bandwidth_valid', () => {
+    const operation = {
+      kind: 'density',
+      field: 'value',
+      bandwidth: { kind: 'value', value: 2 },
+      xAs: 'x',
+      densityAs: 'd',
+    };
+    expect(TransformSchema.parse(operation)).toEqual(operation);
+  });
+
+  it('density_requires_output_fields', () => {
+    expect(() => TransformSchema.parse({ kind: 'density', field: 'value', densityAs: 'density' })).toThrow();
+    expect(() => TransformSchema.parse({ kind: 'density', field: 'value', xAs: 'densityX' })).toThrow();
+  });
+
+  it('density_rejects_output_collisions', () => {
+    expect(() => TransformSchema.parse({ kind: 'density', field: 'value', xAs: 'density', densityAs: 'density' })).toThrow();
+    expect(() =>
+      TransformSchema.parse({
+        kind: 'density',
+        field: 'value',
+        groupBy: ['species'],
+        xAs: 'species',
+        densityAs: 'density',
+      }),
+    ).toThrow();
+  });
+
+  it('density_rejects_invalid_extent_and_bandwidth', () => {
+    expect(() => TransformSchema.parse({ kind: 'density', field: 'value', extent: [10, 0], xAs: 'x', densityAs: 'd' })).toThrow();
+    expect(() => TransformSchema.parse({ kind: 'density', field: 'value', bandwidth: { kind: 'value', value: 0 }, xAs: 'x', densityAs: 'd' })).toThrow();
+  });
+});

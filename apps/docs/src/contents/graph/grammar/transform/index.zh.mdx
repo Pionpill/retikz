@@ -15,7 +15,7 @@ description: transform 是图形语法的统计层：在比例尺和图元之前
 | --- | --- | --- | --- | --- |
 | 保行重写 | `sort` / `derive-interval` / `jitter` | N → N | row rewrite | 排序、单行区间、确定性抖点 |
 | 保行标注 | `stack` / `normalize` / `annotate` | N → N | reducer / row context | 堆叠区间、占比、组均值回填 |
-| 规约与选择 | `bin` / `summarize` / `select` | N → M/K | reducer / selector | 直方图、分组统计、极值点、top-N |
+| 规约与选择 | `bin` / `summarize` / `select` / `density` | N → M/K | reducer / selector / KDE | 直方图、分组统计、极值点、密度面积 |
 | 行配对 | `relate` | N → P | selector / projection | 从 source / target 行生成关系字段 |
 | 扩展能力 | custom transform / reducer / selector | 取决于定义 | definition registry | 自定义数据处理或统计子算子 |
 

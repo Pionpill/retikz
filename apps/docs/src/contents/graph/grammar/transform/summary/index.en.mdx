@@ -10,6 +10,7 @@ These transforms generate new rows from detail data. `bin` and `summarize` emit 
 | `bin` | One row per interval | Histograms and distribution overviews |
 | `summarize` | One row per group | Grouped bars, mean lines, summary tables |
 | `select` | One or more original rows per group | Extremes, top-N, nth row in a group |
+| `density` | Sampled rows per group | Density curves and density areas |
 
 ## Bin
 
@@ -76,3 +77,9 @@ Built-in selectors include `min` / `max` / `first` / `last` / `top` / `bottom` /
   rankAs="rank"
 />
 ```
+
+## Density
+
+`density` turns one-dimensional continuous samples into KDE sample rows, emitting `xAs` and `densityAs` fields. It is meant to feed `PathMark`: a normal path draws a density curve, while `closure={{ kind: 'baseline' }}` plus `fill` draws a density area.
+
+See [Statistic Operations](/graph/grammar/transform/statistics) for the full field table and demo.

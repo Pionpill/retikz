@@ -10,6 +10,23 @@ description: reducer 和 selector 是 transform 共享的统计底层能力，�
 | reducer | 字段片段 | `bin` / `summarize` / `annotate` | 计数、均值、分位区间、风险分数 |
 | selector | 原始行 | `select` / `annotate` / `relate` | 极值点、top-N、阈值外样本、配对端点 |
 
+## 完整 transform
+
+有些统计会直接生成一批新的采样行，不能塞进 reducer 或 selector。`density` 就是这种完整 transform：它读取一维连续字段，用 KDE 生成 `xAs` / `densityAs` 两个输出字段，再交给 `PathMark` 画曲线或面积。
+
+<ComponentPreview name="transform-density" sourceFiles={['transform-density.data.ts']} />
+
+| prop | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| `field` | `string` | — | 用来估计密度的一维连续字段 |
+| `groupBy` | `Array<string>?` | 全局单组 | 按组分别估计 density |
+| `bandwidth` | `{ kind: 'silverman' }`<br />`{ kind: 'value'; value: number }` | `silverman` | KDE 带宽；显式值必须为正数 |
+| `sampleCount` | `number?` | `64` | 每组输出的采样点数量，至少为 2 |
+| `extent` | `[number, number]?` | 观测范围外扩 | 采样区间 |
+| `xAs` / `densityAs` | `string` | — | 输出采样位置和 density 值的字段名 |
+
+`density` 输出的是普通 rows。密度曲线用 `PathMark`；密度面积用同一个 `PathMark` 加 `closure={{ kind: 'baseline' }}` 和 `fill`。不要为了 density 新增专用 mark。
+
 ## reducer
 
 reducer 接收一组 rows，返回要写入输出行或标注行的字段片段。它只关心“这一组的统计结果是什么”，不决定 transform 最后保留明细行还是生成汇总行。

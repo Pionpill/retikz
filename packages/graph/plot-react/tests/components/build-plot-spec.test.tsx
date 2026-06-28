@@ -1293,6 +1293,35 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / summarize / histogram x0x
   });
 });
 
+describe('buildPlotSpec alpha.13 ADR-03（density transform 透传）', () => {
+  it('density_declared_to_ir', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Transform kind="density" field="value" groupBy={['species']} xAs="densityX" densityAs="density" sampleCount={96} />
+        <PathMark
+          x="densityX"
+          y="density"
+          series="species"
+          order="densityX"
+          closure={{ kind: 'baseline', baseline: 0 }}
+          fill="#60a5fa"
+        />
+      </>,
+      '__plot',
+    );
+
+    expect(spec.transform).toEqual([{ kind: 'density', field: 'value', groupBy: ['species'], xAs: 'densityX', densityAs: 'density', sampleCount: 96 }]);
+    expect(spec.marks[0]).toMatchObject({
+      type: 'path',
+      series: 'species',
+      order: 'densityX',
+      closure: { kind: 'baseline', baseline: 0 },
+      encoding: { x: { field: 'densityX' }, y: { field: 'density' } },
+    });
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+});
+
 describe('buildPlotSpec alpha.12 ADR-02（normalize / derive-interval / jitter 经同一 <Transform> 透传）', () => {
   it('normalize_then_stack_percentage_via_transform', () => {
     // 百分比堆叠：显式 [normalize, stack] 两步链 + <IntervalMark stack>（柱读累积界 y0/y1）；

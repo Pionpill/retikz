@@ -497,6 +497,66 @@ export const JitterTransformSchema = z
     'Jitter transform: add a deterministic pseudo-random offset in data units to a continuous numeric positional field; row-preserving and JSON-serializable',
   );
 
+export const DensityBandwidthSpecSchema = z
+  .discriminatedUnion('kind', [
+    z
+      .object({
+        kind: z.literal('silverman').describe('Bandwidth strategy discriminator: compute Gaussian KDE bandwidth with Silverman rule of thumb'),
+      })
+      .strict()
+      .describe('Silverman bandwidth strategy'),
+    z
+      .object({
+        kind: z.literal('value').describe('Bandwidth strategy discriminator: use an explicit positive numeric bandwidth'),
+        value: z.number().finite().positive().describe('Explicit positive finite KDE bandwidth in source data units'),
+      })
+      .strict()
+      .describe('Explicit bandwidth strategy'),
+  ])
+  .describe('Density transform bandwidth strategy');
+
+export const DensityTransformSchema = z
+  .object({
+    kind: z.literal(PlotTransform.Density).describe('Discriminator: sample one-dimensional KDE density rows'),
+    field: z.string().min(1).describe('Continuous source field used as the one-dimensional KDE sample value'),
+    groupBy: GroupBySchema,
+    bandwidth: DensityBandwidthSpecSchema.optional().describe('KDE bandwidth strategy; default Silverman rule of thumb'),
+    sampleCount: z.number().int().min(2).optional().describe('Number of evenly spaced density samples emitted for each group; default 64'),
+    extent: z
+      .tuple([z.number().finite(), z.number().finite()])
+      .optional()
+      .describe('Optional density sampling extent [min, max]; omitted means observed extent padded by three bandwidths'),
+    xAs: z.string().min(1).describe('Output field receiving each density sample position'),
+    densityAs: z.string().min(1).describe('Output field receiving each KDE density value'),
+  })
+  .strict()
+  .superRefine((operation, ctx) => {
+    if (operation.extent !== undefined && operation.extent[0] >= operation.extent[1]) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['extent'],
+        message: 'density extent lower bound must be less than upper bound',
+      });
+    }
+    if (operation.xAs === operation.densityAs) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['densityAs'],
+        message: 'density output fields xAs and densityAs must be different',
+      });
+    }
+    for (const [index, field] of (operation.groupBy ?? []).entries()) {
+      if (field === operation.xAs || field === operation.densityAs) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['groupBy', index],
+          message: `density output field must not overwrite groupBy field "${field}"`,
+        });
+      }
+    }
+  })
+  .describe('Density transform: sample one-dimensional Gaussian KDE rows consumable by PathMark');
+
 export const BuiltinTransformSchema = z
   .discriminatedUnion('kind', [
     SortTransformSchema,
@@ -509,6 +569,7 @@ export const BuiltinTransformSchema = z
     DeriveIntervalTransformSchema,
     RelateTransformSchema,
     JitterTransformSchema,
+    DensityTransformSchema,
   ])
   .describe('Built-in data transform operation applied before scale / mark; ordered pipeline');
 

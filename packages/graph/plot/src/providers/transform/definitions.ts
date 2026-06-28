@@ -5,6 +5,8 @@ import {
   AnnotateTransformSchema,
   type BinTransform,
   BinTransformSchema,
+  type DensityTransform,
+  DensityTransformSchema,
   type DeriveIntervalTransform,
   DeriveIntervalTransformSchema,
   type JitterTransform,
@@ -23,6 +25,7 @@ import {
   SummarizeTransformSchema,
 } from '../../schemas';
 import { reducerInputFields, reducerOutputFields, selectorInputFields } from '../statistics';
+import { applyDensity, densityInputFields, densityOutputFields } from './density';
 import { applyAnnotate, applyBin, applyRelate, applySelect, applySummarize, binMetricOperations, binOutputFields, relationEndpointOutputField } from './group';
 import { DEFAULT_DERIVE_END_FIELD, DEFAULT_DERIVE_START_FIELD, DEFAULT_END_FIELD, DEFAULT_JITTER_X_FIELD, DEFAULT_JITTER_Y_FIELD, DEFAULT_START_FIELD, applyDeriveInterval, applyJitter, applyNormalize, applySort, applyStack } from './row';
 
@@ -137,6 +140,13 @@ const jitterTransformDefinition = defineTransform<JitterTransform>({
   apply: (rows, operation) => applyJitter(rows, operation),
 });
 
+const densityTransformDefinition = defineTransform<DensityTransform>({
+  schema: DensityTransformSchema,
+  inputFields: operation => densityInputFields(operation),
+  outputFields: operation => densityOutputFields(operation),
+  apply: (rows, operation, context) => applyDensity(rows, operation, context),
+});
+
 /** 内置 transform definition 列表；内置 transform 与自定义 transform 共享同一 registry 分派流程。 */
 export const BUILTIN_TRANSFORMS: ReadonlyArray<AnyTransformDefinition> = [
   sortTransformDefinition,
@@ -149,6 +159,7 @@ export const BUILTIN_TRANSFORMS: ReadonlyArray<AnyTransformDefinition> = [
   deriveIntervalTransformDefinition,
   relateTransformDefinition,
   jitterTransformDefinition,
+  densityTransformDefinition,
 ] as ReadonlyArray<AnyTransformDefinition>;
 
 /**
