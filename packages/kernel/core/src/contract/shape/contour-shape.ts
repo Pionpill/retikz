@@ -19,6 +19,10 @@ import { defineShape } from './define';
  */
 type ContourParams = {
   points: Array<Position>;
+  /**
+   * 逐顶点统一 fillet 半径。
+   * @default 0
+   */
   cornerRadius?: number;
 };
 

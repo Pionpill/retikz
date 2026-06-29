@@ -19,6 +19,10 @@ type ArcParams = {
   radius: number;
   startAngle: number;
   endAngle: number;
+  /**
+   * 是否闭合为可填充弓形。
+   * @default false
+   */
   close?: boolean;
 };
 

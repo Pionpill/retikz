@@ -11,7 +11,10 @@ export type Rect = {
   y: number;
   width: number;
   height: number;
-  /** 绕中心旋转弧度 */
+  /**
+   * 绕中心旋转弧度。
+   * @default 0
+   */
   rotate?: number;
 };
 

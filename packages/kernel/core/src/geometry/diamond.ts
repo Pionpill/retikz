@@ -21,7 +21,10 @@ export type Diamond = {
   halfA: number;
   /** 中心到 north/south 顶点距离 */
   halfB: number;
-  /** 绕中心旋转弧度 */
+  /**
+   * 绕中心旋转弧度。
+   * @default 0
+   */
   rotate?: number;
 };
 

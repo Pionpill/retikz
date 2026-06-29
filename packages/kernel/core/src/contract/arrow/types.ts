@@ -27,21 +27,39 @@ export type ArrowEmitContext = {
  *   `lineWidth/2` 得到实际 refX / shrink 接触点（这条调整由编译器 / adapter 落，def 只声明静态 base）。
  */
 export type ArrowDefinition = {
-  /** Registry key referenced by IR `arrowDetail.shape`. */
+  /** 注册表 key，由 IR `arrowDetail.shape` 引用 */
   name: string;
-  /** marker 局部基准边长（viewBox `0 0 baseSize baseSize`，refY = baseSize/2）；缺省 10 */
+  /**
+   * marker 局部基准边长（viewBox `0 0 baseSize baseSize`，refY = baseSize/2）；缺省 10
+   * @default 10
+   */
   baseSize?: number;
-  /** 空心标志：true 时 framework 丢 fill、color 主导描边、启用 lineWidth；并对 lineContactX 减 lineWidth/2 */
+  /**
+   * 空心标志：true 时 framework 丢 fill、color 主导描边、启用 lineWidth；并对 lineContactX 减 lineWidth/2
+   * @default false
+   */
   hollow?: boolean;
   /** 线接触点静态 base（决定 path shrink + marker refX）；空心 def 由 framework 再减 lineWidth/2 */
   lineContactX: number;
-  /** 外轮廓补偿量（marker 局部坐标）；缺省时空心箭头用 lineWidth/2，实心箭头用 0 */
+  /**
+   * 外轮廓补偿量（marker 局部坐标）；缺省时空心箭头用 lineWidth/2，实心箭头用 0
+   * @default `hollow ? lineWidth / 2 : 0`
+   */
   outerInset?: number;
-  /** 尖端 x（shrink 用）；缺省 = baseSize */
+  /**
+   * 尖端 x（shrink 用）；缺省 = baseSize
+   * @default `baseSize`
+   */
   tipX?: number;
-  /** 默认箭头长度（length fallback）；缺省 6 */
+  /**
+   * 默认箭头长度（length fallback）；缺省 6
+   * @default 6
+   */
   defaultLength?: number;
-  /** 默认箭头宽度（width fallback）；缺省 6 */
+  /**
+   * 默认箭头宽度（width fallback）；缺省 6
+   * @default 6
+   */
   defaultWidth?: number;
   /** 局部坐标 marker 几何（renderer-agnostic）；adapter 把产物嵌进 `<marker>` */
   emit: (ctx: ArrowEmitContext) => Iterable<MarkerPrimitive>;

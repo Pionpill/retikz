@@ -21,7 +21,15 @@ type StarParams = {
   points: number;
   innerRadius: number;
   outerRadius: number;
+  /**
+   * 起始尖角自旋角（度）。
+   * @default 0
+   */
   rotate?: number;
+  /**
+   * 顶点倒角半径。
+   * @default 0
+   */
   cornerRadius?: number;
 };
 

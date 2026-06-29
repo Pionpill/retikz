@@ -146,42 +146,57 @@ const scopePlaceholderLayout = (
 
 /** compileToScene 的可选参数 */
 export type CompileOptions = {
-  /** 注入文字度量函数；不传则用 fallback（不准但可跑） */
+  /**
+   * 注入文字度量函数；不传则用 fallback（不准但可跑）
+   * @default `fallbackMeasurer`
+   */
   measureText?: TextMeasurer;
-  /** layout 周围的留白（user units），默认 10 */
+  /**
+   * layout 周围的留白（user units），默认 10
+   * @default 10
+   */
   padding?: number;
   /**
    * 输出坐标的小数位精度；默认 2
    * @description 仅作用于 Scene primitive / path d / layout；内部几何计算保持完整 double 精度
+   * @default `DEFAULT_PRECISION` (2)
    */
   precision?: number;
   /**
    * 相对定位的默认距离（对应 TikZ `node distance`，user units）
    * @description `Node.position` 为 `{ direction, of }` 且未自带 `distance` 时取此值；未配回退到 1
+   * @default `DEFAULT_NODE_DISTANCE` (1)
    */
   nodeDistance?: number;
   /**
    * 编译期警告收集器
    * @description path / position 解析失败时按 IR locator + code + message 同步触发；不传时 dev 模式（`process.env.NODE_ENV !== 'production'`）默认 `console.warn`、生产静默
+   * @default `defaultWarnDispatcher`
    */
   onWarn?: (warning: CompileWarning) => void;
   /**
    * 运行时注入的第三方 shape（不进 IR）
    * @description 有效 shape 表 = `{ ...BUILTIN_SHAPES, ...shapes }`——同名 key 覆盖内置，经 `onWarn` 发
    *   Duplicate names fail at registration time. IR 的 `node.shape` 仍是字符串；未注册名在编译期 throw。
+   * @default 仅 `BUILTIN_SHAPES`
    */
   shapes?: ReadonlyArray<ShapeDefinition>;
   /**
    * 运行时注入的第三方 connection surface（不进 IR）
    * @description `boundary` 先查本 registry，再 fallback 到 shape registry；`shape` 保留为节点自身视觉 shape。
+   * @default 仅 `BUILTIN_BOUNDARIES`
    */
   boundaries?: ReadonlyArray<BoundaryDefinition>;
-  /** Runtime clip providers keyed by `Scope.clip.kind`; custom kinds are JSON specs resolved at compile time. */
+  /**
+   * 运行时注入的 clip providers；按 `Scope.clip.kind` 查找，自定义 kind 在编译期解析为 JSON spec。
+   * @default 仅 `BUILTIN_CLIPS`
+   */
   clips?: ReadonlyArray<ClipDefinition>;
   /**
    * 运行时注入的第三方 arrow（不进 IR）
    * @description 有效 arrow 表 = `{ ...BUILTIN_ARROWS, ...arrows }`——同名 key 覆盖内置，经 `onWarn` 发
    *   Duplicate names fail at registration time. IR 的 `arrowDetail.shape` 仍是字符串；未注册名在编译期 throw。
+   * @default 仅 `BUILTIN_ARROWS`
    */
   arrows?: ReadonlyArray<ArrowDefinition>;
   /**
@@ -189,6 +204,7 @@ export type CompileOptions = {
    * @description 有效 pattern 表 = `{ ...BUILTIN_PATTERNS, ...patterns }`——同名 key 覆盖内置，经 `onWarn` 发
    *   Duplicate names fail at registration time. IR 的 `pattern.shape` 仍是字符串；未注册名在编译期 throw。
    *   compile 对 pattern 资源查本表 + 调 `PatternDefinition.emit` 产 tile，写进 `SceneResource.tile`。
+   * @default 仅 `BUILTIN_PATTERNS`
    */
   patterns?: ReadonlyArray<PatternDefinition>;
   /**
@@ -198,26 +214,31 @@ export type CompileOptions = {
    *   对结果再跑 `JsonObjectSchema.parse` 二次确认 JSON-safe → `targetParams` 顶层 key 经 target lookup
    *   resolve 成世界坐标 → 调 `generate(ctx)` → splice 产出的 `PathCommand[]` 进命令流。IR 的
    *   `generator.name` 仍是字符串；generator 函数本身只在此运行时注入面、不进 IR。
+   * @default 空 registry
    */
   pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
   /**
-   * Runtime path kind providers. Built-in kinds are `stroke` and `ribbon`; custom kinds are keyed by Path.kind.
+   * 运行时注入的 path kind providers；内置 kind 为 `stroke` / `ribbon`，自定义 kind 按 Path.kind 查找。
+   * @default 仅 `BUILTIN_PATH_KINDS`
    */
   pathKinds?: ReadonlyArray<PathKindDefinition>;
   /**
-   * Runtime ribbon width profiles.
-   * @description IR stores only `{ kind:"profile", name, params }`; profile functions are injected here and never enter IR.
+   * 运行时注入的 ribbon 宽度 profile。
+   * @description IR 只保存 `{ kind:"profile", name, params }`；profile 函数从这里注入，永不进入 IR。
+   * @default 空 registry
    */
   ribbonWidthProfiles?: ReadonlyArray<RibbonWidthProfileDefinition>;
   /**
    * 运行时注入的 Tier 2 composite 展开逻辑（不进 IR）
    * @description compileToScene 第一步据各 def 的 schema 提取的 `${namespace}.${type}` 把 IR 里的 composite
    *   节点展开成 Tier 1；core 无内置。未注册 namespace/type → `onWarn(COMPOSITE_NOT_REGISTERED)` + 跳过该节点。
+   * @default 空 registry
    */
   composites?: ReadonlyArray<CompositeDefinition>;
   /**
    * composite 嵌套展开的最大深度（防环 / 防失控递归）
    * @description 默认 32；composite 展开出 composite 时累加，超限或环 throw。
+   * @default `DEFAULT_MAX_COMPOSITE_DEPTH` (32)
    */
   maxCompositeDepth?: number;
   /**
@@ -225,6 +246,7 @@ export type CompileOptions = {
    * @description node `tex` 内容编译时调本函数把 LaTeX → 字形路径 + bbox。core 不依赖
    *   MathJax，仅声明注入类型。带 tex 内容但未注入 → `onWarn(TEX_LOWERER_MISSING)` + 降级；返回 null
    *   （非法 tex）→ `onWarn(TEX_INVALID)` + 降级。均不抛、不丢节点。
+   * @default undefined；禁用 TeX 降级能力
    */
   lowerTex?: LowerTex;
 };

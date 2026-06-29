@@ -23,6 +23,10 @@ type SectorParams = {
   outerRadius: number;
   startAngle: number;
   endAngle: number;
+  /**
+   * 环楔接缝倒角半径。
+   * @default 0
+   */
   cornerRadius?: number;
 };
 

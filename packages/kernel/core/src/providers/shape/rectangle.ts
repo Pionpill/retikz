@@ -18,6 +18,10 @@ import { localToWorld } from '../../geometry/transform';
  *   cornerRadius 从 Node 顶层迁入 params；缺省 / 0 = 直角。
  */
 type RectangleParams = {
+  /**
+   * 矩形圆角半径。
+   * @default 0
+   */
   cornerRadius?: number;
 };
 

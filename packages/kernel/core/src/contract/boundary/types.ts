@@ -5,13 +5,16 @@ import type { Rect } from '../../geometry/rect';
 import type { IRJsonObject } from '../../schemas/json';
 
 export type BoundaryDefinitionInput<TParams extends IRJsonObject> = {
-  /** Registry key referenced by IR `boundary`. */
+  /** 注册表 key，由 IR `boundary` 引用。 */
   name: string;
-  /** Params schema for this runtime connection surface. */
+  /** 运行时连接面参数的 schema。 */
   paramsSchema: z.ZodType<TParams>;
-  /** Center-to-toward ray hit on the connection surface. */
+  /** 从中心指向 toward 的射线与连接面的交点。 */
   boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
-  /** Optional named anchor support for web-style connection points. */
+  /**
+   * 可选的命名 anchor 支持，用于 Web 风格连接点。
+   * @default 不支持；调用方回退或报告不支持该 anchor
+   */
   anchor?: (rect: Rect, name: string, params: TParams) => Position | undefined;
 };
 

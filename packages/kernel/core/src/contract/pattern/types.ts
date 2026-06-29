@@ -12,12 +12,16 @@ export type PatternEmitContext = {
   size: number;
   /** motif 主色（CSS 串，缺省 `currentColor`） */
   color: string;
-  /** tile 背景填充（CSS 串）；缺省透明（字段缺省） */
+  /**
+   * tile 背景填充（CSS 串）；缺省透明（字段缺省）
+   * @default 透明背景
+   */
   background?: string;
   /**
    * 线 / 网格描边宽；dots motif 用作半径。
    * @description 仅当用户在 `pattern.lineWidth` 显式给值时存在；缺省（字段不存在）让各 motif 自定默认
    *   （lines / grid 用 1，dots 用 `size / 5`），保历史几何不退化。
+   * @default motif 自定义默认值
    */
   lineWidth?: number;
   /** 精度取整函数（与 compile/render 同一 round，保几何一致） */
@@ -34,7 +38,10 @@ export type PatternEmitContext = {
 export type PatternDefinition = {
   /** Registry key referenced by IR pattern paint `shape`. */
   name: string;
-  /** tile 周期默认（user units）；用户 `pattern.size` 覆盖；缺省 8 */
+  /**
+   * tile 周期默认（user units）；用户 `pattern.size` 覆盖；缺省 8
+   * @default 8
+   */
   defaultSize?: number;
   /** 局部 tile 坐标 motif 几何（renderer-agnostic）；adapter 把产物物化进 `<pattern>` */
   emit: (ctx: PatternEmitContext) => Iterable<MarkerPrimitive>;

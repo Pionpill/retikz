@@ -95,6 +95,10 @@ type RibbonCrossSection = {
 };
 
 type RibbonEmitOptions = EmitPathWarnHook & {
+  /**
+   * ribbon 宽度 profile 注册表。
+   * @default 空 Map
+   */
   ribbonWidthProfiles?: ReadonlyMap<string, RibbonWidthProfileDefinition>;
 };
 

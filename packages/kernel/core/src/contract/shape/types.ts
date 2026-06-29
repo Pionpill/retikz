@@ -13,17 +13,55 @@ import type { IRJsonObject } from '../../schemas/json';
  *   字段名与 NodeLayout 样式字段一致（单一词汇表）。
  */
 export type ShapeStyle = {
+  /**
+   * 填充 paint；缺省由 shape emit 按透明填充处理。
+   * @default 'transparent'
+   */
   fill?: PaintValue;
+  /**
+   * 填充不透明度。
+   * @default 1
+   */
   fillOpacity?: number;
+  /**
+   * 描边 paint；缺省由 shape emit 按当前文字色处理。
+   * @default 'currentColor'
+   */
   stroke?: PaintValue;
+  /**
+   * 描边不透明度。
+   * @default 1
+   */
   strokeOpacity?: number;
+  /**
+   * 描边宽度。
+   * @default 1
+   */
   strokeWidth?: number;
+  /**
+   * 描边虚线模式；缺省为实线。
+   * @default []
+   */
   dashPattern?: Array<number>;
+  /**
+   * 圆角半径。
+   * @default 0
+   */
   cornerRadius?: number;
+  /**
+   * 整体不透明度。
+   * @default 1
+   */
   opacity?: number;
-  /** 投影：解析后对象（compile 已把预设展开 + 显式字段覆盖合并；缺省无投影） */
+  /**
+   * 投影：解析后对象（compile 已把预设展开 + 显式字段覆盖合并；缺省无投影）
+   * @default 无投影
+   */
   shadow?: DropShadow;
-  /** 混合模式：解析后值（compile 透传；缺省 / normal 等价普通 source-over） */
+  /**
+   * 混合模式：解析后值（compile 透传；缺省 / normal 等价普通 source-over）
+   * @default 'normal'
+   */
   blendMode?: BlendModeValue;
 };
 
@@ -64,6 +102,7 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
    *   形状的语义锚点（圆心 apex）才是 position，其外接 AABB 中心偏在一侧——此 hook 让 compile 把
    *   `rect.center` 放到 `position + offset`，使 bbox / viewBox 罩住完整形状、anchor 以 AABB 中心 rect 计算时
    *   apex 落回 position。返回**未旋转**局部偏移（compile 在施加 node rotate 前用于定位 rect 中心）。
+   * @default [0, 0]
    */
   circumscribeOffset?: (params: TParams) => Position;
   /** 中心 → toward 射线 ∩ 边界（rect 带 rotate）；params 喂参数化边界。 */
@@ -80,6 +119,7 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
    * 边上比例点：Web side 真实边界从约定起点起 t∈[0,1] 处（轴对齐空间求出后由 layout 投回世界系）。
    * @description 可选——目前仅 rectangle / ellipse 实现；未实现的 shape（polygon / sector / arc / star）收到 `{ side, t }` 时编译期（resolveEdgePoint）抛明确错。
    *   side 使用 Web/CSS canonical 值：top/right/bottom/left。与 `anchor` 同坐标语义：收**带 rotate 的 Rect**，自行用 worldToLocal/localToWorld 处理旋转。
+   * @default 不支持；该 shape 的 side anchor 会抛错
    */
   edgePoint?: (rect: Rect, side: WebSideValue, t: number, params: TParams) => Position;
   /** 视觉 primitive，**轴对齐空间**（rotate 由编译器外层 GroupPrim 统一施加）；params 喂参数化几何。 */
@@ -90,6 +130,7 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
    *   缺省时编译器沿用默认行为——深度缩放 params 里所有数值叶子（uniform 几何均值因子）。
    *   适用于 params 含「非长度」语义字段（如角度）的形状：sector / arc 只缩半径、不缩角度，
    *   通过本 hook 把 startAngle / endAngle 排除在缩放外。不缩放任何 params 的形状不必实现。
+   * @default 按 `Math.sqrt(sx * sy)` 深度缩放 params 中的数值叶子
    */
   scaleParams?: (params: TParams, sx: number, sy: number) => TParams;
 };

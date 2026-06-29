@@ -55,7 +55,10 @@ export type ArcPathCommand = {
   startAngle: number;
   /** 终止角度（度） */
   endAngle: number;
-  /** 是否逆时针扫描；缺省 / `false` = CW（屏幕坐标系正向） */
+  /**
+   * 是否逆时针扫描；缺省 / `false` = CW（屏幕坐标系正向）
+   * @default false
+   */
   counterClockwise?: boolean;
 };
 
@@ -69,13 +72,19 @@ export type EllipseArcPathCommand = {
   radiusX: number;
   /** y 轴半径 */
   radiusY: number;
-  /** 椭圆整体旋转角度（度），缺省 0 */
+  /**
+   * 椭圆整体旋转角度（度），缺省 0
+   * @default 0
+   */
   rotation?: number;
   /** 起始角度（度） */
   startAngle: number;
   /** 终止角度（度） */
   endAngle: number;
-  /** 是否逆时针扫描；缺省 / `false` = CW */
+  /**
+   * 是否逆时针扫描；缺省 / `false` = CW
+   * @default false
+   */
   counterClockwise?: boolean;
 };
 
@@ -118,7 +127,10 @@ export type ArrowEndSpec = {
   markerWidth: number;
   /** 已解析尖宽 = `(width ?? def.defaultWidth) * scale`（adapter 直接当 markerHeight 用） */
   markerHeight: number;
-  /** marker 元素级不透明度 0..1；缺省继承 path opacity */
+  /**
+   * marker 元素级不透明度 0..1；缺省继承 path opacity
+   * @default 继承 `path.opacity`
+   */
   opacity?: number;
   /** `def.emit` 产物：局部 baseSize 坐标系下的内部几何（fill 限 `string | { kind:'contextStroke' }`） */
   marker: Array<MarkerPrimitive>;
@@ -138,30 +150,51 @@ export type PathPrim = {
   commands: Array<PathCommand>;
   /** 填充：纯色 / 资源表 paint server（gradient）/ contextStroke；不填表示不填充 */
   fill?: PaintValue;
-  /** 填充透明度 0~1 */
+  /**
+   * 填充透明度 0~1
+   * @default 1
+   */
   fillOpacity?: number;
-  /** 填充规则：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景） */
+  /**
+   * 填充规则：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景）
+   * @default 'nonzero'
+   */
   fillRule?: 'nonzero' | 'evenodd';
   /** 描边：纯色 / 资源表 paint server（gradient）/ contextStroke */
   stroke?: PaintValue;
-  /** 描边透明度 0~1 */
+  /**
+   * 描边透明度 0~1
+   * @default 1
+   */
   strokeOpacity?: number;
   /** 描边宽度 */
   strokeWidth?: number;
   /** 描边 dash pattern */
   dashPattern?: Array<number>;
-  /** 端点形状 */
+  /**
+   * 端点形状
+   * @default 'butt'
+   */
   strokeLinecap?: 'butt' | 'round' | 'square';
-  /** 拐点形状 */
+  /**
+   * 拐点形状
+   * @default 'miter'
+   */
   strokeLinejoin?: 'miter' | 'round' | 'bevel';
   /** 起点箭头视觉规格；undefined = 无箭头 */
   arrowStart?: ArrowEndSpec;
   /** 终点箭头视觉规格；undefined = 无箭头 */
   arrowEnd?: ArrowEndSpec;
-  /** 整体透明度 0~1 */
+  /**
+   * 整体透明度 0~1
+   * @default 1
+   */
   opacity?: number;
   /** 投影：解析后对象（preset 已展开 + 显式覆盖合并）；undefined = 无投影 */
   shadow?: DropShadow;
-  /** 混合模式：解析后值；undefined / normal = 普通 source-over */
+  /**
+   * 混合模式：解析后值；undefined / normal = 普通 source-over
+   * @default 'normal'
+   */
   blendMode?: BlendModeValue;
 };

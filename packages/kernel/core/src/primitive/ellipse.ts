@@ -19,22 +19,37 @@ export type EllipsePrim = {
   cy: number;
   rx: number;
   ry: number;
-  /** 绕中心旋转度数 */
+  /**
+   * 绕中心旋转度数
+   * @default 0
+   */
   rotate?: number;
   /** 填充：纯色 / 资源表 paint server（gradient）/ contextStroke */
   fill?: PaintValue;
-  /** 填充透明度 0~1 */
+  /**
+   * 填充透明度 0~1
+   * @default 1
+   */
   fillOpacity?: number;
   /** 描边：纯色 / 资源表 paint server（gradient）/ contextStroke */
   stroke?: PaintValue;
-  /** 描边透明度 0~1 */
+  /**
+   * 描边透明度 0~1
+   * @default 1
+   */
   strokeOpacity?: number;
   strokeWidth?: number;
   dashPattern?: Array<number>;
-  /** 整体透明度 0~1 */
+  /**
+   * 整体透明度 0~1
+   * @default 1
+   */
   opacity?: number;
   /** 投影：解析后对象（preset 已展开 + 显式覆盖合并）；undefined = 无投影 */
   shadow?: DropShadow;
-  /** 混合模式：解析后值；undefined / normal = 普通 source-over */
+  /**
+   * 混合模式：解析后值；undefined / normal = 普通 source-over
+   * @default 'normal'
+   */
   blendMode?: BlendModeValue;
 };

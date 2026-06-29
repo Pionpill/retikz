@@ -22,7 +22,10 @@ export type Scene = {
   primitives: Array<ScenePrimitive>;
   /** 整个场景的布局边界 */
   layout: Layout;
-  /** 渲染无关资源表（paint server 等）；adapter 物化（SVG → `<defs>`）。无资源时省略 */
+  /**
+   * 渲染无关资源表（paint server 等）；adapter 物化（SVG → `<defs>`）。无资源时省略
+   * @default []
+   */
   resources?: Array<SceneResource>;
   /** scene 根（镜头）时间轴动画 tracks（viewBox property）：compile 从 IR 根 animations 原样透传；renderer 能播则播、不能则用静态 layout 并 warn。无则省略 */
   animations?: Array<IRAnimationTrack>;

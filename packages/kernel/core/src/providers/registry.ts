@@ -1,6 +1,10 @@
 export type ProviderRegistryOptions<TDefinition> = {
   capability: string;
   builtins: ReadonlyArray<TDefinition>;
+  /**
+   * 运行时注入的 provider definitions。
+   * @default []
+   */
   custom?: ReadonlyArray<TDefinition>;
   keyOf: (definition: TDefinition) => string;
   optionName: string;

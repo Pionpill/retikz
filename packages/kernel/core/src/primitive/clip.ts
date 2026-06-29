@@ -7,11 +7,19 @@ export type PolygonClipShape = { kind: 'polygon'; points: Array<[number, number]
 export type PathClipShape = {
   kind: 'path';
   commands: Array<PathCommand>;
+  /**
+   * 裁剪路径填充规则。
+   * @default 'nonzero'
+   */
   fillRule?: 'nonzero' | 'evenodd';
 };
 export type CompoundClipShape = {
   kind: 'compound';
   children: Array<ClipShape>;
+  /**
+   * 复合裁剪形状填充规则。
+   * @default 'nonzero'
+   */
   fillRule?: 'nonzero' | 'evenodd';
 };
 

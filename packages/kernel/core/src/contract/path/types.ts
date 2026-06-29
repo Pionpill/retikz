@@ -43,7 +43,10 @@ export type PathGeneratorDefinition = {
   name: string;
   /** params 的 zod schema；类型约束输出 JSON-safe（运行时双 parse 才是真正护栏） */
   paramsSchema: ZodType<IRJsonObject>;
-  /** 哪些 params 顶层 key 是 NodeTarget（compile resolve 成世界坐标）；仅顶层，嵌套不支持 */
+  /**
+   * 哪些 params 顶层 key 是 NodeTarget（compile resolve 成世界坐标）；仅顶层，嵌套不支持
+   * @default []
+   */
   targetParams?: Array<string>;
   /** 据 from / to / params / resolvedTargets 产低层 path 命令；可含 move 形成 sub-path */
   generate: (ctx: PathGeneratorGenerateContext) => Array<PathCommand>;
@@ -63,6 +66,10 @@ export type PathKindCompileContext<TOptions = IRJsonObject> = {
 
 export type PathKindDefinition<TOptions = IRJsonObject> = {
   schema: z.ZodObject<{ kind: z.ZodLiteral<string> }>;
+  /**
+   * kind 配置项的额外校验 schema；缺省直接使用原始 `kindOptions ?? {}`。
+   * @default 原始 `kindOptions ?? {}`
+   */
   optionsSchema?: z.ZodType<TOptions>;
   compile: (context: PathKindCompileContext<TOptions>) => PathKindCompileResult | null;
 };

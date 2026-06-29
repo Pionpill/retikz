@@ -1,12 +1,21 @@
 /** 字体规格：传给 TextMeasurer 的最小信息 */
 export type FontSpec = {
-  /** 字体族；不填走 fallback "sans-serif" */
+  /**
+   * 字体族；不填走兜底值 "sans-serif"
+   * @default 'sans-serif'
+   */
   family?: string;
   /** 字号（user units） */
   size: number;
-  /** 字重；可以是 'normal' / 'bold' / 100~900 数字等 */
+  /**
+   * 字重；可以是 'normal' / 'bold' / 100~900 数字等
+   * @default 'normal'
+   */
   weight?: string | number;
-  /** 字形：normal / italic / oblique */
+  /**
+   * 字形：normal / italic / oblique
+   * @default 'normal'
+   */
   style?: 'normal' | 'italic' | 'oblique';
 };
 
@@ -16,9 +25,15 @@ export type TextMetrics = {
   width: number;
   /** 文本高度（user units），通常 ≈ ascent + descent */
   height: number;
-  /** 基线以上的高度；不一定所有 measurer 都返回 */
+  /**
+   * 基线以上的高度；不一定所有 measurer 都返回
+   * @default 根据 `height` 估算
+   */
   ascent?: number;
-  /** 基线以下的深度；不一定所有 measurer 都返回 */
+  /**
+   * 基线以下的深度；不一定所有 measurer 都返回
+   * @default 根据 `height` 估算
+   */
   descent?: number;
 };
 

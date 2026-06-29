@@ -23,12 +23,40 @@ const ARROW_GEOMETRY_BASE_SIZE = 10;
  */
 type ResolvedArrowVisual = {
   shape: string;
+  /**
+   * 箭头缩放倍率。
+   * @default 1
+   */
   scale?: number;
+  /**
+   * 箭头长度。
+   * @default `def.defaultLength ?? ARROW_MARKER_DEFAULT_SIZE`
+   */
   length?: number;
+  /**
+   * 箭头宽度。
+   * @default `def.defaultWidth ?? ARROW_MARKER_DEFAULT_SIZE`
+   */
   width?: number;
+  /**
+   * 箭头主色。
+   * @default 继承 `contextStroke`
+   */
   color?: string;
+  /**
+   * 实心箭头填充色。
+   * @default `color ?? contextStroke`
+   */
   fill?: string;
+  /**
+   * marker 元素不透明度。
+   * @default 继承 `path.opacity`
+   */
   opacity?: number;
+  /**
+   * 空心箭头局部描边宽度。
+   * @default `ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH`
+   */
   lineWidth?: number;
 };
 

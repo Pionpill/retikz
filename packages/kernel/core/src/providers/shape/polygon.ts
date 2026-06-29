@@ -20,7 +20,15 @@ import { localToWorld } from '../../geometry/transform';
  */
 type PolygonParams = {
   sides: number;
+  /**
+   * 起始顶点自旋角（度）。
+   * @default 0
+   */
   rotate?: number;
+  /**
+   * 顶点倒角半径。
+   * @default 0
+   */
   cornerRadius?: number;
 };
 
