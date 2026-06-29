@@ -69,6 +69,8 @@ export type MarkTransformProps = {
 
 export type CoordinateScopeProps = {
   coordinateScope?: string;
+  facetId?: string;
+  trackId?: string;
 };
 
 export type CoreNodeChannelProps = {
@@ -157,6 +159,8 @@ export type PathMarkProps = MarkTransformProps &
     x: FieldName;
     /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
     y: FieldName;
+    /** Adapter-only sugar: bind this mark to a named y axis; expanded to coordinateScope before PlotSpec output. */
+    yAxisId?: string;
     /** 驱动连接顺序的字段；缺省按数据数组顺序 */
     order?: FieldName;
     /** 系列字段：按其拆成多条折线（多系列）；缺省单线 */
@@ -197,6 +201,8 @@ export type PointMarkProps = MarkTransformProps &
     x?: FieldName;
     /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值；cartesian2D / polar2D 必填，1D 省略） */
     y?: FieldName;
+    /** Adapter-only sugar: bind this mark to a named y axis; expanded to coordinateScope before PlotSpec output. */
+    yAxisId?: string;
     /** 三元坐标第三分量字段；ternary2D 下与 x / y 一起使用 */
     z?: FieldName;
     /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale） */
@@ -256,6 +262,8 @@ export type IntervalMarkProps = MarkTransformProps &
     x?: FieldName;
     /** 绑 y 位置通道的字段路径（数值；polar 下作径向值；直方下作箱高度 binCount 或自定义 metric 字段） */
     y?: FieldName;
+    /** Adapter-only sugar: bind this mark to a named y axis; expanded to coordinateScope before PlotSpec output. */
+    yAxisId?: string;
     /** polar 饼图 / 环图的份额值字段；设置后自动累积成角界（extent×full bounds），下沉为扇区 */
     angle?: FieldName;
     /** 直方连续 x 区间下界字段（如 bin 的 binStart）；与 x1 配对 → bounds.x = extent(x0,x1) */

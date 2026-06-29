@@ -3,28 +3,30 @@ title: 坐标组合
 description: composition 在一张 Plot 内注册多个坐标 scope，让 overlay、facet 和 shared track 共用同一套坐标组织模型。
 ---
 
-当一张图只有一个投影方式时，用 `coordinate` 就够了。需要把同一份数据放进多个坐标区域、多个面板或上下轨道时，用 `composition` 代替单个 `coordinate`：先注册一组 coordinate scope，再让 mark 和 guide 通过 `coordinateScope` 选择目标。
+当一张图只有一个投影方式时，用 `coordinate` 就够了。需要把同一份数据放进多个坐标区域、多个面板或上下轨道时，仍然会落到同一套 `composition` 模型，但日常写法不必手写 `composition` 对象：双轴用 `Axis id` + `yAxisId`，分面用 `<Facet>` + `facetId`，共享轨道用 `<Scaffold>` / `<Track>` + `trackId` / `scaffoldId`。adapter 会把这些声明展开成 coordinate scope、facet、scaffold 和 guide placement。
 
 `composition` 解决的是“坐标区域怎么组织”，不是新的图元类型。mark 仍然是 `PathMark`、`PointMark`、`IntervalMark`；scale 仍然由字段和显式 `<Scale>` 推断；guide 仍然用 `<Axis>` 声明。
 
 ## 多坐标 scope
 
-scope 是 composition 的最小单元。`defaultScope` 是省略 `coordinateScope` 时使用的作用域；其它 scope 可以叠在它上面，适合双轴、单位不同但共享 x 位置的图。
+scope 是 composition 的最小单元。`defaultScope` 是省略 `coordinateScope` 时使用的作用域；其它 scope 可以叠在它上面。双轴图一般不需要手写这些字段，默认 y 轴对应 `default` scope，额外 y 轴用 `Axis id` 命名，再让 mark 用 `yAxisId` 绑定对应轴即可。
 
 <ComponentPreview name="coordinate-composition-scopes" sourceFiles={['coordinate-composition.data.ts']} size="md" />
 
-这个例子里，`temperature` 是默认 scope，折线 mark 不写 `coordinateScope` 就落在它上面；`rainfall` 通过 `placement: { kind: 'overlay', target: 'temperature' }` 叠到同一个 plot area。两个 y 轴分别声明自己的 `coordinateScope`，`placement` 决定放左侧还是右侧，`title` 输出轴标题。
+这个例子里，`temperature` 使用默认 y 轴，`rainfall` 是额外 y 轴的 `id`。temperature 折线省略 `yAxisId`，rainfall 折线和点用 `yAxisId="rainfall"` 选择右侧轴；adapter 会生成 `default` scope，并把 `rainfall` 作为 overlay scope 叠在它上面。省略 `yAxisId` 或写 `yAxisId="default"` 的 mark 会进入默认 y scope。用户不需要手写 `__x`、`__y.default` 或 `coordinateScope`，但底层 PlotSpec 仍然是 composition。
 
 | 字段 | 作用 |
 | --- | --- |
-| `defaultScope` | mark / axis 未声明 `coordinateScope` 时的目标 |
+| `Axis id` | 给 y 轴一个可被 mark 引用的绑定身份 |
+| `yAxisId` | 让 mark 绑定到指定 y 轴，并展开成 `coordinateScope`；省略或写 `default` 时进入默认 y scope |
+| `defaultScope` | mark / axis 未声明 `coordinateScope` 时的目标；双轴 sugar 固定生成 `default` |
 | `scopes[].id` | 被 mark / guide 引用的稳定 scope id |
 | `scopes[].coordinate` | 该 scope 使用的坐标系配置 |
 | `placement.kind: 'overlay'` | 把当前 scope 叠到另一个 scope 的 plot area |
 
 ## 分面
 
-facet 会按数据字段派生多个 panel scope。你只声明一份基础 scope 和拆分规则，lowering 会按 row / column 值生成面板、路由每个面板的数据，并把 mark 放进对应 panel。
+facet 会按数据字段派生多个 panel scope。常规写法是声明一个 `<Facet>`，然后让 mark 和 axis 用 `facetId` 指向它；adapter 会生成基础 scope 和 facet 规则，lowering 再按 row / column 值生成面板、路由每个面板的数据，并把 mark 放进对应 panel。
 
 <ComponentPreview name="coordinate-composition-facet" sourceFiles={['coordinate-composition.data.ts']} size="xl" />
 
@@ -32,14 +34,15 @@ facet 会按数据字段派生多个 panel scope。你只声明一份基础 scop
 
 | 字段 | 作用 |
 | --- | --- |
-| `facets[].id` | facet 身份，也会进入 provenance / locator 上下文 |
+| `<Facet id>` | facet 身份，也会进入 provenance / locator 上下文 |
 | `row` / `column` | 按哪个字段拆面板，以及可选显示顺序 |
+| `facetId` | 让 mark / axis 绑定到这个 facet |
 | `empty` | 空面板是丢弃还是保留 |
 | `scales.roles` | 指定每个坐标 role 是 `shared` 还是 `independent` |
 
 ## 共享 scaffold 与 track
 
-shared scaffold 用一套坐标骨架管理多个 track。常见用途是多条上下对齐的小轨道：共享 x 轴，y 方向各自占一段 band，适合时间线、监控指标、事件 + 负载这类图。
+shared scaffold 用一套坐标骨架管理多个 track。常见用途是多条上下对齐的小轨道：共享 x 轴，y 方向各自占一段 band，适合时间线、监控指标、事件 + 负载这类图。常规写法是用 `<Scaffold>` 包住多个 `<Track>`，mark 用 `trackId` 选择轨道，跨轨道共享的轴用 `scaffoldId` 选择整套 scaffold。
 
 <ComponentPreview name="coordinate-composition-tracks" sourceFiles={['coordinate-composition.data.ts']} size="md" />
 
@@ -47,10 +50,11 @@ shared scaffold 用一套坐标骨架管理多个 track。常见用途是多条�
 
 | 字段 | 作用 |
 | --- | --- |
-| `scaffolds[].coordinate` | scaffold 的基础坐标系 |
+| `<Scaffold id>` | scaffold 的绑定身份 |
 | `sharedRoles` | 由 scaffold 统一管理的 role，例如共享 `x` |
+| `<Track id>` | track 的绑定身份 |
 | `tracks[].band` | 某个 track 在非共享 role 上占用的比例区间 |
-| `placement.kind: 'track'` | 把 scope 挂到指定 scaffold / track 上 |
+| `trackId` / `scaffoldId` | 让 mark / axis 绑定到某条 track 或整个 scaffold |
 
 ## layout 与 guidePolicy
 

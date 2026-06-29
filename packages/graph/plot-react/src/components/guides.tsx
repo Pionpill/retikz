@@ -19,6 +19,9 @@ export type AxisProps = {
   /** 是否画对齐本轴刻度的网格线，以及在组合坐标中投放到哪些目标；缺省 = false */
   grid?: AxisGuide['grid'];
   coordinateScope?: string;
+  facetId?: string;
+  scaffoldId?: string;
+  trackId?: string;
   placement?: AxisGuide['placement'];
   title?: string;
   /** 可选 guide 句柄（预留 scope/anchor，解析留 alpha.5） */
