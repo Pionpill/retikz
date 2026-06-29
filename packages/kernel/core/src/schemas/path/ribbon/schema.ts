@@ -15,7 +15,6 @@ export const RibbonArcCapSchema = z
       .describe('Arc center as a Cartesian position or PolarPosition sugar.'),
     radius: z
       .number()
-
       .positive()
       .describe('Arc radius in user units; both ribbon side endpoints must lie on this circle.'),
     sweep: z
@@ -34,13 +33,11 @@ export const RibbonWidthStopSchema = z
   .object({
     offset: z
       .number()
-
       .min(0)
       .max(1)
       .describe('Normalized position along the centerline.'),
     value: z
       .number()
-
       .nonnegative()
       .describe('Ribbon width in user units at this stop.'),
   })
@@ -96,7 +93,6 @@ export const RibbonEndpointSchema = z
   .object({
     width: z
       .number()
-
       .nonnegative()
       .optional()
       .describe('Ribbon width in user units at this endpoint.'),
@@ -127,7 +123,6 @@ export const RibbonSamplingSchema = z
         kind: z.literal('adaptive').describe('Choose a sample count from path length and tolerance.'),
         tolerance: z
           .number()
-
           .positive()
           .describe('Approximate target segment length in user units.'),
         maxSamples: z.number().int().min(2).max(512).optional().describe('Optional upper bound for generated samples.'),

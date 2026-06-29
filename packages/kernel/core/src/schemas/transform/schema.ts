@@ -11,7 +11,6 @@ const TranslateSchema = z
     x: z.number().describe('Cartesian x translation in user units.'),
     y: z
       .number()
-
       .describe('Cartesian y translation in user units (screen y-down).'),
   })
   .describe('Cartesian translate transform using user-unit x and y offsets.');
@@ -27,11 +26,9 @@ const PolarTranslateSchema = z
       ),
     angle: z
       .number()
-
       .describe('Angle in degrees measured from the positive x axis.'),
     radius: z
       .number()
-
       .describe('Radius / distance in user units; negative values are accepted (equivalent to angle + 180°).'),
   })
   .describe('Polar translate transform lowered to Cartesian translate at compile time.');
@@ -84,16 +81,13 @@ const RotateSchema = z
     kind: z.literal('rotate').describe('Discriminator: rotation about a point.'),
     degrees: z
       .number()
-
       .describe('Rotation angle in degrees; positive = visually clockwise under screen y-down.'),
     cx: z
       .number()
-
       .optional()
       .describe('Rotation center x in user units; omit = 0 (rotate about local origin).'),
     cy: z
       .number()
-
       .optional()
       .describe('Rotation center y in user units; omit = 0 (rotate about local origin).'),
   })
@@ -104,11 +98,9 @@ const ScaleSchema = z
     kind: z.literal('scale').describe('Discriminator: uniform / anisotropic scale.'),
     x: z
       .number()
-
       .describe('Scale factor on the x axis.'),
     y: z
       .number()
-
       .optional()
       .describe('Scale factor on the y axis. Omitted fields use x for uniform scaling.'),
   })

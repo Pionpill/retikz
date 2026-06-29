@@ -16,19 +16,16 @@ export const ArrowEndDetailSchema = z
       ),
     scale: z
       .number()
-
       .positive()
       .optional()
       .describe('Uniform arrow-tip scale applied to both `length` and `width`. Defaults to 1.'),
     length: z
       .number()
-
       .nonnegative()
       .optional()
       .describe('Arrow-tip length along the path direction, in user units. Defaults to the shape definition fallback.'),
     width: z
       .number()
-
       .nonnegative()
       .optional()
       .describe('Arrow-tip width perpendicular to the path, in user units. Defaults to the shape definition fallback.'),
@@ -52,7 +49,6 @@ export const ArrowEndDetailSchema = z
       .describe('Arrow-only opacity. When omitted, the arrow follows the path opacity.'),
     lineWidth: z
       .number()
-
       .nonnegative()
       .optional()
       .describe(

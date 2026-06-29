@@ -156,28 +156,24 @@ export const BendStepSchema = z
       ),
     bendAngle: z
       .number()
-
       .gt(-180)
       .lt(180)
       .optional()
       .describe('Bend angle in degrees. Omitted fields use 30.'),
     outAngle: z
       .number()
-
       .optional()
       .describe(
         'Outgoing tangent angle in degrees at the start point. With `inAngle`, takes precedence over bendDirection and bendAngle.',
       ),
     inAngle: z
       .number()
-
       .optional()
       .describe(
         'Incoming tangent angle in degrees at the end point. Used with `outAngle` for explicit tangent control.',
       ),
     looseness: z
       .number()
-
       .positive()
       .optional()
       .describe(
@@ -247,17 +243,14 @@ const ArcStepBaseSchema = z
       ),
     startAngle: z
       .number()
-
       .describe(
         'Arc start angle in degrees, measured from +x axis. 0° = +x, 90° = +y = screen-down (visual clockwise under screen y-down); matches polar / Node label angle convention.',
       ),
     endAngle: z
       .number()
-
       .describe('Arc end angle in degrees; sweep direction inferred from startAngle vs endAngle'),
     radius: z
       .number()
-
       .positive()
       .optional()
       .describe(
@@ -265,7 +258,6 @@ const ArcStepBaseSchema = z
       ),
     radiusX: z
       .number()
-
       .positive()
       .optional()
       .describe(
@@ -273,7 +265,6 @@ const ArcStepBaseSchema = z
       ),
     radiusY: z
       .number()
-
       .positive()
       .optional()
       .describe(
@@ -300,19 +291,16 @@ const CirclePathStepBaseSchema = z
       ),
     radius: z
       .number()
-
       .positive()
       .describe('Circle radius in user units'),
     startAngle: z
       .number()
-
       .optional()
       .describe(
         'Partial-circle start angle in degrees (same convention as arc: 0°=+x, 90°=+y screen-down). Give both startAngle and endAngle for a partial circle, or neither for a full circle.',
       ),
     endAngle: z
       .number()
-
       .optional()
       .describe('Partial-circle end angle in degrees; sweep direction inferred from startAngle vs endAngle.'),
     closed: z
@@ -341,24 +329,20 @@ const EllipsePathStepBaseSchema = z
       ),
     radiusX: z
       .number()
-
       .positive()
       .describe('Ellipse x-axis radius (semi-major or semi-minor on x)'),
     radiusY: z
       .number()
-
       .positive()
       .describe('Ellipse y-axis radius (semi-major or semi-minor on y)'),
     startAngle: z
       .number()
-
       .optional()
       .describe(
         'Partial-ellipse start angle in degrees (parametric, same convention as arc). Give both startAngle and endAngle for a partial ellipse, or neither for a full ellipse.',
       ),
     endAngle: z
       .number()
-
       .optional()
       .describe('Partial-ellipse end angle in degrees.'),
     closed: z
@@ -414,7 +398,6 @@ export const SmoothStepSchema = z
     tension: z
       .number()
       .positive()
-
       .optional()
       .describe('Tangent-length multiplier controlling curve slackness. Omitted fields use 1.'),
     label: StepLabelSchema.optional().describe(

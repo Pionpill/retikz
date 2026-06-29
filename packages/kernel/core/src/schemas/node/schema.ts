@@ -134,7 +134,6 @@ export const NodeSchema = z
       ),
     rotate: z
       .number()
-
       .optional()
       .describe('Rotation in degrees around the node center; positive is visually clockwise.'),
     text: TextBlockSchema.optional().describe(
@@ -151,7 +150,6 @@ export const NodeSchema = z
       .describe('Line height in user units; falls back to `font.size × 1.2` when omitted.'),
     maxTextWidth: z
       .number()
-
       .positive()
       .optional()
       .describe('Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.'),
@@ -175,7 +173,6 @@ export const NodeSchema = z
     drawOpacity: z.number().min(0).max(1).optional().describe('Stroke-only opacity for the node border.'),
     strokeWidth: z
       .number()
-
       .nonnegative()
       .optional()
       .describe('Border width in user units; defaults to 1 when omitted'),
@@ -268,7 +265,6 @@ export const NodeSchema = z
     zIndex: z
       .number()
       .int()
-
       .optional()
       .describe(
         'Stacking order among sibling IR children. Higher draws on top; equal values keep source order within the same parent group.',

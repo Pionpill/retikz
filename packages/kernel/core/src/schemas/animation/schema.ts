@@ -68,12 +68,10 @@ export const AnimationTrackSchema = z
       ),
     duration: z
       .number()
-
       .positive()
       .describe('Duration of one animation iteration in milliseconds.'),
     delay: z
       .number()
-
       .nonnegative()
       .optional()
       .describe('Delay before playback starts, in milliseconds.'),
