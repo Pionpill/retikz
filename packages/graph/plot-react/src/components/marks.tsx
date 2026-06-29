@@ -13,8 +13,8 @@ import type {
   IRPathScale,
   IRShapeRef,
   JsonValue,
-  MarkGeometryLabel,
-  MarkNodeLabel,
+  MarkGeometryLabelInput,
+  MarkNodeLabelInput,
   MarkValueType,
   NodeBooleanStyle,
   NodeBoundaryStyle,
@@ -42,7 +42,7 @@ import type {
   PointStrokeWidthStyle,
   PointZIndexStyle,
   RelationGeometryKindValue,
-  RelationPathGeometry,
+  RelationPathGeometryInput,
   RelationPrimitiveStyle,
   RelationRibbonOptions,
   ShadowPresetValue,
@@ -116,17 +116,8 @@ export type DatumLabelProps = {
   label?: FieldName;
   /** 标签格式串（d3-format 数值 / d3-time-format 时间，进 IR）；仅与 label 字段同用 */
   labelDisplayFormat?: string;
-  /** 标签相对宿主 Node 边框方位：8 方向枚举或数字角度（度）；缺省 above（对齐 core NodeLabelSchema.position） */
-  labelPosition?:
-    | 'above'
-    | 'below'
-    | 'left'
-    | 'right'
-    | 'above-left'
-    | 'above-right'
-    | 'below-left'
-    | 'below-right'
-    | number;
+  /** 标签相对宿主 Node 边框方位；Web 名为 canonical，compass / above-below 写法作为输入别名。 */
+  labelPosition?: MarkNodeLabelInput['position'];
   /** 标签离宿主边框距离（user units）；缺省 12（对齐 core NodeLabelSchema.distance） */
   labelDistance?: number;
   /** 从宿主边框拉引线到标签（core leader）；缺省 false */
@@ -158,7 +149,7 @@ export type PathMarkProps = MarkTransformProps &
     series?: FieldName;
     /** 颜色字段（categorical，自动 ordinal 色 scale）：无显式 series 时按此字段隐式拆多条线；缺省取 series。连续 / 时间字段报错 */
     color?: FieldName;
-    label?: MarkGeometryLabel | Array<MarkGeometryLabel>;
+    label?: MarkGeometryLabelInput | Array<MarkGeometryLabelInput>;
     resolveLabel?: (row: ExternalRow) => string;
     strokeWidth?: MarkValueProp<number> | PointStrokeWidthStyle;
     opacity?: MarkValueProp<number> | PointOpacityStyle;
@@ -294,15 +285,19 @@ export type RelationMarkProps = MarkTransformProps & {
   kind?: RelationGeometryKindValue;
   source: PlotTargetRef;
   target: PlotTargetRef;
-  label?: MarkGeometryLabel | Array<MarkGeometryLabel>;
+  label?: MarkGeometryLabelInput | Array<MarkGeometryLabelInput>;
   style?: RelationPrimitiveStyle;
-  path?: RelationPathGeometry;
+  path?: RelationPathGeometryInput;
   ribbon?: RelationRibbonOptions;
   color?: FieldName;
   channels?: Record<string, ExtensionChannelProp>;
 };
 
-type ReferenceMarkLabel = MarkNodeLabel | Array<MarkNodeLabel> | MarkGeometryLabel | Array<MarkGeometryLabel>;
+type ReferenceMarkLabel =
+  | MarkNodeLabelInput
+  | Array<MarkNodeLabelInput>
+  | MarkGeometryLabelInput
+  | Array<MarkGeometryLabelInput>;
 
 /**
  * <ReferenceMark> props：参考标注图层（阈值线 / 容差带 / 参考区域）。

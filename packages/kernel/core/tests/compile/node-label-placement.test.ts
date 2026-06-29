@@ -56,6 +56,14 @@ describe('Node label placement', () => {
       });
     });
 
+    it('方向 position 支持 Web canonical、compass alias 与旧 above/below alias，并归一到 Web', () => {
+      expect(NodeLabelSchema.parse({ text: 'L', position: 'top-left' })).toMatchObject({ position: 'top-left' });
+      expect(NodeLabelSchema.parse({ text: 'L', position: 'south-east' })).toMatchObject({
+        position: 'bottom-right',
+      });
+      expect(NodeLabelSchema.parse({ text: 'L', position: 'above' })).toMatchObject({ position: 'top' });
+    });
+
     it('拒绝未知 placement、未知 boundary 与越界 t', () => {
       expect(() => NodeLabelSchema.parse({ text: 'L', placement: 'inner' })).toThrow();
       expect(() => NodeLabelSchema.parse({ text: 'L', position: { boundary: 'up' } })).toThrow();
@@ -66,7 +74,7 @@ describe('Node label placement', () => {
       expect(() =>
         NodeLabelSchema.parse({
           text: 'L',
-          position: 'above',
+          position: 'top',
           placement: 'inside',
           pin: true,
         }),
@@ -85,9 +93,9 @@ describe('Node label placement', () => {
   });
 
   describe('inside placement', () => {
-    it('above + inside 沿 top boundary 向内偏移', () => {
+    it('top + inside 沿 top boundary 向内偏移', () => {
       const scene = compileToScene(
-        sceneWithLabel({ text: 'L', position: 'above', placement: 'inside', distance: 6 }),
+        sceneWithLabel({ text: 'L', position: 'top', placement: 'inside', distance: 6 }),
         silent,
       );
       const label = labelText(scene.primitives, 'L')!;

@@ -114,6 +114,14 @@ describe('Drawable shared schema', () => {
     expect(StepLabelSchema).toBe(GeometryLabelSchema);
   });
 
+  it('keeps edge label above/below canonical while accepting web and compass aliases', () => {
+    expect(GeometryLabelSchema.parse({ text: 'x', side: 'above' })).toMatchObject({ side: 'above' });
+    expect(GeometryLabelSchema.parse({ text: 'x', side: 'top' })).toMatchObject({ side: 'above' });
+    expect(GeometryLabelSchema.parse({ text: 'x', side: 'north' })).toMatchObject({ side: 'above' });
+    expect(GeometryLabelSchema.parse({ text: 'x', side: 'bottom' })).toMatchObject({ side: 'below' });
+    expect(GeometryLabelSchema.parse({ text: 'x', side: 'south' })).toMatchObject({ side: 'below' });
+  });
+
   it('rejects path-only fields inside ribbon options', () => {
     for (const field of ['dashPattern', 'arrow', 'arrowDetail', 'lineCap', 'lineJoin', 'roundedCorners']) {
       const value = field === 'dashPattern' ? [4, 2] : 'round';

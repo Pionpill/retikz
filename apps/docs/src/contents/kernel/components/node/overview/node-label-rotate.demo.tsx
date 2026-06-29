@@ -17,9 +17,9 @@ const Demo: FC = () => (
       fill="lightgray"
       stroke="dodgerblue"
       label={[
-        { text: 'radial', position: 'above', rotate: 'radial' },
+        { text: 'radial', position: 'top', rotate: 'radial' },
         { text: 'radial', position: 'right', rotate: 'radial' },
-        { text: 'radial', position: 'below', rotate: 'radial' },
+        { text: 'radial', position: 'bottom', rotate: 'radial' },
         { text: 'radial', position: 'left', rotate: 'radial' },
       ]}
     >
@@ -34,9 +34,9 @@ const Demo: FC = () => (
       fill="lightgray"
       stroke="green"
       label={[
-        { text: 'tangent', position: 'above', rotate: 'tangent' },
+        { text: 'tangent', position: 'top', rotate: 'tangent' },
         { text: 'tangent', position: 'right', rotate: 'tangent' },
-        { text: 'tangent', position: 'below', rotate: 'tangent' },
+        { text: 'tangent', position: 'bottom', rotate: 'tangent' },
         { text: 'tangent', position: 'left', rotate: 'tangent' },
       ]}
     >

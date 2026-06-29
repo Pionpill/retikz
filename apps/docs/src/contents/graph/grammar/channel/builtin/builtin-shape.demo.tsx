@@ -24,7 +24,7 @@ const Demo: FC = () => (
     height={240}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <PointMark x="x" y="y" shape="kind" color="kind" size={11} label="kind" labelPosition="above" />
+    <PointMark x="x" y="y" shape="kind" color="kind" size={11} label="kind" labelPosition="top" />
     <Axis dimension="x" />
     <Axis dimension="y" grid />
     <Legend channel="shape" position="right" />

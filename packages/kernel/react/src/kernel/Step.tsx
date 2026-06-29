@@ -1,4 +1,4 @@
-import type { IRControlPoint, IRStepLabel, IRTarget } from '@retikz/core';
+import type { IRControlPoint, IRStepLabelInput, IRTarget } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
 import { TIKZ_STEP } from './_displayNames';
@@ -24,7 +24,7 @@ export type LineStepProps = {
   /** 直线终点 */
   to: DslTarget;
   /** 边标注，等价于 sugar `<EdgeLabel>` child */
-  label?: IRStepLabel;
+  label?: IRStepLabelInput;
   /** sugar 形态：`<Step><EdgeLabel>...</EdgeLabel></Step>`；其它 children 静默忽略 */
   children?: ReactNode;
 };
@@ -38,7 +38,7 @@ export type FoldStepProps = {
   /** 折角终点 */
   to: DslTarget;
   /** 边标注 */
-  label?: IRStepLabel;
+  label?: IRStepLabelInput;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -58,7 +58,7 @@ export type CurveStepProps = {
   /** 曲线终点 */
   to: DslTarget;
   /** 边标注 */
-  label?: IRStepLabel;
+  label?: IRStepLabelInput;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -74,7 +74,7 @@ export type CubicStepProps = {
   /** 曲线终点 */
   to: DslTarget;
   /** 边标注 */
-  label?: IRStepLabel;
+  label?: IRStepLabelInput;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -100,7 +100,7 @@ export type BendStepProps = {
   /** 终点 */
   to: DslTarget;
   /** 边标注 */
-  label?: IRStepLabel;
+  label?: IRStepLabelInput;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -122,7 +122,7 @@ export type ArcStepProps = {
   /** 显式圆心；缺省取游标（上一 step anchor） */
   center?: DslTarget;
   /** 边标注 */
-  label?: IRStepLabel;
+  label?: IRStepLabelInput;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -140,7 +140,7 @@ export type CirclePathStepProps = {
   /** 闭合模式：无角度=closed（整圆）；带角度=chord（弦，默认）/ sector（连回中心）/ open（纯弧） */
   closed?: 'closed' | 'chord' | 'open' | 'sector';
   /** 边标注 */
-  label?: IRStepLabel;
+  label?: IRStepLabelInput;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -160,7 +160,7 @@ export type EllipsePathStepProps = {
   /** 闭合模式：无角度=closed（整椭圆）；带角度=chord（默认）/ sector（连回中心）/ open */
   closed?: 'closed' | 'chord' | 'open' | 'sector';
   /** 边标注 */
-  label?: IRStepLabel;
+  label?: IRStepLabelInput;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -190,7 +190,7 @@ export type SmoothStepProps = {
   /** 切线长度乘子（TikZ `tension`）；缺省 1，<1 更紧、>1 更鼓 */
   tension?: number;
   /** 边标注，沿生成 cubic 按贝塞尔参数定位 */
-  label?: IRStepLabel;
+  label?: IRStepLabelInput;
   /** sugar 形态 */
   children?: ReactNode;
 };

@@ -22,7 +22,7 @@ const Demo: FC = () => (
       id="plotIr"
       position={[-70, 0]}
       stroke="none"
-      label={{ text: '图表语义', position: 'below', distance: 8, textColor: 'gray', font: { size: 12 } }}
+      label={{ text: '图表语义', position: 'bottom', distance: 8, textColor: 'gray', font: { size: 12 } }}
     >
       Plot IR
     </Node>
@@ -32,7 +32,7 @@ const Demo: FC = () => (
       position={[-70, 76]}
       stroke="none"
       textColor="gray"
-      label={{ text: '不进 IR', position: 'below', distance: 8, textColor: 'gray', font: { size: 12 } }}
+      label={{ text: '不进 IR', position: 'bottom', distance: 8, textColor: 'gray', font: { size: 12 } }}
     >
       数据行
     </Node>
@@ -41,7 +41,7 @@ const Demo: FC = () => (
       id="lower"
       position={[70, 0]}
       stroke="none"
-      label={{ text: 'IR + data', position: 'below', distance: 8, textColor: 'gray', font: { size: 12 } }}
+      label={{ text: 'IR + data', position: 'bottom', distance: 8, textColor: 'gray', font: { size: 12 } }}
     >
       lowerPlots
     </Node>
@@ -49,7 +49,7 @@ const Demo: FC = () => (
       id="core"
       position={[220, 0]}
       stroke="none"
-      label={{ text: 'Node · Path · Scene', position: 'below', distance: 8, textColor: 'gray', font: { size: 12 } }}
+      label={{ text: 'Node · Path · Scene', position: 'bottom', distance: 8, textColor: 'gray', font: { size: 12 } }}
     >
       core IR / Scene
     </Node>

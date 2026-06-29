@@ -107,7 +107,7 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
 
   it('at-translate 缺 distance 走 nodeDistance', () => {
     const idx = makeStack([['A', [0, 0]]]);
-    const out = lowerScopeTransforms([{ kind: 'at-translate', direction: 'above', of: 'A' }], idx, 15);
+    const out = lowerScopeTransforms([{ kind: 'at-translate', direction: 'top', of: 'A' }], idx, 15);
     expect(out![0]).toEqual({ kind: 'translate', x: 0, y: -15 });
   });
 

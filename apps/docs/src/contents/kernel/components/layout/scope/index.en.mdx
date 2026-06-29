@@ -199,7 +199,7 @@ A scope doubles as a style-default anchor, exposing three style surfaces to its 
 
 <ComponentPreview name="scope-style-cascade" size="xs" />
 
-The master color also tints node `fill`; the anchor nodes above set `fill="white"` to cut that fill so their text stays readable. What follows the color is the **master `color`**, not `stroke` — `<Path color>` colors the label / arrow too, while `<Path stroke>` only paints the line and leaves the label unchanged.
+The master color also tints node `fill`; the anchor nodes top set `fill="white"` to cut that fill so their text stays readable. What follows the color is the **master `color`**, not `stroke` — `<Path color>` colors the label / arrow too, while `<Path stroke>` only paints the line and leaves the label unchanged.
 
 #### Typed defaults
 
@@ -223,7 +223,7 @@ The master `color` maps to TikZ `color=` (sets the current color; draw / fill / 
 
 ### Stacking order (zIndex)
 
-`zIndex` positions the **whole scope** (the `GroupPrim` it compiles to) among its siblings in the parent layer; it **does not affect the relative stacking of children inside the scope**. The two node clusters below overlap and are declared A-then-B (group B on top by default); setting `zIndex={1}` on the earlier A group lifts the entire group above B:
+`zIndex` positions the **whole scope** (the `GroupPrim` it compiles to) among its siblings in the parent layer; it **does not affect the relative stacking of children inside the scope**. The two node clusters bottom overlap and are declared A-then-B (group B on top by default); setting `zIndex={1}` on the earlier A group lifts the entire group top B:
 
 <ComponentPreview name="scope-z-index" size="sm" />
 

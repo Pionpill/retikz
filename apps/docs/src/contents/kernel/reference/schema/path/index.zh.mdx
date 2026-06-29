@@ -329,7 +329,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
   descriptions={{
     text: '标签文字内容（单行；多行需 \\n）',
     position: '沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway',
-    side: '标签相对锚点的方位：above / below / left / right；兼容旧写法 sloped（无方位偏移地沿切线旋转）',
+    side: '标签相对锚点的方位：top / bottom / left / right；接受 compass 别名 north / south / east / west 和旧 above / below；sloped 表示无方位偏移地沿切线旋转',
     sloped: '是否沿采样点切线旋转标签；为 true 时仍可用 side 控制方位',
     placement: '标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Ribbon 等面状宿主在未指定 side 时放在内部',
     distance: 'side 偏移距离，默认与 Path step label 一致',

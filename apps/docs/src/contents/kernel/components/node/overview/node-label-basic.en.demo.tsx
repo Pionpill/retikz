@@ -8,7 +8,7 @@ import { Layout, Node } from '@retikz/react';
  */
 const Demo: FC = () => (
   <Layout width={500} height={260}>
-    {/* Single label, default position='above' */}
+    {/* Single label, default position='top' */}
     <Node id="A" position={[-160, 0]} label={{ text: 'simple label' }}>
       A
     </Node>
@@ -21,9 +21,9 @@ const Demo: FC = () => (
       position={[0, 0]}
       label={[
         { text: 'center', position: 'center', textColor: 'currentColor' },
-        { text: 'top', position: 'above', textColor: '#0f172a' },
+        { text: 'top', position: 'top', textColor: '#0f172a' },
         { text: 'right', position: 'right', textColor: '#0f172a' },
-        { text: 'bottom-left', position: 'below-left', textColor: '#0f172a' },
+        { text: 'bottom-left', position: 'bottom-left', textColor: '#0f172a' },
       ]}
     />
     {/* Numeric angles (retikz polar: 0° = +x, 90° = +y, screen-down) */}

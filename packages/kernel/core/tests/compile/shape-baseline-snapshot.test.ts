@@ -42,7 +42,7 @@ const richIR: IR = {
       id: 'p',
       position: [120, 120],
       text: ['line1', 'line2'],
-      label: { text: 'tag', position: 'above' },
+      label: { text: 'tag', position: 'top' },
     },
     // boundary clip：r（带 margin）→ c
     {

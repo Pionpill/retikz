@@ -29,7 +29,7 @@ export const circuitMeter: ShapeDefinition = defineShape({
     if (name === 'center') return [rect.x, rect.y];
     if (name === 'left' || name === 'input') return localToWorld(rect, [-rect.width / 2, 0]);
     if (name === 'right' || name === 'output') return localToWorld(rect, [rect.width / 2, 0]);
-    // 圆形表头的上 / 下沿（高度 = 2×半径，引线只在水平方向）——供 label `above` / `below` 取 top / bottom
+    // 圆形表头的上 / 下沿（高度 = 2×半径，引线只在水平方向）——供 label `top` / `bottom` 取 top / bottom
     if (name === 'top') return localToWorld(rect, [0, -rect.height / 2]);
     if (name === 'bottom') return localToWorld(rect, [0, rect.height / 2]);
     return undefined;

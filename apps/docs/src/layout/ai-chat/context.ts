@@ -46,7 +46,7 @@ Scene = {
 Node = {
   type: 'node',
   id?: string,             // 后续 path/coordinate 引用用
-  position: [x, y] | { direction: 'right'|'above'|..., of: string, distance?: number } | { angle, radius },
+  position: [x, y] | { direction: 'right'|'top'|..., of: string, distance?: number } | { angle, radius },
   text?: string | { lines: Array<string | { text, fill? }> },
   shape?: 'rectangle' | 'circle' | 'ellipse' | 'diamond',  // 默认 rectangle
   fill?, stroke?, strokeWidth?, padding?, font?, ...  // 视觉属性
@@ -152,7 +152,7 @@ Scene = {
 Node = {
   type: 'node',
   id?: string,             // referenced later by path/coordinate
-  position: [x, y] | { direction: 'right'|'above'|..., of: string, distance?: number } | { angle, radius },
+  position: [x, y] | { direction: 'right'|'top'|..., of: string, distance?: number } | { angle, radius },
   text?: string | { lines: Array<string | { text, fill? }> },
   shape?: 'rectangle' | 'circle' | 'ellipse' | 'diamond',  // default rectangle
   fill?, stroke?, strokeWidth?, padding?, font?, ...  // visual props

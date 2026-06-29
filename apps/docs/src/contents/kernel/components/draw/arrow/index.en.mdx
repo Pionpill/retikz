@@ -8,7 +8,7 @@ Arrows are driven by two independent props:
 - **`arrow`** — direction enum: `'->'` end / `'<-'` start / `'<->'` both / `'none'` (default) = none
 - **`arrowDetail`** — visual detail object, 8 top-level fields + optional `start` / `end` sub-objects. **Omit it for the default "stealth sharp barb inheriting the path stroke / opacity" behavior**
 
-Both props sit on `<Draw>` and `<Path>` with identical syntax and effect — the examples below use `<Draw>`; the `<Path>` equivalent is the same.
+Both props sit on `<Draw>` and `<Path>` with identical syntax and effect — the examples bottom use `<Draw>`; the `<Path>` equivalent is the same.
 
 An arrow attaches to a path endpoint: it does not change the original path geometry, and it is not repeated at intermediate nodes. Very short segments, two-ended arrows, or large `length` / `width` values can overlap visually; reduce the arrow size or create room with node `margin` / explicit coordinates.
 

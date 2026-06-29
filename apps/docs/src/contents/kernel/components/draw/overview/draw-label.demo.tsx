@@ -17,8 +17,8 @@ const Demo: FC = () => (
     {/* line 段：{ label } 短记法等价 { label: { text: 'yes' } } */}
     <Draw way={['a', { label: 'yes' }, 'b']} arrow="->" />
 
-    {/* line 段：完整 label 对象，side='below' */}
-    <Draw way={['a', { label: { text: 'no', side: 'below' } }, 'c']} arrow="->" />
+    {/* line 段：完整 label 对象，side='bottom' */}
+    <Draw way={['a', { label: { text: 'no', side: 'bottom' } }, 'c']} arrow="->" />
 
     {/* fold 段：label 算子放在 '-|' 之前 */}
     <Node id="d" position={[270, -45]}>

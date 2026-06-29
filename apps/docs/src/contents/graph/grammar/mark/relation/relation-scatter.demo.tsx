@@ -13,7 +13,7 @@ const Demo: FC = () => (
       anchorId={{ prefix: 'node', field: 'id' }}
       color="group"
       label="label"
-      labelPosition="above"
+      labelPosition="top"
       fill="#f8fafc"
       stroke="#334155"
       strokeWidth={1}

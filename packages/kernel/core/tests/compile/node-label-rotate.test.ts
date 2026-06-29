@@ -58,9 +58,9 @@ describe('Node label rotate', () => {
     expect(rot.cy).toBeCloseTo(visualMiddle(txt), 2);
   });
 
-  it("radial：position='below'（+y 方向，屏幕下）→ 角度 ≈ 90", () => {
+  it("radial：position='bottom'（+y 方向，屏幕下）→ 角度 ≈ 90", () => {
     const ir = scene([
-      { type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'below', rotate: 'radial' } },
+      { type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'bottom', rotate: 'radial' } },
     ]);
     const g = findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')!;
     const rot = g.transforms!.find(t => t.kind === 'rotate')!;

@@ -173,7 +173,7 @@ describe('Draw: 边标注 label 透传', () => {
   });
 
   it('对象 label：text + side 透传到 IR', () => {
-    const out = ir(<Draw way={['a', { label: { text: 'no', side: 'below' } }, 'b']} />);
+    const out = ir(<Draw way={['a', { label: { text: 'no', side: 'bottom' } }, 'b']} />);
     const steps = (out.children[0] as { children: Array<{ label?: { text: string; side?: string } }> }).children;
     expect(steps[1].label).toMatchObject({ text: 'no', side: 'below' });
   });

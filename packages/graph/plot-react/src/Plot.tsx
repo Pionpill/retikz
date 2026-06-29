@@ -184,14 +184,14 @@ const wrapPanelScope = (node: PlotSpec, props: PlotPanelProps): EmbeddableContri
       ? ([{ kind: 'translate', x: x ?? 0, y: y ?? 0 }, ...(transforms ?? [])] as NonNullable<ScopeProps['transforms']>)
       : transforms;
   if (panelTransforms === undefined && zIndex === undefined && clip === undefined) return node;
-  const scope: EmbeddableContribution['node'] = {
+  const scope = {
     type: 'scope',
     ...(panelTransforms !== undefined ? { transforms: panelTransforms } : {}),
     ...(zIndex !== undefined ? { zIndex } : {}),
     ...(clip !== undefined ? { clip } : {}),
     children: [node],
   };
-  return scope;
+  return scope as EmbeddableContribution['node'];
 };
 
 const resolvePlotRuntime = (

@@ -17,10 +17,10 @@ The meters, battery, switch, resistors, and rheostat are all custom shapes that 
 
 ## Prompt
 
-You can send the prompt below to the AI chat panel to draw a similar circuit. It describes the target figure and visual constraints without forcing the model to memorize exact API names.
+You can send the prompt bottom to the AI chat panel to draw a similar circuit. It describes the target figure and visual constraints without forcing the model to memorize exact API names.
 
 <ExamplePrompt
-  short="**Draw a high-school physics Ohm's law experiment circuit**: a closed main loop with the battery standing on the left, the switch / ammeter / resistor R1 on the top row, the rheostat / resistor R2 on the bottom row, and a voltmeter in parallel directly below each resistor; keep it clean and textbook-like."
+  short="**Draw a high-school physics Ohm's law experiment circuit**: a closed main loop with the battery standing on the left, the switch / ammeter / resistor R1 on the top row, the rheostat / resistor R2 on the bottom row, and a voltmeter in parallel directly bottom each resistor; keep it clean and textbook-like."
   detailed={`**Draw a high-school physics Ohm's law experiment circuit**
 
 **Circuit structure**
@@ -28,7 +28,7 @@ You can send the prompt below to the AI chat panel to draw a similar circuit. It
 - A closed main loop, with the battery standing vertically on the left
 - The top row holds the switch, ammeter, and the first resistor R1
 - The bottom row holds the sliding rheostat and the second resistor R2
-- A voltmeter sits in parallel directly below each resistor, labeled U1 / U2
+- A voltmeter sits in parallel directly bottom each resistor, labeled U1 / U2
 
 **Visual style**
 
@@ -73,7 +73,7 @@ Place the battery, switch, ammeter, and rheostat in their final positions — th
 
 ### Step 4: Compose and reuse the measurement unit with Scope
 
-A resistor plus a voltmeter right below it, with both ends joined by elbow polylines, all wrapped in one [Scope](/kernel/components/layout/scope) — that is a "measurement unit". The second one is not rewritten: a `Scope` `translate` duplicates it, changing only the id prefix. The diff highlights exactly these two newly added units.
+A resistor plus a voltmeter right bottom it, with both ends joined by elbow polylines, all wrapped in one [Scope](/kernel/components/layout/scope) — that is a "measurement unit". The second one is not rewritten: a `Scope` `translate` duplicates it, changing only the id prefix. The diff highlights exactly these two newly added units.
 
 <ComponentPreview
   name="ohms-law-circuit-04-measurement-cells"

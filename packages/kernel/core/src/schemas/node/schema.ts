@@ -10,6 +10,7 @@ import { PaintSpecSchema } from '../paint';
 import {
   AtPositionSchema,
   BetweenPositionSchema,
+  normalizeAtDirection,
   OffsetPositionSchema,
   PolarPositionSchema,
   PositionSchema,
@@ -35,7 +36,7 @@ export const NodeLabelBoundaryPositionSchema = z
 
 /**
  * 节点附属标签 label（TikZ `[label=above:foo]` 同义）
- * @description 可挂多个；label 不参与 layout。position 支持 8 方向枚举或数字角度（polar 约定：0°=+x，90°=+y 屏幕下方）；默认 position='above'，distance=12
+ * @description 可挂多个；label 不参与 layout。position 支持 8 方向枚举或数字角度（polar 约定：0°=+x，90°=+y 屏幕下方）；默认 position='top'，distance=12
  */
 export const NodeLabelSchema = z
   .object({
@@ -45,10 +46,13 @@ export const NodeLabelSchema = z
         'Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ runs }` mixed text+math line. Rendered as a single line.',
       ),
     position: z
-      .union([z.enum(NodeLabelPosition), z.number(), NodeLabelBoundaryPositionSchema])
+      .preprocess(
+        value => (typeof value === 'string' ? normalizeAtDirection(value) ?? value : value),
+        z.union([z.enum(NodeLabelPosition), z.number(), NodeLabelBoundaryPositionSchema]),
+      )
       .optional()
       .describe(
-        'Placement around the node border: direction keyword, center, numeric angle, or `{ boundary, t }`. Omitted fields use above.',
+        'Placement around the node border: direction keyword, center, numeric angle, or `{ boundary, t }`. Omitted fields use top.',
       ),
     placement: z
       .enum(NodeLabelPlacement)

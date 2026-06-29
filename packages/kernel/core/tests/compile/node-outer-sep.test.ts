@@ -164,7 +164,7 @@ describe('outerSep：不外扩护栏 + 校验', () => {
           position: [0, 0],
           text: 'A',
           margin,
-          label: { text: 'L', position: 'above' },
+          label: { text: 'L', position: 'top' },
         },
       ],
     });

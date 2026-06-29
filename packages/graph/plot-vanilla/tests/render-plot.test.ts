@@ -410,7 +410,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       marks: [
         {
           type: 'interval',
-          label: { content: { field: 'revenue', displayFormat: ',.0f' }, position: 'above', distance: 6 },
+          label: { content: { field: 'revenue', displayFormat: ',.0f' }, position: 'top', distance: 6 },
           encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
         },
       ],

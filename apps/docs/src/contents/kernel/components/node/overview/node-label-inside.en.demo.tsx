@@ -10,7 +10,7 @@ const Demo: FC = () => (
       minimumWidth={110}
       minimumHeight={68}
       label={[
-        { text: 'outside', position: 'above', distance: 14 },
+        { text: 'outside', position: 'top', distance: 14 },
         { text: '0 deg', position: 0, distance: 14 },
       ]}
     >

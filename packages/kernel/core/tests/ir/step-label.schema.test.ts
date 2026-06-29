@@ -32,7 +32,7 @@ describe('StepLabelSchema 新增样式字段', () => {
       StepLabelSchema.safeParse({
         text: 'sin',
         position: 'near-end',
-        side: 'below',
+        side: 'bottom',
         textColor: '#333',
         opacity: 0.8,
         font: { size: 10 },
@@ -65,7 +65,7 @@ describe('StepLabelSchema 零破坏（旧形态仍合法）', () => {
   });
 
   it('text + position + side（v0.1 形态）', () => {
-    expect(StepLabelSchema.safeParse({ text: 'x', position: 'midway', side: 'above' }).success).toBe(true);
+    expect(StepLabelSchema.safeParse({ text: 'x', position: 'midway', side: 'top' }).success).toBe(true);
   });
 });
 
@@ -74,11 +74,14 @@ describe('StepLabel JSON round-trip', () => {
     const label = {
       text: 'sin',
       position: 'near-end' as const,
-      side: 'below' as const,
+      side: 'bottom' as const,
       textColor: '#333',
       opacity: 0.8,
       font: { size: 10, family: 'serif' },
     };
-    expect(StepLabelSchema.parse(JSON.parse(JSON.stringify(label)))).toEqual(label);
+    expect(StepLabelSchema.parse(JSON.parse(JSON.stringify(label)))).toEqual({
+      ...label,
+      side: 'below',
+    });
   });
 });

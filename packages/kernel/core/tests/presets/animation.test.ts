@@ -69,7 +69,7 @@ describe('Sugar=Kernel 等价（默认参数）', () => {
         { at: 0, value: 0 },
         { at: 1, value: 1 },
       ],
-      origin: 'south',
+      origin: 'bottom',
       duration: 500,
       easing: 'ease-out',
     });

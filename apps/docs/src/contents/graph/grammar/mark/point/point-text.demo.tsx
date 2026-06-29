@@ -8,7 +8,7 @@ import { points } from './point-api.data';
 const Demo: FC = () => (
   <Layout width={620} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
     <Plot data={points} width={300} height={220} x={0} y={20}>
-      <PointMark x="x" y="y" color="region" label="label" labelPosition="above" labelDistance={8} />
+      <PointMark x="x" y="y" color="region" label="label" labelPosition="top" labelDistance={8} />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>

@@ -26,7 +26,7 @@ const Demo: FC = () => (
     <Draw
       way={[
         'child',
-        { label: { text: 'static read', side: 'above', textColor: 'gray', font: { size: 12 } } },
+        { label: { text: 'static read', side: 'top', textColor: 'gray', font: { size: 12 } } },
         'contribute',
       ]}
       arrow="->"
@@ -35,7 +35,7 @@ const Demo: FC = () => (
     <Draw
       way={[
         'aggregate',
-        { label: { text: 'by namespace', side: 'above', textColor: 'gray', font: { size: 12 } } },
+        { label: { text: 'by namespace', side: 'top', textColor: 'gray', font: { size: 12 } } },
         'compile',
       ]}
       arrow="->"

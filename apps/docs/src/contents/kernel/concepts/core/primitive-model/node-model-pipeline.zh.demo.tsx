@@ -26,15 +26,15 @@ const Demo: FC = () => (
     </Node>
 
     <Draw
-      way={['s1', { label: { text: '度量', side: 'above', textColor: 'gray', font: { size: 12 } } }, 's2']}
+      way={['s1', { label: { text: '度量', side: 'top', textColor: 'gray', font: { size: 12 } } }, 's2']}
       arrow="->"
     />
     <Draw
-      way={['s2', { label: { text: 'circumscribe', side: 'above', textColor: 'gray', font: { size: 12 } } }, 's3']}
+      way={['s2', { label: { text: 'circumscribe', side: 'top', textColor: 'gray', font: { size: 12 } } }, 's3']}
       arrow="->"
     />
     <Draw
-      way={['s3', { label: { text: 'emit', side: 'above', textColor: 'gray', font: { size: 12 } } }, 's4']}
+      way={['s3', { label: { text: 'emit', side: 'top', textColor: 'gray', font: { size: 12 } } }, 's4']}
       arrow="->"
     />
     <Draw way={['s4', 's5']} arrow="->" />

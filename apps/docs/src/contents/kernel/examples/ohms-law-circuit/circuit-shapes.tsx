@@ -14,7 +14,7 @@ import { defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { Node } from '@retikz/react';
 import { z } from 'zod';
 
-/** 元件可选标签（透传给内部 Node 的 label，TikZ `[label=above:foo]` 同义） */
+/** 元件可选标签（透传给内部 Node 的 label，TikZ `[label=top:foo]` 同义） */
 type CircuitLabel = IRNodeLabel | Array<IRNodeLabel>;
 
 const INK = 'currentColor';

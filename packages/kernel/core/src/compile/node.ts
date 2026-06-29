@@ -30,11 +30,11 @@ import type { ResolveBetweenGlobal } from './position';
 import type { LaidLine, LineLayoutContext } from './text-layout';
 import type { FontSpec, TextMeasurer } from './text-metrics';
 
-import { normalizeWebAnchor } from '../geometry/anchor';
+import { normalizeWebAnchor, normalizeWebSide } from '../geometry/anchor';
 import { resolveBoundaryRegistry } from '../providers/boundary';
 import { providerDefinitionOf } from '../providers/registry';
 import { resolveShapeRegistry } from '../providers/shape';
-import { JsonObjectSchema } from '../schemas';
+import { JsonObjectSchema, normalizeAtDirection } from '../schemas';
 import { fallbackBoundaryAnchor, resolveBoundary } from './boundary';
 import { CompileWarningCode } from './constant';
 import { DirectionVectorByAtDirection, LabelAnchorByAtDirection } from './direction';
@@ -175,6 +175,7 @@ export type NodeLayout = {
    * 已校验的 per-instance shape 参数（经 `paramsSchema.parse` + `JsonObjectSchema.parse` 双护栏）
    * @description 透传给 `shapeDef` 的 circumscribe / boundaryPoint / anchor / edgePoint / emit；
    *   无参形状（内置 4 个）解析为 `{}`。省略时各调用点以空对象兜底（合成 layout 如 coordinate / scope.id）。
+   * @default {}
    */
   shapeParams?: IRJsonObject;
   /**
@@ -206,40 +207,80 @@ export type NodeLayout = {
   lineHeight: number;
   /** 文本字号（已应用默认值） */
   fontSize: number;
-  /** 字体族（CSS font-family） */
+  /**
+   * 字体族（CSS font-family）
+   * @default 'sans-serif'
+   */
   fontFamily?: string;
-  /** 字重 */
+  /**
+   * 字重
+   * @default 'normal'
+   */
   fontWeight?: string | number;
-  /** 字形 */
+  /**
+   * 字形
+   * @default 'normal'
+   */
   fontStyle?: 'normal' | 'italic' | 'oblique';
-  /** 节点背景填充（纯色 / PaintSpec gradient），emit 时经 resolvePaint → PaintValue、'transparent' 兜底 */
+  /**
+   * 节点背景填充（纯色 / PaintSpec gradient），emit 时经 resolvePaint → PaintValue、'transparent' 兜底
+   * @default 'transparent'
+   */
   fill?: string | IRPaintSpec;
-  /** 填充透明度 0~1 */
+  /**
+   * 填充透明度 0~1
+   * @default 1
+   */
   fillOpacity?: number;
-  /** 节点边框 paint，emit 时经 resolvePaint → PaintValue、'currentColor' 兜底 */
+  /**
+   * 节点边框 paint，emit 时经 resolvePaint → PaintValue、'currentColor' 兜底
+   * @default 'currentColor'
+   */
   stroke?: string | IRPaintSpec;
-  /** 描边透明度 0~1（TikZ `draw opacity`） */
+  /**
+   * 描边透明度 0~1（TikZ `draw opacity`）
+   * @default 1
+   */
   strokeOpacity?: number;
-  /** 边框宽度，emit 时 1 兜底 */
+  /**
+   * 边框宽度，emit 时 1 兜底
+   * @default 1
+   */
   strokeWidth?: number;
   /** 描边 dash pattern，已把 dashed/dotted 预设解析为具体 pattern */
   dashPattern?: Array<number>;
-  /** rectangle 圆角半径（非 rect shape 无效） */
+  /**
+   * rectangle 圆角半径（非 rect shape 无效）
+   * @default 0
+   */
   cornerRadius?: number;
-  /** 文字颜色，emit 时 'currentColor' 兜底 */
+  /**
+   * 文字颜色，emit 时 'currentColor' 兜底
+   * @default 'currentColor'
+   */
   textColor?: string;
-  /** 整节点透明度 0~1（同时挂 shape 与 text primitive） */
+  /**
+   * 整节点透明度 0~1（同时挂 shape 与 text primitive）
+   * @default 1
+   */
   opacity?: number;
   /** 已解析的主形状投影（compile 已展开 preset + 显式覆盖）；仅挂 shape 几何图元，不挂 text */
   shadow?: DropShadow;
-  /** 主形状混合模式（与下方已绘内容混合）；仅挂 shape 几何图元，不挂 text */
+  /**
+   * 主形状混合模式（与下方已绘内容混合）；仅挂 shape 几何图元，不挂 text
+   * @default 'normal'
+   */
   blendMode?: BlendModeValue;
   /**
    * 已解析的 label 列表
-   * @description IR 层 `Node.label` 标准化：position 默认 'above'、distance 默认 DEFAULT_LABEL_DISTANCE、font 从 Node 继承
+   * @description IR 层 `Node.label` 标准化：position 默认 'top'、distance 默认 DEFAULT_LABEL_DISTANCE、font 从 Node 继承
+   * @default []
    */
   labels?: Array<NodeLabelLayout>;
-  /** 节点默认连接面（来自 IR `node.boundary`；undefined = 'shape'）；path 端点 boundary 可覆盖 */
+  /**
+   * 节点默认连接面（来自 IR `node.boundary`；undefined = 'shape'）；path 端点 boundary 可覆盖
+   * @default 'shape'
+   */
   boundary?: IRBoundary;
   /** provenance 元数据（来自 IR `node.meta`）；emit 时原样 stamp 到 node 的 top-level 图元，renderer 忽略 */
   meta?: IRJsonObject;
@@ -247,7 +288,10 @@ export type NodeLayout = {
   animations?: Array<IRAnimationTrack>;
   /** 构建本 layout 的 shape 注册表引用——借用连接面（borrowed boundary）查表用 */
   shapes: ProviderCollection<ShapeDefinition>;
-  /** 构建本 layout 的 boundary 注册表引用——connection surface provider 查表用 */
+  /**
+   * 构建本 layout 的 boundary 注册表引用——connection surface provider 查表用
+   * @default resolveBoundaryRegistry()
+   */
   boundaries?: ProviderCollection<BoundaryDefinition>;
 };
 
@@ -263,19 +307,48 @@ export type NodeLabelLayout = {
   placement: NodeLabelPlacementValue;
   /** 已应用默认值 */
   distance: number;
+  /**
+   * label 文本颜色。
+   * @default 'currentColor'
+   */
   textColor?: string;
+  /**
+   * label 整体不透明度。
+   * @default 1
+   */
   opacity?: number;
   fontSize: number;
+  /**
+   * label 字体族。
+   * @default 'sans-serif'
+   */
   fontFamily?: string;
+  /**
+   * label 字重。
+   * @default 'normal'
+   */
   fontWeight?: string | number;
+  /**
+   * label 字形。
+   * @default 'normal'
+   */
   fontStyle?: 'normal' | 'italic' | 'oblique';
-  /** label 文本自旋模式（none / radial / tangent / 数字角度）；缺省 = 不旋转 */
+  /**
+   * label 文本自旋模式（none / radial / tangent / 数字角度）；缺省 = 不旋转
+   * @default 'none'
+   */
   rotate?: 'none' | 'radial' | 'tangent' | number;
-  /** 自旋后若文字倒置则翻 180°；缺省 false */
+  /**
+   * 自旋后若文字倒置则翻 180°；缺省 false
+   * @default false
+   */
   keepUpright?: boolean;
   /** label 文本测量宽度（pin leader 算 label 框近边用） */
   measuredWidth: number;
-  /** pin：true = 默认引线；对象 = 带样式引线（stroke / strokeWidth / dashPattern）；缺省 / false = 无引线 */
+  /**
+   * pin：true = 默认引线；对象 = 带样式引线（stroke / strokeWidth / dashPattern）；缺省 / false = 无引线
+   * @default false
+   */
   pin?: boolean | { stroke?: string; strokeWidth?: number; dashPattern?: Array<number> };
 };
 
@@ -373,6 +446,22 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
  */
 const isLabelBoundaryPosition = (position: NodeLabelLayout['position']): position is IRNodeLabelBoundaryPosition =>
   typeof position === 'object';
+
+const normalizeLabelBoundaryPosition = (position: IRNodeLabelBoundaryPosition): IRNodeLabelBoundaryPosition => ({
+  ...position,
+  boundary: normalizeWebSide(position.boundary) ?? position.boundary,
+});
+
+const normalizeLabelPosition = (
+  position: IRNodeLabel['position'] | undefined,
+): NodeLabelLayout['position'] => {
+  if (position === undefined) return 'top';
+  if (typeof position !== 'string') {
+    return typeof position === 'object' ? normalizeLabelBoundaryPosition(position) : position;
+  }
+  if (position === 'center') return position;
+  return (normalizeAtDirection(position) ?? position);
+};
 
 const ensureBoxLikeLabelBoundary = (layout: NodeLayout): void => {
   if (layout.shapeName !== 'rectangle') {
@@ -730,7 +819,7 @@ export const layoutNode = (
     return {
       text: plainText,
       laid,
-      position: lab.position ?? 'above',
+      position: normalizeLabelPosition(lab.position),
       placement: lab.placement ?? 'outside',
       distance: lab.distance ?? DEFAULT_LABEL_DISTANCE,
       textColor: labTextColor,

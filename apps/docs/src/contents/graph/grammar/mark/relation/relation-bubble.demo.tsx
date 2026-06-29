@@ -13,7 +13,7 @@ const Demo: FC = () => (
       color="segment"
       anchorId={{ prefix: 'bubble', field: 'id' }}
       label="label"
-      labelPosition="above"
+      labelPosition="top"
       fillOpacity={0.68}
       stroke="#0f172a"
       strokeWidth={0.8}

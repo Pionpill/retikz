@@ -8,7 +8,9 @@ import type {
   IntervalBounds,
   IRPaintSpec,
   Mark,
+  MarkGeometryLabelList,
   MarkNodeLabel,
+  MarkNodeLabelList,
   MarkValueType,
   PlotSpec,
   PointColorStyle,
@@ -21,6 +23,7 @@ import type {
   PointStrokeStyle,
   PointStrokeWidthStyle,
   PointZIndexStyle,
+  RelationPathGeometry,
   Scale as PlotScaleSpec,
   TextChannel,
   TransformOperation,
@@ -30,6 +33,9 @@ import type { ReactNode } from 'react';
 import {
   CoordinateOperationSchema,
   IntervalBoundKind,
+  MarkGeometryLabelListSchema,
+  MarkNodeLabelListSchema,
+  MarkNodeLabelSchema,
   PLOT_NAMESPACE,
   PlotComposite,
   PlotCoordinate,
@@ -38,6 +44,7 @@ import {
   PlotMark,
   PlotScale,
   PlotTransform,
+  RelationPathGeometrySchema,
 } from '@retikz/plot';
 import { Children, Fragment, isValidElement } from 'react';
 
@@ -554,7 +561,7 @@ const buildMarkLabel = (props: DatumLabelProps): MarkNodeLabel | undefined => {
     field: label,
     ...(labelDisplayFormat !== undefined ? { displayFormat: labelDisplayFormat } : {}),
   };
-  return {
+  return MarkNodeLabelSchema.parse({
     content,
     ...(labelPosition !== undefined ? { position: labelPosition } : {}),
     ...(labelDistance !== undefined ? { distance: labelDistance } : {}),
@@ -564,7 +571,7 @@ const buildMarkLabel = (props: DatumLabelProps): MarkNodeLabel | undefined => {
     ...(labelRotate !== undefined ? { rotate: labelRotate } : {}),
     ...(labelKeepUpright !== undefined ? { keepUpright: labelKeepUpright } : {}),
     ...(labelPin !== undefined && labelPin !== false ? { pin: labelPin } : {}),
-  };
+  });
 };
 
 /** 收集某 mark 的运行时 resolveLabel（不进 IR）：仅在配了 mark id 时按 id 注册，否则无从命中（与 ADR-04 注入点一致） */
@@ -581,6 +588,20 @@ const recordResolveLabel = (
 };
 
 /** 把 x/y 字段装成位置 encoding（x/y 是唯一位置通道；polar 下坐标系把 x→angle、y→radius 重解释） */
+const canonicalGeometryLabel = (
+  label: PathMarkProps['label'] | RelationMarkProps['label'],
+): MarkGeometryLabelList =>
+  MarkGeometryLabelListSchema.parse(label);
+
+const canonicalReferenceLabel = (props: ReferenceMarkProps): MarkNodeLabelList | MarkGeometryLabelList => {
+  const usesNodeHost =
+    props.kind === 'region' || props.xTo !== undefined || props.yTo !== undefined || props.zTo !== undefined;
+  return usesNodeHost ? MarkNodeLabelListSchema.parse(props.label) : MarkGeometryLabelListSchema.parse(props.label);
+};
+
+const canonicalRelationPath = (path: RelationMarkProps['path']): RelationPathGeometry =>
+  RelationPathGeometrySchema.parse(path);
+
 const positionEncoding = (x: string, y: string): Pick<Encoding, 'x' | 'y'> => ({
   x: { field: x },
   y: { field: y },
@@ -717,7 +738,7 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
     ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
     ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
     ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
-    ...(label !== undefined ? { label } : {}),
+    ...(label !== undefined ? { label: canonicalReferenceLabel(props) } : {}),
     ...nodeStylePropsOf(referenceNodeStyleProps, styleContext),
     ...pathStylePropsOf(props, styleContext),
     encoding: { ...positional, ...colorEnc, ...extensionChannelEncoding(channels) },
@@ -787,7 +808,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(lineJoinStyle !== undefined ? { lineJoin: lineJoinStyle } : {}),
         ...(roundedCornersStyle !== undefined ? { roundedCorners: roundedCornersStyle } : {}),
         ...pathStylePropsOf(props, styleContext),
-        ...(label !== undefined ? { label } : {}),
+        ...(label !== undefined ? { label: canonicalGeometryLabel(label) } : {}),
         encoding: { ...positionEncoding(x, y), ...colorEnc, ...extensionChannelEncoding(channels) },
       });
       recordColor(into, colorEnc);
@@ -1150,9 +1171,9 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(transform !== undefined ? { transform } : {}),
         source,
         target,
-        ...(label !== undefined ? { label } : {}),
+        ...(label !== undefined ? { label: canonicalGeometryLabel(label) } : {}),
         ...(style !== undefined ? { style } : {}),
-        ...(path !== undefined ? { path } : {}),
+        ...(path !== undefined ? { path: canonicalRelationPath(path) } : {}),
         ...(ribbon !== undefined ? { ribbon } : {}),
         ...(Object.keys(encoding).length > 0 ? { encoding } : {}),
       });

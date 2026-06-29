@@ -64,7 +64,7 @@ const GROW_UP: IRAnimationTrack = {
     { at: 1, value: 1 },
   ],
   duration: 500,
-  origin: 'south',
+  origin: 'bottom',
   easing: 'ease-out',
 };
 

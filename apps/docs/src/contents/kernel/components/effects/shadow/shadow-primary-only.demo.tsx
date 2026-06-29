@@ -14,7 +14,7 @@ const Demo: FC = () => (
       fill="white"
       padding={16}
       shadow="lg"
-      label={{ text: 'label', position: 'above' }}
+      label={{ text: 'label', position: 'top' }}
     >
       text
     </Node>

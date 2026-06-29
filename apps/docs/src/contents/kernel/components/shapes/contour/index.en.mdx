@@ -35,7 +35,7 @@ import { Node } from '@retikz/react';
 />
 ```
 
-`points` is a ring of **local-frame vertices** (at least 3, implicitly closed, with straight edges). You **do not need to pre-center** them — core normalizes by the points' AABB center and aligns the node's `position` to the geometric center of the contour. The two nodes below use the same shape, but the right one's points are all shifted by a fixed offset: after auto-centering they render identically.
+`points` is a ring of **local-frame vertices** (at least 3, implicitly closed, with straight edges). You **do not need to pre-center** them — core normalizes by the points' AABB center and aligns the node's `position` to the geometric center of the contour. The two nodes bottom use the same shape, but the right one's points are all shifted by a fixed offset: after auto-centering they render identically.
 
 <ComponentPreview name="node-contour" size="sm" />
 

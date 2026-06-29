@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { AtDirection } from '../position/at-position';
+import { AtDirection, normalizeAtDirection } from '../position/at-position';
 import { AbsoluteTargetSchema } from '../position/between-position';
 import { PolarPositionSchema } from '../position/polar-position';
 import { PositionSchema } from '../position/position';
@@ -36,7 +36,9 @@ const PolarTranslateSchema = z
 const AtTranslateSchema = z
   .object({
     kind: z.literal('at-translate').describe('Discriminator for direction-relative translate.'),
-    direction: z.enum(AtDirection).describe('Direction enum (8 values, shared with AtPosition.direction).'),
+    direction: z
+      .preprocess(value => (typeof value === 'string' ? normalizeAtDirection(value) ?? value : value), z.enum(AtDirection))
+      .describe('Direction enum (8 values, shared with AtPosition.direction). Web names are canonical; compass and above/below names are accepted aliases.'),
     of: z
       .string()
       .min(1)

@@ -328,7 +328,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
           {
             type: 'node',
             id: 'C',
-            position: { direction: 'below', of: 'A', distance: 30 },
+            position: { direction: 'bottom', of: 'A', distance: 30 },
             text: 'C',
           },
           // 4) offset of id

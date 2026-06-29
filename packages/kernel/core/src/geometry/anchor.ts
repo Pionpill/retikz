@@ -57,6 +57,12 @@ export const WebAnchor = {
 
 export type WebAnchorValue = ValueOf<typeof WebAnchor>;
 
+export type CompassAnchorInput = CompassSideValue | CompassCornerValue;
+
+export type WebSideInput = WebSideValue | CompassSideValue;
+
+export type WebAnchorInput = WebAnchorValue | CompassAnchorInput;
+
 export type AnchorInput = CompassAnchorValue | WebAnchorValue;
 
 const CompassAnchorSet = new Set<string>(Object.values(CompassAnchor));

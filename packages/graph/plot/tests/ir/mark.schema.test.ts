@@ -662,7 +662,7 @@ describe('MarkSchema (ADR-05)', () => {
   it('mark_interval_label_valid', () => {
     const m = {
       type: 'interval',
-      label: { content: { field: 'revenue', displayFormat: ',.0f' }, position: 'above', distance: 6, pin: true },
+      label: { content: { field: 'revenue', displayFormat: ',.0f' }, position: 'top', distance: 6, pin: true },
       encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
     };
     expect(MarkSchema.parse(m)).toEqual(m);
@@ -671,10 +671,13 @@ describe('MarkSchema (ADR-05)', () => {
   it('mark_path_host_geometry_label_valid', () => {
     const m = {
       type: 'path',
-      label: { content: { value: 'trend' }, position: 'midway', side: 'above', sloped: true },
+      label: { content: { value: 'trend' }, position: 'midway', side: 'top', sloped: true },
       encoding: { x: { field: 'x' }, y: { field: 'y' } },
     };
-    expect(MarkSchema.parse(m)).toEqual(m);
+    expect(MarkSchema.parse(m)).toEqual({
+      ...m,
+      label: { ...m.label, side: 'above' },
+    });
   });
 
   it('mark_label_core_style_fields_valid', () => {
@@ -779,17 +782,20 @@ describe('MarkSchema (ADR-05)', () => {
   it('mark_reference_line_label_valid', () => {
     const m = {
       type: 'reference',
-      label: { content: { value: 'target' }, position: 'near-end', side: 'above' },
+      label: { content: { value: 'target' }, position: 'near-end', side: 'top' },
       encoding: { y: { value: 80 } },
     };
-    expect(MarkSchema.parse(m)).toEqual(m);
+    expect(MarkSchema.parse(m)).toEqual({
+      ...m,
+      label: { ...m.label, side: 'above' },
+    });
   });
 
   it('mark_reference_band_rejects_geometry_only_side', () => {
     expect(() =>
       MarkSchema.parse({
         type: 'reference',
-        label: { content: { value: 'band' }, side: 'above' },
+        label: { content: { value: 'band' }, side: 'top' },
         yTo: 90,
         encoding: { y: { value: 80 } },
       }),

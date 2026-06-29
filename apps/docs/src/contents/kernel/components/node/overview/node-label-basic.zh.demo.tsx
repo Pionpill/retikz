@@ -8,7 +8,7 @@ import { Layout, Node } from '@retikz/react';
  */
 const Demo: FC = () => (
   <Layout width={500} height={260}>
-    {/* 单 label，缺省 position='above' */}
+    {/* 单 label，缺省 position='top' */}
     <Node id="A" position={[-160, 0]} label={{ text: '简单标签' }}>
       A
     </Node>
@@ -21,9 +21,9 @@ const Demo: FC = () => (
       position={[0, 0]}
       label={[
         { text: '中心', position: 'center', textColor: 'currentColor' },
-        { text: '上', position: 'above', textColor: '#0f172a' },
+        { text: '上', position: 'top', textColor: '#0f172a' },
         { text: '右', position: 'right', textColor: '#0f172a' },
-        { text: '左下', position: 'below-left', textColor: '#0f172a' },
+        { text: '左下', position: 'bottom-left', textColor: '#0f172a' },
       ]}
     />
     {/* 数字角度（视觉 30°，retikz polar 0°=+x、90°=+y 屏幕下） */}

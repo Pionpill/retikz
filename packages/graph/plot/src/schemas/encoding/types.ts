@@ -1,4 +1,5 @@
-﻿import type { z } from 'zod';
+import type { IRGeometryLabelInput, IRNodeLabelInput } from '@retikz/core';
+import type { z } from 'zod';
 
 import type {
   ChannelSchema,
@@ -40,11 +41,20 @@ export type TextChannel = z.infer<typeof TextChannelSchema>;
 export type MarkLabelContent = z.infer<typeof MarkLabelContentSchema>;
 /** Host datum label config aligned with core NodeLabelSchema. */
 export type MarkNodeLabel = z.infer<typeof MarkNodeLabelSchema>;
+export type MarkNodeLabelInput = Omit<IRNodeLabelInput, 'text'> & {
+  content: MarkLabelContent;
+};
 /** Host geometry label config aligned with core GeometryLabelSchema. */
 export type MarkGeometryLabel = z.infer<typeof MarkGeometryLabelSchema>;
+export type MarkGeometryLabelInput = Omit<IRGeometryLabelInput, 'text'> & {
+  content: MarkLabelContent;
+};
 /** Single or array node label input. */
 export type MarkNodeLabelList = z.infer<typeof MarkNodeLabelListSchema>;
+export type MarkNodeLabelListInput = MarkNodeLabelInput | Array<MarkNodeLabelInput>;
 /** Single or array geometry label input. */
 export type MarkGeometryLabelList = z.infer<typeof MarkGeometryLabelListSchema>;
+export type MarkGeometryLabelListInput = MarkGeometryLabelInput | Array<MarkGeometryLabelInput>;
 /** Host-inferred mark label config. */
 export type MarkLabel = z.infer<typeof MarkLabelSchema>;
+export type MarkLabelInput = MarkNodeLabelInput | MarkGeometryLabelInput;

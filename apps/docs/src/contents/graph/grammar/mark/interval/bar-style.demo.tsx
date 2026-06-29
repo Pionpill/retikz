@@ -16,7 +16,7 @@ const Demo: FC = () => (
         strokeWidth={1.5}
         fillOpacity={0.86}
         label="value"
-        labelPosition="above"
+        labelPosition="top"
         labelDistance={6}
         labelFont={{ size: 10, weight: 'bold' }}
       />
@@ -40,7 +40,7 @@ const Demo: FC = () => (
         fillOpacity={0.88}
         shadow={{ preset: 'md', color: '#0f172a', opacity: 0.28 }}
         label="value"
-        labelPosition="above"
+        labelPosition="top"
         labelDistance={12}
         labelFont={{ size: 10, weight: 'bold' }}
       />

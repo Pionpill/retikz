@@ -582,14 +582,14 @@ describe('convertIRToReactNode', () => {
 
     it('round-trips AtPosition 8 方向枚举全覆盖', () => {
       const directions = [
-        'above',
-        'below',
+        'top',
+        'bottom',
         'left',
         'right',
-        'above-left',
-        'above-right',
-        'below-left',
-        'below-right',
+        'top-left',
+        'top-right',
+        'bottom-left',
+        'bottom-right',
       ] as const;
       for (const direction of directions) {
         const ir: IR = {
@@ -921,7 +921,7 @@ describe('convertIRToReactNode', () => {
             id: 'A',
             position: [0, 0],
             text: 'A',
-            label: { text: 'tag', position: 'above', distance: 5 },
+            label: { text: 'tag', position: 'top', distance: 5 },
           },
         ],
       };
@@ -938,7 +938,7 @@ describe('convertIRToReactNode', () => {
             position: [0, 0],
             text: 'B',
             label: [
-              { text: 'top', position: 'above' },
+              { text: 'top', position: 'top' },
               { text: 'right', position: 'right', textColor: '#666' },
               { text: '30°', position: 30 },
             ],

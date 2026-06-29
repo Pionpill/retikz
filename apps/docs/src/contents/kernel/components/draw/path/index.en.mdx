@@ -170,7 +170,7 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 
 <ComponentPreview name="path-rounded-corners" size="sm" />
 
-`roundedCorners` changes the **path geometry** — it pulls the joint vertices back and inserts a tangent arc, so it affects the bounding box, arc length, path-level `marks` normalization, and connection-point resolution. This is distinct from `lineJoin`, which only styles the **stroke render** while the path centerline stays a sharp fold. (Note: per-step edge `label`s are currently positioned along the step's own segment and are not re-fitted to the shortened, rounded geometry.) The contrast below uses a very thick stroke: the top path uses `lineJoin="round"` (only the stroke is rounded, the centerline stays sharp), the bottom uses `roundedCorners` (the centerline itself is an arc):
+`roundedCorners` changes the **path geometry** — it pulls the joint vertices back and inserts a tangent arc, so it affects the bounding box, arc length, path-level `marks` normalization, and connection-point resolution. This is distinct from `lineJoin`, which only styles the **stroke render** while the path centerline stays a sharp fold. (Note: per-step edge `label`s are currently positioned along the step's own segment and are not re-fitted to the shortened, rounded geometry.) The contrast bottom uses a very thick stroke: the top path uses `lineJoin="round"` (only the stroke is rounded, the centerline stays sharp), the bottom uses `roundedCorners` (the centerline itself is an arc):
 
 <ComponentPreview name="path-rounded-vs-linejoin" size="sm" />
 

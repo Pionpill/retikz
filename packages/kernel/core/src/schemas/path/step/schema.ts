@@ -5,7 +5,7 @@ import { JsonObjectSchema } from '../../json';
 import { PositionSchema } from '../../position';
 import { MixedLineSchema } from '../../text';
 import { TargetSchema } from '../target';
-import { FoldStepVia, GeometryLabelPlacement } from './constants';
+import { FoldStepVia, GeometryLabelPlacement, GeometryLabelSide, normalizeGeometryLabelSide } from './constants';
 
 /**
  * 边标注：画线 step 上的 label
@@ -28,10 +28,13 @@ export const GeometryLabelSchema = z
         'Position along the step. Use a normalized number or a keyword: at-start, very-near-start, near-start, midway, near-end, very-near-end, or at-end. Parameter meaning follows the step kind.',
       ),
     side: z
-      .enum(['above', 'below', 'left', 'right', 'sloped'])
+      .preprocess(
+        value => (typeof value === 'string' ? normalizeGeometryLabelSide(value) ?? value : value),
+        z.enum(GeometryLabelSide),
+      )
       .optional()
       .describe(
-        'Side relative to the label anchor. `above` / `below` / `left` / `right` place the label around the anchor; legacy `sloped` rotates label along the tangent with no side offset. Default `above`.',
+        'Side relative to the label anchor. Edge label sides above/below/left/right are canonical; web and compass side names are accepted aliases. `sloped` rotates label along the tangent with no side offset. Default `above`.',
       ),
     sloped: z
       .boolean()

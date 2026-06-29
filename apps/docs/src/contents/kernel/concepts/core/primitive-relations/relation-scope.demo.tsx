@@ -30,13 +30,13 @@ const Demo: FC = () => (
       dashPattern={[4, 3]}
     />
     <Draw
-      way={['ext', { label: { text: 'cluster', side: 'below', textColor: 'gray', font: { size: 12 } } }, 'cluster']}
+      way={['ext', { label: { text: 'cluster', side: 'bottom', textColor: 'gray', font: { size: 12 } } }, 'cluster']}
       arrow="->"
     />
     <Draw
       way={[
         'ext',
-        { label: { text: 'cluster.top', side: 'above', textColor: 'gray', font: { size: 12 } } },
+        { label: { text: 'cluster.top', side: 'top', textColor: 'gray', font: { size: 12 } } },
         'cluster.top',
       ]}
       arrow="->"

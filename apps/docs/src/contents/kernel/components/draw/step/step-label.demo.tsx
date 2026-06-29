@@ -14,17 +14,17 @@ const Demo: FC = () => (
       no
     </Node>
 
-    {/* prop 形态：直接给 label 对象，position 默认 midway，side='above' */}
+    {/* prop 形态：直接给 label 对象，position 默认 midway，side='top' */}
     <Path arrow="->">
       <Step kind="move" to="a" />
       <Step to="b" label={{ text: 'yes' }} />
     </Path>
 
-    {/* sugar 形态：<EdgeLabel> 当 child；side='below' 让标签落在线下方 */}
+    {/* sugar 形态：<EdgeLabel> 当 child；side='bottom' 让标签落在线下方 */}
     <Path arrow="->">
       <Step kind="move" to="a" />
       <Step to="c">
-        <EdgeLabel side="below">no</EdgeLabel>
+        <EdgeLabel side="bottom">no</EdgeLabel>
       </Step>
     </Path>
 
@@ -37,7 +37,7 @@ const Demo: FC = () => (
     <Path arrow="->">
       <Step kind="move" to="d" />
       <Step to="e">
-        <EdgeLabel side="below">below</EdgeLabel>
+        <EdgeLabel side="bottom">bottom</EdgeLabel>
       </Step>
     </Path>
 

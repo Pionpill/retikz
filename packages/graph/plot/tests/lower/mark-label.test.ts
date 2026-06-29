@@ -47,7 +47,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
   return out;
 };
 
-const baseSpec = (marks: PlotSpec['marks']): PlotSpec =>
+const baseSpec = (marks: unknown): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -67,7 +67,7 @@ describe('ADR-07 mark host label lowering', () => {
       baseSpec([
         {
           type: 'path',
-          label: { content: { value: 'trend' }, position: 'midway', side: 'above', sloped: true },
+          label: { content: { value: 'trend' }, position: 'midway', side: 'top', sloped: true },
           encoding: { x: { field: 'x' }, y: { field: 'y' } },
         },
       ]),
@@ -84,12 +84,33 @@ describe('ADR-07 mark host label lowering', () => {
     expect(path.children.some(step => 'label' in step && step.label !== undefined)).toBe(false);
   });
 
+  it('path-mark-host-geometry-label normalizes compass side aliases', () => {
+    const root = expandOf(
+      baseSpec([
+        {
+          type: 'path',
+          label: { content: { value: 'trend' }, position: 'midway', side: 'north' },
+          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        },
+      ]),
+      {
+        d: [
+          { x: 0, y: 0 },
+          { x: 1, y: 1 },
+        ],
+      },
+    );
+
+    const [path] = collectPaths(markLayer(root, 0));
+    expect(path.label).toEqual({ text: 'trend', position: 'midway', side: 'above' });
+  });
+
   it('reference-line-geometry-label：ReferenceMark line 使用 geometry label', () => {
     const root = expandOf(
       baseSpec([
         {
           type: 'reference',
-          label: { content: { field: 'name' }, position: 'near-end', side: 'below' },
+          label: { content: { field: 'name' }, position: 'near-end', side: 'bottom' },
           encoding: { y: { value: 5 } },
         },
       ]),
@@ -124,7 +145,7 @@ describe('ADR-07 mark host label lowering', () => {
           type: 'relation',
           source: { project: { x: 'sourceX', y: 'sourceY' } },
           target: { project: { x: 'targetX', y: 'targetY' } },
-          label: { content: { field: 'label' }, position: 0.5, side: 'above' },
+          label: { content: { field: 'label' }, position: 0.5, side: 'top' },
         },
       ]),
       {

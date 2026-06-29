@@ -1,4 +1,4 @@
-﻿import type { FC } from 'react';
+import type { FC } from 'react';
 
 import { Draw, Layout, Node, Scope } from '@retikz/react';
 
@@ -20,23 +20,23 @@ const CircuitDemo: FC = () => (
       nodeDefault={{ font: FONT, stroke: 'none', padding: 0 }}
       labelDefault={{ font: { ...FONT, size: 28, style: 'italic' } }}
     >
-      <Switch id="switch" position={[350, 200]} label={{ text: 'S', position: 'above' }} />
+      <Switch id="switch" position={[350, 200]} label={{ text: 'S', position: 'top' }} />
       <Meter id="ammeter" position={[625, 200]} text="A" />
       <Battery id="battery" position={[160, 320]} rotate={90} />
       <Rheostat
         id="rheostat"
         position={[460, 440]}
-        label={{ text: '滑动变阻器', position: 'above', distance: 30, font: { ...FONT, size: 28, style: 'normal' } }}
+        label={{ text: '滑动变阻器', position: 'top', distance: 30, font: { ...FONT, size: 28, style: 'normal' } }}
       />
 
       {/* 测量单元：电阻 + 正下方电压表，两端折线相连，整组一个 Scope；R / U 标注用 Node 自带 label */}
       <Scope>
-        <Resistor id="cell1-resistor" position={[900, 200]} label={{ text: 'R1', position: 'above' }} />
+        <Resistor id="cell1-resistor" position={[900, 200]} label={{ text: 'R1', position: 'top' }} />
         <Meter
           id="cell1-voltmeter"
           position={[900, 320]}
           text="V"
-          label={{ text: 'U1', position: 'above', distance: 20 }}
+          label={{ text: 'U1', position: 'top', distance: 20 }}
         />
         <Draw way={[at('cell1-resistor', 'left'), [809, 320], at('cell1-voltmeter', 'left')]} />
         <Draw way={[at('cell1-resistor', 'right'), [991, 320], at('cell1-voltmeter', 'right')]} />
@@ -44,12 +44,12 @@ const CircuitDemo: FC = () => (
 
       {/* 第二组靠 Scope 平移复制（左移 60、下移 240），只换 id 前缀与标注 */}
       <Scope transforms={[{ kind: 'translate', x: -60, y: 240 }]}>
-        <Resistor id="cell2-resistor" position={[900, 200]} label={{ text: 'R2', position: 'above' }} />
+        <Resistor id="cell2-resistor" position={[900, 200]} label={{ text: 'R2', position: 'top' }} />
         <Meter
           id="cell2-voltmeter"
           position={[900, 320]}
           text="V"
-          label={{ text: 'U2', position: 'above', distance: 20 }}
+          label={{ text: 'U2', position: 'top', distance: 20 }}
         />
         <Draw way={[at('cell2-resistor', 'left'), [809, 320], at('cell2-voltmeter', 'left')]} />
         <Draw way={[at('cell2-resistor', 'right'), [991, 320], at('cell2-voltmeter', 'right')]} />

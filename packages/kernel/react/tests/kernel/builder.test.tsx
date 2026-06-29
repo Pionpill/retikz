@@ -637,7 +637,7 @@ after`;
       const ir = buildIR(
         <Path>
           <Step kind="move" to="A" />
-          <Step to="B" label={{ text: 'accept', side: 'above' }} />
+          <Step to="B" label={{ text: 'accept', side: 'top' }} />
         </Path>,
       );
       expect(ir.children[0]).toMatchObject({
@@ -654,18 +654,50 @@ after`;
       });
     });
 
+    it('canonicalizes compass aliases for labels and relative positions', () => {
+      const ir = buildIR(
+        <Scope transforms={[{ kind: 'at-translate', direction: 'south', of: 'A', distance: 4 }]}>
+          <Coordinate id="C" position={{ direction: 'north-west', of: 'A' }} />
+          <Node
+            id="B"
+            position={{ direction: 'north-east', of: 'A' }}
+            label={{ text: 'tag', position: 'south-east' }}
+          />
+          <Path>
+            <Step kind="move" to="A" />
+            <Step to="B">
+              <EdgeLabel side="north">edge</EdgeLabel>
+            </Step>
+          </Path>
+        </Scope>,
+      );
+
+      expect(ir.children[0]).toMatchObject({
+        type: 'scope',
+        transforms: [{ kind: 'at-translate', direction: 'bottom', of: 'A', distance: 4 }],
+        children: [
+          { type: 'coordinate', id: 'C', position: { direction: 'top-left', of: 'A' } },
+          { type: 'node', id: 'B', position: { direction: 'top-right', of: 'A' }, label: { position: 'bottom-right' } },
+          {
+            type: 'path',
+            children: [{ kind: 'move' }, { kind: 'line', label: { text: 'edge', side: 'above' } }],
+          },
+        ],
+      });
+    });
+
     it('<EdgeLabel> child 与 prop 形态产出相同 IR', () => {
       const fromProp = buildIR(
         <Path>
           <Step kind="move" to="A" />
-          <Step to="B" label={{ text: 'x', position: 'near-end', side: 'below' }} />
+          <Step to="B" label={{ text: 'x', position: 'near-end', side: 'bottom' }} />
         </Path>,
       );
       const fromChild = buildIR(
         <Path>
           <Step kind="move" to="A" />
           <Step to="B">
-            <EdgeLabel position="near-end" side="below">
+            <EdgeLabel position="near-end" side="bottom">
               x
             </EdgeLabel>
           </Step>
@@ -934,7 +966,7 @@ after`;
             { label: 'fold' },
             '-|',
             'B',
-            { label: { text: 'q', side: 'below' } },
+            { label: { text: 'q', side: 'bottom' } },
             { curve: [5, 8] },
             'C',
             { label: 'a' },
@@ -946,7 +978,7 @@ after`;
         <Path>
           <Step kind="move" to="A" />
           <Step kind="fold" via="-|" to="B" label={{ text: 'fold' }} />
-          <Step kind="curve" to="C" control={[5, 8]} label={{ text: 'q', side: 'below' }} />
+          <Step kind="curve" to="C" control={[5, 8]} label={{ text: 'q', side: 'bottom' }} />
           <Step kind="arc" startAngle={0} endAngle={90} radius={4} label={{ text: 'a' }} />
         </Path>,
       );

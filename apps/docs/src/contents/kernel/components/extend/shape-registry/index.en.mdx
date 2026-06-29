@@ -15,7 +15,7 @@ A third-party package (`@retikz/shapes-flow` / `-uml`, etc.) or host code can re
 
 The actual shape definition is called `ShapeDefinition`. It contains functions, so it **never enters the IR**. Instead, those functions are passed to retikz at compile time through `CompileOptions.shapes`. Schema validation only checks that `shape` is a non-empty string; if the name is not registered, the error is thrown during **compile**, with the available shape names listed.
 
-`node.shape` also accepts a nested form `{ type, params }`: `type` is the shape name and `params` is a plain JSON parameter object (e.g. a sector's `{ innerRadius, outerRadius, startAngle, endAngle }`), which is equally safe in the IR. A bare string `'rectangle'` is equivalent to `{ type: 'rectangle', params: {} }` — both forms are identical for parameterless shapes. At compile time the params are first validated by the shape's own `paramsSchema`, then by a JSON guard, and finally passed to each computation function below.
+`node.shape` also accepts a nested form `{ type, params }`: `type` is the shape name and `params` is a plain JSON parameter object (e.g. a sector's `{ innerRadius, outerRadius, startAngle, endAngle }`), which is equally safe in the IR. A bare string `'rectangle'` is equivalent to `{ type: 'rectangle', params: {} }` — both forms are identical for parameterless shapes. At compile time the params are first validated by the shape's own `paramsSchema`, then by a JSON guard, and finally passed to each computation function bottom.
 
 ## ShapeDefinition
 
@@ -27,9 +27,9 @@ Read the core types in the table like this:
 - `Position` is a point coordinate, shaped as `[x, y]`.
 - `ScenePrimitive` is a low-level drawing primitive passed to the renderer, such as `path`, `rect`, or `ellipse`.
 
-Every computation function receives a final, **already-validated** `params` argument (parameterless shapes receive `{}` and may ignore it). `paramsSchema` declares the shape of those params: use `z.strictObject({})` for parameterless shapes (rejects extra fields), or a concrete schema for parametric ones. Each method is described below (the ones marked “optional” are optional hooks; the other four are required).
+Every computation function receives a final, **already-validated** `params` argument (parameterless shapes receive `{}` and may ignore it). `paramsSchema` declares the shape of those params: use `z.strictObject({})` for parameterless shapes (rejects extra fields), or a concrete schema for parametric ones. Each method is described bottom (the ones marked “optional” are optional hooks; the other four are required).
 
-A `ShapeDefinition` is just a plain object: one `paramsSchema` plus a set of computation functions, with no inheritance or registration ceremony. Wrap it at the definition site with `defineShape<TParams>()` to get type safety — the parameter type `TParams` inferred from `paramsSchema` flows into the final `params` of every function; the registry actually stores the form with `TParams` erased to `IRJsonObject` (so `TParams` in the signatures below means “the parameter type inferred from `paramsSchema`”).
+A `ShapeDefinition` is just a plain object: one `paramsSchema` plus a set of computation functions, with no inheritance or registration ceremony. Wrap it at the definition site with `defineShape<TParams>()` to get type safety — the parameter type `TParams` inferred from `paramsSchema` flows into the final `params` of every function; the registry actually stores the form with `TParams` erased to `IRJsonObject` (so `TParams` in the signatures bottom means “the parameter type inferred from `paramsSchema`”).
 
 | Method               | Purpose                                                                                    | Required · Optional |
 | -------------------- | ------------------------------------------------------------------------------------------ | ------------------- |
@@ -42,7 +42,7 @@ A `ShapeDefinition` is just a plain object: one `paramsSchema` plus a set of com
 | `emit`               | the primitives to draw in axis-aligned space                                               | Required            |
 | `scaleParams`        | how a node scale applies to params                                                         | Optional            |
 
-Each method is given below with its full signature and an example.
+Each method is given bottom with its full signature and an example.
 
 ### paramsSchema
 
@@ -274,13 +274,13 @@ A factory like `createPolygonShape(name, n)` is just a plain function returning 
 
 ### Parametric shape: params go through nested params
 
-The factory above bakes the side count into a closure, so each side count needs its own registered name. By writing the parameter into `params` instead of a factory closure, a single registered shape `ngon` can produce different variants through `{ type, params }` — `{ sides: 3 }` is a triangle, `{ sides: 5 }` a pentagon, `{ sides: 6 }` a hexagon — and the parameter is persisted in the IR (a bare string can only express parameterless shapes). Every computation function receives the already-validated `params` as its last argument, and the geometry is driven uniformly by `params.sides`. The rightmost node is a hexagon with `scale={2}`: `scaleParams` returns params unchanged, so a count like `sides` is not corrupted by the node `scale` — only the node size grows while the side count stays 6:
+The factory top bakes the side count into a closure, so each side count needs its own registered name. By writing the parameter into `params` instead of a factory closure, a single registered shape `ngon` can produce different variants through `{ type, params }` — `{ sides: 3 }` is a triangle, `{ sides: 5 }` a pentagon, `{ sides: 6 }` a hexagon — and the parameter is persisted in the IR (a bare string can only express parameterless shapes). Every computation function receives the already-validated `params` as its last argument, and the geometry is driven uniformly by `params.sides`. The rightmost node is a hexagon with `scale={2}`: `scaleParams` returns params unchanged, so a count like `sides` is not corrupted by the node `scale` — only the node size grows while the side count stays 6:
 
 <ComponentPreview name="ngon" size="sm" />
 
 ### Multiple primitives: a subroutine box
 
-`emit` can return several drawing primitives at once. The subroutine box below consists of an outer frame and two vertical bars, so it returns 3 primitives. Its outer outline is still a rectangle, so `circumscribe` / `boundaryPoint` / `anchor` can reuse the built-in rectangle:
+`emit` can return several drawing primitives at once. The subroutine box bottom consists of an outer frame and two vertical bars, so it returns 3 primitives. Its outer outline is still a rectangle, so `circumscribe` / `boundaryPoint` / `anchor` can reuse the built-in rectangle:
 
 <ComponentPreview name="subroutine" size="xs" />
 

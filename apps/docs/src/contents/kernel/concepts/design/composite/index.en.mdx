@@ -44,7 +44,7 @@ A few more equally important advantages:
 
 ## Lowering
 
-This is exactly the `lower` step (`composite IR → core IR`) from the pipeline figure above: `compileToScene` walks the IR first, and for a tier2 node (`namespace` present) looks up the `${namespace}.${type}` registry → `schema.parse(node)` (precise validation + strong typing + default filling) → `expand` → replace; expansion output may contain composites, recursing to all Tier 1 (fixpoint).
+This is exactly the `lower` step (`composite IR → core IR`) from the pipeline figure top: `compileToScene` walks the IR first, and for a tier2 node (`namespace` present) looks up the `${namespace}.${type}` registry → `schema.parse(node)` (precise validation + strong typing + default filling) → `expand` → replace; expansion output may contain composites, recursing to all Tier 1 (fixpoint).
 
 - **Unregistered** `namespace/type` → warns (`COMPOSITE_NOT_REGISTERED`) and **skips that node**, rendering the rest — the whole figure is not aborted (graceful degradation beats crashing the figure when a high-level node's package is missing).
 - **Duplicate registration** of the same `namespace.type` → **throws** at registration time (`composites` is injected as an array with no natural dedup, so a key clash is a caller error).
