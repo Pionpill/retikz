@@ -1,6 +1,6 @@
 ﻿import { z } from 'zod';
 
-import { AxisCardinalSide, AxisPlacementKind, LegendOrient, LegendPosition, PlotGuide } from './constants';
+import { AxisCardinalSide, AxisGridApplyTo, AxisPlacementKind, LegendOrient, LegendPosition, PlotGuide } from './constants';
 
 const AxisAutoPlacementSchema = z
   .object({
@@ -38,6 +38,82 @@ const AxisEdgePlacementSchema = z
 export const AxisPlacementSchema = z
   .discriminatedUnion('kind', [AxisAutoPlacementSchema, AxisSidePlacementSchema, AxisEdgePlacementSchema])
   .describe('Axis placement mode: automatic coordinate default, cardinal plot-area side, or coordinate-native edge');
+
+const FacetTargetValueSchema = z
+  .union([z.string(), z.number(), z.boolean(), z.null()])
+  .describe('JSON-safe facet value matched by an axis grid target selector');
+
+const FacetGridTargetSelectorSchema = z
+  .object({
+    id: z.string().min(1).optional().describe('Facet grid id to match; omit to match any facet grid'),
+    row: z
+      .array(FacetTargetValueSchema)
+      .min(1)
+      .optional()
+      .describe('Facet row values to match; omit to match any row value'),
+    column: z
+      .array(FacetTargetValueSchema)
+      .min(1)
+      .optional()
+      .describe('Facet column values to match; omit to match any column value'),
+  })
+  .strict()
+  .describe('Facet panel selector used by an axis grid target');
+
+const TrackGridTargetSelectorSchema = z
+  .object({
+    scaffold: z.string().min(1).optional().describe('Shared scaffold id to match; omit to match any scaffold'),
+    id: z.array(z.string().min(1)).min(1).optional().describe('Track ids to match; omit to match any track'),
+  })
+  .strict()
+  .describe('Shared scaffold track selector used by an axis grid target');
+
+export const GuideTargetSelectorSchema = z
+  .object({
+    scopes: z.array(z.string().min(1)).min(1).optional().describe('Coordinate scope ids to match'),
+    facet: FacetGridTargetSelectorSchema.optional().describe('Facet panel target selector'),
+    track: TrackGridTargetSelectorSchema.optional().describe('Shared scaffold track target selector'),
+  })
+  .strict()
+  .superRefine((selector, ctx) => {
+    if (selector.scopes === undefined && selector.facet === undefined && selector.track === undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [],
+        message: 'grid target selector requires scopes, facet, or track',
+      });
+    }
+  })
+  .describe('Axis grid target selector for coordinate scopes, facet panels, and shared scaffold tracks');
+
+export const AxisGridSchema = z
+  .object({
+    applyTo: z
+      .enum(AxisGridApplyTo)
+      .optional()
+      .describe('Where this axis grid is projected; omit to use composition.guidePolicy.gridPlacement or self'),
+    select: GuideTargetSelectorSchema.optional().describe(
+      'Explicit target selector; required when applyTo is selected',
+    ),
+  })
+  .strict()
+  .superRefine((grid, ctx) => {
+    if (grid.applyTo === AxisGridApplyTo.Selected && grid.select === undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['select'],
+        message: 'selected axis grid requires a select target selector',
+      });
+    }
+    if (grid.applyTo !== undefined && grid.applyTo !== AxisGridApplyTo.Selected && grid.select !== undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['select'],
+        message: 'axis grid select is only valid when applyTo is selected',
+      });
+    }
+  })
+  .describe('Axis grid projection configuration');
 
 export const AxisGuideSchema = z
   .object({
@@ -81,11 +157,15 @@ export const AxisGuideSchema = z
       .describe(
         'Whether to render tick labels (the numeric text beside each tick); omit = true. Named tickLabels (not label) to avoid confusion with a future axis title',
       ),
+    title: z
+      .string()
+      .optional()
+      .describe('Axis title text rendered near this axis; omit for no axis title'),
     grid: z
-      .boolean()
+      .union([z.boolean(), AxisGridSchema])
       .optional()
       .describe(
-        'Whether to draw grid lines spanning the plot area at this axis tick positions; omit = false. Grid is an axis sub-property (Vega-style): its lines always align to this axis ticks, so there is no separate grid tick source',
+        'Whether to draw grid lines at this axis tick positions and where to project them; omit = false. Grid is an axis sub-property, so there is no separate grid tick source',
       ),
   })
   .describe(

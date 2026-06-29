@@ -1,0 +1,100 @@
+---
+title: Coordinate Composition
+description: composition registers multiple coordinate scopes inside one Plot, so overlays, facets, and shared tracks use one coordinate organization model.
+---
+
+When a chart has one projection, `coordinate` is enough. When the same Plot needs several coordinate regions, panels, or aligned tracks, use `composition` instead of a single `coordinate`: register coordinate scopes first, then point marks and guides at a target with `coordinateScope`.
+
+`composition` organizes coordinate regions; it is not a new mark type. Marks are still `PathMark`, `PointMark`, and `IntervalMark`; scales still come from fields and explicit `<Scale>` children; guides are still declared with `<Axis>`.
+
+## Multiple Scopes
+
+A scope is the smallest unit in a composition. `defaultScope` is used when a mark or axis omits `coordinateScope`; other scopes can overlay it, which is useful for dual-axis charts where units differ but x positions are shared.
+
+<ComponentPreview name="coordinate-composition-scopes" sourceFiles={['coordinate-composition.data.ts']} size="md" />
+
+In this example, `temperature` is the default scope, so the line mark lands there without a `coordinateScope`. `rainfall` uses `placement: { kind: 'overlay', target: 'temperature' }` to share the same plot area. Each y-axis declares its own `coordinateScope`; `placement` chooses the side and `title` renders the axis title.
+
+| Field | Role |
+| --- | --- |
+| `defaultScope` | Target for marks / axes that omit `coordinateScope` |
+| `scopes[].id` | Stable scope id referenced by marks and guides |
+| `scopes[].coordinate` | Coordinate configuration owned by that scope |
+| `placement.kind: 'overlay'` | Place this scope over another scope's plot area |
+
+## Facets
+
+A facet derives panel scopes from data fields. You declare one base scope and split rules; lowering generates the panels, routes each panel's rows, and places marks in the matching panel.
+
+<ComponentPreview name="coordinate-composition-facet" sourceFiles={['coordinate-composition.data.ts']} size="xl" />
+
+The chart above splits columns by `region` and rows by `channel`. `scales.roles.y: 'shared'` makes every panel train against the same y domain; `guidePolicy.axes: 'outerShared'` keeps the shared axis on the outside; each grid is still declared by its `<Axis grid>`, and `gridPlacement: 'self'` projects that grid into each panel's own plot area.
+
+| Field | Role |
+| --- | --- |
+| `facets[].id` | Facet identity, also carried into provenance and locator context |
+| `row` / `column` | Field used to split panels, plus optional display order |
+| `empty` | Whether empty panels are dropped or kept |
+| `scales.roles` | Per-coordinate-role `shared` / `independent` scale domain policy |
+
+## Shared Scaffold And Tracks
+
+A shared scaffold uses one coordinate frame to manage several tracks. The common case is aligned small tracks: shared x, separate y bands, useful for timelines, monitoring panels, or event + load views.
+
+<ComponentPreview name="coordinate-composition-tracks" sourceFiles={['coordinate-composition.data.ts']} size="md" />
+
+Here both tracks share the `week` x position. `incidents` and `load` each occupy a y band inside the scaffold, so they align horizontally while keeping separate vertical space. The x-axis enables `grid`, and `gridPlacement: 'sharedRole'` projects the same x ticks into every track on the shared scaffold. `trackGap` opens space between bands, and `trackLabels: 'inline'` renders inline track labels.
+
+| Field | Role |
+| --- | --- |
+| `scaffolds[].coordinate` | Base coordinate owned by the scaffold |
+| `sharedRoles` | Roles managed by the scaffold, such as shared `x` |
+| `tracks[].band` | Fractional interval occupied by a track on the non-shared role |
+| `placement.kind: 'track'` | Mount a scope onto a scaffold / track |
+
+## layout And guidePolicy
+
+`layout` only controls spacing inside the composition. It does not change data, scale domains, or mark semantics.
+
+| Field | Controls |
+| --- | --- |
+| `panelGap` | Gap between facet panels |
+| `trackGap` | Gap between shared scaffold tracks |
+| `axisGap` | Outward offset between axes on the same side |
+| `labelGap` | Distance from axis titles, facet labels, and track labels to the plot area |
+| `padding` | Extra padding around the composition frame |
+
+`guidePolicy` decides the default placement of guides in multi-scope scenes. When omitted, the conservative behavior keeps axes and grids in their own scope.
+
+| Field | Values | Use it when |
+| --- | --- | --- |
+| `axes` | `perScope` / `outerShared` | Facets or tracks share scales and only need one outer axis |
+| `gridPlacement` | `self` / `sharedRole` | Default projection target for `Axis grid`; whether a grid exists is still decided by each axis |
+| `facetLabels` | `none` / `rowColumn` | Render row / column panel labels |
+| `trackLabels` | `none` / `inline` | Render labels inside tracks |
+
+## Choosing A Shape
+
+| Situation | Recommended structure |
+| --- | --- |
+| One line plus one bar layer, shared x but different y units | Overlay scopes |
+| Split by region / category into rows or columns | Facet |
+| Several metrics aligned along one time axis | Shared scaffold + tracks |
+| Several independent charts placed on one large canvas | Multiple `<Plot>` panels inside a parent `<Layout>`; no composition needed |
+
+## Related
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/graph/components/plot">
+    <span className="font-semibold">Plot</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">See the `composition` prop and JSX entry</span>
+  </LinkedCard>
+  <LinkedCard href="/graph/grammar/guide/axis">
+    <span className="font-semibold">Axis</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">See `placement`, `title`, and grid guide configuration</span>
+  </LinkedCard>
+  <LinkedCard href="/graph/grammar/provenance">
+    <span className="font-semibold">Provenance & Anchors</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">See `coordinateScope`, facet, and track provenance under composition</span>
+  </LinkedCard>
+</div>

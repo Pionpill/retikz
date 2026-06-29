@@ -212,6 +212,7 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
       xTicks: xTicks ?? EMPTY_TICKS,
       yTicks: yTicks ?? EMPTY_TICKS,
       fontSize: ctx.fontSize,
+      labelGap: ctx.labelGap,
     };
     const lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));
     return {
@@ -265,6 +266,7 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
       xTicks: horizontal ? (ticks ?? EMPTY_TICKS) : EMPTY_TICKS,
       yTicks: horizontal ? EMPTY_TICKS : (ticks ?? EMPTY_TICKS),
       fontSize: ctx.fontSize,
+      labelGap: ctx.labelGap,
       axisOrientation: horizontal ? 'horizontal' : 'vertical',
     };
     const lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));

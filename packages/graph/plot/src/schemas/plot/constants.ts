@@ -50,3 +50,47 @@ export const ScaffoldFrameMode = {
 
 /** scaffold frame 共享模式取值。 */
 export type ScaffoldFrameModeValue = ValueOf<typeof ScaffoldFrameMode>;
+
+/** 多 scope composition 下的 axis 输出策略。 */
+export const CompositionAxisPolicy = {
+  /** 每个 coordinate scope 独立输出自己的 axis。 */
+  PerScope: 'perScope',
+  /** 对共享 scale 的 facet / track 只输出外侧共享 axis。 */
+  OuterShared: 'outerShared',
+} as const;
+
+/** 多 scope composition 下的 axis 输出策略取值。 */
+export type CompositionAxisPolicyValue = ValueOf<typeof CompositionAxisPolicy>;
+
+/** 多 scope composition 下 axis grid 的默认投放策略。 */
+export const CompositionGridPlacement = {
+  /** 投放到 axis 自己绑定的 coordinate scope。 */
+  Self: 'self',
+  /** 投放到与 axis 共享 coordinate role / scale identity 的 scope。 */
+  SharedRole: 'sharedRole',
+} as const;
+
+/** 多 scope composition 下 axis grid 默认投放策略取值。 */
+export type CompositionGridPlacementValue = ValueOf<typeof CompositionGridPlacement>;
+
+/** facet panel label 输出策略。 */
+export const CompositionFacetLabelPolicy = {
+  /** 不输出 facet label。 */
+  None: 'none',
+  /** 输出 row / column facet value label。 */
+  RowColumn: 'rowColumn',
+} as const;
+
+/** facet panel label 输出策略取值。 */
+export type CompositionFacetLabelPolicyValue = ValueOf<typeof CompositionFacetLabelPolicy>;
+
+/** shared scaffold track label 输出策略。 */
+export const CompositionTrackLabelPolicy = {
+  /** 不输出 track label。 */
+  None: 'none',
+  /** 在 track 内输出 inline label。 */
+  Inline: 'inline',
+} as const;
+
+/** shared scaffold track label 输出策略取值。 */
+export type CompositionTrackLabelPolicyValue = ValueOf<typeof CompositionTrackLabelPolicy>;

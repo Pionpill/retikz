@@ -187,6 +187,7 @@ const ternary2DCoordinateDefinition: CoordinateDefinition<Ternary2DCoordinate> =
       xTicks: EMPTY_TICKS,
       yTicks: EMPTY_TICKS,
       fontSize: ctx.fontSize,
+      labelGap: ctx.labelGap,
       ternaryVertices: layout.vertices,
       ternaryTicks: TERNARY_TICKS,
     };

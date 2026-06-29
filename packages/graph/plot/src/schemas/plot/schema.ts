@@ -7,7 +7,64 @@ import { GuideSchema } from '../guide';
 import { MarkOperationSchema } from '../mark';
 import { ScaleOperationSchema } from '../scale';
 import { TransformSchema } from '../transform';
-import { FacetEmptyPolicy, FacetScaleSharing, PLOT_NAMESPACE, PlotComposite, ScaffoldFrameMode } from './constants';
+import {
+  CompositionAxisPolicy,
+  CompositionFacetLabelPolicy,
+  CompositionGridPlacement,
+  CompositionTrackLabelPolicy,
+  FacetEmptyPolicy,
+  FacetScaleSharing,
+  PLOT_NAMESPACE,
+  PlotComposite,
+  ScaffoldFrameMode,
+} from './constants';
+
+const BoxPaddingSchema = z
+  .object({
+    top: z.number().nonnegative().optional().describe('Top composition padding in user units'),
+    right: z.number().nonnegative().optional().describe('Right composition padding in user units'),
+    bottom: z.number().nonnegative().optional().describe('Bottom composition padding in user units'),
+    left: z.number().nonnegative().optional().describe('Left composition padding in user units'),
+  })
+  .strict()
+  .describe('Optional per-side padding around a coordinate composition');
+
+export const CompositionLayoutSchema = z
+  .object({
+    panelGap: z.number().nonnegative().optional().describe('Gap between generated facet panels in user units'),
+    trackGap: z.number().nonnegative().optional().describe('Gap between scaffold tracks in user units'),
+    axisGap: z.number().nonnegative().optional().describe('Outward gap between axes that share the same side or edge'),
+    labelGap: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe('Gap between panel, track, or axis title labels and their related plot area'),
+    padding: BoxPaddingSchema.optional().describe('Optional outer padding applied to composition frame calculation'),
+  })
+  .strict()
+  .describe('Plot composition spacing configuration');
+
+export const CompositionGuidePolicySchema = z
+  .object({
+    axes: z
+      .enum(CompositionAxisPolicy)
+      .optional()
+      .describe('Axis rendering policy for multi-scope compositions; omit to render axes per scope'),
+    gridPlacement: z
+      .enum(CompositionGridPlacement)
+      .optional()
+      .describe('Default target placement for axis grids in multi-scope compositions; omit to project grids to their own scope'),
+    facetLabels: z
+      .enum(CompositionFacetLabelPolicy)
+      .optional()
+      .describe('Facet label rendering policy for generated panels'),
+    trackLabels: z
+      .enum(CompositionTrackLabelPolicy)
+      .optional()
+      .describe('Track label rendering policy for shared scaffold tracks'),
+  })
+  .strict()
+  .describe('Plot composition guide rendering policy');
 
 const CoordinateScopeRootPlacementSchema = z
   .object({
@@ -180,6 +237,8 @@ export const CoordinateCompositionSchema = z
       .array(SharedScaffoldSchema)
       .optional()
       .describe('Shared coordinate scaffolds that provide track bands for coordinate scopes'),
+    layout: CompositionLayoutSchema.optional().describe('Composition-level spacing configuration'),
+    guidePolicy: CompositionGuidePolicySchema.optional().describe('Composition-level guide rendering policy'),
   })
   .strict()
   .superRefine((composition, ctx) => {

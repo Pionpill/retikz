@@ -23,8 +23,10 @@ alpha.14 不是跨域组合容器，也不是 chart preset 层。它只处理 `@
 | ADR-04 | **shared scaffold tracks** | 定义坐标系无关的共享骨架 + 局部 track：polar rings（共享 center / angle，不同 radius band）、cartesian lanes（共享 x，不同 y band）、混合 coordinate scope 的共享 anchor / bbox | [Proposed](./04-shared-scaffold-tracks.md) |
 | ADR-05 | **composition guides, axes, grid, spacing** | 定义 facet panel、overlay axis、track guide 的轴 / 网格 / 间距 / 标题策略，先取可解释的最小形态；统一轴与 per-scope guide 的取舍在 ADR 内拍板 | [Proposed](./05-composition-guides-layout.md) |
 | ADR-06 | **locator, provenance, and adapters surface** | 让 locator / provenance 带上 coordinate scope / facet key / track key；收敛 React / Vanilla 表面与 docs 示例，证明 facet、dual-axis、shared scaffold 都映射到同一 PlotSpec | [Proposed](./06-scope-provenance-surface.md) |
+| ADR-07 | **axis-level grid targeting** | 把 grid 是否生成收回 AxisGuide，composition 只提供默认投放策略；支持 scope / facet / track selector，解决只给特定分面或 track 画 grid 的需求 | [Proposed](./07-axis-grid-targeting.md) |
+| ADR-08 | **React axis binding sugar for overlay scopes** | 借鉴 Recharts 的 axis id 绑定心智，让常见双 y 轴用 `yAxisId` 自动展开成 overlay composition；底层 PlotSpec 仍复用 ADR-01/03 的 scope 机制 | [Proposed](./08-react-axis-binding-sugar.md) |
 
-> 建议文件名：`01-coordinate-composition-registry.md`、`02-facet-grid-data-routing.md`、`03-same-panel-multi-axis.md`、`04-shared-scaffold-tracks.md`、`05-composition-guides-layout.md`、`06-scope-provenance-surface.md`。
+> 建议文件名：`01-coordinate-composition-registry.md`、`02-facet-grid-data-routing.md`、`03-same-panel-multi-axis.md`、`04-shared-scaffold-tracks.md`、`05-composition-guides-layout.md`、`06-scope-provenance-surface.md`、`07-axis-grid-targeting.md`、`08-react-axis-binding-sugar.md`。
 
 ## 依赖与顺序
 
@@ -34,6 +36,8 @@ alpha.14 不是跨域组合容器，也不是 chart preset 层。它只处理 `@
 4. **ADR-04 抽象 shared scaffold / track**：它不能写死 polar rings，必须同时覆盖 cartesian lanes 与混合 coordinate scope 的共享语义。
 5. **ADR-05 收敛 guide / spacing**：facet、overlay、track 都需要 guide，但表现不同，集中拍板避免三套轴语义漂移。
 6. **ADR-06 收口三包与 locator**：避免 render 输出与 hit-test / provenance 在多 scope 下漂移。
+7. **ADR-07 修正 grid 职责边界**：依赖 ADR-01 / ADR-02 / ADR-04 的 scope、facet、track 地址能力，并细化 ADR-05 的 grid policy；后续实现以 AxisGuide 为 grid 是否生成的唯一声明。
+8. **ADR-08 收敛双轴 authoring 表面**：依赖 ADR-01 / ADR-03 / ADR-06，把常见 overlay 多轴写法从显式 `composition` 降到 axis id binding sugar；不改变底层 IR。
 
 ## 关键设计约束
 
@@ -45,6 +49,8 @@ alpha.14 不是跨域组合容器，也不是 chart preset 层。它只处理 `@
 - **复用 core `Scope`**：plot 不自建容器、不做跨域排版系统。跨域组合仍属 core / 更上层。
 - **纯 lowering 无文字度量**：facet 轴标题、panel label、外侧统一轴必须在无测量前提下给出稳定布局策略。
 - **IR JSON-safe**：facet key、scope id、track key、scale sharing 策略、shared basis、mark 选择 coordinate / track 的字段都必须是可序列化配置。
+- **grid 由 AxisGuide 声明**：composition 不再决定是否生成 grid，只提供默认投放策略；精确目标用 scope / facet / track selector 表达。
+- **authoring sugar 必须展开为 composition**：React / Vanilla 可提供更顺手的 axis binding 写法，但不得新增平行 IR 或绕过 coordinate scope registry。
 
 ## 文件 scope 预估
 
@@ -92,7 +98,7 @@ alpha.14 不是跨域组合容器，也不是 chart preset 层。它只处理 `@
 
 alpha.14 封口时应满足：
 
-- ADR-01～06 全部 Proposed 并经人工确认可进入实现；实现后再按 wrapup 翻 Accepted。
+- ADR-01～08 全部 Proposed 并经人工确认可进入实现；实现后再按 wrapup 翻 Accepted。
 - `@retikz/plot` / `@retikz/plot-react` / `@retikz/plot-vanilla` 三包版本面一致。
 - 至少三组端到端 demo：一个 facet grid，一个 same-panel dual-axis，一个 shared scaffold tracks（polar rings 或 cartesian lanes，优先选择能说明坐标系无关性的例子）。
 - 多 coordinate scope / scaffold / track 下 guide、mark lowering、locator / provenance 使用同一 scope identity。

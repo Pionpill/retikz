@@ -82,6 +82,17 @@ What gets written per level when `provenance` is on:
 - **axis / grid layer**: `{ source: 'plot', layer: 'axis' | 'grid', dimension }`
 - **datum** (with `datumProvenance`, point / interval / sector only): see below
 
+When a PlotSpec uses coordinate composition, plot-related scope / node / path meta also carries the active scope context:
+
+| Field             | Meaning                                                                                   |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| `coordinateScope` | coordinate scope id that produced this layer or datum                                      |
+| `facet`           | facet identity, with `{ id, row?, column? }` when the datum belongs to a facet panel       |
+| `scaffold`        | shared scaffold id when the scope is placed in a track scaffold                           |
+| `track`           | track id inside that scaffold                                                              |
+
+Single-coordinate plots keep the old shape; these fields appear when composition needs them.
+
 ### Per-datum meta and index semantics
 
 Each datum's meta looks like:
@@ -132,6 +143,9 @@ locator.series('north');
 // → { position: <centroid of all rendered points in the series>, meta: { …, series: 'north' } }
 
 locator.resolve('sales.datum.0'); // dotted-path string resolution
+locator.datum(1, { coordinateScope: 'rain' });
+locator.datum(1, { facet: { id: 'region', column: 'north' } });
+locator.resolve('sales.scope.rain.datum.1');
 locator.datum(999); // out of range → null
 ```
 
@@ -144,6 +158,8 @@ All three methods return `{ position, meta, id? }` or `null`:
 | `resolve(address)`        | resolves a `<plotId>.datum.<i>` / `<plotId>.series.<value>` dotted path; no match → `null` |
 
 `resolve`'s address is an **index / value address** — `datum.<transformedIndex>` (render-order index) and `series.<value>` — **not** the named `id` bound to a node (that `<plotId>.datum.<slug>` handle is for core connection, returned in `ResolvedAnchor.id`; the slug is irreversible and isn't used for resolve). Series values are string-normalized, so a numeric series (`series.5`) is addressable too; but a series whose **value contains `.`** can't be addressed via resolve (the address splits on `.`) — use `series(value)` directly for those. `series()` works for any mark with a series field (line / area / interval) — the "series structural host is line/area only" note above is about _where lowering hangs the id/meta_, and does not restrict `series()` from computing a centroid.
+
+`datum` and `series` also accept `{ markIndex?, coordinateScope?, facet?, track? }`. Use those options when the same render-order index appears in multiple panels, overlay scopes, or tracks. `resolve` keeps the old address form and adds scoped convenience addresses such as `<plotId>.scope.<scope>.datum.<i>` and `<plotId>.track.<track>.datum.<i>`.
 
 Two key guarantees:
 

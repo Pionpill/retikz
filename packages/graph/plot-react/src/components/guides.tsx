@@ -1,8 +1,9 @@
+import type { AxisGuide } from '@retikz/plot';
 import type { FC } from 'react';
 
 import type { PositionScaleType } from './scales';
 
-/** <Axis> props：坐标轴配置；网格走 `grid` 布尔 prop（与 IR axis.grid 对应，非独立 <Grid> 组件） */
+/** <Axis> props：坐标轴配置；网格走 axis-level `grid`（与 IR axis.grid 对应，非独立 <Grid> 组件） */
 export type AxisProps = {
   /**
    * 装饰哪个定位维度：cartesian 的 x（水平）/ y（垂直）；polar 的 x（角向）/ y（径向）；
@@ -15,8 +16,11 @@ export type AxisProps = {
   tickCount?: number;
   /** 是否出刻度标签；缺省 = true */
   tickLabels?: boolean;
-  /** 是否在 plot area 画对齐本轴刻度的网格线；缺省 = false */
-  grid?: boolean;
+  /** 是否画对齐本轴刻度的网格线，以及在组合坐标中投放到哪些目标；缺省 = false */
+  grid?: AxisGuide['grid'];
+  coordinateScope?: string;
+  placement?: AxisGuide['placement'];
+  title?: string;
   /** 可选 guide 句柄（预留 scope/anchor，解析留 alpha.5） */
   id?: string;
 };

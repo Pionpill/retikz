@@ -37,6 +37,7 @@ import {
   PlotGuide,
   PlotMark,
   PlotScale,
+  PlotSpecSchema,
   PlotTransform,
 } from '@retikz/plot';
 import { Children, Fragment, isValidElement } from 'react';
@@ -122,6 +123,7 @@ export type BuildPlotSpecOptions = {
   height?: number;
   /** 坐标系选择（缺省 cartesian2D）；"polar2D" 或 polar2D 对象配置 */
   coordinate?: CoordinateInput;
+  composition?: PlotSpec['composition'];
   /** 数据模型（字段类型）：声明则进 data.model，并对未显式 <Scale> 的位置维度走 type-driven 派生 */
   model?: DataModel;
   /**
@@ -611,6 +613,7 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
     color,
     label,
     id,
+    coordinateScope,
     transform,
     channels,
     strokeWidth,
@@ -710,6 +713,7 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
     type: PlotMark.Reference,
     ...(kind !== undefined ? { kind } : {}),
     ...(id !== undefined ? { id } : {}),
+    ...(coordinateScope !== undefined ? { coordinateScope } : {}),
     ...(transform !== undefined ? { transform } : {}),
     ...upper,
     ...(extentField !== undefined ? { extentField } : {}),
@@ -751,6 +755,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         closure,
         curve,
         id,
+        coordinateScope,
         transform,
         anchorId,
         channels,
@@ -773,6 +778,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       into.marks.push({
         type: PlotMark.Path,
         ...(id !== undefined ? { id } : {}),
+        ...(coordinateScope !== undefined ? { coordinateScope } : {}),
         ...(transform !== undefined ? { transform } : {}),
         ...(anchorId !== undefined ? { anchorId } : {}),
         ...(order !== undefined ? { order } : {}),
@@ -820,6 +826,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         dx,
         dy,
         id,
+        coordinateScope,
         transform,
         anchorId,
         channels,
@@ -853,6 +860,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       into.marks.push({
         type: PlotMark.Point,
         ...(id !== undefined ? { id } : {}),
+        ...(coordinateScope !== undefined ? { coordinateScope } : {}),
         ...(transform !== undefined ? { transform } : {}),
         ...(anchorId !== undefined ? { anchorId } : {}),
         ...(colorStyle !== undefined ? { color: colorStyle } : {}),
@@ -904,6 +912,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         stack,
         bounds: explicitBounds,
         id,
+        coordinateScope,
         transform,
         anchorId,
         channels,
@@ -972,6 +981,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         into.marks.push({
           type: PlotMark.Interval,
           ...(id !== undefined ? { id } : {}),
+          ...(coordinateScope !== undefined ? { coordinateScope } : {}),
           ...(transform !== undefined ? { transform } : {}),
           ...(anchorId !== undefined ? { anchorId } : {}),
           ...intervalStyle,
@@ -998,6 +1008,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         into.marks.push({
           type: PlotMark.Interval,
           ...(id !== undefined ? { id } : {}),
+          ...(coordinateScope !== undefined ? { coordinateScope } : {}),
           ...(transform !== undefined ? { transform } : {}),
           ...(anchorId !== undefined ? { anchorId } : {}),
           ...(series !== undefined ? { series } : {}),
@@ -1111,6 +1122,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       into.marks.push({
         type: PlotMark.Interval,
         ...(id !== undefined ? { id } : {}),
+        ...(coordinateScope !== undefined ? { coordinateScope } : {}),
         ...(transform !== undefined ? { transform } : {}),
         ...(anchorId !== undefined ? { anchorId } : {}),
         ...(series !== undefined ? { series } : {}),
@@ -1139,7 +1151,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
     } else if (child.type === ReferenceMark) {
       collectReference(child.props as ReferenceMarkProps, into, styleContext);
     } else if (child.type === RelationMark) {
-      const { id, kind, transform, source, target, label, style, path, ribbon, color, channels } =
+      const { id, kind, coordinateScope, transform, source, target, label, style, path, ribbon, color, channels } =
         child.props as RelationMarkProps;
       const colorEnc = colorChannel(color, undefined);
       const encoding = { ...colorEnc, ...extensionChannelEncoding(channels) };
@@ -1147,6 +1159,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         type: PlotMark.Relation,
         ...(id !== undefined ? { id } : {}),
         ...(kind !== undefined ? { kind } : {}),
+        ...(coordinateScope !== undefined ? { coordinateScope } : {}),
         ...(transform !== undefined ? { transform } : {}),
         source,
         target,
@@ -1158,7 +1171,8 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       });
       recordColor(into, colorEnc);
     } else if (child.type === Axis) {
-      const { dimension, scale, tickCount, tickLabels, grid, id } = child.props as AxisProps;
+      const { dimension, scale, tickCount, tickLabels, grid, coordinateScope, placement, title, id } =
+        child.props as AxisProps;
       if (scale !== undefined) {
         into.scales.push({ dimension, type: scale });
       }
@@ -1166,6 +1180,9 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         type: PlotGuide.Axis,
         dimension,
         ...(id !== undefined ? { id } : {}),
+        ...(coordinateScope !== undefined ? { coordinateScope } : {}),
+        ...(placement !== undefined ? { placement } : {}),
+        ...(title !== undefined ? { title } : {}),
         ...(tickCount !== undefined ? { tickCount } : {}),
         ...(tickLabels !== undefined ? { tickLabels } : {}),
         ...(grid !== undefined ? { grid } : {}),
@@ -1381,6 +1398,64 @@ const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | u
   return undefined;
 };
 
+const fillCoordinateScaleBindings = (
+  input: CoordinateOperation,
+  defaults: CoordinateOperation,
+): CoordinateOperation => {
+  if (input.type !== defaults.type) return input;
+  if (input.type === PlotCoordinate.Cartesian2D && defaults.type === PlotCoordinate.Cartesian2D) {
+    return {
+      ...input,
+      ...(input.x === undefined && defaults.x !== undefined ? { x: defaults.x } : {}),
+      ...(input.y === undefined && defaults.y !== undefined ? { y: defaults.y } : {}),
+    };
+  }
+  if (input.type === PlotCoordinate.Cartesian1D && defaults.type === PlotCoordinate.Cartesian1D) {
+    return {
+      ...input,
+      ...(input.x === undefined && defaults.x !== undefined ? { x: defaults.x } : {}),
+    };
+  }
+  if (input.type === PlotCoordinate.Polar2D && defaults.type === PlotCoordinate.Polar2D) {
+    return {
+      ...input,
+      ...(input.angle === undefined && defaults.angle !== undefined ? { angle: defaults.angle } : {}),
+      ...(input.radius === undefined && defaults.radius !== undefined ? { radius: defaults.radius } : {}),
+    };
+  }
+  if (input.type === PlotCoordinate.Polar1D && defaults.type === PlotCoordinate.Polar1D) {
+    return {
+      ...input,
+      ...(input.angle === undefined && defaults.angle !== undefined ? { angle: defaults.angle } : {}),
+    };
+  }
+  return input;
+};
+
+const fillCompositionScaleBindings = (
+  composition: PlotSpec['composition'],
+  defaults: CoordinateOperation,
+): PlotSpec['composition'] => {
+  if (composition === undefined) return undefined;
+  return {
+    ...composition,
+    scopes: composition.scopes.map(scope => ({
+      ...scope,
+      ...(scope.coordinate !== undefined
+        ? { coordinate: fillCoordinateScaleBindings(scope.coordinate, defaults) }
+        : {}),
+    })),
+    ...(composition.scaffolds !== undefined
+      ? {
+          scaffolds: composition.scaffolds.map(scaffold => ({
+            ...scaffold,
+            coordinate: fillCoordinateScaleBindings(scaffold.coordinate, defaults),
+          })),
+        }
+      : {}),
+  };
+};
+
 /**
  * 把 mark / guide 子组件装配成规范化 PlotSpec
  * @description 纯函数：从 children 收集 mark + guide + transform；按 coordinate（cartesian / polar）推断 scale 类型、
@@ -1557,13 +1632,16 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     ...(options.colors !== undefined ? { colors: options.colors } : {}),
     ...(options.width !== undefined ? { width: options.width } : {}),
     ...(options.height !== undefined ? { height: options.height } : {}),
-    coordinate,
+    ...(options.composition !== undefined
+      ? { composition: fillCompositionScaleBindings(options.composition, coordinate) }
+      : { coordinate }),
     marks: collected.marks,
     guides,
   };
   // 旁路记录 resolveLabel（运行时函数、不进 IR）：resolvePlotRuntime 据返回的 spec 取出注入 lowerPlots options
-  if (Object.keys(collected.resolveLabels).length > 0) resolveLabelBySpec.set(spec, collected.resolveLabels);
-  return spec;
+  const parsed = collected.marks.length === 0 ? spec : PlotSpecSchema.parse(spec);
+  if (Object.keys(collected.resolveLabels).length > 0) resolveLabelBySpec.set(parsed, collected.resolveLabels);
+  return parsed;
 };
 
 /**
@@ -1572,6 +1650,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
  *   非 cartesian2D（polar / 1D / ternary）的专门轴仍需显式声明，原样返回；已有显式 <Axis> 时不补。
  */
 export const decorateDefaultGuides = (spec: PlotSpec): PlotSpec => {
+  if (spec.coordinate === undefined) return spec;
   if (spec.coordinate.type !== PlotCoordinate.Cartesian2D) return spec;
   const guides = spec.guides ?? [];
   if (guides.some(guide => guide.type === PlotGuide.Axis)) return spec;

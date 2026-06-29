@@ -75,6 +75,7 @@ export const graphSection: Array<Section> = [
           { id: '2d', label: 'graph.grammarCoordinate2d' },
           { id: '1d', label: 'graph.grammarCoordinate1d' },
           { id: 'ternary', label: 'graph.grammarCoordinateTernary' },
+          { id: 'composition', label: 'graph.grammarCoordinateComposition' },
         ],
       },
       {

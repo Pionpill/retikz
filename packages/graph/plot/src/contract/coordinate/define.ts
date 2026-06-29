@@ -50,6 +50,8 @@ export type CoordinateResolveContext = {
   height: number;
   /** guide / label 使用的基础字号。 */
   fontSize: number;
+  /** guide title / composition label 固定间距。 */
+  labelGap?: number;
   /** 用户传入的边距覆盖；自定义坐标系可选择是否消费。 */
   margin?: Partial<Margins>;
   /** legend 预留区域；内置坐标系用它收窄 plotArea，自定义坐标系 v1 通常保持满画布。 */

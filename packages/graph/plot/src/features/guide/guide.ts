@@ -35,6 +35,8 @@ export type GuideContext = {
   yTicks: TickSet;
   /** label 字号（与 ADR-03 估算同源） */
   fontSize: number;
+  /** axis title / composition label 与 axis 的固定间距；省略时复用默认 axis label gap。 */
+  labelGap?: number;
   /**
    * 直线轴向覆盖（仅 cartesian1D 给）：horizontal → 沿 x 轴线（用 projectX/xTicks），vertical → 沿 y 轴线（用 projectY/yTicks）。
    * @description cartesian1D 单维角色恒为 x，但轴可竖排；给此值时 lowerCartesianGuide 按它选屏幕方向，而非按 dimension。
@@ -147,6 +149,7 @@ const lowerCartesianGuide = (
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
   const { plotArea, fontSize } = ctx;
+  const labelGap = ctx.labelGap ?? AXIS_LABEL_GAP;
   const left = plotArea.x;
   const right = plotArea.x + plotArea.width;
   const top = plotArea.y;
@@ -201,14 +204,30 @@ const lowerCartesianGuide = (
       })
     : [];
 
+  const titleNode = ((): IRNode | null => {
+    if (guide.title === undefined) return null;
+    const labelOffset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize + labelGap + fontSize / 2;
+    const position: [number, number] = isX
+      ? [left + plotArea.width / 2, axisY + tickDirection * labelOffset]
+      : [
+          axisX +
+            tickDirection * (AXIS_TICK_LENGTH + AXIS_LABEL_GAP + estimateLabelWidth(guide.title, fontSize) / 2 + labelGap),
+          top + plotArea.height / 2,
+        ];
+    return { type: 'node', position, text: guide.title };
+  })();
   const axisLayer: IRScope | null = linePath
-    ? {
+    ? (() => {
+        const axisChildren: Array<IRPath | IRNode> = [linePath, ...labels];
+        if (titleNode) axisChildren.push(titleNode);
+        return {
         type: 'scope',
         ...guideScopeProps(guide, 'axis', context),
         pathDefault: { stroke: 'currentColor' },
         nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
-        children: [linePath, ...labels],
-      }
+        children: axisChildren,
+        };
+      })()
     : null;
 
   // ---- 网格层（grid:true 才出）----
@@ -271,6 +290,7 @@ const lowerAngularAxis = (
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
   const { fontSize } = ctx;
+  const labelGap = ctx.labelGap ?? AXIS_LABEL_GAP;
   const ticks = ctx.angularTicks ?? { values: [], labels: [] };
   const scale = frame.primary;
   const outer = frame.outerRadius;
@@ -298,6 +318,18 @@ const lowerAngularAxis = (
         return { type: 'node', position, text: ticks.labels[index] };
       })
     : [];
+  if (guide.title !== undefined) {
+    const midAngle = (frame.startAngle + frame.endAngle) / 2;
+    labels.push({
+      type: 'node',
+      position: finitePolarPoint(
+        frame.center,
+        midAngle,
+        outer + AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize + labelGap + fontSize / 2,
+      ),
+      text: guide.title,
+    });
+  }
 
   const axisLayer: IRScope = {
     type: 'scope',
@@ -340,6 +372,7 @@ const lowerRadialAxis = (
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
   const { fontSize } = ctx;
+  const labelGap = ctx.labelGap ?? AXIS_LABEL_GAP;
   const ticks = ctx.radialTicks ?? { values: [], labels: [] };
   const scale = frame.secondary;
   const baseAngle = frame.startAngle;
@@ -370,6 +403,15 @@ const lowerRadialAxis = (
         return { type: 'node', position, text };
       })
     : [];
+  if (guide.title !== undefined) {
+    const titlePoint = finitePolarPoint(frame.center, baseAngle, (frame.innerRadius + frame.outerRadius) / 2);
+    const offset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize + labelGap + fontSize / 2;
+    labels.push({
+      type: 'node',
+      position: [titlePoint[0] - tangent[0] * offset, titlePoint[1] - tangent[1] * offset],
+      text: guide.title,
+    });
+  }
 
   const axisLayer: IRScope | null = linePath
     ? {
@@ -434,6 +476,7 @@ const lowerTernaryGuide = (
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
   const { fontSize } = ctx;
+  const labelGap = ctx.labelGap ?? AXIS_LABEL_GAP;
   const ticks = ctx.ternaryTicks ?? { values: [], labels: [] };
   const showLabels = guide.tickLabels !== false;
   const { apex, baseP, baseQ } = ternaryAxisRoles(guide.dimension, vertices);
@@ -481,7 +524,7 @@ const lowerTernaryGuide = (
   let gridLayer: IRScope | null = null;
   if (guide.grid) {
     const isoSegments: Array<Segment> = [];
-    for (const value of ticks.values) {
+  for (const value of ticks.values) {
       const t = Number(value);
       if (t <= 0 || t >= 1) continue; // 0（0 边）/ 1（顶点）退化，不画
       isoSegments.push([lerp2(baseP, apex, t), lerp2(baseQ, apex, t)]);
@@ -495,6 +538,16 @@ const lowerTernaryGuide = (
         children: [gridPath],
       };
     }
+  }
+  if (guide.title !== undefined) {
+    const mid = lerp2(baseP, apex, 0.5);
+    const out = outwardAt(mid);
+    const offset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize + labelGap + fontSize / 2;
+    labels.push({
+      type: 'node',
+      position: [mid[0] + out[0] * offset, mid[1] + out[1] * offset],
+      text: guide.title,
+    });
   }
 
   return { gridLayer, axisLayer };
@@ -533,6 +586,7 @@ export const lowerCustomAxis = (
     .filter(tick => Number.isFinite(tick.value));
   if (numericTicks.length === 0) return { gridLayer: null, axisLayer: null };
   const showLabels = guide.tickLabels !== false;
+  const labelGap = AXIS_LABEL_GAP;
 
   // 其它角色锚在各自 scale 首刻度（≈ domain 起点）；按 frame.roles 序拼 values 喂 projectRoles
   const anchorFor = (role: DimensionRole): unknown => {
@@ -585,6 +639,20 @@ export const lowerCustomAxis = (
         type: 'node',
         position: [point[0] + normal[0] * offset, point[1] + normal[1] * offset],
         text: tick.label,
+      });
+    }
+  }
+  if (guide.title !== undefined) {
+    const resolved = pointAndTangent((lo + hi) / 2);
+    if (resolved) {
+      const [point, tangent] = resolved;
+      const length = Math.hypot(tangent[0], tangent[1]) || 1;
+      const normal: [number, number] = [-tangent[1] / length, tangent[0] / length];
+      const offset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize + labelGap + fontSize / 2;
+      labels.push({
+        type: 'node',
+        position: [point[0] + normal[0] * offset, point[1] + normal[1] * offset],
+        text: guide.title,
       });
     }
   }

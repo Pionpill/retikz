@@ -67,6 +67,10 @@ export type MarkTransformProps = {
   transform?: Array<Transform>;
 };
 
+export type CoordinateScopeProps = {
+  coordinateScope?: string;
+};
+
 export type CoreNodeChannelProps = {
   align?: MarkValueProp<NodeTextAlignValue> | NodeTextAlignStyle;
   lineHeight?: MarkValueProp<number> | NodePositiveNumberStyle;
@@ -147,6 +151,7 @@ export type DatumLabelProps = {
 
 /** <PathMark> props：折线图层，按 order（缺省按数据顺序）连点成一维轨迹 */
 export type PathMarkProps = MarkTransformProps &
+  CoordinateScopeProps &
   CorePathChannelProps & {
     /** 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值） */
     x: FieldName;
@@ -182,6 +187,7 @@ export type PathMarkProps = MarkTransformProps &
 
 /** <PointMark> props：散点 / 文本图层，每行一个 glyph（给 text → 无边框文本 Node） */
 export type PointMarkProps = MarkTransformProps &
+  CoordinateScopeProps &
   DatumLabelProps &
   CoreNodeChannelProps & {
     /**
@@ -243,6 +249,7 @@ export type PointMarkProps = MarkTransformProps &
  *   series(+stack) 分组/堆叠；heatmap（双 band）经显式 bounds={{x:{kind:'band'},y:{kind:'band'}}}。
  */
 export type IntervalMarkProps = MarkTransformProps &
+  CoordinateScopeProps &
   DatumLabelProps &
   CoreNodeChannelProps & {
     /** 绑 x 位置通道的字段路径（分类，自动 band scale；polar 下作角向类别）；直方连续 x 用 x0/x1 取代 */
@@ -289,7 +296,8 @@ export type IntervalMarkProps = MarkTransformProps &
     anchorId?: AnchorIdSpec;
   };
 
-export type RelationMarkProps = MarkTransformProps & {
+export type RelationMarkProps = MarkTransformProps &
+  CoordinateScopeProps & {
   id?: string;
   kind?: RelationGeometryKindValue;
   source: PlotTargetRef;
@@ -311,6 +319,7 @@ type ReferenceMarkLabel = MarkNodeLabel | Array<MarkNodeLabel> | MarkGeometryLab
  *   extent 给对侧维起止字段截成部分长度。
  */
 export type ReferenceMarkProps = MarkTransformProps &
+  CoordinateScopeProps &
   Omit<CoreNodeChannelProps, 'scale' | 'dashPattern' | 'shadow' | 'blendMode'> &
   CorePathChannelProps & {
     /** 参考形态覆写；设为 region 时 x/xTo/y/yTo 四个边界共同围出二维区域 */
