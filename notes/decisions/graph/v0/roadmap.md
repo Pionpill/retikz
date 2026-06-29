@@ -9,7 +9,10 @@
 
 - plot **只消费 core 能力、不反向依赖**，也不自带 renderer（见 [plot-design §2 / §8](../../../architecture/plot-design.md)）。
 - plot **版本线独立于 core**，不与 core 版本号对齐；每个里程碑由「所需 core 能力是否就绪」gating。
-- 上层 `@retikz/chart`（`type` + 配置的 preset 封装）依赖 `@retikz/plot`，preset 必须展开成 plot primitive，不得拥有底层无法表达的能力。
+- 规划中的 `@retikz/data` 是 graph 共享数据语义层：负责数据模型、数据引用、字段解析、通用 transform、数据通道、scale / formatter / theme token 等跨 plot / table / geo（若独立）共用的契约。
+- graph 组解决的是「有了数据之后如何可视化」：`@retikz/plot` 通过 GoG 可视化，`@retikz/table` 通过表格可视化，geo 处理地图类可视化但是否独立拆包待决策。原 `struct` 范围不作为独立包，gauge / progress / tree / network / word cloud / pictogram 等通过 plot 的 layout transform + mark 表达。
+- 规划独立 `@retikz/chart` / `@retikz/chart-react` / `@retikz/chart-vanilla`：chart 是 Tier 3 新手友好封装层，通过 `type` / config / preset 调度 plot 底层能力并生成 PlotSpec；它不拥有自己的 IR、lowering 或 renderer，也不聚合 table / geo。
+- 框架绑定由各表达层各自发布：`@retikz/plot-react` / `@retikz/plot-vanilla`、规划中的 `@retikz/chart-react` / `@retikz/chart-vanilla`、`@retikz/table-react` / `@retikz/table-vanilla`，以及候选的 `@retikz/geo-react` / `@retikz/geo-vanilla`。不规划统一 `@retikz/graph-react` / `@retikz/graph-vanilla` 聚合 adapter，避免安装不需要的模块。
 
 模块边界与 MVP 范围见 [plot-design §11](../../../architecture/plot-design.md)，里程碑拆分见 [§13](../../../architecture/plot-design.md)。
 
@@ -40,7 +43,7 @@
 | **Geometry** 几何对象 | mark | point/line/area/bar/sector ✓ | **rect / rule / text / ribbon / boxplot** |
 | **Statistics** 统计变换 | transform | sort/groupBy/stack ✓ | **bin / aggregate / density / smooth / quartile** |
 | **Scales** 标度 | scale | linear/band/time/ordinal ✓ | **log/pow/sqrt/quantize/threshold/color gradient + type-driven 选型**（横切 Data/Aesthetics 两轮，非独立 alpha） |
-| **Coordinates** 坐标系统 | coordinate | cartesian2D / polar2D ✓ | **cartesian1D / polar1D / ternary2D**（**地图坐标 = 独立 domain 包，[§2](../../../architecture/plot-design.md) 明确不进 plot**） |
+| **Coordinates** 坐标系统 | coordinate | cartesian2D / polar2D ✓ | **cartesian1D / polar1D / ternary2D**（地图坐标是否独立为 geo domain 仍待决策，也可能作为 plot projection / layout 扩展） |
 | **Coordinate composition** 坐标复合（含 Facets） | coordinate scope / facet / shared scaffold（复用 core `Scope`） | — | **全新：分面小多图 + 同 panel 多坐标轴 / 多 scale 叠加 + 共享坐标骨架的 tracks / rings / lanes** |
 | **Theme** 主题样式 | theme | — | **全新：标题 / 字体 / 背景 / 网格 / 图例外观 / 调色板** |
 
@@ -65,7 +68,12 @@ plot 聚焦坐标语法本身：transform / encoding / scale / coordinate / mark
 以下不由 plot 承载：
 
 - **渲染**：plot 不自带 renderer，绘制走 core / `@retikz/render` / 框架绑定包；
-- **preset 封装**：`type` + 配置的快速出图属上层 `@retikz/chart`；
+- **共享数据层**：数据模型、字段解析、通用 transform、数据通道、scale / formatter 等规划归 `@retikz/data`，plot 只消费；
+- **chart 高层封装**：`type` + 配置的快速出图规划归 `@retikz/chart`，展开成 PlotSpec 并调度 plot 能力；chart 不拥有自己的底层 IR / lowering / renderer；
+- **结构化可视化**：gauge / progress / token ring / tree / network / word cloud / pictogram 等不设独立 struct 包，规划归 plot 的 layout transform：算法先产出位置、尺寸、路由等派生字段，再统一走 plot mark / guide / lowering；
+- **表格可视化**：table / pivot table / matrix 等表格型展示规划归 `@retikz/table`；
+- **地图可视化**：map / choropleth / flow map / tile layer 等地图型展示待决策；可独立为 `@retikz/geo`，也可作为 plot projection / layout 能力进入 plot pipeline；
+- **框架 adapter**：React / Vanilla authoring 表面由各表达层各自承接，plot 已有 `@retikz/plot-react` / `@retikz/plot-vanilla`，chart 规划 `@retikz/chart-react` / `@retikz/chart-vanilla`，table / geo（若独立）后续各自发包；
 - **跨域内容组合**（plot 与 uml / table / 任意业务内容混排）：基于 core 现有 `Scope` 的通用能力，任意 Tier 2 内容共用同一套，plot 的义务仅是「可被组合」（lower 进可引用 scope + 暴露 anchor）；
 - **core 通用图形能力**：Node / Path / Step / Coordinate / Scope 等留在 core，plot 只消费不重造。
 
