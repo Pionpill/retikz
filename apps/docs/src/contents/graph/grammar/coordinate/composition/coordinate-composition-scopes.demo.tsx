@@ -2,10 +2,10 @@ import type { FC } from 'react';
 
 import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
 
-import { weatherRows } from './coordinate-composition.data';
+import { weatherRows } from './coordinate-composition-scopes.data';
 
 const Demo: FC = () => (
-  <Plot data={weatherRows} width={440} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Plot data={weatherRows} width={520} height={250}>
     <Axis dimension="x" title="day" />
     <Axis dimension="y" title="temperature" />
     <Axis id="rainfall" dimension="y" placement={{ kind: 'side', side: 'right' }} title="rainfall" />

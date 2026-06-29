@@ -254,11 +254,17 @@ export const coordinateScopeIdOf = (
 const axisGuideScopeIdOf = (guide: AxisGuide, defaultScope: string): string =>
   guide.coordinateScope ?? defaultScope;
 
-const compositionAxisPolicyOf = (policy: CompositionGuidePolicy | undefined): string =>
-  policy?.axes ?? CompositionAxisPolicy.PerScope;
+const compositionAxisPolicyOf = (
+  policy: CompositionGuidePolicy | undefined,
+  context: { hasFacets: boolean; hasScaffolds: boolean },
+): string =>
+  policy?.axes ?? (context.hasFacets || context.hasScaffolds ? CompositionAxisPolicy.OuterShared : CompositionAxisPolicy.PerScope);
 
-const compositionGridPlacementOf = (policy: CompositionGuidePolicy | undefined): string =>
-  policy?.gridPlacement ?? CompositionGridPlacement.Self;
+const compositionGridPlacementOf = (
+  policy: CompositionGuidePolicy | undefined,
+  context: { hasFacets: boolean; hasScaffolds: boolean },
+): string =>
+  policy?.gridPlacement ?? (!context.hasFacets && context.hasScaffolds ? CompositionGridPlacement.SharedRole : CompositionGridPlacement.Self);
 
 const axisGapKeyOf = (guide: AxisGuide): string | null => {
   const placement = guide.placement;
@@ -1413,9 +1419,15 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   }));
 
   const compositionLayout = node.composition?.layout;
+  const compositionFacets = node.composition?.facets ?? [];
+  const compositionScaffolds = node.composition?.scaffolds ?? [];
   const compositionGuidePolicy = node.composition?.guidePolicy;
-  const compositionAxisPolicy = compositionAxisPolicyOf(compositionGuidePolicy);
-  const compositionGridPlacement = compositionGridPlacementOf(compositionGuidePolicy);
+  const compositionPolicyContext = {
+    hasFacets: compositionFacets.length > 0,
+    hasScaffolds: compositionScaffolds.length > 0,
+  };
+  const compositionAxisPolicy = compositionAxisPolicyOf(compositionGuidePolicy, compositionPolicyContext);
+  const compositionGridPlacement = compositionGridPlacementOf(compositionGuidePolicy, compositionPolicyContext);
   const frameMargin = mergeCompositionMargin(compositionLayout?.padding, options.margin);
   const allGuides = withAxisGapOffsets(node.guides ?? [], compositionLayout?.axisGap);
   const coordinateScopes = resolveCoordinateScopeRegistry(node);
@@ -1429,7 +1441,6 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     }
     return context;
   };
-  const compositionScaffolds = node.composition?.scaffolds ?? [];
   const scaffoldById = new Map(compositionScaffolds.map(scaffold => [scaffold.id, scaffold] as const));
   const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
   const rolesOf = (coordinate: CoordinateOperation): ReadonlySet<DimensionRole> => {
@@ -1696,7 +1707,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     resolvedFrames.set(scope.id, resolved);
     return resolved;
   };
-  const facets = node.composition?.facets ?? [];
+  const facets = compositionFacets;
   if (facets.length === 0) assertSelectedGridTargetsScopes();
   const scopedFrames = coordinateScopes.scopes.map(resolveScopedFrame);
   const frameByScope = new Map(scopedFrames.map(scopeFrame => [scopeFrame.scopeId, scopeFrame.frame] as const));
@@ -1729,6 +1740,14 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     const panels = facets.flatMap(facet => resolveFacetPanels(facet, rows, usedFacetScopeIds));
     const maxColumnIndex = panels.reduce((max, panel) => Math.max(max, panel.columnIndex), 0);
     const maxRowIndex = panels.reduce((max, panel) => Math.max(max, panel.rowIndex), 0);
+    const panelGap = compositionLayout?.panelGap ?? 0;
+    const columnCount = maxColumnIndex + 1;
+    const rowCount = maxRowIndex + 1;
+    const panelWidth = (width - Math.max(0, columnCount - 1) * panelGap) / columnCount;
+    const panelHeight = (height - Math.max(0, rowCount - 1) * panelGap) / rowCount;
+    if (panelWidth <= 0 || panelHeight <= 0) {
+      throw new Error(`lowerPlots: panelGap ${panelGap} leaves no room for ${columnCount}x${rowCount} facet panels`);
+    }
     const facetGuides = allGuides.filter(
       guide => !isAxisGuide(guide) || axisGuideScopeIdOf(guide, coordinateScopes.defaultScope) === defaultScope.id,
     );
@@ -1792,8 +1811,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         node: panelNode,
         rows: panel.rows,
         fieldTypes,
-        width,
-        height,
+        width: panelWidth,
+        height: panelHeight,
         fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
         margin: frameMargin,
         labelGap: compositionLayout?.labelGap,
@@ -1810,8 +1829,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
               node: { ...panelNode, guides: panelGridGuides },
               rows: panel.rows,
               fieldTypes,
-              width,
-              height,
+              width: panelWidth,
+              height: panelHeight,
               fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
               margin: frameMargin,
               labelGap: compositionLayout?.labelGap,
@@ -1872,8 +1891,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         transforms: [
           {
             kind: 'translate',
-            x: panel.columnIndex * (width + (compositionLayout?.panelGap ?? 0)),
-            y: panel.rowIndex * (height + (compositionLayout?.panelGap ?? 0)),
+            x: panel.columnIndex * (panelWidth + panelGap),
+            y: panel.rowIndex * (panelHeight + panelGap),
           },
         ],
       };
@@ -1886,17 +1905,17 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       return provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
     }
 
-    const panelStrideX = width + (compositionLayout?.panelGap ?? 0);
-    const panelStrideY = height + (compositionLayout?.panelGap ?? 0);
+    const panelStrideX = panelWidth + panelGap;
+    const panelStrideY = panelHeight + panelGap;
     const inner: IRScope = { type: 'scope', localNamespace: true, children };
     const innerContent: IRScope = provenance ? { ...inner, meta: rootMeta(provenance.dataReference) } : inner;
     const plotAreaCarrier: IRNode = {
       type: 'node',
       id: `${node.id}.plotArea`,
-      position: [(maxColumnIndex * panelStrideX + width) / 2, (maxRowIndex * panelStrideY + height) / 2],
+      position: [(maxColumnIndex * panelStrideX + panelWidth) / 2, (maxRowIndex * panelStrideY + panelHeight) / 2],
       shape: 'rectangle',
-      minimumWidth: maxColumnIndex * panelStrideX + width,
-      minimumHeight: maxRowIndex * panelStrideY + height,
+      minimumWidth: maxColumnIndex * panelStrideX + panelWidth,
+      minimumHeight: maxRowIndex * panelStrideY + panelHeight,
       padding: 0,
       opacity: 0,
     };

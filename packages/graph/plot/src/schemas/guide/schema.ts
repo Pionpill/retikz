@@ -91,7 +91,7 @@ export const AxisGridSchema = z
     applyTo: z
       .enum(AxisGridApplyTo)
       .optional()
-      .describe('Where this axis grid is projected; omit to use composition.guidePolicy.gridPlacement or self'),
+      .describe('Where this axis grid is projected; omit to use composition.guidePolicy.gridPlacement or composition-type defaults'),
     select: GuideTargetSelectorSchema.optional().describe(
       'Explicit target selector; required when applyTo is selected',
     ),

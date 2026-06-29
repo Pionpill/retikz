@@ -1,21 +1,14 @@
 import type { FC } from 'react';
 
-import { Axis, PathMark, Plot, PointMark, Scaffold, Scale, Track } from '@retikz/plot-react';
+import { Axis, PathMark, Plot, PointMark, Scaffold, Track } from '@retikz/plot-react';
 
-import { operationsRows } from './coordinate-composition.data';
+import { operationsRows } from './coordinate-composition-tracks.data';
 
 const Demo: FC = () => (
-  <Plot data={operationsRows} width={520} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Scale dimension="x" type="linear" />
-    <Scale dimension="y" type="linear" />
-    <Scaffold
-      id="ops"
-      sharedRoles={['x']}
-      layout={{ trackGap: 24, axisGap: 8, labelGap: 6 }}
-      guidePolicy={{ gridPlacement: 'sharedRole', trackLabels: 'inline' }}
-    >
-      <Track id="incidents" band={{ role: 'y', start: 0, end: 0.42 }} />
-      <Track id="load" band={{ role: 'y', start: 0.58, end: 1 }} />
+  <Plot data={operationsRows} width={560} height={250}>
+    <Scaffold id="ops" sharedRoles={['x']} layout={{ trackGap: 24 }}>
+      <Track id="incidents" band={{ role: 'y', start: 0, end: 0.5 }} />
+      <Track id="load" band={{ role: 'y', start: 0.5, end: 1 }} />
     </Scaffold>
     <Axis dimension="x" scaffoldId="ops" grid title="week" />
     <Axis dimension="y" trackId="incidents" title="incidents" />

@@ -1,54 +1,52 @@
 ---
 title: Coordinate Composition
-description: composition registers multiple coordinate scopes inside one Plot, so overlays, facets, and shared tracks use one coordinate organization model.
+description: composition lets one Plot express dual axes, facets, and shared tracks.
 ---
 
-When a chart has one projection, `coordinate` is enough. When the same Plot needs several coordinate regions, panels, or aligned tracks, the result still uses the same `composition` model, but everyday JSX does not need a hand-written `composition` object: dual axes use `Axis id` plus `yAxisId`, facets use `<Facet>` plus `facetId`, and shared tracks use `<Scaffold>` / `<Track>` plus `trackId` / `scaffoldId`. The adapter expands those declarations into coordinate scopes, facets, scaffolds, and guide placement.
+When a chart has one projection, `coordinate` is enough. When the same Plot needs several coordinate regions, panels, or aligned tracks, the result still uses the same `composition` model, but everyday JSX does not need a hand-written `composition` object: dual axes use `Axis id` plus `yAxisId`, facets use `<Facet>` plus `facetId`, and shared tracks use `<Scaffold>` / `<Track>` plus `trackId` / `scaffoldId`.
 
 `composition` organizes coordinate regions; it is not a new mark type. Marks are still `PathMark`, `PointMark`, and `IntervalMark`; scales still come from fields and explicit `<Scale>` children; guides are still declared with `<Axis>`.
 
-## Multiple Scopes
+## Dual Axes
 
-A scope is the smallest unit in a composition. `defaultScope` is used when a mark or axis omits `coordinateScope`; other scopes can overlay it. For dual-axis charts, you usually do not write those fields directly: the default y-axis maps to the `default` scope, extra y-axes are named with `Axis id`, and marks bind to them with `yAxisId`.
+Dual-axis charts are the most common multi-scope case: x positions are shared, while two y-axes represent different units. The default y-axis does not need a name; extra y-axes use `Axis id`, and marks select them with `yAxisId`.
 
-<ComponentPreview name="coordinate-composition-scopes" sourceFiles={['coordinate-composition.data.ts']} size="md" />
+<ComponentPreview name="coordinate-composition-scopes" sourceFiles={['coordinate-composition-scopes.data.ts']} size="md" />
 
-In this example, `temperature` uses the default y-axis, while `rainfall` is the id of an extra y-axis. The temperature line omits `yAxisId`; the rainfall line and points use `yAxisId="rainfall"` to choose the right-side axis. The adapter generates a `default` scope and overlays `rainfall` on top of it. A mark that omits `yAxisId`, or sets `yAxisId="default"`, enters the default y scope. Users do not write `__x`, `__y.default`, or `coordinateScope`, but the resulting PlotSpec is still a composition.
+In this example, `temperature` uses the default y-axis, while `rainfall` is the id of an extra y-axis. The temperature line omits `yAxisId`; the rainfall line and points use `yAxisId="rainfall"` to choose the right-side axis. A mark that omits `yAxisId`, or sets `yAxisId="default"`, enters the default y scope.
 
-| Field | Role |
+| JSX | Role |
 | --- | --- |
-| `Axis id` | Give a y-axis a binding identity that marks can reference |
-| `yAxisId` | Bind a mark to a named y-axis and expand it into `coordinateScope`; omitted or `default` uses the default y scope |
-| `defaultScope` | Target for marks / axes that omit `coordinateScope`; dual-axis sugar generates `default` |
-| `scopes[].id` | Stable scope id referenced by marks and guides |
-| `scopes[].coordinate` | Coordinate configuration owned by that scope |
-| `placement.kind: 'overlay'` | Place this scope over another scope's plot area |
+| `<Axis dimension="y">` | Declare the default y-axis; marks use it when `yAxisId` is omitted |
+| `<Axis id="rainfall" dimension="y">` | Declare an extra y-axis whose `id` can be referenced by marks |
+| `yAxisId` | Let a mark choose a y-axis; omitted or `default` uses the default y-axis |
+| `placement={{ kind: 'side', side: 'right' }}` | Put an extra y-axis on the right; x bottom and y left can be omitted |
 
 ## Facets
 
-A facet derives panel scopes from data fields. The common JSX form declares one `<Facet>`, then points marks and axes at it with `facetId`; the adapter generates the base scope and facet rules, and lowering generates panels from row / column values, routes each panel's rows, and places marks in the matching panel.
+A facet splits one chart into panels from data fields. The common JSX form declares one `<Facet>`, then points marks and axes at it with `facetId`; each panel receives the rows that match its row / column value.
 
-<ComponentPreview name="coordinate-composition-facet" sourceFiles={['coordinate-composition.data.ts']} size="xl" />
+<ComponentPreview name="coordinate-composition-facet" sourceFiles={['coordinate-composition-facet.data.ts']} size="lg" />
 
-The chart above splits columns by `region` and rows by `channel`. `scales.roles.y: 'shared'` makes every panel train against the same y domain; `guidePolicy.axes: 'outerShared'` keeps the shared axis on the outside; each grid is still declared by its `<Axis grid>`, and `gridPlacement: 'self'` projects that grid into each panel's own plot area.
+The chart above splits columns by `region` and rows by `channel`. Facets share coordinate-role domains by default and collapse shared axes to the outside; each grid is still declared by its `<Axis grid>`, and the default placement projects that grid into each panel's own plot area.
 
-| Field | Role |
+| JSX | Role |
 | --- | --- |
-| `<Facet id>` | Facet identity, also carried into provenance and locator context |
+| `<Facet id>` | Binding identity for this facet |
 | `row` / `column` | Field used to split panels, plus optional display order |
 | `facetId` | Bind a mark or axis to this facet |
 | `empty` | Whether empty panels are dropped or kept |
-| `scales.roles` | Per-coordinate-role `shared` / `independent` scale domain policy |
+| `scales.roles` | Choose whether x / y roles share a domain or compute it per panel |
 
 ## Shared Scaffold And Tracks
 
 A shared scaffold uses one coordinate frame to manage several tracks. The common case is aligned small tracks: shared x, separate y bands, useful for timelines, monitoring panels, or event + load views. The common JSX form wraps several `<Track>` declarations in one `<Scaffold>`; marks choose a track with `trackId`, while axes that span the aligned scaffold choose it with `scaffoldId`.
 
-<ComponentPreview name="coordinate-composition-tracks" sourceFiles={['coordinate-composition.data.ts']} size="md" />
+<ComponentPreview name="coordinate-composition-tracks" sourceFiles={['coordinate-composition-tracks.data.ts']} size="md" />
 
-Here both tracks share the `week` x position. `incidents` and `load` each occupy a y band inside the scaffold, so they align horizontally while keeping separate vertical space. The x-axis enables `grid`, and `gridPlacement: 'sharedRole'` projects the same x ticks into every track on the shared scaffold. `trackGap` opens space between bands, and `trackLabels: 'inline'` renders inline track labels.
+Here both tracks share the `week` x position. `incidents` and `load` each occupy a y band inside the scaffold, so they align horizontally while keeping separate vertical space. The x-axis enables `grid`; shared scaffold defaults project the same x ticks into every shared track. `trackGap` opens space between bands.
 
-| Field | Role |
+| JSX | Role |
 | --- | --- |
 | `<Scaffold id>` | Binding identity for the shared scaffold |
 | `sharedRoles` | Roles managed by the scaffold, such as shared `x` |
@@ -68,7 +66,7 @@ Here both tracks share the `week` x position. `incidents` and `load` each occupy
 | `labelGap` | Distance from axis titles, facet labels, and track labels to the plot area |
 | `padding` | Extra padding around the composition frame |
 
-`guidePolicy` decides the default placement of guides in multi-scope scenes. When omitted, the conservative behavior keeps axes and grids in their own scope.
+`guidePolicy` decides where axes, grids, and labels are placed in multi-region charts. When omitted, defaults are chosen by composition type: facets use outer shared axes plus local panel grids; shared scaffolds project shared-role grids into every track; plain overlay scopes keep their own axes and grids.
 
 | Field | Values | Use it when |
 | --- | --- | --- |
@@ -81,7 +79,7 @@ Here both tracks share the `week` x position. `incidents` and `load` each occupy
 
 | Situation | Recommended structure |
 | --- | --- |
-| One line plus one bar layer, shared x but different y units | Overlay scopes |
+| One line plus one bar layer, shared x but different y units | Dual axes |
 | Split by region / category into rows or columns | Facet |
 | Several metrics aligned along one time axis | Shared scaffold + tracks |
 | Several independent charts placed on one large canvas | Multiple `<Plot>` panels inside a parent `<Layout>`; no composition needed |
@@ -99,6 +97,6 @@ Here both tracks share the `week` x position. `incidents` and `load` each occupy
   </LinkedCard>
   <LinkedCard href="/graph/grammar/provenance">
     <span className="font-semibold">Provenance & Anchors</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">See `coordinateScope`, facet, and track provenance under composition</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">See source, facet, and track context in multi-region charts</span>
   </LinkedCard>
 </div>

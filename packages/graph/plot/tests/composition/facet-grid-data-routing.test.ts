@@ -37,8 +37,12 @@ const baseFacetSpec = {
   marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
 };
 
-const expandOf = (spec: PlotSpec): IRScope => {
-  const [definition] = lowerPlots({ sales: salesRows }, { width: 480, height: 300 });
+const expandOf = (
+  spec: PlotSpec,
+  options: { width?: number; height?: number } = {},
+  datasets: { sales: Array<Record<string, string | number>> } = { sales: salesRows },
+): IRScope => {
+  const [definition] = lowerPlots(datasets, { width: options.width ?? 480, height: options.height ?? 300 });
   return definition.expand(spec) as IRScope;
 };
 
@@ -57,6 +61,13 @@ const facetPanelsOf = (scope: IRScope): Array<IRScope> =>
     .filter(child => child.meta?.source === 'plot' && child.meta.layer === 'facetPanel');
 
 const panelKeyOf = (panel: IRScope): string => String(panel.meta?.column ?? panel.meta?.row ?? '');
+
+const facetPanelMetaOf = (panel: IRScope): NonNullable<IRScope['meta']> => panel.meta ?? {};
+
+const translateOf = (scope: IRScope): { x: number; y: number } => {
+  const translate = scope.transforms?.find(transform => transform.kind === 'translate');
+  return { x: translate?.x ?? 0, y: translate?.y ?? 0 };
+};
 
 describe('facet grid data routing schema', () => {
   it('facet_column_schema_parses', () => {
@@ -168,6 +179,47 @@ describe('facet grid data routing lowering', () => {
       'south:store',
     ]);
     expect(panels.map(panel => allNodes(panel).length)).toEqual([2, 1, 2, 0]);
+  });
+
+  it('row_column_facet_treats_width_height_as_total_chart_size', () => {
+    const rows = [
+      { region: 'north', channel: 'online', month: 1, revenue: 58 },
+      { region: 'south', channel: 'online', month: 1, revenue: 42 },
+      { region: 'west', channel: 'online', month: 1, revenue: 76 },
+      { region: 'north', channel: 'store', month: 1, revenue: 44 },
+      { region: 'south', channel: 'store', month: 1, revenue: 36 },
+      { region: 'west', channel: 'store', month: 1, revenue: 51 },
+    ];
+    const spec = {
+      ...baseFacetSpec,
+      composition: {
+        ...baseFacetSpec.composition,
+        layout: { panelGap: 24 },
+        facets: [
+          {
+            id: 'region-channel',
+            row: { field: 'channel', order: ['online', 'store'] },
+            column: { field: 'region', order: ['north', 'south', 'west'] },
+          },
+        ],
+      },
+    };
+
+    const outer = expandOf(PlotSpecSchema.parse(spec), { width: 660, height: 480 }, { sales: rows });
+    const panels = facetPanelsOf(outer);
+    const southOnline = panels.find(panel => {
+      const meta = facetPanelMetaOf(panel);
+      return meta.row === 'online' && meta.column === 'south';
+    });
+    const northStore = panels.find(panel => {
+      const meta = facetPanelMetaOf(panel);
+      return meta.row === 'store' && meta.column === 'north';
+    });
+
+    expect(southOnline).toBeDefined();
+    expect(northStore).toBeDefined();
+    expect(translateOf(southOnline as IRScope)).toEqual({ x: 228, y: 0 });
+    expect(translateOf(northStore as IRScope)).toEqual({ x: 0, y: 252 });
   });
 
   it('independent_y_scale_uses_panel_local_domain', () => {

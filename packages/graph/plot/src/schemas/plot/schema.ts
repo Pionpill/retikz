@@ -49,11 +49,11 @@ export const CompositionGuidePolicySchema = z
     axes: z
       .enum(CompositionAxisPolicy)
       .optional()
-      .describe('Axis rendering policy for multi-scope compositions; omit to render axes per scope'),
+      .describe('Axis rendering policy for multi-scope compositions; omit to use composition-type defaults'),
     gridPlacement: z
       .enum(CompositionGridPlacement)
       .optional()
-      .describe('Default target placement for axis grids in multi-scope compositions; omit to project grids to their own scope'),
+      .describe('Default target placement for axis grids in multi-scope compositions; omit to use composition-type defaults'),
     facetLabels: z
       .enum(CompositionFacetLabelPolicy)
       .optional()

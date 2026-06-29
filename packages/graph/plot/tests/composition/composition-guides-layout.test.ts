@@ -267,7 +267,7 @@ describe('composition guides layout lowering', () => {
     const outer = expandOf(PlotSpecSchema.parse(facetSpec), { sales: salesRows });
     const panels = panelScopesOf(outer);
     expect(panels.map(panel => String(panel.meta?.column))).toEqual(['north', 'south']);
-    expect(panels[1].transforms).toEqual([{ kind: 'translate', x: 504, y: 0 }]);
+    expect(panels[1].transforms).toEqual([{ kind: 'translate', x: 252, y: 0 }]);
   });
 
   it('overlay_same_side_axis_gap_offsets_axes', () => {
@@ -290,7 +290,7 @@ describe('composition guides layout lowering', () => {
     expect(allNodes(axis).some(node => node.text === longTitle)).toBe(true);
   });
 
-  it('policy_omitted_keeps_per_scope_axes', () => {
+  it('facet_policy_omitted_uses_outer_shared_axes', () => {
     const spec = {
       ...facetSpec,
       composition: {
@@ -300,7 +300,7 @@ describe('composition guides layout lowering', () => {
     };
     const outer = expandOf(PlotSpecSchema.parse(JSON.parse(JSON.stringify(spec))), { sales: salesRows });
     const yAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'y');
-    expect(yAxes).toHaveLength(2);
+    expect(yAxes).toHaveLength(1);
   });
 
   it('grid_false_overrides_shared_role_default', () => {
@@ -384,6 +384,19 @@ describe('composition guides layout lowering', () => {
 
   it('scaffold_shared_grid_keeps_one_grid_per_dimension', () => {
     const outer = expandOf(PlotSpecSchema.parse(lanesSpec), { lanes: laneRows });
+    const trackGridScopes = gridLayersOf(outer).map(layer => layer.meta?.track);
+    expect(trackGridScopes).toEqual(['events', 'volume']);
+  });
+
+  it('scaffold_policy_omitted_projects_grid_to_shared_tracks', () => {
+    const spec = {
+      ...lanesSpec,
+      composition: {
+        ...lanesSpec.composition,
+        guidePolicy: undefined,
+      },
+    };
+    const outer = expandOf(PlotSpecSchema.parse(JSON.parse(JSON.stringify(spec))), { lanes: laneRows });
     const trackGridScopes = gridLayersOf(outer).map(layer => layer.meta?.track);
     expect(trackGridScopes).toEqual(['events', 'volume']);
   });
