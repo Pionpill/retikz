@@ -1645,6 +1645,17 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     const scopedMarkDataViews = markDataViews.filter(
       view => coordinateScopeIdOf(view.mark, coordinateScopes.defaultScope) === scope.id,
     );
+    if (scaffold === undefined) {
+      for (const role of rolesOf(scope.coordinate)) {
+        const scaleName = coordinateScaleNameOf(scope, role);
+        if (scaleName === undefined) continue;
+        const sharedViews = markDataViews.filter(view => {
+          const viewScope = scopeById.get(coordinateScopeIdOf(view.mark, coordinateScopes.defaultScope));
+          return viewScope !== undefined && coordinateScaleNameOf(viewScope, role) === scaleName;
+        });
+        if (sharedViews.length > scopedMarkDataViews.length) roleMarkDataViews[role] = sharedViews;
+      }
+    }
     const scopedGuides = withoutAxisGrid(allGuides.filter(
       guide => !isAxisGuide(guide) || axisGuideScopeIdOf(guide, coordinateScopes.defaultScope) === scope.id,
     ));

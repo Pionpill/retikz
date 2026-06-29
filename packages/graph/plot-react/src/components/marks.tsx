@@ -159,6 +159,8 @@ export type PathMarkProps = MarkTransformProps &
     x: FieldName;
     /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
     y: FieldName;
+    /** Adapter-only sugar: bind this mark to a named x axis; expanded to coordinateScope before PlotSpec output. */
+    xAxisId?: string;
     /** Adapter-only sugar: bind this mark to a named y axis; expanded to coordinateScope before PlotSpec output. */
     yAxisId?: string;
     /** 驱动连接顺序的字段；缺省按数据数组顺序 */
@@ -201,6 +203,8 @@ export type PointMarkProps = MarkTransformProps &
     x?: FieldName;
     /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值；cartesian2D / polar2D 必填，1D 省略） */
     y?: FieldName;
+    /** Adapter-only sugar: bind this mark to a named x axis; expanded to coordinateScope before PlotSpec output. */
+    xAxisId?: string;
     /** Adapter-only sugar: bind this mark to a named y axis; expanded to coordinateScope before PlotSpec output. */
     yAxisId?: string;
     /** 三元坐标第三分量字段；ternary2D 下与 x / y 一起使用 */
@@ -262,6 +266,8 @@ export type IntervalMarkProps = MarkTransformProps &
     x?: FieldName;
     /** 绑 y 位置通道的字段路径（数值；polar 下作径向值；直方下作箱高度 binCount 或自定义 metric 字段） */
     y?: FieldName;
+    /** Adapter-only sugar: bind this mark to a named x axis; expanded to coordinateScope before PlotSpec output. */
+    xAxisId?: string;
     /** Adapter-only sugar: bind this mark to a named y axis; expanded to coordinateScope before PlotSpec output. */
     yAxisId?: string;
     /** polar 饼图 / 环图的份额值字段；设置后自动累积成角界（extent×full bounds），下沉为扇区 */

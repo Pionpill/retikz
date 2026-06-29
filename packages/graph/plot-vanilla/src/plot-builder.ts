@@ -14,6 +14,7 @@ export type PlotBuilderConfig = Omit<PlotSpec, 'namespace' | 'type' | 'marks' | 
 };
 
 type MarkBindingProps = {
+  xAxisId?: string;
   yAxisId?: string;
   facetId?: string;
   trackId?: string;
@@ -86,6 +87,7 @@ const AUTO_Y = '__y';
 const DEFAULT_AXIS_SCOPE = 'default';
 
 const yAxisScaleNameOf = (axisId: string): string => `__y.${axisId}`;
+const xAxisScaleNameOf = (axisId: string): string => `__x.${axisId}`;
 
 const isAxisGuide = (guide: Guide): guide is AxisGuide => guide.type === PlotGuide.Axis;
 
@@ -94,6 +96,7 @@ const isPositionMark = (mark: AxisBoundMarkOperation): boolean =>
 
 const stripMarkBindings = (mark: AxisBoundMarkOperation): MarkOperation => {
   const rest = { ...mark };
+  delete rest.xAxisId;
   delete rest.yAxisId;
   delete rest.facetId;
   delete rest.trackId;
@@ -121,6 +124,7 @@ const withGuideScope = (guide: AxisBoundGuide, coordinateScope: string | undefin
 
 const assertMarkBindingCompatibility = (mark: AxisBoundMarkOperation): void => {
   const bindings = [
+    mark.xAxisId !== undefined ? 'xAxisId' : undefined,
     mark.yAxisId !== undefined ? 'yAxisId' : undefined,
     mark.facetId !== undefined ? 'facetId' : undefined,
     mark.trackId !== undefined ? 'trackId' : undefined,
@@ -157,25 +161,45 @@ const facetDimensionOf = (
 
 const insertAxisBindingScales = (
   scales: ReadonlyArray<ScaleOperation>,
-  axisIds: ReadonlyArray<string>,
+  xAxisIds: ReadonlyArray<string>,
+  yAxisIds: ReadonlyArray<string>,
 ): Array<ScaleOperation> => {
-  const hasXScale = scales.some(scale => scale.name === AUTO_X);
+  const hasXBinding = xAxisIds.length > 0;
+  const hasYBinding = yAxisIds.length > 0;
+  const baseXScale = scales.find(scale => scale.name === AUTO_X) ?? { type: PlotScale.Linear, name: AUTO_X };
   const baseYScale = scales.find(scale => scale.name === AUTO_Y) ?? { type: PlotScale.Linear, name: AUTO_Y };
-  const yScales: Array<ScaleOperation> = axisIds.map(axisId => ({
+  const xScales: Array<ScaleOperation> = xAxisIds.map(axisId => ({
+    ...baseXScale,
+    name: xAxisScaleNameOf(axisId),
+  }));
+  const yScales: Array<ScaleOperation> = yAxisIds.map(axisId => ({
     ...baseYScale,
     name: yAxisScaleNameOf(axisId),
   }));
-  const out: Array<ScaleOperation> = hasXScale ? [] : [{ type: PlotScale.Linear, name: AUTO_X }];
-  let inserted = false;
+  const out: Array<ScaleOperation> = [];
+  let insertedX = false;
+  let insertedY = false;
   for (const scale of scales) {
-    if (scale.name === AUTO_Y) {
+    if (scale.name === AUTO_X && hasXBinding) {
+      out.push(...xScales);
+      insertedX = true;
+    } else if (scale.name === AUTO_Y && hasYBinding) {
       out.push(...yScales);
-      inserted = true;
+      insertedY = true;
     } else {
       out.push(scale);
     }
   }
-  if (!inserted) out.push(...yScales);
+  if (!scales.some(scale => scale.name === AUTO_X)) {
+    out.unshift(...(hasXBinding ? xScales : [{ type: PlotScale.Linear, name: AUTO_X }]));
+  } else if (hasXBinding && !insertedX) {
+    out.unshift(...xScales);
+  }
+  if (!scales.some(scale => scale.name === AUTO_Y)) {
+    out.push(...(hasYBinding ? yScales : [{ type: PlotScale.Linear, name: AUTO_Y }]));
+  } else if (hasYBinding && !insertedY) {
+    out.push(...yScales);
+  }
   return out;
 };
 
@@ -372,7 +396,9 @@ const normalizeAxisBindings = (
   marks.forEach(assertMarkBindingCompatibility);
   guides.forEach(assertGuideBindingCompatibility);
 
-  const hasAxisBinding = marks.some(mark => mark.yAxisId !== undefined);
+  const hasXAxisBinding = marks.some(mark => mark.xAxisId !== undefined);
+  const hasYAxisBinding = marks.some(mark => mark.yAxisId !== undefined);
+  const hasAxisBinding = hasXAxisBinding || hasYAxisBinding;
   const hasTopologyBinding = marks.some(mark => mark.facetId !== undefined || mark.trackId !== undefined) ||
     guides.some(guide => guide.facetId !== undefined || guide.scaffoldId !== undefined || guide.trackId !== undefined);
   const hasTopologyDeclarations = facets.length > 0 || scaffolds.length > 0;
@@ -400,68 +426,107 @@ const normalizeAxisBindings = (
   }
 
   if (base.coordinate !== undefined && base.coordinate.type !== PlotCoordinate.Cartesian2D) {
-    throw new Error('plotBuilder: yAxisId binding only supports cartesian2D coordinates');
+    throw new Error('plotBuilder: axis id binding only supports cartesian2D coordinates');
   }
 
   const axes = guides.filter(isAxisGuide);
+  const xAxesById = new Map<string, AxisGuide>();
   const yAxesById = new Map<string, AxisGuide>();
   const axesById = new Map<string, AxisGuide>();
   const seenAxisKeys = new Set<string>();
+  const seenBindingScopeIds = new Map<string, string>();
   for (const axis of axes) {
     if (axis.id === undefined) continue;
-    if (axis.id.length === 0) throw new Error('plotBuilder: axis id must be non-empty when using yAxisId');
+    if (axis.id.length === 0) throw new Error('plotBuilder: axis id must be non-empty when using axis id binding');
     const duplicateKey = `${axis.dimension}:${axis.id}`;
     if (seenAxisKeys.has(duplicateKey)) {
       throw new Error(`plotBuilder: duplicate axis id "${axis.id}" for dimension "${axis.dimension}"`);
     }
     seenAxisKeys.add(duplicateKey);
     axesById.set(axis.id, axis);
+    if (axis.dimension === 'x') xAxesById.set(axis.id, axis);
     if (axis.dimension === 'y') yAxesById.set(axis.id, axis);
+    if ((axis.dimension === 'x' && hasXAxisBinding) || (axis.dimension === 'y' && hasYAxisBinding)) {
+      const previousDimension = seenBindingScopeIds.get(axis.id);
+      if (previousDimension !== undefined && previousDimension !== axis.dimension) {
+        throw new Error(
+          `plotBuilder: axis id "${axis.id}" cannot be reused across dimensions when using axis id binding`,
+        );
+      }
+      seenBindingScopeIds.set(axis.id, axis.dimension);
+    }
   }
 
-  const referencedAxisIds: Array<string> = [];
+  const referencedXAxisIds: Array<string> = [];
+  const referencedYAxisIds: Array<string> = [];
   for (const mark of marks) {
-    if (mark.yAxisId === undefined) continue;
-    if (mark.yAxisId.length === 0) throw new Error('plotBuilder: yAxisId must be a non-empty string');
-    if (mark.yAxisId === DEFAULT_AXIS_SCOPE) continue;
-    if (yAxesById.has(mark.yAxisId)) {
-      if (!referencedAxisIds.includes(mark.yAxisId)) referencedAxisIds.push(mark.yAxisId);
-      continue;
+    if (mark.xAxisId !== undefined) {
+      if (mark.xAxisId.length === 0) throw new Error('plotBuilder: xAxisId must be a non-empty string');
+      if (mark.xAxisId !== DEFAULT_AXIS_SCOPE) {
+        if (xAxesById.has(mark.xAxisId)) {
+          if (!referencedXAxisIds.includes(mark.xAxisId)) referencedXAxisIds.push(mark.xAxisId);
+        } else if (axesById.has(mark.xAxisId)) {
+          throw new Error(`plotBuilder: xAxisId "${mark.xAxisId}" must reference an axis with dimension "x"`);
+        } else {
+          throw new Error(`plotBuilder: missing x axis for xAxisId "${mark.xAxisId}"`);
+        }
+      }
     }
-    if (axesById.has(mark.yAxisId)) {
-      throw new Error(`plotBuilder: yAxisId "${mark.yAxisId}" must reference an axis with dimension "y"`);
+    if (mark.yAxisId !== undefined) {
+      if (mark.yAxisId.length === 0) throw new Error('plotBuilder: yAxisId must be a non-empty string');
+      if (mark.yAxisId !== DEFAULT_AXIS_SCOPE) {
+        if (yAxesById.has(mark.yAxisId)) {
+          if (!referencedYAxisIds.includes(mark.yAxisId)) referencedYAxisIds.push(mark.yAxisId);
+        } else if (axesById.has(mark.yAxisId)) {
+          throw new Error(`plotBuilder: yAxisId "${mark.yAxisId}" must reference an axis with dimension "y"`);
+        } else {
+          throw new Error(`plotBuilder: missing y axis for yAxisId "${mark.yAxisId}"`);
+        }
+      }
     }
-    throw new Error(`plotBuilder: missing y axis for yAxisId "${mark.yAxisId}"`);
   }
 
-  const yAxisIds: Array<string> = [DEFAULT_AXIS_SCOPE];
+  const xAxisIds: Array<string> = hasXAxisBinding ? [DEFAULT_AXIS_SCOPE] : [];
+  const yAxisIds: Array<string> = hasYAxisBinding ? [DEFAULT_AXIS_SCOPE] : [];
   for (const axis of axes) {
-    if (axis.dimension === 'y' && axis.id !== undefined && axis.id !== DEFAULT_AXIS_SCOPE) yAxisIds.push(axis.id);
+    if (axis.dimension === 'x' && hasXAxisBinding && axis.id !== undefined && axis.id !== DEFAULT_AXIS_SCOPE) {
+      xAxisIds.push(axis.id);
+    }
+    if (axis.dimension === 'y' && hasYAxisBinding && axis.id !== undefined && axis.id !== DEFAULT_AXIS_SCOPE) {
+      yAxisIds.push(axis.id);
+    }
   }
-  for (const axisId of referencedAxisIds) {
+  for (const axisId of referencedXAxisIds) {
+    if (!xAxisIds.includes(axisId)) xAxisIds.push(axisId);
+  }
+  for (const axisId of referencedYAxisIds) {
     if (!yAxisIds.includes(axisId)) yAxisIds.push(axisId);
   }
 
   if (base.composition !== undefined) {
     const scopeIds = new Set(base.composition.scopes.map(scope => scope.id));
-    for (const axisId of yAxisIds) {
+    for (const axisId of [...xAxisIds, ...yAxisIds]) {
       if (!scopeIds.has(axisId)) {
-        throw new Error(`plotBuilder: yAxisId "${axisId}" requires an explicit composition scope with the same id`);
+        throw new Error(`plotBuilder: axis id "${axisId}" requires an explicit composition scope with the same id`);
       }
     }
   }
 
   const normalizedMarks = marks.map(mark => {
     if (!isPositionMark(mark)) return stripMarkBindings(mark);
+    if (mark.xAxisId !== undefined) return withMarkScope(mark, mark.xAxisId);
     if (mark.yAxisId !== undefined) return withMarkScope(mark, mark.yAxisId);
     return mark.coordinateScope === undefined ? withMarkScope(mark, DEFAULT_AXIS_SCOPE) : stripMarkBindings(mark);
   });
   const normalizedGuides = guides.map(guide => {
-    if (!isAxisGuide(guide) || guide.dimension !== 'y') return stripGuideBindings(guide);
+    if (!isAxisGuide(guide)) return stripGuideBindings(guide);
+    if (guide.dimension !== 'x' && guide.dimension !== 'y') return stripGuideBindings(guide);
+    if (guide.dimension === 'x' && !hasXAxisBinding) return stripGuideBindings(guide);
+    if (guide.dimension === 'y' && !hasYAxisBinding) return stripGuideBindings(guide);
     const coordinateScope = guide.id ?? DEFAULT_AXIS_SCOPE;
     if (guide.coordinateScope !== undefined && guide.coordinateScope !== coordinateScope) {
       throw new Error(
-        `plotBuilder: y axis "${guide.id ?? '<anonymous>'}" cannot set coordinateScope different from its binding scope`,
+        `plotBuilder: ${guide.dimension} axis "${guide.id ?? '<anonymous>'}" cannot set coordinateScope different from its binding scope`,
       );
     }
     return withGuideScope(guide, coordinateScope);
@@ -476,19 +541,37 @@ const normalizeAxisBindings = (
     };
   }
 
+  const defaultXScaleName = hasXAxisBinding ? xAxisScaleNameOf(DEFAULT_AXIS_SCOPE) : AUTO_X;
+  const defaultYScaleName = hasYAxisBinding ? yAxisScaleNameOf(DEFAULT_AXIS_SCOPE) : AUTO_Y;
+  const xAxisScopes: Array<CoordinateScopeSpec> = xAxisIds
+    .filter(axisId => axisId !== DEFAULT_AXIS_SCOPE)
+    .map(axisId => ({
+      id: axisId,
+      coordinate: { type: PlotCoordinate.Cartesian2D, x: xAxisScaleNameOf(axisId), y: defaultYScaleName },
+      placement: { kind: 'overlay' as const, target: DEFAULT_AXIS_SCOPE },
+    }));
+  const yAxisScopes: Array<CoordinateScopeSpec> = yAxisIds
+    .filter(axisId => axisId !== DEFAULT_AXIS_SCOPE)
+    .map(axisId => ({
+      id: axisId,
+      coordinate: { type: PlotCoordinate.Cartesian2D, x: defaultXScaleName, y: yAxisScaleNameOf(axisId) },
+      placement: { kind: 'overlay' as const, target: DEFAULT_AXIS_SCOPE },
+    }));
+
   return {
     marks: normalizedMarks,
     guides: normalizedGuides,
-    scales: insertAxisBindingScales(base.scales, yAxisIds),
+    scales: insertAxisBindingScales(base.scales, xAxisIds, yAxisIds),
     composition: {
       defaultScope: DEFAULT_AXIS_SCOPE,
-      scopes: yAxisIds.map(axisId => ({
-        id: axisId,
-        coordinate: { type: PlotCoordinate.Cartesian2D, x: AUTO_X, y: yAxisScaleNameOf(axisId) },
-        ...(axisId !== DEFAULT_AXIS_SCOPE
-          ? { placement: { kind: 'overlay' as const, target: DEFAULT_AXIS_SCOPE } }
-          : {}),
-      })),
+      scopes: [
+        {
+          id: DEFAULT_AXIS_SCOPE,
+          coordinate: { type: PlotCoordinate.Cartesian2D, x: defaultXScaleName, y: defaultYScaleName },
+        },
+        ...xAxisScopes,
+        ...yAxisScopes,
+      ],
     },
   };
 };

@@ -103,6 +103,54 @@ describe('plotBuilder', () => {
     expect(() => PlotSpecSchema.parse(built)).not.toThrow();
   });
 
+  it('expands xAxisId binding sugar into overlay composition', () => {
+    const built = plotBuilder({ data: { reference: 'schedule' }, scales: [] })
+      .axis({ type: 'axis', id: 'elapsed', dimension: 'x', placement: { kind: 'side', side: 'bottom' } })
+      .axis({ type: 'axis', id: 'date', dimension: 'x', placement: { kind: 'side', side: 'top' } })
+      .axis({ type: 'axis', dimension: 'y', title: 'revenue' })
+      .path({
+        type: 'path',
+        xAxisId: 'elapsed',
+        encoding: { x: { field: 'elapsedDay' }, y: { field: 'revenue' } },
+      })
+      .point({
+        type: 'point',
+        xAxisId: 'date',
+        encoding: { x: { field: 'dateIndex' }, y: { field: 'revenue' } },
+      })
+      .build();
+
+    expect(built.coordinate).toBeUndefined();
+    expect(built.composition).toEqual({
+      defaultScope: 'default',
+      scopes: [
+        { id: 'default', coordinate: { type: 'cartesian2D', x: '__x.default', y: '__y' } },
+        {
+          id: 'elapsed',
+          coordinate: { type: 'cartesian2D', x: '__x.elapsed', y: '__y' },
+          placement: { kind: 'overlay', target: 'default' },
+        },
+        {
+          id: 'date',
+          coordinate: { type: 'cartesian2D', x: '__x.date', y: '__y' },
+          placement: { kind: 'overlay', target: 'default' },
+        },
+      ],
+    });
+    expect(built.scales).toEqual([
+      { type: 'linear', name: '__x.default' },
+      { type: 'linear', name: '__x.elapsed' },
+      { type: 'linear', name: '__x.date' },
+      { type: 'linear', name: '__y' },
+    ]);
+    expect(built.marks).toMatchObject([
+      { type: 'path', coordinateScope: 'elapsed' },
+      { type: 'point', coordinateScope: 'date' },
+    ]);
+    expect(JSON.stringify(built)).not.toContain('xAxisId');
+    expect(() => PlotSpecSchema.parse(built)).not.toThrow();
+  });
+
   it('binds omitted and default yAxisId marks to the dimension default scope', () => {
     const built = plotBuilder({ data: { reference: 'weather' }, scales: [] })
       .axis({ type: 'axis', id: 'rainfall', dimension: 'y' })

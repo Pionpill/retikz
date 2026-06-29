@@ -3,77 +3,115 @@ title: 坐标组合
 description: composition 让一张 Plot 同时表达双轴、分面和共享轨道这类多区域图。
 ---
 
-当一张图只有一个投影方式时，用 `coordinate` 就够了。需要把同一份数据放进多个坐标区域、多个面板或上下轨道时，仍然会落到同一套 `composition` 模型，但日常写法不必手写 `composition` 对象：双轴用 `Axis id` + `yAxisId`，分面用 `<Facet>` + `facetId`，共享轨道用 `<Scaffold>` / `<Track>` + `trackId` / `scaffoldId`。
+当一张图只有一个投影方式时，用 `coordinate` 就够了。需要把同一份数据放进多个坐标区域、多个面板或上下轨道时，仍然会落到同一套 `composition` 模型，但日常写法不必手写 `composition` 对象：双轴用 `Axis id` + `xAxisId` / `yAxisId`，分面用 `<Facet>` + `facetId`，共享轨道用 `<Scaffold>` / `<Track>` + `trackId` / `scaffoldId`。
 
 `composition` 解决的是“坐标区域怎么组织”，不是新的图元类型。mark 仍然是 `PathMark`、`PointMark`、`IntervalMark`；scale 仍然由字段和显式 `<Scale>` 推断；guide 仍然用 `<Axis>` 声明。
 
 ## 双轴
 
-双轴图是最常见的多坐标场景：x 位置共享，两个 y 轴各自负责不同单位。默认 y 轴不需要命名；额外 y 轴用 `Axis id` 命名，mark 用 `yAxisId` 选择它。
+双轴图是最常见的多坐标场景：一边共享，另一边放两套刻度。多轴快捷写法目前面向 `cartesian2D`，也就是常见的 x / y 笛卡尔坐标。
+
+每个维度都会先有一根默认轴。没有写 `id` 的 `<Axis dimension="x">` 或 `<Axis dimension="y">` 属于对应维度的默认轴；mark 省略 `xAxisId` / `yAxisId` 时，也会使用对应维度的默认轴。只有额外轴需要显式 `id`，再由 mark 用 `xAxisId` 或 `yAxisId` 选择。
+
+### 多 y 轴
+
+多 y 轴适合 x 位置相同、y 单位不同的图。下面的天气例子里，温度使用默认 y 轴，降雨量绑定到右侧 y 轴。
 
 <ComponentPreview name="coordinate-composition-scopes" sourceFiles={['coordinate-composition-scopes.data.ts']} size="md" />
 
-这个例子里，`temperature` 使用默认 y 轴，`rainfall` 是额外 y 轴的 `id`。temperature 折线省略 `yAxisId`，rainfall 折线和点用 `yAxisId="rainfall"` 选择右侧轴；省略 `yAxisId` 或写 `yAxisId="default"` 的 mark 会进入默认 y scope。
+`rainfall` 是额外 y 轴的 `id`。temperature 折线省略 `yAxisId`，rainfall 折线和点用 `yAxisId="rainfall"` 选择右侧轴。
 
 | 写法 | 作用 |
 | --- | --- |
-| `<Axis dimension="y">` | 声明默认 y 轴；mark 省略 `yAxisId` 时使用它 |
-| `<Axis id="rainfall" dimension="y">` | 声明一根额外 y 轴，`id` 供 mark 引用 |
-| `yAxisId` | 让 mark 选择指定 y 轴；省略或写 `default` 时使用默认 y 轴 |
-| `placement={{ kind: 'side', side: 'right' }}` | 把额外 y 轴放到右侧；x 轴 bottom、y 轴 left 可省略 |
+| `<Axis id="rainfall" dimension="y">` | 声明降雨量这根额外 y 轴 |
+| `yAxisId="rainfall"` | 让 mark 使用降雨量轴 |
+| `placement={{ kind: 'side', side: 'right' }}` | 把额外 y 轴放到右侧 |
+
+### 多 x 轴
+
+多 x 轴适合 y 度量相同，但横向刻度有两套解释的图。下面的例子底部显示“发布第几天”，顶部显示“日历日期”；两条线共享 y 轴。
+
+<ComponentPreview name="coordinate-composition-x-axis" sourceFiles={['coordinate-composition-x-axis.data.ts']} size="md" />
+
+`calendar` 是额外 x 轴的 `id`。completed 折线使用默认 x 轴，forecast 折线和点用 `xAxisId="calendar"` 选择上方轴。
+
+| 写法 | 作用 |
+| --- | --- |
+| `<Axis id="calendar" dimension="x">` | 声明日历日期这根额外 x 轴 |
+| `xAxisId="calendar"` | 让 mark 使用日历日期轴 |
+| `placement={{ kind: 'side', side: 'top' }}` | 把额外 x 轴放到上方 |
 
 ## 分面
 
 facet 会按数据字段把一张图拆成多个面板。常规写法是声明一个 `<Facet>`，然后让 mark 和 axis 用 `facetId` 指向它；每个面板会拿到自己对应的数据行。
 
+### 基础列分面
+
+只传 `column` 时，facet 会生成一行多列面板。下面的例子按 `segment` 拆成三列，所有面板默认共享 x / y domain，所以不同面板的折线高度可以直接比较。
+
+<ComponentPreview name="coordinate-composition-facet-basic" sourceFiles={['coordinate-composition-facet-basic.data.ts']} size="md" />
+
+### 行列网格
+
+同时传 `row` 和 `column` 时，facet 会生成二维网格。下面的图按 `region` 拆列、按 `channel` 拆行；`Axis grid` 仍然由轴自己声明，facet 默认会把这根轴的 grid 画到每个面板里。
+
 <ComponentPreview name="coordinate-composition-facet" sourceFiles={['coordinate-composition-facet.data.ts']} size="lg" />
 
-上面的图按 `region` 拆成三列、按 `channel` 拆成两行。facet 默认共享坐标 role 的 domain，并把共享轴收敛到外侧；`Axis grid` 仍由轴自己声明，默认投放到每个面板自己的 plot area。
+### 空面板与独立比例
 
-| 写法 | 作用 |
-| --- | --- |
-| `<Facet id>` | 分面的绑定身份 |
-| `row` / `column` | 按哪个字段拆面板，以及可选显示顺序 |
-| `facetId` | 让 mark / axis 绑定到这个 facet |
-| `empty` | 空面板是丢弃还是保留 |
-| `scales.roles` | 指定 x / y 等坐标角色共享 domain，还是各面板独立计算 |
+默认情况下，空面板会被丢弃；默认 scale domain 会跨所有面板共享。下面的例子显式保留空面板，并让 y 轴在每个面板内独立计算，适合量级差异很大的分组。
 
-## 共享 scaffold 与 track
+<ComponentPreview name="coordinate-composition-facet-independent" sourceFiles={['coordinate-composition-facet-independent.data.ts']} size="lg" />
 
-shared scaffold 用一套坐标骨架管理多个 track。常见用途是多条上下对齐的小轨道：共享 x 轴，y 方向各自占一段 band，适合时间线、监控指标、事件 + 负载这类图。常规写法是用 `<Scaffold>` 包住多个 `<Track>`，mark 用 `trackId` 选择轨道，跨轨道共享的轴用 `scaffoldId` 选择整套 scaffold。
+### API
+
+表里的 `FacetValue` 表示 `string | number | boolean | null`。
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `id` | `string` | 必填 | facet 身份，供 `facetId` 引用 |
+| `row` | `string`<br />`{ field: string; order?: FacetValue[] }` | 省略 | 拆行字段 |
+| `column` | `string`<br />`{ field: string; order?: FacetValue[] }` | 省略 | 拆列字段 |
+| `row.order`<br />`column.order` | `FacetValue[]` | 数据首次出现顺序 | 面板顺序；未列出的值按首次出现追加 |
+| `facetId` | `string` | 省略 | 让 mark / axis 进入 facet 面板 |
+| `empty` | `'drop' \| 'show'` | `'drop'` | 空面板是丢弃还是保留 |
+| `scales.roles` | `Record<string, 'shared' \| 'independent'>` | 未写 role 为 `'shared'` | 指定每个坐标 role 的 domain 是否跨面板共享 |
+| `layout.panelGap` | `number` | `0` | 面板间距，单位是用户坐标单位 |
+| `guidePolicy.axes` | `'perScope' \| 'outerShared'` | `'outerShared'` | 轴逐面板绘制，或收敛到外侧 |
+| `guidePolicy.gridPlacement` | `'self' \| 'sharedRole'` | `'self'` | `Axis grid` 默认投放目标；facet 中会投到每个面板 |
+
+## 共享轨道
+
+共享轨道用一套坐标骨架管理多条 track。常见用途是多条对齐的小图：共享一个 role，另一个 role 被切成多段 band。常规写法是用 `<Scaffold>` 包住多个 `<Track>`，mark 用 `trackId` 选择轨道，跨轨道共享的轴用 `scaffoldId` 选择整套 scaffold。
+
+### 笛卡尔轨道
 
 <ComponentPreview name="coordinate-composition-tracks" sourceFiles={['coordinate-composition-tracks.data.ts']} size="md" />
 
-这个例子里两个 track 共用 `week` 的 x 位置。`incidents` 和 `load` 各自占用 scaffold 的 y band，所以它们能上下对齐但保持自己的垂直空间。x 轴的 `grid` 由 `<Axis>` 开启；shared scaffold 默认把同一组 x 刻度投放到所有共享 track。`trackGap` 打开轨道之间的空隙。
+这个例子里两个 track 共用 `week` 的 x 位置。`incidents` 和 `load` 各自占用 y band，所以它们能上下对齐但保持自己的垂直空间。x 轴的 `grid` 由 `<Axis>` 开启；共享轨道默认把同一组 x 刻度投放到所有共享 track。`trackGap` 打开轨道之间的空隙。
 
-| 写法 | 作用 |
-| --- | --- |
-| `<Scaffold id>` | scaffold 的绑定身份 |
-| `sharedRoles` | 由 scaffold 统一管理的 role，例如共享 `x` |
-| `<Track id>` | track 的绑定身份 |
-| `tracks[].band` | 某个 track 在非共享 role 上占用的比例区间 |
-| `trackId` / `scaffoldId` | 让 mark / axis 绑定到某条 track 或整个 scaffold |
+### 极坐标轨道
 
-## layout 与 guidePolicy
+<ComponentPreview name="coordinate-composition-tracks-polar" sourceFiles={['coordinate-composition-tracks-polar.data.ts']} size="lg" />
 
-`layout` 只管 composition 内部的间距；它不改变数据、scale domain 或 mark 语义。
+共享轨道也可以放在 `polar2D` 下。这里 `x` 被坐标系解释为角向 role，`y` 被解释为径向 role；`sharedRoles={['x']}` 让两条径向 track 共用同一组角度刻度，而各自使用不同的半径 band。
 
-| 字段 | 控制 |
-| --- | --- |
-| `panelGap` | facet 面板之间的间距 |
-| `trackGap` | shared scaffold track 之间的间距 |
-| `axisGap` | 同侧多根 axis 向外错开的距离 |
-| `labelGap` | axis title、facet label、track label 与绘图区的距离 |
-| `padding` | composition 外框四周额外留白 |
+### API
 
-`guidePolicy` 决定轴、网格和标签在多区域图中的投放方式。省略时会按 composition 类型选择常用默认：facet 默认外侧共享轴 + 面板内网格；shared scaffold 默认把共享 role 的网格投放到所有 track；普通 overlay scope 保持各自轴和网格。
-
-| 字段 | 可选值 | 何时用 |
-| --- | --- | --- |
-| `axes` | `perScope` / `outerShared` | facet 或 track 共用 scale 时，外侧只保留一份轴 |
-| `gridPlacement` | `self` / `sharedRole` | `Axis grid` 的默认投放目标；是否画网格仍由每根 `<Axis grid>` 决定 |
-| `facetLabels` | `none` / `rowColumn` | 是否输出 row / column 面板标签 |
-| `trackLabels` | `none` / `inline` | 是否在 track 内输出标签 |
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `Scaffold.id` | `string` | 必填 | scaffold 身份，供 `scaffoldId` 与 `trackId` 生成的 scope 引用 |
+| `Scaffold.sharedRoles` | `Array<string>` | 必填 | 由 scaffold 统一管理的坐标 role，例如共享 `x` |
+| `Scaffold.coordinate` | `CoordinateOperation` | 继承 `<Plot coordinate>` | scaffold 使用的坐标系 |
+| `Scaffold.frame` | `'shared' \| 'independent'` | `'shared'` | track 是否共享 scaffold 的 frame |
+| `Track.id` | `string` | 必填 | track 身份，供 `trackId` 引用 |
+| `Track.band` | `{ role: string; start: number; end: number }` | 必填 | track 在非共享 role 上占用的比例区间，`start` / `end` 取 `0` 到 `1` |
+| `Track.order` | `number` | 声明顺序 | track 排序提示 |
+| `trackId` | `string` | 省略 | 让 mark / axis 进入某条 track |
+| `scaffoldId` | `string` | 省略 | 让 axis 绑定整套 scaffold，常用于共享轴 |
+| `layout.trackGap` | `number` | `0` | track 之间的间距，单位是用户坐标单位 |
+| `guidePolicy.axes` | `'perScope' \| 'outerShared'` | `'outerShared'` | 轴逐 track 绘制，或收敛到外侧 |
+| `guidePolicy.gridPlacement` | `'self' \| 'sharedRole'` | `'sharedRole'` | `Axis grid` 默认投放目标；共享轨道中会投到同 role 的 track |
 
 ## 怎么选择
 
@@ -81,7 +119,7 @@ shared scaffold 用一套坐标骨架管理多个 track。常见用途是多条�
 | --- | --- |
 | 一条折线 + 一组柱，共享 x 但 y 单位不同 | 双轴 |
 | 按地区 / 类别拆成多列或多行 | 分面 |
-| 几个指标沿同一时间轴上下对齐 | 共享 scaffold + track |
+| 几个指标沿同一时间轴上下对齐 | 共享轨道 |
 | 几张图只是摆在同一个大画布里 | 父级 `<Layout>` 里放多个 `<Plot>`，不用 composition |
 
 ## 延伸阅读

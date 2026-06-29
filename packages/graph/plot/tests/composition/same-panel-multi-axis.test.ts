@@ -53,6 +53,41 @@ const dualAxisSpec = {
   ],
 };
 
+const sharedYOverlaySpec = {
+  namespace: 'plot',
+  type: 'plot',
+  id: 'release',
+  data: { reference: 'weather' },
+  scales: [
+    { type: 'linear', name: 'xElapsed' },
+    { type: 'linear', name: 'xCalendar' },
+    { type: 'linear', name: 'yShared' },
+  ],
+  composition: {
+    defaultScope: 'elapsed',
+    scopes: [
+      {
+        id: 'elapsed',
+        coordinate: { type: 'cartesian2D', x: 'xElapsed', y: 'yShared' },
+      },
+      {
+        id: 'calendar',
+        coordinate: { type: 'cartesian2D', x: 'xCalendar', y: 'yShared' },
+        placement: { kind: 'overlay', target: 'elapsed' },
+      },
+    ],
+  },
+  marks: [
+    { type: 'path', order: 'day', encoding: { x: { field: 'day' }, y: { field: 'temperature' } } },
+    {
+      type: 'path',
+      order: 'rainfall',
+      coordinateScope: 'calendar',
+      encoding: { x: { field: 'rainfall' }, y: { field: 'rainfall' } },
+    },
+  ],
+};
+
 const expandOf = (spec: PlotSpec): IRScope => {
   const [definition] = lowerPlots({ weather: rows }, { width: 480, height: 300, provenance: true });
   return definition.expand(spec) as IRScope;
@@ -95,6 +130,8 @@ const allPaths = (child: IRChild): Array<IRPath> => {
 
 const pathYValues = (path: IRPath): Array<number> =>
   path.children.flatMap(step => ('to' in step && Array.isArray(step.to) ? [(step.to)[1]] : []));
+
+const spanOf = (values: ReadonlyArray<number>): number => Math.max(...values) - Math.min(...values);
 
 describe('same-panel multi-axis overlay schema', () => {
   it('axis_placement_and_overlay_zindex_round_trip', () => {
@@ -190,6 +227,14 @@ describe('same-panel multi-axis overlay lowering', () => {
       ...intervalNodes.map(node => (node.position as [number, number])[1] - (node.minimumHeight ?? 0) / 2),
     );
     expect(intervalYMin).toBeCloseTo(pathYMin, 6);
+  });
+
+  it('overlay_scopes_with_the_same_scale_name_share_domain', () => {
+    const outer = expandOf(PlotSpecSchema.parse(sharedYOverlaySpec));
+    const marks = markLayersOf(outer);
+    const temperatureSpan = spanOf(pathYValues(firstPathOf(marks[0])));
+    const rainfallSpan = spanOf(pathYValues(firstPathOf(marks[1])));
+    expect(temperatureSpan).toBeLessThan(rainfallSpan / 5);
   });
 
   it('overlay_zindex_changes_mark_layer_order', () => {

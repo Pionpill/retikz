@@ -303,6 +303,54 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
+  it('react_x_axis_binding_generates_overlay_composition', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Axis id="elapsed" dimension="x" placement={{ kind: 'side', side: 'bottom' }} title="elapsed day" />
+        <Axis id="date" dimension="x" placement={{ kind: 'side', side: 'top' }} title="date" />
+        <Axis dimension="y" title="revenue" />
+        <PathMark x="elapsedDay" y="revenue" xAxisId="elapsed" />
+        <PointMark x="dateIndex" y="revenue" xAxisId="date" />
+      </>,
+      'schedule',
+    );
+
+    expect(spec.coordinate).toBeUndefined();
+    expect(spec.composition).toEqual({
+      defaultScope: 'default',
+      scopes: [
+        { id: 'default', coordinate: { type: 'cartesian2D', x: '__x.default', y: '__y' } },
+        {
+          id: 'elapsed',
+          coordinate: { type: 'cartesian2D', x: '__x.elapsed', y: '__y' },
+          placement: { kind: 'overlay', target: 'default' },
+        },
+        {
+          id: 'date',
+          coordinate: { type: 'cartesian2D', x: '__x.date', y: '__y' },
+          placement: { kind: 'overlay', target: 'default' },
+        },
+      ],
+    });
+    expect(spec.scales).toEqual([
+      { type: 'linear', name: '__x.default' },
+      { type: 'linear', name: '__x.elapsed' },
+      { type: 'linear', name: '__x.date' },
+      { type: 'linear', name: '__y' },
+    ]);
+    expect(spec.marks).toMatchObject([
+      { type: 'path', coordinateScope: 'elapsed' },
+      { type: 'point', coordinateScope: 'date' },
+    ]);
+    expect(spec.guides).toMatchObject([
+      { type: 'axis', id: 'elapsed', dimension: 'x', coordinateScope: 'elapsed' },
+      { type: 'axis', id: 'date', dimension: 'x', coordinateScope: 'date' },
+      { type: 'axis', dimension: 'y' },
+    ]);
+    expect(JSON.stringify(spec)).not.toContain('xAxisId');
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
   it('axis_binding_omitted_keeps_single_coordinate', () => {
     const spec = buildPlotSpec(
       <>
@@ -508,6 +556,29 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
       { type: 'axis', dimension: 'x', coordinateScope: 'incidents', grid: true },
       { type: 'axis', dimension: 'y', coordinateScope: 'load' },
     ]);
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('track_binding_inherits_plot_coordinate_when_scaffold_coordinate_is_omitted', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Scaffold id="radar" sharedRoles={['x']}>
+          <Track id="signal" band={{ role: 'y', start: 0.12, end: 0.48 }} />
+          <Track id="capacity" band={{ role: 'y', start: 0.58, end: 0.96 }} />
+        </Scaffold>
+        <PathMark trackId="signal" x="area" y="signal" order="order" />
+        <PathMark trackId="capacity" x="area" y="capacity" order="order" />
+        <Axis scaffoldId="radar" dimension="x" grid title="area" />
+      </>,
+      'radar',
+      { coordinate: { type: 'polar2D' } },
+    );
+
+    expect(spec.composition?.scaffolds?.[0]?.coordinate).toMatchObject({
+      type: 'polar2D',
+      angle: '__angle',
+      radius: '__radius',
+    });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
