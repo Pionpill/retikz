@@ -1,5 +1,6 @@
 import type { ArrowDefinition } from '../contract/arrow';
 import type { BoundaryDefinition } from '../contract/boundary';
+import type { ClipDefinition } from '../contract/clip';
 import type { CompositeDefinition } from '../contract/composite';
 import type { PathGeneratorDefinition } from '../contract/path';
 import type { PathKindCompileResult, PathKindDefinition } from '../contract/path';
@@ -19,6 +20,7 @@ import type { TextMeasurer } from './text-metrics';
 import { rect as rectOps } from '../geometry/rect';
 import { resolveArrowRegistry } from '../providers/arrow';
 import { resolveBoundaryRegistry } from '../providers/boundary';
+import { resolveClipRegistry } from '../providers/clip';
 import { resolveCompositeRegistry } from '../providers/composite';
 import { resolvePathGeneratorRegistry } from '../providers/path';
 import { resolvePathKindRegistry } from '../providers/path-kind';
@@ -174,6 +176,8 @@ export type CompileOptions = {
    * @description `boundary` 先查本 registry，再 fallback 到 shape registry；`shape` 保留为节点自身视觉 shape。
    */
   boundaries?: ReadonlyArray<BoundaryDefinition>;
+  /** Runtime clip providers keyed by `Scope.clip.kind`; custom kinds are JSON specs resolved at compile time. */
+  clips?: ReadonlyArray<ClipDefinition>;
   /**
    * 运行时注入的第三方 arrow（不进 IR）
    * @description 有效 arrow 表 = `{ ...BUILTIN_ARROWS, ...arrows }`——同名 key 覆盖内置，经 `onWarn` 发
@@ -423,6 +427,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   // compile 主流程只消费 resolved Map；unknown string-reference provider 仍 fail-fast。
   const effectiveShapes: ReadonlyMap<string, ShapeDefinition> = resolveShapeRegistry(options.shapes);
   const effectiveBoundaries: ReadonlyMap<string, BoundaryDefinition> = resolveBoundaryRegistry(options.boundaries);
+  const effectiveClips: ReadonlyMap<string, ClipDefinition> = resolveClipRegistry(options.clips);
   const effectivePathGenerators: ReadonlyMap<string, PathGeneratorDefinition> = resolvePathGeneratorRegistry(
     options.pathGenerators,
   );
@@ -458,7 +463,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   // pattern 资源额外查 effectivePatterns + emit 产 tile（emit-in-compile），用同一 round 保几何一致
   const paint = createPaintRegistry(effectivePatterns, round);
   // clip 登记表：scope.clip 去重 + 派稳定 id（clip-N）→ Scene.resources（与 paint 同表，id 命名空间不撞）
-  const clip = createClipRegistry(round);
+  const clip = createClipRegistry(round, effectiveClips);
 
   const emitStrokePath = (
     path: IRPathBase,

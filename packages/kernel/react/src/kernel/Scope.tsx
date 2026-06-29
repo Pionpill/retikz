@@ -35,7 +35,7 @@ export type ScopeProps = ScopeStyleProps &
     resetStyle?: IRScope['resetStyle'];
     /** 显式栈序：作用于 scope 整体在父层的位置（不影响 scope 内部子元素相对栈序）；缺省 0 = 声明顺序 */
     zIndex?: IRScope['zIndex'];
-    /** 裁剪区（rect / circle / ellipse / polygon，scope 局部坐标）；设值则裁剪 scope 内全部子元素 */
+    /** 裁剪区（rect / circle / ellipse / polygon / path / compound / custom，scope 局部坐标）；设值则裁剪 scope 内全部子元素 */
     clip?: IRScope['clip'];
     /** scope id 注册的 synthetic 包络形状（受控枚举 'rectangle' | 'circle'，非 Node shape 那种开放 shape 引用）；缺省为 'rectangle'（AABB） */
     boundingShape?: IRScope['boundingShape'];

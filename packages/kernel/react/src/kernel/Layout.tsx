@@ -1,6 +1,7 @@
 import type {
   ArrowDefinition,
   BoundaryDefinition,
+  ClipDefinition,
   CompositeDefinition,
   IR,
   IRAnimationTrack,
@@ -200,6 +201,8 @@ export type LayoutProps = ScopeStyleProps & {
    * @description IR 里 `boundary` 仍只写字符串名或 `{ type, params }`；定义在此注入。查不到时再 fallback 到 shapes。
    */
   boundaries?: ReadonlyArray<BoundaryDefinition>;
+  /** Runtime clip providers passed through to `compileToScene`. */
+  clips?: ReadonlyArray<ClipDefinition>;
   /**
    * 运行时注入的第三方 / 自定义 arrow（透传给 `compileToScene` 的 `CompileOptions.arrows`）
    * @description IR 里 `<Path arrowDetail={{ shape: '...' }}>` 仍只写字符串名；定义在此注入。emit-in-compile：
@@ -321,6 +324,7 @@ export const Layout: FC<LayoutProps> = props => {
     nodeDistance,
     shapes,
     boundaries,
+    clips,
     arrows,
     patterns,
     pathGenerators,
@@ -418,6 +422,7 @@ export const Layout: FC<LayoutProps> = props => {
         nodeDistance,
         shapes,
         boundaries,
+        clips,
         arrows,
         patterns,
         pathGenerators,
@@ -432,6 +437,7 @@ export const Layout: FC<LayoutProps> = props => {
       nodeDistance,
       shapes,
       boundaries,
+      clips,
       arrows,
       patterns,
       pathGenerators,

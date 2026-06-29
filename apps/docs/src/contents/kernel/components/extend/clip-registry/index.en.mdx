@@ -1,0 +1,106 @@
+---
+title: Custom Clips
+description: Register scope clipping regions through the Clip Registry; IR keeps JSON-safe clip specs while ClipDefinition resolves custom kinds into renderer-agnostic ClipResource shapes.
+---
+
+`clip` controls which part of a `<Scope>` remains visible. The built-ins cover `rect`, `circle`, `ellipse`, `polygon`, `path`, and `compound`; when a host package needs a named clipping primitive such as `rounded-rect`, `viewport`, `donut`, or a domain-specific mask, register it as a `ClipDefinition`.
+
+The Clip Registry follows the same rule as the other compile-time registries: the IR stores only a JSON object with a `kind`, while functions are injected through `CompileOptions.clips` / `<Layout clips>`.
+
+> Use this when the clip kind is part of your app or package vocabulary. For one-off rectangles or circles, write the built-in clip object directly on `<Scope>`.
+
+## Core Constraint: IR Stays JSON
+
+A custom clip spec is still plain data:
+
+```tsx
+<Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
+  {/* children */}
+</Scope>
+```
+
+The `ClipDefinition` validates that data and resolves it into one of the renderer-agnostic clip shapes that Scene already understands. The definition never enters IR.
+
+| Syntax | Lookup | Use case |
+| --- | --- | --- |
+| `rect` / `circle` / `ellipse` / `polygon` | built-in clip provider | Simple structured clipping |
+| `path` | built-in clip provider | Path-like clipping, including `fillRule` |
+| `compound` | built-in clip provider | Combine built-in and custom clips recursively |
+| custom `kind` | custom clip provider | Domain masks or reusable clip vocabulary |
+
+Custom providers cannot reuse built-in names, and duplicate custom names fail at registration time.
+
+## ClipDefinition
+
+| Field | Purpose | Required / Optional |
+| --- | --- | --- |
+| `kind` | Registry key referenced by `clip.kind` | Required |
+| `schema` | zod schema validating the full custom clip object at compile time | Required |
+| `resolve` | Converts the validated spec into a built-in clip shape | Required |
+
+`resolve` receives `(spec, context)`. `context.round` applies compile precision when a provider wants stable rounded values, and `context.resolve` lets a provider reuse another clip spec by going back through the same registry.
+
+## Injection: CompileOptions.clips
+
+```ts
+import { compileToScene, defineClip, type ClipDefinition, type PathCommand } from '@retikz/core';
+import { z } from 'zod';
+
+const roundedRectClip: ClipDefinition = defineClip({
+  kind: 'rounded-rect',
+  schema: z.strictObject({
+    kind: z.literal('rounded-rect'),
+    x: z.number(),
+    y: z.number(),
+    width: z.number().positive(),
+    height: z.number().positive(),
+    radius: z.number().nonnegative(),
+  }),
+  resolve: (spec) => {
+    const commands: Array<PathCommand> = [
+      { kind: 'move', to: [spec.x + spec.radius, spec.y] },
+      // Build the remaining rounded-rectangle path commands here.
+      { kind: 'close' },
+    ];
+
+    return { kind: 'path', commands };
+  },
+});
+
+const scene = compileToScene(ir, { clips: [roundedRectClip] });
+```
+
+In React, pass the same definition to `<Layout>`:
+
+```tsx
+<Layout clips={[roundedRectClip]}>
+  <Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
+    {/* clipped children */}
+  </Scope>
+</Layout>
+```
+
+## Examples
+
+### Rounded viewport
+
+The scope below uses a custom `rounded-rect` provider. The IR only carries the JSON clip spec; the provider turns it into a path clip during compile, so SVG and Canvas consume the same `ClipResource`.
+
+<ComponentPreview name="clip-registry" size="sm" />
+
+## Lookup and Collisions
+
+- Built-in clip kinds are `rect`, `circle`, `ellipse`, `polygon`, `path`, and `compound`.
+- Custom clip kinds can be any non-empty string except the built-in names.
+- `compound.children` resolves through the same registry, so a compound clip can mix built-ins and custom providers.
+- Unknown custom kinds throw at compile time and tell you to pass the missing definition through `options.clips`.
+
+## Public Helpers
+
+`@retikz/core` exports `defineClip` / `ClipDefinition` / `ClipDefinitionInput` / `ClipResolveContext` / `BUILTIN_CLIPS`. The React and Vanilla package entries re-export the definition helpers as well, so adapter users can import from their current package.
+
+## Related
+
+- [Scope](/kernel/components/layout/scope): Use `<Scope clip>`
+- [Layout](/kernel/components/layout/overview): See the `<Layout clips>` prop
+- [Compile](/kernel/reference/runtime/compile): See `CompileOptions.clips`

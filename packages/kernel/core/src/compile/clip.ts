@@ -1,84 +1,156 @@
-import type { ClipResource, ClipShape } from '../primitive';
+import type { ClipDefinition } from '../contract/clip';
+import type { ClipResource, ClipShape, PathClipShape } from '../primitive';
+import type { PathCommand } from '../primitive/path';
 import type { IRClipSpec } from '../schemas';
 
-/** clip 登记表：编译期收集裁剪区、去重派稳定 id（`clip-1`…），最后产出 Scene clip 资源 */
+import { providerDefinitionOf } from '../providers/registry';
+import { JsonObjectSchema } from '../schemas';
+
 export type ClipRegistry = {
-  /** 把一个裁剪区去重派 id；返回资源 id（供 GroupPrim.clipRef） */
   resolve: (clip: IRClipSpec) => string;
-  /** 产出收集到的全部 clip 资源 */
   resources: () => Array<ClipResource>;
 };
 
-/**
- * 裁剪区 finite 守卫 + round
- * @description schema 的 `.positive()` 只在 IR parse 守门；compileToScene 直接收手搓 / LLM IR 会绕过，
- *   故 compile 是唯一真实关口——非 finite / 非正尺寸会污染 Scene round-trip（JSON.stringify(NaN/Infinity)=null）。
- *   在此抛清晰错（含 kind），对齐 arrow / pattern 的 finite 守卫。坐标 / 尺寸按 Scene precision round。
- */
-const guardAndRound = (clip: IRClipSpec, round: (n: number) => number): ClipShape => {
-  const bad = (field: string, v: number): never => {
-    throw new Error(
-      `Clip '${clip.kind}' has an invalid ${field} (${String(v)}); it must be a finite number${
-        field === 'x' || field === 'y' || field === 'cx' || field === 'cy' ? '' : ' greater than 0'
-      }.`,
-    );
-  };
-  const fin = (field: string, v: number): number => {
-    if (!Number.isFinite(v)) bad(field, v);
-    return round(v);
-  };
-  const pos = (field: string, v: number): number => {
-    if (!Number.isFinite(v) || v <= 0) bad(field, v);
-    return round(v);
-  };
-  switch (clip.kind) {
-    case 'rect':
+const clipKindOf = (clip: IRClipSpec): string => clip.kind;
+
+const bad = (kind: string, field: string, value: number, positive = false): never => {
+  throw new Error(
+    `Clip '${kind}' has an invalid ${field} (${String(value)}); it must be a finite number${
+      positive ? ' greater than 0' : ''
+    }.`,
+  );
+};
+
+const finite = (kind: string, field: string, value: number, round: (n: number) => number): number => {
+  if (!Number.isFinite(value)) bad(kind, field, value);
+  return round(value);
+};
+
+const positive = (kind: string, field: string, value: number, round: (n: number) => number): number => {
+  if (!Number.isFinite(value) || value <= 0) bad(kind, field, value, true);
+  return round(value);
+};
+
+const point = (kind: string, field: string, value: [number, number], round: (n: number) => number): [number, number] => [
+  finite(kind, `${field}[0]`, value[0], round),
+  finite(kind, `${field}[1]`, value[1], round),
+];
+
+const roundCommand = (command: PathCommand, round: (n: number) => number): PathCommand => {
+  switch (command.kind) {
+    case 'move':
+      return { kind: 'move', to: point('path', 'to', command.to, round) };
+    case 'line':
+      return { kind: 'line', to: point('path', 'to', command.to, round) };
+    case 'quad':
       return {
-        kind: 'rect',
-        x: fin('x', clip.x),
-        y: fin('y', clip.y),
-        width: pos('width', clip.width),
-        height: pos('height', clip.height),
+        kind: 'quad',
+        control: point('path', 'control', command.control, round),
+        to: point('path', 'to', command.to, round),
       };
-    case 'circle':
-      return { kind: 'circle', cx: fin('cx', clip.cx), cy: fin('cy', clip.cy), r: pos('r', clip.r) };
-    case 'ellipse':
+    case 'cubic':
       return {
-        kind: 'ellipse',
-        cx: fin('cx', clip.cx),
-        cy: fin('cy', clip.cy),
-        rx: pos('rx', clip.rx),
-        ry: pos('ry', clip.ry),
+        kind: 'cubic',
+        control1: point('path', 'control1', command.control1, round),
+        control2: point('path', 'control2', command.control2, round),
+        to: point('path', 'to', command.to, round),
       };
-    case 'polygon': {
-      if (clip.points.length < 3) {
-        throw new Error(`Clip 'polygon' needs at least 3 points; got ${clip.points.length}.`);
-      }
+    case 'arc':
       return {
-        kind: 'polygon',
-        points: clip.points.map(([px, py], i): [number, number] => {
-          if (!Number.isFinite(px) || !Number.isFinite(py)) {
-            throw new Error(`Clip 'polygon' point[${i}] is not finite (${String(px)}, ${String(py)}).`);
-          }
-          return [round(px), round(py)];
-        }),
+        kind: 'arc',
+        center: point('path', 'center', command.center, round),
+        radius: positive('path', 'radius', command.radius, round),
+        startAngle: finite('path', 'startAngle', command.startAngle, round),
+        endAngle: finite('path', 'endAngle', command.endAngle, round),
+        ...(command.counterClockwise !== undefined ? { counterClockwise: command.counterClockwise } : {}),
       };
-    }
+    case 'ellipseArc':
+      return {
+        kind: 'ellipseArc',
+        center: point('path', 'center', command.center, round),
+        radiusX: positive('path', 'radiusX', command.radiusX, round),
+        radiusY: positive('path', 'radiusY', command.radiusY, round),
+        ...(command.rotation !== undefined ? { rotation: finite('path', 'rotation', command.rotation, round) } : {}),
+        startAngle: finite('path', 'startAngle', command.startAngle, round),
+        endAngle: finite('path', 'endAngle', command.endAngle, round),
+        ...(command.counterClockwise !== undefined ? { counterClockwise: command.counterClockwise } : {}),
+      };
+    case 'close':
+      return { kind: 'close' };
   }
 };
 
-/**
- * 建一个 clip 登记表
- * @description resolve 对结构相同裁剪区（JSON 深比较）合并为一个资源、派稳定 id（`clip-1` / `clip-2`…，首见序）。
- *   同一份 IR 编译两次 → 同 id（快照稳定）。裁剪区坐标 / 尺寸经 finite 守卫 + round。
- * @param round 精度取整（与 compile / render 同一 round，保几何一致）
- */
-export const createClipRegistry = (round: (n: number) => number): ClipRegistry => {
+const guardAndRoundShape = (shape: ClipShape, round: (n: number) => number): ClipShape => {
+  switch (shape.kind) {
+    case 'rect':
+      return {
+        kind: 'rect',
+        x: finite(shape.kind, 'x', shape.x, round),
+        y: finite(shape.kind, 'y', shape.y, round),
+        width: positive(shape.kind, 'width', shape.width, round),
+        height: positive(shape.kind, 'height', shape.height, round),
+      };
+    case 'circle':
+      return {
+        kind: 'circle',
+        cx: finite(shape.kind, 'cx', shape.cx, round),
+        cy: finite(shape.kind, 'cy', shape.cy, round),
+        r: positive(shape.kind, 'r', shape.r, round),
+      };
+    case 'ellipse':
+      return {
+        kind: 'ellipse',
+        cx: finite(shape.kind, 'cx', shape.cx, round),
+        cy: finite(shape.kind, 'cy', shape.cy, round),
+        rx: positive(shape.kind, 'rx', shape.rx, round),
+        ry: positive(shape.kind, 'ry', shape.ry, round),
+      };
+    case 'polygon':
+      if (shape.points.length < 3) {
+        throw new Error(`Clip 'polygon' needs at least 3 points; got ${shape.points.length}.`);
+      }
+      return {
+        kind: 'polygon',
+        points: shape.points.map(([x, y], index) => [
+          finite(shape.kind, `points[${index}][0]`, x, round),
+          finite(shape.kind, `points[${index}][1]`, y, round),
+        ]),
+      };
+    case 'path': {
+      if (shape.commands.length === 0) throw new Error("Clip 'path' needs at least 1 command.");
+      const rounded: PathClipShape = {
+        kind: 'path',
+        commands: shape.commands.map(command => roundCommand(command, round)),
+      };
+      if (shape.fillRule !== undefined) rounded.fillRule = shape.fillRule;
+      return rounded;
+    }
+    case 'compound':
+      if (shape.children.length === 0) throw new Error("Clip 'compound' needs at least 1 child.");
+      return {
+        kind: 'compound',
+        children: shape.children.map(child => guardAndRoundShape(child, round)),
+        ...(shape.fillRule !== undefined ? { fillRule: shape.fillRule } : {}),
+      };
+  }
+};
+
+export const createClipRegistry = (
+  round: (n: number) => number,
+  definitions: ReadonlyMap<string, ClipDefinition>,
+): ClipRegistry => {
   const idByKey = new Map<string, string>();
   const list: Array<ClipResource> = [];
   let counter = 0;
+  const resolveShape = (clip: IRClipSpec): ClipShape => {
+    const kind = clipKindOf(clip);
+    const definition = providerDefinitionOf(definitions, kind, { capability: 'clip', optionName: 'clips' });
+    const parsed = definition.schema.parse(clip);
+    JsonObjectSchema.parse(parsed);
+    return guardAndRoundShape(definition.resolve(parsed, { round, resolve: resolveShape }), round);
+  };
   const resolve = (clip: IRClipSpec): string => {
-    const shape = guardAndRound(clip, round);
+    const shape = resolveShape(clip);
     const key = JSON.stringify(shape);
     let id = idByKey.get(key);
     if (id === undefined) {

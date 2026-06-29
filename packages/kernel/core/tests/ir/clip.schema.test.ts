@@ -151,8 +151,13 @@ describe('ClipSpecSchema 退化 / 非法形态拒绝', () => {
     expect(parsed.success).toBe(false);
   });
 
-  it('未知 kind 拒绝', () => {
+  it('custom kind 接受 JSON-safe 对象，具体语义由 compile 的 clips provider 校验', () => {
     const parsed = ClipSpecSchema.safeParse({ kind: 'triangle', x: 0, y: 0, width: 10, height: 10 });
+    expect(parsed.success).toBe(true);
+  });
+
+  it('builtin kind 形态错误时不回退成 custom clip', () => {
+    const parsed = ClipSpecSchema.safeParse({ kind: 'rect', x: 0, y: 0, width: 10 });
     expect(parsed.success).toBe(false);
   });
 });

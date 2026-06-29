@@ -229,7 +229,7 @@ The master `color` maps to TikZ `color=` (sets the current color; draw / fill / 
 
 ### Clipping
 
-`<Scope clip={...}>` clips every child of the scope to a region — inside is visible, outside is cut away (TikZ `\begin{scope}\clip ...`). The clip region is one of four structured shapes, in scope-local coordinates:
+`<Scope clip={...}>` clips every child of the scope to a region — inside is visible, outside is cut away (TikZ `\begin{scope}\clip ...`). Built-in clips support `rect` / `circle` / `ellipse` / `polygon` / `path` / `compound`, and [Custom Clips](/kernel/components/extend/clip-registry) can register additional `kind` values. Coordinates are scope-local:
 
 ```tsx
 <Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 60 }}>{/* children */}</Scope>
@@ -365,7 +365,7 @@ Inner overrides outer; within one frame the typed default overrides the cascade.
 
 > **Renderer-agnostic**: the region compiles into a `ClipResource` in the Scene resource table (deduped + stable id); `<clipPath>` materialization happens only in the SVG adapter — any adapter can reproduce it.
 >
-> **Limitations**: clip applies to the scope's GroupPrim children; a **path declared inside a transformed scope** is hoisted to the top level and is not clipped by that scope (existing architecture); to clip a single Node / Path, wrap it in `<Scope clip>`. Arbitrary Bézier clip paths are not yet supported.
+> **Limitations**: clip applies to the scope's GroupPrim children; a **path declared inside a transformed scope** is hoisted to the top level and is not clipped by that scope (existing architecture); to clip a single Node / Path, wrap it in `<Scope clip>`. A custom clip provider must still resolve to a renderer-agnostic `ClipShape`; functions or backend-specific objects never enter IR.
 
 ## API Reference
 
@@ -390,7 +390,7 @@ Inner overrides outer; within one frame the typed default overrides the cascade.
 | `arrowDefault`   | `object`                     | —             | Arrow default style (shape / scale / color)                                                                                                                                                                                                                                                                                                                  |
 | `resetStyle`     | `boolean \| Array`           | `false`       | Inheritance barrier: cut outer channels; details in § How it works §「Style inheritance resolution」                                                                                                                                                                                                                                                         |
 | `zIndex`         | `number` (integer)           | `0`           | Explicit stacking order: positions the scope as a whole (its GroupPrim) among its siblings without affecting the relative stacking inside it; higher draws on top, ties keep declaration order                                                                                                                                                               |
-| `clip`           | `ClipSpec`                   | —             | Clip region (rect / circle / ellipse / polygon, scope-local coords); clips every child of the scope                                                                                                                                                                                                                                                          |
+| `clip`           | `ClipSpec`                   | —             | Clip region (rect / circle / ellipse / polygon / path / compound / custom, scope-local coords); clips every child of the scope                                                                                                                                                                                                                                   |
 | `animations`     | `Array<AnimationTrack>`      | —             | Timeline animation tracks applied to the scope as a whole (its GroupPrim); not propagated to children, not part of layout. See [Animation](/kernel/components/effects/animation)                                                                                                                                                                             |
 
 ## Related

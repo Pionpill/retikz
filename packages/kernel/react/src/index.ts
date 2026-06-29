@@ -93,6 +93,9 @@ export type {
   ArrowEmitContext,
   BoundaryDefinition,
   BoundaryDefinitionInput,
+  ClipDefinition,
+  ClipDefinitionInput,
+  ClipResolveContext,
   IRJsonObject,
   MarkerFill,
   MarkerPrimitive,
@@ -109,6 +112,7 @@ export type {
 export {
   defineArrow,
   defineBoundary,
+  defineClip,
   definePathGenerator,
   definePathKind,
   definePattern,

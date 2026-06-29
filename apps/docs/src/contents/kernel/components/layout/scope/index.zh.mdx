@@ -229,7 +229,7 @@ Scope 兼作样式默认值挂点，给内部元素提供三组样式表面：**
 
 ### clip 裁切
 
-`<Scope clip={...}>` 把 scope 内所有子元素裁剪到一个区域内——区域内可见、区域外裁掉（对应 TikZ `\begin{scope}\clip ...`）。裁剪区是四种结构化形状之一，坐标用 scope 局部坐标系：
+`<Scope clip={...}>` 把 scope 内所有子元素裁剪到一个区域内——区域内可见、区域外裁掉（对应 TikZ `\begin{scope}\clip ...`）。内置裁剪区支持 `rect` / `circle` / `ellipse` / `polygon` / `path` / `compound`，也可以通过 [自定义裁剪区](/kernel/components/extend/clip-registry) 注册自己的 `kind`；坐标用 scope 局部坐标系：
 
 ```tsx
 <Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 60 }}>{/* children */}</Scope>
@@ -365,7 +365,7 @@ compile 维护一个 style frame 栈，进入每层 scope 压一帧，每个元�
 
 > **渲染无关**：裁剪区编译成 Scene 资源表里的 `ClipResource`（去重 + 稳定 id），`<clipPath>` 物化只在 SVG adapter——任何 adapter 都能复刻。
 >
-> **限制**：clip 只作用于 scope 的 GroupPrim 子元素；**带 transforms 的 scope 内 path** 会被 hoist 到顶层、不被该 scope 裁（既有架构）；要裁单个 Node / Path 用 `<Scope clip>` 包一层。任意贝塞尔曲线裁剪路径暂不支持。
+> **限制**：clip 只作用于 scope 的 GroupPrim 子元素；**带 transforms 的 scope 内 path** 会被 hoist 到顶层、不被该 scope 裁（既有架构）；要裁单个 Node / Path 用 `<Scope clip>` 包一层。自定义 clip provider 仍然必须解析成 renderer-agnostic 的 `ClipShape`，不能把函数或后端专有对象写进 IR。
 
 ## API 参考
 
@@ -390,7 +390,7 @@ compile 维护一个 style frame 栈，进入每层 scope 压一帧，每个元�
 | `arrowDefault`   | `object`                  | —             | arrow 默认样式（shape / scale / 色等）                                                                                                                                                                                        |
 | `resetStyle`     | `boolean \| Array`        | `false`       | 继承屏障：切外层对应通道；详见 § 技术原理 §「样式继承解析」                                                                                                                                                                   |
 | `zIndex`         | `number`（整数）          | `0`           | 显式栈序：作用于 scope 整体（其 GroupPrim）在父层的位置，不影响 scope 内部子元素相对栈序；大者在上、同值保持声明顺序                                                                                                          |
-| `clip`           | `ClipSpec`                | —             | 裁剪区（rect / circle / ellipse / polygon，scope 局部坐标）；裁 scope 内全部子元素                                                                                                                                            |
+| `clip`           | `ClipSpec`                | —             | 裁剪区（rect / circle / ellipse / polygon / path / compound / custom，scope 局部坐标）；裁 scope 内全部子元素                                                                                                                 |
 | `animations`     | `Array<AnimationTrack>`   | —             | 作用于 scope 整体（其 GroupPrim）的时间轴动画 tracks；不下传子元素、不参与布局。见 [动画](/kernel/components/effects/animation)                                                                                               |
 
 ## 相关

@@ -29,17 +29,22 @@ export type {
   IRBetweenPosition,
   IRBetweenTranslateTransform,
   IRChild,
+  IRCircleClipSpec,
   IRCirclePathStep,
+  IRClipFillRule,
   IRClipSpec,
   IRComposite,
+  IRCompoundClipSpec,
   IRControlPoint,
   IRCoordinate,
   IRCubicStep,
   IRCurveStep,
+  IRCustomClipSpec,
   IRCycleStep,
   IRDrawableMeta,
   IRDrawableSharedStyle,
   IRDrawableStyle,
+  IREllipseClipSpec,
   IREllipsePathStep,
   IRFoldStep,
   IRFont,
@@ -61,12 +66,16 @@ export type {
   IRPaintSpec,
   IRPath,
   IRPathBase,
+  IRPathClipSpec,
+  IRPathCommand,
   IRPathDefault,
   IRPathRibbonOptions,
   IRPathScale,
   IRPolarTranslateTransform,
+  IRPolygonClipSpec,
   IRPosition,
   IRRectangleStep,
+  IRRectClipSpec,
   IRRelativeAccumulateTarget,
   IRRelativeTarget,
   IRRibbonArcCap,
@@ -115,6 +124,7 @@ export type {
 export {
   AbsoluteTargetSchema,
   AnchorRefSchema,
+  ArcPathCommandSchema,
   ArcStepSchema,
   ArrowDefaultSchema,
   ArrowDetailSchema,
@@ -126,10 +136,13 @@ export {
   BetweenPositionSchema,
   ChildSchema,
   CirclePathStepSchema,
+  ClipFillRuleSchema,
   ClipSpecSchema,
+  ClosePathCommandSchema,
   CompositeBaseSchema,
   ControlPointSchema,
   CoordinateSchema,
+  CubicPathCommandSchema,
   CubicStepSchema,
   CURRENT_IR_VERSION,
   CurveStepSchema,
@@ -137,6 +150,7 @@ export {
   DrawableMetaSchema,
   DrawableStyleSchema,
   DropShadowSchema,
+  EllipseArcPathCommandSchema,
   EllipsePathStepSchema,
   FoldStepSchema,
   FoldStepVia,
@@ -148,8 +162,10 @@ export {
   JsonObjectSchema,
   JsonValueSchema,
   LabelDefaultSchema,
+  LinePathCommandSchema,
   LineSpecSchema,
   LineStepSchema,
+  MovePathCommandSchema,
   MoveStepSchema,
   NodeDefaultSchema,
   NodeLabelBoundaryPositionSchema,
@@ -161,12 +177,14 @@ export {
   OffsetPositionSchema,
   PaintSpecSchema,
   PathBaseSchema,
+  PathCommandSchema,
   PathDefaultSchema,
   PathRibbonOptionsSchema,
   PathScaleSchema,
   PathSchema,
   PolarPositionSchema,
   PositionSchema,
+  QuadPathCommandSchema,
   RectangleStepSchema,
   RelativeAccumulateTargetSchema,
   RelativeTargetSchema,
@@ -334,9 +352,12 @@ export {
 // Shapes (Shape Registry 扩展面：第三方 shape 注入 + 内置注册项 + 作者所需 helper)
 export type { BoundaryDefinition, BoundaryDefinitionInput } from './contract/boundary';
 export { defineBoundary } from './contract/boundary';
+export type { ClipDefinition, ClipDefinitionInput, ClipResolveContext } from './contract/clip';
+export { defineClip } from './contract/clip';
 export type { ShapeDefinition, ShapeDefinitionInput, ShapeStyle } from './contract/shape';
 export { contour, defineShape, localToWorld, worldToLocal } from './contract/shape';
 export { BUILTIN_BOUNDARIES } from './providers/boundary';
+export { BUILTIN_CLIPS } from './providers/clip';
 export { BUILTIN_SHAPES } from './providers/shape';
 
 // Arrows (Arrow Registry 扩展面：第三方 arrow 注入 + 内置注册项)

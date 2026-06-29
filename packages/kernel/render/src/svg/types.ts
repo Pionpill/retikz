@@ -72,6 +72,7 @@ export type SvgPresentationAttrs = {
   opacity?: number | string;
   'fill-opacity'?: number | string;
   'fill-rule'?: 'nonzero' | 'evenodd';
+  'clip-rule'?: 'nonzero' | 'evenodd';
   'stroke-opacity'?: number | string;
   'stroke-width'?: number | string;
   'stroke-dasharray'?: number | string;
