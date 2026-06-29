@@ -1,6 +1,6 @@
 # ADR-02：Provider key contract
 
-- 状态：Proposed
+- 状态：Accepted（2026-06-29 人工签字，待实现）
 - 决策日期：2026-06-28
 - 关联：[alpha.7 roadmap](./roadmap.md) · [ADR-01](./01-provider-registry-contract.md) · [core-design.md](../../../../../architecture/core-design.md) · [plot-design.md](../../../../../architecture/plot-design.md)
 

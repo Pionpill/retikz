@@ -52,10 +52,10 @@ kernel alpha.7 采用同样原则: **registry 机制统一，key 来源按能力
 
 | ADR | 状态 | 主题 | 说明 |
 | --- | --- | --- | --- |
-| [ADR-01](./01-provider-registry-contract.md) | Proposed | Provider registry contract | 统一 array 输入、Map resolve、builtin-first、duplicate throw、unknown 诊断、测试矩阵与错误消息格式 |
-| [ADR-02](./02-provider-key-contract.md) | Proposed | Provider key contract | 区分 string reference provider 与 operation provider；明确 `name`、schema literal、`namespace.type` 三种 key 来源 |
-| [ADR-03](./03-capability-provider-migration.md) | Proposed | Capability migration | 迁移 shape / arrow / pattern / path generator / path kind / ribbon width profile / composite 到统一 provider 模型 |
-| [ADR-04](./04-adapter-surface-and-docs.md) | Proposed | Adapter surface and docs | React / Vanilla provider 透传改成数组定义；文档新增 provider authoring 总览与扩展示例 |
+| [ADR-01](./01-provider-registry-contract.md) | Accepted（2026-06-29 人工签字，待实现） | Provider registry contract | 统一 array 输入、Map resolve、builtin-first、duplicate throw、unknown 诊断、测试矩阵与错误消息格式 |
+| [ADR-02](./02-provider-key-contract.md) | Accepted（2026-06-29 人工签字，待实现） | Provider key contract | 区分 string reference provider 与 operation provider；明确 `name`、schema literal、`namespace.type` 三种 key 来源 |
+| [ADR-03](./03-capability-provider-migration.md) | Accepted（2026-06-29 人工签字，待实现） | Capability migration | 迁移 shape / arrow / pattern / path generator / path kind / ribbon width profile / composite 到统一 provider 模型 |
+| [ADR-04](./04-adapter-surface-and-docs.md) | Accepted（2026-06-29 人工签字，待实现） | Adapter surface and docs | React / Vanilla provider 透传改成数组定义；文档新增 provider authoring 总览与扩展示例 |
 
 ## 设计约束
 
