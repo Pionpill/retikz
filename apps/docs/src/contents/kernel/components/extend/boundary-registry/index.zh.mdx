@@ -59,7 +59,7 @@ boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
 anchor?: (rect: Rect, name: string, params: TParams) => Position | undefined;
 ```
 
-当用户写 `A.input`、`A.output` 这类名字时调用。未实现 `anchor`，或返回 `undefined` 时，编译层会回退到矩形 compass 锚点；这让简单 boundary 只写 `boundaryPoint` 也能继续使用 `north` / `east` 等常见方位。
+当用户写 `A.input`、`A.output` 这类名字时调用。未实现 `anchor`，或返回 `undefined` 时，编译层会回退到矩形 Web 锚点；这让简单 boundary 只写 `boundaryPoint` 也能继续使用 `top` / `right` 等常见方位。`north` / `east` 这类 compass 写法仍可作为输入别名，但进入 provider 前会归一为 Web 风格。
 
 ## 注入连接面定义
 

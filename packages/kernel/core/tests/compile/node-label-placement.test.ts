@@ -50,9 +50,15 @@ describe('Node label placement', () => {
       });
     });
 
+    it('compass boundary 别名归一到 Web canonical', () => {
+      expect(NodeLabelSchema.parse({ text: 'L', position: { boundary: 'north' } })).toMatchObject({
+        position: { boundary: 'top' },
+      });
+    });
+
     it('拒绝未知 placement、未知 boundary 与越界 t', () => {
       expect(() => NodeLabelSchema.parse({ text: 'L', placement: 'inner' })).toThrow();
-      expect(() => NodeLabelSchema.parse({ text: 'L', position: { boundary: 'north' } })).toThrow();
+      expect(() => NodeLabelSchema.parse({ text: 'L', position: { boundary: 'up' } })).toThrow();
       expect(() => NodeLabelSchema.parse({ text: 'L', position: { boundary: 'top', t: 1.1 } })).toThrow();
     });
 

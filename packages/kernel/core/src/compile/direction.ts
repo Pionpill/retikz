@@ -1,7 +1,7 @@
-import type { CompassAnchorValue } from '../geometry/anchor';
+import type { WebAnchorValue } from '../geometry/anchor';
 import type { AtDirectionValue } from '../schemas';
 
-import { CompassAnchor } from '../geometry/anchor';
+import { WebAnchor } from '../geometry/anchor';
 import { AtDirection } from '../schemas';
 
 export type DirectionVector = readonly [number, number];
@@ -23,12 +23,12 @@ export const DirectionVectorByAtDirection = {
 
 /** 8 方向 label position 对应的节点边界 anchor。 */
 export const LabelAnchorByAtDirection = {
-  [AtDirection.Above]: CompassAnchor.North,
-  [AtDirection.Below]: CompassAnchor.South,
-  [AtDirection.Left]: CompassAnchor.West,
-  [AtDirection.Right]: CompassAnchor.East,
-  [AtDirection.AboveLeft]: CompassAnchor.NorthWest,
-  [AtDirection.AboveRight]: CompassAnchor.NorthEast,
-  [AtDirection.BelowLeft]: CompassAnchor.SouthWest,
-  [AtDirection.BelowRight]: CompassAnchor.SouthEast,
-} as const satisfies Record<AtDirectionValue, CompassAnchorValue>;
+  [AtDirection.Above]: WebAnchor.Top,
+  [AtDirection.Below]: WebAnchor.Bottom,
+  [AtDirection.Left]: WebAnchor.Left,
+  [AtDirection.Right]: WebAnchor.Right,
+  [AtDirection.AboveLeft]: WebAnchor.TopLeft,
+  [AtDirection.AboveRight]: WebAnchor.TopRight,
+  [AtDirection.BelowLeft]: WebAnchor.BottomLeft,
+  [AtDirection.BelowRight]: WebAnchor.BottomRight,
+} as const satisfies Record<AtDirectionValue, WebAnchorValue>;

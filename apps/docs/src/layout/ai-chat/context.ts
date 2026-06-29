@@ -62,7 +62,7 @@ Path = {
 Step = {
   type: 'step',
   kind: 'move' | 'line' | 'arc' | 'circlePath' | 'quad' | 'cubic' | 'ellipseArc' | 'cycle',
-  to?: [x, y] | { id, anchor?, offset? },  // 节点/Coordinate 引用用对象；anchor = 'north' | 30 | { side, t }；写 JSX 时可用 'A.north' 字符串简写（react 层转对象）
+  to?: [x, y] | { id, anchor?, offset? },  // 节点/Coordinate 引用用对象；anchor = 'top' | 30 | { side, t }；写 JSX 时可用 'A.top' 字符串简写（react 层转对象）
   // 各 kind 还有专属字段（如 arc: startAngle/endAngle/radius；circlePath: radius）
 }
 
@@ -168,7 +168,7 @@ Path = {
 Step = {
   type: 'step',
   kind: 'move' | 'line' | 'arc' | 'circlePath' | 'quad' | 'cubic' | 'ellipseArc' | 'cycle',
-  to?: [x, y] | { id, anchor?, offset? },  // node/Coordinate references use the object form; anchor = 'north' | 30 | { side, t }; in JSX the 'A.north' string shorthand works (react converts to object)
+  to?: [x, y] | { id, anchor?, offset? },  // node/Coordinate references use the object form; anchor = 'top' | 30 | { side, t }; in JSX the 'A.top' string shorthand works (react converts to object)
   // each kind has kind-specific extras (e.g. arc: startAngle/endAngle/radius; circlePath: radius)
 }
 

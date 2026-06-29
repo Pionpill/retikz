@@ -322,7 +322,7 @@ IR schema 还包含 `generator` step，用于外部路径生成器注册面；�
 | 极坐标                        | `{ origin: 'a', angle: 30, radius: 50 }`                                          | 极坐标（参看 [定位](/kernel/concepts/basic/position)）                                                     |
 | 偏移定位                      | `{ of: 'a', offset: [10, 5] }`                                                    | 基准 + `(dx, dy)`；`of` 三态——节点 id / 笛卡尔字面值 / PolarPosition                                       |
 | 比例定位                      | `{ between: [{ id: 'a' }, { id: 'b' }], t: 0.5 }`                                 | A 到 B 连线上的比例点；端点必须是可独立解析的 absolute target（`{ id, anchor? }` 形态，或笛卡尔 / 极坐标） |
-| 比例定位（显式锚点）          | `{ between: [{ id: 'a', anchor: 'east' }, { id: 'b', anchor: 'west' }], t: 0.5 }` | 端点可带显式 `anchor`，从锚点而非自动贴边解析                                                              |
+| 比例定位（显式锚点）          | `{ between: [{ id: 'a', anchor: 'right' }, { id: 'b', anchor: 'left' }], t: 0.5 }` | 端点可带显式 `anchor`，从锚点而非自动贴边解析                                                              |
 | 相对偏移 (relative)           | `{ relative: [10, 0] }` 或 `'+10,0'`                                              | 基于前一 step 终点 + `[dx, dy]`；**不**更新 prevEnd                                                        |
 | 相对偏移 (relativeAccumulate) | `{ relativeAccumulate: [10, 0] }` 或 `'++10,0'`                                   | 基于前一 step 终点 + `[dx, dy]`；**更新** prevEnd                                                          |
 

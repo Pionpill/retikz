@@ -59,7 +59,7 @@ Called when a path connects to a node, and when numeric anchors such as `A.30` a
 anchor?: (rect: Rect, name: string, params: TParams) => Position | undefined;
 ```
 
-Called for names such as `A.input` / `A.output`. If `anchor` is omitted, or returns `undefined`, compile falls back to rectangle compass anchors; that keeps simple boundaries usable with `north` / `east` without writing anchor code.
+Called for names such as `A.input` / `A.output`. If `anchor` is omitted, or returns `undefined`, compile falls back to rectangle Web anchors; that keeps simple boundaries usable with `top` / `right` without writing anchor code. Compass names such as `north` / `east` are still accepted as input aliases, but are normalized to Web names before provider hooks run.
 
 ## Injection: CompileOptions.boundaries
 

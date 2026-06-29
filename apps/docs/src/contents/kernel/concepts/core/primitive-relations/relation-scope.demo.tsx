@@ -5,7 +5,7 @@ import { Draw, DrawWay, Layout, Node, Scope } from '@retikz/react';
 /**
  * 分组连接：引用 Scope 的合成边界
  * @description `<Scope id="cluster">` 把 3 个节点的视觉外接框注册成可引用边界（淡灰虚线用 4 个角锚点连出）。
- *   外部 ext 用纯 `'cluster'`（auto，贴到朝它一侧的边）与 `'cluster.north'`（锁定到上边中点）连接整组。
+ *   外部 ext 用纯 `'cluster'`（auto，贴到朝它一侧的边）与 `'cluster.top'`（锁定到上边中点）连接整组。
  */
 const Demo: FC = () => (
   <Layout width={440} height={150}>
@@ -25,7 +25,7 @@ const Demo: FC = () => (
     </Scope>
     {/* cluster 合成外接框：4 个角锚点连成轮廓，纯示意 */}
     <Draw
-      way={['cluster.north-west', 'cluster.north-east', 'cluster.south-east', 'cluster.south-west', DrawWay.Cycle]}
+      way={['cluster.top-left', 'cluster.top-right', 'cluster.bottom-right', 'cluster.bottom-left', DrawWay.Cycle]}
       stroke="lightgray"
       dashPattern={[4, 3]}
     />
@@ -36,8 +36,8 @@ const Demo: FC = () => (
     <Draw
       way={[
         'ext',
-        { label: { text: 'cluster.north', side: 'above', textColor: 'gray', font: { size: 12 } } },
-        'cluster.north',
+        { label: { text: 'cluster.top', side: 'above', textColor: 'gray', font: { size: 12 } } },
+        'cluster.top',
       ]}
       arrow="->"
     />

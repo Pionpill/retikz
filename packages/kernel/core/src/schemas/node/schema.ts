@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { normalizeWebSide } from '../../geometry/anchor';
 import { AnimationTrackSchema } from '../animation';
 import { BoundarySchema } from '../boundary';
 import { BlendMode, DropShadowSchema, ShadowPreset } from '../effects';
@@ -19,7 +20,9 @@ import { NodeLabelBoundarySide, NodeLabelPlacement, NodeLabelPosition, NodeTextA
 
 export const NodeLabelBoundaryPositionSchema = z
   .object({
-    boundary: z.enum(NodeLabelBoundarySide).describe('Box-like node boundary side used as the label attachment line.'),
+    boundary: z
+      .preprocess(value => (typeof value === 'string' ? normalizeWebSide(value) ?? value : value), z.enum(NodeLabelBoundarySide))
+      .describe('Box-like node boundary side used as the label attachment line. Compass side names are accepted aliases.'),
     t: z
       .number()
       .min(0)

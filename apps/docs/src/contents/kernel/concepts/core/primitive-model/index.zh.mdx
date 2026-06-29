@@ -25,14 +25,14 @@ Node 是这套图元模型最常用的具体实现。你可以把它想成一个
 | 内框<br />inner frame    | 文本测量 + `innerXSep` / `innerYSep` + 最小尺寸       | 传给 shape 的基础半轴                                  |
 | 形状<br />shape          | `shape.circumscribe` 与 `shape.emit`                  | 节点真正画出来的轮廓                                   |
 | 外接框<br />bounding box | shape 对内框的包围结果（视觉包围矩形，不含 `margin`） | 渲染裁剪的基础；+`margin` 后即布局占位 / viewBox       |
-| 连接面<br />boundary     | `boundary`，默认跟随 shape                            | border 锚点（自动连线 / compass / 角度）贴的连接面形状 |
-| 锚点<br />anchor         | compass / angle / shape-specific / edge point         | 精确引用节点上的点                                     |
+| 连接面<br />boundary     | `boundary`，默认跟随 shape                            | border 锚点（自动连线 / 命名方位 / 角度）贴的连接面形状 |
+| 锚点<br />anchor         | Web 方位 / angle / shape-specific / edge point        | 精确引用节点上的点                                      |
 
 读这张图的顺序也就是编译顺序：
 
 <ComponentPreview name="node-model-pipeline" size="xs" hideCode />
 
-外接框只包住 shape 的渲染结果，不含 `margin`。`margin`（`outerSep`）是连接面外的一层均匀偏移：它把**所有 border 锚点**（自动连线端点、显式 `.north` / `.30`）整体外推 `margin`，节点在 viewBox / 布局里也按外推后的范围占位——视觉 shape 本身不变（对齐 TikZ `outer sep`）。
+外接框只包住 shape 的渲染结果，不含 `margin`。`margin`（`outerSep`）是连接面外的一层均匀偏移：它把**所有 border 锚点**（自动连线端点、显式 `.top` / `.30`）整体外推 `margin`，节点在 viewBox / 布局里也按外推后的范围占位——视觉 shape 本身不变（对齐 TikZ `outer sep`）。
 
 ## 盒模型
 
@@ -40,7 +40,7 @@ Node 是这套图元模型最常用的具体实现。你可以把它想成一个
 
 - **内容盒**：由 `text` / children 和 `font` 决定，是文本测量出的基础尺寸。
 - **内框**：在内容盒外加上 `innerXSep` / `innerYSep`（对称别名 `padding`），再与 `minimumWidth` / `minimumHeight`（或 `minimumSize`）取较大者，得到传给 shape 的基础半轴——对矩形节点来说，它就是画出来的 shape。
-- **外框**：在内框外再加 `outerSep`（对称别名 `margin`）。它不改变视觉 shape，而是把节点的连接 / 引用边界整体外推 `margin`——所有 border 锚点（自动连线端点和显式 `.north` 这类）都落在这一圈上，节点的布局占位 / viewBox 也按这一圈算（对齐 TikZ `outer sep`）。
+- **外框**：在内框外再加 `outerSep`（对称别名 `margin`）。它不改变视觉 shape，而是把节点的连接 / 引用边界整体外推 `margin`——所有 border 锚点（自动连线端点和显式 `.top` 这类）都落在这一圈上，节点的布局占位 / viewBox 也按这一圈算（对齐 TikZ `outer sep`）。
 
 <ComponentPreview name="node-frames" size="md" hideCode />
 
@@ -89,7 +89,7 @@ shape 不是简单的 CSS border-radius。它是一套几何定义：给定内�
 | 设置                | 改变什么                                               | 不改变什么                 |
 | ------------------- | ------------------------------------------------------ | -------------------------- |
 | `shape`             | 视觉轮廓、外接框、shape anchor                         | 节点中心语义               |
-| `boundary`          | border 锚点（自动连线 / compass / 角度）贴的连接面形状 | 节点视觉、外接框、布局占位 |
+| `boundary`          | border 锚点（自动连线 / 命名方位 / 角度）贴的连接面形状 | 节点视觉、外接框、布局占位 |
 | 单条边覆盖 boundary | 当前路径端点                                           | 节点默认设置               |
 
 因此，外接框是“渲染 / 视觉包围矩形”（再加 `margin` 即布局占位），连接面更接近“连接用的 hit surface”——都不是“画出来的外壳”。
@@ -98,7 +98,7 @@ shape 不是简单的 CSS border-radius。它是一套几何定义：给定内�
 
 <ComponentPreview name="margin-boundary-gap" size="md" hideCode />
 
-每列从内到外三层：最内灰块是文本区（内容盒），currentColor 实线是 shape（内框，矩形节点画出来的就是它），虚线是连接面（boundary），灰点是落在连接面上的 compass 锚点。左、中是默认 `boundary="shape"`：`margin` 越大，连接面连同锚点离 shape 越远，shape 和文本区都不变。右是 `boundary="circle"`：`margin` 同样把连接面从 shape 推开（圆半径 = 较长半轴 + `margin`），但外边界的**形状**由 `boundary` 决定。中、右 `margin` 相同、boundary 不同——正好印证「`outerSep` 定多远、连接面定形状」。
+每列从内到外三层：最内灰块是文本区（内容盒），currentColor 实线是 shape（内框，矩形节点画出来的就是它），虚线是连接面（boundary），灰点是落在连接面上的命名方位锚点。左、中是默认 `boundary="shape"`：`margin` 越大，连接面连同锚点离 shape 越远，shape 和文本区都不变。右是 `boundary="circle"`：`margin` 同样把连接面从 shape 推开（圆半径 = 较长半轴 + `margin`），但外边界的**形状**由 `boundary` 决定。中、右 `margin` 相同、boundary 不同——正好印证「`outerSep` 定多远、连接面定形状」。
 
 ## 锚点 Anchor
 
@@ -107,49 +107,49 @@ Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都�
 | anchor 类型  | 例子                                 | 适合用途                 |
 | ------------ | ------------------------------------ | ------------------------ |
 | 中心点       | `center`                             | 对齐、旋转、放射关系     |
-| 方位点       | `north`、`east`、`south-west`        | 常规连线和布局           |
+| 方位点       | `top`、`right`、`bottom-left`        | 常规连线和布局           |
 | 角度点       | `'A.35'` / `{ id: 'A', anchor: 35 }` | 沿射线找边界交点         |
 | shape 专属点 | star 的尖角、sector 的圆弧端点       | 复杂形状的语义连接       |
-| 边比例点     | `{ side: 'north', t: 0.25 }`         | 表格、泳道、框图边缘定位 |
+| 边比例点     | `{ side: 'top', t: 0.25 }`           | 表格、泳道、框图边缘定位 |
 
 <ComponentPreview name="anchors" size="lg" hideCode />
 
-上排都用最常见的矩形：左边是固定的 8 个方位 anchor（外加 `center`）；右边是角度 anchor（`A.30`，沿 30° 射线打到边界）和边比例 anchor（`{ side: 'north', t: 0.25 }`，north 边西→东取 1/4 处）。下排是几种自带 shape 专属点的非矩形形状：star 的 `tip-N` 尖角（另有 `notch-N` 凹角）、sector 的 `apex` / `centroid` / `outer-arc-mid` / `inner-arc-mid` / `start-edge-mid` / `end-edge-mid`、arc 的 `start` / `arc-mid` / `end`。这些专属点用对象形态引用，如 `{ id: 'A', anchor: 'tip-0' }`。
+上排都用最常见的矩形：左边是固定的 8 个方位 anchor（外加 `center`）；右边是角度 anchor（`A.30`，沿 30° 射线打到边界）和边比例 anchor（`{ side: 'top', t: 0.25 }`，top 边左→右取 1/4 处）。下排是几种自带 shape 专属点的非矩形形状：star 的 `tip-N` 尖角（另有 `notch-N` 凹角）、sector 的 `apex` / `centroid` / `outer-arc-mid` / `inner-arc-mid` / `start-edge-mid` / `end-edge-mid`、arc 的 `start` / `arc-mid` / `end`。这些专属点用对象形态引用，如 `{ id: 'A', anchor: 'tip-0' }`。
 
-方位锚点有两套名字：`CompassAnchor` 是 canonical 名称，沿用 TikZ 风格；`WebAnchor` 是面向 Web / CSS 心智的输入别名，编译时归一到对应的 `CompassAnchor`。
+方位锚点有两套名字：`WebAnchor` 是 canonical 名称，符合 Web / CSS 心智；`CompassAnchor` 沿用 TikZ 风格，只作为输入别名，解析时归一到对应的 Web 名称。
 
-| CompassAnchor                                             | 位置                               |
+| WebAnchor                                                 | 位置                               |
 | --------------------------------------------------------- | ---------------------------------- |
 | `center`                                                  | 节点几何中心                       |
-| `north` / `south` / `east` / `west`                       | 上 / 下 / 右 / 左 4 个方位的边界点 |
-| `north-east` / `north-west` / `south-east` / `south-west` | 4 个对角方位的边界点               |
+| `top` / `bottom` / `right` / `left`                       | 上 / 下 / 右 / 左 4 个方位的边界点 |
+| `top-right` / `top-left` / `bottom-right` / `bottom-left` | 4 个对角方位的边界点               |
 
-内置 [`shape`](/kernel/components/node) 都遵守这套命名，但解析连接面分两类：圆 / 椭圆落在真实曲线上，其余形状（含 diamond 这种 polygon 预设，以及无 compass 的 star / sector / arc）统一落在视觉外接框（AABB）的对应方位上——与 TikZ 把多边形 compass 取在 bbox 上一致：
+内置 [`shape`](/kernel/components/node) 都遵守这套命名，但解析连接面分两类：圆 / 椭圆落在真实曲线上，其余形状（含 diamond 这种 polygon 预设，以及无标准方位实现的 star / sector / arc）统一落在视觉外接框（AABB）的对应方位上——与 TikZ 把多边形方位锚点取在 bbox 上一致：
 
 |                          | rectangle               | circle      | ellipse           | diamond（polygon） |
 | ------------------------ | ----------------------- | ----------- | ----------------- | ------------------ |
-| `north` / 等 4 方位      | 边中点（= AABB 边中点） | 圆周 4 方位 | 椭圆轴端          | AABB 边中点        |
-| `north-east` / 等 4 对角 | 4 角                    | 圆周 45° 处 | 椭圆参数 t=π/4 处 | AABB 4 角          |
+| `top` / 等 4 方位        | 边中点（= AABB 边中点） | 圆周 4 方位 | 椭圆轴端          | AABB 边中点        |
+| `top-right` / 等 4 对角  | 4 角                    | 圆周 45° 处 | 椭圆参数 t=π/4 处 | AABB 4 角          |
 
-节点 `rotate` 时 9 个锚点跟着旋转。`WebAnchor` 别名归一如下：
+节点 `rotate` 时 9 个锚点跟着旋转。`CompassAnchor` 别名归一如下：
 
-| WebAnchor                           | 等价 CompassAnchor                  |
-| ----------------------------------- | ----------------------------------- |
-| `top` / `bottom` / `right` / `left` | `north` / `south` / `east` / `west` |
-| `top-right` / `top-left`            | `north-east` / `north-west`         |
-| `bottom-right` / `bottom-left`      | `south-east` / `south-west`         |
+| CompassAnchor                                             | 等价 WebAnchor                                            |
+| --------------------------------------------------------- | --------------------------------------------------------- |
+| `north` / `south` / `east` / `west`                       | `top` / `bottom` / `right` / `left`                       |
+| `north-east` / `north-west`                               | `top-right` / `top-left`                                  |
+| `south-east` / `south-west`                               | `bottom-right` / `bottom-left`                            |
 
 <Comparison target="tikz" title="锚点命名">
 
-`center` / `north` / `south` / `east` / `west` / `north-east` / `north-west` / `south-east` / `south-west` 沿用 TikZ 的常用 anchor 词汇，方便把节点关系从 LaTeX 图迁到 JSX 写法。
+`north` / `south` / `east` / `west` / `north-east` / `north-west` / `south-east` / `south-west` 仍作为 TikZ 风格输入别名保留，方便把节点关系从 LaTeX 图迁到 JSX 写法；解析后的 canonical 值是 `top` / `right` 等 Web 名称。
 
 </Comparison>
 
-自定义 shape 的 anchor 行为由它的 `ShapeDefinition` 提供：推荐支持这 9 个标准方位 anchor，方便与内置形状互换；如果某个注册形状不支持某个 anchor，编译期会给出对应错误。见 [自定义形状](/kernel/components/extend/shape-registry)。
+自定义 shape 的 anchor 行为由它的 `ShapeDefinition` 提供：推荐支持这 9 个 Web 标准方位 anchor，方便与内置形状互换；如果某个注册形状不支持某个 anchor，编译期会给出对应错误。见 [自定义形状](/kernel/components/extend/shape-registry)。
 
-边上比例点 `{ side, t }` 取 shape **真实边界**某条边上从约定起点起 `t ∈ [0, 1]` 比例处——方向 north/south 西→东、east/west 北→南：rectangle 沿直边、circle / ellipse 沿该侧可见周长弧段、diamond 沿可见斜边。`{ side: 'west', t: 1/3 }` = 左边三等分点，`{ side: 'north', t: 0.5 }` = 上边中点（等于命名 `'north'`）。
+边上比例点 `{ side, t }` 取 shape **真实边界**某条边上从约定起点起 `t ∈ [0, 1]` 比例处——方向 top/bottom 左→右、right/left 上→下：rectangle 沿直边、circle / ellipse 沿该侧可见周长弧段、diamond 沿可见斜边。`{ side: 'left', t: 1/3 }` = 左边三等分点，`{ side: 'top', t: 0.5 }` = 上边中点（等于命名 `'top'`）。
 
-解析时，方位点（compass）和数字角度点是 **border 锚点**：先经选定 boundary 的连接面、再按 `outerSep` 外推——`boundary="shape"` 时落在外接框（含 `outerSep`）的矩形方位上，数字角度点则沿射线打到外扩后的 boundary 上。`center`、shape 专属点和边上比例点始终走视觉 shape，既不受 `boundary` 改写、也不吃 `outerSep`。
+解析时，命名方位点和数字角度点是 **border 锚点**：先经选定 boundary 的连接面、再按 `outerSep` 外推——`boundary="shape"` 时落在外接框（含 `outerSep`）的矩形方位上，数字角度点则沿射线打到外扩后的 boundary 上。`center`、shape 专属点和边上比例点始终走视觉 shape，既不受 `boundary` 改写、也不吃 `outerSep`。
 
 这些点怎么被另一个图元引用、连接端点如何在 auto / 锁定两种模式间解析，见 [图元关系](/kernel/concepts/kernel/primitive-relations)。
 

@@ -11,7 +11,7 @@ export type BoundaryDefinitionInput<TParams extends IRJsonObject> = {
   paramsSchema: z.ZodType<TParams>;
   /** Center-to-toward ray hit on the connection surface. */
   boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
-  /** Optional named anchor support for compass-like connection points. */
+  /** Optional named anchor support for web-style connection points. */
   anchor?: (rect: Rect, name: string, params: TParams) => Position | undefined;
 };
 

@@ -1,9 +1,7 @@
+import { WebSide } from '../../geometry/anchor';
 import { AtDirection } from '../position';
 
-/**
- * 节点形状常量（用 const + ValueOf 派生，不用 TS enum）
- * @description rectangle 默认；几何语义：node 视觉边界包"text 矩形 + padding"；rectangle: 视觉=text；ellipse: rx=innerHalfW×√2,ry=innerHalfH×√2。circle 是 ellipse 等轴 preset 别名（`{ type:'ellipse', params:{ circumscribe:'equal' } }`，两轴 = 内框对角线半长 √(innerHalfW²+innerHalfH²)）；diamond 是 polygon 4 边形 preset 别名（`{ type:'polygon', params:{ sides:4, rotate:0 } }`）——circle / diamond 均保留为合法 shape 名向后兼容，编译期分别消解为 ellipse / polygon，不进 shape 注册表
- */
+/** 节点形状关键字（用 const + ValueOf 派生，不用 TS enum） */
 export const BuiltinShape = {
   Rectangle: 'rectangle',
   Circle: 'circle',
@@ -18,19 +16,17 @@ export const NodeTextAlign = {
   Right: 'right',
 } as const;
 
+/** 节点标签相对节点的位置关键字 */
 export const NodeLabelPosition = {
   ...AtDirection,
   Center: 'center',
 } as const;
 
+/** 节点标签放置在节点边界内侧或外侧 */
 export const NodeLabelPlacement = {
   Outside: 'outside',
   Inside: 'inside',
 } as const;
 
-export const NodeLabelBoundarySide = {
-  Top: 'top',
-  Right: 'right',
-  Bottom: 'bottom',
-  Left: 'left',
-} as const;
+/** 节点标签 `{ boundary, t }` 使用的矩形边；compass side 作为输入别名归一到 Web side */
+export const NodeLabelBoundarySide = WebSide;

@@ -26,7 +26,7 @@ const SWITCH_LEAD = 56;
 /** 电阻 / 滑动变阻器共用（滑动变阻器整体与电阻一致，仅多一条斜箭头） */
 const RESISTOR_LEAD = 39;
 
-/** 引用某个元件的固定端点（如 battery 的 east），导线靠它落到元件边框而非猜中心坐标 */
+/** 引用某个元件的固定端点（如 battery 的 right），导线靠它落到元件边框而非猜中心坐标 */
 export const at = (id: string, anchor: IRAnchorRef): IRNodeTarget => ({ id, anchor });
 
 const anchorPoint = (rect: Rect, x: number, y: number): Position => localToWorld(rect, [x, y]);
@@ -37,21 +37,21 @@ const boxAnchor = (rect: Rect, name: string): Position | undefined => {
   switch (name) {
     case 'center':
       return anchorPoint(rect, 0, 0);
-    case 'north':
+    case 'top':
       return anchorPoint(rect, 0, -halfHeight);
-    case 'south':
+    case 'bottom':
       return anchorPoint(rect, 0, halfHeight);
-    case 'east':
+    case 'right':
       return anchorPoint(rect, halfWidth, 0);
-    case 'west':
+    case 'left':
       return anchorPoint(rect, -halfWidth, 0);
-    case 'north-east':
+    case 'top-right':
       return anchorPoint(rect, halfWidth, -halfHeight);
-    case 'north-west':
+    case 'top-left':
       return anchorPoint(rect, -halfWidth, -halfHeight);
-    case 'south-east':
+    case 'bottom-right':
       return anchorPoint(rect, halfWidth, halfHeight);
-    case 'south-west':
+    case 'bottom-left':
       return anchorPoint(rect, -halfWidth, halfHeight);
     default:
       return undefined;
@@ -59,15 +59,15 @@ const boxAnchor = (rect: Rect, name: string): Position | undefined => {
 };
 
 const horizontalTerminalAnchor = (rect: Rect, name: string): Position | undefined => {
-  if (name === 'input') return boxAnchor(rect, 'west');
-  if (name === 'output') return boxAnchor(rect, 'east');
+  if (name === 'input') return boxAnchor(rect, 'left');
+  if (name === 'output') return boxAnchor(rect, 'right');
   return boxAnchor(rect, name);
 };
 
-/** 电池端点：长板（正极）在右 = east，短板（负极）在左 = west；同时兼容 input / output / 方位名 */
+/** 电池端点：长板（正极）在右 = right，短板（负极）在左 = left；同时兼容 input / output / 方位名 */
 const batteryAnchor = (rect: Rect, name: string): Position | undefined => {
-  if (name === 'positive') return boxAnchor(rect, 'east');
-  if (name === 'negative') return boxAnchor(rect, 'west');
+  if (name === 'positive') return boxAnchor(rect, 'right');
+  if (name === 'negative') return boxAnchor(rect, 'left');
   return horizontalTerminalAnchor(rect, name);
 };
 
@@ -77,7 +77,7 @@ const horizontalBoundaryPoint = (rect: Rect, toward: Position): Position => {
 };
 
 /**
- * 电池（单电池 cell）：横向标准符号——长板（阳极 / 正极，east）+ 短板（阴极 / 负极，west），左右各一段引线
+ * 电池（单电池 cell）：横向标准符号——长板（阳极 / 正极，right）+ 短板（阴极 / 负极，left），左右各一段引线
  * @description 板的长短表极性：阳极板长 = 阴极板的两倍；两板同等细描边（与参考符号表一致，不再额外标 +/-）；
  *   整体相对竖式旋转 90°，落在水平的底部支路上
  */

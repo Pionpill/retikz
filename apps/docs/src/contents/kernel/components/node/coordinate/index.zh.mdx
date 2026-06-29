@@ -67,7 +67,7 @@ Coordinate 在内部以一个 **0×0 的点**登记，由此带来三条可观�
 
 - **不画任何图元**——没有形状、没有文字，渲染产物里完全不出现。
 - **不撑大画布**——远处的 coordinate 不会让最终 viewBox 自动变大；必须有实际 `<Node>` / `<Path>` 落在那片区域，画布才覆盖过去（调试定位时常踩这点）。
-- **所有 anchor 退化为中心**——尺寸是 0，`hub.north` / `hub.south` 等方位 anchor 都等于中心点；需要方向 anchor 就改用 `<Node>`。
+- **所有 anchor 退化为中心**——尺寸是 0，`hub.top` / `hub.bottom` 等方位 anchor 都等于中心点；需要方向 anchor 就改用 `<Node>`。
 
 ## API 参考
 
@@ -95,7 +95,7 @@ Coordinate 在内部以一个 **0×0 的点**登记，由此带来三条可观�
 
 - **要给点配文字标签** → 用 `<Node>` 加 `label?`，coordinate 不带文字字段
 - **要画一个圆点 / 标记位置** → 用 `<Node shape="circle">` + 小尺寸；coordinate 永远不画
-- **anchor 指向**（`hub.north`）→ coordinate 所有 anchor 都退化为中心，要方向 anchor 用 `<Node>`
+- **anchor 指向**（`hub.top`）→ coordinate 所有 anchor 都退化为中心，要方向 anchor 用 `<Node>`
 
 - [Node](/kernel/components/node/overview)：有形状和文字的节点
 - [Draw](/kernel/components/draw/overview)：引用 coordinate id 的日常连线写法

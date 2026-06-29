@@ -30,7 +30,7 @@ import type { ResolveBetweenGlobal } from './position';
 import type { LaidLine, LineLayoutContext } from './text-layout';
 import type { FontSpec, TextMeasurer } from './text-metrics';
 
-import { normalizeCompassAnchor } from '../geometry/anchor';
+import { normalizeWebAnchor } from '../geometry/anchor';
 import { resolveBoundaryRegistry } from '../providers/boundary';
 import { providerDefinitionOf } from '../providers/registry';
 import { resolveShapeRegistry } from '../providers/shape';
@@ -286,7 +286,7 @@ const inflateRect = (r: Rect, m: number): Rect =>
 /**
  * 视觉 rect 外扩 outerSep（margin）得到外边界 AABB
  * @description = `inflateRect(layout.rect, layout.margin)`，中心不变、四向各 +margin。border 类
- *   anchor（compass / 数字角度）解析与 bbox / viewBox / 布局占位都基于这层；视觉 emit / 裁剪 /
+ *   anchor（标准方位 / 数字角度）解析与 bbox / viewBox / 布局占位都基于这层；视觉 emit / 裁剪 /
  *   形状专属 anchor / edgePoint / label 附着点仍读 `layout.rect`（不外扩）。单一派生量，不另存字段。
  *   （对齐 TikZ outer sep 语义。）
  */
@@ -314,23 +314,23 @@ export const boundaryPointOf = (
 };
 
 /**
- * 取节点 shape 命名 anchor（center / north / east / north-east 等）
+ * 取节点 shape 命名 anchor（center / top / right / top-right，或 north 等别名）
  * @description 纯几何：在传入的 `layout.rect` 上求点，本体**不施加 outerSep（margin）**。outerSep 的
- *   「border 外推」由调用方决定——`anchor-cache.ts` 的 compass 解析先把 rect 外扩 margin（`outerRectOf`）
+ *   「border 外推」由调用方决定——`anchor-cache.ts` 的标准方位解析先把 rect 外扩 margin（`outerRectOf`）
  *   再调本函数；`labelBorderPoint` 喂视觉 rect（label 附着点不含 margin）。这样 outer sep 只作用于
  *   path / position 的 anchor 引用，不波及 label。
- *   compass（9 个 rect 方位名）：默认连接面先走视觉 shape 自身 compass（ellipse/circle 落真实周长、polygon/rect 落 AABB，与 TikZ 一致），shape 未实现则回退 AABB 矩形；显式 boundary 按其解析。
- *   形状专属命名 anchor（tip-N / apex 等非 compass 名）恒走视觉形状自身，boundary 不影响。
+ *   标准方位名：默认连接面先走视觉 shape 自身方位几何（ellipse/circle 落真实周长、polygon/rect 落 AABB，与 TikZ 一致），shape 未实现则回退 AABB 矩形；显式 boundary 按其解析。
+ *   形状专属命名 anchor（tip-N / apex 等非标准方位名）恒走视觉形状自身，boundary 不影响。
  *   boundary 缺省 = 'shape'。
  */
 export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary | undefined = 'shape'): Position => {
-  const compassAnchor = normalizeCompassAnchor(name);
-  if (compassAnchor !== undefined) {
-    // compass 方位名：默认连接面（'shape'）先走视觉 shape 自身 compass——ellipse/circle 落真实周长、
-    // rectangle/polygon 落 AABB（与 TikZ 一致）；shape 未实现 compass（star/sector/arc 返回 undefined）
+  const webAnchor = normalizeWebAnchor(name);
+  if (webAnchor !== undefined) {
+    // 标准方位名：默认连接面（'shape'）先走视觉 shape 自身 anchor——ellipse/circle 落真实周长、
+    // rectangle/polygon 落 AABB（与 TikZ 一致）；shape 未实现标准方位（star/sector/arc 返回 undefined）
     // 回退外接 AABB 矩形。显式 boundary 指定时按该连接面解析。
     if (boundary === 'shape') {
-      const own = layout.shapeDef.anchor(layout.rect, compassAnchor, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
+      const own = layout.shapeDef.anchor(layout.rect, webAnchor, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
       if (own !== undefined) return own;
       const fallback = resolveBoundary(
         'rectangle',
@@ -340,7 +340,7 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
         layout.shapes,
         layout.boundaries ?? resolveBoundaryRegistry(),
       );
-      const p = fallback.def.anchor?.(fallback.rect, compassAnchor, fallback.params);
+      const p = fallback.def.anchor?.(fallback.rect, webAnchor, fallback.params);
       if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
       return p;
     }
@@ -352,7 +352,7 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
       layout.shapes,
       layout.boundaries ?? resolveBoundaryRegistry(),
     );
-    const p = def.anchor?.(rect, compassAnchor, params) ?? fallbackBoundaryAnchor(rect, compassAnchor, params);
+    const p = def.anchor?.(rect, webAnchor, params) ?? fallbackBoundaryAnchor(rect, webAnchor, params);
     if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
     return p;
   }
@@ -369,7 +369,7 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
  * @description 8 方向：节点对应 anchor 出发按单位向量 × distance 外推；数字角度：先取 angleBoundary 边界点再沿 (cos,sin) × distance 外推。
  *   两个分支都在 **axis-aligned rect（rotate=0）** 上算——node 自身 rotate 由外层 GroupPrim 统一施加；
  *   若用带 rotate 的 rect，label 位置会被 anchorOf / angleBoundaryOf 旋转一次、再被外层 group 旋转一次（双重旋转）。
- *   anchorOf / angleBoundaryOf 本身不改（path anchor `'A.north'` / `'A.30'` 仍需带 rotate 的 rect）。
+ *   anchorOf / angleBoundaryOf 本身不改（path anchor `'A.top'` / `'A.30'` 仍需带 rotate 的 rect）。
  */
 const isLabelBoundaryPosition = (position: NodeLabelLayout['position']): position is IRNodeLabelBoundaryPosition =>
   typeof position === 'object';

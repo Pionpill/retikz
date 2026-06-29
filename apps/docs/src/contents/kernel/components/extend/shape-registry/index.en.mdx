@@ -120,7 +120,7 @@ boundaryPoint: (rect, toward, params) => {
 anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
 ```
 
-Called when users write `A.north`, `A.center`, or a shape-specific anchor name. Return a coordinate for names the shape owns, or `undefined` for unknown names, which the compiler reports with the standard Unknown anchor error. Compass names (north/east…) are likewise resolved on the engine-expanded `rect` (including `outerSep`); shape-specific anchors always use the visual `rect`, without outer sep.
+Called when users write `A.top`, `A.center`, or a shape-specific anchor name. Return a coordinate for names the shape owns, or `undefined` for unknown names, which the compiler reports with the standard Unknown anchor error. Standard direction names use Web/CSS canonical values (`top` / `right` / `bottom` / `left` plus corners); compass names such as `north` / `east` are accepted as aliases and normalized before provider hooks run. Standard direction names are resolved on the engine-expanded `rect` (including `outerSep`); shape-specific anchors always use the visual `rect`, without outer sep.
 
 ```ts
 // sector: exposes semantic anchors like apex / centroid / arc midpoints
@@ -143,17 +143,17 @@ anchor: (rect, name, params) => {
 ```ts
 edgePoint?: (
   rect: Rect,
-  side: 'north' | 'south' | 'east' | 'west',
+  side: 'top' | 'right' | 'bottom' | 'left',
   t: number,
   params: TParams,
 ) => Position;
 ```
 
-Called for proportional edge points (`{ side, t }`): `side` is `north` / `south` / `east` / `west`, and `t` is a 0..1 ratio along that edge. The built-in shapes implement it; shapes that don't will throw at compile time when a proportional point is requested. Same coordinate semantics as `anchor` — `rect` includes `rotate`.
+Called for proportional edge points (`{ side, t }`): `side` is `top` / `right` / `bottom` / `left`, and `t` is a 0..1 ratio along that edge. Compass side names are accepted as input aliases, but provider hooks receive the Web canonical form. The built-in shapes implement it; shapes that don't will throw at compile time when a proportional point is requested. Same coordinate semantics as `anchor` — `rect` includes `rotate`.
 
 ```ts
-// rectangle: reuse the rect geometry layer directly
-edgePoint: (rect, side, t) => rectOps.edgePoint(rect, side, t),
+// rectangle: bridge from public Web sides to the compass geometry layer
+edgePoint: (rect, side, t) => rectOps.edgePoint(rect, webSideToCompassSide(side), t),
 ```
 
 ### emit

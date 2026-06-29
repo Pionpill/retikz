@@ -49,7 +49,7 @@ import { Node } from '@retikz/react';
 
 <ComponentAlert
   title="anchor 回退 AABB"
-  description="命名 / 罗盘 anchor（north / center …）在曲边块上没有有意义的方位，contour 让它们回退到外接 AABB 矩形；指向式连接（boundaryPoint）始终精确命中轮廓。需要精确贴边时用「连一条线指向它」而非取具名 anchor。"
+  description="命名 / 标准方位 anchor（top / center …）在曲边块上没有有意义的方位，contour 让它们回退到外接 AABB 矩形；指向式连接（boundaryPoint）始终精确命中轮廓。需要精确贴边时用「连一条线指向它」而非取具名 anchor。"
 />
 
 ### API 参考
@@ -73,7 +73,7 @@ import { Node } from '@retikz/react';
 
 ### anchor 回退、boundaryPoint 精确
 
-`contour` 是几何驱动的曲边块，命名 / 罗盘方位（`north` / `east` …）没有稳定语义，故 `anchor` 不提供具名锚点，compile 回退到外接 AABB 矩形。指向式连接走 `boundaryPoint`——它对**任意**顶点环（凸 / 凹 / 圆角后）都求射线 ∩ 轮廓的精确交点，是连接到 contour 节点的可靠方式。
+`contour` 是几何驱动的曲边块，命名 / 标准方位（`top` / `right` …）没有稳定语义，故 `anchor` 不提供具名锚点，compile 回退到外接 AABB 矩形。指向式连接走 `boundaryPoint`——它对**任意**顶点环（凸 / 凹 / 圆角后）都求射线 ∩ 轮廓的精确交点，是连接到 contour 节点的可靠方式。
 
 ## 相关
 

@@ -97,7 +97,7 @@ export const contour = defineShape({
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
     return hit ?? center;
   },
-  // compass 名交回退（compile 回退到外接 AABB rect）；曲边块上没有有意义的真·命名方位。
+  // 标准方位名交回退（compile 回退到外接 AABB rect）；曲边块上没有有意义的真·命名方位。
   anchor: (rect: Rect, name: string, params: ContourParams): Position | undefined => {
     void rect;
     void name;

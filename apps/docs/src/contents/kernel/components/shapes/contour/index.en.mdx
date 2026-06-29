@@ -49,7 +49,7 @@ The key value of `contour` is that it is **still a Node**: another `<Path>` / `<
 
 <ComponentAlert
   title="Anchors fall back to the AABB"
-  description="Named / compass anchors (north / center …) have no meaningful direction on a curved block, so contour falls them back to the circumscribing AABB rectangle; directional connection (boundaryPoint) always hits the contour exactly. For an exact edge hit, point a line at it rather than reading a named anchor."
+  description="Named / standard direction anchors (top / center …) have no meaningful direction on a curved block, so contour falls them back to the circumscribing AABB rectangle; directional connection (boundaryPoint) always hits the contour exactly. For an exact edge hit, point a line at it rather than reading a named anchor."
 />
 
 ### API Reference
@@ -73,7 +73,7 @@ The key value of `contour` is that it is **still a Node**: another `<Path>` / `<
 
 ### Anchor fallback, exact boundaryPoint
 
-`contour` is a geometry-driven curved block; compass directions (`north` / `east` …) have no stable meaning, so `anchor` provides no named anchors and compile falls back to the circumscribing AABB rectangle. Directional connection goes through `boundaryPoint` — it computes the exact ray ∩ contour intersection for **any** vertex ring (convex / concave / filleted), and is the reliable way to connect to a contour node.
+`contour` is a geometry-driven curved block; standard direction names (`top` / `right` …) have no stable meaning, so `anchor` provides no named anchors and compile falls back to the circumscribing AABB rectangle. Directional connection goes through `boundaryPoint` — it computes the exact ray ∩ contour intersection for **any** vertex ring (convex / concave / filleted), and is the reliable way to connect to a contour node.
 
 ## Related
 

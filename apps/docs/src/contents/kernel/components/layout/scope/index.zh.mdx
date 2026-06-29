@@ -117,7 +117,7 @@ scope 内 node id 默认注册到全局 nodeIndex，外部 path 端点 / `at.of`
 
 <ComponentPreview name="scope-anchor-cross" size="sm" />
 
-注意 compass 方位锚（`north` / `south-west` 等 8 方位）默认取节点**外接矩形（AABB）**的边 / 角点，不是形状轮廓——所以圆形节点 `hub` 的 `south-west` 落在外接框左下角、在圆**外**；只有 `north` / `east` / `south` / `west` 4 个边中点正好压在圆周上。要贴形状轮廓本身，用角度锚 `.<deg>`（如 `hub.225` 取圆周上西南方向的点），或给节点设 `boundary="circle"` 让 compass 锚改走圆边界。
+注意 Web 方位锚（`top` / `bottom-left` 等 8 方位）默认取节点**外接矩形（AABB）**的边 / 角点，不是形状轮廓——所以圆形节点 `hub` 的 `bottom-left` 落在外接框左下角、在圆**外**；只有 `top` / `right` / `bottom` / `left` 4 个边中点正好压在圆周上。要贴形状轮廓本身，用角度锚 `.<deg>`（如 `hub.225` 取圆周上西南方向的点），或给节点设 `boundary="circle"` 让标准方位锚改走圆边界。`north` / `south-west` 这类 compass 名仍可作为输入别名。
 
 ### scope.id：作为引用整体
 
@@ -314,7 +314,7 @@ scope 内 `<Node>` / `<Coordinate>` / `<Path>` `Step.to` 使用 `PolarPosition` 
 | **注册位置**                          | **父 frame**（不受自身 `localNamespace` 影响）——scope.id 是外部句柄                                                                                                                                                                                                                                                       |
 | **形态**                              | 默认 synthetic rectangle `NodeLayout`，`rect.rotate=0`（轴对齐）；`boundingShape='circle'` 时为 ellipse(`circumscribe:'equal'`) 形态、rect 为 MEC 的正方外接框                                                                                                                                                            |
 | **boundingShape**                     | 可选包络形状——**受控枚举**（`'rectangle'` \| `'circle'`），非 Node `shape` / `boundary` 那种开放 shape 引用：缺省 / `'rectangle'` = AABB；`'circle'` = 子树点集最小外接圆（消费 `@retikz/math` 的 `minimalEnclosingCircle`）；枚举外的值由 schema 在 parse 边界拒绝。`polygon` / `ellipse` 缓做（各需独立的最小外接算法） |
-| **作为 anchor referent**              | 9 个命名 anchor + 数字角度都走共享的 rect anchor 路径——`'X.north'` / `'X.30'` / 无后缀走 `boundaryPoint` clip                                                                                                                                                                                                             |
+| **作为 anchor referent**              | 9 个命名 anchor + 数字角度都走共享的 rect anchor 路径——`'X.top'` / `'X.30'` / 无后缀走 `boundaryPoint` clip；`'X.north'` 等 compass 写法作为别名支持                                                                                                                                                                      |
 | **作为 polar / at / offset referent** | 取 bbox 中心，与普通 rectangle 节点一致                                                                                                                                                                                                                                                                                   |
 | **嵌套**                              | 每层 scope.id 各算各的 bbox——外层 bbox 含全部内层 layout；内层 bbox 仅含自己子树                                                                                                                                                                                                                                          |
 | **空 scope.id**                       | 子树无任何 layout 时 bbox 退化为 0×0 占位点（落在 scope 局部原点经 chain 投影到的全局点）                                                                                                                                                                                                                                 |

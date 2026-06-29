@@ -5,7 +5,7 @@ import { Coordinate, Draw, Layout, Node, Scope } from '@retikz/react';
 /**
  * scope.id boundingShape='circle'：synthetic 包络取子树最小外接圆，连线落圆周而非矩形角
  * @description 右侧 `<Scope id="cluster" boundingShape="circle">` 内 3 节点；灰虚线用密集角度锚
- *   （每 10°）描出**圆形**包络；外部两条 path 引用 `cluster.west` / `cluster.north`，端点贴圆周。
+ *   （每 10°）描出**圆形**包络；外部两条 path 引用 `cluster.left` / `cluster.top`，端点贴圆周。
  *   缺省 / boundingShape="rectangle" 时这些点会落在外接矩形边上。
  */
 const RING = [...Array.from({ length: 36 }, (_, i) => `cluster.${i * 10}`), 'cluster.0'];
@@ -25,8 +25,8 @@ const Demo: FC = () => (
       </Node>
     </Scope>
     <Draw way={RING} stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['external', 'cluster.west']} arrow="->" />
-    <Draw way={['external', 'cluster.north']} arrow="->" />
+    <Draw way={['external', 'cluster.left']} arrow="->" />
+    <Draw way={['external', 'cluster.top']} arrow="->" />
   </Layout>
 );
 

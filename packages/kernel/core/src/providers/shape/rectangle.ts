@@ -7,7 +7,7 @@ import type { ScenePrimitive } from '../../primitive';
 
 import { verticesToSegments } from '../../contract/shape/contour';
 import { defineShape } from '../../contract/shape/define';
-import { normalizeCompassAnchor } from '../../geometry/anchor';
+import { normalizeCompassAnchor, webSideToCompassSide } from '../../geometry/anchor';
 import { boundaryFromContour } from '../../geometry/contour';
 import { rect as rectOps } from '../../geometry/rect';
 import { localToWorld } from '../../geometry/transform';
@@ -65,7 +65,7 @@ export const rectangle = defineShape({
     const a = normalizeCompassAnchor(name);
     return a ? rectOps.anchor(r, a) : undefined;
   },
-  edgePoint: (r, side, t) => rectOps.edgePoint(r, side, t),
+  edgePoint: (r, side, t) => rectOps.edgePoint(r, webSideToCompassSide(side), t),
   *emit(r, style, round, params: RectangleParams): Iterable<ScenePrimitive> {
     const halfW = r.width / 2;
     const halfH = r.height / 2;

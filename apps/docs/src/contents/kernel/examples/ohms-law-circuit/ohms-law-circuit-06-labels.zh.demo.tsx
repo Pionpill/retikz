@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+﻿import type { FC } from 'react';
 
 import { Draw, Layout, Node, Scope } from '@retikz/react';
 
@@ -38,8 +38,8 @@ const CircuitDemo: FC = () => (
           text="V"
           label={{ text: 'U1', position: 'above', distance: 20 }}
         />
-        <Draw way={[at('cell1-resistor', 'west'), [809, 320], at('cell1-voltmeter', 'west')]} />
-        <Draw way={[at('cell1-resistor', 'east'), [991, 320], at('cell1-voltmeter', 'east')]} />
+        <Draw way={[at('cell1-resistor', 'left'), [809, 320], at('cell1-voltmeter', 'left')]} />
+        <Draw way={[at('cell1-resistor', 'right'), [991, 320], at('cell1-voltmeter', 'right')]} />
       </Scope>
 
       {/* 第二组靠 Scope 平移复制（左移 60、下移 240），只换 id 前缀与标注 */}
@@ -51,17 +51,17 @@ const CircuitDemo: FC = () => (
           text="V"
           label={{ text: 'U2', position: 'above', distance: 20 }}
         />
-        <Draw way={[at('cell2-resistor', 'west'), [809, 320], at('cell2-voltmeter', 'west')]} />
-        <Draw way={[at('cell2-resistor', 'east'), [991, 320], at('cell2-voltmeter', 'east')]} />
+        <Draw way={[at('cell2-resistor', 'left'), [809, 320], at('cell2-voltmeter', 'left')]} />
+        <Draw way={[at('cell2-resistor', 'right'), [991, 320], at('cell2-voltmeter', 'right')]} />
       </Scope>
 
       {/* 主回路：用折角把元件依次连成一个闭合回路 */}
-      <Draw way={[at('battery', 'west'), [160, 200], at('switch', 'west')]} />
-      <Draw way={[at('switch', 'east'), at('ammeter', 'west')]} />
-      <Draw way={[at('ammeter', 'east'), at('cell1-resistor', 'west')]} />
-      <Draw way={[at('cell1-resistor', 'east'), [1040, 200], [1040, 440], at('cell2-resistor', 'east')]} />
-      <Draw way={[at('cell2-resistor', 'west'), at('rheostat', 'east')]} />
-      <Draw way={[at('rheostat', 'west'), [160, 440], at('battery', 'east')]} />
+      <Draw way={[at('battery', 'left'), [160, 200], at('switch', 'left')]} />
+      <Draw way={[at('switch', 'right'), at('ammeter', 'left')]} />
+      <Draw way={[at('ammeter', 'right'), at('cell1-resistor', 'left')]} />
+      <Draw way={[at('cell1-resistor', 'right'), [1040, 200], [1040, 440], at('cell2-resistor', 'right')]} />
+      <Draw way={[at('cell2-resistor', 'left'), at('rheostat', 'right')]} />
+      <Draw way={[at('rheostat', 'left'), [160, 440], at('battery', 'right')]} />
 
       {/* 电源竖放，Node 的 label 会跟着旋转，所以 E 用一个相对定位的斜体文字 Node */}
       <Node position={{ direction: 'left', of: 'battery', distance: 72 }} font={{ ...FONT, size: 28, style: 'italic' }}>

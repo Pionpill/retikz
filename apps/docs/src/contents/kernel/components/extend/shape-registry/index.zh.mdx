@@ -120,7 +120,7 @@ boundaryPoint: (rect, toward, params) => {
 anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
 ```
 
-用户写 `A.north`、`A.center` 或形状自定义锚点名时调用，决定命名锚点在哪里。认识的名字返回坐标，不认识就返回 `undefined`，由编译层统一报 Unknown anchor。compass 方位名（north/east…）同样在引擎外扩好的 `rect`（含 `outerSep`）上解析；形状专属锚点恒走视觉 `rect`，不含 outer sep。
+用户写 `A.top`、`A.center` 或形状自定义锚点名时调用，决定命名锚点在哪里。认识的名字返回坐标，不认识就返回 `undefined`，由编译层统一报 Unknown anchor。Web 方位名（top/right…）会传给 provider；`north` / `east` 等 compass 写法只是输入别名，解析后也会变成 Web 名。形状专属锚点恒走视觉 `rect`，不含 outer sep。
 
 ```ts
 // sector：暴露 apex / centroid / 弧中点等语义锚点
@@ -143,17 +143,17 @@ anchor: (rect, name, params) => {
 ```ts
 edgePoint?: (
   rect: Rect,
-  side: 'north' | 'south' | 'east' | 'west',
+  side: 'top' | 'right' | 'bottom' | 'left',
   t: number,
   params: TParams,
 ) => Position;
 ```
 
-用户写边上比例点（`{ side, t }`）时调用：`side` 是 `north` / `south` / `east` / `west`，`t` 是这条边上 0..1 的比例。内置形状都实现；未实现的形状收到比例点请求时编译期报错。坐标语义与 `anchor` 相同，`rect` 带 `rotate`。
+用户写边上比例点（`{ side, t }`）时调用：`side` 是 `top` / `right` / `bottom` / `left`，`t` 是这条边上 0..1 的比例。`north` / `east` 等 compass side 可作为输入别名，但 provider 收到的是 Web 名。内置形状都实现；未实现的形状收到比例点请求时编译期报错。坐标语义与 `anchor` 相同，`rect` 带 `rotate`。
 
 ```ts
-// rectangle：直接复用 rect 几何层
-edgePoint: (rect, side, t) => rectOps.edgePoint(rect, side, t),
+// rectangle：复用 rect 几何层时先转成几何层 side
+edgePoint: (rect, side, t) => rectOps.edgePoint(rect, webSideToCompassSide(side), t),
 ```
 
 ### emit

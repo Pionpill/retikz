@@ -71,12 +71,12 @@ describe('对象 NodeTarget 命名 / 角度 / auto 方向正确', () => {
 });
 
 describe('{ side, t } 边上比例点', () => {
-  it('north t=0.5 == 命名 north anchor（edgePoint 中点 = cardinal）', () => {
-    expect(endOf({ id: 'A', anchor: { side: 'north', t: 0.5 } })).toEqual(endOf({ id: 'A', anchor: 'north' }));
+  it('top t=0.5 == 命名 top anchor（edgePoint 中点 = cardinal）', () => {
+    expect(endOf({ id: 'A', anchor: { side: 'top', t: 0.5 } })).toEqual(endOf({ id: 'A', anchor: 'top' }));
   });
 
-  it('west t=0 == north-west 角（rect 边端点 = 角 anchor）', () => {
-    expect(endOf({ id: 'A', anchor: { side: 'west', t: 0 } })).toEqual(endOf({ id: 'A', anchor: 'north-west' }));
+  it('left t=0 == top-left 角（rect 边端点 = 角 anchor）', () => {
+    expect(endOf({ id: 'A', anchor: { side: 'left', t: 0 } })).toEqual(endOf({ id: 'A', anchor: 'top-left' }));
   });
 });
 
@@ -149,6 +149,6 @@ describe('Coordinate（零尺寸）anchor 退化（ADR-01 决策细节 #10）', 
   });
 
   it('{ side, t } 对零尺寸 Coordinate 报明确错', () => {
-    expect(() => coordEnd({ id: 'c', anchor: { side: 'north', t: 0.5 } })).toThrow(/zero-size Coordinate/);
+    expect(() => coordEnd({ id: 'c', anchor: { side: 'top', t: 0.5 } })).toThrow(/zero-size Coordinate/);
   });
 });

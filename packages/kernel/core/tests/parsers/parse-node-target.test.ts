@@ -1,7 +1,7 @@
 /**
  * parseNodeTarget 单元测试（ADR-01）
  * @description 字符串 shorthand → NodeTarget 对象（单一真源，React DSL 层用）：
- *   node（无 .）/ 命名 anchor / Web alias / 角度 anchor；未知 anchor 抛错；含 . 的 id 走对象（dotted-id 限制）
+ *   node（无 .）/ Web canonical 命名 anchor / compass alias / 角度 anchor；未知 anchor 抛错；含 . 的 id 走对象（dotted-id 限制）
  */
 import { describe, expect, it } from 'vitest';
 
@@ -19,30 +19,20 @@ describe('parseNodeTarget node 模式（无 .）', () => {
 });
 
 describe('parseNodeTarget 命名 anchor 模式（id.<name>）', () => {
-  it('9 个标准方位 anchor 全识别 → { id, anchor }', () => {
-    for (const name of [
-      'center',
-      'north',
-      'south',
-      'east',
-      'west',
-      'north-east',
-      'north-west',
-      'south-east',
-      'south-west',
-    ]) {
+  it('9 个 Web canonical 方位 anchor 全识别 → { id, anchor }', () => {
+    for (const name of ['center', 'top', 'right', 'bottom', 'left', 'top-right', 'top-left', 'bottom-right', 'bottom-left']) {
       expect(parseNodeTarget(`A.${name}`)).toEqual({ id: 'A', anchor: name });
     }
   });
 
   it('含连字符的 id 也行', () => {
-    expect(parseNodeTarget('my-node.east')).toEqual({ id: 'my-node', anchor: 'east' });
+    expect(parseNodeTarget('my-node.right')).toEqual({ id: 'my-node', anchor: 'right' });
   });
 
-  it('Web 风格 anchor alias 归一到 canonical anchor', () => {
-    expect(parseNodeTarget('A.top')).toEqual({ id: 'A', anchor: 'north' });
-    expect(parseNodeTarget('A.top-left')).toEqual({ id: 'A', anchor: 'north-west' });
-    expect(parseNodeTarget('A.bottom-right')).toEqual({ id: 'A', anchor: 'south-east' });
+  it('compass 风格 anchor alias 归一到 Web canonical anchor', () => {
+    expect(parseNodeTarget('A.north')).toEqual({ id: 'A', anchor: 'top' });
+    expect(parseNodeTarget('A.north-west')).toEqual({ id: 'A', anchor: 'top-left' });
+    expect(parseNodeTarget('A.south-east')).toEqual({ id: 'A', anchor: 'bottom-right' });
   });
 
   it('未知 anchor 名抛错', () => {
@@ -56,8 +46,8 @@ describe('parseNodeTarget 空 id 守卫（adversarial H1）', () => {
     expect(() => parseNodeTarget('')).toThrow(/empty node id/);
   });
 
-  it("'.north'（空 id + anchor）→ 抛错", () => {
-    expect(() => parseNodeTarget('.north')).toThrow(/empty node id/);
+  it("'.top'（空 id + anchor）→ 抛错", () => {
+    expect(() => parseNodeTarget('.top')).toThrow(/empty node id/);
   });
 
   it("'.30'（空 id + 角度）→ 抛错", () => {
@@ -84,7 +74,7 @@ describe('parseNodeTarget 角度 anchor 模式（id.<deg>）', () => {
 });
 
 describe('parseNodeTarget dotted-id 限制（按第一个点切分）', () => {
-  it("'a.b.north' → id 'a' + tail 'b.north' 非命名 anchor → 抛错（含 . 的 id 须用对象）", () => {
-    expect(() => parseNodeTarget('a.b.north')).toThrow(/unknown anchor/);
+  it("'a.b.top' → id 'a' + tail 'b.top' 非命名 anchor → 抛错（含 . 的 id 须用对象）", () => {
+    expect(() => parseNodeTarget('a.b.top')).toThrow(/unknown anchor/);
   });
 });

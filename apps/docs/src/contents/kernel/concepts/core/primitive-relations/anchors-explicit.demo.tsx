@@ -9,15 +9,15 @@ import { Draw, Layout, Node } from '@retikz/react';
  */
 type Dir = { id: string; pos: [number, number]; label: string; anchor: string };
 
-const COMPASS: Array<Dir> = [
-  { id: 'n', pos: [0, -60], label: 'N', anchor: 'north' },
-  { id: 's', pos: [0, 60], label: 'S', anchor: 'south' },
-  { id: 'e', pos: [72, 0], label: 'E', anchor: 'east' },
-  { id: 'w', pos: [-72, 0], label: 'W', anchor: 'west' },
-  { id: 'ne', pos: [58, -58], label: 'NE', anchor: 'north-east' },
-  { id: 'nw', pos: [-58, -58], label: 'NW', anchor: 'north-west' },
-  { id: 'se', pos: [58, 58], label: 'SE', anchor: 'south-east' },
-  { id: 'sw', pos: [-58, 58], label: 'SW', anchor: 'south-west' },
+const WEB_ANCHORS: Array<Dir> = [
+  { id: 'top', pos: [0, -60], label: 'T', anchor: 'top' },
+  { id: 'bottom', pos: [0, 60], label: 'B', anchor: 'bottom' },
+  { id: 'right', pos: [72, 0], label: 'R', anchor: 'right' },
+  { id: 'left', pos: [-72, 0], label: 'L', anchor: 'left' },
+  { id: 'tr', pos: [58, -58], label: 'TR', anchor: 'top-right' },
+  { id: 'tl', pos: [-58, -58], label: 'TL', anchor: 'top-left' },
+  { id: 'br', pos: [58, 58], label: 'BR', anchor: 'bottom-right' },
+  { id: 'bl', pos: [-58, 58], label: 'BL', anchor: 'bottom-left' },
 ];
 
 // 5 个尖角方向（star 默认第一尖角朝上，每 72° 一个）；源放在 tip 外更远处，连线更长
@@ -36,7 +36,7 @@ const ring = (tag: string, cx: number, dirs: Array<Dir>): Array<ReactElement> =>
       {d.label}
     </Node>
   )),
-  // 目标用对象形态 { id, anchor }：compass 名与 shape 专属名（tip-N）都走它——
+  // 目标用对象形态 { id, anchor }：Web 方位名与 shape 专属名（tip-N）都走它——
   // 字符串 shorthand `'id.tip-0'` 只认标准方位名，shape 专属 anchor 会被 parser 拒掉。
   ...dirs.map(d => <Draw key={`d-${tag}-${d.id}`} way={[`${tag}-${d.id}`, { id: `${tag}-o`, anchor: d.anchor }]} />),
 ];
@@ -46,12 +46,12 @@ const Demo: FC = () => (
     <Node id="rect-o" position={[-185, 0]} shape="rectangle" padding={12} stroke="gray" dashPattern={[4, 3]}>
       Node
     </Node>
-    {ring('rect', -185, COMPASS)}
+    {ring('rect', -185, WEB_ANCHORS)}
 
     <Node id="ell-o" position={[0, 0]} shape="ellipse" padding={12} stroke="gray" dashPattern={[4, 3]}>
       Node
     </Node>
-    {ring('ell', 0, COMPASS)}
+    {ring('ell', 0, WEB_ANCHORS)}
 
     <Node
       id="star-o"

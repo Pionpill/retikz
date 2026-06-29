@@ -14,8 +14,8 @@ const horizontalPorts: BoundaryDefinition = defineBoundary({
   },
   anchor: (rect, name) => {
     if (name === 'center') return [rect.x, rect.y];
-    if (name === 'west' || name === 'input') return [rect.x - rect.width / 2, rect.y];
-    if (name === 'east' || name === 'output') return [rect.x + rect.width / 2, rect.y];
+    if (name === 'left' || name === 'input') return [rect.x - rect.width / 2, rect.y];
+    if (name === 'right' || name === 'output') return [rect.x + rect.width / 2, rect.y];
     return undefined;
   },
 });
