@@ -9,7 +9,7 @@ import { NameStack } from '../../src/compile/name-stack';
 import { anchorOf, angleBoundaryOf, boundaryPointOf, layoutNode } from '../../src/compile/node';
 import * as core from '../../src/index';
 import { BUILTIN_SHAPES, star } from '../../src/providers/shape';
-import { Boundary, BoundarySchema } from '../../src/schemas/boundary';
+import { BoundaryKeyword, BoundarySchema } from '../../src/schemas/boundary';
 import { NodeSchema } from '../../src/schemas/node';
 import { NodeTargetSchema } from '../../src/schemas/path/target';
 
@@ -29,8 +29,8 @@ describe('BoundarySchema', () => {
     expect(() => BoundarySchema.parse('')).toThrow();
   });
   it('exposes reserved-keyword constant', () => {
-    expect(Boundary.Self).toBe('shape');
-    expect(Boundary.Circle).toBe('circle');
+    expect(BoundaryKeyword.Self).toBe('shape');
+    expect(BoundaryKeyword.Circle).toBe('circle');
   });
 });
 
@@ -289,11 +289,11 @@ describe('端到端：path clip 透传 boundary ?? node.boundary', () => {
 // ─── 导出断言 + 补充象限 ──────────────────────────────────────────────────────
 
 describe('public export + remaining quadrants', () => {
-  it('Boundary / BoundarySchema exported from package root', () => {
-    expect(core.Boundary.Self).toBe('shape');
-    expect(core.Boundary.Circle).toBe('circle');
+  it('BoundaryKeyword / BoundarySchema exported from package root', () => {
+    expect(core.BoundaryKeyword.Self).toBe('shape');
+    expect(core.BoundaryKeyword.Circle).toBe('circle');
     expect(core.BoundarySchema).toBeDefined();
-    // BoundaryValue / IRBoundary 是类型，仅编译时可见，此处不再 runtime 断言
+    // BoundaryKeywordValue / IRBoundary 是类型，仅编译时可见，此处不再 runtime 断言
   });
 
   it('boundary_unregistered_throws: boundary 指向未注册 shape 且有 path 连到该节点时编译抛错', () => {

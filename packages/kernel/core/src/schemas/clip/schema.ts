@@ -61,12 +61,12 @@ export const CompoundClipSchema: z.ZodType<IRCompoundClipSpec> = z.lazy(() =>
     .describe('Compound clip region.'),
 );
 
-const BUILTIN_CLIP_KINDS = new Set(['rect', 'circle', 'ellipse', 'polygon', 'path', 'compound']);
+const RESERVED_CLIP_KINDS = new Set(['rect', 'circle', 'ellipse', 'polygon', 'path', 'compound']);
 
 const CustomClipSpecSchema = z
   .intersection(z.object({ kind: z.string().min(1) }), JsonObjectSchema)
   .superRefine((value, ctx) => {
-    if (BUILTIN_CLIP_KINDS.has(value.kind)) {
+    if (RESERVED_CLIP_KINDS.has(value.kind)) {
       ctx.addIssue({
         code: 'custom',
         message: `Builtin clip kind '${value.kind}' must match its builtin schema.`,

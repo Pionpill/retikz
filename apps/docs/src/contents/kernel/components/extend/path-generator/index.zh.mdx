@@ -22,7 +22,7 @@ step 的内置 kind 是固定 12 种（move / line / fold / cycle / curve / cubi
 | `generate`     | `(ctx) => Array<PathCommand>` | 据 ctx 产低层路径命令（line / quad / cubic / move…），不再走 step 编译     |
 | `targetParams` | `Array<string>`               | 哪些 params **顶层 key** 是 Target，compile 先 resolve 成世界坐标          |
 
-`generate` 拿到的 `PathGeneratorContext`：
+`generate` 拿到的 `PathGeneratorGenerateContext`：
 
 | 字段              | 类型                       | 描述                                                      |
 | ----------------- | -------------------------- | --------------------------------------------------------- |

@@ -1,2 +1,6 @@
 export { defineRibbonWidthProfile } from './define';
-export type { RibbonWidthProfileContext, RibbonWidthProfileDefinition, RibbonWidthProfileInput } from './types';
+export type {
+  RibbonWidthProfileContext,
+  RibbonWidthProfileDefinition,
+  RibbonWidthProfileDefinitionInput,
+} from './types';

@@ -11,7 +11,7 @@ export type RibbonWidthProfileContext<TParams extends IRJsonObject = IRJsonObjec
   params: TParams;
 };
 
-export type RibbonWidthProfileInput<TParams extends IRJsonObject = IRJsonObject> = {
+export type RibbonWidthProfileDefinitionInput<TParams extends IRJsonObject = IRJsonObject> = {
   /** Registry key referenced by IR `width: { kind: "profile", name }`. */
   name: string;
   /** Optional JSON-safe params schema; compile parses `width.params` before sampling. */

@@ -1,7 +1,7 @@
 export { definePathGenerator, definePathKind } from './define';
 export type {
-  PathGeneratorContext,
   PathGeneratorDefinition,
+  PathGeneratorGenerateContext,
   PathKindCompileContext,
   PathKindCompileResult,
   PathKindDefinition,

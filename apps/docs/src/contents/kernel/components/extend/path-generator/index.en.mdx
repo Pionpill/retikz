@@ -22,7 +22,7 @@ A `PathGeneratorDefinition` is a plain object (not part of the IR, can be return
 | `generate`     | `(ctx) => Array<PathCommand>` | Produces low-level path commands (line / quad / cubic / move…) from ctx; does not re-enter step compilation      |
 | `targetParams` | `Array<string>`               | Which **top-level** params keys are Targets, resolved to world coordinates by compile first                      |
 
-The `PathGeneratorContext` passed to `generate`:
+The `PathGeneratorGenerateContext` passed to `generate`:
 
 | Field             | Type                       | Description                                                            |
 | ----------------- | -------------------------- | ---------------------------------------------------------------------- |

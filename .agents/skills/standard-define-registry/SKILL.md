@@ -40,7 +40,7 @@ define-registry 是 retikz 扩展能力的标准形态。遇到可枚举但应�
 | `PlotXxx` / `BuiltinXxx` / `XxxKeyword` | `schemas/<capability>/constants.ts` | schema const object。plot 公共 IR 判别用 `PlotXxx`；core 内置 schema literal 才用 `BuiltinXxx`；语义关键字用 `XxxKeyword`。 |
 | core `<capability>s`、plot `xxxDefinitions` | core `compile/compile.ts`、plot `pipeline/expand.ts` 或相邻 option 定义 | 用户传入自定义 definition 的公开 option。 |
 
-新代码不要用裸 `Xxx` 表示内置 registry，`Boundary` 是历史例外。
+新代码不要用裸 `Xxx` 表示内置 registry；旧版 `Boundary` 这类裸名只能作为反例参考。
 
 ## Discriminator 与 Option
 

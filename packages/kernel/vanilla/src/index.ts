@@ -68,13 +68,13 @@ export type {
   IRJsonObject,
   MarkerFill,
   MarkerPrimitive,
-  PathGeneratorContext,
   PathGeneratorDefinition,
+  PathGeneratorGenerateContext,
   PatternDefinition,
   PatternEmitContext,
   RibbonWidthProfileContext,
   RibbonWidthProfileDefinition,
-  RibbonWidthProfileInput,
+  RibbonWidthProfileDefinitionInput,
 } from '@retikz/core';
 export {
   defineArrow,

@@ -108,7 +108,7 @@ export type {
   ShadowPresetValue,
   StyleChannel,
 } from './schemas';
-export type { BoundaryValue, IRBoundary } from './schemas';
+export type { BoundaryKeywordValue, IRBoundary } from './schemas';
 export type {
   AnimationDirectionValue,
   AnimationEasingValue,
@@ -215,7 +215,7 @@ export {
   ARROW_MARKER_DEFAULT_SIZE,
   ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
   BlendMode,
-  Boundary,
+  BoundaryKeyword,
   BoundarySchema,
   BuiltinArrowShape,
   BuiltinShape,
@@ -372,8 +372,8 @@ export { BUILTIN_PATTERNS } from './providers/pattern';
 
 // Path (generator + kind provider extension surface)
 export type {
-  PathGeneratorContext,
   PathGeneratorDefinition,
+  PathGeneratorGenerateContext,
   PathKindCompileContext,
   PathKindCompileResult,
   PathKindDefinition,
@@ -385,7 +385,7 @@ export { BUILTIN_PATH_KINDS } from './providers/path-kind';
 export type {
   RibbonWidthProfileContext,
   RibbonWidthProfileDefinition,
-  RibbonWidthProfileInput,
+  RibbonWidthProfileDefinitionInput,
 } from './contract/ribbon';
 export { defineRibbonWidthProfile } from './contract/ribbon';
 export { BUILTIN_RIBBON_WIDTH_PROFILES } from './providers/ribbon';
