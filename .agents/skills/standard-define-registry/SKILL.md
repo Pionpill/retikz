@@ -51,6 +51,12 @@ define-registry 是 retikz 扩展能力的标准形态。遇到可枚举但应�
 - core compile options 用能力复数名：`shapes`、`boundaries`、`clips`、`arrows`、`patterns`、`pathGenerators`、`pathKinds`、`composites`。
 - plot 新增 registry option 优先用 `xxxDefinitions`；既有 `coordinates` 是历史例外，除非保持同一能力兼容，否则不要复制。
 
+## JSDoc 备注
+
+- `@description` 说明当前 API 做什么；`@remarks` 说明为什么这样设计、当前限制和未来扩展点。
+- 当 `defineXxx()` helper 目前只是 typed identity（入参和返回值同为 `XxxDefinition`，不做运行时加工），用 `@remarks` 说明它保留稳定入口是为了对齐其它 registry API，并为未来运行时校验、默认值归一或泛型收敛预留空间。
+- 不要把这种设计备注写成 `@todo`；`@todo` 会暗示当前实现缺失，而 typed identity helper 可能是有意保留的 contract hook。
+
 ## 使用这套准则的模块
 
 - core：参考 `packages/kernel/core/src/contract/*`、`packages/kernel/core/src/providers/*`、`packages/kernel/core/src/schemas/*`、`packages/kernel/core/src/compile/compile.ts`。优先看 shape、boundary、clip、arrow、pattern、path-kind、composite 这些已经走 define-registry 的能力。
