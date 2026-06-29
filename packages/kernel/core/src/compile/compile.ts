@@ -1,4 +1,5 @@
 import type { ArrowDefinition } from '../contract/arrow';
+import type { BoundaryDefinition } from '../contract/boundary';
 import type { CompositeDefinition } from '../contract/composite';
 import type { PathGeneratorDefinition } from '../contract/path';
 import type { PathKindCompileResult, PathKindDefinition } from '../contract/path';
@@ -17,6 +18,7 @@ import type { TextMeasurer } from './text-metrics';
 
 import { rect as rectOps } from '../geometry/rect';
 import { resolveArrowRegistry } from '../providers/arrow';
+import { resolveBoundaryRegistry } from '../providers/boundary';
 import { resolveCompositeRegistry } from '../providers/composite';
 import { resolvePathGeneratorRegistry } from '../providers/path';
 import { resolvePathKindRegistry } from '../providers/path-kind';
@@ -57,7 +59,12 @@ export { CompileWarningCode } from './constant';
  * @description coordinate / scope.id 入场临时占位等"无形状只有位置"句柄共享此结构，
  *   让后续 path target / `at.of` / `offset.of` / `polar.origin` 引用时 boundaryPoint 命中中心。
  */
-const zeroSizeRectAt = (id: string, [cx, cy]: IRPosition, shapes: ProviderCollection<ShapeDefinition>): NodeLayout => ({
+const zeroSizeRectAt = (
+  id: string,
+  [cx, cy]: IRPosition,
+  shapes: ProviderCollection<ShapeDefinition>,
+  boundaries: ProviderCollection<BoundaryDefinition>,
+): NodeLayout => ({
   id,
   shapeName: 'rectangle',
   shapeDef: providerDefinitionOf(shapes, 'rectangle', { capability: 'shape', optionName: 'shapes' }),
@@ -70,14 +77,19 @@ const zeroSizeRectAt = (id: string, [cx, cy]: IRPosition, shapes: ProviderCollec
   lineHeight: 0,
   fontSize: 0,
   shapes,
+  boundaries,
 });
 
 /**
  * 把 coordinate 注册成 0×0 NodeLayout
  * @description 让后续 path target / `at.of` 引用时 boundaryPoint 命中中心，符合"占位无形状边界"语义
  */
-const coordinateAsLayout = (id: string, center: IRPosition, shapes: ProviderCollection<ShapeDefinition>): NodeLayout =>
-  zeroSizeRectAt(id, center, shapes);
+const coordinateAsLayout = (
+  id: string,
+  center: IRPosition,
+  shapes: ProviderCollection<ShapeDefinition>,
+  boundaries: ProviderCollection<BoundaryDefinition>,
+): NodeLayout => zeroSizeRectAt(id, center, shapes, boundaries);
 
 /** shadow 是视觉效果，不改变锚点 / scope bbox；这里只把它的外溢纳入根自动 layout，避免根 viewBox 裁剪 */
 const shadowOverflowPoints = (points: ReadonlyArray<IRPosition>, shadow: DropShadow | undefined): Array<IRPosition> => {
@@ -124,9 +136,10 @@ const scopePlaceholderLayout = (
   id: string,
   chain: ReadonlyArray<Transform>,
   shapes: ProviderCollection<ShapeDefinition>,
+  boundaries: ProviderCollection<BoundaryDefinition>,
 ): NodeLayout => {
   const globalOrigin: IRPosition = chain.length === 0 ? [0, 0] : applyTransformChain([0, 0], chain);
-  return zeroSizeRectAt(id, globalOrigin, shapes);
+  return zeroSizeRectAt(id, globalOrigin, shapes, boundaries);
 };
 
 /** compileToScene 的可选参数 */
@@ -156,6 +169,11 @@ export type CompileOptions = {
    *   Duplicate names fail at registration time. IR 的 `node.shape` 仍是字符串；未注册名在编译期 throw。
    */
   shapes?: ReadonlyArray<ShapeDefinition>;
+  /**
+   * 运行时注入的第三方 connection surface（不进 IR）
+   * @description `boundary` 先查本 registry，再 fallback 到 shape registry；`shape` 保留为节点自身视觉 shape。
+   */
+  boundaries?: ReadonlyArray<BoundaryDefinition>;
   /**
    * 运行时注入的第三方 arrow（不进 IR）
    * @description 有效 arrow 表 = `{ ...BUILTIN_ARROWS, ...arrows }`——同名 key 覆盖内置，经 `onWarn` 发
@@ -404,6 +422,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   // provider registry 在 compile 入口统一 resolve：内置和自定义同表，duplicate key fail-loud。
   // compile 主流程只消费 resolved Map；unknown string-reference provider 仍 fail-fast。
   const effectiveShapes: ReadonlyMap<string, ShapeDefinition> = resolveShapeRegistry(options.shapes);
+  const effectiveBoundaries: ReadonlyMap<string, BoundaryDefinition> = resolveBoundaryRegistry(options.boundaries);
   const effectivePathGenerators: ReadonlyMap<string, PathGeneratorDefinition> = resolvePathGeneratorRegistry(
     options.pathGenerators,
   );
@@ -576,6 +595,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           chain,
           resolveLabelDefault(styleStack),
           effectiveShapes,
+          effectiveBoundaries,
           // between 端点世界坐标解析器（refPointOfTarget 处理 NodeTarget anchor / Cartesian / Polar / Offset / 嵌套 between）
           refPointOfTarget,
           // 公式渲染注入 + 预绑路径的 warn（文本里的 `$...$` 行内公式编译用）
@@ -617,7 +637,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           );
         }
         const globalCenter = chain.length === 0 ? localCenter : applyTransformChain(localCenter, chain);
-        const coordLayout = coordinateAsLayout(child.id, globalCenter, effectiveShapes);
+        const coordLayout = coordinateAsLayout(child.id, globalCenter, effectiveShapes, effectiveBoundaries);
         nameStack.register(child.id, coordLayout, `${locatorPrefix}children[${i}].coordinate.id`);
         // coordinate 0×0 layout 也算上层 scope.id bbox 输入（参与父 scope 子树 AABB 累积）
         layoutsAccumulator.push(coordLayout);
@@ -643,7 +663,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         const parentFrameDepth = nameStack.depth - 1;
         let placeholderLayout: NodeLayout | undefined;
         if (child.id) {
-          placeholderLayout = scopePlaceholderLayout(child.id, innerChain, effectiveShapes);
+          placeholderLayout = scopePlaceholderLayout(child.id, innerChain, effectiveShapes, effectiveBoundaries);
           nameStack.register(child.id, placeholderLayout, `${locatorPrefix}children[${i}].scope.id`);
         }
         // 进入 scope 子 frame：localNamespace=true 时隔离子树命名空间
@@ -678,6 +698,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
                 collectScopeCornerPoints(innerLayouts),
                 fallbackOrigin,
                 effectiveShapes,
+                effectiveBoundaries,
               );
             } else {
               bboxLayout = registerScopeAsLayout(
@@ -685,6 +706,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
                 computeScopeBoundingBox(innerLayouts),
                 fallbackOrigin,
                 effectiveShapes,
+                effectiveBoundaries,
               );
             }
             // 用 replaceLayout 覆盖不触发 duplicate warn（placeholder → real bbox 是预期升级）

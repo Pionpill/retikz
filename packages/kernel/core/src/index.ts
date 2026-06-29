@@ -332,8 +332,11 @@ export {
 } from './presets';
 
 // Shapes (Shape Registry 扩展面：第三方 shape 注入 + 内置注册项 + 作者所需 helper)
+export type { BoundaryDefinition, BoundaryDefinitionInput } from './contract/boundary';
+export { defineBoundary } from './contract/boundary';
 export type { ShapeDefinition, ShapeDefinitionInput, ShapeStyle } from './contract/shape';
 export { contour, defineShape, localToWorld, worldToLocal } from './contract/shape';
+export { BUILTIN_BOUNDARIES } from './providers/boundary';
 export { BUILTIN_SHAPES } from './providers/shape';
 
 // Arrows (Arrow Registry 扩展面：第三方 arrow 注入 + 内置注册项)

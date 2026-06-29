@@ -1,5 +1,6 @@
 import { minimalEnclosingCircle } from '@retikz/math';
 
+import type { BoundaryDefinition } from '../contract/boundary';
 import type { ShapeDefinition } from '../contract/shape';
 import type { Rect } from '../geometry/rect';
 import type { Transform } from '../primitive';
@@ -17,6 +18,7 @@ import type { NodeLayout } from './node';
 import type { ResolveBetweenGlobal } from './position';
 
 import { rect as rectOps } from '../geometry/rect';
+import { resolveBoundaryRegistry } from '../providers/boundary';
 import { providerDefinitionOf } from '../providers/registry';
 import { resolveShapeRegistry } from '../providers/shape';
 import { outerRectOf } from './node';
@@ -279,6 +281,7 @@ export const registerScopeAsLayout = (
   bbox: ScopeBoundingBox | null,
   fallbackOrigin: IRPosition,
   shapes: ProviderCollection<ShapeDefinition> = resolveShapeRegistry(),
+  boundaries: ProviderCollection<BoundaryDefinition> = resolveBoundaryRegistry(),
 ): NodeLayout => {
   const box: ScopeBoundingBox = bbox ?? { x: fallbackOrigin[0], y: fallbackOrigin[1], width: 0, height: 0 };
   return {
@@ -294,6 +297,7 @@ export const registerScopeAsLayout = (
     lineHeight: 0,
     fontSize: 0,
     shapes,
+    boundaries,
   };
 };
 
@@ -307,6 +311,7 @@ export const registerScopeCircleLayout = (
   cornerPoints: ReadonlyArray<IRPosition>,
   fallbackOrigin: IRPosition,
   shapes: ProviderCollection<ShapeDefinition> = resolveShapeRegistry(),
+  boundaries: ProviderCollection<BoundaryDefinition> = resolveBoundaryRegistry(),
 ): NodeLayout => {
   const mec = cornerPoints.length > 0 ? minimalEnclosingCircle([...cornerPoints]) : null;
   const center: IRPosition = mec ? [mec.center[0], mec.center[1]] : fallbackOrigin;
@@ -325,5 +330,6 @@ export const registerScopeCircleLayout = (
     lineHeight: 0,
     fontSize: 0,
     shapes,
+    boundaries,
   };
 };

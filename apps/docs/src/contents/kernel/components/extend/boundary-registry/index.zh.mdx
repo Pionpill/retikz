@@ -1,0 +1,120 @@
+---
+title: 自定义连接面
+description: 通过 Boundary Registry 注册节点的连接面；节点的视觉 shape 保持不变，路径连线和具名锚点可以改用单独的 BoundaryDefinition。
+---
+
+`boundary` 控制路径连接到节点时停在哪里。默认值是 `shape`：连接面就是节点自己的视觉形状。需要让一个矩形节点只暴露左右两个端口、让一个图标按圆形连线、或让多个视觉 shape 复用同一套连接规则时，就把连接面拆成独立的 `BoundaryDefinition`。
+
+Boundary Registry 和 [自定义形状](/kernel/components/extend/shape-registry) 是同一类 compile-time 扩展：IR 里只保存 `boundary` 的名字或 `{ type, params }`，真正的函数定义通过 `CompileOptions.boundaries` / `<Layout boundaries>` 注入。
+
+> 日常连线通常不需要本页。只有当“看起来是什么形状”和“线应该接到哪里”不是同一件事时，才需要自定义连接面。
+
+## 核心约束：shape 是默认连接面
+
+不写 `boundary`，或写 `boundary="shape"`，都表示沿用节点自己的 `shape`。这也是最常见、最直观的行为。
+
+除了 `shape` 这个保留值，其他 `boundary` 名字会先查 Boundary Registry；如果找不到，再 fallback 到 Shape Registry。这个 fallback 保留了旧能力：你仍然可以写 `boundary="ellipse"` 让一个矩形节点按椭圆连线。但新的推荐写法是：只负责连接面的逻辑放进 `BoundaryDefinition`。
+
+| 写法 | 查找顺序 | 适用场景 |
+| --- | --- | --- |
+| 不写 / `shape` | 节点视觉 shape | 默认行为 |
+| `circle` / `rectangle` / `ellipse` | 内置 boundary provider | 复用常见连接面 |
+| 自定义名字 | boundary provider → shape fallback | 业务端口、语义连接面 |
+| `{ type, params }` | 同上，并把 params 传给 provider | 带参数的连接面 |
+
+`boundary` 仍然是 JSON-safe 的 IR 字段；`BoundaryDefinition` 含函数，不进入 IR。
+
+## BoundaryDefinition
+
+一个连接面只负责“线接在哪里”和“这个连接面有哪些锚点”。它不参与节点尺寸计算，也不绘制任何图元；这些仍然由节点自己的 `shape` 负责。
+
+| 字段 | 作用 | 必填 · 可选 |
+| --- | --- | --- |
+| `name` | Registry key；IR 的 `boundary` 通过它引用 provider | 必填 |
+| `paramsSchema` | zod schema；编译期校验 `boundary.params` | 必填 |
+| `boundaryPoint` | 从节点中心朝 `toward` 发射射线时，返回连线应停下的点 | 必填 |
+| `anchor` | 返回具名锚点坐标；未知名字返回 `undefined` | 可选 |
+
+`rect` 是节点视觉 shape 已经算好的外接框，包含中心点、宽高和可选旋转；`params` 是 `paramsSchema` 校验后的纯 JSON 对象。连接面不重新决定节点大小，所以不会有 `circumscribe` / `emit`。
+
+### paramsSchema
+
+```ts
+paramsSchema: z.ZodType<TParams>;
+```
+
+无参连接面用 `z.strictObject({})`。带参数时，参数写在 IR 的 `{ type, params }` 里，编译期先过 provider 自己的 schema，再传给计算函数。
+
+### boundaryPoint
+
+```ts
+boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
+```
+
+路径连接节点、或解析 `A.30` 这类数字角度时调用。普通几何可以按 `toward` 与 `rect` 求交点；语义端口可以直接忽略真实轮廓，按方向返回固定端口。
+
+### anchor
+
+```ts
+anchor?: (rect: Rect, name: string, params: TParams) => Position | undefined;
+```
+
+当用户写 `A.input`、`A.output` 这类名字时调用。未实现 `anchor`，或返回 `undefined` 时，编译层会回退到矩形 compass 锚点；这让简单 boundary 只写 `boundaryPoint` 也能继续使用 `north` / `east` 等常见方位。
+
+## 注入连接面定义
+
+```ts
+import { compileToScene, defineBoundary, type BoundaryDefinition } from '@retikz/core';
+import { z } from 'zod';
+
+const horizontalPorts: BoundaryDefinition = defineBoundary({
+  name: 'horizontal-ports',
+  paramsSchema: z.strictObject({}),
+  boundaryPoint: (rect, toward) => {
+    return toward[0] < rect.x
+      ? [rect.x - rect.width / 2, rect.y]
+      : [rect.x + rect.width / 2, rect.y];
+  },
+  anchor: (rect, name) => {
+    if (name === 'input') return [rect.x - rect.width / 2, rect.y];
+    if (name === 'output') return [rect.x + rect.width / 2, rect.y];
+    return undefined;
+  },
+});
+
+const scene = compileToScene(ir, { boundaries: [horizontalPorts] });
+```
+
+React 里把同一份定义传给 `<Layout>`：
+
+```tsx
+<Layout boundaries={[horizontalPorts]}>
+  <Node id="io" boundary="horizontal-ports" position={[0, 0]} text="IO" />
+</Layout>
+```
+
+## 例子
+
+### 只换连接面，不换视觉形状
+
+下面的 `IO` 仍然是普通矩形节点，但 `boundary="horizontal-ports"` 让连线只接左右两个端口。右侧的 `B` 放在右下方，线仍然落在 `IO` 的右侧中心，而不是矩形的右下边缘。
+
+<ComponentPreview name="boundary-registry" size="sm" />
+
+## 查找与冲突
+
+- `boundary="shape"` 是保留语义，不是 provider key；它永远表示节点自己的视觉 shape。
+- 除 `shape` 外，查找顺序是 **boundaries 优先，shapes fallback 其次**。
+- 自定义 boundary 不能和内置 boundary 同名；同一数组内重复名字也会在注册期报错。
+- 自定义 boundary 与 shape 同名时，boundary provider 优先。这样可以单独替换连接面，而不影响视觉 shape。
+- 未知名字会在编译期报错，并同时列出已注册 boundaries 和 shapes，方便判断是少传了 `boundaries` 还是 `shapes`。
+
+## 公开导出
+
+`@retikz/core` 导出 `defineBoundary` / `BoundaryDefinition` / `BoundaryDefinitionInput` / `BUILTIN_BOUNDARIES`。React 和 Vanilla 单包入口也 re-export 了这些定义，方便 adapter 用户从当前包导入。
+
+## 相关
+
+- [自定义形状](/kernel/components/extend/shape-registry)：定义节点如何占位、连线和绘制
+- [Layout](/kernel/components/layout/overview)：查看 `<Layout boundaries>` prop
+- [编译](/kernel/reference/runtime/compile)：查看 `CompileOptions.boundaries`

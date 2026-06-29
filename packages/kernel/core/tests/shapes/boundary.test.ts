@@ -319,7 +319,7 @@ describe('public export + remaining quadrants', () => {
         },
       ],
     };
-    expect(() => core.compileToScene(ir)).toThrow(/Unknown connection surface 'nope'/);
+    expect(() => core.compileToScene(ir)).toThrow(/Unknown connection surface provider 'nope'/);
   });
 
   it('specific_anchor_ignores_boundary: tip-0 是星形专属 anchor，boundary 不影响其解析结果', () => {

@@ -1,12 +1,14 @@
-import type { ScenePrimitive, ShapeDefinition } from '@retikz/core';
+import type { BoundaryDefinition, ScenePrimitive, ShapeDefinition } from '@retikz/core';
 
-import { defineShape, localToWorld, worldToLocal } from '@retikz/core';
+import { defineBoundary, defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import { Layout } from '../../src/kernel/Layout';
 import { Node } from '../../src/kernel/Node';
+import { Path } from '../../src/kernel/Path';
+import { Step } from '../../src/kernel/Step';
 
 /**
  * <Layout shapes={...}> 自定义 shape 注入透传
@@ -42,6 +44,13 @@ const radialShape = (): ShapeDefinition =>
     },
   });
 
+const fixedBoundary = (): BoundaryDefinition =>
+  defineBoundary({
+    name: 'pin',
+    paramsSchema: z.strictObject({}),
+    boundaryPoint: rect => [rect.x + 7, rect.y],
+  });
+
 describe('<Layout shapes> 自定义 shape 注入', () => {
   it('注入 shapes 后 <Node shape="hexagon"> 渲染出自定义 emit（ellipse）', () => {
     const svg = renderToStaticMarkup(
@@ -60,5 +69,35 @@ describe('<Layout shapes> 自定义 shape 注入', () => {
         </Layout>,
       ),
     ).toThrow(/Unknown shape 'hexagon'/);
+  });
+});
+
+describe('<Layout boundaries> custom boundary passthrough', () => {
+  it('passes boundary providers to compileToScene', () => {
+    expect(() =>
+      renderToStaticMarkup(
+        <Layout width={120} height={80} boundaries={[fixedBoundary()]}>
+          <Node id="A" position={[0, 0]} minimumSize={40} boundary="pin" />
+          <Path>
+            <Step kind="move" to={[100, 0]} />
+            <Step kind="line" to="A" />
+          </Path>
+        </Layout>,
+      ),
+    ).not.toThrow();
+  });
+
+  it('throws when a referenced boundary provider is not registered', () => {
+    expect(() =>
+      renderToStaticMarkup(
+        <Layout width={120} height={80}>
+          <Node id="A" position={[0, 0]} minimumSize={40} boundary="pin" />
+          <Path>
+            <Step kind="move" to={[100, 0]} />
+            <Step kind="line" to="A" />
+          </Path>
+        </Layout>,
+      ),
+    ).toThrow(/Unknown connection surface provider 'pin'/);
   });
 });

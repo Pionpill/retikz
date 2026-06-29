@@ -1,5 +1,6 @@
 import { arcEndPoint } from '@retikz/math';
 
+import type { BoundaryDefinition } from '../contract/boundary';
 import type { ShapeDefinition, ShapeStyle } from '../contract/shape';
 import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';
@@ -30,10 +31,11 @@ import type { LaidLine, LineLayoutContext } from './text-layout';
 import type { FontSpec, TextMeasurer } from './text-metrics';
 
 import { normalizeCompassAnchor } from '../geometry/anchor';
+import { resolveBoundaryRegistry } from '../providers/boundary';
 import { providerDefinitionOf } from '../providers/registry';
 import { resolveShapeRegistry } from '../providers/shape';
 import { JsonObjectSchema } from '../schemas';
-import { resolveBoundary } from './boundary';
+import { fallbackBoundaryAnchor, resolveBoundary } from './boundary';
 import { CompileWarningCode } from './constant';
 import { DirectionVectorByAtDirection, LabelAnchorByAtDirection } from './direction';
 import { resolveShadow } from './effects';
@@ -245,6 +247,8 @@ export type NodeLayout = {
   animations?: Array<IRAnimationTrack>;
   /** 构建本 layout 的 shape 注册表引用——借用连接面（borrowed boundary）查表用 */
   shapes: ProviderCollection<ShapeDefinition>;
+  /** 构建本 layout 的 boundary 注册表引用——connection surface provider 查表用 */
+  boundaries?: ProviderCollection<BoundaryDefinition>;
 };
 
 /** 节点附属标签 layout（layoutNode 已合并默认值与样式继承） */
@@ -304,6 +308,7 @@ export const boundaryPointOf = (
     layout.rect,
     layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
     layout.shapes,
+    layout.boundaries ?? resolveBoundaryRegistry(),
   );
   return def.boundaryPoint(inflateRect(rect, layout.margin), toward, params);
 };
@@ -333,8 +338,9 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
         layout.rect,
         layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
         layout.shapes,
+        layout.boundaries ?? resolveBoundaryRegistry(),
       );
-      const p = fallback.def.anchor(fallback.rect, compassAnchor, fallback.params);
+      const p = fallback.def.anchor?.(fallback.rect, compassAnchor, fallback.params);
       if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
       return p;
     }
@@ -344,8 +350,9 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
       layout.rect,
       layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
       layout.shapes,
+      layout.boundaries ?? resolveBoundaryRegistry(),
     );
-    const p = def.anchor(rect, compassAnchor, params);
+    const p = def.anchor?.(rect, compassAnchor, params) ?? fallbackBoundaryAnchor(rect, compassAnchor, params);
     if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
     return p;
   }
@@ -488,6 +495,7 @@ export const angleBoundaryOf = (
     layout.rect,
     layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
     layout.shapes,
+    layout.boundaries ?? resolveBoundaryRegistry(),
   );
   return def.boundaryPoint(rect, toward, params);
 };
@@ -516,6 +524,7 @@ export const layoutNode = (
   scopeChain: ReadonlyArray<Transform> = [],
   labelDefault?: IRLabelDefault,
   shapes: ProviderCollection<ShapeDefinition> = resolveShapeRegistry(),
+  boundaries: ProviderCollection<BoundaryDefinition> = resolveBoundaryRegistry(),
   resolveBetweenGlobal?: ResolveBetweenGlobal,
   texLowering?: TexLoweringContext,
 ): NodeLayout => {
@@ -779,6 +788,7 @@ export const layoutNode = (
     meta: node.meta,
     animations: node.animations,
     shapes,
+    boundaries,
   };
 };
 

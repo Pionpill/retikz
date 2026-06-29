@@ -1,5 +1,6 @@
 import type {
   ArrowDefinition,
+  BoundaryDefinition,
   CompositeDefinition,
   IR,
   IRAnimationTrack,
@@ -195,6 +196,11 @@ export type LayoutProps = ScopeStyleProps & {
    */
   shapes?: ReadonlyArray<ShapeDefinition>;
   /**
+   * 运行时注入的第三方 / 自定义 connection surface（透传给 `compileToScene` 的 `CompileOptions.boundaries`）
+   * @description IR 里 `boundary` 仍只写字符串名或 `{ type, params }`；定义在此注入。查不到时再 fallback 到 shapes。
+   */
+  boundaries?: ReadonlyArray<BoundaryDefinition>;
+  /**
    * 运行时注入的第三方 / 自定义 arrow（透传给 `compileToScene` 的 `CompileOptions.arrows`）
    * @description IR 里 `<Path arrowDetail={{ shape: '...' }}>` 仍只写字符串名；定义在此注入。emit-in-compile：
    *   compile 调 `def.emit` 产 marker 几何进 `ArrowEndSpec`，react adapter 只物化、不需 arrows 表。同名覆盖
@@ -314,6 +320,7 @@ export const Layout: FC<LayoutProps> = props => {
     idPrefix,
     nodeDistance,
     shapes,
+    boundaries,
     arrows,
     patterns,
     pathGenerators,
@@ -410,6 +417,7 @@ export const Layout: FC<LayoutProps> = props => {
         measureText,
         nodeDistance,
         shapes,
+        boundaries,
         arrows,
         patterns,
         pathGenerators,
@@ -423,6 +431,7 @@ export const Layout: FC<LayoutProps> = props => {
       measureText,
       nodeDistance,
       shapes,
+      boundaries,
       arrows,
       patterns,
       pathGenerators,

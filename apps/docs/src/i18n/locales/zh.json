@@ -94,6 +94,7 @@
     "refScenePrimitive": "原语",
     "refParser": "解析器",
     "refShapeRegistry": "自定义形状",
+    "refBoundaryRegistry": "自定义连接面",
     "refCustomArrow": "自定义箭头",
     "refCustomPattern": "自定义图案",
     "refCustomPath": "自定义路径",

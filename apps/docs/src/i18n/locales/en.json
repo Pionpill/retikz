@@ -94,6 +94,7 @@
     "refScenePrimitive": "Primitive",
     "refParser": "Parser",
     "refShapeRegistry": "Custom Shapes",
+    "refBoundaryRegistry": "Custom Boundaries",
     "refCustomArrow": "Custom Arrows",
     "refCustomPattern": "Custom Patterns",
     "refCustomPath": "Custom Paths",

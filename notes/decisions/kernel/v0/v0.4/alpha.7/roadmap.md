@@ -34,6 +34,7 @@ kernel alpha.7 采用同样原则: **registry 机制统一，key 来源按能力
 | 能力 | IR 引用 | Definition key | 说明 |
 | --- | --- | --- | --- |
 | Shape | `node.shape` | `ShapeDefinition.name` | `paramsSchema` / geometry / emit 运行时注入，不进 IR |
+| Boundary | `node.boundary` / target `boundary` | `BoundaryDefinition.name` | `boundary` 优先查一等连接面 provider；查不到再 fallback 到已注册 shape |
 | Arrow | `arrowDetail.shape` | `ArrowDefinition.name` | 保留 IR 字段语义，definition name 作为注册项真源 |
 | Pattern | pattern 引用字段 | `PatternDefinition.name` | 不为统一而强行改 IR 字段名；只要求它指向 definition name |
 | Path generator | generator step `name` | `PathGeneratorDefinition.name` | generator operation 仍保存 JSON params |
@@ -56,11 +57,13 @@ kernel alpha.7 采用同样原则: **registry 机制统一，key 来源按能力
 | [ADR-02](./02-provider-key-contract.md) | Accepted（2026-06-29 人工签字，待实现） | Provider key contract | 区分 string reference provider 与 operation provider；明确 `name`、schema literal、`namespace.type` 三种 key 来源 |
 | [ADR-03](./03-capability-provider-migration.md) | Accepted（2026-06-29 人工签字，待实现） | Capability migration | 迁移 shape / arrow / pattern / path generator / path kind / ribbon width profile / composite 到统一 provider 模型 |
 | [ADR-04](./04-adapter-surface-and-docs.md) | Accepted（2026-06-29 人工签字，待实现） | Adapter surface and docs | React / Vanilla provider 透传改成数组定义；文档新增 provider authoring 总览与扩展示例 |
+| [ADR-05](./05-boundary-provider-contract.md) | Accepted（2026-06-29 人工签字，待实现） | Boundary provider contract | 新增一等 BoundaryDefinition / CompileOptions.boundaries；lookup 先 boundary provider，后 shape fallback，并保留默认 `shape` 语义 |
 
 ## 设计约束
 
 - `CompileOptions` 的 provider 字段统一改为 `ReadonlyArray<AnyXxxDefinition>` 或对应精确 definition 数组。
 - `BUILTIN_*` 公开清单统一为 `ReadonlyArray<AnyXxxDefinition>`；如需诊断可另建内部 `ReadonlyMap`，但公共面以数组为主。
+- `boundary` 解析优先消费 `BoundaryDefinition` registry，找不到时再借用 shape registry；`shape` 是保留语义，不是 provider key。
 - custom provider 与 builtin provider 同名默认 throw，不通过 warn 静默覆盖。
 - alpha.7 不设计 `overrideBuiltin` 逃生口；如后续确有覆盖内置行为需求，单独 ADR 讨论。
 - `defineX()` 保持纯函数，不读全局 registry，不依赖 providers。
@@ -75,6 +78,7 @@ kernel alpha.7 采用同样原则: **registry 机制统一，key 来源按能力
 - `packages/kernel/core/src/contract/**`
 - `packages/kernel/core/src/providers/**`
 - `packages/kernel/core/src/compile/**` 中 provider resolve 与 lookup 相关代码
+- `packages/kernel/core/src/schemas/boundary/**` 与 connection surface 相关契约
 - `packages/kernel/core/src/index.ts` 的 provider 公开导出
 - `packages/kernel/react` 中 `<Layout>` provider props 的透传形态
 - `packages/kernel/vanilla` 中 builder / render 入口的 provider 透传形态
@@ -91,11 +95,12 @@ kernel alpha.7 采用同样原则: **registry 机制统一，key 来源按能力
 ## 验收清单
 
 - [ ] `CompileOptions` 中 provider 注入形态统一为 definition 数组。
-- [ ] `BUILTIN_SHAPES` / `BUILTIN_ARROWS` / `BUILTIN_PATTERNS` / `BUILTIN_PATH_GENERATORS` / `BUILTIN_PATH_KINDS` / `BUILTIN_RIBBON_WIDTH_PROFILES` / `BUILTIN_COMPOSITES` 公开形态一致。
+- [ ] `BUILTIN_SHAPES` / `BUILTIN_BOUNDARIES` / `BUILTIN_ARROWS` / `BUILTIN_PATTERNS` / `BUILTIN_PATH_GENERATORS` / `BUILTIN_PATH_KINDS` / `BUILTIN_RIBBON_WIDTH_PROFILES` / `BUILTIN_COMPOSITES` 公开形态一致。
 - [ ] 所有 provider registry 都先注册 builtin，再注册 custom，并对重复 key throw。
 - [ ] custom 不能覆盖 builtin；同一 custom 数组内重复 key 也必须 throw。
 - [ ] unknown provider 引用的报错列出 capability、失败 key、可用 key 与注入 options 名称。
 - [ ] string reference provider 全部由 `Definition.name` 提供 key。
+- [ ] boundary provider 优先于 shape fallback；shape fallback 保留现有借用 shape 作为连接面的能力。
 - [ ] operation provider 全部由 schema literal 或 `namespace.type` 提供 key，且有显式 key 提取 helper。
 - [ ] compile 中不存在面向内置 provider 的特殊白名单分支。
 - [ ] React / Vanilla 的 provider props 与 core `CompileOptions` 命名和形态一致。
@@ -117,6 +122,6 @@ kernel alpha.7 采用同样原则: **registry 机制统一，key 来源按能力
 alpha.7 会改变 public provider API，因此必须同步 docs:
 
 - 新增 kernel provider authoring 总览页，解释 `contract/`、`providers/`、IR JSON 与 runtime definition 的边界。
-- 更新 Shape / Path / Pattern / Arrow 等相关页面中的自定义 provider 写法。
+- 更新 Shape / Boundary / Path / Pattern / Arrow 等相关页面中的自定义 provider 写法。
 - 更新 React `<Layout>` 与 Vanilla render / builder 的 provider 参数 API 表。
 - 如字段名或输入形态破坏旧写法，文档只保留新写法，不写迁移兼容层。

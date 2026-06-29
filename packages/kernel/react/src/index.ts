@@ -91,6 +91,8 @@ export type { IRAnchorRef, IRNodeTarget } from '@retikz/core';
 export type {
   ArrowDefinition,
   ArrowEmitContext,
+  BoundaryDefinition,
+  BoundaryDefinitionInput,
   IRJsonObject,
   MarkerFill,
   MarkerPrimitive,
@@ -106,6 +108,7 @@ export type {
 } from '@retikz/core';
 export {
   defineArrow,
+  defineBoundary,
   definePathGenerator,
   definePathKind,
   definePattern,
