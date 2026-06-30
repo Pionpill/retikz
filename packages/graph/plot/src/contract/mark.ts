@@ -62,6 +62,7 @@ export type MarkDefinition<T extends MarkOperation = Mark> = {
 /**
  * 定义一个 mark definition。
  * @description 保留 collectFields / buildCell / lower 之间对 mark 子类型的强类型关联；内置与自定义 mark 都经同一 registry 入口分派。
+ * @remarks 当前 helper 只做 `MarkDefinition` 类型约束并原样返回定义对象；保留稳定入口是为了与其它 registry API 对齐，并为后续运行时校验、默认值归一或泛型收敛预留 contract hook。
  */
 export const defineMark = <T extends MarkOperation = Mark>(def: MarkDefinition<T>): MarkDefinition<T> => def;
 
