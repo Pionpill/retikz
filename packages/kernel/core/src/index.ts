@@ -396,7 +396,7 @@ export {
 } from './presets';
 
 // Shapes (Shape Registry 扩展面：第三方 shape 注入 + 内置注册项 + 作者所需 helper)
-export type { BoundaryDefinition, BoundaryDefinitionInput } from './contract/boundary';
+export type { BoundaryAnchorName, BoundaryDefinition, BoundaryDefinitionInput } from './contract/boundary';
 export { defineBoundary } from './contract/boundary';
 export type { ClipDefinition, ClipDefinitionInput, ClipResolveContext } from './contract/clip';
 export { defineClip } from './contract/clip';
