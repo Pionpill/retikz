@@ -6,6 +6,19 @@ import { ArrowDetailSchema, ArrowEndDetailSchema } from '../arrow';
 import { PathRibbonOptionsSchema } from '../ribbon';
 import { GeometryLabelSchema } from '../step';
 import { StepSchema } from '../step';
+import { PathArrowDirection, PathFillRule, PathLineCap, PathLineJoin, PathThickness } from './constants';
+
+export const PathArrowDirectionSchema = z
+  .enum(PathArrowDirection)
+  .describe('Path-level arrow direction keyword.');
+
+export const PathFillRuleSchema = z.enum(PathFillRule).describe('Path fill rule keyword.');
+
+export const PathLineCapSchema = z.enum(PathLineCap).describe('Path stroke endpoint cap keyword.');
+
+export const PathLineJoinSchema = z.enum(PathLineJoin).describe('Path stroke corner join keyword.');
+
+export const PathThicknessSchema = z.enum(PathThickness).describe('Semantic path stroke thickness preset.');
 
 /**
  * 路径整条缩放 schema：等比 number 或非等比 {x,y}
@@ -65,8 +78,7 @@ export const PathBaseSchema = z
       .min(1)
       .optional()
       .describe('Stroke dash pattern lengths in user units. Omitted fields mean solid line.'),
-    arrow: z
-      .enum(['none', '->', '<-', '<->'])
+    arrow: PathArrowDirectionSchema
       .optional()
       .describe(
         'Path-level arrow direction. omitted/`none` = no arrows; `->` = arrow at end; `<-` = at start; `<->` = both.',
@@ -74,20 +86,17 @@ export const PathBaseSchema = z
     arrowDetail: ArrowDetailSchema.optional().describe(
       'Detailed arrow visual config with optional `start` and `end` per-end overrides. Omitted fields use arrow definition defaults.',
     ),
-    fillRule: z
-      .enum(['nonzero', 'evenodd'])
+    fillRule: PathFillRuleSchema
       .optional()
       .describe(
         'How self-intersecting / nested sub-paths are filled. `nonzero` (default) winds-by-direction; `evenodd` toggles fill on each crossing — useful for ring / donut shapes.',
       ),
-    lineCap: z
-      .enum(['butt', 'round', 'square'])
+    lineCap: PathLineCapSchema
       .optional()
       .describe(
         'Stroke endpoint shape. Omitted fields use butt; round adds a half-disc cap and square extends past the endpoint.',
       ),
-    lineJoin: z
-      .enum(['miter', 'round', 'bevel'])
+    lineJoin: PathLineJoinSchema
       .optional()
       .describe('Stroke corner shape. Omitted fields use miter; round rounds the join and bevel cuts the corner flat.'),
     roundedCorners: z
@@ -97,8 +106,7 @@ export const PathBaseSchema = z
       .describe(
         'Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.',
       ),
-    thickness: z
-      .enum(['ultraThin', 'veryThin', 'thin', 'semithick', 'thick', 'veryThick', 'ultraThick'])
+    thickness: PathThicknessSchema
       .optional()
       .describe('Semantic stroke thickness preset. Used only when `strokeWidth` is omitted.'),
     rotate: z
