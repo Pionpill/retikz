@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { JsonValueSchema } from '../json';
+import { NormalizedFractionSchema } from '../scalar';
 import { AnimationDirection, AnimationFill, AnimationProperty, AnimationTrigger } from './constants';
 
 export const EasingSchema = z
@@ -11,11 +12,7 @@ export const EasingSchema = z
 
 export const KeyframeSchema = z
   .object({
-    at: z
-      .number()
-      .min(0)
-      .max(1)
-      .describe('Normalized keyframe time. Keyframes in one track must be sorted by this field.'),
+    at: NormalizedFractionSchema.describe('Normalized keyframe time. Keyframes in one track must be sorted by this field.'),
     value: JsonValueSchema.describe(
       'Absolute property value at this keyframe. Built-in properties are refined by track property; custom properties accept any JSON value.',
     ),

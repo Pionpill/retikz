@@ -12,6 +12,7 @@ export * from './paint';
 export * from './path';
 export * from './path-command';
 export * from './position';
+export * from './scalar';
 export * from './scene';
 export * from './scope';
 export * from './shape';

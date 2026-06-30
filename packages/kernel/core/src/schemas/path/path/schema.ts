@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { DrawableInstanceSchema, DrawableStyleSchema } from '../../drawable';
 import { JsonObjectSchema } from '../../json';
+import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
 import { ArrowDetailSchema, ArrowEndDetailSchema } from '../arrow';
 import { PathRibbonOptionsSchema } from '../ribbon';
 import { GeometryLabelSchema } from '../step';
@@ -100,8 +101,7 @@ export const PathBaseSchema = z
     thickness: PathThicknessSchema
       .optional()
       .describe('Semantic stroke thickness preset. Used only when `strokeWidth` is omitted.'),
-    rotate: z
-      .number()
+    rotate: AngleDegreesSchema
       .optional()
       .describe(
         'Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.',
@@ -113,13 +113,9 @@ export const PathBaseSchema = z
       .array(
         z
           .object({
-            pos: z
-              .number()
-              .min(0)
-              .max(1)
-              .describe(
-                'Normalized position along the path. Parameter meaning matches step labels: arc length for line-like steps and Bezier parameter for curve-like steps.',
-              ),
+            pos: NormalizedFractionSchema.describe(
+              'Normalized position along the path. Parameter meaning matches step labels: arc length for line-like steps and Bezier parameter for curve-like steps.',
+            ),
             mark: ArrowMarkSchema.describe(
               'The mark to place at this position; currently an arrow tip oriented by the path tangent.',
             ),

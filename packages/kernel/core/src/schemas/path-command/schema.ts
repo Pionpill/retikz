@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { AngleDegreesSchema } from '../scalar';
+
 const PointSchema = z.tuple([z.number(), z.number()]);
 
 export const MovePathCommandSchema = z.object({
@@ -29,8 +31,8 @@ export const ArcPathCommandSchema = z.object({
   kind: z.literal('arc'),
   center: PointSchema.describe('Arc center point.'),
   radius: z.number().positive().describe('Arc radius in user units.'),
-  startAngle: z.number().describe('Arc start angle in degrees.'),
-  endAngle: z.number().describe('Arc end angle in degrees.'),
+  startAngle: AngleDegreesSchema.describe('Arc start angle in degrees.'),
+  endAngle: AngleDegreesSchema.describe('Arc end angle in degrees.'),
   counterClockwise: z.boolean().optional().describe('Whether to draw counter-clockwise.'),
 });
 
@@ -39,9 +41,9 @@ export const EllipseArcPathCommandSchema = z.object({
   center: PointSchema.describe('Ellipse arc center point.'),
   radiusX: z.number().positive().describe('Ellipse arc x radius in user units.'),
   radiusY: z.number().positive().describe('Ellipse arc y radius in user units.'),
-  rotation: z.number().optional().describe('Ellipse rotation in degrees.'),
-  startAngle: z.number().describe('Ellipse arc start angle in degrees.'),
-  endAngle: z.number().describe('Ellipse arc end angle in degrees.'),
+  rotation: AngleDegreesSchema.optional().describe('Ellipse rotation in degrees.'),
+  startAngle: AngleDegreesSchema.describe('Ellipse arc start angle in degrees.'),
+  endAngle: AngleDegreesSchema.describe('Ellipse arc end angle in degrees.'),
   counterClockwise: z.boolean().optional().describe('Whether to draw counter-clockwise.'),
 });
 

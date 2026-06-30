@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { JsonObjectSchema } from '../../json';
 import { PositionSchema } from '../../position';
+import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
 import { createLabelVisualStyleShape, LabelTextContentSchema } from '../../text';
 import { TargetSchema } from '../target';
 import { FoldStepVia, GeometryLabelPlacement, GeometryLabelSide, normalizeGeometryLabelSide } from './constants';
@@ -12,7 +13,7 @@ export const GeometryLabelSchema = z
     position: z
       .union([
         z.enum(['at-start', 'very-near-start', 'near-start', 'midway', 'near-end', 'very-near-end', 'at-end']),
-        z.number().min(0).max(1),
+        NormalizedFractionSchema,
       ])
       .optional()
       .describe(
@@ -134,20 +135,17 @@ export const BendStepSchema = z
       .describe(
         'Bend side relative to the from-to direction. Use with bendAngle unless outAngle and inAngle are provided.',
       ),
-    bendAngle: z
-      .number()
+    bendAngle: AngleDegreesSchema
       .gt(-180)
       .lt(180)
       .optional()
       .describe('Bend angle in degrees. Omitted fields use 30.'),
-    outAngle: z
-      .number()
+    outAngle: AngleDegreesSchema
       .optional()
       .describe(
         'Outgoing tangent angle in degrees at the start point. With `inAngle`, takes precedence over bendDirection and bendAngle.',
       ),
-    inAngle: z
-      .number()
+    inAngle: AngleDegreesSchema
       .optional()
       .describe(
         'Incoming tangent angle in degrees at the end point. Used with `outAngle` for explicit tangent control.',
@@ -221,14 +219,11 @@ const ArcStepBaseSchema = z
       .describe(
         'Arc segment sweeping from startAngle to endAngle around a center. Use either radius or radiusX/radiusY.',
       ),
-    startAngle: z
-      .number()
+    startAngle: AngleDegreesSchema
       .describe(
         'Arc start angle in degrees, measured from +x axis. 0° = +x, 90° = +y = screen-down (visual clockwise under screen y-down); matches polar / Node label angle convention.',
       ),
-    endAngle: z
-      .number()
-      .describe('Arc end angle in degrees; sweep direction inferred from startAngle vs endAngle'),
+    endAngle: AngleDegreesSchema.describe('Arc end angle in degrees; sweep direction inferred from startAngle vs endAngle'),
     radius: z
       .number()
       .positive()
@@ -273,14 +268,12 @@ const CirclePathStepBaseSchema = z
       .number()
       .positive()
       .describe('Circle radius in user units'),
-    startAngle: z
-      .number()
+    startAngle: AngleDegreesSchema
       .optional()
       .describe(
         'Partial-circle start angle in degrees (same convention as arc: 0°=+x, 90°=+y screen-down). Give both startAngle and endAngle for a partial circle, or neither for a full circle.',
       ),
-    endAngle: z
-      .number()
+    endAngle: AngleDegreesSchema
       .optional()
       .describe('Partial-circle end angle in degrees; sweep direction inferred from startAngle vs endAngle.'),
     closed: z
@@ -315,14 +308,12 @@ const EllipsePathStepBaseSchema = z
       .number()
       .positive()
       .describe('Ellipse y-axis radius (semi-major or semi-minor on y)'),
-    startAngle: z
-      .number()
+    startAngle: AngleDegreesSchema
       .optional()
       .describe(
         'Partial-ellipse start angle in degrees (parametric, same convention as arc). Give both startAngle and endAngle for a partial ellipse, or neither for a full ellipse.',
       ),
-    endAngle: z
-      .number()
+    endAngle: AngleDegreesSchema
       .optional()
       .describe('Partial-ellipse end angle in degrees.'),
     closed: z

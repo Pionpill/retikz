@@ -1,10 +1,11 @@
 import { z } from 'zod';
 
+import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
 import { CssColorSchema, OpacitySchema } from '../style/primitives';
 
 export const GradientStopSchema = z
   .object({
-    offset: z.number().min(0).max(1).describe('Stop position along the gradient axis.'),
+    offset: NormalizedFractionSchema.describe('Stop position along the gradient axis.'),
     color: CssColorSchema.describe('CSS color for this stop.'),
     opacity: OpacitySchema.optional().describe('Stop opacity. Omitted fields are fully opaque.'),
   })
@@ -14,8 +15,7 @@ export const LinearGradientPaintSpecSchema = z
   .object({
     kind: z.literal('linearGradient'),
     stops: z.array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
-    angle: z
-      .number()
+    angle: AngleDegreesSchema
       .optional()
       .describe('Gradient direction angle in degrees. Omitted fields use the paint backend default.'),
   })
@@ -45,8 +45,7 @@ export const ConicGradientPaintSpecSchema = z
       .tuple([z.number(), z.number()])
       .optional()
       .describe('Center in object-bounding-box coordinates. Omitted fields use [0.5, 0.5].'),
-    angle: z
-      .number()
+    angle: AngleDegreesSchema
       .optional()
       .describe('Start angle in degrees. Omitted fields use 0.'),
   })
@@ -73,8 +72,7 @@ export const PatternPaintSpecSchema = z
       .positive()
       .optional()
       .describe('Line / grid stroke width; for dots, drives the dot radius. Default 1 (dots default to size/5)'),
-    rotation: z
-      .number()
+    rotation: AngleDegreesSchema
       .optional()
       .describe('Rotate the whole pattern, in degrees'),
   })

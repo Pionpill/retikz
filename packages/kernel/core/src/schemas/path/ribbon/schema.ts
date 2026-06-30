@@ -4,6 +4,7 @@ import type { IRRibbonDirection } from './types';
 
 import { JsonObjectSchema } from '../../json';
 import { PolarPositionSchema, PositionSchema, Vector2Schema } from '../../position';
+import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
 import { StepSchema } from '../step';
 import { RibbonAlignment, RibbonArcCapSweep, RibbonCap, RibbonMode } from './constants';
 
@@ -31,11 +32,7 @@ export const RibbonCapSchema = z
 
 export const RibbonWidthStopSchema = z
   .object({
-    offset: z
-      .number()
-      .min(0)
-      .max(1)
-      .describe('Normalized position along the centerline.'),
+    offset: NormalizedFractionSchema.describe('Normalized position along the centerline.'),
     value: z
       .number()
       .nonnegative()
@@ -79,7 +76,7 @@ export const RibbonWidthSchema = z
 
 export const RibbonDirectionSchema: z.ZodType<IRRibbonDirection> = z
   .union([
-    z.number().describe('Direction angle in degrees, where 0 points to the positive x axis.'),
+    AngleDegreesSchema.describe('Direction angle in degrees, where 0 points to the positive x axis.'),
     Vector2Schema.refine(([x, y]) => x !== 0 || y !== 0, {
       message: 'Ribbon direction vector must not be zero length.',
     }).describe(

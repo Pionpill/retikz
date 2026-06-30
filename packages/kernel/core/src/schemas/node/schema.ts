@@ -13,6 +13,7 @@ import {
   PolarPositionSchema,
   PositionSchema,
 } from '../position';
+import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
 import { ShapeRefSchema } from '../shape';
 import { CssColorSchema, GraphicStyleSchema } from '../style';
 import { createLabelVisualStyleShape, LabelTextContentSchema, TextBlockSchema } from '../text';
@@ -23,10 +24,7 @@ export const NodeLabelBoundaryPositionSchema = z
     boundary: z
       .preprocess(value => (typeof value === 'string' ? normalizeWebSide(value) ?? value : value), z.enum(NodeLabelBoundarySide))
       .describe('Box-like node boundary side used as the label attachment line. Compass side names are accepted aliases.'),
-    fraction: z
-      .number()
-      .min(0)
-      .max(1)
+    fraction: NormalizedFractionSchema
       .optional()
       .describe('Normalized position along the selected boundary. Defaults to 0.5.'),
   })
@@ -39,7 +37,7 @@ export const NodeLabelSchema = z
     position: z
       .preprocess(
         value => (typeof value === 'string' ? normalizeAtDirection(value) ?? value : value),
-        z.union([z.enum(NodeLabelPosition), z.number(), NodeLabelBoundaryPositionSchema]),
+        z.union([z.enum(NodeLabelPosition), AngleDegreesSchema, NodeLabelBoundaryPositionSchema]),
       )
       .optional()
       .describe(
@@ -60,7 +58,7 @@ export const NodeLabelSchema = z
       font: 'Label font overrides. Missing fields inherit from the parent node font.',
     }),
     rotate: z
-      .union([z.enum(['none', 'radial', 'tangent']), z.number()])
+      .union([z.enum(['none', 'radial', 'tangent']), AngleDegreesSchema])
       .optional()
       .describe(
         'Label text self-rotation around its own center. `none` keeps text upright; `radial` points along node center to label center; `tangent` is radial + 90 degrees; a number is an explicit angle in degrees. Only changes orientation, not placement.',
@@ -127,8 +125,7 @@ export const NodeSchema = z
       .describe(
         'Center point of the node content box: Cartesian [x, y], polar, relative-to-node, offset, or between two endpoints. Non-Cartesian forms resolve at compile time.',
       ),
-    rotate: z
-      .number()
+    rotate: AngleDegreesSchema
       .optional()
       .describe('Rotation in degrees around the node center; positive is visually clockwise.'),
     text: TextBlockSchema.optional().describe(
