@@ -1,4 +1,4 @@
-import type { IRStepLabel } from '@retikz/core';
+import type { IRStepLabelInput } from '@retikz/core';
 import type { FC, ReactElement } from 'react';
 
 import type { DslTarget } from '../kernel/Step';
@@ -18,7 +18,7 @@ import { pickPathVisual, polarXY, requireXY, resolveAngles } from './_shared';
 export type SectorProps = PathVisualProps &
   AngleInput & {
     /** 扇形弧上的边标注（透传到弧 step；`position` 缺省 midway，沿弧 startAngle..endAngle 线性映射） */
-    label?: IRStepLabel;
+    label?: IRStepLabelInput;
   } & (
     | { center: DslTarget; radius: number; innerRadius?: number }
     | {
@@ -90,7 +90,7 @@ export const Sector: FC<SectorProps> = props => {
   const center = requireXY(props.center, 'Sector', 'center');
 
   /** 一段 arc step（圆用 radius、椭圆用 radiusX/radiusY） */
-  const arcEl = (rx: number, ry: number, a: number, b: number, label?: IRStepLabel): ReactElement =>
+  const arcEl = (rx: number, ry: number, a: number, b: number, label?: IRStepLabelInput): ReactElement =>
     circular ? (
       <Step kind="arc" center={center} startAngle={a} endAngle={b} radius={rx} label={label} />
     ) : (

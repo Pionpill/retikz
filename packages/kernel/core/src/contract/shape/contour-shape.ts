@@ -19,6 +19,10 @@ import { defineShape } from './define';
  */
 type ContourParams = {
   points: Array<Position>;
+  /**
+   * 逐顶点统一 fillet 半径。
+   * @default 0
+   */
   cornerRadius?: number;
 };
 
@@ -62,6 +66,7 @@ const worldSegments = (rect: Rect, params: ContourParams): Array<ContourSegment>
  *   按轴各向异性缩，cornerRadius 是长度按几何均值因子缩（同 polygon）。
  */
 export const contour = defineShape({
+  name: 'contour',
   paramsSchema: z.strictObject({
     points: z
       .array(z.tuple([z.number(), z.number()]))
@@ -96,7 +101,7 @@ export const contour = defineShape({
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
     return hit ?? center;
   },
-  // compass 名交回退（compile 回退到外接 AABB rect）；曲边块上没有有意义的真·命名方位。
+  // 标准方位名交回退（compile 回退到外接 AABB rect）；曲边块上没有有意义的真·命名方位。
   anchor: (rect: Rect, name: string, params: ContourParams): Position | undefined => {
     void rect;
     void name;

@@ -10,7 +10,6 @@ export const FontSchema = z
     size: z
       .number()
       .positive()
-
       .optional()
       .describe('Font size in user units. Omitted fields use inherited text defaults.'),
     weight: z

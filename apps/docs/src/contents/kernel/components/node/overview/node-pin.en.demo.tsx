@@ -20,7 +20,7 @@ const Demo: FC = () => (
         { text: 'entry state', position: 'right', distance: 34, pin: true },
         {
           text: 'initial',
-          position: 'above-left',
+          position: 'top-left',
           distance: 34,
           pin: { stroke: 'gray', dashPattern: [3, 2] },
         },

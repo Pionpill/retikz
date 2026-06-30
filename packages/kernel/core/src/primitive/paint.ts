@@ -21,9 +21,15 @@ export type PaintValue = string | { kind: 'resourceRef'; id: string } | { kind: 
 export type ResolvedPatternTile = {
   /** tile 周期（user units）；= 解析后 pattern.size（缺省 8） */
   size: number;
-  /** tile 背景填充（CSS 串）；缺省透明（字段缺省） */
+  /**
+   * tile 背景填充（CSS 串）；缺省透明（字段缺省）
+   * @default 透明背景
+   */
   background?: string;
-  /** 整体旋转角（度）；= pattern.rotation，缺省不旋转（字段缺省） */
+  /**
+   * 整体旋转角（度）；= pattern.rotation，缺省不旋转（字段缺省）
+   * @default 0
+   */
   rotation?: number;
   /** 局部 tile 坐标系下的 motif 几何（`MarkerPrimitive` 窄子集，纯数据） */
   motif: Array<MarkerPrimitive>;

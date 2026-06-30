@@ -9,7 +9,7 @@ import { figure } from '../src/builder/figure';
 import { node } from '../src/builder/node';
 
 /** 自定义 shape：复用 builtin 定义、注册成新名 'hexagon'，仅验 figure({shapes}) 把表透传进 compileToScene */
-const hexagon = BUILTIN_SHAPES.rectangle;
+const hexagon = { ...BUILTIN_SHAPES.rectangle, name: 'hexagon' };
 
 describe('@retikz/vanilla builder ↔ render 管线', () => {
   it('width-height-emitted：figure({width,height}) 的 toSvgString/mount 根 <svg> 带 width/height', () => {
@@ -97,12 +97,12 @@ describe('@retikz/vanilla builder ↔ render 管线', () => {
   });
 
   it('custom-shape-passthrough：figure({shapes}) 把 shape 表透传进 compileToScene（未注册抛、注册后不抛）', () => {
-    const mk = (shapes?: Record<string, typeof hexagon>): string =>
+    const mk = (shapes?: Array<typeof hexagon>): string =>
       figure({ width: 100, height: 100, ...(shapes ? { shapes } : {}) }, [
         node('a', { position: [0, 0], shape: 'hexagon', minimumWidth: 40, minimumHeight: 40, fill: '#0a0' }),
       ]).toSvgString();
     expect(() => mk()).toThrow(/hexagon/i); // 未注册 → compileToScene 抛
-    expect(() => mk({ hexagon })).not.toThrow(); // figure({shapes}) 透传后 → 不抛
+    expect(() => mk([hexagon])).not.toThrow(); // figure({shapes}) 透传后 → 不抛
   });
 
   it('invalid-config-throws：坏 config 字段 → compileToScene schema 报错、不静默', () => {

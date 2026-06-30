@@ -13,7 +13,7 @@ description: Named members placed in a scene — Node and Coordinate
 
 <Comparison target="tikz" title="Node field mapping">
 
-`drawOpacity` maps to TikZ `draw opacity`; `dashed` / `dotted` map to TikZ's dashed / dotted presets; the `{ text, position }` form of `label` maps to `[label=above:foo]` / `[label=30:foo]`. `placement: 'inside'` is retikz's structured extension for labels placed inside a node.
+`drawOpacity` maps to TikZ `draw opacity`; `dashed` / `dotted` map to TikZ's dashed / dotted presets; the `{ text, position }` form of `label` maps to `[label=top:foo]` / `[label=30:foo]`. `placement: 'inside'` is retikz's structured extension for labels placed inside a node.
 
 </Comparison>
 
@@ -38,7 +38,7 @@ description: Named members placed in a scene — Node and Coordinate
   descriptions={{
     text: 'Label text content, rendered as one line',
     position:
-      'Label position relative to the node border: 8-direction enum, center, numeric angle, or `{ boundary, t }` on a rectangle boundary; defaults to above; center draws at the node center',
+      'Label position relative to the node border: 8-direction enum, center, numeric angle, or `{ boundary, t }` on a rectangle boundary; defaults to top; center draws at the node center',
     placement: 'Offset direction from the attachment point: outside (default) or inside; inside labels cannot use pin',
     distance: 'Distance from the node boundary to the label center, in user units; defaults to 12',
     textColor: 'Label text color; defaults to currentColor',

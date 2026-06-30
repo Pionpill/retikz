@@ -6,7 +6,7 @@ import { boundaryKey, resolveBoundary } from '../../src/compile/boundary';
 import { ellipse, rectangle } from '../../src/providers/shape';
 
 const visualRect: Rect = { x: 0, y: 0, width: 40, height: 20, rotate: 0 };
-const registry = { rectangle, ellipse };
+const registry = [rectangle, ellipse];
 
 describe('resolveBoundary', () => {
   it("'shape' / undefined → visual def + rect", () => {
@@ -15,26 +15,27 @@ describe('resolveBoundary', () => {
     expect(r.rect).toEqual(visualRect);
     expect(resolveBoundary(undefined, rectangle, visualRect, {}, registry).def).toBe(rectangle);
   });
-  it("'rectangle' / 'ellipse' → that builtin def on visual AABB", () => {
-    expect(resolveBoundary('rectangle', ellipse, visualRect, {}, registry).def).toBe(rectangle);
-    expect(resolveBoundary('ellipse', rectangle, visualRect, {}, registry).def).toBe(ellipse);
+  it("'rectangle' / 'ellipse' → builtin boundary providers on visual AABB", () => {
+    expect(resolveBoundary('rectangle', ellipse, visualRect, {}, registry).def.name).toBe('rectangle');
+    expect(resolveBoundary('ellipse', rectangle, visualRect, {}, registry).def.name).toBe('ellipse');
   });
-  it("'circle' → ellipse def on squared-to-max rect", () => {
+  it("'circle' → circle boundary provider uses squared-to-max geometry", () => {
     const r = resolveBoundary('circle', rectangle, visualRect, {}, registry);
-    expect(r.def).toBe(ellipse);
+    expect(r.def.name).toBe('circle');
+    expect(r.def.boundaryPoint(r.rect, [0, -100], r.params)).toEqual([0, -20]);
     expect(r.rect.width).toBe(40);
-    expect(r.rect.height).toBe(40);
+    expect(r.rect.height).toBe(20);
     expect(r.rect.x).toBe(0);
   });
-  it('borrowed {type, params} → registry def + parsed params', () => {
+  it('builtin {type, params} → boundary provider + parsed params', () => {
     const r = resolveBoundary({ type: 'ellipse' }, rectangle, visualRect, {}, registry);
-    expect(r.def).toBe(ellipse);
+    expect(r.def.name).toBe('ellipse');
   });
-  it('reserved keyword beats registered same-name shape', () => {
-    const fakeCircle = { ...ellipse };
-    const r = resolveBoundary('circle', rectangle, visualRect, {}, { ...registry, circle: fakeCircle });
-    expect(r.def).toBe(ellipse);
-    expect(r.rect.height).toBe(40);
+  it('boundary provider beats registered same-name shape fallback', () => {
+    const fakeCircle = { ...ellipse, name: 'circle' };
+    const r = resolveBoundary('circle', rectangle, visualRect, {}, [...registry, fakeCircle]);
+    expect(r.def.name).toBe('circle');
+    expect(r.def.boundaryPoint(r.rect, [0, -100], r.params)).toEqual([0, -20]);
   });
 });
 

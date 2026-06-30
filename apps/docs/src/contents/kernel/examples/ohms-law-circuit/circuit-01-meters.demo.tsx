@@ -11,7 +11,7 @@ const CircuitDemo: FC = () => (
     width={600}
     height={300}
     viewBox={{ x: 0, y: 0, width: 1280, height: 760 }}
-    shapes={{ 'circuit-meter': circuitMeter }}
+    shapes={[circuitMeter]}
   >
     <Scope nodeDefault={{ font: FONT, stroke: 'none', padding: 0 }}>
       <Meter position={[520, 360]} text="A" />

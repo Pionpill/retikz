@@ -29,7 +29,7 @@ const Demo: FC = () => (
       fill="#dbeafe"
       stroke="#1d4ed8"
       label="city"
-      labelPosition="above"
+      labelPosition="top"
       labelPin
       labelDistance={16}
       labelTextColor="#1e3a8a"

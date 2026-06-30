@@ -30,7 +30,7 @@ const Demo: FC = () => (
       stroke="#075985"
       strokeWidth={1.5}
       label="amount"
-      labelPosition="above"
+      labelPosition="top"
     />
     <Axis dimension="x" />
     <Axis dimension="y" grid />

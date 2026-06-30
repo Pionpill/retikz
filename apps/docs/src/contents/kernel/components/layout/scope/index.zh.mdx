@@ -117,7 +117,7 @@ scope 内 node id 默认注册到全局 nodeIndex，外部 path 端点 / `at.of`
 
 <ComponentPreview name="scope-anchor-cross" size="sm" />
 
-注意 compass 方位锚（`north` / `south-west` 等 8 方位）默认取节点**外接矩形（AABB）**的边 / 角点，不是形状轮廓——所以圆形节点 `hub` 的 `south-west` 落在外接框左下角、在圆**外**；只有 `north` / `east` / `south` / `west` 4 个边中点正好压在圆周上。要贴形状轮廓本身，用角度锚 `.<deg>`（如 `hub.225` 取圆周上西南方向的点），或给节点设 `boundary="circle"` 让 compass 锚改走圆边界。
+注意 Web 方位锚（`top` / `bottom-left` 等 8 方位）默认取节点**外接矩形（AABB）**的边 / 角点，不是形状轮廓——所以圆形节点 `hub` 的 `bottom-left` 落在外接框左下角、在圆**外**；只有 `top` / `right` / `bottom` / `left` 4 个边中点正好压在圆周上。要贴形状轮廓本身，用角度锚 `.<deg>`（如 `hub.225` 取圆周上西南方向的点），或给节点设 `boundary="circle"` 让标准方位锚改走圆边界。`north` / `south-west` 这类 compass 名仍可作为输入别名。
 
 ### scope.id：作为引用整体
 
@@ -229,7 +229,7 @@ Scope 兼作样式默认值挂点，给内部元素提供三组样式表面：**
 
 ### clip 裁切
 
-`<Scope clip={...}>` 把 scope 内所有子元素裁剪到一个区域内——区域内可见、区域外裁掉（对应 TikZ `\begin{scope}\clip ...`）。裁剪区是四种结构化形状之一，坐标用 scope 局部坐标系：
+`<Scope clip={...}>` 把 scope 内所有子元素裁剪到一个区域内——区域内可见、区域外裁掉（对应 TikZ `\begin{scope}\clip ...`）。内置裁剪区支持 `rect` / `circle` / `ellipse` / `polygon` / `path` / `compound`，也可以通过 [自定义裁剪区](/kernel/components/extend/clip-registry) 注册自己的 `kind`；坐标用 scope 局部坐标系：
 
 ```tsx
 <Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 60 }}>{/* children */}</Scope>
@@ -314,7 +314,7 @@ scope 内 `<Node>` / `<Coordinate>` / `<Path>` `Step.to` 使用 `PolarPosition` 
 | **注册位置**                          | **父 frame**（不受自身 `localNamespace` 影响）——scope.id 是外部句柄                                                                                                                                                                                                                                                       |
 | **形态**                              | 默认 synthetic rectangle `NodeLayout`，`rect.rotate=0`（轴对齐）；`boundingShape='circle'` 时为 ellipse(`circumscribe:'equal'`) 形态、rect 为 MEC 的正方外接框                                                                                                                                                            |
 | **boundingShape**                     | 可选包络形状——**受控枚举**（`'rectangle'` \| `'circle'`），非 Node `shape` / `boundary` 那种开放 shape 引用：缺省 / `'rectangle'` = AABB；`'circle'` = 子树点集最小外接圆（消费 `@retikz/math` 的 `minimalEnclosingCircle`）；枚举外的值由 schema 在 parse 边界拒绝。`polygon` / `ellipse` 缓做（各需独立的最小外接算法） |
-| **作为 anchor referent**              | 9 个命名 anchor + 数字角度都走共享的 rect anchor 路径——`'X.north'` / `'X.30'` / 无后缀走 `boundaryPoint` clip                                                                                                                                                                                                             |
+| **作为 anchor referent**              | 9 个命名 anchor + 数字角度都走共享的 rect anchor 路径——`'X.top'` / `'X.30'` / 无后缀走 `boundaryPoint` clip；`'X.north'` 等 compass 写法作为别名支持                                                                                                                                                                      |
 | **作为 polar / at / offset referent** | 取 bbox 中心，与普通 rectangle 节点一致                                                                                                                                                                                                                                                                                   |
 | **嵌套**                              | 每层 scope.id 各算各的 bbox——外层 bbox 含全部内层 layout；内层 bbox 仅含自己子树                                                                                                                                                                                                                                          |
 | **空 scope.id**                       | 子树无任何 layout 时 bbox 退化为 0×0 占位点（落在 scope 局部原点经 chain 投影到的全局点）                                                                                                                                                                                                                                 |
@@ -365,7 +365,7 @@ compile 维护一个 style frame 栈，进入每层 scope 压一帧，每个元�
 
 > **渲染无关**：裁剪区编译成 Scene 资源表里的 `ClipResource`（去重 + 稳定 id），`<clipPath>` 物化只在 SVG adapter——任何 adapter 都能复刻。
 >
-> **限制**：clip 只作用于 scope 的 GroupPrim 子元素；**带 transforms 的 scope 内 path** 会被 hoist 到顶层、不被该 scope 裁（既有架构）；要裁单个 Node / Path 用 `<Scope clip>` 包一层。任意贝塞尔曲线裁剪路径暂不支持。
+> **限制**：clip 只作用于 scope 的 GroupPrim 子元素；**带 transforms 的 scope 内 path** 会被 hoist 到顶层、不被该 scope 裁（既有架构）；要裁单个 Node / Path 用 `<Scope clip>` 包一层。自定义 clip provider 仍然必须解析成 renderer-agnostic 的 `ClipShape`，不能把函数或后端专有对象写进 IR。
 
 ## API 参考
 
@@ -390,7 +390,7 @@ compile 维护一个 style frame 栈，进入每层 scope 压一帧，每个元�
 | `arrowDefault`   | `object`                  | —             | arrow 默认样式（shape / scale / 色等）                                                                                                                                                                                        |
 | `resetStyle`     | `boolean \| Array`        | `false`       | 继承屏障：切外层对应通道；详见 § 技术原理 §「样式继承解析」                                                                                                                                                                   |
 | `zIndex`         | `number`（整数）          | `0`           | 显式栈序：作用于 scope 整体（其 GroupPrim）在父层的位置，不影响 scope 内部子元素相对栈序；大者在上、同值保持声明顺序                                                                                                          |
-| `clip`           | `ClipSpec`                | —             | 裁剪区（rect / circle / ellipse / polygon，scope 局部坐标）；裁 scope 内全部子元素                                                                                                                                            |
+| `clip`           | `ClipSpec`                | —             | 裁剪区（rect / circle / ellipse / polygon / path / compound / custom，scope 局部坐标）；裁 scope 内全部子元素                                                                                                                 |
 | `animations`     | `Array<AnimationTrack>`   | —             | 作用于 scope 整体（其 GroupPrim）的时间轴动画 tracks；不下传子元素、不参与布局。见 [动画](/kernel/components/effects/animation)                                                                                               |
 
 ## 相关

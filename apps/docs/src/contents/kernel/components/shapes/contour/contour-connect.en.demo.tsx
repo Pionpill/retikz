@@ -6,7 +6,7 @@ import { Draw, Layout, Node } from '@retikz/react';
  * Another Path connecting to a contour node (connectability)
  * @description A contour is still a Node — when another line targets it by id, boundaryPoint returns the exact
  *   ray ∩ contour intersection, so the endpoint lands on the contour edge (not the circumscribing AABB).
- *   Named / compass anchors fall back to the AABB; boundaryPoint is always exact.
+ *   Named / standard direction anchors fall back to the AABB; boundaryPoint is always exact.
  */
 const FLAG: Array<[number, number]> = [
   [-34, 44],

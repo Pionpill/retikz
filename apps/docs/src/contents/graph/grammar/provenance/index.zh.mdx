@@ -65,10 +65,10 @@ id 是底层「连接」机制的钥匙——一个有 id 的元素可以被路�
 | 单个数据点（需 `datumIdField`） | `<plotId>.datum.<字段值>`                                                            |
 | 坐标轴 / 网格层                 | 用户 `guide.id`（仅轴层）→ `<plotId>.<guideId>`；否则 `<plotId>.<axis\|grid>.<维度>` |
 
-这里有一条重要边界：plot 的 root 是一个 **local namespace**（局部命名空间）。这意味着 `<plotId>.mark.0`、`.series.north` 这些**内部 id 不会逃出 plot**——它们只在 plot 内部可见，用于 plot 内部连接和 locator 寻址。
+这里有一条重要边界：plot 的 root 是一个 **local namespace**（局部命名空间）。这意味着 `<plotId>.mark.0`、`.series.top` 这些**内部 id 不会逃出 plot**——它们只在 plot 内部可见，用于 plot 内部连接和 locator 寻址。
 
 - **对外组合**只通过 plot 的 **root id**：外部的标注 / 连接线连到整张图，而不是图里的某个子元素。
-- **从图外直接连到子元素**（比如从外面连到 `sales.series.north`）需要一套「导出锚点」机制，这是后续 v0.5 跨域组合的能力，当前不支持。
+- **从图外直接连到子元素**（比如从外面连到 `sales.series.top`）需要一套「导出锚点」机制，这是后续 v0.5 跨域组合的能力，当前不支持。
 
 ## meta：来源标签
 

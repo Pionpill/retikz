@@ -4,6 +4,7 @@ import type { RectPrim, ScenePrimitive } from '../../src/primitive';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
+import { AtPositionSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 /** 取所有 RectPrim（节点 shape=rectangle 默认走 RectPrim；带文本节点包 group，flatten 穿透） */
@@ -15,6 +16,20 @@ const centers = (ir: IR): Array<[number, number]> =>
   rects(compileToScene(ir).primitives).map(r => [r.x + r.width / 2, r.y + r.height / 2]);
 
 describe('Node at relative positioning', () => {
+  describe('schema aliases', () => {
+    it('direction 支持 Web canonical、compass alias 与旧 above/below alias，并归一到 Web', () => {
+      expect(AtPositionSchema.parse({ direction: 'top', of: 'A' })).toEqual({ direction: 'top', of: 'A' });
+      expect(AtPositionSchema.parse({ direction: 'north-west', of: 'A' })).toEqual({
+        direction: 'top-left',
+        of: 'A',
+      });
+      expect(AtPositionSchema.parse({ direction: 'below-right', of: 'A' })).toEqual({
+        direction: 'bottom-right',
+        of: 'A',
+      });
+    });
+  });
+
   describe('8 方向单位向量', () => {
     it('right of：水平向右 distance', () => {
       const ir: IR = {
@@ -44,13 +59,13 @@ describe('Node at relative positioning', () => {
       expect(b[1]).toBeCloseTo(0);
     });
 
-    it('above of：屏幕 y 减小（视觉上方）', () => {
+    it('top of：屏幕 y 减小（视觉上方）', () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
         children: [
           { type: 'node', id: 'A', position: [0, 0], text: 'A' },
-          { type: 'node', id: 'B', position: { direction: 'above', of: 'A', distance: 5 } },
+          { type: 'node', id: 'B', position: { direction: 'top', of: 'A', distance: 5 } },
         ],
       };
       const [, b] = centers(ir);
@@ -58,13 +73,13 @@ describe('Node at relative positioning', () => {
       expect(b[1]).toBeCloseTo(-5);
     });
 
-    it('below of：屏幕 y 增大（视觉下方）', () => {
+    it('bottom of：屏幕 y 增大（视觉下方）', () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
         children: [
           { type: 'node', id: 'A', position: [0, 0], text: 'A' },
-          { type: 'node', id: 'B', position: { direction: 'below', of: 'A', distance: 5 } },
+          { type: 'node', id: 'B', position: { direction: 'bottom', of: 'A', distance: 5 } },
         ],
       };
       const [, b] = centers(ir);
@@ -72,13 +87,13 @@ describe('Node at relative positioning', () => {
       expect(b[1]).toBeCloseTo(5);
     });
 
-    it('above-right：对角分量为 1/√2 × distance（斜向距离 = distance）', () => {
+    it('top-right：对角分量为 1/√2 × distance（斜向距离 = distance）', () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
         children: [
           { type: 'node', id: 'A', position: [0, 0], text: 'A' },
-          { type: 'node', id: 'B', position: { direction: 'above-right', of: 'A', distance: 10 } },
+          { type: 'node', id: 'B', position: { direction: 'top-right', of: 'A', distance: 10 } },
         ],
       };
       const [, b] = centers(ir);
@@ -89,13 +104,13 @@ describe('Node at relative positioning', () => {
       expect(Math.hypot(b[0], b[1])).toBeCloseTo(10);
     });
 
-    it('below-left：x 减、y 增，对角分量等长', () => {
+    it('bottom-left：x 减、y 增，对角分量等长', () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
         children: [
           { type: 'node', id: 'A', position: [0, 0], text: 'A' },
-          { type: 'node', id: 'B', position: { direction: 'below-left', of: 'A', distance: 8 } },
+          { type: 'node', id: 'B', position: { direction: 'bottom-left', of: 'A', distance: 8 } },
         ],
       };
       const [, b] = centers(ir);

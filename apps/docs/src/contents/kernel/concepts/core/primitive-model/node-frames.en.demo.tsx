@@ -44,13 +44,13 @@ const Demo: FC = () => (
       content
     </Node>
 
-    {/* Outer frame: centered label above, one vertical arrow to the top edge, gray */}
+    {/* Outer frame: centered label top, one vertical arrow to the top edge, gray */}
     <Node id="outer-label" position={[0, -85]} stroke="none" textColor="gray" font={FONT}>
       outer frame
     </Node>
     <Draw way={['outer-label', [0, -OUTER_HEIGHT / 2]]} stroke="gray" arrow="->" />
 
-    {/* Inner frame: centered label below, one vertical arrow to the bottom edge, currentColor */}
+    {/* Inner frame: centered label bottom, one vertical arrow to the bottom edge, currentColor */}
     <Node id="inner-label" position={[0, 85]} stroke="none" font={FONT}>
       inner frame
     </Node>

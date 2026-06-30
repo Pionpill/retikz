@@ -16,7 +16,7 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 下面这段 prompt 一键发到 AI 对话面板，由 LLM 直接产出 retikz IR / JSX 复现本图。需要变体（改文案、加路径按钮、换连线 step 等）在聊天面板里改 prompt 重发即可。
 
 <ExamplePrompt
-  short="**复刻 [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap) 的 intro.svg 封面图**：顶部居中标题 `AI Expert in 2022` + 中段灰色 `Fundamentals` 按钮 + 加粗黑字小标题 `Choose your path`；左侧 4 个蓝色 `Required for any path` 按钮、右侧 2 个图例按钮；中央 5 个灰色路径按钮（3 + 2 分子列）；2 条贝塞尔合并曲线 + 1 条青色虚线「推荐路径」+ 2 条「more below」短虚线 + 1 个红 X 装饰。"
+  short="**复刻 [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap) 的 intro.svg 封面图**：顶部居中标题 `AI Expert in 2022` + 中段灰色 `Fundamentals` 按钮 + 加粗黑字小标题 `Choose your path`；左侧 4 个蓝色 `Required for any path` 按钮、右侧 2 个图例按钮；中央 5 个灰色路径按钮（3 + 2 分子列）；2 条贝塞尔合并曲线 + 1 条青色虚线「推荐路径」+ 2 条「more bottom」短虚线 + 1 个红 X 装饰。"
   detailed={`**1:1 复刻 [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap) 的 intro.svg 封面图**
 
 **画布**：宽 811 × 高 441，背景白；y 轴向下为正，全部用 intro.svg 的原始像素坐标
@@ -43,7 +43,7 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 **装饰**
 
 - 青色 \`#287fad\` 虚线 \`dashPattern=[6,6]\` 的"推荐路径"：从 Deep Learning 上方 (251.88, 359.77) 蜿蜒 3 段 quadratic Bezier 到 Choose 底 (404, 174.5)；箭头在起点指向 Deep Learning；中点挂 \`label="recommended"\`
-- 2 条蓝色 \`#1f6286\` 短虚线 \`dashPattern=[4,4]\` 4px 粗，垂直，"more below" 提示
+- 2 条蓝色 \`#1f6286\` 短虚线 \`dashPattern=[4,4]\` 4px 粗，垂直，"more bottom" 提示
 - 1 个红色 \`#ff0000\` X：两条 4px 交叉线`}
   extensions={[
   '**替换路径节点**：把 5 个 path 按钮换成自己组里的成长路径（如「前端 / 后端 / 全栈 / DevOps / SRE」），其它布局不变。',
@@ -87,15 +87,15 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 
 ### 步骤 3：两侧色块条 — AtPosition 紧贴堆叠
 
-加左右两个独立的色块条——左侧 4 个蓝色「必修」按钮、右侧 2 个图例按钮（1 蓝 1 灰）。每列**段头**先用绝对坐标落点，剩余节点再用 [AtPosition](/kernel/concepts/basic/position) `{ direction: 'below', of: 'prev-id' }` 紧贴堆叠：先定骨架，再让同列内容自动往下长，这样最容易读，也最容易改。
+加左右两个独立的色块条——左侧 4 个蓝色「必修」按钮、右侧 2 个图例按钮（1 蓝 1 灰）。每列**段头**先用绝对坐标落点，剩余节点再用 [AtPosition](/kernel/concepts/basic/position) `{ direction: 'bottom', of: 'prev-id' }` 紧贴堆叠：先定骨架，再让同列内容自动往下长，这样最容易读，也最容易改。
 
 - `<Layout ... nodeDistance={41}>` 在容器一次性设全局节点间距
 - 段内每个 AtPosition 节点都引用上一个节点 id；视觉上紧贴成"色块条"
 
 ```tsx
 <RoadmapNode id="papers" position={[105, 68]} ...>Papers With Code</RoadmapNode>
-<RoadmapNode id="git" position={{ direction: 'below', of: 'papers' }} ...>GIT - Version Control</RoadmapNode>
-<RoadmapNode id="semver" position={{ direction: 'below', of: 'git' }} ...>Semantic Versioning</RoadmapNode>
+<RoadmapNode id="git" position={{ direction: 'bottom', of: 'papers' }} ...>GIT - Version Control</RoadmapNode>
+<RoadmapNode id="semver" position={{ direction: 'bottom', of: 'git' }} ...>Semantic Versioning</RoadmapNode>
 ```
 
 此步只加节点，不加新连线。新手可以把它理解成“把两列按钮摆整齐”，不用同时处理连线逻辑。
@@ -140,7 +140,7 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 | 装饰                             | Draw 配置                                                      | way 算子                                                                    |
 | -------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | 青色虚线推荐路径                 | `stroke="#287fad"` + `dashPattern={[6,6]}` + `arrow="<-"`      | 3 段连续 `{ curve }` infix，前置 `{ label: 'recommended' }` 给第 1 段挂标注 |
-| 短虚线「more below」提示（2 条） | `stroke="#1f6286"` + `strokeWidth={4}` + `dashPattern={[4,4]}` | way `[起点, 终点]` 两坐标即可                                               |
+| 短虚线「more bottom」提示（2 条） | `stroke="#1f6286"` + `strokeWidth={4}` + `dashPattern={[4,4]}` | way `[起点, 终点]` 两坐标即可                                               |
 | 红 X 装饰（2 条交叉线）          | `stroke="#ff0000"` + `strokeWidth={4}`                         | 同上                                                                        |
 
 ```tsx
@@ -162,7 +162,7 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 />
 ```
 
-`arrow="<-"` 把箭头放在**起点**而非终点——本例中起点 (251.88, 359.77) 正好在 Deep Learning 顶部，箭头指向"推荐去 Deep Learning"。`{ label: 'recommended' }` 是 infix 算子，修饰**下一段**——这里挂在第 1 段 curve 上，落在该段中点上方（默认 `position: 'midway'` + `side: 'above'`）。
+`arrow="<-"` 把箭头放在**起点**而非终点——本例中起点 (251.88, 359.77) 正好在 Deep Learning 顶部，箭头指向"推荐去 Deep Learning"。`{ label: 'recommended' }` 是 infix 算子，修饰**下一段**——这里挂在第 1 段 curve 上，落在该段中点上方（默认 `position: 'midway'` + `side: 'top'`）。
 
 <ComponentPreview name="learning-path-05-dashed" diffFrom="learning-path-04-paths" size="xxl" />
 
@@ -173,7 +173,7 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 | [Draw](/kernel/components/draw/overview)      | 全部 12 条连线（2 spine line / 3 子列短 line / 2 quadratic 合并 / 1 推荐虚线 / 2 short dashed / 2 红 X）+ stroke / strokeWidth / dashPattern / arrow | [2](#步骤-2中段-spine--2-条-draw-line), [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x) |
 | [Way 算子](/kernel/components/draw/way)       | `{ curve }` infix 走 quadratic / `{ label }` infix 挂边标注 / 节点 id 自动锚 border                                                                  | [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x)                                         |
 | [Node](/kernel/components/node/overview)      | 全部 16 个 roadmap 节点（title / header / required / optional）—— 4 variant 抽成 `RoadmapNode`                                                       | [1](#步骤-1title--roadmapnode-4-variant), [3](#步骤-3两侧色块条--atposition-紧贴堆叠)                                        |
-| [AtPosition](/kernel/concepts/basic/position) | 三个色块段内的紧贴堆叠（`{ direction: 'below', of: prevId }` + 全局 `nodeDistance`）                                                                 | [3](#步骤-3两侧色块条--atposition-紧贴堆叠), [4](#步骤-45-路径按钮--curve-合并曲线)                                          |
+| [AtPosition](/kernel/concepts/basic/position) | 三个色块段内的紧贴堆叠（`{ direction: 'bottom', of: prevId }` + 全局 `nodeDistance`）                                                                 | [3](#步骤-3两侧色块条--atposition-紧贴堆叠), [4](#步骤-45-路径按钮--curve-合并曲线)                                          |
 
 ## 限制
 

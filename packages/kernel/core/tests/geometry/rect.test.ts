@@ -2,12 +2,35 @@ import { describe, expect, it } from 'vitest';
 
 import type { Rect } from '../../src/geometry/rect';
 
-import { CompassAnchor, normalizeCompassAnchor, WebAnchor } from '../../src/geometry/anchor';
+import {
+  CompassAnchor,
+  CompassCorner,
+  CompassSide,
+  normalizeCompassAnchor,
+  normalizeWebAnchor,
+  normalizeWebSide,
+  WebAnchor,
+} from '../../src/geometry/anchor';
 import { rect } from '../../src/geometry/rect';
 
 const r10x6: Rect = { x: 0, y: 0, width: 10, height: 6 };
 
 describe('CompassAnchor 常量值', () => {
+  it('compass side / corner 拆分后仍保持 TikZ 命名', () => {
+    expect(CompassSide).toEqual({
+      North: 'north',
+      South: 'south',
+      East: 'east',
+      West: 'west',
+    });
+    expect(CompassCorner).toEqual({
+      NorthEast: 'north-east',
+      NorthWest: 'north-west',
+      SouthEast: 'south-east',
+      SouthWest: 'south-west',
+    });
+  });
+
   it('9 个 anchor 名与 TikZ 命名一致', () => {
     expect(CompassAnchor).toEqual({
       Center: 'center',
@@ -22,10 +45,18 @@ describe('CompassAnchor 常量值', () => {
     });
   });
 
-  it('Web anchor alias 归一到 TikZ canonical anchor', () => {
+  it('Web anchor 仍可归一到几何层 compass anchor', () => {
     expect(normalizeCompassAnchor(WebAnchor.Top)).toBe(CompassAnchor.North);
     expect(normalizeCompassAnchor(WebAnchor.TopLeft)).toBe(CompassAnchor.NorthWest);
     expect(normalizeCompassAnchor(WebAnchor.BottomRight)).toBe(CompassAnchor.SouthEast);
+  });
+
+  it('compass anchor/side 作为输入别名归一到 Web canonical', () => {
+    expect(normalizeWebAnchor(CompassAnchor.North)).toBe(WebAnchor.Top);
+    expect(normalizeWebAnchor(CompassAnchor.NorthWest)).toBe(WebAnchor.TopLeft);
+    expect(normalizeWebAnchor(WebAnchor.BottomRight)).toBe(WebAnchor.BottomRight);
+    expect(normalizeWebSide('north')).toBe('top');
+    expect(normalizeWebSide('left')).toBe('left');
   });
 });
 

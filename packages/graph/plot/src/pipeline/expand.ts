@@ -1260,6 +1260,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
  */
 export const lowerPlots = (datasets: ExternalDatasets, options: LowerPlotsOptions = {}): Array<CompositeDefinition> => [
   defineComposite({
+    namespace: 'plot',
+    type: 'plot',
     schema: PlotSpecSchema,
     expand: (node: PlotSpec) => expandPlot(node, datasets, options),
   }),

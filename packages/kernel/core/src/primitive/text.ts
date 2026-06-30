@@ -5,17 +5,35 @@ import type { IRJsonObject } from '../schemas/json';
 export type TextLine = {
   /** 行文字内容 */
   text: string;
-  /** 行级字号 override（user units）；缺省走块级 TextPrim.fontSize */
+  /**
+   * 行级字号覆盖（user units）；缺省走块级 TextPrim.fontSize
+   * @default `TextPrim.fontSize`
+   */
   fontSize?: number;
-  /** 行级字体族 override（CSS font-family）；缺省走块级 */
+  /**
+   * 行级字体族覆盖（CSS font-family）；缺省走块级
+   * @default `TextPrim.fontFamily`
+   */
   fontFamily?: string;
-  /** 行级字重 override（CSS font-weight）；缺省走块级 */
+  /**
+   * 行级字重覆盖（CSS font-weight）；缺省走块级
+   * @default `TextPrim.fontWeight`
+   */
   fontWeight?: string | number;
-  /** 行级字形 override；缺省走块级 */
+  /**
+   * 行级字形覆盖；缺省走块级
+   * @default `TextPrim.fontStyle`
+   */
   fontStyle?: 'normal' | 'italic' | 'oblique';
-  /** 行级文字颜色 override；缺省走块级 TextPrim.fill */
+  /**
+   * 行级文字颜色覆盖；缺省走块级 TextPrim.fill
+   * @default `TextPrim.fill`
+   */
   fill?: string;
-  /** 行级透明度 0..1 override；缺省走块级 */
+  /**
+   * 行级透明度 0..1 覆盖；缺省走块级
+   * @default `TextPrim.opacity`
+   */
   opacity?: number;
 };
 
@@ -38,8 +56,20 @@ export type TextPrim = {
   /** 至少 1 行；单行节点也用 `[{ text: 'Hello' }]` */
   lines: Array<TextLine>;
   fontSize: number;
+  /**
+   * 块级字体族。
+   * @default 'sans-serif'
+   */
   fontFamily?: string;
+  /**
+   * 块级字重。
+   * @default 'normal'
+   */
   fontWeight?: string | number;
+  /**
+   * 块级字形。
+   * @default 'normal'
+   */
   fontStyle?: 'normal' | 'italic' | 'oblique';
   align: 'start' | 'middle' | 'end';
   baseline: 'top' | 'middle' | 'bottom' | 'alphabetic';
@@ -49,7 +79,14 @@ export type TextPrim = {
   measuredWidth: number;
   /** 编译期算好的整块文字高度 ≈ lines × lineHeight */
   measuredHeight: number;
+  /**
+   * 块级文字颜色。
+   * @default 'currentColor'
+   */
   fill?: string;
-  /** 整体透明度 0~1 */
+  /**
+   * 整体透明度 0~1
+   * @default 1
+   */
   opacity?: number;
 };

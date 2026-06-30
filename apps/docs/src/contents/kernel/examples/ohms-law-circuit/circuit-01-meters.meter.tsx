@@ -10,11 +10,12 @@ const FONT = { family: 'Arial, sans-serif' } as const;
 
 /**
  * 电表形状：圆形表头 + 左右引线
- * @description 只暴露 west / east（input / output）两个连接端点——和 shape-registry 的"语义端点：二极管"一样，
+ * @description 只暴露 left / right（input / output）两个连接端点——和 shape-registry 的"语义端点：二极管"一样，
  *   导线只会落到左右两个引线端点，不会接到上下；圆形表头大小沿用内置 circle 的外接算法（√(hw²+hh²)）
  */
 // eslint-disable-next-line react-refresh/only-export-components -- 形状定义与电表组件同处一处，便于成组复用；本文件不是 HMR 热点
 export const circuitMeter: ShapeDefinition = defineShape({
+  name: 'circuit-meter',
   paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => {
     const radius = Math.sqrt(innerHalfWidth * innerHalfWidth + innerHalfHeight * innerHalfHeight);
@@ -26,11 +27,11 @@ export const circuitMeter: ShapeDefinition = defineShape({
   },
   anchor: (rect, name) => {
     if (name === 'center') return [rect.x, rect.y];
-    if (name === 'west' || name === 'input') return localToWorld(rect, [-rect.width / 2, 0]);
-    if (name === 'east' || name === 'output') return localToWorld(rect, [rect.width / 2, 0]);
-    // 圆形表头的上 / 下沿（高度 = 2×半径，引线只在水平方向）——供 label `above` / `below` 取 north / south
-    if (name === 'north') return localToWorld(rect, [0, -rect.height / 2]);
-    if (name === 'south') return localToWorld(rect, [0, rect.height / 2]);
+    if (name === 'left' || name === 'input') return localToWorld(rect, [-rect.width / 2, 0]);
+    if (name === 'right' || name === 'output') return localToWorld(rect, [rect.width / 2, 0]);
+    // 圆形表头的上 / 下沿（高度 = 2×半径，引线只在水平方向）——供 label `top` / `bottom` 取 top / bottom
+    if (name === 'top') return localToWorld(rect, [0, -rect.height / 2]);
+    if (name === 'bottom') return localToWorld(rect, [0, rect.height / 2]);
     return undefined;
   },
   *emit(rect, style, round) {

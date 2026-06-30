@@ -6,7 +6,7 @@ import { Draw, Layout, Node } from '@retikz/react';
  * Dynamic attach vs locked position
  * @description Two groups with identical geometry: sources a / b and target T share one
  *   horizontal line, flanking T. The left group references by plain id (auto) — endpoints land
- *   on T's near side (west / east) by direction; the right group locks to `T.north` —
+ *   on T's near side (left / right) by direction; the right group locks to `T.top` —
  *   both pin to T's top-edge midpoint regardless of where the source is.
  */
 const Demo: FC = () => (
@@ -37,7 +37,7 @@ const Demo: FC = () => (
       dashPattern={[4, 4]}
     />
 
-    {/* Right: locked to north, both pin to the top-edge midpoint */}
+    {/* Right: locked to top, both pin to the top-edge midpoint */}
     <Node id="A2" position={[50, 0]} stroke="none">
       a
     </Node>
@@ -47,10 +47,10 @@ const Demo: FC = () => (
     <Node id="B2" position={[210, 0]} stroke="none">
       b
     </Node>
-    <Draw way={['A2', 'T2.north']} arrow="->" />
-    <Draw way={['B2', 'T2.north']} arrow="->" />
+    <Draw way={['A2', 'T2.top']} arrow="->" />
+    <Draw way={['B2', 'T2.top']} arrow="->" />
     <Node position={[130, 80]} stroke="none" padding={0} textColor="gray">
-      locked north: fixed
+      locked top: fixed
     </Node>
   </Layout>
 );

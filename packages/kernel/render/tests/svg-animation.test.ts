@@ -42,7 +42,7 @@ const GROW_UP: IRAnimationTrack = {
     { at: 1, value: 1 },
   ],
   duration: 500,
-  origin: 'south',
+  origin: 'bottom',
   easing: 'ease-out',
 };
 
@@ -92,7 +92,7 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
     expect(css).toContain('animation-timing-function:ease-in');
   });
 
-  it('transform track（scaleY + origin south）→ wrapper <g> + transform-origin + @keyframes scale', () => {
+  it('transform track（scaleY + origin bottom）→ wrapper <g> + transform-origin + @keyframes scale', () => {
     const out = buildSvgFragment(scene([rect({ animations: [GROW_UP] })]), { idPrefix: 't' });
     const g = findTag(out, 'g')!;
     expect(g).toBeDefined();
@@ -100,7 +100,7 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
     const css = String(findTag(out, 'style')!.children![0]);
     expect(css).toContain('transform:scale(1, 0)');
     expect(css).toContain('transform:scale(1, 1)');
-    expect(css).toContain('transform-origin:5px 10px'); // rect 10×10 的 south = (5,10)
+    expect(css).toContain('transform-origin:5px 10px'); // rect 10×10 的 bottom = (5,10)
     expect(css).toContain('transform-box:view-box');
   });
 

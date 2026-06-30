@@ -7,6 +7,7 @@ import { definePattern, Layout, Node } from '@retikz/react';
  * emit 在局部 tile 坐标系（0..size）产 MarkerPrimitive；color / lineWidth 来自 ctx（size 来自 spec.size ?? defaultSize）。
  */
 const cross = definePattern({
+  name: 'cross',
   defaultSize: 12,
   emit: ({ size, color, lineWidth }) => {
     const lw = lineWidth ?? 1.5;
@@ -35,7 +36,7 @@ const cross = definePattern({
 });
 
 const Demo: FC = () => (
-  <Layout width={200} height={120} patterns={{ cross }}>
+  <Layout width={200} height={120} patterns={[cross]}>
     <Node
       id="a"
       position={[0, 0]}

@@ -12,17 +12,14 @@ export const DropShadowSchema = z
       ),
     offsetX: z
       .number()
-
       .optional()
       .describe('Horizontal shadow offset in user units. Overrides the preset value.'),
     offsetY: z
       .number()
-
       .optional()
       .describe('Vertical shadow offset in user units (overrides preset); positive = downward under screen y-down.'),
     blur: z
       .number()
-
       .nonnegative()
       .optional()
       .describe('Shadow blur radius in user units. Overrides the preset value; 0 means hard-edged.'),

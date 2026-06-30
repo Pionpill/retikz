@@ -132,7 +132,7 @@ import { Path, Step } from '@retikz/react';
 
 - `text`：必填，标签文字（单行）
 - `position`：`'at-start' | 'very-near-start' | 'near-start' | 'midway' | 'near-end' | 'very-near-end' | 'at-end'` 七个 keyword，或 0..1 的数值 t（任意精细位置），缺省 `'midway'`（t=0.5）
-- `side`：`'above'` / `'below'` / `'left'` / `'right'` / `'sloped'`，缺省 `'above'`；`'sloped'` 让标签沿段切线方向旋转贴线
+- `side`：`'above'` / `'below'` / `'left'` / `'right'` / `'sloped'`，缺省 `'above'`。也接受 `top` / `bottom` 和 compass 别名 `north` / `south` / `east` / `west`；`'sloped'` 让标签沿段切线方向旋转贴线
 - `textColor`：标签文字色；缺省按 **scope `labelDefault` → 宿主 path 主色 `color` → currentColor** 回退（跟主色不跟 stroke）
 - `opacity`：标签独立透明度 0..1；与所属 path 的 opacity 相乘（元素内轴；跨 scope 不复合）
 - `font`：标签字体覆盖（family / size / weight / style），逐字段回退 `labelDefault` → 渲染端默认
@@ -305,7 +305,7 @@ IR schema 还包含 `generator` step，用于外部路径生成器注册面；�
 | ----------- | ----------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `text`      | `string`                                              | —          | 必填，标签文字（单行）                                                                                                                                                                    |
 | `position`  | 7 keyword 之一 或 `number`（0..1）                    | `'midway'` | 段上归一化位置 t——keyword 是 t 的语义糖（at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1）；超出 [0, 1] 由 schema 拒绝 |
-| `side`      | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'`  | 锚点 + 偏移方向；`above` / `below` 偏 y 轴、`left` / `right` 偏 x 轴；`sloped` 不偏移、按段切线方向旋转                                                                                   |
+| `side`      | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'` | 边标注相对段方向的侧。也接受 `top` / `bottom` 和 compass 别名 `north` / `south` / `east` / `west`；`sloped` 不偏移、按段切线方向旋转 |
 | `textColor` | `string`                                              | —          | 标签文字色；缺省回退 scope `labelDefault` → 宿主 path 主色 `color` → currentColor（跟主色不跟 stroke）                                                                                    |
 | `opacity`   | `number`                                              | —          | 标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合）                                                                                                                          |
 | `font`      | `object`                                              | —          | 标签字体覆盖（family / size / weight / style）；逐字段回退 `labelDefault` → 渲染端默认                                                                                                    |
@@ -322,7 +322,7 @@ IR schema 还包含 `generator` step，用于外部路径生成器注册面；�
 | 极坐标                        | `{ origin: 'a', angle: 30, radius: 50 }`                                          | 极坐标（参看 [定位](/kernel/concepts/basic/position)）                                                     |
 | 偏移定位                      | `{ of: 'a', offset: [10, 5] }`                                                    | 基准 + `(dx, dy)`；`of` 三态——节点 id / 笛卡尔字面值 / PolarPosition                                       |
 | 比例定位                      | `{ between: [{ id: 'a' }, { id: 'b' }], t: 0.5 }`                                 | A 到 B 连线上的比例点；端点必须是可独立解析的 absolute target（`{ id, anchor? }` 形态，或笛卡尔 / 极坐标） |
-| 比例定位（显式锚点）          | `{ between: [{ id: 'a', anchor: 'east' }, { id: 'b', anchor: 'west' }], t: 0.5 }` | 端点可带显式 `anchor`，从锚点而非自动贴边解析                                                              |
+| 比例定位（显式锚点）          | `{ between: [{ id: 'a', anchor: 'right' }, { id: 'b', anchor: 'left' }], t: 0.5 }` | 端点可带显式 `anchor`，从锚点而非自动贴边解析                                                              |
 | 相对偏移 (relative)           | `{ relative: [10, 0] }` 或 `'+10,0'`                                              | 基于前一 step 终点 + `[dx, dy]`；**不**更新 prevEnd                                                        |
 | 相对偏移 (relativeAccumulate) | `{ relativeAccumulate: [10, 0] }` 或 `'++10,0'`                                   | 基于前一 step 终点 + `[dx, dy]`；**更新** prevEnd                                                          |
 

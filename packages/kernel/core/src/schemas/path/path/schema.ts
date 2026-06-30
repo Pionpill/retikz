@@ -18,12 +18,10 @@ export const PathScaleSchema = z
       .object({
         x: z
           .number()
-
           .positive()
           .describe('Scale factor on the x axis.'),
         y: z
           .number()
-
           .positive()
           .describe('Scale factor on the y axis.'),
       })
@@ -94,7 +92,6 @@ export const PathBaseSchema = z
       .describe('Stroke corner shape. Omitted fields use miter; round rounds the join and bevel cuts the corner flat.'),
     roundedCorners: z
       .number()
-
       .nonnegative()
       .optional()
       .describe(
@@ -106,7 +103,6 @@ export const PathBaseSchema = z
       .describe('Semantic stroke thickness preset. Used only when `strokeWidth` is omitted.'),
     rotate: z
       .number()
-
       .optional()
       .describe(
         'Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.',

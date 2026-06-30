@@ -1,4 +1,4 @@
-﻿---
+---
 title: Layers
 description: 'The three retikz expression layers: DSL for authors, IR for declaration and persistence, Scene for rendering.'
 ---
@@ -32,7 +32,7 @@ Why this matters in practice: use the DSL when authoring diagrams, use IR when s
 | Kernel | `<Layout>` / `<Scope>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>`                                                                    | Yes                | One-to-one with IR nodes                       |
 | Sugar  | `<Draw way={...}>`, `DrawWay.Cycle`, relative-coordinate strings, <br />shape helpers like `<Circle>` / `<Rectangle>` / `<Grid>` / `<Star>` | No                 | Synchronously expands to Kernel in the adapter |
 
-Sugar adds no new capability. Anything drawn with `<Draw>` can also be written manually with `<Path>` + `<Step>`. The two snippets below compile to the same result:
+Sugar adds no new capability. Anything drawn with `<Draw>` can also be written manually with `<Path>` + `<Step>`. The two snippets bottom compile to the same result:
 
 ```tsx
 // Sugar: a one-line way array
@@ -70,7 +70,7 @@ The adapter collects this JSX into IR. `@retikz/core` resolves positions, comput
 - **resolve paths**: nodes settle first so paths can look up their endpoints from the name table and expand into path commands (`d`) — exactly the dependency the `anchors` arrow stands for.
 - **fit bounds**: union every primitive's bounding box, add padding, round to precision, and produce the viewBox.
 
-If the IR contains Tier 2 composite nodes (such as plot's higher-level components), the compiler lowers them to Kernel first, then runs the chain above; see [Tier 2 composites](/kernel/concepts/design/composite) for details.
+If the IR contains Tier 2 composite nodes (such as plot's higher-level components), the compiler lowers them to Kernel first, then runs the chain top; see [Tier 2 composites](/kernel/concepts/design/composite) for details.
 
 ## Choosing a Layer
 

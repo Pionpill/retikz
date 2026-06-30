@@ -82,7 +82,7 @@ When an endpoint references a node (the `{ id }` object form, or an id inside a 
 </Path>
 ```
 
-`boundary` only applies where a connection surface is meaningful: endpoint auto-clip (no explicit `anchor`) and that endpoint's compass / angle anchor. In direction-less reference contexts — `between` endpoints, an `offset` `of`, a node center — it is a no-op. A node's default connection surface lives on [`<Node boundary>`](/kernel/components/node/overview); the endpoint `boundary` is the per-edge override.
+`boundary` only applies where a connection surface is meaningful: endpoint auto-clip (no explicit `anchor`) and that endpoint's standard direction / angle anchor. In direction-less reference contexts — `between` endpoints, an `offset` `of`, a node center — it is a no-op. A node's default connection surface lives on [`<Node boundary>`](/kernel/components/node/overview); the endpoint `boundary` is the per-edge override.
 
 Below, two edges target the same five-pointed star (no node `boundary` set) and each picks its connection surface at the endpoint: the solid edge clips to the real tips by default, the dashed edge uses `boundary="circle"` to clip to the circumscribed circle — the surface is decided per edge.
 
@@ -170,7 +170,7 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 
 <ComponentPreview name="path-rounded-corners" size="sm" />
 
-`roundedCorners` changes the **path geometry** — it pulls the joint vertices back and inserts a tangent arc, so it affects the bounding box, arc length, path-level `marks` normalization, and connection-point resolution. This is distinct from `lineJoin`, which only styles the **stroke render** while the path centerline stays a sharp fold. (Note: per-step edge `label`s are currently positioned along the step's own segment and are not re-fitted to the shortened, rounded geometry.) The contrast below uses a very thick stroke: the top path uses `lineJoin="round"` (only the stroke is rounded, the centerline stays sharp), the bottom uses `roundedCorners` (the centerline itself is an arc):
+`roundedCorners` changes the **path geometry** — it pulls the joint vertices back and inserts a tangent arc, so it affects the bounding box, arc length, path-level `marks` normalization, and connection-point resolution. This is distinct from `lineJoin`, which only styles the **stroke render** while the path centerline stays a sharp fold. (Note: per-step edge `label`s are currently positioned along the step's own segment and are not re-fitted to the shortened, rounded geometry.) The contrast bottom uses a very thick stroke: the top path uses `lineJoin="round"` (only the stroke is rounded, the centerline stays sharp), the bottom uses `roundedCorners` (the centerline itself is an arc):
 
 <ComponentPreview name="path-rounded-vs-linejoin" size="sm" />
 

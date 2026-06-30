@@ -180,30 +180,30 @@ describe('Ribbon label compile', () => {
     expect(textOf(compiled.primitives, 'end')?.x).toBeCloseTo(100);
   });
 
-  it('side=above/below 与 path label 一样沿切线法线偏移', () => {
+  it('side=top/bottom 与 path label 一样沿切线法线偏移', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
           label: [
-            { text: 'above', side: 'above' },
-            { text: 'below', side: 'below' },
+            { text: 'top', side: 'top' },
+            { text: 'bottom', side: 'bottom' },
           ],
         }),
       ]),
       { padding: 0 },
     );
 
-    expect(textOf(compiled.primitives, 'above')?.y).toBeLessThan(0);
-    expect(textOf(compiled.primitives, 'below')?.y).toBeGreaterThan(0);
+    expect(textOf(compiled.primitives, 'top')?.y).toBeLessThan(0);
+    expect(textOf(compiled.primitives, 'bottom')?.y).toBeGreaterThan(0);
   });
 
-  it('side=above 使用 Path label 默认距离加 ribbon 半宽，distance 可覆盖', () => {
+  it('side=top 使用 Path label 默认距离加 ribbon 半宽，distance 可覆盖', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
           label: [
-            { text: 'default', side: 'above' },
-            { text: 'far', side: 'above', distance: 10 },
+            { text: 'default', side: 'top' },
+            { text: 'far', side: 'top', distance: 10 },
           ],
         }),
       ]),

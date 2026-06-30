@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { normalizeWebAnchor, normalizeWebSide, WebSide } from '../../../geometry/anchor';
 import { BoundarySchema } from '../../boundary';
 import { BetweenPositionSchema } from '../../position/between-position/schema';
 import { OffsetPositionSchema } from '../../position/offset-position/schema';
@@ -11,18 +12,21 @@ export const AnchorRefSchema = z
     z
       .string()
       .min(1)
+      .transform(name => normalizeWebAnchor(name) ?? name)
       .describe(
-        'Named anchor: compass anchor, web alias, or shape-specific anchor. Unknown names fail at compile time.',
+        'Named anchor: web anchor, compass alias, or shape-specific anchor. Known aliases are normalized to web names; unknown names fail at compile time.',
       ),
     z.number().describe('Angle anchor in degrees (boundary point in that direction)'),
     z
       .object({
-        side: z.enum(['north', 'south', 'east', 'west']).describe('Which edge of the shape boundary'),
+        side: z
+          .preprocess(value => (typeof value === 'string' ? normalizeWebSide(value) ?? value : value), z.enum(WebSide))
+          .describe('Which edge of the shape boundary. Compass side names are accepted aliases.'),
         t: z
           .number()
           .min(0)
           .max(1)
-          .describe('Proportion along the edge; north/south run west to east, east/west run north to south.'),
+          .describe('Proportion along the edge; top/bottom run left to right, right/left run top to bottom.'),
       })
       .describe('Proportional point on the real shape boundary edge'),
   ])
@@ -37,7 +41,7 @@ export const NodeTargetSchema = z
       .optional()
       .describe('Optional world-space 2D offset added after the anchor/edge point is resolved'),
     boundary: BoundarySchema.optional().describe(
-      'Per-endpoint override of the target node connection surface. Used for auto-clipped endpoints and compass or angle anchors.',
+      'Per-endpoint override of the target node connection surface. Used for auto-clipped endpoints and standard direction or angle anchors.',
     ),
   })
   .describe('Reference to a Node/Coordinate by id, with optional anchor and world-space offset');

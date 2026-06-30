@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { normalizeWebSide } from '../../geometry/anchor';
 import { AnimationTrackSchema } from '../animation';
 import { BoundarySchema } from '../boundary';
 import { BlendMode, DropShadowSchema, ShadowPreset } from '../effects';
@@ -9,6 +10,7 @@ import { PaintSpecSchema } from '../paint';
 import {
   AtPositionSchema,
   BetweenPositionSchema,
+  normalizeAtDirection,
   OffsetPositionSchema,
   PolarPositionSchema,
   PositionSchema,
@@ -19,7 +21,9 @@ import { NodeLabelBoundarySide, NodeLabelPlacement, NodeLabelPosition, NodeTextA
 
 export const NodeLabelBoundaryPositionSchema = z
   .object({
-    boundary: z.enum(NodeLabelBoundarySide).describe('Box-like node boundary side used as the label attachment line.'),
+    boundary: z
+      .preprocess(value => (typeof value === 'string' ? normalizeWebSide(value) ?? value : value), z.enum(NodeLabelBoundarySide))
+      .describe('Box-like node boundary side used as the label attachment line. Compass side names are accepted aliases.'),
     t: z
       .number()
       .min(0)
@@ -32,7 +36,7 @@ export const NodeLabelBoundaryPositionSchema = z
 
 /**
  * 节点附属标签 label（TikZ `[label=above:foo]` 同义）
- * @description 可挂多个；label 不参与 layout。position 支持 8 方向枚举或数字角度（polar 约定：0°=+x，90°=+y 屏幕下方）；默认 position='above'，distance=12
+ * @description 可挂多个；label 不参与 layout。position 支持 8 方向枚举或数字角度（polar 约定：0°=+x，90°=+y 屏幕下方）；默认 position='top'，distance=12
  */
 export const NodeLabelSchema = z
   .object({
@@ -42,10 +46,13 @@ export const NodeLabelSchema = z
         'Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ runs }` mixed text+math line. Rendered as a single line.',
       ),
     position: z
-      .union([z.enum(NodeLabelPosition), z.number(), NodeLabelBoundaryPositionSchema])
+      .preprocess(
+        value => (typeof value === 'string' ? normalizeAtDirection(value) ?? value : value),
+        z.union([z.enum(NodeLabelPosition), z.number(), NodeLabelBoundaryPositionSchema]),
+      )
       .optional()
       .describe(
-        'Placement around the node border: direction keyword, center, numeric angle, or `{ boundary, t }`. Omitted fields use above.',
+        'Placement around the node border: direction keyword, center, numeric angle, or `{ boundary, t }`. Omitted fields use top.',
       ),
     placement: z
       .enum(NodeLabelPlacement)
@@ -134,7 +141,6 @@ export const NodeSchema = z
       ),
     rotate: z
       .number()
-
       .optional()
       .describe('Rotation in degrees around the node center; positive is visually clockwise.'),
     text: TextBlockSchema.optional().describe(
@@ -151,7 +157,6 @@ export const NodeSchema = z
       .describe('Line height in user units; falls back to `font.size × 1.2` when omitted.'),
     maxTextWidth: z
       .number()
-
       .positive()
       .optional()
       .describe('Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.'),
@@ -175,7 +180,6 @@ export const NodeSchema = z
     drawOpacity: z.number().min(0).max(1).optional().describe('Stroke-only opacity for the node border.'),
     strokeWidth: z
       .number()
-
       .nonnegative()
       .optional()
       .describe('Border width in user units; defaults to 1 when omitted'),
@@ -268,7 +272,6 @@ export const NodeSchema = z
     zIndex: z
       .number()
       .int()
-
       .optional()
       .describe(
         'Stacking order among sibling IR children. Higher draws on top; equal values keep source order within the same parent group.',

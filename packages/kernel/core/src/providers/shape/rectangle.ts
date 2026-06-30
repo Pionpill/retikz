@@ -7,7 +7,7 @@ import type { ScenePrimitive } from '../../primitive';
 
 import { verticesToSegments } from '../../contract/shape/contour';
 import { defineShape } from '../../contract/shape/define';
-import { normalizeCompassAnchor } from '../../geometry/anchor';
+import { normalizeCompassAnchor, webSideToCompassSide } from '../../geometry/anchor';
 import { boundaryFromContour } from '../../geometry/contour';
 import { rect as rectOps } from '../../geometry/rect';
 import { localToWorld } from '../../geometry/transform';
@@ -18,6 +18,10 @@ import { localToWorld } from '../../geometry/transform';
  *   cornerRadius 从 Node 顶层迁入 params；缺省 / 0 = 直角。
  */
 type RectangleParams = {
+  /**
+   * 矩形圆角半径。
+   * @default 0
+   */
   cornerRadius?: number;
 };
 
@@ -42,6 +46,7 @@ const rectVertices = (rect: Rect): Array<Position> => {
  *   scaleParams：cornerRadius 是长度，随 node scale 用 uniform 几何均值因子协同缩放（边数 / 角度类参数才不缩）。
  */
 export const rectangle = defineShape({
+  name: 'rectangle',
   paramsSchema: z.strictObject({
     cornerRadius: z
       .number()
@@ -64,7 +69,7 @@ export const rectangle = defineShape({
     const a = normalizeCompassAnchor(name);
     return a ? rectOps.anchor(r, a) : undefined;
   },
-  edgePoint: (r, side, t) => rectOps.edgePoint(r, side, t),
+  edgePoint: (r, side, t) => rectOps.edgePoint(r, webSideToCompassSide(side), t),
   *emit(r, style, round, params: RectangleParams): Iterable<ScenePrimitive> {
     const halfW = r.width / 2;
     const halfH = r.height / 2;

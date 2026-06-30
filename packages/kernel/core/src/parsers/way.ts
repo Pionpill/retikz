@@ -12,9 +12,11 @@ import type {
   IRMoveStep,
   IRStep,
   IRStepLabel,
+  IRStepLabelInput,
   IRTarget,
 } from '../schemas';
 
+import { normalizeGeometryLabelSide } from '../schemas';
 import { parseTargetSugar } from './target-sugar';
 
 /**
@@ -61,7 +63,14 @@ export type WayCurveOp = { curve: IRControlPoint };
 export type WayCubicOp = { cubic: [IRControlPoint, IRControlPoint] };
 
 /** 弧形简记算子（infix）：bend step；bend=方向，angle 可选缺省 30° */
-export type WayBendOp = { bend: 'left' | 'right'; angle?: number };
+export type WayBendOp = {
+  bend: 'left' | 'right';
+  /**
+   * bend 角度（度）。
+   * @default 30
+   */
+  angle?: number;
+};
 
 /**
  * 弧段算子（infix），以上一项为圆心
@@ -78,7 +87,7 @@ export type WayCircleOp = { circle: { radius: number } };
 export type WayEllipseOp = { ellipse: { radiusX: number; radiusY: number } };
 
 /** 边标注 sugar 形态：字符串=`{text:s}`，对象=IR `step.label` 字面一致 */
-export type WayLabel = IRStepLabel | string;
+export type WayLabel = IRStepLabelInput | string;
 
 /**
  * 边标注 prefix 算子（infix），修饰下一段
@@ -142,7 +151,16 @@ const isWayOperator = (item: WayItem): boolean =>
   isWayCycle(item) || isWayVia(item) || isWayCurveLike(item) || isWayShapeOp(item) || isWayLabelOp(item);
 
 /** sugar 字符串/对象 → IR step.label（字符串 = `{text:s}`） */
-const normalizeLabel = (l: WayLabel): IRStepLabel => (typeof l === 'string' ? { text: l } : { ...l });
+const normalizeLabel = (l: WayLabel): IRStepLabel => {
+  if (typeof l === 'string') return { text: l };
+  const { side: rawSide, ...rest } = l;
+  const out: IRStepLabel = { ...rest, text: l.text };
+  if (rawSide !== undefined) {
+    const side = normalizeGeometryLabelSide(rawSide);
+    if (side !== undefined) out.side = side;
+  }
+  return out;
+};
 
 /** sugar `{position,type}` → IR `{relative}|{relativeAccumulate}`；其它形态原样返回 */
 const desugarRelativeItem = (item: WayItem): WayItem => {

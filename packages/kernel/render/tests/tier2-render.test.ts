@@ -12,6 +12,8 @@ import { renderToSvgString } from '../src/svg';
  * @description composite 在 compile 期已展开成 Tier 1 → Scene；svg / canvas 消费同一 Scene，无需认识 composite。
  */
 const labeledBox = defineComposite({
+  namespace: 'example',
+  type: 'labeledBox',
   schema: CompositeBaseSchema.extend({
     namespace: z.literal('example'),
     type: z.literal('labeledBox'),

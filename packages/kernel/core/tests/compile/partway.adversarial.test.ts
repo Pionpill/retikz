@@ -670,7 +670,7 @@ describe('端点带 anchor / offset 的 lerp', () => {
         type: 'coordinate',
         id: 'm',
         position: {
-          between: [{ id: 'A', anchor: { side: 'east', t: 0.5 } }, { id: 'B' }],
+          between: [{ id: 'A', anchor: { side: 'right', t: 0.5 } }, { id: 'B' }],
           t: 0.5,
         },
       },

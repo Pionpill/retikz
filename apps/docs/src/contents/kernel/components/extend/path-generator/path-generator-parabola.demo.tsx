@@ -11,6 +11,7 @@ import { z } from 'zod';
  * generator step 目前走 IR 直传（<Layout ir>），正体现 path generator 的 IR 级扩展本质。
  */
 const parabola = definePathGenerator({
+  name: 'parabola',
   paramsSchema: z.object({ bend: z.tuple([z.number(), z.number()]) }),
   targetParams: ['bend'],
   generate: ({ from, to, resolvedTargets }) => [{ kind: 'quad', control: resolvedTargets.bend, to: to ?? from }],
@@ -33,6 +34,6 @@ const ir: IR = {
   ],
 };
 
-const Demo: FC = () => <Layout ir={ir} pathGenerators={{ parabola }} width={320} height={100} />;
+const Demo: FC = () => <Layout ir={ir} pathGenerators={[parabola]} width={320} height={100} />;
 
 export default Demo;

@@ -13,7 +13,7 @@ const CircuitDemo: FC = () => (
     width={600}
     height={300}
     viewBox={{ x: 0, y: 0, width: 1280, height: 760 }}
-    shapes={{ ...circuitShapes, 'circuit-meter': circuitMeter }}
+    shapes={[...circuitShapes, circuitMeter]}
   >
     <Scope
       pathDefault={{ stroke: INK, strokeWidth: 3, lineCap: 'round', lineJoin: 'round' }}

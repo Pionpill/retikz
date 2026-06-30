@@ -23,19 +23,19 @@ const Demo: FC = () => (
     <Node
       id="quarter"
       position={{ between: [{ id: 'a' }, { id: 'b' }], t: 0.25 }}
-      label={{ text: '25%', position: 'above', distance: 16, font: labelFont }}
+      label={{ text: '25%', position: 'top', distance: 16, font: labelFont }}
       {...pointStyle}
     />
     <Node
       id="middle"
       position={{ between: [{ id: 'a' }, { id: 'b' }], t: 0.5 }}
-      label={{ text: '50%', position: 'above', distance: 16, font: labelFont }}
+      label={{ text: '50%', position: 'top', distance: 16, font: labelFont }}
       {...pointStyle}
     />
     <Node
       id="threeQuarter"
       position={{ between: [{ id: 'a' }, { id: 'b' }], t: 0.75 }}
-      label={{ text: '75%', position: 'above', distance: 16, font: labelFont }}
+      label={{ text: '75%', position: 'top', distance: 16, font: labelFont }}
       {...pointStyle}
     />
   </Layout>

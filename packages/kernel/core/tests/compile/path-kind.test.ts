@@ -90,7 +90,7 @@ describe('Path kind registry', () => {
 
   it('lets custom path kinds reuse the built-in stroke emitter', () => {
     const highlight = definePathKind({
-      kind: 'highlight',
+      schema: z.object({ kind: z.literal('highlight') }),
       optionsSchema: z.object({ stroke: z.string().min(1) }).strict(),
       compile: context => {
         const base = context.emitStroke(context.path);
@@ -113,7 +113,7 @@ describe('Path kind registry', () => {
           children: steps,
         },
       ] as IR['children']),
-      { pathKinds: { highlight } },
+      { pathKinds: [highlight] },
     );
 
     expect(prim.stroke).toBe('gold');

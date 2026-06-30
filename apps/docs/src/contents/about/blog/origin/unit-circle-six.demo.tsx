@@ -135,7 +135,7 @@ const Demo: FC = () => (
       thickness="thick"
     />
     <Draw
-      way={[[COS30 * 100, 0], { label: { text: 'cos α', side: 'below' } }, [0, 0]]}
+      way={[[COS30 * 100, 0], { label: { text: 'cos α', side: 'bottom' } }, [0, 0]]}
       stroke="dodgerblue"
       thickness="thick"
     />
@@ -146,11 +146,11 @@ const Demo: FC = () => (
     />
 
     {/* sec α 紫：切线下半段，P → x 轴截距 (sec α · 100, 0)；
-        标签锚到段末 + side='below'，落到 x 轴下方，避开 tan α 的 right 侧标签 */}
+        标签锚到段末 + side='bottom'，落到 x 轴下方，避开 tan α 的 right 侧标签 */}
     <Draw
       way={[
         { angle: -30, radius: 100 },
-        { label: { text: 'sec α', position: 'at-end', side: 'below' } },
+        { label: { text: 'sec α', position: 'at-end', side: 'bottom' } },
         [SEC30 * 100, 0],
       ]}
       stroke="dodgerblue"
@@ -166,7 +166,7 @@ const Demo: FC = () => (
 
     {/* cot α 青：顶部水平切线段，(0, -100) → (cot α · 100, -100) */}
     <Draw
-      way={[[0, -100], { label: { text: 'cot α', side: 'above' } }, [COT30 * 100, -100]]}
+      way={[[0, -100], { label: { text: 'cot α', side: 'top' } }, [COT30 * 100, -100]]}
       stroke="green"
       thickness="thick"
     />

@@ -1,4 +1,6 @@
 import type { ArrowDefinition } from '../contract/arrow';
+import type { BoundaryDefinition } from '../contract/boundary';
+import type { ClipDefinition } from '../contract/clip';
 import type { CompositeDefinition } from '../contract/composite';
 import type { PathGeneratorDefinition } from '../contract/path';
 import type { PathKindCompileResult, PathKindDefinition } from '../contract/path';
@@ -6,6 +8,7 @@ import type { PatternDefinition } from '../contract/pattern';
 import type { RibbonWidthProfileDefinition } from '../contract/ribbon';
 import type { ShapeDefinition } from '../contract/shape';
 import type { DropShadow, GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
+import type { ProviderCollection } from '../providers/registry';
 import type { IR, IRAnimationTrack, IRChild, IRPathBase, IRPosition, IRTransform } from '../schemas';
 import type { CompileWarning } from './constant';
 import type { LowerTex } from './lower-tex';
@@ -16,13 +19,15 @@ import type { TextMeasurer } from './text-metrics';
 
 import { rect as rectOps } from '../geometry/rect';
 import { resolveArrowRegistry } from '../providers/arrow';
+import { resolveBoundaryRegistry } from '../providers/boundary';
+import { resolveClipRegistry } from '../providers/clip';
 import { resolveCompositeRegistry } from '../providers/composite';
 import { resolvePathGeneratorRegistry } from '../providers/path';
 import { resolvePathKindRegistry } from '../providers/path-kind';
 import { resolvePatternRegistry } from '../providers/pattern';
+import { providerDefinitionOf } from '../providers/registry';
 import { resolveRibbonWidthProfileRegistry } from '../providers/ribbon';
 import { resolveShapeRegistry } from '../providers/shape';
-import { JsonObjectSchema } from '../schemas';
 import { ScopeBoundingShape } from '../schemas';
 import { createClipRegistry } from './clip';
 import { lowerComposites } from './composite';
@@ -56,10 +61,15 @@ export { CompileWarningCode } from './constant';
  * @description coordinate / scope.id 入场临时占位等"无形状只有位置"句柄共享此结构，
  *   让后续 path target / `at.of` / `offset.of` / `polar.origin` 引用时 boundaryPoint 命中中心。
  */
-const zeroSizeRectAt = (id: string, [cx, cy]: IRPosition, shapes: Record<string, ShapeDefinition>): NodeLayout => ({
+const zeroSizeRectAt = (
+  id: string,
+  [cx, cy]: IRPosition,
+  shapes: ProviderCollection<ShapeDefinition>,
+  boundaries: ProviderCollection<BoundaryDefinition>,
+): NodeLayout => ({
   id,
   shapeName: 'rectangle',
-  shapeDef: shapes.rectangle,
+  shapeDef: providerDefinitionOf(shapes, 'rectangle', { capability: 'shape', optionName: 'shapes' }),
   rect: { x: cx, y: cy, width: 0, height: 0, rotate: 0 },
   rotateDeg: 0,
   margin: 0,
@@ -69,14 +79,19 @@ const zeroSizeRectAt = (id: string, [cx, cy]: IRPosition, shapes: Record<string,
   lineHeight: 0,
   fontSize: 0,
   shapes,
+  boundaries,
 });
 
 /**
  * 把 coordinate 注册成 0×0 NodeLayout
  * @description 让后续 path target / `at.of` 引用时 boundaryPoint 命中中心，符合"占位无形状边界"语义
  */
-const coordinateAsLayout = (id: string, center: IRPosition, shapes: Record<string, ShapeDefinition>): NodeLayout =>
-  zeroSizeRectAt(id, center, shapes);
+const coordinateAsLayout = (
+  id: string,
+  center: IRPosition,
+  shapes: ProviderCollection<ShapeDefinition>,
+  boundaries: ProviderCollection<BoundaryDefinition>,
+): NodeLayout => zeroSizeRectAt(id, center, shapes, boundaries);
 
 /** shadow 是视觉效果，不改变锚点 / scope bbox；这里只把它的外溢纳入根自动 layout，避免根 viewBox 裁剪 */
 const shadowOverflowPoints = (points: ReadonlyArray<IRPosition>, shadow: DropShadow | undefined): Array<IRPosition> => {
@@ -122,52 +137,76 @@ const pushLayoutPoints = (target: Array<IRPosition>, points: ReadonlyArray<IRPos
 const scopePlaceholderLayout = (
   id: string,
   chain: ReadonlyArray<Transform>,
-  shapes: Record<string, ShapeDefinition>,
+  shapes: ProviderCollection<ShapeDefinition>,
+  boundaries: ProviderCollection<BoundaryDefinition>,
 ): NodeLayout => {
   const globalOrigin: IRPosition = chain.length === 0 ? [0, 0] : applyTransformChain([0, 0], chain);
-  return zeroSizeRectAt(id, globalOrigin, shapes);
+  return zeroSizeRectAt(id, globalOrigin, shapes, boundaries);
 };
 
 /** compileToScene 的可选参数 */
 export type CompileOptions = {
-  /** 注入文字度量函数；不传则用 fallback（不准但可跑） */
+  /**
+   * 注入文字度量函数；不传则用 fallback（不准但可跑）
+   * @default `fallbackMeasurer`
+   */
   measureText?: TextMeasurer;
-  /** layout 周围的留白（user units），默认 10 */
+  /**
+   * layout 周围的留白（user units），默认 10
+   * @default 10
+   */
   padding?: number;
   /**
    * 输出坐标的小数位精度；默认 2
    * @description 仅作用于 Scene primitive / path d / layout；内部几何计算保持完整 double 精度
+   * @default `DEFAULT_PRECISION` (2)
    */
   precision?: number;
   /**
    * 相对定位的默认距离（对应 TikZ `node distance`，user units）
    * @description `Node.position` 为 `{ direction, of }` 且未自带 `distance` 时取此值；未配回退到 1
+   * @default `DEFAULT_NODE_DISTANCE` (1)
    */
   nodeDistance?: number;
   /**
    * 编译期警告收集器
    * @description path / position 解析失败时按 IR locator + code + message 同步触发；不传时 dev 模式（`process.env.NODE_ENV !== 'production'`）默认 `console.warn`、生产静默
+   * @default `defaultWarnDispatcher`
    */
   onWarn?: (warning: CompileWarning) => void;
   /**
    * 运行时注入的第三方 shape（不进 IR）
    * @description 有效 shape 表 = `{ ...BUILTIN_SHAPES, ...shapes }`——同名 key 覆盖内置，经 `onWarn` 发
-   *   `SHAPE_OVERRIDES_BUILTIN`。IR 的 `node.shape` 仍是字符串；未注册名在编译期 throw。
+   *   Duplicate names fail at registration time. IR 的 `node.shape` 仍是字符串；未注册名在编译期 throw。
+   * @default 仅 `BUILTIN_SHAPES`
    */
-  shapes?: Record<string, ShapeDefinition>;
+  shapes?: ReadonlyArray<ShapeDefinition>;
+  /**
+   * 运行时注入的第三方 connection surface（不进 IR）
+   * @description `boundary` 先查本 registry，再 fallback 到 shape registry；`shape` 保留为节点自身视觉 shape。
+   * @default 仅 `BUILTIN_BOUNDARIES`
+   */
+  boundaries?: ReadonlyArray<BoundaryDefinition>;
+  /**
+   * 运行时注入的 clip providers；按 `Scope.clip.kind` 查找，自定义 kind 在编译期解析为 JSON spec。
+   * @default 仅 `BUILTIN_CLIPS`
+   */
+  clips?: ReadonlyArray<ClipDefinition>;
   /**
    * 运行时注入的第三方 arrow（不进 IR）
    * @description 有效 arrow 表 = `{ ...BUILTIN_ARROWS, ...arrows }`——同名 key 覆盖内置，经 `onWarn` 发
-   *   `ARROW_OVERRIDES_BUILTIN`。IR 的 `arrowDetail.shape` 仍是字符串；未注册名在编译期 throw。
+   *   Duplicate names fail at registration time. IR 的 `arrowDetail.shape` 仍是字符串；未注册名在编译期 throw。
+   * @default 仅 `BUILTIN_ARROWS`
    */
-  arrows?: Record<string, ArrowDefinition>;
+  arrows?: ReadonlyArray<ArrowDefinition>;
   /**
    * 运行时注入的第三方 pattern motif（不进 IR）
    * @description 有效 pattern 表 = `{ ...BUILTIN_PATTERNS, ...patterns }`——同名 key 覆盖内置，经 `onWarn` 发
-   *   `PATTERN_OVERRIDES_BUILTIN`。IR 的 `pattern.shape` 仍是字符串；未注册名在编译期 throw。
+   *   Duplicate names fail at registration time. IR 的 `pattern.shape` 仍是字符串；未注册名在编译期 throw。
    *   compile 对 pattern 资源查本表 + 调 `PatternDefinition.emit` 产 tile，写进 `SceneResource.tile`。
+   * @default 仅 `BUILTIN_PATTERNS`
    */
-  patterns?: Record<string, PatternDefinition>;
+  patterns?: ReadonlyArray<PatternDefinition>;
   /**
    * 运行时注入的第三方 path generator（不进 IR）
    * @description generator step 编译时按 `name` 查本表；core 不内置任何曲线生成器，故无内置合并。
@@ -175,26 +214,31 @@ export type CompileOptions = {
    *   对结果再跑 `JsonObjectSchema.parse` 二次确认 JSON-safe → `targetParams` 顶层 key 经 target lookup
    *   resolve 成世界坐标 → 调 `generate(ctx)` → splice 产出的 `PathCommand[]` 进命令流。IR 的
    *   `generator.name` 仍是字符串；generator 函数本身只在此运行时注入面、不进 IR。
+   * @default 空 registry
    */
-  pathGenerators?: Record<string, PathGeneratorDefinition>;
+  pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
   /**
-   * Runtime path kind providers. Built-in kinds are `stroke` and `ribbon`; custom kinds are keyed by Path.kind.
+   * 运行时注入的 path kind providers；内置 kind 为 `stroke` / `ribbon`，自定义 kind 按 Path.kind 查找。
+   * @default 仅 `BUILTIN_PATH_KINDS`
    */
-  pathKinds?: Record<string, PathKindDefinition>;
+  pathKinds?: ReadonlyArray<PathKindDefinition>;
   /**
-   * Runtime ribbon width profiles.
-   * @description IR stores only `{ kind:"profile", name, params }`; profile functions are injected here and never enter IR.
+   * 运行时注入的 ribbon 宽度 profile。
+   * @description IR 只保存 `{ kind:"profile", name, params }`；profile 函数从这里注入，永不进入 IR。
+   * @default 空 registry
    */
-  ribbonWidthProfiles?: Partial<Record<string, RibbonWidthProfileDefinition>>;
+  ribbonWidthProfiles?: ReadonlyArray<RibbonWidthProfileDefinition>;
   /**
    * 运行时注入的 Tier 2 composite 展开逻辑（不进 IR）
    * @description compileToScene 第一步据各 def 的 schema 提取的 `${namespace}.${type}` 把 IR 里的 composite
    *   节点展开成 Tier 1；core 无内置。未注册 namespace/type → `onWarn(COMPOSITE_NOT_REGISTERED)` + 跳过该节点。
+   * @default 空 registry
    */
-  composites?: Array<CompositeDefinition>;
+  composites?: ReadonlyArray<CompositeDefinition>;
   /**
    * composite 嵌套展开的最大深度（防环 / 防失控递归）
    * @description 默认 32；composite 展开出 composite 时累加，超限或环 throw。
+   * @default `DEFAULT_MAX_COMPOSITE_DEPTH` (32)
    */
   maxCompositeDepth?: number;
   /**
@@ -202,6 +246,7 @@ export type CompileOptions = {
    * @description node `tex` 内容编译时调本函数把 LaTeX → 字形路径 + bbox。core 不依赖
    *   MathJax，仅声明注入类型。带 tex 内容但未注入 → `onWarn(TEX_LOWERER_MISSING)` + 降级；返回 null
    *   （非法 tex）→ `onWarn(TEX_INVALID)` + 降级。均不抛、不丢节点。
+   * @default undefined；禁用 TeX 降级能力
    */
   lowerTex?: LowerTex;
 };
@@ -400,18 +445,19 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     maxDepth: options.maxCompositeDepth,
   });
 
-  // shape / arrow / pattern 三表策略一致：Record 注入（key 天然去重）→ 同名覆盖内置 warn + last-wins、
-  // 未注册名 throw（定位 / 布局类基元缺失无法继续）。与 composite（Array 注入、重名 throw、缺失 warn+skip）
-  // 的策略差异是有意的，理由见 lowerComposites JSDoc。
-  const effectiveShapes: Record<string, ShapeDefinition> = resolveShapeRegistry(options.shapes, onWarn);
-  const effectivePathGenerators: Record<string, PathGeneratorDefinition> = resolvePathGeneratorRegistry(
+  // provider registry 在 compile 入口统一 resolve：内置和自定义同表，duplicate key fail-loud。
+  // compile 主流程只消费 resolved Map；unknown string-reference provider 仍 fail-fast。
+  const effectiveShapes: ReadonlyMap<string, ShapeDefinition> = resolveShapeRegistry(options.shapes);
+  const effectiveBoundaries: ReadonlyMap<string, BoundaryDefinition> = resolveBoundaryRegistry(options.boundaries);
+  const effectiveClips: ReadonlyMap<string, ClipDefinition> = resolveClipRegistry(options.clips);
+  const effectivePathGenerators: ReadonlyMap<string, PathGeneratorDefinition> = resolvePathGeneratorRegistry(
     options.pathGenerators,
   );
-  const effectivePathKinds: Partial<Record<string, PathKindDefinition>> = resolvePathKindRegistry(options.pathKinds);
-  const effectiveRibbonWidthProfiles: Partial<Record<string, RibbonWidthProfileDefinition>> =
+  const effectivePathKinds: ReadonlyMap<string, PathKindDefinition> = resolvePathKindRegistry(options.pathKinds);
+  const effectiveRibbonWidthProfiles: ReadonlyMap<string, RibbonWidthProfileDefinition> =
     resolveRibbonWidthProfileRegistry(options.ribbonWidthProfiles);
-  const effectiveArrows: Record<string, ArrowDefinition> = resolveArrowRegistry(options.arrows, onWarn);
-  const effectivePatterns: Record<string, PatternDefinition> = resolvePatternRegistry(options.patterns, onWarn);
+  const effectiveArrows: ReadonlyMap<string, ArrowDefinition> = resolveArrowRegistry(options.arrows);
+  const effectivePatterns: ReadonlyMap<string, PatternDefinition> = resolvePatternRegistry(options.patterns);
 
   const primitives: Array<InternalScenePrimitive> = [];
   /** 已 push 但未回填的占位计数；compileToScene 返回前必须归零（无条件守 Scene 公开契约） */
@@ -439,7 +485,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   // pattern 资源额外查 effectivePatterns + emit 产 tile（emit-in-compile），用同一 round 保几何一致
   const paint = createPaintRegistry(effectivePatterns, round);
   // clip 登记表：scope.clip 去重 + 派稳定 id（clip-N）→ Scene.resources（与 paint 同表，id 命名空间不撞）
-  const clip = createClipRegistry(round);
+  const clip = createClipRegistry(round, effectiveClips);
 
   const emitStrokePath = (
     path: IRPathBase,
@@ -478,14 +524,10 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     scopeChain: ReadonlyArray<Transform>,
   ): PathKindCompileResult | null => {
     const kind = path.kind ?? 'stroke';
-    const definition = effectivePathKinds[kind];
-    if (definition === undefined) {
-      const available = Object.keys(effectivePathKinds).sort().join(', ');
-      throw new Error(`Unknown path kind '${kind}'. Available path kinds: ${available || '(none)'}.`);
-    }
+    const definition = providerDefinitionOf(effectivePathKinds, kind, { capability: 'path kind', optionName: 'pathKinds' });
     const optionsValue = definition.optionsSchema
       ? definition.optionsSchema.parse(path.kindOptions ?? {})
-      : JsonObjectSchema.parse(path.kindOptions ?? {});
+      : path.kindOptions ?? {};
     return definition.compile({
       path,
       options: optionsValue,
@@ -580,6 +622,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           chain,
           resolveLabelDefault(styleStack),
           effectiveShapes,
+          effectiveBoundaries,
           // between 端点世界坐标解析器（refPointOfTarget 处理 NodeTarget anchor / Cartesian / Polar / Offset / 嵌套 between）
           refPointOfTarget,
           // 公式渲染注入 + 预绑路径的 warn（文本里的 `$...$` 行内公式编译用）
@@ -621,7 +664,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           );
         }
         const globalCenter = chain.length === 0 ? localCenter : applyTransformChain(localCenter, chain);
-        const coordLayout = coordinateAsLayout(child.id, globalCenter, effectiveShapes);
+        const coordLayout = coordinateAsLayout(child.id, globalCenter, effectiveShapes, effectiveBoundaries);
         nameStack.register(child.id, coordLayout, `${locatorPrefix}children[${i}].coordinate.id`);
         // coordinate 0×0 layout 也算上层 scope.id bbox 输入（参与父 scope 子树 AABB 累积）
         layoutsAccumulator.push(coordLayout);
@@ -647,7 +690,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         const parentFrameDepth = nameStack.depth - 1;
         let placeholderLayout: NodeLayout | undefined;
         if (child.id) {
-          placeholderLayout = scopePlaceholderLayout(child.id, innerChain, effectiveShapes);
+          placeholderLayout = scopePlaceholderLayout(child.id, innerChain, effectiveShapes, effectiveBoundaries);
           nameStack.register(child.id, placeholderLayout, `${locatorPrefix}children[${i}].scope.id`);
         }
         // 进入 scope 子 frame：localNamespace=true 时隔离子树命名空间
@@ -682,6 +725,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
                 collectScopeCornerPoints(innerLayouts),
                 fallbackOrigin,
                 effectiveShapes,
+                effectiveBoundaries,
               );
             } else {
               bboxLayout = registerScopeAsLayout(
@@ -689,6 +733,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
                 computeScopeBoundingBox(innerLayouts),
                 fallbackOrigin,
                 effectiveShapes,
+                effectiveBoundaries,
               );
             }
             // 用 replaceLayout 覆盖不触发 duplicate warn（placeholder → real bbox 是预期升级）

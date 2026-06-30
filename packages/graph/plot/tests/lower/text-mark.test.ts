@@ -95,7 +95,7 @@ const POINT_ROWS: Datasets = {
 
 describe('ADR-04 priority-1 宿主 label（填 datum Node.label）', () => {
   it('label-host-node：interval label → 每个 datum Node.label 被填上 NodeLabelSchema，不新建额外 Node', () => {
-    const spec = intervalSpec({ content: { field: 'revenue' }, position: 'above', distance: 6 });
+    const spec = intervalSpec({ content: { field: 'revenue' }, position: 'top', distance: 6 });
     const layer = expandOf(spec, BAR_ROWS);
     const nodes = nodesOf(layer);
     // 每行一个柱 Node（无额外 text Node）
@@ -103,7 +103,7 @@ describe('ADR-04 priority-1 宿主 label（填 datum Node.label）', () => {
     for (const node of nodes) {
       expect(node.label).toBeDefined();
       const label = node.label as { text: string; position?: string; distance?: number };
-      expect(label.position).toBe('above');
+      expect(label.position).toBe('top');
       expect(label.distance).toBe(6);
       expect(typeof label.text).toBe('string');
     }

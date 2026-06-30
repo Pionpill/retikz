@@ -16,24 +16,24 @@ const polar = (cx: number, cy: number, r: number, deg: number): [number, number]
 const arcPts = (cx: number, cy: number, r: number, a: number, b: number, n: number): Array<[number, number]> =>
   Array.from({ length: n + 1 }, (_unused, i): [number, number] => polar(cx, cy, r, a + ((b - a) * i) / n));
 
-// 第一排两个矩形：左 = 8 方位 anchor，右 = 角度 / 边比例 anchor
+// 第一排两个矩形：左 = 8 个 Web 方位 anchor，右 = 角度 / 边比例 anchor
 const RA = { x: -120, y: -58, w: 42, h: 26 };
 const RB = { x: 120, y: -58, w: 42, h: 26 };
 
-const COMPASS: Array<{ dx: number; dy: number; l: string }> = [
-  { dx: 0, dy: -1, l: 'N' },
-  { dx: 1, dy: -1, l: 'NE' },
-  { dx: 1, dy: 0, l: 'E' },
-  { dx: 1, dy: 1, l: 'SE' },
-  { dx: 0, dy: 1, l: 'S' },
-  { dx: -1, dy: 1, l: 'SW' },
-  { dx: -1, dy: 0, l: 'W' },
-  { dx: -1, dy: -1, l: 'NW' },
+const WEB_ANCHORS: Array<{ dx: number; dy: number; l: string }> = [
+  { dx: 0, dy: -1, l: 'T' },
+  { dx: 1, dy: -1, l: 'TR' },
+  { dx: 1, dy: 0, l: 'R' },
+  { dx: 1, dy: 1, l: 'BR' },
+  { dx: 0, dy: 1, l: 'B' },
+  { dx: -1, dy: 1, l: 'BL' },
+  { dx: -1, dy: 0, l: 'L' },
+  { dx: -1, dy: -1, l: 'TL' },
 ];
 
-// 角度 anchor 30°：从中心沿 30° 射线打到边界（命中 east 边）
+// 角度 anchor 30°：从中心沿 30° 射线打到边界（命中 right 边）
 const ANG_PT: [number, number] = [RB.x + RB.w, RB.y + RB.w * Math.tan(30 * DEG)];
-// 边比例 anchor {side:'north', t:0.25}：north 边西→东，t=0 在 NW
+// 边比例 anchor {side:'top', t:0.25}：top 边左→右，t=0 在 TL
 const EDGE_PT: [number, number] = [RB.x - RB.w + 0.25 * 2 * RB.w, RB.y - RB.h];
 
 // 第二排：有 shape 专属 anchor 的非矩形 —— star / sector / arc
@@ -65,13 +65,13 @@ const Demo: FC = () => (
     viewBox={{ x: -200, y: -106, width: 400, height: 256 }}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    {/* 第一排 · 左：8 方位 anchor */}
+    {/* 第一排 · 左：8 个 Web 方位 anchor */}
     <Rectangle center={[RA.x, RA.y]} width={RA.w * 2} height={RA.h * 2} {...RECT} />
     <Circle center={[RA.x, RA.y]} radius={3} fill="dodgerblue" stroke="none" />
-    {COMPASS.map(({ dx, dy, l }) => (
+    {WEB_ANCHORS.map(({ dx, dy, l }) => (
       <Circle key={`a-${l}`} center={[RA.x + dx * RA.w, RA.y + dy * RA.h]} radius={3} fill="dodgerblue" stroke="none" />
     ))}
-    {COMPASS.map(({ dx, dy, l }) => (
+    {WEB_ANCHORS.map(({ dx, dy, l }) => (
       <Node
         key={`al-${l}`}
         id={`al-${l}`}
@@ -83,7 +83,7 @@ const Demo: FC = () => (
       </Node>
     ))}
     <Node id="ta" position={[RA.x, 8]} {...TITLE} font={FONT}>
-      compass + center
+      web anchors + center
     </Node>
 
     {/* 第一排 · 右：角度 / 边比例 anchor */}

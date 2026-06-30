@@ -54,8 +54,8 @@ describe('Node label', () => {
             position: [0, 0],
             text: 'A',
             label: [
-              { text: 'top', position: 'above' },
-              { text: 'bot', position: 'below' },
+              { text: 'top', position: 'top' },
+              { text: 'bot', position: 'bottom' },
             ],
           },
         ],
@@ -67,7 +67,7 @@ describe('Node label', () => {
   });
 
   describe('位置算法（rectangle 节点上）', () => {
-    it("position='above'：在 north 边界外（y 减小）", () => {
+    it("position='top'：在 north 边界外（y 减小）", () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
@@ -77,7 +77,7 @@ describe('Node label', () => {
             id: 'A',
             position: [0, 0],
             text: 'A',
-            label: { text: 'L', position: 'above', distance: 10 },
+            label: { text: 'L', position: 'top', distance: 10 },
           },
         ],
       };
@@ -87,7 +87,7 @@ describe('Node label', () => {
       expect(labelText.y).toBeLessThan(-10);
     });
 
-    it("position='below'：在 south 边界外（y 增大）", () => {
+    it("position='bottom'：在 south 边界外（y 增大）", () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
@@ -97,7 +97,7 @@ describe('Node label', () => {
             id: 'A',
             position: [0, 0],
             text: 'A',
-            label: { text: 'L', position: 'below', distance: 10 },
+            label: { text: 'L', position: 'bottom', distance: 10 },
           },
         ],
       };
@@ -146,7 +146,7 @@ describe('Node label', () => {
       expect(visualMiddle(labelText)).toBeCloseTo(0);
     });
 
-    it('数字角度 90：retikz polar y 向下，相当于 below', () => {
+    it('数字角度 90：retikz polar y 向下，相当于 bottom', () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
@@ -167,7 +167,7 @@ describe('Node label', () => {
   });
 
   describe('默认值 / 缺省', () => {
-    it('position 缺省 = above', () => {
+    it('position 缺省 = top', () => {
       const irExplicit: IR = {
         version: 1,
         type: 'scene',
@@ -177,7 +177,7 @@ describe('Node label', () => {
             id: 'A',
             position: [0, 0],
             text: 'A',
-            label: { text: 'L', position: 'above' },
+            label: { text: 'L', position: 'top' },
           },
         ],
       };
@@ -209,7 +209,7 @@ describe('Node label', () => {
             id: 'A',
             position: [0, 0],
             text: 'A',
-            label: { text: 'L', position: 'above', distance: 12 },
+            label: { text: 'L', position: 'top', distance: 12 },
           },
         ],
       };
@@ -222,7 +222,7 @@ describe('Node label', () => {
             id: 'A',
             position: [0, 0],
             text: 'A',
-            label: { text: 'L', position: 'above' },
+            label: { text: 'L', position: 'top' },
           },
         ],
       };

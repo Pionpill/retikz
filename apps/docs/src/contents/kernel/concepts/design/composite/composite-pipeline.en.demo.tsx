@@ -15,6 +15,8 @@ const STAGE_GAP = 165;
  * The diagram depicts the very path a composite itself travels: Tier 2 DSL → composite IR → (lower) → core IR → (render) → graph.
  */
 const pipeline = defineComposite({
+  namespace: 'demo',
+  type: 'pipeline',
   schema: CompositeBaseSchema.extend({
     namespace: z.literal('demo'),
     type: z.literal('pipeline'),

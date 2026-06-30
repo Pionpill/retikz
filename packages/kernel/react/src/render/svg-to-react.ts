@@ -13,6 +13,7 @@ const ATTR_KEBAB_TO_CAMEL: Record<string, string> = {
   class: 'className',
   'fill-opacity': 'fillOpacity',
   'fill-rule': 'fillRule',
+  'clip-rule': 'clipRule',
   'stroke-opacity': 'strokeOpacity',
   'stroke-width': 'strokeWidth',
   'stroke-dasharray': 'strokeDasharray',

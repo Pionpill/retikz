@@ -60,18 +60,30 @@ export type { IRAnchorRef, IRNodeTarget } from '@retikz/core';
 export type {
   ArrowDefinition,
   ArrowEmitContext,
+  BoundaryDefinition,
+  BoundaryDefinitionInput,
+  ClipDefinition,
+  ClipDefinitionInput,
+  ClipResolveContext,
   IRJsonObject,
   MarkerFill,
   MarkerPrimitive,
-  PathGeneratorContext,
   PathGeneratorDefinition,
+  PathGeneratorGenerateContext,
   PatternDefinition,
   PatternEmitContext,
   RibbonWidthProfileContext,
   RibbonWidthProfileDefinition,
-  RibbonWidthProfileInput,
+  RibbonWidthProfileDefinitionInput,
 } from '@retikz/core';
-export { defineArrow, definePathGenerator, definePattern, defineRibbonWidthProfile } from '@retikz/core';
+export {
+  defineArrow,
+  defineBoundary,
+  defineClip,
+  definePathGenerator,
+  definePattern,
+  defineRibbonWidthProfile,
+} from '@retikz/core';
 // 动画扩展类型（构造 mountCanvas 的 animationProperties / easings 用，re-export 自 render）
 export { coordinate } from './builder/coordinate';
 export { draw } from './builder/draw';

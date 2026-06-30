@@ -3,8 +3,11 @@ import type { IR } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { renderToSvgString as svgRenderToString } from '@retikz/render/svg';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 
-import { renderToSvgString } from '../src';
+import type { BoundaryDefinition, ClipDefinition } from '../src';
+
+import { defineBoundary, defineClip, renderToSvgString } from '../src';
 
 /**
  * @retikz/vanilla renderToSvgString（SSR / 构建期，node 环境，无 DOM）
@@ -13,6 +16,60 @@ const nodeIr: IR = {
   version: 1,
   type: 'scene',
   children: [{ type: 'node', id: 'a', position: [0, 0], text: 'A' }],
+};
+
+const boundaryIr: IR = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], minimumSize: 40, boundary: 'pin' },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: [100, 0] },
+        { type: 'step', kind: 'line', to: { id: 'a' } },
+      ],
+    },
+  ],
+};
+
+const fixedBoundary = (): BoundaryDefinition =>
+  defineBoundary({
+    name: 'pin',
+    paramsSchema: z.strictObject({}),
+    boundaryPoint: rect => [rect.x + 7, rect.y],
+  });
+
+const circleFrameClip = (): ClipDefinition =>
+  defineClip({
+    kind: 'circleFrame',
+    schema: z.strictObject({
+      kind: z.literal('circleFrame'),
+      cx: z.number(),
+      cy: z.number(),
+      outer: z.number().positive(),
+      inner: z.number().positive(),
+    }),
+    resolve: spec => ({
+      kind: 'compound',
+      fillRule: 'evenodd',
+      children: [
+        { kind: 'circle', cx: spec.cx, cy: spec.cy, r: spec.outer },
+        { kind: 'circle', cx: spec.cx, cy: spec.cy, r: spec.inner },
+      ],
+    }),
+  });
+
+const clipIr: IR = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'scope',
+      clip: { kind: 'circleFrame', cx: 0, cy: 0, outer: 40, inner: 20 },
+      children: [{ type: 'node', id: 'a', position: [0, 0], text: 'A' }],
+    },
+  ],
 };
 
 describe('@retikz/vanilla renderToSvgString', () => {
@@ -45,5 +102,16 @@ describe('@retikz/vanilla renderToSvgString', () => {
     expect(renderToSvgString(scene, { width: 200, height: 100 })).toBe(sized);
     // 缺省时根 <svg> 不带 size（直接以 viewBox 开头；内层 rect 自带 width 不算）
     expect(renderToSvgString(scene)).toMatch(/^<svg viewBox=/);
+  });
+  it('passes boundary providers to compile options', () => {
+    expect(() => renderToSvgString(boundaryIr)).toThrow(/options\.boundaries/i);
+    expect(renderToSvgString(boundaryIr, { boundaries: [fixedBoundary()] })).toMatch(/^<svg/);
+  });
+
+  it('passes clip providers to compile options', () => {
+    expect(() => renderToSvgString(clipIr)).toThrow(/options\.clips/i);
+    const svg = renderToSvgString(clipIr, { clips: [circleFrameClip()] });
+    expect(svg).toContain('<clipPath');
+    expect(svg).toContain('clip-rule="evenodd"');
   });
 });

@@ -5,7 +5,7 @@ import type { Rect } from '../../geometry/rect';
 import type { ScenePrimitive } from '../../primitive';
 
 import { defineShape } from '../../contract/shape/define';
-import { normalizeCompassAnchor } from '../../geometry/anchor';
+import { normalizeCompassAnchor, webSideToCompassSide } from '../../geometry/anchor';
 import { ellipse as ellipseOps } from '../../geometry/ellipse';
 
 /** 外接框 Rect → Ellipse（rx/ry = 半宽/半高） */
@@ -25,6 +25,7 @@ const toEllipse = (r: Rect): Ellipse => ({
  *   `{ type: 'ellipse', params: { circumscribe: 'equal' } }`。
  */
 export const ellipse = defineShape({
+  name: 'ellipse',
   paramsSchema: z.strictObject({
     circumscribe: z
       .enum(['proportional', 'equal'])
@@ -42,7 +43,7 @@ export const ellipse = defineShape({
     const a = normalizeCompassAnchor(name);
     return a ? ellipseOps.anchor(toEllipse(r), a) : undefined;
   },
-  edgePoint: (r, side, t) => ellipseOps.edgePoint(toEllipse(r), side, t),
+  edgePoint: (r, side, t) => ellipseOps.edgePoint(toEllipse(r), webSideToCompassSide(side), t),
   *emit(r, style, round): Iterable<ScenePrimitive> {
     yield {
       type: 'ellipse',

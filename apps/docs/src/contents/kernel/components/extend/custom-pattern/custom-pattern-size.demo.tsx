@@ -7,12 +7,13 @@ import { definePattern, Layout, Node } from '@retikz/react';
  * dedup 按 spec 结构——size 不同 → 两个独立资源 / tile。
  */
 const dotsGrid = definePattern({
+  name: 'dotsGrid',
   defaultSize: 10,
   emit: ({ size, color }) => [{ type: 'ellipse', cx: size / 2, cy: size / 2, rx: 1.5, ry: 1.5, fill: color }],
 });
 
 const Demo: FC = () => (
-  <Layout width={260} height={110} patterns={{ dotsGrid }}>
+  <Layout width={260} height={110} patterns={[dotsGrid]}>
     <Node
       id="a"
       position={[0, 0]}

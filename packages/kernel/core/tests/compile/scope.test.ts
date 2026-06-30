@@ -117,13 +117,13 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
       { type: 'node', id: 'A', position: [0, 0], text: 'A' },
       {
         type: 'scope',
-        transforms: [{ kind: 'at-translate', direction: 'above', of: 'A' }],
+        transforms: [{ kind: 'at-translate', direction: 'top', of: 'A' }],
         children: [{ type: 'node', id: 'inside', position: [0, 0], text: 'I' }],
       },
     ]);
     const compiled = compileToScene(ir, { nodeDistance: 15 });
     const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate');
-    // above direction = y -15
+    // top direction = y -15
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 0, y: -15 });
   });
 

@@ -97,7 +97,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
   return out;
 };
 
-const baseSpec = (marks: PlotSpec['marks']): PlotSpec =>
+const baseSpec = (marks: unknown): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -223,8 +223,8 @@ describe('RelationMark and anchorId lowering', () => {
       baseSpec([
         {
           type: 'relation',
-          source: { id: 'A', anchor: 'east' },
-          target: { id: 'B', anchor: 'west' },
+          source: { id: 'A', anchor: 'right' },
+          target: { id: 'B', anchor: 'left' },
           path: { options: { arrow: '->', arrowDetail: { end: { length: 10, width: 7 } } } },
         },
       ]),
@@ -233,8 +233,8 @@ describe('RelationMark and anchorId lowering', () => {
     const [path] = collectPaths(markLayer(root, 0));
     expect(path.arrow).toBe('->');
     expect(path.arrowDetail).toMatchObject({ end: { length: 10, width: 7 } });
-    expect(path.children[0]).toMatchObject({ kind: 'move', to: { id: 'A', anchor: 'east' } });
-    expect(path.children[1]).toMatchObject({ kind: 'line', to: { id: 'B', anchor: 'west' } });
+    expect(path.children[0]).toMatchObject({ kind: 'move', to: { id: 'A', anchor: 'right' } });
+    expect(path.children[1]).toMatchObject({ kind: 'line', to: { id: 'B', anchor: 'left' } });
   });
 
   it('lowers generated source-target anchors to a core Path with labels and arrow passthrough', () => {
@@ -298,7 +298,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect('label' in path.children[2] ? path.children[2].label : undefined).toBeUndefined();
   });
 
-  it('preserves an explicit non-sloped relation label side', () => {
+  it('canonicalizes explicit relation label side aliases', () => {
     const root = expandOf(
       baseSpec([
         { type: 'point', anchorId: { prefix: 'pt', field: 'id' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -306,7 +306,7 @@ describe('RelationMark and anchorId lowering', () => {
           type: 'relation',
           source: { anchorId: { prefix: 'pt', field: 'source' } },
           target: { anchorId: { prefix: 'pt', field: 'target' } },
-          path: { label: { text: { field: 'label' }, side: 'above' } },
+          path: { label: { text: { field: 'label' }, side: 'north' } },
         },
       ]),
       { d: rows },

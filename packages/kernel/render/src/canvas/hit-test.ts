@@ -93,7 +93,8 @@ const hitPrim = (
 const insideClip = (ctx: CanvasRenderingContext2D, shape: ClipShape | undefined, point: HitPoint): boolean => {
   if (shape === undefined) return true;
   buildClipPath(ctx, shape);
-  return ctx.isPointInPath(point.x, point.y);
+  const fillRule = shape.kind === 'path' || shape.kind === 'compound' ? shape.fillRule : undefined;
+  return fillRule === undefined ? ctx.isPointInPath(point.x, point.y) : ctx.isPointInPath(point.x, point.y, fillRule);
 };
 
 /**

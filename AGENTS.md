@@ -18,6 +18,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件 / JSON IR �
 
 - 上层包的底层能力必须源自 `@retikz/core`。React / Vanilla / Plot / Docs demo 等可以通过 adapter、sugar、composite、lowering、renderer 扩展来增强表达力，但不要绕开 core 另造一套平行能力、平行 IR 或平行渲染语义。
 - 功能设计的首要路径是先抽象 Definition / registry / capability contract，再实现内置能力，并让扩展能力复用同一套注册、解析和消费逻辑。不要让内置实现享有一套私有白名单或特殊入口、扩展实现再走另一套补丁接口；应由 `XxxDefinition` 这类定义对象声明 schema、能力和解析结果，内置与自定义只是在同一机制下注册的不同 definition。
+- 涉及新增 / 重命名 / 重构 define-registry 能力（`XxxDefinition`、`defineXxx`、`providers/*`、`BUILTIN_*`、`AnyXxxDefinition`、`CompileOptions.*`、plot lowering options 等）前，必须先读 `.agents/skills/standard-define-registry/SKILL.md`，按其中准则确定开放式扩展模型、文件分层、schema discriminator、definition、registry、内置集合和 option 字段命名；不要沿用历史裸名（如 `Boundary`）作为新范式。
 - 框架与功能设计优先做抽象设计，而不是只补当前单一场景。遇到具体需求时，先识别它背后的通用模型、边界和可扩展点；若确实只能局部处理，必须说明为什么不抽象。
 - 后续发现既有设计有问题或需要架构调整时，以当前能判断的最优方案为准，先修正设计与架构方向，再评估兼容性、迁移成本和版本节奏；兼容性是重要约束，但不应压过正确设计。
 - `0.x` 版本代表早期开发版，公开 API / schema / 命名 / 架构仍处于设计收敛期；本阶段调整以正确设计为准，不为兼容旧写法保留别名、桥接或迁移负担，除非当次版本设计文档明确要求。

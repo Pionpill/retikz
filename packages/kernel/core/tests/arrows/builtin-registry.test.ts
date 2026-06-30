@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileOptions, CompileWarning } from '../../src/compile/compile';
+import type { CompileOptions } from '../../src/compile/compile';
 import type { ArrowDefinition } from '../../src/contract/arrow';
 import type {
   ArrowEndSpec,
@@ -107,8 +107,9 @@ const markerPaint = (spec: ArrowEndSpec | undefined): string | undefined => {
 };
 
 /** 一个最小自定义 arrow：lineContactX=2、tipX 缺省（=baseSize 10）、emit 产单 path marker */
-const customArrow = (): ArrowDefinition =>
+const customArrow = (name = 'myTip'): ArrowDefinition =>
   defineArrow({
+    name,
     lineContactX: 2,
     emit: ({ stroke }): Array<MarkerPrimitive> => [
       {
@@ -204,7 +205,7 @@ describe('Arrow registry — happy path', () => {
 
   it('custom_arrow_register：注册自定义 ArrowDefinition → compile 不抛、marker 几何进 arrowEnd', () => {
     const ir = horizontalPathIR('->', { shape: 'myTip' });
-    const opts: CompileOptions = { arrows: { myTip: customArrow() } };
+    const opts: CompileOptions = { arrows: [{ ...customArrow(), name: 'myTip' }] };
     expect(() => compileToScene(ir, opts)).not.toThrow();
     const spec = endSpecOf('->', { shape: 'myTip' }, opts);
     expect(spec?.shape).toBe('myTip');
@@ -215,7 +216,7 @@ describe('Arrow registry — happy path', () => {
 
   it('shape_open_string：arrowDetail.shape=myTip（已注册）合法编译', () => {
     const ir = horizontalPathIR('->', { shape: 'myTip' });
-    const scene = compileToScene(ir, { arrows: { myTip: customArrow() } });
+    const scene = compileToScene(ir, { arrows: [{ ...customArrow(), name: 'myTip' }] });
     expect(firstPath(scene.primitives)).toBeDefined();
   });
 
@@ -292,14 +293,13 @@ describe('Arrow registry — error path', () => {
     );
   });
 
-  it('same_name_override_warn：arrows 覆盖内置名 → ARROW_OVERRIDES_BUILTIN warn（不静默）', () => {
-    const warnings: Array<CompileWarning> = [];
+  it('same_name_override_rejected: arrows cannot override a builtin name', () => {
     const ir = horizontalPathIR('->', { shape: 'stealth' });
-    compileToScene(ir, {
-      arrows: { stealth: customArrow() },
-      onWarn: w => warnings.push(w),
-    });
-    expect(warnings.some(w => w.code === 'ARROW_OVERRIDES_BUILTIN')).toBe(true);
+    expect(() =>
+      compileToScene(ir, {
+        arrows: [{ ...customArrow('stealth'), name: 'stealth' }],
+      }),
+    ).toThrow(/duplicate arrow registration: "stealth"/);
   });
 
   it('marker_primitive_rejects_text：MarkerPrimitive 窄子集类型层面拒 text（@ts-expect-error）', () => {
@@ -359,7 +359,7 @@ describe('Arrow registry — interaction', () => {
           } as never,
         ],
       },
-      { arrows: { myTip: customArrow() } },
+      { arrows: [{ ...customArrow(), name: 'myTip' }] },
     );
     const path = firstPath(scene.primitives);
     expect(path?.stroke).toBe('crimson');
@@ -370,33 +370,25 @@ describe('Arrow registry — interaction', () => {
 
   it('arrow_with_shrink：自定义 lineContactX → path 端点收缩量正确（lineContactX 2 → shrink 4.8）', () => {
     const ir = horizontalPathIR('->', { shape: 'myTip' });
-    const path = firstPath(compileToScene(ir, { arrows: { myTip: customArrow() } }).primitives);
+    const path = firstPath(compileToScene(ir, { arrows: [{ ...customArrow(), name: 'myTip' }] }).primitives);
     // myTip tipX 缺省 10, lineContactX 2 → shrink (10-2)*6/10 = 4.8 → 末端 [100-4.8, 0] = [95.2, 0]
     expect(path && endpointTo(path)).toEqual([95.2, 0]);
   });
 
-  it('override_builtin_geometry_takes_effect：覆盖内置 stealth 的几何 → 该 path shrink 真按覆盖值变（内置名真查注册表）', () => {
-    // 内置 stealth 默认 tipX 10 / lineContactX 3 → shrink (10-3)*6/10 = 4.2 → 末端 95.8
-    // 覆盖成 lineContactX 99 / tipX 10：若内置名仍走旧 switch（不查 effectiveArrows），shrink 不变（95.8）；
-    // 若真查注册表，shrink = (10-99)*6/10 = -53.4（端点坐标随之变）。断言端点 != 95.8 证明走注册表。
+  it('override_builtin_geometry_rejected: builtin arrow names are reserved', () => {
     const overridden: ArrowDefinition = {
+      name: 'overridden',
       lineContactX: 99,
       tipX: 10,
       emit: () => [
         { type: 'path', commands: [{ kind: 'move', to: [0, 0] }, { kind: 'line', to: [10, 5] }, { kind: 'close' }] },
       ],
     };
-    const path = firstPath(
+    expect(() =>
       compileToScene(horizontalPathIR('->', { shape: 'stealth' }), {
-        arrows: { stealth: overridden },
-        onWarn: () => {},
-      }).primitives,
-    );
-    const x = path && endpointTo(path)?.[0];
-    // 端点必须随覆盖几何而变（不再是内置 95.8）——证明内置名走 effectiveArrows 而非保留 switch
-    expect(x).not.toBe(95.8);
-    // shrink (10-99)*6/10 = -53.4 → 末端 100 - (-53.4) = 153.4
-    expect(x).toBeCloseTo(153.4, 1);
+        arrows: [{ ...overridden, name: 'stealth' }],
+      }),
+    ).toThrow(/duplicate arrow registration: "stealth"/);
   });
 });
 
@@ -453,7 +445,7 @@ describe('Arrow registry — JSON round-trip / zod parse', () => {
 
 describe('Arrow registry — BUILTIN_ARROWS 注册表结构', () => {
   it('内置 8 注册键穷尽（normal/open/stealth/openStealth/diamond/openDiamond/circle/openCircle）', () => {
-    expect(Object.keys(BUILTIN_ARROWS).sort()).toEqual([
+    expect(BUILTIN_ARROWS.map(def => def.name).sort()).toEqual([
       'circle',
       'diamond',
       'normal',

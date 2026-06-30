@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning } from '../../src/compile/compile';
 import type { ArrowDefinition } from '../../src/contract/arrow';
 import type { PathCommand, PathPrim, ScenePrimitive } from '../../src/primitive';
 import type { IR } from '../../src/schemas';
@@ -8,6 +7,8 @@ import type { IR } from '../../src/schemas';
 import { compileToScene } from '../../src/compile/compile';
 import { PathSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
+
+type TestArrowDefinition = Omit<ArrowDefinition, 'name'> & { name?: string };
 
 /**
  * Arrow Registry（ADR-01）对抗回归
@@ -60,8 +61,14 @@ const allCoords = (commands: Array<PathCommand>): Array<number> => {
 
 const allFinite = (xs: Array<number>): boolean => xs.every(Number.isFinite);
 
-const compileArrow = (detail: Record<string, unknown>, arrows: Record<string, ArrowDefinition>) =>
-  compileToScene(horizontalPathIR('->', detail), { arrows, onWarn: () => {} });
+const compileArrow = (
+  detail: Record<string, unknown>,
+  arrows: Record<string, TestArrowDefinition>,
+) =>
+  compileToScene(horizontalPathIR('->', detail), {
+    arrows: Object.entries(arrows).map(([name, definition]) => ({ ...definition, name })),
+    onWarn: () => {},
+  });
 
 // ───────────────────────────────────────────────────────────────────────────
 // 攻击面 1：def 几何非有限 → 不放任 NaN/Infinity 污染 path 坐标，抛清晰错
@@ -69,6 +76,7 @@ const compileArrow = (detail: Record<string, unknown>, arrows: Record<string, Ar
 describe('ADV — def 几何 finite 守卫', () => {
   it('baseSize_zero：自定义 def baseSize=0 → 抛（不产 NaN 端点）', () => {
     const def: ArrowDefinition = {
+      name: 'def',
       baseSize: 0,
       lineContactX: 0,
       emit: () => [{ type: 'path', commands: [{ kind: 'move', to: [0, 0] }] }],
@@ -79,6 +87,7 @@ describe('ADV — def 几何 finite 守卫', () => {
 
   it('lineContactX_NaN：def.lineContactX=NaN → 抛 non-finite lineContactX', () => {
     const def: ArrowDefinition = {
+      name: 'def',
       lineContactX: NaN,
       emit: () => [{ type: 'path', commands: [{ kind: 'move', to: [0, 0] }] }],
     };
@@ -87,6 +96,7 @@ describe('ADV — def 几何 finite 守卫', () => {
 
   it('lineContactX_Infinity：def.lineContactX=Infinity → 抛 non-finite lineContactX', () => {
     const def: ArrowDefinition = {
+      name: 'def',
       lineContactX: Infinity,
       emit: () => [{ type: 'path', commands: [{ kind: 'move', to: [0, 0] }] }],
     };
@@ -95,6 +105,7 @@ describe('ADV — def 几何 finite 守卫', () => {
 
   it('tipX_NaN：def.tipX=NaN → 抛 non-finite tipX', () => {
     const def: ArrowDefinition = {
+      name: 'def',
       lineContactX: 0,
       tipX: NaN,
       emit: () => [{ type: 'path', commands: [{ kind: 'move', to: [0, 0] }] }],
@@ -104,6 +115,7 @@ describe('ADV — def 几何 finite 守卫', () => {
 
   it('outerInset_NaN: def.outerInset=NaN throws non-finite outerInset', () => {
     const def: ArrowDefinition = {
+      name: 'def',
       lineContactX: 0,
       outerInset: NaN,
       emit: () => [{ type: 'path', commands: [{ kind: 'move', to: [0, 0] }] }],
@@ -113,6 +125,7 @@ describe('ADV — def 几何 finite 守卫', () => {
 
   it('lineWidth_huge：hollow def + 极大 lineWidth（有限）→ 端点仍 finite（不抛，TikZ 同不 clamp）', () => {
     const def: ArrowDefinition = {
+      name: 'def',
       hollow: true,
       lineContactX: 1,
       tipX: 9,
@@ -143,13 +156,14 @@ describe('ADV — def 几何 finite 守卫', () => {
 // ───────────────────────────────────────────────────────────────────────────
 describe('ADV — emit 异常 / 窄子集栅栏', () => {
   it('emit_empty_array：emit 返回 []（空 marker）→ 不抛、marker=[]', () => {
-    const def: ArrowDefinition = { lineContactX: 0, emit: () => [] };
+    const def: TestArrowDefinition = { lineContactX: 0, emit: () => [] };
     const scene = compileArrow({ shape: 'z' }, { z: def });
     expect(firstPath(scene.primitives)?.arrowEnd?.marker).toEqual([]);
   });
 
   it('emit_generator：emit 返回 generator（非数组 Iterable）→ 正常收集', () => {
     const def: ArrowDefinition = {
+      name: 'def',
       lineContactX: 0,
       *emit() {
         yield { type: 'path', commands: [{ kind: 'move', to: [0, 0] }] };
@@ -162,6 +176,7 @@ describe('ADV — emit 异常 / 窄子集栅栏', () => {
 
   it('emit_throws：emit 抛异常 → 包成含 shape 名 + 原因的清晰错', () => {
     const def: ArrowDefinition = {
+      name: 'def',
       lineContactX: 0,
       emit: () => {
         throw new Error('boom in emit');
@@ -225,10 +240,10 @@ describe('ADV — override 缺字段', () => {
     const def = { lineContactX: 0 } as unknown as ArrowDefinition;
     expect(() =>
       compileToScene(horizontalPathIR('->', { shape: 'stealth' }), {
-        arrows: { stealth: def },
+        arrows: [{ ...def, name: 'stealth' }],
         onWarn: () => {},
       }),
-    ).toThrow(/'stealth' is missing an emit function/);
+    ).toThrow(/duplicate arrow registration: "stealth"/);
   });
 
   it('override_missing_lineContactX：def 缺 lineContactX → 抛 non-finite lineContactX', () => {
@@ -238,13 +253,12 @@ describe('ADV — override 缺字段', () => {
     expect(() => compileArrow({ shape: 'z' }, { z: def })).toThrow(/non-finite lineContactX/i);
   });
 
-  it('duplicate_override_same_name：覆盖内置 stealth 触发恰一次 ARROW_OVERRIDES_BUILTIN warn', () => {
-    const warnings: Array<CompileWarning> = [];
-    compileToScene(horizontalPathIR('->', { shape: 'stealth' }), {
-      arrows: { stealth: { lineContactX: 0, emit: () => [] } },
-      onWarn: w => warnings.push(w),
-    });
-    expect(warnings.filter(w => w.code === 'ARROW_OVERRIDES_BUILTIN')).toHaveLength(1);
+  it('duplicate_builtin_name_rejected：覆盖内置 stealth 直接失败', () => {
+    expect(() =>
+      compileToScene(horizontalPathIR('->', { shape: 'stealth' }), {
+        arrows: [{ name: 'stealth', lineContactX: 0, emit: () => [] }],
+      }),
+    ).toThrow(/duplicate arrow registration: "stealth"/);
   });
 });
 
@@ -265,7 +279,7 @@ describe('ADV — 未注册 shape 错误质量', () => {
 
   it('empty_registry：arrows={} 不覆盖内置 → stealth 仍可用', () => {
     const scene = compileToScene(horizontalPathIR('->', { shape: 'stealth' }), {
-      arrows: {},
+      arrows: [],
       onWarn: () => {},
     });
     expect(firstPath(scene.primitives)?.arrowEnd?.shape).toBe('stealth');
@@ -273,11 +287,12 @@ describe('ADV — 未注册 shape 错误质量', () => {
 
   it('start_one_side_custom_other_builtin：<-> 一端自定义一端内置', () => {
     const def: ArrowDefinition = {
+      name: 'def',
       lineContactX: 2,
       emit: () => [{ type: 'path', commands: [{ kind: 'move', to: [0, 0] }] }],
     };
     const scene = compileToScene(horizontalPathIR('<->', { start: { shape: 'myTip' }, end: { shape: 'stealth' } }), {
-      arrows: { myTip: def },
+      arrows: [{ ...def, name: 'myTip' }],
       onWarn: () => {},
     });
     const path = firstPath(scene.primitives);

@@ -12,6 +12,8 @@ import { renderToSvgString } from '../src';
  *   自动透传给 compileToScene；展开在 core。
  */
 const labeledBox = defineComposite({
+  namespace: 'example',
+  type: 'labeledBox',
   schema: CompositeBaseSchema.extend({
     namespace: z.literal('example'),
     type: z.literal('labeledBox'),

@@ -82,7 +82,7 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`boundary` 只在"连接面有意义"的地方生效：端点自动贴边（未显式给 `anchor`）以及该端点的 compass / 角度锚点。在没有方向引用的场合——`between` 端点、`offset` 的 `of`、节点中心——它是 no-op。节点默认连接面写在 [`<Node boundary>`](/kernel/components/node/overview)，端点 `boundary` 是单边覆盖。
+`boundary` 只在"连接面有意义"的地方生效：端点自动贴边（未显式给 `anchor`）以及该端点的标准方位 / 角度锚点。在没有方向引用的场合——`between` 端点、`offset` 的 `of`、节点中心——它是 no-op。节点默认连接面写在 [`<Node boundary>`](/kernel/components/node/overview)，端点 `boundary` 是单边覆盖。
 
 下例同一五角星（未设节点 `boundary`），两条边各自在端点选连接面：实线默认贴真实尖端，虚线 `boundary="circle"` 改贴外接圆——连接面由边自己决定。
 

@@ -1,6 +1,8 @@
 import type { z } from 'zod';
 
+import type { WebSideInput } from '../../geometry/anchor';
 import type { ValueOf } from '../../types';
+import type { AtDirectionInput } from '../position';
 import type {
   BuiltinShape,
   NodeLabelBoundarySide,
@@ -12,8 +14,22 @@ import type { NodeLabelBoundaryPositionSchema, NodeLabelSchema, NodeSchema } fro
 
 export type IRNodeLabelBoundaryPosition = z.infer<typeof NodeLabelBoundaryPositionSchema>;
 
+export type IRNodeLabelBoundaryPositionInput = Omit<IRNodeLabelBoundaryPosition, 'boundary'> & {
+  boundary: WebSideInput;
+};
+
 /** Node label IR 类型 */
 export type IRNodeLabel = z.infer<typeof NodeLabelSchema>;
+
+export type NodeLabelPositionInput =
+  | AtDirectionInput
+  | typeof NodeLabelPosition.Center
+  | number
+  | IRNodeLabelBoundaryPositionInput;
+
+export type IRNodeLabelInput = Omit<IRNodeLabel, 'position'> & {
+  position?: NodeLabelPositionInput;
+};
 
 /** 节点：可定位的形状容器（矩形/圆/椭圆/菱形）+ 可选文本标签 */
 export type IRNode = z.infer<typeof NodeSchema>;

@@ -15,7 +15,7 @@ A third-party package (`@retikz/shapes-flow` / `-uml`, etc.) or host code can re
 
 The actual shape definition is called `ShapeDefinition`. It contains functions, so it **never enters the IR**. Instead, those functions are passed to retikz at compile time through `CompileOptions.shapes`. Schema validation only checks that `shape` is a non-empty string; if the name is not registered, the error is thrown during **compile**, with the available shape names listed.
 
-`node.shape` also accepts a nested form `{ type, params }`: `type` is the shape name and `params` is a plain JSON parameter object (e.g. a sector's `{ innerRadius, outerRadius, startAngle, endAngle }`), which is equally safe in the IR. A bare string `'rectangle'` is equivalent to `{ type: 'rectangle', params: {} }` — both forms are identical for parameterless shapes. At compile time the params are first validated by the shape's own `paramsSchema`, then by a JSON guard, and finally passed to each computation function below.
+`node.shape` also accepts a nested form `{ type, params }`: `type` is the shape name and `params` is a plain JSON parameter object (e.g. a sector's `{ innerRadius, outerRadius, startAngle, endAngle }`), which is equally safe in the IR. A bare string `'rectangle'` is equivalent to `{ type: 'rectangle', params: {} }` — both forms are identical for parameterless shapes. At compile time the params are first validated by the shape's own `paramsSchema`, then by a JSON guard, and finally passed to each computation function bottom.
 
 ## ShapeDefinition
 
@@ -27,9 +27,9 @@ Read the core types in the table like this:
 - `Position` is a point coordinate, shaped as `[x, y]`.
 - `ScenePrimitive` is a low-level drawing primitive passed to the renderer, such as `path`, `rect`, or `ellipse`.
 
-Every computation function receives a final, **already-validated** `params` argument (parameterless shapes receive `{}` and may ignore it). `paramsSchema` declares the shape of those params: use `z.strictObject({})` for parameterless shapes (rejects extra fields), or a concrete schema for parametric ones. Each method is described below (the ones marked “optional” are optional hooks; the other four are required).
+Every computation function receives a final, **already-validated** `params` argument (parameterless shapes receive `{}` and may ignore it). `paramsSchema` declares the shape of those params: use `z.strictObject({})` for parameterless shapes (rejects extra fields), or a concrete schema for parametric ones. Each method is described bottom (the ones marked “optional” are optional hooks; the other four are required).
 
-A `ShapeDefinition` is just a plain object: one `paramsSchema` plus a set of computation functions, with no inheritance or registration ceremony. Wrap it at the definition site with `defineShape<TParams>()` to get type safety — the parameter type `TParams` inferred from `paramsSchema` flows into the final `params` of every function; the registry actually stores the form with `TParams` erased to `IRJsonObject` (so `TParams` in the signatures below means “the parameter type inferred from `paramsSchema`”).
+A `ShapeDefinition` is just a plain object: one `paramsSchema` plus a set of computation functions, with no inheritance or registration ceremony. Wrap it at the definition site with `defineShape<TParams>()` to get type safety — the parameter type `TParams` inferred from `paramsSchema` flows into the final `params` of every function; the registry actually stores the form with `TParams` erased to `IRJsonObject` (so `TParams` in the signatures bottom means “the parameter type inferred from `paramsSchema`”).
 
 | Method               | Purpose                                                                                    | Required · Optional |
 | -------------------- | ------------------------------------------------------------------------------------------ | ------------------- |
@@ -42,7 +42,7 @@ A `ShapeDefinition` is just a plain object: one `paramsSchema` plus a set of com
 | `emit`               | the primitives to draw in axis-aligned space                                               | Required            |
 | `scaleParams`        | how a node scale applies to params                                                         | Optional            |
 
-Each method is given below with its full signature and an example.
+Each method is given bottom with its full signature and an example.
 
 ### paramsSchema
 
@@ -120,7 +120,7 @@ boundaryPoint: (rect, toward, params) => {
 anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
 ```
 
-Called when users write `A.north`, `A.center`, or a shape-specific anchor name. Return a coordinate for names the shape owns, or `undefined` for unknown names, which the compiler reports with the standard Unknown anchor error. Compass names (north/east…) are likewise resolved on the engine-expanded `rect` (including `outerSep`); shape-specific anchors always use the visual `rect`, without outer sep.
+Called when users write `A.top`, `A.center`, or a shape-specific anchor name. Return a coordinate for names the shape owns, or `undefined` for unknown names, which the compiler reports with the standard Unknown anchor error. Standard direction names use Web/CSS canonical values (`top` / `right` / `bottom` / `left` plus corners); compass names such as `north` / `east` are accepted as aliases and normalized before provider hooks run. Standard direction names are resolved on the engine-expanded `rect` (including `outerSep`); shape-specific anchors always use the visual `rect`, without outer sep.
 
 ```ts
 // sector: exposes semantic anchors like apex / centroid / arc midpoints
@@ -143,17 +143,17 @@ anchor: (rect, name, params) => {
 ```ts
 edgePoint?: (
   rect: Rect,
-  side: 'north' | 'south' | 'east' | 'west',
+  side: 'top' | 'right' | 'bottom' | 'left',
   t: number,
   params: TParams,
 ) => Position;
 ```
 
-Called for proportional edge points (`{ side, t }`): `side` is `north` / `south` / `east` / `west`, and `t` is a 0..1 ratio along that edge. The built-in shapes implement it; shapes that don't will throw at compile time when a proportional point is requested. Same coordinate semantics as `anchor` — `rect` includes `rotate`.
+Called for proportional edge points (`{ side, t }`): `side` is `top` / `right` / `bottom` / `left`, and `t` is a 0..1 ratio along that edge. Compass side names are accepted as input aliases, but provider hooks receive the Web canonical form. The built-in shapes implement it; shapes that don't will throw at compile time when a proportional point is requested. Same coordinate semantics as `anchor` — `rect` includes `rotate`.
 
 ```ts
-// rectangle: reuse the rect geometry layer directly
-edgePoint: (rect, side, t) => rectOps.edgePoint(rect, side, t),
+// rectangle: bridge from public Web sides to the compass geometry layer
+edgePoint: (rect, side, t) => rectOps.edgePoint(rect, webSideToCompassSide(side), t),
 ```
 
 ### emit
@@ -223,8 +223,9 @@ import { z } from 'zod';
 
 // a factory is just a plain function: pass parameters in, return a ShapeDefinition
 // defineShape gives definition-site type safety: the paramsSchema output type flows into every function's params
-const createPolygonShape = (sides: number): ShapeDefinition =>
+const createPolygonShape = (name: string, sides: number): ShapeDefinition =>
   defineShape({
+    name,
     paramsSchema: z.strictObject({}), // parameterless shape
     circumscribe: (hw, hh) => {
       const r = Math.hypot(hw, hh);
@@ -233,7 +234,7 @@ const createPolygonShape = (sides: number): ShapeDefinition =>
     boundaryPoint: (rect, toward) => {
       /* map toward to local coordinates first, then intersect the ray with polygon edges */
     },
-    anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+    anchor: (rect, anchorName) => (anchorName === 'center' ? [rect.x, rect.y] : undefined),
     *emit(rect, style, round) {
       yield {
         type: 'path',
@@ -252,13 +253,13 @@ const createPolygonShape = (sides: number): ShapeDefinition =>
   });
 
 // the IR only writes shape: 'hexagon'; options supply the concrete definition
-const scene = compileToScene(ir, { shapes: { hexagon: createPolygonShape(6) } });
+const scene = compileToScene(ir, { shapes: [createPolygonShape('hexagon', 6)] });
 ```
 
 In React, pass the same `shapes` table to `<Layout>`:
 
 ```tsx
-<Layout shapes={{ hexagon: createPolygonShape(6) }}>
+<Layout shapes={[createPolygonShape('hexagon', 6)]}>
   <Node shape="hexagon" position={[0, 0]} text="Ready" />
 </Layout>
 ```
@@ -267,19 +268,19 @@ In React, pass the same `shapes` table to `<Layout>`:
 
 ### Polygon factory (single path)
 
-A factory like `createPolygonShape(n)` is just a plain function returning a `ShapeDefinition`. The example below injects a regular hexagon; when the two nodes are connected, the path endpoints stop on the actual hexagon boundary instead of the node center:
+A factory like `createPolygonShape(name, n)` is just a plain function returning a `ShapeDefinition`. The example below injects a regular hexagon; when the two nodes are connected, the path endpoints stop on the actual hexagon boundary instead of the node center:
 
 <ComponentPreview name="custom-shape" size="sm" />
 
 ### Parametric shape: params go through nested params
 
-The factory above bakes the side count into a closure, so each side count needs its own registered name. By writing the parameter into `params` instead of a factory closure, a single registered shape `ngon` can produce different variants through `{ type, params }` — `{ sides: 3 }` is a triangle, `{ sides: 5 }` a pentagon, `{ sides: 6 }` a hexagon — and the parameter is persisted in the IR (a bare string can only express parameterless shapes). Every computation function receives the already-validated `params` as its last argument, and the geometry is driven uniformly by `params.sides`. The rightmost node is a hexagon with `scale={2}`: `scaleParams` returns params unchanged, so a count like `sides` is not corrupted by the node `scale` — only the node size grows while the side count stays 6:
+The factory top bakes the side count into a closure, so each side count needs its own registered name. By writing the parameter into `params` instead of a factory closure, a single registered shape `ngon` can produce different variants through `{ type, params }` — `{ sides: 3 }` is a triangle, `{ sides: 5 }` a pentagon, `{ sides: 6 }` a hexagon — and the parameter is persisted in the IR (a bare string can only express parameterless shapes). Every computation function receives the already-validated `params` as its last argument, and the geometry is driven uniformly by `params.sides`. The rightmost node is a hexagon with `scale={2}`: `scaleParams` returns params unchanged, so a count like `sides` is not corrupted by the node `scale` — only the node size grows while the side count stays 6:
 
 <ComponentPreview name="ngon" size="sm" />
 
 ### Multiple primitives: a subroutine box
 
-`emit` can return several drawing primitives at once. The subroutine box below consists of an outer frame and two vertical bars, so it returns 3 primitives. Its outer outline is still a rectangle, so `circumscribe` / `boundaryPoint` / `anchor` can reuse the built-in rectangle:
+`emit` can return several drawing primitives at once. The subroutine box bottom consists of an outer frame and two vertical bars, so it returns 3 primitives. Its outer outline is still a rectangle, so `circumscribe` / `boundaryPoint` / `anchor` can reuse the built-in rectangle:
 
 <ComponentPreview name="subroutine" size="xs" />
 
@@ -305,7 +306,7 @@ When writing a third-party shape, check these points first:
 
 ## Overriding built-ins and unknown names
 
-- **Same-name override**: if you write `shapes: { rectangle: myRect }`, the new definition replaces the built-in rectangle. Compile emits `SHAPE_OVERRIDES_BUILTIN` through `onWarn` to make the replacement visible.
+- **Same-name collision**: if a custom definition uses `name: 'rectangle'`, registration throws `duplicate shape registration`. Built-in names are reserved instead of being overrideable through warnings.
 - **Unknown shape**: if `node.shape` names something that has not been registered, compile throws `Unknown shape '<name>'; registered shapes: <sorted list>`. retikz cannot safely fall back to another shape because it does not know the missing shape's boundary or anchors.
 
 ## Public helpers

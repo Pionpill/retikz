@@ -14,6 +14,8 @@ import { compileToScene } from '../../src/compile/compile';
 import { arcSegmentSample, cubicSegmentSample, lineSegmentSample } from '../../src/geometry/segment';
 import { flattenPrims } from '../helpers/flatten';
 
+type TestArrowDefinition = Omit<ArrowDefinition, 'name'> & { name?: string };
+
 /** flatten 后非 group 的叶子 primitive 数（marker 产出体现为新增叶子 / group） */
 const leafCount = (prims: ReadonlyArray<ScenePrimitive>): number => flattenPrims(prims).length;
 
@@ -56,7 +58,7 @@ describe('marks → 中段 marker primitive', () => {
 
   it('mark 用自定义箭头名 → 注入注册表后编译不抛、产 marker', () => {
     const ir = linePathIR([{ pos: 0.5, mark: { kind: 'arrow', shape: 'myTip' } }]);
-    const customArrow: Record<string, ArrowDefinition> = {
+    const customArrow: Record<string, TestArrowDefinition> = {
       myTip: {
         lineContactX: 0,
         emit: () => [
@@ -74,7 +76,10 @@ describe('marks → 中段 marker primitive', () => {
       },
     };
     const without = leafCount(compileToScene(linePathIR()).primitives);
-    const withMark = leafCount(compileToScene(ir, { arrows: customArrow }).primitives);
+    const withMark = leafCount(
+      compileToScene(ir, { arrows: Object.entries(customArrow).map(([name, definition]) => ({ ...definition, name })) })
+        .primitives,
+    );
     expect(withMark).toBeGreaterThan(without);
   });
 });

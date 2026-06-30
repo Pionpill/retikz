@@ -25,7 +25,6 @@ export const PaintSpecSchema = z
         stops: z.array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
         angle: z
           .number()
-
           .optional()
           .describe('Gradient direction angle in degrees. Omitted fields use the paint backend default.'),
       })
@@ -40,7 +39,6 @@ export const PaintSpecSchema = z
           .describe('Center in object-bounding-box coordinates. Omitted fields use [0.5, 0.5].'),
         radius: z
           .number()
-
           .positive()
           .optional()
           .describe('Radius in object-bounding-box units. Omitted fields use 0.5.'),
@@ -56,7 +54,6 @@ export const PaintSpecSchema = z
           .describe('Center in object-bounding-box coordinates. Omitted fields use [0.5, 0.5].'),
         angle: z
           .number()
-
           .optional()
           .describe('Start angle in degrees. Omitted fields use 0.'),
       })
@@ -74,19 +71,16 @@ export const PaintSpecSchema = z
         background: z.string().optional().describe('Tile background fill; omitted = transparent'),
         size: z
           .number()
-
           .positive()
           .optional()
           .describe('Tile period in user units (line gap / dot spacing); default 8'),
         lineWidth: z
           .number()
-
           .positive()
           .optional()
           .describe('Line / grid stroke width; for dots, drives the dot radius. Default 1 (dots default to size/5)'),
         rotation: z
           .number()
-
           .optional()
           .describe('Rotate the whole pattern, in degrees'),
       })

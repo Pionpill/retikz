@@ -13,6 +13,8 @@ const findByType = <T extends ScenePrimitive['type']>(
   flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
 
 const labeledBox = defineComposite({
+  namespace: 'example',
+  type: 'labeledBox',
   schema: CompositeBaseSchema.extend({
     namespace: z.literal('example'),
     type: z.literal('labeledBox'),
@@ -24,38 +26,55 @@ const labeledBox = defineComposite({
 describe('lowerComposites — adversarial', () => {
   it('duplicate-registration-throws: 两个 def 同 namespace.type → 注册期 throw（即使 IR 无 tier2）', () => {
     const dupA = defineComposite({
+      namespace: 'x',
+      type: 'y',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('x'), type: z.literal('y') }),
       expand: () => [],
     });
     const dupB = defineComposite({
+      namespace: 'x',
+      type: 'y',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('x'), type: z.literal('y') }),
       expand: () => [],
     });
     const ir: IR = { version: 1, type: 'scene', children: [] };
-    expect(() => compileToScene(ir, { composites: [dupA, dupB] })).toThrow(/Duplicate composite registration: 'x\.y'/);
+    expect(() => compileToScene(ir, { composites: [dupA, dupB] })).toThrow(
+      /duplicate composite registration: "x\.y"/,
+    );
   });
 
   it('non-zodobject-schema-throws: schema 非 ZodObject（z.string）→ 注册期可诊断 throw', () => {
-    const bad = defineComposite({ schema: z.string(), expand: () => [] });
-    const ir: IR = { version: 1, type: 'scene', children: [] };
-    expect(() => compileToScene(ir, { composites: [bad] })).toThrow(/ZodObject/);
+    expect(() =>
+      defineComposite({
+        namespace: 'invalid',
+        type: 'invalid',
+        schema: z.string(),
+        expand: () => [],
+      }),
+    ).toThrow(/ZodObject/);
   });
 
   it('non-literal-discriminator-throws: namespace/type 非 z.literal → 注册期可诊断 throw', () => {
-    const bad = defineComposite({
-      schema: z.object({ namespace: z.string(), type: z.string() }),
-      expand: () => [],
-    });
-    const ir: IR = { version: 1, type: 'scene', children: [] };
-    expect(() => compileToScene(ir, { composites: [bad] })).toThrow(/literal/);
+    expect(() =>
+      defineComposite({
+        namespace: 'm',
+        type: 'a',
+        schema: z.object({ namespace: z.string(), type: z.string() }),
+        expand: () => [],
+      }),
+    ).toThrow(/literal/);
   });
 
   it('mutual-cycle-throws: A 展开 B、B 展开 A → 深度守卫 throw、非死循环', () => {
     const aDef = defineComposite({
+      namespace: 'm',
+      type: 'a',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('m'), type: z.literal('a') }),
       expand: () => ({ namespace: 'm', type: 'b' }),
     });
     const bDef = defineComposite({
+      namespace: 'm',
+      type: 'b',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('m'), type: z.literal('b') }),
       expand: () => ({ namespace: 'm', type: 'a' }),
     });
@@ -102,6 +121,8 @@ describe('lowerComposites — adversarial', () => {
 
   it('expand-mixed-tier1-and-tier2: expand 返回 [tier1, tier2] 混合 → tier2 继续展开、tier1 原样', () => {
     const mixed = defineComposite({
+      namespace: 'mix',
+      type: 'pair',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('mix'), type: z.literal('pair') }),
       expand: () => [
         { type: 'node', id: 'kept', position: [0, 0], text: 'kept' },

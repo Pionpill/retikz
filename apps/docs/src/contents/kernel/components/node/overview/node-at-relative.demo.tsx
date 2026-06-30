@@ -17,10 +17,10 @@ const Demo: FC = () => (
     <Node id="C" position={{ direction: 'right', of: 'B' }}>
       C
     </Node>
-    <Node id="D" position={{ direction: 'below', of: 'B', distance: 56 }} shape="circle">
+    <Node id="D" position={{ direction: 'bottom', of: 'B', distance: 56 }} shape="circle">
       D
     </Node>
-    <Node id="E" shape="diamond" position={{ direction: 'below-right', of: 'C', distance: 70 }}>
+    <Node id="E" shape="diamond" position={{ direction: 'bottom-right', of: 'C', distance: 70 }}>
       E
     </Node>
     <Draw way={['A', 'B']} arrow="->" stroke="gray" />

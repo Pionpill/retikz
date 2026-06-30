@@ -10,10 +10,10 @@ const Demo: FC = () => (
   <Layout width={340} height={220}>
     {/* Named virtual center — invisible, but the four `of` references all rely on it */}
     <Coordinate id="hub" position={[0, 0]} />
-    <Node id="N" position={{ direction: 'above', of: 'hub', distance: 65 }}>
+    <Node id="N" position={{ direction: 'top', of: 'hub', distance: 65 }}>
       North
     </Node>
-    <Node id="S" position={{ direction: 'below', of: 'hub', distance: 65 }}>
+    <Node id="S" position={{ direction: 'bottom', of: 'hub', distance: 65 }}>
       South
     </Node>
     <Node id="E" position={{ direction: 'right', of: 'hub', distance: 110 }} shape="circle">

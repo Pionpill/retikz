@@ -46,7 +46,7 @@ Scene = {
 Node = {
   type: 'node',
   id?: string,             // 后续 path/coordinate 引用用
-  position: [x, y] | { direction: 'right'|'above'|..., of: string, distance?: number } | { angle, radius },
+  position: [x, y] | { direction: 'right'|'top'|..., of: string, distance?: number } | { angle, radius },
   text?: string | { lines: Array<string | { text, fill? }> },
   shape?: 'rectangle' | 'circle' | 'ellipse' | 'diamond',  // 默认 rectangle
   fill?, stroke?, strokeWidth?, padding?, font?, ...  // 视觉属性
@@ -62,7 +62,7 @@ Path = {
 Step = {
   type: 'step',
   kind: 'move' | 'line' | 'arc' | 'circlePath' | 'quad' | 'cubic' | 'ellipseArc' | 'cycle',
-  to?: [x, y] | { id, anchor?, offset? },  // 节点/Coordinate 引用用对象；anchor = 'north' | 30 | { side, t }；写 JSX 时可用 'A.north' 字符串简写（react 层转对象）
+  to?: [x, y] | { id, anchor?, offset? },  // 节点/Coordinate 引用用对象；anchor = 'top' | 30 | { side, t }；写 JSX 时可用 'A.top' 字符串简写（react 层转对象）
   // 各 kind 还有专属字段（如 arc: startAngle/endAngle/radius；circlePath: radius）
 }
 
@@ -152,7 +152,7 @@ Scene = {
 Node = {
   type: 'node',
   id?: string,             // referenced later by path/coordinate
-  position: [x, y] | { direction: 'right'|'above'|..., of: string, distance?: number } | { angle, radius },
+  position: [x, y] | { direction: 'right'|'top'|..., of: string, distance?: number } | { angle, radius },
   text?: string | { lines: Array<string | { text, fill? }> },
   shape?: 'rectangle' | 'circle' | 'ellipse' | 'diamond',  // default rectangle
   fill?, stroke?, strokeWidth?, padding?, font?, ...  // visual props
@@ -168,7 +168,7 @@ Path = {
 Step = {
   type: 'step',
   kind: 'move' | 'line' | 'arc' | 'circlePath' | 'quad' | 'cubic' | 'ellipseArc' | 'cycle',
-  to?: [x, y] | { id, anchor?, offset? },  // node/Coordinate references use the object form; anchor = 'north' | 30 | { side, t }; in JSX the 'A.north' string shorthand works (react converts to object)
+  to?: [x, y] | { id, anchor?, offset? },  // node/Coordinate references use the object form; anchor = 'top' | 30 | { side, t }; in JSX the 'A.top' string shorthand works (react converts to object)
   // each kind has kind-specific extras (e.g. arc: startAngle/endAngle/radius; circlePath: radius)
 }
 

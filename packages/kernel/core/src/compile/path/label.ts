@@ -1,11 +1,12 @@
 import type { SegmentSample } from '../../geometry/segment';
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../primitive';
-import type { IRPosition, IRStepLabel } from '../../schemas';
+import type { GeometryLabelSideValue, IRPosition, IRStepLabel } from '../../schemas';
 import type { CompileWarningCodeValue } from '../constant';
 import type { LowerTex } from '../lower-tex';
 import type { LineLayoutContext } from '../text-layout';
 import type { FontSpec, TextMeasurer } from '../text-metrics';
 
+import { normalizeGeometryLabelSide } from '../../schemas';
 import { CompileWarningCode } from '../constant';
 import { toAlphabeticBaselineY } from '../text-baseline';
 import { layoutInlineLine, resolveLineRuns } from '../text-layout';
@@ -15,10 +16,14 @@ const LABEL_FONT_SIZE = 14;
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
 const LABEL_SIDE_OFFSET = 4;
 const RAD_TO_DEG = 180 / Math.PI;
-type LabelSide = 'above' | 'below' | 'left' | 'right' | 'sloped' | 'center';
+type LabelSide = GeometryLabelSideValue | 'center';
 
 /** 边标注公式上下文（注入的 lowerTex + gating + warn）；缺省 = 无 tex 能力 */
 export type LabelTexContext = {
+  /**
+   * 注入的 TeX 降解能力。
+   * @default undefined
+   */
   lowerTex?: LowerTex;
   /** `$...$` 解析门控（= lowerTex 已注入） */
   gatingOn: boolean;
@@ -26,7 +31,10 @@ export type LabelTexContext = {
 };
 
 export type LabelPlacementContext = {
-  /** Area-like host half extent from centerline to boundary at the sampled point. */
+  /**
+   * Area-like host half extent from centerline to boundary at the sampled point.
+   * @default 0
+   */
   boundaryOffset?: number;
 };
 
@@ -75,7 +83,12 @@ export const emitLabelPrimitive = (
   const fontWeight = label.font?.weight;
   const fontStyle = label.font?.style;
   const font: FontSpec = { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle };
-  const side: LabelSide = label.side ?? (label.sloped === true || label.placement === 'inside' ? 'center' : 'above');
+  const side: LabelSide =
+    label.side === undefined
+      ? label.sloped === true || label.placement === 'inside'
+        ? 'center'
+        : 'above'
+      : ((normalizeGeometryLabelSide(label.side) ?? label.side));
   const sloped = label.sloped === true || side === 'sloped';
   const sideDistance = label.distance ?? LABEL_SIDE_OFFSET;
   const boundaryOffset = placementCtx?.boundaryOffset ?? 0;

@@ -20,21 +20,36 @@ export type MarkerPathPrim = {
   commands: Array<MarkerPathCommand>;
   /** 填充：纯色 / contextStroke；不填表示不填充 */
   fill?: MarkerFill;
-  /** 填充透明度 0~1 */
+  /**
+   * 填充透明度 0~1
+   * @default 1
+   */
   fillOpacity?: number;
-  /** 填充规则：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景） */
+  /**
+   * 填充规则：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景）
+   * @default 'nonzero'
+   */
   fillRule?: 'nonzero' | 'evenodd';
   /** 描边色：纯色 CSS 或 `{ kind: 'contextStroke' }`（继承所在元素描边）；与 fill 同词汇，core 不持 SVG 裸关键字 */
   stroke?: MarkerFill;
-  /** 描边透明度 0~1 */
+  /**
+   * 描边透明度 0~1
+   * @default 1
+   */
   strokeOpacity?: number;
   /** 描边宽度（marker 局部坐标） */
   strokeWidth?: number;
   /** 描边 dash pattern */
   dashPattern?: Array<number>;
-  /** 端点形状 */
+  /**
+   * 端点形状
+   * @default 'butt'
+   */
   strokeLinecap?: 'butt' | 'round' | 'square';
-  /** 拐点形状 */
+  /**
+   * 拐点形状
+   * @default 'miter'
+   */
   strokeLinejoin?: 'miter' | 'round' | 'bevel';
 };
 
@@ -59,6 +74,10 @@ export type MarkerPathCommand =
       radius: number;
       startAngle: number;
       endAngle: number;
+      /**
+       * 是否逆时针扫描。
+       * @default false
+       */
       counterClockwise?: boolean;
     }
   | {
@@ -66,9 +85,17 @@ export type MarkerPathCommand =
       center: [number, number];
       radiusX: number;
       radiusY: number;
+      /**
+       * 椭圆整体旋转角度（度）。
+       * @default 0
+       */
       rotation?: number;
       startAngle: number;
       endAngle: number;
+      /**
+       * 是否逆时针扫描。
+       * @default false
+       */
       counterClockwise?: boolean;
     }
   | { kind: 'close' };
@@ -88,15 +115,24 @@ export type MarkerEllipsePrim = {
   rx: number;
   /** y 轴半径 */
   ry: number;
-  /** 绕中心旋转度数 */
+  /**
+   * 绕中心旋转度数
+   * @default 0
+   */
   rotate?: number;
   /** 填充：纯色 / contextStroke */
   fill?: MarkerFill;
-  /** 填充透明度 0~1 */
+  /**
+   * 填充透明度 0~1
+   * @default 1
+   */
   fillOpacity?: number;
   /** 描边色：纯色 CSS 或 `{ kind: 'contextStroke' }` */
   stroke?: MarkerFill;
-  /** 描边透明度 0~1 */
+  /**
+   * 描边透明度 0~1
+   * @default 1
+   */
   strokeOpacity?: number;
   /** 描边宽度 */
   strokeWidth?: number;
@@ -121,17 +157,26 @@ export type MarkerRectPrim = {
   height: number;
   /** 填充：纯色 / contextStroke */
   fill?: MarkerFill;
-  /** 填充透明度 0~1 */
+  /**
+   * 填充透明度 0~1
+   * @default 1
+   */
   fillOpacity?: number;
   /** 描边色：纯色 CSS 或 `{ kind: 'contextStroke' }` */
   stroke?: MarkerFill;
-  /** 描边透明度 0~1 */
+  /**
+   * 描边透明度 0~1
+   * @default 1
+   */
   strokeOpacity?: number;
   /** 描边宽度 */
   strokeWidth?: number;
   /** 描边 dash pattern */
   dashPattern?: Array<number>;
-  /** 圆角半径（同时作用于 rx/ry） */
+  /**
+   * 圆角半径（同时作用于 rx/ry）
+   * @default 0
+   */
   cornerRadius?: number;
 };
 
@@ -143,7 +188,10 @@ export type MarkerRectPrim = {
 export type MarkerGroupPrim = {
   /** 类型判别符 */
   type: 'group';
-  /** 结构化变换序列，按数组顺序应用；undefined / 空数组表示无变换 */
+  /**
+   * 结构化变换序列，按数组顺序应用；undefined / 空数组表示无变换
+   * @default []
+   */
   transforms?: Array<Transform>;
   /** 组内子原语（仅 MarkerPrimitive 子集，禁 text / 嵌套 marker） */
   children: Array<MarkerPrimitive>;

@@ -1,11 +1,12 @@
 import type {
   IRAtPosition,
+  IRAtPositionInput,
   IRBetweenPosition,
   IRBoundary,
   IRFont,
   IRLineSpec,
   IRNode,
-  IRNodeLabel,
+  IRNodeLabelInput,
   IROffsetPosition,
   IRPosition,
   NodeTextAlignValue,
@@ -33,7 +34,7 @@ export type NodeProps = HydrationEventProps & {
    * 节点中心位置
    * @description 五种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }`（TikZ `[<direction>=<distance> of <id>]` 同义）/ 偏移定位 `{ of, offset }`（TikZ `calc` 同义）/ 比例 partway `{ between: [A, B], t }`（A、B 连线上 t 处，TikZ `($(A)!t!(B)$)` 同义）；非笛卡尔形态在编译时解析
    */
-  position: IRPosition | PolarPosition | IRAtPosition | IROffsetPosition | IRBetweenPosition;
+  position: IRPosition | PolarPosition | IRAtPosition | IRAtPositionInput | IROffsetPosition | IRBetweenPosition;
   /** 旋转角度（度数，与 TikZ 一致），绕节点中心；正值顺时针 */
   rotate?: number;
   /**
@@ -107,10 +108,10 @@ export type NodeProps = HydrationEventProps & {
   /** 主形状混合模式（与下方已绘内容混合，W3C 分离模式）；不含 text / label / pin。省略 / `normal` = 普通 source-over */
   blendMode?: IRNode['blendMode'];
   /**
-   * 节点附属标签——TikZ `[label=above:foo]` 同义
-   * @description 单对象或数组；每条 label 接 `text` / `position?` / `distance?` / 样式继承；`position` 接 8 方向枚举或数字角度（`label=30:foo` 等价 `position: 30`），缺省 'above'，distance 缺省 12
+   * 节点附属标签——TikZ `[label=top:foo]` 同义
+   * @description 单对象或数组；每条 label 接 `text` / `position?` / `distance?` / 样式继承；`position` 接 8 方向枚举或数字角度（`label=30:foo` 等价 `position: 30`），缺省 'top'，distance 缺省 12
    */
-  label?: IRNodeLabel | Array<IRNodeLabel>;
+  label?: IRNodeLabelInput | Array<IRNodeLabelInput>;
   /** 显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层（同 scope / 顶层）子节点间生效 */
   zIndex?: IRNode['zIndex'];
 };

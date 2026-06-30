@@ -74,7 +74,7 @@ export const grow = (opts: Omit<ScaleInOptions, 'from'> = {}): IRAnimationTrack 
 
 /** `growUp` 选项：支点 `origin`（缺省底边中点，柱状图从基线长出） */
 export type GrowUpOptions = AnimationPresetOptions & {
-  /** 缩放支点；缺省 'south'（底边中点） */
+  /** 缩放支点；缺省 'bottom'（底边中点） */
   origin?: IRAnimationOrigin;
 };
 
@@ -85,7 +85,7 @@ export const growUp = (opts: GrowUpOptions = {}): IRAnimationTrack => ({
     { at: 0, value: 0 },
     { at: 1, value: 1 },
   ],
-  origin: opts.origin ?? 'south',
+  origin: opts.origin ?? 'bottom',
   ...applyBase({ duration: 500, easing: 'ease-out' }, opts),
 });
 

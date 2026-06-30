@@ -15,7 +15,10 @@ export type Ellipse = {
   rx: number;
   /** 沿本地 +y */
   ry: number;
-  /** 绕中心旋转弧度 */
+  /**
+   * 绕中心旋转弧度。
+   * @default 0
+   */
   rotate?: number;
 };
 

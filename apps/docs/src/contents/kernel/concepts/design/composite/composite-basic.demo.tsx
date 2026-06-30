@@ -17,6 +17,8 @@ const MAX_HEIGHT = 80;
  * core 不内置任何 composite；domain 包用 defineComposite 注册，经 <Layout composites> 注入、节点经 IR 直传。
  */
 const barChart = defineComposite({
+  namespace: 'demo',
+  type: 'barChart',
   schema: CompositeBaseSchema.extend({
     namespace: z.literal('demo'),
     type: z.literal('barChart'),

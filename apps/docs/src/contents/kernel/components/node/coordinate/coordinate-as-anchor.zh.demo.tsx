@@ -10,10 +10,10 @@ const Demo: FC = () => (
   <Layout width={340} height={220}>
     {/* 命名虚拟中心——画面里看不见，但下面 4 个 of 引用都靠它 */}
     <Coordinate id="hub" position={[0, 0]} />
-    <Node id="N" position={{ direction: 'above', of: 'hub', distance: 65 }}>
+    <Node id="N" position={{ direction: 'top', of: 'hub', distance: 65 }}>
       北
     </Node>
-    <Node id="S" position={{ direction: 'below', of: 'hub', distance: 65 }}>
+    <Node id="S" position={{ direction: 'bottom', of: 'hub', distance: 65 }}>
       南
     </Node>
     <Node id="E" position={{ direction: 'right', of: 'hub', distance: 110 }} shape="circle">

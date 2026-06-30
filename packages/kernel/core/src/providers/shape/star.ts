@@ -21,7 +21,15 @@ type StarParams = {
   points: number;
   innerRadius: number;
   outerRadius: number;
+  /**
+   * 起始尖角自旋角（度）。
+   * @default 0
+   */
   rotate?: number;
+  /**
+   * 顶点倒角半径。
+   * @default 0
+   */
   cornerRadius?: number;
 };
 
@@ -97,6 +105,7 @@ const worldVertices = (rect: Rect, geo: StarGeometry): Array<Position> => geo.ve
  *   不缩 points（计数）/ rotate（角度）。
  */
 export const star = defineShape({
+  name: 'star',
   paramsSchema: z
     .strictObject({
       points: z

@@ -39,12 +39,16 @@ describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
   });
 });
 
-describe('BUILTIN_SHAPES.anchor returns the 9 compass anchors, undefined otherwise', () => {
+describe('BUILTIN_SHAPES.anchor returns web canonical anchors, undefined otherwise', () => {
   const rect: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
   it('rectangle named anchors', () => {
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'center', NO_PARAMS)).toEqual([0, 0]);
+    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'top', NO_PARAMS)).toEqual([0, -5]);
+    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'right', NO_PARAMS)).toEqual([10, 0]);
+    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'bottom-left', NO_PARAMS)).toEqual([-10, 5]);
+  });
+  it('compass anchor aliases remain accepted by built-in providers', () => {
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'north', NO_PARAMS)).toEqual([0, -5]);
-    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'east', NO_PARAMS)).toEqual([10, 0]);
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'south-west', NO_PARAMS)).toEqual([-10, 5]);
   });
   it('unknown anchor name → undefined (caller throws clear error)', () => {
@@ -100,6 +104,7 @@ describe('emit runs in axis-aligned space and returns Iterable<ScenePrimitive>',
 describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
   const createPolygonShape = (): ShapeDefinition =>
     defineShape({
+      name: 'customPolygon',
       paramsSchema: z.strictObject({}),
       circumscribe: (hw, hh) => {
         const r = Math.sqrt(hw * hw + hh * hh);
@@ -127,7 +132,7 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
     const poly = createPolygonShape();
     expect(poly.circumscribe(3, 4, NO_PARAMS)).toEqual({ halfWidth: 5, halfHeight: 5 });
     expect(poly.anchor({ x: 0, y: 0, width: 10, height: 10 }, 'center', NO_PARAMS)).toEqual([0, 0]);
-    expect(poly.anchor({ x: 0, y: 0, width: 10, height: 10 }, 'north', NO_PARAMS)).toBeUndefined();
+    expect(poly.anchor({ x: 0, y: 0, width: 10, height: 10 }, 'top', NO_PARAMS)).toBeUndefined();
     const prims = [...poly.emit({ x: 0, y: 0, width: 10, height: 10 }, {}, id, NO_PARAMS)];
     expect(prims).toHaveLength(1);
   });
@@ -147,21 +152,21 @@ describe('BUILTIN_SHAPES.edgePoint —— 内置 4 shape 必实现，落真实�
     expect(typeof BUILTIN_SHAPES.ellipse.edgePoint).toBe('function');
   });
 
-  it('rectangle.edgePoint 委托 rect 几何（north 上边中点）', () => {
-    expect(BUILTIN_SHAPES.rectangle.edgePoint!(r, 'north', 0.5, NO_PARAMS)).toEqual([0, -5]);
+  it('rectangle.edgePoint 委托 rect 几何（top 上边中点）', () => {
+    expect(BUILTIN_SHAPES.rectangle.edgePoint!(r, 'top', 0.5, NO_PARAMS)).toEqual([0, -5]);
   });
 
-  it('circle (= ellipse equal) edgePoint（外接框 20×20 → radius 10，east t=0.5）', () => {
+  it('circle (= ellipse equal) edgePoint（外接框 20×20 → radius 10，right t=0.5）', () => {
     const square: Rect = { x: 0, y: 0, width: 20, height: 20, rotate: 0 };
-    const p = BUILTIN_SHAPES.ellipse.edgePoint!(square, 'east', 0.5, EQUAL_PARAMS);
+    const p = BUILTIN_SHAPES.ellipse.edgePoint!(square, 'right', 0.5, EQUAL_PARAMS);
     expect(p[0]).toBeCloseTo(10, 6);
     expect(p[1]).toBeCloseTo(0, 6);
   });
 
-  it('ellipse.edgePoint：外接框 ×√2 后落椭圆周（east t=0.5 = (rx, 0)）', () => {
+  it('ellipse.edgePoint：外接框 ×√2 后落椭圆周（right t=0.5 = (rx, 0)）', () => {
     // shapes/ellipse 把 Rect(width) → rx = width/2 / √2？实际由 toEllipse 决定，仅校验在周长上
-    const p = BUILTIN_SHAPES.ellipse.edgePoint!(r, 'east', 0.5, NO_PARAMS);
-    // east 中点必在 +x 轴上
+    const p = BUILTIN_SHAPES.ellipse.edgePoint!(r, 'right', 0.5, NO_PARAMS);
+    // right 中点必在 +x 轴上
     expect(p[1]).toBeCloseTo(0, 6);
     expect(p[0]).toBeGreaterThan(0);
   });

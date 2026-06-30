@@ -4,6 +4,7 @@ import type { Transform } from '../primitive';
 import type { IRAtPosition, IRBetweenPosition, IROffsetPosition, IRPosition, PolarPosition } from '../schemas';
 import type { NameStack } from './name-stack';
 
+import { normalizeAtDirection } from '../schemas';
 import { DirectionVectorByAtDirection } from './direction';
 import { inverseTransformChain } from './scope';
 
@@ -62,7 +63,8 @@ export const resolvePosition = (
     const refGlobal: IRPosition = [ref.rect.x, ref.rect.y];
     const refLocal = scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
     const distance = pos.distance ?? nodeDistance;
-    const [dx, dy] = DirectionVectorByAtDirection[pos.direction];
+    const direction = normalizeAtDirection(pos.direction) ?? pos.direction;
+    const [dx, dy] = DirectionVectorByAtDirection[direction];
     return [refLocal[0] + dx * distance, refLocal[1] + dy * distance];
   }
   if ('offset' in pos) {

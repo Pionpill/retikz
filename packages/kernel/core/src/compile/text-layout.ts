@@ -17,12 +17,22 @@ type Round = (n: number) => number;
 /** 混排行布局上下文：注入的度量 / 降解 + 块级字体 / 色 + warn 发射器 */
 export type LineLayoutContext = {
   measureText: TextMeasurer;
+  /**
+   * TeX 降解能力；缺省时 math run 跳过并发警告。
+   * @default undefined
+   */
   lowerTex?: LowerTex;
   /** 块级字体（行 / run 未覆盖时兜底） */
   font: FontSpec;
-  /** 块级文字色（run 未给 fill 时；emit 时 'currentColor' 兜底） */
+  /**
+   * 块级文字色（run 未给 fill 时；emit 时 'currentColor' 兜底）
+   * @default 'currentColor'
+   */
   color?: string;
-  /** 宿主整体不透明度（node / label 级）；与 run 自身 opacity 相乘 */
+  /**
+   * 宿主整体不透明度（node / label 级）；与 run 自身 opacity 相乘
+   * @default 1
+   */
   opacity?: number;
   warn: (code: CompileWarningCodeValue, message: string) => void;
 };
@@ -81,7 +91,15 @@ type TextPiece = {
   x: number;
   text: string;
   font: FontSpec;
+  /**
+   * 文本 run 填充色。
+   * @default `LineLayoutContext.color`
+   */
   fill?: string;
+  /**
+   * 文本 run 不透明度。
+   * @default `LineLayoutContext.opacity`
+   */
   opacity?: number;
   width: number;
   measuredHeight: number;
@@ -93,7 +111,15 @@ type MathPiece = {
   width: number;
   height: number;
   depth: number;
+  /**
+   * 公式 run 填充色。
+   * @default `LineLayoutContext.color`
+   */
   fill?: string;
+  /**
+   * 公式 run 不透明度。
+   * @default `LineLayoutContext.opacity`
+   */
   opacity?: number;
 };
 type Piece = TextPiece | MathPiece;

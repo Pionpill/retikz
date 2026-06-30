@@ -35,7 +35,8 @@ import {
   quadSegmentSample,
   rectPerimeterSample,
 } from '../../geometry/segment';
-import { BUILTIN_ARROWS } from '../../providers/arrow';
+import { resolveArrowRegistry } from '../../providers/arrow';
+import { providerDefinitionOf } from '../../providers/registry';
 import { JsonObjectSchema } from '../../schemas';
 import { CompileWarningCode } from '../constant';
 import { resolveShadow } from '../effects';
@@ -47,6 +48,8 @@ import { normalizeRelativeTargets } from './relative';
 import { applyRoundedCorners, sampleRoundedCommands } from './rounded-corners';
 import { applyArrowShrinks, endpointArrows, resolveMarkArrowSpec } from './shrink';
 import { splitSubPathsForEndpointArrows } from './split';
+
+const EMPTY_PATH_GENERATORS: ReadonlyMap<string, PathGeneratorDefinition> = new Map();
 
 /**
  * referent（offset.of / polar.origin 的并集形态：节点 id 字符串 / `[x, y]` 字面量 / 嵌套 PolarPosition）里挖节点 id
@@ -148,22 +151,33 @@ void _assertThicknessCheck;
 
 /** emitPathPrimitive 可选 warn 钩子 */
 export type EmitPathWarnHook = {
-  /** 警告收集器（由 compileToScene 传入） */
+  /**
+   * 警告收集器（由 compileToScene 传入）
+   * @default undefined；不发出警告
+   */
   onWarn?: (warning: CompileWarning) => void;
-  /** 当前 path 在 IR 中的 locator 前缀（如 `'children[3].path'`） */
+  /**
+   * 当前 path 在 IR 中的 locator 前缀（如 `'children[3].path'`）
+   * @default 'path'
+   */
   irPath?: string;
   /**
    * 该 path 所属 scope 的累积 Cartesian-only transform 链
    * @description step.to 内的 polar/at/offset 字面量按"当前 scope 局部度量 + 末端 apply chain"
    *   投影回全局；顶层 path / 无 scope chain 时为 `[]`（恒等，全局坐标）
+   * @default []
    */
   scopeChain?: ReadonlyArray<Transform>;
-  /** paint 解析器（PaintSpec → resourceRef + 登记资源）；缺省时纯色透传、PaintSpec 退化为无填充 / currentColor */
+  /**
+   * paint 解析器（PaintSpec → resourceRef + 登记资源）；缺省时纯色透传、PaintSpec 退化为无填充 / currentColor
+   * @default 透传字符串；无法解析的 spec 变为 undefined
+   */
   resolvePaint?: PaintResolver;
   /**
    * 有效 arrow 表（内置 8 + 注入）；缺省 = 仅内置 8
    * @description compileToScene 合并 `{ ...BUILTIN_ARROWS, ...options.arrows }` 传入；
    *   endpointArrows 据此查表算 shrink / 调 def.emit；未注册名编译期 throw
+   * @default resolveArrowRegistry()
    */
   effectiveArrows?: EffectiveArrows;
   /**
@@ -171,11 +185,13 @@ export type EmitPathWarnHook = {
    * @description compileToScene 传 `options.pathGenerators ?? {}`；generator step 据此查表（未注册名
    *   编译期 throw，错误列出可用名）→ 双 parse 护栏 → targetParams resolve → 调 generate splice 命令。
    *   解析逻辑由后续实现落地（此处仅声明 hook 入口）。
+   * @default EMPTY_PATH_GENERATORS
    */
-  effectivePathGenerators?: Record<string, PathGeneratorDefinition>;
+  effectivePathGenerators?: ReadonlyMap<string, PathGeneratorDefinition>;
   /**
    * 注入的 TeX 降解能力（来自 @retikz/tex）；供边标注里的 `$...$` 行内公式降解
    * @description 缺省 = 无 tex 能力，边标注 `$...$` 字面（gating off）；注入后边标注可写行内公式
+   * @default undefined；禁用行内 TeX
    */
   lowerTex?: LowerTex;
 };
@@ -594,13 +610,11 @@ export const emitPathPrimitive = (
     }
 
     if (step.kind === 'generator') {
-      const generators = warnHook.effectivePathGenerators ?? {};
-      // hasOwnProperty 守门：避免 `'toString'` 等原型链 key 被 Record 索引误命中（开放 name 的边界安全）
-      const def = Object.prototype.hasOwnProperty.call(generators, step.name) ? generators[step.name] : undefined;
-      if (!def) {
-        const available = Object.keys(generators).sort().join(', ') || '(none registered)';
-        throw new Error(`Unknown path generator '${step.name}'; available: ${available}`);
-      }
+      const generators = warnHook.effectivePathGenerators ?? EMPTY_PATH_GENERATORS;
+      const def = providerDefinitionOf(generators, step.name, {
+        capability: 'path generator',
+        optionName: 'pathGenerators',
+      });
 
       // 外部校验：generator 自带 paramsSchema 先 parse step.params
       const parsed = def.paramsSchema.parse(step.params);
@@ -1089,7 +1103,7 @@ export const emitPathPrimitive = (
     blendMode: path.blendMode,
   };
 
-  const effectiveArrows = warnHook.effectiveArrows ?? BUILTIN_ARROWS;
+  const effectiveArrows = warnHook.effectiveArrows ?? resolveArrowRegistry();
   const arrows = endpointArrows(path.arrow, path.arrowDetail, effectiveArrows, round);
   assertArrowCanInheritStroke(baseProps.stroke, arrows);
 

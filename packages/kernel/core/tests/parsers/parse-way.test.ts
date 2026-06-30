@@ -444,6 +444,12 @@ describe('parseWay', () => {
       ]);
     });
 
+    it('label side accepts compass aliases and emits edge-label canonical values', () => {
+      expect(parseWay(['A', { label: { text: 'q', side: 'north' } }, 'B'])[1]).toMatchObject({
+        label: { text: 'q', side: 'above' },
+      });
+    });
+
     it('折角段（-|）也接受前置 label', () => {
       expect(parseWay(['A', { label: 'f' }, '-|', 'B'])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },

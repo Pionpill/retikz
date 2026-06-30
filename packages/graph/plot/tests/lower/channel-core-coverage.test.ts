@@ -181,7 +181,7 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
           type: 'interval',
           label: {
             content: { field: 'label' },
-            position: 'above',
+            position: 'top',
             distance: 6,
             textColor: '#334155',
             opacity: 0.75,
@@ -197,7 +197,7 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
     const [node] = collectNodes(firstLayer(spec, { d: [{ cat: 'A', value: 1, label: 'A' }] }));
     expect(node.label).toMatchObject({
       text: 'A',
-      position: 'above',
+      position: 'top',
       distance: 6,
       textColor: '#334155',
       opacity: 0.75,

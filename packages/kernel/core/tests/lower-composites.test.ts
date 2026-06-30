@@ -21,36 +21,48 @@ const LabeledBoxSchema = CompositeBaseSchema.extend({
 });
 /** labeledBox → 一个带文字的 rectangle node */
 const labeledBox = defineComposite({
+  namespace: 'example',
+  type: 'labeledBox',
   schema: LabeledBoxSchema,
   expand: node => ({ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: node.text }),
 });
 
 /** vanishing → 展开成空（节点消失） */
 const vanishing = defineComposite({
+  namespace: 'example',
+  type: 'vanishing',
   schema: CompositeBaseSchema.extend({ namespace: z.literal('example'), type: z.literal('vanishing') }),
   expand: () => [],
 });
 
 /** panel → 展开出另一个 composite（labeledBox），验证嵌套 fixpoint */
 const panel = defineComposite({
+  namespace: 'example',
+  type: 'panel',
   schema: CompositeBaseSchema.extend({ namespace: z.literal('example'), type: z.literal('panel') }),
   expand: () => ({ namespace: 'example', type: 'labeledBox', text: 'inner' }),
 });
 
 /** loop → 展开出自身，验证环守卫 */
 const loop = defineComposite({
+  namespace: 'example',
+  type: 'loop',
   schema: CompositeBaseSchema.extend({ namespace: z.literal('example'), type: z.literal('loop') }),
   expand: () => ({ namespace: 'example', type: 'loop' }),
 });
 
 /** zbox → 展开出带 zIndex 的 node */
 const zbox = defineComposite({
+  namespace: 'example',
+  type: 'zbox',
   schema: CompositeBaseSchema.extend({ namespace: z.literal('example'), type: z.literal('zbox') }),
   expand: () => ({ type: 'node', id: 'z', position: [0, 0], shape: 'rectangle', text: 'z', zIndex: 10 }),
 });
 
 /** boxWithId → 展开出带 id 的 node，供其它元素 anchor 引用 */
 const boxWithId = defineComposite({
+  namespace: 'example',
+  type: 'boxWithId',
   schema: CompositeBaseSchema.extend({ namespace: z.literal('example'), type: z.literal('boxWithId') }),
   expand: () => ({ type: 'node', id: 'panel', position: [50, 50], shape: 'rectangle', text: 'P' }),
 });

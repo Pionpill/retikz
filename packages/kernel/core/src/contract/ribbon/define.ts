@@ -1,6 +1,6 @@
 import type { IRJsonObject } from '../../schemas/json';
-import type { RibbonWidthProfileDefinition, RibbonWidthProfileInput } from './types';
+import type { RibbonWidthProfileDefinition, RibbonWidthProfileDefinitionInput } from './types';
 
 export const defineRibbonWidthProfile = <TParams extends IRJsonObject = IRJsonObject>(
-  definition: RibbonWidthProfileInput<TParams>,
+  definition: RibbonWidthProfileDefinitionInput<TParams>,
 ): RibbonWidthProfileDefinition => definition as unknown as RibbonWidthProfileDefinition;
