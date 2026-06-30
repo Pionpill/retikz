@@ -11,13 +11,9 @@ import { SOURCE_INDEX } from '../../src/pipeline/provenance';
 import { PlotSpecSchema } from '../../src/schemas';
 
 /**
- * ADR-01：scope-aware id 绑定 + meta 透传。
- *
- * 断言 lowerPlots 产物（core IR Scope / Node / Path 的 id + meta），由 LowerPlotsOptions 的
- *   provenance / datumProvenance / datumIdField 三开关门控。provenance 关（默认）→ 逐字节等价 alpha.4。
- *
- * 这些测试对「未来 API」编写：除 provenance_off_byte_identical（应在现状即过）外，
- *   新行为断言在实现落地前会 FAIL（预期）。
+ * scope-aware id 绑定 + meta 透传。
+ * @description 断言 lowerPlots 产物中 core IR Scope / Node / Path 的 id 与 meta。
+ *   这些字段由 provenance、datumProvenance、datumIdField 控制；provenance 关闭时不写合成 id/meta。
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
@@ -28,9 +24,8 @@ const expandOf = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOption
 };
 
 /**
- * plot lowered 的「内容 scope」（承 mark/guide 层 + provenance meta 的 localNamespace scope）。
- * ADR-02 L1-b：带 id 的 plot → 外层 panel scope（id、非 localNamespace）⊃ 内层内容 scope；
- *   无 id → outer 自身即内容 scope。本 helper 抹平两形态，供下方按内容层断言。
+ * plot lowered 的内容 scope：承载 mark/guide 层与 provenance meta 的 localNamespace scope。
+ * @description 带 id 的 plot 会生成外层 panel scope；无 id 时 outer 自身就是内容 scope。
  */
 const contentScope = (outer: IRScope): IRScope =>
   outer.id !== undefined && outer.localNamespace !== true ? (outer.children[0] as IRScope) : outer;
@@ -116,10 +111,9 @@ const pointSpec = (over: { id?: string } = {}): PlotSpec =>
 // =====================================================================
 // Happy path
 // =====================================================================
-describe('ADR-01 id/meta — happy path', () => {
+describe('scope id/meta — happy path', () => {
   it('root_id_to_scope_id', () => {
-    // ADR-02 L1-b：<Plot id="sales"> + provenance:true → 外层 panel scope.id='sales'（非 localNamespace、面板 bbox 句柄）
-    //   ⊃ 内层 localNamespace 内容 scope（承 meta {source:'plot',dataReference:'sales'}）+ plotArea carrier
+    // <Plot id="sales"> + provenance:true → 外层 panel scope.id='sales'，内层 localNamespace 承载内容 meta。
     const outer = expandOf(barSpec({ id: 'sales' }), { sales: SALES }, { ...opts, provenance: true });
     expect(outer.type).toBe('scope');
     expect(outer.id).toBe('sales');
@@ -140,9 +134,8 @@ describe('ADR-01 id/meta — happy path', () => {
   });
 
   it('mark_layer_uses_user_mark_id', () => {
-    // 用户给 mark.id='bars' → layer scope.id='sales.bars'（用户句柄优先；待决策点倾向）
+    // 用户给 mark.id='bars' → 用户句柄优先，layer scope.id='sales.bars'。
     const layer = firstLayer(barSpec({ id: 'sales', markId: 'bars' }), { sales: SALES }, { ...opts, provenance: true });
-    // TODO impl: confirm <plotId>.<markId>（倾向）vs <plotId>.mark.<markId>
     expect(layer.id).toBe('sales.bars');
     expect((layer.meta as { markIndex?: number }).markIndex).toBe(0);
   });
@@ -216,9 +209,9 @@ describe('ADR-01 id/meta — happy path', () => {
 // =====================================================================
 // 边界
 // =====================================================================
-describe('ADR-01 id/meta — 边界', () => {
+describe('scope id/meta — boundary', () => {
   it('provenance_off_byte_identical', () => {
-    // 默认（provenance 关）→ lowering 产物逐字节等价 alpha.4：无任何 meta / 合成 id key。
+    // 默认（provenance 关）→ lowering 产物不写任何 meta / 合成 id key。
     // 用「无 root id / 无 mark id」spec（point + bar）作代表，逐字结构比对 off vs 显式 off。
     for (const spec of [pointSpec(), barSpec()]) {
       const withoutOptions = expandOf(spec, { sales: SALES }, opts);
@@ -274,8 +267,7 @@ describe('ADR-01 id/meta — 边界', () => {
   });
 
   it('series_value_slug', () => {
-    // series 值含 '.' → id 路径确定性 slug（'.'→'_'，非串 String()）。断言稳定性 + 可寻址，不锁死精确串。
-    // TODO impl: confirm slug 规则（'.'→'_'、非串 String()）
+    // series 值含 '.' → id 路径确定性 slug。断言稳定性 + 可寻址，不锁死精确串。
     const TREND = [
       { t: 0, v: 1, region: 'north.west' },
       { t: 1, v: 3, region: 'north.west' },
@@ -311,7 +303,6 @@ describe('ADR-01 id/meta — 边界', () => {
 
   it('series_slug_collision_throws', () => {
     // 两个不同 series 值 slug 后撞同一 id（'a.b' 与 'a_b' 都 → 'a_b'）→ fail loud（与 datumIdField 重复同策）
-    // TODO impl: confirm slug-collision throws（与 duplicate-id 一致）
     const TREND = [
       { t: 0, v: 1, region: 'a.b' },
       { t: 1, v: 3, region: 'a.b' },
@@ -368,7 +359,7 @@ describe('ADR-01 id/meta — 边界', () => {
 // =====================================================================
 // 错误路径
 // =====================================================================
-describe('ADR-01 id/meta — 错误路径', () => {
+describe('scope id/meta — errors', () => {
   it('datum_id_field_missing', () => {
     // datumIdField 指向某行不存在的字段 → 抛清晰错误（fail loud，不静默跳过）
     const rows = [
@@ -405,7 +396,7 @@ describe('ADR-01 id/meta — 错误路径', () => {
 // =====================================================================
 // 交互
 // =====================================================================
-describe('ADR-01 id/meta — 交互', () => {
+describe('scope id/meta — interaction', () => {
   it('polar_id_meta_parity', () => {
     // polar 下 interval→sector 径向柱层 id / meta 与 cartesian 同构（layer scope id + meta layer:mark）
     const spec = PlotSpecSchema.parse({
@@ -467,7 +458,7 @@ describe('ADR-01 id/meta — 交互', () => {
   });
 
   it('compile_meta_reaches_scene', () => {
-    // 含 meta 的 lowering 产物 → compileToScene → Scene 图元带同款 meta（验证 core ADR-08 通道连通）
+    // 含 meta 的 lowering 产物 → compileToScene → Scene 图元保留同款 meta。
     const spec = barSpec({ id: 'sales' });
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
@@ -571,7 +562,7 @@ describe('ADR-01 id/meta — 交互', () => {
 // =====================================================================
 // Bug Hunter 回归（stage 3 对抗提升为正式测试）
 // =====================================================================
-describe('ADR-01 id/meta — Bug Hunter 回归', () => {
+describe('scope id/meta — bug hunter regressions', () => {
   it('middle_skipped_row_index_integrity', () => {
     // 中间行被跳过（非有限投影）时，存活 datum 的 transformedIndex / sourceIndex 必须反映「原始行位置」，
     // 而非压缩后的 placed 数组位置（经典 off-by-one 陷阱）。row1 的 y=NaN → 跳过，存活 row0/row2 应得 index 0/2。

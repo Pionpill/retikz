@@ -7,21 +7,15 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { PlotSpec } from '../../../src/schemas';
 
 import { defineTransform } from '../../../src';
-// ADR-02 未来 API：locator 在实现落地前不存在，整文件 import 即会失败（预期）。
-// 解析路径取 ADR file-scope 指明的新模块 src/features/interaction/locate.ts（同时 re-export 自 src/index）。
 import { createPlotLocator } from '../../../src/features';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { SOURCE_INDEX } from '../../../src/pipeline/provenance';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 /**
- * ADR-02：datum locator 命中预演——逻辑地址 → 位置/元素的确定性正向解析纯函数。
- *
- * `createPlotLocator(spec, datasets, options?)` 与 lowerPlots 同参，复用 ADR-01 resolveFrame。
- *   核心保证：locator.datum(i).position 与 lowering 实际摆放第 i 行 Node.position 逐点一致（共享 datumAnchor）。
- *   sector/polar 锚点取扇片 centroid（≠ Node.position 的圆心），断言落在渲染扇区内。
- *
- * 这些测试对「未来 API」编写：createPlotLocator 实现落地前全 FAIL（预期）。
+ * datum locator：逻辑地址 → 位置/元素的确定性解析函数。
+ * @description createPlotLocator 与 lowerPlots 同参，locator.datum(i).position 应与 lowering 实际摆放一致。
+ *   sector/polar 锚点取扇片 centroid，断言落在渲染扇区内。
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
@@ -176,7 +170,7 @@ const squareOpts: LowerPlotsOptions = { width: 400, height: 400 };
 // =====================================================================
 // Happy path
 // =====================================================================
-describe('ADR-02 locator — happy path', () => {
+describe('datum locator — happy path', () => {
   it('datum_position_matches_lowering_point', () => {
     // point mark：locator.datum(i).position === lowering 第 i 行 Node.position（cartesian）
     const spec = pointSpec({ id: 'sales' });
@@ -268,7 +262,7 @@ describe('ADR-02 locator — happy path', () => {
 // =====================================================================
 // 边界
 // =====================================================================
-describe('ADR-02 locator — 边界', () => {
+describe('datum locator — boundary', () => {
   it('datum_out_of_range', () => {
     // datum(负 / ≥ rowCount) → null（不抛）
     const spec = pointSpec({ id: 'sales' });
@@ -338,7 +332,7 @@ describe('ADR-02 locator — 边界', () => {
   });
 
   it('no_plot_id_structural', () => {
-    // root 无 id → 结构寻址 datum(i) 仍解析（不依赖 plotId）；点路径无前缀形式 'datum.<i>' 亦支持（ADR 待决策倾向）
+    // root 无 id → 结构寻址 datum(i) 仍解析（不依赖 plotId）；点路径支持无前缀形式 'datum.<i>'。
     const spec = pointSpec(); // 无 id
     const locator = createPlotLocator(spec, { sales: SALES }, opts);
     const nodes = datumNodes(firstLayer(spec, { sales: SALES }, opts));
@@ -349,8 +343,6 @@ describe('ADR-02 locator — 边界', () => {
       // 无具名 Node 可连 → id 省略
       expect(anchor!.id).toBeUndefined();
     }
-    // 假设：root 无 id 时支持无前缀点路径 'datum.<i>'（ADR 待决策点倾向「无前缀形式」）。
-    // 若实现选择仅结构寻址、不支持无前缀串，此断言需放宽——见报告 §API 歧义。
     const viaAddress = locator.resolve('datum.0');
     expect(viaAddress).not.toBeNull();
     expect(viaAddress!.position).toEqual(nodes[0].position);
@@ -360,7 +352,7 @@ describe('ADR-02 locator — 边界', () => {
 // =====================================================================
 // 错误路径
 // =====================================================================
-describe('ADR-02 locator — 错误路径', () => {
+describe('datum locator — errors', () => {
   it('invalid_address', () => {
     // 非法 address → null（不抛）：垃圾串、错 plotId、错段、越界、错类别值
     const spec = pointSpec({ id: 'sales' });
@@ -403,7 +395,7 @@ describe('ADR-02 locator — 错误路径', () => {
 // =====================================================================
 // 交互
 // =====================================================================
-describe('ADR-02 locator — 交互', () => {
+describe('datum locator — interaction', () => {
   it('polar_datum_parity', () => {
     // sector(饼图)：centroid 落在渲染扇区内（inner ≤ |anchor-center| ≤ outer，角度在 [start,end]）。
     //   不与 Node.position（圆心）相等——sector 锚点取扇片 centroid。
@@ -478,7 +470,7 @@ describe('ADR-02 locator — 交互', () => {
 // =====================================================================
 // Bug Hunter 回归（stage 3 对抗提升为正式测试）
 // =====================================================================
-describe('ADR-02 locator — Bug Hunter 回归', () => {
+describe('datum locator — bug hunter regressions', () => {
   it('locator_matches_lowering_under_transform', () => {
     // 关键对抗：locator 必须与 lowering 用「同一份 transform 后行」。带 descending sort 时，
     //   locator.datum(i) 须对齐 lowering 渲染序第 i 个 Node（而非原始数据序），且 meta.sourceIndex 正确回指。
@@ -531,7 +523,7 @@ describe('ADR-02 locator — Bug Hunter 回归', () => {
   });
 });
 
-describe('ADR-06 locator transform registry parity', () => {
+describe('datum locator transform registry parity', () => {
   it('custom_transform_locator_matches_lowering', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
@@ -627,7 +619,7 @@ describe('ADR-06 locator transform registry parity', () => {
 // =====================================================================
 // 跨评审回归（BLOCKER #1/#2/#3 + WARNING #4 的正式回归网）
 // =====================================================================
-describe('ADR-02 locator — anchor parity & fail-loud (cross-review)', () => {
+describe('datum locator — anchor parity and fail-loud', () => {
   // dodge：2 系列分组柱（band-x，series 切等分子带）
   const dodgeSpec = (): PlotSpec =>
     PlotSpecSchema.parse({
