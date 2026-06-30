@@ -9,7 +9,7 @@ export const BuiltinShape = {
   Diamond: 'diamond',
 } as const;
 
-/** 节点文本对齐（TikZ `align=` 同义） */
+/** 节点文本对齐 */
 export const NodeTextAlign = {
   Left: 'left',
   Center: 'center',
@@ -28,5 +28,5 @@ export const NodeLabelPlacement = {
   Inside: 'inside',
 } as const;
 
-/** 节点标签 `{ boundary, t }` 使用的矩形边；compass side 作为输入别名归一到 Web side */
+/** 节点标签 `{ boundary, fraction }` 使用的矩形边；compass side 作为输入别名归一到 Web side */
 export const NodeLabelBoundarySide = WebSide;

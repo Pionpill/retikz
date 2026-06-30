@@ -14,10 +14,10 @@ Node label 早期主要表达外侧标签，适合普通点、矩形节点和关
 `Node.label` 增加 `placement` 与边界位置能力：
 
 - `placement` 支持 `outside` 与 `inside`，默认仍为 `outside`。
-- `position` 可以继续使用既有锚点，也可以在 box-like boundary 上使用 `{ boundary, t }`。
+- `position` 可以继续使用既有锚点，也可以在 box-like boundary 上使用 `{ boundary, fraction }`。
 - `position: "center"` 是几何中心语义，不受 `placement` 改写。
 - `inside` 不与 `pin` 混用；pin 表示外部引线，不适合作为内部 label contract。
-- `{ boundary, t }` 第一版只承诺 box-like boundary，可由后续 shape definition 扩展。
+- `{ boundary, fraction }` 第一版只承诺 box-like boundary，可由后续 shape definition 扩展。
 
 该设计让 core 保持 label host 的唯一来源；plot 只把 mark label 投递给 node host，不重新定义 inside/outside 几何。
 

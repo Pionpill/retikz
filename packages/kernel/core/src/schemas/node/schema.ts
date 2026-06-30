@@ -24,7 +24,7 @@ export const NodeLabelBoundaryPositionSchema = z
     boundary: z
       .preprocess(value => (typeof value === 'string' ? normalizeWebSide(value) ?? value : value), z.enum(NodeLabelBoundarySide))
       .describe('Box-like node boundary side used as the label attachment line. Compass side names are accepted aliases.'),
-    t: z
+    fraction: z
       .number()
       .min(0)
       .max(1)
@@ -48,7 +48,7 @@ export const NodeLabelSchema = z
       )
       .optional()
       .describe(
-        'Placement around the node border: direction keyword, center, numeric angle, or `{ boundary, t }`. Omitted fields use top.',
+        'Label attachment point on the node border. Accepts Web directions (top, top-left, ...), compass / legacy aliases (north, north-west, above, below-left, ...), center, a numeric polar angle in degrees (0=right, 90=bottom in y-down coordinates), or `{ boundary, fraction }` for a proportional point on a box-like side. Omitted fields use top.',
       ),
     placement: z
       .enum(NodeLabelPlacement)
@@ -71,7 +71,7 @@ export const NodeLabelSchema = z
       .union([z.enum(['none', 'radial', 'tangent']), z.number()])
       .optional()
       .describe(
-        'Rotate label text around its own center: none, radial, tangent, or explicit degrees. Only changes orientation, not placement.',
+        'Label text self-rotation around its own center. `none` keeps text upright; `radial` points along node center to label center; `tangent` is radial + 90 degrees; a number is an explicit angle in degrees. Only changes orientation, not placement.',
       ),
     keepUpright: z
       .boolean()
@@ -90,7 +90,7 @@ export const NodeLabelSchema = z
       ])
       .optional()
       .describe(
-        'Leader line from the node border to the label. `true` uses the default line; an object provides line style overrides; omitted or `false` disables the leader.',
+        'Outside-label leader line from the node border attachment point to the label box. `true` uses the default line; an object provides line style overrides; omitted or `false` disables the leader. Rejected when placement is inside.',
       ),
   })
   .superRefine((label, ctx) => {

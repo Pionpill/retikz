@@ -1,5 +1,5 @@
 import type { ShapeDefinition } from '../../contract/shape';
-import type { BuiltinShapeName } from '../../schemas/node';
+import type { BuiltinShapeValue } from '../../schemas/node';
 
 import { contour } from '../../contract/shape';
 import { defineBuiltinProviderArray, resolveProviderRegistry } from '../registry';
@@ -10,7 +10,7 @@ import { rectangle } from './rectangle';
 import { sector } from './sector';
 import { star } from './star';
 
-export type BuiltinShapeProviderName = Exclude<BuiltinShapeName, 'circle' | 'diamond'> | 'sector' | 'arc' | 'polygon' | 'star' | 'contour';
+export type BuiltinShapeProviderName = Exclude<BuiltinShapeValue, 'circle' | 'diamond'> | 'sector' | 'arc' | 'polygon' | 'star' | 'contour';
 
 /** 内置 shape 注册项（circle / diamond 已收为 preset，不占独立项）。 */
 export const BUILTIN_SHAPES = defineBuiltinProviderArray<ShapeDefinition, BuiltinShapeProviderName>([

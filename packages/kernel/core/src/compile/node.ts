@@ -473,15 +473,15 @@ const ensureBoxLikeLabelBoundary = (layout: NodeLayout): void => {
 
 const labelBoundaryPoint = (layout: NodeLayout, position: IRNodeLabelBoundaryPosition): Position => {
   ensureBoxLikeLabelBoundary(layout);
-  const t = position.t ?? 0.5;
+  const fraction = position.fraction ?? 0.5;
   const left = layout.rect.x - layout.rect.width / 2;
   const right = layout.rect.x + layout.rect.width / 2;
   const top = layout.rect.y - layout.rect.height / 2;
   const bottom = layout.rect.y + layout.rect.height / 2;
-  if (position.boundary === 'top') return [left + layout.rect.width * t, top];
-  if (position.boundary === 'right') return [right, top + layout.rect.height * t];
-  if (position.boundary === 'bottom') return [left + layout.rect.width * t, bottom];
-  return [left, top + layout.rect.height * t];
+  if (position.boundary === 'top') return [left + layout.rect.width * fraction, top];
+  if (position.boundary === 'right') return [right, top + layout.rect.height * fraction];
+  if (position.boundary === 'bottom') return [left + layout.rect.width * fraction, bottom];
+  return [left, top + layout.rect.height * fraction];
 };
 
 const labelBoundaryDirection = (position: IRNodeLabelBoundaryPosition): Position => {

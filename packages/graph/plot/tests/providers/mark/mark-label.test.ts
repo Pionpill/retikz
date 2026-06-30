@@ -126,7 +126,7 @@ describe('ADR-07 mark host label lowering', () => {
       baseSpec([
         {
           type: 'reference',
-          label: { content: { value: 'safe zone' }, position: { boundary: 'top', t: 0.5 }, placement: 'inside' },
+          label: { content: { value: 'safe zone' }, position: { boundary: 'top', fraction: 0.5 }, placement: 'inside' },
           yTo: 7,
           encoding: { y: { value: 3 } },
         },
@@ -135,7 +135,7 @@ describe('ADR-07 mark host label lowering', () => {
     );
 
     const [node] = collectNodes(markLayer(root, 0));
-    expect(node.label).toEqual({ text: 'safe zone', position: { boundary: 'top', t: 0.5 }, placement: 'inside' });
+    expect(node.label).toEqual({ text: 'safe zone', position: { boundary: 'top', fraction: 0.5 }, placement: 'inside' });
   });
 
   it('relation-path-host-label：RelationMark 顶层 label lowering 到 core Path.label', () => {

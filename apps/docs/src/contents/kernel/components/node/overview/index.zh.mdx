@@ -187,7 +187,7 @@ Line 2`}</Node>;
 
 ### 节点标签
 
-`label` 在节点边界附加额外文字。单对象或数组形态；`position` 接 8 方向枚举（缺省 `'top'`）、`'center'`、数字角度，或 `{ boundary, t }` 这种边界比例点；`placement` 控制标签在附着点外侧还是内侧，默认 `'outside'`；`'center'` 会把 label 直接画在节点中心，不做重叠避让；`font` / `textColor` 缺省时从 node 继承，`opacity` 可单独控制标签透明度（0~1，与 node `opacity` 相乘）。
+`label` 在节点边界附加额外文字。单对象或数组形态；`position` 接 8 方向枚举（缺省 `'top'`）、`'center'`、数字角度，或 `{ boundary, fraction }` 这种边界比例点；`placement` 控制标签在附着点外侧还是内侧，默认 `'outside'`；`'center'` 会把 label 直接画在节点中心，不做重叠避让；`font` / `textColor` 缺省时从 node 继承，`opacity` 可单独控制标签透明度（0~1，与 node `opacity` 相乘）。
 
 <Comparison target="tikz" title="节点标签">
 
@@ -203,10 +203,10 @@ Line 2`}</Node>;
 
 #### 内侧与边界比例
 
-`placement: 'inside'` 会把标签从附着点向节点内部偏移，`distance` 仍是偏移距离。8 方向与数字角度都支持内侧放置；矩形节点还可以写 `position: { boundary, t }`，把标签附着到某条边界的比例位置上。
+`placement: 'inside'` 会把标签从附着点向节点内部偏移，`distance` 仍是偏移距离。8 方向与数字角度都支持内侧放置；矩形节点还可以写 `position: { boundary, fraction }`，把标签附着到某条边界的比例位置上。
 
 - `boundary` 接 `'top'` / `'right'` / `'bottom'` / `'left'`
-- `t` 是边界上的 0..1 比例位置，缺省 `0.5`
+- `fraction` 是边界上的 0..1 比例位置，缺省 `0.5`
 - `placement: 'inside'` 不能和 `pin` 同时使用；需要引线时请保持外侧标签
 
 <ComponentPreview name="node-label-inside" size="sm" />
@@ -361,7 +361,7 @@ Line 2`}</Node>;
 | `scale`                          | `number`                                                                                                      | `1`               | 均匀缩放（含字号、padding、路径附着点）                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `xScale` / `yScale`              | `number`                                                                                                      | —                 | 分轴缩放，优先于 `scale`                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `zIndex`                         | `number`（整数）                                                                                              | `0`               | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `label`                          | `NodeLabel \| Array<NodeLabel>`                                                                               | —                 | 边挂标签；单对象或数组；`position` 接 8 方向枚举（缺省 `'top'`）、`'center'`、数字角度或 `{ boundary, t }`（矩形边界比例点），`placement` 缺省 `'outside'`，可设 `'inside'` 放到节点内部；`distance` 缺省 12，`font` / `textColor` 缺省继承 node，`opacity` 单独控制标签 0~1；`rotate`（`'none'` / `'radial'` / `'tangent'` / 数字度数）+ `keepUpright` 控制标签自旋；`pin`（`true` 默认线 / `{ stroke, strokeWidth, dashPattern }` 带样式 / 省略无引线）画引线，且仅支持外侧标签 |
+| `label`                          | `NodeLabel \| Array<NodeLabel>`                                                                               | —                 | 边挂标签；单对象或数组；`position` 接 8 方向枚举（缺省 `'top'`）、`'center'`、数字角度或 `{ boundary, fraction }`（矩形边界比例点），`placement` 缺省 `'outside'`，可设 `'inside'` 放到节点内部；`distance` 缺省 12，`font` / `textColor` 缺省继承 node，`opacity` 单独控制标签 0~1；`rotate`（`'none'` / `'radial'` / `'tangent'` / 数字度数）+ `keepUpright` 控制标签自旋；`pin`（`true` 默认线 / `{ stroke, strokeWidth, dashPattern }` 带样式 / 省略无引线）画引线，且仅支持外侧标签 |
 | `animations`                     | `Array<AnimationTrack>`                                                                                       | —                 | 时间轴动画 tracks：每条 track 动一个 renderer 无关 property，base = 动画终态；透传进 Scene 图元，renderer 播放或降级到静态。不参与布局。见 [动画](/kernel/components/effects/animation)                                                                                                                                                                                                                                                                                             |
 
 ### margin 与 padding 的区别

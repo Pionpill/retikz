@@ -146,8 +146,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'Node 内侧边界标签', en: 'Inside node boundary labels' },
                 content: {
-                  zh: '`Node.label` 增加 `placement: "inside"` 与 `{ boundary, t }` 位置，矩形 / box-like 节点可把标签放到内部边界比例点；inside + pin 被 schema 拒绝。',
-                  en: '`Node.label` gains `placement: "inside"` and `{ boundary, t }` positions, letting rectangle / box-like nodes place labels at proportional inner-boundary points; inside + pin is rejected by schema.',
+                  zh: '`Node.label` 增加 `placement: "inside"` 与 `{ boundary, fraction }` 位置，矩形 / box-like 节点可把标签放到内部边界比例点；inside + pin 被 schema 拒绝。',
+                  en: '`Node.label` gains `placement: "inside"` and `{ boundary, fraction }` positions, letting rectangle / box-like nodes place labels at proportional inner-boundary points; inside + pin is rejected by schema.',
                 },
               },
             ],

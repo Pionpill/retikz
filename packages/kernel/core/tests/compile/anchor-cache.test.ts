@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 import type { NodeLayout } from '../../src/compile/node';
 import type { ShapeDefinition } from '../../src/contract/shape';
-import type { BuiltinShapeName } from '../../src/schemas';
+import type { BuiltinShapeValue } from '../../src/schemas';
 
 import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';
 import { defineShape } from '../../src/contract/shape';
@@ -16,7 +16,7 @@ import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 /** 构造一个最简 NodeLayout，rect 已是全局坐标 */
 const makeLayout = (
-  shape: BuiltinShapeName = 'rectangle',
+  shape: BuiltinShapeValue = 'rectangle',
   width = 40,
   height = 30,
   cx = 0,
