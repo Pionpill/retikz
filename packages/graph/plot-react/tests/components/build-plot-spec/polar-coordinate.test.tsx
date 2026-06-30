@@ -3,6 +3,7 @@ import type { PlotSpec } from '@retikz/plot';
 import { PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
+import { createPolarPieSpec } from '../../../../plot/tests/helpers/plot-spec-fixtures';
 import { buildPlotSpec } from '../../../src/components/build-plot-spec';
 import { Axis } from '../../../src/components/guides';
 import { IntervalMark, PathMark } from '../../../src/components/marks';
@@ -43,33 +44,7 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
 
   it('pie_equivalence：coordinate="polar2D" + <IntervalMark angle> → polar2D + linear 角向 + stack transform + interval mark', () => {
     const spec = buildPlotSpec(<IntervalMark angle="value" color="label" />, '__plot', { coordinate: 'polar2D' });
-    const expected: PlotSpec = {
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: '__plot' },
-      transform: [{ kind: 'stack', y: 'value' }],
-      scales: [
-        { type: 'linear', name: '__angle' },
-        { type: 'linear', name: '__radius' },
-        { type: 'ordinal', name: '__color' },
-      ],
-      coordinate: {
-        type: 'polar2D',
-        angle: '__angle',
-        radius: '__radius',
-        startAngle: 0,
-        endAngle: 360,
-        innerRadius: 0,
-      },
-      marks: [
-        {
-          type: 'interval',
-          bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
-          encoding: { color: { field: 'label', scale: '__color' } },
-        },
-      ],
-      guides: [],
-    };
+    const expected = createPolarPieSpec('__plot', { angle: '__angle', radius: '__radius', color: '__color' });
     expect(spec).toEqual(expected);
   });
 

@@ -1,6 +1,7 @@
 import { isBuiltinMark, PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
+import { createHistogramSpec } from '../../../../plot/tests/helpers/plot-spec-fixtures';
 import { buildPlotSpec } from '../../../src/components/build-plot-spec';
 import { IntervalMark } from '../../../src/components/marks';
 import { Transform } from '../../../src/components/transform';
@@ -25,8 +26,10 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / summarize / histogram x0x
       </>,
       '__plot',
     );
+    const expected = createHistogramSpec('__plot', { x: '__x', y: '__y' }, 5);
     const mark = spec.marks[0];
-    expect(mark).toMatchObject({ type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } } });
+    expect(spec.transform).toEqual(expected.transform);
+    expect(mark).toMatchObject(expected.marks[0]);
     if (!isBuiltinMark(mark) || mark.type !== 'interval') throw new Error('expected interval mark');
     // histogram：仅 y 高度通道、无 encoding.x
     expect(mark.encoding.y).toEqual({ field: 'binCount' });

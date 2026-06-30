@@ -1,6 +1,7 @@
 import { PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
+import { createDensityAreaSpec } from '../../../../plot/tests/helpers/plot-spec-fixtures';
 import { buildPlotSpec } from '../../../src/components/build-plot-spec';
 import { PathMark } from '../../../src/components/marks';
 import { Transform } from '../../../src/components/transform';
@@ -28,17 +29,13 @@ describe('buildPlotSpec alpha.13 ADR-03（density transform 透传）', () => {
       </>,
       '__plot',
     );
-
-    expect(spec.transform).toEqual([
-      { kind: 'density', field: 'value', groupBy: ['species'], xAs: 'densityX', densityAs: 'density', sampleCount: 96 },
-    ]);
-    expect(spec.marks[0]).toMatchObject({
-      type: 'path',
-      series: 'species',
-      order: 'densityX',
-      closure: { kind: 'baseline', baseline: 0 },
-      encoding: { x: { field: 'densityX' }, y: { field: 'density' } },
+    const expected = createDensityAreaSpec('__plot', {
+      sampleCount: 96,
+      scales: { x: '__x', y: '__y' },
     });
+
+    expect(spec.transform).toEqual(expected.transform);
+    expect(spec.marks[0]).toMatchObject(expected.marks[0]);
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 });
