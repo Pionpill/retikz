@@ -1,0 +1,255 @@
+import { describe, expect, it } from 'vitest';
+
+import type { PathPrim, ScenePrimitive } from '../../../src/primitive';
+import type { IR } from '../../../src/schemas';
+
+import { compileToScene } from '../../../src/compile/compile';
+import { line, move } from '../../helpers/path-command-factory';
+import { findPathPrim } from './helpers';
+
+describe('compile path: arrow 箭头', () => {
+  it("arrow: '->' → PathPrim arrowEnd shape='stealth'，arrowStart 不写", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '->',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    const path = findPathPrim(scene.primitives);
+    expect(path.arrowEnd?.shape).toBe('stealth');
+    expect(path.arrowStart).toBeUndefined();
+  });
+
+  it("arrow: '<-' → arrowStart shape='stealth'", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '<-',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).primitives);
+    expect(path.arrowStart?.shape).toBe('stealth');
+    expect(path.arrowEnd).toBeUndefined();
+  });
+
+  it("arrow: '<->' → 两端都 shape='stealth'", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '<->',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).primitives);
+    expect(path.arrowStart?.shape).toBe('stealth');
+    expect(path.arrowEnd?.shape).toBe('stealth');
+  });
+
+  it("arrow: 'none' / 缺省 → 两端都不挂 marker", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).primitives);
+    expect(path.arrowStart).toBeUndefined();
+    expect(path.arrowEnd).toBeUndefined();
+  });
+
+  it('多 sub-path + arrow → 拆成 GroupPrim：首段独占 arrowStart，末段独占 arrowEnd', () => {
+    // A → B → C 多节点路径，'->'。期望产出 GroupPrim 内 2 个 PathPrim：
+    //   首段 d="M ... L ..."（无 arrow）
+    //   末段 d="M ... L ..."（arrowEnd shape='stealth'）
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'A', position: [0, 0] },
+        { type: 'node', id: 'B', position: [60, 0] },
+        { type: 'node', id: 'C', position: [60, 60] },
+        {
+          type: 'path',
+          arrow: '->',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'line', to: { id: 'B' } },
+            { type: 'step', kind: 'line', to: { id: 'C' } },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    const group = scene.primitives.find((p): p is Extract<ScenePrimitive, { type: 'group' }> => p.type === 'group');
+    expect(group).toBeDefined();
+    expect(group?.children).toHaveLength(2);
+    const [first, last] = group!.children as Array<PathPrim>;
+    expect(first.arrowStart).toBeUndefined();
+    expect(first.arrowEnd).toBeUndefined();
+    expect(last.arrowStart).toBeUndefined();
+    expect(last.arrowEnd?.shape).toBe('stealth');
+  });
+
+  it('arrowDetail.shape 透传到 PathPrim 作为 arrowEnd / arrowStart 的 shape', () => {
+    for (const shape of ['normal', 'open', 'stealth', 'openStealth', 'diamond', 'circle'] as const) {
+      const ir: IR = {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            arrow: '->',
+            arrowDetail: { shape },
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [10, 0] },
+            ],
+          },
+        ],
+      };
+      const path = findPathPrim(compileToScene(ir).primitives);
+      expect(path.arrowEnd?.shape).toBe(shape);
+    }
+  });
+
+  it('open shape 让 path 末端向内缩 5.25×strokeWidth（line 端点接在 back stroke 外缘）', () => {
+    // 默认 length=6, scale=1, lineWidth=1.5：shrink = (8 + 1.5/2) × 6 / 10 = 5.25 path 单位
+    // 线段 (0,0) → (100,0)，shrink 后变 (0,0) → (94.75, 0)；line 端点不再贯穿 back outline
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '->',
+          arrowDetail: { shape: 'open' },
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([move([0, 0]), line([94.75, 0])]);
+  });
+
+  it('strokeWidth 翻倍时 shrink 也翻倍（5.25 × strokeWidth）', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '->',
+          arrowDetail: { shape: 'open' },
+          strokeWidth: 2,
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    // shrink = 5.25 × 2 = 10.5 → (100 - 10.5, 0) = (89.5, 0)
+    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([move([0, 0]), line([89.5, 0])]);
+  });
+
+  it.each([
+    ['normal', 94], // shrink = length × scale = 6
+    ['diamond', 94],
+    ['circle', 94],
+    ['stealth', 95.8], // shrink = 0.7 × length × scale = 4.2（V tip x=3，line 嵌进凹口）
+  ] as const)(
+    '实心 shape %s 也 shrink（line 端点接在 arrow 尾部，低 opacity 下不透出 line）',
+    (shape, expectedEndX) => {
+      const ir: IR = {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            arrow: '->',
+            arrowDetail: { shape },
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [100, 0] },
+            ],
+          },
+        ],
+      };
+      expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([move([0, 0]), line([expectedEndX, 0])]);
+    },
+  );
+
+  it("arrowDetail 缺省时 shape 回退 'stealth'", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '->',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).arrowEnd?.shape).toBe('stealth');
+  });
+
+  it('单 sub-path + arrow → 不拆 group，直接一个 PathPrim 挂 marker', () => {
+    // 直接坐标，无 boundary clip 差异，单 sub-path
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '->',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+            { type: 'step', kind: 'line', to: [10, 10] },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    expect(scene.primitives.find(p => p.type === 'group')).toBeUndefined();
+    const path = findPathPrim(scene.primitives);
+    expect(path.arrowEnd?.shape).toBe('stealth');
+  });
+});
