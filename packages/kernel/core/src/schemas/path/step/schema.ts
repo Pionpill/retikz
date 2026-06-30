@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { FontSchema } from '../../font';
 import { JsonObjectSchema } from '../../json';
 import { PositionSchema } from '../../position';
+import { CssColorSchema, OpacitySchema } from '../../style';
 import { MixedLineSchema } from '../../text';
 import { TargetSchema } from '../target';
 import { FoldStepVia, GeometryLabelPlacement, GeometryLabelSide, normalizeGeometryLabelSide } from './constants';
@@ -47,18 +48,12 @@ export const GeometryLabelSchema = z
       .nonnegative()
       .optional()
       .describe('Side offset distance in user units. Defaults to the same distance as Path step labels.'),
-    textColor: z
-      .string()
+    textColor: CssColorSchema
       .optional()
       .describe(
         "Label text color; falls back to the scope labelDefault, then the owning path's resolved master color, then currentColor. To match a colored line set the path color (not stroke).",
       ),
-    opacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Label-only opacity, multiplied with the owning path opacity.'),
+    opacity: OpacitySchema.optional().describe('Label-only opacity, multiplied with the owning path opacity.'),
     font: FontSchema.optional().describe('Label font overrides. Missing fields inherit from scope label defaults.'),
   })
   .strict()

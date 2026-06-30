@@ -1,10 +1,12 @@
 import { z } from 'zod';
 
+import { CssColorSchema, OpacitySchema } from '../style/primitives';
+
 export const GradientStopSchema = z
   .object({
     offset: z.number().min(0).max(1).describe('Stop position along the gradient axis.'),
-    color: z.string().describe('CSS color for this stop.'),
-    opacity: z.number().min(0).max(1).optional().describe('Stop opacity. Omitted fields are fully opaque.'),
+    color: CssColorSchema.describe('CSS color for this stop.'),
+    opacity: OpacitySchema.optional().describe('Stop opacity. Omitted fields are fully opaque.'),
   })
   .describe('A single gradient color stop');
 
@@ -59,8 +61,8 @@ export const PatternPaintSpecSchema = z
       .describe(
         'Pattern motif provider name. Built-ins are `lines`, `dots`, and `grid`; custom names must be registered via CompileOptions.patterns.',
       ),
-    color: z.string().optional().describe('Motif color; any CSS color, defaults to `currentColor`'),
-    background: z.string().optional().describe('Tile background fill; omitted = transparent'),
+    color: CssColorSchema.optional().describe('Motif color; any CSS color, defaults to `currentColor`'),
+    background: CssColorSchema.optional().describe('Tile background fill; omitted = transparent'),
     size: z
       .number()
       .positive()

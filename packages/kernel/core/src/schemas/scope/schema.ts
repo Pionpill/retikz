@@ -11,9 +11,9 @@ import { ClipSpecSchema } from '../clip';
 import { FontSchema } from '../font';
 import { JsonObjectSchema } from '../json';
 import { NodeSchema } from '../node';
-import { PaintSpecSchema } from '../paint';
 import { PathBaseSchema } from '../path';
 import { ArrowDetailSchema } from '../path/arrow';
+import { CascadingGraphicStyleSchema, CssColorSchema, OpacitySchema } from '../style';
 import { TransformSchema } from '../transform';
 import { ScopeBoundingShape } from './constants';
 
@@ -50,9 +50,9 @@ export const PathDefaultSchema = PathBaseSchema.omit({
 
 export const LabelDefaultSchema = z
   .object({
-    color: z.string().optional().describe('Master color for labels in this scope; textColor falls back to it.'),
-    textColor: z.string().optional().describe('Default text color for node labels and step labels in this scope.'),
-    opacity: z.number().min(0).max(1).optional().describe('Default label opacity.'),
+    color: CssColorSchema.optional().describe('Master color for labels in this scope; textColor falls back to it.'),
+    textColor: CssColorSchema.optional().describe('Default text color for node labels and step labels in this scope.'),
+    opacity: OpacitySchema.optional().describe('Default label opacity.'),
     font: FontSchema.optional().describe('Default label font (family / size / weight / style); per-field fallback.'),
   })
   .strict()
@@ -89,42 +89,7 @@ export const ScopeSchema = z
       .describe(
         'Local transforms applied to all scope children. Array order is application order; translate variants are lowered at compile time.',
       ),
-    color: z
-      .string()
-      .optional()
-      .describe(
-        'Cascading master color for elements in this scope. Stroke, fill, text, labels, and arrows may inherit it unless overridden.',
-      ),
-    stroke: z
-      .union([z.string(), PaintSpecSchema])
-      .optional()
-      .describe(
-        'Cascading default stroke paint (CSS color or PaintSpec: gradient / pattern / image) for inner nodes and paths; overrides the cascading master color for the stroke channel.',
-      ),
-    fill: z
-      .union([z.string(), PaintSpecSchema])
-      .optional()
-      .describe(
-        'Cascading default fill (CSS color or PaintSpec: gradient / pattern / image) for inner nodes and paths.',
-      ),
-    strokeWidth: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Cascading default stroke width (user units) for inner nodes and paths.'),
-    opacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Cascading whole-element opacity. Nested scopes replace it rather than compounding it.'),
-    fillOpacity: z.number().min(0).max(1).optional().describe('Cascading fill-only opacity for inner nodes and paths.'),
-    drawOpacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Cascading stroke-only opacity for inner nodes and paths.'),
+    ...CascadingGraphicStyleSchema.shape,
     nodeDefault: NodeDefaultSchema.optional().describe(
       'Default style applied to nodes in this scope. Independent from the other default channels.',
     ),

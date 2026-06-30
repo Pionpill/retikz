@@ -1,12 +1,13 @@
 import { z } from 'zod';
 
 import { FontSchema } from '../font';
+import { CssColorSchema, OpacitySchema } from '../style';
 
 export const TextRunSchema = z
   .object({
     text: z.string().describe('Text segment content within a mixed text+math line.'),
-    fill: z.string().optional().describe('Per-run text color; overrides the line / block default.'),
-    opacity: z.number().min(0).max(1).optional().describe('Per-run opacity.'),
+    fill: CssColorSchema.optional().describe('Per-run text color; overrides the line / block default.'),
+    opacity: OpacitySchema.optional().describe('Per-run opacity.'),
     font: FontSchema.optional().describe('Per-run font overrides; missing fields inherit from the line / block font.'),
   })
   .strict()
@@ -25,11 +26,8 @@ export const MathRunSchema = z
       .describe(
         'Display (block) vs inline TeX metrics; default inline (false). The `$$...$$` sugar sets this true, `$...$` leaves it false.',
       ),
-    fill: z
-      .string()
-      .optional()
-      .describe('Glyph color for this formula segment; overrides the line / block text color.'),
-    opacity: z.number().min(0).max(1).optional().describe('Per-run opacity.'),
+    fill: CssColorSchema.optional().describe('Glyph color for this formula segment; overrides the line / block text color.'),
+    opacity: OpacitySchema.optional().describe('Per-run opacity.'),
   })
   .strict()
   .describe(
@@ -53,8 +51,8 @@ export const LineSpecSchema = z
     z.string(),
     z.object({
       text: z.string().describe('Line content'),
-      fill: z.string().optional().describe('Per-line text color; overrides block default'),
-      opacity: z.number().min(0).max(1).optional().describe('Per-line opacity.'),
+      fill: CssColorSchema.optional().describe('Per-line text color; overrides block default'),
+      opacity: OpacitySchema.optional().describe('Per-line opacity.'),
       font: FontSchema.optional().describe('Per-line font overrides; missing fields inherit from block-level `font`'),
     }),
     MixedLineSchema,

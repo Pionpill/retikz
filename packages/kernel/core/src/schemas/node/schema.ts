@@ -3,10 +3,8 @@ import { z } from 'zod';
 import { normalizeWebSide } from '../../geometry/anchor';
 import { AnimationTrackSchema } from '../animation';
 import { BoundarySchema } from '../boundary';
-import { BlendMode, DropShadowSchema, ShadowPreset } from '../effects';
 import { FontSchema } from '../font';
 import { JsonObjectSchema } from '../json';
-import { PaintSpecSchema } from '../paint';
 import {
   AtPositionSchema,
   BetweenPositionSchema,
@@ -16,6 +14,7 @@ import {
   PositionSchema,
 } from '../position';
 import { ShapeRefSchema } from '../shape';
+import { CssColorSchema, GraphicStyleSchema, OpacitySchema } from '../style';
 import { MixedLineSchema, TextBlockSchema } from '../text';
 import { NodeLabelBoundarySide, NodeLabelPlacement, NodeLabelPosition, NodeTextAlign } from './constants';
 
@@ -59,13 +58,8 @@ export const NodeLabelSchema = z
       .nonnegative()
       .optional()
       .describe('Gap between the node border and the label center, in user units. Default 12.'),
-    textColor: z.string().optional().describe('Label text color; falls back to currentColor.'),
-    opacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Label-only opacity, multiplied with node opacity when both are set.'),
+    textColor: CssColorSchema.optional().describe('Label text color; falls back to currentColor.'),
+    opacity: OpacitySchema.optional().describe('Label-only opacity, multiplied with node opacity when both are set.'),
     font: FontSchema.optional().describe('Label font overrides. Missing fields inherit from the parent node font.'),
     rotate: z
       .union([z.enum(['none', 'radial', 'tangent']), z.number()])
@@ -83,7 +77,7 @@ export const NodeLabelSchema = z
       .union([
         z.boolean(),
         z.object({
-          stroke: z.string().optional().describe('Leader line color; defaults to the label color / currentColor'),
+          stroke: CssColorSchema.optional().describe('Leader line color; defaults to the label color / currentColor'),
           strokeWidth: z.number().positive().optional().describe('Leader line width (user units); default 1'),
           dashPattern: z.array(z.number()).optional().describe('Leader dash pattern lengths in user units.'),
         }),
@@ -156,24 +150,7 @@ export const NodeSchema = z
       .positive()
       .optional()
       .describe('Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.'),
-    color: z
-      .string()
-      .optional()
-      .describe(
-        'Master color for this node. Stroke, fill, text, and labels may inherit it unless individually overridden.',
-      ),
-    fill: z
-      .union([z.string(), PaintSpecSchema])
-      .optional()
-      .describe('Node background paint: CSS color string or PaintSpec.'),
-    fillOpacity: z.number().min(0).max(1).optional().describe('Fill-only opacity for the node shape.'),
-    stroke: z
-      .union([z.string(), PaintSpecSchema])
-      .optional()
-      .describe(
-        'Border paint of the node shape; any CSS color string or a PaintSpec (linear / radial gradient, pattern, or image). Defaults to currentColor when omitted.',
-      ),
-    drawOpacity: z.number().min(0).max(1).optional().describe('Stroke-only opacity for the node border.'),
+    ...GraphicStyleSchema.shape,
     strokeWidth: z
       .number()
       .nonnegative()
@@ -217,20 +194,7 @@ export const NodeSchema = z
       ),
     xScale: z.number().positive().optional().describe('Horizontal scale factor; overrides `scale` for the X axis.'),
     yScale: z.number().positive().optional().describe('Vertical scale factor; overrides `scale` for the Y axis.'),
-    textColor: z.string().optional().describe('Text label color; any CSS color. Defaults to `currentColor`.'),
-    opacity: z.number().min(0).max(1).optional().describe('Whole-node opacity applied uniformly to shape and text.'),
-    shadow: z
-      .union([z.enum(ShadowPreset), DropShadowSchema])
-      .optional()
-      .describe(
-        'Drop shadow for the node primary shape only. Use a preset keyword or an object whose explicit fields override the preset.',
-      ),
-    blendMode: z
-      .enum(BlendMode)
-      .optional()
-      .describe(
-        'Blend mode for the node primary shape against already drawn content. Does not affect text, labels, or leader lines.',
-      ),
+    textColor: CssColorSchema.optional().describe('Text label color; any CSS color. Defaults to `currentColor`.'),
     innerXSep: z
       .number()
       .nonnegative()

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { CssColorSchema, OpacitySchema } from '../../style';
 import { BuiltinArrowShape } from './constants';
 
 export const ArrowEndDetailSchema = z
@@ -25,24 +26,17 @@ export const ArrowEndDetailSchema = z
       .nonnegative()
       .optional()
       .describe('Arrow-tip width perpendicular to the path, in user units. Defaults to the shape definition fallback.'),
-    color: z
-      .string()
+    color: CssColorSchema
       .optional()
       .describe(
         'Arrow color override. Hollow arrows use it as stroke; solid arrows use it as the fallback fill/stroke color. Omitted arrows inherit the path stroke.',
       ),
-    fill: z
-      .string()
+    fill: CssColorSchema
       .optional()
       .describe(
         'Fill override for solid arrow shapes. Hollow arrow definitions ignore fill and use `color` for their outline.',
       ),
-    opacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Arrow-only opacity. When omitted, the arrow follows the path opacity.'),
+    opacity: OpacitySchema.optional().describe('Arrow-only opacity. When omitted, the arrow follows the path opacity.'),
     lineWidth: z
       .number()
       .nonnegative()
