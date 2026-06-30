@@ -50,10 +50,16 @@ export type CoordinateResolveContext = {
   height: number;
   /** guide / label 使用的基础字号。 */
   fontSize: number;
+  /** guide title / composition label 固定间距。 */
+  labelGap?: number;
   /** 用户传入的边距覆盖；自定义坐标系可选择是否消费。 */
   margin?: Partial<Margins>;
   /** legend 预留区域；内置坐标系用它收窄 plotArea，自定义坐标系 v1 通常保持满画布。 */
   legendReserve: LegendReserve;
+  /** overlay scope 共享的目标 plotArea；给定时坐标系仍独立训练 scale，但使用该矩形作为 range。 */
+  plotAreaOverride?: CoordinatePlotArea;
+  /** 指定 role 的最终 range；用于 scaffold track 把局部 role 映射进 track band。 */
+  roleRangeOverrides?: Partial<Record<DimensionRole, readonly [number, number]>>;
   /** provenance 上下文，透传给 guide 下沉以保留诊断来源。 */
   provenance?: ProvenanceContext;
   /** 按定位角色收集 mark 通道原始值；includeBaseline 用于需要把 baseline 纳入连续域的值轴。 */
@@ -106,6 +112,7 @@ export type CoordinateDefinition<TCoordinateOperation extends CoordinateOperatio
  * @description 这是坐标系扩展的唯一注册单元：schema 决定 IR 中允许的 coordinate operation，
  *   roles 决定 mark 必填位置通道，resolve 把 JSON operation 解析成运行时 frame 与 guide 层。内置坐标系和
  *   自定义坐标系都应通过这个对象进入 registry，避免内置白名单与扩展补丁接口分叉。
+ * @remarks 当前 helper 只做 `CoordinateDefinition` 类型约束并原样返回定义对象；保留稳定入口是为了与其它 registry API 对齐，并为后续运行时校验、默认值归一或泛型收敛预留 contract hook。
  */
 export const defineCoordinate = <TCoordinateOperation extends CoordinateOperation>(
   def: CoordinateDefinition<TCoordinateOperation>,

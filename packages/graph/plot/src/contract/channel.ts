@@ -298,7 +298,10 @@ export type ChannelDefinition<T extends ChannelValue = ChannelValue> =
   | NodeChannelDefinition<T>
   | PathChannelDefinition<T>;
 
-/** 定义一个通道（统一入口）；具体 kind 决定解析后进入 position / mark / scope / node / path 哪条消费路径。 */
+/**
+ * 定义一个通道（统一入口）；具体 kind 决定解析后进入 position / mark / scope / node / path 哪条消费路径。
+ * @remarks 当前 helper 只做 `ChannelDefinition` 类型约束并原样返回定义对象；保留稳定入口是为了与其它 registry API 对齐，并为后续运行时校验、默认值归一或泛型收敛预留 contract hook。
+ */
 export const defineChannel = <T extends ChannelDefinition>(def: T): T => def;
 
 /** 定义一个 Scope 通道（保留 resolve / deliver 的输出强类型）。 */

@@ -1,13 +1,27 @@
-import { JsonObjectSchema } from '@retikz/core';
+﻿import { JsonObjectSchema } from '@retikz/core';
 import { z } from 'zod';
 
-import { PlotTransform, RESERVED_TRANSFORM_KINDS } from './constants';
+import {
+  BUILTIN_REDUCER_OPERATION_KINDS,
+  BUILTIN_SELECTOR_OPS,
+  FieldReducerOperationKind,
+  FirstLastSelectorOp,
+  MinMaxSelectorOp,
+  PlotSortOrder,
+  PlotTransform,
+  ReducerOperationKind,
+  RESERVED_TRANSFORM_KINDS,
+  RowSelectorTie,
+  SelectorOp,
+  StackOffset,
+  TopBottomSelectorOp,
+} from './constants';
 
 export const SortTransformSchema = z
   .object({
     kind: z.literal(PlotTransform.Sort).describe('Discriminator: reorder rows by a field'),
     field: z.string().min(1).describe('Field path the rows are ordered by'),
-    order: z.enum(['ascending', 'descending']).optional().describe('Sort direction; default ascending'),
+    order: z.enum(PlotSortOrder).optional().describe('Sort direction; default ascending'),
   })
   .describe('Sort transform: stable reorder of the data rows by one field');
 
@@ -32,7 +46,7 @@ export const StackTransformSchema = z
     startField: z.string().min(1).optional().describe('Output field for the lower bound of each segment; default "y0"'),
     endField: z.string().min(1).optional().describe('Output field for the upper bound of each segment; default "y1"'),
     offset: z
-      .enum(['zero', 'normalize', 'diverging', 'center', 'overlap'])
+      .enum(StackOffset)
       .optional()
       .describe(
         'Stack baseline offset: zero accumulates from 0; normalize scales each stack to 0..1; diverging separates positive/negative values; center centers the full stack; overlap draws every segment from 0',
@@ -48,26 +62,14 @@ export const GroupBySchema = z
 export const OrderBySchema = z
   .object({
     field: z.string().min(1).describe('Field path used to order rows'),
-    order: z.enum(['ascending', 'descending']).optional().describe('Sort direction; default ascending'),
+    order: z.enum(PlotSortOrder).optional().describe('Sort direction; default ascending'),
   })
   .strict()
   .describe('Ordering rule used by row selectors');
 
-const BuiltinReducerOps = [
-  'count',
-  'sum',
-  'mean',
-  'median',
-  'min',
-  'max',
-  'extent',
-  'quantile',
-  'quantile-band',
-] as const;
-
 const CountReducerOperationSchema = z
   .object({
-    op: z.literal('count').describe('Reducer discriminator: count rows in the group'),
+    op: z.literal(ReducerOperationKind.Count).describe('Reducer discriminator: count rows in the group'),
     as: z.string().min(1).describe('Output field for the row count'),
   })
   .strict()
@@ -76,7 +78,7 @@ const CountReducerOperationSchema = z
 const FieldReducerOperationSchema = z
   .object({
     op: z
-      .enum(['sum', 'mean', 'median', 'min', 'max', 'extent'])
+      .enum(FieldReducerOperationKind)
       .describe('Reducer discriminator: numeric group statistic'),
     field: z.string().min(1).describe('Numeric source field reduced within the group'),
     as: z.string().min(1).describe('Output field for the reduced value'),
@@ -86,7 +88,7 @@ const FieldReducerOperationSchema = z
 
 const QuantileReducerOperationSchema = z
   .object({
-    op: z.literal('quantile').describe('Reducer discriminator: numeric quantile within the group'),
+    op: z.literal(ReducerOperationKind.Quantile).describe('Reducer discriminator: numeric quantile within the group'),
     field: z.string().min(1).describe('Numeric source field reduced within the group'),
     p: z.number().min(0).max(1).describe('Quantile probability in [0, 1]'),
     as: z.string().min(1).describe('Output field for the quantile value'),
@@ -163,7 +165,7 @@ export const QuantileBandOutputsSchema = z
       const previous = seen.get(field);
       if (previous !== undefined) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path,
           message: `duplicate quantile-band output field "${field}"`,
         });
@@ -191,7 +193,9 @@ export const QuantileBandOutputsSchema = z
 
 export const QuantileBandReducerOperationSchema = z
   .object({
-    op: z.literal('quantile-band').describe('Reducer discriminator: parameterized quantile band within the group'),
+    op: z
+      .literal(ReducerOperationKind.QuantileBand)
+      .describe('Reducer discriminator: parameterized quantile band within the group'),
     field: z.string().min(1).describe('Numeric source field reduced within the group'),
     lowerP: z.number().min(0).max(1).describe('Lower quantile probability in [0, 1]; must be less than upperP'),
     upperP: z.number().min(0).max(1).describe('Upper quantile probability in [0, 1]; must be greater than lowerP'),
@@ -212,7 +216,7 @@ const ExternalReducerOperationSchema = z
     op: z
       .string()
       .min(1)
-      .refine(op => !(BuiltinReducerOps as ReadonlyArray<string>).includes(op), {
+      .refine(op => !BUILTIN_REDUCER_OPERATION_KINDS.has(op), {
         message: 'external reducer op must not collide with a built-in reducer op',
       })
       .describe('Discriminator: externally registered reducer operation key'),
@@ -222,7 +226,7 @@ const ExternalReducerOperationSchema = z
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message:
           'external reducer operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
       });
@@ -246,7 +250,7 @@ export const ReducerOperationSchema = z
 const reducerOutputFieldsOf = (
   operation: z.infer<typeof ReducerOperationSchema>,
 ): Array<{ field: string; path: Array<string | number> }> => {
-  if (operation.op === 'quantile-band') {
+  if (operation.op === ReducerOperationKind.QuantileBand) {
     const quantileBandOperation = QuantileBandReducerOperationSchema.parse(operation);
     const fields: Array<{ field: string; path: Array<string | number> }> = [
       { field: quantileBandOperation.outputs.lower, path: ['outputs', 'lower'] },
@@ -283,7 +287,7 @@ const ReducerMetricsSchema = z
       for (const { field, path } of reducerOutputFieldsOf(metrics[index])) {
         if (seen.has(field)) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: 'custom',
             path: [index, ...path],
             message: `duplicate reducer output field "${field}"`,
           });
@@ -294,22 +298,20 @@ const ReducerMetricsSchema = z
   })
   .describe('One or more reducer metrics; output field names must be unique within the transform');
 
-const BuiltinSelectorOps = ['min', 'max', 'first', 'last', 'top', 'bottom', 'nth', 'outside-quantile-band'] as const;
-
 const MinMaxSelectorOperationSchema = z
   .object({
     op: z
-      .enum(['min', 'max'])
+      .enum(MinMaxSelectorOp)
       .describe('Selector discriminator: choose the row with the smallest or largest numeric value'),
     by: z.string().min(1).describe('Numeric field used for min/max comparison'),
-    tie: z.enum(['first', 'last', 'all']).optional().describe('Tie-breaking strategy; default first'),
+    tie: z.enum(RowSelectorTie).optional().describe('Tie-breaking strategy; default first'),
   })
   .strict()
   .describe('Min/max row selector operation');
 
 const FirstLastSelectorOperationSchema = z
   .object({
-    op: z.enum(['first', 'last']).describe('Selector discriminator: choose the first or last row'),
+    op: z.enum(FirstLastSelectorOp).describe('Selector discriminator: choose the first or last row'),
     orderBy: z
       .array(OrderBySchema)
       .min(1)
@@ -321,11 +323,11 @@ const FirstLastSelectorOperationSchema = z
 
 const TopBottomSelectorOperationSchema = z
   .object({
-    op: z.enum(['top', 'bottom']).describe('Selector discriminator: choose top or bottom N rows by a numeric field'),
+    op: z.enum(TopBottomSelectorOp).describe('Selector discriminator: choose top or bottom N rows by a numeric field'),
     by: z.string().min(1).describe('Numeric field used for ranking'),
     n: z.number().int().positive().describe('Number of rows selected per group'),
     tie: z
-      .enum(['first', 'last', 'all'])
+      .enum(RowSelectorTie)
       .optional()
       .describe('Tie-breaking strategy around the Nth row; default first'),
   })
@@ -334,7 +336,7 @@ const TopBottomSelectorOperationSchema = z
 
 const NthSelectorOperationSchema = z
   .object({
-    op: z.literal('nth').describe('Selector discriminator: choose a zero-based ordered row index'),
+    op: z.literal(SelectorOp.Nth).describe('Selector discriminator: choose a zero-based ordered row index'),
     orderBy: z.array(OrderBySchema).min(1).describe('Stable ordering before choosing the row'),
     index: z.number().int().nonnegative().describe('Zero-based selected row index after ordering'),
   })
@@ -372,7 +374,7 @@ export const OutsideQuantileBandBoundarySpecSchema = z
 export const OutsideQuantileBandSelectorOperationSchema = z
   .object({
     op: z
-      .literal('outside-quantile-band')
+      .literal(SelectorOp.OutsideQuantileBand)
       .describe('Selector discriminator: choose rows outside a parameterized quantile band'),
     field: z.string().min(1).describe('Numeric source field used to compute quantile band boundaries'),
     lowerP: z.number().min(0).max(1).describe('Lower quantile probability in [0, 1]; must be less than upperP'),
@@ -393,7 +395,7 @@ const ExternalSelectorOperationSchema = z
     op: z
       .string()
       .min(1)
-      .refine(op => !(BuiltinSelectorOps as ReadonlyArray<string>).includes(op), {
+      .refine(op => !BUILTIN_SELECTOR_OPS.has(op), {
         message: 'external selector op must not collide with a built-in selector op',
       })
       .describe('Discriminator: externally registered selector operation key'),
@@ -403,7 +405,7 @@ const ExternalSelectorOperationSchema = z
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message:
           'external selector operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
       });
@@ -517,7 +519,7 @@ export const AnnotateTransformSchema = z
   .superRefine((operation, ctx) => {
     if (operation.metrics === undefined && operation.selectors === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'annotate transform requires metrics or selectors',
       });
     }
@@ -727,14 +729,14 @@ export const DensityTransformSchema = z
   .superRefine((operation, ctx) => {
     if (operation.extent !== undefined && operation.extent[0] >= operation.extent[1]) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['extent'],
         message: 'density extent lower bound must be less than upper bound',
       });
     }
     if (operation.xAs === operation.densityAs) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['densityAs'],
         message: 'density output fields xAs and densityAs must be different',
       });
@@ -742,7 +744,7 @@ export const DensityTransformSchema = z
     for (const [index, field] of (operation.groupBy ?? []).entries()) {
       if (field === operation.xAs || field === operation.densityAs) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['groupBy', index],
           message: `density output field must not overwrite groupBy field "${field}"`,
         });
@@ -788,14 +790,14 @@ export const SmoothTransformSchema = z
   .superRefine((operation, ctx) => {
     if (operation.extent !== undefined && operation.extent[0] >= operation.extent[1]) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['extent'],
         message: 'smooth extent lower bound must be less than upper bound',
       });
     }
     if (operation.xAs === operation.yAs) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['yAs'],
         message: 'smooth output fields xAs and yAs must be different',
       });
@@ -803,7 +805,7 @@ export const SmoothTransformSchema = z
     for (const [index, field] of (operation.groupBy ?? []).entries()) {
       if (field === operation.xAs || field === operation.yAs) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['groupBy', index],
           message: `smooth output field must not overwrite groupBy field "${field}"`,
         });
@@ -846,7 +848,7 @@ const ExternalTransformSchema = z
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message:
           'external transform operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
       });

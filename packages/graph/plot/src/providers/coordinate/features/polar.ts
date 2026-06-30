@@ -17,7 +17,7 @@ import type { Coordinate, Polar1DCoordinate } from '../../../schemas';
 import { cellInterval, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../contract';
 import { computePolarCoordinate } from '../../../pipeline';
 import { PlotCoordinate, PlotScale, Polar1DSchema, Polar2DSchema } from '../../../schemas';
-import { assertUniqueAxisDimension } from '../shared';
+import { assertUniqueAxisPlacement } from '../shared';
 
 type Polar2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Polar2D }>;
 
@@ -75,6 +75,8 @@ export type PolarCoordinateFrame = {
   primary: PositionScale;
   /** radius 位置 scale（range = [innerRadius, outerRadius]） */
   secondary: PositionScale;
+  /** 按通用 coordinate contract 暴露各 role 的位置 scale。 */
+  roleScales: Partial<Record<DimensionRole, PositionScale>>;
   /** 投影：θ=primary.coordinate(angle)°、r=secondary.coordinate(radius)，[cx + r·cosθ, cy + r·sinθ]；任一非有限 → null */
   project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：按 roles 序传值（[angle, radius]），内部委托 project；任一非有限 → null */
@@ -130,6 +132,7 @@ export const createPolarCoordinate = (input: PolarCoordinateSpec): PolarCoordina
     continuousAngle: input.continuousAngle,
     primary: input.primary,
     secondary: input.secondary,
+    roleScales: { x: input.primary, y: input.secondary },
     project,
     projectRoles: values => project(values[0], values[1]),
     projectPolar,
@@ -165,6 +168,8 @@ export type Polar1DCoordinateFrame = {
   continuousAngle: boolean;
   /** angle 位置 scale（range = [startAngle, endAngle] 度） */
   primary: PositionScale;
+  /** 按通用 coordinate contract 暴露 x role 的位置 scale。 */
+  roleScales: Partial<Record<DimensionRole, PositionScale>>;
   /** 把已映射的极坐标对 (θ 度, r user units) 换算成屏幕点（非有限 → null） */
   projectPolar: (thetaDeg: number, radius: number) => Position | null;
   /** 投影别名（2 入参形态，secondary 忽略）：等价 projectRoles([angleValue]) */
@@ -210,6 +215,7 @@ export const createPolar1DCoordinate = (input: Polar1DCoordinateSpec): Polar1DCo
     endAngle: input.endAngle,
     continuousAngle: input.continuousAngle,
     primary: input.primary,
+    roleScales: { x: input.primary },
     projectPolar,
     project: primaryValue => projectRoles([primaryValue]),
     projectRoles,
@@ -276,7 +282,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     const radiusScaleDef = ctx.resolveScaleForRole('y', coordinate.radius, radiusValues);
     ctx.assertBaselineScaleCompatible(radiusScaleDef.type, ctx.marks);
 
-    assertUniqueAxisDimension(ctx.axisGuides, axisRole);
+    assertUniqueAxisPlacement(ctx.axisGuides, axisRole);
     const angularAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
     const radialAxis = ctx.axisGuides.find(guide => guide.dimension === 'y');
 
@@ -295,13 +301,20 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     );
     const innerRadiusUnits = coordinate.innerRadius * layout.outerRadius;
     const radiusScale = ctx.buildPositionScale(radiusScaleDef, radiusValues, [innerRadiusUnits, layout.outerRadius]);
+    const angleRangeOverride = ctx.roleRangeOverrides?.x;
+    const radiusRangeOverride = ctx.roleRangeOverrides?.y;
+    if (angleRangeOverride !== undefined) angleScale.setRange([angleRangeOverride[0], angleRangeOverride[1]]);
+    if (radiusRangeOverride !== undefined) radiusScale.setRange([radiusRangeOverride[0], radiusRangeOverride[1]]);
     const radialTicks: TickSet | undefined = radialAxis
       ? (ctx.collectAxisTicks('y') ?? radiusScale.ticks(radialAxis.tickCount))
       : undefined;
+    const [radiusRangeStart, radiusRangeEnd] = radiusScale.range();
+    const frameInnerRadius = Math.min(radiusRangeStart, radiusRangeEnd);
+    const frameOuterRadius = Math.max(radiusRangeStart, radiusRangeEnd);
     const frame = createPolarCoordinate({
       center: layout.center,
-      innerRadius: innerRadiusUnits,
-      outerRadius: layout.outerRadius,
+      innerRadius: frameInnerRadius,
+      outerRadius: frameOuterRadius,
       startAngle: coordinate.startAngle,
       endAngle: coordinate.endAngle,
       continuousAngle: isContinuousAngleScale(angleScaleDef.type),
@@ -316,6 +329,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
       xTicks: angularTicks ?? EMPTY_TICKS,
       yTicks: radialTicks ?? EMPTY_TICKS,
       fontSize: ctx.fontSize,
+      labelGap: ctx.labelGap,
       frame,
       angularTicks: angularTicks ?? EMPTY_TICKS,
       radialTicks: radialTicks ?? EMPTY_TICKS,
@@ -340,10 +354,12 @@ const polar1DCoordinateDefinition: CoordinateDefinition<Polar1DCoordinate> = {
     const angleValues = ctx.collectPositionValues('x', { axis: 'primary' });
     const angleScaleDef = ctx.resolveScaleForRole('x', coordinate.angle, angleValues);
 
-    assertUniqueAxisDimension(ctx.axisGuides, axisRole);
+    assertUniqueAxisPlacement(ctx.axisGuides, axisRole);
     const angularAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
 
     const angleScale = ctx.buildPositionScale(angleScaleDef, angleValues, [startAngle, endAngle]);
+    const angleRangeOverride = ctx.roleRangeOverrides?.x;
+    if (angleRangeOverride !== undefined) angleScale.setRange([angleRangeOverride[0], angleRangeOverride[1]]);
     const angularTicks: TickSet | undefined = angularAxis
       ? (ctx.collectAxisTicks('x') ?? angleScale.ticks(angularAxis.tickCount))
       : undefined;
@@ -384,6 +400,7 @@ const polar1DCoordinateDefinition: CoordinateDefinition<Polar1DCoordinate> = {
       xTicks: angularTicks ?? EMPTY_TICKS,
       yTicks: EMPTY_TICKS,
       fontSize: ctx.fontSize,
+      labelGap: ctx.labelGap,
       frame: guidePolarCoordinate,
       angularTicks: angularTicks ?? EMPTY_TICKS,
       radialTicks: EMPTY_TICKS,

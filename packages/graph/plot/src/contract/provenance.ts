@@ -2,7 +2,7 @@ import type { ExternalRow } from '../schemas';
 
 /**
  * provenance 下沉上下文：贯穿 expand -> mark -> guide，承载 plotId / dataReference / 各开关。
- * @description provenance 关时不构造此对象（传 undefined），mark / guide 据此决定是否写 id / meta，保默认逐字节等价。
+ * @description provenance 关时不构造此对象（传 undefined），mark / guide 据此决定是否写 id / meta。
  */
 export type ProvenanceContext = {
   /** root.id；存在时作为 plot-local id 前缀，缺省则内部元素匿名。 */

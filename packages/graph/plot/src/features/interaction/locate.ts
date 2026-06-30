@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { IRChild, IRJsonObject, IRNode, IRScope } from '@retikz/core';
 
 import type { AnyTransformDefinition, CoordinateFrame, IntervalContext, TransformContext } from '../../contract';
 import type { LowerPlotsOptions, MarkDataView } from '../../pipeline/expand';
@@ -6,7 +6,7 @@ import type { ProvenanceContext } from '../../pipeline/provenance';
 import type { ExternalDatasets, ExternalRow, Mark, MarkOperation, PlotSpec, TransformOperation } from '../../schemas';
 
 import { cellGeometryAnchor, isRenderableCellGeometry } from '../../contract';
-import { prepareRows, resolveFrame } from '../../pipeline/expand';
+import { lowerPlots, prepareRows, resolveFrame } from '../../pipeline/expand';
 import { DEFAULT_FONT_SIZE } from '../../pipeline/layout';
 import {
   createDatumIdRegistrar,
@@ -31,12 +31,12 @@ const DEFAULT_HEIGHT = 300;
 /**
  * 解析结果：逻辑地址在 scene 里的落点 + 来源 meta +（若已绑）可连接 id
  * @description position 与 lowering 摆放一致（共享 datumAnchor）；meta 即便 lowering 未开 datumProvenance 也按需合成；
- *   id 仅在 ADR-01 给该元素绑了具名 id（datumIdField 命中）时回填，否则省略。
+ *   id 仅在 datumIdField 命中且已给该元素绑了具名 id 时回填，否则省略。
  */
 export type ResolvedAnchor = {
   /** 该 datum / series 的锚点屏幕位置（user units，与 lowering 摆放一致） */
   position: [number, number];
-  /** 来源 meta（与 ADR-01 per-datum meta 同构；series 携带 {source,dataReference,mark,markIndex,series}） */
+  /** 来源 meta（与 per-datum meta 同构；series 携带 {source,dataReference,mark,markIndex,series}） */
   meta: IRJsonObject;
   /** 若给该元素绑了具名 id（datumIdField 命中），回填；否则省略 */
   id?: string;
@@ -44,19 +44,32 @@ export type ResolvedAnchor = {
 
 /**
  * plot locator：对一份 spec + 数据 + 渲染选项的确定性正向解析器（纯函数、无副作用、不进 IR）
- * @description 命中预演：把逻辑地址映射到 scene 落点 + 来源 meta，与实际渲染逐点一致（复用 ADR-01 resolveFrame + datumAnchor）。
+ * @description 命中预演：把逻辑地址映射到 scene 落点 + 来源 meta，与实际渲染逐点一致（复用 resolveFrame + datumAnchor）。
  */
+export type PlotFacetLocatorOptions = {
+  id: string;
+  row?: string | number | boolean | null;
+  column?: string | number | boolean | null;
+};
+
+export type PlotLocatorOptions = {
+  markIndex?: number;
+  coordinateScope?: string;
+  facet?: PlotFacetLocatorOptions;
+  track?: string;
+};
+
 export type PlotLocator = {
   /**
    * 按 transformedIndex（transform 后行序 = lowering 迭代序 = 渲染序）解析 datum 锚点。O(1)。
    * @description markIndex 缺省取首个 mark；越界 / 该行未被渲染（投影无效 / 零尺寸被跳过）→ null。
    */
-  datum: (transformedIndex: number, opts?: { markIndex?: number }) => ResolvedAnchor | null;
+  datum: (transformedIndex: number, opts?: PlotLocatorOptions) => ResolvedAnchor | null;
   /**
    * 按 series 值解析其区域锚点（该 series 所有已渲染 datum 锚点的 centroid）。O(k)。
    * @description 无此 series 值 / 全被跳过 → null；meta 携带 series。
    */
-  series: (value: string | number, opts?: { markIndex?: number }) => ResolvedAnchor | null;
+  series: (value: string | number, opts?: PlotLocatorOptions) => ResolvedAnchor | null;
   /**
    * 按点路径串解析：'<plotId>.datum.<transformedIndex>' / '<plotId>.series.<value>'。
    * @description root 无 id 时支持无前缀形式 'datum.<i>' / 'series.<v>'；不匹配 / plotId 不符 / 非法段 → null（不抛）。
@@ -72,6 +85,79 @@ const seriesFieldOf = (mark: Mark): string | undefined =>
 const isDatumBearing = (mark: MarkOperation): mark is Mark =>
   isBuiltinMark(mark) && (mark.type === PlotMark.Point || mark.type === PlotMark.Interval);
 
+type RenderDatumEntry = ResolvedAnchor & {
+  transformedIndex: number;
+  markIndex: number;
+};
+
+const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
+const isNode = (child: IRChild): child is IRNode => child.type === 'node';
+
+const mergeMeta = (parent: IRJsonObject, own: IRJsonObject | undefined): IRJsonObject => ({
+  ...parent,
+  ...(own ?? {}),
+});
+
+const translateOffsetOf = (scope: IRScope): [number, number] => {
+  let x = 0;
+  let y = 0;
+  for (const transform of scope.transforms ?? []) {
+    if (transform.kind !== 'translate') continue;
+    x += transform.x;
+    y += transform.y;
+  }
+  return [x, y];
+};
+
+const collectRenderDatumEntries = (
+  child: IRChild,
+  parentMeta: IRJsonObject = {},
+  offset: [number, number] = [0, 0],
+): Array<RenderDatumEntry> => {
+  if (isNode(child)) {
+    const meta = mergeMeta(parentMeta, child.meta);
+    const transformedIndex = meta.transformedIndex;
+    const markIndex = meta.markIndex;
+    if (typeof transformedIndex !== 'number' || !Number.isInteger(transformedIndex)) return [];
+    if (typeof markIndex !== 'number' || !Number.isInteger(markIndex)) return [];
+    const position = child.position;
+    if (!Array.isArray(position)) return [];
+    const [x, y] = position;
+    const entry: RenderDatumEntry = {
+      position: [x + offset[0], y + offset[1]],
+      meta,
+      transformedIndex,
+      markIndex,
+    };
+    return child.id !== undefined ? [{ ...entry, id: child.id }] : [entry];
+  }
+  if (!isScope(child)) return [];
+  const meta = mergeMeta(parentMeta, child.meta);
+  const [dx, dy] = translateOffsetOf(child);
+  const nextOffset: [number, number] = [offset[0] + dx, offset[1] + dy];
+  return child.children.flatMap(item => collectRenderDatumEntries(item, meta, nextOffset));
+};
+
+const hasContextOptions = (opts: PlotLocatorOptions | undefined): boolean =>
+  opts?.coordinateScope !== undefined || opts?.facet !== undefined || opts?.track !== undefined;
+
+const facetMatches = (meta: IRJsonObject, facet: PlotFacetLocatorOptions | undefined): boolean => {
+  if (facet === undefined) return true;
+  const found = meta.facet;
+  if (found === null || typeof found !== 'object' || Array.isArray(found)) return false;
+  const facetMeta = found;
+  if (facetMeta.id !== facet.id) return false;
+  if ('row' in facet && facetMeta.row !== facet.row) return false;
+  if ('column' in facet && facetMeta.column !== facet.column) return false;
+  return true;
+};
+
+const contextMatches = (meta: IRJsonObject, opts: PlotLocatorOptions | undefined): boolean => {
+  if (opts?.coordinateScope !== undefined && meta.coordinateScope !== opts.coordinateScope) return false;
+  if (opts?.track !== undefined && meta.track !== opts.track) return false;
+  return facetMatches(meta, opts?.facet);
+};
+
 const resolveMarkRows = (
   mark: MarkOperation,
   rows: Array<ExternalRow>,
@@ -84,7 +170,7 @@ const resolveMarkRows = (
 };
 
 /**
- * 用与 lowerPlots 同一份 spec + datasets + options 建 locator（复用 ADR-01 resolveFrame，投影单一真源）
+ * 用与 lowerPlots 同一份 spec + datasets + options 建 locator（复用 resolveFrame，投影单一真源）
  * @description 行构造与 expandPlot 一致：先 tagSourceIndex（克隆、不污染入参）供 sourceIndex 回指，再 applyTransforms；
  *   frame 走同一 resolveFrame。locator 纯函数：不产 IR、不注册 core 元素、不改 spec / datasets。
  *   datumIdField 设时在构建期跑 plot 级 registrar（与 lowering 同序、同查重）→ 同 spec+options 下 locator-build 抛 iff lowering 抛（#3）。
@@ -109,7 +195,7 @@ export const createPlotLocator = (
     return empty;
   }
 
-  // 与 expandPlot 共用 prepareRows（fieldMaps 校验 + 类型解析 + 归一化），保证 render 抛错 ⟺ locator 抛错（评审 P2 parity）。
+  // 与 expandPlot 共用 prepareRows（fieldMaps 校验 + 类型解析 + 归一化），保证 render 抛错 ⟺ locator 抛错。
   // tagSourceIndex（clone，不动入参）→ prepareRows → applyTransforms，与 lowering 完全同序，否则 locator 落点漂移。
   const ingested = tagSourceIndex(dataset);
   const { fieldTypes, normalized, transformRegistry, transformContext, scaleRegistry } = prepareRows(
@@ -193,6 +279,54 @@ export const createPlotLocator = (
   const datumIdOf = (markIndex: number, transformedIndex: number): string | undefined =>
     validatedDatumIds.get(markIndex)?.get(transformedIndex);
 
+  let renderEntriesCache: Array<RenderDatumEntry> | undefined;
+  const renderEntries = (): Array<RenderDatumEntry> => {
+    if (renderEntriesCache !== undefined) return renderEntriesCache;
+    const [definition] = lowerPlots(datasets, {
+      ...options,
+      width,
+      height,
+      provenance: true,
+      datumProvenance: true,
+    });
+    const expanded = definition.expand(spec);
+    const roots = Array.isArray(expanded) ? expanded : [expanded];
+    renderEntriesCache = roots.flatMap(child => collectRenderDatumEntries(child));
+    return renderEntriesCache;
+  };
+
+  const contextualDatum = (transformedIndex: number, opts: PlotLocatorOptions | undefined): ResolvedAnchor | null => {
+    if (!Number.isInteger(transformedIndex) || transformedIndex < 0) return null;
+    const found = renderEntries().find(entry => {
+      if (entry.transformedIndex !== transformedIndex) return false;
+      if (opts?.markIndex !== undefined && entry.markIndex !== opts.markIndex) return false;
+      return contextMatches(entry.meta, opts);
+    });
+    if (found === undefined) return null;
+    return found.id === undefined
+      ? { position: found.position, meta: found.meta }
+      : { position: found.position, meta: found.meta, id: found.id };
+  };
+
+  const contextualSeries = (value: string | number, opts: PlotLocatorOptions | undefined): ResolvedAnchor | null => {
+    let sumX = 0;
+    let sumY = 0;
+    let count = 0;
+    let meta: IRJsonObject | undefined;
+    for (const entry of renderEntries()) {
+      if (opts?.markIndex !== undefined && entry.markIndex !== opts.markIndex) continue;
+      if (!contextMatches(entry.meta, opts)) continue;
+      const seriesValue = entry.meta.series;
+      if (seriesValue !== value && String(seriesValue) !== String(value)) continue;
+      sumX += entry.position[0];
+      sumY += entry.position[1];
+      count++;
+      meta = entry.meta;
+    }
+    if (count === 0 || meta === undefined) return null;
+    return { position: [sumX / count, sumY / count], meta };
+  };
+
   /** 算某 (markIndex, transformedIndex) 的锚点（越界 / 未渲染 → null） */
   const anchorAt = (
     markIndex: number,
@@ -209,6 +343,7 @@ export const createPlotLocator = (
   };
 
   const datum: PlotLocator['datum'] = (transformedIndex, opts) => {
+    if (hasContextOptions(opts)) return contextualDatum(transformedIndex, opts);
     const markIndex = opts?.markIndex ?? defaultMarkIndex;
     const hit = anchorAt(markIndex, transformedIndex);
     if (!hit) return null;
@@ -228,6 +363,7 @@ export const createPlotLocator = (
   };
 
   const series: PlotLocator['series'] = (value, opts) => {
+    if (hasContextOptions(opts)) return contextualSeries(value, opts);
     const markIndex = opts?.markIndex ?? defaultMarkIndex;
     const mark = markOf(markIndex);
     if (!mark || !isBuiltinMark(mark)) return null; // 自定义 mark 无内置 series 语义，locator 跳过
@@ -269,6 +405,23 @@ export const createPlotLocator = (
       rest = parts;
     } else {
       return null; // 有 plotId 但前缀不符
+    }
+    if (rest[0] === 'scope' && rest.length === 4 && rest[2] === 'datum') {
+      const index = Number(rest[3]);
+      if (!Number.isInteger(index)) return null;
+      return datum(index, { coordinateScope: rest[1] });
+    }
+    if (rest[0] === 'track' && rest.length === 4 && rest[2] === 'datum') {
+      const index = Number(rest[3]);
+      if (!Number.isInteger(index)) return null;
+      return datum(index, { track: rest[1] });
+    }
+    if (rest[0] === 'facet' && rest.length === 6 && rest[4] === 'datum') {
+      const index = Number(rest[5]);
+      if (!Number.isInteger(index)) return null;
+      if (rest[2] === 'row') return datum(index, { facet: { id: rest[1], row: rest[3] } });
+      if (rest[2] === 'column') return datum(index, { facet: { id: rest[1], column: rest[3] } });
+      return null;
     }
     if (rest.length !== 2) return null;
     const [kind, token] = rest;

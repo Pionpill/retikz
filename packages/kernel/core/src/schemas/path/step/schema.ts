@@ -115,11 +115,9 @@ export const CycleStepSchema = z
 
 /**
  * 控制点 schema 别名
- * @description 当前仅支持笛卡尔 `[x,y]`；未来扩展节点 ref/极坐标时只改本处 union，curve/cubic schema 与下游不变
+ * @description 曲线 step 共用同一控制点 schema，curve / cubic schema 与下游消费保持一致。
  */
-export const ControlPointSchema = PositionSchema.describe(
-  'Bezier control point. Currently Cartesian [x, y]; reserved for node ref / polar in future versions.',
-);
+export const ControlPointSchema = PositionSchema.describe('Bezier control point position.');
 
 export const CurveStepSchema = z
   .object({

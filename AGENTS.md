@@ -32,22 +32,30 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件 / JSON IR �
 
 ```bash
 pnpm install
-pnpm lint
+pnpm lint # 全仓 lint，发布 / CI / 明确要求全量验证时使用
 pnpm --filter @retikz/core build
 pnpm dev:docs
 ```
 
-改完代码后必须按受影响 workspace 跑：
+改完代码后默认只按当前 / 受影响 workspace 跑脚本；不要为了日常局部改动直接跑全仓 `pnpm lint` / `pnpm test` / `pnpm -r exec tsc --noEmit`。跨包公共契约、发布前、CI 复现或用户明确要求全量验证时，才扩大到全仓或发布组。
 
 ```bash
 pnpm --filter <pkg> exec eslint . --fix
 pnpm --filter <pkg> exec tsc --noEmit
-pnpm lint
+pnpm --filter <pkg> exec vitest run
+```
+
+多个受影响模块用多条 `--filter` 命令显式列出，例如：
+
+```bash
+pnpm --filter @retikz/core exec tsc --noEmit
+pnpm --filter @retikz/react exec tsc --noEmit
+pnpm --filter @retikz/docs exec tsc --noEmit
 ```
 
 验证按改动类型选择：
 
-- 改 `*.ts` / `*.tsx` / `*.json` / 配置文件等结构化文件：先跑受影响包的 `eslint --fix`，再跑对应 `tsc --noEmit` / 测试。
+- 改 `*.ts` / `*.tsx` / `*.json` / 配置文件等结构化文件：先跑受影响包的 `eslint --fix`，再跑对应包的 `tsc --noEmit` / 测试；测试也用 `pnpm --filter <pkg> exec vitest run [test-file]` 限定在当前模块。
 - 只改纯文档正文（例如 `index.zh.mdx` / `index.en.mdx` 的段落、表格、站内链接，不改 import、demo、data、i18n、sidebar、schema registry）：不强制跑 eslint / tsc；至少跑 `git diff --check`，并验证新增或修改的关键链接 / 页面可访问。
 - 改 docs demo / data / i18n / sidebar / schema registry / MDX import：按 `apps/docs/AGENTS.md` 和 `docs-doc-principle` 的分级规则验证，通常需要 docs 包类型检查。
 
@@ -140,18 +148,18 @@ Control: human-directed
 
 - `main`：稳定发布线，只接正式发布、hotfix、发布后文档补丁
 - `next`：唯一的下版本集成真源，release 只从这里切
-- `next-core`：core / renderer / runtime / animation 方向集成
-- `next-plot`：plot / Tier 2 方向集成
+- `next-kernel`：kernel / renderer / runtime / animation 方向集成
+- `next-graph`：graph / Tier 2 方向集成
 - `feature/*`：具体短期任务
 - `release/*`：发布候选，只做 bugfix / docs / changelog / 版本号 / 验收
 - `hotfix/*`：从 main 切，修完回 main，再回灌 next
 
-功能改动不从 `next-core` / `next-plot` 直接进 `main`，必须先合 `next`。创建 / 切换 / 合并 / 删除分支前确认任务确实需要分支操作。
+功能改动不从 `next-kernel` / `next-graph` 直接进 `main`，必须先合 `next`。创建 / 切换 / 合并 / 删除分支前确认任务确实需要分支操作。
 
 分支同步由 GitHub Actions 自动开 PR，不手动静默合并：
 
 - `main` push 后自动创建 `main -> next` 同步 PR
-- `next` push 后自动创建 `next -> next-core` 与 `next -> next-plot` 同步 PR
+- `next` push 后自动创建 `next -> next-kernel` 与 `next -> next-graph` 同步 PR
 - 已有同向开放 PR 或源分支无新增提交时跳过
 - 冲突、CI 失败、是否合并均在 PR 中处理，不由 automation 直接强推目标分支
 

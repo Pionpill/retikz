@@ -15,3 +15,13 @@ export const PlotFieldType = {
 
 /** 字段测量类型 */
 export type PlotFieldTypeValue = ValueOf<typeof PlotFieldType>;
+
+/** categorical field order modes. */
+export const FieldOrderMode = {
+  Data: 'data',
+  Ascending: 'ascending',
+  Descending: 'descending',
+} as const;
+
+/** categorical field order mode value. */
+export type FieldOrderModeValue = ValueOf<typeof FieldOrderMode>;

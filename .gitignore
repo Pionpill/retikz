@@ -1,4 +1,4 @@
-# Logs
+﻿# Logs
 logs
 *.log
 npm-debug.log*
@@ -140,6 +140,7 @@ index.html
 
 # 本地分析 / 报告 / 计划产物，不入库
 notes/reports/
+**/_notes/reports/
 notes/plans/
 
 temp.*

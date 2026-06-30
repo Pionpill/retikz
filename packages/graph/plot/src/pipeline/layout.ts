@@ -2,9 +2,9 @@
 export const DEFAULT_FONT_SIZE = 11;
 /** 数字字宽经验系数（字宽 ≈ 0.6em），用于无 measureText 时估算 label 像素宽 */
 export const CHAR_WIDTH_FACTOR = 0.6;
-/** 刻度线长（user units）；ADR-04 画刻度线复用，导出避免跨文件复制常量 */
+/** 刻度线长（user units）；axis 与 guide 复用，导出避免跨文件复制常量 */
 export const AXIS_TICK_LENGTH = 6;
-/** 刻度线到 label 的间距（user units）；ADR-04 复用 */
+/** 刻度线到 label 的间距（user units）；axis 与 guide 共用 */
 export const AXIS_LABEL_GAP = 4;
 
 /** 矩形区域（绘图区 plot area 用） */
@@ -34,7 +34,7 @@ export type Margins = {
 /**
  * 估算一段文字的像素宽
  * @description plot lowering 在 core compile 前跑、无 measureText，按字符数 × 字号 × 经验系数估。
- *   单一来源：ADR-03 的 left margin 与 ADR-04 的 y label 水平偏移都调它，避免两处各算一份。
+ *   作为 margin 估算与 y label 水平偏移的单一来源，避免两处各算一份。
  */
 export const estimateLabelWidth = (text: string, fontSize: number): number =>
   text.length * fontSize * CHAR_WIDTH_FACTOR;
@@ -61,7 +61,7 @@ export type PlotAreaInput = {
   xLabels: ReadonlyArray<string>;
   /** y 轴刻度标签（估算最宽 label 定 left margin） */
   yLabels: ReadonlyArray<string>;
-  /** legend 各边预留带宽（在 axis margin 之外叠加；缺省无 legend 占位）（ADR-03 决策 ⑩） */
+  /** legend 各边预留带宽（在 axis margin 之外叠加；缺省无 legend 占位） */
   legendReserve?: LegendReserve;
 };
 
@@ -79,7 +79,7 @@ const maxLabelWidth = (labels: ReadonlyArray<string>, fontSize: number): number 
 
 /**
  * 由整图尺寸 + axis 占位估算 plot area（d3 margin convention）
- * @description margin 仅在对应维度有 axis 时才留；无 axis → 全 0 → plot area = 整图（向后兼容无轴的 alpha.1）。
+ * @description margin 仅在对应维度有 axis 时才留；无 axis → 全 0 → plot area = 整图。
  *   用户 options.margin 逐边覆盖估算。估算用 fontSize × 字符数，不精确但对数字轴足够（用户可 margin 覆盖）。
  *   margin 之和 ≥ 尺寸（plot area 非正）→ 抛清晰错误，不静默出退化坏图。
  */
@@ -140,8 +140,8 @@ export type PolarLayout = {
 
 /**
  * 由整图尺寸估算极坐标布局：圆心 = plot area 中心、外半径 = 可用尺寸减角向标签留白
- * @description ADR-01 用整圆 bbox 定 center / outerRadius（partial-arc 紧包围留后续）。
- *   有角向轴时为外圈刻度标签预留一圈留白（按最宽标签估），让标签不溢出画布；ADR-04 只消费本 frame、不回写 layout。
+ * @description 按整圆 bbox 定 center / outerRadius。
+ *   有角向轴时为外圈刻度标签预留一圈留白（按最宽标签估），让标签不溢出画布；调用方只消费本 frame、不回写 layout。
  *   margin 之大 → 外半径 ≤ 0 → 抛清晰错误，不静默出退化坏图。
  */
 export const computePolarCoordinate = (
@@ -199,7 +199,7 @@ export type TernaryLayout = {
 /**
  * 由整图尺寸估算三元三角布局：朝上等边三角内接于 plot area（减三边标签留白）
  * @description 顶点朝上、x=顶 / y=右下 / z=左下。side = min(可用宽, 可用高·2/√3)、
- *   三角高 = side·√3/2，水平 / 垂直居中。有三角轴时为三边刻度标签预留一圈留白；ADR-04 只消费、不回写。
+ *   三角高 = side·√3/2，水平 / 垂直居中。有三角轴时为三边刻度标签预留一圈留白；调用方只消费、不回写。
  *   留白过大 → 边长 ≤ 0 → 抛清晰错误，不静默出退化坏图。
  */
 export const computeTernaryFrame = (

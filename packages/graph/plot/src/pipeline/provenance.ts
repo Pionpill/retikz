@@ -21,7 +21,7 @@ export const readSourceIndex = (row: ExternalRow): number | undefined => {
 };
 
 /**
- * 组级源序标记（alpha.12）：改行数 transform（bin / summarize）给每个输出行打 `row[SOURCE_INDICES]=[...]`
+ * 组级源序标记：改行数 transform（bin / summarize）给每个输出行打 `row[SOURCE_INDICES]=[...]`
  * @description 聚合 / 分箱产出的一行代表一组源行，故其 provenance 是「源行索引集合」而非单 sourceIndex。
  *   Symbol 键不进 JSON、不被 resolveFieldPath 看见；仅在源行已 tagSourceIndex（provenance 开）时由 transform 填充。
  */

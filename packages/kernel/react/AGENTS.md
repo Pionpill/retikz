@@ -1,8 +1,8 @@
 # @retikz/react 工作指南
 
 > 本文档是 `@retikz/react` 包内特有的规范。
-> 项目通用规则（commit / TS / React 组件规范 / Kernel-Sugar-Tier2 分层 / 目录与文件命名等）见根 [`AGENTS.md`](../../AGENTS.md)。
-> core 侧约束见 [`packages/kernel/AGENTS.md`](../core/AGENTS.md)。
+> 项目通用规则（commit / TS / React 组件规范 / Kernel-Sugar-Tier2 分层 / 目录与文件命名等）见根 [`AGENTS.md`](../../../AGENTS.md)。
+> core 侧约束见 [`packages/kernel/AGENTS.md`](../AGENTS.md)。
 
 ---
 

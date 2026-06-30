@@ -62,6 +62,7 @@ export type PlotDslProps = PlotCommonProps &
     fieldMap?: Record<string, string>;
     /** 坐标系：缺省 cartesian2D；"polar2D" 简写或 polar2D 对象配置（innerRadius / startAngle / endAngle） */
     coordinate?: CoordinateInput;
+    composition?: PlotSpec['composition'];
     /**
      * 数据变换 IR 直传（快捷入口）：拼到 `<Transform>` 子组件收集结果之前、自动装配 stack 之前。
      * @description 与 `<Transform kind="...">` 声明组件共用同一管线、可混用；程序化构造变换链时的便捷入口。
@@ -222,6 +223,7 @@ const resolvePlotRuntime = (
       width: props.width,
       height: props.height,
       coordinate: props.coordinate,
+      composition: props.composition,
       model: props.model,
       dataFieldNames: dataFieldNamesOf(props.data),
       colors: props.colors,

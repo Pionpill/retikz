@@ -23,7 +23,7 @@ retikz beta 期 plan TODO 端到端执行的**编排器**。beta 与 alpha / rc 
 调用本 SKILL 前必须先确认两件事：
 
 1. **当前在 beta 期**（`packages/kernel/core/package.json` 版本号含 `-beta.`）——否则 halt，去用 `flow-alpha`
-2. **TODO 候选已在 milestone roadmap 登记**（`notes/decisions/kernel/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-beta.<N>/roadmap.md`）——没登记的不接
+2. **TODO 候选已在 milestone roadmap 登记**（`packages/kernel/_notes/decisions/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-beta.<N>/roadmap.md`）——没登记的不接
 
 启动模式与 `flow-alpha` 对齐：
 
@@ -34,7 +34,7 @@ retikz beta 期 plan TODO 端到端执行的**编排器**。beta 与 alpha / rc 
 
 | # | 阶段 | 子 SKILL | 主体 | 关卡（不过则 halt） |
 |---|---|---|---|---|
-| 1 | 实现 | [`develop-implement`](../develop-implement/SKILL.md) | AI | 全部既有测试绿 + 新加测试绿 + lint / tsc 全过才进 2 |
+| 1 | 实现 | [`develop-implement`](../develop-implement/SKILL.md) | AI | 受影响模块既有测试绿 + 新加测试绿 + lint / tsc 全过才进 2 |
 | 2 | 多 LLM 评估 | （本 SKILL 内联，见下） | AI 调度多 LLM | 全部 LLM 都判"无回归 + 改动确有收益 + breaking 已正确登记到 changelog"才进 3 |
 | 3 | 收尾 | [`develop-wrapup`](../develop-wrapup/SKILL.md)（简化路径） | AI 起草 / **人工**最终 ack | breaking 必写 changelog BREAKING + 迁移路径；visible 视情况写；internal 仅在 commit message 体现 |
 
@@ -73,7 +73,10 @@ beta 允许公开 API 改名 / 重构，但需按破坏范围分档评估深度�
   - 性能优化 → 加 1 个基准 / 复杂度测试
   - bug fix → 必加回归测试（先 fail 后 pass 的 commit pair）
   - 新 helper / 新 export → 加单测覆盖
-- **lint / tsc / 既有测试三全过**才允许进 stage 2
+- **受影响模块 lint / tsc / 既有测试三全过**才允许进 stage 2。命令按根 `AGENTS.md` 限定模块，例如：
+  `pnpm --filter @retikz/<pkg> exec eslint . --fix`、
+  `pnpm --filter @retikz/<pkg> exec tsc --noEmit`、
+  `pnpm --filter @retikz/<pkg> exec vitest run`。
 
 完成标志：working tree 改动完整、所有守门通过、待 commit。
 
@@ -148,7 +151,7 @@ beta 阶段最大风险是**重构引入回归 + breaking 改名漏改调用方*
 | Contract Auditor adversarial 对账 | **不走**（beta 没 ADR 可对，stage 2 多 LLM 评估已覆盖等价性审计） |
 | ADR Proposed → Accepted | **不做**（beta 不开 ADR） |
 | roadmap checkbox 勾选 | **做**——按 plan TODO 编号勾 |
-| roadmap TODO 删除 / 标完成 | **做**——`notes/decisions/kernel/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-beta.<N>/roadmap.md` 该条标 ✅ + commit hash |
+| roadmap TODO 删除 / 标完成 | **做**——`packages/kernel/_notes/decisions/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-beta.<N>/roadmap.md` 该条标 ✅ + commit hash |
 | 人工授权 commit | **必走**——commit 必须显式 ack |
 | 批量实现 commit 粒度 | **允许分批**——多 ADR / 多 TODO 批量实现时，可按 ADR、TODO 或 review 友好的逻辑块分批 commit，避免把多块独立改动压成一个提交 |
 
@@ -183,7 +186,7 @@ beta 阶段三个角色对应的 LLM 分工：
 
 ## 与上下游衔接
 
-- **上游**：beta roadmap TODO 已登记（`notes/decisions/kernel/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-beta.<N>/roadmap.md`）
+- **上游**：beta roadmap TODO 已登记（`packages/kernel/_notes/decisions/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-beta.<N>/roadmap.md`）
 - **下游**：可能的 [`package-publish`](../package-publish/SKILL.md)（当 plan 全部 TODO 完成、想发版到 npm 时）；否则结束、等下条 TODO 走本 SKILL 再来一次
 
 ## 完成标志（每条 TODO）

@@ -1,4 +1,4 @@
-import type { CompositeDefinition, IRChild, IRNode, IRScope } from '@retikz/core';
+import type { CompositeDefinition, IRChild, IRJsonObject, IRNode, IRPathBase, IRScope } from '@retikz/core';
 
 import { defineComposite, JsonObjectSchema } from '@retikz/core';
 
@@ -24,6 +24,7 @@ import type { CategoryOrder, ScaleDescriptor } from '../providers';
 import type {
   AxisGuide,
   Channel,
+  CoordinateOperation,
   ExternalDatasets,
   ExternalRow,
   Guide,
@@ -81,6 +82,10 @@ import {
   validateBoundData,
 } from '../providers';
 import {
+  AxisGridApplyTo,
+  CompositionAxisPolicy,
+  CompositionGridPlacement,
+  FieldOrderMode,
   IntervalBoundKind,
   isBuiltinMark,
   PathClosureKind,
@@ -92,7 +97,7 @@ import {
 } from '../schemas';
 import { createAnchorRegistry } from './anchors';
 import { DEFAULT_FONT_SIZE } from './layout';
-import { createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
+import { createDatumIdRegistrar, rootMeta, slug, tagSourceIndex } from './provenance';
 import { collectSourceFields } from './source-fields';
 
 /**
@@ -165,6 +170,12 @@ export type MarkDataView = {
   rows: Array<ExternalRow>;
 };
 
+type CoordinateScopePlacement = NonNullable<NonNullable<PlotSpec['composition']>['scopes'][number]['placement']>;
+type SharedScaffold = NonNullable<NonNullable<PlotSpec['composition']>['scaffolds']>[number];
+type ScaffoldTrack = SharedScaffold['tracks'][number];
+type CompositionLayout = NonNullable<NonNullable<PlotSpec['composition']>['layout']>;
+type CompositionGuidePolicy = NonNullable<NonNullable<PlotSpec['composition']>['guidePolicy']>;
+
 const relationTargetRoleValues = (
   mark: MarkOperation,
   role: DimensionRole,
@@ -190,6 +201,239 @@ const markEncoding = (mark: MarkOperation): Record<string, Channel | undefined> 
 /** guide 谓词：按 type 判别串收窄成 axis / legend 子集 */
 const isAxisGuide = (guide: Guide): guide is AxisGuide => guide.type === PlotGuide.Axis;
 const isLegendGuide = (guide: Guide): guide is LegendGuide => guide.type === PlotGuide.Legend;
+
+const DEFAULT_COORDINATE_SCOPE_ID = 'default';
+
+export type CoordinateScopeRegistryEntry = {
+  id: string;
+  coordinate: CoordinateOperation;
+  placement?: CoordinateScopePlacement;
+  scaffold?: string;
+  track?: string;
+};
+
+export type CoordinateScopeRegistry = {
+  defaultScope: string;
+  scopes: Array<CoordinateScopeRegistryEntry>;
+};
+
+export const resolveCoordinateScopeRegistry = (node: PlotSpec): CoordinateScopeRegistry => {
+  if (node.composition !== undefined) {
+    const scaffoldById = new Map((node.composition.scaffolds ?? []).map(scaffold => [scaffold.id, scaffold] as const));
+    return {
+      defaultScope: node.composition.defaultScope,
+      scopes: node.composition.scopes.map(scope => {
+        const placement = scope.placement;
+        const scaffold = placement?.kind === 'track' ? scaffoldById.get(placement.scaffold) : undefined;
+        const coordinate = scope.coordinate ?? scaffold?.coordinate;
+        if (coordinate === undefined) {
+          throw new Error(`lowerPlots: coordinate scope "${scope.id}" must declare coordinate or inherit one from scaffold`);
+        }
+        return {
+          id: scope.id,
+          coordinate,
+          ...(placement !== undefined ? { placement } : {}),
+          ...(placement?.kind === 'track' ? { scaffold: placement.scaffold, track: placement.track } : {}),
+        };
+      }),
+    };
+  }
+  if (node.coordinate === undefined) {
+    throw new Error('lowerPlots: PlotSpec requires either coordinate shorthand or composition');
+  }
+  return {
+    defaultScope: DEFAULT_COORDINATE_SCOPE_ID,
+    scopes: [{ id: DEFAULT_COORDINATE_SCOPE_ID, coordinate: node.coordinate }],
+  };
+};
+
+export const coordinateScopeIdOf = (
+  operation: { coordinateScope?: string },
+  defaultScope: string,
+): string => operation.coordinateScope ?? defaultScope;
+
+const axisGuideScopeIdOf = (guide: AxisGuide, defaultScope: string): string =>
+  guide.coordinateScope ?? defaultScope;
+
+const compositionAxisPolicyOf = (
+  policy: CompositionGuidePolicy | undefined,
+  context: { hasFacets: boolean; hasScaffolds: boolean },
+): string =>
+  policy?.axes ?? (context.hasFacets || context.hasScaffolds ? CompositionAxisPolicy.OuterShared : CompositionAxisPolicy.PerScope);
+
+const compositionGridPlacementOf = (
+  policy: CompositionGuidePolicy | undefined,
+  context: { hasFacets: boolean; hasScaffolds: boolean },
+): string =>
+  policy?.gridPlacement ?? (!context.hasFacets && context.hasScaffolds ? CompositionGridPlacement.SharedRole : CompositionGridPlacement.Self);
+
+const axisGapKeyOf = (guide: AxisGuide): string | null => {
+  const placement = guide.placement;
+  if (placement === undefined || placement.kind === 'auto') return null;
+  if (placement.kind === 'side') return `side:${placement.side}`;
+  return `edge:${placement.edge}`;
+};
+
+const withAxisGapOffsets = (guides: ReadonlyArray<Guide>, axisGap: number | undefined): Array<Guide> => {
+  if (axisGap === undefined || axisGap === 0) return [...guides];
+  const counts = new Map<string, number>();
+  return guides.map(guide => {
+    if (!isAxisGuide(guide)) return guide;
+    const key = axisGapKeyOf(guide);
+    if (key === null) return guide;
+    const index = counts.get(key) ?? 0;
+    counts.set(key, index + 1);
+    if (index === 0 && (guide.placement?.kind === 'side' || guide.placement?.kind === 'edge')) return guide;
+    if (guide.placement?.kind === 'side' || guide.placement?.kind === 'edge') {
+      return {
+        ...guide,
+        placement: {
+          ...guide.placement,
+          offset: (guide.placement.offset ?? 0) + index * axisGap,
+        },
+      };
+    }
+    return guide;
+  });
+};
+
+const withoutAxisGrid = (guides: ReadonlyArray<Guide>): Array<Guide> =>
+  guides.map(guide => (isAxisGuide(guide) && guide.grid !== undefined ? { ...guide, grid: false } : guide));
+
+const withEnabledAxisGrid = (guide: AxisGuide, coordinateScope: string | undefined): AxisGuide => ({
+  ...guide,
+  ...(coordinateScope !== undefined ? { coordinateScope } : {}),
+  grid: true,
+});
+
+const mergeCompositionMargin = (
+  padding: CompositionLayout['padding'] | undefined,
+  margin: Partial<Margins> | undefined,
+): Partial<Margins> | undefined => {
+  if (padding === undefined) return margin;
+  return { ...padding, ...margin };
+};
+
+const mergeContextMeta = (meta: IRJsonObject | undefined, context: IRJsonObject): IRJsonObject => ({
+  ...(meta ?? {}),
+  ...context,
+});
+
+const isIRScope = (child: IRChild): child is IRScope => child.type === 'scope' && 'children' in child;
+const isIRNode = (child: IRChild): child is IRNode => child.type === 'node' && 'position' in child;
+const isIRPath = (child: IRChild): child is IRPathBase => child.type === 'path' && 'children' in child;
+
+const withScopeContext = (child: IRChild, context: IRJsonObject): IRChild => {
+  if (Object.keys(context).length === 0) return child;
+  if (isIRScope(child)) {
+    return {
+      ...child,
+      meta: mergeContextMeta(child.meta, context),
+      children: child.children.map(item => withScopeContext(item, context)),
+    };
+  }
+  if (isIRNode(child)) return { ...child, meta: mergeContextMeta(child.meta, context) } satisfies IRNode;
+  if (isIRPath(child)) return { ...child, meta: mergeContextMeta(child.meta, context) } satisfies IRPathBase;
+  return child;
+};
+
+type FacetGrid = NonNullable<NonNullable<PlotSpec['composition']>['facets']>[number];
+type FacetDimension = NonNullable<FacetGrid['row']>;
+type FacetScalar = string | number | boolean | null;
+
+type FacetPanel = {
+  id: string;
+  facet: FacetGrid;
+  row: FacetScalar | undefined;
+  column: FacetScalar | undefined;
+  rowIndex: number;
+  columnIndex: number;
+  rows: Array<ExternalRow>;
+};
+
+const isFacetScalar = (value: unknown): value is FacetScalar =>
+  value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+
+const facetValueOf = (row: ExternalRow, field: string): FacetScalar => {
+  const value = resolveFieldPath(row, field);
+  if (value === undefined) throw new Error(`lowerPlots: facet field "${field}" is missing on a row`);
+  if (!isFacetScalar(value)) {
+    throw new Error(
+      `lowerPlots: facet field "${field}" must resolve to a JSON scalar (string, number, boolean, or null)`,
+    );
+  }
+  return value;
+};
+
+const facetValueKey = (value: FacetScalar | undefined): string => (value === undefined ? '' : JSON.stringify(value));
+
+const orderedFacetValues = (
+  dimension: FacetDimension | undefined,
+  rows: ReadonlyArray<ExternalRow>,
+): Array<FacetScalar | undefined> => {
+  if (dimension === undefined) return [undefined];
+  const out: Array<FacetScalar> = [];
+  const seen = new Set<string>();
+  const add = (value: FacetScalar): void => {
+    const key = facetValueKey(value);
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push(value);
+  };
+  for (const value of dimension.order ?? []) add(value);
+  for (const row of rows) add(facetValueOf(row, dimension.field));
+  return out;
+};
+
+const defaultFacetPanelId = (
+  facet: FacetGrid,
+  row: FacetScalar | undefined,
+  column: FacetScalar | undefined,
+): string => {
+  const parts = ['facet', facet.id];
+  if (row !== undefined) parts.push('row', slug(row));
+  if (column !== undefined) parts.push('column', slug(column));
+  return parts.join('.');
+};
+
+const facetPanelId = (facet: FacetGrid, row: FacetScalar | undefined, column: FacetScalar | undefined): string => {
+  const template = facet.scopeIdTemplate;
+  if (template === undefined) return defaultFacetPanelId(facet, row, column);
+  return template
+    .replaceAll('{facet}', facet.id)
+    .replaceAll('{row}', row === undefined ? '' : slug(row))
+    .replaceAll('{column}', column === undefined ? '' : slug(column));
+};
+
+const resolveFacetPanels = (
+  facet: FacetGrid,
+  rows: ReadonlyArray<ExternalRow>,
+  usedIds: Set<string>,
+): Array<FacetPanel> => {
+  const rowValues = orderedFacetValues(facet.row, rows);
+  const columnValues = orderedFacetValues(facet.column, rows);
+  const groups = new Map<string, Array<ExternalRow>>();
+  for (const row of rows) {
+    const rowValue = facet.row === undefined ? undefined : facetValueOf(row, facet.row.field);
+    const columnValue = facet.column === undefined ? undefined : facetValueOf(row, facet.column.field);
+    const key = `${facetValueKey(rowValue)}\u0000${facetValueKey(columnValue)}`;
+    groups.set(key, [...(groups.get(key) ?? []), row]);
+  }
+
+  const panels: Array<FacetPanel> = [];
+  for (const [rowIndex, rowValue] of rowValues.entries()) {
+    for (const [columnIndex, columnValue] of columnValues.entries()) {
+      const key = `${facetValueKey(rowValue)}\u0000${facetValueKey(columnValue)}`;
+      const panelRows = groups.get(key) ?? [];
+      if (panelRows.length === 0 && facet.empty !== 'show') continue;
+      const id = facetPanelId(facet, rowValue, columnValue);
+      if (usedIds.has(id)) throw new Error(`lowerPlots: facet panel scope id "${id}" is duplicated`);
+      usedIds.add(id);
+      panels.push({ id, facet, row: rowValue, column: columnValue, rowIndex, columnIndex, rows: panelRows });
+    }
+  }
+  return panels;
+};
 
 /** 非位置 encoding key：这些键有专属语义，不参与 CoordinateDefinition.roles 校验。 */
 const NON_POSITION_ENCODING_KEYS = new Set<string>(['color', 'text', 'channels']);
@@ -221,8 +465,8 @@ const assertKnownPositionEncodingRoles = (
 };
 
 /**
- * 按坐标系合法集校验每根 axis guide 的 dimension（ADR-01，修 cross-review P2）
- * @description 非法 dimension（如 cartesian 下 'angle'）从「静默丢弃 / 渲杂散轴线」改 fail-loud，给清晰错误。
+ * 按坐标系合法集校验每根 axis guide 的 dimension
+ * @description 非法 dimension（如 cartesian 下 'angle'）fail-loud，给出清晰错误。
  */
 const assertValidGuideDimensions = (
   coordinateType: string,
@@ -240,7 +484,7 @@ const assertValidGuideDimensions = (
 };
 
 /**
- * 按坐标系必填角色集校验每个位置 mark 的 encoding（ADR-01；x/y 转可选后必填性下放此处）
+ * 按坐标系必填角色集校验每个位置 mark 的 encoding
  * @description sector 无位置通道（角度来自累积界）→ 跳过；其余 mark 缺任一必填角色通道 → fail-loud。
  */
 const assertRequiredPositionChannels = (
@@ -293,7 +537,7 @@ export type LowerPlotsOptions = {
   fontSize?: number;
   /** 逐边覆盖自动估算的 margin */
   margin?: Partial<Margins>;
-  /** 总开关：开启才写 layer/series meta + 合成 `<plotId>.` 内部 id；关（默认 false）→ 逐字节等价 alpha.4 */
+  /** 总开关：开启才写 layer/series meta + 合成 `<plotId>.` 内部 id；默认 false 时不写 provenance id/meta */
   provenance?: boolean;
   /** 每个 datum Node 写 per-datum 来源 meta（hit-test；O(rows) 增量，蕴含需 provenance 开），默认 false */
   datumProvenance?: boolean;
@@ -310,10 +554,10 @@ export type LowerPlotsOptions = {
    * 下游 mark 自跳非法几何；`'error'` 在 transform 之前对 spec 参与字段全量校验，遇任一非法 / 缺失即 fail-loud。
    */
   invalid?: 'skip' | 'error';
-  /** 程序化字段解析逃生舱（运行时函数，不进 IR）：按字段名覆盖类型 + 自定义值解析；返回 undefined → 回退 model/推断 + 内置 coerce（ADR-04） */
+  /** 程序化字段解析逃生舱（运行时函数，不进 IR）：按字段名覆盖类型 + 自定义值解析；返回 undefined → 回退 model/推断 + 内置 coerce */
   resolveField?: ResolveField;
   /**
-   * datum label 内容逃生舱（运行时函数，不进 IR；ADR-04 text mark）：按 mark id 映射的「行 → 完全自定义标签串」。
+   * datum label 内容逃生舱（运行时函数，不进 IR）：按 mark id 映射的「行 → 完全自定义标签串」。
    * @description 优先级最高（resolveLabel > field+format > value），覆盖该 mark 的 label / text 内容声明。
    *   按 mark id 取（宿主 mark 的 priority-1 label / 独立 TextMark 的 priority-2 text 共用）；未命中的 mark 走声明层 field/value/format。
    *   不进 PlotSpec，故不破坏 IR JSON 可序列化。
@@ -374,17 +618,17 @@ export type CoordinateFrameResolution = {
   gridLayers: Array<IRScope>;
   /** 轴层（压顶；每根 axis guide 产出） */
   axisLayers: Array<IRScope>;
-  /** 绘图区矩形（已扣 axis margin + legend 预留带）；legend band 据此摆进预留 gutter（ADR-03 占位） */
+  /** 绘图区矩形（已扣 axis margin + legend 预留带）；legend band 据此摆进预留 gutter */
   plotArea: Rect;
 };
 
-/** resolveFrame 入参：投影 + guide 下沉所需的全部上下文（pure，无副作用，ADR-02 locator 复用同一投影） */
+/** resolveFrame 入参：投影 + guide 下沉所需的全部上下文（pure，无副作用，locator 复用同一投影） */
 export type ResolveFrameParams = {
   /** plot IR 根节点（取 coordinate / guides） */
   node: PlotSpec;
   /** transform 后的数据行（域推断、guide 刻度同源） */
   rows: Array<ExternalRow>;
-  /** 用户源字段 → PlotFieldTypeValue（ADR-01 解析）；供 type-driven scale 派生与兼容校验（ADR-03） */
+  /** 用户源字段 → PlotFieldTypeValue；供 type-driven scale 派生与兼容校验 */
   fieldTypes: PlotFieldTypeMap;
   /** 整图宽（user units） */
   width: number;
@@ -392,9 +636,15 @@ export type ResolveFrameParams = {
   height: number;
   /** label 字号 */
   fontSize: number;
+  /** guide title / composition label 固定间距。 */
+  labelGap?: number;
   /** 逐边覆盖自动估算的 margin */
   margin?: Partial<Margins>;
-  /** provenance 上下文（开 → guide 层带 `<plotId>.` id + 来源 meta；undefined → alpha.2 行为） */
+  /** overlay scope 共享 target scope 的 plotArea；省略时由坐标系自行计算。 */
+  plotAreaOverride?: Rect;
+  /** 指定 role 的最终 range；用于 scaffold track 把局部 role 映射进 track band。 */
+  roleRangeOverrides?: Partial<Record<DimensionRole, readonly [number, number]>>;
+  /** provenance 上下文（开 → guide 层带 `<plotId>.` id + 来源 meta；undefined → 不写 provenance id/meta） */
   provenance?: ProvenanceContext;
   /** 自定义坐标系 definition 数组（运行时函数，不进 IR）；coordinate {type:<customType>, ...config} 据此解析投影 */
   coordinates?: Array<AnyCoordinateDefinition>;
@@ -402,17 +652,38 @@ export type ResolveFrameParams = {
   scaleRegistry: Map<string, AnyScaleDefinition>;
   /** 每个 mark 实际使用的数据视图；普通 mark 用全图 rows，relation 可使用 mark-scoped transform rows。 */
   markDataViews?: Array<MarkDataView>;
+  roleMarkDataViews?: Record<string, Array<MarkDataView>>;
 };
 
 /**
  * 按坐标系解析出 mark / guide 共用的投影帧 + 下沉 guide 层
  * @description cartesian：x/y 角色绑 x/y scale、走 plotArea + 直线轴；polar：angle/radius 角色、走 polar layout + 弧 / 辐条轴。
- *   抽成纯函数使 mark 下沉与 ADR-02 locator 共用同一投影（杜绝两套投影漂移）；产物与内联版等价。
+ *   抽成纯函数使 mark 下沉与 locator 共用同一投影，杜绝两套投影漂移。
  */
 export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolution => {
-  const { node, rows, fieldTypes, width, height, fontSize, margin, provenance, coordinates, scaleRegistry } = params;
+  const {
+    node,
+    rows,
+    fieldTypes,
+    width,
+    height,
+    fontSize,
+    labelGap,
+    margin,
+    plotAreaOverride,
+    roleRangeOverrides,
+    provenance,
+    coordinates,
+    scaleRegistry,
+  } = params;
   const markDataViews = params.markDataViews ?? node.marks.map(mark => ({ mark, rows }));
-  const coordinateOperation = node.coordinate;
+  const markDataViewsForRole = (role: DimensionRole): Array<MarkDataView> =>
+    params.roleMarkDataViews?.[role] ?? markDataViews;
+  const registry = resolveCoordinateScopeRegistry(node);
+  const coordinateOperation = node.coordinate ?? registry.scopes.find(scope => scope.id === registry.defaultScope)?.coordinate;
+  if (coordinateOperation === undefined) {
+    throw new Error(`lowerPlots: default coordinate scope "${registry.defaultScope}" is not registered`);
+  }
   const coordinateRegistry = resolveCoordinateRegistry(coordinates);
   const coordinateDefinition = coordinateRegistry.get(coordinateOperation.type);
   if (coordinateDefinition === undefined) {
@@ -425,7 +696,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   const positionChannels = createPositionChannelDefinitions(roles);
 
-  // ADR-01 校验（建 frame 前）：guide 维度按坐标系合法集校验 + mark 必填位置角色校验，均 fail-loud。
+  // 建 frame 前校验：guide 维度按坐标系合法集校验 + mark 必填位置角色校验，均 fail-loud。
   assertValidGuideDimensions(coordinateOperation.type, roles, axisGuides);
   assertKnownPositionEncodingRoles(coordinateOperation.type, roles, node.marks);
   assertRequiredPositionChannels(coordinateOperation.type, roles, node.marks);
@@ -440,7 +711,8 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     includeBaseline: boolean,
   ): Array<unknown> => {
     const out: Array<unknown> = [];
-    for (const { mark, rows: markRows } of markDataViews) {
+    const sourceViews = markDataViewsForRole(role);
+    for (const { mark, rows: markRows } of sourceViews) {
       out.push(...relationTargetRoleValues(mark, role, markRows));
       // interval：域贡献按 bounds 来源（band/span → 位置通道值、extent → 两字段、full → 不贡献），统一替代旧 histogram / stack / sector 特判
       if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && axis !== undefined) {
@@ -467,7 +739,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
           if (mark.closure?.kind === PathClosureKind.Baseline) {
             out.push(mark.closure.baseline ?? 0);
           } else if (mark.closure?.kind === PathClosureKind.Stack) {
-            const markRows = markDataViews.find(view => view.mark === mark)?.rows ?? rows;
+            const markRows = sourceViews.find(view => view.mark === mark)?.rows ?? rows;
             for (const row of markRows) out.push(resolveFieldPath(row, mark.closure.baselineField));
           }
         }
@@ -485,7 +757,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     if (hasRegularRoleTicks) return undefined;
     const values: TickSet['values'] = [];
     const labels: TickSet['labels'] = [];
-    for (const { mark, rows: markRows } of markDataViews) {
+    for (const { mark, rows: markRows } of markDataViewsForRole(role)) {
       if (!isBuiltinMark(mark) || mark.type !== PlotMark.Interval) continue;
       const ticks = intervalProportionalAxisTicks(mark, role, markRows);
       if (ticks === undefined) continue;
@@ -534,7 +806,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
       const channel = pick(mark);
       if (channel?.field === undefined) continue;
       const order = fieldOrders.get(channel.field);
-      if (order === undefined || order === 'data') continue;
+      if (order === undefined || order === FieldOrderMode.Data) continue;
       const type = fieldTypes.get(channel.field);
       if (type !== undefined && type !== PlotFieldType.Categorical) {
         throw new Error(
@@ -553,7 +825,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     return found[0];
   };
 
-  // 解析角色 scale（ADR-03）：显式绑定 → 查表（未声明仍抛，typo 守卫）+ 对该 role **全部**字段做兼容校验；
+  // 解析角色 scale：显式绑定 → 查表（未声明仍抛，typo 守卫）+ 对该 role **全部**字段做兼容校验；
   //   省略 → 按字段类型派生（要求该 role 字段类型一致，混类型 fail-loud）。兼容校验只对「声明 model 的类型」生效。
   const resolveScaleForRole = (
     role: DimensionRole,
@@ -619,8 +891,11 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     width,
     height,
     fontSize,
+    ...(labelGap !== undefined ? { labelGap } : {}),
     ...(margin !== undefined ? { margin } : {}),
     legendReserve,
+    ...(plotAreaOverride !== undefined ? { plotAreaOverride } : {}),
+    ...(roleRangeOverrides !== undefined ? { roleRangeOverrides } : {}),
     ...(provenance !== undefined ? { provenance } : {}),
     collectRoleValues: (role, opts) =>
       collectValues(role, undefined, roleChannelOf(role), opts?.includeBaseline ?? false),
@@ -647,7 +922,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
 /**
  * 收集所有 mark 在某非位置通道上的字段 descriptor（size / opacity / shape）
  * @description resolver 双产出的 descriptor 注册到 channel → descriptor 表；同通道多 mark 取首个有 descriptor 的
- *   （legend 据 scale name 消歧留待多 scale 场景，alpha.8 这三通道用合成默认 scale，不暴露具名）。
+ *   legend 据 scale name 消歧；未具名的默认 scale 用 channel/field/type 签名区分。
  */
 const collectChannelDescriptors = (
   node: PlotSpec,
@@ -716,7 +991,7 @@ const selectLegendDescriptor = (
   return matched[0];
 };
 
-/** 数值刻度 nice 化 + 格式化：复用 axis 的 scaleTicks 链（决策 ⑨），domain → {value, offset 0..1, label} */
+/** 数值刻度 nice 化 + 格式化：复用 axis 的 scaleTicks 链，domain → {value, offset 0..1, label} */
 const niceNumericTicks = (
   domain: readonly [number, number],
   count: number,
@@ -839,7 +1114,7 @@ const LEGEND_CONTENT_GAP = 24;
 
 /**
  * 据 legend guide 估算各边 legend 预留带宽（同侧多个 legend 累加）
- * @description 喂 computePlotArea 在对应边收窄 plotArea（决策 ⑩）；估算式占位、不测量。
+ * @description 喂 computePlotArea 在对应边收窄 plotArea；估算式占位、不测量。
  */
 const legendReserveOf = (legendGuides: Array<LegendGuide>): LegendReserve => {
   const reserve: { right: number; left: number; top: number; bottom: number } = {
@@ -995,7 +1270,7 @@ const resolveMarkRows = (
 
 /**
  * 校验 fieldMaps（fail-loud）：ref∈datasets；本 plot 的 map 需 model + 逻辑名∈model
- * @description 抽出供 expandPlot 与 createPlotLocator 共用，保证「render 抛错 ⟺ locator 抛错」的 parity（评审 P2）
+ * @description 抽出供 expandPlot 与 createPlotLocator 共用，保证「render 抛错 ⟺ locator 抛错」的 parity。
  */
 export const validateFieldMaps = (
   spec: PlotSpec,
@@ -1025,9 +1300,9 @@ export const validateFieldMaps = (
 
 /**
  * 共享的「绑定准备」：fieldMaps 校验 + 用户源字段类型解析 + ingest 恒归一化
- * @description expandPlot 与 createPlotLocator 共用同一入口，保证两者校验 / 归一化 / 类型解析完全同序（评审 P2 parity）。
+ * @description expandPlot 与 createPlotLocator 共用同一入口，保证两者校验 / 归一化 / 类型解析完全同序。
  *   入参 ingested 由调用方按各自需要先行 tagSourceIndex；本函数不碰 transform（调用方各自 applyTransforms）。
- *   恒归一化（ADR-08）：无论有无 model / resolver，总按解析出的 fieldTypes 跑 normalizeRows，下游统一读 canonical。
+ *   恒归一化：无论有无 model / resolver，总按解析出的 fieldTypes 跑 normalizeRows，下游统一读 canonical。
  */
 export const prepareRows = (
   spec: PlotSpec,
@@ -1052,10 +1327,10 @@ export const prepareRows = (
   const scaleRegistry = resolveScaleRegistry(options.scaleDefinitions);
   const markRegistry = resolveMarkRegistry(options.markDefinitions);
   const userSourceFields = collectSourceFields(spec, transformRegistry, markRegistry, transformContext);
-  // strict + 声明/推断（ADR-01/05）；strict 在 applyFieldResolver 之前先校验，resolver 不绕过（ADR-04）
+  // strict + 声明/推断；strict 在 applyFieldResolver 之前先校验，resolver 不绕过。
   const baseTypes = resolveFieldTypes(spec.data.model, ingested, userSourceFields);
   const fieldMap = options.fieldMaps?.[spec.data.reference];
-  // 声明式 format（ADR-06 内置 + ADR-09 自定义 registry）：format 经 registry 解析出 definition，蕴含 type 覆盖推断 + 冲突 / 未注册 fail-loud + 收集 parser；
+  // 声明式 format：format 经 registry 解析出 definition，蕴含 type 覆盖推断 + 冲突 / 未注册 fail-loud + 收集 parser；
   //   置于 resolveField 之前，使 resolveField 仍胜出
   const formatRegistry = resolveFormatRegistry(options.formatDefinitions);
   const { fieldTypes: formatTypes, parsers: formatParsers } = collectFormatFields(
@@ -1064,7 +1339,7 @@ export const prepareRows = (
     userSourceFields,
     formatRegistry,
   );
-  // resolveField 叠加：类型覆盖 + 收集 per-field parser（ADR-04）；优先级 resolveField.type > format 蕴含 / 显式 type
+  // resolveField 叠加：类型覆盖 + 收集 per-field parser；优先级 resolveField.type > format 蕴含 / 显式 type
   const { fieldTypes, parsers: resolverParsers } = applyFieldResolver(
     formatTypes,
     userSourceFields,
@@ -1075,8 +1350,8 @@ export const prepareRows = (
   );
   // 合并 parser 槽：format parser 垫底，resolveField.parse 命中同字段时覆盖（优先级 resolveField > format）
   const parsers = new Map([...formatParsers, ...resolverParsers]);
-  // 恒归一化（ADR-08 去门控）：无论有无 model / resolver 命中，总按解析出的 fieldTypes 跑 normalizeRows
-  //   →下游统一读 canonical、无第二处 coerce。干净数据产物与旧门控路径逐字段等价。
+  // 恒归一化：无论有无 model / resolver 命中，总按解析出的 fieldTypes 跑 normalizeRows。
+  //   下游统一读 canonical、无第二处 coerce。
   const normalized = normalizeRows(ingested, fieldTypes, fieldMap, parsers);
   return { fieldTypes, normalized, transformRegistry, transformContext, scaleRegistry, markRegistry };
 };
@@ -1087,7 +1362,7 @@ export const prepareRows = (
  *   root id → Scope.id（plot-design §8.1）；provenance 开 → 外层 Scope + 各层 / datum 带来源 meta + `<plotId>.` 内部 id。
  */
 const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPlotsOptions): IRChild => {
-  // 自描述尺寸（ADR-02 L1-a）：节点自带 width/height 优先（组合时各面板本性尺寸），缺省回退全局选项、再回退默认
+  // 自描述尺寸：节点自带 width/height 优先（组合时各面板本性尺寸），缺省回退全局选项、再回退默认
   const width = node.width ?? options.width ?? DEFAULT_WIDTH;
   const height = node.height ?? options.height ?? DEFAULT_HEIGHT;
   // 绘图区尺寸是 scale range / 投影的单一来源；非有限或非正数会一路污染出 cx="NaN" 等坏坐标——入口抛清晰错误
@@ -1103,7 +1378,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   }
 
   // provenance 总开关：provenance / datumProvenance / datumIdField 任一开即启用（后两者蕴含 provenance）；
-  // 全关 → undefined（产物逐字节等价 alpha.4）
+  // 全关 → undefined；下游不写 provenance id/meta。
   const provenanceEnabled =
     options.provenance === true || options.datumProvenance === true || options.datumIdField !== undefined;
   const provenance: ProvenanceContext | undefined = provenanceEnabled
@@ -1118,8 +1393,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   // 取数：provenance 开时先打源序标记（symbol 键，跨 transform 存活，供 sourceIndex 回指），再过 transform 管线
   const ingested = provenance ? tagSourceIndex(datasets[node.data.reference]) : datasets[node.data.reference];
 
-  // ADR-01/02/08：fieldMaps 校验 + 用户源字段类型解析（strict）+ ingest 恒归一化。与 locator 共用 prepareRows 保 parity。
-  // 类型 Map 是 type-driven scale（ADR-03）/ coercion 的单一真源；归一化置于 transform 前、无论有无 model 都跑（恒 canonical）。
+  // fieldMaps 校验 + 用户源字段类型解析（strict）+ ingest 恒归一化。与 locator 共用 prepareRows 保 parity。
+  // 类型 Map 是 type-driven scale / coercion 的单一真源；归一化置于 transform 前、无论有无 model 都跑（恒 canonical）。
   const { fieldTypes, normalized, transformRegistry, transformContext, scaleRegistry, markRegistry } = prepareRows(
     node,
     datasets,
@@ -1132,7 +1407,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     const sampleRows = typeof options.validateData === 'object' ? (options.validateData.sampleRows ?? 100) : 100;
     validateBoundData(normalized, fieldTypes, sampleRows);
   }
-  // invalid:'error'（ADR-08）：transform 之前对 spec 参与字段（= fieldTypes 键）全量校验，遇任一非法 / 缺失 fail-loud；
+  // invalid:'error'：transform 之前对 spec 参与字段（= fieldTypes 键）全量校验，遇任一非法 / 缺失 fail-loud；
   //   置于 transform 前 → 错误定位到原始源字段、不被 transform 改写干扰。默认 'skip' 不校验（哨兵留给下游跳）。
   if (options.invalid === 'error') {
     assertAllValuesValid(normalized, fieldTypes);
@@ -1144,19 +1419,313 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     rows: resolveMarkRows(mark, rows, transformRegistry, transformContext),
   }));
 
-  const { frame, gridLayers, axisLayers, plotArea } = resolveFrame({
-    node,
-    rows,
-    fieldTypes,
-    width,
-    height,
-    fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-    margin: options.margin,
-    provenance,
-    coordinates: options.coordinates,
-    scaleRegistry,
-    markDataViews,
-  });
+  const compositionLayout = node.composition?.layout;
+  const compositionFacets = node.composition?.facets ?? [];
+  const compositionScaffolds = node.composition?.scaffolds ?? [];
+  const compositionGuidePolicy = node.composition?.guidePolicy;
+  const compositionPolicyContext = {
+    hasFacets: compositionFacets.length > 0,
+    hasScaffolds: compositionScaffolds.length > 0,
+  };
+  const compositionAxisPolicy = compositionAxisPolicyOf(compositionGuidePolicy, compositionPolicyContext);
+  const compositionGridPlacement = compositionGridPlacementOf(compositionGuidePolicy, compositionPolicyContext);
+  const frameMargin = mergeCompositionMargin(compositionLayout?.padding, options.margin);
+  const allGuides = withAxisGapOffsets(node.guides ?? [], compositionLayout?.axisGap);
+  const coordinateScopes = resolveCoordinateScopeRegistry(node);
+  const scopeById = new Map(coordinateScopes.scopes.map(scope => [scope.id, scope] as const));
+  const scopeContextOf = (scope: CoordinateScopeRegistryEntry): IRJsonObject => {
+    if (node.composition === undefined) return {};
+    const context: IRJsonObject = { coordinateScope: scope.id };
+    if (scope.placement?.kind === 'track') {
+      context.scaffold = scope.placement.scaffold;
+      context.track = scope.placement.track;
+    }
+    return context;
+  };
+  const scaffoldById = new Map(compositionScaffolds.map(scaffold => [scaffold.id, scaffold] as const));
+  const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
+  const rolesOf = (coordinate: CoordinateOperation): ReadonlySet<DimensionRole> => {
+    const definition = coordinateRegistry.get(coordinate.type);
+    if (definition === undefined) {
+      throw new Error(
+        `lowerPlots: coordinate type "${coordinate.type}" is not registered; pass a CoordinateDefinition via options.coordinates`,
+      );
+    }
+    return new Set(definition.roles);
+  };
+  const assertScaffoldRole = (role: DimensionRole, roles: ReadonlySet<DimensionRole>, scaffoldId: string): void => {
+    if (!roles.has(role)) {
+      throw new Error(`lowerPlots: scaffold "${scaffoldId}" shared role "${role}" is not supported by its coordinate`);
+    }
+  };
+  const assertTrackRole = (role: DimensionRole, roles: ReadonlySet<DimensionRole>, scopeId: string): void => {
+    if (!roles.has(role)) {
+      throw new Error(`lowerPlots: coordinate scope "${scopeId}" track band role "${role}" is not supported by its coordinate`);
+    }
+  };
+  const roleRangeOf = (
+    frameResolution: CoordinateFrameResolution,
+    role: DimensionRole,
+    context: string,
+  ): readonly [number, number] => {
+    const range = frameResolution.frame.roleScales?.[role]?.range();
+    if (range === undefined) {
+      throw new Error(`lowerPlots: ${context} does not expose a scale range for role "${role}"`);
+    }
+    return range;
+  };
+  const trackIndexOf = (scaffold: SharedScaffold, track: ScaffoldTrack): { index: number; count: number } => {
+    const ordered = scaffold.tracks
+      .filter(candidate => candidate.band.role === track.band.role)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.band.start - b.band.start || a.band.end - b.band.end);
+    return { index: ordered.findIndex(candidate => candidate.id === track.id), count: ordered.length };
+  };
+  const bandRangeOf = (
+    range: readonly [number, number],
+    track: ScaffoldTrack,
+    scaffold: SharedScaffold,
+  ): readonly [number, number] => {
+    const delta = range[1] - range[0];
+    const start = range[0] + delta * track.band.start;
+    const end = range[0] + delta * track.band.end;
+    const gap = compositionLayout?.trackGap ?? 0;
+    if (gap === 0) return [start, end];
+    const { index, count } = trackIndexOf(scaffold, track);
+    const direction = delta >= 0 ? 1 : -1;
+    const adjustedStart = start + (index > 0 ? direction * (gap / 2) : 0);
+    const adjustedEnd = end - (index >= 0 && index < count - 1 ? direction * (gap / 2) : 0);
+    if ((delta >= 0 && adjustedStart >= adjustedEnd) || (delta < 0 && adjustedStart <= adjustedEnd)) {
+      throw new Error(`lowerPlots: trackGap ${gap} leaves no range for track "${track.id}"`);
+    }
+    return [adjustedStart, adjustedEnd];
+  };
+  const trackScopesByScaffold = new Map<string, Array<CoordinateScopeRegistryEntry>>();
+  for (const scope of coordinateScopes.scopes) {
+    if (scope.placement?.kind !== 'track') continue;
+    const entries = trackScopesByScaffold.get(scope.placement.scaffold) ?? [];
+    entries.push(scope);
+    trackScopesByScaffold.set(scope.placement.scaffold, entries);
+  }
+  type AxisGridConfig = Exclude<NonNullable<AxisGuide['grid']>, boolean>;
+  type GridTargetSelector = NonNullable<AxisGridConfig['select']>;
+  const axisGridApplyToOf = (guide: AxisGuide): string | null => {
+    if (guide.grid === undefined || guide.grid === false) return null;
+    if (guide.grid === true) return compositionGridPlacement;
+    return guide.grid.applyTo ?? compositionGridPlacement;
+  };
+  const axisGridSelectorOf = (guide: AxisGuide): GridTargetSelector | undefined =>
+    typeof guide.grid === 'object' ? guide.grid.select : undefined;
+  const scalarSelectorIncludes = (
+    values: ReadonlyArray<FacetScalar> | undefined,
+    value: FacetScalar | undefined,
+  ): boolean => values === undefined || (value !== undefined && values.some(candidate => facetValueKey(candidate) === facetValueKey(value)));
+  const coordinateScaleNameOf = (scope: CoordinateScopeRegistryEntry, role: DimensionRole): string | undefined => {
+    const value = (scope.coordinate as Record<string, unknown>)[role];
+    return typeof value === 'string' ? value : undefined;
+  };
+  const scopeSharesAxisRole = (
+    source: CoordinateScopeRegistryEntry,
+    target: CoordinateScopeRegistryEntry,
+    dimension: DimensionRole,
+  ): boolean => {
+    if (source.id === target.id) return true;
+    if (source.placement?.kind === 'track' && target.placement?.kind === 'track') {
+      if (source.placement.scaffold === target.placement.scaffold) {
+        const scaffold = scaffoldById.get(source.placement.scaffold);
+        if (scaffold?.sharedRoles.includes(dimension)) return true;
+      }
+    }
+    const sourceScale = coordinateScaleNameOf(source, dimension);
+    const targetScale = coordinateScaleNameOf(target, dimension);
+    return sourceScale !== undefined && sourceScale === targetScale;
+  };
+  const selectorMatchesScope = (selector: GridTargetSelector, scope: CoordinateScopeRegistryEntry): boolean => {
+    if (selector.scopes?.includes(scope.id)) return true;
+    if (selector.track !== undefined && scope.placement?.kind === 'track') {
+      const scaffoldMatches = selector.track.scaffold === undefined || selector.track.scaffold === scope.placement.scaffold;
+      const trackMatches = selector.track.id === undefined || selector.track.id.includes(scope.placement.track);
+      return scaffoldMatches && trackMatches;
+    }
+    return false;
+  };
+  const axisGridTargetsScope = (guide: AxisGuide, scope: CoordinateScopeRegistryEntry): boolean => {
+    const applyTo = axisGridApplyToOf(guide);
+    if (applyTo === null) return false;
+    const sourceScope = scopeById.get(axisGuideScopeIdOf(guide, coordinateScopes.defaultScope));
+    if (sourceScope === undefined) return false;
+    if (applyTo === AxisGridApplyTo.Self) return sourceScope.id === scope.id;
+    if (applyTo === AxisGridApplyTo.SharedRole) return scopeSharesAxisRole(sourceScope, scope, guide.dimension);
+    const selector = axisGridSelectorOf(guide);
+    return selector !== undefined && selectorMatchesScope(selector, scope);
+  };
+  const gridGuidesForScope = (scope: CoordinateScopeRegistryEntry): Array<AxisGuide> =>
+    allGuides.flatMap(guide =>
+      isAxisGuide(guide) && axisGridTargetsScope(guide, scope) ? [withEnabledAxisGrid(guide, scope.id)] : [],
+    );
+  const assertSelectedGridTargetsScopes = (): void => {
+    for (const guide of allGuides) {
+      if (!isAxisGuide(guide) || axisGridApplyToOf(guide) !== AxisGridApplyTo.Selected) continue;
+      const count = coordinateScopes.scopes.filter(scope => axisGridTargetsScope(guide, scope)).length;
+      if (count === 0) {
+        throw new Error(`lowerPlots: axis grid selector for dimension "${guide.dimension}" matches no target scope`);
+      }
+    }
+  };
+  const resolvedFrames = new Map<string, CoordinateFrameResolution & { scopeId: string }>();
+  const scaffoldFrames = new Map<string, CoordinateFrameResolution>();
+  const resolvingFrames = new Set<string>();
+  const resolveScaffoldFrame = (scaffold: SharedScaffold): CoordinateFrameResolution => {
+    const cached = scaffoldFrames.get(scaffold.id);
+    if (cached !== undefined) return cached;
+    const scaffoldRoles = rolesOf(scaffold.coordinate);
+    for (const role of scaffold.sharedRoles) assertScaffoldRole(role, scaffoldRoles, scaffold.id);
+    for (const track of scaffold.tracks) assertTrackRole(track.band.role, scaffoldRoles, scaffold.id);
+    const scaffoldScopeIds = new Set((trackScopesByScaffold.get(scaffold.id) ?? []).map(scope => scope.id));
+    const scaffoldMarkDataViews = markDataViews.filter(view =>
+      scaffoldScopeIds.has(coordinateScopeIdOf(view.mark, coordinateScopes.defaultScope)),
+    );
+    const scaffoldNode: PlotSpec = {
+      ...node,
+      coordinate: scaffold.coordinate,
+      composition: undefined,
+      marks: scaffoldMarkDataViews.map(view => view.mark),
+      guides: [],
+    };
+    const resolved = resolveFrame({
+      node: scaffoldNode,
+      rows,
+      fieldTypes,
+      width,
+      height,
+      fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+      margin: frameMargin,
+      labelGap: compositionLayout?.labelGap,
+      provenance,
+      coordinates: options.coordinates,
+      scaleRegistry,
+      markDataViews: scaffoldMarkDataViews,
+    });
+    scaffoldFrames.set(scaffold.id, resolved);
+    return resolved;
+  };
+  const resolveScopedFrame = (scope: CoordinateScopeRegistryEntry): CoordinateFrameResolution & { scopeId: string } => {
+    const cached = resolvedFrames.get(scope.id);
+    if (cached !== undefined) return cached;
+    if (resolvingFrames.has(scope.id)) {
+      throw new Error(`lowerPlots: overlay coordinate scope cycle detected at "${scope.id}"`);
+    }
+    resolvingFrames.add(scope.id);
+    const targetPlotArea =
+      scope.placement?.kind === 'overlay'
+        ? resolveScopedFrame(scopeById.get(scope.placement.target) ?? scope).plotArea
+        : undefined;
+    const trackPlacement = scope.placement?.kind === 'track' ? scope.placement : undefined;
+    const scaffold = trackPlacement !== undefined ? scaffoldById.get(trackPlacement.scaffold) : undefined;
+    const track =
+      scaffold !== undefined && trackPlacement !== undefined
+        ? scaffold.tracks.find(candidate => candidate.id === trackPlacement.track)
+        : undefined;
+    const scaffoldFrame = scaffold !== undefined ? resolveScaffoldFrame(scaffold) : undefined;
+    const roleMarkDataViews: Record<string, Array<MarkDataView>> = {};
+    const roleRangeOverrides: Partial<Record<DimensionRole, readonly [number, number]>> = {};
+    if (scaffold !== undefined && track !== undefined && scaffoldFrame !== undefined) {
+      const scopeRoles = rolesOf(scope.coordinate);
+      const scaffoldScopeIds = new Set((trackScopesByScaffold.get(scaffold.id) ?? []).map(entry => entry.id));
+      const scaffoldMarkDataViews = markDataViews.filter(view =>
+        scaffoldScopeIds.has(coordinateScopeIdOf(view.mark, coordinateScopes.defaultScope)),
+      );
+      for (const role of scaffold.sharedRoles) {
+        assertScaffoldRole(role, scopeRoles, scaffold.id);
+        roleMarkDataViews[role] = scaffoldMarkDataViews;
+        roleRangeOverrides[role] = roleRangeOf(scaffoldFrame, role, `scaffold "${scaffold.id}"`);
+      }
+      assertTrackRole(track.band.role, scopeRoles, scope.id);
+      const baseBandRange = roleRangeOf(scaffoldFrame, track.band.role, `scaffold "${scaffold.id}"`);
+      roleRangeOverrides[track.band.role] = bandRangeOf(baseBandRange, track, scaffold);
+    }
+    const scopedMarkDataViews = markDataViews.filter(
+      view => coordinateScopeIdOf(view.mark, coordinateScopes.defaultScope) === scope.id,
+    );
+    if (scaffold === undefined) {
+      for (const role of rolesOf(scope.coordinate)) {
+        const scaleName = coordinateScaleNameOf(scope, role);
+        if (scaleName === undefined) continue;
+        const sharedViews = markDataViews.filter(view => {
+          const viewScope = scopeById.get(coordinateScopeIdOf(view.mark, coordinateScopes.defaultScope));
+          return viewScope !== undefined && coordinateScaleNameOf(viewScope, role) === scaleName;
+        });
+        if (sharedViews.length > scopedMarkDataViews.length) roleMarkDataViews[role] = sharedViews;
+      }
+    }
+    const scopedGuides = withoutAxisGrid(allGuides.filter(
+      guide => !isAxisGuide(guide) || axisGuideScopeIdOf(guide, coordinateScopes.defaultScope) === scope.id,
+    ));
+    const scopedGridGuides = gridGuidesForScope(scope);
+    const scopedNode: PlotSpec = {
+      ...node,
+      coordinate: scope.coordinate,
+      composition: undefined,
+      marks: scopedMarkDataViews.map(view => view.mark),
+      guides: scopedGuides,
+    };
+    const rawResolution = resolveFrame({
+      node: scopedNode,
+      rows,
+      fieldTypes,
+      width,
+      height,
+      fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+      margin: frameMargin,
+      labelGap: compositionLayout?.labelGap,
+      ...(targetPlotArea !== undefined ? { plotAreaOverride: targetPlotArea } : {}),
+      ...(scaffoldFrame !== undefined && (scaffold?.frame ?? 'shared') === 'shared'
+        ? { plotAreaOverride: scaffoldFrame.plotArea }
+        : {}),
+      ...(Object.keys(roleRangeOverrides).length > 0 ? { roleRangeOverrides } : {}),
+      provenance,
+      coordinates: options.coordinates,
+      scaleRegistry,
+      markDataViews: scopedMarkDataViews,
+      ...(Object.keys(roleMarkDataViews).length > 0 ? { roleMarkDataViews } : {}),
+    });
+    const gridResolution =
+      scopedGridGuides.length > 0
+        ? resolveFrame({
+            node: { ...scopedNode, guides: scopedGridGuides },
+            rows,
+            fieldTypes,
+            width,
+            height,
+            fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+            margin: frameMargin,
+            labelGap: compositionLayout?.labelGap,
+            plotAreaOverride: rawResolution.plotArea,
+            ...(Object.keys(roleRangeOverrides).length > 0 ? { roleRangeOverrides } : {}),
+            provenance,
+            coordinates: options.coordinates,
+            scaleRegistry,
+            markDataViews: scopedMarkDataViews,
+            ...(Object.keys(roleMarkDataViews).length > 0 ? { roleMarkDataViews } : {}),
+          })
+        : undefined;
+    const scopeContext = scopeContextOf(scope);
+    const resolved = {
+      scopeId: scope.id,
+      ...rawResolution,
+      gridLayers: (gridResolution?.gridLayers ?? []).map(layer => withScopeContext(layer, scopeContext) as IRScope),
+      axisLayers: rawResolution.axisLayers.map(layer => withScopeContext(layer, scopeContext) as IRScope),
+    };
+    resolvingFrames.delete(scope.id);
+    resolvedFrames.set(scope.id, resolved);
+    return resolved;
+  };
+  const facets = compositionFacets;
+  if (facets.length === 0) assertSelectedGridTargetsScopes();
+  const scopedFrames = coordinateScopes.scopes.map(resolveScopedFrame);
+  const frameByScope = new Map(scopedFrames.map(scopeFrame => [scopeFrame.scopeId, scopeFrame.frame] as const));
+  const gridLayers = scopedFrames.flatMap(scopeFrame => scopeFrame.gridLayers);
+  const axisLayers = scopedFrames.flatMap(scopeFrame => scopeFrame.axisLayers);
+  const plotArea = scopedFrames[0]?.plotArea ?? { x: 0, y: 0, width, height };
 
   const channelCtx = { node, rows, fieldTypes, scaleRegistry, resolveColorScheme };
   // 通道 registry：内置 definition 先注册，自定义 definition 再合并；mark / node / path 通道统一解析。
@@ -1173,12 +1742,210 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       : undefined;
   const anchorRegistry = createAnchorRegistry({ plotId: node.id, generators: options.anchorIdGenerators });
 
+  if (facets.length > 0) {
+    const defaultScope = coordinateScopes.scopes.find(scope => scope.id === coordinateScopes.defaultScope);
+    if (defaultScope === undefined) {
+      throw new Error(`lowerPlots: default coordinate scope "${coordinateScopes.defaultScope}" is not registered`);
+    }
+
+    const usedFacetScopeIds = new Set(coordinateScopes.scopes.map(scope => scope.id));
+    const panels = facets.flatMap(facet => resolveFacetPanels(facet, rows, usedFacetScopeIds));
+    const maxColumnIndex = panels.reduce((max, panel) => Math.max(max, panel.columnIndex), 0);
+    const maxRowIndex = panels.reduce((max, panel) => Math.max(max, panel.rowIndex), 0);
+    const panelGap = compositionLayout?.panelGap ?? 0;
+    const columnCount = maxColumnIndex + 1;
+    const rowCount = maxRowIndex + 1;
+    const panelWidth = (width - Math.max(0, columnCount - 1) * panelGap) / columnCount;
+    const panelHeight = (height - Math.max(0, rowCount - 1) * panelGap) / rowCount;
+    if (panelWidth <= 0 || panelHeight <= 0) {
+      throw new Error(`lowerPlots: panelGap ${panelGap} leaves no room for ${columnCount}x${rowCount} facet panels`);
+    }
+    const facetGuides = allGuides.filter(
+      guide => !isAxisGuide(guide) || axisGuideScopeIdOf(guide, coordinateScopes.defaultScope) === defaultScope.id,
+    );
+    const keepOuterSharedAxisForPanel = (guide: Guide, panel: FacetPanel): boolean => {
+        if (!isAxisGuide(guide) || compositionAxisPolicy !== CompositionAxisPolicy.OuterShared) return true;
+        const sharing = panel.facet.scales?.roles?.[guide.dimension] ?? 'shared';
+        if (sharing === 'independent') return true;
+        if (guide.dimension === 'x') return panel.rowIndex === maxRowIndex;
+        if (guide.dimension === 'y') return panel.columnIndex === 0;
+        return panel.rowIndex === 0 && panel.columnIndex === 0;
+    };
+    const selectorMatchesFacetPanel = (selector: GridTargetSelector, panel: FacetPanel): boolean => {
+      if (selector.scopes?.includes(panel.id)) return true;
+      if (selector.facet === undefined) return false;
+      const facetMatches = selector.facet.id === undefined || selector.facet.id === panel.facet.id;
+      const rowMatches = scalarSelectorIncludes(selector.facet.row, panel.row);
+      const columnMatches = scalarSelectorIncludes(selector.facet.column, panel.column);
+      return facetMatches && rowMatches && columnMatches;
+    };
+    const axisGridTargetsFacetPanel = (guide: AxisGuide, panel: FacetPanel): boolean => {
+      const applyTo = axisGridApplyToOf(guide);
+      if (applyTo === null) return false;
+      if (applyTo === AxisGridApplyTo.Self || applyTo === AxisGridApplyTo.SharedRole) return true;
+      const selector = axisGridSelectorOf(guide);
+      return selector !== undefined && selectorMatchesFacetPanel(selector, panel);
+    };
+    const facetAxisGuidesForPanel = (panel: FacetPanel): Array<Guide> =>
+      withoutAxisGrid(facetGuides.filter(guide => keepOuterSharedAxisForPanel(guide, panel)));
+    const facetGridGuidesForPanel = (panel: FacetPanel): Array<Guide> =>
+      facetGuides.flatMap(guide =>
+        isAxisGuide(guide) && axisGridTargetsFacetPanel(guide, panel)
+          ? [withEnabledAxisGrid(guide, undefined)]
+          : [],
+      );
+    for (const guide of facetGuides) {
+      if (!isAxisGuide(guide) || axisGridApplyToOf(guide) !== AxisGridApplyTo.Selected) continue;
+      const count = panels.filter(panel => axisGridTargetsFacetPanel(guide, panel)).length;
+      if (count === 0) {
+        throw new Error(`lowerPlots: axis grid selector for dimension "${guide.dimension}" matches no target facet panel`);
+      }
+    }
+
+    const panelScopes: Array<IRScope> = panels.map(panel => {
+      const panelAxisGuides = facetAxisGuidesForPanel(panel);
+      const panelMarkDataViews: Array<MarkDataView> = node.marks.map(mark => ({
+        mark,
+        rows: resolveMarkRows(mark, panel.rows, transformRegistry, transformContext),
+      }));
+      const roleMarkDataViews: Record<string, Array<MarkDataView>> = {};
+      for (const [role, sharing] of Object.entries(panel.facet.scales?.roles ?? {})) {
+        if (sharing === 'independent') roleMarkDataViews[role] = panelMarkDataViews;
+      }
+      const panelNode: PlotSpec = {
+        ...node,
+        coordinate: panel.facet.coordinate ?? defaultScope.coordinate,
+        composition: undefined,
+        marks: node.marks,
+        guides: panelAxisGuides,
+      };
+      const frameResolution = resolveFrame({
+        node: panelNode,
+        rows: panel.rows,
+        fieldTypes,
+        width: panelWidth,
+        height: panelHeight,
+        fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+        margin: frameMargin,
+        labelGap: compositionLayout?.labelGap,
+        provenance,
+        coordinates: options.coordinates,
+        scaleRegistry,
+        markDataViews,
+        roleMarkDataViews,
+      });
+      const panelGridGuides = facetGridGuidesForPanel(panel);
+      const gridResolution =
+        panelGridGuides.length > 0
+          ? resolveFrame({
+              node: { ...panelNode, guides: panelGridGuides },
+              rows: panel.rows,
+              fieldTypes,
+              width: panelWidth,
+              height: panelHeight,
+              fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+              margin: frameMargin,
+              labelGap: compositionLayout?.labelGap,
+              plotAreaOverride: frameResolution.plotArea,
+              provenance,
+              coordinates: options.coordinates,
+              scaleRegistry,
+              markDataViews,
+              roleMarkDataViews,
+            })
+          : undefined;
+      const facetContext: IRJsonObject = { id: panel.facet.id };
+      if (panel.row !== undefined) facetContext.row = panel.row;
+      if (panel.column !== undefined) facetContext.column = panel.column;
+      const panelContext: IRJsonObject = { coordinateScope: panel.id, facet: facetContext };
+      const markLayers: Array<IRChild> = node.marks
+        .map((mark, markIndex) => {
+          const markRows = panelMarkDataViews[markIndex]?.rows ?? panel.rows;
+          const layer = lowerMark(
+            mark,
+            markRows,
+            frameResolution.frame,
+            resolveMarkChannels(
+              mark,
+              { ...channelCtx, rows: markRows },
+              channelRegistry,
+              defaultColorOf(node, markIndex),
+              channelKindsForMark(mark, markRegistry),
+            ),
+            {
+              markIndex,
+              plotId: node.id,
+              ...(provenance !== undefined ? { provenance: { context: provenance, markIndex, registerDatumId } } : {}),
+              anchors: anchorRegistry,
+            },
+            markRegistry,
+          );
+          return layer === null ? null : withScopeContext(layer, panelContext);
+        })
+        .filter((layer): layer is IRChild => layer !== null);
+      const meta: IRJsonObject = { source: 'plot', layer: 'facetPanel', facet: panel.facet.id };
+      if (panel.row !== undefined) meta.row = panel.row;
+      if (panel.column !== undefined) meta.column = panel.column;
+      const base: IRScope = {
+        type: 'scope',
+        id: panel.id,
+        localNamespace: true,
+        meta,
+        children: [
+          ...(gridResolution?.gridLayers ?? []).map(layer => withScopeContext(layer, panelContext) as IRScope),
+          ...markLayers,
+          ...frameResolution.axisLayers.map(layer => withScopeContext(layer, panelContext) as IRScope),
+        ],
+      };
+      if (panel.rowIndex === 0 && panel.columnIndex === 0) return base;
+      return {
+        ...base,
+        transforms: [
+          {
+            kind: 'translate',
+            x: panel.columnIndex * (panelWidth + panelGap),
+            y: panel.rowIndex * (panelHeight + panelGap),
+          },
+        ],
+      };
+    });
+
+    anchorRegistry.assertResolved();
+    const children: Array<IRChild> = panelScopes;
+    if (node.id === undefined) {
+      const base: IRScope = { type: 'scope', localNamespace: true, children };
+      return provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
+    }
+
+    const panelStrideX = panelWidth + panelGap;
+    const panelStrideY = panelHeight + panelGap;
+    const inner: IRScope = { type: 'scope', localNamespace: true, children };
+    const innerContent: IRScope = provenance ? { ...inner, meta: rootMeta(provenance.dataReference) } : inner;
+    const plotAreaCarrier: IRNode = {
+      type: 'node',
+      id: `${node.id}.plotArea`,
+      position: [(maxColumnIndex * panelStrideX + panelWidth) / 2, (maxRowIndex * panelStrideY + panelHeight) / 2],
+      shape: 'rectangle',
+      minimumWidth: maxColumnIndex * panelStrideX + panelWidth,
+      minimumHeight: maxRowIndex * panelStrideY + panelHeight,
+      padding: 0,
+      opacity: 0,
+    };
+    return { type: 'scope', id: node.id, children: [innerContent, plotAreaCarrier] };
+  }
+
   // 每个 mark 下沉成一个图层 Scope（样式上提到 nodeDefault/pathDefault）；空图层（无可绘制点）丢弃
   // provenance 开 → 传 markProvenance（plotId / markIndex / datum 开关 + 共享 registerDatumId），各层 / datum 绑 id + 来源 meta
-  const markLayers: Array<IRChild> = node.marks
+  const scopeOrderById = new Map(coordinateScopes.scopes.map((scope, index) => [scope.id, index] as const));
+  const markLayerEntries = node.marks
     .map((mark, markIndex) => {
       const markRows = markDataViews[markIndex]?.rows ?? rows;
-      return lowerMark(
+      const coordinateScopeId = coordinateScopeIdOf(mark, coordinateScopes.defaultScope);
+      const frame = frameByScope.get(coordinateScopeId);
+      if (frame === undefined) {
+        throw new Error(`lowerPlots: coordinateScope "${coordinateScopeId}" is not registered`);
+      }
+      const layer = lowerMark(
         mark,
         markRows,
         frame,
@@ -1197,13 +1964,23 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         },
         markRegistry,
       );
+      if (layer === null) return null;
+      const scope = scopeById.get(coordinateScopeId);
+      const scopedLayer = scope === undefined ? layer : withScopeContext(layer, scopeContextOf(scope));
+      const declarationOrder = scopeOrderById.get(coordinateScopeId) ?? markIndex;
+      const zIndex =
+        scope?.placement?.kind === 'overlay' ? (scope.placement.zIndex ?? declarationOrder) : declarationOrder;
+      return { layer: scopedLayer, markIndex, zIndex };
     })
-    .filter((layer): layer is IRChild => layer !== null);
+    .filter((entry): entry is { layer: IRChild; markIndex: number; zIndex: number } => entry !== null);
+  const markLayers: Array<IRChild> = markLayerEntries
+    .sort((a, b) => a.zIndex - b.zIndex || a.markIndex - b.markIndex)
+    .map(entry => entry.layer);
   anchorRegistry.assertResolved();
 
-  // legend（ADR-03）：收 legend guide → 据通道 + scale 类型选形态下沉成独立 scope，落 position 预留带。
+  // 收 legend guide → 据通道 + scale 类型选形态下沉成独立 scope，落 position 预留带。
   // 占位（band 计算 / plotArea 收窄）见 reserveLegendBands；fail-loud（多 scale 未消歧 / scale 不存在）在 buildLegendLayers 内。
-  const legendGuides = (node.guides ?? []).filter(isLegendGuide);
+  const legendGuides = allGuides.filter(isLegendGuide);
   const legendLayers: Array<IRScope> = [];
   if (legendGuides.length > 0) {
     const channelDescriptors = collectChannelDescriptors(
@@ -1229,13 +2006,13 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   // z-order：所有网格层 → marks → 所有轴层 → legend（网格垫底、坐标轴压顶不被数据盖、legend 在预留带最上）
   const children: Array<IRChild> = [...gridLayers, ...markLayers, ...axisLayers, ...legendLayers];
 
-  // 无 id：结构逐字不变（单图零回归）——root = localNamespace 内容 scope（+ provenance meta）
+  // 无 id：root = localNamespace 内容 scope（可带 provenance meta）。
   if (node.id === undefined) {
     const base: IRScope = { type: 'scope', localNamespace: true, children };
     return provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
   }
 
-  // 有 id（ADR-02 L1-b）：外层 panel scope（id、非 localNamespace → 面板 bbox 注册父帧、外部可见）
+  // 有 id：外层 panel scope（id、非 localNamespace → 面板 bbox 注册父帧、外部可见）
   //   ⊃ [ 内层 localNamespace 内容 scope（封内部 datum/series id、承 provenance meta）, plotArea 不可见 carrier ]。
   // 让面板 bbox `<plotId>` 与绘图区 `<plotId>.plotArea` 都落在 localNamespace 之外、外部兄弟可锚（组合连线）。
   const inner: IRScope = { type: 'scope', localNamespace: true, children };

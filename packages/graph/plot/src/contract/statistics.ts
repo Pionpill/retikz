@@ -21,7 +21,10 @@ export type StatisticsReducerDefinition<TReducerOperation extends ReducerOperati
   reduce: (rows: Array<ExternalRow>, operation: TReducerOperation, context: StatisticsReducerContext) => ExternalRow;
 };
 
-/** 定义一个统计 reducer。 */
+/**
+ * 定义一个统计 reducer。
+ * @remarks 当前 helper 只做 `StatisticsReducerDefinition` 类型约束并原样返回定义对象；保留稳定入口是为了与其它 registry API 对齐，并为后续运行时校验、默认值归一或泛型收敛预留 contract hook。
+ */
 export const defineStatisticsReducer = <TReducerOperation extends ReducerOperation>(
   def: StatisticsReducerDefinition<TReducerOperation>,
 ): StatisticsReducerDefinition<TReducerOperation> => def;
@@ -57,7 +60,10 @@ export type RowSelectorDefinition<TSelectorOperation extends SelectorOperation =
   select: (rows: Array<ExternalRow>, operation: TSelectorOperation) => Array<RowSelection>;
 };
 
-/** 定义一个 row selector。 */
+/**
+ * 定义一个 row selector。
+ * @remarks 当前 helper 只做 `RowSelectorDefinition` 类型约束并原样返回定义对象；保留稳定入口是为了与其它 registry API 对齐，并为后续运行时校验、默认值归一或泛型收敛预留 contract hook。
+ */
 export const defineRowSelector = <TSelectorOperation extends SelectorOperation>(
   def: RowSelectorDefinition<TSelectorOperation>,
 ): RowSelectorDefinition<TSelectorOperation> => def;

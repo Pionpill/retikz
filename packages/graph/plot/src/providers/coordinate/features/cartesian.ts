@@ -22,7 +22,7 @@ import {
   PlotCoordinate,
   PlotScale,
 } from '../../../schemas';
-import { assertUniqueAxisDimension } from '../shared';
+import { assertUniqueAxisPlacement } from '../shared';
 
 type Cartesian2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Cartesian2D }>;
 
@@ -54,6 +54,8 @@ export type CartesianCoordinateFrame = {
   primary: PositionScale;
   /** y（垂直）位置 scale */
   secondary: PositionScale;
+  /** 按通用 coordinate contract 暴露各 role 的位置 scale。 */
+  roleScales: Partial<Record<DimensionRole, PositionScale>>;
   /** 投影：[primary.coordinate(x), secondary.coordinate(y)]；任一非有限 → null */
   project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：按 roles 序传值（[x, y]），内部委托 project；任一非有限 → null */
@@ -82,6 +84,7 @@ export const createCartesianCoordinate = (
     roles: ['x', 'y'],
     primary,
     secondary,
+    roleScales: { x: primary, y: secondary },
     project,
     projectRoles: values => project(values[0], values[1]),
     projectCell: cell => {
@@ -113,6 +116,8 @@ export type Cartesian1DCoordinateFrame = {
   baseline: number;
   /** 单一位置 scale */
   primary: PositionScale;
+  /** 按通用 coordinate contract 暴露 x role 的位置 scale。 */
+  roleScales: Partial<Record<DimensionRole, PositionScale>>;
   /** 投影别名（2 入参形态，secondary 忽略）：等价 projectRoles([primaryValue]) */
   project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：roles 长度 1，传 [value] → horizontal [scale(v), baseline] / vertical [baseline, scale(v)]；非有限 → null */
@@ -141,6 +146,7 @@ export const createCartesian1DCoordinate = (
     orientation,
     baseline,
     primary: scale,
+    roleScales: { x: scale },
     project: primaryValue => projectRoles([primaryValue]),
     projectRoles,
   };
@@ -159,7 +165,7 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
     const xScale = ctx.buildPositionScale(xScaleDef, xValues, [0, ctx.width]);
     const yScale = ctx.buildPositionScale(yScaleDef, yValues, [ctx.height, 0]);
 
-    assertUniqueAxisDimension(ctx.axisGuides);
+    assertUniqueAxisPlacement(ctx.axisGuides);
     const xAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
     const yAxis = ctx.axisGuides.find(guide => guide.dimension === 'y');
     const xTicks: TickSet | undefined = xAxis
@@ -181,10 +187,14 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
       },
       { fontSize: ctx.fontSize, margin: ctx.margin },
     );
-    const plotArea = computed.plotArea;
+    const plotArea = ctx.plotAreaOverride ?? computed.plotArea;
 
     if (!hasExplicitContinuousRange(xScaleDef)) xScale.setRange([plotArea.x, plotArea.x + plotArea.width]);
     if (!hasExplicitContinuousRange(yScaleDef)) yScale.setRange([plotArea.y + plotArea.height, plotArea.y]);
+    const xRangeOverride = ctx.roleRangeOverrides?.x;
+    const yRangeOverride = ctx.roleRangeOverrides?.y;
+    if (xRangeOverride !== undefined) xScale.setRange([xRangeOverride[0], xRangeOverride[1]]);
+    if (yRangeOverride !== undefined) yScale.setRange([yRangeOverride[0], yRangeOverride[1]]);
     const frame = createCartesianCoordinate(xScale, yScale);
 
     const [xRangeStart, xRangeEnd] = xScale.range();
@@ -202,6 +212,7 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
       xTicks: xTicks ?? EMPTY_TICKS,
       yTicks: yTicks ?? EMPTY_TICKS,
       fontSize: ctx.fontSize,
+      labelGap: ctx.labelGap,
     };
     const lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));
     return {
@@ -222,7 +233,7 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
     const values = ctx.collectPositionValues('x', { axis: 'primary' });
     const scaleDef = ctx.resolveScaleForRole('x', coordinate.x, values);
 
-    assertUniqueAxisDimension(ctx.axisGuides);
+    assertUniqueAxisPlacement(ctx.axisGuides);
     const axis = ctx.axisGuides.find(guide => guide.dimension === 'x');
 
     const provisional: [number, number] = horizontal ? [0, ctx.width] : [ctx.height, 0];
@@ -240,9 +251,11 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
       },
       { fontSize: ctx.fontSize, margin: ctx.margin },
     );
-    const plotArea = computed.plotArea;
+    const plotArea = ctx.plotAreaOverride ?? computed.plotArea;
     if (horizontal) scale.setRange([plotArea.x, plotArea.x + plotArea.width]);
     else scale.setRange([plotArea.y + plotArea.height, plotArea.y]);
+    const rangeOverride = ctx.roleRangeOverrides?.x;
+    if (rangeOverride !== undefined) scale.setRange([rangeOverride[0], rangeOverride[1]]);
     const baseline = horizontal ? plotArea.y + plotArea.height : plotArea.x;
     const frame = createCartesian1DCoordinate(scale, orientation, baseline);
 
@@ -253,6 +266,7 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
       xTicks: horizontal ? (ticks ?? EMPTY_TICKS) : EMPTY_TICKS,
       yTicks: horizontal ? EMPTY_TICKS : (ticks ?? EMPTY_TICKS),
       fontSize: ctx.fontSize,
+      labelGap: ctx.labelGap,
       axisOrientation: horizontal ? 'horizontal' : 'vertical',
     };
     const lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));

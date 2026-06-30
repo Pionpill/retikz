@@ -1,7 +1,24 @@
 import type { z } from 'zod';
 
+import type { ValueOf } from '../../../types';
 import type { StepSchema } from '../step';
+import type { PathArrowDirection, PathFillRule, PathLineCap, PathLineJoin, PathThickness } from './constants';
 import type { ArrowMarkSchema, PathBaseSchema, PathScaleSchema } from './schema';
+
+/** 路径级箭头方向关键字类型。 */
+export type PathArrowDirectionValue = ValueOf<typeof PathArrowDirection>;
+
+/** 路径填充规则关键字类型。 */
+export type PathFillRuleValue = ValueOf<typeof PathFillRule>;
+
+/** 路径端点线帽关键字类型。 */
+export type PathLineCapValue = ValueOf<typeof PathLineCap>;
+
+/** 路径拐角连接关键字类型。 */
+export type PathLineJoinValue = ValueOf<typeof PathLineJoin>;
+
+/** 路径语义线宽关键字类型。 */
+export type PathThicknessValue = ValueOf<typeof PathThickness>;
 
 /** 路径整条缩放类型：number（等比）或 {x,y}（非等比） */
 export type IRPathScale = z.infer<typeof PathScaleSchema>;

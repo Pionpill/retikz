@@ -937,8 +937,9 @@ describe('label.position schema 边界：异常值由 zod 拒绝（不在 compil
     const result = StepLabelSchema.safeParse({ text: 'x', position: 'unknown' });
     expect(result.success).toBe(false);
   });
-  it('label_legacy_3_keywords_still_accepted：旧 IR 的 "midway"/"near-start"/"near-end" 仍合法', async () => {
+  it('label_compat_position_alias_keywords_accepted', async () => {
     const { StepLabelSchema } = await import('../../src/schemas/path/step');
+    // compat: these position aliases remain accepted StepLabelSchema input.
     for (const k of ['midway', 'near-start', 'near-end']) {
       const result = StepLabelSchema.safeParse({ text: 'x', position: k });
       expect(result.success).toBe(true);

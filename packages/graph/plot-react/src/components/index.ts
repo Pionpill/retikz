@@ -7,6 +7,8 @@ export type {
   ResolveLabelMap,
 } from './build-plot-spec';
 export { buildPlotSpec, resolveLabelOf } from './build-plot-spec';
+export type { FacetDimensionInput, FacetProps, ScaffoldProps, TrackProps } from './composition';
+export { Facet, Scaffold, Track } from './composition';
 export type { AxisProps, LegendProps } from './guides';
 export { Axis, Legend } from './guides';
 export type {

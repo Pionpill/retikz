@@ -51,7 +51,7 @@ export const DemoRenderer: FC<DemoRendererProps> = props => {
       </RendererModeProvider>
     );
   }
-  return <>{applyRendererMode(Component({}), rendererMode)}</>;
+  return <RendererModeProvider mode={rendererMode}>{applyRendererMode(Component({}), rendererMode)}</RendererModeProvider>;
 };
 
 /**

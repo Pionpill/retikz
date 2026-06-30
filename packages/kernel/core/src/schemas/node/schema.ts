@@ -195,7 +195,7 @@ export const NodeSchema = z
       .nonnegative()
       .optional()
       .describe(
-        'Migration-period top-level corner radius in user units; only effective on `rectangle` shape. Prefer the shape params form `{ type: "rectangle", params: { cornerRadius } }`.',
+        'Top-level corner radius in user units. Only effective on `rectangle` shape.',
       ),
     minimumWidth: z
       .number()

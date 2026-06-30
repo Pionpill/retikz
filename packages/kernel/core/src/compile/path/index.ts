@@ -1069,7 +1069,7 @@ export const emitPathPrimitive = (
     collectLabel(step, t => foldSegmentSample(fromClip, corner, toClip, t));
   }
 
-  // 折线几何圆角（ADR-01 `roundedCorners`）：编译期对 line step ↔ line step 内接缝插切圆弧。
+  // 折线几何圆角：编译期对 line step ↔ line step 内接缝插切圆弧。
   // 在 shrink / split / marks 之前作用于已 emit 的 commands（在未变换几何上）——故 marks 弧长、arrow shrink、
   // rotate/scale 外层 group 都自动落在倒角后几何上（顺序硬契约）。缺省 / 0 → commands 逐字不变。
   let roundedCommands = false;
@@ -1113,7 +1113,7 @@ export const emitPathPrimitive = (
   if (path.marks && path.marks.length > 0 && segmentSamplers.length > 0) {
     const segCount = segmentSamplers.length;
     for (const { pos, mark } of path.marks) {
-      // 倒角后：沿倒角后 commands 按总弧长重定位（接缝几何 + 总弧长已变 → 落点 / 切线与尖角不同，ADR-01）。
+      // 倒角后：沿倒角后 commands 按总弧长重定位（接缝几何 + 总弧长已变 → 落点 / 切线与尖角不同）。
       // 未倒角：保持原便宜模型——pos·N 落第 segIdx 段（pos=1 收口落末段尾），段内参数 = 余数。
       const sample = roundedCommands
         ? sampleRoundedCommands(commands, pos)

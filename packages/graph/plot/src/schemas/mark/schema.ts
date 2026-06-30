@@ -6,7 +6,13 @@ import {
   BoundarySchema,
   DropShadowSchema,
   FontSchema,
+  NodeTextAlign,
+  PathArrowDirectionSchema,
+  PathFillRuleSchema,
+  PathLineCapSchema,
+  PathLineJoinSchema,
   PathScaleSchema,
+  PathThicknessSchema,
   ShadowPreset,
   ShapeRefSchema,
 } from '@retikz/core';
@@ -34,7 +40,14 @@ export const RelationTransformSchema = MarkTransformSchema;
 
 /** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema，reference 用专属） */
 const markBase = {
-  id: z.string().min(1).optional().describe('Optional mark handle; reserved scope/anchor target'),
+  id: z.string().min(1).optional().describe('Optional mark handle used by generated scope and anchor targets'),
+  coordinateScope: z
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      'Coordinate scope id this mark is projected through; omit to use the plot composition default scope',
+    ),
   transform: MarkTransformSchema.optional().describe(
     'Optional mark-local transform pipeline applied after the plot root transform',
   ),
@@ -70,7 +83,7 @@ export const AnchorIdSpecSchema = z
     const count = [spec.field, spec.template, spec.generator].filter(value => value !== undefined).length;
     if (count !== 1) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'anchorId requires exactly one of field, template, or generator',
       });
     }
@@ -208,7 +221,7 @@ const RelationOrthogonalRoutingSchema = z
   .superRefine((routing, ctx) => {
     if (routing.via === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['via'],
         message: 'orthogonal relation routing requires via',
       });
@@ -335,7 +348,7 @@ export const NodePositiveNumberStyleSchema = markValueSchema(
   'node positive numeric style value',
 );
 export const NodeTextAlignStyleSchema = markValueSchema(
-  z.enum(['left', 'center', 'right']),
+  z.enum(NodeTextAlign),
   'Data field path bound to node text align',
   'Constant core Node align',
   'node text align style value',
@@ -377,13 +390,13 @@ export const BlendModeStyleSchema = markValueSchema(
   'blendMode style value',
 );
 export const PathLineCapStyleSchema = markValueSchema(
-  z.enum(['butt', 'round', 'square']),
+  PathLineCapSchema,
   'Data field path bound to a path lineCap value',
   'Constant core Path lineCap',
   'path lineCap style value',
 );
 export const PathLineJoinStyleSchema = markValueSchema(
-  z.enum(['miter', 'round', 'bevel']),
+  PathLineJoinSchema,
   'Data field path bound to a path lineJoin value',
   'Constant core Path lineJoin',
   'path lineJoin style value',
@@ -395,19 +408,19 @@ export const PathRoundedCornersStyleSchema = markValueSchema(
   'path roundedCorners style value',
 );
 export const PathFillRuleStyleSchema = markValueSchema(
-  z.enum(['nonzero', 'evenodd']),
+  PathFillRuleSchema,
   'Data field path bound to path fillRule',
   'Constant core Path fillRule',
   'path fillRule style value',
 );
 export const PathThicknessStyleSchema = markValueSchema(
-  z.enum(['ultraThin', 'veryThin', 'thin', 'semithick', 'thick', 'veryThick', 'ultraThick']),
+  PathThicknessSchema,
   'Data field path bound to path thickness',
   'Constant core Path thickness preset',
   'path thickness style value',
 );
 export const PathArrowStyleSchema = markValueSchema(
-  z.enum(['none', '->', '<-', '<->']),
+  PathArrowDirectionSchema,
   'Data field path bound to path arrow direction',
   'Constant core Path arrow direction',
   'path arrow style value',
@@ -936,7 +949,7 @@ export const ReferenceMarkSchema = z
       : MarkGeometryLabelListSchema.safeParse(mark.label);
     if (!result.success) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['label'],
         message: usesNodeHost
           ? 'reference band / region expects node label fields'
@@ -971,14 +984,14 @@ export const RelationPathGeometrySchema = z
   .superRefine((path, ctx) => {
     if (path.route !== undefined && path.routing !== undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['routing'],
         message: 'relation mark cannot use route and routing together; use explicit route steps or a routing strategy',
       });
     }
     if (path.via !== undefined && path.route !== undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['via'],
         message:
           'relation mark cannot use via and route together; encode waypoints as route steps when route is explicit',
@@ -1025,7 +1038,7 @@ export const RelationRibbonSpecificOptionsSchema = z
   .superRefine((options, ctx) => {
     if (options.samples !== undefined && options.sampling !== undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['sampling'],
         message: 'Use either `samples` or `sampling`, not both.',
       });
@@ -1049,7 +1062,7 @@ export const RelationRibbonOptionsSchema = z
   .superRefine((ribbon, ctx) => {
     if (ribbon.options?.interpolation !== undefined && ribbon.endWidth === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['options', 'interpolation'],
         message: 'ribbon interpolation only applies when endWidth is set',
       });
@@ -1089,21 +1102,21 @@ export const RelationMarkSchema = z
     const kind = mark.kind ?? RelationGeometryKind.Path;
     if (kind === RelationGeometryKind.Path && mark.ribbon !== undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['ribbon'],
         message: 'path relation marks cannot use ribbon options',
       });
     }
     if (kind === RelationGeometryKind.Ribbon && mark.path !== undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['path'],
         message: 'ribbon relation marks cannot use path options',
       });
     }
     if (kind === RelationGeometryKind.Ribbon && mark.ribbon === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['ribbon'],
         message: 'ribbon relation marks require ribbon options',
       });
@@ -1139,6 +1152,13 @@ export const CustomMarkSchema = z
     transform: MarkTransformSchema.optional().describe(
       'Optional mark-local transform pipeline applied after the plot root transform',
     ),
+    coordinateScope: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'Coordinate scope id this custom mark is projected through; omit to use the plot composition default scope',
+      ),
     encoding: EncodingSchema.optional().describe(
       'Position / non-position channels; reuses the shared encoding so a custom mark contributes to scale inference like built-in marks',
     ),
@@ -1148,7 +1168,7 @@ export const CustomMarkSchema = z
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message:
           'custom mark operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
       });

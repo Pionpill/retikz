@@ -1,6 +1,6 @@
 ---
 name: cross-test
-description: retikz 交叉测试 / 缺陷挖掘技能。用于基于 packages 下现有实现和已有测试补充边缘场景测试，以找出现有实现缺陷为目标，不能凭空编造需求；同时从真实使用者角度评估 API、错误信息、文档契约、可诊断性与可改进点。适用于 alpha/beta 任意阶段的独立质量审计、回归测试补强、adversarial 测试、用户视角体验评估，以及把发现沉淀为测试、问题报告或 notes/decisions TODO。
+description: retikz 交叉测试 / 缺陷挖掘技能。用于基于 packages 下现有实现和已有测试补充边缘场景测试，以找出现有实现缺陷为目标，不能凭空编造需求；同时从真实使用者角度评估 API、错误信息、文档契约、可诊断性与可改进点。适用于 alpha/beta 任意阶段的独立质量审计、回归测试补强、adversarial 测试、用户视角体验评估，以及把发现沉淀为测试、问题报告或 _notes/decisions TODO。
 ---
 
 # Cross Test：交叉测试与缺陷挖掘
@@ -31,7 +31,7 @@ description: retikz 交叉测试 / 缺陷挖掘技能。用于基于 packages �
 - 目标范围：一个包、一个模块、一个 TODO、一个 ADR、一个 bug 线索，或整个 `packages/`。
 - 现有实现：`packages/kernel/core/src/**`、`packages/kernel/render/src/**`、`packages/kernel/react/src/**`、`packages/kernel/vanilla/src/**`、`packages/graph/*/src/**`。
 - 现有测试：`packages/*/*/tests/**`。
-- 可选上下文：`notes/decisions/kernel/**`、`notes/decisions/kernel/**`、`apps/docs/**`。
+- 可选上下文：`packages/kernel/_notes/decisions/**`、`packages/kernel/_notes/decisions/**`、`apps/docs/**`。
 
 若用户没有指定目标范围，默认从 `packages/` 做广义扫描，但先聚焦高风险区域：
 
@@ -104,14 +104,14 @@ description: retikz 交叉测试 / 缺陷挖掘技能。用于基于 packages �
 
 ### 4. 运行验证
 
-优先小范围运行：
+优先小范围运行，只针对本轮审计 / 修改涉及的包：
 
 ```bash
 pnpm --filter @retikz/core exec vitest run <test-file>
 pnpm --filter @retikz/react exec vitest run <test-file>
 ```
 
-若测试稳定，再跑对应包：
+若测试稳定，再跑对应包；不要把局部 cross-test 扩大成全仓 lint / test / recursive tsc，除非用户明确要求：
 
 ```bash
 pnpm --filter @retikz/core exec vitest run
@@ -138,7 +138,7 @@ pnpm --filter @retikz/<pkg> exec eslint . --fix
 notes/reports/cross-test-YYYY-MM-DD-<scope>.md
 ```
 
-其中 `<scope>` 使用简短 kebab-case，例如 `packages`、`core-compile-path`、`react-builder`。若 `notes/reports/` 不存在，可以创建。
+其中 `<scope>` 使用简短 kebab-case，例如 `packages`、`core-compile-path`、`react-builder`。若 `notes/reports/` 不存在，可以创建。`notes/reports/` 与任意 `_notes/reports/` 都是 `.gitignore` 忽略的本地临时报告目录；报告文件不 stage、不 commit。
 
 报告必须包含三档：
 
@@ -268,7 +268,7 @@ notes/reports/cross-test-YYYY-MM-DD-<scope>.md
 
 如果发现的问题暂不适合立即修：
 
-- beta 非破坏优化：追加到 `notes/decisions/kernel/v0/v0.1/beta.1/roadmap.md` 或当前 beta plan。
+- beta 非破坏优化：追加到 `packages/kernel/_notes/decisions/v0/v0.1/beta.1/roadmap.md` 或当前 beta plan。
 - 需要改 IR schema / public API：不要塞进 beta，登记为下次 alpha 候选。
 - 文档不一致：登记 docs TODO；若当轮改了用户可见行为，必须同步 docs。
 
@@ -303,5 +303,5 @@ notes/reports/cross-test-YYYY-MM-DD-<scope>.md
 - 已新增或草拟一组真实边缘 case。
 - 已运行最小必要测试，并记录 pass/fail。
 - BLOCKING / WARNING / INFO 分类清楚。
-- 已输出测试报告；有 BLOCKING / WARNING 或用户要求留档时，已写入 `notes/reports/cross-test-YYYY-MM-DD-<scope>.md`。
+- 已输出测试报告；有 BLOCKING / WARNING 或用户要求留档时，已写入 `notes/reports/cross-test-YYYY-MM-DD-<scope>.md`，且未 stage / commit 该 ignored 报告文件。
 - 所有确认 bug 都有可复现输入；所有暂不修的问题都沉淀到 plan 或报告。

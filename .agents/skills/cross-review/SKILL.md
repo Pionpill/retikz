@@ -181,7 +181,7 @@ claude -p --model <model> \
 notes/reports/cross-review-YYYY-MM-DD-<scope>.md
 ```
 
-`<scope>` 用简短 kebab-case（如 `commit-1f1bd60`、`plot-axis`、`uncommitted`）。报告必须有三档，并且**每条 finding 标注是哪些模型提出 + 共识/单点**。
+`<scope>` 用简短 kebab-case（如 `commit-1f1bd60`、`plot-axis`、`uncommitted`）。报告必须有三档，并且**每条 finding 标注是哪些模型提出 + 共识/单点**。`notes/reports/` 与任意 `_notes/reports/` 都是 `.gitignore` 忽略的本地临时报告目录；报告文件不 stage、不 commit。
 
 跑完后复核仓库未被改动：
 
@@ -238,7 +238,7 @@ git status --short    # 应与评审前一致；codex/claude 评审不应改任�
 
 - 建议立即修：…
 - 建议转 cross-test 写测试坐实：…
-- 建议记入 plan / notes/decisions TODO：…
+- 建议记入 plan / _notes/decisions TODO：…
 - 误报 / 已剔除（附原因）：…
 ```
 
@@ -263,7 +263,7 @@ git status --short    # 应与评审前一致；codex/claude 评审不应改任�
 - 不让评审员修改仓库；评审后必 `git status` 复核。
 - 不把风格偏好 / 对本仓规范的误解硬说成 BLOCKING。
 - 不自行 commit / push / tag / publish；按 `AGENTS.md` 等用户授权。
-- 不把 `.cross-review/` 临时产物提交进库（评审完清理或加 .gitignore）。
+- 不把 `.cross-review/` 或 reports 临时产物提交进库（评审完清理或依赖 .gitignore）。
 - 只跑得起一个模型时，不假装是交叉评审——如实降级并告知用户。
 
 ## 完成标志
@@ -272,5 +272,5 @@ git status --short    # 应与评审前一致；codex/claude 评审不应改任�
 - 已确认评审员阵容（≥2 独立通道，理想跨厂商），并实际跑完。
 - 已收集各家原始输出，对失败/超时的如实记录。
 - 已归并去重、标注每条 finding 的提出模型与共识/分歧，并对冲突给出主 AI 裁决。
-- 已输出三档分级报告；有 BLOCKING/WARNING 或用户要求时已写入 `notes/reports/cross-review-YYYY-MM-DD-<scope>.md`。
+- 已输出三档分级报告；有 BLOCKING/WARNING 或用户要求时已写入 `notes/reports/cross-review-YYYY-MM-DD-<scope>.md`，且未 stage / commit 该 ignored 报告文件。
 - 已 `git status` 复核仓库未被评审过程改动。

@@ -44,9 +44,9 @@ retikz 是多渲染器库，authoring 层有两套对用户的入口——`@reti
 
 ## 输出
 
-`notes/decisions/kernel/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNNN>-<slug>.md`，状态 = Proposed。
+`packages/kernel/_notes/decisions/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNNN>-<slug>.md`，状态 = Proposed。
 
-例：`notes/decisions/kernel/v0/v0.1/alpha.5/01-some-feature.md`
+例：`packages/kernel/_notes/decisions/v0/v0.1/alpha.5/01-some-feature.md`
 
 ### 目录约定
 
@@ -66,17 +66,17 @@ retikz 是多渲染器库，authoring 层有两套对用户的入口——`@reti
 
 ### 模板
 
-复制 `notes/decisions/kernel/_template.md` 到目标位置：
+复制 `packages/kernel/_notes/decisions/_template.md` 到目标位置：
 
 ```bash
-cp notes/decisions/kernel/_template.md notes/decisions/kernel/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNNN>-<slug>.md
+cp packages/kernel/_notes/decisions/_template.md packages/kernel/_notes/decisions/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNNN>-<slug>.md
 ```
 
 模板里的相对链接已按"实例位于三级 milestone 目录"写好，cp 后能直接用。
 
 ## ADR 必填段速查
 
-完整模板在 [`notes/decisions/kernel/_template.md`](../../../notes/decisions/kernel/_template.md)（cp 到三级目录 `v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-channel.N/<NNNN>-<slug>.md` 后路径自动正确）。本 SKILL 只列必填段速查供 AI / 人工写 ADR 时核对：
+完整模板在 [`packages/kernel/_notes/decisions/_template.md`](../../../packages/kernel/_notes/decisions/_template.md)（cp 到三级目录 `v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-channel.N/<NNNN>-<slug>.md` 后路径自动正确）。本 SKILL 只列必填段速查供 AI / 人工写 ADR 时核对：
 
 **叙述部分**：
 
@@ -113,7 +113,7 @@ cp notes/decisions/kernel/_template.md notes/decisions/kernel/v<MAJOR>/v<MAJOR>.
    - 校验失败 → 报告人工补充
 6. **人工确认 ADR 可进入实现**；若需要提交，按根 AGENTS.md 由用户当次授权后再 commit。状态仍 Proposed，直到 develop-wrapup 阶段才翻 Accepted
 
-完成本阶段的标志：`notes/decisions/kernel/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNNN>-*.md` 已写好、实现契约段 4 件齐、多 LLM 评估意见已合并、人工说"可以进实现"。是否已 commit 取决于用户当次授权。
+完成本阶段的标志：`packages/kernel/_notes/decisions/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNNN>-*.md` 已写好、实现契约段 4 件齐、多 LLM 评估意见已合并、人工说"可以进实现"。是否已 commit 取决于用户当次授权。
 
 ## 多 LLM 设计评估
 

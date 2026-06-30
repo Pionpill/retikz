@@ -9,6 +9,8 @@ import { PanZoomToolbar } from '../../src/components/shared/component-preview/Pa
 import { useComponentPreviewStore } from '../../src/store/use-component-preview-store';
 
 const Demo: FC = () => <Layout width={40} height={20} />;
+const WrappedLayout: FC = () => <Layout width={40} height={20} />;
+const WrappedDemo: FC = () => <WrappedLayout />;
 const noop = () => {};
 
 describe('DemoRenderer', () => {
@@ -20,6 +22,11 @@ describe('DemoRenderer', () => {
 
   it('canvas 模式切到 canvas 输出', () => {
     const markup = renderToStaticMarkup(<DemoRenderer Component={Demo} rendererMode="canvas" />);
+    expect(markup).toContain('<canvas');
+    expect(markup).not.toContain('<svg');
+  });
+  it('passes canvas mode through component wrappers', () => {
+    const markup = renderToStaticMarkup(<DemoRenderer Component={WrappedDemo} rendererMode="canvas" />);
     expect(markup).toContain('<canvas');
     expect(markup).not.toContain('<svg');
   });

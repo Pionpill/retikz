@@ -46,7 +46,7 @@ export const safeExtent = (values: Array<number>): [number, number] => {
 
 /**
  * 取一个线性 scale 的刻度值 + 格式化标签
- * @description 刻度值 / 标签只依赖 domain + count（与 range 无关）——故可在 range 定下来前先算，供布局估算 margin（ADR-03）。
+ * @description 刻度值 / 标签只依赖 domain + count（与 range 无关）——故可在 range 定下来前先算，供布局估算 margin。
  *   axis 与同维 grid 复用同一 TickSet（同源）。
  */
 export const scaleTicks = (

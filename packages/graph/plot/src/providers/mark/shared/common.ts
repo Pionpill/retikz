@@ -85,7 +85,7 @@ export const constantNodeStyleOverrides = (mark: Mark): Partial<IRNodeDefault> =
 
 /**
  * datum node 装饰器：provenance 开时给 node 挂 per-datum meta（datumProvenance）+ datum id（datumIdField）。
- * @description 关 provenance / 无 markProvenance → 原样返回（保默认逐字节等价）。
+ * @description 关 provenance / 无 markProvenance → 原样返回，不写 id/meta。
  */
 export const decorateDatum = (
   node: IRNode,

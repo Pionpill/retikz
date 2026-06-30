@@ -2,7 +2,7 @@ import type { ValueOf } from '@retikz/core';
 
 /**
  * scale 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'linear'` 同样可用）
- * @description discriminated union 判别字段，成员里写 z.literal(PlotScale.x)（不用 z.enum）；后续加 ordinal / time…
+ * @description discriminated union 判别字段，成员里写 z.literal(PlotScale.x)（不用 z.enum）。
  */
 export const PlotScale = {
   /** 连续线性映射 */
