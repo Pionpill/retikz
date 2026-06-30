@@ -16,16 +16,6 @@ const compareValues = (left: unknown, right: unknown): number => {
   return left < right ? -1 : 1;
 };
 
-/** 提取一组 rows 中某字段的有限数值。 */
-export const finiteValuesOf = (rows: Array<ExternalRow>, field: string): Array<number> => {
-  const values: Array<number> = [];
-  for (const row of rows) {
-    const value = resolveFieldPath(row, field);
-    if (isFiniteNumber(value)) values.push(value);
-  }
-  return values;
-};
-
 /** 提取一组 rows 中某字段的有限数值，并保留原始行引用。 */
 const finiteValueEntriesOf = (rows: Array<ExternalRow>, field: string): Array<{ row: ExternalRow; value: number }> => {
   const entries: Array<{ row: ExternalRow; value: number }> = [];

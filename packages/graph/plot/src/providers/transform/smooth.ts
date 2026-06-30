@@ -3,13 +3,9 @@ import { isFiniteNumber } from '@retikz/math';
 import { type TransformContext } from '../../contract';
 import { type ExternalRow, type SmoothTransform } from '../../schemas';
 import { resolveFieldPath } from '../data';
+import { groupRowsByFields, linearSamplesOf } from './shared';
 
 const DEFAULT_SMOOTH_SAMPLE_COUNT = 64;
-
-type SmoothGroup = {
-  rows: Array<ExternalRow>;
-  values: ExternalRow;
-};
 
 type SmoothPair = {
   x: number;
@@ -19,27 +15,6 @@ type SmoothPair = {
 type LinearModel = {
   intercept: number;
   slope: number;
-};
-
-const groupKeyOf = (row: ExternalRow, groupBy: ReadonlyArray<string>): string =>
-  JSON.stringify(groupBy.map(field => resolveFieldPath(row, field) ?? null));
-
-const groupRows = (rows: Array<ExternalRow>, groupBy?: Array<string>): Array<SmoothGroup> => {
-  const fields = groupBy ?? [];
-  if (fields.length === 0) return [{ rows, values: {} }];
-  const groups = new Map<string, SmoothGroup>();
-  for (const row of rows) {
-    const key = groupKeyOf(row, fields);
-    const found = groups.get(key);
-    if (found !== undefined) {
-      found.rows.push(row);
-      continue;
-    }
-    const values: ExternalRow = {};
-    for (const field of fields) values[field] = resolveFieldPath(row, field);
-    groups.set(key, { rows: [row], values });
-  }
-  return [...groups.values()];
 };
 
 const finitePairsOf = (rows: Array<ExternalRow>, xField: string, yField: string): Array<SmoothPair> => {
@@ -84,14 +59,6 @@ const sampleExtentOf = (operation: SmoothTransform, pairs: Array<SmoothPair>): [
   return [min, max];
 };
 
-const samplePositionsOf = (extent: [number, number], sampleCount: number): Array<number> => {
-  if (sampleCount === 2) return [extent[0], extent[1]];
-  const step = (extent[1] - extent[0]) / (sampleCount - 1);
-  return Array.from({ length: sampleCount }, (_, index) =>
-    index === sampleCount - 1 ? extent[1] : extent[0] + step * index,
-  );
-};
-
 export const smoothInputFields = (operation: SmoothTransform): Array<string> => [
   operation.x,
   operation.y,
@@ -106,12 +73,12 @@ export const applySmooth = (
   operation: SmoothTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
-  groupRows(rows, operation.groupBy).flatMap(group => {
+  groupRowsByFields(rows, operation.groupBy).flatMap(group => {
     const pairs = finitePairsOf(group.rows, operation.x, operation.y);
     const model = linearModelOf(pairs);
     const extent = sampleExtentOf(operation, pairs);
     const sampleCount = operation.sampleCount ?? DEFAULT_SMOOTH_SAMPLE_COUNT;
-    return samplePositionsOf(extent, sampleCount).map(x =>
+    return linearSamplesOf(extent, sampleCount).map(x =>
       context.groupProvenance(
         {
           ...group.values,

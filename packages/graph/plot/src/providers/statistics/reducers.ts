@@ -5,9 +5,9 @@ import type { ExternalRow } from '../../schemas';
 
 import { defineStatisticsReducer } from '../../contract';
 import { QuantileBandReducerOperationSchema, ReducerOperationKind } from '../../schemas';
+import { finiteFieldValuesOf } from '../transform/shared';
 import {
   finiteExtentOf,
-  finiteValuesOf,
   medianOf,
   quantileBandStatsOf,
   quantileOf,
@@ -36,7 +36,7 @@ const sumReducerDefinition = defineStatisticsReducer({
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => ({
-    [operation.as]: finiteValuesOf(rows, operation.field).reduce((sum, value) => sum + value, 0),
+    [operation.as]: finiteFieldValuesOf(rows, operation.field).reduce((sum, value) => sum + value, 0),
   }),
 });
 
@@ -50,7 +50,7 @@ const meanReducerDefinition = defineStatisticsReducer({
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
-    const values = finiteValuesOf(rows, operation.field);
+    const values = finiteFieldValuesOf(rows, operation.field);
     return { [operation.as]: values.length === 0 ? 0 : values.reduce((sum, value) => sum + value, 0) / values.length };
   },
 });
@@ -64,7 +64,7 @@ const medianReducerDefinition = defineStatisticsReducer({
   }),
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
-  reduce: (rows, operation) => ({ [operation.as]: medianOf(finiteValuesOf(rows, operation.field)) }),
+  reduce: (rows, operation) => ({ [operation.as]: medianOf(finiteFieldValuesOf(rows, operation.field)) }),
 });
 
 /** `min` reducer：计算有限数值最小值。 */
@@ -77,7 +77,7 @@ const minReducerDefinition = defineStatisticsReducer({
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
-    const values = finiteValuesOf(rows, operation.field);
+    const values = finiteFieldValuesOf(rows, operation.field);
     return { [operation.as]: values.length === 0 ? 0 : Math.min(...values) };
   },
 });
@@ -92,7 +92,7 @@ const maxReducerDefinition = defineStatisticsReducer({
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
-    const values = finiteValuesOf(rows, operation.field);
+    const values = finiteFieldValuesOf(rows, operation.field);
     return { [operation.as]: values.length === 0 ? 0 : Math.max(...values) };
   },
 });
@@ -107,7 +107,7 @@ const extentReducerDefinition = defineStatisticsReducer({
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
-    const values = finiteValuesOf(rows, operation.field);
+    const values = finiteFieldValuesOf(rows, operation.field);
     return { [operation.as]: values.length === 0 ? [0, 0] : [Math.min(...values), Math.max(...values)] };
   },
 });
@@ -122,7 +122,7 @@ const quantileReducerDefinition = defineStatisticsReducer({
   }),
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
-  reduce: (rows, operation) => ({ [operation.as]: quantileOf(finiteValuesOf(rows, operation.field), operation.p) }),
+  reduce: (rows, operation) => ({ [operation.as]: quantileOf(finiteFieldValuesOf(rows, operation.field), operation.p) }),
 });
 
 /** `quantile-band` reducer：输出参数化分位区间及可选 whisker 字段。 */

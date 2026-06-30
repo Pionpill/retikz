@@ -7,6 +7,7 @@ import { type TransformContext } from '../../contract';
 import { ReducerOperationKind } from '../../schemas';
 import { resolveFieldPath } from '../data';
 import { applyReducerOperation, applySelectorOperation } from '../statistics';
+import { finiteFieldValuesOf, groupRowsByFields } from './shared';
 
 /** bin 默认输出字段名，对齐 IntervalMark 的区间消费方。 */
 const DEFAULT_BIN_START_FIELD = 'binStart';
@@ -15,12 +16,6 @@ const DEFAULT_BIN_COUNT_FIELD = 'binCount';
 
 /** bin 默认目标箱数。 */
 const DEFAULT_BIN_COUNT = 10;
-
-type GroupBucket = {
-  key: string;
-  rows: Array<ExternalRow>;
-  values: ExternalRow;
-};
 
 /** bin 的边界输出字段名，validate 剔除派生字段时复用。 */
 export const binOutputFields = (operation: BinTransform): { startField: string; endField: string } => ({
@@ -31,39 +26,7 @@ export const binOutputFields = (operation: BinTransform): { startField: string; 
 export const binMetricOperations = (operation: BinTransform): NonNullable<BinTransform['metrics']> =>
   operation.metrics ?? [{ op: ReducerOperationKind.Count, as: DEFAULT_BIN_COUNT_FIELD }];
 
-const groupFieldsOf = (groupBy?: Array<string>): Array<string> => groupBy ?? [];
-
-const groupKeyOf = (row: ExternalRow, groupBy: ReadonlyArray<string>): string =>
-  JSON.stringify(groupBy.map(field => resolveFieldPath(row, field) ?? null));
-
-const groupRows = (rows: Array<ExternalRow>, groupBy?: Array<string>): Array<GroupBucket> => {
-  const fields = groupFieldsOf(groupBy);
-  if (fields.length === 0) return [{ key: '__all__', rows, values: {} }];
-  const groups = new Map<string, GroupBucket>();
-  for (const row of rows) {
-    const key = groupKeyOf(row, fields);
-    const found = groups.get(key);
-    if (found !== undefined) {
-      found.rows.push(row);
-      continue;
-    }
-    const values: ExternalRow = {};
-    for (const field of fields) values[field] = resolveFieldPath(row, field);
-    groups.set(key, { key, rows: [row], values });
-  }
-  return [...groups.values()];
-};
-
 /** 取一组行某字段的有限数值；规约只看有限值。 */
-const finiteValuesOf = (rows: Array<ExternalRow>, field: string): Array<number> => {
-  const out: Array<number> = [];
-  for (const row of rows) {
-    const value = resolveFieldPath(row, field);
-    if (isFiniteNumber(value)) out.push(value);
-  }
-  return out;
-};
-
 /** 由策略计算分箱边界；count / step / thresholds 三策略互斥。 */
 const binEdges = (operation: BinTransform, values: Array<number>): Array<number> => {
   const strategies = [
@@ -150,7 +113,7 @@ export const applyBin = (
   if (rows.length === 0) return [];
   const { startField, endField } = binOutputFields(operation);
   const metrics = binMetricOperations(operation);
-  const observed = finiteValuesOf(rows, operation.field);
+  const observed = finiteFieldValuesOf(rows, operation.field);
   const edges = binEdges(operation, observed);
   const binCount = edges.length - 1;
   const buckets: Array<Array<ExternalRow>> = Array.from({ length: binCount }, () => []);
@@ -187,7 +150,7 @@ export const applySummarize = (
   operation: SummarizeTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
-  groupRows(rows, operation.groupBy).map(group =>
+  groupRowsByFields(rows, operation.groupBy).map(group =>
     context.groupProvenance(
       {
         ...group.values,
@@ -203,7 +166,7 @@ export const applySelect = (
   operation: SelectTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
-  groupRows(rows, operation.groupBy).flatMap(group =>
+  groupRowsByFields(rows, operation.groupBy).flatMap(group =>
     applySelectorOperation(group.rows, operation.selector, context).map(selection => ({
       ...selection.row,
       ...(operation.rankAs !== undefined && selection.rank !== undefined ? { [operation.rankAs]: selection.rank } : {}),
@@ -216,7 +179,7 @@ export const applyAnnotate = (
   operation: AnnotateTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
-  groupRows(rows, operation.groupBy).flatMap(group => {
+  groupRowsByFields(rows, operation.groupBy).flatMap(group => {
     const metricFields =
       operation.metrics === undefined ? {} : applyReducerMetrics(group.rows, operation.metrics, context);
     const selectorFields =
@@ -262,7 +225,7 @@ export const applyRelate = (
   operation: RelateTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
-  groupRows(rows, operation.groupBy).flatMap(group => {
+  groupRowsByFields(rows, operation.groupBy).flatMap(group => {
     const sources = applySelectorOperation(group.rows, operation.source.selector, context);
     const targets = applySelectorOperation(group.rows, operation.target.selector, context);
     if (sources.length === 0 || targets.length === 0) return [];

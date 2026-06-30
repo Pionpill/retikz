@@ -2,47 +2,12 @@ import { isFiniteNumber } from '@retikz/math';
 
 import { type TransformContext } from '../../contract';
 import { type DensityTransform, type ExternalRow } from '../../schemas';
-import { resolveFieldPath } from '../data';
 import { quantileOfSorted } from '../statistics/helpers';
+import { finiteFieldValuesOf, groupRowsByFields, linearSamplesOf } from './shared';
 
 const DEFAULT_DENSITY_SAMPLE_COUNT = 64;
 const DENSITY_EXTENT_BANDWIDTH_FACTOR = 3;
 const GAUSSIAN_NORMALIZER = 1 / Math.sqrt(2 * Math.PI);
-
-type DensityGroup = {
-  rows: Array<ExternalRow>;
-  values: ExternalRow;
-};
-
-const groupKeyOf = (row: ExternalRow, groupBy: ReadonlyArray<string>): string =>
-  JSON.stringify(groupBy.map(field => resolveFieldPath(row, field) ?? null));
-
-const groupRows = (rows: Array<ExternalRow>, groupBy?: Array<string>): Array<DensityGroup> => {
-  const fields = groupBy ?? [];
-  if (fields.length === 0) return [{ rows, values: {} }];
-  const groups = new Map<string, DensityGroup>();
-  for (const row of rows) {
-    const key = groupKeyOf(row, fields);
-    const found = groups.get(key);
-    if (found !== undefined) {
-      found.rows.push(row);
-      continue;
-    }
-    const values: ExternalRow = {};
-    for (const field of fields) values[field] = resolveFieldPath(row, field);
-    groups.set(key, { rows: [row], values });
-  }
-  return [...groups.values()];
-};
-
-const finiteValuesOf = (rows: Array<ExternalRow>, field: string): Array<number> => {
-  const values: Array<number> = [];
-  for (const row of rows) {
-    const value = resolveFieldPath(row, field);
-    if (isFiniteNumber(value)) values.push(value);
-  }
-  return values;
-};
 
 const standardDeviationOf = (values: ReadonlyArray<number>): number => {
   const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
@@ -91,14 +56,6 @@ const densityAt = (x: number, values: ReadonlyArray<number>, bandwidth: number):
   return sum / values.length;
 };
 
-const samplePositionsOf = (extent: [number, number], sampleCount: number): Array<number> => {
-  if (sampleCount === 2) return [extent[0], extent[1]];
-  const step = (extent[1] - extent[0]) / (sampleCount - 1);
-  return Array.from({ length: sampleCount }, (_, index) =>
-    index === sampleCount - 1 ? extent[1] : extent[0] + step * index,
-  );
-};
-
 export const densityInputFields = (operation: DensityTransform): Array<string> => [
   operation.field,
   ...(operation.groupBy ?? []),
@@ -112,15 +69,15 @@ export const applyDensity = (
   operation: DensityTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
-  groupRows(rows, operation.groupBy).flatMap(group => {
-    const sortedValues = finiteValuesOf(group.rows, operation.field).sort((a, b) => a - b);
+  groupRowsByFields(rows, operation.groupBy).flatMap(group => {
+    const sortedValues = finiteFieldValuesOf(group.rows, operation.field).sort((a, b) => a - b);
     if (sortedValues.length === 0) {
       throw new Error(`lowerPlots: density transform field "${operation.field}" has no finite values`);
     }
     const bandwidth = bandwidthOf(operation, sortedValues);
     const extent = sampleExtentOf(operation, sortedValues, bandwidth);
     const sampleCount = operation.sampleCount ?? DEFAULT_DENSITY_SAMPLE_COUNT;
-    return samplePositionsOf(extent, sampleCount).map(x =>
+    return linearSamplesOf(extent, sampleCount).map(x =>
       context.groupProvenance(
         {
           ...group.values,
