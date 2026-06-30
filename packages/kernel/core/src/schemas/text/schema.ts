@@ -46,6 +46,31 @@ export const MixedLineSchema = z
     'A line composed of text and math runs laid out left-to-right on a shared baseline (canonical form of the `$...$` string sugar).',
   );
 
+export const LabelTextContentSchema = z
+  .union([z.string(), MixedLineSchema])
+  .describe(
+    'Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ runs }` mixed text+math line. Single-line.',
+  );
+
+type LabelVisualStyleDescriptionOverrides = Partial<Record<'textColor' | 'opacity' | 'font', string>>;
+
+export const createLabelVisualStyleShape = (descriptions: LabelVisualStyleDescriptionOverrides = {}) => ({
+  textColor: CssColorSchema.optional().describe(
+    descriptions.textColor ?? 'Label text color override. Missing values inherit from host defaults.',
+  ),
+  opacity: OpacitySchema.optional().describe(
+    descriptions.opacity ?? 'Label-only opacity. Host opacity may still multiply it at emit time.',
+  ),
+  font: FontSchema.optional().describe(
+    descriptions.font ?? 'Label font overrides. Missing fields inherit from host defaults.',
+  ),
+});
+
+export const LabelVisualStyleSchema = z
+  .object(createLabelVisualStyleShape())
+  .strict()
+  .describe('Shared visual style fields for node labels and geometry labels.');
+
 export const LineSpecSchema = z
   .union([
     z.string(),

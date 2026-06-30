@@ -14,8 +14,8 @@ import {
   PositionSchema,
 } from '../position';
 import { ShapeRefSchema } from '../shape';
-import { CssColorSchema, GraphicStyleSchema, OpacitySchema } from '../style';
-import { MixedLineSchema, TextBlockSchema } from '../text';
+import { CssColorSchema, GraphicStyleSchema } from '../style';
+import { createLabelVisualStyleShape, LabelTextContentSchema, TextBlockSchema } from '../text';
 import { NodeLabelBoundarySide, NodeLabelPlacement, NodeLabelPosition, NodeTextAlign } from './constants';
 
 export const NodeLabelBoundaryPositionSchema = z
@@ -35,11 +35,7 @@ export const NodeLabelBoundaryPositionSchema = z
 
 export const NodeLabelSchema = z
   .object({
-    text: z
-      .union([z.string(), MixedLineSchema])
-      .describe(
-        'Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ runs }` mixed text+math line. Rendered as a single line.',
-      ),
+    text: LabelTextContentSchema,
     position: z
       .preprocess(
         value => (typeof value === 'string' ? normalizeAtDirection(value) ?? value : value),
@@ -58,9 +54,11 @@ export const NodeLabelSchema = z
       .nonnegative()
       .optional()
       .describe('Gap between the node border and the label center, in user units. Default 12.'),
-    textColor: CssColorSchema.optional().describe('Label text color; falls back to currentColor.'),
-    opacity: OpacitySchema.optional().describe('Label-only opacity, multiplied with node opacity when both are set.'),
-    font: FontSchema.optional().describe('Label font overrides. Missing fields inherit from the parent node font.'),
+    ...createLabelVisualStyleShape({
+      textColor: 'Label text color; falls back to currentColor.',
+      opacity: 'Label-only opacity, multiplied with node opacity when both are set.',
+      font: 'Label font overrides. Missing fields inherit from the parent node font.',
+    }),
     rotate: z
       .union([z.enum(['none', 'radial', 'tangent']), z.number()])
       .optional()

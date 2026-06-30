@@ -1,20 +1,14 @@
 import { z } from 'zod';
 
-import { FontSchema } from '../../font';
 import { JsonObjectSchema } from '../../json';
 import { PositionSchema } from '../../position';
-import { CssColorSchema, OpacitySchema } from '../../style';
-import { MixedLineSchema } from '../../text';
+import { createLabelVisualStyleShape, LabelTextContentSchema } from '../../text';
 import { TargetSchema } from '../target';
 import { FoldStepVia, GeometryLabelPlacement, GeometryLabelSide, normalizeGeometryLabelSide } from './constants';
 
 export const GeometryLabelSchema = z
   .object({
-    text: z
-      .union([z.string(), MixedLineSchema])
-      .describe(
-        'Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ runs }` mixed text+math line. Single-line.',
-      ),
+    text: LabelTextContentSchema,
     position: z
       .union([
         z.enum(['at-start', 'very-near-start', 'near-start', 'midway', 'near-end', 'very-near-end', 'at-end']),
@@ -48,13 +42,12 @@ export const GeometryLabelSchema = z
       .nonnegative()
       .optional()
       .describe('Side offset distance in user units. Defaults to the same distance as Path step labels.'),
-    textColor: CssColorSchema
-      .optional()
-      .describe(
+    ...createLabelVisualStyleShape({
+      textColor:
         "Label text color; falls back to the scope labelDefault, then the owning path's resolved master color, then currentColor. To match a colored line set the path color (not stroke).",
-      ),
-    opacity: OpacitySchema.optional().describe('Label-only opacity, multiplied with the owning path opacity.'),
-    font: FontSchema.optional().describe('Label font overrides. Missing fields inherit from scope label defaults.'),
+      opacity: 'Label-only opacity, multiplied with the owning path opacity.',
+      font: 'Label font overrides. Missing fields inherit from scope label defaults.',
+    }),
   })
   .strict()
   .describe(
