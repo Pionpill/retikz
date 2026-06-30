@@ -73,6 +73,8 @@ git status --short            # 工作区基线：审计前已有的改动清单
 
 最小必查总览（每条都要扫，详见各维度）：**正确性 · 类型安全 · 分层归属 · schema/数据结构 · 文件结构 · JSDoc/注释 · 测试覆盖 · 文档一致性**。
 
+若审查范围涉及 Definition contract、`defineXxx()` helper、registry/provider、内置与自定义扩展点、schema discriminator、registry option、命名或文件分层，必须同时参考 [`standard-define-registry`](../standard-define-registry/SKILL.md) 的规则判断；不要只按局部实现习惯评审 define-registry 相关代码。
+
 ### finding 证据要求
 
 每条 finding 必须给：**① 代码位置（`文件:行`）+ ② 为什么当前行为 / 结构会出问题**。只有「建议可优化」「这里可以更好」而没有具体代码位置和成因的，不写进报告——它无法被 triage、也无法被 flow-beta 消费。
