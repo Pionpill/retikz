@@ -7,10 +7,6 @@ import { MixedLineSchema } from '../../text';
 import { TargetSchema } from '../target';
 import { FoldStepVia, GeometryLabelPlacement, GeometryLabelSide, normalizeGeometryLabelSide } from './constants';
 
-/**
- * 边标注：画线 step 上的 label
- * @description 按段几何 + side 偏移翻译为 TextPrim；move/cycle 不挂 label
- */
 export const GeometryLabelSchema = z
   .object({
     text: z
@@ -70,7 +66,6 @@ export const GeometryLabelSchema = z
     'Geometry label spec attached to a path-like host; compiled to a TextPrim positioned from a centerline sample.',
   );
 
-/** 边标注 IR 类型 */
 export const StepLabelSchema = GeometryLabelSchema;
 
 export const MoveStepSchema = z
@@ -113,10 +108,6 @@ export const CycleStepSchema = z
   })
   .describe('Cycle action: close the current sub-path back to its starting point; carries no `to` field');
 
-/**
- * 控制点 schema 别名
- * @description 曲线 step 共用同一控制点 schema，curve / cubic schema 与下游消费保持一致。
- */
 export const ControlPointSchema = PositionSchema.describe('Bezier control point position.');
 
 export const CurveStepSchema = z

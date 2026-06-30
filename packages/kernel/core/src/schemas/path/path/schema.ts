@@ -20,10 +20,6 @@ export const PathLineJoinSchema = z.enum(PathLineJoin).describe('Path stroke cor
 
 export const PathThicknessSchema = z.enum(PathThickness).describe('Semantic path stroke thickness preset.');
 
-/**
- * 路径整条缩放 schema：等比 number 或非等比 {x,y}
- * @description 与 Node scale 字段对齐；number = 等比，{x,y} = 各轴独立。全部要求有限正数。
- */
 export const PathScaleSchema = z
   .union([
     z.number().positive(),
@@ -44,11 +40,6 @@ export const PathScaleSchema = z
     'Whole-path scale: a single number for uniform scaling, or an { x, y } object for anisotropic scaling. Applied around the path bounding-box center with rotate.',
   );
 
-/**
- * 路径中段标记 schema（首批仅箭头）
- * @description `kind:'arrow'` 判别符 + 复用 ArrowEndDetail 视觉子集（shape / scale / length / width / color / fill / opacity / lineWidth）；
- *   方向由该处路径切线决定，shape 是已注册箭头名（不是 `->` 方向记号）。
- */
 export const ArrowMarkSchema = ArrowEndDetailSchema.extend({
   kind: z
     .literal('arrow')

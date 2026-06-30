@@ -7,12 +7,10 @@ import { OffsetPositionSchema } from '../offset-position';
 import { PolarPositionSchema } from '../polar-position';
 import { PositionSchema } from '../position';
 
-/** AbsoluteTarget schema（z.lazy 自引用：between 可嵌套 between；NodeTarget 在 lazy thunk 内引用化解跨文件环） */
 export const AbsoluteTargetSchema: z.ZodType<IRAbsoluteTarget> = z.lazy(() =>
   z.union([PositionSchema, PolarPositionSchema, NodeTargetSchema, OffsetPositionSchema, BetweenPositionSchema]),
 );
 
-/** BetweenPosition schema：`{ between: [AbsoluteTarget, AbsoluteTarget], t: 0..1 }` */
 export const BetweenPositionSchema: z.ZodType<IRBetweenPosition> = z.lazy(() =>
   z
     .object({

@@ -1,9 +1,5 @@
 import { z } from 'zod';
 
-/**
- * 渐变 stop：位置 + 颜色 + 可选透明度
- * @description offset 0..1（沿渐变轴的位置）；color 任意 CSS 颜色（含 `currentColor` 主题反应）；opacity 0..1。
- */
 export const GradientStopSchema = z
   .object({
     offset: z.number().min(0).max(1).describe('Stop position along the gradient axis.'),
@@ -12,11 +8,6 @@ export const GradientStopSchema = z
   })
   .describe('A single gradient color stop');
 
-/**
- * Paint server 规格（渐变 / 图案 / 图片）；纯色仍是 `fill` / `stroke` 上的 string，不进此 schema
- * @description 四种 paint server：linear / radial gradient、pattern（图案）、image（图片）。纯 JSON 形态，保 IR 可序列化。
- *   linear 方向用 `angle`（度，polar 约定：0°=+x，90°=+y 屏幕下）；radial 的 `center` / `radius` 用 objectBoundingBox（0..1，随形状缩放）。
- */
 export const PaintSpecSchema = z
   .discriminatedUnion('kind', [
     z

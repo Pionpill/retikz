@@ -4,7 +4,6 @@ import type { PolarPosition } from '../../../geometry/polar';
 
 import { PositionSchema } from '../position';
 
-/** 极坐标点 schema（递归 origin 可嵌套）；z.lazy 处理自引用，TS 类型从 geometry/polar 导入 */
 export const PolarPositionSchema: z.ZodType<PolarPosition> = z.lazy(() =>
   z
     .object({
