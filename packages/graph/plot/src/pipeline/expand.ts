@@ -85,6 +85,7 @@ import {
   AxisGridApplyTo,
   CompositionAxisPolicy,
   CompositionGridPlacement,
+  FieldOrderMode,
   IntervalBoundKind,
   isBuiltinMark,
   PathClosureKind,
@@ -805,7 +806,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
       const channel = pick(mark);
       if (channel?.field === undefined) continue;
       const order = fieldOrders.get(channel.field);
-      if (order === undefined || order === 'data') continue;
+      if (order === undefined || order === FieldOrderMode.Data) continue;
       const type = fieldTypes.get(channel.field);
       if (type !== undefined && type !== PlotFieldType.Categorical) {
         throw new Error(

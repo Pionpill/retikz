@@ -36,6 +36,7 @@ import type {
 import { defineScale } from '../../../contract';
 import {
   BandScaleSchema,
+  FieldOrderMode,
   LinearScaleSchema,
   LogScaleSchema,
   PlotFieldType,
@@ -307,13 +308,13 @@ export const orderedCategoryDomain = (
   order: CategoryOrder | undefined,
 ): Array<string | number> => {
   const deduped = inferCategoryDomain(values);
-  if (order === undefined || order === 'data') return deduped;
-  if (order === 'ascending' || order === 'descending') {
+  if (order === undefined || order === FieldOrderMode.Data) return deduped;
+  if (order === FieldOrderMode.Ascending || order === FieldOrderMode.Descending) {
     const allNumber = deduped.every(value => typeof value === 'number');
     const sorted = [...deduped].sort((a, b) =>
       allNumber ? (a as number) - (b as number) : String(a).localeCompare(String(b)),
     );
-    return order === 'descending' ? sorted.reverse() : sorted;
+    return order === FieldOrderMode.Descending ? sorted.reverse() : sorted;
   }
   // Array：数组序优先；数据出现但不在数组里的类别按出现序追加末尾
   const inArray = new Set<string | number>(order);

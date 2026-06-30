@@ -1,13 +1,8 @@
 import { isFiniteNumber } from '@retikz/math';
 
-import {
-  type DeriveIntervalTransform,
-  type ExternalRow,
-  type JitterTransform,
-  type NormalizeTransform,
-  type SortTransform,
-  type StackTransform,
-} from '../../schemas';
+import type { DeriveIntervalTransform, ExternalRow, JitterTransform, NormalizeTransform, SortTransform, StackOffsetValue, StackTransform } from '../../schemas';
+
+import { PlotSortOrder, StackOffset as StackOffsetMode } from '../../schemas';
 import { compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../data';
 
 /** 默认堆叠下界 / 上界输出字段名，对齐 IntervalMark 的 y0Field / y1Field 默认值。 */
@@ -22,11 +17,9 @@ export const DEFAULT_DERIVE_END_FIELD = 'y1';
 export const DEFAULT_JITTER_X_FIELD = 'x';
 export const DEFAULT_JITTER_Y_FIELD = 'y';
 
-type StackOffset = NonNullable<StackTransform['offset']>;
-
 /** 稳定排序：按字段升 / 降序；等键保持原序。 */
 export const applySort = (rows: Array<ExternalRow>, operation: SortTransform): Array<ExternalRow> => {
-  const direction = operation.order === 'descending' ? -1 : 1;
+  const direction = operation.order === PlotSortOrder.Descending ? -1 : 1;
   return [...rows].sort((a, b) => direction * compareRowsByFieldPath(a, b, operation.field));
 };
 
@@ -37,7 +30,7 @@ export const applySort = (rows: Array<ExternalRow>, operation: SortTransform): A
 export const applyStack = (rows: Array<ExternalRow>, operation: StackTransform): Array<ExternalRow> => {
   const startField = operation.startField ?? DEFAULT_START_FIELD;
   const endField = operation.endField ?? DEFAULT_END_FIELD;
-  const offset: StackOffset = operation.offset ?? 'zero';
+  const offset: StackOffsetValue = operation.offset ?? StackOffsetMode.Zero;
   const groupByField = operation.groupBy;
   const seriesOrder =
     groupByField === undefined ? [] : inferCategoryDomain(rows.map(row => resolveFieldPath(row, groupByField)));
@@ -65,12 +58,12 @@ export const applyStack = (rows: Array<ExternalRow>, operation: StackTransform):
     });
     const out = new Map<ExternalRow, [number, number]>();
 
-    if (offset === 'overlap') {
+    if (offset === StackOffsetMode.Overlap) {
       ordered.forEach((row, index) => out.set(row, [0, values[index] ?? 0]));
       return out;
     }
 
-    if (offset === 'diverging') {
+    if (offset === StackOffsetMode.Diverging) {
       let positive = 0;
       let negative = 0;
       ordered.forEach((row, index) => {
@@ -87,8 +80,8 @@ export const applyStack = (rows: Array<ExternalRow>, operation: StackTransform):
     }
 
     const total = values.reduce((sum, value) => sum + value, 0);
-    const scale = offset === 'normalize' ? (total === 0 ? 0 : 1 / total) : 1;
-    let cumulative = offset === 'center' ? (-total * scale) / 2 : 0;
+    const scale = offset === StackOffsetMode.Normalize ? (total === 0 ? 0 : 1 / total) : 1;
+    let cumulative = offset === StackOffsetMode.Center ? (-total * scale) / 2 : 0;
     ordered.forEach((row, index) => {
       const segment = (values[index] ?? 0) * scale;
       const y0 = cumulative;

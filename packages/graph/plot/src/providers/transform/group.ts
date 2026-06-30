@@ -1,16 +1,10 @@
 import { isFiniteNumber } from '@retikz/math';
 import { scaleLinear as d3ScaleLinear } from 'd3-scale';
 
+import type { AnnotateSelector, AnnotateTransform, BinTransform, ExternalRow, RelateTransform, SelectTransform, SummarizeTransform } from '../../schemas';
+
 import { type TransformContext } from '../../contract';
-import {
-  type AnnotateSelector,
-  type AnnotateTransform,
-  type BinTransform,
-  type ExternalRow,
-  type RelateTransform,
-  type SelectTransform,
-  type SummarizeTransform,
-} from '../../schemas';
+import { ReducerOperationKind } from '../../schemas';
 import { resolveFieldPath } from '../data';
 import { applyReducerOperation, applySelectorOperation } from '../statistics';
 
@@ -35,7 +29,7 @@ export const binOutputFields = (operation: BinTransform): { startField: string; 
 });
 
 export const binMetricOperations = (operation: BinTransform): NonNullable<BinTransform['metrics']> =>
-  operation.metrics ?? [{ op: 'count', as: DEFAULT_BIN_COUNT_FIELD }];
+  operation.metrics ?? [{ op: ReducerOperationKind.Count, as: DEFAULT_BIN_COUNT_FIELD }];
 
 const groupFieldsOf = (groupBy?: Array<string>): Array<string> => groupBy ?? [];
 

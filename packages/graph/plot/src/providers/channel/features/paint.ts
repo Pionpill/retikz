@@ -8,7 +8,7 @@ import type { Channel, MarkOperation, PlotFieldTypeMap, PlotSpec, ScaleOperation
 import type { CategoryOrder } from '../../scale';
 
 import { ChannelDefinitionKind, isBuiltinScaleOperation } from '../../../contract';
-import { PlotFieldType, PlotScale } from '../../../schemas';
+import { FieldOrderMode, PlotFieldType, PlotScale } from '../../../schemas';
 import { coerceTimestamp, resolveFieldPath } from '../../data';
 import { orderedCategoryDomain, resolveChannelScale } from '../../scale';
 
@@ -85,7 +85,7 @@ export const makeColorChannelDefinition = (
         scaleOperation.domain === undefined
       ) {
         const order = fieldOrders.get(field);
-        if (order !== undefined && order !== 'data')
+        if (order !== undefined && order !== FieldOrderMode.Data)
           scaleOperation = { ...scaleOperation, domain: orderedCategoryDomain(rawValues, order) };
       }
       const resolution = resolveChannelScale(
