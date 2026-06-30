@@ -293,8 +293,8 @@ describe('lowerPlots (ADR-06)', () => {
     ],
   });
 
-  it('legacy_no_guides_projection_unchanged', () => {
-    // 守 alpha.1：无 guides → plot area = 整图 → 投影坐标逐字不变
+  it('compat_no_guides_projection_unchanged', () => {
+    // compat: omitting guides keeps the plot area equal to the full frame.
     const path = (firstLayer(lineSpec, { sales: SALES }, opts).children[0] as IRPath).children;
     expect(path).toEqual([
       { type: 'step', kind: 'move', to: [0, 240] },
@@ -642,7 +642,7 @@ describe('lowerPlots color (ADR-04)', () => {
   });
 
   it('uncolored_point_keeps_single_scope', () => {
-    // 无 color：守 alpha.1 结构（单层 nodeDefault，不分子 Scope）
+    // No color channel keeps the mark in one scope with node defaults.
     expect(firstLayer(pointSpec(), { sales: SALES }, opts).nodeDefault?.shape).toBe('circle');
   });
 });

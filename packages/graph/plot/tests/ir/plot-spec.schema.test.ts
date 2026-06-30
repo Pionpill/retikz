@@ -95,7 +95,7 @@ describe('PlotSpecSchema (ADR-01)', () => {
     expect(PlotSpecSchema.parse(JSON.parse(JSON.stringify(spec)))).toEqual(spec);
   });
 
-  it('legacy_custom_coordinate_shape_rejected', () => {
+  it('compat_rejects_unregistered_custom_coordinate_shape', () => {
     const spec = {
       ...baseLine,
       coordinate: { type: 'custom', name: 'arch', roles: ['x'], params: { archHeight: 30 } },
@@ -103,7 +103,7 @@ describe('PlotSpecSchema (ADR-01)', () => {
     expect(() => PlotSpecSchema.parse(spec)).toThrow();
   });
 
-  // guides 槽位（ADR-01 alpha.2）
+  // guides are optional schema-level plot annotations.
   it('plot_with_guides_valid', () => {
     const spec = {
       ...baseLine,
@@ -116,7 +116,7 @@ describe('PlotSpecSchema (ADR-01)', () => {
   });
 
   it('plot_omits_guides_valid', () => {
-    // 非破坏：alpha.1 不带 guides 的 spec 仍合法
+    // compat: specs without guides remain valid.
     expect(PlotSpecSchema.parse(baseLine)).toEqual(baseLine);
   });
 
