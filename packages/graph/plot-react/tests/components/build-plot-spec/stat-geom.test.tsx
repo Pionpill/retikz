@@ -5,7 +5,7 @@ import { boxplotOutside, boxplotSummary } from '../../../../plot/tests/helpers/p
 import { buildPlotSpec } from '../../../src/components/build-plot-spec';
 import { IntervalMark, PointMark, ReferenceMark } from '../../../src/components/marks';
 
-describe('buildPlotSpec alpha.13 ADR-05（stat-geom 结构组合）', () => {
+describe('buildPlotSpec stat-geom 结构组合', () => {
   it('boxplot composition uses existing marks and mark-local transforms', () => {
     const spec = buildPlotSpec(
       <>

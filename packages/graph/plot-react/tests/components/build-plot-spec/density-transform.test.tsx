@@ -6,7 +6,7 @@ import { buildPlotSpec } from '../../../src/components/build-plot-spec';
 import { PathMark } from '../../../src/components/marks';
 import { Transform } from '../../../src/components/transform';
 
-describe('buildPlotSpec alpha.13 ADR-03（density transform 透传）', () => {
+describe('buildPlotSpec density transform passthrough', () => {
   it('density_declared_to_ir', () => {
     const spec = buildPlotSpec(
       <>

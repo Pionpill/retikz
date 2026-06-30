@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { PlotSpecSchema } from '../../src/schemas';
 import { BuiltinTransformSchema, TransformSchema } from '../../src/schemas/transform';
 
-describe('TransformSchema (ADR-03)', () => {
+describe('TransformSchema sort / stack', () => {
   // Happy path
   it('sort_schema_valid', () => {
     const t = { kind: 'sort', field: 'month' };
@@ -47,7 +47,7 @@ describe('TransformSchema (ADR-03)', () => {
     expect(() => TransformSchema.parse({ kind: 'stack', x: 'm', groupBy: 'p' })).toThrow();
   });
 
-  // ADR-02：泛化 stack —— x / groupBy 转可选（缺省单链累积，喂饼图）
+  // stack 允许省略 x / groupBy，用于单链累积场景。
   it('stack_omits_x_and_group_valid', () => {
     // 单链累积：只给 y，按数据序累加（饼图用法）
     const t = { kind: 'stack', y: 'value' };
@@ -81,7 +81,7 @@ describe('TransformSchema (ADR-03)', () => {
   });
 });
 
-describe('TransformSchema external operations (alpha.12 ADR-06)', () => {
+describe('TransformSchema external operations', () => {
   it('builtin_bad_shape_static_rejected', () => {
     expect(() => TransformSchema.parse({ kind: 'bin' })).toThrow();
   });
@@ -126,7 +126,7 @@ describe('TransformSchema external operations (alpha.12 ADR-06)', () => {
   });
 });
 
-describe('BinTransformSchema (alpha.12 ADR-01)', () => {
+describe('BinTransformSchema', () => {
   it('bin_count_strategy_valid', () => {
     const t = { kind: 'bin', field: 'measurement', count: 20, metrics: [{ op: 'count', as: 'binCount' }] };
     expect(TransformSchema.parse(t)).toEqual(t);
@@ -189,7 +189,7 @@ describe('BinTransformSchema (alpha.12 ADR-01)', () => {
   });
 });
 
-describe('Statistical transform algebra schema (alpha.12 ADR-16)', () => {
+describe('Statistical transform algebra schema', () => {
   it('summarize_multiple_metrics_valid', () => {
     const operation = {
       kind: 'summarize',
@@ -264,7 +264,7 @@ describe('Statistical transform algebra schema (alpha.12 ADR-16)', () => {
   });
 });
 
-describe('SummarizeTransformSchema (alpha.12 ADR-16)', () => {
+describe('SummarizeTransformSchema', () => {
   it('summarize_sum_valid', () => {
     const t = {
       kind: 'summarize',
@@ -319,7 +319,7 @@ describe('SummarizeTransformSchema (alpha.12 ADR-16)', () => {
   });
 });
 
-describe('NormalizeTransformSchema (alpha.12 ADR-02)', () => {
+describe('NormalizeTransformSchema', () => {
   it('normalize_full_form_valid', () => {
     const t = { kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' };
     expect(TransformSchema.parse(t)).toEqual(t);
@@ -343,7 +343,7 @@ describe('NormalizeTransformSchema (alpha.12 ADR-02)', () => {
   });
 });
 
-describe('DeriveIntervalTransformSchema (alpha.12 ADR-02)', () => {
+describe('DeriveIntervalTransformSchema', () => {
   it('derive_interval_two_field_valid', () => {
     const t = { kind: 'derive-interval', startFrom: 'start', endFrom: 'end' };
     expect(TransformSchema.parse(t)).toEqual(t);
@@ -364,7 +364,7 @@ describe('DeriveIntervalTransformSchema (alpha.12 ADR-02)', () => {
   });
 });
 
-describe('JitterTransformSchema (alpha.12 ADR-02)', () => {
+describe('JitterTransformSchema', () => {
   it('jitter_full_form_valid', () => {
     const t = { kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 42 };
     expect(TransformSchema.parse(t)).toEqual(t);
@@ -393,7 +393,7 @@ describe('JitterTransformSchema (alpha.12 ADR-02)', () => {
   });
 });
 
-describe('DensityTransformSchema (alpha.13 ADR-03)', () => {
+describe('DensityTransformSchema', () => {
   it('density_full_form_valid_and_json_roundtrip_equivalent', () => {
     const operation = {
       kind: 'density',
@@ -459,7 +459,7 @@ describe('DensityTransformSchema (alpha.13 ADR-03)', () => {
   });
 });
 
-describe('SmoothTransformSchema (alpha.13 ADR-04)', () => {
+describe('SmoothTransformSchema', () => {
   it('smooth_full_form_valid_and_json_roundtrip_equivalent', () => {
     const operation = {
       kind: 'smooth',

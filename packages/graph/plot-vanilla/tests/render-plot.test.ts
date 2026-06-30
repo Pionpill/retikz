@@ -83,7 +83,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(svg).toMatch(/<svg[^>]*\sheight="200"/);
   });
 
-  // ADR-07：柱状 / 堆叠柱 SSR
+  // 柱状 / 堆叠柱 SSR
   it('柱状 spec 渲出矩形（<rect>）', () => {
     const barSpec: PlotSpec = {
       namespace: 'plot',
@@ -127,7 +127,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(renderPlot(createPolarRadialBarSpec(), polarShareData, { width: 360, height: 360 })).toContain('<path');
   });
 
-  // alpha.9 ADR-04：1D / ternary 坐标系 PlotSpec → renderPlot 透传（vanilla 直接消费 core IR，与 react 对等）
+  // 1D / ternary 坐标系 PlotSpec → renderPlot 透传（vanilla 直接消费 core IR，与 react 对等）
   const samples: ExternalDatasets = {
     samples: [{ v: 1 }, { v: 5 }, { v: 9 }],
   };
@@ -195,7 +195,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(svg).toContain('<path');
   });
 
-  // alpha.11 ADR-02：rect heatmap spec → renderPlot 透传（vanilla 不改 src，纯 spec 驱动出每格 <rect>）
+  // rect heatmap spec → renderPlot 透传，纯 spec 驱动出每格 <rect>
   it('rect-vanilla-ssr-heatmap：双 band heatmap spec → SVG 含每格 <rect> + 填充色', () => {
     const heatmap: ExternalDatasets = {
       heat: [
@@ -265,7 +265,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(renderPlot(gridSpec, grid, { width: 320, height: 320 })).toMatch(/<rect/);
   });
 
-  // ADR-03：rule mark（参考线 + 参考带）SSR——vanilla 无代码改动，纯 spec 驱动端到端产出
+  // rule mark（参考线 + 参考带）SSR，纯 spec 驱动端到端产出
   it('rule line + band spec → SVG 含参考线（<path>）与参考带（<rect> fill）', () => {
     const scores: ExternalDatasets = {
       scores: [
@@ -328,7 +328,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect((svg.match(/<path/g) ?? []).length).toBeGreaterThanOrEqual(3);
   });
 
-  // ADR-04：text mark / datum label SSR（vanilla 源码无改动，纯 spec 驱动贯通三包）
+  // text mark / datum label SSR，纯 spec 驱动贯通三包
   it('vanilla-label-ssr 宿主 label：interval label → <text> 元素 + 标签内容串', () => {
     const labelSpec: PlotSpec = {
       namespace: 'plot',
@@ -379,7 +379,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(svg).toContain('beta');
   });
 
-  // alpha.12 ADR-01：histogram（bin transform + interval x0/x1 连续 x 区间柱）SSR
+  // histogram（bin transform + interval x0/x1 连续 x 区间柱）SSR
   it('histogram bin + interval x0/x1 → SSR 出连续 x 直方柱（<path）', () => {
     const svg = renderPlot(createHistogramSpec(), histogramData, { width: 480, height: 300 });
     expect(svg).toContain('<svg');
@@ -388,7 +388,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect((svg.match(/<rect/g) ?? []).length).toBeGreaterThanOrEqual(2);
   });
 
-  // alpha.12 ADR-01：分组聚合柱（summarize transform → band 柱）SSR
+  // 分组聚合柱（summarize transform → band 柱）SSR
   it('summarize groupBy sum → SSR 出聚合柱（<path）', () => {
     const orders: ExternalDatasets = {
       o: [
@@ -415,7 +415,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect((svg.match(/<rect/g) ?? []).length).toBe(2);
   });
 
-  // alpha.12 ADR-02：jitter 确定性——同 seed 两次 SSR 渲染逐字节相同（locator parity / 确定性快照）
+  // jitter 确定性：同 seed 两次 SSR 渲染逐字节相同
   it('jitter 同 seed 两次 SSR 渲染逐字节相同（确定性 PRNG）', () => {
     const scatterPts: ExternalDatasets = {
       pts: [

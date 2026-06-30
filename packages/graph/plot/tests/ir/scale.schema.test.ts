@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ScaleSchema } from '../../src/schemas/scale';
 
-describe('ScaleSchema (ADR-03)', () => {
+describe('ScaleSchema linear', () => {
   // Happy path
   it('scale_linear_omits_optionals_valid', () => {
     expect(ScaleSchema.parse({ type: 'linear', name: 'x' })).toEqual({ type: 'linear', name: 'x' });
@@ -44,7 +44,7 @@ describe('ScaleSchema (ADR-03)', () => {
   });
 });
 
-describe('ScaleSchema log / pow / sqrt (alpha.7 ADR-01)', () => {
+describe('ScaleSchema log / pow / sqrt', () => {
   // Happy path
   it('log_schema_valid', () => {
     const s = { type: 'log', name: 'y', base: 10, nice: true };
@@ -114,7 +114,7 @@ describe('ScaleSchema symlog / radial', () => {
   });
 });
 
-describe('ScaleSchema band / point (ADR-01)', () => {
+describe('ScaleSchema band / point', () => {
   // Happy path
   it('band_schema_valid', () => {
     const s = { type: 'band', name: 'x', domain: ['a', 'b'] };
@@ -154,7 +154,7 @@ describe('ScaleSchema band / point (ADR-01)', () => {
   });
 });
 
-describe('ScaleSchema ordinal (ADR-04)', () => {
+describe('ScaleSchema ordinal', () => {
   it('ordinal_schema_valid', () => {
     const s = { type: 'ordinal', name: 'col' };
     expect(ScaleSchema.parse(s)).toEqual(s);
@@ -170,7 +170,7 @@ describe('ScaleSchema ordinal (ADR-04)', () => {
   });
 });
 
-describe('ScaleSchema time (ADR-06)', () => {
+describe('ScaleSchema time', () => {
   it('time_schema_valid', () => {
     const s = { type: 'time', name: 'x' };
     expect(ScaleSchema.parse(s)).toEqual(s);
@@ -186,7 +186,7 @@ describe('ScaleSchema time (ADR-06)', () => {
   });
 });
 
-describe('ScaleSchema sequential 连续顺序色阶（alpha.8 ADR-01）', () => {
+describe('ScaleSchema sequential 连续顺序色阶', () => {
   // Happy path
   it('省略可选字段合法', () => {
     expect(ScaleSchema.parse({ type: 'sequential', name: 'col' })).toEqual({ type: 'sequential', name: 'col' });
@@ -207,8 +207,8 @@ describe('ScaleSchema sequential 连续顺序色阶（alpha.8 ADR-01）', () => 
     expect(ScaleSchema.parse({ type: 'sequential', name: 'col' })).not.toHaveProperty('scheme');
   });
 
-  // 边界：schema 只校结构，domain 乱序（min > max）在结构上仍合法（正性 / 序由 lowering fail-loud）
-  it('domain 乱序在 schema 层仍合法（序校验留 lowering）', () => {
+  // 边界：schema 只校结构，domain 乱序（min > max）的正性 / 顺序由 lowering fail-loud。
+  it('schema 接受乱序 domain（顺序校验留 lowering）', () => {
     const s = { type: 'sequential', name: 'col', domain: [100, 0] };
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
@@ -227,7 +227,7 @@ describe('ScaleSchema sequential 连续顺序色阶（alpha.8 ADR-01）', () => 
     expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', domain: [0, 1, 2] })).toThrow();
   });
 
-  it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud，ADR-07）', () => {
+  it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud）', () => {
     expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', scheme: 'brand' })).not.toThrow();
   });
 
@@ -258,7 +258,7 @@ describe('ScaleSchema sequential 连续顺序色阶（alpha.8 ADR-01）', () => 
   });
 });
 
-describe('ScaleSchema diverging 连续发散色阶（alpha.8 ADR-01）', () => {
+describe('ScaleSchema diverging 连续发散色阶', () => {
   // Happy path
   it('省略可选字段合法', () => {
     expect(ScaleSchema.parse({ type: 'diverging', name: 'col' })).toEqual({ type: 'diverging', name: 'col' });
@@ -280,7 +280,7 @@ describe('ScaleSchema diverging 连续发散色阶（alpha.8 ADR-01）', () => {
   });
 
   // 边界：domain 乱序结构上合法（low<mid<high 序校验留 lowering）
-  it('domain 乱序在 schema 层仍合法（序校验留 lowering）', () => {
+  it('schema 接受乱序 domain（顺序校验留 lowering）', () => {
     const s = { type: 'diverging', name: 'col', domain: [100, 0, -100] };
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
@@ -299,7 +299,7 @@ describe('ScaleSchema diverging 连续发散色阶（alpha.8 ADR-01）', () => {
     expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', range: ['#f00', '#00f'] })).toThrow();
   });
 
-  it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud，ADR-07）', () => {
+  it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud）', () => {
     expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', scheme: 'brand' })).not.toThrow();
   });
 
@@ -322,7 +322,7 @@ describe('ScaleSchema diverging 连续发散色阶（alpha.8 ADR-01）', () => {
   });
 });
 
-describe('ScaleSchema quantize 等宽离散化（alpha.8 ADR-02）', () => {
+describe('ScaleSchema quantize 等宽离散化', () => {
   // Happy path
   it('省略可选字段合法（仅 type + name）', () => {
     expect(ScaleSchema.parse({ type: 'quantize', name: 'col' })).toEqual({ type: 'quantize', name: 'col' });
@@ -373,7 +373,7 @@ describe('ScaleSchema quantize 等宽离散化（alpha.8 ADR-02）', () => {
     expect(() => ScaleSchema.parse({ type: 'quantize', name: 'col', domain: [0, 1, 2] })).toThrow();
   });
 
-  it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud，ADR-07）', () => {
+  it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud）', () => {
     expect(() => ScaleSchema.parse({ type: 'quantize', name: 'col', scheme: 'brand' })).not.toThrow();
   });
 
@@ -382,7 +382,7 @@ describe('ScaleSchema quantize 等宽离散化（alpha.8 ADR-02）', () => {
   });
 
   // 边界：domain 乱序结构上合法（序校验留 lowering）
-  it('domain 乱序在 schema 层仍合法（序校验留 lowering）', () => {
+  it('schema 接受乱序 domain（顺序校验留 lowering）', () => {
     const s = { type: 'quantize', name: 'col', domain: [100, 0] };
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
@@ -408,7 +408,7 @@ describe('ScaleSchema quantize 等宽离散化（alpha.8 ADR-02）', () => {
   });
 });
 
-describe('ScaleSchema threshold 阈值离散化（alpha.8 ADR-02）', () => {
+describe('ScaleSchema threshold 阈值离散化', () => {
   // Happy path
   it('单断点合法（type + name + breakpoints）', () => {
     const s = { type: 'threshold', name: 'col', breakpoints: [50] };
@@ -447,7 +447,7 @@ describe('ScaleSchema threshold 阈值离散化（alpha.8 ADR-02）', () => {
   });
 
   // 边界：断点乱序结构上合法（升序校验留 lowering）
-  it('断点乱序在 schema 层仍合法（升序校验留 lowering）', () => {
+  it('schema 接受乱序断点（升序校验留 lowering）', () => {
     const s = { type: 'threshold', name: 'col', breakpoints: [80, 60] };
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
@@ -466,7 +466,7 @@ describe('ScaleSchema threshold 阈值离散化（alpha.8 ADR-02）', () => {
   });
 });
 
-describe('ScaleSchema quantile 分位离散化（alpha.8 ADR-02）', () => {
+describe('ScaleSchema quantile 分位离散化', () => {
   // Happy path
   it('省略可选字段合法（仅 type + name）', () => {
     expect(ScaleSchema.parse({ type: 'quantile', name: 'col' })).toEqual({ type: 'quantile', name: 'col' });
@@ -506,7 +506,7 @@ describe('ScaleSchema quantile 分位离散化（alpha.8 ADR-02）', () => {
     expect(() => ScaleSchema.parse({ type: 'quantile', name: 'col', range: ['#fff'] })).toThrow();
   });
 
-  it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud，ADR-07）', () => {
+  it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud）', () => {
     expect(() => ScaleSchema.parse({ type: 'quantile', name: 'col', scheme: 'brand' })).not.toThrow();
   });
 

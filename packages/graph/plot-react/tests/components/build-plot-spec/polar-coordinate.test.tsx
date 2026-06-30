@@ -9,7 +9,7 @@ import { Axis } from '../../../src/components/guides';
 import { IntervalMark, PathMark } from '../../../src/components/marks';
 import { Scale } from '../../../src/components/scales';
 
-describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / angle·radius）', () => {
+describe('buildPlotSpec polar coordinate / sector / area / closed / angle·radius', () => {
   it('radial_bar_equivalence：coordinate="polar2D" + <IntervalMark> → polar2D + band 角向 + interval mark', () => {
     const spec = buildPlotSpec(<IntervalMark x="month" y="amount" color="month" />, '__plot', {
       coordinate: 'polar2D',

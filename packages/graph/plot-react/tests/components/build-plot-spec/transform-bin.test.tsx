@@ -6,7 +6,7 @@ import { buildPlotSpec } from '../../../src/components/build-plot-spec';
 import { IntervalMark } from '../../../src/components/marks';
 import { Transform } from '../../../src/components/transform';
 
-describe('buildPlotSpec alpha.12（<Transform> / bin / summarize / histogram x0x1）', () => {
+describe('buildPlotSpec <Transform> / bin / summarize / histogram x0x1', () => {
   it('transform_bin_declared_to_ir', () => {
     const spec = buildPlotSpec(
       <>
@@ -120,7 +120,7 @@ describe('buildPlotSpec alpha.12（<Transform> / bin / summarize / histogram x0x
     expect(spec.transform?.[1]).toMatchObject({ kind: 'stack' });
   });
 
-  it('alpha12 装配产物过 PlotSpecSchema', () => {
+  it('transform 装配产物过 PlotSpecSchema', () => {
     const spec = buildPlotSpec(
       <>
         <Transform kind="bin" field="m" count={10} />

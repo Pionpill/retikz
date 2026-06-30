@@ -5,7 +5,7 @@ import { createSmoothTrendSpec } from '../../../../plot/tests/helpers/plot-spec-
 import { buildPlotSpec } from '../../../src/components/build-plot-spec';
 import { PathMark, PointMark } from '../../../src/components/marks';
 
-describe('buildPlotSpec alpha.13 ADR-04（smooth transform 透传）', () => {
+describe('buildPlotSpec smooth transform passthrough', () => {
   it('smooth_declared_to_ir', () => {
     const spec = buildPlotSpec(
       <>
