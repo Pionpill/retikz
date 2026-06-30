@@ -25,7 +25,7 @@ export const FieldDefSchema = z
       .union([z.enum(FieldOrderMode), z.array(z.union([z.string(), z.number()])).min(1)])
       .optional()
       .describe(
-        'Category order for a categorical field: data appearance (default), ascending/descending sort, or an explicit value list. A non-default order marks the field as ordered. Drives the categorical domain for both band/point position and ordinal color, keeping position and color in the same order. Only valid on categorical fields; values present in the data but absent from an explicit list are appended at the end',
+        'Category order for a categorical field. Omit or `data` keeps first appearance; ascending/descending sorts values; an explicit list pins listed values first and appends other values by appearance.',
       ),
   })
   .describe(
@@ -35,7 +35,7 @@ export const FieldDefSchema = z
 export const DataModelSchema = z
   .array(FieldDefSchema)
   .describe(
-    'Optional declaration of the external data fields. Listing a field name enables strict reference checking and portable field binding; a given field type also validates and selects scales without seeing the data, while fields with the type omitted are inferred from the bound dataset at lowering. Omit the whole model to infer everything.',
+    'Optional external data field declarations. Declared names enable strict reference checking; declared types drive scale selection, while omitted types are inferred from the bound dataset.',
   );
 
 export const DataRefSchema = z

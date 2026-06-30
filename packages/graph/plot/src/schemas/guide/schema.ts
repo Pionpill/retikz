@@ -130,9 +130,7 @@ export const AxisGuideSchema = z
       .string()
       .min(1)
       .optional()
-      .describe(
-        'Optional guide handle; reserved scope/anchor target (e.g. plot.xAxis / plot.yAxis region), resolution deferred to alpha.5',
-      ),
+      .describe('Optional guide handle used as the axis scope id and anchor target'),
     coordinateScope: z
       .string()
       .min(1)
@@ -154,9 +152,7 @@ export const AxisGuideSchema = z
     tickLabels: z
       .boolean()
       .optional()
-      .describe(
-        'Whether to render tick labels (the numeric text beside each tick); omit = true. Named tickLabels (not label) to avoid confusion with a future axis title',
-      ),
+      .describe('Whether to render tick labels beside each tick; omit = true'),
     title: z
       .string()
       .optional()
@@ -195,9 +191,7 @@ export const LegendGuideSchema = z
     title: z
       .string()
       .optional()
-      .describe(
-        'Legend title rendered above the entries; omit for no title (automatic field-name title is not yet rendered)',
-      ),
+      .describe('Legend title rendered above the entries; omit for no title'),
     position: z
       .enum(LegendPosition)
       .optional()

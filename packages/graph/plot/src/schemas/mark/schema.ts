@@ -40,7 +40,7 @@ export const RelationTransformSchema = MarkTransformSchema;
 
 /** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema，reference 用专属） */
 const markBase = {
-  id: z.string().min(1).optional().describe('Optional mark handle; reserved scope/anchor target'),
+  id: z.string().min(1).optional().describe('Optional mark handle used by generated scope and anchor targets'),
   coordinateScope: z
     .string()
     .min(1)

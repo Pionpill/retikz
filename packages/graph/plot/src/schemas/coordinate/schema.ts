@@ -133,7 +133,7 @@ export const Ternary2DSchema = z
       ),
   })
   .describe(
-    '2D ternary coordinate system: three continuous components (bound via the mark x / y / z channels) projected by barycentric coordinates into an equilateral triangle (composition / mixture / vote share); each row is auto-normalized by x+y+z at lowering. No geometry options this round (per-component scales not yet supported)',
+    '2D ternary coordinate system: normalizes x / y / z position channels into barycentric coordinates inside an equilateral triangle',
   );
 
 const RESERVED_CUSTOM_COORDINATE_TYPES = new Set<string>([...BUILTIN_COORDINATE_TYPES, 'custom']);
