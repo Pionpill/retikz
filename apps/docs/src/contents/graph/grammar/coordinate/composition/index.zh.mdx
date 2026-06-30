@@ -3,7 +3,7 @@ title: 坐标组合
 description: composition 让一张 Plot 同时表达双轴、分面和共享轨道这类多区域图。
 ---
 
-当一张图只有一个投影方式时，用 `coordinate` 就够了。需要把同一份数据放进多个坐标区域、多个面板或上下轨道时，仍然会落到同一套 `composition` 模型，但日常写法不必手写 `composition` 对象：双轴用 `Axis id` + `xAxisId` / `yAxisId`，分面用 `<Facet>` + `facetId`，共享轨道用 `<Scaffold>` / `<Track>` + `trackId` / `scaffoldId`。
+当一张图只有一个投影方式时，用 `coordinate` 就够了。需要把同一份数据放进多个坐标区域、多个面板或上下轨道时，仍然会落到同一套 `composition` 模型，但日常写法不必手写 `composition` 对象：双轴用 `Axis id` + `xAxisId` / `yAxisId`，分面和共享轨道把 axis / mark 放进对应容器即可。
 
 `composition` 解决的是“坐标区域怎么组织”，不是新的图元类型。mark 仍然是 `PathMark`、`PointMark`、`IntervalMark`；scale 仍然由字段和显式 `<Scale>` 推断；guide 仍然用 `<Axis>` 声明。
 
@@ -43,7 +43,7 @@ description: composition 让一张 Plot 同时表达双轴、分面和共享轨�
 
 ## 分面
 
-facet 会按数据字段把一张图拆成多个面板。常规写法是声明一个 `<Facet>`，然后让 mark 和 axis 用 `facetId` 指向它；每个面板会拿到自己对应的数据行。
+facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis 和 mark 放进 `<Facet>`；每个面板会拿到自己对应的数据行。
 
 ### 基础列分面
 
@@ -51,17 +51,23 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是声明�
 
 <ComponentPreview name="coordinate-composition-facet-basic" sourceFiles={['coordinate-composition-facet-basic.data.ts']} size="md" />
 
+这个 demo 里只有一个 `<Facet column="segment">`。`Axis`、`PathMark` 和 `PointMark` 都写在 `<Facet>` 内部，所以它们会自动进入每个 segment 面板，不需要再写 `facetId`。
+
 ### 行列网格
 
 同时传 `row` 和 `column` 时，facet 会生成二维网格。下面的图按 `region` 拆列、按 `channel` 拆行；`Axis grid` 仍然由轴自己声明，facet 默认会把这根轴的 grid 画到每个面板里。
 
 <ComponentPreview name="coordinate-composition-facet" sourceFiles={['coordinate-composition-facet.data.ts']} size="lg" />
 
+这里的 `<Facet row="channel" column="region">` 决定面板矩阵。`grid` 仍然写在 `<Axis dimension="x">` / `<Axis dimension="y">` 上，facet 只负责把这些 guide 投放到每个面板。
+
 ### 空面板与独立比例
 
 默认情况下，空面板会被丢弃；默认 scale domain 会跨所有面板共享。下面的例子显式保留空面板，并让 y 轴在每个面板内独立计算，适合量级差异很大的分组。
 
 <ComponentPreview name="coordinate-composition-facet-independent" sourceFiles={['coordinate-composition-facet-independent.data.ts']} size="lg" />
+
+`empty="show"` 会保留 order 中列出的空面板；`scales={{ roles: { y: 'independent' } }}` 让每个面板各自计算 y domain。x 轴仍然共享，方便按月份对齐阅读。
 
 ### API
 
@@ -73,7 +79,7 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是声明�
 | `row` | `string`<br />`{ field: string; order?: FacetValue[] }` | 省略 | 拆行字段 |
 | `column` | `string`<br />`{ field: string; order?: FacetValue[] }` | 省略 | 拆列字段 |
 | `row.order`<br />`column.order` | `FacetValue[]` | 数据首次出现顺序 | 面板顺序；未列出的值按首次出现追加 |
-| `facetId` | `string` | 省略 | 让 mark / axis 进入 facet 面板 |
+| `facetId` | `string` | 省略 | 显式让容器外的 mark / axis 进入 facet 面板 |
 | `empty` | `'drop' \| 'show'` | `'drop'` | 空面板是丢弃还是保留 |
 | `scales.roles` | `Record<string, 'shared' \| 'independent'>` | 未写 role 为 `'shared'` | 指定每个坐标 role 的 domain 是否跨面板共享 |
 | `layout.panelGap` | `number` | `0` | 面板间距，单位是用户坐标单位 |
@@ -82,33 +88,37 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是声明�
 
 ## 共享轨道
 
-共享轨道用一套坐标骨架管理多条 track。常见用途是多条对齐的小图：共享一个 role，另一个 role 被切成多段 band。常规写法是用 `<Scaffold>` 包住多个 `<Track>`，mark 用 `trackId` 选择轨道，跨轨道共享的轴用 `scaffoldId` 选择整套 scaffold。
+共享轨道用一套坐标骨架管理多条 track。常见用途是多条对齐的小图：共享一个 role，另一个 role 被切成多段 band。常规写法是用 `<Scaffold>` 包住多个 `<Track>`，共享轴放在 `<Scaffold>` 里，局部轴和 mark 放进对应 `<Track>`。
 
 ### 笛卡尔轨道
 
-<ComponentPreview name="coordinate-composition-tracks" sourceFiles={['coordinate-composition-tracks.data.ts']} size="md" />
+<ComponentPreview name="coordinate-composition-tracks" sourceFiles={['coordinate-composition-tracks.data.ts']} size="lg" />
 
-这个例子里两个 track 共用 `week` 的 x 位置。`incidents` 和 `load` 各自占用 y band，所以它们能上下对齐但保持自己的垂直空间。x 轴的 `grid` 由 `<Axis>` 开启；共享轨道默认把同一组 x 刻度投放到所有共享 track。`trackGap` 打开轨道之间的空隙。
+这个例子里三条 track 共用 `trading day` 的 x 位置。共享的 x 轴直接写在 `<Scaffold>` 里；`trend` 画普通折线，`drawdown` 用 baseline closure 画面积，`signal` 画带点折线。
+
+每条 track 的 y 轴和 mark 都写在自己的 `<Track>` 里，所以它们能上下对齐但保持独立的垂直空间。x 轴的 `grid` 由 `<Axis>` 开启；共享轨道默认把同一组 x 刻度投放到所有共享 track。
 
 ### 极坐标轨道
 
 <ComponentPreview name="coordinate-composition-tracks-polar" sourceFiles={['coordinate-composition-tracks-polar.data.ts']} size="lg" />
 
-共享轨道也可以放在 `polar2D` 下。这里 `x` 被坐标系解释为角向 role，`y` 被解释为径向 role；`sharedRoles={['x']}` 让两条径向 track 共用同一组角度刻度，而各自使用不同的半径 band。
+共享轨道也可以放在 `polar2D` 下。这里 `x` 被坐标系解释为角向 role，`y` 被解释为径向 role；`sharedRoles={['x']}` 让多条径向 track 共用同一组角度刻度，而各自使用不同的半径 band。
+
+写法上仍然是 `<Scaffold>` 包 `<Track>`：角向轴放在 scaffold 层，`signal` 和 `capacity` 两组径向折线放在内侧 track，最外层的 `sector` track 用 `IntervalMark` 画一圈扇形分区。换坐标系只改变 role 的解释，不改变容器绑定规则。
 
 ### API
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `Scaffold.id` | `string` | 必填 | scaffold 身份，供 `scaffoldId` 与 `trackId` 生成的 scope 引用 |
+| `Scaffold.id` | `string` | 必填 | scaffold 身份，供显式 `scaffoldId` 以及 track scope 引用 |
 | `Scaffold.sharedRoles` | `Array<string>` | 必填 | 由 scaffold 统一管理的坐标 role，例如共享 `x` |
 | `Scaffold.coordinate` | `CoordinateOperation` | 继承 `<Plot coordinate>` | scaffold 使用的坐标系 |
 | `Scaffold.frame` | `'shared' \| 'independent'` | `'shared'` | track 是否共享 scaffold 的 frame |
 | `Track.id` | `string` | 必填 | track 身份，供 `trackId` 引用 |
 | `Track.band` | `{ role: string; start: number; end: number }` | 必填 | track 在非共享 role 上占用的比例区间，`start` / `end` 取 `0` 到 `1` |
 | `Track.order` | `number` | 声明顺序 | track 排序提示 |
-| `trackId` | `string` | 省略 | 让 mark / axis 进入某条 track |
-| `scaffoldId` | `string` | 省略 | 让 axis 绑定整套 scaffold，常用于共享轴 |
+| `trackId` | `string` | 省略 | 显式让容器外的 mark / axis 进入某条 track |
+| `scaffoldId` | `string` | 省略 | 显式让容器外的 axis 绑定整套 scaffold，常用于共享轴 |
 | `layout.trackGap` | `number` | `0` | track 之间的间距，单位是用户坐标单位 |
 | `guidePolicy.axes` | `'perScope' \| 'outerShared'` | `'outerShared'` | 轴逐 track 绘制，或收敛到外侧 |
 | `guidePolicy.gridPlacement` | `'self' \| 'sharedRole'` | `'sharedRole'` | `Axis grid` 默认投放目标；共享轨道中会投到同 role 的 track |

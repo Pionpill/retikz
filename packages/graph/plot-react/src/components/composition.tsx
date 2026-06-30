@@ -14,6 +14,7 @@ export type FacetProps = Omit<FacetGridSpec, 'row' | 'column'> & {
   scopeId?: string;
   layout?: CompositionSpec['layout'];
   guidePolicy?: CompositionSpec['guidePolicy'];
+  children?: ReactNode;
 };
 
 export type ScaffoldProps = Omit<SharedScaffoldSpec, 'coordinate' | 'tracks'> & {
@@ -24,7 +25,9 @@ export type ScaffoldProps = Omit<SharedScaffoldSpec, 'coordinate' | 'tracks'> & 
   children?: ReactNode;
 };
 
-export type TrackProps = ScaffoldTrackSpec;
+export type TrackProps = ScaffoldTrackSpec & {
+  children?: ReactNode;
+};
 
 export const Facet: FC<FacetProps> = () => null;
 

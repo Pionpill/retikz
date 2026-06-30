@@ -11,11 +11,12 @@ const Demo: FC = () => (
       row={{ field: 'channel', order: ['online', 'store'] }}
       column={{ field: 'region', order: ['north', 'south', 'west'] }}
       layout={{ panelGap: 24 }}
-    />
-    <Axis facetId="sales" dimension="x" title="month" />
-    <Axis facetId="sales" dimension="y" grid title="revenue" />
-    <PathMark facetId="sales" x="month" y="revenue" order="month" stroke="darkorange" strokeWidth={2} />
-    <PointMark facetId="sales" x="month" y="revenue" fill="white" stroke="darkorange" strokeWidth={1.5} />
+    >
+      <Axis dimension="x" title="month" />
+      <Axis dimension="y" grid title="revenue" />
+      <PathMark x="month" y="revenue" order="month" stroke="darkorange" strokeWidth={2} />
+      <PointMark x="month" y="revenue" fill="white" stroke="darkorange" strokeWidth={1.5} />
+    </Facet>
   </Plot>
 );
 

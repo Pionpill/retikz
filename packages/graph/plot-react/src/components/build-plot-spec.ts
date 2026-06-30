@@ -242,6 +242,12 @@ type Collected = {
   hasClosedLine: boolean;
 };
 
+type CollectionContext = {
+  facetId?: string;
+  scaffoldId?: string;
+  trackId?: string;
+};
+
 /** 颜色字段缺省取 series（分系列即按系列上色）；都无则不着色 */
 const colorChannel = (
   color: string | undefined,
@@ -801,28 +807,59 @@ const scaffoldTracksOf = (
   children: ReactNode,
 ): Array<ScaffoldTrackSpec> => {
   const tracks: Array<ScaffoldTrackSpec> = [...(propTracks ?? [])];
-  Children.forEach(children, child => {
+  const appendChildTracks = (node: ReactNode): void => Children.forEach(node, child => {
     if (!isValidElement(child)) return;
-    if (child.type !== Track) {
-      throw new Error(`buildPlotSpec: <Scaffold id="${scaffoldId}"> only accepts <Track> children`);
+    if (child.type === Fragment) {
+      appendChildTracks((child.props as { children?: ReactNode }).children);
+      return;
     }
-    tracks.push(child.props as ScaffoldTrackSpec);
+    if (child.type === Track) {
+      const { id, band, order } = child.props as ScaffoldTrackSpec & { children?: ReactNode };
+      tracks.push({ id, band, ...(order !== undefined ? { order } : {}) });
+    }
   });
+  appendChildTracks(children);
   if (tracks.length === 0) {
     throw new Error(`buildPlotSpec: <Scaffold id="${scaffoldId}"> requires at least one track`);
   }
   return tracks;
 };
 
-const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSugarContext): void => {
+const collectScaffoldChildren = (
+  scaffoldId: string,
+  children: ReactNode,
+  into: Collected,
+  styleContext: StyleSugarContext,
+): void => {
   Children.forEach(children, child => {
     if (!isValidElement(child)) return;
     if (child.type === Fragment) {
-      collectInto((child.props as { children?: ReactNode }).children, into, styleContext);
+      collectScaffoldChildren(scaffoldId, (child.props as { children?: ReactNode }).children, into, styleContext);
+      return;
+    }
+    if (child.type === Track) {
+      const { id, children: trackChildren } = child.props as ScaffoldTrackSpec & { children?: ReactNode };
+      collectInto(trackChildren, into, styleContext, { trackId: id });
+      return;
+    }
+    collectInto(child, into, styleContext, { scaffoldId });
+  });
+};
+
+const collectInto = (
+  children: ReactNode,
+  into: Collected,
+  styleContext: StyleSugarContext,
+  context: CollectionContext = {},
+): void => {
+  Children.forEach(children, child => {
+    if (!isValidElement(child)) return;
+    if (child.type === Fragment) {
+      collectInto((child.props as { children?: ReactNode }).children, into, styleContext, context);
       return;
     }
     if (child.type === Facet) {
-      const { id, row, column, empty, scales, coordinate, scopeId, scopeIdTemplate, layout, guidePolicy } =
+      const { id, row, column, empty, scales, coordinate, scopeId, scopeIdTemplate, layout, guidePolicy, children: facetChildren } =
         child.props as {
           id: string;
           row?: string | NonNullable<FacetGridSpec['row']>;
@@ -834,6 +871,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
           scopeIdTemplate?: string;
           layout?: CompositionSpec['layout'];
           guidePolicy?: CompositionSpec['guidePolicy'];
+          children?: ReactNode;
         };
       into.facets.push({
         id,
@@ -847,6 +885,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(layout !== undefined ? { layout } : {}),
         ...(guidePolicy !== undefined ? { guidePolicy } : {}),
       });
+      collectInto(facetChildren, into, styleContext, { facetId: id });
       return;
     }
     if (child.type === Scaffold) {
@@ -870,6 +909,7 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(layout !== undefined ? { layout } : {}),
         ...(guidePolicy !== undefined ? { guidePolicy } : {}),
       });
+      collectScaffoldChildren(id, scaffoldChildren, into, styleContext);
       return;
     }
     if (child.type === Track) {
@@ -913,14 +953,16 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         'roundedCorners',
         styleContext,
       );
+      const effectiveFacetId = facetId ?? context.facetId;
+      const effectiveTrackId = trackId ?? context.trackId;
       into.marks.push({
         type: PlotMark.Path,
         ...(id !== undefined ? { id } : {}),
         ...(coordinateScope !== undefined ? { coordinateScope } : {}),
         ...(xAxisId !== undefined ? { xAxisId } : {}),
         ...(yAxisId !== undefined ? { yAxisId } : {}),
-        ...(facetId !== undefined ? { facetId } : {}),
-        ...(trackId !== undefined ? { trackId } : {}),
+        ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
+        ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
         ...(transform !== undefined ? { transform } : {}),
         ...(anchorId !== undefined ? { anchorId } : {}),
         ...(order !== undefined ? { order } : {}),
@@ -1003,14 +1045,16 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         text !== undefined
           ? { text: { field: text, ...(displayFormat !== undefined ? { displayFormat } : {}) } }
           : undefined;
+      const effectiveFacetId = facetId ?? context.facetId;
+      const effectiveTrackId = trackId ?? context.trackId;
       into.marks.push({
         type: PlotMark.Point,
         ...(id !== undefined ? { id } : {}),
         ...(coordinateScope !== undefined ? { coordinateScope } : {}),
         ...(xAxisId !== undefined ? { xAxisId } : {}),
         ...(yAxisId !== undefined ? { yAxisId } : {}),
-        ...(facetId !== undefined ? { facetId } : {}),
-        ...(trackId !== undefined ? { trackId } : {}),
+        ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
+        ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
         ...(transform !== undefined ? { transform } : {}),
         ...(anchorId !== undefined ? { anchorId } : {}),
         ...(colorStyle !== undefined ? { color: colorStyle } : {}),
@@ -1100,6 +1144,8 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
       const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
       const pullStyle = intervalPullStyleOf(pull);
+      const effectiveFacetId = facetId ?? context.facetId;
+      const effectiveTrackId = trackId ?? context.trackId;
       const intervalStyle = {
         ...(fillStyle !== undefined ? { fill: fillStyle } : {}),
         ...(strokeStyle !== undefined ? { stroke: strokeStyle } : {}),
@@ -1138,8 +1184,8 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
           ...(coordinateScope !== undefined ? { coordinateScope } : {}),
           ...(xAxisId !== undefined ? { xAxisId } : {}),
           ...(yAxisId !== undefined ? { yAxisId } : {}),
-          ...(facetId !== undefined ? { facetId } : {}),
-          ...(trackId !== undefined ? { trackId } : {}),
+          ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
+          ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
           ...(transform !== undefined ? { transform } : {}),
           ...(anchorId !== undefined ? { anchorId } : {}),
           ...intervalStyle,
@@ -1169,8 +1215,8 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
           ...(coordinateScope !== undefined ? { coordinateScope } : {}),
           ...(xAxisId !== undefined ? { xAxisId } : {}),
           ...(yAxisId !== undefined ? { yAxisId } : {}),
-          ...(facetId !== undefined ? { facetId } : {}),
-          ...(trackId !== undefined ? { trackId } : {}),
+          ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
+          ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
           ...(transform !== undefined ? { transform } : {}),
           ...(anchorId !== undefined ? { anchorId } : {}),
           ...(series !== undefined ? { series } : {}),
@@ -1287,8 +1333,8 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
         ...(coordinateScope !== undefined ? { coordinateScope } : {}),
         ...(xAxisId !== undefined ? { xAxisId } : {}),
         ...(yAxisId !== undefined ? { yAxisId } : {}),
-        ...(facetId !== undefined ? { facetId } : {}),
-        ...(trackId !== undefined ? { trackId } : {}),
+        ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
+        ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
         ...(transform !== undefined ? { transform } : {}),
         ...(anchorId !== undefined ? { anchorId } : {}),
         ...(series !== undefined ? { series } : {}),
@@ -1342,14 +1388,17 @@ const collectInto = (children: ReactNode, into: Collected, styleContext: StyleSu
       if (scale !== undefined) {
         into.scales.push({ dimension, type: scale });
       }
+      const effectiveFacetId = facetId ?? context.facetId;
+      const effectiveScaffoldId = scaffoldId ?? context.scaffoldId;
+      const effectiveTrackId = trackId ?? context.trackId;
       into.guides.push({
         type: PlotGuide.Axis,
         dimension,
         ...(id !== undefined ? { id } : {}),
         ...(coordinateScope !== undefined ? { coordinateScope } : {}),
-        ...(facetId !== undefined ? { facetId } : {}),
-        ...(scaffoldId !== undefined ? { scaffoldId } : {}),
-        ...(trackId !== undefined ? { trackId } : {}),
+        ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
+        ...(effectiveScaffoldId !== undefined ? { scaffoldId: effectiveScaffoldId } : {}),
+        ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
         ...(placement !== undefined ? { placement } : {}),
         ...(title !== undefined ? { title } : {}),
         ...(tickCount !== undefined ? { tickCount } : {}),
