@@ -1,7 +1,7 @@
+import type { ShapeStyle } from '../../contract/shape';
 import type { ContourCommand, LineSegment } from '../../geometry/contour';
 import type { Position } from '../../geometry/point';
 import type { PathCommand, PathPrim } from '../../primitive';
-import type { ShapeStyle } from './types';
 
 /**
  * 由顶点环构造闭合折线段序列（接缝顺序同顶点顺序）

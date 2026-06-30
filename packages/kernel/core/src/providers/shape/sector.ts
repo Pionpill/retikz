@@ -6,11 +6,11 @@ import type { Position } from '../../geometry/point';
 import type { Rect } from '../../geometry/rect';
 import type { ScenePrimitive } from '../../primitive';
 
-import { contourToPathCommands, contourToPathPrimitive } from '../../contract/shape/contour';
 import { defineShape } from '../../contract/shape/define';
 import { sectorGeometry, sectorPolarPoint } from '../../contract/shape/shared';
 import { boundaryFromContour, contourCommands, filletContour } from '../../geometry/contour';
 import { localToWorld } from '../../geometry/transform';
+import { contourToPathCommands, contourToPathPrimitive } from './outline';
 
 /**
  * sector shape 的 per-instance params 类型

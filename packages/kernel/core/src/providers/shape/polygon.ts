@@ -5,12 +5,12 @@ import type { Position } from '../../geometry/point';
 import type { Rect } from '../../geometry/rect';
 import type { ScenePrimitive } from '../../primitive';
 
-import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from '../../contract/shape/contour';
 import { defineShape } from '../../contract/shape/define';
 import { normalizeCompassAnchor } from '../../geometry/anchor';
 import { boundaryFromContour, contourCommands } from '../../geometry/contour';
 import { rect as rectOps } from '../../geometry/rect';
 import { localToWorld } from '../../geometry/transform';
+import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
 /**
  * polygon shape 的 per-instance params 类型

@@ -5,11 +5,11 @@ import type { Position } from '../../geometry/point';
 import type { Rect } from '../../geometry/rect';
 import type { ScenePrimitive } from '../../primitive';
 
-import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from '../../contract/shape/contour';
 import { defineShape } from '../../contract/shape/define';
 import { boundaryFromContour, contourCommands } from '../../geometry/contour';
 import { point } from '../../geometry/point';
 import { localToWorld } from '../../geometry/transform';
+import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
 /**
  * contour shape 的 per-instance params 类型

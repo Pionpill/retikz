@@ -5,12 +5,12 @@ import type { Position } from '../../geometry/point';
 import type { Rect } from '../../geometry/rect';
 import type { ScenePrimitive } from '../../primitive';
 
-import { verticesToSegments } from '../../contract/shape/contour';
 import { defineShape } from '../../contract/shape/define';
 import { normalizeCompassAnchor, webSideToCompassSide } from '../../geometry/anchor';
 import { boundaryFromContour } from '../../geometry/contour';
 import { rect as rectOps } from '../../geometry/rect';
 import { localToWorld } from '../../geometry/transform';
+import { verticesToSegments } from './outline';
 
 /**
  * rectangle shape 的 per-instance params 类型
