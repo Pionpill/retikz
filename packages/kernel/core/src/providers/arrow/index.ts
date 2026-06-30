@@ -1,1 +1,1 @@
-export { BUILTIN_ARROWS, resolveArrowRegistry } from './registry';
+export * from './registry';

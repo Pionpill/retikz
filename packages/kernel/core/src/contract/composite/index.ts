@@ -1,2 +1,2 @@
-export { defineComposite } from './define';
-export type { CompositeDefinition } from './types';
+export * from './define';
+export * from './types';

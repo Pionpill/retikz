@@ -10,17 +10,17 @@
  */
 
 // ============ 描述树类型 ============
-export type { SvgAttrs, SvgNode, SvgStructuralAttrs, SvgStyle, SvgTag } from './types';
+export * from './types';
 
 // ============ builder（总装入口 + 粒度化）/ 字符串序列化 ============
 export * from './builders';
 export * from './serialize';
 
 // ============ renderer-neutral 几何 / 字符串工具（src 下扁平文件，本就与框架无关，多 renderer 共用） ============
-export { buildPathD } from './path-d-builder';
-export { buildTransform } from './transform-builder';
-export { formatViewBox } from './view-box';
+export * from './path-d-builder';
+export * from './transform-builder';
+export * from './view-box';
 
 // ============ 动画播放（SVG 后端）：CSS @keyframes + WAAPI 描述类型 ============
-export type { CubicBezier, EasingFn, EasingRegistry } from '../animation/types';
+export * from '../animation/types';
 export * from './animation';
