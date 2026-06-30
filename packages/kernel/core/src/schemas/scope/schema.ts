@@ -142,7 +142,6 @@ export const ScopeSchema = z
       ),
     strokeWidth: z
       .number()
-
       .nonnegative()
       .optional()
       .describe('Cascading default stroke width (user units) for inner nodes and paths.'),
@@ -178,7 +177,6 @@ export const ScopeSchema = z
     zIndex: z
       .number()
       .int()
-
       .optional()
       .describe(
         'Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.',

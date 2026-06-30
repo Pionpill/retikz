@@ -100,6 +100,8 @@ export const kernelSection: Array<Section> = [
         label: 'kernel.refExtending',
         children: [
           { id: 'shape-registry', label: 'kernel.refShapeRegistry' },
+          { id: 'boundary-registry', label: 'kernel.refBoundaryRegistry' },
+          { id: 'clip-registry', label: 'kernel.refClipRegistry' },
           { id: 'custom-arrow', label: 'kernel.refCustomArrow' },
           { id: 'custom-pattern', label: 'kernel.refCustomPattern' },
           { id: 'custom-path', label: 'kernel.refCustomPath' },

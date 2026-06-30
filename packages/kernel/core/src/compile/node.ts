@@ -1,9 +1,11 @@
 import { arcEndPoint } from '@retikz/math';
 
+import type { BoundaryDefinition } from '../contract/boundary';
 import type { ShapeDefinition, ShapeStyle } from '../contract/shape';
 import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';
 import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
+import type { ProviderCollection } from '../providers/registry';
 import type {
   IRAnimationTrack,
   IRBoundary,
@@ -28,10 +30,12 @@ import type { ResolveBetweenGlobal } from './position';
 import type { LaidLine, LineLayoutContext } from './text-layout';
 import type { FontSpec, TextMeasurer } from './text-metrics';
 
-import { normalizeCompassAnchor } from '../geometry/anchor';
-import { BUILTIN_SHAPES } from '../providers/shape';
-import { JsonObjectSchema } from '../schemas';
-import { resolveBoundary } from './boundary';
+import { normalizeWebAnchor, normalizeWebSide } from '../geometry/anchor';
+import { resolveBoundaryRegistry } from '../providers/boundary';
+import { providerDefinitionOf } from '../providers/registry';
+import { resolveShapeRegistry } from '../providers/shape';
+import { JsonObjectSchema, normalizeAtDirection } from '../schemas';
+import { fallbackBoundaryAnchor, resolveBoundary } from './boundary';
 import { CompileWarningCode } from './constant';
 import { DirectionVectorByAtDirection, LabelAnchorByAtDirection } from './direction';
 import { resolveShadow } from './effects';
@@ -171,6 +175,7 @@ export type NodeLayout = {
    * 已校验的 per-instance shape 参数（经 `paramsSchema.parse` + `JsonObjectSchema.parse` 双护栏）
    * @description 透传给 `shapeDef` 的 circumscribe / boundaryPoint / anchor / edgePoint / emit；
    *   无参形状（内置 4 个）解析为 `{}`。省略时各调用点以空对象兜底（合成 layout 如 coordinate / scope.id）。
+   * @default {}
    */
   shapeParams?: IRJsonObject;
   /**
@@ -202,47 +207,92 @@ export type NodeLayout = {
   lineHeight: number;
   /** 文本字号（已应用默认值） */
   fontSize: number;
-  /** 字体族（CSS font-family） */
+  /**
+   * 字体族（CSS font-family）
+   * @default 'sans-serif'
+   */
   fontFamily?: string;
-  /** 字重 */
+  /**
+   * 字重
+   * @default 'normal'
+   */
   fontWeight?: string | number;
-  /** 字形 */
+  /**
+   * 字形
+   * @default 'normal'
+   */
   fontStyle?: 'normal' | 'italic' | 'oblique';
-  /** 节点背景填充（纯色 / PaintSpec gradient），emit 时经 resolvePaint → PaintValue、'transparent' 兜底 */
+  /**
+   * 节点背景填充（纯色 / PaintSpec gradient），emit 时经 resolvePaint → PaintValue、'transparent' 兜底
+   * @default 'transparent'
+   */
   fill?: string | IRPaintSpec;
-  /** 填充透明度 0~1 */
+  /**
+   * 填充透明度 0~1
+   * @default 1
+   */
   fillOpacity?: number;
-  /** 节点边框 paint，emit 时经 resolvePaint → PaintValue、'currentColor' 兜底 */
+  /**
+   * 节点边框 paint，emit 时经 resolvePaint → PaintValue、'currentColor' 兜底
+   * @default 'currentColor'
+   */
   stroke?: string | IRPaintSpec;
-  /** 描边透明度 0~1（TikZ `draw opacity`） */
+  /**
+   * 描边透明度 0~1（TikZ `draw opacity`）
+   * @default 1
+   */
   strokeOpacity?: number;
-  /** 边框宽度，emit 时 1 兜底 */
+  /**
+   * 边框宽度，emit 时 1 兜底
+   * @default 1
+   */
   strokeWidth?: number;
   /** 描边 dash pattern，已把 dashed/dotted 预设解析为具体 pattern */
   dashPattern?: Array<number>;
-  /** rectangle 圆角半径（非 rect shape 无效） */
+  /**
+   * rectangle 圆角半径（非 rect shape 无效）
+   * @default 0
+   */
   cornerRadius?: number;
-  /** 文字颜色，emit 时 'currentColor' 兜底 */
+  /**
+   * 文字颜色，emit 时 'currentColor' 兜底
+   * @default 'currentColor'
+   */
   textColor?: string;
-  /** 整节点透明度 0~1（同时挂 shape 与 text primitive） */
+  /**
+   * 整节点透明度 0~1（同时挂 shape 与 text primitive）
+   * @default 1
+   */
   opacity?: number;
   /** 已解析的主形状投影（compile 已展开 preset + 显式覆盖）；仅挂 shape 几何图元，不挂 text */
   shadow?: DropShadow;
-  /** 主形状混合模式（与下方已绘内容混合）；仅挂 shape 几何图元，不挂 text */
+  /**
+   * 主形状混合模式（与下方已绘内容混合）；仅挂 shape 几何图元，不挂 text
+   * @default 'normal'
+   */
   blendMode?: BlendModeValue;
   /**
    * 已解析的 label 列表
-   * @description IR 层 `Node.label` 标准化：position 默认 'above'、distance 默认 DEFAULT_LABEL_DISTANCE、font 从 Node 继承
+   * @description IR 层 `Node.label` 标准化：position 默认 'top'、distance 默认 DEFAULT_LABEL_DISTANCE、font 从 Node 继承
+   * @default []
    */
   labels?: Array<NodeLabelLayout>;
-  /** 节点默认连接面（来自 IR `node.boundary`；undefined = 'shape'）；path 端点 boundary 可覆盖 */
+  /**
+   * 节点默认连接面（来自 IR `node.boundary`；undefined = 'shape'）；path 端点 boundary 可覆盖
+   * @default 'shape'
+   */
   boundary?: IRBoundary;
   /** provenance 元数据（来自 IR `node.meta`）；emit 时原样 stamp 到 node 的 top-level 图元，renderer 忽略 */
   meta?: IRJsonObject;
   /** 时间轴动画 tracks（来自 IR `node.animations`）；emit 时原样 stamp 到 node 的 top-level 图元，renderer 播放 / 降级 */
   animations?: Array<IRAnimationTrack>;
   /** 构建本 layout 的 shape 注册表引用——借用连接面（borrowed boundary）查表用 */
-  shapes: Record<string, ShapeDefinition>;
+  shapes: ProviderCollection<ShapeDefinition>;
+  /**
+   * 构建本 layout 的 boundary 注册表引用——connection surface provider 查表用
+   * @default resolveBoundaryRegistry()
+   */
+  boundaries?: ProviderCollection<BoundaryDefinition>;
 };
 
 /** 节点附属标签 layout（layoutNode 已合并默认值与样式继承） */
@@ -257,19 +307,48 @@ export type NodeLabelLayout = {
   placement: NodeLabelPlacementValue;
   /** 已应用默认值 */
   distance: number;
+  /**
+   * label 文本颜色。
+   * @default 'currentColor'
+   */
   textColor?: string;
+  /**
+   * label 整体不透明度。
+   * @default 1
+   */
   opacity?: number;
   fontSize: number;
+  /**
+   * label 字体族。
+   * @default 'sans-serif'
+   */
   fontFamily?: string;
+  /**
+   * label 字重。
+   * @default 'normal'
+   */
   fontWeight?: string | number;
+  /**
+   * label 字形。
+   * @default 'normal'
+   */
   fontStyle?: 'normal' | 'italic' | 'oblique';
-  /** label 文本自旋模式（none / radial / tangent / 数字角度）；缺省 = 不旋转 */
+  /**
+   * label 文本自旋模式（none / radial / tangent / 数字角度）；缺省 = 不旋转
+   * @default 'none'
+   */
   rotate?: 'none' | 'radial' | 'tangent' | number;
-  /** 自旋后若文字倒置则翻 180°；缺省 false */
+  /**
+   * 自旋后若文字倒置则翻 180°；缺省 false
+   * @default false
+   */
   keepUpright?: boolean;
   /** label 文本测量宽度（pin leader 算 label 框近边用） */
   measuredWidth: number;
-  /** pin：true = 默认引线；对象 = 带样式引线（stroke / strokeWidth / dashPattern）；缺省 / false = 无引线 */
+  /**
+   * pin：true = 默认引线；对象 = 带样式引线（stroke / strokeWidth / dashPattern）；缺省 / false = 无引线
+   * @default false
+   */
   pin?: boolean | { stroke?: string; strokeWidth?: number; dashPattern?: Array<number> };
 };
 
@@ -280,7 +359,7 @@ const inflateRect = (r: Rect, m: number): Rect =>
 /**
  * 视觉 rect 外扩 outerSep（margin）得到外边界 AABB
  * @description = `inflateRect(layout.rect, layout.margin)`，中心不变、四向各 +margin。border 类
- *   anchor（compass / 数字角度）解析与 bbox / viewBox / 布局占位都基于这层；视觉 emit / 裁剪 /
+ *   anchor（标准方位 / 数字角度）解析与 bbox / viewBox / 布局占位都基于这层；视觉 emit / 裁剪 /
  *   形状专属 anchor / edgePoint / label 附着点仍读 `layout.rect`（不外扩）。单一派生量，不另存字段。
  *   （对齐 TikZ outer sep 语义。）
  */
@@ -302,28 +381,29 @@ export const boundaryPointOf = (
     layout.rect,
     layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
     layout.shapes,
+    layout.boundaries ?? resolveBoundaryRegistry(),
   );
   return def.boundaryPoint(inflateRect(rect, layout.margin), toward, params);
 };
 
 /**
- * 取节点 shape 命名 anchor（center / north / east / north-east 等）
+ * 取节点 shape 命名 anchor（center / top / right / top-right，或 north 等别名）
  * @description 纯几何：在传入的 `layout.rect` 上求点，本体**不施加 outerSep（margin）**。outerSep 的
- *   「border 外推」由调用方决定——`anchor-cache.ts` 的 compass 解析先把 rect 外扩 margin（`outerRectOf`）
+ *   「border 外推」由调用方决定——`anchor-cache.ts` 的标准方位解析先把 rect 外扩 margin（`outerRectOf`）
  *   再调本函数；`labelBorderPoint` 喂视觉 rect（label 附着点不含 margin）。这样 outer sep 只作用于
  *   path / position 的 anchor 引用，不波及 label。
- *   compass（9 个 rect 方位名）：默认连接面先走视觉 shape 自身 compass（ellipse/circle 落真实周长、polygon/rect 落 AABB，与 TikZ 一致），shape 未实现则回退 AABB 矩形；显式 boundary 按其解析。
- *   形状专属命名 anchor（tip-N / apex 等非 compass 名）恒走视觉形状自身，boundary 不影响。
+ *   标准方位名：默认连接面先走视觉 shape 自身方位几何（ellipse/circle 落真实周长、polygon/rect 落 AABB，与 TikZ 一致），shape 未实现则回退 AABB 矩形；显式 boundary 按其解析。
+ *   形状专属命名 anchor（tip-N / apex 等非标准方位名）恒走视觉形状自身，boundary 不影响。
  *   boundary 缺省 = 'shape'。
  */
 export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary | undefined = 'shape'): Position => {
-  const compassAnchor = normalizeCompassAnchor(name);
-  if (compassAnchor !== undefined) {
-    // compass 方位名：默认连接面（'shape'）先走视觉 shape 自身 compass——ellipse/circle 落真实周长、
-    // rectangle/polygon 落 AABB（与 TikZ 一致）；shape 未实现 compass（star/sector/arc 返回 undefined）
+  const webAnchor = normalizeWebAnchor(name);
+  if (webAnchor !== undefined) {
+    // 标准方位名：默认连接面（'shape'）先走视觉 shape 自身 anchor——ellipse/circle 落真实周长、
+    // rectangle/polygon 落 AABB（与 TikZ 一致）；shape 未实现标准方位（star/sector/arc 返回 undefined）
     // 回退外接 AABB 矩形。显式 boundary 指定时按该连接面解析。
     if (boundary === 'shape') {
-      const own = layout.shapeDef.anchor(layout.rect, compassAnchor, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
+      const own = layout.shapeDef.anchor(layout.rect, webAnchor, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
       if (own !== undefined) return own;
       const fallback = resolveBoundary(
         'rectangle',
@@ -331,8 +411,9 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
         layout.rect,
         layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
         layout.shapes,
+        layout.boundaries ?? resolveBoundaryRegistry(),
       );
-      const p = fallback.def.anchor(fallback.rect, compassAnchor, fallback.params);
+      const p = fallback.def.anchor?.(fallback.rect, webAnchor, fallback.params);
       if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
       return p;
     }
@@ -342,8 +423,9 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
       layout.rect,
       layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
       layout.shapes,
+      layout.boundaries ?? resolveBoundaryRegistry(),
     );
-    const p = def.anchor(rect, compassAnchor, params);
+    const p = def.anchor?.(rect, webAnchor, params) ?? fallbackBoundaryAnchor(rect, webAnchor, params);
     if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
     return p;
   }
@@ -360,10 +442,26 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
  * @description 8 方向：节点对应 anchor 出发按单位向量 × distance 外推；数字角度：先取 angleBoundary 边界点再沿 (cos,sin) × distance 外推。
  *   两个分支都在 **axis-aligned rect（rotate=0）** 上算——node 自身 rotate 由外层 GroupPrim 统一施加；
  *   若用带 rotate 的 rect，label 位置会被 anchorOf / angleBoundaryOf 旋转一次、再被外层 group 旋转一次（双重旋转）。
- *   anchorOf / angleBoundaryOf 本身不改（path anchor `'A.north'` / `'A.30'` 仍需带 rotate 的 rect）。
+ *   anchorOf / angleBoundaryOf 本身不改（path anchor `'A.top'` / `'A.30'` 仍需带 rotate 的 rect）。
  */
 const isLabelBoundaryPosition = (position: NodeLabelLayout['position']): position is IRNodeLabelBoundaryPosition =>
   typeof position === 'object';
+
+const normalizeLabelBoundaryPosition = (position: IRNodeLabelBoundaryPosition): IRNodeLabelBoundaryPosition => ({
+  ...position,
+  boundary: normalizeWebSide(position.boundary) ?? position.boundary,
+});
+
+const normalizeLabelPosition = (
+  position: IRNodeLabel['position'] | undefined,
+): NodeLabelLayout['position'] => {
+  if (position === undefined) return 'top';
+  if (typeof position !== 'string') {
+    return typeof position === 'object' ? normalizeLabelBoundaryPosition(position) : position;
+  }
+  if (position === 'center') return position;
+  return (normalizeAtDirection(position) ?? position);
+};
 
 const ensureBoxLikeLabelBoundary = (layout: NodeLayout): void => {
   if (layout.shapeName !== 'rectangle') {
@@ -486,6 +584,7 @@ export const angleBoundaryOf = (
     layout.rect,
     layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
     layout.shapes,
+    layout.boundaries ?? resolveBoundaryRegistry(),
   );
   return def.boundaryPoint(rect, toward, params);
 };
@@ -513,7 +612,8 @@ export const layoutNode = (
   nodeDistance?: number,
   scopeChain: ReadonlyArray<Transform> = [],
   labelDefault?: IRLabelDefault,
-  shapes: Record<string, ShapeDefinition> = BUILTIN_SHAPES,
+  shapes: ProviderCollection<ShapeDefinition> = resolveShapeRegistry(),
+  boundaries: ProviderCollection<BoundaryDefinition> = resolveBoundaryRegistry(),
   resolveBetweenGlobal?: ResolveBetweenGlobal,
   texLowering?: TexLoweringContext,
 ): NodeLayout => {
@@ -521,10 +621,7 @@ export const layoutNode = (
   const { type: shapeName, params: rawShapeParams } = normalizeShape(node.shape);
   // own-property 校验：既得到 `ShapeDefinition | undefined` 类型（让未注册分支成立），又避开
   // `'toString'` 等原型链 key 被 Record 索引误命中（开放字符串 shape 名的边界安全）
-  const shapeDef = Object.prototype.hasOwnProperty.call(shapes, shapeName) ? shapes[shapeName] : undefined;
-  if (!shapeDef) {
-    throw new Error(`Unknown shape '${shapeName}'; registered shapes: ${Object.keys(shapes).sort().join(', ')}`);
-  }
+  const shapeDef = providerDefinitionOf(shapes, shapeName, { capability: 'shape', optionName: 'shapes' });
   // 双护栏（抄 path generator）：① paramsSchema.parse 校验形状字段；② JsonObjectSchema.parse 守 JSON-safe。
   // JSON-safe 这道跑在**原始 params** 上——宽松 schema（如 `z.object({}).passthrough()`）会在 parse 时
   // 静默剥掉 `undefined` 值的键，若只校验其输出就漏过非 JSON 输入；校验原始入参才能稳拦 function / undefined。
@@ -722,7 +819,7 @@ export const layoutNode = (
     return {
       text: plainText,
       laid,
-      position: lab.position ?? 'above',
+      position: normalizeLabelPosition(lab.position),
       placement: lab.placement ?? 'outside',
       distance: lab.distance ?? DEFAULT_LABEL_DISTANCE,
       textColor: labTextColor,
@@ -780,6 +877,7 @@ export const layoutNode = (
     meta: node.meta,
     animations: node.animations,
     shapes,
+    boundaries,
   };
 };
 

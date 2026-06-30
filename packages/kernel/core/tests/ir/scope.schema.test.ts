@@ -235,10 +235,23 @@ describe('TransformSchema 各变体合法形态', () => {
   it('at-translate 缺省 distance', () => {
     const parsed = TransformSchema.safeParse({
       kind: 'at-translate',
-      direction: 'above',
+      direction: 'top',
       of: 'A',
     });
     expect(parsed.success).toBe(true);
+  });
+
+  it('at-translate direction 别名归一到 Web canonical', () => {
+    expect(TransformSchema.parse({ kind: 'at-translate', direction: 'north-west', of: 'A' })).toEqual({
+      kind: 'at-translate',
+      direction: 'top-left',
+      of: 'A',
+    });
+    expect(TransformSchema.parse({ kind: 'at-translate', direction: 'below', of: 'A' })).toEqual({
+      kind: 'at-translate',
+      direction: 'bottom',
+      of: 'A',
+    });
   });
 
   it('offset-translate of=string 含 offset', () => {

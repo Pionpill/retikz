@@ -1,6 +1,6 @@
 # @retikz/eval
 
-LLM 生成 retikz IR 的准确性评测（L1 结构有效性 + L2 语义断言）。设计见 `notes/eval/design.md`。
+LLM 生成 retikz IR 的准确性评测（L1 结构有效性 + L2 语义断言）。设计见 `_notes/design.md`。
 
 ## 这是什么
 

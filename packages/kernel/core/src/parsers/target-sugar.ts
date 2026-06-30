@@ -10,7 +10,7 @@ const RELATIVE_LIKE_RE = /^\+.*,/;
 /**
  * Sugar 字符串解析：TikZ 风格字符串 shorthand → IR 对象（React DSL 层；core IR 只见对象）
  * @description `'+dx,dy'` → `{relative:[dx,dy]}`（TikZ `+`，不更新 prevEnd）；`'++dx,dy'` → `{relativeAccumulate:[dx,dy]}`（TikZ `++`，累积）；
- *   其余字符串作节点 ref 经 `parseNodeTarget` 转 `{ id, anchor? }`（`'A'` / `'A.north'` / `'A.30'`）；非字符串（笛卡尔 / 极坐标 / 已是对象）原样返回。
+ *   其余字符串作节点 ref 经 `parseNodeTarget` 转 `{ id, anchor? }`（`'A'` / `'A.top'` / `'A.30'`）；非字符串（笛卡尔 / 极坐标 / 已是对象）原样返回。
  *   纯函数无 nodeIndex 依赖，react adapter 与 Draw DSL 共用。core schema 已无字符串 target 分支——eager 解析后才入 IR。
  */
 export const parseTargetSugar = (input: unknown): IRTarget => {

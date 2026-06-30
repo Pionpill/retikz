@@ -1,13 +1,13 @@
 import { z } from 'zod';
 
-import { AtDirection } from './constants';
+import { AtDirection, normalizeAtDirection } from './constants';
 
 export const AtPositionSchema = z
   .object({
     direction: z
-      .enum(AtDirection)
+      .preprocess(value => (typeof value === 'string' ? normalizeAtDirection(value) ?? value : value), z.enum(AtDirection))
       .describe(
-        'Direction from the referenced node toward this node, in visual convention (above = visually upward, screen y-).',
+        'Direction from the referenced node toward this node, in visual convention. Web names are canonical; compass and above/below names are accepted aliases.',
       ),
     of: z
       .string()

@@ -12,7 +12,7 @@ import type { IRJsonObject, IRPathBase, IRPosition } from '../../schemas';
  *   `targetParams` 列出的顶层 key 经 target lookup 解析成的世界坐标；`round` = 与 compile/render 同一精度
  *   取整函数。坐标均为世界坐标（scope transform 已在调用前折算）。
  */
-export type PathGeneratorContext = {
+export type PathGeneratorGenerateContext = {
   /** 当前游标世界坐标（上一段终点 / sub-path 起点） */
   from: Position;
   /** step.to resolve 后的世界坐标；step 未给 `to` 时为 undefined */
@@ -39,12 +39,17 @@ export type PathGeneratorContext = {
  *     允许产含 `move` 的 sub-path（多段波形）。
  */
 export type PathGeneratorDefinition = {
+  /** Registry key referenced by generator steps. */
+  name: string;
   /** params 的 zod schema；类型约束输出 JSON-safe（运行时双 parse 才是真正护栏） */
   paramsSchema: ZodType<IRJsonObject>;
-  /** 哪些 params 顶层 key 是 NodeTarget（compile resolve 成世界坐标）；仅顶层，嵌套不支持 */
+  /**
+   * 哪些 params 顶层 key 是 NodeTarget（compile resolve 成世界坐标）；仅顶层，嵌套不支持
+   * @default []
+   */
   targetParams?: Array<string>;
   /** 据 from / to / params / resolvedTargets 产低层 path 命令；可含 move 形成 sub-path */
-  generate: (ctx: PathGeneratorContext) => Array<PathCommand>;
+  generate: (ctx: PathGeneratorGenerateContext) => Array<PathCommand>;
 };
 
 export type PathKindCompileResult = {
@@ -60,7 +65,11 @@ export type PathKindCompileContext<TOptions = IRJsonObject> = {
 };
 
 export type PathKindDefinition<TOptions = IRJsonObject> = {
-  kind: string;
+  schema: z.ZodObject<{ kind: z.ZodLiteral<string> }>;
+  /**
+   * kind 配置项的额外校验 schema；缺省直接使用原始 `kindOptions ?? {}`。
+   * @default 原始 `kindOptions ?? {}`
+   */
   optionsSchema?: z.ZodType<TOptions>;
   compile: (context: PathKindCompileContext<TOptions>) => PathKindCompileResult | null;
 };

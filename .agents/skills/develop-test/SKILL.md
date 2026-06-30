@@ -22,7 +22,7 @@ retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**�
 
 - ADR
 - develop-implement 阶段产出的：spec 测试文件 + 实现代码 + commit 历史
-- 当前 HEAD 的 lint / tsc / 全量 vitest 状态：必须全过（不过则上一阶段没完成）
+- 当前 HEAD 的受影响模块 lint / tsc / vitest 状态：必须全过（不过则上一阶段没完成）
 
 ## 适用范围
 
@@ -37,7 +37,7 @@ retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**�
 ```
 1. git status 工作区干净
 2. ADR 状态仍 Proposed（不应在本阶段标 Accepted）
-3. lint / tsc / 全量 vitest 三件套全过——三选一不过则 halt 回 stage 2
+3. 当前 / 受影响模块 lint / tsc / vitest 三件套全过——三选一不过则 halt 回 stage 2
 ```
 
 ---
@@ -159,5 +159,5 @@ BLOCKING 修完后**重跑一遍 Bug Hunter**（用同一份 prompt）确认没�
 
 - 最后一轮 Bug Hunter 报告 BLOCKING 列为空
 - 所有 BLOCKING 修复都已转化为正式测试 case 进 git 历史
-- 全量 vitest / lint / tsc 全过
+- 当前 / 受影响模块 vitest / lint / tsc 全过
 - WARNING / INFO 列表整理后存入主 AI 上下文，供 wrapup 阶段引用

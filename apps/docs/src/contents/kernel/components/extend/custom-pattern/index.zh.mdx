@@ -5,7 +5,7 @@ description: pattern.shape 是开放字符串；内置 lines / dots / grid 之�
 
 `fill` 的 `PaintSpec` 里 `pattern.shape` 是**开放字符串**:内置三种 motif(`lines` 斜纹 / `dots` 网点 / `grid` 网格)之外,可以注册自己的图案。注册面对齐 [自定义形状](/kernel/components/extend/shape-registry) / [自定义箭头](/kernel/components/extend/custom-arrow)——内置 3 种本身也是注册项,没有特权。
 
-注册靠 `CompileOptions.patterns`(React 里是 `<Layout patterns={...}>`):IR 的 `fill={{ kind:'pattern', shape:'...' }}` 仍只写字符串名,motif 几何定义在此注入。未注册名编译期报错(带可用名列表);同名覆盖内置发 `PATTERN_OVERRIDES_BUILTIN` 警告。
+注册通过 `CompileOptions.patterns`（React 里是 `<Layout patterns={...}>`）：IR 的 `fill={{ kind:'pattern', shape:'...' }}` 仍只保存字符串名，motif 几何在这里注入。未注册名会在编译时报错（带可用名称列表）；每个 definition 都携带 `name`；与内置名冲突会在注册阶段失败。
 
 ## 注册一个 motif
 
@@ -19,6 +19,7 @@ description: pattern.shape 是开放字符串；内置 lines / dots / grid 之�
 
 | 字段          | 类型                                 | 默认值 | 描述                                               |
 | ------------- | ------------------------------------ | ------ | -------------------------------------------------- |
+| `name`        | `string`                             | 必填   | 注册名；`pattern.shape` 按这个名字查找 motif，且不能与内置名冲突 |
 | `emit`        | `(ctx) => Iterable<MarkerPrimitive>` | 必填   | 在局部 tile 坐标系(`0..size`)产 motif 几何         |
 | `defaultSize` | `number`                             | `8`    | tile 周期默认(user units);用户 `pattern.size` 覆盖 |
 

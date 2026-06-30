@@ -19,6 +19,10 @@ type ArcParams = {
   radius: number;
   startAngle: number;
   endAngle: number;
+  /**
+   * 是否闭合为可填充弓形。
+   * @default false
+   */
   close?: boolean;
 };
 
@@ -76,6 +80,7 @@ const arcLocalToWorld = (rect: Rect, centerOffset: Position, localFromCenter: Po
  *   arc-mid（弧中点）/ start / end / center（圆心）。scaleParams 只缩 radius、不缩角度与 close。
  */
 export const arc = defineShape({
+  name: 'arc',
   paramsSchema: z.strictObject({
     radius: z
       .number()

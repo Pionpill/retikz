@@ -20,7 +20,15 @@ import { localToWorld } from '../../geometry/transform';
  */
 type PolygonParams = {
   sides: number;
+  /**
+   * 起始顶点自旋角（度）。
+   * @default 0
+   */
   rotate?: number;
+  /**
+   * 顶点倒角半径。
+   * @default 0
+   */
   cornerRadius?: number;
 };
 
@@ -93,6 +101,7 @@ const polygonVertices = (rect: Rect, radius: number, params: PolygonParams): Arr
  *   diamond ≡ `{ type: 'polygon', params: { sides: 4, rotate: 0 } }`，由 compile 规范化。
  */
 export const polygon = defineShape({
+  name: 'polygon',
   paramsSchema: z.strictObject({
     sides: z
       .number()

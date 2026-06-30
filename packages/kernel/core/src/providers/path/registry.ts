@@ -1,7 +1,16 @@
 import type { PathGeneratorDefinition } from '../../contract/path';
 
-export const BUILTIN_PATH_GENERATORS: Record<string, PathGeneratorDefinition> = {};
+import { resolveProviderRegistry } from '../registry';
+
+export const BUILTIN_PATH_GENERATORS: ReadonlyArray<PathGeneratorDefinition> = [];
 
 export const resolvePathGeneratorRegistry = (
-  pathGenerators?: Record<string, PathGeneratorDefinition>,
-): Record<string, PathGeneratorDefinition> => pathGenerators ?? BUILTIN_PATH_GENERATORS;
+  pathGenerators?: ReadonlyArray<PathGeneratorDefinition>,
+): ReadonlyMap<string, PathGeneratorDefinition> =>
+  resolveProviderRegistry({
+    capability: 'path generator',
+    builtins: BUILTIN_PATH_GENERATORS,
+    custom: pathGenerators,
+    keyOf: definition => definition.name,
+    optionName: 'pathGenerators',
+  });

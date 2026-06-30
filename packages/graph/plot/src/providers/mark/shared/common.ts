@@ -1,13 +1,6 @@
-import {
-  type IRChild,
-  type IRGeometryLabel,
-  type IRNode,
-  type IRNodeDefault,
-  type IRNodeLabel,
-  type IRPaintSpec,
-  type IRPath,
-  type IRScope,
-} from '@retikz/core';
+import type { IRChild, IRGeometryLabel, IRNode, IRNodeDefault, IRNodeLabel, IRPaintSpec, IRPath, IRScope } from '@retikz/core';
+
+import { normalizeAtDirection, normalizeGeometryLabelSide, normalizeWebSide } from '@retikz/core';
 
 import type {
   ChannelValue,
@@ -92,7 +85,7 @@ export const constantNodeStyleOverrides = (mark: Mark): Partial<IRNodeDefault> =
 
 /**
  * datum node 装饰器：provenance 开时给 node 挂 per-datum meta（datumProvenance）+ datum id（datumIdField）。
- * @description 关 provenance / 无 markProvenance → 原样返回（保默认逐字节等价）。
+ * @description 关 provenance / 无 markProvenance → 原样返回，不写 id/meta。
  */
 export const decorateDatum = (
   node: IRNode,
@@ -168,6 +161,36 @@ const normalizeResolvedLabels = <T>(labels: Array<T>): T | Array<T> | undefined 
   return labels.length === 1 ? labels[0] : labels;
 };
 
+const normalizeNodeLabelPosition = (position: IRNodeLabel['position']): IRNodeLabel['position'] => {
+  if (position === undefined) return undefined;
+  if (typeof position !== 'string') {
+    if (typeof position === 'object') {
+      return { ...position, boundary: normalizeWebSide(position.boundary) ?? position.boundary };
+    }
+    return position;
+  }
+  if (position === 'center') return position;
+  return normalizeAtDirection(position) ?? position;
+};
+
+const normalizeNodeLabel = (label: IRNodeLabel): IRNodeLabel => {
+  const position = normalizeNodeLabelPosition(label.position);
+  if (position === label.position) return label;
+  const next: IRNodeLabel = { ...label };
+  if (position === undefined) {
+    delete next.position;
+  } else {
+    next.position = position;
+  }
+  return next;
+};
+
+const normalizeGeometryLabel = (label: IRGeometryLabel): IRGeometryLabel => {
+  if (label.side === undefined) return label;
+  const side = normalizeGeometryLabelSide(label.side) ?? label.side;
+  return side === label.side ? label : { ...label, side };
+};
+
 export const resolveNodeMarkLabels = (
   labels: MarkNodeLabel | ReadonlyArray<MarkNodeLabel> | undefined,
   row: ExternalRow,
@@ -176,12 +199,7 @@ export const resolveNodeMarkLabels = (
   const resolved = normalizeNodeLabels(labels).flatMap((label, index): Array<IRNodeLabel> => {
     const text = textForLabel(label, row, labelOf, index);
     if (text === undefined) return [];
-    return [
-      {
-        ...omitContent(label),
-        text,
-      },
-    ];
+    return [normalizeNodeLabel({ ...omitContent(label), text })];
   });
   return normalizeResolvedLabels(resolved);
 };
@@ -194,12 +212,7 @@ export const resolveGeometryMarkLabels = (
   const resolved = normalizeGeometryLabels(labels).flatMap((label, index): Array<IRGeometryLabel> => {
     const text = textForLabel(label, row, labelOf, index);
     if (text === undefined) return [];
-    return [
-      {
-        ...omitContent(label),
-        text,
-      },
-    ];
+    return [normalizeGeometryLabel({ ...omitContent(label), text })];
   });
   return normalizeResolvedLabels(resolved);
 };

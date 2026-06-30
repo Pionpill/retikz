@@ -35,13 +35,13 @@ const linePathIR = (label: NonNullable<Parameters<typeof JSON.stringify>[0]>): I
 });
 
 describe('step.label：line 段的 label 几何', () => {
-  it('默认 (position=midway, side=above)：TextPrim 落在中点上方，align=middle baseline=bottom', () => {
+  it('默认 (position=midway, side=top)：TextPrim 落在中点上方，align=middle baseline=bottom', () => {
     const scene = compileToScene(linePathIR({ text: 'accept' }));
     const labels = findTextPrims(scene.primitives);
     expect(labels).toHaveLength(1);
     const t = labels[0];
     expect(t.x).toBe(5);
-    // above 默认 4px 偏移（compile/path 内部常量）；文本块底边落在原始中点上方
+    // top 默认 4px 偏移（compile/path 内部常量）；文本块底边落在原始中点上方
     expect(visualBottom(t)).toBeLessThanOrEqual(0);
     expect(t.align).toBe('middle');
     expect(t.baseline).toBe('alphabetic');
@@ -60,12 +60,12 @@ describe('step.label：line 段的 label 几何', () => {
     expect(labels[0].x).toBe(7.5);
   });
 
-  it('side=below → align=middle baseline=top，y 在中点下方', () => {
-    const scene = compileToScene(linePathIR({ text: 'x', side: 'below' }));
+  it('side=bottom → align=middle baseline=top，y 在中点下方', () => {
+    const scene = compileToScene(linePathIR({ text: 'x', side: 'bottom' }));
     const t = findTextPrims(scene.primitives)[0];
     expect(t.align).toBe('middle');
     expect(t.baseline).toBe('alphabetic');
-    // below：文本块顶边落在原始中点下方
+    // bottom：文本块顶边落在原始中点下方
     expect(visualTop(t)).toBeGreaterThan(0);
   });
 
@@ -100,7 +100,7 @@ describe('step.label：line 段的 label 几何', () => {
   });
 
   it('sloped=true → 外裹 group 旋转，同时保留 side 定位', () => {
-    const scene = compileToScene(linePathIR({ text: 'x', side: 'below', sloped: true }));
+    const scene = compileToScene(linePathIR({ text: 'x', side: 'bottom', sloped: true }));
     const grp = findGroupPrim(scene.primitives);
     expect(grp).toBeDefined();
     expect(grp!.transforms).toEqual([{ kind: 'rotate', degrees: 0, cx: 5, cy: 0 }]);
@@ -109,7 +109,7 @@ describe('step.label：line 段的 label 几何', () => {
     expect(visualTop(inner!)).toBeGreaterThan(0);
   });
 
-  it('sloped=true 未显式 side 时不使用默认 above 偏移', () => {
+  it('sloped=true 未显式 side 时不使用默认 top 偏移', () => {
     const scene = compileToScene(linePathIR({ text: 'x', sloped: true }));
     const grp = findGroupPrim(scene.primitives);
     expect(grp).toBeDefined();
@@ -119,8 +119,8 @@ describe('step.label：line 段的 label 几何', () => {
     expect(visualMiddle(inner!)).toBeCloseTo(0, 2);
   });
 
-  it('side distance 覆盖默认 above 偏移距离', () => {
-    const scene = compileToScene(linePathIR({ text: 'x', side: 'above', distance: 10 }));
+  it('side distance 覆盖默认 top 偏移距离', () => {
+    const scene = compileToScene(linePathIR({ text: 'x', side: 'top', distance: 10 }));
     const t = findTextPrims(scene.primitives)[0];
     expect(visualBottom(t)).toBeCloseTo(-10, 2);
   });
@@ -170,7 +170,7 @@ describe('step.label：覆盖各 step kind', () => {
     };
     const scene = compileToScene(ir);
     const t = findTextPrims(scene.primitives)[0];
-    // 二次贝塞尔 t=0.5 顶点：(5, -5)；above 再向上偏 4
+    // 二次贝塞尔 t=0.5 顶点：(5, -5)；top 再向上偏 4
     expect(t.x).toBe(5);
     expect(t.y).toBeLessThan(-5);
     expect(t.lines[0].text).toBe('q');
@@ -226,7 +226,7 @@ describe('step.label：覆盖各 step kind', () => {
     };
     const scene = compileToScene(ir);
     const t = findTextPrims(scene.primitives)[0];
-    // via='-|' corner=(10, 0)；above 向 -y 偏 4
+    // via='-|' corner=(10, 0)；top 向 -y 偏 4
     expect(t.x).toBe(10);
     expect(t.y).toBeLessThan(0);
   });
@@ -256,7 +256,7 @@ describe('step.label：覆盖各 step kind', () => {
     const t = findTextPrims(scene.primitives)[0];
     // 圆心 = move 终点 (0, 0)；t=0.5 → angle=45°
     expect(t.x).toBeCloseTo(Math.cos(Math.PI / 4) * 10, 1);
-    expect(t.y).toBeLessThan(Math.sin(Math.PI / 4) * 10); // above 偏移
+    expect(t.y).toBeLessThan(Math.sin(Math.PI / 4) * 10); // top 偏移
   });
 
   it('circlePath 段 label 默认在 t=0.5 (west)', () => {
@@ -327,7 +327,7 @@ describe('step.label：覆盖各 step kind', () => {
 });
 
 describe('step.label：layout 把标签纳入 bbox', () => {
-  it('side=above 时 label 锚点在路径外，layout 至少要包住其外接四角', () => {
+  it('side=top 时 label 锚点在路径外，layout 至少要包住其外接四角', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -371,7 +371,7 @@ describe('step.label：layout 把标签纳入 bbox', () => {
       expect(scene.layout.x).toBeLessThanOrEqual(-154);
     });
 
-    it("side='above'（baseline=bottom）：文本完全在锚点上方，layout 上界覆盖整高（非半高）", () => {
+    it("side='top'（baseline=bottom）：文本完全在锚点上方，layout 上界覆盖整高（非半高）", () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
@@ -541,7 +541,7 @@ describe('label on fold (step kind="fold")：N=2 段等 t 拼接、拐角恒在 
     const scene = compileToScene(foldIR(0.5));
     const t = findTextPrims(scene.primitives)[0];
     expect(t.x).toBe(40);
-    // above 偏移：y < 0
+    // top 偏移：y < 0
     expect(t.y).toBeLessThan(0);
   });
   it('label_fold_t_0_25_segment_1_mid：position=0.25 落在段 1 中点 (20, 0)', () => {
@@ -553,7 +553,7 @@ describe('label on fold (step kind="fold")：N=2 段等 t 拼接、拐角恒在 
     const scene = compileToScene(foldIR(0.75));
     const t = findTextPrims(scene.primitives)[0];
     expect(t.x).toBe(40);
-    // 段 2 中点 y=15，above 上移 4 → 文本块底边 ≈ 11
+    // 段 2 中点 y=15，top 上移 4 → 文本块底边 ≈ 11
     expect(visualBottom(t)).toBeCloseTo(15 - 4, 2);
   });
   it('label_fold_t_0_at_start：position=0 落在 (0, 0)', () => {
@@ -591,7 +591,7 @@ describe('label on fold (step kind="fold")：N=2 段等 t 拼接、拐角恒在 
     };
     const scene = compileToScene(ir);
     const t = findTextPrims(scene.primitives)[0];
-    // 拐角 (100, 0)，above 上移
+    // 拐角 (100, 0)，top 上移
     expect(t.x).toBe(100);
     expect(t.y).toBeLessThan(0);
   });
@@ -623,7 +623,7 @@ describe('label on curve (quadratic Bezier)：Bezier 参数 t（非弧长）', (
     const scene = compileToScene(curveIR(0.5));
     const t = findTextPrims(scene.primitives)[0];
     // 二次贝塞尔 t=0.5：(1-t)²·P0 + 2(1-t)t·P1 + t²·P2 = 0.25·0 + 0.5·50 + 0.25·100 = 50
-    // y = 0.25·0 + 0.5·(-100) + 0.25·0 = -50；above 再上移 → y < -50
+    // y = 0.25·0 + 0.5·(-100) + 0.25·0 = -50；top 再上移 → y < -50
     expect(t.x).toBe(50);
     expect(t.y).toBeLessThan(-50);
   });
@@ -726,9 +726,9 @@ describe('label on bend：lower 成 cubic 后 Bezier t', () => {
     };
     const scene = compileToScene(ir);
     const t = findTextPrims(scene.primitives)[0];
-    // bend 对称：t=0.5 x = 50；y 在 above 偏移后是负值
+    // bend 对称：t=0.5 x = 50；y 在 top 偏移后是负值
     expect(t.x).toBe(50);
-    // bend left：control 把曲线推到 y<0 侧；above 偏移再 -4
+    // bend left：control 把曲线推到 y<0 侧；top 偏移再 -4
     expect(t.y).toBeLessThan(0);
   });
 });
@@ -759,7 +759,7 @@ describe('label on arc：角度参数化 startAngle..endAngle', () => {
     const t = findTextPrims(scene.primitives)[0];
     // center=(0,0)，t=0.5 → 45° → (cos45·100, sin45·100) = (70.71, 70.71)
     expect(t.x).toBeCloseTo(Math.cos(Math.PI / 4) * 100, 1);
-    // 切线 above 偏移后 y < sin45·100
+    // 切线 top 偏移后 y < sin45·100
     expect(t.y).toBeLessThan(Math.sin(Math.PI / 4) * 100);
   });
   it('label_arc_t_0_25_at_quarter_angle：position=0.25 → start + (end-start)·0.25', () => {
@@ -840,14 +840,14 @@ describe('label on circlePath：整圆 t∈[0,1]，t=0 = angle 0 (+x), CCW', () 
     const scene = compileToScene(circleIR(0));
     const t = findTextPrims(scene.primitives)[0];
     expect(t.x).toBe(100);
-    expect(visualBottom(t)).toBeCloseTo(0 - 4, 2); // above 偏移
+    expect(visualBottom(t)).toBeCloseTo(0 - 4, 2); // top 偏移
   });
   it('label_circlePath_t_0_25_at_90deg：position=0.25 → 90° (0, +100)（SVG y 朝下视觉朝下）', () => {
     const scene = compileToScene(circleIR(0.25));
     const t = findTextPrims(scene.primitives)[0];
     expect(t.x).toBeCloseTo(0, 1);
     // 90° in math convention with SVG y-down → y = sin(90)·100 = 100
-    expect(visualBottom(t)).toBeGreaterThan(95); // above 偏移 -4，块底 ≈ 96
+    expect(visualBottom(t)).toBeGreaterThan(95); // top 偏移 -4，块底 ≈ 96
   });
   it('label_circlePath_t_0_5_at_180deg：position=0.5 → 180° (-100, 0)', () => {
     const scene = compileToScene(circleIR(0.5));
@@ -858,7 +858,7 @@ describe('label on circlePath：整圆 t∈[0,1]，t=0 = angle 0 (+x), CCW', () 
     const scene = compileToScene(circleIR(0.75));
     const t = findTextPrims(scene.primitives)[0];
     expect(t.x).toBeCloseTo(0, 1);
-    // 270° → y = sin(270)·100 = -100；above 偏移 → y < -100
+    // 270° → y = sin(270)·100 = -100；top 偏移 → y < -100
     expect(t.y).toBeLessThan(-100);
   });
   it('label_circlePath_keyword_midway_equals_t_0_5：keyword 与数值 0.5 同位置', () => {
@@ -922,12 +922,12 @@ describe('label on ellipsePath：同 circlePath 角度参数化（非弧长）',
 
 describe('label.position schema 边界：异常值由 zod 拒绝（不在 compile 阶段 clamp）', () => {
   // 用 IR 通过 PathSchema / StepLabelSchema 解析；构造直接喂 path schema 验证
-  it('label_position_below_0_rejected：position=-0.1 → schema 校验失败', async () => {
+  it('label_position_bottom_0_rejected：position=-0.1 → schema 校验失败', async () => {
     const { StepLabelSchema } = await import('../../src/schemas/path/step');
     const result = StepLabelSchema.safeParse({ text: 'x', position: -0.1 });
     expect(result.success).toBe(false);
   });
-  it('label_position_above_1_rejected：position=1.5 → schema 校验失败', async () => {
+  it('label_position_top_1_rejected：position=1.5 → schema 校验失败', async () => {
     const { StepLabelSchema } = await import('../../src/schemas/path/step');
     const result = StepLabelSchema.safeParse({ text: 'x', position: 1.5 });
     expect(result.success).toBe(false);
@@ -937,8 +937,9 @@ describe('label.position schema 边界：异常值由 zod 拒绝（不在 compil
     const result = StepLabelSchema.safeParse({ text: 'x', position: 'unknown' });
     expect(result.success).toBe(false);
   });
-  it('label_legacy_3_keywords_still_accepted：旧 IR 的 "midway"/"near-start"/"near-end" 仍合法', async () => {
+  it('label_compat_position_alias_keywords_accepted', async () => {
     const { StepLabelSchema } = await import('../../src/schemas/path/step');
+    // compat: these position aliases remain accepted StepLabelSchema input.
     for (const k of ['midway', 'near-start', 'near-end']) {
       const result = StepLabelSchema.safeParse({ text: 'x', position: k });
       expect(result.success).toBe(true);
@@ -979,7 +980,7 @@ describe('label.position adversarial：构造让实现挂的输入', () => {
     const result = StepLabelSchema.safeParse({ text: 'x', position: -0 });
     expect(result.success).toBe(true);
   });
-  it('adv_just_above_1_rejected：position=1.0000000001 → 拒绝', async () => {
+  it('adv_just_top_1_rejected：position=1.0000000001 → 拒绝', async () => {
     const { StepLabelSchema } = await import('../../src/schemas/path/step');
     const result = StepLabelSchema.safeParse({ text: 'x', position: 1.0000000001 });
     expect(result.success).toBe(false);
@@ -1095,10 +1096,10 @@ describe('label.position adversarial：构造让实现挂的输入', () => {
     const t = findTextPrims(scene.primitives)[0];
     // via='|-' corner=(0, 30)
     expect(t.x).toBe(0);
-    // above 偏移 corner y=30 → 块底 ≈ 26
+    // top 偏移 corner y=30 → 块底 ≈ 26
     expect(visualBottom(t)).toBeCloseTo(30 - 4, 2);
   });
-  it('adv_fold_t_just_above_half：t=0.500001 落第二段起点（边界刚过）', () => {
+  it('adv_fold_t_just_top_half：t=0.500001 落第二段起点（边界刚过）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -1208,7 +1209,7 @@ describe('label.position adversarial：构造让实现挂的输入', () => {
       ],
     });
     const t = findTextPrims(scene.primitives)[0];
-    // angle 90° → (500·cos90, 5·sin90) = (0, 5)；y above 上移
+    // angle 90° → (500·cos90, 5·sin90) = (0, 5)；y top 上移
     expect(t.x).toBeCloseTo(0, 1);
     expect(t.y).toBeLessThan(5);
   });

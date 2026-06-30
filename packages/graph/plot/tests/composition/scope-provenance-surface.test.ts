@@ -144,7 +144,8 @@ describe('scope provenance surface lowering', () => {
 
   it('track_guide_meta_carries_scaffold_and_track_context', () => {
     const outer = expandOf(PlotSpecSchema.parse(trackSpec));
-    expect(gridLayersOf(outer)[0]?.meta).toMatchObject({ coordinateScope: 'rain', scaffold: 'lanes', track: 'rain' });
+    const rainGridLayer = gridLayersOf(outer).find(layer => layer.meta?.coordinateScope === 'rain');
+    expect(rainGridLayer?.meta).toMatchObject({ coordinateScope: 'rain', scaffold: 'lanes', track: 'rain' });
   });
 });
 

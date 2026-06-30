@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+﻿import type { FC } from 'react';
 
 import { Draw, Layout, Scope } from '@retikz/react';
 
@@ -13,7 +13,7 @@ const CircuitDemo: FC = () => (
     width={600}
     height={300}
     viewBox={{ x: 0, y: 0, width: 1280, height: 760 }}
-    shapes={{ ...circuitShapes, 'circuit-meter': circuitMeter }}
+    shapes={[...circuitShapes, circuitMeter]}
   >
     <Scope
       pathDefault={{ stroke: INK, strokeWidth: 3, lineCap: 'round', lineJoin: 'round' }}
@@ -29,16 +29,16 @@ const CircuitDemo: FC = () => (
       <Scope>
         <Resistor id="cell1-resistor" position={[900, 200]} />
         <Meter id="cell1-voltmeter" position={[900, 320]} text="V" />
-        <Draw way={[at('cell1-resistor', 'west'), [809, 320], at('cell1-voltmeter', 'west')]} />
-        <Draw way={[at('cell1-resistor', 'east'), [991, 320], at('cell1-voltmeter', 'east')]} />
+        <Draw way={[at('cell1-resistor', 'left'), [809, 320], at('cell1-voltmeter', 'left')]} />
+        <Draw way={[at('cell1-resistor', 'right'), [991, 320], at('cell1-voltmeter', 'right')]} />
       </Scope>
 
       {/* 第二组不重写，靠 Scope 平移复制（左移 60、下移 240），只换 id 前缀 */}
       <Scope transforms={[{ kind: 'translate', x: -60, y: 240 }]}>
         <Resistor id="cell2-resistor" position={[900, 200]} />
         <Meter id="cell2-voltmeter" position={[900, 320]} text="V" />
-        <Draw way={[at('cell2-resistor', 'west'), [809, 320], at('cell2-voltmeter', 'west')]} />
-        <Draw way={[at('cell2-resistor', 'east'), [991, 320], at('cell2-voltmeter', 'east')]} />
+        <Draw way={[at('cell2-resistor', 'left'), [809, 320], at('cell2-voltmeter', 'left')]} />
+        <Draw way={[at('cell2-resistor', 'right'), [991, 320], at('cell2-voltmeter', 'right')]} />
       </Scope>
     </Scope>
   </Layout>

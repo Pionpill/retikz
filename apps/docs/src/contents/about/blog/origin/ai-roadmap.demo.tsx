@@ -64,15 +64,15 @@ const Demo: FC = () => (
     <RoadmapNode id="papers" position={[105, 68]} variant="required" width={210} height={30}>
       Papers With Code
     </RoadmapNode>
-    <RoadmapNode id="git" position={{ direction: 'below', of: 'papers' }} variant="required" width={210} height={30}>
+    <RoadmapNode id="git" position={{ direction: 'bottom', of: 'papers' }} variant="required" width={210} height={30}>
       GIT - Version Control
     </RoadmapNode>
-    <RoadmapNode id="semver" position={{ direction: 'below', of: 'git' }} variant="required" width={210} height={30}>
+    <RoadmapNode id="semver" position={{ direction: 'bottom', of: 'git' }} variant="required" width={210} height={30}>
       Semantic Versioning
     </RoadmapNode>
     <RoadmapNode
       id="changelog"
-      position={{ direction: 'below', of: 'semver' }}
+      position={{ direction: 'bottom', of: 'semver' }}
       variant="required"
       width={210}
       height={30}
@@ -88,7 +88,7 @@ const Demo: FC = () => (
     </RoadmapNode>
     <RoadmapNode
       id="legend-gray"
-      position={{ direction: 'below', of: 'legend-blue' }}
+      position={{ direction: 'bottom', of: 'legend-blue' }}
       variant="optional"
       width={210}
       height={30}
@@ -101,7 +101,7 @@ const Demo: FC = () => (
     </RoadmapNode>
     <RoadmapNode
       id="machine-learning"
-      position={{ direction: 'below', of: 'data-scientist', distance: 61 }}
+      position={{ direction: 'bottom', of: 'data-scientist', distance: 61 }}
       variant="optional"
       width={111}
       height={30}
@@ -110,7 +110,7 @@ const Demo: FC = () => (
     </RoadmapNode>
     <RoadmapNode
       id="deep-learning"
-      position={{ direction: 'below', of: 'machine-learning', distance: 60 }}
+      position={{ direction: 'bottom', of: 'machine-learning', distance: 60 }}
       variant="optional"
       width={111}
       height={30}
@@ -122,7 +122,7 @@ const Demo: FC = () => (
     </RoadmapNode>
     <RoadmapNode
       id="big-data-engineer"
-      position={{ direction: 'below', of: 'data-engineer', distance: 61 }}
+      position={{ direction: 'bottom', of: 'data-engineer', distance: 61 }}
       variant="optional"
       width={111}
       height={30}

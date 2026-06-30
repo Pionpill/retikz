@@ -40,7 +40,10 @@ export type ArcSegment = {
   startAngle: number;
   /** 终止角度（度） */
   endAngle: number;
-  /** 是否逆时针扫描；缺省 / false = CW（角度递增 / 屏幕顺时针） */
+  /**
+   * 是否逆时针扫描；缺省 / false = CW（角度递增 / 屏幕顺时针）
+   * @default false
+   */
   counterClockwise?: boolean;
 };
 
@@ -57,6 +60,10 @@ export type ContourCommand =
       radius: number;
       startAngle: number;
       endAngle: number;
+      /**
+       * 是否逆时针扫描；缺省 / false = CW。
+       * @default false
+       */
       counterClockwise?: boolean;
     }
   | { kind: 'close' };

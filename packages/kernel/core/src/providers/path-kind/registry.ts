@@ -1,21 +1,30 @@
+import { z } from 'zod';
+
 import type { PathKindDefinition } from '../../contract/path';
 
 import { definePathKind } from '../../contract/path';
+import { resolveProviderRegistry } from '../registry';
 
-export const BUILTIN_PATH_KINDS: Record<string, PathKindDefinition> = {
-  stroke: definePathKind({
-    kind: 'stroke',
+export const keyOfPathKind = (definition: PathKindDefinition): string => definition.schema.shape.kind.value;
+
+export const BUILTIN_PATH_KINDS: ReadonlyArray<PathKindDefinition> = [
+  definePathKind({
+    schema: z.object({ kind: z.literal('stroke') }),
     compile: context => context.emitStroke(context.path),
   }),
-  ribbon: definePathKind({
-    kind: 'ribbon',
+  definePathKind({
+    schema: z.object({ kind: z.literal('ribbon') }),
     compile: context => context.emitRibbon(context.path),
   }),
-};
+];
 
 export const resolvePathKindRegistry = (
-  pathKinds?: Record<string, PathKindDefinition>,
-): Record<string, PathKindDefinition> => ({
-  ...BUILTIN_PATH_KINDS,
-  ...(pathKinds ?? {}),
-});
+  pathKinds?: ReadonlyArray<PathKindDefinition>,
+): ReadonlyMap<string, PathKindDefinition> =>
+  resolveProviderRegistry({
+    capability: 'path kind',
+    builtins: BUILTIN_PATH_KINDS,
+    custom: pathKinds,
+    keyOf: keyOfPathKind,
+    optionName: 'pathKinds',
+  });

@@ -76,10 +76,10 @@ const CoordinateScopeRootPlacementSchema = z
 const CoordinateScopePanelPlacementSchema = z
   .object({
     kind: z.literal('panel').describe('Placement kind: this scope occupies a named panel slot'),
-    slot: z.string().min(1).optional().describe('Panel slot key; detailed facet placement is defined by later ADRs'),
+    slot: z.string().min(1).optional().describe('Panel slot key this scope occupies'),
   })
   .strict()
-  .describe('Panel coordinate scope placement placeholder');
+  .describe('Panel coordinate scope placement');
 
 const CoordinateScopeOverlayPlacementSchema = z
   .object({
@@ -100,7 +100,7 @@ const CoordinateScopeTrackPlacementSchema = z
     track: z.string().min(1).describe('Track id within the shared scaffold'),
   })
   .strict()
-  .describe('Track coordinate scope placement placeholder');
+  .describe('Track coordinate scope placement');
 
 export const CoordinateScopePlacementSchema = z
   .discriminatedUnion('kind', [
@@ -109,7 +109,7 @@ export const CoordinateScopePlacementSchema = z
     CoordinateScopeOverlayPlacementSchema,
     CoordinateScopeTrackPlacementSchema,
   ])
-  .describe('Minimal coordinate scope placement classification; later ADRs extend each kind payload');
+  .describe('Coordinate scope placement kind and payload');
 
 export const CoordinateScopeSchema = z
   .object({
@@ -419,9 +419,7 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
     .string()
     .min(1)
     .optional()
-    .describe(
-      'Optional handle for the whole plot; reserved as the scope reference id / anchor target used by composition and interaction (resolution deferred to alpha.5). Zero-cost reservation: alpha.1 only validates the field, attaches no semantics.',
-    ),
+    .describe('Optional plot handle used as the outer scope id and anchor target'),
   data: DataRefSchema.describe(
     'Data binding: a named reference to an externally-supplied dataset plus an optional data model. The dataset values never enter the IR; they are injected at compile time via lowerPlots(datasets).',
   ),
@@ -475,9 +473,7 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
     .describe(
       'Guide layers (axes, each with optional grid lines), derived from scales + coordinate; omit for no guides. Grid lines draw behind marks; axis lines / ticks / labels around the plot area.',
     ),
-  meta: JsonObjectSchema.optional().describe(
-    'Free-form JSON-serializable source metadata passthrough; reserved so lowering can preserve provenance into core IR meta',
-  ),
+  meta: JsonObjectSchema.optional().describe('Free-form JSON-serializable source metadata copied into core IR meta'),
 })
   .superRefine((spec, ctx) => {
     if (spec.coordinate === undefined && spec.composition === undefined) {

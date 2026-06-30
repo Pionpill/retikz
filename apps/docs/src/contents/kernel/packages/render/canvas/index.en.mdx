@@ -1,4 +1,4 @@
-﻿---
+---
 title: Canvas
 description: Paints the same Scene as a raster bitmap — immediate-mode drawing + coordinate hit-testing; beats SVG when primitives are many or repaints are frequent.
 ---
@@ -46,7 +46,7 @@ The same `handlers` table behaves identically under SVG and Canvas — see [Hydr
 
 <ComponentAlert
   title="Low-level drawing / hit-testing (for custom integrations)"
-  description="@retikz/render/canvas exposes renderToCanvas(canvas, scene) (paints straight into an HTMLCanvasElement), drawScene (paints into a 2D context), and hitTest(scene, point) (coordinate → primitive id). Reach for this when managing the canvas, offscreen rendering, or hit-testing yourself; ordinary usage only needs mountCanvas above."
+  description="@retikz/render/canvas exposes renderToCanvas(canvas, scene) (paints straight into an HTMLCanvasElement), drawScene (paints into a 2D context), and hitTest(scene, point) (coordinate → primitive id). Reach for this when managing the canvas, offscreen rendering, or hit-testing yourself; ordinary usage only needs mountCanvas top."
 />
 
 ## Node image export

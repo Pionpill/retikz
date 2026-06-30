@@ -9,6 +9,7 @@ import { Draw, Layout } from '@retikz/react';
  * 同一个 bracket 定义用在不同描边色的 path 上，括号自动跟随各自的 stroke（主题反应不冻结）。
  */
 const bracket = defineArrow({
+  name: 'bracket',
   hollow: true,
   lineContactX: 2,
   tipX: 8,
@@ -30,7 +31,7 @@ const bracket = defineArrow({
 });
 
 const Demo: FC = () => (
-  <Layout width={320} height={90} arrows={{ bracket }}>
+  <Layout width={320} height={90} arrows={[bracket]}>
     <Draw
       way={[
         [0, 0],

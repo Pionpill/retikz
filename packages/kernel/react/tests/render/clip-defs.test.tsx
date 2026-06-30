@@ -87,6 +87,48 @@ describe('ClipDefs — 裁剪区物化为 clipPath', () => {
     expect(points).toContain('20');
   });
 
+  it('path clip -> <clipPath> contains <path d clipRule>', () => {
+    const [cp] = clipPathsOf([
+      clipResource('clip-1', {
+        kind: 'path',
+        fillRule: 'evenodd',
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [40, 0] },
+          { kind: 'line', to: [40, 40] },
+          { kind: 'close' },
+        ],
+      }),
+    ]);
+    const [shape] = shapeChildrenOf(cp);
+    expect(shape.type).toBe('path');
+    expect(shape.props.d).toBe('M 0 0 L 40 0 L 40 40 Z');
+    expect(shape.props.clipRule).toBe('evenodd');
+  });
+
+  it('compound clip -> <clipPath> contains multiple child shapes', () => {
+    const [cp] = clipPathsOf([
+      clipResource('clip-1', {
+        kind: 'compound',
+        children: [
+          { kind: 'rect', x: 0, y: 0, width: 40, height: 30 },
+          {
+            kind: 'path',
+            commands: [
+              { kind: 'move', to: [5, 5] },
+              { kind: 'line', to: [20, 5] },
+              { kind: 'close' },
+            ],
+          },
+        ],
+      }),
+    ]);
+    const [group] = shapeChildrenOf(cp);
+    expect(group.type).toBe('g');
+    const children = shapeChildrenOf(group);
+    expect(children.map(child => child.type)).toEqual(['rect', 'path']);
+  });
+
   it('多 clip 资源 → 多个 clipPath，各自 id', () => {
     const cps = clipPathsOf([
       clipResource('clip-1', { kind: 'rect', x: 0, y: 0, width: 10, height: 10 }),

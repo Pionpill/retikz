@@ -16,13 +16,11 @@ export const PolarPositionSchema: z.ZodType<PolarPosition> = z.lazy(() =>
         ),
       angle: z
         .number()
-
         .describe(
           'Angle in degrees measured from the positive x axis. Positive angles follow the screen y-down convention.',
         ),
       radius: z
         .number()
-
         .describe('Radius or distance in user units.'),
     })
     .describe('Polar coordinate position; resolved to Cartesian at Scene compile time'),

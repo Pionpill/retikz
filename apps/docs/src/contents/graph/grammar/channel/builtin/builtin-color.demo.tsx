@@ -47,7 +47,7 @@ const Demo: FC = () => (
     height={260}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <PointMark x="x" y="y" color="colorKey" size={13} label="colorKey" labelPosition="above" />
+    <PointMark x="x" y="y" color="colorKey" size={13} label="colorKey" labelPosition="top" />
     <PointMark
       x="xFill"
       y="y"
@@ -56,7 +56,7 @@ const Demo: FC = () => (
       strokeWidth={3}
       size={13}
       label="strokeKey"
-      labelPosition="above"
+      labelPosition="top"
     />
     <PointMark
       x="xText"
@@ -65,7 +65,7 @@ const Demo: FC = () => (
       textColor="textKey"
       font={{ size: 16, weight: 'bold' }}
       label="textKey"
-      labelPosition="above"
+      labelPosition="top"
     />
     <Axis dimension="x" />
     <Axis dimension="y" grid />

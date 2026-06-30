@@ -24,10 +24,12 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 | `precision`         | `number`                                  | `2`                                         | 输出 Scene primitive / path d / layout 的小数位；内部几何计算保持双精度                                                                  |
 | `nodeDistance`      | `number`                                  | `1`                                         | `AtPosition` 未写 `distance` 时使用的默认距离                                                                                            |
 | `onWarn`            | `(warning) => void`                       | dev: `console.warn`<br />production: silent | 收集可恢复的编译期 warning                                                                                                               |
-| `shapes`            | `Record<string, ShapeDefinition>`         | `—`                                         | 运行时注入自定义 node shape；同名覆盖内置发 `SHAPE_OVERRIDES_BUILTIN`。见 [自定义形状](/kernel/components/extend/shape-registry)         |
-| `arrows`            | `Record<string, ArrowDefinition>`         | `—`                                         | 运行时注入自定义箭头；同名覆盖内置发 `ARROW_OVERRIDES_BUILTIN`。见 [自定义箭头](/kernel/components/extend/custom-arrow)                  |
-| `patterns`          | `Record<string, PatternDefinition>`       | `—`                                         | 运行时注入自定义填充图案 motif；同名覆盖内置发 `PATTERN_OVERRIDES_BUILTIN`。见 [自定义图案](/kernel/components/extend/custom-pattern)    |
-| `pathGenerators`    | `Record<string, PathGeneratorDefinition>` | `—`                                         | 运行时注入自定义曲线生成器；generator step 按 `name` 查表，未注册编译期 throw。见 [路径生成器](/kernel/components/extend/path-generator) |
+| `shapes`            | `ReadonlyArray<ShapeDefinition>`         | `—`                                         | 运行时注入自定义节点形状；每个 definition 通过 `name` 查表，内置名碰撞注册期报错。见 [自定义形状](/kernel/components/extend/shape-registry) |
+| `boundaries`        | `ReadonlyArray<BoundaryDefinition>`      | `—`                                         | 运行时注入自定义连接面；`boundary` 先查本 registry，再 fallback 到 shape registry。见 [自定义连接面](/kernel/components/extend/boundary-registry) |
+| `clips`             | `ReadonlyArray<ClipDefinition>`          | `—`                                         | 运行时注入自定义裁剪区；`clip.kind` 查本 registry，内置 kind 碰撞注册期报错。见 [自定义裁剪区](/kernel/components/extend/clip-registry) |
+| `arrows`            | `ReadonlyArray<ArrowDefinition>`         | `—`                                         | 运行时注入自定义箭头；每个 definition 通过 `name` 查表，内置名碰撞注册期报错。见 [自定义箭头](/kernel/components/extend/custom-arrow) |
+| `patterns`          | `ReadonlyArray<PatternDefinition>`       | `—`                                         | 运行时注入自定义填充图案；每个 definition 通过 `name` 查表，内置名碰撞注册期报错。见 [自定义图案](/kernel/components/extend/custom-pattern) |
+| `pathGenerators`    | `ReadonlyArray<PathGeneratorDefinition>` | `—`                                         | 运行时注入自定义曲线生成器；generator step 按 `name` 查表，未注册编译期 throw。见 [路径生成器](/kernel/components/extend/path-generator) |
 | `composites`        | `Array<CompositeDefinition>`              | `—`                                         | 运行时注入 Tier 2 composite 展开逻辑；编译第一步把 composite 节点展开成 Tier 1，未注册发 `COMPOSITE_NOT_REGISTERED` 并跳过该节点         |
 | `maxCompositeDepth` | `number`                                  | `32`                                        | composite 嵌套展开的最大深度（防环 / 防失控递归），超限或成环 throw                                                                      |
 
@@ -66,9 +68,6 @@ type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
 | `POLAR_ORIGIN_UNRESOLVED`       | PolarPosition 的 `origin` 无法解析                                                          |
 | `AT_TARGET_UNRESOLVED`          | AtPosition 的 `of` 无法解析                                                                 |
 | `DUPLICATE_NODE_ID`             | 同一命名空间帧内重复 id；后定义覆盖先定义（last-wins）                                      |
-| `SHAPE_OVERRIDES_BUILTIN`       | `CompileOptions.shapes` 同名 key 覆盖了内置 shape                                           |
-| `ARROW_OVERRIDES_BUILTIN`       | `CompileOptions.arrows` 同名 key 覆盖了内置箭头                                             |
-| `PATTERN_OVERRIDES_BUILTIN`     | `CompileOptions.patterns` 同名 key 覆盖了内置图案                                           |
 | `COMPOSITE_NOT_REGISTERED`      | composite 节点的 `namespace.type` 未注册，跳过该节点                                        |
 | `ANIMATION_INVALID_PROPERTY`    | 动画 track 的 property 非法（如 scene-root 非 viewBox 属性），该 track 丢弃                 |
 | `ARC_MISSING_RADIUS`            | arc step 缺 `radius`（圆）或 `radiusX`+`radiusY`（椭圆），整条 path 跳过                    |

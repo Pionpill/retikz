@@ -103,17 +103,17 @@ node -e "const fs=require('node:fs'); for (const p of ['core/core','core/render'
 
 ### Stage 3 — 验证
 
-按改动面选择验证，宁可多跑不漏跑。
+按改动面选择验证。普通 bugfix / docs patch 默认只跑当前 / 受影响模块；RC 发布候选、跨包契约或用户明确要求时，再扩大到发布组 / 全仓。
 
-通用守门：
+普通改动守门：
 
 ```bash
-pnpm lint
-pnpm --filter @retikz/core exec tsc --noEmit
-pnpm --filter @retikz/react exec tsc --noEmit
-pnpm --filter @retikz/docs exec tsc --noEmit
-pnpm test
+pnpm --filter @retikz/<pkg> exec eslint . --fix
+pnpm --filter @retikz/<pkg> exec tsc --noEmit
+pnpm --filter @retikz/<pkg> exec vitest run
 ```
+
+发布候选门禁可以保留全量 / 发布组验证，例如 `pnpm lint`、`pnpm test`、core / plot / docs 的 `tsc --noEmit`。
 
 文档改动：
 

@@ -37,8 +37,8 @@ const Demo: FC = () => (
     </Node>
     <Draw
       way={[
-        { id: 'a3', anchor: { side: 'east', t: 0.5 } },
-        { id: 'b3', anchor: { side: 'west', t: 0.5 } },
+        { id: 'a3', anchor: { side: 'right', t: 0.5 } },
+        { id: 'b3', anchor: { side: 'left', t: 0.5 } },
       ]}
       stroke="currentColor"
       strokeWidth={2}

@@ -112,6 +112,7 @@ export type CoordinateDefinition<TCoordinateOperation extends CoordinateOperatio
  * @description 这是坐标系扩展的唯一注册单元：schema 决定 IR 中允许的 coordinate operation，
  *   roles 决定 mark 必填位置通道，resolve 把 JSON operation 解析成运行时 frame 与 guide 层。内置坐标系和
  *   自定义坐标系都应通过这个对象进入 registry，避免内置白名单与扩展补丁接口分叉。
+ * @remarks 当前 helper 只做 `CoordinateDefinition` 类型约束并原样返回定义对象；保留稳定入口是为了与其它 registry API 对齐，并为后续运行时校验、默认值归一或泛型收敛预留 contract hook。
  */
 export const defineCoordinate = <TCoordinateOperation extends CoordinateOperation>(
   def: CoordinateDefinition<TCoordinateOperation>,

@@ -1,6 +1,18 @@
 import type { CompositeDefinition } from '../../contract/composite';
 
-export const BUILTIN_COMPOSITES: Array<CompositeDefinition> = [];
+import { resolveProviderRegistry } from '../registry';
 
-export const resolveCompositeRegistry = (composites?: Array<CompositeDefinition>): Array<CompositeDefinition> =>
-  composites ?? BUILTIN_COMPOSITES;
+export const BUILTIN_COMPOSITES: ReadonlyArray<CompositeDefinition> = [];
+
+export const keyOfComposite = (definition: CompositeDefinition): string => `${definition.namespace}.${definition.type}`;
+
+export const resolveCompositeRegistry = (
+  composites?: ReadonlyArray<CompositeDefinition>,
+): ReadonlyMap<string, CompositeDefinition> =>
+  resolveProviderRegistry({
+    capability: 'composite',
+    builtins: BUILTIN_COMPOSITES,
+    custom: composites,
+    keyOf: keyOfComposite,
+    optionName: 'composites',
+  });

@@ -21,11 +21,11 @@ const Demo: FC = () => (
     <Node id="follower" position={{ direction: 'right', of: 'left-cluster', distance: 200 }}>
       right-of-cluster
     </Node>
-    <Node id="below" position={{ of: 'left-cluster', offset: [0, 120] }}>
-      below-cluster
+    <Node id="bottom" position={{ of: 'left-cluster', offset: [0, 120] }}>
+      bottom-cluster
     </Node>
     <Draw way={['left-cluster', 'follower']} arrow="->" />
-    <Draw way={['left-cluster', 'below']} arrow="->" />
+    <Draw way={['left-cluster', 'bottom']} arrow="->" />
   </Layout>
 );
 

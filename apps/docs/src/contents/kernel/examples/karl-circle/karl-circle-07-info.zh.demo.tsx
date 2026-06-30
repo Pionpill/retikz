@@ -106,7 +106,7 @@ const Demo: FC = () => {
         thickness="thick"
       />
       <Draw
-        way={[[COS30 * 100, 0], { label: { text: '$\\cos\\alpha$', side: 'below' } }, [0, 0]]}
+        way={[[COS30 * 100, 0], { label: { text: '$\\cos\\alpha$', side: 'bottom' } }, [0, 0]]}
         stroke="dodgerblue"
         thickness="thick"
       />

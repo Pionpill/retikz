@@ -69,7 +69,7 @@ const Demo: FC = () => (
     </Node>
 
     <Draw
-      way={['world', { label: { text: 'render', side: 'above', textColor: 'gray', font: { size: 12 } } }, 'page']}
+      way={['world', { label: { text: 'render', side: 'top', textColor: 'gray', font: { size: 12 } } }, 'page']}
       arrow="->"
       stroke="gray"
     />

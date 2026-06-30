@@ -20,7 +20,7 @@ const Demo: FC = () => (
     height={300}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <PointMark x="gdp" y="life" color="region" size="population" label="abbr" labelPosition="above" />
+    <PointMark x="gdp" y="life" color="region" size="population" label="abbr" labelPosition="top" />
     <Axis dimension="x" />
     <Axis dimension="y" grid />
     <Legend channel="color" position="bottom" />

@@ -4,7 +4,7 @@
  */
 import type { IRAnimationOrigin, IRAnimationTrack, ScenePrimitive } from '@retikz/core';
 
-import { AnimationProperty } from '@retikz/core';
+import { AnimationProperty, normalizeCompassAnchor } from '@retikz/core';
 
 /** transform 类通道（落 transform，需支点 origin） */
 const TRANSFORM_PROPERTIES = new Set<string>([
@@ -53,7 +53,7 @@ const anchorOnBBox = (
   const right = bbox.x + bbox.w;
   const top = bbox.y;
   const bottom = bbox.y + bbox.h;
-  switch (name) {
+  switch (normalizeCompassAnchor(name)) {
     case 'center':
       return [cx, cy];
     case 'north':

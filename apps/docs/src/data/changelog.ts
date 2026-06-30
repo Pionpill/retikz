@@ -3314,8 +3314,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'DslTarget 字符串 shorthand', en: 'DslTarget string shorthand' },
                 content: {
-                  zh: "Step `to` / `from` / `center` 类型 `DslTarget = IRTarget | string`:JSX / Draw way 可写 `'A.north'` 等字符串,react 层 eager 解析成对象 IR",
-                  en: "Step `to` / `from` / `center` are typed `DslTarget = IRTarget | string`: JSX / Draw way may use `'A.north'`-style strings, eager-parsed into object IR at the react layer",
+                  zh: "Step `to` / `from` / `center` 类型 `DslTarget = IRTarget | string`:JSX / Draw way 可写 `'A.top'` 等字符串,react 层 eager 解析成对象 IR",
+                  en: "Step `to` / `from` / `center` are typed `DslTarget = IRTarget | string`: JSX / Draw way may use `'A.top'`-style strings, eager-parsed into object IR at the react layer",
                 },
               },
             ],

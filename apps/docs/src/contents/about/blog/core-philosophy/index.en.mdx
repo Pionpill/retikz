@@ -72,7 +72,7 @@ These 12 are the result of repeated trimming — TikZ has dozens of native path 
 `compileToScene(ir, options)` is core's heaviest asset (`packages/kernel/kernel/src/compile/compile.ts`), and it's a two-pass design:
 
 - **Pass 1**: Walk every Node, resolve relative placement (e.g. `{ direction: 'right', of: 'A', distance: 2 }`), register into `nodeIndex` — a map from node id to known coordinates plus anchor table.
-- **Pass 2**: Emit primitives in JSX source order. Steps in a Path resolve their `to` here — node references like `"A.east"` / `"A.45"` look up `nodeIndex`; relative / accumulated-relative targets track cursor position.
+- **Pass 2**: Emit primitives in JSX source order. Steps in a Path resolve their `to` here — node references like `"A.right"` / `"A.45"` look up `nodeIndex`; relative / accumulated-relative targets track cursor position.
 
 Why two passes? Because nodes and paths reference each other — a node's position may depend on another node's anchor, and a path endpoint may reference some node's compass direction. Lay out all nodes first, and paths can consume the result without hitting undefined references.
 

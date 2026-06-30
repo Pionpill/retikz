@@ -19,7 +19,7 @@ const Demo: FC = () => (
         { text: '入口态', position: 'right', distance: 34, pin: true },
         {
           text: '初始',
-          position: 'above-left',
+          position: 'top-left',
           distance: 34,
           pin: { stroke: 'gray', dashPattern: [3, 2] },
         },

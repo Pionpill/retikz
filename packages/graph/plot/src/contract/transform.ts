@@ -41,6 +41,7 @@ export type TransformDefinition<TTransformOperation extends TransformOperation =
 /**
  * 定义一个 transform definition。
  * @description 保留 schema / inputFields / outputFields / apply 之间的泛型关联；内置与自定义 transform 都经同一 registry 入口分派。
+ * @remarks 当前 helper 只做 `TransformDefinition` 类型约束并原样返回定义对象；保留稳定入口是为了与其它 registry API 对齐，并为后续运行时校验、默认值归一或泛型收敛预留 contract hook。
  */
 export const defineTransform = <TTransformOperation extends TransformOperation>(
   def: TransformDefinition<TTransformOperation>,

@@ -1,0 +1,120 @@
+---
+title: Custom Boundaries
+description: Register node connection surfaces through the Boundary Registry; the visual shape stays unchanged while paths and named anchors can use a separate BoundaryDefinition.
+---
+
+`boundary` decides where a path stops when it connects to a node. The default is `shape`: the connection surface is the node's own visual shape. Use a separate `BoundaryDefinition` when a rectangular node should expose only left/right ports, an icon should connect as a circle, or several visual shapes should share one connection rule.
+
+The Boundary Registry is a compile-time extension like [Custom Shapes](/kernel/components/extend/shape-registry): the IR stores only a `boundary` name or `{ type, params }`; the real functions are injected through `CompileOptions.boundaries` / `<Layout boundaries>`.
+
+> This page is not needed for everyday connections. Reach for it when "what the node looks like" and "where lines should attach" are different concerns.
+
+## Core constraint: shape is the default boundary
+
+Omitting `boundary`, or writing `boundary="shape"`, means "use the node's own `shape`." That remains the common path.
+
+For any value other than the reserved `shape`, retikz first checks the Boundary Registry; if nothing matches, it falls back to the Shape Registry. That fallback preserves the existing behavior: a rectangular node can still use `boundary="ellipse"` to connect as an ellipse. The recommended new shape is to put connection-only logic in a `BoundaryDefinition`.
+
+| Syntax | Lookup | Use case |
+| --- | --- | --- |
+| omitted / `shape` | visual shape | Default behavior |
+| `circle` / `rectangle` / `ellipse` | built-in boundary provider | Reuse common surfaces |
+| custom name | boundary provider → shape fallback | Domain ports, semantic surfaces |
+| `{ type, params }` | same lookup, params passed to the provider | Parametric surfaces |
+
+`boundary` stays a JSON-safe IR field; `BoundaryDefinition` contains functions and never enters the IR.
+
+## BoundaryDefinition
+
+A boundary only answers "where should the line attach" and "which anchors does this surface expose." It does not affect node sizing and does not draw primitives; those still belong to the node's own `shape`.
+
+| Field | Purpose | Required / Optional |
+| --- | --- | --- |
+| `name` | Registry key referenced by IR `boundary` | Required |
+| `paramsSchema` | zod schema validating `boundary.params` at compile time | Required |
+| `boundaryPoint` | Given a ray from the node center toward `toward`, returns the point where the path should stop | Required |
+| `anchor` | Returns a named anchor coordinate; unknown names return `undefined` | Optional |
+
+`rect` is the already-laid-out visual shape rectangle, including center, size, and optional rotation; `params` is the JSON object validated by `paramsSchema`. A boundary does not re-decide node size, so there is no `circumscribe` or `emit`.
+
+### paramsSchema
+
+```ts
+paramsSchema: z.ZodType<TParams>;
+```
+
+Use `z.strictObject({})` for parameterless boundaries. For parametric boundaries, params live in the IR as `{ type, params }`; compile validates them with the provider's schema before calling the computation functions.
+
+### boundaryPoint
+
+```ts
+boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
+```
+
+Called when a path connects to a node, and when numeric anchors such as `A.30` are resolved. Geometry-style boundaries can intersect `toward` with `rect`; semantic-port boundaries can ignore the visible outline and return a fixed port by direction.
+
+### anchor
+
+```ts
+anchor?: (rect: Rect, name: string, params: TParams) => Position | undefined;
+```
+
+Called for names such as `A.input` / `A.output`. If `anchor` is omitted, or returns `undefined`, compile falls back to rectangle Web anchors; that keeps simple boundaries usable with `top` / `right` without writing anchor code. Compass names such as `north` / `east` are still accepted as input aliases, but are normalized to Web names before provider hooks run.
+
+## Injection: CompileOptions.boundaries
+
+```ts
+import { compileToScene, defineBoundary, type BoundaryDefinition } from '@retikz/core';
+import { z } from 'zod';
+
+const horizontalPorts: BoundaryDefinition = defineBoundary({
+  name: 'horizontal-ports',
+  paramsSchema: z.strictObject({}),
+  boundaryPoint: (rect, toward) => {
+    return toward[0] < rect.x
+      ? [rect.x - rect.width / 2, rect.y]
+      : [rect.x + rect.width / 2, rect.y];
+  },
+  anchor: (rect, name) => {
+    if (name === 'input') return [rect.x - rect.width / 2, rect.y];
+    if (name === 'output') return [rect.x + rect.width / 2, rect.y];
+    return undefined;
+  },
+});
+
+const scene = compileToScene(ir, { boundaries: [horizontalPorts] });
+```
+
+In React, pass the same definition to `<Layout>`:
+
+```tsx
+<Layout boundaries={[horizontalPorts]}>
+  <Node id="io" boundary="horizontal-ports" position={[0, 0]} text="IO" />
+</Layout>
+```
+
+## Examples
+
+### Change the connection surface, not the visual shape
+
+The `IO` node bottom is still an ordinary rectangle, but `boundary="horizontal-ports"` makes paths attach only to its left/right ports. The `B` node sits down and to the right, yet the line lands on the right-center port instead of the rectangle's lower-right edge.
+
+<ComponentPreview name="boundary-registry" size="sm" />
+
+## Lookup and collisions
+
+- `boundary="shape"` is reserved behavior, not a provider key; it always means the node's own visual shape.
+- For other values, lookup is **boundary provider first, shape fallback second**.
+- A custom boundary cannot reuse a built-in boundary name; duplicate names inside one custom array also fail registration.
+- When a boundary and a shape share the same name, the boundary provider wins. That lets you replace only the connection surface without changing the visual shape.
+- Unknown names throw at compile time and list both registered boundaries and registered shapes, making it clear whether `boundaries` or `shapes` was missing.
+
+## Public helpers
+
+`@retikz/core` exports `defineBoundary` / `BoundaryDefinition` / `BoundaryDefinitionInput` / `BUILTIN_BOUNDARIES`. The React and Vanilla package entries re-export them as well, so adapter users can import from their current package.
+
+## Related
+
+- [Custom Shapes](/kernel/components/extend/shape-registry): Define how nodes size, connect, and draw
+- [Layout](/kernel/components/layout/overview): See the `<Layout boundaries>` prop
+- [Compile](/kernel/reference/runtime/compile): See `CompileOptions.boundaries`

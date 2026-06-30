@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { CompileWarning } from '../../src/compile/compile';
 import type { ShapeDefinition } from '../../src/contract/shape';
 import type { ScenePrimitive } from '../../src/primitive';
 import type { IR } from '../../src/schemas';
@@ -21,6 +20,7 @@ const findByType = <T extends ScenePrimitive['type']>(
 /** 径向自定义 shape（外接圆 + 投影 boundaryPoint + 仅 center anchor + ellipse emit） */
 const radialShape = (): ShapeDefinition =>
   defineShape({
+    name: 'hexagon',
     paramsSchema: z.strictObject({}),
     circumscribe: (hw, hh) => {
       const r = Math.hypot(hw, hh);
@@ -50,6 +50,7 @@ const radialShape = (): ShapeDefinition =>
 /** 多 primitive shape：body rect + 左右各一根 pin 短线（验证 emit Iterable 的 factory 价值） */
 const chipShape = (): ShapeDefinition =>
   defineShape({
+    name: 'chip',
     paramsSchema: z.strictObject({}),
     circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
     boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
@@ -93,7 +94,7 @@ describe('Shape registry — injection (happy path)', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'hexagon', position: [0, 0] }],
     };
-    const scene = compileToScene(ir, { shapes: { hexagon: radialShape() } });
+    const scene = compileToScene(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] });
     expect(findByType(scene.primitives, 'ellipse')).toBeDefined();
   });
 
@@ -112,7 +113,7 @@ describe('Shape registry — injection (happy path)', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { shapes: { hexagon: radialShape() } });
+    const scene = compileToScene(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] });
     const linePath = scene.primitives.find(p => p.type === 'path');
     // r = √(8²+8²) = 11.31; 30° → (9.8, 5.66)
     if (linePath?.type === 'path') expect(linePath.commands[0]).toEqual({ kind: 'move', to: [9.8, 5.66] });
@@ -124,7 +125,7 @@ describe('Shape registry — injection (happy path)', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'chip', position: [0, 0] }],
     };
-    const scene = compileToScene(ir, { shapes: { chip: chipShape() } });
+    const scene = compileToScene(ir, { shapes: [{ ...chipShape(), name: 'chip' }] });
     expect(scene.primitives.filter(p => p.type === 'rect' || p.type === 'path')).toHaveLength(3);
   });
 
@@ -138,6 +139,7 @@ describe('Shape registry — injection (happy path)', () => {
     };
     const cachedShape: ShapeDefinition = {
       ...BUILTIN_SHAPES.rectangle,
+      name: 'cachedShape',
       *emit(): Iterable<ScenePrimitive> {
         yield cachedPrim;
       },
@@ -150,7 +152,7 @@ describe('Shape registry — injection (happy path)', () => {
         { type: 'node', id: 'B', shape: 'cached', position: [20, 0] },
       ],
     };
-    const scene = compileToScene(ir, { shapes: { cached: cachedShape } });
+    const scene = compileToScene(ir, { shapes: [{ ...cachedShape, name: 'cached' }] });
     const rects = scene.primitives.filter((p): p is Extract<ScenePrimitive, { type: 'rect' }> => p.type === 'rect');
     expect(rects).toHaveLength(2);
     expect(rects[0]).not.toBe(rects[1]);
@@ -175,7 +177,7 @@ describe('Shape registry — boundary', () => {
         },
       ],
     };
-    expect(compileToScene(ir, { shapes: {} })).toEqual(compileToScene(ir));
+    expect(compileToScene(ir, { shapes: [] })).toEqual(compileToScene(ir));
   });
 
   it('default_rectangle_when_shape_absent: no shape → RectPrim', () => {
@@ -219,6 +221,7 @@ describe('Shape registry — boundary', () => {
   it('synthetic_layouts_use_effective_rectangle_shape: scope.id 自定义 anchor 走注入后的 rectangle', () => {
     const sentinelRect: ShapeDefinition = {
       ...BUILTIN_SHAPES.rectangle,
+      name: 'sentinelRect',
       anchor: (rect, name) =>
         name === 'sentinel' ? [rect.x + 77, rect.y + 88] : BUILTIN_SHAPES.rectangle.anchor(rect, name, {}),
     };
@@ -236,16 +239,11 @@ describe('Shape registry — boundary', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, {
-      shapes: { rectangle: sentinelRect },
-      onWarn: () => {},
-    });
-    const linePath = scene.primitives.find(
-      (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
-        p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
-    );
-    const line = linePath?.commands.find(c => c.kind === 'line');
-    expect(line?.to).toEqual([77, 88]);
+    expect(() =>
+      compileToScene(ir, {
+        shapes: [{ ...sentinelRect, name: 'rectangle' }],
+      }),
+    ).toThrow(/duplicate shape registration: "rectangle"/);
   });
 });
 
@@ -285,7 +283,7 @@ describe('Shape registry — error path', () => {
       ],
     };
     // north 是 compass 名，上提后走 AABB rectangle，不再 throw
-    expect(() => compileToScene(ir, { shapes: { dot: radialShape() } })).not.toThrow();
+    expect(() => compileToScene(ir, { shapes: [{ ...radialShape(), name: 'dot' }] })).not.toThrow();
   });
 
   it('custom_shape_anchor_only_center: 非 compass 专属 anchor (tip) 仍然 throw', () => {
@@ -304,16 +302,17 @@ describe('Shape registry — error path', () => {
         },
       ],
     };
-    expect(() => compileToScene(ir, { shapes: { dot: radialShape() } })).toThrow(
+    expect(() => compileToScene(ir, { shapes: [{ ...radialShape(), name: 'dot' }] })).toThrow(
       /Unknown anchor 'tip' for shape 'dot'/,
     );
   });
 });
 
 describe('Shape registry — interaction', () => {
-  it('inject_overrides_builtin_emits_warn: override rectangle → custom emit + SHAPE_OVERRIDES_BUILTIN', () => {
+  it('duplicate_builtin_shape_rejected: override rectangle → duplicate error', () => {
     const ovalRect: ShapeDefinition = {
       ...BUILTIN_SHAPES.rectangle,
+      name: 'ovalRect',
       *emit(rect, style): Iterable<ScenePrimitive> {
         yield {
           type: 'ellipse',
@@ -327,28 +326,27 @@ describe('Shape registry — interaction', () => {
         };
       },
     };
-    const warnings: Array<CompileWarning> = [];
     const ir: IR = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }] };
-    const scene = compileToScene(ir, { shapes: { rectangle: ovalRect }, onWarn: w => warnings.push(w) });
-    expect(findByType(scene.primitives, 'ellipse')).toBeDefined();
-    expect(findByType(scene.primitives, 'rect')).toBeUndefined();
-    expect(warnings.some(w => w.code === 'SHAPE_OVERRIDES_BUILTIN')).toBe(true);
+    expect(() => compileToScene(ir, { shapes: [{ ...ovalRect, name: 'rectangle' }] })).toThrow(
+      /duplicate shape registration: "rectangle"/,
+    );
   });
 
-  it('override_warn_reaches_user_onwarn_in_prod: user onWarn fires even in production', () => {
+  it('duplicate_builtin_shape_rejected_in_prod: duplicate error still fires in production', () => {
     const prev = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
     try {
-      const warnings: Array<CompileWarning> = [];
       const ovalRect: ShapeDefinition = {
         ...BUILTIN_SHAPES.rectangle,
+        name: 'ovalRect',
         *emit(rect): Iterable<ScenePrimitive> {
           yield { type: 'ellipse', cx: rect.x, cy: rect.y, rx: rect.width / 2, ry: rect.height / 2 };
         },
       };
       const ir: IR = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', position: [0, 0] }] };
-      compileToScene(ir, { shapes: { rectangle: ovalRect }, onWarn: w => warnings.push(w) });
-      expect(warnings.some(w => w.code === 'SHAPE_OVERRIDES_BUILTIN')).toBe(true);
+      expect(() => compileToScene(ir, { shapes: [{ ...ovalRect, name: 'rectangle' }] })).toThrow(
+        /duplicate shape registration: "rectangle"/,
+      );
     } finally {
       process.env.NODE_ENV = prev;
     }
@@ -381,7 +379,7 @@ describe('Shape registry — interaction', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { shapes: { hexagon: radialShape() } });
+    const scene = compileToScene(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] });
     const linePath = scene.primitives.find(p => p.type === 'path');
     // r = √(8²+8²)=11.31, + margin 10 → 21.31
     if (linePath?.type === 'path' && linePath.commands[0].kind === 'move') {

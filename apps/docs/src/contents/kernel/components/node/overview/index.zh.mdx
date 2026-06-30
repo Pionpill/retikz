@@ -31,13 +31,13 @@ import { Node } from '@retikz/react';
 
 `position` 除了笛卡尔 / 极坐标还接受 **`{ direction, of, distance? }`** 形态；不需要手算每个绝对坐标，描述节点关系即可。
 
-- `direction` 接 8 方向：`above` / `below` / `left` / `right` / `above-left` / `above-right` / `below-left` / `below-right`
+- `direction` 接 8 方向：`top` / `bottom` / `left` / `right` / `top-left` / `top-right` / `bottom-left` / `bottom-right`
 - `of` 是被参照节点 / coordinate 的 id（要求先出现在 IR 中，前向引用拒绝）
 - `distance` 缺省时取 `<Layout nodeDistance>`，再缺省回退到 1
 
 <Comparison target="tikz" title="相对定位">
 
-`{ direction: 'above', of: 'a', distance: 20 }` 对应 TikZ positioning library 的 `[above=20 of a]` 一类写法。`<Layout nodeDistance={...}>` 对应 TikZ 的全局 `node distance` 缺省值。
+`{ direction: 'top', of: 'a', distance: 20 }` 是 Web 风格写法，对应 TikZ positioning library 的 `[above=20 of a]` 一类语义；`north` 这类 compass 名和旧的 `above` 写法仍可作为别名输入。`<Layout nodeDistance={...}>` 对应 TikZ 的全局 `node distance` 缺省值。
 
 </Comparison>
 
@@ -102,7 +102,7 @@ import { Node } from '@retikz/react';
 
 默认情况下，连线贴的就是节点视觉形状的边界。当你想让边按另一种形状贴边、却不改节点真实占位时，用 `boundary` 指定一个独立的"连接面"。常见场景是星形 / 多边形这类带凹角的形状——你想保留尖角的视觉，但希望连线像贴圆一样均匀汇入，而不是钻进凹槽。
 
-`boundary` 取值与 `shape` 同形。常用是前四个免参取值，另可借任意已注册形状：
+`boundary` 取值与 `shape` 同形。常用是前四个免参取值；除此之外会先查 [自定义连接面](/kernel/components/extend/boundary-registry)，查不到再借任意已注册形状：
 
 | 取值                               | 连接面                          | 效果                                                                          |
 | ---------------------------------- | ------------------------------- | ----------------------------------------------------------------------------- |
@@ -116,7 +116,7 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-boundary-surfaces" size="sm" />
 
-连接面**不改节点占位**：节点的包围盒、视觉形状、布局位置都不变，只改"边在哪贴、compass 锚点怎么解析"。形状专属锚点（如星形的 `tip-0`）和边上比例点始终走视觉形状，不受 `boundary` 影响。
+连接面**不改节点占位**：节点的包围盒、视觉形状、布局位置都不变，只改"边在哪贴、标准方位锚点怎么解析"。形状专属锚点（如星形的 `tip-0`）和边上比例点始终走视觉形状，不受 `boundary` 影响。
 
 下例五角星 `boundary="circle"`：默认实线连到外接圆上；端点写 `boundary="shape"` 的虚线则改贴真实尖端。
 
@@ -187,17 +187,17 @@ Line 2`}</Node>;
 
 ### 节点标签
 
-`label` 在节点边界附加额外文字。单对象或数组形态；`position` 接 8 方向枚举（缺省 `'above'`）、`'center'`、数字角度，或 `{ boundary, t }` 这种边界比例点；`placement` 控制标签在附着点外侧还是内侧，默认 `'outside'`；`'center'` 会把 label 直接画在节点中心，不做重叠避让；`font` / `textColor` 缺省时从 node 继承，`opacity` 可单独控制标签透明度（0~1，与 node `opacity` 相乘）。
+`label` 在节点边界附加额外文字。单对象或数组形态；`position` 接 8 方向枚举（缺省 `'top'`）、`'center'`、数字角度，或 `{ boundary, t }` 这种边界比例点；`placement` 控制标签在附着点外侧还是内侧，默认 `'outside'`；`'center'` 会把 label 直接画在节点中心，不做重叠避让；`font` / `textColor` 缺省时从 node 继承，`opacity` 可单独控制标签透明度（0~1，与 node `opacity` 相乘）。
 
 <Comparison target="tikz" title="节点标签">
 
-`label={{ text: 'foo', position: 'above' }}` 对应 TikZ `[label=above:foo]`；`position: 30` 对应 `label=30:foo`。
+`label={{ text: 'foo', position: 'top' }}` 是 Web 风格写法，对应 TikZ `[label=above:foo]`；`position: 30` 对应 `label=30:foo`。
 
 </Comparison>
 
 <ComponentPreview name="node-label-basic" size="xs" />
 
-`distance` 控制标签从节点边界继续向外推开的距离，单位仍是 retikz user units；省略时默认为 `12`。例如 `position: 'above', distance: 20` 会从节点上边界继续向上放置标签。
+`distance` 控制标签从节点边界继续向外推开的距离，单位仍是 retikz user units；省略时默认为 `12`。例如 `position: 'top', distance: 20` 会从节点上边界继续向上放置标签。
 
 <ComponentPreview name="node-label-distance" size="xs" />
 
@@ -329,7 +329,7 @@ Line 2`}</Node>;
 | `id`                             | `string`                                                                                                      | —                 | 唯一标识；被 `<Path>` / `<Draw>` 用来引用                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `meta`                           | `Record<string, JSON 值>`                                                                                     | —                 | provenance 元数据：随该节点原样透传到渲染产物，renderer 忽略、不参与布局 / 连接 / 样式；典型由 plot 等高层注入（标记来自哪个 datum / series / layer），供交互层命中图元后反查来源。须为 JSON 可序列化对象                                                                                                                                                                                                                                                                           |
 | `shape`                          | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| string`<br />`\| { type, params }`                      | `'rectangle'`     | 节点形状：裸字符串仅限无必填参数的形状（`rectangle` / `circle` / `ellipse` / `diamond` / 无参注册名）；`polygon` / `sector` / `arc` / `star` 等带必填参数的形状必须用 `{ type, params }`（裸字符串会编译期抛错）；内置见上，或经 `<Layout shapes>` / `CompileOptions.shapes` 注册                                                                                                                                                                                                   |
-| `boundary`                       | `'shape' \| 'circle' \| string \| { type, params }`                                                           | `'shape'`         | 连接面：边在此节点如何贴边、compass 锚点如何解析，独立于视觉 `shape`；`'shape'` = 视觉形状自身，`'circle'` = 真圆（半径 = 外接盒较长半轴），其它走借用的 shape 边界。不改节点占位；形状专属锚点与边上比例点仍走视觉形状。单条边可用端点 `boundary` 覆盖                                                                                                                                                                                                                             |
+| `boundary`                       | `'shape' \| 'circle' \| string \| { type, params }`                                                           | `'shape'`         | 连接面：边在此节点如何贴边、标准方位锚点如何解析，独立于视觉 `shape`；`'shape'` = 视觉形状自身，`'circle'` = 真圆（半径 = 外接盒较长半轴），其它值先查自定义连接面，再 fallback 到已注册 shape 边界。不改节点占位；形状专属锚点与边上比例点仍走视觉形状。单条边可用端点 `boundary` 覆盖                                                                                                                                                                                                        |
 | `position`                       | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }`                 | —                 | 节点中心位置：笛卡尔 / 极坐标 / 相对定位 / 偏移定位 / 比例定位；`of` 三态：节点 id、笛卡尔、PolarPosition                                                                                                                                                                                                                                                                                                                                                                           |
 | `children` / `text`              | `string \| Array<string \| LineSpec>`                                                                         | —                 | 节点内可见文字；字符串里 `'\n'` 是硬换行 / 数组一元素一行；数组元素可混入 `LineSpec` 对象（`{ text, fill?, opacity?, font? }`）做行级覆盖；`text` 优先于 `children`                                                                                                                                                                                                                                                                                                                 |
 | `align`                          | `'left' \| 'center' \| 'right'`                                                                               | `'center'`        | 多行文本块内各行水平对齐方式                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
@@ -342,7 +342,7 @@ Line 2`}</Node>;
 | `strokeWidth`                    | `number`                                                                                                      | `1`               | 边框宽度（user units）                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `innerXSep`                      | `number`                                                                                                      | —                 | 横向内边距（text → 左右 border）；不填走 `padding` 兜底                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `innerYSep`                      | `number`                                                                                                      | —                 | 纵向内边距（text → 上下 border）；不填走 `padding` 兜底                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `outerSep`                       | `number`                                                                                                      | `0`               | 连接面外的均匀外偏移（TikZ `outer sep`）：作用于**所有 border 锚点**（显式 `.north` / `.30` 与自动连线端点一致），并**计入节点布局占位 / viewBox**；不改视觉形状；`center`、形状专属锚点、边上比例点、标签附着点仍贴视觉形状。不填走 `margin` 兜底                                                                                                                                                                                                                                  |
+| `outerSep`                       | `number`                                                                                                      | `0`               | 连接面外的均匀外偏移（TikZ `outer sep`）：作用于**所有 border 锚点**（显式 `.top` / `.30` 与自动连线端点一致），并**计入节点布局占位 / viewBox**；不改视觉形状；`center`、形状专属锚点、边上比例点、标签附着点仍贴视觉形状。不填走 `margin` 兜底                                                                                                                                                                                                                                    |
 | `padding`                        | `number`                                                                                                      | `8`               | 内边距对称别名；轴特化字段优先                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `margin`                         | `number`                                                                                                      | `0`               | `outerSep` 的对称别名（TikZ `outer sep`）；`outerSep` 优先                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `font`                           | `{ family?, size?, weight?, style? }`                                                                         | —                 | 字体规格；嵌套对象，所有字段可选                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
@@ -361,7 +361,7 @@ Line 2`}</Node>;
 | `scale`                          | `number`                                                                                                      | `1`               | 均匀缩放（含字号、padding、路径附着点）                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `xScale` / `yScale`              | `number`                                                                                                      | —                 | 分轴缩放，优先于 `scale`                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `zIndex`                         | `number`（整数）                                                                                              | `0`               | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `label`                          | `NodeLabel \| Array<NodeLabel>`                                                                               | —                 | 边挂标签；单对象或数组；`position` 接 8 方向枚举（缺省 `'above'`）、`'center'`、数字角度或 `{ boundary, t }`（矩形边界比例点），`placement` 缺省 `'outside'`，可设 `'inside'` 放到节点内部；`distance` 缺省 12，`font` / `textColor` 缺省继承 node，`opacity` 单独控制标签 0~1；`rotate`（`'none'` / `'radial'` / `'tangent'` / 数字度数）+ `keepUpright` 控制标签自旋；`pin`（`true` 默认线 / `{ stroke, strokeWidth, dashPattern }` 带样式 / 省略无引线）画引线，且仅支持外侧标签 |
+| `label`                          | `NodeLabel \| Array<NodeLabel>`                                                                               | —                 | 边挂标签；单对象或数组；`position` 接 8 方向枚举（缺省 `'top'`）、`'center'`、数字角度或 `{ boundary, t }`（矩形边界比例点），`placement` 缺省 `'outside'`，可设 `'inside'` 放到节点内部；`distance` 缺省 12，`font` / `textColor` 缺省继承 node，`opacity` 单独控制标签 0~1；`rotate`（`'none'` / `'radial'` / `'tangent'` / 数字度数）+ `keepUpright` 控制标签自旋；`pin`（`true` 默认线 / `{ stroke, strokeWidth, dashPattern }` 带样式 / 省略无引线）画引线，且仅支持外侧标签 |
 | `animations`                     | `Array<AnimationTrack>`                                                                                       | —                 | 时间轴动画 tracks：每条 track 动一个 renderer 无关 property，base = 动画终态；透传进 Scene 图元，renderer 播放或降级到静态。不参与布局。见 [动画](/kernel/components/effects/animation)                                                                                                                                                                                                                                                                                             |
 
 ### margin 与 padding 的区别
@@ -371,7 +371,7 @@ Line 2`}</Node>;
 | `padding` | 文字到 border 的距离                   | 视觉形状变大                                                             |
 | `margin`  | 连接面外的均匀外偏移（TikZ outer sep） | 视觉形状不变；所有 border 锚点与连线端点外移 margin，节点占位也含 margin |
 
-`padding` 撑大节点本身；`margin` 不动视觉形状，而是把节点的连接/引用边界整体外推 margin（含显式 `.north` 这类锚点），并让节点在布局里多占 margin 的空间——既给连线"留呼吸空间"，也和 TikZ `outer sep` 一致。`margin` 缺省 0，不设则零影响。
+`padding` 撑大节点本身；`margin` 不动视觉形状，而是把节点的连接/引用边界整体外推 margin（含显式 `.top` 这类锚点），并让节点在布局里多占 margin 的空间——既给连线"留呼吸空间"，也和 TikZ `outer sep` 一致。`margin` 缺省 0，不设则零影响。
 
 ## 相关
 

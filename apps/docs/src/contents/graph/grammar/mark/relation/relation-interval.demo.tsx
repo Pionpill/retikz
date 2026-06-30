@@ -15,7 +15,7 @@ const Demo: FC = () => (
       stroke="#ffffff"
       strokeWidth={0.8}
       label="label"
-      labelPosition="above"
+      labelPosition="top"
       labelDistance={4}
       labelTextColor="#0f172a"
       labelFont={{ size: 10, weight: 'bold' }}

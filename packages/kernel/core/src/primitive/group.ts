@@ -18,9 +18,15 @@ export type RotateTransform = {
   kind: 'rotate';
   /** 旋转角度（度，正向 = 屏幕 y-down 下的视觉顺时针） */
   degrees: number;
-  /** 旋转中心 x（缺省 0） */
+  /**
+   * 旋转中心 x（缺省 0）
+   * @default 0
+   */
   cx?: number;
-  /** 旋转中心 y（缺省 0） */
+  /**
+   * 旋转中心 y（缺省 0）
+   * @default 0
+   */
   cy?: number;
 };
 
@@ -30,7 +36,10 @@ export type ScaleTransform = {
   kind: 'scale';
   /** x 轴缩放因子 */
   x: number;
-  /** y 轴缩放因子；缺省 = x（等比缩放） */
+  /**
+   * y 轴缩放因子；缺省 = x（等比缩放）
+   * @default x
+   */
   y?: number;
 };
 
@@ -50,12 +59,16 @@ export type GroupPrim = {
   meta?: IRJsonObject;
   /** 时间轴动画 tracks：compile 从 IR 元素的 animations 原样 stamp；renderer 能播则播、不能则渲染 settled 静态态并 warn（不丢图） */
   animations?: Array<IRAnimationTrack>;
-  /** 结构化变换序列，按数组顺序应用；undefined / 空数组表示无变换 */
+  /**
+   * 结构化变换序列，按数组顺序应用；undefined / 空数组表示无变换
+   * @default []
+   */
   transforms?: Array<Transform>;
   /**
    * 裁剪资源 id：指向 `Scene.resources` 里某 ClipResource。
    * @description 有值时该 group 的所有子原语被裁到该资源描述的区域（adapter → `<g clip-path="url(#id)">`）；
    *   裁剪区坐标在该 group 的局部坐标系（与 children 同帧）。缺省 = 不裁。
+   * @default 不裁剪
    */
   clipRef?: string;
   /** 组内子原语 */

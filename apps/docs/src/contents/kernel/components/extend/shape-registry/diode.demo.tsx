@@ -6,6 +6,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 import { z } from 'zod';
 
 const diode: ShapeDefinition = defineShape({
+  name: 'diode',
   paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 42),
@@ -18,8 +19,8 @@ const diode: ShapeDefinition = defineShape({
   },
   anchor: (rect, name) => {
     if (name === 'center') return [rect.x, rect.y];
-    if (name === 'west' || name === 'input') return localToWorld(rect, [-rect.width / 2, 0]);
-    if (name === 'east' || name === 'output') return localToWorld(rect, [rect.width / 2, 0]);
+    if (name === 'left' || name === 'input') return localToWorld(rect, [-rect.width / 2, 0]);
+    if (name === 'right' || name === 'output') return localToWorld(rect, [rect.width / 2, 0]);
     return undefined;
   },
   *emit(rect, style, round) {
@@ -84,7 +85,7 @@ const diode: ShapeDefinition = defineShape({
 });
 
 const Demo: FC = () => (
-  <Layout width={420} height={190} shapes={{ diode }}>
+  <Layout width={420} height={190} shapes={[diode]}>
     <Node id="source" position={[-150, 0]} text="in" />
     <Node id="d" shape="diode" position={[0, 0]} fill="lightgray" stroke="darkorange" strokeWidth={2} />
     <Node id="sink" position={[145, 55]} text="out" />

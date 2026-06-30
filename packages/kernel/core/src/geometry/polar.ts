@@ -12,7 +12,10 @@ import type { Position } from './point';
  * @description IR 保留 polar 形态，Scene 编译时统一解析为笛卡尔；origin 可嵌套/节点 id/坐标，省略表示 [0,0]
  */
 export type PolarPosition = {
-  /** 极坐标原点：节点 id / 笛卡尔 / 嵌套极坐标；省略表示 [0,0] */
+  /**
+   * 极坐标原点：节点 id / 笛卡尔 / 嵌套极坐标；省略表示 [0,0]
+   * @default [0, 0]
+   */
   origin?: string | Position | PolarPosition;
   /** 角度（度数）：从 +x 轴量起，90° 朝 +y（屏幕下方），与 ArcStep / Node label 角度约定一致 */
   angle: number;

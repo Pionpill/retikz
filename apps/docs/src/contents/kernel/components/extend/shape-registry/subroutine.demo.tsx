@@ -11,6 +11,7 @@ import { z } from 'zod';
  *   circumscribe / boundaryPoint / anchor 直接复用内置 rectangle（外框即矩形）。无参形状用 z.strictObject({})。
  */
 const subroutine: ShapeDefinition = defineShape({
+  name: 'subroutine',
   paramsSchema: z.strictObject({}),
   circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
   boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
@@ -59,7 +60,7 @@ const subroutine: ShapeDefinition = defineShape({
 });
 
 const Demo: FC = () => (
-  <Layout width={320} height={130} shapes={{ subroutine }}>
+  <Layout width={320} height={130} shapes={[subroutine]}>
     <Node
       id="p"
       shape="subroutine"

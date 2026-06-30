@@ -14,7 +14,7 @@ const Demo: FC = () => (
         '-|' 先水平后垂直，拐角在右上；'|-' 先垂直后水平，拐角在左下 */}
     <Draw way={['A', { label: { text: "'-|' t=0.5 (corner)", position: 0.5 } }, '-|', 'B']} arrow="->" />
     <Draw
-      way={['A', { label: { text: "'|-' t=0.5 (corner)", position: 0.5, side: 'below' } }, '|-', 'B']}
+      way={['A', { label: { text: "'|-' t=0.5 (corner)", position: 0.5, side: 'bottom' } }, '|-', 'B']}
       arrow="->"
       dashPattern={[3, 3]}
     />

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { PlotSpecSchema } from '../../src/schemas';
 import { BuiltinTransformSchema, TransformSchema } from '../../src/schemas/transform';
 
-describe('TransformSchema (ADR-03)', () => {
+describe('TransformSchema sort / stack', () => {
   // Happy path
   it('sort_schema_valid', () => {
     const t = { kind: 'sort', field: 'month' };
@@ -47,7 +47,7 @@ describe('TransformSchema (ADR-03)', () => {
     expect(() => TransformSchema.parse({ kind: 'stack', x: 'm', groupBy: 'p' })).toThrow();
   });
 
-  // ADR-02：泛化 stack —— x / groupBy 转可选（缺省单链累积，喂饼图）
+  // stack 允许省略 x / groupBy，用于单链累积场景。
   it('stack_omits_x_and_group_valid', () => {
     // 单链累积：只给 y，按数据序累加（饼图用法）
     const t = { kind: 'stack', y: 'value' };
@@ -81,7 +81,7 @@ describe('TransformSchema (ADR-03)', () => {
   });
 });
 
-describe('TransformSchema external operations (alpha.12 ADR-06)', () => {
+describe('TransformSchema external operations', () => {
   it('builtin_bad_shape_static_rejected', () => {
     expect(() => TransformSchema.parse({ kind: 'bin' })).toThrow();
   });
@@ -100,11 +100,13 @@ describe('TransformSchema external operations (alpha.12 ADR-06)', () => {
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 
-  it('external_operation_rejects_non_json_values', () => {
-    expect(() => TransformSchema.parse({ kind: 'regression', fn: () => 1 })).toThrow(/JSON-serializable/i);
-    expect(() => TransformSchema.parse({ kind: 'regression', value: undefined })).toThrow(/JSON-serializable/i);
-    expect(() => TransformSchema.parse({ kind: 'regression', value: Number.NaN })).toThrow(/JSON-serializable/i);
-    expect(() => TransformSchema.parse({ kind: 'regression', value: Infinity })).toThrow(/JSON-serializable/i);
+  it.each([
+    ['function', { kind: 'regression', fn: () => 1 }],
+    ['undefined', { kind: 'regression', value: undefined }],
+    ['NaN', { kind: 'regression', value: Number.NaN }],
+    ['Infinity', { kind: 'regression', value: Infinity }],
+  ])('external_operation_rejects_non_json_value: %s', (_name, operation) => {
+    expect(() => TransformSchema.parse(operation)).toThrow(/JSON-serializable/i);
   });
 
   it('plot_spec_transform_accepts_custom_operation', () => {
@@ -124,7 +126,7 @@ describe('TransformSchema external operations (alpha.12 ADR-06)', () => {
   });
 });
 
-describe('BinTransformSchema (alpha.12 ADR-01)', () => {
+describe('BinTransformSchema', () => {
   it('bin_count_strategy_valid', () => {
     const t = { kind: 'bin', field: 'measurement', count: 20, metrics: [{ op: 'count', as: 'binCount' }] };
     expect(TransformSchema.parse(t)).toEqual(t);
@@ -187,7 +189,7 @@ describe('BinTransformSchema (alpha.12 ADR-01)', () => {
   });
 });
 
-describe('Statistical transform algebra schema (alpha.12 ADR-16)', () => {
+describe('Statistical transform algebra schema', () => {
   it('summarize_multiple_metrics_valid', () => {
     const operation = {
       kind: 'summarize',
@@ -262,7 +264,7 @@ describe('Statistical transform algebra schema (alpha.12 ADR-16)', () => {
   });
 });
 
-describe('SummarizeTransformSchema (alpha.12 ADR-16)', () => {
+describe('SummarizeTransformSchema', () => {
   it('summarize_sum_valid', () => {
     const t = {
       kind: 'summarize',
@@ -317,7 +319,7 @@ describe('SummarizeTransformSchema (alpha.12 ADR-16)', () => {
   });
 });
 
-describe('NormalizeTransformSchema (alpha.12 ADR-02)', () => {
+describe('NormalizeTransformSchema', () => {
   it('normalize_full_form_valid', () => {
     const t = { kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' };
     expect(TransformSchema.parse(t)).toEqual(t);
@@ -341,7 +343,7 @@ describe('NormalizeTransformSchema (alpha.12 ADR-02)', () => {
   });
 });
 
-describe('DeriveIntervalTransformSchema (alpha.12 ADR-02)', () => {
+describe('DeriveIntervalTransformSchema', () => {
   it('derive_interval_two_field_valid', () => {
     const t = { kind: 'derive-interval', startFrom: 'start', endFrom: 'end' };
     expect(TransformSchema.parse(t)).toEqual(t);
@@ -362,7 +364,7 @@ describe('DeriveIntervalTransformSchema (alpha.12 ADR-02)', () => {
   });
 });
 
-describe('JitterTransformSchema (alpha.12 ADR-02)', () => {
+describe('JitterTransformSchema', () => {
   it('jitter_full_form_valid', () => {
     const t = { kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 42 };
     expect(TransformSchema.parse(t)).toEqual(t);
@@ -391,7 +393,7 @@ describe('JitterTransformSchema (alpha.12 ADR-02)', () => {
   });
 });
 
-describe('DensityTransformSchema (alpha.13 ADR-03)', () => {
+describe('DensityTransformSchema', () => {
   it('density_full_form_valid_and_json_roundtrip_equivalent', () => {
     const operation = {
       kind: 'density',
@@ -417,43 +419,47 @@ describe('DensityTransformSchema (alpha.13 ADR-03)', () => {
     expect(TransformSchema.parse(operation)).toEqual(operation);
   });
 
-  it('density_requires_output_fields', () => {
-    expect(() => TransformSchema.parse({ kind: 'density', field: 'value', densityAs: 'density' })).toThrow();
-    expect(() => TransformSchema.parse({ kind: 'density', field: 'value', xAs: 'densityX' })).toThrow();
+  it.each([
+    ['xAs', { kind: 'density', field: 'value', densityAs: 'density' }],
+    ['densityAs', { kind: 'density', field: 'value', xAs: 'densityX' }],
+  ])('density_requires_output_field: %s', (_field, operation) => {
+    expect(() => TransformSchema.parse(operation)).toThrow();
   });
 
-  it('density_rejects_output_collisions', () => {
-    expect(() =>
-      TransformSchema.parse({ kind: 'density', field: 'value', xAs: 'density', densityAs: 'density' }),
-    ).toThrow();
-    expect(() =>
-      TransformSchema.parse({
+  it.each([
+    ['xAs matches densityAs', { kind: 'density', field: 'value', xAs: 'density', densityAs: 'density' }],
+    [
+      'xAs matches groupBy',
+      {
         kind: 'density',
         field: 'value',
         groupBy: ['species'],
         xAs: 'species',
         densityAs: 'density',
-      }),
-    ).toThrow();
+      },
+    ],
+  ])('density_rejects_output_collision: %s', (_name, operation) => {
+    expect(() => TransformSchema.parse(operation)).toThrow();
   });
 
-  it('density_rejects_invalid_extent_and_bandwidth', () => {
-    expect(() =>
-      TransformSchema.parse({ kind: 'density', field: 'value', extent: [10, 0], xAs: 'x', densityAs: 'd' }),
-    ).toThrow();
-    expect(() =>
-      TransformSchema.parse({
+  it.each([
+    ['extent order', { kind: 'density', field: 'value', extent: [10, 0], xAs: 'x', densityAs: 'd' }],
+    [
+      'bandwidth value',
+      {
         kind: 'density',
         field: 'value',
         bandwidth: { kind: 'value', value: 0 },
         xAs: 'x',
         densityAs: 'd',
-      }),
-    ).toThrow();
+      },
+    ],
+  ])('density_rejects_invalid_%s', (_name, operation) => {
+    expect(() => TransformSchema.parse(operation)).toThrow();
   });
 });
 
-describe('SmoothTransformSchema (alpha.13 ADR-04)', () => {
+describe('SmoothTransformSchema', () => {
   it('smooth_full_form_valid_and_json_roundtrip_equivalent', () => {
     const operation = {
       kind: 'smooth',
@@ -480,40 +486,44 @@ describe('SmoothTransformSchema (alpha.13 ADR-04)', () => {
     expect(BuiltinTransformSchema.parse(operation)).toEqual(operation);
   });
 
-  it('smooth_requires_output_fields', () => {
-    expect(() => TransformSchema.parse({ kind: 'smooth', x: 'time', y: 'value', yAs: 'trendY' })).toThrow();
-    expect(() => TransformSchema.parse({ kind: 'smooth', x: 'time', y: 'value', xAs: 'trendX' })).toThrow();
+  it.each([
+    ['xAs', { kind: 'smooth', x: 'time', y: 'value', yAs: 'trendY' }],
+    ['yAs', { kind: 'smooth', x: 'time', y: 'value', xAs: 'trendX' }],
+  ])('smooth_requires_output_field: %s', (_field, operation) => {
+    expect(() => TransformSchema.parse(operation)).toThrow();
   });
 
-  it('smooth_rejects_output_collisions', () => {
-    expect(() =>
-      TransformSchema.parse({ kind: 'smooth', x: 'time', y: 'value', xAs: 'trend', yAs: 'trend' }),
-    ).toThrow();
-    expect(() =>
-      TransformSchema.parse({
+  it.each([
+    ['xAs matches yAs', { kind: 'smooth', x: 'time', y: 'value', xAs: 'trend', yAs: 'trend' }],
+    [
+      'xAs matches groupBy',
+      {
         kind: 'smooth',
         x: 'time',
         y: 'value',
         groupBy: ['series'],
         xAs: 'series',
         yAs: 'trendY',
-      }),
-    ).toThrow();
+      },
+    ],
+  ])('smooth_rejects_output_collision: %s', (_name, operation) => {
+    expect(() => TransformSchema.parse(operation)).toThrow();
   });
 
-  it('smooth_rejects_invalid_extent_and_method', () => {
-    expect(() =>
-      TransformSchema.parse({ kind: 'smooth', x: 'time', y: 'value', extent: [10, 0], xAs: 'trendX', yAs: 'trendY' }),
-    ).toThrow();
-    expect(() =>
-      TransformSchema.parse({
+  it.each([
+    ['extent order', { kind: 'smooth', x: 'time', y: 'value', extent: [10, 0], xAs: 'trendX', yAs: 'trendY' }],
+    [
+      'method kind',
+      {
         kind: 'smooth',
         x: 'time',
         y: 'value',
         method: { kind: 'loess' },
         xAs: 'trendX',
         yAs: 'trendY',
-      }),
-    ).toThrow();
+      },
+    ],
+  ])('smooth_rejects_invalid_%s', (_name, operation) => {
+    expect(() => TransformSchema.parse(operation)).toThrow();
   });
 });

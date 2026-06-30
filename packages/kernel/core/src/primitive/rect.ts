@@ -23,22 +23,37 @@ export type RectPrim = {
   height: number;
   /** 填充：纯色 CSS 串、或指向资源表的 paint server（gradient）、或 contextStroke */
   fill?: PaintValue;
-  /** 填充透明度 0~1 */
+  /**
+   * 填充透明度 0~1
+   * @default 1
+   */
   fillOpacity?: number;
   /** 描边：纯色 / 资源表 paint server（gradient）/ contextStroke */
   stroke?: PaintValue;
-  /** 描边透明度 0~1 */
+  /**
+   * 描边透明度 0~1
+   * @default 1
+   */
   strokeOpacity?: number;
   /** 描边宽度 */
   strokeWidth?: number;
   /** 描边 dash pattern（如 [4, 2]） */
   dashPattern?: Array<number>;
-  /** 圆角半径（同时作用于 rx/ry） */
+  /**
+   * 圆角半径（同时作用于 rx/ry）
+   * @default 0
+   */
   cornerRadius?: number;
-  /** 整体透明度 0~1 */
+  /**
+   * 整体透明度 0~1
+   * @default 1
+   */
   opacity?: number;
   /** 投影：解析后对象（preset 已展开 + 显式覆盖合并）；undefined = 无投影 */
   shadow?: DropShadow;
-  /** 混合模式：解析后值；undefined / normal = 普通 source-over */
+  /**
+   * 混合模式：解析后值；undefined / normal = 普通 source-over
+   * @default 'normal'
+   */
   blendMode?: BlendModeValue;
 };

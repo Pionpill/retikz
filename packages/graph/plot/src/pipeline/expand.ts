@@ -85,6 +85,7 @@ import {
   AxisGridApplyTo,
   CompositionAxisPolicy,
   CompositionGridPlacement,
+  FieldOrderMode,
   IntervalBoundKind,
   isBuiltinMark,
   PathClosureKind,
@@ -464,8 +465,8 @@ const assertKnownPositionEncodingRoles = (
 };
 
 /**
- * 按坐标系合法集校验每根 axis guide 的 dimension（ADR-01，修 cross-review P2）
- * @description 非法 dimension（如 cartesian 下 'angle'）从「静默丢弃 / 渲杂散轴线」改 fail-loud，给清晰错误。
+ * 按坐标系合法集校验每根 axis guide 的 dimension
+ * @description 非法 dimension（如 cartesian 下 'angle'）fail-loud，给出清晰错误。
  */
 const assertValidGuideDimensions = (
   coordinateType: string,
@@ -483,7 +484,7 @@ const assertValidGuideDimensions = (
 };
 
 /**
- * 按坐标系必填角色集校验每个位置 mark 的 encoding（ADR-01；x/y 转可选后必填性下放此处）
+ * 按坐标系必填角色集校验每个位置 mark 的 encoding
  * @description sector 无位置通道（角度来自累积界）→ 跳过；其余 mark 缺任一必填角色通道 → fail-loud。
  */
 const assertRequiredPositionChannels = (
@@ -536,7 +537,7 @@ export type LowerPlotsOptions = {
   fontSize?: number;
   /** 逐边覆盖自动估算的 margin */
   margin?: Partial<Margins>;
-  /** 总开关：开启才写 layer/series meta + 合成 `<plotId>.` 内部 id；关（默认 false）→ 逐字节等价 alpha.4 */
+  /** 总开关：开启才写 layer/series meta + 合成 `<plotId>.` 内部 id；默认 false 时不写 provenance id/meta */
   provenance?: boolean;
   /** 每个 datum Node 写 per-datum 来源 meta（hit-test；O(rows) 增量，蕴含需 provenance 开），默认 false */
   datumProvenance?: boolean;
@@ -553,10 +554,10 @@ export type LowerPlotsOptions = {
    * 下游 mark 自跳非法几何；`'error'` 在 transform 之前对 spec 参与字段全量校验，遇任一非法 / 缺失即 fail-loud。
    */
   invalid?: 'skip' | 'error';
-  /** 程序化字段解析逃生舱（运行时函数，不进 IR）：按字段名覆盖类型 + 自定义值解析；返回 undefined → 回退 model/推断 + 内置 coerce（ADR-04） */
+  /** 程序化字段解析逃生舱（运行时函数，不进 IR）：按字段名覆盖类型 + 自定义值解析；返回 undefined → 回退 model/推断 + 内置 coerce */
   resolveField?: ResolveField;
   /**
-   * datum label 内容逃生舱（运行时函数，不进 IR；ADR-04 text mark）：按 mark id 映射的「行 → 完全自定义标签串」。
+   * datum label 内容逃生舱（运行时函数，不进 IR）：按 mark id 映射的「行 → 完全自定义标签串」。
    * @description 优先级最高（resolveLabel > field+format > value），覆盖该 mark 的 label / text 内容声明。
    *   按 mark id 取（宿主 mark 的 priority-1 label / 独立 TextMark 的 priority-2 text 共用）；未命中的 mark 走声明层 field/value/format。
    *   不进 PlotSpec，故不破坏 IR JSON 可序列化。
@@ -617,17 +618,17 @@ export type CoordinateFrameResolution = {
   gridLayers: Array<IRScope>;
   /** 轴层（压顶；每根 axis guide 产出） */
   axisLayers: Array<IRScope>;
-  /** 绘图区矩形（已扣 axis margin + legend 预留带）；legend band 据此摆进预留 gutter（ADR-03 占位） */
+  /** 绘图区矩形（已扣 axis margin + legend 预留带）；legend band 据此摆进预留 gutter */
   plotArea: Rect;
 };
 
-/** resolveFrame 入参：投影 + guide 下沉所需的全部上下文（pure，无副作用，ADR-02 locator 复用同一投影） */
+/** resolveFrame 入参：投影 + guide 下沉所需的全部上下文（pure，无副作用，locator 复用同一投影） */
 export type ResolveFrameParams = {
   /** plot IR 根节点（取 coordinate / guides） */
   node: PlotSpec;
   /** transform 后的数据行（域推断、guide 刻度同源） */
   rows: Array<ExternalRow>;
-  /** 用户源字段 → PlotFieldTypeValue（ADR-01 解析）；供 type-driven scale 派生与兼容校验（ADR-03） */
+  /** 用户源字段 → PlotFieldTypeValue；供 type-driven scale 派生与兼容校验 */
   fieldTypes: PlotFieldTypeMap;
   /** 整图宽（user units） */
   width: number;
@@ -643,7 +644,7 @@ export type ResolveFrameParams = {
   plotAreaOverride?: Rect;
   /** 指定 role 的最终 range；用于 scaffold track 把局部 role 映射进 track band。 */
   roleRangeOverrides?: Partial<Record<DimensionRole, readonly [number, number]>>;
-  /** provenance 上下文（开 → guide 层带 `<plotId>.` id + 来源 meta；undefined → alpha.2 行为） */
+  /** provenance 上下文（开 → guide 层带 `<plotId>.` id + 来源 meta；undefined → 不写 provenance id/meta） */
   provenance?: ProvenanceContext;
   /** 自定义坐标系 definition 数组（运行时函数，不进 IR）；coordinate {type:<customType>, ...config} 据此解析投影 */
   coordinates?: Array<AnyCoordinateDefinition>;
@@ -657,7 +658,7 @@ export type ResolveFrameParams = {
 /**
  * 按坐标系解析出 mark / guide 共用的投影帧 + 下沉 guide 层
  * @description cartesian：x/y 角色绑 x/y scale、走 plotArea + 直线轴；polar：angle/radius 角色、走 polar layout + 弧 / 辐条轴。
- *   抽成纯函数使 mark 下沉与 ADR-02 locator 共用同一投影（杜绝两套投影漂移）；产物与内联版等价。
+ *   抽成纯函数使 mark 下沉与 locator 共用同一投影，杜绝两套投影漂移。
  */
 export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolution => {
   const {
@@ -695,7 +696,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   const positionChannels = createPositionChannelDefinitions(roles);
 
-  // ADR-01 校验（建 frame 前）：guide 维度按坐标系合法集校验 + mark 必填位置角色校验，均 fail-loud。
+  // 建 frame 前校验：guide 维度按坐标系合法集校验 + mark 必填位置角色校验，均 fail-loud。
   assertValidGuideDimensions(coordinateOperation.type, roles, axisGuides);
   assertKnownPositionEncodingRoles(coordinateOperation.type, roles, node.marks);
   assertRequiredPositionChannels(coordinateOperation.type, roles, node.marks);
@@ -805,7 +806,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
       const channel = pick(mark);
       if (channel?.field === undefined) continue;
       const order = fieldOrders.get(channel.field);
-      if (order === undefined || order === 'data') continue;
+      if (order === undefined || order === FieldOrderMode.Data) continue;
       const type = fieldTypes.get(channel.field);
       if (type !== undefined && type !== PlotFieldType.Categorical) {
         throw new Error(
@@ -824,7 +825,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     return found[0];
   };
 
-  // 解析角色 scale（ADR-03）：显式绑定 → 查表（未声明仍抛，typo 守卫）+ 对该 role **全部**字段做兼容校验；
+  // 解析角色 scale：显式绑定 → 查表（未声明仍抛，typo 守卫）+ 对该 role **全部**字段做兼容校验；
   //   省略 → 按字段类型派生（要求该 role 字段类型一致，混类型 fail-loud）。兼容校验只对「声明 model 的类型」生效。
   const resolveScaleForRole = (
     role: DimensionRole,
@@ -921,7 +922,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
 /**
  * 收集所有 mark 在某非位置通道上的字段 descriptor（size / opacity / shape）
  * @description resolver 双产出的 descriptor 注册到 channel → descriptor 表；同通道多 mark 取首个有 descriptor 的
- *   （legend 据 scale name 消歧留待多 scale 场景，alpha.8 这三通道用合成默认 scale，不暴露具名）。
+ *   legend 据 scale name 消歧；未具名的默认 scale 用 channel/field/type 签名区分。
  */
 const collectChannelDescriptors = (
   node: PlotSpec,
@@ -990,7 +991,7 @@ const selectLegendDescriptor = (
   return matched[0];
 };
 
-/** 数值刻度 nice 化 + 格式化：复用 axis 的 scaleTicks 链（决策 ⑨），domain → {value, offset 0..1, label} */
+/** 数值刻度 nice 化 + 格式化：复用 axis 的 scaleTicks 链，domain → {value, offset 0..1, label} */
 const niceNumericTicks = (
   domain: readonly [number, number],
   count: number,
@@ -1113,7 +1114,7 @@ const LEGEND_CONTENT_GAP = 24;
 
 /**
  * 据 legend guide 估算各边 legend 预留带宽（同侧多个 legend 累加）
- * @description 喂 computePlotArea 在对应边收窄 plotArea（决策 ⑩）；估算式占位、不测量。
+ * @description 喂 computePlotArea 在对应边收窄 plotArea；估算式占位、不测量。
  */
 const legendReserveOf = (legendGuides: Array<LegendGuide>): LegendReserve => {
   const reserve: { right: number; left: number; top: number; bottom: number } = {
@@ -1269,7 +1270,7 @@ const resolveMarkRows = (
 
 /**
  * 校验 fieldMaps（fail-loud）：ref∈datasets；本 plot 的 map 需 model + 逻辑名∈model
- * @description 抽出供 expandPlot 与 createPlotLocator 共用，保证「render 抛错 ⟺ locator 抛错」的 parity（评审 P2）
+ * @description 抽出供 expandPlot 与 createPlotLocator 共用，保证「render 抛错 ⟺ locator 抛错」的 parity。
  */
 export const validateFieldMaps = (
   spec: PlotSpec,
@@ -1299,9 +1300,9 @@ export const validateFieldMaps = (
 
 /**
  * 共享的「绑定准备」：fieldMaps 校验 + 用户源字段类型解析 + ingest 恒归一化
- * @description expandPlot 与 createPlotLocator 共用同一入口，保证两者校验 / 归一化 / 类型解析完全同序（评审 P2 parity）。
+ * @description expandPlot 与 createPlotLocator 共用同一入口，保证两者校验 / 归一化 / 类型解析完全同序。
  *   入参 ingested 由调用方按各自需要先行 tagSourceIndex；本函数不碰 transform（调用方各自 applyTransforms）。
- *   恒归一化（ADR-08）：无论有无 model / resolver，总按解析出的 fieldTypes 跑 normalizeRows，下游统一读 canonical。
+ *   恒归一化：无论有无 model / resolver，总按解析出的 fieldTypes 跑 normalizeRows，下游统一读 canonical。
  */
 export const prepareRows = (
   spec: PlotSpec,
@@ -1326,10 +1327,10 @@ export const prepareRows = (
   const scaleRegistry = resolveScaleRegistry(options.scaleDefinitions);
   const markRegistry = resolveMarkRegistry(options.markDefinitions);
   const userSourceFields = collectSourceFields(spec, transformRegistry, markRegistry, transformContext);
-  // strict + 声明/推断（ADR-01/05）；strict 在 applyFieldResolver 之前先校验，resolver 不绕过（ADR-04）
+  // strict + 声明/推断；strict 在 applyFieldResolver 之前先校验，resolver 不绕过。
   const baseTypes = resolveFieldTypes(spec.data.model, ingested, userSourceFields);
   const fieldMap = options.fieldMaps?.[spec.data.reference];
-  // 声明式 format（ADR-06 内置 + ADR-09 自定义 registry）：format 经 registry 解析出 definition，蕴含 type 覆盖推断 + 冲突 / 未注册 fail-loud + 收集 parser；
+  // 声明式 format：format 经 registry 解析出 definition，蕴含 type 覆盖推断 + 冲突 / 未注册 fail-loud + 收集 parser；
   //   置于 resolveField 之前，使 resolveField 仍胜出
   const formatRegistry = resolveFormatRegistry(options.formatDefinitions);
   const { fieldTypes: formatTypes, parsers: formatParsers } = collectFormatFields(
@@ -1338,7 +1339,7 @@ export const prepareRows = (
     userSourceFields,
     formatRegistry,
   );
-  // resolveField 叠加：类型覆盖 + 收集 per-field parser（ADR-04）；优先级 resolveField.type > format 蕴含 / 显式 type
+  // resolveField 叠加：类型覆盖 + 收集 per-field parser；优先级 resolveField.type > format 蕴含 / 显式 type
   const { fieldTypes, parsers: resolverParsers } = applyFieldResolver(
     formatTypes,
     userSourceFields,
@@ -1349,8 +1350,8 @@ export const prepareRows = (
   );
   // 合并 parser 槽：format parser 垫底，resolveField.parse 命中同字段时覆盖（优先级 resolveField > format）
   const parsers = new Map([...formatParsers, ...resolverParsers]);
-  // 恒归一化（ADR-08 去门控）：无论有无 model / resolver 命中，总按解析出的 fieldTypes 跑 normalizeRows
-  //   →下游统一读 canonical、无第二处 coerce。干净数据产物与旧门控路径逐字段等价。
+  // 恒归一化：无论有无 model / resolver 命中，总按解析出的 fieldTypes 跑 normalizeRows。
+  //   下游统一读 canonical、无第二处 coerce。
   const normalized = normalizeRows(ingested, fieldTypes, fieldMap, parsers);
   return { fieldTypes, normalized, transformRegistry, transformContext, scaleRegistry, markRegistry };
 };
@@ -1361,7 +1362,7 @@ export const prepareRows = (
  *   root id → Scope.id（plot-design §8.1）；provenance 开 → 外层 Scope + 各层 / datum 带来源 meta + `<plotId>.` 内部 id。
  */
 const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPlotsOptions): IRChild => {
-  // 自描述尺寸（ADR-02 L1-a）：节点自带 width/height 优先（组合时各面板本性尺寸），缺省回退全局选项、再回退默认
+  // 自描述尺寸：节点自带 width/height 优先（组合时各面板本性尺寸），缺省回退全局选项、再回退默认
   const width = node.width ?? options.width ?? DEFAULT_WIDTH;
   const height = node.height ?? options.height ?? DEFAULT_HEIGHT;
   // 绘图区尺寸是 scale range / 投影的单一来源；非有限或非正数会一路污染出 cx="NaN" 等坏坐标——入口抛清晰错误
@@ -1377,7 +1378,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   }
 
   // provenance 总开关：provenance / datumProvenance / datumIdField 任一开即启用（后两者蕴含 provenance）；
-  // 全关 → undefined（产物逐字节等价 alpha.4）
+  // 全关 → undefined；下游不写 provenance id/meta。
   const provenanceEnabled =
     options.provenance === true || options.datumProvenance === true || options.datumIdField !== undefined;
   const provenance: ProvenanceContext | undefined = provenanceEnabled
@@ -1392,8 +1393,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   // 取数：provenance 开时先打源序标记（symbol 键，跨 transform 存活，供 sourceIndex 回指），再过 transform 管线
   const ingested = provenance ? tagSourceIndex(datasets[node.data.reference]) : datasets[node.data.reference];
 
-  // ADR-01/02/08：fieldMaps 校验 + 用户源字段类型解析（strict）+ ingest 恒归一化。与 locator 共用 prepareRows 保 parity。
-  // 类型 Map 是 type-driven scale（ADR-03）/ coercion 的单一真源；归一化置于 transform 前、无论有无 model 都跑（恒 canonical）。
+  // fieldMaps 校验 + 用户源字段类型解析（strict）+ ingest 恒归一化。与 locator 共用 prepareRows 保 parity。
+  // 类型 Map 是 type-driven scale / coercion 的单一真源；归一化置于 transform 前、无论有无 model 都跑（恒 canonical）。
   const { fieldTypes, normalized, transformRegistry, transformContext, scaleRegistry, markRegistry } = prepareRows(
     node,
     datasets,
@@ -1406,7 +1407,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     const sampleRows = typeof options.validateData === 'object' ? (options.validateData.sampleRows ?? 100) : 100;
     validateBoundData(normalized, fieldTypes, sampleRows);
   }
-  // invalid:'error'（ADR-08）：transform 之前对 spec 参与字段（= fieldTypes 键）全量校验，遇任一非法 / 缺失 fail-loud；
+  // invalid:'error'：transform 之前对 spec 参与字段（= fieldTypes 键）全量校验，遇任一非法 / 缺失 fail-loud；
   //   置于 transform 前 → 错误定位到原始源字段、不被 transform 改写干扰。默认 'skip' 不校验（哨兵留给下游跳）。
   if (options.invalid === 'error') {
     assertAllValuesValid(normalized, fieldTypes);
@@ -1977,7 +1978,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     .map(entry => entry.layer);
   anchorRegistry.assertResolved();
 
-  // legend（ADR-03）：收 legend guide → 据通道 + scale 类型选形态下沉成独立 scope，落 position 预留带。
+  // 收 legend guide → 据通道 + scale 类型选形态下沉成独立 scope，落 position 预留带。
   // 占位（band 计算 / plotArea 收窄）见 reserveLegendBands；fail-loud（多 scale 未消歧 / scale 不存在）在 buildLegendLayers 内。
   const legendGuides = allGuides.filter(isLegendGuide);
   const legendLayers: Array<IRScope> = [];
@@ -2005,13 +2006,13 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   // z-order：所有网格层 → marks → 所有轴层 → legend（网格垫底、坐标轴压顶不被数据盖、legend 在预留带最上）
   const children: Array<IRChild> = [...gridLayers, ...markLayers, ...axisLayers, ...legendLayers];
 
-  // 无 id：结构逐字不变（单图零回归）——root = localNamespace 内容 scope（+ provenance meta）
+  // 无 id：root = localNamespace 内容 scope（可带 provenance meta）。
   if (node.id === undefined) {
     const base: IRScope = { type: 'scope', localNamespace: true, children };
     return provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
   }
 
-  // 有 id（ADR-02 L1-b）：外层 panel scope（id、非 localNamespace → 面板 bbox 注册父帧、外部可见）
+  // 有 id：外层 panel scope（id、非 localNamespace → 面板 bbox 注册父帧、外部可见）
   //   ⊃ [ 内层 localNamespace 内容 scope（封内部 datum/series id、承 provenance meta）, plotArea 不可见 carrier ]。
   // 让面板 bbox `<plotId>` 与绘图区 `<plotId>.plotArea` 都落在 localNamespace 之外、外部兄弟可锚（组合连线）。
   const inner: IRScope = { type: 'scope', localNamespace: true, children };
@@ -2036,6 +2037,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
  */
 export const lowerPlots = (datasets: ExternalDatasets, options: LowerPlotsOptions = {}): Array<CompositeDefinition> => [
   defineComposite({
+    namespace: 'plot',
+    type: 'plot',
     schema: PlotSpecSchema,
     expand: (node: PlotSpec) => expandPlot(node, datasets, options),
   }),

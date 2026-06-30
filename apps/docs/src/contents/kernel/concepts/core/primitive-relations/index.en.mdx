@@ -12,26 +12,26 @@ retikz resolves such a connection in two modes:
 
 ## Dynamic attach vs locked position
 
-Start with the difference between the two modes. The two groups below have identical geometry — only the reference syntax differs:
+Start with the difference between the two modes. The two groups bottom have identical geometry — only the reference syntax differs:
 
 <ComponentPreview name="relation-dynamic-vs-locked" size="sm" hideCode />
 
-The left group uses plain ids (`'T'`), so endpoints land on the target's west / east border by source direction; the right group locks to `'T.north'`, so endpoints pin to the top-edge midpoint no matter where the source is. **Prefer auto by default** — it lets connections adapt to the layout; lock only when a line must leave a specific side, align with a layout, or replicate an existing diagram.
+The left group uses plain ids (`'T'`), so endpoints land on the target's left / right border by source direction; the right group locks to `'T.top'`, so endpoints pin to the top-edge midpoint no matter where the source is. **Prefer auto by default** — it lets connections adapt to the layout; lock only when a line must leave a specific side, align with a layout, or replicate an existing diagram.
 
 | Mode            | Syntax                         | Endpoint behavior                    | Best for                                    |
 | --------------- | ------------------------------ | ------------------------------------ | ------------------------------------------- |
 | Dynamic attach  | `'T'` / `{ id: 'T' }`          | Picks a border by relative direction | Flowcharts, DAGs, ordinary relation lines   |
-| Locked position | `'T.north'` / `{ id, anchor }` | Fixed, ignores direction             | Fixed exit side, layout alignment, replicas |
+| Locked position | `'T.top'` / `{ id, anchor }` | Fixed, ignores direction             | Fixed exit side, layout alignment, replicas |
 
 ### Dynamic attach
 
 With a plain id reference (`<Step to="a">` or `<Draw way={['a', ...]}>`), retikz calls `boundaryPoint` at compile time: it casts a ray from the target center toward the **neighbor step's direction** and takes the intersection with the connection surface (boundary) as the endpoint. So the endpoint depends on the relative position of the two primitives — which is exactly what "relation" means.
 
-Each group below has 8 `[outerNode, center]` draws: the left center has a rectangle boundary, the right an ellipse boundary. Endpoints attach to each boundary — edges / corners for the rectangle, the corresponding perimeter point for the ellipse:
+Each group bottom has 8 `[outerNode, center]` draws: the left center has a rectangle boundary, the right an ellipse boundary. Endpoints attach to each boundary — edges / corners for the rectangle, the corresponding perimeter point for the ellipse:
 
 <ComponentPreview name="anchors-auto-attach" size="sm" hideCode />
 
-Which surface the endpoint lands on is decided by the target's **boundary** (following shape by default) — for how boundary, shape, and bounding box divide their roles, see the [primitive model](/kernel/concepts/kernel/primitive-model). To keep lines off the border, use `margin` (below) rather than replacing the target with hand-computed coordinates.
+Which surface the endpoint lands on is decided by the target's **boundary** (following shape by default) — for how boundary, shape, and bounding box divide their roles, see the [primitive model](/kernel/concepts/kernel/primitive-model). To keep lines off the border, use `margin` (bottom) rather than replacing the target with hand-computed coordinates.
 
 ### Locked position
 
@@ -40,30 +40,30 @@ To lock onto a specific position, a path target uses the **object form** `{ id, 
 | anchor form       | Meaning                                                                                                                                   |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | anchor omitted    | `{ id: 'A' }`: dynamic attach (same as plain id)                                                                                          |
-| named anchor      | `{ id: 'A', anchor: 'north' }`: a standard compass anchor or Web alias                                                                    |
+| named anchor      | `{ id: 'A', anchor: 'top' }`: a Web anchor name; compass names such as `north` remain aliases                                             |
 | angle anchor      | `{ id: 'A', anchor: 30 }`: visual border point at the given degree                                                                        |
-| edge proportional | `{ id: 'A', anchor: { side: 'north', t: 0.25 } }`                                                                                         |
-| anchor + offset   | `{ id: 'A', anchor: 'west', offset: [-4, 0] }`: resolve the point, then add a world-space `[dx, dy]` (not rotated by the node's `rotate`) |
+| edge proportional | `{ id: 'A', anchor: { side: 'top', t: 0.25 } }`                                                                                           |
+| anchor + offset   | `{ id: 'A', anchor: 'left', offset: [-4, 0] }`: resolve the point, then add a world-space `[dx, dy]` (not rotated by the node's `rotate`) |
 
-The anchor naming rules and geometric meanings all live in the [primitive model · anchors](/kernel/concepts/kernel/primitive-model); here only one thing matters: named / angle / edge-proportional anchors are **fixed in place**, unaffected by neighbor step direction (only auto mode adjusts dynamically). The three groups below: rectangle / ellipse use generic compass anchors, while star uses its own `tip-N`:
+The anchor naming rules and geometric meanings all live in the [primitive model · anchors](/kernel/concepts/kernel/primitive-model); here only one thing matters: named / angle / edge-proportional anchors are **fixed in place**, unaffected by neighbor step direction (only auto mode adjusts dynamically). The three groups bottom: rectangle / ellipse use generic Web anchors, while star uses its own `tip-N`:
 
 <ComponentPreview name="anchors-explicit" size="sm" hideCode />
 
-> **Named compass anchors use the box model**: named compass anchors resolve on the node's **bounding-box rectangle (bbox)** by default (circle / ellipse are the exception — they land on the real curve). So on a polygon hub, the diagonals NE/NW/SE/SW land on the **bbox corners (outside the shape)** — unlike dynamic attach, which casts a ray against the real shape. To pin named anchors on a different connection surface, set `boundary` explicitly.
+> **Named anchors use the box model**: named anchors resolve on the node's **bounding-box rectangle (bbox)** by default (circle / ellipse are the exception — they land on the real curve). So on a polygon hub, top-right / top-left / bottom-right / bottom-left land on the **bbox corners (outside the shape)** — unlike dynamic attach, which casts a ray against the real shape. To pin named anchors on a different connection surface, set `boundary` explicitly.
 >
-> **Angle anchors use the real shape**: a numeric angle anchor (`{ id, anchor: 30 }` / `'A.30'`) casts a ray in that direction onto the **real shape boundary** (then expanded by `margin` / `outerSep`), unlike the bbox resolution of named compass anchors.
+> **Angle anchors use the real shape**: a numeric angle anchor (`{ id, anchor: 30 }` / `'A.30'`) casts a ray in that direction onto the **real shape boundary** (then expanded by `margin` / `outerSep`), unlike the bbox resolution of named directional anchors.
 >
-> **Shape-specific anchors are the exception**: a star's `tip-N`, a sector's `apex` / `outer-arc-mid`, etc. are named points unique to that shape and always land on the **real geometry**, regardless of `boundary` (right group above).
+> **Shape-specific anchors are the exception**: a star's `tip-N`, a sector's `apex` / `outer-arc-mid`, etc. are named points unique to that shape and always land on the **real geometry**, regardless of `boundary` (right group top).
 
 A path target can also be a Cartesian, polar, relative / offset / proportional position — see [positioning](/kernel/concepts/basic/position) for the full catalog. This page only covers "referencing another primitive".
 
 ## Line clearance
 
-`<Node margin={n}>` leaves the visible border untouched but pushes the node's whole connection boundary outward by `n` user units — **auto endpoints and explicit border anchors (`'A.east'` / `'A.30'`) move out alike**, so lines don't touch the border directly (matching TikZ `outer sep`). In multi-node flowcharts `margin={4}` is usually enough. For where margin sits in the node box model (and how it divides from padding), see the [primitive model](/kernel/concepts/kernel/primitive-model).
+`<Node margin={n}>` leaves the visible border untouched but pushes the node's whole connection boundary outward by `n` user units — **auto endpoints and explicit border anchors (`'A.right'` / `'A.30'`) move out alike**, so lines don't touch the border directly (matching TikZ `outer sep`). In multi-node flowcharts `margin={4}` is usually enough. For where margin sits in the node box model (and how it divides from padding), see the [primitive model](/kernel/concepts/kernel/primitive-model).
 
 <ComponentPreview name="anchors-margin" size="xs" hideCode />
 
-The three columns above are: no margin (touching the border), auto with margin (a border anchor → backs off into a gap), and `{side,t}` with margin (an edge point → still touches the visual border). Only border anchors (auto / compass / angle) move out with `margin`; `center`, shape-specific anchors, edge-proportional points `{side,t}`, and label attachment still hit the **visual shape** and ignore `margin`. To keep a connection on the visible edge at some point, use those or an explicit coordinate offset.
+The three columns top are: no margin (touching the border), auto with margin (a border anchor → backs off into a gap), and `{side,t}` with margin (an edge point → still touches the visual border). Only border anchors (auto / named direction / angle) move out with `margin`; `center`, shape-specific anchors, edge-proportional points `{side,t}`, and label attachment still hit the **visual shape** and ignore `margin`. To keep a connection on the visible edge at some point, use those or an explicit coordinate offset.
 
 `margin` also depends on the shape family: it applies to **text-container shapes** (rectangle / ellipse / polygon, sized by the inner frame) but not to **param-driven shapes** (star / sector, sized by params).
 
@@ -97,11 +97,11 @@ A connection target need not be a node, either. `<Coordinate>` declares a positi
 
 ## Group connection
 
-`<Scope id="cluster">` registers the visual bounding box of its subtree as a referenceable boundary, and outer paths reference it via `'cluster'` / `'cluster.north'` / `'cluster.30'` — both auto and locked modes apply, only the connection target changes from a single node to a whole group of primitives:
+`<Scope id="cluster">` registers the visual bounding box of its subtree as a referenceable boundary, and outer paths reference it via `'cluster'` / `'cluster.top'` / `'cluster.30'` — both auto and locked modes apply, only the connection target changes from a single node to a whole group of primitives:
 
 <ComponentPreview name="relation-scope" size="sm" hideCode />
 
-Above, the light-gray dashed outline is the cluster's bounding box; the external `ext` uses plain `'cluster'` to auto-attach to the boundary on its side, and `'cluster.north'` to lock onto the top-edge midpoint. This is useful for drawing outer connections to a whole group; namespace and bbox details live in [Scope](/kernel/components/layout/scope).
+Above, the light-gray dashed outline is the cluster's bounding box; the external `ext` uses plain `'cluster'` to auto-attach to the boundary on its side, and `'cluster.top'` to lock onto the top-edge midpoint. This is useful for drawing outer connections to a whole group; namespace and bbox details live in [Scope](/kernel/components/layout/scope).
 
 ## Further Reading
 

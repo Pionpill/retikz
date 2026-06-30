@@ -2,6 +2,7 @@ export * from './anchor';
 export * from './channel';
 export * from './coordinate';
 export * from './data';
+export * from './format';
 export * from './mark';
 export * from './provenance';
 export * from './scale';

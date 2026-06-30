@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileOptions, CompileWarning } from '../../src/compile/compile';
+import type { CompileOptions } from '../../src/compile/compile';
 import type { PatternDefinition, PatternEmitContext } from '../../src/contract/pattern';
 import type {
   MarkerEllipsePrim,
@@ -70,6 +70,7 @@ const pathD = (prim: MarkerPathPrim): string =>
 /** 自定义 pattern：单 path motif（斜十字横段），size 默认 10 */
 const customPattern = (): PatternDefinition =>
   definePattern({
+    name: 'customPattern',
     defaultSize: 10,
     emit: ({ size, color, lineWidth }): Array<MarkerPrimitive> => [
       {
@@ -87,6 +88,7 @@ const customPattern = (): PatternDefinition =>
 /** 多 primitive 自定义 pattern：背景 rect + 两 motif 元素 */
 const multiPrimPattern = (): PatternDefinition =>
   definePattern({
+    name: 'multiPrimPattern',
     defaultSize: 12,
     emit: ({ size, color, background }): Array<MarkerPrimitive> => [
       ...(background
@@ -123,7 +125,7 @@ describe('Pattern registry — happy path', () => {
   });
 
   it('custom_pattern_register：注册自定义 PatternDefinition → tile.motif 进资源', () => {
-    const opts: CompileOptions = { patterns: { cross: customPattern() } };
+    const opts: CompileOptions = { patterns: [{ ...customPattern(), name: 'cross' }] };
     const ir = patternNodeIR({ kind: 'pattern', shape: 'cross' });
     expect(() => compileToScene(ir, opts)).not.toThrow();
     const tile = firstPatternResource(compileToScene(ir, opts).resources)?.tile;
@@ -134,7 +136,7 @@ describe('Pattern registry — happy path', () => {
 
   it('shape_open_string：pattern.shape=myMotif（已注册）合法编译', () => {
     const ir = patternNodeIR({ kind: 'pattern', shape: 'myMotif' });
-    const scene = compileToScene(ir, { patterns: { myMotif: customPattern() } });
+    const scene = compileToScene(ir, { patterns: [{ ...customPattern(), name: 'myMotif' }] });
     expect(firstPatternResource(scene.resources)).toBeDefined();
   });
 
@@ -202,14 +204,13 @@ describe('Pattern registry — error path', () => {
     expect(() => compileToScene(ir)).toThrow(/dots, grid, lines/);
   });
 
-  it('same_name_override_warn：patterns 覆盖内置名 → PATTERN_OVERRIDES_BUILTIN warn（不静默）', () => {
-    const warnings: Array<CompileWarning> = [];
+  it('same_name_duplicate_rejected：patterns 覆盖内置名 → duplicate error（不静默）', () => {
     const ir = patternNodeIR({ kind: 'pattern', shape: 'lines' });
-    compileToScene(ir, {
-      patterns: { lines: customPattern() },
-      onWarn: w => warnings.push(w),
-    });
-    expect(warnings.some(w => w.code === 'PATTERN_OVERRIDES_BUILTIN')).toBe(true);
+    expect(() =>
+      compileToScene(ir, {
+        patterns: [{ ...customPattern(), name: 'lines' }],
+      }),
+    ).toThrow(/duplicate pattern shape registration: "lines"/);
   });
 
   it('motif_rejects_text：emit 返回含 text 的 primitive → 运行时窄子集栅栏拒', () => {
@@ -219,9 +220,9 @@ describe('Pattern registry — error path', () => {
       // @ts-expect-error MarkerPrimitive 禁 text（窄子集杜绝 motif 内文本布局）
       { type: 'text', x: 0, y: 0, lines: [], measuredWidth: 0, measuredHeight: 0 },
     ];
-    const badPattern: PatternDefinition = { emit: () => badMotif };
+    const badPattern: PatternDefinition = { name: 'bad', emit: () => badMotif };
     const ir = patternNodeIR({ kind: 'pattern', shape: 'bad' });
-    expect(() => compileToScene(ir, { patterns: { bad: badPattern } })).toThrow();
+    expect(() => compileToScene(ir, { patterns: [{ ...badPattern, name: 'bad' }] })).toThrow();
   });
 });
 
@@ -234,7 +235,7 @@ describe('Pattern registry — interaction', () => {
   });
 
   it('custom_motif_multiple_prims：emit 产多 MarkerPrimitive（背景 rect + 多 motif 元素）', () => {
-    const opts: CompileOptions = { patterns: { multi: multiPrimPattern() } };
+    const opts: CompileOptions = { patterns: [{ ...multiPrimPattern(), name: 'multi' }] };
     const tile = firstPatternResource(
       compileToScene(patternNodeIR({ kind: 'pattern', shape: 'multi', background: '#fff' }), opts).resources,
     )?.tile;
@@ -274,7 +275,7 @@ describe('Pattern registry — interaction', () => {
 
 describe('Pattern registry — BUILTIN_PATTERNS 注册表结构', () => {
   it('内置 3 注册键穷尽（lines / dots / grid）', () => {
-    expect(Object.keys(BUILTIN_PATTERNS).sort()).toEqual(['dots', 'grid', 'lines']);
+    expect(BUILTIN_PATTERNS.map(def => def.name).sort()).toEqual(['dots', 'grid', 'lines']);
   });
 
   it('内置 3 defaultSize 对齐几何契约（缺省 8）', () => {
@@ -286,7 +287,8 @@ describe('Pattern registry — BUILTIN_PATTERNS 注册表结构', () => {
   it('PatternEmitContext / PatternDefinition 类型门控：emit 产物限 MarkerPrimitive 窄子集（@ts-expect-error）', () => {
     // 正向：path / ellipse / rect / group 合法 motif
     const ok: PatternDefinition = {
-      emit: (ctx: PatternEmitContext): Array<MarkerPrimitive> => [
+      name: 'ok',
+emit: (ctx: PatternEmitContext): Array<MarkerPrimitive> => [
         { type: 'path', commands: [{ kind: 'move', to: [0, 0] }] },
         { type: 'ellipse', cx: ctx.size / 2, cy: ctx.size / 2, rx: 1, ry: 1, fill: ctx.color },
       ],

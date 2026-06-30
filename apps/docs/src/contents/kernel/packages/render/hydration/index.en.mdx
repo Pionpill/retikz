@@ -16,7 +16,7 @@ The two-step split exists because an event handler is a function and cannot be s
 
 ## React: event props on components
 
-Add `on<Event>` props to `<Node>` / `<Path>` / `<Scope>` — as long as the element has an `id`. The handler signature is `(event, context) => void`: the first arg is the native DOM `Event`, the second `context` is a renderer-agnostic runtime context (see [below](#the-handler-context)). The old `event => …` form that only uses `event` keeps working.
+Add `on<Event>` props to `<Node>` / `<Path>` / `<Scope>` — as long as the element has an `id`. The handler signature is `(event, context) => void`: the first arg is the native DOM `Event`, the second `context` is a renderer-agnostic runtime context (see [bottom](#the-handler-context)). The old `event => …` form that only uses `event` keeps working.
 
 <ComponentPreview name="hydration-click" size="md" interactive />
 
@@ -95,7 +95,7 @@ const handle = view.hydrate({
 
 `handlers` is a `{ [id]: { eventName: handler } }` table; event names are `click` / `doubleClick` / `rightClick` / `pointerDown` / `pointerUp` / `pointerMove` / `pointerEnter` / `pointerLeave` / `wheel` (a one-to-one match with React's `on<Event>`, with the `on` prefix dropped and the first letter lowercased).
 
-After SSR, bind via the standalone `hydrate(root, options)` entry (the container already holds the SSR-injected `<svg>` string). `options` also accepts `renderer: 'svg' | 'canvas'` (defaults to `'svg'`), which decides how elements are located. To give context its meta / geometry / animation controls, pass `scene` (compiled from the IR via `@retikz/core`'s `compileToScene(ir)`) in too; otherwise you get only the minimal context (below):
+After SSR, bind via the standalone `hydrate(root, options)` entry (the container already holds the SSR-injected `<svg>` string). `options` also accepts `renderer: 'svg' | 'canvas'` (defaults to `'svg'`), which decides how elements are located. To give context its meta / geometry / animation controls, pass `scene` (compiled from the IR via `@retikz/core`'s `compileToScene(ir)`) in too; otherwise you get only the minimal context (bottom):
 
 ```ts
 import { compileToScene } from '@retikz/core';

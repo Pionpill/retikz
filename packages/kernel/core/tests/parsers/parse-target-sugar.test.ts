@@ -25,7 +25,8 @@ describe('parseTargetSugar', () => {
 
   it('节点 id 类字符串解析为 NodeTarget 对象', () => {
     expect(parseTargetSugar('A')).toEqual({ id: 'A' });
-    expect(parseTargetSugar('A.north')).toEqual({ id: 'A', anchor: 'north' });
+    expect(parseTargetSugar('A.top')).toEqual({ id: 'A', anchor: 'top' });
+    expect(parseTargetSugar('A.north')).toEqual({ id: 'A', anchor: 'top' });
     expect(parseTargetSugar('A.30')).toEqual({ id: 'A', anchor: 30 });
     expect(parseTargetSugar('node-1')).toEqual({ id: 'node-1' });
   });
@@ -36,7 +37,7 @@ describe('parseTargetSugar', () => {
     expect(parseTargetSugar(polar)).toEqual(polar);
     const relative = { relative: [3, 4] };
     expect(parseTargetSugar(relative)).toEqual(relative);
-    const nodeTarget = { id: 'A', anchor: { side: 'north', t: 0.5 } };
+    const nodeTarget = { id: 'A', anchor: { side: 'top', t: 0.5 } };
     expect(parseTargetSugar(nodeTarget)).toEqual(nodeTarget);
   });
 

@@ -16,11 +16,11 @@ const Demo: FC = () => (
     </Path>
     <Path stroke="transparent">
       <Step kind="move" to="a" />
-      <Step kind="fold" via="-|" to="b" label={{ text: 'near-start', position: 'near-start', side: 'above' }} />
+      <Step kind="fold" via="-|" to="b" label={{ text: 'near-start', position: 'near-start', side: 'top' }} />
     </Path>
     <Path stroke="transparent">
       <Step kind="move" to="a" />
-      <Step kind="fold" via="-|" to="b" label={{ text: 'midway', position: 'midway', side: 'above' }} />
+      <Step kind="fold" via="-|" to="b" label={{ text: 'midway', position: 'midway', side: 'top' }} />
     </Path>
     <Path stroke="transparent">
       <Step kind="move" to="a" />
@@ -36,11 +36,11 @@ const Demo: FC = () => (
     </Path>
     <Path stroke="transparent">
       <Step kind="move" to="a" />
-      <Step kind="fold" via="|-" to="b" label={{ text: '0.5', position: 0.5, side: 'below' }} />
+      <Step kind="fold" via="|-" to="b" label={{ text: '0.5', position: 0.5, side: 'bottom' }} />
     </Path>
     <Path stroke="transparent">
       <Step kind="move" to="a" />
-      <Step kind="fold" via="|-" to="b" label={{ text: '0.75', position: 0.75, side: 'below' }} />
+      <Step kind="fold" via="|-" to="b" label={{ text: '0.75', position: 0.75, side: 'bottom' }} />
     </Path>
   </Layout>
 );

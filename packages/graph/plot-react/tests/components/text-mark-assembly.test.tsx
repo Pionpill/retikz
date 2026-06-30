@@ -17,7 +17,7 @@ describe('priority-1 宿主 mark label 扁平 props → IR mark.label', () => {
         x="month"
         y="revenue"
         label="revenue"
-        labelPosition="above"
+        labelPosition="top"
         labelDistance={6}
         labelDisplayFormat=",.0f"
       />,
@@ -27,7 +27,7 @@ describe('priority-1 宿主 mark label 扁平 props → IR mark.label', () => {
     expect(mark.type).toBe('interval');
     expect(mark.label).toEqual({
       content: { field: 'revenue', displayFormat: ',.0f' },
-      position: 'above',
+      position: 'top',
       distance: 6,
     });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();

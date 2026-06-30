@@ -1,12 +1,7 @@
 import type { ClipShape, PathCommand, Transform } from '@retikz/core';
 
-/** 角度转弧度系数（canvas 角度用弧度、Scene 用度） */
 export const DEG_TO_RAD = Math.PI / 180;
 
-/**
- * 在当前 context 上构建圆角矩形路径（cornerRadius 缺省或 ≤0 退化为直角 rect）
- * @description radius 上限钳到宽 / 高的一半，四角用二次贝塞尔逼近；drawScene 填充 / 描边与 hitTest 点测共用。
- */
 export const roundedRectPath = (
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -35,10 +30,6 @@ export const roundedRectPath = (
   ctx.closePath();
 };
 
-/**
- * 把单条 PathCommand 翻译成 canvas 路径调用（不含 beginPath，供 buildPath 串联）
- * @description arc/ellipseArc 的角度按度转弧度；counterClockwise 缺省时按 end<start 推断扫描方向，与 SVG sweep-flag 一致。
- */
 export const pathCommand = (ctx: CanvasRenderingContext2D, command: PathCommand): void => {
   switch (command.kind) {
     case 'move':
@@ -70,8 +61,6 @@ export const pathCommand = (ctx: CanvasRenderingContext2D, command: PathCommand)
         command.radius,
         command.startAngle * DEG_TO_RAD,
         command.endAngle * DEG_TO_RAD,
-        // counterClockwise 缺省时按角度顺序推断扫描方向（endAngle < startAngle = 逆时针），与 SVG sweep-flag 一致；
-        // 否则 ctx.arc 对 end<start 会绕远（如 0→-30 画成 330°）
         command.counterClockwise ?? command.endAngle < command.startAngle,
       );
       break;
@@ -90,13 +79,11 @@ export const pathCommand = (ctx: CanvasRenderingContext2D, command: PathCommand)
   }
 };
 
-/** 在当前 context 上把整条 path commands 构建为路径（含 beginPath）；填充 / 描边 / 点测共用 */
 export const buildPath = (ctx: CanvasRenderingContext2D, commands: ReadonlyArray<PathCommand>): void => {
   ctx.beginPath();
   for (const command of commands) pathCommand(ctx, command);
 };
 
-/** 把单个 group Transform 应用到当前 context（translate / rotate（可选 cx,cy）/ scale）；drawScene 与 hitTest 共用 */
 export const applyTransform = (ctx: CanvasRenderingContext2D, transform: Transform): void => {
   switch (transform.kind) {
     case 'translate':
@@ -119,28 +106,40 @@ export const applyTransform = (ctx: CanvasRenderingContext2D, transform: Transfo
   }
 };
 
-/** 把裁剪形状构建为当前 ctx 路径（含 beginPath）；clip 填充与 hit-test 点测共用，避免形状 switch 两处漂移 */
 export const buildClipPath = (ctx: CanvasRenderingContext2D, shape: ClipShape): void => {
   ctx.beginPath();
-  switch (shape.kind) {
-    case 'rect':
-      ctx.rect(shape.x, shape.y, shape.width, shape.height);
-      break;
-    case 'circle':
-      ctx.arc(shape.cx, shape.cy, shape.r, 0, Math.PI * 2);
-      break;
-    case 'ellipse':
-      ctx.ellipse(shape.cx, shape.cy, shape.rx, shape.ry, 0, 0, Math.PI * 2);
-      break;
-    case 'polygon':
-      shape.points.forEach((pt, i) => (i === 0 ? ctx.moveTo(pt[0], pt[1]) : ctx.lineTo(pt[0], pt[1])));
-      ctx.closePath();
-      break;
-  }
+  const append = (s: ClipShape): void => {
+    switch (s.kind) {
+      case 'rect':
+        ctx.rect(s.x, s.y, s.width, s.height);
+        break;
+      case 'circle':
+        ctx.arc(s.cx, s.cy, s.r, 0, Math.PI * 2);
+        break;
+      case 'ellipse':
+        ctx.ellipse(s.cx, s.cy, s.rx, s.ry, 0, 0, Math.PI * 2);
+        break;
+      case 'polygon':
+        s.points.forEach((pt, i) => (i === 0 ? ctx.moveTo(pt[0], pt[1]) : ctx.lineTo(pt[0], pt[1])));
+        ctx.closePath();
+        break;
+      case 'path':
+        for (const command of s.commands) pathCommand(ctx, command);
+        break;
+      case 'compound':
+        for (const child of s.children) append(child);
+        break;
+    }
+  };
+  append(shape);
 };
 
-/** 按裁剪形状构建路径并 ctx.clip()（坐标在 group 局部帧，须在 group transform 之后调用） */
+const clipFillRule = (shape: ClipShape): CanvasFillRule | undefined =>
+  shape.kind === 'path' || shape.kind === 'compound' ? shape.fillRule : undefined;
+
 export const applyClip = (ctx: CanvasRenderingContext2D, shape: ClipShape): void => {
   buildClipPath(ctx, shape);
-  ctx.clip();
+  const fillRule = clipFillRule(shape);
+  if (fillRule === undefined) ctx.clip();
+  else ctx.clip(fillRule);
 };

@@ -6,7 +6,13 @@ import {
   BoundarySchema,
   DropShadowSchema,
   FontSchema,
+  NodeTextAlign,
+  PathArrowDirectionSchema,
+  PathFillRuleSchema,
+  PathLineCapSchema,
+  PathLineJoinSchema,
   PathScaleSchema,
+  PathThicknessSchema,
   ShadowPreset,
   ShapeRefSchema,
 } from '@retikz/core';
@@ -34,7 +40,7 @@ export const RelationTransformSchema = MarkTransformSchema;
 
 /** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema，reference 用专属） */
 const markBase = {
-  id: z.string().min(1).optional().describe('Optional mark handle; reserved scope/anchor target'),
+  id: z.string().min(1).optional().describe('Optional mark handle used by generated scope and anchor targets'),
   coordinateScope: z
     .string()
     .min(1)
@@ -342,7 +348,7 @@ export const NodePositiveNumberStyleSchema = markValueSchema(
   'node positive numeric style value',
 );
 export const NodeTextAlignStyleSchema = markValueSchema(
-  z.enum(['left', 'center', 'right']),
+  z.enum(NodeTextAlign),
   'Data field path bound to node text align',
   'Constant core Node align',
   'node text align style value',
@@ -384,13 +390,13 @@ export const BlendModeStyleSchema = markValueSchema(
   'blendMode style value',
 );
 export const PathLineCapStyleSchema = markValueSchema(
-  z.enum(['butt', 'round', 'square']),
+  PathLineCapSchema,
   'Data field path bound to a path lineCap value',
   'Constant core Path lineCap',
   'path lineCap style value',
 );
 export const PathLineJoinStyleSchema = markValueSchema(
-  z.enum(['miter', 'round', 'bevel']),
+  PathLineJoinSchema,
   'Data field path bound to a path lineJoin value',
   'Constant core Path lineJoin',
   'path lineJoin style value',
@@ -402,19 +408,19 @@ export const PathRoundedCornersStyleSchema = markValueSchema(
   'path roundedCorners style value',
 );
 export const PathFillRuleStyleSchema = markValueSchema(
-  z.enum(['nonzero', 'evenodd']),
+  PathFillRuleSchema,
   'Data field path bound to path fillRule',
   'Constant core Path fillRule',
   'path fillRule style value',
 );
 export const PathThicknessStyleSchema = markValueSchema(
-  z.enum(['ultraThin', 'veryThin', 'thin', 'semithick', 'thick', 'veryThick', 'ultraThick']),
+  PathThicknessSchema,
   'Data field path bound to path thickness',
   'Constant core Path thickness preset',
   'path thickness style value',
 );
 export const PathArrowStyleSchema = markValueSchema(
-  z.enum(['none', '->', '<-', '<->']),
+  PathArrowDirectionSchema,
   'Data field path bound to path arrow direction',
   'Constant core Path arrow direction',
   'path arrow style value',

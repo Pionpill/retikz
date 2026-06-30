@@ -46,6 +46,7 @@ const findNgonBoundaryPoint = (radius: number, sides: number, direction: Positio
 
 /** ngon 注册项：sides 走 nested params，单一注册名生成任意边数变体 */
 const ngon = defineShape({
+  name: 'ngon',
   paramsSchema: z.strictObject({
     sides: z.number().int().min(3).describe('Number of sides of the regular polygon (>= 3).'),
   }),
@@ -96,7 +97,7 @@ const ngon = defineShape({
 });
 
 const Demo: FC = () => (
-  <Layout width={460} height={200} shapes={{ ngon }}>
+  <Layout width={460} height={200} shapes={[ngon]}>
     <Node
       id="t"
       shape={{ type: 'ngon', params: { sides: 3 } }}

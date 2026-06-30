@@ -1,8 +1,10 @@
 import { minimalEnclosingCircle } from '@retikz/math';
 
+import type { BoundaryDefinition } from '../contract/boundary';
 import type { ShapeDefinition } from '../contract/shape';
 import type { Rect } from '../geometry/rect';
 import type { Transform } from '../primitive';
+import type { ProviderCollection } from '../providers/registry';
 import type {
   IRAtPosition,
   IRBetweenPosition,
@@ -16,7 +18,9 @@ import type { NodeLayout } from './node';
 import type { ResolveBetweenGlobal } from './position';
 
 import { rect as rectOps } from '../geometry/rect';
-import { BUILTIN_SHAPES } from '../providers/shape';
+import { resolveBoundaryRegistry } from '../providers/boundary';
+import { providerDefinitionOf } from '../providers/registry';
+import { resolveShapeRegistry } from '../providers/shape';
 import { outerRectOf } from './node';
 import { resolvePosition } from './position';
 
@@ -276,13 +280,14 @@ export const registerScopeAsLayout = (
   id: string,
   bbox: ScopeBoundingBox | null,
   fallbackOrigin: IRPosition,
-  shapes: Record<string, ShapeDefinition> = BUILTIN_SHAPES,
+  shapes: ProviderCollection<ShapeDefinition> = resolveShapeRegistry(),
+  boundaries: ProviderCollection<BoundaryDefinition> = resolveBoundaryRegistry(),
 ): NodeLayout => {
   const box: ScopeBoundingBox = bbox ?? { x: fallbackOrigin[0], y: fallbackOrigin[1], width: 0, height: 0 };
   return {
     id,
     shapeName: 'rectangle',
-    shapeDef: shapes.rectangle,
+    shapeDef: providerDefinitionOf(shapes, 'rectangle', { capability: 'shape', optionName: 'shapes' }),
     rect: { x: box.x, y: box.y, width: box.width, height: box.height, rotate: 0 },
     rotateDeg: 0,
     margin: 0,
@@ -292,6 +297,7 @@ export const registerScopeAsLayout = (
     lineHeight: 0,
     fontSize: 0,
     shapes,
+    boundaries,
   };
 };
 
@@ -304,7 +310,8 @@ export const registerScopeCircleLayout = (
   id: string,
   cornerPoints: ReadonlyArray<IRPosition>,
   fallbackOrigin: IRPosition,
-  shapes: Record<string, ShapeDefinition> = BUILTIN_SHAPES,
+  shapes: ProviderCollection<ShapeDefinition> = resolveShapeRegistry(),
+  boundaries: ProviderCollection<BoundaryDefinition> = resolveBoundaryRegistry(),
 ): NodeLayout => {
   const mec = cornerPoints.length > 0 ? minimalEnclosingCircle([...cornerPoints]) : null;
   const center: IRPosition = mec ? [mec.center[0], mec.center[1]] : fallbackOrigin;
@@ -312,7 +319,7 @@ export const registerScopeCircleLayout = (
   return {
     id,
     shapeName: 'ellipse',
-    shapeDef: shapes.ellipse,
+    shapeDef: providerDefinitionOf(shapes, 'ellipse', { capability: 'shape', optionName: 'shapes' }),
     shapeParams: { circumscribe: 'equal' },
     rect: { x: center[0], y: center[1], width: diameter, height: diameter, rotate: 0 },
     rotateDeg: 0,
@@ -323,5 +330,6 @@ export const registerScopeCircleLayout = (
     lineHeight: 0,
     fontSize: 0,
     shapes,
+    boundaries,
   };
 };

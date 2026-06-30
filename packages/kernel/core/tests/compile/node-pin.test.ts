@@ -32,20 +32,20 @@ const lineEnds = (p: PathPrim): { from: [number, number]; to: [number, number] }
 
 describe('pin 引线产出', () => {
   it('pin:true → 恰好 1 条 leader PathPrim（move + line）', () => {
-    const paths = compileNode({ text: 'x', position: 'above', pin: true });
+    const paths = compileNode({ text: 'x', position: 'top', pin: true });
     expect(paths).toHaveLength(1);
     expect(paths[0].commands.map(c => c.kind)).toEqual(['move', 'line']);
   });
 
-  it("position:'above' → leader 竖直向上（end 比 start 更高、x 近似相等）", () => {
-    const { from, to } = lineEnds(compileNode({ text: 'x', position: 'above', pin: true })[0]);
+  it("position:'top' → leader 竖直向上（end 比 start 更高、x 近似相等）", () => {
+    const { from, to } = lineEnds(compileNode({ text: 'x', position: 'top', pin: true })[0]);
     expect(to[1]).toBeLessThan(from[1]); // 屏幕 y-down：label 在上 → end y 更小
     expect(Math.abs(to[0] - from[0])).toBeLessThan(1); // 竖直
   });
 
   it('pin 缺省 / false → 不画 leader', () => {
-    expect(compileNode({ text: 'x', position: 'above' })).toHaveLength(0);
-    expect(compileNode({ text: 'x', position: 'above', pin: false })).toHaveLength(0);
+    expect(compileNode({ text: 'x', position: 'top' })).toHaveLength(0);
+    expect(compileNode({ text: 'x', position: 'top', pin: false })).toHaveLength(0);
   });
 });
 
@@ -61,7 +61,7 @@ describe('pin 引线样式', () => {
   });
 
   it('pin:true 引线 stroke 缺省继承 currentColor', () => {
-    const paths = compileNode({ text: 'x', position: 'above', pin: true });
+    const paths = compileNode({ text: 'x', position: 'top', pin: true });
     expect(paths[0].stroke).toBe('currentColor');
   });
 });
@@ -88,7 +88,7 @@ describe('label / pin 进 bbox（不被 viewBox 裁切）', () => {
 
   it('远处 label 撑大 scene.layout（与无 label 比）', () => {
     const base = sceneOf({});
-    const withLabel = sceneOf({ label: { text: 'far above', position: 'above', distance: 60 } });
+    const withLabel = sceneOf({ label: { text: 'far top', position: 'top', distance: 60 } });
     expect(withLabel.height).toBeGreaterThan(base.height);
   });
 

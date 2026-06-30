@@ -1,4 +1,4 @@
-import type { ValueOf } from '@retikz/core';
+import type { IRStepLabelInput, ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
 import type { MarkValueKind, PathCurve } from './constants';
@@ -111,13 +111,23 @@ export type ReferenceMark = z.infer<typeof ReferenceMarkSchema>;
 export type AnchorIdSpec = z.infer<typeof AnchorIdSpecSchema>;
 export type PlotTargetRef = z.infer<typeof PlotTargetRefSchema>;
 export type RelationStepLabel = z.infer<typeof RelationStepLabelSchema>;
+export type RelationStepLabelInput = Omit<IRStepLabelInput, 'text'> & {
+  text: RelationStepLabel['text'];
+};
 export type RelationRouteStep = z.infer<typeof RelationRouteStepSchema>;
+export type RelationRouteStepInput = Omit<RelationRouteStep, 'label'> & {
+  label?: RelationStepLabelInput;
+};
 export type MarkTransform = z.infer<typeof MarkTransformSchema>;
 export type RelationTransform = z.infer<typeof RelationTransformSchema>;
 export type RelationRoutingSpec = z.infer<typeof RelationRoutingSpecSchema>;
 export type RelationPrimitiveStyle = z.infer<typeof RelationPrimitiveStyleSchema>;
 export type RelationPathSpecificOptions = z.infer<typeof RelationPathSpecificOptionsSchema>;
 export type RelationPathGeometry = z.infer<typeof RelationPathGeometrySchema>;
+export type RelationPathGeometryInput = Omit<RelationPathGeometry, 'label' | 'route'> & {
+  label?: RelationStepLabelInput;
+  route?: Array<RelationRouteStepInput>;
+};
 export type RelationRibbonSpecificOptions = z.infer<typeof RelationRibbonSpecificOptionsSchema>;
 export type RelationRibbonOptions = z.infer<typeof RelationRibbonOptionsSchema>;
 export type RelationMark = z.infer<typeof RelationMarkSchema>;

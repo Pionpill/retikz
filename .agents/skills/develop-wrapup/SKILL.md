@@ -134,7 +134,7 @@ INFO（一致 / 文档质量"好消息"）：
 主 AI 把以下材料整理给人工：
 
 ```
-ADR：notes/decisions/kernel/<major>/<minor>/<milestone>/<NNNN>-*.md
+ADR：packages/kernel/_notes/decisions/<major>/<minor>/<milestone>/<NNNN>-*.md
 本 ADR commit 列表：
   - <hash> <message>
   - ...

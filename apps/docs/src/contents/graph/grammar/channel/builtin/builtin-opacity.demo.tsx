@@ -32,7 +32,7 @@ const Demo: FC = () => (
       stroke="#1e3a8a"
       strokeWidth={2}
       label="alpha"
-      labelPosition="above"
+      labelPosition="top"
     />
     <PointMark
       x="xFill"
@@ -43,7 +43,7 @@ const Demo: FC = () => (
       stroke="#14532d"
       strokeWidth={2}
       label="alpha"
-      labelPosition="above"
+      labelPosition="top"
     />
     <PointMark
       x="xDraw"
@@ -54,7 +54,7 @@ const Demo: FC = () => (
       stroke="#7c2d12"
       strokeWidth={5}
       label="alpha"
-      labelPosition="above"
+      labelPosition="top"
     />
     <Axis dimension="x" />
     <Axis dimension="y" grid />

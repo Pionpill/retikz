@@ -10,4 +10,4 @@ lowers to `@retikz/core` (Scope / Node / Path / Step / Coordinate) via the core
 - Authoring surface for v0.1 is the Plot IR object + lowering; framework bindings
   (React / vanilla) come later.
 
-See `notes/architecture/plot-design.md` and `notes/decisions/plot/` for design and ADRs.
+See `../_notes/architecture/plot-design.md` and `../_notes/decisions/` for design and ADRs.

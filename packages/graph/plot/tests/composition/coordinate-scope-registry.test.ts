@@ -13,7 +13,7 @@ const rows = [
   { month: 2, value: 15 },
 ];
 
-const legacySpec = {
+const coordinateShorthandSpec = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'sales' },
@@ -67,8 +67,8 @@ const expandOf = (spec: PlotSpec): IRScope => {
 };
 
 describe('coordinate composition registry schema', () => {
-  it('legacy_coordinate_shorthand_still_parses', () => {
-    expect(PlotSpecSchema.parse(legacySpec)).toEqual(legacySpec);
+  it('compat_coordinate_shorthand_parses', () => {
+    expect(PlotSpecSchema.parse(coordinateShorthandSpec)).toEqual(coordinateShorthandSpec);
   });
 
   it('composition_scope_registry_parses_without_top_level_coordinate', () => {
@@ -158,9 +158,9 @@ describe('coordinate composition registry schema', () => {
     expect(() => PlotSpecSchema.parse(spec)).toThrow(/coordinateScope/);
   });
 
-  it('legacy_mark_coordinate_scope_must_reference_implicit_default_scope', () => {
+  it('compat_mark_coordinate_scope_must_reference_implicit_default_scope', () => {
     const spec = {
-      ...legacySpec,
+      ...coordinateShorthandSpec,
       marks: [
         { type: 'point', coordinateScope: 'missing', encoding: { x: { field: 'month' }, y: { field: 'value' } } },
       ],
@@ -168,9 +168,9 @@ describe('coordinate composition registry schema', () => {
     expect(() => PlotSpecSchema.parse(spec)).toThrow(/coordinateScope/);
   });
 
-  it('legacy_axis_coordinate_scope_must_reference_implicit_default_scope', () => {
+  it('compat_axis_coordinate_scope_must_reference_implicit_default_scope', () => {
     const spec = {
-      ...legacySpec,
+      ...coordinateShorthandSpec,
       guides: [{ type: 'axis', dimension: 'x', coordinateScope: 'missing' }],
     };
     expect(() => PlotSpecSchema.parse(spec)).toThrow(/coordinateScope/);

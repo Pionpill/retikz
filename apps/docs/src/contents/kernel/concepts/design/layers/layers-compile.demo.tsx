@@ -21,9 +21,9 @@ const Demo: FC = () => (
     </Node>
 
     <Draw way={['ir', 'nodes']} arrow="->" />
-    <Draw way={['nodes', { label: { text: 'anchors', side: 'above', textColor: 'gray' } }, 'paths']} arrow="->" />
-    <Draw way={['paths', { label: { text: 'primitives', side: 'above', textColor: 'gray' } }, 'bounds']} arrow="->" />
-    <Draw way={['bounds', { label: { text: 'viewBox', side: 'above', textColor: 'gray' } }, 'scene']} arrow="->" />
+    <Draw way={['nodes', { label: { text: 'anchors', side: 'top', textColor: 'gray' } }, 'paths']} arrow="->" />
+    <Draw way={['paths', { label: { text: 'primitives', side: 'top', textColor: 'gray' } }, 'bounds']} arrow="->" />
+    <Draw way={['bounds', { label: { text: 'viewBox', side: 'top', textColor: 'gray' } }, 'scene']} arrow="->" />
   </Layout>
 );
 

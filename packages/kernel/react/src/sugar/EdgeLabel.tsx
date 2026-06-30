@@ -1,4 +1,4 @@
-import type { IRStepLabel } from '@retikz/core';
+import type { IRStepLabelInput } from '@retikz/core';
 import type { FC } from 'react';
 
 import { TIKZ_EDGE_LABEL } from '../kernel/_displayNames';
@@ -6,9 +6,9 @@ import { TIKZ_EDGE_LABEL } from '../kernel/_displayNames';
 /** <EdgeLabel> 组件的 props */
 export type EdgeLabelProps = {
   /** 段上位置（TikZ `midway` / `near start` / `near end`），缺省 'midway' */
-  position?: IRStepLabel['position'];
-  /** 相对段方向 / 视觉方位的偏移侧（'sloped' = 沿切线旋转），缺省 'above' */
-  side?: IRStepLabel['side'];
+  position?: IRStepLabelInput['position'];
+  /** 相对段方向 / 视觉方位的偏移侧（'sloped' = 沿切线旋转），缺省 'top' */
+  side?: IRStepLabelInput['side'];
   /** 标签文字内容；必须是字符串 */
   children: string;
 };

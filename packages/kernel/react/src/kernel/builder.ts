@@ -1,7 +1,21 @@
-import type { IR, IRChild, IRLineSpec, IRNode, IRScope, IRStep, IRStepLabel, IRTarget } from '@retikz/core';
+import type {
+  IR,
+  IRChild,
+  IRLineSpec,
+  IRNode,
+  IRNodeLabel,
+  IRNodeLabelInput,
+  IRScope,
+  IRStep,
+  IRStepLabel,
+  IRStepLabelInput,
+  IRTarget,
+  IRTransform,
+  IRTransformInput,
+} from '@retikz/core';
 import type { ReactElement, ReactNode } from 'react';
 
-import { CURRENT_IR_VERSION, parseTargetSugar } from '@retikz/core';
+import { CURRENT_IR_VERSION, normalizeAtDirection, normalizeGeometryLabelSide, normalizeWebSide, parseTargetSugar } from '@retikz/core';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
 import type { EdgeLabelProps } from '../sugar/EdgeLabel';
@@ -173,6 +187,65 @@ const readNodeText = (props: NodeProps): IRNode['text'] => {
   return lines;
 };
 
+const normalizePositionInput = (position: NodeProps['position'] | CoordinateProps['position']): IRNode['position'] => {
+  if (!Array.isArray(position) && typeof position === 'object' && 'direction' in position) {
+    return {
+      ...position,
+      direction: normalizeAtDirection(position.direction) ?? position.direction,
+    } as IRNode['position'];
+  }
+  return position;
+};
+
+const normalizeNodeLabelPositionInput = (
+  position: IRNodeLabelInput['position'],
+): IRNodeLabel['position'] | undefined => {
+  if (position === undefined) return undefined;
+  if (typeof position !== 'string') {
+    if (typeof position === 'object') {
+      return { ...position, boundary: normalizeWebSide(position.boundary) ?? position.boundary } as IRNodeLabel['position'];
+    }
+    return position;
+  }
+  if (position === 'center') return position;
+  return (normalizeAtDirection(position) ?? position) as IRNodeLabel['position'];
+};
+
+const normalizeNodeLabelInput = (label: IRNodeLabelInput): IRNodeLabel => {
+  const { position: rawPosition, ...rest } = label;
+  const out: IRNodeLabel = { ...rest, text: label.text };
+  const position = normalizeNodeLabelPositionInput(rawPosition);
+  if (position !== undefined) out.position = position;
+  return out;
+};
+
+const normalizeNodeLabelsInput = (label: NodeProps['label']): IRNode['label'] => {
+  if (label === undefined) return undefined;
+  return Array.isArray(label) ? label.map(normalizeNodeLabelInput) : normalizeNodeLabelInput(label);
+};
+
+const normalizeStepLabelInput = (label: IRStepLabelInput): IRStepLabel => {
+  const { side: rawSide, ...rest } = label;
+  const out: IRStepLabel = { ...rest, text: label.text };
+  if (rawSide !== undefined) out.side = (normalizeGeometryLabelSide(rawSide) ?? rawSide) as IRStepLabel['side'];
+  return out;
+};
+
+const normalizeTransformInput = (transform: IRTransformInput): IRTransform => {
+  if (transform.kind === 'at-translate') {
+    return {
+      ...transform,
+      direction: normalizeAtDirection(transform.direction) ?? transform.direction,
+    } as IRTransform;
+  }
+  return transform;
+};
+
+const normalizeTransformsInput = (transforms: ScopeProps['transforms']): IRScope['transforms'] => {
+  if (transforms === undefined) return undefined;
+  return transforms.map(normalizeTransformInput);
+};
+
 /**
  * `<Node>` props → IRChild
  * @description NODE_FIELDS 字段表透传纯字段；text / position / label 特化字段独立处理。
@@ -182,11 +255,11 @@ const buildNodeFromProps = (props: NodeProps): IRChild => {
   const text = readNodeText(props);
   const ir: IRChild = {
     type: 'node',
-    position: props.position,
+    position: normalizePositionInput(props.position),
     ...pickDefined(props, NODE_FIELDS),
   };
   if (text !== undefined) ir.text = text;
-  if (props.label !== undefined) ir.label = props.label;
+  if (props.label !== undefined) ir.label = normalizeNodeLabelsInput(props.label);
   return ir;
 };
 
@@ -221,7 +294,9 @@ const readEdgeLabel = (children: ReactNode): IRStepLabel | undefined => {
       }
       const out: IRStepLabel = { text: props.children };
       if (props.position !== undefined) out.position = props.position;
-      if (props.side !== undefined) out.side = props.side;
+      if (props.side !== undefined) {
+        out.side = (normalizeGeometryLabelSide(props.side) ?? props.side) as IRStepLabel['side'];
+      }
       result = out;
     });
   };
@@ -230,14 +305,14 @@ const readEdgeLabel = (children: ReactNode): IRStepLabel | undefined => {
 };
 
 /** Step kinds 中可挂 label 的子集（move / cycle 除外） */
-type LabelableStepProps = Extract<StepProps, { label?: IRStepLabel; children?: ReactNode }>;
+type LabelableStepProps = Extract<StepProps, { label?: IRStepLabelInput; children?: ReactNode }>;
 
 /**
  * 解析 Step 的 label 来源
  * @description prop `label` 优先于 sugar `<EdgeLabel>` child；都缺省时返回 undefined
  */
 const resolveStepLabel = (props: LabelableStepProps): IRStepLabel | undefined => {
-  if (props.label !== undefined) return props.label;
+  if (props.label !== undefined) return normalizeStepLabelInput(props.label);
   return readEdgeLabel(props.children);
 };
 
@@ -431,7 +506,7 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
 const buildCoordinateFromProps = (props: CoordinateProps): IRChild => ({
   type: 'coordinate',
   id: props.id,
-  position: props.position,
+  position: normalizePositionInput(props.position),
 });
 
 /**
@@ -444,11 +519,16 @@ type BuildContext = {
 };
 
 /** `<Scope>` props → IRScope；样式 / 容器字段走 SCOPE_FIELDS 透传，children 递归扫描走 readSceneChildren（透传贡献上下文） */
-const buildScopeFromProps = (props: ScopeProps, ctx?: BuildContext): IRScope => ({
-  type: 'scope',
-  ...pickDefined(props, SCOPE_FIELDS),
-  children: readSceneChildren(props.children, ctx),
-});
+const buildScopeFromProps = (props: ScopeProps, ctx?: BuildContext): IRScope => {
+  const scopeFields = pickDefined(props, SCOPE_FIELDS) as Omit<IRScope, 'type' | 'children' | 'transforms'>;
+  const scope: IRScope = {
+    type: 'scope',
+    ...scopeFields,
+    children: readSceneChildren(props.children, ctx),
+  };
+  if (props.transforms !== undefined) scope.transforms = normalizeTransformsInput(props.transforms);
+  return scope;
+};
 
 /** `<Path>` props → IRChild；step 序列由 readPathChildren 收集 */
 const buildPathFromProps = (props: PathProps): IRChild => {

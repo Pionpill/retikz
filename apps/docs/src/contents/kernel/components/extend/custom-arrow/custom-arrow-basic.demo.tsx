@@ -9,6 +9,7 @@ import { Draw, Layout, Node } from '@retikz/react';
  * stroke 取 ctx.stroke（无 color override 时为 contextStroke，跟随 path 描边色）。
  */
 const bracket = defineArrow({
+  name: 'bracket',
   hollow: true,
   lineContactX: 2,
   tipX: 8,
@@ -30,7 +31,7 @@ const bracket = defineArrow({
 });
 
 const Demo: FC = () => (
-  <Layout width={320} height={70} arrows={{ bracket }}>
+  <Layout width={320} height={70} arrows={[bracket]}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>

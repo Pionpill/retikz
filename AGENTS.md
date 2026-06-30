@@ -18,6 +18,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件 / JSON IR �
 
 - 上层包的底层能力必须源自 `@retikz/core`。React / Vanilla / Plot / Docs demo 等可以通过 adapter、sugar、composite、lowering、renderer 扩展来增强表达力，但不要绕开 core 另造一套平行能力、平行 IR 或平行渲染语义。
 - 功能设计的首要路径是先抽象 Definition / registry / capability contract，再实现内置能力，并让扩展能力复用同一套注册、解析和消费逻辑。不要让内置实现享有一套私有白名单或特殊入口、扩展实现再走另一套补丁接口；应由 `XxxDefinition` 这类定义对象声明 schema、能力和解析结果，内置与自定义只是在同一机制下注册的不同 definition。
+- 涉及新增 / 重命名 / 重构 define-registry 能力（`XxxDefinition`、`defineXxx`、`providers/*`、`BUILTIN_*`、`AnyXxxDefinition`、`CompileOptions.*`、plot lowering options 等）前，必须先读 `.agents/skills/standard-define-registry/SKILL.md`，按其中准则确定开放式扩展模型、文件分层、schema discriminator、definition、registry、内置集合和 option 字段命名；不要沿用历史裸名（如 `Boundary`）作为新范式。
 - 框架与功能设计优先做抽象设计，而不是只补当前单一场景。遇到具体需求时，先识别它背后的通用模型、边界和可扩展点；若确实只能局部处理，必须说明为什么不抽象。
 - 后续发现既有设计有问题或需要架构调整时，以当前能判断的最优方案为准，先修正设计与架构方向，再评估兼容性、迁移成本和版本节奏；兼容性是重要约束，但不应压过正确设计。
 - `0.x` 版本代表早期开发版，公开 API / schema / 命名 / 架构仍处于设计收敛期；本阶段调整以正确设计为准，不为兼容旧写法保留别名、桥接或迁移负担，除非当次版本设计文档明确要求。
@@ -31,22 +32,30 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件 / JSON IR �
 
 ```bash
 pnpm install
-pnpm lint
+pnpm lint # 全仓 lint，发布 / CI / 明确要求全量验证时使用
 pnpm --filter @retikz/core build
 pnpm dev:docs
 ```
 
-改完代码后必须按受影响 workspace 跑：
+改完代码后默认只按当前 / 受影响 workspace 跑脚本；不要为了日常局部改动直接跑全仓 `pnpm lint` / `pnpm test` / `pnpm -r exec tsc --noEmit`。跨包公共契约、发布前、CI 复现或用户明确要求全量验证时，才扩大到全仓或发布组。
 
 ```bash
 pnpm --filter <pkg> exec eslint . --fix
 pnpm --filter <pkg> exec tsc --noEmit
-pnpm lint
+pnpm --filter <pkg> exec vitest run
+```
+
+多个受影响模块用多条 `--filter` 命令显式列出，例如：
+
+```bash
+pnpm --filter @retikz/core exec tsc --noEmit
+pnpm --filter @retikz/react exec tsc --noEmit
+pnpm --filter @retikz/docs exec tsc --noEmit
 ```
 
 验证按改动类型选择：
 
-- 改 `*.ts` / `*.tsx` / `*.json` / 配置文件等结构化文件：先跑受影响包的 `eslint --fix`，再跑对应 `tsc --noEmit` / 测试。
+- 改 `*.ts` / `*.tsx` / `*.json` / 配置文件等结构化文件：先跑受影响包的 `eslint --fix`，再跑对应包的 `tsc --noEmit` / 测试；测试也用 `pnpm --filter <pkg> exec vitest run [test-file]` 限定在当前模块。
 - 只改纯文档正文（例如 `index.zh.mdx` / `index.en.mdx` 的段落、表格、站内链接，不改 import、demo、data、i18n、sidebar、schema registry）：不强制跑 eslint / tsc；至少跑 `git diff --check`，并验证新增或修改的关键链接 / 页面可访问。
 - 改 docs demo / data / i18n / sidebar / schema registry / MDX import：按 `apps/docs/AGENTS.md` 和 `docs-doc-principle` 的分级规则验证，通常需要 docs 包类型检查。
 
@@ -139,18 +148,18 @@ Control: human-directed
 
 - `main`：稳定发布线，只接正式发布、hotfix、发布后文档补丁
 - `next`：唯一的下版本集成真源，release 只从这里切
-- `next-core`：core / renderer / runtime / animation 方向集成
-- `next-plot`：plot / Tier 2 方向集成
+- `next-kernel`：kernel / renderer / runtime / animation 方向集成
+- `next-graph`：graph / Tier 2 方向集成
 - `feature/*`：具体短期任务
 - `release/*`：发布候选，只做 bugfix / docs / changelog / 版本号 / 验收
 - `hotfix/*`：从 main 切，修完回 main，再回灌 next
 
-功能改动不从 `next-core` / `next-plot` 直接进 `main`，必须先合 `next`。创建 / 切换 / 合并 / 删除分支前确认任务确实需要分支操作。
+功能改动不从 `next-kernel` / `next-graph` 直接进 `main`，必须先合 `next`。创建 / 切换 / 合并 / 删除分支前确认任务确实需要分支操作。
 
 分支同步由 GitHub Actions 自动开 PR，不手动静默合并：
 
 - `main` push 后自动创建 `main -> next` 同步 PR
-- `next` push 后自动创建 `next -> next-core` 与 `next -> next-plot` 同步 PR
+- `next` push 后自动创建 `next -> next-kernel` 与 `next -> next-graph` 同步 PR
 - 已有同向开放 PR 或源分支无新增提交时跳过
 - 冲突、CI 失败、是否合并均在 PR 中处理，不由 automation 直接强推目标分支
 

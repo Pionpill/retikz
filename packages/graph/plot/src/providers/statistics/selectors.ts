@@ -3,29 +3,29 @@ import { z } from 'zod';
 import type { AnyRowSelectorDefinition } from '../../contract';
 
 import { defineRowSelector } from '../../contract';
-import { OutsideQuantileBandSelectorOperationSchema } from '../../schemas';
+import { OutsideQuantileBandSelectorOperationSchema, PlotSortOrder, RowSelectorTie, SelectorOp } from '../../schemas';
 import { resolveFieldPath } from '../data';
 import { orderRows, quantileBandStatsOf, rankedByNumericField, spreadFactorOf } from './helpers';
 
 /** `min` selector：选择数值最小的原始行。 */
 const minSelectorDefinition = defineRowSelector({
   schema: z.object({
-    op: z.literal('min'),
+    op: z.literal(SelectorOp.Min),
     by: z.string().min(1),
-    tie: z.enum(['first', 'last', 'all']).optional(),
+    tie: z.enum(RowSelectorTie).optional(),
   }),
   inputFields: operation => [operation.by],
   select: (rows, operation) => {
-    const ranked = rankedByNumericField(rows, operation.by, 'ascending');
+    const ranked = rankedByNumericField(rows, operation.by, PlotSortOrder.Ascending);
     if (ranked.length === 0) return [];
-    if (operation.tie === 'all') {
+    if (operation.tie === RowSelectorTie.All) {
       const value = resolveFieldPath(ranked[0], operation.by);
       return ranked
         .filter(row => resolveFieldPath(row, operation.by) === value)
         .map((row, index) => ({ row, rank: index + 1 }));
     }
     const row =
-      operation.tie === 'last'
+      operation.tie === RowSelectorTie.Last
         ? ([...ranked]
             .reverse()
             .find(
@@ -39,22 +39,22 @@ const minSelectorDefinition = defineRowSelector({
 /** `max` selector：选择数值最大的原始行。 */
 const maxSelectorDefinition = defineRowSelector({
   schema: z.object({
-    op: z.literal('max'),
+    op: z.literal(SelectorOp.Max),
     by: z.string().min(1),
-    tie: z.enum(['first', 'last', 'all']).optional(),
+    tie: z.enum(RowSelectorTie).optional(),
   }),
   inputFields: operation => [operation.by],
   select: (rows, operation) => {
-    const ranked = rankedByNumericField(rows, operation.by, 'descending');
+    const ranked = rankedByNumericField(rows, operation.by, PlotSortOrder.Descending);
     if (ranked.length === 0) return [];
-    if (operation.tie === 'all') {
+    if (operation.tie === RowSelectorTie.All) {
       const value = resolveFieldPath(ranked[0], operation.by);
       return ranked
         .filter(row => resolveFieldPath(row, operation.by) === value)
         .map((row, index) => ({ row, rank: index + 1 }));
     }
     const row =
-      operation.tie === 'last'
+      operation.tie === RowSelectorTie.Last
         ? ([...ranked]
             .reverse()
             .find(
@@ -68,9 +68,9 @@ const maxSelectorDefinition = defineRowSelector({
 /** `first` selector：选择当前顺序或稳定排序后的首行。 */
 const firstSelectorDefinition = defineRowSelector({
   schema: z.object({
-    op: z.literal('first'),
+    op: z.literal(SelectorOp.First),
     orderBy: z
-      .array(z.object({ field: z.string().min(1), order: z.enum(['ascending', 'descending']).optional() }))
+      .array(z.object({ field: z.string().min(1), order: z.enum(PlotSortOrder).optional() }))
       .min(1)
       .optional(),
   }),
@@ -84,9 +84,9 @@ const firstSelectorDefinition = defineRowSelector({
 /** `last` selector：选择当前顺序或稳定排序后的末行。 */
 const lastSelectorDefinition = defineRowSelector({
   schema: z.object({
-    op: z.literal('last'),
+    op: z.literal(SelectorOp.Last),
     orderBy: z
-      .array(z.object({ field: z.string().min(1), order: z.enum(['ascending', 'descending']).optional() }))
+      .array(z.object({ field: z.string().min(1), order: z.enum(PlotSortOrder).optional() }))
       .min(1)
       .optional(),
   }),
@@ -100,16 +100,16 @@ const lastSelectorDefinition = defineRowSelector({
 /** `top` selector：按数值字段选择前 N 行。 */
 const topSelectorDefinition = defineRowSelector({
   schema: z.object({
-    op: z.literal('top'),
+    op: z.literal(SelectorOp.Top),
     by: z.string().min(1),
     n: z.number().int().positive(),
-    tie: z.enum(['first', 'last', 'all']).optional(),
+    tie: z.enum(RowSelectorTie).optional(),
   }),
   inputFields: operation => [operation.by],
   select: (rows, operation) => {
-    const ranked = rankedByNumericField(rows, operation.by, 'descending');
+    const ranked = rankedByNumericField(rows, operation.by, PlotSortOrder.Descending);
     const selected = ranked.slice(0, operation.n);
-    if (operation.tie === 'all' && selected.length > 0 && ranked.length > selected.length) {
+    if (operation.tie === RowSelectorTie.All && selected.length > 0 && ranked.length > selected.length) {
       const threshold = resolveFieldPath(selected[selected.length - 1], operation.by);
       for (const row of ranked.slice(operation.n)) {
         if (resolveFieldPath(row, operation.by) !== threshold) break;
@@ -123,16 +123,16 @@ const topSelectorDefinition = defineRowSelector({
 /** `bottom` selector：按数值字段选择后 N 行。 */
 const bottomSelectorDefinition = defineRowSelector({
   schema: z.object({
-    op: z.literal('bottom'),
+    op: z.literal(SelectorOp.Bottom),
     by: z.string().min(1),
     n: z.number().int().positive(),
-    tie: z.enum(['first', 'last', 'all']).optional(),
+    tie: z.enum(RowSelectorTie).optional(),
   }),
   inputFields: operation => [operation.by],
   select: (rows, operation) => {
-    const ranked = rankedByNumericField(rows, operation.by, 'ascending');
+    const ranked = rankedByNumericField(rows, operation.by, PlotSortOrder.Ascending);
     const selected = ranked.slice(0, operation.n);
-    if (operation.tie === 'all' && selected.length > 0 && ranked.length > selected.length) {
+    if (operation.tie === RowSelectorTie.All && selected.length > 0 && ranked.length > selected.length) {
       const threshold = resolveFieldPath(selected[selected.length - 1], operation.by);
       for (const row of ranked.slice(operation.n)) {
         if (resolveFieldPath(row, operation.by) !== threshold) break;
@@ -146,9 +146,9 @@ const bottomSelectorDefinition = defineRowSelector({
 /** `nth` selector：按稳定排序选择指定零基下标行。 */
 const nthSelectorDefinition = defineRowSelector({
   schema: z.object({
-    op: z.literal('nth'),
+    op: z.literal(SelectorOp.Nth),
     orderBy: z
-      .array(z.object({ field: z.string().min(1), order: z.enum(['ascending', 'descending']).optional() }))
+      .array(z.object({ field: z.string().min(1), order: z.enum(PlotSortOrder).optional() }))
       .min(1),
     index: z.number().int().nonnegative(),
   }),

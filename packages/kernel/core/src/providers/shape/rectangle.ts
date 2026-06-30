@@ -7,7 +7,7 @@ import type { ScenePrimitive } from '../../primitive';
 
 import { verticesToSegments } from '../../contract/shape/contour';
 import { defineShape } from '../../contract/shape/define';
-import { normalizeCompassAnchor } from '../../geometry/anchor';
+import { normalizeCompassAnchor, webSideToCompassSide } from '../../geometry/anchor';
 import { boundaryFromContour } from '../../geometry/contour';
 import { rect as rectOps } from '../../geometry/rect';
 import { localToWorld } from '../../geometry/transform';
@@ -18,6 +18,10 @@ import { localToWorld } from '../../geometry/transform';
  *   cornerRadius 从 Node 顶层迁入 params；缺省 / 0 = 直角。
  */
 type RectangleParams = {
+  /**
+   * 矩形圆角半径。
+   * @default 0
+   */
   cornerRadius?: number;
 };
 
@@ -38,10 +42,11 @@ const rectVertices = (rect: Rect): Array<Position> => {
  * @description circumscribe = identity（视觉边界 = 内框）；anchor / edgePoint 直接走 rect 数学层；
  *   boundaryPoint 把矩形 4 角构造成 4 条折线段、委托 rounded-contour 模块（cornerRadius 省略 / 0 出原尖角
  *   求交、>0 在每个角插逐角夹紧的 fillet 弧，连接感知倒角），rayOrigin = 矩形中心（= node position）。
- *   emit 仍出 RectPrim，圆角半径优先取 `params.cornerRadius`、回退到 `style.cornerRadius`（顶层迁移期兼容）。
+ *   emit 仍出 RectPrim，圆角半径优先取 `params.cornerRadius`、回退到 `style.cornerRadius`。
  *   scaleParams：cornerRadius 是长度，随 node scale 用 uniform 几何均值因子协同缩放（边数 / 角度类参数才不缩）。
  */
 export const rectangle = defineShape({
+  name: 'rectangle',
   paramsSchema: z.strictObject({
     cornerRadius: z
       .number()
@@ -64,7 +69,7 @@ export const rectangle = defineShape({
     const a = normalizeCompassAnchor(name);
     return a ? rectOps.anchor(r, a) : undefined;
   },
-  edgePoint: (r, side, t) => rectOps.edgePoint(r, side, t),
+  edgePoint: (r, side, t) => rectOps.edgePoint(r, webSideToCompassSide(side), t),
   *emit(r, style, round, params: RectangleParams): Iterable<ScenePrimitive> {
     const halfW = r.width / 2;
     const halfH = r.height / 2;

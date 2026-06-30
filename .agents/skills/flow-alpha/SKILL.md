@@ -159,15 +159,14 @@ pnpm hardlink store 下每个 worktree 的 node_modules 占用极小。创建 / 
 
 ```
 1. 进 worktree（cwd = ../<repo>-adr-XX）
-2. 读 notes/decisions/kernel/v0/<minor>/<milestone>/<XX>-*.md
+2. 读 packages/kernel/_notes/decisions/v0/<minor>/<milestone>/<XX>-*.md
 3. 按本 SKILL 5 阶段跑（红 / 黄 / 绿 按判级走 Spec-First / 常规 / 直跑）
-4. 每个 stage 内部 commit 跑现有约束（lint / tsc / vitest 三关 + emoji + ADR 编号）
-5. 所有 stage 跑完后再跑一次最终三关：
-     pnpm lint
-     pnpm test
-     pnpm --filter @retikz/core exec tsc --noEmit
-     pnpm --filter @retikz/react exec tsc --noEmit
-     pnpm --filter @retikz/docs exec tsc --noEmit
+4. 每个 stage 内部 commit 跑当前 / 受影响模块约束（lint / tsc / vitest 三关 + emoji + ADR 编号）
+5. 所有 stage 跑完后再按受影响模块跑一次最终三关，例如：
+     pnpm --filter @retikz/<pkg> exec eslint . --fix
+     pnpm --filter @retikz/<pkg> exec tsc --noEmit
+     pnpm --filter @retikz/<pkg> exec vitest run
+   多个模块逐个显式列出 `--filter`；只有跨包契约、发布门禁或用户要求时才扩大到全仓。
 6. 三关绿 → 进 7；不绿 → REVIEW.md 写明失败原因后 halt，不"完工"
 7. worktree 根写 REVIEW.md（**未追踪、不 commit、不 stage**）—— 模板见下节
 8. halt，报告"ADR-XX 已就绪可 review，分支 adr/<milestone>/XX-..."
@@ -191,9 +190,9 @@ pnpm hardlink store 下每个 worktree 的 node_modules 占用极小。创建 / 
 
 ## 三关结果
 
-- pnpm lint：                    ✅ / ❌ <详情>
-- pnpm test：                    ✅ <N passed> / ❌ <失败列表>
-- tsc --noEmit（core / react / docs）： ✅ / ❌
+- lint（受影响模块）：          ✅ / ❌ <详情>
+- vitest（受影响模块）：        ✅ <N passed> / ❌ <失败列表>
+- tsc --noEmit（受影响模块）：  ✅ / ❌
 
 ## 关键改动（2-3 句讲清干了啥）
 

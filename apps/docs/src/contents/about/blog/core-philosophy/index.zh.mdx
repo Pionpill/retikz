@@ -72,7 +72,7 @@ IR 是这三件事的公约数。一旦它存在，JSX 就是 IR 的一种"输�
 `compileToScene(ir, options)` 是 core 包最重的资产（`packages/kernel/kernel/src/compile/compile.ts`），两 pass 设计：
 
 - **Pass 1**：遍历所有 Node，解析相对定位（如 `{ direction: 'right', of: 'A', distance: 2 }`），登记到 `nodeIndex` 表里——节点 id 到已知坐标 + 锚点表的映射。
-- **Pass 2**：按 JSX 源码顺序发 primitive。Path 里的 Step 这时才解析 `to`——节点引用 `"A.east"` / `"A.45"` 都查 nodeIndex；相对 / 累积相对则跟踪游标位置。
+- **Pass 2**：按 JSX 源码顺序发 primitive。Path 里的 Step 这时才解析 `to`——节点引用 `"A.right"` / `"A.45"` 都查 nodeIndex；相对 / 累积相对则跟踪游标位置。
 
 为什么要两 pass？因为节点和路径互相引用——节点位置可能依赖另一个节点的锚点，路径终点可能引用某个节点的方位。先把节点全部布完，路径再消费就不会撞上未定义引用。
 

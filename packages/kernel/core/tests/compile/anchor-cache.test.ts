@@ -159,30 +159,31 @@ describe('resolveAnchor 数字角度支持负号 / 小数', () => {
 });
 
 describe('resolveEdgePoint 边上比例点（ADR-02）', () => {
-  it('rect north t=0.5 = 上边中点', () => {
+  it('rect top t=0.5 = 上边中点', () => {
     const layout = makeLayout('rectangle', 20, 10, 0, 0);
-    const p = resolveEdgePoint(layout, 'north', 0.5);
+    const p = resolveEdgePoint(layout, 'top', 0.5);
     expect(p[0]).toBeCloseTo(0, 6);
     expect(p[1]).toBeCloseTo(-5, 6);
   });
 
   it('缓存命中返回同一引用（key = `${side}:${t}`）', () => {
     const layout = makeLayout('rectangle', 20, 10, 0, 0);
-    const first = resolveEdgePoint(layout, 'north', 0.25);
-    expect(resolveEdgePoint(layout, 'north', 0.25)).toBe(first);
+    const first = resolveEdgePoint(layout, 'top', 0.25);
+    expect(resolveEdgePoint(layout, 'top', 0.25)).toBe(first);
   });
 
-  it('与命名 anchor cache key 命名空间不冲突（north vs north:0.5）', () => {
+  it('与命名 anchor cache key 命名空间不冲突（top vs top:0.5）', () => {
     const layout = makeLayout('rectangle', 20, 10, 0, 0);
-    const named = resolveAnchor(layout, 'north'); // 上边中点 (0,-5)
-    const edge = resolveEdgePoint(layout, 'north', 0); // NW 角 (-10,-5)
+    const named = resolveAnchor(layout, 'top'); // 上边中点 (0,-5)
+    const edge = resolveEdgePoint(layout, 'top', 0); // NW 角 (-10,-5)
     expect(named).not.toBe(edge);
     expect(edge[0]).toBeCloseTo(-10, 6);
   });
 
   it('不支持 edgePoint 的自定义 shape → 抛明确错', () => {
     const noEdge: ShapeDefinition = defineShape({
-      paramsSchema: z.strictObject({}),
+      name: 'noEdge',
+paramsSchema: z.strictObject({}),
       circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
       boundaryPoint: r => [r.x, r.y],
       anchor: (r, name) => (name === 'center' ? [r.x, r.y] : undefined),
@@ -201,12 +202,12 @@ describe('resolveEdgePoint 边上比例点（ADR-02）', () => {
       fontSize: 0,
       shapes: BUILTIN_SHAPES,
     };
-    expect(() => resolveEdgePoint(layout, 'north', 0.5)).toThrow(/does not support side anchors/);
+    expect(() => resolveEdgePoint(layout, 'top', 0.5)).toThrow(/does not support side anchors/);
   });
 
   it('零尺寸 Coordinate → { side, t } 报错（决策细节 #10）', () => {
     const layout = makeLayout('rectangle', 0, 0, 5, 5);
-    expect(() => resolveEdgePoint(layout, 'north', 0.5)).toThrow(/zero-size Coordinate/);
+    expect(() => resolveEdgePoint(layout, 'top', 0.5)).toThrow(/zero-size Coordinate/);
   });
 });
 

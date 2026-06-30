@@ -65,10 +65,10 @@ An id is the key to the low-level "connect" mechanism — a named element can be
 | A single datum (needs `datumIdField`) | `<plotId>.datum.<field value>`                                                                          |
 | Axis / grid layer                     | user `guide.id` (axis layer only) → `<plotId>.<guideId>`; otherwise `<plotId>.<axis\|grid>.<dimension>` |
 
-One important boundary: the plot root is a **local namespace**. That means internal ids like `<plotId>.mark.0` and `.series.north` **do not escape the plot** — they are visible only inside it, for plot-local connections and locator addressing.
+One important boundary: the plot root is a **local namespace**. That means internal ids like `<plotId>.mark.0` and `.series.top` **do not escape the plot** — they are visible only inside it, for plot-local connections and locator addressing.
 
 - **External composition** goes only through the plot's **root id**: an outside annotation / connector attaches to the whole chart, not to one of its sub-elements.
-- **Connecting directly to a sub-element from outside** (e.g. wiring to `sales.series.north` from the outside) needs an "export anchor" mechanism, which is a later v0.5 cross-composition capability and is not supported today.
+- **Connecting directly to a sub-element from outside** (e.g. wiring to `sales.series.top` from the outside) needs an "export anchor" mechanism, which is a later v0.5 cross-composition capability and is not supported today.
 
 ## meta: the provenance tag
 

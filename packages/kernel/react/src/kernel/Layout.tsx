@@ -1,5 +1,7 @@
 import type {
   ArrowDefinition,
+  BoundaryDefinition,
+  ClipDefinition,
   CompositeDefinition,
   IR,
   IRAnimationTrack,
@@ -191,36 +193,43 @@ export type LayoutProps = ScopeStyleProps & {
   nodeDistance?: number;
   /**
    * 运行时注入的第三方 / 自定义 shape（透传给 `compileToScene` 的 `CompileOptions.shapes`）
-   * @description IR 里 `<Node shape="...">` 仍只写字符串名；定义在此注入。同名覆盖内置时编译期发 `SHAPE_OVERRIDES_BUILTIN`；未注册名编译期 throw
+   * @description IR ? `<Node shape="...">` ?????????????????????????????????? throw
    */
-  shapes?: Record<string, ShapeDefinition>;
+  shapes?: ReadonlyArray<ShapeDefinition>;
+  /**
+   * 运行时注入的第三方 / 自定义 connection surface（透传给 `compileToScene` 的 `CompileOptions.boundaries`）
+   * @description IR 里 `boundary` 仍只写字符串名或 `{ type, params }`；定义在此注入。查不到时再 fallback 到 shapes。
+   */
+  boundaries?: ReadonlyArray<BoundaryDefinition>;
+  /** Runtime clip providers passed through to `compileToScene`. */
+  clips?: ReadonlyArray<ClipDefinition>;
   /**
    * 运行时注入的第三方 / 自定义 arrow（透传给 `compileToScene` 的 `CompileOptions.arrows`）
    * @description IR 里 `<Path arrowDetail={{ shape: '...' }}>` 仍只写字符串名；定义在此注入。emit-in-compile：
    *   compile 调 `def.emit` 产 marker 几何进 `ArrowEndSpec`，react adapter 只物化、不需 arrows 表。同名覆盖
-   *   内置时编译期发 `ARROW_OVERRIDES_BUILTIN`；未注册名编译期 throw
+   *   compile ? `def.emit` ? marker ??? `ArrowEndSpec`?????????????????? throw
    */
-  arrows?: Record<string, ArrowDefinition>;
+  arrows?: ReadonlyArray<ArrowDefinition>;
   /**
    * 运行时注入的第三方 / 自定义 pattern motif（透传给 `compileToScene` 的 `CompileOptions.patterns`）
    * @description IR 里 `fill={{ kind: 'pattern', shape: '...' }}` 仍只写字符串名；motif 定义在此注入。
    *   emit-in-compile：compile 调 `def.emit` 产 motif 几何进 `SceneResource.tile`，react adapter 只物化、
-   *   不需 patterns 表。同名覆盖内置时编译期发 `PATTERN_OVERRIDES_BUILTIN`；未注册名编译期 throw
+   *   ?? patterns ??????????????????? throw
    */
-  patterns?: Record<string, PatternDefinition>;
+  patterns?: ReadonlyArray<PatternDefinition>;
   /**
    * 运行时注入的第三方 / 自定义 path generator（透传给 `compileToScene` 的 `CompileOptions.pathGenerators`）
    * @description IR 里 generator step 仍只写字符串 `name`；曲线生成器定义在此注入。core 不内置任何曲线；
    *   未注册名编译期 throw（错误列出可用名）。`params` 经 generator 的 paramsSchema + JsonObjectSchema 双 parse 守 JSON 可序列化
    */
-  pathGenerators?: Record<string, PathGeneratorDefinition>;
+  pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
   /**
    * 运行时注入的第三方 / 自定义 Path kind provider（透传给 `compileToScene` 的 `CompileOptions.pathKinds`）
    * @description IR 里只保存 `kind` / `kindOptions`；provider 定义在这里注入，并接管整条 Path 的编译。
    */
-  pathKinds?: Record<string, PathKindDefinition>;
+  pathKinds?: ReadonlyArray<PathKindDefinition>;
   /** Runtime ribbon width profiles passed through to `compileToScene`. */
-  ribbonWidthProfiles?: Partial<Record<string, RibbonWidthProfileDefinition>>;
+  ribbonWidthProfiles?: ReadonlyArray<RibbonWidthProfileDefinition>;
   /**
    * 运行时注入的 Tier 2 composite 展开逻辑（透传给 `compileToScene` 的 `CompileOptions.composites`）
    * @description IR 里含 namespace 的 tier2 节点经此注册表在 compile 第一步展开成 Tier 1；core 无内置，
@@ -314,6 +323,8 @@ export const Layout: FC<LayoutProps> = props => {
     idPrefix,
     nodeDistance,
     shapes,
+    boundaries,
+    clips,
     arrows,
     patterns,
     pathGenerators,
@@ -410,6 +421,8 @@ export const Layout: FC<LayoutProps> = props => {
         measureText,
         nodeDistance,
         shapes,
+        boundaries,
+        clips,
         arrows,
         patterns,
         pathGenerators,
@@ -423,6 +436,8 @@ export const Layout: FC<LayoutProps> = props => {
       measureText,
       nodeDistance,
       shapes,
+      boundaries,
+      clips,
       arrows,
       patterns,
       pathGenerators,
