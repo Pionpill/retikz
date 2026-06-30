@@ -2,7 +2,7 @@
 
 状态：Accepted
 决策日期：2026-06-26
-关联：[plot v0.1-alpha.12 roadmap](./roadmap.md) · [ADR-03 mark abstraction](./03-mark-abstraction-registry.md) · [ADR-04 mark surface convergence](./04-mark-surface-convergence.md) · [alpha.3 ADR-05 relation](../alpha.3/05-relation.md) · [core Path target schema](../../../../../../../kernel/core/src/schemas/path/target.ts)
+关联：[plot v0.1-alpha.12 roadmap](./roadmap.md) · [ADR-03 mark abstraction](./03-mark-abstraction-registry.md) · [ADR-04 mark surface convergence](./04-mark-surface-convergence.md) · [alpha.3 ADR-05 relation](../alpha.3/05-relation.md) · [core Path target schema](../../../../../../kernel/core/src/schemas/path/target/schema.ts)
 
 ## 背景
 

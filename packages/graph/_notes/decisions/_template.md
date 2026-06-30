@@ -16,7 +16,7 @@
 
 - 状态：Proposed
 - 决策日期：YYYY-MM-DD
-- 关联：[plot v0 roadmap §<段>](./v0/roadmap.md) · [plot-design.md §<段>](../architecture/plot-design.md) · [core-design.md §<段>](../../../../notes/architecture/core-design.md)
+- 关联：[plot v0 roadmap §<段>](../../roadmap.md) · [plot-design.md §<段>](../../../../architecture/plot-design.md) · [core-design.md §<段>](../../../../../../../notes/architecture/core-design.md)
 
 ## 背景
 

@@ -1,8 +1,8 @@
-# ADR-01：Node `at` 节点间相对定位
+﻿# ADR-01：Node `at` 节点间相对定位
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-10
-- 关联：[v0 roadmap §v0.1.0-alpha.4](../../roadmap.md) · [tikz-gap-analysis §1 P1](../../../../../../../_notes/analysis/tikz-gap-analysis.md)
+- 关联：[v0 roadmap §v0.1.0-alpha.4](../../roadmap.md) · tikz-gap-analysis §1 P1（历史分析已删除）
 
 > **范围**：补 TikZ `positioning` library 的相对定位（`right=2cm of A` / `above right=of A`），让用户描述节点关系而非手算坐标。
 

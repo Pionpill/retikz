@@ -1,7 +1,7 @@
 # @retikz/core 工作指南
 
 > 本文档是 `@retikz/core` 包内特有的规范。
-> 项目通用规则（commit / JSDoc / IR schema 风格 / 数组写 `Array<T>` 等）见根 [`AGENTS.md`](../../AGENTS.md)。
+> 项目通用规则（commit / JSDoc / IR schema 风格 / 数组写 `Array<T>` 等）见根 [`AGENTS.md`](../../../AGENTS.md)。
 
 ---
 

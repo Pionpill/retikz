@@ -36,15 +36,15 @@
 
 ### kernel 发布组
 
-- [`kernel notes`](../packages/kernel/notes/README.md)：kernel 发布组内部文档入口。
+- [`kernel notes`](../packages/kernel/_notes/README.md)：kernel 发布组内部文档入口。
 - [`kernel v0 roadmap`](../packages/kernel/_notes/decisions/v0/roadmap.md)：kernel v0 总路线。
 - [`kernel ADR template`](../packages/kernel/_notes/decisions/_template.md)：kernel ADR 模板。
 - [`core compare analysis`](../packages/kernel/_notes/analysis/core-compare-analysis.md)：core 底座横向对比。
 
 ### plot 发布组
 
-- [`plot notes`](../packages/graph/notes/README.md)：plot 发布组内部文档入口。
-- [`plot-design.md`](../packages/graph/notes/architecture/plot-design.md)：`@retikz/plot` 架构设计。
+- [`plot notes`](../packages/graph/_notes/README.md)：plot 发布组内部文档入口。
+- [`plot-design.md`](../packages/graph/_notes/architecture/plot-design.md)：`@retikz/plot` 架构设计。
 - [`plot v0 roadmap`](../packages/graph/_notes/decisions/v0/roadmap.md)：plot v0 总路线。
 - [`plot v0.1 roadmap`](../packages/graph/_notes/decisions/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
 - [`plot compare analysis`](../packages/graph/_notes/analysis/plot-compare-analysis.md)：plot 横向对比。

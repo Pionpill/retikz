@@ -1,8 +1,8 @@
-# ADR-03：Node `label` 边挂标签
+﻿# ADR-03：Node `label` 边挂标签
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-10
-- 关联：[v0 roadmap §v0.1.0-alpha.4](../../roadmap.md) · [tikz-gap-analysis §1 P2](../../../../../../../_notes/analysis/tikz-gap-analysis.md)
+- 关联：[v0 roadmap §v0.1.0-alpha.4](../../roadmap.md) · tikz-gap-analysis §1 P2（历史分析已删除）
 
 > **范围**：补 TikZ `[label=above:foo]`（节点边界外挂额外文字，支持多 label / 方向 / 距离 / 样式），用于节点编号、引脚标记、UML 多重性等。
 

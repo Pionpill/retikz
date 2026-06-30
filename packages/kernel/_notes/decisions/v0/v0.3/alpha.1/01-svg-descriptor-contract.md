@@ -1,8 +1,8 @@
-# ADR-01：`@retikz/svg` 以 framework-neutral descriptor 为核心,字符串与 React 各做薄序列化层
+﻿# ADR-01：`@retikz/svg` 以 framework-neutral descriptor 为核心,字符串与 React 各做薄序列化层
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-29
-- 关联：[v0.3 roadmap §SVG 包拆分范围 / §待决策 1·2](../roadmap.md) · [v0 roadmap](../../roadmap.md) · [core-design.md §5 / §6](../../../../../../../notes/architecture/core-design.md) · [tikz-gap-analysis](../../../../../../../_notes/analysis/tikz-gap-analysis.md)
+- 关联：[v0.3 roadmap §SVG 包拆分范围 / §待决策 1·2](../roadmap.md) · [v0 roadmap](../../roadmap.md) · [core-design.md §5 / §6](../../../../../../../notes/architecture/core-design.md) · tikz-gap-analysis（历史分析已删除）
 
 > **打包变更（[ADR-05](./05-renderer-repackage.md)）**：`@retikz/svg` 已并入 `@retikz/render`、以子路径 **`@retikz/render/svg`** 发布；下文 `@retikz/svg` ≡ `@retikz/render/svg`、`packages/svg/` ≡ `render/src/svg/`，**渲染设计与决策不变**。
 >

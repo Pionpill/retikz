@@ -5,7 +5,7 @@
 - 状态：Accepted（2026-06-16 收尾：builtin `contour` shape 已实现 + 文档同步 + 评审/对账通过；自动按 AABB 中心居中、compass anchor 回退 AABB、`boundaryPoint` 精确。plot 侧消费归 plot alpha.11）
 - 决策日期：2026-06-15
 - 发起方：plot（Tier 2），消费方需求见 [plot v0.1 roadmap alpha.11](../../../../../../graph/_notes/decisions/v0/v0.1/roadmap.md)
-- 关联：[alpha.3 roadmap](./roadmap.md) · [alpha.3 ADR-01 任意折线圆角（同享 contour fillet 引擎）](./01-polyline-rounded-corners.md) · [plot-design §8.3 mark 几何 × coordinate](../../../../../../graph/notes/architecture/plot-design.md) · [plot-design §8.1 id 绑定与可连接性](../../../../../../graph/notes/architecture/plot-design.md) · core `geometry/contour.ts` · core `shapes/polygon.ts`
+- 关联：[alpha.3 roadmap](./roadmap.md) · [alpha.3 ADR-01 任意折线圆角（同享 contour fillet 引擎）](./01-polyline-rounded-corners.md) · [plot-design §8.3 mark 几何 × coordinate](../../../../../../graph/_notes/architecture/plot-design.md) · [plot-design §8.1 id 绑定与可连接性](../../../../../../graph/_notes/architecture/plot-design.md) · core `geometry/contour.ts` · core `shapes/polygon.ts`
 
 ## 背景
 

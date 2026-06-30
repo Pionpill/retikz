@@ -1,8 +1,8 @@
-# ADR-03：自定义 viewBox override（覆盖自动包围盒的逃生口）
+﻿# ADR-03：自定义 viewBox override（覆盖自动包围盒的逃生口）
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.9 plan §第三部分](./roadmap.md) · [tikz-gap-analysis §6 Scene](../../../../../../../_notes/analysis/tikz-gap-analysis.md) · 本 milestone [ADR-01](./01-partway-absolute-target.md) / [ADR-02](./02-clip.md)
+- 关联：[v0.2-alpha.9 plan §第三部分](./roadmap.md) · tikz-gap-analysis §6 Scene（历史分析已删除） · 本 milestone [ADR-01](./01-partway-absolute-target.md) / [ADR-02](./02-clip.md)
 
 ## 背景 / 约束
 

@@ -1,8 +1,8 @@
-# ADR-03：pin 引脚（label + 引线）
+﻿# ADR-03：pin 引脚（label + 引线）
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.7 plan §第三部分](./roadmap.md) · [tikz-gap-analysis §1 Node](../../../../../../../_notes/analysis/tikz-gap-analysis.md) · 本 milestone [ADR-01](./01-paint-basics.md) / [ADR-02](./02-max-text-width.md) · [alpha.4 Node label rotate](../alpha.4)（label 体系）· [alpha.6 ADR-02 edgePoint](../alpha.6/02-side-t-edge-point.md)（引线起点边界解析）
+- 关联：[v0.2-alpha.7 plan §第三部分](./roadmap.md) · tikz-gap-analysis §1 Node（历史分析已删除） · 本 milestone [ADR-01](./01-paint-basics.md) / [ADR-02](./02-max-text-width.md) · [alpha.4 Node label rotate](../alpha.4)（label 体系）· [alpha.6 ADR-02 edgePoint](../alpha.6/02-side-t-edge-point.md)（引线起点边界解析）
 
 ## 背景 / 约束
 

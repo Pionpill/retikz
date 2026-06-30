@@ -8,7 +8,7 @@
 
 三个数据层健壮性短板（cross-review / 库对比里反复点到）：
 
-1. **归一化两模式割裂**：`prepareRows` 现在「有 model 或 resolver 命中才归一化，否则原始行」（[expand.ts](../../../../../../../packages/graph/plot/src/lower/expand.ts) ADR-04 门控）。同一份数据，加不加 model 走两条路（canonical vs raw），下游靠各 scale 自己 coerce 兜（time scale 认 ISO 串、linear 只认真数）——行为割裂、难预测。
+1. **归一化两模式割裂**：`prepareRows` 现在「有 model 或 resolver 命中才归一化，否则原始行」（[expand.ts](../../../../../plot/src/pipeline/expand.ts) ADR-04 门控）。同一份数据，加不加 model 走两条路（canonical vs raw），下游靠各 scale 自己 coerce 兜（time scale 认 ISO 串、linear 只认真数）——行为割裂、难预测。
 2. **非法/缺失值策略单薄**：coercion 失败就静默跳过；`validateData` 只能抽样二元 fail-loud，不报**哪个字段、多少非法/缺失**。脏数据导致空图时，用户无从诊断。
 3. **`bigint` 静默丢**：`classify` / `coerceNumber` 不认 `bigint`（DB int64、JSON reviver 可能产出）→ 推断与 ingest 两处无声蒸发。
 
@@ -70,5 +70,5 @@
 - **per-field / per-mark invalid 覆盖**——先全局。
 - **`bigint` 进 IR 标量**——破 JSON 可序列化，永不收；只 ingest 转 number。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/lower/{expand,coerce,infer}.ts` 与 React `invalid` options 透传，测试见 `packages/graph/plot/tests/lower/data-robustness.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/pipeline/expand.ts`、`packages/graph/plot/src/providers/data/{coerce,field,normalize}.ts` 与 React `invalid` options 透传，测试见 `packages/graph/plot/tests/providers/data/data-robustness.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.6/08-data-robustness.md`（封板全文）。

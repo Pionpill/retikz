@@ -1,8 +1,8 @@
-# ADR-02：clip 裁切（renderer-agnostic ClipResource + clipRef，复用 alpha.7 资源表）
+﻿# ADR-02：clip 裁切（renderer-agnostic ClipResource + clipRef，复用 alpha.7 资源表）
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.9 plan §第二部分](./roadmap.md) · [tikz-gap-analysis §6 Scene](../../../../../../../_notes/analysis/tikz-gap-analysis.md) · [alpha.7 ADR-01 Paint](../alpha.7/01-paint-basics.md)（`SceneResource` discriminated 资源表 + adapter 物化范式）· [alpha.1 Scope](../alpha.1)（裁剪作用域挂点）· 本 milestone [ADR-01](./01-partway-absolute-target.md) / [ADR-03](./03-viewbox-override.md)
+- 关联：[v0.2-alpha.9 plan §第二部分](./roadmap.md) · tikz-gap-analysis §6 Scene（历史分析已删除） · [alpha.7 ADR-01 Paint](../alpha.7/01-paint-basics.md)（`SceneResource` discriminated 资源表 + adapter 物化范式）· [alpha.1 Scope](../alpha.1)（裁剪作用域挂点）· 本 milestone [ADR-01](./01-partway-absolute-target.md) / [ADR-03](./03-viewbox-override.md)
 
 ## 背景 / 约束
 

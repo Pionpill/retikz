@@ -1,8 +1,8 @@
-# ADR-01：ArrowDefinition 注册面（自定义 arrow + MarkerPrimitive + 内置 7 降注册项）
+﻿# ADR-01：ArrowDefinition 注册面（自定义 arrow + MarkerPrimitive + 内置 7 降注册项）
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.8 plan §第一部分](./roadmap.md) · [tikz-gap-analysis §2 Path](../../../../../../../_notes/analysis/tikz-gap-analysis.md) · [alpha.3 ADR-01 Shape Registry](../alpha.3/01-shape-registry.md)（注册面先例）· [alpha.7 ADR-01 Paint](../alpha.7/01-paint-basics.md)（`PaintValue.contextStroke` 颜色继承）· 本 milestone [ADR-02](./02-path-generator-definition.md) / [ADR-03](./03-curve-transform-marking.md)
+- 关联：[v0.2-alpha.8 plan §第一部分](./roadmap.md) · tikz-gap-analysis §2 Path（历史分析已删除） · [alpha.3 ADR-01 Shape Registry](../alpha.3/01-shape-registry.md)（注册面先例）· [alpha.7 ADR-01 Paint](../alpha.7/01-paint-basics.md)（`PaintValue.contextStroke` 颜色继承）· 本 milestone [ADR-02](./02-path-generator-definition.md) / [ADR-03](./03-curve-transform-marking.md)
 
 ## 背景 / 约束
 

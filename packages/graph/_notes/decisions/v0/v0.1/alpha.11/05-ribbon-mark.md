@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-06-16
-- 关联：[alpha.11 roadmap](./roadmap.md)「ribbon mark」· [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.7 ribbon / §7 scope 组合 / §8.1 可连接性](../../../../architecture/plot-design.md) · [ADR-01 区间几何投影](./01-cell-geometry-projection.md)（contour 围合思路同源）· core [step.ts cubic / curve / bend](../../../../../../../kernel/core/src/ir/path/step.ts)
+- 关联：[alpha.11 roadmap](./roadmap.md)「ribbon mark」· [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.7 ribbon / §7 scope 组合 / §8.1 可连接性](../../../../architecture/plot-design.md) · [ADR-01 区间几何投影](./01-cell-geometry-projection.md)（contour 围合思路同源）· core [step schema cubic / curve / bend](../../../../../../kernel/core/src/schemas/path/step/schema.ts)
 
 ## 背景
 

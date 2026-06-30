@@ -2,7 +2,7 @@
 
 - 状态：Accepted（2026-06-29 人工签字，待实现）
 - 决策日期：2026-06-28
-- 关联：[alpha.7 roadmap](./roadmap.md) · [v0.4 roadmap](../roadmap.md) · [core-design.md](../../../../../../../notes/architecture/core-design.md) · [plot-design.md](../../../../../../graph/notes/architecture/plot-design.md)
+- 关联：[alpha.7 roadmap](./roadmap.md) · [v0.4 roadmap](../roadmap.md) · [core-design.md](../../../../../../../notes/architecture/core-design.md) · [plot-design.md](../../../../../../graph/_notes/architecture/plot-design.md)
 
 ## 背景
 

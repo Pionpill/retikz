@@ -67,7 +67,7 @@ locator 是**纯函数、不进 IR、不注册任何 core 元素**，不预建 N
 - **`series(v)` O(k)**——centroid 需扫该 series 的 k 行（或首次惰性预建一次 series→行 索引、后续 O(1)）；**不是 O(1)**。
 - 万级散点下 locator 内存 = spec + 数据引用；解析单 datum = 一次投影。
 
-**未渲染 datum → null**：lowering 会跳过投影无效 / 零尺寸的行（[mark.ts](../../../../../../../packages/graph/plot/src/lower/mark.ts) 各 `Number.isFinite` 守卫 / 退化扇区跳过）。locator 必须对**这些行同样返回 null**（命中预演与实际渲染一致：没渲染的 datum 不可命中）。`series(v)` 的 centroid 只计入已渲染成员。
+**未渲染 datum → null**：lowering 会跳过投影无效 / 零尺寸的行（mark providers 的 `Number.isFinite` / `isFiniteNumber` 守卫，例如 [interval provider](../../../../../plot/src/providers/mark/features/interval.ts)）。locator 必须对**这些行同样返回 null**（命中预演与实际渲染一致：没渲染的 datum 不可命中）。`series(v)` 的 centroid 只计入已渲染成员。
 
 `meta` 即便 lowering 没开 `datumProvenance`（ADR-01 默认关），locator 也按需合成同构 meta——provenance 零 IR 代价可得。
 
@@ -114,9 +114,9 @@ locator.datum(999);                       // → null（越界）
 
 ## 影响
 
-- **新模块** `packages/graph/plot/src/lower/locate.ts`（`createPlotLocator` + `ResolvedAnchor` / `PlotLocator` 类型）。
+- **新模块** `packages/graph/plot/src/features/interaction/locate.ts`（`createPlotLocator` + `ResolvedAnchor` / `PlotLocator` 类型）。
 - **`src/lower/index.ts`** / **`src/index.ts`**：导出 locator API（新 public surface）。
-- **共享几何抽取**：`src/lower/mark.ts` 的逐行锚点计算抽成 `datumAnchor`（与 locate.ts 共用）——属内部重构，mark 下沉产物等价。
+- **共享几何抽取**：mark provider registry 的逐行锚点计算抽成 `datumAnchor`（与 locate.ts 共用）——属内部重构，mark 下沉产物等价。
 - **frame 复用**：消费 [ADR-01](./01-scope-id-meta.md) 抽出的 `resolveFrame`。
 - **core**：不依赖、不改（locator 纯 plot 侧）。
 - **plot IR schema**：无改动（locator 不进 IR）。
@@ -130,5 +130,5 @@ locator.datum(999);                       // → null（越界）
 - **line / area 的顶点级具名锚点**：本 ADR `datum(i)` 给 line/area 顶点位置但不绑具名 id；逐顶点可连接锚点留后续。
 - **series bbox / 外接锚点**：本 ADR series 锚点取 centroid；bbox 留后续。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/lower/{locate,mark,expand,index}.ts` 与 `packages/graph/plot/src/index.ts` public export，测试见 `packages/graph/plot/tests/lower/locate.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/features/interaction/locate.ts`、`packages/graph/plot/src/providers/mark/`、`packages/graph/plot/src/pipeline/expand.ts` 与 `packages/graph/plot/src/index.ts` public export，测试见 `packages/graph/plot/tests/features/interaction/locate.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.5/02-datum-locator.md`（封板全文）。

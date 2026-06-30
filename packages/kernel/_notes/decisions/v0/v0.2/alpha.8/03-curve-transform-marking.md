@@ -1,8 +1,8 @@
-# ADR-03：out/in 曲线 + self-loop / 路径整体变换 / 中段 marking（三搭车项）
+﻿# ADR-03：out/in 曲线 + self-loop / 路径整体变换 / 中段 marking（三搭车项）
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.8 plan §第三~五部分](./roadmap.md) · [tikz-gap-analysis §2 Path / §3 Step](../../../../../../../_notes/analysis/tikz-gap-analysis.md) · 本 milestone [ADR-01](./01-arrow-definition.md)（marking 复用 arrow marker）/ [ADR-02](./02-path-generator-definition.md) · [alpha.1 Scope transform](../alpha.1)（路径变换复用）
+- 关联：[v0.2-alpha.8 plan §第三~五部分](./roadmap.md) · tikz-gap-analysis §2 Path / §3 Step（历史分析已删除） · 本 milestone [ADR-01](./01-arrow-definition.md)（marking 复用 arrow marker）/ [ADR-02](./02-path-generator-definition.md) · [alpha.1 Scope transform](../alpha.1)（路径变换复用）
 
 > **定位**：三项都是低成本搭车项，复用既有机器（bend→cubic / `GroupPrim.transforms` / `geometry/segment.ts`），不与两个注册面（ADR-01/02）互相阻塞。合一篇 ADR、按需插入实现。
 

@@ -1,8 +1,8 @@
-# ADR-01：比例 partway 定位（AbsoluteTarget + BetweenPosition）
+﻿# ADR-01：比例 partway 定位（AbsoluteTarget + BetweenPosition）
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.9 plan §第一部分](./roadmap.md) · [tikz-gap-analysis §5 定位](../../../../../../../_notes/analysis/tikz-gap-analysis.md) · [alpha.6 ADR-01 结构化 Target](../alpha.6/01-structured-target-anchor.md)（对象主契约 + target resolve）· [alpha.6 ADR-02 edgePoint](../alpha.6/02-side-t-edge-point.md)（`lerpPoint`）· 本 milestone [ADR-02](./02-clip.md) / [ADR-03](./03-viewbox-override.md)
+- 关联：[v0.2-alpha.9 plan §第一部分](./roadmap.md) · tikz-gap-analysis §5 定位（历史分析已删除） · [alpha.6 ADR-01 结构化 Target](../alpha.6/01-structured-target-anchor.md)（对象主契约 + target resolve）· [alpha.6 ADR-02 edgePoint](../alpha.6/02-side-t-edge-point.md)（`lerpPoint`）· 本 milestone [ADR-02](./02-clip.md) / [ADR-03](./03-viewbox-override.md)
 
 ## 背景 / 约束
 

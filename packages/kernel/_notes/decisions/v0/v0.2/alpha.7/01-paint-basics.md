@@ -1,8 +1,8 @@
-# ADR-01：Paint 基础（PaintValue 词汇表 + SceneResource discriminated 资源表 + gradient）
+﻿# ADR-01：Paint 基础（PaintValue 词汇表 + SceneResource discriminated 资源表 + gradient）
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.7 plan §第一部分](./roadmap.md) · [tikz-gap-analysis §1 Node](../../../../../../../_notes/analysis/tikz-gap-analysis.md) · [alpha.2 样式继承](../alpha.2)（`fill` 级联）· 下游 [alpha.8 ADR-01 ArrowDefinition](../alpha.8)（复用 `PaintValue.contextStroke`）· [alpha.9 ADR-02 clip](../alpha.9)（复用 `SceneResource` 资源表）· 本 milestone [ADR-02](./02-max-text-width.md) / [ADR-03](./03-pin.md) / [ADR-04](./04-pattern-image-deferred.md)
+- 关联：[v0.2-alpha.7 plan §第一部分](./roadmap.md) · tikz-gap-analysis §1 Node（历史分析已删除） · [alpha.2 样式继承](../alpha.2)（`fill` 级联）· 下游 [alpha.8 ADR-01 ArrowDefinition](../alpha.8)（复用 `PaintValue.contextStroke`）· [alpha.9 ADR-02 clip](../alpha.9)（复用 `SceneResource` 资源表）· 本 milestone [ADR-02](./02-max-text-width.md) / [ADR-03](./03-pin.md) / [ADR-04](./04-pattern-image-deferred.md)
 
 > **跨段契约**：本 ADR 定下的 `PaintValue` 词汇表与 `SceneResource` 资源表是 alpha.7–9 共享的地基——alpha.8 arrow 颜色继承用 `PaintValue.contextStroke`，alpha.9 clip 把 `ClipResource` 加进同一 `SceneResource` 表。
 

@@ -2,7 +2,7 @@
 
 状态：Accepted
 决策日期：2026-06-26
-关联：[plot v0.1-alpha.12 roadmap](./roadmap.md) · [ADR-06 transform registry](./06-transform-registry.md) · [ADR-13 RelationMark](./13-relation-mark-anchor.md) · [core Path step schema](../../../../../../../kernel/core/src/schemas/path/step.ts)
+关联：[plot v0.1-alpha.12 roadmap](./roadmap.md) · [ADR-06 transform registry](./06-transform-registry.md) · [ADR-13 RelationMark](./13-relation-mark-anchor.md) · [core Path step schema](../../../../../../kernel/core/src/schemas/path/step/schema.ts)
 
 ## 背景
 

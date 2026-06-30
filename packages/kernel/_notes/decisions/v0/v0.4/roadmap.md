@@ -2,7 +2,7 @@
 
 > 本文件是 v0.4 的**讨论工作区**：记录候选方向、取舍与后续讨论结论；尚未拍板成正式总计划。正式启动各子项时各自走 brainstorm → spec → plan。
 >
-> 关联：[`v0 roadmap`](../roadmap.md) · [`core 底座对比分析`](../../../analysis/core-compare-analysis.md) · [`v0.3 renderer / runtime 专题`](../v0.3/roadmap.md) · [`plot-design.md`](../../../../../graph/notes/architecture/plot-design.md)
+> 关联：[`v0 roadmap`](../roadmap.md) · [`core 底座对比分析`](../../../analysis/core-compare-analysis.md) · [`v0.3 renderer / runtime 专题`](../v0.3/roadmap.md) · [`plot-design.md`](../../../../../graph/_notes/architecture/plot-design.md)
 
 ## 切分原则
 

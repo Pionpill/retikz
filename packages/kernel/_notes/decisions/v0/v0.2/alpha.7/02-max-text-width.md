@@ -1,8 +1,8 @@
-# ADR-02：maxTextWidth 自动换行（折行阈值 + 短文本收缩）
+﻿# ADR-02：maxTextWidth 自动换行（折行阈值 + 短文本收缩）
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.7 plan §第二部分](./roadmap.md) · [tikz-gap-analysis §1 Node](../../../../../../../_notes/analysis/tikz-gap-analysis.md) · 本 milestone [ADR-01](./01-paint-basics.md) / [ADR-03](./03-pin.md)
+- 关联：[v0.2-alpha.7 plan §第二部分](./roadmap.md) · tikz-gap-analysis §1 Node（历史分析已删除） · 本 milestone [ADR-01](./01-paint-basics.md) / [ADR-03](./03-pin.md)
 
 ## 背景 / 约束
 

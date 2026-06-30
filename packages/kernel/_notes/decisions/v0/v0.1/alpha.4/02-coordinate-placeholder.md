@@ -1,8 +1,8 @@
-# ADR-02：`<Coordinate>` 占位节点的 IR 表达
+﻿# ADR-02：`<Coordinate>` 占位节点的 IR 表达
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-10
-- 关联：[v0 roadmap §v0.1.0-alpha.4](../../roadmap.md) · [tikz-gap-analysis §3](../../../../../../../_notes/analysis/tikz-gap-analysis.md)
+- 关联：[v0 roadmap §v0.1.0-alpha.4](../../roadmap.md) · tikz-gap-analysis §3（历史分析已删除）
 
 > **范围**：把 TikZ `\coordinate (m) at (3,2);`（命名一个点、不画图形、供相对定位 / path 端点引用）升为一等 IR 概念。
 

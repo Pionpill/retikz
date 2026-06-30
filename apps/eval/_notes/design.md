@@ -1,7 +1,7 @@
 # retikz eval：LLM 生成准确性评测 · 设计
 
 > 目的：验证 LLM 生成 retikz IR（core + plot）的准确性，产出**可回归追踪**的报告，反哺 schema / DSL 设计。
-> 状态：**设计中（草案）** · 2026-06-12 起 · 关联：[`core-design.md §1.2 / §7 AI 友好`](../architecture/core-design.md) · [`core 底座对比分析 · AI 维度`](../../packages/kernel/_notes/analysis/core-compare-analysis.md) · [`v0.4 roadmap · D`](../../packages/kernel/_notes/decisions/v0/v0.4/roadmap.md)
+> 状态：**设计中（草案）** · 2026-06-12 起 · 关联：[`core-design.md §1.2 / §7 AI 友好`](../../../notes/architecture/core-design.md) · [`core 底座对比分析 · AI 维度`](../../../packages/kernel/_notes/analysis/core-compare-analysis.md) · [`v0.4 roadmap · D`](../../../packages/kernel/_notes/decisions/v0/v0.4/roadmap.md)
 > 落地：`apps/eval`（workspace 包，依赖 core + plot 的 schema）。
 
 ## 为什么做
@@ -31,7 +31,7 @@
 ## 前置依赖
 
 - **「zod → 喂 LLM 的 JSON Schema 契约」导出尚未落地**（core-design §7 的设计意图）。eval 要测生成，先得有「喂给模型的 schema 契约」。
-- core 已升级 **zod v4**（见 [`v0.3 beta.2`](../../packages/kernel/_notes/decisions/v0/v0.3/beta.2/roadmap.md)），内置 `z.toJSONSchema` 可**零额外依赖**产出 JSON Schema；`SceneSchema` / `PlotSpecSchema` 的导出能力已有测试锁定 → 导出做进 core（见 D2）只剩封装工作。
+- core 已升级 **zod v4**（见 [`v0.3 beta.2`](../../../packages/kernel/_notes/decisions/v0/v0.3/beta.2/roadmap.md)），内置 `z.toJSONSchema` 可**零额外依赖**产出 JSON Schema；`SceneSchema` / `PlotSpecSchema` 的导出能力已有测试锁定 → 导出做进 core（见 D2）只剩封装工作。
 
 ## 首切定稿（L1 baseline · 端到端流水线）
 
