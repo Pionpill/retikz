@@ -1,9 +1,14 @@
-import { compileToScene } from '@retikz/core';
 import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
+
+import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots } from '../../src/pipeline/expand';
 import { SOURCE_INDEX } from '../../src/pipeline/provenance';
+import { PlotSpecSchema } from '../../src/schemas';
 
 /**
  * ADR-01：scope-aware id 绑定 + meta 透传。
@@ -35,7 +40,10 @@ const firstLayer = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOpti
   contentScope(expandOf(spec, datasets, options)).children[0] as IRScope;
 
 /** 递归收集 IRChild 树里所有带 meta 的元素（id 一并带出，便于断言） */
-const collectMeta = (child: IRChild, out: Array<{ type: string; id?: string; meta: unknown }> = []): Array<{ type: string; id?: string; meta: unknown }> => {
+const collectMeta = (
+  child: IRChild,
+  out: Array<{ type: string; id?: string; meta: unknown }> = [],
+): Array<{ type: string; id?: string; meta: unknown }> => {
   const anyChild = child as { type: string; id?: string; meta?: unknown; children?: Array<IRChild> };
   if (anyChild.meta !== undefined) out.push({ type: anyChild.type, id: anyChild.id, meta: anyChild.meta });
   if (Array.isArray(anyChild.children)) for (const c of anyChild.children) collectMeta(c, out);
@@ -52,7 +60,10 @@ const collectIds = (child: IRChild, out: Array<string> = []): Array<string> => {
 
 /** 递归收集 Scene primitive 树里所有带 meta 的图元 */
 type ScenePrimLike = { type: string; id?: string; meta?: unknown; children?: Array<ScenePrimLike> };
-const collectSceneMeta = (prim: ScenePrimLike, out: Array<{ type: string; meta: unknown }> = []): Array<{ type: string; meta: unknown }> => {
+const collectSceneMeta = (
+  prim: ScenePrimLike,
+  out: Array<{ type: string; meta: unknown }> = [],
+): Array<{ type: string; meta: unknown }> => {
   if (prim.meta !== undefined) out.push({ type: prim.type, meta: prim.meta });
   if (Array.isArray(prim.children)) for (const c of prim.children) collectSceneMeta(c, out);
   return out;
@@ -78,7 +89,13 @@ const barSpec = (over: { id?: string; markId?: string } = {}): PlotSpec =>
       { type: 'linear', name: 'yRevenue' },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
-    marks: [{ type: 'interval', ...(over.markId ? { id: over.markId } : {}), encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    marks: [
+      {
+        type: 'interval',
+        ...(over.markId ? { id: over.markId } : {}),
+        encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+      },
+    ],
   });
 
 /** linear point spec；可带 root id */
@@ -149,7 +166,14 @@ describe('ADR-01 id/meta — happy path', () => {
         { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'path', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } }],
+      marks: [
+        {
+          type: 'path',
+          series: 'city',
+          order: 't',
+          encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } },
+        },
+      ],
     });
     const layer = firstLayer(spec, { t: TREND }, { ...opts, provenance: true });
     const [pathX, pathY] = layer.children as Array<IRPath>;
@@ -162,11 +186,22 @@ describe('ADR-01 id/meta — happy path', () => {
 
   it('datum_provenance_on', () => {
     // datumProvenance:true → 每个 datum Node 带 meta {source,dataReference,mark,markIndex,transformedIndex,sourceIndex,series?}
-    const layer = firstLayer(barSpec({ id: 'sales' }), { sales: SALES }, { ...opts, provenance: true, datumProvenance: true });
+    const layer = firstLayer(
+      barSpec({ id: 'sales' }),
+      { sales: SALES },
+      { ...opts, provenance: true, datumProvenance: true },
+    );
     const nodes = layer.children as Array<IRNode>;
     expect(nodes).toHaveLength(3);
     for (let index = 0; index < nodes.length; index++) {
-      const meta = nodes[index].meta as { source?: string; dataReference?: string; mark?: string; markIndex?: number; transformedIndex?: number; sourceIndex?: number };
+      const meta = nodes[index].meta as {
+        source?: string;
+        dataReference?: string;
+        mark?: string;
+        markIndex?: number;
+        transformedIndex?: number;
+        sourceIndex?: number;
+      };
       expect(meta.source).toBe('plot');
       expect(meta.dataReference).toBe('sales');
       expect(meta.mark).toBe('interval');
@@ -208,7 +243,13 @@ describe('ADR-01 id/meta — 边界', () => {
         { type: 'linear', name: 'r' },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'k' } } }],
+      marks: [
+        {
+          type: 'interval',
+          bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+          encoding: { color: { field: 'k' } },
+        },
+      ],
     });
     const rows = [
       { k: 'A', v: 3 },
@@ -335,7 +376,13 @@ describe('ADR-01 id/meta — 错误路径', () => {
       { month: 1, revenue: 14 }, // 缺 key
       { month: 2, revenue: 9, key: 'c' },
     ];
-    expect(() => expandOf(barSpec({ id: 'sales' }), { sales: rows }, { ...opts, provenance: true, datumProvenance: true, datumIdField: 'key' })).toThrow();
+    expect(() =>
+      expandOf(
+        barSpec({ id: 'sales' }),
+        { sales: rows },
+        { ...opts, provenance: true, datumProvenance: true, datumIdField: 'key' },
+      ),
+    ).toThrow();
   });
 
   it('duplicate_datum_id', () => {
@@ -345,7 +392,13 @@ describe('ADR-01 id/meta — 错误路径', () => {
       { month: 1, revenue: 14, key: 'dup' },
       { month: 2, revenue: 9, key: 'c' },
     ];
-    expect(() => expandOf(barSpec({ id: 'sales' }), { sales: rows }, { ...opts, provenance: true, datumProvenance: true, datumIdField: 'key' })).toThrow();
+    expect(() =>
+      expandOf(
+        barSpec({ id: 'sales' }),
+        { sales: rows },
+        { ...opts, provenance: true, datumProvenance: true, datumIdField: 'key' },
+      ),
+    ).toThrow();
   });
 });
 
@@ -390,7 +443,13 @@ describe('ADR-01 id/meta — 交互', () => {
         { type: 'linear', name: 'r' },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'k' } } }],
+      marks: [
+        {
+          type: 'interval',
+          bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+          encoding: { color: { field: 'k' } },
+        },
+      ],
     });
     const rows = [
       { k: 'A', v: 3 },
@@ -416,7 +475,11 @@ describe('ADR-01 id/meta — 交互', () => {
     );
     const sceneMetas = scene.primitives.flatMap(p => collectSceneMeta(p as ScenePrimLike));
     // 至少 datum node 的 meta 被 stamp 进 Scene 图元
-    const datumMetas = sceneMetas.filter(m => (m.meta as { mark?: string }).mark === 'interval' && typeof (m.meta as { transformedIndex?: number }).transformedIndex === 'number');
+    const datumMetas = sceneMetas.filter(
+      m =>
+        (m.meta as { mark?: string }).mark === 'interval' &&
+        typeof (m.meta as { transformedIndex?: number }).transformedIndex === 'number',
+    );
     expect(datumMetas.length).toBeGreaterThanOrEqual(3);
     expect((datumMetas[0].meta as { source?: string }).source).toBe('plot');
     expect((datumMetas[0].meta as { dataReference?: string }).dataReference).toBe('sales');
@@ -436,7 +499,9 @@ describe('ADR-01 id/meta — 交互', () => {
     // 图元数量与 viewBox 不因 meta 改变
     const countPrims = (prims: Array<ScenePrimLike>): number =>
       prims.reduce((n, p) => n + 1 + (Array.isArray(p.children) ? countPrims(p.children) : 0), 0);
-    expect(countPrims(sceneOn.primitives as Array<ScenePrimLike>)).toBe(countPrims(sceneOff.primitives as Array<ScenePrimLike>));
+    expect(countPrims(sceneOn.primitives as Array<ScenePrimLike>)).toBe(
+      countPrims(sceneOff.primitives as Array<ScenePrimLike>),
+    );
     expect((sceneOn as { viewBox?: unknown }).viewBox).toEqual((sceneOff as { viewBox?: unknown }).viewBox);
   });
 
@@ -468,7 +533,11 @@ describe('ADR-01 id/meta — 交互', () => {
       { month: 1, revenue: 14, q: 'Q2' },
       { month: 2, revenue: 9, q: 'Q3' },
     ];
-    const layer = firstLayer(barSpec({ id: 'sales' }), { sales: rows }, { ...opts, provenance: true, datumProvenance: true, datumIdField: 'q' });
+    const layer = firstLayer(
+      barSpec({ id: 'sales' }),
+      { sales: rows },
+      { ...opts, provenance: true, datumProvenance: true, datumIdField: 'q' },
+    );
     const ids = (layer.children as Array<IRNode>).map(n => n.id);
     expect(ids).toEqual(['sales.datum.Q1', 'sales.datum.Q2', 'sales.datum.Q3']);
   });
@@ -511,7 +580,11 @@ describe('ADR-01 id/meta — Bug Hunter 回归', () => {
       { month: 1, revenue: Number.NaN }, // 跳过
       { month: 2, revenue: 9 },
     ];
-    const layer = firstLayer(pointSpec({ id: 'sales' }), { sales: rows }, { ...opts, provenance: true, datumProvenance: true });
+    const layer = firstLayer(
+      pointSpec({ id: 'sales' }),
+      { sales: rows },
+      { ...opts, provenance: true, datumProvenance: true },
+    );
     const nodes = layer.children as Array<IRNode>;
     expect(nodes).toHaveLength(2); // 中间行被跳过
     const idx = nodes.map(n => n.meta as { transformedIndex: number; sourceIndex?: number });

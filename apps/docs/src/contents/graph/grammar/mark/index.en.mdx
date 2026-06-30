@@ -1,0 +1,94 @@
+---
+title: Marks
+description: Marks are the registered layer from data to geometry: each mark declares a low-level geometry, while scales and coordinates decide its final form.
+---
+
+Marks are the geometry layer of the graphic grammar. They do not hard-code pixel positions; they declare which kind of low-level geometry the data should produce: points, paths, intervals, reference constraints, or relation paths between two targets.
+
+Each built-in mark is a registered entry. During compilation, field mappings become channels and are then lowered by the matching mark; the coordinate system interprets those channels, so the same mark can produce different shapes in different coordinates.
+
+## Mechanism
+
+| Category          | Mark            | Mechanism                                             | Common forms                                                            |
+| ----------------- | --------------- | ----------------------------------------------------- | ----------------------------------------------------------------------- |
+| Dimensional marks | `PointMark`     | A Node positioned by the coordinate system            | Scatter, bubbles, text points                                           |
+|                   | `PathMark`      | Ordered points connected into a 1D trajectory         | Lines, paths, radar outlines                                            |
+|                   | `IntervalMark`  | Orthogonal interval products across position roles    | Bars, histograms, heatmaps, radial bars, pies / donuts                  |
+| Auxiliary marks   | `ReferenceMark` | Reference constraints at fixed positions or intervals | Threshold lines, reference rings, tolerance bands                       |
+| Relation marks    | `RelationMark`  | A core Path from source to target                     | Arrows, dependencies, point-to-point or interval-to-interval connectors |
+
+Chart forms are not separate low-level marks. A heatmap is a double-band `IntervalMark`, a pie is an angular `IntervalMark` under polar coordinates, and scatter / bubble / text points are different presentation settings of `PointMark`.
+
+These categories describe each mark's role only: dimensional marks map data dimensions to geometry, auxiliary marks express reference constraints, and relation marks express connections between targets. In implementation, they remain entries in the same mark registry and lower to core through their own lowering logic.
+
+## Lowering to Core
+
+plot marks do not own renderer primitives directly; after lowering, they become Kernel IR from [@retikz/core](/kernel/introduction). The geometric body usually lowers to [Node](/kernel/components/node/overview) or [Path](/kernel/components/draw/path), while color groups, series groups, and shared defaults are carried by [Scope](/kernel/components/layout/scope).
+
+| Mark            | Core implementation                                                                       | Notes                                                                                                                     |
+| --------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `PointMark`     | [Node](/kernel/components/node/overview)                                                  | Each row produces one point Node; text points are borderless text Nodes                                                   |
+| `PathMark`      | [Path](/kernel/components/draw/path) + [Coordinate](/kernel/components/layout/coordinate) | Ordered projected points produce a Path; with `anchorId`, each valid vertex also produces a referenceable Coordinate      |
+| `IntervalMark`  | [Node](/kernel/components/node/overview)                                                  | The coordinate frame projects each cell into rect / sector / contour geometry, then packs it into a sized or shaped Node  |
+| `ReferenceMark` | [Path](/kernel/components/draw/path) / [Node](/kernel/components/node/overview)           | Reference lines lower to Paths; reference bands lower to interval Nodes                                                   |
+| `RelationMark`  | [Path](/kernel/components/draw/path) + [Coordinate](/kernel/components/layout/coordinate) | source / target resolve into core targets; default relations lower to Paths, while `kind="ribbon"` lowers to ribbon Paths |
+
+## Anchor IDs
+
+`PointMark`, `PathMark`, and `IntervalMark` can configure `anchorId` to write stable ids onto the core Nodes or Coordinates they generate. `anchorId` takes precedence over the older `datumIdField`; `datumIdField` remains for legacy locator / provenance semantics.
+
+`anchorId` supports four inputs: `prefix` provides a namespace, `field` slugs a data field into the id, `template` supports `{plotId}` / `{markId}` / `{markIndex}` / `{index}` / `{field:name}`, and `generator` stores only a runtime key whose function is supplied through `LowerPlotsOptions.anchorIdGenerators`.
+
+```tsx
+<PointMark id="cities" x="x" y="y" anchorId={{ prefix: 'city', field: 'id' }} />
+<PathMark id="route" x="x" y="y" order="order" anchorId={{ template: 'route.{index}' }} />
+```
+
+`PathMark` does not simulate path vertices with invisible Nodes. With `anchorId`, every valid datum becomes a core `Coordinate`, so later relation, annotation, or custom marks can target those vertices by id.
+
+## Paint Styles
+
+`fill` / `stroke` can be solid colors or core `IRPaintSpec` objects. Constant paint lowers to the matching Node or Path default style; field bindings still go through color scales, which is the right path for category or numeric color mapping.
+
+```tsx
+const sunsetStroke = {
+  kind: 'linearGradient',
+  angle: 0,
+  stops: [
+    { offset: 0, color: '#38bdf8' },
+    { offset: 1, color: '#f97316' },
+  ],
+};
+
+<PathMark x="month" y="revenue" order="month" stroke={sunsetStroke} />
+<IntervalMark x="month" y="revenue" fill={sunsetStroke} />
+```
+
+Gradients, patterns, and image paint are handled by the core resource table. plot does not assemble renderer-private `url(#...)` values, so SVG and Canvas consume the same semantics.
+
+## Registered Marks
+
+<div className="grid gap-3 sm:grid-cols-2">
+  <LinkedCard href="/graph/grammar/mark/point">
+    <strong>PointMark</strong>
+    <span>Coordinate-positioned Nodes for scatter, bubbles, shape encoding, and text points.</span>
+  </LinkedCard>
+  <LinkedCard href="/graph/grammar/mark/path">
+    <strong>PathMark</strong>
+    <span>1D trajectories: connect data points in order for trends, paths, and radar outlines.</span>
+  </LinkedCard>
+  <LinkedCard href="/graph/grammar/mark/interval">
+    <strong>IntervalMark</strong>
+    <span>Interval products: bars, histograms, heatmaps, radial bars, pies, and donuts.</span>
+  </LinkedCard>
+  <LinkedCard href="/graph/grammar/mark/reference">
+    <strong>ReferenceMark</strong>
+    <span>Reference constraints: lines, rings, sectors, and tolerance bands at fixed positions.</span>
+  </LinkedCard>
+  <LinkedCard href="/graph/grammar/mark/relation">
+    <strong>RelationMark</strong>
+    <span>
+      Lower source / target relations into core Paths or ribbon Paths while reusing path labels and target resolution.
+    </span>
+  </LinkedCard>
+</div>

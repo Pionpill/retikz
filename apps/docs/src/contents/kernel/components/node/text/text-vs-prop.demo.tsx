@@ -1,0 +1,34 @@
+import type { FC } from 'react';
+
+import { Layout, Node, Text } from '@retikz/react';
+
+/**
+ * 两条等价路径
+ * @description 左 <Text> Sugar、右 text prop 数组里写 LineSpec 对象，编译产物完全相同。
+ */
+const Demo: FC = () => (
+  <Layout width={420} height={140}>
+    <Node id="sugar" position={[-100, 0]} align="left">
+      <Text fill="red" font={{ weight: 'bold', size: 16 }}>
+        Heading
+      </Text>
+      body line 1
+      <Text font={{ style: 'italic' }} opacity={0.6}>
+        note
+      </Text>
+    </Node>
+
+    <Node
+      id="prop"
+      position={[100, 0]}
+      align="left"
+      text={[
+        { text: 'Heading', fill: 'red', font: { weight: 'bold', size: 16 } },
+        'body line 1',
+        { text: 'note', font: { style: 'italic' }, opacity: 0.6 },
+      ]}
+    />
+  </Layout>
+);
+
+export default Demo;

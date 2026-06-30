@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { node } from '../src/builder/node';
 
 describe('@retikz/vanilla node()', () => {
@@ -26,5 +27,28 @@ describe('@retikz/vanilla node()', () => {
   it('node-overload-no-config：node(id) / node() 仅 id / 全空也合法', () => {
     expect(node('c')).toEqual({ type: 'node', id: 'c' });
     expect(node()).toEqual({ type: 'node' });
+  });
+
+  it('node-label-placement：label 透传 inside placement 与 boundary position', () => {
+    const n = node('a', {
+      position: [0, 0],
+      label: {
+        text: 'L',
+        position: { boundary: 'top', t: 0.25 },
+        placement: 'inside',
+        distance: 6,
+      },
+    });
+    expect(n).toEqual({
+      type: 'node',
+      id: 'a',
+      position: [0, 0],
+      label: {
+        text: 'L',
+        position: { boundary: 'top', t: 0.25 },
+        placement: 'inside',
+        distance: 6,
+      },
+    });
   });
 });

@@ -2,7 +2,10 @@
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Circle, type HydrationContext, Layout, Rectangle, Star } from '../../src';
+
+import type { HydrationContext } from '../../src';
+
+import { Circle, Layout, Rectangle, Star } from '../../src';
 
 /**
  * 水合：Sugar 形状组件事件全链 DOM 派发（端到端）
@@ -126,7 +129,15 @@ describe('Sugar 形状事件全链 DOM 派发', () => {
     await act(() => {
       root.render(
         <Layout renderer="svg" width={SIZE} height={SIZE}>
-          <Star id="s" center={[0, 0]} outerRadius={30} innerRadius={12} points={5} fill="gold" onPointerDown={onPointerDown} />
+          <Star
+            id="s"
+            center={[0, 0]}
+            outerRadius={30}
+            innerRadius={12}
+            points={5}
+            fill="gold"
+            onPointerDown={onPointerDown}
+          />
         </Layout>,
       );
     });

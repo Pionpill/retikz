@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
+
+import type { TextMeasurer } from '../../src';
+import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
 import { compileToScene } from '../../src/compile/compile';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
-import type { TextMeasurer } from '../../src';
-import type { IR } from '../../src/schemas';
-import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
 
 const findTextPrims = (prims: Array<ScenePrimitive>): Array<TextPrim> =>
   prims.filter((p): p is TextPrim => p.type === 'text');
@@ -15,8 +17,7 @@ const findGroupPrim = (prims: Array<ScenePrimitive>): GroupPrim | undefined =>
 // 用于验证 label 实际落点（与 baseline 编码方式解耦）
 const visualTop = (t: TextPrim): number => t.y - t.fontSize * ASCENT_FACTOR;
 const visualBottom = (t: TextPrim): number => t.y + t.fontSize * DESCENT_FACTOR;
-const visualMiddle = (t: TextPrim): number =>
-  t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
+const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
 
 const linePathIR = (label: NonNullable<Parameters<typeof JSON.stringify>[0]>): IR => ({
   version: 1,
@@ -96,6 +97,32 @@ describe('step.label：line 段的 label 几何', () => {
     // 锚点不偏移：sloped 文本块底边落在采样点上（文字在线上方）
     expect(inner!.x).toBe(5);
     expect(visualBottom(inner!)).toBeCloseTo(0, 2);
+  });
+
+  it('sloped=true → 外裹 group 旋转，同时保留 side 定位', () => {
+    const scene = compileToScene(linePathIR({ text: 'x', side: 'below', sloped: true }));
+    const grp = findGroupPrim(scene.primitives);
+    expect(grp).toBeDefined();
+    expect(grp!.transforms).toEqual([{ kind: 'rotate', degrees: 0, cx: 5, cy: 0 }]);
+    const inner = grp!.children.find((c): c is TextPrim => c.type === 'text');
+    expect(inner).toBeDefined();
+    expect(visualTop(inner!)).toBeGreaterThan(0);
+  });
+
+  it('sloped=true 未显式 side 时不使用默认 above 偏移', () => {
+    const scene = compileToScene(linePathIR({ text: 'x', sloped: true }));
+    const grp = findGroupPrim(scene.primitives);
+    expect(grp).toBeDefined();
+    expect(grp!.transforms).toEqual([{ kind: 'rotate', degrees: 0, cx: 5, cy: 0 }]);
+    const inner = grp!.children.find((c): c is TextPrim => c.type === 'text');
+    expect(inner).toBeDefined();
+    expect(visualMiddle(inner!)).toBeCloseTo(0, 2);
+  });
+
+  it('side distance 覆盖默认 above 偏移距离', () => {
+    const scene = compileToScene(linePathIR({ text: 'x', side: 'above', distance: 10 }));
+    const t = findTextPrims(scene.primitives)[0];
+    expect(visualBottom(t)).toBeCloseTo(-10, 2);
   });
 
   it('sloped 在垂直段上 angle=90', () => {
@@ -473,6 +500,41 @@ describe('label on fold (step kind="fold")：N=2 段等 t 拼接、拐角恒在 
         ],
       },
     ],
+  });
+
+  it('label_fold_midway_matches_numeric_0_5', () => {
+    const numeric = compileToScene(foldIR(0.5));
+    const keyword = compileToScene(foldIR('midway'));
+    expect(findTextPrims(keyword.primitives)[0].x).toBe(findTextPrims(numeric.primitives)[0].x);
+    expect(visualBottom(findTextPrims(keyword.primitives)[0])).toBeCloseTo(
+      visualBottom(findTextPrims(numeric.primitives)[0]),
+      2,
+    );
+  });
+
+  it('label_fold_sloped_uses_tangent_of_actual_sampled_leg', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            {
+              type: 'step',
+              kind: 'fold',
+              via: '-|',
+              to: [40, 30],
+              label: { text: 'F', position: 0.5, side: 'sloped' },
+            },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    const group = findGroupPrim(scene.primitives);
+    expect(group!.transforms).toEqual([{ kind: 'rotate', degrees: 0, cx: 40, cy: 0 }]);
   });
 
   it('label_fold_t_0_5_at_corner：position=0.5 落在拐角 (40, 0)', () => {
@@ -884,15 +946,7 @@ describe('label.position schema 边界：异常值由 zod 拒绝（不在 compil
   });
   it('label_all_7_keywords_accepted：7 个新 keyword 全部合法', async () => {
     const { StepLabelSchema } = await import('../../src/schemas/path/step');
-    const keywords = [
-      'at-start',
-      'very-near-start',
-      'near-start',
-      'midway',
-      'near-end',
-      'very-near-end',
-      'at-end',
-    ];
+    const keywords = ['at-start', 'very-near-start', 'near-start', 'midway', 'near-end', 'very-near-end', 'at-end'];
     for (const k of keywords) {
       const result = StepLabelSchema.safeParse({ text: 'x', position: k });
       expect(result.success).toBe(true);

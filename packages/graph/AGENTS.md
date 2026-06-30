@@ -4,11 +4,11 @@
 
 ## 分组定位
 
-| 包 | 职责 |
-| --- | --- |
-| `@retikz/plot` | grammar-of-graphics Plot IR、数据处理、scale / coordinate / mark lowering，最终下沉到 `@retikz/core` |
-| `@retikz/plot-react` | React 绑定层，把 JSX / props 组装成 plot spec，并交给 `@retikz/plot` + `@retikz/react` |
-| `@retikz/plot-vanilla` | framework-free / SSR 入口，把 plot spec + 数据渲染为 core / vanilla 输出 |
+| 包                     | 职责                                                                                                 |
+| ---------------------- | ---------------------------------------------------------------------------------------------------- |
+| `@retikz/plot`         | grammar-of-graphics Plot IR、数据处理、scale / coordinate / mark lowering，最终下沉到 `@retikz/core` |
+| `@retikz/plot-react`   | React 绑定层，把 JSX / props 组装成 plot spec，并交给 `@retikz/plot` + `@retikz/react`               |
+| `@retikz/plot-vanilla` | framework-free / SSR 入口，把 plot spec + 数据渲染为 core / vanilla 输出                             |
 
 ## 分层约束
 

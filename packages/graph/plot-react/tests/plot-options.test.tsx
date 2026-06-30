@@ -1,6 +1,7 @@
+import { type ExternalDatasets, type PlotSpec } from '@retikz/plot';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { type ExternalDatasets, type PlotSpec } from '@retikz/plot';
+
 import { IntervalMark, Plot } from '../src';
 
 /**
@@ -62,14 +63,16 @@ describe('<Plot dataTransforms> 快捷数据变换直传 (alpha.12)', () => {
     { region: 'S', revenue: 2 },
   ];
 
-  it('data_transforms_reach_pipeline — aggregate 折叠行数', () => {
-    // dataTransforms 直传 aggregate：3 笔明细 → 2 组（N/S）→ 恰 2 根柱（interval 渲染为 <rect>）
+  it('data_transforms_reach_pipeline — summarize 折叠行数', () => {
+    // dataTransforms 直传 summarize：3 笔明细 → 2 组（N/S）→ 恰 2 根柱（interval 渲染为 <rect>）
     const svg = renderToStaticMarkup(
       <Plot
         data={orders}
         width={480}
         height={300}
-        dataTransforms={[{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }]}
+        dataTransforms={[
+          { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] },
+        ]}
       >
         <IntervalMark x="region" y="total" />
       </Plot>,
@@ -78,9 +81,14 @@ describe('<Plot dataTransforms> 快捷数据变换直传 (alpha.12)', () => {
   });
 
   it('data_transforms_compose_with_transform_children', () => {
-    // dataTransforms（直传）拼在 <Transform> 子组件之前；与子组件混用同一管线（此处仅直传一条 aggregate）
+    // dataTransforms（直传）拼在 <Transform> 子组件之前；与子组件混用同一管线（此处仅直传一条 summarize）
     const svg = renderToStaticMarkup(
-      <Plot data={orders} width={480} height={300} dataTransforms={[{ kind: 'aggregate', groupBy: ['region'], reduce: 'count', as: 'n' }]}>
+      <Plot
+        data={orders}
+        width={480}
+        height={300}
+        dataTransforms={[{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'count', as: 'n' }] }]}
+      >
         <IntervalMark x="region" y="n" />
       </Plot>,
     );

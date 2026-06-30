@@ -1,16 +1,11 @@
+import type { GroupPrim, MarkerPrimitive, PaintResource, RectPrim, ScenePrimitive, TextPrim } from '@retikz/core';
+
 import { describe, expect, it } from 'vitest';
-import type {
-  GroupPrim,
-  MarkerPrimitive,
-  PaintResource,
-  RectPrim,
-  ScenePrimitive,
-  TextPrim,
-} from '@retikz/core';
-import { buildPrim } from '../src/svg/builders/prim';
+
+import { collectArrowSpecs } from '../src/svg/builders/arrow-collect';
 import { buildMarkerPrim } from '../src/svg/builders/marker-prim';
 import { buildPaintDef } from '../src/svg/builders/paint-defs';
-import { collectArrowSpecs } from '../src/svg/builders/arrow-collect';
+import { buildPrim } from '../src/svg/builders/prim';
 
 describe('buildPrim —— primitive → SvgNode', () => {
   it('prim-rect-to-node：rect → tag/kebab/SVG 真名属性，无 React camelCase', () => {
@@ -105,10 +100,7 @@ describe('buildPrim —— primitive → SvgNode', () => {
   it('group-undefined-child：group.children 含 undefined 槽位 → builder noop 跳过、不抛', () => {
     const group: GroupPrim = {
       type: 'group',
-      children: [
-        { type: 'rect', x: 0, y: 0, width: 1, height: 1 },
-        undefined as unknown as ScenePrimitive,
-      ],
+      children: [{ type: 'rect', x: 0, y: 0, width: 1, height: 1 }, undefined as unknown as ScenePrimitive],
     };
     expect(() => buildPrim(group)).not.toThrow();
     const node = buildPrim(group);

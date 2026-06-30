@@ -87,7 +87,6 @@ export const pathCommand = (ctx: CanvasRenderingContext2D, command: PathCommand)
         command.counterClockwise ?? command.endAngle < command.startAngle,
       );
       break;
-
   }
 };
 

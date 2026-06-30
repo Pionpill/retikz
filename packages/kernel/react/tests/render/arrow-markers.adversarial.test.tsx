@@ -1,6 +1,8 @@
+import type { ArrowEndSpec, MarkerPathCommand } from '@retikz/core';
+
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
-import type { ArrowEndSpec, MarkerPathCommand } from '@retikz/core';
+
 import { ArrowMarker } from '../../src/render/arrow-markers';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
@@ -23,8 +25,7 @@ const spec = (overrides: Partial<ArrowEndSpec> = {}): ArrowEndSpec => ({
   ...overrides,
 });
 
-const render = (s: ArrowEndSpec, id = 'mk'): AnyEl =>
-  ArrowMarker({ id, spec: s }) as unknown as AnyEl;
+const render = (s: ArrowEndSpec, id = 'mk'): AnyEl => ArrowMarker({ id, spec: s }) as unknown as AnyEl;
 
 describe('arrow marker arc 物化', () => {
   it('marker path 用 arc 命令 → 物化出 SVG A 段（不再静默丢）', () => {
@@ -48,6 +49,6 @@ describe('arrow marker arc 物化', () => {
     ];
     const el = render(spec({ marker: [{ type: 'path', commands: cmds, stroke: 'blue' }] }));
     const children = el.props.children as Array<AnyEl>;
-    expect((children[0].props.d as string)).toContain('A 5 3');
+    expect(children[0].props.d as string).toContain('A 5 3');
   });
 });

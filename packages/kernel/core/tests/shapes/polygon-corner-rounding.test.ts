@@ -9,9 +9,11 @@
  *   - circumscribe 不随 cornerRadius 变（AABB = 尖角极值）。
  */
 import { describe, expect, it } from 'vitest';
-import { polygon } from '../../src/providers/shape';
+
 import type { Rect } from '../../src/contract/shape';
 import type { Position } from '../../src/geometry/point';
+
+import { polygon } from '../../src/providers/shape';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 const identity = (n: number): number => n;
@@ -62,7 +64,9 @@ describe('polygon cornerRadius — emit', () => {
     const prims = [...polygon.emit(rect, {}, round2, { sides: 6, cornerRadius: 8 })];
     const path = prims[0];
     if (path.type !== 'path') throw new Error('expected path');
-    const arcs = path.commands.filter((cmd): cmd is Extract<(typeof path.commands)[number], { kind: 'arc' }> => cmd.kind === 'arc');
+    const arcs = path.commands.filter(
+      (cmd): cmd is Extract<(typeof path.commands)[number], { kind: 'arc' }> => cmd.kind === 'arc',
+    );
     expect(arcs.length).toBe(6);
     for (const arc of arcs) {
       expect(Math.abs(arc.endAngle - arc.startAngle)).toBeLessThanOrEqual(180);
@@ -114,10 +118,7 @@ describe('polygon cornerRadius — r=0 equivalence to current sharp-corner outpu
     const out: Array<{ kind: string; to?: [number, number] }> = [];
     for (let k = 0; k < params.sides; k++) {
       const a = (startDeg + k * stepDeg) * DEG;
-      const v: [number, number] = [
-        round(rect.x + radius * Math.cos(a)),
-        round(rect.y + radius * Math.sin(a)),
-      ];
+      const v: [number, number] = [round(rect.x + radius * Math.cos(a)), round(rect.y + radius * Math.sin(a))];
       out.push({ kind: k === 0 ? 'move' : 'line', to: v });
     }
     out.push({ kind: 'close' });

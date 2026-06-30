@@ -57,8 +57,8 @@ export type Report = {
 
 const ratesOf = (records: Array<RunRecord>): PassRates => {
   const count = records.length;
-  const zod = records.filter((r) => r.zodOk).length;
-  const compile = records.filter((r) => r.compileOk).length;
+  const zod = records.filter(r => r.zodOk).length;
+  const compile = records.filter(r => r.compileOk).length;
   return {
     count,
     zodPassRate: count === 0 ? 0 : zod / count,
@@ -66,10 +66,7 @@ const ratesOf = (records: Array<RunRecord>): PassRates => {
   };
 };
 
-const groupBy = (
-  records: Array<RunRecord>,
-  key: (r: RunRecord) => string,
-): Record<string, PassRates> => {
+const groupBy = (records: Array<RunRecord>, key: (r: RunRecord) => string): Record<string, PassRates> => {
   const buckets = new Map<string, Array<RunRecord>>();
   for (const r of records) {
     const k = key(r);
@@ -81,10 +78,8 @@ const groupBy = (
 };
 
 /** Summarizes the L2 assertion layer across records that reached it, plus per-assertion failure details */
-const summarizeL2 = (
-  records: Array<RunRecord>,
-): { l2: L2Summary; assertionFailures: Array<AssertionFailure> } => {
-  const reachedRecs = records.filter((r) => r.l2 !== null);
+const summarizeL2 = (records: Array<RunRecord>): { l2: L2Summary; assertionFailures: Array<AssertionFailure> } => {
+  const reachedRecs = records.filter(r => r.l2 !== null);
   const reached = reachedRecs.length;
   const skipped = records.length - reached;
   let assertionsTotal = 0;
@@ -135,17 +130,17 @@ const summarizeL2 = (
 export const aggregate = (records: Array<RunRecord>): Report => ({
   total: records.length,
   overall: ratesOf(records),
-  byModel: groupBy(records, (r) => r.model),
-  byDifficulty: groupBy(records, (r) => r.difficulty),
+  byModel: groupBy(records, r => r.model),
+  byDifficulty: groupBy(records, r => r.difficulty),
   failuresByStage: {
-    llm: records.filter((r) => r.failure?.stage === 'llm').length,
-    extract: records.filter((r) => r.failure?.stage === 'extract').length,
-    zod: records.filter((r) => r.failure?.stage === 'zod').length,
-    compile: records.filter((r) => r.failure?.stage === 'compile').length,
+    llm: records.filter(r => r.failure?.stage === 'llm').length,
+    extract: records.filter(r => r.failure?.stage === 'extract').length,
+    zod: records.filter(r => r.failure?.stage === 'zod').length,
+    compile: records.filter(r => r.failure?.stage === 'compile').length,
   },
   failures: records
     .filter((r): r is RunRecord & { failure: NonNullable<RunRecord['failure']> } => Boolean(r.failure))
-    .map((r) => ({
+    .map(r => ({
       promptId: r.promptId,
       model: r.model,
       kIndex: r.kIndex,

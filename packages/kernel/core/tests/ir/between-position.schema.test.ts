@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import {
-  AbsoluteTargetSchema,
-  BetweenPositionSchema,
-  type IRAbsoluteTarget,
-  type IRBetweenPosition,
-} from '../../src/schemas';
+
+import type { IRAbsoluteTarget, IRBetweenPosition } from '../../src/schemas';
+
+import { AbsoluteTargetSchema, BetweenPositionSchema } from '../../src/schemas';
 
 describe('两端点之间按比例取点的端点形态', () => {
   it('端点为笛卡尔坐标 [x, y] 接受', () => {
-    const valid: IRBetweenPosition = { between: [[0, 0], [100, 0]], t: 0.5 };
+    const valid: IRBetweenPosition = {
+      between: [
+        [0, 0],
+        [100, 0],
+      ],
+      t: 0.5,
+    };
     expect(() => BetweenPositionSchema.parse(valid)).not.toThrow();
   });
 
@@ -55,10 +59,7 @@ describe('两端点之间按比例取点的端点形态', () => {
 
   it('端点为嵌套 between 接受（between 套 between）', () => {
     const valid: IRBetweenPosition = {
-      between: [
-        { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 },
-        { id: 'C' },
-      ],
+      between: [{ between: [{ id: 'A' }, { id: 'B' }], t: 0.5 }, { id: 'C' }],
       t: 0.5,
     };
     expect(() => BetweenPositionSchema.parse(valid)).not.toThrow();
@@ -75,30 +76,59 @@ describe('两端点之间按比例取点的端点形态', () => {
 
 describe('比例 t 的取值范围', () => {
   it('t=0 边界接受', () => {
-    const valid: IRBetweenPosition = { between: [[0, 0], [100, 0]], t: 0 };
+    const valid: IRBetweenPosition = {
+      between: [
+        [0, 0],
+        [100, 0],
+      ],
+      t: 0,
+    };
     expect(() => BetweenPositionSchema.parse(valid)).not.toThrow();
   });
 
   it('t=1 边界接受', () => {
-    const valid: IRBetweenPosition = { between: [[0, 0], [100, 0]], t: 1 };
+    const valid: IRBetweenPosition = {
+      between: [
+        [0, 0],
+        [100, 0],
+      ],
+      t: 1,
+    };
     expect(() => BetweenPositionSchema.parse(valid)).not.toThrow();
   });
 
   it('t>1（1.5）拒绝', () => {
     expect(() =>
-      BetweenPositionSchema.parse({ between: [[0, 0], [100, 0]], t: 1.5 }),
+      BetweenPositionSchema.parse({
+        between: [
+          [0, 0],
+          [100, 0],
+        ],
+        t: 1.5,
+      }),
     ).toThrow();
   });
 
   it('t<0（-0.1）拒绝', () => {
     expect(() =>
-      BetweenPositionSchema.parse({ between: [[0, 0], [100, 0]], t: -0.1 }),
+      BetweenPositionSchema.parse({
+        between: [
+          [0, 0],
+          [100, 0],
+        ],
+        t: -0.1,
+      }),
     ).toThrow();
   });
 
   it('t 缺失拒绝', () => {
     expect(() =>
-      BetweenPositionSchema.parse({ between: [[0, 0], [100, 0]] }),
+      BetweenPositionSchema.parse({
+        between: [
+          [0, 0],
+          [100, 0],
+        ],
+      }),
     ).toThrow();
   });
 });
@@ -125,7 +155,13 @@ describe('端点排除 path-relative 形态', () => {
   it('AbsoluteTargetSchema 单独接受非 relative 端点形态', () => {
     const cartesian: IRAbsoluteTarget = [0, 0];
     const node: IRAbsoluteTarget = { id: 'A' };
-    const nested: IRAbsoluteTarget = { between: [[0, 0], [10, 0]], t: 0.5 };
+    const nested: IRAbsoluteTarget = {
+      between: [
+        [0, 0],
+        [10, 0],
+      ],
+      t: 0.5,
+    };
     expect(() => AbsoluteTargetSchema.parse(cartesian)).not.toThrow();
     expect(() => AbsoluteTargetSchema.parse(node)).not.toThrow();
     expect(() => AbsoluteTargetSchema.parse(nested)).not.toThrow();
@@ -138,15 +174,17 @@ describe('端点排除 path-relative 形态', () => {
 
 describe('between 结构完整性', () => {
   it('between 仅含 1 个端点拒绝', () => {
-    expect(() =>
-      BetweenPositionSchema.parse({ between: [[0, 0]], t: 0.5 }),
-    ).toThrow();
+    expect(() => BetweenPositionSchema.parse({ between: [[0, 0]], t: 0.5 })).toThrow();
   });
 
   it('between 含 3 个端点拒绝', () => {
     expect(() =>
       BetweenPositionSchema.parse({
-        between: [[0, 0], [50, 0], [100, 0]],
+        between: [
+          [0, 0],
+          [50, 0],
+          [100, 0],
+        ],
         t: 0.5,
       }),
     ).toThrow();

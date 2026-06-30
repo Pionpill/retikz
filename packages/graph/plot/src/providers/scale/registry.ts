@@ -1,14 +1,20 @@
 import { JsonObjectSchema } from '@retikz/core';
-import { type AnyScaleDefinition, type ChannelResolveContext, type ChannelScaleResolution, type PositionScale, extractScaleType, isBuiltinScaleOperation } from '../../contract';
-import { PlotFieldType, type PlotFieldTypeValue, PlotMark, PlotScale, type Scale, type ScaleOperation } from '../../schemas';
-import { COLOR_SCALE_DEFINITIONS } from './color';
-import { POSITION_SCALE_DEFINITIONS } from './position';
+
+import type { AnyScaleDefinition, ChannelResolveContext, ChannelScaleResolution, PositionScale } from '../../contract';
+import type { MarkOperation, PlotFieldTypeValue, Scale, ScaleOperation } from '../../schemas';
+
+import { extractScaleType, isBuiltinScaleOperation } from '../../contract';
+import { isBuiltinMark, PathClosureKind, PlotFieldType, PlotMark, PlotScale } from '../../schemas';
+import { COLOR_SCALE_DEFINITIONS, POSITION_SCALE_DEFINITIONS } from './features';
 
 /**
  * 内置 scale definition 列表（position 9 + channel 6 = 15）。
  * @description 按 family 分族登记（position 产坐标 / channel 产颜色，对齐 contract 的 family 判别）；与自定义 scale 共享同一 registry 分派流程。
  */
-export const BUILTIN_SCALES: ReadonlyArray<AnyScaleDefinition> = [...POSITION_SCALE_DEFINITIONS, ...COLOR_SCALE_DEFINITIONS];
+export const BUILTIN_SCALES: ReadonlyArray<AnyScaleDefinition> = [
+  ...POSITION_SCALE_DEFINITIONS,
+  ...COLOR_SCALE_DEFINITIONS,
+];
 
 /**
  * 解析 scale registry。
@@ -29,10 +35,15 @@ export const resolveScaleRegistry = (custom?: ReadonlyArray<AnyScaleDefinition>)
   return registry;
 };
 
-const scaleDefinitionOf = (operation: ScaleOperation, registry: ReadonlyMap<string, AnyScaleDefinition>): AnyScaleDefinition => {
+const scaleDefinitionOf = (
+  operation: ScaleOperation,
+  registry: ReadonlyMap<string, AnyScaleDefinition>,
+): AnyScaleDefinition => {
   const def = registry.get(operation.type);
   if (def === undefined) {
-    throw new Error(`lowerPlots: scale type "${operation.type}" is not registered; pass a ScaleDefinition via options.scaleDefinitions`);
+    throw new Error(
+      `lowerPlots: scale type "${operation.type}" is not registered; pass a ScaleDefinition via options.scaleDefinitions`,
+    );
   }
   return def;
 };
@@ -62,7 +73,9 @@ export const resolvePositionScale = (
 ): PositionScale => {
   const def = scaleDefinitionOf(operation, registry);
   if (def.family !== 'position') {
-    throw new Error(`resolvePositionScale: ${operation.type} scale "${operation.name}" cannot drive a positional (x/y) channel; color scales bind the color channel only`);
+    throw new Error(
+      `resolvePositionScale: ${operation.type} scale "${operation.name}" cannot drive a positional (x/y) channel; color scales bind the color channel only`,
+    );
   }
   return def.resolve(parseScaleOperation(def, operation), values, fallbackRange);
 };
@@ -80,11 +93,15 @@ export const resolveChannelScale = (
 ): ChannelScaleResolution => {
   const def = scaleDefinitionOf(operation, registry);
   if (def.family !== 'channel') {
-    throw new Error(`lowerPlots: scale "${operation.name}" of type "${operation.type}" is not a color scale (color channels bind ordinal / sequential / diverging / quantize / threshold / quantile)`);
+    throw new Error(
+      `lowerPlots: scale "${operation.name}" of type "${operation.type}" is not a color scale (color channels bind ordinal / sequential / diverging / quantize / threshold / quantile)`,
+    );
   }
   // 字段绑定（mark 取色）强制 fieldType 兼容；legend 只渲 scale 外观、不绑字段，跳过该校验。
   if (options.checkFieldCompatible !== false && !def.isFieldCompatible(ctx.fieldType)) {
-    throw new Error(`lowerPlots: color scale "${operation.name}" (${operation.type}) is incompatible with a ${ctx.fieldType ?? 'untyped'} field`);
+    throw new Error(
+      `lowerPlots: color scale "${operation.name}" (${operation.type}) is incompatible with a ${ctx.fieldType ?? 'untyped'} field`,
+    );
   }
   return def.resolve(parseScaleOperation(def, operation), values, ctx);
 };
@@ -103,7 +120,9 @@ export const assertScaleFieldCompatible = (
   const def = registry.get(scaleType);
   if (def === undefined || def.family !== 'position') return;
   if (!def.isFieldCompatible(fieldType)) {
-    throw new Error(`lowerPlots: coordinate.${role} scale "${scaleName}" (${scaleType}) is incompatible with ${fieldType} field`);
+    throw new Error(
+      `lowerPlots: coordinate.${role} scale "${scaleName}" (${scaleType}) is incompatible with ${fieldType} field`,
+    );
   }
 };
 
@@ -113,14 +132,21 @@ export const assertScaleFieldCompatible = (
  */
 export const assertBaselineScaleCompatible = (
   valueScaleType: string,
-  marks: ReadonlyArray<{ type: string }>,
+  marks: ReadonlyArray<MarkOperation>,
   registry: ReadonlyMap<string, AnyScaleDefinition>,
 ): void => {
   const def = registry.get(valueScaleType);
   if (def === undefined || def.family !== 'position' || def.allowsBaseline !== false) return;
-  if (marks.some(mark => mark.type === PlotMark.Interval || mark.type === PlotMark.Region)) {
+  const hasBaselineMark = marks.some(
+    mark =>
+      isBuiltinMark(mark) &&
+      (mark.type === PlotMark.Interval ||
+        (mark.type === PlotMark.Path &&
+          (mark.closure?.kind === PathClosureKind.Baseline || mark.closure?.kind === PathClosureKind.Stack))),
+  );
+  if (hasBaselineMark) {
     throw new Error(
-      `nonlinear continuous scale (${valueScaleType}) cannot be used with interval/area because their baseline includes 0; use point/line or wait for explicit positive baseline support`,
+      `nonlinear continuous scale (${valueScaleType}) cannot be used with interval/area/path closure because their baseline participates in the value axis; use a linear value scale or an open point/line mark`,
     );
   }
 };

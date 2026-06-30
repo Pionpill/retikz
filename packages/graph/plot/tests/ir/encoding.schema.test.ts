@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { ChannelSchema, EncodingSchema, PointEncodingSchema, ShapeChannelSchema, SizeChannelSchema } from '../../src/schemas/encoding';
+
+import {
+  ChannelSchema,
+  EncodingSchema,
+  PointEncodingSchema,
+  ShapeChannelSchema,
+  SizeChannelSchema,
+} from '../../src/schemas/encoding';
 
 describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
   // Happy path
@@ -76,7 +83,11 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
   });
 
   it('encoding_json_round_trip', () => {
-    const e = EncodingSchema.parse({ x: { field: 'theta' }, y: { field: 'value' }, color: { field: 'g', scale: 'col' } });
+    const e = EncodingSchema.parse({
+      x: { field: 'theta' },
+      y: { field: 'value' },
+      color: { field: 'g', scale: 'col' },
+    });
     expect(EncodingSchema.parse(JSON.parse(JSON.stringify(e)))).toEqual(e);
   });
 
@@ -87,7 +98,12 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
   });
 
   it('encoding_xyz_with_color_valid', () => {
-    const e = { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' }, color: { field: 'region', scale: 'col' } };
+    const e = {
+      x: { field: 'sand' },
+      y: { field: 'silt' },
+      z: { field: 'clay' },
+      color: { field: 'region', scale: 'col' },
+    };
     expect(EncodingSchema.parse(e)).toEqual(e);
   });
 

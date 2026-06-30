@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+
 import type { ExternalRow } from '../../src/schemas';
+
 import { applyTransforms } from '../../src';
 import { readSourceIndices, tagSourceIndex } from '../../src/pipeline/provenance';
 
@@ -28,7 +30,11 @@ describe('applyTransforms (ADR-03)', () => {
   });
 
   it('sort_stable', () => {
-    const rows = [{ m: 1, tag: 'a' }, { m: 1, tag: 'b' }, { m: 0, tag: 'c' }];
+    const rows = [
+      { m: 1, tag: 'a' },
+      { m: 1, tag: 'b' },
+      { m: 0, tag: 'c' },
+    ];
     const out = applyTransforms(rows, [{ kind: 'sort', field: 'm' }]);
     expect(out.map(r => r.tag)).toEqual(['c', 'a', 'b']);
   });
@@ -73,9 +79,63 @@ describe('applyTransforms (ADR-03)', () => {
     expect(out[0]).not.toHaveProperty('y0');
   });
 
+  it('stack_offset_normalize', () => {
+    const rows = [
+      { x: 'a', s: 'A', v: 2 },
+      { x: 'a', s: 'B', v: 6 },
+    ];
+    const out = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's', offset: 'normalize' }]);
+    expect(out.map(row => [row.y0, row.y1])).toEqual([
+      [0, 0.25],
+      [0.25, 1],
+    ]);
+  });
+
+  it('stack_offset_diverging', () => {
+    const rows = [
+      { x: 'a', s: 'A', v: 3 },
+      { x: 'a', s: 'B', v: -2 },
+      { x: 'a', s: 'C', v: 4 },
+    ];
+    const out = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's', offset: 'diverging' }]);
+    expect(out.map(row => [row.y0, row.y1])).toEqual([
+      [0, 3],
+      [-2, 0],
+      [3, 7],
+    ]);
+  });
+
+  it('stack_offset_center', () => {
+    const rows = [
+      { x: 'a', s: 'A', v: 2 },
+      { x: 'a', s: 'B', v: 6 },
+    ];
+    const out = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's', offset: 'center' }]);
+    expect(out.map(row => [row.y0, row.y1])).toEqual([
+      [-4, -2],
+      [-2, 4],
+    ]);
+  });
+
+  it('stack_offset_overlap', () => {
+    const rows = [
+      { x: 'a', s: 'A', v: 2 },
+      { x: 'a', s: 'B', v: 6 },
+    ];
+    const out = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's', offset: 'overlap' }]);
+    expect(out.map(row => [row.y0, row.y1])).toEqual([
+      [0, 2],
+      [0, 6],
+    ]);
+  });
+
   // ADR-02：泛化 stack —— 缺省 x / groupBy 的单链累积（按数据序），喂饼图
   it('stack_single_chain_accumulates_in_data_order', () => {
-    const SHARE = [{ label: 'A', value: 3 }, { label: 'B', value: 5 }, { label: 'C', value: 2 }];
+    const SHARE = [
+      { label: 'A', value: 3 },
+      { label: 'B', value: 5 },
+      { label: 'C', value: 2 },
+    ];
     const out = applyTransforms(SHARE, [{ kind: 'stack', y: 'value' }]);
     // 行序累积：A[0,3] B[3,8] C[8,10]
     expect(out[0]).toMatchObject({ label: 'A', y0: 0, y1: 3 });
@@ -84,9 +144,13 @@ describe('applyTransforms (ADR-03)', () => {
   });
 
   it('stack_single_chain_custom_output_fields', () => {
-    const out = applyTransforms([{ label: 'A', value: 4 }, { label: 'B', value: 6 }], [
-      { kind: 'stack', y: 'value', startField: 'a0', endField: 'a1' },
-    ]);
+    const out = applyTransforms(
+      [
+        { label: 'A', value: 4 },
+        { label: 'B', value: 6 },
+      ],
+      [{ kind: 'stack', y: 'value', startField: 'a0', endField: 'a1' }],
+    );
     expect(out[0]).toMatchObject({ a0: 0, a1: 4 });
     expect(out[1]).toMatchObject({ a0: 4, a1: 10 });
   });
@@ -109,7 +173,7 @@ describe('applyBin (alpha.12 ADR-01)', () => {
   const GAPPED: Array<ExternalRow> = [{ m: 0 }, { m: 1 }, { m: 2 }, { m: 8 }, { m: 9 }, { m: 10 }];
 
   it('bin_count_histogram_exact_bins_and_empty', () => {
-    const out = applyTransforms(GAPPED, [{ kind: 'bin', field: 'm', count: 10, reduce: 'count' }]);
+    const out = applyTransforms(GAPPED, [{ kind: 'bin', field: 'm', count: 10 }]);
     // 恰 10 箱（count:N → N 个箱，含空箱）
     expect(out.length).toBe(10);
     // 域 [0,10]（min/max 已 nice）、等宽 1、紧贴排列
@@ -117,9 +181,9 @@ describe('applyBin (alpha.12 ADR-01)', () => {
     expect(out[9]).toMatchObject({ binStart: 9, binEnd: 10 });
     for (let i = 0; i < out.length - 1; i++) expect(out[i].binEnd).toBe(out[i + 1].binStart);
     // 频数：[1,1,1,0,0,0,0,0,1,2]（10 落最后一箱，含上界）
-    expect(out.map(r => r.binValue)).toEqual([1, 1, 1, 0, 0, 0, 0, 0, 1, 2]);
-    // 空箱仍产行、binValue=0
-    expect(out[4]).toMatchObject({ binStart: 4, binEnd: 5, binValue: 0 });
+    expect(out.map(r => r.binCount)).toEqual([1, 1, 1, 0, 0, 0, 0, 0, 1, 2]);
+    // 空箱仍产行、binCount=0
+    expect(out[4]).toMatchObject({ binStart: 4, binEnd: 5, binCount: 0 });
   });
 
   it('bin_step_strategy_tiles_from_lower_bound', () => {
@@ -127,8 +191,8 @@ describe('applyBin (alpha.12 ADR-01)', () => {
     const out = applyTransforms(rows, [{ kind: 'bin', field: 'm', step: 5 }]);
     // [0,5),[5,10] → 2 箱（last 含上界）；count: 0,3 → bin0=2；7,10 → bin1=2
     expect(out.length).toBe(2);
-    expect(out[0]).toMatchObject({ binStart: 0, binEnd: 5, binValue: 2 });
-    expect(out[1]).toMatchObject({ binStart: 5, binEnd: 10, binValue: 2 });
+    expect(out[0]).toMatchObject({ binStart: 0, binEnd: 5, binCount: 2 });
+    expect(out[1]).toMatchObject({ binStart: 5, binEnd: 10, binCount: 2 });
   });
 
   it('bin_thresholds_strategy_k_plus_one_bins', () => {
@@ -136,26 +200,46 @@ describe('applyBin (alpha.12 ADR-01)', () => {
     // K=3 thresholds + extent [0,40] 端点补齐 → edges [0,10,20,30,40] → 4 箱
     const out = applyTransforms(rows, [{ kind: 'bin', field: 'm', thresholds: [10, 20, 30], extent: [0, 40] }]);
     expect(out.length).toBe(4);
-    expect(out.map(r => [r.binStart, r.binEnd])).toEqual([[0, 10], [10, 20], [20, 30], [30, 40]]);
-    expect(out.map(r => r.binValue)).toEqual([1, 1, 1, 1]);
+    expect(out.map(r => [r.binStart, r.binEnd])).toEqual([
+      [0, 10],
+      [10, 20],
+      [20, 30],
+      [30, 40],
+    ]);
+    expect(out.map(r => r.binCount)).toEqual([1, 1, 1, 1]);
   });
 
-  it('bin_reduce_sum_mean_min_max', () => {
-    const rows = [{ m: 1, w: 10 }, { m: 2, w: 20 }, { m: 8, w: 5 }];
-    const sum = applyTransforms(rows, [{ kind: 'bin', field: 'm', step: 5, reduce: 'sum', reduceField: 'w' }]);
+  it('bin_metrics_sum_mean_min_max', () => {
+    const rows = [
+      { m: 1, w: 10 },
+      { m: 2, w: 20 },
+      { m: 8, w: 5 },
+    ];
+    const sum = applyTransforms(rows, [
+      { kind: 'bin', field: 'm', step: 5, metrics: [{ op: 'sum', field: 'w', as: 'total' }] },
+    ]);
     // [0,5): w 10,20 → 30；[5,10]: w 5 → 5
-    expect(sum.map(r => r.binValue)).toEqual([30, 5]);
-    const mean = applyTransforms(rows, [{ kind: 'bin', field: 'm', step: 5, reduce: 'mean', reduceField: 'w' }]);
-    expect(mean.map(r => r.binValue)).toEqual([15, 5]);
-    const min = applyTransforms(rows, [{ kind: 'bin', field: 'm', step: 5, reduce: 'min', reduceField: 'w' }]);
-    expect(min.map(r => r.binValue)).toEqual([10, 5]);
-    const max = applyTransforms(rows, [{ kind: 'bin', field: 'm', step: 5, reduce: 'max', reduceField: 'w' }]);
-    expect(max.map(r => r.binValue)).toEqual([20, 5]);
+    expect(sum.map(r => r.total)).toEqual([30, 5]);
+    const mean = applyTransforms(rows, [
+      { kind: 'bin', field: 'm', step: 5, metrics: [{ op: 'mean', field: 'w', as: 'avg' }] },
+    ]);
+    expect(mean.map(r => r.avg)).toEqual([15, 5]);
+    const min = applyTransforms(rows, [
+      { kind: 'bin', field: 'm', step: 5, metrics: [{ op: 'min', field: 'w', as: 'min' }] },
+    ]);
+    expect(min.map(r => r.min)).toEqual([10, 5]);
+    const max = applyTransforms(rows, [
+      { kind: 'bin', field: 'm', step: 5, metrics: [{ op: 'max', field: 'w', as: 'max' }] },
+    ]);
+    expect(max.map(r => r.max)).toEqual([20, 5]);
   });
 
   it('bin_custom_output_fields', () => {
     // step 从域下界（观测 min = 0）平铺 → [0,5]
-    const out = applyTransforms([{ m: 0 }], [{ kind: 'bin', field: 'm', step: 5, startField: 'lo', endField: 'hi', valueField: 'n' }]);
+    const out = applyTransforms(
+      [{ m: 0 }],
+      [{ kind: 'bin', field: 'm', step: 5, startField: 'lo', endField: 'hi', metrics: [{ op: 'count', as: 'n' }] }],
+    );
     expect(out[0]).toMatchObject({ lo: 0, hi: 5, n: 1 });
     expect(out[0]).not.toHaveProperty('binStart');
   });
@@ -169,15 +253,19 @@ describe('applyBin (alpha.12 ADR-01)', () => {
     expect(out.length).toBeGreaterThanOrEqual(1);
     expect(out.every(r => typeof r.binStart === 'number' && typeof r.binEnd === 'number')).toBe(true);
     // 唯一观测计入某箱、总频数 1
-    expect(out.reduce((acc, r) => acc + (r.binValue as number), 0)).toBe(1);
+    expect(out.reduce((acc, r) => acc + (r.binCount as number), 0)).toBe(1);
   });
 
-  it('bin_reduce_sum_missing_reduceField_fail_loud', () => {
-    expect(() => applyTransforms([{ m: 1 }], [{ kind: 'bin', field: 'm', step: 5, reduce: 'sum' }])).toThrow(/reduceField/);
+  it('bin_metric_sum_missing_field_fail_loud', () => {
+    expect(() =>
+      applyTransforms([{ m: 1 }], [{ kind: 'bin', field: 'm', step: 5, metrics: [{ op: 'sum', as: 'sum' }] }]),
+    ).toThrow();
   });
 
   it('bin_conflicting_strategy_fail_loud', () => {
-    expect(() => applyTransforms([{ m: 1 }], [{ kind: 'bin', field: 'm', count: 5, step: 2 }])).toThrow(/mutually exclusive|strateg/i);
+    expect(() => applyTransforms([{ m: 1 }], [{ kind: 'bin', field: 'm', count: 5, step: 2 }])).toThrow(
+      /mutually exclusive|strateg/i,
+    );
   });
 
   it('bin_step_float_drift_keeps_domain_max', () => {
@@ -185,14 +273,14 @@ describe('applyBin (alpha.12 ADR-01)', () => {
     const rows: Array<ExternalRow> = Array.from({ length: 11 }, (_, i) => ({ v: i * 0.1 }));
     const out = applyTransforms(rows, [{ kind: 'bin', field: 'v', step: 0.1, extent: [0, 1] }]);
     // 11 个观测一个不丢
-    expect(out.reduce((acc, r) => acc + (r.binValue as number), 0)).toBe(11);
+    expect(out.reduce((acc, r) => acc + (r.binCount as number), 0)).toBe(11);
   });
 
   it('bin_count_float_drift_keeps_domain_max', () => {
     // count 策略下末边钉到 hi：非整除域不丢上界观测
     const rows: Array<ExternalRow> = Array.from({ length: 8 }, (_, i) => ({ v: i }));
     const out = applyTransforms(rows, [{ kind: 'bin', field: 'v', count: 3, extent: [0, 7] }]);
-    expect(out.reduce((acc, r) => acc + (r.binValue as number), 0)).toBe(8);
+    expect(out.reduce((acc, r) => acc + (r.binCount as number), 0)).toBe(8);
   });
 
   it('bin_thresholds_outside_extent_filtered', () => {
@@ -200,8 +288,11 @@ describe('applyBin (alpha.12 ADR-01)', () => {
     const rows: Array<ExternalRow> = [{ m: 1 }, { m: 5 }, { m: 9 }];
     const out = applyTransforms(rows, [{ kind: 'bin', field: 'm', thresholds: [3, 100] }]);
     expect(out.length).toBe(2);
-    expect(out.map(r => [r.binStart, r.binEnd])).toEqual([[1, 3], [3, 9]]);
-    expect(out.reduce((acc, r) => acc + (r.binValue as number), 0)).toBe(3);
+    expect(out.map(r => [r.binStart, r.binEnd])).toEqual([
+      [1, 3],
+      [3, 9],
+    ]);
+    expect(out.reduce((acc, r) => acc + (r.binCount as number), 0)).toBe(3);
   });
 
   it('bin_group_level_provenance_source_indices', () => {
@@ -214,8 +305,8 @@ describe('applyBin (alpha.12 ADR-01)', () => {
   });
 });
 
-// alpha.12 ADR-01：aggregate（分组聚合，改行数）
-describe('applyAggregate (alpha.12 ADR-01)', () => {
+// alpha.12 ADR-16：summarize（分组统计，改行数）
+describe('applySummarize (alpha.12 ADR-16)', () => {
   const ORDERS: Array<ExternalRow> = [
     { region: 'N', product: 'A', revenue: 3 },
     { region: 'N', product: 'B', revenue: 5 },
@@ -223,21 +314,25 @@ describe('applyAggregate (alpha.12 ADR-01)', () => {
     { region: 'S', product: 'A', revenue: 4 },
   ];
 
-  it('aggregate_groupby_sum', () => {
-    const out = applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }]);
+  it('summarize_groupby_sum', () => {
+    const out = applyTransforms(ORDERS, [
+      { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] },
+    ]);
     expect(out.length).toBe(2);
     expect(out[0]).toMatchObject({ region: 'N', total: 8 });
     expect(out[1]).toMatchObject({ region: 'S', total: 6 });
   });
 
-  it('aggregate_default_as_name', () => {
-    const out = applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue' }]);
-    // as 缺省 = reduce + 首字母大写 field
-    expect(out[0]).toMatchObject({ region: 'N', sumRevenue: 8 });
+  it('summarize_requires_explicit_as', () => {
+    expect(() =>
+      applyTransforms(ORDERS, [{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue' }] }]),
+    ).toThrow();
   });
 
-  it('aggregate_multikey_composite', () => {
-    const out = applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region', 'product'], reduce: 'sum', field: 'revenue', as: 't' }]);
+  it('summarize_multikey_composite', () => {
+    const out = applyTransforms(ORDERS, [
+      { kind: 'summarize', groupBy: ['region', 'product'], metrics: [{ op: 'sum', field: 'revenue', as: 't' }] },
+    ]);
     // 复合键：N/A, N/B, S/A
     expect(out.length).toBe(3);
     expect(out).toEqual([
@@ -247,44 +342,58 @@ describe('applyAggregate (alpha.12 ADR-01)', () => {
     ]);
   });
 
-  it('aggregate_count_no_field', () => {
-    const out = applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'count' }]);
-    // count 默认 as = 'count'、值 = 组行数
+  it('summarize_count_no_field', () => {
+    const out = applyTransforms(ORDERS, [
+      { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'count', as: 'count' }] },
+    ]);
+    // count 需显式 as、值 = 组行数
     expect(out[0]).toMatchObject({ region: 'N', count: 2 });
     expect(out[1]).toMatchObject({ region: 'S', count: 2 });
   });
 
-  it('aggregate_mean_min_max', () => {
-    const mean = applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'mean', field: 'revenue', as: 'v' }]);
+  it('summarize_mean_min_max', () => {
+    const mean = applyTransforms(ORDERS, [
+      { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'mean', field: 'revenue', as: 'v' }] },
+    ]);
     expect(mean[0].v).toBe(4); // N: (3+5)/2
     expect(mean[1].v).toBe(3); // S: (2+4)/2
-    const min = applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'min', field: 'revenue', as: 'v' }]);
+    const min = applyTransforms(ORDERS, [
+      { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'min', field: 'revenue', as: 'v' }] },
+    ]);
     expect(min.map(r => r.v)).toEqual([3, 2]);
-    const max = applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'max', field: 'revenue', as: 'v' }]);
+    const max = applyTransforms(ORDERS, [
+      { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'max', field: 'revenue', as: 'v' }] },
+    ]);
     expect(max.map(r => r.v)).toEqual([5, 4]);
   });
 
-  it('aggregate_changes_row_count', () => {
-    const out = applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'count' }]);
+  it('summarize_changes_row_count', () => {
+    const out = applyTransforms(ORDERS, [
+      { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'count', as: 'count' }] },
+    ]);
     expect(out.length).not.toBe(ORDERS.length);
     expect(out.length).toBe(2);
   });
 
-  it('aggregate_missing_field_fail_loud', () => {
-    expect(() => applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum' }])).toThrow(/field/);
+  it('summarize_missing_field_fail_loud', () => {
+    expect(() =>
+      applyTransforms(ORDERS, [{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', as: 'total' }] }]),
+    ).toThrow();
   });
 
-  it('aggregate_group_level_provenance_source_indices', () => {
+  it('summarize_group_level_provenance_source_indices', () => {
     const tagged = tagSourceIndex(ORDERS); // 0,1,2,3
-    const out = applyTransforms(tagged, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 't' }]);
+    const out = applyTransforms(tagged, [
+      { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 't' }] },
+    ]);
     expect(readSourceIndices(out[0])).toEqual([0, 1]); // N
     expect(readSourceIndices(out[1])).toEqual([2, 3]); // S
   });
 
-  // 交互：aggregate（改行数）后接 stack（保行数）
-  it('aggregate_then_stack_chain', () => {
+  // 交互：summarize（改行数）后接 stack（保行数）
+  it('summarize_then_stack_chain', () => {
     const out = applyTransforms(ORDERS, [
-      { kind: 'aggregate', groupBy: ['region', 'product'], reduce: 'sum', field: 'revenue', as: 'total' },
+      { kind: 'summarize', groupBy: ['region', 'product'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] },
       { kind: 'stack', x: 'region', y: 'total', groupBy: 'product' },
     ]);
     // 聚合 → N/A=3,N/B=5,S/A=6；按 region stack：N: A[0,3] B[3,8]；S: A[0,6]
@@ -305,7 +414,9 @@ describe('applyNormalize (alpha.12 ADR-02)', () => {
   ];
 
   it('normalize_group_share_percent', () => {
-    const out = applyTransforms(REVENUE, [{ kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' }]);
+    const out = applyTransforms(REVENUE, [
+      { kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' },
+    ]);
     // Q1 总 4 → A 75, B 25；Q2 总 10 → A 50, B 50；原 amount 保留
     expect(out[0]).toMatchObject({ amount: 3, share: 75 });
     expect(out[1]).toMatchObject({ amount: 1, share: 25 });
@@ -321,7 +432,13 @@ describe('applyNormalize (alpha.12 ADR-02)', () => {
   });
 
   it('normalize_overwrite_in_place', () => {
-    const out = applyTransforms([{ g: 'x', v: 2 }, { g: 'x', v: 2 }], [{ kind: 'normalize', field: 'v', groupBy: ['g'] }]);
+    const out = applyTransforms(
+      [
+        { g: 'x', v: 2 },
+        { g: 'x', v: 2 },
+      ],
+      [{ kind: 'normalize', field: 'v', groupBy: ['g'] }],
+    );
     // as 缺省 → 原位覆盖 v
     expect(out[0].v).toBeCloseTo(0.5, 9);
   });
@@ -333,7 +450,13 @@ describe('applyNormalize (alpha.12 ADR-02)', () => {
   });
 
   it('normalize_zero_group_sum_no_nan', () => {
-    const out = applyTransforms([{ g: 'z', v: 0 }, { g: 'z', v: 0 }], [{ kind: 'normalize', field: 'v', groupBy: ['g'], as: 's' }]);
+    const out = applyTransforms(
+      [
+        { g: 'z', v: 0 },
+        { g: 'z', v: 0 },
+      ],
+      [{ kind: 'normalize', field: 'v', groupBy: ['g'], as: 's' }],
+    );
     // 组和为 0 → share 0（不产 NaN / Infinity）
     expect(out.every(r => r.s === 0)).toBe(true);
   });
@@ -355,7 +478,10 @@ describe('applyNormalize (alpha.12 ADR-02)', () => {
 // alpha.12 ADR-02：derive-interval（单行派生区间，保行数）
 describe('applyDeriveInterval (alpha.12 ADR-02)', () => {
   it('derive_interval_two_field', () => {
-    const tasks = [{ task: 'A', start: 1, end: 5 }, { task: 'B', start: 3, end: 9 }];
+    const tasks = [
+      { task: 'A', start: 1, end: 5 },
+      { task: 'B', start: 3, end: 9 },
+    ];
     const out = applyTransforms(tasks, [{ kind: 'derive-interval', startFrom: 'start', endFrom: 'end' }]);
     expect(out.length).toBe(2);
     expect(out[0]).toMatchObject({ y0: 1, y1: 5 });
@@ -368,7 +494,10 @@ describe('applyDeriveInterval (alpha.12 ADR-02)', () => {
   });
 
   it('derive_interval_custom_fields', () => {
-    const out = applyTransforms([{ s: 1, e: 4 }], [{ kind: 'derive-interval', startFrom: 's', endFrom: 'e', startField: 'lo', endField: 'hi' }]);
+    const out = applyTransforms(
+      [{ s: 1, e: 4 }],
+      [{ kind: 'derive-interval', startFrom: 's', endFrom: 'e', startField: 'lo', endField: 'hi' }],
+    );
     expect(out[0]).toMatchObject({ lo: 1, hi: 4 });
   });
 
@@ -378,18 +507,31 @@ describe('applyDeriveInterval (alpha.12 ADR-02)', () => {
 
   // derive-interval（单行）vs stack（跨行累积）产不同 y0/y1
   it('derive_interval_vs_stack_distinct', () => {
-    const rows = [{ x: 'a', v: 3 }, { x: 'a', v: 5 }];
+    const rows = [
+      { x: 'a', v: 3 },
+      { x: 'a', v: 5 },
+    ];
     const derived = applyTransforms(rows, [{ kind: 'derive-interval', from: 'v' }]);
     const stacked = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v' }]);
     // derive：每行独立 [0,v]；stack：跨行累积 [0,3],[3,8]
-    expect(derived.map(r => [r.y0, r.y1])).toEqual([[0, 3], [0, 5]]);
-    expect(stacked.map(r => [r.y0, r.y1])).toEqual([[0, 3], [3, 8]]);
+    expect(derived.map(r => [r.y0, r.y1])).toEqual([
+      [0, 3],
+      [0, 5],
+    ]);
+    expect(stacked.map(r => [r.y0, r.y1])).toEqual([
+      [0, 3],
+      [3, 8],
+    ]);
   });
 });
 
 // alpha.12 ADR-02：jitter（确定性位置抖动，保行数）
 describe('applyJitter (alpha.12 ADR-02)', () => {
-  const SAMPLES: Array<ExternalRow> = [{ dose: 1, r: 10 }, { dose: 1, r: 12 }, { dose: 2, r: 8 }];
+  const SAMPLES: Array<ExternalRow> = [
+    { dose: 1, r: 10 },
+    { dose: 1, r: 12 },
+    { dose: 2, r: 8 },
+  ];
 
   it('jitter_deterministic_same_seed', () => {
     const op = { kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 42 } as const;
@@ -397,7 +539,9 @@ describe('applyJitter (alpha.12 ADR-02)', () => {
     const b = applyTransforms(SAMPLES, [op]);
     expect(a.map(r => r.dose)).toEqual(b.map(r => r.dose));
     // 偏移在 ±amount 内
-    a.forEach((r, i) => expect(Math.abs((r.dose as number) - (SAMPLES[i].dose as number))).toBeLessThanOrEqual(0.3 + 1e-9));
+    a.forEach((r, i) =>
+      expect(Math.abs((r.dose as number) - (SAMPLES[i].dose as number))).toBeLessThanOrEqual(0.3 + 1e-9),
+    );
   });
 
   it('jitter_different_seed_differs', () => {
@@ -425,7 +569,10 @@ describe('applyJitter (alpha.12 ADR-02)', () => {
   });
 
   it('jitter_non_finite_value_skipped', () => {
-    const out = applyTransforms([{ dose: 'NA', r: 1 }], [{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 1, seed: 0 }]);
+    const out = applyTransforms(
+      [{ dose: 'NA', r: 1 }],
+      [{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 1, seed: 0 }],
+    );
     // 非有限值保持原值（不产 NaN）
     expect(out[0].dose).toBe('NA');
   });

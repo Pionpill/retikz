@@ -1,5 +1,22 @@
 ﻿import type { z } from 'zod';
-import type { ChannelSchema, EncodingSchema, MarkChannelEncodingSchema, MarkLabelSchema, OpacityChannelSchema, PointEncodingSchema, PositionEncodingSchema, ShapeChannelSchema, SizeChannelSchema, TextChannelSchema } from './schema';
+
+import type {
+  ChannelSchema,
+  EncodingSchema,
+  MarkChannelEncodingSchema,
+  MarkGeometryLabelListSchema,
+  MarkGeometryLabelSchema,
+  MarkLabelContentSchema,
+  MarkLabelSchema,
+  MarkNodeLabelListSchema,
+  MarkNodeLabelSchema,
+  OpacityChannelSchema,
+  PointEncodingSchema,
+  PositionEncodingSchema,
+  ShapeChannelSchema,
+  SizeChannelSchema,
+  TextChannelSchema,
+} from './schema';
 
 /** Channel binding: exactly one of field (data-driven) or value (constant). */
 export type Channel = z.infer<typeof ChannelSchema>;
@@ -19,5 +36,15 @@ export type ShapeChannel = z.infer<typeof ShapeChannelSchema>;
 export type PointEncoding = z.infer<typeof PointEncodingSchema>;
 /** Text content channel binding. */
 export type TextChannel = z.infer<typeof TextChannelSchema>;
-/** Host datum label config aligned with core NodeLabelSchema position / distance / pin. */
+/** Mark label content binding. */
+export type MarkLabelContent = z.infer<typeof MarkLabelContentSchema>;
+/** Host datum label config aligned with core NodeLabelSchema. */
+export type MarkNodeLabel = z.infer<typeof MarkNodeLabelSchema>;
+/** Host geometry label config aligned with core GeometryLabelSchema. */
+export type MarkGeometryLabel = z.infer<typeof MarkGeometryLabelSchema>;
+/** Single or array node label input. */
+export type MarkNodeLabelList = z.infer<typeof MarkNodeLabelListSchema>;
+/** Single or array geometry label input. */
+export type MarkGeometryLabelList = z.infer<typeof MarkGeometryLabelListSchema>;
+/** Host-inferred mark label config. */
 export type MarkLabel = z.infer<typeof MarkLabelSchema>;

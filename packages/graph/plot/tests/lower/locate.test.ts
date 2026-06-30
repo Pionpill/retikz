@@ -1,13 +1,18 @@
 import type { IRNode, IRScope } from '@retikz/core';
-import { z } from 'zod';
+
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
-import { SOURCE_INDEX } from '../../src/pipeline/provenance';
+import { z } from 'zod';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { defineTransform } from '../../src';
 // ADR-02 未来 API：locator 在实现落地前不存在，整文件 import 即会失败（预期）。
 // 解析路径取 ADR file-scope 指明的新模块 src/features/interaction/locate.ts（同时 re-export 自 src/index）。
 import { createPlotLocator } from '../../src/features';
-import { defineTransform } from '../../src';
+import { lowerPlots } from '../../src/pipeline/expand';
+import { SOURCE_INDEX } from '../../src/pipeline/provenance';
+import { PlotSpecSchema } from '../../src/schemas';
 
 /**
  * ADR-02：datum locator 命中预演——逻辑地址 → 位置/元素的确定性正向解析纯函数。
@@ -89,7 +94,7 @@ const datumNodes = (layer: IRScope): Array<IRNode> => {
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'node') out.push(node);
+      if (node.type === 'node') out.push(child as IRNode);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -98,7 +103,9 @@ const datumNodes = (layer: IRScope): Array<IRNode> => {
 };
 
 /** 读 sector node 的 shape params（断言其确为 sector shape ref） */
-const sectorParams = (node: IRNode): { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number } => {
+const sectorParams = (
+  node: IRNode,
+): { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number } => {
   const shape = node.shape as { type?: string; params?: Record<string, number> } | undefined;
   expect(shape?.type).toBe('sector');
   return shape!.params as { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number };
@@ -149,7 +156,13 @@ const pieSpec = (over: { id?: string } = {}): PlotSpec =>
       { type: 'linear', name: 'a' },
       { type: 'linear', name: 'r' },
     ],
-    marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'k' } } }],
+    marks: [
+      {
+        type: 'interval',
+        bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+        encoding: { color: { field: 'k' } },
+      },
+    ],
   });
 
 const PIE_ROWS = [
@@ -533,7 +546,12 @@ describe('ADR-06 locator transform registry parity', () => {
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'x2' }, y: { field: 'y' } } }],
     });
-    const datasets = { d: [{ x: 1, y: 2 }, { x: 3, y: 4 }] };
+    const datasets = {
+      d: [
+        { x: 1, y: 2 },
+        { x: 3, y: 4 },
+      ],
+    };
     const options: LowerPlotsOptions = { ...opts, transformDefinitions: [doubleDefinition] };
     const nodes = datumNodes(firstLayer(spec, datasets, options));
     const locator = createPlotLocator(spec, datasets, options);
@@ -541,6 +559,42 @@ describe('ADR-06 locator transform registry parity', () => {
     for (let index = 0; index < nodes.length; index++) {
       expect(locator.datum(index)!.position).toEqual(nodes[index].position);
     }
+  });
+
+  it('mark_local_transform_locator_matches_lowering', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      id: 'local',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'point',
+          transform: [{ kind: 'sort', field: 'revenue', order: 'descending' }],
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+      ],
+    });
+    const datasets = { sales: SALES };
+    const options: LowerPlotsOptions = { ...opts, provenance: true, datumProvenance: true };
+    const nodes = datumNodes(firstLayer(spec, datasets, options));
+    const locator = createPlotLocator(spec, datasets, options);
+
+    expect(nodes).toHaveLength(3);
+    for (let index = 0; index < nodes.length; index++) {
+      const anchor = locator.datum(index);
+      expect(anchor).not.toBeNull();
+      expect(anchor!.position).toEqual(nodes[index].position);
+      expect((anchor!.meta as { sourceIndex?: number }).sourceIndex).toBe(
+        (nodes[index].meta as { sourceIndex?: number }).sourceIndex,
+      );
+    }
+    expect(nodes.map(node => (node.meta as { sourceIndex?: number }).sourceIndex)).toEqual([1, 0, 2]);
   });
 
   it('custom_group_transform_locator_meta_carries_source_indices', () => {
@@ -586,7 +640,14 @@ describe('ADR-02 locator — anchor parity & fail-loud (cross-review)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', series: 'g', bounds: { x: { kind: 'band', group: 'g' } }, encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
+      marks: [
+        {
+          type: 'interval',
+          series: 'g',
+          bounds: { x: { kind: 'band', group: 'g' } },
+          encoding: { x: { field: 'cat' }, y: { field: 'v' } },
+        },
+      ],
     });
   const DODGE_ROWS = [
     { cat: 'A', g: 'p', v: 3 },
@@ -608,7 +669,14 @@ describe('ADR-02 locator — anchor parity & fail-loud (cross-review)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'interval', series: 'g', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } }, encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
+      marks: [
+        {
+          type: 'interval',
+          series: 'g',
+          bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } },
+          encoding: { x: { field: 'cat' }, y: { field: 'v' } },
+        },
+      ],
     });
   const STACK_ROWS = [
     { cat: 'A', g: 'p', v: 3 },
@@ -629,7 +697,14 @@ describe('ADR-02 locator — anchor parity & fail-loud (cross-review)', () => {
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'interval', series: 'g', bounds: { x: { kind: 'band', group: 'g' } }, encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
+      marks: [
+        {
+          type: 'interval',
+          series: 'g',
+          bounds: { x: { kind: 'band', group: 'g' } },
+          encoding: { x: { field: 'cat' }, y: { field: 'v' } },
+        },
+      ],
     });
   const POLAR_DODGE_ROWS = [
     { cat: 'A', g: 'p', v: 4 },

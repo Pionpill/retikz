@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 import type { TableRow } from './types';
+
 import { RenderType } from './RenderType';
 
 type Props = {
@@ -31,18 +32,14 @@ export const RenderTable: FC<Props> = ({ rows }) => {
         <tbody>
           {rows.map((r, i) => (
             <tr key={`${r.originalName ?? r.name}-${i}`}>
-              <td className={cn(td, 'font-mono whitespace-nowrap')}>
-                {r.isChild ? '' : r.name}
-              </td>
+              <td className={cn(td, 'font-mono whitespace-nowrap')}>{r.isChild ? '' : r.name}</td>
               <td className={td}>
                 {r.isChild && r.originalName != null && (
                   <span className="font-mono text-muted-foreground">{`${r.originalName}: `}</span>
                 )}
                 <RenderType repr={r.type} />
                 {r.constraints.length > 0 && (
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    ({r.constraints.join(', ')})
-                  </span>
+                  <span className="ml-2 text-xs text-muted-foreground">({r.constraints.join(', ')})</span>
                 )}
               </td>
               <td className={cn(td, 'whitespace-nowrap text-center')}>

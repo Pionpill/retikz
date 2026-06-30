@@ -3,46 +3,46 @@ title: Roadmap
 description: "retikz's current and near-future roadmap: v0.3 beta hardening, v0.3 rc validation, v0.4 incremental-rendering candidates, and v1+ domain packages."
 ---
 
-The roadmap is a **goal list, not a promise** — it adjusts with community feedback and maintainer bandwidth. Concrete releases land by version in the [Changelog](/core/releases/changelog).
+The roadmap is a **goal list, not a promise** — it adjusts with community feedback and maintainer bandwidth. Concrete releases land by version in the [Changelog](/kernel/releases/changelog).
 
 ## Now
 
 **v0.3.0-beta.1** — beta hardening before rc.
 
-| Item | Status |
-| --- | --- |
-| Renderer/runtime split | ✅ Complete |
-| Public API | ⏳ Beta review |
+| Item                      | Status               |
+| ------------------------- | -------------------- |
+| Renderer/runtime split    | ✅ Complete          |
+| Public API                | ⏳ Beta review       |
 | Parity / docs / packaging | ⏳ In beta hardening |
 
 ## Short term: v0.3.0 rc
 
 Turn the beta line into a release candidate.
 
-| Goal | Content |
-| --- | --- |
-| API freeze | No new components, props, IR fields, or public exports after rc starts |
-| Installation acceptance | npm package, type exports, examples, and docs links all work |
-| Release notes | Changelog, versioning notes, and migration hints stay aligned |
+| Goal                    | Content                                                                |
+| ----------------------- | ---------------------------------------------------------------------- |
+| API freeze              | No new components, props, IR fields, or public exports after rc starts |
+| Installation acceptance | npm package, type exports, examples, and docs links all work           |
+| Release notes           | Changelog, versioning notes, and migration hints stay aligned          |
 
 ## Current v0.3 shape
 
 Scene output and runtime responsibilities are split into clearer Tier 1 packages.
 
-| Goal | Content |
-| --- | --- |
-| `@retikz/render` | SVG string render, Canvas 2D draw, hydration helpers, animation runtime, optional Node image export |
-| `@retikz/vanilla` | Framework-free mounting and SSR entry points |
-| `@retikz/react` | Unified `renderer="svg"` / `renderer="canvas"` entry |
-| Hydration | Stable ids + event-binding semantics |
-| Plot support | Lowering, coordinate scopes, layers, locator / anchor interfaces |
+| Goal              | Content                                                                                             |
+| ----------------- | --------------------------------------------------------------------------------------------------- |
+| `@retikz/render`  | SVG string render, Canvas 2D draw, hydration helpers, animation runtime, optional Node image export |
+| `@retikz/vanilla` | Framework-free mounting and SSR entry points                                                        |
+| `@retikz/react`   | Unified `renderer="svg"` / `renderer="canvas"` entry                                                |
+| Hydration         | Stable ids + event-binding semantics                                                                |
+| Plot support      | Lowering, coordinate scopes, layers, locator / anchor interfaces                                    |
 
 ## Long term
 
-| Topic | Where |
-| --- | --- |
-| v0.4 | Incremental rendering, Progressive IR, AI step updates, view-layer experiments |
-| v1+ | Domain packages such as `plot` / `graph` / `flow`, plus the broader ecosystem |
+| Topic | Where                                                                          |
+| ----- | ------------------------------------------------------------------------------ |
+| v0.4  | Incremental rendering, Progressive IR, AI step updates, view-layer experiments |
+| v1+   | Domain packages such as `plot` / `graph` / `flow`, plus the broader ecosystem  |
 
 ## Not on the roadmap
 

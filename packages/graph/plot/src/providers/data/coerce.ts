@@ -1,5 +1,8 @@
 import { isFiniteNumber } from '@retikz/math';
-import { PlotFieldType, type PlotFieldTypeValue } from '../../schemas';
+
+import type { PlotFieldTypeValue } from '../../schemas';
+
+import { PlotFieldType } from '../../schemas';
 import { isIsoDateString } from './field';
 
 /** 严格数字串：trimmed 十进制 / 科学计数；拒空串、Infinity、NaN、hex、带单位串。 */

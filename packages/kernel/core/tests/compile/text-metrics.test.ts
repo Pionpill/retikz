@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+
 import type { FontSpec } from '../../src/compile/text-metrics';
+
 import { fallbackMeasurer } from '../../src/compile/text-metrics';
 
 const font14: FontSpec = { size: 14 };

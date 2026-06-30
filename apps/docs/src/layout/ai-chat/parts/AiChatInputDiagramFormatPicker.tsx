@@ -1,11 +1,15 @@
-import { Braces, FileCode2, type LucideIcon, Sparkles } from 'lucide-react';
-import { type FC, useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import type { FC } from 'react';
+
+import { Braces, FileCode2, Sparkles } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/use-ai-chat-store';
+
 import type { DiagramFormatPreference } from '../context';
 
 const PREFERENCES: ReadonlyArray<DiagramFormatPreference> = ['auto', 'ir', 'tsx'];

@@ -6,8 +6,10 @@
  *   ⚠️ 本文件断言"期望的正确行为"——compile stamp 尚未实现，大部分 case 此刻预计 fail（预期 TDD red）。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { IR, ScenePrimitive } from '../../src';
+
+import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
 const scene = (children: IR['children']): IR => ({
@@ -18,10 +20,8 @@ const scene = (children: IR['children']): IR => ({
 const silent = { onWarn: () => {} };
 
 /** 摊平后取某 type 的全部图元 */
-const allOfType = (
-  prims: ReadonlyArray<ScenePrimitive>,
-  type: ScenePrimitive['type'],
-): Array<ScenePrimitive> => flattenPrims(prims).filter(p => p.type === type);
+const allOfType = (prims: ReadonlyArray<ScenePrimitive>, type: ScenePrimitive['type']): Array<ScenePrimitive> =>
+  flattenPrims(prims).filter(p => p.type === type);
 
 describe('纯几何 Node（无文本 / 无 rotate）带 id → 平铺 shape 图元逐个 stamp 同一 id', () => {
   it('rectangle 纯几何 Node 带 id → 其 RectPrim 带该 id（不强制包 group）', () => {

@@ -3,11 +3,13 @@
  * 渲染层断言（SVG feDropShadow / Canvas ctx.shadow*、跨端像素 parity）留 render 测试。
  */
 import { describe, expect, it } from 'vitest';
+
+import type { ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
 import { compileToScene } from '../../src/compile/compile';
 import { NodeSchema } from '../../src/schemas';
 import { SHADOW_PRESETS } from '../../src/schemas/effects';
-import type { IR } from '../../src/schemas';
-import type { ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 
 const silent = { onWarn: () => {} };
@@ -93,10 +95,7 @@ describe('[shadow] 边界', () => {
 
   it('preset-string-equals-preset-object：shadow="md" ≡ {preset:"md"}（编译逐字一致）', () => {
     const a = findByType(compileNode({ shape: 'rectangle', text: 'x', shadow: 'md' }).primitives, 'rect');
-    const b = findByType(
-      compileNode({ shape: 'rectangle', text: 'x', shadow: { preset: 'md' } }).primitives,
-      'rect',
-    );
+    const b = findByType(compileNode({ shape: 'rectangle', text: 'x', shadow: { preset: 'md' } }).primitives, 'rect');
     expect(a!.shadow).toEqual(b!.shadow);
   });
 

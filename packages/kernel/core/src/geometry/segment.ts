@@ -1,4 +1,6 @@
-import { type Position, point as pointOps } from './point';
+import type { Position } from './point';
+
+import { point as pointOps } from './point';
 
 /*
  * 段几何采样工具：给边标注（step.label）算位置 / 切线。
@@ -46,11 +48,7 @@ const sampleEllipseArc = (
 };
 
 /** 直线段 from → to */
-export const lineSegmentSample = (
-  from: Position,
-  to: Position,
-  t: number,
-): SegmentSample => ({
+export const lineSegmentSample = (from: Position, to: Position, t: number): SegmentSample => ({
   point: [from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t],
   tangent: pointOps.normalize([to[0] - from[0], to[1] - from[1]]),
 });
@@ -59,12 +57,7 @@ export const lineSegmentSample = (
  * 二次贝塞尔 from → control → to
  * @description P(t) = (1-t)²P0 + 2(1-t)t·P1 + t²P2；P'(t) = 2(1-t)(P1-P0) + 2t(P2-P1)
  */
-export const quadSegmentSample = (
-  from: Position,
-  control: Position,
-  to: Position,
-  t: number,
-): SegmentSample => {
+export const quadSegmentSample = (from: Position, control: Position, to: Position, t: number): SegmentSample => {
   const u = 1 - t;
   const point: Position = [
     u * u * from[0] + 2 * u * t * control[0] + t * t * to[0],
@@ -88,23 +81,11 @@ export const cubicSegmentSample = (
 ): SegmentSample => {
   const u = 1 - t;
   const point: Position = [
-    u * u * u * from[0] +
-      3 * u * u * t * c1[0] +
-      3 * u * t * t * c2[0] +
-      t * t * t * to[0],
-    u * u * u * from[1] +
-      3 * u * u * t * c1[1] +
-      3 * u * t * t * c2[1] +
-      t * t * t * to[1],
+    u * u * u * from[0] + 3 * u * u * t * c1[0] + 3 * u * t * t * c2[0] + t * t * t * to[0],
+    u * u * u * from[1] + 3 * u * u * t * c1[1] + 3 * u * t * t * c2[1] + t * t * t * to[1],
   ];
-  const tx =
-    3 * u * u * (c1[0] - from[0]) +
-    6 * u * t * (c2[0] - c1[0]) +
-    3 * t * t * (to[0] - c2[0]);
-  const ty =
-    3 * u * u * (c1[1] - from[1]) +
-    6 * u * t * (c2[1] - c1[1]) +
-    3 * t * t * (to[1] - c2[1]);
+  const tx = 3 * u * u * (c1[0] - from[0]) + 6 * u * t * (c2[0] - c1[0]) + 3 * t * t * (to[0] - c2[0]);
+  const ty = 3 * u * u * (c1[1] - from[1]) + 6 * u * t * (c2[1] - c1[1]) + 3 * t * t * (to[1] - c2[1]);
   return { point, tangent: pointOps.normalize([tx, ty]) };
 };
 
@@ -112,12 +93,7 @@ export const cubicSegmentSample = (
  * 折角段 from → corner → to
  * @description t∈[0,0.5] 走第一段（参数 2t）；t∈(0.5,1] 走第二段（参数 2t-1）；t=0.5 落 corner 切线取第一段方向
  */
-export const foldSegmentSample = (
-  from: Position,
-  corner: Position,
-  to: Position,
-  t: number,
-): SegmentSample => {
+export const foldSegmentSample = (from: Position, corner: Position, to: Position, t: number): SegmentSample => {
   if (t <= 0.5) return lineSegmentSample(from, corner, t * 2);
   return lineSegmentSample(corner, to, t * 2 - 1);
 };
@@ -142,19 +118,12 @@ export const ellipseArcSegmentSample = (
 ): SegmentSample => sampleEllipseArc(center, rx, ry, startAngleDeg, endAngleDeg, t);
 
 /** 整圆，从 0°(east) 开始，与 compile/path circlePath 输出方向（右→左→右，sweep=1）一致 */
-export const circleSegmentSample = (
-  center: Position,
-  radius: number,
-  t: number,
-): SegmentSample => sampleEllipseArc(center, radius, radius, 0, 360, t);
+export const circleSegmentSample = (center: Position, radius: number, t: number): SegmentSample =>
+  sampleEllipseArc(center, radius, radius, 0, 360, t);
 
 /** 整椭圆，参数化 (rx·cos(2πt), ry·sin(2πt)) */
-export const ellipseSegmentSample = (
-  center: Position,
-  rx: number,
-  ry: number,
-  t: number,
-): SegmentSample => sampleEllipseArc(center, rx, ry, 0, 360, t);
+export const ellipseSegmentSample = (center: Position, rx: number, ry: number, t: number): SegmentSample =>
+  sampleEllipseArc(center, rx, ry, 0, 360, t);
 
 /**
  * 矩形周长段：两对角 → 闭合周长上 t∈[0,1] 的点 / 切线
@@ -162,11 +131,7 @@ export const ellipseSegmentSample = (
  *   每条边占 1/4 t；切线 = 该边方向。忽略 cornerRadius（采尖角折线周长），mark 落在直边上精确、
  *   贴近圆角处略偏轮廓——对中段 marking 足够。退化（零宽 / 零高）由 lineSegmentSample 的零切线回退兜底。
  */
-export const rectPerimeterSample = (
-  from: Position,
-  to: Position,
-  t: number,
-): SegmentSample => {
+export const rectPerimeterSample = (from: Position, to: Position, t: number): SegmentSample => {
   const x0 = Math.min(from[0], to[0]);
   const x1 = Math.max(from[0], to[0]);
   const y0 = Math.min(from[1], to[1]);

@@ -1,11 +1,12 @@
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, Route, Routes, useParams } from 'react-router';
-import { Toaster, toast } from 'sonner';
+import { toast, Toaster } from 'sonner';
+
+import type { Section } from './data/interface';
 
 import { AppErrorBoundary } from './components/shared/error-boundary';
-import type { Section } from './data/interface';
-import { coreSection } from './data/core';
+import { kernelSection } from './data/kernel';
 import { modules } from './data/module';
 import { getSectionsByModule } from './data/sections';
 import { DocLayout, DocPage } from './layout/doc-layout';
@@ -17,13 +18,11 @@ import { useTocStore } from './store/use-toc-store';
 /** section + 它的首页 → 完整 URL（无分组时跳过 sectionId 段） */
 const firstPageUrl = (moduleId: string, section: Section): string => {
   const firstPage = section.pages[0];
-  return section.label && section.id
-    ? `/${moduleId}/${section.id}/${firstPage.id}`
-    : `/${moduleId}/${firstPage.id}`;
+  return section.label && section.id ? `/${moduleId}/${section.id}/${firstPage.id}` : `/${moduleId}/${firstPage.id}`;
 };
 
 /** 默认入口：首个模块下的第一个栏目的第一页 */
-const defaultPath = firstPageUrl(modules[0].id, coreSection[0]);
+const defaultPath = firstPageUrl(modules[0].id, kernelSection[0]);
 
 /** /:moduleId 命中时重定向到该模块首栏首页；找不到模块或模块为空就回首页 */
 const ModuleRedirect = () => {

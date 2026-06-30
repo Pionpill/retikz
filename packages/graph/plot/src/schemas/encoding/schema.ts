@@ -1,7 +1,5 @@
-﻿import { AtDirection } from '@retikz/core';
+import { GeometryLabelSchema, JsonValueSchema, NodeLabelSchema } from '@retikz/core';
 import { z } from 'zod';
-import { FontSchema } from '@retikz/core';
-import { JsonValueSchema } from '@retikz/core';
 
 export const ChannelSchema = z
   .object({
@@ -12,7 +10,9 @@ export const ChannelSchema = z
       .describe(
         'Path accessor into a data row bound to this channel (e.g. "month" or "user.age"); resolved against the externally-supplied dataset at lowering and must yield a scalar',
       ),
-    value: JsonValueSchema.optional().describe('Constant JSON literal for this channel (mutually exclusive with field)'),
+    value: JsonValueSchema.optional().describe(
+      'Constant JSON literal for this channel (mutually exclusive with field)',
+    ),
     scale: z
       .string()
       .min(1)
@@ -24,7 +24,9 @@ export const ChannelSchema = z
   .refine(c => (c.field === undefined) !== (c.value === undefined), {
     message: 'channel must set exactly one of `field` or `value`',
   })
-  .describe('A channel binding: exactly one of field (data-driven) / value (constant), plus an optional scale reference');
+  .describe(
+    'A channel binding: exactly one of field (data-driven) / value (constant), plus an optional scale reference',
+  );
 
 export const PositionEncodingSchema = z
   .object({
@@ -73,34 +75,89 @@ export const SizeChannelSchema = z
       .string()
       .min(1)
       .optional()
-      .describe('Data path bound to the size channel; resolves to a numeric magnitude mapped through a radius (sqrt) scale'),
-    value: z.number().finite().nonnegative().optional().describe('Constant final radius in px, bypassing the scale entirely (mutually exclusive with field)'),
-    scale: z.string().min(1).optional().describe('Optional sqrt-scale name (only meaningful with field); omitted means a default radius (sqrt) scale is synthesized'),
+      .describe(
+        'Data path bound to the size channel; resolves to a numeric magnitude mapped through a radius (sqrt) scale',
+      ),
+    value: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe('Constant final radius in px, bypassing the scale entirely (mutually exclusive with field)'),
+    scale: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'Optional sqrt-scale name (only meaningful with field); omitted means a default radius (sqrt) scale is synthesized',
+      ),
   })
-  .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'size channel must set exactly one of `field` or `value`' })
-  .describe('Size channel (PointMark): field maps glyph radius via a sqrt scale; value is a constant final radius (px) that bypasses the scale');
+  .refine(c => (c.field === undefined) !== (c.value === undefined), {
+    message: 'size channel must set exactly one of `field` or `value`',
+  })
+  .describe(
+    'Size channel (PointMark): field maps glyph radius via a sqrt scale; value is a constant final radius (px) that bypasses the scale',
+  );
 
 export const OpacityChannelSchema = z
   .object({
-    field: z.string().min(1).optional().describe('Data path bound to opacity; continuous, mapped through a clamped linear scale to [minOpacity, 1]'),
-    value: z.number().min(0).max(1).optional().describe('Constant opacity 0..1, bypassing the scale (mutually exclusive with field)'),
-    scale: z.string().min(1).optional().describe('Optional linear-scale name (only meaningful with field); omitted means a default opacity scale is synthesized'),
+    field: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Data path bound to opacity; continuous, mapped through a clamped linear scale to [minOpacity, 1]'),
+    value: z
+      .number()
+      .min(0)
+      .max(1)
+      .optional()
+      .describe('Constant opacity 0..1, bypassing the scale (mutually exclusive with field)'),
+    scale: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'Optional linear-scale name (only meaningful with field); omitted means a default opacity scale is synthesized',
+      ),
   })
-  .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'opacity channel must set exactly one of `field` or `value`' })
-  .describe('Opacity channel (PointMark): field maps glyph opacity via a clamped linear scale; value is a constant opacity that bypasses the scale');
+  .refine(c => (c.field === undefined) !== (c.value === undefined), {
+    message: 'opacity channel must set exactly one of `field` or `value`',
+  })
+  .describe(
+    'Opacity channel (PointMark): field maps glyph opacity via a clamped linear scale; value is a constant opacity that bypasses the scale',
+  );
 
 export const ShapeChannelSchema = z
   .object({
-    field: z.string().min(1).optional().describe('Data path bound to shape; categorical, mapped to a built-in glyph palette'),
-    value: z.string().min(1).optional().describe('Constant glyph shape name: a core / registered node shape (mutually exclusive with field)'),
+    field: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Data path bound to shape; categorical, mapped to a built-in glyph palette'),
+    value: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Constant glyph shape name: a core / registered node shape (mutually exclusive with field)'),
   })
-  .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'shape channel must set exactly one of `field` or `value`' })
-  .describe('Shape channel (PointMark): field maps glyph shape via the built-in shape palette; value is a constant core shape name');
+  .refine(c => (c.field === undefined) !== (c.value === undefined), {
+    message: 'shape channel must set exactly one of `field` or `value`',
+  })
+  .describe(
+    'Shape channel (PointMark): field maps glyph shape via the built-in shape palette; value is a constant core shape name',
+  );
 
 export const TextChannelSchema = z
   .object({
-    field: z.string().min(1).optional().describe('Data path whose row value becomes the label string; mutually exclusive with value'),
-    value: z.string().min(1).optional().describe('Constant label string for every datum (mutually exclusive with field)'),
+    field: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Data path whose row value becomes the label string; mutually exclusive with value'),
+    value: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Constant label string for every datum (mutually exclusive with field)'),
     displayFormat: z
       .string()
       .min(1)
@@ -110,14 +167,18 @@ export const TextChannelSchema = z
       ),
   })
   .strict()
-  .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'text channel must set exactly one of `field` or `value`' })
-  .describe('Text content channel: field is a per-datum label string, value is a constant label, displayFormat is a display format string for a numeric or temporal field');
+  .refine(c => (c.field === undefined) !== (c.value === undefined), {
+    message: 'text channel must set exactly one of `field` or `value`',
+  })
+  .describe(
+    'Text content channel: field is a per-datum label string, value is a constant label, displayFormat is a display format string for a numeric or temporal field',
+  );
 
 export const LabelPinStyleSchema = z
   .object({
     stroke: z.string().optional().describe('Leader line color; defaults to the label color / currentColor'),
-    strokeWidth: z.number().finite().positive().optional().describe('Leader line width in user units; default 1'),
-    dashPattern: z.array(z.number().finite()).optional().describe('Leader dash pattern, e.g. [2, 2]'),
+    strokeWidth: z.number().positive().optional().describe('Leader line width in user units; default 1'),
+    dashPattern: z.array(z.number()).optional().describe('Leader dash pattern, e.g. [2, 2]'),
   })
   .describe('Styled label leader line options aligned with core NodeLabelSchema.pin');
 
@@ -126,24 +187,84 @@ export const PointEncodingSchema = PositionEncodingSchema.extend({
     'Optional text content channel: when set the point lowers to a borderless core Node carrying text (free-text / datum label) instead of a glyph; field is a per-datum string, value is constant, displayFormat handles numeric / temporal display formatting',
   ),
   ...MarkChannelEncodingSchema.shape,
-}).describe('PointMark encoding: positional channels plus optional text and extension channel bindings; built-in node properties live on the mark as MarkValueType fields');
+}).describe(
+  'PointMark encoding: positional channels plus optional text and extension channel bindings; built-in node properties live on the mark as MarkValueType fields',
+);
+
+export const MarkLabelContentSchema = z
+  .object({
+    field: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Data path whose row value becomes the label text; mutually exclusive with value'),
+    value: NodeLabelSchema.shape.text
+      .optional()
+      .describe('Constant label text for every datum; mutually exclusive with field'),
+    displayFormat: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'Optional JSON-safe display format string applied to a field value before stringification; only meaningful together with field',
+      ),
+  })
+  .strict()
+  .refine(c => (c.field === undefined) !== (c.value === undefined), {
+    message: 'label content must set exactly one of `field` or `value`',
+  })
+  .describe(
+    'Plot label content binding: exactly one of field (data-driven) or value (constant), plus optional displayFormat',
+  );
+
+const omitText = <T extends Record<string, unknown>>(shape: T): Omit<T, 'text'> =>
+  Object.fromEntries(Object.entries(shape).filter(([key]) => key !== 'text')) as Omit<T, 'text'>;
+
+const nodeLabelShape = omitText(NodeLabelSchema.shape);
+const geometryLabelShape = omitText(GeometryLabelSchema.shape);
+
+export const MarkNodeLabelSchema = z
+  .object({
+    ...nodeLabelShape,
+    content: MarkLabelContentSchema.describe('Node label content binding (field / value / displayFormat)'),
+  })
+  .strict()
+  .superRefine((label, ctx) => {
+    if (label.placement === 'inside' && label.pin) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['pin'],
+        message: 'Node label pin is only supported for outside placement.',
+      });
+    }
+  })
+  .describe(
+    'Plot label attached to a core Node.label host; all geometry fields are inherited from core NodeLabelSchema',
+  );
+
+export const MarkGeometryLabelSchema = z
+  .object({
+    ...geometryLabelShape,
+    content: MarkLabelContentSchema.describe('Geometry label content binding (field / value / displayFormat)'),
+  })
+  .strict()
+  .describe(
+    'Plot label attached to a path-like GeometryLabel host; all geometry fields are inherited from core GeometryLabelSchema',
+  );
+
+export const MarkNodeLabelListSchema = z
+  .union([MarkNodeLabelSchema, z.array(MarkNodeLabelSchema).min(1)])
+  .describe('Single or multiple node-host labels; array order is preserved');
+
+export const MarkGeometryLabelListSchema = z
+  .union([MarkGeometryLabelSchema, z.array(MarkGeometryLabelSchema).min(1)])
+  .describe('Single or multiple geometry-host labels; array order is preserved');
 
 export const MarkLabelSchema = z
-  .object({
-    content: TextChannelSchema.describe('Label content channel (field / value / displayFormat)'),
-    position: z
-      .union([z.enum(AtDirection), z.number()])
-      .optional()
-      .describe('Placement around the host datum node border: 8-direction enum or numeric angle (degrees); mirrors core NodeLabelSchema.position. Default above'),
-    distance: z.number().nonnegative().optional().describe('Gap between the host node border and the label center (user units); mirrors core NodeLabelSchema.distance. Default 12'),
-    textColor: z.string().min(1).optional().describe('Label text color; mirrors core NodeLabelSchema.textColor'),
-    opacity: z.number().min(0).max(1).optional().describe('Label-only opacity 0..1; mirrors core NodeLabelSchema.opacity'),
-    font: FontSchema.optional().describe('Label font overrides; mirrors core NodeLabelSchema.font'),
-    rotate: z
-      .union([z.enum(['none', 'radial', 'tangent']), z.number()])
-      .optional()
-      .describe('Label text rotation: none / radial / tangent / explicit degrees; mirrors core NodeLabelSchema.rotate'),
-    keepUpright: z.boolean().optional().describe('Flip rotated labels that would otherwise read upside-down; mirrors core NodeLabelSchema.keepUpright'),
-    pin: z.union([z.boolean(), LabelPinStyleSchema]).optional().describe('Draw a leader line from the host node border to the label; true uses defaults, object overrides leader style'),
-  })
-  .describe('Datum label attached to a positional mark: lowered onto each datum Node.label (core border-relative placement), the preferred path over a standalone TextMark');
+  .union([MarkNodeLabelSchema, MarkGeometryLabelSchema])
+  .describe('Host-inferred plot label input; mark definitions choose node or geometry host schema');
+
+export const MarkLabelSchemaByHost = {
+  node: MarkNodeLabelListSchema,
+  geometry: MarkGeometryLabelListSchema,
+} as const;

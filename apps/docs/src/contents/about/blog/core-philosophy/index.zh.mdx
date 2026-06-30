@@ -11,11 +11,11 @@ tags: [架构, 设计]
 
 四路输入——Sugar JSX、Kernel JSX、远期的 Text DSL、AI / LLM——最终都翻成同一份 IR；IR 编译成 Scene 后，由各 adapter 分流到 React + SVG、纯 SVG 字符串、Canvas（再栅格化为 PNG / JPEG / WebP）、Native（Skia / RN）或 PDF。IR 与"持久化 / 编辑"之间是双向箭头：它是可读写的持久层，所有用户编辑、AI patch、序列化保存都在这一层完成。
 
-| 层 | 是什么 | 关键约束 |
-|---|---|---|
-| IR | 声明式 JSON schema（zod 单源定义） | 只装数据，禁函数 / ReactNode / closure |
-| Scene | 编译后产物，几何坐标已折算 | 矢量图形最大公约子集（rect / ellipse / text / path / group）|
-| Adapter | Scene → 具体 runtime（React/SVG、Canvas、SSR…） | 薄翻译层，零布局逻辑 |
+| 层      | 是什么                                          | 关键约束                                                     |
+| ------- | ----------------------------------------------- | ------------------------------------------------------------ |
+| IR      | 声明式 JSON schema（zod 单源定义）              | 只装数据，禁函数 / ReactNode / closure                       |
+| Scene   | 编译后产物，几何坐标已折算                      | 矢量图形最大公约子集（rect / ellipse / text / path / group） |
+| Adapter | Scene → 具体 runtime（React/SVG、Canvas、SSR…） | 薄翻译层，零布局逻辑                                         |
 
 中间这两层 schema 稳定下来，外圈就能任意演进——这是 retikz 的核心赌注。
 
@@ -41,7 +41,7 @@ IR 是这三件事的公约数。一旦它存在，JSX 就是 IR 的一种"输�
 }
 ```
 
-`version` 字段强制存在，破坏性改动时递增；schema 用 zod 单源定义（`packages/kernel/core/src/schemas/scene.ts`），TS 类型靠 `z.infer` 派生，JSON Schema 靠 `zod-to-json-schema` 导出喂给 LLM。每个字段必须带 `.describe(...)` 英文说明——这影响 LLM 生成质量，不是文档。
+`version` 字段强制存在，破坏性改动时递增；schema 用 zod 单源定义（`packages/kernel/kernel/src/schemas/scene.ts`），TS 类型靠 `z.infer` 派生，JSON Schema 靠 `zod-to-json-schema` 导出喂给 LLM。每个字段必须带 `.describe(...)` 英文说明——这影响 LLM 生成质量，不是文档。
 
 中间层是 **Node** 和 **Path**：
 
@@ -50,26 +50,26 @@ IR 是这三件事的公约数。一旦它存在，JSX 就是 IR 的一种"输�
 
 底层是 **Step**，12 种 kind 覆盖全部路径动作：
 
-| kind | 参数 | 语义 |
-|---|---|---|
-| `move` | `to` | 移动游标，不绘制 |
-| `line` | `to`, `label?` | 直线 |
-| `step` | `via`, `to`, `label?` | 折角（一个直角中间点）|
-| `cycle` | — | 闭合回起点 |
-| `curve` | `to`, `control`, `label?` | 二次 Bézier |
-| `cubic` | `to`, `control1`, `control2`, `label?` | 三次 Bézier |
-| `bend` | `to`, `bendDirection?` / `outAngle?` `inAngle?`, `looseness?` | 弧线简记（bend 角或 out/in 角，支持自环；编译为 cubic）|
-| `arc` | `startAngle`, `endAngle`, `radius` 或 `radiusX`/`radiusY`, `center?` | 圆 / 椭圆弧（默认游标为圆心，可显式 `center`）|
-| `circlePath` | `radius`, `startAngle?`, `endAngle?`, `closed?` | 整圆或部分弧（chord / sector / open）|
-| `ellipsePath` | `radiusX`, `radiusY`, `startAngle?`, `endAngle?`, `closed?` | 整椭圆或部分弧 |
-| `rectangle` | `from`, `to`, `cornerRadius?` | 轴对齐矩形（两对角，自包含）|
-| `generator` | `name`, `to?`, `params` | 委托注册的路径生成器（parabola / sin…，core 不内置）|
+| kind          | 参数                                                                 | 语义                                                    |
+| ------------- | -------------------------------------------------------------------- | ------------------------------------------------------- |
+| `move`        | `to`                                                                 | 移动游标，不绘制                                        |
+| `line`        | `to`, `label?`                                                       | 直线                                                    |
+| `step`        | `via`, `to`, `label?`                                                | 折角（一个直角中间点）                                  |
+| `cycle`       | —                                                                    | 闭合回起点                                              |
+| `curve`       | `to`, `control`, `label?`                                            | 二次 Bézier                                             |
+| `cubic`       | `to`, `control1`, `control2`, `label?`                               | 三次 Bézier                                             |
+| `bend`        | `to`, `bendDirection?` / `outAngle?` `inAngle?`, `looseness?`        | 弧线简记（bend 角或 out/in 角，支持自环；编译为 cubic） |
+| `arc`         | `startAngle`, `endAngle`, `radius` 或 `radiusX`/`radiusY`, `center?` | 圆 / 椭圆弧（默认游标为圆心，可显式 `center`）          |
+| `circlePath`  | `radius`, `startAngle?`, `endAngle?`, `closed?`                      | 整圆或部分弧（chord / sector / open）                   |
+| `ellipsePath` | `radiusX`, `radiusY`, `startAngle?`, `endAngle?`, `closed?`          | 整椭圆或部分弧                                          |
+| `rectangle`   | `from`, `to`, `cornerRadius?`                                        | 轴对齐矩形（两对角，自包含）                            |
+| `generator`   | `name`, `to?`, `params`                                              | 委托注册的路径生成器（parabola / sin…，core 不内置）    |
 
 挑这 12 个是反复砍出来的——TikZ 原生几十条 path 动作，绝大多数能由这 12 种组合表达。kind 多了 LLM 学习成本涨、新增 adapter 实现成本涨；少了 sugar 层兜不住。
 
 ## Scene 编译器：两 pass 在做什么
 
-`compileToScene(ir, options)` 是 core 包最重的资产（`packages/kernel/core/src/compile/compile.ts`），两 pass 设计：
+`compileToScene(ir, options)` 是 core 包最重的资产（`packages/kernel/kernel/src/compile/compile.ts`），两 pass 设计：
 
 - **Pass 1**：遍历所有 Node，解析相对定位（如 `{ direction: 'right', of: 'A', distance: 2 }`），登记到 `nodeIndex` 表里——节点 id 到已知坐标 + 锚点表的映射。
 - **Pass 2**：按 JSX 源码顺序发 primitive。Path 里的 Step 这时才解析 `to`——节点引用 `"A.east"` / `"A.45"` 都查 nodeIndex；相对 / 累积相对则跟踪游标位置。
@@ -99,10 +99,10 @@ SVG / Canvas / PDF / ...
 
 ### Tier 1：Kernel / Sugar（已落地）
 
-| 层 | 例子 | 进 IR 形态 | 展开时机 |
-|---|---|---|---|
-| Kernel | `<Node>` `<Path>` `<Step>` | 直接对应 IR 节点 | 不展开 |
-| Sugar | `<Draw way={['A', '-\|', 'B']}>` | 展平为 Kernel | builder 同步（不进 IR）|
+| 层     | 例子                             | 进 IR 形态       | 展开时机                |
+| ------ | -------------------------------- | ---------------- | ----------------------- |
+| Kernel | `<Node>` `<Path>` `<Step>`       | 直接对应 IR 节点 | 不展开                  |
+| Sugar  | `<Draw way={['A', '-\|', 'B']}>` | 展平为 Kernel    | builder 同步（不进 IR） |
 
 Kernel 是 IR 的 React 直接映射，1:1 对应；Sugar 是 Kernel 的语法糖，在 builder 阶段就被展平，不会出现在 IR 里。两层都在 `@retikz/react` 包内，零额外依赖。
 
@@ -112,8 +112,8 @@ Kernel 是 IR 的 React 直接映射，1:1 对应；Sugar 是 Kernel 的语法�
 
 Tier 2 目前还没在 core 里实装，规划中由 `@retikz/flow` / `@retikz/plot` 等 domain 包承担：
 
-| 层 | 例子 | 进 IR 形态 | 展开时机 |
-|---|---|---|---|
+| 层     | 例子                                       | 进 IR 形态   | 展开时机            |
+| ------ | ------------------------------------------ | ------------ | ------------------- |
 | Tier 2 | `<Axis>` `<BarPlot>` `<Tree>`（domain 包） | 高层形态保留 | `compileToScene` 内 |
 
 它们的共同特征是有算法决策（dagre 布局、自动刻度、scale 计算），需要在编译流水线里以高层形态保留到 `compileToScene` 阶段，再由 lowerComposites 钩子下沉成 Kernel primitive。这样 core schema 不膨胀，LLM 学习成本不涨，新增 chart 类型也不用改 core——等 core 1.0 稳定后再启动这层。
@@ -152,6 +152,6 @@ retikz 的语法**采用** TikZ 子集，而不是另起一套 DSL。这条决�
 
 ## 引用
 
-- 站内：[karl-circle 示例](/core/examples/karl-circle)——retikz v0.1 标志性图，演示 Kernel 原语组合
-- 站内：[欧姆定律电路示例](/core/examples/ohms-law-circuit)——自定义形状、Scope 复制与折角连线，一步步搭出完整电路图
+- 站内：[karl-circle 示例](/kernel/examples/karl-circle)——retikz v0.1 标志性图，演示 Kernel 原语组合
+- 站内：[欧姆定律电路示例](/kernel/examples/ohms-law-circuit)——自定义形状、Scope 复制与折角连线，一步步搭出完整电路图
 - 站内：[retikz 的起点](/about/blog/origin)——项目灵感来源、路线图与版本节奏

@@ -1,37 +1,39 @@
+import type { IR, PathKindDefinition } from '@retikz/core';
 import type { FC, ReactElement, ReactNode } from 'react';
+
+import { convertReactNodeToIR, Layout, Scope } from '@retikz/react';
 import { createElement, isValidElement, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { docPathSegments, useDocLocation } from '@/layout/doc-layout/doc-location';
-import type { IR } from '@retikz/core';
-import { Layout, Scope, convertReactNodeToIR } from '@retikz/react';
 
-import { ComponentRender } from './ComponentRender';
-import { RawSvgFrame } from './DemoRenderer';
-import { useDemoSegments } from './demo-location-context';
-import { irToVanillaCode } from './ir-to-vanilla-code';
-import {
-  type AlignKey,
-  type ComponentRenderSource,
-  type ComponentSourceFile,
-  type PreviewAction,
-  type PreviewOverlay,
-  type RendererMode,
-  type SizeKey,
-  type SourceLang,
-  computeUnifiedDiff,
-  formatIR,
+import type {
+  AlignKey,
+  ComponentRenderSource,
+  ComponentSourceFile,
+  PreviewAction,
+  PreviewOverlay,
+  RendererMode,
+  SizeKey,
+  SourceLang,
 } from './_shared';
+
+import { computeUnifiedDiff, formatIR } from './_shared';
+import { ComponentRender } from './ComponentRender';
+import { useDemoSegments } from './demo-location-context';
+import { RawSvgFrame } from './DemoRenderer';
+import { irToVanillaCode } from './ir-to-vanilla-code';
 
 /**
  * 收集 contents 下全部 demo 模块 + 源码字符串
  * @description 双 glob 同 key 一一对应：default 导出当渲染组件，?raw 取源码喂底部代码段。`undefined` 显式声明，让 TS 知道存在性检查不是冗余
  */
-const demoModules: Record<string, { default: FC; previewIR?: IR; previewActions?: Array<PreviewAction> } | undefined> = import.meta.glob<{
-  default: FC;
-  previewIR?: IR;
-  previewActions?: Array<PreviewAction>;
-}>('../../../contents/**/*.demo.tsx', { eager: true });
+const demoModules: Record<string, { default: FC; previewIR?: IR; previewActions?: Array<PreviewAction> } | undefined> =
+  import.meta.glob<{
+    default: FC;
+    previewIR?: IR;
+    previewActions?: Array<PreviewAction>;
+  }>('../../../contents/**/*.demo.tsx', { eager: true });
 const demoSources: Record<string, string | undefined> = import.meta.glob<string>('../../../contents/**/*.demo.tsx', {
   query: '?raw',
   import: 'default',
@@ -61,20 +63,20 @@ const vanillaOverrides: Record<string, string | undefined> = import.meta.glob<st
   },
 );
 // vanilla 视图的「真渲染」：同 `<name>.vanilla.ts` 导出的 `svg` 字符串（renderPlot 等 SSR 产物）；有则切到 vanilla 视图用它真渲染
-const vanillaModules: Record<string, { svg?: unknown } | undefined> = import.meta.glob('../../../contents/**/*.vanilla.ts', {
-  eager: true,
-});
-// IR 视图的手写覆盖：同级 `<name>.ir.json`（命中则该文本即 IR 源 + 真渲染来源，不论 interactive 与否）。
-// 用途：interactive demo 带 hooks 无法静态求 IR，配一份初始态 IR.json 让 IR 视图照样出现（React + IR 两视图）。
-// 语言无关（IR 里中文文本即中文）——单文件、两语共用，故 key 用 name 不含 lang。
-const irJsonOverrides: Record<string, string | undefined> = import.meta.glob<string>(
-  '../../../contents/**/*.ir.json',
+const vanillaModules: Record<string, { svg?: unknown } | undefined> = import.meta.glob(
+  '../../../contents/**/*.vanilla.ts',
   {
-    query: '?raw',
-    import: 'default',
     eager: true,
   },
 );
+// IR 视图的手写覆盖：同级 `<name>.ir.json`（命中则该文本即 IR 源 + 真渲染来源，不论 interactive 与否）。
+// 用途：interactive demo 带 hooks 无法静态求 IR，配一份初始态 IR.json 让 IR 视图照样出现（React + IR 两视图）。
+// 语言无关（IR 里中文文本即中文）——单文件、两语共用，故 key 用 name 不含 lang。
+const irJsonOverrides: Record<string, string | undefined> = import.meta.glob<string>('../../../contents/**/*.ir.json', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+});
 
 const buildKey = (segments: Array<string>, name: string) => `../../../contents/${segments.join('/')}/${name}.demo.tsx`;
 const buildLangKey = (segments: Array<string>, name: string, lang: string) =>
@@ -137,6 +139,8 @@ const LAYOUT_OWN_PROPS = new Set([
   'arrows',
   'patterns',
   'pathGenerators',
+  'pathKinds',
+  'ribbonWidthProfiles',
   'animate',
   'animations',
   'easings',
@@ -144,7 +148,12 @@ const LAYOUT_OWN_PROPS = new Set([
 ]);
 
 /** buildPreviewIR 产物：派生的 IR + 根 `<Layout>` 的尺寸（供 IR 视图真渲染时对齐 demo 尺寸） */
-type PreviewIR = { ir: IR; width?: number | string; height?: number | string };
+type PreviewIR = {
+  ir: IR;
+  width?: number | string;
+  height?: number | string;
+  pathKinds?: Record<string, PathKindDefinition>;
+};
 
 const buildPreviewIR = (Component: FC): PreviewIR => {
   const rootElement = resolvePreviewRootElement(Component({}));
@@ -170,7 +179,8 @@ const buildPreviewIR = (Component: FC): PreviewIR => {
   if (rootAnimations !== undefined) ir = { ...ir, animations: rootAnimations };
   const width = isLayout ? (props.width as number | string | undefined) : undefined;
   const height = isLayout ? (props.height as number | string | undefined) : undefined;
-  return { ir, width, height };
+  const pathKinds = isLayout ? (props.pathKinds as Record<string, PathKindDefinition> | undefined) : undefined;
+  return { ir, width, height, pathKinds };
 };
 
 /** 节点（含子树）是否带 namespace（Tier 2 composite 标记）——composite 可嵌在 scope 下，故递归 */
@@ -257,8 +267,20 @@ export type ComponentPreviewProps = {
  * @description 只负责 demo 文件 glob 加载 + IR 派生 + "Demo not found" 兜底；卡片 / pan&zoom / 代码面板 / 放大 dialog 全部走 `ComponentRender` 核心
  */
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
-  const { name, align = 'center', size = 'md', componentClassName, hideCode = false, sourceFiles, diffFrom, interactive = false, replayable, actions, actionsAlwaysVisible = true, overlays } =
-    props;
+  const {
+    name,
+    align = 'center',
+    size = 'md',
+    componentClassName,
+    hideCode = false,
+    sourceFiles,
+    diffFrom,
+    interactive = false,
+    replayable,
+    actions,
+    actionsAlwaysVisible = true,
+    overlays,
+  } = props;
   const loc = useDocLocation();
   const { i18n } = useTranslation();
   const lang = i18n.language.startsWith('zh') ? 'zh' : 'en';
@@ -293,15 +315,22 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
         const ir = JSON.parse(irJson) as IR;
         return { previewIr: { ir, width: undefined, height: undefined }, irJson };
       } catch (err) {
-        return { previewIr: null, irJson: `// Failed to parse IR override: ${err instanceof Error ? err.message : String(err)}` };
+        return {
+          previewIr: null,
+          irJson: `// Failed to parse IR override: ${err instanceof Error ? err.message : String(err)}`,
+        };
       }
     }
-    if (interactive) return { previewIr: null, irJson: exportedPreviewIR !== undefined ? formatIR(exportedPreviewIR) : '' };
+    if (interactive)
+      return { previewIr: null, irJson: exportedPreviewIR !== undefined ? formatIR(exportedPreviewIR) : '' };
     try {
       const previewIr = buildPreviewIR(Component);
       return { previewIr, irJson: formatIR(previewIr.ir) };
     } catch (err) {
-      return { previewIr: null, irJson: `// Failed to compute IR: ${err instanceof Error ? err.message : String(err)}` };
+      return {
+        previewIr: null,
+        irJson: `// Failed to compute IR: ${err instanceof Error ? err.message : String(err)}`,
+      };
     }
   }, [Component, hideCode, interactive, irJsonOverride, exportedPreviewIR]);
 
@@ -382,7 +411,13 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
                 render:
                   previewIr !== null && !irHasComposite(previewIr.ir)
                     ? (mode: RendererMode) => (
-                        <Layout ir={previewIr.ir} renderer={mode} width={previewIr.width} height={previewIr.height} />
+                        <Layout
+                          ir={previewIr.ir}
+                          renderer={mode}
+                          width={previewIr.width}
+                          height={previewIr.height}
+                          pathKinds={previewIr.pathKinds}
+                        />
                       )
                     : undefined,
               },

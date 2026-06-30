@@ -12,11 +12,13 @@
  *   `rectangle_rounded_toplevel_compat` / `rectangle_params_over_toplevel` 依赖 emit 优先级落地。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
-import type { IR } from '../../src/schemas';
-import { rectangle } from '../../src/providers/shape';
+
 import type { ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { rectangle } from '../../src/providers/shape';
+import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
@@ -39,18 +41,14 @@ const rectNode = (extra: Record<string, unknown> = {}): IR['children'][number] =
 
 describe('rectangle — cornerRadius 入 params', () => {
   it('rectangle_rounded_from_params：{type:"rectangle", params:{cornerRadius:6}} → 圆角矩形（cornerRadius=6）', () => {
-    const compiled = compileToScene(
-      scene([rectNode({ shape: { type: 'rectangle', params: { cornerRadius: 6 } } })]),
-    );
+    const compiled = compileToScene(scene([rectNode({ shape: { type: 'rectangle', params: { cornerRadius: 6 } } })]));
     const r = findByType(compiled.primitives, 'rect');
     expect(r).toBeDefined();
     expect(r!.cornerRadius).toBe(6);
   });
 
   it('rectangle_rounded_zero_sharp：params.cornerRadius:0 → 直角（cornerRadius=0）', () => {
-    const compiled = compileToScene(
-      scene([rectNode({ shape: { type: 'rectangle', params: { cornerRadius: 0 } } })]),
-    );
+    const compiled = compileToScene(scene([rectNode({ shape: { type: 'rectangle', params: { cornerRadius: 0 } } })]));
     const r = findByType(compiled.primitives, 'rect');
     expect(r).toBeDefined();
     expect(r!.cornerRadius).toBe(0);

@@ -1,4 +1,5 @@
 ﻿import { z } from 'zod';
+
 import { LegendOrient, LegendPosition, PlotGuide } from './constants';
 
 export const AxisGuideSchema = z
@@ -48,7 +49,9 @@ export const LegendGuideSchema = z
   .object({
     type: z
       .literal(PlotGuide.Legend)
-      .describe('Discriminator: a legend that visualizes a non-positional scale (color / size / opacity / shape) as swatches, a continuous color ramp, binned classes, or graduated symbols'),
+      .describe(
+        'Discriminator: a legend that visualizes a non-positional scale (color / size / opacity / shape) as swatches, a continuous color ramp, binned classes, or graduated symbols',
+      ),
     channel: z
       .string()
       .min(1)
@@ -65,21 +68,29 @@ export const LegendGuideSchema = z
     title: z
       .string()
       .optional()
-      .describe('Legend title rendered above the entries; omit for no title (automatic field-name title is not yet rendered)'),
+      .describe(
+        'Legend title rendered above the entries; omit for no title (automatic field-name title is not yet rendered)',
+      ),
     position: z
       .enum(LegendPosition)
       .optional()
-      .describe('Which side of the plot area the legend reserves a band on; omit = right (default applied during lowering)'),
+      .describe(
+        'Which side of the plot area the legend reserves a band on; omit = right (default applied during lowering)',
+      ),
     orient: z
       .enum(LegendOrient)
       .optional()
-      .describe('How legend entries are laid out; omit to derive from position (left/right -> vertical, top/bottom -> horizontal, applied during lowering)'),
+      .describe(
+        'How legend entries are laid out; omit to derive from position (left/right -> vertical, top/bottom -> horizontal, applied during lowering)',
+      ),
     tickCount: z
       .number()
       .int()
       .positive()
       .optional()
-      .describe('Target number of ticks for a continuous color ramp (a hint); meaningless for discrete legends and ignored there'),
+      .describe(
+        'Target number of ticks for a continuous color ramp (a hint); meaningless for discrete legends and ignored there',
+      ),
     tickLabels: z
       .boolean()
       .optional()

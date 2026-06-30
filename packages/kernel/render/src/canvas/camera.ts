@@ -4,9 +4,11 @@
  *   在绘制所有 prim 之前应用一次（caller 的 ctx.save/restore 作用域内）。
  */
 import type { Scene } from '@retikz/core';
+
+import type { EasingRegistry } from '../animation/types';
+
 import { isAutoplayTrigger } from '../animation/channels';
 import { evaluateTrack } from '../animation/evaluate';
-import type { EasingRegistry } from '../animation/types';
 
 /**
  * 在 ctx 上施加 scene 根镜头变换；无镜头则不动

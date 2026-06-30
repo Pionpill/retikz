@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
 import type { IRAnimationTrack } from '@retikz/core';
+
+import { describe, expect, it } from 'vitest';
+
 import { coordinate } from '../src/builder/coordinate';
 import { draw } from '../src/builder/draw';
 import { figure } from '../src/builder/figure';
@@ -13,10 +15,7 @@ describe('@retikz/vanilla figure() — IR 装配', () => {
     ]);
     expect(fig.ir.version).toBe(1);
     expect(fig.ir.type).toBe('scene');
-    expect(fig.ir.children).toEqual([
-      node('a', { position: [0, 0], text: 'A' }),
-      draw(['a', 'b'], { arrow: '->' }),
-    ]);
+    expect(fig.ir.children).toEqual([node('a', { position: [0, 0], text: 'A' }), draw(['a', 'b'], { arrow: '->' })]);
   });
 
   it('figure-viewbox：config.viewBox → IR.viewBox；width/height 不进 IR', () => {
@@ -30,11 +29,13 @@ describe('@retikz/vanilla figure() — IR 装配', () => {
     const hyper = figure({ width: 400, height: 300 }, [
       node('a', { position: [0, 0], text: 'A' }),
       draw(['a', 'b'], { arrow: '->' }),
+      draw(['a', 'b'], { kind: 'ribbon', ribbon: { width: 3 } }),
       coordinate('mid', { position: [60, 40] }),
     ]);
     const fluent = figure({ width: 400, height: 300 })
       .node('a', { position: [0, 0], text: 'A' })
       .draw(['a', 'b'], { arrow: '->' })
+      .draw(['a', 'b'], { kind: 'ribbon', ribbon: { width: 3 } })
       .coordinate('mid', { position: [60, 40] });
     expect(fluent.ir).toEqual(hyper.ir);
   });
@@ -44,7 +45,14 @@ describe('@retikz/vanilla figure() — IR 装配', () => {
   });
 
   it('figure-root-animations：config.animations → IR 根 animations（镜头时间轴）', () => {
-    const track: IRAnimationTrack = { property: 'viewBox', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 300 };
+    const track: IRAnimationTrack = {
+      property: 'viewBox',
+      keyframes: [
+        { at: 0, value: 0 },
+        { at: 1, value: 1 },
+      ],
+      duration: 300,
+    };
     const fig = figure({ animations: [track] }, [node('a', { position: [0, 0] })]);
     expect(fig.ir.animations).toEqual([track]);
     // 无根样式 → children 不被包进合成根 scope
@@ -90,6 +98,7 @@ describe('@retikz/vanilla 公开导出', () => {
     expect(typeof api.figure).toBe('function');
     expect(typeof api.node).toBe('function');
     expect(typeof api.draw).toBe('function');
+    expect(api).not.toHaveProperty('ribbon');
     expect(typeof api.coordinate).toBe('function');
     expect(typeof api.scope).toBe('function');
   });

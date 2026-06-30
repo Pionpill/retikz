@@ -3,11 +3,13 @@
  * 跨端像素 parity 属 render-layer 断言，留 render 测试。
  */
 import { describe, expect, it } from 'vitest';
+
+import type { ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
 import { compileToScene } from '../../src/compile/compile';
 import { NodeSchema } from '../../src/schemas';
 import { BlendMode } from '../../src/schemas/effects';
-import type { IR } from '../../src/schemas';
-import type { ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 
 const silent = { onWarn: () => {} };
@@ -57,7 +59,10 @@ describe('[blend] 边界', () => {
   });
 
   it('blend-normal-equals-omitted：blendMode="normal" 与省略编译等价', () => {
-    const withNormal = findByType(compileNode({ shape: 'rectangle', text: 'x', blendMode: 'normal' }).primitives, 'rect');
+    const withNormal = findByType(
+      compileNode({ shape: 'rectangle', text: 'x', blendMode: 'normal' }).primitives,
+      'rect',
+    );
     const omitted = findByType(compileNode({ shape: 'rectangle', text: 'x' }).primitives, 'rect');
     expect(withNormal!.blendMode ?? 'normal').toBe(omitted!.blendMode ?? 'normal');
   });
@@ -109,7 +114,13 @@ describe('[blend] 交互', () => {
 
 describe('[blend] round-trip', () => {
   it('含 blendMode 的 IRNode JSON 往返 parse 深等', () => {
-    const node = { type: 'node', id: 'n', position: [0, 0] as [number, number], shape: 'rectangle', blendMode: 'multiply' };
+    const node = {
+      type: 'node',
+      id: 'n',
+      position: [0, 0] as [number, number],
+      shape: 'rectangle',
+      blendMode: 'multiply',
+    };
     const parsed = NodeSchema.parse(node);
     const round = NodeSchema.parse(JSON.parse(JSON.stringify(parsed)));
     expect(round.blendMode).toBe(parsed.blendMode);

@@ -1,0 +1,165 @@
+---
+title: 数据处理
+description: 把真实数据接进来并信得过：字段不同名给 fieldMap，特殊格式用 format 或 resolveField 解析，脏数据用 validateData / invalid 校验。
+---
+
+[数据模型](/graph/grammar/data/model)声明了字段**是什么**；这页讲怎么把真实世界的数据**接进来**——换源、解析、校验。`fieldMap` 与声明式 `format` 依赖 model 提供逻辑字段契约；`resolveField`、`validateData`、`invalid` 也能配合自动推断使用。实践中，想让配置稳定复用到多份数据源时，仍建议先声明 model。
+
+## 换数据源
+
+数据不进配置（IR），所以同一份 `<Plot>` 配置能换着数据源用。字段完全同名时，不写 model 也能快速试画；但要跨接口、跨文件长期复用，声明 model 才有明确的逻辑字段契约。换数据源有三种对接方式：
+
+### 同名同类型
+
+最轻量的换源方式是保持同一份字段契约：新旧数据都叫 `month` / `revenue`，并且 `month` 仍然是时间、`revenue` 仍然是连续数值。这时 mark、轴、比例尺、颜色、排序和校验都不用改，只替换 `<Plot data>`。
+
+这适合后端接口版本稳定、只切换筛选条件 / 时间范围 / 环境数据的场景。比如同一个销售图，可以在「实际值」和「预测值」之间切换；只要字段契约不变，图表配置就能复用。
+
+<ComponentPreview name="processing-same" sourceFiles={['processing-same.data.ts']} />
+
+如果字段名换了，进入下一节用 `fieldMap`；如果字段名没换但存储格式变了（例如 ISO 日期变成 `YYYY/MM/DD`），看后面的「解析格式」。
+
+### 字段名不同
+
+数据里字段名和配置里的逻辑名对不上时，给一份 `fieldMap`（逻辑名 → 数据里的实际路径），配置不动：
+
+```tsx
+// 数据里叫 period / amount，配置里仍用 month / revenue
+<Plot
+  data={rows}
+  model={[
+    { name: 'month', type: 'temporal' },
+    { name: 'revenue', type: 'continuous' },
+  ]}
+  fieldMap={{ month: 'period', revenue: 'amount' }}
+>
+  <PathMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+`fieldMap` 只做改名（值不变换，计算交给 transform）；它必须配合 model 使用——没有 model 就没有「逻辑字段」可映射。右侧可以是嵌套路径，如 `pricing.amount`。Plot 会先从真实路径取值，再把解析后的值写回 `revenue` 这样的逻辑字段名，所以后续 transform / scale / mark 仍然只写逻辑字段。
+
+下面两张图共用同一份逻辑配置：左图数据字段已经叫 `month` / `revenue`，右图数据来自另一套接口，实际字段叫 `period` / `amount`，用 `fieldMap` 接回同一个 model。
+
+<ComponentPreview name="processing-source" sourceFiles={['processing-source.data.ts']} />
+
+### 存储格式不同但类型相同
+
+同一个 `temporal` 字段，数据里是 `Date` 对象、ISO 字符串还是毫秒时间戳，都能正确读；`continuous` 字段是数字、bigint 安全整数还是严格数字串（`"120"`）也都认。无需任何额外配置。非默认的存储格式（如 `'2024/01/01'`、epoch 秒、`'50%'`、带千分位的数字串）走下面的解析。
+
+下面右图故意混用了 `Date`、epoch 毫秒、ISO 字符串，以及数字 / 数字串。因为字段类型仍然是 `temporal` + `continuous`，同一份 model 就能完成规范化。
+
+<ComponentPreview name="processing-storage" sourceFiles={['processing-storage.data.ts']} />
+
+## 解析格式
+
+内置解析只认固定形态：`temporal` 收 `Date` / 毫秒 / 严格 ISO，`continuous` 收数字 / 严格数字串。词表外的格式需要你点名怎么解析——常见格式用声明式 `format`，真正任意的逻辑用 `resolveField` 兜底。
+
+| 场景               | 写法                                      | 进 IR                  |
+| ------------------ | ----------------------------------------- | ---------------------- |
+| 默认格式           | 只写 `type` / 省略解析                    | 是                     |
+| 常见非默认格式     | 在 `model` 字段上写内置 `format`          | 是                     |
+| 可复用的自定义格式 | `defineFieldFormat` + `formatDefinitions` | 是，IR 只存格式名串    |
+| 任意运行时逻辑     | `resolveField`                            | 否，函数只在运行时使用 |
+
+### 声明式解析格式
+
+碰上 `'2024/01/01'`、epoch 秒、`'50%'` 这类常见的非默认格式，不必动用函数——给字段一个声明式 `format`，它**进 IR、可序列化、LLM 也能生成**：
+
+```tsx
+<Plot
+  data={rows}
+  model={[
+    { name: 'createdAt', type: 'temporal', format: 'slashDate' }, // '2024/01/01' → 时间
+    { name: 'ts', type: 'temporal', format: 'epochSeconds' }, // 1700000000 → 毫秒
+    { name: 'ratio', type: 'continuous', format: 'percent' }, // '50%' → 0.5
+  ]}
+>
+  {/* … */}
+</Plot>
+```
+
+下面的右图用同一组业务字段接入报表数据：日期是 `YYYY/MM/DD`，比例是百分比字符串。`format` 把它们先规范化，再交给时间轴和线性轴。
+
+<ComponentPreview name="processing-format" sourceFiles={['processing-format.data.ts']} />
+
+可选的 `format`（每个绑定一种类型）：
+
+| `format`       | 适用类型   | 解析                              |
+| -------------- | ---------- | --------------------------------- |
+| `iso`          | temporal   | 严格 ISO（等价不写）              |
+| `epochSeconds` | temporal   | epoch 秒 → 毫秒                   |
+| `epochMillis`  | temporal   | epoch 毫秒                        |
+| `slashDate`    | temporal   | 严格 `YYYY/MM/DD`（按 UTC 零点）  |
+| `numberString` | continuous | 宽松数字串（容空白 / 千分位逗号） |
+| `percent`      | continuous | 百分比串 `'50%'` → 0.5            |
+
+规则：
+
+- **format 蕴含 type**：写了 `format` 就可省略 `type`——`{ name: 'ratio', format: 'percent' }` 自动当 continuous，不会被推断成分类。
+- **必须与 type 兼容**：format 绑定的类型与你写的 `type` 冲突（如 `{ type: 'continuous', format: 'slashDate' }`）会**报清晰错误**，不静默。
+- `slashDate` 只认严格 `YYYY/MM/DD`；`DD/MM/YYYY`、`MM/DD/YYYY` 这类有地区歧义的布局不收（避免同一串在不同环境解析成不同日期）。
+- 解析优先级：`resolveField` 的 `parse` > 声明式 `format`（内置或自定义）> 内置默认。
+
+### 自定义解析
+
+内置 `format` 词表之外，常见且可复用的格式用 `defineFieldFormat` 注册成具名格式；一次性、按数据源分支的任意解析用 `resolveField`。两者的完整定义契约、示例和选择建议见[自定义数据](/graph/grammar/extend/data)。
+
+解析和归一化发生在 transform、scale、mark 之前。Plot 会把解析后的值按逻辑字段名写入 canonical 行（规范化行：解析、归一后写回逻辑字段名的标准行）；后续所有环节都读这份值。因此 `fieldMap={{ revenue: 'finance.amount' }}`、`format: 'percent'` 和自定义解析都只影响数据准备阶段，mark 里仍然写 `y="revenue"`。
+
+## 校验脏数据
+
+文档型 / 异构数据常有缺字段、类型不一的行。retikz 的处理是**跳过、不伪造、不静默画错**：
+
+下面右图里 `Feb` 是无法解析的字符串、`Mar` 缺值、`May` 是 `null`。默认 `invalid="skip"` 会跳过这些柱；开发或数据准入时，再打开校验让它们直接报错。
+
+<ComponentPreview name="processing-invalid" sourceFiles={['processing-invalid.data.ts']} />
+
+| 情形                              | 行为                                            |
+| --------------------------------- | ----------------------------------------------- |
+| 某行缺这个字段                    | 跳过该数据点（异构数据常态，不报错）            |
+| 叶子是对象 / 数组（非标量）       | 跳过该数据点（绝不把对象塞进图）                |
+| 同类型不同存储格式                | 自动转换（见上「换数据源」）                    |
+| 字段是 `bigint`（如数据库 int64） | 自动转 number（仅安全整数；超出范围按非法处理） |
+| 路径中途是数组（需展开）          | 暂不支持自动展开，请先在数据层 flatten          |
+
+校验选项按“多严格”选择：
+
+| 配置                    | 检查方式           | 适合场景                            |
+| ----------------------- | ------------------ | ----------------------------------- |
+| 默认 / `invalid="skip"` | 不报错，非法点跳过 | 生产图容忍少量脏数据                |
+| `validateData`          | 抽样检查绑定字段   | 开发期排查空图 / 字段映射错误       |
+| `invalid="error"`       | 全量检查参与字段   | 数据准入、测试、需要 fail-loud 的图 |
+
+校验发生在解析 / 归一化之后，只检查当前图真正参与的字段。默认「跳过」可能让你对着一张空图摸不着头脑。打开 `validateData` 让 retikz **抽样**校验、有问题直接报错，并指出**哪个字段、多少非法 / 缺失**（如 `field "x": 3/100 invalid`），把「为什么图是空的」变成明确提示：
+
+```tsx
+<Plot data={rows} model={[...]} validateData>
+  {/* 字段缺失 / 全部无法转换 → 编译期报错，而非空图 */}
+</Plot>
+```
+
+要更严的**全量**校验，给 `invalid="error"`——图里实际用到的字段里任一非法值（含缺字段、无法转换、超范围 bigint）都立刻报错并指明字段，而不是抽样：
+
+```tsx
+<Plot data={rows} model={[...]} invalid="error">
+  {/* 任一参与字段有非法值 → 报错并指明字段 */}
+</Plot>
+```
+
+`invalid` 默认是 `'skip'`（上表的「跳过」行为）：非法点跳过、但**整行仍保留**，照常参与 stack / 排序等数据变换；`'error'` 只检查图里实际引用的字段，不波及其它脏列。
+
+## 技术原理
+
+数据处理发生在 mark lowering 之前，目标是把不同来源、不同存储格式的外部行变成统一的 canonical 行。后续 transform、scale、mark 和 locator 都只读这份结果。
+
+| 顺序 | 处理                                                                                                                  |
+| ---- | --------------------------------------------------------------------------------------------------------------------- |
+| 1    | 收集当前配置引用的字段，得到本次真正需要处理的字段集合                                                                |
+| 2    | 用 `fieldMap` 把逻辑字段对齐到真实数据路径；没有映射时，真实路径等于逻辑字段名                                        |
+| 3    | 解析字段类型：`resolveField.type` 优先，其次 model / format / 自动推断                                                |
+| 4    | 解析字段值：`resolveField.parse` 优先，其次声明式 `format`（内置或 `formatDefinitions` 注册的自定义），最后走内置转换 |
+| 5    | 把解析后的值写回 canonical 行的逻辑字段名，供后续阶段统一读取                                                         |
+| 6    | 按 `validateData` / `invalid` 对参与字段做抽样或全量校验                                                              |
+
+`model` 和 `format` 会进入 PlotSpec，适合随图形配置持久化。`fieldMap` 虽然是可序列化映射，但属于 lowering 选项，按数据集 reference 注入，不写进 PlotSpec；`resolveField` 是函数，只在运行时参与编译。如果要复用 `resolveField` 这类逻辑，需要在应用代码里复用同一个 resolver，而不是期待它被写进 IR。

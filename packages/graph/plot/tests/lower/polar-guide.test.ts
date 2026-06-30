@@ -1,7 +1,12 @@
 import type { IRChild, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
+
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 /**
  * ADR-04 polar guide lowering 测试。
@@ -58,9 +63,7 @@ const segmentsOfAxis = (axisLayer: IRScope): Array<[[number, number], [number, n
 const layersOf = (outer: IRScope): { children: Array<IRChild>; markIndex: number } => {
   const children = outer.children;
   const markIndex = children.findIndex(
-    child =>
-      isScope(child) &&
-      (child.nodeDefault?.shape !== undefined || child.pathDefault?.strokeWidth !== undefined),
+    child => isScope(child) && (child.nodeDefault?.shape !== undefined || child.pathDefault?.strokeWidth !== undefined),
   );
   return { children, markIndex };
 };
@@ -117,7 +120,9 @@ describe('lowerPlots polar guide — angular axis (ADR-04)', () => {
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
     // 4 类别 → 4 个角向短刻度（line 段）+ 4 个圆周外标签 Node
-    const tickSegments = pathsOf(axisLayer).flatMap(p => p.children).filter(step => step.kind === 'line');
+    const tickSegments = pathsOf(axisLayer)
+      .flatMap(p => p.children)
+      .filter(step => step.kind === 'line');
     expect(tickSegments.length).toBeGreaterThanOrEqual(4);
     const labels = nodesOf(axisLayer);
     expect(labels).toHaveLength(4);
@@ -128,7 +133,9 @@ describe('lowerPlots polar guide — angular axis (ADR-04)', () => {
     const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'x' }]), { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
-    const arcStep = pathsOf(axisLayer).flatMap(p => p.children).find(step => step.kind === 'arc') as { radius?: number };
+    const arcStep = pathsOf(axisLayer)
+      .flatMap(p => p.children)
+      .find(step => step.kind === 'arc') as { radius?: number };
     const outerRadius = arcStep.radius as number;
     // polar center = plot 区中心。每个标签到圆心的距离 > outerRadius（圆周外侧）
     const labels = nodesOf(axisLayer);
@@ -259,7 +266,9 @@ describe('lowerPlots polar guide — grid (ADR-04)', () => {
     const gridLayer = children.slice(0, markIndex).find(isScope) as IRScope;
     expect(gridLayer).toBeDefined();
     // 同心环用 arc step
-    const arcs = pathsOf(gridLayer).flatMap(p => p.children).filter(step => step.kind === 'arc');
+    const arcs = pathsOf(gridLayer)
+      .flatMap(p => p.children)
+      .filter(step => step.kind === 'arc');
     expect(arcs.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -267,7 +276,9 @@ describe('lowerPlots polar guide — grid (ADR-04)', () => {
     const outer = expandOf(radiusGridSpec, { d: [{ theta: 0, value: 5 }] }, opts);
     const { children, markIndex } = layersOf(outer);
     const gridLayer = children.slice(0, markIndex).find(isScope) as IRScope;
-    const arcs = pathsOf(gridLayer).flatMap(p => p.children).filter(step => step.kind === 'arc') as Array<{ radius?: number }>;
+    const arcs = pathsOf(gridLayer)
+      .flatMap(p => p.children)
+      .filter(step => step.kind === 'arc') as Array<{ radius?: number }>;
     // 多刻度 → 多环，半径各异（同心、递增）
     const radii = arcs.map(a => a.radius ?? 0).filter(r => r > 0);
     expect(radii.length).toBeGreaterThanOrEqual(1);
@@ -304,7 +315,9 @@ describe('lowerPlots polar guide — grid (ADR-04)', () => {
     const { children, markIndex } = layersOf(outer);
     const gridLayer = children.slice(0, markIndex).find(isScope) as IRScope;
     // 4 类别 → 4 条辐条（每条 move+line 一对）
-    const lineSegments = pathsOf(gridLayer).flatMap(p => p.children).filter(step => step.kind === 'line');
+    const lineSegments = pathsOf(gridLayer)
+      .flatMap(p => p.children)
+      .filter(step => step.kind === 'line');
     expect(lineSegments).toHaveLength(4);
   });
 });
@@ -334,7 +347,7 @@ describe('lowerPlots polar guide — z-order (ADR-04)', () => {
     const after = children.slice(markIndex + 1);
     expect(before.length).toBeGreaterThanOrEqual(1);
     expect(after.length).toBeGreaterThanOrEqual(1);
-    expect(before.every(child => isScope(child) && (child).nodeDefault?.shape === undefined)).toBe(true);
+    expect(before.every(child => isScope(child) && child.nodeDefault?.shape === undefined)).toBe(true);
   });
 });
 

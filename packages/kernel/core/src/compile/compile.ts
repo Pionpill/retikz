@@ -1,30 +1,41 @@
-import { rect as rectOps } from '../geometry/rect';
-import type { IR, IRAnimationTrack, IRChild, IRPath, IRPosition, IRTransform } from '../schemas';
-import { ScopeBoundingShape } from '../schemas';
-import type { DropShadow, GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
-import type { ShapeDefinition } from '../contract/shape';
 import type { ArrowDefinition } from '../contract/arrow';
-import type { PatternDefinition } from '../contract/pattern';
-import type { PathGeneratorDefinition } from '../contract/path';
 import type { CompositeDefinition } from '../contract/composite';
-import { resolveShapeRegistry } from '../providers/shape';
+import type { PathGeneratorDefinition } from '../contract/path';
+import type { PathKindCompileResult, PathKindDefinition } from '../contract/path';
+import type { PatternDefinition } from '../contract/pattern';
+import type { RibbonWidthProfileDefinition } from '../contract/ribbon';
+import type { ShapeDefinition } from '../contract/shape';
+import type { DropShadow, GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
+import type { IR, IRAnimationTrack, IRChild, IRPathBase, IRPosition, IRTransform } from '../schemas';
+import type { CompileWarning } from './constant';
+import type { LowerTex } from './lower-tex';
+import type { DuplicateRegisterInfo } from './name-stack';
+import type { NodeLayout } from './node';
+import type { StyleFrame } from './style';
+import type { TextMeasurer } from './text-metrics';
+
+import { rect as rectOps } from '../geometry/rect';
 import { resolveArrowRegistry } from '../providers/arrow';
-import { resolvePatternRegistry } from '../providers/pattern';
-import { resolvePathGeneratorRegistry } from '../providers/path';
 import { resolveCompositeRegistry } from '../providers/composite';
-import {
-  type CompileWarning,
-  CompileWarningCode,
-  formatCompileWarning,
-} from './constant';
-import { lowerComposites } from './composite';
-import { type DuplicateRegisterInfo, NameStack } from './name-stack';
-import { type NodeLayout, emitNodePrimitives, labelExtentPoints, layoutNode, outerRectOf } from './node';
-import { createPaintRegistry } from './paint';
+import { resolvePathGeneratorRegistry } from '../providers/path';
+import { resolvePathKindRegistry } from '../providers/path-kind';
+import { resolvePatternRegistry } from '../providers/pattern';
+import { resolveRibbonWidthProfileRegistry } from '../providers/ribbon';
+import { resolveShapeRegistry } from '../providers/shape';
+import { JsonObjectSchema } from '../schemas';
+import { ScopeBoundingShape } from '../schemas';
 import { createClipRegistry } from './clip';
+import { lowerComposites } from './composite';
+import { CompileWarningCode, formatCompileWarning } from './constant';
+import { resolveShadow } from './effects';
+import { computeLayout } from './layout';
+import { NameStack } from './name-stack';
+import { emitNodePrimitives, labelExtentPoints, layoutNode, outerRectOf } from './node';
+import { createPaintRegistry } from './paint';
 import { emitPathPrimitive, refPointOfTarget } from './path';
+import { emitRibbonPrimitive } from './path/ribbon';
 import { resolvePosition } from './position';
-import { DEFAULT_PRECISION, createRound } from './precision';
+import { createRound, DEFAULT_PRECISION } from './precision';
 import {
   applyTransformChain,
   collectScopeCornerPoints,
@@ -34,17 +45,8 @@ import {
   registerScopeAsLayout,
   registerScopeCircleLayout,
 } from './scope';
-import {
-  type StyleFrame,
-  createStyleFrame,
-  resolveEffectivePath,
-  resolveLabelDefault,
-  resolveNodeStyle,
-} from './style';
-import { type TextMeasurer, fallbackMeasurer } from './text-metrics';
-import type { LowerTex } from './lower-tex';
-import { computeLayout } from './layout';
-import { resolveShadow } from './effects';
+import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle } from './style';
+import { fallbackMeasurer } from './text-metrics';
 
 export type { CompileWarning } from './constant';
 export { CompileWarningCode } from './constant';
@@ -54,11 +56,7 @@ export { CompileWarningCode } from './constant';
  * @description coordinate / scope.id 入场临时占位等"无形状只有位置"句柄共享此结构，
  *   让后续 path target / `at.of` / `offset.of` / `polar.origin` 引用时 boundaryPoint 命中中心。
  */
-const zeroSizeRectAt = (
-  id: string,
-  [cx, cy]: IRPosition,
-  shapes: Record<string, ShapeDefinition>,
-): NodeLayout => ({
+const zeroSizeRectAt = (id: string, [cx, cy]: IRPosition, shapes: Record<string, ShapeDefinition>): NodeLayout => ({
   id,
   shapeName: 'rectangle',
   shapeDef: shapes.rectangle,
@@ -77,17 +75,11 @@ const zeroSizeRectAt = (
  * 把 coordinate 注册成 0×0 NodeLayout
  * @description 让后续 path target / `at.of` 引用时 boundaryPoint 命中中心，符合"占位无形状边界"语义
  */
-const coordinateAsLayout = (
-  id: string,
-  center: IRPosition,
-  shapes: Record<string, ShapeDefinition>,
-): NodeLayout => zeroSizeRectAt(id, center, shapes);
+const coordinateAsLayout = (id: string, center: IRPosition, shapes: Record<string, ShapeDefinition>): NodeLayout =>
+  zeroSizeRectAt(id, center, shapes);
 
 /** shadow 是视觉效果，不改变锚点 / scope bbox；这里只把它的外溢纳入根自动 layout，避免根 viewBox 裁剪 */
-const shadowOverflowPoints = (
-  points: ReadonlyArray<IRPosition>,
-  shadow: DropShadow | undefined,
-): Array<IRPosition> => {
+const shadowOverflowPoints = (points: ReadonlyArray<IRPosition>, shadow: DropShadow | undefined): Array<IRPosition> => {
   if (shadow === undefined || points.length === 0) return [];
 
   let minX = Infinity;
@@ -116,11 +108,7 @@ const shadowOverflowPoints = (
   ];
 };
 
-const pushLayoutPoints = (
-  target: Array<IRPosition>,
-  points: ReadonlyArray<IRPosition>,
-  shadow?: DropShadow,
-): void => {
+const pushLayoutPoints = (target: Array<IRPosition>, points: ReadonlyArray<IRPosition>, shadow?: DropShadow): void => {
   for (const p of points) target.push(p);
   for (const p of shadowOverflowPoints(points, shadow)) target.push(p);
 };
@@ -136,8 +124,7 @@ const scopePlaceholderLayout = (
   chain: ReadonlyArray<Transform>,
   shapes: Record<string, ShapeDefinition>,
 ): NodeLayout => {
-  const globalOrigin: IRPosition =
-    chain.length === 0 ? [0, 0] : applyTransformChain([0, 0], chain);
+  const globalOrigin: IRPosition = chain.length === 0 ? [0, 0] : applyTransformChain([0, 0], chain);
   return zeroSizeRectAt(id, globalOrigin, shapes);
 };
 
@@ -191,6 +178,15 @@ export type CompileOptions = {
    */
   pathGenerators?: Record<string, PathGeneratorDefinition>;
   /**
+   * Runtime path kind providers. Built-in kinds are `stroke` and `ribbon`; custom kinds are keyed by Path.kind.
+   */
+  pathKinds?: Record<string, PathKindDefinition>;
+  /**
+   * Runtime ribbon width profiles.
+   * @description IR stores only `{ kind:"profile", name, params }`; profile functions are injected here and never enter IR.
+   */
+  ribbonWidthProfiles?: Partial<Record<string, RibbonWidthProfileDefinition>>;
+  /**
    * 运行时注入的 Tier 2 composite 展开逻辑（不进 IR）
    * @description compileToScene 第一步据各 def 的 schema 提取的 `${namespace}.${type}` 把 IR 里的 composite
    *   节点展开成 Tier 1；core 无内置。未注册 namespace/type → `onWarn(COMPOSITE_NOT_REGISTERED)` + 跳过该节点。
@@ -212,7 +208,7 @@ export type CompileOptions = {
 
 /**
  * 显式 viewBox → Scene.layout（finite 守卫 + round）
- * @description schema 的 `.finite().positive()` 只在 IR parse 守门；compileToScene 直接收手搓 / LLM IR 会绕过，
+ * @description schema 的 `.positive()` 只在 IR parse 守门；compileToScene 直接收手搓 / LLM IR 会绕过，
  *   故此处是唯一真实关口——非 finite / 非正尺寸会污染 Scene round-trip。非法即抛清晰错（不泄漏进 Scene）；
  *   四字段按 Scene precision round（与自动算 layout 同口径）。
  */
@@ -236,7 +232,14 @@ const viewBoxToLayout = (
   const y = round(vb.y);
   const width = round(vb.width);
   const height = round(vb.height);
-  if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(width) || width <= 0 || !Number.isFinite(height) || height <= 0) {
+  if (
+    !Number.isFinite(x) ||
+    !Number.isFinite(y) ||
+    !Number.isFinite(width) ||
+    width <= 0 ||
+    !Number.isFinite(height) ||
+    height <= 0
+  ) {
     throw new Error(
       `viewBox rounds to an invalid layout (x=${String(x)}, y=${String(y)}, width=${String(width)}, height=${String(height)}); check precision and coordinate magnitude.`,
     );
@@ -247,7 +250,7 @@ const viewBoxToLayout = (
 /**
  * 自动算 layout 的 finite 守卫：四值非全 finite 即抛清晰错（LLM 可读），不泄漏进 Scene
  * @description computeLayout 由 `center ± halfWidth` 等运算聚合——极端 shape 几何（如 outerRadius:1e308
- *   半轴 finite 但 center+halfWidth 溢出 Infinity）会让运算结果脏。schema 的 `.finite()` 只守单字段输入，
+ *   半轴 finite 但 center+halfWidth 溢出 Infinity）会让运算结果脏。schema 的 `` 只守单字段输入，
  *   守不住聚合后的溢出；此处复用 viewBoxToLayout 同款 finite 关口，是自动 layout 进 Scene 前的唯一兜底。
  */
 const assertFiniteLayout = (layout: {
@@ -325,8 +328,7 @@ type InternalScenePrimitive = ScenePrimitive | PathPlaceholder;
 const makePathPlaceholder = (): PathPlaceholder => ({ type: 'path-placeholder' });
 
 /** 把内部 sink 收窄回公开 ScenePrimitive[]：占位已全部回填（compileToScene 末端 placeholderBalance 无条件校验兜底） */
-const sealSink = (sink: Array<InternalScenePrimitive>): Array<ScenePrimitive> =>
-  sink as Array<ScenePrimitive>;
+const sealSink = (sink: Array<InternalScenePrimitive>): Array<ScenePrimitive> => sink as Array<ScenePrimitive>;
 
 /** dev 诊断：递归找出残留占位的 index 路径，供末端无条件校验报错时定位 */
 const collectPlaceholderLocators = (
@@ -338,27 +340,17 @@ const collectPlaceholderLocators = (
     if (prim.type === 'path-placeholder') {
       locators.push(`${prefix}[${idx}]`);
     } else if (prim.type === 'group') {
-      locators.push(
-        ...collectPlaceholderLocators(prim.children, `${prefix}[${idx}].children`),
-      );
+      locators.push(...collectPlaceholderLocators(prim.children, `${prefix}[${idx}].children`));
     }
   });
   return locators;
 };
 
-type PendingPath = {
-  /** path IR 节点本体 */
-  path: IRPath;
-  /** path 在 IR 中的 jq-like locator（如 `children[2].scope.children[1].path`） */
+type PendingDrawing = {
+  item: IRPathBase;
   irPath: string;
-  /** 该 path 所属 scope 的累积 transform 链；顶层 path = [] */
   scopeChain: ReadonlyArray<Transform>;
-  /**
-   * 回填目标：scopeChain 为空（顶层 / 无 transform scope）时占位——记下所在 sink 与占位 marker，
-   * Pass 2 原位 splice 回填；scopeChain 非空（transformed scope）时缺省，path 走 hoist 到顶层 primitives。
-   */
   slot?: { sink: Array<InternalScenePrimitive>; placeholder: PathPlaceholder };
-  /** 该 path 的显式 zIndex（raw child.zIndex）；缺省 = 0。回填 / hoist 时复制到 real primitive */
   zIndex?: number;
 };
 
@@ -412,8 +404,12 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   // 未注册名 throw（定位 / 布局类基元缺失无法继续）。与 composite（Array 注入、重名 throw、缺失 warn+skip）
   // 的策略差异是有意的，理由见 lowerComposites JSDoc。
   const effectiveShapes: Record<string, ShapeDefinition> = resolveShapeRegistry(options.shapes, onWarn);
-  const effectivePathGenerators: Record<string, PathGeneratorDefinition> =
-    resolvePathGeneratorRegistry(options.pathGenerators);
+  const effectivePathGenerators: Record<string, PathGeneratorDefinition> = resolvePathGeneratorRegistry(
+    options.pathGenerators,
+  );
+  const effectivePathKinds: Partial<Record<string, PathKindDefinition>> = resolvePathKindRegistry(options.pathKinds);
+  const effectiveRibbonWidthProfiles: Partial<Record<string, RibbonWidthProfileDefinition>> =
+    resolveRibbonWidthProfileRegistry(options.ribbonWidthProfiles);
   const effectiveArrows: Record<string, ArrowDefinition> = resolveArrowRegistry(options.arrows, onWarn);
   const effectivePatterns: Record<string, PatternDefinition> = resolvePatternRegistry(options.patterns, onWarn);
 
@@ -445,26 +441,71 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   // clip 登记表：scope.clip 去重 + 派稳定 id（clip-N）→ Scene.resources（与 paint 同表，id 命名空间不撞）
   const clip = createClipRegistry(round);
 
+  const emitStrokePath = (
+    path: IRPathBase,
+    irPath: string,
+    scopeChain: ReadonlyArray<Transform>,
+  ): PathKindCompileResult | null =>
+    emitPathPrimitive(path, nameStack, round, measureText, {
+      onWarn,
+      irPath,
+      scopeChain,
+      resolvePaint: paint.resolve,
+      effectiveArrows,
+      effectivePathGenerators,
+      lowerTex: options.lowerTex,
+    });
+
+  const emitRibbonPath = (
+    path: IRPathBase,
+    irPath: string,
+    scopeChain: ReadonlyArray<Transform>,
+  ): PathKindCompileResult | null =>
+    emitRibbonPrimitive(path, nameStack, round, measureText, {
+      onWarn,
+      irPath,
+      scopeChain,
+      resolvePaint: paint.resolve,
+      effectiveArrows,
+      effectivePathGenerators,
+      lowerTex: options.lowerTex,
+      ribbonWidthProfiles: effectiveRibbonWidthProfiles,
+    });
+
+  const emitPathKindPrimitive = (
+    path: IRPathBase,
+    irPath: string,
+    scopeChain: ReadonlyArray<Transform>,
+  ): PathKindCompileResult | null => {
+    const kind = path.kind ?? 'stroke';
+    const definition = effectivePathKinds[kind];
+    if (definition === undefined) {
+      const available = Object.keys(effectivePathKinds).sort().join(', ');
+      throw new Error(`Unknown path kind '${kind}'. Available path kinds: ${available || '(none)'}.`);
+    }
+    const optionsValue = definition.optionsSchema
+      ? definition.optionsSchema.parse(path.kindOptions ?? {})
+      : JsonObjectSchema.parse(path.kindOptions ?? {});
+    return definition.compile({
+      path,
+      options: optionsValue,
+      emitStroke: nextPath => emitStrokePath(nextPath ?? path, irPath, scopeChain),
+      emitRibbon: nextPath => emitRibbonPath(nextPath ?? path, irPath, scopeChain),
+    });
+  };
+
   /**
    * 解析一批本层收集的 pending paths（lookup-only 阶段）
    * @description 两种落点：有 `slot`（scopeChain 为空）→ 原位 splice 回填该 path 在本层 sink 占的位（按引用定位免索引漂移），保住与同层 node 的 IR 声明序；无 `slot`（scopeChain 非空）→ hoist 到顶层 `primitives`，因端点已是全局坐标、进 transformed GroupPrim 会被 scope.transform 二次 apply。NameStack 切到 pass2 守门：path 解析中误调 register 抛 internal error；解析完切回 pass1 让上层 scope 子树继续 register 子节点。
    *   `item.scopeChain` 记录该 path 所属 scope 累积 transform 链——传给 emitPathPrimitive，
    *   让 step.to 内的 polar/at/offset 字面量按"当前 scope 局部度量 + 末端 apply chain"投影回全局。
    */
-  const resolvePendingPaths = (pending: ReadonlyArray<PendingPath>): void => {
+  const resolvePendingPaths = (pending: ReadonlyArray<PendingDrawing>): void => {
     if (pending.length === 0) return;
     nameStack.enterLookupPhase();
     try {
       for (const item of pending) {
-        const result = emitPathPrimitive(item.path, nameStack, round, measureText, {
-          onWarn,
-          irPath: item.irPath,
-          scopeChain: item.scopeChain,
-          resolvePaint: paint.resolve,
-          effectiveArrows,
-          effectivePathGenerators,
-          lowerTex: options.lowerTex,
-        });
+        const result = emitPathKindPrimitive(item.item, item.irPath, item.scopeChain);
         if (item.slot) {
           // 原位回填：按引用定位占位再 splice 替换为真 primitive（result 为 null 时替换成 0 个 = 删占位）
           const idx = item.slot.sink.indexOf(item.slot.placeholder);
@@ -485,7 +526,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           }
         }
         if (result) {
-          pushLayoutPoints(allPoints, result.points, resolveShadow(item.path.shadow));
+          pushLayoutPoints(allPoints, result.points, resolveShadow(item.item.shadow));
         }
       }
     } finally {
@@ -510,7 +551,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     sink: Array<InternalScenePrimitive>,
     locatorPrefix: string,
     layoutsAccumulator: Array<NodeLayout>,
-    pathsAccumulator: Array<PendingPath>,
+    pathsAccumulator: Array<PendingDrawing>,
     styleStack: ReadonlyArray<StyleFrame>,
   ): void => {
     for (let i = 0; i < children.length; i++) {
@@ -524,7 +565,15 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
       if (child.type === 'node') {
         const effectiveNode = resolveNodeStyle(child, styleStack);
         const layout = layoutNode(
-          { ...effectiveNode, animations: filterAnimations(effectiveNode.animations, 'element', onWarn, `${locatorPrefix}children[${i}].node`) },
+          {
+            ...effectiveNode,
+            animations: filterAnimations(
+              effectiveNode.animations,
+              'element',
+              onWarn,
+              `${locatorPrefix}children[${i}].node`,
+            ),
+          },
           measureText,
           nameStack,
           nodeDistance,
@@ -536,8 +585,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           // 公式渲染注入 + 预绑路径的 warn（文本里的 `$...$` 行内公式编译用）
           {
             lowerTex: options.lowerTex,
-            warn: (code, message) =>
-              onWarn({ code, message, path: `${locatorPrefix}children[${i}].node` }),
+            warn: (code, message) => onWarn({ code, message, path: `${locatorPrefix}children[${i}].node` }),
           },
         );
         const globalLayout = chain.length === 0 ? layout : projectLayoutToGlobal(layout, chain);
@@ -574,11 +622,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         }
         const globalCenter = chain.length === 0 ? localCenter : applyTransformChain(localCenter, chain);
         const coordLayout = coordinateAsLayout(child.id, globalCenter, effectiveShapes);
-        nameStack.register(
-          child.id,
-          coordLayout,
-          `${locatorPrefix}children[${i}].coordinate.id`,
-        );
+        nameStack.register(child.id, coordLayout, `${locatorPrefix}children[${i}].coordinate.id`);
         // coordinate 0×0 layout 也算上层 scope.id bbox 输入（参与父 scope 子树 AABB 累积）
         layoutsAccumulator.push(coordLayout);
       } else if (child.type === 'scope') {
@@ -604,11 +648,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         let placeholderLayout: NodeLayout | undefined;
         if (child.id) {
           placeholderLayout = scopePlaceholderLayout(child.id, innerChain, effectiveShapes);
-          nameStack.register(
-            child.id,
-            placeholderLayout,
-            `${locatorPrefix}children[${i}].scope.id`,
-          );
+          nameStack.register(child.id, placeholderLayout, `${locatorPrefix}children[${i}].scope.id`);
         }
         // 进入 scope 子 frame：localNamespace=true 时隔离子树命名空间
         const pushedFrame = child.localNamespace === true;
@@ -618,7 +658,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         const innerLayouts: Array<NodeLayout> = [];
         /** 本 scope 子树收集的 pending paths——在 bbox replaceLayout 后 / popFrame 前 resolve，
          *  让 scope 内 path 自引用本 scope.id 端点取真 bbox 而非 placeholder */
-        const innerPaths: Array<PendingPath> = [];
+        const innerPaths: Array<PendingDrawing> = [];
         try {
           processChildren(
             child.children,
@@ -644,7 +684,12 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
                 effectiveShapes,
               );
             } else {
-              bboxLayout = registerScopeAsLayout(child.id, computeScopeBoundingBox(innerLayouts), fallbackOrigin, effectiveShapes);
+              bboxLayout = registerScopeAsLayout(
+                child.id,
+                computeScopeBoundingBox(innerLayouts),
+                fallbackOrigin,
+                effectiveShapes,
+              );
             }
             // 用 replaceLayout 覆盖不触发 duplicate warn（placeholder → real bbox 是预期升级）
             nameStack.replaceLayout(child.id, bboxLayout, parentFrameDepth, placeholderLayout);
@@ -662,10 +707,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         }
         const hasOwnTransforms = ownTransforms.length > 0;
         const isPrunable =
-          innerSink.length === 0 &&
-          !hasOwnTransforms &&
-          child.id === undefined &&
-          child.clip === undefined;
+          innerSink.length === 0 && !hasOwnTransforms && child.id === undefined && child.clip === undefined;
         if (isPrunable) continue;
         const group: GroupPrim = {
           type: 'group',
@@ -677,7 +719,12 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         // meta provenance 与 id 同款：stamp 到 scope GroupPrim（不下传子元素；不进 prune 保留条件）
         if (child.meta !== undefined) group.meta = child.meta;
         // animations 与 meta 同款：stamp 到 scope GroupPrim（不下传子元素）；先过 viewBox⇔根 校验
-        const scopeAnimations = filterAnimations(child.animations, 'element', onWarn, `${locatorPrefix}children[${i}].scope`);
+        const scopeAnimations = filterAnimations(
+          child.animations,
+          'element',
+          onWarn,
+          `${locatorPrefix}children[${i}].scope`,
+        );
         if (scopeAnimations !== undefined) group.animations = scopeAnimations;
         if (hasOwnTransforms) group.transforms = [...ownTransforms];
         // scope.clip → 去重派 clip 资源 id 挂 group.clipRef；裁剪区裁该 group 内全部子原语
@@ -686,14 +733,22 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         // scope 整体作一个 stacking 单位：把 group 在父层按 scope.zIndex 排序
         if (child.zIndex !== undefined) zIndexOf.set(group, child.zIndex);
       } else {
-        // child.type === 'path'：累积到调用方提供的 pathsAccumulator，让调用方决定 resolve 时机
+        // child.type === 'path' / 'ribbon'：累积到调用方提供的 pathsAccumulator，让调用方决定 resolve 时机
         // path 端点从 NameStack（全局坐标）查得，几何已是全局。chain 空时先在本层 sink 占一个位（Pass 2
         // 原位回填）保住与同层 node 的声明序；chain 非空时维持 hoist 到顶层 primitives，避免被 scope.transform 二次 apply。
         // `chain` 同时记录 path 所属 scope 累积 transform，让 step.to 内的 polar/at/offset 字面量
         // 按"当前 scope 局部度量 + 末端 apply chain"投影回全局
         const effectivePath = resolveEffectivePath(child, styleStack);
-        const pending: PendingPath = {
-          path: { ...effectivePath, animations: filterAnimations(effectivePath.animations, 'element', onWarn, `${locatorPrefix}children[${i}].path`) },
+        const pending: PendingDrawing = {
+          item: {
+            ...effectivePath,
+            animations: filterAnimations(
+              effectivePath.animations,
+              'element',
+              onWarn,
+              `${locatorPrefix}children[${i}].path`,
+            ),
+          },
           irPath: `${locatorPrefix}children[${i}].path`,
           scopeChain: chain,
           zIndex: child.zIndex,
@@ -711,7 +766,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
 
   // 递归处理整棵 IR child 树；顶层 paths 在所有 register 完成后统一 resolve
   // 顶层 layouts 累积无人消费——传一个临时数组即可（顶层无 scope.id 包裹）
-  const rootPaths: Array<PendingPath> = [];
+  const rootPaths: Array<PendingDrawing> = [];
   processChildren(loweredIr.children, [], primitives, '', [], rootPaths, []);
   resolvePendingPaths(rootPaths);
 
@@ -721,9 +776,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
       typeof process !== 'undefined' && process.env.NODE_ENV !== 'production'
         ? ` at ${collectPlaceholderLocators(primitives).join(', ')}`
         : '';
-    throw new Error(
-      `internal: ${placeholderBalance} unresolved path placeholder(s) leaked into Scene output${detail}`,
-    );
+    throw new Error(`internal: ${placeholderBalance} unresolved path placeholder(s) leaked into Scene output${detail}`);
   }
 
   // paint（gradient / pattern / image）+ clip 资源同表（kind 判别，id 命名空间各自不撞）
@@ -734,7 +787,10 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     // sealSink 后对顶层按 zIndex 稳定排序（占位已回填）
     primitives: stableSortByZIndex(sealSink(primitives)),
     // 显式 viewBox 覆盖自动算（忽略 padding）；无则回退 AABB + padding
-    layout: loweredIr.viewBox !== undefined ? viewBoxToLayout(loweredIr.viewBox, round) : assertFiniteLayout(computeLayout(allPoints, layoutPadding, round)),
+    layout:
+      loweredIr.viewBox !== undefined
+        ? viewBoxToLayout(loweredIr.viewBox, round)
+        : assertFiniteLayout(computeLayout(allPoints, layoutPadding, round)),
     // 渲染无关资源（paint / clip）；无则省略，保 Scene 输出纯净
     ...(resources.length > 0 ? { resources } : {}),
     // scene 根（镜头）动画 tracks（viewBox property）；无则省略

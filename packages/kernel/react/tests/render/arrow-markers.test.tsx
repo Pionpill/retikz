@@ -1,6 +1,8 @@
+import type { ArrowEndSpec, MarkerPathCommand, MarkerPrimitive } from '@retikz/core';
+
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
-import type { ArrowEndSpec, MarkerPathCommand, MarkerPrimitive } from '@retikz/core';
+
 import { ArrowMarker } from '../../src/render/arrow-markers';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
@@ -25,8 +27,7 @@ const spec = (overrides: Partial<ArrowEndSpec> = {}): ArrowEndSpec => ({
   ...overrides,
 });
 
-const render = (s: ArrowEndSpec, id = 'mk'): AnyEl =>
-  ArrowMarker({ id, spec: s }) as unknown as AnyEl;
+const render = (s: ArrowEndSpec, id = 'mk'): AnyEl => ArrowMarker({ id, spec: s }) as unknown as AnyEl;
 
 /** 取物化 marker 的 children（数组形态） */
 const innerEls = (el: AnyEl): Array<AnyEl> => {
@@ -103,9 +104,7 @@ describe('ArrowMarker: marker 几何物化（spec.marker → SVG 元素）', () 
   });
 
   it('ellipse marker → 物化出 <ellipse>，cx/cy/rx/ry 透传', () => {
-    const marker: Array<MarkerPrimitive> = [
-      { type: 'ellipse', cx: 5, cy: 5, rx: 5, ry: 5, fill: 'black' },
-    ];
+    const marker: Array<MarkerPrimitive> = [{ type: 'ellipse', cx: 5, cy: 5, rx: 5, ry: 5, fill: 'black' }];
     const inner = innerEls(render(spec({ marker })));
     expect(inner[0].type).toBe('ellipse');
     expect(inner[0].props as Record<string, unknown>).toMatchObject({ cx: 5, cy: 5, rx: 5, ry: 5 });
@@ -138,66 +137,90 @@ describe('ArrowMarker: 内置 8 resolved 几何物化回归（golden master）',
     spec({ marker: [{ type: 'path', commands }] });
 
   it('normal: 实心三角 d="M 0 0 L 10 5 L 0 10 Z"', () => {
-    const inner = innerEls(render(pathMarker([
-      { kind: 'move', to: [0, 0] },
-      { kind: 'line', to: [10, 5] },
-      { kind: 'line', to: [0, 10] },
-      { kind: 'close' },
-    ])));
+    const inner = innerEls(
+      render(
+        pathMarker([
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [10, 5] },
+          { kind: 'line', to: [0, 10] },
+          { kind: 'close' },
+        ]),
+      ),
+    );
     expect((inner[0].props as Record<string, unknown>).d).toBe('M 0 0 L 10 5 L 0 10 Z');
   });
 
   it('stealth: V 形倒钩 d="M 0 0 L 10 5 L 0 10 L 3 5 Z"', () => {
-    const inner = innerEls(render(pathMarker([
-      { kind: 'move', to: [0, 0] },
-      { kind: 'line', to: [10, 5] },
-      { kind: 'line', to: [0, 10] },
-      { kind: 'line', to: [3, 5] },
-      { kind: 'close' },
-    ])));
+    const inner = innerEls(
+      render(
+        pathMarker([
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [10, 5] },
+          { kind: 'line', to: [0, 10] },
+          { kind: 'line', to: [3, 5] },
+          { kind: 'close' },
+        ]),
+      ),
+    );
     expect((inner[0].props as Record<string, unknown>).d).toBe('M 0 0 L 10 5 L 0 10 L 3 5 Z');
   });
 
   it('diamond: 实心菱形 d="M 0 5 L 5 0 L 10 5 L 5 10 Z"', () => {
-    const inner = innerEls(render(pathMarker([
-      { kind: 'move', to: [0, 5] },
-      { kind: 'line', to: [5, 0] },
-      { kind: 'line', to: [10, 5] },
-      { kind: 'line', to: [5, 10] },
-      { kind: 'close' },
-    ])));
+    const inner = innerEls(
+      render(
+        pathMarker([
+          { kind: 'move', to: [0, 5] },
+          { kind: 'line', to: [5, 0] },
+          { kind: 'line', to: [10, 5] },
+          { kind: 'line', to: [5, 10] },
+          { kind: 'close' },
+        ]),
+      ),
+    );
     expect((inner[0].props as Record<string, unknown>).d).toBe('M 0 5 L 5 0 L 10 5 L 5 10 Z');
   });
 
   it('open: 空心三角 d="M 1 1 L 9 5 L 1 9 Z"', () => {
-    const inner = innerEls(render(pathMarker([
-      { kind: 'move', to: [1, 1] },
-      { kind: 'line', to: [9, 5] },
-      { kind: 'line', to: [1, 9] },
-      { kind: 'close' },
-    ])));
+    const inner = innerEls(
+      render(
+        pathMarker([
+          { kind: 'move', to: [1, 1] },
+          { kind: 'line', to: [9, 5] },
+          { kind: 'line', to: [1, 9] },
+          { kind: 'close' },
+        ]),
+      ),
+    );
     expect((inner[0].props as Record<string, unknown>).d).toBe('M 1 1 L 9 5 L 1 9 Z');
   });
 
   it('openStealth: 空心 V 形倒钩 d="M 1 1 L 9 5 L 1 9 L 3 5 Z"', () => {
-    const inner = innerEls(render(pathMarker([
-      { kind: 'move', to: [1, 1] },
-      { kind: 'line', to: [9, 5] },
-      { kind: 'line', to: [1, 9] },
-      { kind: 'line', to: [3, 5] },
-      { kind: 'close' },
-    ])));
+    const inner = innerEls(
+      render(
+        pathMarker([
+          { kind: 'move', to: [1, 1] },
+          { kind: 'line', to: [9, 5] },
+          { kind: 'line', to: [1, 9] },
+          { kind: 'line', to: [3, 5] },
+          { kind: 'close' },
+        ]),
+      ),
+    );
     expect((inner[0].props as Record<string, unknown>).d).toBe('M 1 1 L 9 5 L 1 9 L 3 5 Z');
   });
 
   it('openDiamond: 空心菱形 d="M 1 5 L 5 1 L 9 5 L 5 9 Z"', () => {
-    const inner = innerEls(render(pathMarker([
-      { kind: 'move', to: [1, 5] },
-      { kind: 'line', to: [5, 1] },
-      { kind: 'line', to: [9, 5] },
-      { kind: 'line', to: [5, 9] },
-      { kind: 'close' },
-    ])));
+    const inner = innerEls(
+      render(
+        pathMarker([
+          { kind: 'move', to: [1, 5] },
+          { kind: 'line', to: [5, 1] },
+          { kind: 'line', to: [9, 5] },
+          { kind: 'line', to: [5, 9] },
+          { kind: 'close' },
+        ]),
+      ),
+    );
     expect((inner[0].props as Record<string, unknown>).d).toBe('M 1 5 L 5 1 L 9 5 L 5 9 Z');
   });
 

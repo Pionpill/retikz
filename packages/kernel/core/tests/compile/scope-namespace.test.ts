@@ -3,8 +3,10 @@
  * @description 覆盖 localNamespace 创建子 frame、跨 frame shadowing 不算 duplicate、外层不可见内层、scope.id 始终注册到父 frame、scope at-translate 的 of= 走 inside-out lookup
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { CompileWarning, IR, Scene, ScenePrimitive } from '../../src';
+
+import { compileToScene } from '../../src/compile/compile';
 
 const scene = (children: IR['children']): IR => ({
   version: 1,
@@ -12,9 +14,7 @@ const scene = (children: IR['children']): IR => ({
   children,
 });
 
-const compileWithWarnings = (
-  ir: IR,
-): { compiled: Scene; warnings: Array<CompileWarning> } => {
+const compileWithWarnings = (ir: IR): { compiled: Scene; warnings: Array<CompileWarning> } => {
   const warnings: Array<CompileWarning> = [];
   const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
   return { compiled, warnings };
@@ -110,9 +110,7 @@ describe('localNamespace 隔离子 frame', () => {
       {
         type: 'scope',
         localNamespace: true,
-        children: [
-          { type: 'node', id: 'hidden', position: [100, 0], text: 'hidden' },
-        ],
+        children: [{ type: 'node', id: 'hidden', position: [100, 0], text: 'hidden' }],
       },
       {
         type: 'path',
@@ -165,7 +163,11 @@ describe('localNamespace 隔离子 frame', () => {
     expect(warnings.filter(w => w.code === 'DUPLICATE_NODE_ID')).toHaveLength(0);
     const paths = compiled.primitives.filter(p => p.type === 'path');
     expect(paths).toHaveLength(2);
-    const ends = paths.map(lineTo).filter((p): p is [number, number] => !!p).map(p => p[0]).sort((a, b) => a - b);
+    const ends = paths
+      .map(lineTo)
+      .filter((p): p is [number, number] => !!p)
+      .map(p => p[0])
+      .sort((a, b) => a - b);
     // 中层 A 全局 ≈ 100；最内层 A 全局 ≈ 200
     expect(Math.abs(ends[0] - 100)).toBeLessThan(30);
     expect(Math.abs(ends[1] - 200)).toBeLessThan(30);
@@ -181,9 +183,7 @@ describe('localNamespace 隔离子 frame', () => {
           {
             type: 'scope',
             transforms: [{ kind: 'at-translate', direction: 'right', of: 'rootNode', distance: 50 }],
-            children: [
-              { type: 'node', id: 'inner', position: [0, 0], text: 'I' },
-            ],
+            children: [{ type: 'node', id: 'inner', position: [0, 0], text: 'I' }],
           },
         ],
       },
@@ -199,9 +199,7 @@ describe('localNamespace 隔离子 frame', () => {
       {
         type: 'scope',
         localNamespace: true,
-        children: [
-          { type: 'node', id: 'A', position: [100, 0], text: 'inner' },
-        ],
+        children: [{ type: 'node', id: 'A', position: [100, 0], text: 'inner' }],
       },
     ]);
     const { warnings } = compileWithWarnings(ir);
@@ -217,9 +215,7 @@ describe('scope.id 始终注册到父 frame', () => {
         id: 'cluster',
         localNamespace: true,
         transforms: [{ kind: 'translate', x: 80, y: 0 }],
-        children: [
-          { type: 'node', id: 'A', position: [0, 0], text: 'A' },
-        ],
+        children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
       {
         type: 'path',
@@ -257,9 +253,7 @@ describe('scope.id 始终注册到父 frame', () => {
     const ir = scene([
       {
         type: 'scope',
-        children: [
-          { type: 'node', id: 'flat', position: [0, 0], text: 'F' },
-        ],
+        children: [{ type: 'node', id: 'flat', position: [0, 0], text: 'F' }],
       },
       {
         type: 'path',

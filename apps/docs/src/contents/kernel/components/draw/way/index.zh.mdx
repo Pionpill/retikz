@@ -1,0 +1,83 @@
+---
+title: Draw Way
+description: way 数组的 item 形态、DrawWay 常量、折角、闭合与相对坐标写法。
+---
+
+`way` 是 `<Draw>` 的核心。前几种 item 是 target，后续形态是改变下一段或上一点的算子。
+
+可以把 `way` 看成一个很小的 path 语言：target 产生点，`'-|'` / `'|-'` 改写前后两个点之间的段，`{ label }` 修饰下一段，`{ curve }` / `{ cubic }` / `{ bend }` 消耗下一项生成曲线，`{ arc }` / `{ circle }` / `{ ellipse }` 围绕上一点画形状而不消耗下一项。
+
+## 用法
+
+```tsx
+import { Draw, DrawWay } from '@retikz/react';
+```
+
+```tsx
+<Draw way={['a', DrawWay.Hv, 'b']} />
+```
+
+## 例子
+
+### Target 形态
+
+同一条 `way` 可以混合节点 id、笛卡尔坐标、极坐标和对象形态 target。
+
+<ComponentPreview name="draw-way-types" size="sm" />
+
+### 折角
+
+`'-|'` / `'|-'` 把上一项到下一项那段改成折角。
+
+<Comparison target="tikz" title="折角写法">
+
+这两个裸字面量沿用 TikZ path 的 `(A) -| (B)` / `(A) |- (B)` 写法：`'-|'` 先水平后垂直，`'|-'` 先垂直后水平。
+
+</Comparison>
+
+<ComponentPreview name="draw-fold" size="sm" />
+
+### 闭合
+
+`DrawWay.Cycle` 把最后一段闭合回 way 第一项。
+
+<ComponentPreview name="draw-cycle" size="sm" />
+
+### 相对坐标
+
+`DrawWay.Relative` 不推进 prevEnd；`DrawWay.Accumulate` 推进 prevEnd。下例两条 Draw 只差 `type`。
+
+<ComponentPreview name="draw-rel" size="sm" />
+
+## API 参考
+
+### WayItem
+
+| 形态               | 例                                                                                              | 含义                                                       |
+| ------------------ | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| 节点 id            | `'a'`                                                                                           | 引用同一张图内的 Node；端点自动贴 border                   |
+| 显式锚点           | `{ id: 'a', anchor: 'north' }` 或 `'a.north'`                                                   | 锁定命名 anchor / 角度 / 边上比例点；对象形态是 IR 主契约  |
+| 笛卡尔             | `[120, 0]`                                                                                      | 直接给坐标                                                 |
+| 极坐标             | `{ origin: 'a', angle: 60, radius: 80 }`                                                        | 极坐标，详见 [定位](/kernel/concepts/basic/position)       |
+| 偏移定位           | `{ of: 'a', offset: [10, 5] }`                                                                  | 基准 + `(dx, dy)`，与 `<Node position>` 的 offset 形态一致 |
+| 比例定位           | `{ between: [{ id: 'a' }, { id: 'b' }], t: 0.5 }`                                               | A 到 B 连线上的比例点                                      |
+| Relative           | `{ position: [10, 0], type: DrawWay.Relative }` 或 `'+10,0'`                                    | 基于前一 step 终点偏移，不更新 prevEnd                     |
+| Accumulate         | `{ position: [10, 0], type: DrawWay.Accumulate }` 或 `'++10,0'`                                 | 基于前一 step 终点偏移，并更新 prevEnd                     |
+| 折角算子           | `'-\|'` / `'\|-'`                                                                               | 把上一项到下一项改成折角                                   |
+| 闭合               | `DrawWay.Cycle`                                                                                 | 闭合回 way 起点                                            |
+| 曲线 / 形状 / 标注 | `{ curve }` / `{ cubic }` / `{ bend }` / `{ arc }` / `{ circle }` / `{ ellipse }` / `{ label }` | 详见 [Draw](/kernel/components/draw/overview)              |
+
+### DrawWay
+
+| 常量                 | 等价裸字面量 | 含义                           |
+| -------------------- | ------------ | ------------------------------ |
+| `DrawWay.Cycle`      | 仅常量       | 闭合关键字；避免与节点 id 撞车 |
+| `DrawWay.Hv`         | `'-\|'`      | 先水平后垂直                   |
+| `DrawWay.Vh`         | `'\|-'`      | 先垂直后水平                   |
+| `DrawWay.Relative`   | 仅常量       | 非累积相对偏移                 |
+| `DrawWay.Accumulate` | 仅常量       | 累积相对偏移                   |
+
+## 相关
+
+- [Draw](/kernel/components/draw/overview)
+- [Step](/kernel/components/draw/step)

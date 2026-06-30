@@ -1,19 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+
+import type { PathCommand, ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
 import { compileToScene } from '../../src/compile/compile';
 import { definePathGenerator } from '../../src/contract/path';
 import { JsonObjectSchema, PathSchema } from '../../src/schemas';
-import type { IR } from '../../src/schemas';
-import type { PathCommand, ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 
 /** 取首个非 close 的 path primitive（generator 产的折线 / 曲线主体） */
-const firstDrawnPath = (
-  prims: Array<ScenePrimitive>,
-): Extract<ScenePrimitive, { type: 'path' }> | undefined =>
-  flattenPrims(prims).find(
-    (p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path',
-  );
+const firstDrawnPath = (prims: Array<ScenePrimitive>): Extract<ScenePrimitive, { type: 'path' }> | undefined =>
+  flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path');
 
 /** parabola 生成器：from→to + 一个 control，产单个 quad 命令；params.bend 为顶层 Target */
 const parabola = definePathGenerator({
@@ -47,9 +45,7 @@ const sin = definePathGenerator({
 /** 纯参数曲线（无 to）：固定一段 line */
 const fixedSegment = definePathGenerator({
   paramsSchema: z.object({ length: z.number() }),
-  generate: ({ from, params }) => [
-    { kind: 'line', to: [from[0] + (params.length as number), from[1]] },
-  ],
+  generate: ({ from, params }) => [{ kind: 'line', to: [from[0] + (params.length as number), from[1]] }],
 });
 
 describe('Path generator 注册面 — happy path', () => {
@@ -434,7 +430,7 @@ describe('Path generator step — JSON round-trip & zod 校验', () => {
     const parsed = PathSchema.parse(roundTripped);
     expect(parsed).toEqual(PathSchema.parse(path));
     // params JSON 内容保真
-    const genStep = parsed.children[1];
+    const genStep = parsed.children![1];
     expect(genStep.kind === 'generator' && genStep.params).toEqual({
       bend: { id: 'C' },
       coeff: 2.5,

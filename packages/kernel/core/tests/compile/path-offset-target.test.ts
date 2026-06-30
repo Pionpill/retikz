@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import { type IR, TargetSchema } from '../../src/schemas';
+
 import type { PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { TargetSchema } from '../../src/schemas';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
   const p = prims.find((x): x is PathPrim => x.type === 'path');
@@ -26,12 +29,8 @@ const firstMove = (prim: PathPrim): [number, number] => {
 
 describe('OffsetPosition: step.to schema 校验', () => {
   it('合法 OffsetPosition 通过 TargetSchema', () => {
-    expect(() =>
-      TargetSchema.parse({ of: 'A', offset: [10, 5] }),
-    ).not.toThrow();
-    expect(() =>
-      TargetSchema.parse({ of: [0, 0], offset: [10, 0] }),
-    ).not.toThrow();
+    expect(() => TargetSchema.parse({ of: 'A', offset: [10, 5] })).not.toThrow();
+    expect(() => TargetSchema.parse({ of: [0, 0], offset: [10, 0] })).not.toThrow();
     expect(() =>
       TargetSchema.parse({
         of: { origin: 'A', angle: 0, radius: 30 },
@@ -42,9 +41,7 @@ describe('OffsetPosition: step.to schema 校验', () => {
 
   it('TargetSchema 接受对象形态（笛卡尔 / polar / NodeTarget / relative / relativeAccumulate）', () => {
     expect(() => TargetSchema.parse([1, 2])).not.toThrow();
-    expect(() =>
-      TargetSchema.parse({ origin: 'A', angle: 0, radius: 30 }),
-    ).not.toThrow();
+    expect(() => TargetSchema.parse({ origin: 'A', angle: 0, radius: 30 })).not.toThrow();
     expect(() => TargetSchema.parse({ id: 'A' })).not.toThrow();
     expect(() => TargetSchema.parse({ relative: [1, 0] })).not.toThrow();
     expect(() => TargetSchema.parse({ relativeAccumulate: [1, 0] })).not.toThrow();

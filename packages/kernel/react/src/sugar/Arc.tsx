@@ -1,8 +1,12 @@
-import type { FC } from 'react';
 import type { IRStepLabel } from '@retikz/core';
+import type { FC } from 'react';
+
+import type { DslTarget } from '../kernel/Step';
+import type { AngleInput, PathVisualProps } from './_shared';
+
 import { Path } from '../kernel/Path';
-import { type DslTarget, Step } from '../kernel/Step';
-import { type AngleInput, type PathVisualProps, pickPathVisual, resolveAngles } from './_shared';
+import { Step } from '../kernel/Step';
+import { pickPathVisual, resolveAngles } from './_shared';
 
 /**
  * `<Arc>` 形态：圆弧（radius）/ 椭圆弧（radiusX/radiusY）；必给角度（startAngle / endAngle / sweepAngle 三选二）。
@@ -15,10 +19,7 @@ export type ArcProps = PathVisualProps &
     close?: 'open' | 'chord' | 'sector';
     /** 弧上边标注（透传到底层 step；`position` 缺省 midway，沿弧 startAngle..endAngle 线性映射） */
     label?: IRStepLabel;
-  } & (
-    | { center: DslTarget; radius: number }
-    | { center: DslTarget; radiusX: number; radiusY: number }
-  );
+  } & ({ center: DslTarget; radius: number } | { center: DslTarget; radiusX: number; radiusY: number });
 
 /**
  * Arc sugar——弧线（默认开放，可弦闭合 / 扇形闭合）

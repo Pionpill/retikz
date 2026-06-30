@@ -1,21 +1,33 @@
-import { compileToScene } from '@retikz/core';
 import type { IRPath, IRScope, IRStep } from '@retikz/core';
+
+import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 /** 笛卡尔默认画布；polar 用正方形 → outerRadius = min(w,h)/2 = 200、center = [200,200] */
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 const polarOpts: LowerPlotsOptions = { width: 400, height: 400 };
 
-const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options: LowerPlotsOptions): IRScope => {
+const expandOf = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options: LowerPlotsOptions,
+): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
-const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options: LowerPlotsOptions): IRScope =>
-  expandOf(spec, datasets, options).children[0] as IRScope;
+const firstLayer = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options: LowerPlotsOptions,
+): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 Path（无 color 时直接子或藏在子 Scope 里） */
 const collectPaths = (layer: IRScope): Array<IRPath> => {
@@ -23,7 +35,7 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'path') out.push(node);
+      if (node.type === 'path') out.push(child as IRPath);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -61,17 +73,35 @@ describe('lowerPlots area cartesian (ADR-03)', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'region', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, ...extra }],
+      marks: [
+        {
+          type: 'path',
+          closure: { kind: 'baseline' },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+          ...extra,
+        },
+      ],
     });
 
-  it('area_produces_single_fillable_path', () => {
+  it('area_closure_without_fill_is_unfilled', () => {
     const layer = firstLayer(areaSpec({ order: 'month' }), { sales: SALES }, cartOpts);
     const paths = collectPaths(layer);
     expect(paths).toHaveLength(1);
-    // 面积需要填充：path 或图层提供 fill（而非纯描边）
     const path = paths[0];
     const fill = path.fill ?? (layer.pathDefault as { fill?: unknown } | undefined)?.fill;
-    expect(fill).toBeTruthy();
+    expect(fill).toBeUndefined();
+  });
+
+  it('area_fill_can_be_enabled_explicitly', () => {
+    const layer = firstLayer(
+      areaSpec({ order: 'month', fill: { kind: 'constant', value: 'rgba(14, 165, 233, 0.22)' } }),
+      { sales: SALES },
+      cartOpts,
+    );
+    const path = collectPaths(layer)[0];
+    const fill = path.fill ?? (layer.pathDefault as { fill?: unknown } | undefined)?.fill;
+    expect(fill).toBe('rgba(14, 165, 233, 0.22)');
+    expect(isClosedSteps(path.children)).toBe(true);
   });
 
   it('area_starts_with_move_and_is_closed', () => {
@@ -93,7 +123,38 @@ describe('lowerPlots area cartesian (ADR-03)', () => {
 
   it('area_baseline_zero_return_edge_at_baseline', () => {
     // baseline 0 投影 y = 300（屏幕底）。回边上至少有一点贴 baseline y≈300
-    const path = collectPaths(firstLayer(areaSpec({ order: 'month', baseline: 0 }), { sales: SALES }, cartOpts))[0];
+    const path = collectPaths(
+      firstLayer(areaSpec({ order: 'month', closure: { kind: 'baseline', baseline: 0 } }), { sales: SALES }, cartOpts),
+    )[0];
+    const ys = path.children.filter(s => s.kind === 'move' || s.kind === 'line').map(s => stepPoint(s)[1]);
+    expect(Math.max(...ys)).toBeCloseTo(300, 6);
+  });
+
+  it('area_default_baseline_uses_value_domain_edge_when_zero_is_outside', () => {
+    const rows = [
+      { month: 0, revenue: 40 },
+      { month: 1, revenue: 60 },
+      { month: 2, revenue: 50 },
+    ];
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y', domain: [30, 70] },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'path',
+          order: 'month',
+          closure: { kind: 'baseline' },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+      ],
+    });
+    const path = collectPaths(firstLayer(spec, { sales: rows }, cartOpts))[0];
     const ys = path.children.filter(s => s.kind === 'move' || s.kind === 'line').map(s => stepPoint(s)[1]);
     expect(Math.max(...ys)).toBeCloseTo(300, 6);
   });
@@ -147,7 +208,15 @@ describe('lowerPlots area cartesian (ADR-03)', () => {
         { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'region', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } }],
+      marks: [
+        {
+          type: 'path',
+          series: 'city',
+          order: 't',
+          closure: { kind: 'baseline' },
+          encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } },
+        },
+      ],
     });
     const paths = collectPaths(firstLayer(spec, { t: TREND }, cartOpts));
     expect(paths).toHaveLength(2);
@@ -195,6 +264,146 @@ describe('lowerPlots line cartesian regression (ADR-03)', () => {
     const path = collectPaths(firstLayer(lineSpec({ closed: true }), { sales: SALES }, cartOpts))[0];
     expect(isClosedSteps(path.children)).toBe(true);
   });
+
+  it('line_missing_points_split_into_multiple_core_paths_by_default', () => {
+    const rows = [
+      { month: 0, revenue: 10 },
+      { month: 1, revenue: 12 },
+      { month: 2, revenue: null },
+      { month: 3, revenue: 9 },
+      { month: 4, revenue: 11 },
+    ];
+    const paths = collectPaths(firstLayer(lineSpec(), { sales: rows }, cartOpts));
+    expect(paths).toHaveLength(2);
+    expect(paths.map(path => path.children.filter(step => step.kind === 'move').length)).toEqual([1, 1]);
+    expect(paths.map(path => path.children.filter(step => step.kind === 'line').length)).toEqual([1, 1]);
+  });
+
+  it('line_connect_nulls_keeps_previous_skip_and_connect_behavior', () => {
+    const rows = [
+      { month: 0, revenue: 10 },
+      { month: 1, revenue: 12 },
+      { month: 2, revenue: null },
+      { month: 3, revenue: 9 },
+      { month: 4, revenue: 11 },
+    ];
+    const paths = collectPaths(firstLayer(lineSpec({ connectNulls: true }), { sales: rows }, cartOpts));
+    expect(paths).toHaveLength(1);
+    expect(paths[0].children.filter(step => step.kind === 'move')).toHaveLength(1);
+    expect(paths[0].children.filter(step => step.kind === 'line')).toHaveLength(3);
+  });
+});
+
+describe('lowerPlots path closure cartesian', () => {
+  const SERIES = [
+    { x: 0, y: 10, y0: 0, y1: 3 },
+    { x: 1, y: 14, y0: 1, y1: 4 },
+    { x: 2, y: 12, y0: 2, y1: 6 },
+  ];
+  const pathSpec = (extra: Record<string, unknown> = {}): PlotSpec =>
+    PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'series' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'path', order: 'x', encoding: { x: { field: 'x' }, y: { field: 'y' } }, ...extra }],
+    });
+
+  it('path_closure_baseline_produces_fillable_closed_path', () => {
+    const layer = firstLayer(
+      pathSpec({
+        closure: { kind: 'baseline', baseline: 8 },
+        fill: { kind: 'constant', value: 'rgba(14, 165, 233, 0.22)' },
+      }),
+      { series: SERIES },
+      cartOpts,
+    );
+    const [path] = collectPaths(layer);
+    const fill = path.fill ?? (layer.pathDefault as { fill?: unknown } | undefined)?.fill;
+    expect(fill).toBeTruthy();
+    expect(isClosedSteps(path.children)).toBe(true);
+    const ys = path.children.filter(s => s.kind === 'move' || s.kind === 'line').map(s => stepPoint(s)[1]);
+    expect(Math.max(...ys)).toBeCloseTo(300, 6);
+  });
+
+  it('path_closure_baseline_can_disable_stroke', () => {
+    const layer = firstLayer(
+      pathSpec({ closure: { kind: 'baseline', baseline: 8 }, stroke: { kind: 'constant', value: 'none' } }),
+      { series: SERIES },
+      cartOpts,
+    );
+    const path = collectPaths(layer)[0];
+    expect(path.stroke ?? layer.pathDefault?.stroke).toBe('none');
+    expect(isClosedSteps(path.children)).toBe(true);
+  });
+
+  it('path_closure_baseline_keeps_curve_steps_on_upper_outline', () => {
+    const path = collectPaths(
+      firstLayer(
+        pathSpec({ curve: 'monotoneX', closure: { kind: 'baseline', baseline: 8 } }),
+        { series: SERIES },
+        cartOpts,
+      ),
+    )[0];
+    expect(path.children.some(step => step.kind === 'cubic')).toBe(true);
+    expect(path.children[path.children.length - 1].kind).toBe('cycle');
+  });
+
+  it('path_closure_baseline_splits_fill_at_missing_points', () => {
+    const rows = [
+      { x: 0, y: 10 },
+      { x: 1, y: 12 },
+      { x: 2, y: null },
+      { x: 3, y: 9 },
+      { x: 4, y: 11 },
+    ];
+    const layer = firstLayer(
+      pathSpec({
+        closure: { kind: 'baseline', baseline: 8 },
+        fill: { kind: 'constant', value: 'rgba(14, 165, 233, 0.22)' },
+        stroke: { kind: 'constant', value: 'none' },
+      }),
+      { series: rows },
+      cartOpts,
+    );
+    const paths = collectPaths(layer);
+    expect(paths).toHaveLength(2);
+    for (const path of paths) expect(isClosedSteps(path.children)).toBe(true);
+    expect(
+      paths.every(
+        path =>
+          (path.fill ?? (layer.pathDefault as { fill?: unknown } | undefined)?.fill) === 'rgba(14, 165, 233, 0.22)',
+      ),
+    ).toBe(true);
+  });
+
+  it('path_closure_stack_uses_per_row_baseline_field', () => {
+    const spec = pathSpec({
+      closure: { kind: 'stack', baselineField: 'y0' },
+      encoding: { x: { field: 'x' }, y: { field: 'y1' } },
+    });
+    const path = collectPaths(firstLayer(spec, { series: SERIES }, cartOpts))[0];
+    expect(isClosedSteps(path.children)).toBe(true);
+    const linePoints = path.children.filter(s => s.kind === 'move' || s.kind === 'line').map(stepPoint);
+    const stackReturnEnd = linePoints.find(([x, y]) => Math.abs(x - 480) < 1e-6 && y > 100);
+    expect(stackReturnEnd?.[1]).toBeCloseTo(200, 6);
+    const stackReturnStart = linePoints.find(([x, y]) => Math.abs(x) < 1e-6 && y > 250);
+    expect(stackReturnStart?.[1]).toBeCloseTo(300, 6);
+  });
+
+  it('path_closure_stack_applies_curve_to_return_edge', () => {
+    const spec = pathSpec({
+      curve: 'cardinal',
+      closure: { kind: 'stack', baselineField: 'y0' },
+      encoding: { x: { field: 'x' }, y: { field: 'y1' } },
+    });
+    const path = collectPaths(firstLayer(spec, { series: SERIES }, cartOpts))[0];
+    expect(path.children.filter(step => step.kind === 'cubic')).toHaveLength(4);
+  });
 });
 
 // ── polar line：连续角轴段内采样、分类角轴走弦 ───────────────────────────
@@ -217,16 +426,27 @@ describe('lowerPlots line polar sampling (ADR-03)', () => {
       marks: [{ type: 'path', order: 'a', encoding: { x: { field: 'a' }, y: { field: 'r' } }, ...extra }],
     });
 
+  it('polar_path_defaults_to_closed', () => {
+    const path = collectPaths(firstLayer(polarLineSpec(), { d: POLAR }, polarOpts))[0];
+    expect(isClosedSteps(path.children)).toBe(true);
+  });
+
+  it('polar_monotone_curve_falls_back_to_linear_steps', () => {
+    const path = collectPaths(firstLayer(polarLineSpec({ curve: 'monotoneY' }), { d: POLAR }, polarOpts))[0];
+    expect(path.children.some(step => step.kind === 'cubic' || step.kind === 'smooth')).toBe(false);
+    expect(path.children.some(step => step.kind === 'line')).toBe(true);
+  });
+
   it('polar_continuous_axis_densifies_segment', () => {
     // 连续角轴 + 非 closed：相邻顶点大角差 → 段内插值中间点（points 数 > 顶点数 2）
-    const path = collectPaths(firstLayer(polarLineSpec(), { d: POLAR }, polarOpts))[0];
+    const path = collectPaths(firstLayer(polarLineSpec({ closed: false }), { d: POLAR }, polarOpts))[0];
     const points = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
     expect(points.length).toBeGreaterThan(2);
   });
 
   it('polar_sampled_points_lie_on_projected_arc', () => {
     // 采样点在 [θ,r] 空间线性插值后反投影：半径插值 → 到圆心距离介于两端半径之间且单调
-    const path = collectPaths(firstLayer(polarLineSpec(), { d: POLAR }, polarOpts))[0];
+    const path = collectPaths(firstLayer(polarLineSpec({ closed: false }), { d: POLAR }, polarOpts))[0];
     const center = [200, 200];
     const radii = path.children
       .filter(s => s.kind === 'move' || s.kind === 'line')
@@ -332,6 +552,11 @@ describe('lowerPlots area polar (ADR-03)', () => {
     { dim: 'b', value: 8 },
     { dim: 'c', value: 6 },
   ];
+  const STACK = [
+    { dim: 'a', y0: 0, y1: 4 },
+    { dim: 'b', y0: 0, y1: 8 },
+    { dim: 'c', y0: 0, y1: 6 },
+  ];
   const polarAreaSpec = (extra: Record<string, unknown> = {}): PlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
@@ -342,21 +567,53 @@ describe('lowerPlots area polar (ADR-03)', () => {
         { type: 'point', name: 'a' },
         { type: 'linear', name: 'r' },
       ],
-      marks: [{ type: 'region', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } }, ...extra }],
+      marks: [
+        {
+          type: 'path',
+          closure: { kind: 'baseline', baseline: 0 },
+          encoding: { x: { field: 'dim' }, y: { field: 'value' } },
+          ...extra,
+        },
+      ],
+    });
+  const polarStackSpec = (extra: Record<string, unknown> = {}): PlotSpec =>
+    PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'm' },
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+      scales: [
+        { type: 'point', name: 'a' },
+        { type: 'linear', name: 'r' },
+      ],
+      marks: [
+        {
+          type: 'path',
+          closure: { kind: 'stack', baselineField: 'y0' },
+          encoding: { x: { field: 'dim' }, y: { field: 'y1' } },
+          ...extra,
+        },
+      ],
     });
 
   it('polar_area_is_fillable_closed_path', () => {
-    const layer = firstLayer(polarAreaSpec(), { m: METRICS }, polarOpts);
+    const layer = firstLayer(
+      polarAreaSpec({ fill: { kind: 'constant', value: 'rgba(16, 185, 129, 0.22)' } }),
+      { m: METRICS },
+      polarOpts,
+    );
     const path = collectPaths(layer)[0];
     expect(path.children[0].kind).toBe('move');
     expect(isClosedSteps(path.children)).toBe(true);
     const fill = path.fill ?? (layer.pathDefault as { fill?: unknown } | undefined)?.fill;
-    expect(fill).toBeTruthy();
+    expect(fill).toBe('rgba(16, 185, 129, 0.22)');
   });
 
   it('polar_area_return_edge_at_inner_baseline', () => {
     // baseline 0 → 径向内界（radiusScale(0) = innerRadius 0 = 圆心方向）。回边点贴近圆心
-    const path = collectPaths(firstLayer(polarAreaSpec({ baseline: 0 }), { m: METRICS }, polarOpts))[0];
+    const path = collectPaths(
+      firstLayer(polarAreaSpec({ closure: { kind: 'baseline', baseline: 0 } }), { m: METRICS }, polarOpts),
+    )[0];
     const center = [200, 200];
     const radii = path.children
       .filter(s => s.kind === 'move' || s.kind === 'line')
@@ -366,6 +623,56 @@ describe('lowerPlots area polar (ADR-03)', () => {
       });
     // baseline 回边至少一点贴圆心（半径 ≈ 0）
     expect(Math.min(...radii)).toBeCloseTo(0, 6);
+  });
+
+  it('polar_area_default_baseline_uses_radius_domain_edge_when_zero_is_outside', () => {
+    const rows = [
+      { dim: 'a', value: 40 },
+      { dim: 'b', value: 60 },
+      { dim: 'c', value: 50 },
+    ];
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'm' },
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+      scales: [
+        { type: 'point', name: 'a' },
+        { type: 'linear', name: 'r', domain: [30, 70] },
+      ],
+      marks: [
+        { type: 'path', closure: { kind: 'baseline' }, encoding: { x: { field: 'dim' }, y: { field: 'value' } } },
+      ],
+    });
+    const path = collectPaths(firstLayer(spec, { m: rows }, polarOpts))[0];
+    const center = [200, 200];
+    const radii = path.children
+      .filter(s => s.kind === 'move' || s.kind === 'line')
+      .map(s => {
+        const [x, y] = stepPoint(s);
+        return Math.hypot(x - center[0], y - center[1]);
+      });
+    expect(Math.min(...radii)).toBeCloseTo(0, 6);
+  });
+
+  it('polar_stack_area_defaults_to_closed_loop', () => {
+    const path = collectPaths(firstLayer(polarStackSpec(), { m: STACK }, polarOpts))[0];
+    expect(isClosedSteps(path.children)).toBe(true);
+    const lineSteps = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
+    expect(lineSteps.length).toBeGreaterThan(STACK.length * 2);
+  });
+
+  it('polar_stack_area_monotone_curve_falls_back_to_linear_steps', () => {
+    const path = collectPaths(firstLayer(polarStackSpec({ curve: 'monotoneY' }), { m: STACK }, polarOpts))[0];
+    expect(path.children.some(step => step.kind === 'cubic' || step.kind === 'smooth')).toBe(false);
+    expect(path.children.some(step => step.kind === 'line')).toBe(true);
+  });
+
+  it('polar_stack_area_respects_closed_false', () => {
+    const path = collectPaths(firstLayer(polarStackSpec({ closed: false }), { m: STACK }, polarOpts))[0];
+    expect(isClosedSteps(path.children)).toBe(true);
+    const lineSteps = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
+    expect(lineSteps.length).toBe(STACK.length * 2);
   });
 
   it('polar_area_compiles_to_scene', () => {

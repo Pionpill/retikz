@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
 
 const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
 const silent = { onWarn: () => {} };

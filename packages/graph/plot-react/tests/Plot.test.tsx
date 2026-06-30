@@ -1,9 +1,12 @@
+import type { ExternalDatasets, PlotSpec } from '@retikz/plot';
+
+import { lowerPlots } from '@retikz/plot';
+import { Layout } from '@retikz/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
-import { Layout } from '@retikz/react';
-import { type ExternalDatasets, type PlotSpec, lowerPlots } from '@retikz/plot';
-import { Axis, IntervalMark, PathMark, Plot } from '../src';
+
+import { Axis, IntervalMark, PathMark, Plot, PointMark } from '../src';
 
 const spec: PlotSpec = {
   namespace: 'plot',
@@ -120,6 +123,30 @@ describe('<Plot spec data> 薄包装', () => {
 
     expect(svg).toContain('<svg');
     expect(svg).toContain('transform="translate(10 20)"');
+  });
+
+  it('DSL 入口透传 mark transform shortcut 生成的普通 transform', () => {
+    const svg = renderToStaticMarkup(
+      <Plot
+        data={[
+          { x: 0, value: 2 },
+          { x: 1, value: 3 },
+        ]}
+        width={300}
+        height={220}
+        markTransformShortcuts={[
+          {
+            markType: 'point',
+            build: () => [{ kind: 'normalize', field: 'value', as: 'share' }],
+          },
+        ]}
+      >
+        <PointMark x="x" y="share" />
+      </Plot>,
+    );
+
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('<ellipse');
   });
 
   it('嵌入态默认使用 id 作为 DSL 数据集引用，显式 dataRef 可共享数据源', () => {

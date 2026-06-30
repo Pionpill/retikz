@@ -5,15 +5,14 @@
  *   scope.id 作为 polar / at / offset referent 取 bbox 中心。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import {
-  computeScopeBoundingBox,
-  registerScopeAsLayout,
-} from '../../src/compile/scope';
+
 import type { CompileWarning, IR, ScenePrimitive } from '../../src';
 import type { NodeLayout } from '../../src/compile/node';
-import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import type { TextMeasurer } from '../../src/compile/text-metrics';
+
+import { compileToScene } from '../../src/compile/compile';
+import { computeScopeBoundingBox, registerScopeAsLayout } from '../../src/compile/scope';
+import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const scene = (children: IR['children']): IR => ({
   version: 1,
@@ -54,11 +53,7 @@ describe('computeScopeBoundingBox / registerScopeAsLayout 单元测试', () => {
   });
 
   it('3 个 0×0 单点 layout → bbox 包 3 点的 AABB', () => {
-    const bbox = computeScopeBoundingBox([
-      layoutAt(0, 0, 0, 0),
-      layoutAt(40, 30, 0, 0),
-      layoutAt(80, -20, 0, 0),
-    ]);
+    const bbox = computeScopeBoundingBox([layoutAt(0, 0, 0, 0), layoutAt(40, 30, 0, 0), layoutAt(80, -20, 0, 0)]);
     expect(bbox).not.toBeNull();
     // x 范围 [0, 80]，y 范围 [-20, 30]
     expect(bbox!.x).toBeCloseTo(40, 5);
@@ -91,11 +86,7 @@ describe('computeScopeBoundingBox / registerScopeAsLayout 单元测试', () => {
   });
 
   it('registerScopeAsLayout(bbox=有效) → rect 字段反映 bbox', () => {
-    const layout = registerScopeAsLayout(
-      'g',
-      { x: 100, y: 50, width: 80, height: 60 },
-      [0, 0],
-    );
+    const layout = registerScopeAsLayout('g', { x: 100, y: 50, width: 80, height: 60 }, [0, 0]);
     expect(layout.rect.x).toBe(100);
     expect(layout.rect.y).toBe(50);
     expect(layout.rect.width).toBe(80);

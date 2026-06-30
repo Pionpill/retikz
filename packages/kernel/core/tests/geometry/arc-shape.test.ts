@@ -11,11 +11,13 @@
  *   paramsSchema / scaleParams / round-trip / zod 错误类 case 此刻应通过。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
-import type { IR } from '../../src/schemas';
-import { arc } from '../../src/providers/shape';
+
 import type { ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { arc } from '../../src/providers/shape';
+import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
@@ -26,9 +28,12 @@ const findByType = <T extends ScenePrimitive['type']>(
 ): Extract<ScenePrimitive, { type: T }> | undefined =>
   flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
 
-const arcNode = (
-  params: { radius: number; startAngle: number; endAngle: number; close?: boolean },
-): IR['children'][number] => ({
+const arcNode = (params: {
+  radius: number;
+  startAngle: number;
+  endAngle: number;
+  close?: boolean;
+}): IR['children'][number] => ({
   type: 'node',
   id: 'a',
   position: [0, 0],
@@ -46,9 +51,7 @@ describe('arc — happy path', () => {
   });
 
   it('arc_close：close:true → 闭合弓形（path 含 close 命令、可填充）', () => {
-    const compiled = compileToScene(
-      scene([arcNode({ radius: 50, startAngle: 30, endAngle: 150, close: true })]),
-    );
+    const compiled = compileToScene(scene([arcNode({ radius: 50, startAngle: 30, endAngle: 150, close: true })]));
     const path = findByType(compiled.primitives, 'path');
     expect(path).toBeDefined();
     expect(path!.commands.some(c => c.kind === 'close')).toBe(true);
@@ -58,9 +61,7 @@ describe('arc — happy path', () => {
     // 巨型起始角下旧 while 循环（end += 360）退化成数百万次迭代（1e308 时浮点 end+360===end 直接挂死）；
     // O(1) 规范化 + axisAngles 守卫下编译应在毫秒级返回，且 layout 四值全 finite。
     const start = Date.now();
-    const compiled = compileToScene(
-      scene([arcNode({ radius: 50, startAngle: 1e9, endAngle: 1e9 + 90 })]),
-    );
+    const compiled = compileToScene(scene([arcNode({ radius: 50, startAngle: 1e9, endAngle: 1e9 + 90 })]));
     expect(Date.now() - start).toBeLessThan(1000);
     expect(Number.isFinite(compiled.layout.width)).toBe(true);
     expect(Number.isFinite(compiled.layout.height)).toBe(true);
@@ -97,9 +98,7 @@ describe('arc — paramsSchema 校验', () => {
   });
 
   it('strictObject 多余字段 → reject', () => {
-    expect(() =>
-      arc.paramsSchema.parse({ radius: 50, startAngle: 0, endAngle: 90, foo: 1 }),
-    ).toThrow();
+    expect(() => arc.paramsSchema.parse({ radius: 50, startAngle: 0, endAngle: 90, foo: 1 })).toThrow();
   });
 });
 

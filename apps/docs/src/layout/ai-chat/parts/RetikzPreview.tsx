@@ -1,28 +1,19 @@
+import type { IR } from '@retikz/core';
+import type { ErrorInfo, FC, ReactElement, ReactNode } from 'react';
+
+import { SceneSchema } from '@retikz/core';
+import { convertReactNodeToIR, Layout } from '@retikz/react';
 import { AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
-import {
-  type ErrorInfo,
-  type FC,
-  Component as ReactComponent,
-  type ReactElement,
-  type ReactNode,
-  cloneElement,
-  isValidElement,
-  useMemo,
-  useState,
-} from 'react';
+import { cloneElement, Component as ReactComponent, isValidElement, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import type { ComponentRenderSource } from '@/components/shared/component-preview';
+
+import { ComponentRender, formatIR } from '@/components/shared/component-preview';
 import { CodeBlock } from '@/components/shared/highlight-code';
-import {
-  ComponentRender,
-  type ComponentRenderSource,
-  formatIR,
-} from '@/components/shared/component-preview';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { parseRetikzJsx } from '@/lib/jsx-to-ir';
-import { type IR, SceneSchema } from '@retikz/core';
-import { Layout, convertReactNodeToIR } from '@retikz/react';
+import { cn } from '@/lib/utils';
 
 import { formatZodError } from '../retikz-validation';
 
@@ -70,7 +61,11 @@ const resolveIr = (source: string): Resolved => {
   // 强制传 width/height：SVG 不带 width/height attr 时 flex 容器里浏览器算 intrinsic size 不一致（Chrome 偶尔 0×0），导致看似"没渲染"
   const Component: FC = () => <Layout ir={ir} width={DEFAULT_TIKZ_WIDTH} height={DEFAULT_TIKZ_HEIGHT} />;
   // 只给 IR 视图（单视图、不出 toggle）；无 render thunk → 渲染走 Component（即 <Layout ir>）
-  return { ok: true, Component, renderSource: { ir: { files: [{ filename: 'scene.ir.json', code: formatIR(ir), lang: 'json' }] } } };
+  return {
+    ok: true,
+    Component,
+    renderSource: { ir: { files: [{ filename: 'scene.ir.json', code: formatIR(ir), lang: 'json' }] } },
+  };
 };
 
 const resolveTsx = (source: string): Resolved => {
@@ -117,10 +112,7 @@ export const RetikzPreview: FC<RetikzPreviewProps> = props => {
     // AI 经常用 retikz-tsx 围栏块写"改动片段"（裸的几行 <Node>，不带 <Layout> 外壳）来说明 diff——
     // 这种情况 parser 报 "Adjacent JSX elements must be wrapped in an enclosing tag"。
     // 降级成 plain code block：用户看的是改动片段，不是要再跑一次预览
-    if (
-      resolved.errorKind === 'tsx' &&
-      /Adjacent JSX elements must be wrapped/i.test(resolved.errorDetail)
-    ) {
+    if (resolved.errorKind === 'tsx' && /Adjacent JSX elements must be wrapped/i.test(resolved.errorDetail)) {
       // w-full + min-w-0 + overflow-hidden 三件套防止长代码行撑宽 AI 侧栏，内部 pre 自带横向滚动
       return (
         <div className="my-3 w-full min-w-0 max-w-full overflow-hidden">
@@ -168,10 +160,7 @@ type RetikzRenderErrorBoundaryProps = {
 
 type RetikzRenderErrorBoundaryState = { error: Error | null };
 
-class RetikzRenderErrorBoundary extends ReactComponent<
-  RetikzRenderErrorBoundaryProps,
-  RetikzRenderErrorBoundaryState
-> {
+class RetikzRenderErrorBoundary extends ReactComponent<RetikzRenderErrorBoundaryProps, RetikzRenderErrorBoundaryState> {
   override state: RetikzRenderErrorBoundaryState = { error: null };
 
   static getDerivedStateFromError(error: Error): RetikzRenderErrorBoundaryState {
@@ -222,9 +211,7 @@ const RetikzPreviewError: FC<RetikzPreviewErrorProps> = props => {
           type="button"
           variant="ghost"
           size="sm"
-          className={cn(
-            'h-6 cursor-pointer gap-1 px-2 text-xs text-muted-foreground hover:text-foreground',
-          )}
+          className={cn('h-6 cursor-pointer gap-1 px-2 text-xs text-muted-foreground hover:text-foreground')}
           onClick={() => setExpanded(prev => !prev)}
         >
           {expanded ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}

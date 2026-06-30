@@ -1,7 +1,12 @@
 import type { IRNode, IRScope } from '@retikz/core';
+
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
@@ -30,7 +35,19 @@ const ternarySpec = (extra: Record<string, unknown> = {}): PlotSpec =>
   });
 
 const pureVertices = (): { vx: [number, number]; vy: [number, number]; vz: [number, number] } => {
-  const positions = positionsOf(firstLayer(ternarySpec(), { d: [{ x: 1, y: 0, z: 0 }, { x: 0, y: 1, z: 0 }, { x: 0, y: 0, z: 1 }] }, opts));
+  const positions = positionsOf(
+    firstLayer(
+      ternarySpec(),
+      {
+        d: [
+          { x: 1, y: 0, z: 0 },
+          { x: 0, y: 1, z: 0 },
+          { x: 0, y: 0, z: 1 },
+        ],
+      },
+      opts,
+    ),
+  );
   return { vx: positions[0], vy: positions[1], vz: positions[2] };
 };
 
@@ -60,7 +77,10 @@ describe('ternary2D barycentric projection', () => {
 
   it('non_normalized_triple_normalized', () => {
     const { vx, vy, vz } = pureVertices();
-    const expected: [number, number] = [0.5 * vx[0] + 0.3 * vy[0] + 0.2 * vz[0], 0.5 * vx[1] + 0.3 * vy[1] + 0.2 * vz[1]];
+    const expected: [number, number] = [
+      0.5 * vx[0] + 0.3 * vy[0] + 0.2 * vz[0],
+      0.5 * vx[1] + 0.3 * vy[1] + 0.2 * vz[1],
+    ];
     const [p] = positionsOf(firstLayer(ternarySpec(), { d: [{ x: 50, y: 30, z: 20 }] }, opts));
     expect(p[0]).toBeCloseTo(expected[0], 4);
     expect(p[1]).toBeCloseTo(expected[1], 4);
@@ -75,7 +95,11 @@ describe('ternary2D barycentric projection', () => {
   });
 
   it('multiple_points_placed', () => {
-    const rows = [{ x: 1, y: 1, z: 1 }, { x: 2, y: 1, z: 1 }, { x: 1, y: 2, z: 1 }];
+    const rows = [
+      { x: 1, y: 1, z: 1 },
+      { x: 2, y: 1, z: 1 },
+      { x: 1, y: 2, z: 1 },
+    ];
     expect(positionsOf(firstLayer(ternarySpec(), { d: rows }, opts))).toHaveLength(3);
   });
 });
@@ -86,7 +110,9 @@ describe('ternary2D fail-loud', () => {
   });
 
   it('negative_component_fails_loud', () => {
-    expect(() => expandOf(ternarySpec(), { d: [{ x: -1, y: 1, z: 1 }] }, opts)).toThrow(/ternary|non-negative|negative/i);
+    expect(() => expandOf(ternarySpec(), { d: [{ x: -1, y: 1, z: 1 }] }, opts)).toThrow(
+      /ternary|non-negative|negative/i,
+    );
   });
 
   it('sum_overflow_fails_loud', () => {
@@ -124,7 +150,11 @@ describe('ternary2D fail-loud', () => {
         },
       ],
     });
-    const layer = firstLayer(spec, { d: [{ x: 1, y: 1, z: 1, x0: 0.2, x1: 0.8, y0: 0.1, y1: 0.7, z0: 0.1, z1: 0.7 }] }, opts);
+    const layer = firstLayer(
+      spec,
+      { d: [{ x: 1, y: 1, z: 1, x0: 0.2, x1: 0.8, y0: 0.1, y1: 0.7, z0: 0.1, z1: 0.7 }] },
+      opts,
+    );
     const [node] = layer.children as Array<IRNode>;
     expect(typeof node.shape).toBe('object');
     if (typeof node.shape !== 'object') throw new Error('expected contour shape object');
@@ -134,15 +164,17 @@ describe('ternary2D fail-loud', () => {
 
   it('angle_dimension_rejected_by_coordinate_definition_roles', () => {
     const spec = PlotSpecSchema.parse({
-        namespace: 'plot',
-        type: 'plot',
-        data: { reference: 'd' },
-        scales: [],
-        coordinate: { type: 'ternary2D' },
-        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' } } }],
-        guides: [{ type: 'axis', dimension: 'angle' }],
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [],
+      coordinate: { type: 'ternary2D' },
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' } } }],
+      guides: [{ type: 'axis', dimension: 'angle' }],
     });
-    expect(() => expandOf(spec, { d: [{ x: 1, y: 1, z: 1 }] }, opts)).toThrow(/does not support axis dimension "angle"/);
+    expect(() => expandOf(spec, { d: [{ x: 1, y: 1, z: 1 }] }, opts)).toThrow(
+      /does not support axis dimension "angle"/,
+    );
   });
 });
 
@@ -195,7 +227,16 @@ describe('ternary2D guide + color', () => {
         { type: 'axis', dimension: 'z' },
       ],
     });
-    const root = expandOf(spec, { d: [{ x: 1, y: 1, z: 1 }, { x: 2, y: 1, z: 1 }] }, opts);
+    const root = expandOf(
+      spec,
+      {
+        d: [
+          { x: 1, y: 1, z: 1 },
+          { x: 2, y: 1, z: 1 },
+        ],
+      },
+      opts,
+    );
     expect(root.children.length).toBeGreaterThanOrEqual(4);
   });
 
@@ -206,9 +247,24 @@ describe('ternary2D guide + color', () => {
       data: { reference: 'd' },
       scales: [{ type: 'ordinal', name: 'col', range: ['#aa', '#bb'] }],
       coordinate: { type: 'ternary2D' },
-      marks: [{ type: 'point', color: { kind: 'field', value: 'region', scale: 'col' }, encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' } } }],
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'region', scale: 'col' },
+          encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' } },
+        },
+      ],
     });
-    const layer = firstLayer(spec, { d: [{ x: 1, y: 1, z: 1, region: 'X' }, { x: 2, y: 1, z: 1, region: 'Y' }] }, opts);
+    const layer = firstLayer(
+      spec,
+      {
+        d: [
+          { x: 1, y: 1, z: 1, region: 'X' },
+          { x: 2, y: 1, z: 1, region: 'Y' },
+        ],
+      },
+      opts,
+    );
     expect(layer.children).toHaveLength(2);
   });
 });

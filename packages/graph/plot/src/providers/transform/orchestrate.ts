@@ -1,4 +1,5 @@
 import { JsonObjectSchema } from '@retikz/core';
+
 import { type AnyTransformDefinition, type FieldCollector, type TransformContext } from '../../contract';
 import { type ExternalRow, type TransformOperation } from '../../schemas';
 import { DEFAULT_TRANSFORM_CONTEXT, resolveTransformRegistry } from './definitions';
@@ -12,25 +13,36 @@ const parseTransformOperation = (definition: AnyTransformDefinition, operation: 
 };
 
 /** 查找 transform definition；未知 kind 必须 fail-loud，避免静默跳过结构性数据变换。 */
-const transformDefinitionOf = (operation: TransformOperation, registry: ReadonlyMap<string, AnyTransformDefinition>): AnyTransformDefinition => {
+const transformDefinitionOf = (
+  operation: TransformOperation,
+  registry: ReadonlyMap<string, AnyTransformDefinition>,
+): AnyTransformDefinition => {
   const definition = registry.get(operation.kind);
   if (definition === undefined) {
-    throw new Error(`lowerPlots: transform kind "${operation.kind}" is not registered; pass a TransformDefinition via options.transformDefinitions`);
+    throw new Error(
+      `lowerPlots: transform kind "${operation.kind}" is not registered; pass a TransformDefinition via options.transformDefinitions`,
+    );
   }
   return definition;
 };
 
 /** 收集 transform 读取的源字段，并登记 transform 派生输出字段以供 strict model 排除。 */
-export const collectTransformFields = (transform: TransformOperation, fields: FieldCollector, derivedOutputs: Set<string>, registry: ReadonlyMap<string, AnyTransformDefinition> = resolveTransformRegistry()): void => {
+export const collectTransformFields = (
+  transform: TransformOperation,
+  fields: FieldCollector,
+  derivedOutputs: Set<string>,
+  registry: ReadonlyMap<string, AnyTransformDefinition> = resolveTransformRegistry(),
+  context: TransformContext = DEFAULT_TRANSFORM_CONTEXT,
+): void => {
   const definition = transformDefinitionOf(transform, registry);
   const parsed = parseTransformOperation(definition, transform);
-  fields.addFields(...(definition.inputFields?.(parsed) ?? []));
-  for (const output of definition.outputFields?.(parsed) ?? []) derivedOutputs.add(output);
+  fields.addFields(...(definition.inputFields?.(parsed, context) ?? []));
+  for (const output of definition.outputFields?.(parsed, context) ?? []) derivedOutputs.add(output);
 };
 
 /**
  * 按声明顺序折叠应用 transform。
- * @description sort / stack / normalize / derive-interval / jitter 保行数；bin / aggregate 改行数。
+ * @description sort / stack / normalize / derive-interval / jitter 保行数；bin / summarize 改行数。
  */
 export const applyTransforms = (
   rows: Array<ExternalRow>,

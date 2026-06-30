@@ -1,8 +1,13 @@
+import type { FC } from 'react';
+
+import { Check, Copy, Terminal } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import type { PkgManager } from '@/store/use-pkg-manager-store';
+
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { type PkgManager, usePkgManagerStore } from '@/store/use-pkg-manager-store';
-import { Check, Copy, Terminal } from 'lucide-react';
-import { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { usePkgManagerStore } from '@/store/use-pkg-manager-store';
 
 export type CodeBlockCommandProps = {
   pnpm?: string;

@@ -1,9 +1,10 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * 核心理念文章插图：IR 居中的流水线
- * @description 与 /core/introduction 的 ir-centric 图对齐——4 路输入 → IR ↔ Scene → 4 路输出（hourglass），所有节点 stroke="none" 当文字锚点，Draw 按 bbox 自动贴边；IR 与"持久化 / 编辑"双向箭头表示 IR 是可读写持久层。
+ * @description 与 /kernel/introduction 的 ir-centric 图对齐——4 路输入 → IR ↔ Scene → 4 路输出（hourglass），所有节点 stroke="none" 当文字锚点，Draw 按 bbox 自动贴边；IR 与"持久化 / 编辑"双向箭头表示 IR 是可读写持久层。
  *   已落地的部分用默认色（currentColor），规划中 / 未实现的（Text DSL、React 以外的 adapter）用灰色弱化。
  */
 const Demo: FC = () => (

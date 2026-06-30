@@ -34,7 +34,7 @@ const diagramProtocolZh = (preference: DiagramFormatPreference): string => {
 
 ### ⚠️ 写图前**必须先看下面这段 Schema 速查**
 
-retikz 是新库，字段名与 TikZ / d3 / mermaid / "你训练时见过的某个 graph 库"**都不一致**。下面是 IR 顶层骨架；细节字段缺失时再查 \`/core/reference/schema/*\` 页面。**不要凭训练记忆编字段名（如 \`entities\`、\`paths\`、\`nodes\`、\`edges\` 这些都不存在）**。
+retikz 是新库，字段名与 TikZ / d3 / mermaid / "你训练时见过的某个 graph 库"**都不一致**。下面是 IR 顶层骨架；细节字段缺失时再查 \`/kernel/reference/schema/*\` 页面。**不要凭训练记忆编字段名（如 \`entities\`、\`paths\`、\`nodes\`、\`edges\` 这些都不存在）**。
 
 \`\`\`
 Scene = {
@@ -110,11 +110,11 @@ Coordinate = {
 
 需要 polar 坐标 / 多段 path / Node 锚点 / Draw way DSL / EdgeLabel / 弧 / 扇形等更深字段时，下面页面给出权威字段表（用 markdown 链接引用即可，path 以 / 开头）：
 
-- 定位：\`/core/concepts/basic/position\` · \`/core/reference/schema/placement\`
-- IR：\`/core/reference/schema/scene\` · \`.../entity\` · \`.../path\`
-- 组件：\`/core/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
-- 形状 sugar：\`/core/components/shapes/circle-ellipse\`
-- 完整范例：\`/core/examples/karl-circle\`
+- 定位：\`/kernel/concepts/basic/position\` · \`/kernel/reference/schema/placement\`
+- IR：\`/kernel/reference/schema/scene\` · \`.../entity\` · \`.../path\`
+- 组件：\`/kernel/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
+- 形状 sugar：\`/kernel/components/shapes/circle-ellipse\`
+- 完整范例：\`/kernel/examples/karl-circle\`
 
 这些页面已经收录在 prompt 末尾的 llms.txt 索引里。Schema 不熟时**务必参照上面速查 + 引用页面**，不要凭记忆瞎写——产出非法 IR 会被自动校验拦下，比一次写对成本高得多。`;
 
@@ -140,7 +140,7 @@ When you need to draw a diagram, use one of the two fenced blocks below; otherwi
 
 ### ⚠️ **Read the Schema cheatsheet below BEFORE drawing**
 
-retikz is a new library; field names disagree with TikZ / d3 / mermaid / "whatever graph lib you've seen in training". Below is the IR top-level skeleton; consult \`/core/reference/schema/*\` pages for deeper details. **Do NOT guess field names from training memory (no \`entities\`, no \`paths\` top-level field, no \`nodes\`, no \`edges\`)**.
+retikz is a new library; field names disagree with TikZ / d3 / mermaid / "whatever graph lib you've seen in training". Below is the IR top-level skeleton; consult \`/kernel/reference/schema/*\` pages for deeper details. **Do NOT guess field names from training memory (no \`entities\`, no \`paths\` top-level field, no \`nodes\`, no \`edges\`)**.
 
 \`\`\`
 Scene = {
@@ -216,11 +216,11 @@ Coordinate = {
 
 For polar coordinates / multi-segment paths / Node anchors / Draw way DSL / EdgeLabel / arcs / wedges — these pages have authoritative field tables (reference by site-relative path starting with /):
 
-- Positioning: \`/core/concepts/basic/position\` · \`/core/reference/schema/placement\`
-- IR: \`/core/reference/schema/scene\` · \`.../entity\` · \`.../path\`
-- Components: \`/core/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
-- Shape sugar: \`/core/components/shapes/circle-ellipse\`
-- Worked example: \`/core/examples/karl-circle\`
+- Positioning: \`/kernel/concepts/basic/position\` · \`/kernel/reference/schema/placement\`
+- IR: \`/kernel/reference/schema/scene\` · \`.../entity\` · \`.../path\`
+- Components: \`/kernel/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
+- Shape sugar: \`/kernel/components/shapes/circle-ellipse\`
+- Worked example: \`/kernel/examples/karl-circle\`
 
 These pages are already indexed in the llms.txt at the end of this prompt. When unsure about the schema, **follow the cheatsheet + cite the relevant page** — don't improvise. Invalid IR will be rejected by automated validation, costing more than getting it right once.`;
 
@@ -253,7 +253,8 @@ export const composeSystem = async (
       ? '你是 retikz（TikZ React 适配库）的文档助手。基于下面提供的当前页内容回答用户的问题，回答用中文。需要引用其他文档页时给出对应的 markdown 链接，链接 path 用站内绝对路径（以 / 开头）。'
       : 'You are a documentation assistant for retikz (a TikZ React adapter). Answer user questions based on the current page content provided below. Respond in English. When referencing other documentation pages, include a markdown link using a site-relative path (starting with /).';
 
-  const diagramBlock = '\n\n' + (lang === 'zh' ? diagramProtocolZh(diagramFormatPreference) : diagramProtocolEn(diagramFormatPreference));
+  const diagramBlock =
+    '\n\n' + (lang === 'zh' ? diagramProtocolZh(diagramFormatPreference) : diagramProtocolEn(diagramFormatPreference));
 
   const pageBlock = page ? `\n\n## Current page: ${page.title}\n\n${page.mdx}` : '';
 

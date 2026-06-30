@@ -1,15 +1,14 @@
 import { z } from 'zod';
-import { localToWorld } from '../../geometry/transform';
+
+import type { ContourSegment } from '../../geometry/contour';
 import type { Position } from '../../geometry/point';
 import type { Rect } from '../../geometry/rect';
-import {
-  type ContourSegment,
-  boundaryFromContour,
-  contourCommands,
-} from '../../geometry/contour';
 import type { ScenePrimitive } from '../../primitive';
+
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from '../../contract/shape/contour';
 import { defineShape } from '../../contract/shape/define';
+import { boundaryFromContour, contourCommands } from '../../geometry/contour';
+import { localToWorld } from '../../geometry/transform';
 
 /**
  * star shape 的 per-instance params 类型
@@ -82,8 +81,7 @@ const toWorld = (rect: Rect, local: Position): Position => localToWorld(rect, lo
  * @description emit 收轴对齐 rect（rotate=0）、boundaryPoint 收带 rotate 的 rect，二者共用此构造；
  *   绕向 = starGeometry 顶点顺序（偶尖 / 奇凹交替），供 verticesToSegments → rounded-contour 模块倒角。
  */
-const worldVertices = (rect: Rect, geo: StarGeometry): Array<Position> =>
-  geo.vertices.map(v => toWorld(rect, v));
+const worldVertices = (rect: Rect, geo: StarGeometry): Array<Position> => geo.vertices.map(v => toWorld(rect, v));
 
 /**
  * star 注册项：星形（外径尖角 / 内径凹角交替的 2×points 顶点闭合多边形）
@@ -106,25 +104,29 @@ export const star = defineShape({
         .int()
         .min(3)
         .max(MAX_STAR_POINTS)
-        .describe(`Number of star points (3..${MAX_STAR_POINTS}); capped to bound vertex count (mirrors polygon sides).`),
+        .describe(
+          `Number of star points (3..${MAX_STAR_POINTS}); capped to bound vertex count (mirrors polygon sides).`,
+        ),
       innerRadius: z
         .number()
-        .finite()
+
         .positive()
         .describe('Inner (notch) radius in user units.'),
       outerRadius: z
         .number()
-        .finite()
+
         .positive()
         .describe('Outer (tip) radius in user units; must be > innerRadius.'),
       rotate: z
         .number()
-        .finite()
+
         .optional()
-        .describe('Shape self-rotation in degrees; default 0 = first tip points up (screen -y / top); positive rotates clockwise (screen). Composes with Node.rotate.'),
+        .describe(
+          'Shape self-rotation in degrees; default 0 = first tip points up (screen -y / top); positive rotates clockwise (screen). Composes with Node.rotate.',
+        ),
       cornerRadius: z
         .number()
-        .finite()
+
         .nonnegative()
         .optional()
         .describe(
@@ -162,7 +164,7 @@ export const star = defineShape({
     }
     return undefined;
   },
-  *emit (rect: Rect, style, round, params: StarParams): Iterable<ScenePrimitive> {
+  *emit(rect: Rect, style, round, params: StarParams): Iterable<ScenePrimitive> {
     const geo = starGeometry(params);
     // emit 收轴对齐 rect（rotate=0）；顶点世界坐标 → 折线段 → rounded-contour 命令 → path
     const verts = worldVertices(rect, geo);

@@ -4,13 +4,12 @@
  *   零破坏（旧 text/position/side 仍合法）+ JSON round-trip。继承顺序解析属 compile 行为，见 compile/path-label-style.test.ts
  */
 import { describe, expect, it } from 'vitest';
+
 import { StepLabelSchema } from '../../src/schemas';
 
 describe('StepLabelSchema 新增样式字段', () => {
   it('接受 textColor', () => {
-    expect(
-      StepLabelSchema.safeParse({ text: 'x', textColor: 'red' }).success,
-    ).toBe(true);
+    expect(StepLabelSchema.safeParse({ text: 'x', textColor: 'red' }).success).toBe(true);
   });
 
   it('接受 opacity 0..1', () => {
@@ -52,9 +51,7 @@ describe('StepLabelSchema 错误路径', () => {
   });
 
   it('font 非法字段类型拒（size 为字符串）', () => {
-    expect(
-      StepLabelSchema.safeParse({ text: 'x', font: { size: 'big' } }).success,
-    ).toBe(false);
+    expect(StepLabelSchema.safeParse({ text: 'x', font: { size: 'big' } }).success).toBe(false);
   });
 
   it('textColor 非字符串拒', () => {
@@ -68,9 +65,7 @@ describe('StepLabelSchema 零破坏（旧形态仍合法）', () => {
   });
 
   it('text + position + side（v0.1 形态）', () => {
-    expect(
-      StepLabelSchema.safeParse({ text: 'x', position: 'midway', side: 'above' }).success,
-    ).toBe(true);
+    expect(StepLabelSchema.safeParse({ text: 'x', position: 'midway', side: 'above' }).success).toBe(true);
   });
 });
 

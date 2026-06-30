@@ -1,11 +1,14 @@
-import { type FC, Fragment } from 'react';
+import type { FC } from 'react';
+
+import { Fragment } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
-import { AppSidebarMenuItem } from './AppSidebarMenuItem';
 import type { SidebarCategoryData } from './interface';
+
+import { AppSidebarMenuItem } from './AppSidebarMenuItem';
 
 export type AppSidebarMenuProps = {
   /** 分组化的菜单数据 */

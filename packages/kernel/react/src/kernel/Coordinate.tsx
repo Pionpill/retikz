@@ -1,5 +1,6 @@
-import type { FC } from 'react';
 import type { IRAtPosition, IRBetweenPosition, IROffsetPosition, IRPosition, PolarPosition } from '@retikz/core';
+import type { FC } from 'react';
+
 import { TIKZ_COORDINATE } from './_displayNames';
 
 /** <Coordinate> 组件的 props */

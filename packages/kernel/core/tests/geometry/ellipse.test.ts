@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { type Ellipse, ellipse } from '../../src/geometry/ellipse';
-import { ellipse as ellipseShape } from '../../src/providers/shape';
-import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/schemas';
+
+import type { Ellipse } from '../../src/geometry/ellipse';
 import type { ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { ellipse } from '../../src/geometry/ellipse';
+import { ellipse as ellipseShape } from '../../src/providers/shape';
 import { flattenPrims } from '../helpers/flatten';
 
 const e: Ellipse = { x: 0, y: 0, rx: 10, ry: 5 };
@@ -142,9 +145,7 @@ describe('ellipse shape — circumscribe 策略', () => {
   });
 
   it('strictObject 拒绝多余字段', () => {
-    expect(ellipseShape.paramsSchema.safeParse({ circumscribe: 'equal', foo: 1 }).success).toBe(
-      false,
-    );
+    expect(ellipseShape.paramsSchema.safeParse({ circumscribe: 'equal', foo: 1 }).success).toBe(false);
   });
 });
 

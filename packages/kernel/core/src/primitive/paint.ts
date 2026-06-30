@@ -8,10 +8,7 @@ import type { MarkerPrimitive } from './marker';
  *   `Scene.resources` 里的 paint server（gradient / 后续 pattern·image）；`{ kind:'contextStroke' }` 继承所在元素描边
  *   （adapter → SVG context-stroke）。
  */
-export type PaintValue =
-  | string
-  | { kind: 'resourceRef'; id: string }
-  | { kind: 'contextStroke' };
+export type PaintValue = string | { kind: 'resourceRef'; id: string } | { kind: 'contextStroke' };
 
 /**
  * 已解析 pattern tile（进 Scene，纯数据，无函数）

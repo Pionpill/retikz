@@ -56,9 +56,7 @@
     "category": "core",
     "difficulty": "single",
     "prompt": "画一个旋转了 45 度的正方形。",
-    "assertions": [
-      { "kind": "primitiveCount", "primitive": "rect", "op": ">=", "value": 1 }
-    ]
+    "assertions": [{ "kind": "primitiveCount", "primitive": "rect", "op": ">=", "value": 1 }]
   },
   {
     "id": "core-single-07",
@@ -120,9 +118,7 @@
     "category": "core",
     "difficulty": "composite",
     "prompt": "画节点 A 和节点 B，用一条向上拱起的弧线从 A 连到 B。",
-    "assertions": [
-      { "kind": "primitiveCount", "primitive": "path", "op": ">=", "value": 1 }
-    ]
+    "assertions": [{ "kind": "primitiveCount", "primitive": "path", "op": ">=", "value": 1 }]
   },
   {
     "id": "core-composite-06",
@@ -150,9 +146,7 @@
     "category": "core",
     "difficulty": "composite",
     "prompt": "画一个圆，并在它的右半边叠加一段加粗的圆弧作为高亮。",
-    "assertions": [
-      { "kind": "primitiveCount", "primitive": "path", "op": ">=", "value": 1 }
-    ]
+    "assertions": [{ "kind": "primitiveCount", "primitive": "path", "op": ">=", "value": 1 }]
   },
   {
     "id": "core-composite-09",
@@ -194,9 +188,7 @@
     "category": "core",
     "difficulty": "complex",
     "prompt": "画一棵三层的二叉树：1 个根节点在上，下面 2 个子节点，再下面 4 个叶子节点，父子之间用连线连接。",
-    "assertions": [
-      { "kind": "primitiveCount", "primitive": "path", "op": ">=", "value": 6 }
-    ]
+    "assertions": [{ "kind": "primitiveCount", "primitive": "path", "op": ">=", "value": 6 }]
   },
   {
     "id": "core-complex-04",
@@ -247,9 +239,7 @@
     "category": "core",
     "difficulty": "complex",
     "prompt": "画一条水平时间线：一条横轴，上面均匀分布四个节点，每个节点下方标注一个事件名。",
-    "assertions": [
-      { "kind": "primitiveCount", "primitive": "path", "op": ">=", "value": 1 }
-    ]
+    "assertions": [{ "kind": "primitiveCount", "primitive": "path", "op": ">=", "value": 1 }]
   },
   {
     "id": "core-complex-09",
@@ -298,9 +288,7 @@
     "category": "core",
     "difficulty": "advanced",
     "prompt": "画一棵四层的满二叉树，每个子节点分别画在父节点的左下方和右下方，父子之间连线，整体呈对称的金字塔形。",
-    "assertions": [
-      { "kind": "primitiveCount", "primitive": "path", "op": ">=", "value": 1 }
-    ]
+    "assertions": [{ "kind": "primitiveCount", "primitive": "path", "op": ">=", "value": 1 }]
   },
   {
     "id": "core-advanced-04",
@@ -338,9 +326,7 @@
     "category": "core",
     "difficulty": "advanced",
     "prompt": "画一个甘特图风格的排布（不要坐标轴）：三行任务，每行一个长度不同的横向矩形条，三行的起止位置依次错开以体现先后，每行左侧标注任务名。",
-    "assertions": [
-      { "kind": "primitiveCount", "primitive": "rect", "op": ">=", "value": 3 }
-    ]
+    "assertions": [{ "kind": "primitiveCount", "primitive": "rect", "op": ">=", "value": 3 }]
   },
   {
     "id": "core-advanced-08",
@@ -357,9 +343,7 @@
     "category": "core",
     "difficulty": "advanced",
     "prompt": "画一个图例：三个并排的小方块分别用斜线、网点、网格三种填充图案，每个方块右侧标注它代表的含义。",
-    "assertions": [
-      { "kind": "primitiveCount", "primitive": "rect", "op": ">=", "value": 3 }
-    ]
+    "assertions": [{ "kind": "primitiveCount", "primitive": "rect", "op": ">=", "value": 3 }]
   },
   {
     "id": "core-advanced-10",

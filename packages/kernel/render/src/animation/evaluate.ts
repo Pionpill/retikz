@@ -5,7 +5,9 @@
  *   （数值线性、颜色 oklch 真 lerp、viewBox 4 元组分量线性、自定义经注入插值器）。
  */
 import type { IRAnimationTrack } from '@retikz/core';
+
 import type { CubicBezier, EasingFn, EasingRegistry } from './types';
+
 import { lerpColorOklch } from './oklch';
 
 const LINEAR: EasingFn = t => t;
@@ -113,7 +115,7 @@ export const evaluateTrack = (
   options: EvaluateTrackOptions = {},
 ): { value: unknown } | null => {
   const dur = track.duration;
-  const iterCount = track.iterations === 'infinite' ? Infinity : track.iterations ?? 1;
+  const iterCount = track.iterations === 'infinite' ? Infinity : (track.iterations ?? 1);
   const fill = track.fill ?? 'forwards';
   const local = timeMs - (track.delay ?? 0);
 

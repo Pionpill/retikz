@@ -1,5 +1,6 @@
 import type { FieldFormatDefinition, ParsedFieldValue } from '../../contract';
 import type { DataModel, PlotFieldTypeMap } from '../../schemas';
+
 import { resolveFormatRegistry } from './definitions';
 
 /**
@@ -21,11 +22,15 @@ export const collectFormatFields = (
     if (!userSourceFields.has(field.name)) continue;
     const definition = registry.get(field.format);
     if (definition === undefined) {
-      throw new Error(`lowerPlots: field format "${field.format}" is not registered; pass a FieldFormatDefinition via options.formatDefinitions`);
+      throw new Error(
+        `lowerPlots: field format "${field.format}" is not registered; pass a FieldFormatDefinition via options.formatDefinitions`,
+      );
     }
     const impliedType = definition.impliedType;
     if (field.type !== undefined && field.type !== impliedType) {
-      throw new Error(`lowerPlots: field "${field.name}" declares type "${field.type}" but format "${field.format}" implies "${impliedType}" (incompatible)`);
+      throw new Error(
+        `lowerPlots: field "${field.name}" declares type "${field.type}" but format "${field.format}" implies "${impliedType}" (incompatible)`,
+      );
     }
     fieldTypes.set(field.name, impliedType);
     parsers.set(field.name, definition.parse);

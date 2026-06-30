@@ -1,15 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { Boundary, BoundarySchema } from '../../src/schemas/boundary';
+
+import type { Rect } from '../../src/contract/shape';
+import type { PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { IR, IRNodeTarget } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { NameStack } from '../../src/compile/name-stack';
+import { anchorOf, angleBoundaryOf, boundaryPointOf, layoutNode } from '../../src/compile/node';
 import * as core from '../../src/index';
+import { BUILTIN_SHAPES, star } from '../../src/providers/shape';
+import { Boundary, BoundarySchema } from '../../src/schemas/boundary';
 import { NodeSchema } from '../../src/schemas/node';
 import { NodeTargetSchema } from '../../src/schemas/path/target';
-import { anchorOf, angleBoundaryOf, boundaryPointOf, layoutNode } from '../../src/compile/node';
-import { NameStack } from '../../src/compile/name-stack';
-import { BUILTIN_SHAPES, star } from '../../src/providers/shape';
-import type { Rect } from '../../src/contract/shape';
-import { compileToScene } from '../../src/compile/compile';
-import type { IR, IRNodeTarget } from '../../src/schemas';
-import type { PathPrim, ScenePrimitive } from '../../src/primitive';
 
 describe('BoundarySchema', () => {
   it('parses reserved keywords and registered names', () => {
@@ -346,7 +348,9 @@ describe('public export + remaining quadrants', () => {
     const sceneCircle = core.compileToScene(makeIr('circle'));
     // 取连接线的 line 端点（无 close 的路径）
     const endpointOf = (prims: ReadonlyArray<core.ScenePrimitive>): [number, number] => {
-      const path = prims.filter((p): p is core.PathPrim => p.type === 'path').find(p => !p.commands.some(c => c.kind === 'close'));
+      const path = prims
+        .filter((p): p is core.PathPrim => p.type === 'path')
+        .find(p => !p.commands.some(c => c.kind === 'close'));
       if (!path) throw new Error('no connection path');
       for (const cmd of path.commands) {
         if (cmd.kind === 'line') return [cmd.to[0], cmd.to[1]];

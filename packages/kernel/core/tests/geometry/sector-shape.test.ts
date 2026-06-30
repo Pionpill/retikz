@@ -16,11 +16,13 @@
  *   paramsSchema / scaleParams / round-trip / zod 错误类 case 此刻应通过。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
-import type { IR } from '../../src/schemas';
-import { sector } from '../../src/providers/shape';
+
 import type { ScenePrimitive } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { compileToScene } from '../../src/compile/compile';
+import { sector } from '../../src/providers/shape';
+import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
@@ -125,10 +127,7 @@ describe('sector — 边界 AABB / 角度', () => {
     expect(apex).toBeDefined();
 
     const midRad = ((params.startAngle + params.endAngle) / 2) * (Math.PI / 180);
-    const toward: [number, number] = [
-      apex![0] + Math.cos(midRad) * 20,
-      apex![1] + Math.sin(midRad) * 20,
-    ];
+    const toward: [number, number] = [apex![0] + Math.cos(midRad) * 20, apex![1] + Math.sin(midRad) * 20];
     const hit = sector.boundaryPoint(rect, toward, params);
     const distance = Math.hypot(hit[0] - apex![0], hit[1] - apex![1]);
     expect(distance).toBeGreaterThan(9.5);
@@ -151,6 +150,20 @@ describe('sector — 边界 AABB / 角度', () => {
     const { halfWidth, halfHeight } = sector.circumscribe(0, 0, params);
     expect(halfWidth).toBeCloseTo(60, 1);
     expect(halfHeight).toBeCloseTo(60, 1);
+  });
+
+  it('sector_full_annulus_keeps_inner_arc：innerRadius>0 且 0→360 → 输出外弧与反向内弧', () => {
+    const compiled = compileToScene(
+      scene([wedgeNode({ innerRadius: 20, outerRadius: 60, startAngle: 0, endAngle: 360 })]),
+    );
+    const path = findByType(compiled.primitives, 'path');
+    expect(path).toBeDefined();
+    expect(path!.fillRule).toBe('evenodd');
+    const arcCmds = path!.commands.filter(c => c.kind === 'arc');
+    expect(arcCmds).toHaveLength(2);
+    expect(arcCmds[0]).toMatchObject({ radius: 60, startAngle: 0, endAngle: 360 });
+    expect(arcCmds[1]).toMatchObject({ radius: 20, counterClockwise: true });
+    expect(Math.abs(arcCmds[1].endAngle - arcCmds[1].startAngle)).toBeCloseTo(360, 6);
   });
 
   it('sector_end_before_start：endAngle<startAngle → 按约定产合法环楔（emit 不抛、AABB 非退化）', () => {
@@ -197,9 +210,7 @@ describe('sector — 错误路径（paramsSchema 拒绝）', () => {
   });
 
   it('sector_missing_field_rejected：缺 outerRadius → strictObject reject', () => {
-    expect(() =>
-      sector.paramsSchema.parse({ innerRadius: 20, startAngle: 0, endAngle: 90 }),
-    ).toThrow();
+    expect(() => sector.paramsSchema.parse({ innerRadius: 20, startAngle: 0, endAngle: 90 })).toThrow();
   });
 });
 

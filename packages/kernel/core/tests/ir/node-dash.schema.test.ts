@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { NodeDefaultSchema, NodeSchema } from '../../src/schemas';
 
 describe('Node dashPattern schema', () => {

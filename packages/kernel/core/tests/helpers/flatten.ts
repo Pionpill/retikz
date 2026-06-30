@@ -6,7 +6,5 @@ import type { ScenePrimitive } from '../../src/primitive';
  *   text / label primitive 落在 group.children 内。断言"某节点的 rect / text"时先 flatten 再按 type
  *   过滤，即可穿透包裹层；坐标值不受包裹影响（无 transform group 不改子坐标）。
  */
-export const flattenPrims = (
-  prims: ReadonlyArray<ScenePrimitive>,
-): Array<ScenePrimitive> =>
+export const flattenPrims = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   prims.flatMap(p => (p.type === 'group' ? [p, ...flattenPrims(p.children)] : [p]));

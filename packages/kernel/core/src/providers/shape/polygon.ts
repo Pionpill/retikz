@@ -1,17 +1,16 @@
 import { z } from 'zod';
-import { localToWorld } from '../../geometry/transform';
+
+import type { ContourSegment } from '../../geometry/contour';
 import type { Position } from '../../geometry/point';
-import { normalizeCompassAnchor } from '../../geometry/anchor';
-import { rect as rectOps } from '../../geometry/rect';
 import type { Rect } from '../../geometry/rect';
-import {
-  type ContourSegment,
-  boundaryFromContour,
-  contourCommands,
-} from '../../geometry/contour';
 import type { ScenePrimitive } from '../../primitive';
+
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from '../../contract/shape/contour';
 import { defineShape } from '../../contract/shape/define';
+import { normalizeCompassAnchor } from '../../geometry/anchor';
+import { boundaryFromContour, contourCommands } from '../../geometry/contour';
+import { rect as rectOps } from '../../geometry/rect';
+import { localToWorld } from '../../geometry/transform';
 
 /**
  * polygon shape 的 per-instance params 类型
@@ -69,8 +68,7 @@ const circumradiusFor = (hw: number, hh: number, params: PolygonParams): number 
 };
 
 /** 由外接 AABB（emit / boundaryPoint 收到的 rect）反推外接圆半径：R = halfWidth / max|cosθ_k| */
-const circumradiusFromRect = (rect: Rect, params: PolygonParams): number =>
-  (rect.width / 2) / maxAbsCos(params);
+const circumradiusFromRect = (rect: Rect, params: PolygonParams): number => rect.width / 2 / maxAbsCos(params);
 
 /**
  * 正多边形 `sides` 个顶点的世界坐标（外接圆半径 radius、起始角 rotate、绕 rect 中心）
@@ -104,12 +102,12 @@ export const polygon = defineShape({
       .describe(`Number of sides of the regular polygon (3..${MAX_POLYGON_SIDES}).`),
     rotate: z
       .number()
-      .finite()
+
       .optional()
       .describe('Shape self-rotation in degrees (vertex start direction); default 0. Composes with Node.rotate.'),
     cornerRadius: z
       .number()
-      .finite()
+
       .nonnegative()
       .optional()
       .describe(
@@ -142,7 +140,7 @@ export const polygon = defineShape({
     const a = normalizeCompassAnchor(name);
     return a ? rectOps.anchor(rect, a) : undefined;
   },
-  *emit (rect: Rect, style, round, params: PolygonParams): Iterable<ScenePrimitive> {
+  *emit(rect: Rect, style, round, params: PolygonParams): Iterable<ScenePrimitive> {
     const radius = circumradiusFromRect(rect, params);
     // emit 收轴对齐 rect（rotate=0）；顶点世界坐标 → 折线段 → rounded-contour 命令 → path
     const verts = polygonVertices(rect, radius, params);
@@ -152,7 +150,5 @@ export const polygon = defineShape({
   },
   // sides 计数 / rotate 角度不缩（默认深缩会缩坏 sides）；cornerRadius 是长度，随 node scale 用几何均值因子缩。
   scaleParams: (params: PolygonParams, sx: number, sy: number): PolygonParams =>
-    params.cornerRadius === undefined
-      ? params
-      : { ...params, cornerRadius: params.cornerRadius * Math.sqrt(sx * sy) },
+    params.cornerRadius === undefined ? params : { ...params, cornerRadius: params.cornerRadius * Math.sqrt(sx * sy) },
 });

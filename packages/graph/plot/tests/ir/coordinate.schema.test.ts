@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { BUILTIN_COORDINATE_TYPES, CoordinateOperationSchema, CoordinateSchema, PlotCoordinate } from '../../src/schemas/coordinate';
+
+import {
+  BUILTIN_COORDINATE_TYPES,
+  CoordinateOperationSchema,
+  CoordinateSchema,
+  PlotCoordinate,
+} from '../../src/schemas/coordinate';
 
 describe('CoordinateSchema (ADR-04)', () => {
   // Happy path
@@ -103,7 +109,14 @@ describe('CoordinateSchema polar2D (ADR-01)', () => {
 
   // round-trip：IR 必须 100% JSON 可序列化
   it('polar2d_json_round_trip', () => {
-    const ir = CoordinateSchema.parse({ type: 'polar2D', angle: 'a', radius: 'r', startAngle: -90, endAngle: 270, innerRadius: 0.25 });
+    const ir = CoordinateSchema.parse({
+      type: 'polar2D',
+      angle: 'a',
+      radius: 'r',
+      startAngle: -90,
+      endAngle: 270,
+      innerRadius: 0.25,
+    });
     expect(CoordinateSchema.parse(JSON.parse(JSON.stringify(ir)))).toEqual(ir);
   });
 });
@@ -142,7 +155,11 @@ describe('CoordinateSchema 一维坐标系族 cartesian1D / polar1D (alpha.9 ADR
 
   // 边界：radius 占比 0<r≤1
   it('polar1d_radius_one_valid', () => {
-    expect(CoordinateSchema.parse({ type: 'polar1D', angle: 'a', radius: 1 })).toEqual({ type: 'polar1D', angle: 'a', radius: 1 });
+    expect(CoordinateSchema.parse({ type: 'polar1D', angle: 'a', radius: 1 })).toEqual({
+      type: 'polar1D',
+      angle: 'a',
+      radius: 1,
+    });
   });
 
   it('polar1d_radius_zero_rejected', () => {
@@ -211,7 +228,9 @@ describe('CoordinateSchema ternary2D (alpha.9 ADR-03)', () => {
 describe('CoordinateOperationSchema coordinate registry 占位（alpha.12 ADR-05）', () => {
   it('CoordinateSchema 保持内置 5-union，不接收旧 custom 判别', () => {
     expect(Object.values(PlotCoordinate)).toEqual(['cartesian2D', 'polar2D', 'cartesian1D', 'polar1D', 'ternary2D']);
-    expect([...BUILTIN_COORDINATE_TYPES].sort()).toEqual(['cartesian1D', 'cartesian2D', 'polar1D', 'polar2D', 'ternary2D'].sort());
+    expect([...BUILTIN_COORDINATE_TYPES].sort()).toEqual(
+      ['cartesian1D', 'cartesian2D', 'polar1D', 'polar2D', 'ternary2D'].sort(),
+    );
     expect(() => CoordinateSchema.parse({ type: 'custom', name: 'arch', roles: ['x'] })).toThrow();
   });
 
@@ -222,7 +241,9 @@ describe('CoordinateOperationSchema coordinate registry 占位（alpha.12 ADR-05
 
   it('CoordinateOperationSchema 内置 type 仍走精确 schema 校验，不被自定义 passthrough 吞掉', () => {
     expect(() => CoordinateOperationSchema.parse({ type: 'cartesian2D', x: 1, y: 'ys' })).toThrow();
-    expect(() => CoordinateOperationSchema.parse({ type: 'polar2D', angle: 'a', radius: 'r', innerRadius: 2 })).toThrow();
+    expect(() =>
+      CoordinateOperationSchema.parse({ type: 'polar2D', angle: 'a', radius: 'r', innerRadius: 2 }),
+    ).toThrow();
   });
 
   it('自定义 coordinate type 不能撞内置或旧 custom 保留字', () => {
@@ -238,7 +259,9 @@ describe('CoordinateOperationSchema coordinate registry 占位（alpha.12 ADR-05
   it('[adversarial] 自定义 coordinate operation 拒绝非 JSON 配置值', () => {
     expect(() => CoordinateOperationSchema.parse({ type: 'arch', project: () => [0, 0] })).toThrow(/JSON-serializable/);
     expect(() => CoordinateOperationSchema.parse({ type: 'arch', extra: undefined })).toThrow(/JSON-serializable/);
-    expect(() => CoordinateOperationSchema.parse({ type: 'arch', archHeight: Number.NaN })).toThrow(/JSON-serializable/);
+    expect(() => CoordinateOperationSchema.parse({ type: 'arch', archHeight: Number.NaN })).toThrow(
+      /JSON-serializable/,
+    );
     expect(() => CoordinateOperationSchema.parse({ type: 'arch', archHeight: Infinity })).toThrow(/JSON-serializable/);
   });
 });

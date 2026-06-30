@@ -22,9 +22,7 @@ export const CompileWarningCode = {
   TextTexParseError: 'TEXT_TEX_PARSE_ERROR',
 } as const;
 
-export type CompileWarningCodeValue =
-  | ValueOf<typeof CompileWarningCode>
-  | (string & {});
+export type CompileWarningCodeValue = ValueOf<typeof CompileWarningCode> | (string & {});
 
 /** 编译期 warning：不影响 Scene 产物，交给调用方收集或展示。 */
 export type CompileWarning = {

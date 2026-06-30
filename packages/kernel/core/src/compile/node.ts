@@ -1,25 +1,43 @@
-import type { Position } from '../geometry/point';
 import { arcEndPoint } from '@retikz/math';
-import { normalizeCompassAnchor } from '../geometry/anchor';
+
+import type { ShapeDefinition, ShapeStyle } from '../contract/shape';
+import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';
-import type { AtDirectionValue, IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../schemas';
-import { JsonObjectSchema } from '../schemas';
+import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
+import type {
+  IRAnimationTrack,
+  IRBoundary,
+  IRJsonObject,
+  IRLabelDefault,
+  IRLineSpec,
+  IRNode,
+  IRNodeLabel,
+  IRNodeLabelBoundaryPosition,
+  IRPaintSpec,
+  IRShapeRef,
+  JsonValue,
+  NodeLabelPlacementValue,
+  NodeLabelPositionValue,
+} from '../schemas';
 import type { BlendModeValue, DropShadow } from '../schemas/effects';
-import { resolveShadow } from './effects';
-import { CompileWarningCode } from './constant';
 import type { CompileWarningCodeValue } from './constant';
 import type { LowerTex } from './lower-tex';
-import { type LaidLine, type LineLayoutContext, layoutInlineLine, resolveLineRuns } from './text-layout';
-import type { PaintResolver } from './paint';
-import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
-import { BUILTIN_SHAPES } from '../providers/shape';
-import type { ShapeDefinition, ShapeStyle } from '../contract/shape';
 import type { NameStack } from './name-stack';
-import { DirectionVectorByAtDirection, LabelAnchorByAtDirection } from './direction';
-import { type ResolveBetweenGlobal, resolvePosition } from './position';
-import { toAlphabeticBaselineY } from './text-baseline';
+import type { PaintResolver } from './paint';
+import type { ResolveBetweenGlobal } from './position';
+import type { LaidLine, LineLayoutContext } from './text-layout';
 import type { FontSpec, TextMeasurer } from './text-metrics';
+
+import { normalizeCompassAnchor } from '../geometry/anchor';
+import { BUILTIN_SHAPES } from '../providers/shape';
+import { JsonObjectSchema } from '../schemas';
 import { resolveBoundary } from './boundary';
+import { CompileWarningCode } from './constant';
+import { DirectionVectorByAtDirection, LabelAnchorByAtDirection } from './direction';
+import { resolveShadow } from './effects';
+import { resolvePosition } from './position';
+import { toAlphabeticBaselineY } from './text-baseline';
+import { layoutInlineLine, resolveLineRuns } from './text-layout';
 
 const DEFAULT_FONT_SIZE = 14;
 const DEFAULT_PADDING = 8;
@@ -76,12 +94,7 @@ const isCjk = (ch: string): boolean => {
  * 按 maxWidth 贪心折行：西文按词（空白分割）、CJK 按字；长不可断 token 溢出不硬断
  * @description 用注入的 measureText 度量；连续空白归一为单空格分隔。空文本返回 [''].
  */
-const wrapText = (
-  text: string,
-  font: FontSpec,
-  maxWidth: number,
-  measure: TextMeasurer,
-): Array<string> => {
+const wrapText = (text: string, font: FontSpec, maxWidth: number, measure: TextMeasurer): Array<string> => {
   // 拆 unit：空白段 → 单空格分隔符；非空白段把 CJK 拆单字、非 CJK 连续 run 保整
   const units: Array<string> = [];
   for (const seg of text.split(/(\s+)/)) {
@@ -144,9 +157,7 @@ const resolveDashPattern = (
 };
 
 /** IR align → 文字对齐锚点（start / middle / end） */
-const alignToTextAnchor = (
-  a: 'left' | 'center' | 'right',
-): 'start' | 'middle' | 'end' =>
+const alignToTextAnchor = (a: 'left' | 'center' | 'right'): 'start' | 'middle' | 'end' =>
   a === 'left' ? 'start' : a === 'right' ? 'end' : 'middle';
 
 export type NodeLayout = {
@@ -240,8 +251,10 @@ export type NodeLabelLayout = {
   text: string;
   /** 含公式时的混排行布局（emit 走 laid）；纯文本时 undefined */
   laid?: LaidLine;
-  /** 8 方向枚举或数字角度 */
-  position: AtDirectionValue | number;
+  /** 8 方向枚举、center、数字角度，或 box-like boundary 上的归一位置 */
+  position: NodeLabelPositionValue | number | IRNodeLabelBoundaryPosition;
+  /** label 相对附着点向外或向内偏移 */
+  placement: NodeLabelPlacementValue;
   /** 已应用默认值 */
   distance: number;
   textColor?: string;
@@ -262,9 +275,7 @@ export type NodeLabelLayout = {
 
 /** 把 Rect 各方向外扩 m（margin generic：所有 shape 都 w+2m, h+2m，由 boundaryPointOf 调用前膨胀） */
 const inflateRect = (r: Rect, m: number): Rect =>
-  m === 0
-    ? r
-    : { x: r.x, y: r.y, width: r.width + 2 * m, height: r.height + 2 * m, rotate: r.rotate };
+  m === 0 ? r : { x: r.x, y: r.y, width: r.width + 2 * m, height: r.height + 2 * m, rotate: r.rotate };
 
 /**
  * 视觉 rect 外扩 outerSep（margin）得到外边界 AABB
@@ -305,22 +316,14 @@ export const boundaryPointOf = (
  *   形状专属命名 anchor（tip-N / apex 等非 compass 名）恒走视觉形状自身，boundary 不影响。
  *   boundary 缺省 = 'shape'。
  */
-export const anchorOf = (
-  layout: NodeLayout,
-  name: string,
-  boundary: IRBoundary | undefined = 'shape',
-): Position => {
+export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary | undefined = 'shape'): Position => {
   const compassAnchor = normalizeCompassAnchor(name);
   if (compassAnchor !== undefined) {
     // compass 方位名：默认连接面（'shape'）先走视觉 shape 自身 compass——ellipse/circle 落真实周长、
     // rectangle/polygon 落 AABB（与 TikZ 一致）；shape 未实现 compass（star/sector/arc 返回 undefined）
     // 回退外接 AABB 矩形。显式 boundary 指定时按该连接面解析。
     if (boundary === 'shape') {
-      const own = layout.shapeDef.anchor(
-        layout.rect,
-        compassAnchor,
-        layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
-      );
+      const own = layout.shapeDef.anchor(layout.rect, compassAnchor, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
       if (own !== undefined) return own;
       const fallback = resolveBoundary(
         'rectangle',
@@ -359,9 +362,46 @@ export const anchorOf = (
  *   若用带 rotate 的 rect，label 位置会被 anchorOf / angleBoundaryOf 旋转一次、再被外层 group 旋转一次（双重旋转）。
  *   anchorOf / angleBoundaryOf 本身不改（path anchor `'A.north'` / `'A.30'` 仍需带 rotate 的 rect）。
  */
+const isLabelBoundaryPosition = (position: NodeLabelLayout['position']): position is IRNodeLabelBoundaryPosition =>
+  typeof position === 'object';
+
+const ensureBoxLikeLabelBoundary = (layout: NodeLayout): void => {
+  if (layout.shapeName !== 'rectangle') {
+    throw new Error(
+      `Node label boundary position requires a box-like boundary; shape '${layout.shapeName}' is not supported.`,
+    );
+  }
+};
+
+const labelBoundaryPoint = (layout: NodeLayout, position: IRNodeLabelBoundaryPosition): Position => {
+  ensureBoxLikeLabelBoundary(layout);
+  const t = position.t ?? 0.5;
+  const left = layout.rect.x - layout.rect.width / 2;
+  const right = layout.rect.x + layout.rect.width / 2;
+  const top = layout.rect.y - layout.rect.height / 2;
+  const bottom = layout.rect.y + layout.rect.height / 2;
+  if (position.boundary === 'top') return [left + layout.rect.width * t, top];
+  if (position.boundary === 'right') return [right, top + layout.rect.height * t];
+  if (position.boundary === 'bottom') return [left + layout.rect.width * t, bottom];
+  return [left, top + layout.rect.height * t];
+};
+
+const labelBoundaryDirection = (position: IRNodeLabelBoundaryPosition): Position => {
+  if (position.boundary === 'top') return [0, -1];
+  if (position.boundary === 'right') return [1, 0];
+  if (position.boundary === 'bottom') return [0, 1];
+  return [-1, 0];
+};
+
+const labelPlacementSign = (label: NodeLabelLayout): number => (label.placement === 'inside' ? -1 : 1);
+
 /** label 在 node 边界上的附着点（未旋转局部系；pin 引线起点 = 此点） */
 const labelBorderPoint = (layout: NodeLayout, label: NodeLabelLayout): Position => {
+  if (label.position === 'center') return [layout.rect.x, layout.rect.y];
   const aaLayout: NodeLayout = { ...layout, rect: { ...layout.rect, rotate: 0 } };
+  if (isLabelBoundaryPosition(label.position)) {
+    return labelBoundaryPoint(aaLayout, label.position);
+  }
   if (typeof label.position === 'number') {
     return angleBoundaryOf(aaLayout, label.position);
   }
@@ -369,21 +409,22 @@ const labelBorderPoint = (layout: NodeLayout, label: NodeLabelLayout): Position 
 };
 
 const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
+  if (label.position === 'center') return [layout.rect.x, layout.rect.y];
   const [bx, by] = labelBorderPoint(layout, label);
+  const sign = labelPlacementSign(label);
+  if (isLabelBoundaryPosition(label.position)) {
+    const vec = labelBoundaryDirection(label.position);
+    return [bx + vec[0] * label.distance * sign, by + vec[1] * label.distance * sign];
+  }
   if (typeof label.position === 'number') {
-    return arcEndPoint([bx, by], label.distance, label.position);
+    return arcEndPoint([bx, by], label.distance * sign, label.position);
   }
   const vec = DirectionVectorByAtDirection[label.position];
-  return [bx + vec[0] * label.distance, by + vec[1] * label.distance];
+  return [bx + vec[0] * label.distance * sign, by + vec[1] * label.distance * sign];
 };
 
 /** 从 label 中心朝 border 方向，求 label 框（halfW×halfH）边界交点（pin 引线终点 = label 框近 node 边） */
-const labelBoxEdgeToward = (
-  center: Position,
-  border: Position,
-  halfW: number,
-  halfH: number,
-): Position => {
+const labelBoxEdgeToward = (center: Position, border: Position, halfW: number, halfH: number): Position => {
   const dx = border[0] - center[0];
   const dy = border[1] - center[1];
   const len = Math.hypot(dx, dy);
@@ -404,13 +445,7 @@ const RAD_TO_DEG = 180 / Math.PI;
  * @description radial = atan2(label中心 − node中心)；tangent = radial + 90；number = 原值；none / 缺省 = 0。
  *   keepUpright 时把"偏离正立 > 90°"的角度翻 180° 保阅读方向。方向向量在局部坐标算，node 自身 rotate 由外层 group 叠加。
  */
-const resolveLabelRotateDeg = (
-  label: NodeLabelLayout,
-  lx: number,
-  ly: number,
-  cx: number,
-  cy: number,
-): number => {
+const resolveLabelRotateDeg = (label: NodeLabelLayout, lx: number, ly: number, cx: number, cy: number): number => {
   const mode = label.rotate;
   if (mode === undefined || mode === 'none') return 0;
   let deg: number;
@@ -444,10 +479,7 @@ export const angleBoundaryOf = (
   const cosR = Math.cos(rot);
   const sinR = Math.sin(rot);
   // 局部 (lx, ly) → 世界方向 (lx*cos - ly*sin, lx*sin + ly*cos)；toward 距离任意，boundaryPoint 只用方向
-  const toward: Position = [
-    layout.rect.x + lx * cosR - ly * sinR,
-    layout.rect.y + lx * sinR + ly * cosR,
-  ];
+  const toward: Position = [layout.rect.x + lx * cosR - ly * sinR, layout.rect.y + lx * sinR + ly * cosR];
   const { def, rect, params } = resolveBoundary(
     boundary,
     layout.shapeDef,
@@ -489,13 +521,9 @@ export const layoutNode = (
   const { type: shapeName, params: rawShapeParams } = normalizeShape(node.shape);
   // own-property 校验：既得到 `ShapeDefinition | undefined` 类型（让未注册分支成立），又避开
   // `'toString'` 等原型链 key 被 Record 索引误命中（开放字符串 shape 名的边界安全）
-  const shapeDef = Object.prototype.hasOwnProperty.call(shapes, shapeName)
-    ? shapes[shapeName]
-    : undefined;
+  const shapeDef = Object.prototype.hasOwnProperty.call(shapes, shapeName) ? shapes[shapeName] : undefined;
   if (!shapeDef) {
-    throw new Error(
-      `Unknown shape '${shapeName}'; registered shapes: ${Object.keys(shapes).sort().join(', ')}`,
-    );
+    throw new Error(`Unknown shape '${shapeName}'; registered shapes: ${Object.keys(shapes).sort().join(', ')}`);
   }
   // 双护栏（抄 path generator）：① paramsSchema.parse 校验形状字段；② JsonObjectSchema.parse 守 JSON-safe。
   // JSON-safe 这道跑在**原始 params** 上——宽松 schema（如 `z.object({}).passthrough()`）会在 parse 时
@@ -508,9 +536,7 @@ export const layoutNode = (
   // cornerRadius 时合进 params，使 emit 与 boundary（都读 params.cornerRadius）一致；params 显式给则优先。
   // 其余形状（polygon / star / sector）只认自身 params，不受顶层影响，避免 boundary 圆而 emit 不圆。
   const mergedShapeParams: IRJsonObject =
-    shapeName === 'rectangle' &&
-    node.cornerRadius !== undefined &&
-    !('cornerRadius' in parsedShapeParams)
+    shapeName === 'rectangle' && node.cornerRadius !== undefined && !('cornerRadius' in parsedShapeParams)
       ? { ...parsedShapeParams, cornerRadius: node.cornerRadius }
       : parsedShapeParams;
 
@@ -539,17 +565,12 @@ export const layoutNode = (
   const xSep = (node.innerXSep ?? node.padding ?? DEFAULT_PADDING) * sx;
   const ySep = (node.innerYSep ?? node.padding ?? DEFAULT_PADDING) * sy;
   const outerSep = (node.outerSep ?? node.margin ?? 0) * Math.max(sx, sy);
-  const lineHeight =
-    (node.lineHeight ?? baseFontSize * DEFAULT_LINE_HEIGHT_FACTOR) * sy;
+  const lineHeight = (node.lineHeight ?? baseFontSize * DEFAULT_LINE_HEIGHT_FACTOR) * sy;
   const align = alignToTextAnchor(node.align ?? 'center');
 
   // 标准化为 Array<IRLineSpec>：单字符串 → 单元素（空数组 schema 已拒）
   const rawLines: Array<IRLineSpec> | undefined =
-    node.text === undefined
-      ? undefined
-      : typeof node.text === 'string'
-        ? [node.text]
-        : node.text;
+    node.text === undefined ? undefined : typeof node.text === 'string' ? [node.text] : node.text;
 
   // 折行阈值（user units，受 x 缩放）；未给 = 不折行
   const maxTextWidth = node.maxTextWidth !== undefined ? node.maxTextWidth * sx : undefined;
@@ -667,11 +688,7 @@ export const layoutNode = (
   const rectCenterY = center[1] + (aabbOffset?.[1] ?? 0);
   // 标准化 label：单对象 → 单元素数组；继承 Node 的 font/textColor
   const rawLabels: Array<IRNodeLabel> | undefined =
-    node.label === undefined
-      ? undefined
-      : Array.isArray(node.label)
-        ? node.label
-        : [node.label];
+    node.label === undefined ? undefined : Array.isArray(node.label) ? node.label : [node.label];
   const labels: Array<NodeLabelLayout> | undefined = rawLabels?.map(lab => {
     const labFont = lab.font;
     const labFontSize = (labFont?.size ?? labelDefault?.font?.size ?? baseFontSize) * fontScale;
@@ -706,6 +723,7 @@ export const layoutNode = (
       text: plainText,
       laid,
       position: lab.position ?? 'above',
+      placement: lab.placement ?? 'outside',
       distance: lab.distance ?? DEFAULT_LABEL_DISTANCE,
       textColor: labTextColor,
       opacity: labOpacity,
@@ -854,15 +872,12 @@ export const emitNodePrimitives = (
   } else if (layout.lines) {
     // align=start: x=中心-块半宽; align=end: x=中心+块半宽; align=middle: x=中心
     const halfBlockW = layout.textWidth / 2;
-    const xOffset =
-      layout.align === 'start' ? -halfBlockW : layout.align === 'end' ? halfBlockW : 0;
+    const xOffset = layout.align === 'start' ? -halfBlockW : layout.align === 'end' ? halfBlockW : 0;
     const lineHeight = round(layout.lineHeight);
     inner.push({
       type: 'text',
       x: round(layout.rect.x + xOffset),
-      y: round(
-        toAlphabeticBaselineY(layout.rect.y, 'middle', layout.lines.length, lineHeight, layout.fontSize),
-      ),
+      y: round(toAlphabeticBaselineY(layout.rect.y, 'middle', layout.lines.length, lineHeight, layout.fontSize)),
       lines: layout.lines,
       fontSize: layout.fontSize,
       fontFamily: layout.fontFamily,
@@ -888,12 +903,7 @@ export const emitNodePrimitives = (
         const style = typeof lab.pin === 'object' ? lab.pin : undefined;
         const [bx, by] = labelBorderPoint(layout, lab);
         const pad = 2;
-        const [nx, ny] = labelBoxEdgeToward(
-          [lx, ly],
-          [bx, by],
-          lab.measuredWidth / 2 + pad,
-          lab.fontSize / 2 + pad,
-        );
+        const [nx, ny] = labelBoxEdgeToward([lx, ly], [bx, by], lab.measuredWidth / 2 + pad, lab.fontSize / 2 + pad);
         inner.push({
           type: 'path',
           commands: [
@@ -948,8 +958,7 @@ export const emitNodePrimitives = (
   }
   // 带文本（layout.lines 非空）或有旋转的 Node 包进单层 GroupPrim：给"语义化节点"一个稳定 DOM /
   // stacking 单位边界；纯几何装饰 Node 维持平铺、零额外 DOM 层。无旋转时 group 不带 transforms。
-  const needsGroup =
-    layout.rotateDeg !== 0 || layout.lines !== undefined || layout.inlineBlock !== undefined;
+  const needsGroup = layout.rotateDeg !== 0 || layout.lines !== undefined || layout.inlineBlock !== undefined;
   if (!needsGroup) {
     // 纯几何 Node（不包 group）：把 user id stamp 到每个平铺 shape 图元（多 shape emit 时共享同一 id）；
     // label / pin 等附属图元不 stamp。无 user id 时保持 undefined。

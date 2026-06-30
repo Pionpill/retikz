@@ -1,35 +1,21 @@
-import {
-  Children,
-  Fragment,
-  type ReactElement,
-  type ReactNode,
-  createElement,
-  isValidElement,
-} from 'react';
-import type {
-  IR,
-  IRChild,
-  IRLineSpec,
-  IRNode,
-  IRScope,
-  IRStep,
-  IRStepLabel,
-  IRTarget,
-} from '@retikz/core';
+import type { IR, IRChild, IRLineSpec, IRNode, IRScope, IRStep, IRStepLabel, IRTarget } from '@retikz/core';
+import type { ReactElement, ReactNode } from 'react';
+
 import { CURRENT_IR_VERSION, parseTargetSugar } from '@retikz/core';
+import { Children, createElement, Fragment, isValidElement } from 'react';
+
+import type { EdgeLabelProps } from '../sugar/EdgeLabel';
+import type { ScopeStyleProps } from './_fields';
 import type { CoordinateProps } from './Coordinate';
+import type { EmbeddableContributionRecord, EmbeddableTier2Adapter } from './embeddable';
 import type { NodeProps } from './Node';
 import type { PathProps } from './Path';
-import { Scope, type ScopeProps } from './Scope';
-import {
-  type EmbeddableContributionRecord,
-  type EmbeddableTier2Adapter,
-  resolveEmbeddableAdapter,
-} from './embeddable';
+import type { ScopeProps } from './Scope';
 import type { StepProps } from './Step';
 import type { TextProps } from './Text';
-import type { EdgeLabelProps } from '../sugar/EdgeLabel';
+
 import {
+  getDisplayName,
   TIKZ_COORDINATE,
   TIKZ_EDGE_LABEL,
   TIKZ_NODE,
@@ -37,16 +23,10 @@ import {
   TIKZ_SCOPE,
   TIKZ_STEP,
   TIKZ_TEXT,
-  getDisplayName,
 } from './_displayNames';
-import {
-  NODE_FIELDS,
-  PATH_FIELDS,
-  SCOPE_FIELDS,
-  SCOPE_STYLE_FIELDS,
-  type ScopeStyleProps,
-  pickDefined,
-} from './_fields';
+import { NODE_FIELDS, PATH_FIELDS, pickDefined, SCOPE_FIELDS, SCOPE_STYLE_FIELDS } from './_fields';
+import { resolveEmbeddableAdapter } from './embeddable';
+import { Scope } from './Scope';
 
 // NODE_FIELDS / PATH_FIELDS / pickDefined 抽到 _fields.ts 与 unbuilder 共享
 
@@ -82,11 +62,7 @@ const textElementToLineSpec = (el: ReactElement): IRLineSpec | undefined => {
     return undefined;
   }
   const text = String(props.children);
-  if (
-    props.fill === undefined &&
-    props.opacity === undefined &&
-    props.font === undefined
-  ) {
+  if (props.fill === undefined && props.opacity === undefined && props.font === undefined) {
     return text;
   }
   return {
@@ -254,10 +230,7 @@ const readEdgeLabel = (children: ReactNode): IRStepLabel | undefined => {
 };
 
 /** Step kinds 中可挂 label 的子集（move / cycle 除外） */
-type LabelableStepProps = Extract<
-  StepProps,
-  { label?: IRStepLabel; children?: ReactNode }
->;
+type LabelableStepProps = Extract<StepProps, { label?: IRStepLabel; children?: ReactNode }>;
 
 /**
  * 解析 Step 的 label 来源
@@ -289,8 +262,7 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
       out.push({ type: 'step', kind: 'cycle' });
       return;
     }
-    const label =
-      kind === 'move' ? undefined : resolveStepLabel(props as LabelableStepProps);
+    const label = kind === 'move' ? undefined : resolveStepLabel(props as LabelableStepProps);
     if (kind === 'fold') {
       const p = props as Extract<StepProps, { kind: 'fold' }>;
       const step: Extract<IRStep, { kind: 'fold' }> = {
@@ -479,11 +451,16 @@ const buildScopeFromProps = (props: ScopeProps, ctx?: BuildContext): IRScope => 
 });
 
 /** `<Path>` props → IRChild；step 序列由 readPathChildren 收集 */
-const buildPathFromProps = (props: PathProps): IRChild => ({
-  type: 'path',
-  ...pickDefined(props, PATH_FIELDS),
-  children: readPathChildren(props.children),
-});
+const buildPathFromProps = (props: PathProps): IRChild => {
+  const path: IRChild = {
+    type: 'path',
+    ...pickDefined(props, PATH_FIELDS),
+  };
+  if (props.children !== undefined) {
+    path.children = readPathChildren(props.children);
+  }
+  return path;
+};
 
 /**
  * 扫描 <TikZ> 直接 children

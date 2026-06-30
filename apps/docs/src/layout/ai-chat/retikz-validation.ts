@@ -1,5 +1,6 @@
-import { SceneSchema } from '@retikz/core';
 import type { ZodError } from 'zod';
+
+import { SceneSchema } from '@retikz/core';
 
 import { parseRetikzJsx } from '@/lib/jsx-to-ir';
 
@@ -18,7 +19,9 @@ export type RetikzBlockValidation = {
 export const formatZodError = (err: ZodError): string => {
   const issues = err.issues.slice(0, 3).map(issue => {
     const path = issue.path
-      .map((segment, idx) => (typeof segment === 'number' ? `[${segment}]` : idx === 0 ? String(segment) : `.${String(segment)}`))
+      .map((segment, idx) =>
+        typeof segment === 'number' ? `[${segment}]` : idx === 0 ? String(segment) : `.${String(segment)}`,
+      )
       .join('');
     return path ? `${path}: ${issue.message}` : issue.message;
   });

@@ -1,27 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import { changelogForModule, changelogVersionSlug } from '@/data/changelog';
-import { PACKAGE_GROUPS, type PackageId } from '@/data/changelog.types';
 
-const membersOf = (id: 'core' | 'plot' | 'other'): Set<PackageId> =>
+import type { PackageId } from '@/data/changelog.types';
+
+import { changelogForModule, changelogVersionSlug } from '@/data/changelog';
+import { PACKAGE_GROUPS } from '@/data/changelog.types';
+
+const membersOf = (id: 'kernel' | 'graph' | 'other'): Set<PackageId> =>
   new Set(PACKAGE_GROUPS.find(g => g.id === id)?.members ?? []);
 
 describe('changelogForModule', () => {
   it('core 模块只含 core 组包', () => {
-    const releases = changelogForModule('core');
+    const releases = changelogForModule('kernel');
     expect(releases.length).toBeGreaterThan(0);
-    const core = membersOf('core');
+    const core = membersOf('kernel');
     for (const r of releases) for (const b of r.packages) expect(core.has(b.pkg), b.pkg).toBe(true);
   });
 
   it('plot 模块只含 plot 组包', () => {
-    const releases = changelogForModule('plot');
+    const releases = changelogForModule('graph');
     expect(releases.length).toBeGreaterThan(0);
-    const plot = membersOf('plot');
+    const plot = membersOf('graph');
     for (const r of releases) for (const b of r.packages) expect(plot.has(b.pkg), b.pkg).toBe(true);
   });
 
   it('过滤后无包块的里程碑被丢弃（每个里程碑至少一个包）', () => {
-    for (const moduleId of ['core', 'plot']) {
+    for (const moduleId of ['kernel', 'graph']) {
       for (const r of changelogForModule(moduleId)) expect(r.packages.length).toBeGreaterThan(0);
     }
   });
@@ -38,7 +41,7 @@ describe('changelogVersionSlug', () => {
   });
 
   it('每个模块内各中版本 slug 唯一（保证侧边栏子页 id 不撞）', () => {
-    for (const moduleId of ['core', 'plot']) {
+    for (const moduleId of ['kernel', 'graph']) {
       const slugs = changelogForModule(moduleId).map(r => changelogVersionSlug(r.minor));
       expect(new Set(slugs).size).toBe(slugs.length);
     }

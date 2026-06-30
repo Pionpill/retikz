@@ -1,0 +1,89 @@
+---
+title: Custom Transforms
+description: Extensions can register a full transform, or add reducer / selector sub-operations reused by built-in statistical transforms.
+---
+
+Built-in transforms cover common statistical pipelines. Long-tail logic has three extension levels. If the logic produces a statistic value, prefer a reducer. If it chooses representative rows, prefer a selector. Register a full transform only when the input/output row shape itself is different.
+
+| Extension level           | Used by                                    | Good for                                                              |
+| ------------------------- | ------------------------------------------ | --------------------------------------------------------------------- |
+| `defineStatisticsReducer` | `bin` / `summarize` / `annotate` `metrics` | Weighted means, business quantiles, risk scores                       |
+| `defineRowSelector`       | `select` / `relate` `selector`             | Nearest row, threshold crossing, custom ranking                       |
+| `defineTransform`         | Independent `kind`                         | Custom row structures, cross-source derivation, special output shapes |
+
+## Full Transform
+
+The `double-x` transform below doubles `field` into `as`. It is registered through `transformDefinitions`, while the spec references it with `<Transform kind="double-x" field="x" as="x2" />`.
+
+<ComponentPreview name="transform-custom" sourceFiles={['transform-custom.data.ts']} />
+
+`x2` is not listed in `model` because it is derived by `double-x`. `outputFields` registers it as a transform output, so strict model validation only checks the real input fields `x` and `y`.
+
+## Reducer Extensions
+
+A reducer is a statistic sub-operation. Once registered, it can be reused by `summarize`, `annotate`, and `bin.metrics` without adding a new transform kind.
+
+```tsx
+const weightedMean = defineStatisticsReducer({
+  schema: z.object({
+    op: z.literal('weighted-mean'),
+    field: z.string().min(1),
+    weight: z.string().min(1),
+    as: z.string().min(1),
+  }),
+  inputFields: operation => [operation.field, operation.weight],
+  outputFields: operation => [operation.as],
+  reduce: (rows, operation) => {
+    const totalWeight = rows.reduce((sum, row) => sum + Number(row[operation.weight]), 0);
+    const total = rows.reduce((sum, row) => sum + Number(row[operation.field]) * Number(row[operation.weight]), 0);
+    return { [operation.as]: totalWeight === 0 ? 0 : total / totalWeight };
+  },
+});
+```
+
+Inject it through `<Plot statisticsReducerDefinitions={[weightedMean]}>`, then use `{ op: 'weighted-mean', ... }` inside `metrics`.
+
+## Selector Extensions
+
+A selector is a representative-row sub-operation. Once registered, it can be reused by `select` and `relate`; the output remains the selected original row, so ids, labels, and anchor fields stay available.
+
+```tsx
+const nearest = defineRowSelector({
+  schema: z.object({
+    op: z.literal('nearest'),
+    field: z.string().min(1),
+    target: z.number(),
+  }),
+  inputFields: operation => [operation.field],
+  select: (rows, operation) => {
+    const ranked = [...rows].sort(
+      (left, right) =>
+        Math.abs(Number(left[operation.field]) - operation.target) -
+        Math.abs(Number(right[operation.field]) - operation.target),
+    );
+    return ranked.length === 0 ? [] : [{ row: ranked[0], rank: 1 }];
+  },
+});
+```
+
+After injecting it through `<Plot rowSelectorDefinitions={[nearest]}>`, use it like this:
+
+```tsx
+<Transform kind="select" selector={{ op: 'nearest', field: 'value', target: 50 }} />
+```
+
+## Contract
+
+| Field                         | Role                                                                                                          |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `schema`                      | Validates `{ kind/op, ...config }`; config must remain JSON-serializable                                      |
+| `inputFields`                 | Returns source fields read by the operation, so model and field resolution can validate them                  |
+| `outputFields`                | Returns derived fields produced by the operation, so downstream consumers do not need to list them in `model` |
+| `apply` / `reduce` / `select` | Runs the logic; it must be deterministic so rendering and locators agree                                      |
+
+For a full transform, the third `apply` argument is the transform context. Row-preserving transforms usually keep provenance with `{ ...row, newField }`. Row-changing transforms that represent a group of source rows should call `context.groupProvenance(out, members)` so the output row carries `sourceIndices`.
+
+<ComponentAlert
+  title="Extensions must be deterministic"
+  description="Rendering and locator hit-testing each run the data pipeline. If an extension depends on randomness, time, or mutable external state, the two results can diverge and hit-testing may point at the wrong datum. Use a fixed-seed deterministic algorithm when you need randomness."
+/>

@@ -1,4 +1,6 @@
-import { type Position, arcAngleInRange, arcEndPoint, intersect, point, rayArc } from '@retikz/math';
+import type { Position } from '@retikz/math';
+
+import { arcAngleInRange, arcEndPoint, intersect, point, rayArc } from '@retikz/math';
 
 /*
  * 圆角轮廓模块：把「闭合有序段序列」(Line / Arc) 的每个接缝（角）替换为与两侧段相切、半径 r 的
@@ -129,7 +131,7 @@ const fractionAlong = (seg: ContourSegment, p: Position, fromStart: boolean): nu
   const angle = Math.atan2(p[1] - seg.center[1], p[0] - seg.center[0]) * RAD_TO_DEG;
   const span = Math.abs(arcSpan(seg));
   if (span < EPSILON) return 0;
-  const ccw = (seg.counterClockwise ?? false);
+  const ccw = seg.counterClockwise ?? false;
   const ref = fromStart ? seg.startAngle : seg.endAngle;
   // 从 ref 出发、沿（fromStart ? 扫描方向 : 反扫描方向）量到 angle 的非负角差
   const goingCcw = fromStart ? ccw : !ccw;
@@ -155,12 +157,7 @@ type Offset =
  *   凹角（反向转）圆心在外侧（弧仍嵌入凹槽）。故偏移侧 = 行进方向左手 (-dy, dx) 乘 turnSign 符号。
  *   arc 同心偏移返回 radius−r 主候选；±r 两候选由 offsetSegmentAlt 补齐、求交后按真实距离校验择优。
  */
-const offsetSegment = (
-  seg: ContourSegment,
-  r: number,
-  turnSign: number,
-  atEnd: boolean,
-): Offset => {
+const offsetSegment = (seg: ContourSegment, r: number, turnSign: number, atEnd: boolean): Offset => {
   if (seg.kind === 'line') {
     const dir = tangentAt(seg, true);
     // 圆心侧法向 = 行进方向左手 (-dy, dx) × turnSign 符号（凸角内侧 / 凹角外侧）
@@ -182,7 +179,6 @@ const offsetSegmentAlt = (seg: ArcSegment, r: number): Offset => ({
   center: seg.center,
   radius: seg.radius + r,
 });
-
 
 /** 点到直线（无限延长）的有符号垂足点 */
 const footOnLine = (p: Position, base: Position, dir: Position): Position => {
@@ -215,7 +211,10 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
     const candidates: Array<Position> = [];
     const pushIntersections = (oa: Offset, ob: Offset): void => {
       if (oa.kind === 'line' && ob.kind === 'line') {
-        const p = intersect.lineLine(oa.point, [oa.point[0] + oa.dir[0], oa.point[1] + oa.dir[1]], ob.point, [ob.point[0] + ob.dir[0], ob.point[1] + ob.dir[1]]);
+        const p = intersect.lineLine(oa.point, [oa.point[0] + oa.dir[0], oa.point[1] + oa.dir[1]], ob.point, [
+          ob.point[0] + ob.dir[0],
+          ob.point[1] + ob.dir[1],
+        ]);
         if (p) candidates.push(p);
       } else if (oa.kind === 'line' && ob.kind === 'circle') {
         candidates.push(...intersect.lineCircle(oa.point, oa.dir, ob.center, ob.radius));
@@ -235,9 +234,7 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
 
     // 挑选：圆心到两段距离均≈radius、两切点都落在各自段参数区间内、且最靠近 corner。
     //   参数区间过滤剔除「落在边延长线上」的伪解（line-arc 时尤其关键）。
-    let best:
-      | { center: Position; tInPt: Position; tOutPt: Position; inFrac: number; outFrac: number }
-      | undefined;
+    let best: { center: Position; tInPt: Position; tOutPt: Position; inFrac: number; outFrac: number } | undefined;
     let bestDist = Infinity;
     for (const cand of candidates) {
       const tInPt = tangentPointOn(segA, cand, radius);
@@ -454,14 +451,22 @@ export const contourCommands = (
 };
 
 /** emit 单段主体（line → line 命令到 end；arc → 裁剪角度的 arc 命令到 end），起点由调用方先 move/前段给出 */
-const emitSegmentBody = (
-  seg: ContourSegment,
-  start: Position,
-  end: Position,
-  cmds: Array<ContourCommand>,
-): void => {
+const emitSegmentBody = (seg: ContourSegment, start: Position, end: Position, cmds: Array<ContourCommand>): void => {
   if (seg.kind === 'line') {
     cmds.push({ kind: 'line', to: end });
+    return;
+  }
+  const originalSweep = Math.abs(seg.endAngle - seg.startAngle);
+  if (originalSweep >= 360 - 1e-9 && point.length([start[0] - end[0], start[1] - end[1]]) < 1e-9) {
+    const adjusted = alignSweep(seg.startAngle, seg.endAngle, seg.counterClockwise ?? false);
+    cmds.push({
+      kind: 'arc',
+      center: seg.center,
+      radius: seg.radius,
+      startAngle: adjusted.start,
+      endAngle: adjusted.end,
+      counterClockwise: seg.counterClockwise,
+    });
     return;
   }
   // arc：起点角 / 终点角 = start / end 相对圆心的角，扫描方向不变
@@ -485,9 +490,7 @@ export const alignSweep = (start: number, end: number, ccw: boolean): { start: n
   if (Math.abs(sweep) === 360) return { start, end: start + (ccw ? -360 : 360) };
 
   const normalized = ((sweep % 360) + 360) % 360;
-  const alignedSweep = ccw
-    ? normalized === 0 ? -360 : normalized - 360
-    : normalized === 0 ? 360 : normalized;
+  const alignedSweep = ccw ? (normalized === 0 ? -360 : normalized - 360) : normalized === 0 ? 360 : normalized;
   return { start, end: start + alignedSweep };
 };
 
@@ -526,13 +529,7 @@ export const boundaryFromContour = (
     if (t >= -1e-9 && t <= 1 + 1e-9) best = s;
   };
 
-  const considerArc = (
-    center: Position,
-    radius: number,
-    startAngle: number,
-    endAngle: number,
-    ccw: boolean,
-  ): void => {
+  const considerArc = (center: Position, radius: number, startAngle: number, endAngle: number, ccw: boolean): void => {
     // 把 (start, end) 规范成与 ccw 一致的有向区间（end 落在 start 同向的 [0,360) 内），
     //   再喂 rayArc——arcAngleInRange 据 end−start 的符号判扫描方向，必须与 ccw 自洽。
     const aligned = alignSweep(startAngle, endAngle, ccw);

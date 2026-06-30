@@ -1,0 +1,166 @@
+---
+title: Layout
+description: Top-level container — accepts a component tree or IR, compiles to Scene, and produces rendered output.
+---
+
+`<Layout>` is retikz's only required top-level wrapper. Every Kernel / Sugar component must live inside a `<Layout>`.
+
+It is the entry point between the DSL and the renderer: with children it converts the component tree into IR; with `ir` it uses that pre-built IR directly. It then compiles the IR into a Scene and hands it to the current renderer.
+
+`width` / `height` only control the rendered output's displayed size in the page; internal coordinates stay in retikz user units, and the visible range is auto-computed from layout bounds at compile time.
+
+## Usage
+
+```tsx
+import { Layout } from '@retikz/react';
+```
+
+```tsx
+<Layout width={300} height={80}>
+  {/* Kernel / Sugar children */}
+</Layout>
+```
+
+## Composition
+
+`<Layout>` is a container; children are any Kernel / Sugar component tree:
+
+```tsx
+<Layout>
+  <Node id="..." position={...}>label</Node>
+  <Path>
+    <Step kind="move" to="..." />
+    <Step kind="line" to="..." />
+  </Path>
+  <Draw way={[...]} />
+</Layout>
+```
+
+## Examples
+
+### Basic
+
+<ComponentPreview name="layout-basic" size="xs" />
+
+### Whole-figure Default Style
+
+`<Layout>` directly accepts the same cascade style subset as [`<Scope>`](/kernel/components/layout/scope) (`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`). When any style prop is set, Layout wraps its children in an **implicit root `<Scope>`**, removing the boilerplate of nesting one root `<Scope>` on every figure. Inner `<Scope>` and explicit primitive props still cascade over it as usual.
+
+<ComponentPreview name="layout-scope-style" size="sm" />
+
+```tsx
+// Set defaults for the whole figure — no nested <Scope> needed
+<Layout stroke="gray" nodeDefault={{ shape: 'circle', fill: 'white', dashed: true }} pathDefault={{ lineCap: 'round' }}>
+  <Node id="A" position={[0, 0]}>A</Node>
+  <Draw way={['A', 'B']} arrow="->" />
+</Layout>
+
+// Equivalent to hand-writing one root <Scope>
+<Layout>
+  <Scope stroke="gray" nodeDefault={{ shape: 'circle', fill: 'white', dashed: true }} pathDefault={{ lineCap: 'round' }}>
+    {/* ... */}
+  </Scope>
+</Layout>
+```
+
+The exact wrapping condition, and what happens when combined with the `ir` prop, are covered in How it works below.
+
+### Render from IR
+
+`<Layout>` accepts an `ir` prop — feed a persisted IR JSON directly and get a rendered image, **no JSX children needed**. Source can be anything: LLM-generated, a JSON editor, URL deserialization, or database storage.
+
+<ComponentPreview name="layout-from-ir" size="xs" />
+
+When you need to convert between the DSL and IR, pair with `convertReactNodeToIR` / `convertIRToReactNode` for a two-way bridge:
+
+```tsx
+import { Layout, Node, convertReactNodeToIR } from '@retikz/react';
+
+const ir = convertReactNodeToIR(
+  <Node id="a" position={[0, 0]}>
+    A
+  </Node>,
+);
+// Serialize, send to LLM, store in DB...
+<Layout ir={ir} width={200} height={80} />;
+```
+
+`ir` and `children` are mutually exclusive; if both are supplied, `ir` wins.
+
+### Custom viewBox
+
+By default the `viewBox` is auto-computed from content (AABB + padding). Pass `viewBox={{ x, y, width, height }}` to pin it explicitly — for fixed size, deliberate clipping, multi-figure alignment, or excluding overflow. When set it overrides the auto computation and ignores padding; `width` / `height` must be > 0.
+
+<ComponentPreview name="layout-viewbox" size="md" />
+
+### Render Backend (SVG / Canvas)
+
+`renderer` selects the output backend: `'svg'` by default, or `'canvas'` to draw the same Scene onto a `<canvas>`.
+
+When the `renderer` prop is omitted, `<Layout>` falls back to the nearest `RendererModeProvider`. This fits the case where an outer layer wants to switch a whole subtree it can't reach into per-`<Layout>` — e.g. toggling an interactive (hooks / async) subtree between svg / canvas: you can't edit its inner `<Layout renderer>`, but wrapping it in the Provider does it:
+
+```tsx
+import { Layout, RendererModeProvider } from '@retikz/react';
+
+// Inner <Layout>s without an explicit renderer follow the Provider; those with one are unaffected
+<RendererModeProvider mode="canvas">
+  <SomeInteractiveChart />
+</RendererModeProvider>;
+```
+
+## How it works
+
+> Optional for everyday use; revisit when you hit edge cases or want to understand how `<Layout>` handles styles / viewBox / backends.
+
+### Implicit root Scope wrapping
+
+The implicit root `<Scope>` is added only when at least one style prop carries an actual style directive; with no style prop (or only empty-object defaults like `nodeDefault={{}}`) the IR shape stays unchanged and no empty scope is introduced. When combined with the `ir` prop, the style props are ignored (a dev-mode console warning fires) — `ir` is already a complete IR, so put root styles in the IR's own root `<Scope>` node.
+
+### viewBox override & padding
+
+When set, `viewBox` overrides the auto-computed range, ignores padding, and is injected into the constructed IR root (`ir.viewBox`). When passing an `ir` prop whose IR already carries a viewBox, the prop wins and the IR value is used only if the prop is omitted. viewBox is orthogonal to `width` / `height` (render size).
+
+### Render backend fallback
+
+When the `renderer` prop is omitted, resolution follows **explicit `renderer` prop > context > `'svg'`**, where context comes from the nearest `RendererModeProvider`. A `<Layout>` with an explicit `renderer` is unaffected by the Provider.
+
+### Clipped / empty-space troubleshooting
+
+If a diagram looks clipped or has too much empty space, inspect **View Code → IR** first: the usual causes are internal coordinates far away from visible primitives, invisible coordinates that do not extend bounds, or explicit coordinates without a visible boundary around them.
+
+## API Reference
+
+| Prop                                                                                    | Type                                                 | Default | Description                                                                                                                                                                                                                                                                           |
+| --------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`                                                                                 | `number \| string`                                   | —       | Rendered output width                                                                                                                                                                                                                                                                 |
+| `height`                                                                                | `number \| string`                                   | —       | Rendered output height                                                                                                                                                                                                                                                                |
+| `viewBox`                                                                               | `{ x, y, width, height }`                            | —       | Explicit viewBox overriding the auto-computed range (ignores padding); injected into the IR root, prop wins over IR-embedded                                                                                                                                                          |
+| `children`                                                                              | `ReactNode`                                          | —       | Kernel / Sugar component tree (mutually exclusive with `ir`)                                                                                                                                                                                                                          |
+| `ir`                                                                                    | `IR`                                                 | —       | Pre-built IR JSON (mutually exclusive with `children`)                                                                                                                                                                                                                                |
+| `className`                                                                             | `string`                                             | —       | Forwarded to the render root                                                                                                                                                                                                                                                          |
+| `style`                                                                                 | `CSSProperties`                                      | —       | Forwarded to the render root                                                                                                                                                                                                                                                          |
+| `idPrefix`                                                                              | `string`                                             | —       | Overrides the `<defs>` resource id prefix; pass the same value to SSR output and client `<Layout>` to keep reference ids aligned                                                                                                                                                      |
+| `renderer`                                                                              | `'svg' \| 'canvas'`                                  | `'svg'` | Render backend; when omitted, falls back to the nearest `RendererModeProvider` context value (prop > context > svg)                                                                                                                                                                   |
+| `nodeDistance`                                                                          | `number`                                             | `1`     | Default distance for relative positioning (`position = { direction, of }`); a node's own `distance` wins                                                                                                                                                                              |
+| `shapes`                                                                                | `Record<string, ShapeDefinition>`                    | —       | Runtime-injected custom shapes (forwarded to `CompileOptions.shapes`); overriding a built-in emits `SHAPE_OVERRIDES_BUILTIN`, an unregistered name throws at compile. See [Extending](/kernel/components/extend/shape-registry)                                                       |
+| `arrows`                                                                                | `Record<string, ArrowDefinition>`                    | —       | Runtime-injected custom arrows (forwarded to `CompileOptions.arrows`); overriding a built-in emits `ARROW_OVERRIDES_BUILTIN`. See [Extending](/kernel/components/extend/custom-arrow)                                                                                                 |
+| `patterns`                                                                              | `Record<string, PatternDefinition>`                  | —       | Runtime-injected custom pattern motifs (forwarded to `CompileOptions.patterns`); overriding a built-in emits `PATTERN_OVERRIDES_BUILTIN`. See [Extending](/kernel/components/extend/custom-pattern)                                                                                   |
+| `pathGenerators`                                                                        | `Record<string, PathGeneratorDefinition>`            | —       | Runtime-injected custom path generators (forwarded to `CompileOptions.pathGenerators`); core ships no curves, an unregistered name throws at compile. See [Extending](/kernel/components/extend/path-generator)                                                                       |
+| `composites`                                                                            | `Array<CompositeDefinition>`                         | —       | Runtime-injected Tier 2 composite expansion logic (forwarded to `CompileOptions.composites`); expanded to Tier 1 in compile's first step, an unregistered namespace/type warns and is skipped                                                                                         |
+| `embeddables`                                                                           | `Array<EmbeddableTier2Adapter>`                      | —       | Optional escape hatch: explicitly inject embeddable Tier 2 adapters; the primary path is the component static marker, matched by displayName and overriding the marker. See [Composites](/kernel/concepts/design/composite#embeddable-tier-2-writing-tier-2-components-inside-layout) |
+| `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` | same as [`<Scope>`](/kernel/components/layout/scope) | —       | Whole-figure cascade graphic state; when set, wraps children in an implicit root `<Scope>`                                                                                                                                                                                            |
+| `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`                         | same as [`<Scope>`](/kernel/components/layout/scope) | —       | Whole-figure every-X defaults (four channels); wraps the same implicit root scope                                                                                                                                                                                                     |
+| `animate`                                                                               | `boolean`                                            | `true`  | Whether to play animations; `false` renders the base static figure (no CSS/WAAPI, canvas skips rAF). See [Animation](/kernel/components/effects/animation)                                                                                                                            |
+| `snapshotAt`                                                                            | `number`                                             | —       | Static-snapshot time (ms): freeze one frame at that instant (no playback), overrides `animate`; SSR poster frames / thumbnails                                                                                                                                                        |
+| `animations`                                                                            | `Array<AnimationTrack>`                              | —       | Scene-root (camera) animation tracks (`viewBox` channel), paired with [`cameraTo()`](/kernel/components/effects/animation)                                                                                                                                                            |
+| `animationRef`                                                                          | `Ref<AnimationControls \| null>`                     | —       | Imperative animation handle out-port: receives `play` / `pause` / `seek` after mount (svg=WAAPI, canvas=rAF clock); `null` when there's no animation                                                                                                                                  |
+| `easings`                                                                               | `EasingRegistry`                                     | —       | Custom easing registry (name → cubic-bezier tuple / function). See [Custom Animation](/kernel/components/extend/custom-animation)                                                                                                                                                     |
+| `animationProperties`                                                                   | `AnimationPropertyRegistry`                          | —       | Custom animation property-channel interpolators (e.g. `blur`); Canvas-only for now. See [Custom Animation](/kernel/components/extend/custom-animation)                                                                                                                                |
+| `handlers`                                                                              | `HydrationHandlers`                                  | —       | Hydration handler registry keyed by id for `ir` mode (JSX mode uses component `on<Event>` props). See [Hydration](/kernel/packages/render/hydration)                                                                                                                                  |
+
+## Related
+
+- [Node](/kernel/components/node/overview): Most common Kernel node
+- [Draw](/kernel/components/draw/overview): Sugar for everyday connections
+- [Path](/kernel/components/draw/path): Low-level path container
+- [Scope](/kernel/components/layout/scope): Local style / transform / namespace

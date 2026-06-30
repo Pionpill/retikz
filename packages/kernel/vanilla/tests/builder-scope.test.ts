@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { node } from '../src/builder/node';
 import { scope } from '../src/builder/scope';
 
@@ -29,7 +30,7 @@ describe('@retikz/vanilla scope()', () => {
     const viaArray = scope({ transforms: [{ kind: 'translate', x: 40, y: 0 }] }, [
       node('c', { position: [0, 0], text: 'C' }),
     ]);
-    const viaBuild = scope({ transforms: [{ kind: 'translate', x: 40, y: 0 }] }, (s) =>
+    const viaBuild = scope({ transforms: [{ kind: 'translate', x: 40, y: 0 }] }, s =>
       s.node('c', { position: [0, 0], text: 'C' }),
     );
     expect(viaBuild).toEqual(viaArray);

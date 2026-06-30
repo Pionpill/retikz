@@ -1,12 +1,16 @@
+import type { FC } from 'react';
+
 import { ArrowUpRight, SlidersHorizontal } from 'lucide-react';
-import { type FC, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAiChatStore } from '@/store/use-ai-chat-store';
-import { PROVIDER_LABEL } from '../models';
 import { isBuiltInProviderId } from '@/store/use-ai-chat-store';
+
 import type { CustomProvider } from '../providers/resolve';
+
+import { PROVIDER_LABEL } from '../models';
 
 const LABEL_KEY = {
   lean: 'ai.settingsContextLean',
@@ -50,9 +54,7 @@ export const AiChatInputSettingsPopover: FC = () => {
         <SlidersHorizontal className="size-3.5" />
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[320px] p-0">
-        <div className="border-b border-border px-3 py-2 text-xs font-medium">
-          {t('ai.convSettingsPopoverTitle')}
-        </div>
+        <div className="border-b border-border px-3 py-2 text-xs font-medium">{t('ai.convSettingsPopoverTitle')}</div>
         <ul className="text-xs">
           <li className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
             <span className="text-muted-foreground">{t('ai.settingsProviderLabel')}</span>

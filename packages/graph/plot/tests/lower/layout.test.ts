@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { computePlotArea } from '../../src/pipeline/layout';
 
 const noAxis = { hasXAxis: false, hasYAxis: false, xLabels: [], yLabels: [] };
@@ -34,20 +35,40 @@ describe('computePlotArea (ADR-03)', () => {
   });
 
   it('area_only_x_axis', () => {
-    const { margins } = computePlotArea(480, 300, { hasXAxis: true, hasYAxis: false, xLabels: ['0', '2'], yLabels: [] });
+    const { margins } = computePlotArea(480, 300, {
+      hasXAxis: true,
+      hasYAxis: false,
+      xLabels: ['0', '2'],
+      yLabels: [],
+    });
     expect(margins.bottom).toBeGreaterThan(0);
     expect(margins.left).toBe(0);
   });
 
   it('area_font_size_affects', () => {
-    const small = computePlotArea(480, 300, { hasXAxis: true, hasYAxis: false, xLabels: ['0'], yLabels: [] }, { fontSize: 11 });
-    const big = computePlotArea(480, 300, { hasXAxis: true, hasYAxis: false, xLabels: ['0'], yLabels: [] }, { fontSize: 20 });
+    const small = computePlotArea(
+      480,
+      300,
+      { hasXAxis: true, hasYAxis: false, xLabels: ['0'], yLabels: [] },
+      { fontSize: 11 },
+    );
+    const big = computePlotArea(
+      480,
+      300,
+      { hasXAxis: true, hasYAxis: false, xLabels: ['0'], yLabels: [] },
+      { fontSize: 20 },
+    );
     expect(big.margins.bottom).toBeGreaterThan(small.margins.bottom);
   });
 
   // 错误路径 / 退化
   it('area_margin_override_wins', () => {
-    const { margins } = computePlotArea(480, 300, { hasXAxis: false, hasYAxis: true, xLabels: [], yLabels: ['1'] }, { margin: { left: 80 } });
+    const { margins } = computePlotArea(
+      480,
+      300,
+      { hasXAxis: false, hasYAxis: true, xLabels: [], yLabels: ['1'] },
+      { margin: { left: 80 } },
+    );
     expect(margins.left).toBe(80);
   });
 

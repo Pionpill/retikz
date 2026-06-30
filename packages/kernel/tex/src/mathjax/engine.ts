@@ -25,9 +25,7 @@ type HandlerModule = { RegisterHTMLHandler: (adaptor: LiteAdaptor) => void };
  *   `mathjax-full` 仍是 optional peer：tex 库构建已将其 external，未安装时 import 失败 → 下方 catch 抛带安装提示
  *   的错误（同 `@napi-rs/canvas` optional peer 口径）。startup 异步故本工厂 async；引擎 `convert` 同步。
  */
-export const createMathJaxEngine = async (
-  options?: { packages?: Array<string> },
-): Promise<MathJaxSvgEngine> => {
+export const createMathJaxEngine = async (options?: { packages?: Array<string> }): Promise<MathJaxSvgEngine> => {
   let mods: {
     mj: MathjaxModule;
     tex: TexModule;

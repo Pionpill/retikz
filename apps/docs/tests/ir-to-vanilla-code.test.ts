@@ -1,5 +1,7 @@
+import type { IR } from '@retikz/core';
+
+import { parseWay } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type IR, parseWay } from '@retikz/core';
 
 import { irToVanillaCode } from '../src/components/shared/component-preview/ir-to-vanilla-code';
 
@@ -46,7 +48,7 @@ describe('irToVanillaCode', () => {
         },
       ]),
     );
-    expect(code).toContain('draw([[0, 0], [50, 50]], { arrow: \'->\' })');
+    expect(code).toContain("draw([[0, 0], [50, 50]], { arrow: '->' })");
   });
 
   it('draw-way-fold-cycle：fold(-|) + cycle → 字面量 + DrawWay.Cycle + core import', () => {
@@ -116,7 +118,7 @@ describe('irToVanillaCode', () => {
         },
       ]),
     );
-    expect(code).toContain('scope({ transforms: [{ kind: \'translate\', x: 40, y: 20 }] }, [');
+    expect(code).toContain("scope({ transforms: [{ kind: 'translate', x: 40, y: 20 }] }, [");
     expect(code).toContain("node('c'");
   });
 

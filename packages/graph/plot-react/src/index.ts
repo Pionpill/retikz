@@ -1,23 +1,36 @@
 // @retikz/plot-react public API barrel.
-export { Plot } from './Plot';
-export type { PlotProps, PlotSpecProps, PlotDslProps, PlotPanelProps } from './Plot';
-export { PointMark, PathMark, RegionMark, IntervalMark, LinkMark, ReferenceMark, Axis, Legend, Scale, Transform, buildPlotSpec, resolveLabelOf } from './components';
 export type {
-  PointMarkProps,
-  PathMarkProps,
-  RegionMarkProps,
-  IntervalMarkProps,
-  LinkMarkProps,
-  ReferenceMarkProps,
-  DatumLabelProps,
-  FieldName,
   AxisProps,
-  LegendProps,
-  ScaleProps,
-  ScaleDimension,
-  PositionScaleType,
-  TransformProps,
   BuildPlotSpecOptions,
   CoordinateInput,
+  DatumLabelProps,
+  FieldName,
+  IntervalMarkProps,
+  LegendProps,
+  MarkTransformShortcutContext,
+  MarkTransformShortcutDefinition,
+  PathMarkProps,
+  PointMarkProps,
+  PositionScaleType,
+  ReferenceMarkProps,
+  RelationMarkProps,
   ResolveLabelMap,
+  ScaleDimension,
+  ScaleProps,
+  TransformProps,
 } from './components';
+export {
+  Axis,
+  buildPlotSpec,
+  IntervalMark,
+  Legend,
+  PathMark,
+  PointMark,
+  ReferenceMark,
+  RelationMark,
+  resolveLabelOf,
+  Scale,
+  Transform,
+} from './components';
+export type { PlotDslProps, PlotPanelProps, PlotProps, PlotSpecProps } from './Plot';
+export { Plot } from './Plot';

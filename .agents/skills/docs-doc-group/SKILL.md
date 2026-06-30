@@ -18,7 +18,7 @@ description: retikz 文档站「分组落地页」写法——带 children 的�
 分组节点（`data/<module>.ts` 里带 `children`）**有自己的 `index.{zh,en}.mdx`**，放在分组目录根：
 
 ```
-contents/core/components/node/
+contents/kernel/components/node/
   index.{zh,en}.mdx            # 分组落地页（本 skill）
   overview/index.{zh,en}.mdx   # 子页（叶子，走 docs-doc-component）
   text/ ...

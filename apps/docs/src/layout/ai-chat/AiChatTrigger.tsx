@@ -1,5 +1,7 @@
+import type { FC } from 'react';
+
 import { BotMessageSquare } from 'lucide-react';
-import { type FC, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Shortcut } from '@/components/shared/shortcut';

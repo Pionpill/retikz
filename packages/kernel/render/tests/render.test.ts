@@ -1,5 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
 import type { Scene } from '@retikz/core';
+
+import { describe, expect, it, vi } from 'vitest';
+
 import { renderToCanvas } from '../src/canvas';
 
 type CanvasCall = {
@@ -29,9 +31,11 @@ type SpyCanvasContext = Pick<
 
 const createSpyCanvasContext = (): SpyCanvasContext => {
   const calls: Array<CanvasCall> = [];
-  const record = (name: string) => (...args: Array<unknown>) => {
-    calls.push({ name, args });
-  };
+  const record =
+    (name: string) =>
+    (...args: Array<unknown>) => {
+      calls.push({ name, args });
+    };
 
   return {
     calls,

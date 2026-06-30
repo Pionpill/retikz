@@ -1,0 +1,20 @@
+import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
+
+const Demo: FC = () => (
+  <Layout width={320} height={260} nodeDefault={{ stroke: 'gray', dashed: true }}>
+    <Node id="a" position={[0, 0]}>
+      A
+    </Node>
+    <Node id="b" position={[200, 0]}>
+      B
+    </Node>
+    {/* { bend: 'left' }：默认 30°，向视觉左侧（屏幕上方）鼓 */}
+    <Draw way={['a', { bend: 'left' }, 'b']} />
+    {/* { bend: 'right', angle: 45 }：向视觉右侧（屏幕下方）鼓，更大 */}
+    <Draw way={['a', { bend: 'right', angle: 45 }, 'b']} />
+  </Layout>
+);
+
+export default Demo;

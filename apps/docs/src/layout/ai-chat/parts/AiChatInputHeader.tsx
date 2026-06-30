@@ -12,10 +12,7 @@ import { AiChatInputSettingsPopover } from './AiChatInputSettingsPopover';
  */
 export const AiChatInputHeader: FC = () => (
   <div className="flex items-center gap-2">
-    <div
-      className="flex flex-1 flex-wrap items-center gap-1.5 overflow-y-auto py-px"
-      style={{ maxHeight: 48 }}
-    >
+    <div className="flex flex-1 flex-wrap items-center gap-1.5 overflow-y-auto py-px" style={{ maxHeight: 48 }}>
       <AiChatInputContextChips />
     </div>
     <div className="flex shrink-0 items-center gap-0.5">

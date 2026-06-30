@@ -1,0 +1,39 @@
+import type { FC } from 'react';
+
+import { Layout, Node, Text } from '@retikz/react';
+
+/**
+ * 行级样式覆盖
+ * @description 左：<Text> 写 heading + 普通 body；中：text prop 数组混 LineSpec 对象 + 字符串；右：每行单独 fill / opacity 行级独立染色。
+ */
+const Demo: FC = () => (
+  <Layout width={520} height={160}>
+    <Node id="left" position={[-180, 0]} align="left">
+      <Text fill="red" font={{ weight: 'bold', size: 16 }}>
+        Heading
+      </Text>
+      body line 1 body line 2
+    </Node>
+
+    <Node
+      id="mid"
+      position={[0, 0]}
+      align="left"
+      text={[
+        { text: 'Title', font: { weight: 'bold', size: 16 }, fill: 'dodgerblue' },
+        'body 1',
+        { text: 'note', font: { style: 'italic' }, opacity: 0.6 },
+      ]}
+    />
+
+    <Node id="right" position={[180, 0]} align="left">
+      <Text fill="green">success</Text>
+      <Text fill="darkorange">warning</Text>
+      <Text fill="red" opacity={0.8}>
+        error
+      </Text>
+    </Node>
+  </Layout>
+);
+
+export default Demo;

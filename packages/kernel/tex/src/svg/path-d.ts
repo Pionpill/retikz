@@ -1,5 +1,8 @@
 import type { PathCommand } from '@retikz/core';
-import { type Matrix, apply } from './matrix';
+
+import type { Matrix } from './matrix';
+
+import { apply } from './matrix';
 
 /** 把一个点经矩阵变换 + 归一化函数（viewBox 平移 + 缩放）映射成最终用户坐标 */
 export type PointMapper = (x: number, y: number) => [number, number];
@@ -45,8 +48,14 @@ export const parsePathD = (d: string): Array<PathCommand> => {
       case 'M': {
         let x = num();
         let y = num();
-        if (rel) { x += cx; y += cy; }
-        cx = x; cy = y; startX = x; startY = y;
+        if (rel) {
+          x += cx;
+          y += cy;
+        }
+        cx = x;
+        cy = y;
+        startX = x;
+        startY = y;
         out.push({ kind: 'move', to: [x, y] });
         cmd = rel ? 'l' : 'L'; // 后续坐标对作为 line
         break;
@@ -54,8 +63,12 @@ export const parsePathD = (d: string): Array<PathCommand> => {
       case 'L': {
         let x = num();
         let y = num();
-        if (rel) { x += cx; y += cy; }
-        cx = x; cy = y;
+        if (rel) {
+          x += cx;
+          y += cy;
+        }
+        cx = x;
+        cy = y;
         out.push({ kind: 'line', to: [x, y] });
         break;
       }
@@ -74,46 +87,87 @@ export const parsePathD = (d: string): Array<PathCommand> => {
         break;
       }
       case 'C': {
-        let x1 = num(); let y1 = num();
-        let x2 = num(); let y2 = num();
-        let x = num(); let y = num();
-        if (rel) { x1 += cx; y1 += cy; x2 += cx; y2 += cy; x += cx; y += cy; }
+        let x1 = num();
+        let y1 = num();
+        let x2 = num();
+        let y2 = num();
+        let x = num();
+        let y = num();
+        if (rel) {
+          x1 += cx;
+          y1 += cy;
+          x2 += cx;
+          y2 += cy;
+          x += cx;
+          y += cy;
+        }
         out.push({ kind: 'cubic', control1: [x1, y1], control2: [x2, y2], to: [x, y] });
-        lastCtrlX = x2; lastCtrlY = y2; cx = x; cy = y;
+        lastCtrlX = x2;
+        lastCtrlY = y2;
+        cx = x;
+        cy = y;
         break;
       }
       case 'S': {
         const reflect = lastCmd.toUpperCase() === 'C' || lastCmd.toUpperCase() === 'S';
         const x1 = reflect ? 2 * cx - lastCtrlX : cx;
         const y1 = reflect ? 2 * cy - lastCtrlY : cy;
-        let x2 = num(); let y2 = num();
-        let x = num(); let y = num();
-        if (rel) { x2 += cx; y2 += cy; x += cx; y += cy; }
+        let x2 = num();
+        let y2 = num();
+        let x = num();
+        let y = num();
+        if (rel) {
+          x2 += cx;
+          y2 += cy;
+          x += cx;
+          y += cy;
+        }
         out.push({ kind: 'cubic', control1: [x1, y1], control2: [x2, y2], to: [x, y] });
-        lastCtrlX = x2; lastCtrlY = y2; cx = x; cy = y;
+        lastCtrlX = x2;
+        lastCtrlY = y2;
+        cx = x;
+        cy = y;
         break;
       }
       case 'Q': {
-        let x1 = num(); let y1 = num();
-        let x = num(); let y = num();
-        if (rel) { x1 += cx; y1 += cy; x += cx; y += cy; }
+        let x1 = num();
+        let y1 = num();
+        let x = num();
+        let y = num();
+        if (rel) {
+          x1 += cx;
+          y1 += cy;
+          x += cx;
+          y += cy;
+        }
         out.push({ kind: 'quad', control: [x1, y1], to: [x, y] });
-        lastCtrlX = x1; lastCtrlY = y1; cx = x; cy = y;
+        lastCtrlX = x1;
+        lastCtrlY = y1;
+        cx = x;
+        cy = y;
         break;
       }
       case 'T': {
         const reflect = lastCmd.toUpperCase() === 'Q' || lastCmd.toUpperCase() === 'T';
         const x1 = reflect ? 2 * cx - lastCtrlX : cx;
         const y1 = reflect ? 2 * cy - lastCtrlY : cy;
-        let x = num(); let y = num();
-        if (rel) { x += cx; y += cy; }
+        let x = num();
+        let y = num();
+        if (rel) {
+          x += cx;
+          y += cy;
+        }
         out.push({ kind: 'quad', control: [x1, y1], to: [x, y] });
-        lastCtrlX = x1; lastCtrlY = y1; cx = x; cy = y;
+        lastCtrlX = x1;
+        lastCtrlY = y1;
+        cx = x;
+        cy = y;
         break;
       }
       case 'Z': {
         out.push({ kind: 'close' });
-        cx = startX; cy = startY;
+        cx = startX;
+        cy = startY;
         break;
       }
       default:

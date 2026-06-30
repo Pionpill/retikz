@@ -1,8 +1,10 @@
-import type { Buffer } from 'node:buffer';
 import type { Scene } from '@retikz/core';
+import type { Buffer } from 'node:buffer';
+
+import type { DrawOptions } from '../canvas/types';
+
 import { drawScene } from '../canvas/draw-scene';
 import { createCssColorNormalizer, sceneFitMatrix } from '../canvas/shared';
-import type { DrawOptions } from '../canvas/types';
 
 export type CanvasNodeImageFormat = 'png' | 'jpeg' | 'webp';
 
@@ -110,7 +112,8 @@ export const renderSceneToImage = async (scene: Scene, options: RenderSceneToIma
     defaultFontFamily: options.defaultFontFamily ?? 'sans-serif',
     currentColor: options.currentColor ?? '#000000',
     createOffscreen: options.createOffscreen ?? createOffscreenFactory(canvasApi.createCanvas),
-    resolveCssColor: options.resolveCssColor ?? createCssColorNormalizer(() => canvasApi.createCanvas(1, 1).getContext('2d')),
+    resolveCssColor:
+      options.resolveCssColor ?? createCssColorNormalizer(() => canvasApi.createCanvas(1, 1).getContext('2d')),
   });
 
   return encodeCanvas(canvas, format, options.quality);

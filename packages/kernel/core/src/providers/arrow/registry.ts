@@ -1,14 +1,12 @@
-import type { MarkerPrimitive } from '../../primitive/marker';
-import type { BuiltinArrowName } from '../../schemas/path/arrow';
-import type { ArrowDefinition, ArrowEmitContext } from '../../contract/arrow';
 import type { CompileWarning } from '../../compile/constant';
+import type { ArrowDefinition, ArrowEmitContext } from '../../contract/arrow';
+import type { MarkerPrimitive } from '../../primitive/marker';
+import type { BuiltinArrowShapeValue } from '../../schemas/path/arrow';
+
 import { CompileWarningCode } from '../../compile/constant';
 
 /** 实心闭合三角 / 菱形 / V 形的 path 工厂：填充走 ctx.fill（无 override = contextStroke） */
-const filledPath = (
-  ctx: ArrowEmitContext,
-  points: ReadonlyArray<[number, number]>,
-): MarkerPrimitive => ({
+const filledPath = (ctx: ArrowEmitContext, points: ReadonlyArray<[number, number]>): MarkerPrimitive => ({
   type: 'path',
   commands: [
     { kind: 'move', to: points[0] },
@@ -36,36 +34,84 @@ const hollowPath = (
 });
 
 /** 内置 8 arrow 注册项；与 `CompileOptions.arrows` 合并时被同名注入覆盖 */
-export const BUILTIN_ARROWS: Record<BuiltinArrowName, ArrowDefinition> = {
+export const BUILTIN_ARROWS: Record<BuiltinArrowShapeValue, ArrowDefinition> = {
   normal: {
     lineContactX: 0,
-    emit: ctx => [filledPath(ctx, [[0, 0], [10, 5], [0, 10]])],
+    emit: ctx => [
+      filledPath(ctx, [
+        [0, 0],
+        [10, 5],
+        [0, 10],
+      ]),
+    ],
   },
   open: {
     hollow: true,
     lineContactX: 1,
     tipX: 9,
-    emit: ctx => [hollowPath(ctx, [[1, 1], [9, 5], [1, 9]])],
+    emit: ctx => [
+      hollowPath(ctx, [
+        [1, 1],
+        [9, 5],
+        [1, 9],
+      ]),
+    ],
   },
   stealth: {
     lineContactX: 3,
-    emit: ctx => [filledPath(ctx, [[0, 0], [10, 5], [0, 10], [3, 5]])],
+    emit: ctx => [
+      filledPath(ctx, [
+        [0, 0],
+        [10, 5],
+        [0, 10],
+        [3, 5],
+      ]),
+    ],
   },
   openStealth: {
     hollow: true,
     lineContactX: 3,
     tipX: 9,
-    emit: ctx => [hollowPath(ctx, [[1, 1], [9, 5], [1, 9], [3, 5]], 'miter')],
+    emit: ctx => [
+      hollowPath(
+        ctx,
+        [
+          [1, 1],
+          [9, 5],
+          [1, 9],
+          [3, 5],
+        ],
+        'miter',
+      ),
+    ],
   },
   diamond: {
     lineContactX: 0,
-    emit: ctx => [filledPath(ctx, [[0, 5], [5, 0], [10, 5], [5, 10]])],
+    emit: ctx => [
+      filledPath(ctx, [
+        [0, 5],
+        [5, 0],
+        [10, 5],
+        [5, 10],
+      ]),
+    ],
   },
   openDiamond: {
     hollow: true,
     lineContactX: 1,
     tipX: 9,
-    emit: ctx => [hollowPath(ctx, [[1, 5], [5, 1], [9, 5], [5, 9]], 'round')],
+    emit: ctx => [
+      hollowPath(
+        ctx,
+        [
+          [1, 5],
+          [5, 1],
+          [9, 5],
+          [5, 9],
+        ],
+        'round',
+      ),
+    ],
   },
   circle: {
     lineContactX: 0,

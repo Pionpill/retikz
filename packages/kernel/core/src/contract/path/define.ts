@@ -1,4 +1,5 @@
-import type { PathGeneratorDefinition } from './types';
+import type { IRJsonObject } from '../../schemas';
+import type { PathGeneratorDefinition, PathKindDefinition, PathKindDefinitionInput } from './types';
 
 /**
  * 注册一个 path generator（注册时 best-effort 元校验）
@@ -13,30 +14,23 @@ import type { PathGeneratorDefinition } from './types';
  * @returns 原样返回的 def（便于 `export const parabola = definePathGenerator({ ... })`）
  * @throws 当 paramsSchema 不是可 parse 的 zod schema、generate 不是函数、或 targetParams 形态非法时
  */
-export const definePathGenerator = (
-  def: PathGeneratorDefinition,
-): PathGeneratorDefinition => {
+export const definePathGenerator = (def: PathGeneratorDefinition): PathGeneratorDefinition => {
   const schema = def.paramsSchema as { safeParse?: unknown } | null | undefined;
-  if (
-    schema === null ||
-    typeof schema !== 'object' ||
-    typeof schema.safeParse !== 'function'
-  ) {
-    throw new Error(
-      'definePathGenerator: paramsSchema must be a zod schema (with a safeParse method).',
-    );
+  if (schema === null || typeof schema !== 'object' || typeof schema.safeParse !== 'function') {
+    throw new Error('definePathGenerator: paramsSchema must be a zod schema (with a safeParse method).');
   }
   if (typeof def.generate !== 'function') {
     throw new Error('definePathGenerator: generate must be a function.');
   }
   if (
     def.targetParams !== undefined &&
-    (!Array.isArray(def.targetParams) ||
-      def.targetParams.some(key => typeof key !== 'string'))
+    (!Array.isArray(def.targetParams) || def.targetParams.some(key => typeof key !== 'string'))
   ) {
-    throw new Error(
-      'definePathGenerator: targetParams must be an array of top-level param key strings.',
-    );
+    throw new Error('definePathGenerator: targetParams must be an array of top-level param key strings.');
   }
   return def;
 };
+
+export const definePathKind = <TOptions = IRJsonObject>(
+  definition: PathKindDefinitionInput<TOptions>,
+): PathKindDefinition<TOptions> & PathKindDefinition => definition as PathKindDefinition<TOptions> & PathKindDefinition;

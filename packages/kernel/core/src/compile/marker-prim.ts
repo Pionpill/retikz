@@ -14,9 +14,7 @@ const MARKER_PRIM_TYPES = new Set(['path', 'ellipse', 'rect', 'group']);
 /** 深度查 emit 产物里有没有函数（守 Scene 100% JSON 可序列化） */
 export const assertNoFunction = (owner: string, value: unknown): void => {
   if (typeof value === 'function') {
-    throw new Error(
-      `${owner} emit produced a marker containing a function; markers must be plain JSON data.`,
-    );
+    throw new Error(`${owner} emit produced a marker containing a function; markers must be plain JSON data.`);
   }
   if (Array.isArray(value)) {
     for (const v of value) assertNoFunction(owner, v);
@@ -85,10 +83,7 @@ export const assertValidMarkerPrim = (owner: string, prim: unknown): void => {
  * 跑完整窄子集 + JSON-safe 校验（产物逐个过 `assertValidMarkerPrim` + 深度无函数检查）
  * @description arrow / pattern 调 emit 收齐 `MarkerPrimitive[]` 后调用；任一原语违窄子集即抛含 owner 的清晰错。
  */
-export const validateMarkerPrimitives = (
-  owner: string,
-  marker: ReadonlyArray<MarkerPrimitive>,
-): void => {
+export const validateMarkerPrimitives = (owner: string, marker: ReadonlyArray<MarkerPrimitive>): void => {
   for (const prim of marker) assertValidMarkerPrim(owner, prim);
   assertNoFunction(owner, marker);
   assertFiniteNumbers(owner, marker);

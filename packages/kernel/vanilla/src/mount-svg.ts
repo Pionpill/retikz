@@ -1,6 +1,7 @@
 import type { Scene } from '@retikz/core';
-import { buildSvgDocument } from '@retikz/render/svg';
-import { type AnimationControls, bindWaapiDescriptors, prefersReducedMotion, sceneHasAnimations } from '@retikz/render/animation';
+import type { AnimationControls } from '@retikz/render/animation';
+
+import { bindWaapiDescriptors, prefersReducedMotion, sceneHasAnimations } from '@retikz/render/animation';
 import {
   createContextBuilder,
   createHydrationController,
@@ -9,11 +10,14 @@ import {
   resolvePointViaLayout,
   resolveSvgElement,
 } from '@retikz/render/hydration';
+import { buildSvgDocument } from '@retikz/render/svg';
+
+import type { HydrateOptions, HydrationHandle, MountOptions, RenderInput, VanillaView } from './types';
+
 import { isFigure } from './builder/is-figure';
 import { DEFAULT_ID_PREFIX } from './constants';
 import { applyAttrs, svgNodeToDom } from './svg-node-to-dom';
 import { toScene } from './to-scene';
-import type { HydrateOptions, HydrationHandle, MountOptions, RenderInput, VanillaView } from './types';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -44,7 +48,12 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
     }
     const scene: Scene = toScene(next, options);
     currentScene = scene;
-    const doc = buildSvgDocument(scene, { idPrefix, animate, snapshotAt: options.snapshotAt, easings: options.easings });
+    const doc = buildSvgDocument(scene, {
+      idPrefix,
+      animate,
+      snapshotAt: options.snapshotAt,
+      easings: options.easings,
+    });
     // 清空 root（子节点 + 自身 attrs），再写新 doc → root 元素复用、引用不失效
     while (root.firstChild) root.removeChild(root.firstChild);
     for (const attr of [...root.attributes]) root.removeAttribute(attr.name);

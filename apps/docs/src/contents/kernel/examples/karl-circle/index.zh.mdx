@@ -1,0 +1,134 @@
+---
+title: Karl 单位圆
+description: 学术 / 教材类绘图示例——30° 角下 sin / cos / tan 的几何关系示意：从一个圆开始，七步搭出完整图，端到端走一遍 Path / Draw / Coordinate / Node 的组合用法
+---
+
+## 引言
+
+这是 [TikZ 入门教程](https://tikz.dev/tutorial) 最后那张「Karl 给女儿讲三角函数」的图：单位圆 + 30° 角下 sin / cos / tan 的几何关系示意。
+
+本页把它拆成 7 个累加 step：从一个孤零零的圆开始，每步加一点东西、对应学一点 retikz 能力——结束时既得到完整图，也顺手看完了最适合新手上手的三个 sugar：[Circle](/kernel/components/shapes/circle-ellipse) / [Grid](/kernel/components/helpers/grid) / [Sector](/kernel/components/shapes/arc-sector)。它们把原本要手写的 Path / Step 片段压短了，后面的 [Draw](/kernel/components/draw/overview) / [Coordinate](/kernel/components/node/coordinate) / [Node](/kernel/components/node/overview) 则继续把完整图拼起来，顺带练到极坐标、多 Draw 协同、Node 多行多色文本等高频技巧。
+
+<ComponentPreview name="karl-circle-07-info" size="lg" interactive />
+
+如果你是从 TikZ 迁移过来，这页重点看 5 个差异：retikz 坐标 y 向下；圆 / 网格 / 扇形现在可以直接用 sugar；投影 / 交点目前需要手算或命名 Coordinate；`foreach` 风格重复图元通常在 React 里用 `.map()` 生成；公式不再用纯文本兜底，而是 [@retikz/tex](/kernel/packages/tex) 的 `$...$` / `$$...$$` 行内公式（文字夹公式、逐 run 着色都支持）。
+
+## 提示词
+
+下面这段 prompt 一键发到 AI 对话面板，由 LLM 直接产出 retikz IR / JSX 复现本图。需要变体（改角度、改颜色、改半径等）发送后在聊天面板里改 prompt 重发即可。
+
+<ExamplePrompt
+  short="**画 30° 角下 sin / cos / tan 几何关系示意图**：单位圆 + 带箭头坐标轴 + 刻度（−1, −1/2, 1/2, 1）+ 绿色描边扇形 + 红/蓝/橙三色函数线 + 右侧多色信息说明框。"
+  detailed={`**绘制单位圆三角函数示意图**
+
+**几何**
+
+- 单位圆 r = 100px
+- 坐标轴 x / y，从 −1.5 到 1.5，带箭头
+- 刻度：x 轴标注 −1 / −1/2 / 1；y 轴标注 −1 / −1/2 / 1/2 / 1
+- 50px 间距的浅色背景网格
+- 30° 扇形：原点为圆心，半径 30px
+
+**函数线**
+
+- sin α 红色：从 (cos30°, sin30°) 垂直到 x 轴
+- cos α 蓝色：sin 投影点 → 原点
+- tan α 橙色：从 (1, 0) 垂直到 (1, tan30°)；该点延伸出原点 30° 射线
+
+**颜色**
+
+- 扇形：浅灰填充（lightgray）+ 绿色描边（green）
+- sin: red, cos: dodgerblue, tan: darkorange
+
+**标注**
+
+- 公式（轴标 x / y、刻度分数、α、右侧图例）用 @retikz/tex 的 $...$ / $$...$$ 写在 Node 文本里；启动 MathJax 经 useLowerTex 注入 Layout
+- α 文字在扇形内（极坐标 15°, 22px）
+- 每条函数线带各自名字 label，边标注用 $...$ 公式（$\sin\alpha$ / $\cos\alpha$ / $\tan\alpha=\frac{\sin\alpha}{\cos\alpha}$）
+- 右侧说明框是一个 Node，对照 tikz 教程的 information text：每行 runs 把线名(red/blue/orange)写成着色 text run + 值写成 tex run 混排（α=π/6、sin=1/2、cos=√3/2、tan=1/√3），node 自己的 rectangle + 虚线当框`}
+  extensions={[
+  '**改成钝角（120°）版本**：把角度从 30° 换成 120°，看 cos 取负值时几何上是什么样——sin 投影点会落到 y 轴左侧，tan 切线方向也跟着翻转。',
+  '**画齐六个三角函数**：在同一张图里把 sec / csc / cot 也按几何定义画出来——sec 是 x 轴上的截距，csc 是 y 轴上的截距，cot 是 (0, 1) 处水平切线与原点射线的交点距离。',
+  '**多角度小图并排对比**：用 3 张 ComponentPreview 并排，分别画 30° / 60° / 120° 的同款图，便于一眼对比 sin / cos / tan 随角度的几何变化。',
+  ]}
+  />
+
+## 过程
+
+### 步骤 1：画单位圆
+
+最小起步——一个原点为中心的圆。现在直接用 [Circle](/kernel/components/shapes/circle-ellipse) 更短：`center + radius` 就能把这一步写完；底层仍会展开成等价的 Path / Step，但读代码时一眼就能看懂“这是个圆”。`lineCap="round"` 让圆轮廓端点圆润一点。
+
+<ComponentPreview name="karl-circle-01-circle" size="lg" />
+
+### 步骤 2：加坐标轴 + 端点标签 + 命名锚
+
+x 轴和 y 轴用 [Draw](/kernel/components/draw/overview) 配 `arrow="->"` 一键画带箭头的线段。轴端的 `x` / `y` 现在写成 [@retikz/tex](/kernel/packages/tex) 的 `$x$` / `$y$` 行内公式（[Node](/kernel/components/node/overview) 文本里的 `$...$`），渲染成数学斜体字母（`stroke="none"` 去掉默认外框）。这是本页第一处公式，所以**从这一步起每个 demo 都用 `useLowerTex()` 启动 MathJax、再注入 `<Layout lowerTex>`**；没注入时 `$...$` 一律字面、含公式的内容静默降级、不崩。[Coordinate](/kernel/components/node/coordinate) 给两个端点命名（`x-axis` / `y-axis`），后续 step 可以用 id 字符串引用——本例其实没引用到，但保留以贴合 TikZ 的 `coordinate(x axis)` 风格习惯。
+
+<ComponentPreview name="karl-circle-02-axes" diffFrom="karl-circle-01-circle" size="lg" interactive />
+
+### 步骤 3：加网格 + 刻度
+
+背景网格现在直接用 [Grid](/kernel/components/helpers/grid) sugar；它会展开成多条线，不再需要手写 5 横 5 竖，所以新手读起来更像“我要一张网格背景”，而不是“我要拼 10 条线”。刻度同样靠数组遍历，每条短线配一个无背景的 [Node](/kernel/components/node/overview)，文字写 `$-\frac{1}{2}$` 等行内公式；现在 `−1/2` / `1/2` 不再是 `-1/2` 纯文本，而是渲染出的真分数。label 位置在 tick 基础上**轻微偏移**（x 轴左偏 10px / y 轴下偏 10px），避开圆周线与轴线交叠。
+
+retikz 坐标统一是 SVG 像素，y 向下为正——所以「向上 1 单位」写成 `[0, -100]`（本例取 100px = 单位圆半径作为长度基准）。顶层 `<Layout>` 不接 picture-level scale + 不翻 y，TikZ 教程里的数学坐标得手动给 y 加负号。
+
+<ComponentPreview name="karl-circle-03-ticks" diffFrom="karl-circle-02-axes" size="lg" interactive />
+
+### 步骤 4：画 30° 扇形 + α 标签
+
+扇形现在直接用 [Sector](/kernel/components/shapes/arc-sector) sugar。它会从圆心出发、画弧、再闭合回圆心，所以这一步比手写 `arc` + `line` 更接近“画一个扇形”的直觉，也更适合刚接触 retikz 的读者先记住一个清楚的 API。
+
+α 标签写成 `$\alpha$` 行内公式出真希腊字母，配极坐标位置（`{ angle, radius }`）——`{ angle: -15, radius: 22 }` 把它放在扇形的视觉中央（角度负、朝屏幕上方）。字形颜色用 node 的 `textColor`（整段公式跟随 textColor；要逐段不同色见步骤 7 的 runs）。
+
+<ComponentPreview name="karl-circle-04-wedge" diffFrom="karl-circle-03-ticks" size="lg" interactive />
+
+### 步骤 5：sin α 红线 + cos α 蓝线
+
+sin 是 (30°, 100px) 垂直落到 x 轴；cos 是落点回原点。两段都靠 [Draw](/kernel/components/draw/overview)，way 数组里中间插一个 `{ label: { text, side } }` 算子给段挂边标注——边标注的 `text` 同样支持 `$...$` 行内公式，所以直接写 `$\sin\alpha$` / `$\cos\alpha$`（和 [TikZ 教程](https://tikz.dev/tutorial) 的 `node {$\sin \alpha$}` 一致）。`thickness="thick"` 是语义 stroke 档位，省得写具体像素值。
+
+注：原 TikZ 用 `(30:1cm |- x axis)` 直接表达"30°,1cm 点与 x 轴的投影交点"。retikz 暂无投影 target，几何上等于 (cos30°, 0)，手算坐标喂进去。
+
+<ComponentPreview name="karl-circle-05-sin-cos" diffFrom="karl-circle-04-wedge" size="lg" interactive />
+
+### 步骤 6：tan α 橙线 + 辅助射线
+
+tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + intersections 求"x=1 竖线与原点 30° 射线"的交点；retikz 暂无这类构造，手算 (1, tan30°) 并用 [Coordinate](/kernel/components/node/coordinate) 命名为 `t`，下方延伸到 `t` 的辅助射线就能直接引用这个 id。
+
+注意"多个 [Draw](/kernel/components/draw/overview) 协同 + 共享命名锚"——这是 retikz 把"一张图的多条 path 串起来"的标准套路。
+
+<ComponentPreview name="karl-circle-06-tan" diffFrom="karl-circle-05-sin-cos" size="lg" interactive />
+
+### 步骤 7：右侧多色信息说明框
+
+最后照着 [TikZ 教程](https://tikz.dev/tutorial) 那个 information text 框，在图右侧放一个**常规文字 + 公式混排**的说明框。整个框就是**一个 [Node](/kernel/components/node/overview)**：`text` 接多行数组，每行是一个 `{ runs: [...] }`——把线名（红线 / 蓝线 / 橙线）写成 text run 并各自 `fill` 着色、把值写成 `{ tex }` 公式 run，同一行左右排在一起。这正是行内 text+math 混排 + 逐 run 着色：中文走 text run（经 measureText 正确度量），公式走 tex run，不用 `\text{}`（MathJax 排中文易出豆腐块）。
+
+框就是这个 node 自己的 `shape="rectangle"` + `dashed` + `stroke="lightgray"` + `cornerRadius`（无填充、light/dark 都看得见），由内容 bbox 自动定尺寸、`align="left"` 左对齐——一个 node 同时是文字 + 公式混排块和它的外框。
+
+<ComponentPreview name="karl-circle-07-info" diffFrom="karl-circle-06-tan" size="lg" interactive />
+
+## 能力
+
+| 组件                                                                       | 在本例中扮演的角色                                                                                            | 主要 step                                                                                                                              |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| [Circle](/kernel/components/shapes/circle-ellipse)                         | 单位圆                                                                                                        | [1](#步骤-1画单位圆), [3](#步骤-3加网格--刻度), [4](#步骤-4画-30-扇形--α-标签)                                                         |
+| [Sector](/kernel/components/shapes/arc-sector)                             | 30° 扇形                                                                                                      | [4](#步骤-4画-30-扇形--α-标签), [5](#步骤-5sin-α-红线--cos-α-蓝线), [6](#步骤-6tan-α-橙线--辅助射线)                                   |
+| [Grid](/kernel/components/helpers/grid)                                    | 背景网格                                                                                                      | [3](#步骤-3加网格--刻度)                                                                                                               |
+| [Draw](/kernel/components/draw/overview)                                   | 坐标轴 + 刻度短线 + sin/cos/tan 三色线（边标注用 `$...$` 公式）+ 辅助射线                                     | [2](#步骤-2加坐标轴--端点标签--命名锚), [3](#步骤-3加网格--刻度), [5](#步骤-5sin-α-红线--cos-α-蓝线), [6](#步骤-6tan-α-橙线--辅助射线) |
+| [Node](/kernel/components/node/overview) + [`$...$`](/kernel/packages/tex) | 轴端 x / y、刻度真分数、α（行内公式）+ 右侧说明框（多行 `{ runs }` 文字 + 公式混排、逐 run 着色，自带虚线框） | [2](#步骤-2加坐标轴--端点标签--命名锚), [3](#步骤-3加网格--刻度), [4](#步骤-4画-30-扇形--α-标签), [7](#步骤-7右侧多色信息说明框)       |
+| [Coordinate](/kernel/components/node/coordinate)                           | 命名 x/y 轴端点 + tan 交点 t                                                                                  | [2](#步骤-2加坐标轴--端点标签--命名锚), [6](#步骤-6tan-α-橙线--辅助射线)                                                               |
+
+## 限制
+
+| 能力                                       | 计划        | 现状 / 兜底                                                                                                                                         |
+| ------------------------------------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 数学 y-up 坐标系                           | 🚧 未来支持 | 缩放本身可用 Scope 的 `scale` 变换；但还没有 Layout 级的「y 轴朝上」开关（`scale` 的 y 取负会连文字一起翻转），本例直接写像素坐标 + 手动给 y 加负号 |
+| 投影 target（`(A \|- B)`）                 | 🚧 未来支持 | 手算 `[cos30 * 100, 0]`                                                                                                                             |
+| named path + intersection target           | 🚧 未来支持 | 手算 `[100, -tan30 * 100]`                                                                                                                          |
+| LaTeX 公式（行内 / display / 带框 / 混排） | ✅ 已支持   | [@retikz/tex](/kernel/packages/tex)：文本里 `$...$` / `$$...$$`，或显式 `{ runs }` 逐 run 着色；本例用于 x / y、刻度、α、右侧图例                   |
+| 逐 run / 逐行着色                          | ✅ 已支持   | 显式 `{ runs: [{ tex, fill }, { text }] }`，每段单独 `fill`（如右侧图例）；`\color{}` 仍不生效，靠 run 的 `fill`                                    |
+
+## 扩展阅读
+
+- [Path](/kernel/components/draw/path) · [Step](/kernel/components/draw/step) · [Draw](/kernel/components/draw/overview) · [Node](/kernel/components/node/overview) · [Coordinate](/kernel/components/node/coordinate) · [TeX 公式](/kernel/packages/tex)
+- [定位](/kernel/concepts/basic/position) · [图元关系](/kernel/concepts/kernel/primitive-relations)

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import { SceneSchema } from '../../src';
+
 import type { CompileWarning, IR, ScenePrimitive } from '../../src';
 import type { RectPrim } from '../../src/primitive';
+
+import { SceneSchema } from '../../src';
+import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
 /** 取所有 RectPrim（默认 rectangle 节点；带文本节点包 group，flatten 穿透） */
@@ -10,10 +12,7 @@ const rects = (prims: Array<ScenePrimitive>): Array<RectPrim> =>
   flattenPrims(prims).filter((p): p is RectPrim => p.type === 'rect');
 
 /** rect 几何中心 [cx, cy] */
-const rectCenter = (r: RectPrim): [number, number] => [
-  r.x + r.width / 2,
-  r.y + r.height / 2,
-];
+const rectCenter = (r: RectPrim): [number, number] => [r.x + r.width / 2, r.y + r.height / 2];
 
 /** 取顶层 path primitive */
 const topPath = (prims: ReadonlyArray<ScenePrimitive>): ScenePrimitive | undefined =>
@@ -233,7 +232,13 @@ describe('深层嵌套 between + 端点混极坐标 / offset', () => {
           between: [
             {
               between: [
-                { between: [[0, 0], [8, 0]], t: 0.5 },
+                {
+                  between: [
+                    [0, 0],
+                    [8, 0],
+                  ],
+                  t: 0.5,
+                },
                 [8, 8],
               ],
               t: 0.5,
@@ -320,7 +325,7 @@ describe('深层嵌套 between + 端点混极坐标 / offset', () => {
 // ---------------------------------------------------------------------------
 describe('非 finite 端点不进 Scene；带 between 的 Scene round-trip', () => {
   it('端点极坐标 radius=Infinity（手搓绕过 schema）→ 不产生非 finite 进 Scene', () => {
-    // PolarPositionSchema.radius .finite() 会拒，但 compileToScene 直接吃手搓 IR 绕过。
+    // PolarPositionSchema.radius 的 number 校验会拒，但 compileToScene 直接吃手搓 IR 绕过。
     // 端点解析出 Infinity → lerp 出 Infinity；正确行为：要么 warn + 不进 Scene，
     // 绝不能让 Infinity 污染 Scene 坐标。
     const ir = {
@@ -371,10 +376,7 @@ describe('非 finite 端点不进 Scene；带 between 的 Scene round-trip', () 
           type: 'coordinate',
           id: 'm',
           position: {
-            between: [
-              { of: 'N', offset: [Number.NaN, 0] },
-              [10, 0],
-            ],
+            between: [{ of: 'N', offset: [Number.NaN, 0] }, [10, 0]],
             t: 0.5,
           },
         },
@@ -509,7 +511,13 @@ describe('t 退化与越界（手搓绕过 schema）', () => {
       {
         type: 'coordinate',
         id: 'm',
-        position: { between: [[33, 44], [33, 44]], t: 0.5 },
+        position: {
+          between: [
+            [33, 44],
+            [33, 44],
+          ],
+          t: 0.5,
+        },
       },
       {
         type: 'path',
@@ -533,7 +541,13 @@ describe('t 退化与越界（手搓绕过 schema）', () => {
         {
           type: 'coordinate',
           id: 'm',
-          position: { between: [[0, 0], [100, 0]], t: Number.NaN },
+          position: {
+            between: [
+              [0, 0],
+              [100, 0],
+            ],
+            t: Number.NaN,
+          },
         },
         {
           type: 'path',
@@ -568,7 +582,13 @@ describe('t 退化与越界（手搓绕过 schema）', () => {
         {
           type: 'coordinate',
           id: 'm',
-          position: { between: [[0, 0], [100, 0]], t: 1.5 },
+          position: {
+            between: [
+              [0, 0],
+              [100, 0],
+            ],
+            t: 1.5,
+          },
         },
         {
           type: 'path',
@@ -650,10 +670,7 @@ describe('端点带 anchor / offset 的 lerp', () => {
         type: 'coordinate',
         id: 'm',
         position: {
-          between: [
-            { id: 'A', anchor: { side: 'east', t: 0.5 } },
-            { id: 'B' },
-          ],
+          between: [{ id: 'A', anchor: { side: 'east', t: 0.5 } }, { id: 'B' }],
           t: 0.5,
         },
       },
@@ -673,10 +690,7 @@ describe('端点带 anchor / offset 的 lerp', () => {
         type: 'coordinate',
         id: 'm',
         position: {
-          between: [
-            { id: 'A', anchor: 'center' },
-            { id: 'B' },
-          ],
+          between: [{ id: 'A', anchor: 'center' }, { id: 'B' }],
           t: 0.5,
         },
       },

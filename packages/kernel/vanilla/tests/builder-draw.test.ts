@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import type { IRPathRibbonOptions } from '@retikz/core';
+
 import { DrawWay, parseWay } from '@retikz/core';
+import { describe, expect, it } from 'vitest';
+
 import { draw } from '../src/builder/draw';
 
 describe('@retikz/vanilla draw()', () => {
@@ -12,9 +15,20 @@ describe('@retikz/vanilla draw()', () => {
   });
 
   it('draw-coords：way 接坐标点', () => {
-    const p = draw([[0, 0], [50, 50]], { dashPattern: [4, 2] });
+    const p = draw(
+      [
+        [0, 0],
+        [50, 50],
+      ],
+      { dashPattern: [4, 2] },
+    );
     if (p.type !== 'path') throw new Error('unreachable');
-    expect(p.children).toEqual(parseWay([[0, 0], [50, 50]]));
+    expect(p.children).toEqual(
+      parseWay([
+        [0, 0],
+        [50, 50],
+      ]),
+    );
     expect(p.dashPattern).toEqual([4, 2]);
   });
 
@@ -34,7 +48,14 @@ describe('@retikz/vanilla draw()', () => {
   });
 
   it('draw-rounded-corners：roundedCorners 透传进 path IR', () => {
-    const p = draw([[0, 0], [10, 0], [10, 10]], { roundedCorners: 8 });
+    const p = draw(
+      [
+        [0, 0],
+        [10, 0],
+        [10, 10],
+      ],
+      { roundedCorners: 8 },
+    );
     if (p.type !== 'path') throw new Error('unreachable');
     expect(p.roundedCorners).toBe(8);
   });
@@ -42,5 +63,49 @@ describe('@retikz/vanilla draw()', () => {
   it('draw-no-config：draw(way) 无 config 也合法', () => {
     const p = draw(['a', 'b']);
     expect(p).toEqual({ type: 'path', children: parseWay(['a', 'b']) });
+  });
+});
+
+describe('@retikz/vanilla draw(kind=ribbon)', () => {
+  it('ribbon-way-reuses-core：draw(way, kind=ribbon) 的 steps 与 core parseWay 逐字一致', () => {
+    const r = draw(['a', 'b'], {
+      kind: 'ribbon',
+      fill: 'steelblue',
+      ribbon: {
+        start: { width: 8, direction: 0 },
+        end: { width: 2, direction: [1, 0] },
+        samples: true,
+      },
+    });
+    expect(r.type).toBe('path');
+    if (r.type !== 'path') throw new Error('unreachable');
+    expect(r.kind).toBe('ribbon');
+    const options = r.ribbon as IRPathRibbonOptions;
+    expect(options.start).toEqual({ width: 8, direction: 0 });
+    expect(options.end).toEqual({ width: 2, direction: [1, 0] });
+    expect(r.fill).toBe('steelblue');
+    expect(options.samples).toBe(true);
+    expect(r.children).toEqual(parseWay(['a', 'b']));
+  });
+
+  it('ribbon-label-forwards：draw(kind=ribbon, { label }) 透传 path-like geometry label', () => {
+    const r = draw(['a', 'b'], {
+      kind: 'ribbon',
+      ribbon: { width: 8 },
+      label: {
+        text: '128',
+        position: 'midway',
+        sloped: true,
+      },
+    });
+
+    expect(r.type).toBe('path');
+    if (r.type !== 'path') throw new Error('unreachable');
+    expect(r.kind).toBe('ribbon');
+    expect(r.label).toEqual({
+      text: '128',
+      position: 'midway',
+      sloped: true,
+    });
   });
 });

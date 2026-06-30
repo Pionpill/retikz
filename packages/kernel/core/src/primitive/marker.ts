@@ -156,8 +156,4 @@ export type MarkerGroupPrim = {
  *   `resourceRef`、禁 `clip`；`fill` 限 `MarkerFill`。这条收窄兜住"marker 内递归引用 marker / clip /
  *   文本布局"的复杂度。
  */
-export type MarkerPrimitive =
-  | MarkerPathPrim
-  | MarkerEllipsePrim
-  | MarkerRectPrim
-  | MarkerGroupPrim;
+export type MarkerPrimitive = MarkerPathPrim | MarkerEllipsePrim | MarkerRectPrim | MarkerGroupPrim;

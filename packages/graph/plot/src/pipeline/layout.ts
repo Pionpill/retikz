@@ -36,7 +36,8 @@ export type Margins = {
  * @description plot lowering 在 core compile 前跑、无 measureText，按字符数 × 字号 × 经验系数估。
  *   单一来源：ADR-03 的 left margin 与 ADR-04 的 y label 水平偏移都调它，避免两处各算一份。
  */
-export const estimateLabelWidth = (text: string, fontSize: number): number => text.length * fontSize * CHAR_WIDTH_FACTOR;
+export const estimateLabelWidth = (text: string, fontSize: number): number =>
+  text.length * fontSize * CHAR_WIDTH_FACTOR;
 
 /** 四边 legend 预留带宽（user units）：legend 占某边时该边在 axis margin 之外再让出的带宽 */
 export type LegendReserve = {
@@ -95,7 +96,9 @@ export const computePlotArea = (
     top: (input.hasYAxis ? fontSize * 0.5 : 0) + (reserve.top ?? 0),
     right: (input.hasXAxis ? maxLabelWidth(input.xLabels.slice(-1), fontSize) * 0.5 : 0) + (reserve.right ?? 0),
     bottom: (input.hasXAxis ? AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize : 0) + (reserve.bottom ?? 0),
-    left: (input.hasYAxis ? AXIS_TICK_LENGTH + AXIS_LABEL_GAP + maxLabelWidth(input.yLabels, fontSize) : 0) + (reserve.left ?? 0),
+    left:
+      (input.hasYAxis ? AXIS_TICK_LENGTH + AXIS_LABEL_GAP + maxLabelWidth(input.yLabels, fontSize) : 0) +
+      (reserve.left ?? 0),
   };
   const margins: Margins = { ...auto, ...options.margin };
   // 用户 margin 可能传入 NaN / 负值——会一路污染出坏坐标，逐边校验有限非负（与 width/height 入口校验同思路）
@@ -169,7 +172,9 @@ export const computePolarCoordinate = (
   const availableHeight = height - margins.top - margins.bottom;
   const outerRadius = Math.min(availableWidth, availableHeight) / 2;
   if (outerRadius <= 0) {
-    throw new Error(`lowerPlots: polar label reserve / margins exceed the ${width}×${height} canvas, leaving no radius`);
+    throw new Error(
+      `lowerPlots: polar label reserve / margins exceed the ${width}×${height} canvas, leaving no radius`,
+    );
   }
   return {
     center: [margins.left + availableWidth / 2, margins.top + availableHeight / 2],
@@ -205,7 +210,9 @@ export const computeTernaryFrame = (
 ): TernaryLayout => {
   const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
   // 三边刻度标签贴边一圈，按最宽标签估留白；无轴时也留一字高边距，避免顶点贴画布
-  const reserve = input.hasAxis ? maxLabelWidth(input.labels, fontSize) + AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize : fontSize;
+  const reserve = input.hasAxis
+    ? maxLabelWidth(input.labels, fontSize) + AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize
+    : fontSize;
   const explicit: Partial<Margins> = options.margin ?? {};
   const margins: Margins = {
     top: explicit.top ?? reserve,
@@ -224,7 +231,9 @@ export const computeTernaryFrame = (
   // 朝上等边三角内接：边长受可用宽与可用高（高 = 边·√3/2）双约束
   const side = Math.min(availableWidth, (availableHeight * 2) / Math.sqrt(3));
   if (side <= 0) {
-    throw new Error(`lowerPlots: ternary label reserve / margins exceed the ${width}×${height} canvas, leaving no triangle`);
+    throw new Error(
+      `lowerPlots: ternary label reserve / margins exceed the ${width}×${height} canvas, leaving no triangle`,
+    );
   }
   const triangleHeight = (side * Math.sqrt(3)) / 2;
   const centerX = margins.left + availableWidth / 2;

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import { RectangleStepSchema } from '../../src/schemas';
+
 import type { CompileWarning, IR } from '../../src';
 import type { PathPrim, ScenePrimitive } from '../../src/primitive';
+
+import { compileToScene } from '../../src/compile/compile';
+import { RectangleStepSchema } from '../../src/schemas';
 import { arc, close, line, move } from '../helpers/path-command-factory';
 
 const silent = { onWarn: () => {} };
@@ -150,16 +152,8 @@ describe('rectangle step：单步自包含（无前置 move）', () => {
   it('仅一个 rectangle step（无 move）→ 正常渲染，不触发 PATH_TOO_SHORT', () => {
     const warnings: Array<CompileWarning> = [];
     const ir = path({ type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6] });
-    const commands = findPathPrim(
-      compileToScene(ir, { onWarn: w => warnings.push(w) }).primitives,
-    ).commands;
-    expect(commands).toEqual([
-      move([0, 0]),
-      line([10, 0]),
-      line([10, 6]),
-      line([0, 6]),
-      close(),
-    ]);
+    const commands = findPathPrim(compileToScene(ir, { onWarn: w => warnings.push(w) }).primitives).commands;
+    expect(commands).toEqual([move([0, 0]), line([10, 0]), line([10, 6]), line([0, 6]), close()]);
     expect(warnings.find(w => w.code === 'PATH_TOO_SHORT')).toBeUndefined();
   });
 
@@ -182,8 +176,6 @@ describe('rectangle step：node ref 角 + schema', () => {
   });
 
   it('缺 to → schema 拒（from/to 必填）', () => {
-    expect(
-      RectangleStepSchema.safeParse({ type: 'step', kind: 'rectangle', from: [0, 0] }).success,
-    ).toBe(false);
+    expect(RectangleStepSchema.safeParse({ type: 'step', kind: 'rectangle', from: [0, 0] }).success).toBe(false);
   });
 });

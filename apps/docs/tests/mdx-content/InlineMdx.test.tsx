@@ -1,7 +1,8 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { InlineMdx } from '@/components/shared/mdx-content/InlineMdx';
+
 import { escapeBareJsxTriggers } from '@/components/shared/mdx-content/escape-bare-jsx-triggers';
+import { InlineMdx } from '@/components/shared/mdx-content/InlineMdx';
 
 describe('escapeBareJsxTriggers', () => {
   it('代码段外裸 `<` 转义成 `\\<`（保留行为）', () => {
@@ -9,21 +10,17 @@ describe('escapeBareJsxTriggers', () => {
   });
 
   it('代码段外裸 `{` / `}` 转义成 `\\{` / `\\}`（changelog `{ x, y }` 这类字面对象）', () => {
-    expect(escapeBareJsxTriggers('（{ x, y, width, height }）')).toBe(
-      '（\\{ x, y, width, height \\}）',
-    );
+    expect(escapeBareJsxTriggers('（{ x, y, width, height }）')).toBe('（\\{ x, y, width, height \\}）');
   });
 
   it('反引号 code span 内的 `<` / `{` / `}` 一律不动', () => {
-    expect(escapeBareJsxTriggers('a `<Tag>` and `{ x: 1 }` b')).toBe(
-      'a `<Tag>` and `{ x: 1 }` b',
-    );
+    expect(escapeBareJsxTriggers('a `<Tag>` and `{ x: 1 }` b')).toBe('a `<Tag>` and `{ x: 1 }` b');
   });
 
   it('混合：code span 内保持，外面 `<` / `{` 都转义', () => {
-    expect(
-      escapeBareJsxTriggers('use `<Tag>` not `{x}`; bare {y} or <X> blow up'),
-    ).toBe('use `<Tag>` not `{x}`; bare \\{y\\} or \\<X> blow up');
+    expect(escapeBareJsxTriggers('use `<Tag>` not `{x}`; bare {y} or <X> blow up')).toBe(
+      'use `<Tag>` not `{x}`; bare \\{y\\} or \\<X> blow up',
+    );
   });
 });
 

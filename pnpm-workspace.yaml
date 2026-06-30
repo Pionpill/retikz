@@ -2,6 +2,9 @@ packages:
   - packages/*/*
   - apps/*
 
+allowBuilds:
+  esbuild: true
+
 catalog:
   '@ai-sdk/anthropic': ^3.0.84
   '@ai-sdk/deepseek': ^2.0.38
@@ -34,6 +37,7 @@ catalog:
   eslint: ^10.2.1
   eslint-plugin-react-hooks: ^7.1.1
   eslint-plugin-react-refresh: ^0.5.2
+  eslint-plugin-simple-import-sort: ^13.0.0
   github-slugger: ^2.0.0
   globals: ^17.5.0
   i18next: ^26

@@ -1,5 +1,7 @@
+import type { FC, ReactNode } from 'react';
+
 import { Ban, BotMessageSquare, ChevronsDownUp, ChevronsUpDown, Diff, Minus, Plus, X } from 'lucide-react';
-import { type FC, Fragment, type ReactNode, useRef, useState } from 'react';
+import { Fragment, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -8,30 +10,28 @@ import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/use-ai-chat-store';
 import { useComponentPreviewStore } from '@/store/use-component-preview-store';
 
+import type {
+  AlignKey,
+  ComponentRenderSource,
+  DiffMode,
+  PreviewAction,
+  PreviewActionContext,
+  PreviewOverlay,
+  RendererMode,
+  SizeKey,
+  UnifiedDiff,
+} from './_shared';
+
 import { HighlightedCode } from '../highlight-code';
 import { CopyButton, SourceViewBar, ToolbarIconButton } from './_parts';
-import {
-  type AlignKey,
-  type ComponentRenderSource,
-  type DiffMode,
-  type PreviewAction,
-  type PreviewActionContext,
-  PreviewActionStateContext,
-  type PreviewOverlay,
-  type RendererMode,
-  type SizeKey,
-  type UnifiedDiff,
-  alignClass,
-  filterDiffByMode,
-  sizeClass,
-} from './_shared';
+import { alignClass, filterDiffByMode, PreviewActionStateContext, sizeClass } from './_shared';
 import { ANIM_PAUSE_ID, buildAnimationActions } from './animation-actions';
-import { PreviewActionBar } from './PreviewActionBar';
 import { ComponentDetailDialog } from './ComponentDetailDialog';
 import { DemoRenderer } from './DemoRenderer';
 import { PanZoomToolbar } from './PanZoomToolbar';
-import { useSourceViews } from './use-source-views';
+import { PreviewActionBar } from './PreviewActionBar';
 import { usePanZoom } from './use-pan-zoom';
+import { useSourceViews } from './use-source-views';
 
 export type { ComponentRenderSource } from './_shared';
 
@@ -102,8 +102,20 @@ export type ComponentRenderProps = {
  * @description 不接触 demo 文件加载、AST 解析或 IR 派生——那些由调用方（`ComponentPreview` 走 glob、`RetikzPreview` 走 source string）准备好后喂进来
  */
 export const ComponentRender: FC<ComponentRenderProps> = props => {
-  const { name, Component, source, align = 'center', size = 'md', componentClassName, showAskAi = true, interactive, animated = false, actions, actionsAlwaysVisible = true, overlays } =
-    props;
+  const {
+    name,
+    Component,
+    source,
+    align = 'center',
+    size = 'md',
+    componentClassName,
+    showAskAi = true,
+    interactive,
+    animated = false,
+    actions,
+    actionsAlwaysVisible = true,
+    overlays,
+  } = props;
   // 局部状态用 `boolean | undefined`：undefined 跟随全局默认；用户单卡操作过一次后本地选择胜出
   const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);
   const [sourceFileIndex, setSourceFileIndex] = useState(0);
@@ -112,8 +124,17 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   // 偏好 added/removed 优先于 full：full unified（current + 删除行交织）阅读噪声大，教学场景只看新增 / 只看删除更直观
   const [localDiffMode, setLocalDiffMode] = useState<DiffMode | undefined>(undefined);
   // 视图选择 + 当前视图文件 + 复制：统一走 useSourceViews（与 Dialog 共用同一份推导，任意视图都能多文件 + diff）
-  const { views, view, setView, files, activeFileIndex, activeFile, render: activeRender, copied, handleCopy } =
-    useSourceViews(source, sourceFileIndex);
+  const {
+    views,
+    view,
+    setView,
+    files,
+    activeFileIndex,
+    activeFile,
+    render: activeRender,
+    copied,
+    handleCopy,
+  } = useSourceViews(source, sourceFileIndex);
   const hasCode = views.length > 0;
   // 卡内 drag 默认关闭：local 为 undefined 时跟随全局；单卡点过 Hand 后本地胜出
   const [localDragEnabled, setLocalDragEnabled] = useState<boolean | undefined>(undefined);
@@ -278,7 +299,9 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     values: actionValues,
     setValue: actionCtx.setActionValue,
   };
-  const overlayNodes: Array<ReactNode> = (overlays ?? []).map(o => <Fragment key={o.id}>{o.render(actionCtx)}</Fragment>);
+  const overlayNodes: Array<ReactNode> = (overlays ?? []).map(o => (
+    <Fragment key={o.id}>{o.render(actionCtx)}</Fragment>
+  ));
 
   return (
     <div ref={containerRef} className="my-6 overflow-hidden rounded-xl border">
@@ -315,7 +338,12 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
             </PreviewActionStateContext.Provider>
           </Fragment>
         </div>
-        <PreviewActionBar actions={allActions} ctx={actionCtx} pinned={toolbarPinned} alwaysVisible={actionsAlwaysVisible && (actions?.length ?? 0) > 0} />
+        <PreviewActionBar
+          actions={allActions}
+          ctx={actionCtx}
+          pinned={toolbarPinned}
+          alwaysVisible={actionsAlwaysVisible && (actions?.length ?? 0) > 0}
+        />
         {overlayNodes}
         <PanZoomToolbar
           transform={transform}
@@ -332,7 +360,6 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
           rendererMode={rendererMode}
           toggleRendererMode={toggleRendererMode}
           pinned={toolbarPinned}
-          alwaysVisible={actionsAlwaysVisible && (actions?.length ?? 0) > 0}
         />
       </div>
       {hasCode ? (

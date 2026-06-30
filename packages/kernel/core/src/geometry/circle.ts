@@ -1,7 +1,9 @@
-import { type Side, edgeAngleDeg } from './edge';
-import { localToWorld, worldToLocal } from './transform';
 import type { CompassAnchorValue } from './anchor';
+import type { Side } from './edge';
 import type { Position } from './point';
+
+import { edgeAngleDeg } from './edge';
+import { localToWorld, worldToLocal } from './transform';
 
 const DEG_TO_RAD = Math.PI / 180;
 

@@ -6,9 +6,11 @@
  *   带 transforms 的 scope 内 path 被 hoist 到顶层、不进 GroupPrim（既有架构限制）；手搓非 finite 裁剪区编译期抛。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { GroupPrim, IR, IRPaintSpec, ScenePrimitive, SceneResource } from '../../src';
 import type { ClipResource } from '../../src';
+
+import { compileToScene } from '../../src/compile/compile';
 
 const scene = (children: IR['children']): IR => ({
   version: 1,

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { sceneContract, sceneContractString } from '../../src/schema/contract';
 
 describe('sceneContract: SceneSchema → JSON Schema（喂 LLM 的结构化契约）', () => {

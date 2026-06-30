@@ -1,0 +1,14 @@
+import type { FC } from 'react';
+
+import { IntervalMark, Plot } from '@retikz/plot-react';
+
+import { share } from './coordinate-pie.data';
+
+/** 饼图：polar + <IntervalMark angle>，angle 值字段自动累积成各扇区角界 */
+const Demo: FC = () => (
+  <Plot data={share} width={320} height={320} coordinate="polar2D" style={{ maxWidth: '100%', height: 'auto' }}>
+    <IntervalMark angle="value" color="label" />
+  </Plot>
+);
+
+export default Demo;

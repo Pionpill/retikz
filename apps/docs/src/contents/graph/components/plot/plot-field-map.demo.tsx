@@ -1,0 +1,25 @@
+import type { FC } from 'react';
+
+import { Axis, PathMark, Plot } from '@retikz/plot-react';
+
+import { renamedVisits } from './plot-field-map.data';
+
+const Demo: FC = () => (
+  <Plot
+    data={renamedVisits}
+    model={[
+      { name: 'date', type: 'temporal' },
+      { name: 'visits', type: 'continuous' },
+    ]}
+    fieldMap={{ date: 'period', visits: 'amount' }}
+    width={420}
+    height={220}
+    style={{ maxWidth: '100%', height: 'auto' }}
+  >
+    <PathMark x="date" y="visits" order="date" />
+    <Axis dimension="x" />
+    <Axis dimension="y" grid />
+  </Plot>
+);
+
+export default Demo;

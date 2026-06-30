@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { ScaleSchema } from '../../src/schemas/scale';
 
 describe('ScaleSchema (ADR-03)', () => {
@@ -70,7 +71,11 @@ describe('ScaleSchema log / pow / sqrt (alpha.7 ADR-01)', () => {
 
   it('log_domain_negative_accepted_by_schema_rejected_at_lowering', () => {
     // schema 只校验结构（两元数值元组）；正性留 lowering fail-loud
-    expect(ScaleSchema.parse({ type: 'log', name: 'y', domain: [-1, 10] })).toEqual({ type: 'log', name: 'y', domain: [-1, 10] });
+    expect(ScaleSchema.parse({ type: 'log', name: 'y', domain: [-1, 10] })).toEqual({
+      type: 'log',
+      name: 'y',
+      domain: [-1, 10],
+    });
   });
 
   it('pow_exponent_non_number_rejected', () => {
@@ -239,7 +244,15 @@ describe('ScaleSchema sequential 连续顺序色阶（alpha.8 ADR-01）', () => 
 
   // JSON round-trip
   it('JSON round-trip 不丢字段', () => {
-    const s = { type: 'sequential', name: 'col', domain: [0, 50], scheme: 'blues', range: ['#eee', '#111'], nice: true, clamp: false };
+    const s = {
+      type: 'sequential',
+      name: 'col',
+      domain: [0, 50],
+      scheme: 'blues',
+      range: ['#eee', '#111'],
+      nice: true,
+      clamp: false,
+    };
     expect(ScaleSchema.parse(JSON.parse(JSON.stringify(s)))).toEqual(s);
   });
 });
@@ -295,7 +308,15 @@ describe('ScaleSchema diverging 连续发散色阶（alpha.8 ADR-01）', () => {
 
   // JSON round-trip
   it('JSON round-trip 不丢字段', () => {
-    const s = { type: 'diverging', name: 'col', domain: [-1, 0, 1], scheme: 'rdylbu', range: ['#a00', '#fff', '#00a'], nice: false, clamp: true };
+    const s = {
+      type: 'diverging',
+      name: 'col',
+      domain: [-1, 0, 1],
+      scheme: 'rdylbu',
+      range: ['#a00', '#fff', '#00a'],
+      nice: false,
+      clamp: true,
+    };
     expect(ScaleSchema.parse(JSON.parse(JSON.stringify(s)))).toEqual(s);
   });
 });
@@ -367,7 +388,14 @@ describe('ScaleSchema quantize 等宽离散化（alpha.8 ADR-02）', () => {
 
   // JSON round-trip
   it('JSON round-trip 不丢字段', () => {
-    const s = { type: 'quantize', name: 'col', domain: [0, 100], count: 4, scheme: 'viridis', range: ['#a', '#b', '#c', '#d'] };
+    const s = {
+      type: 'quantize',
+      name: 'col',
+      domain: [0, 100],
+      count: 4,
+      scheme: 'viridis',
+      range: ['#a', '#b', '#c', '#d'],
+    };
     expect(ScaleSchema.parse(JSON.parse(JSON.stringify(s)))).toEqual(s);
   });
 
@@ -502,15 +530,28 @@ describe('ScaleSchema quantile 分位离散化（alpha.8 ADR-02）', () => {
 describe('离散化 / 连续色阶 · 非有限数值字段被 schema 拒（自 adversarial BLOCKING 提升；守 IR 100% JSON 可序列化）', () => {
   // Infinity 经 JSON.stringify 变 null、再 parse 失败——非有限数必须在 parse 期 fail-loud，不放进 IR
   it('threshold breakpoints 含 Infinity 被拒', () => {
-    expect(() => ScaleSchema.parse({ type: 'threshold', name: 'col', breakpoints: [60, Number.POSITIVE_INFINITY], range: ['#111', '#888', '#eee'] })).toThrow();
+    expect(() =>
+      ScaleSchema.parse({
+        type: 'threshold',
+        name: 'col',
+        breakpoints: [60, Number.POSITIVE_INFINITY],
+        range: ['#111', '#888', '#eee'],
+      }),
+    ).toThrow();
   });
   it('quantize domain 含 Infinity 被拒', () => {
-    expect(() => ScaleSchema.parse({ type: 'quantize', name: 'col', domain: [0, Number.POSITIVE_INFINITY], count: 3 })).toThrow();
+    expect(() =>
+      ScaleSchema.parse({ type: 'quantize', name: 'col', domain: [0, Number.POSITIVE_INFINITY], count: 3 }),
+    ).toThrow();
   });
   it('sequential domain 含 -Infinity 被拒', () => {
-    expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', domain: [Number.NEGATIVE_INFINITY, 100] })).toThrow();
+    expect(() =>
+      ScaleSchema.parse({ type: 'sequential', name: 'col', domain: [Number.NEGATIVE_INFINITY, 100] }),
+    ).toThrow();
   });
   it('diverging domain 含 Infinity 被拒', () => {
-    expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', domain: [-100, 0, Number.POSITIVE_INFINITY] })).toThrow();
+    expect(() =>
+      ScaleSchema.parse({ type: 'diverging', name: 'col', domain: [-100, 0, Number.POSITIVE_INFINITY] }),
+    ).toThrow();
   });
 });

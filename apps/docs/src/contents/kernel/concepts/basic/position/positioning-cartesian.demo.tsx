@@ -1,0 +1,19 @@
+import type { FC } from 'react';
+
+import { Layout, Node } from '@retikz/react';
+
+const Demo: FC = () => (
+  <Layout width={300} height={120}>
+    <Node id="a" position={[0, 0]}>
+      [0, 0]
+    </Node>
+    <Node id="b" position={[100, 0]}>
+      [100, 0]
+    </Node>
+    <Node id="c" position={[50, 60]}>
+      [50, 60]
+    </Node>
+  </Layout>
+);
+
+export default Demo;

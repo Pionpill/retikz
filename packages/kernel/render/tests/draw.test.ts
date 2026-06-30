@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
 import type { Scene } from '@retikz/core';
+
+import { describe, expect, it } from 'vitest';
+
 import { drawScene } from '../src/canvas';
 
 type CanvasCall = {
@@ -22,6 +24,7 @@ type SpyCanvasContext = Pick<
   | 'clip'
   | 'closePath'
   | 'createLinearGradient'
+  | 'createConicGradient'
   | 'createPattern'
   | 'createRadialGradient'
   | 'drawImage'
@@ -69,25 +72,32 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
     textAlign: 'start',
     textBaseline: 'alphabetic',
   } as SpyCanvasContext;
-  const record = (name: string) => (...args: Array<unknown>) => {
-    if (name === 'save') {
-      stack.push({ font: context.font, lineCap: context.lineCap, lineJoin: context.lineJoin, lineWidth: context.lineWidth });
-    }
-    if (name === 'restore') {
-      const snapshot = stack.pop();
-      if (snapshot) Object.assign(context, snapshot);
-    }
-    calls.push({
-      name,
-      args,
-      font: context.font,
-      fillStyle: context.fillStyle,
-      lineCap: context.lineCap,
-      lineJoin: context.lineJoin,
-      lineWidth: context.lineWidth,
-      strokeStyle: context.strokeStyle,
-    });
-  };
+  const record =
+    (name: string) =>
+    (...args: Array<unknown>) => {
+      if (name === 'save') {
+        stack.push({
+          font: context.font,
+          lineCap: context.lineCap,
+          lineJoin: context.lineJoin,
+          lineWidth: context.lineWidth,
+        });
+      }
+      if (name === 'restore') {
+        const snapshot = stack.pop();
+        if (snapshot) Object.assign(context, snapshot);
+      }
+      calls.push({
+        name,
+        args,
+        font: context.font,
+        fillStyle: context.fillStyle,
+        lineCap: context.lineCap,
+        lineJoin: context.lineJoin,
+        lineWidth: context.lineWidth,
+        strokeStyle: context.strokeStyle,
+      });
+    };
 
   const makeGradient = (): CanvasGradient => ({
     addColorStop: (...a: Array<unknown>) => {
@@ -104,6 +114,10 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
     closePath: record('closePath'),
     createLinearGradient: (...args: Array<unknown>) => {
       record('createLinearGradient')(...args);
+      return makeGradient();
+    },
+    createConicGradient: (...args: Array<unknown>) => {
+      record('createConicGradient')(...args);
       return makeGradient();
     },
     createRadialGradient: (...args: Array<unknown>) => {
@@ -688,9 +702,7 @@ describe('drawScene 渐变填充', () => {
           },
         },
       ],
-      primitives: [
-        { type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'paint-1' } },
-      ],
+      primitives: [{ type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'paint-1' } }],
     };
 
     drawScene(context as unknown as CanvasRenderingContext2D, s, {
@@ -725,9 +737,7 @@ describe('drawScene 渐变填充', () => {
           },
         },
       ],
-      primitives: [
-        { type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'g' } },
-      ],
+      primitives: [{ type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'g' } }],
     };
 
     drawScene(context as unknown as CanvasRenderingContext2D, s);
@@ -754,9 +764,7 @@ describe('drawScene 渐变填充', () => {
           },
         },
       ],
-      primitives: [
-        { type: 'rect', x: 0, y: 0, width: 80, height: 80, fill: { kind: 'resourceRef', id: 'r' } },
-      ],
+      primitives: [{ type: 'rect', x: 0, y: 0, width: 80, height: 80, fill: { kind: 'resourceRef', id: 'r' } }],
     };
 
     drawScene(context as unknown as CanvasRenderingContext2D, s);
@@ -764,6 +772,39 @@ describe('drawScene 渐变填充', () => {
     // center 默认 (0.5,0.5) → (40,40)，radius 默认 0.5 → 0.5*max(80,80)=40
     expect(context.calls.find(c => c.name === 'createRadialGradient')?.args).toEqual([40, 40, 0, 40, 40, 40]);
     expect(context.calls.filter(c => c.name === 'addColorStop').length).toBe(2);
+  });
+
+  it('conic-gradient: rect fill maps bbox center to createConicGradient', () => {
+    const context = createSpyCanvasContext();
+    const s: Scene = {
+      layout: { x: 0, y: 0, width: 100, height: 50 },
+      resources: [
+        {
+          kind: 'paint',
+          id: 'c',
+          spec: {
+            kind: 'conicGradient',
+            center: [0.25, 0.5],
+            angle: -90,
+            stops: [
+              { offset: 0, color: '#ff0' },
+              { offset: 0.5, color: '#06c' },
+              { offset: 1, color: '#f30' },
+            ],
+          },
+        },
+      ],
+      primitives: [{ type: 'rect', x: 10, y: 20, width: 80, height: 40, fill: { kind: 'resourceRef', id: 'c' } }],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, s);
+
+    expect(context.calls.find(c => c.name === 'createConicGradient')?.args).toEqual([-Math.PI / 2, 30, 40]);
+    expect(context.calls.filter(c => c.name === 'addColorStop').map(c => c.args)).toEqual([
+      [0, '#ff0'],
+      [0.5, '#06c'],
+      [1, '#f30'],
+    ]);
   });
 
   it('gradient-stop-opacity：带 opacity 的 stop 烘焙成 rgba', () => {
@@ -783,9 +824,7 @@ describe('drawScene 渐变填充', () => {
           },
         },
       ],
-      primitives: [
-        { type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'g' } },
-      ],
+      primitives: [{ type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'g' } }],
     };
 
     drawScene(context as unknown as CanvasRenderingContext2D, s);
@@ -812,9 +851,7 @@ describe('drawScene 渐变填充', () => {
           },
         },
       ],
-      primitives: [
-        { type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'g' } },
-      ],
+      primitives: [{ type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'g' } }],
     };
 
     drawScene(context as unknown as CanvasRenderingContext2D, s, {
@@ -863,7 +900,9 @@ describe('drawScene 渐变描边', () => {
 
     drawScene(context as unknown as CanvasRenderingContext2D, s);
 
-    expect((context.calls.find(c => c.name === 'createLinearGradient')?.args as Array<number>).map(n => Math.round(n))).toEqual([50, 0, 50, 50]);
+    expect(
+      (context.calls.find(c => c.name === 'createLinearGradient')?.args as Array<number>).map(n => Math.round(n)),
+    ).toEqual([50, 0, 50, 50]);
     expect(context.calls.filter(c => c.name === 'addColorStop').map(c => c.args)).toEqual([
       [0, '#000'],
       [1, '#fff'],

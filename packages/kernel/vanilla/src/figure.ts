@@ -1,19 +1,30 @@
 import type { IR } from '@retikz/core';
-import { renderToCanvas } from '@retikz/render/canvas';
 import type { RenderOptions } from '@retikz/render/canvas';
+
+import { renderToCanvas } from '@retikz/render/canvas';
+
+import type { ScopeBuilder } from './builder/scope';
+import type {
+  Child,
+  CoordinateConfig,
+  DrawConfig,
+  FigureConfig,
+  FigureRootStyle,
+  ScopeConfig,
+  Way,
+} from './builder/types';
+import type { CanvasView, MountCanvasOptions, MountOptions, RenderToStringOptions, VanillaView } from './types';
+
 import { coordinate } from './builder/coordinate';
 import { draw } from './builder/draw';
 import { FIGURE_BRAND } from './builder/is-figure';
 import { node } from './builder/node';
 import { scope } from './builder/scope';
-import type { ScopeBuilder } from './builder/scope';
 import { FIGURE_ROOT_STYLE_FIELDS } from './builder/types';
-import type { Child, CoordinateConfig, DrawConfig, FigureConfig, FigureRootStyle, ScopeConfig, Way } from './builder/types';
 import { mountCanvas } from './mount-canvas';
 import { mountSvg } from './mount-svg';
 import { renderToSvgString } from './render-to-svg-string';
 import { toScene } from './to-scene';
-import type { CanvasView, MountCanvasOptions, MountOptions, RenderToStringOptions, VanillaView } from './types';
 
 /**
  * 命令式 builder 的装配产物 —— 唯一返回类型

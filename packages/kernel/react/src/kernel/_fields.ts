@@ -56,6 +56,10 @@ void _assertNodeFieldsCheck;
  * @description 同 NODE_FIELDS 互锁防漂移
  */
 export const PATH_FIELDS = [
+  'kind',
+  'kindOptions',
+  'ribbon',
+  'label',
   'id',
   'meta',
   'animations',
@@ -82,10 +86,7 @@ export const PATH_FIELDS = [
   'blendMode',
 ] as const satisfies ReadonlyArray<keyof IRPath>;
 
-type _PathFieldsCheck = AssertEqual<
-  (typeof PATH_FIELDS)[number],
-  Exclude<keyof IRPath, 'type' | 'children'>
->;
+type _PathFieldsCheck = AssertEqual<(typeof PATH_FIELDS)[number], Exclude<keyof IRPath, 'type' | 'children'>>;
 const _assertPathFieldsCheck: _PathFieldsCheck = true;
 void _assertPathFieldsCheck;
 
@@ -117,10 +118,7 @@ export const SCOPE_FIELDS = [
   'animations',
 ] as const satisfies ReadonlyArray<keyof IRScope>;
 
-type _ScopeFieldsCheck = AssertEqual<
-  (typeof SCOPE_FIELDS)[number],
-  Exclude<keyof IRScope, 'type' | 'children'>
->;
+type _ScopeFieldsCheck = AssertEqual<(typeof SCOPE_FIELDS)[number], Exclude<keyof IRScope, 'type' | 'children'>>;
 const _assertScopeFieldsCheck: _ScopeFieldsCheck = true;
 void _assertScopeFieldsCheck;
 
@@ -175,10 +173,7 @@ export const SCOPE_STYLE_FIELDS = [
   'arrowDefault',
 ] as const satisfies ReadonlyArray<keyof ScopeStyleProps>;
 
-type _ScopeStyleFieldsCheck = AssertEqual<
-  (typeof SCOPE_STYLE_FIELDS)[number],
-  keyof ScopeStyleProps
->;
+type _ScopeStyleFieldsCheck = AssertEqual<(typeof SCOPE_STYLE_FIELDS)[number], keyof ScopeStyleProps>;
 const _assertScopeStyleFieldsCheck: _ScopeStyleFieldsCheck = true;
 void _assertScopeStyleFieldsCheck;
 

@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+
 import { CodeBlockCommand } from '../code-block-command';
 
 export type PackageManagerInstallProps = {

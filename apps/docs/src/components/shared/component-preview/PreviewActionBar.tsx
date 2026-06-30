@@ -1,10 +1,13 @@
-import { type FC, useEffect, useState } from 'react';
+import type { FC } from 'react';
+
+import { useEffect, useState } from 'react';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-import { ToolbarIconButton } from './_parts';
 import type { PreviewAction, PreviewActionContext } from './_shared';
+
+import { ToolbarIconButton } from './_parts';
 
 const releaseSelectDocumentLock = (): void => {
   if (document.querySelector('[role="dialog"]')) return;

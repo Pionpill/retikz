@@ -1,19 +1,31 @@
 import type { IRNode, IRScope } from '@retikz/core';
+
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 /** 正方形画布 → outerRadius = min(w,h)/2 = 200、center = [200,200]（无角向轴 → margin 0） */
 const opts: LowerPlotsOptions = { width: 400, height: 400 };
 
-const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options: LowerPlotsOptions = opts): IRScope => {
+const expandOf = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options: LowerPlotsOptions = opts,
+): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
 
 /** 取第一个 mark 图层 scope */
-const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options: LowerPlotsOptions = opts): IRScope =>
-  expandOf(spec, datasets, options).children[0] as IRScope;
+const firstLayer = (
+  spec: PlotSpec,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options: LowerPlotsOptions = opts,
+): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 sector node（无 color 时直接子，有 color 时藏在子 Scope 里） */
 const sectorNodes = (layer: IRScope): Array<IRNode> => {
@@ -21,7 +33,7 @@ const sectorNodes = (layer: IRScope): Array<IRNode> => {
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'node') out.push(node);
+      if (node.type === 'node') out.push(child as IRNode);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -30,10 +42,18 @@ const sectorNodes = (layer: IRScope): Array<IRNode> => {
 };
 
 /** 读 sector node 的 shape params（断言其确为 sector shape ref） */
-const sectorParams = (node: IRNode): { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number } => {
+const sectorParams = (
+  node: IRNode,
+): { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number; cornerRadius?: number } => {
   const shape = node.shape as { type?: string; params?: Record<string, number> } | undefined;
   expect(shape?.type).toBe('sector');
-  return shape!.params as { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number };
+  return shape!.params as {
+    innerRadius: number;
+    outerRadius: number;
+    startAngle: number;
+    endAngle: number;
+    cornerRadius?: number;
+  };
 };
 
 // ── interval polar → sector（径向柱 / 玫瑰）─────────────────────────────
@@ -103,7 +123,14 @@ describe('lowerPlots interval→sector under polar2D (ADR-02)', () => {
 
   it('rose_negative_value_swaps_to_keep_outer_gt_inner', () => {
     // 负值径向柱：value 跨 baseline，swap 保证 outerRadius > innerRadius（core 硬约束）
-    const params = sectorNodes(firstLayer(roseSpec(), { sales: [{ month: 'A', amount: -4 }, { month: 'B', amount: 8 }] })).map(sectorParams);
+    const params = sectorNodes(
+      firstLayer(roseSpec(), {
+        sales: [
+          { month: 'A', amount: -4 },
+          { month: 'B', amount: 8 },
+        ],
+      }),
+    ).map(sectorParams);
     for (const p of params) expect(p.outerRadius).toBeGreaterThan(p.innerRadius);
   });
 
@@ -124,13 +151,68 @@ describe('lowerPlots interval→sector under polar2D (ADR-02)', () => {
         { type: 'linear', name: 'val' },
         { type: 'ordinal', name: 'col', range: ['#a', '#b', '#c'] },
       ],
-      marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'amount' }, color: { field: 'month', scale: 'col' } } }],
+      marks: [
+        {
+          type: 'interval',
+          encoding: { x: { field: 'month' }, y: { field: 'amount' }, color: { field: 'month', scale: 'col' } },
+        },
+      ],
     });
     const layer = firstLayer(spec, { sales: SALES });
     // 3 类别 → 3 子 Scope（按颜色），各持一个 sector
     expect(layer.children).toHaveLength(3);
     expect((layer.children[0] as IRScope).type).toBe('scope');
     expect(sectorNodes(layer)).toHaveLength(3);
+  });
+
+  it('rose_sector_corner_radius_and_pad_angle_lower_into_shape_params', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      coordinate: { type: 'polar2D', angle: 'cat', radius: 'val', innerRadius: 0.45 },
+      scales: [
+        { type: 'band', name: 'cat' },
+        { type: 'linear', name: 'val' },
+      ],
+      marks: [
+        {
+          type: 'interval',
+          cornerRadius: { kind: 'constant', value: 8 },
+          padAngle: 6,
+          encoding: { x: { field: 'month' }, y: { field: 'amount' } },
+        },
+      ],
+    });
+    const unpaddedSpec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      coordinate: { type: 'polar2D', angle: 'cat', radius: 'val', innerRadius: 0.45 },
+      scales: [
+        { type: 'band', name: 'cat' },
+        { type: 'linear', name: 'val' },
+      ],
+      marks: [
+        {
+          type: 'interval',
+          cornerRadius: { kind: 'constant', value: 8 },
+          encoding: { x: { field: 'month' }, y: { field: 'amount' } },
+        },
+      ],
+    });
+    const params = sectorNodes(firstLayer(spec, { sales: SALES })).map(sectorParams);
+    const unpaddedParams = sectorNodes(firstLayer(unpaddedSpec, { sales: SALES })).map(sectorParams);
+    expect(params).toHaveLength(3);
+    expect(unpaddedParams).toHaveLength(3);
+    for (let index = 0; index < params.length; index++) {
+      const p = params[index];
+      const unpadded = unpaddedParams[index];
+      expect(p.innerRadius).toBeGreaterThan(0);
+      expect(p.cornerRadius).toBe(8);
+      expect(p.startAngle).toBeCloseTo(unpadded.startAngle + 3, 6);
+      expect(p.endAngle).toBeCloseTo(unpadded.endAngle - 3, 6);
+    }
   });
 
   it('rose_compiles_to_scene', async () => {
@@ -162,7 +244,13 @@ describe('lowerPlots sector mark pie / donut (ADR-02)', () => {
         { type: 'linear', name: 'a' },
         { type: 'linear', name: 'r' },
       ],
-      marks: [{ type: 'interval', encoding: { color: { field: 'label' } }, bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } } }],
+      marks: [
+        {
+          type: 'interval',
+          encoding: { color: { field: 'label' } },
+          bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+        },
+      ],
     });
 
   it('pie_each_row_one_sector_node', () => {
@@ -229,7 +317,13 @@ describe('lowerPlots sector mark pie / donut (ADR-02)', () => {
         { type: 'linear', name: 'r' },
         { type: 'ordinal', name: 'col', range: ['#a', '#b', '#c'] },
       ],
-      marks: [{ type: 'interval', encoding: { color: { field: 'label', scale: 'col' } }, bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } } }],
+      marks: [
+        {
+          type: 'interval',
+          encoding: { color: { field: 'label', scale: 'col' } },
+          bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+        },
+      ],
     });
     const layer = firstLayer(spec, { share: SHARE });
     // 每片颜色由 color 编码 → 3 子 Scope
@@ -259,7 +353,13 @@ describe('lowerPlots sector mark pie / donut (ADR-02)', () => {
         { type: 'linear', name: 'a' },
         { type: 'linear', name: 'r' },
       ],
-      marks: [{ type: 'interval', encoding: { color: { field: 'label' } }, bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } } }],
+      marks: [
+        {
+          type: 'interval',
+          encoding: { color: { field: 'label' } },
+          bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+        },
+      ],
     });
     expect(() => expandOf(spec, { share: SHARE })).toThrow();
   });
@@ -277,8 +377,22 @@ describe('lowerPlots sector mark pie / donut (ADR-02)', () => {
         { type: 'linear', name: 'a' },
         { type: 'linear', name: 'r' },
       ],
-      marks: [{ type: 'interval', encoding: { color: { field: 'label' } }, bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } } }],
+      marks: [
+        {
+          type: 'interval',
+          encoding: { color: { field: 'label' } },
+          bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+        },
+      ],
     });
-    expect(() => expandOf(spec, { share: [{ label: 'A', value: 3 }, { label: 'B', value: -5 }, { label: 'C', value: 2 }] })).not.toThrow();
+    expect(() =>
+      expandOf(spec, {
+        share: [
+          { label: 'A', value: 3 },
+          { label: 'B', value: -5 },
+          { label: 'C', value: 2 },
+        ],
+      }),
+    ).not.toThrow();
   });
 });

@@ -4,8 +4,10 @@
  *   path target `'A.<keyword>'` / `'A.<deg>'` 取 anchor 应反映视觉投影；测试用 fallback measurer 几何近似 + 宽松断言
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
 import type { IR, ScenePrimitive } from '../../src';
+
+import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
 const scene = (children: IR['children']): IR => ({
@@ -282,9 +284,7 @@ describe('跨 scope anchor 边界', () => {
       {
         type: 'scope',
         transforms: [{ kind: 'translate', x: 80, y: 0 }],
-        children: [
-          { type: 'coordinate', id: 'cz', position: [0, 0] },
-        ],
+        children: [{ type: 'coordinate', id: 'cz', position: [0, 0] }],
       },
       {
         type: 'path',

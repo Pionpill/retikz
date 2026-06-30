@@ -1,0 +1,71 @@
+---
+title: Entity
+description: Named members placed in a scene — Node and Coordinate
+---
+
+`entity` covers IR primitives that **have an id**, are **placed at a position**, and **don't draw paths themselves**. Both register into the same node index, so a Node id and a Coordinate id share the same namespace.
+
+## Node
+
+`NodeSchema` describes one positioned visual primitive. It's the heaviest IR entity — 30+ fields covering shape, fill / stroke style, padding, text content, font, scaling, and attached labels.
+
+<ZodSchema name="NodeSchema" />
+
+<Comparison target="tikz" title="Node field mapping">
+
+`drawOpacity` maps to TikZ `draw opacity`; `dashed` / `dotted` map to TikZ's dashed / dotted presets; the `{ text, position }` form of `label` maps to `[label=above:foo]` / `[label=30:foo]`. `placement: 'inside'` is retikz's structured extension for labels placed inside a node.
+
+</Comparison>
+
+## Coordinate
+
+`CoordinateSchema` requires an `id` (its whole purpose), never contributes to layout, and shares the node index with `Node`.
+
+<Comparison target="tikz" title="Coordinate Mapping">
+
+`{ type: 'coordinate', id: 'm', position: [3, 2] }` maps to TikZ `\coordinate (m) at (3,2);`.
+
+</Comparison>
+
+<ZodSchema name="CoordinateSchema" />
+
+## NodeLabel
+
+`NodeLabelSchema` describes extra text attached to a node. `Node.label` accepts either one object or an array.
+
+<ZodSchema
+  name="NodeLabelSchema"
+  descriptions={{
+    text: 'Label text content, rendered as one line',
+    position:
+      'Label position relative to the node border: 8-direction enum, center, numeric angle, or `{ boundary, t }` on a rectangle boundary; defaults to above; center draws at the node center',
+    placement: 'Offset direction from the attachment point: outside (default) or inside; inside labels cannot use pin',
+    distance: 'Distance from the node boundary to the label center, in user units; defaults to 12',
+    textColor: 'Label text color; defaults to currentColor',
+    opacity: 'Label opacity 0..1; multiplied with the node opacity',
+    font: 'Label font override; omitted fields inherit from the parent node font, then renderer defaults',
+    rotate:
+      'Rotates label text around its own center: none (default), radial, tangent, or an explicit degree value; changes orientation only',
+    keepUpright:
+      'When true, flips rotated text by 180 degrees if it would otherwise read upside down; defaults to false',
+    pin: 'Draws a leader line from node border to label: true = default thin line; object = styled leader; omitted / false = none. Only supported for outside labels',
+  }}
+/>
+
+`position: { boundary, t }` currently targets box-like node boundaries: `boundary` is `'top'` / `'right'` / `'bottom'` / `'left'`, and `t` is the 0..1 proportional position on that side, defaulting to `0.5`.
+
+## TextBlock
+
+`TextBlockSchema` is the node text block shape: a single string for one line, or an array for multiple lines where each item may use `LineSpec` for per-line styling.
+
+<ZodSchema name="TextBlockSchema" />
+
+### LineSpec
+
+<ZodSchema name="LineSpecSchema" />
+
+## Font
+
+`FontSchema` is shared by node text, node labels, and per-line text overrides. All fields are optional.
+
+<ZodSchema name="FontSchema" />

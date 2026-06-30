@@ -1,7 +1,12 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
+
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotSpec } from '../../src/schemas';
+
+import { lowerPlots } from '../../src/pipeline/expand';
+import { PlotSpecSchema } from '../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
@@ -10,14 +15,15 @@ const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, 
   return def.expand(spec) as IRScope;
 };
 
-const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => expandOf(spec, datasets).children[0] as IRScope;
+const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
+  expandOf(spec, datasets).children[0] as IRScope;
 
 const collectNodes = (scope: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'node') out.push(node);
+      if (node.type === 'node') out.push(child as IRNode);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -30,7 +36,7 @@ const collectPaths = (scope: IRScope): Array<IRPath> => {
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'path') out.push(node);
+      if (node.type === 'path') out.push(child as IRPath);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -58,7 +64,10 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
         {
@@ -86,7 +95,10 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
         {
@@ -100,8 +112,21 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
         },
       ],
     });
-    const [path] = collectPaths(firstLayer(spec, { d: [{ x: 0, y: 0 }, { x: 1, y: 1 }] }));
-    expect(path).toMatchObject({ strokeWidth: 3, opacity: 0.6, lineCap: 'round', lineJoin: 'bevel', roundedCorners: 4 });
+    const [path] = collectPaths(
+      firstLayer(spec, {
+        d: [
+          { x: 0, y: 0 },
+          { x: 1, y: 1 },
+        ],
+      }),
+    );
+    expect(path).toMatchObject({
+      strokeWidth: 3,
+      opacity: 0.6,
+      lineCap: 'round',
+      lineJoin: 'bevel',
+      roundedCorners: 4,
+    });
   });
 
   it('interval_node_channels_deliver_to_core_node', () => {
@@ -109,7 +134,10 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'band', name: 'x' }, { type: 'linear', name: 'y' }],
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
         {
@@ -121,12 +149,21 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
         },
       ],
     });
-    const nodes = collectNodes(firstLayer(spec, { d: [{ cat: 'A', value: 1, weight: 0, alpha: 0 }, { cat: 'B', value: 2, weight: 10, alpha: 10 }] }));
+    const nodes = collectNodes(
+      firstLayer(spec, {
+        d: [
+          { cat: 'A', value: 1, weight: 0, alpha: 0 },
+          { cat: 'B', value: 2, weight: 10, alpha: 10 },
+        ],
+      }),
+    );
     expect(nodes[0].strokeWidth).toBeCloseTo(0.5, 6);
     expect(nodes[1].strokeWidth).toBeCloseTo(4, 6);
     expect(nodes[0].fillOpacity).toBeCloseTo(0.2, 6);
     expect(nodes[1].fillOpacity).toBeCloseTo(1, 6);
-    expect((firstLayer(spec, { d: [{ cat: 'A', value: 1, weight: 0, alpha: 0 }] }).nodeDefault as IRNode).opacity).toBe(0.9);
+    expect((firstLayer(spec, { d: [{ cat: 'A', value: 1, weight: 0, alpha: 0 }] }).nodeDefault as IRNode).opacity).toBe(
+      0.9,
+    );
   });
 
   it('datum_label_style_fields_deliver_to_core_node_label', () => {
@@ -134,7 +171,10 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'band', name: 'x' }, { type: 'linear', name: 'y' }],
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
         {
@@ -173,7 +213,10 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
         {
@@ -183,7 +226,14 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
         },
       ],
     });
-    const nodes = collectNodes(firstLayer(spec, { d: [{ x: 0, y: 0, label: 'A', tone: '#ef4444' }, { x: 1, y: 1, label: 'B', tone: '#2563eb' }] }));
+    const nodes = collectNodes(
+      firstLayer(spec, {
+        d: [
+          { x: 0, y: 0, label: 'A', tone: '#ef4444' },
+          { x: 1, y: 1, label: 'B', tone: '#2563eb' },
+        ],
+      }),
+    );
     expect(nodes.map(node => node.textColor)).toEqual(['#ef4444', '#2563eb']);
   });
 
@@ -192,7 +242,10 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
         {
@@ -237,7 +290,11 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'ordinal', name: 'tone', range: ['#ef4444', '#2563eb'] }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'tone', range: ['#ef4444', '#2563eb'] },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
         {
@@ -247,7 +304,14 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
         },
       ],
     });
-    const nodeDefaults = collectScopes(firstLayer(spec, { d: [{ x: 0, y: 0, group: 'A' }, { x: 1, y: 1, group: 'B' }] })).map(scope => scope.nodeDefault);
+    const nodeDefaults = collectScopes(
+      firstLayer(spec, {
+        d: [
+          { x: 0, y: 0, group: 'A' },
+          { x: 1, y: 1, group: 'B' },
+        ],
+      }),
+    ).map(scope => scope.nodeDefault);
     expect(nodeDefaults).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ color: '#ef4444', fill: '#ef4444' }),
@@ -261,7 +325,10 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
         {
@@ -294,7 +361,10 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
         {
@@ -314,7 +384,14 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
         },
       ],
     });
-    const [path] = collectPaths(firstLayer(spec, { d: [{ x: 0, y: 0 }, { x: 1, y: 1 }] }));
+    const [path] = collectPaths(
+      firstLayer(spec, {
+        d: [
+          { x: 0, y: 0 },
+          { x: 1, y: 1 },
+        ],
+      }),
+    );
     expect(path).toMatchObject({
       drawOpacity: 0.45,
       zIndex: 7,

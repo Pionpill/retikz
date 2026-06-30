@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+
 import type { Release } from '@/data/changelog.types';
+
 import { changelogToMarkdown } from '@/components/shared/changelog/changelog-to-markdown';
 
 const fixture: Array<Release> = [
@@ -11,14 +13,14 @@ const fixture: Array<Release> = [
         pkg: '@retikz/core',
         version: 'v0.2',
         description: { zh: '核心摘要', en: 'core summary' },
-        highlights: [
-          { label: { zh: '形状注册', en: 'Shape registry' }, content: { zh: '可注册', en: 'registrable' } },
-        ],
+        highlights: [{ label: { zh: '形状注册', en: 'Shape registry' }, content: { zh: '可注册', en: 'registrable' } }],
         subVersions: [
           {
             version: 'alpha.3',
             date: '2026-05-23',
-            items: [{ label: { zh: '开放 string', en: 'open string' }, content: { zh: 'shape 字段', en: 'shape field' } }],
+            items: [
+              { label: { zh: '开放 string', en: 'open string' }, content: { zh: 'shape 字段', en: 'shape field' } },
+            ],
           },
         ],
       },
@@ -44,10 +46,7 @@ describe('changelogToMarkdown', () => {
   });
 
   it('有 stableDate 时标题带日期', () => {
-    const md = changelogToMarkdown(
-      [{ minor: 'v0.1', stableDate: '2026-05-20', packages: [] }],
-      'zh',
-    );
+    const md = changelogToMarkdown([{ minor: 'v0.1', stableDate: '2026-05-20', packages: [] }], 'zh');
     expect(md).toContain('## v0.1（2026-05-20）');
   });
 });

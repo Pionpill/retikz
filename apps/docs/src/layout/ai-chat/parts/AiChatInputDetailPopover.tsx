@@ -1,5 +1,7 @@
-import { FileText, Files } from 'lucide-react';
-import { type FC, useState } from 'react';
+import type { FC } from 'react';
+
+import { Files, FileText } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -32,9 +34,7 @@ export const AiChatInputDetailPopover: FC = () => {
         <Files className="size-3.5" />
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[320px] p-0">
-        <div className="border-b border-border px-3 py-2 text-xs font-medium">
-          {t('ai.convDetailReferenced')}
-        </div>
+        <div className="border-b border-border px-3 py-2 text-xs font-medium">{t('ai.convDetailReferenced')}</div>
         <ul className="max-h-[220px] overflow-y-auto py-1 text-sm">
           {contextSelection.length === 0 ? (
             <li className="px-3 py-2 text-xs text-muted-foreground">{t('ai.convNoPageContext')}</li>
@@ -42,10 +42,7 @@ export const AiChatInputDetailPopover: FC = () => {
             contextSelection.map(item => {
               const isCurrent = currentPage?.path === item.path;
               return (
-                <li
-                  key={item.path}
-                  className="flex items-center justify-between gap-2 px-3 py-1.5 hover:bg-accent"
-                >
+                <li key={item.path} className="flex items-center justify-between gap-2 px-3 py-1.5 hover:bg-accent">
                   <div className="flex min-w-0 items-center gap-2">
                     <FileText className="size-3.5 shrink-0 text-muted-foreground" />
                     <div className="flex min-w-0 flex-col">

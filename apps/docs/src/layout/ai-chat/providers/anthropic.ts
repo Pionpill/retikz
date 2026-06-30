@@ -1,5 +1,6 @@
-import { readSse } from './sse';
 import type { ChatChunk, ChatErrorKind, ChatProvider, ChatRequestOptions } from './types';
+
+import { readSse } from './sse';
 
 /**
  * Anthropic Messages API（直连浏览器要求 `anthropic-dangerous-direct-browser-access: true`）

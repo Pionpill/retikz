@@ -1,0 +1,170 @@
+---
+title: Arc / Sector
+description: 弧和扇形——既能画一条 Path（Sugar），也能作为节点的扇形 / 弧形边界。
+---
+
+弧和扇形都围绕「角度范围」工作，有两副面孔：用 `<Arc>` / `<Sector>` 画一段角度片段（Sugar），或用 `shape={{ type:'sector', params }}` 让节点带上扇形 / 弧形边界。完整定义见 [形状](/kernel/components/shapes)。要画一段弧 / 扇形线，用 Sugar；要一个可连接的扇形 / 弧形图元，用 `<Node shape>`。
+
+## 作为 Path 图形（Sugar）
+
+`<Arc>`（开放弧）/ `<Sector>`（闭合扇形）在指定位置画一段角度片段，展开成底层 `<Path>`。适合角度标记、圆环片段、扇区高亮这类图。
+
+### 用法
+
+```tsx
+import { Arc, Sector } from '@retikz/react';
+```
+
+```tsx
+<Arc center={[0, 0]} radius={40} startAngle={0} endAngle={90} />
+<Sector center={[0, 0]} radius={40} startAngle={0} endAngle={90} fill="darkorange" />
+```
+
+### Arc
+
+`<Arc>` 默认画一段不闭合的弧。它适合做箭头弧线、环形标记或装饰线。
+
+| 写法                                                 | 适合   |
+| ---------------------------------------------------- | ------ |
+| `{ center, radius, startAngle, endAngle }`           | 圆弧   |
+| `{ center, radiusX, radiusY, startAngle, endAngle }` | 椭圆弧 |
+
+角度从 +x 方向开始；`90` 指向屏幕下方。角度三选二：`startAngle` / `endAngle` / `sweepAngle`（扫掠角）任给两个即可，例如 `{ startAngle: 30, sweepAngle: 90 }`。`center` 接任意 target（节点 id / 极坐标 / 笛卡尔）。
+
+<ComponentPreview name="arc-basic" size="sm" />
+
+#### 视觉属性
+
+`<Arc>` 透传整套 `<Path>` 视觉属性：`stroke` / `strokeWidth` / `dashPattern` / `arrow` / `marks` / `opacity` / `rotate` / `scale` 等。常见的有箭头弧（`arrow="->"`）、虚线弧（`dashPattern`）和中段方向标记（`marks`，朝向随切线）。
+
+<ComponentPreview name="arc-visual" size="sm" />
+
+#### 闭合方式
+
+默认是开放弧；给 `close` 可把弧闭合成可填充区域：
+
+| `close`         | 含义                   |
+| --------------- | ---------------------- |
+| 缺省 / `'open'` | 开放弧，不闭合、不填充 |
+| `'chord'`       | 两端点连弦闭合，成弓形 |
+| `'sector'`      | 两端连回圆心，成扇形   |
+
+<ComponentPreview name="arc-close" size="sm" />
+
+#### 弧上标注
+
+`label` 透传到底层弧 step，文字沿弧定位（`position` 缺省 `midway`，按 `startAngle..endAngle` 线性映射），用法与边标注一致。Sector 同样支持，见下方饼图示例。
+
+### Sector
+
+`<Sector>` 会从圆心出发，画弧，再回到圆心。给 `innerRadius` 可以画空心扇形；椭圆空心写法用 `innerRadiusX` + `innerRadiusY`。
+
+| 写法                                                 | 适合         |
+| ---------------------------------------------------- | ------------ |
+| `{ center, radius, startAngle, endAngle }`           | 圆扇形       |
+| `{ center, radiusX, radiusY, startAngle, endAngle }` | 椭圆扇形     |
+| 加 `innerRadius`                                     | 空心圆扇形   |
+| 加 `innerRadiusX` + `innerRadiusY`                   | 空心椭圆扇形 |
+
+<ComponentPreview name="sector-basic" size="sm" />
+
+#### 圆心接节点、扇区标注
+
+实心扇形的圆心就是游标，所以 `center` 可以直接接节点 id（或极坐标），把扇形钉在某个节点上；配合 `sweepAngle` 和 `label`，几段就能拼出带标签的饼图。
+
+> 空心扇形（给了内半径）需要计算内 / 外弧端点，`center` 仍须 literal 笛卡尔 `[x, y]`。
+
+<ComponentPreview name="sector-label" size="sm" />
+
+#### 整体变换
+
+`rotate` / `scale` 透传到 `<Path>`，把整条扇形绕包围盒中心变换（免包 `<Scope>`）。`rotate` 让轴对齐椭圆扇形倾斜——这是目前画"斜椭圆扇形"的方式。
+
+<ComponentPreview name="sector-transform" size="sm" />
+
+### API 参考
+
+| 组件       | 组合                                    | 含义                       |
+| ---------- | --------------------------------------- | -------------------------- |
+| `<Arc>`    | `center` + `radius` + 角度              | 圆弧（默认开放；角度必填） |
+|            | `center` + `radiusX` + `radiusY` + 角度 | 椭圆弧                     |
+| `<Sector>` | `center` + `radius` + 角度              | 圆扇形（角度必填）         |
+|            | `center` + `radiusX` + `radiusY` + 角度 | 椭圆扇形                   |
+|            | + `innerRadius?`                        | 空心圆扇形                 |
+|            | + `innerRadiusX?` + `innerRadiusY?`     | 空心椭圆扇形               |
+
+共用属性（透传到底层 `<Path>`）：
+
+| 属性               | 类型                                                                      | 适用              | 说明                                                         |
+| ------------------ | ------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------ |
+| 角度               | `startAngle` / `endAngle` / `sweepAngle`                                  | Arc / Sector      | 三选二，单位度；`0`=+x、`90`=屏幕下方                        |
+| `center`           | target                                                                    | Arc / 实心 Sector | 接节点 id / 极坐标 / 笛卡尔；空心 Sector 须 literal `[x, y]` |
+| `close`            | `'open' \| 'chord' \| 'sector'`                                           | Arc               | 闭合方式，缺省 `'open'`                                      |
+| `label`            | 边标注对象                                                                | Arc / Sector      | 沿弧定位，`position` 缺省 `midway`                           |
+| `rotate` / `scale` | `number` / `{ x, y }`                                                     | Arc / Sector      | 绕包围盒中心整体变换                                         |
+| `marks`            | `{ pos, mark }[]`                                                         | Arc / Sector      | 沿路径中段放方向标记                                         |
+| 视觉               | `stroke` / `strokeWidth` / `dashPattern` / `arrow` / `fill` / `opacity` … | Arc / Sector      | 透传 `<Path>` 全套视觉属性                                   |
+
+## 作为 Node 形状
+
+当你要的是一个扇形 / 弧形的**节点**（可被连线引用、可当图标 glyph）而不是一条线时，给 `<Node>` 设 `shape={{ type, params }}`。这类形状尺寸由 `params` 里的半径 / 角度定，**不依赖文字内容**。
+
+### 用法
+
+```tsx
+import { Node } from '@retikz/react';
+```
+
+```tsx
+<Node shape={{ type: 'sector', params: { innerRadius: 0, outerRadius: 40, startAngle: 0, endAngle: 90 } }} />
+<Node shape={{ type: 'arc', params: { radius: 40, startAngle: 0, endAngle: 90 } }} />
+```
+
+### 例子
+
+| shape  | params                                               | 说明                              |
+| ------ | ---------------------------------------------------- | --------------------------------- |
+| sector | `{ innerRadius, outerRadius, startAngle, endAngle }` | 环楔；`innerRadius:0` 为实心扇片  |
+| arc    | `{ radius, startAngle, endAngle, close? }`           | 单半径弧；`close:true` 闭合成弓形 |
+
+<ComponentPreview name="node-arc-sector" size="md" />
+
+给 sector 的 `params.cornerRadius` 一个正数，会把环楔四个拐角（两条直边与内外弧的接缝）磨成圆角，省略 / `0` 是硬角。倒角是连接感知的：朝外弧方向的连线端点会落在圆角后的轮廓上。
+
+<ComponentPreview name="node-sector-corner-radius" size="md" />
+
+除节点的 9 个标准 anchor（`north` / `center` …）外，这两个形状还提供按几何命名的 anchor，可用 `{ id, anchor }` 精确连线：
+
+- **sector**：`outer-arc-mid` / `inner-arc-mid` / `apex` / `centroid` / `start-edge-mid` / `end-edge-mid`
+- **arc**：`arc-mid` / `start` / `end` / `center`
+
+完整的 `<Node>` 属性见 [Node](/kernel/components/node/overview)。
+
+### API 参考
+
+| `shape`                      | params                                                                      | 边界 / 用途                                |
+| ---------------------------- | --------------------------------------------------------------------------- | ------------------------------------------ |
+| `{ type: 'sector', params }` | `innerRadius` / `outerRadius` / `startAngle` / `endAngle` / `cornerRadius?` | 环楔（可连接，`innerRadius:0` 为实心扇片） |
+| `{ type: 'arc', params }`    | `radius` / `startAngle` / `endAngle` / `close?`                             | 弧形 glyph（可连接）                       |
+
+sector 的 `cornerRadius`（用户单位）给环楔四角倒角，省略 / `0` = 硬角，逐角夹紧；`apex` / `*-arc-mid` 等命名锚点不随它移动。
+
+> Node sector 约束：`outerRadius` 必须 > `innerRadius`（`innerRadius:0` 为实心扇片），违反编译期 refine 报错。
+
+## 技术原理
+
+> 日常使用可以跳过本节；只有在角度方向或闭合方式不符合预期时再回来读。
+
+### 角度跟屏幕坐标一致（两者）
+
+retikz 的文档示例使用屏幕坐标：x 向右，y 向下。因此 `0` 度指向右侧，`90` 度指向下方，`-90` 度指向上方。Sugar 和 Node 形状的角度都按这套来。
+
+### 弧线和扇形的闭合不同
+
+`<Arc>` 默认是开放路径，不会自动填充一个区域；`<Sector>` 会闭合成区域，所以可以直接设置 `fill`。需要"弦闭合"或"扇形闭合"的部分圆时，可以给 `<Arc close="chord" | "sector">`，或直接用 [Circle / Ellipse](../circle-ellipse) 里的角度 + `closed` 写法（三者底层一致）。而 `<Node shape="sector">` 是另一条路：它不是 Path，而是一个有扇形边界、可被连线贴边的节点。
+
+## 相关
+
+- [Node](/kernel/components/node/overview)：把形状用作节点边界时的完整属性
+- [Circle / Ellipse](../circle-ellipse)：半圆、弓形和部分椭圆
+- [Shapes](/kernel/components/shapes)：形状分组入口与完整定义

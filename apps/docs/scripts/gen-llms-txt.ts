@@ -1,9 +1,10 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
+import type { I18nKey } from '../src/data/interface';
+
 import { modules } from '../src/data/module';
 import { getSectionsByModule } from '../src/data/sections';
-import type { I18nKey } from '../src/data/interface';
 import { en } from '../src/i18n/locales/en';
 
 /**

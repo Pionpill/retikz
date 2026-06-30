@@ -48,17 +48,8 @@ export const pickPathVisual = (props: object): PathVisualProps => {
 const DEG = Math.PI / 180;
 
 /** 校验点输入必须是字面 [x, y] 坐标 */
-export const requireXY = (
-  value: unknown,
-  sugarName: string,
-  propName: string,
-): [number, number] => {
-  if (
-    Array.isArray(value) &&
-    value.length === 2 &&
-    typeof value[0] === 'number' &&
-    typeof value[1] === 'number'
-  ) {
+export const requireXY = (value: unknown, sugarName: string, propName: string): [number, number] => {
+  if (Array.isArray(value) && value.length === 2 && typeof value[0] === 'number' && typeof value[1] === 'number') {
     return [value[0], value[1]];
   }
   throw new Error(
@@ -67,10 +58,10 @@ export const requireXY = (
 };
 
 /** 两点中点 */
-export const midpoint = (
-  a: [number, number],
-  b: [number, number],
-): [number, number] => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+export const midpoint = (a: [number, number], b: [number, number]): [number, number] => [
+  (a[0] + b[0]) / 2,
+  (a[1] + b[1]) / 2,
+];
 
 /** sugar 形状的 box 输入 */
 export type ShapeBox =
@@ -101,11 +92,7 @@ export type NormalizedShapeBox = {
 };
 
 /** 把 box 对象转成归一化的四边 */
-export const normalizeShapeBox = (
-  value: ShapeBox,
-  sugarName: string,
-  propName: string,
-): NormalizedShapeBox => {
+export const normalizeShapeBox = (value: ShapeBox, sugarName: string, propName: string): NormalizedShapeBox => {
   const origin: [number, number] =
     'origin' in value ? requireXY(value.origin, sugarName, `${propName}.origin`) : [value.x, value.y];
   if (!Number.isFinite(value.width) || value.width <= 0 || !Number.isFinite(value.height) || value.height <= 0) {
@@ -120,10 +107,7 @@ export const normalizeShapeBox = (
 };
 
 /** 把两个对角点转成归一化的四边 */
-export const normalizeCornerBox = (
-  corner1: [number, number],
-  corner2: [number, number],
-): NormalizedShapeBox => ({
+export const normalizeCornerBox = (corner1: [number, number], corner2: [number, number]): NormalizedShapeBox => ({
   left: Math.min(corner1[0], corner2[0]),
   top: Math.min(corner1[1], corner2[1]),
   right: Math.max(corner1[0], corner2[0]),
@@ -163,10 +147,7 @@ export const boxCenter = (box: NormalizedShapeBox): [number, number] => [
 ];
 
 /** box 尺寸 */
-export const boxSize = (box: NormalizedShapeBox): [number, number] => [
-  box.right - box.left,
-  box.bottom - box.top,
-];
+export const boxSize = (box: NormalizedShapeBox): [number, number] => [box.right - box.left, box.bottom - box.top];
 
 /** 轴对齐椭圆 / 圆上由极角求笛卡尔点 */
 export const polarXY = (
@@ -174,10 +155,7 @@ export const polarXY = (
   radiusX: number,
   radiusY: number,
   angleDeg: number,
-): [number, number] => [
-  center[0] + Math.cos(angleDeg * DEG) * radiusX,
-  center[1] + Math.sin(angleDeg * DEG) * radiusY,
-];
+): [number, number] => [center[0] + Math.cos(angleDeg * DEG) * radiusX, center[1] + Math.sin(angleDeg * DEG) * radiusY];
 
 /** 轴对齐椭圆上的正多边形顶点 */
 export const regularPolygonVertices = (
@@ -226,9 +204,7 @@ export const resolveAngles = (
 ): { startAngle: number; endAngle: number } | undefined => {
   const { startAngle, endAngle, sweepAngle } = input;
   const given =
-    (startAngle !== undefined ? 1 : 0) +
-    (endAngle !== undefined ? 1 : 0) +
-    (sweepAngle !== undefined ? 1 : 0);
+    (startAngle !== undefined ? 1 : 0) + (endAngle !== undefined ? 1 : 0) + (sweepAngle !== undefined ? 1 : 0);
   if (given === 0) {
     if (required) {
       throw new Error(`<${sugarName}> requires angles: provide any two of startAngle / endAngle / sweepAngle`);

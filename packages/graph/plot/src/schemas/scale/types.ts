@@ -1,5 +1,26 @@
 import type { z } from 'zod';
-import type { BandScaleSchema, CategoryValueSchema, CustomScaleSchema, DivergingColorScaleSchema, LinearScaleSchema, LogScaleSchema, OrdinalScaleSchema, PointScaleSchema, PowScaleSchema, QuantileColorScaleSchema, QuantizeColorScaleSchema, RadialScaleSchema, ScaleOperationSchema, ScaleSchema, SequentialColorScaleSchema, SqrtScaleSchema, SymlogScaleSchema, ThresholdColorScaleSchema, TimeScaleSchema } from './schema';
+
+import type {
+  BandScaleSchema,
+  CategoryValueSchema,
+  CustomScaleSchema,
+  DivergingColorScaleSchema,
+  LinearScaleSchema,
+  LogScaleSchema,
+  OrdinalScaleSchema,
+  PointScaleSchema,
+  PowScaleSchema,
+  QuantileColorScaleSchema,
+  QuantizeColorScaleSchema,
+  RadialScaleSchema,
+  ScaleOperationSchema,
+  ScaleSchema,
+  SequentialColorScaleSchema,
+  SqrtScaleSchema,
+  SymlogScaleSchema,
+  ThresholdColorScaleSchema,
+  TimeScaleSchema,
+} from './schema';
 
 /** 分类标量：类别取值 */
 export type CategoryValue = z.infer<typeof CategoryValueSchema>;

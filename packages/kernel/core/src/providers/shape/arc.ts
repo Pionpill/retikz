@@ -1,11 +1,13 @@
-import { z } from 'zod';
 import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
-import { localToWorld, worldToLocal } from '../../geometry/transform';
+import { z } from 'zod';
+
 import type { Position } from '../../geometry/point';
 import type { Rect } from '../../geometry/rect';
 import type { PathCommand, ScenePrimitive } from '../../primitive';
+
 import { defineShape } from '../../contract/shape/define';
 import { normalizeAngularRange } from '../../contract/shape/shared';
+import { localToWorld, worldToLocal } from '../../geometry/transform';
 
 const RAD_TO_DEG = 180 / Math.PI;
 
@@ -64,15 +66,8 @@ const arcGeometry = (params: ArcParams): ArcGeometry => {
 };
 
 /** 圆心局部点（相对圆心）→ 世界系（+centerOffset 到相对 AABB 中心后经 rect 投影） */
-const arcLocalToWorld = (
-  rect: Rect,
-  centerOffset: Position,
-  localFromCenter: Position,
-): Position =>
-  localToWorld(rect, [
-    localFromCenter[0] + centerOffset[0],
-    localFromCenter[1] + centerOffset[1],
-  ]);
+const arcLocalToWorld = (rect: Rect, centerOffset: Position, localFromCenter: Position): Position =>
+  localToWorld(rect, [localFromCenter[0] + centerOffset[0], localFromCenter[1] + centerOffset[1]]);
 
 /**
  * arc 注册项：单半径曲线（描边、可选闭合为弓形）
@@ -84,16 +79,16 @@ export const arc = defineShape({
   paramsSchema: z.strictObject({
     radius: z
       .number()
-      .finite()
+
       .positive()
       .describe('Arc radius in user units.'),
     startAngle: z
       .number()
-      .finite()
+
       .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
     endAngle: z
       .number()
-      .finite()
+
       .describe('End angle in degrees; swept from startAngle in screen space.'),
     close: z
       .boolean()
@@ -126,8 +121,7 @@ export const arc = defineShape({
     const geo = arcGeometry(params);
     const { radius } = params;
     const { start, end, mid } = geo.range;
-    const at = (angle: number): Position =>
-      arcLocalToWorld(rect, geo.centerOffset, arcEndPoint([0, 0], radius, angle));
+    const at = (angle: number): Position => arcLocalToWorld(rect, geo.centerOffset, arcEndPoint([0, 0], radius, angle));
     switch (name) {
       case 'center':
         return arcLocalToWorld(rect, geo.centerOffset, [0, 0]);
@@ -141,7 +135,7 @@ export const arc = defineShape({
         return undefined;
     }
   },
-  *emit (rect: Rect, style, round, params: ArcParams): Iterable<ScenePrimitive> {
+  *emit(rect: Rect, style, round, params: ArcParams): Iterable<ScenePrimitive> {
     const geo = arcGeometry(params);
     const { radius, close } = params;
     const { start, end } = geo.range;

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { type MarkValueType, PlotFieldType } from '../../src/schemas';
+
+import type { MarkValueType } from '../../src/schemas';
+
 import { makeMarkValueResolver } from '../../src/providers';
+import { PlotFieldType } from '../../src/schemas';
 
 describe('makeMarkValueResolver', () => {
   it('resolves_constant_mark_value', () => {

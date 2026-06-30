@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { layoutNode } from '../../src/compile/node';
+
 import { NameStack } from '../../src/compile/name-stack';
+import { layoutNode } from '../../src/compile/node';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const measureText = (): { width: number; height: number; ascent: number } => ({
@@ -42,11 +43,7 @@ describe('NodeLayout boundary / shapes', () => {
 
   it('不传 shapes 时 layout.shapes 回退到 BUILTIN_SHAPES', () => {
     const nameStack = new NameStack();
-    const layout = layoutNode(
-      { type: 'node', id: 'a', position: [0, 0] },
-      measureText,
-      nameStack,
-    );
+    const layout = layoutNode({ type: 'node', id: 'a', position: [0, 0] }, measureText, nameStack);
     expect(layout.shapes).toBe(BUILTIN_SHAPES);
   });
 

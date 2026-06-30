@@ -1,4 +1,5 @@
 import type { Localized, PackageId, Release } from './changelog.types';
+
 import { PACKAGE_GROUPS } from './changelog.types';
 
 /** changelog 概览页副标题(替代原 mdx frontmatter description) */
@@ -86,8 +87,8 @@ export const changelog: Array<Release> = [
         pkg: '@retikz/core',
         version: 'v0.4',
         description: {
-          zh: 'v0.4 纵向底座深化：纯几何下沉 `@retikz/math`、Tier2 可嵌入机制、path 文法补强（折线圆角 + 过点平滑曲线）、任意轮廓 contour shape。',
-          en: 'v0.4 deepens the base: pure geometry sinks to `@retikz/math`, an embeddable-Tier2 mechanism, path-grammar reinforcement (rounded corners + smooth-through-points), plus an arbitrary-contour shape.',
+          zh: 'v0.4 纵向底座深化：纯几何下沉 `@retikz/math`、Tier2 可嵌入机制、path 文法补强（折线圆角 + 过点平滑曲线）、任意轮廓 contour shape，以及可扩展 Path kind / ribbon 带状关系路径。',
+          en: 'v0.4 deepens the base: `@retikz/math` geometry, embeddable Tier2, stronger path grammar, contour shape, extensible Path kinds, and ribbon relation paths.',
         },
         highlights: [
           {
@@ -104,8 +105,53 @@ export const changelog: Array<Release> = [
               en: 'An arbitrary closed vertex ring as a Node shape, auto-centered on its AABB center, as connectable as rectangle / sector via `boundaryPoint`.',
             },
           },
+          {
+            label: { zh: 'Path kind / ribbon', en: 'Path kind / ribbon' },
+            content: {
+              zh: '`Path.kind` 成为一等 provider contract；内置 `ribbon` kind 表达可变宽度带状关系路径，仍 lower 为普通 `PathPrim`。',
+              en: '`Path.kind` becomes a first-class provider contract; the built-in `ribbon` kind describes variable-width relation bands while still lowering to ordinary `PathPrim`.',
+            },
+          },
         ],
         subVersions: [
+          {
+            version: 'alpha.6',
+            date: '2026-06-28',
+            summary: {
+              zh: '关系路径底座收口：`Path.kind` 统一 stroke / ribbon / 自定义 provider；内置 `ribbon` 支持可变宽度、单侧对齐、端帽、显式边界、host label 与共享 drawable 契约。',
+              en: 'Relation-path foundation: `Path.kind` unifies stroke / ribbon / custom providers; the built-in `ribbon` supports variable width, one-sided alignment, caps, explicit boundaries, host labels, and the shared drawable contract.',
+            },
+            items: [
+              {
+                label: { zh: 'Path kind provider', en: 'Path kind provider' },
+                content: {
+                  zh: '`IRPath.kind` 选择几何 lowering 策略：省略即 `stroke`，`kind: "ribbon"` 使用 `ribbon` 参数对象，自定义 kind 通过 `CompileOptions.pathKinds` + `kindOptions` 注入；未知 kind 编译期 fail-loud。',
+                  en: '`IRPath.kind` selects the geometry-lowering strategy: omitted means `stroke`, `kind: "ribbon"` uses the `ribbon` option object, and custom kinds are injected through `CompileOptions.pathKinds` + `kindOptions`; unknown kinds fail loud at compile time.',
+                },
+              },
+              {
+                label: { zh: 'Ribbon 并入 Path', en: 'Ribbon folded into Path' },
+                content: {
+                  zh: '不再新增独立 `type: "ribbon"` IR；ribbon 是 `type: "path", kind: "ribbon"`。`PathRibbonOptions` 覆盖 fixed / stops / profile 宽度、start/end 宽度与方向、butt / round / square / arc 端帽、`align`、fixed sampling 与 boundary `upper` / `lower` 模式。',
+                  en: 'There is no standalone `type: "ribbon"` IR; ribbon is `type: "path", kind: "ribbon"`. `PathRibbonOptions` covers fixed / stops / profile width, start/end width and direction, butt / round / square / arc caps, `align`, fixed sampling, and boundary `upper` / `lower` mode.',
+                },
+              },
+              {
+                label: { zh: '共享 drawable / label 契约', en: 'Shared drawable / label contract' },
+                content: {
+                  zh: '`DrawableStyleSchema` / `DrawableMetaSchema` 显式导出 Path kind 共享样式与元数据；`GeometryLabelSchema` 同时服务 step label 与 Path host label。`pathDefault` 对 stroke Path 完整生效，对 ribbon 只消费共享 drawable 子集。',
+                  en: '`DrawableStyleSchema` / `DrawableMetaSchema` explicitly export the style and metadata shared by Path kinds; `GeometryLabelSchema` serves both step labels and Path host labels. `pathDefault` fully applies to stroke paths and only its shared drawable subset applies to ribbon.',
+                },
+              },
+              {
+                label: { zh: 'Node 内侧边界标签', en: 'Inside node boundary labels' },
+                content: {
+                  zh: '`Node.label` 增加 `placement: "inside"` 与 `{ boundary, t }` 位置，矩形 / box-like 节点可把标签放到内部边界比例点；inside + pin 被 schema 拒绝。',
+                  en: '`Node.label` gains `placement: "inside"` and `{ boundary, t }` positions, letting rectangle / box-like nodes place labels at proportional inner-boundary points; inside + pin is rejected by schema.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.5',
             date: '2026-06-19',
@@ -274,11 +320,35 @@ export const changelog: Array<Release> = [
         pkg: '@retikz/react',
         version: 'v0.4',
         description: {
-          zh: 'React adapter 跟进 core v0.4：`<Step kind="smooth">` 与 `<Draw>` / `<Path>` 的 `roundedCorners`，以及 `<Layout>` 可嵌入 Tier2 子组件。',
-          en: 'The React adapter follows core v0.4: `<Step kind="smooth">` and `roundedCorners` on `<Draw>` / `<Path>`, plus embeddable Tier2 children in `<Layout>`.',
+          zh: 'React adapter 跟进 core v0.4：`<Step kind="smooth">`、`roundedCorners`、`<Path kind="ribbon">`、`pathKinds` 注入，以及 `<Layout>` 可嵌入 Tier2 子组件。',
+          en: 'The React adapter follows core v0.4: `<Step kind="smooth">`, `roundedCorners`, `<Path kind="ribbon">`, `pathKinds` injection, plus embeddable Tier2 children in `<Layout>`.',
         },
         highlights: [],
         subVersions: [
+          {
+            version: 'alpha.6',
+            date: '2026-06-28',
+            summary: {
+              zh: '`<Path>` 透传 `kind` / `ribbon` / `kindOptions` / host `label`，`<Layout pathKinds>` 注入自定义 Path kind；不新增独立 Ribbon 组件面。',
+              en: '`<Path>` passes through `kind` / `ribbon` / `kindOptions` / host `label`, and `<Layout pathKinds>` injects custom Path kinds; no standalone Ribbon component surface is added.',
+            },
+            items: [
+              {
+                label: { zh: '<Path kind="ribbon">', en: '<Path kind="ribbon">' },
+                content: {
+                  zh: 'React authoring 直接使用 `<Path kind="ribbon" ribbon={{ ... }}>`；centerline children、boundary `upper` / `lower`、ribbon host label、arc cap 等字段与 core IR 同名透传，unbuilder 也回到 `<Path>`。',
+                  en: 'React authoring uses `<Path kind="ribbon" ribbon={{ ... }}>` directly; centerline children, boundary `upper` / `lower`, ribbon host labels, arc caps, and related fields pass through with the same names as core IR, and the unbuilder returns `<Path>`.',
+                },
+              },
+              {
+                label: { zh: 'pathKinds 注入', en: 'pathKinds injection' },
+                content: {
+                  zh: '`<Layout pathKinds>` 把自定义 `PathKindDefinition` 透传到 `compileToScene`，与 `shapes` / `arrows` / `patterns` / `pathGenerators` 同一注入模型。',
+                  en: '`<Layout pathKinds>` forwards custom `PathKindDefinition` objects to `compileToScene`, using the same injection model as `shapes` / `arrows` / `patterns` / `pathGenerators`.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.5',
             date: '2026-06-19',
@@ -360,11 +430,28 @@ export const changelog: Array<Release> = [
         pkg: '@retikz/vanilla',
         version: 'v0.4',
         description: {
-          zh: 'Vanilla DSL 跟进 core v0.4：`node` / `draw` config 经 `Omit<IR*>` 自动获得 `shadow` / `blendMode`，与 react 同一份 schema。',
-          en: 'The vanilla DSL follows core v0.4: `node` / `draw` config get `shadow` / `blendMode` automatically via `Omit<IR*>`, the same schema as react.',
+          zh: 'Vanilla DSL 跟进 core v0.4：`node` / `draw` config 经 `Omit<IR*>` 自动获得 `shadow` / `blendMode`、Path kind / ribbon 等核心字段。',
+          en: 'The vanilla DSL follows core v0.4: `node` / `draw` config get core fields such as `shadow` / `blendMode`, Path kind, and ribbon through `Omit<IR*>`.',
         },
         highlights: [],
         subVersions: [
+          {
+            version: 'alpha.6',
+            date: '2026-06-28',
+            summary: {
+              zh: '`draw` 支持 `kind: "ribbon"` 与 `ribbon` 参数，复用 core way DSL；vanilla builder 明确不暴露独立 `ribbon()` helper。',
+              en: '`draw` supports `kind: "ribbon"` with `ribbon` options and reuses the core way DSL; the vanilla builder deliberately does not expose a standalone `ribbon()` helper.',
+            },
+            items: [
+              {
+                label: { zh: 'draw(kind=ribbon)', en: 'draw(kind=ribbon)' },
+                content: {
+                  zh: '`draw(way, { kind: "ribbon", ribbon: { ... } })` 产出与 core `IRPath` 一致的 `type: "path", kind: "ribbon"`；host `label` 和 shared drawable style 随 `draw` config 透传。',
+                  en: '`draw(way, { kind: "ribbon", ribbon: { ... } })` emits the same `type: "path", kind: "ribbon"` `IRPath` shape as core; host `label` and shared drawable style pass through in the draw config.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.5',
             date: '2026-06-17',
@@ -570,8 +657,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'SVG 播放（`@retikz/render/svg`）', en: 'SVG playback (`@retikz/render/svg`)' },
                 content: {
-                  zh: '`trigger:\'load\'`→内联 `<style>` CSS `@keyframes`（SSR 零 JS 自播），交互→WAAPI 描述（`bindWaapiDescriptors` 按 trigger 应用）；transform 通道各包一层 `<g>` + `transform-origin` 支点，pathDraw→`stroke-dashoffset`，camera→group transform，fill / stroke 在 oklch 预采样；`{ animate:false }` 降级 + `RenderOptions.easings` 自定义缓动。',
-                  en: '`trigger:\'load\'`→inline `<style>` CSS `@keyframes` (SSR zero-JS autoplay), interactive→WAAPI descriptors (`bindWaapiDescriptors` applies by trigger); transform channels each wrap a `<g>` + a `transform-origin` pivot, pathDraw→`stroke-dashoffset`, camera→group transform, fill / stroke presampled in oklch; `{ animate:false }` degradation + `RenderOptions.easings` custom easings.',
+                  zh: "`trigger:'load'`→内联 `<style>` CSS `@keyframes`（SSR 零 JS 自播），交互→WAAPI 描述（`bindWaapiDescriptors` 按 trigger 应用）；transform 通道各包一层 `<g>` + `transform-origin` 支点，pathDraw→`stroke-dashoffset`，camera→group transform，fill / stroke 在 oklch 预采样；`{ animate:false }` 降级 + `RenderOptions.easings` 自定义缓动。",
+                  en: "`trigger:'load'`→inline `<style>` CSS `@keyframes` (SSR zero-JS autoplay), interactive→WAAPI descriptors (`bindWaapiDescriptors` applies by trigger); transform channels each wrap a `<g>` + a `transform-origin` pivot, pathDraw→`stroke-dashoffset`, camera→group transform, fill / stroke presampled in oklch; `{ animate:false }` degradation + `RenderOptions.easings` custom easings.",
                 },
               },
               {
@@ -582,24 +669,33 @@ export const changelog: Array<Release> = [
                 },
               },
               {
-                label: { zh: '共享 rAF runtime（`@retikz/render/animation`）', en: 'shared rAF runtime (`@retikz/render/animation`)' },
+                label: {
+                  zh: '共享 rAF runtime（`@retikz/render/animation`）',
+                  en: 'shared rAF runtime (`@retikz/render/animation`)',
+                },
                 content: {
                   zh: '`createClock`（rAF 共享时钟，有限时长到点停末帧 settled、缺 rAF 优雅退化）、`prefersReducedMotion`、scene 含动画 / 总时长 / autoplay 探测、`bindWaapiDescriptors`（visible→IntersectionObserver / manual→句柄 / `{onEvent}`→事件桥）；纯 runtime，与 evaluate / oklch 纯数学分离。',
                   en: '`createClock` (a shared rAF clock that stops at the settled last frame for finite durations and degrades gracefully without rAF), `prefersReducedMotion`, scene has-animation / total-duration / autoplay probes, and `bindWaapiDescriptors` (visible→IntersectionObserver / manual→handle / `{onEvent}`→event bridge); pure runtime, separate from the evaluate / oklch math.',
                 },
               },
               {
-                label: { zh: '水合 runtime 上下文（`@retikz/render/hydration`）', en: 'hydration runtime context (`@retikz/render/hydration`)' },
+                label: {
+                  zh: '水合 runtime 上下文（`@retikz/render/hydration`）',
+                  en: 'hydration runtime context (`@retikz/render/hydration`)',
+                },
                 content: {
                   zh: 'handler 升 `(event, context)`：`context` 携命中语义元素的 `id` / `meta`(provenance) / 几何（同 id 全部图元并集 bbox）/ DOM `element` / scene `point` / 动画控制 / `scene`；SVG per-id 经 `getAnimations()` + wrapper 上的 `data-retikz-animation-owner` 双查，renderer 无关（canvas `element=null`）；additive，旧式 `(event) =>` 照常。',
-                  en: 'The handler upgrades to `(event, context)`: `context` carries the hit semantic element\'s `id` / `meta` (provenance) / geometry (union bbox of all same-id primitives) / DOM `element` / scene `point` / animation controls / `scene`; SVG per-id queries `getAnimations()` plus `data-retikz-animation-owner` on wrappers, renderer-agnostic (canvas `element=null`); additive, old `(event) =>` still works.',
+                  en: "The handler upgrades to `(event, context)`: `context` carries the hit semantic element's `id` / `meta` (provenance) / geometry (union bbox of all same-id primitives) / DOM `element` / scene `point` / animation controls / `scene`; SVG per-id queries `getAnimations()` plus `data-retikz-animation-owner` on wrappers, renderer-agnostic (canvas `element=null`); additive, old `(event) =>` still works.",
                 },
               },
               {
-                label: { zh: '静态截帧 `snapshotAt` + canvas per-id', en: 'static snapshot `snapshotAt` + canvas per-id' },
+                label: {
+                  zh: '静态截帧 `snapshotAt` + canvas per-id',
+                  en: 'static snapshot `snapshotAt` + canvas per-id',
+                },
                 content: {
                   zh: '`buildSvgDocument({ snapshotAt })` 把各 track 在该时刻的值烘焙成静态属性 / transform（复用 `evaluateTrack`，SSR 海报帧 / 缩略图）；canvas 新增 `IdClockRegistry` + `drawScene` 的 `resolvePrimAnimation`，在单 rAF 共享时钟上给每个 id 叠独立虚拟时钟（offset / pause / active / stop），实现 per-id restart / play / pause / seek。',
-                  en: '`buildSvgDocument({ snapshotAt })` bakes each track\'s value at that instant into static attributes / transforms (reusing `evaluateTrack`, for SSR poster frames / thumbnails); canvas gains an `IdClockRegistry` + `drawScene`\'s `resolvePrimAnimation`, layering an independent virtual clock (offset / pause / active / stop) per id on the single shared rAF clock for per-id restart / play / pause / seek.',
+                  en: "`buildSvgDocument({ snapshotAt })` bakes each track's value at that instant into static attributes / transforms (reusing `evaluateTrack`, for SSR poster frames / thumbnails); canvas gains an `IdClockRegistry` + `drawScene`'s `resolvePrimAnimation`, layering an independent virtual clock (offset / pause / active / stop) per id on the single shared rAF clock for per-id restart / play / pause / seek.",
                 },
               },
             ],
@@ -766,14 +862,20 @@ export const changelog: Array<Release> = [
                 },
               },
               {
-                label: { zh: 'onEvent 随 update 重建 + dispose 解绑', en: 'onEvent rebinds on update + dispose unbinds' },
+                label: {
+                  zh: 'onEvent 随 update 重建 + dispose 解绑',
+                  en: 'onEvent rebinds on update + dispose unbinds',
+                },
                 content: {
                   zh: 'canvas 存活水合登记，`view.update()` 换图后按新 scene 重建 onEvent 动画 handler 表（新增 / 移除的 onEvent track 即时反映）；`view.dispose()` 统一解绑全部未手动 dispose 的水合。',
                   en: 'Canvas registers live hydrations; `view.update()` rebuilds the onEvent animation handler table against the new scene (added / removed onEvent tracks take effect immediately); `view.dispose()` unbinds every not-yet-disposed hydration.',
                 },
               },
               {
-                label: { zh: 'FigureConfig 根级 animations + 样式默认', en: 'FigureConfig root animations + style defaults' },
+                label: {
+                  zh: 'FigureConfig 根级 animations + 样式默认',
+                  en: 'FigureConfig root animations + style defaults',
+                },
                 content: {
                   zh: '`FigureConfig` 增根级 `animations`（镜头动画 preset 可接根）与根级级联样式默认（`wrapRootScope`），与 React `<Layout>` 对齐；visible-trigger 的 scroll / resize 监听改 rAF 合帧。',
                   en: '`FigureConfig` adds root-level `animations` (camera presets can attach to the root) and root cascading style defaults (`wrapRootScope`), matching React `<Layout>`; visible-trigger scroll / resize listeners now coalesce via rAF.',
@@ -790,7 +892,10 @@ export const changelog: Array<Release> = [
             },
             items: [
               {
-                label: { zh: '`mountCanvas` 交互挂载 + `scope` children 数组', en: '`mountCanvas` interactive mount + `scope` children array' },
+                label: {
+                  zh: '`mountCanvas` 交互挂载 + `scope` children 数组',
+                  en: '`mountCanvas` interactive mount + `scope` children array',
+                },
                 content: {
                   zh: '`Figure` 新增 `mountCanvas` 交互挂载入口（canvas 后端接事件 / 动画触发）；`scope` 接受 children 数组。',
                   en: '`Figure` adds a `mountCanvas` interactive mount entry (canvas backend wired for events / animation triggers); `scope` accepts a children array.',
@@ -824,7 +929,7 @@ export const changelog: Array<Release> = [
                 label: { zh: '水合富上下文', en: 'rich hydration context' },
                 content: {
                   zh: '`view.hydrate` 与 standalone `hydrate(root, { handlers, scene?, renderer? })`：传 `scene` → 富 context（meta / 几何 / 动画控制），否则最小 context（id / element / root / point）；handler 升 `(event, context)`，canvas 经 per-id 虚拟时钟控制命中元素动画。',
-                  en: '`view.hydrate` and standalone `hydrate(root, { handlers, scene?, renderer? })`: passing `scene` → a rich context (meta / geometry / animation controls), otherwise a minimal context (id / element / root / point); the handler upgrades to `(event, context)`, and canvas controls the hit element\'s animation via a per-id virtual clock.',
+                  en: "`view.hydrate` and standalone `hydrate(root, { handlers, scene?, renderer? })`: passing `scene` → a rich context (meta / geometry / animation controls), otherwise a minimal context (id / element / root / point); the handler upgrades to `(event, context)`, and canvas controls the hit element's animation via a per-id virtual clock.",
                 },
               },
               {
@@ -848,14 +953,14 @@ export const changelog: Array<Release> = [
             date: '2026-06-07',
             summary: {
               zh: '无源码改动：`node` / `draw` / `scope` 的 config 是 `Omit<IR…>` 派生，core 新增的 shape `{ type, params }` / `boundary` / `cornerRadius` / `meta` 字段经类型自动透传；随四包 version lockstep 对齐。',
-              en: 'No source change: the `node` / `draw` / `scope` configs derive from `Omit<IR…>`, so core\'s new shape `{ type, params }` / `boundary` / `cornerRadius` / `meta` fields pass through automatically by type; aligned under the four-package version lockstep.',
+              en: "No source change: the `node` / `draw` / `scope` configs derive from `Omit<IR…>`, so core's new shape `{ type, params }` / `boundary` / `cornerRadius` / `meta` fields pass through automatically by type; aligned under the four-package version lockstep.",
             },
             items: [
               {
                 label: { zh: '字段自动透传', en: 'Fields auto-passthrough' },
                 content: {
                   zh: '命令式 builder 的 config 类型直接派生自 IR schema，core 形状泛化 / boundary / cornerRadius / meta 无需 vanilla 改一行代码即可用。',
-                  en: 'The imperative builder\'s config types derive straight from the IR schema, so core\'s shape generalization / boundary / cornerRadius / meta work with zero vanilla code changes.',
+                  en: "The imperative builder's config types derive straight from the IR schema, so core's shape generalization / boundary / cornerRadius / meta work with zero vanilla code changes.",
                 },
               },
             ],
@@ -871,8 +976,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '`hydrate` SVG 水合', en: '`hydrate` SVG hydration' },
                 content: {
-                  zh: '`hydrate(root, { handlers })` 把按 id 提供的事件 handler 绑到容器内已挂或 SSR 注入的 `<svg>`：根级单 listener + `closest(\'[data-retikz-id]\')` 委托，不重渲染组件树、不接管状态；返回 `{ dispose }` 解绑。',
-                  en: '`hydrate(root, { handlers })` binds id-keyed event handlers onto an already-mounted or SSR-injected `<svg>`: a single root-level listener + `closest(\'[data-retikz-id]\')` delegation, with no component re-render and no state takeover; returns `{ dispose }` to unbind.',
+                  zh: "`hydrate(root, { handlers })` 把按 id 提供的事件 handler 绑到容器内已挂或 SSR 注入的 `<svg>`：根级单 listener + `closest('[data-retikz-id]')` 委托，不重渲染组件树、不接管状态；返回 `{ dispose }` 解绑。",
+                  en: "`hydrate(root, { handlers })` binds id-keyed event handlers onto an already-mounted or SSR-injected `<svg>`: a single root-level listener + `closest('[data-retikz-id]')` delegation, with no component re-render and no state takeover; returns `{ dispose }` to unbind.",
                 },
               },
               {
@@ -1003,8 +1108,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '`boundingBox` 别名移除（breaking）', en: '`boundingBox` alias removed (breaking)' },
                 content: {
-                  zh: '`<Circle>` / `<Ellipse>` 去掉 `boundingBox` 别名 prop，只保留 `box`；旧 `boundingBox` 需改名为 `box` [Circle / Ellipse](/core/components/shapes/circle-ellipse)',
-                  en: '`<Circle>` / `<Ellipse>` drop the `boundingBox` alias prop, keeping only `box`; old `boundingBox` must be renamed to `box` [Circle / Ellipse](/core/components/shapes/circle-ellipse)',
+                  zh: '`<Circle>` / `<Ellipse>` 去掉 `boundingBox` 别名 prop，只保留 `box`；旧 `boundingBox` 需改名为 `box` [Circle / Ellipse](/kernel/components/shapes/circle-ellipse)',
+                  en: '`<Circle>` / `<Ellipse>` drop the `boundingBox` alias prop, keeping only `box`; old `boundingBox` must be renamed to `box` [Circle / Ellipse](/kernel/components/shapes/circle-ellipse)',
                 },
               },
               {
@@ -1042,7 +1147,7 @@ export const changelog: Array<Release> = [
                 label: { zh: 'canvasHost rAF + per-id', en: 'canvasHost rAF + per-id' },
                 content: {
                   zh: 'render effect 起 `createClock` rAF 逐帧重绘（autoplay track 自动播），`snapshotAt` 给定时画单帧不起 rAF；`context.animation` 经 `IdClockRegistry` + `resolvePrimAnimation` 折算各 id 有效时刻，per-id 控制命中元素的动画。',
-                  en: 'The render effect starts a `createClock` rAF loop redrawing per frame (autoplay tracks auto-play); when `snapshotAt` is given it draws a single frame without rAF; `context.animation` resolves each id\'s effective time via `IdClockRegistry` + `resolvePrimAnimation`, controlling the hit element\'s animation per-id.',
+                  en: "The render effect starts a `createClock` rAF loop redrawing per frame (autoplay tracks auto-play); when `snapshotAt` is given it draws a single frame without rAF; `context.animation` resolves each id's effective time via `IdClockRegistry` + `resolvePrimAnimation`, controlling the hit element's animation per-id.",
                 },
               },
               {
@@ -1065,8 +1170,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '形状 props 泛化 + boundary', en: 'Shape props generalization + boundary' },
                 content: {
-                  zh: '`<Node shape>` 接受 `{ type, params }`（如 `{ type:\'sector\', params:{ innerRadius, outerRadius, startAngle, endAngle } }`）；`diamond` / `circle` 别名保留；新增 `boundary` prop（连接面，端点亦可覆盖）。',
-                  en: '`<Node shape>` accepts `{ type, params }` (e.g. `{ type:\'sector\', params:{ innerRadius, outerRadius, startAngle, endAngle } }`); `diamond` / `circle` aliases kept; new `boundary` prop (connection surface, also overridable per edge endpoint).',
+                  zh: "`<Node shape>` 接受 `{ type, params }`（如 `{ type:'sector', params:{ innerRadius, outerRadius, startAngle, endAngle } }`）；`diamond` / `circle` 别名保留；新增 `boundary` prop（连接面，端点亦可覆盖）。",
+                  en: "`<Node shape>` accepts `{ type, params }` (e.g. `{ type:'sector', params:{ innerRadius, outerRadius, startAngle, endAngle } }`); `diamond` / `circle` aliases kept; new `boundary` prop (connection surface, also overridable per edge endpoint).",
                 },
               },
               {
@@ -1202,7 +1307,10 @@ export const changelog: Array<Release> = [
             },
             items: [
               {
-                label: { zh: '中段 marks：strokeWidth 缩放 + rectangle/cycle 段', en: 'Mid-path marks: strokeWidth scaling + rectangle/cycle segments' },
+                label: {
+                  zh: '中段 marks：strokeWidth 缩放 + rectangle/cycle 段',
+                  en: 'Mid-path marks: strokeWidth scaling + rectangle/cycle segments',
+                },
                 content: {
                   zh: '中段 `marks` 尺寸随路径 `strokeWidth` 缩放，与端点箭头同口径（TikZ 语义）；marks 现可落在 rectangle / cycle 段上。',
                   en: 'Mid-path `marks` scale with the path `strokeWidth`, consistent with endpoint arrows (TikZ semantics); marks can now sit on rectangle / cycle segments.',
@@ -1242,19 +1350,25 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'outerSep 对齐 TikZ outer sep', en: 'outerSep aligns with TikZ outer sep' },
                 content: {
-                  zh: '`outerSep` 改为对齐 TikZ outer sep——把所有 border anchor 整体外推 `outerSep` 并计入布局占位（此前只外推连接点、不占布局空间）；节点外接框与相邻间距随之变化 [Node](/core/components/node/overview)',
-                  en: '`outerSep` now matches TikZ outer sep — every border anchor is pushed outward by `outerSep` and counted into layout (previously it only shifted connection points without reserving space); node bounding boxes and neighbor spacing change accordingly [Node](/core/components/node/overview)',
+                  zh: '`outerSep` 改为对齐 TikZ outer sep——把所有 border anchor 整体外推 `outerSep` 并计入布局占位（此前只外推连接点、不占布局空间）；节点外接框与相邻间距随之变化 [Node](/kernel/components/node/overview)',
+                  en: '`outerSep` now matches TikZ outer sep — every border anchor is pushed outward by `outerSep` and counted into layout (previously it only shifted connection points without reserving space); node bounding boxes and neighbor spacing change accordingly [Node](/kernel/components/node/overview)',
                 },
               },
               {
-                label: { zh: '折角 step 判别值 `step`→`fold`（breaking）', en: 'fold step discriminator `step`→`fold` (breaking)' },
+                label: {
+                  zh: '折角 step 判别值 `step`→`fold`（breaking）',
+                  en: 'fold step discriminator `step`→`fold` (breaking)',
+                },
                 content: {
-                  zh: '`FoldStep.kind` 判别值 `step`→`fold`（`<Step kind="fold" via="-|" | "|-">`）；`parseWay` / React `Step` / JSX round-trip 同步。0.x 不留旧值别名，旧 `kind="step"` 需改名 [Step](/core/components/draw/step)',
-                  en: 'The `FoldStep.kind` discriminator `step`→`fold` (`<Step kind="fold" via="-|" | "|-">`); `parseWay` / React `Step` / JSX round-trip updated. As a 0.x release no alias is kept — old `kind="step"` must be renamed [Step](/core/components/draw/step)',
+                  zh: '`FoldStep.kind` 判别值 `step`→`fold`（`<Step kind="fold" via="-|" | "|-">`）；`parseWay` / React `Step` / JSX round-trip 同步。0.x 不留旧值别名，旧 `kind="step"` 需改名 [Step](/kernel/components/draw/step)',
+                  en: 'The `FoldStep.kind` discriminator `step`→`fold` (`<Step kind="fold" via="-|" | "|-">`); `parseWay` / React `Step` / JSX round-trip updated. As a 0.x release no alias is kept — old `kind="step"` must be renamed [Step](/kernel/components/draw/step)',
                 },
               },
               {
-                label: { zh: '`scope` between 平移 + `openStealth` 箭头', en: '`scope` between translation + `openStealth` arrow' },
+                label: {
+                  zh: '`scope` between 平移 + `openStealth` 箭头',
+                  en: '`scope` between translation + `openStealth` arrow',
+                },
                 content: {
                   zh: '`scope` 支持 `between` 平移定位（位置随两端点比例插值）；新增 `openStealth` 空心 stealth 箭头端点。',
                   en: '`scope` gains `between` translation positioning (placed by proportional interpolation between two endpoints); a new `openStealth` hollow stealth arrow tip.',
@@ -1309,7 +1423,7 @@ export const changelog: Array<Release> = [
                 label: { zh: '14 个具名 preset 工厂', en: '14 named preset factories' },
                 content: {
                   zh: '`fadeIn` / `drawOn` / `scaleIn` / `grow` / `growUp` / `slideIn` / `colorShift` / `cameraTo` / `pulse` / `spin` / `loop` / `flash` / `blink` / `wiggle` + `stagger` helper；纯函数产 `AnimationTrack`，输出逐字段等于手写 track（Sugar=Kernel 等价），播放 / 降级全走 renderer 既有通路。',
-                  en: '`fadeIn` / `drawOn` / `scaleIn` / `grow` / `growUp` / `slideIn` / `colorShift` / `cameraTo` / `pulse` / `spin` / `loop` / `flash` / `blink` / `wiggle` + a `stagger` helper; pure functions producing an `AnimationTrack` field-for-field identical to a hand-written one (Sugar=Kernel), with playback / degradation via the renderers\' existing paths.',
+                  en: "`fadeIn` / `drawOn` / `scaleIn` / `grow` / `growUp` / `slideIn` / `colorShift` / `cameraTo` / `pulse` / `spin` / `loop` / `flash` / `blink` / `wiggle` + a `stagger` helper; pure functions producing an `AnimationTrack` field-for-field identical to a hand-written one (Sugar=Kernel), with playback / degradation via the renderers' existing paths.",
                 },
               },
             ],
@@ -1401,8 +1515,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '有无 namespace 判别 tier1/tier2', en: 'namespace presence discriminates tier1/tier2' },
                 content: {
-                  zh: '`ChildSchema` 由严格 4-way `discriminatedUnion` 放宽为 `z.union([discriminatedUnion(core4), CompositeNodeSchema])`：tier2 必有 `namespace`、tier1（core4）没有——`\'namespace\' in node` 即判 tier2，core4 四类 schema 零改动；放宽非 breaking，原合法 IR 仍合法。',
-                  en: '`ChildSchema` relaxes from a strict 4-way `discriminatedUnion` to `z.union([discriminatedUnion(core4), CompositeNodeSchema])`: tier2 must carry `namespace`, tier1 (core4) carries none — `\'namespace\' in node` decides tier2, the four core schemas are untouched; the relaxation is non-breaking, existing valid IR stays valid.',
+                  zh: "`ChildSchema` 由严格 4-way `discriminatedUnion` 放宽为 `z.union([discriminatedUnion(core4), CompositeNodeSchema])`：tier2 必有 `namespace`、tier1（core4）没有——`'namespace' in node` 即判 tier2，core4 四类 schema 零改动；放宽非 breaking，原合法 IR 仍合法。",
+                  en: "`ChildSchema` relaxes from a strict 4-way `discriminatedUnion` to `z.union([discriminatedUnion(core4), CompositeNodeSchema])`: tier2 must carry `namespace`, tier1 (core4) carries none — `'namespace' in node` decides tier2, the four core schemas are untouched; the relaxation is non-breaking, existing valid IR stays valid.",
                 },
               },
               {
@@ -1444,8 +1558,8 @@ export const changelog: Array<Release> = [
           {
             label: { zh: '复合 / Composite 分组', en: 'Composite group' },
             content: {
-              zh: 'reference 下 extending 之后、schema 之前新增「复合 / Composite」分组，落地页 + 复合页（defineComposite / namespace·type 判别 / lowering 管线）[复合](/core/reference/composites)',
-              en: 'A "Composite" group between extending and schema under reference — a landing page + a Tier 2 nodes page (defineComposite / namespace·type discrimination / lowering pipeline) [Composite](/core/reference/composites)',
+              zh: 'reference 下 extending 之后、schema 之前新增「复合 / Composite」分组，落地页 + 复合页（defineComposite / namespace·type 判别 / lowering 管线）[复合](/kernel/reference/composites)',
+              en: 'A "Composite" group between extending and schema under reference — a landing page + a Tier 2 nodes page (defineComposite / namespace·type discrimination / lowering pipeline) [Composite](/kernel/reference/composites)',
             },
           },
         ],
@@ -1509,8 +1623,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'Path 页 `id` API 行', en: 'Path page `id` API row' },
                 content: {
-                  zh: '[Path 组件页](/core/components/draw/path) API 表加 `id` 行（可选稳定 id，水合 / 引用挂点），对齐 Node / Coordinate / Scope；zh / en 并行。',
-                  en: 'The [Path component page](/core/components/draw/path) API table gains an `id` row (an optional stable id, a hydration / reference hook), aligned with Node / Coordinate / Scope; zh / en in parallel.',
+                  zh: '[Path 组件页](/kernel/components/draw/path) API 表加 `id` 行（可选稳定 id，水合 / 引用挂点），对齐 Node / Coordinate / Scope；zh / en 并行。',
+                  en: 'The [Path component page](/kernel/components/draw/path) API table gains an `id` row (an optional stable id, a hydration / reference hook), aligned with Node / Coordinate / Scope; zh / en in parallel.',
                 },
               },
             ],
@@ -1526,8 +1640,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '复合分组 + 复合页', en: 'Composite group + Tier 2 nodes page' },
                 content: {
-                  zh: '[复合](/core/reference/composites) 分组落地页 + [复合](/core/concepts/design/composite) 详细页（`defineComposite({ schema, expand })`、有无 namespace 判别、`lowerComposites` 展开、未注册 warn+skip）；三处协同（contents + data + i18n）同步。',
-                  en: 'A [Composite](/core/reference/composites) landing page + a [Tier 2 nodes](/core/concepts/design/composite) page (`defineComposite({ schema, expand })`, namespace-presence discrimination, `lowerComposites` expansion, unregistered warn+skip); three-place sync (contents + data + i18n).',
+                  zh: '[复合](/kernel/reference/composites) 分组落地页 + [复合](/kernel/concepts/design/composite) 详细页（`defineComposite({ schema, expand })`、有无 namespace 判别、`lowerComposites` 展开、未注册 warn+skip）；三处协同（contents + data + i18n）同步。',
+                  en: 'A [Composite](/kernel/reference/composites) landing page + a [Tier 2 nodes](/kernel/concepts/design/composite) page (`defineComposite({ schema, expand })`, namespace-presence discrimination, `lowerComposites` expansion, unregistered warn+skip); three-place sync (contents + data + i18n).',
                 },
               },
             ],
@@ -1543,8 +1657,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '包关系 section + 依赖图', en: 'Package-relationship section + dependency diagram' },
                 content: {
-                  zh: '[introduction](/core/introduction) 新增「包关系」一节，描述 core / render / react / vanilla 四包职责与依赖方向，并用 retikz 自身画出依赖关系图（dogfooding）。',
-                  en: 'The [introduction](/core/introduction) gains a "package relationships" section describing the duties and dependency direction of core / render / react / vanilla, with the dependency diagram drawn by retikz itself (dogfooding).',
+                  zh: '[introduction](/kernel/introduction) 新增「包关系」一节，描述 core / render / react / vanilla 四包职责与依赖方向，并用 retikz 自身画出依赖关系图（dogfooding）。',
+                  en: 'The [introduction](/kernel/introduction) gains a "package relationships" section describing the duties and dependency direction of core / render / react / vanilla, with the dependency diagram drawn by retikz itself (dogfooding).',
                 },
               },
             ],
@@ -1583,6 +1697,44 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.13',
+            date: '2026-06-28',
+            summary: {
+              zh: 'Statistics 进阶与 stat-geom 闭环：RelationMark 支持 ribbon，统计层新增 quantile-band、density 与 smooth，抽象 mark 可组合出 boxplot、density area、趋势线；同时收口 mark label 宿主语义与 polar sector pull。',
+              en: 'Advanced statistics and the stat-geom loop: RelationMark supports ribbons, the statistics layer adds quantile-band, density, and smooth, abstract marks compose boxplots, density areas, and trend lines; mark labels and polar sector pull are also consolidated.',
+            },
+            items: [
+              {
+                label: { zh: 'RelationMark ribbon', en: 'RelationMark ribbon' },
+                content: {
+                  zh: '`RelationMark kind="ribbon"` 复用 source / target / transform / color / label 契约，把关系 rows 下沉为 core `Path kind="ribbon"`；不引入独立 RibbonMark 或 Sankey layout。',
+                  en: '`RelationMark kind="ribbon"` reuses source / target / transform / color / label contracts and lowers relation rows into core `Path kind="ribbon"`; no separate RibbonMark or Sankey layout is introduced.',
+                },
+              },
+              {
+                label: { zh: '统计子算子与采样 transform', en: 'Statistic operations and sampled transforms' },
+                content: {
+                  zh: '新增 `quantile-band` reducer、`outside-quantile-band` selector、`density` KDE transform 与 `smooth` linear regression transform，统计步骤先产出 plain rows，再交给 mark 消费。',
+                  en: 'Adds the `quantile-band` reducer, `outside-quantile-band` selector, `density` KDE transform, and `smooth` linear-regression transform; statistic steps produce plain rows before marks consume them.',
+                },
+              },
+              {
+                label: { zh: 'stat + geom 组合', en: 'stat + geom composition' },
+                content: {
+                  zh: 'boxplot、density area 与 regression path 都由现有 `IntervalMark` / `ReferenceMark` / `PointMark` / `PathMark` 组合表达，不新增 BoxPlotMark / DensityMark / RegressionMark。',
+                  en: 'Boxplots, density areas, and regression paths are composed from existing `IntervalMark` / `ReferenceMark` / `PointMark` / `PathMark`, without BoxPlotMark / DensityMark / RegressionMark.',
+                },
+              },
+              {
+                label: { zh: 'label 与 sector pull', en: 'Labels and sector pull' },
+                content: {
+                  zh: 'mark label 按 node / geometry 宿主下沉到 core label；`IntervalMark.pull` 为 polar sector 提供静态径向偏移，locator anchor 跟随同一几何。',
+                  en: 'Mark labels lower onto node / geometry core label hosts; `IntervalMark.pull` adds static radial offsets for polar sectors, with locator anchors following the same geometry.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.12',
             date: '2026-06-17',
             summary: {
@@ -1593,22 +1745,28 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'bin / aggregate：改行数规约变换', en: 'bin / aggregate: row-changing reduce transforms' },
                 content: {
-                  zh: '`bin` 把连续字段分箱（边界策略 count / step / thresholds 三选一互斥，nice 对齐，含空箱产行），每箱产出 `binStart` / `binEnd` / `binValue`（count / sum / mean / min / max 规约）。`aggregate` 按 `groupBy`（复合键）分组规约成每组一行（携组键 + `as` 值）。二者打破「行数不变」隐式不变量，输出行带组级 provenance（`sourceIndices` 指向源行集合，datum locator 组级降级） [变换](/plot/grammar/transform)',
-                  en: '`bin` partitions a continuous field (count / step / thresholds strategies, mutually exclusive; nice alignment; empty bins still emit rows), each bin emitting `binStart` / `binEnd` / `binValue` (count / sum / mean / min / max). `aggregate` groups by `groupBy` (composite key) into one row per group (carrying keys + the `as` value). Both break the implicit row-count invariant; output rows carry group-level provenance (`sourceIndices` pointing to the source-row set, datum locators degrading to group level) [Transforms](/plot/grammar/transform)',
+                  zh: '`bin` 把连续字段分箱（边界策略 count / step / thresholds 三选一互斥，nice 对齐，含空箱产行），每箱产出 `binStart` / `binEnd` / `binValue`（count / sum / mean / min / max 规约）。`aggregate` 按 `groupBy`（复合键）分组规约成每组一行（携组键 + `as` 值）。二者打破「行数不变」隐式不变量，输出行带组级 provenance（`sourceIndices` 指向源行集合，datum locator 组级降级） [变换](/graph/grammar/transform)',
+                  en: '`bin` partitions a continuous field (count / step / thresholds strategies, mutually exclusive; nice alignment; empty bins still emit rows), each bin emitting `binStart` / `binEnd` / `binValue` (count / sum / mean / min / max). `aggregate` groups by `groupBy` (composite key) into one row per group (carrying keys + the `as` value). Both break the implicit row-count invariant; output rows carry group-level provenance (`sourceIndices` pointing to the source-row set, datum locators degrading to group level) [Transforms](/graph/grammar/transform)',
                 },
               },
               {
-                label: { zh: 'normalize / derive-interval / jitter：保行数派生', en: 'normalize / derive-interval / jitter: row-preserving derive' },
+                label: {
+                  zh: 'normalize / derive-interval / jitter：保行数派生',
+                  en: 'normalize / derive-interval / jitter: row-preserving derive',
+                },
                 content: {
-                  zh: '`normalize` 组内占比归一化（`groupBy` 数组、fraction / percent、组和 0 不产 NaN），接 `stack` 即百分比堆叠。`derive-interval` 单行算 `[start, end]`（baseline→value 或两字段），与 stack 跨行累积语义正交。`jitter` 给连续数值字段加 pre-scale 偏移，用整数 `seed` + mulberry32 确定性 PRNG——SSR 与 hydration 抖出逐字节相同坐标 [变换](/plot/grammar/transform)',
-                  en: '`normalize` computes within-group shares (`groupBy` array, fraction / percent, zero group sum → 0, no NaN); compose before `stack` for percentage stacking. `derive-interval` computes a per-row `[start, end]` (baseline→value or two fields), orthogonal to stack’s cross-row accumulation. `jitter` adds a pre-scale offset to a continuous numeric field using an integer `seed` + mulberry32 deterministic PRNG — byte-identical coordinates across SSR and hydration [Transforms](/plot/grammar/transform)',
+                  zh: '`normalize` 组内占比归一化（`groupBy` 数组、fraction / percent、组和 0 不产 NaN），接 `stack` 即百分比堆叠。`derive-interval` 单行算 `[start, end]`（baseline→value 或两字段），与 stack 跨行累积语义正交。`jitter` 给连续数值字段加 pre-scale 偏移，用整数 `seed` + mulberry32 确定性 PRNG——SSR 与 hydration 抖出逐字节相同坐标 [变换](/graph/grammar/transform)',
+                  en: '`normalize` computes within-group shares (`groupBy` array, fraction / percent, zero group sum → 0, no NaN); compose before `stack` for percentage stacking. `derive-interval` computes a per-row `[start, end]` (baseline→value or two fields), orthogonal to stack’s cross-row accumulation. `jitter` adds a pre-scale offset to a continuous numeric field using an integer `seed` + mulberry32 deterministic PRNG — byte-identical coordinates across SSR and hydration [Transforms](/graph/grammar/transform)',
                 },
               },
               {
-                label: { zh: 'histogram 连续 x 区间柱 + 派生字段校验', en: 'histogram continuous-x bars + derived-field validation' },
+                label: {
+                  zh: 'histogram 连续 x 区间柱 + 派生字段校验',
+                  en: 'histogram continuous-x bars + derived-field validation',
+                },
                 content: {
-                  zh: 'interval 加 `x0Field` / `x1Field`：设了则 primary 取 `[coord(x0), coord(x1)]` 连续区间（紧贴排列、宽随箱边）而非 band，配 bin 的 `binStart` / `binEnd` 画直方图（x 走连续 linear scale），未设则 band 行为不变。`collectUserSourceFields` 统一剔除 transform 派生输出字段（即便被 mark encoding 引用），输入字段仍进严格校验 [图元](/plot/grammar/mark)',
-                  en: 'interval gains `x0Field` / `x1Field`: when set, the primary spans `[coord(x0), coord(x1)]` (contiguous, width following the bin edges) instead of a band, pairing with bin’s `binStart` / `binEnd` to draw histograms (continuous linear x); unset, band behavior is unchanged. `collectUserSourceFields` uniformly subtracts transform-derived output fields (even when referenced by mark encodings), while input fields still go through strict validation [Marks](/plot/grammar/mark)',
+                  zh: 'interval 加 `x0Field` / `x1Field`：设了则 primary 取 `[coord(x0), coord(x1)]` 连续区间（紧贴排列、宽随箱边）而非 band，配 bin 的 `binStart` / `binEnd` 画直方图（x 走连续 linear scale），未设则 band 行为不变。`collectUserSourceFields` 统一剔除 transform 派生输出字段（即便被 mark encoding 引用），输入字段仍进严格校验 [图元](/graph/grammar/mark)',
+                  en: 'interval gains `x0Field` / `x1Field`: when set, the primary spans `[coord(x0), coord(x1)]` (contiguous, width following the bin edges) instead of a band, pairing with bin’s `binStart` / `binEnd` to draw histograms (continuous linear x); unset, band behavior is unchanged. `collectUserSourceFields` uniformly subtracts transform-derived output fields (even when referenced by mark encodings), while input fields still go through strict validation [Marks](/graph/grammar/mark)',
                 },
               },
             ],
@@ -1624,36 +1782,42 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'projectCell 区间几何投影契约', en: 'projectCell interval-geometry contract' },
                 content: {
-                  zh: '把 interval / sector 的下沉重构成单路径「正交 cell → `frame.projectCell(cell)` → 装配 core Node」：判断「投影后是否闭式 shape」挪进坐标系——cartesian2D 出 rect、polar2D 出 sector（闭式快路，产物与重构前逐字节等价），曲线 / 自定义坐标系经自身 `projectCell` 把四边密采样成 contour 顶点环兜底，仍是可连接 Node（守 §8.1）;无 `projectCell` 的坐标系（1D / ternary / 无 cell 概念的 custom）对 cell 类 mark fail-loud，无引擎自动兜底。mark 侧零分支，加坐标系收敛为「实现一个 `projectCell`」 [坐标系](/plot/grammar/coordinate)',
-                  en: 'Refactors interval / sector lowering into a single path "orthogonal cell → `frame.projectCell(cell)` → assemble core Node": the "is the projection a closed-form shape" decision moves into the coordinate system — cartesian2D emits rect, polar2D emits sector (closed-form fast paths, byte-for-byte equal to the pre-refactor output), while curved / custom systems densify the four edges into a contour vertex ring via their own `projectCell`, still a connectable Node (per §8.1); systems without `projectCell` (1D / ternary / custom with no cell concept) fail loud for cell marks, with no engine auto-fallback. Marks gain no branching, and adding a coordinate system collapses to "implement one `projectCell`" [Coordinates](/plot/grammar/coordinate)',
+                  zh: '把 interval / sector 的下沉重构成单路径「正交 cell → `frame.projectCell(cell)` → 装配 core Node」：判断「投影后是否闭式 shape」挪进坐标系——cartesian2D 出 rect、polar2D 出 sector（闭式快路，产物与重构前逐字节等价），曲线 / 自定义坐标系经自身 `projectCell` 把四边密采样成 contour 顶点环兜底，仍是可连接 Node（守 §8.1）;无 `projectCell` 的坐标系（1D / ternary / 无 cell 概念的 custom）对 cell 类 mark fail-loud，无引擎自动兜底。mark 侧零分支，加坐标系收敛为「实现一个 `projectCell`」 [坐标系](/graph/grammar/coordinate)',
+                  en: 'Refactors interval / sector lowering into a single path "orthogonal cell → `frame.projectCell(cell)` → assemble core Node": the "is the projection a closed-form shape" decision moves into the coordinate system — cartesian2D emits rect, polar2D emits sector (closed-form fast paths, byte-for-byte equal to the pre-refactor output), while curved / custom systems densify the four edges into a contour vertex ring via their own `projectCell`, still a connectable Node (per §8.1); systems without `projectCell` (1D / ternary / custom with no cell concept) fail loud for cell marks, with no engine auto-fallback. Marks gain no branching, and adding a coordinate system collapses to "implement one `projectCell`" [Coordinates](/graph/grammar/coordinate)',
                 },
               },
               {
                 label: { zh: 'rect mark：双 band heatmap 格', en: 'rect mark: double-band heatmap cell' },
                 content: {
-                  zh: '新增 `RectMarkSchema` / `PlotMark.Rect` 并入 mark union：x / y 双 band 围成 `bandwidth_x × bandwidth_y` 固定格子（heatmap / 混淆矩阵 / 日历热图），值经 color 通道（通常 sequential 色阶）映射成填充。几何完全复用 `projectCell`（cartesian2D 出 rect 快路），与 interval 共享装配单路径;缺 color 回退默认填充（纯网格），y 非 band scale fail-loud，v1 仅 cartesian2D（其余坐标系无 cell 构造即 fail-loud） [比例尺](/plot/grammar/scale)',
-                  en: 'Adds `RectMarkSchema` / `PlotMark.Rect` to the mark union: x / y double bands form a fixed `bandwidth_x × bandwidth_y` cell (heatmap / confusion matrix / calendar heatmap), the value mapped to fill via the color channel (typically a sequential scale). Geometry fully reuses `projectCell` (cartesian2D rect fast path), sharing the single assembly path with interval; a missing color falls back to the default fill (plain grid), a non-band y scale fails loud, and v1 is cartesian2D only (other systems fail loud without a cell construction) [Scales](/plot/grammar/scale)',
+                  zh: '新增 `RectMarkSchema` / `PlotMark.Rect` 并入 mark union：x / y 双 band 围成 `bandwidth_x × bandwidth_y` 固定格子（heatmap / 混淆矩阵 / 日历热图），值经 color 通道（通常 sequential 色阶）映射成填充。几何完全复用 `projectCell`（cartesian2D 出 rect 快路），与 interval 共享装配单路径;缺 color 回退默认填充（纯网格），y 非 band scale fail-loud，v1 仅 cartesian2D（其余坐标系无 cell 构造即 fail-loud） [比例尺](/graph/grammar/scale)',
+                  en: 'Adds `RectMarkSchema` / `PlotMark.Rect` to the mark union: x / y double bands form a fixed `bandwidth_x × bandwidth_y` cell (heatmap / confusion matrix / calendar heatmap), the value mapped to fill via the color channel (typically a sequential scale). Geometry fully reuses `projectCell` (cartesian2D rect fast path), sharing the single assembly path with interval; a missing color falls back to the default fill (plain grid), a non-band y scale fails loud, and v1 is cartesian2D only (other systems fail loud without a cell construction) [Scales](/graph/grammar/scale)',
                 },
               },
               {
-                label: { zh: 'rule mark：参考 / 阈值线 + band 区域', en: 'rule mark: reference / threshold line + band region' },
+                label: {
+                  zh: 'rule mark：参考 / 阈值线 + band 区域',
+                  en: 'rule mark: reference / threshold line + band region',
+                },
                 content: {
-                  zh: '新增 `RuleMarkSchema` / `PlotMark.Rule`：数据驱动的常量位置参考标注，绑 x（竖直）或 y（水平）之一、`field` per-datum / `value` 常量。两种形态——单值 → line（1D 线，下沉 core `Path`，跨满对侧轴域）、给 `xTo` / `yTo` 上界 → band（`[lo,hi]` 区间填充区域，复用 `projectCell`：cartesian 出 rect / polar 出环带 / 曲线出 contour，可连接 Node）;`extentField` / `extentToField` 截断为部分长度。reference-line / band guide 本轮不引入，其角色由 rule mark 承接 [图元](/plot/grammar/mark)',
-                  en: 'Adds `RuleMarkSchema` / `PlotMark.Rule`: a data-driven constant-position reference, binding x (vertical) or y (horizontal), `field` per-datum / `value` constant. Two forms — a single value → line (1D, lowered to core `Path`, spanning the opposite axis domain), and an `xTo` / `yTo` upper bound → band (a `[lo,hi]` filled region reusing `projectCell`: cartesian rect / polar ring band / curved contour, a connectable Node); `extentField` / `extentToField` clip to a partial length. Reference-line / band guides are not introduced this round — that role is carried by the rule mark [Marks](/plot/grammar/mark)',
+                  zh: '新增 `RuleMarkSchema` / `PlotMark.Rule`：数据驱动的常量位置参考标注，绑 x（竖直）或 y（水平）之一、`field` per-datum / `value` 常量。两种形态——单值 → line（1D 线，下沉 core `Path`，跨满对侧轴域）、给 `xTo` / `yTo` 上界 → band（`[lo,hi]` 区间填充区域，复用 `projectCell`：cartesian 出 rect / polar 出环带 / 曲线出 contour，可连接 Node）;`extentField` / `extentToField` 截断为部分长度。reference-line / band guide 本轮不引入，其角色由 rule mark 承接 [图元](/graph/grammar/mark)',
+                  en: 'Adds `RuleMarkSchema` / `PlotMark.Rule`: a data-driven constant-position reference, binding x (vertical) or y (horizontal), `field` per-datum / `value` constant. Two forms — a single value → line (1D, lowered to core `Path`, spanning the opposite axis domain), and an `xTo` / `yTo` upper bound → band (a `[lo,hi]` filled region reusing `projectCell`: cartesian rect / polar ring band / curved contour, a connectable Node); `extentField` / `extentToField` clip to a partial length. Reference-line / band guides are not introduced this round — that role is carried by the rule mark [Marks](/graph/grammar/mark)',
                 },
               },
               {
-                label: { zh: 'text mark / datum label：宿主 label 优先', en: 'text mark / datum label: host label first' },
+                label: {
+                  zh: 'text mark / datum label：宿主 label 优先',
+                  en: 'text mark / datum label: host label first',
+                },
                 content: {
-                  zh: '新增 `PlotMark.Text` + 文本内容通道 `field` / `value` / `format`（格式串进 IR）+ 运行时 `resolveLabel(row)` 逃生舱（不进 IR、经 options 注入，覆盖任意模板）。下沉优先级链：datum label 首选挂宿主位置 mark（point / interval …）的 core `Node.label`（复用 core 边框相对定位 + distance + 引线 pin，零新建 Node），无宿主才由 `<TextMark>` 兜底新建带 `text` 的核心 Node;位置投影与 point 同源（`frame.projectRoles`，坐标系无关） [图元](/plot/grammar/mark)',
-                  en: 'Adds `PlotMark.Text` + a text-content channel `field` / `value` / `format` (format string in the IR) + a runtime `resolveLabel(row)` escape hatch (never in the IR, injected via options, covering arbitrary templates). Lowering priority chain: a datum label first attaches to the host positional mark’s (point / interval …) core `Node.label` (reusing core border-relative placement + distance + leader pin, zero new Node), and only when host-less does `<TextMark>` fall back to a new core Node carrying `text`; position projection is point-shared (`frame.projectRoles`, coordinate-agnostic) [Marks](/plot/grammar/mark)',
+                  zh: '新增 `PlotMark.Text` + 文本内容通道 `field` / `value` / `format`（格式串进 IR）+ 运行时 `resolveLabel(row)` 逃生舱（不进 IR、经 options 注入，覆盖任意模板）。下沉优先级链：datum label 首选挂宿主位置 mark（point / interval …）的 core `Node.label`（复用 core 边框相对定位 + distance + 引线 pin，零新建 Node），无宿主才由 `<TextMark>` 兜底新建带 `text` 的核心 Node;位置投影与 point 同源（`frame.projectRoles`，坐标系无关） [图元](/graph/grammar/mark)',
+                  en: 'Adds `PlotMark.Text` + a text-content channel `field` / `value` / `format` (format string in the IR) + a runtime `resolveLabel(row)` escape hatch (never in the IR, injected via options, covering arbitrary templates). Lowering priority chain: a datum label first attaches to the host positional mark’s (point / interval …) core `Node.label` (reusing core border-relative placement + distance + leader pin, zero new Node), and only when host-less does `<TextMark>` fall back to a new core Node carrying `text`; position projection is point-shared (`frame.projectRoles`, coordinate-agnostic) [Marks](/graph/grammar/mark)',
                 },
               },
               {
                 label: { zh: 'ribbon mark：sankey / alluvial 流带', en: 'ribbon mark: sankey / alluvial ribbon' },
                 content: {
-                  zh: '新增 `RibbonMarkSchema` / `PlotMark.Ribbon`：关系类几何「源 / 目标 / 宽度 → 可填充 cubic 曲带」，每行一条流下沉成一条 core `Path`（与 area 同构、长边换 cubic 精确切向、`move → 上边界 → 封口 → 下边界 → cycle` 围合）。端点为字段对 `{ x, y }`，经当前 scope `frame.projectRoles` 投影出屏幕坐标算半宽法向偏移 / 四角 / 控制点;`value` → 带宽、`endWidth` 喇叭形、`curvature` 控 S 形。布局（sankey 节点排布 / 堆叠 / 跨 scope connector）明确解耦、推后续 [图元](/plot/grammar/mark)',
-                  en: 'Adds `RibbonMarkSchema` / `PlotMark.Ribbon`: the relational geometry "source / target / width → a fillable cubic ribbon", each row lowering to one core `Path` (isomorphic to area, long edges swapped to cubic with exact tangents, enclosed via `move → top edge → cap → bottom edge → cycle`). Endpoints are field pairs `{ x, y }` projected to screen coordinates through the current scope’s `frame.projectRoles` to compute half-width normals / corners / control points; `value` → ribbon width, `endWidth` → a flared band, `curvature` → S-shape tension. Layout (sankey node placement / stacking / cross-scope connectors) is explicitly decoupled and deferred [Marks](/plot/grammar/mark)',
+                  zh: '新增 `RibbonMarkSchema` / `PlotMark.Ribbon`：关系类几何「源 / 目标 / 宽度 → 可填充 cubic 曲带」，每行一条流下沉成一条 core `Path`（与 area 同构、长边换 cubic 精确切向、`move → 上边界 → 封口 → 下边界 → cycle` 围合）。端点为字段对 `{ x, y }`，经当前 scope `frame.projectRoles` 投影出屏幕坐标算半宽法向偏移 / 四角 / 控制点;`value` → 带宽、`endWidth` 喇叭形、`curvature` 控 S 形。布局（sankey 节点排布 / 堆叠 / 跨 scope connector）明确解耦、推后续 [图元](/graph/grammar/mark)',
+                  en: 'Adds `RibbonMarkSchema` / `PlotMark.Ribbon`: the relational geometry "source / target / width → a fillable cubic ribbon", each row lowering to one core `Path` (isomorphic to area, long edges swapped to cubic with exact tangents, enclosed via `move → top edge → cap → bottom edge → cycle`). Endpoints are field pairs `{ x, y }` projected to screen coordinates through the current scope’s `frame.projectRoles` to compute half-width normals / corners / control points; `value` → ribbon width, `endWidth` → a flared band, `curvature` → S-shape tension. Layout (sankey node placement / stacking / cross-scope connectors) is explicitly decoupled and deferred [Marks](/graph/grammar/mark)',
                 },
               },
             ],
@@ -1698,31 +1862,34 @@ export const changelog: Array<Release> = [
             },
             items: [
               {
-                label: { zh: 'frame N 通道泛化 + 位置 encoding 角色化', en: 'frame N-channel generalization + role-based position encoding' },
+                label: {
+                  zh: 'frame N 通道泛化 + 位置 encoding 角色化',
+                  en: 'frame N-channel generalization + role-based position encoding',
+                },
                 content: {
-                  zh: '`CoordinateFrame` 写死 2 通道的 `project(primary, secondary)` 泛化成按角色序传值（cartesian1D/polar1D=1、cartesian2D/polar2D=2、ternary2D=3）;`PositionEncodingSchema` 的 x/y 转可选并新增 a/b/c 角色通道，必填角色集由坐标系在 lowering 校验（cartesian2D 需 x+y、cartesian1D 需单维、ternary2D 需 a/b/c，缺即 fail-loud）;cartesian / polar 现状零回归 [坐标系](/plot/grammar/coordinate)',
-                  en: '`CoordinateFrame`’s hardcoded 2-channel `project(primary, secondary)` is generalized to pass values by role order (cartesian1D/polar1D=1, cartesian2D/polar2D=2, ternary2D=3); `PositionEncodingSchema`’s x/y become optional with new a/b/c role channels, and the required role set is validated per coordinate system at lowering (cartesian2D needs x+y, cartesian1D a single axis, ternary2D a/b/c — missing fails loud); cartesian / polar have zero regression [Coordinates](/plot/grammar/coordinate)',
+                  zh: '`CoordinateFrame` 写死 2 通道的 `project(primary, secondary)` 泛化成按角色序传值（cartesian1D/polar1D=1、cartesian2D/polar2D=2、ternary2D=3）;`PositionEncodingSchema` 的 x/y 转可选并新增 a/b/c 角色通道，必填角色集由坐标系在 lowering 校验（cartesian2D 需 x+y、cartesian1D 需单维、ternary2D 需 a/b/c，缺即 fail-loud）;cartesian / polar 现状零回归 [坐标系](/graph/grammar/coordinate)',
+                  en: '`CoordinateFrame`’s hardcoded 2-channel `project(primary, secondary)` is generalized to pass values by role order (cartesian1D/polar1D=1, cartesian2D/polar2D=2, ternary2D=3); `PositionEncodingSchema`’s x/y become optional with new a/b/c role channels, and the required role set is validated per coordinate system at lowering (cartesian2D needs x+y, cartesian1D a single axis, ternary2D a/b/c — missing fails loud); cartesian / polar have zero regression [Coordinates](/graph/grammar/coordinate)',
                 },
               },
               {
                 label: { zh: '一维坐标系族 cartesian1D / polar1D', en: '1D coordinate family cartesian1D / polar1D' },
                 content: {
-                  zh: '单位置通道的两种空间载体——`cartesian1D` 投影到一条直线、另一屏幕维塌缩到基线（rug / timeline，`orientation` 选轴向），`polar1D` 单角向通道落到固定半径圆周（环形 / 周期数据，`radius` 半径占比 + `startAngle` / `endAngle` 半环，复用 alpha.4 角向投影）;各配 1D 轴 / 角向 1D 轴 guide [坐标系](/plot/grammar/coordinate)',
-                  en: 'Two spatial carriers for a single position channel — `cartesian1D` projects onto a line with the other screen dimension collapsed to a baseline (rug / timeline, `orientation` picks the axis), `polar1D` maps a single angular channel onto a fixed-radius circle (ring / periodic data, `radius` ratio + `startAngle` / `endAngle` half-rings, reusing alpha.4 angular projection); each gets a 1D / angular-1D axis guide [Coordinates](/plot/grammar/coordinate)',
+                  zh: '单位置通道的两种空间载体——`cartesian1D` 投影到一条直线、另一屏幕维塌缩到基线（rug / timeline，`orientation` 选轴向），`polar1D` 单角向通道落到固定半径圆周（环形 / 周期数据，`radius` 半径占比 + `startAngle` / `endAngle` 半环，复用 alpha.4 角向投影）;各配 1D 轴 / 角向 1D 轴 guide [坐标系](/graph/grammar/coordinate)',
+                  en: 'Two spatial carriers for a single position channel — `cartesian1D` projects onto a line with the other screen dimension collapsed to a baseline (rug / timeline, `orientation` picks the axis), `polar1D` maps a single angular channel onto a fixed-radius circle (ring / periodic data, `radius` ratio + `startAngle` / `endAngle` half-rings, reusing alpha.4 angular projection); each gets a 1D / angular-1D axis guide [Coordinates](/graph/grammar/coordinate)',
                 },
               },
               {
                 label: { zh: 'ternary2D 三元坐标系', en: 'ternary2D coordinate system' },
                 content: {
-                  zh: '三个连续通道 a/b/c 经重心坐标投影到等边三角内，自动按行归一化（容忍任意正值三元组，a+b+c≤0 或含负 fail-loud）;配三角轴 guide（三条边各一刻度轴 + 三向网格）;mark 矩阵本轮以 point 为主（三角内散点），未支持组合 fail-loud [坐标系](/plot/grammar/coordinate)',
-                  en: 'Three continuous channels a/b/c project via barycentric coordinates into an equilateral triangle, auto-normalized per row (any positive triple tolerated, a+b+c≤0 or negatives fail loud); a triangular-axis guide (one tick axis per edge + three-way grid); the mark matrix is point-first this round (in-triangle scatter), with unsupported combinations failing loud [Coordinates](/plot/grammar/coordinate)',
+                  zh: '三个连续通道 a/b/c 经重心坐标投影到等边三角内，自动按行归一化（容忍任意正值三元组，a+b+c≤0 或含负 fail-loud）;配三角轴 guide（三条边各一刻度轴 + 三向网格）;mark 矩阵本轮以 point 为主（三角内散点），未支持组合 fail-loud [坐标系](/graph/grammar/coordinate)',
+                  en: 'Three continuous channels a/b/c project via barycentric coordinates into an equilateral triangle, auto-normalized per row (any positive triple tolerated, a+b+c≤0 or negatives fail loud); a triangular-axis guide (one tick axis per edge + three-way grid); the mark matrix is point-first this round (in-triangle scatter), with unsupported combinations failing loud [Coordinates](/graph/grammar/coordinate)',
                 },
               },
               {
                 label: { zh: '自定义坐标系扩展点（实验性）', en: 'custom-coordinate extension point (experimental)' },
                 content: {
-                  zh: '坐标系开放为可注入工厂——IR 只存 `name` + `roles` + 数值参数，投影函数 `projectRoles` 经 `lowerPlots` 的 `coordinates` 选项运行时注入（不进 IR）;新增单 role 轴标架契约 `frameAlong`（曲线轴沿 role 报局部标架，缺则数值回落），为曲线轴 / 3D / 多 plot 组合留扩展缝 [坐标系](/plot/grammar/coordinate)',
-                  en: 'Coordinate systems open up to injectable factories — the IR stores only `name` + `roles` + numeric params, while the `projectRoles` projection function is injected at runtime via `lowerPlots`’ `coordinates` option (never in the IR); a single-role axis-frame contract `frameAlong` is added (a curved axis reports a local frame along its role, falling back to numeric when absent), leaving room for curved axes / 3D / multi-plot composition [Coordinates](/plot/grammar/coordinate)',
+                  zh: '坐标系开放为可注入工厂——IR 只存 `name` + `roles` + 数值参数，投影函数 `projectRoles` 经 `lowerPlots` 的 `coordinates` 选项运行时注入（不进 IR）;新增单 role 轴标架契约 `frameAlong`（曲线轴沿 role 报局部标架，缺则数值回落），为曲线轴 / 3D / 多 plot 组合留扩展缝 [坐标系](/graph/grammar/coordinate)',
+                  en: 'Coordinate systems open up to injectable factories — the IR stores only `name` + `roles` + numeric params, while the `projectRoles` projection function is injected at runtime via `lowerPlots`’ `coordinates` option (never in the IR); a single-role axis-frame contract `frameAlong` is added (a curved axis reports a local frame along its role, falling back to numeric when absent), leaving room for curved axes / 3D / multi-plot composition [Coordinates](/graph/grammar/coordinate)',
                 },
               },
             ],
@@ -1738,22 +1905,25 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '连续色阶 sequential / diverging', en: 'sequential / diverging continuous color scales' },
                 content: {
-                  zh: '`PlotScale` 新增连续颜色 scale，continuous / temporal `color.field` 经它映射到色带（sequential 单调、diverging 带中点）;配色用 `d3-scale-chromatic` 命名方案词表 + 可选 range 覆盖;了结 alpha.7 留下的 continuous color fail-loud 债。per-datum 着色仅 point / bar / sector，line / area + 连续 color 仍 fail-loud（无 path gradient）[比例尺](/plot/grammar/scale)',
-                  en: '`PlotScale` adds continuous color scales mapping continuous / temporal `color.field` onto a ramp (sequential monotone, diverging with a midpoint); palettes use a `d3-scale-chromatic` named-scheme vocabulary + an optional range override; this discharges the continuous-color fail-loud debt from alpha.7. Per-datum coloring is point / bar / sector only; line / area + continuous color still fails loud (no path gradient) [Scales](/plot/grammar/scale)',
+                  zh: '`PlotScale` 新增连续颜色 scale，continuous / temporal `color.field` 经它映射到色带（sequential 单调、diverging 带中点）;配色用 `d3-scale-chromatic` 命名方案词表 + 可选 range 覆盖;了结 alpha.7 留下的 continuous color fail-loud 债。per-datum 着色仅 point / bar / sector，line / area + 连续 color 仍 fail-loud（无 path gradient）[比例尺](/graph/grammar/scale)',
+                  en: '`PlotScale` adds continuous color scales mapping continuous / temporal `color.field` onto a ramp (sequential monotone, diverging with a midpoint); palettes use a `d3-scale-chromatic` named-scheme vocabulary + an optional range override; this discharges the continuous-color fail-loud debt from alpha.7. Per-datum coloring is point / bar / sector only; line / area + continuous color still fails loud (no path gradient) [Scales](/graph/grammar/scale)',
                 },
               },
               {
-                label: { zh: '离散化 scale quantize / threshold / quantile', en: 'discretization scales quantize / threshold / quantile' },
+                label: {
+                  zh: '离散化 scale quantize / threshold / quantile',
+                  en: 'discretization scales quantize / threshold / quantile',
+                },
                 content: {
-                  zh: '连续 domain → 离散 color 档：quantize 等宽分箱、threshold 自定义断点（强校验，断点须升序且 range 长度 = 断点数 + 1）、quantile 按数据分位分箱（只接受分箱数、不接受显式数值 domain）;复用连续色阶的 scheme / range 词表 [比例尺](/plot/grammar/scale)',
-                  en: 'Continuous domain → discrete color bins: quantize (equal-width bins), threshold (custom breakpoints, strictly validated — ascending and range length = breakpoints + 1), quantile (data-quantile bins, accepting only a bin count, not an explicit numeric domain); reuses the continuous scales’ scheme / range vocabulary [Scales](/plot/grammar/scale)',
+                  zh: '连续 domain → 离散 color 档：quantize 等宽分箱、threshold 自定义断点（强校验，断点须升序且 range 长度 = 断点数 + 1）、quantile 按数据分位分箱（只接受分箱数、不接受显式数值 domain）;复用连续色阶的 scheme / range 词表 [比例尺](/graph/grammar/scale)',
+                  en: 'Continuous domain → discrete color bins: quantize (equal-width bins), threshold (custom breakpoints, strictly validated — ascending and range length = breakpoints + 1), quantile (data-quantile bins, accepting only a bin count, not an explicit numeric domain); reuses the continuous scales’ scheme / range vocabulary [Scales](/graph/grammar/scale)',
                 },
               },
               {
                 label: { zh: 'legend guide', en: 'legend guide' },
                 content: {
-                  zh: '`GuideSchema` 升 `discriminatedUnion`（`PlotGuide` 加 `Legend`），legend 按 `channel` + 可选 `scale` 绑定，由对应非位置 scale 派生形态——ordinal/shape → 离散 swatch、sequential/diverging → 连续色带 ramp、quantize/threshold/quantile → 分箱 swatch、size → 梯度符号、opacity → 梯度透明度;纯函数估算布局（受无文字度量约束）+ 先估尺寸再决定 plotArea;显式 `Legend` 不抑制默认坐标轴 [图例](/plot/grammar/guide/legend)',
-                  en: '`GuideSchema` becomes a `discriminatedUnion` (`PlotGuide` gains `Legend`), with legends bound by `channel` + optional `scale` and their form derived from the bound non-position scale — ordinal/shape → discrete swatches, sequential/diverging → a continuous ramp, quantize/threshold/quantile → binned swatches, size → graduated symbols, opacity → graduated transparency; pure-function estimated layout (under the no-text-measurement constraint) + sizing estimated before deciding the plot area; an explicit `Legend` does not suppress default axes [Legend](/plot/grammar/guide/legend)',
+                  zh: '`GuideSchema` 升 `discriminatedUnion`（`PlotGuide` 加 `Legend`），legend 按 `channel` + 可选 `scale` 绑定，由对应非位置 scale 派生形态——ordinal/shape → 离散 swatch、sequential/diverging → 连续色带 ramp、quantize/threshold/quantile → 分箱 swatch、size → 梯度符号、opacity → 梯度透明度;纯函数估算布局（受无文字度量约束）+ 先估尺寸再决定 plotArea;显式 `Legend` 不抑制默认坐标轴 [图例](/graph/grammar/guide/legend)',
+                  en: '`GuideSchema` becomes a `discriminatedUnion` (`PlotGuide` gains `Legend`), with legends bound by `channel` + optional `scale` and their form derived from the bound non-position scale — ordinal/shape → discrete swatches, sequential/diverging → a continuous ramp, quantize/threshold/quantile → binned swatches, size → graduated symbols, opacity → graduated transparency; pure-function estimated layout (under the no-text-measurement constraint) + sizing estimated before deciding the plot area; an explicit `Legend` does not suppress default axes [Legend](/graph/grammar/guide/legend)',
                 },
               },
             ],
@@ -1781,7 +1951,10 @@ export const changelog: Array<Release> = [
                 },
               },
               {
-                label: { zh: 'color 真通道收口 + series 一等化', en: 'color real-channel closure + first-class series' },
+                label: {
+                  zh: 'color 真通道收口 + series 一等化',
+                  en: 'color real-channel closure + first-class series',
+                },
                 content: {
                   zh: '`makeColorResolver` 补字段类型校验（categorical→ordinal 色;continuous / temporal `color.field` → **fail-loud**，连续色阶留 alpha.8）;B/C 收口规则——point / bar / sector 按 datum 着色，line / area 按 series 着色;line / area 无显式 `series` 且有 categorical `color.field` → **隐式按 color 拆 series**（修单系列 `color.field` 静默丢弃），隐式拆产出的 IR 等价显式 `series`（守 alpha.5 datum locator parity）;显式 `series` 优先、color 不反向覆盖。',
                   en: '`makeColorResolver` gains field-type checks (categorical→ordinal color; continuous / temporal `color.field` → **fails loud**, continuous color ramps deferred to alpha.8); the B/C closure rules — point / bar / sector color by datum, line / area color by series; a line / area with no explicit `series` but a categorical `color.field` → **implicitly splits series by color** (fixing the silently-dropped single-series `color.field`), with the implicit split’s IR equal to writing `series` explicitly (preserving alpha.5 datum-locator parity); an explicit `series` wins and color never overrides it.',
@@ -1805,21 +1978,30 @@ export const changelog: Array<Release> = [
             },
             items: [
               {
-                label: { zh: '字段语义类型层（3 类）+ 缺省推断', en: 'Field-semantic-type layer (3 types) + default inference' },
+                label: {
+                  zh: '字段语义类型层（3 类）+ 缺省推断',
+                  en: 'Field-semantic-type layer (3 types) + default inference',
+                },
                 content: {
                   zh: '`data.model` 升级成承重的字段语义类型层，字段类型集定为 `continuous / categorical / temporal`（`PlotFieldType`）;`FieldDef.type` 可选（部分声明 model，缺省字段从数据推断）;无 model 时全字段缺省推断（严格 ISO temporal guard + 抽样双阈值 ≤1000 行/≤100 标量）;encoding `field` 引用与自洽校验 fail-loud。优先级 `resolveField.type > model.type > infer`。',
                   en: '`data.model` becomes a load-bearing field-semantic-type layer with the type set fixed to `continuous / categorical / temporal` (`PlotFieldType`); `FieldDef.type` is optional (partial model declaration, unspecified fields inferred from data); with no model, all fields are inferred (strict ISO temporal guard + dual sampling thresholds ≤1000 rows / ≤100 scalars); encoding `field` references and self-consistency are validated fail-loud. Precedence `resolveField.type > model.type > infer`.',
                 },
               },
               {
-                label: { zh: 'type-driven scale 默认选型 + guide 格式化', en: 'type-driven scale selection + guide formatting' },
+                label: {
+                  zh: 'type-driven scale 默认选型 + guide 格式化',
+                  en: 'type-driven scale selection + guide formatting',
+                },
                 content: {
                   zh: 'channel 未显式声明 scale 时按字段类型派生默认 scale（continuous→linear、temporal→time、categorical→band[位置]/ordinal[色]）;显式 scale 永远优先;类型↔scale 不兼容 **fail-loud 不强转**;guide 按类型选 tick formatter（时间轴日期 / 分类 tick）。最小 spec 可省 scale 声明。',
                   en: 'When a channel omits its scale, a default is derived from the field type (continuous→linear, temporal→time, categorical→band[position]/ordinal[color]); an explicit scale always wins; an incompatible type↔scale pairing **fails loud rather than coercing**; guides pick a tick formatter by type (date axes / categorical ticks). A minimal spec can drop scale declarations.',
                 },
               },
               {
-                label: { zh: '可移植数据契约：fieldMaps + 按类型 coercion', en: 'Portable data contract: fieldMaps + by-type coercion' },
+                label: {
+                  zh: '可移植数据契约：fieldMaps + 按类型 coercion',
+                  en: 'Portable data contract: fieldMaps + by-type coercion',
+                },
                 content: {
                   zh: 'spec 绑定逻辑字段（名 + 类型），数据源经适配层接入：同名同类型直接换源、不同名经 `LowerPlotsOptions.fieldMaps`（逻辑名→物理路径，按 dataset reference 键，不进 IR）映射、不同 JS 类型但同 `PlotFieldType` 经按类型值强制。ingest 一次性归一化成 canonical rows（transform 前）;`validateData?: boolean | { sampleRows? }` 抽样 fail-loud（默认关、不 warn）。fieldMaps 需 model。',
                   en: 'The spec binds logical fields (name + type) and data sources plug in via an adapter layer: same-name-same-type swaps directly, different names map through `LowerPlotsOptions.fieldMaps` (logical-name→physical-path, keyed by dataset reference, never in the IR), and different JS types but the same `PlotFieldType` go through by-type coercion. Ingest normalizes once into canonical rows (before transforms); `validateData?: boolean | { sampleRows? }` samples fail-loud (off by default, never warns). fieldMaps requires a model.',
@@ -1833,17 +2015,20 @@ export const changelog: Array<Release> = [
                 },
               },
               {
-                label: { zh: '声明式 FieldDef.format + FieldDef.order', en: 'declarative FieldDef.format + FieldDef.order' },
+                label: {
+                  zh: '声明式 FieldDef.format + FieldDef.order',
+                  en: 'declarative FieldDef.format + FieldDef.order',
+                },
                 content: {
-                  zh: '`FieldDef.format`：closed 枚举词表（进 IR、可序列化），覆盖常见非默认格式，优先级 `resolveField.parse > format > 内置`（完整 date pattern 串留后续）;`FieldDef.order`：`\'data\' | \'ascending\' | \'descending\' | Array`，非默认即有序;挂 FieldDef 故位置(band) 与颜色(ordinal) 同序，不复活 ordinal 类型。',
-                  en: '`FieldDef.format`: a closed-enum vocabulary (in the IR, serializable) covering common non-default formats, precedence `resolveField.parse > format > built-in` (full date-pattern strings deferred); `FieldDef.order`: `\'data\' | \'ascending\' | \'descending\' | Array`, non-default means ordered; hung on the FieldDef so position (band) and color (ordinal) share one order, without reviving an ordinal type.',
+                  zh: "`FieldDef.format`：closed 枚举词表（进 IR、可序列化），覆盖常见非默认格式，优先级 `resolveField.parse > format > 内置`（完整 date pattern 串留后续）;`FieldDef.order`：`'data' | 'ascending' | 'descending' | Array`，非默认即有序;挂 FieldDef 故位置(band) 与颜色(ordinal) 同序，不复活 ordinal 类型。",
+                  en: "`FieldDef.format`: a closed-enum vocabulary (in the IR, serializable) covering common non-default formats, precedence `resolveField.parse > format > built-in` (full date-pattern strings deferred); `FieldDef.order`: `'data' | 'ascending' | 'descending' | Array`, non-default means ordered; hung on the FieldDef so position (band) and color (ordinal) share one order, without reviving an ordinal type.",
                 },
               },
               {
                 label: { zh: '数据健壮性 + ISO 识别扩宽', en: 'data robustness + widened ISO recognition' },
                 content: {
-                  zh: '恒归一化（去「仅 model/resolver 命中」门控，下游单一 canonical 路径）;`LowerPlotsOptions.invalid: \'skip\' | \'error\'`——`skip`（默认）写 NaN/undefined 哨兵不删行、mark 自跳非法几何，`error` 在 transform 前全量校验遇非法即 fail-loud;`validateData` 出字段级 invalid/missing 报告;bigint 进 ingest（转 number，safe-integer 边界校验）但不进 IR 标量;temporal 推断扩认空格分隔带时区 ISO（SQL 时间戳），仍拒歧义格式。',
-                  en: 'Always-normalize (drops the "only when model/resolver hits" gate, so downstream has a single canonical path); `LowerPlotsOptions.invalid: \'skip\' | \'error\'` — `skip` (default) writes NaN/undefined sentinels without dropping rows and marks skip invalid geometry, `error` validates all participating fields before transforms and fails loud on any invalid; `validateData` emits per-field invalid/missing counts; bigint enters ingest (cast to number with safe-integer bounds) but never the IR scalar; temporal inference additionally accepts space-separated timezone ISO (SQL timestamps) while still rejecting ambiguous formats.',
+                  zh: "恒归一化（去「仅 model/resolver 命中」门控，下游单一 canonical 路径）;`LowerPlotsOptions.invalid: 'skip' | 'error'`——`skip`（默认）写 NaN/undefined 哨兵不删行、mark 自跳非法几何，`error` 在 transform 前全量校验遇非法即 fail-loud;`validateData` 出字段级 invalid/missing 报告;bigint 进 ingest（转 number，safe-integer 边界校验）但不进 IR 标量;temporal 推断扩认空格分隔带时区 ISO（SQL 时间戳），仍拒歧义格式。",
+                  en: "Always-normalize (drops the \"only when model/resolver hits\" gate, so downstream has a single canonical path); `LowerPlotsOptions.invalid: 'skip' | 'error'` — `skip` (default) writes NaN/undefined sentinels without dropping rows and marks skip invalid geometry, `error` validates all participating fields before transforms and fails loud on any invalid; `validateData` emits per-field invalid/missing counts; bigint enters ingest (cast to number with safe-integer bounds) but never the IR scalar; temporal inference additionally accepts space-separated timezone ISO (SQL timestamps) while still rejecting ambiguous formats.",
                 },
               },
             ],
@@ -2023,6 +2208,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.13',
+            date: '2026-06-28',
+            summary: {
+              zh: 'React DSL 透传 alpha.13 的 ribbon、统计 transform、host label 与 sector pull；仍保持薄适配，只装配同一份 PlotSpec。',
+              en: 'The React DSL exposes alpha.13 ribbons, statistic transforms, host labels, and sector pull while staying a thin adapter that assembles the same PlotSpec.',
+            },
+            items: [
+              {
+                label: { zh: '薄组件表面', en: 'Thin component surface' },
+                content: {
+                  zh: '`<RelationMark kind="ribbon">`、`<Transform kind="density" | "smooth">`、boxplot 组合写法、mark label props 与 `<IntervalMark pull>` 都映射到 Plot IR，不新增 chart preset。',
+                  en: '`<RelationMark kind="ribbon">`, `<Transform kind="density" | "smooth">`, boxplot composition, mark label props, and `<IntervalMark pull>` all map to Plot IR with no chart preset.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.12',
             date: '2026-06-17',
             summary: {
@@ -2033,15 +2235,15 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '<Transform> 声明组件', en: '<Transform> declaration component' },
                 content: {
-                  zh: '新增 `<Transform kind="...">`（返回 null 的配置载体，props 即 IR transform op、按 `kind` 判别扁平字段），由 `<Plot>` 同步内省、按声明序折叠进 `spec.transform`。服务全部七种 transform，是显式、可排序、可复用的数据管线节点——新 transform 一律走它，不再扩张 mark-prop 自动装配 [变换](/plot/grammar/transform)',
-                  en: 'Adds `<Transform kind="...">` (a config carrier returning null; props are the IR transform op, flat fields discriminated by `kind`), introspected by `<Plot>` and folded into `spec.transform` in declaration order. It serves all seven transforms as an explicit, orderable, reusable pipeline node — new transforms always go through it rather than expanding mark-prop auto-assembly [Transforms](/plot/grammar/transform)',
+                  zh: '新增 `<Transform kind="...">`（返回 null 的配置载体，props 即 IR transform op、按 `kind` 判别扁平字段），由 `<Plot>` 同步内省、按声明序折叠进 `spec.transform`。服务全部七种 transform，是显式、可排序、可复用的数据管线节点——新 transform 一律走它，不再扩张 mark-prop 自动装配 [变换](/graph/grammar/transform)',
+                  en: 'Adds `<Transform kind="...">` (a config carrier returning null; props are the IR transform op, flat fields discriminated by `kind`), introspected by `<Plot>` and folded into `spec.transform` in declaration order. It serves all seven transforms as an explicit, orderable, reusable pipeline node — new transforms always go through it rather than expanding mark-prop auto-assembly [Transforms](/graph/grammar/transform)',
                 },
               },
               {
                 label: { zh: 'BarMark x0 / x1 + auto-stack 去重', en: 'BarMark x0 / x1 + auto-stack dedup' },
                 content: {
-                  zh: '`<BarMark>` 加 `x0` / `x1`（→ interval `x0Field` / `x1Field`）：设了走连续 x linear scale 的 histogram 区间柱（不强制 band、无需 `x`），配 `<Transform kind="bin">` 即直方图。当管线已显式存在 `stack`（经 `<Transform kind="stack">`）时，抑制 `<BarMark stack>` / `<BarMark angle>` 的自动 stack 注入，避免对同一组数据二次堆叠（百分比堆叠 = 显式 `[normalize, stack]`） [柱](/plot/grammar/mark/interval)',
-                  en: '`<BarMark>` gains `x0` / `x1` (→ interval `x0Field` / `x1Field`): when set, continuous-x histogram bars on a linear scale (no forced band, no `x` needed), pairing with `<Transform kind="bin">` for histograms. When a `stack` already exists explicitly (via `<Transform kind="stack">`), the auto-stack injection of `<BarMark stack>` / `<BarMark angle>` is suppressed to avoid double-stacking the same data (percentage stacking = explicit `[normalize, stack]`) [Bar](/plot/grammar/mark/interval)',
+                  zh: '`<BarMark>` 加 `x0` / `x1`（→ interval `x0Field` / `x1Field`）：设了走连续 x linear scale 的 histogram 区间柱（不强制 band、无需 `x`），配 `<Transform kind="bin">` 即直方图。当管线已显式存在 `stack`（经 `<Transform kind="stack">`）时，抑制 `<BarMark stack>` / `<BarMark angle>` 的自动 stack 注入，避免对同一组数据二次堆叠（百分比堆叠 = 显式 `[normalize, stack]`） [柱](/graph/grammar/mark/interval)',
+                  en: '`<BarMark>` gains `x0` / `x1` (→ interval `x0Field` / `x1Field`): when set, continuous-x histogram bars on a linear scale (no forced band, no `x` needed), pairing with `<Transform kind="bin">` for histograms. When a `stack` already exists explicitly (via `<Transform kind="stack">`), the auto-stack injection of `<BarMark stack>` / `<BarMark angle>` is suppressed to avoid double-stacking the same data (percentage stacking = explicit `[normalize, stack]`) [Bar](/graph/grammar/mark/interval)',
                 },
               },
             ],
@@ -2057,29 +2259,29 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '<RectMark> heatmap 组件', en: '`<RectMark>` heatmap component' },
                 content: {
-                  zh: '`<RectMark x y color />` 扁平 props 声明双 band heatmap 格（x / y 分类、值 `color` 映射成填充）;`buildPlotSpec` 装配 rect IR 并据 `hasRect` 把 cartesian y 也强制 band（仿 `hasBar` 强制 x band），与显式 `<Scale dimension="y">` 冲突时 fail-loud;缺 `color` 出纯网格、连续值字段配 model 自动派生 sequential 色阶 [图元](/plot/grammar/mark)',
-                  en: '`<RectMark x y color />` flat props declare a double-band heatmap cell (x / y categorical, the value `color` mapped to fill); `buildPlotSpec` assembles the rect IR and, on `hasRect`, forces cartesian y to band too (mirroring `hasBar` forcing x band), failing loud if it conflicts with an explicit `<Scale dimension="y">`; a missing `color` yields a plain grid, and a continuous value field with a model auto-derives a sequential scale [Marks](/plot/grammar/mark)',
+                  zh: '`<RectMark x y color />` 扁平 props 声明双 band heatmap 格（x / y 分类、值 `color` 映射成填充）;`buildPlotSpec` 装配 rect IR 并据 `hasRect` 把 cartesian y 也强制 band（仿 `hasBar` 强制 x band），与显式 `<Scale dimension="y">` 冲突时 fail-loud;缺 `color` 出纯网格、连续值字段配 model 自动派生 sequential 色阶 [图元](/graph/grammar/mark)',
+                  en: '`<RectMark x y color />` flat props declare a double-band heatmap cell (x / y categorical, the value `color` mapped to fill); `buildPlotSpec` assembles the rect IR and, on `hasRect`, forces cartesian y to band too (mirroring `hasBar` forcing x band), failing loud if it conflicts with an explicit `<Scale dimension="y">`; a missing `color` yields a plain grid, and a continuous value field with a model auto-derives a sequential scale [Marks](/graph/grammar/mark)',
                 },
               },
               {
                 label: { zh: '<RuleMark> 参考 / 阈值线组件', en: '`<RuleMark>` reference / threshold component' },
                 content: {
-                  zh: '`<RuleMark>` 声明常量位置参考标注：绑 `x`（竖直）或 `y`（水平）之一、字段名 per-datum 或常量值;只给下界 → 一条线（跨满对侧轴域），配 `xTo` / `yTo` 上界 → `[lo,hi]` band 填充区域;`extentField` / `extentToField` 截成部分长度。装配进 rule IR，line / band 由是否给上界判别 [图元](/plot/grammar/mark)',
-                  en: '`<RuleMark>` declares a constant-position reference: bind `x` (vertical) or `y` (horizontal), per-datum field name or constant value; a lower bound alone → a single line (spanning the opposite axis domain), paired with an `xTo` / `yTo` upper bound → a `[lo,hi]` filled band; `extentField` / `extentToField` clip to a partial length. It assembles into rule IR, with line / band discriminated by whether an upper bound is given [Marks](/plot/grammar/mark)',
+                  zh: '`<RuleMark>` 声明常量位置参考标注：绑 `x`（竖直）或 `y`（水平）之一、字段名 per-datum 或常量值;只给下界 → 一条线（跨满对侧轴域），配 `xTo` / `yTo` 上界 → `[lo,hi]` band 填充区域;`extentField` / `extentToField` 截成部分长度。装配进 rule IR，line / band 由是否给上界判别 [图元](/graph/grammar/mark)',
+                  en: '`<RuleMark>` declares a constant-position reference: bind `x` (vertical) or `y` (horizontal), per-datum field name or constant value; a lower bound alone → a single line (spanning the opposite axis domain), paired with an `xTo` / `yTo` upper bound → a `[lo,hi]` filled band; `extentField` / `extentToField` clip to a partial length. It assembles into rule IR, with line / band discriminated by whether an upper bound is given [Marks](/graph/grammar/mark)',
                 },
               },
               {
                 label: { zh: '<TextMark> + 位置 mark label prop', en: '`<TextMark>` + positional-mark label prop' },
                 content: {
-                  zh: '`<TextMark>` 声明自由文本兜底（位置投影与 `<PointMark>` 同源 + 必填 `text` 内容通道 field / value / format）;首选路径是给位置 mark 加可选 `label` prop——`<BarMark label>` / `<PointMark label>` 把文本挂宿主 datum 的 core `Node.label`（方位 / distance / 引线 pin 由 core 负责，零新建 Node）;运行时 `resolveLabel(row)` 经 options 注入做任意模板，不进 IR [图元](/plot/grammar/mark)',
-                  en: '`<TextMark>` declares the free-text fallback (point-shared position projection + a required `text` content channel field / value / format); the preferred path is an optional `label` prop on positional marks — `<BarMark label>` / `<PointMark label>` attach text to the host datum’s core `Node.label` (orientation / distance / leader pin handled by core, zero new Node); a runtime `resolveLabel(row)` injected via options handles arbitrary templates, never in the IR [Marks](/plot/grammar/mark)',
+                  zh: '`<TextMark>` 声明自由文本兜底（位置投影与 `<PointMark>` 同源 + 必填 `text` 内容通道 field / value / format）;首选路径是给位置 mark 加可选 `label` prop——`<BarMark label>` / `<PointMark label>` 把文本挂宿主 datum 的 core `Node.label`（方位 / distance / 引线 pin 由 core 负责，零新建 Node）;运行时 `resolveLabel(row)` 经 options 注入做任意模板，不进 IR [图元](/graph/grammar/mark)',
+                  en: '`<TextMark>` declares the free-text fallback (point-shared position projection + a required `text` content channel field / value / format); the preferred path is an optional `label` prop on positional marks — `<BarMark label>` / `<PointMark label>` attach text to the host datum’s core `Node.label` (orientation / distance / leader pin handled by core, zero new Node); a runtime `resolveLabel(row)` injected via options handles arbitrary templates, never in the IR [Marks](/graph/grammar/mark)',
                 },
               },
               {
                 label: { zh: '<RibbonMark> 流带组件', en: '`<RibbonMark>` ribbon component' },
                 content: {
-                  zh: '`<RibbonMark source target value>` 声明 sankey / alluvial 流带：`source` / `target` 各是一组 `{ x, y }` 字段对（经坐标系投影成屏幕端点）、`value` 字段经 width scale 算带宽、可选 `endWidth` 喇叭形 + `curvature` 控 S 形。装配进 ribbon IR，每行下沉一条可填充 cubic 曲带 Path;布局算法解耦、不在组件内 [图元](/plot/grammar/mark)',
-                  en: '`<RibbonMark source target value>` declares a sankey / alluvial ribbon: `source` / `target` are each a `{ x, y }` field pair (projected to screen endpoints by the coordinate system), `value` is sized to ribbon width via a width scale, with optional `endWidth` flare + `curvature` S-shape control. It assembles into ribbon IR, each row lowering to one fillable cubic ribbon Path; the layout algorithm is decoupled and not in the component [Marks](/plot/grammar/mark)',
+                  zh: '`<RibbonMark source target value>` 声明 sankey / alluvial 流带：`source` / `target` 各是一组 `{ x, y }` 字段对（经坐标系投影成屏幕端点）、`value` 字段经 width scale 算带宽、可选 `endWidth` 喇叭形 + `curvature` 控 S 形。装配进 ribbon IR，每行下沉一条可填充 cubic 曲带 Path;布局算法解耦、不在组件内 [图元](/graph/grammar/mark)',
+                  en: '`<RibbonMark source target value>` declares a sankey / alluvial ribbon: `source` / `target` are each a `{ x, y }` field pair (projected to screen endpoints by the coordinate system), `value` is sized to ribbon width via a width scale, with optional `endWidth` flare + `curvature` S-shape control. It assembles into ribbon IR, each row lowering to one fillable cubic ribbon Path; the layout algorithm is decoupled and not in the component [Marks](/graph/grammar/mark)',
                 },
               },
             ],
@@ -2093,14 +2295,20 @@ export const changelog: Array<Release> = [
             },
             items: [
               {
-                label: { zh: '薄 <Plot>：移除默认轴注入（BREAKING）', en: 'Thin `<Plot>`: default-axis injection removed (BREAKING)' },
+                label: {
+                  zh: '薄 <Plot>：移除默认轴注入（BREAKING）',
+                  en: 'Thin `<Plot>`: default-axis injection removed (BREAKING)',
+                },
                 content: {
-                  zh: 'cartesian2D 组合 DSL 不再自动补 x/y 轴 + y 网格——`<Plot>` 只画你显式列出的 `<Axis>` / `<Legend>`；scale / coordinate 推断不变，`bare` 删除。迁移：补 `<Axis dimension="x" />` / `<Axis dimension="y" grid />`，并移除 `bare` [坐标轴](/plot/grammar/guide/axis)',
-                  en: 'The cartesian2D composition DSL no longer auto-adds x/y axes + y grid — `<Plot>` draws only the `<Axis>` / `<Legend>` you list; scale / coordinate inference is unchanged, and `bare` is removed. Migration: add `<Axis dimension="x" />` / `<Axis dimension="y" grid />`, and remove `bare` [Axis](/plot/grammar/guide/axis)',
+                  zh: 'cartesian2D 组合 DSL 不再自动补 x/y 轴 + y 网格——`<Plot>` 只画你显式列出的 `<Axis>` / `<Legend>`；scale / coordinate 推断不变，`bare` 删除。迁移：补 `<Axis dimension="x" />` / `<Axis dimension="y" grid />`，并移除 `bare` [坐标轴](/graph/grammar/guide/axis)',
+                  en: 'The cartesian2D composition DSL no longer auto-adds x/y axes + y grid — `<Plot>` draws only the `<Axis>` / `<Legend>` you list; scale / coordinate inference is unchanged, and `bare` is removed. Migration: add `<Axis dimension="x" />` / `<Axis dimension="y" grid />`, and remove `bare` [Axis](/graph/grammar/guide/axis)',
                 },
               },
               {
-                label: { zh: 'decorateDefaultGuides 抽出（留 v0.2 chart）', en: '`decorateDefaultGuides` extracted (for v0.2 chart)' },
+                label: {
+                  zh: 'decorateDefaultGuides 抽出（留 v0.2 chart）',
+                  en: '`decorateDefaultGuides` extracted (for v0.2 chart)',
+                },
                 content: {
                   zh: '默认轴 / 网格补齐逻辑抽成框架无关纯函数（PlotSpec 进出）：cartesian2D 且无显式 axis 时前置 x 轴 + y 轴（带网格）。薄 `<Plot>` 本身不调用，留给上层 `<Chart>`（v0.2）复用——能力不丢、将来不重写。',
                   en: 'The default-axis / grid logic is extracted into a framework-agnostic pure function (PlotSpec in/out): for cartesian2D with no explicit axis it prepends an x axis + y axis (with grid). Thin `<Plot>` does not call it; it is reserved for a v0.2 `<Chart>` to reuse — capability kept, no future rewrite.',
@@ -2109,15 +2317,15 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '<Scale> 子组件替代 scaleX / scaleY', en: '`<Scale>` child replaces scaleX / scaleY' },
                 content: {
-                  zh: '`<Scale dimension="x|y|angle|radius" type="linear|time|point|log|sqrt" />` 作为声明式子组件覆盖位置 scale；`scaleX` / `scaleY` 从 `<Plot>` props 删除，polar 下可用 angle/radius 或 x/y 别名 [比例尺](/plot/grammar/scale)',
-                  en: '`<Scale dimension="x|y|angle|radius" type="linear|time|point|log|sqrt" />` declaratively overrides position scales; `scaleX` / `scaleY` are removed from `<Plot>` props, with angle/radius or x/y aliases under polar [Scales](/plot/grammar/scale)',
+                  zh: '`<Scale dimension="x|y|angle|radius" type="linear|time|point|log|sqrt" />` 作为声明式子组件覆盖位置 scale；`scaleX` / `scaleY` 从 `<Plot>` props 删除，polar 下可用 angle/radius 或 x/y 别名 [比例尺](/graph/grammar/scale)',
+                  en: '`<Scale dimension="x|y|angle|radius" type="linear|time|point|log|sqrt" />` declaratively overrides position scales; `scaleX` / `scaleY` are removed from `<Plot>` props, with angle/radius or x/y aliases under polar [Scales](/graph/grammar/scale)',
                 },
               },
               {
                 label: { zh: '多 Plot 面板组合', en: 'Multi-plot panel composition' },
                 content: {
-                  zh: '`<Plot>` 可作为可嵌入 Tier 2 子组件放进同一个 core `<Layout>`；每张图用 `width` / `height` 自描述尺寸，用 `x` / `y` 或 `transforms` 摆位，`id` 作为外部 anchor 句柄，`dataRef` 可共享数据源 [图表容器](/plot/components/plot)',
-                  en: '`<Plot>` can now act as an embeddable Tier 2 child inside one core `<Layout>`; each panel uses `width` / `height` as its intrinsic size, `x` / `y` or `transforms` for placement, `id` as its external anchor handle, and `dataRef` for shared datasets [Plot](/plot/components/plot)',
+                  zh: '`<Plot>` 可作为可嵌入 Tier 2 子组件放进同一个 core `<Layout>`；每张图用 `width` / `height` 自描述尺寸，用 `x` / `y` 或 `transforms` 摆位，`id` 作为外部 anchor 句柄，`dataRef` 可共享数据源 [图表容器](/graph/components/plot)',
+                  en: '`<Plot>` can now act as an embeddable Tier 2 child inside one core `<Layout>`; each panel uses `width` / `height` as its intrinsic size, `x` / `y` or `transforms` for placement, `id` as its external anchor handle, and `dataRef` for shared datasets [Plot](/graph/components/plot)',
                 },
               },
               {
@@ -2140,22 +2348,22 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '<Plot coordinate> 坐标系族', en: '`<Plot coordinate>` coordinate family' },
                 content: {
-                  zh: '`CoordinateInput` 扩 `cartesian1D` / `polar1D` / `ternary2D`（cartesian2D 仍为缺省态）;对象形态承载几何——cartesian1D `orientation` 轴向、polar1D 半径占比 + 角向区间、ternary2D 无额外配置;`buildPlotSpec` 据坐标系装配对应 IR + 1D / 角向 / 三角轴 guide [坐标系](/plot/grammar/coordinate)',
-                  en: '`CoordinateInput` extends to `cartesian1D` / `polar1D` / `ternary2D` (cartesian2D stays the default); the object form carries geometry — cartesian1D `orientation`, polar1D radius ratio + angular range, ternary2D no extra config; `buildPlotSpec` assembles the matching IR + 1D / angular / triangular axis guides per coordinate system [Coordinates](/plot/grammar/coordinate)',
+                  zh: '`CoordinateInput` 扩 `cartesian1D` / `polar1D` / `ternary2D`（cartesian2D 仍为缺省态）;对象形态承载几何——cartesian1D `orientation` 轴向、polar1D 半径占比 + 角向区间、ternary2D 无额外配置;`buildPlotSpec` 据坐标系装配对应 IR + 1D / 角向 / 三角轴 guide [坐标系](/graph/grammar/coordinate)',
+                  en: '`CoordinateInput` extends to `cartesian1D` / `polar1D` / `ternary2D` (cartesian2D stays the default); the object form carries geometry — cartesian1D `orientation`, polar1D radius ratio + angular range, ternary2D no extra config; `buildPlotSpec` assembles the matching IR + 1D / angular / triangular axis guides per coordinate system [Coordinates](/graph/grammar/coordinate)',
                 },
               },
               {
                 label: { zh: '<PointMark> 角色通道 a/b/c', en: '`<PointMark>` role channels a/b/c' },
                 content: {
-                  zh: '`<PointMark>` 的 x/y 转可选并新增 `a` / `b` / `c` 三元分量 props（顶点朝上=a、右下=b、左下=c）;位置通道按坐标系取角色——1D / 2D 用 x/y、ternary2D 用 a/b/c，缺角色由 lowering 按坐标系 fail-loud 校验 [坐标系](/plot/grammar/coordinate)',
-                  en: '`<PointMark>`’s x/y become optional with new `a` / `b` / `c` ternary-component props (apex=a, bottom-right=b, bottom-left=c); position channels take roles per coordinate system — 1D / 2D use x/y, ternary2D uses a/b/c, with missing roles failing loud at lowering per coordinate system [Coordinates](/plot/grammar/coordinate)',
+                  zh: '`<PointMark>` 的 x/y 转可选并新增 `a` / `b` / `c` 三元分量 props（顶点朝上=a、右下=b、左下=c）;位置通道按坐标系取角色——1D / 2D 用 x/y、ternary2D 用 a/b/c，缺角色由 lowering 按坐标系 fail-loud 校验 [坐标系](/graph/grammar/coordinate)',
+                  en: '`<PointMark>`’s x/y become optional with new `a` / `b` / `c` ternary-component props (apex=a, bottom-right=b, bottom-left=c); position channels take roles per coordinate system — 1D / 2D use x/y, ternary2D uses a/b/c, with missing roles failing loud at lowering per coordinate system [Coordinates](/graph/grammar/coordinate)',
                 },
               },
               {
                 label: { zh: '自定义坐标系注入（实验性）', en: 'custom-coordinate injection (experimental)' },
                 content: {
-                  zh: '`<Plot coordinate={{ type: \'custom\', name }} coordinates={{ [name]: factory }}>` 注入投影工厂——IR 只存 name + roles + 数值参数，工厂是运行时函数、不进 IR;曲线轴吃 `frameAlong` 局部标架 [坐标系](/plot/grammar/coordinate)',
-                  en: '`<Plot coordinate={{ type: \'custom\', name }} coordinates={{ [name]: factory }}>` injects a projection factory — the IR holds only name + roles + numeric params, the factory is a runtime function and never enters the IR; curved axes consume the `frameAlong` local frame [Coordinates](/plot/grammar/coordinate)',
+                  zh: "`<Plot coordinate={{ type: 'custom', name }} coordinates={{ [name]: factory }}>` 注入投影工厂——IR 只存 name + roles + 数值参数，工厂是运行时函数、不进 IR;曲线轴吃 `frameAlong` 局部标架 [坐标系](/graph/grammar/coordinate)",
+                  en: "`<Plot coordinate={{ type: 'custom', name }} coordinates={{ [name]: factory }}>` injects a projection factory — the IR holds only name + roles + numeric params, the factory is a runtime function and never enters the IR; curved axes consume the `frameAlong` local frame [Coordinates](/graph/grammar/coordinate)",
                 },
               },
             ],
@@ -2171,15 +2379,15 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '<Legend> 组件', en: '`<Legend>` component' },
                 content: {
-                  zh: '`<Legend channel scale title position orient tickCount tickLabels>` 声明图例，形态（swatch / 色带 / 分箱 / 梯度符号）据绑定 scale 类型自动选;`<Legend>` 不抑制默认坐标轴（与 `<Axis>` 区分），修复此前「有任何 guide 即清空默认轴」导致加图例丢 x/y 轴的 bug [图例](/plot/grammar/guide/legend)',
-                  en: '`<Legend channel scale title position orient tickCount tickLabels>` declares a legend whose form (swatch / ramp / bins / graduated symbols) is auto-picked from the bound scale type; `<Legend>` does not suppress default axes (unlike `<Axis>`), fixing the prior bug where any guide cleared the default x/y axes when a legend was added [Legend](/plot/grammar/guide/legend)',
+                  zh: '`<Legend channel scale title position orient tickCount tickLabels>` 声明图例，形态（swatch / 色带 / 分箱 / 梯度符号）据绑定 scale 类型自动选;`<Legend>` 不抑制默认坐标轴（与 `<Axis>` 区分），修复此前「有任何 guide 即清空默认轴」导致加图例丢 x/y 轴的 bug [图例](/graph/grammar/guide/legend)',
+                  en: '`<Legend channel scale title position orient tickCount tickLabels>` declares a legend whose form (swatch / ramp / bins / graduated symbols) is auto-picked from the bound scale type; `<Legend>` does not suppress default axes (unlike `<Axis>`), fixing the prior bug where any guide cleared the default x/y axes when a legend was added [Legend](/graph/grammar/guide/legend)',
                 },
               },
               {
                 label: { zh: '连续色阶 / 离散化入口', en: 'continuous-color / discretization entry' },
                 content: {
-                  zh: 'continuous / temporal `color` 字段经 type-driven 自动派生连续色阶（不再 fail-loud），离散化 scale 经 spec scale 接入;`buildPlotSpec` 不再把所有 color 绑死 ordinal [比例尺](/plot/grammar/scale)',
-                  en: 'A continuous / temporal `color` field auto-derives a continuous color scale via type-driven derivation (no longer fails loud), and discretization scales plug in via spec scales; `buildPlotSpec` no longer hardwires every color to ordinal [Scales](/plot/grammar/scale)',
+                  zh: 'continuous / temporal `color` 字段经 type-driven 自动派生连续色阶（不再 fail-loud），离散化 scale 经 spec scale 接入;`buildPlotSpec` 不再把所有 color 绑死 ordinal [比例尺](/graph/grammar/scale)',
+                  en: 'A continuous / temporal `color` field auto-derives a continuous color scale via type-driven derivation (no longer fails loud), and discretization scales plug in via spec scales; `buildPlotSpec` no longer hardwires every color to ordinal [Scales](/graph/grammar/scale)',
                 },
               },
             ],
@@ -2195,8 +2403,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'DSL scale 家族 log / sqrt', en: 'DSL scale family log / sqrt' },
                 content: {
-                  zh: '`DslScaleX` = `\'linear\' | \'time\' | \'point\' | \'log\' | \'sqrt\'`、`DslScaleY` = `\'linear\' | \'log\' | \'sqrt\'`;`<Plot scaleX="log">` / `scaleY="sqrt"` 一键非线性轴（`buildPlotSpec` 装配成 `PlotScale.Log` / `Sqrt`），bar + 非线性 scale 顺延 core 的 fail-loud 规则。',
-                  en: '`DslScaleX` = `\'linear\' | \'time\' | \'point\' | \'log\' | \'sqrt\'`, `DslScaleY` = `\'linear\' | \'log\' | \'sqrt\'`; `<Plot scaleX="log">` / `scaleY="sqrt"` gives a nonlinear axis in one prop (`buildPlotSpec` assembles `PlotScale.Log` / `Sqrt`), with bar + nonlinear scale inheriting core’s fail-loud rule.',
+                  zh: "`DslScaleX` = `'linear' | 'time' | 'point' | 'log' | 'sqrt'`、`DslScaleY` = `'linear' | 'log' | 'sqrt'`;`<Plot scaleX=\"log\">` / `scaleY=\"sqrt\"` 一键非线性轴（`buildPlotSpec` 装配成 `PlotScale.Log` / `Sqrt`），bar + 非线性 scale 顺延 core 的 fail-loud 规则。",
+                  en: "`DslScaleX` = `'linear' | 'time' | 'point' | 'log' | 'sqrt'`, `DslScaleY` = `'linear' | 'log' | 'sqrt'`; `<Plot scaleX=\"log\">` / `scaleY=\"sqrt\"` gives a nonlinear axis in one prop (`buildPlotSpec` assembles `PlotScale.Log` / `Sqrt`), with bar + nonlinear scale inheriting core’s fail-loud rule.",
                 },
               },
               {
@@ -2351,6 +2559,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.13',
+            date: '2026-06-28',
+            summary: {
+              zh: 'Vanilla SSR 继续纯 spec 驱动，自动渲染 alpha.13 的 ribbon、boxplot、density area、smooth path、host label 与 pulled sector。',
+              en: 'Vanilla SSR remains purely spec-driven and renders alpha.13 ribbons, boxplots, density areas, smooth paths, host labels, and pulled sectors automatically.',
+            },
+            items: [
+              {
+                label: { zh: 'renderPlot 零新入口', en: 'No new renderPlot entry' },
+                content: {
+                  zh: '`renderPlot(spec, datasets)` 消费同一 PlotSpec；新增能力都经共享 lowering 与 core renderer 出 SVG 字符串。',
+                  en: '`renderPlot(spec, datasets)` consumes the same PlotSpec; all new capabilities flow through shared lowering and the core renderer to SVG strings.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.12',
             date: '2026-06-17',
             summary: {
@@ -2361,8 +2586,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'transform 纯 spec 驱动 SSR', en: 'transform purely spec-driven SSR' },
                 content: {
-                  zh: 'bin / aggregate / normalize / derive-interval / jitter 全经 Plot IR + lowering 自动生效，vanilla 侧零代码改动。新增 SSR 渲染测试覆盖直方图（连续 x 区间柱）、分组聚合柱，以及 jitter 同 seed 两次渲染逐字节相同（确定性 PRNG 守 SSR / hydration parity） [变换](/plot/grammar/transform)',
-                  en: 'bin / aggregate / normalize / derive-interval / jitter all take effect automatically through the Plot IR + lowering, with zero code change on the vanilla side. New SSR tests cover histograms (continuous-x bars), grouped aggregate bars, and jitter rendering byte-identically across two runs with the same seed (the deterministic PRNG preserving SSR / hydration parity) [Transforms](/plot/grammar/transform)',
+                  zh: 'bin / aggregate / normalize / derive-interval / jitter 全经 Plot IR + lowering 自动生效，vanilla 侧零代码改动。新增 SSR 渲染测试覆盖直方图（连续 x 区间柱）、分组聚合柱，以及 jitter 同 seed 两次渲染逐字节相同（确定性 PRNG 守 SSR / hydration parity） [变换](/graph/grammar/transform)',
+                  en: 'bin / aggregate / normalize / derive-interval / jitter all take effect automatically through the Plot IR + lowering, with zero code change on the vanilla side. New SSR tests cover histograms (continuous-x bars), grouped aggregate bars, and jitter rendering byte-identically across two runs with the same seed (the deterministic PRNG preserving SSR / hydration parity) [Transforms](/graph/grammar/transform)',
                 },
               },
             ],
@@ -2378,15 +2603,15 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '新 mark SSR（零额外代码）', en: 'new-mark SSR (zero extra code)' },
                 content: {
-                  zh: '`renderPlot(spec, datasets)` 消费含 `rect` / `rule` / `text` / `ribbon` 的 PlotSpec，经共享 lowering + core 编译零 DOM 出 SVG 字符串——vanilla 不改 `src/` 代码：`renderPlot` mark 无关、纯 spec 驱动，新 mark 经 IR + lowering 自动渲染（heatmap 每格 `<rect>`、参考线 / band、datum label 文本、sankey cubic 曲带），与 react 面视觉一致 [图元](/plot/grammar/mark)',
-                  en: '`renderPlot(spec, datasets)` consumes a PlotSpec with `rect` / `rule` / `text` / `ribbon`, emitting an SVG string with zero DOM through shared lowering + core compile — vanilla changes no `src/` code: `renderPlot` is mark-agnostic and purely spec-driven, so new marks render automatically through IR + lowering (per-cell `<rect>` heatmap, reference lines / bands, datum-label text, sankey cubic ribbons), visually matching the React surface [Marks](/plot/grammar/mark)',
+                  zh: '`renderPlot(spec, datasets)` 消费含 `rect` / `rule` / `text` / `ribbon` 的 PlotSpec，经共享 lowering + core 编译零 DOM 出 SVG 字符串——vanilla 不改 `src/` 代码：`renderPlot` mark 无关、纯 spec 驱动，新 mark 经 IR + lowering 自动渲染（heatmap 每格 `<rect>`、参考线 / band、datum label 文本、sankey cubic 曲带），与 react 面视觉一致 [图元](/graph/grammar/mark)',
+                  en: '`renderPlot(spec, datasets)` consumes a PlotSpec with `rect` / `rule` / `text` / `ribbon`, emitting an SVG string with zero DOM through shared lowering + core compile — vanilla changes no `src/` code: `renderPlot` is mark-agnostic and purely spec-driven, so new marks render automatically through IR + lowering (per-cell `<rect>` heatmap, reference lines / bands, datum-label text, sankey cubic ribbons), visually matching the React surface [Marks](/graph/grammar/mark)',
                 },
               },
               {
                 label: { zh: '曲线坐标系 contour 柱 SSR', en: 'curved-coordinate contour bars SSR' },
                 content: {
-                  zh: '区间几何下沉重构后，`renderPlot` 在曲线 / 自定义坐标系（其 `frame.projectCell` 就绪时）下把 interval / rect / rule band 出成 contour 顶点环 Node，SSR 渲染成可填充多边形且仍可被同级 core `Path` / `Node` 连接;cartesian / polar 闭式快路产物零回归 [坐标系](/plot/grammar/coordinate)',
-                  en: 'After the interval-geometry refactor, `renderPlot` emits interval / rect / rule bands as contour vertex-ring Nodes on curved / custom coordinate systems (when their `frame.projectCell` is ready), SSR-rendering fillable polygons that remain connectable by sibling core `Path` / `Node`; the cartesian / polar closed-form fast paths have zero regression [Coordinates](/plot/grammar/coordinate)',
+                  zh: '区间几何下沉重构后，`renderPlot` 在曲线 / 自定义坐标系（其 `frame.projectCell` 就绪时）下把 interval / rect / rule band 出成 contour 顶点环 Node，SSR 渲染成可填充多边形且仍可被同级 core `Path` / `Node` 连接;cartesian / polar 闭式快路产物零回归 [坐标系](/graph/grammar/coordinate)',
+                  en: 'After the interval-geometry refactor, `renderPlot` emits interval / rect / rule bands as contour vertex-ring Nodes on curved / custom coordinate systems (when their `frame.projectCell` is ready), SSR-rendering fillable polygons that remain connectable by sibling core `Path` / `Node`; the cartesian / polar closed-form fast paths have zero regression [Coordinates](/graph/grammar/coordinate)',
                 },
               },
             ],
@@ -2402,15 +2627,15 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '新坐标系族 SSR', en: 'new coordinate family SSR' },
                 content: {
-                  zh: '`renderPlot` 消费含 `cartesian1D` / `polar1D` / `ternary2D` 的 PlotSpec，零 DOM 出 SVG 字符串;一维 rug / timeline / 环形周期、三元散点均走同一份共享 lowering，与 react 面视觉一致 [坐标系](/plot/grammar/coordinate)',
-                  en: '`renderPlot` consumes a PlotSpec with `cartesian1D` / `polar1D` / `ternary2D`, emitting an SVG string with zero DOM; 1D rug / timeline / ring-periodic and ternary scatter all go through the same shared lowering, visually matching the React surface [Coordinates](/plot/grammar/coordinate)',
+                  zh: '`renderPlot` 消费含 `cartesian1D` / `polar1D` / `ternary2D` 的 PlotSpec，零 DOM 出 SVG 字符串;一维 rug / timeline / 环形周期、三元散点均走同一份共享 lowering，与 react 面视觉一致 [坐标系](/graph/grammar/coordinate)',
+                  en: '`renderPlot` consumes a PlotSpec with `cartesian1D` / `polar1D` / `ternary2D`, emitting an SVG string with zero DOM; 1D rug / timeline / ring-periodic and ternary scatter all go through the same shared lowering, visually matching the React surface [Coordinates](/graph/grammar/coordinate)',
                 },
               },
               {
                 label: { zh: '自定义坐标系注入（实验性）', en: 'custom-coordinate injection (experimental)' },
                 content: {
-                  zh: '`renderPlot(spec, data, options)` 的 `options`（`LowerPlotsOptions`）加 `coordinates` 字段，注入自定义投影工厂（运行时函数、不进 IR），与 React 表面对等 [坐标系](/plot/grammar/coordinate)',
-                  en: '`renderPlot(spec, data, options)`’s `options` (`LowerPlotsOptions`) gains a `coordinates` field to inject custom projection factories (runtime functions, never in the IR), at parity with the React surface [Coordinates](/plot/grammar/coordinate)',
+                  zh: '`renderPlot(spec, data, options)` 的 `options`（`LowerPlotsOptions`）加 `coordinates` 字段，注入自定义投影工厂（运行时函数、不进 IR），与 React 表面对等 [坐标系](/graph/grammar/coordinate)',
+                  en: '`renderPlot(spec, data, options)`’s `options` (`LowerPlotsOptions`) gains a `coordinates` field to inject custom projection factories (runtime functions, never in the IR), at parity with the React surface [Coordinates](/graph/grammar/coordinate)',
                 },
               },
             ],
@@ -2426,8 +2651,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'Scales + Legend SSR', en: 'Scales + Legend SSR' },
                 content: {
-                  zh: '`renderPlot` 消费含连续色阶（sequential / diverging）/ 离散化 scale（quantize / threshold / quantile）/ `Legend` guide 的 PlotSpec，估算布局后 SSR 出带色带 / 分箱 / 符号图例的 SVG 字符串，与 react 面视觉一致、vanilla 侧零额外代码 [图例](/plot/grammar/guide/legend)',
-                  en: '`renderPlot` consumes a PlotSpec with continuous (sequential / diverging) / discretization (quantize / threshold / quantile) color scales and a `Legend` guide, SSR-emitting an SVG string with ramp / binned / symbol legends after estimated layout, visually matching the React surface with zero extra code on the vanilla side [Legend](/plot/grammar/guide/legend)',
+                  zh: '`renderPlot` 消费含连续色阶（sequential / diverging）/ 离散化 scale（quantize / threshold / quantile）/ `Legend` guide 的 PlotSpec，估算布局后 SSR 出带色带 / 分箱 / 符号图例的 SVG 字符串，与 react 面视觉一致、vanilla 侧零额外代码 [图例](/graph/grammar/guide/legend)',
+                  en: '`renderPlot` consumes a PlotSpec with continuous (sequential / diverging) / discretization (quantize / threshold / quantile) color scales and a `Legend` guide, SSR-emitting an SVG string with ramp / binned / symbol legends after estimated layout, visually matching the React surface with zero extra code on the vanilla side [Legend](/graph/grammar/guide/legend)',
                 },
               },
             ],
@@ -2571,22 +2796,22 @@ export const changelog: Array<Release> = [
           {
             label: { zh: 'Paint 填充服务', en: 'Paint fill service' },
             content: {
-              zh: '`fill` 升 `PaintValue` + `SceneResource` 资源表,支持渐变 / 图案 pattern / 图片 image,渲染目标无关(`<defs>` 由 adapter 物化)[Node 概览](/core/components/node/overview)',
-              en: '`fill` upgrades to `PaintValue` + a `SceneResource` table supporting gradients / pattern / image, render-target agnostic (`<defs>` materialized by the adapter) [Node overview](/core/components/node/overview)',
+              zh: '`fill` 升 `PaintValue` + `SceneResource` 资源表,支持渐变 / 图案 pattern / 图片 image,渲染目标无关(`<defs>` 由 adapter 物化)[Node 概览](/kernel/components/node/overview)',
+              en: '`fill` upgrades to `PaintValue` + a `SceneResource` table supporting gradients / pattern / image, render-target agnostic (`<defs>` materialized by the adapter) [Node overview](/kernel/components/node/overview)',
             },
           },
           {
             label: { zh: '形状注册', en: 'Shape registry' },
             content: {
-              zh: 'ShapeDefinition 四方法,内置 4 形状改注册项,可发第三方形状库 [自定义形状](/core/reference/extending/shape-registry)',
-              en: 'Four-method ShapeDefinition; the 4 built-ins become registry entries; third-party shape libs possible [shape registry](/core/reference/extending/shape-registry)',
+              zh: 'ShapeDefinition 四方法,内置 4 形状改注册项,可发第三方形状库 [自定义形状](/kernel/components/extend/shape-registry)',
+              en: 'Four-method ShapeDefinition; the 4 built-ins become registry entries; third-party shape libs possible [shape registry](/kernel/components/extend/shape-registry)',
             },
           },
           {
             label: { zh: '箭头 / 图案 / 生成器注册面', en: 'Arrow / pattern / generator registries' },
             content: {
-              zh: 'ArrowDefinition(自定义箭头,emit-in-compile,内置 7 降注册项)+ PatternDefinition(自定义图案 motif,复用 MarkerPrimitive)+ PathGeneratorDefinition(外部曲线包,JSON params 双 parse 护栏),与形状注册面同构 [自定义箭头](/core/reference/extending/custom-arrow)',
-              en: 'ArrowDefinition (custom arrows, emit-in-compile, the 7 built-ins demoted to entries) + PatternDefinition (custom pattern motifs, reusing MarkerPrimitive) + PathGeneratorDefinition (external curve packages, JSON params with a double-parse guard), isomorphic to the shape registry [custom arrows](/core/reference/extending/custom-arrow)',
+              zh: 'ArrowDefinition(自定义箭头,emit-in-compile,内置 7 降注册项)+ PatternDefinition(自定义图案 motif,复用 MarkerPrimitive)+ PathGeneratorDefinition(外部曲线包,JSON params 双 parse 护栏),与形状注册面同构 [自定义箭头](/kernel/components/extend/custom-arrow)',
+              en: 'ArrowDefinition (custom arrows, emit-in-compile, the 7 built-ins demoted to entries) + PatternDefinition (custom pattern motifs, reusing MarkerPrimitive) + PathGeneratorDefinition (external curve packages, JSON params with a double-parse guard), isomorphic to the shape registry [custom arrows](/kernel/components/extend/custom-arrow)',
             },
           },
           {
@@ -2613,8 +2838,8 @@ export const changelog: Array<Release> = [
           {
             label: { zh: 'Scene / Position 能力完善', en: 'Scene / Position completion' },
             content: {
-              zh: 'clip 裁切（Scope 级 ClipResource + clipRef）+ 自定义 viewBox override + 比例 partway 定位 `{ between, t }`（自包含 AbsoluteTarget）[Scope](/core/components/layout/scope)',
-              en: 'Clipping (Scope-level ClipResource + clipRef) + custom viewBox override + proportional partway positioning `{ between, t }` (self-contained AbsoluteTarget) [Scope](/core/components/layout/scope)',
+              zh: 'clip 裁切（Scope 级 ClipResource + clipRef）+ 自定义 viewBox override + 比例 partway 定位 `{ between, t }`（自包含 AbsoluteTarget）[Scope](/kernel/components/layout/scope)',
+              en: 'Clipping (Scope-level ClipResource + clipRef) + custom viewBox override + proportional partway positioning `{ between, t }` (self-contained AbsoluteTarget) [Scope](/kernel/components/layout/scope)',
             },
           },
         ],
@@ -2664,22 +2889,22 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'clip 裁切', en: 'Clipping' },
                 content: {
-                  zh: '`Scope.clip` 接 rect / circle / ellipse / polygon 四形状（scope 局部坐标）；compile 去重成 `ClipResource` 进 Scene 资源表（`clip-N`，与 paint 同表）+ scope GroupPrim 挂 `clipRef`，`<clipPath>` 物化只在 adapter；finite 守卫 + 带 clip 不 prune [Scope](/core/components/layout/scope)',
-                  en: '`Scope.clip` takes rect / circle / ellipse / polygon (scope-local coords); compile dedups it into a `ClipResource` in the Scene resource table (`clip-N`, same table as paint) and attaches `clipRef` to the scope GroupPrim, `<clipPath>` materialized only in the adapter; finite guards + a clipped scope is never pruned [Scope](/core/components/layout/scope)',
+                  zh: '`Scope.clip` 接 rect / circle / ellipse / polygon 四形状（scope 局部坐标）；compile 去重成 `ClipResource` 进 Scene 资源表（`clip-N`，与 paint 同表）+ scope GroupPrim 挂 `clipRef`，`<clipPath>` 物化只在 adapter；finite 守卫 + 带 clip 不 prune [Scope](/kernel/components/layout/scope)',
+                  en: '`Scope.clip` takes rect / circle / ellipse / polygon (scope-local coords); compile dedups it into a `ClipResource` in the Scene resource table (`clip-N`, same table as paint) and attaches `clipRef` to the scope GroupPrim, `<clipPath>` materialized only in the adapter; finite guards + a clipped scope is never pruned [Scope](/kernel/components/layout/scope)',
                 },
               },
               {
                 label: { zh: '自定义 viewBox', en: 'Custom viewBox' },
                 content: {
-                  zh: 'IR 根加可选 `viewBox`（{ x, y, width, height }）；有值则直接用作 `Scene.layout`、忽略 padding（固定尺寸 / 裁剪 / 多图对齐），round 后复检 finite 守 round-trip [Layout](/core/components/layout/overview)',
-                  en: 'The IR root gains an optional `viewBox` ({ x, y, width, height }); when set it becomes `Scene.layout` directly and ignores padding (fixed size / clipping / multi-figure alignment), re-checked finite after rounding to guard round-trip [Layout](/core/components/layout/overview)',
+                  zh: 'IR 根加可选 `viewBox`（{ x, y, width, height }）；有值则直接用作 `Scene.layout`、忽略 padding（固定尺寸 / 裁剪 / 多图对齐），round 后复检 finite 守 round-trip [Layout](/kernel/components/layout/overview)',
+                  en: 'The IR root gains an optional `viewBox` ({ x, y, width, height }); when set it becomes `Scene.layout` directly and ignores padding (fixed size / clipping / multi-figure alignment), re-checked finite after rounding to guard round-trip [Layout](/kernel/components/layout/overview)',
                 },
               },
               {
                 label: { zh: '比例 partway 定位', en: 'Proportional partway' },
                 content: {
-                  zh: '`{ between: [A, B], t }` 比例定位 `lerp(A, B, t)`，进 `Node.position` / `Coordinate.position` / path `Step.to`；端点用自包含 `AbsoluteTarget`（笛卡尔 / 极坐标 / 节点引用 / offset / 嵌套 between，排除 path-relative，z.lazy 化解 schema 环）；复用 `refPointOfTarget` + `lerpPoint` + finite 守卫 [Coordinate](/core/components/node/coordinate)',
-                  en: '`{ between: [A, B], t }` proportional positioning `lerp(A, B, t)`, admitted into `Node.position` / `Coordinate.position` / path `Step.to`; endpoints use a self-contained `AbsoluteTarget` (Cartesian / polar / node ref / offset / nested between, excluding path-relative, z.lazy breaks the schema cycle); reuses `refPointOfTarget` + `lerpPoint` with finite guards [Coordinate](/core/components/node/coordinate)',
+                  zh: '`{ between: [A, B], t }` 比例定位 `lerp(A, B, t)`，进 `Node.position` / `Coordinate.position` / path `Step.to`；端点用自包含 `AbsoluteTarget`（笛卡尔 / 极坐标 / 节点引用 / offset / 嵌套 between，排除 path-relative，z.lazy 化解 schema 环）；复用 `refPointOfTarget` + `lerpPoint` + finite 守卫 [Coordinate](/kernel/components/node/coordinate)',
+                  en: '`{ between: [A, B], t }` proportional positioning `lerp(A, B, t)`, admitted into `Node.position` / `Coordinate.position` / path `Step.to`; endpoints use a self-contained `AbsoluteTarget` (Cartesian / polar / node ref / offset / nested between, excluding path-relative, z.lazy breaks the schema cycle); reuses `refPointOfTarget` + `lerpPoint` with finite guards [Coordinate](/kernel/components/node/coordinate)',
                 },
               },
             ],
@@ -2927,7 +3152,10 @@ export const changelog: Array<Release> = [
           },
           {
             label: { zh: '<TikZ shapes>', en: '<TikZ shapes>' },
-            content: { zh: '透传 `CompileOptions.shapes`,自定义 shape 端到端可用', en: 'Pass through `CompileOptions.shapes`; custom shapes work end to end' },
+            content: {
+              zh: '透传 `CompileOptions.shapes`,自定义 shape 端到端可用',
+              en: 'Pass through `CompileOptions.shapes`; custom shapes work end to end',
+            },
           },
           {
             label: { zh: '8 个形状 sugar', en: '8 shape sugar components' },
@@ -2966,8 +3194,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '<Layout> 全图默认样式', en: '<Layout> whole-figure defaults' },
                 content: {
-                  zh: '`<Layout>` 加 11 个级联样式 props（`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`）；设任一项时把 children 包进合成的隐式根 `<Scope>`，编译产物与手写根 `<Scope>` 完全同一 IR，内层 `<Scope>` / 图元显式属性照常级联覆盖。与 `ir` prop 并用时样式被忽略（dev 警告）[Layout 概览](/core/components/layout/overview)',
-                  en: '`<Layout>` gains 11 cascade style props (`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`); setting any wraps children in a synthetic implicit root `<Scope>` producing the exact same IR as a hand-written root `<Scope>`, with inner `<Scope>` / explicit primitive props cascading over it. Ignored (dev warning) when combined with the `ir` prop [Layout overview](/core/components/layout/overview)',
+                  zh: '`<Layout>` 加 11 个级联样式 props（`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`）；设任一项时把 children 包进合成的隐式根 `<Scope>`，编译产物与手写根 `<Scope>` 完全同一 IR，内层 `<Scope>` / 图元显式属性照常级联覆盖。与 `ir` prop 并用时样式被忽略（dev 警告）[Layout 概览](/kernel/components/layout/overview)',
+                  en: '`<Layout>` gains 11 cascade style props (`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`); setting any wraps children in a synthetic implicit root `<Scope>` producing the exact same IR as a hand-written root `<Scope>`, with inner `<Scope>` / explicit primitive props cascading over it. Ignored (dev warning) when combined with the `ir` prop [Layout overview](/kernel/components/layout/overview)',
                 },
               },
             ],
@@ -2991,7 +3219,7 @@ export const changelog: Array<Release> = [
                 label: { zh: 'unbuilder round-trip 修复', en: 'unbuilder round-trip fix' },
                 content: {
                   zh: 'unbuilder 的 path 分支手写漏 `rotate` / `scale` / `marks`（IR → JSX → IR 静默丢失）→ 改用 `pickDefined(PATH_FIELDS)`（与 node / scope 一致、互锁防漂移）修复；补 paint / clip / between / marks 等 round-trip 覆盖',
-                  en: "The unbuilder path branch hand-listed fields and dropped `rotate` / `scale` / `marks` (silently lost on IR → JSX → IR) → fixed via `pickDefined(PATH_FIELDS)` (consistent with node / scope, interlocked against drift); added round-trip coverage for paint / clip / between / marks",
+                  en: 'The unbuilder path branch hand-listed fields and dropped `rotate` / `scale` / `marks` (silently lost on IR → JSX → IR) → fixed via `pickDefined(PATH_FIELDS)` (consistent with node / scope, interlocked against drift); added round-trip coverage for paint / clip / between / marks',
                 },
               },
             ],
@@ -3086,8 +3314,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'DslTarget 字符串 shorthand', en: 'DslTarget string shorthand' },
                 content: {
-                  zh: 'Step `to` / `from` / `center` 类型 `DslTarget = IRTarget | string`:JSX / Draw way 可写 `\'A.north\'` 等字符串,react 层 eager 解析成对象 IR',
-                  en: 'Step `to` / `from` / `center` are typed `DslTarget = IRTarget | string`: JSX / Draw way may use `\'A.north\'`-style strings, eager-parsed into object IR at the react layer',
+                  zh: "Step `to` / `from` / `center` 类型 `DslTarget = IRTarget | string`:JSX / Draw way 可写 `'A.north'` 等字符串,react 层 eager 解析成对象 IR",
+                  en: "Step `to` / `from` / `center` are typed `DslTarget = IRTarget | string`: JSX / Draw way may use `'A.north'`-style strings, eager-parsed into object IR at the react layer",
                 },
               },
             ],
@@ -3131,7 +3359,10 @@ export const changelog: Array<Release> = [
             items: [
               {
                 label: { zh: '<TikZ shapes>', en: '<TikZ shapes>' },
-                content: { zh: '透传自定义 shapes;`<Node shape>` 接受任意字符串名', en: 'pass custom shapes; `<Node shape>` accepts any string name' },
+                content: {
+                  zh: '透传自定义 shapes;`<Node shape>` 接受任意字符串名',
+                  en: 'pass custom shapes; `<Node shape>` accepts any string name',
+                },
               },
             ],
           },
@@ -3141,7 +3372,10 @@ export const changelog: Array<Release> = [
             items: [
               {
                 label: { zh: 'Scope 样式 props', en: 'Scope style props' },
-                content: { zh: '`<Scope>` 加 12 个样式 props;`<Node>` / `<Path>` 加主色 `color`', en: '12 style props on `<Scope>`; primary `color` on `<Node>` / `<Path>`' },
+                content: {
+                  zh: '`<Scope>` 加 12 个样式 props;`<Node>` / `<Path>` 加主色 `color`',
+                  en: '12 style props on `<Scope>`; primary `color` on `<Node>` / `<Path>`',
+                },
               },
             ],
           },
@@ -3151,7 +3385,10 @@ export const changelog: Array<Release> = [
             items: [
               {
                 label: { zh: '<Scope> Kernel 组件', en: '<Scope> kernel component' },
-                content: { zh: '接收 `transforms` / `id` / `localNamespace` / children', en: 'takes `transforms` / `id` / `localNamespace` / children' },
+                content: {
+                  zh: '接收 `transforms` / `id` / `localNamespace` / children',
+                  en: 'takes `transforms` / `id` / `localNamespace` / children',
+                },
               },
             ],
           },
@@ -3168,8 +3405,8 @@ export const changelog: Array<Release> = [
           {
             label: { zh: '自定义形状参考页', en: 'Custom-shape reference page' },
             content: {
-              zh: '注入 / 覆盖 / 未知名行为 + hexagon live demo [自定义形状](/core/reference/extending/shape-registry)',
-              en: 'inject / override / unknown-name behavior + a hexagon live demo [shape registry](/core/reference/extending/shape-registry)',
+              zh: '注入 / 覆盖 / 未知名行为 + hexagon live demo [自定义形状](/kernel/components/extend/shape-registry)',
+              en: 'inject / override / unknown-name behavior + a hexagon live demo [shape registry](/kernel/components/extend/shape-registry)',
             },
           },
         ],
@@ -3185,8 +3422,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '清 `<TikZ>` 文档残留', en: 'drop `<TikZ>` doc residue' },
                 content: {
-                  zh: 'retikz-tsx AST 白名单（18 → 17 组件）+ AI system prompt 去 `TikZ`；[Layout](/core/components/layout/overview) / custom-arrow 等 mdx 把"`<TikZ>` 保留为别名"改为"已移除"',
-                  en: 'The retikz-tsx AST whitelist (18 → 17 components) + AI system prompt drop `TikZ`; [Layout](/core/components/layout/overview) / custom-arrow mdx change "`<TikZ>` kept as an alias" to "removed"',
+                  zh: 'retikz-tsx AST 白名单（18 → 17 组件）+ AI system prompt 去 `TikZ`；[Layout](/kernel/components/layout/overview) / custom-arrow 等 mdx 把"`<TikZ>` 保留为别名"改为"已移除"',
+                  en: 'The retikz-tsx AST whitelist (18 → 17 components) + AI system prompt drop `TikZ`; [Layout](/kernel/components/layout/overview) / custom-arrow mdx change "`<TikZ>` kept as an alias" to "removed"',
                 },
               },
             ],
@@ -3202,8 +3439,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'clip / viewBox / partway 文档', en: 'clip / viewBox / partway docs' },
                 content: {
-                  zh: '[Scope](/core/components/layout/scope) clip 圆形取景窗 demo + 四形状 + 限制；[Layout](/core/components/layout/overview) 固定 viewBox demo；[Coordinate](/core/components/node/coordinate) partway（1/4·1/2·3/4）demo + AbsoluteTarget 端点；[placement 参考](/core/reference/schema/placement) 补 BetweenPosition / AbsoluteTarget 两 section',
-                  en: 'The [Scope](/core/components/layout/scope) clip demo (circular viewport) + four shapes + limits; the [Layout](/core/components/layout/overview) fixed-viewBox demo; the [Coordinate](/core/components/node/coordinate) partway (1/4·1/2·3/4) demo + AbsoluteTarget endpoints; the [placement reference](/core/reference/schema/placement) gains BetweenPosition / AbsoluteTarget sections',
+                  zh: '[Scope](/kernel/components/layout/scope) clip 圆形取景窗 demo + 四形状 + 限制；[Layout](/kernel/components/layout/overview) 固定 viewBox demo；[Coordinate](/kernel/components/node/coordinate) partway（1/4·1/2·3/4）demo + AbsoluteTarget 端点；[placement 参考](/kernel/reference/schema/placement) 补 BetweenPosition / AbsoluteTarget 两 section',
+                  en: 'The [Scope](/kernel/components/layout/scope) clip demo (circular viewport) + four shapes + limits; the [Layout](/kernel/components/layout/overview) fixed-viewBox demo; the [Coordinate](/kernel/components/node/coordinate) partway (1/4·1/2·3/4) demo + AbsoluteTarget endpoints; the [placement reference](/kernel/reference/schema/placement) gains BetweenPosition / AbsoluteTarget sections',
                 },
               },
             ],
@@ -3219,15 +3456,15 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '注册面概念页 + Path 扩展', en: 'Registry concept pages + Path extension' },
                 content: {
-                  zh: '[自定义箭头](/core/reference/extending/custom-arrow)(注册 + ArrowDefinition 契约 + emit/MarkerPrimitive + 颜色继承 + Bracket demo)、[路径生成器](/core/reference/extending/path-generator)(契约 + 双 parse + targetParams + parabola/sin demo)、[自定义图案](/core/reference/extending/custom-pattern)(PatternDefinition + emit-in-compile tile + cross/size demo);[Path 页](/core/components/draw/path)补 out/in·自环 / rotate·scale / marks 三 demo 与 API 行',
-                  en: '[Custom Arrows](/core/reference/extending/custom-arrow) (registration + ArrowDefinition contract + emit/MarkerPrimitive + color inheritance + a Bracket demo), [Path Generators](/core/reference/extending/path-generator) (contract + double-parse + targetParams + parabola/sin demos), [Custom Patterns](/core/reference/extending/custom-pattern) (PatternDefinition + emit-in-compile tile + cross/size demos); the [Path page](/core/components/draw/path) gains out/in·self-loop / rotate·scale / marks demos plus API rows',
+                  zh: '[自定义箭头](/kernel/components/extend/custom-arrow)(注册 + ArrowDefinition 契约 + emit/MarkerPrimitive + 颜色继承 + Bracket demo)、[路径生成器](/kernel/components/extend/path-generator)(契约 + 双 parse + targetParams + parabola/sin demo)、[自定义图案](/kernel/components/extend/custom-pattern)(PatternDefinition + emit-in-compile tile + cross/size demo);[Path 页](/kernel/components/draw/path)补 out/in·自环 / rotate·scale / marks 三 demo 与 API 行',
+                  en: '[Custom Arrows](/kernel/components/extend/custom-arrow) (registration + ArrowDefinition contract + emit/MarkerPrimitive + color inheritance + a Bracket demo), [Path Generators](/kernel/components/extend/path-generator) (contract + double-parse + targetParams + parabola/sin demos), [Custom Patterns](/kernel/components/extend/custom-pattern) (PatternDefinition + emit-in-compile tile + cross/size demos); the [Path page](/kernel/components/draw/path) gains out/in·self-loop / rotate·scale / marks demos plus API rows',
                 },
               },
               {
                 label: { zh: 'image 填充补外部 URL + fit 演示', en: 'Image fill: external URL + fit demo' },
                 content: {
-                  zh: '[Node 概览](/core/components/node/overview) image 填充补外部 URL(`picsum`)demo,对照 `cover`/`contain`/`fill` 三模式,并说明 fit 按形状盒归一计算的口径',
-                  en: 'The [Node overview](/core/components/node/overview) image fill gains an external-URL (`picsum`) demo contrasting `cover`/`contain`/`fill`, plus a note on how `fit` is computed against the normalized shape box',
+                  zh: '[Node 概览](/kernel/components/node/overview) image 填充补外部 URL(`picsum`)demo,对照 `cover`/`contain`/`fill` 三模式,并说明 fit 按形状盒归一计算的口径',
+                  en: 'The [Node overview](/kernel/components/node/overview) image fill gains an external-URL (`picsum`) demo contrasting `cover`/`contain`/`fill`, plus a note on how `fit` is computed against the normalized shape box',
                 },
               },
             ],
@@ -3243,8 +3480,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'Node Paint / 换行 / 引脚 demo', en: 'Node Paint / wrap / pin demos' },
                 content: {
-                  zh: '[Node 概览](/core/components/node/overview)加渐变填充(含 `stops` opacity 渐隐 + `currentColor`)、pattern·image(斜线 / 网点 / 网格 + 图片)、`maxTextWidth` 自动换行(中英混排)、`pin` 引脚 demo,API 表补 `maxTextWidth` / `pin` / `fill` PaintSpec 行',
-                  en: 'The [Node overview](/core/components/node/overview) adds gradient fills (incl. `stops` opacity fade + `currentColor`), pattern·image (lines / dots / grid + image), `maxTextWidth` auto-wrapping (mixed CJK / western), and `pin` leader demos; the API table gains `maxTextWidth` / `pin` / `fill` PaintSpec rows',
+                  zh: '[Node 概览](/kernel/components/node/overview)加渐变填充(含 `stops` opacity 渐隐 + `currentColor`)、pattern·image(斜线 / 网点 / 网格 + 图片)、`maxTextWidth` 自动换行(中英混排)、`pin` 引脚 demo,API 表补 `maxTextWidth` / `pin` / `fill` PaintSpec 行',
+                  en: 'The [Node overview](/kernel/components/node/overview) adds gradient fills (incl. `stops` opacity fade + `currentColor`), pattern·image (lines / dots / grid + image), `maxTextWidth` auto-wrapping (mixed CJK / western), and `pin` leader demos; the API table gains `maxTextWidth` / `pin` / `fill` PaintSpec rows',
                 },
               },
             ],
@@ -3260,8 +3497,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'demo / 路由切 Layout', en: 'demos / route to Layout' },
                 content: {
-                  zh: '全部 demo / mdx 的 `<TikZ>` → `<Layout>`;组件页路由 `/core/components/tikz` → `/layout`;AST 白名单 + system prompt 主推 `Layout`(`TikZ` 仍为别名)',
-                  en: 'All demos / mdx switch `<TikZ>` → `<Layout>`; the component page route `/core/components/tikz` → `/layout`; AST whitelist + system prompt lead with `Layout` (`TikZ` still an alias)',
+                  zh: '全部 demo / mdx 的 `<TikZ>` → `<Layout>`;组件页路由 `/kernel/components/tikz` → `/layout`;AST 白名单 + system prompt 主推 `Layout`(`TikZ` 仍为别名)',
+                  en: 'All demos / mdx switch `<TikZ>` → `<Layout>`; the component page route `/kernel/components/tikz` → `/layout`; AST whitelist + system prompt lead with `Layout` (`TikZ` still an alias)',
                 },
               },
               {
@@ -3299,7 +3536,10 @@ export const changelog: Array<Release> = [
             items: [
               {
                 label: { zh: 'API 补 zIndex / rotate', en: 'API: zIndex / rotate' },
-                content: { zh: 'Node / Path / Scope 参考加 `zIndex`;Node label 文档加 `rotate` / `keepUpright`', en: '`zIndex` on Node / Path / Scope refs; `rotate` / `keepUpright` in Node label docs' },
+                content: {
+                  zh: 'Node / Path / Scope 参考加 `zIndex`;Node label 文档加 `rotate` / `keepUpright`',
+                  en: '`zIndex` on Node / Path / Scope refs; `rotate` / `keepUpright` in Node label docs',
+                },
               },
             ],
           },
@@ -3309,7 +3549,10 @@ export const changelog: Array<Release> = [
             items: [
               {
                 label: { zh: 'Scope 样式继承章节', en: 'Scope style-inheritance chapter' },
-                content: { zh: '主色级联 / 四通道 every-X / resetStyle 屏障 + 优先级链,配 3 个 demo', en: 'primary cascade / four every-X channels / resetStyle barrier + priority chain, with 3 demos' },
+                content: {
+                  zh: '主色级联 / 四通道 every-X / resetStyle 屏障 + 优先级链,配 3 个 demo',
+                  en: 'primary cascade / four every-X channels / resetStyle barrier + priority chain, with 3 demos',
+                },
               },
             ],
           },
@@ -3997,8 +4240,8 @@ export const changelog: Array<Release> = [
           {
             label: { zh: 'Examples / Recipes 与搜索', en: 'Examples / Recipes + search' },
             content: {
-              zh: '`/core/examples/` 场景示例分组;搜索从 frontmatter 升级到正文 / 标题 / inline code 全覆盖',
-              en: '`/core/examples/` scenario grouping; search upgraded from frontmatter to full body / heading / inline-code coverage',
+              zh: '`/kernel/examples/` 场景示例分组;搜索从 frontmatter 升级到正文 / 标题 / inline code 全覆盖',
+              en: '`/kernel/examples/` scenario grouping; search upgraded from frontmatter to full body / heading / inline-code coverage',
             },
           },
           {
@@ -4045,8 +4288,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'Examples / Recipes 分组', en: 'Examples / Recipes section' },
                 content: {
-                  zh: '`/core/examples/` 新增分组,首例 Karl 单位圆;配套 `docs-doc-example` skill 供后续续加',
-                  en: 'New `/core/examples/` grouping with the first entry — Karl’s unit circle; backed by a `docs-doc-example` skill for more',
+                  zh: '`/kernel/examples/` 新增分组,首例 Karl 单位圆;配套 `docs-doc-example` skill 供后续续加',
+                  en: 'New `/kernel/examples/` grouping with the first entry — Karl’s unit circle; backed by a `docs-doc-example` skill for more',
                 },
               },
               {
@@ -4104,8 +4347,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'Arrow 专页', en: 'Arrow page' },
                 content: {
-                  zh: '新增 [Arrow 专页](/core/components/draw/arrow) 讲箭头 shape / 颜色 / 起末异形 / 缩放 / 半透明;Path / Draw 页精简引用',
-                  en: 'New [Arrow page](/core/components/draw/arrow) on shape / color / heterogeneous ends / scale / opacity; Path / Draw pages link to it',
+                  zh: '新增 [Arrow 专页](/kernel/components/draw/arrow) 讲箭头 shape / 颜色 / 起末异形 / 缩放 / 半透明;Path / Draw 页精简引用',
+                  en: 'New [Arrow page](/kernel/components/draw/arrow) on shape / color / heterogeneous ends / scale / opacity; Path / Draw pages link to it',
                 },
               },
             ],
@@ -4117,16 +4360,16 @@ export const changelog: Array<Release> = [
 ];
 
 /** 文档模块 id → changelog 包组：core / plot 模块各对应同名包组 */
-const MODULE_GROUP = new Map<string, 'core' | 'plot' | 'other'>([
-  ['core', 'core'],
-  ['plot', 'plot'],
+const MODULE_GROUP = new Map<string, 'kernel' | 'graph' | 'other'>([
+  ['kernel', 'kernel'],
+  ['graph', 'graph'],
 ]);
 
 /** 中版本号 → URL slug（`v0.3` → `v0-3`），概览页链接与详情页 subPage id 共用 */
 export const changelogVersionSlug = (minor: string): string => minor.replaceAll('.', '-');
 
 /** 包标识 → 所属包组 */
-const groupOfPackage = (pkg: PackageId): 'core' | 'plot' | 'other' | undefined =>
+const groupOfPackage = (pkg: PackageId): 'kernel' | 'graph' | 'other' | undefined =>
   PACKAGE_GROUPS.find(group => group.members.includes(pkg))?.id;
 
 /**

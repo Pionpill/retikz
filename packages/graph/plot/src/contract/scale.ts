@@ -1,5 +1,8 @@
 import { z } from 'zod';
-import { BUILTIN_SCALE_TYPES, type PlotFieldTypeValue, type ScalarValue, type Scale, type ScaleOperation } from '../schemas';
+
+import type { PlotFieldTypeValue, ScalarValue, Scale, ScaleOperation } from '../schemas';
+
+import { BUILTIN_SCALE_TYPES } from '../schemas';
 
 /** 刻度值 + 标签集（axis 与同维 grid 复用同一份）。 */
 export type TickSet = { values: Array<ScalarValue>; labels: Array<string> };
@@ -13,6 +16,8 @@ export type TickSet = { values: Array<ScalarValue>; labels: Array<string> };
 export type PositionScale = {
   /** 数据值 → 坐标（连续=scale(value)；band=band 中心；point=点位）；非法值返回 NaN，调用方据此跳过 */
   coordinate: (value: unknown) => number;
+  /** 当前输入域；连续 scale 返回 [min, max]，分类 scale 返回类别序列。 */
+  domain: () => ReadonlyArray<ScalarValue>;
   /** band 宽（连续 / point = 0；band = scale.bandwidth()）；getter 反映 setRange 后的最新值 */
   readonly bandwidth: number;
   /** 刻度 + 标签（连续走 scaleTicks；band / point = 每类别一刻度，落 band 中心 / 点位） */
@@ -91,7 +96,9 @@ export type ChannelScaleDefinition<TScaleOperation extends ScaleOperation = Scal
  * @description definition 是运行时对象，不进入 JSON IR；IR 只保存 `{ type, name, ...config }` 形态的 scale operation。
  *   family 判别 position（坐标）vs channel（颜色），两族产出契约不同。
  */
-export type ScaleDefinition<TScaleOperation extends ScaleOperation = ScaleOperation> = PositionScaleDefinition<TScaleOperation> | ChannelScaleDefinition<TScaleOperation>;
+export type ScaleDefinition<TScaleOperation extends ScaleOperation = ScaleOperation> =
+  | PositionScaleDefinition<TScaleOperation>
+  | ChannelScaleDefinition<TScaleOperation>;
 
 /**
  * 定义一个 scale definition，保留 resolve 对 scale operation 的强类型（对齐 core defineComposite / defineTransform / defineCoordinate）。
@@ -136,4 +143,5 @@ export const extractScaleType = (schema: z.ZodType): string => {
 };
 
 /** scale operation 是否内置（type 在内置集）；用于把 registry 取出的 operation 收窄回精确 Scale。 */
-export const isBuiltinScaleOperation = (operation: ScaleOperation): operation is Scale => BUILTIN_SCALE_TYPES.has(operation.type);
+export const isBuiltinScaleOperation = (operation: ScaleOperation): operation is Scale =>
+  BUILTIN_SCALE_TYPES.has(operation.type);

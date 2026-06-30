@@ -11,7 +11,7 @@ tags: [设计, 起点]
 
 <ComponentPreview name="unit-circle" size="lg" />
 
-这是 [karl-circle 示例](/core/examples/karl-circle)的最终图。示例页把它拆成 7 步演进，从一个圆开始一步步搭出来。
+这是 [karl-circle 示例](/kernel/examples/karl-circle)的最终图。示例页把它拆成 7 步演进，从一个圆开始一步步搭出来。
 
 图里每一根线、每一个标签都是 retikz 原语（Node / Path / Step）拼出来的，不是手写的 SVG——所以你能直接拿 React 代码改它。
 
@@ -21,11 +21,11 @@ demo 卡片右上角的 **Ask AI** 按钮可以把当前图喂给站内 AI 助�
 
 retikz 的长远规划是「底层图元 + 上层 domain 包」分层矩阵——core 守通用图元 + IR 标准，零依赖、零框架；上层 domain 包按方向切（流程图 / UML / 图表等），各自带数据与布局算法，最终都由 core 统一渲染。
 
-| 包 | 职责 | 状态 |
-|---|---|---|
+| 包             | 职责                                                             | 状态                                 |
+| -------------- | ---------------------------------------------------------------- | ------------------------------------ |
 | `@retikz/core` | 通用图元（Node / Path / Step / Anchor）<br />+ IR + Scene 编译器 | v0.1 稳定版<br />（API 遵循 SemVer） |
-| `@retikz/flow` | 流程图 / UML 等 DAG 类高层组件<br />+ 布局算法（dagre / elkjs） | 规划中 |
-| `@retikz/plot` | 数据驱动的图表能力（chart） | 规划中 |
+| `@retikz/flow` | 流程图 / UML 等 DAG 类高层组件<br />+ 布局算法（dagre / elkjs）  | 规划中                               |
+| `@retikz/plot` | 数据驱动的图表能力（chart）                                      | 规划中                               |
 
 在 v0.1 起步时，底层之外还只露出一层 framework adapter，把 IR 翻成具体框架的元素——当时先发布 `@retikz/react`，Canvas / SSR 与无框架入口还在路线图里。到 v0.3，渲染层已收敛到 `@retikz/render`，并补出 `@retikz/vanilla`；flow / plot 等 domain 包仍按独立方向演进。
 
@@ -52,13 +52,13 @@ TikZ 把"从 A 节点的右上角画一条带弯到 B 节点的下边"这种关�
 
 我了解到的组件库有：
 
-| 组件 | 我以为 | 实际上 |
-|---|---|---|
+| 组件                            | 我以为             | 实际上                                      |
+| ------------------------------- | ------------------ | ------------------------------------------- |
 | **echarts / highcharts / antv** | chart 库，画图就行 | 按图表类型出图<br />（line / bar / pie...） |
-| **react-flow** | 节点 + 边 = 万能 | 锁定在流程图 / DAG<br />节点形状不通用 |
-| **d3** | 万能底层 | 偏数据驱动 + 偏底层<br />API 不是图元词汇 |
-| **mermaid** | DSL 简洁 | 图类型固定<br />自定义钩子少 |
-| **drawio** | 万能编辑器 | 是 GUI 工具不是 library |
+| **react-flow**                  | 节点 + 边 = 万能   | 锁定在流程图 / DAG<br />节点形状不通用      |
+| **d3**                          | 万能底层           | 偏数据驱动 + 偏底层<br />API 不是图元词汇   |
+| **mermaid**                     | DSL 简洁           | 图类型固定<br />自定义钩子少                |
+| **drawio**                      | 万能编辑器         | 是 GUI 工具不是 library                     |
 
 我想要的是 `(node.south east) -- (other.north)` 这种 anchor + 关系式坐标的表达——chart 库不给、d3 太底层、flow 锁定 DAG 拓扑，都不是。
 
@@ -104,25 +104,25 @@ v0.1 把架构整个翻过来——核心是一份 IR（JSON 序列化的图描�
 
 开发流程也整套 AI 化。每个功能从立项到合并走 5 个阶段，每个阶段配一个 SKILL 约束 AI 行为：
 
-| 阶段 | 谁主导 | 关键动作 |
-|---|---|---|
-| design | 人工 | ADR 草稿 + 实现契约段 |
-| implement | AI | Spec-First TDD：子 Agent 写测试<br />实现 Agent 让其通过 |
-| test | AI | 派 Adversarial Bug Hunter 子 Agent 攻击实现 |
-| document | AI | 双语 mdx + demo + i18n |
-| wrapup | AI + 人工 | Contract Auditor 四方对账<br />人工 ack 后 commit |
+| 阶段      | 谁主导    | 关键动作                                                 |
+| --------- | --------- | -------------------------------------------------------- |
+| design    | 人工      | ADR 草稿 + 实现契约段                                    |
+| implement | AI        | Spec-First TDD：子 Agent 写测试<br />实现 Agent 让其通过 |
+| test      | AI        | 派 Adversarial Bug Hunter 子 Agent 攻击实现              |
+| document  | AI        | 双语 mdx + demo + i18n                                   |
+| wrapup    | AI + 人工 | Contract Auditor 四方对账<br />人工 ack 后 commit        |
 
 人工管住两端（设计 + 最终 ack），中间环节大量交给独立 session 的子 Agent。
 
 ## 最终成效
 
-| 维度 | 数字 |
-|---|---|
+| 维度                    | 数字                             |
+| ----------------------- | -------------------------------- |
 | v0.1 重写动手 → alpha.0 | 2026-04-26 → 2026-05-08，约 2 周 |
-| alpha.0 → rc.1 | 2026-05-08 → 2026-05-16，1 周 |
-| v0.1 时段 commits | 430+ |
-| 发布的包 | `@retikz/core` + `@retikz/react` |
-| 文档站 mdx 页 | 28（双语 56 份） |
+| alpha.0 → rc.1          | 2026-05-08 → 2026-05-16，1 周    |
+| v0.1 时段 commits       | 430+                             |
+| 发布的包                | `@retikz/core` + `@retikz/react` |
+| 文档站 mdx 页           | 28（双语 56 份）                 |
 
 整体一个月——v0.0 时代两年没做完的事，这一个月做了。
 
@@ -132,11 +132,11 @@ v0.1 把架构整个翻过来——核心是一份 IR（JSON 序列化的图描�
 
 两个具体例子说明这种「prompt 改图」的实际形态。
 
-任何 demo 卡片右上角的 **Ask AI** 都把当前图喂给站内 AI——把 [karl-circle 示例](/core/examples/karl-circle) 的 prompt 加一句「画齐六个三角函数：把 sec / csc / cot 也按几何定义画出来」，模型在原图基础上加一条切线（同时承担 sec / csc 两段）+ 一条顶部水平切线（cot），右侧信息框扩到 6 个公式：
+任何 demo 卡片右上角的 **Ask AI** 都把当前图喂给站内 AI——把 [karl-circle 示例](/kernel/examples/karl-circle) 的 prompt 加一句「画齐六个三角函数：把 sec / csc / cot 也按几何定义画出来」，模型在原图基础上加一条切线（同时承担 sec / csc 两段）+ 一条顶部水平切线（cot），右侧信息框扩到 6 个公式：
 
 <ComponentPreview name="unit-circle-six" hideCode size="xxl" />
 
-[AI 专家路线图示例](/core/examples/learning-path) 则是另一个综合例——按坐标 1:1 复刻 [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap) 的 intro.svg 封面，演示 RoadmapNode 抽象 + AtPosition 紧贴堆叠 + Draw way 的 line / curve / dashPattern / arrow / label 一套组合：
+[AI 专家路线图示例](/kernel/examples/learning-path) 则是另一个综合例——按坐标 1:1 复刻 [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap) 的 intro.svg 封面，演示 RoadmapNode 抽象 + AtPosition 紧贴堆叠 + Draw way 的 line / curve / dashPattern / arrow / label 一套组合：
 
 <ComponentPreview name="ai-roadmap" hideCode size="lg" />
 
@@ -159,7 +159,7 @@ v0.1 这一阶段证明了独立开发者配 AI 工具能跑通这套架构；�
 
 ## 引用
 
-- [karl-circle 示例](/core/examples/karl-circle)：v0.1 标志性例子的 7 步演进
+- [karl-circle 示例](/kernel/examples/karl-circle)：v0.1 标志性例子的 7 步演进
 - [LaTeX 学习笔记](https://github.com/Pionpill/Notebook/tree/Pionpill/Language/Academic/Latex)：大学整理的系统性 LaTeX 笔记
 - [TikZ 基础语法 PDF](https://github.com/Pionpill/Notebook/blob/Pionpill/Language/Academic/Latex/TikZ/Latex/TikZNotebook.pdf)：自译的 TikZ 中文手册
 - [pionpill.github.io/article](https://pionpill.github.io/article)：个人笔记，全程 LaTeX 写

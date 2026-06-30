@@ -1,7 +1,9 @@
-import { type Side, edgeAngleDeg } from './edge';
-import { localToWorld, worldToLocal } from './transform';
 import type { CompassAnchorValue } from './anchor';
+import type { Side } from './edge';
 import type { Position } from './point';
+
+import { edgeAngleDeg } from './edge';
+import { localToWorld, worldToLocal } from './transform';
 
 const DEG_TO_RAD = Math.PI / 180;
 
@@ -29,10 +31,10 @@ export const ellipse = {
     const [lx, ly] = worldToLocal(e, p);
     return (lx * lx) / (e.rx * e.rx) + (ly * ly) / (e.ry * e.ry) <= 1;
   },
-/**
- * 9 个 anchor 的世界坐标
- * @description 对角（NE/NW/SE/SW）取参数曲线 t=π/4 处 (rx/√2, ry/√2)，与 TikZ 椭圆 anchor 参数等分约定一致
- */
+  /**
+   * 9 个 anchor 的世界坐标
+   * @description 对角（NE/NW/SE/SW）取参数曲线 t=π/4 处 (rx/√2, ry/√2)，与 TikZ 椭圆 anchor 参数等分约定一致
+   */
   anchor: (e: Ellipse, name: CompassAnchorValue): Position => {
     let lx = 0;
     let ly = 0;
@@ -70,10 +72,10 @@ export const ellipse = {
     }
     return localToWorld(e, [lx, ly]);
   },
-/**
- * 从中心向 toward 方向射线与椭圆交点
- * @description 椭圆方程 (x/rx)² + (y/ry)² = 1；沿 (lx,ly) 缩放 t 倍命中 t = 1 / √((lx/rx)² + (ly/ry)²)
- */
+  /**
+   * 从中心向 toward 方向射线与椭圆交点
+   * @description 椭圆方程 (x/rx)² + (y/ry)² = 1；沿 (lx,ly) 缩放 t 倍命中 t = 1 / √((lx/rx)² + (ly/ry)²)
+   */
   boundaryPoint: (e: Ellipse, toward: Position): Position => {
     if (e.rx === 0 || e.ry === 0) return [e.x, e.y]; // 退化椭圆（零半轴）：边界塌缩到中心，避免除零产 NaN
     const [lx, ly] = worldToLocal(e, toward);

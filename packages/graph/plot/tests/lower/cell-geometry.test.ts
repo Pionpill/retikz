@@ -1,14 +1,26 @@
 import type { IRNode, IRScope } from '@retikz/core';
+
 import { compileToScene } from '@retikz/core';
-import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { type IntervalMark, type PlotSpec, PlotSpecSchema, isBuiltinMark } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+import { z } from 'zod';
+
+import type { PositionScale } from '../../src/contract';
+import type { Cell } from '../../src/contract';
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { CartesianCoordinateFrame } from '../../src/providers';
+import type { IntervalMark, PlotSpec } from '../../src/schemas';
+
+import {
+  createCoordinateFrame,
+  defineCoordinate,
+  densifyCellContour,
+  RETIKZ_POLAR_SEGMENT_SAMPLES,
+} from '../../src/contract';
+import { lowerPlots } from '../../src/pipeline/expand';
 import { buildIntervalContext, cellGeometryAnchor, datumAnchor } from '../../src/providers';
 import { lowerMark } from '../../src/providers';
-import { type Cell, RETIKZ_POLAR_SEGMENT_SAMPLES, createCoordinateFrame, defineCoordinate, densifyCellContour } from '../../src/contract';
-import { type CartesianCoordinateFrame, createCartesianCoordinate, createPolarCoordinate, createTernary2DCoordinate } from '../../src/providers';
-import type { PositionScale } from '../../src/contract';
+import { createCartesianCoordinate, createPolarCoordinate, createTernary2DCoordinate } from '../../src/providers';
+import { isBuiltinMark, PlotSpecSchema } from '../../src/schemas';
 
 /**
  * ADR-01（alpha.11）：区间几何投影契约测试——frame.projectCell 统一 interval / sector / 曲线轴下沉。
@@ -23,7 +35,8 @@ const expandOf = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions
   return def.expand(spec) as IRScope;
 };
 
-const firstLayer = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
+const firstLayer = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope =>
+  expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 node（无 color → 直接子；有 color → 藏在分色子 Scope 里） */
 const nodesOf = (layer: IRScope): Array<IRNode> => {
@@ -31,7 +44,7 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'node') out.push(node);
+      if (node.type === 'node') out.push(child as IRNode);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -44,7 +57,9 @@ const linearStub = (domain: [number, number], range: [number, number], bandwidth
   const [d0, d1] = domain;
   const [r0, r1] = range;
   return {
-    coordinate: (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? r0 + ((value - d0) / (d1 - d0)) * (r1 - r0) : NaN),
+    coordinate: (value: unknown) =>
+      typeof value === 'number' && Number.isFinite(value) ? r0 + ((value - d0) / (d1 - d0)) * (r1 - r0) : NaN,
+    domain: () => [d0, d1],
     get bandwidth() {
       return bandwidth;
     },
@@ -77,7 +92,14 @@ describe('projectCell 闭式快路（rect / sector）', () => {
     });
     const cell: Cell = { intervals: { x: [30, 90], y: [40, 120] } };
     const geometry = frame.projectCell(cell);
-    expect(geometry).toEqual({ kind: 'sector', center: [200, 200], innerRadius: 40, outerRadius: 120, startAngle: 30, endAngle: 90 });
+    expect(geometry).toEqual({
+      kind: 'sector',
+      center: [200, 200],
+      innerRadius: 40,
+      outerRadius: 120,
+      startAngle: 30,
+      endAngle: 90,
+    });
   });
 });
 
@@ -115,7 +137,11 @@ const cartesianBarSpec = (arrangement?: 'stack', series?: string): PlotSpec =>
 
 describe('cartesian interval → rect 产物（byte-equal 回归基线）', () => {
   it('cartesian_interval_plain_rect_nodes', () => {
-    const rows = [{ m: 'A', v: 3 }, { m: 'B', v: 6 }, { m: 'C', v: 9 }];
+    const rows = [
+      { m: 'A', v: 3 },
+      { m: 'B', v: 6 },
+      { m: 'C', v: 9 },
+    ];
     const nodes = nodesOf(firstLayer(cartesianBarSpec(), { d: rows }, cartOpts));
     expect(nodes).toHaveLength(3);
     for (const node of nodes) {
@@ -146,7 +172,10 @@ describe('cartesian interval → rect 产物（byte-equal 回归基线）', () =
   });
 
   it('cartesian_interval_compiles_to_scene', () => {
-    const rows = [{ m: 'A', v: 3 }, { m: 'B', v: 6 }];
+    const rows = [
+      { m: 'A', v: 3 },
+      { m: 'B', v: 6 },
+    ];
     const layer = firstLayer(cartesianBarSpec(), { d: rows }, cartOpts);
     expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] })).not.toThrow();
   });
@@ -176,12 +205,22 @@ const pieSpec = (): PlotSpec =>
       { type: 'linear', name: 'a' },
       { type: 'linear', name: 'r' },
     ],
-    marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } }, encoding: { color: { field: 'label' } } }],
+    marks: [
+      {
+        type: 'interval',
+        bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
+        encoding: { color: { field: 'label' } },
+      },
+    ],
   });
 
 describe('polar interval / sector → sector 产物（byte-equal 回归基线）', () => {
   it('polar_interval_sector_nodes', () => {
-    const rows = [{ m: 'A', v: 3 }, { m: 'B', v: 6 }, { m: 'C', v: 9 }];
+    const rows = [
+      { m: 'A', v: 3 },
+      { m: 'B', v: 6 },
+      { m: 'C', v: 9 },
+    ];
     const nodes = nodesOf(firstLayer(polarBarSpec(), { d: rows }, cartOpts));
     expect(nodes).toHaveLength(3);
     for (const node of nodes) {
@@ -192,7 +231,11 @@ describe('polar interval / sector → sector 产物（byte-equal 回归基线）
   });
 
   it('pie_sector_mark_nodes', () => {
-    const rows = [{ label: 'A', value: 3 }, { label: 'B', value: 5 }, { label: 'C', value: 2 }];
+    const rows = [
+      { label: 'A', value: 3 },
+      { label: 'B', value: 5 },
+      { label: 'C', value: 2 },
+    ];
     const nodes = nodesOf(firstLayer(pieSpec(), { d: rows }, cartOpts));
     expect(nodes).toHaveLength(3);
     for (const node of nodes) {
@@ -210,7 +253,10 @@ const curvedFrame = (): CartesianCoordinateFrame => {
   const projectFn = (px: number, py: number): [number, number] => [px, py + 20 * Math.sin((px / 200) * Math.PI)];
   return {
     ...base,
-    projectCell: cell => ({ kind: 'contour', points: densifyCellContour(cell, projectFn, { curvedPrimary: true, curvedSecondary: false }) }),
+    projectCell: cell => ({
+      kind: 'contour',
+      points: densifyCellContour(cell, projectFn, { curvedPrimary: true, curvedSecondary: false }),
+    }),
   };
 };
 
@@ -252,7 +298,10 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
     // 注册 frame 即便带 projectCell，缺少 roleScales 时也无法从 encoding/bounds 构造 cell →
     //   fail-loud，不静默产空层（守「无 cell 构造即 fail-loud、无引擎自动兜底」）
     const custom = createCoordinateFrame('curved-cell', ['x', 'y'], values => [Number(values[0]), Number(values[1])], {
-      projectCell: (cell: Cell) => ({ kind: 'contour', points: densifyCellContour(cell, (p, s) => [p, s], { curvedPrimary: false, curvedSecondary: false }) }),
+      projectCell: (cell: Cell) => ({
+        kind: 'contour',
+        points: densifyCellContour(cell, (p, s) => [p, s], { curvedPrimary: false, curvedSecondary: false }),
+      }),
     });
     const mark = firstIntervalMark(intervalMarkSpec());
     expect(() => lowerMark(mark, [{ m: 2, v: 3 }], custom)).toThrow(/not supported|interval|custom/i);
@@ -260,7 +309,10 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
 
   it('curved_frame_interval_lowers_to_contour_nodes', () => {
     const mark = firstIntervalMark(intervalMarkSpec());
-    const rows = [{ m: 2, v: 3 }, { m: 6, v: 6 }];
+    const rows = [
+      { m: 2, v: 3 },
+      { m: 6, v: 6 },
+    ];
     const frame = curvedFrame();
     const layer = lowerMark(mark, rows, frame) as IRScope;
     const nodes = nodesOf(layer);
@@ -269,7 +321,7 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
       const shape = node.shape as { type?: string; params?: { points?: Array<[number, number]> } } | undefined;
       expect(shape?.type).toBe('contour');
       // 顶点密采样（曲边）+ 闭合环 ≥ 4 顶点
-      expect((shape!.params!.points?.length ?? 0)).toBeGreaterThanOrEqual(4);
+      expect(shape!.params!.points?.length ?? 0).toBeGreaterThanOrEqual(4);
     }
   });
 
@@ -329,7 +381,14 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
 
   it('anchor_sector_is_centroid', () => {
     // mid-angle 90°、mid-radius 80 → [center + 80·cos90, center + 80·sin90] = [200, 280]
-    const geometry = { kind: 'sector' as const, center: [200, 200] as [number, number], innerRadius: 60, outerRadius: 100, startAngle: 60, endAngle: 120 };
+    const geometry = {
+      kind: 'sector' as const,
+      center: [200, 200] as [number, number],
+      innerRadius: 60,
+      outerRadius: 100,
+      startAngle: 60,
+      endAngle: 120,
+    };
     const anchor = cellGeometryAnchor(geometry);
     expect(anchor).not.toBeNull();
     expect(anchor![0]).toBeCloseTo(200, 6);
@@ -337,19 +396,36 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
   });
 
   it('anchor_contour_is_aabb_center', () => {
-    const geometry = { kind: 'contour' as const, points: [[0, 0], [10, 0], [10, 20], [0, 20]] as Array<[number, number]> };
+    const geometry = {
+      kind: 'contour' as const,
+      points: [
+        [0, 0],
+        [10, 0],
+        [10, 20],
+        [0, 20],
+      ] as Array<[number, number]>,
+    };
     expect(cellGeometryAnchor(geometry)).toEqual([5, 10]);
   });
 
   it('anchor_contour_with_too_few_points_is_null', () => {
-    const geometry = { kind: 'contour' as const, points: [[0, 0], [10, 0]] as Array<[number, number]> };
+    const geometry = {
+      kind: 'contour' as const,
+      points: [
+        [0, 0],
+        [10, 0],
+      ] as Array<[number, number]>,
+    };
     expect(cellGeometryAnchor(geometry)).toBeNull();
   });
 
   it('datum_anchor_cartesian_interval_matches_node_position', () => {
     // datumAnchor（locator）= lowerMark 摆放的柱 Node.position（同一 frame、同源不漂移）
     const mark = firstIntervalMark(intervalMarkSpec());
-    const rows = [{ m: 2, v: 3 }, { m: 6, v: 6 }];
+    const rows = [
+      { m: 2, v: 3 },
+      { m: 6, v: 6 },
+    ];
     const frame = createCartesianCoordinate(linearStub([0, 10], [0, 200], 40), linearStub([0, 10], [200, 0]));
     const ctx = buildIntervalContext(mark, frame, rows);
     const nodes = nodesOf(lowerMark(mark, rows, frame) as IRScope);
@@ -379,7 +455,11 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
   it('datum_anchor_ternary_empty_contour_is_null', () => {
     const mark: IntervalMark = {
       type: 'interval',
-      bounds: { x: { kind: 'extent', from: 'x0', to: 'x1' }, y: { kind: 'extent', from: 'y0', to: 'y1' }, z: { kind: 'full' } },
+      bounds: {
+        x: { kind: 'extent', from: 'x0', to: 'x1' },
+        y: { kind: 'extent', from: 'y0', to: 'y1' },
+        z: { kind: 'full' },
+      },
       encoding: { x: { field: 'x' }, y: { field: 'y' }, z: { field: 'z' } },
     };
     const rows = [{ x: 0.2, y: 0.3, z: 0.5, x0: 0.8, x1: 0.9, y0: 0.8, y1: 0.9 }];
@@ -407,13 +487,16 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
   const histogramMark = (): IntervalMark => ({
     type: 'interval',
     bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } },
-    encoding: { y: { field: 'binValue' } },
+    encoding: { y: { field: 'binCount' } },
   });
 
   it('x0x1_primary_is_continuous_interval_not_band', () => {
     // 连续 x scale（bandwidth 0）：primary cell = [coord(binStart), coord(binEnd)]、紧贴排列、宽随箱边
     const mark = histogramMark();
-    const rows = [{ binStart: 0, binEnd: 2, binValue: 5 }, { binStart: 2, binEnd: 4, binValue: 3 }];
+    const rows = [
+      { binStart: 0, binEnd: 2, binCount: 5 },
+      { binStart: 2, binEnd: 4, binCount: 3 },
+    ];
     const frame = createCartesianCoordinate(linearStub([0, 10], [0, 200], 0), linearStub([0, 10], [200, 0]));
     const nodes = nodesOf(lowerMark(mark, rows, frame) as IRScope);
     expect(nodes).toHaveLength(2);
@@ -422,7 +505,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
     expect(nodes[1].minimumWidth).toBeCloseTo(40, 9);
     expect((nodes[0].position as [number, number])[0]).toBeCloseTo(20, 9);
     expect((nodes[1].position as [number, number])[0]).toBeCloseTo(60, 9);
-    // secondary 高度 = coord(0)..coord(binValue)：bar0 = |200-100|=100、bar1 = |200-140|=60
+    // secondary 高度 = coord(0)..coord(binCount)：bar0 = |200-100|=100、bar1 = |200-140|=60
     expect(nodes[0].minimumHeight).toBeCloseTo(100, 9);
     expect(nodes[1].minimumHeight).toBeCloseTo(60, 9);
   });
@@ -430,7 +513,10 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
   it('x0x1_unequal_width_bins_follow_edges', () => {
     // 不等宽箱（thresholds 派生）：宽随各自箱边
     const mark = histogramMark();
-    const rows = [{ binStart: 0, binEnd: 1, binValue: 2 }, { binStart: 1, binEnd: 5, binValue: 4 }];
+    const rows = [
+      { binStart: 0, binEnd: 1, binCount: 2 },
+      { binStart: 1, binEnd: 5, binCount: 4 },
+    ];
     const frame = createCartesianCoordinate(linearStub([0, 10], [0, 200], 0), linearStub([0, 10], [200, 0]));
     const nodes = nodesOf(lowerMark(mark, rows, frame) as IRScope);
     // coord(1)-coord(0)=20、coord(5)-coord(1)=80
@@ -444,13 +530,19 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      transform: [{ kind: 'bin', field: 'm', step: 2, reduce: 'count' }],
+      transform: [{ kind: 'bin', field: 'm', step: 2 }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
       ],
-      marks: [{ type: 'interval', bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } }, encoding: { y: { field: 'binValue' } } }],
+      marks: [
+        {
+          type: 'interval',
+          bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } },
+          encoding: { y: { field: 'binCount' } },
+        },
+      ],
     });
     const rows = [{ m: 0 }, { m: 1 }, { m: 3 }, { m: 5 }];
     const layer = firstLayer(spec, { d: rows }, cartOpts);
@@ -502,13 +594,21 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       height: HEIGHT,
       coordinates: [
         defineCoordinate({
-          schema: z.object({ type: z.literal('noproj').describe('Discriminator: no-project-cell custom coordinate operation') }),
+          schema: z.object({
+            type: z.literal('noproj').describe('Discriminator: no-project-cell custom coordinate operation'),
+          }),
           roles: ['x', 'y'],
           resolve: (_operation, ctx) => {
             const xValues = ctx.collectRoleValues('x');
             const yValues = ctx.collectRoleValues('y');
-            const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [0, ctx.width]);
-            const yScale = ctx.buildPositionScale(ctx.resolveScaleForRole('y', undefined, yValues), yValues, [ctx.height, 0]);
+            const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [
+              0,
+              ctx.width,
+            ]);
+            const yScale = ctx.buildPositionScale(ctx.resolveScaleForRole('y', undefined, yValues), yValues, [
+              ctx.height,
+              0,
+            ]);
             return {
               frame: createCoordinateFrame('noproj', ['x', 'y'], values => {
                 const x = xScale.coordinate(values[0]);
@@ -540,22 +640,37 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       height: HEIGHT,
       coordinates: [
         defineCoordinate({
-          schema: z.object({ type: z.literal('curved-cell').describe('Discriminator: project-cell custom coordinate operation') }),
+          schema: z.object({
+            type: z.literal('curved-cell').describe('Discriminator: project-cell custom coordinate operation'),
+          }),
           roles: ['x', 'y'],
           resolve: (_operation, ctx) => {
             const xValues = ctx.collectRoleValues('x');
             const yValues = ctx.collectRoleValues('y');
-            const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [0, ctx.width]);
-            const yScale = ctx.buildPositionScale(ctx.resolveScaleForRole('y', undefined, yValues), yValues, [ctx.height, 0]);
+            const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [
+              0,
+              ctx.width,
+            ]);
+            const yScale = ctx.buildPositionScale(ctx.resolveScaleForRole('y', undefined, yValues), yValues, [
+              ctx.height,
+              0,
+            ]);
             const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
               const x = xScale.coordinate(values[0]);
               const y = yScale.coordinate(values[1]);
-              return Number.isFinite(x) && Number.isFinite(y) ? [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)] : null;
+              return Number.isFinite(x) && Number.isFinite(y)
+                ? [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)]
+                : null;
             };
             return {
               frame: createCoordinateFrame('curved-cell', ['x', 'y'], projectRoles, {
                 roleScales: { x: xScale, y: yScale },
-                projectCell: cell => ({ kind: 'contour', points: densifyCellContour(cell, (x, y) => [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)], { curvedPrimary: true }) }),
+                projectCell: cell => ({
+                  kind: 'contour',
+                  points: densifyCellContour(cell, (x, y) => [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)], {
+                    curvedPrimary: true,
+                  }),
+                }),
               }),
               plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
               gridLayers: [],
@@ -593,13 +708,21 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       height: HEIGHT,
       coordinates: [
         defineCoordinate({
-          schema: z.object({ type: z.literal('curved-cell').describe('Discriminator: project-cell custom coordinate operation') }),
+          schema: z.object({
+            type: z.literal('curved-cell').describe('Discriminator: project-cell custom coordinate operation'),
+          }),
           roles: ['x', 'y'],
           resolve: (_operation, ctx) => {
             const xValues = ctx.collectRoleValues('x');
             const yValues = ctx.collectRoleValues('y');
-            const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [0, ctx.width]);
-            const yScale = ctx.buildPositionScale(ctx.resolveScaleForRole('y', undefined, yValues), yValues, [ctx.height, 0]);
+            const xScale = ctx.buildPositionScale(ctx.resolveScaleForRole('x', undefined, xValues), xValues, [
+              0,
+              ctx.width,
+            ]);
+            const yScale = ctx.buildPositionScale(ctx.resolveScaleForRole('y', undefined, yValues), yValues, [
+              ctx.height,
+              0,
+            ]);
             const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
               const x = xScale.coordinate(values[0]);
               const y = yScale.coordinate(values[1]);

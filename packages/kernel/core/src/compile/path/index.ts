@@ -1,33 +1,7 @@
-import {
-  arcBoundingPoints,
-  arcEndPoint,
-  curve,
-  ellipseArcBoundingPoints,
-  ellipseArcPoint,
-} from '@retikz/math';
-import { bendControlPoints, outInControlPoints } from '../../geometry/bend';
-import { rectOutline } from '../../geometry/rect';
-import type { PaintResolver } from '../paint';
-import {
-  type SegmentSample,
-  arcSegmentSample,
-  circleSegmentSample,
-  cubicSegmentSample,
-  ellipseArcSegmentSample,
-  ellipseSegmentSample,
-  foldSegmentSample,
-  lineSegmentSample,
-  quadSegmentSample,
-  rectPerimeterSample,
-} from '../../geometry/segment';
-import type {
-  IRPath,
-  IRPathScale,
-  IRPosition,
-  IRStep,
-  IRTarget,
-} from '../../schemas';
-import { JsonObjectSchema } from '../../schemas';
+import { arcBoundingPoints, arcEndPoint, curve, ellipseArcBoundingPoints, ellipseArcPoint } from '@retikz/math';
+
+import type { PathGeneratorDefinition } from '../../contract/path';
+import type { SegmentSample } from '../../geometry/segment';
 import type {
   ArrowEndSpec,
   GroupPrim,
@@ -38,22 +12,41 @@ import type {
   ScenePrimitive,
   Transform,
 } from '../../primitive';
+import type { IRPath, IRPathBase, IRPathScale, IRPosition, IRStep, IRTarget } from '../../schemas';
 import type { AssertEqual } from '../../types';
-import type { PathGeneratorDefinition } from '../../contract/path';
-import type { LowerTex } from '../lower-tex';
-import { CompileWarningCode } from '../constant';
 import type { CompileWarning } from '../constant';
+import type { LowerTex } from '../lower-tex';
 import type { NameStack } from '../name-stack';
-import { type TextMeasurer, fallbackMeasurer } from '../text-metrics';
+import type { PaintResolver } from '../paint';
+import type { TextMeasurer } from '../text-metrics';
+import type { EffectiveArrows } from './shrink';
+import type { PathBaseProps } from './split';
+
+import { bendControlPoints, outInControlPoints } from '../../geometry/bend';
+import { rectOutline } from '../../geometry/rect';
+import {
+  arcSegmentSample,
+  circleSegmentSample,
+  cubicSegmentSample,
+  ellipseArcSegmentSample,
+  ellipseSegmentSample,
+  foldSegmentSample,
+  lineSegmentSample,
+  quadSegmentSample,
+  rectPerimeterSample,
+} from '../../geometry/segment';
+import { BUILTIN_ARROWS } from '../../providers/arrow';
+import { JsonObjectSchema } from '../../schemas';
+import { CompileWarningCode } from '../constant';
+import { resolveShadow } from '../effects';
+import { applyTransformChain } from '../scope';
+import { fallbackMeasurer } from '../text-metrics';
 import { clipForTarget, cornerOf, isAutoBoundaryTarget, refPointOfTarget, samePoint } from './anchor';
 import { emitLabelPrimitive, tForLabelPosition } from './label';
 import { normalizeRelativeTargets } from './relative';
-import { applyTransformChain } from '../scope';
-import { type EffectiveArrows, applyArrowShrinks, endpointArrows, resolveMarkArrowSpec } from './shrink';
-import { type PathBaseProps, splitSubPathsForEndpointArrows } from './split';
-import { BUILTIN_ARROWS } from '../../providers/arrow';
 import { applyRoundedCorners, sampleRoundedCommands } from './rounded-corners';
-import { resolveShadow } from '../effects';
+import { applyArrowShrinks, endpointArrows, resolveMarkArrowSpec } from './shrink';
+import { splitSubPathsForEndpointArrows } from './split';
 
 /**
  * referent（offset.of / polar.origin 的并集形态：节点 id 字符串 / `[x, y]` 字面量 / 嵌套 PolarPosition）里挖节点 id
@@ -149,10 +142,7 @@ const THICKNESS_TO_WIDTH = {
 } as const satisfies Record<NonNullable<IRPath['thickness']>, number>;
 
 /** 类型互锁完备性：THICKNESS_TO_WIDTH 的 key 集合必须与 IRPath['thickness'] 完全等价；漏键 / 多键 / 类型错位 → AssertEqual = false → 下方常量赋值 TS 编译期报错 */
-type _ThicknessCheck = AssertEqual<
-  keyof typeof THICKNESS_TO_WIDTH,
-  NonNullable<IRPath['thickness']>
->;
+type _ThicknessCheck = AssertEqual<keyof typeof THICKNESS_TO_WIDTH, NonNullable<IRPath['thickness']>>;
 const _assertThicknessCheck: _ThicknessCheck = true;
 void _assertThicknessCheck;
 
@@ -228,11 +218,11 @@ const buildPathTransforms = (
     // 绕 bbox center 缩放：translate(center) ∘ scale ∘ translate(-center)
     const scaleT: Transform = { kind: 'scale', x: sx };
     if (sy !== undefined) scaleT.y = sy;
-    out.push(
-      { kind: 'translate', x: round(center[0]), y: round(center[1]) },
-      scaleT,
-      { kind: 'translate', x: round(-center[0]), y: round(-center[1]) },
-    );
+    out.push({ kind: 'translate', x: round(center[0]), y: round(center[1]) }, scaleT, {
+      kind: 'translate',
+      x: round(-center[0]),
+      y: round(-center[1]),
+    });
   }
   return out;
 };
@@ -253,8 +243,7 @@ const buildPathTransforms = (
 const resolveMarkerContextFill = (value: MarkerFill, contextStroke: string): string =>
   typeof value === 'string' ? value : contextStroke;
 
-const markerFillUsesContextStroke = (value: MarkerFill | undefined): boolean =>
-  typeof value === 'object';
+const markerFillUsesContextStroke = (value: MarkerFill | undefined): boolean => typeof value === 'object';
 
 const markerPrimUsesContextStroke = (prim: MarkerPrimitive): boolean => {
   if (prim.type === 'group') return prim.children.some(markerPrimUsesContextStroke);
@@ -278,9 +267,7 @@ const assertArrowCanInheritStroke = (
 const markerContextStroke = (stroke: PaintValue | undefined): string => {
   if (stroke === undefined) return 'currentColor';
   if (typeof stroke === 'string') return stroke;
-  throw new Error(
-    'Path mark cannot inherit a PaintSpec stroke; set the mark or arrow color to an explicit CSS color.',
-  );
+  throw new Error('Path mark cannot inherit a PaintSpec stroke; set the mark or arrow color to an explicit CSS color.');
 };
 
 /** marker 图元 → Scene 图元：结构同构，仅把 fill/stroke 的 contextStroke 解析成具体描边色（递归 group） */
@@ -321,7 +308,7 @@ const buildMarkMarkerGroup = (
  * @description 每个绘制段独立用节点中心算两端 boundary clip——中段节点的入/出 boundary 点通常不同，path 在该节点可见"断开"（与 TikZ `\draw (A)--(B)--(C);` 段独立 clip 一致）。仍产一个 PathPrim：commands 用多组 move/line 表达 sub-path；段起点等于上段终点时复用 cursor 省 move。cycle 段闭回最近 move 起点，起点==lastEnd && 终点==subPathStart 时输出 close，否则显式画段 line。引用未定义节点/解析失败返回 null，并通过 `warnHook.onWarn` 同步触发 warning
  */
 export const emitPathPrimitive = (
-  path: IRPath,
+  path: IRPathBase,
   nameStack: NameStack,
   round: (n: number) => number,
   measureText: TextMeasurer = fallbackMeasurer,
@@ -335,6 +322,9 @@ export const emitPathPrimitive = (
   // paint 解析：有 registry 走去重派 id；无（直调）时纯色透传、PaintSpec 退化为 undefined
   const resolvePaint: PaintResolver =
     warnHook.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
+  if (path.children === undefined) {
+    throw new Error('Stroke path requires `children` steps.');
+  }
   // 先把 relative/relativeAccumulate 解析为绝对坐标，后续算法可统一按绝对坐标处理
   const steps = normalizeRelativeTargets(path.children, nameStack, scopeChain);
   // 自包含 shape step（rectangle 自带 from/to 两对角、不依赖游标）单独成 path 合法；
@@ -360,17 +350,9 @@ export const emitPathPrimitive = (
   const segmentSamplers: Array<(t: number) => SegmentSample> = [];
 
   /** 算 sample 后 emitLabelPrimitive，结果累积到 labelPrims/points；同时登记本段采样器供 marks 用 */
-  const collectLabel = (
-    step: IRStep,
-    sampleAt: (t: number) => SegmentSample,
-  ): void => {
+  const collectLabel = (step: IRStep, sampleAt: (t: number) => SegmentSample): void => {
     segmentSamplers.push(sampleAt);
-    if (
-      step.kind === 'move' ||
-      step.kind === 'cycle' ||
-      !('label' in step) ||
-      !step.label
-    ) {
+    if (step.kind === 'move' || step.kind === 'cycle' || !('label' in step) || !step.label) {
       return;
     }
     const t = tForLabelPosition(step.label.position);
@@ -511,12 +493,7 @@ export const emitPathPrimitive = (
     points.push(p);
     lastEnd = p;
   };
-  const emitCubic = (
-    c1: IRPosition,
-    c2: IRPosition,
-    p: IRPosition,
-    sourceAutoBoundary = false,
-  ) => {
+  const emitCubic = (c1: IRPosition, c2: IRPosition, p: IRPosition, sourceAutoBoundary = false) => {
     noteEndpointSource(sourceAutoBoundary);
     const rc1 = roundPoint(c1);
     const rc2 = roundPoint(c2);
@@ -534,12 +511,7 @@ export const emitPathPrimitive = (
     points.push(p);
     lastEnd = p;
   };
-  const emitArc = (
-    center: IRPosition,
-    radius: number,
-    startAngle: number,
-    endAngle: number,
-  ) => {
+  const emitArc = (center: IRPosition, radius: number, startAngle: number, endAngle: number) => {
     noteEndpointSource(false);
     const rc = roundPoint(center);
     commands.push({
@@ -624,14 +596,10 @@ export const emitPathPrimitive = (
     if (step.kind === 'generator') {
       const generators = warnHook.effectivePathGenerators ?? {};
       // hasOwnProperty 守门：避免 `'toString'` 等原型链 key 被 Record 索引误命中（开放 name 的边界安全）
-      const def = Object.prototype.hasOwnProperty.call(generators, step.name)
-        ? generators[step.name]
-        : undefined;
+      const def = Object.prototype.hasOwnProperty.call(generators, step.name) ? generators[step.name] : undefined;
       if (!def) {
         const available = Object.keys(generators).sort().join(', ') || '(none registered)';
-        throw new Error(
-          `Unknown path generator '${step.name}'; available: ${available}`,
-        );
+        throw new Error(`Unknown path generator '${step.name}'; available: ${available}`);
       }
 
       // 外部校验：generator 自带 paramsSchema 先 parse step.params
@@ -662,13 +630,9 @@ export const emitPathPrimitive = (
       // 起点：当前游标（前一绘制段终点 / arc 等留下的 penOverride）；首段时回退最近 hasTo step 的 anchor。
       // 经闭包 readCursor 读 lastEnd/penOverride（循环外声明的宽类型 let，不被分支位置 narrow 成 null）
       const prevGen = findPrev();
-      const fromGen: IRPosition =
-        readCursor() ?? (prevGen ? prevGen.anchor : [0, 0]);
+      const fromGen: IRPosition = readCursor() ?? (prevGen ? prevGen.anchor : [0, 0]);
       // 终点：step.to resolve 后的世界坐标（无 to 则 undefined）
-      const resolvedTo =
-        step.to !== undefined
-          ? refPointOfTarget(step.to, nameStack, scopeChain)
-          : null;
+      const resolvedTo = step.to !== undefined ? refPointOfTarget(step.to, nameStack, scopeChain) : null;
       const toGen = resolvedTo ?? undefined;
 
       let produced: unknown;
@@ -681,10 +645,9 @@ export const emitPathPrimitive = (
           round,
         });
       } catch (e) {
-        throw new Error(
-          `path generator '${step.name}' threw: ${e instanceof Error ? e.message : String(e)}`,
-          { cause: e },
-        );
+        throw new Error(`path generator '${step.name}' threw: ${e instanceof Error ? e.message : String(e)}`, {
+          cause: e,
+        });
       }
       if (!Array.isArray(produced)) {
         throw new Error(
@@ -714,13 +677,7 @@ export const emitPathPrimitive = (
             emitArc(cmd.center, cmd.radius, cmd.startAngle, cmd.endAngle);
             break;
           case 'ellipseArc':
-            emitEllipseArc(
-              cmd.center,
-              cmd.radiusX,
-              cmd.radiusY,
-              cmd.startAngle,
-              cmd.endAngle,
-            );
+            emitEllipseArc(cmd.center, cmd.radiusX, cmd.radiusY, cmd.startAngle, cmd.endAngle);
             break;
           case 'close':
             emitClose();
@@ -746,8 +703,7 @@ export const emitPathPrimitive = (
       const moveAnchor = refPointOfTarget(moveTo, nameStack, scopeChain);
       if (!moveAnchor) return null;
 
-      const fromClip =
-        usedOverride ?? (prev ? clipForTarget(prev.step.to, moveAnchor, nameStack, scopeChain) : null);
+      const fromClip = usedOverride ?? (prev ? clipForTarget(prev.step.to, moveAnchor, nameStack, scopeChain) : null);
       const toClip = clipForTarget(moveTo, fromClip ?? prev?.anchor ?? moveAnchor, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
 
@@ -857,9 +813,7 @@ export const emitPathPrimitive = (
         for (const p of ellipseArcBoundingPoints(center, rx, ry, step.startAngle, step.endAngle)) {
           points.push(p);
         }
-        collectLabel(step, t =>
-          ellipseArcSegmentSample(center, rx, ry, step.startAngle, step.endAngle, t),
-        );
+        collectLabel(step, t => ellipseArcSegmentSample(center, rx, ry, step.startAngle, step.endAngle, t));
         penOverride = ellipseArcPoint(center, rx, ry, step.endAngle);
         continue;
       }
@@ -872,9 +826,7 @@ export const emitPathPrimitive = (
         for (const p of arcBoundingPoints(center, r, step.startAngle, step.endAngle)) {
           points.push(p);
         }
-        collectLabel(step, t =>
-          arcSegmentSample(center, r, step.startAngle, step.endAngle, t),
-        );
+        collectLabel(step, t => arcSegmentSample(center, r, step.startAngle, step.endAngle, t));
         penOverride = arcEndPoint(center, r, step.endAngle);
         continue;
       }
@@ -1007,8 +959,7 @@ export const emitPathPrimitive = (
       if (resolveFailed) return null;
 
       // 首 knot = 当前游标：penOverride 优先，否则 prev.step.to 朝首个 through-point boundary clip
-      const fromClip =
-        usedOverride ?? clipForTarget(prev.step.to, resolved[0], nameStack, scopeChain);
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, resolved[0], nameStack, scopeChain);
       if (!fromClip) return null;
 
       // knots = [游标, ...through-points]；centripetal Catmull-Rom 转 cubic 段链
@@ -1069,9 +1020,7 @@ export const emitPathPrimitive = (
       if (!fromClip || !toClip) return null;
       startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
       emitCubic(step.control1, step.control2, toClip, isAutoBoundaryTarget(step.to));
-      collectLabel(step, t =>
-        cubicSegmentSample(fromClip, step.control1, step.control2, toClip, t),
-      );
+      collectLabel(step, t => cubicSegmentSample(fromClip, step.control1, step.control2, toClip, t));
       continue;
     }
     if (step.kind === 'bend') {
@@ -1080,24 +1029,11 @@ export const emitPathPrimitive = (
       // out/in 角（任一给定）优先于 bendDirection 对称弯；都缺则按 bendDirection 对称弯，仍缺则默认 left 弯
       const [c1, c2] =
         step.outAngle !== undefined || step.inAngle !== undefined
-          ? outInControlPoints(
-              fromRef,
-              currAnchor,
-              step.outAngle ?? 0,
-              step.inAngle ?? 180,
-              step.looseness,
-            )
-          : bendControlPoints(
-              fromRef,
-              currAnchor,
-              step.bendDirection ?? 'left',
-              step.bendAngle ?? 30,
-            );
+          ? outInControlPoints(fromRef, currAnchor, step.outAngle ?? 0, step.inAngle ?? 180, step.looseness)
+          : bendControlPoints(fromRef, currAnchor, step.bendDirection ?? 'left', step.bendAngle ?? 30);
       // looseness × chord 可能把 finite 输入放大溢出成 Infinity；非 finite 控制点会污染 Scene + layout
       if (!isFinitePoint(c1) || !isFinitePoint(c2)) {
-        throw new Error(
-          'Bend produced a non-finite control point (looseness / angle too large); use smaller values.',
-        );
+        throw new Error('Bend produced a non-finite control point (looseness / angle too large); use smaller values.');
       }
       const fromClip = usedOverride ?? clipForTarget(prev.step.to, c1, nameStack, scopeChain);
       const toClip = clipForTarget(step.to, c2, nameStack, scopeChain);
@@ -1135,8 +1071,7 @@ export const emitPathPrimitive = (
   }
 
   // strokeWidth 解析：显式 strokeWidth > thickness 档位 > 默认 1
-  const strokeWidth =
-    path.strokeWidth ?? (path.thickness ? THICKNESS_TO_WIDTH[path.thickness] : 1);
+  const strokeWidth = path.strokeWidth ?? (path.thickness ? THICKNESS_TO_WIDTH[path.thickness] : 1);
   const baseProps: PathBaseProps = {
     stroke: resolvePaint(path.stroke) ?? 'currentColor',
     strokeWidth,
@@ -1183,11 +1118,8 @@ export const emitPathPrimitive = (
 
   // shrink 在 compile 算（端点收缩与 emit 落点无关）：按 shape + 视觉输入把首/末段端点向内缩短，
   // 让 line 端点接在 hollow arrow 尾部外缘、不贯穿 back outline；shrink=0 的实心 shape 跳过
-  const shrinkStart =
-    arrows.shrinkStart +
-    (endpointSource.firstAutoBoundary ? arrows.boundaryOuterInsetStart : 0);
-  const shrinkEnd =
-    arrows.shrinkEnd + (endpointSource.lastAutoBoundary ? arrows.boundaryOuterInsetEnd : 0);
+  const shrinkStart = arrows.shrinkStart + (endpointSource.firstAutoBoundary ? arrows.boundaryOuterInsetStart : 0);
+  const shrinkEnd = arrows.shrinkEnd + (endpointSource.lastAutoBoundary ? arrows.boundaryOuterInsetEnd : 0);
   applyArrowShrinks(commands, shrinkStart, shrinkEnd, strokeWidth, round);
 
   // 只在端点有箭头时塞 key——避免给无箭头 path 注入 `arrowStart: undefined` / `arrowEnd: undefined`（保 Scene 输出纯净）
@@ -1216,9 +1148,7 @@ export const emitPathPrimitive = (
       const transformedPoints = points.map(p => applyTransformChain(p, transforms));
       // scale × 坐标可能把 finite 输入放大溢出成 Infinity；非 finite 会污染 layout（round-trip 失真）
       if (!transformedPoints.every(isFinitePoint)) {
-        throw new Error(
-          'Path rotate / scale produced a non-finite coordinate (scale too large); use a smaller scale.',
-        );
+        throw new Error('Path rotate / scale produced a non-finite coordinate (scale too large); use a smaller scale.');
       }
       return { primitives: [group], points: transformedPoints };
     }

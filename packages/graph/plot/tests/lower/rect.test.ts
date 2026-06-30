@@ -1,13 +1,18 @@
 import type { IRNode, IRScope } from '@retikz/core';
+
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { type IntervalMark, type PlotSpec, PlotSpecSchema } from '../../src/schemas';
-import { type LowerPlotsOptions, lowerPlots } from '../../src/pipeline/expand';
+
+import type { PositionScale } from '../../src/contract';
+import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { IntervalMark, PlotSpec } from '../../src/schemas';
+
+import { type Cell } from '../../src/contract';
+import { lowerPlots } from '../../src/pipeline/expand';
 import { buildIntervalContext, datumAnchor, intervalCell } from '../../src/providers';
 import { lowerMark } from '../../src/providers';
-import { type Cell } from '../../src/contract';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../src/providers';
-import type { PositionScale } from '../../src/contract';
+import { PlotSpecSchema } from '../../src/schemas';
 
 /**
  * ADR-02（alpha.11）：rect mark（heatmap 双 band 正交 cell）下沉契约测试。
@@ -26,7 +31,8 @@ const expandOf = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions
   return def.expand(spec) as IRScope;
 };
 
-const firstLayer = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
+const firstLayer = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope =>
+  expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 node（无 color → 直接子；有 color → 藏在分色子 Scope 里） */
 const nodesOf = (layer: IRScope): Array<IRNode> => {
@@ -34,7 +40,7 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
-      if (node.type === 'node') out.push(node);
+      if (node.type === 'node') out.push(child as IRNode);
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
@@ -52,6 +58,7 @@ const bandStub = (categories: Array<string>, range: [number, number]): PositionS
       const i = typeof value === 'string' ? index.get(value) : undefined;
       return i === undefined ? NaN : r0 + step * (i + 0.5);
     },
+    domain: () => categories,
     get bandwidth() {
       return Math.abs(step);
     },
@@ -66,7 +73,9 @@ const linearStub = (domain: [number, number], range: [number, number]): Position
   const [d0, d1] = domain;
   const [r0, r1] = range;
   return {
-    coordinate: (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? r0 + ((value - d0) / (d1 - d0)) * (r1 - r0) : NaN),
+    coordinate: (value: unknown) =>
+      typeof value === 'number' && Number.isFinite(value) ? r0 + ((value - d0) / (d1 - d0)) * (r1 - r0) : NaN,
+    domain: () => [d0, d1],
     get bandwidth() {
       return 0;
     },
@@ -103,6 +112,7 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
     const frame = createCartesianCoordinate(bandStub(['r0', 'r1'], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
     const mark = rectMark();
     const ctx = buildIntervalContext(mark, frame, [{ rk: 'r0', ck: 'c0' }]);
+    if (ctx === undefined) throw new Error('expected interval context');
     const cell = intervalCell(mark, { rk: 'r0', ck: 'c0' }, frame, ctx);
     expect(cell).not.toBeNull();
     const geometry = frame.projectCell(cell as Cell);
@@ -175,20 +185,35 @@ describe('rect 值 → color', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference: 'd', model: [{ name: 'rk', type: 'categorical' }, { name: 'ck', type: 'categorical' }, { name: 'v', type: 'continuous' }] },
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'rk', type: 'categorical' },
+          { name: 'ck', type: 'categorical' },
+          { name: 'v', type: 'continuous' },
+        ],
+      },
       coordinate: { type: 'cartesian2D', x: 'rk', y: 'ck' },
       scales: [
         { type: 'band', name: 'rk' },
         { type: 'band', name: 'ck' },
         { type: 'sequential', name: 'heat', domain: [0, 9] },
       ],
-      marks: [{ type: 'interval', encoding: { x: { field: 'rk' }, y: { field: 'ck' }, color: { field: 'v', scale: 'heat' } }, bounds: { x: { kind: 'band' }, y: { kind: 'band' } } }],
+      marks: [
+        {
+          type: 'interval',
+          encoding: { x: { field: 'rk' }, y: { field: 'ck' }, color: { field: 'v', scale: 'heat' } },
+          bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
+        },
+      ],
     });
     const layer = firstLayer(spec, { d: rows }, cartOpts);
     const nodes = nodesOf(layer);
     expect(nodes).toHaveLength(4);
     // 按色分子 Scope：每个子 Scope nodeDefault 含 fill；不同值 → 不同 fill 串
-    const fills = (layer.children as Array<{ nodeDefault?: { fill?: string } }>).map(c => c.nodeDefault?.fill).filter((f): f is string => f !== undefined);
+    const fills = (layer.children as Array<{ nodeDefault?: { fill?: string } }>)
+      .map(c => c.nodeDefault?.fill)
+      .filter((f): f is string => f !== undefined);
     expect(fills.length).toBeGreaterThan(1);
     expect(new Set(fills).size).toBeGreaterThan(1);
   });
@@ -198,17 +223,32 @@ describe('rect 值 → color', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { reference: 'd', model: [{ name: 'rk', type: 'categorical' }, { name: 'ck', type: 'categorical' }, { name: 'v', type: 'continuous' }] },
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'rk', type: 'categorical' },
+          { name: 'ck', type: 'categorical' },
+          { name: 'v', type: 'continuous' },
+        ],
+      },
       coordinate: { type: 'cartesian2D', x: 'rk', y: 'ck' },
       scales: [
         { type: 'band', name: 'rk' },
         { type: 'band', name: 'ck' },
         { type: 'sequential', name: 'heat', domain: [0, 9] },
       ],
-      marks: [{ type: 'interval', encoding: { x: { field: 'rk' }, y: { field: 'ck' }, color: { field: 'v', scale: 'heat' } }, bounds: { x: { kind: 'band' }, y: { kind: 'band' } } }],
+      marks: [
+        {
+          type: 'interval',
+          encoding: { x: { field: 'rk' }, y: { field: 'ck' }, color: { field: 'v', scale: 'heat' } },
+          bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
+        },
+      ],
     });
     const layer = firstLayer(spec, { d: rows }, cartOpts);
-    const colorScopes = (layer.children as Array<{ type?: string; children?: Array<unknown> }>).filter(c => c.type === 'scope');
+    const colorScopes = (layer.children as Array<{ type?: string; children?: Array<unknown> }>).filter(
+      c => c.type === 'scope',
+    );
     // 3 个不同值（1 / 5 / 9）→ 3 个分色子 Scope；v=5 的两格在同一 Scope（2 子节点）
     expect(colorScopes).toHaveLength(3);
     const sizes = colorScopes.map(s => s.children?.length ?? 0).sort();
@@ -267,7 +307,13 @@ describe('rect fail-loud', () => {
         { type: 'band', name: 'rk' },
         { type: 'linear', name: 'ck' },
       ],
-      marks: [{ type: 'interval', encoding: { x: { field: 'rk' }, y: { field: 'ck' } }, bounds: { x: { kind: 'band' }, y: { kind: 'band' } } }],
+      marks: [
+        {
+          type: 'interval',
+          encoding: { x: { field: 'rk' }, y: { field: 'ck' } },
+          bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
+        },
+      ],
     });
     expect(() => expandOf(spec, { d: [{ rk: 'r0', ck: 3 }] }, cartOpts)).not.toThrow();
   });
@@ -294,7 +340,13 @@ describe('rect fail-loud', () => {
       data: { reference: 'd' },
       coordinate: { type: 'cartesian1D', x: 'rk' },
       scales: [{ type: 'band', name: 'rk' }],
-      marks: [{ type: 'interval', encoding: { x: { field: 'rk' }, y: { field: 'ck' } }, bounds: { x: { kind: 'band' }, y: { kind: 'band' } } }],
+      marks: [
+        {
+          type: 'interval',
+          encoding: { x: { field: 'rk' }, y: { field: 'ck' } },
+          bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
+        },
+      ],
     });
     expect(() => expandOf(spec, { d: [{ rk: 'r0', ck: 'c0' }] }, cartOpts)).toThrow(/cartesian1D|not supported|rect/i);
   });
@@ -310,7 +362,13 @@ describe('rect fail-loud', () => {
         { type: 'linear', name: 'b' },
         { type: 'linear', name: 'c' },
       ],
-      marks: [{ type: 'interval', encoding: { x: { field: 'rk' }, y: { field: 'ck' } }, bounds: { x: { kind: 'band' }, y: { kind: 'band' } } }],
+      marks: [
+        {
+          type: 'interval',
+          encoding: { x: { field: 'rk' }, y: { field: 'ck' } },
+          bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
+        },
+      ],
     });
     expect(() => expandOf(spec, { d: [{ rk: 'r0', ck: 'c0' }] }, cartOpts)).toThrow(/ternary2D|requires|z/i);
   });
@@ -329,12 +387,25 @@ describe('rect + interval 共存', () => {
         { type: 'band', name: 'ck' },
       ],
       marks: [
-        { type: 'interval', encoding: { x: { field: 'rk' }, y: { field: 'ck' } }, bounds: { x: { kind: 'band' }, y: { kind: 'band' } } },
+        {
+          type: 'interval',
+          encoding: { x: { field: 'rk' }, y: { field: 'ck' } },
+          bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
+        },
         // interval（柱）：x band（rk）、y 连续读 v；同 plot 双 mark 各自 cell 算法
         { type: 'interval', encoding: { x: { field: 'rk' }, y: { field: 'v' } } },
       ],
     });
-    const expanded = expandOf(spec, { d: [{ rk: 'r0', ck: 'c0', v: 3 }, { rk: 'r1', ck: 'c1', v: 6 }] }, cartOpts);
+    const expanded = expandOf(
+      spec,
+      {
+        d: [
+          { rk: 'r0', ck: 'c0', v: 3 },
+          { rk: 'r1', ck: 'c1', v: 6 },
+        ],
+      },
+      cartOpts,
+    );
     // 两个图层各产物互不串扰
     const rectLayer = expanded.children[0] as IRScope;
     const intervalLayer = expanded.children[1] as IRScope;

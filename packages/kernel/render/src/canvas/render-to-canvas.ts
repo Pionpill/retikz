@@ -1,7 +1,9 @@
 import type { Scene } from '@retikz/core';
+
+import type { RenderOptions } from './types';
+
 import { drawScene } from './draw-scene';
 import { createCssColorNormalizer, sceneFitMatrix } from './shared';
-import type { RenderOptions } from './types';
 
 const getDevicePixelRatio = (options: RenderOptions): number => {
   if (options.devicePixelRatio !== undefined) {
@@ -47,11 +49,7 @@ const normalizeCssColorViaCanvas = createCssColorNormalizer(() =>
 );
 
 /** 将 Scene 渲染到 HTMLCanvasElement */
-export const renderToCanvas = (
-  canvas: HTMLCanvasElement,
-  scene: Scene,
-  options: RenderOptions = {},
-): void => {
+export const renderToCanvas = (canvas: HTMLCanvasElement, scene: Scene, options: RenderOptions = {}): void => {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('renderToCanvas: unable to acquire 2d canvas context.');
 
@@ -73,7 +71,14 @@ export const renderToCanvas = (
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
-  ctx.setTransform(...sceneFitMatrix(scene.layout, canvas.width / devicePixelRatio, canvas.height / devicePixelRatio, devicePixelRatio));
+  ctx.setTransform(
+    ...sceneFitMatrix(
+      scene.layout,
+      canvas.width / devicePixelRatio,
+      canvas.height / devicePixelRatio,
+      devicePixelRatio,
+    ),
+  );
   drawScene(ctx, scene, {
     ...options,
     defaultFontFamily: options.defaultFontFamily ?? getCanvasDefaultFontFamily(canvas),

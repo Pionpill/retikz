@@ -2,7 +2,10 @@
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { type HydrationContext, Layout, Node } from '../src';
+
+import type { HydrationContext } from '../src';
+
+import { Layout, Node } from '../src';
 
 /**
  * 水合：SVG 模式事件绑定（端到端）
@@ -55,7 +58,16 @@ describe('SVG 水合', () => {
     await act(() => {
       root.render(
         <Layout renderer="svg" width={200} height={200}>
-          <Node id="a" position={[0, 0]} fill="red" minimumSize={2} meta={{ series: 'sales', i: 3 }} onClick={(_event, received) => { context = received; }} />
+          <Node
+            id="a"
+            position={[0, 0]}
+            fill="red"
+            minimumSize={2}
+            meta={{ series: 'sales', i: 3 }}
+            onClick={(_event, received) => {
+              context = received;
+            }}
+          />
         </Layout>,
       );
     });

@@ -1,7 +1,8 @@
 import type { CompileOptions } from '@mdx-js/mdx';
-import { compileSync, runSync } from '@mdx-js/mdx';
 import type { MDXComponents, MDXContent as MDXContentType } from 'mdx/types';
 import type { ComponentPropsWithoutRef, FC } from 'react';
+
+import { compileSync, runSync } from '@mdx-js/mdx';
 import { useMemo } from 'react';
 import * as jsxDevRuntime from 'react/jsx-dev-runtime';
 import * as jsxRuntime from 'react/jsx-runtime';

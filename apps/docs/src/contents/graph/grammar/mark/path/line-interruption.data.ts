@@ -1,0 +1,18 @@
+export const interruptedArea: Array<Record<string, number | string | null>> = [
+  { year: 2016, name: 'Arvid', amount: 11 },
+  { year: 2017, name: 'Arvid', amount: 11 },
+  { year: 2018, name: 'Arvid', amount: 8 },
+  { year: 2019, name: 'Arvid', amount: 13 },
+  { year: 2020, name: 'Arvid', amount: 12 },
+  { year: 2021, name: 'Arvid', amount: 14 },
+  { year: 2022, name: 'Arvid', amount: 4 },
+  { year: 2023, name: 'Arvid', amount: 12 },
+  { year: 2016, name: 'Yasin', amount: 10 },
+  { year: 2017, name: 'Yasin', amount: 10 },
+  { year: 2018, name: 'Yasin', amount: 8 },
+  { year: 2019, name: 'Yasin', amount: null },
+  { year: 2020, name: 'Yasin', amount: 8 },
+  { year: 2021, name: 'Yasin', amount: 6 },
+  { year: 2022, name: 'Yasin', amount: 4 },
+  { year: 2023, name: 'Yasin', amount: 8 },
+];

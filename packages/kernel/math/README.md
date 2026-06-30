@@ -20,7 +20,13 @@ import { point, intersect, triangle, convexHull } from '@retikz/math';
 point.cross([1, 0], [0, 1]); // 1
 intersect.lineLine([0, 0], [2, 2], [0, 2], [2, 0]); // [1, 1]
 triangle.circumcircle([0, 0], [4, 0], [0, 3]); // { center: [2, 1.5], radius: 2.5 }
-convexHull([[0, 0], [4, 0], [4, 4], [0, 4], [2, 2]]); // 4 corners, CCW
+convexHull([
+  [0, 0],
+  [4, 0],
+  [4, 4],
+  [0, 4],
+  [2, 2],
+]); // 4 corners, CCW
 ```
 
 All functions are pure and side-effect-free; degenerate inputs return `null` (`triangle.*`) or `[]` (intersections) rather than throwing. Epsilon is naive (`DEFAULT_EPSILON = 1e-9`), tuned for drawing-scale coordinates.

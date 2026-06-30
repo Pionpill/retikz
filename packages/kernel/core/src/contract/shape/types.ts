@@ -1,9 +1,10 @@
 import type { z } from 'zod';
+
 import type { Position } from '../../geometry/point';
 import type { Rect } from '../../geometry/rect';
+import type { PaintValue, ScenePrimitive } from '../../primitive';
 import type { BlendModeValue, DropShadow } from '../../schemas/effects';
 import type { IRJsonObject } from '../../schemas/json';
-import type { PaintValue, ScenePrimitive } from '../../primitive';
 
 /**
  * emit 需要的视觉样式子集
@@ -77,19 +78,9 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
    * @description 可选——目前仅 rectangle / ellipse 实现；未实现的 shape（polygon / sector / arc / star）收到 `{ side, t }` 时编译期（resolveEdgePoint）抛明确错。
    *   与 `anchor` 同坐标语义：收**带 rotate 的 Rect**，自行用 worldToLocal/localToWorld 处理旋转。
    */
-  edgePoint?: (
-    rect: Rect,
-    side: 'north' | 'south' | 'east' | 'west',
-    t: number,
-    params: TParams,
-  ) => Position;
+  edgePoint?: (rect: Rect, side: 'north' | 'south' | 'east' | 'west', t: number, params: TParams) => Position;
   /** 视觉 primitive，**轴对齐空间**（rotate 由编译器外层 GroupPrim 统一施加）；params 喂参数化几何。 */
-  emit: (
-    rect: Rect,
-    style: ShapeStyle,
-    round: (n: number) => number,
-    params: TParams,
-  ) => Iterable<ScenePrimitive>;
+  emit: (rect: Rect, style: ShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>;
   /**
    * node scale 作用于 params 的方式（可选）。
    * @description 给定原始 params 与水平 / 垂直缩放因子 `sx` / `sy`，返回缩放后的 params。

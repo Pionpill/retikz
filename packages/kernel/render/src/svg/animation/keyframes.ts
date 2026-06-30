@@ -3,23 +3,22 @@
  * @description `trigger:'load'` 的 track 编进 CSS（SSR 零 JS 自播）；交互 track 出 WAAPI 描述挂 data 属性。
  *   transform 通道各包一层 `<g>`（避免同元素多个 transform 动画在 CSS 上冲突，且天然支持支点 transform-origin）。
  */
-import { AnimationProperty, type IRAnimationTrack, type Scene, type ScenePrimitive } from '@retikz/core';
-import type { SvgAttrs, SvgNode, SvgStyle } from '../types';
+import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
+
+import { AnimationProperty } from '@retikz/core';
+
 import type { EasingRegistry } from '../../animation/types';
+import type { SvgAttrs, SvgNode, SvgStyle } from '../types';
+import type { ExpandedTrack } from './shared';
+import type { WaapiDescriptor } from './waapi';
+
 import { classifyProperty, isAutoplayTrigger, primHasStroke, resolveTransformOrigin } from '../../animation/channels';
 import { evaluateTrack } from '../../animation/evaluate';
-import { type WaapiDescriptor, buildWaapiDescriptor } from './waapi';
-import {
-  type ExpandedTrack,
-  easingToCss,
-  expandTrack,
-  iterationsToCss,
-  transformValue,
-} from './shared';
+import { easingToCss, expandTrack, iterationsToCss, transformValue } from './shared';
+import { buildWaapiDescriptor } from './waapi';
 
 /** load 触发（缺省即 load）→ 走 CSS 自播；其余 → WAAPI 描述 */
-const isLoadTrigger = (track: IRAnimationTrack): boolean =>
-  track.trigger === undefined || track.trigger === 'load';
+const isLoadTrigger = (track: IRAnimationTrack): boolean => track.trigger === undefined || track.trigger === 'load';
 
 /** 百分比保留至多 4 位小数（offset 升序、确定性） */
 const pct = (offset: number): string => `${Math.round(offset * 1e6) / 1e4}%`;
@@ -64,8 +63,7 @@ const expandCameraTrack = (track: IRAnimationTrack, layout: Scene['layout']): Ex
 };
 
 /** 合并 class 属性（保留既有） */
-const mergeClass = (existing: string | undefined, added: string): string =>
-  existing ? `${existing} ${added}` : added;
+const mergeClass = (existing: string | undefined, added: string): string => (existing ? `${existing} ${added}` : added);
 
 /** 给 SvgNode 叠加属性（过滤 undefined） */
 const addAttrs = (node: SvgNode, attrs: SvgAttrs): SvgNode => {
@@ -111,7 +109,12 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
    * @description wrapper `<g>` 没有 `data-retikz-id`，给它打 `data-retikz-animation-owner=<被包元素 id>`（id 存在时），
    *   让 `context.animation` per-id 控制经此双查到承载真动画的 wrapper（否则带 transform 的节点 restart 失效）。
    */
-  const wrapTransform = (current: SvgNode, expanded: ExpandedTrack, track: IRAnimationTrack, ownerId: string | undefined): SvgNode => {
+  const wrapTransform = (
+    current: SvgNode,
+    expanded: ExpandedTrack,
+    track: IRAnimationTrack,
+    ownerId: string | undefined,
+  ): SvgNode => {
     const owner: SvgAttrs = ownerId !== undefined ? { 'data-retikz-animation-owner': ownerId } : {};
     if (isLoadTrigger(track)) {
       const kf = nextName('k');
@@ -252,7 +255,12 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
       if (classifyProperty(track.property) !== 'transform') continue;
       const result = evaluateTrack(track, snapshotAt, { easings: options.easings });
       if (!result) continue;
-      current = { tag: 'g', attrs: {}, style: snapshotTransformStyle(track, Number(result.value), prim), children: [current] };
+      current = {
+        tag: 'g',
+        attrs: {},
+        style: snapshotTransformStyle(track, Number(result.value), prim),
+        children: [current],
+      };
     }
     return current;
   };

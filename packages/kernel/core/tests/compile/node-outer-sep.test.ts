@@ -5,13 +5,15 @@
  *   edgePoint / label 附着点恒走视觉 shape、不外扩。缺省 0 → 零 margin 行为同改前。
  */
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
-import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';
+
 import type { NodeLayout } from '../../src/compile/node';
+import type { ScenePrimitive, TextPrim } from '../../src/primitive';
+import type { IR } from '../../src/schemas';
+
+import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';
+import { compileToScene } from '../../src/compile/compile';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import { NodeSchema } from '../../src/schemas';
-import type { IR } from '../../src/schemas';
-import type { ScenePrimitive, TextPrim } from '../../src/primitive';
 import { line, move } from '../helpers/path-command-factory';
 
 /** 最简 rectangle NodeLayout（rect 40×30、半轴 20×15、中心原点），margin 可调 */

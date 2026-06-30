@@ -1,7 +1,4 @@
-import { Parser } from 'acorn';
-// acorn-jsx 没有 ESM 类型；用 default import + 运行时签名足够
-import jsx from 'acorn-jsx';
-import { type FC, type ReactElement, type ReactNode, createElement } from 'react';
+import type { FC, ReactElement, ReactNode } from 'react';
 
 import {
   Arc,
@@ -22,6 +19,10 @@ import {
   Step,
   Text,
 } from '@retikz/react';
+import { Parser } from 'acorn';
+// acorn-jsx 没有 ESM 类型；用 default import + 运行时签名足够
+import jsx from 'acorn-jsx';
+import { createElement } from 'react';
 
 const JsxParser = Parser.extend(jsx());
 
@@ -33,7 +34,7 @@ const JsxParser = Parser.extend(jsx());
 const COMPONENT_REGISTRY: Record<string, FC<Record<string, unknown>> | undefined> = {
   Layout,
   Node: Node as unknown as FC<Record<string, unknown>>,
-  Path: Path as unknown as FC<Record<string, unknown>>,
+  Path,
   Step: Step as unknown as FC<Record<string, unknown>>,
   Text: Text as unknown as FC<Record<string, unknown>>,
   Coordinate: Coordinate as unknown as FC<Record<string, unknown>>,
@@ -52,9 +53,7 @@ const COMPONENT_REGISTRY: Record<string, FC<Record<string, unknown>> | undefined
 
 const componentNames = Object.keys(COMPONENT_REGISTRY).join(', ');
 
-export type ParseRetikzJsxResult =
-  | { ok: true; element: ReactElement }
-  | { ok: false; error: string };
+export type ParseRetikzJsxResult = { ok: true; element: ReactElement } | { ok: false; error: string };
 
 /** AST 节点用 acorn 自己的运行时形状，类型层面 `any`-shape：只用 .type / .name / .value / .properties 等公开字段 */
 type AstNode = { type: string; [key: string]: unknown };
@@ -152,7 +151,7 @@ const evalLiteralExpression = (node: AstNode, contextName: string): unknown => {
       const argument = node.argument as AstNode;
       // 允许 -1, -0.5, +0.5 等数值字面量前缀
       if ((operator === '-' || operator === '+') && argument.type === 'Literal' && typeof argument.value === 'number') {
-        return operator === '-' ? -(argument.value) : (argument.value);
+        return operator === '-' ? -argument.value : argument.value;
       }
       throw new Error(`不支持的表达式：${operator}${describeNode(argument)}（仅允许字面量与一元 -/+ 数字）`);
     }
@@ -185,7 +184,10 @@ const evalLiteralExpression = (node: AstNode, contextName: string): unknown => {
         let propKey: string;
         if (keyNode.type === 'Identifier') {
           propKey = keyNode.name as string;
-        } else if (keyNode.type === 'Literal' && (typeof keyNode.value === 'string' || typeof keyNode.value === 'number')) {
+        } else if (
+          keyNode.type === 'Literal' &&
+          (typeof keyNode.value === 'string' || typeof keyNode.value === 'number')
+        ) {
           propKey = String(keyNode.value);
         } else {
           throw new Error(`不支持的对象 key 形式：${keyNode.type}`);

@@ -4,8 +4,10 @@
  *   含 id 的 IRPath 经 JSON 序列化往返后语义不变、空串 id 被 `.min(1)` 拒绝并抛明确错误
  */
 import { describe, expect, it } from 'vitest';
-import { PathSchema } from '../../src/schemas/path/path';
+
 import type { IRPath } from '../../src/schemas/path/path';
+
+import { PathSchema } from '../../src/schemas/path/path';
 
 /** 构造带 id 的最简合法 IRPath（两段 step，满足 children.min(2)） */
 const pathWithId = (id: string): IRPath => ({

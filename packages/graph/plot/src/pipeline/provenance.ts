@@ -1,7 +1,9 @@
 import type { IRJsonObject, JsonValue } from '@retikz/core';
+
 import type { DatumIdRegistrar, ProvenanceContext } from '../contract/provenance';
 import type { ExternalRow } from '../schemas';
-import { resolveFieldPath } from '../providers';
+
+import { resolveFieldPath } from '../providers/data';
 
 export type { DatumIdRegistrar, ProvenanceContext } from '../contract/provenance';
 
@@ -19,13 +21,13 @@ export const readSourceIndex = (row: ExternalRow): number | undefined => {
 };
 
 /**
- * 组级源序标记（alpha.12）：改行数 transform（bin / aggregate）给每个输出行打 `row[SOURCE_INDICES]=[...]`
+ * 组级源序标记（alpha.12）：改行数 transform（bin / summarize）给每个输出行打 `row[SOURCE_INDICES]=[...]`
  * @description 聚合 / 分箱产出的一行代表一组源行，故其 provenance 是「源行索引集合」而非单 sourceIndex。
  *   Symbol 键不进 JSON、不被 resolveFieldPath 看见；仅在源行已 tagSourceIndex（provenance 开）时由 transform 填充。
  */
 export const SOURCE_INDICES = Symbol('retikz.plot.sourceIndices');
 
-/** 读一行的组级源序标记（未打标记 → undefined）；bin / aggregate 输出行的组级 provenance */
+/** 读一行的组级源序标记（未打标记 → undefined）；bin / summarize 输出行的组级 provenance */
 export const readSourceIndices = (row: ExternalRow): Array<number> | undefined => {
   const value: unknown = Reflect.get(row, SOURCE_INDICES);
   return Array.isArray(value) && value.every((v): v is number => typeof v === 'number') ? value : undefined;
@@ -68,7 +70,8 @@ const PLOT_SOURCE = 'plot';
 
 /** 把 series / datum 值收成 JsonValue（标量直用，其余 String() 兜底，保 meta JSON-safe） */
 const toJsonValue = (value: unknown): JsonValue => {
-  if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value;
+  if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
+    return value;
   return String(value);
 };
 
@@ -119,7 +122,7 @@ export const datumMeta = (
     markIndex,
     transformedIndex,
   };
-  // 改行数 transform（bin / aggregate）产出的 datum 代表一组源行 → 组级 sourceIndices（数组）；否则单 sourceIndex
+  // 改行数 transform（bin / summarize）产出的 datum 代表一组源行 → 组级 sourceIndices（数组）；否则单 sourceIndex
   if (sourceIndices !== undefined && sourceIndices.length > 0) meta.sourceIndices = [...sourceIndices];
   else if (sourceIndex !== undefined) meta.sourceIndex = sourceIndex;
   if (series !== undefined) meta.series = toJsonValue(series);
@@ -127,7 +130,11 @@ export const datumMeta = (
 };
 
 /** mark 图层 scope.id：用户给 mark.id → `<plotId>.<markId>`；缺省 → `<plotId>.mark.<markIndex>`（plotId 缺 → undefined） */
-export const markLayerId = (plotId: string | undefined, markId: string | undefined, markIndex: number): string | undefined => {
+export const markLayerId = (
+  plotId: string | undefined,
+  markId: string | undefined,
+  markIndex: number,
+): string | undefined => {
   if (plotId === undefined) return undefined;
   return markId !== undefined ? `${plotId}.${markId}` : `${plotId}.mark.${markIndex}`;
 };
@@ -141,15 +148,21 @@ export const createDatumIdRegistrar = (datumIdField: string, plotId: string): Da
   return (row: ExternalRow): string => {
     const raw = resolveFieldPath(row, datumIdField);
     if (raw === undefined) {
-      throw new Error(`lowerPlots: datumIdField "${datumIdField}" missing on a row; every row must carry the id field (cannot synthesize a stable anchor)`);
+      throw new Error(
+        `lowerPlots: datumIdField "${datumIdField}" missing on a row; every row must carry the id field (cannot synthesize a stable anchor)`,
+      );
     }
     const id = `${plotId}.datum.${slug(raw)}`;
     const prior = seenIds.get(id);
     if (prior !== undefined && prior !== raw) {
-      throw new Error(`lowerPlots: datumIdField "${datumIdField}" values "${String(prior)}" and "${String(raw)}" collide to the same datum id "${id}"; anchors must be unique`);
+      throw new Error(
+        `lowerPlots: datumIdField "${datumIdField}" values "${String(prior)}" and "${String(raw)}" collide to the same datum id "${id}"; anchors must be unique`,
+      );
     }
     if (seenIds.has(id)) {
-      throw new Error(`lowerPlots: duplicate datumIdField "${datumIdField}" value "${String(raw)}" → duplicate datum id "${id}"; anchors must be unique`);
+      throw new Error(
+        `lowerPlots: duplicate datumIdField "${datumIdField}" value "${String(raw)}" → duplicate datum id "${id}"; anchors must be unique`,
+      );
     }
     seenIds.set(id, raw);
     return id;

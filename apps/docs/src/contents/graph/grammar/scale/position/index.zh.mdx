@@ -1,0 +1,106 @@
+---
+title: 位置比例尺
+description: 位置比例尺把数据值映射成坐标 / 长度 / 半径——数值轴（linear / log / sqrt / pow / symlog / radial）、时间轴（time）、分类轴（band / point）。
+---
+
+位置比例尺把数据值映射成画布上的**坐标 / 长度 / 半径**：`x` / `y`（polar 下对应 `angle` / `radius`）的位置，以及 `size` 通道的半径。按输入字段，位置 scale 分三类——连续数值、时间、分类。`<Plot>` 按字段测量类型自动选，常见图表不用手写。
+
+## 位置 scale 类型
+
+| 类型     | 用于                  | 说明                                                    |
+| -------- | --------------------- | ------------------------------------------------------- |
+| `linear` | 连续数值              | 等距线性映射（默认）                                    |
+| `log`    | 跨数量级的正数        | 对数映射；仅 point / line                               |
+| `sqrt`   | 面积感知              | 平方根映射；仅 point / line（`size` 通道默认用它）      |
+| `pow`    | 自定义幂              | 幂映射（需 `exponent`，写完整 spec 用）                 |
+| `symlog` | 跨零 / 含负的宽幅数据 | 对称对数：近零线性、尾部对数；仅 point / line           |
+| `radial` | 极坐标 / 玫瑰图半径   | 径向：输出半径使面积正比于值；可作 interval / area 值轴 |
+| `time`   | 时间字段              | 连续时间映射；刻度落人类可读时间边界                    |
+| `band`   | 分类（柱状）          | 每个类别占等宽一格，图元落格中央并可铺满格宽            |
+| `point`  | 分类（折线 / 散点）   | 每个类别落一个等距点，无格宽                            |
+
+## 线性 vs 对数
+
+数据跨多个数量级时，线性轴把小值全压在底部。换成对数轴（`<Scale dimension="y" type="log" />`），每个数量级占等高，小值也看得清。两张图喂的是同一份逐年用户量。
+
+<ComponentPreview name="scale-linear-log" sourceFiles={['scale-continuous.data.ts']} />
+
+<p className="text-sm text-muted-foreground">
+  左：缺省 linear，前几年贴底；右：仅加 <code>{'<Scale dimension="y" type="log" />'}</code>，跨度铺开。
+</p>
+
+## 平方根
+
+`<Scale dimension="y" type="sqrt" />` 按平方根映射，弱化大值的视觉夸张；它也是 `size` 通道（散点半径）的默认 scale，让半径的**面积**正比于数据。
+
+<ComponentPreview name="scale-sqrt" sourceFiles={['scale-continuous.data.ts']} />
+
+## 只作用 point / line
+
+`log` / `pow` / `sqrt` 只能用在散点和折线上。柱状图、面积图从 0 基线起算，而 0 在对数 / 幂轴上没有定义——给柱 / 面积配非线性 scale 会直接报错，提示改用 point / line。
+
+<ComponentAlert
+  type="warn"
+  title="非线性 scale 的取值范围"
+  description="log 要求数据全为正、sqrt 要求非负；越界的值无法投影。显式写了含非法边界的 domain 会在编译期报错。"
+/>
+
+## 对称对数
+
+`log` 不能处理零和负值，但盈亏、温差、增长率这类数据常常跨零又跨数量级。`<Scale dimension="y" type="symlog" />` 用**对称对数**——近零是一段线性区、两侧尾部才转对数，所以零和负值都有定义。线性区宽度由 `constant` 调（缺省 `1`，调大让更多中段保持线性）。和 `log` / `sqrt` / `pow` 一样，`symlog` 是非线性 scale，只作用 point / line。
+
+<ComponentPreview name="scale-symlog" sourceFiles={['scale-symlog.data.ts']} />
+
+<p className="text-sm text-muted-foreground">
+  同一份跨零的逐月净现金流。左：缺省 linear，近零的几个月全贴在 0 线；右：换{' '}
+  <code>{'<Scale dimension="y" type="symlog" />'}</code>，铺开可读。
+</p>
+
+## 径向
+
+`radial` 把值映射成半径，且让**扇形 / 圆环的面积**（而非半径长度）正比于值——这正是极坐标玫瑰图（南丁格尔图）的编码方式。它是开方型映射，但与 `sqrt` 不同：`radial` 从 0 基线起算、专作半径值轴，因此**允许**配 interval / path closure（玫瑰图扇区或闭合面积），而 `sqrt` 不可。
+
+<ComponentPreview name="scale-radial" sourceFiles={['scale-radial.data.ts']} />
+
+<p className="text-sm text-muted-foreground">
+  极坐标 + <code>IntervalMark</code> 画出每季一扇区，径向走 radial：扇区面积正比于降水量。
+</p>
+
+## 时间轴
+
+时间字段（`temporal`）的位置通道默认走 `time`。它本质是连续映射，但刻度不取等距数值，而是落在**人类可读的时间边界**（月初、季度、整点……），标签也按时间格式化，而不是把日期当裸数字。把字段在 model 里声明为 `temporal`，x 就自动走 time scale，无需手写 `<Scale>`。
+
+<ComponentPreview name="scale-time" sourceFiles={['scale-time.data.ts']} />
+
+<p className="text-sm text-muted-foreground">
+  date 声明为 temporal → x 自动走 time；刻度落季度边界，标签按时间格式化。
+</p>
+
+日期值可以喂 ISO 字符串（如 `'2024-01-01'`）或时间戳；time scale 负责把它们解析成时间轴上的位置。日期字段的解析格式细节见[数据处理](/graph/grammar/data/processing)。时间也是连续量，把 `color` 绑时间字段会派生连续色带 `sequential`，见[颜色比例尺](/graph/grammar/scale/color)。
+
+## 分类轴：band 与 point
+
+分类字段（`categorical`）没有连续的数值序，位置 scale 要做的是把有限个类别**等分到位置**上。默认 `band`（柱状），折线 / 散点用 `point`。
+
+| 类型    | 摆放                                         | 用于               |
+| ------- | -------------------------------------------- | ------------------ |
+| `band`  | 每个类别占等宽一格，图元落格中央并可铺满格宽 | 柱状图（默认）     |
+| `point` | 每个类别落一个等距点，无格宽                 | 分类折线、分类散点 |
+
+声明字段为 `categorical` 后，位置通道默认走 `band`：每个类别等分一格，柱落在格中央。
+
+<ComponentPreview name="scale-band" sourceFiles={['scale-band.data.ts']} />
+
+<p className="text-sm text-muted-foreground">segment 声明为 categorical → x 自动走 band；五个套餐档等宽分格。</p>
+
+折线 / 散点要的是点而非格——类别之间没有「宽度」，显式换 `point` 让每个类别落一个等距点：
+
+```tsx
+<Plot data={rows} model={[{ name: 'segment', type: 'categorical' }]}>
+  <PathMark x="segment" y="revenue" order="segment" />
+  <Scale dimension="x" type="point" />
+  <Axis dimension="x" />
+</Plot>
+```
+
+把分类字段绑 `color` 走的是 `ordinal` 离散着色，见[颜色比例尺](/graph/grammar/scale/color)。

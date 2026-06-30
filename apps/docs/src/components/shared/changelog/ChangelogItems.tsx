@@ -1,8 +1,9 @@
 import type { ComponentPropsWithoutRef, FC } from 'react';
 
-import { InlineMdx } from '@/components/shared/mdx-content';
-import type { Lang } from '@/i18n';
 import type { ChangeItem } from '@/data/changelog.types';
+import type { Lang } from '@/i18n';
+
+import { InlineMdx } from '@/components/shared/mdx-content';
 import { cn } from '@/lib/utils';
 
 /** label 与 content 的分隔 */
@@ -29,21 +30,16 @@ export const ChangelogItems: FC<ChangelogItemsProps> = ({ items, lang }) => (
       const blockContent = hasBlockContent(content);
       return (
         <li key={i} className={cn('leading-relaxed', blockContent && 'space-y-1.5')}>
-          <span className="font-medium">{item.label[lang]}{SEP[lang]}</span>
+          <span className="font-medium">
+            {item.label[lang]}
+            {SEP[lang]}
+          </span>
           {blockContent ? (
-            <InlineMdx
-              source={content}
-              className="text-foreground/85"
-              components={contentComponents}
-            />
+            <InlineMdx source={content} className="text-foreground/85" components={contentComponents} />
           ) : (
             <>
               {' '}
-              <InlineMdx
-                source={content}
-                className="inline text-foreground/85"
-                components={contentComponents}
-              />
+              <InlineMdx source={content} className="inline text-foreground/85" components={contentComponents} />
             </>
           )}
           {item.children?.length ? <ChangelogItems items={item.children} lang={lang} /> : null}

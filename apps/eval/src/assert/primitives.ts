@@ -19,4 +19,4 @@ export const flattenPrimitives = (scene: Scene): Array<Primitive> => {
 export const allText = (scene: Scene): Array<string> =>
   flattenPrimitives(scene)
     .filter((p): p is Extract<Primitive, { type: 'text' }> => p.type === 'text')
-    .flatMap((p) => p.lines.map((l) => l.text));
+    .flatMap(p => p.lines.map(l => l.text));

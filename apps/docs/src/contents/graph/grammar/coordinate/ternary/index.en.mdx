@@ -1,0 +1,26 @@
+---
+title: Ternary Coordinates
+description: ternary2D normalizes x / y / z continuous components and projects them into an equilateral triangle for compositions and three-way trade-offs.
+---
+
+`coordinate="ternary2D"` projects three components satisfying `x + y + z = constant` into an equilateral triangle. Each vertex represents one component at 100%; the closer a point is to a vertex, the larger that component's share is.
+
+## Field Binding
+
+Ternary coordinates bind three channels: `x` / `y` / `z`; the number of supplied position channels maps directly to coordinate dimensions. Each row is normalized automatically, so you can feed any positive triple directly, such as sand 60, silt 30, clay 10. Negative values or a sum of zero fail loudly.
+
+<ComponentPreview name="coordinate-ternary" sourceFiles={['coordinate-ternary.data.ts']} />
+
+## Axes And Dimensions
+
+Add `<Axis dimension="x" />` / `"y"` / `"z"` to draw tick axes along the three edges; all three together form the full triangle outline. Ternary coordinates this round are `<PointMark>`-first, for scatter points inside the triangle.
+
+<ComponentAlert
+  type="tip"
+  title="Guide dimensions must match the coordinate"
+  description="Each coordinate system accepts only its own dimensions: cartesian uses x / y, polar uses x / y (x is angular, y is radial), ternary uses x / y / z. A wrong dimension, such as <Axis dimension='angle'>, fails loudly instead of silently drawing an empty axis."
+/>
+
+## Good Fits
+
+Ternary coordinates fit data where three parts share a fixed total and trade off against each other: soil composition, three-way vote shares, or recipe ratios. They are not ordinary 3D data: `x` / `y` / `z` are not independent spatial axes, but components of one position inside a triangle.

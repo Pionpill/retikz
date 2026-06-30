@@ -1,8 +1,19 @@
-import { type CSSProperties, type FC, type MutableRefObject, type Ref, useEffect, useReducer, useRef } from 'react';
 import type { Scene } from '@retikz/core';
-import { type PrimAnimationResolution, hitTest, renderToCanvas } from '@retikz/render/canvas';
+import type { AnimationControls, IdClockRegistry } from '@retikz/render/animation';
+import type { PrimAnimationResolution } from '@retikz/render/canvas';
 import type { AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/canvas';
 import type { BuildContext, HydrationHandlers } from '@retikz/render/hydration';
+import type { CSSProperties, FC, MutableRefObject, Ref } from 'react';
+
+import {
+  createClock,
+  createIdClockRegistry,
+  prefersReducedMotion,
+  sceneAnimationDurationMs,
+  sceneHasAnimations,
+  sceneHasAutoplayTrigger,
+} from '@retikz/render/animation';
+import { hitTest, renderToCanvas } from '@retikz/render/canvas';
 import {
   collectCanvasVisibleAnimationIds,
   createCanvasIdAnimationControls,
@@ -12,7 +23,7 @@ import {
   metaOf,
   withCanvasAnimationEventHandlers,
 } from '@retikz/render/hydration';
-import { type AnimationControls, type IdClockRegistry, createClock, createIdClockRegistry, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations, sceneHasAutoplayTrigger } from '@retikz/render/animation';
+import { useEffect, useReducer, useRef } from 'react';
 
 /** 按 href 缓存的图片加载态（image paint server 用；跨 CanvasHost 实例共享去重） */
 type ImageEntry = { img: HTMLImageElement; loaded: boolean; failed: boolean; waiters: Set<() => void> };
@@ -128,7 +139,19 @@ const clientToScene = (
 
 /** React canvas 宿主：管理 `<canvas>` 与全量重绘 effect */
 export const CanvasHost: FC<CanvasHostProps> = props => {
-  const { scene, handlers, width, height, className, style, animate: animateProp, snapshotAt, animationRef, easings, animationProperties } = props;
+  const {
+    scene,
+    handlers,
+    width,
+    height,
+    className,
+    style,
+    animate: animateProp,
+    snapshotAt,
+    animationRef,
+    easings,
+    animationProperties,
+  } = props;
   const animate = animateProp !== false;
   const ref = useRef<HTMLCanvasElement>(null);
   // rAF 时钟句柄：render effect 写、hydration effect 的 context.animation 读 live，update 后自动跟随
@@ -202,7 +225,8 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     }
     const clock = createClock({
       durationMs: sceneAnimationDurationMs(scene),
-      onFrame: time => renderToCanvas(canvas, scene, { ...baseOptions, time, resolvePrimAnimation: id => resolvePrim(id, time) }),
+      onFrame: time =>
+        renderToCanvas(canvas, scene, { ...baseOptions, time, resolvePrimAnimation: id => resolvePrim(id, time) }),
     });
     clockRef.current = clock;
     assignRef(animationRef, clock); // 命令式句柄出口

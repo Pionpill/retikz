@@ -1,5 +1,7 @@
+import type { FC } from 'react';
+
 import { Menu } from 'lucide-react';
-import { type FC, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router';
 

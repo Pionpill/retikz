@@ -1,24 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { compileToScene } from '../../src/compile/compile';
+
+import type { EllipsePrim, PathPrim, RectPrim, TextPrim } from '../../src/primitive';
 import type { IR } from '../../src/schemas';
-import type {
-  EllipsePrim,
-  PathPrim,
-  RectPrim,
-  TextPrim,
-} from '../../src/primitive';
-import { line, move } from '../helpers/path-command-factory';
+
+import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
+import { line, move } from '../helpers/path-command-factory';
 
 const findRect = (ir: IR): RectPrim | undefined =>
-  flattenPrims(compileToScene(ir).primitives).find(
-    (p): p is RectPrim => p.type === 'rect',
-  );
+  flattenPrims(compileToScene(ir).primitives).find((p): p is RectPrim => p.type === 'rect');
 
 const findEllipse = (ir: IR): EllipsePrim | undefined =>
-  flattenPrims(compileToScene(ir).primitives).find(
-    (p): p is EllipsePrim => p.type === 'ellipse',
-  );
+  flattenPrims(compileToScene(ir).primitives).find((p): p is EllipsePrim => p.type === 'ellipse');
 
 const findShapePath = (ir: IR): PathPrim | undefined =>
   flattenPrims(compileToScene(ir).primitives).find(
@@ -146,9 +139,7 @@ describe('Node 描边样式 (alpha.2)', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [
-        { type: 'node', position: [0, 0], dashed: true, dotted: true },
-      ],
+      children: [{ type: 'node', position: [0, 0], dashed: true, dotted: true }],
     };
     expect(findRect(ir)?.dashPattern).toEqual([4, 2]);
   });
@@ -289,9 +280,7 @@ describe('Node 缩放 (alpha.2)', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [
-        { type: 'node', position: [0, 0], xScale: 3, yScale: 1 },
-      ],
+      children: [{ type: 'node', position: [0, 0], xScale: 3, yScale: 1 }],
     };
     const r = findRect(ir)!;
     // 默认 16x16；xScale=3 → 宽 48，高 16
@@ -303,9 +292,7 @@ describe('Node 缩放 (alpha.2)', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [
-        { type: 'node', position: [0, 0], scale: 2, xScale: 4 },
-      ],
+      children: [{ type: 'node', position: [0, 0], scale: 2, xScale: 4 }],
     };
     const r = findRect(ir)!;
     // xScale=4 覆盖 scale=2 影响 X；Y 仍走 scale=2

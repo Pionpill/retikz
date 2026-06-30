@@ -1,4 +1,5 @@
 import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
+
 import type { Position } from '../../geometry/point';
 
 const DEG_TO_RAD = Math.PI / 180;
@@ -103,14 +104,8 @@ export const sectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
   } else {
     centroidRadius = (2 / 3) * (Math.sin(half) / half) * ((R * R * R - r * r * r) / areaDenom);
   }
-  const centroidLocal: Position = [
-    Math.cos(midRad) * centroidRadius,
-    Math.sin(midRad) * centroidRadius,
-  ];
-  const centroidOffset: Position = [
-    centroidLocal[0] - aabbCenter[0],
-    centroidLocal[1] - aabbCenter[1],
-  ];
+  const centroidLocal: Position = [Math.cos(midRad) * centroidRadius, Math.sin(midRad) * centroidRadius];
+  const centroidOffset: Position = [centroidLocal[0] - aabbCenter[0], centroidLocal[1] - aabbCenter[1]];
   const boundaryOriginRadius = innerRadius > 0 ? (innerRadius + outerRadius) / 2 : centroidRadius;
   const boundaryOriginLocal: Position = [
     Math.cos(midRad) * boundaryOriginRadius,
@@ -131,5 +126,4 @@ export const sectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
 };
 
 /** sector 局部系点（圆心为原点）：极角(度) + 半径 → 直角坐标 */
-export const sectorPolarPoint = (radius: number, angleDeg: number): Position =>
-  arcEndPoint([0, 0], radius, angleDeg);
+export const sectorPolarPoint = (radius: number, angleDeg: number): Position => arcEndPoint([0, 0], radius, angleDeg);
