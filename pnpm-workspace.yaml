@@ -23,6 +23,7 @@ catalog:
   '@types/react': ~18.2
   '@types/react-dom': ~18.2
   '@types/react-syntax-highlighter': ^15.5.13
+  '@vitest/coverage-v8': ^4.1.5
   '@vitejs/plugin-react': ^6.0.1
   ai: ^6.0.204
   class-variance-authority: 0.7.1

@@ -187,6 +187,8 @@ pnpm --filter @retikz/docs lint     # ESLint
 
 注：apps/docs 不发布产物，可以用 `tsc -b`，不会触发根 AGENTS.md 中"`tsc` 污染源码树"的问题（那条针对 `packages/*`）。
 
+覆盖率：apps/docs 当前不按 coverage 结果做特殊补测或提交门槛。docs 覆盖率口径需要单独设计（页面内容、运行时 MDX、demo、数据注册与 UI 交互应分开评估），后续有明确方案后再调整本规则。
+
 docs 改动按类型验证，不要把纯文案改动一律升级成完整类型检查：
 
 | 改动类型                                             | 最小验证                                                         |
