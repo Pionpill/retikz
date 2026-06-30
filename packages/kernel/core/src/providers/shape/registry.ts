@@ -1,9 +1,9 @@
 import type { ShapeDefinition } from '../../contract/shape';
 import type { BuiltinShapeValue } from '../../schemas/node';
 
-import { contour } from '../../contract/shape';
 import { defineBuiltinProviderArray, resolveProviderRegistry } from '../registry';
 import { arc } from './arc';
+import { contour } from './contour';
 import { ellipse } from './ellipse';
 import { polygon } from './polygon';
 import { rectangle } from './rectangle';
