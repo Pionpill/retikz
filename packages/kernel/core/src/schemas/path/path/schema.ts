@@ -47,7 +47,7 @@ export const PathScaleSchema = z
 /**
  * 路径中段标记 schema（首批仅箭头）
  * @description `kind:'arrow'` 判别符 + 复用 ArrowEndDetail 视觉子集（shape / scale / length / width / color / fill / opacity / lineWidth）；
- *   方向由该处路径切线决定，shape 是已注册箭头名（不是 `->` 方向记号）。后续可扩展更多 mark kind。
+ *   方向由该处路径切线决定，shape 是已注册箭头名（不是 `->` 方向记号）。
  */
 export const ArrowMarkSchema = ArrowEndDetailSchema.extend({
   kind: z

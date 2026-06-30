@@ -41,7 +41,7 @@ export const axisPlacementKeyOf = (guide: AxisGuide, roleOf: AxisRoleOf = dimens
 
 /**
  * 校验同一定位 role + placement key 只声明一根 axis。
- * @description ADR-03 允许同一 role 放在不同 side / edge；完全相同 placement key 才视为重复。
+ * @description 同一 role 可放在不同 side / edge；完全相同 placement key 才视为重复。
  */
 export const assertUniqueAxisPlacement = (
   guides: ReadonlyArray<AxisGuide>,

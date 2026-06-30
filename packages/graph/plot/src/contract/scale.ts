@@ -11,7 +11,7 @@ export type TickSet = { values: Array<ScalarValue>; labels: Array<string> };
  * 归一化位置 scale：连续 / band / point 对 projector & guide 暴露同一形态
  * @description 把「band 起点 vs 中心」「bandwidth 是否为 0」「类别 vs 数值刻度」收进一层；
  *   下游（projector / guide / bar）只认 coordinate + bandwidth + ticks，不各自分支 scale 类型。
- *   连续走 bandwidth=0 + coordinate=scale(value)，逐字守住 alpha.1/alpha.2 投影与刻度。
+ *   连续 scale 使用 bandwidth=0 + coordinate=scale(value)，与 band / point scale 对齐到同一接口。
  */
 export type PositionScale = {
   /** 数据值 → 坐标（连续=scale(value)；band=band 中心；point=点位）；非法值返回 NaN，调用方据此跳过 */

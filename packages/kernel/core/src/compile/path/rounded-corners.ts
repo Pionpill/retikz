@@ -4,7 +4,7 @@ import type { PathCommand } from '../../primitive';
 import { contourCommands, filletContour } from '../../geometry/contour';
 
 /**
- * 折线几何圆角：把 path 内部「line step ↔ line step」接缝倒成切圆弧（ADR-01 `roundedCorners`）。
+ * 折线几何圆角：把 path 内部「line step ↔ line step」接缝倒成切圆弧。
  *
  * 只动 line step 产出的 line 命令构成的连续 run；fold（一个 step 产两段直线但接缝须保持尖）/ curve / cubic /
  * arc / rectangle / generator 等接缝一律保持尖角——故需逐命令的 provenance（来自哪个 step kind）判定。
@@ -17,8 +17,8 @@ export type CommandProvenance = string;
 
 /**
  * ContourCommand → PathCommand（圆角后只可能是 move / line / arc / close 子集）
- * @description 坐标 / 半径走 Scene precision round（与 emitLine / emitArc 同口径）——使 clamp 到段长上界（r=1000
- *   → 二分逼近 ~5.000001）与显式可行半径（r=5 直接命中 5）round 后逐字一致（spec clamp 测试硬契约）。
+ * @description 坐标 / 半径走 Scene precision round（与 emitLine / emitArc 同口径），让超大半径 clamp
+ *   与显式可行半径在 round 后稳定一致。
  */
 const contourToPathCommand = (c: ContourCommand, round: (n: number) => number): PathCommand => {
   if (c.kind === 'move') return { kind: 'move', to: [round(c.to[0]), round(c.to[1])] };
@@ -71,7 +71,7 @@ const runSegments = (run: LineRun): Array<ContourSegment> => {
 /**
  * 对一条 path 的 commands 施加 line-line 接缝几何圆角
  * @description provenance 与 commands 一一对应、给出每条命令的来源 step kind。返回新 commands（≥2 段 line run 才倒，
- *   无合格 run 时原样返回 — 与未设 roundedCorners 行为逐字一致）。radius ≤ 0 由调用方提前短路。
+ *   无合格 run 时原样返回）。radius ≤ 0 由调用方提前短路。
  */
 export const applyRoundedCorners = (
   commands: Array<PathCommand>,
@@ -249,7 +249,7 @@ const samplePiece = (piece: Piece, u: number): CommandSample => {
 
 /**
  * 沿（倒角后）commands 按总弧长在 pos∈[0,1] 处采样点 + 切线（mark / label 弧长重定位用）
- * @description 倒角缩短了路径总弧长并改变接缝几何 → 同一 pos 落点 / 切线与尖角不同（ADR-01「影响 marks 归一化参数」）。
+ * @description 倒角缩短了路径总弧长并改变接缝几何 → 同一 pos 落点 / 切线与尖角不同。
  *   无可行片段（退化）时回退 { [0,0], [1,0] }。
  */
 export const sampleRoundedCommands = (commands: ReadonlyArray<PathCommand>, pos: number): CommandSample => {

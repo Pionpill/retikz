@@ -187,7 +187,7 @@ export const resolveRadialScale = (
   return scale;
 };
 
-/** 连续 scale → PositionScale（bandwidth=0；只接受有限数值，守 alpha.1 跳过语义） */
+/** 连续 scale → PositionScale（bandwidth=0；只接受有限数值，非法值返回 NaN 供下游跳过） */
 export const linearPositionScale = (scale: D3ScaleLinear<number, number>): PositionScale => ({
   coordinate: value => (isFiniteNumber(value) ? scale(value) : NaN),
   domain: () => {

@@ -2,7 +2,7 @@ import type { ValueOf } from '@retikz/core';
 
 /**
  * transform 类型关键字（暴露给用户；裸 `'sort'` / `'stack'` 同样可用）
- * @description 数据变换 operation 的判别字段，成员里写 z.literal(PlotTransform.x)；后续加 filter / window…
+ * @description 数据变换 operation 的判别字段，成员里写 z.literal(PlotTransform.x)。
  */
 export const PlotTransform = {
   /** 按字段排序 */

@@ -31,12 +31,12 @@ const DEFAULT_HEIGHT = 300;
 /**
  * 解析结果：逻辑地址在 scene 里的落点 + 来源 meta +（若已绑）可连接 id
  * @description position 与 lowering 摆放一致（共享 datumAnchor）；meta 即便 lowering 未开 datumProvenance 也按需合成；
- *   id 仅在 ADR-01 给该元素绑了具名 id（datumIdField 命中）时回填，否则省略。
+ *   id 仅在 datumIdField 命中且已给该元素绑了具名 id 时回填，否则省略。
  */
 export type ResolvedAnchor = {
   /** 该 datum / series 的锚点屏幕位置（user units，与 lowering 摆放一致） */
   position: [number, number];
-  /** 来源 meta（与 ADR-01 per-datum meta 同构；series 携带 {source,dataReference,mark,markIndex,series}） */
+  /** 来源 meta（与 per-datum meta 同构；series 携带 {source,dataReference,mark,markIndex,series}） */
   meta: IRJsonObject;
   /** 若给该元素绑了具名 id（datumIdField 命中），回填；否则省略 */
   id?: string;
@@ -44,7 +44,7 @@ export type ResolvedAnchor = {
 
 /**
  * plot locator：对一份 spec + 数据 + 渲染选项的确定性正向解析器（纯函数、无副作用、不进 IR）
- * @description 命中预演：把逻辑地址映射到 scene 落点 + 来源 meta，与实际渲染逐点一致（复用 ADR-01 resolveFrame + datumAnchor）。
+ * @description 命中预演：把逻辑地址映射到 scene 落点 + 来源 meta，与实际渲染逐点一致（复用 resolveFrame + datumAnchor）。
  */
 export type PlotFacetLocatorOptions = {
   id: string;
@@ -170,7 +170,7 @@ const resolveMarkRows = (
 };
 
 /**
- * 用与 lowerPlots 同一份 spec + datasets + options 建 locator（复用 ADR-01 resolveFrame，投影单一真源）
+ * 用与 lowerPlots 同一份 spec + datasets + options 建 locator（复用 resolveFrame，投影单一真源）
  * @description 行构造与 expandPlot 一致：先 tagSourceIndex（克隆、不污染入参）供 sourceIndex 回指，再 applyTransforms；
  *   frame 走同一 resolveFrame。locator 纯函数：不产 IR、不注册 core 元素、不改 spec / datasets。
  *   datumIdField 设时在构建期跑 plot 级 registrar（与 lowering 同序、同查重）→ 同 spec+options 下 locator-build 抛 iff lowering 抛（#3）。
@@ -195,7 +195,7 @@ export const createPlotLocator = (
     return empty;
   }
 
-  // 与 expandPlot 共用 prepareRows（fieldMaps 校验 + 类型解析 + 归一化），保证 render 抛错 ⟺ locator 抛错（评审 P2 parity）。
+  // 与 expandPlot 共用 prepareRows（fieldMaps 校验 + 类型解析 + 归一化），保证 render 抛错 ⟺ locator 抛错。
   // tagSourceIndex（clone，不动入参）→ prepareRows → applyTransforms，与 lowering 完全同序，否则 locator 落点漂移。
   const ingested = tagSourceIndex(dataset);
   const { fieldTypes, normalized, transformRegistry, transformContext, scaleRegistry } = prepareRows(

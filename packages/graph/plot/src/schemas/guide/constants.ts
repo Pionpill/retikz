@@ -2,7 +2,7 @@
 
 /**
  * guide 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'axis'` 同样可用）
- * @description grammar-of-graphics 的 guide 是 scale 的可视化身（坐标轴 / 图例…）；alpha.2 仅 axis，后续加 legend / reference line
+ * @description grammar-of-graphics 的 guide 是 scale 的可视化身（坐标轴 / 图例等）。
  */
 export const PlotGuide = {
   /** 坐标轴：轴线 + 刻度 + 刻度标签，可选对齐网格 */

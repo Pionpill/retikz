@@ -18,8 +18,8 @@ const DEG_TO_RAD = Math.PI / 180;
 
 /**
  * lowerGuide 上下文：cartesian 直线 guide 用 plotArea + 两维投影 + ticks；polar 经 `frame` 走弧 / 辐条几何
- * @description cartesian 沿用 alpha.2 形态（projectX/projectY/plotArea/xTicks/yTicks），产物逐字不变；
- *   polar 由 `frame`（ADR-01 的 PolarCoordinateFrame）驱动：圆心 / 内外半径 / 起止角 + primary(angle)/secondary(radius) 投影。
+ * @description cartesian 使用 projectX/projectY/plotArea/xTicks/yTicks；
+ *   polar 由 `frame` 驱动：圆心 / 内外半径 / 起止角 + primary(angle)/secondary(radius) 投影。
  *   存在 `frame.type === polar2D` 即走极坐标分支，guide 与 mark 同帧严格对齐。
  */
 export type GuideContext = {
@@ -33,7 +33,7 @@ export type GuideContext = {
   xTicks: TickSet;
   /** y 轴刻度集（cartesian 用） */
   yTicks: TickSet;
-  /** label 字号（与 ADR-03 估算同源） */
+  /** label 字号（与 layout 估算同源） */
   fontSize: number;
   /** axis title / composition label 与 axis 的固定间距；省略时复用默认 axis label gap。 */
   labelGap?: number;
@@ -127,7 +127,7 @@ const finitePolarPoint = (center: Position, angleDeg: number, radius: number): P
 
 /**
  * 轴 / 网格 scope 的 id + meta props（provenance 开时合成 `<plotId>.` 前缀 id + layer 来源 meta）
- * @description provenance 关（context undefined）→ 沿用 alpha.2 行为：仅在用户给 guide.id 时绑裸 id、无 meta。
+ * @description provenance 关（context undefined）→ 仅在用户给 guide.id 时绑裸 id、无 meta。
  *   开 → id 走 `<plotId>.<guideId|axis|grid.dim>`（plotId 缺则匿名）、meta 写 {source,layer,dimension}。
  */
 const guideScopeProps = (
@@ -142,7 +142,7 @@ const guideScopeProps = (
   return { ...(id !== undefined ? { id } : {}), meta: guideLayerMeta(layer, guide.dimension) };
 };
 
-/** cartesian guide：直线轴 + 竖 / 横刻度 + grid 跨绘图区直线（alpha.2 几何，逐字保持） */
+/** cartesian guide：直线轴 + 竖 / 横刻度 + grid 跨绘图区直线 */
 const lowerCartesianGuide = (
   guide: AxisGuide,
   ctx: GuideContext,
@@ -570,7 +570,7 @@ const CUSTOM_AXIS_SAMPLES = 40;
  * 自定义坐标系的曲线轴（通用 path-aware 轴）：沿 projectRoles 投影密采样画轴线 + 在 scale 刻度处放刻度 / 标签
  * @description 取该维度的位置 scale 刻度、其余角色锚在各自 scale 首刻度（≈ domain 起点），按 frame.roles 序喂 projectRoles
  *   得轴线（任意曲线）与刻度点；刻度短线 / 标签沿局部切向的法线摆。frame 无 roleScales[dimension] → 不画（返回空）。
- *   通用性即「轴 = 参数路径」：直线 / 拱 / 圆 / 螺旋同一套画法。无网格（自定义网格几何因投影而异，留后续）。
+ *   通用性即「轴 = 参数路径」：直线 / 拱 / 圆 / 螺旋同一套画法。自定义坐标系暂不生成网格。
  */
 export const lowerCustomAxis = (
   frame: CoordinateFrame,
@@ -608,7 +608,7 @@ export const lowerCustomAxis = (
   }
   const axisLinePath = polylinePath(linePoints);
 
-  // 刻度 + 标签：沿局部切向的法线摆。切向优先取工厂回传的解析 frameAlong（ADR-05），缺则邻近采样数值差分回落
+  // 刻度 + 标签：沿局部切向的法线摆。切向优先取工厂回传的解析 frameAlong，缺则邻近采样数值差分回落
   const epsilon = span === 0 ? 1 : span * 1e-3;
   const valuesAt = (value: number): Array<unknown> =>
     frame.roles.map(role => (role === guide.dimension ? value : anchorFor(role)));
@@ -691,7 +691,7 @@ export const lowerGuide = (guide: AxisGuide, ctx: GuideContext, context?: Proven
   return lowerCartesianGuide(guide, ctx, context);
 };
 
-// ── legend（ADR-03）─────────────────────────────────────────────────────
+// ── legend ─────────────────────────────────────────────────────
 
 /** legend swatch 边长（user units）；离散色块 / 形状框 / size 符号格的基准格尺寸 */
 export const LEGEND_SWATCH_SIZE = 14;
