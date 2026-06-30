@@ -56,6 +56,7 @@ define-registry 是 retikz 扩展能力的标准形态。遇到可枚举但应�
 ## JSDoc 备注
 
 - `@description` 说明当前 API 做什么；`@remarks` 说明为什么这样设计、当前限制和未来扩展点。
+- `XxxDefinition` / context / option object 的整体 JSDoc 不枚举字段含义；能写到字段上的说明必须下沉到字段 JSDoc。整体 JSDoc 只写类型定位、生命周期、跨字段规则、函数 / 回调协议和无法归属到单个字段的约束。
 - 对 `?:` 可省略字段，如果代码会在缺省时使用默认值或默认行为，字段 JSDoc 必须写 `@default`，明确实际默认值或默认语义。
 - 当 `defineXxx()` helper 目前只是 typed identity（入参和返回值同为 `XxxDefinition`，不做运行时加工），用 `@remarks` 说明它保留稳定入口是为了对齐其它 registry API，并为未来运行时校验、默认值归一或泛型收敛预留空间。
 - 不要把这种设计备注写成 `@todo`；`@todo` 会暗示当前实现缺失，而 typed identity helper 可能是有意保留的 contract hook。

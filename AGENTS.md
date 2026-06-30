@@ -172,6 +172,7 @@ Control: human-directed
 - 函数优先箭头形式，例外是确实需要 hoisting / class 方法
 - enum 用 const object enum：`as const` 对象 + `ValueOf` 派生类型；value object 用单数 PascalCase，例如 `export const CompassAnchor = {...} as const`，成员 key 用大驼峰；派生类型加 `Value` 后缀避免 ESLint `no-redeclare`，例如 `export type CompassAnchorValue = ValueOf<typeof CompassAnchor>`；schema 枚举字段用 `z.enum(X)`（不用已弃用的 `z.nativeEnum`）；判别 union 成员用 `z.literal(X.Member)`
 - 不写无意义注释；注释 / JSDoc / 测试标题 / zod `.describe(...)` 不引用 ADR / 历史阶段
+- 类型 / interface / 对象字面量的 JSDoc 不要在整体说明里枚举属性含义；能写在属性上的说明必须下沉到属性 JSDoc。只有函数签名、回调协议、互斥组合等无法附着到单个属性上的规则，才放在整体 `@description` / `@remarks`
 
 React 组件：
 
