@@ -2,7 +2,7 @@ import type { IRAnimationTrack } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import { evaluateTrack } from '../src/animation/evaluate';
+import { evaluateTrack } from '../../src/animation/evaluate';
 
 /**
  * ADR-03 共享插值引擎 evaluateTrack：数值 / 颜色 oklch / viewBox 分量插值；delay / iteration / direction / fill；

@@ -3,7 +3,7 @@ import type { Scene } from '@retikz/core';
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { hitTest } from '../src/canvas';
+import { hitTest } from '../../src/canvas';
 
 /**
  * hitTest 兜底 2D context 复用：未传 context2d 时，跨多次调用只懒建一个离屏 canvas，

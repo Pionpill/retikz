@@ -2,8 +2,8 @@ import type { GroupPrim, PathPrim, RectPrim, Scene } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import { renderToSvgString } from '../src/svg';
-import { buildPrim } from '../src/svg/builders/prim';
+import { renderToSvgString } from '../../src/svg';
+import { buildPrim } from '../../src/svg/builders/prim';
 
 /**
  * meta provenance 对 SVG renderer 不可见：图元带 meta 与不带 meta 产出逐字节一致

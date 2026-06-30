@@ -3,7 +3,7 @@ import type { Scene } from '@retikz/core';
 
 import { describe, expect, it, vi } from 'vitest';
 
-import type { HydrationContext, HydrationHandlers } from '../src/hydration';
+import type { HydrationContext, HydrationHandlers } from '../../src/hydration';
 
 import {
   createClockAnimationControls,
@@ -14,7 +14,7 @@ import {
   locateSvg,
   metaOf,
   resolveSvgElement,
-} from '../src/hydration';
+} from '../../src/hydration';
 
 /**
  * ADR-06 水合 runtime 上下文：按 id 聚合的语义元素 context + per-id owner 动画控制

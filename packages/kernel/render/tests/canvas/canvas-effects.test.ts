@@ -3,8 +3,8 @@ import type { ArrowEndSpec, PathPrim, RectPrim, Scene } from '@retikz/core';
 import { createCanvas } from '@napi-rs/canvas';
 import { describe, expect, it } from 'vitest';
 
-import { drawScene } from '../src/canvas/draw-scene';
-import { renderToSvgString } from '../src/svg/serialize/to-string';
+import { drawScene } from '../../src/canvas/draw-scene';
+import { renderToSvgString } from '../../src/svg/serialize/to-string';
 
 /** 最小可绘制的端点箭头规格（验证箭头随主路径一起进 shadow / blend 状态绘制） */
 const arrowEndSpec: ArrowEndSpec = {

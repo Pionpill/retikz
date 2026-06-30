@@ -2,7 +2,7 @@ import type { PathCommand } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildPathD } from '../src/svg';
+import { buildPathD } from '../../src/svg';
 
 describe('buildPathD arc encoding', () => {
   it('splits a full counter-clockwise arc into two SVG arc commands', () => {

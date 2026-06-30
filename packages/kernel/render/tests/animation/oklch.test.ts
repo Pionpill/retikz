@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { lerpColorOklch, sampleColorOklch } from '../src/animation/oklch';
+import { lerpColorOklch, sampleColorOklch } from '../../src/animation/oklch';
 
 /**
  * oklch 颜色插值（fill / stroke 动画核心数学）锁定测试：

@@ -2,10 +2,10 @@ import type { GroupPrim, PathPrim, RectPrim, Scene } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import type { SvgNode } from '../src/svg/types';
+import type { SvgNode } from '../../src/svg/types';
 
-import { buildSvgFragment } from '../src/svg/builders/document';
-import { buildPrim } from '../src/svg/builders/prim';
+import { buildSvgFragment } from '../../src/svg/builders/document';
+import { buildPrim } from '../../src/svg/builders/prim';
 
 /**
  * ADR-01 水合：SVG renderer 从 ScenePrimitive.id emit data-retikz-id attribute

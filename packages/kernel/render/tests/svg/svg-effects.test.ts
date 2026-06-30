@@ -2,7 +2,7 @@ import type { ArrowEndSpec, EllipsePrim, PathPrim, RectPrim, Scene } from '@reti
 
 import { describe, expect, it } from 'vitest';
 
-import { renderToSvgString } from '../src/svg/serialize/to-string';
+import { renderToSvgString } from '../../src/svg/serialize/to-string';
 
 /** 最小可渲染的端点箭头规格（用于断言箭头与主路径同元素受效果牵连） */
 const arrowEndSpec: ArrowEndSpec = {

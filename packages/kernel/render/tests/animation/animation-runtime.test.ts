@@ -8,7 +8,7 @@ import {
   sceneAnimationDurationMs,
   sceneHasAnimations,
   sceneHasAutoplayTrigger,
-} from '../src/animation/runtime';
+} from '../../src/animation/runtime';
 
 /**
  * animation/runtime 纯逻辑锁定测试：scene 动画存在性 / 自动播放判定 / 总时长聚合（递归 group + 根镜头），

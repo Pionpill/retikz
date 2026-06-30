@@ -2,7 +2,7 @@ import type { ClipShape } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import { applyClip } from '../src/canvas/path-geometry';
+import { applyClip } from '../../src/canvas/path-geometry';
 
 type Call = { name: string; args: Array<unknown> };
 

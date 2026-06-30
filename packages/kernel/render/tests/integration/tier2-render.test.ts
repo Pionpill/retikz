@@ -4,8 +4,8 @@ import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/co
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { drawScene } from '../src/canvas';
-import { renderToSvgString } from '../src/svg';
+import { drawScene } from '../../src/canvas';
+import { renderToSvgString } from '../../src/svg';
 
 /**
  * Tier 2 composite —— renderer 对照（render 零源码改动）

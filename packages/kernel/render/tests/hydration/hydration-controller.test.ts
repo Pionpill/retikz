@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
 
-import type { HydrationHandlers } from '../src/hydration';
+import type { HydrationHandlers } from '../../src/hydration';
 
-import { createHydrationController, locateSvg } from '../src/hydration';
+import { createHydrationController, locateSvg } from '../../src/hydration';
 
 /**
  * ADR-01 水合：renderer 无关控制器（根级委托 + enter/leave 合成 + dispose）

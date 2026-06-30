@@ -2,7 +2,7 @@ import type { Scene } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import { hitTest } from '../src/canvas';
+import { hitTest } from '../../src/canvas';
 
 /**
  * ADR-01 水合：Canvas hitTest（逆 z-order + fill/stroke 区分 + group 祖先 id）

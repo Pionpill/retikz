@@ -3,14 +3,14 @@ import type { Scene } from '@retikz/core';
 
 import { describe, expect, it, vi } from 'vitest';
 
-import type { HydrationContext, HydrationHandlers } from '../src/hydration';
+import type { HydrationContext, HydrationHandlers } from '../../src/hydration';
 
 import {
   collectCanvasAnimationEventTriggers,
   collectCanvasVisibleAnimationIds,
   isCanvasAnimationIdVisible,
   withCanvasAnimationEventHandlers,
-} from '../src/hydration';
+} from '../../src/hydration';
 
 const scene: Scene = {
   layout: { x: 0, y: 0, width: 100, height: 100 },

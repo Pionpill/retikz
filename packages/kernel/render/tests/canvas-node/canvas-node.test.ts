@@ -82,7 +82,7 @@ const scene: Scene = {
 
 describe('renderSceneToImage', () => {
   it('renders a Scene into an encoded Node canvas image buffer', async () => {
-    const { renderSceneToImage } = await import('../src/canvas-node');
+    const { renderSceneToImage } = await import('../../src/canvas-node');
 
     const buffer = await renderSceneToImage(scene, {
       width: 200,
@@ -103,7 +103,7 @@ describe('renderSceneToImage', () => {
   });
 
   it('validates output dimensions before loading the optional peer', async () => {
-    const { renderSceneToImage } = await import('../src/canvas-node');
+    const { renderSceneToImage } = await import('../../src/canvas-node');
 
     await expect(renderSceneToImage(scene, { width: 0, height: 100 })).rejects.toThrow(
       /width must be a positive finite number/,

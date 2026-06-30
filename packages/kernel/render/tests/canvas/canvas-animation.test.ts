@@ -2,10 +2,10 @@ import type { IRAnimationTrack, PathPrim, RectPrim, Scene, ScenePrimitive } from
 
 import { describe, expect, it, vi } from 'vitest';
 
-import type { AnimationPropertyDefinition } from '../src/animation/registry';
+import type { AnimationPropertyDefinition } from '../../src/animation/registry';
 
-import { createIdClockRegistry } from '../src/animation';
-import { drawScene } from '../src/canvas';
+import { createIdClockRegistry } from '../../src/animation';
+import { drawScene } from '../../src/canvas';
 
 /**
  * ADR-03 Canvas 动画播放：drawScene({time}) 逐帧应用 opacity/transform/pathDraw/自定义；无 time = 现状；

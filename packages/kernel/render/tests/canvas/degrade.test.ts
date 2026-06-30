@@ -4,7 +4,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 
-import { drawScene } from '../src/canvas';
+import { drawScene } from '../../src/canvas';
 
 type CanvasCall = {
   name: string;

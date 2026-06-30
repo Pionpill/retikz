@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { sceneFitMatrix } from '../src/canvas/shared';
-import { parseHexColor } from '../src/shared/color';
-import { gradientLineFromAngle } from '../src/shared/gradient';
-import { commandEndpoint } from '../src/shared/path-command';
+import { sceneFitMatrix } from '../../src/canvas/shared';
+import { parseHexColor } from '../../src/shared/color';
+import { gradientLineFromAngle } from '../../src/shared/gradient';
+import { commandEndpoint } from '../../src/shared/path-command';
 
 /**
  * 后端无关 / canvas 族共享纯函数锁定测试：渐变线端点（SVG+Canvas 共用）、meet-fit 适配矩阵（canvas+canvas-node 共用）。
