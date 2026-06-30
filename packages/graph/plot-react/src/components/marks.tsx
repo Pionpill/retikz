@@ -3,11 +3,11 @@ import type {
   BlendModeStyle,
   BlendModeValue,
   Channel,
-  DropShadow,
   ExternalRow,
   IntervalBounds,
   IRArrowDetail,
   IRBoundary,
+  IRDropShadow,
   IRFont,
   IRPaintSpec,
   IRPathScale,
@@ -90,7 +90,7 @@ export type CoreNodeChannelProps = {
   dashPattern?: MarkValueProp<Array<number>> | NodeDashPatternStyle;
   font?: MarkValueProp<IRFont> | NodeFontStyle;
   boundary?: MarkValueProp<IRBoundary> | NodeBoundaryStyle;
-  shadow?: MarkValueProp<ShadowPresetValue | DropShadow> | ShadowStyle;
+  shadow?: MarkValueProp<ShadowPresetValue | IRDropShadow> | ShadowStyle;
   blendMode?: MarkValueProp<BlendModeValue> | BlendModeStyle;
 };
 
@@ -106,7 +106,7 @@ export type CorePathChannelProps = {
   arrow?: MarkValueProp<ArrowValue> | PathArrowStyle;
   dashPattern?: MarkValueProp<Array<number>> | NodeDashPatternStyle;
   arrowDetail?: MarkValueProp<IRArrowDetail> | PathArrowDetailStyle;
-  shadow?: MarkValueProp<ShadowPresetValue | DropShadow> | ShadowStyle;
+  shadow?: MarkValueProp<ShadowPresetValue | IRDropShadow> | ShadowStyle;
   blendMode?: MarkValueProp<BlendModeValue> | BlendModeStyle;
 };
 

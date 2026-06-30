@@ -4,7 +4,7 @@ import type { WebSideValue } from '../../geometry/anchor';
 import type { Position } from '../../geometry/point';
 import type { Rect } from '../../geometry/rect';
 import type { PaintValue, ScenePrimitive } from '../../primitive';
-import type { BlendModeValue, DropShadow } from '../../schemas/effects';
+import type { BlendModeValue, IRDropShadow } from '../../schemas/effects';
 import type { IRJsonObject } from '../../schemas/json';
 
 /**
@@ -57,7 +57,7 @@ export type ShapeStyle = {
    * 投影：解析后对象（compile 已把预设展开 + 显式字段覆盖合并；缺省无投影）
    * @default 无投影
    */
-  shadow?: DropShadow;
+  shadow?: IRDropShadow;
   /**
    * 混合模式：解析后值（compile 透传；缺省 / normal 等价普通 source-over）
    * @default 'normal'

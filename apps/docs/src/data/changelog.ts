@@ -187,8 +187,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'shadow（投影）', en: 'shadow' },
                 content: {
-                  zh: '`IRNode` / `IRPath` 新增 `shadow`：预设字符串（`sm`/`md`/`lg`/`xl`/`2xl`/`none`）或对象 `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }`，显式字段覆盖 preset；编译期经 `resolveShadow` 展开为 canonical `DropShadow`。根自动 layout 纳入阴影外溢，避免被根 viewBox / 画布裁切。',
-                  en: '`IRNode` / `IRPath` gain `shadow`: a preset string (`sm`/`md`/`lg`/`xl`/`2xl`/`none`) or object `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }`, explicit fields overriding the preset; compiled via `resolveShadow` into a canonical `DropShadow`. Root auto-layout now includes the shadow’s overflow so it is not clipped by the root viewBox / canvas.',
+                  zh: '`IRNode` / `IRPath` 新增 `shadow`：预设字符串（`sm`/`md`/`lg`/`xl`/`2xl`/`none`）或对象 `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }`，显式字段覆盖 preset；编译期经 `resolveShadow` 展开为 canonical `IRDropShadow`。根自动 layout 纳入阴影外溢，避免被根 viewBox / 画布裁切。',
+                  en: '`IRNode` / `IRPath` gain `shadow`: a preset string (`sm`/`md`/`lg`/`xl`/`2xl`/`none`) or object `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }`, explicit fields overriding the preset; compiled via `resolveShadow` into a canonical `IRDropShadow`. Root auto-layout now includes the shadow’s overflow so it is not clipped by the root viewBox / canvas.',
                 },
               },
               {
@@ -201,8 +201,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '作用范围 = 图元级', en: 'Scope = element-level' },
                 content: {
-                  zh: '两者均跟随图元主几何 + Path 端点箭头；Node 的文字 / 标签 / 引脚是独立图元，不带效果。新增 `DropShadow` 类型与 `ShadowPreset` / `BlendMode` 常量导出，全部 optional / additive，缺省零回归。',
-                  en: 'Both follow the primitive’s main geometry plus a Path’s endpoint arrows; a Node’s text / label / pin are separate primitives and stay unaffected. Exports a `DropShadow` type and `ShadowPreset` / `BlendMode` constants; all optional / additive with zero regression when omitted.',
+                  zh: '两者均跟随图元主几何 + Path 端点箭头；Node 的文字 / 标签 / 引脚是独立图元，不带效果。新增 `IRDropShadow` 类型与 `ShadowPreset` / `BlendMode` 常量导出，全部 optional / additive，缺省零回归。',
+                  en: 'Both follow the primitive’s main geometry plus a Path’s endpoint arrows; a Node’s text / label / pin are separate primitives and stay unaffected. Exports a `IRDropShadow` type and `ShadowPreset` / `BlendMode` constants; all optional / additive with zero regression when omitted.',
                 },
               },
             ],

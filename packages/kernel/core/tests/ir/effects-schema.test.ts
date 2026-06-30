@@ -56,7 +56,7 @@ describe('[effects] SHADOW_PRESETS 表完整性', () => {
     expect(SHADOW_PRESETS.none).toBeNull();
   });
 
-  it('sm/md/lg/xl/2xl → offsetX=0 的 canonical DropShadow', () => {
+  it('sm/md/lg/xl/2xl → offsetX=0 的 canonical IRDropShadow', () => {
     for (const key of ['sm', 'md', 'lg', 'xl', '2xl'] as const) {
       const s = SHADOW_PRESETS[key];
       expect(s).not.toBeNull();

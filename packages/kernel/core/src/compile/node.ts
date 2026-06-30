@@ -21,7 +21,7 @@ import type {
   NodeLabelPlacementValue,
   NodeLabelPositionValue,
 } from '../schemas';
-import type { BlendModeValue, DropShadow } from '../schemas/effects';
+import type { BlendModeValue, IRDropShadow } from '../schemas/effects';
 import type { CompileWarningCodeValue } from './constant';
 import type { LowerTex } from './lower-tex';
 import type { NameStack } from './name-stack';
@@ -265,7 +265,7 @@ export type NodeLayout = {
    */
   opacity?: number;
   /** 已解析的主形状投影（compile 已展开 preset + 显式覆盖）；仅挂 shape 几何图元，不挂 text */
-  shadow?: DropShadow;
+  shadow?: IRDropShadow;
   /**
    * 主形状混合模式（与下方已绘内容混合）；仅挂 shape 几何图元，不挂 text
    * @default 'normal'

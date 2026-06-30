@@ -191,6 +191,7 @@ Tailwind：
 
 - IR 必须 100% JSON 可序列化，禁止函数 / ReactNode / class 实例
 - zod schema 是单一真源，TS 类型用 `z.infer`
+- 由 IR schema object 推导出的公开数据类型命名为 `IRXxx`（例如 `IRFont`、`IRPaintSpec`、`IRDropShadow`）；由 const object enum + `ValueOf` 推导出的取值 union 命名为 `XxxValue`（例如 `BlendModeValue`、`ShadowPresetValue`），不加 `IR`；Definition / registry contract 类型按 `XxxDefinition`，也不加 `IR`
 - schema 字段 `.describe(...)` 用英文，描述含义和用途
 - schema `.describe(...)` 面向 LLM / schema registry 准确识别 IR 契约，保持简洁干练；优先说明字段含义、允许值 / custom 扩展、默认值、compile/runtime 边界；避免重复 schema 已表达的约束，避免 SSR / IntersectionObserver / WAAPI / hydration / 具体 renderer 策略等场景化或后端实现细节，除非该细节本身就是字段契约
 - IR schema 文件里的 schema 常量一般不写 JSDoc，schema 说明统一看字段级 / 对象级 zod `.describe(...)`；派生类型、非 schema 常量、函数、类写中文 JSDoc

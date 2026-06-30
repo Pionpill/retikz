@@ -7,7 +7,7 @@ import type { PathKindCompileResult, PathKindDefinition } from '../contract/path
 import type { PatternDefinition } from '../contract/pattern';
 import type { RibbonWidthProfileDefinition } from '../contract/ribbon';
 import type { ShapeDefinition } from '../contract/shape';
-import type { DropShadow, GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
+import type { GroupPrim, IRDropShadow, Scene, ScenePrimitive, Transform } from '../primitive';
 import type { ProviderCollection } from '../providers/registry';
 import type { IR, IRAnimationTrack, IRChild, IRPathBase, IRPosition, IRTransform } from '../schemas';
 import type { CompileWarning } from './constant';
@@ -94,7 +94,7 @@ const coordinateAsLayout = (
 ): NodeLayout => zeroSizeRectAt(id, center, shapes, boundaries);
 
 /** shadow 是视觉效果，不改变锚点 / scope bbox；这里只把它的外溢纳入根自动 layout，避免根 viewBox 裁剪 */
-const shadowOverflowPoints = (points: ReadonlyArray<IRPosition>, shadow: DropShadow | undefined): Array<IRPosition> => {
+const shadowOverflowPoints = (points: ReadonlyArray<IRPosition>, shadow: IRDropShadow | undefined): Array<IRPosition> => {
   if (shadow === undefined || points.length === 0) return [];
 
   let minX = Infinity;
@@ -123,7 +123,7 @@ const shadowOverflowPoints = (points: ReadonlyArray<IRPosition>, shadow: DropSha
   ];
 };
 
-const pushLayoutPoints = (target: Array<IRPosition>, points: ReadonlyArray<IRPosition>, shadow?: DropShadow): void => {
+const pushLayoutPoints = (target: Array<IRPosition>, points: ReadonlyArray<IRPosition>, shadow?: IRDropShadow): void => {
   for (const p of points) target.push(p);
   for (const p of shadowOverflowPoints(points, shadow)) target.push(p);
 };

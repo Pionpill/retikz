@@ -5,7 +5,7 @@ import type { BlendMode, ShadowPreset } from './constants';
 import type { DropShadowSchema } from './schema';
 
 /** 解析后的投影对象类型（compile 已把预设展开 + 显式字段覆盖合并） */
-export type DropShadow = z.infer<typeof DropShadowSchema>;
+export type IRDropShadow = z.infer<typeof DropShadowSchema>;
 
 /** 阴影预设档位值联合 */
 export type ShadowPresetValue = ValueOf<typeof ShadowPreset>;

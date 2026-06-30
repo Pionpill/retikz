@@ -38,6 +38,8 @@ define-registry 是 retikz 扩展能力的标准形态。遇到可枚举但应�
 | `RESERVED_XXX_<KEYS>` / `REMOVED_XXX_<KEYS>` | `providers` 或 `schemas` 中最靠近诊断逻辑的位置 | 保留名和已移除名诊断，后缀必须匹配真实 discriminator。 |
 | `resolveXxxRegistry()` / `xxxDefinitionOf()` / `extractXxxType|Kind|Name()` | `providers/<capability>/registry.ts` | 合并内置和用户 definition、按 key 查询、从 IR 或 option 抽取 key。 |
 | `PlotXxx` / `BuiltinXxx` / `XxxKeyword` | `schemas/<capability>/constants.ts` | schema const object。plot 公共 IR 判别用 `PlotXxx`；core 内置 schema literal 才用 `BuiltinXxx`；语义关键字用 `XxxKeyword`。 |
+| `IRXxx` | `schemas/<capability>/types.ts` | 由 IR schema object 经 `z.infer` 推导出的公开 JSON 数据类型，例如 `IRFont`、`IRPaintSpec`、`IRDropShadow`。 |
+| `XxxValue` | `schemas/<capability>/types.ts` | 由 const object enum 经 `ValueOf` 推导出的取值 union，例如 `BlendModeValue`、`ShadowPresetValue`；不加 `IR`。 |
 | core `<capability>s`、plot `xxxDefinitions` | core `compile/compile.ts`、plot `pipeline/expand.ts` 或相邻 option 定义 | 用户传入自定义 definition 的公开 option。 |
 
 新代码不要用裸 `Xxx` 表示内置 registry；旧版 `Boundary` 这类裸名只能作为反例参考。

@@ -1,5 +1,5 @@
 import type { IRAnimationTrack } from '../schemas/animation';
-import type { BlendModeValue, DropShadow } from '../schemas/effects';
+import type { BlendModeValue, IRDropShadow } from '../schemas/effects';
 import type { IRJsonObject } from '../schemas/json';
 import type { PaintValue } from './paint';
 
@@ -50,7 +50,7 @@ export type RectPrim = {
    */
   opacity?: number;
   /** 投影：解析后对象（preset 已展开 + 显式覆盖合并）；undefined = 无投影 */
-  shadow?: DropShadow;
+  shadow?: IRDropShadow;
   /**
    * 混合模式：解析后值；undefined / normal = 普通 source-over
    * @default 'normal'
