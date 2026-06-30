@@ -19,9 +19,11 @@ describe('ScaleSchema (ADR-03)', () => {
   });
 
   // 边界
-  it('scale_domain_two_tuple_only', () => {
-    expect(() => ScaleSchema.parse({ type: 'linear', name: 'x', domain: [0] })).toThrow();
-    expect(() => ScaleSchema.parse({ type: 'linear', name: 'x', domain: [0, 1, 2] })).toThrow();
+  it.each([
+    ['one value', [0]],
+    ['three values', [0, 1, 2]],
+  ])('scale_domain_two_tuple_only: %s', (_name, domain) => {
+    expect(() => ScaleSchema.parse({ type: 'linear', name: 'x', domain })).toThrow();
   });
 
   it('scale_range_two_tuple_only', () => {
@@ -64,9 +66,8 @@ describe('ScaleSchema log / pow / sqrt (alpha.7 ADR-01)', () => {
   });
 
   // 边界 / 错误路径（注：domain 正性是 lowering 校验，schema 仅校验结构）
-  it('log_base_must_be_gt_one', () => {
-    expect(() => ScaleSchema.parse({ type: 'log', name: 'y', base: 1 })).toThrow();
-    expect(() => ScaleSchema.parse({ type: 'log', name: 'y', base: 0 })).toThrow();
+  it.each([1, 0])('log_base_must_be_gt_one: %s', base => {
+    expect(() => ScaleSchema.parse({ type: 'log', name: 'y', base })).toThrow();
   });
 
   it('log_domain_negative_accepted_by_schema_rejected_at_lowering', () => {
@@ -99,9 +100,8 @@ describe('ScaleSchema symlog / radial', () => {
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
-  it('symlog_constant_must_be_positive', () => {
-    expect(() => ScaleSchema.parse({ type: 'symlog', name: 'y', constant: 0 })).toThrow();
-    expect(() => ScaleSchema.parse({ type: 'symlog', name: 'y', constant: -1 })).toThrow();
+  it.each([0, -1])('symlog_constant_must_be_positive: %s', constant => {
+    expect(() => ScaleSchema.parse({ type: 'symlog', name: 'y', constant })).toThrow();
   });
 
   it('radial_omits_optionals_valid', () => {
@@ -142,14 +142,15 @@ describe('ScaleSchema band / point (ADR-01)', () => {
     expect(ScaleSchema.parse({ type: 'band', name: 'x' })).toEqual({ type: 'band', name: 'x' });
   });
 
-  it('band_padding_out_of_range_rejected', () => {
-    expect(() => ScaleSchema.parse({ type: 'band', name: 'x', paddingInner: 1.5 })).toThrow();
-    expect(() => ScaleSchema.parse({ type: 'band', name: 'x', paddingInner: -0.1 })).toThrow();
+  it.each([1.5, -0.1])('band_padding_out_of_range_rejected: %s', paddingInner => {
+    expect(() => ScaleSchema.parse({ type: 'band', name: 'x', paddingInner })).toThrow();
   });
 
-  it('band_domain_bad_element_rejected', () => {
-    expect(() => ScaleSchema.parse({ type: 'band', name: 'x', domain: [true] })).toThrow();
-    expect(() => ScaleSchema.parse({ type: 'band', name: 'x', domain: [{}] })).toThrow();
+  it.each([
+    ['boolean', [true]],
+    ['object', [{}]],
+  ])('band_domain_bad_element_rejected: %s', (_name, domain) => {
+    expect(() => ScaleSchema.parse({ type: 'band', name: 'x', domain })).toThrow();
   });
 });
 
