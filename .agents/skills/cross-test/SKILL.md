@@ -104,14 +104,14 @@ description: retikz 交叉测试 / 缺陷挖掘技能。用于基于 packages �
 
 ### 4. 运行验证
 
-优先小范围运行：
+优先小范围运行，只针对本轮审计 / 修改涉及的包：
 
 ```bash
 pnpm --filter @retikz/core exec vitest run <test-file>
 pnpm --filter @retikz/react exec vitest run <test-file>
 ```
 
-若测试稳定，再跑对应包：
+若测试稳定，再跑对应包；不要把局部 cross-test 扩大成全仓 lint / test / recursive tsc，除非用户明确要求：
 
 ```bash
 pnpm --filter @retikz/core exec vitest run

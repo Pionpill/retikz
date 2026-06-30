@@ -34,7 +34,7 @@ retikz beta 期 plan TODO 端到端执行的**编排器**。beta 与 alpha / rc 
 
 | # | 阶段 | 子 SKILL | 主体 | 关卡（不过则 halt） |
 |---|---|---|---|---|
-| 1 | 实现 | [`develop-implement`](../develop-implement/SKILL.md) | AI | 全部既有测试绿 + 新加测试绿 + lint / tsc 全过才进 2 |
+| 1 | 实现 | [`develop-implement`](../develop-implement/SKILL.md) | AI | 受影响模块既有测试绿 + 新加测试绿 + lint / tsc 全过才进 2 |
 | 2 | 多 LLM 评估 | （本 SKILL 内联，见下） | AI 调度多 LLM | 全部 LLM 都判"无回归 + 改动确有收益 + breaking 已正确登记到 changelog"才进 3 |
 | 3 | 收尾 | [`develop-wrapup`](../develop-wrapup/SKILL.md)（简化路径） | AI 起草 / **人工**最终 ack | breaking 必写 changelog BREAKING + 迁移路径；visible 视情况写；internal 仅在 commit message 体现 |
 
@@ -73,7 +73,10 @@ beta 允许公开 API 改名 / 重构，但需按破坏范围分档评估深度�
   - 性能优化 → 加 1 个基准 / 复杂度测试
   - bug fix → 必加回归测试（先 fail 后 pass 的 commit pair）
   - 新 helper / 新 export → 加单测覆盖
-- **lint / tsc / 既有测试三全过**才允许进 stage 2
+- **受影响模块 lint / tsc / 既有测试三全过**才允许进 stage 2。命令按根 `AGENTS.md` 限定模块，例如：
+  `pnpm --filter @retikz/<pkg> exec eslint . --fix`、
+  `pnpm --filter @retikz/<pkg> exec tsc --noEmit`、
+  `pnpm --filter @retikz/<pkg> exec vitest run`。
 
 完成标志：working tree 改动完整、所有守门通过、待 commit。
 

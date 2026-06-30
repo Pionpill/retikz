@@ -157,7 +157,7 @@ retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**�
 任何让 IR JSON 化失真的写法都禁止，详见下方 schema 不变量。
 
 任务：让 Spec Writer 写好的所有测试通过。读 ADR + spec test，按 ADR Step 拆分写实现，
-每个 step 一个 commit；每次 commit 前跑 lint + tsc + 全量 vitest，全过才进下一步。
+每个 step 一个 commit；每次 commit 前只跑当前 / 受影响模块的 lint + tsc + vitest，全过才进下一步。
 
 强制约束：
 
@@ -176,10 +176,11 @@ retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**�
 - 不允许 `it.skip` / `xit(` / `describe.skip`。
 - 不允许 lint disable（除非确有不可避情况且同行写明原因）。
 - 一个 ADR Step 一个 commit。commit message 用 `:sparkles: ADR-NN step.X：<简述>` 风格。
-- 每次 commit 前必须跑：
-    pnpm --filter @retikz/<pkg> exec eslint .
+- 每次 commit 前必须只针对当前 / 受影响包跑：
+    pnpm --filter @retikz/<pkg> exec eslint . --fix
     pnpm --filter @retikz/<pkg> exec tsc --noEmit
     pnpm --filter @retikz/<pkg> exec vitest run
+  多个受影响包就逐个显式列出 `--filter`；不要用全仓 lint / test / recursive tsc 代替模块验证。
   任一不过 → halt，不 commit、不进下一步。
 - 不要自行 git push / publish。
 
@@ -200,13 +201,13 @@ retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**�
 
 ## 黄色（轻量 Spec-First 或常规）
 
-ADR Step 数 ≤ 3 + 不动 IR schema：可跳 Spec Writer 直接派实现 Agent，**但仍要写测试**——实现 Agent 边写实现边写测试（每 step 一个 commit，commit 内含实现 + 测试，跑全套验证）。
+ADR Step 数 ≤ 3 + 不动 IR schema：可跳 Spec Writer 直接派实现 Agent，**但仍要写测试**——实现 Agent 边写实现边写测试（每 step 一个 commit，commit 内含实现 + 测试，跑当前 / 受影响模块验证）。
 
 ADR Step 数 ≥ 4：建议仍走 Spec-First，享受"测试先于实现 + 第二只眼睛"的好处。
 
 ## 绿色
 
-直接实现，无 sub-Agent。主 AI 自己改 mdx / 配置 / 注释，每个 commit 跑 lint + tsc 即可（绿色不一定有测试）。
+直接实现，无 sub-Agent。主 AI 自己改 mdx / 配置 / 注释，每个 commit 跑当前 / 受影响模块 lint + tsc 即可（绿色不一定有测试）。
 
 实际流程：直接进 develop-document SKILL（绿色 ADR 主体就是文档）。
 
@@ -229,5 +230,5 @@ ADR Step 数 ≥ 4：建议仍走 Spec-First，享受"测试先于实现 + 第�
 
 - ADR 实现契约段列出的 schema 字段全部进 IR 文件
 - spec 测试 + 实现都进入 git 历史，**测试 commit 在实现 commit 之前**（git log 可见 `:construction:` 早于 `:sparkles:`）
-- lint / tsc / vitest 全过
+- 当前 / 受影响模块 lint / tsc / vitest 全过
 - 实现 Agent 没动 spec 测试文件（git log 可校验）

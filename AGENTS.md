@@ -32,22 +32,30 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件 / JSON IR �
 
 ```bash
 pnpm install
-pnpm lint
+pnpm lint # 全仓 lint，发布 / CI / 明确要求全量验证时使用
 pnpm --filter @retikz/core build
 pnpm dev:docs
 ```
 
-改完代码后必须按受影响 workspace 跑：
+改完代码后默认只按当前 / 受影响 workspace 跑脚本；不要为了日常局部改动直接跑全仓 `pnpm lint` / `pnpm test` / `pnpm -r exec tsc --noEmit`。跨包公共契约、发布前、CI 复现或用户明确要求全量验证时，才扩大到全仓或发布组。
 
 ```bash
 pnpm --filter <pkg> exec eslint . --fix
 pnpm --filter <pkg> exec tsc --noEmit
-pnpm lint
+pnpm --filter <pkg> exec vitest run
+```
+
+多个受影响模块用多条 `--filter` 命令显式列出，例如：
+
+```bash
+pnpm --filter @retikz/core exec tsc --noEmit
+pnpm --filter @retikz/react exec tsc --noEmit
+pnpm --filter @retikz/docs exec tsc --noEmit
 ```
 
 验证按改动类型选择：
 
-- 改 `*.ts` / `*.tsx` / `*.json` / 配置文件等结构化文件：先跑受影响包的 `eslint --fix`，再跑对应 `tsc --noEmit` / 测试。
+- 改 `*.ts` / `*.tsx` / `*.json` / 配置文件等结构化文件：先跑受影响包的 `eslint --fix`，再跑对应包的 `tsc --noEmit` / 测试；测试也用 `pnpm --filter <pkg> exec vitest run [test-file]` 限定在当前模块。
 - 只改纯文档正文（例如 `index.zh.mdx` / `index.en.mdx` 的段落、表格、站内链接，不改 import、demo、data、i18n、sidebar、schema registry）：不强制跑 eslint / tsc；至少跑 `git diff --check`，并验证新增或修改的关键链接 / 页面可访问。
 - 改 docs demo / data / i18n / sidebar / schema registry / MDX import：按 `apps/docs/AGENTS.md` 和 `docs-doc-principle` 的分级规则验证，通常需要 docs 包类型检查。
 

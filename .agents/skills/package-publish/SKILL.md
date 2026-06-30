@@ -180,6 +180,8 @@ pnpm install   # catalog 没变就基本无操作；版本字段变化也无影�
 
 发版守门：任一步报错都停下。
 
+本阶段是发布例外：日常开发按根 `AGENTS.md` 只跑当前 / 受影响模块；发布必须覆盖发布组、docs 和 dry-run，避免 tarball / 版本依赖漏检。
+
 | 步骤 | 命令 / 检查 |
 | --- | --- |
 | lint | `pnpm lint`，warning 也算失败 |
