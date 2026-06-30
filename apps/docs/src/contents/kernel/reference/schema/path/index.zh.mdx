@@ -62,14 +62,14 @@ description: 笔画外壳、step 动作序列与 step 目标点
   }}
 />
 
-<span id="drawablemeta"></span>
+<span id="drawableinstance"></span>
 
-## 可绘制元素元数据
+## 可绘制元素实例字段
 
-`DrawableMetaSchema` 收拢 Path 共享的身份、provenance、动画和栈序字段。`id` / `meta` / `animations` 是实例元数据，不进入 `pathDefault`；`zIndex` 参与同层排序，也不作为默认样式继承。
+`DrawableInstanceSchema` 收拢 Path 共享的身份、provenance、动画和栈序字段。`id` / `meta` / `animations` 是实例元数据，不进入 `pathDefault`；`zIndex` 参与同层排序，也不作为默认样式继承。
 
 <ZodSchema
-  name="DrawableMetaSchema"
+  name="DrawableInstanceSchema"
   description="Path 共享的身份、来源、动画和栈序字段。"
   descriptions={{
     id: '可选稳定 id；供引用和水合事件绑定使用',

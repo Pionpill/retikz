@@ -1,10 +1,10 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type { IRDrawableMeta, IRDrawableSharedStyle, IRDrawableStyle } from '../../src';
+import type { IRDrawableInstance, IRDrawableSharedStyle, IRDrawableStyle } from '../../src';
 
 import {
   ChildSchema,
-  DrawableMetaSchema,
+  DrawableInstanceSchema,
   DrawableStyleSchema,
   GeometryLabelSchema,
   PathSchema,
@@ -40,7 +40,7 @@ const ribbonPath = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('Drawable shared schema', () => {
-  it('accepts shared drawable style and metadata on stroke paths', () => {
+  it('accepts shared drawable style and instance fields on stroke paths', () => {
     const parsed = PathSchema.parse(
       path({
         id: 'edge-a',
@@ -69,7 +69,7 @@ describe('Drawable shared schema', () => {
     });
   });
 
-  it('accepts shared drawable style and metadata on path kind=ribbon', () => {
+  it('accepts shared drawable style and instance fields on path kind=ribbon', () => {
     const parsed = PathSchema.parse(
       ribbonPath({
         id: 'flow-a',
@@ -98,9 +98,9 @@ describe('Drawable shared schema', () => {
     });
   });
 
-  it('keeps shared style type separate from metadata except zIndex', () => {
+  it('keeps shared style type separate from instance fields except zIndex', () => {
     expectTypeOf<IRDrawableSharedStyle>().toMatchTypeOf<IRDrawableStyle>();
-    expectTypeOf<IRDrawableSharedStyle>().toHaveProperty('zIndex').toEqualTypeOf<IRDrawableMeta['zIndex']>();
+    expectTypeOf<IRDrawableSharedStyle>().toHaveProperty('zIndex').toEqualTypeOf<IRDrawableInstance['zIndex']>();
     expectTypeOf<IRDrawableSharedStyle>().not.toHaveProperty('id');
     expectTypeOf<IRDrawableSharedStyle>().not.toHaveProperty('meta');
     expectTypeOf<IRDrawableSharedStyle>().not.toHaveProperty('animations');
@@ -135,12 +135,12 @@ describe('Drawable shared schema', () => {
     }
   });
 
-  it('keeps metadata out of the drawable style helper schema', () => {
+  it('keeps instance fields out of the drawable style helper schema', () => {
     expect(DrawableStyleSchema.safeParse({ id: 'x' }).success).toBe(false);
     expect(DrawableStyleSchema.safeParse({ meta: { x: 1 } }).success).toBe(false);
     expect(DrawableStyleSchema.safeParse({ animations: [] }).success).toBe(false);
     expect(DrawableStyleSchema.safeParse({ zIndex: 1 }).success).toBe(false);
-    expect(DrawableMetaSchema.safeParse({ zIndex: 1, meta: { ok: true } }).success).toBe(true);
+    expect(DrawableInstanceSchema.safeParse({ zIndex: 1, meta: { ok: true } }).success).toBe(true);
   });
 
   it('rejects private ribbon label fields', () => {

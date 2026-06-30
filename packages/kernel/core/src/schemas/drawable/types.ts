@@ -1,9 +1,9 @@
 import type { z } from 'zod';
 
-import type { DrawableMetaSchema, DrawableStyleSchema } from './schema';
+import type { DrawableInstanceSchema, DrawableStyleSchema } from './schema';
 
 export type IRDrawableStyle = z.infer<typeof DrawableStyleSchema>;
 
-export type IRDrawableMeta = z.infer<typeof DrawableMetaSchema>;
+export type IRDrawableInstance = z.infer<typeof DrawableInstanceSchema>;
 
-export type IRDrawableSharedStyle = IRDrawableStyle & Pick<IRDrawableMeta, 'zIndex'>;
+export type IRDrawableSharedStyle = IRDrawableStyle & Pick<IRDrawableInstance, 'zIndex'>;

@@ -54,7 +54,7 @@ export const DrawableStyleSchema = z
   .strict()
   .describe('Shared geometry style fields for path-like drawable elements.');
 
-export const DrawableMetaSchema = z
+export const DrawableInstanceSchema = z
   .object({
     id: z
       .string()
@@ -81,4 +81,4 @@ export const DrawableMetaSchema = z
       ),
   })
   .strict()
-  .describe('Shared identity, provenance, animation, and stacking metadata for drawable elements.');
+  .describe('Shared instance-level identity, provenance, animation, and stacking fields for drawable elements.');

@@ -139,8 +139,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '共享 drawable / label 契约', en: 'Shared drawable / label contract' },
                 content: {
-                  zh: '`DrawableStyleSchema` / `DrawableMetaSchema` 显式导出 Path kind 共享样式与元数据；`GeometryLabelSchema` 同时服务 step label 与 Path host label。`pathDefault` 对 stroke Path 完整生效，对 ribbon 只消费共享 drawable 子集。',
-                  en: '`DrawableStyleSchema` / `DrawableMetaSchema` explicitly export the style and metadata shared by Path kinds; `GeometryLabelSchema` serves both step labels and Path host labels. `pathDefault` fully applies to stroke paths and only its shared drawable subset applies to ribbon.',
+                  zh: '`DrawableStyleSchema` / `DrawableInstanceSchema` 显式导出 Path kind 共享样式与实例字段；`GeometryLabelSchema` 同时服务 step label 与 Path host label。`pathDefault` 对 stroke Path 完整生效，对 ribbon 只消费共享 drawable 子集。',
+                  en: '`DrawableStyleSchema` / `DrawableInstanceSchema` explicitly export the style and instance fields shared by Path kinds; `GeometryLabelSchema` serves both step labels and Path host labels. `pathDefault` fully applies to stroke paths and only its shared drawable subset applies to ribbon.',
                 },
               },
               {

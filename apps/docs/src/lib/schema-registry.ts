@@ -34,10 +34,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'DrawableStyle',
     url: '/kernel/reference/schema/path#drawablestyle',
   },
-  DrawableMetaSchema: {
-    schema: IR.DrawableMetaSchema,
-    label: 'DrawableMeta',
-    url: '/kernel/reference/schema/path#drawablemeta',
+  DrawableInstanceSchema: {
+    schema: IR.DrawableInstanceSchema,
+    label: 'DrawableInstance',
+    url: '/kernel/reference/schema/path#drawableinstance',
   },
   PathRibbonOptionsSchema: {
     schema: IR.PathRibbonOptionsSchema,

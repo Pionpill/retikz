@@ -15,11 +15,11 @@ A `path` is the outer container for a drawn line. Its `children` field is an ord
 
 <ZodSchema name="DrawableStyleSchema" />
 
-## DrawableMeta
+## DrawableInstance
 
-`DrawableMetaSchema` groups shared identity, provenance, animation, and stacking fields for Path. `id` / `meta` / `animations` are instance metadata and do not enter `pathDefault`; `zIndex` participates in sibling ordering but is not inherited as a default style.
+`DrawableInstanceSchema` groups shared identity, provenance, animation, and stacking fields for Path. `id` / `meta` / `animations` are instance metadata and do not enter `pathDefault`; `zIndex` participates in sibling ordering but is not inherited as a default style.
 
-<ZodSchema name="DrawableMetaSchema" />
+<ZodSchema name="DrawableInstanceSchema" />
 
 ## PathRibbonOptions
 

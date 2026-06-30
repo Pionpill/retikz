@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { DrawableMetaSchema, DrawableStyleSchema } from '../../drawable';
+import { DrawableInstanceSchema, DrawableStyleSchema } from '../../drawable';
 import { JsonObjectSchema } from '../../json';
 import { ArrowDetailSchema, ArrowEndDetailSchema } from '../arrow';
 import { PathRibbonOptionsSchema } from '../ribbon';
@@ -62,7 +62,7 @@ export const PathBaseSchema = z
       .union([GeometryLabelSchema, z.array(GeometryLabelSchema).min(1)])
       .optional()
       .describe('Host label attached to this path-like relation.'),
-    ...DrawableMetaSchema.shape,
+    ...DrawableInstanceSchema.shape,
     ...DrawableStyleSchema.shape,
     dashPattern: z
       .array(z.number().nonnegative())
