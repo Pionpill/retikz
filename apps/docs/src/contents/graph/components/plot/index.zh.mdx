@@ -47,6 +47,31 @@ import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 
 默认 scale 来自字段值和 mark 类型：数字走连续轴，普通字符串走分类位置，ISO 日期走时间轴。需要对数轴、平方根轴或手动 domain 时，在 `<Plot>` 里写 `<Scale>` 子组件覆盖对应维度。
 
+如果一张图里需要多个坐标 scope，用 `composition` 代替单个 `coordinate`。mark 通过 `coordinateScope` 选择作用域；坐标轴也可以带同名字段，并继续使用 `placement` 和 `title`。
+
+```tsx
+<Plot
+  data={weather}
+  composition={{
+    defaultScope: 'temp',
+    scopes: [
+      { id: 'temp', coordinate: { type: 'cartesian2D', x: '__x', y: 'temp' } },
+      {
+        id: 'rain',
+        coordinate: { type: 'cartesian2D', x: '__x', y: 'rain' },
+        placement: { kind: 'overlay', target: 'temp' },
+      },
+    ],
+    layout: { axisGap: 10 },
+  }}
+>
+  <PathMark x="day" y="temperature" />
+  <IntervalMark coordinateScope="rain" x="day" y="rainfall" />
+  <Axis dimension="y" coordinateScope="temp" placement={{ kind: 'side', side: 'left' }} title="Temperature" />
+  <Axis dimension="y" coordinateScope="rain" placement={{ kind: 'side', side: 'right' }} title="Rainfall" />
+</Plot>
+```
+
 <ComponentPreview name="plot-scale" sourceFiles={['plot-scale.data.ts']} size="md" />
 
 <p className="text-sm text-muted-foreground">
@@ -131,6 +156,7 @@ import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 | `model`              | `DataModel`                           | —                  | 数据模型（字段名 + 类型）：声明则启用 strict 校验与 type-driven scale / guide 派生；详见[数据模型](/graph/grammar/data/model)         |
 | `fieldMap`           | `Record<string, string>`              | —                  | 逻辑字段名 → 数据里的实际路径（需配合 `model`）；只改名、不变换值；详见[数据处理](/graph/grammar/data/processing)                     |
 | `coordinate`         | 见[坐标系](/graph/grammar/coordinate) | cartesian2D        | 坐标系：`"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` 简写或对应对象配置；缺省平面直角                                  |
+| `composition`        | `PlotSpec['composition']`             | -                  | 多坐标 scope 组合配置，适用于 overlay、facet 和 shared track；与 `coordinate` 二选一，mark 与 axis 通过 `coordinateScope` 选择作用域 |
 | `colors`             | `Array<string>`                       | `schemeCategory10` | 默认调色板。分类颜色 scale 会把它作为 range；没有颜色编码的 mark 按图层顺序取色，超过后循环。写 `'currentColor'` 表示保持 core 继承色 |
 | `id`                 | `string`                              | —                  | 面板 id：写入 PlotSpec.id，作为外部 anchor 句柄；嵌入态未显式 `dataRef` 时也作为默认数据集引用                                        |
 | `dataRef`            | `string`                              | —                  | DSL 入口的数据集引用名；多张 Plot 共享同一数据源时可显式设为同名                                                                      |

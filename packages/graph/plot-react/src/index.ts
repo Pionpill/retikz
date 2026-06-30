@@ -4,6 +4,8 @@ export type {
   BuildPlotSpecOptions,
   CoordinateInput,
   DatumLabelProps,
+  FacetDimensionInput,
+  FacetProps,
   FieldName,
   IntervalMarkProps,
   LegendProps,
@@ -15,13 +17,16 @@ export type {
   ReferenceMarkProps,
   RelationMarkProps,
   ResolveLabelMap,
+  ScaffoldProps,
   ScaleDimension,
   ScaleProps,
+  TrackProps,
   TransformProps,
 } from './components';
 export {
   Axis,
   buildPlotSpec,
+  Facet,
   IntervalMark,
   Legend,
   PathMark,
@@ -29,7 +34,9 @@ export {
   ReferenceMark,
   RelationMark,
   resolveLabelOf,
+  Scaffold,
   Scale,
+  Track,
   Transform,
 } from './components';
 export type { PlotDslProps, PlotPanelProps, PlotProps, PlotSpecProps } from './Plot';

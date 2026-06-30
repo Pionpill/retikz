@@ -67,6 +67,12 @@ export type MarkTransformProps = {
   transform?: Array<Transform>;
 };
 
+export type CoordinateScopeProps = {
+  coordinateScope?: string;
+  facetId?: string;
+  trackId?: string;
+};
+
 export type CoreNodeChannelProps = {
   align?: MarkValueProp<NodeTextAlignValue> | NodeTextAlignStyle;
   lineHeight?: MarkValueProp<number> | NodePositiveNumberStyle;
@@ -138,11 +144,16 @@ export type DatumLabelProps = {
 
 /** <PathMark> props：折线图层，按 order（缺省按数据顺序）连点成一维轨迹 */
 export type PathMarkProps = MarkTransformProps &
+  CoordinateScopeProps &
   CorePathChannelProps & {
     /** 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值） */
     x: FieldName;
     /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
     y: FieldName;
+    /** Adapter-only sugar: bind this mark to a named x axis; expanded to coordinateScope before PlotSpec output. */
+    xAxisId?: string;
+    /** Adapter-only sugar: bind this mark to a named y axis; expanded to coordinateScope before PlotSpec output. */
+    yAxisId?: string;
     /** 驱动连接顺序的字段；缺省按数据数组顺序 */
     order?: FieldName;
     /** 系列字段：按其拆成多条折线（多系列）；缺省单线 */
@@ -173,6 +184,7 @@ export type PathMarkProps = MarkTransformProps &
 
 /** <PointMark> props：散点 / 文本图层，每行一个 glyph（给 text → 无边框文本 Node） */
 export type PointMarkProps = MarkTransformProps &
+  CoordinateScopeProps &
   DatumLabelProps &
   CoreNodeChannelProps & {
     /**
@@ -182,6 +194,10 @@ export type PointMarkProps = MarkTransformProps &
     x?: FieldName;
     /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值；cartesian2D / polar2D 必填，1D 省略） */
     y?: FieldName;
+    /** Adapter-only sugar: bind this mark to a named x axis; expanded to coordinateScope before PlotSpec output. */
+    xAxisId?: string;
+    /** Adapter-only sugar: bind this mark to a named y axis; expanded to coordinateScope before PlotSpec output. */
+    yAxisId?: string;
     /** 三元坐标第三分量字段；ternary2D 下与 x / y 一起使用 */
     z?: FieldName;
     /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale） */
@@ -234,12 +250,17 @@ export type PointMarkProps = MarkTransformProps &
  *   series(+stack) 分组/堆叠；heatmap（双 band）经显式 bounds={{x:{kind:'band'},y:{kind:'band'}}}。
  */
 export type IntervalMarkProps = MarkTransformProps &
+  CoordinateScopeProps &
   DatumLabelProps &
   CoreNodeChannelProps & {
     /** 绑 x 位置通道的字段路径（分类，自动 band scale；polar 下作角向类别）；直方连续 x 用 x0/x1 取代 */
     x?: FieldName;
     /** 绑 y 位置通道的字段路径（数值；polar 下作径向值；直方下作箱高度 binCount 或自定义 metric 字段） */
     y?: FieldName;
+    /** Adapter-only sugar: bind this mark to a named x axis; expanded to coordinateScope before PlotSpec output. */
+    xAxisId?: string;
+    /** Adapter-only sugar: bind this mark to a named y axis; expanded to coordinateScope before PlotSpec output. */
+    yAxisId?: string;
     /** polar 饼图 / 环图的份额值字段；设置后自动累积成角界（extent×full bounds），下沉为扇区 */
     angle?: FieldName;
     /** 直方连续 x 区间下界字段（如 bin 的 binStart）；与 x1 配对 → bounds.x = extent(x0,x1) */
@@ -280,7 +301,8 @@ export type IntervalMarkProps = MarkTransformProps &
     anchorId?: AnchorIdSpec;
   };
 
-export type RelationMarkProps = MarkTransformProps & {
+export type RelationMarkProps = MarkTransformProps &
+  CoordinateScopeProps & {
   id?: string;
   kind?: RelationGeometryKindValue;
   source: PlotTargetRef;
@@ -306,6 +328,7 @@ type ReferenceMarkLabel =
  *   extent 给对侧维起止字段截成部分长度。
  */
 export type ReferenceMarkProps = MarkTransformProps &
+  CoordinateScopeProps &
   Omit<CoreNodeChannelProps, 'scale' | 'dashPattern' | 'shadow' | 'blendMode'> &
   CorePathChannelProps & {
     /** 参考形态覆写；设为 region 时 x/xTo/y/yTo 四个边界共同围出二维区域 */

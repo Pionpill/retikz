@@ -50,10 +50,16 @@ export type CoordinateResolveContext = {
   height: number;
   /** guide / label 使用的基础字号。 */
   fontSize: number;
+  /** guide title / composition label 固定间距。 */
+  labelGap?: number;
   /** 用户传入的边距覆盖；自定义坐标系可选择是否消费。 */
   margin?: Partial<Margins>;
   /** legend 预留区域；内置坐标系用它收窄 plotArea，自定义坐标系 v1 通常保持满画布。 */
   legendReserve: LegendReserve;
+  /** overlay scope 共享的目标 plotArea；给定时坐标系仍独立训练 scale，但使用该矩形作为 range。 */
+  plotAreaOverride?: CoordinatePlotArea;
+  /** 指定 role 的最终 range；用于 scaffold track 把局部 role 映射进 track band。 */
+  roleRangeOverrides?: Partial<Record<DimensionRole, readonly [number, number]>>;
   /** provenance 上下文，透传给 guide 下沉以保留诊断来源。 */
   provenance?: ProvenanceContext;
   /** 按定位角色收集 mark 通道原始值；includeBaseline 用于需要把 baseline 纳入连续域的值轴。 */

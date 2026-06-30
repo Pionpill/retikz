@@ -43,6 +43,31 @@ import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 
 See [Coordinates](/graph/grammar/coordinate) for each system's geometry options (polar's `innerRadius` / `startAngle` / `endAngle`, cartesian1D's `orientation`, polar1D's `radius`, …) and which marks / channels apply.
 
+For one chart with multiple coordinate scopes, pass `composition` instead of a single `coordinate`. Marks choose a scope with `coordinateScope`; axis guides can use the same field plus `placement` and `title`.
+
+```tsx
+<Plot
+  data={weather}
+  composition={{
+    defaultScope: 'temp',
+    scopes: [
+      { id: 'temp', coordinate: { type: 'cartesian2D', x: '__x', y: 'temp' } },
+      {
+        id: 'rain',
+        coordinate: { type: 'cartesian2D', x: '__x', y: 'rain' },
+        placement: { kind: 'overlay', target: 'temp' },
+      },
+    ],
+    layout: { axisGap: 10 },
+  }}
+>
+  <PathMark x="day" y="temperature" />
+  <IntervalMark coordinateScope="rain" x="day" y="rainfall" />
+  <Axis dimension="y" coordinateScope="temp" placement={{ kind: 'side', side: 'left' }} title="Temperature" />
+  <Axis dimension="y" coordinateScope="rain" placement={{ kind: 'side', side: 'right' }} title="Rainfall" />
+</Plot>
+```
+
 ### Scales
 
 Default scales come from field values and mark types: numbers use continuous axes, ordinary strings use categorical positions, and ISO dates use time axes. To request log axes, square-root axes, or a manual domain, add a `<Scale>` child to override the relevant dimension.
@@ -138,6 +163,7 @@ When the PlotSpec carries an `id` (spec entry or generated IR), lowering wraps a
 | `model`              | `DataModel`                                  | —                  | Data model (field names + types): enables strict validation and type-driven scale / guide derivation; see [Data Model](/graph/grammar/data/model)                                                  |
 | `fieldMap`           | `Record<string, string>`                     | —                  | Logical field name → actual path in the data (requires `model`); renames only, no value transform; see [Processing](/graph/grammar/data/processing)                                                |
 | `coordinate`         | see [Coordinates](/graph/grammar/coordinate) | cartesian2D        | Coordinate system: `"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` shorthand or the matching object; cartesian2D by default                                                            |
+| `composition`        | `PlotSpec['composition']`                    | -                  | Multi-scope coordinate composition for overlays, facets, and shared tracks. Mutually exclusive with `coordinate`; marks and axes target scopes with `coordinateScope`                              |
 | `colors`             | `Array<string>`                              | `schemeCategory10` | Default palette. Categorical color scales use it as their range; marks without a color encoding use it by layer order and cycle when needed. Use `'currentColor'` to keep the inherited core color |
 | `id`                 | `string`                                     | —                  | Panel id: written to PlotSpec.id as an external anchor handle; in embedded DSL mode it is also the default dataset reference when `dataRef` is omitted                                             |
 | `dataRef`            | `string`                                     | —                  | Dataset reference name for the DSL entry; set the same value on multiple plots to share one data source                                                                                            |

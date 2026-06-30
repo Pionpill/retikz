@@ -9,7 +9,10 @@
 
 - plot **只消费 core 能力、不反向依赖**，也不自带 renderer（见 [plot-design §2 / §8](../../../architecture/plot-design.md)）。
 - plot **版本线独立于 core**，不与 core 版本号对齐；每个里程碑由「所需 core 能力是否就绪」gating。
-- 上层 `@retikz/chart`（`type` + 配置的 preset 封装）依赖 `@retikz/plot`，preset 必须展开成 plot primitive，不得拥有底层无法表达的能力。
+- 规划中的 `@retikz/data` 是 graph 共享数据语义层：负责数据模型、数据引用、字段解析、通用 transform、数据通道、scale / formatter / theme token 等跨 plot / table / geo（若独立）共用的契约。
+- graph 组解决的是「有了数据之后如何可视化」：`@retikz/plot` 通过 GoG 可视化，`@retikz/table` 通过表格可视化，geo 处理地图类可视化但是否独立拆包待决策。原 `struct` 范围不作为独立包，gauge / progress / tree / network / word cloud / pictogram 等通过 plot 的 layout transform + mark 表达。
+- 规划独立 `@retikz/chart` / `@retikz/chart-react` / `@retikz/chart-vanilla`：chart 是 Tier 3 新手友好封装层，通过 `type` / config / preset 调度 plot 底层能力并生成 PlotSpec；它不拥有自己的 IR、lowering 或 renderer，也不聚合 table / geo。
+- 框架绑定由各表达层各自发布：`@retikz/plot-react` / `@retikz/plot-vanilla`、规划中的 `@retikz/chart-react` / `@retikz/chart-vanilla`、`@retikz/table-react` / `@retikz/table-vanilla`，以及候选的 `@retikz/geo-react` / `@retikz/geo-vanilla`。不规划统一 `@retikz/graph-react` / `@retikz/graph-vanilla` 聚合 adapter，避免安装不需要的模块。
 
 模块边界与 MVP 范围见 [plot-design §11](../../../architecture/plot-design.md)，里程碑拆分见 [§13](../../../architecture/plot-design.md)。
 
@@ -18,7 +21,7 @@
 **v0.1 承载整套图形语法**（GoG 8 组件，除交互 / 动画）。它分两阶段，**都在 v0.1 的 alpha 线**——不另起 v0.6+ minor（我们 v0.2 都未发，语法完善是继续在 v0.1 出 alpha）：
 
 - **阶段一 · 基础架构搭建（v0.1 alpha.1–5，✅ 已完成）**：验证 8 段管线 / lowering / 坐标系抽象 / anchor·scope 等**架构能力端到端成立**，并搭起 6 个语法组件（Data / Aesthetics / Geometry / Statistics / Scales / Coordinates）的**最小骨架**（2 个二维坐标系、position + 基础 color、基础 mark）。是「搭骨架」，不求语法完备。
-- **阶段二 · 完善图形语法（v0.1 alpha.6–9 / 11–15）**：在已验证的架构上**补全全部 8 组件**——含两个全新组件 **Facets / Theme**。（**alpha.10 为 2026-06-13 插入的绑定层 milestone**「退化 Plot 为薄容器」、非 GoG 组件，故语法 milestone 顺延 11–15。）
+- **阶段二 · 完善图形语法（v0.1 alpha.6–9 / 11–15）**：在已验证的架构上**补全全部 8 组件**——含两个全新组件 **Coordinate composition / Theme**（Coordinate composition 覆盖 GoG 的 Facets，并向同 panel 多坐标复合扩展）。（**alpha.10 为 2026-06-13 插入的绑定层 milestone**「退化 Plot 为薄容器」、非 GoG 组件，故语法 milestone 顺延 11–15。）
 - **v0.1 发布 = 图形语法完整**。
 
 **v0.1 之后 · 能力轴 minor**（**不属图形语法**，按 core 能力 gating 排，版本号待定）：
@@ -27,7 +30,7 @@
 - AI 渐进生成（分层渐进产出 / 渲染）——依赖 core Progressive IR；
 - 性能（大数据稠密 primitive 等，见本文「后续处理」段）——依赖 core Tier 1 原语。
 
-> **阶段二排序原则**：上游先于下游、结构性先于增量、地基先于铺面。故 Data（数据模型，结构性地基）先行，Aesthetics + Scales（通道×scale×legend，语法核心）居中，Geometry / Coordinates（铺面、增量）随后，Statistics 配对几何，Facets / Theme 收尾。推导见 [plot-design §15~§16](../../../architecture/plot-design.md)。
+> **阶段二排序原则**：上游先于下游、结构性先于增量、地基先于铺面。故 Data（数据模型，结构性地基）先行，Aesthetics + Scales（通道×scale×legend，语法核心）居中，Geometry / Coordinates（铺面、增量）随后，Statistics 配对几何，Coordinate composition / Theme 收尾。推导见 [plot-design §15~§16](../../../architecture/plot-design.md)。
 
 ### 图形语法 = GoG 8 组件（范围确认 2026-06-07）
 
@@ -40,8 +43,8 @@
 | **Geometry** 几何对象 | mark | point/line/area/bar/sector ✓ | **rect / rule / text / ribbon / boxplot** |
 | **Statistics** 统计变换 | transform | sort/groupBy/stack ✓ | **bin / aggregate / density / smooth / quartile** |
 | **Scales** 标度 | scale | linear/band/time/ordinal ✓ | **log/pow/sqrt/quantize/threshold/color gradient + type-driven 选型**（横切 Data/Aesthetics 两轮，非独立 alpha） |
-| **Coordinates** 坐标系统 | coordinate | cartesian2D / polar2D ✓ | **cartesian1D / polar1D / ternary2D**（**地图坐标 = 独立 domain 包，[§2](../../../architecture/plot-design.md) 明确不进 plot**） |
-| **Facets** 分面 | facet（复用 core `Scope`） | — | **全新：分面小多图** |
+| **Coordinates** 坐标系统 | coordinate | cartesian2D / polar2D ✓ | **cartesian1D / polar1D / ternary2D**（地图坐标是否独立为 geo domain 仍待决策，也可能作为 plot projection / layout 扩展） |
+| **Coordinate composition** 坐标复合（含 Facets） | coordinate scope / facet / shared scaffold（复用 core `Scope`） | — | **全新：分面小多图 + 同 panel 多坐标轴 / 多 scale 叠加 + 共享坐标骨架的 tracks / rings / lanes** |
 | **Theme** 主题样式 | theme | — | **全新：标题 / 字体 / 背景 / 网格 / 图例外观 / 调色板** |
 
 阶段二把 8 组件按依赖拆成 **alpha.6–9 / 11–15**（薄片拆，每 alpha 一个可渲染薄片，延续「纵向薄片 + 三包 lockstep」）——**每个 alpha 具体做什么见内层 [v0.1/roadmap](./v0.1/roadmap.md) Milestones**（本外层只到版本 / 组件粒度，不复述 alpha 细节）。
@@ -65,7 +68,12 @@ plot 聚焦坐标语法本身：transform / encoding / scale / coordinate / mark
 以下不由 plot 承载：
 
 - **渲染**：plot 不自带 renderer，绘制走 core / `@retikz/render` / 框架绑定包；
-- **preset 封装**：`type` + 配置的快速出图属上层 `@retikz/chart`；
+- **共享数据层**：数据模型、字段解析、通用 transform、数据通道、scale / formatter 等规划归 `@retikz/data`，plot 只消费；
+- **chart 高层封装**：`type` + 配置的快速出图规划归 `@retikz/chart`，展开成 PlotSpec 并调度 plot 能力；chart 不拥有自己的底层 IR / lowering / renderer；
+- **结构化可视化**：gauge / progress / token ring / tree / network / word cloud / pictogram 等不设独立 struct 包，规划归 plot 的 layout transform：算法先产出位置、尺寸、路由等派生字段，再统一走 plot mark / guide / lowering；
+- **表格可视化**：table / pivot table / matrix 等表格型展示规划归 `@retikz/table`；
+- **地图可视化**：map / choropleth / flow map / tile layer 等地图型展示待决策；可独立为 `@retikz/geo`，也可作为 plot projection / layout 能力进入 plot pipeline；
+- **框架 adapter**：React / Vanilla authoring 表面由各表达层各自承接，plot 已有 `@retikz/plot-react` / `@retikz/plot-vanilla`，chart 规划 `@retikz/chart-react` / `@retikz/chart-vanilla`，table / geo（若独立）后续各自发包；
 - **跨域内容组合**（plot 与 uml / table / 任意业务内容混排）：基于 core 现有 `Scope` 的通用能力，任意 Tier 2 内容共用同一套，plot 的义务仅是「可被组合」（lower 进可引用 scope + 暴露 anchor）；
 - **core 通用图形能力**：Node / Path / Step / Coordinate / Scope 等留在 core，plot 只消费不重造。
 
@@ -73,7 +81,7 @@ plot 聚焦坐标语法本身：transform / encoding / scale / coordinate / mark
 
 - ternary / 更多专门坐标系与 sankey / alluvial 完整支持；
 - 大数据专用 lowering / 采样 / Canvas / WebGL 热路径（先保证语法正确，性能后续优化）；
-- 完整 facet 之外的复杂多图编排。
+- plot 内坐标复合之外的复杂跨域多图编排。
 
 ## 后续处理：架构权衡处置（backlog）
 

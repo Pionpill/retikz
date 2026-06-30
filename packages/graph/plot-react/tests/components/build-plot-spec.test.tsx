@@ -6,10 +6,11 @@ import type {
   Transform as PlotTransformOperation,
 } from '@retikz/plot';
 
-import { isBuiltinMark, lowerPlots, PlotSpecSchema } from '@retikz/plot';
+import { AxisGridApplyTo, isBuiltinMark, lowerPlots, PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotSpec, decorateDefaultGuides } from '../../src/components/build-plot-spec';
+import { Facet, Scaffold, Track } from '../../src/components/composition';
 import { Axis, Legend } from '../../src/components/guides';
 import { IntervalMark, PathMark, PointMark, ReferenceMark, RelationMark } from '../../src/components/marks';
 import { Scale } from '../../src/components/scales';
@@ -94,6 +95,582 @@ describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P
     );
     expect(spec.coordinate).toEqual({ type: 'cartesian2D', x: '__x' });
     expect(spec.scales).toEqual([{ type: 'time', name: '__x' }]);
+  });
+});
+
+describe('buildPlotSpec alpha.14 ADR-06 composition adapter surface', () => {
+  const composition: NonNullable<PlotSpec['composition']> = {
+    defaultScope: 'temp',
+    scopes: [
+      { id: 'temp', coordinate: { type: 'cartesian2D', x: '__x', y: '__y' } },
+      {
+        id: 'rain',
+        coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
+        placement: { kind: 'overlay', target: 'temp' },
+      },
+    ],
+  };
+
+  it('passes composition coordinateScope and axis placement through schema', () => {
+    const spec = buildPlotSpec(
+      <>
+        <PointMark coordinateScope="temp" x="day" y="temperature" />
+        <IntervalMark coordinateScope="rain" x="day" y="rainfall" />
+        <Axis coordinateScope="rain" dimension="y" placement={{ kind: 'side', side: 'right' }} title="Rainfall" />
+      </>,
+      'weather',
+      { composition },
+    );
+    expect(spec.coordinate).toBeUndefined();
+    expect(spec.composition).toEqual(composition);
+    expect(spec.marks[0]).toMatchObject({ type: 'point', coordinateScope: 'temp' });
+    expect(spec.marks[1]).toMatchObject({ type: 'interval', coordinateScope: 'rain' });
+    expect(spec.guides?.[0]).toMatchObject({
+      type: 'axis',
+      coordinateScope: 'rain',
+      placement: { kind: 'side', side: 'right' },
+      title: 'Rainfall',
+    });
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('passes axis grid target selectors through schema', () => {
+    const spec = buildPlotSpec(
+      <>
+        <PointMark coordinateScope="temp" x="day" y="temperature" />
+        <Axis
+          coordinateScope="temp"
+          dimension="y"
+          grid={{
+            applyTo: AxisGridApplyTo.Selected,
+            select: { scopes: ['temp'] },
+          }}
+        />
+      </>,
+      'weather',
+      { composition },
+    );
+
+    expect(spec.guides?.[0]).toMatchObject({
+      type: 'axis',
+      dimension: 'y',
+      grid: {
+        applyTo: 'selected',
+        select: { scopes: ['temp'] },
+      },
+    });
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('fills composition scope coordinate scale bindings from declared scales', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Scale dimension="x" type="linear" />
+        <Scale dimension="y" type="linear" />
+        <PointMark x="day" y="temperature" />
+      </>,
+      'weather',
+      {
+        composition: {
+          defaultScope: 'temp',
+          scopes: [
+            { id: 'temp', coordinate: { type: 'cartesian2D' } },
+            {
+              id: 'rain',
+              coordinate: { type: 'cartesian2D' },
+              placement: { kind: 'overlay', target: 'temp' },
+            },
+          ],
+        },
+      },
+    );
+
+    expect(spec.composition?.scopes.map(scope => scope.coordinate)).toEqual([
+      { type: 'cartesian2D', x: '__x', y: '__y' },
+      { type: 'cartesian2D', x: '__x', y: '__y' },
+    ]);
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('fills shared scaffold coordinate scale bindings from declared scales', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Scale dimension="x" type="linear" />
+        <Scale dimension="y" type="linear" />
+        <PointMark coordinateScope="events" x="week" y="count" />
+      </>,
+      'ops',
+      {
+        composition: {
+          defaultScope: 'events',
+          scaffolds: [
+            {
+              id: 'ops',
+              coordinate: { type: 'cartesian2D' },
+              sharedRoles: ['x'],
+              tracks: [{ id: 'events', band: { role: 'y', start: 0, end: 1 } }],
+            },
+          ],
+          scopes: [{ id: 'events', placement: { kind: 'track', scaffold: 'ops', track: 'events' } }],
+        },
+      },
+    );
+
+    expect(spec.composition?.scaffolds?.[0]?.coordinate).toEqual({ type: 'cartesian2D', x: '__x', y: '__y' });
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('rejects non-json composition values before they leave the adapter', () => {
+    expect(() =>
+      buildPlotSpec(<PointMark x="day" y="temperature" />, 'weather', {
+        composition: {
+          ...composition,
+          layout: { panelGap: (() => 12) as unknown as number },
+        },
+      }),
+    ).toThrow();
+  });
+});
+
+describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
+  it('react_y_axis_binding_generates_overlay_composition', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Axis dimension="x" title="day" />
+        <Axis id="temperature" dimension="y" placement={{ kind: 'side', side: 'left' }} title="Temperature" />
+        <Axis id="rainfall" dimension="y" placement={{ kind: 'side', side: 'right' }} title="Rainfall" grid />
+        <PathMark x="day" y="temperature" yAxisId="temperature" />
+        <PathMark x="day" y="rainfall" yAxisId="rainfall" />
+      </>,
+      'weather',
+    );
+
+    expect(spec.coordinate).toBeUndefined();
+    expect(spec.composition).toEqual({
+      defaultScope: 'default',
+      scopes: [
+        { id: 'default', coordinate: { type: 'cartesian2D', x: '__x', y: '__y.default' } },
+        {
+          id: 'temperature',
+          coordinate: { type: 'cartesian2D', x: '__x', y: '__y.temperature' },
+          placement: { kind: 'overlay', target: 'default' },
+        },
+        {
+          id: 'rainfall',
+          coordinate: { type: 'cartesian2D', x: '__x', y: '__y.rainfall' },
+          placement: { kind: 'overlay', target: 'default' },
+        },
+      ],
+    });
+    expect(spec.scales).toEqual([
+      { type: 'linear', name: '__x' },
+      { type: 'linear', name: '__y.default' },
+      { type: 'linear', name: '__y.temperature' },
+      { type: 'linear', name: '__y.rainfall' },
+    ]);
+    expect(spec.marks).toMatchObject([
+      { type: 'path', coordinateScope: 'temperature' },
+      { type: 'path', coordinateScope: 'rainfall' },
+    ]);
+    expect(spec.guides).toMatchObject([
+      { type: 'axis', dimension: 'x' },
+      { type: 'axis', id: 'temperature', dimension: 'y', coordinateScope: 'temperature' },
+      { type: 'axis', id: 'rainfall', dimension: 'y', coordinateScope: 'rainfall', grid: true },
+    ]);
+    expect(JSON.stringify(spec)).not.toContain('yAxisId');
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('y_axis_binding_supplies_scales_when_position_inference_is_deferred', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Axis dimension="x" title="day" />
+        <Axis id="temperature" dimension="y" title="temperature" />
+        <Axis id="rainfall" dimension="y" title="rainfall" />
+        <PathMark x="day" y="temperature" yAxisId="temperature" />
+        <PathMark x="day" y="rainfall" yAxisId="rainfall" />
+      </>,
+      'weather',
+      { deferPositionScaleInference: true },
+    );
+
+    expect(spec.scales).toEqual([
+      { type: 'linear', name: '__x' },
+      { type: 'linear', name: '__y.default' },
+      { type: 'linear', name: '__y.temperature' },
+      { type: 'linear', name: '__y.rainfall' },
+    ]);
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('react_x_axis_binding_generates_overlay_composition', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Axis id="elapsed" dimension="x" placement={{ kind: 'side', side: 'bottom' }} title="elapsed day" />
+        <Axis id="date" dimension="x" placement={{ kind: 'side', side: 'top' }} title="date" />
+        <Axis dimension="y" title="revenue" />
+        <PathMark x="elapsedDay" y="revenue" xAxisId="elapsed" />
+        <PointMark x="dateIndex" y="revenue" xAxisId="date" />
+      </>,
+      'schedule',
+    );
+
+    expect(spec.coordinate).toBeUndefined();
+    expect(spec.composition).toEqual({
+      defaultScope: 'default',
+      scopes: [
+        { id: 'default', coordinate: { type: 'cartesian2D', x: '__x.default', y: '__y' } },
+        {
+          id: 'elapsed',
+          coordinate: { type: 'cartesian2D', x: '__x.elapsed', y: '__y' },
+          placement: { kind: 'overlay', target: 'default' },
+        },
+        {
+          id: 'date',
+          coordinate: { type: 'cartesian2D', x: '__x.date', y: '__y' },
+          placement: { kind: 'overlay', target: 'default' },
+        },
+      ],
+    });
+    expect(spec.scales).toEqual([
+      { type: 'linear', name: '__x.default' },
+      { type: 'linear', name: '__x.elapsed' },
+      { type: 'linear', name: '__x.date' },
+      { type: 'linear', name: '__y' },
+    ]);
+    expect(spec.marks).toMatchObject([
+      { type: 'path', coordinateScope: 'elapsed' },
+      { type: 'point', coordinateScope: 'date' },
+    ]);
+    expect(spec.guides).toMatchObject([
+      { type: 'axis', id: 'elapsed', dimension: 'x', coordinateScope: 'elapsed' },
+      { type: 'axis', id: 'date', dimension: 'x', coordinateScope: 'date' },
+      { type: 'axis', dimension: 'y' },
+    ]);
+    expect(JSON.stringify(spec)).not.toContain('xAxisId');
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('axis_binding_omitted_keeps_single_coordinate', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Axis dimension="x" />
+        <Axis id="temperature" dimension="y" />
+        <PathMark x="day" y="temperature" />
+      </>,
+      'weather',
+    );
+
+    expect(spec.coordinate).toEqual({ type: 'cartesian2D', x: '__x', y: '__y' });
+    expect(spec.composition).toBeUndefined();
+  });
+
+  it('marks_without_y_axis_id_bind_to_default_axis_in_binding_mode', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Axis id="temperature" dimension="y" />
+        <Axis id="rainfall" dimension="y" />
+        <PathMark x="day" y="temperature" yAxisId="temperature" />
+        <PointMark x="day" y="label" />
+      </>,
+      'weather',
+    );
+
+    expect(spec.marks).toMatchObject([
+      { type: 'path', coordinateScope: 'temperature' },
+      { type: 'point', coordinateScope: 'default' },
+    ]);
+  });
+
+  it('default_y_axis_id_binds_to_dimension_default_scope', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Axis id="rainfall" dimension="y" />
+        <PathMark x="day" y="temperature" yAxisId="default" />
+        <PathMark x="day" y="rainfall" yAxisId="rainfall" />
+      </>,
+      'weather',
+    );
+
+    expect(spec.composition).toMatchObject({
+      defaultScope: 'default',
+      scopes: [
+        { id: 'default', coordinate: { y: '__y.default' } },
+        { id: 'rainfall', coordinate: { y: '__y.rainfall' }, placement: { kind: 'overlay', target: 'default' } },
+      ],
+    });
+    expect(spec.marks).toMatchObject([
+      { type: 'path', coordinateScope: 'default' },
+      { type: 'path', coordinateScope: 'rainfall' },
+    ]);
+  });
+
+  it('explicit_composition_with_same_named_scope_accepts_y_axis_id', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Axis id="temperature" dimension="y" />
+        <Axis id="rainfall" dimension="y" />
+        <PathMark x="day" y="temperature" yAxisId="temperature" />
+        <PathMark x="day" y="rainfall" yAxisId="rainfall" />
+      </>,
+      'weather',
+      {
+        composition: {
+          defaultScope: 'default',
+          scopes: [
+            { id: 'default', coordinate: { type: 'cartesian2D' } },
+            { id: 'temperature', coordinate: { type: 'cartesian2D' }, placement: { kind: 'overlay', target: 'default' } },
+            { id: 'rainfall', coordinate: { type: 'cartesian2D' }, placement: { kind: 'overlay', target: 'default' } },
+          ],
+        },
+      },
+    );
+
+    expect(spec.composition?.defaultScope).toBe('default');
+    expect(spec.marks).toMatchObject([
+      { type: 'path', coordinateScope: 'temperature' },
+      { type: 'path', coordinateScope: 'rainfall' },
+    ]);
+    expect(spec.guides).toMatchObject([
+      { type: 'axis', id: 'temperature', coordinateScope: 'temperature' },
+      { type: 'axis', id: 'rainfall', coordinateScope: 'rainfall' },
+    ]);
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('rejects invalid y axis binding inputs', () => {
+    expect(() =>
+      buildPlotSpec(
+        <>
+          <Axis id="left" dimension="y" />
+          <PathMark x="day" y="temperature" yAxisId="missing" />
+        </>,
+        'weather',
+      ),
+    ).toThrow(/missing.*y axis/i);
+
+    expect(() =>
+      buildPlotSpec(
+        <>
+          <Axis id="left" dimension="x" />
+          <PathMark x="day" y="temperature" yAxisId="left" />
+        </>,
+        'weather',
+      ),
+    ).toThrow(/dimension.*y/i);
+
+    expect(() =>
+      buildPlotSpec(
+        <>
+          <Axis id="left" dimension="y" />
+          <Axis id="left" dimension="y" />
+          <PathMark x="day" y="temperature" yAxisId="left" />
+        </>,
+        'weather',
+      ),
+    ).toThrow(/duplicate.*axis id/i);
+
+    expect(() =>
+      buildPlotSpec(
+        <>
+          <Axis id="left" dimension="y" />
+          <PathMark coordinateScope="left" x="day" y="temperature" yAxisId="left" />
+        </>,
+        'weather',
+      ),
+    ).toThrow(/coordinateScope.*yAxisId/i);
+  });
+
+  it('rejects axis binding outside cartesian2D and missing explicit scopes', () => {
+    expect(() =>
+      buildPlotSpec(
+        <>
+          <Axis id="left" dimension="y" />
+          <PathMark x="day" y="temperature" yAxisId="left" />
+        </>,
+        'weather',
+        { coordinate: 'polar2D' },
+      ),
+    ).toThrow(/cartesian2D/i);
+
+    expect(() =>
+      buildPlotSpec(
+        <>
+          <Axis id="left" dimension="y" />
+          <PathMark x="day" y="temperature" yAxisId="left" />
+        </>,
+        'weather',
+        { composition: { defaultScope: 'default', scopes: [{ id: 'default', coordinate: { type: 'cartesian2D' } }] } },
+      ),
+    ).toThrow(/left.*scope/i);
+  });
+});
+
+describe('buildPlotSpec alpha.14 topology binding sugar', () => {
+  it('track_binding_generates_shared_scaffold_composition', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Scaffold
+          id="ops"
+          sharedRoles={['x']}
+          layout={{ trackGap: 24, axisGap: 8, labelGap: 6 }}
+          guidePolicy={{ gridPlacement: 'sharedRole', trackLabels: 'inline' }}
+        >
+          <Track id="incidents" band={{ role: 'y', start: 0, end: 0.42 }} />
+          <Track id="load" band={{ role: 'y', start: 0.58, end: 1 }} />
+        </Scaffold>
+        <PathMark trackId="incidents" x="week" y="incidents" order="week" />
+        <PathMark trackId="load" x="week" y="load" order="week" />
+        <Axis scaffoldId="ops" dimension="x" grid title="week" />
+        <Axis trackId="load" dimension="y" title="load" />
+      </>,
+      'ops',
+    );
+
+    expect(spec.coordinate).toBeUndefined();
+    expect(spec.composition).toEqual({
+      defaultScope: 'incidents',
+      scaffolds: [
+        {
+          id: 'ops',
+          coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
+          sharedRoles: ['x'],
+          tracks: [
+            { id: 'incidents', band: { role: 'y', start: 0, end: 0.42 } },
+            { id: 'load', band: { role: 'y', start: 0.58, end: 1 } },
+          ],
+        },
+      ],
+      scopes: [
+        { id: 'incidents', placement: { kind: 'track', scaffold: 'ops', track: 'incidents' } },
+        { id: 'load', placement: { kind: 'track', scaffold: 'ops', track: 'load' } },
+      ],
+      layout: { trackGap: 24, axisGap: 8, labelGap: 6 },
+      guidePolicy: { gridPlacement: 'sharedRole', trackLabels: 'inline' },
+    });
+    expect(spec.marks).toMatchObject([
+      { type: 'path', coordinateScope: 'incidents' },
+      { type: 'path', coordinateScope: 'load' },
+    ]);
+    expect(spec.guides).toMatchObject([
+      { type: 'axis', dimension: 'x', coordinateScope: 'incidents', grid: true },
+      { type: 'axis', dimension: 'y', coordinateScope: 'load' },
+    ]);
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('track_binding_inherits_plot_coordinate_when_scaffold_coordinate_is_omitted', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Scaffold id="radar" sharedRoles={['x']}>
+          <Track id="signal" band={{ role: 'y', start: 0.12, end: 0.48 }} />
+          <Track id="capacity" band={{ role: 'y', start: 0.58, end: 0.96 }} />
+        </Scaffold>
+        <PathMark trackId="signal" x="area" y="signal" order="order" />
+        <PathMark trackId="capacity" x="area" y="capacity" order="order" />
+        <Axis scaffoldId="radar" dimension="x" grid title="area" />
+      </>,
+      'radar',
+      { coordinate: { type: 'polar2D' } },
+    );
+
+    expect(spec.composition?.scaffolds?.[0]?.coordinate).toMatchObject({
+      type: 'polar2D',
+      angle: '__angle',
+      radius: '__radius',
+    });
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('facet_binding_generates_facet_composition', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Facet
+          id="sales"
+          row={{ field: 'channel', order: ['online', 'store'] }}
+          column={{ field: 'region', order: ['north', 'south', 'west'] }}
+          scales={{ roles: { y: 'shared' } }}
+          layout={{ panelGap: 24, axisGap: 8, labelGap: 6 }}
+          guidePolicy={{ axes: 'outerShared', gridPlacement: 'self', facetLabels: 'rowColumn' }}
+        />
+        <PathMark facetId="sales" x="month" y="revenue" order="month" />
+        <PointMark facetId="sales" x="month" y="revenue" />
+        <Axis facetId="sales" dimension="x" title="month" />
+        <Axis facetId="sales" dimension="y" grid title="revenue" />
+      </>,
+      'sales',
+    );
+
+    expect(spec.coordinate).toBeUndefined();
+    expect(spec.composition).toEqual({
+      defaultScope: 'salesPanel',
+      scopes: [{ id: 'salesPanel', coordinate: { type: 'cartesian2D', x: '__x', y: '__y' } }],
+      facets: [
+        {
+          id: 'sales',
+          row: { field: 'channel', order: ['online', 'store'] },
+          column: { field: 'region', order: ['north', 'south', 'west'] },
+          scales: { roles: { y: 'shared' } },
+        },
+      ],
+      layout: { panelGap: 24, axisGap: 8, labelGap: 6 },
+      guidePolicy: { axes: 'outerShared', gridPlacement: 'self', facetLabels: 'rowColumn' },
+    });
+    expect(spec.marks).toMatchObject([
+      { type: 'path', coordinateScope: 'salesPanel' },
+      { type: 'point', coordinateScope: 'salesPanel' },
+    ]);
+    expect(spec.guides).toMatchObject([
+      { type: 'axis', dimension: 'x', coordinateScope: 'salesPanel' },
+      { type: 'axis', dimension: 'y', coordinateScope: 'salesPanel', grid: true },
+    ]);
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('rejects missing topology binding targets and conflicting binding props', () => {
+    expect(() =>
+      buildPlotSpec(
+        <>
+          <Scaffold id="ops" sharedRoles={['x']}>
+            <Track id="load" band={{ role: 'y', start: 0, end: 1 }} />
+          </Scaffold>
+          <PathMark trackId="missing" x="week" y="load" />
+        </>,
+        'ops',
+      ),
+    ).toThrow(/missing.*track/i);
+
+    expect(() =>
+      buildPlotSpec(
+        <>
+          <Facet id="sales" column="region" />
+          <PathMark facetId="missing" x="month" y="revenue" />
+        </>,
+        'sales',
+      ),
+    ).toThrow(/missing.*facet/i);
+
+    expect(() =>
+      buildPlotSpec(
+        <>
+          <Facet id="sales" column="region" />
+          <PathMark facetId="sales" coordinateScope="salesPanel" x="month" y="revenue" />
+        </>,
+        'sales',
+      ),
+    ).toThrow(/coordinateScope.*facetId/i);
+
+    expect(() =>
+      buildPlotSpec(
+        <>
+          <Scaffold id="ops" sharedRoles={['x']}>
+            <Track id="load" band={{ role: 'y', start: 0, end: 1 }} />
+          </Scaffold>
+          <PathMark facetId="sales" trackId="load" x="week" y="load" />
+        </>,
+        'ops',
+      ),
+    ).toThrow(/multiple.*binding/i);
   });
 });
 

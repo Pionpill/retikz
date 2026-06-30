@@ -27,7 +27,7 @@
 ## 排序与依赖
 
 - **ADR-03 supersede ADR-01/02 的 interval 字段行**：ADR-03 把 interval 的 `x0Field`/`x1Field`（ADR-01）、`y0`/`y1` 专属读取（ADR-02 derive-interval / normalize 对接）收敛进 `bounds.extent(from,to)`。**transform 定义本身不变**（bin 仍产 binStart/binEnd、stack/normalize/derive-interval 仍产 y0/y1）；变的只是 interval mark 改用 `bounds.extent` 指向这些字段。实现顺序：ADR-03（引擎）→ ADR-04（表面），二者依赖 ADR-01/02 的 transform 产物。
-- **位置**：Statistics 排在 Geometry（alpha.11）之后、Facets（alpha.14）之前——geom 先就位，再喂统计派生数据。
+- **位置**：Statistics 排在 Geometry（alpha.11）之后、Coordinate composition（alpha.14）之前——geom 先就位，再喂统计派生数据。
 - **接 alpha.11 钩子**：bin 产出的箱边喂 rect「binned heatmap 显式区间边」（alpha.11 ADR-02 明确 gate 于 bin transform）；derive-interval / aggregate 丰富 interval `y0/y1`、sector 累积界的数据来源；bin/histogram 呼应 alpha.9 cartesian1D「histogram 底座」。
 - **下游**：alpha.13 boxplot ← alpha.12/13 stat；density / smooth(回归) / quartile 在 alpha.13、不在本轮。
 

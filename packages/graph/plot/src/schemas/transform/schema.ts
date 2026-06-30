@@ -1,4 +1,4 @@
-import { JsonObjectSchema } from '@retikz/core';
+﻿import { JsonObjectSchema } from '@retikz/core';
 import { z } from 'zod';
 
 import { PlotTransform, RESERVED_TRANSFORM_KINDS } from './constants';
@@ -163,7 +163,7 @@ export const QuantileBandOutputsSchema = z
       const previous = seen.get(field);
       if (previous !== undefined) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path,
           message: `duplicate quantile-band output field "${field}"`,
         });
@@ -222,7 +222,7 @@ const ExternalReducerOperationSchema = z
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message:
           'external reducer operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
       });
@@ -283,7 +283,7 @@ const ReducerMetricsSchema = z
       for (const { field, path } of reducerOutputFieldsOf(metrics[index])) {
         if (seen.has(field)) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: 'custom',
             path: [index, ...path],
             message: `duplicate reducer output field "${field}"`,
           });
@@ -403,7 +403,7 @@ const ExternalSelectorOperationSchema = z
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message:
           'external selector operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
       });
@@ -517,7 +517,7 @@ export const AnnotateTransformSchema = z
   .superRefine((operation, ctx) => {
     if (operation.metrics === undefined && operation.selectors === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'annotate transform requires metrics or selectors',
       });
     }
@@ -727,14 +727,14 @@ export const DensityTransformSchema = z
   .superRefine((operation, ctx) => {
     if (operation.extent !== undefined && operation.extent[0] >= operation.extent[1]) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['extent'],
         message: 'density extent lower bound must be less than upper bound',
       });
     }
     if (operation.xAs === operation.densityAs) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['densityAs'],
         message: 'density output fields xAs and densityAs must be different',
       });
@@ -742,7 +742,7 @@ export const DensityTransformSchema = z
     for (const [index, field] of (operation.groupBy ?? []).entries()) {
       if (field === operation.xAs || field === operation.densityAs) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['groupBy', index],
           message: `density output field must not overwrite groupBy field "${field}"`,
         });
@@ -788,14 +788,14 @@ export const SmoothTransformSchema = z
   .superRefine((operation, ctx) => {
     if (operation.extent !== undefined && operation.extent[0] >= operation.extent[1]) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['extent'],
         message: 'smooth extent lower bound must be less than upper bound',
       });
     }
     if (operation.xAs === operation.yAs) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['yAs'],
         message: 'smooth output fields xAs and yAs must be different',
       });
@@ -803,7 +803,7 @@ export const SmoothTransformSchema = z
     for (const [index, field] of (operation.groupBy ?? []).entries()) {
       if (field === operation.xAs || field === operation.yAs) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['groupBy', index],
           message: `smooth output field must not overwrite groupBy field "${field}"`,
         });
@@ -846,7 +846,7 @@ const ExternalTransformSchema = z
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message:
           'external transform operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
       });
