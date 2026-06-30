@@ -168,7 +168,7 @@ retikz 站点除了 docs 之外还挂了一个 **blog** 顶层 module，URL 形�
 
 **写 blog 文章前先读** [`.agents/skills/docs-doc-blog/SKILL.md`](../../.agents/skills/docs-doc-blog/SKILL.md)（受众 / 篇幅 / 段落风格 / `<ComponentPreview>` 优先 / 双语术语 review / 系列拆分 / 跨平台手抄约束 / 与 docs 的差异）。通用规则（三处协同 / Comparison / 表格宽度等）继承自 [`docs-doc-principle`](../../.agents/skills/docs-doc-principle/SKILL.md)。
 
-设计 spec：[`notes/decisions/kernel/2026-05-17-blog-section-spec.md`](https://github.com/Pionpill/retikz/blob/main/notes/decisions/kernel/2026-05-17-blog-section-spec.md)（含 markdown 导出方案——已废弃，改为手抄 mdx）。
+设计 spec：[`packages/kernel/_notes/decisions/2026-05-17-blog-section-spec.md`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/_notes/decisions/2026-05-17-blog-section-spec.md)（含 markdown 导出方案——已废弃，改为手抄 mdx）。
 
 ## 全局快捷键
 

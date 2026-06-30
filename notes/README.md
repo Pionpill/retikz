@@ -1,81 +1,55 @@
-# retikz 内部文档地图
+﻿# retikz 内部文档地图
 
 面向项目内部协作，不面向终端用户。用户文档放在 `apps/docs/`。
 
-## 子目录
+## 当前结构
 
-| 目录 | 装什么 | 生命周期 | 命名 |
-|---|---|---|---|
-| [`architecture/`](./architecture) | 长期架构文档；少改、不带日期 | 永久。重大架构调整时更新原文，不另起临时副本 | 主题名，如 `core-design.md` |
-| [`decisions/`](./decisions) | 路线、执行追踪、ADR 决策记录 | roadmap 可更新；ADR 永久保留，Accepted 后不改历史 | 见下文 decisions 规则 |
-| [`analysis/`](./analysis) | 一次性研究 / 对比 / gap 分析 | 长期保留作历史参考，但不再更新 | `YYYY-MM-DD-kebab-case-标题.md` |
+| 目录 | 内容 | 生命周期 |
+| --- | --- | --- |
+| [`architecture/`](./architecture) | 全仓长期架构真源。只放跨包原则、IR / Scene / schema 等底层契约。 | 永久；重大架构调整直接更新原文。 |
+| [`reports/`](./reports) | 只读审计、阶段性 review 报告。 | 本地临时产物；被 `.gitignore` 忽略，不提交。 |
 
-## decisions 规则
+包或发布组专属文档已经下沉到对应目录：
 
-`decisions/` 合并原 `adr/` 与 `plans/`，按库 / 包能力域组织：
+| 目录 | 内容 |
+| --- | --- |
+| [`../packages/kernel/_notes/`](../packages/kernel/_notes) | kernel 发布组（`@retikz/math/core/render/react/vanilla/tex`）的 roadmap、ADR、分析。 |
+| [`../packages/graph/_notes/`](../packages/graph/_notes) | `@retikz/plot` 发布组的架构、roadmap、ADR、分析。 |
+| [`../apps/eval/_notes/`](../apps/eval/_notes) | eval 应用的评测设计、语料与 runner 方案。 |
 
-```text
-notes/decisions/
-└── core/
-    ├── _template.md
-    └── v0/
-        ├── roadmap.md
-        ├── v0.1/
-        │   ├── roadmap.md
-        │   └── beta.1/
-        │       ├── roadmap.md
-        │       ├── 01-xxx.md
-        │       └── 02-xxx.md
-        └── v0.2/
-            ├── roadmap.md
-            └── alpha.9/
-                ├── roadmap.md
-                ├── 01-xxx.md
-                └── 02-xxx.md
-```
+## 写到哪里
 
-- 一级能力域：`core/` 承载 `@retikz/core` 以及强依赖 core 的 `@retikz/render`（SVG / Canvas 后端）、`@retikz/react`、`@retikz/vanilla`、文档运行时等决策；`plot/` 承载 `@retikz/plot`（Tier 2 图表层）及其强相关内容。
-- `v0/roadmap.md`：major 总路线。
-- `v0/v0.1/roadmap.md`：minor 总路线。
-- `v0/v0.1/<milestone>/roadmap.md`：milestone 路线 / TODO / 验收记录，替代旧的独立 plan 文件。
-- `v0/v0.1/<milestone>/<NN>-<slug>.md`：该 milestone 下的 ADR；文件名不用 `adr-` 前缀。
-- PATCH 版本不开目录；patch 仅修 bug，不写 roadmap / ADR，除非它推翻了既有决策。
+1. 跨包长期架构原则：写进 `notes/architecture/`。
+2. kernel 发布组的版本路线、ADR、执行记录：写进 `packages/kernel/_notes/decisions/`。
+3. plot 发布组的版本路线、ADR、执行记录：写进 `packages/graph/_notes/decisions/`。
+4. 单包一次性分析：写进该包或发布组的 `_notes/analysis/`。
+5. 全仓审计报告：写进 `notes/reports/`；这是本地临时目录，不提交。
 
-## roadmap 与 ADR 的生命周期
+判断标准：文档的主要维护者是谁，就放到谁的目录下；只有会约束多个包的长期原则才留在根 `notes`。
 
-- **roadmap** 记录"接下来要做什么"：路线、TODO、实施步骤、验收记录。它可更新，完成后可精简；纯执行过程若长期信息已沉淀到 changelog / docs / ADR，可删除。
-- **ADR** 记录"为什么这么做"：架构、接口、字段语义、公开行为等单点决策。ADR 永久保留；状态变为 `Accepted` 后不改历史内容。若后续推翻，新增 ADR 并在旧文标 `Superseded by <milestone> ADR-NN`。
-- 有歧义时先写 milestone `roadmap.md`；当某个方案需要成为长期契约，再拆出 `NN-*.md` ADR。
+## 当前入口
 
-## 当前文档
-
-### architecture/
+### 全仓架构
 
 - [`core-design.md`](./architecture/core-design.md)：retikz 总架构设计，包含分层模型、IR、Scene、AI 友好原则、跨平台策略。
-- [`plot-design.md`](./architecture/plot-design.md)：`@retikz/plot`（Tier 2 图表层）架构设计——grammar of graphics、Plot IR、lowering 管线。
+- [`schema-design.md`](./architecture/schema-design.md)：schema / LLM 契约相关设计。
 
-### decisions/
+### kernel 发布组
 
-- [`core/v0/roadmap.md`](./decisions/core/v0/roadmap.md)：core v0 总路线。
-- [`core/v0/v0.1/roadmap.md`](./decisions/core/v0/v0.1/roadmap.md)：core v0.1 路线与 milestone 索引。
-- [`core/v0/v0.2/roadmap.md`](./decisions/core/v0/v0.2/roadmap.md)：core v0.2 路线与已完成 alpha / beta 跟踪。
-- [`core/v0/v0.3/roadmap.md`](./decisions/core/v0/v0.3/roadmap.md)：core v0.3 路线（renderer 拆分 + `@retikz/render` / `@retikz/vanilla` + 水合 + Tier 2 支撑 + 动画）。
-- [`plot/v0/roadmap.md`](./decisions/plot/v0/roadmap.md) / [`plot/v0/v0.1/roadmap.md`](./decisions/plot/v0/v0.1/roadmap.md)：`@retikz/plot`（Tier 2）路线与 milestone 索引。
-- ADR 模板：[`core/_template.md`](./decisions/core/_template.md)。
+- [`kernel notes`](../packages/kernel/notes/README.md)：kernel 发布组内部文档入口。
+- [`kernel v0 roadmap`](../packages/kernel/_notes/decisions/v0/roadmap.md)：kernel v0 总路线。
+- [`kernel ADR template`](../packages/kernel/_notes/decisions/_template.md)：kernel ADR 模板。
+- [`core compare analysis`](../packages/kernel/_notes/analysis/core-compare-analysis.md)：core 底座横向对比。
 
-### analysis/
+### plot 发布组
 
-- [`core-compare-analysis.md`](./analysis/core-compare-analysis.md)：core 底座横向对比（TikZ / D3 / Two.js / Mermaid / react-flow / Excalidraw / Vega）。
-- [`plot-compare-analysis.md`](./analysis/plot-compare-analysis.md)：`@retikz/plot` 横向对比（ggplot2 / Vega-Lite / Observable Plot / Highcharts / ECharts / Recharts）。
-- [`plot-rendering-performance.md`](./analysis/plot-rendering-performance.md)：plot 渲染性能分析。
+- [`plot notes`](../packages/graph/notes/README.md)：plot 发布组内部文档入口。
+- [`plot-design.md`](../packages/graph/notes/architecture/plot-design.md)：`@retikz/plot` 架构设计。
+- [`plot v0 roadmap`](../packages/graph/_notes/decisions/v0/roadmap.md)：plot v0 总路线。
+- [`plot v0.1 roadmap`](../packages/graph/_notes/decisions/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
+- [`plot compare analysis`](../packages/graph/_notes/analysis/plot-compare-analysis.md)：plot 横向对比。
+- [`plot rendering performance`](../packages/graph/_notes/analysis/plot-rendering-performance.md)：plot 渲染性能分析。
 
-## 写文档前先选生命周期
+## 打包约束
 
-1. 是长期架构总图？写进 `architecture/`。
-2. 是一次性研究 / 对比，写完不再改？写进 `analysis/`。
-3. 是版本路线、实施步骤、TODO？写进对应 `decisions/<domain>/<major>/<minor>/<milestone>/roadmap.md`。
-4. 是需要长期保留的单点决策？写进对应 milestone 目录下的 `<NN>-<slug>.md`。
-
-## superpowers/
-
-`superpowers/` 目录下的 specs / plans 是 superpowers skill 的工作流产物，生命周期由 skill 自己管理，不要混进上面的体系。
+包内 `_notes/` 是仓库协作资料，不进入 npm 包。发布包继续依赖各自 `package.json` 的 `files` 白名单，只发布 `dist/**/*`、`README.md`、`LICENSE` 和 `package.json`。

@@ -1,6 +1,6 @@
 ---
 name: develop-review
-description: retikz beta 期模块级只读代码审计技能，是 flow-beta 的上游发现器。版本通道按被审范围所属分组判断（core 分组 lockstep，plot 等 Tier 2 各自独立）。主 AI 横向通读一个模块（整个 workspace 包，或某个子系统 / 路径集），按五维度——文件组织结构、bug 排查（含类型安全 / 测试覆盖）、逻辑复用与简化、数据结构 / schema 抽象与 AI 友好、文档一致性——系统排查全局问题，输出一份分级 review 报告（BLOCKING / WARNING / INFO，每条带维度标签 + 代码位置证据 + 建议改法 + 预估 flow-beta Level）。产品代码只读：不改源码、不碰 roadmap，仅新增 notes/reports 报告，跑完对比工作区基线确认未误改。下游由人工 triage 决定把哪些 finding 登记成所属模块的 beta roadmap TODO 交 flow-beta 修；高风险 bug / 不确定的重构指向 cross-review（多模型背书）或 cross-test（写测试坐实）。适用于 beta 期引入新代码后对模块做整体优化盘点、重构前找复用与收敛机会、schema 抽象度与 AI 友好性体检。
+description: retikz beta 期模块级只读代码审计技能，是 flow-beta 的上游发现器。版本通道按被审范围所属分组判断（core 分组 lockstep，plot 等 Tier 2 各自独立）。主 AI 横向通读一个模块（整个 workspace 包，或某个子系统 / 路径集），按五维度——文件组织结构、bug 排查（含类型安全 / 测试覆盖）、逻辑复用与简化、数据结构 / schema 抽象与 AI 友好、文档一致性——系统排查全局问题，输出一份分级 review 报告（BLOCKING / WARNING / INFO，每条带维度标签 + 代码位置证据 + 建议改法 + 预估 flow-beta Level）。产品代码只读：不改源码、不碰 roadmap，仅新增本地 ignored 的 notes/reports 报告，跑完对比工作区基线确认未误改。下游由人工 triage 决定把哪些 finding 登记成所属模块的 beta roadmap TODO 交 flow-beta 修；高风险 bug / 不确定的重构指向 cross-review（多模型背书）或 cross-test（写测试坐实）。适用于 beta 期引入新代码后对模块做整体优化盘点、重构前找复用与收敛机会、schema 抽象度与 AI 友好性体检。
 ---
 
 # Develop Review：模块级只读审计
@@ -220,7 +220,7 @@ notes/reports/develop-review-YYYY-MM-DD-<module>.md
 术语统一，避免「只读」与「写报告」表述打架：
 
 - **产品代码只读 / 不改产品代码**：不动任何源码、不写 roadmap、不动 ADR、不 commit
-- **允许新增审计产物**：唯一写入的是 `notes/reports/develop-review-*.md` 报告本身
+- **允许新增审计产物**：唯一写入的是 `notes/reports/develop-review-*.md` 报告本身；该目录由 `.gitignore` 忽略，报告是本地临时产物，不 stage / 不 commit
 - **工作区保护**：审计后对比审计前留底的基线，确认「除新增报告外，审计前已有的工作区改动未变化」——不把用户审计前已有的脏改动算到 skill 头上：
 
 ```bash
@@ -232,7 +232,7 @@ git status --short    # 与输入段留底的基线对比：应只多出新增�
 本 skill 终点是**报告**，不是改动。下游由人工驱动：
 
 1. **人工 triage 报告** → 决定哪些 finding 值得修、优先级、走哪条流程
-2. 选中要修的 → 人工登记到**所属模块的 beta milestone roadmap**（路径按被审模块走：core 分组在 `notes/decisions/kernel/v<MAJOR>/.../v<MAJOR>.<MINOR>-beta.<N>/roadmap.md`，plot 分组在 `notes/decisions/graph/...`）→ 交 [`flow-beta`](../flow-beta/SKILL.md) 逐条消费
+2. 选中要修的 → 人工登记到**所属模块的 beta milestone roadmap**（路径按被审模块走：core 分组在 `packages/kernel/_notes/decisions/v<MAJOR>/.../v<MAJOR>.<MINOR>-beta.<N>/roadmap.md`，plot 分组在 `packages/graph/_notes/decisions/...`）→ 交 [`flow-beta`](../flow-beta/SKILL.md) 逐条消费
 3. **高风险 finding 的坐实出口**：
    - 不确定是不是真 bug / 重构怕引入回归 → [`cross-review`](../cross-review/SKILL.md) 拉多模型背书
    - 疑似 BLOCKING bug → [`cross-test`](../cross-test/SKILL.md) 写 fail 测试坐实再修
@@ -241,8 +241,8 @@ git status --short    # 与输入段留底的基线对比：应只多出新增�
 
 ## 禁止事项
 
-- 不改源码、不碰 roadmap、不动 ADR——本 skill 产品代码只读，唯一新增产物是报告。
-- 不自行 commit / push / tag（含报告文件）；按根 `AGENTS.md` 需用户当次授权。
+- 不改源码、不碰 roadmap、不动 ADR——本 skill 产品代码只读，唯一新增产物是本地 ignored 的报告。
+- 不自行 commit / push / tag；报告文件位于 ignored reports 目录，默认不提交。
 - 不替主 AI 包装成多模型——本 skill 就是主 AI 单路深读；要多视角请转 cross-review，别在报告里假称跨模型。
 - 不夸大 / 不硬凑 finding，把风格偏好或对 `AGENTS.md` 规范的误解（如把规定的 `Array<T>` 当问题）说成 BLOCKING。
 - 不在报告里下「已修复」结论——修复不在本 skill 职责内。
@@ -253,5 +253,5 @@ git status --short    # 与输入段留底的基线对比：应只多出新增�
 - 已声明并在报告头记录确切审查范围、所属分组版本通道、基准快照与覆盖率声明。
 - 已横向通读范围内代码，按五维度产出分级报告（每条 finding 列齐：位置证据 / 维度 / 问题 / 建议改法 / 预估 Level / 坐实出口），无「只有建议、没有代码位置与成因」的空 finding。
 - 报告含「横向发现」与「建议 triage」段，高风险项标好 cross-review / cross-test 出口。
-- 报告写入 `notes/reports/develop-review-YYYY-MM-DD-<module>.md`。
+- 报告写入 `notes/reports/develop-review-YYYY-MM-DD-<module>.md`；该目录被 `.gitignore` 忽略，不作为提交内容。
 - 已对比工作区基线复核：除新增报告外仓库未被改动。
