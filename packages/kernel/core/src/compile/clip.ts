@@ -145,7 +145,14 @@ export const createClipRegistry = (
   const resolveShape = (clip: IRClipSpec): ClipShape => {
     const kind = clipKindOf(clip);
     const definition = providerDefinitionOf(definitions, kind, { capability: 'clip', optionName: 'clips' });
-    const parsed = definition.schema.parse(clip);
+    const parsed = (() => {
+      try {
+        return definition.schema.parse(clip);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(`Clip '${kind}' failed schema validation: ${message}`, { cause: error });
+      }
+    })();
     JsonObjectSchema.parse(parsed);
     return guardAndRoundShape(definition.resolve(parsed, { round, resolve: resolveShape }), round);
   };
