@@ -6,25 +6,24 @@ import { PositionSchema } from '../../position';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
 import { createLabelVisualStyleShape, LabelTextContentSchema } from '../../text';
 import { TargetSchema } from '../target';
-import { FoldStepVia, GeometryLabelPlacement } from './constants';
+import { BendDirection, FoldStepVia, GeometryLabelPlacement, GeometryLabelPosition, PathCloseMode } from './constants';
 
 export const GeometryLabelSchema = z
   .object({
     ...createLabelVisualStyleShape({
-      textColor:
-        "Label text color; falls back to the scope labelDefault, then the owning path's resolved master color, then currentColor. To match a colored line set the path color (not stroke).",
+      textColor: "Label text color; falls back to label defaults, path color, then currentColor.",
       opacity: 'Label-only opacity, multiplied with the owning path opacity.',
       font: 'Label font overrides. Missing fields inherit from scope label defaults.',
     }),
     text: LabelTextContentSchema,
     position: z
       .union([
-        z.enum(['at-start', 'very-near-start', 'near-start', 'midway', 'near-end', 'very-near-end', 'at-end']),
+        z.enum(GeometryLabelPosition),
         NormalizedFractionSchema,
       ])
       .optional()
       .describe(
-        'Position along the step. Use a normalized number or a keyword: at-start, very-near-start, near-start, midway, near-end, very-near-end, or at-end. Parameter meaning follows the step kind.',
+        'Position along the step: keyword or normalized number. Parameter meaning follows the step kind.',
       ),
     side: z
       .preprocess(
@@ -131,7 +130,7 @@ export const BendStepSchema = z
       ),
     to: TargetSchema.describe('Destination point of the bend'),
     bendDirection: z
-      .enum(['left', 'right'])
+      .enum(BendDirection)
       .optional()
       .describe(
         'Bend side relative to the from-to direction. Use with bendAngle unless outAngle and inAngle are provided.',
@@ -190,7 +189,7 @@ const refineArcStep = (step: { radius?: number; radiusX?: number; radiusY?: numb
 };
 
 const refinePartialAngles = (
-  step: { startAngle?: number; endAngle?: number; closed?: 'closed' | 'chord' | 'open' | 'sector' },
+  step: { startAngle?: number; endAngle?: number; closed?: string },
   ctx: z.RefinementCtx,
   kind: 'circlePath' | 'ellipsePath',
 ): void => {
@@ -278,7 +277,7 @@ const CirclePathStepBaseSchema = z
       .optional()
       .describe('Partial-circle end angle in degrees; sweep direction inferred from startAngle vs endAngle.'),
     closed: z
-      .enum(['closed', 'chord', 'open', 'sector'])
+      .enum(PathCloseMode)
       .optional()
       .describe(
         'Closing mode for a circle path: closed, chord, sector, or open. With angles, omitted fields use chord.',
@@ -318,7 +317,7 @@ const EllipsePathStepBaseSchema = z
       .optional()
       .describe('Partial-ellipse end angle in degrees.'),
     closed: z
-      .enum(['closed', 'chord', 'open', 'sector'])
+      .enum(PathCloseMode)
       .optional()
       .describe(
         'Closing mode for an ellipse path: closed, chord, sector, or open. With angles, omitted fields use chord.',

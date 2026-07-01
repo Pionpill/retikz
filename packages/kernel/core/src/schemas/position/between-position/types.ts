@@ -13,11 +13,11 @@ import { type IRPosition } from '../position';
 export type IRAbsoluteTarget = IRPosition | PolarPosition | IRNodeTarget | IROffsetPosition | IRBetweenPosition;
 
 /**
- * 两端点之间按比例 t 取点（lerp）
+ * 两端点之间按 fraction 取点（lerp）
  * @description `between` 两端点为 `AbsoluteTarget`（可嵌套 between）；`t ∈ [0,1]`（外插推迟）。
  *   compile 把两端点各 resolve 成世界坐标后 `lerpPoint(A, B, t)`。对应 TikZ `($(A)!t!(B)$)`。
  */
 export type IRBetweenPosition = {
   between: [IRAbsoluteTarget, IRAbsoluteTarget];
-  t: number;
+  fraction: number;
 };

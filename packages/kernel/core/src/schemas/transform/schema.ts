@@ -74,7 +74,7 @@ const BetweenTranslateSchema = z
     between: z
       .tuple([AbsoluteTargetSchema, AbsoluteTargetSchema])
       .describe('Two absolute endpoints; path-relative targets are excluded.'),
-    t: NormalizedFractionSchema.describe('Proportion from the first endpoint to the second endpoint.'),
+    fraction: NormalizedFractionSchema.describe('Proportion from the first endpoint to the second endpoint.'),
   })
   .describe('Proportional translate transform lowered to Cartesian translate at compile time.');
 

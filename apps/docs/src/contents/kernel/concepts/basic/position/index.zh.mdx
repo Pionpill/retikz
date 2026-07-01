@@ -12,7 +12,7 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
 | 节点引用    | `'node-id'` / `{ id, anchor?, offset? }`                          | 引用已命名节点或 Coordinate，并由路径自动贴边界；字符串是 React DSL 便捷写法 | **仅**路径目标（`Step.to` / way item） |
 | 相对定位    | `{ direction, of, distance? }`                                    | 按方向和距离放在另一个节点 / Coordinate 周围                                 | 节点位置、Coordinate 位置              |
 | 偏移定位    | `{ of, offset }`                                                  | 基于节点、坐标或极坐标做二维偏移                                             | 节点位置、Coordinate 位置、路径目标    |
-| 比例定位    | `{ between: [A, B], t }`                                          | 取 A 到 B 连线上的比例点；节点端点写 `{ id: 'a' }`                           | 节点位置、Coordinate 位置、路径目标    |
+| 比例定位    | `{ between: [A, B], fraction }`                                          | 取 A 到 B 连线上的比例点；节点端点写 `{ id: 'a' }`                           | 节点位置、Coordinate 位置、路径目标    |
 | 相对 target | `{ relative }` / `{ relativeAccumulate }` 或 `'+x,y'` / `'++x,y'` | 基于上一段终点做相对偏移                                                     | **仅**路径目标                         |
 
 > [坐标系](/kernel/concepts/basic/coordinate-system)：x 向右，y 向下（与 SVG / Canvas 一致，与数学课本相反）。单位是 user units，不是像素，最终物理尺寸由 `<Layout>` 的 `width` / `height` 与编译得到的 layout bounds 决定。
@@ -90,12 +90,12 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
 ```tsx
 <Node id="a" position={[0, 0]}>A</Node>
 <Node id="b" position={[120, 0]}>B</Node>
-<Coordinate id="mid" position={{ between: [{ id: 'a' }, { id: 'b' }], t: 0.5 }} />
+<Coordinate id="mid" position={{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }} />
 ```
 
 <ComponentPreview name="positioning-between" size="xs" />
 
-`between` 的两个端点是自包含的 absolute target：可用笛卡尔、极坐标、节点 / Coordinate 引用对象（`{ id: 'a' }`）、偏移定位，或继续嵌套 `{ between, t }`。它不接受 path-relative target（`relative` / `relativeAccumulate`），因为比例定位必须能独立解析。
+`between` 的两个端点是自包含的 absolute target：可用笛卡尔、极坐标、节点 / Coordinate 引用对象（`{ id: 'a' }`）、偏移定位，或继续嵌套 `{ between, fraction }`。它不接受 path-relative target（`relative` / `relativeAccumulate`），因为比例定位必须能独立解析。
 
 ## 路径相对 target
 

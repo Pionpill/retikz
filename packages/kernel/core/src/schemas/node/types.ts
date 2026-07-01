@@ -7,6 +7,7 @@ import type {
   BuiltinShape,
   NodeLabelPlacement,
   NodeLabelPosition,
+  NodeLabelRotateMode,
   NodeTextAlign,
 } from './constants';
 import type { NodeLabelBoundaryPositionSchema, NodeLabelSchema, NodeSchema } from './schema';
@@ -51,3 +52,6 @@ export type NodeTextAlignValue = ValueOf<typeof NodeTextAlign>;
 export type NodeLabelPositionValue = ValueOf<typeof NodeLabelPosition>;
 
 export type NodeLabelPlacementValue = ValueOf<typeof NodeLabelPlacement>;
+
+/** 节点标签自身旋转模式取值 */
+export type NodeLabelRotateModeValue = ValueOf<typeof NodeLabelRotateMode>;

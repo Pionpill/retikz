@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 
 import type { ValueOf } from '../../shared';
-import type { PatternShape } from './constants';
+import type { ImageFit, PatternShape } from './constants';
 import type { GradientStopSchema, PaintSpecSchema } from './schema';
 
 /** 渐变 stop 类型 */
@@ -15,6 +15,9 @@ export type IRPaintSpec = z.infer<typeof PaintSpecSchema>;
  * @description `BUILTIN_PATTERNS` 的 Record key（保穷尽性约束，不随 `PatternShapeName` 开放而退化为 `string`）
  */
 export type PatternShapeValue = ValueOf<typeof PatternShape>;
+
+/** 图片填充适配方式取值 */
+export type ImageFitValue = ValueOf<typeof ImageFit>;
 
 export type BuiltinPatternName = PatternShapeValue;
 

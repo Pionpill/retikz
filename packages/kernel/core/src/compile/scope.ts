@@ -80,7 +80,7 @@ export const lowerScopeTransforms = (
         break;
       }
       case 'between-translate': {
-        const between: IRBetweenPosition = { between: t.between, t: t.t };
+        const between: IRBetweenPosition = { between: t.between, fraction: t.fraction };
         const resolved = resolvePosition(between, nameStack, nodeDistance, [], resolveBetweenGlobal);
         if (!resolved) {
           onUnresolved?.(t);

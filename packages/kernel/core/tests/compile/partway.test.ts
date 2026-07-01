@@ -40,7 +40,7 @@ describe('Node 中心落两端点之间', () => {
       {
         type: 'node',
         id: 'mid',
-        position: { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 },
+        position: { between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 },
         text: 'mid',
       },
     ]);
@@ -60,7 +60,7 @@ describe('Node 中心落两端点之间', () => {
             [-40, -40],
             [40, 40],
           ],
-          t: 0.5,
+          fraction: 0.5,
         },
         text: 'm',
       },
@@ -82,7 +82,7 @@ describe('Coordinate 注册位置落两端点之间', () => {
             [0, 0],
             [90, 0],
           ],
-          t: 0.333,
+          fraction: 0.333,
         },
       },
       {
@@ -112,7 +112,7 @@ describe('Path step 端点落两端点之间', () => {
           {
             type: 'step',
             kind: 'line',
-            to: { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 },
+            to: { between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 },
           },
         ],
       },
@@ -132,7 +132,7 @@ describe('比例 t 边界命中端点', () => {
       {
         type: 'node',
         id: 'p',
-        position: { between: [{ id: 'A' }, { id: 'B' }], t: 0 },
+        position: { between: [{ id: 'A' }, { id: 'B' }], fraction: 0 },
         text: 'p',
       },
     ]);
@@ -149,7 +149,7 @@ describe('比例 t 边界命中端点', () => {
       {
         type: 'node',
         id: 'p',
-        position: { between: [{ id: 'A' }, { id: 'B' }], t: 1 },
+        position: { between: [{ id: 'A' }, { id: 'B' }], fraction: 1 },
         text: 'p',
       },
     ]);
@@ -172,8 +172,8 @@ describe('嵌套 between 解析', () => {
         type: 'node',
         id: 'p',
         position: {
-          between: [{ between: [{ id: 'A' }, { id: 'B' }], t: 0.5 }, { id: 'C' }],
-          t: 0.5,
+          between: [{ between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }, { id: 'C' }],
+          fraction: 0.5,
         },
         text: 'p',
       },
@@ -200,7 +200,7 @@ describe('端点带 anchor 时用对应 anchor 点插值', () => {
             { id: 'A', anchor: 'north' },
             { id: 'B', anchor: 'north' },
           ],
-          t: 0.5,
+          fraction: 0.5,
         },
         text: 'm',
       },
@@ -216,7 +216,7 @@ describe('端点带 anchor 时用对应 anchor 点插值', () => {
             { id: 'A', anchor: 'center' },
             { id: 'B', anchor: 'center' },
           ],
-          t: 0.5,
+          fraction: 0.5,
         },
         text: 'm',
       },
@@ -245,7 +245,7 @@ describe('transforms scope 内 between 投影', () => {
           {
             type: 'node',
             id: 'm',
-            position: { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 },
+            position: { between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 },
             text: 'm',
           },
         ],
@@ -278,7 +278,7 @@ describe('端点引用未定义节点不崩', () => {
           {
             type: 'step',
             kind: 'line',
-            to: { between: [{ id: 'A' }, { id: 'bogus' }], t: 0.5 },
+            to: { between: [{ id: 'A' }, { id: 'bogus' }], fraction: 0.5 },
           },
         ],
       },

@@ -75,7 +75,7 @@ describe('Node label placement', () => {
       expect(() => NodeLabelSchema.parse({ text: 'L', placement: 'inner' })).toThrow();
       expect(() => NodeLabelSchema.parse({ text: 'L', position: { boundary: 'up' } })).toThrow();
       expect(() => NodeLabelSchema.parse({ text: 'L', position: { boundary: 'top', fraction: 1.1 } })).toThrow();
-      expect(() => NodeLabelSchema.parse({ text: 'L', position: { boundary: 'top', t: 0.5 } })).toThrow();
+      expect(() => NodeLabelSchema.parse({ text: 'L', position: { boundary: 'top', offset: 0.5 } })).toThrow();
     });
 
     it('拒绝 inside placement 与 pin 同时出现', () => {

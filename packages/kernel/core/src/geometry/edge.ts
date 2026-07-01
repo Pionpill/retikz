@@ -7,7 +7,7 @@ import { WebAnchor, WebSide } from '../shared';
 
 export { lerp as lerpPoint } from '@retikz/math';
 
-/** 边上比例点 `{ side, t }` 的四个 Web side（top/right/bottom/left） */
+/** 边上比例点 `{ side, fraction }` 的四个 Web side（top/right/bottom/left） */
 export type Side = WebSideValue;
 
 /**

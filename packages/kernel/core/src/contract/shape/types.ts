@@ -121,7 +121,7 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
   anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
   /**
    * 边上比例点：Web side 真实边界从约定起点起 t∈[0,1] 处（轴对齐空间求出后由 layout 投回世界系）。
-   * @description 可选——目前仅 rectangle / ellipse 实现；未实现的 shape（polygon / sector / arc / star）收到 `{ side, t }` 时编译期（resolveEdgePoint）抛明确错。
+   * @description 可选——目前仅 rectangle / ellipse 实现；未实现的 shape（polygon / sector / arc / star）收到 `{ side, fraction }` 时编译期（resolveEdgePoint）抛明确错。
    *   side 使用 Web/CSS canonical 值：top/right/bottom/left。与 `anchor` 同坐标语义：收**带 rotate 的 Rect**，自行用 `worldToLocal` / `localToWorld` 处理旋转。
    * @default 不支持；该 shape 的 side anchor 会抛错
    */

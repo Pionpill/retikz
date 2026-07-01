@@ -129,7 +129,7 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
       ['B', [100, 40]],
     ]);
     const out = lowerScopeTransforms(
-      [{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], t: 0.25 }],
+      [{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.25 }],
       idx,
       undefined,
       between => {
@@ -138,8 +138,8 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
         const bLayout = 'id' in b ? idx.lookup(b.id) : null;
         if (!aLayout || !bLayout) return null;
         return [
-          aLayout.rect.x + (bLayout.rect.x - aLayout.rect.x) * between.t,
-          aLayout.rect.y + (bLayout.rect.y - aLayout.rect.y) * between.t,
+          aLayout.rect.x + (bLayout.rect.x - aLayout.rect.x) * between.fraction,
+          aLayout.rect.y + (bLayout.rect.y - aLayout.rect.y) * between.fraction,
         ];
       },
     );
@@ -168,7 +168,7 @@ describe('lowerScopeTransforms 失败情形', () => {
       ['A', [0, 0]],
       ['B', [100, 40]],
     ]);
-    const out = lowerScopeTransforms([{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], t: 0.5 }], idx);
+    const out = lowerScopeTransforms([{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }], idx);
     expect(out).toBeNull();
   });
 
@@ -233,7 +233,7 @@ describe('lowerScopeTransforms 链复合', () => {
       { kind: 'polar-translate', angle: 0, radius: 10 },
       { kind: 'at-translate', direction: 'right', of: 'A', distance: 4 },
       { kind: 'offset-translate', of: 'B', offset: [1, 2] },
-      { kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], t: 0.5 },
+      { kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 },
       { kind: 'rotate', degrees: 30 },
       { kind: 'scale', x: 2 },
     ];
@@ -243,8 +243,8 @@ describe('lowerScopeTransforms 链复合', () => {
       const bLayout = 'id' in b ? idx.lookup(b.id) : null;
       if (!aLayout || !bLayout) return null;
       return [
-        aLayout.rect.x + (bLayout.rect.x - aLayout.rect.x) * between.t,
-        aLayout.rect.y + (bLayout.rect.y - aLayout.rect.y) * between.t,
+        aLayout.rect.x + (bLayout.rect.x - aLayout.rect.x) * between.fraction,
+        aLayout.rect.y + (bLayout.rect.y - aLayout.rect.y) * between.fraction,
       ];
     });
     expect(out).not.toBeNull();

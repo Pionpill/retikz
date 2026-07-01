@@ -2838,8 +2838,8 @@ export const changelog: Array<Release> = [
           {
             label: { zh: 'Scene / Position 能力完善', en: 'Scene / Position completion' },
             content: {
-              zh: 'clip 裁切（Scope 级 ClipResource + clipRef）+ 自定义 viewBox override + 比例 partway 定位 `{ between, t }`（自包含 AbsoluteTarget）[Scope](/kernel/components/layout/scope)',
-              en: 'Clipping (Scope-level ClipResource + clipRef) + custom viewBox override + proportional partway positioning `{ between, t }` (self-contained AbsoluteTarget) [Scope](/kernel/components/layout/scope)',
+              zh: 'clip 裁切（Scope 级 ClipResource + clipRef）+ 自定义 viewBox override + 比例 partway 定位 `{ between, fraction }`（自包含 AbsoluteTarget）[Scope](/kernel/components/layout/scope)',
+              en: 'Clipping (Scope-level ClipResource + clipRef) + custom viewBox override + proportional partway positioning `{ between, fraction }` (self-contained AbsoluteTarget) [Scope](/kernel/components/layout/scope)',
             },
           },
         ],
@@ -2903,8 +2903,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '比例 partway 定位', en: 'Proportional partway' },
                 content: {
-                  zh: '`{ between: [A, B], t }` 比例定位 `lerp(A, B, t)`，进 `Node.position` / `Coordinate.position` / path `Step.to`；端点用自包含 `AbsoluteTarget`（笛卡尔 / 极坐标 / 节点引用 / offset / 嵌套 between，排除 path-relative，z.lazy 化解 schema 环）；复用 `refPointOfTarget` + `lerpPoint` + finite 守卫 [Coordinate](/kernel/components/node/coordinate)',
-                  en: '`{ between: [A, B], t }` proportional positioning `lerp(A, B, t)`, admitted into `Node.position` / `Coordinate.position` / path `Step.to`; endpoints use a self-contained `AbsoluteTarget` (Cartesian / polar / node ref / offset / nested between, excluding path-relative, z.lazy breaks the schema cycle); reuses `refPointOfTarget` + `lerpPoint` with finite guards [Coordinate](/kernel/components/node/coordinate)',
+                  zh: '`{ between: [A, B], fraction }` 比例定位 `lerp(A, B, fraction)`，进 `Node.position` / `Coordinate.position` / path `Step.to`；端点用自包含 `AbsoluteTarget`（笛卡尔 / 极坐标 / 节点引用 / offset / 嵌套 between，排除 path-relative，z.lazy 化解 schema 环）；复用 `refPointOfTarget` + `lerpPoint` + finite 守卫 [Coordinate](/kernel/components/node/coordinate)',
+                  en: '`{ between: [A, B], fraction }` proportional positioning `lerp(A, B, fraction)`, admitted into `Node.position` / `Coordinate.position` / path `Step.to`; endpoints use a self-contained `AbsoluteTarget` (Cartesian / polar / node ref / offset / nested between, excluding path-relative, z.lazy breaks the schema cycle); reuses `refPointOfTarget` + `lerpPoint` with finite guards [Coordinate](/kernel/components/node/coordinate)',
                 },
               },
             ],
@@ -2982,8 +2982,8 @@ export const changelog: Array<Release> = [
             version: 'alpha.6',
             date: '2026-05-23',
             summary: {
-              zh: '结构化 Target / Anchor:path target 对象唯一(去 z.string)+ AnchorRef(命名 / 角度 / 边上比例点 `{ side, t }`)+ offset;`{ side, t }` 落 shape 真实边界。',
-              en: 'Structured Target / Anchor: object-only path target (drops z.string) + AnchorRef (named / angle / edge-proportional `{ side, t }`) + offset; `{ side, t }` lands on the real shape boundary.',
+              zh: '结构化 Target / Anchor:path target 对象唯一(去 z.string)+ AnchorRef(命名 / 角度 / 边上比例点 `{ side, fraction }`)+ offset;`{ side, fraction }` 落 shape 真实边界。',
+              en: 'Structured Target / Anchor: object-only path target (drops z.string) + AnchorRef (named / angle / edge-proportional `{ side, fraction }`) + offset; `{ side, fraction }` lands on the real shape boundary.',
             },
             items: [
               {
@@ -2996,12 +2996,12 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'AnchorRef + offset', en: 'AnchorRef + offset' },
                 content: {
-                  zh: '`anchor` 支持命名 anchor / 角度 / `{ side, t }` 边上比例点;`offset` 在 anchor 解析后世界系叠加(不随节点 rotate 旋转)',
-                  en: '`anchor` accepts a named anchor / angle / `{ side, t }` edge-proportional point; `offset` adds a world-space delta after the anchor resolves (not rotated by the node)',
+                  zh: '`anchor` 支持命名 anchor / 角度 / `{ side, fraction }` 边上比例点;`offset` 在 anchor 解析后世界系叠加(不随节点 rotate 旋转)',
+                  en: '`anchor` accepts a named anchor / angle / `{ side, fraction }` edge-proportional point; `offset` adds a world-space delta after the anchor resolves (not rotated by the node)',
                 },
               },
               {
-                label: { zh: '`{ side, t }` 真实边界几何', en: '`{ side, t }` real-boundary geometry' },
+                label: { zh: '`{ side, fraction }` 真实边界几何', en: '`{ side, fraction }` real-boundary geometry' },
                 content: {
                   zh: '`ShapeDefinition.edgePoint?` + `resolveEdgePoint`:rect 直边 / circle·ellipse 周长弧段(等角)/ diamond 过顶点折线;不支持的 shape / 零尺寸 Coordinate 报明确错',
                   en: '`ShapeDefinition.edgePoint?` + `resolveEdgePoint`: rect straight edge / circle·ellipse perimeter arc (equiangular) / diamond via-vertex polyline; clear errors for unsupported shapes / zero-size Coordinates',
@@ -3228,8 +3228,8 @@ export const changelog: Array<Release> = [
             version: 'alpha.9',
             date: '2026-05-24',
             summary: {
-              zh: 'adapter 物化 clip：ClipDefs 产 `<clipPath>`、group 挂 `clip-path`；`<Layout viewBox>` prop；`<Node>` / `<Coordinate>` position 接 `{ between, t }`。',
-              en: 'The adapter materializes clip: ClipDefs emits `<clipPath>` and the group gains `clip-path`; a `<Layout viewBox>` prop; `<Node>` / `<Coordinate>` position accept `{ between, t }`.',
+              zh: 'adapter 物化 clip：ClipDefs 产 `<clipPath>`、group 挂 `clip-path`；`<Layout viewBox>` prop；`<Node>` / `<Coordinate>` position 接 `{ between, fraction }`。',
+              en: 'The adapter materializes clip: ClipDefs emits `<clipPath>` and the group gains `clip-path`; a `<Layout viewBox>` prop; `<Node>` / `<Coordinate>` position accept `{ between, fraction }`.',
             },
             items: [
               {
@@ -3242,8 +3242,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'viewBox / partway DSL', en: 'viewBox / partway DSL' },
                 content: {
-                  zh: '`<Layout viewBox={{ x, y, width, height }}>` 注入 IR 根（prop 优先于 IR 内置）；`<Node position>` / `<Coordinate position>` 类型并入 `{ between, t }`（Step.to 走 DslTarget 已含）',
-                  en: '`<Layout viewBox={{ x, y, width, height }}>` injects the IR root (prop wins over IR-embedded); `<Node position>` / `<Coordinate position>` types include `{ between, t }` (Step.to already covered via DslTarget)',
+                  zh: '`<Layout viewBox={{ x, y, width, height }}>` 注入 IR 根（prop 优先于 IR 内置）；`<Node position>` / `<Coordinate position>` 类型并入 `{ between, fraction }`（Step.to 走 DslTarget 已含）',
+                  en: '`<Layout viewBox={{ x, y, width, height }}>` injects the IR root (prop wins over IR-embedded); `<Node position>` / `<Coordinate position>` types include `{ between, fraction }` (Step.to already covered via DslTarget)',
                 },
               },
             ],
@@ -3490,8 +3490,8 @@ export const changelog: Array<Release> = [
             version: 'alpha.6',
             date: '2026-05-23',
             summary: {
-              zh: '文档全量切 `<Layout>`、路由 `/components/tikz` → `/layout`;anchors 概念页主推对象形态 Target + `{ side, t }` 边上比例点。',
-              en: 'Docs switch to `<Layout>` throughout, route `/components/tikz` → `/layout`; the anchors page leads with object-form targets + `{ side, t }` edge-proportional points.',
+              zh: '文档全量切 `<Layout>`、路由 `/components/tikz` → `/layout`;anchors 概念页主推对象形态 Target + `{ side, fraction }` 边上比例点。',
+              en: 'Docs switch to `<Layout>` throughout, route `/components/tikz` → `/layout`; the anchors page leads with object-form targets + `{ side, fraction }` edge-proportional points.',
             },
             items: [
               {
@@ -3502,10 +3502,10 @@ export const changelog: Array<Release> = [
                 },
               },
               {
-                label: { zh: 'anchors 页对象形态 + `{ side, t }`', en: 'anchors page object form + `{ side, t }`' },
+                label: { zh: 'anchors 页对象形态 + `{ side, fraction }`', en: 'anchors page object form + `{ side, fraction }`' },
                 content: {
-                  zh: 'anchors 概念页主推对象形态 `{ id, anchor?, offset? }`、字符串 shorthand 降级为 DSL 便捷写法,新增「边上比例点 `{ side, t }`」小节 + demo',
-                  en: 'The anchors page leads with `{ id, anchor?, offset? }`, demotes string shorthand to DSL convenience, and adds an "edge-proportional `{ side, t }`" section + demo',
+                  zh: 'anchors 概念页主推对象形态 `{ id, anchor?, offset? }`、字符串 shorthand 降级为 DSL 便捷写法,新增「边上比例点 `{ side, fraction }`」小节 + demo',
+                  en: 'The anchors page leads with `{ id, anchor?, offset? }`, demotes string shorthand to DSL convenience, and adds an "edge-proportional `{ side, fraction }`" section + demo',
                 },
               },
             ],

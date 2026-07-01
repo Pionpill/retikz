@@ -1,7 +1,13 @@
+import type { ValueOf } from '../../shared';
 import type { IRJsonObject } from '../json';
 import type { IRPathCommand } from '../path-command';
+import type { ClipFillRule } from './constants';
 
-export type IRClipFillRule = 'nonzero' | 'evenodd';
+/** 裁切路径填充规则取值 */
+export type ClipFillRuleValue = ValueOf<typeof ClipFillRule>;
+
+/** 裁切路径填充规则 IR 类型 */
+export type IRClipFillRule = ClipFillRuleValue;
 export type IRRectClipSpec = { kind: 'rect'; x: number; y: number; width: number; height: number };
 export type IRCircleClipSpec = { kind: 'circle'; cx: number; cy: number; r: number };
 export type IREllipseClipSpec = { kind: 'ellipse'; cx: number; cy: number; rx: number; ry: number };

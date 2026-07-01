@@ -440,7 +440,7 @@ describe('public export + remaining quadrants', () => {
                   { id: 'A', boundary: 'circle' },
                   { id: 'B' },
                 ],
-                t: 0.5,
+                fraction: 0.5,
               },
             },
           ],

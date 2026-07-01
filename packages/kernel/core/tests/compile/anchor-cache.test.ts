@@ -205,7 +205,7 @@ paramsSchema: z.strictObject({}),
     expect(() => resolveEdgePoint(layout, 'top', 0.5)).toThrow(/does not support side anchors/);
   });
 
-  it('零尺寸 Coordinate → { side, t } 报错（决策细节 #10）', () => {
+  it('零尺寸 Coordinate → { side, fraction } 报错（决策细节 #10）', () => {
     const layout = makeLayout('rectangle', 0, 0, 5, 5);
     expect(() => resolveEdgePoint(layout, 'top', 0.5)).toThrow(/zero-size Coordinate/);
   });

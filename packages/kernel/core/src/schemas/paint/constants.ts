@@ -8,3 +8,13 @@ export const PatternShape = {
   Dots: 'dots',
   Grid: 'grid',
 } as const;
+
+/** 图片填充到目标形状的适配方式 */
+export const ImageFit = {
+  /** 拉伸图片填满目标区域 */
+  Fill: 'fill',
+  /** 保持比例完整显示在目标区域内 */
+  Contain: 'contain',
+  /** 保持比例覆盖目标区域，允许裁切 */
+  Cover: 'cover',
+} as const;

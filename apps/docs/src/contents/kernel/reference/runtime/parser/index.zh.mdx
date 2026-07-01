@@ -60,7 +60,7 @@ Parser reference 覆盖 `@retikz/core` 公开的 sugar 解析函数。它们不�
 
 ## 相对目标点语法糖
 
-`parseTargetSugar` 只处理 React DSL 的字符串 shorthand；非字符串输入原样返回，已经是对象的 target（含 `{ id, anchor? }`、`{ of, offset }`、`{ between, t }`）不会被重写。合法的节点 ref / 偏移字符串按下表转换，非法字符串（如 `'+x,'`、未知 anchor、空 id、纯小数串）抛错：
+`parseTargetSugar` 只处理 React DSL 的字符串 shorthand；非字符串输入原样返回，已经是对象的 target（含 `{ id, anchor? }`、`{ of, offset }`、`{ between, fraction }`）不会被重写。合法的节点 ref / 偏移字符串按下表转换，非法字符串（如 `'+x,'`、未知 anchor、空 id、纯小数串）抛错：
 
 | Input                                             | Output                                            | 含义                                          |
 | ------------------------------------------------- | ------------------------------------------------- | --------------------------------------------- |
@@ -70,7 +70,7 @@ Parser reference 覆盖 `@retikz/core` 公开的 sugar 解析函数。它们不�
 | `'node-id.top'`                                   | `{ id: 'node-id', anchor: 'top' }`                | 命名 anchor                                   |
 | `'node-id.30'`                                    | `{ id: 'node-id', anchor: 30 }`                   | 数字角度 anchor                               |
 | `[10, 20]`                                        | `[10, 20]`                                        | 非字符串输入原样返回                          |
-| `{ between: [{ id: 'a' }, { id: 'b' }], t: 0.5 }` | `{ between: [{ id: 'a' }, { id: 'b' }], t: 0.5 }` | 对象 target 原样返回；后续 compile 再解析端点 |
+| `{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }` | `{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }` | 对象 target 原样返回；后续 compile 再解析端点 |
 
 正则允许空格和负数，例如 `'+ -4, 8'` / `'++-4,8'`。
 

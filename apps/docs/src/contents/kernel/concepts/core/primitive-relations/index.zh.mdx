@@ -42,7 +42,7 @@ retikz 把这种连接的解析分成两种模式：
 | 省略 anchor   | `{ id: 'A' }`：动态贴边（同纯 id）                                                                      |
 | 命名 anchor   | `{ id: 'A', anchor: 'top' }`：Web 方位名；`north` 等 compass 写法可作别名                                |
 | 角度 anchor   | `{ id: 'A', anchor: 30 }`：deg 方向的视觉边界点                                                         |
-| 边上比例点    | `{ id: 'A', anchor: { side: 'top', t: 0.25 } }`                                                         |
+| 边上比例点    | `{ id: 'A', anchor: { side: 'top', fraction: 0.25 } }`                                                         |
 | anchor + 偏移 | `{ id: 'A', anchor: 'left', offset: [-4, 0] }`：解析到点后再加世界系 `[dx, dy]`（不随节点 rotate 旋转） |
 
 anchor 的命名规则和几何含义都在 [图元模型 · 锚点](/kernel/concepts/kernel/primitive-model)；这里只关心一点：命名 / 角度 / 边上比例点都**位置定死**，不受邻居 step 方向影响（只有 auto 模式才动态调整）。下面三组：矩形 / 椭圆用通用 Web 方位 anchor，星形用它专属的 `tip-N`：
@@ -63,7 +63,7 @@ path target 还能写笛卡尔、极坐标、相对 / 偏移 / 比例定位等�
 
 <ComponentPreview name="anchors-margin" size="xs" hideCode />
 
-上图三列依次是：无 margin（贴边）、有 margin 的 auto（border 锚点 → 退开间隙）、有 margin 的 `{side,t}`（边点 → 仍贴死视觉 border）。只有 border 锚点（auto / 命名方位 / 角度）随 margin 外移；`center`、形状专属锚点、边上比例点 `{side,t}` 和标签附着点仍取**视觉 shape**、不吃 margin。要让连线在某处贴死视觉边，用这些点或显式坐标偏移。
+上图三列依次是：无 margin（贴边）、有 margin 的 auto（border 锚点 → 退开间隙）、有 margin 的 `{ side, fraction }`（边点 → 仍贴死视觉 border）。只有 border 锚点（auto / 命名方位 / 角度）随 margin 外移；`center`、形状专属锚点、边上比例点 `{ side, fraction }` 和标签附着点仍取**视觉 shape**、不吃 margin。要让连线在某处贴死视觉边，用这些点或显式坐标偏移。
 
 margin 还分形状：对**文本容器形状**（矩形 / 椭圆 / 多边形，尺寸由内框驱动）生效，对**参数驱动形状**（star / sector，尺寸由 params 定）不生效。
 

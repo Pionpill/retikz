@@ -118,7 +118,7 @@ describe('outerSep：不外扩护栏 + 校验', () => {
     expect(bad.success).toBe(false);
   });
 
-  it('edgePoint-no-margin：{ side, t } 恒走视觉 shape，不受 margin 影响', () => {
+  it('edgePoint-no-margin：{ side, fraction } 恒走视觉 shape，不受 margin 影响', () => {
     const e0 = resolveEdgePoint(mkLayout(0), 'top', 0.5);
     const e10 = resolveEdgePoint(mkLayout(10), 'top', 0.5);
     expect(e10).toEqual(e0); // 视觉 top 边中点 = [0,-15]

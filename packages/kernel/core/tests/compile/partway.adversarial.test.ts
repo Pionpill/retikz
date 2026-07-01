@@ -60,7 +60,7 @@ describe('between 在带 scale / 复合 transform 的 scope 内投影到正确�
           {
             type: 'coordinate',
             id: 'm',
-            position: { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 },
+            position: { between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 },
           },
         ],
       },
@@ -96,7 +96,7 @@ describe('between 在带 scale / 复合 transform 的 scope 内投影到正确�
           {
             type: 'node',
             id: 'm',
-            position: { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 },
+            position: { between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 },
             text: 'm',
           },
         ],
@@ -127,7 +127,7 @@ describe('between 在带 scale / 复合 transform 的 scope 内投影到正确�
           {
             type: 'coordinate',
             id: 'm',
-            position: { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 },
+            position: { between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 },
           },
         ],
       },
@@ -162,7 +162,7 @@ describe('between 在带 scale / 复合 transform 的 scope 内投影到正确�
               {
                 type: 'coordinate',
                 id: 'm',
-                position: { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 },
+                position: { between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 },
               },
             ],
           },
@@ -197,7 +197,7 @@ describe('between 在带 scale / 复合 transform 的 scope 内投影到正确�
           {
             type: 'coordinate',
             id: 'm',
-            position: { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 },
+            position: { between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 },
           },
         ],
       },
@@ -237,15 +237,15 @@ describe('深层嵌套 between + 端点混极坐标 / offset', () => {
                     [0, 0],
                     [8, 0],
                   ],
-                  t: 0.5,
+                  fraction: 0.5,
                 },
                 [8, 8],
               ],
-              t: 0.5,
+              fraction: 0.5,
             },
             [0, 8],
           ],
-          t: 0.5,
+          fraction: 0.5,
         },
       },
       {
@@ -274,7 +274,7 @@ describe('深层嵌套 between + 端点混极坐标 / offset', () => {
             { angle: 0, radius: 100 },
             { angle: 90, radius: 100 },
           ],
-          t: 0.5,
+          fraction: 0.5,
         },
       },
       {
@@ -302,7 +302,7 @@ describe('深层嵌套 between + 端点混极坐标 / offset', () => {
             { of: 'N', offset: [10, 0] },
             { of: 'N', offset: [-10, 0] },
           ],
-          t: 0.5,
+          fraction: 0.5,
         },
       },
       {
@@ -340,7 +340,7 @@ describe('非 finite 端点不进 Scene；带 between 的 Scene round-trip', () 
               { angle: 0, radius: Number.POSITIVE_INFINITY },
               { angle: 90, radius: 100 },
             ],
-            t: 0.5,
+            fraction: 0.5,
           },
         },
         {
@@ -377,7 +377,7 @@ describe('非 finite 端点不进 Scene；带 between 的 Scene round-trip', () 
           id: 'm',
           position: {
             between: [{ of: 'N', offset: [Number.NaN, 0] }, [10, 0]],
-            t: 0.5,
+            fraction: 0.5,
           },
         },
         {
@@ -410,7 +410,7 @@ describe('非 finite 端点不进 Scene；带 between 的 Scene round-trip', () 
       {
         type: 'node',
         id: 'mid',
-        position: { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 },
+        position: { between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 },
         text: 'mid',
       },
     ]);
@@ -440,7 +440,7 @@ describe('未解析端点：前向引用 / bogus 端点应 warn 不崩', () => {
           {
             type: 'step',
             kind: 'line',
-            to: { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 },
+            to: { between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 },
           },
         ],
       },
@@ -464,7 +464,7 @@ describe('未解析端点：前向引用 / bogus 端点应 warn 不崩', () => {
           {
             type: 'step',
             kind: 'line',
-            to: { between: [{ id: 'nope1' }, { id: 'nope2' }], t: 0.5 },
+            to: { between: [{ id: 'nope1' }, { id: 'nope2' }], fraction: 0.5 },
           },
         ],
       },
@@ -482,7 +482,7 @@ describe('未解析端点：前向引用 / bogus 端点应 warn 不崩', () => {
       {
         type: 'node',
         id: 'mid',
-        position: { between: [{ id: 'A' }, { id: 'bogus' }], t: 0.5 },
+        position: { between: [{ id: 'A' }, { id: 'bogus' }], fraction: 0.5 },
         text: 'mid',
       },
     ]);
@@ -495,7 +495,7 @@ describe('未解析端点：前向引用 / bogus 端点应 warn 不崩', () => {
       {
         type: 'coordinate',
         id: 'mid',
-        position: { between: [{ id: 'A' }, { id: 'bogus' }], t: 0.5 },
+        position: { between: [{ id: 'A' }, { id: 'bogus' }], fraction: 0.5 },
       },
     ]);
     expect(() => compileToScene(ir, { onWarn: () => {} })).toThrow(/Cannot resolve position/);
@@ -516,7 +516,7 @@ describe('t 退化与越界（手搓绕过 schema）', () => {
             [33, 44],
             [33, 44],
           ],
-          t: 0.5,
+          fraction: 0.5,
         },
       },
       {
@@ -546,7 +546,7 @@ describe('t 退化与越界（手搓绕过 schema）', () => {
               [0, 0],
               [100, 0],
             ],
-            t: Number.NaN,
+            fraction: Number.NaN,
           },
         },
         {
@@ -587,7 +587,7 @@ describe('t 退化与越界（手搓绕过 schema）', () => {
               [0, 0],
               [100, 0],
             ],
-            t: 1.5,
+            fraction: 1.5,
           },
         },
         {
@@ -622,7 +622,7 @@ describe('between 端点为 relative（手搓绕过 schema）应被拒绝，不�
             {
               type: 'step',
               kind: 'line',
-              to: { between: [{ id: 'A' }, { relative: [10, 10] }], t: 0.5 },
+              to: { between: [{ id: 'A' }, { relative: [10, 10] }], fraction: 0.5 },
             },
           ],
         },
@@ -646,7 +646,7 @@ describe('between 端点为 relative（手搓绕过 schema）应被拒绝，不�
         {
           type: 'node',
           id: 'mid',
-          position: { between: [{ id: 'A' }, { relative: [10, 10] }], t: 0.5 },
+          position: { between: [{ id: 'A' }, { relative: [10, 10] }], fraction: 0.5 },
           text: 'mid',
         },
       ],
@@ -659,8 +659,8 @@ describe('between 端点为 relative（手搓绕过 schema）应被拒绝，不�
 // 攻击面 7：端点带 anchor / offset 的 lerp 正确
 // ---------------------------------------------------------------------------
 describe('端点带 anchor / offset 的 lerp', () => {
-  it('端点 { id, anchor:{side,t} } 边上比例点 lerp 正确', () => {
-    // A 是有尺寸节点 [0,0]，端点 A.east 的 {side:east,t:0.5} = east 中点（east anchor）。
+  it('端点 { id, anchor:{ side, fraction } } 边上比例点 lerp 正确', () => {
+    // A 是有尺寸节点 [0,0]，端点 A.east 的 {side:east,fraction:0.5} = east 中点（east anchor）。
     // B=[200,0] 是 0×0 coordinate。between(A.east, B) t=0.5。
     // 期望：x = (A.east.x + 200)/2，y = 0（east anchor y 与中心同）。A.east.x > 0。
     const ir = scene([
@@ -670,8 +670,8 @@ describe('端点带 anchor / offset 的 lerp', () => {
         type: 'coordinate',
         id: 'm',
         position: {
-          between: [{ id: 'A', anchor: { side: 'right', t: 0.5 } }, { id: 'B' }],
-          t: 0.5,
+          between: [{ id: 'A', anchor: { side: 'right', fraction: 0.5 } }, { id: 'B' }],
+          fraction: 0.5,
         },
       },
       {
@@ -691,7 +691,7 @@ describe('端点带 anchor / offset 的 lerp', () => {
         id: 'm',
         position: {
           between: [{ id: 'A', anchor: 'center' }, { id: 'B' }],
-          t: 0.5,
+          fraction: 0.5,
         },
       },
       {
@@ -724,7 +724,7 @@ describe('端点带 anchor / offset 的 lerp', () => {
             { id: 'A', offset: [0, 20] },
             { id: 'B', offset: [0, 20] },
           ],
-          t: 0.5,
+          fraction: 0.5,
         },
       },
       {

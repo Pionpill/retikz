@@ -6,7 +6,7 @@ import { Draw, Layout, Node } from '@retikz/react';
  * margin 对连接端点的作用
  * @description 三组对照：1) 无 margin，auto 端点贴视觉 border；
  *   2) 有 margin，auto 是 border 锚点 → 整体外移，留出间隙；
- *   3) 同样有 margin，但用 `{ side, t }` 边点 → 取视觉 border、不吃 margin，仍贴死。
+ *   3) 同样有 margin，但用 `{ side, fraction }` 边点 → 取视觉 border、不吃 margin，仍贴死。
  */
 const Demo: FC = () => (
   <Layout width={620} height={160}>
@@ -28,7 +28,7 @@ const Demo: FC = () => (
     </Node>
     <Draw way={['a2', 'b2']} stroke="currentColor" strokeWidth={2} />
 
-    {/* margin + {side,t}：边点取视觉 border，不吃 margin，仍贴死 */}
+    {/* margin + { side, fraction }：边点取视觉 border，不吃 margin，仍贴死 */}
     <Node id="a3" position={[190, -10]} padding={10} margin={12} stroke="gray" dashPattern={[4, 3]}>
       a
     </Node>
@@ -37,8 +37,8 @@ const Demo: FC = () => (
     </Node>
     <Draw
       way={[
-        { id: 'a3', anchor: { side: 'right', t: 0.5 } },
-        { id: 'b3', anchor: { side: 'left', t: 0.5 } },
+        { id: 'a3', anchor: { side: 'right', fraction: 0.5 } },
+        { id: 'b3', anchor: { side: 'left', fraction: 0.5 } },
       ]}
       stroke="currentColor"
       strokeWidth={2}
@@ -51,7 +51,7 @@ const Demo: FC = () => (
       margin · border anchor
     </Node>
     <Node position={[245, 42]} stroke="none" padding={0} textColor="gray">
-      margin · {'{side,t}'}
+      margin · {'{ side, fraction }'}
     </Node>
   </Layout>
 );

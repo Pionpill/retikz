@@ -45,7 +45,7 @@ IR 是这三件事的公约数。一旦它存在，JSX 就是 IR 的一种"输�
 
 中间层是 **Node** 和 **Path**：
 
-- **Node** 是可定位、可旋转的形状容器（内置 rectangle / circle / ellipse / diamond，ShapeRegistry 可注册更多），带 text / label / padding / scale 等字段；position 支持 5 种形式（笛卡尔 / 极坐标 / `at` 引用 / 偏移 / 比例 partway `{ between, t }`）。
+- **Node** 是可定位、可旋转的形状容器（内置 rectangle / circle / ellipse / diamond，ShapeRegistry 可注册更多），带 text / label / padding / scale 等字段；position 支持 5 种形式（笛卡尔 / 极坐标 / `at` 引用 / 偏移 / 比例 partway `{ between, fraction }`）。
 - **Path** 是绘制命令序列，`children` 一般至少 2 个 `Step`（自包含的 rectangle step 可独立成段），外加 stroke / fill / arrow / dashPattern / rotate / scale / marks 等视觉属性。
 
 底层是 **Step**，12 种 kind 覆盖全部路径动作：

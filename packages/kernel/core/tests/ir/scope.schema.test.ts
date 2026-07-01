@@ -275,7 +275,7 @@ describe('TransformSchema 各变体合法形态', () => {
     const parsed = TransformSchema.safeParse({
       kind: 'between-translate',
       between: [[0, 0], { id: 'B' }],
-      t: 0.5,
+      fraction: 0.5,
     });
     expect(parsed.success).toBe(true);
   });
@@ -388,7 +388,7 @@ describe('TransformSchema 各变体拒绝缺字段', () => {
         [0, 0],
         [10, 0],
       ],
-      t: 1.5,
+      fraction: 1.5,
     });
     expect(parsed.success).toBe(false);
   });

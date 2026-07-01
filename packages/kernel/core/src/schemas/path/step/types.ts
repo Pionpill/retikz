@@ -2,7 +2,7 @@ import type { z } from 'zod';
 
 import type { CompassSideValue, TikzSideValue, WebSideValue } from '../../../shared';
 import type { ValueOf } from '../../../shared';
-import type { FoldStepVia, GeometryLabelPlacement } from './constants';
+import type { BendDirection, FoldStepVia, GeometryLabelPlacement, GeometryLabelPosition, PathCloseMode } from './constants';
 import type {
   ArcStepSchema,
   BendStepSchema,
@@ -90,4 +90,13 @@ export type IRStep = z.infer<typeof StepSchema>;
 
 export type GeometryLabelPlacementValue = ValueOf<typeof GeometryLabelPlacement>;
 
+/** path-like 几何标签沿段的位置关键字取值 */
+export type GeometryLabelPositionValue = ValueOf<typeof GeometryLabelPosition>;
+
 export type FoldStepViaValue = ValueOf<typeof FoldStepVia>;
+
+/** bend step 弯曲侧取值 */
+export type BendDirectionValue = ValueOf<typeof BendDirection>;
+
+/** 圆 / 椭圆 path 局部弧段闭合方式取值 */
+export type PathCloseModeValue = ValueOf<typeof PathCloseMode>;

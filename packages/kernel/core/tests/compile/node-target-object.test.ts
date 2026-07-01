@@ -1,7 +1,7 @@
 /**
  * 对象形态 NodeTarget 的 compile 解析（ADR-01）
  * @description 对象 { id, anchor?, offset? } 与等价字符串 shorthand 编译结果一致（named / angle / auto）；
- *   { side, t } t=0.5 == cardinal 命名 anchor；offset 世界系叠加；未定义 id 不产 PathPrim
+ *   { side, fraction } t=0.5 == cardinal 命名 anchor；offset 世界系叠加；未定义 id 不产 PathPrim
  */
 import { describe, expect, it } from 'vitest';
 
@@ -70,13 +70,13 @@ describe('对象 NodeTarget 命名 / 角度 / auto 方向正确', () => {
   });
 });
 
-describe('{ side, t } 边上比例点', () => {
+describe('{ side, fraction } 边上比例点', () => {
   it('top t=0.5 == 命名 top anchor（edgePoint 中点 = cardinal）', () => {
-    expect(endOf({ id: 'A', anchor: { side: 'top', t: 0.5 } })).toEqual(endOf({ id: 'A', anchor: 'top' }));
+    expect(endOf({ id: 'A', anchor: { side: 'top', fraction: 0.5 } })).toEqual(endOf({ id: 'A', anchor: 'top' }));
   });
 
   it('left t=0 == top-left 角（rect 边端点 = 角 anchor）', () => {
-    expect(endOf({ id: 'A', anchor: { side: 'left', t: 0 } })).toEqual(endOf({ id: 'A', anchor: 'top-left' }));
+    expect(endOf({ id: 'A', anchor: { side: 'left', fraction: 0 } })).toEqual(endOf({ id: 'A', anchor: 'top-left' }));
   });
 });
 
@@ -148,7 +148,7 @@ describe('Coordinate（零尺寸）anchor 退化（ADR-01 决策细节 #10）', 
     expect(coordEnd({ id: 'c', anchor: 30 })).toEqual([50, 50]);
   });
 
-  it('{ side, t } 对零尺寸 Coordinate 报明确错', () => {
-    expect(() => coordEnd({ id: 'c', anchor: { side: 'top', t: 0.5 } })).toThrow(/zero-size Coordinate/);
+  it('{ side, fraction } 对零尺寸 Coordinate 报明确错', () => {
+    expect(() => coordEnd({ id: 'c', anchor: { side: 'top', fraction: 0.5 } })).toThrow(/zero-size Coordinate/);
   });
 });

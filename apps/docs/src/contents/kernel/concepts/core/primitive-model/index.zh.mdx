@@ -110,11 +110,11 @@ Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都�
 | 方位点       | `top`、`right`、`bottom-left`        | 常规连线和布局           |
 | 角度点       | `'A.35'` / `{ id: 'A', anchor: 35 }` | 沿射线找边界交点         |
 | shape 专属点 | star 的尖角、sector 的圆弧端点       | 复杂形状的语义连接       |
-| 边比例点     | `{ side: 'top', t: 0.25 }`           | 表格、泳道、框图边缘定位 |
+| 边比例点     | `{ side: 'top', fraction: 0.25 }`           | 表格、泳道、框图边缘定位 |
 
 <ComponentPreview name="anchors" size="lg" hideCode />
 
-上排都用最常见的矩形：左边是固定的 8 个方位 anchor（外加 `center`）；右边是角度 anchor（`A.30`，沿 30° 射线打到边界）和边比例 anchor（`{ side: 'top', t: 0.25 }`，top 边左→右取 1/4 处）。下排是几种自带 shape 专属点的非矩形形状：star 的 `tip-N` 尖角（另有 `notch-N` 凹角）、sector 的 `apex` / `centroid` / `outer-arc-mid` / `inner-arc-mid` / `start-edge-mid` / `end-edge-mid`、arc 的 `start` / `arc-mid` / `end`。这些专属点用对象形态引用，如 `{ id: 'A', anchor: 'tip-0' }`。
+上排都用最常见的矩形：左边是固定的 8 个方位 anchor（外加 `center`）；右边是角度 anchor（`A.30`，沿 30° 射线打到边界）和边比例 anchor（`{ side: 'top', fraction: 0.25 }`，top 边左→右取 1/4 处）。下排是几种自带 shape 专属点的非矩形形状：star 的 `tip-N` 尖角（另有 `notch-N` 凹角）、sector 的 `apex` / `centroid` / `outer-arc-mid` / `inner-arc-mid` / `start-edge-mid` / `end-edge-mid`、arc 的 `start` / `arc-mid` / `end`。这些专属点用对象形态引用，如 `{ id: 'A', anchor: 'tip-0' }`。
 
 方位锚点保留三套名字：`WebAnchor` 是 canonical 名称，符合 Web / CSS 心智；`CompassAnchor` 使用 `north` / `south` 这类 compass 风格；`TikzAnchor` 使用 `above` / `below` 这类 TikZ positioning 风格。后两者只作为输入别名，解析时归一到对应的 Web 名称。`center` 是独立的中心锚点，不属于这些方向枚举。
 
@@ -153,7 +153,7 @@ Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都�
 
 自定义 shape 的 anchor 行为由它的 `ShapeDefinition` 提供：推荐支持这 8 个 Web 方位 anchor，方便与内置形状互换；普通 `center` 由编译器按节点中心处理，arc / sector 这类语义中心不同于 AABB 中心的形状可以自己声明 `center`。如果某个注册形状不支持某个 anchor，编译期会给出对应错误。见 [自定义形状](/kernel/components/extend/shape-registry)。
 
-边上比例点 `{ side, t }` 取 shape **真实边界**某条边上从约定起点起 `t ∈ [0, 1]` 比例处——方向 top/bottom 左→右、right/left 上→下：rectangle 沿直边、circle / ellipse 沿该侧可见周长弧段、diamond 沿可见斜边。`{ side: 'left', t: 1/3 }` = 左边三等分点，`{ side: 'top', t: 0.5 }` = 上边中点（等于命名 `'top'`）。
+边上比例点 `{ side, fraction }` 取 shape **真实边界**某条边上从约定起点起 `fraction ∈ [0, 1]` 比例处——方向 top/bottom 左→右、right/left 上→下：rectangle 沿直边、circle / ellipse 沿该侧可见周长弧段、diamond 沿可见斜边。`{ side: 'left', fraction: 1/3 }` = 左边三等分点，`{ side: 'top', fraction: 0.5 }` = 上边中点（等于命名 `'top'`）。
 
 解析时，命名方位点和数字角度点是 **border 锚点**：先经选定 boundary 的连接面、再按 `outerSep` 外推——`boundary="shape"` 时落在外接框（含 `outerSep`）的矩形方位上，数字角度点则沿射线打到外扩后的 boundary 上。`center`、shape 专属点和边上比例点始终走视觉 shape，既不受 `boundary` 改写、也不吃 `outerSep`。
 

@@ -110,11 +110,11 @@ Anchors are the stable points that a Node exposes to other primitives. Paths, po
 | Direction       | `top`, `right`, `bottom-left`        | Common connections and layout         |
 | Angle           | `'A.35'` / `{ id: 'A', anchor: 35 }` | Intersecting a ray with the boundary  |
 | Shape-specific  | star tips, sector arc endpoints      | Semantic points on complex shapes     |
-| Edge proportion | `{ side: 'top', t: 0.25 }`           | Tables, lanes, frame edges            |
+| Edge proportion | `{ side: 'top', fraction: 0.25 }`           | Tables, lanes, frame edges            |
 
 <ComponentPreview name="anchors" size="lg" hideCode />
 
-The top row uses the most common rectangle: on the left, the eight fixed directional anchors (plus `center`); on the right, an angle anchor (`A.30`, a ray cast at 30° onto the boundary) and an edge-proportion anchor (`{ side: 'top', t: 0.25 }`, a quarter of the way along the top edge, left→right). The bottom row shows several non-rectangular shapes that carry their own shape-specific points: a star's `tip-N` points (it also has `notch-N`), a sector's `apex` / `centroid` / `outer-arc-mid` / `inner-arc-mid` / `start-edge-mid` / `end-edge-mid`, and an arc's `start` / `arc-mid` / `end`. These are referenced in object form, e.g. `{ id: 'A', anchor: 'tip-0' }`.
+The top row uses the most common rectangle: on the left, the eight fixed directional anchors (plus `center`); on the right, an angle anchor (`A.30`, a ray cast at 30° onto the boundary) and an edge-proportion anchor (`{ side: 'top', fraction: 0.25 }`, a quarter of the way along the top edge, left→right). The bottom row shows several non-rectangular shapes that carry their own shape-specific points: a star's `tip-N` points (it also has `notch-N`), a sector's `apex` / `centroid` / `outer-arc-mid` / `inner-arc-mid` / `start-edge-mid` / `end-edge-mid`, and an arc's `start` / `arc-mid` / `end`. These are referenced in object form, e.g. `{ id: 'A', anchor: 'tip-0' }`.
 
 Directional anchors keep three name sets: `WebAnchor` is the canonical, Web / CSS-friendly vocabulary; `CompassAnchor` uses compass-style names such as `north` / `south`; `TikzAnchor` uses TikZ positioning-style names such as `above` / `below`. The latter two are input aliases normalized to the matching `WebAnchor` at parse time. `center` is a separate center anchor, not part of these directional enums.
 
@@ -153,7 +153,7 @@ When a node has `rotate`, the center plus the 8 directional anchors rotate with 
 
 Custom shapes define their anchor behavior through `ShapeDefinition`. Supporting these 8 Web directional anchors is recommended so the shape can substitute for built-ins; ordinary `center` is handled by the compiler as the node center, while shapes whose semantic center differs from the AABB center, such as arc / sector, can declare their own `center`. If a registered shape does not support a requested anchor, compilation reports the corresponding error. See [shape registry](/kernel/components/extend/shape-registry).
 
-Edge-proportional `{ side, t }` takes the point at proportion `t ∈ [0, 1]` along an edge of the shape's **real boundary** — top/bottom run left→right, right/left run top→bottom: rectangle along the straight edge, circle / ellipse along that side's visible perimeter arc, diamond along the visible slanted edges. `{ side: 'left', t: 1/3 }` is the left edge's one-third point; `{ side: 'top', t: 0.5 }` is the top-edge midpoint (equals the named `'top'`).
+Edge-proportional `{ side, fraction }` takes the point at proportion `fraction ∈ [0, 1]` along an edge of the shape's **real boundary** — top/bottom run left→right, right/left run top→bottom: rectangle along the straight edge, circle / ellipse along that side's visible perimeter arc, diamond along the visible slanted edges. `{ side: 'left', fraction: 1/3 }` is the left edge's one-third point; `{ side: 'top', fraction: 0.5 }` is the top-edge midpoint (equals the named `'top'`).
 
 When resolving, named directional and numeric angle anchors are **border anchors**: they go through the selected boundary surface and are then pushed out by `outerSep` — with `boundary="shape"` they land on the bounding box (including `outerSep`) rectangle direction, and angle anchors intersect the expanded boundary along a ray. `center`, shape-specific anchors, and edge proportion points always use the visual shape, taking neither `boundary` nor `outerSep`.
 

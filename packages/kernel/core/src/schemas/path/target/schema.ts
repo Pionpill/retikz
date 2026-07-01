@@ -13,7 +13,7 @@ export const BoundaryAnchorRefSchema = z
     side: z
       .preprocess(value => (typeof value === 'string' ? normalizeSide(value) ?? value : value), z.enum(WebSide))
       .describe('Which edge of the shape boundary. Compass and TikZ side names are accepted aliases.'),
-    t: NormalizedFractionSchema.describe(
+    fraction: NormalizedFractionSchema.describe(
       'Proportion along the edge; top/bottom run left to right, right/left run top to bottom.',
     ),
   })
@@ -31,7 +31,7 @@ export const AnchorRefSchema = z
     AngleDegreesSchema.describe('Angle anchor in degrees (boundary point in that direction)'),
     BoundaryAnchorRefSchema,
   ])
-  .describe('Anchor reference: named anchor, angle in degrees, or proportional point { side, t } on the boundary');
+  .describe('Anchor reference: named anchor, angle in degrees, or proportional point { side, fraction } on the boundary');
 
 export const NodeTargetSchema = z
   .object({

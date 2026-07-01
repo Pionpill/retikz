@@ -15,7 +15,7 @@ import { PathBaseSchema } from '../path';
 import { ArrowDetailSchema } from '../path/arrow';
 import { CascadingGraphicStyleSchema, CssColorSchema, OpacitySchema } from '../style';
 import { TransformSchema } from '../transform';
-import { ScopeBoundingShape } from './constants';
+import { ScopeBoundingShape, ScopeStyleChannel } from './constants';
 
 // ===========================================================================
 // every-X 四通道默认 schema —— 各从对应元素 schema `.omit()` 派生（单一真源，禁手抄）
@@ -100,7 +100,7 @@ export const ScopeSchema = z
     ),
     arrowDefault: ArrowDefaultSchema.optional().describe('Default style applied to arrows in this scope.'),
     resetStyle: z
-      .union([z.boolean(), z.array(z.enum(['node', 'path', 'label', 'arrow']))])
+      .union([z.boolean(), z.array(z.enum(ScopeStyleChannel))])
       .optional()
       .describe(
         'Inheritance barrier for style defaults. Use true for all channels, or list node, path, label, and arrow channels to reset.',
@@ -118,9 +118,7 @@ export const ScopeSchema = z
     boundingShape: z
       .enum(ScopeBoundingShape)
       .optional()
-      .describe(
-        "Shape of the synthetic bounding envelope for this scope's `id`: rectangle or circle. This is a closed enum, not a shape provider reference.",
-      ),
+      .describe("Synthetic bounding envelope for this scope's id: rectangle or circle."),
     meta: JsonObjectSchema.optional().describe(
       'Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.',
     ),

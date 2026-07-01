@@ -161,7 +161,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
       { type: 'node', id: 'B', position: [100, 40], text: 'B' },
       {
         type: 'scope',
-        transforms: [{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], t: 0.5 }],
+        transforms: [{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }],
         children: [{ type: 'node', id: 'inside', position: [0, 0], text: 'I' }],
       },
     ]);

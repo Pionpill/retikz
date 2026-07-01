@@ -85,7 +85,7 @@ export const resolveAnchor = (
 };
 
 /**
- * 取节点边上比例点 `{ side, t }` 的全局坐标，带 per-layout 缓存
+ * 取节点边上比例点 `{ side, fraction }` 的全局坐标，带 per-layout 缓存
  * @description 走 `layout.shapeDef.edgePoint`——shape 未实现（如自定义 shape）抛"does not support side anchors"；
  *   零尺寸 layout（Coordinate）抛错（边上比例点对一个点无意义，报错比退化中心更可诊断）。
  *   缓存 key = `${side}:${t}`，与命名 anchor（`'top'` / `'30'`）共用 layout 的 Map——key 含 `:` 故命名空间不冲突。
@@ -95,10 +95,10 @@ export const resolveAnchor = (
 export const resolveEdgePoint = (layout: NodeLayout, side: WebSideValue, t: number): IRPosition => {
   const { edgePoint } = layout.shapeDef;
   if (!edgePoint) {
-    throw new Error(`shape '${layout.shapeName}' does not support side anchors ({ side, t })`);
+    throw new Error(`shape '${layout.shapeName}' does not support side anchors ({ side, fraction })`);
   }
   if (layout.rect.width === 0 && layout.rect.height === 0) {
-    throw new Error(`{ side, t } is not meaningful on a zero-size Coordinate (shape '${layout.shapeName}')`);
+    throw new Error(`{ side, fraction } is not meaningful on a zero-size Coordinate (shape '${layout.shapeName}')`);
   }
   let layoutCache = cache.get(layout);
   if (!layoutCache) {
