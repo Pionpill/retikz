@@ -50,6 +50,8 @@ export const ArrowMarkSchema = ArrowEndDetailSchema.extend({
 export const PathBaseSchema = z
   .object({
     type: z.literal('path').describe('Discriminator marking this child as a path.'),
+    ...DrawableInstanceSchema.shape,
+    ...DrawableStyleSchema.shape,
     kind: z.string().min(1).optional().describe('Path kind provider name. Omitted means built-in `stroke`.'),
     kindOptions: JsonObjectSchema.optional().describe(
       'JSON-safe option object for custom path kind providers. Built-in `stroke` and `ribbon` do not use this field.',
@@ -59,8 +61,6 @@ export const PathBaseSchema = z
       .union([GeometryLabelSchema, z.array(GeometryLabelSchema).min(1)])
       .optional()
       .describe('Host label attached to this path-like relation.'),
-    ...DrawableInstanceSchema.shape,
-    ...DrawableStyleSchema.shape,
     dashPattern: z
       .array(z.number().nonnegative())
       .min(1)

@@ -33,6 +33,11 @@ export const NodeLabelBoundaryPositionSchema = z
 
 export const NodeLabelSchema = z
   .object({
+    ...createLabelVisualStyleShape({
+      textColor: 'Label text color; falls back to currentColor.',
+      opacity: 'Label-only opacity, multiplied with node opacity when both are set.',
+      font: 'Label font overrides. Missing fields inherit from the parent node font.',
+    }),
     text: LabelTextContentSchema,
     position: z
       .preprocess(
@@ -52,11 +57,6 @@ export const NodeLabelSchema = z
       .nonnegative()
       .optional()
       .describe('Gap between the node border and the label center, in user units. Default 12.'),
-    ...createLabelVisualStyleShape({
-      textColor: 'Label text color; falls back to currentColor.',
-      opacity: 'Label-only opacity, multiplied with node opacity when both are set.',
-      font: 'Label font overrides. Missing fields inherit from the parent node font.',
-    }),
     rotate: z
       .union([z.enum(['none', 'radial', 'tangent']), AngleDegreesSchema])
       .optional()
@@ -97,6 +97,7 @@ export const NodeLabelSchema = z
 export const NodeSchema = z
   .object({
     type: z.literal('node').describe('Discriminator marking this child as a node'),
+    ...GraphicStyleSchema.shape,
     id: z
       .string()
       .min(1)
@@ -145,7 +146,6 @@ export const NodeSchema = z
       .positive()
       .optional()
       .describe('Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.'),
-    ...GraphicStyleSchema.shape,
     strokeWidth: z
       .number()
       .nonnegative()

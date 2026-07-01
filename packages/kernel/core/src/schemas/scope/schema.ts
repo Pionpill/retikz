@@ -71,6 +71,7 @@ export const __registerChildSchema = (schema: z.ZodType<ScopeChild>): void => {
 export const ScopeSchema = z
   .object({
     type: z.literal('scope').describe('Discriminator marking this child as a scope container.'),
+    ...CascadingGraphicStyleSchema.shape,
     id: z
       .string()
       .min(1)
@@ -88,7 +89,6 @@ export const ScopeSchema = z
       .describe(
         'Local transforms applied to all scope children. Array order is application order; translate variants are lowered at compile time.',
       ),
-    ...CascadingGraphicStyleSchema.shape,
     nodeDefault: NodeDefaultSchema.optional().describe(
       'Default style applied to nodes in this scope. Independent from the other default channels.',
     ),

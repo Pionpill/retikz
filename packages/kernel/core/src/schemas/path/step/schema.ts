@@ -9,6 +9,12 @@ import { FoldStepVia, GeometryLabelPlacement, GeometryLabelSide, normalizeGeomet
 
 export const GeometryLabelSchema = z
   .object({
+    ...createLabelVisualStyleShape({
+      textColor:
+        "Label text color; falls back to the scope labelDefault, then the owning path's resolved master color, then currentColor. To match a colored line set the path color (not stroke).",
+      opacity: 'Label-only opacity, multiplied with the owning path opacity.',
+      font: 'Label font overrides. Missing fields inherit from scope label defaults.',
+    }),
     text: LabelTextContentSchema,
     position: z
       .union([
@@ -43,12 +49,6 @@ export const GeometryLabelSchema = z
       .nonnegative()
       .optional()
       .describe('Side offset distance in user units. Defaults to the same distance as Path step labels.'),
-    ...createLabelVisualStyleShape({
-      textColor:
-        "Label text color; falls back to the scope labelDefault, then the owning path's resolved master color, then currentColor. To match a colored line set the path color (not stroke).",
-      opacity: 'Label-only opacity, multiplied with the owning path opacity.',
-      font: 'Label font overrides. Missing fields inherit from scope label defaults.',
-    }),
   })
   .strict()
   .describe(
