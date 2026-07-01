@@ -52,6 +52,15 @@ export const LabelTextContentSchema = z
     'Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ runs }` mixed text+math line. Single-line.',
   );
 
+export const StyledLineSchema = z
+  .object({
+    text: z.string().describe('Line content'),
+    fill: CssColorSchema.optional().describe('Per-line text color; overrides block default'),
+    opacity: OpacitySchema.optional().describe('Per-line opacity.'),
+    font: FontSchema.optional().describe('Per-line font overrides; missing fields inherit from block-level `font`'),
+  })
+  .describe('One styled text line with per-line visual overrides.');
+
 type LabelVisualStyleDescriptionOverrides = Partial<Record<'textColor' | 'opacity' | 'font', string>>;
 
 export const createLabelVisualStyleShape = (descriptions: LabelVisualStyleDescriptionOverrides = {}) => ({
@@ -72,16 +81,7 @@ export const LabelVisualStyleSchema = z
   .describe('Shared visual style fields for node labels and geometry labels.');
 
 export const LineSpecSchema = z
-  .union([
-    z.string(),
-    z.object({
-      text: z.string().describe('Line content'),
-      fill: CssColorSchema.optional().describe('Per-line text color; overrides block default'),
-      opacity: OpacitySchema.optional().describe('Per-line opacity.'),
-      font: FontSchema.optional().describe('Per-line font overrides; missing fields inherit from block-level `font`'),
-    }),
-    MixedLineSchema,
-  ])
+  .union([z.string(), StyledLineSchema, MixedLineSchema])
   .describe(
     'Single line of text: bare string for default styling (with `$...$` math sugar), an object with per-line `fill` / `opacity` / `font` overrides, or a `{ runs }` mixed text+math line.',
   );

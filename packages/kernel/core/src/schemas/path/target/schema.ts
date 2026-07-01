@@ -8,6 +8,17 @@ import { PolarPositionSchema } from '../../position/polar-position/schema';
 import { PositionSchema } from '../../position/position/schema';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
 
+export const BoundaryAnchorRefSchema = z
+  .object({
+    side: z
+      .preprocess(value => (typeof value === 'string' ? normalizeWebSide(value) ?? value : value), z.enum(WebSide))
+      .describe('Which edge of the shape boundary. Compass side names are accepted aliases.'),
+    t: NormalizedFractionSchema.describe(
+      'Proportion along the edge; top/bottom run left to right, right/left run top to bottom.',
+    ),
+  })
+  .describe('Proportional point on the real shape boundary edge');
+
 export const AnchorRefSchema = z
   .union([
     z
@@ -18,16 +29,7 @@ export const AnchorRefSchema = z
         'Named anchor: web anchor, compass alias, or shape-specific anchor. Known aliases are normalized to web names; unknown names fail at compile time.',
       ),
     AngleDegreesSchema.describe('Angle anchor in degrees (boundary point in that direction)'),
-    z
-      .object({
-        side: z
-          .preprocess(value => (typeof value === 'string' ? normalizeWebSide(value) ?? value : value), z.enum(WebSide))
-          .describe('Which edge of the shape boundary. Compass side names are accepted aliases.'),
-        t: NormalizedFractionSchema.describe(
-          'Proportion along the edge; top/bottom run left to right, right/left run top to bottom.',
-        ),
-      })
-      .describe('Proportional point on the real shape boundary edge'),
+    BoundaryAnchorRefSchema,
   ])
   .describe('Anchor reference: named anchor, angle in degrees, or proportional point { side, t } on the boundary');
 

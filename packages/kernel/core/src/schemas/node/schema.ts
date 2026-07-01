@@ -31,6 +31,14 @@ export const NodeLabelBoundaryPositionSchema = z
   .strict()
   .describe('Label position on a box-like node boundary.');
 
+export const NodeLabelPinSchema = z
+  .object({
+    stroke: CssColorSchema.optional().describe('Leader line color; defaults to the label color / currentColor'),
+    strokeWidth: z.number().positive().optional().describe('Leader line width (user units); default 1'),
+    dashPattern: z.array(z.number()).optional().describe('Leader dash pattern lengths in user units.'),
+  })
+  .describe('Leader line style overrides for an outside node label.');
+
 export const NodeLabelSchema = z
   .object({
     ...createLabelVisualStyleShape({
@@ -70,14 +78,7 @@ export const NodeLabelSchema = z
         'When true, flips the rotated label 180 deg if it would otherwise read upside-down (more than 90 deg from upright). Default false (strict geometric angle).',
       ),
     pin: z
-      .union([
-        z.boolean(),
-        z.object({
-          stroke: CssColorSchema.optional().describe('Leader line color; defaults to the label color / currentColor'),
-          strokeWidth: z.number().positive().optional().describe('Leader line width (user units); default 1'),
-          dashPattern: z.array(z.number()).optional().describe('Leader dash pattern lengths in user units.'),
-        }),
-      ])
+      .union([z.boolean(), NodeLabelPinSchema])
       .optional()
       .describe(
         'Outside-label leader line from the node border attachment point to the label box. `true` uses the default line; an object provides line style overrides; omitted or `false` disables the leader. Rejected when placement is inside.',

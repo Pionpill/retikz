@@ -17,22 +17,21 @@ export const PathLineJoinSchema = z.enum(PathLineJoin).describe('Path stroke cor
 
 export const PathThicknessSchema = z.enum(PathThickness).describe('Semantic path stroke thickness preset.');
 
+export const PathAnisotropicScaleSchema = z
+  .object({
+    x: z
+      .number()
+      .positive()
+      .describe('Scale factor on the x axis.'),
+    y: z
+      .number()
+      .positive()
+      .describe('Scale factor on the y axis.'),
+  })
+  .describe('Anisotropic scale with independent x / y factors.');
+
 export const PathScaleSchema = z
-  .union([
-    z.number().positive(),
-    z
-      .object({
-        x: z
-          .number()
-          .positive()
-          .describe('Scale factor on the x axis.'),
-        y: z
-          .number()
-          .positive()
-          .describe('Scale factor on the y axis.'),
-      })
-      .describe('Anisotropic scale with independent x / y factors.'),
-  ])
+  .union([z.number().positive(), PathAnisotropicScaleSchema])
   .describe(
     'Whole-path scale: a single number for uniform scaling, or an { x, y } object for anisotropic scaling. Applied around the path bounding-box center with rotate.',
   );
@@ -46,6 +45,17 @@ export const ArrowMarkSchema = ArrowEndDetailSchema.extend({
 }).describe(
   'Arrow mark placed along the path. Direction follows the path tangent; `shape` is an arrow provider name, not a direction token.',
 );
+
+export const PathMarkPlacementSchema = z
+  .object({
+    pos: NormalizedFractionSchema.describe(
+      'Normalized position along the path. Parameter meaning matches step labels: arc length for line-like steps and Bezier parameter for curve-like steps.',
+    ),
+    mark: ArrowMarkSchema.describe(
+      'The mark to place at this position; currently an arrow tip oriented by the path tangent.',
+    ),
+  })
+  .describe('One mark placement along the path.');
 
 export const PathBaseSchema = z
   .object({
@@ -98,18 +108,7 @@ export const PathBaseSchema = z
       'Scale the whole path around its bounding-box center. Applied with rotate around the same center.',
     ),
     marks: z
-      .array(
-        z
-          .object({
-            pos: NormalizedFractionSchema.describe(
-              'Normalized position along the path. Parameter meaning matches step labels: arc length for line-like steps and Bezier parameter for curve-like steps.',
-            ),
-            mark: ArrowMarkSchema.describe(
-              'The mark to place at this position; currently an arrow tip oriented by the path tangent.',
-            ),
-          })
-          .describe('One mark placement along the path.'),
-      )
+      .array(PathMarkPlacementSchema)
       .optional()
       .describe(
         'Marks placed along the path at normalized positions; each is rendered at its position with its direction taken from the path tangent there. First batch supports arrow marks only.',

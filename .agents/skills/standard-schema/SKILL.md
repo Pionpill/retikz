@@ -67,6 +67,32 @@ export const PathBaseSchema = z.object({
 - `superRefine` 变长时拆成命名校验函数，例如 `validateStrokePath(path, ctx)` / `validateRibbonPath(path, ctx)`。
 - `BaseSchema` 只有在确实复用或需要分层 refinement 时才命名；普通小 schema 不强行拆 base。
 
+## Union 成员拆分
+
+- `z.union([...])` 里不要直接塞复杂 object；对象成员超过少量字段、带 `kind` 判别、或有独立 `.describe(...)` 语义时，先命名成 `XxxYyySchema`，再在 union 中引用。
+- 这样做能让 schema registry、测试、类型推导和后续复用都指向稳定名字，也避免 union 里嵌一大坨导致 LLM 难以定位具体变体。
+- 简单字面量、数字、字符串或一行小 schema 可以直接放在 union 中。
+
+示例：
+
+```ts
+export const RibbonWidthStopsSchema = z.object({
+  kind: z.literal('stops').describe('Discriminator for stop-based width rules.'),
+  stops: z.array(RibbonWidthStopSchema).min(2),
+});
+
+export const RibbonWidthProfileSchema = z.object({
+  kind: z.literal('profile').describe('Discriminator for registered width profiles.'),
+  name: z.string().min(1),
+});
+
+export const RibbonWidthSchema = z.union([
+  z.number().nonnegative(),
+  RibbonWidthStopsSchema,
+  RibbonWidthProfileSchema,
+]);
+```
+
 ## describe 与 JSDoc
 
 - schema 字段 `.describe(...)` 用英文，面向 LLM / schema registry 准确识别 IR 契约。

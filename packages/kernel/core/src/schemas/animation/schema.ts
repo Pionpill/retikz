@@ -22,16 +22,17 @@ export const KeyframeSchema = z
   })
   .describe('One animation keyframe: normalized time, absolute value, and optional segment easing.');
 
+export const EventTriggerSchema = z
+  .object({
+    onEvent: z
+      .string()
+      .min(1)
+      .describe('Runtime event name that starts playback. Only the event name enters the IR.'),
+  })
+  .describe('Runtime event trigger descriptor.');
+
 export const TriggerSchema = z
-  .union([
-    z.enum(AnimationTrigger),
-    z.object({
-      onEvent: z
-        .string()
-        .min(1)
-        .describe('Runtime event name that starts playback. Only the event name enters the IR.'),
-    }),
-  ])
+  .union([z.enum(AnimationTrigger), EventTriggerSchema])
   .describe('Playback trigger: load, visible, manual, or a named runtime event. Omitted fields use load.');
 
 export const OriginSchema = z

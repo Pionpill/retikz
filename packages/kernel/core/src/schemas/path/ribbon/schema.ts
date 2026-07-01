@@ -41,35 +41,35 @@ export const RibbonWidthStopSchema = z
   .strict()
   .describe('One stop in a sampled ribbon width curve.');
 
+export const RibbonWidthStopsSchema = z
+  .object({
+    kind: z.literal('stops').describe('Discriminator for stop-based width rules.'),
+    stops: z
+      .array(RibbonWidthStopSchema)
+      .min(2)
+      .describe('Width stops; compile sorts them by offset before interpolation.'),
+    interpolation: z
+      .enum(['linear', 'smooth', 'step'])
+      .optional()
+      .describe('Interpolation curve between adjacent stops.'),
+  })
+  .strict()
+  .describe('A multi-stop ribbon width rule.');
+
+export const RibbonWidthProfileSchema = z
+  .object({
+    kind: z.literal('profile').describe('Discriminator for registered width profiles.'),
+    name: z
+      .string()
+      .min(1)
+      .describe('Registered ribbon width profile name from CompileOptions.ribbonWidthProfiles.'),
+    params: JsonObjectSchema.optional().describe('JSON-safe profile parameters.'),
+  })
+  .strict()
+  .describe('A registered width profile reference.');
+
 export const RibbonWidthSchema = z
-  .union([
-    z.number().nonnegative(),
-    z
-      .object({
-        kind: z.literal('stops').describe('Discriminator for stop-based width rules.'),
-        stops: z
-          .array(RibbonWidthStopSchema)
-          .min(2)
-          .describe('Width stops; compile sorts them by offset before interpolation.'),
-        interpolation: z
-          .enum(['linear', 'smooth', 'step'])
-          .optional()
-          .describe('Interpolation curve between adjacent stops.'),
-      })
-      .strict()
-      .describe('A multi-stop ribbon width rule.'),
-    z
-      .object({
-        kind: z.literal('profile').describe('Discriminator for registered width profiles.'),
-        name: z
-          .string()
-          .min(1)
-          .describe('Registered ribbon width profile name from CompileOptions.ribbonWidthProfiles.'),
-        params: JsonObjectSchema.optional().describe('JSON-safe profile parameters.'),
-      })
-      .strict()
-      .describe('A registered width profile reference.'),
-  ])
+  .union([z.number().nonnegative(), RibbonWidthStopsSchema, RibbonWidthProfileSchema])
   .describe(
     'Ribbon width rule: fixed number, stop curve, or registered profile reference. Endpoint taper widths live on start.width and end.width.',
   );
@@ -101,32 +101,33 @@ export const RibbonEndpointSchema = z
   .strict()
   .describe('Endpoint-local ribbon properties such as width, tangent direction, and cap.');
 
+export const RibbonFixedSamplingSchema = z
+  .object({
+    kind: z.literal('fixed').describe('Use a fixed number of cross-section samples.'),
+    samples: z
+      .number()
+      .int()
+      .min(2)
+      .max(512)
+      .describe('Number of cross-section samples used to approximate the ribbon polygon.'),
+  })
+  .strict()
+  .describe('Fixed ribbon sampling strategy.');
+
+export const RibbonAdaptiveSamplingSchema = z
+  .object({
+    kind: z.literal('adaptive').describe('Choose a sample count from path length and tolerance.'),
+    tolerance: z
+      .number()
+      .positive()
+      .describe('Approximate target segment length in user units.'),
+    maxSamples: z.number().int().min(2).max(512).optional().describe('Optional upper bound for generated samples.'),
+  })
+  .strict()
+  .describe('Length-aware adaptive ribbon sampling strategy.');
+
 export const RibbonSamplingSchema = z
-  .union([
-    z
-      .object({
-        kind: z.literal('fixed').describe('Use a fixed number of cross-section samples.'),
-        samples: z
-          .number()
-          .int()
-          .min(2)
-          .max(512)
-          .describe('Number of cross-section samples used to approximate the ribbon polygon.'),
-      })
-      .strict()
-      .describe('Fixed ribbon sampling strategy.'),
-    z
-      .object({
-        kind: z.literal('adaptive').describe('Choose a sample count from path length and tolerance.'),
-        tolerance: z
-          .number()
-          .positive()
-          .describe('Approximate target segment length in user units.'),
-        maxSamples: z.number().int().min(2).max(512).optional().describe('Optional upper bound for generated samples.'),
-      })
-      .strict()
-      .describe('Length-aware adaptive ribbon sampling strategy.'),
-  ])
+  .union([RibbonFixedSamplingSchema, RibbonAdaptiveSamplingSchema])
   .describe('Ribbon boundary sampling strategy; `samples` is retained as a shorthand for fixed sampling.');
 
 export const PathRibbonOptionsSchema = z
