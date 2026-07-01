@@ -1,14 +1,11 @@
-export * from './anchor';
 export * from './bend';
 export * from './circle';
 export * from './contour';
 export * from './diamond';
-export type { Side } from './edge';
-export { EDGE_ENDS, edgeAngleDeg, lerpPoint, polylineViaVertex } from './edge';
+export * from './edge';
 export * from './ellipse';
 export * from './point';
 export * from './polar';
 export * from './rect';
 export * from './segment';
-export type { CenteredShape } from './transform';
-export { localToWorld, worldToLocal } from './transform';
+export * from './transform';

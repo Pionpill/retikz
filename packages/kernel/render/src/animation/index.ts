@@ -5,22 +5,10 @@
  * 以及 `evaluateTrack`（给时刻求值）+ 自定义 property 插值器注册表。
  */
 
-export type { PropertyClass } from './channels';
-export { classifyProperty, primHasStroke, resolveTransformOrigin } from './channels';
-export { isAutoplayTrigger } from './channels';
-export type { EvaluateTrackOptions } from './evaluate';
-export { evaluateTrack } from './evaluate';
-export type { IdClockRegistry } from './id-clock';
-export { createIdClockRegistry } from './id-clock';
-export { lerpColorOklch, sampleColorOklch } from './oklch';
-export type { AnimationPropertyDefinition, AnimationPropertyRegistry } from './registry';
-export type { AnimationControls, ClockOptions } from './runtime';
-export {
-  bindWaapiDescriptors,
-  createClock,
-  prefersReducedMotion,
-  sceneAnimationDurationMs,
-  sceneHasAnimations,
-  sceneHasAutoplayTrigger,
-} from './runtime';
-export type { CubicBezier, EasingFn, EasingRegistry } from './types';
+export * from './channels';
+export * from './evaluate';
+export * from './id-clock';
+export * from './oklch';
+export * from './registry';
+export * from './runtime';
+export * from './types';

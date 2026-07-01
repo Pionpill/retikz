@@ -1,16 +1,13 @@
 import { z } from 'zod';
 
-import { DrawableMetaSchema, DrawableStyleSchema } from '../../drawable';
+import { DrawableInstanceSchema, DrawableStyleSchema } from '../../drawable';
 import { JsonObjectSchema } from '../../json';
-import { ArrowDetailSchema, ArrowEndDetailSchema } from '../arrow';
+import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
+import { ArrowEndDetailSchema } from '../arrow';
 import { PathRibbonOptionsSchema } from '../ribbon';
 import { GeometryLabelSchema } from '../step';
 import { StepSchema } from '../step';
-import { PathArrowDirection, PathFillRule, PathLineCap, PathLineJoin, PathThickness } from './constants';
-
-export const PathArrowDirectionSchema = z
-  .enum(PathArrowDirection)
-  .describe('Path-level arrow direction keyword.');
+import { PathFillRule, PathLineCap, PathLineJoin, PathThickness } from './constants';
 
 export const PathFillRuleSchema = z.enum(PathFillRule).describe('Path fill rule keyword.');
 
@@ -20,35 +17,25 @@ export const PathLineJoinSchema = z.enum(PathLineJoin).describe('Path stroke cor
 
 export const PathThicknessSchema = z.enum(PathThickness).describe('Semantic path stroke thickness preset.');
 
-/**
- * 路径整条缩放 schema：等比 number 或非等比 {x,y}
- * @description 与 Node scale 字段对齐；number = 等比，{x,y} = 各轴独立。全部要求有限正数。
- */
+export const PathAnisotropicScaleSchema = z
+  .object({
+    x: z
+      .number()
+      .positive()
+      .describe('Scale factor on the x axis.'),
+    y: z
+      .number()
+      .positive()
+      .describe('Scale factor on the y axis.'),
+  })
+  .describe('Anisotropic scale with independent x / y factors.');
+
 export const PathScaleSchema = z
-  .union([
-    z.number().positive(),
-    z
-      .object({
-        x: z
-          .number()
-          .positive()
-          .describe('Scale factor on the x axis.'),
-        y: z
-          .number()
-          .positive()
-          .describe('Scale factor on the y axis.'),
-      })
-      .describe('Anisotropic scale with independent x / y factors.'),
-  ])
+  .union([z.number().positive(), PathAnisotropicScaleSchema])
   .describe(
     'Whole-path scale: a single number for uniform scaling, or an { x, y } object for anisotropic scaling. Applied around the path bounding-box center with rotate.',
   );
 
-/**
- * 路径中段标记 schema（首批仅箭头）
- * @description `kind:'arrow'` 判别符 + 复用 ArrowEndDetail 视觉子集（shape / scale / length / width / color / fill / opacity / lineWidth）；
- *   方向由该处路径切线决定，shape 是已注册箭头名（不是 `->` 方向记号）。
- */
 export const ArrowMarkSchema = ArrowEndDetailSchema.extend({
   kind: z
     .literal('arrow')
@@ -59,9 +46,22 @@ export const ArrowMarkSchema = ArrowEndDetailSchema.extend({
   'Arrow mark placed along the path. Direction follows the path tangent; `shape` is an arrow provider name, not a direction token.',
 );
 
+export const PathMarkPlacementSchema = z
+  .object({
+    pos: NormalizedFractionSchema.describe(
+      'Normalized position along the path. Parameter meaning matches step labels: arc length for line-like steps and Bezier parameter for curve-like steps.',
+    ),
+    mark: ArrowMarkSchema.describe(
+      'The mark to place at this position; currently an arrow tip oriented by the path tangent.',
+    ),
+  })
+  .describe('One mark placement along the path.');
+
 export const PathBaseSchema = z
   .object({
     type: z.literal('path').describe('Discriminator marking this child as a path.'),
+    ...DrawableInstanceSchema.shape,
+    ...DrawableStyleSchema.shape,
     kind: z.string().min(1).optional().describe('Path kind provider name. Omitted means built-in `stroke`.'),
     kindOptions: JsonObjectSchema.optional().describe(
       'JSON-safe option object for custom path kind providers. Built-in `stroke` and `ribbon` do not use this field.',
@@ -71,21 +71,11 @@ export const PathBaseSchema = z
       .union([GeometryLabelSchema, z.array(GeometryLabelSchema).min(1)])
       .optional()
       .describe('Host label attached to this path-like relation.'),
-    ...DrawableMetaSchema.shape,
-    ...DrawableStyleSchema.shape,
     dashPattern: z
       .array(z.number().nonnegative())
       .min(1)
       .optional()
       .describe('Stroke dash pattern lengths in user units. Omitted fields mean solid line.'),
-    arrow: PathArrowDirectionSchema
-      .optional()
-      .describe(
-        'Path-level arrow direction. omitted/`none` = no arrows; `->` = arrow at end; `<-` = at start; `<->` = both.',
-      ),
-    arrowDetail: ArrowDetailSchema.optional().describe(
-      'Detailed arrow visual config with optional `start` and `end` per-end overrides. Omitted fields use arrow definition defaults.',
-    ),
     fillRule: PathFillRuleSchema
       .optional()
       .describe(
@@ -109,8 +99,7 @@ export const PathBaseSchema = z
     thickness: PathThicknessSchema
       .optional()
       .describe('Semantic stroke thickness preset. Used only when `strokeWidth` is omitted.'),
-    rotate: z
-      .number()
+    rotate: AngleDegreesSchema
       .optional()
       .describe(
         'Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.',
@@ -119,22 +108,7 @@ export const PathBaseSchema = z
       'Scale the whole path around its bounding-box center. Applied with rotate around the same center.',
     ),
     marks: z
-      .array(
-        z
-          .object({
-            pos: z
-              .number()
-              .min(0)
-              .max(1)
-              .describe(
-                'Normalized position along the path. Parameter meaning matches step labels: arc length for line-like steps and Bezier parameter for curve-like steps.',
-              ),
-            mark: ArrowMarkSchema.describe(
-              'The mark to place at this position; currently an arrow tip oriented by the path tangent.',
-            ),
-          })
-          .describe('One mark placement along the path.'),
-      )
+      .array(PathMarkPlacementSchema)
       .optional()
       .describe(
         'Marks placed along the path at normalized positions; each is rendered at its position with its direction taken from the path tangent there. First batch supports arrow marks only.',

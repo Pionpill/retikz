@@ -35,11 +35,11 @@ const Demo: FC = () => (
         label: {
           text: { field: 'deltaLabel' },
           position: 0.5,
-          side: 'sloped',
+          sloped: true,
           textColor: '#ea580c',
           font: { size: 11, weight: 'bold' },
         },
-        options: { arrow: '->' },
+        options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
       }}
     />
     <Axis dimension="x" grid />

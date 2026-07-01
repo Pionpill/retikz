@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-import { AtDirection, normalizeAtDirection } from './constants';
+import { normalizeAtDirection } from '../../../shared';
+import { AtDirection } from './constants';
 
 export const AtPositionSchema = z
   .object({

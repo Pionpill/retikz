@@ -521,6 +521,9 @@ export type SeriesPathBuilder = (seriesRows: Array<ExternalRow>) => Array<PathSt
 /** path child 的可变形态（series 下沉时按需补 id / meta），直接复用 core IRPath 属性面。 */
 type IRPathChild = IRPath;
 
+const pathMarkOptions = (mark: PathMark): Partial<Pick<IRPath, 'marks'>> =>
+  mark.marks === undefined ? {} : { marks: mark.marks };
+
 export const buildSeriesPaths = (
   mark: PathMark,
   rows: Array<ExternalRow>,
@@ -542,7 +545,13 @@ export const buildSeriesPaths = (
       const row = segment.rows[0] ?? {};
       const label = resolveGeometryMarkLabels(mark.label, row, channelValueOf<IRNodeLabel['text']>(channels, 'label'));
       const path: IRPathChild = applyPathChannelDeliveries(
-        { type: 'path', ...paintOf(segment.rows), ...(label !== undefined ? { label } : {}), children: segment.steps },
+        {
+          type: 'path',
+          ...pathMarkOptions(mark),
+          ...paintOf(segment.rows),
+          ...(label !== undefined ? { label } : {}),
+          children: segment.steps,
+        },
         mark,
         row,
         channels,
@@ -673,7 +682,7 @@ const lowerPath = (
       const row = segment.rows[0] ?? {};
       const label = resolveGeometryMarkLabels(mark.label, row, channelValueOf<IRNodeLabel['text']>(channels, 'label'));
       return applyPathChannelDeliveries(
-        { type: 'path', ...(label !== undefined ? { label } : {}), children: segment.steps },
+        { type: 'path', ...pathMarkOptions(mark), ...(label !== undefined ? { label } : {}), children: segment.steps },
         mark,
         row,
         channels,

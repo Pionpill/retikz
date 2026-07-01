@@ -1,8 +1,6 @@
 import type { z } from 'zod';
 
-import type { Vector2 } from '../../../geometry/point';
-import type { PolarPosition } from '../../../geometry/polar';
-import type { ValueOf } from '../../../types';
+import type { PolarPosition, ValueOf, Vector2 } from '../../../shared';
 import type { RibbonAlignment, RibbonArcCapSweep, RibbonCap, RibbonMode } from './constants';
 import type {
   PathRibbonOptionsSchema,

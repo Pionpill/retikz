@@ -1,34 +1,35 @@
 import { z } from 'zod';
 
-import { normalizeWebAnchor, normalizeWebSide, WebSide } from '../../../geometry/anchor';
+import { normalizeAnchor, normalizeSide, WebSide } from '../../../shared';
 import { BoundarySchema } from '../../boundary';
 import { BetweenPositionSchema } from '../../position/between-position/schema';
 import { OffsetPositionSchema } from '../../position/offset-position/schema';
 import { PolarPositionSchema } from '../../position/polar-position/schema';
 import { PositionSchema } from '../../position/position/schema';
+import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
+
+export const BoundaryAnchorRefSchema = z
+  .object({
+    side: z
+      .preprocess(value => (typeof value === 'string' ? normalizeSide(value) ?? value : value), z.enum(WebSide))
+      .describe('Which edge of the shape boundary. Compass and TikZ side names are accepted aliases.'),
+    t: NormalizedFractionSchema.describe(
+      'Proportion along the edge; top/bottom run left to right, right/left run top to bottom.',
+    ),
+  })
+  .describe('Proportional point on the real shape boundary edge');
 
 export const AnchorRefSchema = z
   .union([
     z
       .string()
       .min(1)
-      .transform(name => normalizeWebAnchor(name) ?? name)
+      .transform(name => normalizeAnchor(name) ?? name)
       .describe(
-        'Named anchor: web anchor, compass alias, or shape-specific anchor. Known aliases are normalized to web names; unknown names fail at compile time.',
+        'Named anchor: web anchor, compass/TikZ alias, or shape-specific anchor. Known aliases are normalized to web names; unknown names fail at compile time.',
       ),
-    z.number().describe('Angle anchor in degrees (boundary point in that direction)'),
-    z
-      .object({
-        side: z
-          .preprocess(value => (typeof value === 'string' ? normalizeWebSide(value) ?? value : value), z.enum(WebSide))
-          .describe('Which edge of the shape boundary. Compass side names are accepted aliases.'),
-        t: z
-          .number()
-          .min(0)
-          .max(1)
-          .describe('Proportion along the edge; top/bottom run left to right, right/left run top to bottom.'),
-      })
-      .describe('Proportional point on the real shape boundary edge'),
+    AngleDegreesSchema.describe('Angle anchor in degrees (boundary point in that direction)'),
+    BoundaryAnchorRefSchema,
   ])
   .describe('Anchor reference: named anchor, angle in degrees, or proportional point { side, t } on the boundary');
 

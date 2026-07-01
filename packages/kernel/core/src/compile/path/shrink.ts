@@ -1,16 +1,16 @@
 import { arcEndPoint, ellipseArcPoint } from '@retikz/math';
 
 import type { ArrowDefinition, ArrowEmitContext } from '../../contract/arrow';
-import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathCommand } from '../../primitive';
-import type { IRArrowDetail, IRArrowEndDetail, IRArrowMark, IRPosition } from '../../schemas';
+import type { MarkerFill, MarkerPrimitive, PathCommand, ResolvedArrowEndSpec } from '../../primitive';
+import type { IRArrowMark, IRPosition } from '../../schemas';
 
 import { providerDefinitionOf } from '../../providers/registry';
 import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH, DEFAULT_ARROW_SHAPE } from '../../schemas';
 import { validateMarkerPrimitives } from '../marker-prim';
 import { shiftToward } from './anchor';
 
-/** 有效 arrow 表：内置 8 + 注入 */
-export type EffectiveArrows = ReadonlyMap<string, ArrowDefinition>;
+/** 已解析 arrow registry：内置 8 + 注入 */
+export type ResolvedArrowRegistry = ReadonlyMap<string, ArrowDefinition>;
 
 /** 默认 baseSize（marker 局部基准边长，viewBox `0 0 baseSize baseSize`） */
 const ARROW_GEOMETRY_BASE_SIZE = 10;
@@ -18,7 +18,7 @@ const ARROW_GEOMETRY_BASE_SIZE = 10;
 /**
  * compile 内部中间体：把顶层默认 ⊕ end-side override merge 后的"视觉输入"集合
  * @description 仅 compile 解析阶段用——shrink 几何 + 调 def.emit 都读它；这些视觉输入字段（scale /
- *   length / width / color / fill / lineWidth）解析完即消费，**不**进最终 `ArrowEndSpec`（已解析 marker 描述）。
+ *   length / width / color / fill / lineWidth）解析完即消费，**不**进最终 `ResolvedArrowEndSpec`（已解析 marker 描述）。
  *   这是 compile-internal 类型，不导出公开 API。
  */
 type ResolvedArrowVisual = {
@@ -60,39 +60,26 @@ type ResolvedArrowVisual = {
   lineWidth?: number;
 };
 
-/** 查 effective 表取 def；未注册名编译期 throw（消息含字母序可用名列表） */
-const lookupArrowDef = (shape: string, effective: EffectiveArrows): ArrowDefinition =>
-  providerDefinitionOf(effective, shape, { capability: 'arrow shape', optionName: 'arrows' });
+/** 查 resolved registry 取 def；未注册名编译期 throw（消息含字母序可用名列表） */
+const lookupArrowDef = (shape: string, registry: ResolvedArrowRegistry): ArrowDefinition =>
+  providerDefinitionOf(registry, shape, { capability: 'arrow shape', optionName: 'arrows' });
 
 /**
  * 端点级视觉输入：顶层默认 ⊕ end-side override（逐字段 merge）
  * @description 缺省字段继承顶层（不是"完全替换"）；空心 def 上 fill 字段被丢（silent no-op）。
  *   产 compile-internal 中间体，供 shrink + emit 消费。
  */
-const resolveArrowVisual = (
-  topLevel: IRArrowDetail,
-  endSide: IRArrowEndDetail | undefined,
-  effective: EffectiveArrows,
-): ResolvedArrowVisual => {
-  const baseShape = endSide?.shape ?? topLevel.shape ?? DEFAULT_ARROW_SHAPE;
+const resolveArrowMarkVisual = (mark: IRArrowMark, registry: ResolvedArrowRegistry): ResolvedArrowVisual => {
+  const baseShape = mark.shape ?? DEFAULT_ARROW_SHAPE;
   const out: ResolvedArrowVisual = { shape: baseShape };
-  const scale = endSide?.scale ?? topLevel.scale;
-  if (scale !== undefined) out.scale = scale;
-  const length = endSide?.length ?? topLevel.length;
-  if (length !== undefined) out.length = length;
-  const width = endSide?.width ?? topLevel.width;
-  if (width !== undefined) out.width = width;
-  const color = endSide?.color ?? topLevel.color;
-  if (color !== undefined) out.color = color;
-  const opacity = endSide?.opacity ?? topLevel.opacity;
-  if (opacity !== undefined) out.opacity = opacity;
-  const lineWidth = endSide?.lineWidth ?? topLevel.lineWidth;
-  if (lineWidth !== undefined) out.lineWidth = lineWidth;
-  const def = lookupArrowDef(baseShape, effective);
-  if (!def.hollow) {
-    const fill = endSide?.fill ?? topLevel.fill;
-    if (fill !== undefined) out.fill = fill;
-  }
+  if (mark.scale !== undefined) out.scale = mark.scale;
+  if (mark.length !== undefined) out.length = mark.length;
+  if (mark.width !== undefined) out.width = mark.width;
+  if (mark.color !== undefined) out.color = mark.color;
+  if (mark.opacity !== undefined) out.opacity = mark.opacity;
+  if (mark.lineWidth !== undefined) out.lineWidth = mark.lineWidth;
+  const def = lookupArrowDef(baseShape, registry);
+  if (!def.hollow && mark.fill !== undefined) out.fill = mark.fill;
   return out;
 };
 
@@ -161,8 +148,8 @@ type ResolvedArrowGeometry = {
 };
 
 /** 据 def + 视觉输入解析端点几何（baseSize / tipX / contactX / resolved length·width） */
-const resolveGeometry = (visual: ResolvedArrowVisual, effective: EffectiveArrows): ResolvedArrowGeometry => {
-  const def = lookupArrowDef(visual.shape, effective);
+const resolveGeometry = (visual: ResolvedArrowVisual, registry: ResolvedArrowRegistry): ResolvedArrowGeometry => {
+  const def = lookupArrowDef(visual.shape, registry);
   assertFiniteGeometry(visual.shape, def);
   const baseSize = def.baseSize ?? ARROW_GEOMETRY_BASE_SIZE;
   const tipX = def.tipX ?? baseSize;
@@ -212,7 +199,7 @@ const buildEmitContext = (
 };
 
 /**
- * 把视觉中间体物化成最终 `ArrowEndSpec`（已解析 marker 描述）
+ * 把视觉中间体物化成最终 `ResolvedArrowEndSpec`（已解析 marker 描述）
  * @description 构 `ArrowEmitContext` → 调 `def.emit` 收集 `MarkerPrimitive[]`，并算 baseSize /
  *   refX（hollow 减 lineWidth/2）/ markerWidth = 解析 length / markerHeight = 解析 width / opacity 透传。
  */
@@ -220,10 +207,10 @@ const materializeArrowEndSpec = (
   visual: ResolvedArrowVisual,
   geometry: ResolvedArrowGeometry,
   round: (n: number) => number,
-): ArrowEndSpec => {
+): ResolvedArrowEndSpec => {
   const ctx = buildEmitContext(visual, geometry, round);
   const marker = callEmit(visual.shape, geometry.def, ctx);
-  const out: ArrowEndSpec = {
+  const out: ResolvedArrowEndSpec = {
     shape: visual.shape,
     baseSize: geometry.baseSize,
     refX: geometry.contactX,
@@ -237,87 +224,44 @@ const materializeArrowEndSpec = (
 
 /**
  * IR path-level `arrow` + `arrowDetail` → PathPrim 起末端点已解析 marker 描述
- * @description merge 视觉输入 → 查 effective 表 + 解析几何 → 算 shrink → 调 def.emit 物化最终 `ArrowEndSpec`。
+ * @description merge 视觉输入 → 查 resolved registry + 解析几何 → 算 shrink → 调 def.emit 物化最终 `ResolvedArrowEndSpec`。
  *   返回同时带 compile-internal 的 shrink 量（端点收缩在 compile 落，与 emit 落点无关）。
  *   未注册 shape 名在此 throw（lookupArrowDef）。
  */
-export const endpointArrows = (
-  arrow: 'none' | '->' | '<-' | '<->' | undefined,
-  detail: IRArrowDetail | undefined,
-  effective: EffectiveArrows,
+export type ResolvedEndpointArrowMark = {
+  spec: ResolvedArrowEndSpec;
+  shrink: number;
+  boundaryOuterInset: number;
+};
+
+export const resolveEndpointArrowMark = (
+  mark: IRArrowMark,
+  registry: ResolvedArrowRegistry,
   round: (n: number) => number,
-): {
-  arrowStart?: ArrowEndSpec;
-  arrowEnd?: ArrowEndSpec;
-  shrinkStart: number;
-  shrinkEnd: number;
-  boundaryOuterInsetStart: number;
-  boundaryOuterInsetEnd: number;
-} => {
-  if (!arrow || arrow === 'none') {
-    return {
-      shrinkStart: 0,
-      shrinkEnd: 0,
-      boundaryOuterInsetStart: 0,
-      boundaryOuterInsetEnd: 0,
-    };
-  }
-  const top: IRArrowDetail = detail ?? {};
-  const wantStart = arrow === '<-' || arrow === '<->';
-  const wantEnd = arrow === '->' || arrow === '<->';
-  const result: {
-    arrowStart?: ArrowEndSpec;
-    arrowEnd?: ArrowEndSpec;
-    shrinkStart: number;
-    shrinkEnd: number;
-    boundaryOuterInsetStart: number;
-    boundaryOuterInsetEnd: number;
-  } = {
-    shrinkStart: 0,
-    shrinkEnd: 0,
-    boundaryOuterInsetStart: 0,
-    boundaryOuterInsetEnd: 0,
+): ResolvedEndpointArrowMark => {
+  const visual = resolveArrowMarkVisual(mark, registry);
+  const geometry = resolveGeometry(visual, registry);
+  return {
+    spec: materializeArrowEndSpec(visual, geometry, round),
+    shrink: computeShrink(geometry),
+    boundaryOuterInset: geometry.boundaryOuterInset,
   };
-  if (wantStart) {
-    const visual = resolveArrowVisual(top, top.start, effective);
-    const geometry = resolveGeometry(visual, effective);
-    result.arrowStart = materializeArrowEndSpec(visual, geometry, round);
-    result.shrinkStart = computeShrink(geometry);
-    result.boundaryOuterInsetStart = geometry.boundaryOuterInset;
-  }
-  if (wantEnd) {
-    const visual = resolveArrowVisual(top, top.end, effective);
-    const geometry = resolveGeometry(visual, effective);
-    result.arrowEnd = materializeArrowEndSpec(visual, geometry, round);
-    result.shrinkEnd = computeShrink(geometry);
-    result.boundaryOuterInsetEnd = geometry.boundaryOuterInset;
-  }
-  return result;
 };
 
 /**
- * 解析一个中段标记 `IRArrowMark` 为已物化的 marker 描述（`ArrowEndSpec`）
+ * 解析一个中段标记 `IRArrowMark` 为已物化的 marker 描述（`ResolvedArrowEndSpec`）
  * @description 复用端点箭头同一管线：mark 自身视觉子集字段（shape / scale / length / width / color /
- *   fill / opacity / lineWidth）即 `ResolvedArrowVisual`（空心 def 上 fill 字段被丢）→ 查 effective 表
+ *   fill / opacity / lineWidth）即 `ResolvedArrowVisual`（空心 def 上 fill 字段被丢）→ 查 resolved registry
  *   解析几何 → 调 def.emit 物化局部 baseSize 几何 + wrapper 参数。方向由调用方按路径切线决定，本函数不含定向。
  *   未注册 shape 名在此 throw（lookupArrowDef）。
  */
 export const resolveMarkArrowSpec = (
   mark: IRArrowMark,
-  effective: EffectiveArrows,
+  registry: ResolvedArrowRegistry,
   round: (n: number) => number,
-): ArrowEndSpec => {
-  const baseShape = mark.shape ?? DEFAULT_ARROW_SHAPE;
-  const visual: ResolvedArrowVisual = { shape: baseShape };
-  if (mark.scale !== undefined) visual.scale = mark.scale;
-  if (mark.length !== undefined) visual.length = mark.length;
-  if (mark.width !== undefined) visual.width = mark.width;
-  if (mark.color !== undefined) visual.color = mark.color;
-  if (mark.opacity !== undefined) visual.opacity = mark.opacity;
-  if (mark.lineWidth !== undefined) visual.lineWidth = mark.lineWidth;
-  const def = lookupArrowDef(baseShape, effective);
-  if (!def.hollow && mark.fill !== undefined) visual.fill = mark.fill;
-  const geometry = resolveGeometry(visual, effective);
+): ResolvedArrowEndSpec => {
+  const visual = resolveArrowMarkVisual(mark, registry);
+  const geometry = resolveGeometry(visual, registry);
   return materializeArrowEndSpec(visual, geometry, round);
 };
 

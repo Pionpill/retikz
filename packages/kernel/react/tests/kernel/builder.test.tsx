@@ -648,7 +648,7 @@ after`;
             type: 'step',
             kind: 'line',
             to: { id: 'B' },
-            label: { text: 'accept', side: 'above' },
+            label: { text: 'accept', side: 'top' },
           },
         ],
       });
@@ -680,7 +680,7 @@ after`;
           { type: 'node', id: 'B', position: { direction: 'top-right', of: 'A' }, label: { position: 'bottom-right' } },
           {
             type: 'path',
-            children: [{ kind: 'move' }, { kind: 'line', label: { text: 'edge', side: 'above' } }],
+            children: [{ kind: 'move' }, { kind: 'line', label: { text: 'edge', side: 'top' } }],
           },
         ],
       });
@@ -690,14 +690,14 @@ after`;
       const fromProp = buildIR(
         <Path>
           <Step kind="move" to="A" />
-          <Step to="B" label={{ text: 'x', position: 'near-end', side: 'bottom' }} />
+          <Step to="B" label={{ text: 'x', position: 'near-end', side: 'bottom', sloped: true }} />
         </Path>,
       );
       const fromChild = buildIR(
         <Path>
           <Step kind="move" to="A" />
           <Step to="B">
-            <EdgeLabel position="near-end" side="bottom">
+            <EdgeLabel position="near-end" side="bottom" sloped>
               x
             </EdgeLabel>
           </Step>
@@ -885,7 +885,7 @@ after`;
           position={[0, 0]}
           label={{
             text: 'L',
-            position: { boundary: 'top', t: 0.25 },
+            position: { boundary: 'top', fraction: 0.25 },
             placement: 'inside',
             distance: 6,
           }}
@@ -897,7 +897,7 @@ after`;
         type: 'node',
         label: {
           text: 'L',
-          position: { boundary: 'top', t: 0.25 },
+          position: { boundary: 'top', fraction: 0.25 },
           placement: 'inside',
           distance: 6,
         },

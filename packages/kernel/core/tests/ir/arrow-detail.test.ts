@@ -64,6 +64,21 @@ describe('ArrowDetailSchema：字段合法 / optional', () => {
   });
 });
 
+describe('PathSchema: arrow sugar is outside core IR', () => {
+  it('rejects top-level arrow and arrowDetail fields', () => {
+    const result = PathSchema.safeParse({
+      type: 'path',
+      arrow: '->',
+      arrowDetail: { shape: 'stealth' },
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [10, 0] },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
 describe('ArrowDetailSchema：错误路径', () => {
   // shape 已开成开放字符串（z.string().min(1)）：任意非空名 schema 接受，
   // 未注册名的拒绝移到 compile 期（见 arrows/builtin-registry.test.ts 的 compile throw 用例）
@@ -117,8 +132,7 @@ describe('PathSchema：arrowDetail 嵌入 + arrowShape 删除', () => {
   it('PathSchema 接受 arrowDetail', () => {
     const ok = PathSchema.safeParse({
       type: 'path',
-      arrow: '->',
-      arrowDetail: { shape: 'stealth', scale: 1.5 },
+      marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'stealth', scale: 1.5 } }],
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [10, 0] },

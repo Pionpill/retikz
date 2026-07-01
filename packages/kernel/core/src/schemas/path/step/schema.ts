@@ -1,27 +1,26 @@
 import { z } from 'zod';
 
-import { FontSchema } from '../../font';
+import { normalizeSide, WebSide } from '../../../shared';
 import { JsonObjectSchema } from '../../json';
 import { PositionSchema } from '../../position';
-import { MixedLineSchema } from '../../text';
+import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
+import { createLabelVisualStyleShape, LabelTextContentSchema } from '../../text';
 import { TargetSchema } from '../target';
-import { FoldStepVia, GeometryLabelPlacement, GeometryLabelSide, normalizeGeometryLabelSide } from './constants';
+import { FoldStepVia, GeometryLabelPlacement } from './constants';
 
-/**
- * 边标注：画线 step 上的 label
- * @description 按段几何 + side 偏移翻译为 TextPrim；move/cycle 不挂 label
- */
 export const GeometryLabelSchema = z
   .object({
-    text: z
-      .union([z.string(), MixedLineSchema])
-      .describe(
-        'Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ runs }` mixed text+math line. Single-line.',
-      ),
+    ...createLabelVisualStyleShape({
+      textColor:
+        "Label text color; falls back to the scope labelDefault, then the owning path's resolved master color, then currentColor. To match a colored line set the path color (not stroke).",
+      opacity: 'Label-only opacity, multiplied with the owning path opacity.',
+      font: 'Label font overrides. Missing fields inherit from scope label defaults.',
+    }),
+    text: LabelTextContentSchema,
     position: z
       .union([
         z.enum(['at-start', 'very-near-start', 'near-start', 'midway', 'near-end', 'very-near-end', 'at-end']),
-        z.number().min(0).max(1),
+        NormalizedFractionSchema,
       ])
       .optional()
       .describe(
@@ -29,12 +28,12 @@ export const GeometryLabelSchema = z
       ),
     side: z
       .preprocess(
-        value => (typeof value === 'string' ? normalizeGeometryLabelSide(value) ?? value : value),
-        z.enum(GeometryLabelSide),
+        value => (typeof value === 'string' ? normalizeSide(value) ?? value : value),
+        z.enum(WebSide),
       )
       .optional()
       .describe(
-        'Side relative to the label anchor. Edge label sides above/below/left/right are canonical; web and compass side names are accepted aliases. `sloped` rotates label along the tangent with no side offset. Default `above`.',
+        'Side relative to the label anchor. Web sides top/bottom/left/right are canonical; compass and TikZ side names are accepted aliases. Default `top`.',
       ),
     sloped: z
       .boolean()
@@ -51,26 +50,12 @@ export const GeometryLabelSchema = z
       .nonnegative()
       .optional()
       .describe('Side offset distance in user units. Defaults to the same distance as Path step labels.'),
-    textColor: z
-      .string()
-      .optional()
-      .describe(
-        "Label text color; falls back to the scope labelDefault, then the owning path's resolved master color, then currentColor. To match a colored line set the path color (not stroke).",
-      ),
-    opacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Label-only opacity, multiplied with the owning path opacity.'),
-    font: FontSchema.optional().describe('Label font overrides. Missing fields inherit from scope label defaults.'),
   })
   .strict()
   .describe(
     'Geometry label spec attached to a path-like host; compiled to a TextPrim positioned from a centerline sample.',
   );
 
-/** 边标注 IR 类型 */
 export const StepLabelSchema = GeometryLabelSchema;
 
 export const MoveStepSchema = z
@@ -113,10 +98,6 @@ export const CycleStepSchema = z
   })
   .describe('Cycle action: close the current sub-path back to its starting point; carries no `to` field');
 
-/**
- * 控制点 schema 别名
- * @description 曲线 step 共用同一控制点 schema，curve / cubic schema 与下游消费保持一致。
- */
 export const ControlPointSchema = PositionSchema.describe('Bezier control point position.');
 
 export const CurveStepSchema = z
@@ -155,20 +136,17 @@ export const BendStepSchema = z
       .describe(
         'Bend side relative to the from-to direction. Use with bendAngle unless outAngle and inAngle are provided.',
       ),
-    bendAngle: z
-      .number()
+    bendAngle: AngleDegreesSchema
       .gt(-180)
       .lt(180)
       .optional()
       .describe('Bend angle in degrees. Omitted fields use 30.'),
-    outAngle: z
-      .number()
+    outAngle: AngleDegreesSchema
       .optional()
       .describe(
         'Outgoing tangent angle in degrees at the start point. With `inAngle`, takes precedence over bendDirection and bendAngle.',
       ),
-    inAngle: z
-      .number()
+    inAngle: AngleDegreesSchema
       .optional()
       .describe(
         'Incoming tangent angle in degrees at the end point. Used with `outAngle` for explicit tangent control.',
@@ -242,14 +220,11 @@ const ArcStepBaseSchema = z
       .describe(
         'Arc segment sweeping from startAngle to endAngle around a center. Use either radius or radiusX/radiusY.',
       ),
-    startAngle: z
-      .number()
+    startAngle: AngleDegreesSchema
       .describe(
         'Arc start angle in degrees, measured from +x axis. 0° = +x, 90° = +y = screen-down (visual clockwise under screen y-down); matches polar / Node label angle convention.',
       ),
-    endAngle: z
-      .number()
-      .describe('Arc end angle in degrees; sweep direction inferred from startAngle vs endAngle'),
+    endAngle: AngleDegreesSchema.describe('Arc end angle in degrees; sweep direction inferred from startAngle vs endAngle'),
     radius: z
       .number()
       .positive()
@@ -294,14 +269,12 @@ const CirclePathStepBaseSchema = z
       .number()
       .positive()
       .describe('Circle radius in user units'),
-    startAngle: z
-      .number()
+    startAngle: AngleDegreesSchema
       .optional()
       .describe(
         'Partial-circle start angle in degrees (same convention as arc: 0°=+x, 90°=+y screen-down). Give both startAngle and endAngle for a partial circle, or neither for a full circle.',
       ),
-    endAngle: z
-      .number()
+    endAngle: AngleDegreesSchema
       .optional()
       .describe('Partial-circle end angle in degrees; sweep direction inferred from startAngle vs endAngle.'),
     closed: z
@@ -336,14 +309,12 @@ const EllipsePathStepBaseSchema = z
       .number()
       .positive()
       .describe('Ellipse y-axis radius (semi-major or semi-minor on y)'),
-    startAngle: z
-      .number()
+    startAngle: AngleDegreesSchema
       .optional()
       .describe(
         'Partial-ellipse start angle in degrees (parametric, same convention as arc). Give both startAngle and endAngle for a partial ellipse, or neither for a full ellipse.',
       ),
-    endAngle: z
-      .number()
+    endAngle: AngleDegreesSchema
       .optional()
       .describe('Partial-ellipse end angle in degrees.'),
     closed: z

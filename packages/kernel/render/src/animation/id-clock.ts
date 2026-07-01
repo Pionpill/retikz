@@ -1,16 +1,21 @@
 /**
  * 按 id 的虚拟时钟登记表：在单条 scene 级 rAF 共享时钟之上，给每个元素 id 叠加独立的时间偏移 / 暂停 / 激活态
  * @description Canvas 后端无逐元素 DOM，per-id 动画控制（`ctx.animation.restart(id)` 等）靠此把全局时间 `globalTime`
- *   折算成该 id 的「有效时刻」。纯数据 / 纯数学（无 DOM）。每个 id 的状态：
- *   - `offset`：有效时刻 = `globalTime − offset`（restart 把 offset 设为当前 globalTime，使有效时刻归零）
- *   - `pausedAt`：非 null 时定格在该有效时刻（暂停）
- *   - `active`：是否播放该 id 的**非自动播**（manual / visible / onEvent）track（被 play / restart 激活）
- *   - `stopped`：true 时该 id 渲染 base 静止态（跳过全部 track）
- *   自动播（load）track 不依赖 `active`，恒按有效时刻播放（除非 `stopped`）。
+ *   折算成该 id 的「有效时刻」。纯数据 / 纯数学（无 DOM）。自动播（load）track 不依赖 `active`，
+ *   恒按有效时刻播放（除非 `stopped`）。
  */
 
 /** 单个 id 的虚拟时钟态 */
-type IdEntry = { offset: number; pausedAt: number | null; active: boolean; stopped: boolean };
+type IdEntry = {
+  /** 有效时刻 = `globalTime - offset`；restart 把 offset 设为当前 globalTime，使有效时刻归零。 */
+  offset: number;
+  /** 暂停时定格的有效时刻；null 表示未暂停。 */
+  pausedAt: number | null;
+  /** 是否播放该 id 的非自动播（manual / visible / onEvent）track。 */
+  active: boolean;
+  /** true 时该 id 渲染 base 静止态，跳过全部 track。 */
+  stopped: boolean;
+};
 
 /** 按 id 的虚拟时钟登记表 */
 export type IdClockRegistry = {

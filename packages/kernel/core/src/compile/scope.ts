@@ -21,6 +21,7 @@ import { rect as rectOps } from '../geometry/rect';
 import { resolveBoundaryRegistry } from '../providers/boundary';
 import { providerDefinitionOf } from '../providers/registry';
 import { resolveShapeRegistry } from '../providers/shape';
+import { WebAnchor } from '../shared';
 import { outerRectOf } from './node';
 import { resolvePosition } from './position';
 
@@ -238,10 +239,10 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Ar
   for (const layout of layouts) {
     const outerRect = outerRectOf(layout);
     points.push(
-      rectOps.anchor(outerRect, 'north-west'),
-      rectOps.anchor(outerRect, 'north-east'),
-      rectOps.anchor(outerRect, 'south-west'),
-      rectOps.anchor(outerRect, 'south-east'),
+      rectOps.anchor(outerRect, WebAnchor.TopLeft),
+      rectOps.anchor(outerRect, WebAnchor.TopRight),
+      rectOps.anchor(outerRect, WebAnchor.BottomLeft),
+      rectOps.anchor(outerRect, WebAnchor.BottomRight),
     );
   }
   return points;
@@ -250,7 +251,7 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Ar
 /**
  * 收集一组 NodeLayout 的全局 axis-aligned bounding box
  * @description 每个 layout 的 4 角点已是全局坐标系（Pass 1 累积 chain apply 后），
- *   取每个 layout 的 rotate-aware `north-west` / `north-east` / `south-west` / `south-east`
+ *   取每个 layout 的 rotate-aware `top-left` / `top-right` / `bottom-left` / `bottom-right`
  *   4 角点（rect.anchor 已含 layout.rect.rotate 处理）并求 AABB；
  *   layout 是 0×0（coordinate / 空 scope 占位）时退化为单点也合法；
  *   空 layouts 数组返回 null（调用方按"empty scope + fallback origin"退化为 0×0 占位）

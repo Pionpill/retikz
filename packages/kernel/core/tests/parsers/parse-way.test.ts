@@ -433,20 +433,25 @@ describe('parseWay', () => {
     });
 
     it('label 完整字段透传：position + side', () => {
-      expect(parseWay(['A', { label: { text: 'q', position: 'near-end', side: 'sloped' } }, 'B'])).toEqual([
+      expect(
+        parseWay(['A', { label: { text: 'q', position: 'near-end', side: 'sloped' } as never }, 'B']),
+      ).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         {
           type: 'step',
           kind: 'line',
           to: { id: 'B' },
-          label: { text: 'q', position: 'near-end', side: 'sloped' },
+          label: { text: 'q', position: 'near-end', sloped: true },
         },
       ]);
     });
 
-    it('label side accepts compass aliases and emits edge-label canonical values', () => {
+    it('label side accepts compass and TikZ aliases and emits edge-label canonical values', () => {
       expect(parseWay(['A', { label: { text: 'q', side: 'north' } }, 'B'])[1]).toMatchObject({
-        label: { text: 'q', side: 'above' },
+        label: { text: 'q', side: 'top' },
+      });
+      expect(parseWay(['A', { label: { text: 'q', side: 'above' } }, 'B'])[1]).toMatchObject({
+        label: { text: 'q', side: 'top' },
       });
     });
 

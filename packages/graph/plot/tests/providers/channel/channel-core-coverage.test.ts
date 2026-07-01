@@ -375,9 +375,7 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
           scale: { kind: 'constant', value: { x: 1.2, y: 0.8 } },
           fillRule: { kind: 'constant', value: 'evenodd' },
           thickness: { kind: 'constant', value: 'thick' },
-          arrow: { kind: 'constant', value: '->' },
           dashPattern: { kind: 'constant', value: [4, 2] },
-          arrowDetail: { kind: 'constant', value: { end: { shape: 'stealth', length: 8 } } },
           shadow: { kind: 'constant', value: { preset: 'md', offsetX: 1, offsetY: 2 } },
           blendMode: { kind: 'constant', value: 'screen' },
           encoding: { x: { field: 'x' }, y: { field: 'y' } },
@@ -399,11 +397,10 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       scale: { x: 1.2, y: 0.8 },
       fillRule: 'evenodd',
       thickness: 'thick',
-      arrow: '->',
       dashPattern: [4, 2],
-      arrowDetail: { end: { shape: 'stealth', length: 8 } },
       shadow: { preset: 'md', offsetX: 1, offsetY: 2 },
       blendMode: 'screen',
     });
+    expect(path.marks).toBeUndefined();
   });
 });

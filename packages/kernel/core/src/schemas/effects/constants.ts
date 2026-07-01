@@ -1,4 +1,4 @@
-import type { DropShadow, ShadowPresetValue } from './types';
+import type { ResolvedDropShadow, ShadowPresetValue } from './types';
 
 /**
  * 阴影预设档位关键字（Tailwind 风格刻度）
@@ -15,11 +15,11 @@ export const ShadowPreset = {
 } as const;
 
 /**
- * 预设档位 → canonical DropShadow 单一真源表
+ * 预设档位 → 解析后投影对象单一真源表
  * @description compile 用本表把预设字符串 / `{ preset }` 展开成解析后对象；`none` → null（不产阴影，等价省略）。
  *   单层近似 Tailwind 阴影刻度：`offsetX=0`、暗化半透明黑；exact 值实现期按快照微调。
  */
-export const SHADOW_PRESETS: Record<ShadowPresetValue, DropShadow | null> = {
+export const SHADOW_PRESETS: Record<ShadowPresetValue, ResolvedDropShadow | null> = {
   none: null,
   sm: { offsetX: 0, offsetY: 1, blur: 2, color: 'rgba(0,0,0,0.10)' },
   md: { offsetX: 0, offsetY: 3, blur: 6, color: 'rgba(0,0,0,0.12)' },

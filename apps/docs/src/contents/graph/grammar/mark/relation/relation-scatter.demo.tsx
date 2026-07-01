@@ -30,8 +30,8 @@ const Demo: FC = () => (
         zIndex: { kind: 'constant', value: 1 },
       }}
       path={{
-        label: { text: { field: 'relation' }, position: 0.45, side: 'sloped' },
-        options: { arrow: '->' },
+        label: { text: { field: 'relation' }, position: 0.45, sloped: true },
+        options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
       }}
     />
   </Plot>

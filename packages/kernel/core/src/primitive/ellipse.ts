@@ -3,7 +3,7 @@
  * @description 圆形（rx=ry）复用同一 prim 单 case 处理；rotate 度数绕中心，非零时由 renderer 在 emit 阶段应用旋转变换
  */
 import type { IRAnimationTrack } from '../schemas/animation';
-import type { BlendModeValue, DropShadow } from '../schemas/effects';
+import type { BlendModeValue, ResolvedDropShadow } from '../schemas/effects';
 import type { IRJsonObject } from '../schemas/json';
 import type { PaintValue } from './paint';
 
@@ -46,7 +46,7 @@ export type EllipsePrim = {
    */
   opacity?: number;
   /** 投影：解析后对象（preset 已展开 + 显式覆盖合并）；undefined = 无投影 */
-  shadow?: DropShadow;
+  shadow?: ResolvedDropShadow;
   /**
    * 混合模式：解析后值；undefined / normal = 普通 source-over
    * @default 'normal'

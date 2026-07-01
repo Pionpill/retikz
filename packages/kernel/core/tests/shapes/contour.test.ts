@@ -13,7 +13,7 @@ import type { ScenePrimitive } from '../../src/primitive';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { contour } from '../../src/contract/shape';
+import { contour } from '../../src/providers/shape';
 import { NodeSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 

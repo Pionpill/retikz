@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { Circle } from '../../src/geometry/circle';
 
 import { circle } from '../../src/geometry/circle';
+import { WebAnchor } from '../../src/shared';
 
 const c10: Circle = { x: 0, y: 0, radius: 10 };
 
@@ -30,23 +31,23 @@ describe('circle.contains', () => {
 });
 
 describe('circle.anchor', () => {
-  it('center / N / S / E / W', () => {
-    expect(circle.anchor(c10, 'center')).toEqual([0, 0]);
-    expect(circle.anchor(c10, 'north')).toEqual([0, -10]);
-    expect(circle.anchor(c10, 'south')).toEqual([0, 10]);
-    expect(circle.anchor(c10, 'east')).toEqual([10, 0]);
-    expect(circle.anchor(c10, 'west')).toEqual([-10, 0]);
+  it('N / S / E / W', () => {
+    expect(circle.center(c10)).toEqual([0, 0]);
+    expect(circle.anchor(c10, WebAnchor.Top)).toEqual([0, -10]);
+    expect(circle.anchor(c10, WebAnchor.Bottom)).toEqual([0, 10]);
+    expect(circle.anchor(c10, WebAnchor.Right)).toEqual([10, 0]);
+    expect(circle.anchor(c10, WebAnchor.Left)).toEqual([-10, 0]);
   });
 
   it('对角 anchor 在 45° 处（圆周等距分布）', () => {
-    const ne = circle.anchor(c10, 'north-east');
+    const ne = circle.anchor(c10, WebAnchor.TopRight);
     expect(ne[0]).toBeCloseTo(10 * Math.SQRT1_2);
     expect(ne[1]).toBeCloseTo(-10 * Math.SQRT1_2);
   });
 });
 
 describe('circle.boundaryPoint', () => {
-  it('沿 +x 方向射线 → east', () => {
+  it('沿 +x 方向射线 → right', () => {
     const p = circle.boundaryPoint(c10, [1000, 0]);
     expect(p[0]).toBeCloseTo(10);
     expect(p[1]).toBeCloseTo(0);

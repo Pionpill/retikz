@@ -1,13 +1,11 @@
 ﻿import { JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
 import { AnchorRefSchema, PathBaseSchema, PositionSchema, StepLabelSchema } from '@retikz/core';
 import {
-  ArrowDetailSchema,
   BlendMode,
   BoundarySchema,
   DropShadowSchema,
   FontSchema,
   NodeTextAlign,
-  PathArrowDirectionSchema,
   PathFillRuleSchema,
   PathLineCapSchema,
   PathLineJoinSchema,
@@ -148,8 +146,6 @@ export const RelationStepLabelSchema = StepLabelSchema.extend({
 
 export const RelationPathSpecificOptionsSchema = PathBaseSchema.pick({
   dashPattern: true,
-  arrow: true,
-  arrowDetail: true,
   fillRule: true,
   lineCap: true,
   lineJoin: true,
@@ -419,23 +415,11 @@ export const PathThicknessStyleSchema = markValueSchema(
   'Constant core Path thickness preset',
   'path thickness style value',
 );
-export const PathArrowStyleSchema = markValueSchema(
-  PathArrowDirectionSchema,
-  'Data field path bound to path arrow direction',
-  'Constant core Path arrow direction',
-  'path arrow style value',
-);
 export const PathScaleStyleSchema = markValueSchema(
   PathScaleSchema,
   'Data field path bound to path scale',
   'Constant core Path scale',
   'path scale style value',
-);
-export const PathArrowDetailStyleSchema = markValueSchema(
-  ArrowDetailSchema,
-  'Data field path bound to path arrowDetail',
-  'Constant core Path arrowDetail',
-  'path arrowDetail style value',
 );
 
 export const RelationPrimitiveStyleSchema = z
@@ -589,14 +573,11 @@ const corePathStyle = {
   thickness: PathThicknessStyleSchema.optional().describe(
     'Core Path thickness: field-bound datum channel or constant preset',
   ),
-  arrow: PathArrowStyleSchema.optional().describe(
-    'Core Path arrow: field-bound datum channel or constant arrow direction',
+  marks: PathBaseSchema.shape.marks.optional().describe(
+    'Static core Path marks placed along the lowered path; use endpoint marks for arrows',
   ),
   dashPattern: NodeDashPatternStyleSchema.optional().describe(
     'Core Path dashPattern: field-bound datum channel or constant number array',
-  ),
-  arrowDetail: PathArrowDetailStyleSchema.optional().describe(
-    'Core Path arrowDetail: field-bound datum channel or constant object',
   ),
   shadow: ShadowStyleSchema.optional().describe(
     'Core Path shadow: field-bound datum channel or constant preset / object',

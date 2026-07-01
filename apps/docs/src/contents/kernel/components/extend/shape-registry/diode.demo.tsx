@@ -18,7 +18,6 @@ const diode: ShapeDefinition = defineShape({
     return localToWorld(rect, terminal);
   },
   anchor: (rect, name) => {
-    if (name === 'center') return [rect.x, rect.y];
     if (name === 'left' || name === 'input') return localToWorld(rect, [-rect.width / 2, 0]);
     if (name === 'right' || name === 'output') return localToWorld(rect, [rect.width / 2, 0]);
     return undefined;

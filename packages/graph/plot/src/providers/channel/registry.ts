@@ -62,8 +62,6 @@ export const BUILTIN_CHANNEL_NAMES: ReadonlySet<string> = new Set<string>([
   'blendMode',
   'fillRule',
   'thickness',
-  'arrow',
-  'arrowDetail',
 ]);
 
 export type ChannelRegistryOptions = {

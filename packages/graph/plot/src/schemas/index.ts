@@ -8,9 +8,9 @@ export * from './scale';
 export * from './transform';
 export type {
   BlendModeValue,
-  DropShadow,
   IRArrowDetail,
   IRBoundary,
+  IRDropShadow,
   IRFont,
   IRPaintSpec,
   IRPathScale,

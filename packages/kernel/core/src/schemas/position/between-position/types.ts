@@ -1,4 +1,4 @@
-import type { PolarPosition } from '../../../geometry/polar';
+import type { PolarPosition } from '../../../shared';
 import type { IRNodeTarget } from '../../path/target';
 
 import { type IROffsetPosition } from '../offset-position';

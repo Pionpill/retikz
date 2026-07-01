@@ -2,8 +2,8 @@ import type { IRJsonObject } from '../../schemas/json';
 import type { BoundaryDefinition, BoundaryDefinitionInput } from './types';
 
 /**
- * 注册一个参数化 connection surface（定义点 typed，返回擦除形态进 registry）。
- * @description boundary definition 含函数与 paramsSchema，不进 IR；IR 只保存 boundary 名或 `{ type, params }`。
+ * 定义 boundary 注册项，并把参数泛型擦除为 registry 可存储形态。
+ * @remarks 当前只集中封装擦除边界；保留入口用于对齐 registry API，并为未来校验或归一化预留空间。
  */
 export const defineBoundary = <TParams extends IRJsonObject>(
   def: BoundaryDefinitionInput<TParams>,

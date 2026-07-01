@@ -11,7 +11,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 | 样式       | `color` / `fill` / `stroke` / `textColor`<br />`opacity` / `size` / `shape`            | 颜色、透明度、大小和形状         |
 | 节点几何   | `padding` / `cornerRadius`<br />`rotate` / `minimumWidth`                              | node 尺寸、间距和变换            |
 | 文本       | `text`<br />`label`                                                                    | 节点内文本和节点外 label         |
-| 路径与箭头 | `strokeWidth` / `lineCap` / `lineJoin`<br />`roundedCorners` / `arrow` / `arrowDetail` | 路径描边、端点、连接、圆角和箭头 |
+| 路径 | `strokeWidth` / `lineCap` / `lineJoin`<br />`roundedCorners` / `dashPattern` | 路径描边、端点、连接、圆角和虚线 |
 | 效果       | `shadow`<br />`blendMode`                                                              | 阴影和混合模式                   |
 | 其他       | `zIndex` / `order`<br />`series`                                                       | 绘制顺序、排序和系列拆分         |
 
@@ -115,9 +115,9 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 | `label`                                           | 字段：`label = "field"`                                           | datum host 标签 | core node `label`      |
 | `labelPosition` / `labelDistance`<br />`labelPin` | 常量：`labelPosition = "top"`<br />常量：`labelDistance = {16}` | label 布局      | core node label fields |
 
-## 路径与箭头
+## 路径
 
-路径与箭头通道作用在下沉为 core path 的 mark 上，例如折线、relation、区域边界和参考线。
+路径通道作用在下沉为 core path 的 mark 上，例如折线、relation、区域边界和参考线。端点箭头不是 plot channel；需要箭头时在对应 path 配置中写 `marks`。
 
 ### 路径样式
 
@@ -131,17 +131,6 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 | `roundedCorners`                       | 字段：`roundedCorners = "field"`<br />常量：`roundedCorners = {8}` | path 圆角提示  | core path `roundedCorners`                                   |
 | `lineCap`<br />`lineJoin`              | 字段：`lineCap = "field"`<br />常量：`lineCap = "round"`           | 线端和连接样式 | core path line fields                                        |
 | `dashPattern` / `dashed`<br />`dotted` | 字段：`dashPattern = "field"`<br />常量：`dashPattern = {[7, 4]}`  | 描边虚线样式   | core node/path dash fields                                   |
-
-### 箭头
-
-箭头通道控制路径端点方向和箭头细节。`arrow` 负责方向，`arrowDetail` 负责箭头尺寸。
-
-<ComponentPreview name="builtin-arrow" size="md" />
-
-| 通道          | 通道值                                                                             | 含义         | 落点                   |
-| ------------- | ---------------------------------------------------------------------------------- | ------------ | ---------------------- |
-| `arrow`       | 字段：`arrow = "field"`<br />常量：`arrow = "->"`                                  | 箭头方向     | core path arrow        |
-| `arrowDetail` | 字段：`arrowDetail = "field"`<br />常量：`arrowDetail = {{ length: 8, width: 6 }}` | 箭头尺寸细节 | core path arrow detail |
 
 ## 效果
 

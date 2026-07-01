@@ -34,10 +34,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'DrawableStyle',
     url: '/kernel/reference/schema/path#drawablestyle',
   },
-  DrawableMetaSchema: {
-    schema: IR.DrawableMetaSchema,
-    label: 'DrawableMeta',
-    url: '/kernel/reference/schema/path#drawablemeta',
+  DrawableInstanceSchema: {
+    schema: IR.DrawableInstanceSchema,
+    label: 'DrawableInstance',
+    url: '/kernel/reference/schema/path#drawableinstance',
   },
   PathRibbonOptionsSchema: {
     schema: IR.PathRibbonOptionsSchema,
@@ -131,6 +131,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
 
   // Arrow detail（path-level 箭头视觉规格）
+  ArrowMarkSchema: {
+    schema: IR.ArrowMarkSchema,
+    label: 'ArrowMark',
+    url: '/kernel/reference/schema/path#arrowmark',
+  },
   ArrowDetailSchema: {
     schema: IR.ArrowDetailSchema,
     label: 'ArrowDetail',

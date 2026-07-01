@@ -81,7 +81,7 @@ describe('StepLabel JSON round-trip', () => {
     };
     expect(StepLabelSchema.parse(JSON.parse(JSON.stringify(label)))).toEqual({
       ...label,
-      side: 'below',
+      side: 'bottom',
     });
   });
 });

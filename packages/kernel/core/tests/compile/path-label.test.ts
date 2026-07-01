@@ -35,6 +35,12 @@ const linePathIR = (label: NonNullable<Parameters<typeof JSON.stringify>[0]>): I
 });
 
 describe('step.label：line 段的 label 几何', () => {
+  it('schema rejects sloped as a side value and accepts sloped as a boolean flag', async () => {
+    const { StepLabelSchema } = await import('../../src/schemas/path/step');
+    expect(StepLabelSchema.safeParse({ text: 'x', side: 'sloped' }).success).toBe(false);
+    expect(StepLabelSchema.safeParse({ text: 'x', sloped: true }).success).toBe(true);
+  });
+
   it('默认 (position=midway, side=top)：TextPrim 落在中点上方，align=middle baseline=bottom', () => {
     const scene = compileToScene(linePathIR({ text: 'accept' }));
     const labels = findTextPrims(scene.primitives);
@@ -87,8 +93,8 @@ describe('step.label：line 段的 label 几何', () => {
     expect(visualMiddle(t)).toBeCloseTo(0, 2);
   });
 
-  it('side=sloped → 外裹 group 旋转，水平段 angle=0', () => {
-    const scene = compileToScene(linePathIR({ text: 'x', side: 'sloped' }));
+  it('sloped=true → 外裹 group 旋转，水平段 angle=0', () => {
+    const scene = compileToScene(linePathIR({ text: 'x', sloped: true }));
     const grp = findGroupPrim(scene.primitives);
     expect(grp).toBeDefined();
     expect(grp!.transforms).toEqual([{ kind: 'rotate', degrees: 0, cx: 5, cy: 0 }]);
@@ -96,7 +102,7 @@ describe('step.label：line 段的 label 几何', () => {
     expect(inner).toBeDefined();
     // 锚点不偏移：sloped 文本块底边落在采样点上（文字在线上方）
     expect(inner!.x).toBe(5);
-    expect(visualBottom(inner!)).toBeCloseTo(0, 2);
+    expect(visualMiddle(inner!)).toBeCloseTo(0, 2);
   });
 
   it('sloped=true → 外裹 group 旋转，同时保留 side 定位', () => {
@@ -134,7 +140,7 @@ describe('step.label：line 段的 label 几何', () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'line', to: [0, 10], label: { text: 'x', side: 'sloped' } },
+            { type: 'step', kind: 'line', to: [0, 10], label: { text: 'x', sloped: true } },
           ],
         },
       ],
@@ -380,7 +386,7 @@ describe('step.label：layout 把标签纳入 bbox', () => {
             type: 'path',
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'line', to: [100, 0], label: { text: 'tall', side: 'above' } },
+              { type: 'step', kind: 'line', to: [100, 0], label: { text: 'tall', side: 'top' } },
             ],
           },
         ],
@@ -526,7 +532,7 @@ describe('label on fold (step kind="fold")：N=2 段等 t 拼接、拐角恒在 
               kind: 'fold',
               via: '-|',
               to: [40, 30],
-              label: { text: 'F', position: 0.5, side: 'sloped' },
+              label: { text: 'F', position: 0.5, sloped: true },
             },
           ],
         },

@@ -1,8 +1,8 @@
-import type { WebAnchorValue } from '../geometry/anchor';
 import type { AtDirectionValue } from '../schemas';
+import type { WebAnchorValue } from '../shared';
 
-import { WebAnchor } from '../geometry/anchor';
 import { AtDirection } from '../schemas';
+import { WebAnchor } from '../shared';
 
 export type DirectionVector = readonly [number, number];
 

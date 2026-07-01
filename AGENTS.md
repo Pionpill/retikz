@@ -18,11 +18,15 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件 / JSON IR �
 
 - 上层包的底层能力必须源自 `@retikz/core`。React / Vanilla / Plot / Docs demo 等可以通过 adapter、sugar、composite、lowering、renderer 扩展来增强表达力，但不要绕开 core 另造一套平行能力、平行 IR 或平行渲染语义。
 - 功能设计的首要路径是先抽象 Definition / registry / capability contract，再实现内置能力，并让扩展能力复用同一套注册、解析和消费逻辑。不要让内置实现享有一套私有白名单或特殊入口、扩展实现再走另一套补丁接口；应由 `XxxDefinition` 这类定义对象声明 schema、能力和解析结果，内置与自定义只是在同一机制下注册的不同 definition。
-- 涉及新增 / 重命名 / 重构 define-registry 能力（`XxxDefinition`、`defineXxx`、`providers/*`、`BUILTIN_*`、`AnyXxxDefinition`、`CompileOptions.*`、plot lowering options 等）前，必须先读 `.agents/skills/standard-define-registry/SKILL.md`，按其中准则确定开放式扩展模型、文件分层、schema discriminator、definition、registry、内置集合和 option 字段命名；不要沿用历史裸名（如 `Boundary`）作为新范式。
+- 涉及新增 / 重命名 / 重构文件分层、shared / schemas / contract / providers / pipeline / compile 依赖方向，或 define-registry 能力（`XxxDefinition`、`defineXxx`、`providers/*`、`BUILTIN_*`、`AnyXxxDefinition`、`CompileOptions.*`、plot lowering options 等）前，必须先读 `.agents/skills/standard-structure/SKILL.md`，再按实际改动层级按需读取 `standard-shared` / `standard-schema` / `standard-contract` / `standard-providers` / `standard-pipeline-compile`；不要沿用历史裸名（如 `Boundary`）作为新范式。
 - 框架与功能设计优先做抽象设计，而不是只补当前单一场景。遇到具体需求时，先识别它背后的通用模型、边界和可扩展点；若确实只能局部处理，必须说明为什么不抽象。
 - 后续发现既有设计有问题或需要架构调整时，以当前能判断的最优方案为准，先修正设计与架构方向，再评估兼容性、迁移成本和版本节奏；兼容性是重要约束，但不应压过正确设计。
 - `0.x` 版本代表早期开发版，公开 API / schema / 命名 / 架构仍处于设计收敛期；本阶段调整以正确设计为准，不为兼容旧写法保留别名、桥接或迁移负担，除非当次版本设计文档明确要求。
 - 因排期、风险控制或版本冻结等原因采用临时设计时，必须在代码 / ADR / notes 中备注原因、影响范围和后续替换方向，并同步写入对应版本设计文档的 roadmap，避免临时方案沉没成长期事实。
+
+## 文件编码
+
+仓库内所有文本文件统一使用 UTF-8 编码读写，不使用操作系统默认编码、ANSI / GBK / locale code page 等隐式编码。PowerShell、脚本或编辑器写文件时必须显式指定 UTF-8，避免中文文档、注释、JSDoc、MDX、skill 内容被错误编码破坏。
 
 ## 依赖与命令
 
@@ -167,10 +171,12 @@ Control: human-directed
 
 - TypeScript ESM；命名：组件 PascalCase、hook `useXxx`、其余 camelCase
 - 组件 / 类文件可用 PascalCase；其他文件和文件夹统一 kebab-case（短横线），目录通常有只 re-export 的 `index.ts`
+- `index.ts` 作为 barrel 时，绝大多数情况下采用 `export * from './xxx'` 形式；只有需要限制公共导出面、重命名导出、跨目录精选再导出或避免导出冲突时，才使用 `export { xxx } from './xxx'` / `export type { Xxx } from './xxx'`
 - 数组类型写 `Array<T>`，不用 `T[]`
 - 函数优先箭头形式，例外是确实需要 hoisting / class 方法
 - enum 用 const object enum：`as const` 对象 + `ValueOf` 派生类型；value object 用单数 PascalCase，例如 `export const CompassAnchor = {...} as const`，成员 key 用大驼峰；派生类型加 `Value` 后缀避免 ESLint `no-redeclare`，例如 `export type CompassAnchorValue = ValueOf<typeof CompassAnchor>`；schema 枚举字段用 `z.enum(X)`（不用已弃用的 `z.nativeEnum`）；判别 union 成员用 `z.literal(X.Member)`
 - 不写无意义注释；注释 / JSDoc / 测试标题 / zod `.describe(...)` 不引用 ADR / 历史阶段
+- 类型 / interface / 对象字面量的 JSDoc 不要在整体说明里枚举属性含义；能写在属性上的说明必须下沉到属性 JSDoc。只有函数签名、回调协议、互斥组合等无法附着到单个属性上的规则，才放在整体 `@description` / `@remarks`
 
 React 组件：
 
@@ -189,10 +195,12 @@ Tailwind：
 详细规则见 `packages/kernel/core/AGENTS.md`。全仓记住几条硬约束：
 
 - IR 必须 100% JSON 可序列化，禁止函数 / ReactNode / class 实例
+- 涉及新增 / 重命名 / 重构 Zod / IR schema、schema 派生类型、schema 字段顺序、`.superRefine(...)`、schema registry 文档或 schema 行为测试前，必须先读 `.agents/skills/standard-schema/SKILL.md`，按其中准则确定 schema 分层、字段顺序、BaseSchema + refinement、describe / JSDoc 和同步范围。
 - zod schema 是单一真源，TS 类型用 `z.infer`
+- 由 IR schema object 推导出的公开数据类型命名为 `IRXxx`（例如 `IRFont`、`IRPaintSpec`、`IRDropShadow`）；由 const object enum + `ValueOf` 推导出的取值 union 命名为 `XxxValue`（例如 `BlendModeValue`、`ShadowPresetValue`），不加 `IR`；Definition / registry contract 类型按 `XxxDefinition`，也不加 `IR`
 - schema 字段 `.describe(...)` 用英文，描述含义和用途
 - schema `.describe(...)` 面向 LLM / schema registry 准确识别 IR 契约，保持简洁干练；优先说明字段含义、允许值 / custom 扩展、默认值、compile/runtime 边界；避免重复 schema 已表达的约束，避免 SSR / IntersectionObserver / WAAPI / hydration / 具体 renderer 策略等场景化或后端实现细节，除非该细节本身就是字段契约
-- IR schema 内不写 JSDoc；派生类型、常量、函数、类写中文 JSDoc
+- IR schema 文件里的 schema 常量一般不写 JSDoc，schema 说明统一看字段级 / 对象级 zod `.describe(...)`；派生类型、非 schema 常量、函数、类写中文 JSDoc
 - 顶层实体判别字段用 `type`，内部子变体用 `kind`
 
 ## 抽象分层

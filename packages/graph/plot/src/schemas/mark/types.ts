@@ -18,8 +18,6 @@ import type {
   NodeFontStyleSchema,
   NodePositiveNumberStyleSchema,
   NodeTextAlignStyleSchema,
-  PathArrowDetailStyleSchema,
-  PathArrowStyleSchema,
   PathClosureSchema,
   PathFillRuleStyleSchema,
   PathMarkSchema,
@@ -90,9 +88,7 @@ export type ShadowStyle = z.infer<typeof ShadowStyleSchema>;
 export type BlendModeStyle = z.infer<typeof BlendModeStyleSchema>;
 export type PathFillRuleStyle = z.infer<typeof PathFillRuleStyleSchema>;
 export type PathThicknessStyle = z.infer<typeof PathThicknessStyleSchema>;
-export type PathArrowStyle = z.infer<typeof PathArrowStyleSchema>;
 export type PathScaleStyle = z.infer<typeof PathScaleStyleSchema>;
-export type PathArrowDetailStyle = z.infer<typeof PathArrowDetailStyleSchema>;
 /** PathMark 相邻点连接方式。 */
 export type PathCurveValue = ValueOf<typeof PathCurve>;
 /** PathMark 闭合策略配置。 */

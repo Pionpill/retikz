@@ -34,7 +34,7 @@ describe('@retikz/vanilla node()', () => {
       position: [0, 0],
       label: {
         text: 'L',
-        position: { boundary: 'top', t: 0.25 },
+        position: { boundary: 'top', fraction: 0.25 },
         placement: 'inside',
         distance: 6,
       },
@@ -45,7 +45,7 @@ describe('@retikz/vanilla node()', () => {
       position: [0, 0],
       label: {
         text: 'L',
-        position: { boundary: 'top', t: 0.25 },
+        position: { boundary: 'top', fraction: 0.25 },
         placement: 'inside',
         distance: 6,
       },

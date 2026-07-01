@@ -1,2 +1,2 @@
 // @retikz/tex/react: React helpers for TeX formulas.
-export { useLowerTex } from './useLowerTex';
+export * from './useLowerTex';

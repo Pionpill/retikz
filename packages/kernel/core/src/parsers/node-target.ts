@@ -1,19 +1,24 @@
 /**
  * 节点 ref 字符串 shorthand → NodeTarget 对象（单一真源）
  * @description React DSL / Draw way 层把 `'A'` / `'A.top'` / `'A.30'` 解析成对象 IR，core ir/compile 只见对象。
- *   `'A'`→`{id:'A'}`；`'A.<name>'`→命名 anchor（center/top/.../bottom-left，north 等 compass 名作为别名）；`'A.<deg>'`→角度 anchor。
+ *   `'A'`→`{id:'A'}`；`'A.<name>'`→命名 anchor（center/top/.../bottom-left，north / above 等别名）；`'A.<deg>'`→角度 anchor。
  *   按**第一个点**切分——含 `.` 的 id 不能用 shorthand，必须写对象 `{ id: 'a.b', anchor: 'top' }`。
  *   {side,t} 边上比例点是结构化新能力、shorthand 不表达（仅对象形态）。
- *   字符串 shorthand 只认标准方位 anchor 与 Web 方位别名（提前拦拼写错误）；shape 自定义 anchor（如 sector 的
+ *   字符串 shorthand 只认标准方位 anchor 与 Web / compass / TikZ 方位别名（提前拦拼写错误）；shape 自定义 anchor（如 sector 的
  *   `outer-arc-mid`）走对象形态 `{ id, anchor: 'outer-arc-mid' }`，由 compile 据目标 shape 解释。
  *   放 parser 层（非 compile）避免 adapter 反向依赖 compile。
  */
 
 import type { IRNodeTarget } from '../schemas';
 
-import { CompassAnchor, normalizeWebAnchor, WebAnchor } from '../geometry/anchor';
+import { CenterAnchor, CompassAnchor, normalizeAnchor, TikzAnchor, WebAnchor } from '../shared';
 
-const SUPPORTED_ANCHOR_NAMES = [...Object.values(CompassAnchor), ...Object.values(WebAnchor)];
+const SUPPORTED_ANCHOR_NAMES = [
+  ...Object.values(CenterAnchor),
+  ...Object.values(WebAnchor),
+  ...Object.values(CompassAnchor),
+  ...Object.values(TikzAnchor),
+];
 
 /** 纯数字识别 `A.30` / `A.-45` / `A.180.5` */
 const ANGLE_RE = /^-?\d+(\.\d+)?$/;
@@ -38,7 +43,7 @@ export const parseNodeTarget = (s: string): IRNodeTarget => {
   if (ANGLE_RE.test(tail)) {
     return { id, anchor: Number(tail) };
   }
-  const anchor = normalizeWebAnchor(tail);
+  const anchor = normalizeAnchor(tail);
   if (anchor === undefined) {
     throw new Error(
       `parseNodeTarget: unknown anchor '${tail}' in '${s}' (supports: ${SUPPORTED_ANCHOR_NAMES.join(', ')}); for ids containing '.' or shape-specific anchors, use the object form { id, anchor }`,

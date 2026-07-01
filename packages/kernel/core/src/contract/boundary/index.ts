@@ -1,2 +1,2 @@
-export { defineBoundary } from './define';
-export type { BoundaryDefinition, BoundaryDefinitionInput } from './types';
+export * from './define';
+export * from './types';

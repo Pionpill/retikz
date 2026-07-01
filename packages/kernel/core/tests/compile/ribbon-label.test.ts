@@ -245,7 +245,7 @@ describe('Ribbon label compile', () => {
     expect(group?.transforms?.[0]).toMatchObject({ kind: 'rotate', degrees: 90 });
   });
 
-  it('legacy side=sloped 仍保持无偏移 rotate 行为', () => {
+  it('sloped=true 仍保持无偏移 rotate 行为', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
@@ -253,7 +253,7 @@ describe('Ribbon label compile', () => {
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [0, 100] },
           ],
-          label: { text: 'legacy', side: 'sloped' },
+          label: { text: 'legacy', sloped: true },
         }),
       ]),
       { padding: 0 },

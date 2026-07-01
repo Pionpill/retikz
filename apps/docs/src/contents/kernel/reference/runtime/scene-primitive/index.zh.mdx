@@ -75,7 +75,7 @@ renderer 不需要重新决定文字布局，只需要按 `TextPrim` 的锚点�
 | `opacity?`     | `number`                 | marker 元素级不透明度 0..1；缺省继承 path opacity                                                   |
 | `marker`       | `Array<MarkerPrimitive>` | `def.emit` 产物：局部 baseSize 坐标系下的内部几何（`fill` 限 `string \| { kind:'contextStroke' }`） |
 
-compile 层已经把 IR 的 `arrowDetail` 顶层配置与 `start` / `end` 覆盖合并、查 effective arrow 表、调 `def.emit` 产几何。renderer 不需要再理解 IR 层的 merge 规则或重新计算视觉尺寸。
+compile 层已经把 core IR 的 `marks` 端点箭头解析成 `ArrowEndSpec`：查 effective arrow 表、调 `def.emit` 产几何，并完成路径端点收缩。renderer 不需要再理解箭头注册表或重新计算视觉尺寸。
 
 ## 变换
 

@@ -1,7 +1,8 @@
-import type { CompassAnchorValue } from './anchor';
+import type { WebAnchorValue } from '../shared';
 import type { Side } from './edge';
 import type { Position } from './point';
 
+import { WebAnchor } from '../shared';
 import { edgeAngleDeg } from './edge';
 import { localToWorld, worldToLocal } from './transform';
 
@@ -35,40 +36,38 @@ export const ellipse = {
     return (lx * lx) / (e.rx * e.rx) + (ly * ly) / (e.ry * e.ry) <= 1;
   },
   /**
-   * 9 个 anchor 的世界坐标
+   * 8 个 Web 方位 anchor 的世界坐标；center 请用 `ellipse.center()`
    * @description 对角（NE/NW/SE/SW）取参数曲线 t=π/4 处 (rx/√2, ry/√2)，与 TikZ 椭圆 anchor 参数等分约定一致
    */
-  anchor: (e: Ellipse, name: CompassAnchorValue): Position => {
+  anchor: (e: Ellipse, name: WebAnchorValue): Position => {
     let lx = 0;
     let ly = 0;
     switch (name) {
-      case 'center':
-        break;
-      case 'north':
+      case WebAnchor.Top:
         ly = -e.ry;
         break;
-      case 'south':
+      case WebAnchor.Bottom:
         ly = e.ry;
         break;
-      case 'east':
+      case WebAnchor.Right:
         lx = e.rx;
         break;
-      case 'west':
+      case WebAnchor.Left:
         lx = -e.rx;
         break;
-      case 'north-east':
+      case WebAnchor.TopRight:
         lx = e.rx * SQRT_HALF;
         ly = -e.ry * SQRT_HALF;
         break;
-      case 'north-west':
+      case WebAnchor.TopLeft:
         lx = -e.rx * SQRT_HALF;
         ly = -e.ry * SQRT_HALF;
         break;
-      case 'south-east':
+      case WebAnchor.BottomRight:
         lx = e.rx * SQRT_HALF;
         ly = e.ry * SQRT_HALF;
         break;
-      case 'south-west':
+      case WebAnchor.BottomLeft:
         lx = -e.rx * SQRT_HALF;
         ly = e.ry * SQRT_HALF;
         break;

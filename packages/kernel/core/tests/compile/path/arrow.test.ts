@@ -4,6 +4,7 @@ import type { PathPrim, ScenePrimitive } from '../../../src/primitive';
 import type { IR } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
+import { arrowMarks } from '../../helpers/arrow-marks';
 import { line, move } from '../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
@@ -15,7 +16,7 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          arrow: '->',
+          marks: arrowMarks('->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -36,7 +37,7 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          arrow: '<-',
+          marks: arrowMarks('<-'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -56,7 +57,7 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          arrow: '<->',
+          marks: arrowMarks('<->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -101,7 +102,7 @@ describe('compile path: arrow 箭头', () => {
         { type: 'node', id: 'C', position: [60, 60] },
         {
           type: 'path',
-          arrow: '->',
+          marks: arrowMarks('->'),
           children: [
             { type: 'step', kind: 'move', to: { id: 'A' } },
             { type: 'step', kind: 'line', to: { id: 'B' } },
@@ -129,8 +130,7 @@ describe('compile path: arrow 箭头', () => {
         children: [
           {
             type: 'path',
-            arrow: '->',
-            arrowDetail: { shape },
+            marks: arrowMarks('->', { shape }),
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [10, 0] },
@@ -152,8 +152,7 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'open' },
+          marks: arrowMarks('->', { shape: 'open' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
@@ -171,8 +170,7 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'open' },
+          marks: arrowMarks('->', { shape: 'open' }),
           strokeWidth: 2,
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
@@ -199,8 +197,7 @@ describe('compile path: arrow 箭头', () => {
         children: [
           {
             type: 'path',
-            arrow: '->',
-            arrowDetail: { shape },
+            marks: arrowMarks('->', { shape }),
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },
@@ -219,7 +216,7 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          arrow: '->',
+          marks: arrowMarks('->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -238,7 +235,7 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          arrow: '->',
+          marks: arrowMarks('->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },

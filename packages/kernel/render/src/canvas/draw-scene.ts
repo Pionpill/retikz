@@ -1,7 +1,7 @@
 import type {
   ArrowEndSpec,
   BlendModeValue,
-  DropShadow,
+  IRDropShadow,
   IRPaintSpec,
   MarkerFill,
   MarkerPrimitive,
@@ -102,7 +102,7 @@ type CanvasShadowStyle = { offsetX: number; offsetY: number; blur: number };
  * @description Canvas shadowOffset / shadowBlur 不会稳定跟随当前变换；这里显式读取 CTM，让预览缩放 / camera
  *   下的投影尺寸继续贴近 SVG 的 user-space filter 口径。无 getTransform 的宿主保持旧行为。
  */
-const resolveCanvasShadowStyle = (ctx: CanvasRenderingContext2D, shadow: DropShadow): CanvasShadowStyle => {
+const resolveCanvasShadowStyle = (ctx: CanvasRenderingContext2D, shadow: IRDropShadow): CanvasShadowStyle => {
   const offsetX = shadow.offsetX ?? 0;
   const offsetY = shadow.offsetY ?? 0;
   const blur = shadow.blur ?? 0;
@@ -129,11 +129,11 @@ const resolveCanvasShadowStyle = (ctx: CanvasRenderingContext2D, shadow: DropSha
 };
 
 /**
- * 用已解析 DropShadow 包裹一段绘制：set `ctx.shadow*`、draw、restore
+ * 用已解析 IRDropShadow 包裹一段绘制：set `ctx.shadow*`、draw、restore
  * @description `blur` / offset 按当前 Canvas transform 校准到 shadow*；`opacity`（若给）经 bakeAlpha 相乘到 color 有效 alpha。
  *   无 shadow → 直接 draw（逐字不变）。
  */
-const withShadow = (ctx: CanvasRenderingContext2D, shadow: DropShadow | undefined, draw: () => void): void => {
+const withShadow = (ctx: CanvasRenderingContext2D, shadow: IRDropShadow | undefined, draw: () => void): void => {
   if (shadow === undefined) {
     draw();
     return;

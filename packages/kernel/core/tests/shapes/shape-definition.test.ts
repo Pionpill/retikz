@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { ShapeDefinition, ShapeStyle } from '../../src/contract/shape';
+import type { ResolvedShapeStyle, ShapeDefinition } from '../../src/contract/shape';
 import type { Rect } from '../../src/geometry/rect';
 import type { PathCommand, ScenePrimitive } from '../../src/primitive';
 
-import { defineShape, localToWorld, worldToLocal } from '../../src/contract/shape';
+import { defineShape } from '../../src/contract/shape';
+import { localToWorld, worldToLocal } from '../../src/geometry/transform';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const SQRT2 = Math.SQRT2;
@@ -42,7 +43,7 @@ describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
 describe('BUILTIN_SHAPES.anchor returns web canonical anchors, undefined otherwise', () => {
   const rect: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
   it('rectangle named anchors', () => {
-    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'center', NO_PARAMS)).toEqual([0, 0]);
+    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'center', NO_PARAMS)).toBeUndefined();
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'top', NO_PARAMS)).toEqual([0, -5]);
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'right', NO_PARAMS)).toEqual([10, 0]);
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'bottom-left', NO_PARAMS)).toEqual([-10, 5]);
@@ -69,7 +70,7 @@ describe('boundaryPoint honours rect.rotate (rotate-bearing rect)', () => {
 
 describe('emit runs in axis-aligned space and returns Iterable<ScenePrimitive>', () => {
   const rect: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
-  const style: ShapeStyle = { fill: 'red', stroke: 'blue', strokeWidth: 2 };
+  const style: ResolvedShapeStyle = { fill: 'red', stroke: 'blue', strokeWidth: 2 };
   it('rectangle → single RectPrim', () => {
     const prims = [...BUILTIN_SHAPES.rectangle.emit(rect, style, id, NO_PARAMS)];
     expect(prims).toHaveLength(1);
@@ -116,7 +117,7 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
         const r = rect.width / 2;
         return localToWorld(rect, [(lx / len) * r, (ly / len) * r]);
       },
-      anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+      anchor: (rect, name) => (name === 'origin' ? [rect.x, rect.y] : undefined),
       *emit(rect, style): Iterable<ScenePrimitive> {
         yield {
           type: 'path',
@@ -131,7 +132,7 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
   it('a returned plain object satisfies ShapeDefinition', () => {
     const poly = createPolygonShape();
     expect(poly.circumscribe(3, 4, NO_PARAMS)).toEqual({ halfWidth: 5, halfHeight: 5 });
-    expect(poly.anchor({ x: 0, y: 0, width: 10, height: 10 }, 'center', NO_PARAMS)).toEqual([0, 0]);
+    expect(poly.anchor({ x: 0, y: 0, width: 10, height: 10 }, 'origin', NO_PARAMS)).toEqual([0, 0]);
     expect(poly.anchor({ x: 0, y: 0, width: 10, height: 10 }, 'top', NO_PARAMS)).toBeUndefined();
     const prims = [...poly.emit({ x: 0, y: 0, width: 10, height: 10 }, {}, id, NO_PARAMS)];
     expect(prims).toHaveLength(1);

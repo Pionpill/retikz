@@ -11,9 +11,7 @@ export type {
   BlendModeValue,
   BuiltinArrowShapeValue,
   BuiltinPatternName,
-  BuiltinShapeName,
   BuiltinShapeValue,
-  DropShadow,
   FoldStepViaValue,
   GeometryLabelPlacementValue,
   GeometryLabelSideAliasValue,
@@ -34,6 +32,7 @@ export type {
   IRBendStep,
   IRBetweenPosition,
   IRBetweenTranslateTransform,
+  IRCascadingGraphicStyle,
   IRChild,
   IRCircleClipSpec,
   IRCirclePathStep,
@@ -47,9 +46,10 @@ export type {
   IRCurveStep,
   IRCustomClipSpec,
   IRCycleStep,
-  IRDrawableMeta,
+  IRDrawableInstance,
   IRDrawableSharedStyle,
   IRDrawableStyle,
+  IRDropShadow,
   IREllipseClipSpec,
   IREllipsePathStep,
   IRFoldStep,
@@ -58,8 +58,11 @@ export type {
   IRGeometryLabel,
   IRGeometryLabelInput,
   IRGradientStop,
+  IRGraphicStyle,
   IRJsonObject,
   IRLabelDefault,
+  IRLabelTextContent,
+  IRLabelVisualStyle,
   IRLineSpec,
   IRLineStep,
   IRMoveStep,
@@ -73,6 +76,7 @@ export type {
   IROffsetPosition,
   IROffsetTranslateTransform,
   IRPaintSpec,
+  IRPaintValue,
   IRPath,
   IRPathBase,
   IRPathClipSpec,
@@ -108,19 +112,17 @@ export type {
   IRVector2,
   IRViewBox,
   JsonValue,
-  LegacyAtDirectionAliasValue,
-  NodeLabelBoundarySideValue,
   NodeLabelPlacementValue,
   NodeLabelPositionInput,
   NodeShape,
   NodeTextAlignValue,
-  PathArrowDirectionValue,
   PathFillRuleValue,
   PathLineCapValue,
   PathLineJoinValue,
   PathThicknessValue,
   PatternShapeName,
   PatternShapeValue,
+  ResolvedDropShadow,
   RibbonArcCapSweepValue,
   RibbonCapValue,
   ShadowPresetValue,
@@ -142,6 +144,7 @@ export type {
 export {
   AbsoluteTargetSchema,
   AnchorRefSchema,
+  AngleDegreesSchema,
   ArcPathCommandSchema,
   ArcStepSchema,
   ArrowDefaultSchema,
@@ -152,20 +155,23 @@ export {
   AtPositionSchema,
   BendStepSchema,
   BetweenPositionSchema,
+  CascadingGraphicStyleSchema,
   ChildSchema,
   CirclePathStepSchema,
   ClipFillRuleSchema,
   ClipSpecSchema,
   ClosePathCommandSchema,
   CompositeBaseSchema,
+  ConicGradientPaintSpecSchema,
   ControlPointSchema,
   CoordinateSchema,
+  CssColorSchema,
   CubicPathCommandSchema,
   CubicStepSchema,
   CURRENT_IR_VERSION,
   CurveStepSchema,
   CycleStepSchema,
-  DrawableMetaSchema,
+  DrawableInstanceSchema,
   DrawableStyleSchema,
   DropShadowSchema,
   EllipseArcPathCommandSchema,
@@ -176,11 +182,15 @@ export {
   GeneratorStepSchema,
   GeometryLabelPlacement,
   GeometryLabelSchema,
-  GeometryLabelSide,
   GradientStopSchema,
+  GraphicStyleSchema,
+  ImagePaintSpecSchema,
   JsonObjectSchema,
   JsonValueSchema,
   LabelDefaultSchema,
+  LabelTextContentSchema,
+  LabelVisualStyleSchema,
+  LinearGradientPaintSpecSchema,
   LinePathCommandSchema,
   LineSpecSchema,
   LineStepSchema,
@@ -188,18 +198,16 @@ export {
   MoveStepSchema,
   NodeDefaultSchema,
   NodeLabelBoundaryPositionSchema,
-  NodeLabelBoundarySide,
   NodeLabelPlacement,
   NodeLabelPosition,
   NodeLabelSchema,
   NodeSchema,
   NodeTargetSchema,
-  normalizeAtDirection,
-  normalizeGeometryLabelSide,
+  NormalizedFractionSchema,
   OffsetPositionSchema,
+  OpacitySchema,
   PaintSpecSchema,
-  PathArrowDirection,
-  PathArrowDirectionSchema,
+  PaintValueSchema,
   PathBaseSchema,
   PathCommandSchema,
   PathDefaultSchema,
@@ -214,9 +222,11 @@ export {
   PathSchema,
   PathThickness,
   PathThicknessSchema,
+  PatternPaintSpecSchema,
   PolarPositionSchema,
   PositionSchema,
   QuadPathCommandSchema,
+  RadialGradientPaintSpecSchema,
   RectangleStepSchema,
   RelativeAccumulateTargetSchema,
   RelativeTargetSchema,
@@ -267,7 +277,6 @@ export {
 // Primitive (Scene 数据模型)
 export type {
   ArcPathCommand,
-  ArrowEndSpec,
   /** 裁剪资源（renderer-agnostic，adapter 物化 `<clipPath>`） */
   ClipResource,
   ClipShape,
@@ -294,6 +303,7 @@ export type {
   PathPrim,
   QuadPathCommand,
   RectPrim,
+  ResolvedArrowEndSpec,
   /** 已解析 pattern tile（emit-in-compile 产物，进 Scene 资源，纯数据无函数） */
   ResolvedPatternTile,
   RotateTransform,
@@ -320,6 +330,53 @@ export type {
   TextMetrics,
 } from './compile';
 export { compileToScene, CompileWarningCode, computeLayout, fallbackMeasurer, formatCompileWarning } from './compile';
+export type {
+  AnchorInput,
+  CenterAnchorValue,
+  CompassAnchorInput,
+  CompassAnchorValue,
+  CompassCornerValue,
+  CompassSideValue,
+  DirectionalAnchorInput,
+  SideInput,
+  TikzAnchorInput,
+  TikzAnchorValue,
+  TikzCornerValue,
+  TikzSideValue,
+  WebAnchorInput,
+  WebAnchorValue,
+  WebCornerValue,
+  WebSideInput,
+  WebSideValue,
+} from './shared';
+export {
+  CenterAnchor,
+  CompassAnchor,
+  CompassAnchorToWebAnchor,
+  CompassAnchorValues,
+  CompassCorner,
+  CompassCornerValues,
+  CompassSide,
+  CompassSideToWebSide,
+  CompassSideValues,
+  normalizeAnchor,
+  normalizeAtDirection,
+  normalizeSide,
+  TikzAnchor,
+  TikzAnchorToWebAnchor,
+  TikzAnchorValues,
+  TikzCorner,
+  TikzCornerValues,
+  TikzSide,
+  TikzSideToWebSide,
+  TikzSideValues,
+  WebAnchor,
+  WebAnchorValues,
+  WebCorner,
+  WebCornerValues,
+  WebSide,
+  WebSideValues,
+} from './shared';
 
 // Parsers
 export type { WayCycle, WayDSL, WayItem, WayLabel, WayLabelOp, WayRelativeItem, WayVia } from './parsers';
@@ -327,41 +384,23 @@ export { DrawWay, parseNodeTarget, parseTargetSugar, parseWay } from './parsers'
 
 // Presets（具名动画 sugar：产 AnimationTrack 的纯工厂）
 export type {
-  AnchorInput,
   Circle,
-  CompassAnchorInput,
-  CompassAnchorValue,
-  CompassCornerValue,
-  CompassSideValue,
   Diamond,
   Ellipse,
   PolarPosition,
   Position,
   Rect,
   Vector2,
-  WebAnchorInput,
-  WebAnchorValue,
-  WebCornerValue,
-  WebSideInput,
-  WebSideValue,
 } from './geometry';
 export {
   circle,
-  CompassAnchor,
-  CompassCorner,
-  CompassSide,
   diamond,
   ellipse,
-  normalizeCompassAnchor,
-  normalizeWebAnchor,
-  normalizeWebSide,
+  localToWorld,
   point,
   polar,
   rect,
-  WebAnchor,
-  WebCorner,
-  WebSide,
-  webSideToCompassSide,
+  worldToLocal,
 } from './geometry';
 export type {
   AnimationPresetOptions,
@@ -395,16 +434,16 @@ export {
   wiggle,
 } from './presets';
 
-// Shapes (Shape Registry 扩展面：第三方 shape 注入 + 内置注册项 + 作者所需 helper)
-export type { BoundaryDefinition, BoundaryDefinitionInput } from './contract/boundary';
+// Shapes (Shape Registry 扩展面：第三方 shape 注入 + 内置注册项)
+export type { BoundaryAnchorName, BoundaryDefinition, BoundaryDefinitionInput } from './contract/boundary';
 export { defineBoundary } from './contract/boundary';
 export type { ClipDefinition, ClipDefinitionInput, ClipResolveContext } from './contract/clip';
 export { defineClip } from './contract/clip';
-export type { ShapeDefinition, ShapeDefinitionInput, ShapeStyle } from './contract/shape';
-export { contour, defineShape, localToWorld, worldToLocal } from './contract/shape';
+export type { ResolvedShapeStyle, ShapeDefinition, ShapeDefinitionInput } from './contract/shape';
+export { defineShape } from './contract/shape';
 export { BUILTIN_BOUNDARIES } from './providers/boundary';
 export { BUILTIN_CLIPS } from './providers/clip';
-export { BUILTIN_SHAPES } from './providers/shape';
+export { BUILTIN_SHAPES, contour } from './providers/shape';
 
 // Arrows (Arrow Registry 扩展面：第三方 arrow 注入 + 内置注册项)
 export type { ArrowDefinition, ArrowEmitContext } from './contract/arrow';
@@ -441,4 +480,4 @@ export type { CompositeDefinition } from './contract/composite';
 export { defineComposite } from './contract/composite';
 
 // Type utilities
-export type { AssertEqual, ValueOf } from './types';
+export type { AssertEqual, ValueOf } from './shared';

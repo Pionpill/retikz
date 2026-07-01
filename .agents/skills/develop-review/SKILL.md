@@ -73,7 +73,7 @@ git status --short            # 工作区基线：审计前已有的改动清单
 
 最小必查总览（每条都要扫，详见各维度）：**正确性 · 类型安全 · 分层归属 · schema/数据结构 · 文件结构 · JSDoc/注释 · 测试覆盖 · 文档一致性**。
 
-若审查范围涉及 Definition contract、`defineXxx()` helper、registry/provider、内置与自定义扩展点、schema discriminator、registry option、命名或文件分层，必须同时参考 [`standard-define-registry`](../standard-define-registry/SKILL.md) 的规则判断；不要只按局部实现习惯评审 define-registry 相关代码。
+若审查范围涉及 Definition contract、`defineXxx()` helper、registry/provider、内置与自定义扩展点、schema discriminator、registry option、命名或文件分层，必须同时参考 [`standard-structure`](../standard-structure/SKILL.md) 的规则判断；不要只按局部实现习惯评审 define-registry 相关代码。
 
 ### finding 证据要求
 
@@ -96,7 +96,7 @@ git status --short            # 工作区基线：审计前已有的改动清单
 最小必查：
 
 - **正确性**：边界条件（`0` / 负数 / `NaN` / `Infinity` / 空数组 / 角度跨 360 / 极值）、错误处理与可诊断性、引用解析（未定义 id / 自引用 / 同名）、顺序敏感与重复调用、react 与 vanilla 是否产同一 IR
-- **类型安全**：有无 `as any` / `@ts-ignore` / 非必要 `!` 绕过；TS 类型是否 `z.infer` 派生而非手写；IR 是否 100% JSON 可序列化
+- **类型安全**：有无 `as any` / `@ts-ignore` / 非必要 `!` 绕过；TS 类型是否 `z.infer` 派生而非手写；由 IR schema object 推导出的公开数据类型是否命名为 `IRXxx`，const object enum + `ValueOf` 推导出的取值 union 是否命名为 `XxxValue`；IR 是否 100% JSON 可序列化
 - **代码注释 / JSDoc**：除非常简单且语义完全自解释的函数（如 `isInfinite`）和非常简单的属性名（如 `name`）外，函数、类、派生类型、常量、接口、复杂对象字段、非平凡内部 helper 都需要 JSDoc。JSDoc 写语义、单位、边界、返回值、错误条件或副作用，不复述命名；IR schema 字段仍以 zod `.describe(...)` 为单一说明来源，不额外写 JSDoc。
 - **测试覆盖**：被审范围的关键行为有无锁定测试；新引入逻辑是否缺回归测试
 

@@ -1,4 +1,3 @@
-import { WebSide } from '../../geometry/anchor';
 import { AtDirection } from '../position';
 
 /** 节点形状关键字（用 const + ValueOf 派生，不用 TS enum） */
@@ -9,7 +8,7 @@ export const BuiltinShape = {
   Diamond: 'diamond',
 } as const;
 
-/** 节点文本对齐（TikZ `align=` 同义） */
+/** 节点文本对齐 */
 export const NodeTextAlign = {
   Left: 'left',
   Center: 'center',
@@ -27,6 +26,3 @@ export const NodeLabelPlacement = {
   Outside: 'outside',
   Inside: 'inside',
 } as const;
-
-/** 节点标签 `{ boundary, t }` 使用的矩形边；compass side 作为输入别名归一到 Web side */
-export const NodeLabelBoundarySide = WebSide;

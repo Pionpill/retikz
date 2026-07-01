@@ -11,7 +11,7 @@ Built-in channels are easiest to read by intent, not by the lower-level `Node` /
 | Style            | `color` / `fill` / `stroke` / `textColor`<br />`opacity` / `size` / `shape`            | Color, opacity, size, and shape                |
 | Node geometry    | `padding` / `cornerRadius`<br />`rotate` / `minimumWidth`                              | Node size, spacing, and transforms             |
 | Text             | `text`<br />`label`                                                                    | Text inside nodes and labels attached to nodes |
-| Paths and arrows | `strokeWidth` / `lineCap` / `lineJoin`<br />`roundedCorners` / `arrow` / `arrowDetail` | Path stroke, caps, joins, corners, and arrows  |
+| Paths           | `strokeWidth` / `lineCap` / `lineJoin`<br />`roundedCorners` / `dashPattern`             | Path stroke, caps, joins, corners, and dashes  |
 | Effects          | `shadow`<br />`blendMode`                                                              | Shadows and compositing                        |
 | Other            | `zIndex` / `order`<br />`series`                                                       | Drawing order, ordering, and series splitting  |
 
@@ -115,9 +115,9 @@ Text channels split into two groups: visible text inside a node, and labels atta
 | `label`                                           | Field: `label = "field"`                                                  | Datum host label | core node `label`      |
 | `labelPosition` / `labelDistance`<br />`labelPin` | Constant: `labelPosition = "top"`<br />Constant: `labelDistance = {16}` | Label layout     | core node label fields |
 
-## Paths And Arrows
+## Paths
 
-Paths and arrows channels apply to marks that lower to core paths, such as line marks, relation marks, region boundaries, and reference lines.
+Path channels apply to marks that lower to core paths, such as line marks, relation marks, region boundaries, and reference lines. Endpoint arrows are not plot channels; configure them with `marks` on the relevant path config.
 
 ### Path styling
 
@@ -131,17 +131,6 @@ This demo contrasts `strokeWidth`, `lineCap`, `lineJoin`, `roundedCorners`, and 
 | `roundedCorners`                       | Field: `roundedCorners = "field"`<br />Constant: `roundedCorners = {8}` | Path corner hint    | core path `roundedCorners`                                                  |
 | `lineCap`<br />`lineJoin`              | Field: `lineCap = "field"`<br />Constant: `lineCap = "round"`           | Stroke cap and join | core path line fields                                                       |
 | `dashPattern` / `dashed`<br />`dotted` | Field: `dashPattern = "field"`<br />Constant: `dashPattern = {[7, 4]}`  | Stroke pattern      | core node/path dash fields                                                  |
-
-### Arrows
-
-Arrow channels control endpoint direction and arrow detail. `arrow` controls direction; `arrowDetail` controls arrow size.
-
-<ComponentPreview name="builtin-arrow" size="md" />
-
-| Channel       | Channel Value                                                                           | Meaning              | Delivery               |
-| ------------- | --------------------------------------------------------------------------------------- | -------------------- | ---------------------- |
-| `arrow`       | Field: `arrow = "field"`<br />Constant: `arrow = "->"`                                  | Arrow direction      | core path arrow        |
-| `arrowDetail` | Field: `arrowDetail = "field"`<br />Constant: `arrowDetail = {{ length: 8, width: 6 }}` | Arrow sizing details | core path arrow detail |
 
 ## Effects
 

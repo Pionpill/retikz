@@ -1,10 +1,12 @@
 import type {
   IR,
+  IRArrowMark,
   IRChild,
   IRLineSpec,
   IRNode,
   IRNodeLabel,
   IRNodeLabelInput,
+  IRPathBase,
   IRScope,
   IRStep,
   IRStepLabel,
@@ -15,7 +17,7 @@ import type {
 } from '@retikz/core';
 import type { ReactElement, ReactNode } from 'react';
 
-import { CURRENT_IR_VERSION, normalizeAtDirection, normalizeGeometryLabelSide, normalizeWebSide, parseTargetSugar } from '@retikz/core';
+import { CURRENT_IR_VERSION, normalizeAtDirection, normalizeSide, parseTargetSugar } from '@retikz/core';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
 import type { EdgeLabelProps } from '../sugar/EdgeLabel';
@@ -203,7 +205,7 @@ const normalizeNodeLabelPositionInput = (
   if (position === undefined) return undefined;
   if (typeof position !== 'string') {
     if (typeof position === 'object') {
-      return { ...position, boundary: normalizeWebSide(position.boundary) ?? position.boundary } as IRNodeLabel['position'];
+      return { ...position, boundary: normalizeSide(position.boundary) ?? position.boundary } as IRNodeLabel['position'];
     }
     return position;
   }
@@ -227,7 +229,7 @@ const normalizeNodeLabelsInput = (label: NodeProps['label']): IRNode['label'] =>
 const normalizeStepLabelInput = (label: IRStepLabelInput): IRStepLabel => {
   const { side: rawSide, ...rest } = label;
   const out: IRStepLabel = { ...rest, text: label.text };
-  if (rawSide !== undefined) out.side = (normalizeGeometryLabelSide(rawSide) ?? rawSide) as IRStepLabel['side'];
+  if (rawSide !== undefined) out.side = (normalizeSide(rawSide) ?? rawSide) as IRStepLabel['side'];
   return out;
 };
 
@@ -244,6 +246,40 @@ const normalizeTransformInput = (transform: IRTransformInput): IRTransform => {
 const normalizeTransformsInput = (transforms: ScopeProps['transforms']): IRScope['transforms'] => {
   if (transforms === undefined) return undefined;
   return transforms.map(normalizeTransformInput);
+};
+
+const arrowMarkFromDetail = (detail: PathProps['arrowDetail'], endpoint: 'start' | 'end'): IRArrowMark => {
+  const top = detail ?? {};
+  const side = endpoint === 'start' ? top.start : top.end;
+  const mark: IRArrowMark = { kind: 'arrow' };
+  const shape = side?.shape ?? top.shape;
+  if (shape !== undefined) mark.shape = shape;
+  const scale = side?.scale ?? top.scale;
+  if (scale !== undefined) mark.scale = scale;
+  const length = side?.length ?? top.length;
+  if (length !== undefined) mark.length = length;
+  const width = side?.width ?? top.width;
+  if (width !== undefined) mark.width = width;
+  const color = side?.color ?? top.color;
+  if (color !== undefined) mark.color = color;
+  const fill = side?.fill ?? top.fill;
+  if (fill !== undefined) mark.fill = fill;
+  const opacity = side?.opacity ?? top.opacity;
+  if (opacity !== undefined) mark.opacity = opacity;
+  const lineWidth = side?.lineWidth ?? top.lineWidth;
+  if (lineWidth !== undefined) mark.lineWidth = lineWidth;
+  return mark;
+};
+
+const buildPathMarksFromProps = (props: PathProps): IRPathBase['marks'] | undefined => {
+  const marks: NonNullable<IRPathBase['marks']> = [];
+  const arrow = props.arrow;
+  if (arrow !== undefined && arrow !== 'none') {
+    if (arrow === '<-' || arrow === '<->') marks.push({ pos: 0, mark: arrowMarkFromDetail(props.arrowDetail, 'start') });
+    if (arrow === '->' || arrow === '<->') marks.push({ pos: 1, mark: arrowMarkFromDetail(props.arrowDetail, 'end') });
+  }
+  if (props.marks !== undefined) marks.push(...props.marks);
+  return marks.length > 0 ? marks : undefined;
 };
 
 /**
@@ -295,8 +331,9 @@ const readEdgeLabel = (children: ReactNode): IRStepLabel | undefined => {
       const out: IRStepLabel = { text: props.children };
       if (props.position !== undefined) out.position = props.position;
       if (props.side !== undefined) {
-        out.side = (normalizeGeometryLabelSide(props.side) ?? props.side) as IRStepLabel['side'];
+        out.side = (normalizeSide(props.side) ?? props.side) as IRStepLabel['side'];
       }
+      if (props.sloped !== undefined) out.sloped = props.sloped;
       result = out;
     });
   };
@@ -536,6 +573,8 @@ const buildPathFromProps = (props: PathProps): IRChild => {
     type: 'path',
     ...pickDefined(props, PATH_FIELDS),
   };
+  const marks = buildPathMarksFromProps(props);
+  if (marks !== undefined) path.marks = marks;
   if (props.children !== undefined) {
     path.children = readPathChildren(props.children);
   }

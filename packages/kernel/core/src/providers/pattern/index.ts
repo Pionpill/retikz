@@ -1,1 +1,1 @@
-export { BUILTIN_PATTERNS, resolvePatternRegistry } from './registry';
+export * from './registry';

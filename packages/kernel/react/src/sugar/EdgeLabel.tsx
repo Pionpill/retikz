@@ -7,8 +7,10 @@ import { TIKZ_EDGE_LABEL } from '../kernel/_displayNames';
 export type EdgeLabelProps = {
   /** 段上位置（TikZ `midway` / `near start` / `near end`），缺省 'midway' */
   position?: IRStepLabelInput['position'];
-  /** 相对段方向 / 视觉方位的偏移侧（'sloped' = 沿切线旋转），缺省 'top' */
+  /** 相对段方向 / 视觉方位的偏移侧，缺省 'top' */
   side?: IRStepLabelInput['side'];
+  /** 是否沿采样点切线旋转标签 */
+  sloped?: IRStepLabelInput['sloped'];
   /** 标签文字内容；必须是字符串 */
   children: string;
 };

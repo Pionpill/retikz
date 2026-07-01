@@ -6,7 +6,7 @@ import type { LowerTex } from '../lower-tex';
 import type { LineLayoutContext } from '../text-layout';
 import type { FontSpec, TextMeasurer } from '../text-metrics';
 
-import { normalizeGeometryLabelSide } from '../../schemas';
+import { normalizeSide } from '../../shared';
 import { CompileWarningCode } from '../constant';
 import { toAlphabeticBaselineY } from '../text-baseline';
 import { layoutInlineLine, resolveLineRuns } from '../text-layout';
@@ -65,7 +65,7 @@ const resolveLabelOpacity = (labelOpacity?: number, hostOpacity?: number): numbe
 
 /**
  * step.label + 段采样 → 单行 primitive（纯文本走 TextPrim、含公式走 GroupPrim；sloped 时再裹一层 group 旋转）
- * @description side 偏移 + align/baseline：above/below 锚点 y±offset 横向居中；left/right x±offset 纵向居中；sloped 不偏移、裹 rotate(切线角)。
+ * @description side 偏移 + align/baseline：top/bottom 锚点 y±offset 横向居中；left/right x±offset 纵向居中；sloped 仅控制 rotate(切线角)。
  *   `$...$` 行内公式仅在注入 lowerTex（texCtx.gatingOn）时解析。返回 primitive + bbox 外接点
  */
 export const emitLabelPrimitive = (
@@ -87,9 +87,9 @@ export const emitLabelPrimitive = (
     label.side === undefined
       ? label.sloped === true || label.placement === 'inside'
         ? 'center'
-        : 'above'
-      : ((normalizeGeometryLabelSide(label.side) ?? label.side));
-  const sloped = label.sloped === true || side === 'sloped';
+        : 'top'
+      : ((normalizeSide(label.side) ?? label.side));
+  const sloped = label.sloped === true;
   const sideDistance = label.distance ?? LABEL_SIDE_OFFSET;
   const boundaryOffset = placementCtx?.boundaryOffset ?? 0;
   const sideOffset =
@@ -121,7 +121,7 @@ export const emitLabelPrimitive = (
     const ay = sample.point[1];
     let originX: number;
     let baselineY: number;
-    if (side === 'below') {
+    if (side === 'bottom') {
       originX = ax - laid.width / 2;
       baselineY = ay + sideOffset + laid.ascent;
     } else if (side === 'left') {
@@ -134,9 +134,9 @@ export const emitLabelPrimitive = (
       originX = ax - laid.width / 2;
       baselineY = ay + (laid.ascent - laid.descent) / 2;
     } else {
-      // above / sloped：横向居中、坐在线上方（above 偏移 offset，sloped 锚点不偏移）
+      // top: horizontal center, placed above the sampled point with side offset.
       originX = ax - laid.width / 2;
-      baselineY = (side === 'sloped' ? ay : ay - sideOffset) - laid.descent;
+      baselineY = ay - sideOffset - laid.descent;
     }
     const children = laid.emit(originX, baselineY, round);
     const group: GroupPrim = { type: 'group', children };
@@ -186,10 +186,10 @@ export const emitLabelPrimitive = (
   let align: 'start' | 'middle' | 'end' = 'middle';
   let baseline: 'top' | 'middle' | 'bottom' | 'alphabetic' = 'middle';
 
-  if (side === 'above') {
+  if (side === 'top') {
     y -= sideOffset;
     baseline = 'bottom';
-  } else if (side === 'below') {
+  } else if (side === 'bottom') {
     y += sideOffset;
     baseline = 'top';
   } else if (side === 'left') {
@@ -198,11 +198,8 @@ export const emitLabelPrimitive = (
   } else if (side === 'right') {
     x += sideOffset;
     align = 'start';
-  } else if (side === 'center') {
-    baseline = 'middle';
   } else {
-    // sloped：锚点不偏移；baseline=bottom 视觉上"在线上方"
-    baseline = 'bottom';
+    baseline = 'middle';
   }
 
   const emittedLineHeight = round(lineHeight);
@@ -253,7 +250,7 @@ export const emitLabelPrimitive = (
 
   // 非 sloped：按 align / baseline 求文本块的真实左右 / 上下边，再取四角加进 bbox 候选。
   // 锚点居中对称取角会少覆盖半个宽 / 高——side='left'（align=end）文本完全在锚点左侧、
-  // side='above'（baseline=bottom）文本完全在锚点上方，长 label 会超出自动 viewBox 被裁。
+  // side='top'（baseline=bottom）文本完全在锚点上方，长 label 会超出自动 viewBox 被裁。
   const halfW = measuredWidth / 2;
   const halfH = measuredHeight / 2;
   const left = align === 'start' ? x : align === 'end' ? x - measuredWidth : x - halfW;

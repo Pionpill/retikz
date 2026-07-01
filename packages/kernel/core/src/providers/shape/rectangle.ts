@@ -5,12 +5,12 @@ import type { Position } from '../../geometry/point';
 import type { Rect } from '../../geometry/rect';
 import type { ScenePrimitive } from '../../primitive';
 
-import { verticesToSegments } from '../../contract/shape/contour';
 import { defineShape } from '../../contract/shape/define';
-import { normalizeCompassAnchor, webSideToCompassSide } from '../../geometry/anchor';
 import { boundaryFromContour } from '../../geometry/contour';
 import { rect as rectOps } from '../../geometry/rect';
 import { localToWorld } from '../../geometry/transform';
+import { CenterAnchor, normalizeAnchor } from '../../shared';
+import { verticesToSegments } from './outline';
 
 /**
  * rectangle shape 的 per-instance params 类型
@@ -66,10 +66,10 @@ export const rectangle = defineShape({
     return hit ?? center;
   },
   anchor: (r, name) => {
-    const a = normalizeCompassAnchor(name);
-    return a ? rectOps.anchor(r, a) : undefined;
+    const a = normalizeAnchor(name);
+    return a !== undefined && a !== CenterAnchor.Center ? rectOps.anchor(r, a) : undefined;
   },
-  edgePoint: (r, side, t) => rectOps.edgePoint(r, webSideToCompassSide(side), t),
+  edgePoint: (r, side, t) => rectOps.edgePoint(r, side, t),
   *emit(r, style, round, params: RectangleParams): Iterable<ScenePrimitive> {
     const halfW = r.width / 2;
     const halfH = r.height / 2;

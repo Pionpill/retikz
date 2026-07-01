@@ -90,6 +90,7 @@ Schema 硬约束（来自 AGENTS.md「IR / Schema 风格」+ `core-design.md` §
 - **字段命名沿用 TikZ 词汇**（stroke / fill / via / anchor / origin 等），不缩写、不发明新词；
   保留对 LLM 训练数据的亲和力（详见 AGENTS.md §代码风格"不用缩写"）
 - **TS 类型走 `z.infer` 派生**，不手写——zod 是单一来源
+- **schema object 推导类型命名用 `IRXxx`**，例如 `IRFont` / `IRPaintSpec` / `IRDropShadow`；const object enum 的 `ValueOf` 派生类型用 `XxxValue`，例如 `BlendModeValue` / `ShadowPresetValue`
 - **schema 内不写 JSDoc**；派生类型 / 普通常量 / 函数才写中文 JSDoc
 
 测试硬约束：

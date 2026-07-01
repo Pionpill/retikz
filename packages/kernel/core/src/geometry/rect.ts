@@ -1,7 +1,8 @@
-import type { CompassAnchorValue } from './anchor';
+import type { WebAnchorValue } from '../shared';
 import type { Side } from './edge';
 import type { Position } from './point';
 
+import { WebAnchor } from '../shared';
 import { EDGE_ENDS, lerpPoint } from './edge';
 import { localToWorld, worldToLocal } from './transform';
 
@@ -28,40 +29,38 @@ export const rect = {
     const halfH = r.height / 2;
     return lx >= -halfW && lx <= halfW && ly >= -halfH && ly <= halfH;
   },
-  /** 9 个标准方位 anchor 之一的世界坐标（含旋转），TikZ 命名 */
-  anchor: (r: Rect, name: CompassAnchorValue): Position => {
+  /** 8 个 Web 方位 anchor 之一的世界坐标（含旋转）；center 请用 `rect.center()` */
+  anchor: (r: Rect, name: WebAnchorValue): Position => {
     const halfW = r.width / 2;
     const halfH = r.height / 2;
     let lx = 0;
     let ly = 0;
     switch (name) {
-      case 'center':
-        break;
-      case 'north':
+      case WebAnchor.Top:
         ly = -halfH;
         break;
-      case 'south':
+      case WebAnchor.Bottom:
         ly = halfH;
         break;
-      case 'east':
+      case WebAnchor.Right:
         lx = halfW;
         break;
-      case 'west':
+      case WebAnchor.Left:
         lx = -halfW;
         break;
-      case 'north-east':
+      case WebAnchor.TopRight:
         lx = halfW;
         ly = -halfH;
         break;
-      case 'north-west':
+      case WebAnchor.TopLeft:
         lx = -halfW;
         ly = -halfH;
         break;
-      case 'south-east':
+      case WebAnchor.BottomRight:
         lx = halfW;
         ly = halfH;
         break;
-      case 'south-west':
+      case WebAnchor.BottomLeft:
         lx = -halfW;
         ly = halfH;
         break;

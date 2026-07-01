@@ -1,6 +1,14 @@
 import type { z } from 'zod';
 
-import type { LineSpecSchema, MathRunSchema, MixedLineSchema, TextBlockSchema, TextRunSchema } from './schema';
+import type {
+  LabelTextContentSchema,
+  LabelVisualStyleSchema,
+  LineSpecSchema,
+  MathRunSchema,
+  MixedLineSchema,
+  TextBlockSchema,
+  TextRunSchema,
+} from './schema';
 
 /** 混排文字段 IR 类型 */
 export type IRTextRun = z.infer<typeof TextRunSchema>;
@@ -10,6 +18,10 @@ export type IRMathRun = z.infer<typeof MathRunSchema>;
 
 /** 混排行 IR 类型 */
 export type IRMixedLine = z.infer<typeof MixedLineSchema>;
+
+export type IRLabelTextContent = z.infer<typeof LabelTextContentSchema>;
+
+export type IRLabelVisualStyle = z.infer<typeof LabelVisualStyleSchema>;
 
 /** 行规格 IR 类型 */
 export type IRLineSpec = z.infer<typeof LineSpecSchema>;

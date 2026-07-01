@@ -4,7 +4,7 @@ import type { Transform } from '../primitive';
 import type { IRAtPosition, IRBetweenPosition, IROffsetPosition, IRPosition, PolarPosition } from '../schemas';
 import type { NameStack } from './name-stack';
 
-import { normalizeAtDirection } from '../schemas';
+import { normalizeAtDirection } from '../shared';
 import { DirectionVectorByAtDirection } from './direction';
 import { inverseTransformChain } from './scope';
 

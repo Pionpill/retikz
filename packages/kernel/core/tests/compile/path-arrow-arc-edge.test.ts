@@ -4,6 +4,7 @@ import type { PathPrim, ScenePrimitive } from '../../src/primitive';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
+import { arrowMarks } from '../helpers/arrow-marks';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
   prims.find((p): p is PathPrim => p.type === 'path');
@@ -20,8 +21,7 @@ describe('arrow + arc 末端：编译不挂', () => {
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'normal' },
+          marks: arrowMarks('->', { shape: 'normal' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'arc', radius: 10, startAngle: 0, endAngle: 90 },
@@ -45,8 +45,7 @@ describe('arrow + arc 末端：编译不挂', () => {
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'open' },
+          marks: arrowMarks('->', { shape: 'open' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'arc', radius: 10, startAngle: 0, endAngle: 90 },

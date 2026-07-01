@@ -80,7 +80,7 @@ describe('ADR-07 mark host label lowering', () => {
     );
 
     const [path] = collectPaths(markLayer(root, 0));
-    expect(path.label).toEqual({ text: 'trend', position: 'midway', side: 'above', sloped: true });
+    expect(path.label).toEqual({ text: 'trend', position: 'midway', side: 'top', sloped: true });
     expect(path.children.some(step => 'label' in step && step.label !== undefined)).toBe(false);
   });
 
@@ -102,7 +102,7 @@ describe('ADR-07 mark host label lowering', () => {
     );
 
     const [path] = collectPaths(markLayer(root, 0));
-    expect(path.label).toEqual({ text: 'trend', position: 'midway', side: 'above' });
+    expect(path.label).toEqual({ text: 'trend', position: 'midway', side: 'top' });
   });
 
   it('reference-line-geometry-label：ReferenceMark line 使用 geometry label', () => {
@@ -118,7 +118,7 @@ describe('ADR-07 mark host label lowering', () => {
     );
 
     const [path] = collectPaths(markLayer(root, 0));
-    expect(path.label).toEqual({ text: 'target', position: 'near-end', side: 'below' });
+    expect(path.label).toEqual({ text: 'target', position: 'near-end', side: 'bottom' });
   });
 
   it('reference-band-node-label：ReferenceMark band 使用 node label', () => {
@@ -126,7 +126,7 @@ describe('ADR-07 mark host label lowering', () => {
       baseSpec([
         {
           type: 'reference',
-          label: { content: { value: 'safe zone' }, position: { boundary: 'top', t: 0.5 }, placement: 'inside' },
+          label: { content: { value: 'safe zone' }, position: { boundary: 'top', fraction: 0.5 }, placement: 'inside' },
           yTo: 7,
           encoding: { y: { value: 3 } },
         },
@@ -135,7 +135,7 @@ describe('ADR-07 mark host label lowering', () => {
     );
 
     const [node] = collectNodes(markLayer(root, 0));
-    expect(node.label).toEqual({ text: 'safe zone', position: { boundary: 'top', t: 0.5 }, placement: 'inside' });
+    expect(node.label).toEqual({ text: 'safe zone', position: { boundary: 'top', fraction: 0.5 }, placement: 'inside' });
   });
 
   it('relation-path-host-label：RelationMark 顶层 label lowering 到 core Path.label', () => {
@@ -154,7 +154,7 @@ describe('ADR-07 mark host label lowering', () => {
     );
 
     const [path] = collectPaths(markLayer(root, 0));
-    expect(path.label).toEqual({ text: 'A to B', position: 0.5, side: 'above' });
+    expect(path.label).toEqual({ text: 'A to B', position: 0.5, side: 'top' });
     expect(path.children.some(step => 'label' in step && step.label !== undefined)).toBe(false);
   });
 

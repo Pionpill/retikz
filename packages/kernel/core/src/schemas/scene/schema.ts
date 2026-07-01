@@ -9,12 +9,6 @@ import { NodeSchema } from '../node';
 import { PathSchema } from '../path';
 import { __registerChildSchema, ScopeSchema } from '../scope';
 
-/**
- * ChildSchema：tier1 四类 discriminatedUnion（按 type）+ tier2 开放节点（有 namespace）
- * @description tier1 节点无 namespace、按 `type` 判别；tier2 节点有 namespace（CompositeNodeSchema passthrough）。
- *   namespace 必填 / 缺失互斥，union 天然无歧义分流；精确字段校验在 compile 期由 lowerComposites 用注册 schema 完成。
- *   用 `z.ZodType<IRChild>` + `z.lazy` 让 ScopeSchema.children 能递归引用自己。
- */
 export const ChildSchema: z.ZodType<IRChild> = z.lazy(() =>
   z.union([
     z
@@ -29,11 +23,6 @@ export const ChildSchema: z.ZodType<IRChild> = z.lazy(() =>
 // 把 ChildSchema 注册回 scope.ts 让 ScopeSchema.children 能延迟解析此 schema（解决双向依赖）
 __registerChildSchema(ChildSchema);
 
-/**
- * 显式视框 schema（覆盖自动算的 layout 范围）
- * @description 具名四字段（与 Scene.layout / SVG viewBox 同构）；width / height `.positive()`、
- *   x / y `` 守 Scene JSON 可序列化。设值时 compile 直接用它作 Scene.layout、忽略 padding。
- */
 export const ViewBoxSchema = z
   .object({
     x: z.number().describe('ViewBox left-top x'),
@@ -47,8 +36,8 @@ export const ViewBoxSchema = z
 
 export const SceneSchema = z
   .object({
-    version: z.literal(1).describe('IR major version number; bump only on breaking schema changes'),
     type: z.literal('scene').describe('Discriminator marking this object as the root scene'),
+    version: z.literal(1).describe('IR major version number; bump only on breaking schema changes'),
     children: z
       .array(ChildSchema)
       .describe('Top-level children of the scene; nodes register ids that paths can reference'),
