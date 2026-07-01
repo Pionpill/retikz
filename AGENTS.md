@@ -24,6 +24,10 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件 / JSON IR �
 - `0.x` 版本代表早期开发版，公开 API / schema / 命名 / 架构仍处于设计收敛期；本阶段调整以正确设计为准，不为兼容旧写法保留别名、桥接或迁移负担，除非当次版本设计文档明确要求。
 - 因排期、风险控制或版本冻结等原因采用临时设计时，必须在代码 / ADR / notes 中备注原因、影响范围和后续替换方向，并同步写入对应版本设计文档的 roadmap，避免临时方案沉没成长期事实。
 
+## 文件编码
+
+仓库内所有文本文件统一使用 UTF-8 编码读写，不使用操作系统默认编码、ANSI / GBK / locale code page 等隐式编码。PowerShell、脚本或编辑器写文件时必须显式指定 UTF-8，避免中文文档、注释、JSDoc、MDX、skill 内容被错误编码破坏。
+
 ## 依赖与命令
 
 共享依赖版本统一写在 `pnpm-workspace.yaml` 的 `catalog:` 段；子包 `package.json` 用 `"catalog:"`，不要硬编码重复版本。React / React-DOM 对库是 peerDependencies，同时作为 devDependencies 走 catalog 供本地开发。
