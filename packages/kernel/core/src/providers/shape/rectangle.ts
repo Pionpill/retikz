@@ -1,15 +1,15 @@
 import { z } from 'zod';
 
-import type { ContourSegment } from '../../geometry/contour';
 import type { Position } from '../../geometry/point';
 import type { Rect } from '../../geometry/rect';
 import type { ScenePrimitive } from '../../primitive';
+import type { ContourSegment } from '../../shared/geometry';
 
 import { defineShape } from '../../contract/shape/define';
-import { boundaryFromContour } from '../../geometry/contour';
 import { rect as rectOps } from '../../geometry/rect';
 import { localToWorld } from '../../geometry/transform';
 import { CenterAnchor, normalizeAnchor } from '../../shared';
+import { boundaryFromContour } from '../../shared/geometry';
 import { verticesToSegments } from './outline';
 
 /**

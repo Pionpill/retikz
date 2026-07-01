@@ -1,14 +1,14 @@
-import type { ContourCommand, ContourSegment, FilletSolution } from '../../geometry/contour';
 import type { PathCommand } from '../../primitive';
+import type { ContourCommand, ContourSegment, FilletSolution } from '../../shared/geometry';
 
-import { contourCommands, filletContour } from '../../geometry/contour';
+import { contourCommands, filletContour } from '../../shared/geometry';
 
 /**
  * 折线几何圆角：把 path 内部「line step ↔ line step」接缝倒成切圆弧。
  *
  * 只动 line step 产出的 line 命令构成的连续 run；fold（一个 step 产两段直线但接缝须保持尖）/ curve / cubic /
  * arc / rectangle / generator 等接缝一律保持尖角——故需逐命令的 provenance（来自哪个 step kind）判定。
- * 几何复用 geometry/contour.ts 的 fillet 解算（含 0.5 段长 clamp）：开放 run 走 closed=false 只倒内部缝；
+ * 几何复用 shared/geometry 的 fillet 解算（含 0.5 段长 clamp）：开放 run 走 closed=false 只倒内部缝；
  * 被 cycle close 闭回 run 起点且闭合接缝两侧均 line step 的 run 走 closed=true（含环绕缝，等价闭合 contour）。
  */
 

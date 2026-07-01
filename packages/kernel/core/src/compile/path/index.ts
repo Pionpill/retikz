@@ -1,7 +1,6 @@
 import { arcBoundingPoints, arcEndPoint, curve, ellipseArcBoundingPoints, ellipseArcPoint } from '@retikz/math';
 
 import type { PathGeneratorDefinition } from '../../contract/path';
-import type { SegmentSample } from '../../geometry/segment';
 import type {
   GroupPrim,
   MarkerFill,
@@ -14,6 +13,7 @@ import type {
 } from '../../primitive';
 import type { IRPath, IRPathBase, IRPathScale, IRPosition, IRStep, IRTarget } from '../../schemas';
 import type { AssertEqual } from '../../shared';
+import type { SegmentSample } from '../../shared/geometry';
 import type { CompileWarning } from '../constant';
 import type { LowerTex } from '../lower-tex';
 import type { NameStack } from '../name-stack';
@@ -22,22 +22,23 @@ import type { TextMeasurer } from '../text-metrics';
 import type { ResolvedArrowRegistry } from './shrink';
 import type { PathBaseProps } from './split';
 
-import { bendControlPoints, outInControlPoints } from '../../geometry/bend';
 import { rectOutline } from '../../geometry/rect';
+import { resolveArrowRegistry } from '../../providers/arrow';
+import { providerDefinitionOf } from '../../providers/registry';
+import { JsonObjectSchema } from '../../schemas';
 import {
   arcSegmentSample,
+  bendControlPoints,
   circleSegmentSample,
   cubicSegmentSample,
   ellipseArcSegmentSample,
   ellipseSegmentSample,
   foldSegmentSample,
   lineSegmentSample,
+  outInControlPoints,
   quadSegmentSample,
   rectPerimeterSample,
-} from '../../geometry/segment';
-import { resolveArrowRegistry } from '../../providers/arrow';
-import { providerDefinitionOf } from '../../providers/registry';
-import { JsonObjectSchema } from '../../schemas';
+} from '../../shared/geometry';
 import { CompileWarningCode } from '../constant';
 import { resolveShadow } from '../effects';
 import { applyTransformChain } from '../scope';

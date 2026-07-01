@@ -47,4 +47,14 @@ describe('core layer import boundaries', () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it('shared code does not import upward into schemas, contract, providers, primitive, or compile', () => {
+    const offenders = tsFiles(join(SRC_ROOT, 'shared')).flatMap(file =>
+      importDeclarations(file)
+        .filter(line => /from ['"].*(schemas|contract|providers|primitive|compile)/.test(line))
+        .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
+    );
+
+    expect(offenders).toEqual([]);
+  });
 });

@@ -1,6 +1,6 @@
-import type { SegmentSample } from '../../geometry/segment';
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../primitive';
 import type { GeometryLabelSideValue, IRPosition, IRStepLabel } from '../../schemas';
+import type { SegmentSample } from '../../shared/geometry';
 import type { CompileWarningCodeValue } from '../constant';
 import type { LowerTex } from '../lower-tex';
 import type { LineLayoutContext } from '../text-layout';

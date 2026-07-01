@@ -1,13 +1,13 @@
 import { z } from 'zod';
 
-import type { ContourSegment } from '../../geometry/contour';
 import type { Position } from '../../geometry/point';
 import type { Rect } from '../../geometry/rect';
 import type { ScenePrimitive } from '../../primitive';
+import type { ContourSegment } from '../../shared/geometry';
 
 import { defineShape } from '../../contract/shape/define';
-import { boundaryFromContour, contourCommands } from '../../geometry/contour';
 import { localToWorld } from '../../geometry/transform';
+import { boundaryFromContour, contourCommands } from '../../shared/geometry';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
 /**
