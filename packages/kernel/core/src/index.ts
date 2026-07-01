@@ -462,7 +462,6 @@ export type {
   PathKindCompileContext,
   PathKindCompileResult,
   PathKindDefinition,
-  PathKindDefinitionInput,
 } from './contract/path';
 export { definePathGenerator, definePathKind } from './contract/path';
 export { BUILTIN_PATH_KINDS } from './providers/path-kind';
