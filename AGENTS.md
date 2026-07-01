@@ -35,6 +35,12 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 - 共享依赖版本统一写在 `pnpm-workspace.yaml` 的 `catalog:`；子包 `package.json` 使用 `"catalog:"`，不要硬编码重复版本。
 - React / React-DOM 对库包是 peerDependencies，本地开发再通过 devDependencies 走 catalog。
 
+## 临时产物
+
+- AI / superpower / plugin 为长任务保上下文、做临时决策、审计或计划而生成的报告和计划默认不入库。
+- 这类文件放到 `.gitignore` 已覆盖的本地目录：`notes/reports/`、`notes/plans/`、任意 `**/_notes/reports/`、`**/_notes/plans/`；不要 stage / commit。
+- 如果新流程需要新的临时产物目录，先征求用户确认并补 `.gitignore`，再写入该目录。
+
 常用命令：
 
 ```bash
