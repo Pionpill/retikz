@@ -1,111 +1,65 @@
 ---
 name: flow-rc
-description: retikz rc 期发布候选编排。用于 beta 完成后进入公开 API 冻结窗口：不再做破坏性改动，不再新增公开能力，保持可供用户长期使用的兼容性；主要处理 bug 收敛、npm 安装验收、文档站结构与内容补齐、迁移指南、示例质量、API 参考一致性、发布说明与最终 stable 前检查。适用于 v0.1.0-rc.N 到 stable 前的质量冻结流程。
+description: Use when retikz release-candidate work needs API-freeze enforcement, bug convergence, docs completion, migration guidance, packaging validation, or rc/stable readiness checks.
 ---
 
 # rc 发布候选流程
 
-retikz rc 期的目标是把 beta 已经确定的 API 变成可长期依赖的用户入口。rc 不是最后一轮重命名窗口，而是冻结后的验收窗口。
-
-## 阶段定位
-
-| 维度 | beta | rc | stable |
-| --- | --- | --- | --- |
-| 公开 API | 允许破坏性改名 / schema 字段调整 | **冻结**，只允许 blocker 级修正 | 按 SemVer 守护 |
-| 主要工作 | 重构、命名、破坏性整理、测试补强 | bug 收敛、文档站、安装验收、迁移说明 | 正式发布与维护 |
-| 文档要求 | 用户可见改动同步文档 | **文档是主工作面** | 只修错漏 |
-| npm dist-tag | `beta` | `next` | `latest` |
-
-rc 的核心判断：外部用户能不能从 npm 安装、照着文档写出稳定可维护的图，并预期后续 patch 不会破坏现有代码。
+rc 是公开 API 冻结后的验收窗口。目标是让外部用户能从 npm 安装、按文档写图，并预期后续 patch 不破坏现有代码。
 
 ## 硬规则
 
-- **不再做破坏性改动**：不改组件名、prop 名、IR 字段名、导出类型名、默认语义、公开函数签名。
-- **不新增公开能力**：不新增组件、IR 节点、schema union 分支、公开 prop、公开 export。确实需要新增时，记录到下一个 minor / alpha 窗口。
-- **只修兼容 bug**：修复应保持旧写法继续可用；如果必须破坏兼容性，halt，交给人工裁定是否回退到 beta 或推迟到后续版本。
-- **文档优先**：rc 的主要产物是 docs、示例、迁移指南、release notes、安装验收报告。
-- **包版本先入库**：发 rc 包时必须先把 `packages/*/package.json` 写成目标版本并提交，再 tag / publish；具体走 [`package-publish`](../package-publish/SKILL.md)。
-- **AI 不自行 commit / push / publish**：继承根 AGENTS.md。改完、验证、stage 后停下等用户当次授权。
+- 不做破坏性改动：不改组件名、prop 名、IR 字段名、导出类型名、默认语义、公开函数签名。
+- 不新增公开能力：不新增组件、IR 节点、schema union 分支、公开 prop、公开 export。
+- 只修兼容 bug；若必须破坏兼容性，halt，交给人工决定回 beta、推迟到后续版本或放弃。
+- 文档、示例、迁移指南、release notes、安装验收是 rc 主工作面。
+- 发 rc / stable 包走 `package-publish`；发布前 package.json 目标版本必须已进入 HEAD。
+- AI 不自行 commit / push / tag / publish，继承根 AGENTS 授权规则。
 
 ## 启动条件
 
-调用本 SKILL 前先确认：
+调用前确认：
 
-1. beta 计划已经完成并发布，或者用户明确宣布进入 rc。
-2. 当前目标版本是 `0.1.0-rc.N`，npm dist-tag 应为 `next`。
-3. 当前任务属于以下范围之一：
-   - bug fix
-   - 文档站内容 / 信息架构 / 示例 / 迁移指南
-   - npm 安装验收 / tarball / 类型导出 / 构建兼容性检查
-   - release notes / changelog / versioning 文案
+1. beta 已完成，或用户明确宣布进入 rc。
+2. 目标版本形如 `0.x.y-rc.N`，npm dist-tag 为 `next`。
+3. 当前任务属于 bugfix、docs、packaging、release notes、安装验收或迁移指南。
 
-若任务要求“再改一个 API 名 / 再换一个 schema 字段 / 加一个 prop”，立即 halt，说明 rc 已冻结 API，并建议登记到后续版本计划。
+若用户要求“再改 API 名 / 换 schema 字段 / 加 prop”，立即 halt，并建议登记到后续 alpha / beta 窗口。
 
-## 任务分级
+## 分级
 
-| Level | 范围 | 允许程度 | 必要验证 |
+| Level | 范围 | 允许程度 | 验证 |
 | --- | --- | --- | --- |
-| **docs** | `apps/docs/**`、文档导航、i18n、demo、changelog、迁移指南 | rc 主路径 | docs build + 示例可运行 |
-| **bugfix** | 不改变公开契约的 core/react bug 修复 | 允许 | 回归测试 + lint / tsc / test |
-| **packaging** | package metadata、exports、tarball、安装 smoke test | 允许 | build + dry-run + 外部安装验证 |
-| **compat-risk** | 可能影响用户代码但声称不破坏 API 的行为调整 | 谨慎，需人工裁定 | 回归测试 + changelog + 用户影响说明 |
-| **breaking** | 公开 API / IR schema / 组件名 / prop 名 / 导出名变化 | 禁止 | halt |
-| **feature** | 新公开能力、新组件、新 schema 字段、新 DSL 行为 | 禁止 | halt |
+| docs | `apps/docs/**`、导航、i18n、demo、changelog、迁移指南 | 主路径 | docs typecheck / build + 页面确认 |
+| bugfix | 不改变公开契约的 core / react / plot bug 修复 | 允许 | 回归测试 + lint / tsc / test |
+| packaging | metadata、exports、tarball、安装 smoke | 允许 | build + dry-run + 外部安装验证 |
+| compat-risk | 可观察行为调整但声称兼容 | 谨慎，需人工裁定 | 回归测试 + changelog / 用户影响说明 |
+| breaking | 公开 API / IR schema / 组件名 / prop 名 / export 变化 | 禁止 | halt |
+| feature | 新公开能力 / 新 schema 字段 / 新 DSL 行为 | 禁止 | halt |
 
 ## 标准流程
 
-### Stage 1 — 盘点
+### Stage 1 盘点
 
-先明确任务来源与范围：
+- bug：记录复现输入、期望、实际、影响面。
+- docs：记录页面、用户路径、双语、demo 需求。
+- packaging：记录目标包、版本、环境、包管理器、框架版本。
+- 先看 `git status --short`，识别已有改动归属，不覆盖用户改动。
 
-- bug 报告：记录复现输入、期望行为、实际行为、影响面。
-- 文档任务：记录目标页面、目标用户路径、是否中英双语、是否需要 demo。
-- packaging 任务：记录目标环境、包版本、包管理器、框架版本。
+当前发布组路径以 `package.json` 为准。kernel 组在 `packages/kernel/{math,core,render,vanilla,react,tex}`；plot 组在 `packages/graph/{plot,plot-vanilla,plot-react}`。
 
-同时跑快速边界检查：
+### Stage 2 实施
 
-```bash
-git status --short
-node -e "const fs=require('node:fs'); for (const p of ['core/core','core/render','core/react','core/vanilla']) { const j=JSON.parse(fs.readFileSync(`packages/${p}/package.json`,'utf8')); console.log(j.name, j.version); }"  // core 组 4 包 lockstep；plot 组换 plot/{plot,react,vanilla}
-```
+- docs：读 `docs-doc-principle`，按页型再读 component / example / group / concept / blog skill。zh 是 source of truth，en 同步。
+- bugfix：先补最小回归测试，再修实现，保持 public API 不变。
+- packaging：从 packed tarball / npm 安装角度验证 exports、types、peer deps、workspace dependency rewrite。
+- compat-risk：先写用户影响说明，再改代码；不得弱化测试断言。
 
-如果工作区不干净，先识别已有改动归属，不覆盖用户改动。
+### Stage 3 验证
 
-### Stage 2 — 实施
+默认验证受影响模块；RC 发布候选、跨包契约或用户要求时扩大到发布组 / 全仓。
 
-按 level 执行。
-
-**docs**
-
-- 优先走 [`docs-doc-principle`](../docs-doc-principle/SKILL.md)（按页型再读 [`docs-doc-component`](../docs-doc-component/SKILL.md) / [`docs-doc-example`](../docs-doc-example/SKILL.md)）。
-- zh 是 source of truth，en 同步；不要只改单语。
-- 示例必须使用 rc API，不出现 beta 旧字段。
-- 迁移指南应提供“旧写法 / 新写法 / 原因 / 影响范围”。
-- 不把 ADR、内部 plan、agent 流程写成用户必须理解的前置知识。
-
-**bugfix**
-
-- 先补最小回归测试，证明现有行为失败。
-- 修复实现，保持公开 API 不变。
-- 不用 alias / deprecated 包装掩盖破坏性改动；rc 不做兼容层大迁移。
-
-**packaging**
-
-- 从 npm tarball / packed tarball 角度验证，而不是只依赖 workspace。
-- 检查 `exports`、`main`、`module`、`types`、peer dependency、workspace dependency rewrite。
-- 对 `@retikz/react` 至少验证一个最小 Vite React 项目可安装、可 import、可 typecheck。
-
-**compat-risk**
-
-- 先写用户影响说明，再改代码。
-- 保持已有测试语义，不弱化断言。
-- 必须在 changelog 或 release notes 里说明可观察行为变化。
-
-### Stage 3 — 验证
-
-按改动面选择验证。普通 bugfix / docs patch 默认只跑当前 / 受影响模块；RC 发布候选、跨包契约或用户明确要求时，再扩大到发布组 / 全仓。
-
-普通改动守门：
+普通结构化改动：
 
 ```bash
 pnpm --filter @retikz/<pkg> exec eslint . --fix
@@ -113,96 +67,69 @@ pnpm --filter @retikz/<pkg> exec tsc --noEmit
 pnpm --filter @retikz/<pkg> exec vitest run
 ```
 
-发布候选门禁可以保留全量 / 发布组验证，例如 `pnpm lint`、`pnpm test`、core / plot / docs 的 `tsc --noEmit`。
-
-文档改动：
+docs 改动：
 
 ```bash
 pnpm --filter @retikz/docs exec tsc --noEmit
 pnpm --filter @retikz/docs build
 ```
 
-包改动：
+packaging / rc 发布候选：
 
-```bash
-# core 组 4 包按依赖序 build + dry-run（plot 组同理；rc 用 --tag next）
-for p in core render vanilla react; do pnpm --filter @retikz/$p build; done
-for p in core render vanilla react; do pnpm --filter @retikz/$p publish --dry-run --no-git-checks --access public --tag next --registry https://registry.npmjs.org/; done
-```
+- 按依赖序 build 发布组。
+- `pnpm --filter @retikz/<pkg> publish --dry-run --no-git-checks --access public --tag next --registry https://registry.npmjs.org/`
+- 检查源码污染：`rg --files packages | rg "packages/.*/src/.*\.(d\.ts|d\.ts\.map|js)$"`
+- 至少用独立项目 smoke：安装目标 tag / tarball、import、typecheck、渲染最小示例。
 
-源码污染检查：
+### Stage 4 用户验收
 
-```bash
-rg --files packages | rg "packages/.*/src/.*\.(d\.ts|d\.ts\.map|js)$"
-```
-
-该命令有输出时，按 AGENTS.md 清理误生成文件后重新验证。
-
-### Stage 4 — 用户验收
-
-输出本次改动摘要：
+汇报：
 
 - 改了哪些用户路径或 bug。
-- 是否触碰 core/react 公开契约；若是，应说明为什么仍兼容。
+- 是否触碰公开契约；若触碰，为什么仍兼容。
 - 跑过哪些验证。
-- 是否需要用户手动浏览 docs 页面或在真实项目试用。
+- 是否需要用户手动浏览 docs 或在真实项目试用。
 
-若需要 commit，按逻辑块 stage，展示 stage 文件清单与建议 commit message，等待用户明确“提交”。
+需要 commit 时，按逻辑块 stage，展示文件清单和建议 commit message，等待授权。
 
-### Stage 5 — rc 发布
+### Stage 5 发布
 
-只有用户明确要求“发布 rc / publish rc / 发版”时才进入。发布细节走 [`package-publish`](../package-publish/SKILL.md)，本 SKILL 只补 rc 约束：
+只有用户明确要求“发布 rc / publish rc / 发版”时才进入，细节走 `package-publish`。本 skill 只补 rc 约束：
 
-- 目标版本形如 `0.1.0-rc.N`。
+- 版本形如 `0.x.y-rc.N`。
 - npm dist-tag 使用 `next`。
-- tag 形如 `v0.1.0-rc.N`。
-- 发布前确认 `package.json` 目标版本已经进入 HEAD。
-- 发布后从 npm registry 反查版本与 dist-tag。
-- push commit 与 tag；轻量 tag 必要时单独 `git push origin v0.1.0-rc.N`。
+- tag 形如 `v0.x.y-rc.N`；plot 组按发布 skill 的 tag 规则。
+- 发布后从 npm registry 反查版本和 dist-tag。
+- push commit / tag 仍需单独授权。
 
-## rc 文档工作清单
-
-rc 期优先补齐这些面：
+## rc 文档优先级
 
 - 安装与第一个图。
-- `Layout`、`Node`、`Path`、`Step`、`Draw`、`Text`、`Coordinate` API 参考。
+- 核心 API 参考：`Layout`、`Node`、`Path`、`Step`、`Draw`、`Text`、`Coordinate`。
 - Kernel / Sugar / IR / Scene 的概念关系。
 - 坐标、anchor、relative step、path label 的心智模型。
 - alpha / beta 到 rc 的迁移指南。
-- 常见图例：流程图、箭头关系图、label path、虚线样式、文本节点、基础几何。
-- changelog 与 versioning 页面。
-- 中英文导航、sidebar、页面标题、描述、代码示例一致。
-
-## rc 安装验收清单
-
-至少覆盖：
-
-- `pnpm add @retikz/react@next`
-- TypeScript 可解析 `@retikz/react` 与 `@retikz/core` 类型。
-- Vite React 项目可渲染一个最小 `<Layout>` 示例。
-- React peer dependency 覆盖 React 18；如声明兼容 React 19，则也验证。
-- tarball 不包含 `src/`、`tests/`、`node_modules/`、源码配置文件。
-- `@retikz/react` 发布包内 `@retikz/core` 依赖不是 `workspace:*`，而是目标版本。
+- 常见图例、changelog、versioning、中英文导航一致性。
 
 ## 完成标准
 
-单条任务完成标准：
+单条任务：
 
-- 没有破坏性改动。
-- bugfix 有回归测试；docs 有中英同步与 build 验证；packaging 有 dry-run / smoke 证据。
+- 无破坏性改动。
+- bugfix 有回归测试；docs 有中英同步和 build / 页面验证；packaging 有 dry-run / smoke 证据。
 - 工作区改动按逻辑块 stage 或等待用户审阅。
 - 用户明确 ack 后才 commit。
 
-rc 阶段整体完成标准：
+rc 阶段整体：
 
 - 文档站核心路径可供新用户从零使用。
-- API 参考与代码实现一致。
-- 迁移指南覆盖 beta 阶段所有 breaking change。
+- API 参考与实现一致。
+- 迁移指南覆盖 beta 阶段 breaking changes。
 - npm `next` 包可在独立项目安装并运行。
-- 剩余 TODO 都是 non-blocking，已迁移到 stable 后或下一 minor 计划。
+- 剩余 TODO 均 non-blocking，并迁移到 stable 后或下一 minor 计划。
 
-## 与上下游衔接
+## 上下游
 
-- **上游**：`flow-beta` 完成并发布 beta 后进入本流程。
-- **下游**：rc 无 blocker 后，走 [`package-publish`](../package-publish/SKILL.md) 发布 `0.1.0` stable；正式版不带预发布 dist-tag，默认进入 `latest`。
-- **回退**：若发现必须破坏 API 才能修的设计问题，halt，人工决定是否发新的 beta、推迟到 `0.2`，或放弃该改动。
+- 上游：`flow-beta` 完成并发布 beta 后进入。
+- 下游：无 blocker 后走 `package-publish` 发布 stable；正式版不带预发布 dist-tag，默认 `latest`。
+- 回退：若必须破坏 API 才能修设计问题，halt，人工决定发新 beta、推迟到下一 minor，或放弃改动。
