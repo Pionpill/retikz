@@ -1,9 +1,8 @@
 import type { z, ZodType } from 'zod';
 
 import type { Position } from '../../geometry/point';
-import type { ScenePrimitive } from '../../primitive';
-import type { PathCommand } from '../../primitive/path';
 import type { IRJsonObject, IRPathBase, IRPosition } from '../../schemas';
+import type { PathCommand, ScenePrimitive } from '../scene';
 
 /**
  * generate 拿到的运行时上下文
