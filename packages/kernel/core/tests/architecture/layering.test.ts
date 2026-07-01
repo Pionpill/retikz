@@ -86,4 +86,14 @@ describe('core layer import boundaries', () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it('compile code does not import provider shape internals', () => {
+    const offenders = tsFiles(join(SRC_ROOT, 'compile')).flatMap(file =>
+      importDeclarations(file)
+        .filter(line => /from ['"].*providers\/shape\//.test(line.replace(/\\/g, '/')))
+        .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
+    );
+
+    expect(offenders).toEqual([]);
+  });
 });
