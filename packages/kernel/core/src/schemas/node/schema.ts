@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { normalizeWebSide } from '../../geometry/anchor';
+import { normalizeAtDirection, normalizeSide } from '../../shared';
 import { AnimationTrackSchema } from '../animation';
 import { BoundarySchema } from '../boundary';
 import { FontSchema } from '../font';
@@ -8,7 +8,6 @@ import { JsonObjectSchema } from '../json';
 import {
   AtPositionSchema,
   BetweenPositionSchema,
-  normalizeAtDirection,
   OffsetPositionSchema,
   PolarPositionSchema,
   PositionSchema,
@@ -22,7 +21,7 @@ import { NodeLabelBoundarySide, NodeLabelPlacement, NodeLabelPosition, NodeTextA
 export const NodeLabelBoundaryPositionSchema = z
   .object({
     boundary: z
-      .preprocess(value => (typeof value === 'string' ? normalizeWebSide(value) ?? value : value), z.enum(NodeLabelBoundarySide))
+      .preprocess(value => (typeof value === 'string' ? normalizeSide(value) ?? value : value), z.enum(NodeLabelBoundarySide))
       .describe('Box-like node boundary side used as the label attachment line. Compass side names are accepted aliases.'),
     fraction: NormalizedFractionSchema
       .optional()

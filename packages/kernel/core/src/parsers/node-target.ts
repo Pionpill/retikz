@@ -11,9 +11,14 @@
 
 import type { IRNodeTarget } from '../schemas';
 
-import { CompassAnchor, normalizeWebAnchor, WebAnchor } from '../geometry/anchor';
+import { CenterAnchor, CompassAnchor, normalizeAnchor, TikzAnchor, WebAnchor } from '../shared';
 
-const SUPPORTED_ANCHOR_NAMES = [...Object.values(CompassAnchor), ...Object.values(WebAnchor)];
+const SUPPORTED_ANCHOR_NAMES = [
+  ...Object.values(CenterAnchor),
+  ...Object.values(WebAnchor),
+  ...Object.values(CompassAnchor),
+  ...Object.values(TikzAnchor),
+];
 
 /** 纯数字识别 `A.30` / `A.-45` / `A.180.5` */
 const ANGLE_RE = /^-?\d+(\.\d+)?$/;
@@ -38,7 +43,7 @@ export const parseNodeTarget = (s: string): IRNodeTarget => {
   if (ANGLE_RE.test(tail)) {
     return { id, anchor: Number(tail) };
   }
-  const anchor = normalizeWebAnchor(tail);
+  const anchor = normalizeAnchor(tail);
   if (anchor === undefined) {
     throw new Error(
       `parseNodeTarget: unknown anchor '${tail}' in '${s}' (supports: ${SUPPORTED_ANCHOR_NAMES.join(', ')}); for ids containing '.' or shape-specific anchors, use the object form { id, anchor }`,

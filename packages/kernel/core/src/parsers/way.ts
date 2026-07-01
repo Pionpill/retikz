@@ -16,7 +16,7 @@ import type {
   IRTarget,
 } from '../schemas';
 
-import { normalizeGeometryLabelSide } from '../schemas';
+import { normalizeSide } from '../shared';
 import { parseTargetSugar } from './target-sugar';
 
 /**
@@ -160,7 +160,7 @@ const normalizeLabel = (l: WayLabel): IRStepLabel => {
     if (rawSide === 'sloped') {
       out.sloped = true;
     } else {
-      const normalizedSide = normalizeGeometryLabelSide(rawSide);
+      const normalizedSide = normalizeSide(rawSide);
       if (normalizedSide !== undefined) out.side = normalizedSide;
     }
   }

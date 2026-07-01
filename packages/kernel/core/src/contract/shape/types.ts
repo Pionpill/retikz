@@ -1,12 +1,12 @@
 import type { z } from 'zod';
 
-import type { WebSideValue } from '../../geometry/anchor';
 import type { Position } from '../../geometry/point';
 import type { Rect } from '../../geometry/rect';
 import type { PaintValue, ScenePrimitive } from '../../primitive';
 import type { ResolvedDropShadow } from '../../schemas/effects';
 import type { IRJsonObject } from '../../schemas/json';
 import type { IRGraphicStyle } from '../../schemas/style';
+import type { WebSideValue } from '../../shared';
 
 /** 从 IR graphic style 复用的已解析 shape 样式字段。 */
 type ResolvedShapeStyleFields = Pick<IRGraphicStyle, 'fillOpacity' | 'strokeWidth' | 'drawOpacity' | 'opacity' | 'blendMode'>;
@@ -113,10 +113,10 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
   boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
   /**
    * 命名 anchor 世界坐标；shape 不认识的名字返回 `undefined`（调用方据此抛清晰错误）。
-   * @description 标准方位名使用 Web/CSS canonical 值（top / right / ... / center）：默认连接面下 compile 先调本函数，
+   * @description 标准方位名使用 Web/CSS canonical 值（top / right / ...）：默认连接面下 compile 先调本函数，
    *   shape 返回真实形状上的点即采用（如 ellipse 落真实周长、polygon 落外接 AABB）；返回 `undefined` 则 compile
    *   回退到外接 AABB 矩形。故 shape 作者可只实现 shape 专属命名 anchor（tip-N / apex 等），标准方位名交回退即可；
-   *   要让标准方位贴真实形状边界（圆 / 椭圆类）才需自行处理。
+   *   要让标准方位贴真实形状边界（圆 / 椭圆类）才需自行处理。`center` 由 compile 特殊处理，不传给 provider。
    */
   anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
   /**

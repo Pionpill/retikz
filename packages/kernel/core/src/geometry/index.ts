@@ -1,4 +1,3 @@
-export * from './anchor';
 export * from './bend';
 export * from './circle';
 export * from './contour';

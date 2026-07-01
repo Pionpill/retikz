@@ -6,10 +6,10 @@ import type { Rect } from '../../geometry/rect';
 import type { ScenePrimitive } from '../../primitive';
 
 import { defineShape } from '../../contract/shape/define';
-import { normalizeCompassAnchor } from '../../geometry/anchor';
 import { boundaryFromContour, contourCommands } from '../../geometry/contour';
 import { rect as rectOps } from '../../geometry/rect';
 import { localToWorld } from '../../geometry/transform';
+import { CenterAnchor, normalizeAnchor } from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
 /**
@@ -146,8 +146,8 @@ export const polygon = defineShape({
   },
   anchor: (rect: Rect, name: string, params: PolygonParams): Position | undefined => {
     void params;
-    const a = normalizeCompassAnchor(name);
-    return a ? rectOps.anchor(rect, a) : undefined;
+    const a = normalizeAnchor(name);
+    return a !== undefined && a !== CenterAnchor.Center ? rectOps.anchor(rect, a) : undefined;
   },
   *emit(rect: Rect, style, round, params: PolygonParams): Iterable<ScenePrimitive> {
     const radius = circumradiusFromRect(rect, params);

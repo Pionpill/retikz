@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-import { AtDirection, normalizeAtDirection } from '../position/at-position';
+import { normalizeAtDirection } from '../../shared';
+import { AtDirection } from '../position/at-position';
 import { AbsoluteTargetSchema } from '../position/between-position';
 import { PolarPositionSchema } from '../position/polar-position';
 import { PositionSchema } from '../position/position';

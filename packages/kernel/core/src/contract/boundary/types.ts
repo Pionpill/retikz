@@ -1,9 +1,9 @@
 import type { z } from 'zod';
 
-import type { WebAnchorValue } from '../../geometry/anchor';
 import type { Position } from '../../geometry/point';
 import type { Rect } from '../../geometry/rect';
 import type { IRJsonObject } from '../../schemas/json';
+import type { WebAnchorValue } from '../../shared';
 
 /**
  * 连接面命名 anchor 的名字。

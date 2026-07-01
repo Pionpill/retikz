@@ -6,7 +6,7 @@ import type { LowerTex } from '../lower-tex';
 import type { LineLayoutContext } from '../text-layout';
 import type { FontSpec, TextMeasurer } from '../text-metrics';
 
-import { normalizeGeometryLabelSide } from '../../schemas';
+import { normalizeSide } from '../../shared';
 import { CompileWarningCode } from '../constant';
 import { toAlphabeticBaselineY } from '../text-baseline';
 import { layoutInlineLine, resolveLineRuns } from '../text-layout';
@@ -88,7 +88,7 @@ export const emitLabelPrimitive = (
       ? label.sloped === true || label.placement === 'inside'
         ? 'center'
         : 'top'
-      : ((normalizeGeometryLabelSide(label.side) ?? label.side));
+      : ((normalizeSide(label.side) ?? label.side));
   const sloped = label.sloped === true;
   const sideDistance = label.distance ?? LABEL_SIDE_OFFSET;
   const boundaryOffset = placementCtx?.boundaryOffset ?? 0;

@@ -29,6 +29,7 @@ import { providerDefinitionOf } from '../providers/registry';
 import { resolveRibbonWidthProfileRegistry } from '../providers/ribbon';
 import { resolveShapeRegistry } from '../providers/shape';
 import { ScopeBoundingShape } from '../schemas';
+import { WebAnchor } from '../shared';
 import { createClipRegistry } from './clip';
 import { lowerComposites } from './composite';
 import { CompileWarningCode, formatCompileWarning } from './constant';
@@ -650,10 +651,10 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         // node 含 outerSep（margin）时按外边界（rect + margin）入 bbox，与 viewBox 占位口径一致
         const outerRect = outerRectOf(globalLayout);
         const nodePoints: Array<IRPosition> = [
-          rectOps.anchor(outerRect, 'north-west'),
-          rectOps.anchor(outerRect, 'north-east'),
-          rectOps.anchor(outerRect, 'south-west'),
-          rectOps.anchor(outerRect, 'south-east'),
+          rectOps.anchor(outerRect, WebAnchor.TopLeft),
+          rectOps.anchor(outerRect, WebAnchor.TopRight),
+          rectOps.anchor(outerRect, WebAnchor.BottomLeft),
+          rectOps.anchor(outerRect, WebAnchor.BottomRight),
         ];
         pushLayoutPoints(allPoints, nodePoints, globalLayout.shadow);
         // label / pin 外接点也纳入 bbox——避免 label 超出 viewBox 被裁（与 step.label 进 bbox 一致）

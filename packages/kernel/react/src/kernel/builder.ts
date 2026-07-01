@@ -17,7 +17,7 @@ import type {
 } from '@retikz/core';
 import type { ReactElement, ReactNode } from 'react';
 
-import { CURRENT_IR_VERSION, normalizeAtDirection, normalizeGeometryLabelSide, normalizeWebSide, parseTargetSugar } from '@retikz/core';
+import { CURRENT_IR_VERSION, normalizeAtDirection, normalizeSide, parseTargetSugar } from '@retikz/core';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
 import type { EdgeLabelProps } from '../sugar/EdgeLabel';
@@ -205,7 +205,7 @@ const normalizeNodeLabelPositionInput = (
   if (position === undefined) return undefined;
   if (typeof position !== 'string') {
     if (typeof position === 'object') {
-      return { ...position, boundary: normalizeWebSide(position.boundary) ?? position.boundary } as IRNodeLabel['position'];
+      return { ...position, boundary: normalizeSide(position.boundary) ?? position.boundary } as IRNodeLabel['position'];
     }
     return position;
   }
@@ -229,7 +229,7 @@ const normalizeNodeLabelsInput = (label: NodeProps['label']): IRNode['label'] =>
 const normalizeStepLabelInput = (label: IRStepLabelInput): IRStepLabel => {
   const { side: rawSide, ...rest } = label;
   const out: IRStepLabel = { ...rest, text: label.text };
-  if (rawSide !== undefined) out.side = (normalizeGeometryLabelSide(rawSide) ?? rawSide) as IRStepLabel['side'];
+  if (rawSide !== undefined) out.side = (normalizeSide(rawSide) ?? rawSide) as IRStepLabel['side'];
   return out;
 };
 
@@ -331,7 +331,7 @@ const readEdgeLabel = (children: ReactNode): IRStepLabel | undefined => {
       const out: IRStepLabel = { text: props.children };
       if (props.position !== undefined) out.position = props.position;
       if (props.side !== undefined) {
-        out.side = (normalizeGeometryLabelSide(props.side) ?? props.side) as IRStepLabel['side'];
+        out.side = (normalizeSide(props.side) ?? props.side) as IRStepLabel['side'];
       }
       if (props.sloped !== undefined) out.sloped = props.sloped;
       result = out;

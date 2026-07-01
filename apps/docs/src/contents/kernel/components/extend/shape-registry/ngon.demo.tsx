@@ -69,9 +69,9 @@ const ngon = defineShape({
     const boundary = findNgonBoundaryPoint(rect.width / 2, params.sides, localToward);
     return localToWorld(rect, boundary);
   },
-  anchor: (rect, name, params) => {
+  anchor: (_rect, _name, params) => {
     void params;
-    return name === 'center' ? [rect.x, rect.y] : undefined;
+    return undefined;
   },
   *emit(rect, style, round, params) {
     const vertices = ngonVertices(rect.width / 2, params.sides);

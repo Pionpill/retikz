@@ -1,12 +1,12 @@
 import { z } from 'zod';
 
-import { WebSide } from '../../../geometry/anchor';
+import { normalizeSide, WebSide } from '../../../shared';
 import { JsonObjectSchema } from '../../json';
 import { PositionSchema } from '../../position';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
 import { createLabelVisualStyleShape, LabelTextContentSchema } from '../../text';
 import { TargetSchema } from '../target';
-import { FoldStepVia, GeometryLabelPlacement, normalizeGeometryLabelSide } from './constants';
+import { FoldStepVia, GeometryLabelPlacement } from './constants';
 
 export const GeometryLabelSchema = z
   .object({
@@ -28,7 +28,7 @@ export const GeometryLabelSchema = z
       ),
     side: z
       .preprocess(
-        value => (typeof value === 'string' ? normalizeGeometryLabelSide(value) ?? value : value),
+        value => (typeof value === 'string' ? normalizeSide(value) ?? value : value),
         z.enum(WebSide),
       )
       .optional()

@@ -20,6 +20,7 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 - `schemas/<capability>/constants.ts`：const object enum、关键字常量。成员 JSDoc 用中文说明业务含义。
 - `schemas/<capability>/schema.ts`：Zod schema、字段 `.describe(...)`、对象级 `.describe(...)`、必要 refinement。
 - `schemas/<capability>/types.ts`：由 schema / const object 派生的 TS 类型；派生类型、非 schema 常量、函数、类用中文 JSDoc。
+- `shared/`：schema / contract / providers / compile 之间共享的无依赖底层。优先放跨层复用的纯函数；当某组 vocabulary 不属于单个 IR schema（例如通用 anchor / side 命名体系）且会被 geometry、schema、compile、provider 共同消费时，也可放 const object enum 和由其派生的 `XxxValue` / `XxxInput` 类型。属于具体 IR schema 的 const object enum、关键字常量、schema 派生类型仍留在 `schemas/<capability>/constants.ts` / `types.ts`。
 - `providers` / `contract` / `compile`：不要反向放 IR schema；需要开放能力时走 `standard-define-registry`。
 
 ## 命名
@@ -116,3 +117,21 @@ export const RibbonWidthSchema = z.union([
 4. 共享 shape spread 是否紧跟判别字段或对象开头？
 5. 是否能用 `BaseSchema + superRefine` 避免一大坨重复 object？
 6. schema 改动是否需要同步 `types.ts`、docs、schema registry 和测试？
+
+## Shared 主题目录
+
+`shared/` 是 schema / contract / providers / compile / geometry 共用的无依赖共享层。跨层词汇、纯函数和无状态映射可以放这里；具体 IR schema 私有的 const object enum 和 schema 派生类型仍留在对应 `schemas/<capability>/` 下。
+
+当某个 shared 主题同时包含词汇、类型、索引数组 / 映射和工具函数时，拆成目录：
+
+| 文件 | 职责 |
+| --- | --- |
+| `shared/<topic>/constants.ts` | const object enum 和稳定字面量词汇 |
+| `shared/<topic>/types.ts` | 由常量派生的 `XxxValue` / `XxxInput` 类型 |
+| `shared/<topic>/indexes.ts` | `XxxValues` 数组、`Record<A, B>` 映射表、查表型索引 |
+| `shared/<topic>/utils.ts` | 纯函数，通常只做 normalize / parse / classify |
+| `shared/<topic>/index.ts` | 只做本主题 barrel 导出 |
+
+外部模块只从包级 shared barrel 导入，例如 `../shared`、`../../shared` 或 `@retikz/core`；不要从 `shared/<topic>/constants` 这类子文件导入。主题内部文件之间可以互相从相邻子文件导入。
+
+消费 shared vocabulary 时使用 const object enum 成员，不直接写裸字符串。例如几何、compile、provider、render 和单元测试调用 `rect.anchor(...)`、`edgePoint(...)`、`switch (anchor)` 时写 `WebAnchor.Top` / `WebSide.Top`，不要写 `'top'` / `'north'`。只有 schema/parser 的用户输入样例、错误负例和文档说明可以保留字符串字面量。

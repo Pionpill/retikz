@@ -43,7 +43,7 @@ describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
 describe('BUILTIN_SHAPES.anchor returns web canonical anchors, undefined otherwise', () => {
   const rect: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
   it('rectangle named anchors', () => {
-    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'center', NO_PARAMS)).toEqual([0, 0]);
+    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'center', NO_PARAMS)).toBeUndefined();
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'top', NO_PARAMS)).toEqual([0, -5]);
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'right', NO_PARAMS)).toEqual([10, 0]);
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'bottom-left', NO_PARAMS)).toEqual([-10, 5]);
@@ -117,7 +117,7 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
         const r = rect.width / 2;
         return localToWorld(rect, [(lx / len) * r, (ly / len) * r]);
       },
-      anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+      anchor: (rect, name) => (name === 'origin' ? [rect.x, rect.y] : undefined),
       *emit(rect, style): Iterable<ScenePrimitive> {
         yield {
           type: 'path',
@@ -132,7 +132,7 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
   it('a returned plain object satisfies ShapeDefinition', () => {
     const poly = createPolygonShape();
     expect(poly.circumscribe(3, 4, NO_PARAMS)).toEqual({ halfWidth: 5, halfHeight: 5 });
-    expect(poly.anchor({ x: 0, y: 0, width: 10, height: 10 }, 'center', NO_PARAMS)).toEqual([0, 0]);
+    expect(poly.anchor({ x: 0, y: 0, width: 10, height: 10 }, 'origin', NO_PARAMS)).toEqual([0, 0]);
     expect(poly.anchor({ x: 0, y: 0, width: 10, height: 10 }, 'top', NO_PARAMS)).toBeUndefined();
     const prims = [...poly.emit({ x: 0, y: 0, width: 10, height: 10 }, {}, id, NO_PARAMS)];
     expect(prims).toHaveLength(1);

@@ -1,4 +1,4 @@
-import { WebSide } from '../../geometry/anchor';
+import { WebSide } from '../../shared';
 import { AtDirection } from '../position';
 
 /** 节点形状关键字（用 const + ValueOf 派生，不用 TS enum） */

@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import type { CompassSideValue, WebSideValue } from '../../../geometry/anchor';
+import type { CompassSideValue, TikzSideValue, WebSideValue } from '../../../shared';
 import type { ValueOf } from '../../../types';
 import type { FoldStepVia, GeometryLabelPlacement } from './constants';
 import type {
@@ -27,7 +27,7 @@ export type IRGeometryLabel = z.infer<typeof GeometryLabelSchema>;
 
 export type GeometryLabelSideValue = WebSideValue;
 
-export type GeometryLabelSideAliasValue = CompassSideValue;
+export type GeometryLabelSideAliasValue = CompassSideValue | TikzSideValue;
 
 export type GeometryLabelSideInput = GeometryLabelSideValue | GeometryLabelSideAliasValue;
 

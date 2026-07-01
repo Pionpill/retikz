@@ -8,7 +8,7 @@ import { z } from 'zod';
 /**
  * 自定义 hexagon shape 注入 demo
  * @description 普通函数返回 ShapeDefinition（factory 模式）：circumscribe 计算能包住内容的外接半径，
- *   boundaryPoint 解真实六边形射线交边，emit 出 6 顶点 path，anchor 只认 center。
+ *   boundaryPoint 解真实六边形射线交边，emit 出 6 顶点 path，center 由编译器处理。
  *   <Layout shapes={[hexagon]}> 注入；IR 里 <Node shape="hexagon"> 只写字符串名。
  */
 const createHexagonVertices = (radius: number): Array<Position> =>
@@ -66,7 +66,7 @@ const createHexagon = (): ShapeDefinition =>
       const boundary = findHexagonBoundaryPoint(rect.width / 2, localToward);
       return localToWorld(rect, boundary);
     },
-    anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+    anchor: () => undefined,
     *emit(rect, style, round) {
       const vertices = createHexagonVertices(rect.width / 2);
       const commands: Array<PathCommand> = vertices.map((vertex, index) => {

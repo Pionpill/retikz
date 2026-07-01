@@ -2,7 +2,7 @@
  * star shape（ADR-05）—— paramsSchema + 星形几何契约 + scaleParams 测试
  * @description 覆盖：
  *   - paramsSchema 校验（points 整数 ≥3、内外半径 finite positive、outerRadius>innerRadius、strictObject 拒多余/缺字段）；
- *   - 几何契约：2×points 顶点外径尖角 / 内径凹角交替均布、emit 闭合 path、tip-N / notch-N / center anchor、
+ *   - 几何契约：2×points 顶点外径尖角 / 内径凹角交替均布、emit 闭合 path、tip-N / notch-N anchor、
  *     rotate:0 第一尖角朝上（−y）、points:3 最小三角星、innerRadius→outerRadius 近正多边形、rotate 360° 等价；
  *   - 错误：points<3 / outerRadius≤innerRadius / 缺字段 paramsSchema reject；
  *   - 交互：self-rotate（params.rotate）+ Node.rotate 叠加、× scale 尺寸协同、Path 连接 tip-0；
@@ -102,18 +102,13 @@ describe('star — happy path 几何', () => {
     ]);
   });
 
-  it('star_anchors：tip-0 / notch-0 / center 坐标符几何', () => {
+  it('star_anchors：tip-0 / notch-0 坐标符几何', () => {
     // points:5 star，圆心局部原点。默认 −90 基准 → tip-0 朝上：顶点 0 角 = 0·36 − 90 = −90°，
     // 点 = (40cos(−90), 40sin(−90)) = (0, −40)（屏幕上方）。AABB 中心 = 原点（对称）。
     // 这里直接用 star.anchor 验三个特征点（rect 用以中心为原点的对称 AABB）。
     const params = { points: 5, innerRadius: 16, outerRadius: 40 };
     const { halfWidth, halfHeight } = star.circumscribe(0, 0, params);
     const rect = { x: 0, y: 0, width: 2 * halfWidth, height: 2 * halfHeight, rotate: 0 };
-    // center = 星形中心 = 世界原点
-    const center = star.anchor(rect, 'center', params);
-    expect(center).toBeDefined();
-    expect(center![0]).toBeCloseTo(0, 6);
-    expect(center![1]).toBeCloseTo(0, 6);
     // tip-0 = 顶点 0（尖角）= outerRadius 在 −90° = (0, −40)（朝上）
     const tip0 = star.anchor(rect, 'tip-0', params);
     expect(tip0).toBeDefined();

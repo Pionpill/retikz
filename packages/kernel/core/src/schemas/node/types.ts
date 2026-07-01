@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import type { WebSideInput } from '../../geometry/anchor';
+import type { WebSideInput } from '../../shared';
 import type { ValueOf } from '../../types';
 import type { AtDirectionInput } from '../position';
 import type {

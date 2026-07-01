@@ -120,7 +120,7 @@ boundaryPoint: (rect, toward, params) => {
 anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
 ```
 
-Called when users write `A.top`, `A.center`, or a shape-specific anchor name. Return a coordinate for names the shape owns, or `undefined` for unknown names, which the compiler reports with the standard Unknown anchor error. Standard direction names use Web/CSS canonical values (`top` / `right` / `bottom` / `left` plus corners); compass names such as `north` / `east` are accepted as aliases and normalized before provider hooks run. Standard direction names are resolved on the engine-expanded `rect` (including `outerSep`); shape-specific anchors always use the visual `rect`, without outer sep.
+Called when users write `A.top` or a shape-specific anchor name. Return a coordinate for names the shape owns, or `undefined` for unknown names, which the compiler reports with the standard Unknown anchor error. Standard direction names use Web/CSS canonical values (`top` / `right` / `bottom` / `left` plus corners); compass names such as `north` / `east` are accepted as aliases and normalized before provider hooks run. Ordinary `A.center` is handled by the compiler as the node center; only shapes whose semantic center differs from the AABB center, such as sector / arc, need to declare their own `center`. Standard direction names are resolved on the engine-expanded `rect` (including `outerSep`); shape-specific anchors always use the visual `rect`, without outer sep.
 
 ```ts
 // sector: exposes semantic anchors like apex / centroid / arc midpoints
@@ -153,7 +153,7 @@ Called for proportional edge points (`{ side, t }`): `side` is `top` / `right` /
 
 ```ts
 // rectangle: bridge from public Web sides to the compass geometry layer
-edgePoint: (rect, side, t) => rectOps.edgePoint(rect, webSideToCompassSide(side), t),
+edgePoint: (rect, side, t) => rectOps.edgePoint(rect, side, t),
 ```
 
 ### emit
@@ -234,7 +234,7 @@ const createPolygonShape = (name: string, sides: number): ShapeDefinition =>
     boundaryPoint: (rect, toward) => {
       /* map toward to local coordinates first, then intersect the ray with polygon edges */
     },
-    anchor: (rect, anchorName) => (anchorName === 'center' ? [rect.x, rect.y] : undefined),
+    anchor: () => undefined,
     *emit(rect, style, round) {
       yield {
         type: 'path',

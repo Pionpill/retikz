@@ -30,11 +30,11 @@ import type { ResolveBetweenGlobal } from './position';
 import type { LaidLine, LineLayoutContext } from './text-layout';
 import type { FontSpec, TextMeasurer } from './text-metrics';
 
-import { normalizeWebAnchor, normalizeWebSide } from '../geometry/anchor';
 import { resolveBoundaryRegistry } from '../providers/boundary';
 import { providerDefinitionOf } from '../providers/registry';
 import { resolveShapeRegistry } from '../providers/shape';
-import { JsonObjectSchema, normalizeAtDirection } from '../schemas';
+import { JsonObjectSchema } from '../schemas';
+import { CenterAnchor, normalizeAnchor, normalizeAtDirection, normalizeSide } from '../shared';
 import { fallbackBoundaryAnchor, resolveBoundary } from './boundary';
 import { CompileWarningCode } from './constant';
 import { DirectionVectorByAtDirection, LabelAnchorByAtDirection } from './direction';
@@ -397,8 +397,17 @@ export const boundaryPointOf = (
  *   boundary 缺省 = 'shape'。
  */
 export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary | undefined = 'shape'): Position => {
-  const webAnchor = normalizeWebAnchor(name);
+  const webAnchor = normalizeAnchor(name);
   if (webAnchor !== undefined) {
+    if (webAnchor === CenterAnchor.Center) {
+      const own = layout.shapeDef.anchor(
+        layout.rect,
+        CenterAnchor.Center,
+        layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
+      );
+      return own ?? [layout.rect.x, layout.rect.y];
+    }
+
     // 标准方位名：默认连接面（'shape'）先走视觉 shape 自身 anchor——ellipse/circle 落真实周长、
     // rectangle/polygon 落 AABB（与 TikZ 一致）；shape 未实现标准方位（star/sector/arc 返回 undefined）
     // 回退外接 AABB 矩形。显式 boundary 指定时按该连接面解析。
@@ -449,7 +458,7 @@ const isLabelBoundaryPosition = (position: NodeLabelLayout['position']): positio
 
 const normalizeLabelBoundaryPosition = (position: IRNodeLabelBoundaryPosition): IRNodeLabelBoundaryPosition => ({
   ...position,
-  boundary: normalizeWebSide(position.boundary) ?? position.boundary,
+  boundary: normalizeSide(position.boundary) ?? position.boundary,
 });
 
 const normalizeLabelPosition = (

@@ -120,7 +120,7 @@ boundaryPoint: (rect, toward, params) => {
 anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
 ```
 
-用户写 `A.top`、`A.center` 或形状自定义锚点名时调用，决定命名锚点在哪里。认识的名字返回坐标，不认识就返回 `undefined`，由编译层统一报 Unknown anchor。Web 方位名（top/right…）会传给 provider；`north` / `east` 等 compass 写法只是输入别名，解析后也会变成 Web 名。形状专属锚点恒走视觉 `rect`，不含 outer sep。
+用户写 `A.top` 或形状自定义锚点名时调用，决定命名锚点在哪里。认识的名字返回坐标，不认识就返回 `undefined`，由编译层统一报 Unknown anchor。Web 方位名（top/right…）会传给 provider；`north` / `east` 等 compass 写法只是输入别名，解析后也会变成 Web 名。普通 `A.center` 由编译器按节点中心处理；只有 sector / arc 这类语义中心不同于 AABB 中心的形状才需要自行声明 `center`。形状专属锚点恒走视觉 `rect`，不含 outer sep。
 
 ```ts
 // sector：暴露 apex / centroid / 弧中点等语义锚点
@@ -153,7 +153,7 @@ edgePoint?: (
 
 ```ts
 // rectangle：复用 rect 几何层时先转成几何层 side
-edgePoint: (rect, side, t) => rectOps.edgePoint(rect, webSideToCompassSide(side), t),
+edgePoint: (rect, side, t) => rectOps.edgePoint(rect, side, t),
 ```
 
 ### emit
@@ -234,7 +234,7 @@ const createPolygonShape = (name: string, sides: number): ShapeDefinition =>
     boundaryPoint: (rect, toward) => {
       /* 先把 toward 转到局部坐标，再计算射线和多边形边界的交点 */
     },
-    anchor: (rect, anchorName) => (anchorName === 'center' ? [rect.x, rect.y] : undefined),
+    anchor: () => undefined,
     *emit(rect, style, round) {
       yield {
         type: 'path',

@@ -20,6 +20,7 @@ define-registry 是 retikz 扩展能力的标准形态。遇到可枚举但应�
 - `contract/<capability>/` 或 `contract/<capability>.ts`：公共能力契约，放 `XxxDefinition`、可选 `XxxDefinitionInput` / `AnyXxxDefinition`、`defineXxx()`、context、helper。不放内置数组，不放 IR schema。
 - `providers/<capability>/`：内置 definition、provider name、registry 解析、重复 key / 保留 key 诊断、by-key map。
 - `schemas/<capability>/`：JSON IR schema、const object、literal union、schema registry 描述。不放运行时函数。
+- `shared/`：schema / contract / providers / compile 共用的无依赖底层，放跨层复用 helper；通用 vocabulary（例如 anchor / side）可放 const object enum 和派生类型。具体 IR schema 的常量和类型仍留在 `schemas`。
 - `compile` / `pipeline` / `lowering` / adapter：接收 option，解析 registry，消费 definition；不要复制内置白名单。
 - docs / tests：用同一套术语描述内置和自定义，不把自定义写成补丁能力。
 - core 现有能力多用 `contract/<capability>/types.ts` + `define.ts`；plot 既有 `contract/<capability>.ts`，也有 `contract/<capability>/types.ts` + `define.ts`。新增代码先贴近同包相邻能力，但职责分层不变。

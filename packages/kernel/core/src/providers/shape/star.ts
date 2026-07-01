@@ -100,7 +100,7 @@ const worldVertices = (rect: Rect, geo: StarGeometry): Array<Position> => geo.ve
  *   插逐角夹紧的 fillet 弧——凸尖与凹角（notch）由模块按接缝转向叉积统一处理（凹角弧 sweep 反向、圆心在凸侧），
  *   emit 与 boundaryPoint 共用同一份 fillet 结果。emit 收轴对齐 rect（旋转由外层 group 施加）、boundaryPoint
  *   收带 rotate 的 rect 且 rayOrigin = 星形几何中心（关于中心对称，AABB 中心 = 形心 = node position）。
- *   anchor 含 center / tip-N（第 N 尖角）/ notch-N（第 N 凹角）——恒在原尖角 / 凹角逻辑顶点，不随 cornerRadius 移；
+ *   anchor 含 tip-N（第 N 尖角）/ notch-N（第 N 凹角）——恒在原尖角 / 凹角逻辑顶点，不随 cornerRadius 移；
  *   self-rotate（params.rotate）与 Node.rotate 叠加。scaleParams 只缩 inner/outerRadius / cornerRadius（长度）、
  *   不缩 points（计数）/ rotate（角度）。
  */
@@ -157,7 +157,6 @@ export const star = defineShape({
   },
   anchor: (rect: Rect, name: string, params: StarParams): Position | undefined => {
     const geo = starGeometry(params);
-    if (name === 'center') return toWorld(rect, [0, 0]);
     // tip-N → 顶点 2N（尖角）；notch-N → 顶点 2N+1（凹角）。范围越界返回 undefined。
     const tip = /^tip-(\d+)$/.exec(name);
     if (tip) {

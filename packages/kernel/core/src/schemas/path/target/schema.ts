@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { normalizeWebAnchor, normalizeWebSide, WebSide } from '../../../geometry/anchor';
+import { normalizeAnchor, normalizeSide, WebSide } from '../../../shared';
 import { BoundarySchema } from '../../boundary';
 import { BetweenPositionSchema } from '../../position/between-position/schema';
 import { OffsetPositionSchema } from '../../position/offset-position/schema';
@@ -11,8 +11,8 @@ import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
 export const BoundaryAnchorRefSchema = z
   .object({
     side: z
-      .preprocess(value => (typeof value === 'string' ? normalizeWebSide(value) ?? value : value), z.enum(WebSide))
-      .describe('Which edge of the shape boundary. Compass side names are accepted aliases.'),
+      .preprocess(value => (typeof value === 'string' ? normalizeSide(value) ?? value : value), z.enum(WebSide))
+      .describe('Which edge of the shape boundary. Compass and TikZ side names are accepted aliases.'),
     t: NormalizedFractionSchema.describe(
       'Proportion along the edge; top/bottom run left to right, right/left run top to bottom.',
     ),
@@ -24,9 +24,9 @@ export const AnchorRefSchema = z
     z
       .string()
       .min(1)
-      .transform(name => normalizeWebAnchor(name) ?? name)
+      .transform(name => normalizeAnchor(name) ?? name)
       .describe(
-        'Named anchor: web anchor, compass alias, or shape-specific anchor. Known aliases are normalized to web names; unknown names fail at compile time.',
+        'Named anchor: web anchor, compass/TikZ alias, or shape-specific anchor. Known aliases are normalized to web names; unknown names fail at compile time.',
       ),
     AngleDegreesSchema.describe('Angle anchor in degrees (boundary point in that direction)'),
     BoundaryAnchorRefSchema,

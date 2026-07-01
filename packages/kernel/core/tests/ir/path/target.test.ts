@@ -17,6 +17,7 @@ describe('AnchorRefSchema：命名 / 角度 / 边上比例点', () => {
   it('compass 命名 anchor 作为输入别名归一到 Web canonical', () => {
     expect(AnchorRefSchema.parse('north')).toBe('top');
     expect(AnchorRefSchema.parse('south-west')).toBe('bottom-left');
+    expect(AnchorRefSchema.parse('above-left')).toBe('top-left');
   });
 
   it('接受角度 anchor（含负 / 小数）', () => {
@@ -30,6 +31,7 @@ describe('AnchorRefSchema：命名 / 角度 / 边上比例点', () => {
     expect(AnchorRefSchema.parse({ side: 'left', t: 0 })).toEqual({ side: 'left', t: 0 });
     expect(AnchorRefSchema.parse({ side: 'right', t: 1 })).toEqual({ side: 'right', t: 1 });
     expect(AnchorRefSchema.parse({ side: 'north', t: 0.25 })).toEqual({ side: 'top', t: 0.25 });
+    expect(AnchorRefSchema.parse({ side: 'above', t: 0.25 })).toEqual({ side: 'top', t: 0.25 });
   });
 
   it('角度 NaN / Infinity 被拒（.finite）', () => {
