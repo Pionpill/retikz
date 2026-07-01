@@ -1,11 +1,12 @@
 import { z } from 'zod';
 
+import { WebSide } from '../../../geometry/anchor';
 import { JsonObjectSchema } from '../../json';
 import { PositionSchema } from '../../position';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
 import { createLabelVisualStyleShape, LabelTextContentSchema } from '../../text';
 import { TargetSchema } from '../target';
-import { FoldStepVia, GeometryLabelPlacement, GeometryLabelSide, normalizeGeometryLabelSide } from './constants';
+import { FoldStepVia, GeometryLabelPlacement, normalizeGeometryLabelSide } from './constants';
 
 export const GeometryLabelSchema = z
   .object({
@@ -28,11 +29,11 @@ export const GeometryLabelSchema = z
     side: z
       .preprocess(
         value => (typeof value === 'string' ? normalizeGeometryLabelSide(value) ?? value : value),
-        z.enum(GeometryLabelSide),
+        z.enum(WebSide),
       )
       .optional()
       .describe(
-        'Side relative to the label anchor. Edge label sides above/below/left/right are canonical; web and compass side names are accepted aliases. Default `above`.',
+        'Side relative to the label anchor. Web sides top/bottom/left/right are canonical; compass side names are accepted aliases. Default `top`.',
       ),
     sloped: z
       .boolean()

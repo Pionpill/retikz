@@ -184,7 +184,6 @@ export {
   GeneratorStepSchema,
   GeometryLabelPlacement,
   GeometryLabelSchema,
-  GeometryLabelSide,
   GradientStopSchema,
   GraphicStyleSchema,
   ImagePaintSpecSchema,

@@ -1,8 +1,8 @@
 import type { z } from 'zod';
 
-import type { WebSideInput } from '../../../geometry/anchor';
+import type { CompassSideValue, WebSideValue } from '../../../geometry/anchor';
 import type { ValueOf } from '../../../types';
-import type { FoldStepVia, GeometryLabelPlacement, GeometryLabelSide } from './constants';
+import type { FoldStepVia, GeometryLabelPlacement } from './constants';
 import type {
   ArcStepSchema,
   BendStepSchema,
@@ -25,9 +25,9 @@ import type {
 /** Shared path-like geometry label IR type. */
 export type IRGeometryLabel = z.infer<typeof GeometryLabelSchema>;
 
-export type GeometryLabelSideValue = ValueOf<typeof GeometryLabelSide>;
+export type GeometryLabelSideValue = WebSideValue;
 
-export type GeometryLabelSideAliasValue = WebSideInput;
+export type GeometryLabelSideAliasValue = CompassSideValue;
 
 export type GeometryLabelSideInput = GeometryLabelSideValue | GeometryLabelSideAliasValue;
 

@@ -329,7 +329,7 @@ describe('RelationMark and anchorId lowering', () => {
       { d: rows },
     );
     const [path] = collectPaths(markLayer(root, 1));
-    expect(path.children[1]).toMatchObject({ kind: 'line', label: { text: 'A to B', side: 'above' } });
+    expect(path.children[1]).toMatchObject({ kind: 'line', label: { text: 'A to B', side: 'top' } });
   });
 
   it('skips rows whose generated relation anchor fields are missing', () => {

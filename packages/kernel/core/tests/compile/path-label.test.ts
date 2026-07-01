@@ -386,7 +386,7 @@ describe('step.label：layout 把标签纳入 bbox', () => {
             type: 'path',
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'line', to: [100, 0], label: { text: 'tall', side: 'above' } },
+              { type: 'step', kind: 'line', to: [100, 0], label: { text: 'tall', side: 'top' } },
             ],
           },
         ],

@@ -132,7 +132,7 @@ import { Path, Step } from '@retikz/react';
 
 - `text`：必填，标签文字（单行）
 - `position`：`'at-start' | 'very-near-start' | 'near-start' | 'midway' | 'near-end' | 'very-near-end' | 'at-end'` 七个 keyword，或 0..1 的数值 t（任意精细位置），缺省 `'midway'`（t=0.5）
-- `side`：`'above'` / `'below'` / `'left'` / `'right'`，缺省 `'above'`。也接受 `top` / `bottom` 和 compass 别名 `north` / `south` / `east` / `west`；`sloped: true` 让标签沿段切线方向旋转
+- `side`：`'top'` / `'bottom'` / `'left'` / `'right'`，缺省 `'top'`。也接受 compass 别名 `north` / `south` / `east` / `west`；`sloped: true` 让标签沿段切线方向旋转
 - `textColor`：标签文字色；缺省按 **scope `labelDefault` → 宿主 path 主色 `color` → currentColor** 回退（跟主色不跟 stroke）
 - `opacity`：标签独立透明度 0..1；与所属 path 的 opacity 相乘（元素内轴；跨 scope 不复合）
 - `font`：标签字体覆盖（family / size / weight / style），逐字段回退 `labelDefault` → 渲染端默认
@@ -305,7 +305,7 @@ IR schema 还包含 `generator` step，用于外部路径生成器注册面；�
 | ----------- | ----------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `text`      | `string`                                              | —          | 必填，标签文字（单行）                                                                                                                                                                    |
 | `position`  | 7 keyword 之一 或 `number`（0..1）                    | `'midway'` | 段上归一化位置 t——keyword 是 t 的语义糖（at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1）；超出 [0, 1] 由 schema 拒绝 |
-| `side`      | `'above' \| 'below' \| 'left' \| 'right'`             | `'above'` | 边标注相对段方向的侧。也接受 `top` / `bottom` 和 compass 别名 `north` / `south` / `east` / `west` |
+| `side`      | `'top' \| 'bottom' \| 'left' \| 'right'`              | `'top'` | 边标注相对段方向的侧；也接受 compass 别名 `north` / `south` / `east` / `west` |
 | `sloped`    | `boolean`                                             | `false`   | 是否按段切线方向旋转；为 true 时仍可配合 `side` 控制偏移侧 |
 | `textColor` | `string`                                              | —          | 标签文字色；缺省回退 scope `labelDefault` → 宿主 path 主色 `color` → currentColor（跟主色不跟 stroke）                                                                                    |
 | `opacity`   | `number`                                              | —          | 标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合）                                                                                                                          |

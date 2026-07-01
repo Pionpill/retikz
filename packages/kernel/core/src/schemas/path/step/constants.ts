@@ -7,26 +7,8 @@ export const GeometryLabelPlacement = {
   Inside: 'inside',
 } as const;
 
-export const GeometryLabelSide = {
-  Above: 'above',
-  Below: 'below',
-  Left: 'left',
-  Right: 'right',
-} as const;
-
-export const GeometryLabelSideAlias = {
-  top: GeometryLabelSide.Above,
-  bottom: GeometryLabelSide.Below,
-  left: GeometryLabelSide.Left,
-  right: GeometryLabelSide.Right,
-} as const satisfies Record<WebSideValue, (typeof GeometryLabelSide)[keyof typeof GeometryLabelSide]>;
-
-export const normalizeGeometryLabelSide = (name: string): (typeof GeometryLabelSide)[keyof typeof GeometryLabelSide] | undefined => {
-  const webSide = normalizeWebSide(name);
-  if (webSide !== undefined) return GeometryLabelSideAlias[webSide];
-  if (name === GeometryLabelSide.Above || name === GeometryLabelSide.Below) return name;
-  return undefined;
-};
+export const normalizeGeometryLabelSide = (name: string): WebSideValue | undefined =>
+  normalizeWebSide(name);
 
 export const FoldStepVia = {
   HorizontalThenVertical: '-|',

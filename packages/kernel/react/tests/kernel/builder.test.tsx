@@ -648,7 +648,7 @@ after`;
             type: 'step',
             kind: 'line',
             to: { id: 'B' },
-            label: { text: 'accept', side: 'above' },
+            label: { text: 'accept', side: 'top' },
           },
         ],
       });
@@ -680,7 +680,7 @@ after`;
           { type: 'node', id: 'B', position: { direction: 'top-right', of: 'A' }, label: { position: 'bottom-right' } },
           {
             type: 'path',
-            children: [{ kind: 'move' }, { kind: 'line', label: { text: 'edge', side: 'above' } }],
+            children: [{ kind: 'move' }, { kind: 'line', label: { text: 'edge', side: 'top' } }],
           },
         ],
       });

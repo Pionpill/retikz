@@ -114,12 +114,13 @@ describe('Drawable shared schema', () => {
     expect(StepLabelSchema).toBe(GeometryLabelSchema);
   });
 
-  it('keeps edge label above/below canonical while accepting web and compass aliases', () => {
-    expect(GeometryLabelSchema.parse({ text: 'x', side: 'above' })).toMatchObject({ side: 'above' });
-    expect(GeometryLabelSchema.parse({ text: 'x', side: 'top' })).toMatchObject({ side: 'above' });
-    expect(GeometryLabelSchema.parse({ text: 'x', side: 'north' })).toMatchObject({ side: 'above' });
-    expect(GeometryLabelSchema.parse({ text: 'x', side: 'bottom' })).toMatchObject({ side: 'below' });
-    expect(GeometryLabelSchema.parse({ text: 'x', side: 'south' })).toMatchObject({ side: 'below' });
+  it('keeps edge label web sides canonical while accepting compass aliases', () => {
+    expect(GeometryLabelSchema.parse({ text: 'x', side: 'top' })).toMatchObject({ side: 'top' });
+    expect(GeometryLabelSchema.parse({ text: 'x', side: 'north' })).toMatchObject({ side: 'top' });
+    expect(GeometryLabelSchema.parse({ text: 'x', side: 'bottom' })).toMatchObject({ side: 'bottom' });
+    expect(GeometryLabelSchema.parse({ text: 'x', side: 'south' })).toMatchObject({ side: 'bottom' });
+    expect(GeometryLabelSchema.safeParse({ text: 'x', side: 'above' }).success).toBe(false);
+    expect(GeometryLabelSchema.safeParse({ text: 'x', side: 'below' }).success).toBe(false);
   });
 
   it('rejects path-only fields inside ribbon options', () => {

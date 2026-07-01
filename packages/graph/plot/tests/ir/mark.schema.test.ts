@@ -676,7 +676,7 @@ describe('MarkSchema (ADR-05)', () => {
     };
     expect(MarkSchema.parse(m)).toEqual({
       ...m,
-      label: { ...m.label, side: 'above' },
+      label: { ...m.label, side: 'top' },
     });
   });
 
@@ -787,7 +787,7 @@ describe('MarkSchema (ADR-05)', () => {
     };
     expect(MarkSchema.parse(m)).toEqual({
       ...m,
-      label: { ...m.label, side: 'above' },
+      label: { ...m.label, side: 'top' },
     });
   });
 

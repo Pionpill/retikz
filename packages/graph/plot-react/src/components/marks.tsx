@@ -118,7 +118,7 @@ export type DatumLabelProps = {
   label?: FieldName;
   /** 标签格式串（d3-format 数值 / d3-time-format 时间，进 IR）；仅与 label 字段同用 */
   labelDisplayFormat?: string;
-  /** 标签相对宿主 Node 边框方位；Web 名为 canonical，compass / above-below 写法作为输入别名。 */
+  /** 标签相对宿主 Node 边框方位；Web 名为 canonical，compass 写法作为输入别名。 */
   labelPosition?: MarkNodeLabelInput['position'];
   /** 标签离宿主边框距离（user units）；缺省 12（对齐 core NodeLabelSchema.distance） */
   labelDistance?: number;
