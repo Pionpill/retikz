@@ -54,6 +54,9 @@ describe('Node label placement', () => {
       expect(NodeLabelSchema.parse({ text: 'L', position: { boundary: 'north' } })).toMatchObject({
         position: { boundary: 'top' },
       });
+      expect(NodeLabelSchema.parse({ text: 'L', position: { boundary: 'below' } })).toMatchObject({
+        position: { boundary: 'bottom' },
+      });
     });
 
     it('方向 position 支持 Web canonical、compass alias 与旧 above/below alias，并归一到 Web', () => {

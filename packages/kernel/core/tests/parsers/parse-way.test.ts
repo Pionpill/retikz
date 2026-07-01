@@ -446,8 +446,11 @@ describe('parseWay', () => {
       ]);
     });
 
-    it('label side accepts compass aliases and emits edge-label canonical values', () => {
+    it('label side accepts compass and TikZ aliases and emits edge-label canonical values', () => {
       expect(parseWay(['A', { label: { text: 'q', side: 'north' } }, 'B'])[1]).toMatchObject({
+        label: { text: 'q', side: 'top' },
+      });
+      expect(parseWay(['A', { label: { text: 'q', side: 'above' } }, 'B'])[1]).toMatchObject({
         label: { text: 'q', side: 'top' },
       });
     });

@@ -5,7 +5,6 @@ import type { ValueOf } from '../../types';
 import type { AtDirectionInput } from '../position';
 import type {
   BuiltinShape,
-  NodeLabelBoundarySide,
   NodeLabelPlacement,
   NodeLabelPosition,
   NodeTextAlign,
@@ -52,5 +51,3 @@ export type NodeTextAlignValue = ValueOf<typeof NodeTextAlign>;
 export type NodeLabelPositionValue = ValueOf<typeof NodeLabelPosition>;
 
 export type NodeLabelPlacementValue = ValueOf<typeof NodeLabelPlacement>;
-
-export type NodeLabelBoundarySideValue = ValueOf<typeof NodeLabelBoundarySide>;

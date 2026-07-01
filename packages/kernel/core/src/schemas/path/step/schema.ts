@@ -33,7 +33,7 @@ export const GeometryLabelSchema = z
       )
       .optional()
       .describe(
-        'Side relative to the label anchor. Web sides top/bottom/left/right are canonical; compass side names are accepted aliases. Default `top`.',
+        'Side relative to the label anchor. Web sides top/bottom/left/right are canonical; compass and TikZ side names are accepted aliases. Default `top`.',
       ),
     sloped: z
       .boolean()

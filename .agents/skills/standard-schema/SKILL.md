@@ -109,6 +109,12 @@ export const RibbonWidthSchema = z.union([
 - 对闭合枚举字段，用 `z.enum(ConstObject)` 或 `z.literal(Const.Member)`，不用 `z.nativeEnum`。
 - 对开放式 provider 名称，只校验 JSON 形态和非空字符串；是否注册通常在 compile / lowering 阶段 fail-loud。
 
+## Vocabulary 使用准则
+
+- 使用 const object enum 成员，不直接写裸字符串。消费 shared / schema vocabulary 时写 `WebSide.Top`、`WebAnchor.TopLeft`、`PathLineCap.Round` 这类枚举成员；只有 schema/parser 的用户输入样例、错误负例和文档说明可以保留字符串字面量。
+- 避免无意义别名。不要为了局部语境把一个既有 vocabulary 原样包一层，例如不要写 `export const NodeLabelBoundarySide = WebSide`；schema 直接使用 `WebSide`，类型直接使用 `WebSideValue` 或对应输入类型。
+- 禁止从当前模块 export 其它模块的内容。`schemas/<capability>/constants.ts` 只导出本模块自有 vocabulary；shared vocabulary 从 shared barrel 导入并直接使用，不要在 capability 模块或根 barrel 中用新名字转手导出。
+
 ## 改代码前检查
 
 1. 这是 IR 契约，还是 provider / compile / adapter 行为？

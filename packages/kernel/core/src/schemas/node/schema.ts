@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { normalizeAtDirection, normalizeSide } from '../../shared';
+import { normalizeAtDirection, normalizeSide, WebSide } from '../../shared';
 import { AnimationTrackSchema } from '../animation';
 import { BoundarySchema } from '../boundary';
 import { FontSchema } from '../font';
@@ -16,13 +16,13 @@ import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
 import { ShapeRefSchema } from '../shape';
 import { CssColorSchema, GraphicStyleSchema } from '../style';
 import { createLabelVisualStyleShape, LabelTextContentSchema, TextBlockSchema } from '../text';
-import { NodeLabelBoundarySide, NodeLabelPlacement, NodeLabelPosition, NodeTextAlign } from './constants';
+import { NodeLabelPlacement, NodeLabelPosition, NodeTextAlign } from './constants';
 
 export const NodeLabelBoundaryPositionSchema = z
   .object({
     boundary: z
-      .preprocess(value => (typeof value === 'string' ? normalizeSide(value) ?? value : value), z.enum(NodeLabelBoundarySide))
-      .describe('Box-like node boundary side used as the label attachment line. Compass side names are accepted aliases.'),
+      .preprocess(value => (typeof value === 'string' ? normalizeSide(value) ?? value : value), z.enum(WebSide))
+      .describe('Box-like node boundary side used as the label attachment line. Web sides are canonical; compass and TikZ side names are accepted aliases.'),
     fraction: NormalizedFractionSchema
       .optional()
       .describe('Normalized position along the selected boundary. Defaults to 0.5.'),
@@ -53,7 +53,7 @@ export const NodeLabelSchema = z
       )
       .optional()
       .describe(
-        'Label attachment point on the node border. Accepts Web directions (top, top-left, ...), compass / legacy aliases (north, north-west, above, below-left, ...), center, a numeric polar angle in degrees (0=right, 90=bottom in y-down coordinates), or `{ boundary, fraction }` for a proportional point on a box-like side. Omitted fields use top.',
+        'Label attachment point on the node border. Accepts Web directions (top, top-left, ...), compass aliases (north, north-west, ...), TikZ aliases (above, below-left, ...), center, a numeric polar angle in degrees (0=right, 90=bottom in y-down coordinates), or `{ boundary, fraction }` for a proportional point on a box-like side. Omitted fields use top.',
       ),
     placement: z
       .enum(NodeLabelPlacement)

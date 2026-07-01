@@ -33,7 +33,9 @@ describe('parseNodeTarget 命名 anchor 模式（id.<name>）', () => {
     expect(parseNodeTarget('A.north')).toEqual({ id: 'A', anchor: 'top' });
     expect(parseNodeTarget('A.north-west')).toEqual({ id: 'A', anchor: 'top-left' });
     expect(parseNodeTarget('A.south-east')).toEqual({ id: 'A', anchor: 'bottom-right' });
+    expect(parseNodeTarget('A.above')).toEqual({ id: 'A', anchor: 'top' });
     expect(parseNodeTarget('A.above-left')).toEqual({ id: 'A', anchor: 'top-left' });
+    expect(parseNodeTarget('A.below-right')).toEqual({ id: 'A', anchor: 'bottom-right' });
   });
 
   it('未知 anchor 名抛错', () => {
