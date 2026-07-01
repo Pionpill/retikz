@@ -39,7 +39,9 @@ description: Use when changing retikz contract layer code, XxxDefinition types, 
 
 ## JSDoc
 
-- 整体 JSDoc 写类型定位、生命周期、跨字段规则和回调协议。
+- 默认写 JSDoc：definition 类型、helper、context、capability 字段和重要内部宽类型都要说明；纯推断 / 重命名别名可省略。
+- `@description` 写主语义、生命周期、跨字段规则、回调协议或 registry 消费契约。
+- `@remarks` 只写设计理由、typed identity / future hook 这类非主路径补充。
 - 字段含义写到字段 JSDoc；可省略字段有默认行为时写 `@default`。
 
 ## 改代码前检查

@@ -105,7 +105,8 @@ Control: <human-directed|llm-autonomous>
 - barrel 默认 `export * from './xxx'`；需要裁剪公共面、避免冲突或显式重命名时才用 named re-export。公共入口可按包内 AGENTS 要求显式导出。
 - 数组类型写 `Array<T>`，不用 `T[]`；函数优先箭头形式，确需 hoisting / class 方法时例外。
 - enum 用 const object enum：`as const` 对象 + `ValueOf` 派生类型；value object 用单数 PascalCase，成员 key 用大驼峰，派生类型加 `Value` 后缀。
-- 注释 / JSDoc / 测试标题 / zod `.describe(...)` 不引用 ADR 或历史阶段。JSDoc 能写到属性上的说明不要堆在整体类型说明里。
+- JSDoc 默认必须写：导出类型、接口、函数、组件、重要内部 helper、public props 和复杂对象字段都要注释；纯推断 / 重命名别名（如 `ValueOf`、`z.infer`、re-export 收窄）可省略。
+- `@description` 写主语义、契约和跨字段行为；`@remarks` 只写设计理由、非主路径补充或未来扩展钩子；默认值写字段级 `@default`。能写到属性上的说明不要堆在整体类型说明里；注释 / JSDoc / 测试标题 / zod `.describe(...)` 不引用 ADR 或历史阶段。
 - React 组件用 `FC<Props>`，Props 类型独立声明并导出；props 在函数体内解构；`components/ui/*` 是 shadcn vendored，不直接手改。
 - Tailwind v4：入口 CSS 用 `@import 'tailwindcss';`，主题走 CSS-first（`@theme` / CSS variables / `@plugin`），不建 v3 风格 JS config；新 token 同步 `:root` 与 `.dark`。
 
