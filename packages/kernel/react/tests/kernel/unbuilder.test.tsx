@@ -436,7 +436,7 @@ describe('convertIRToReactNode', () => {
                 type: 'step',
                 kind: 'line',
                 to: [10, 0],
-                label: { text: 'x', position: 'near-end', side: 'sloped' },
+                label: { text: 'x', position: 'near-end', sloped: true },
               },
             ],
           },

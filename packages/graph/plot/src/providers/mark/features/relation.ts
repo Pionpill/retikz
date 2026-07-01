@@ -161,7 +161,7 @@ const anchorInputMissing = (ref: PlotTargetRef, row: ExternalRow): boolean => {
 
 const withDefaultLabelSide = (label: IRStepLabel): IRStepLabel => {
   const side = label.side === undefined ? undefined : normalizeGeometryLabelSide(label.side) ?? label.side;
-  return { side: 'sloped', ...label, ...(side !== undefined ? { side } : {}) };
+  return { sloped: true, ...label, ...(side !== undefined ? { side } : {}) };
 };
 
 const resolveMarkValue = <T>(value: MarkValueType<T> | undefined, row: ExternalRow): T | undefined => {

@@ -32,7 +32,7 @@ export const GeometryLabelSchema = z
       )
       .optional()
       .describe(
-        'Side relative to the label anchor. Edge label sides above/below/left/right are canonical; web and compass side names are accepted aliases. `sloped` rotates label along the tangent with no side offset. Default `above`.',
+        'Side relative to the label anchor. Edge label sides above/below/left/right are canonical; web and compass side names are accepted aliases. Default `above`.',
       ),
     sloped: z
       .boolean()

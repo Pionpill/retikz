@@ -333,6 +333,7 @@ const readEdgeLabel = (children: ReactNode): IRStepLabel | undefined => {
       if (props.side !== undefined) {
         out.side = (normalizeGeometryLabelSide(props.side) ?? props.side) as IRStepLabel['side'];
       }
+      if (props.sloped !== undefined) out.sloped = props.sloped;
       result = out;
     });
   };

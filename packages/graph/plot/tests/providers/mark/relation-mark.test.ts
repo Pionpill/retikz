@@ -279,7 +279,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(path.children[1]).toMatchObject({
       kind: 'line',
       to: { id: 'pt.B' },
-      label: { text: 'A to B', side: 'sloped' },
+      label: { text: 'A to B', sloped: true },
     });
   });
 
@@ -310,7 +310,7 @@ describe('RelationMark and anchorId lowering', () => {
     );
     const [path] = collectPaths(markLayer(root, 1));
     expect(path.roundedCorners).toBe(6);
-    expect(path.children[1]).toMatchObject({ kind: 'fold', label: { text: 'A to B', position: 0.25, side: 'sloped' } });
+    expect(path.children[1]).toMatchObject({ kind: 'fold', label: { text: 'A to B', position: 0.25, sloped: true } });
     expect(path.children[2]).toMatchObject({ kind: 'bend', bendDirection: 'left', bendAngle: 25 });
     expect('label' in path.children[2] ? path.children[2].label : undefined).toBeUndefined();
   });
@@ -447,7 +447,7 @@ describe('RelationMark and anchorId lowering', () => {
       to: { id: 'trend.c' },
       bendDirection: 'left',
       bendAngle: 20,
-      label: { text: '+24', position: 0.5, side: 'sloped' },
+      label: { text: '+24', position: 0.5, sloped: true },
     });
   });
 
@@ -513,7 +513,7 @@ describe('RelationMark and anchorId lowering', () => {
     );
     const [path] = collectPaths(markLayer(root, 0));
     expect(path.children).toHaveLength(3);
-    expect(path.children[1]).toMatchObject({ kind: 'line', label: { text: '+16', position: 0.5, side: 'sloped' } });
+    expect(path.children[1]).toMatchObject({ kind: 'line', label: { text: '+16', position: 0.5, sloped: true } });
     expect(path.children[2]).toMatchObject({ kind: 'line' });
   });
 

@@ -65,7 +65,7 @@ const resolveLabelOpacity = (labelOpacity?: number, hostOpacity?: number): numbe
 
 /**
  * step.label + 段采样 → 单行 primitive（纯文本走 TextPrim、含公式走 GroupPrim；sloped 时再裹一层 group 旋转）
- * @description side 偏移 + align/baseline：above/below 锚点 y±offset 横向居中；left/right x±offset 纵向居中；sloped 不偏移、裹 rotate(切线角)。
+ * @description side 偏移 + align/baseline：above/below 锚点 y±offset 横向居中；left/right x±offset 纵向居中；sloped 仅控制 rotate(切线角)。
  *   `$...$` 行内公式仅在注入 lowerTex（texCtx.gatingOn）时解析。返回 primitive + bbox 外接点
  */
 export const emitLabelPrimitive = (
@@ -89,7 +89,7 @@ export const emitLabelPrimitive = (
         ? 'center'
         : 'above'
       : ((normalizeGeometryLabelSide(label.side) ?? label.side));
-  const sloped = label.sloped === true || side === 'sloped';
+  const sloped = label.sloped === true;
   const sideDistance = label.distance ?? LABEL_SIDE_OFFSET;
   const boundaryOffset = placementCtx?.boundaryOffset ?? 0;
   const sideOffset =
@@ -134,9 +134,9 @@ export const emitLabelPrimitive = (
       originX = ax - laid.width / 2;
       baselineY = ay + (laid.ascent - laid.descent) / 2;
     } else {
-      // above / sloped：横向居中、坐在线上方（above 偏移 offset，sloped 锚点不偏移）
+      // above: horizontal center, placed above the sampled point with side offset.
       originX = ax - laid.width / 2;
-      baselineY = (side === 'sloped' ? ay : ay - sideOffset) - laid.descent;
+      baselineY = ay - sideOffset - laid.descent;
     }
     const children = laid.emit(originX, baselineY, round);
     const group: GroupPrim = { type: 'group', children };
@@ -198,11 +198,8 @@ export const emitLabelPrimitive = (
   } else if (side === 'right') {
     x += sideOffset;
     align = 'start';
-  } else if (side === 'center') {
-    baseline = 'middle';
   } else {
-    // sloped：锚点不偏移；baseline=bottom 视觉上"在线上方"
-    baseline = 'bottom';
+    baseline = 'middle';
   }
 
   const emittedLineHeight = round(lineHeight);

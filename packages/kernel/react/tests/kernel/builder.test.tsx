@@ -690,14 +690,14 @@ after`;
       const fromProp = buildIR(
         <Path>
           <Step kind="move" to="A" />
-          <Step to="B" label={{ text: 'x', position: 'near-end', side: 'bottom' }} />
+          <Step to="B" label={{ text: 'x', position: 'near-end', side: 'bottom', sloped: true }} />
         </Path>,
       );
       const fromChild = buildIR(
         <Path>
           <Step kind="move" to="A" />
           <Step to="B">
-            <EdgeLabel position="near-end" side="bottom">
+            <EdgeLabel position="near-end" side="bottom" sloped>
               x
             </EdgeLabel>
           </Step>

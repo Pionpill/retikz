@@ -29,14 +29,14 @@ const Demo: FC = () => (
     </Node>
     <Draw way={['d', { label: 'fold' }, '-|', 'e']} arrow="->" />
 
-    {/* sloped：side='sloped' 让标签沿段切线方向旋转贴线 */}
+    {/* sloped：让标签沿段切线方向旋转贴线 */}
     <Node id="f" position={[270, 65]}>
       f
     </Node>
     <Node id="g" position={[470, 35]}>
       g
     </Node>
-    <Draw way={['f', { label: { text: 'distance = 12', side: 'sloped' } }, 'g']} arrow="->" />
+    <Draw way={['f', { label: { text: 'distance = 12', sloped: true } }, 'g']} arrow="->" />
   </Layout>
 );
 

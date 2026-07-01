@@ -35,7 +35,7 @@ const Demo: FC = () => (
         label: {
           text: { field: 'deltaLabel' },
           position: 0.5,
-          side: 'sloped',
+          sloped: true,
           textColor: '#ea580c',
           font: { size: 11, weight: 'bold' },
         },

@@ -310,7 +310,7 @@ describe('GroupPrim.transforms：结构化形态约束', () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'line', to: [10, 0], label: { text: 'x', side: 'sloped' } },
+            { type: 'step', kind: 'line', to: [10, 0], label: { text: 'x', sloped: true } },
           ],
         },
       ],
