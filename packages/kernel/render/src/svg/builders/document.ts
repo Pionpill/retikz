@@ -1,4 +1,4 @@
-import type { ArrowEndSpec, IRDropShadow, Scene, ScenePrimitive } from '@retikz/core';
+import type { IRDropShadow, ResolvedArrowEndSpec, Scene, ScenePrimitive } from '@retikz/core';
 
 import type { EasingRegistry } from '../../animation/types';
 import type { SvgNode } from '../types';
@@ -42,12 +42,12 @@ const makeContext = (
   idPrefix: string,
 ): {
   context: BuildContext;
-  arrowMarkerIdFor: (spec: ArrowEndSpec) => string;
+  arrowMarkerIdFor: (spec: ResolvedArrowEndSpec) => string;
   paintIdFor: (id: string) => string;
   clipIdFor: (id: string) => string;
   shadowIdFor: (shadow: IRDropShadow) => string;
 } => {
-  const arrowMarkerIdFor = (spec: ArrowEndSpec): string => `retikz-arrow-${idPrefix}-${hashKey(stableSpecKey(spec))}`;
+  const arrowMarkerIdFor = (spec: ResolvedArrowEndSpec): string => `retikz-arrow-${idPrefix}-${hashKey(stableSpecKey(spec))}`;
   const paintIdFor = (id: string): string => `retikz-paint-${idPrefix}-${id}`;
   const clipIdFor = (id: string): string => `retikz-clip-${idPrefix}-${id}`;
   const shadowIdFor = (shadow: IRDropShadow): string => `retikz-shadow-${idPrefix}-${shadowHash(shadow)}`;
@@ -66,8 +66,8 @@ const makeContext = (
 };
 
 /** 收集 + 按 stableSpecKey dedup arrow 端点 spec（保持首次出现顺序） */
-const dedupArrowSpecs = (prims: ReadonlyArray<ScenePrimitive>): Map<string, ArrowEndSpec> => {
-  const uniqueByKey = new Map<string, ArrowEndSpec>();
+const dedupArrowSpecs = (prims: ReadonlyArray<ScenePrimitive>): Map<string, ResolvedArrowEndSpec> => {
+  const uniqueByKey = new Map<string, ResolvedArrowEndSpec>();
   for (const s of collectArrowSpecs(prims)) {
     const k = stableSpecKey(s);
     if (!uniqueByKey.has(k)) uniqueByKey.set(k, s);
