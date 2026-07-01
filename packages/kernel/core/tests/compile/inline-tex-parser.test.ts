@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseInlineRuns } from '../../src/parsers/inline-tex';
+import { parseInlineRuns } from '../../src/compile/inline-tex';
 
 describe('[inline-tex] parseInlineRuns', () => {
   it('keeps the whole string literal when gating is off (no lowerTex)', () => {

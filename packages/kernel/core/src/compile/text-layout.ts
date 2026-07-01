@@ -1,12 +1,12 @@
-import type { IRInlineRun } from '../parsers/inline-tex';
 import type { GroupPrim, PathCommand, PathPrim, ScenePrimitive, TextPrim } from '../primitive';
 import type { IRFont, IRLineSpec } from '../schemas';
 import type { CompileWarningCodeValue } from './constant';
+import type { IRInlineRun } from './inline-tex';
 import type { LowerTex } from './lower-tex';
 import type { FontSpec, TextMeasurer } from './text-metrics';
 
-import { isMathRun, parseInlineRuns } from '../parsers/inline-tex';
 import { CompileWarningCode } from './constant';
+import { isMathRun, parseInlineRuns } from './inline-tex';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from './text-baseline';
 
 /** 行高近似系数（与 node.ts 的 DEFAULT_LINE_HEIGHT_FACTOR 同口径） */
