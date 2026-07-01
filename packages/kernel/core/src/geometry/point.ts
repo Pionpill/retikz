@@ -1,1 +1,2 @@
-export { DEFAULT_EPSILON, point, type Position, type Vector2, vector2 } from '@retikz/math';
+export type { Position, Vector2 } from '../shared/geometry';
+export { DEFAULT_EPSILON, point, vector2 } from '../shared/geometry';

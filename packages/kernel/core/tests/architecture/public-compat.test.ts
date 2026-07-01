@@ -13,6 +13,7 @@ import type {
   ScenePrimitive as ContractScenePrimitive,
   Transform as ContractTransform,
 } from '../../src/contract/scene';
+import type { Position as LegacyPosition, Rect as LegacyRect } from '../../src/geometry';
 import type {
   CircleClipShape as LegacyCircleClipShape,
   ClipShape as LegacyClipShape,
@@ -27,6 +28,7 @@ import type {
   Transform as LegacyTransform,
 } from '../../src/primitive';
 import type { AssertEqual } from '../../src/shared';
+import type { Position as SharedPosition, Rect as SharedRect } from '../../src/shared';
 
 type ExpectTrue<T extends true> = T;
 
@@ -41,6 +43,8 @@ type PolygonClipShapeCompat = ExpectTrue<AssertEqual<LegacyPolygonClipShape, Con
 type PathClipShapeCompat = ExpectTrue<AssertEqual<LegacyPathClipShape, ContractPathClipShape>>;
 type CompoundClipShapeCompat = ExpectTrue<AssertEqual<LegacyCompoundClipShape, ContractCompoundClipShape>>;
 type TransformCompat = ExpectTrue<AssertEqual<LegacyTransform, ContractTransform>>;
+type PositionCompat = ExpectTrue<AssertEqual<LegacyPosition, SharedPosition>>;
+type RectCompat = ExpectTrue<AssertEqual<LegacyRect, SharedRect>>;
 
 describe('contract/scene compatibility surface', () => {
   it('keeps runtime-free type compatibility between legacy primitive and contract/scene exports', () => {
@@ -55,6 +59,8 @@ describe('contract/scene compatibility surface', () => {
     const pathClipShapeCheck: PathClipShapeCompat = true;
     const compoundClipShapeCheck: CompoundClipShapeCompat = true;
     const transformCheck: TransformCompat = true;
+    const positionCheck: PositionCompat = true;
+    const rectCheck: RectCompat = true;
 
     expect([
       scenePrimitiveCheck,
@@ -68,6 +74,8 @@ describe('contract/scene compatibility surface', () => {
       pathClipShapeCheck,
       compoundClipShapeCheck,
       transformCheck,
-    ]).toEqual([true, true, true, true, true, true, true, true, true, true, true]);
+      positionCheck,
+      rectCheck,
+    ]).toEqual([true, true, true, true, true, true, true, true, true, true, true, true, true]);
   });
 });

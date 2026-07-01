@@ -1,11 +1,9 @@
 import type { z } from 'zod';
 
-import type { Position } from '../../geometry/point';
-import type { Rect } from '../../geometry/rect';
 import type { ResolvedDropShadow } from '../../schemas/effects';
 import type { IRJsonObject } from '../../schemas/json';
 import type { IRGraphicStyle } from '../../schemas/style';
-import type { WebSideValue } from '../../shared';
+import type { Position, Rect, WebSideValue } from '../../shared';
 import type { PaintValue, ScenePrimitive } from '../scene';
 
 /** 从 IR graphic style 复用的已解析 shape 样式字段。 */

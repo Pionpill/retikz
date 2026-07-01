@@ -37,4 +37,14 @@ describe('core layer import boundaries', () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it('contract code does not import from legacy geometry owner paths', () => {
+    const offenders = tsFiles(join(SRC_ROOT, 'contract')).flatMap(file =>
+      importDeclarations(file)
+        .filter(line => /from ['"]\.\.\/\.\.\/geometry/.test(line))
+        .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
+    );
+
+    expect(offenders).toEqual([]);
+  });
 });

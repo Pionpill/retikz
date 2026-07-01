@@ -1,7 +1,7 @@
 import type { z, ZodType } from 'zod';
 
-import type { Position } from '../../geometry/point';
 import type { IRJsonObject, IRPathBase, IRPosition } from '../../schemas';
+import type { Position } from '../../shared';
 import type { PathCommand, ScenePrimitive } from '../scene';
 
 /**
