@@ -1,199 +1,63 @@
 ---
 name: develop-wrapup
-description: alpha 功能开发的收尾阶段——AI 起草 changelog 草稿（zh + en），用独立 Contract Auditor 任务从“对账 ADR 承诺 / changelog / docs / 实际行为四方一致”角度审计，把对账报告与 changelog 草稿一并呈给人工。**人工 ack 后**才可标 ADR Accepted、勾 roadmap、准备 commit；commit / push / publish 均按根 AGENTS.md 当次授权执行。
+description: Use when retikz implementation, adversarial testing, and docs are complete, and an ADR or beta TODO needs changelog, contract consistency review, roadmap status updates, or final human acknowledgement.
 ---
 
-# Stage 5：收尾
+# Stage 5: 收尾
 
-实现 + 测试 + 文档都已稳，接下来把这条 ADR"封口"——写 changelog、跑第二关 adversarial 对账、人工最终审、commit、标 ADR Accepted。
+把已实现、已测试、已文档化的改动封口：changelog、对账、人工确认、ADR / roadmap 状态更新。commit / push / publish 仍按根 AGENTS 的当次授权规则。
 
 ## 输入
 
-- ADR（Proposed）
-- 全套 commit 历史（spec / 实现 / adversarial 修复 / 文档）
-- develop-test 留下的 INFO 列表（实现稳健性素材）
-- develop-document 完成的 mdx / demo
+- alpha：状态为 `Proposed` 的 ADR、实现 / 测试 / 文档 diff、Bug Hunter 结果。
+- beta：已完成的 roadmap TODO、diff、多 LLM 评估结果。
+- 文档页和 demo 路径。
 
-## 流程
+## Changelog
 
-### 5.1 起草 changelog（zh + en）
+用户可见改动起草 `apps/docs/src/data/changelog.ts` 条目，zh / en 同步。changelog 是数据驱动；不要维护旧的 changelog MDX 页面。
 
-主 AI 起草 `apps/docs/src/data/changelog.ts` 的结构化 release / subVersion / change item（zh + en 同字段并行）。changelog 页已改为数据驱动渲染，不再维护 `contents/**/changelog/index.{zh,en}.mdx`。
+写法按 `package-publish` 中当前 changelog 数据结构；若该 skill 与 `changelog.types.ts` 不一致，以源码类型为准。
 
-格式按 [`package-publish`](../package-publish/SKILL.md) §2.2 规范：
+internal-only 改动通常不写 changelog；breaking 必写迁移说明。
 
-```ts
-{
-  minor: 'v0.2',
-  stableDate: null,
-  packages: [
-    {
-      pkg: '@retikz/core',
-      version: 'v0.2',
-      description: { zh: '<中版本摘要>', en: '<minor summary>' },
-      highlights: [],
-      subVersions: [
-        {
-          version: 'alpha.X',
-          date: 'YYYY-MM-DD',
-          summary: { zh: '<一句总结>', en: '<one-sentence summary>' },
-          items: [
-            {
-              label: { zh: '<短标签>', en: '<short label>' },
-              content: { zh: '<用户视角说明>', en: '<user-facing note>' },
-            },
-          ],
-        },
-      ],
-    },
-  ],
-}
-```
+## Contract Auditor
 
-但本阶段**只起草、不 commit**——changelog 的最终版本要等人工 review + adversarial 对账后才定。
+alpha 红黄改动建议做第二关对账。目标不是找代码 bug，而是检查四方一致：
 
-### 5.2 派 Adversarial Contract Auditor 子 Agent
+1. ADR 承诺。
+2. changelog 草稿。
+3. docs mdx + demo。
+4. 实际代码 + 测试。
 
-#### 输入准备
+优先用独立线程、子代理或外部模型；不可用时主 AI 自己执行并说明退化。输入给 ADR、changelog 草稿、commit / diff、相关 docs、schema / public API / tests diff。
 
-- ADR 全文
-- changelog 草稿（zh + en）
-- 本 ADR 涉及的 commit 历史 `git log --oneline <range>`
-- mdx / demo diff
-- schema diff（`git diff <ADR commit 起点>..HEAD -- 'packages/kernel/core/src/ir/**'`）
+结果处理：
 
-#### 调度方式
+| 结果 | 处理 |
+| --- | --- |
+| BLOCKING | 修 ADR / changelog / docs / 实现中真正不一致的一方；修完重跑 Auditor |
+| WARNING | 本轮修或登记 backlog，由人工裁决 |
+| INFO | 可并入 changelog 措辞 |
 
-优先使用当前环境可用的独立执行通道（子代理 / 新线程 / 外部模型窗口）；没有独立通道时由主 AI 自己按下面 prompt 执行，并在报告里说明退化情况。记录实际使用的通道、模型和输入范围，不写死模型名。
+Contract 偏差通常涉及承诺取舍；1 轮后仍不一致时，halt 给人工，不让 AI 自行调和。
 
-#### Contract Auditor 完整 system prompt
+## 人工确认后落盘
 
-```
-你是 retikz alpha 功能开发的 Adversarial Contract Auditor 子 Agent。
+收到人工确认后再改最终状态文件：
 
-任务：对账。给定四个来源的"承诺 / 描述 / 实现 / 行为"——
+- alpha：ADR `Proposed` -> `Accepted`，补完工摘要；对应 roadmap 勾选或标完成；changelog 写入最终稿。
+- beta：roadmap TODO 标完成并记录 commit；breaking / visible 按需写 changelog；不改 ADR 状态。
 
-  1. ADR（设计契约）
-  2. changelog 草稿（用户视角的承诺）
-  3. mdx + demo（文档站描述 + 演示）
-  4. 实际代码 + 测试（实际行为）
+这些文件可按逻辑分块提交。每块提交前展示文件清单和建议 message；没有当前对话授权不提交。
 
-找四方不一致。常见的不一致模式：
+## 不发布
 
-  A. **悄然加码**：实现 / 测试里出现的字段、prop、行为，ADR / changelog 没列
-  B. **悄然减码**：ADR / changelog 承诺的字段或行为，实现 / 测试里没有 / 不完整
-  C. **默认值偏移**：ADR 表写默认 4，实现里是 5（或者 ADR 写"缺省 above"，实现里缺省 below）
-  D. **命名漂移**：ADR 表叫 `nodeDistance`，实现里叫 `node_distance` 或 `defaultDistance`
-  E. **mdx 与代码脱节**：mdx 描述的 API 行为与实际不符（mdx 写"接受 [a,b,c]"，代码只接受 [a,b]）
-  F. **demo 与文档说明矛盾**：demo 用法在 mdx 里没解释 / mdx 说有用法 demo 没演示
-  G. **changelog 与 mdx 范围不符**：changelog 说"新增 X / Y / Z"，mdx 只描述了 X / Y
-  H. **测试覆盖与 ADR 测试象限不符**：象限要求 ≥ 9 case，实际不到 / 类别失衡
-
-强制约束：
-
-- 你不修代码、不修 mdx、不修 changelog。**只报告四方对账结果**。
-- 你不必抓"代码 bug"——那是 develop-test 第一关 Bug Hunter 的事。
-- 你的关注点是**承诺 / 描述 / 实现的一致性**，不是"代码本身好不好"。
-- 你可以查 git log / git diff 看历史。
-
-输出格式（结构化）：
-
-BLOCKING（必须修，否则不进 commit）：
-  - 项: <字段名 / 行为>
-    ADR 说: ...
-    changelog 说: ...
-    mdx 说: ...
-    实际是: ...
-    建议修哪个: <ADR / changelog / mdx / 实现>
-
-WARNING（建议修但不阻塞）：
-  - 同上
-
-INFO（一致 / 文档质量"好消息"）：
-  - <可写进 changelog 的措辞建议或省略>
-
-只报告，不修。
-```
-
-#### Contract Auditor 输出处理
-
-| 列表 | 处理 |
-|---|---|
-| BLOCKING 非空 | 主 AI 决定修哪一方（ADR / changelog / mdx / 实现），然后改完后**重跑 Auditor**确认对齐；最多 3 轮 |
-| WARNING 非空 | 主 AI 决定本 ADR 内修还是 backlog |
-| INFO | 整理后并入 changelog 措辞 |
-
-注意：BLOCKING 偏差通常**不是简单的代码 bug**——可能 ADR 设计错了、可能 changelog 写得太宽、可能 mdx 没跟上。如果 1 轮没对齐，建议直接 halt 给人工——AI 自动调和"承诺差距"通常会偏向某一方。
-
-### 5.3 多模型协同（可选）
-
-用户可手动把同一份 ADR + changelog + commit 历史 + diff 喂给其它独立模型 / 线程跑同样的 Contract Auditor prompt，得到第二份 BLOCKING / WARNING 列表。主 AI 接到两份后**取并集**合并 BLOCKING 列表。
-
-### 5.4 人工 review
-
-主 AI 把以下材料整理给人工：
-
-```
-ADR：packages/kernel/_notes/decisions/<major>/<minor>/<milestone>/<NNNN>-*.md
-本 ADR commit 列表：
-  - <hash> <message>
-  - ...
-
-changelog 草稿（zh）：
-  <粘贴段落>
-
-changelog 草稿（en）：
-  <粘贴段落>
-
-Adversarial 第一关 Bug Hunter 结果：
-  BLOCKING（已全修）: <case 名列表>
-  WARNING: <case 名列表>
-  INFO: <稳健性亮点>
-
-Adversarial 第二关 Contract Auditor 结果：
-  BLOCKING: <项列表>
-  WARNING: <项列表>
-  INFO: <一致性亮点>
-
-请审阅。可以的话回复"确认"或修改建议。
-```
-
-### 5.5 人工 ack 后的落盘与提交建议
-
-收到人工"确认"后，先编辑文件，不自动提交：
-
-1. ADR 状态翻 `Proposed` → `Accepted`，并写完工摘要（如模板要求）。
-2. 对应 milestone / minor roadmap 勾选或标完成。
-3. `apps/docs/src/data/changelog.ts` 写入最终 changelog。
-
-三件事逻辑上独立：ADR 状态、roadmap、changelog 可以分 3 个 commit。每块完成后展示具体 `git status --short` 文件清单和建议 commit message；只有用户当次明确授权，才按根 AGENTS.md `git add <具体文件>` + commit。subject 不写 ADR 编号，追溯信息放 footer。
-
-### 5.6 不走到 publish
-
-publish 是 [`package-publish`](../package-publish/SKILL.md) SKILL 的事，与本 SKILL **互斥**。
-
-发不发版由用户决定：
-- 单条 ADR 完工就发 alpha.N+1 → 走 package-publish
-- 累积多条 ADR 再发 → 暂不发版，主 AI 输出"等下一个 ADR / 等用户发版"提示
-
-## 失败 / 升级
-
-| 情景 | 处理 |
-|---|---|
-| Contract Auditor 报告"实现与 ADR 严重不符" | halt → 主 AI 呈给人工，可能要回 develop-implement 重做或修 ADR |
-| Contract Auditor 1 轮没对齐 | halt → 直接呈给人工，不要 AI 自行调和承诺差距 |
-| 人工 review 否决 changelog | 主 AI 改写后再 review，不重跑 Adversarial（除非人工说要） |
-| 人工 review 暴露代码本身的问题 | halt → 回 stage 2 / 3 修，本 SKILL 暂停 |
-
-## 与上下游衔接
-
-- **上游**：develop-document（文档已落地）
-- **下游**：可能的 [`package-publish`](../package-publish/SKILL.md)（如要发版）；否则结束、等下条 ADR 走 flow-alpha
+本 skill 不执行 npm publish、tag 或 push。需要发版时另走 `package-publish`。
 
 ## 完成标志
 
-- ADR 状态 Accepted、已 commit
-- changelog zh + en 段落已入库
-- roadmap 对应 alpha 段 checkbox 已勾（如适用）
-- Adversarial 第二关报告附在收尾 commit 之一的 message / PR 描述里（供回溯）
-- 人工显式说"完成"或调用 flow-alpha 进下一条 ADR
+- changelog、ADR / roadmap 状态与实际行为一致。
+- Contract Auditor BLOCKING 清空或人工明确裁决。
+- 人工 ack 已记录在对话中。
+- 如获授权，相关提交已按根 AGENTS 粒度完成；否则工作区改动清楚可 review。
