@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import type { CompositeDefinition } from './types';
 
+/** 从 composite schema 中读取并校验 namespace / type literal。 */
 const literalValueOf = (schema: CompositeDefinition['schema'], field: 'namespace' | 'type'): string => {
   if (!(schema instanceof z.ZodObject)) {
     throw new Error('defineComposite: schema must be a ZodObject extending CompositeBaseSchema.');

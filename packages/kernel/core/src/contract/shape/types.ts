@@ -8,6 +8,7 @@ import type { ResolvedDropShadow } from '../../schemas/effects';
 import type { IRJsonObject } from '../../schemas/json';
 import type { IRGraphicStyle } from '../../schemas/style';
 
+/** 从 IR graphic style 复用的已解析 shape 样式字段。 */
 type ResolvedShapeStyleFields = Pick<IRGraphicStyle, 'fillOpacity' | 'strokeWidth' | 'drawOpacity' | 'opacity' | 'blendMode'>;
 
 /**

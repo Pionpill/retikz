@@ -14,6 +14,7 @@ import type { IRJsonObject } from '../../schemas/json';
  */
 export type BoundaryAnchorName = WebAnchorValue | (string & {});
 
+/** boundary definition 的作者侧输入形态。 */
 export type BoundaryDefinitionInput<TParams extends IRJsonObject> = {
   /** 注册表 key，由 IR `boundary` 引用。 */
   name: string;
