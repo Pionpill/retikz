@@ -191,6 +191,7 @@ Tailwind：
 详细规则见 `packages/kernel/core/AGENTS.md`。全仓记住几条硬约束：
 
 - IR 必须 100% JSON 可序列化，禁止函数 / ReactNode / class 实例
+- 涉及新增 / 重命名 / 重构 Zod / IR schema、schema 派生类型、schema 字段顺序、`.superRefine(...)`、schema registry 文档或 schema 行为测试前，必须先读 `.agents/skills/standard-schema/SKILL.md`，按其中准则确定 schema 分层、字段顺序、BaseSchema + refinement、describe / JSDoc 和同步范围。
 - zod schema 是单一真源，TS 类型用 `z.infer`
 - 由 IR schema object 推导出的公开数据类型命名为 `IRXxx`（例如 `IRFont`、`IRPaintSpec`、`IRDropShadow`）；由 const object enum + `ValueOf` 推导出的取值 union 命名为 `XxxValue`（例如 `BlendModeValue`、`ShadowPresetValue`），不加 `IR`；Definition / registry contract 类型按 `XxxDefinition`，也不加 `IR`
 - schema 字段 `.describe(...)` 用英文，描述含义和用途

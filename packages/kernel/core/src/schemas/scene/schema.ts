@@ -36,8 +36,8 @@ export const ViewBoxSchema = z
 
 export const SceneSchema = z
   .object({
-    version: z.literal(1).describe('IR major version number; bump only on breaking schema changes'),
     type: z.literal('scene').describe('Discriminator marking this object as the root scene'),
+    version: z.literal(1).describe('IR major version number; bump only on breaking schema changes'),
     children: z
       .array(ChildSchema)
       .describe('Top-level children of the scene; nodes register ids that paths can reference'),

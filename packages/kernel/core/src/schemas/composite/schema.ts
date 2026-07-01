@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { JsonValueSchema } from '../json';
+
 const compositeBaseShape = {
   namespace: z.string().min(1).describe('Tier 2 domain namespace that selects the registered definition.'),
   type: z.string().min(1).describe('Composite type name within the namespace.'),
@@ -7,4 +9,4 @@ const compositeBaseShape = {
 
 export const CompositeBaseSchema = z.object(compositeBaseShape);
 
-export const CompositeNodeSchema = z.looseObject(compositeBaseShape);
+export const CompositeNodeSchema = z.object(compositeBaseShape).catchall(JsonValueSchema);
