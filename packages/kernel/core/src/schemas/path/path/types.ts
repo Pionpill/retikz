@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import type { ValueOf } from '../../../types';
+import type { ValueOf } from '../../../shared';
 import type { StepSchema } from '../step';
 import type { PathFillRule, PathLineCap, PathLineJoin, PathThickness } from './constants';
 import type { ArrowMarkSchema, PathBaseSchema, PathScaleSchema } from './schema';

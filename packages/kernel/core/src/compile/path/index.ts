@@ -13,7 +13,7 @@ import type {
   Transform,
 } from '../../primitive';
 import type { IRPath, IRPathBase, IRPathScale, IRPosition, IRStep, IRTarget } from '../../schemas';
-import type { AssertEqual } from '../../types';
+import type { AssertEqual } from '../../shared';
 import type { CompileWarning } from '../constant';
 import type { LowerTex } from '../lower-tex';
 import type { NameStack } from '../name-stack';

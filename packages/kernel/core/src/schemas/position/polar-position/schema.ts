@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import type { PolarPosition } from '../../../geometry/polar';
+import type { PolarPosition } from '../../../shared';
 
 import { AngleDegreesSchema } from '../../scalar';
 import { PositionSchema } from '../position';

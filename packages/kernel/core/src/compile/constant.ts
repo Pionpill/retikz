@@ -1,4 +1,4 @@
-import type { ValueOf } from '../types';
+import type { ValueOf } from '../shared';
 
 /** 编译期 warning code（机器可读）。 */
 export const CompileWarningCode = {

@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import type { ValueOf } from '../../types';
+import type { ValueOf } from '../../shared';
 import type { IRComposite } from '../composite';
 import type { IRCoordinate } from '../coordinate';
 import type { ScopeBoundingShape } from './constants';

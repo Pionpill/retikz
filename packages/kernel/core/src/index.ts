@@ -480,4 +480,4 @@ export type { CompositeDefinition } from './contract/composite';
 export { defineComposite } from './contract/composite';
 
 // Type utilities
-export type { AssertEqual, ValueOf } from './types';
+export type { AssertEqual, ValueOf } from './shared';

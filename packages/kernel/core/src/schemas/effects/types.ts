@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import type { ValueOf } from '../../types';
+import type { ValueOf } from '../../shared';
 import type { BlendMode, ShadowPreset } from './constants';
 import type { DropShadowSchema } from './schema';
 

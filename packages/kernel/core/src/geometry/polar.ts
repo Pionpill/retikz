@@ -1,4 +1,4 @@
-import type { Position } from './point';
+import type { PolarPosition, Position } from '../shared';
 
 /*
  * 极坐标不直接参与几何计算——所有计算（intersection/bbox/boundaryPoint/Path 端点）都在笛卡尔下进行，
@@ -7,21 +7,7 @@ import type { Position } from './point';
  * Scene 编译 (compile.ts resolvePosition) 统一折成笛卡尔，本文件只提供 polar ↔ cartesian 转换。
  */
 
-/**
- * 极坐标点：相对 origin 的角度 + 半径偏移
- * @description IR 保留 polar 形态，Scene 编译时统一解析为笛卡尔；origin 可嵌套/节点 id/坐标，省略表示 [0,0]
- */
-export type PolarPosition = {
-  /**
-   * 极坐标原点：节点 id / 笛卡尔 / 嵌套极坐标；省略表示 [0,0]
-   * @default [0, 0]
-   */
-  origin?: string | Position | PolarPosition;
-  /** 角度（度数）：从 +x 轴量起，90° 朝 +y（屏幕下方），与 ArcStep / Node label 角度约定一致 */
-  angle: number;
-  /** 半径（非负） */
-  radius: number;
-};
+export type { PolarPosition } from '../shared';
 
 const DEG_TO_RAD = Math.PI / 180;
 const RAD_TO_DEG = 180 / Math.PI;
