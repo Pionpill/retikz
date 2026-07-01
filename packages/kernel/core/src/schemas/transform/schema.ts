@@ -42,9 +42,7 @@ const AtTranslateSchema = z
     of: z
       .string()
       .min(1)
-      .describe(
-        'Referent node id; must be defined earlier in the IR (forward references rejected, mirroring AtPosition.of).',
-      ),
+      .describe('Referenced node id; must already be defined.'),
     distance: z
       .number()
       .positive()

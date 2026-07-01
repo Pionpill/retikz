@@ -18,7 +18,7 @@ export const CoordinateSchema = z
     position: z
       .union([PositionSchema, PolarPositionSchema, AtPositionSchema, OffsetPositionSchema, BetweenPositionSchema])
       .describe(
-        'Coordinate position; Cartesian [x, y], polar, relative-to-another-node (`at`-style), offset from a base point (`{ of, offset }` form), or between two endpoints (`{ between: [A, B], fraction }`). Resolved at compile time.',
+        'Coordinate position. Supports Cartesian, polar, at-position, offset, and between-position forms.',
       ),
   })
   .strict()

@@ -13,9 +13,7 @@ export const AtPositionSchema = z
     of: z
       .string()
       .min(1)
-      .describe(
-        'Id of the referenced node or coordinate; must be defined earlier in the IR (forward references rejected, mirroring polar `origin` and string targets).',
-      ),
+      .describe('Referenced node or coordinate id; must already be defined.'),
     distance: z
       .number()
       .positive()

@@ -39,9 +39,7 @@ export const PathScaleSchema = z
 export const ArrowMarkSchema = ArrowEndDetailSchema.extend({
   kind: z
     .literal('arrow')
-    .describe(
-      'Discriminator marking this mark as an arrow tip. Only `arrow` is supported in the first batch; other kinds are rejected by schema.',
-    ),
+    .describe('Discriminator marking this mark as an arrow tip.'),
 }).describe(
   'Arrow mark placed along the path. Direction follows the path tangent; `shape` is an arrow provider name, not a direction token.',
 );
@@ -111,7 +109,7 @@ export const PathBaseSchema = z
       .array(PathMarkPlacementSchema)
       .optional()
       .describe(
-        'Marks placed along the path at normalized positions; each is rendered at its position with its direction taken from the path tangent there. First batch supports arrow marks only.',
+        'Marks placed along the path at normalized positions; direction follows the path tangent.',
       ),
     children: z
       .array(StepSchema)

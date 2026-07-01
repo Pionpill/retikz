@@ -137,9 +137,7 @@ export const ScopeSchema = z
           return childSchemaRef;
         }),
       )
-      .describe(
-        'Scope children: nested nodes / paths / coordinates / scopes. Recursive via the parent ChildSchema (registered late to break the IRChild <-> IRScope cycle).',
-      ),
+      .describe('Scope children: nested nodes, paths, coordinates, scopes, or composites.'),
   })
   .strict()
   .describe(

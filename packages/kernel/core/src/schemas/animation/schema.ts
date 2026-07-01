@@ -53,7 +53,7 @@ export const AnimationTrackSchema = z
       .string()
       .min(1)
       .describe(
-        'Animated property name. Built-ins are opacity, fill, stroke, strokeWidth, translateX, translateY, rotate, scale, scaleX, scaleY, pathDraw, and viewBox. Other names are custom properties. viewBox is scene-root only.',
+        'Animated property name. Built-ins have refined value types; custom names accept JSON values. viewBox is scene-root only.',
       ),
     keyframes: z
       .array(KeyframeSchema)

@@ -71,5 +71,5 @@ export const TargetSchema = z
     z.lazy(() => BetweenPositionSchema),
   ])
   .describe(
-    'Path endpoint: Cartesian [x, y], polar position, node target, relative offset, accumulated relative offset, offset position, or between position. Non-Cartesian forms resolve at compile time.',
+    'Path endpoint target. Supports Cartesian, polar, node, relative, accumulated-relative, offset, and between-position forms.',
   );

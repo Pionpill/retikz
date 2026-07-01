@@ -42,7 +42,7 @@ export const GeometryLabelSchema = z
       .enum(GeometryLabelPlacement)
       .optional()
       .describe(
-        'Placement mode for path-like labels. `outside` keeps the default Path label behavior; `inside` lets area-like hosts such as Ribbon place labels in the band when no side is specified.',
+        'Geometry label placement mode. outside uses side offset; inside lets area hosts place labels within their band.',
       ),
     distance: z
       .number()
@@ -245,9 +245,7 @@ const ArcStepBaseSchema = z
       .describe(
         'Elliptical arc y-axis radius; requires radiusX and radiusY together (mutually exclusive with radius).',
       ),
-    center: TargetSchema.optional().describe(
-      'Explicit arc center. Defaults to the cursor (previous step anchor) for backward compatibility; set it to anchor the arc independently of the cursor (used by <Sector> to draw a correct wedge).',
-    ),
+    center: TargetSchema.optional().describe('Explicit arc center. Omitted fields use the current cursor as center.'),
     label: StepLabelSchema.optional().describe('Edge label attached to this arc'),
   })
   .describe(
@@ -364,7 +362,7 @@ export const SmoothStepSchema = z
       .array(TargetSchema)
       .min(1)
       .describe(
-        'Through-points after the cursor, in order; the curve passes through each. The current cursor is the implicit first knot, so a single point yields one segment. The cursor ends at the last point.',
+        'Through-points after the cursor, in order. The cursor is the implicit first knot and ends at the last point.',
       ),
     tension: z
       .number()
@@ -383,7 +381,7 @@ export const GeneratorStepSchema = z
     kind: z
       .literal('generator')
       .describe(
-        'Delegate this segment to a registered path generator looked up by `name` in CompileOptions.pathGenerators; the generator turns `from` / `to` / `params` into low-level path commands at compile time',
+        'Registered path generator segment. `name` selects CompileOptions.pathGenerators; `params` is JSON input.',
       ),
     name: z
       .string()
