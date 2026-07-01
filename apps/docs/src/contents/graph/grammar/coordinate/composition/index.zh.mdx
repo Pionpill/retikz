@@ -53,6 +53,22 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 
 这个 demo 里只有一个 `<Facet column="segment">`。`Axis`、`PathMark` 和 `PointMark` 都写在 `<Facet>` 内部，所以它们会自动进入每个 segment 面板，不需要再写 `facetId`。
 
+### 共享尺度
+
+分面默认会把同一个坐标 role 的 domain 跨面板同步。下面两个面板分别覆盖 `0-100` 和 `0-50`，但右侧面板仍然使用整体的 `0-100` y domain，因此高度可以和左侧直接比较。
+
+<ComponentPreview name="coordinate-composition-facet-shared-scale" sourceFiles={['coordinate-composition-facet-shared-scale.data.ts']} size="md" />
+
+这个例子没有写 `scales`，因为共享 domain 是默认逻辑。想让右侧 `0-50` 面板铺满自己的高度时，才需要把 y 设置为 `independent`。
+
+### 多层分面
+
+`row` 和 `column` 可以接收字段数组，用多个字段共同决定同一个方向上的面板层级。下面的例子列方向先按 `region` 分组、再按 `channel` 拆分；行方向先按 `business` 分组、再按 `metric` 拆分。
+
+<ComponentPreview name="coordinate-composition-facet-multilevel" sourceFiles={['coordinate-composition-facet-multilevel.data.ts']} size="lg" />
+
+数组顺序就是分面层级顺序。打开 `guidePolicy.facetLabels` 后，内层 label 会贴近面板，外层 label 会按连续相同的上层值自动合并。
+
 ### 行列网格
 
 同时传 `row` 和 `column` 时，facet 会生成二维网格。下面的图按 `region` 拆列、按 `channel` 拆行；`Axis grid` 仍然由轴自己声明，facet 默认会把这根轴的 grid 画到每个面板里。
@@ -76,15 +92,17 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
 | `id` | `string` | 必填 | facet 身份，供 `facetId` 引用 |
-| `row` | `string`<br />`{ field: string; order?: FacetValue[] }` | 省略 | 拆行字段 |
-| `column` | `string`<br />`{ field: string; order?: FacetValue[] }` | 省略 | 拆列字段 |
+| `row` | `string`<br />`FacetDimension`<br />`FacetDimension[]` | 省略 | 拆行字段；数组表示多层行分面 |
+| `column` | `string`<br />`FacetDimension`<br />`FacetDimension[]` | 省略 | 拆列字段；数组表示多层列分面 |
+| `FacetDimension` | `{ field: string; order?: FacetValue[] }` | - | 一层分面字段及其可选排序 |
 | `row.order`<br />`column.order` | `FacetValue[]` | 数据首次出现顺序 | 面板顺序；未列出的值按首次出现追加 |
 | `facetId` | `string` | 省略 | 显式让容器外的 mark / axis 进入 facet 面板 |
 | `empty` | `'drop' \| 'show'` | `'drop'` | 空面板是丢弃还是保留 |
-| `scales.roles` | `Record<string, 'shared' \| 'independent'>` | 未写 role 为 `'shared'` | 指定每个坐标 role 的 domain 是否跨面板共享 |
+| `scales.roles` | `Record<string, 'shared' \| 'independent'>` | 未写 role 为 `'shared'` | `shared` 跨面板使用同一个 domain；`independent` 每个面板各自计算 |
 | `layout.panelGap` | `number` | `0` | 面板间距，单位是用户坐标单位 |
 | `guidePolicy.axes` | `'perScope' \| 'outerShared'` | `'outerShared'` | 轴逐面板绘制，或收敛到外侧 |
 | `guidePolicy.gridPlacement` | `'self' \| 'sharedRole'` | `'self'` | `Axis grid` 默认投放目标；facet 中会投到每个面板 |
+| `guidePolicy.facetLabels` | `'none' \| 'rowColumn'` | `'none'` | 是否输出 row / column 分面 label；多层分面会按层级自动分组 |
 
 ## 共享轨道
 

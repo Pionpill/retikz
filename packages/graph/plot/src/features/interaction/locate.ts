@@ -48,9 +48,11 @@ export type ResolvedAnchor = {
  */
 export type PlotFacetLocatorOptions = {
   id: string;
-  row?: string | number | boolean | null;
-  column?: string | number | boolean | null;
+  row?: string | number | boolean | null | Array<string | number | boolean | null>;
+  column?: string | number | boolean | null | Array<string | number | boolean | null>;
 };
+
+type PlotFacetLocatorValue = Exclude<PlotFacetLocatorOptions['row'], undefined>;
 
 export type PlotLocatorOptions = {
   markIndex?: number;
@@ -147,8 +149,16 @@ const facetMatches = (meta: IRJsonObject, facet: PlotFacetLocatorOptions | undef
   if (found === null || typeof found !== 'object' || Array.isArray(found)) return false;
   const facetMeta = found;
   if (facetMeta.id !== facet.id) return false;
-  if ('row' in facet && facetMeta.row !== facet.row) return false;
-  if ('column' in facet && facetMeta.column !== facet.column) return false;
+  const valueMatches = (foundValue: unknown, expected: PlotFacetLocatorValue): boolean => {
+    const foundValues = Array.isArray(foundValue) ? foundValue : [foundValue];
+    const expectedValues = Array.isArray(expected) ? expected : [expected];
+    if (Array.isArray(expected)) {
+      return JSON.stringify(foundValues) === JSON.stringify(expectedValues);
+    }
+    return foundValues.some(value => JSON.stringify(value) === JSON.stringify(expected));
+  };
+  if (facet.row !== undefined && !valueMatches(facetMeta.row, facet.row)) return false;
+  if (facet.column !== undefined && !valueMatches(facetMeta.column, facet.column)) return false;
   return true;
 };
 

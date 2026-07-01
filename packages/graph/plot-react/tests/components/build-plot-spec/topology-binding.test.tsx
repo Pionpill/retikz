@@ -199,6 +199,41 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
+  it('facet_container_accepts_multi_level_row_dimensions', () => {
+    const spec = buildPlotSpec(
+      <Facet
+        id="sales"
+        row={[
+          { field: 'region', order: ['north', 'south'] },
+          { field: 'channel', order: ['online', 'store'] },
+        ]}
+        column="quarter"
+      >
+        <Axis dimension="x" title="month" />
+        <Axis dimension="y" grid title="revenue" />
+        <PathMark x="month" y="revenue" order="month" />
+      </Facet>,
+      'sales',
+    );
+
+    expect(spec.composition).toMatchObject({
+      defaultScope: 'salesPanel',
+      scopes: [{ id: 'salesPanel', coordinate: { type: 'cartesian2D', x: '__x', y: '__y' } }],
+      facets: [
+        {
+          id: 'sales',
+          row: [
+            { field: 'region', order: ['north', 'south'] },
+            { field: 'channel', order: ['online', 'store'] },
+          ],
+          column: { field: 'quarter' },
+        },
+      ],
+    });
+    expect(spec.marks).toMatchObject([{ type: 'path', coordinateScope: 'salesPanel' }]);
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
   it('rejects missing topology binding targets and conflicting binding props', () => {
     expect(() =>
       buildPlotSpec(
