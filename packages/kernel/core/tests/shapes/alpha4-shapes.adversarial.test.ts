@@ -8,8 +8,8 @@ import type { ScenePrimitive } from '../../src/primitive';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { normalizeAngularRange } from '../../src/contract/shape/shared';
 import { arc, polygon, sector, star } from '../../src/providers/shape';
+import { normalizeAngularRange } from '../../src/providers/shape/angle';
 import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 

@@ -1,16 +1,16 @@
 import { z } from 'zod';
 
-import type { SectorGeometry } from '../../contract/shape/shared';
 import type { ContourSegment, FilletSolution } from '../../geometry/contour';
 import type { Position } from '../../geometry/point';
 import type { Rect } from '../../geometry/rect';
 import type { ScenePrimitive } from '../../primitive';
+import type { SectorGeometry } from './sector-geometry';
 
 import { defineShape } from '../../contract/shape/define';
-import { sectorGeometry, sectorPolarPoint } from '../../contract/shape/shared';
 import { boundaryFromContour, contourCommands, filletContour } from '../../geometry/contour';
 import { localToWorld } from '../../geometry/transform';
 import { contourToPathCommands, contourToPathPrimitive } from './outline';
+import { sectorGeometry, sectorPolarPoint } from './sector-geometry';
 
 /**
  * sector shape 的 per-instance params 类型
