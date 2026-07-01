@@ -5,7 +5,7 @@ description: Use when changing retikz package file layout, dependency direction,
 
 # Standard Structure
 
-retikz 模块按“shared → schemas → contract → providers → pipeline/compile”分层。本 skill 只做总纲和路由；不要一次加载所有子 skill。
+retikz 模块按“shared → schemas → contract → providers → pipeline/compile”分层；core 另有 `parsers/` 作为 Sugar / DSL 到 IR 的必要入口。本 skill 只做总纲和路由；不要一次加载所有子 skill。
 
 ## 按需加载
 
@@ -16,6 +16,7 @@ retikz 模块按“shared → schemas → contract → providers → pipeline/co
 | `contract/`、`XxxDefinition`、`defineXxx()`、作者侧 API、context | `standard-contract` |
 | `providers/`、内置 definition、registry resolver、`BUILTIN_*`、保留名诊断 | `standard-providers` |
 | `pipeline/` / `compile/`、lowering、registry 消费、options、`ResolvedXxx` | `standard-pipeline-compile` |
+| `parsers/`、字符串 / DSL / Sugar shorthand 解析为 IR 节点或片段 | 本 skill；若改变 IR 形态再读 `standard-schema` |
 
 define-registry 能力通常跨多层：先读本总纲判断 scope，再只加载本次会改到的层级 skill。
 
@@ -25,9 +26,10 @@ define-registry 能力通常跨多层：先读本总纲判断 scope，再只加�
 
 ```text
 shared <- schemas <- contract <- providers <- pipeline/compile
+shared/schemas <- parsers
 ```
 
-右侧消费左侧；左侧不反向读取右侧。跨层复用的纯函数优先下沉到 `shared`，IR 契约回 `schemas`，作者协议回 `contract`，内置实现回 `providers`，编排消费留在 `pipeline/compile`。
+右侧消费左侧；左侧不反向读取右侧。`parsers/` 是入 IR 前的纯函数旁路，只依赖 `shared` / `schemas`，输出 IR 节点或片段，供 adapter / Sugar 复用；不得依赖 `compile`、`providers` 或运行时 registry。跨层复用的纯函数优先下沉到 `shared`，IR 契约回 `schemas`，作者协议回 `contract`，内置实现回 `providers`，编排消费留在 `pipeline/compile`，字符串 / DSL shorthand 归 `parsers`。
 
 ## 共性文件
 

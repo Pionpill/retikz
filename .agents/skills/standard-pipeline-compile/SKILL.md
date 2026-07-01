@@ -12,7 +12,7 @@ description: Use when changing retikz pipeline or compile code, lowering, regist
 - `pipeline/`：Tier 2 到 Kernel IR 的 lowering 编排，例如 plot 的 data / scale / coordinate / transform / mark / guide 阶段。
 - `compile/`：Kernel IR 到 Scene primitive 的确定性编译，例如 core 的 registry options、坐标、路径、节点、样式继承、命名空间和 warning。
 
-具体规则回到拥有概念的层：schema 形态回 `schemas`，能力协议回 `contract`，内置实现回 `providers`，通用纯函数回 `shared`。
+具体规则回到拥有概念的层：schema 形态回 `schemas`，能力协议回 `contract`，内置实现回 `providers`，通用纯函数回 `shared`，字符串 / DSL / Sugar shorthand 到 IR 的 eager 解析回 `parsers`。
 
 ## 确定性
 
@@ -43,6 +43,7 @@ description: Use when changing retikz pipeline or compile code, lowering, regist
 - 内置项如何工作 → `providers`。
 - 用户如何定义能力 → `contract`。
 - IR 字段是否合法 → `schemas`；只有跨字段运行时上下文规则留在 pipeline / compile。
+- 字符串 / DSL / Sugar shorthand 解析成 IR 节点或片段 → `parsers`；compile 只保留 Scene 编译期间必须消费的内部解析。
 
 ## 改代码前检查
 
