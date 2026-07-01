@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { MarkerFill, MarkerPrimitive, PathPrim, ResolvedArrowEndSpec, ScenePrimitive } from '../../src/primitive';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -14,11 +14,11 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
 };
 
 /**
- * 从已解析 `ArrowEndSpec` 的 marker 几何抽主导颜色
+ * 从已解析 `ResolvedArrowEndSpec` 的 marker 几何抽主导颜色
  * @description 新契约：视觉输入 color / fill 在 compile 被消费、物化进 marker 几何（实心 fill / 空心 stroke）；
  *   contextStroke / 无 paint → undefined（继承）。
  */
-const markerPaint = (spec: ArrowEndSpec | undefined): string | undefined => {
+const markerPaint = (spec: ResolvedArrowEndSpec | undefined): string | undefined => {
   if (!spec) return undefined;
   const pickFill = (f: MarkerFill | undefined): string | undefined => (typeof f === 'string' ? f : undefined);
   const walk = (prims: ReadonlyArray<MarkerPrimitive>): string | undefined => {

@@ -3,12 +3,12 @@ import { describe, expect, it } from 'vitest';
 import type { CompileOptions } from '../../src/compile/compile';
 import type { ArrowDefinition } from '../../src/contract/arrow';
 import type {
-  ArrowEndSpec,
   MarkerEllipsePrim,
   MarkerFill,
   MarkerPathPrim,
   MarkerPrimitive,
   PathPrim,
+  ResolvedArrowEndSpec,
   ScenePrimitive,
 } from '../../src/primitive';
 import type { IR } from '../../src/schemas';
@@ -26,7 +26,7 @@ import { flattenPrims } from '../helpers/flatten';
  *   - marker 几何（`arrowEnd.marker: MarkerPrimitive[]`，def.emit 产物）内置 8 零回归 golden
  *   - wrapper 参数（baseSize / refX / markerWidth / markerHeight）
  *   - 端点 shrink 坐标（shrink 在 compile，与 emit 落点无关）
- *   - renderer-agnostic（Scene 无 SVG `<marker>` 元素；ArrowEndSpec.marker 纯 JSON 数据）
+ *   - renderer-agnostic（Scene 无 SVG `<marker>` 元素；ResolvedArrowEndSpec.marker 纯 JSON 数据）
  *   - 错误 / 交互 / override（含 override_builtin_geometry_takes_effect 逼出"内置名真走注册表"）
  *   ArrowDefinition 含函数、不进 IR：round-trip 只针对 IR（arrowDetail.shape 字符串）。
  */
@@ -58,12 +58,12 @@ const endpointTo = (path: PathPrim): [number, number] | undefined => {
   return undefined;
 };
 
-/** 末端已解析 ArrowEndSpec（end 箭头）；compile 单端水平 path 工厂用 */
+/** 末端已解析 ResolvedArrowEndSpec（end 箭头）；compile 单端水平 path 工厂用 */
 const endSpecOf = (
   arrow: '->' | '<-' | '<->',
   detail: Record<string, unknown> = {},
   opts?: CompileOptions,
-): ArrowEndSpec | undefined => {
+): ResolvedArrowEndSpec | undefined => {
   const path = firstPath(compileToScene(horizontalPathIR(arrow, detail), opts).primitives);
   return path?.arrowEnd;
 };
@@ -88,7 +88,7 @@ const firstMarkerEllipse = (marker: ReadonlyArray<MarkerPrimitive>): MarkerEllip
   marker.find((m): m is MarkerEllipsePrim => m.type === 'ellipse');
 
 /** marker 主导颜色（实心 fill / 空心 stroke；contextStroke / 无 → undefined） */
-const markerPaint = (spec: ArrowEndSpec | undefined): string | undefined => {
+const markerPaint = (spec: ResolvedArrowEndSpec | undefined): string | undefined => {
   if (!spec) return undefined;
   const pickFill = (f: MarkerFill | undefined): string | undefined => (typeof f === 'string' ? f : undefined);
   const walk = (prims: ReadonlyArray<MarkerPrimitive>): string | undefined => {
@@ -141,7 +141,7 @@ describe('Arrow registry — happy path', () => {
     expect(openStealth && endpointTo(openStealth)).toEqual([95.95, 0]);
   });
 
-  it('builtin_marker_geometry_golden：内置 8 marker 几何零回归（compile 输出 ArrowEndSpec.marker）', () => {
+  it('builtin_marker_geometry_golden：内置 8 marker 几何零回归（compile 输出 ResolvedArrowEndSpec.marker）', () => {
     // 实心三角 normal：一个 path，commands 等价 d "M0,0 L10,5 L0,10 Z"
     const normal = endSpecOf('->', { shape: 'normal' });
     const normalPath = firstMarkerPath(normal?.marker ?? []);
@@ -220,7 +220,7 @@ describe('Arrow registry — happy path', () => {
     expect(firstPath(scene.primitives)).toBeDefined();
   });
 
-  it('marker_renderer_agnostic：core 输出 ArrowEndSpec、无 SVG <marker> 元素', () => {
+  it('marker_renderer_agnostic：core 输出 ResolvedArrowEndSpec、无 SVG <marker> 元素', () => {
     const scene = compileToScene(horizontalPathIR('->', { shape: 'stealth' }));
     const path = firstPath(scene.primitives);
     expect(path?.arrowEnd).toBeDefined();
@@ -228,7 +228,7 @@ describe('Arrow registry — happy path', () => {
     // Scene primitive 树里不存在任何 'marker' type 元素（marker 是几何数据，不是 SVG marker 标签）
     const allTypes = flattenPrims(scene.primitives).map(p => p.type);
     expect(allTypes).not.toContain('marker');
-    // ArrowEndSpec.marker 是纯 JSON 数据（无函数）：序列化往返不丢
+    // ResolvedArrowEndSpec.marker 是纯 JSON 数据（无函数）：序列化往返不丢
     const json = JSON.parse(JSON.stringify(path?.arrowEnd));
     expect(json.marker).toEqual(path?.arrowEnd?.marker);
     const hasFn = (path?.arrowEnd?.marker ?? []).some(m => typeof (m as unknown) === 'function');

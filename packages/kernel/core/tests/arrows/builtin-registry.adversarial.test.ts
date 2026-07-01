@@ -401,7 +401,7 @@ describe('ADV — Scene round-trip / contextStroke', () => {
     expect(mp.stroke).toBe('green');
   });
 
-  it('opacity_zero：arrowDetail.opacity=0 合法 → ArrowEndSpec.opacity=0 不被吞', () => {
+  it('opacity_zero：arrowDetail.opacity=0 合法 → ResolvedArrowEndSpec.opacity=0 不被吞', () => {
     const spec = firstPath(
       compileToScene(horizontalPathIR('->', { shape: 'stealth', opacity: 0 })).primitives,
     )?.arrowEnd;

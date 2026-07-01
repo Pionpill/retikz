@@ -1,4 +1,4 @@
-import type { ShapeStyle } from '../../contract/shape';
+import type { ResolvedShapeStyle } from '../../contract/shape';
 import type { ContourCommand, LineSegment } from '../../geometry/contour';
 import type { Position } from '../../geometry/point';
 import type { PathCommand, PathPrim } from '../../primitive';
@@ -62,7 +62,7 @@ export const contourToPathCommands = (
 };
 
 /** contour shape 共用的 path primitive 样式落地。 */
-export const contourToPathPrimitive = (commands: Array<PathCommand>, style: ShapeStyle): PathPrim => ({
+export const contourToPathPrimitive = (commands: Array<PathCommand>, style: ResolvedShapeStyle): PathPrim => ({
   type: 'path',
   commands,
   fill: style.fill ?? 'transparent',

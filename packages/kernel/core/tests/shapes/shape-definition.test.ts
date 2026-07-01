@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { ShapeDefinition, ShapeStyle } from '../../src/contract/shape';
+import type { ResolvedShapeStyle, ShapeDefinition } from '../../src/contract/shape';
 import type { Rect } from '../../src/geometry/rect';
 import type { PathCommand, ScenePrimitive } from '../../src/primitive';
 
@@ -70,7 +70,7 @@ describe('boundaryPoint honours rect.rotate (rotate-bearing rect)', () => {
 
 describe('emit runs in axis-aligned space and returns Iterable<ScenePrimitive>', () => {
   const rect: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
-  const style: ShapeStyle = { fill: 'red', stroke: 'blue', strokeWidth: 2 };
+  const style: ResolvedShapeStyle = { fill: 'red', stroke: 'blue', strokeWidth: 2 };
   it('rectangle → single RectPrim', () => {
     const prims = [...BUILTIN_SHAPES.rectangle.emit(rect, style, id, NO_PARAMS)];
     expect(prims).toHaveLength(1);

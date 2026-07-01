@@ -124,6 +124,7 @@ export type {
   PathThicknessValue,
   PatternShapeName,
   PatternShapeValue,
+  ResolvedDropShadow,
   RibbonArcCapSweepValue,
   RibbonCapValue,
   ShadowPresetValue,
@@ -282,7 +283,6 @@ export {
 // Primitive (Scene 数据模型)
 export type {
   ArcPathCommand,
-  ArrowEndSpec,
   /** 裁剪资源（renderer-agnostic，adapter 物化 `<clipPath>`） */
   ClipResource,
   ClipShape,
@@ -309,6 +309,7 @@ export type {
   PathPrim,
   QuadPathCommand,
   RectPrim,
+  ResolvedArrowEndSpec,
   /** 已解析 pattern tile（emit-in-compile 产物，进 Scene 资源，纯数据无函数） */
   ResolvedPatternTile,
   RotateTransform,
@@ -417,7 +418,7 @@ export type { BoundaryAnchorName, BoundaryDefinition, BoundaryDefinitionInput } 
 export { defineBoundary } from './contract/boundary';
 export type { ClipDefinition, ClipDefinitionInput, ClipResolveContext } from './contract/clip';
 export { defineClip } from './contract/clip';
-export type { ShapeDefinition, ShapeDefinitionInput, ShapeStyle } from './contract/shape';
+export type { ResolvedShapeStyle, ShapeDefinition, ShapeDefinitionInput } from './contract/shape';
 export { defineShape } from './contract/shape';
 export { BUILTIN_BOUNDARIES } from './providers/boundary';
 export { BUILTIN_CLIPS } from './providers/clip';

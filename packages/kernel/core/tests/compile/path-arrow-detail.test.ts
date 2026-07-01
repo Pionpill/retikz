@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { MarkerFill, MarkerPrimitive, PathPrim, ResolvedArrowEndSpec, ScenePrimitive } from '../../src/primitive';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -13,11 +13,11 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
 };
 
 /**
- * 从已解析 `ArrowEndSpec` 的 marker 几何抽主导颜色
+ * 从已解析 `ResolvedArrowEndSpec` 的 marker 几何抽主导颜色
  * @description 新契约：视觉输入 color / fill 在 compile 被消费，物化进 marker 几何（实心 fill / 空心 stroke）；
  *   contextStroke / 无 paint → undefined（继承，不冻结）。
  */
-const markerPaint = (spec: ArrowEndSpec | undefined): string | undefined => {
+const markerPaint = (spec: ResolvedArrowEndSpec | undefined): string | undefined => {
   if (!spec) return undefined;
   const pickFill = (f: MarkerFill | undefined): string | undefined => (typeof f === 'string' ? f : undefined);
   const walk = (prims: ReadonlyArray<MarkerPrimitive>): string | undefined => {
@@ -38,7 +38,7 @@ const markerPaint = (spec: ArrowEndSpec | undefined): string | undefined => {
 /**
  * compile path.arrowDetail → PathPrim.arrowStart / arrowEnd（已解析 marker 描述）
  * @description emit-in-compile 契约：compile merge 视觉输入 → 查 effective arrow 表 → 调 def.emit 产几何，
- *   最终 `ArrowEndSpec` 是"已解析 marker 描述"（shape 标识 + baseSize / refX / markerWidth / markerHeight +
+ *   最终 `ResolvedArrowEndSpec` 是"已解析 marker 描述"（shape 标识 + baseSize / refX / markerWidth / markerHeight +
  *   marker 几何 + opacity）。视觉输入（scale / length / width / color / fill / lineWidth）不再出现在结果上：
  *   scale 乘进 markerWidth / markerHeight；color / fill 物化进 marker 几何；lineWidth 影响 refX / 空心描边。
  *  - 无 arrowDetail / `arrow="->"` → arrowEnd 仍解析为 shape 'stealth'（颜色走 contextStroke 缺省）

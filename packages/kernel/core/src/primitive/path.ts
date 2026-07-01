@@ -1,5 +1,5 @@
 import type { IRAnimationTrack } from '../schemas/animation';
-import type { BlendModeValue, IRDropShadow } from '../schemas/effects';
+import type { BlendModeValue, ResolvedDropShadow } from '../schemas/effects';
 import type { IRJsonObject } from '../schemas/json';
 import type { ArrowShapeValue } from '../schemas/path/arrow';
 import type { MarkerPrimitive } from './marker';
@@ -116,7 +116,7 @@ export type PathCommand =
  *   `markerHeight` / `opacity`）。adapter 只**物化**——把 `marker` 嵌进 `<marker viewBox refX refY markerWidth
  *   markerHeight>`，不再 switch、不调 emit、不需要 arrows 注册表。纯 JSON 数据（无函数）。
  */
-export type ArrowEndSpec = {
+export type ResolvedArrowEndSpec = {
   /** 形状名：内置 8 或经 `CompileOptions.arrows` 注册的扩展名；标识 / 调试用，已解析后渲染不依赖（保留） */
   shape: ArrowShapeValue;
   /** marker viewBox 边长（`def.baseSize ?? 10`）；adapter 据此推 viewBox `0 0 baseSize baseSize` 与 refY = baseSize/2 */
@@ -182,16 +182,16 @@ export type PathPrim = {
    */
   strokeLinejoin?: 'miter' | 'round' | 'bevel';
   /** 起点箭头视觉规格；undefined = 无箭头 */
-  arrowStart?: ArrowEndSpec;
+  arrowStart?: ResolvedArrowEndSpec;
   /** 终点箭头视觉规格；undefined = 无箭头 */
-  arrowEnd?: ArrowEndSpec;
+  arrowEnd?: ResolvedArrowEndSpec;
   /**
    * 整体透明度 0~1
    * @default 1
    */
   opacity?: number;
   /** 投影：解析后对象（preset 已展开 + 显式覆盖合并）；undefined = 无投影 */
-  shadow?: IRDropShadow;
+  shadow?: ResolvedDropShadow;
   /**
    * 混合模式：解析后值；undefined / normal = 普通 source-over
    * @default 'normal'

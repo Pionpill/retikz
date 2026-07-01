@@ -1,7 +1,7 @@
 import { arcEndPoint } from '@retikz/math';
 
 import type { BoundaryDefinition } from '../contract/boundary';
-import type { ShapeDefinition, ShapeStyle } from '../contract/shape';
+import type { ResolvedShapeStyle, ShapeDefinition } from '../contract/shape';
 import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';
 import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
@@ -21,7 +21,7 @@ import type {
   NodeLabelPlacementValue,
   NodeLabelPositionValue,
 } from '../schemas';
-import type { BlendModeValue, IRDropShadow } from '../schemas/effects';
+import type { BlendModeValue, ResolvedDropShadow } from '../schemas/effects';
 import type { CompileWarningCodeValue } from './constant';
 import type { LowerTex } from './lower-tex';
 import type { NameStack } from './name-stack';
@@ -265,7 +265,7 @@ export type NodeLayout = {
    */
   opacity?: number;
   /** 已解析的主形状投影（compile 已展开 preset + 显式覆盖）；仅挂 shape 几何图元，不挂 text */
-  shadow?: IRDropShadow;
+  shadow?: ResolvedDropShadow;
   /**
    * 主形状混合模式（与下方已绘内容混合）；仅挂 shape 几何图元，不挂 text
    * @default 'normal'
@@ -881,8 +881,8 @@ export const layoutNode = (
   };
 };
 
-/** 从 NodeLayout 收敛 emit 所需的视觉样式子集（ShapeStyle，不含几何 / 文本）；fill / stroke 经 resolvePaint 转 PaintValue */
-const toShapeStyle = (layout: NodeLayout, resolvePaint: PaintResolver): ShapeStyle => ({
+/** 从 NodeLayout 收敛 emit 所需的视觉样式子集（ResolvedShapeStyle，不含几何 / 文本）；fill / stroke 经 resolvePaint 转 PaintValue */
+const toShapeStyle = (layout: NodeLayout, resolvePaint: PaintResolver): ResolvedShapeStyle => ({
   fill: resolvePaint(layout.fill),
   fillOpacity: layout.fillOpacity,
   stroke: resolvePaint(layout.stroke) ?? 'currentColor',

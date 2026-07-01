@@ -3,12 +3,12 @@ import { arcBoundingPoints, arcEndPoint, curve, ellipseArcBoundingPoints, ellips
 import type { PathGeneratorDefinition } from '../../contract/path';
 import type { SegmentSample } from '../../geometry/segment';
 import type {
-  ArrowEndSpec,
   GroupPrim,
   MarkerFill,
   MarkerPrimitive,
   PaintValue,
   PathCommand,
+  ResolvedArrowEndSpec,
   ScenePrimitive,
   Transform,
 } from '../../primitive';
@@ -19,7 +19,7 @@ import type { LowerTex } from '../lower-tex';
 import type { NameStack } from '../name-stack';
 import type { PaintResolver } from '../paint';
 import type { TextMeasurer } from '../text-metrics';
-import type { EffectiveArrows } from './shrink';
+import type { ResolvedArrowRegistry } from './shrink';
 import type { PathBaseProps } from './split';
 
 import { bendControlPoints, outInControlPoints } from '../../geometry/bend';
@@ -174,12 +174,12 @@ export type EmitPathWarnHook = {
    */
   resolvePaint?: PaintResolver;
   /**
-   * 有效 arrow 表（内置 8 + 注入）；缺省 = 仅内置 8
+   * 已解析 arrow registry（内置 8 + 注入）；缺省 = 仅内置 8
    * @description compileToScene 合并 `{ ...BUILTIN_ARROWS, ...options.arrows }` 传入；
    *   endpoint arrow marks 据此查表算 shrink / 调 def.emit；未注册名编译期 throw
    * @default resolveArrowRegistry()
    */
-  effectiveArrows?: EffectiveArrows;
+  resolvedArrows?: ResolvedArrowRegistry;
   /**
    * 有效 path generator 表（注入即全部，core 无内置）；缺省 = 空表
    * @description compileToScene 传 `options.pathGenerators ?? {}`；generator step 据此查表（未注册名
@@ -268,7 +268,7 @@ const markerPrimUsesContextStroke = (prim: MarkerPrimitive): boolean => {
 
 const assertArrowCanInheritStroke = (
   stroke: PaintValue | undefined,
-  arrows: { arrowStart?: ArrowEndSpec; arrowEnd?: ArrowEndSpec },
+  arrows: { arrowStart?: ResolvedArrowEndSpec; arrowEnd?: ResolvedArrowEndSpec },
 ): void => {
   if (stroke === undefined || typeof stroke === 'string') return;
   const usesContextStroke =
@@ -300,7 +300,7 @@ const markerPrimToScene = (prim: MarkerPrimitive, contextStroke: string): SceneP
 };
 
 const buildMarkMarkerGroup = (
-  spec: ArrowEndSpec,
+  spec: ResolvedArrowEndSpec,
   sample: SegmentSample,
   strokeWidth: number,
   round: (n: number) => number,
@@ -1103,10 +1103,10 @@ export const emitPathPrimitive = (
     blendMode: path.blendMode,
   };
 
-  const effectiveArrows = warnHook.effectiveArrows ?? resolveArrowRegistry();
+  const resolvedArrows = warnHook.resolvedArrows ?? resolveArrowRegistry();
   const arrows: {
-    arrowStart?: ArrowEndSpec;
-    arrowEnd?: ArrowEndSpec;
+    arrowStart?: ResolvedArrowEndSpec;
+    arrowEnd?: ResolvedArrowEndSpec;
     shrinkStart: number;
     shrinkEnd: number;
     boundaryOuterInsetStart: number;
@@ -1120,14 +1120,14 @@ export const emitPathPrimitive = (
   const inlineMarks: NonNullable<IRPathBase['marks']> = [];
   for (const item of path.marks ?? []) {
     if (item.pos === 0 && arrows.arrowStart === undefined) {
-      const resolved = resolveEndpointArrowMark(item.mark, effectiveArrows, round);
+      const resolved = resolveEndpointArrowMark(item.mark, resolvedArrows, round);
       arrows.arrowStart = resolved.spec;
       arrows.shrinkStart = resolved.shrink;
       arrows.boundaryOuterInsetStart = resolved.boundaryOuterInset;
       continue;
     }
     if (item.pos === 1 && arrows.arrowEnd === undefined) {
-      const resolved = resolveEndpointArrowMark(item.mark, effectiveArrows, round);
+      const resolved = resolveEndpointArrowMark(item.mark, resolvedArrows, round);
       arrows.arrowEnd = resolved.spec;
       arrows.shrinkEnd = resolved.shrink;
       arrows.boundaryOuterInsetEnd = resolved.boundaryOuterInset;
@@ -1152,8 +1152,8 @@ export const emitPathPrimitive = (
             const segIdx = Math.min(Math.floor(scaled), segCount - 1);
             const localT = scaled - segIdx;
             return segmentSamplers[segIdx](pos === 1 ? 1 : localT);
-          })();
-      const spec = resolveMarkArrowSpec(mark, effectiveArrows, round);
+      })();
+      const spec = resolveMarkArrowSpec(mark, resolvedArrows, round);
       markPrims.push(buildMarkMarkerGroup(spec, sample, strokeWidth, round, markerContextStroke(baseProps.stroke)));
       // marker 落点纳入 bbox（保守取采样点；marker 自身尺寸相对小，端点已足够避免被裁）
       points.push(sample.point);

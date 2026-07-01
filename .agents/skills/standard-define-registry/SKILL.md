@@ -40,9 +40,12 @@ define-registry 是 retikz 扩展能力的标准形态。遇到可枚举但应�
 | `PlotXxx` / `BuiltinXxx` / `XxxKeyword` | `schemas/<capability>/constants.ts` | schema const object。plot 公共 IR 判别用 `PlotXxx`；core 内置 schema literal 才用 `BuiltinXxx`；语义关键字用 `XxxKeyword`。 |
 | `IRXxx` | `schemas/<capability>/types.ts` | 由 IR schema object 经 `z.infer` 推导出的公开 JSON 数据类型，例如 `IRFont`、`IRPaintSpec`、`IRDropShadow`。 |
 | `XxxValue` | `schemas/<capability>/types.ts` | 由 const object enum 经 `ValueOf` 推导出的取值 union，例如 `BlendModeValue`、`ShadowPresetValue`；不加 `IR`。 |
+| `ResolvedXxx` | `contract`、`compile` 或 `providers` 中最靠近消费边界的位置 | 已经经过解析、归一化、查表、默认值处理或扩展展开后的消费形态；用于和 `IRXxx` / 输入形态区分，例如 provider 实际消费的 `ResolvedShapeStyle`。 |
 | core `<capability>s`、plot `xxxDefinitions` | core `compile/compile.ts`、plot `pipeline/expand.ts` 或相邻 option 定义 | 用户传入自定义 definition 的公开 option。 |
 
 新代码不要用裸 `Xxx` 表示内置 registry；旧版 `Boundary` 这类裸名只能作为反例参考。
+
+`ResolvedXxx` 不表示“更正确”，只表示它不再是用户原始输入形态：字段可能已经改名（如 IR `drawOpacity` → primitive `strokeOpacity`）、资源可能已经查表（如 paint spec → resourceRef）、预设可能已经展开（如 shadow preset → drop shadow object）。如果类型仍对应 JSON IR / schema 输入，使用 `IRXxx`；如果只是 const object 派生的取值 union，使用 `XxxValue`；只有下游 provider / renderer / compile 后续阶段消费的稳定形态才加 `Resolved`。
 
 ## Discriminator 与 Option
 
