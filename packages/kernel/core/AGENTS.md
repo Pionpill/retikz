@@ -1,121 +1,73 @@
 # @retikz/core 工作指南
 
-> 本文档是 `@retikz/core` 包内特有的规范。
-> 项目通用规则（commit / JSDoc / IR schema 风格 / 数组写 `Array<T>` 等）见根 [`AGENTS.md`](../../../AGENTS.md)。
+本文件只写 `@retikz/core` 包内特有规则。全仓通用规则见根 [`AGENTS.md`](../../../AGENTS.md)，kernel 组规则见 [`../AGENTS.md`](../AGENTS.md)。
 
----
+## 硬约束
 
-## 硬约束（CI 守门）
+- 不准 import `react` / `react-dom`；React 内容属于 `@retikz/react`。
+- 不准依赖 DOM API（`document` / `window` / `canvas` / `HTMLElement` 等）；浏览器能力由 adapter 或 render 包注入。
+- 运行时依赖只允许 `@retikz/math` 与 `zod`；新增依赖必须先说明理由。
+- 任何可能进入 IR 的数据都必须 JSON 可序列化，禁止函数、ref、closure、class 实例。
+- `compileToScene` 必须保持纯函数：相同 IR + options 产生相同 Scene；禁止 `Math.random()`、`Date.now()`、module-level mutable state。
 
-- **不准 `import 'react'` / `import 'react-dom'`**——所有 React 内容属于 [`@retikz/react`](../react/)
-- **不准依赖 DOM API**（`document` / `window` / `canvas` / `HTMLElement` 等）——浏览器特化能力由 adapter 通过依赖注入提供
-- **运行时依赖白名单**：当前只有 `zod`；新增任何运行时依赖必须在 PR 描述里写明理由
-- **所有可能进 IR 的数据 100% JSON 可序列化**——禁止函数 / ref / closure / class 实例进 IR 类型
+## 目录分层
 
-## 几何模块（`geometry/`）
+```text
+shared/      无业务依赖的常量、类型、纯工具
+schemas/     Zod schema 与 IR 类型真源
+contract/    第三方作者实现的 Definition、defineXxx、能力无关 helper
+providers/   内置 definition、BUILTIN_*、registry resolver
+compile/     IR 到 Scene 的编排、layout、lowering、registry 消费
+geometry/    core 侧几何封装；优先复用 @retikz/math
+parsers/     字符串 / DSL parser，输出 IR 节点
+primitive/   Scene primitive 类型
+presets/     内置 preset
+```
 
-### 坐标系
+改这些层的依赖方向、文件职责或 define-registry 能力前，按根 AGENTS 的 `standard-*` skill 分流。
 
-- 笛卡尔 `[x, y]`：x 向右增长，y 向下增长（与 SVG / Canvas 一致，与数学课本相反）
-- 单位是 **user units**，不是像素；最终物理单位由 SVG `viewBox` / Canvas 缩放决定
+## 几何与坐标
 
-### 极坐标进 IR，但只在 Scene 编译时解析为笛卡尔
+- 坐标系为 `[x, y]`，x 向右、y 向下，与 SVG / Canvas 一致；单位是 user units。
+- 2D 形状的 `x, y` 表示几何中心，不表示边界角点；转换到 SVG 原生坐标只发生在 emit primitive 阶段。
+- 极坐标可以进入 IR，但只在 Scene 编译阶段解析为笛卡尔；下游 renderer 和几何计算只看笛卡尔。
+- 几何工具用纯函数 + plain data；函数集合可用 `const xxx = { ... }` 命名空间形态，不写 class。
 
-- `geometry/polar.ts` 提供 `PolarPosition` 类型（含递归 `origin?: string | Position | PolarPosition`）+ `polar` 工具集（`toPosition` / `fromPosition` / `offsetFrom`）
-- `schemas/polar-position.ts` 提供 `PolarPositionSchema`（用 `z.lazy` 处理递归），允许 polar 进入 IR
-- **IR 中接受 polar 的位置字段**：
-  - `Node.position`：`Position | PolarPosition`
-  - `Step.to`：`Position | PolarPosition | string`（string 是节点 id 引用）
-  - `PolarPosition.origin`：`string | Position | PolarPosition`（可嵌套，可引用节点 id）
-- **极坐标的解析时机：Scene 编译阶段**
-  - `compile.ts` 的 `resolvePosition()` 把所有 polar 形态折成笛卡尔
-  - 所有下游（renderer / 几何运算）只看到笛卡尔，无需知道 polar 存在
-  - 字符串 origin 解析依赖 nodeIndex，因此节点必须按依赖顺序定义（前向引用要求被引用节点先出现，与 TikZ 一致）
-- **理由**：
-  - polar 在 IR 保留用户原始意图，对 TikZ 双向 codec / 编辑器"显示原始输入" / AI 生成径向图非常友好
-  - 解析集中在 Scene 编译一处，下游复杂度只增加在该处
-  - SVG / Canvas / Skia / PDF 底层仍是笛卡尔，Scene primitive 保持笛卡尔即可
+## Scene 编译
 
-### 形状的 `x, y` 表示几何中心
+- `ScenePrimitive` 是后端最大公约子集，避免 SVG-only 或 Canvas-only 特性泄漏进 core。
+- `PathPrim.commands` 与 `GroupPrim.transforms` 必须是结构化数组，不输出 SVG `d` / `transform` 字符串。
+- `circlePath` / `ellipsePath` 可在 IR 编译为结构化 `ellipseArc`；后端自行映射为原生 API。
+- 文本在 Scene 编译完成时必须已有度量结果；度量函数通过 `CompileOptions.measureText` 注入，缺省走 fallback。
 
-**所有 2D 形状类型的 `x, y` 字段表示形状的几何中心，不是边界角点。**
+## Registry 与 Shape
 
-- `Rect.x` / `Rect.y` = 矩形几何中心
-- 未来 `Circle.x` / `Circle.y` = 圆心
-- 未来 `Ellipse.x` / `Ellipse.y` = 椭圆中心
-- ……
+- 扩展能力按 `contract/<能力>` + `providers/<能力>` 分层：contract 放 author-facing 类型和 define helper；providers 放内置实现和 registry 合并。
+- 内置 definition 不享有特殊入口。有效表应由内置表与 options 自定义表合并，冲突通过 warning 或明确策略处理。
+- `node.shape` 在 IR 中永远是字符串名；`ShapeDefinition` 不进 IR，经 `CompileOptions.shapes` 注入。schema 只校验字符串形状，未注册名在 compile 期处理。
+- Shape 几何方法围绕外接 `Rect` 工作；`emit` 接轴对齐 rect，rotate 由外层 `GroupPrim` 统一施加。
+- 改内置 shape 几何或 emit 时，优先跑 shape baseline snapshot 和相关 compile 测试。
 
-理由：
+## Scope 与命名
 
-- 与 IR `Node.position` 语义一致——TikZ 节点定位的是中心
-- 不同形状类型保持一致的位置语义，避免心智割裂
-- 操作上"在某点放一个东西"是常见心智，center 是天然锚点
-- 渲染输出层（`primitive/*.ts` 的 `RectPrim` / `EllipsePrim` 等）保持各形状原生的 SVG 位置约定（`<rect>` 用左上角，`<circle>` 用 `cx/cy`）。**坐标转换发生在 emit primitive 时，不污染上游几何代码。**
+- `IRScope` 表示分组、局部 transform 与样式默认作用域；scope transform 在 compile pass 中下沉到 Scene `GroupPrim.transforms`。
+- compile 使用 `NameStack` 做 id 查找：默认全局扁平；`localNamespace` 时隔离子 frame；`scope.id` 始终注册到父 frame，作为外部句柄。
+- lookup 按 inside-out；同 frame 重复 id 发 warning 并 last-wins，跨 frame 同名是 shadowing。
+- scope 的相对定位、bbox synthetic layout、样式继承和 `resetStyle` 属 compile 语义；改动前读相关代码与测试，不把规则复制到 renderer。
 
-### 纯函数 + plain data，不用 class
+## Parsers
 
-- 几何工具一律用纯函数 + 普通对象，**不写 class**
-- 函数集合用 `const xxx = { method1, method2 }` 命名空间形态
-- 每个方法独立 JSDoc（见根 AGENTS.md "对象字面量当命名空间"规则）
+- parser 必须是纯函数：input -> output，无副作用。
+- parser 输出 IR 节点或 IR 片段，不输出 React props 或 adapter 私有结构。
+- 解析失败用 `throw new Error('parseXxx: ...')`，消息开头标明解析器名。
 
-## Scene 编译器（`compile/` 产出 `primitive/` 类型）
+## 公开 API
 
-- `ScenePrimitive` 是矢量图形的最大公约子集
-  - 禁止 SVG-only 特性（`<filter>` / `<marker>` / `<defs>` 共享）
-  - 禁止 Canvas-only 特性（`getImageData` / 复杂合成模式）
-- **`PathPrim` / `GroupPrim` 用结构化 `commands` / `transforms` 数组，不出 SVG 字符串**——`PathPrim.commands: Array<PathCommand>`（move/line/quad/cubic/arc/ellipseArc/close 七种 kind），`GroupPrim.transforms: Array<Transform>`（translate/rotate/scale 三种 kind）；adapter 在 render 时翻译为原生 API：SVG 拼 d / transform 字符串、Canvas 调 ctx.moveTo / lineTo / arc / translate 等。core 不持有 SVG mini-language 知识
-- `circlePath` / `ellipsePath` IR step 编译为单个 `ellipseArc` 全 sweep（0→360）PathCommand；SVG adapter 在 path-d-builder 内识别 360° 退化拆为两段半弧；canvas adapter 可直接 `ctx.ellipse` 整圈
-- **文字必须在 Scene 编译完成时已度量好**——`TextPrim.measuredWidth` / `measuredHeight` 都填好；下游 renderer 直接信任
-- 度量函数通过 `CompileOptions.measureText` **依赖注入**；不传走 fallback
-- `compileToScene` **必须保持纯函数**：相同 IR + 相同 options → 完全相同的 Scene；禁止 `Math.random()` / `Date.now()` / module-level mutable state
+- 只通过 `src/index.ts` 暴露公开 API；adapter 不 import core 内部子路径。
+- 顶层 `src/index.ts` 用显式 named re-export，作为公共契约面；内部子 barrel 可用 `export *`。
 
-## 扩展面分层（`contract/` + `providers/`）
+## 测试
 
-- `contract/<能力>/` 放第三方作者要实现的 `Definition` 类型、`defineX()` 工厂和能力无关 helper；这些类型可以包含函数，**不进 IR**。
-- `providers/<能力>/` 放内置实现、`BUILTIN_X` 注册表和 `resolveXRegistry()` 合并逻辑；compile 只消费解析后的有效表。
-- 旧的 `shapes/` / `arrows/` / `patterns/` / `path-generators` / `composites/` 目录已删除；新增内部引用直接指向 `contract/` 或 `providers/`。path generator 的目录名收敛为 `path`（`contract/path` / `providers/path`），公开类型名仍保留 `PathGeneratorDefinition` / `definePathGenerator`。
-
-## Shape Registry（`contract/shape` + `providers/shape`，alpha.3）
-
-- **IR 的 `node.shape` 永远是字符串名**（JSON 可序列化 / LLM 友好）；`ShapeDefinition`（含函数）**不进 IR**，走 `CompileOptions.shapes` 运行时注入。schema 只校验非空字符串；未注册名在 **compile 期** throw（不在 schema 层门控内置名）。
-- 内置 4 shape 是注册项（`BUILTIN_SHAPES`），无特权。有效表 = `{ ...BUILTIN_SHAPES, ...options.shapes }`；同名覆盖经 `onWarn` 发 `SHAPE_OVERRIDES_BUILTIN`。
-- `ShapeDefinition` 四方法统一操作外接 `Rect`：`circumscribe`（内框半轴→外接框半轴）/ `boundaryPoint` / `anchor`（未知名返回 `undefined`，`anchorOf` 据此 throw）/ `emit`（`Iterable<ScenePrimitive>`，可多 prim）。
-- **两套坐标语义**：`emit` 收**轴对齐 rect（rotate=0）**——rotate 由 `emitNodePrimitives` 末端外层 `GroupPrim` 统一施加；`boundaryPoint` / `anchor` 收**带 rotate 的 rect**（用 `worldToLocal` / `localToWorld`）。改 emit 时勿读 `rect.rotate`。
-- 数字角度（`A.30`）是 generic：编译层算 toward 后调 `shape.boundaryPoint`，**不进** shape 接口——任何实现 boundaryPoint 的 shape 免费可用。
-- synthetic layout（coordinate 占位 / `scope.id` bbox）必须显式挂 `shapeDef: BUILTIN_SHAPES.rectangle`（`NodeLayout.shapeDef` 必填，无兜底分支）。
-- 改内置 shape 几何 / emit → 跑 `tests/compile/shape-baseline-snapshot.test.ts`（逐字节回归网）确认无行为漂移。
-
-## 解析器（`parsers/`）
-
-- 解析器一律是纯函数：input → output，无副作用
-- **输出总是 IR 节点**（`IRStep` / `IRChild` / 未来的完整 `IR`），不是 React props 或其他中间形态
-- 解析失败用 `throw new Error('parseXxx: ...')`，错误消息开头标明解析器名
-
-## 公开 API（`src/index.ts`）
-
-- 只通过 `src/index.ts` 暴露公开 API；adapter 不准 import 子路径（如 `@retikz/core/compile`）
-- 顶层 `src/index.ts` 用**显式 named re-export**——这是公开契约面，让 API 一目了然
-- 内部子 barrel（`schemas/index.ts`、`primitive/index.ts`、`compile/index.ts` 等）用 `export *`——维护轻
-
-## Scope IR 容器（`schemas/scope.ts` + `compile/scope.ts`）
-
-- `IRScope` 是 IRChild 第 4 类，对应 TikZ `\begin{scope}[...]...\end{scope}`：分组 + 局部 transform + 样式默认作用域（alpha.2 起，见下「样式继承」）
-- `TransformSchema` 7 变体（IR 层）：`translate` / `polar-translate` / `at-translate` / `offset-translate` / `between-translate` / `rotate` / `scale`——5 个 translate 完全镜像 Node.position union
-- compile Pass 1 递归处理 scope 树：`lowerScopeTransforms` 把 5 个 translate 变体调用 `resolvePosition` 展平为 Cartesian translate，再下沉到 Scene `GroupPrim.transforms`（Scene 维持 3 变体不变）
-- NameStack 存全局坐标（chain apply 后），Scene primitive 树里 node 用局部坐标 + GroupPrim transform 链——adapter 只看 Scene 的几何
-- 空 scope（children 空 + transforms 空 / 缺省 + id 缺省）→ 不 emit GroupPrim
-- **scope 下相对定位**：referent（`polar.origin` / `at.of` / `offset.of`）取全局；relative 部分（polar `(angle, radius)` / at `(direction, distance)` / offset `[dx, dy]`）在**当前 node 所属 scope 局部度量**；末端正向 apply 当前 scope chain 投回全局。`resolvePosition(pos, nameStack, nodeDistance?, scopeChain?)` 第 4 参数空 = v0.1 行为（全局）；非空 = 当前 scope 局部坐标返回值，调用方走 `projectLayoutToGlobal` / `applyTransformChain` 投全局。`inverseTransformChain` 是 `applyTransformChain` 的逆——translate(-x,-y) / rotate(-deg, cx, cy) / scale(1/x, 1/y)；scale 分量 0 退化为 (0,0) 防 NaN
-- **`scope.transforms` 自身定位的边界语义**（与 scope 内 node 相对定位区分）：`lowerScopeTransforms` 处理的是 scope 本身放在父 scope 里的"自身位移 / 旋转 / 缩放"——它的 `polar-translate` / `at-translate` / `offset-translate` / `between-translate` 在解析 referent 时**不接 scope chain**（按"父 scope 全局坐标"度量），因为这些 transform 描述的是 scope 自身在父坐标系里的放置，**不属于"scope 内 node 的相对定位"那条算法**。调用方对此**不要传 chain**——传了反而违背"scope 是被父 scope 包含的"模型。注意：在嵌套 scope 时如果父 scope 内有更外层 scope，本 scope 的 transforms 仍按"父 scope 全局" = 上一层 scope 内的局部坐标（已被外层 scope chain 投到全局前的本层视角），现阶段不展开"嵌套父 scope chain → scope.transforms"语义——这是当前已知边界，alpha 阶段不修
-- **样式继承（alpha.2，`compile/style.ts`）**：scope 兼作样式默认挂点——级联 graphic state（主色 `color` + `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity`）+ 四类默认（`nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`，各从对应 schema `.omit().strict()` 派生，单一真源）+ `resetStyle` 屏障。compile 维护 style frame 栈，每元素 inside-out per-field fold 成 effective `IRNode` / `IRPath` 再喂给现有 `layoutNode` / `emitPathPrimitive`（核心 layout / emit 不感知样式继承）。优先级就近：元素显式分项 > 元素 color > 分类默认分项 > 分类默认 color > scope 级联分项 > scope color > 内置；主色同源展开 stroke / fill / textColor；arrow / step-label 跟宿主 path 已解析主色（host 轴，不被 `resetStyle` 切，故 arrow.color 优先于 `arrowDefault.color`）；opacity 嵌套替换不复合（仅元素内 label × 元素相乘）。主色 `color` 同时上 Node / Path（`schemas/node.ts` / `schemas/path/path.ts`），StepLabel 加 `textColor` / `opacity` / `font`（`schemas/path/step.ts`）。
-
-## 命名空间栈（`compile/name-stack.ts`）
-
-- compile 用 `NameStack` 替代单一 `Map<string, NodeLayout>` 作为 id → layout 的查找结构；内部维护 `Array<Map<string, NodeLayout>>`，栈底是 `<TikZ>` 根 frame
-- **默认全局扁平**：`<Scope>` 不 push frame，子 node / coordinate / 嵌套 scope.id 全部注册到栈顶现有 frame；与 TikZ pgf 默认 + v0.1 行为一致
-- **opt-in 隔离**：`<Scope localNamespace>` push 子 frame；子节点 id 注册到此 local frame、退出时 pop 不向父合并 → 外部不可见
-- **scope.id 始终在父 frame 注册**：scope.id 是外部句柄；与 `localNamespace` 字段无关，永远进入父 frame 让外部 path 可引用
-- **scope.id 注册的 layout 是子树轴对齐全局 bbox 的 synthetic rectangle**：Pass 1 scope 入场先 register 0×0 占位（让子树内 lookup 不返 undefined），子树处理完后用 `computeScopeBoundingBox` 收集本 scope 子树全部 layouts（含 node / coordinate / 嵌套 scope.id synthetic bbox 透传）求 AABB，`registerScopeAsLayout` 构造 rectangle layout，通过 `NameStack.replaceLayout`（不发 duplicate warn）覆盖占位——外部 `cluster.<anchor>` / `cluster.<deg>` / `cluster` 走与普通 rectangle node 完全一致的 anchor / boundary 路径；空 scope + id 退化为 0×0 占位点
-- **lookup = inside-out**：path / position referent 字符串 id 从当前 frame 向栈底逐层查找；命中第一个匹配 frame 返回——内部 shadowing 外部、外部看不到内部
-- **同 frame 重复 id 走 warn + last-wins**：register 检测到栈顶 frame 已有同 id → 通过 onDuplicate 回调发 `DUPLICATE_NODE_ID`（compile 翻译成 CompileWarning），用新 layout 覆盖；**不抛错**。跨 frame 同 id 是 shadowing，**不算 duplicate、不 warn**
-- 与 v0.1 行为对比：v0.1 duplicate throw，alpha 起改为 warn + last-wins；用户 v0.1 代码 0 改动；如需 strict 行为，`onWarn` 内可检测 code 主动 throw
-- NameStack 内部 `phase: 'pass1' | 'pass2'` 状态：register 仅 pass1 允许，pass2 期 register 抛 internal error（防御性 invariant，path 解析阶段只 lookup）；compile 在每层 children 处理完后切到 pass2 resolve 本层 path、再切回 pass1 继续上层 children
+- schema / IR 改动：补 schema 行为测试，并按 `standard-schema` 同步描述、类型和 docs。
+- compile / lowering 改动：补 compile 输出和边界输入测试。
+- 几何 / shape / path 改动：补几何或 snapshot 回归，避免只靠视觉 demo。
