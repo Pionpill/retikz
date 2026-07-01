@@ -20,7 +20,7 @@ import { Plot, PointMark, RelationMark } from '@retikz/plot-react';
   <RelationMark
     source={{ anchorId: { prefix: 'node', field: 'sourceId' } }}
     target={{ anchorId: { prefix: 'node', field: 'targetId' } }}
-    path={{ options: { arrow: '->' } }}
+    path={{ options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] } }}
   />
 </Plot>
 ```
@@ -37,7 +37,7 @@ RelationMark is the low-level relationship path mark. It does not reinvent arrow
 | Waypoint path           | `path.via` / `path.route[].to`      | Projected waypoints generate core `Coordinate` elements, so later ids can reference them                    |
 | Geometry label          | `label`                             | Lowers to core `Path.label`; path and ribbon relations share the same host label                            |
 | Step label              | `path.label` / `path.route[].label` | Lowers to core step label; explicit step labels win over shorthand                                          |
-| Core Path capabilities  | `path.options`                      | Passes through path-only options such as arrows, rounded corners, and marks                                 |
+| Core Path capabilities  | `path.options`                      | Passes through path-only options such as marks, rounded corners, and dash patterns                          |
 | Path ribbon kind        | `kind="ribbon"` / `ribbon`          | Lowers source-target rows into core `Path` objects with `kind: 'ribbon'` for Sankey-style bands             |
 | Shared style            | `style`                             | Shared paint and opacity fields used by both path and ribbon relations                                      |
 
@@ -109,7 +109,7 @@ When a relation uses generated `anchorId` and the target does not exist, lowerin
 |          | `path.routing`       | `RelationRoutingSpec?`                               | `line`                       | Algorithmic route strategy: `line`, `bend`, or `orthogonal`; mutually exclusive with `path.route`                                            |
 |          | `path.route[].label` | `RelationStepLabel?`                                 | -                            | Label for the current step; higher priority than `path.label` shorthand                                                                      |
 |          | `path.label`         | `RelationStepLabel?`                                 | -                            | Shorthand path label for the default path or the final drawable route step; defaults to `sloped` when `side` is omitted                      |
-|          | `path.options`       | `RelationPathSpecificOptions?`                       | -                            | Path-only options such as `arrow`, `arrowDetail`, `marks`, `dashPattern`, `roundedCorners`, `lineCap`, and `lineJoin`                        |
+|          | `path.options`       | `RelationPathSpecificOptions?`                       | -                            | Path-only options such as `marks`, `dashPattern`, `roundedCorners`, `lineCap`, and `lineJoin`                        |
 | Ribbon   | `ribbon.width`       | `MarkValue<number>`                                  | Required for `kind="ribbon"` | Ribbon width at the source side, or the whole width when `endWidth` is omitted                                                               |
 |          | `ribbon.endWidth`    | `MarkValue<number>?`                                 | -                            | Optional target-side width for tapered ribbons                                                                                               |
 |          | `ribbon.options`     | `RelationRibbonSpecificOptions?`                     | -                            | Ribbon-only options: `align`, `samples`, `sampling`, and taper `interpolation`                                                               |
@@ -118,7 +118,7 @@ When a relation uses generated `anchorId` and the target does not exist, lowerin
 | Common   | `id`                 | `string?`                                            | -                            | Optional mark handle for layer ids, errors, and runtime lookup                                                                               |
 | Custom   | `channels`           | `Record<string, Channel>`                            | -                            | Custom channel entry point, resolved by registered channel definitions                                                                       |
 
-Path-only fields live under `path.options`, while fields that both path and ribbon can use live under `style`. This keeps `strokeWidth`, `fillOpacity`, `opacity`, `fill`, and `stroke` in one shared place and keeps arrow / route-only behavior out of ribbon configs.
+Path-only fields live under `path.options`, while fields that both path and ribbon can use live under `style`. This keeps `strokeWidth`, `fillOpacity`, `opacity`, `fill`, and `stroke` in one shared place and keeps marks / route-only behavior out of ribbon configs.
 
 ### Transform API
 

@@ -4,6 +4,7 @@ import type { PathCommand, PathPrim, ScenePrimitive } from '../../src/primitive'
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
+import { arrowMarks } from '../helpers/arrow-marks';
 
 /**
  * ADR-05 拆分前 e2e snapshot 守门——锁住 IR → PathPrim.commands 输出
@@ -213,8 +214,7 @@ describe('ADR-05 e2e snapshot：拆分前 commands 锁定', () => {
       scene([
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'normal' },
+          marks: arrowMarks('->', { shape: 'normal' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },

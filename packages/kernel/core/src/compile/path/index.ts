@@ -46,7 +46,7 @@ import { clipForTarget, cornerOf, isAutoBoundaryTarget, refPointOfTarget, samePo
 import { emitLabelPrimitive, tForLabelPosition } from './label';
 import { normalizeRelativeTargets } from './relative';
 import { applyRoundedCorners, sampleRoundedCommands } from './rounded-corners';
-import { applyArrowShrinks, endpointArrows, resolveMarkArrowSpec } from './shrink';
+import { applyArrowShrinks, resolveEndpointArrowMark, resolveMarkArrowSpec } from './shrink';
 import { splitSubPathsForEndpointArrows } from './split';
 
 const EMPTY_PATH_GENERATORS: ReadonlyMap<string, PathGeneratorDefinition> = new Map();
@@ -176,7 +176,7 @@ export type EmitPathWarnHook = {
   /**
    * 有效 arrow 表（内置 8 + 注入）；缺省 = 仅内置 8
    * @description compileToScene 合并 `{ ...BUILTIN_ARROWS, ...options.arrows }` 传入；
-   *   endpointArrows 据此查表算 shrink / 调 def.emit；未注册名编译期 throw
+   *   endpoint arrow marks 据此查表算 shrink / 调 def.emit；未注册名编译期 throw
    * @default resolveArrowRegistry()
    */
   effectiveArrows?: EffectiveArrows;
@@ -1104,15 +1104,45 @@ export const emitPathPrimitive = (
   };
 
   const effectiveArrows = warnHook.effectiveArrows ?? resolveArrowRegistry();
-  const arrows = endpointArrows(path.arrow, path.arrowDetail, effectiveArrows, round);
+  const arrows: {
+    arrowStart?: ArrowEndSpec;
+    arrowEnd?: ArrowEndSpec;
+    shrinkStart: number;
+    shrinkEnd: number;
+    boundaryOuterInsetStart: number;
+    boundaryOuterInsetEnd: number;
+  } = {
+    shrinkStart: 0,
+    shrinkEnd: 0,
+    boundaryOuterInsetStart: 0,
+    boundaryOuterInsetEnd: 0,
+  };
+  const inlineMarks: NonNullable<IRPathBase['marks']> = [];
+  for (const item of path.marks ?? []) {
+    if (item.pos === 0 && arrows.arrowStart === undefined) {
+      const resolved = resolveEndpointArrowMark(item.mark, effectiveArrows, round);
+      arrows.arrowStart = resolved.spec;
+      arrows.shrinkStart = resolved.shrink;
+      arrows.boundaryOuterInsetStart = resolved.boundaryOuterInset;
+      continue;
+    }
+    if (item.pos === 1 && arrows.arrowEnd === undefined) {
+      const resolved = resolveEndpointArrowMark(item.mark, effectiveArrows, round);
+      arrows.arrowEnd = resolved.spec;
+      arrows.shrinkEnd = resolved.shrink;
+      arrows.boundaryOuterInsetEnd = resolved.boundaryOuterInset;
+      continue;
+    }
+    inlineMarks.push(item);
+  }
   assertArrowCanInheritStroke(baseProps.stroke, arrows);
 
   // 中段 marking：把整条 path 的 pos∈[0,1] 分摊到 N 个绘制段，取该处 { point, tangent }，
   // 产一个按 tangent 定向的 arrow marker（复用端点箭头同款 def.emit 几何）；point 计入 bbox（远端 mark 不被裁）。
   const markPrims: Array<ScenePrimitive> = [];
-  if (path.marks && path.marks.length > 0 && segmentSamplers.length > 0) {
+  if (inlineMarks.length > 0 && segmentSamplers.length > 0) {
     const segCount = segmentSamplers.length;
-    for (const { pos, mark } of path.marks) {
+    for (const { pos, mark } of inlineMarks) {
       // 倒角后：沿倒角后 commands 按总弧长重定位（接缝几何 + 总弧长已变 → 落点 / 切线与尖角不同）。
       // 未倒角：保持原便宜模型——pos·N 落第 segIdx 段（pos=1 收口落末段尾），段内参数 = 余数。
       const sample = roundedCommands

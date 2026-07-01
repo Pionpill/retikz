@@ -3,15 +3,11 @@ import { z } from 'zod';
 import { DrawableInstanceSchema, DrawableStyleSchema } from '../../drawable';
 import { JsonObjectSchema } from '../../json';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
-import { ArrowDetailSchema, ArrowEndDetailSchema } from '../arrow';
+import { ArrowEndDetailSchema } from '../arrow';
 import { PathRibbonOptionsSchema } from '../ribbon';
 import { GeometryLabelSchema } from '../step';
 import { StepSchema } from '../step';
-import { PathArrowDirection, PathFillRule, PathLineCap, PathLineJoin, PathThickness } from './constants';
-
-export const PathArrowDirectionSchema = z
-  .enum(PathArrowDirection)
-  .describe('Path-level arrow direction keyword.');
+import { PathFillRule, PathLineCap, PathLineJoin, PathThickness } from './constants';
 
 export const PathFillRuleSchema = z.enum(PathFillRule).describe('Path fill rule keyword.');
 
@@ -70,14 +66,6 @@ export const PathBaseSchema = z
       .min(1)
       .optional()
       .describe('Stroke dash pattern lengths in user units. Omitted fields mean solid line.'),
-    arrow: PathArrowDirectionSchema
-      .optional()
-      .describe(
-        'Path-level arrow direction. omitted/`none` = no arrows; `->` = arrow at end; `<-` = at start; `<->` = both.',
-      ),
-    arrowDetail: ArrowDetailSchema.optional().describe(
-      'Detailed arrow visual config with optional `start` and `end` per-end overrides. Omitted fields use arrow definition defaults.',
-    ),
     fillRule: PathFillRuleSchema
       .optional()
       .describe(

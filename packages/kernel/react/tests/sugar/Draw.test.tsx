@@ -30,7 +30,7 @@ describe('Draw: 基础展开', () => {
   it('与等价 Kernel Path 产出一致——Sugar 不引入新能力', () => {
     const sugarIR = ir(<Draw way={['a', 'b']} stroke="#f00" strokeWidth={2} arrow="->" />);
     const kernelIR = ir(
-      <Path stroke="#f00" strokeWidth={2} arrow="->">
+      <Path stroke="#f00" strokeWidth={2} marks={[{ pos: 1, mark: { kind: 'arrow' } }]}>
         <Step kind="move" to="a" />
         <Step kind="line" to="b" />
       </Path>,
@@ -72,8 +72,10 @@ describe('Draw: 基础展开', () => {
       shadow: 'md',
       blendMode: 'multiply',
       thickness: 'thick',
-      arrow: '<->',
-      arrowDetail: { shape: 'stealth' },
+      marks: [
+        { pos: 0, mark: { kind: 'arrow', shape: 'stealth' } },
+        { pos: 1, mark: { kind: 'arrow', shape: 'stealth' } },
+      ],
       fill: '#fed',
       fillRule: 'evenodd',
       opacity: 0.8,

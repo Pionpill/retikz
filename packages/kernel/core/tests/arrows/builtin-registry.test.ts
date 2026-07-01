@@ -17,6 +17,7 @@ import { compileToScene } from '../../src/compile/compile';
 import { defineArrow } from '../../src/contract/arrow';
 import { BUILTIN_ARROWS } from '../../src/providers/arrow';
 import { PathSchema } from '../../src/schemas';
+import { arrowMarks } from '../helpers/arrow-marks';
 import { flattenPrims } from '../helpers/flatten';
 
 /**
@@ -37,8 +38,7 @@ const horizontalPathIR = (arrow: '->' | '<-' | '<->', detail: Record<string, unk
   children: [
     {
       type: 'path',
-      arrow,
-      arrowDetail: detail,
+      marks: arrowMarks(arrow, detail),
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [100, 0] },
@@ -349,9 +349,8 @@ describe('Arrow registry — interaction', () => {
         children: [
           {
             type: 'path',
-            arrow: '->',
+            marks: arrowMarks('->', { shape: 'myTip' }),
             stroke: 'crimson',
-            arrowDetail: { shape: 'myTip' },
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },
@@ -396,13 +395,11 @@ describe('Arrow registry — JSON round-trip / zod parse', () => {
   it('round_trip：含 arrowDetail 的 IR JSON.stringify → parse 语义等价（shape 字符串保真）', () => {
     const path = {
       type: 'path',
-      arrow: '<->',
-      arrowDetail: {
-        shape: 'myTip',
-        scale: 1.5,
-        start: { shape: 'open', color: 'red' },
-        end: { shape: 'stealth' },
-      },
+      marks: [
+        { pos: 0, mark: { kind: 'arrow', shape: 'open', scale: 1.5, color: 'red' } },
+        { pos: 1, mark: { kind: 'arrow', shape: 'stealth', scale: 1.5 } },
+        { pos: 0.5, mark: { kind: 'arrow', shape: 'myTip', scale: 1.5 } },
+      ],
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [100, 0] },
@@ -412,15 +409,14 @@ describe('Arrow registry — JSON round-trip / zod parse', () => {
     const roundTripped = PathSchema.parse(JSON.parse(JSON.stringify(original)));
     expect(roundTripped).toEqual(original);
     // 开放 shape 名经 JSON 往返不丢
-    expect(roundTripped.arrowDetail?.shape).toBe('myTip');
-    expect(roundTripped.arrowDetail?.start?.shape).toBe('open');
+    expect(roundTripped.marks?.[2]?.mark.shape).toBe('myTip');
+    expect(roundTripped.marks?.[0]?.mark.shape).toBe('open');
   });
 
   it('zod_parse_error：空串 shape 被 schema 拒（min(1)）', () => {
     const r = PathSchema.safeParse({
       type: 'path',
-      arrow: '->',
-      arrowDetail: { shape: '' },
+      marks: [{ pos: 1, mark: { kind: 'arrow', shape: '' } }],
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [100, 0] },
@@ -432,8 +428,7 @@ describe('Arrow registry — JSON round-trip / zod parse', () => {
   it('zod_parse_pass：任意非空 shape 名 schema 接受（未注册名拒绝移到 compile 期）', () => {
     const r = PathSchema.safeParse({
       type: 'path',
-      arrow: '->',
-      arrowDetail: { shape: 'totally-custom-name' },
+      marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'totally-custom-name' } }],
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [100, 0] },

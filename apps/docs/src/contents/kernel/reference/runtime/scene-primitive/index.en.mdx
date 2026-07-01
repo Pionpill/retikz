@@ -75,7 +75,7 @@ Coordinates use user units. Angles follow the screen-coordinate convention: `0 =
 | `opacity?`     | `number`                 | Marker element-level opacity 0..1; inherits the path opacity when omitted                                                            |
 | `marker`       | `Array<MarkerPrimitive>` | `def.emit` output: internal geometry in the local baseSize coordinate space (`fill` limited to `string \| { kind:'contextStroke' }`) |
 
-The compile layer has already merged IR-level `arrowDetail` defaults with `start` / `end` overrides, looked up the effective arrow table, and called `def.emit` to produce the geometry. Renderers do not need to know the IR merge rule or recompute visual sizes.
+The compile layer has already resolved endpoint arrow entries from core IR `marks` into `ArrowEndSpec`: it looks up the effective arrow table, calls `def.emit` to produce geometry, and shrinks path endpoints. Renderers do not need to know the arrow registry or recompute visual sizes.
 
 ## Transforms
 

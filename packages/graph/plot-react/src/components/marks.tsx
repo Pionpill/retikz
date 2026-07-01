@@ -5,7 +5,6 @@ import type {
   Channel,
   ExternalRow,
   IntervalBounds,
-  IRArrowDetail,
   IRBoundary,
   IRDropShadow,
   IRFont,
@@ -23,8 +22,6 @@ import type {
   NodePositiveNumberStyle,
   NodeTextAlignStyle,
   NodeTextAlignValue,
-  PathArrowDetailStyle,
-  PathArrowStyle,
   PathClosure,
   PathCurveValue,
   PathFillRuleStyle,
@@ -43,6 +40,7 @@ import type {
   PointZIndexStyle,
   RelationGeometryKindValue,
   RelationPathGeometryInput,
+  RelationPathSpecificOptions,
   RelationPrimitiveStyle,
   RelationRibbonOptions,
   ShadowPresetValue,
@@ -59,7 +57,6 @@ export type LineCapValue = 'butt' | 'round' | 'square';
 export type LineJoinValue = 'miter' | 'round' | 'bevel';
 export type FillRuleValue = 'nonzero' | 'evenodd';
 export type ThicknessValue = 'ultraThin' | 'veryThin' | 'thin' | 'semithick' | 'thick' | 'veryThick' | 'ultraThick';
-export type ArrowValue = 'none' | '->' | '<-' | '<->';
 export type NodeShapeChannelValue = string | IRShapeRef;
 export type ExtensionChannelProp = FieldName | JsonValue | Channel | MarkValueType<JsonValue>;
 
@@ -103,9 +100,8 @@ export type CorePathChannelProps = {
   scale?: MarkValueProp<IRPathScale> | PathScaleStyle;
   fillRule?: MarkValueProp<FillRuleValue> | PathFillRuleStyle;
   thickness?: MarkValueProp<ThicknessValue> | PathThicknessStyle;
-  arrow?: MarkValueProp<ArrowValue> | PathArrowStyle;
+  marks?: RelationPathSpecificOptions['marks'];
   dashPattern?: MarkValueProp<Array<number>> | NodeDashPatternStyle;
-  arrowDetail?: MarkValueProp<IRArrowDetail> | PathArrowDetailStyle;
   shadow?: MarkValueProp<ShadowPresetValue | IRDropShadow> | ShadowStyle;
   blendMode?: MarkValueProp<BlendModeValue> | BlendModeStyle;
 };

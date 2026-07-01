@@ -46,7 +46,7 @@ const Demo: FC = () => (
           textColor: '#7f1d1d',
           font: { size: 10, weight: 'bold' },
         },
-        options: { arrow: '->', dashPattern: [5, 4] },
+        options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], dashPattern: [5, 4] },
       }}
     />
     <RelationMark
@@ -75,7 +75,7 @@ const Demo: FC = () => (
           textColor: '#166534',
           font: { size: 10, weight: 'bold' },
         },
-        options: { arrow: '->', dashPattern: [5, 4] },
+        options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], dashPattern: [5, 4] },
       }}
     />
   </Plot>

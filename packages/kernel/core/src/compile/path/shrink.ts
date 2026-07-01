@@ -2,7 +2,7 @@ import { arcEndPoint, ellipseArcPoint } from '@retikz/math';
 
 import type { ArrowDefinition, ArrowEmitContext } from '../../contract/arrow';
 import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathCommand } from '../../primitive';
-import type { IRArrowDetail, IRArrowEndDetail, IRArrowMark, IRPosition } from '../../schemas';
+import type { IRArrowMark, IRPosition } from '../../schemas';
 
 import { providerDefinitionOf } from '../../providers/registry';
 import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH, DEFAULT_ARROW_SHAPE } from '../../schemas';
@@ -69,30 +69,17 @@ const lookupArrowDef = (shape: string, effective: EffectiveArrows): ArrowDefinit
  * @description 缺省字段继承顶层（不是"完全替换"）；空心 def 上 fill 字段被丢（silent no-op）。
  *   产 compile-internal 中间体，供 shrink + emit 消费。
  */
-const resolveArrowVisual = (
-  topLevel: IRArrowDetail,
-  endSide: IRArrowEndDetail | undefined,
-  effective: EffectiveArrows,
-): ResolvedArrowVisual => {
-  const baseShape = endSide?.shape ?? topLevel.shape ?? DEFAULT_ARROW_SHAPE;
+const resolveArrowMarkVisual = (mark: IRArrowMark, effective: EffectiveArrows): ResolvedArrowVisual => {
+  const baseShape = mark.shape ?? DEFAULT_ARROW_SHAPE;
   const out: ResolvedArrowVisual = { shape: baseShape };
-  const scale = endSide?.scale ?? topLevel.scale;
-  if (scale !== undefined) out.scale = scale;
-  const length = endSide?.length ?? topLevel.length;
-  if (length !== undefined) out.length = length;
-  const width = endSide?.width ?? topLevel.width;
-  if (width !== undefined) out.width = width;
-  const color = endSide?.color ?? topLevel.color;
-  if (color !== undefined) out.color = color;
-  const opacity = endSide?.opacity ?? topLevel.opacity;
-  if (opacity !== undefined) out.opacity = opacity;
-  const lineWidth = endSide?.lineWidth ?? topLevel.lineWidth;
-  if (lineWidth !== undefined) out.lineWidth = lineWidth;
+  if (mark.scale !== undefined) out.scale = mark.scale;
+  if (mark.length !== undefined) out.length = mark.length;
+  if (mark.width !== undefined) out.width = mark.width;
+  if (mark.color !== undefined) out.color = mark.color;
+  if (mark.opacity !== undefined) out.opacity = mark.opacity;
+  if (mark.lineWidth !== undefined) out.lineWidth = mark.lineWidth;
   const def = lookupArrowDef(baseShape, effective);
-  if (!def.hollow) {
-    const fill = endSide?.fill ?? topLevel.fill;
-    if (fill !== undefined) out.fill = fill;
-  }
+  if (!def.hollow && mark.fill !== undefined) out.fill = mark.fill;
   return out;
 };
 
@@ -241,58 +228,24 @@ const materializeArrowEndSpec = (
  *   返回同时带 compile-internal 的 shrink 量（端点收缩在 compile 落，与 emit 落点无关）。
  *   未注册 shape 名在此 throw（lookupArrowDef）。
  */
-export const endpointArrows = (
-  arrow: 'none' | '->' | '<-' | '<->' | undefined,
-  detail: IRArrowDetail | undefined,
+export type ResolvedEndpointArrowMark = {
+  spec: ArrowEndSpec;
+  shrink: number;
+  boundaryOuterInset: number;
+};
+
+export const resolveEndpointArrowMark = (
+  mark: IRArrowMark,
   effective: EffectiveArrows,
   round: (n: number) => number,
-): {
-  arrowStart?: ArrowEndSpec;
-  arrowEnd?: ArrowEndSpec;
-  shrinkStart: number;
-  shrinkEnd: number;
-  boundaryOuterInsetStart: number;
-  boundaryOuterInsetEnd: number;
-} => {
-  if (!arrow || arrow === 'none') {
-    return {
-      shrinkStart: 0,
-      shrinkEnd: 0,
-      boundaryOuterInsetStart: 0,
-      boundaryOuterInsetEnd: 0,
-    };
-  }
-  const top: IRArrowDetail = detail ?? {};
-  const wantStart = arrow === '<-' || arrow === '<->';
-  const wantEnd = arrow === '->' || arrow === '<->';
-  const result: {
-    arrowStart?: ArrowEndSpec;
-    arrowEnd?: ArrowEndSpec;
-    shrinkStart: number;
-    shrinkEnd: number;
-    boundaryOuterInsetStart: number;
-    boundaryOuterInsetEnd: number;
-  } = {
-    shrinkStart: 0,
-    shrinkEnd: 0,
-    boundaryOuterInsetStart: 0,
-    boundaryOuterInsetEnd: 0,
+): ResolvedEndpointArrowMark => {
+  const visual = resolveArrowMarkVisual(mark, effective);
+  const geometry = resolveGeometry(visual, effective);
+  return {
+    spec: materializeArrowEndSpec(visual, geometry, round),
+    shrink: computeShrink(geometry),
+    boundaryOuterInset: geometry.boundaryOuterInset,
   };
-  if (wantStart) {
-    const visual = resolveArrowVisual(top, top.start, effective);
-    const geometry = resolveGeometry(visual, effective);
-    result.arrowStart = materializeArrowEndSpec(visual, geometry, round);
-    result.shrinkStart = computeShrink(geometry);
-    result.boundaryOuterInsetStart = geometry.boundaryOuterInset;
-  }
-  if (wantEnd) {
-    const visual = resolveArrowVisual(top, top.end, effective);
-    const geometry = resolveGeometry(visual, effective);
-    result.arrowEnd = materializeArrowEndSpec(visual, geometry, round);
-    result.shrinkEnd = computeShrink(geometry);
-    result.boundaryOuterInsetEnd = geometry.boundaryOuterInset;
-  }
-  return result;
 };
 
 /**
@@ -307,16 +260,7 @@ export const resolveMarkArrowSpec = (
   effective: EffectiveArrows,
   round: (n: number) => number,
 ): ArrowEndSpec => {
-  const baseShape = mark.shape ?? DEFAULT_ARROW_SHAPE;
-  const visual: ResolvedArrowVisual = { shape: baseShape };
-  if (mark.scale !== undefined) visual.scale = mark.scale;
-  if (mark.length !== undefined) visual.length = mark.length;
-  if (mark.width !== undefined) visual.width = mark.width;
-  if (mark.color !== undefined) visual.color = mark.color;
-  if (mark.opacity !== undefined) visual.opacity = mark.opacity;
-  if (mark.lineWidth !== undefined) visual.lineWidth = mark.lineWidth;
-  const def = lookupArrowDef(baseShape, effective);
-  if (!def.hollow && mark.fill !== undefined) visual.fill = mark.fill;
+  const visual = resolveArrowMarkVisual(mark, effective);
   const geometry = resolveGeometry(visual, effective);
   return materializeArrowEndSpec(visual, geometry, round);
 };

@@ -1,14 +1,9 @@
 /** 路径级箭头方向关键字。 */
-export const PathArrowDirection = {
-  None: 'none',
-  Forward: '->',
-  Backward: '<-',
-  Both: '<->',
-} as const;
-
 /** 路径填充规则关键字。 */
 export const PathFillRule = {
+  /** Non-zero winding rule: sub-path direction decides whether nested regions cancel. */
   Nonzero: 'nonzero',
+  /** Even-odd rule: each boundary crossing toggles filled / unfilled state, useful for holes and rings. */
   EvenOdd: 'evenodd',
 } as const;
 

@@ -1,4 +1,14 @@
-import type { IRChild, IRCoordinate, IRNodeLabel, IRNodeTarget, IRPath, IRPathRibbonOptions, IRStep, IRStepLabel, IRTarget } from '@retikz/core';
+import type {
+  IRChild,
+  IRCoordinate,
+  IRNodeLabel,
+  IRNodeTarget,
+  IRPath,
+  IRPathRibbonOptions,
+  IRStep,
+  IRStepLabel,
+  IRTarget,
+} from '@retikz/core';
 
 import { normalizeGeometryLabelSide } from '@retikz/core';
 

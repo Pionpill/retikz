@@ -40,7 +40,7 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
     expect(() => ChannelSchema.parse({})).toThrow();
   });
 
-  // 交互：value 复用 JSON literal 约束，允许对象常量用于 font / arrowDetail / boundary 等内置通道。
+  // 交互：value 复用 JSON literal 约束，允许对象常量用于 font / boundary 等内置通道。
   it('channel_value_uses_json_literal', () => {
     const value = { a: 1, nested: [true, null] };
     expect(ChannelSchema.parse({ value })).toEqual({ value });

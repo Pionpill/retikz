@@ -2,12 +2,10 @@ import type { z } from 'zod';
 
 import type { ValueOf } from '../../../types';
 import type { StepSchema } from '../step';
-import type { PathArrowDirection, PathFillRule, PathLineCap, PathLineJoin, PathThickness } from './constants';
+import type { PathFillRule, PathLineCap, PathLineJoin, PathThickness } from './constants';
 import type { ArrowMarkSchema, PathBaseSchema, PathScaleSchema } from './schema';
 
 /** 路径级箭头方向关键字类型。 */
-export type PathArrowDirectionValue = ValueOf<typeof PathArrowDirection>;
-
 /** 路径填充规则关键字类型。 */
 export type PathFillRuleValue = ValueOf<typeof PathFillRule>;
 

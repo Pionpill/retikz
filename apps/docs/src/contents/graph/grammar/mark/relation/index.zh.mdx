@@ -20,7 +20,7 @@ import { Plot, PointMark, RelationMark } from '@retikz/plot-react';
   <RelationMark
     source={{ anchorId: { prefix: 'node', field: 'sourceId' } }}
     target={{ anchorId: { prefix: 'node', field: 'targetId' } }}
-    path={{ options: { arrow: '->' } }}
+    path={{ options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] } }}
   />
 </Plot>
 ```
@@ -109,7 +109,7 @@ React 里的 `<RelationMark>` 本身不渲染 DOM；`<Plot>` 构造 `PlotSpec` �
 |        | `path.routing`       | `RelationRoutingSpec?`                               | `line`                 | 算法路由策略：`line`、`bend` 或 `orthogonal`；与 `path.route` 互斥                                                           |
 |        | `path.route[].label` | `RelationStepLabel?`                                 | -                      | 当前 step 的路径标签，优先级高于 `path.label` shorthand                                                                      |
 |        | `path.label`         | `RelationStepLabel?`                                 | -                      | 便捷路径标签，落到默认路径或最后一个可绘制 route step；未指定 `side` 时默认 `sloped`                                         |
-|        | `path.options`       | `RelationPathSpecificOptions?`                       | -                      | path-only 选项，例如 `arrow`、`arrowDetail`、`marks`、`dashPattern`、`roundedCorners`、`lineCap`、`lineJoin`                 |
+|        | `path.options`       | `RelationPathSpecificOptions?`                       | -                      | path-only 选项，例如 `marks`、`dashPattern`、`roundedCorners`、`lineCap`、`lineJoin`                 |
 | Ribbon | `ribbon.width`       | `MarkValue<number>`                                  | `kind="ribbon"` 时必填 | source 侧宽度；省略 `endWidth` 时也是整条带宽                                                                                |
 |        | `ribbon.endWidth`    | `MarkValue<number>?`                                 | -                      | target 侧宽度，用于渐变宽度 ribbon                                                                                           |
 |        | `ribbon.options`     | `RelationRibbonSpecificOptions?`                     | -                      | ribbon-only 选项：`align`、`samples`、`sampling` 和渐变宽度 `interpolation`                                                  |

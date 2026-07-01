@@ -1,10 +1,12 @@
 import type {
   IR,
+  IRArrowMark,
   IRChild,
   IRLineSpec,
   IRNode,
   IRNodeLabel,
   IRNodeLabelInput,
+  IRPathBase,
   IRScope,
   IRStep,
   IRStepLabel,
@@ -244,6 +246,40 @@ const normalizeTransformInput = (transform: IRTransformInput): IRTransform => {
 const normalizeTransformsInput = (transforms: ScopeProps['transforms']): IRScope['transforms'] => {
   if (transforms === undefined) return undefined;
   return transforms.map(normalizeTransformInput);
+};
+
+const arrowMarkFromDetail = (detail: PathProps['arrowDetail'], endpoint: 'start' | 'end'): IRArrowMark => {
+  const top = detail ?? {};
+  const side = endpoint === 'start' ? top.start : top.end;
+  const mark: IRArrowMark = { kind: 'arrow' };
+  const shape = side?.shape ?? top.shape;
+  if (shape !== undefined) mark.shape = shape;
+  const scale = side?.scale ?? top.scale;
+  if (scale !== undefined) mark.scale = scale;
+  const length = side?.length ?? top.length;
+  if (length !== undefined) mark.length = length;
+  const width = side?.width ?? top.width;
+  if (width !== undefined) mark.width = width;
+  const color = side?.color ?? top.color;
+  if (color !== undefined) mark.color = color;
+  const fill = side?.fill ?? top.fill;
+  if (fill !== undefined) mark.fill = fill;
+  const opacity = side?.opacity ?? top.opacity;
+  if (opacity !== undefined) mark.opacity = opacity;
+  const lineWidth = side?.lineWidth ?? top.lineWidth;
+  if (lineWidth !== undefined) mark.lineWidth = lineWidth;
+  return mark;
+};
+
+const buildPathMarksFromProps = (props: PathProps): IRPathBase['marks'] | undefined => {
+  const marks: NonNullable<IRPathBase['marks']> = [];
+  const arrow = props.arrow;
+  if (arrow !== undefined && arrow !== 'none') {
+    if (arrow === '<-' || arrow === '<->') marks.push({ pos: 0, mark: arrowMarkFromDetail(props.arrowDetail, 'start') });
+    if (arrow === '->' || arrow === '<->') marks.push({ pos: 1, mark: arrowMarkFromDetail(props.arrowDetail, 'end') });
+  }
+  if (props.marks !== undefined) marks.push(...props.marks);
+  return marks.length > 0 ? marks : undefined;
 };
 
 /**
@@ -536,6 +572,8 @@ const buildPathFromProps = (props: PathProps): IRChild => {
     type: 'path',
     ...pickDefined(props, PATH_FIELDS),
   };
+  const marks = buildPathMarksFromProps(props);
+  if (marks !== undefined) path.marks = marks;
   if (props.children !== undefined) {
     path.children = readPathChildren(props.children);
   }

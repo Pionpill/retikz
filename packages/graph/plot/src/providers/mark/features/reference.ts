@@ -1,4 +1,4 @@
-import { type IRChild, type IRNode, type IRNodeLabel, type IRScope, type IRStep } from '@retikz/core';
+import { type IRChild, type IRNode, type IRNodeLabel, type IRPath, type IRScope, type IRStep } from '@retikz/core';
 
 import type {
   Cell,
@@ -42,6 +42,9 @@ import { pointsToSteps } from './path';
 
 /** reference 描边宽度（参考线；与 path mark 同宽，视觉一致）。 */
 const REFERENCE_STROKE_WIDTH = LINE_STROKE_WIDTH;
+
+const referencePathOptions = (mark: ReferenceMark): Partial<Pick<IRPath, 'marks'>> =>
+  mark.marks === undefined ? {} : { marks: mark.marks };
 
 type ReferenceOrientation = 'x' | 'y';
 
@@ -392,7 +395,7 @@ const lowerReference = (
           labelOf,
         );
         return applyPathChannelDeliveries(
-          { type: 'path', ...(label !== undefined ? { label } : {}), children: p.steps },
+          { type: 'path', ...referencePathOptions(mark), ...(label !== undefined ? { label } : {}), children: p.steps },
           mark,
           p.row,
           channels,
@@ -412,6 +415,7 @@ const lowerReference = (
     const path: IRChild = applyPathChannelDeliveries(
       {
         type: 'path',
+        ...referencePathOptions(mark),
         ...(directStroke !== undefined ? { stroke: directStroke } : {}),
         ...(label !== undefined ? { label } : {}),
         children: steps,

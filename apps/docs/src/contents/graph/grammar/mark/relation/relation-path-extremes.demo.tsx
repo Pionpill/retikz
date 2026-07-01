@@ -39,7 +39,7 @@ const Demo: FC = () => (
           textColor: '#ea580c',
           font: { size: 11, weight: 'bold' },
         },
-        options: { arrow: '->' },
+        options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
       }}
     />
     <Axis dimension="x" grid />

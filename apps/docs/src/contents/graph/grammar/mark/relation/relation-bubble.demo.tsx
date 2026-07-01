@@ -35,7 +35,7 @@ const Demo: FC = () => (
       }}
       path={{
         label: { text: { field: 'relLabel' }, position: 0.5, side: 'sloped' },
-        options: { arrow: '->', roundedCorners: 8 },
+        options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 8 },
       }}
     />
     <Axis dimension="x" grid />

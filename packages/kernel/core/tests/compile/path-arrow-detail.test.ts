@@ -4,6 +4,7 @@ import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathPrim, ScenePrimitiv
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
+import { arrowMarks } from '../helpers/arrow-marks';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
   const p = prims.find((x): x is PathPrim => x.type === 'path');
@@ -51,7 +52,7 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
       children: [
         {
           type: 'path',
-          arrow: '->',
+          marks: arrowMarks('->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -81,7 +82,7 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
       children: [
         {
           type: 'path',
-          arrow: '<->',
+          marks: arrowMarks('<->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -101,8 +102,7 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: {},
+          marks: arrowMarks('->', {}),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -116,7 +116,7 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
       children: [
         {
           type: 'path',
-          arrow: '->',
+          marks: arrowMarks('->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -136,8 +136,7 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
       children: [
         {
           type: 'path',
-          arrow: 'none',
-          arrowDetail: { shape: 'stealth', color: 'red' },
+          marks: arrowMarks('none', { shape: 'stealth', color: 'red' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -159,8 +158,7 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
       children: [
         {
           type: 'path',
-          arrow: '<->',
-          arrowDetail: { shape: 'stealth' },
+          marks: arrowMarks('<->', { shape: 'stealth' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -180,8 +178,7 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
       children: [
         {
           type: 'path',
-          arrow: '<->',
-          arrowDetail: { shape: 'stealth', color: 'red', scale: 1.5, opacity: 0.7 },
+          marks: arrowMarks('<->', { shape: 'stealth', color: 'red', scale: 1.5, opacity: 0.7 }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -207,11 +204,10 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
       children: [
         {
           type: 'path',
-          arrow: '<->',
-          arrowDetail: {
+          marks: arrowMarks('<->', {
             start: { shape: 'normal' },
             end: { shape: 'stealth' },
-          },
+          }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -234,8 +230,7 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
       children: [
         {
           type: 'path',
-          arrow: '<->',
-          arrowDetail: { shape: 'stealth', start: { color: 'red' } },
+          marks: arrowMarks('<->', { shape: 'stealth', start: { color: 'red' } }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -258,12 +253,11 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
       children: [
         {
           type: 'path',
-          arrow: '<->',
-          arrowDetail: {
+          marks: arrowMarks('<->', {
             shape: 'stealth',
             start: { color: 'red' },
             end: { color: 'blue' },
-          },
+          }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -285,8 +279,7 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
       children: [
         {
           type: 'path',
-          arrow: '<-',
-          arrowDetail: { end: { color: 'red' } },
+          marks: arrowMarks('<-', { end: { color: 'red' } }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -308,8 +301,7 @@ describe('compile arrowDetail：空心 shape silent fill ignore', () => {
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'open', fill: 'red' },
+          marks: arrowMarks('->', { shape: 'open', fill: 'red' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -330,8 +322,7 @@ describe('compile arrowDetail：空心 shape silent fill ignore', () => {
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'open', color: 'blue', fill: 'red' },
+          marks: arrowMarks('->', { shape: 'open', color: 'blue', fill: 'red' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -354,8 +345,7 @@ describe('compile arrowDetail：空心 shape silent fill ignore', () => {
         children: [
           {
             type: 'path',
-            arrow: '->',
-            arrowDetail: { shape, fill: 'red' },
+            marks: arrowMarks('->', { shape, fill: 'red' }),
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [10, 0] },
@@ -375,8 +365,7 @@ describe('compile arrowDetail：空心 shape silent fill ignore', () => {
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape, fill: 'red' },
+          marks: arrowMarks('->', { shape, fill: 'red' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -397,8 +386,7 @@ describe('compile arrowDetail：scale × length / width 解析进 wrapper 参数
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'normal', length: 10, scale: 1.5 },
+          marks: arrowMarks('->', { shape: 'normal', length: 10, scale: 1.5 }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -417,8 +405,7 @@ describe('compile arrowDetail：scale × length / width 解析进 wrapper 参数
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'normal', width: 8, scale: 2 },
+          marks: arrowMarks('->', { shape: 'normal', width: 8, scale: 2 }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -439,8 +426,7 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'open' },
+          marks: arrowMarks('->', { shape: 'open' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
@@ -462,8 +448,7 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'openCircle', lineWidth: 1 },
+          marks: arrowMarks('->', { shape: 'openCircle', lineWidth: 1 }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
@@ -484,8 +469,7 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'open' },
+          marks: arrowMarks('->', { shape: 'open' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
@@ -508,8 +492,7 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
         { type: 'node', id: 'b', position: [100, 0], minimumWidth: 20, minimumHeight: 20 },
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'open' },
+          marks: arrowMarks('->', { shape: 'open' }),
           children: [
             { type: 'step', kind: 'move', to: { id: 'a' } },
             { type: 'step', kind: 'line', to: { id: 'b' } },
@@ -535,8 +518,7 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
         { type: 'node', id: 'b', position: [100, 0], minimumWidth: 20, minimumHeight: 20 },
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'customOpen' },
+          marks: arrowMarks('->', { shape: 'customOpen' }),
           children: [
             { type: 'step', kind: 'move', to: { id: 'a' } },
             { type: 'step', kind: 'line', to: { id: 'b' } },

@@ -514,9 +514,8 @@ const pathStylePropsOf = (props: CorePathChannelProps, context: StyleSugarContex
       context,
     ),
   );
-  put('arrow', enumStyleOf(props.arrow, 'arrow', new Set(['none', '->', '<-', '<->']), context));
+  put('marks', props.marks);
   put('dashPattern', jsonStyleOf(props.dashPattern, 'dashPattern', context));
-  put('arrowDetail', jsonStyleOf(props.arrowDetail, 'arrowDetail', context));
   put(
     'shadow',
     typeof props.shadow === 'string'

@@ -126,9 +126,15 @@ For the endpoint rules of proportional placement, see [Placement](/kernel/refere
 
 </Comparison>
 
+## ArrowMark
+
+`ArrowMarkSchema` is the core IR arrow marker used inside `Path.marks`. Endpoint arrows are represented as marks at `pos: 0` or `pos: 1`; React `arrow` / `arrowDetail` sugar expands to this shape before it reaches core IR.
+
+<ZodSchema name="ArrowMarkSchema" />
+
 ## ArrowDetail
 
-The schema for `Path.arrowDetail` — eight top-level visual fields (shared with `ArrowEndDetail`) plus optional `start` / `end` sub-objects. Sub-objects merge field-by-field into the top-level defaults: missing fields inherit, present fields override.
+`ArrowDetailSchema` is the visual configuration used by React `arrowDetail` sugar and `arrowDefault`. Core Path IR no longer stores `arrow` / `arrowDetail`; endpoint arrows are `ArrowMark` entries in `marks`.
 
 <ZodSchema name="ArrowDetailSchema" />
 

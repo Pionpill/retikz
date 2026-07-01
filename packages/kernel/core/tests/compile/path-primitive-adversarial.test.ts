@@ -4,6 +4,7 @@ import type { PathCommand, PathPrim, ScenePrimitive } from '../../src/primitive'
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
+import { arrowMarks } from '../helpers/arrow-marks';
 import { close, line, move } from '../helpers/path-command-factory';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
@@ -282,7 +283,7 @@ describe('GroupPrim.transforms：结构化形态约束', () => {
         { type: 'node', id: 'C', position: [60, 60] },
         {
           type: 'path',
-          arrow: '->',
+          marks: arrowMarks('->'),
           children: [
             { type: 'step', kind: 'move', to: { id: 'A' } },
             { type: 'step', kind: 'line', to: { id: 'B' } },

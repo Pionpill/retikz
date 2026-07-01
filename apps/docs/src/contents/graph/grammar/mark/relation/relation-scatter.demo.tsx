@@ -31,7 +31,7 @@ const Demo: FC = () => (
       }}
       path={{
         label: { text: { field: 'relation' }, position: 0.45, side: 'sloped' },
-        options: { arrow: '->' },
+        options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
       }}
     />
   </Plot>

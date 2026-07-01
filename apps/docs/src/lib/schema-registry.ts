@@ -131,6 +131,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
 
   // Arrow detail（path-level 箭头视觉规格）
+  ArrowMarkSchema: {
+    schema: IR.ArrowMarkSchema,
+    label: 'ArrowMark',
+    url: '/kernel/reference/schema/path#arrowmark',
+  },
   ArrowDetailSchema: {
     schema: IR.ArrowDetailSchema,
     label: 'ArrowDetail',

@@ -3,6 +3,8 @@ import type { FC } from 'react';
 
 import { parseWay } from '@retikz/core';
 
+import type { PathProps } from '../kernel/Path';
+
 import { Path } from '../kernel/Path';
 import { Step } from '../kernel/Step';
 
@@ -35,12 +37,12 @@ export type DrawProps = {
    * 路径级箭头方向
    * @description `'->'` 终点 / `'<-'` 起点 / `'<->'` 两端；省略或 `'none'` 无箭头
    */
-  arrow?: IRPath['arrow'];
+  arrow?: PathProps['arrow'];
   /**
    * 箭头详细配置
    * @description 顶层默认 + 可选 `start` / `end` 子对象逐字段 merge override。空心 shape 上 `fill` silent no-op
    */
-  arrowDetail?: IRPath['arrowDetail'];
+  arrowDetail?: PathProps['arrowDetail'];
   /** 闭合区域填充色，省略 = 不填充。配合 way 末尾的 `DrawWay.Cycle` 画填充形状 */
   fill?: IRPath['fill'];
   /** 填充规则：`'nonzero'`（默认）/ `'evenodd'` */
