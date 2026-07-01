@@ -3,11 +3,10 @@ import type {
   BlendModeStyle,
   BlendModeValue,
   Channel,
-  DropShadow,
   ExternalRow,
   IntervalBounds,
-  IRArrowDetail,
   IRBoundary,
+  IRDropShadow,
   IRFont,
   IRPaintSpec,
   IRPathScale,
@@ -23,8 +22,6 @@ import type {
   NodePositiveNumberStyle,
   NodeTextAlignStyle,
   NodeTextAlignValue,
-  PathArrowDetailStyle,
-  PathArrowStyle,
   PathClosure,
   PathCurveValue,
   PathFillRuleStyle,
@@ -43,6 +40,7 @@ import type {
   PointZIndexStyle,
   RelationGeometryKindValue,
   RelationPathGeometryInput,
+  RelationPathSpecificOptions,
   RelationPrimitiveStyle,
   RelationRibbonOptions,
   ShadowPresetValue,
@@ -59,7 +57,6 @@ export type LineCapValue = 'butt' | 'round' | 'square';
 export type LineJoinValue = 'miter' | 'round' | 'bevel';
 export type FillRuleValue = 'nonzero' | 'evenodd';
 export type ThicknessValue = 'ultraThin' | 'veryThin' | 'thin' | 'semithick' | 'thick' | 'veryThick' | 'ultraThick';
-export type ArrowValue = 'none' | '->' | '<-' | '<->';
 export type NodeShapeChannelValue = string | IRShapeRef;
 export type ExtensionChannelProp = FieldName | JsonValue | Channel | MarkValueType<JsonValue>;
 
@@ -90,7 +87,7 @@ export type CoreNodeChannelProps = {
   dashPattern?: MarkValueProp<Array<number>> | NodeDashPatternStyle;
   font?: MarkValueProp<IRFont> | NodeFontStyle;
   boundary?: MarkValueProp<IRBoundary> | NodeBoundaryStyle;
-  shadow?: MarkValueProp<ShadowPresetValue | DropShadow> | ShadowStyle;
+  shadow?: MarkValueProp<ShadowPresetValue | IRDropShadow> | ShadowStyle;
   blendMode?: MarkValueProp<BlendModeValue> | BlendModeStyle;
 };
 
@@ -103,10 +100,9 @@ export type CorePathChannelProps = {
   scale?: MarkValueProp<IRPathScale> | PathScaleStyle;
   fillRule?: MarkValueProp<FillRuleValue> | PathFillRuleStyle;
   thickness?: MarkValueProp<ThicknessValue> | PathThicknessStyle;
-  arrow?: MarkValueProp<ArrowValue> | PathArrowStyle;
+  marks?: RelationPathSpecificOptions['marks'];
   dashPattern?: MarkValueProp<Array<number>> | NodeDashPatternStyle;
-  arrowDetail?: MarkValueProp<IRArrowDetail> | PathArrowDetailStyle;
-  shadow?: MarkValueProp<ShadowPresetValue | DropShadow> | ShadowStyle;
+  shadow?: MarkValueProp<ShadowPresetValue | IRDropShadow> | ShadowStyle;
   blendMode?: MarkValueProp<BlendModeValue> | BlendModeStyle;
 };
 
@@ -122,7 +118,7 @@ export type DatumLabelProps = {
   label?: FieldName;
   /** 标签格式串（d3-format 数值 / d3-time-format 时间，进 IR）；仅与 label 字段同用 */
   labelDisplayFormat?: string;
-  /** 标签相对宿主 Node 边框方位；Web 名为 canonical，compass / above-below 写法作为输入别名。 */
+  /** 标签相对宿主 Node 边框方位；Web 名为 canonical，compass 写法作为输入别名。 */
   labelPosition?: MarkNodeLabelInput['position'];
   /** 标签离宿主边框距离（user units）；缺省 12（对齐 core NodeLabelSchema.distance） */
   labelDistance?: number;

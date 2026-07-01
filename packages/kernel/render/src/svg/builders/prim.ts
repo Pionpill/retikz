@@ -1,4 +1,4 @@
-import type { ArrowEndSpec, BlendModeValue, DropShadow, PaintValue, ScenePrimitive } from '@retikz/core';
+import type { ArrowEndSpec, BlendModeValue, IRDropShadow, PaintValue, ScenePrimitive } from '@retikz/core';
 
 import type { SvgNode, SvgStyle } from '../types';
 
@@ -21,8 +21,8 @@ export type BuildContext = {
   paintRefUrl?: (id: string) => string;
   /** clip 资源 id → `url(#...)` 引用（GroupPrim.clipRef 物化用）；缺省 `url(#id)` */
   clipRefUrl?: (id: string) => string;
-  /** 按已解析 DropShadow 查去重注册的 `<filter>` id（emit `filter="url(#id)"`）；缺省裸 hash id */
-  shadowIdFor?: (shadow: DropShadow) => string;
+  /** 按已解析 IRDropShadow 查去重注册的 `<filter>` id（emit `filter="url(#id)"`）；缺省裸 hash id */
+  shadowIdFor?: (shadow: IRDropShadow) => string;
   /** 动画装饰回调（document builder 在动画启用时注入）：给带 `animations` 的 prim 挂 CSS / WAAPI；缺省不装饰 */
   decorate?: (node: SvgNode, prim: ScenePrimitive) => SvgNode;
 };
@@ -91,15 +91,15 @@ const mergeBlendStyle = (style: SvgStyle | undefined, blendMode: BlendModeValue 
 };
 
 /**
- * DropShadow → `filter="url(#id)"` 值
+ * IRDropShadow → `filter="url(#id)"` 值
  * @description 缺省 `shadowIdFor`（粒度化调用 `buildPrim` 而非走整文档装配）时回退到「内容寻址」裸 id
  *   `retikz-shadow-<hash>`（同 paint / clip 回退口径：不带实例前缀的稳定 id）。这样独立调用方只要自行用同口径
  *   emit 对应 `<filter>` def，引用即生效；不同 shadow 得不同 hash（不会塌成一个 id）。整文档路径恒由
  *   `context.shadowIdFor` 注入带前缀 id 并配套 defs。
  */
 const shadowFilterRef = (
-  shadow: DropShadow | undefined,
-  shadowIdFor: ((shadow: DropShadow) => string) | undefined,
+  shadow: IRDropShadow | undefined,
+  shadowIdFor: ((shadow: IRDropShadow) => string) | undefined,
 ): string | undefined =>
   shadow ? `url(#${shadowIdFor ? shadowIdFor(shadow) : `retikz-shadow-${shadowHash(shadow)}`})` : undefined;
 

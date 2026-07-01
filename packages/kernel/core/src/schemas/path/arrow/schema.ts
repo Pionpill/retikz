@@ -1,11 +1,8 @@
 import { z } from 'zod';
 
+import { CssColorSchema, OpacitySchema } from '../../style';
 import { BuiltinArrowShape } from './constants';
 
-/**
- * 端点级箭头视觉规格 schema
- * @description 顶层 8 字段全 optional；fill 在空心 shape 上 silent no-op（schema 不拒绝、compile/render 丢字段）；start/end 子对象用相同字段集（无 start/end 递归）
- */
 export const ArrowEndDetailSchema = z
   .object({
     shape: z
@@ -29,24 +26,17 @@ export const ArrowEndDetailSchema = z
       .nonnegative()
       .optional()
       .describe('Arrow-tip width perpendicular to the path, in user units. Defaults to the shape definition fallback.'),
-    color: z
-      .string()
+    color: CssColorSchema
       .optional()
       .describe(
         'Arrow color override. Hollow arrows use it as stroke; solid arrows use it as the fallback fill/stroke color. Omitted arrows inherit the path stroke.',
       ),
-    fill: z
-      .string()
+    fill: CssColorSchema
       .optional()
       .describe(
         'Fill override for solid arrow shapes. Hollow arrow definitions ignore fill and use `color` for their outline.',
       ),
-    opacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Arrow-only opacity. When omitted, the arrow follows the path opacity.'),
+    opacity: OpacitySchema.optional().describe('Arrow-only opacity. When omitted, the arrow follows the path opacity.'),
     lineWidth: z
       .number()
       .nonnegative()
@@ -59,10 +49,6 @@ export const ArrowEndDetailSchema = z
     'Per-end arrow visual spec. Omitted fields inherit from top-level `arrowDetail`, then from the arrow definition defaults.',
   );
 
-/**
- * Path 级箭头详细配置 schema
- * @description 顶层视觉字段（与 `ArrowEndDetailSchema` 同字段集）作为起末共享默认；`start` / `end` 子对象逐字段 merge 顶层（缺省字段继承，已填字段 override）
- */
 export const ArrowDetailSchema = ArrowEndDetailSchema.extend({
   start: ArrowEndDetailSchema.optional().describe(
     'Start-end override (effective only when `arrow` includes a start arrow: `<-` / `<->`). Fields merge into the top-level defaults; omitted fields inherit, present fields override.',

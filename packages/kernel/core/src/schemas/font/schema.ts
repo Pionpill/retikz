@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-/** 字体规格：family/size/weight/style 全部可选 */
 export const FontSchema = z
   .object({
     family: z

@@ -1,4 +1,4 @@
-import type { BoundaryDefinition } from '../contract/boundary';
+import type { BoundaryAnchorName, BoundaryDefinition } from '../contract/boundary';
 import type { ShapeDefinition } from '../contract/shape';
 import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';
@@ -15,7 +15,7 @@ const SELF = 'shape';
 type ResolvedBoundaryDefinition = {
   name: string;
   boundaryPoint: (rect: Rect, toward: Position, params: IRJsonObject) => Position;
-  anchor?: (rect: Rect, name: string, params: IRJsonObject) => ReturnType<ShapeDefinition['anchor']>;
+  anchor?: (rect: Rect, name: BoundaryAnchorName, params: IRJsonObject) => ReturnType<ShapeDefinition['anchor']>;
 };
 
 const providerOf = <TDefinition>(

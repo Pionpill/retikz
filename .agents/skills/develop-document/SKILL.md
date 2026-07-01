@@ -1,136 +1,59 @@
 ---
 name: develop-document
-description: alpha 功能开发的文档阶段——把已实现已通过 adversarial 第一关的功能落进 apps/docs/。衔接 docs-doc-principle SKILL（按页型再分流到 docs-doc-component / docs-doc-example；双语 mdx + demo + API 表 + sidebar / i18n 同步）。绿色 level 改动若主体就是文档，本阶段即主流程；红色 / 黄色实现的文档化在本阶段补齐。
+description: Use when a retikz feature or user-visible behavior needs apps/docs updates, demos, API tables, sidebar or i18n changes after implementation, or when the change itself is documentation-first.
 ---
 
-# Stage 4：文档
+# Stage 4: 文档
 
-实现已稳（Bug Hunter BLOCKING 清空），接下来把功能"用户化"——文档站给用户看的章节、API 表、demo 都补上。
+把稳定实现转成用户能读、能跑、能对照的 docs 页面和 demo。用户 review 通常先看站点 demo，再看代码细节；文档不是可选项。
 
-## 评审优先级（用户习惯，必读）
+## 必读
 
-> 用户 review 一个功能时**先看站点文档演示（site demo），再看代码细节**。由此三条铁律：
->
-> 1. **站点 demo 是首要交付物**——能在 docs 站跑起来、直观演示该 ADR 能力的 `<name>.demo.tsx` 比代码注释 / 测试更先被看到；demo 必须真渲染出体现该功能的画面，不能是占位。
-> 2. **文档不可跳过 / 延后**——即使在自治 / 离线 / "先收口" 场景，一个功能**没补文档 demo 就不算 flow 走完**。stage 4 是硬关卡，不因赶进度或上下文预算省略；宁可少做一个功能、做完的功能必带 demo。
-> 3. **完工汇报先呈 demo**——给用户的完工报告**先给文档页路径 + 怎么看**（哪个组件页 / `pnpm dev:docs` 访问哪条路由），再讲代码改了哪里。
+- `apps/docs/AGENTS.md`
+- `docs-doc-principle`
+- 按页型继续读 `docs-doc-component` / `docs-doc-example` / `docs-doc-group` / `docs-doc-concept` / `docs-doc-blog`
+- 需要独立审稿时读 `docs-doc-review`
 
 ## 输入
 
-- ADR（已 Proposed，未 Accepted——Accepted 是 wrapup 阶段的事）
-- develop-test 阶段产出的稳定实现 + 完整测试
-- develop-test 留下的 INFO 列表（实现稳健性的素材，可写进文档"提示"段）
+- ADR / TODO 与最终行为。
+- `develop-test` 的 BLOCKING 修复结果、WARNING / INFO。
+- 受影响的现有 docs 页面、demo、API 表、sidebar、i18n key。
 
-## 适用范围
+## 先读现有 docs
 
-| Level | 走不走 |
-|---|---|
-| red | 必走（功能要让用户能查到） |
-| yellow | 必走 |
-| green | 主体就是文档 → 直接进本阶段（跳过 implement / test 大部分） |
+用户可见改动必须先读相关现有页面，再决定更新还是新增：
 
-## 流程主体
+- 改组件 / prop：读对应组件页 zh + en、demo、Related 指向页。
+- 改 schema / IR：读 reference schema 页、使用该字段的组件页、概念页。
+- 改 DSL / sugar：读所在组件页、示例页、入门路径中复用 demo。
+- 改默认值 / 错误信息：全局搜索旧字段名、旧默认值、旧说法。
 
-委托给 [`docs-doc-principle`](../docs-doc-principle/SKILL.md) SKILL（按页型再分流到 [`docs-doc-component`](../docs-doc-component/SKILL.md) / [`docs-doc-example`](../docs-doc-example/SKILL.md)）。本 SKILL 主要负责：
-
-- 列出本 ADR 必须落到文档站的清单
-- 功能性改动先读 `apps/docs/src/contents/**` 下相关现有页面，判断哪些页面会被新行为影响
-- 检查 doc-skill 产出是否覆盖了清单
-- 校验双语并行 / API 表 / sidebar 注册的完整性
-
-## 先读现有 docs（功能性改动硬规则）
-
-任何功能性改动（新增 / 删除 / 重命名组件或 props、IR schema 字段、React DSL 行为、sugar 解析、渲染行为、默认值或用户可观察错误信息）都必须先阅读 `apps/docs/src/contents/**` 下相关页面，再决定是更新、修改还是补充新文档。
-
-读取范围按影响面定：
-
-- 改组件 / prop：读对应组件页 zh + en、相关 demo、Related 指向的概念页 / reference 页
-- 改 schema / IR：读对应 reference schema 页、使用该字段的组件页、相关概念页
-- 改 DSL / sugar：读 sugar 所在组件页、示例页、入门 / learning path 中可能复用的 demo
-- 改默认值 / 行为语义：全局搜索旧字段名 / 旧默认值 / 旧说法，避免文档里同时出现新旧行为
-
-结论必须落到必落清单：需要更新的 mdx / demo / API 表 / sidebar / i18n 都列出来；如果读完判断不需要改文档，也要在汇报里说明“已读哪些页面，为什么无需更新”。
+若判断无需改文档，在汇报中说明读了哪些页面以及为什么无需更新。
 
 ## 必落清单
 
-按 ADR 类型分：
+按实际改动选择：
 
-### 新 IR 字段 / 新 prop（红色 / 黄色 ADR 通常都是）
+- 新 prop / IR 字段：说明、API 表行、至少一个 `<ComponentPreview>`、zh/en mdx 对齐。
+- 新 kernel / sugar / plot 组件：页面、基础 + 进阶 demo、data 注册、i18n key。
+- 行为 / 默认值变化：说明、API 表、demo 和“行为变化”提示。
+- 删除 / 改名：删或改 API 表、说明、demo、站内链接。
 
-- [ ] 对应组件页 mdx 加章节描述
-- [ ] API 表加新行（`prop` / `类型` / `默认值` / `描述` 四列）
-- [ ] 至少一个 `<ComponentPreview name="..." />` 示例
-- [ ] 对应的 `<name>.demo.tsx`——**含展示文本则双语**（`<name>.zh.demo.tsx` + `<name>.en.demo.tsx`），无文本则单文件
-- [ ] zh + en 两份 mdx 结构对齐
+demo 有可见文本时必须双语：`<name>.zh.demo.tsx` + `<name>.en.demo.tsx`；无文本可用 `<name>.demo.tsx`。
 
-### 新 kernel / sugar 组件
+## 验证
 
-- [ ] 新建组件页目录 `core/components/<...>/<组件>/`
-- [ ] `index.zh.mdx` + `index.en.mdx`
-- [ ] ≥ 2 个独立 demo（基本用法 + 进阶用法）
-- [ ] `apps/docs/src/data/<...>.ts` 加 sidebar 条目
-- [ ] `apps/docs/src/i18n/locales/{zh,en}.json` 加 i18n key
+按 `apps/docs/AGENTS.md` 的分级执行：
 
-### 改默认值 / 改字段语义
-
-- [ ] mdx 里描述行更新（旧默认值改新）
-- [ ] 受影响 demo 检查 / 改
-- [ ] 章节末加"行为变化"提示（让从旧 alpha 升上来的用户知道）
-
-### 删 prop / 删字段
-
-- [ ] mdx API 表删行
-- [ ] 受影响 demo 删 / 改
-- [ ] 章节里如有相关说明全删
-
-## doc-skill 衔接
-
-调用 docs-doc-principle SKILL（按页型再读 docs-doc-component / docs-doc-example）时把上面"必落清单"作为输入，让其按清单逐条产出 mdx / demo 文件。
-
-主 AI 接到 doc-skill 产出后回校：
-
-```
-- 必落清单每条是否打勾？没打勾的项 halt → 派 doc-skill 补
-- 双语 demo 文件结构是否一致（同 props / 同 layout / 仅文案差异）？
-- API 表行是否完整（4 列填全）？
-- sidebar / i18n 是否两端都注册？
-```
-
-文档初稿完成后，推荐运行 [`docs-doc-review`](../docs-doc-review/SKILL.md) 做一次独立评审；红色 / 黄色功能改动建议把评审作为进入 wrapup 前的固定关卡。
-
-## demo 文件命名（与 doc-skill 一致）
-
-- 无文字：`<name>.demo.tsx`
-- 含展示文本：`<name>.zh.demo.tsx` + `<name>.en.demo.tsx`（[`ComponentPreview`](../../../apps/docs/src/components/shared/component-preview/ComponentPreview.tsx) 按当前 i18n 语言挑）
-
-## commit 颗粒度
-
-按章节粒度 commit，不要把"3 个新 demo + 2 个 API 表行 + sidebar"全揉一坨：
-
-```
-:pencil: alpha.X 文档：<组件>/<新章节> + zh/en 双语 demo
-```
-
-如果改动跨多个组件页，**每个组件页一个 commit**。这样 review 时一目了然。
-
-## 失败 / 升级
-
-| 情景 | 处理 |
-|---|---|
-| doc-skill 写出的 mdx 描述与实际行为不符 | halt → 主 AI 呈报，让 doc-skill 重写（不要让本 SKILL 自己改 mdx，违反职责分工） |
-| 必落清单某项 doc-skill 不知道怎么写（如新 demo 找不到合适场景） | halt → 主 AI 提供 demo 场景或改 ADR 加示例 |
-| 双语 demo 文案不对应（zh 用了中文示例文本但 en 拷贝过来没翻译） | halt → 让 doc-skill 修 |
-
-## 与上下游衔接
-
-- **上游**：develop-test（实现已稳）
-- **下游**：develop-wrapup（写 changelog + 跑 Adversarial 第二关 + 人工 ack）
+- 纯正文：`git diff --check` + 页面 / 链接验证。
+- demo / data / i18n / import：docs 包 `tsc --noEmit` + 浏览器确认 demo。
+- CI 等价路径：docs build。
 
 ## 完成标志
 
-- 必落清单全部打勾
-- zh + en mdx 两份都更新且结构对齐
-- demo 文件能跑（`apps/docs` dev server 起来访问对应页面 SVG 渲染正常）
-- sidebar / i18n key 都注册
-- 文档相关的 commit 全部入 git，message 用 `:pencil:`
-- **向用户汇报完工时先呈站点 demo**：给出文档页路径 + 访问路由（`pnpm dev:docs` 看哪条），再讲代码细节（见 §评审优先级）
+- 必落清单全部覆盖。
+- zh / en mdx 结构对齐，展示文本 demo 已双语。
+- sidebar / i18n / data 注册完整。
+- demo 能在 docs 页面渲染出真实功能，不是占位。
+- 向用户汇报时先给文档页路径和访问方式，再讲代码细节。

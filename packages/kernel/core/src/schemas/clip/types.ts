@@ -1,5 +1,5 @@
-import type { PathCommand } from '../../primitive/path';
 import type { IRJsonObject } from '../json';
+import type { IRPathCommand } from '../path-command';
 
 export type IRClipFillRule = 'nonzero' | 'evenodd';
 export type IRRectClipSpec = { kind: 'rect'; x: number; y: number; width: number; height: number };
@@ -8,7 +8,7 @@ export type IREllipseClipSpec = { kind: 'ellipse'; cx: number; cy: number; rx: n
 export type IRPolygonClipSpec = { kind: 'polygon'; points: Array<[number, number]> };
 export type IRPathClipSpec = {
   kind: 'path';
-  commands: Array<PathCommand>;
+  commands: Array<IRPathCommand>;
   fillRule?: IRClipFillRule;
 };
 export type IRCompoundClipSpec = {

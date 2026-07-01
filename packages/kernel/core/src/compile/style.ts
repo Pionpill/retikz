@@ -1,6 +1,7 @@
 import type {
   IRArrowDetail,
   IRArrowEndDetail,
+  IRArrowMark,
   IRDrawableStyle,
   IRFont,
   IRGeometryLabel,
@@ -309,6 +310,38 @@ const resolveArrowDetail = (
   return touched ? acc : undefined;
 };
 
+const arrowMarkFromDetail = (detail: IRArrowEndDetail | undefined): Omit<IRArrowMark, 'kind'> => {
+  if (detail === undefined) return {};
+  return pickDefinedKeys(detail);
+};
+
+const resolveArrowMark = (
+  mark: IRArrowMark,
+  pos: number,
+  stack: ReadonlyArray<StyleFrame>,
+  masterColor: string | undefined,
+): IRArrowMark => {
+  const detail = resolveArrowDetail(undefined, stack, masterColor);
+  if (detail === undefined) return mark;
+  const { start, end, ...top } = detail;
+  const side = pos === 0 ? start : pos === 1 ? end : undefined;
+  return {
+    kind: 'arrow',
+    ...arrowMarkFromDetail(top),
+    ...arrowMarkFromDetail(side),
+    ...pickDefinedKeys(mark),
+  };
+};
+
+const resolvePathMarks = (
+  marks: IRPathBase['marks'] | undefined,
+  stack: ReadonlyArray<StyleFrame>,
+  masterColor: string | undefined,
+): IRPathBase['marks'] | undefined => {
+  if (marks === undefined) return undefined;
+  return marks.map(item => ({ ...item, mark: resolveArrowMark(item.mark, item.pos, stack, masterColor) }));
+};
+
 /** 替换 path children 中各 step 的 label 为已解析 effective label */
 const resolveStepLabels = (
   children: ReadonlyArray<IRStep>,
@@ -373,13 +406,8 @@ export const resolveEffectivePath = (path: IRPathBase, stack: ReadonlyArray<Styl
   const effective = acc as IRPathBase;
 
   const labelDefault = resolveLabelDefault(stack);
-  if (isRibbon) {
-    delete effective.arrowDetail;
-  } else {
-    const arrowDetail = resolveArrowDetail(path.arrowDetail, stack, masterColor);
-    if (arrowDetail !== undefined) effective.arrowDetail = arrowDetail;
-    else delete effective.arrowDetail;
-  }
+  if (isRibbon) delete effective.marks;
+  else effective.marks = resolvePathMarks(path.marks, stack, masterColor);
   if (path.children !== undefined) {
     effective.children = resolveStepLabels(path.children, labelDefault, masterColor);
   } else {

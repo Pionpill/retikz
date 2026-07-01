@@ -7,6 +7,7 @@ import type { IR } from '../../src/schemas';
 import { compileToScene } from '../../src/compile/compile';
 import { ellipse } from '../../src/geometry/ellipse';
 import { ellipse as ellipseShape } from '../../src/providers/shape';
+import { WebAnchor } from '../../src/shared';
 import { flattenPrims } from '../helpers/flatten';
 
 const e: Ellipse = { x: 0, y: 0, rx: 10, ry: 5 };
@@ -52,27 +53,27 @@ describe('ellipse.contains', () => {
 
 describe('ellipse.anchor', () => {
   it('4 轴端点对应 N / S / E / W', () => {
-    expect(ellipse.anchor(e, 'east')).toEqual([10, 0]);
-    expect(ellipse.anchor(e, 'west')).toEqual([-10, 0]);
-    expect(ellipse.anchor(e, 'north')).toEqual([0, -5]);
-    expect(ellipse.anchor(e, 'south')).toEqual([0, 5]);
+    expect(ellipse.anchor(e, WebAnchor.Right)).toEqual([10, 0]);
+    expect(ellipse.anchor(e, WebAnchor.Left)).toEqual([-10, 0]);
+    expect(ellipse.anchor(e, WebAnchor.Top)).toEqual([0, -5]);
+    expect(ellipse.anchor(e, WebAnchor.Bottom)).toEqual([0, 5]);
   });
 
   it('对角 anchor 取参数 t=π/4 处：(rx/√2, ry/√2)', () => {
-    const ne = ellipse.anchor(e, 'north-east');
+    const ne = ellipse.anchor(e, WebAnchor.TopRight);
     expect(ne[0]).toBeCloseTo(10 * Math.SQRT1_2);
     expect(ne[1]).toBeCloseTo(-5 * Math.SQRT1_2);
   });
 });
 
 describe('ellipse.boundaryPoint', () => {
-  it('沿 +x → east', () => {
+  it('沿 +x → right', () => {
     const p = ellipse.boundaryPoint(e, [100, 0]);
     expect(p[0]).toBeCloseTo(10);
     expect(p[1]).toBeCloseTo(0);
   });
 
-  it('沿 +y → south', () => {
+  it('沿 +y → bottom', () => {
     const p = ellipse.boundaryPoint(e, [0, 100]);
     expect(p[0]).toBeCloseTo(0);
     expect(p[1]).toBeCloseTo(5);

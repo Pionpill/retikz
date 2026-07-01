@@ -1,11 +1,15 @@
 import type { z } from 'zod';
 
-import type { ValueOf } from '../../types';
+import type { ValueOf } from '../../shared';
 import type { BlendMode, ShadowPreset } from './constants';
 import type { DropShadowSchema } from './schema';
 
-/** 解析后的投影对象类型（compile 已把预设展开 + 显式字段覆盖合并） */
-export type DropShadow = z.infer<typeof DropShadowSchema>;
+/** IR shadow 对象分支（可带 preset 与显式字段覆盖） */
+export type IRDropShadow = z.infer<typeof DropShadowSchema>;
+
+/** 解析后的投影对象（preset 已展开，offset / color 已补齐，不再携带 preset） */
+export type ResolvedDropShadow = Omit<IRDropShadow, 'preset'> &
+  Required<Pick<IRDropShadow, 'offsetX' | 'offsetY' | 'color'>>;
 
 /** 阴影预设档位值联合 */
 export type ShadowPresetValue = ValueOf<typeof ShadowPreset>;

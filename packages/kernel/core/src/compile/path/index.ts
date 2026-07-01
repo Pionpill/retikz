@@ -3,23 +3,23 @@ import { arcBoundingPoints, arcEndPoint, curve, ellipseArcBoundingPoints, ellips
 import type { PathGeneratorDefinition } from '../../contract/path';
 import type { SegmentSample } from '../../geometry/segment';
 import type {
-  ArrowEndSpec,
   GroupPrim,
   MarkerFill,
   MarkerPrimitive,
   PaintValue,
   PathCommand,
+  ResolvedArrowEndSpec,
   ScenePrimitive,
   Transform,
 } from '../../primitive';
 import type { IRPath, IRPathBase, IRPathScale, IRPosition, IRStep, IRTarget } from '../../schemas';
-import type { AssertEqual } from '../../types';
+import type { AssertEqual } from '../../shared';
 import type { CompileWarning } from '../constant';
 import type { LowerTex } from '../lower-tex';
 import type { NameStack } from '../name-stack';
 import type { PaintResolver } from '../paint';
 import type { TextMeasurer } from '../text-metrics';
-import type { EffectiveArrows } from './shrink';
+import type { ResolvedArrowRegistry } from './shrink';
 import type { PathBaseProps } from './split';
 
 import { bendControlPoints, outInControlPoints } from '../../geometry/bend';
@@ -46,7 +46,7 @@ import { clipForTarget, cornerOf, isAutoBoundaryTarget, refPointOfTarget, samePo
 import { emitLabelPrimitive, tForLabelPosition } from './label';
 import { normalizeRelativeTargets } from './relative';
 import { applyRoundedCorners, sampleRoundedCommands } from './rounded-corners';
-import { applyArrowShrinks, endpointArrows, resolveMarkArrowSpec } from './shrink';
+import { applyArrowShrinks, resolveEndpointArrowMark, resolveMarkArrowSpec } from './shrink';
 import { splitSubPathsForEndpointArrows } from './split';
 
 const EMPTY_PATH_GENERATORS: ReadonlyMap<string, PathGeneratorDefinition> = new Map();
@@ -174,12 +174,12 @@ export type EmitPathWarnHook = {
    */
   resolvePaint?: PaintResolver;
   /**
-   * 有效 arrow 表（内置 8 + 注入）；缺省 = 仅内置 8
+   * 已解析 arrow registry（内置 8 + 注入）；缺省 = 仅内置 8
    * @description compileToScene 合并 `{ ...BUILTIN_ARROWS, ...options.arrows }` 传入；
-   *   endpointArrows 据此查表算 shrink / 调 def.emit；未注册名编译期 throw
+   *   endpoint arrow marks 据此查表算 shrink / 调 def.emit；未注册名编译期 throw
    * @default resolveArrowRegistry()
    */
-  effectiveArrows?: EffectiveArrows;
+  resolvedArrows?: ResolvedArrowRegistry;
   /**
    * 有效 path generator 表（注入即全部，core 无内置）；缺省 = 空表
    * @description compileToScene 传 `options.pathGenerators ?? {}`；generator step 据此查表（未注册名
@@ -268,7 +268,7 @@ const markerPrimUsesContextStroke = (prim: MarkerPrimitive): boolean => {
 
 const assertArrowCanInheritStroke = (
   stroke: PaintValue | undefined,
-  arrows: { arrowStart?: ArrowEndSpec; arrowEnd?: ArrowEndSpec },
+  arrows: { arrowStart?: ResolvedArrowEndSpec; arrowEnd?: ResolvedArrowEndSpec },
 ): void => {
   if (stroke === undefined || typeof stroke === 'string') return;
   const usesContextStroke =
@@ -300,7 +300,7 @@ const markerPrimToScene = (prim: MarkerPrimitive, contextStroke: string): SceneP
 };
 
 const buildMarkMarkerGroup = (
-  spec: ArrowEndSpec,
+  spec: ResolvedArrowEndSpec,
   sample: SegmentSample,
   strokeWidth: number,
   round: (n: number) => number,
@@ -1103,16 +1103,46 @@ export const emitPathPrimitive = (
     blendMode: path.blendMode,
   };
 
-  const effectiveArrows = warnHook.effectiveArrows ?? resolveArrowRegistry();
-  const arrows = endpointArrows(path.arrow, path.arrowDetail, effectiveArrows, round);
+  const resolvedArrows = warnHook.resolvedArrows ?? resolveArrowRegistry();
+  const arrows: {
+    arrowStart?: ResolvedArrowEndSpec;
+    arrowEnd?: ResolvedArrowEndSpec;
+    shrinkStart: number;
+    shrinkEnd: number;
+    boundaryOuterInsetStart: number;
+    boundaryOuterInsetEnd: number;
+  } = {
+    shrinkStart: 0,
+    shrinkEnd: 0,
+    boundaryOuterInsetStart: 0,
+    boundaryOuterInsetEnd: 0,
+  };
+  const inlineMarks: NonNullable<IRPathBase['marks']> = [];
+  for (const item of path.marks ?? []) {
+    if (item.pos === 0 && arrows.arrowStart === undefined) {
+      const resolved = resolveEndpointArrowMark(item.mark, resolvedArrows, round);
+      arrows.arrowStart = resolved.spec;
+      arrows.shrinkStart = resolved.shrink;
+      arrows.boundaryOuterInsetStart = resolved.boundaryOuterInset;
+      continue;
+    }
+    if (item.pos === 1 && arrows.arrowEnd === undefined) {
+      const resolved = resolveEndpointArrowMark(item.mark, resolvedArrows, round);
+      arrows.arrowEnd = resolved.spec;
+      arrows.shrinkEnd = resolved.shrink;
+      arrows.boundaryOuterInsetEnd = resolved.boundaryOuterInset;
+      continue;
+    }
+    inlineMarks.push(item);
+  }
   assertArrowCanInheritStroke(baseProps.stroke, arrows);
 
   // 中段 marking：把整条 path 的 pos∈[0,1] 分摊到 N 个绘制段，取该处 { point, tangent }，
   // 产一个按 tangent 定向的 arrow marker（复用端点箭头同款 def.emit 几何）；point 计入 bbox（远端 mark 不被裁）。
   const markPrims: Array<ScenePrimitive> = [];
-  if (path.marks && path.marks.length > 0 && segmentSamplers.length > 0) {
+  if (inlineMarks.length > 0 && segmentSamplers.length > 0) {
     const segCount = segmentSamplers.length;
-    for (const { pos, mark } of path.marks) {
+    for (const { pos, mark } of inlineMarks) {
       // 倒角后：沿倒角后 commands 按总弧长重定位（接缝几何 + 总弧长已变 → 落点 / 切线与尖角不同）。
       // 未倒角：保持原便宜模型——pos·N 落第 segIdx 段（pos=1 收口落末段尾），段内参数 = 余数。
       const sample = roundedCommands
@@ -1122,8 +1152,8 @@ export const emitPathPrimitive = (
             const segIdx = Math.min(Math.floor(scaled), segCount - 1);
             const localT = scaled - segIdx;
             return segmentSamplers[segIdx](pos === 1 ? 1 : localT);
-          })();
-      const spec = resolveMarkArrowSpec(mark, effectiveArrows, round);
+      })();
+      const spec = resolveMarkArrowSpec(mark, resolvedArrows, round);
       markPrims.push(buildMarkMarkerGroup(spec, sample, strokeWidth, round, markerContextStroke(baseProps.stroke)));
       // marker 落点纳入 bbox（保守取采样点；marker 自身尺寸相对小，端点已足够避免被裁）
       points.push(sample.point);

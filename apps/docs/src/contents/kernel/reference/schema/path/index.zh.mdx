@@ -18,9 +18,6 @@ description: 笔画外壳、step 动作序列与 step 目标点
     stroke: '描边 paint：任意 CSS color 字符串，或 PaintSpec（线性 / 径向渐变、pattern、image）；默认 currentColor',
     strokeWidth: '描边宽度（用户单位），默认 1',
     dashPattern: 'dash/gap 长度序列（如 [4, 2]），省略 = 实线',
-    arrow: '路径箭头方向：省略 / `none` 无箭头；`->` 末端；`<-` 起端；`<->` 双端',
-    arrowDetail:
-      '箭头详细配置（shape / scale / length / width / color / fill / opacity / lineWidth + 可选 start/end 子对象逐字段 merge）',
     fill: '闭合区域填充：任意 CSS color 字符串，或 PaintSpec（线性 / 径向渐变、pattern、image）；省略 = 无填充；与 `cycle` step 配合产生封闭形状',
     fillRule: '自交 / 嵌套子路径填充规则；`nonzero`（默认）方向缠绕，`evenodd` 交错',
     lineCap: '描边端点形状：`butt` 默认 / `round` / `square`',
@@ -62,14 +59,14 @@ description: 笔画外壳、step 动作序列与 step 目标点
   }}
 />
 
-<span id="drawablemeta"></span>
+<span id="drawableinstance"></span>
 
-## 可绘制元素元数据
+## 可绘制元素实例字段
 
-`DrawableMetaSchema` 收拢 Path 共享的身份、provenance、动画和栈序字段。`id` / `meta` / `animations` 是实例元数据，不进入 `pathDefault`；`zIndex` 参与同层排序，也不作为默认样式继承。
+`DrawableInstanceSchema` 收拢 Path 共享的身份、provenance、动画和栈序字段。`id` / `meta` / `animations` 是实例元数据，不进入 `pathDefault`；`zIndex` 参与同层排序，也不作为默认样式继承。
 
 <ZodSchema
-  name="DrawableMetaSchema"
+  name="DrawableInstanceSchema"
   description="Path 共享的身份、来源、动画和栈序字段。"
   descriptions={{
     id: '可选稳定 id；供引用和水合事件绑定使用',
@@ -329,7 +326,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
   descriptions={{
     text: '标签文字内容（单行；多行需 \\n）',
     position: '沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway',
-    side: '标签相对锚点的方位：top / bottom / left / right；接受 compass 别名 north / south / east / west 和旧 above / below；sloped 表示无方位偏移地沿切线旋转',
+    side: '标签相对锚点的方位：top / bottom / left / right；接受 compass 别名 north / south / east / west',
     sloped: '是否沿采样点切线旋转标签；为 true 时仍可用 side 控制方位',
     placement: '标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Ribbon 等面状宿主在未指定 side 时放在内部',
     distance: 'side 偏移距离，默认与 Path step label 一致',
@@ -404,11 +401,33 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 </Comparison>
 
+<span id="arrowmark"></span>
+
+## 箭头标记
+
+`ArrowMarkSchema` 是 Core IR 在 `Path.marks` 里使用的箭头标记。端点箭头写成 `pos: 0` 或 `pos: 1` 的 mark；React `arrow` / `arrowDetail` sugar 会先展开成这个结构，再进入 core IR。
+
+<ZodSchema
+  name="ArrowMarkSchema"
+  description="路径上的箭头标记；端点箭头和中段方向标记共用同一结构。"
+  descriptions={{
+    kind: '判别字段；当前支持 `arrow`',
+    shape: '箭头形状名（开放字符串，含 `CompileOptions.arrows` 扩展名）；缺省时回退 stealth',
+    scale: '等比缩放因子',
+    length: '尖长（user units）',
+    width: '尖宽（user units）',
+    color: '描边色 override',
+    fill: '填充色 override（空心 shape 忽略）',
+    opacity: '箭头透明度 0..1',
+    lineWidth: '空心 shape 描边粗细',
+  }}
+/>
+
 <span id="arrowdetail"></span>
 
 ## 箭头配置
 
-`Path.arrowDetail` 字段的 schema —— 顶层 8 视觉字段（与 `ArrowEndDetail` 共享）+ 可选 `start` / `end` 子对象。`start` / `end` 与顶层默认逐字段 merge：缺省字段继承顶层、已填字段 override。
+`ArrowDetailSchema` 是 React `arrowDetail` sugar 和 `arrowDefault` 的视觉配置 schema。Core Path IR 不再保存 `arrow` / `arrowDetail`；端点箭头也是 `marks` 里的 `ArrowMark`。
 
 <ZodSchema
   name="ArrowDetailSchema"

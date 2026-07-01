@@ -23,9 +23,18 @@ const Demo: FC = () => (
     height={250}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <PathMark x="step" y="up" order="step" strokeWidth={3} arrow="->" />
-    <PathMark x="step" y="down" order="step" strokeWidth={3} arrow="<-" />
-    <PathMark x="step" y="both" order="step" strokeWidth={3} arrow="<->" arrowDetail={{ length: 10, width: 7 }} />
+    <PathMark x="step" y="up" order="step" strokeWidth={3} marks={[{ pos: 1, mark: { kind: 'arrow' } }]} />
+    <PathMark x="step" y="down" order="step" strokeWidth={3} marks={[{ pos: 0, mark: { kind: 'arrow' } }]} />
+    <PathMark
+      x="step"
+      y="both"
+      order="step"
+      strokeWidth={3}
+      marks={[
+        { pos: 0, mark: { kind: 'arrow', length: 10, width: 7 } },
+        { pos: 1, mark: { kind: 'arrow', length: 10, width: 7 } },
+      ]}
+    />
     <Axis dimension="x" />
     <Axis dimension="y" grid />
   </Plot>

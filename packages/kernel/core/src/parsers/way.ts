@@ -16,7 +16,7 @@ import type {
   IRTarget,
 } from '../schemas';
 
-import { normalizeGeometryLabelSide } from '../schemas';
+import { normalizeSide } from '../shared';
 import { parseTargetSugar } from './target-sugar';
 
 /**
@@ -153,11 +153,16 @@ const isWayOperator = (item: WayItem): boolean =>
 /** sugar 字符串/对象 → IR step.label（字符串 = `{text:s}`） */
 const normalizeLabel = (l: WayLabel): IRStepLabel => {
   if (typeof l === 'string') return { text: l };
-  const { side: rawSide, ...rest } = l;
+  const { side, ...rest } = l;
+  const rawSide = side as string | undefined;
   const out: IRStepLabel = { ...rest, text: l.text };
   if (rawSide !== undefined) {
-    const side = normalizeGeometryLabelSide(rawSide);
-    if (side !== undefined) out.side = side;
+    if (rawSide === 'sloped') {
+      out.sloped = true;
+    } else {
+      const normalizedSide = normalizeSide(rawSide);
+      if (normalizedSide !== undefined) out.side = normalizedSide;
+    }
   }
   return out;
 };

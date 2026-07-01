@@ -7,18 +7,19 @@
 import { describe, expect, it } from 'vitest';
 
 import type {
-  ArrowEndSpec,
   EllipsePrim,
   MarkerFill,
   MarkerPrimitive,
   PathPrim,
   RectPrim,
+  ResolvedArrowEndSpec,
   ScenePrimitive,
   TextPrim,
 } from '../../src/primitive';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
+import { arrowMarks } from '../helpers/arrow-marks';
 
 /** 递归展开 GroupPrim，把所有叶子 primitive 拍平（scope 子元素在 GroupPrim 内） */
 const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
@@ -40,13 +41,13 @@ const textsOf = (ir: IR): Array<TextPrim> => allPrims(ir).filter((p): p is TextP
 const textWith = (ir: IR, content: string): TextPrim | undefined => textsOf(ir).find(t => t.lines[0]?.text === content);
 
 /**
- * 从已解析 `ArrowEndSpec` 的 marker 几何里抽"主导箭头颜色"
- * @description 新契约下视觉输入（color）在 compile 被消费、不再挂 `ArrowEndSpec`——解析后的颜色物化进
+ * 从已解析 `ResolvedArrowEndSpec` 的 marker 几何里抽"主导箭头颜色"
+ * @description 新契约下视觉输入（color）在 compile 被消费、不再挂 `ResolvedArrowEndSpec`——解析后的颜色物化进
  *   `marker[]` 内部几何的 fill / stroke（实心走 fill、空心走 stroke；contextStroke 表示继承 path stroke）。
  *   测断言箭头颜色优先级链时改读此处。递归穿 group 子原语，返回首个非 contextStroke 的纯色字符串；
  *   全部 contextStroke / 无 paint 时返回 undefined（= 走继承，未冻结颜色）。
  */
-const markerPaintColor = (spec: ArrowEndSpec | undefined): string | undefined => {
+const markerPaintColor = (spec: ResolvedArrowEndSpec | undefined): string | undefined => {
   if (!spec) return undefined;
   const pickFill = (f: MarkerFill | undefined): string | undefined => (typeof f === 'string' ? f : undefined);
   const walk = (prims: ReadonlyArray<MarkerPrimitive>): string | undefined => {
@@ -81,7 +82,7 @@ describe('Happy: 主色级联 / 四通道', () => {
             { type: 'node', id: 'A', position: [0, 0], text: 'A' },
             {
               type: 'path',
-              arrow: '->',
+              marks: arrowMarks('->'),
               children: [
                 { type: 'step', kind: 'move', to: { id: 'A' } },
                 { type: 'step', kind: 'line', to: [60, 0], label: { text: 'e' } },
@@ -97,7 +98,7 @@ describe('Happy: 主色级联 / 四通道', () => {
     expect(textWith(ir, 'A')?.fill).toBe('blue');
     const path = linePathOf(ir);
     expect(path?.stroke).toBe('blue');
-    // 解析后的箭头颜色物化进 marker 几何（新契约：color 不再挂 ArrowEndSpec）
+    // 解析后的箭头颜色物化进 marker 几何（新契约：color 不再挂 ResolvedArrowEndSpec）
     expect(markerPaintColor(path?.arrowEnd)).toBe('blue');
     expect(textWith(ir, 'e')?.fill).toBe('blue');
   });
@@ -125,7 +126,7 @@ describe('Happy: 主色级联 / 四通道', () => {
         {
           type: 'path',
           color: 'crimson',
-          arrow: '->',
+          marks: arrowMarks('->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [80, 40], label: { text: 'sin' } },
@@ -149,7 +150,7 @@ describe('Happy: 主色级联 / 四通道', () => {
           children: [
             {
               type: 'path',
-              arrow: '->',
+              marks: arrowMarks('->'),
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [50, 0] },
@@ -160,7 +161,7 @@ describe('Happy: 主色级联 / 四通道', () => {
       ],
     };
     expect(linePathOf(ir)?.arrowEnd?.shape).toBe('stealth');
-    // scale 1.5 在 compile 被消费乘进 markerWidth（默认 length 6 × 1.5 = 9）；scale 不再挂 ArrowEndSpec
+    // scale 1.5 在 compile 被消费乘进 markerWidth（默认 length 6 × 1.5 = 9）；scale 不再挂 ResolvedArrowEndSpec
     expect(linePathOf(ir)?.arrowEnd?.markerWidth).toBeCloseTo(9, 5);
   });
 });
@@ -323,7 +324,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
                 {
                   type: 'path',
                   color: 'red',
-                  arrow: '->',
+                  marks: arrowMarks('->'),
                   children: [
                     { type: 'step', kind: 'move', to: [0, 0] },
                     { type: 'step', kind: 'line', to: [40, 0] },
@@ -435,7 +436,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
             {
               type: 'path',
               color: 'red',
-              arrow: '->',
+              marks: arrowMarks('->'),
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [40, 0] },
@@ -444,8 +445,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
             {
               type: 'path',
               color: 'blue',
-              arrow: '->',
-              arrowDetail: { color: 'purple' },
+              marks: arrowMarks('->', { color: 'purple' }),
               children: [
                 { type: 'step', kind: 'move', to: [0, 50] },
                 { type: 'step', kind: 'line', to: [40, 50] },
@@ -474,7 +474,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
             {
               type: 'path',
               color: 'red',
-              arrow: '->',
+              marks: arrowMarks('->'),
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [40, 0] },
@@ -483,8 +483,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
             {
               type: 'path',
               color: 'blue',
-              arrow: '->',
-              arrowDetail: { end: { color: 'purple' } },
+              marks: arrowMarks('->', { end: { color: 'purple' } }),
               children: [
                 { type: 'step', kind: 'move', to: [0, 50] },
                 { type: 'step', kind: 'line', to: [40, 50] },
@@ -516,7 +515,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
               children: [
                 {
                   type: 'path',
-                  arrow: '->',
+                  marks: arrowMarks('->'),
                   children: [
                     { type: 'step', kind: 'move', to: [0, 0] },
                     { type: 'step', kind: 'line', to: [40, 0] },

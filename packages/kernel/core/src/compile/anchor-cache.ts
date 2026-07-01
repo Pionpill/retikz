@@ -9,12 +9,12 @@
  *   compile 结束 layout 引用释放，WeakMap entry 随 GC 一并回收。
  */
 
-import type { WebSideValue } from '../geometry/anchor';
 import type { Position } from '../geometry/point';
 import type { IRBoundary, IRPosition } from '../schemas';
+import type { WebSideValue } from '../shared';
 import type { NodeLayout } from './node';
 
-import { normalizeCompassAnchor } from '../geometry/anchor';
+import { normalizeAnchor } from '../shared';
 import { boundaryKey } from './boundary';
 import { anchorOf, angleBoundaryOf, outerRectOf } from './node';
 
@@ -45,7 +45,7 @@ const computeAnchor = (layout: NodeLayout, anchorName: string, boundary: IRBound
     const angle = Number(anchorName);
     return positionToIR(angleBoundaryOf(withOuterRect(layout), angle, boundary));
   }
-  if (normalizeCompassAnchor(anchorName) !== undefined) {
+  if (normalizeAnchor(anchorName) !== undefined) {
     return positionToIR(anchorOf(withOuterRect(layout), anchorName, boundary));
   }
   // 形状专属命名 anchor：anchorOf 走 layout.shapeDef.anchor(rect, name)，shape 不认识的名字返回 undefined → 抛 Unknown anchor。

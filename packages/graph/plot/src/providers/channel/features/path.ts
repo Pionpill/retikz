@@ -1,6 +1,6 @@
-import type { IRArrowDetail, IRPathScale, JsonValue } from '@retikz/core';
+import type { IRPathScale, JsonValue } from '@retikz/core';
 
-import { ArrowDetailSchema, DropShadowSchema, JsonValueSchema, PathScaleSchema } from '@retikz/core';
+import { DropShadowSchema, JsonValueSchema, PathScaleSchema } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { AnyChannelDefinition, ChannelResolution, PathChannelDefinition } from '../../../contract';
@@ -187,7 +187,6 @@ const lineCapValues = new Set(['butt', 'round', 'square']);
 const lineJoinValues = new Set(['miter', 'round', 'bevel']);
 const fillRuleValues = new Set(['nonzero', 'evenodd']);
 const thicknessValues = new Set(['ultraThin', 'veryThin', 'thin', 'semithick', 'thick', 'veryThick', 'ultraThick']);
-const arrowValues = new Set(['none', '->', '<-', '<->']);
 const shadowPresetValues = new Set(['none', 'sm', 'md', 'lg', 'xl', '2xl']);
 const blendModeValues = new Set([
   'normal',
@@ -257,29 +256,12 @@ const directPathChannels = {
       path.thickness = value as never;
     },
   ),
-  arrow: defineSimplePathChannel<'none' | '->' | '<-' | '<->'>(
-    'arrow',
-    { outputKind: 'symbol', palette: [...arrowValues] },
-    value =>
-      typeof value === 'string' && arrowValues.has(value) ? (value as 'none' | '->' | '<-' | '<->') : undefined,
-    (path, value) => {
-      path.arrow = value;
-    },
-  ),
   dashPattern: defineSimplePathChannel<Array<number>>(
     'dashPattern',
     { outputKind: 'array' },
     dashPatternValue,
     (path, value) => {
       path.dashPattern = value;
-    },
-  ),
-  arrowDetail: defineSimplePathChannel<JsonValue>(
-    'arrowDetail',
-    { outputKind: 'object' },
-    value => (ArrowDetailSchema.safeParse(value).success ? jsonValue(value) : undefined),
-    (path, value) => {
-      path.arrowDetail = value as IRArrowDetail;
     },
   ),
   shadow: defineSimplePathChannel<JsonValue>(

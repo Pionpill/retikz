@@ -24,7 +24,7 @@ const Demo: FC = () => (
       label={[
         {
           text: 'top 25%',
-          position: { boundary: 'top', t: 0.25 },
+          position: { boundary: 'top', fraction: 0.25 },
           placement: 'inside',
           distance: 10,
         },
@@ -36,7 +36,7 @@ const Demo: FC = () => (
         },
         {
           text: 'bottom 80%',
-          position: { boundary: 'bottom', t: 0.8 },
+          position: { boundary: 'bottom', fraction: 0.8 },
           placement: 'inside',
           distance: 10,
         },

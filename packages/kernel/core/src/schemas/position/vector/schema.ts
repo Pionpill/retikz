@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import type { Vector2 } from '../../../geometry/point';
+import type { Vector2 } from '../../../shared';
 
 export const Vector2Schema: z.ZodType<Vector2> = z
   .tuple([z.number(), z.number()])

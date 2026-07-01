@@ -9,9 +9,9 @@ import type { IRChild } from '../../schemas';
  *   definition 显式声明 namespace / type，`defineComposite` 会与 schema literal 对账并保留强类型 `expand`。
  */
 export type CompositeDefinition<T = unknown> = {
-  /** Provider namespace referenced by composite IR nodes. */
+  /** composite IR 节点引用的 provider namespace。 */
   namespace: string;
-  /** Provider type referenced by composite IR nodes. */
+  /** composite IR 节点引用的 provider type。 */
   type: string;
   /** 完整节点 schema（extend CompositeBaseSchema；namespace / type 为 literal） */
   schema: ZodType<T>;

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { CssColorSchema, OpacitySchema } from '../style/primitives';
 import { ShadowPreset } from './constants';
 
 export const DropShadowSchema = z
@@ -23,18 +24,12 @@ export const DropShadowSchema = z
       .nonnegative()
       .optional()
       .describe('Shadow blur radius in user units. Overrides the preset value; 0 means hard-edged.'),
-    color: z
-      .string()
+    color: CssColorSchema
       .optional()
       .describe(
         'Shadow color, any CSS color (overrides preset); when neither preset nor color given = translucent black rgba(0,0,0,0.5).',
       ),
-    opacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Shadow opacity multiplier applied to the resolved shadow color.'),
+    opacity: OpacitySchema.optional().describe('Shadow opacity multiplier applied to the resolved shadow color.'),
   })
   .refine(s => s.preset !== undefined || (s.offsetX !== undefined && s.offsetY !== undefined), {
     message: 'Provide a `preset`, or explicit `offsetX` + `offsetY`.',

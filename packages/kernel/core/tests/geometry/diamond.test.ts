@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { Diamond } from '../../src/geometry/diamond';
 
 import { diamond } from '../../src/geometry/diamond';
+import { WebAnchor } from '../../src/shared';
 
 const d: Diamond = { x: 0, y: 0, halfA: 10, halfB: 5 };
 
@@ -44,28 +45,28 @@ describe('diamond.contains', () => {
 
 describe('diamond.anchor', () => {
   it('N / S / E / W = 4 顶点', () => {
-    expect(diamond.anchor(d, 'east')).toEqual([10, 0]);
-    expect(diamond.anchor(d, 'west')).toEqual([-10, 0]);
-    expect(diamond.anchor(d, 'north')).toEqual([0, -5]);
-    expect(diamond.anchor(d, 'south')).toEqual([0, 5]);
+    expect(diamond.anchor(d, WebAnchor.Right)).toEqual([10, 0]);
+    expect(diamond.anchor(d, WebAnchor.Left)).toEqual([-10, 0]);
+    expect(diamond.anchor(d, WebAnchor.Top)).toEqual([0, -5]);
+    expect(diamond.anchor(d, WebAnchor.Bottom)).toEqual([0, 5]);
   });
 
   it('对角 anchor = 4 边的中点', () => {
-    expect(diamond.anchor(d, 'north-east')).toEqual([5, -2.5]);
-    expect(diamond.anchor(d, 'south-east')).toEqual([5, 2.5]);
-    expect(diamond.anchor(d, 'north-west')).toEqual([-5, -2.5]);
-    expect(diamond.anchor(d, 'south-west')).toEqual([-5, 2.5]);
+    expect(diamond.anchor(d, WebAnchor.TopRight)).toEqual([5, -2.5]);
+    expect(diamond.anchor(d, WebAnchor.BottomRight)).toEqual([5, 2.5]);
+    expect(diamond.anchor(d, WebAnchor.TopLeft)).toEqual([-5, -2.5]);
+    expect(diamond.anchor(d, WebAnchor.BottomLeft)).toEqual([-5, 2.5]);
   });
 });
 
 describe('diamond.boundaryPoint', () => {
-  it('沿 +x → east 顶点', () => {
+  it('沿 +x → right 顶点', () => {
     const p = diamond.boundaryPoint(d, [100, 0]);
     expect(p[0]).toBeCloseTo(10);
     expect(p[1]).toBeCloseTo(0);
   });
 
-  it('沿 +y → south 顶点', () => {
+  it('沿 +y → bottom 顶点', () => {
     const p = diamond.boundaryPoint(d, [0, 100]);
     expect(p[0]).toBeCloseTo(0);
     expect(p[1]).toBeCloseTo(5);

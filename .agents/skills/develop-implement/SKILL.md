@@ -1,234 +1,68 @@
 ---
 name: develop-implement
-description: alpha 功能开发的实现阶段——红色改动（动 IR / public API / compile 核心）走 Spec-First TDD：先用独立任务写 schema stub + 测试，再让实现任务让所有测试通过；黄色改动可选 Spec-First；绿色直接实现。实现任务不允许改 spec 测试 / schema 字段名（schema 改动以 ADR 实现契约段为准）。不写死模型或 Agent API，按当前可用工具调度。
+description: Use when implementing a retikz alpha ADR or beta TODO after design or roadmap scope is fixed, including schema, public API, compile, adapter, test, and docs-visible behavior changes.
 ---
 
-# Stage 2：实现
+# Stage 2: 实现
 
-按 ADR 实现契约段把功能写进代码。**红色** 改动走 Spec-First TDD；黄色 / 绿色按规模选择。
+把 ADR 实现契约或 beta TODO 落到代码和测试。alpha 红色改动走 Spec-First；黄色按规模决定；绿色直接实现。
 
-## 设计原则（不可破坏的硬约束）
+## 必读
 
-retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**（见 [`notes/architecture/core-design.md`](../../../notes/architecture/core-design.md) §7）。本阶段所有实现与评审都必须把这条作为最高优先级、不得破坏：
-
-- **IR 100% JSON 可序列化**：schema 内禁用 `z.any()` / `z.unknown()` / 函数 / class / ReactNode / Symbol / Map / Set；任何"运行时才算得出"的值都不能进 IR
-- **每个 schema 字段必须英文 `.describe(...)`**：这是 LLM Tool Use / Structured Outputs 的契约，缺一即不合格
-- **字段命名沿用 TikZ 词汇 + 不缩写**：保留对 LLM 训练数据的亲和力（详见 AGENTS.md §代码风格）
-- **discriminated union 用清晰 `type` 字段**：LLM 按 type 分发解析最稳
-- **JSON round-trip 等价**：`Schema.parse(JSON.parse(JSON.stringify(ir)))` 必须语义等于原 IR——这是契约保证，Spec Writer 必须出 round-trip 测试，实现 Agent 必须让其过
-- **对外暴露的公开 API 名较通用时加 `Retikz` 前缀消歧**：导出的类型 / 常量 / 枚举对象 / 函数，若名称通用到容易与第三方库或其它模块在用户 `import` 处撞名或语义不清（`EventName` / `Locate` / `Options` / `State` / `Node` / `Mode` 等），**必须加 `Retikz` 前缀或其它领域限定词**（如 `EventName` → `RetikzEventName`、`HYDRATION_EVENTS` → `RetikzEvent`）。判断口诀：把这个名单独 `import { X } from '@retikz/...'`，消费者能否一眼看出它是 retikz 的、且不会与别处的 `X` 混？不能就加前缀。**例外**：已具领域性的名（`IRNode` / `CompositeDefinition` / `HydrationHandlers` / `SvgNode`）、TikZ/SVG/CSS 标准词、仅内部不进 public barrel 的符号，不强加前缀。as-const 枚举对象按 `DrawWay` 惯例用大驼峰常量名 + 大驼峰成员（值仍按用途定）。
-
-破坏前 5 条任一 → halt 报告，不要自行修订；命名前缀一条由实现 Agent 自检（新增导出时对照口诀），有疑虑就加前缀（撤前缀比补前缀的破坏性迁移小）。
-
-### 适配器对等：react + vanilla 两套都落地
-
-authoring API 有两套用户入口——`@retikz/react`（JSX DSL）与 `@retikz/vanilla`（命令式 builder）。**ADR 的「DSL 表面」给了两套写法时，实现必须两套都落**，不能只实现 react 留 vanilla 欠账：
-
-- 两套共享同一份 core IR + zod schema（单一真源），实现各自只是 props/config → IR 的薄壳；vanilla builder 字段派生自 core IR 类型（`Omit<IRNode, …>` 等），不手维护第二份字段清单。
-- 文件 scope 命中 `packages/kernel/react/**` 改 authoring 面时，检查是否需要 `packages/kernel/vanilla/**` 对应改；反之亦然（plot 组同理：`packages/graph/plot-react/**` ↔ `packages/graph/plot-vanilla/**`）。
-- 测试两套都要有（react kernel 测试 + vanilla builder 测试）；develop-test / cross-test 阶段两套适配器一致性也在覆盖范围。
+- 根 `AGENTS.md` 与就近 `AGENTS.md`。
+- 涉及 schema / contract / providers / pipeline / compile 时，按 `standard-structure` 分流读取对应 `standard-*` skill。
+- beta TODO 由 `flow-beta` 调用本 skill 时，以 `flow-beta` 的简化规则覆盖本阶段的 Spec-First 要求。
 
 ## 输入
 
-- ADR 路径：`packages/kernel/_notes/decisions/<NNNN>-*.md`，状态 Proposed
-- ADR 实现契约段已填全（Level / Schema 改动 / 文件 scope / 测试象限）
+- alpha：状态为 `Proposed`、实现契约完整的 ADR。
+- beta：已登记的 roadmap TODO，scope 与预估 level 已明确。
+- 当前受影响文件、已有测试、相关 docs 页面。
 
-## 启动前自动判级
+## 判级
 
-读 ADR 实现契约段的"文件 scope"，按 [`flow-alpha`](../flow-alpha/SKILL.md) 的判级表算 Level：
+按 `flow-alpha` 的 red / yellow / green 表判断；跨级取最高级。
 
-```
-红 → 走 Spec-First（强制）
-黄 → 按 ADR 规模决定（多于 3 step 建议走 Spec-First；少则常规）
-绿 → 直接实现，跳过 Spec Agent
-```
+- **red**：IR schema、public API、compile 核心、包公共入口等，强制 Spec-First。
+- **yellow**：adapter / parser / renderer 接线等，按风险和 step 数决定是否 Spec-First。
+- **green**：纯文档、注释、配置或测试整理，直接实现。
 
-跨级（同时碰红 + 黄 + 绿）取最高 level 走流程，绿色文档部分走 stage 4 单独跑。
+## Spec-First 路径
 
----
+### Spec Writer
 
-## 红色 / 黄色（Spec-First）
+先写 schema stub 与测试，不写实现。输入只给 ADR、相关 schema、少量无关测试样例和必要 AGENTS / standard skill 规则。
 
-### 2.A 派 Spec Writer 子 Agent
+产物要求：
 
-#### 2.A.1 输入准备
+- schema 字段名、类型、默认值、describe 与 ADR 表一致；发现 ADR 自相矛盾则 halt。
+- 测试覆盖 ADR 测试象限，并至少包含 JSON round-trip 与 zod parse 错误路径。
+- 不读或改 compile / adapter 实现。
+- 测试此时可以失败；这是实现未完成的预期。
 
-- ADR 文件全文
-- `notes/architecture/core-design.md`
-- 受影响的现有 schema 文件（read-only，从 ADR "依赖的现有元素" 列出）
-- ≤ 3 个**与本 ADR 主题无关**的现有测试文件（学项目 vitest 风格 / 命名 / 断言习惯，不学 case 选择）
+主 AI 审查 spec 产物后，再进入实现。未经用户授权不 commit；若授权，spec commit 可作为预期失败的测试提交。
 
-#### 2.A.2 调度方式
+### Implementer
 
-优先使用当前环境可用的独立执行通道（例如子代理 / 新线程 / 外部模型窗口）。若需要发现工具，先用当前会话的工具搜索能力查找可用的 multi-agent 或 thread 工具；没有独立通道时，主 AI 也可以按下面 prompt 自己执行，但必须在报告里说明“未使用独立 Spec Writer”。
+实现任务只负责让 spec 测试通过。
 
-不要在 skill 里写死模型名。记录实际使用的通道、模型和输入范围即可。
+- 不改 spec 测试、schema 字段名、字段类型或 describe；认为 spec 错时 halt 报告。
+- 不用 `as any`、`@ts-ignore`、跳测、粗暴 lint disable 绕过问题。
+- 每个 ADR step 或 beta TODO 子任务保持可 review 的提交粒度。
+- 受影响包按根 AGENTS 运行 `eslint --fix`、`tsc --noEmit`、必要 vitest。
+- 连续 3 轮修不动同一 step，halt 并报告失败 case、错误日志和判断。
 
-#### 2.A.3 Spec Writer 完整 system prompt
+## 常规路径
 
-```
-你是 retikz alpha 功能开发的 Spec Writer 子 Agent。
+黄色轻量改动或绿色改动可由主 AI 直接实现，但仍遵守：
 
-retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**（见 `core-design.md` §7）。
-你写的 schema 与测试**首先服务 LLM Tool Use / Structured Outputs，其次才是人类调用**。
-任何破坏这条的产出都不接受。
-
-任务：读 ADR 的实现契约段，输出两份文件：
-  1. zod schema stub（按"Schema 改动"表精确加字段，字段名 / 类型 / 默认值一字不差，但不写
-     compile 实现、不动 react kernel）
-  2. vitest 测试文件（按"测试象限"展开成具体 case，覆盖 ≥ 9 个 case：
-     happy ≥ 3、边界 ≥ 2、错误路径 ≥ 2、交互 ≥ 2，并加 ≥ 1 个 JSON round-trip case）
-
-Schema 硬约束（来自 AGENTS.md「IR / Schema 风格」+ `core-design.md` §7）：
-
-- **每个字段必须 `.describe(...)`**——object 顶层 + 所有内部属性，包括看似自描述的 `type` / `kind`。
-  `.describe` 是 LLM Tool Use 的契约，缺一即不合格
-- **`.describe` 内容统一英文**——LLM 跨语言映射稳，但 schema 文档生态（json-schema 工具 / OpenAPI）默认英文
-- **不允许 `z.any()` / `z.unknown()` / 函数 / class / ReactNode / Symbol / undefined-as-value / Map / Set**——
-  IR 必须 100% JSON 可序列化（`JSON.stringify(ir)` 后 `JSON.parse` 应得到语义等价对象）
-- **discriminated union 必须用清晰 `type` 字段**——LLM 按 type 分发解析最稳
-- **字段命名沿用 TikZ 词汇**（stroke / fill / via / anchor / origin 等），不缩写、不发明新词；
-  保留对 LLM 训练数据的亲和力（详见 AGENTS.md §代码风格"不用缩写"）
-- **TS 类型走 `z.infer` 派生**，不手写——zod 是单一来源
-- **schema 内不写 JSDoc**；派生类型 / 普通常量 / 函数才写中文 JSDoc
-
-测试硬约束：
-
-- 字段名 / 类型 / 默认值必须与 ADR 表一字不差。ADR 表本身有矛盾（字段名和 .describe 不一致 /
-  类型与默认值不兼容）→ halt 并报告，不要自行修订
-- 测试 import 真实 schema（你刚写的 stub），expect 走真值断言，不要 mock
-- 测试名用中文 describe + 中文 it（项目惯例）；断言用 expect().toBe / toEqual / toThrow 等 vitest 标准
-- **必须含 ≥ 1 个 IR JSON round-trip 测试**——构造一个有意义的 IR，
-  `Schema.parse(JSON.parse(JSON.stringify(ir)))` 必须等于原 IR；这是 AI 一等公民的契约保证，
-  不可省略。可放在"交互"或单独的"序列化"小节
-- **必须含 ≥ 1 个 zod parse 错误路径测试**——喂残缺 / 错类型 / 多余字段的 JSON，
-  确认 `Schema.parse` 抛出明确错误（LLM 出错时 retikz 必须能精确报错让 AI 修）
-- 你可以读最多 3 个**与本 ADR 主题无关**的现有测试文件来学习风格。不要读与本 ADR 主题相关的测试
-- 不要看现有 compile / react 实现代码——你只看 schema 和 ADR
-- 不写 compile 实现、不写 React 组件、不动 _builder / _unbuilder
-- 测试此刻应当大部分 fail（实现还没写）——这是预期行为，不要为了让测试过就降低断言强度
-
-输出格式：
-
-Step 1. 读这些文件：<列出 ADR 路径 + core-design.md §7 + AGENTS.md「IR / Schema 风格」段 + 受影响 schema + 3 个无关测试>
-Step 2. 创建 / 修改 schema 文件：<列出 path + 完整文件内容>
-Step 3. 创建测试文件：<path + 完整文件内容>
-Step 4. 报告"已写完"+ 测试 case 数 + 哪些 case 此刻预计 fail / pass + 是否含 round-trip 与 zod parse 错误两类必测
-
-不要 push / publish。若本轮用户未授权按本 skill 自行 commit，则把改动留在工作区，由主 AI 汇总给用户审阅；若用户已授权本轮按本 skill 执行并提交，可按下方 commit 粒度提交。
-```
-
-#### 2.A.4 Spec Writer 产物处理
-
-主 AI 收到 Spec Writer 输出后先审查：schema 字段是否与 ADR 一致、测试是否覆盖象限与 round-trip、是否没有实现代码混入。然后把 schema stub + spec 测试留在工作区，向用户展示文件清单和建议提交信息。
-
-只有用户在当前对话明确授权提交时，才按根 AGENTS.md 分块 `git add <具体文件>` 并提交。Spec-First 可保留一个预期失败的 `:construction:` 测试提交；除此以外所有提交前必须 lint / tsc / test 全绿。
-
-#### 2.A.5 多模型协同（可选）
-
-用户可手动把同一份 ADR + `core-design.md` 也喂给另一个 LLM 跑同样的 Spec Writer prompt，得到第二份 spec。主 AI 收到两份 spec 后：
-
-- schema stub 取 union（合并所有字段——前提是没冲突；冲突 halt 报告人工）
-- 测试 case 取 union（去重 case 名 + 去重断言意图）
-
-合并完整体仍按 2.A.4 commit。
-
----
-
-### 2.B 派实现 Agent
-
-#### 2.B.1 输入
-
-- ADR
-- 上一步 Spec Writer 写的 schema 文件 + 测试文件
-- 现有 compile / react 代码（read + write）
-
-#### 2.B.2 实现任务调度方式
-
-同 Spec Writer：优先使用独立执行通道；不可用时由主 AI 执行。调度输入只给 ADR、spec 文件路径、受影响实现文件，避免把 Spec Writer 的结论之外的隐含答案泄漏给实现任务。
-
-#### 2.B.3 实现 Agent 完整 system prompt
-
-```
-你是 retikz alpha 功能开发的实现 Agent。
-
-retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**（`core-design.md` §7）。
-你的实现**不得破坏 IR 对 LLM 的契约保证**：100% JSON 可序列化、字段全 .describe、TikZ 词汇延续。
-任何让 IR JSON 化失真的写法都禁止，详见下方 schema 不变量。
-
-任务：让 Spec Writer 写好的所有测试通过。读 ADR + spec test，按 ADR Step 拆分写实现，
-每个 step 一个 commit；每次 commit 前只跑当前 / 受影响模块的 lint + tsc + vitest，全过才进下一步。
-
-强制约束：
-
-- **不允许动 spec test 文件**。如果你认为某条测试错了（拼错 / 与 ADR 矛盾 / 期望不合理），
-  halt 并报告"我认为这条测试错了：<原因>"——主 AI 决定退回 Spec Writer 重写还是裁决人工。
-  不要 silent 改测试。
-- **不允许动 schema 字段名 / 类型 / .describe 文本**。schema 已由 ADR + Spec Writer 锁死。
-  如发现 schema 表本身有问题，halt 报告，不要自行修订。
-- **schema 不变量**（AI 一等公民契约的硬约束）：
-    * 不允许在 IR schema 里出现 `z.any()` / `z.unknown()` / 函数 / class 实例 / ReactNode /
-      Symbol / Map / Set / `undefined` 当作合法值
-    * 不允许把"运行时才能算出"的对象塞进 IR（JSON.stringify 不出去就不能进 IR）
-    * 不允许加缩写命名的字段（direction 不写 dir、reference 不写 ref；详 AGENTS.md §代码风格）
-    * compile / react 内部类型可以用 ReactNode 等非 JSON 类型，但不得"漏"进 IR schema
-- 不允许 `as any` / `@ts-ignore` / `@ts-expect-error`（除非确有不可避情况且同行写明原因）。
-- 不允许 `it.skip` / `xit(` / `describe.skip`。
-- 不允许 lint disable（除非确有不可避情况且同行写明原因）。
-- 一个 ADR Step 一个 commit。commit message 用 `:sparkles: ADR-NN step.X：<简述>` 风格。
-- 每次 commit 前必须只针对当前 / 受影响包跑：
-    pnpm --filter @retikz/<pkg> exec eslint . --fix
-    pnpm --filter @retikz/<pkg> exec tsc --noEmit
-    pnpm --filter @retikz/<pkg> exec vitest run
-  多个受影响包就逐个显式列出 `--filter`；不要用全仓 lint / test / recursive tsc 代替模块验证。
-  任一不过 → halt，不 commit、不进下一步。
-- 不要自行 git push / publish。
-
-如果实现 X 步连续 3 次跑测试还是不过：halt，呈报"step X 修不动"+ 错误日志 +
-你的诊断（哪个 case 挂、为什么觉得修不动）。
-
-不要主动加测试 case——测试是 Spec Writer 的产物，你的工作只是让现有测试过。
-你可以加内部 helper 函数，但 helper 不能改变 public schema 字段、不能改 IR JSON 结构。
-```
-
-#### 2.B.4 实现产物处理
-
-每个 ADR step 完成后先跑对应包 lint / `tsc --noEmit` / vitest，再汇报改动和建议提交粒度。只有当前对话得到明确授权时才提交；未授权时不 stage 或只按用户要求 stage 具体文件。
-
-建议提交粒度：每个 step 一个 commit；emoji `:sparkles:` 表示新功能，`:bug:` 表示修复 spec 暴露的问题。subject 不写 ADR 编号，追溯信息放 footer。
-
----
-
-## 黄色（轻量 Spec-First 或常规）
-
-ADR Step 数 ≤ 3 + 不动 IR schema：可跳 Spec Writer 直接派实现 Agent，**但仍要写测试**——实现 Agent 边写实现边写测试（每 step 一个 commit，commit 内含实现 + 测试，跑当前 / 受影响模块验证）。
-
-ADR Step 数 ≥ 4：建议仍走 Spec-First，享受"测试先于实现 + 第二只眼睛"的好处。
-
-## 绿色
-
-直接实现，无 sub-Agent。主 AI 自己改 mdx / 配置 / 注释，每个 commit 跑当前 / 受影响模块 lint + tsc 即可（绿色不一定有测试）。
-
-实际流程：直接进 develop-document SKILL（绿色 ADR 主体就是文档）。
-
-## 失败 / 升级
-
-| 情景 | 处理 |
-|---|---|
-| Spec Writer 写不出测试（ADR 实现契约段不全） | halt → 回 develop-design 补充 ADR |
-| Spec Writer 报告 "ADR 表自相矛盾" | halt → 主 AI 呈给人工裁决，不要让 Spec Writer 自行修订 |
-| 实现 Agent 报告 "spec test 错了" | halt → 主 AI 派 Spec Writer 重写该条测试，或裁决人工 |
-| 实现 Agent 单 step 3 次没过 | halt → 主 AI 呈给人工，看是否要拆 ADR 或改设计 |
-| 跑出 lint / tsc / 测试错误 | 不 commit，让实现 Agent 在工作区里继续修 |
-
-## 与上下游衔接
-
-- **上游**：develop-design 输出已 commit 的 ADR
-- **下游**：develop-test（自测加固阶段）
+- 行为变化需要测试；bug fix 先写能复现的失败测试。
+- 用户可见改动同步 docs。
+- React / Vanilla 或 plot-react / plot-vanilla authoring 面对等检查；只做一套时说明原因。
 
 ## 完成标志
 
-- ADR 实现契约段列出的 schema 字段全部进 IR 文件
-- spec 测试 + 实现都进入 git 历史，**测试 commit 在实现 commit 之前**（git log 可见 `:construction:` 早于 `:sparkles:`）
-- 当前 / 受影响模块 lint / tsc / vitest 全过
-- 实现 Agent 没动 spec 测试文件（git log 可校验）
+- ADR / TODO scope 内代码已实现。
+- 相关测试、lint、类型检查通过，或阻塞原因已明确报告。
+- 用户可见改动已有 docs 同步计划或已进入 `develop-document`。
+- 未经当前对话授权不 commit / push / publish。

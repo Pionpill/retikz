@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import type { GroupPrim, IR, PathPrim, RotateTransform, ScaleTransform, ScenePrimitive } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
+import { arrowMarks } from '../helpers/arrow-marks';
 
 /** 找顶层第一个带 transforms 的 GroupPrim */
 const findTransformGroup = (prims: ReadonlyArray<ScenePrimitive>): GroupPrim | undefined => {
@@ -127,8 +128,8 @@ describe('path scale（等比 / 非等比）', () => {
 
 describe('旋转 path + 箭头：方向随变换正确（变换顺序硬契约）', () => {
   it('rotate + arrow="->"：箭头几何在原始几何上解析（shrink 未被 path transform 污染）后整体由 group 旋转', () => {
-    const noRotate = compileToScene(linePath({ arrow: '->' }));
-    const rotated = compileToScene(linePath({ arrow: '->', rotate: 90 }));
+    const noRotate = compileToScene(linePath({ marks: arrowMarks('->') }));
+    const rotated = compileToScene(linePath({ marks: arrowMarks('->'), rotate: 90 }));
     // 旋转后仍有 path + 箭头；箭头 shrink 在未旋转几何上完成，故内层 path 的 arrowEnd 解析结果与未旋转一致
     const pNo = findPathPrim(noRotate.primitives);
     const pRot = findPathPrim(rotated.primitives);

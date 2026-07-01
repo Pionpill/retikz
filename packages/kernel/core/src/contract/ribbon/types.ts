@@ -2,6 +2,7 @@ import type { ZodType } from 'zod';
 
 import type { IRJsonObject } from '../../schemas/json';
 
+/** ribbon width profile 采样上下文。 */
 export type RibbonWidthProfileContext<TParams extends IRJsonObject = IRJsonObject> = {
   /** 沿中心线的归一化位置，范围 [0, 1]。 */
   offset: number;
@@ -11,6 +12,7 @@ export type RibbonWidthProfileContext<TParams extends IRJsonObject = IRJsonObjec
   params: TParams;
 };
 
+/** ribbon width profile definition 的作者侧输入形态。 */
 export type RibbonWidthProfileDefinitionInput<TParams extends IRJsonObject = IRJsonObject> = {
   /** 注册表 key，由 IR `width: { kind: "profile", name }` 引用。 */
   name: string;
@@ -23,6 +25,7 @@ export type RibbonWidthProfileDefinitionInput<TParams extends IRJsonObject = IRJ
   widthAt: (ctx: RibbonWidthProfileContext<TParams>) => number;
 };
 
+/** ribbon width profile 定义的擦除形态：registry 存这个。 */
 export type RibbonWidthProfileDefinition = {
   /** 注册表 key，由 IR `width: { kind: "profile", name }` 引用。 */
   name: string;

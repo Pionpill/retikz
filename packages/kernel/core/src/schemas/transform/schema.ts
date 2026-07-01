@@ -1,9 +1,11 @@
 import { z } from 'zod';
 
-import { AtDirection, normalizeAtDirection } from '../position/at-position';
+import { normalizeAtDirection } from '../../shared';
+import { AtDirection } from '../position/at-position';
 import { AbsoluteTargetSchema } from '../position/between-position';
 import { PolarPositionSchema } from '../position/polar-position';
 import { PositionSchema } from '../position/position';
+import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
 
 const TranslateSchema = z
   .object({
@@ -24,9 +26,7 @@ const PolarTranslateSchema = z
       .describe(
         'Origin reference: node id string, Cartesian [x, y], or nested PolarPosition. Omitted fields use [0, 0].',
       ),
-    angle: z
-      .number()
-      .describe('Angle in degrees measured from the positive x axis.'),
+    angle: AngleDegreesSchema.describe('Angle in degrees measured from the positive x axis.'),
     radius: z
       .number()
       .describe('Radius / distance in user units; negative values are accepted (equivalent to angle + 180°).'),
@@ -74,16 +74,14 @@ const BetweenTranslateSchema = z
     between: z
       .tuple([AbsoluteTargetSchema, AbsoluteTargetSchema])
       .describe('Two absolute endpoints; path-relative targets are excluded.'),
-    t: z.number().min(0).max(1).describe('Proportion from the first endpoint to the second endpoint.'),
+    t: NormalizedFractionSchema.describe('Proportion from the first endpoint to the second endpoint.'),
   })
   .describe('Proportional translate transform lowered to Cartesian translate at compile time.');
 
 const RotateSchema = z
   .object({
     kind: z.literal('rotate').describe('Discriminator: rotation about a point.'),
-    degrees: z
-      .number()
-      .describe('Rotation angle in degrees; positive = visually clockwise under screen y-down.'),
+    degrees: AngleDegreesSchema.describe('Rotation angle in degrees; positive = visually clockwise under screen y-down.'),
     cx: z
       .number()
       .optional()

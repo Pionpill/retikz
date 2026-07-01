@@ -1,58 +1,59 @@
 import { z } from 'zod';
 
-import { normalizeWebSide } from '../../geometry/anchor';
+import { normalizeAtDirection, normalizeSide, WebSide } from '../../shared';
 import { AnimationTrackSchema } from '../animation';
 import { BoundarySchema } from '../boundary';
-import { BlendMode, DropShadowSchema, ShadowPreset } from '../effects';
 import { FontSchema } from '../font';
 import { JsonObjectSchema } from '../json';
-import { PaintSpecSchema } from '../paint';
 import {
   AtPositionSchema,
   BetweenPositionSchema,
-  normalizeAtDirection,
   OffsetPositionSchema,
   PolarPositionSchema,
   PositionSchema,
 } from '../position';
+import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
 import { ShapeRefSchema } from '../shape';
-import { MixedLineSchema, TextBlockSchema } from '../text';
-import { NodeLabelBoundarySide, NodeLabelPlacement, NodeLabelPosition, NodeTextAlign } from './constants';
+import { CssColorSchema, GraphicStyleSchema } from '../style';
+import { createLabelVisualStyleShape, LabelTextContentSchema, TextBlockSchema } from '../text';
+import { NodeLabelPlacement, NodeLabelPosition, NodeTextAlign } from './constants';
 
 export const NodeLabelBoundaryPositionSchema = z
   .object({
     boundary: z
-      .preprocess(value => (typeof value === 'string' ? normalizeWebSide(value) ?? value : value), z.enum(NodeLabelBoundarySide))
-      .describe('Box-like node boundary side used as the label attachment line. Compass side names are accepted aliases.'),
-    t: z
-      .number()
-      .min(0)
-      .max(1)
+      .preprocess(value => (typeof value === 'string' ? normalizeSide(value) ?? value : value), z.enum(WebSide))
+      .describe('Box-like node boundary side used as the label attachment line. Web sides are canonical; compass and TikZ side names are accepted aliases.'),
+    fraction: NormalizedFractionSchema
       .optional()
       .describe('Normalized position along the selected boundary. Defaults to 0.5.'),
   })
   .strict()
   .describe('Label position on a box-like node boundary.');
 
-/**
- * 节点附属标签 label（TikZ `[label=above:foo]` 同义）
- * @description 可挂多个；label 不参与 layout。position 支持 8 方向枚举或数字角度（polar 约定：0°=+x，90°=+y 屏幕下方）；默认 position='top'，distance=12
- */
+export const NodeLabelPinSchema = z
+  .object({
+    stroke: CssColorSchema.optional().describe('Leader line color; defaults to the label color / currentColor'),
+    strokeWidth: z.number().positive().optional().describe('Leader line width (user units); default 1'),
+    dashPattern: z.array(z.number()).optional().describe('Leader dash pattern lengths in user units.'),
+  })
+  .describe('Leader line style overrides for an outside node label.');
+
 export const NodeLabelSchema = z
   .object({
-    text: z
-      .union([z.string(), MixedLineSchema])
-      .describe(
-        'Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ runs }` mixed text+math line. Rendered as a single line.',
-      ),
+    ...createLabelVisualStyleShape({
+      textColor: 'Label text color; falls back to currentColor.',
+      opacity: 'Label-only opacity, multiplied with node opacity when both are set.',
+      font: 'Label font overrides. Missing fields inherit from the parent node font.',
+    }),
+    text: LabelTextContentSchema,
     position: z
       .preprocess(
         value => (typeof value === 'string' ? normalizeAtDirection(value) ?? value : value),
-        z.union([z.enum(NodeLabelPosition), z.number(), NodeLabelBoundaryPositionSchema]),
+        z.union([z.enum(NodeLabelPosition), AngleDegreesSchema, NodeLabelBoundaryPositionSchema]),
       )
       .optional()
       .describe(
-        'Placement around the node border: direction keyword, center, numeric angle, or `{ boundary, t }`. Omitted fields use top.',
+        'Label attachment point on the node border. Accepts Web directions (top, top-left, ...), compass aliases (north, north-west, ...), TikZ aliases (above, below-left, ...), center, a numeric polar angle in degrees (0=right, 90=bottom in y-down coordinates), or `{ boundary, fraction }` for a proportional point on a box-like side. Omitted fields use top.',
       ),
     placement: z
       .enum(NodeLabelPlacement)
@@ -63,19 +64,11 @@ export const NodeLabelSchema = z
       .nonnegative()
       .optional()
       .describe('Gap between the node border and the label center, in user units. Default 12.'),
-    textColor: z.string().optional().describe('Label text color; falls back to currentColor.'),
-    opacity: z
-      .number()
-      .min(0)
-      .max(1)
-      .optional()
-      .describe('Label-only opacity, multiplied with node opacity when both are set.'),
-    font: FontSchema.optional().describe('Label font overrides. Missing fields inherit from the parent node font.'),
     rotate: z
-      .union([z.enum(['none', 'radial', 'tangent']), z.number()])
+      .union([z.enum(['none', 'radial', 'tangent']), AngleDegreesSchema])
       .optional()
       .describe(
-        'Rotate label text around its own center: none, radial, tangent, or explicit degrees. Only changes orientation, not placement.',
+        'Label text self-rotation around its own center. `none` keeps text upright; `radial` points along node center to label center; `tangent` is radial + 90 degrees; a number is an explicit angle in degrees. Only changes orientation, not placement.',
       ),
     keepUpright: z
       .boolean()
@@ -84,17 +77,10 @@ export const NodeLabelSchema = z
         'When true, flips the rotated label 180 deg if it would otherwise read upside-down (more than 90 deg from upright). Default false (strict geometric angle).',
       ),
     pin: z
-      .union([
-        z.boolean(),
-        z.object({
-          stroke: z.string().optional().describe('Leader line color; defaults to the label color / currentColor'),
-          strokeWidth: z.number().positive().optional().describe('Leader line width (user units); default 1'),
-          dashPattern: z.array(z.number()).optional().describe('Leader dash pattern lengths in user units.'),
-        }),
-      ])
+      .union([z.boolean(), NodeLabelPinSchema])
       .optional()
       .describe(
-        'Leader line from the node border to the label. `true` uses the default line; an object provides line style overrides; omitted or `false` disables the leader.',
+        'Outside-label leader line from the node border attachment point to the label box. `true` uses the default line; an object provides line style overrides; omitted or `false` disables the leader. Rejected when placement is inside.',
       ),
   })
   .superRefine((label, ctx) => {
@@ -111,6 +97,7 @@ export const NodeLabelSchema = z
 export const NodeSchema = z
   .object({
     type: z.literal('node').describe('Discriminator marking this child as a node'),
+    ...GraphicStyleSchema.shape,
     id: z
       .string()
       .min(1)
@@ -139,8 +126,7 @@ export const NodeSchema = z
       .describe(
         'Center point of the node content box: Cartesian [x, y], polar, relative-to-node, offset, or between two endpoints. Non-Cartesian forms resolve at compile time.',
       ),
-    rotate: z
-      .number()
+    rotate: AngleDegreesSchema
       .optional()
       .describe('Rotation in degrees around the node center; positive is visually clockwise.'),
     text: TextBlockSchema.optional().describe(
@@ -160,24 +146,6 @@ export const NodeSchema = z
       .positive()
       .optional()
       .describe('Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.'),
-    color: z
-      .string()
-      .optional()
-      .describe(
-        'Master color for this node. Stroke, fill, text, and labels may inherit it unless individually overridden.',
-      ),
-    fill: z
-      .union([z.string(), PaintSpecSchema])
-      .optional()
-      .describe('Node background paint: CSS color string or PaintSpec.'),
-    fillOpacity: z.number().min(0).max(1).optional().describe('Fill-only opacity for the node shape.'),
-    stroke: z
-      .union([z.string(), PaintSpecSchema])
-      .optional()
-      .describe(
-        'Border paint of the node shape; any CSS color string or a PaintSpec (linear / radial gradient, pattern, or image). Defaults to currentColor when omitted.',
-      ),
-    drawOpacity: z.number().min(0).max(1).optional().describe('Stroke-only opacity for the node border.'),
     strokeWidth: z
       .number()
       .nonnegative()
@@ -221,20 +189,7 @@ export const NodeSchema = z
       ),
     xScale: z.number().positive().optional().describe('Horizontal scale factor; overrides `scale` for the X axis.'),
     yScale: z.number().positive().optional().describe('Vertical scale factor; overrides `scale` for the Y axis.'),
-    textColor: z.string().optional().describe('Text label color; any CSS color. Defaults to `currentColor`.'),
-    opacity: z.number().min(0).max(1).optional().describe('Whole-node opacity applied uniformly to shape and text.'),
-    shadow: z
-      .union([z.enum(ShadowPreset), DropShadowSchema])
-      .optional()
-      .describe(
-        'Drop shadow for the node primary shape only. Use a preset keyword or an object whose explicit fields override the preset.',
-      ),
-    blendMode: z
-      .enum(BlendMode)
-      .optional()
-      .describe(
-        'Blend mode for the node primary shape against already drawn content. Does not affect text, labels, or leader lines.',
-      ),
+    textColor: CssColorSchema.optional().describe('Text label color; any CSS color. Defaults to `currentColor`.'),
     innerXSep: z
       .number()
       .nonnegative()

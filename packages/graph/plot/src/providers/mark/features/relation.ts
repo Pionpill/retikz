@@ -1,6 +1,16 @@
-import type { IRChild, IRCoordinate, IRNodeLabel, IRNodeTarget, IRPath, IRPathRibbonOptions, IRStep, IRStepLabel, IRTarget } from '@retikz/core';
+import type {
+  IRChild,
+  IRCoordinate,
+  IRNodeLabel,
+  IRNodeTarget,
+  IRPath,
+  IRPathRibbonOptions,
+  IRStep,
+  IRStepLabel,
+  IRTarget,
+} from '@retikz/core';
 
-import { normalizeGeometryLabelSide } from '@retikz/core';
+import { normalizeSide } from '@retikz/core';
 
 import type {
   ExternalRow,
@@ -150,8 +160,8 @@ const anchorInputMissing = (ref: PlotTargetRef, row: ExternalRow): boolean => {
 };
 
 const withDefaultLabelSide = (label: IRStepLabel): IRStepLabel => {
-  const side = label.side === undefined ? undefined : normalizeGeometryLabelSide(label.side) ?? label.side;
-  return { side: 'sloped', ...label, ...(side !== undefined ? { side } : {}) };
+  const side = label.side === undefined ? undefined : normalizeSide(label.side) ?? label.side;
+  return { sloped: true, ...label, ...(side !== undefined ? { side } : {}) };
 };
 
 const resolveMarkValue = <T>(value: MarkValueType<T> | undefined, row: ExternalRow): T | undefined => {

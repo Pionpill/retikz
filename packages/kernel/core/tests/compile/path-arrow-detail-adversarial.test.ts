@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { MarkerFill, MarkerPrimitive, PathPrim, ResolvedArrowEndSpec, ScenePrimitive } from '../../src/primitive';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { ArrowDetailSchema } from '../../src/schemas';
+import { arrowMarks } from '../helpers/arrow-marks';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
   const p = prims.find((x): x is PathPrim => x.type === 'path');
@@ -13,11 +14,11 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
 };
 
 /**
- * 从已解析 `ArrowEndSpec` 的 marker 几何抽主导颜色
+ * 从已解析 `ResolvedArrowEndSpec` 的 marker 几何抽主导颜色
  * @description 新契约：视觉输入 color / fill 在 compile 被消费、物化进 marker 几何（实心 fill / 空心 stroke）；
  *   contextStroke / 无 paint → undefined（继承）。
  */
-const markerPaint = (spec: ArrowEndSpec | undefined): string | undefined => {
+const markerPaint = (spec: ResolvedArrowEndSpec | undefined): string | undefined => {
   if (!spec) return undefined;
   const pickFill = (f: MarkerFill | undefined): string | undefined => (typeof f === 'string' ? f : undefined);
   const walk = (prims: ReadonlyArray<MarkerPrimitive>): string | undefined => {
@@ -48,7 +49,7 @@ describe('adv 1: 字段名 = arrowDetail（旧字段 arrowShape 不偷偷生效�
       children: [
         {
           type: 'path',
-          arrow: '->',
+          marks: arrowMarks('->'),
           arrowShape: 'normal',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
@@ -70,8 +71,7 @@ describe('adv 2: merge 语义 = 逐字段（不是"完全替换"）', () => {
       children: [
         {
           type: 'path',
-          arrow: '<->',
-          arrowDetail: { shape: 'stealth', start: { color: 'red' } },
+          marks: arrowMarks('<->', { shape: 'stealth', start: { color: 'red' } }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -95,8 +95,7 @@ describe('adv 2: merge 语义 = 逐字段（不是"完全替换"）', () => {
       children: [
         {
           type: 'path',
-          arrow: '<->',
-          arrowDetail: { scale: 2, color: 'blue', start: { shape: 'diamond' } },
+          marks: arrowMarks('<->', { scale: 2, color: 'blue', start: { shape: 'diamond' } }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -118,8 +117,7 @@ describe('adv 2: merge 语义 = 逐字段（不是"完全替换"）', () => {
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'stealth', scale: 1.5, color: 'red', end: {} },
+          marks: arrowMarks('->', { shape: 'stealth', scale: 1.5, color: 'red', end: {} }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -141,8 +139,7 @@ describe('adv 2: merge 语义 = 逐字段（不是"完全替换"）', () => {
       children: [
         {
           type: 'path',
-          arrow: '<->',
-          arrowDetail: { shape: 'stealth', end: { shape: 'circle' } },
+          marks: arrowMarks('<->', { shape: 'stealth', end: { shape: 'circle' } }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -164,8 +161,7 @@ describe('adv 3: scale × length / width 关系（compile 已乘进 markerWidth 
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'normal', length: 10, scale: 1.5 },
+          marks: arrowMarks('->', { shape: 'normal', length: 10, scale: 1.5 }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -184,8 +180,7 @@ describe('adv 3: scale × length / width 关系（compile 已乘进 markerWidth 
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'normal', width: 8, scale: 2 },
+          marks: arrowMarks('->', { shape: 'normal', width: 8, scale: 2 }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -208,8 +203,7 @@ describe('adv 4: 空心 shape silent fill no-op（4 子象限：实/空 × 有/�
         children: [
           {
             type: 'path',
-            arrow: '->',
-            arrowDetail: { shape, fill: 'red' },
+            marks: arrowMarks('->', { shape, fill: 'red' }),
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [10, 0] },
@@ -231,8 +225,7 @@ describe('adv 4: 空心 shape silent fill no-op（4 子象限：实/空 × 有/�
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape, fill: 'red' },
+          marks: arrowMarks('->', { shape, fill: 'red' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -251,8 +244,7 @@ describe('adv 4: 空心 shape silent fill no-op（4 子象限：实/空 × 有/�
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { shape: 'open', end: { fill: 'red' } },
+          marks: arrowMarks('->', { shape: 'open', end: { fill: 'red' } }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -272,12 +264,11 @@ describe('adv 4: 空心 shape silent fill no-op（4 子象限：实/空 × 有/�
       children: [
         {
           type: 'path',
-          arrow: '<->',
-          arrowDetail: {
+          marks: arrowMarks('<->', {
             fill: 'red', // 顶层共享
             start: { shape: 'diamond' },
             end: { shape: 'open' },
-          },
+          }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -301,8 +292,7 @@ describe('adv 5: 起末异形产 2 不同 marker spec', () => {
       children: [
         {
           type: 'path',
-          arrow: '<->',
-          arrowDetail: { start: { shape: 'normal' }, end: { shape: 'stealth' } },
+          marks: arrowMarks('<->', { start: { shape: 'normal' }, end: { shape: 'stealth' } }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -321,12 +311,11 @@ describe('adv 5: 起末异形产 2 不同 marker spec', () => {
       children: [
         {
           type: 'path',
-          arrow: '<->',
-          arrowDetail: {
+          marks: arrowMarks('<->', {
             shape: 'stealth',
             start: { color: 'red' },
             end: { color: 'blue' },
-          },
+          }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -378,8 +367,7 @@ describe('adv 7: arrowDetail 与 arrow direction 交互（单端配置不漏到�
       children: [
         {
           type: 'path',
-          arrow: '->',
-          arrowDetail: { start: { shape: 'diamond', color: 'red' } },
+          marks: arrowMarks('->', { start: { shape: 'diamond', color: 'red' } }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -400,8 +388,7 @@ describe('adv 7: arrowDetail 与 arrow direction 交互（单端配置不漏到�
       children: [
         {
           type: 'path',
-          arrow: 'none',
-          arrowDetail: { shape: 'stealth', color: 'red', scale: 2 },
+          marks: arrowMarks('none', { shape: 'stealth', color: 'red', scale: 2 }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -421,7 +408,6 @@ describe('adv 7: arrowDetail 与 arrow direction 交互（单端配置不漏到�
       children: [
         {
           type: 'path',
-          arrowDetail: { shape: 'stealth' },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },

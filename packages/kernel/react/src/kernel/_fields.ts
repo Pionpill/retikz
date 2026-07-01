@@ -67,8 +67,6 @@ export const PATH_FIELDS = [
   'stroke',
   'strokeWidth',
   'dashPattern',
-  'arrow',
-  'arrowDetail',
   'fill',
   'fillRule',
   'lineCap',

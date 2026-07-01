@@ -5,19 +5,22 @@ import type { Position } from '../../geometry/point';
 import type { Rect } from '../../geometry/rect';
 import type { ScenePrimitive } from '../../primitive';
 
+import { defineShape } from '../../contract/shape/define';
 import { boundaryFromContour, contourCommands } from '../../geometry/contour';
 import { point } from '../../geometry/point';
 import { localToWorld } from '../../geometry/transform';
-import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './contour';
-import { defineShape } from './define';
+import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
 /**
  * contour shape 的 per-instance params 类型
- * @description 由 paramsSchema z.infer 派生（单一来源 zod）；points = 闭合局部系顶点环（任意原点，
- *   core 按其 AABB 中心自动居中、Node position 对齐几何中心，≥3，隐式闭合，段间直线），
- *   cornerRadius = 逐顶点统一 fillet 半径（user units，可选，逐角夹紧）。
+ * @description 与 paramsSchema 保持同形，供 definition 内部拿到强类型 params。
  */
-type ContourParams = {
+export type ContourParams = {
+  /**
+   * 闭合局部系顶点环。
+   * @description 任意原点；core 按其 AABB 中心自动居中，Node position 对齐几何中心。
+   *   至少 3 个点，隐式闭合，段间直线。
+   */
   points: Array<Position>;
   /**
    * 逐顶点统一 fillet 半径。
@@ -26,10 +29,20 @@ type ContourParams = {
   cornerRadius?: number;
 };
 
-export type { ContourParams };
+/** 点集 AABB 范围。 */
+type ContourAabb = {
+  /** 最小 x 坐标。 */
+  minX: number;
+  /** 最小 y 坐标。 */
+  minY: number;
+  /** 最大 x 坐标。 */
+  maxX: number;
+  /** 最大 y 坐标。 */
+  maxY: number;
+};
 
-/** 点集 AABB 的 [minX, minY, maxX, maxY] */
-const aabbOf = (points: Array<Position>): [number, number, number, number] => {
+/** 点集 AABB。 */
+const aabbOf = (points: Array<Position>): ContourAabb => {
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
@@ -40,12 +53,12 @@ const aabbOf = (points: Array<Position>): [number, number, number, number] => {
     if (x > maxX) maxX = x;
     if (y > maxY) maxY = y;
   }
-  return [minX, minY, maxX, maxY];
+  return { maxX, maxY, minX, minY };
 };
 
 /** 点集 AABB 中心；core 据此自动居中（每顶点减去它，使几何中心落到 Node position） */
 const aabbCenterOf = (points: Array<Position>): Position => {
-  const [minX, minY, maxX, maxY] = aabbOf(points);
+  const { maxX, maxY, minX, minY } = aabbOf(points);
   return [(minX + maxX) / 2, (minY + maxY) / 2];
 };
 
@@ -76,7 +89,6 @@ export const contour = defineShape({
       ),
     cornerRadius: z
       .number()
-
       .nonnegative()
       .optional()
       .describe(
@@ -87,7 +99,7 @@ export const contour = defineShape({
   circumscribe: (innerHalfWidth, innerHalfHeight, params: ContourParams) => {
     void innerHalfWidth;
     void innerHalfHeight;
-    const [minX, minY, maxX, maxY] = aabbOf(params.points);
+    const { maxX, maxY, minX, minY } = aabbOf(params.points);
     return { halfWidth: (maxX - minX) / 2, halfHeight: (maxY - minY) / 2 };
   },
   // 自动居中收在 emit / boundaryPoint 内部（减 AABB 中心），rect 仍中心在 position。

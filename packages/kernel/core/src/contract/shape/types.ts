@@ -1,20 +1,24 @@
 import type { z } from 'zod';
 
-import type { WebSideValue } from '../../geometry/anchor';
 import type { Position } from '../../geometry/point';
 import type { Rect } from '../../geometry/rect';
 import type { PaintValue, ScenePrimitive } from '../../primitive';
-import type { BlendModeValue, DropShadow } from '../../schemas/effects';
+import type { ResolvedDropShadow } from '../../schemas/effects';
 import type { IRJsonObject } from '../../schemas/json';
+import type { IRGraphicStyle } from '../../schemas/style';
+import type { WebSideValue } from '../../shared';
+
+/** 从 IR graphic style 复用的已解析 shape 样式字段。 */
+type ResolvedShapeStyleFields = Pick<IRGraphicStyle, 'fillOpacity' | 'strokeWidth' | 'drawOpacity' | 'opacity' | 'blendMode'>;
 
 /**
- * emit 需要的视觉样式子集
- * @description 从 NodeLayout 的样式字段收敛（不含几何 / 文本）；独立 type，不耦合内部 NodeLayout。
- *   字段名与 NodeLayout 样式字段一致（单一词汇表）。
+ * emit 需要的已解析视觉样式子集。
+ * @description 从 NodeLayout 的样式字段收敛（不含几何 / 文本），作为 shape provider 的 runtime 输入。
+ *   与 IR style schema 同语义的标量字段通过 `IRGraphicStyle` 复用类型；paint / shadow 等 compile 后字段显式组合。
  */
-export type ShapeStyle = {
+export type ResolvedShapeStyle = {
   /**
-   * 填充 paint；缺省由 shape emit 按透明填充处理。
+   * 已解析填充 paint；缺省由 shape emit 按透明填充处理。
    * @default 'transparent'
    */
   fill?: PaintValue;
@@ -22,22 +26,22 @@ export type ShapeStyle = {
    * 填充不透明度。
    * @default 1
    */
-  fillOpacity?: number;
+  fillOpacity?: ResolvedShapeStyleFields['fillOpacity'];
   /**
-   * 描边 paint；缺省由 shape emit 按当前文字色处理。
+   * 已解析描边 paint；缺省由 shape emit 按当前文字色处理。
    * @default 'currentColor'
    */
   stroke?: PaintValue;
   /**
-   * 描边不透明度。
+   * 描边不透明度；来自 IR 的 `drawOpacity`，进入 provider 前按 primitive 字段语义改名。
    * @default 1
    */
-  strokeOpacity?: number;
+  strokeOpacity?: ResolvedShapeStyleFields['drawOpacity'];
   /**
    * 描边宽度。
    * @default 1
    */
-  strokeWidth?: number;
+  strokeWidth?: ResolvedShapeStyleFields['strokeWidth'];
   /**
    * 描边虚线模式；缺省为实线。
    * @default []
@@ -52,17 +56,17 @@ export type ShapeStyle = {
    * 整体不透明度。
    * @default 1
    */
-  opacity?: number;
+  opacity?: ResolvedShapeStyleFields['opacity'];
   /**
    * 投影：解析后对象（compile 已把预设展开 + 显式字段覆盖合并；缺省无投影）
    * @default 无投影
    */
-  shadow?: DropShadow;
+  shadow?: ResolvedDropShadow;
   /**
    * 混合模式：解析后值（compile 透传；缺省 / normal 等价普通 source-over）
    * @default 'normal'
    */
-  blendMode?: BlendModeValue;
+  blendMode?: ResolvedShapeStyleFields['blendMode'];
 };
 
 /**
@@ -72,19 +76,16 @@ export type ShapeStyle = {
  *   sector / arc / polygon / star，circle / diamond 为 preset 别名）也是注册项（无内置特权）。
  *   每个计算函数末位收 per-instance `params`（类型由 `paramsSchema.parse` 在编译期保证），无参形状用
  *   `z.strictObject({})` 并忽略 `params`。
- *
- *   - `paramsSchema`：类型约束输出 JSON-safe（`z.ZodType<TParams>`）。这是类型层约束，不是运行时唯一保证——
- *     compile 在 `paramsSchema.parse(params)` 之后还会对结果跑一次 `JsonObjectSchema.parse`，拦下宽松
- *     schema 放过的非 JSON 输出（function / undefined 等）。
- *
- *   坐标语义两套，第三方最易写错：
- *   - `boundaryPoint` / `anchor` 收**带 `rotate` 的 Rect**——用 re-export 的 `worldToLocal` / `localToWorld` 写局部系几何。
- *   - `emit` 收**轴对齐 Rect（rotate=0）**——旋转由编译器在外层 `GroupPrim` 统一施加。
  */
 export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
-  /** Registry key referenced by IR `node.shape`. */
+  /** 注册表 key，由 IR `node.shape` 引用。 */
   name: string;
-  /** params 的 zod schema；类型约束输出 JSON-safe（运行时双 parse 才是真正护栏，见编译期桥接） */
+  /**
+   * params 的 zod schema。
+   * @description 类型约束输出 JSON-safe（`z.ZodType<TParams>`）。这是类型层约束，不是运行时唯一保证：
+   *   compile 在 `paramsSchema.parse(params)` 之后还会对结果跑一次 `JsonObjectSchema.parse`，
+   *   拦下宽松 schema 放过的非 JSON 输出（function / undefined 等）。
+   */
   paramsSchema: z.ZodType<TParams>;
   /**
    * 外接：内容半轴（text + padding）+ params → 外接框半轴。
@@ -105,25 +106,32 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
    * @default [0, 0]
    */
   circumscribeOffset?: (params: TParams) => Position;
-  /** 中心 → toward 射线 ∩ 边界（rect 带 rotate）；params 喂参数化边界。 */
+  /**
+   * 中心 → toward 射线 ∩ 边界。
+   * @description rect 带 rotate；需要局部系几何时从 `geometry/transform` 使用 `worldToLocal` / `localToWorld`。
+   */
   boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
   /**
    * 命名 anchor 世界坐标；shape 不认识的名字返回 `undefined`（调用方据此抛清晰错误）。
-   * @description 标准方位名使用 Web/CSS canonical 值（top / right / ... / center）：默认连接面下 compile 先调本函数，
+   * @description 标准方位名使用 Web/CSS canonical 值（top / right / ...）：默认连接面下 compile 先调本函数，
    *   shape 返回真实形状上的点即采用（如 ellipse 落真实周长、polygon 落外接 AABB）；返回 `undefined` 则 compile
    *   回退到外接 AABB 矩形。故 shape 作者可只实现 shape 专属命名 anchor（tip-N / apex 等），标准方位名交回退即可；
-   *   要让标准方位贴真实形状边界（圆 / 椭圆类）才需自行处理。
+   *   要让标准方位贴真实形状边界（圆 / 椭圆类）才需自行处理。`center` 由 compile 特殊处理，不传给 provider。
    */
   anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
   /**
    * 边上比例点：Web side 真实边界从约定起点起 t∈[0,1] 处（轴对齐空间求出后由 layout 投回世界系）。
    * @description 可选——目前仅 rectangle / ellipse 实现；未实现的 shape（polygon / sector / arc / star）收到 `{ side, t }` 时编译期（resolveEdgePoint）抛明确错。
-   *   side 使用 Web/CSS canonical 值：top/right/bottom/left。与 `anchor` 同坐标语义：收**带 rotate 的 Rect**，自行用 worldToLocal/localToWorld 处理旋转。
+   *   side 使用 Web/CSS canonical 值：top/right/bottom/left。与 `anchor` 同坐标语义：收**带 rotate 的 Rect**，自行用 `worldToLocal` / `localToWorld` 处理旋转。
    * @default 不支持；该 shape 的 side anchor 会抛错
    */
   edgePoint?: (rect: Rect, side: WebSideValue, t: number, params: TParams) => Position;
-  /** 视觉 primitive，**轴对齐空间**（rotate 由编译器外层 GroupPrim 统一施加）；params 喂参数化几何。 */
-  emit: (rect: Rect, style: ShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>;
+  /**
+   * 视觉 primitive。
+   * @description emit 收轴对齐空间（rotate=0）的 rect；旋转由编译器在外层 `GroupPrim` 统一施加。
+   *   params 喂参数化几何。
+   */
+  emit: (rect: Rect, style: ResolvedShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>;
   /**
    * node scale 作用于 params 的方式（可选）。
    * @description 给定原始 params 与水平 / 垂直缩放因子 `sx` / `sy`，返回缩放后的 params。

@@ -100,7 +100,7 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
   descriptions={{
     text: '标签文字内容，按单行文本渲染',
     position:
-      '标签相对节点边界的位置：8 向枚举、center、数字角度，或 `{ boundary, t }` 矩形边界比例点；默认 top；center 直接画在节点中心',
+      '标签相对节点边界的位置：8 向枚举、center、数字角度，或 `{ boundary, fraction }` 矩形边界比例点；默认 top；center 直接画在节点中心',
     placement: '标签相对附着点的偏移方向：outside（默认）向外，inside 向节点内部偏移；inside 不支持 pin',
     distance: '节点边界到标签中心的间距（用户单位），默认 12',
     textColor: '标签文字颜色，省略时使用 currentColor',
@@ -113,7 +113,7 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
   }}
 />
 
-`position: { boundary, t }` 目前用于 box-like 节点边界：`boundary` 取 `'top'` / `'right'` / `'bottom'` / `'left'`，`t` 是该边上的 0..1 比例位置，缺省 `0.5`。
+`position: { boundary, fraction }` 目前用于 box-like 节点边界：`boundary` 取 `'top'` / `'right'` / `'bottom'` / `'left'`，`fraction` 是该边上的 0..1 比例位置，缺省 `0.5`。
 
 <span id="textblock"></span>
 

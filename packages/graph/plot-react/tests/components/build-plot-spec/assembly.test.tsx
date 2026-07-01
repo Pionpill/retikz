@@ -136,7 +136,16 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
 
   it('path core style props pass through to mark IR', () => {
     const spec = buildPlotSpec(
-      <PathMark x="x" y="y" strokeWidth={3} opacity={0.6} lineCap="round" lineJoin="bevel" roundedCorners={4} />,
+      <PathMark
+        x="x"
+        y="y"
+        strokeWidth={3}
+        opacity={0.6}
+        lineCap="round"
+        lineJoin="bevel"
+        roundedCorners={4}
+        marks={[{ pos: 1, mark: { kind: 'arrow' } }]}
+      />,
       '__plot',
     );
     expect(spec.marks[0]).toEqual({
@@ -146,6 +155,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
       lineCap: { kind: 'constant', value: 'round' },
       lineJoin: { kind: 'constant', value: 'bevel' },
       roundedCorners: { kind: 'constant', value: 4 },
+      marks: [{ pos: 1, mark: { kind: 'arrow' } }],
       encoding: { x: { field: 'x' }, y: { field: 'y' } },
     });
   });
@@ -194,7 +204,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
           source={{ anchorId: { prefix: 'pt', field: 'from' } }}
           target={{ anchorId: { prefix: 'pt', field: 'to' } }}
           label={{ content: { field: 'label' }, position: 'midway' }}
-          path={{ options: { arrow: '->', roundedCorners: 6 } }}
+          path={{ options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 6 } }}
           color="kind"
         />
       </>,
@@ -210,7 +220,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
       source: { anchorId: { prefix: 'pt', field: 'from' } },
       target: { anchorId: { prefix: 'pt', field: 'to' } },
       label: { content: { field: 'label' }, position: 'midway' },
-      path: { options: { arrow: '->', roundedCorners: 6 } },
+      path: { options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 6 } },
       encoding: { color: { field: 'kind', scale: '__color' } },
     });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();

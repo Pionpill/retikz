@@ -9,6 +9,7 @@ import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/primitive';
 import type { IR, IRPaintSpec } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
+import { arrowMarks } from '../helpers/arrow-marks';
 import { flattenPrims } from '../helpers/flatten';
 
 const grad: IRPaintSpec = {
@@ -290,7 +291,7 @@ describe('stroke PaintSpec → 资源表 + resourceRef', () => {
         {
           type: 'path',
           stroke: grad,
-          arrow: '->',
+          marks: arrowMarks('->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -309,8 +310,7 @@ describe('stroke PaintSpec → 资源表 + resourceRef', () => {
         {
           type: 'path',
           stroke: grad,
-          arrow: '->',
-          arrowDetail: { color: '#111' },
+          marks: arrowMarks('->', { color: '#111' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },

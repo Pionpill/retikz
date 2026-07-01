@@ -116,9 +116,9 @@ Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都�
 
 上排都用最常见的矩形：左边是固定的 8 个方位 anchor（外加 `center`）；右边是角度 anchor（`A.30`，沿 30° 射线打到边界）和边比例 anchor（`{ side: 'top', t: 0.25 }`，top 边左→右取 1/4 处）。下排是几种自带 shape 专属点的非矩形形状：star 的 `tip-N` 尖角（另有 `notch-N` 凹角）、sector 的 `apex` / `centroid` / `outer-arc-mid` / `inner-arc-mid` / `start-edge-mid` / `end-edge-mid`、arc 的 `start` / `arc-mid` / `end`。这些专属点用对象形态引用，如 `{ id: 'A', anchor: 'tip-0' }`。
 
-方位锚点有两套名字：`WebAnchor` 是 canonical 名称，符合 Web / CSS 心智；`CompassAnchor` 沿用 TikZ 风格，只作为输入别名，解析时归一到对应的 Web 名称。
+方位锚点保留三套名字：`WebAnchor` 是 canonical 名称，符合 Web / CSS 心智；`CompassAnchor` 使用 `north` / `south` 这类 compass 风格；`TikzAnchor` 使用 `above` / `below` 这类 TikZ positioning 风格。后两者只作为输入别名，解析时归一到对应的 Web 名称。`center` 是独立的中心锚点，不属于这些方向枚举。
 
-| WebAnchor                                                 | 位置                               |
+| Anchor                                                    | 位置                               |
 | --------------------------------------------------------- | ---------------------------------- |
 | `center`                                                  | 节点几何中心                       |
 | `top` / `bottom` / `right` / `left`                       | 上 / 下 / 右 / 左 4 个方位的边界点 |
@@ -131,7 +131,7 @@ Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都�
 | `top` / 等 4 方位        | 边中点（= AABB 边中点） | 圆周 4 方位 | 椭圆轴端          | AABB 边中点        |
 | `top-right` / 等 4 对角  | 4 角                    | 圆周 45° 处 | 椭圆参数 t=π/4 处 | AABB 4 角          |
 
-节点 `rotate` 时 9 个锚点跟着旋转。`CompassAnchor` 别名归一如下：
+节点 `rotate` 时中心与 8 个方位锚点跟着旋转。`CompassAnchor` 和 `TikzAnchor` 别名归一如下：
 
 | CompassAnchor                                             | 等价 WebAnchor                                            |
 | --------------------------------------------------------- | --------------------------------------------------------- |
@@ -139,13 +139,19 @@ Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都�
 | `north-east` / `north-west`                               | `top-right` / `top-left`                                  |
 | `south-east` / `south-west`                               | `bottom-right` / `bottom-left`                            |
 
+| TikzAnchor                                                | 等价 WebAnchor                                            |
+| --------------------------------------------------------- | --------------------------------------------------------- |
+| `above` / `below` / `right` / `left`                      | `top` / `bottom` / `right` / `left`                       |
+| `above-right` / `above-left`                              | `top-right` / `top-left`                                  |
+| `below-right` / `below-left`                              | `bottom-right` / `bottom-left`                            |
+
 <Comparison target="tikz" title="锚点命名">
 
-`north` / `south` / `east` / `west` / `north-east` / `north-west` / `south-east` / `south-west` 仍作为 TikZ 风格输入别名保留，方便把节点关系从 LaTeX 图迁到 JSX 写法；解析后的 canonical 值是 `top` / `right` 等 Web 名称。
+`north` / `south` / `east` / `west` / `north-east` / `north-west` / `south-east` / `south-west` 作为 compass 风格输入别名保留；`above` / `below` / `above-left` 等 TikZ positioning 风格也可以输入。解析后的 canonical 值是 `top` / `right` 等 Web 名称。
 
 </Comparison>
 
-自定义 shape 的 anchor 行为由它的 `ShapeDefinition` 提供：推荐支持这 9 个 Web 标准方位 anchor，方便与内置形状互换；如果某个注册形状不支持某个 anchor，编译期会给出对应错误。见 [自定义形状](/kernel/components/extend/shape-registry)。
+自定义 shape 的 anchor 行为由它的 `ShapeDefinition` 提供：推荐支持这 8 个 Web 方位 anchor，方便与内置形状互换；普通 `center` 由编译器按节点中心处理，arc / sector 这类语义中心不同于 AABB 中心的形状可以自己声明 `center`。如果某个注册形状不支持某个 anchor，编译期会给出对应错误。见 [自定义形状](/kernel/components/extend/shape-registry)。
 
 边上比例点 `{ side, t }` 取 shape **真实边界**某条边上从约定起点起 `t ∈ [0, 1]` 比例处——方向 top/bottom 左→右、right/left 上→下：rectangle 沿直边、circle / ellipse 沿该侧可见周长弧段、diamond 沿可见斜边。`{ side: 'left', t: 1/3 }` = 左边三等分点，`{ side: 'top', t: 0.5 }` = 上边中点（等于命名 `'top'`）。
 

@@ -38,7 +38,7 @@ description: Named members placed in a scene — Node and Coordinate
   descriptions={{
     text: 'Label text content, rendered as one line',
     position:
-      'Label position relative to the node border: 8-direction enum, center, numeric angle, or `{ boundary, t }` on a rectangle boundary; defaults to top; center draws at the node center',
+      'Label position relative to the node border: 8-direction enum, center, numeric angle, or `{ boundary, fraction }` on a rectangle boundary; defaults to top; center draws at the node center',
     placement: 'Offset direction from the attachment point: outside (default) or inside; inside labels cannot use pin',
     distance: 'Distance from the node boundary to the label center, in user units; defaults to 12',
     textColor: 'Label text color; defaults to currentColor',
@@ -52,7 +52,7 @@ description: Named members placed in a scene — Node and Coordinate
   }}
 />
 
-`position: { boundary, t }` currently targets box-like node boundaries: `boundary` is `'top'` / `'right'` / `'bottom'` / `'left'`, and `t` is the 0..1 proportional position on that side, defaulting to `0.5`.
+`position: { boundary, fraction }` currently targets box-like node boundaries: `boundary` is `'top'` / `'right'` / `'bottom'` / `'left'`, and `fraction` is the 0..1 proportional position on that side, defaulting to `0.5`.
 
 ## TextBlock
 

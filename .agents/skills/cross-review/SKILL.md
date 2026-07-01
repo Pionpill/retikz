@@ -70,7 +70,7 @@ for c in codex claude; do command -v $c >/dev/null && echo "available: $c"; done
 
 **类型安全**
 - 无 `as any` / `@ts-ignore` / `@ts-expect-error` / 非必要 `!` 绕过；让 zod / IR / 第三方真实类型穿透到调用点
-- TS 类型用 `z.infer` 派生不手写（单一真源，避免与 schema 漂移）
+- TS 类型用 `z.infer` 派生不手写（单一真源，避免与 schema 漂移）；由 IR schema object 推导出的公开数据类型命名为 `IRXxx`，由 const object enum + `ValueOf` 推导出的取值 union 命名为 `XxxValue`
 - IR 100% JSON 可序列化：schema 里不出现 `z.any()` / `z.unknown()` / 函数 / `ReactNode`
 
 **分层与架构**

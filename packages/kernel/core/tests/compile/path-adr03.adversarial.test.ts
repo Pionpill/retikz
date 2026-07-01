@@ -14,6 +14,7 @@ import type { IR, IRPath, ScenePrimitive } from '../../src';
 import type { Scene } from '../../src/primitive';
 
 import { compileToScene } from '../../src/compile/compile';
+import { arrowMarks } from '../helpers/arrow-marks';
 
 /** 递归收集 Scene 里所有数值坐标（commands / transforms / layout），判 finite */
 const collectNumbers = (value: unknown, out: Array<number> = []): Array<number> => {
@@ -429,8 +430,8 @@ describe('ATTACK 9: out/in bend + rotate + marks 三合一 + arrow', () => {
         {
           rotate: 37,
           scale: 0.5,
-          arrow: '<->',
           marks: [
+            ...arrowMarks('<->'),
             { pos: 0, mark: { kind: 'arrow', shape: 'stealth' } },
             { pos: 0.5, mark: { kind: 'arrow', shape: 'diamond' } },
             { pos: 1, mark: { kind: 'arrow', shape: 'open' } },

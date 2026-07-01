@@ -38,7 +38,7 @@ const Demo: FC = () => (
         {
           text: '起点',
           position: 'near-start',
-          side: 'above',
+          side: 'top',
           sloped: true,
           textColor: '#92400e',
           font: { size: 11, weight: 'bold' },

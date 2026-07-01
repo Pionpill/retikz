@@ -1,12 +1,9 @@
 import type { z } from 'zod';
 
-import type { ValueOf } from '../../../types';
+import type { ValueOf } from '../../../shared';
 import type { StepSchema } from '../step';
-import type { PathArrowDirection, PathFillRule, PathLineCap, PathLineJoin, PathThickness } from './constants';
+import type { PathFillRule, PathLineCap, PathLineJoin, PathThickness } from './constants';
 import type { ArrowMarkSchema, PathBaseSchema, PathScaleSchema } from './schema';
-
-/** 路径级箭头方向关键字类型。 */
-export type PathArrowDirectionValue = ValueOf<typeof PathArrowDirection>;
 
 /** 路径填充规则关键字类型。 */
 export type PathFillRuleValue = ValueOf<typeof PathFillRule>;
@@ -26,7 +23,6 @@ export type IRPathScale = z.infer<typeof PathScaleSchema>;
 /** 路径中段箭头标记类型 */
 export type IRArrowMark = z.infer<typeof ArrowMarkSchema>;
 
-/** 路径：由若干 step 动作（move/line/...）组成 */
 /** Path schema 的原始输出类型：供 kind 派生、boundary ribbon 等特殊形态使用。 */
 export type IRPathBase = z.infer<typeof PathBaseSchema>;
 

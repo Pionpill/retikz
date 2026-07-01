@@ -1,4 +1,4 @@
-import type { DropShadow, Layout, ScenePrimitive } from '@retikz/core';
+import type { IRDropShadow, Layout, ScenePrimitive } from '@retikz/core';
 
 import type { SvgNode } from '../types';
 
@@ -9,11 +9,11 @@ import { compact } from './attrs';
 const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';
 
 /**
- * 递归收集 scene 里所有几何图元（rect / ellipse / path）携带的已解析 DropShadow —— 按需注入 filter defs
+ * 递归收集 scene 里所有几何图元（rect / ellipse / path）携带的已解析 IRDropShadow —— 按需注入 filter defs
  * @description 仅主几何图元带 shadow（compile 已保证 text / marker 不带）；group 递归。
  */
-export const collectShadows = (prims: ReadonlyArray<ScenePrimitive>): Array<DropShadow> => {
-  const out: Array<DropShadow> = [];
+export const collectShadows = (prims: ReadonlyArray<ScenePrimitive>): Array<IRDropShadow> => {
+  const out: Array<IRDropShadow> = [];
   const visit = (p: ScenePrimitive | undefined | null): void => {
     if (!p) return;
     if (p.type === 'rect' || p.type === 'ellipse' || p.type === 'path') {
@@ -27,10 +27,10 @@ export const collectShadows = (prims: ReadonlyArray<ScenePrimitive>): Array<Drop
 };
 
 /**
- * DropShadow → 稳定字符串 key
+ * IRDropShadow → 稳定字符串 key
  * @description 按固定字段顺序遍历（不依赖对象字面量字段顺序），相同 shadow → 同 key（dedup）。
  */
-export const stableShadowKey = (s: DropShadow): string => {
+export const stableShadowKey = (s: IRDropShadow): string => {
   const parts: Array<string> = [];
   for (const field of ['offsetX', 'offsetY', 'blur', 'color', 'opacity'] as const) {
     const value = s[field];
@@ -39,11 +39,11 @@ export const stableShadowKey = (s: DropShadow): string => {
   return parts.join('|');
 };
 
-/** DropShadow → 短 hash（嵌入 SVG filter id 用） */
-export const shadowHash = (s: DropShadow): string => hashKey(stableShadowKey(s));
+/** IRDropShadow → 短 hash（嵌入 SVG filter id 用） */
+export const shadowHash = (s: IRDropShadow): string => hashKey(stableShadowKey(s));
 
 /** 以 shadow 的位移 + 模糊半径外扩 filter region，避免大档位投影被 viewBox 边缘裁掉 */
-const shadowRegion = (s: DropShadow, region: Layout): Layout => {
+const shadowRegion = (s: IRDropShadow, region: Layout): Layout => {
   const dx = s.offsetX ?? 0;
   const dy = s.offsetY ?? 0;
   const blur = s.blur ?? 0;
@@ -60,10 +60,10 @@ const shadowRegion = (s: DropShadow, region: Layout): Layout => {
 };
 
 /** SVG feDropShadow 使用 Gaussian stdDeviation，内部保持单点映射便于后续校准 */
-const svgShadowStdDeviation = (s: DropShadow): number => (s.blur ?? 0) / 2;
+const svgShadowStdDeviation = (s: IRDropShadow): number => (s.blur ?? 0) / 2;
 
 /**
- * 一个 DropShadow → `<filter><feDropShadow></filter>` SvgNode
+ * 一个 IRDropShadow → `<filter><feDropShadow></filter>` SvgNode
  * @description SVG 端把 user-unit blur 映射为 `feDropShadow.stdDeviation`，Canvas 端按当前 transform 校准；
  *   `flood-color` 缺省半透明黑；`opacity`（若给）→ `flood-opacity`（相乘到有效 alpha）。
  *   `id` 已由 caller 加实例前缀。
@@ -73,7 +73,7 @@ const svgShadowStdDeviation = (s: DropShadow): number => (s.blur ?? 0) / 2;
  *   小图元上 offset+blur 超过 10% 也会被切边（Tailwind 预设几乎都会）。一个 filter 跨不同尺寸元素共享去重，
  *   故区域不能依赖单个 bbox；统一覆盖并外扩 viewBox 即与 Canvas 口径更接近，且对直线 / 大模糊一致生效。
  */
-export const buildShadowDef = (s: DropShadow, id: string, region: Layout): SvgNode => {
+export const buildShadowDef = (s: IRDropShadow, id: string, region: Layout): SvgNode => {
   const expanded = shadowRegion(s, region);
   return {
     tag: 'filter',

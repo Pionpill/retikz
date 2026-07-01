@@ -6,6 +6,7 @@ import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { PathSchema } from '../../src/schemas';
+import { arrowMarks } from '../helpers/arrow-marks';
 import { flattenPrims } from '../helpers/flatten';
 
 type TestArrowDefinition = Omit<ArrowDefinition, 'name'> & { name?: string };
@@ -28,8 +29,7 @@ const horizontalPathIR = (
   children: [
     {
       type: 'path',
-      arrow,
-      arrowDetail: detail,
+      marks: arrowMarks(arrow, detail),
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to },
@@ -323,8 +323,7 @@ describe('ADV — 极端几何 / 功能交叉', () => {
   it('scale_nonpositive_rejected：scale<=0 被 schema 拒（NaN 路径不可达）', () => {
     const r = PathSchema.safeParse({
       type: 'path',
-      arrow: '->',
-      arrowDetail: { shape: 'normal', scale: 0 },
+      marks: arrowMarks('->', { shape: 'normal', scale: 0 }),
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [100, 0] },
@@ -351,8 +350,7 @@ describe('ADV — 极端几何 / 功能交叉', () => {
           children: [
             {
               type: 'path',
-              arrow: '->',
-              arrowDetail: { shape: 'stealth' },
+              marks: arrowMarks('->', { shape: 'stealth' }),
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [10, 0] },
@@ -403,7 +401,7 @@ describe('ADV — Scene round-trip / contextStroke', () => {
     expect(mp.stroke).toBe('green');
   });
 
-  it('opacity_zero：arrowDetail.opacity=0 合法 → ArrowEndSpec.opacity=0 不被吞', () => {
+  it('opacity_zero：arrowDetail.opacity=0 合法 → ResolvedArrowEndSpec.opacity=0 不被吞', () => {
     const spec = firstPath(
       compileToScene(horizontalPathIR('->', { shape: 'stealth', opacity: 0 })).primitives,
     )?.arrowEnd;
@@ -418,8 +416,7 @@ describe('ADV — zod parse 错误质量', () => {
   it('shape_as_number：shape 写成数字 → schema 拒 + 错误指明 shape', () => {
     const r = PathSchema.safeParse({
       type: 'path',
-      arrow: '->',
-      arrowDetail: { shape: 7 },
+      marks: arrowMarks('->', { shape: 7 }),
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [100, 0] },
@@ -432,8 +429,7 @@ describe('ADV — zod parse 错误质量', () => {
   it('color_as_number：color 写成数字 → schema 拒', () => {
     const r = PathSchema.safeParse({
       type: 'path',
-      arrow: '->',
-      arrowDetail: { shape: 'stealth', color: 0xff0000 },
+      marks: arrowMarks('->', { shape: 'stealth', color: 0xff0000 }),
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [100, 0] },
@@ -446,8 +442,7 @@ describe('ADV — zod parse 错误质量', () => {
   it('extra_field_typo：拼错字段名 lenght 被静默剥离（全局 IR strip 行为，记录现状）', () => {
     const r = PathSchema.safeParse({
       type: 'path',
-      arrow: '->',
-      arrowDetail: { shape: 'stealth', lenght: 10 },
+      marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'stealth', lenght: 10 } }],
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [100, 0] },
@@ -455,7 +450,7 @@ describe('ADV — zod parse 错误质量', () => {
     });
     expect(r.success).toBe(true);
     if (r.success) {
-      const detail = r.data.arrowDetail as Record<string, unknown>;
+      const detail = r.data.marks?.[0]?.mark as Record<string, unknown>;
       expect('lenght' in detail).toBe(false);
     }
   });

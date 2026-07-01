@@ -10,6 +10,7 @@ import type { IR } from '../../src/schemas';
 import { compileToScene } from '../../src/compile/compile';
 import { PathSchema } from '../../src/schemas';
 import { SHADOW_PRESETS } from '../../src/schemas/effects';
+import { arrowMarks } from '../helpers/arrow-marks';
 import { flattenPrims } from '../helpers/flatten';
 
 const silent = { onWarn: () => {} };
@@ -117,7 +118,7 @@ describe('[path-shadow] 交互', () => {
   // 注：仅断言 arrow spec 对象本身不冗余携带 shadow 字段（效果挂在 PathPrim 上）。渲染时端点箭头随主路径
   // 一起被 shadow / blend 牵连（SVG 元素级 filter / Canvas 同一绘制过程），属正确跨端语义，见 render 层测试。
   it('path-arrow-spec-no-shadow-field：带 arrow 的 path + shadow → endpoint arrow spec 不冗余带 shadow 字段', () => {
-    const prim = findPathPrim(compilePath({ stroke: 'steelblue', arrow: '->', shadow: 'md' }).primitives);
+    const prim = findPathPrim(compilePath({ stroke: 'steelblue', marks: arrowMarks('->'), shadow: 'md' }).primitives);
     expect(prim.shadow).toEqual(SHADOW_PRESETS.md);
     expect(prim.arrowEnd).toBeDefined();
     expect((prim.arrowEnd as unknown as { shadow?: unknown }).shadow).toBeUndefined();

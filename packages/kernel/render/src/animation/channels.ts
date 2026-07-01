@@ -4,7 +4,7 @@
  */
 import type { IRAnimationOrigin, IRAnimationTrack, ScenePrimitive } from '@retikz/core';
 
-import { AnimationProperty, normalizeCompassAnchor } from '@retikz/core';
+import { AnimationProperty, CenterAnchor, normalizeAnchor, WebAnchor } from '@retikz/core';
 
 /** transform 类通道（落 transform，需支点 origin） */
 const TRANSFORM_PROPERTIES = new Set<string>([
@@ -42,7 +42,7 @@ const primBBox = (prim: ScenePrimitive): { x: number; y: number; w: number; h: n
   return undefined;
 };
 
-/** 9 命名 anchor（复用 node 词汇）→ bbox 上的点 */
+/** 中心 + 8 方位 anchor（复用 node 词汇）→ bbox 上的点 */
 const anchorOnBBox = (
   name: string,
   bbox: { x: number; y: number; w: number; h: number },
@@ -53,24 +53,24 @@ const anchorOnBBox = (
   const right = bbox.x + bbox.w;
   const top = bbox.y;
   const bottom = bbox.y + bbox.h;
-  switch (normalizeCompassAnchor(name)) {
-    case 'center':
+  switch (normalizeAnchor(name)) {
+    case CenterAnchor.Center:
       return [cx, cy];
-    case 'north':
+    case WebAnchor.Top:
       return [cx, top];
-    case 'south':
+    case WebAnchor.Bottom:
       return [cx, bottom];
-    case 'east':
+    case WebAnchor.Right:
       return [right, cy];
-    case 'west':
+    case WebAnchor.Left:
       return [left, cy];
-    case 'north-east':
+    case WebAnchor.TopRight:
       return [right, top];
-    case 'north-west':
+    case WebAnchor.TopLeft:
       return [left, top];
-    case 'south-east':
+    case WebAnchor.BottomRight:
       return [right, bottom];
-    case 'south-west':
+    case WebAnchor.BottomLeft:
       return [left, bottom];
     default:
       return undefined;

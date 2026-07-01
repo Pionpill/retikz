@@ -1,4 +1,4 @@
-import type { ArrowEndSpec, DropShadow, Scene, ScenePrimitive } from '@retikz/core';
+import type { ArrowEndSpec, IRDropShadow, Scene, ScenePrimitive } from '@retikz/core';
 
 import type { EasingRegistry } from '../../animation/types';
 import type { SvgNode } from '../types';
@@ -45,12 +45,12 @@ const makeContext = (
   arrowMarkerIdFor: (spec: ArrowEndSpec) => string;
   paintIdFor: (id: string) => string;
   clipIdFor: (id: string) => string;
-  shadowIdFor: (shadow: DropShadow) => string;
+  shadowIdFor: (shadow: IRDropShadow) => string;
 } => {
   const arrowMarkerIdFor = (spec: ArrowEndSpec): string => `retikz-arrow-${idPrefix}-${hashKey(stableSpecKey(spec))}`;
   const paintIdFor = (id: string): string => `retikz-paint-${idPrefix}-${id}`;
   const clipIdFor = (id: string): string => `retikz-clip-${idPrefix}-${id}`;
-  const shadowIdFor = (shadow: DropShadow): string => `retikz-shadow-${idPrefix}-${shadowHash(shadow)}`;
+  const shadowIdFor = (shadow: IRDropShadow): string => `retikz-shadow-${idPrefix}-${shadowHash(shadow)}`;
   return {
     context: {
       arrowMarkerIdFor,
@@ -76,8 +76,8 @@ const dedupArrowSpecs = (prims: ReadonlyArray<ScenePrimitive>): Map<string, Arro
 };
 
 /** 收集 + 按 stableShadowKey dedup shadow（保持首次出现顺序） */
-const dedupShadows = (prims: ReadonlyArray<ScenePrimitive>): Map<string, DropShadow> => {
-  const uniqueByKey = new Map<string, DropShadow>();
+const dedupShadows = (prims: ReadonlyArray<ScenePrimitive>): Map<string, IRDropShadow> => {
+  const uniqueByKey = new Map<string, IRDropShadow>();
   for (const s of collectShadows(prims)) {
     const k = stableShadowKey(s);
     if (!uniqueByKey.has(k)) uniqueByKey.set(k, s);

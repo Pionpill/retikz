@@ -1,4 +1,4 @@
-export { collectHydrationHandlers } from './collect-hydration-handlers';
+export * from './collect-hydration-handlers';
 export * from './Coordinate';
 export * from './embeddable';
 export type { HydrationEventProps } from './event-props';

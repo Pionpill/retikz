@@ -1,7 +1,7 @@
 import { arcEndPoint } from '@retikz/math';
 
 import type { BoundaryDefinition } from '../contract/boundary';
-import type { ShapeDefinition, ShapeStyle } from '../contract/shape';
+import type { ResolvedShapeStyle, ShapeDefinition } from '../contract/shape';
 import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';
 import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
@@ -21,7 +21,7 @@ import type {
   NodeLabelPlacementValue,
   NodeLabelPositionValue,
 } from '../schemas';
-import type { BlendModeValue, DropShadow } from '../schemas/effects';
+import type { BlendModeValue, ResolvedDropShadow } from '../schemas/effects';
 import type { CompileWarningCodeValue } from './constant';
 import type { LowerTex } from './lower-tex';
 import type { NameStack } from './name-stack';
@@ -30,11 +30,11 @@ import type { ResolveBetweenGlobal } from './position';
 import type { LaidLine, LineLayoutContext } from './text-layout';
 import type { FontSpec, TextMeasurer } from './text-metrics';
 
-import { normalizeWebAnchor, normalizeWebSide } from '../geometry/anchor';
 import { resolveBoundaryRegistry } from '../providers/boundary';
 import { providerDefinitionOf } from '../providers/registry';
 import { resolveShapeRegistry } from '../providers/shape';
-import { JsonObjectSchema, normalizeAtDirection } from '../schemas';
+import { JsonObjectSchema } from '../schemas';
+import { CenterAnchor, normalizeAnchor, normalizeAtDirection, normalizeSide } from '../shared';
 import { fallbackBoundaryAnchor, resolveBoundary } from './boundary';
 import { CompileWarningCode } from './constant';
 import { DirectionVectorByAtDirection, LabelAnchorByAtDirection } from './direction';
@@ -265,7 +265,7 @@ export type NodeLayout = {
    */
   opacity?: number;
   /** 已解析的主形状投影（compile 已展开 preset + 显式覆盖）；仅挂 shape 几何图元，不挂 text */
-  shadow?: DropShadow;
+  shadow?: ResolvedDropShadow;
   /**
    * 主形状混合模式（与下方已绘内容混合）；仅挂 shape 几何图元，不挂 text
    * @default 'normal'
@@ -397,8 +397,17 @@ export const boundaryPointOf = (
  *   boundary 缺省 = 'shape'。
  */
 export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary | undefined = 'shape'): Position => {
-  const webAnchor = normalizeWebAnchor(name);
+  const webAnchor = normalizeAnchor(name);
   if (webAnchor !== undefined) {
+    if (webAnchor === CenterAnchor.Center) {
+      const own = layout.shapeDef.anchor(
+        layout.rect,
+        CenterAnchor.Center,
+        layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
+      );
+      return own ?? [layout.rect.x, layout.rect.y];
+    }
+
     // 标准方位名：默认连接面（'shape'）先走视觉 shape 自身 anchor——ellipse/circle 落真实周长、
     // rectangle/polygon 落 AABB（与 TikZ 一致）；shape 未实现标准方位（star/sector/arc 返回 undefined）
     // 回退外接 AABB 矩形。显式 boundary 指定时按该连接面解析。
@@ -449,7 +458,7 @@ const isLabelBoundaryPosition = (position: NodeLabelLayout['position']): positio
 
 const normalizeLabelBoundaryPosition = (position: IRNodeLabelBoundaryPosition): IRNodeLabelBoundaryPosition => ({
   ...position,
-  boundary: normalizeWebSide(position.boundary) ?? position.boundary,
+  boundary: normalizeSide(position.boundary) ?? position.boundary,
 });
 
 const normalizeLabelPosition = (
@@ -473,15 +482,15 @@ const ensureBoxLikeLabelBoundary = (layout: NodeLayout): void => {
 
 const labelBoundaryPoint = (layout: NodeLayout, position: IRNodeLabelBoundaryPosition): Position => {
   ensureBoxLikeLabelBoundary(layout);
-  const t = position.t ?? 0.5;
+  const fraction = position.fraction ?? 0.5;
   const left = layout.rect.x - layout.rect.width / 2;
   const right = layout.rect.x + layout.rect.width / 2;
   const top = layout.rect.y - layout.rect.height / 2;
   const bottom = layout.rect.y + layout.rect.height / 2;
-  if (position.boundary === 'top') return [left + layout.rect.width * t, top];
-  if (position.boundary === 'right') return [right, top + layout.rect.height * t];
-  if (position.boundary === 'bottom') return [left + layout.rect.width * t, bottom];
-  return [left, top + layout.rect.height * t];
+  if (position.boundary === 'top') return [left + layout.rect.width * fraction, top];
+  if (position.boundary === 'right') return [right, top + layout.rect.height * fraction];
+  if (position.boundary === 'bottom') return [left + layout.rect.width * fraction, bottom];
+  return [left, top + layout.rect.height * fraction];
 };
 
 const labelBoundaryDirection = (position: IRNodeLabelBoundaryPosition): Position => {
@@ -881,8 +890,8 @@ export const layoutNode = (
   };
 };
 
-/** 从 NodeLayout 收敛 emit 所需的视觉样式子集（ShapeStyle，不含几何 / 文本）；fill / stroke 经 resolvePaint 转 PaintValue */
-const toShapeStyle = (layout: NodeLayout, resolvePaint: PaintResolver): ShapeStyle => ({
+/** 从 NodeLayout 收敛 emit 所需的视觉样式子集（ResolvedShapeStyle，不含几何 / 文本）；fill / stroke 经 resolvePaint 转 PaintValue */
+const toShapeStyle = (layout: NodeLayout, resolvePaint: PaintResolver): ResolvedShapeStyle => ({
   fill: resolvePaint(layout.fill),
   fillOpacity: layout.fillOpacity,
   stroke: resolvePaint(layout.stroke) ?? 'currentColor',

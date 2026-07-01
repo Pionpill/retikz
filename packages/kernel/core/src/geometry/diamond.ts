@@ -1,17 +1,18 @@
-import type { CompassAnchorValue } from './anchor';
+import type { WebAnchorValue } from '../shared';
 import type { Side } from './edge';
 import type { Position } from './point';
 
+import { WebAnchor, WebSide } from '../shared';
 import { polylineViaVertex } from './edge';
 import { localToWorld, worldToLocal } from './transform';
 
-/** 每条 side 的过顶点折线三 anchor：[邻边中点, cardinal 顶点, 邻边中点]（方向 north/south=西→东、east/west=北→南） */
+/** 每条 side 的过顶点折线三 anchor：[邻边中点, cardinal 顶点, 邻边中点]（方向 top/bottom=西→东、right/left=北→南） */
 const DIAMOND_EDGE = {
-  north: ['north-west', 'north', 'north-east'],
-  south: ['south-west', 'south', 'south-east'],
-  east: ['north-east', 'east', 'south-east'],
-  west: ['north-west', 'west', 'south-west'],
-} as const satisfies Record<Side, readonly [CompassAnchorValue, CompassAnchorValue, CompassAnchorValue]>;
+  [WebSide.Top]: [WebAnchor.TopLeft, WebAnchor.Top, WebAnchor.TopRight],
+  [WebSide.Bottom]: [WebAnchor.BottomLeft, WebAnchor.Bottom, WebAnchor.BottomRight],
+  [WebSide.Right]: [WebAnchor.TopRight, WebAnchor.Right, WebAnchor.BottomRight],
+  [WebSide.Left]: [WebAnchor.TopLeft, WebAnchor.Left, WebAnchor.BottomLeft],
+} as const satisfies Record<Side, readonly [WebAnchorValue, WebAnchorValue, WebAnchorValue]>;
 
 /** 菱形：中心 + halfA/halfB 半轴长 + 可选旋转；顶点在 (±halfA,0) 与 (0,±halfB) */
 export type Diamond = {
@@ -44,38 +45,36 @@ export const diamond = {
     const [lx, ly] = worldToLocal(d, p);
     return Math.abs(lx) / d.halfA + Math.abs(ly) / d.halfB <= 1 + 1e-9;
   },
-  /** 9 个 anchor：N/S/E/W=顶点，NE/NW/SE/SW=边中点，center=中心 */
-  anchor: (d: Diamond, name: CompassAnchorValue): Position => {
+  /** 8 个 Web 方位 anchor：top/bottom/right/left=顶点，四个 corner=边中点；center 请用 `diamond.center()` */
+  anchor: (d: Diamond, name: WebAnchorValue): Position => {
     let lx = 0;
     let ly = 0;
     switch (name) {
-      case 'center':
-        break;
-      case 'north':
+      case WebAnchor.Top:
         ly = -d.halfB;
         break;
-      case 'south':
+      case WebAnchor.Bottom:
         ly = d.halfB;
         break;
-      case 'east':
+      case WebAnchor.Right:
         lx = d.halfA;
         break;
-      case 'west':
+      case WebAnchor.Left:
         lx = -d.halfA;
         break;
-      case 'north-east':
+      case WebAnchor.TopRight:
         lx = d.halfA / 2;
         ly = -d.halfB / 2;
         break;
-      case 'north-west':
+      case WebAnchor.TopLeft:
         lx = -d.halfA / 2;
         ly = -d.halfB / 2;
         break;
-      case 'south-east':
+      case WebAnchor.BottomRight:
         lx = d.halfA / 2;
         ly = d.halfB / 2;
         break;
-      case 'south-west':
+      case WebAnchor.BottomLeft:
         lx = -d.halfA / 2;
         ly = d.halfB / 2;
         break;

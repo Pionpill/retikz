@@ -1,9 +1,11 @@
-import type { IRPath } from '@retikz/core';
+import type { IRArrowDetail, IRPath } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
 import type { HydrationEventProps } from './event-props';
 
 import { TIKZ_PATH } from './_displayNames';
+
+export type PathArrowDirectionValue = 'none' | '->' | '<-' | '<->';
 
 /** <Path> 组件的 props */
 export type PathProps = HydrationEventProps & {
@@ -40,12 +42,13 @@ export type PathProps = HydrationEventProps & {
    * 路径级箭头方向
    * @description `'->'` 终点 / `'<-'` 起点 / `'<->'` 两端；省略或 `'none'` 无箭头
    */
-  arrow?: IRPath['arrow'];
+  arrow?: PathArrowDirectionValue;
   /**
    * 箭头详细配置
-   * @description 顶层默认 + 可选 `start` / `end` 子对象逐字段 merge override；视觉字段含 `shape` / `scale` / `length` / `width` / `color` / `fill` / `opacity` / `lineWidth`。空心 shape（open / openStealth / openDiamond / openCircle）上 `fill` silent no-op
+   * @description 顶层默认 + 可选 `start` / `end` 子对象逐字段 merge override。空心 shape
+   *   （open / openStealth / openDiamond / openCircle）上 `fill` silent no-op
    */
-  arrowDetail?: IRPath['arrowDetail'];
+  arrowDetail?: IRArrowDetail;
   /** 闭合区域填充色，CSS 颜色字符串；省略 = 不填充（仅描边）。配合 cycle step 画填充形状 */
   fill?: IRPath['fill'];
   /** 填充规则：`'nonzero'`（默认）/ `'evenodd'`（环形 / 孔洞） */

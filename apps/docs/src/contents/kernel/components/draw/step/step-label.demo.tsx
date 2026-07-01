@@ -50,7 +50,7 @@ const Demo: FC = () => (
     <Path arrow="->">
       <Step kind="move" to="f" />
       <Step to="g">
-        <EdgeLabel side="sloped">sloped</EdgeLabel>
+        <EdgeLabel sloped>sloped</EdgeLabel>
       </Step>
     </Path>
   </Layout>

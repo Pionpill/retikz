@@ -10,6 +10,7 @@ import type { IR } from '../../src/schemas';
 import { compileToScene } from '../../src/compile/compile';
 import { PathSchema } from '../../src/schemas';
 import { BlendMode } from '../../src/schemas/effects';
+import { arrowMarks } from '../helpers/arrow-marks';
 import { flattenPrims } from '../helpers/flatten';
 
 const silent = { onWarn: () => {} };
@@ -81,7 +82,7 @@ describe('[path-blend] 错误路径（schema 拒）', () => {
 
 describe('[path-blend] 交互', () => {
   it('blend-text-not-inherited（path 类比）：带 arrow 的 path + blendMode → arrow spec 不带 blendMode', () => {
-    const prim = findPathPrim(compilePath({ stroke: 'cyan', arrow: '->', blendMode: 'multiply' }).primitives);
+    const prim = findPathPrim(compilePath({ stroke: 'cyan', marks: arrowMarks('->'), blendMode: 'multiply' }).primitives);
     expect(prim.blendMode).toBe('multiply');
     expect(prim.arrowEnd).toBeDefined();
     expect((prim.arrowEnd as unknown as { blendMode?: unknown }).blendMode).toBeUndefined();

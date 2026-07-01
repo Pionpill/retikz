@@ -34,8 +34,8 @@ const Demo: FC = () => (
         strokeWidth: { kind: 'constant', value: 1.6 },
       }}
       path={{
-        label: { text: { field: 'relLabel' }, position: 0.5, side: 'sloped' },
-        options: { arrow: '->', roundedCorners: 8 },
+        label: { text: { field: 'relLabel' }, position: 0.5, sloped: true },
+        options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 8 },
       }}
     />
     <Axis dimension="x" grid />

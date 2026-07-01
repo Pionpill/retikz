@@ -1,7 +1,8 @@
-import type { CompassAnchorValue } from './anchor';
+import type { WebAnchorValue } from '../shared';
 import type { Side } from './edge';
 import type { Position } from './point';
 
+import { WebAnchor } from '../shared';
 import { edgeAngleDeg } from './edge';
 import { localToWorld, worldToLocal } from './transform';
 
@@ -31,39 +32,37 @@ export const circle = {
     const [lx, ly] = worldToLocal(c, p);
     return lx * lx + ly * ly <= c.radius * c.radius;
   },
-  /** 9 个标准方位 anchor 之一的世界坐标 */
-  anchor: (c: Circle, name: CompassAnchorValue): Position => {
+  /** 8 个 Web 方位 anchor 之一的世界坐标；center 请用 `circle.center()` */
+  anchor: (c: Circle, name: WebAnchorValue): Position => {
     const r = c.radius;
     let lx = 0;
     let ly = 0;
     switch (name) {
-      case 'center':
-        break;
-      case 'north':
+      case WebAnchor.Top:
         ly = -r;
         break;
-      case 'south':
+      case WebAnchor.Bottom:
         ly = r;
         break;
-      case 'east':
+      case WebAnchor.Right:
         lx = r;
         break;
-      case 'west':
+      case WebAnchor.Left:
         lx = -r;
         break;
-      case 'north-east':
+      case WebAnchor.TopRight:
         lx = r * SQRT_HALF;
         ly = -r * SQRT_HALF;
         break;
-      case 'north-west':
+      case WebAnchor.TopLeft:
         lx = -r * SQRT_HALF;
         ly = -r * SQRT_HALF;
         break;
-      case 'south-east':
+      case WebAnchor.BottomRight:
         lx = r * SQRT_HALF;
         ly = r * SQRT_HALF;
         break;
-      case 'south-west':
+      case WebAnchor.BottomLeft:
         lx = -r * SQRT_HALF;
         ly = r * SQRT_HALF;
         break;

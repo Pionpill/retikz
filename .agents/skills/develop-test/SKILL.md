@@ -1,163 +1,52 @@
 ---
 name: develop-test
-description: alpha 功能开发的自测加固阶段——用独立 Adversarial Bug Hunter 任务从“构造让实现挂的输入”角度找缺陷。red / yellow level 必走，green 跳过。可叠加其它独立模型或线程跑 adversarial，结果取并集合并 BLOCKING 列表；不写死模型或 Agent API。
+description: Use when retikz alpha implementation tests have passed but red or yellow changes still need adversarial validation against edge cases, JSON IR stability, and contract robustness before documentation.
 ---
 
-# Stage 3：自测（Adversarial 第一关）
+# Stage 3: 自测
 
-实现 Agent 让 spec 测试全过 ≠ 没 bug——spec 是按 ADR 列的"理论上该测的 case"，**对抗性输入**通常不在其中。本阶段派一个 prompt 角度故意错开的子 Agent 找 bug。
+实现测试全绿后，继续从“构造会让实现挂的输入”角度找 bug。red / yellow 必走，green 跳过。
 
-## 设计原则（攻击面优先级）
+## 前置条件
 
-retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**（[`notes/architecture/core-design.md`](../../../notes/architecture/core-design.md) §7）。本阶段 Bug Hunter 的攻击面**优先针对 AI 契约**：
+- 工作区状态清楚；本阶段开始前记录当前 diff / commit 范围。
+- ADR 仍为 `Proposed`。
+- 受影响模块 lint / `tsc --noEmit` / vitest 已通过；否则回 `develop-implement`。
 
-1. JSON round-trip 失真（IR → JSON → IR 不等价）
-2. zod parse 错误信息含糊到 LLM 修不动
-3. schema 不变量被违反（z.any / 函数 / class 偷渡进 IR）
-4. discriminator 失稳（type 字段缺失 / 拼错时报错笼统）
+## 攻击面
 
-这四类 BLOCKING 直接破坏 retikz 立项理由，必须清空。其他常规 corner case（极端数值 / 引用环 / 嵌套深度 / 与已有功能交叉）按严重度分 BLOCKING / WARNING。
+优先找破坏 AI 友好契约的问题：
 
-## 输入
+1. IR JSON round-trip 后语义不等价。
+2. zod parse 错误信息含糊，LLM 难以修正。
+3. schema 接收非 JSON 值或过宽类型。
+4. discriminator 缺失、拼错、冲突时报错不可诊断。
 
-- ADR
-- develop-implement 阶段产出的：spec 测试文件 + 实现代码 + commit 历史
-- 当前 HEAD 的受影响模块 lint / tsc / vitest 状态：必须全过（不过则上一阶段没完成）
+再查常规边界：自引用 / 引用环、`0` / `-0` / `NaN` / `Infinity` / 极值、长字符串 / Unicode id、深层嵌套、默认值边界、与已有功能交叉。
 
-## 适用范围
+## 执行方式
 
-| Level | 走不走 |
-|---|---|
-| red | 必走 |
-| yellow | 必走 |
-| green | 跳过（无实现可对抗） |
+优先用独立线程、子代理或外部模型当 Bug Hunter；不可用时主 AI 自己执行并说明退化。
 
-## 启动前检查
+Bug Hunter 只做三件事：
 
-```
-1. git status 工作区干净
-2. ADR 状态仍 Proposed（不应在本阶段标 Accepted）
-3. 当前 / 受影响模块 lint / tsc / vitest 三件套全过——三选一不过则 halt 回 stage 2
-```
+- 读 ADR、当前实现 diff、已有测试、相关 schema / compile 入口。
+- 临时写 adversarial vitest case 并运行。
+- 输出 BLOCKING / WARNING / INFO，不修代码、不改现有测试、不 stage 临时草稿。
 
----
+## 处理结果
 
-## 派 Adversarial Bug Hunter 子 Agent
+| 结果 | 处理 |
+| --- | --- |
+| BLOCKING | 提升为正式回归测试，回实现阶段修；修完重跑本阶段 |
+| WARNING | 主 AI 判断本 ADR 内修还是记 backlog / roadmap |
+| INFO | 作为 wrapup changelog 或汇报素材 |
 
-### 输入准备
-
-- ADR 全文
-- 当前实现 diff：`git diff <ADR commit 起点>..HEAD`
-- 现有测试文件（让 Bug Hunter 知道哪些 case 已经被测过，避免重复造轮子）
-- 受影响的 schema 文件 + compile 入口文件（read-only）
-
-### 调度方式
-
-优先使用当前环境可用的独立执行通道（子代理 / 新线程 / 外部模型窗口）；没有独立通道时由主 AI 自己按下面 prompt 执行，并在报告里说明退化情况。记录实际使用的通道、模型和输入范围，不写死模型名。
-
-### Bug Hunter 完整 system prompt
-
-```
-你是 retikz alpha 功能开发的 Adversarial Bug Hunter 子 Agent。
-
-retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**（`core-design.md` §7）。
-你的任务是让 LLM 真实生成的 / 边角的 IR JSON 暴露实现 bug——
-LLM 用 retikz 时不会按教科书走，会送进各种 corner case，retikz 必须能稳。
-
-任务：**让实现失败**。
-
-读 ADR + 当前实现 diff + 现有测试，构造你认为会让实现 throw 出意外 / 返回错误结果 /
-死循环 / 数值不稳定的输入。把它们写成 vitest case 跑一遍，然后报告：
-
-  - 你预期失败但实际通过（实现意外宽容——可能是 bug 也可能是 spec 太松）
-  - 你预期通过但实际失败（实现 bug 或边界处理有问题）
-  - 你跑挂的（实现真崩了，throw 非预期错误 / hang / NaN）
-
-强制约束：
-
-- 你不修代码、不修 schema、不修现有测试。**只构造新输入跑测试**。
-- 可以把对抗性 case 临时加在测试文件里（main test file 末尾或单独的 `.adversarial.test.ts`）跑。
-  跑完先报告；确认是真 bug 后由主 AI 把它提升为正式回归测试。临时草稿不 stage、不 commit。
-- 你**不被 ADR 测试象限限制**。象限是 spec 的覆盖最低线，你的工作是越过这条线找 bug。
-
-**优先级最高的攻击面（AI 一等公民契约必守）**——找到必判 BLOCKING：
-
-  1. **JSON round-trip 失真**：构造 IR、JSON.stringify、JSON.parse、Schema.parse 后与原 IR
-     不等价（任何字段类型 / 默认值 / 缺省值的差异都算）；这条挂 = LLM 持久化失败 = AI 一等公民契约破
-  2. **zod parse 错误信息不明确**：喂 LLM 常见的"乱写 IR"（字段拼错 / 类型混淆 / 缺必填字段 /
-     额外字段 / 数字写成字符串），看 zod 报错信息是否够 LLM 自我修正——含糊的报错（"invalid input"
-     这种）算 BLOCKING，因为 LLM 修不动
-  3. **schema 不变量违反**：如果实现里偷塞了 z.any / 函数 / class / ReactNode / Symbol /
-     Map / Set 进 IR（哪怕只是路径上的中间字段），算 BLOCKING——破坏 100% JSON 序列化
-  4. **discriminator 失稳**：如果 type 字段缺失 / 拼错 / 值非合法字面量时，schema 报错应当指出
-     具体哪个 case；笼统报错算 BLOCKING
-
-**其他常规攻击面**（找到归 WARNING 或 BLOCKING 看严重度）：
-
-  5. 引用环 / 自引用（A 的 position.of = A 自己；polar.origin 形成环）
-  6. 极端数值：0、-0、NaN、Infinity、Number.MAX_VALUE、Number.MIN_VALUE
-  7. Unicode / 长字符串 id（emoji id、千字 id）
-  8. 嵌套深度（polar.origin 链 100 层、coordinate at coordinate at coordinate）
-  9. 字段缺省与默认值边界（distance: 0、distance: undefined）
-  10. 与已有功能的怪异交叉（at + 大 rotate、scale + at + label 三件套）
-
-测试名加前缀 `[adversarial]` 区分；中文 describe / it 仍要遵循。
-
-输出格式（结构化）：
-
-BLOCKING（必须修，否则不进下一阶段）：
-  - case 名 / 触发输入 / 期望行为 / 实际行为 / 你的诊断 / 是否破坏 AI 一等公民契约（是 / 否）
-
-WARNING（建议修但不阻塞）：
-  - 同上
-
-INFO（实现意外稳健的好消息）：
-  - case 名 / 触发输入 / 你以为会挂、实际过了 / 你怀疑是测试不严还是真的稳
-
-只报告，不修。
-```
-
-### Bug Hunter 输出处理
-
-主 AI 收到报告：
-
-| 列表 | 处理 |
-|---|---|
-| BLOCKING 非空 | 派**实现 Agent**修，每条 BLOCKING 加进 spec 测试文件（提升为正式测试），实现 Agent 让其过；3 轮没收敛 halt |
-| WARNING 非空 | 主 AI 决定本 ADR 内修还是 backlog（如果是后续 ADR 会触及的问题，可记进 v0 roadmap） |
-| INFO | 不动作，但记进 wrapup 阶段 changelog 备注（实现稳健性的"宣传素材"） |
-
-BLOCKING 修完后**重跑一遍 Bug Hunter**（用同一份 prompt）确认没新增 BLOCKING——这是"修复回归"。最多再跑 2 轮，第 3 轮还有 BLOCKING 则 halt。
-
-### 多模型协同（可选）
-
-用户可手动把同一份 ADR + diff + 现有测试喂给其它独立模型 / 线程跑同样的 Bug Hunter prompt，得到第二份 BLOCKING / WARNING 列表。主 AI 接到两份意见后：
-
-- BLOCKING 取并集（去重 case 名）
-- WARNING 取并集
-- INFO 仅参考
-
-合并后的 BLOCKING 列表统一处理。
-
----
-
-## 失败 / 升级
-
-| 情景 | 处理 |
-|---|---|
-| Bug Hunter 找出的 BLOCKING 实现 Agent 3 轮没修过 | halt → 主 AI 呈给人工，可能要拆 ADR 或改 schema 设计 |
-| Bug Hunter 找出 BLOCKING 暴露 ADR schema 设计错（不是实现 bug，是字段表本身错） | halt → 回 develop-design 修 ADR |
-| Bug Hunter 找出 BLOCKING 暴露已有 alpha 功能的旧 bug（与本 ADR 无关） | 主 AI 决定：本 ADR 内修（开新 commit）或单独开 bug fix（不必 ADR） |
-| 多轮跑后 Bug Hunter 仍持续报新 BLOCKING（never converge） | halt → 实现质量不行，回 stage 2 重做 |
-
-## 与上下游衔接
-
-- **上游**：develop-implement（实现完毕、所有 spec test 全过）
-- **下游**：develop-document（开始写文档）
+同一 BLOCKING 最多修 3 轮；仍不收敛则 halt 给人工。
 
 ## 完成标志
 
-- 最后一轮 Bug Hunter 报告 BLOCKING 列为空
-- 所有 BLOCKING 修复都已转化为正式测试 case 进 git 历史
-- 当前 / 受影响模块 vitest / lint / tsc 全过
-- WARNING / INFO 列表整理后存入主 AI 上下文，供 wrapup 阶段引用
+- 最后一轮 BLOCKING 为空。
+- 已确认的 BLOCKING 已转成正式测试并通过。
+- 受影响模块 lint / typecheck / test 重新通过。
+- WARNING / INFO 已整理给 `develop-document` / `develop-wrapup` 使用。

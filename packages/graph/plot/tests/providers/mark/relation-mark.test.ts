@@ -123,10 +123,21 @@ describe('RelationMark and anchorId lowering', () => {
           type: 'relation',
           source: { id: 'A' },
           target: { id: 'B' },
-          path: { options: { arrow: '->', arrowDetail: { end: { length: 8 } } } },
+          path: { options: { marks: [{ pos: 1, mark: { kind: 'arrow', length: 8 } }] } },
         },
       ]),
     ).not.toThrow();
+
+    expect(() =>
+      baseSpec([
+        {
+          type: 'relation',
+          source: { id: 'A' },
+          target: { id: 'B' },
+          path: { options: { arrow: '->', arrowDetail: { end: { length: 8 } } } },
+        },
+      ]),
+    ).toThrow();
 
     expect(() =>
       baseSpec([{ type: 'point', anchorId: { prefix: 'pt' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } }]),
@@ -225,19 +236,18 @@ describe('RelationMark and anchorId lowering', () => {
           type: 'relation',
           source: { id: 'A', anchor: 'right' },
           target: { id: 'B', anchor: 'left' },
-          path: { options: { arrow: '->', arrowDetail: { end: { length: 10, width: 7 } } } },
+          path: { options: { marks: [{ pos: 1, mark: { kind: 'arrow', length: 10, width: 7 } }] } },
         },
       ]),
       { d: [rows[0]] },
     );
     const [path] = collectPaths(markLayer(root, 0));
-    expect(path.arrow).toBe('->');
-    expect(path.arrowDetail).toMatchObject({ end: { length: 10, width: 7 } });
+    expect(path.marks).toEqual([{ pos: 1, mark: { kind: 'arrow', length: 10, width: 7 } }]);
     expect(path.children[0]).toMatchObject({ kind: 'move', to: { id: 'A', anchor: 'right' } });
     expect(path.children[1]).toMatchObject({ kind: 'line', to: { id: 'B', anchor: 'left' } });
   });
 
-  it('lowers generated source-target anchors to a core Path with labels and arrow passthrough', () => {
+  it('lowers generated source-target anchors to a core Path with labels and path marks passthrough', () => {
     const root = expandOf(
       baseSpec([
         { type: 'point', anchorId: { prefix: 'pt', field: 'id' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -248,21 +258,28 @@ describe('RelationMark and anchorId lowering', () => {
           style: { color: { kind: 'constant', value: '#2563eb' } },
           path: {
             label: { text: { field: 'label' }, position: 'midway' },
-            options: { arrow: '->', marks: [{ pos: 0.5, mark: { kind: 'arrow' } }] },
+            options: {
+              marks: [
+                { pos: 0.5, mark: { kind: 'arrow' } },
+                { pos: 1, mark: { kind: 'arrow' } },
+              ],
+            },
           },
         },
       ]),
       { d: rows },
     );
     const [path] = collectPaths(markLayer(root, 1));
-    expect(path.arrow).toBe('->');
     expect(path.color).toBe('#2563eb');
-    expect(path.marks).toHaveLength(1);
+    expect(path.marks).toEqual([
+      { pos: 0.5, mark: { kind: 'arrow' } },
+      { pos: 1, mark: { kind: 'arrow' } },
+    ]);
     expect(path.children[0]).toMatchObject({ kind: 'move', to: { id: 'pt.A' } });
     expect(path.children[1]).toMatchObject({
       kind: 'line',
       to: { id: 'pt.B' },
-      label: { text: 'A to B', side: 'sloped' },
+      label: { text: 'A to B', sloped: true },
     });
   });
 
@@ -293,7 +310,7 @@ describe('RelationMark and anchorId lowering', () => {
     );
     const [path] = collectPaths(markLayer(root, 1));
     expect(path.roundedCorners).toBe(6);
-    expect(path.children[1]).toMatchObject({ kind: 'fold', label: { text: 'A to B', position: 0.25, side: 'sloped' } });
+    expect(path.children[1]).toMatchObject({ kind: 'fold', label: { text: 'A to B', position: 0.25, sloped: true } });
     expect(path.children[2]).toMatchObject({ kind: 'bend', bendDirection: 'left', bendAngle: 25 });
     expect('label' in path.children[2] ? path.children[2].label : undefined).toBeUndefined();
   });
@@ -312,7 +329,7 @@ describe('RelationMark and anchorId lowering', () => {
       { d: rows },
     );
     const [path] = collectPaths(markLayer(root, 1));
-    expect(path.children[1]).toMatchObject({ kind: 'line', label: { text: 'A to B', side: 'above' } });
+    expect(path.children[1]).toMatchObject({ kind: 'line', label: { text: 'A to B', side: 'top' } });
   });
 
   it('skips rows whose generated relation anchor fields are missing', () => {
@@ -409,7 +426,7 @@ describe('RelationMark and anchorId lowering', () => {
           path: {
             routing: { kind: 'bend', bendDirection: 'left', bendAngle: 20 },
             label: { text: { field: 'deltaLabel' }, position: 0.5 },
-            options: { arrow: '->' },
+            options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
           },
         },
       ]),
@@ -423,14 +440,14 @@ describe('RelationMark and anchorId lowering', () => {
     );
     const [path] = collectPaths(markLayer(root, 1));
     expect(collectPaths(markLayer(root, 1))).toHaveLength(1);
-    expect(path.arrow).toBe('->');
+    expect(path.marks).toEqual([{ pos: 1, mark: { kind: 'arrow' } }]);
     expect(path.children[0]).toMatchObject({ kind: 'move', to: { id: 'trend.b' } });
     expect(path.children[1]).toMatchObject({
       kind: 'bend',
       to: { id: 'trend.c' },
       bendDirection: 'left',
       bendAngle: 20,
-      label: { text: '+24', position: 0.5, side: 'sloped' },
+      label: { text: '+24', position: 0.5, sloped: true },
     });
   });
 
@@ -496,7 +513,7 @@ describe('RelationMark and anchorId lowering', () => {
     );
     const [path] = collectPaths(markLayer(root, 0));
     expect(path.children).toHaveLength(3);
-    expect(path.children[1]).toMatchObject({ kind: 'line', label: { text: '+16', position: 0.5, side: 'sloped' } });
+    expect(path.children[1]).toMatchObject({ kind: 'line', label: { text: '+16', position: 0.5, sloped: true } });
     expect(path.children[2]).toMatchObject({ kind: 'line' });
   });
 

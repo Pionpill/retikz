@@ -1,4 +1,4 @@
-import type { DropShadow, ShadowPresetValue } from '../schemas/effects';
+import type { IRDropShadow, ResolvedDropShadow, ShadowPresetValue } from '../schemas/effects';
 
 import { SHADOW_PRESETS } from '../schemas/effects';
 
@@ -6,12 +6,12 @@ import { SHADOW_PRESETS } from '../schemas/effects';
 const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';
 
 /**
- * 把 IR 的 shadow（预设字符串 | 对象 | undefined）展开成 renderer 只见的 canonical DropShadow
+ * 把 IR 的 shadow（预设字符串 | 对象 | undefined）展开成 renderer 只见的 `ResolvedDropShadow`
  * @description 字符串预设 → `SHADOW_PRESETS` 查表（克隆；`none` → undefined）；对象 →
  *   `{ ...(preset ? SHADOW_PRESETS[preset] : {}), ...显式出现的字段 }`（显式字段逐项覆盖 preset，输出去掉 `preset` key）。
  *   合并后若仍无 offsetX/offsetY（preset 为 `none` 且无显式偏移）→ undefined。color 缺省补 `rgba(0,0,0,0.5)`。
  */
-export const resolveShadow = (shadow: ShadowPresetValue | DropShadow | undefined): DropShadow | undefined => {
+export const resolveShadow = (shadow: ShadowPresetValue | IRDropShadow | undefined): ResolvedDropShadow | undefined => {
   if (shadow === undefined) return undefined;
 
   if (typeof shadow === 'string') {
@@ -22,9 +22,13 @@ export const resolveShadow = (shadow: ShadowPresetValue | DropShadow | undefined
   const { preset, ...explicit } = shadow;
   const base = preset ? SHADOW_PRESETS[preset] : undefined;
   // explicit 来自 zod parse 后的对象：未给的 optional 字段缺席（非 undefined），逐项覆盖 preset 基底
-  const merged: DropShadow = { ...(base ?? {}), ...explicit };
+  const merged: Omit<IRDropShadow, 'preset'> = { ...(base ?? {}), ...explicit };
 
   if (merged.offsetX === undefined || merged.offsetY === undefined) return undefined;
-  if (merged.color === undefined) merged.color = DEFAULT_SHADOW_COLOR;
-  return merged;
+  return {
+    ...merged,
+    offsetX: merged.offsetX,
+    offsetY: merged.offsetY,
+    color: merged.color ?? DEFAULT_SHADOW_COLOR,
+  };
 };

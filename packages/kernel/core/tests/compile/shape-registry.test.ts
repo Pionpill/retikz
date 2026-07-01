@@ -6,7 +6,8 @@ import type { ScenePrimitive } from '../../src/primitive';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { defineShape, localToWorld, worldToLocal } from '../../src/contract/shape';
+import { defineShape } from '../../src/contract/shape';
+import { localToWorld, worldToLocal } from '../../src/geometry/transform';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import { NodeSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';

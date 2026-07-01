@@ -27,6 +27,7 @@ describe('parseTargetSugar', () => {
     expect(parseTargetSugar('A')).toEqual({ id: 'A' });
     expect(parseTargetSugar('A.top')).toEqual({ id: 'A', anchor: 'top' });
     expect(parseTargetSugar('A.north')).toEqual({ id: 'A', anchor: 'top' });
+    expect(parseTargetSugar('A.above-left')).toEqual({ id: 'A', anchor: 'top-left' });
     expect(parseTargetSugar('A.30')).toEqual({ id: 'A', anchor: 30 });
     expect(parseTargetSugar('node-1')).toEqual({ id: 'node-1' });
   });

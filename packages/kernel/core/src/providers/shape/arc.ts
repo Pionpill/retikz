@@ -6,8 +6,8 @@ import type { Rect } from '../../geometry/rect';
 import type { PathCommand, ScenePrimitive } from '../../primitive';
 
 import { defineShape } from '../../contract/shape/define';
-import { normalizeAngularRange } from '../../contract/shape/shared';
 import { localToWorld, worldToLocal } from '../../geometry/transform';
+import { normalizeAngularRange } from './angle';
 
 const RAD_TO_DEG = 180 / Math.PI;
 
