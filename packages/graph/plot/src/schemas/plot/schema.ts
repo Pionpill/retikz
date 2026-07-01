@@ -140,6 +140,10 @@ const FacetDimensionSchema = z
   .strict()
   .describe('Facet dimension bound to a data field');
 
+const FacetDimensionInputSchema = z
+  .union([FacetDimensionSchema, z.array(FacetDimensionSchema).min(1)])
+  .describe('One or more facet dimensions bound to data fields');
+
 const FacetScaleSharingSchema = z
   .object({
     roles: z
@@ -153,9 +157,11 @@ const FacetScaleSharingSchema = z
 export const FacetGridSchema = z
   .object({
     id: z.string().min(1).describe('Stable facet grid id used to derive panel scope ids and provenance'),
-    row: FacetDimensionSchema.optional().describe('Facet row dimension; omit for a one-dimensional column facet'),
-    column: FacetDimensionSchema.optional().describe(
-      'Facet column dimension; omit for a one-dimensional row facet',
+    row: FacetDimensionInputSchema.optional().describe(
+      'Facet row dimension or ordered row-dimension hierarchy; omit for a one-dimensional column facet',
+    ),
+    column: FacetDimensionInputSchema.optional().describe(
+      'Facet column dimension or ordered column-dimension hierarchy; omit for a one-dimensional row facet',
     ),
     empty: z
       .enum(FacetEmptyPolicy)

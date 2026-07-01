@@ -1,26 +1,24 @@
-# core 分组（基础设施层）工作指南
+# kernel 分组工作指南
 
-> 本文件是 retikz **基础设施分组**——`packages/kernel/` 下 `math` / `core` / `render` / `react` / `vanilla` / `tex` 六个包——的共享规范。
->
-> - 仓库通用规则（commit / 分支 / 依赖 catalog / 代码风格 / React 规范 / zod IR 风格 / Kernel·Sugar·Tier 2 分层等）见根 [`AGENTS.md`](../../AGENTS.md)。
-> - 各包专属实现细节见各自的 `AGENTS.md`：[`core/AGENTS.md`](./core/AGENTS.md)（IR + Scene 编译器）、[`react/AGENTS.md`](./react/AGENTS.md)（Kernel + Sugar）；`math` / `render` / `vanilla` 暂无，按需补。
-> - 本文件只放「跨这四个基础包、但不属于全仓」的规范。
+本文件覆盖 `packages/kernel/` 下的 `math` / `core` / `render` / `react` / `vanilla` / `tex`。全仓通用规则见根 [`AGENTS.md`](../../AGENTS.md)，包内细则看就近 `AGENTS.md`。
 
-## 分组定位
+## 包职责
 
-| 包                | 职责                                                                                                                                                                                                                                                            |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@retikz/math`    | 零依赖纯计算几何（向量 / 仿射 / arc / 求交 / 内外接圆 / 点在多边形 / 凸包）；core 的前置计算底座，被 `core` 正向依赖；零 IR / 零 zod / 不写 class                                                                                                               |
-| `@retikz/core`    | renderer-agnostic IR + Scene 编译器；运行时依赖白名单 `zod` + `@retikz/math`                                                                                                                                                                                    |
-| `@retikz/render`  | Scene → 渲染后端，子路径 `./svg` / `./canvas`                                                                                                                                                                                                                   |
-| `@retikz/react`   | React adapter：Kernel + Sugar JSX，对接 render                                                                                                                                                                                                                  |
-| `@retikz/vanilla` | framework-free runtime / SSR 入口                                                                                                                                                                                                                               |
-| `@retikz/tex`     | LaTeX 公式：MathJax SVG → renderer-agnostic 字形路径，经 core 的 `lowerTex` 注入接入；`mathjax-full` 是 optional peer，core 不依赖它。可选子入口 `@retikz/tex/react` 出 `useLowerTex` / `TexNode`（`react`/`react-dom` 作 optional peer，仅此子入口依赖 React） |
+| 包 | 职责 |
+| --- | --- |
+| `@retikz/math` | 零依赖纯计算几何：向量、仿射、arc、求交、圆、多边形、凸包等；被 core 依赖，不写 IR / zod / class |
+| `@retikz/core` | renderer-agnostic IR + Scene 编译器；运行时依赖限于 `zod` + `@retikz/math` |
+| `@retikz/render` | Scene 到渲染后端，提供 `./svg`、`./canvas`、hydration、animation 等能力 |
+| `@retikz/react` | React adapter：Kernel + Sugar JSX，对接 render |
+| `@retikz/vanilla` | framework-free runtime / SSR 入口 |
+| `@retikz/tex` | 可选 LaTeX 公式接入：MathJax SVG 到 renderer-agnostic 字形路径，经 core 的 `lowerTex` 注入 |
 
-`core` / `render` / `react` / `vanilla` 构成 **Tier 1 底座**；`math` 是其下的**零依赖纯计算底座**（依赖方向 `core → math`，math 不反依赖任何包）；`tex` 是可选的 LaTeX 公式接入包（依赖 `core`，经 `lowerTex` 注入，`mathjax-full` 走 optional peer）。六包同属 **core 分组**、共用同一 lockstep。Tier 2（`@retikz/plot` / `@retikz/chart` 等）是**另外的分组**，通过 core 的 `lowerComposites` 钩子接入、不进 core——分层契约见根 [`AGENTS.md` 的「抽象分层：Kernel / Sugar / Tier 2」](../../AGENTS.md)。
+依赖方向：`math` 被 `core` 消费；`render` 消费 `core`；`react` / `vanilla` 消费 `core` 与 `render`；`tex` 消费 `core`。不要让 core 反依赖公式、React、Vanilla 或具体渲染后端。
 
 ## 版本与发布
 
-math / core / render / react / vanilla / tex 同属 **core 模块**，**版本号始终保持一致（lockstep）**：任一包发生改动并发布时，其余各包一并 bump 到同一版本号并同时发布——不单独错版发布。包间相互依赖用 `workspace:*`，对外发布时由发布流程统一替换为同一固定版本。
+六个包同属 core 组，版本号保持 lockstep：任一包发布时，其余包同步 bump 到同一版本并一并发布。包间依赖用 `workspace:*`，对外发布时由发布流程替换为固定版本。
 
-> Tier 2 的 `@retikz/plot` / `@retikz/chart` 等分组**各自独立版本**，不进此 lockstep；它们只依赖 core 模块的能力，按自身节奏发布。
+Tier 2（如 plot 组）独立版本线，只依赖 core 组能力，不进 core 组 lockstep。
+
+发包细节、tag、changelog、roadmap 和授权边界按 `.agents/skills/package-publish/SKILL.md` 执行；若技能里的包列表与当前 `package.json` 不一致，以当前源码为准并先修正流程文档。

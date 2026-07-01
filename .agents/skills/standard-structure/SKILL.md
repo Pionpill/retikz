@@ -5,11 +5,9 @@ description: Use when changing retikz package file layout, dependency direction,
 
 # Standard Structure
 
-retikz 模块按“无依赖共享层 → IR 契约 → 能力契约 → 契约实现 → 编排/编译”分层。这个 skill 只做总纲和按需路由；不要一次性加载所有子 skill。
+retikz 模块按“shared → schemas → contract → providers → pipeline/compile”分层。本 skill 只做总纲和路由；不要一次加载所有子 skill。
 
 ## 按需加载
-
-先判断改动层级，只读取对应细则：
 
 | 改动内容 | 读取 |
 | --- | --- |
@@ -29,33 +27,30 @@ define-registry 能力通常跨多层：先读本总纲判断 scope，再只加�
 shared <- schemas <- contract <- providers <- pipeline/compile
 ```
 
-实际 import 方向是右侧消费左侧。`shared` 不依赖业务层；`schemas` 跨出自身时只依赖外部模块和 `shared`；`contract` 不依赖 provider；`providers` 不依赖 pipeline / compile。
+右侧消费左侧；左侧不反向读取右侧。跨层复用的纯函数优先下沉到 `shared`，IR 契约回 `schemas`，作者协议回 `contract`，内置实现回 `providers`，编排消费留在 `pipeline/compile`。
 
-## 共性文件拆分
+## 共性文件
 
-| 文件 | 共性职责 |
+| 文件 | 职责 |
 | --- | --- |
-| `constants.ts` | 稳定常量、const object enum、关键字集合 |
+| `constants.ts` | 稳定常量、const object enum、关键字集合、查表数据 |
 | `types.ts` | 导出类型、由 constants / schema 派生的类型 |
 | `utils.ts` | 纯函数 helper；不得承载状态和层级副作用 |
-| `define.ts` | 作者侧 define helper；仅 contract 层常见 |
-| `registry.ts` | registry 合并、按 key 查找、重复 key 诊断；仅 providers 层常见 |
-| `index.ts` | 统一 barrel 导出；不写业务逻辑 |
+| `define.ts` | 作者侧 define helper；contract 层常见 |
+| `registry.ts` | registry 合并、按 key 查找、重复 key 诊断；providers 层常见 |
+| `index.ts` | barrel 导出；不写业务逻辑 |
 
-数组索引、`Map`、`Record<A, B>` 等稳定查表数据放在 `constants.ts`。
+简单能力可合并文件；一旦职责混杂，按上表拆开。
 
-简单能力可以合并文件；一旦出现多个职责，优先按上表拆开。
+## 导入导出
 
-## Barrel 规则
-
-- 目录级 `index.ts` 统一导出当前目录稳定 API。
-- 默认用 `export * from './xxx'`。
-- 只有需要裁剪公共表面、避免冲突或显式重命名时，才用精选导出。
-- 不要从非拥有者模块转手 export 其它层内容；消费方应从拥有者 barrel 直接导入。
+- 目录级 `index.ts` 导出当前目录稳定 API；默认 `export *`，需要裁剪公共面或避免冲突时才精选导出。
+- 消费方从拥有者 barrel 导入；不要从非拥有者模块转手 export 其它层内容。
+- 主题内部可相邻导入；模块外避免 deep import 到 `constants.ts` / `schema.ts` 等私有文件。
 
 ## 改代码前检查
 
-1. 这次改动属于哪一层？只加载必要的层级 skill。
-2. 新文件是否能按 `constants` / `types` / `utils` / `index` 拆清职责？
-3. import 是否沿允许依赖方向走？
-4. `index.ts` 是否只是统一导出，没有业务逻辑？
+1. 改动属于哪一层？是否只加载了必要 skill？
+2. import 是否沿允许依赖方向走？
+3. 新文件是否职责单一，必要时按共性文件拆分？
+4. barrel 是否只导出稳定 API，没有业务逻辑？

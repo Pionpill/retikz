@@ -84,6 +84,7 @@ import {
 import {
   AxisGridApplyTo,
   CompositionAxisPolicy,
+  CompositionFacetLabelPolicy,
   CompositionGridPlacement,
   FieldOrderMode,
   IntervalBoundKind,
@@ -339,13 +340,17 @@ const withScopeContext = (child: IRChild, context: IRJsonObject): IRChild => {
 
 type FacetGrid = NonNullable<NonNullable<PlotSpec['composition']>['facets']>[number];
 type FacetDimension = NonNullable<FacetGrid['row']>;
+type FacetDimensionItem = Extract<FacetDimension, Array<unknown>>[number] | Exclude<FacetDimension, Array<unknown>>;
 type FacetScalar = string | number | boolean | null;
+type FacetTuple = Array<FacetScalar>;
+type FacetPanelValue = FacetScalar | FacetTuple | undefined;
+type FacetLabelDimension = 'row' | 'column';
 
 type FacetPanel = {
   id: string;
   facet: FacetGrid;
-  row: FacetScalar | undefined;
-  column: FacetScalar | undefined;
+  row: FacetPanelValue;
+  column: FacetPanelValue;
   rowIndex: number;
   columnIndex: number;
   rows: Array<ExternalRow>;
@@ -365,17 +370,40 @@ const facetValueOf = (row: ExternalRow, field: string): FacetScalar => {
   return value;
 };
 
-const facetValueKey = (value: FacetScalar | undefined): string => (value === undefined ? '' : JSON.stringify(value));
+const facetDimensionsOf = (dimension: FacetDimension | undefined): Array<FacetDimensionItem> => {
+  if (dimension === undefined) return [];
+  return Array.isArray(dimension) ? dimension : [dimension];
+};
+
+const facetTupleOf = (
+  row: ExternalRow,
+  dimension: FacetDimension | undefined,
+): FacetTuple | undefined => {
+  const dimensions = facetDimensionsOf(dimension);
+  if (dimensions.length === 0) return undefined;
+  return dimensions.map(item => facetValueOf(row, item.field));
+};
+
+const facetPanelValueOf = (tuple: FacetTuple | undefined): FacetPanelValue => {
+  if (tuple === undefined) return undefined;
+  return tuple.length === 1 ? tuple[0] : tuple;
+};
+
+const facetPanelTupleOf = (value: FacetPanelValue): FacetTuple => {
+  if (value === undefined) return [];
+  return Array.isArray(value) ? value : [value];
+};
+
+const facetValueKey = (value: FacetTuple | undefined): string => (value === undefined ? '' : JSON.stringify(value));
 
 const orderedFacetValues = (
-  dimension: FacetDimension | undefined,
+  dimension: FacetDimensionItem,
   rows: ReadonlyArray<ExternalRow>,
-): Array<FacetScalar | undefined> => {
-  if (dimension === undefined) return [undefined];
+): Array<FacetScalar> => {
   const out: Array<FacetScalar> = [];
   const seen = new Set<string>();
   const add = (value: FacetScalar): void => {
-    const key = facetValueKey(value);
+    const key = JSON.stringify(value);
     if (seen.has(key)) return;
     seen.add(key);
     out.push(value);
@@ -385,24 +413,43 @@ const orderedFacetValues = (
   return out;
 };
 
+const cartesianFacetTuples = (valuesByDimension: ReadonlyArray<ReadonlyArray<FacetScalar>>): Array<FacetTuple> => {
+  return valuesByDimension.reduce<Array<FacetTuple>>(
+    (tuples, values) => tuples.flatMap(tuple => values.map(value => [...tuple, value])),
+    [[]],
+  );
+};
+
+const orderedFacetTuples = (
+  dimension: FacetDimension | undefined,
+  rows: ReadonlyArray<ExternalRow>,
+): Array<FacetTuple | undefined> => {
+  const dimensions = facetDimensionsOf(dimension);
+  if (dimensions.length === 0) return [undefined];
+  return cartesianFacetTuples(dimensions.map(item => orderedFacetValues(item, rows)));
+};
+
+const slugFacetValue = (value: FacetTuple | undefined): string =>
+  value === undefined ? '' : value.map(item => slug(item)).join('.');
+
 const defaultFacetPanelId = (
   facet: FacetGrid,
-  row: FacetScalar | undefined,
-  column: FacetScalar | undefined,
+  row: FacetTuple | undefined,
+  column: FacetTuple | undefined,
 ): string => {
   const parts = ['facet', facet.id];
-  if (row !== undefined) parts.push('row', slug(row));
-  if (column !== undefined) parts.push('column', slug(column));
+  if (row !== undefined) parts.push('row', slugFacetValue(row));
+  if (column !== undefined) parts.push('column', slugFacetValue(column));
   return parts.join('.');
 };
 
-const facetPanelId = (facet: FacetGrid, row: FacetScalar | undefined, column: FacetScalar | undefined): string => {
+const facetPanelId = (facet: FacetGrid, row: FacetTuple | undefined, column: FacetTuple | undefined): string => {
   const template = facet.scopeIdTemplate;
   if (template === undefined) return defaultFacetPanelId(facet, row, column);
   return template
     .replaceAll('{facet}', facet.id)
-    .replaceAll('{row}', row === undefined ? '' : slug(row))
-    .replaceAll('{column}', column === undefined ? '' : slug(column));
+    .replaceAll('{row}', slugFacetValue(row))
+    .replaceAll('{column}', slugFacetValue(column));
 };
 
 const resolveFacetPanels = (
@@ -410,12 +457,12 @@ const resolveFacetPanels = (
   rows: ReadonlyArray<ExternalRow>,
   usedIds: Set<string>,
 ): Array<FacetPanel> => {
-  const rowValues = orderedFacetValues(facet.row, rows);
-  const columnValues = orderedFacetValues(facet.column, rows);
+  const rowValues = orderedFacetTuples(facet.row, rows);
+  const columnValues = orderedFacetTuples(facet.column, rows);
   const groups = new Map<string, Array<ExternalRow>>();
   for (const row of rows) {
-    const rowValue = facet.row === undefined ? undefined : facetValueOf(row, facet.row.field);
-    const columnValue = facet.column === undefined ? undefined : facetValueOf(row, facet.column.field);
+    const rowValue = facetTupleOf(row, facet.row);
+    const columnValue = facetTupleOf(row, facet.column);
     const key = `${facetValueKey(rowValue)}\u0000${facetValueKey(columnValue)}`;
     groups.set(key, [...(groups.get(key) ?? []), row]);
   }
@@ -429,11 +476,63 @@ const resolveFacetPanels = (
       const id = facetPanelId(facet, rowValue, columnValue);
       if (usedIds.has(id)) throw new Error(`lowerPlots: facet panel scope id "${id}" is duplicated`);
       usedIds.add(id);
-      panels.push({ id, facet, row: rowValue, column: columnValue, rowIndex, columnIndex, rows: panelRows });
+      panels.push({
+        id,
+        facet,
+        row: facetPanelValueOf(rowValue),
+        column: facetPanelValueOf(columnValue),
+        rowIndex,
+        columnIndex,
+        rows: panelRows,
+      });
     }
   }
   return panels;
 };
+
+const orderedFacetPanelValuesByIndex = (
+  panels: ReadonlyArray<FacetPanel>,
+  dimension: FacetLabelDimension,
+): Array<{ index: number; tuple: FacetTuple }> => {
+  const values = new Map<number, FacetTuple>();
+  for (const panel of panels) {
+    const index = dimension === 'column' ? panel.columnIndex : panel.rowIndex;
+    if (values.has(index)) continue;
+    values.set(index, facetPanelTupleOf(dimension === 'column' ? panel.column : panel.row));
+  }
+  return [...values.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([index, tuple]) => ({ index, tuple }));
+};
+
+const facetLabelGroupKey = (tuple: FacetTuple, level: number): string =>
+  JSON.stringify(tuple.slice(0, level + 1));
+
+const buildFacetLabelGroups = (
+  panels: ReadonlyArray<FacetPanel>,
+  dimension: FacetLabelDimension,
+  level: number,
+): Array<{ startIndex: number; span: number; value: FacetScalar }> => {
+  const values = orderedFacetPanelValuesByIndex(panels, dimension).filter(({ tuple }) => tuple.length > level);
+  const groups: Array<{ startIndex: number; endIndex: number; key: string; value: FacetScalar }> = [];
+  for (const { index, tuple } of values) {
+    const key = facetLabelGroupKey(tuple, level);
+    const value = tuple[level];
+    const last = groups.at(-1);
+    if (last !== undefined && last.key === key && index === last.endIndex + 1) {
+      last.endIndex = index;
+      continue;
+    }
+    groups.push({ startIndex: index, endIndex: index, key, value });
+  }
+  return groups.map(group => ({
+    startIndex: group.startIndex,
+    span: group.endIndex - group.startIndex + 1,
+    value: group.value,
+  }));
+};
+
+const facetLabelTextOf = (value: FacetScalar): string => String(value);
 
 /** 非位置 encoding key：这些键有专属语义，不参与 CoordinateDefinition.roles 校验。 */
 const NON_POSITION_ENCODING_KEYS = new Set<string>(['color', 'text', 'channels']);
@@ -1515,10 +1614,17 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   };
   const axisGridSelectorOf = (guide: AxisGuide): GridTargetSelector | undefined =>
     typeof guide.grid === 'object' ? guide.grid.select : undefined;
+  const facetScalarKey = (value: FacetScalar): string => JSON.stringify(value);
   const scalarSelectorIncludes = (
     values: ReadonlyArray<FacetScalar> | undefined,
-    value: FacetScalar | undefined,
-  ): boolean => values === undefined || (value !== undefined && values.some(candidate => facetValueKey(candidate) === facetValueKey(value)));
+    value: FacetPanelValue,
+  ): boolean => {
+    if (values === undefined) return true;
+    if (value === undefined) return false;
+    const panelValues = Array.isArray(value) ? value : [value];
+    const accepted = new Set(values.map(facetScalarKey));
+    return panelValues.some(item => accepted.has(facetScalarKey(item)));
+  };
   const coordinateScaleNameOf = (scope: CoordinateScopeRegistryEntry, role: DimensionRole): string | undefined => {
     const value = (scope.coordinate as Record<string, unknown>)[role];
     return typeof value === 'string' ? value : undefined;
@@ -1753,13 +1859,101 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     const maxColumnIndex = panels.reduce((max, panel) => Math.max(max, panel.columnIndex), 0);
     const maxRowIndex = panels.reduce((max, panel) => Math.max(max, panel.rowIndex), 0);
     const panelGap = compositionLayout?.panelGap ?? 0;
+    const facetLabelsEnabled = compositionGuidePolicy?.facetLabels === CompositionFacetLabelPolicy.RowColumn;
+    const rowFacetLevelCount = facetLabelsEnabled
+      ? Math.max(0, ...facets.map(facet => facetDimensionsOf(facet.row).length))
+      : 0;
+    const columnFacetLevelCount = facetLabelsEnabled
+      ? Math.max(0, ...facets.map(facet => facetDimensionsOf(facet.column).length))
+      : 0;
+    const facetLabelBandSize =
+      facetLabelsEnabled && (rowFacetLevelCount > 0 || columnFacetLevelCount > 0)
+        ? Math.max((options.fontSize ?? DEFAULT_FONT_SIZE) + 10, 22)
+        : 0;
+    const facetLabelGap = facetLabelsEnabled ? (compositionLayout?.labelGap ?? facetLabelBandSize) : 0;
+    const rowLabelGap = rowFacetLevelCount > 0 ? facetLabelGap : 0;
+    const columnLabelGap = columnFacetLevelCount > 0 ? facetLabelGap : 0;
+    const rowLabelWidth = rowFacetLevelCount * facetLabelBandSize + rowLabelGap;
+    const columnLabelHeight = columnFacetLevelCount * facetLabelBandSize + columnLabelGap;
+    const panelGridWidth = width - rowLabelWidth;
+    const panelGridHeight = height - columnLabelHeight;
     const columnCount = maxColumnIndex + 1;
     const rowCount = maxRowIndex + 1;
-    const panelWidth = (width - Math.max(0, columnCount - 1) * panelGap) / columnCount;
-    const panelHeight = (height - Math.max(0, rowCount - 1) * panelGap) / rowCount;
+    const panelWidth = (panelGridWidth - Math.max(0, columnCount - 1) * panelGap) / columnCount;
+    const panelHeight = (panelGridHeight - Math.max(0, rowCount - 1) * panelGap) / rowCount;
     if (panelWidth <= 0 || panelHeight <= 0) {
       throw new Error(`lowerPlots: panelGap ${panelGap} leaves no room for ${columnCount}x${rowCount} facet panels`);
     }
+    const panelStrideX = panelWidth + panelGap;
+    const panelStrideY = panelHeight + panelGap;
+    const makeFacetLabelScope = (
+      facet: FacetGrid,
+      dimension: FacetLabelDimension,
+      level: number,
+      startIndex: number,
+      span: number,
+      value: FacetScalar,
+      rect: Rect,
+      rotate: number | undefined,
+    ): IRScope => {
+      const position: [number, number] = [rect.x + rect.width / 2, rect.y + rect.height / 2];
+      return {
+        type: 'scope',
+        meta: {
+          source: 'plot',
+          layer: 'facetLabel',
+          facet: facet.id,
+          dimension,
+          level,
+          value,
+          startIndex,
+          span,
+        },
+        nodeDefault: { fill: 'none', stroke: 'none', padding: 0 },
+        children: [
+          {
+            type: 'node',
+            position,
+            text: facetLabelTextOf(value),
+            rotate,
+            maxTextWidth: Math.max(1, (rotate === undefined ? rect.width : rect.height) - 8),
+          },
+        ],
+      };
+    };
+    const facetLabelScopes: Array<IRScope> = facetLabelsEnabled
+      ? facets.flatMap(facet => {
+          const facetPanels = panels.filter(panel => panel.facet.id === facet.id);
+          const rowLevels = facetDimensionsOf(facet.row).length;
+          const columnLevels = facetDimensionsOf(facet.column).length;
+          const labels: Array<IRScope> = [];
+          for (let level = columnLevels - 1; level >= 0; level -= 1) {
+            const bandIndex = columnLevels - 1 - level;
+            for (const group of buildFacetLabelGroups(facetPanels, 'column', level)) {
+              const rect: Rect = {
+                x: rowLabelWidth + group.startIndex * panelStrideX,
+                y: panelGridHeight + columnLabelGap + bandIndex * facetLabelBandSize,
+                width: group.span * panelWidth + Math.max(0, group.span - 1) * panelGap,
+                height: facetLabelBandSize,
+              };
+              labels.push(makeFacetLabelScope(facet, 'column', level, group.startIndex, group.span, group.value, rect, undefined));
+            }
+          }
+          for (let level = rowLevels - 1; level >= 0; level -= 1) {
+            const bandIndex = rowFacetLevelCount - rowLevels + level;
+            for (const group of buildFacetLabelGroups(facetPanels, 'row', level)) {
+              const rect: Rect = {
+                x: bandIndex * facetLabelBandSize,
+                y: group.startIndex * panelStrideY,
+                width: facetLabelBandSize,
+                height: group.span * panelHeight + Math.max(0, group.span - 1) * panelGap,
+              };
+              labels.push(makeFacetLabelScope(facet, 'row', level, group.startIndex, group.span, group.value, rect, -90));
+            }
+          }
+          return labels;
+        })
+      : [];
     const facetGuides = allGuides.filter(
       guide => !isAxisGuide(guide) || axisGuideScopeIdOf(guide, coordinateScopes.defaultScope) === defaultScope.id,
     );
@@ -1897,37 +2091,39 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
           ...frameResolution.axisLayers.map(layer => withScopeContext(layer, panelContext) as IRScope),
         ],
       };
-      if (panel.rowIndex === 0 && panel.columnIndex === 0) return base;
+      const translateX = rowLabelWidth + panel.columnIndex * panelStrideX;
+      const translateY = panel.rowIndex * panelStrideY;
+      if (translateX === 0 && translateY === 0) return base;
       return {
         ...base,
         transforms: [
           {
             kind: 'translate',
-            x: panel.columnIndex * (panelWidth + panelGap),
-            y: panel.rowIndex * (panelHeight + panelGap),
+            x: translateX,
+            y: translateY,
           },
         ],
       };
     });
 
     anchorRegistry.assertResolved();
-    const children: Array<IRChild> = panelScopes;
+    const children: Array<IRChild> = [...panelScopes, ...facetLabelScopes];
     if (node.id === undefined) {
       const base: IRScope = { type: 'scope', localNamespace: true, children };
       return provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
     }
 
-    const panelStrideX = panelWidth + panelGap;
-    const panelStrideY = panelHeight + panelGap;
     const inner: IRScope = { type: 'scope', localNamespace: true, children };
     const innerContent: IRScope = provenance ? { ...inner, meta: rootMeta(provenance.dataReference) } : inner;
+    const facetContentWidth = rowLabelWidth + maxColumnIndex * panelStrideX + panelWidth;
+    const facetContentHeight = maxRowIndex * panelStrideY + panelHeight + columnLabelHeight;
     const plotAreaCarrier: IRNode = {
       type: 'node',
       id: `${node.id}.plotArea`,
-      position: [(maxColumnIndex * panelStrideX + panelWidth) / 2, (maxRowIndex * panelStrideY + panelHeight) / 2],
+      position: [facetContentWidth / 2, facetContentHeight / 2],
       shape: 'rectangle',
-      minimumWidth: maxColumnIndex * panelStrideX + panelWidth,
-      minimumHeight: maxRowIndex * panelStrideY + panelHeight,
+      minimumWidth: facetContentWidth,
+      minimumHeight: facetContentHeight,
       padding: 0,
       opacity: 0,
     };
