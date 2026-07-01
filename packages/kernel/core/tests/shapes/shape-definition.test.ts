@@ -5,7 +5,8 @@ import type { ShapeDefinition, ShapeStyle } from '../../src/contract/shape';
 import type { Rect } from '../../src/geometry/rect';
 import type { PathCommand, ScenePrimitive } from '../../src/primitive';
 
-import { defineShape, localToWorld, worldToLocal } from '../../src/contract/shape';
+import { defineShape } from '../../src/contract/shape';
+import { localToWorld, worldToLocal } from '../../src/geometry/transform';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const SQRT2 = Math.SQRT2;

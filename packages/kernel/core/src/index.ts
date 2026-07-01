@@ -367,6 +367,7 @@ export {
   CompassSide,
   diamond,
   ellipse,
+  localToWorld,
   normalizeCompassAnchor,
   normalizeWebAnchor,
   normalizeWebSide,
@@ -377,6 +378,7 @@ export {
   WebCorner,
   WebSide,
   webSideToCompassSide,
+  worldToLocal,
 } from './geometry';
 export type {
   AnimationPresetOptions,
@@ -410,13 +412,13 @@ export {
   wiggle,
 } from './presets';
 
-// Shapes (Shape Registry 扩展面：第三方 shape 注入 + 内置注册项 + 作者所需 helper)
+// Shapes (Shape Registry 扩展面：第三方 shape 注入 + 内置注册项)
 export type { BoundaryAnchorName, BoundaryDefinition, BoundaryDefinitionInput } from './contract/boundary';
 export { defineBoundary } from './contract/boundary';
 export type { ClipDefinition, ClipDefinitionInput, ClipResolveContext } from './contract/clip';
 export { defineClip } from './contract/clip';
 export type { ShapeDefinition, ShapeDefinitionInput, ShapeStyle } from './contract/shape';
-export { defineShape, localToWorld, worldToLocal } from './contract/shape';
+export { defineShape } from './contract/shape';
 export { BUILTIN_BOUNDARIES } from './providers/boundary';
 export { BUILTIN_CLIPS } from './providers/clip';
 export { BUILTIN_SHAPES, contour } from './providers/shape';

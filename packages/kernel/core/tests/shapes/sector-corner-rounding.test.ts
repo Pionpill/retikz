@@ -14,8 +14,8 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import type { Rect } from '../../src/contract/shape';
 import type { Position } from '../../src/geometry/point';
+import type { Rect } from '../../src/geometry/rect';
 
 import { localToWorld, worldToLocal } from '../../src/geometry/transform';
 import { sector } from '../../src/providers/shape';
