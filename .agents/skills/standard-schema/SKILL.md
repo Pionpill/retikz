@@ -20,8 +20,8 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 - `schemas/<capability>/constants.ts`：const object enum、关键字常量。成员 JSDoc 用中文说明业务含义。
 - `schemas/<capability>/schema.ts`：Zod schema、字段 `.describe(...)`、对象级 `.describe(...)`、必要 refinement。
 - `schemas/<capability>/types.ts`：由 schema / const object 派生的 TS 类型；派生类型、非 schema 常量、函数、类用中文 JSDoc。
-- `shared/`：schema / contract / providers / compile 之间共享的无依赖底层。优先放跨层复用的纯函数；当某组 vocabulary 不属于单个 IR schema（例如通用 anchor / side 命名体系）且会被 geometry、schema、compile、provider 共同消费时，也可放 const object enum 和由其派生的 `XxxValue` / `XxxInput` 类型。属于具体 IR schema 的 const object enum、关键字常量、schema 派生类型仍留在 `schemas/<capability>/constants.ts` / `types.ts`。
-- `providers` / `contract` / `compile`：不要反向放 IR schema；需要开放能力时走 `standard-define-registry`。
+- `shared/`：只消费 shared 已有词汇和工具；新增 shared 内容先读 `standard-shared`。
+- `contract` / `providers` / `compile`：不要反向放 IR schema；需要开放能力或调整分层时先读 `standard-structure`，再按需读 `standard-contract` / `standard-providers` / `standard-pipeline-compile`。
 
 ## 命名
 
@@ -32,6 +32,17 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 | `IRXxx` | 由 IR schema object `z.infer` 派生的公开 JSON 数据类型 |
 | `XxxValue` | 由 const object enum + `ValueOf` 派生的取值 union，不加 `IR` |
 | `XxxInput` | 只有输入形态确实不同于存储形态时使用 |
+
+## LLM 友好契约
+
+schema registry 会被 LLM 读取和生成，因此字段名、判别值和 `.describe(...)` 都以 LLM 友好为第一准则：低歧义、短上下文、高辨识度。
+
+- 属性名尽量语义化。优先写 `boundaryPosition`、`placementOffset` 这类读名即可理解的字段，不写 `t`、`v`、`mode2` 这类需要额外解释的缩写。
+- `type` / `kind` 值要短、稳定、区分度大。避免语义接近或需要上下文猜测的值；同一个 union 里不要出现容易混淆的判别名。
+- 字段结构比长说明更重要。能通过字段名、判别字段、union 拆分表达清楚的，不靠 `.describe(...)` 长篇补救。
+- 开放式自定义字段要明确边界，例如说明是 provider name、custom kind，还是普通 string；避免 LLM 把任意文本当作内置枚举。
+- 避免一字母字段和过度缩写，除非它是领域公认符号且 schema 上下文非常明确；否则宁可字段名稍长。
+- 同一概念在不同 schema 中保持同名同义；不要一处叫 `side`、一处叫 `direction`、一处叫 `position` 却表达同一件事。
 
 ## 对象字段顺序
 
@@ -96,8 +107,12 @@ export const RibbonWidthSchema = z.union([
 
 ## describe 与 JSDoc
 
-- schema 字段 `.describe(...)` 用英文，面向 LLM / schema registry 准确识别 IR 契约。
-- `.describe(...)` 说明字段含义、允许值 / custom 扩展、默认语义、compile/runtime 边界；避免重复 schema 已表达的 `.min()` / `.optional()` 等约束。
+- schema 字段 `.describe(...)` 用英文，面向 LLM / schema registry 准确识别 IR 契约；它是必要的契约提示，不是普通注释。
+- `.describe(...)` 保持简洁干练，包含必要信息即可，避免长篇解释导致 schema registry 上下文膨胀。
+- `.describe(...)` 优先说明字段含义、允许值 / custom 扩展、默认语义、compile/runtime 边界；避免重复 schema 已表达的 `.min()` / `.optional()` 等约束。
+- 对 `type` / `kind` 字段，describe 要说明它是 discriminator，并让 LLM 能判断该值对应的变体语义。
+- 对开放式 provider 名称、custom key、fallback 策略，describe 要明确“可自定义”与“未注册在 compile/lowering 期处理”的边界。
+- 不要在 describe 里写实现故事、历史背景、ADR、renderer 细节或长示例；这些会稀释 LLM 对字段契约的注意力。
 - IR schema 文件里的 schema 常量一般不写 JSDoc；schema 说明统一看字段级 / 对象级 zod `.describe(...)`。
 - `types.ts`、`constants.ts` 的派生类型和非 schema 常量用中文 JSDoc；不要连续写两条 `/** ... */` 叠在同一个导出前，保留最准确的一条。
 - 不在 JSDoc / describe / 测试标题里引用 ADR、alpha/beta 历史阶段或临时过程描述。
@@ -118,26 +133,10 @@ export const RibbonWidthSchema = z.union([
 ## 改代码前检查
 
 1. 这是 IR 契约，还是 provider / compile / adapter 行为？
-2. 是否需要开放给用户自定义？如果是，先读 `standard-define-registry`。
-3. 判别字段是 `type` 还是 `kind`？是否放在对象最前面？
-4. 共享 shape spread 是否紧跟判别字段或对象开头？
-5. 是否能用 `BaseSchema + superRefine` 避免一大坨重复 object？
-6. schema 改动是否需要同步 `types.ts`、docs、schema registry 和测试？
-
-## Shared 主题目录
-
-`shared/` 是 schema / contract / providers / compile / geometry 共用的无依赖共享层。跨层词汇、纯函数和无状态映射可以放这里；具体 IR schema 私有的 const object enum 和 schema 派生类型仍留在对应 `schemas/<capability>/` 下。
-
-当某个 shared 主题同时包含词汇、类型、索引数组 / 映射和工具函数时，拆成目录：
-
-| 文件 | 职责 |
-| --- | --- |
-| `shared/<topic>/constants.ts` | const object enum 和稳定字面量词汇 |
-| `shared/<topic>/types.ts` | 由常量派生的 `XxxValue` / `XxxInput` 类型 |
-| `shared/<topic>/indexes.ts` | `XxxValues` 数组、`Record<A, B>` 映射表、查表型索引 |
-| `shared/<topic>/utils.ts` | 纯函数，通常只做 normalize / parse / classify |
-| `shared/<topic>/index.ts` | 只做本主题 barrel 导出 |
-
-外部模块只从包级 shared barrel 导入，例如 `../shared`、`../../shared` 或 `@retikz/core`；不要从 `shared/<topic>/constants` 这类子文件导入。主题内部文件之间可以互相从相邻子文件导入。
-
-消费 shared vocabulary 时使用 const object enum 成员，不直接写裸字符串。例如几何、compile、provider、render 和单元测试调用 `rect.anchor(...)`、`edgePoint(...)`、`switch (anchor)` 时写 `WebAnchor.Top` / `WebSide.Top`，不要写 `'top'` / `'north'`。只有 schema/parser 的用户输入样例、错误负例和文档说明可以保留字符串字面量。
+2. 是否需要开放给用户自定义？如果是，先读 `standard-structure`，再按需读 `standard-contract` / `standard-providers`。
+3. 字段名是否语义化，LLM 能否不看长说明就理解大意？
+4. 判别字段是 `type` 还是 `kind`？值是否区分度足够，且放在对象最前面？
+5. `.describe(...)` 是否短而准确，包含必要边界，没有上下文膨胀？
+6. 共享 shape spread 是否紧跟判别字段或对象开头？
+7. 是否能用 `BaseSchema + superRefine` 避免一大坨重复 object？
+8. schema 改动是否需要同步 `types.ts`、docs、schema registry 和测试？
