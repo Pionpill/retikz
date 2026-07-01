@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import type { PlotSpec } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../src/schemas';
+import { CompositionFacetLabelPolicy, PlotSpecSchema } from '../../src/schemas';
 
 const salesRows = [
   { region: 'north', channel: 'online', month: 0, revenue: 0 },
@@ -55,14 +55,25 @@ const allNodes = (child: IRChild): Array<IRNode> => {
   return child.children.flatMap(allNodes);
 };
 
+const allScopes = (child: IRChild): Array<IRScope> => {
+  if (!isScope(child)) return [];
+  return [child, ...child.children.flatMap(allScopes)];
+};
+
 const facetPanelsOf = (scope: IRScope): Array<IRScope> =>
   scope.children
     .filter(isScope)
     .filter(child => child.meta?.source === 'plot' && child.meta.layer === 'facetPanel');
 
+const facetLabelsOf = (scope: IRScope): Array<IRScope> =>
+  allScopes(scope).filter(child => child.meta?.source === 'plot' && child.meta.layer === 'facetLabel');
+
 const panelKeyOf = (panel: IRScope): string => String(panel.meta?.column ?? panel.meta?.row ?? '');
 
 const facetPanelMetaOf = (panel: IRScope): NonNullable<IRScope['meta']> => panel.meta ?? {};
+
+const tupleMetaMatches = (value: unknown, expected: ReadonlyArray<unknown>): boolean =>
+  Array.isArray(value) && expected.every((item, index) => value[index] === item);
 
 const translateOf = (scope: IRScope): { x: number; y: number } => {
   const translate = scope.transforms?.find(transform => transform.kind === 'translate');
@@ -91,6 +102,26 @@ describe('facet grid data routing schema', () => {
             column: { field: 'channel', order: ['online', 'store'] },
             empty: 'show',
             scales: { roles: { x: 'shared', y: 'shared' } },
+          },
+        ],
+      },
+    };
+    expect(PlotSpecSchema.parse(spec)).toEqual(spec);
+  });
+
+  it('facet_multi_level_dimension_schema_parses', () => {
+    const spec = {
+      ...baseFacetSpec,
+      composition: {
+        ...baseFacetSpec.composition,
+        facets: [
+          {
+            id: 'region-channel',
+            row: [
+              { field: 'region', order: ['north', 'south'] },
+              { field: 'channel', order: ['online', 'store'] },
+            ],
+            column: { field: 'month', order: [0, 1] },
           },
         ],
       },
@@ -179,6 +210,172 @@ describe('facet grid data routing lowering', () => {
       'south:store',
     ]);
     expect(panels.map(panel => allNodes(panel).length)).toEqual([2, 1, 2, 0]);
+  });
+
+  it('multi_level_row_facet_routes_tuple_panel_values', () => {
+    const spec = {
+      ...baseFacetSpec,
+      composition: {
+        ...baseFacetSpec.composition,
+        facets: [
+          {
+            id: 'region-channel',
+            row: [
+              { field: 'region', order: ['north', 'south'] },
+              { field: 'channel', order: ['online', 'store'] },
+            ],
+          },
+        ],
+      },
+    };
+    const outer = expandOf(PlotSpecSchema.parse(spec));
+    const panels = facetPanelsOf(outer);
+    expect(panels.map(panel => panel.meta?.row)).toEqual([
+      ['north', 'online'],
+      ['north', 'store'],
+      ['south', 'online'],
+    ]);
+    expect(panels.map(panel => panel.id)).toEqual([
+      'facet.region-channel.row.north.online',
+      'facet.region-channel.row.north.store',
+      'facet.region-channel.row.south.online',
+    ]);
+    expect(panels.map(panel => allNodes(panel).length)).toEqual([2, 1, 2]);
+  });
+
+  it('multi_level_facet_groups_row_and_column_label_strips_by_level', () => {
+    const spec = {
+      ...baseFacetSpec,
+      composition: {
+        ...baseFacetSpec.composition,
+        guidePolicy: { facetLabels: CompositionFacetLabelPolicy.RowColumn },
+        facets: [
+          {
+            id: 'region-channel',
+            row: [
+              { field: 'region', order: ['north', 'south'] },
+              { field: 'channel', order: ['online', 'store'] },
+            ],
+            column: [
+              { field: 'region', order: ['north', 'south'] },
+              { field: 'channel', order: ['online', 'store'] },
+            ],
+            empty: 'show',
+          },
+        ],
+      },
+    };
+
+    const outer = expandOf(PlotSpecSchema.parse(spec));
+    const labelSummary = facetLabelsOf(outer).map(label => ({
+      dimension: label.meta?.dimension,
+      level: label.meta?.level,
+      value: label.meta?.value,
+      startIndex: label.meta?.startIndex,
+      span: label.meta?.span,
+    }));
+
+    expect(labelSummary.filter(label => label.dimension === 'column')).toEqual([
+      { dimension: 'column', level: 1, value: 'online', startIndex: 0, span: 1 },
+      { dimension: 'column', level: 1, value: 'store', startIndex: 1, span: 1 },
+      { dimension: 'column', level: 1, value: 'online', startIndex: 2, span: 1 },
+      { dimension: 'column', level: 1, value: 'store', startIndex: 3, span: 1 },
+      { dimension: 'column', level: 0, value: 'north', startIndex: 0, span: 2 },
+      { dimension: 'column', level: 0, value: 'south', startIndex: 2, span: 2 },
+    ]);
+    expect(labelSummary.filter(label => label.dimension === 'row')).toEqual([
+      { dimension: 'row', level: 1, value: 'online', startIndex: 0, span: 1 },
+      { dimension: 'row', level: 1, value: 'store', startIndex: 1, span: 1 },
+      { dimension: 'row', level: 1, value: 'online', startIndex: 2, span: 1 },
+      { dimension: 'row', level: 1, value: 'store', startIndex: 3, span: 1 },
+      { dimension: 'row', level: 0, value: 'north', startIndex: 0, span: 2 },
+      { dimension: 'row', level: 0, value: 'south', startIndex: 2, span: 2 },
+    ]);
+    expect(facetLabelsOf(outer).map(label => allNodes(label).map(node => node.text))).toEqual([
+      ['online'],
+      ['store'],
+      ['online'],
+      ['store'],
+      ['north'],
+      ['south'],
+      ['online'],
+      ['store'],
+      ['online'],
+      ['store'],
+      ['north'],
+      ['south'],
+    ]);
+  });
+
+  it('facet_label_bands_reserve_label_gap_from_panel_grid', () => {
+    const spec = {
+      ...baseFacetSpec,
+      composition: {
+        ...baseFacetSpec.composition,
+        guidePolicy: { facetLabels: CompositionFacetLabelPolicy.RowColumn },
+        layout: { labelGap: 12 },
+        facets: [
+          {
+            id: 'region-channel',
+            row: [
+              { field: 'region', order: ['north', 'south'] },
+              { field: 'channel', order: ['online', 'store'] },
+            ],
+            column: [
+              { field: 'region', order: ['north', 'south'] },
+              { field: 'channel', order: ['online', 'store'] },
+            ],
+            empty: 'show',
+          },
+        ],
+      },
+    };
+
+    const outer = expandOf(PlotSpecSchema.parse(spec), { width: 660, height: 480 });
+    const panels = facetPanelsOf(outer);
+    const firstPanel = panels.find(panel => {
+      const meta = facetPanelMetaOf(panel);
+      return tupleMetaMatches(meta.row, ['north']) && tupleMetaMatches(meta.column, ['north']);
+    });
+    const secondRowPanel = panels.find(panel => tupleMetaMatches(facetPanelMetaOf(panel).row, ['north', 'store']));
+
+    expect(firstPanel).toBeDefined();
+    expect(secondRowPanel).toBeDefined();
+    expect(translateOf(firstPanel as IRScope).x).toBe(56);
+    expect(translateOf(secondRowPanel as IRScope).y).toBe(106);
+  });
+
+  it('facet_label_bands_use_one_label_band_as_default_gap', () => {
+    const spec = {
+      ...baseFacetSpec,
+      composition: {
+        ...baseFacetSpec.composition,
+        guidePolicy: { facetLabels: CompositionFacetLabelPolicy.RowColumn },
+        facets: [
+          {
+            id: 'region-channel',
+            row: [
+              { field: 'region', order: ['north', 'south'] },
+              { field: 'channel', order: ['online', 'store'] },
+            ],
+            column: [
+              { field: 'region', order: ['north', 'south'] },
+              { field: 'channel', order: ['online', 'store'] },
+            ],
+            empty: 'show',
+          },
+        ],
+      },
+    };
+
+    const outer = expandOf(PlotSpecSchema.parse(spec), { width: 660, height: 480 });
+    const firstPanel = facetPanelsOf(outer).find(panel => {
+      const meta = facetPanelMetaOf(panel);
+      return tupleMetaMatches(meta.row, ['north']) && tupleMetaMatches(meta.column, ['north']);
+    });
+
+    expect(firstPanel).toBeDefined();
+    expect(translateOf(firstPanel as IRScope).x).toBe(66);
   });
 
   it('row_column_facet_treats_width_height_as_total_chart_size', () => {

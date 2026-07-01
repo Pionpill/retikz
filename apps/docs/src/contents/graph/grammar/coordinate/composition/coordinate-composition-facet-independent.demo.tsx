@@ -13,11 +13,12 @@ const Demo: FC = () => (
       empty="show"
       scales={{ roles: { y: 'independent' } }}
       layout={{ panelGap: 22 }}
-    />
-    <Axis facetId="accounts" dimension="x" title="month" />
-    <Axis facetId="accounts" dimension="y" grid title="accounts" />
-    <PathMark facetId="accounts" x="month" y="accounts" order="month" stroke="steelblue" strokeWidth={2} />
-    <PointMark facetId="accounts" x="month" y="accounts" fill="lightblue" stroke="steelblue" strokeWidth={1} />
+    >
+      <Axis dimension="x" title="month" />
+      <Axis dimension="y" grid title="accounts" />
+      <PathMark x="month" y="accounts" order="month" stroke="steelblue" strokeWidth={2} />
+      <PointMark x="month" y="accounts" fill="lightblue" stroke="steelblue" strokeWidth={1} />
+    </Facet>
   </Plot>
 );
 

@@ -5,17 +5,55 @@ import { Axis, PathMark, Plot, PointMark, Scaffold, Track } from '@retikz/plot-r
 import { operationsRows } from './coordinate-composition-tracks.data';
 
 const Demo: FC = () => (
-  <Plot data={operationsRows} width={560} height={250}>
-    <Scaffold id="ops" sharedRoles={['x']} layout={{ trackGap: 24 }}>
-      <Track id="incidents" band={{ role: 'y', start: 0, end: 0.5 }} />
-      <Track id="load" band={{ role: 'y', start: 0.5, end: 1 }} />
+  <Plot data={operationsRows} width={560} height={330}>
+    <Scaffold id="ops" sharedRoles={['x']} layout={{ trackGap: 6 }}>
+      <Axis dimension="x" grid title="trading day" />
+      <Track id="trend" band={{ role: 'y', start: 0, end: 0.28 }}>
+        <Axis dimension="y" title="trend" />
+        <PathMark
+          x="day"
+          y="trend"
+          order="day"
+          stroke="#f97316"
+          strokeWidth={2.5}
+          lineCap="round"
+          lineJoin="round"
+        />
+      </Track>
+      <Track id="drawdown" band={{ role: 'y', start: 0.36, end: 0.64 }}>
+        <Axis dimension="y" title="drawdown" />
+        <PathMark
+          x="day"
+          y="drawdown"
+          order="day"
+          closure={{ kind: 'baseline', baseline: 0 }}
+          fill="rgba(148, 163, 184, 0.32)"
+          stroke="none"
+        />
+        <PathMark
+          x="day"
+          y="drawdown"
+          order="day"
+          stroke="#64748b"
+          strokeWidth={2}
+          lineCap="round"
+          lineJoin="round"
+        />
+      </Track>
+      <Track id="signal" band={{ role: 'y', start: 0.72, end: 1 }}>
+        <Axis dimension="y" title="signal" />
+        <PathMark
+          x="day"
+          y="signal"
+          order="day"
+          stroke="#0891b2"
+          strokeWidth={2}
+          lineCap="round"
+          lineJoin="round"
+        />
+        <PointMark x="day" y="signal" fill="#ecfeff" stroke="#0891b2" strokeWidth={1.5} size={7} />
+      </Track>
     </Scaffold>
-    <Axis dimension="x" scaffoldId="ops" grid title="week" />
-    <Axis dimension="y" trackId="incidents" title="incidents" />
-    <Axis dimension="y" trackId="load" title="load" />
-    <PathMark trackId="incidents" x="week" y="incidents" order="week" stroke="darkorange" strokeWidth={2.5} />
-    <PathMark trackId="load" x="week" y="load" order="week" stroke="steelblue" strokeWidth={2} />
-    <PointMark trackId="load" x="week" y="load" fill="lightblue" stroke="steelblue" strokeWidth={1} />
   </Plot>
 );
 
