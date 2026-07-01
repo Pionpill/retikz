@@ -1,6 +1,5 @@
 import type { RibbonWidthProfileDefinition } from '../../contract/ribbon';
-import type { Vector2 } from '../../geometry';
-import type { PathCommand, PathPrim, ScenePrimitive } from '../../primitive';
+import type { PathCommand, PathPrim, ScenePrimitive } from '../../contract/scene';
 import type {
   IRPath,
   IRPathBase,
@@ -14,15 +13,16 @@ import type {
   IRStep,
   RibbonAlignmentValue,
 } from '../../schemas';
+import type { Vector2 } from '../../shared/geometry';
 import type { SegmentSample } from '../../shared/geometry';
 import type { NameStack } from '../name-stack';
 import type { PaintResolver } from '../paint';
 import type { TextMeasurer } from '../text-metrics';
 import type { EmitPathWarnHook } from '.';
 
-import { polar, vector2 } from '../../geometry';
 import { providerDefinitionOf } from '../../providers/registry';
 import { JsonObjectSchema } from '../../schemas';
+import { polar, vector2 } from '../../shared/geometry';
 import {
   arcSegmentSample,
   cubicSegmentSample,

@@ -1,10 +1,8 @@
 import { arcEndPoint } from '@retikz/math';
 
 import type { BoundaryDefinition } from '../contract/boundary';
+import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../contract/scene';
 import type { ResolvedShapeStyle, ShapeDefinition } from '../contract/shape';
-import type { Position } from '../geometry/point';
-import type { Rect } from '../geometry/rect';
-import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
 import type { ProviderCollection } from '../providers/registry';
 import type {
   IRAnimationTrack,
@@ -22,6 +20,8 @@ import type {
   NodeLabelPositionValue,
 } from '../schemas';
 import type { BlendModeValue, ResolvedDropShadow } from '../schemas/effects';
+import type { Position } from '../shared/geometry';
+import type { Rect } from '../shared/geometry';
 import type { CompileWarningCodeValue } from './constant';
 import type { LowerTex } from './lower-tex';
 import type { NameStack } from './name-stack';

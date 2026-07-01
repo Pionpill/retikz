@@ -1,12 +1,12 @@
 import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
 import { z } from 'zod';
 
-import type { Position } from '../../geometry/point';
-import type { Rect } from '../../geometry/rect';
-import type { PathCommand, ScenePrimitive } from '../../primitive';
+import type { PathCommand, ScenePrimitive } from '../../contract/scene';
+import type { Position } from '../../shared/geometry';
+import type { Rect } from '../../shared/geometry';
 
 import { defineShape } from '../../contract/shape/define';
-import { localToWorld, worldToLocal } from '../../geometry/transform';
+import { localToWorld, worldToLocal } from '../../shared/geometry';
 import { normalizeAngularRange } from './angle';
 
 const RAD_TO_DEG = 180 / Math.PI;

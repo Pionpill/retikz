@@ -1,5 +1,5 @@
 import type { PatternDefinition, PatternEmitContext } from '../../contract/pattern';
-import type { MarkerPrimitive } from '../../primitive/marker';
+import type { MarkerPrimitive } from '../../contract/scene';
 import type { BuiltinPatternName } from '../../schemas/paint';
 
 import { defineBuiltinProviderArray, resolveProviderRegistry } from '../registry';

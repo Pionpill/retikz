@@ -1,6 +1,6 @@
 import { arcEndPoint } from '@retikz/math';
 
-import type { Transform } from '../../primitive';
+import type { Transform } from '../../contract/scene';
 import type { IRPosition, IRStep, IRTarget } from '../../schemas';
 import type { NameStack } from '../name-stack';
 

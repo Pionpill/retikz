@@ -1,10 +1,10 @@
 import type { BoundaryAnchorName, BoundaryDefinition } from '../contract/boundary';
 import type { ShapeDefinition } from '../contract/shape';
-import type { Position } from '../geometry/point';
-import type { Rect } from '../geometry/rect';
 import type { ProviderCollection } from '../providers/registry';
 import type { IRBoundary } from '../schemas';
 import type { IRJsonObject } from '../schemas/json';
+import type { Position } from '../shared/geometry';
+import type { Rect } from '../shared/geometry';
 
 import { resolveBoundaryRegistry } from '../providers/boundary';
 import { rectangle } from '../providers/shape';

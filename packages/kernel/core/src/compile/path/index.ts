@@ -10,7 +10,7 @@ import type {
   ResolvedArrowEndSpec,
   ScenePrimitive,
   Transform,
-} from '../../primitive';
+} from '../../contract/scene';
 import type { IRPath, IRPathBase, IRPathScale, IRPosition, IRStep, IRTarget } from '../../schemas';
 import type { AssertEqual } from '../../shared';
 import type { SegmentSample } from '../../shared/geometry';
@@ -22,10 +22,10 @@ import type { TextMeasurer } from '../text-metrics';
 import type { ResolvedArrowRegistry } from './shrink';
 import type { PathBaseProps } from './split';
 
-import { rectOutline } from '../../geometry/rect';
 import { resolveArrowRegistry } from '../../providers/arrow';
 import { providerDefinitionOf } from '../../providers/registry';
 import { JsonObjectSchema } from '../../schemas';
+import { rectOutline } from '../../shared/geometry';
 import {
   arcSegmentSample,
   bendControlPoints,

@@ -9,9 +9,9 @@
  *   compile 结束 layout 引用释放，WeakMap entry 随 GC 一并回收。
  */
 
-import type { Position } from '../geometry/point';
 import type { IRBoundary, IRPosition } from '../schemas';
 import type { WebSideValue } from '../shared';
+import type { Position } from '../shared/geometry';
 import type { NodeLayout } from './node';
 
 import { normalizeAnchor } from '../shared';

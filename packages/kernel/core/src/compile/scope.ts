@@ -1,9 +1,8 @@
 import { minimalEnclosingCircle } from '@retikz/math';
 
 import type { BoundaryDefinition } from '../contract/boundary';
+import type { Transform } from '../contract/scene';
 import type { ShapeDefinition } from '../contract/shape';
-import type { Rect } from '../geometry/rect';
-import type { Transform } from '../primitive';
 import type { ProviderCollection } from '../providers/registry';
 import type {
   IRAtPosition,
@@ -13,15 +12,16 @@ import type {
   IRTransform,
   PolarPosition,
 } from '../schemas';
+import type { Rect } from '../shared/geometry';
 import type { NameStack } from './name-stack';
 import type { NodeLayout } from './node';
 import type { ResolveBetweenGlobal } from './position';
 
-import { rect as rectOps } from '../geometry/rect';
 import { resolveBoundaryRegistry } from '../providers/boundary';
 import { providerDefinitionOf } from '../providers/registry';
 import { resolveShapeRegistry } from '../providers/shape';
 import { WebAnchor } from '../shared';
+import { rect as rectOps } from '../shared/geometry';
 import { outerRectOf } from './node';
 import { resolvePosition } from './position';
 

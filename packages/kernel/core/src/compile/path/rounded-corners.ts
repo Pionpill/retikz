@@ -1,4 +1,4 @@
-import type { PathCommand } from '../../primitive';
+import type { PathCommand } from '../../contract/scene';
 import type { ContourCommand, ContourSegment, FilletSolution } from '../../shared/geometry';
 
 import { contourCommands, filletContour } from '../../shared/geometry';

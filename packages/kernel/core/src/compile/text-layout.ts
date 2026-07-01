@@ -1,4 +1,4 @@
-import type { GroupPrim, PathCommand, PathPrim, ScenePrimitive, TextPrim } from '../primitive';
+import type { GroupPrim, PathCommand, PathPrim, ScenePrimitive, TextPrim } from '../contract/scene';
 import type { IRFont, IRLineSpec } from '../schemas';
 import type { CompileWarningCodeValue } from './constant';
 import type { IRInlineRun } from './inline-tex';

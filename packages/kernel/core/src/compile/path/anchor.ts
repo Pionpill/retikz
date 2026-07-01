@@ -1,12 +1,12 @@
-import type { Transform } from '../../primitive';
+import type { Transform } from '../../contract/scene';
 import type { FoldStepViaValue, IRBetweenPosition, IRNodeTarget, IRPosition, IRTarget } from '../../schemas';
 import type { IRBoundary } from '../../schemas';
 import type { NameStack } from '../name-stack';
 import type { NodeLayout } from '../node';
 
-import { lerpPoint } from '../../geometry/edge';
-import { point } from '../../geometry/point';
 import { FoldStepVia } from '../../schemas';
+import { lerpPoint } from '../../shared/geometry';
+import { point } from '../../shared/geometry';
 import { resolveAnchor, resolveEdgePoint } from '../anchor-cache';
 import { boundaryPointOf } from '../node';
 import { resolvePosition } from '../position';

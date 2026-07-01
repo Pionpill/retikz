@@ -25,6 +25,11 @@ const importDeclarations = (file: string): Array<string> =>
     match => match[0],
   );
 
+const isCompatibilityWrapper = (file: string): boolean => {
+  const rel = relative(SRC_ROOT, file).replace(/\\/g, '/');
+  return rel.startsWith('primitive/') || rel.startsWith('geometry/');
+};
+
 describe('core layer import boundaries', () => {
   it('contract code does not import from legacy primitive owner paths', () => {
     const offenders = tsFiles(join(SRC_ROOT, 'contract'))
@@ -54,6 +59,30 @@ describe('core layer import boundaries', () => {
         .filter(line => /from ['"].*(schemas|contract|providers|primitive|compile)/.test(line))
         .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
     );
+
+    expect(offenders).toEqual([]);
+  });
+
+  it('implementation code imports scene types from contract/scene instead of legacy primitive paths', () => {
+    const offenders = tsFiles(SRC_ROOT)
+      .filter(file => !isCompatibilityWrapper(file))
+      .flatMap(file =>
+        importDeclarations(file)
+          .filter(line => /from ['"].*(\.\.\/)+primitive/.test(line))
+          .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
+      );
+
+    expect(offenders).toEqual([]);
+  });
+
+  it('implementation code imports geometry helpers from shared/geometry instead of legacy geometry paths', () => {
+    const offenders = tsFiles(SRC_ROOT)
+      .filter(file => !isCompatibilityWrapper(file))
+      .flatMap(file =>
+        importDeclarations(file)
+          .filter(line => /from ['"].*(\.\.\/)+geometry/.test(line))
+          .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
+      );
 
     expect(offenders).toEqual([]);
   });
