@@ -124,6 +124,10 @@ describe('path scale（等比 / 非等比）', () => {
     expect(sc?.x).toBe(2);
     expect(sc?.y).toBe(0.5);
   });
+
+  it('transform projection 产生非有限坐标时抛出，避免 Infinity 进入 Scene', () => {
+    expect(() => compileToScene(linePath({ scale: Number.MAX_VALUE }))).toThrow(/finite|Infinity|NaN/i);
+  });
 });
 
 describe('旋转 path + 箭头：方向随变换正确（变换顺序硬契约）', () => {
