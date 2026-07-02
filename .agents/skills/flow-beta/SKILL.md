@@ -78,7 +78,7 @@ beta 的核心风险是重构回归和 breaking 漏迁移。派子 agent / 外�
 - 不改 ADR 状态；beta 无新 ADR。
 - roadmap TODO 标完成并记录 commit hash。
 - commit 必须等待当前对话人工授权；多 TODO 可按 review 友好的逻辑块分批 commit。
-- 非明确功能类代码完工并提交或准备提交后，询问用户是否需要子 agent review。
+- 非明确功能类代码完工并提交或准备提交后，询问用户是否需要子 agent review；用户已明确认可本次单次 commit 时不再额外询问。
 
 ## 批量 worktree
 
@@ -88,7 +88,7 @@ beta 的核心风险是重构回归和 breaking 漏迁移。派子 agent / 外�
 - 呈现平行 / 堆叠 / 混合布局，人工 ack 后建 worktree。
 - 每个 worktree 写 `REVIEW.md` 并 halt。
 - 不 push / merge / 切回 base / 删除 worktree / 删除 `REVIEW.md`。
-- 若批量执行中用户授权 LLM 自行 commit，每次 commit 前先派子 agent review 单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。
+- 若批量执行中用户授权 LLM 自行 commit，每次 commit 前先派子 agent review 单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。用户明确认可的单次 commit 不触发该要求。
 
 ## 失败与换流
 

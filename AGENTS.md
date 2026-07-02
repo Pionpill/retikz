@@ -84,8 +84,8 @@ pnpm --filter <pkg> exec vitest run [test-file]
 - AI 执行 `git commit` / `git push` / `git tag` / `npm publish` 前，必须在当前对话拿到用户明确授权；push / tag / publish 始终单独授权。
 - 计划、skill、自称会提交、lint/build 通过、auto mode、历史会话授权都不算授权。
 - 多块改动按 commit 粒度分块 staging；无授权时展示暂存文件和拟用 message，等待确认。
-- 派子 agent / 外部模型评审前必须征求用户确认。长任务执行前同时询问：plan 写完是否评审、代码写完是否评审。非明确功能类代码完工并提交或准备提交后，也询问是否需要子 agent review。
-- 用户批准批量执行并授权 LLM 自行 commit 时，每次 commit 前必须派子 agent review 单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。
+- 派子 agent / 外部模型评审前必须征求用户确认。长任务执行前同时询问：plan 写完是否评审、代码写完是否评审。非明确功能类代码完工并提交或准备提交后，也询问是否需要子 agent review；用户已明确认可本次单次 commit 时不再额外询问。
+- 用户批准批量执行并授权 LLM 自行 commit 时，每次 commit 前必须派子 agent review 单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。用户明确认可的单次 commit 不触发该要求。
 - 不要 `git add -A` 混入无关改动。不要 `git reset --hard` / `git checkout --` 回滚用户改动，除非用户明确要求。
 
 Commit message：
@@ -116,7 +116,7 @@ Control: <human-directed|llm-autonomous>
 - TypeScript ESM；组件 PascalCase、hook `useXxx`、其余 camelCase。
 - 组件 / 类文件可 PascalCase；其他文件和目录用 kebab-case；目录通常用只 re-export 的 `index.ts`。
 - barrel 默认 `export * from './xxx'`，不要用 `export { ... } from './xxx'` 聚合；需要裁剪公共面、避免冲突或显式重命名时才用 named re-export。公共入口可按包内 AGENTS 要求显式导出。
-- 跨 owner 导入必须走目标 owner 的目录 barrel；同 owner 内部可相邻导入，不从其它 owner deep import 到子文件。
+- 跨 owner 导入必须走目标 owner 的目录 barrel；带独立 barrel 的稳定子域可作为二级 owner（如 `shared/geometry`）；同 owner 内部可相邻导入，不从其它 owner deep import 到子文件。
 - 尽量避免 import / export `as` 重命名；命名冲突优先在定义源头改成准确名称，或由 owner barrel 调整公共面。
 - 数组类型写 `Array<T>`，不用 `T[]`；函数优先箭头形式，确需 hoisting / class 方法时例外。
 - enum 用 const object enum：`as const` 对象 + `ValueOf` 派生类型；value object 用单数 PascalCase，成员 key 用大驼峰，派生类型加 `Value` 后缀。

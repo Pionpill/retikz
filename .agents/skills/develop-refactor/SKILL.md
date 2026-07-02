@@ -37,8 +37,8 @@ description: Use when retikz work is primarily refactoring, reorganization, rena
 
 - 小重构：review / 自审后直接执行，跑受影响验证，完工后不 commit，留给用户 review。
 - 大重构：实现前需要用户批准 scope；允许按步骤提交代码，但每步 commit 前仍需用户确认。
-- 若大重构属于用户批准的批量执行，且授权 LLM 自行 commit，每次 commit 前先派子 agent review 单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。
-- 非明确功能类代码完工并提交或准备提交后，询问用户是否需要子 agent review。
+- 若大重构属于用户批准的批量执行，且授权 LLM 自行 commit，每次 commit 前先派子 agent review 单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。用户明确认可的单次 commit 不触发该要求。
+- 非明确功能类代码完工并提交或准备提交后，询问用户是否需要子 agent review；用户已明确认可本次单次 commit 时不再额外询问。
 - 发现必须改公开契约、文档可见行为或 roadmap 外目标时，halt 并请用户裁决是否换流。
 
 ## 验证
