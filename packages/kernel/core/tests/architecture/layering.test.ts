@@ -28,6 +28,31 @@ const importDeclarations = (file: string): Array<string> =>
 const importSource = (declaration: string): string | undefined =>
   declaration.match(/\sfrom\s+['"]([^'"]+)['"]/)?.[1];
 
+type OwnerRef = {
+  root: string;
+  rootPath: string;
+};
+
+const ownerRef = (file: string): OwnerRef | undefined => {
+  const relativePath = relative(SRC_ROOT, file).replace(/\\/g, '/');
+  const parts = relativePath.split('/');
+  if (parts.length < 3) return undefined;
+  const [layer, owner] = parts;
+  if (owner.endsWith('.ts')) return undefined;
+
+  const rootPath = join(SRC_ROOT, layer, owner);
+  if (!existsSync(join(rootPath, 'index.ts'))) return undefined;
+  return { root: `${layer}/${owner}`, rootPath };
+};
+
+const resolveImportTarget = (file: string, source: string): string => {
+  const target = join(dirname(file), source);
+  if (existsSync(target) && statSync(target).isDirectory()) return join(target, 'index.ts');
+  if (existsSync(`${target}.ts`)) return `${target}.ts`;
+  if (existsSync(join(target, 'index.ts'))) return join(target, 'index.ts');
+  return target;
+};
+
 const importsFromOwner = (file: string, declaration: string, owner: 'geometry' | 'primitive'): boolean => {
   const source = importSource(declaration);
   if (!source?.startsWith('.')) return false;
@@ -44,6 +69,19 @@ const importsFromSchemaSubmodule = (file: string, declaration: string): boolean 
   const schemaRoot = join(SRC_ROOT, 'schemas');
   const target = join(dirname(file), source);
   return target.startsWith(`${schemaRoot}${sep}`);
+};
+
+const importsCrossOwnerSubmodule = (file: string, declaration: string): boolean => {
+  const source = importSource(declaration);
+  if (!source?.startsWith('.')) return false;
+
+  const sourceOwner = ownerRef(file);
+  const target = resolveImportTarget(file, source);
+  const targetOwner = ownerRef(target);
+  if (sourceOwner === undefined || targetOwner === undefined) return false;
+  if (sourceOwner.root === targetOwner.root) return false;
+
+  return target !== join(targetOwner.rootPath, 'index.ts');
 };
 
 describe('core layer import boundaries', () => {
@@ -93,6 +131,16 @@ describe('core layer import boundaries', () => {
           .filter(line => importsFromSchemaSubmodule(file, line))
           .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
       );
+
+    expect(offenders).toEqual([]);
+  });
+
+  it('cross-owner imports go through the target owner barrel', () => {
+    const offenders = tsFiles(SRC_ROOT).flatMap(file =>
+      importDeclarations(file)
+        .filter(line => importsCrossOwnerSubmodule(file, line))
+        .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
+    );
 
     expect(offenders).toEqual([]);
   });

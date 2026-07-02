@@ -5,7 +5,7 @@ import type { PathCommand, ScenePrimitive } from '../../contract/scene';
 import type { Position } from '../../shared/geometry';
 import type { Rect } from '../../shared/geometry';
 
-import { defineShape } from '../../contract/shape/define';
+import { defineShape } from '../../contract/shape';
 import { localToWorld, worldToLocal } from '../../shared/geometry';
 import { normalizeAngularRange } from './angle';
 

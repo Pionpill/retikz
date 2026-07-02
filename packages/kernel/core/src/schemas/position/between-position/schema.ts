@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import type { IRAbsoluteTarget, IRBetweenPosition } from './types';
 
-import { NodeTargetSchema } from '../../path/target';
+import { NodeTargetSchema } from '../../path';
 import { NormalizedFractionSchema } from '../../scalar';
 import { OffsetPositionSchema } from '../offset-position';
 import { PolarPositionSchema } from '../polar-position';

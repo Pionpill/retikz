@@ -1,10 +1,7 @@
 import { z } from 'zod';
 
 import { normalizeAtDirection } from '../../shared';
-import { AtDirection } from '../position/at-position';
-import { AbsoluteTargetSchema } from '../position/between-position';
-import { PolarPositionSchema } from '../position/polar-position';
-import { PositionSchema } from '../position/position';
+import { AbsoluteTargetSchema, AtDirection, PolarPositionSchema, PositionSchema } from '../position';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
 
 const TranslateSchema = z

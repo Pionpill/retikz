@@ -6,7 +6,7 @@ import type { Rect } from '../../shared/geometry';
 import type { ContourSegment, FilletSolution } from '../../shared/geometry';
 import type { SectorGeometry } from './sector-geometry';
 
-import { defineShape } from '../../contract/shape/define';
+import { defineShape } from '../../contract/shape';
 import { localToWorld } from '../../shared/geometry';
 import { boundaryFromContour, contourCommands, filletContour } from '../../shared/geometry';
 import { contourToPathCommands, contourToPathPrimitive } from './outline';

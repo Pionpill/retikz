@@ -2,10 +2,7 @@ import { z } from 'zod';
 
 import { normalizeAnchor, normalizeSide, WebSide } from '../../../shared';
 import { BoundarySchema } from '../../boundary';
-import { BetweenPositionSchema } from '../../position/between-position/schema';
-import { OffsetPositionSchema } from '../../position/offset-position/schema';
-import { PolarPositionSchema } from '../../position/polar-position/schema';
-import { PositionSchema } from '../../position/position/schema';
+import { BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from '../../position';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
 
 export const BoundaryAnchorRefSchema = z

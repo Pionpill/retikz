@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
-import { CssColorSchema, OpacitySchema } from '../style/primitives';
+import { CssColorSchema, OpacitySchema } from '../style';
 import { ImageFit } from './constants';
 
 export const GradientStopSchema = z

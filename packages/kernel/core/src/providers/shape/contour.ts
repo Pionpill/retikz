@@ -5,7 +5,7 @@ import type { Position } from '../../shared/geometry';
 import type { Rect } from '../../shared/geometry';
 import type { ContourSegment } from '../../shared/geometry';
 
-import { defineShape } from '../../contract/shape/define';
+import { defineShape } from '../../contract/shape';
 import { point } from '../../shared/geometry';
 import { localToWorld } from '../../shared/geometry';
 import { boundaryFromContour, contourCommands } from '../../shared/geometry';

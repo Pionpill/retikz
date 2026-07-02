@@ -4,9 +4,9 @@ import type { ScenePrimitive } from '../../contract/scene';
 import type { Ellipse } from '../../shared/geometry';
 import type { Rect } from '../../shared/geometry';
 
-import { defineShape } from '../../contract/shape/define';
+import { defineShape } from '../../contract/shape';
 import { CenterAnchor, normalizeAnchor } from '../../shared';
-import { ellipse as ellipseOps } from '../../shared/geometry';
+import { ellipse } from '../../shared/geometry';
 
 /** 外接框 Rect → Ellipse（rx/ry = 半宽/半高） */
 const toEllipse = (r: Rect): Ellipse => ({
@@ -24,7 +24,7 @@ const toEllipse = (r: Rect): Ellipse => ({
  *   emit / anchor / edgePoint / boundaryPoint 只一套（不读 `params`）。circle 在 compile 期规范化为
  *   `{ type: 'ellipse', params: { circumscribe: 'equal' } }`。
  */
-export const ellipse = defineShape({
+export const ellipseShape = defineShape({
   name: 'ellipse',
   paramsSchema: z.strictObject({
     circumscribe: z
@@ -38,12 +38,12 @@ export const ellipse = defineShape({
     params.circumscribe === 'equal'
       ? { halfWidth: Math.hypot(hw, hh), halfHeight: Math.hypot(hw, hh) }
       : { halfWidth: hw * Math.SQRT2, halfHeight: hh * Math.SQRT2 },
-  boundaryPoint: (r, toward) => ellipseOps.boundaryPoint(toEllipse(r), toward),
+  boundaryPoint: (r, toward) => ellipse.boundaryPoint(toEllipse(r), toward),
   anchor: (r, name) => {
     const a = normalizeAnchor(name);
-    return a !== undefined && a !== CenterAnchor.Center ? ellipseOps.anchor(toEllipse(r), a) : undefined;
+    return a !== undefined && a !== CenterAnchor.Center ? ellipse.anchor(toEllipse(r), a) : undefined;
   },
-  edgePoint: (r, side, t) => ellipseOps.edgePoint(toEllipse(r), side, t),
+  edgePoint: (r, side, t) => ellipse.edgePoint(toEllipse(r), side, t),
   *emit(r, style, round): Iterable<ScenePrimitive> {
     yield {
       type: 'ellipse',

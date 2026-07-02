@@ -5,9 +5,9 @@ import type { Position } from '../../shared/geometry';
 import type { Rect } from '../../shared/geometry';
 import type { ContourSegment } from '../../shared/geometry';
 
-import { defineShape } from '../../contract/shape/define';
+import { defineShape } from '../../contract/shape';
 import { CenterAnchor, normalizeAnchor } from '../../shared';
-import { rect as rectOps } from '../../shared/geometry';
+import { rect } from '../../shared/geometry';
 import { localToWorld } from '../../shared/geometry';
 import { boundaryFromContour, contourCommands } from '../../shared/geometry';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
@@ -144,10 +144,10 @@ export const polygon = defineShape({
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
     return hit ?? center;
   },
-  anchor: (rect: Rect, name: string, params: PolygonParams): Position | undefined => {
+  anchor: (bounds: Rect, name: string, params: PolygonParams): Position | undefined => {
     void params;
     const a = normalizeAnchor(name);
-    return a !== undefined && a !== CenterAnchor.Center ? rectOps.anchor(rect, a) : undefined;
+    return a !== undefined && a !== CenterAnchor.Center ? rect.anchor(bounds, a) : undefined;
   },
   *emit(rect: Rect, style, round, params: PolygonParams): Iterable<ScenePrimitive> {
     const radius = circumradiusFromRect(rect, params);

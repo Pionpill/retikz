@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 
 import type { ValueOf, Vector2 } from '../../../shared';
-import type { PolarPosition } from '../../position/polar-position';
+import type { PolarPosition } from '../../position';
 import type {
   RibbonAlignment,
   RibbonArcCapSweep,
