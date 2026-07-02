@@ -18,7 +18,7 @@ const makeLayout = (
   cy = 0,
   rotate = 0,
 ): NodeLayout => {
-  // circle / diamond 无独立 shapeDef（收为 preset）：circle → ellipse 等轴、diamond → polygon 4/0。
+  // circle / diamond 是内置 shape preset：circle → ellipse 等轴、diamond → polygon 4/0。
   const def =
     shape === 'circle' ? BUILTIN_SHAPES.ellipse : shape === 'diamond' ? BUILTIN_SHAPES.polygon : BUILTIN_SHAPES[shape];
   return {

@@ -73,8 +73,9 @@ export type ResolvedShapeStyle = {
 /**
  * 一个 shape 的参数化可注册定义（定义点 typed 形态）
  * @description plain object（factory 友好：`createPolygonShape(6)` 这类普通函数返回它即可）；含函数与
- *   `paramsSchema`，**不进 IR**，走 `CompileOptions.shapes` 运行时注入。内置 shape（rectangle / ellipse /
- *   sector / arc / polygon / star，circle / diamond 为 preset 别名）也是注册项（无内置特权）。
+ *   `paramsSchema`，**不进 IR**，走 `CompileOptions.shapes` 运行时注入。内置 provider（rectangle / ellipse /
+ *   sector / arc / polygon / star 等）也是注册项（无内置特权）；circle / diamond 是 core IR 保留的内置 shape preset，
+ *   不要求第三方实现独立 provider。
  *   每个计算函数末位收 per-instance `params`（类型由 `paramsSchema.parse` 在编译期保证），无参形状用
  *   `z.strictObject({})` 并忽略 `params`。
  */

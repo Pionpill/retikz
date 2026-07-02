@@ -1,4 +1,4 @@
-﻿import type { ShapeDefinition } from '../../contract';
+import type { ShapeDefinition } from '../../contract';
 import type { BuiltinShapeValue } from '../../schemas';
 
 import { defineBuiltinProviderArray, resolveProviderRegistry } from '../registry';
@@ -12,7 +12,7 @@ import { star } from './star';
 
 export type BuiltinShapeProviderName = Exclude<BuiltinShapeValue, 'circle' | 'diamond'> | 'sector' | 'arc' | 'polygon' | 'star' | 'contour';
 
-/** 内置 shape 注册项（circle / diamond 已收为 preset，不占独立项）。 */
+/** 内置 shape provider 注册项；circle / diamond 是 IR 内置 shape preset，不占独立 provider key。 */
 export const BUILTIN_SHAPES = defineBuiltinProviderArray<ShapeDefinition, BuiltinShapeProviderName>([
   rectangle,
   ellipseShape,

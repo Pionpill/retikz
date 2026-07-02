@@ -219,11 +219,9 @@ describe('ellipse nested params IR round-trip', () => {
   });
 });
 
-describe('circle 收为 ellipse equal preset 别名', () => {
-  // 以下 case 依赖实现 Agent 的 circle 规范化（compile/node.ts 把裸 'circle' →
-  // { type: 'ellipse', params: { circumscribe: 'equal' } }，并删 circle.ts 独立几何）。
-  // 规范化未落地前此刻 fail —— 预期。
-  it("circle_normalizes_to_ellipse_equal：shape:'circle' 编译等价显式 ellipse equal", () => {
+describe('circle 内置 shape preset 解析到 ellipse equal', () => {
+  // circle 是 core IR 内置 shape preset；compile 期解析为显式 ellipse-equal provider 形态。
+  it("circle_resolves_to_ellipse_equal：shape:'circle' 编译等价显式 ellipse equal", () => {
     const bareIr: IR = {
       version: 1,
       type: 'scene',
@@ -245,7 +243,7 @@ describe('circle 收为 ellipse equal preset 别名', () => {
     expect(compileToScene(bareIr).primitives).toEqual(compileToScene(explicitIr).primitives);
   });
 
-  it('circle_emit_equivalent：circle 规范化后 emit EllipsePrim 且 rx == ry（等轴）', () => {
+  it('circle_emit_equivalent：circle 解析后 emit EllipsePrim 且 rx == ry（等轴）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -274,7 +272,7 @@ describe('circle 收为 ellipse equal preset 别名', () => {
     expect(() => compileToScene(ir)).toThrow();
   });
 
-  it('circle_with_scale：circle 规范化后 × scale → 尺寸协同放大、仍正圆（rx == ry）', () => {
+  it('circle_with_scale：circle 解析后 × scale → 尺寸协同放大、仍正圆（rx == ry）', () => {
     const base = compileToScene({
       version: 1,
       type: 'scene',
@@ -332,11 +330,9 @@ describe('circle 收为 ellipse equal preset 别名', () => {
   });
 });
 
-describe('diamond 收为 polygon preset 别名（ADR-04）', () => {
-  // 以下 case 依赖实现 Agent 的 diamond 规范化（compile/node.ts 把裸 'diamond' →
-  // { type: 'polygon', params: { sides: 4, rotate: 0 } }，并删 diamond.ts 独立几何）。
-  // 规范化 + polygon 真实几何（anchor / boundaryPoint）未落地前以下 case fail —— 预期。
-  it("diamond_normalizes_to_polygon：shape:'diamond' 编译等价显式 polygon 4/0", () => {
+describe('diamond 内置 shape preset 解析到 polygon 4/0', () => {
+  // diamond 是 core IR 内置 shape preset；compile 期解析为显式 polygon 4/0 provider 形态。
+  it("diamond_resolves_to_polygon：shape:'diamond' 编译等价显式 polygon 4/0", () => {
     const bareIr: IR = {
       version: 1,
       type: 'scene',
@@ -358,7 +354,7 @@ describe('diamond 收为 polygon preset 别名（ADR-04）', () => {
     expect(compileToScene(bareIr).primitives).toEqual(compileToScene(explicitIr).primitives);
   });
 
-  it('diamond_emit_topology：diamond（规范化）emit 闭合 path（4 顶点 + close）', () => {
+  it('diamond_emit_topology：diamond preset 解析后 emit 闭合 path（4 顶点 + close）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -370,8 +366,8 @@ describe('diamond 收为 polygon preset 别名（ADR-04）', () => {
     expect(p!.commands.map(c => c.kind)).toEqual(['move', 'line', 'line', 'line', 'close']);
   });
 
-  it('diamond_anchor_matches_legacy：diamond（规范化）命名 anchor 与旧 diamond 一致', () => {
-    // diamond 规范化为 polygon 4/0 后，各命名 anchor 落点须与显式 polygon preset 一致。
+  it('diamond_anchor_matches_legacy：diamond preset 解析后命名 anchor 与旧 diamond 一致', () => {
+    // diamond 解析为 polygon 4/0 后，各命名 anchor 落点须与显式 polygon preset 一致。
     // 用 path 连接 'A.<anchor>' 比对两种 shape 写法的首端点（move 落点）。
     for (const anchor of [
       'center',

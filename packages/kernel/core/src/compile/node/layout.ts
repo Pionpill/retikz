@@ -1,4 +1,4 @@
-﻿import type { BoundaryDefinition } from '../../contract';
+import type { BoundaryDefinition } from '../../contract';
 import type { TextLine, Transform } from '../../contract';
 import type { ShapeDefinition } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
@@ -8,7 +8,6 @@ import type {
   IRLineSpec,
   IRNode,
   IRNodeLabel,
-  IRShapeRef,
   JsonValue,
 } from '../../schemas';
 import type { NameStack } from '../name-stack';
@@ -26,26 +25,10 @@ import { resolveShadow } from '../effects';
 import { resolvePosition } from '../position';
 import { layoutInlineLine, resolveLineRuns } from '../text-layout';
 import { DEFAULT_LABEL_DISTANCE, normalizeLabelPosition } from './labels';
+import { resolveNodeShapePreset } from './shape-presets';
 import { alignToTextAnchor, DEFAULT_FONT_SIZE, DEFAULT_LINE_HEIGHT_FACTOR, resolveDashPattern, wrapText } from './text';
 
 const DEFAULT_PADDING = 8;
-/**
- * 规范化 `Node.shape` 为 `{ type, params }`
- * @description 裸 string → `{ type, params: {} }`；`{ type, params? }` → params 缺省补 `{}`；
- *   缺省（undefined）→ `{ type: 'rectangle', params: {} }`。`'circle'`（裸 string）消解为
- *   `{ type: 'ellipse', params: { circumscribe: 'equal' } }`——circle 无独立几何，是 ellipse 等轴 preset 别名。
- *   `'diamond'`（裸 string）消解为 `{ type: 'polygon', params: { sides: 4, rotate: 0 } }`——diamond 无独立几何，
- *   是 polygon 4 边形 preset 别名。仅做形态归一，不查表 / 不校验。
- */
-const normalizeShape = (shape: IRNode['shape']): { type: string; params: IRJsonObject } => {
-  if (shape === undefined) return { type: 'rectangle', params: {} };
-  if (shape === 'circle') return { type: 'ellipse', params: { circumscribe: 'equal' } };
-  if (shape === 'diamond') return { type: 'polygon', params: { sides: 4, rotate: 0 } };
-  if (typeof shape === 'string') return { type: shape, params: {} };
-  const ref: IRShapeRef = shape;
-  return { type: ref.type, params: ref.params ?? {} };
-};
-
 /**
  * 递归把 JSON 值里所有数值叶子乘以 factor（数组 / 对象深入，string / boolean / null 原样）
  * @description 用于 shape params 随 node scale 协同缩放；输入已是 JSON-safe（双护栏过），输出仍 JSON-safe。
@@ -74,8 +57,8 @@ export const layoutNode = (
   resolveBetweenGlobal?: ResolveBetweenGlobal,
   texLowering?: TexLoweringContext,
 ): NodeLayout => {
-  // shape 解析（入口立即报错）：裸 string → { type, params:{} }，对象原样；按 type 查表，未注册抛错列出可用名
-  const { type: shapeName, params: rawShapeParams } = normalizeShape(node.shape);
+  // shape preset 解析（入口立即报错）：裸 string → provider 查询形态；按 type 查表，未注册抛错列出可用名
+  const { type: shapeName, params: rawShapeParams } = resolveNodeShapePreset(node.shape);
   // own-property 校验：既得到 `ShapeDefinition | undefined` 类型（让未注册分支成立），又避开
   // `'toString'` 等原型链 key 被 Record 索引误命中（开放字符串 shape 名的边界安全）
   const shapeDef = providerDefinitionOf(shapes, shapeName, { capability: 'shape', optionName: 'shapes' });

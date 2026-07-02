@@ -164,7 +164,7 @@ describe('[adversarial] JSON round-trip 自描述', () => {
     const node = { type: 'node', id: 'c', position: [0, 0], shape: 'circle' };
     const parsed = NodeSchema.parse(node);
     const round = NodeSchema.parse(JSON.parse(JSON.stringify(parsed)));
-    // IR 自描述：shape 字段应保留 'circle'，规范化只在 compile 内部，不写回 IR
+    // IR 自描述：shape 字段应保留 'circle'，preset 解析只在 compile 内部，不写回 IR
     expect(round.shape).toBe('circle');
   });
 
@@ -287,7 +287,7 @@ describe('[adversarial] shape type 失稳', () => {
     expect(() => ShapeRefSchema.parse({ type: '' })).toThrow();
   });
 
-  it('[adversarial] shape:"circle" 注册表查不到 circle（已收为 preset）但 normalizeShape 先消解 → 应正常编译', () => {
+  it('[adversarial] shape:"circle" 是内置 preset，经 compile 解析后应正常编译', () => {
     expect(() => compileNode({ shape: 'circle', text: 'x' })).not.toThrow();
   });
 
@@ -483,9 +483,9 @@ describe('[adversarial] boundaryPoint / AABB 数值稳定', () => {
   });
 });
 
-// ════════════════ 攻击面 10：收敛别名 × 交叉 ════════════════
+// ════════════════ 攻击面 10：shape preset × anchor / scale 交叉 ════════════════
 
-describe('[adversarial] 别名 × anchor / scale 交叉', () => {
+describe('[adversarial] shape preset × anchor / scale 交叉', () => {
   it('[adversarial] diamond（→polygon 4/0）的 anchor "top" 应与 rect anchor 一致、不抛', () => {
     expect(() =>
       compileToScene(

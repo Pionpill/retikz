@@ -16,7 +16,7 @@ import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } fro
  * polygon shape 的 per-instance params 类型
  * @description 由 paramsSchema z.infer 派生（单一来源 zod）；sides = 边数（≥3），rotate = 起始顶点自旋角（度，可选），
  *   cornerRadius = 顶点倒角半径（user units，可选，逐角夹紧）。
- *   diamond 收敛为此 shape 的 `{ sides: 4, rotate: 0 }` preset 别名。
+ *   diamond 作为内置 shape preset 在 compile 期解析为此 shape 的 `{ sides: 4, rotate: 0 }`。
  */
 type PolygonParams = {
   sides: number;
@@ -98,7 +98,7 @@ const polygonVertices = (bounds: Rect, radius: number, params: PolygonParams): A
  *   （多边形关于中心对称，AABB 中心 = 形心 = node position）。命名 anchor 走外接 AABB 的 9 名 rect anchor（不随
  *   cornerRadius 移）；self-rotate（params.rotate）与 Node.rotate 叠加。scaleParams：cornerRadius 是长度随 scale
  *   缩（几何均值因子），sides 计数 / rotate 角度不缩。
- *   diamond ≡ `{ type: 'polygon', params: { sides: 4, rotate: 0 } }`，由 compile 规范化。
+ *   diamond ≡ `{ type: 'polygon', params: { sides: 4, rotate: 0 } }`，由 compile 解析。
  */
 export const polygon = defineShape({
   name: 'polygon',
