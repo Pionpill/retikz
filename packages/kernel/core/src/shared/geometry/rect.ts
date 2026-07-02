@@ -19,6 +19,7 @@ export type Rect = {
   rotate?: number;
 };
 
+/** 矩形几何工具集合，统一处理中心点、锚点、边界点和边上比例点。 */
 export const rect = {
   /** 几何中心 */
   center: (r: Rect): Position => [r.x, r.y],

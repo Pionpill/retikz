@@ -1,18 +1,18 @@
 import type { PathCommand } from './path';
 
-/** Rectangular Scene clip shape in user coordinates. */
+/** 用户坐标系中的矩形 Scene 裁剪形状。 */
 export type RectClipShape = { kind: 'rect'; x: number; y: number; width: number; height: number };
 
-/** Circular Scene clip shape in user coordinates. */
+/** 用户坐标系中的圆形 Scene 裁剪形状。 */
 export type CircleClipShape = { kind: 'circle'; cx: number; cy: number; r: number };
 
-/** Elliptical Scene clip shape in user coordinates. */
+/** 用户坐标系中的椭圆 Scene 裁剪形状。 */
 export type EllipseClipShape = { kind: 'ellipse'; cx: number; cy: number; rx: number; ry: number };
 
-/** Polygonal Scene clip shape in user coordinates. */
+/** 用户坐标系中的多边形 Scene 裁剪形状。 */
 export type PolygonClipShape = { kind: 'polygon'; points: Array<[number, number]> };
 
-/** Path-based Scene clip shape using structured path commands. */
+/** 使用结构化路径命令描述的 Scene 裁剪形状。 */
 export type PathClipShape = {
   kind: 'path';
   commands: Array<PathCommand>;
@@ -23,7 +23,7 @@ export type PathClipShape = {
   fillRule?: 'nonzero' | 'evenodd';
 };
 
-/** Compound Scene clip shape made of nested clip shapes. */
+/** 由嵌套裁剪形状组合而成的复合 Scene 裁剪形状。 */
 export type CompoundClipShape = {
   kind: 'compound';
   children: Array<ClipShape>;
@@ -34,7 +34,7 @@ export type CompoundClipShape = {
   fillRule?: 'nonzero' | 'evenodd';
 };
 
-/** Scene clip shape union consumed by render adapters. */
+/** renderer adapter 消费的 Scene 裁剪形状联合类型。 */
 export type ClipShape =
   | RectClipShape
   | CircleClipShape
@@ -43,7 +43,7 @@ export type ClipShape =
   | PathClipShape
   | CompoundClipShape;
 
-/** Named Scene clip resource referenced by primitives or groups. */
+/** 可被 primitive 或 group 引用的具名 Scene 裁剪资源。 */
 export type ClipResource = {
   kind: 'clip';
   id: string;

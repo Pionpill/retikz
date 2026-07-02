@@ -7,6 +7,7 @@ import type { BlendModeValue, ResolvedDropShadow } from '../../schemas';
 import type { IRJsonObject } from '../../schemas';
 import type { PaintValue } from './paint';
 
+/** 椭圆原语，圆形复用 rx=ry 的同一 Scene 分支。 */
 export type EllipsePrim = {
   type: 'ellipse';
   /** 稳定挂点 id：compile 从 IR 元素 user id stamp，供 renderer emit data-retikz-id / canvas hit-test */
