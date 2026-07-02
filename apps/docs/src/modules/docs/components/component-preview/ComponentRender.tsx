@@ -1,0 +1,504 @@
+﻿import type { FC, ReactNode } from 'react';
+
+import { Ban, BotMessageSquare, ChevronsDownUp, ChevronsUpDown, Diff, Minus, Plus, X } from 'lucide-react';
+import { Fragment, useRef, useState } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { cn } from '@/lib/utils';
+import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
+import { useComponentPreviewStore } from '@/modules/docs/store/use-component-preview-store';
+
+import type {
+  AlignKey,
+  ComponentRenderSource,
+  DiffMode,
+  PreviewAction,
+  PreviewActionContext,
+  PreviewOverlay,
+  RendererMode,
+  SizeKey,
+  UnifiedDiff,
+} from './_shared';
+
+import { HighlightedCode } from '../highlight-code';
+import { CopyButton, SourceViewBar, ToolbarIconButton } from './_parts';
+import { alignClass, filterDiffByMode, PreviewActionStateContext, sizeClass } from './_shared';
+import { ANIM_PAUSE_ID, buildAnimationActions } from './animation-actions';
+import { ComponentDetailDialog } from './ComponentDetailDialog';
+import { DemoRenderer } from './DemoRenderer';
+import { PanZoomToolbar } from './PanZoomToolbar';
+import { PreviewActionBar } from './PreviewActionBar';
+import { usePanZoom } from './use-pan-zoom';
+import { useSourceViews } from './use-source-views';
+
+export type { ComponentRenderSource } from './_shared';
+
+/**
+ * 反查最近的前置 heading：从当前节点出发往左找兄弟，找不到就上一层继续
+ * @description MDX 渲染产物里 ComponentPreview 卡和 h2/h3 标题是同级兄弟节点（被 article 容器包裹），常规一两轮回溯就能命中；找不到（页面首部无标题）返回 null
+ */
+const findPrecedingHeading = (el: HTMLElement | null): HTMLElement | null => {
+  if (!el) return null;
+  let sib: Element | null = el.previousElementSibling;
+  while (sib) {
+    if (/^H[1-6]$/.test(sib.tagName)) return sib as HTMLElement;
+    sib = sib.previousElementSibling;
+  }
+  return el.parentElement ? findPrecedingHeading(el.parentElement) : null;
+};
+
+const buildAskAiPrompt = (lang: 'zh' | 'en', pageTitle: string, heading: string, demoName: string): string => {
+  if (lang === 'en') {
+    const ref = heading ? `the "${heading}" section of ${pageTitle}` : pageTitle;
+    return `Based on ${ref}, walk me through the \`${demoName}\` example:
+
+- Implementation rationale + key retikz APIs used
+- How could I modify or extend it`;
+  }
+  const ref = heading ? `${pageTitle}「${heading}」小节` : pageTitle;
+  return `请基于${ref}里的 \`${demoName}\` 示例：
+
+- 解释它的实现思路 + 关键 retikz API 用法
+- 可以怎么改 / 怎么扩展`;
+};
+
+/** 折叠态显示前几行 */
+const PREVIEW_MAX_LINES = 3;
+/** 已 View Code 之后默认折叠状态下的代码区高度上限（按 ~15 行 × 1.5em line-height + 一点点 padding 算） */
+const COLLAPSED_CODE_MAX_H = '[&_pre]:max-h-[15rem] [&_pre]:overflow-y-auto';
+/** 触发「展开/收起」按钮的最小行数门槛 */
+const COLLAPSE_THRESHOLD_LINES = 10;
+
+export type ComponentRenderProps = {
+  /** demo 标识（仅用于 Dialog header 显示） */
+  name: string;
+  Component: FC;
+  /** 代码区视图集合；缺省时整段代码面板与 Dialog 右栏都不渲染 */
+  source?: ComponentRenderSource;
+  /** 渲染区垂直对齐，默认 center */
+  align?: AlignKey;
+  /** 渲染区高度档位（xs / sm / md / lg / xl），默认 `md` */
+  size?: SizeKey;
+  /** 透传到 demo 渲染区父级 div 的 className，可覆盖默认高度 / p-10 / 居中等 */
+  componentClassName?: string;
+  /** 是否显示右侧工具条的 Ask AI 按钮，默认 true；在 AI 面板内（如 RetikzPreview）渲染时关掉避免自指 */
+  showAskAi?: boolean;
+  /** 交互式 demo（含 hooks / 异步）：真渲染 `<Component/>`，隐藏 svg/canvas 切换；IR / Vanilla 视图由调用方置空后自动消失 */
+  interactive?: boolean;
+  /** demo 含动画：自动装配内置动画工具（重播 / 播放暂停 / 停止）到左上角动作栏 */
+  animated?: boolean;
+  /** 自定义动作按钮（追加在内置工具之后，渲染在左上角动作栏） */
+  actions?: Array<PreviewAction>;
+  /** 自定义动作栏是否常驻显示；默认 true */
+  actionsAlwaysVisible?: boolean;
+  /** 渲染区内常驻浮层（如未来的 FPS 监视器面板） */
+  overlays?: Array<PreviewOverlay>;
+};
+
+/**
+ * 演示卡核心：接已解析好的 Component + 源码视图，渲染卡片骨架 / pan&zoom 工具条 / 代码面板 / 放大对话框
+ * @description 不接触 demo 文件加载、AST 解析或 IR 派生——那些由调用方（`ComponentPreview` 走 glob、`RetikzPreview` 走 source string）准备好后喂进来
+ */
+export const ComponentRender: FC<ComponentRenderProps> = props => {
+  const {
+    name,
+    Component,
+    source,
+    align = 'center',
+    size = 'md',
+    componentClassName,
+    showAskAi = true,
+    interactive,
+    animated = false,
+    actions,
+    actionsAlwaysVisible = true,
+    overlays,
+  } = props;
+  // 局部状态用 `boolean | undefined`：undefined 跟随全局默认；用户单卡操作过一次后本地选择胜出
+  const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);
+  const [sourceFileIndex, setSourceFileIndex] = useState(0);
+  const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
+  // diff 模式默认 'added'（有 diff 数据时）；用户选过一次后 localDiffMode 胜出。
+  // 偏好 added/removed 优先于 full：full unified（current + 删除行交织）阅读噪声大，教学场景只看新增 / 只看删除更直观
+  const [localDiffMode, setLocalDiffMode] = useState<DiffMode | undefined>(undefined);
+  // 视图选择 + 当前视图文件 + 复制：统一走 useSourceViews（与 Dialog 共用同一份推导，任意视图都能多文件 + diff）
+  const {
+    views,
+    view,
+    setView,
+    files,
+    activeFileIndex,
+    activeFile,
+    render: activeRender,
+    copied,
+    handleCopy,
+  } = useSourceViews(source, sourceFileIndex);
+  const hasCode = views.length > 0;
+  // 卡内 drag 默认关闭：local 为 undefined 时跟随全局；单卡点过 Hand 后本地胜出
+  const [localDragEnabled, setLocalDragEnabled] = useState<boolean | undefined>(undefined);
+  // 卡内 svg/canvas 切换只作用于本卡：local 为 undefined 时跟随全局默认（Header 菜单设），单卡切过一次后本地胜出
+  const [localRendererMode, setLocalRendererMode] = useState<RendererMode | undefined>(undefined);
+  // 用户在 PanZoomToolbar 切了 size 之后本地胜出；未切时跟随 prop 的 size
+  const [localSize, setLocalSize] = useState<SizeKey | undefined>(undefined);
+  const effectiveSize = localSize ?? size;
+  // 工具条 pinned：移动端没 hover，靠 tap preview 区域 toggle
+  const [toolbarPinned, setToolbarPinned] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
+  // 重播：bump nonce → keyed Fragment 重挂渲染子树（CSS @keyframes / canvas rAF / WAAPI 重置）
+  const [replayNonce, setReplayNonce] = useState(0);
+  // per-card 工具开关态（播放暂停、未来性能监视器等 toggle 类工具）
+  const [toolState, setToolState] = useState<Record<string, boolean>>({});
+  const [actionValues, setActionValues] = useState<Record<string, string>>({});
+  const { transform, isDragging, panBy, zoomBy, resetTransform, isTransformed, transformStyle, beginDrag } =
+    usePanZoom();
+  // outer card ref：Ask AI 时反查最近前置 heading 拼 prompt 用
+  const containerRef = useRef<HTMLDivElement>(null);
+  // 渲染区内 transform 容器的 ref：下载时从里头 querySelector('svg') 拿到当前展示的 SVG 节点
+  const renderPaneRef = useRef<HTMLDivElement>(null);
+  const setAiOpen = useAiChatStore(s => s.setOpen);
+  const fillAiDraft = useAiChatStore(s => s.fillDraftAndFocus);
+  const aiCurrentPage = useAiChatStore(s => s.currentPage);
+
+  const globalHideCode = useComponentPreviewStore(s => s.hideCode);
+  const globalIsExpand = useComponentPreviewStore(s => s.isExpand);
+  const globalDragEnabled = useComponentPreviewStore(s => s.dragEnabled);
+  const globalRendererMode = useComponentPreviewStore(s => s.rendererMode);
+  const isCodeVisible = localIsCodeVisible ?? globalHideCode;
+  const isExpanded = localIsExpanded ?? globalIsExpand;
+  const dragEnabled = localDragEnabled ?? globalDragEnabled;
+  const rendererMode = localRendererMode ?? globalRendererMode;
+  // 单卡 svg/canvas 切换写本地 override，不动全局 store → 只影响当前卡
+  const toggleRendererMode = () => setLocalRendererMode(rendererMode === 'svg' ? 'canvas' : 'svg');
+
+  // 当前文件的真实源码 / 语言 / diff（任意视图均可带 diff，不再限 React）
+  const activeCode = activeFile?.code ?? '';
+  const activeLang = activeFile?.lang ?? 'tsx';
+  const activeDiff = activeFile?.diff;
+
+  // teaser 判定基于当前文件行数（初始 view=react，展示首几行 + View Code）
+  const codeLineCount = activeCode.split('\n').length;
+  const codeHasMoreLines = codeLineCount > PREVIEW_MAX_LINES;
+  const codePreview = activeCode.split('\n').slice(0, PREVIEW_MAX_LINES).join('\n');
+  const usesTeaser = hasCode && codeHasMoreLines;
+  const showFull = !usesTeaser || isCodeVisible;
+
+  // 默认 'added'：有 diff 数据 → 默认只看新增；用户在下拉里改过 mode 后 local 胜出
+  const hasActiveDiff = activeDiff !== undefined;
+  const diffMode: DiffMode = localDiffMode ?? (hasActiveDiff ? 'added' : 'off');
+  // 展开态 + 有 diff + mode≠off → 按 mode 过滤 unified diff（任意视图）
+  const displayedDiff: UnifiedDiff | null =
+    showFull && activeDiff !== undefined && diffMode !== 'off' ? filterDiffByMode(activeDiff, diffMode) : null;
+  const displayedCode = showFull ? (displayedDiff?.code ?? activeCode) : codePreview;
+  const displayedLang = activeLang;
+  const displayedLineCount = displayedCode.split('\n').length;
+  const displayedLineKinds = displayedDiff?.lineKinds;
+  // 右侧工具条 diff 下拉：展开态 + 有 diff 数据时出（任意视图）
+  const showDiffPicker = hasActiveDiff && showFull;
+
+  const handleHideAll = () => {
+    setLocalIsCodeVisible(false);
+    setLocalIsExpanded(false);
+    setView('react');
+  };
+
+  const downloadBlob = (blob: Blob, fileName: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadDataUrl = (dataUrl: string, fileName: string) => {
+    const [header = '', payload = ''] = dataUrl.split(',');
+    const mimeType = header.match(/^data:([^;]+)/)?.[1] ?? 'application/octet-stream';
+    const binary = window.atob(payload);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    downloadBlob(new Blob([bytes], { type: mimeType }), fileName);
+  };
+
+  const downloadSvg = () => {
+    const svg = renderPaneRef.current?.querySelector('svg');
+    if (!svg) return;
+    let svgSource = new XMLSerializer().serializeToString(svg);
+    // 序列化 React 渲染出的 svg 不一定带 xmlns；离线打开 / 嵌别处时缺它会被当 HTML 解析
+    if (!/\sxmlns=/.test(svgSource)) {
+      svgSource = svgSource.replace(/<svg\b/, '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    downloadBlob(
+      new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${svgSource}`], {
+        type: 'image/svg+xml;charset=utf-8',
+      }),
+      `${name || 'retikz'}.svg`,
+    );
+  };
+
+  const downloadCanvas = () => {
+    const canvas = renderPaneRef.current?.querySelector('canvas');
+    if (!canvas) return;
+    try {
+      const fileName = `${name || 'retikz'}.png`;
+      if (typeof canvas.toBlob === 'function') {
+        canvas.toBlob(blob => {
+          if (!blob) return;
+          downloadBlob(blob, fileName);
+        }, 'image/png');
+        return;
+      }
+      downloadDataUrl(canvas.toDataURL('image/png'), fileName);
+    } catch {
+      // canvas 可能因跨域图片被标记为 tainted，此时浏览器会阻止导出
+    }
+  };
+
+  /** 下载当前渲染图：SVG 模式导出 `.svg`，Canvas 模式导出 `.png`。 */
+  const handleDownload = () => {
+    if (rendererMode === 'canvas') {
+      downloadCanvas();
+      return;
+    }
+    downloadSvg();
+  };
+
+  const handleAskAi = () => {
+    const heading = findPrecedingHeading(containerRef.current);
+    const lang = aiCurrentPage?.lang ?? 'zh';
+    const pageTitle = aiCurrentPage?.title ?? '';
+    const headingText = (heading?.textContent ?? '').trim();
+    const prompt = buildAskAiPrompt(lang, pageTitle, headingText, name);
+    setAiOpen(true);
+    fillAiDraft(prompt);
+  };
+
+  const cardDragCursor = dragEnabled ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : '';
+
+  // 动作 / 浮层共享上下文：每次渲染重建（active 读当前 toolState、renderPane 用 getter 取最新 ref）
+  const actionCtx: PreviewActionContext = {
+    replay: () => setReplayNonce(n => n + 1),
+    rendererMode,
+    get renderPane() {
+      return renderPaneRef.current;
+    },
+    active: id => toolState[id] ?? false,
+    setActive: (id, on) => setToolState(prev => ({ ...prev, [id]: on ?? !prev[id] })),
+    actionValue: id => actionValues[id],
+    setActionValue: (id, value) => setActionValues(prev => ({ ...prev, [id]: value })),
+  };
+  // 有效动作 = 内置工具（含动画时的重播/播放暂停/停止）∪ 自定义 actions
+  const builtinActions = animated ? buildAnimationActions(toolState[ANIM_PAUSE_ID] ?? false) : [];
+  const allActions: Array<PreviewAction> = [...builtinActions, ...(actions ?? [])];
+  const previewActionState = {
+    values: actionValues,
+    setValue: actionCtx.setActionValue,
+  };
+  const overlayNodes: Array<ReactNode> = (overlays ?? []).map(o => (
+    <Fragment key={o.id}>{o.render(actionCtx)}</Fragment>
+  ));
+
+  return (
+    <div ref={containerRef} className="my-6 overflow-hidden rounded-xl border">
+      <div
+        className={cn(
+          'group/preview relative flex w-full justify-center overflow-hidden p-6 sm:p-10 select-none',
+          sizeClass[effectiveSize],
+          alignClass[align],
+          // 触摸设备启用拖拽时关闭浏览器原生 pan/zoom；关闭时保持默认 touch-action 让用户能正常滚动页面经过 demo
+          dragEnabled && 'touch-none',
+          cardDragCursor,
+          componentClassName,
+        )}
+        onMouseDown={beginDrag(dragEnabled)}
+        onTouchStart={beginDrag(dragEnabled)}
+        onClick={() => setToolbarPinned(prev => !prev)}
+      >
+        <div
+          ref={renderPaneRef}
+          className={cn(
+            // SVG / Canvas 都按父框收紧，不超出宽 / 高；TikZ 自身 width/height 只是 intrinsic 上限
+            'flex items-center justify-center max-w-full max-h-full [&>canvas]:max-w-full [&>canvas]:max-h-full [&>svg]:max-w-full [&>svg]:max-h-full',
+            !isDragging && 'transition-transform duration-150',
+          )}
+          style={{ transform: transformStyle }}
+        >
+          <Fragment key={replayNonce}>
+            <PreviewActionStateContext.Provider value={previewActionState}>
+              {activeRender ? (
+                activeRender(rendererMode)
+              ) : (
+                <DemoRenderer Component={Component} rendererMode={rendererMode} interactive={interactive} />
+              )}
+            </PreviewActionStateContext.Provider>
+          </Fragment>
+        </div>
+        <PreviewActionBar
+          actions={allActions}
+          ctx={actionCtx}
+          pinned={toolbarPinned}
+          alwaysVisible={actionsAlwaysVisible && (actions?.length ?? 0) > 0}
+        />
+        {overlayNodes}
+        <PanZoomToolbar
+          transform={transform}
+          isTransformed={isTransformed}
+          panBy={panBy}
+          zoomBy={zoomBy}
+          resetTransform={resetTransform}
+          dragEnabled={dragEnabled}
+          toggleDrag={() => setLocalDragEnabled(!dragEnabled)}
+          onMaximize={() => setIsMaximized(true)}
+          size={effectiveSize}
+          onSizeChange={setLocalSize}
+          onDownload={handleDownload}
+          rendererMode={rendererMode}
+          toggleRendererMode={toggleRendererMode}
+          pinned={toolbarPinned}
+        />
+      </div>
+      {hasCode ? (
+        <div className="relative overflow-hidden border-t bg-muted/50 text-sm">
+          {showFull ? (
+            <>
+              <div className="flex items-center justify-between p-1 px-2">
+                <div className="flex min-w-0 flex-1 items-center gap-1">
+                  <SourceViewBar
+                    views={views}
+                    view={view}
+                    onViewChange={setView}
+                    files={files}
+                    activeFileIndex={activeFileIndex}
+                    onFileChange={setSourceFileIndex}
+                  />
+                </div>
+                {/* 工具条上每个按钮用 native title 而非 radix Tooltip + asChild：
+                   项目 React 18.2 下 shadcn Button / DropdownMenuTrigger / TooltipTrigger 都是 FC 不 forwardRef，
+                   `<TooltipTrigger asChild>` 透传 ref 给 FC 会触发 React warning + 偶发未捕获错误把整树 unmount。
+                   原生 title 没 portal / ref 链路，最稳。视觉上 toolbar 已经 icon-only + aria-label，可达性不丢 */}
+                <div className="flex items-center gap-1">
+                  {showDiffPicker && (
+                    <ToggleGroup
+                      type="single"
+                      variant="outline"
+                      value={diffMode}
+                      onValueChange={value => {
+                        // radix 单选 ToggleGroup 在点击已激活项时会回 ''（取消选择）；这里禁掉取消，保证 diffMode 始终有 mode
+                        if (value === 'off' || value === 'added' || value === 'removed' || value === 'full') {
+                          setLocalDiffMode(value);
+                        }
+                      }}
+                      className="mr-1"
+                    >
+                      <ToggleGroupItem
+                        value="off"
+                        aria-label="Diff off"
+                        title="Off"
+                        className="h-7 min-w-7 cursor-pointer px-1.5"
+                      >
+                        <Ban className="size-3.5" />
+                      </ToggleGroupItem>
+                      <ToggleGroupItem
+                        value="added"
+                        aria-label="Added only"
+                        title="Added only"
+                        className="h-7 min-w-7 cursor-pointer px-1.5"
+                      >
+                        <Plus className="size-3.5" />
+                      </ToggleGroupItem>
+                      <ToggleGroupItem
+                        value="removed"
+                        aria-label="Removed only"
+                        title="Removed only"
+                        className="h-7 min-w-7 cursor-pointer px-1.5"
+                      >
+                        <Minus className="size-3.5" />
+                      </ToggleGroupItem>
+                      <ToggleGroupItem
+                        value="full"
+                        aria-label="Full diff"
+                        title="Full diff"
+                        className="h-7 min-w-7 cursor-pointer px-1.5"
+                      >
+                        <Diff className="size-3.5" />
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  )}
+                  <CopyButton copied={copied} onCopy={handleCopy} title={copied ? 'Copied' : 'Copy'} />
+                  {showAskAi && (
+                    <ToolbarIconButton label="Ask AI" title="Ask AI" onClick={handleAskAi}>
+                      <BotMessageSquare className="size-4" />
+                    </ToolbarIconButton>
+                  )}
+                  {displayedLineCount > COLLAPSE_THRESHOLD_LINES && (
+                    <ToolbarIconButton
+                      label={isExpanded ? 'Collapse' : 'Expand'}
+                      title={isExpanded ? 'Collapse' : 'Expand'}
+                      onClick={() => setLocalIsExpanded(!isExpanded)}
+                    >
+                      {isExpanded ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
+                    </ToolbarIconButton>
+                  )}
+                  <ToolbarIconButton label="Hide source" title="Hide source" onClick={handleHideAll}>
+                    <X className="size-4" />
+                  </ToolbarIconButton>
+                </div>
+              </div>
+              <Separator className="opacity-40" />
+            </>
+          ) : null}
+          <div className={cn('relative', showFull && !isExpanded && COLLAPSED_CODE_MAX_H)}>
+            <HighlightedCode
+              lang={displayedLang}
+              code={displayedCode}
+              showLineNumbers={displayedLineCount >= 10}
+              lineKinds={displayedLineKinds}
+            />
+            {!showFull && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      'linear-gradient(to top, var(--muted), color-mix(in oklab, var(--muted) 60%, transparent), transparent)',
+                  }}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setLocalIsCodeVisible(true)}
+                  className="relative z-10 cursor-pointer rounded-lg bg-background text-foreground shadow-none hover:bg-muted dark:bg-background dark:text-foreground dark:hover:bg-muted font-medium"
+                >
+                  View Code
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+      <ComponentDetailDialog
+        open={isMaximized}
+        onOpenChange={setIsMaximized}
+        name={name}
+        Component={Component}
+        source={source}
+        align={align}
+        rendererMode={rendererMode}
+        toggleRendererMode={toggleRendererMode}
+        interactive={interactive}
+        animated={animated}
+        actions={actions}
+        actionsAlwaysVisible={actionsAlwaysVisible}
+        overlays={overlays}
+        sourceFileIndex={activeFileIndex}
+        onSourceFileIndexChange={setSourceFileIndex}
+      />
+    </div>
+  );
+};

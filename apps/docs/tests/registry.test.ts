@@ -2,11 +2,11 @@ import { CoordinateSchema, MoveStepSchema, RelativeTargetSchema, SceneSchema } f
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { lookupSchema, SCHEMA_REGISTRY } from '@/lib/schema-registry';
+import { lookupSchema, SCHEMA_REGISTRY } from '@/modules/docs/components/zod-schema/schema-registry';
 
 describe('SCHEMA_REGISTRY', () => {
-  it('contains 39 entries (23 primary + 12 step variants + 2 target variants + 2 arrow detail variants)', () => {
-    expect(Object.keys(SCHEMA_REGISTRY)).toHaveLength(39);
+  it('contains 40 entries (23 primary + 12 step variants + 2 target variants + 3 arrow detail variants)', () => {
+    expect(Object.keys(SCHEMA_REGISTRY)).toHaveLength(40);
   });
 
   it('each entry has non-empty schema / label / url', () => {

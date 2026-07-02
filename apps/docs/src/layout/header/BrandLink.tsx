@@ -1,8 +1,8 @@
-import type { FC } from 'react';
+﻿import type { FC } from 'react';
 
 import { Link, useLocation } from 'react-router';
 
-import { resolveModule } from '@/data/module';
+import { resolveModule } from '@/modules/docs/data/module';
 
 /**
  * 顶栏左侧 brand：logo + 模块名 + 版本 badge

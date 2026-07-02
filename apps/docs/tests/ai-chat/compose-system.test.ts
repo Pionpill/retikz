@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
-import type { CurrentPage } from '@/layout/ai-chat/context';
+import type { CurrentPage } from '@/modules/docs/ai-chat/context';
 
-import { composeSystem } from '@/layout/ai-chat/context';
+import { composeSystem } from '@/modules/docs/ai-chat/context';
 
 /**
  * system prompt 与 alpha.6 同步（ADR-03 + ADR-01）

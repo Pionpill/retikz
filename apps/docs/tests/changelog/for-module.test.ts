@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
-import type { PackageId } from '@/data/changelog.types';
+import type { PackageId } from '@/modules/docs/data/changelog.types';
 
-import { changelogForModule, changelogVersionSlug } from '@/data/changelog';
-import { PACKAGE_GROUPS } from '@/data/changelog.types';
+import { changelogForModule, changelogVersionSlug } from '@/modules/docs/data/changelog';
+import { PACKAGE_GROUPS } from '@/modules/docs/data/changelog.types';
 
 const membersOf = (id: 'kernel' | 'graph' | 'other'): Set<PackageId> =>
   new Set(PACKAGE_GROUPS.find(g => g.id === id)?.members ?? []);
