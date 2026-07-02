@@ -17,32 +17,20 @@ import type { NodeLayout } from './node';
 import type { StyleFrame } from './style';
 import type { TextMeasurer } from './text-metrics';
 
-import { resolveArrowRegistry } from '../providers/arrow';
-import { resolveBoundaryRegistry } from '../providers/boundary';
-import { resolveClipRegistry } from '../providers/clip';
-import { resolveCompositeRegistry } from '../providers/composite';
-import { resolvePathGeneratorRegistry } from '../providers/path';
-import { resolvePathKindRegistry } from '../providers/path-kind';
-import { resolvePatternRegistry } from '../providers/pattern';
 import { providerDefinitionOf } from '../providers/registry';
-import { resolveRibbonWidthProfileRegistry } from '../providers/ribbon';
-import { resolveShapeRegistry } from '../providers/shape';
 import { ScopeBoundingShape } from '../schemas';
 import { WebAnchor } from '../shared';
 import { rect as rectOps } from '../shared/geometry';
 import { filterAnimations } from './animation';
-import { createClipRegistry } from './clip';
-import { lowerComposites } from './composite';
-import { CompileWarningCode, formatCompileWarning } from './constant';
+import { CompileWarningCode } from './constant';
+import { createCompileContext } from './context';
 import { resolveShadow } from './effects';
 import { computeLayout } from './layout';
 import { NameStack } from './name-stack';
 import { emitNodePrimitives, labelExtentPoints, layoutNode, outerRectOf } from './node';
-import { createPaintRegistry } from './paint';
 import { emitPathPrimitive, refPointOfTarget } from './path';
 import { emitRibbonPrimitive } from './path/ribbon';
 import { resolvePosition } from './position';
-import { createRound, DEFAULT_PRECISION } from './precision';
 import { assertFiniteLayout, viewBoxToLayout } from './scene-layout';
 import {
   applyTransformChain,
@@ -54,7 +42,6 @@ import {
   registerScopeCircleLayout,
 } from './scope';
 import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle } from './style';
-import { fallbackMeasurer } from './text-metrics';
 
 export type { CompileWarning } from './constant';
 export { CompileWarningCode } from './constant';
@@ -262,15 +249,6 @@ export type CompileOptions = {
 };
 
 /**
- * 默认 warn dispatcher：dev 模式 console.warn、生产静默
- * @description 用户传 onWarn 时使用用户的；不传走此 fallback
- */
-const defaultWarnDispatcher = (warning: CompileWarning): void => {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return;
-  console.warn(formatCompileWarning(warning));
-};
-
-/**
  * Pass 1 递归扫描时记录的 pending path
  * @description path 必须等所有 node / coordinate Pass 1 注册完才能解析端点（避免前向引用），但 lookup 必须在它所在的 frame 栈上下文中进行——scope localNamespace 内 path 引用同 frame id 需在 frame pop 前完成。compile 处理顺序：每个层级先把子 node / coordinate / 子 scope 处理完（pending path 全部收集），然后**在该层 popFrame 前**统一 resolve 本层 pending path；这样 path 端点 inside-out lookup 能正确看到本层 frame。
  *   `scopeChain` 字段记录该 path 所在 scope 的累积 transform 链，让 path step 内 polar/at/offset
@@ -347,31 +325,23 @@ const formatDuplicateWarning = (info: DuplicateRegisterInfo): CompileWarning => 
  * @description Pass 1 递归处理 node / coordinate / scope，把 scope 树下沉为嵌套 GroupPrim；scope.transforms 中的 5 种 translate 变体按 lowerScopeTransforms 展平为 Cartesian transform；node 在 Scene primitive 树里是局部坐标 + GroupPrim transform 链、在 NameStack 中存全局坐标供其他节点 / path 引用。NameStack 用栈式 frame 管理命名空间：默认全局扁平、`<Scope localNamespace>` 推入子 frame；scope.id 始终在父 frame 注册（外部句柄）；id lookup 从栈顶向栈底 inside-out 搜索；同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + 后定义覆盖前定义。Pass 2 解析 path 端点写 d 字符串，path primitive 发到 Pass 1 记录的对应容器；末端按 precision 折算 layout
  */
 export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
-  const measureText = options.measureText ?? fallbackMeasurer;
-  const layoutPadding = options.padding ?? 10;
-  const round = createRound(options.precision ?? DEFAULT_PRECISION);
-  const nodeDistance = options.nodeDistance;
-  const onWarn = options.onWarn ?? defaultWarnDispatcher;
-
-  // Tier 2：第一步据注册表把 composite 节点展开成 Tier 1（未注册 warn + skip），后续 pass 只见 Tier 1
-  const loweredIr = lowerComposites(ir, resolveCompositeRegistry(options.composites), {
+  const {
+    loweredIr,
+    measureText,
+    layoutPadding,
+    round,
+    nodeDistance,
     onWarn,
-    maxDepth: options.maxCompositeDepth,
-  });
-
-  // provider registry 在 compile 入口统一 resolve：内置和自定义同表，duplicate key fail-loud。
-  // compile 主流程只消费 resolved Map；unknown string-reference provider 仍 fail-fast。
-  const effectiveShapes: ReadonlyMap<string, ShapeDefinition> = resolveShapeRegistry(options.shapes);
-  const effectiveBoundaries: ReadonlyMap<string, BoundaryDefinition> = resolveBoundaryRegistry(options.boundaries);
-  const effectiveClips: ReadonlyMap<string, ClipDefinition> = resolveClipRegistry(options.clips);
-  const effectivePathGenerators: ReadonlyMap<string, PathGeneratorDefinition> = resolvePathGeneratorRegistry(
-    options.pathGenerators,
-  );
-  const effectivePathKinds: ReadonlyMap<string, PathKindDefinition> = resolvePathKindRegistry(options.pathKinds);
-  const effectiveRibbonWidthProfiles: ReadonlyMap<string, RibbonWidthProfileDefinition> =
-    resolveRibbonWidthProfileRegistry(options.ribbonWidthProfiles);
-  const resolvedArrows: ReadonlyMap<string, ArrowDefinition> = resolveArrowRegistry(options.arrows);
-  const effectivePatterns: ReadonlyMap<string, PatternDefinition> = resolvePatternRegistry(options.patterns);
+    shapes: effectiveShapes,
+    boundaries: effectiveBoundaries,
+    pathGenerators: effectivePathGenerators,
+    pathKinds: effectivePathKinds,
+    ribbonWidthProfiles: effectiveRibbonWidthProfiles,
+    arrows: resolvedArrows,
+    paint,
+    clip,
+    lowerTex,
+  } = createCompileContext(ir, options);
 
   const primitives: Array<InternalScenePrimitive> = [];
   /** 已 push 但未回填的占位计数；compileToScene 返回前必须归零（无条件守 Scene 公开契约） */
@@ -395,12 +365,6 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     onDuplicate: info => onWarn(formatDuplicateWarning(info)),
   });
   const allPoints: Array<IRPosition> = [];
-  // paint 登记表：node / path 的 PaintSpec fill 去重 + 派稳定 id → Scene.resources；
-  // pattern 资源额外查 effectivePatterns + emit 产 tile（emit-in-compile），用同一 round 保几何一致
-  const paint = createPaintRegistry(effectivePatterns, round);
-  // clip 登记表：scope.clip 去重 + 派稳定 id（clip-N）→ Scene.resources（与 paint 同表，id 命名空间不撞）
-  const clip = createClipRegistry(round, effectiveClips);
-
   const emitStrokePath = (
     path: IRPathBase,
     irPath: string,
@@ -413,7 +377,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
       resolvePaint: paint.resolve,
       resolvedArrows,
       effectivePathGenerators,
-      lowerTex: options.lowerTex,
+      lowerTex,
     });
 
   const emitRibbonPath = (
@@ -428,7 +392,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
       resolvePaint: paint.resolve,
       resolvedArrows,
       effectivePathGenerators,
-      lowerTex: options.lowerTex,
+      lowerTex,
       ribbonWidthProfiles: effectiveRibbonWidthProfiles,
     });
 
@@ -541,7 +505,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           refPointOfTarget,
           // 公式渲染注入 + 预绑路径的 warn（文本里的 `$...$` 行内公式编译用）
           {
-            lowerTex: options.lowerTex,
+            lowerTex,
             warn: (code, message) => onWarn({ code, message, path: `${locatorPrefix}children[${i}].node` }),
           },
         );
