@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { GroupPrim, IR, ScenePrimitive } from '../../src';
-import type { PathPrim } from '../../src/primitive';
+import type { PathPrim } from '../../src/contract/scene';
 import type { IRPath } from '../../src/schemas/path/path';
 
 import { compileToScene } from '../../src/compile/compile';

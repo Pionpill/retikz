@@ -11,11 +11,11 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import type { Position } from '../../src/geometry/point';
-import type { Rect } from '../../src/geometry/rect';
+import type { Position } from '../../src/shared/geometry/point';
+import type { Rect } from '../../src/shared/geometry/rect';
 
-import { rect as rectOps } from '../../src/geometry/rect';
 import { rectangle } from '../../src/providers/shape';
+import { rect as rectOps } from '../../src/shared/geometry/rect';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 const identity = (n: number): number => n;

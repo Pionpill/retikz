@@ -6,7 +6,7 @@ import type {
   LinePathCommand,
   MovePathCommand,
   QuadPathCommand,
-} from '../../src/primitive';
+} from '../../src/contract/scene';
 
 /**
  * 测试 helper：PathCommand 工厂

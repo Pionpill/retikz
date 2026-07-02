@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Rect } from '../../src/geometry/rect';
-import type { PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { PathPrim, ScenePrimitive } from '../../src/contract/scene';
 import type { IR, IRNodeTarget } from '../../src/schemas';
+import type { Rect } from '../../src/shared/geometry/rect';
 
 import { compileToScene } from '../../src/compile/compile';
 import { NameStack } from '../../src/compile/name-stack';

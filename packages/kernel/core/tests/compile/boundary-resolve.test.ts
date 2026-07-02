@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Rect } from '../../src/geometry/rect';
+import type { Rect } from '../../src/shared/geometry/rect';
 
 import { boundaryKey, resolveBoundary } from '../../src/compile/boundary';
 import { ellipse, rectangle } from '../../src/providers/shape';

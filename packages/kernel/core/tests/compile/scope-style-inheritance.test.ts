@@ -15,7 +15,7 @@ import type {
   ResolvedArrowEndSpec,
   ScenePrimitive,
   TextPrim,
-} from '../../src/primitive';
+} from '../../src/contract/scene';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

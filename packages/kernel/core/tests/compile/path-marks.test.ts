@@ -11,7 +11,7 @@ import type { IR, IRPath, ScenePrimitive } from '../../src';
 import type { ArrowDefinition } from '../../src/contract/arrow';
 
 import { compileToScene } from '../../src/compile/compile';
-import { arcSegmentSample, cubicSegmentSample, lineSegmentSample } from '../../src/geometry/segment';
+import { arcSegmentSample, cubicSegmentSample, lineSegmentSample } from '../../src/shared/geometry/path';
 import { flattenPrims } from '../helpers/flatten';
 
 type TestArrowDefinition = Omit<ArrowDefinition, 'name'> & { name?: string };

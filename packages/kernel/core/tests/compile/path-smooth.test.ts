@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IR } from '../../src';
-import type { CubicPathCommand, PathPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
+import type { CubicPathCommand, PathPrim, ScenePrimitive, TextPrim } from '../../src/contract/scene';
 
 import { compileToScene } from '../../src/compile/compile';
 import { PathSchema, SmoothStepSchema } from '../../src/schemas';

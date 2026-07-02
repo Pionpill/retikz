@@ -1,9 +1,9 @@
 import { arcAngleInRange, rayArc } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import type { ContourSegment } from '../../src/geometry/contour';
+import type { ContourSegment } from '../../src/shared/geometry/path';
 
-import { boundaryFromContour, contourCommands, filletContour } from '../../src/geometry/contour';
+import { boundaryFromContour, contourCommands, filletContour } from '../../src/shared/geometry/path';
 
 /*
  * 角度约定（与 @retikz/math arc、ir/path arc 一致，SVG y-down）：

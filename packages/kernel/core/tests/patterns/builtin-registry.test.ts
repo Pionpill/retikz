@@ -9,7 +9,7 @@ import type {
   PaintResource,
   ResolvedPatternTile,
   SceneResource,
-} from '../../src/primitive';
+} from '../../src/contract/scene';
 import type { IR, IRPaintSpec } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

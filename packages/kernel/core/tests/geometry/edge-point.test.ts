@@ -5,12 +5,12 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { circle } from '../../src/geometry/circle';
-import { diamond } from '../../src/geometry/diamond';
-import { EDGE_ENDS, edgeAngleDeg, lerpPoint } from '../../src/geometry/edge';
-import { ellipse } from '../../src/geometry/ellipse';
-import { rect } from '../../src/geometry/rect';
 import { WebAnchor, WebSide } from '../../src/shared';
+import { circle } from '../../src/shared/geometry/circle';
+import { diamond } from '../../src/shared/geometry/diamond';
+import { EDGE_ENDS, edgeAngleDeg, lerpPoint } from '../../src/shared/geometry/edge';
+import { ellipse } from '../../src/shared/geometry/ellipse';
+import { rect } from '../../src/shared/geometry/rect';
 
 const near = (p: readonly [number, number], x: number, y: number, d = 6): void => {
   expect(p[0]).toBeCloseTo(x, d);

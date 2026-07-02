@@ -8,7 +8,7 @@ import {
   foldSegmentSample,
   lineSegmentSample,
   quadSegmentSample,
-} from '../../src/geometry/segment';
+} from '../../src/shared/geometry/path';
 
 const NEAR = 1e-9;
 

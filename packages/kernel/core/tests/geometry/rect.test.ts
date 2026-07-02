@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Rect } from '../../src/geometry/rect';
+import type { Rect } from '../../src/shared/geometry/rect';
 
-import { rect } from '../../src/geometry/rect';
 import {
   CenterAnchor,
   CompassAnchor,
@@ -17,6 +16,7 @@ import {
   TikzSide,
   WebAnchor,
 } from '../../src/shared';
+import { rect } from '../../src/shared/geometry/rect';
 
 const r10x6: Rect = { x: 0, y: 0, width: 10, height: 6 };
 

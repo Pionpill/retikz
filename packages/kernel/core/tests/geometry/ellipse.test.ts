@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Ellipse } from '../../src/geometry/ellipse';
-import type { ScenePrimitive } from '../../src/primitive';
+import type { ScenePrimitive } from '../../src/contract/scene';
 import type { IR } from '../../src/schemas';
+import type { Ellipse } from '../../src/shared/geometry/ellipse';
 
 import { compileToScene } from '../../src/compile/compile';
-import { ellipse } from '../../src/geometry/ellipse';
 import { ellipse as ellipseShape } from '../../src/providers/shape';
 import { WebAnchor } from '../../src/shared';
+import { ellipse } from '../../src/shared/geometry/ellipse';
 import { flattenPrims } from '../helpers/flatten';
 
 const e: Ellipse = { x: 0, y: 0, rx: 10, ry: 5 };

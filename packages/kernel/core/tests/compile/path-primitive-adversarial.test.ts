@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PathCommand, PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { PathCommand, PathPrim, ScenePrimitive } from '../../src/contract/scene';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

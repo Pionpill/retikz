@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import type { CubicPathCommand, PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { CubicPathCommand, PathPrim, ScenePrimitive } from '../../src/contract/scene';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

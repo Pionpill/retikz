@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompileOptions } from '../../src/compile/compile';
-import type { ScenePrimitive, TextPrim } from '../../src/primitive';
+import type { ScenePrimitive, TextPrim } from '../../src/contract/scene';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

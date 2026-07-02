@@ -10,8 +10,8 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import type { Position } from '../../src/geometry/point';
-import type { Rect } from '../../src/geometry/rect';
+import type { Position } from '../../src/shared/geometry/point';
+import type { Rect } from '../../src/shared/geometry/rect';
 
 import { polygon } from '../../src/providers/shape';
 

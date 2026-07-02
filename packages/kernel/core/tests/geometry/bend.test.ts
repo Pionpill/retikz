@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { bendControlPoints } from '../../src/geometry/bend';
+import { bendControlPoints } from '../../src/shared/geometry/path';
 
 describe('bendControlPoints', () => {
   it("水平 chord，bend left 30° → 控制点 y 在 chord 上方（SVG y 向下，'上方' 即 y<0）", () => {

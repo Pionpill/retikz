@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { NodeLayout } from '../../src/compile/node';
-import type { ScenePrimitive, TextPrim } from '../../src/primitive';
+import type { ScenePrimitive, TextPrim } from '../../src/contract/scene';
 import type { IR } from '../../src/schemas';
 
 import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';

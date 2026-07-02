@@ -13,14 +13,12 @@
 ## 目录分层
 
 ```text
-shared/      无业务依赖的常量、类型、纯工具
+shared/      无业务依赖的常量、类型、纯工具、跨层纯几何 helper
 schemas/     Zod schema 与 IR 类型真源
-contract/    第三方作者实现的 Definition、defineXxx、能力无关 helper
+contract/    第三方作者实现的 Definition、defineXxx、Scene 输出契约、能力无关 helper
 providers/   内置 definition、BUILTIN_*、registry resolver
 compile/     IR 到 Scene 的编排、layout、lowering、registry 消费
-geometry/    core 侧几何封装；优先复用 @retikz/math
 parsers/     字符串 / DSL parser，输出 IR 节点
-primitive/   Scene primitive 类型
 presets/     内置 preset
 ```
 

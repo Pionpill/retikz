@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -46,12 +46,13 @@ const importsFromSchemaSubmodule = (file: string, declaration: string): boolean 
   return target.startsWith(`${schemaRoot}${sep}`);
 };
 
-const isCompatibilityWrapper = (file: string): boolean => {
-  const rel = relative(SRC_ROOT, file).replace(/\\/g, '/');
-  return rel.startsWith('primitive/') || rel.startsWith('geometry/');
-};
-
 describe('core layer import boundaries', () => {
+  it('does not keep legacy primitive or geometry owner directories', () => {
+    const legacyOwners = ['primitive', 'geometry'].filter(owner => existsSync(join(SRC_ROOT, owner)));
+
+    expect(legacyOwners).toEqual([]);
+  });
+
   it('contract code does not import from legacy primitive owner paths', () => {
     const offenders = tsFiles(join(SRC_ROOT, 'contract'))
       .filter(file => !relative(join(SRC_ROOT, 'contract'), file).replace(/\\/g, '/').startsWith('scene/'))
@@ -97,25 +98,21 @@ describe('core layer import boundaries', () => {
   });
 
   it('implementation code imports scene types from contract/scene instead of legacy primitive paths', () => {
-    const offenders = tsFiles(SRC_ROOT)
-      .filter(file => !isCompatibilityWrapper(file))
-      .flatMap(file =>
-        importDeclarations(file)
-          .filter(line => importsFromOwner(file, line, 'primitive'))
-          .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
-      );
+    const offenders = tsFiles(SRC_ROOT).flatMap(file =>
+      importDeclarations(file)
+        .filter(line => importsFromOwner(file, line, 'primitive'))
+        .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
+    );
 
     expect(offenders).toEqual([]);
   });
 
   it('implementation code imports geometry helpers from shared/geometry instead of legacy geometry paths', () => {
-    const offenders = tsFiles(SRC_ROOT)
-      .filter(file => !isCompatibilityWrapper(file))
-      .flatMap(file =>
-        importDeclarations(file)
-          .filter(line => importsFromOwner(file, line, 'geometry'))
-          .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
-      );
+    const offenders = tsFiles(SRC_ROOT).flatMap(file =>
+      importDeclarations(file)
+        .filter(line => importsFromOwner(file, line, 'geometry'))
+        .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
+    );
 
     expect(offenders).toEqual([]);
   });

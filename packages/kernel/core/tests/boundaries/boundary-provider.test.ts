@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import type { CompileOptions } from '../../src/compile/compile';
 import type { BoundaryDefinition } from '../../src/contract/boundary';
-import type { ScenePrimitive } from '../../src/primitive';
+import type { ScenePrimitive } from '../../src/contract/scene';
 import type { IR, IRBoundary } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

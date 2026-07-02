@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
+import type { ScenePrimitive } from '../../src/contract/scene';
 import type { ShapeDefinition } from '../../src/contract/shape';
-import type { ScenePrimitive } from '../../src/primitive';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { defineShape } from '../../src/contract/shape';
-import { localToWorld, worldToLocal } from '../../src/geometry/transform';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import { NodeSchema } from '../../src/schemas';
+import { localToWorld, worldToLocal } from '../../src/shared/geometry/transform';
 import { flattenPrims } from '../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(

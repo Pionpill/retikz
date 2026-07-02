@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { IR, ScenePrimitive } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
-import { rectPerimeterSample } from '../../src/geometry/segment';
+import { rectPerimeterSample } from '../../src/shared/geometry/path';
 
 /**
  * C7：rectangle / cycle 段也注册段采样器，中段 marks 的 pos∈[0,1] 因此把它们计入段数，

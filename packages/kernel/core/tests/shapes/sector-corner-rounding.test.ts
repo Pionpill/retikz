@@ -14,12 +14,12 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import type { Position } from '../../src/geometry/point';
-import type { Rect } from '../../src/geometry/rect';
+import type { Position } from '../../src/shared/geometry/point';
+import type { Rect } from '../../src/shared/geometry/rect';
 
-import { localToWorld, worldToLocal } from '../../src/geometry/transform';
 import { sector } from '../../src/providers/shape';
 import { sectorGeometry, sectorPolarPoint } from '../../src/providers/shape/sector-geometry';
+import { localToWorld, worldToLocal } from '../../src/shared/geometry/transform';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 const identity = (n: number): number => n;

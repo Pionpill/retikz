@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { TextMeasurer } from '../../src';
-import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
+import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/contract/scene';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

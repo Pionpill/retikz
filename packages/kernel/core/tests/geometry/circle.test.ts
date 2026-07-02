@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Circle } from '../../src/geometry/circle';
+import type { Circle } from '../../src/shared/geometry/circle';
 
-import { circle } from '../../src/geometry/circle';
 import { WebAnchor } from '../../src/shared';
+import { circle } from '../../src/shared/geometry/circle';
 
 const c10: Circle = { x: 0, y: 0, radius: 10 };
 

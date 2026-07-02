@@ -11,7 +11,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IR, IRPath, ScenePrimitive } from '../../src';
-import type { Scene } from '../../src/primitive';
+import type { Scene } from '../../src/contract/scene';
 
 import { compileToScene } from '../../src/compile/compile';
 import { arrowMarks } from '../helpers/arrow-marks';
