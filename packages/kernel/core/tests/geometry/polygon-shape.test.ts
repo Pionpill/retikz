@@ -1,4 +1,4 @@
-/**
+﻿/**
  * polygon shape（ADR-04）—— paramsSchema + 正多边形几何契约 + scaleParams 测试
  * @description 覆盖：
  *   - paramsSchema 校验（sides 整数 ≥3、rotate finite、strictObject 拒多余字段）；
@@ -17,7 +17,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import type { ScenePrimitive } from '../../src/contract/scene';
+import type { ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

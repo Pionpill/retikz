@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   ArcPathCommand,
   ClosePathCommand,
   CubicPathCommand,
@@ -6,7 +6,7 @@ import type {
   LinePathCommand,
   MovePathCommand,
   QuadPathCommand,
-} from '../../src/contract/scene';
+} from '../../src/contract';
 
 /**
  * 测试 helper：PathCommand 工厂

@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   GroupPrim,
   MarkerFill,
   MarkerPrimitive,
@@ -6,7 +6,7 @@ import type {
   ResolvedArrowEndSpec,
   ScenePrimitive,
   Transform,
-} from '../../contract/scene';
+} from '../../contract';
 import type { SegmentSample } from '../../shared/geometry';
 
 const resolveMarkerContextFill = (value: MarkerFill, contextStroke: string): string =>

@@ -1,11 +1,11 @@
-/**
+﻿/**
  * Node pin 引脚（alpha.7 ADR-03）
  * @description label + 引线：pin:true 时从 node 边界画 leader PathPrim 到 label 框近边。
  *   leader 起点在 node 边界朝 label 方向；样式 leader.stroke/dashPattern；pin 缺省不画。
  */
 import { describe, expect, it } from 'vitest';
 
-import type { PathPrim, ScenePrimitive } from '../../src/contract/scene';
+import type { PathPrim, ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

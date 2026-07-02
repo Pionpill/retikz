@@ -1,7 +1,7 @@
-import type { BoundaryDefinition } from '../contract/boundary';
-import type { PathKindCompileResult } from '../contract/path';
-import type { GroupPrim, ScenePrimitive, Transform } from '../contract/scene';
-import type { ShapeDefinition } from '../contract/shape';
+﻿import type { BoundaryDefinition } from '../contract';
+import type { PathKindCompileResult } from '../contract';
+import type { GroupPrim, ScenePrimitive, Transform } from '../contract';
+import type { ShapeDefinition } from '../contract';
 import type { ProviderCollection } from '../providers/registry';
 import type { IRChild, IRPathBase, IRPosition, IRTransform, ResolvedDropShadow } from '../schemas';
 import type { CompileWarning } from './constant';

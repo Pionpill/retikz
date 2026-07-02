@@ -1,4 +1,4 @@
-import type { PathCommand, PathPrim, Scene, ScenePrimitive } from '../../../src/contract/scene';
+﻿import type { PathCommand, PathPrim, Scene, ScenePrimitive } from '../../../src/contract';
 import type { IR, IRChild, IRPathBase, IRStep } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';

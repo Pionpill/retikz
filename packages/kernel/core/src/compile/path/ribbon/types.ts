@@ -1,4 +1,4 @@
-import type { RibbonWidthProfileDefinition } from '../../../contract/ribbon';
+﻿import type { RibbonWidthProfileDefinition } from '../../../contract';
 import type { IRPathBase, IRPathRibbonOptions, IRPosition } from '../../../schemas';
 import type { SegmentSample, Vector2 } from '../../../shared/geometry';
 import type { EmitPathWarnHook } from '../types';

@@ -1,12 +1,12 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { ScenePrimitive } from '../../src/contract/scene';
-import type { ShapeDefinition } from '../../src/contract/shape';
+import type { ScenePrimitive } from '../../src/contract';
+import type { ShapeDefinition } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { defineShape } from '../../src/contract/shape';
+import { defineShape } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import { NodeSchema } from '../../src/schemas';
 import { localToWorld, worldToLocal } from '../../src/shared/geometry/transform';

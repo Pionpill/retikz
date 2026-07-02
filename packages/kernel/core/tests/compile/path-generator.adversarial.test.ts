@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Path generator 注册面 — 对抗回归（ADR-02）
  *
  * 来自 Adversarial Bug Hunter 的边角 IR / generator def。坏 def（Infinity params / generate 产
@@ -9,11 +9,11 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { PathCommand, ScenePrimitive } from '../../src/contract/scene';
+import type { PathCommand, ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { definePathGenerator } from '../../src/contract/path';
+import { definePathGenerator } from '../../src/contract';
 import { JsonObjectSchema, PathSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 

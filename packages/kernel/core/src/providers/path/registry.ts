@@ -1,4 +1,4 @@
-import type { PathGeneratorDefinition } from '../../contract/path';
+﻿import type { PathGeneratorDefinition } from '../../contract';
 
 import { resolveProviderRegistry } from '../registry';
 

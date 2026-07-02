@@ -1,6 +1,6 @@
-import type { ClipDefinition } from '../../contract/clip';
+﻿import type { ClipDefinition } from '../../contract';
 
-import { defineClip } from '../../contract/clip';
+import { defineClip } from '../../contract';
 import {
   CircleClipSchema,
   CompoundClipSchema,

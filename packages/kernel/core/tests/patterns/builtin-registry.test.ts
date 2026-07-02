@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
 import type { CompileOptions } from '../../src/compile/compile';
-import type { PatternDefinition, PatternEmitContext } from '../../src/contract/pattern';
+import type { PatternDefinition, PatternEmitContext } from '../../src/contract';
 import type {
   MarkerEllipsePrim,
   MarkerPathPrim,
@@ -9,11 +9,11 @@ import type {
   PaintResource,
   ResolvedPatternTile,
   SceneResource,
-} from '../../src/contract/scene';
+} from '../../src/contract';
 import type { IR, IRPaintSpec } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { definePattern } from '../../src/contract/pattern';
+import { definePattern } from '../../src/contract';
 import { BUILTIN_PATTERNS } from '../../src/providers/pattern';
 import { PaintSpecSchema } from '../../src/schemas';
 

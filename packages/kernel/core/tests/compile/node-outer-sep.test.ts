@@ -1,4 +1,4 @@
-/**
+﻿/**
  * outerSep = TikZ outer sep（ADR-07）
  * @description outerSep（margin）是连接面外的一层均匀偏移：作用于所有 border 类 anchor
  *   （compass / 数字角度 / 自动连线落点）并计入布局占位 / viewBox；center / 形状专属 anchor /
@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { NodeLayout } from '../../src/compile/node';
-import type { ScenePrimitive, TextPrim } from '../../src/contract/scene';
+import type { ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';

@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
 import type { CompileOptions } from '../../src/compile/compile';
-import type { ArrowDefinition } from '../../src/contract/arrow';
+import type { ArrowDefinition } from '../../src/contract';
 import type {
   MarkerEllipsePrim,
   MarkerFill,
@@ -10,11 +10,11 @@ import type {
   PathPrim,
   ResolvedArrowEndSpec,
   ScenePrimitive,
-} from '../../src/contract/scene';
+} from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { defineArrow } from '../../src/contract/arrow';
+import { defineArrow } from '../../src/contract';
 import { BUILTIN_ARROWS } from '../../src/providers/arrow';
 import { PathSchema } from '../../src/schemas';
 import { arrowMarks } from '../helpers/arrow-marks';

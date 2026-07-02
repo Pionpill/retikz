@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Scope 样式继承 compile 测试（alpha.2 ADR-01）
  * @description 主色级联 + 同源分项覆盖主色 + 颜色级联到 label/arrow + 四通道 every-X + 优先级链（就近 model A）+
  *   缺省/显式 none + resetStyle 四通道（不碰 host 轴）+ opacity 替换不复合 + 与 transforms / localNamespace 正交。
@@ -15,7 +15,7 @@ import type {
   ResolvedArrowEndSpec,
   ScenePrimitive,
   TextPrim,
-} from '../../src/contract/scene';
+} from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
-import type { ScenePrimitive } from '../../src/contract/scene';
+import type { ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 import type { Ellipse } from '../../src/shared/geometry/ellipse';
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * compile + schema：path `roundedCorners` 几何圆角行为测试（ADR-01）
  * @description `roundedCorners` 把折线内部 line-line 接缝倒成切圆弧（改几何，区别于 lineJoin 仅描边）。
  *   编译实现尚未落地，故行为组（happy / clamp / 交互）当前应失败；schema accept/reject + JSON round-trip
@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { GroupPrim, IR, ScenePrimitive } from '../../src';
-import type { PathPrim } from '../../src/contract/scene';
+import type { PathPrim } from '../../src/contract';
 import type { IRPath } from '../../src/schemas/path/path';
 
 import { compileToScene } from '../../src/compile/compile';

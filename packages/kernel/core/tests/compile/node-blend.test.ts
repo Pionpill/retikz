@@ -1,10 +1,10 @@
-/**
+﻿/**
  * Node blend mode 编译测试：blendMode 解析后落到 shape emit 的几何图元上。
  * 跨端像素 parity 属 render-layer 断言，留 render 测试。
  */
 import { describe, expect, it } from 'vitest';
 
-import type { ScenePrimitive } from '../../src/contract/scene';
+import type { ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

@@ -1,4 +1,4 @@
-import type { PathCommand, PathPrim } from '../../../contract/scene';
+﻿import type { PathCommand, PathPrim } from '../../../contract';
 import type { IRPosition, IRRibbonCap, RibbonAlignmentValue } from '../../../schemas';
 import type { SegmentSample, Vector2 } from '../../../shared/geometry';
 import type { NameStack } from '../../name-stack';

@@ -1,11 +1,11 @@
-import { arcBoundingPoints, arcEndPoint, curve, ellipseArcBoundingPoints, ellipseArcPoint } from '@retikz/math';
+﻿import { arcBoundingPoints, arcEndPoint, curve, ellipseArcBoundingPoints, ellipseArcPoint } from '@retikz/math';
 
 import type {
   GroupPrim,
   PathCommand,
   ResolvedArrowEndSpec,
   ScenePrimitive,
-} from '../../contract/scene';
+} from '../../contract';
 import type { IRPath, IRPathBase, IRPosition, IRStep, IRTarget } from '../../schemas';
 import type { AssertEqual } from '../../shared';
 import type { SegmentSample } from '../../shared/geometry';

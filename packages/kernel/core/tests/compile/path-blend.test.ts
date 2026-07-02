@@ -1,10 +1,10 @@
-/**
+﻿/**
  * Path blend mode 编译测试：blendMode 解析后落到主 PathPrim 上。
  * 跨端像素 parity 留 render 测试。
  */
 import { describe, expect, it } from 'vitest';
 
-import type { PathPrim, ScenePrimitive } from '../../src/contract/scene';
+import type { PathPrim, ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

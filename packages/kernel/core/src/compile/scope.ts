@@ -1,8 +1,8 @@
-import { minimalEnclosingCircle } from '@retikz/math';
+﻿import { minimalEnclosingCircle } from '@retikz/math';
 
-import type { BoundaryDefinition } from '../contract/boundary';
-import type { Transform } from '../contract/scene';
-import type { ShapeDefinition } from '../contract/shape';
+import type { BoundaryDefinition } from '../contract';
+import type { Transform } from '../contract';
+import type { ShapeDefinition } from '../contract';
 import type { ProviderCollection } from '../providers/registry';
 import type {
   IRAtPosition,

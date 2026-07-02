@@ -1,4 +1,4 @@
-import type { ScenePrimitive } from '../../../contract/scene';
+﻿import type { ScenePrimitive } from '../../../contract';
 import type { IRPathBase, IRPosition } from '../../../schemas';
 import type { NameStack } from '../../name-stack';
 import type { PaintResolver } from '../../paint';

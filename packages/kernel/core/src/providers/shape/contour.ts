@@ -1,11 +1,11 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
-import type { ScenePrimitive } from '../../contract/scene';
+import type { ScenePrimitive } from '../../contract';
 import type { Position } from '../../shared/geometry';
 import type { Rect } from '../../shared/geometry';
 import type { ContourSegment } from '../../shared/geometry';
 
-import { defineShape } from '../../contract/shape';
+import { defineShape } from '../../contract';
 import { point } from '../../shared/geometry';
 import { localToWorld } from '../../shared/geometry';
 import { boundaryFromContour, contourCommands } from '../../shared/geometry';

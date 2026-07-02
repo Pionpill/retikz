@@ -1,4 +1,4 @@
-import type { GroupPrim, ScenePrimitive, TextPrim } from '../../contract/scene';
+﻿import type { GroupPrim, ScenePrimitive, TextPrim } from '../../contract';
 import type { GeometryLabelSideValue, IRPosition, IRStepLabel } from '../../schemas';
 import type { SegmentSample } from '../../shared/geometry';
 import type { CompileWarningCodeValue } from '../constant';

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * rectangle shape —— cornerRadius 从 Node 顶层迁入 params 测试
  * @description 覆盖：
  *   - params.cornerRadius → 圆角矩形（emit RectPrim 带 cornerRadius）；
@@ -13,7 +13,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import type { ScenePrimitive } from '../../src/contract/scene';
+import type { ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

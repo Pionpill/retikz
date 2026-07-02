@@ -1,10 +1,10 @@
-/**
+﻿/**
  * [adversarial] v0.3-alpha.4 五个 shape ADR 对抗测试
  * 目标：让 LLM 真实生成 / 边角 IR 暴露实现 bug。不修代码，仅报告。
  */
 import { describe, expect, it } from 'vitest';
 
-import type { ScenePrimitive } from '../../src/contract/scene';
+import type { ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

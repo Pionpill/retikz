@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Anchor 缓存单元测试
  * @description 覆盖：cache 命中返回严格相等引用；keyword vs 数字角度 cache key 互不串扰；
  *   不同 layout 各自一份缓存；同 layout 多次 lookup 结果一致；数字角度 + 负号 / 小数支持
@@ -7,11 +7,11 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { NodeLayout } from '../../src/compile/node';
-import type { ShapeDefinition } from '../../src/contract/shape';
+import type { ShapeDefinition } from '../../src/contract';
 import type { BuiltinShapeValue } from '../../src/schemas';
 
 import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';
-import { defineShape } from '../../src/contract/shape';
+import { defineShape } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 /** 构造一个最简 NodeLayout，rect 已是全局坐标 */

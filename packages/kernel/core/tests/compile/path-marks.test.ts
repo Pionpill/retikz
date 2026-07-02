@@ -1,4 +1,4 @@
-/**
+﻿/**
  * compile：path 中段 marking 行为 + 段几何采样契约测试
  * @description marks 沿路径在 pos∈[0,1] 处放按切线定向的 arrow marker（复用段采样取点 + 切线）。
  *   compile 侧断言：有 marks 比无 marks 多产 primitive，且数量随 mark 个数增长（编译实现尚未消费 marks，
@@ -8,7 +8,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IR, IRPath, ScenePrimitive } from '../../src';
-import type { ArrowDefinition } from '../../src/contract/arrow';
+import type { ArrowDefinition } from '../../src/contract';
 
 import { compileToScene } from '../../src/compile/compile';
 import { arcSegmentSample, cubicSegmentSample, lineSegmentSample } from '../../src/shared/geometry/path';

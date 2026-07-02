@@ -1,5 +1,5 @@
-import type { PathGeneratorDefinition } from '../../contract/path';
-import type { PathCommand } from '../../contract/scene';
+﻿import type { PathGeneratorDefinition } from '../../contract';
+import type { PathCommand } from '../../contract';
 import type { IRPosition, IRStep } from '../../schemas';
 
 import { providerDefinitionOf } from '../../providers/registry';

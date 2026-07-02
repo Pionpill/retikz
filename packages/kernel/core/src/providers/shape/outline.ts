@@ -1,5 +1,5 @@
-import type { PathCommand, PathPrim } from '../../contract/scene';
-import type { ResolvedShapeStyle } from '../../contract/shape';
+﻿import type { PathCommand, PathPrim } from '../../contract';
+import type { ResolvedShapeStyle } from '../../contract';
 import type { Position } from '../../shared/geometry';
 import type { ContourCommand, LineSegment } from '../../shared/geometry';
 

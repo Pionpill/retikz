@@ -1,6 +1,6 @@
-import type { BoundaryDefinition } from '../../contract/boundary';
-import type { TextLine, Transform } from '../../contract/scene';
-import type { ShapeDefinition } from '../../contract/shape';
+﻿import type { BoundaryDefinition } from '../../contract';
+import type { TextLine, Transform } from '../../contract';
+import type { ShapeDefinition } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
 import type {
   IRJsonObject,

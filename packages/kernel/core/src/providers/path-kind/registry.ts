@@ -1,8 +1,8 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
-import type { PathKindDefinition } from '../../contract/path';
+import type { PathKindDefinition } from '../../contract';
 
-import { definePathKind } from '../../contract/path';
+import { definePathKind } from '../../contract';
 import { resolveProviderRegistry } from '../registry';
 
 export const keyOfPathKind = (definition: PathKindDefinition): string => definition.schema.shape.kind.value;

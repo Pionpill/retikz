@@ -1,4 +1,4 @@
-import type { MarkerPrimitive } from '../contract/scene';
+﻿import type { MarkerPrimitive } from '../contract';
 
 /**
  * marker 窄子集运行时栅栏（arrow + pattern 共用）

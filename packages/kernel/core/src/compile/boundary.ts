@@ -1,5 +1,5 @@
-import type { BoundaryAnchorName, BoundaryDefinition } from '../contract/boundary';
-import type { ShapeDefinition } from '../contract/shape';
+﻿import type { BoundaryAnchorName, BoundaryDefinition } from '../contract';
+import type { ShapeDefinition } from '../contract';
 import type { ProviderCollection } from '../providers/registry';
 import type { IRBoundary } from '../schemas';
 import type { IRJsonObject } from '../schemas';

@@ -1,5 +1,5 @@
-import type { GroupPrim, ScenePrimitive } from '../../contract/scene';
-import type { ResolvedShapeStyle } from '../../contract/shape';
+﻿import type { GroupPrim, ScenePrimitive } from '../../contract';
+import type { ResolvedShapeStyle } from '../../contract';
 import type { IRJsonObject } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { PaintResolver } from '../paint';

@@ -1,4 +1,4 @@
-import type { RibbonWidthProfileDefinition } from '../../contract/ribbon';
+﻿import type { RibbonWidthProfileDefinition } from '../../contract';
 
 import { resolveProviderRegistry } from '../registry';
 

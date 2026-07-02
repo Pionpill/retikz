@@ -1,11 +1,11 @@
-import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
+﻿import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
 import { z } from 'zod';
 
-import type { PathCommand, ScenePrimitive } from '../../contract/scene';
+import type { PathCommand, ScenePrimitive } from '../../contract';
 import type { Position } from '../../shared/geometry';
 import type { Rect } from '../../shared/geometry';
 
-import { defineShape } from '../../contract/shape';
+import { defineShape } from '../../contract';
 import { localToWorld, worldToLocal } from '../../shared/geometry';
 import { normalizeAngularRange } from './angle';
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ADR-03 contour shape —— 任意闭合顶点环作可连接 Node 形状
  * @description 覆盖测试象限（ADR § 实现契约 测试象限）：
  *   - Happy：矩形轮廓 / 旗帜形轮廓 emit、cornerRadius fillet、未居中点集自动居中等价；
@@ -9,7 +9,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import type { ScenePrimitive } from '../../src/contract/scene';
+import type { ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

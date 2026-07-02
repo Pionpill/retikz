@@ -1,5 +1,5 @@
-import type { PathGeneratorDefinition } from '../../contract/path';
-import type { Transform } from '../../contract/scene';
+﻿import type { PathGeneratorDefinition } from '../../contract';
+import type { Transform } from '../../contract';
 import type { CompileWarning } from '../constant';
 import type { LowerTex } from '../lower-tex';
 import type { PaintResolver } from '../paint';

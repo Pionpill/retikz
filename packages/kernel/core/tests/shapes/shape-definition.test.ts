@@ -1,11 +1,11 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { PathCommand, ScenePrimitive } from '../../src/contract/scene';
-import type { ResolvedShapeStyle, ShapeDefinition } from '../../src/contract/shape';
+import type { PathCommand, ScenePrimitive } from '../../src/contract';
+import type { ResolvedShapeStyle, ShapeDefinition } from '../../src/contract';
 import type { Rect } from '../../src/shared/geometry/rect';
 
-import { defineShape } from '../../src/contract/shape';
+import { defineShape } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import { localToWorld, worldToLocal } from '../../src/shared/geometry/transform';
 

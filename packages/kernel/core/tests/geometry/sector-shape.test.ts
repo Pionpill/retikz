@@ -1,4 +1,4 @@
-/**
+﻿/**
  * sector shape（ADR-03）—— paramsSchema + 几何契约 + scaleParams 测试
  * @description 覆盖：
  *   - paramsSchema 校验（outerRadius>innerRadius、finite 角度、strictObject 缺字段拒绝）；
@@ -17,7 +17,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import type { ScenePrimitive } from '../../src/contract/scene';
+import type { ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

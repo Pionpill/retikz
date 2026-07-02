@@ -1,4 +1,4 @@
-/**
+﻿/**
  * compile：smooth step（过 cursor + points 平滑曲线）行为 + schema 测试
  * @description smooth 从当前 cursor 起（首 knot）依次穿过 `points`，编译期经 centripetal Catmull-Rom
  *   转成 cubic 命令链。行为组当前应失败（compile smooth 分支为 stub throw，math catmullRomToCubic 未实现）；
@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IR } from '../../src';
-import type { CubicPathCommand, PathPrim, ScenePrimitive, TextPrim } from '../../src/contract/scene';
+import type { CubicPathCommand, PathPrim, ScenePrimitive, TextPrim } from '../../src/contract';
 
 import { compileToScene } from '../../src/compile/compile';
 import { PathSchema, SmoothStepSchema } from '../../src/schemas';

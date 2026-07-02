@@ -1,4 +1,4 @@
-import type { Transform } from '../../contract/scene';
+﻿import type { Transform } from '../../contract';
 import type { IRPathScale, IRPosition } from '../../schemas';
 
 import { applyTransformChain } from '../scope';

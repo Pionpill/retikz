@@ -1,4 +1,4 @@
-import type { Transform } from '../../contract/scene';
+﻿import type { Transform } from '../../contract';
 import type { FoldStepViaValue, IRBetweenPosition, IRNodeTarget, IRPosition, IRTarget } from '../../schemas';
 import type { IRBoundary } from '../../schemas';
 import type { NameStack } from '../name-stack';

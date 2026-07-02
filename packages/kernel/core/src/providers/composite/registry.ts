@@ -1,4 +1,4 @@
-import type { CompositeDefinition } from '../../contract/composite';
+﻿import type { CompositeDefinition } from '../../contract';
 
 import { resolveProviderRegistry } from '../registry';
 

@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IR, ScenePrimitive } from '../../src';
-import type { RectPrim } from '../../src/contract/scene';
+import type { RectPrim } from '../../src/contract';
 
 import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';

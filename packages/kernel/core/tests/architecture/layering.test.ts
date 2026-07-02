@@ -71,6 +71,18 @@ const importsFromSchemaSubmodule = (file: string, declaration: string): boolean 
   return target.startsWith(`${schemaRoot}${sep}`);
 };
 
+const importsFromContractSubmodule = (file: string, declaration: string): boolean => {
+  const source = importSource(declaration);
+  if (!source?.startsWith('.')) return false;
+
+  const relativePath = relative(SRC_ROOT, file).replace(/\\/g, '/');
+  if (relativePath.startsWith('contract/')) return false;
+
+  const target = resolveImportTarget(file, source);
+  const contractRoot = join(SRC_ROOT, 'contract');
+  return target.startsWith(`${contractRoot}${sep}`) && target !== join(contractRoot, 'index.ts');
+};
+
 const importsCrossOwnerSubmodule = (file: string, declaration: string): boolean => {
   const source = importSource(declaration);
   if (!source?.startsWith('.')) return false;
@@ -131,6 +143,16 @@ describe('core layer import boundaries', () => {
           .filter(line => importsFromSchemaSubmodule(file, line))
           .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
       );
+
+    expect(offenders).toEqual([]);
+  });
+
+  it('source code outside contract imports contract through the contract barrel', () => {
+    const offenders = tsFiles(SRC_ROOT).flatMap(file =>
+      importDeclarations(file)
+        .filter(line => importsFromContractSubmodule(file, line))
+        .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
+    );
 
     expect(offenders).toEqual([]);
   });

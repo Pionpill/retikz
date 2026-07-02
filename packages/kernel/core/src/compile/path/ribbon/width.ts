@@ -1,4 +1,4 @@
-import type { RibbonWidthProfileDefinition } from '../../../contract/ribbon';
+﻿import type { RibbonWidthProfileDefinition } from '../../../contract';
 import type { IRPathRibbonOptions, IRRibbonSampling, IRRibbonWidth } from '../../../schemas';
 import type { RibbonLike } from './types';
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * star shape（ADR-05）—— paramsSchema + 星形几何契约 + scaleParams 测试
  * @description 覆盖：
  *   - paramsSchema 校验（points 整数 ≥3、内外半径 finite positive、outerRadius>innerRadius、strictObject 拒多余/缺字段）；
@@ -15,7 +15,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import type { ScenePrimitive } from '../../src/contract/scene';
+import type { ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

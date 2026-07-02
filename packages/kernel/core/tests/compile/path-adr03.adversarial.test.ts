@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ADR-03 Adversarial Bug Hunter：out/in + self-loop / 路径整体变换 / 中段 marking
  * @description 故意构造 LLM / 第三方真实会写的边角 IR，逼出 throw 意外 / NaN / Infinity /
  *   round-trip 失真 / 几何错乱 / 错误信息含糊。本文件只构造新输入跑，不修代码 / schema / 现有测试。
@@ -11,7 +11,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IR, IRPath, ScenePrimitive } from '../../src';
-import type { Scene } from '../../src/contract/scene';
+import type { Scene } from '../../src/contract';
 
 import { compileToScene } from '../../src/compile/compile';
 import { arrowMarks } from '../helpers/arrow-marks';

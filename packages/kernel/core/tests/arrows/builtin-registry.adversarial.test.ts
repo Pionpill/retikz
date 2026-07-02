@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
-import type { ArrowDefinition } from '../../src/contract/arrow';
-import type { PathCommand, PathPrim, ScenePrimitive } from '../../src/contract/scene';
+import type { ArrowDefinition } from '../../src/contract';
+import type { PathCommand, PathPrim, ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

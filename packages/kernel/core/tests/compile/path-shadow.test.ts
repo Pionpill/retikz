@@ -1,10 +1,10 @@
-/**
+﻿/**
  * Path drop shadow 编译测试：shadow 解析后落到主 PathPrim 上。
  * 渲染层一致性 / 跨端像素 parity 留 render 测试。
  */
 import { describe, expect, it } from 'vitest';
 
-import type { PathPrim, ScenePrimitive } from '../../src/contract/scene';
+import type { PathPrim, ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

@@ -1,11 +1,11 @@
-/**
+﻿/**
  * 对象形态 NodeTarget 的 compile 解析（ADR-01）
  * @description 对象 { id, anchor?, offset? } 与等价字符串 shorthand 编译结果一致（named / angle / auto）；
  *   { side, fraction } t=0.5 == cardinal 命名 anchor；offset 世界系叠加；未定义 id 不产 PathPrim
  */
 import { describe, expect, it } from 'vitest';
 
-import type { PathPrim, ScenePrimitive } from '../../src/contract/scene';
+import type { PathPrim, ScenePrimitive } from '../../src/contract';
 import type { IR, IRTarget } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

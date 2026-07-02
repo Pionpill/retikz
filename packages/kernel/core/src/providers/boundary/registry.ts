@@ -1,8 +1,8 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
-import type { BoundaryDefinition } from '../../contract/boundary';
+import type { BoundaryDefinition } from '../../contract';
 
-import { defineBoundary } from '../../contract/boundary';
+import { defineBoundary } from '../../contract';
 import { defineBuiltinProviderArray, resolveProviderRegistry } from '../registry';
 import { ellipseShape, rectangle } from '../shape';
 

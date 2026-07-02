@@ -1,13 +1,13 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
 import type { CompileOptions } from '../../src/compile/compile';
-import type { PatternDefinition } from '../../src/contract/pattern';
+import type { PatternDefinition } from '../../src/contract';
 import type {
   MarkerPrimitive,
   PaintResource,
   ResolvedPatternTile,
   SceneResource,
-} from '../../src/contract/scene';
+} from '../../src/contract';
 import type { IR, IRPaintSpec } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
