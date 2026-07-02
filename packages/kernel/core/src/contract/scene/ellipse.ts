@@ -1,7 +1,3 @@
-/**
- * 椭圆原语（cx/cy 圆心，rx/ry 半径）
- * @description 圆形（rx=ry）复用同一 prim 单 case 处理；rotate 度数绕中心，非零时由 renderer 在 emit 阶段应用旋转变换
- */
 import type { IRAnimationTrack } from '../../schemas';
 import type { BlendModeValue, ResolvedDropShadow } from '../../schemas';
 import type { IRGraphicStyle, IRPathBase } from '../../schemas';
