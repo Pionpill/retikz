@@ -254,7 +254,7 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Ar
  *   取每个 layout 的 rotate-aware `top-left` / `top-right` / `bottom-left` / `bottom-right`
  *   4 角点（rect.anchor 已含 layout.rect.rotate 处理）并求 AABB；
  *   layout 是 0×0（coordinate / 空 scope 占位）时退化为单点也合法；
- *   空 layouts 数组返回 null（调用方按"empty scope + fallback origin"退化为 0×0 占位）
+ *   空 layouts 数组返回 null（调用方按"空 scope + 兜底原点"退化为 0×0 占位）
  */
 export const computeScopeBoundingBox = (layouts: ReadonlyArray<NodeLayout>): ScopeBoundingBox | null => {
   if (layouts.length === 0) return null;

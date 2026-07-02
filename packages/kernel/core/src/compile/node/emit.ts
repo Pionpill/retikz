@@ -63,7 +63,7 @@ export const emitNodePrimitives = (
       inner.push(...laid.emit(originX, blockTop + baselineOffset, round));
     }
   } else if (layout.lines) {
-    // align=start: x=中心-块半宽; align=end: x=中心+块半宽; align=middle: x=中心
+    // 对齐换算：start 取块左侧，end 取块右侧，middle 取块中心。
     const halfBlockW = layout.textWidth / 2;
     const xOffset = layout.align === 'start' ? -halfBlockW : layout.align === 'end' ? halfBlockW : 0;
     const lineHeight = round(layout.lineHeight);

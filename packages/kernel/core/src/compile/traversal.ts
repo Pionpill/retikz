@@ -146,7 +146,7 @@ const makePathPlaceholder = (): PathPlaceholder => ({ type: 'path-placeholder' }
 /** 把内部 sink 收窄回公开 ScenePrimitive[]：占位已全部回填（compileToScene 末端 placeholderBalance 无条件校验兜底） */
 const sealSink = (sink: Array<InternalScenePrimitive>): Array<ScenePrimitive> => sink as Array<ScenePrimitive>;
 
-/** dev 诊断：递归找出残留占位的 index 路径，供末端无条件校验报错时定位 */
+/** 开发诊断：递归找出残留占位的 index 路径，供末端无条件校验报错时定位 */
 const collectPlaceholderLocators = (
   prims: ReadonlyArray<InternalScenePrimitive>,
   prefix = 'primitives',
@@ -414,7 +414,7 @@ export const compileChildrenToPrimitives = (
       } else if (child.type === 'coordinate') {
         const localCenter = resolvePosition(child.position, nameStack, nodeDistance, chain, refPointOfTarget);
         if (!localCenter) {
-          // coordinate 与 node 同属"定义位置"的实体：位置不可解析时 fail-fast throw（下游引用会级联失败），
+          // coordinate 与 node 同属"定义位置"的实体：位置不可解析时立即 throw（下游引用会级联失败），
           // 不像 path / scope.transform 那类"引用方"走 warn + 降级。此处只 throw、不再额外 onWarn——
           // warn 后立即 throw 会让 onWarn 收集器记录一条永不产出 Scene 的死告警。
           throw new Error(

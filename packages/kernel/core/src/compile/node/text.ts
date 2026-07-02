@@ -1,9 +1,11 @@
 import type { FontSpec, TextMeasurer } from '../text-metrics';
 
+/** 默认节点字号（user units）。 */
 export const DEFAULT_FONT_SIZE = 14;
+/** 默认行高倍率；实际行高 = fontSize × 本倍率。 */
 export const DEFAULT_LINE_HEIGHT_FACTOR = 1.2;
 
-/** CJK / fullwidth ranges: break per-character (no whitespace needed) */
+/** CJK / 全角字符范围：无需空白分隔，折行时可按单字符切分 */
 const isCjk = (ch: string): boolean => {
   const c = ch.codePointAt(0) ?? 0;
   return (
@@ -69,7 +71,7 @@ const DASHED_PATTERN: Array<number> = [4, 2];
 /** dotted 预设：1 px 圆点 + 2 px 间隙 */
 const DOTTED_PATTERN: Array<number> = [1, 2];
 
-/** dashed / dotted / dashPattern 优先级：dashPattern > dashed > dotted */
+/** 虚线字段优先级：显式 dashPattern > dashed 预设 > dotted 预设 */
 export const resolveDashPattern = (
   dashPattern: Array<number> | undefined,
   dashed: boolean | undefined,
@@ -81,6 +83,6 @@ export const resolveDashPattern = (
   return undefined;
 };
 
-/** IR align → 文字对齐锚点（start / middle / end） */
+/** IR align → TextPrim 的文字对齐锚点（start / middle / end） */
 export const alignToTextAnchor = (a: 'left' | 'center' | 'right'): 'start' | 'middle' | 'end' =>
   a === 'left' ? 'start' : a === 'right' ? 'end' : 'middle';

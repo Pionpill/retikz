@@ -30,7 +30,7 @@ export type EmitPathWarnHook = {
    */
   resolvePaint?: PaintResolver;
   /**
-   * 已解析 arrow registry（内置 8 + 注入）；缺省 = 仅内置 8
+   * 已解析 arrow 注册表（内置 8 + 注入）；缺省 = 仅内置 8
    * @description compileToScene 合并 `{ ...BUILTIN_ARROWS, ...options.arrows }` 传入；
    *   endpoint arrow marks 据此查表算 shrink / 调 def.emit；未注册名编译期 throw
    * @default resolveArrowRegistry()

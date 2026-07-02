@@ -34,8 +34,8 @@ const registeredNames = <TDefinition>(registry: ProviderCollection<TDefinition>)
 /**
  * 把连接面取值解析为「计算 boundaryPoint / anchor 所需的 def + rect + params」
  * @description layout-neutral：borrowed/builtin 一律喂目标节点的视觉 AABB rect，绝不调其 circumscribe。
- *   保留字 'shape' → 视觉 def 原样；其它 key 先查 boundary registry，再 fallback 到 shape registry。
- *   boundary provider 优先于同名 shape fallback。
+ *   保留字 'shape' → 视觉 def 原样；其它 key 先查 boundary 注册表，再兜底查 shape 注册表。
+ *   boundary provider 优先于同名 shape 兜底。
  */
 export const resolveBoundary = (
   boundary: IRBoundary | undefined,

@@ -151,7 +151,7 @@ export type NodeLayout = {
 
 /** 节点附属标签 layout（layoutNode 已合并默认值与样式继承） */
 export type NodeLabelLayout = {
-  /** 纯文本内容（混排时是各 text run 拼接，仅作 fallback / 测量） */
+  /** 纯文本内容（混排时是各 text run 拼接，仅作兜底显示 / 测量） */
   text: string;
   /** 含公式时的混排行布局（emit 走 laid）；纯文本时 undefined */
   laid?: LaidLine;

@@ -30,6 +30,11 @@ import {
   resolveSampleCount,
 } from './width';
 
+/**
+ * IR ribbon path → Scene primitive
+ * @description boundary 模式把 upper/lower 两条 path 采样成闭合轮廓；centerline 模式先复用普通 path emit 解析中心线，
+ *   再按宽度函数生成左右边界。静态宽度 + 解析型线段优先走 analyticOutlineCommands；无法解析或用户要求采样时走采样轮廓。
+ */
 export const emitRibbonPrimitive = (
   path: IRPathBase,
   nameStack: NameStack,
@@ -44,6 +49,7 @@ export const emitRibbonPrimitive = (
   const resolvePaint: PaintResolver =
     options.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
   if (ribbon.mode === 'boundary') {
+    // boundary 模式的 upper / lower 是两条真实边界线，不再计算宽度；采样数按较长边界线决定。
     if (ribbon.label !== undefined) {
       throw new Error('Ribbon label first version only supports centerline ribbon labels.');
     }
@@ -73,6 +79,7 @@ export const emitRibbonPrimitive = (
   if (ribbon.children === undefined) {
     throw new Error('Centerline ribbon requires `children`.');
   }
+  // centerline 模式先降成普通 PathPrim，再把 commands 转成 ribbon 自己的 segment 输入。
   const segmentInputs = commandsToSegmentInputs(
     emittedPathFromSteps(ribbon.children, 'centerline', nameStack, round, measureText, options).commands,
     'centerline',
@@ -89,6 +96,7 @@ export const emitRibbonPrimitive = (
     start: directionToTangent(ribbon.start?.direction, connectionTangent, 'start'),
     end: directionToTangent(ribbon.end?.direction, connectionTangent, 'end'),
   };
+  // 若端点显式给 direction，重建首尾段采样器，让横截面在端点处服从该方向。
   const segments = segmentInputsToSegments(segmentInputs, {
     start: ribbon.start?.direction === undefined ? undefined : endpointTangents.start,
     end: ribbon.end?.direction === undefined ? undefined : endpointTangents.end,
@@ -100,6 +108,7 @@ export const emitRibbonPrimitive = (
   const widthAt = centerlineWidthFunction(ribbon, options.ribbonWidthProfiles ?? new Map(), totalLength);
   const samples = resolveSampleCount(ribbon.samples, ribbon.sampling, totalLength);
   const sampleCount = samples ?? (centerlineWidthRequiresSampling(ribbon) ? DEFAULT_RIBBON_SAMPLES : undefined);
+  // 未要求采样且宽度静态时优先解析型轮廓；解析失败（如 arc）再回退到默认采样。
   const outline =
     sampleCount === undefined
       ? (analyticOutlineCommands(
@@ -147,6 +156,7 @@ export const emitRibbonPrimitive = (
   const labelPoints: Array<IRPosition> = [];
   const labels = ribbon.label === undefined ? [] : Array.isArray(ribbon.label) ? ribbon.label : [ribbon.label];
   for (const label of labels) {
+    // ribbon label 以中心线采样点为锚点，boundaryOffset 用当前宽度的一半把 outside/inside 放到带状区域边缘。
     const t = tForLabelPosition(label.position);
     const sample = sampleAtDistance(segments, totalLength, t * totalLength);
     const offset = t * totalLength;

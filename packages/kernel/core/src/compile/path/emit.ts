@@ -906,7 +906,7 @@ export const emitPathPrimitive = (
 
   // 路径整体变换：rotate / scale 给定时，以包围盒中心为支点把本 path 的 primitive 包进 GroupPrim 写 transforms。
   // 顺序硬契约：端点已在当前 scope resolve 到世界坐标、arrow shrink 已在未变换几何上完成（上方），
-  // 这里才以 bbox center 为支点包 group（geometry 留原坐标、变换由外层 group 承担）；layout 外接框据变换后 bbox 计。
+  // 这里才以 bbox center 为支点包 group（几何留原坐标、变换由外层 group 承担）；layout 外接框据变换后 bbox 计。
   if ((path.rotate !== undefined || path.scale !== undefined) && points.length > 0) {
     const center = bboxCenter(points);
     const transforms = buildPathTransforms(path.rotate, path.scale, center, round);

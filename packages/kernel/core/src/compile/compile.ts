@@ -24,7 +24,7 @@ export { CompileWarningCode } from './constant';
 /** compileToScene 的可选参数 */
 export type CompileOptions = {
   /**
-   * 注入文字度量函数；不传则用 fallback（不准但可跑）
+   * 注入文字度量函数；不传则用默认估算器（不准但可跑）
    * @default `fallbackMeasurer`
    */
   measureText?: TextMeasurer;
@@ -47,7 +47,7 @@ export type CompileOptions = {
   nodeDistance?: number;
   /**
    * 编译期警告收集器
-   * @description path / position 解析失败时按 IR locator + code + message 同步触发；不传时 dev 模式（`process.env.NODE_ENV !== 'production'`）默认 `console.warn`、生产静默
+   * @description path / position 解析失败时按 IR locator + code + message 同步触发；不传时开发模式（`process.env.NODE_ENV !== 'production'`）默认 `console.warn`、生产静默
    * @default `defaultWarnDispatcher`
    */
   onWarn?: (warning: CompileWarning) => void;
@@ -60,7 +60,7 @@ export type CompileOptions = {
   shapes?: ReadonlyArray<ShapeDefinition>;
   /**
    * 运行时注入的第三方 connection surface（不进 IR）
-   * @description `boundary` 先查本 registry，再 fallback 到 shape registry；`shape` 保留为节点自身视觉 shape。
+   * @description `boundary` 先查本注册表，再兜底查 shape 注册表；`shape` 保留为节点自身视觉 shape。
    * @default 仅 `BUILTIN_BOUNDARIES`
    */
   boundaries?: ReadonlyArray<BoundaryDefinition>;
@@ -91,7 +91,7 @@ export type CompileOptions = {
    *   对结果再跑 `JsonObjectSchema.parse` 二次确认 JSON-safe → `targetParams` 顶层 key 经 target lookup
    *   resolve 成世界坐标 → 调 `generate(ctx)` → splice 产出的 `PathCommand[]` 进命令流。IR 的
    *   `generator.name` 仍是字符串；generator 函数本身只在此运行时注入面、不进 IR。
-   * @default 空 registry
+   * @default 空注册表
    */
   pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
   /**
@@ -102,14 +102,14 @@ export type CompileOptions = {
   /**
    * 运行时注入的 ribbon 宽度 profile。
    * @description IR 只保存 `{ kind:"profile", name, params }`；profile 函数从这里注入，永不进入 IR。
-   * @default 空 registry
+   * @default 空注册表
    */
   ribbonWidthProfiles?: ReadonlyArray<RibbonWidthProfileDefinition>;
   /**
    * 运行时注入的 Tier 2 composite 展开逻辑（不进 IR）
    * @description compileToScene 第一步据各 def 的 schema 提取的 `${namespace}.${type}` 把 IR 里的 composite
    *   节点展开成 Tier 1；core 无内置。未注册 namespace/type → `onWarn(COMPOSITE_NOT_REGISTERED)` + 跳过该节点。
-   * @default 空 registry
+   * @default 空注册表
    */
   composites?: ReadonlyArray<CompositeDefinition>;
   /**

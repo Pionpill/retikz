@@ -28,6 +28,10 @@ import {
 
 const ENDPOINT_DIRECTION_BLEND_SPAN = 0.18;
 
+/**
+ * 计算中心线某一点的 ribbon 横截面
+ * @description 宽度按 offset 求值；align 决定宽度分配到左右两侧的比例；首尾附近会把切线向端点 direction 平滑过渡。
+ */
 export const ribbonCrossSection = (
   sample: SegmentSample,
   offset: number,
@@ -158,6 +162,10 @@ const offsetAnalyticPoint = (
   return side === 'left' ? section.left : section.right;
 };
 
+/**
+ * 采样型 centerline ribbon 轮廓
+ * @description 沿中心线取 sampleCount 个横截面，左侧顺序连线、右侧逆序连线，再按端帽配置闭合。
+ */
 export const outlineCommands = (
   segments: ReadonlyArray<RibbonSegment>,
   totalLength: number,
@@ -239,6 +247,11 @@ export const outlineCommands = (
   return { commands, points: [...left, ...right] };
 };
 
+/**
+ * 解析型 centerline ribbon 轮廓
+ * @description 当中心线仅由 line / quad / cubic 组成且宽度可解析时，尽量保留线段阶数生成左右 offset 命令；
+ *   遇到 arc / ellipseArc 或输入不匹配返回 null，由调用方退回采样型轮廓。
+ */
 export const analyticOutlineCommands = (
   inputs: ReadonlyArray<RibbonSegmentInput>,
   segments: ReadonlyArray<RibbonSegment>,
@@ -399,6 +412,10 @@ export const analyticOutlineCommands = (
   return { commands, points: [...points, startLeft, startRight, endLeft, endRight] };
 };
 
+/**
+ * boundary 模式 ribbon 轮廓
+ * @description upper / lower 已各自解析成中心线段；这里按同一归一化 offset 采样两条边界，再拼成闭合 path。
+ */
 export const boundaryOutlineCommands = (
   upper: ReadonlyArray<RibbonSegment>,
   upperLength: number,
@@ -432,6 +449,10 @@ export const boundaryOutlineCommands = (
   return { commands, points: [...upperPoints, ...lowerPoints] };
 };
 
+/**
+ * 将闭合轮廓命令写成最终 PathPrim
+ * @description fill 默认 currentColor；仅当用户显式请求 stroke / strokeWidth 时才写描边字段，保持 Scene 输出精简。
+ */
 export const styledPrimitiveFromOutline = (
   ribbon: RibbonLike,
   outline: { commands: Array<PathCommand>; points: Array<IRPosition> },

@@ -30,9 +30,10 @@ export type LabelTexContext = {
   warn: (code: CompileWarningCodeValue, message: string) => void;
 };
 
+/** step label 放置时额外需要的宿主几何信息。 */
 export type LabelPlacementContext = {
   /**
-   * Area-like host half extent from centerline to boundary at the sampled point.
+   * 面状宿主在采样点处从中心线到边界的半宽。
    * @default 0
    */
   boundaryOffset?: number;
@@ -134,7 +135,7 @@ export const emitLabelPrimitive = (
       originX = ax - laid.width / 2;
       baselineY = ay + (laid.ascent - laid.descent) / 2;
     } else {
-      // top: horizontal center, placed above the sampled point with side offset.
+      // top：水平居中，按 sideOffset 放到采样点上方。
       originX = ax - laid.width / 2;
       baselineY = ay - sideOffset - laid.descent;
     }

@@ -17,6 +17,7 @@ import { emitPathPrimitive } from '..';
 
 const LENGTH_SUBDIVISIONS = 16;
 
+/** 去掉 step.label，让中心线复用 path emit 时不会额外产出 label primitive。 */
 export const stripStepLabel = (step: IRStep): IRStep => {
   const next = { ...step } as IRStep;
   if ('label' in next) delete next.label;
@@ -30,22 +31,26 @@ const assertCursor = (cursor: IRPosition | undefined, command: PathCommand): IRP
   throw new Error(`Ribbon centerline command "${command.kind}" has no current point; start with a move step.`);
 };
 
+/** 两个 IR 点之间的欧氏距离。 */
 export const distance = (a: IRPosition, b: IRPosition): number => {
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
   return Math.hypot(dx, dy);
 };
 
+/** 从 origin 沿单位方向前进指定长度。 */
 export const pointOnDirection = (origin: IRPosition, direction: Vector2, length: number): IRPosition => [
   origin[0] + direction[0] * length,
   origin[1] + direction[1] * length,
 ];
 
+/** 从 origin 沿单位方向反向退回指定长度。 */
 export const pointAgainstDirection = (origin: IRPosition, direction: Vector2, length: number): IRPosition => [
   origin[0] - direction[0] * length,
   origin[1] - direction[1] * length,
 ];
 
+/** 校验并归一化 ribbon 方向向量；零向量或非有限值直接报错。 */
 export const normalizeVector = (vector: Vector2, source: string): Vector2 => {
   const length = Math.hypot(vector[0], vector[1]);
   if (!Number.isFinite(length) || length <= 0) {
@@ -54,8 +59,10 @@ export const normalizeVector = (vector: Vector2, source: string): Vector2 => {
   return [vector[0] / length, vector[1] / length];
 };
 
+/** 由切线求左法线（屏幕坐标系下保持统一方向）。 */
 export const normalOf = (tangent: Vector2): Vector2 => [-tangent[1], tangent[0]];
 
+/** 把端点切线翻到与参考切线同侧，避免首尾横截面左右侧反转。 */
 export const alignTangentNormal = (tangent: Vector2, reference: Vector2): Vector2 => {
   const normal = normalOf(tangent);
   const referenceNormal = normalOf(reference);
@@ -64,6 +71,10 @@ export const alignTangentNormal = (tangent: Vector2, reference: Vector2): Vector
 
 const smoothstep = (t: number): number => t * t * (3 - 2 * t);
 
+/**
+ * 在端点指定方向和中心线采样切线之间平滑过渡
+ * @description 只用于首尾一小段，避免用户指定 start/end direction 时横截面突然旋转。
+ */
 export const blendTangent = (endpointTangent: Vector2, sampleTangent: Vector2, t: number, source: string): Vector2 => {
   const u = smoothstep(Math.max(0, Math.min(1, t)));
   return normalizeVector(
@@ -75,6 +86,10 @@ export const blendTangent = (endpointTangent: Vector2, sampleTangent: Vector2, t
   );
 };
 
+/**
+ * 把 ribbon 端点 direction 解析为单位切线
+ * @description 支持角度、显式向量和无字符串 origin 的 PolarPosition；未配置时沿用整条连接线方向。
+ */
 export const directionToTangent = (
   direction: IRRibbonDirection | undefined,
   fallback: Vector2,
@@ -96,6 +111,7 @@ export const directionToTangent = (
   }
 };
 
+/** 用固定细分估算曲线弧长，供 offset→segment 映射和采样数量选择使用。 */
 export const estimateLength = (sampleAt: (t: number) => SegmentSample): number => {
   let total = 0;
   let prev = sampleAt(0).point;
@@ -107,13 +123,19 @@ export const estimateLength = (sampleAt: (t: number) => SegmentSample): number =
   return total;
 };
 
+/** 判断采样点是否为有限坐标。 */
 export const finitePoint = (p: IRPosition): boolean => Number.isFinite(p[0]) && Number.isFinite(p[1]);
 
+/** 控制柄长度兜底：退化控制点用兜底长度，避免端点方向覆盖时生成零柄。 */
 export const controlHandleLength = (anchor: IRPosition, control: IRPosition, fallback: number): number => {
   const handle = distance(anchor, control);
   return handle > 0 ? handle : fallback;
 };
 
+/**
+ * PathCommand → RibbonSegmentInput
+ * @description ribbon 只支持单条开放子路径；零长度段会被丢弃，close / 多 move 会立即报错。
+ */
 export const commandsToSegmentInputs = (
   commands: ReadonlyArray<PathCommand>,
   source = 'centerline',
@@ -269,6 +291,10 @@ const segmentToSampler = (
     ellipseArcSegmentSample(input.center, input.radiusX, input.radiusY, input.startAngle, input.endAngle, t);
 };
 
+/**
+ * RibbonSegmentInput → 可采样中心线段
+ * @description start/end direction 覆盖会重算首尾 Bezier 控制柄，使轮廓端面切线与用户指定方向一致。
+ */
 export const segmentInputsToSegments = (
   inputs: ReadonlyArray<RibbonSegmentInput>,
   endpointTangents: { start?: Vector2; end?: Vector2 } = {},
@@ -282,6 +308,7 @@ export const segmentInputsToSegments = (
   return segments;
 };
 
+/** 按累计弧长在整条中心线上取样；target 会落到对应 segment 的局部 t。 */
 export const sampleAtDistance = (
   segments: ReadonlyArray<RibbonSegment>,
   totalLength: number,
@@ -299,6 +326,10 @@ export const sampleAtDistance = (
   return segments[segments.length - 1].sampleAt(1);
 };
 
+/**
+ * 复用普通 path emit，把 ribbon.children 降成单个 PathPrim
+ * @description 这一步负责解析节点引用、relative、generator 等 path 语义；ribbon 后续只消费已物化的 commands。
+ */
 export const emittedPathFromSteps = (
   steps: ReadonlyArray<IRStep>,
   source: string,
@@ -321,6 +352,10 @@ export const emittedPathFromSteps = (
   return emitted.primitives[0];
 };
 
+/**
+ * 从一组 IRStep 生成 ribbon 中心线段与总长度
+ * @description boundary 模式的 upper/lower 和 centerline 模式的 children 都走这里，保证 path 解析口径一致。
+ */
 export const segmentsFromSteps = (
   steps: ReadonlyArray<IRStep>,
   source: string,

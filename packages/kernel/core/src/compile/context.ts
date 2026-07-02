@@ -27,15 +27,19 @@ import { createRound, DEFAULT_PRECISION } from './precision';
 import { fallbackMeasurer } from './text-metrics';
 
 /**
- * 默认 warn dispatcher：dev 模式 console.warn、生产静默
- * @description 用户传 onWarn 时使用用户的；不传走此 fallback
+ * 默认 warning 分发器：开发模式写到 console.warn，生产环境静默
+ * @description 用户传入 onWarn 时使用用户回调；未传时走此兜底逻辑。
  */
 const defaultWarnDispatcher = (warning: CompileWarning): void => {
   if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return;
   console.warn(formatCompileWarning(warning));
 };
 
-/** 标准化后的 compile 依赖上下文。 */
+/**
+ * 标准化后的 compile 依赖上下文
+ * @description compileToScene 入口把选项、内置 provider、自定义 provider、资源表和 rounding 规则集中解析到这里；
+ *   traversal / emit 阶段只消费已解析结果，不再重复合并注册表。
+ */
 export type CompileContext = {
   /** composite lowering 后的 Tier 1 IR。 */
   loweredIr: IR;
@@ -49,27 +53,27 @@ export type CompileContext = {
   nodeDistance: CompileOptions['nodeDistance'];
   /** 编译 warning dispatcher。 */
   onWarn: (warning: CompileWarning) => void;
-  /** shape provider registry。 */
+  /** shape provider 注册表。 */
   shapes: ReadonlyMap<string, ShapeDefinition>;
-  /** boundary provider registry。 */
+  /** boundary provider 注册表。 */
   boundaries: ReadonlyMap<string, BoundaryDefinition>;
-  /** clip provider registry。 */
+  /** clip provider 注册表。 */
   clips: ReadonlyMap<string, ClipDefinition>;
-  /** path generator provider registry。 */
+  /** path generator provider 注册表。 */
   pathGenerators: ReadonlyMap<string, PathGeneratorDefinition>;
-  /** path kind provider registry。 */
+  /** path kind provider 注册表。 */
   pathKinds: ReadonlyMap<string, PathKindDefinition>;
-  /** ribbon width profile provider registry。 */
+  /** ribbon width profile provider 注册表。 */
   ribbonWidthProfiles: ReadonlyMap<string, RibbonWidthProfileDefinition>;
-  /** arrow provider registry。 */
+  /** arrow provider 注册表。 */
   arrows: ReadonlyMap<string, ArrowDefinition>;
-  /** pattern provider registry。 */
+  /** pattern provider 注册表。 */
   patterns: ReadonlyMap<string, PatternDefinition>;
-  /** paint resource registry。 */
+  /** paint 资源注册表。 */
   paint: ReturnType<typeof createPaintRegistry>;
-  /** clip resource registry。 */
+  /** clip 资源注册表。 */
   clip: ReturnType<typeof createClipRegistry>;
-  /** Runtime TeX lowering hook. */
+  /** 运行时注入的 TeX lowering 钩子。 */
   lowerTex: CompileOptions['lowerTex'];
 };
 
@@ -85,8 +89,8 @@ export const createCompileContext = (ir: IR, options: CompileOptions): CompileCo
     maxDepth: options.maxCompositeDepth,
   });
 
-  // provider registry 在 compile 入口统一 resolve：内置和自定义同表，duplicate key fail-loud。
-  // compile 主流程只消费 resolved Map；unknown string-reference provider 仍 fail-fast。
+  // provider 注册表在 compile 入口统一 resolve：内置和自定义同表，重复 key 直接报错。
+  // compile 主流程只消费已解析 Map；未知字符串引用 provider 时仍立即报错。
   const shapes = resolveShapeRegistry(options.shapes);
   const boundaries = resolveBoundaryRegistry(options.boundaries);
   const clips = resolveClipRegistry(options.clips);

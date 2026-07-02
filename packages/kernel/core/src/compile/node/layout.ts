@@ -74,7 +74,7 @@ export const layoutNode = (
   resolveBetweenGlobal?: ResolveBetweenGlobal,
   texLowering?: TexLoweringContext,
 ): NodeLayout => {
-  // shape 解析（入口 fail-fast）：裸 string → { type, params:{} }，对象原样；按 type 查表，未注册抛错列出可用名
+  // shape 解析（入口立即报错）：裸 string → { type, params:{} }，对象原样；按 type 查表，未注册抛错列出可用名
   const { type: shapeName, params: rawShapeParams } = normalizeShape(node.shape);
   // own-property 校验：既得到 `ShapeDefinition | undefined` 类型（让未注册分支成立），又避开
   // `'toString'` 等原型链 key 被 Record 索引误命中（开放字符串 shape 名的边界安全）
@@ -196,7 +196,7 @@ export const layoutNode = (
           const m = measureText(ptext, font);
           if (m.width > textWidth) textWidth = m.width;
           const out: TextLine = { text: ptext };
-          // 行级与块级不同时才写出（精简 emit JSON，明确下游 fallback）
+          // 行级与块级不同时才写出（精简 emit JSON，明确下游兜底）
           if (lineObj) {
             if (lineObj.fill !== undefined) out.fill = lineObj.fill;
             if (lineObj.opacity !== undefined) out.opacity = lineObj.opacity;

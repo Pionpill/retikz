@@ -6,12 +6,17 @@ import { resolvePosition } from '../../position';
 
 const ARC_CAP_POINT_COUNT = 8;
 
+/** 端帽辅助距离计算。 */
 const distance = (a: IRPosition, b: IRPosition): number => {
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
   return Math.hypot(dx, dy);
 };
 
+/**
+ * 生成 round cap 的离散圆弧点
+ * @description 在左右边界点之间选择朝 outwardDirection 外凸的那段圆弧，避免圆头反向穿过 ribbon 内部。
+ */
 export const roundedArcPoints = (
   center: IRPosition,
   from: IRPosition,
@@ -41,8 +46,10 @@ export const roundedArcPoints = (
   return points;
 };
 
+/** 判定是否为显式圆弧端帽配置。 */
 export const isArcCap = (cap: IRRibbonCap): cap is IRRibbonArcCap => typeof cap === 'object';
 
+/** 校验显式 arc cap 的圆心和半径能同时经过端面两侧点。 */
 export const assertArcCapRadius = (
   actual: number,
   expected: number,
@@ -57,6 +64,10 @@ export const assertArcCapRadius = (
   }
 };
 
+/**
+ * 解析显式 arc cap 并生成离散圆弧点
+ * @description cap.center 可引用节点 / 坐标；半径必须与端面两侧点一致，否则端帽无法闭合。
+ */
 export const arcCapPoints = (
   cap: IRRibbonArcCap,
   from: IRPosition,
@@ -90,11 +101,13 @@ export const arcCapPoints = (
   return points;
 };
 
+/** 端面两侧点的中点。 */
 export const midpoint = (a: IRPosition, b: IRPosition, round: (n: number) => number): IRPosition => [
   round((a[0] + b[0]) / 2),
   round((a[1] + b[1]) / 2),
 ];
 
+/** square cap 沿切线方向外扩的距离；center 对齐只需半宽，left/right 对齐需整宽。 */
 export const capExtension = (width: number, align: RibbonAlignmentValue): number => {
   if (align === 'center') return width / 2;
   return width;
