@@ -145,7 +145,7 @@ describe('compile refactor canary', () => {
 
     expect(scene.animations).toEqual([CAMERA]);
     expect(warnings.map(warning => warning.code)).toEqual(['ANIMATION_INVALID_PROPERTY']);
-    expect(scene.resources?.map(resource => resource.kind).sort()).toEqual(['clip', 'paint']);
+    expect(scene.resources?.map(resource => resource.kind)).toEqual(['paint', 'clip']);
     expect(primitiveTypes(scene.primitives)).toMatchInlineSnapshot(`
       [
         "path",
