@@ -61,4 +61,10 @@ describe('compile source structure', () => {
     expect(label).toEqual({});
     expect(tex.lowerTex).toBeUndefined();
   });
+
+  it('compile entry delegates traversal internals', () => {
+    const text = source('src/compile/compile.ts');
+    expect(text).not.toContain('const processChildren =');
+    expect(text).not.toContain('const resolvePendingPaths =');
+  });
 });
