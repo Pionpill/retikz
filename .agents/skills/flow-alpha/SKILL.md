@@ -29,7 +29,7 @@ description: Use when retikz alpha-stage work needs to execute an accepted ADR o
 | 单条 | 一次 1 条 ADR，在当前 worktree 跑完 5 阶段后停止 |
 | 批量 worktree | 一次多条 ADR，每条独立 worktree + 分支；适合用户离线 review |
 
-含“批量 / 一次跑完 / 离线 / 睡觉 / 健身”或 ≥2 个 ADR 编号时，先呈现候选 ADR、推荐布局和 base 分支，等人工确认。
+含“批量 / 一次跑完 / 离线 / 睡觉 / 健身”或 ≥2 个 ADR 编号时，先呈现候选 ADR、推荐布局和 base 分支，等人工确认。长任务启动时同时询问：ADR / plan 写完是否派子 agent review，代码写完是否派子 agent review。
 
 ## 5 阶段
 
@@ -57,13 +57,13 @@ red 走 Spec-First TDD；yellow 按风险决定是否 Spec-First；green 直接�
 
 ## 独立视角
 
-按阶段调用独立视角，工具不限于某个模型名：
+派子 agent、外部模型或新线程评审前必须先得到用户确认；用户拒绝或工具不可用时，由主 AI 自审并说明退化路径。可选独立视角包括：
 
 - Spec Writer：设计 spec test。
 - Bug Hunter：构造失败输入。
 - Contract Auditor：对账 ADR / changelog / docs / 实际行为。
 
-可由当前子代理、新线程、外部模型或人工粘贴结果完成；不可用时由主 AI 执行并说明退化。多份意见取并集、去重后形成 BLOCKING / WARNING / INFO。
+多份意见取并集、去重后形成 BLOCKING / WARNING / INFO。先文档再执行的阶段，文档草案完成后先按用户选择 review 并润色，再进入执行。
 
 ## 批量 worktree 模式
 
@@ -89,6 +89,7 @@ red 走 Spec-First TDD；yellow 按风险决定是否 Spec-First；green 直接�
 - 不 push、不 merge、不切回集成基线、不删 worktree、不删 `REVIEW.md`。
 - 不跑 `develop-wrapup`；批量 wrapup 等所有分支人工 review 并合并后统一跑。
 - 未获当前对话授权时，不 commit；获授权后也只按本 ADR 粒度 commit。
+- 若批量执行中用户授权 LLM 自行 commit，每次 commit 前先派子 agent review 单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。
 
 `REVIEW.md` 放 worktree 根目录，不 stage / commit，至少包含：
 
