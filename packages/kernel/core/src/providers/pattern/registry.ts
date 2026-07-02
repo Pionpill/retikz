@@ -72,5 +72,4 @@ export const resolvePatternRegistry = (
     builtins: BUILTIN_PATTERNS,
     custom: patterns,
     keyOf: definition => definition.name,
-    optionName: 'patterns',
   });

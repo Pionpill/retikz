@@ -156,5 +156,4 @@ export const resolveArrowRegistry = (arrows?: ReadonlyArray<ArrowDefinition>): R
     builtins: BUILTIN_ARROWS,
     custom: arrows,
     keyOf: definition => definition.name,
-    optionName: 'arrows',
   });

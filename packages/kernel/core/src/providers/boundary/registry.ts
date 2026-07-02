@@ -44,5 +44,4 @@ export const resolveBoundaryRegistry = (
     builtins: BUILTIN_BOUNDARIES,
     custom: boundaries,
     keyOf: definition => definition.name,
-    optionName: 'boundaries',
   });

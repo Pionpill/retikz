@@ -5,8 +5,9 @@ import type { PathKindDefinition } from '../../contract';
 import { definePathKind } from '../../contract';
 import { resolveProviderRegistry } from '../registry';
 
-export const keyOfPathKind = (definition: PathKindDefinition): string => definition.schema.shape.kind.value;
+const keyOfPathKind = (definition: PathKindDefinition): string => definition.schema.shape.kind.value;
 
+/** 内置 path kind provider 注册项。 */
 export const BUILTIN_PATH_KINDS: ReadonlyArray<PathKindDefinition> = [
   definePathKind({
     schema: z.object({ kind: z.literal('stroke') }),
@@ -26,5 +27,4 @@ export const resolvePathKindRegistry = (
     builtins: BUILTIN_PATH_KINDS,
     custom: pathKinds,
     keyOf: keyOfPathKind,
-    optionName: 'pathKinds',
   });

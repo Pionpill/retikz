@@ -10,7 +10,14 @@ import { rectangle } from './rectangle';
 import { sector } from './sector';
 import { star } from './star';
 
-export type BuiltinShapeProviderName = Exclude<BuiltinShapeValue, 'circle' | 'diamond'> | 'sector' | 'arc' | 'polygon' | 'star' | 'contour';
+/** 内置 shape provider 名称；`circle` / `diamond` 是 shape preset，不占 provider key。 */
+export type BuiltinShapeProviderName =
+  | Exclude<BuiltinShapeValue, 'circle' | 'diamond'>
+  | 'sector'
+  | 'arc'
+  | 'polygon'
+  | 'star'
+  | 'contour';
 
 /** 内置 shape provider 注册项；circle / diamond 是 IR 内置 shape preset，不占独立 provider key。 */
 export const BUILTIN_SHAPES = defineBuiltinProviderArray<ShapeDefinition, BuiltinShapeProviderName>([
@@ -29,5 +36,4 @@ export const resolveShapeRegistry = (shapes?: ReadonlyArray<ShapeDefinition>): R
     builtins: BUILTIN_SHAPES,
     custom: shapes,
     keyOf: definition => definition.name,
-    optionName: 'shapes',
   });

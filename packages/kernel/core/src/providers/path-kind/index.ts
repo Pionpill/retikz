@@ -1,1 +1,1 @@
-export { BUILTIN_PATH_KINDS, resolvePathKindRegistry } from './registry';
+export * from './registry';

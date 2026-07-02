@@ -12,5 +12,4 @@ export const resolvePathGeneratorRegistry = (
     builtins: BUILTIN_PATH_GENERATORS,
     custom: pathGenerators,
     keyOf: definition => definition.name,
-    optionName: 'pathGenerators',
   });

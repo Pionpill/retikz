@@ -12,5 +12,4 @@ export const resolveRibbonWidthProfileRegistry = (
     builtins: BUILTIN_RIBBON_WIDTH_PROFILES,
     custom: profiles,
     keyOf: definition => definition.name,
-    optionName: 'ribbonWidthProfiles',
   });

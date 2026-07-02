@@ -1,1 +1,1 @@
-export { BUILTIN_COMPOSITES, resolveCompositeRegistry } from './registry';
+export * from './registry';
