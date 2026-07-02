@@ -59,7 +59,7 @@ notes/plans/<task>/TASK_STATE.md
 
 ## Commit 前 Review
 
-用户批准批量执行并授权 LLM 自行 commit 时，每个 commit 必须单独过 gate。用户在当前对话明确认可的单次 commit 不走本 review gate，不额外派子 agent review：
+用户批准批量执行并授权 LLM 自行 commit 时，每个 commit 必须单独过 gate。用户在当前对话明确认可的小任务单次 commit 不走本 review gate；改动面大或核心功能不适用该豁免：
 
 1. 只 stage 本 commit 文件，不用 `git add -A`。
 2. 跑受影响验证；验证失败不进入 review。

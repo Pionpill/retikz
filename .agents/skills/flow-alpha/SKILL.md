@@ -89,7 +89,7 @@ red 走 Spec-First TDD；yellow 按风险决定是否 Spec-First；green 直接�
 - 不 push、不 merge、不切回集成基线、不删 worktree、不删 `REVIEW.md`。
 - 不跑 `develop-wrapup`；批量 wrapup 等所有分支人工 review 并合并后统一跑。
 - 未获当前对话授权时，不 commit；获授权后也只按本 ADR 粒度 commit。
-- 若批量执行中用户授权 LLM 自行 commit，每次 commit 前先派子 agent review 单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。用户明确认可的单次 commit 不触发该要求。
+- 若批量执行中用户授权 LLM 自行 commit，每次 commit 前先派子 agent review 单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。用户明确认可的小任务单次 commit 不触发该要求；改动面大或核心功能不适用该豁免。
 
 `REVIEW.md` 放 worktree 根目录，不 stage / commit，至少包含：
 
