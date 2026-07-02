@@ -1,14 +1,3 @@
-/**
- * Anchor 解析统一入口 + per-layout WeakMap 缓存
- * @description
- *   `'A.<keyword>'`（top / right / top-left，或 north 等别名）与 `'A.<deg>'`（'30' / '-45' / '180.5' 等数字角度）
- *   两类 anchor 解析在 path / position 多处会反复触发同一 (layout, name) 组合。本模块把对各 shape 的
- *   `anchor()` / 数字角度 `boundaryPoint(toward=旋转后单位向量)` 调用统一收编到 `resolveAnchor(layout, name, boundary?)`，
- *   并按 `WeakMap<NodeLayout, Map<string, IRPosition>>` 缓存结果——
- *   单次 compile 内 layout 不可变 → cache 命中保证返回**严格相等**（`===`）的 IRPosition 引用。
- *   compile 结束 layout 引用释放，WeakMap entry 随 GC 一并回收。
- */
-
 import type { IRBoundary, IRPosition } from '../schemas';
 import type { WebSideValue } from '../shared';
 import type { Position } from '../shared/geometry';

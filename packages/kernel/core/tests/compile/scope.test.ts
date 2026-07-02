@@ -1,7 +1,3 @@
-/**
- * compile + scope 集成测试
- * @description 只覆盖 scope.transforms 5 个 translate 变体 lower + 累积 chain、嵌套 scope、prune、跨 scope path 引用、scope.transforms 失败时的 warn
- */
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, GroupPrim, IR, ScenePrimitive, Transform } from '../../src';

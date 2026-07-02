@@ -1,8 +1,3 @@
-/**
- * `lowerScopeTransforms` 单元测试
- * @description 直接驱动 IR 层 5 种 translate 变体下沉为 Scene Cartesian translate；
- *   referent 未解析返回 null（compile.ts 上游负责发 warn）；rotate/scale 透传
- */
 import { describe, expect, it } from 'vitest';
 
 import type { IRTransform } from '../../src/schemas';

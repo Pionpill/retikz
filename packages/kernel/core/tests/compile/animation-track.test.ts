@@ -1,9 +1,3 @@
-/**
- * 时间轴动画 IR：AnimationTrack schema 校验 + compile 沿 id/meta-stamp 同款通路透传进 Scene + viewBox⇔根 校验
- * @description 覆盖：三载体 + scene 根 track stamp 落点；自定义 property 宽松透传（扩展口）；省略等价现状（settled）；
- *   zod 拒（非法 value / at / duration / iterations / property↔value 类型）；compile viewBox⇔根 warn+drop；
- *   id+meta+animations 共存；layout 中立；round-trip。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IR, IRAnimationTrack, ScenePrimitive } from '../../src';

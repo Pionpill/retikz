@@ -1,20 +1,3 @@
-﻿/**
- * polygon shape（ADR-04）—— paramsSchema + 正多边形几何契约 + scaleParams 测试
- * @description 覆盖：
- *   - paramsSchema 校验（sides 整数 ≥3、rotate finite、strictObject 拒多余字段）；
- *   - 几何契约：顶点均布外接圆、emit 闭合 path、sides=3 最小三角形、sides 大近圆轮廓；
- *   - 错误：sides<3 / rotate 非有限 paramsSchema reject；
- *   - 交互：self-rotate（params.rotate）+ Node.rotate 叠加；
- *   - round-trip（nested params IR）+ zod 错误两类；
- *   - scaleParams：node scale 不缩 sides / rotate（只内框×scale）。
- *
- *   角度约定（与 polar.ts / geometry 一致，SVG y-down）：顶点 k 角 = rotate + k·(360/sides)，
- *   point = [cx + r·cosθ, cy + r·sinθ]，0°=+x(east)，90°=+y(屏幕下方)。
- *
- *   注：polygon 的 circumscribe / boundaryPoint / anchor 真实数学此刻仍为占位 stub
- *   （实现 Agent 填）——依赖这些的几何精确 case 此刻 fail，预期。
- *   paramsSchema / emit 拓扑 / round-trip / zod 错误 / scaleParams 类 case 此刻应通过。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive } from '../../src/contract';

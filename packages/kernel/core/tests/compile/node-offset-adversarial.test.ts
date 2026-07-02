@@ -1,7 +1,3 @@
-﻿/**
- * OffsetPosition 对抗性边界测试
- * @description bug hunter 视角：聚焦"应该失败但可能误通过"的输入——zod union 选错分支、循环引用、特殊数值、首步前向、polar.origin 误纳 OffsetPosition 等
- */
 import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/contract';

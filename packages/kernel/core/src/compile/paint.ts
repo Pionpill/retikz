@@ -21,10 +21,6 @@ const FALLBACK_PATTERN_SIZE = 8;
 const DEFAULT_MOTIF_COLOR = 'currentColor';
 
 /**
- * 查有效 pattern 表取 def；未注册名编译期 throw（消息含字母序可用名列表）
- * @description 仿 arrow / shape 的未注册 throw 风格——错误带可用名便于第三方 / LLM 自修。
- */
-/**
  * 对一个 pattern spec 查表 + 调 `def.emit` 产已解析 tile
  * @description 构 `PatternEmitContext`（size = spec.size ?? def.defaultSize ?? 8；color = spec.color ??
  *   currentColor；background 透传；lineWidth 仅 spec 显式给值时存在——让 dots 缺省半径 size/5、lines/grid

@@ -1,9 +1,3 @@
-﻿/**
- * Node maxTextWidth 自动换行（alpha.7 ADR-02）
- * @description 折行阈值语义：盒宽 = min(实际最长行, maxTextWidth)，短文本收缩。
- *   西文按词、CJK 按字；折出物理行继承逻辑行 LineSpec 样式；长不可断 token 溢出不硬断。
- *   用确定性 measureText（width = 字符数）让断点可精确断言。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { CompileOptions } from '../../src/compile/compile';

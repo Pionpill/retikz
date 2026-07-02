@@ -1,17 +1,3 @@
-/**
- * sector cornerRadius（ADR-07 统一圆角）—— params + emit fillet 弧 + boundary 感知 + r=0 等价 + scaleParams
- * @description sector 轮廓是「直边 + 圆弧」混合（环楔 = radial Line + outerArc + radial Line + innerArc，
- *   pie = radial Line + outerArc + radial Line 交于 apex），接缝是 line-arc / arc-line / line-line。
- *   rayOrigin 是质心（不是圆心），r=0 时 boundaryPoint 必须与现状 sectorBoundaryHit（质心射线 ∩ 轮廓）数值等价。
- *   覆盖：
- *   - paramsSchema：cornerRadius 可选 nonnegative finite，负值 / 非有限 reject；
- *   - r=0 emit 等价：省略 cornerRadius → emit 命令序同现状（含 inner/outer arc + radial line + close）；
- *   - r=0 boundary 等价（硬回归）：质心射线多方向命中 = 现状 sectorBoundaryHit 数值；
- *   - emit fillet：环楔 / pie r>0 → 接缝处含 fillet 弧；
- *   - boundary-aware：朝某接缝方向 r>0 落 fillet 弧（≠ 尖角）；
- *   - 窄角夹紧：窄张角 + 大 cornerRadius 仍产合法闭合轮廓、不自交；
- *   - circumscribe 不随 cornerRadius 变；scaleParams 缩 cornerRadius。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { Position } from '../../src/shared/geometry/point';
@@ -158,13 +144,6 @@ describe('sector cornerRadius — r=0 emit equivalence', () => {
     return commands;
   };
 
-  /**
-   * 比较 emit 命令序与现状参考：命令 kind 序逐字相等；line/move 落点逐字相等；arc 圆心 / 半径逐字、
-   * 起止角数值接近（容差 1e-6）。
-   * @description passthrough（r 省略）下 rounded-contour 的 emitSegmentBody 由弧端点 atan2 重建起止角，
-   *   与现状直接写字面 start/end 几何等价但浮点上有 ~1e-13 抖动（如 200 → 199.999…），且 CW 弧带 counterClockwise:undefined。
-   *   故 arc 角度用 closeTo、其余逐字。
-   */
   /** 两角（度）mod 360 等价断言（差为 360 的整数倍即视为同角） */
   const expectAngleEquiv = (a: number, b: number): void => {
     let diff = (a - b) % 360;

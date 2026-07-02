@@ -1,8 +1,3 @@
-/**
- * parseNodeTarget 单元测试（ADR-01）
- * @description 字符串 shorthand → NodeTarget 对象（单一真源，React DSL 层用）：
- *   node（无 .）/ Web canonical 命名 anchor / compass alias / 角度 anchor；未知 anchor 抛错；含 . 的 id 走对象（dotted-id 限制）
- */
 import { describe, expect, it } from 'vitest';
 
 import { parseNodeTarget } from '../../src/parsers/node-target';

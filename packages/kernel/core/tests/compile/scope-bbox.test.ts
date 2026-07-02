@@ -1,9 +1,3 @@
-/**
- * scope.id synthetic bounding-box layout 注册测试
- * @description scope.id 设值时 Pass 1 子树结束后算 axis-aligned 全局 bbox，注册为 synthetic rectangle NodeLayout 到父 namespace frame。
- *   外部 path 用 `'g'` / `'g.<anchor>'` / `'g.<deg>'` 引用走与普通 rectangle node 完全一致的 anchor 路径；
- *   scope.id 作为 polar / at / offset referent 取 bbox 中心。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IR, ScenePrimitive } from '../../src';

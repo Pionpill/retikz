@@ -1,13 +1,3 @@
-﻿/**
- * ADR-03 Adversarial Bug Hunter：out/in + self-loop / 路径整体变换 / 中段 marking
- * @description 故意构造 LLM / 第三方真实会写的边角 IR，逼出 throw 意外 / NaN / Infinity /
- *   round-trip 失真 / 几何错乱 / 错误信息含糊。本文件只构造新输入跑，不修代码 / schema / 现有测试。
- *
- *   核心契约（DESIGN §1.2/§7 + ADR-03 §4 顺序硬契约）：
- *   - Scene 100% finite + JSON 可序列化（JSON.stringify(NaN/Infinity)=null 会 round-trip 失真）
- *   - zod parse 错误够 LLM 自修
- *   - path transform 顺序：端点先 resolve → shrink 在原始几何 → 最后包 GroupPrim（bbox center 支点）
- */
 import { describe, expect, it } from 'vitest';
 
 import type { IR, IRPath, ScenePrimitive } from '../../src';

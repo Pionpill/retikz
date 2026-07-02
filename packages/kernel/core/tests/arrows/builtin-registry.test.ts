@@ -20,17 +20,6 @@ import { PathSchema } from '../../src/schemas';
 import { arrowMarks } from '../helpers/arrow-marks';
 import { flattenPrims } from '../helpers/flatten';
 
-/**
- * Arrow Registry（ADR-01）core 侧测试（emit-in-compile 契约）
- * @description 断言落点全在 compile 输出（`PathPrim.arrowEnd` 已解析 marker 描述）：
- *   - marker 几何（`arrowEnd.marker: MarkerPrimitive[]`，def.emit 产物）内置 8 零回归 golden
- *   - wrapper 参数（baseSize / refX / markerWidth / markerHeight）
- *   - 端点 shrink 坐标（shrink 在 compile，与 emit 落点无关）
- *   - renderer-agnostic（Scene 无 SVG `<marker>` 元素；ResolvedArrowEndSpec.marker 纯 JSON 数据）
- *   - 错误 / 交互 / override（含 override_builtin_geometry_takes_effect 逼出"内置名真走注册表"）
- *   ArrowDefinition 含函数、不进 IR：round-trip 只针对 IR（arrowDetail.shape 字符串）。
- */
-
 /** 水平直线 path（end 箭头作用在末端 [100,0]，start 作用在首端 [0,0]）的 IR 工厂 */
 const horizontalPathIR = (arrow: '->' | '<-' | '<->', detail: Record<string, unknown> = {}): IR => ({
   version: 1,

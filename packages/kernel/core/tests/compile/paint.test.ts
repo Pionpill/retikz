@@ -1,8 +1,3 @@
-﻿/**
- * Paint 编译：PaintSpec fill → 资源表 + resourceRef
- * @description node / path / scope 的 PaintSpec fill 收进 scene.resources（去重 + 稳定 id），primitive.fill 变 { kind:'resourceRef', id }；
- *   纯色 string 原样、不进资源表；同 spec 多处复用 → 1 条资源、同 id；scope fill 级联到内部 node；纯色与渐变同场景互不干扰。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/contract';

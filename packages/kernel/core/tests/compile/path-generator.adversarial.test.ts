@@ -1,11 +1,3 @@
-﻿/**
- * Path generator 注册面 — 对抗回归（ADR-02）
- *
- * 来自 Adversarial Bug Hunter 的边角 IR / generator def。坏 def（Infinity params / generate 产
- * NaN·Infinity·坏命令 / 返回非数组 / targetParams 值非 Target / generate 抛错）现在都被 compile
- * 在源头拦下、抛含 generator 名的清晰错（或 schema 拒），守「IR / Scene 100% JSON 可序列化」。
- * 可接受的边角（空数组 / 1e6 段 / unresolve / 字符串当 id / scope 增量语义）保持稳定行为。
- */
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 

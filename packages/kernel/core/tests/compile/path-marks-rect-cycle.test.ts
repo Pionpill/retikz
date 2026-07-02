@@ -5,11 +5,6 @@ import type { IR, ScenePrimitive } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { rectPerimeterSample } from '../../src/shared/geometry/path';
 
-/**
- * C7：rectangle / cycle 段也注册段采样器，中段 marks 的 pos∈[0,1] 因此把它们计入段数，
- * 且 mark 能落在矩形周长 / cycle 闭合段上。
- */
-
 /** mark marker group 的签名：transforms = [translate(point), rotate, scale, translate]；取首个 translate 为落点 */
 const findMarkPoint = (prims: ReadonlyArray<ScenePrimitive>): [number, number] | undefined => {
   for (const p of prims) {

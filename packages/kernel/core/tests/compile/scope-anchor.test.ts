@@ -1,8 +1,3 @@
-/**
- * 跨 scope anchor / 数字角度 / corner + scope scale 集成测试
- * @description scope transform chain 累积到 NodeLayout.rect.rotate / .width / .height 后；
- *   path target `'A.<keyword>'` / `'A.<deg>'` 取 anchor 应反映视觉投影；测试用 fallback measurer 几何近似 + 宽松断言
- */
 import { describe, expect, it } from 'vitest';
 
 import type { IR, ScenePrimitive } from '../../src';

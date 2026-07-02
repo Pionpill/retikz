@@ -1,7 +1,3 @@
-﻿/**
- * Node shape drop shadow 编译测试：shadow 解析后落到 shape emit 的几何图元上。
- * 渲染层断言（SVG feDropShadow / Canvas ctx.shadow*、跨端像素 parity）留 render 测试。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive } from '../../src/contract';

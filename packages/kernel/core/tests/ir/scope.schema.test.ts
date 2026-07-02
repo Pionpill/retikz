@@ -1,8 +1,3 @@
-/**
- * ScopeSchema / TransformSchema 校验测试
- * @description 覆盖 scope schema 合法 / 嵌套 / 字段拒绝、6 个 transform 变体的必填字段拒绝；
- *   localNamespace 隔离、duplicate id warn、scope.id bbox、scope 下相对 position 等行为属于 schema 之外的运行时语义，留待后续实现
- */
 import { describe, expect, it } from 'vitest';
 
 import { ChildSchema, ScopeSchema, TransformSchema } from '../../src/schemas';

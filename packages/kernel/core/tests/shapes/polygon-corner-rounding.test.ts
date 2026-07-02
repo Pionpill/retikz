@@ -1,13 +1,3 @@
-/**
- * polygon cornerRadius（ADR-07 统一圆角）—— params + emit fillet 弧 + boundary 感知 + r=0 等价 + scaleParams
- * @description 覆盖：
- *   - paramsSchema：cornerRadius 可选 nonnegative finite，负值 / 非有限 reject；
- *   - emit：cornerRadius>0 path 含 fillet arc 命令；
- *   - boundary-aware：朝顶点方向 boundaryPoint 落 fillet 弧上（≠ 尖顶点）；cornerRadius=0 = 尖顶点；
- *   - r=0 等价：省略 cornerRadius → emit / boundaryPoint 逐字段同现状（直接对照原始尖角轮廓数学）；
- *   - scaleParams：scale=2 → cornerRadius×2、sides/rotate 不变；
- *   - circumscribe 不随 cornerRadius 变（AABB = 尖角极值）。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { Position } from '../../src/shared/geometry/point';

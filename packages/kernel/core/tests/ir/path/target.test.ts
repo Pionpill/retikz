@@ -1,8 +1,3 @@
-/**
- * 结构化 Target / Anchor schema 单元测试（ADR-01）
- * @description AnchorRefSchema（命名 / 角度 / { side, fraction }）+ NodeTargetSchema（{ id, anchor?, offset? }）；
- *   TargetSchema 接受对象形态；finite / t 范围 / 缺 id 错误路径；JSON round-trip
- */
 import { describe, expect, it } from 'vitest';
 
 import { AnchorRefSchema, NodeTargetSchema, TargetSchema } from '../../../src/schemas';

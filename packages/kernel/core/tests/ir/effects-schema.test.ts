@@ -1,7 +1,3 @@
-/**
- * ADR-01 / ADR-02 — ir/effects.ts schema 直测 + SHADOW_PRESETS 表完整性。
- * 全部 PASS（纯 schema / 常量层，无 compile 依赖）。
- */
 import { describe, expect, it } from 'vitest';
 
 import { BlendMode, DropShadowSchema, SHADOW_PRESETS, ShadowPreset } from '../../src/schemas';

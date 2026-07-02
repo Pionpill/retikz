@@ -1,7 +1,3 @@
-/**
- * `<Scope localNamespace>` 隔离与 inside-out lookup 集成测试
- * @description 覆盖 localNamespace 创建子 frame、跨 frame shadowing 不算 duplicate、外层不可见内层、scope.id 始终注册到父 frame、scope at-translate 的 of= 走 inside-out lookup
- */
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IR, Scene, ScenePrimitive } from '../../src';

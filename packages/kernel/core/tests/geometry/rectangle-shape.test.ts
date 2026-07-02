@@ -1,16 +1,3 @@
-﻿/**
- * rectangle shape —— cornerRadius 从 Node 顶层迁入 params 测试
- * @description 覆盖：
- *   - params.cornerRadius → 圆角矩形（emit RectPrim 带 cornerRadius）；
- *   - strictObject 拒多余字段；
- *   - 顶层 Node.cornerRadius 迁移期仍生效（无 params 时回退）；
- *   - params.cornerRadius 与顶层并存 → params 优先；
- *   - scaleParams：cornerRadius 是长度，随 node scale 协同缩放。
- *
- *   迁移期约定：params.cornerRadius 优先；顶层 Node.cornerRadius 仍生效（回退、建议改写 params 内）。
- *   顶层↔params 优先级在 compile（emit 读 params.cornerRadius ?? style.cornerRadius）——
- *   `rectangle_rounded_toplevel_compat` / `rectangle_params_over_toplevel` 依赖 emit 优先级落地。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive } from '../../src/contract';

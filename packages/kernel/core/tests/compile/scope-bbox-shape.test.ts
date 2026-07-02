@@ -1,10 +1,3 @@
-/**
- * scope.id boundingShape 圆形包络测试
- * @description `<Scope id=... boundingShape="circle">` 应把 scope 的 synthetic layout 注册为
- *   最小外接圆（ellipse + circumscribe:'equal'），anchor/boundary 走既有 ellipse 路径。
- *   缺省 boundingShape（矩形 AABB）逐字不变。boundingShape 是受控枚举（'rectangle' | 'circle'），
- *   枚举外的值由 schema 在 parse 边界拒绝，compile 不再做运行时回退 warn。
- */
 import { minimalEnclosingCircle } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 

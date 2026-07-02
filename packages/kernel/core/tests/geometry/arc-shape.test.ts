@@ -1,15 +1,3 @@
-﻿/**
- * arc shape（ADR-03）—— paramsSchema + 几何契约 + scaleParams 测试
- * @description 覆盖：arc paramsSchema（finite 正半径、finite 角度、可选 close、strictObject）；
- *   开放描边弧（close:false）vs 闭合弓形（close:true）；round-trip + zod 错误；
- *   scaleParams：node scale 只缩 radius、不缩角度。
- *
- *   角度约定（与 polar.ts / @retikz/math arc 一致，SVG y-down）：
- *     point = [cx + r·cosθ, cy + r·sinθ]，0°=+x，90°=+y(屏幕下方)。
- *
- *   注：涉及 emit 真实几何的 case 此刻 fail（arc.ts emit 仍是占位 stub，实现 Agent 填）——预期。
- *   paramsSchema / scaleParams / round-trip / zod 错误类 case 此刻应通过。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive } from '../../src/contract';

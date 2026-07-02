@@ -1,10 +1,3 @@
-/**
- * 自定义视框覆盖编译——对抗测试（破坏视角）
- * @description 构造让实现挂的对抗输入：手搓 IR 绕过 zod 直喂 compileToScene 的非 finite / 退化 viewBox、
- *   round 边界（极大 / 负 / 极小坐标 + 各种 precision）、override 语义彻底性、与 clip / paint 资源共存、
- *   JSON round-trip 保真。对抗测试表达**正确期望**：Scene.layout 必须 finite & 正尺寸、可 JSON 序列化、
- *   override 绝对。所有 IR 手搓 `{ version, type, children, viewBox }`，刻意构造 schema 不会拦的脏值。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { IR, IRChild } from '../../src';

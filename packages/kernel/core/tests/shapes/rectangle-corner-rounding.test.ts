@@ -1,14 +1,3 @@
-/**
- * rectangle cornerRadius（统一圆角）—— boundaryPoint 走 rounded-contour（连接感知倒角）+ r=0 等价 + emit 仍 RectPrim
- * @description 覆盖：
- *   - rect_emit_stays_rectprim：emit 仍出 RectPrim（含 cornerRadius 字段），非 path；
- *   - rect_boundary_aware：朝角方向 cornerRadius>0 boundaryPoint 落 fillet 弧（≠ 直角顶点）、r=0 = 直角；
- *   - rect_r0_boundary_equiv：省略 cornerRadius boundaryPoint 多方向 = 现状矩形边求交（rect.boundaryPoint 数学）；
- *   - rect_params_over_toplevel：params.cornerRadius 优先于顶层（经 style）回退。
- *
- *   boundaryPoint 把矩形 4 角构造成 4 条折线段、委托 boundaryFromContour，rayOrigin = 矩形中心；
- *   r=0 / 省略时与现状矩形边射线求交（geometry/rect.boundaryPoint）逐数值等价。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { Position } from '../../src/shared/geometry/point';

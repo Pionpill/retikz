@@ -1,12 +1,3 @@
-﻿/**
- * ADR-03 contour shape —— 任意闭合顶点环作可连接 Node 形状
- * @description 覆盖测试象限（ADR § 实现契约 测试象限）：
- *   - Happy：矩形轮廓 / 旗帜形轮廓 emit、cornerRadius fillet、未居中点集自动居中等价；
- *   - 边界：恰好 3 顶点、cornerRadius 远大于边长逐角夹紧；
- *   - 错误：points<3 / 非有限顶点 schema 拒绝、params 偷渡函数编译期拦；
- *   - 交互：Node rotate / 各向异性 scale / boundaryPoint 连接 / compass anchor 回退 AABB；
- *   - JSON round-trip：{type:'contour', params} 经 NodeSchema 序列化往返等价。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive } from '../../src/contract';

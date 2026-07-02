@@ -128,12 +128,6 @@ const scopePlaceholderLayout = (
 };
 
 /**
- * Pass 1 递归扫描时记录的 pending path
- * @description path 必须等所有 node / coordinate Pass 1 注册完才能解析端点（避免前向引用），但 lookup 必须在它所在的 frame 栈上下文中进行——scope localNamespace 内 path 引用同 frame id 需在 frame pop 前完成。compile 处理顺序：每个层级先把子 node / coordinate / 子 scope 处理完（pending path 全部收集），然后**在该层 popFrame 前**统一 resolve 本层 pending path；这样 path 端点 inside-out lookup 能正确看到本层 frame。
- *   `scopeChain` 字段记录该 path 所在 scope 的累积 transform 链，让 path step 内 polar/at/offset
- *   `to` 在 scope 局部度量后由 path 端点 lookup 端走 `applyTransformChain` 投回全局。
- */
-/**
  * 编译期占位 primitive：Pass 1 的 path 分支先在 sink 占一个位记住声明位置，Pass 2 解析出真 primitive 后按引用 splice 替换。绝不进入最终 Scene 输出（compileToScene 返回前由 placeholderBalance 无条件校验兜底）。
  */
 type PathPlaceholder = { type: 'path-placeholder' };

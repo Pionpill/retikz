@@ -1,9 +1,3 @@
-/**
- * Scope 样式继承 schema 校验测试（alpha.2 ADR-01）
- * @description 覆盖四通道派生 schema（NodeDefault / PathDefault / LabelDefault / ArrowDefault）的合法形态 +
- *   `.strict()` 拒未知 / 被排除字段；ScopeSchema 级联 graphic state + 四通道 + resetStyle 合法 / 拒；JSON round-trip。
- *   样式继承的运行时解析（主色展开 / 颜色级联 / 优先级链 / resetStyle 屏障）属 compile 行为，见 compile/scope-style-inheritance.test.ts
- */
 import { describe, expect, it } from 'vitest';
 
 import {

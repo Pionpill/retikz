@@ -1,8 +1,3 @@
-﻿/**
- * Anchor 缓存单元测试
- * @description 覆盖：cache 命中返回严格相等引用；keyword vs 数字角度 cache key 互不串扰；
- *   不同 layout 各自一份缓存；同 layout 多次 lookup 结果一致；数字角度 + 负号 / 小数支持
- */
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 

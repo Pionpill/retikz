@@ -1,6 +1,3 @@
-/**
- * 具名动画 sugar：Sugar=Kernel 等价（工厂输出逐字段 = 手写 track）+ opts 覆盖 + 必填校验 + loop/stagger
- */
 import { describe, expect, it } from 'vitest';
 
 import {

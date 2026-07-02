@@ -1,8 +1,3 @@
-/**
- * 边上比例点 edgePoint 几何单元测试（ADR-02）
- * @description 覆盖 rect 直边 / circle·ellipse 周长弧段 / diamond 过顶点折线四种真实边界几何；
- *   方向约定 top/bottom=西→东、right/left=北→南；端点与现有 9-anchor 重合；含旋转
- */
 import { describe, expect, it } from 'vitest';
 
 import { WebAnchor, WebSide } from '../../src/shared';

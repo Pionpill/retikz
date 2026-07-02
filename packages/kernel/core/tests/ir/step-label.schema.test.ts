@@ -1,8 +1,3 @@
-/**
- * StepLabel 样式扩展 schema 校验测试（alpha.2 ADR-02）
- * @description StepLabelSchema 新增 textColor / opacity / font 三字段的合法 / 越界拒 / font 复用 FontSchema 校验 +
- *   零破坏（旧 text/position/side 仍合法）+ JSON round-trip。继承顺序解析属 compile 行为，见 compile/path-label-style.test.ts
- */
 import { describe, expect, it } from 'vitest';
 
 import { StepLabelSchema } from '../../src/schemas';

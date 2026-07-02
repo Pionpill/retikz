@@ -1,18 +1,3 @@
-﻿/**
- * star shape（ADR-05）—— paramsSchema + 星形几何契约 + scaleParams 测试
- * @description 覆盖：
- *   - paramsSchema 校验（points 整数 ≥3、内外半径 finite positive、outerRadius>innerRadius、strictObject 拒多余/缺字段）；
- *   - 几何契约：2×points 顶点外径尖角 / 内径凹角交替均布、emit 闭合 path、tip-N / notch-N anchor、
- *     rotate:0 第一尖角朝上（−y）、points:3 最小三角星、innerRadius→outerRadius 近正多边形、rotate 360° 等价；
- *   - 错误：points<3 / outerRadius≤innerRadius / 缺字段 paramsSchema reject；
- *   - 交互：self-rotate（params.rotate）+ Node.rotate 叠加、× scale 尺寸协同、Path 连接 tip-0；
- *   - round-trip（nested params IR）+ zod 错误两类；
- *   - scaleParams：node scale 只缩 inner/outerRadius、不缩 points / rotate。
- *
- *   角度约定（与 polar.ts / geometry 一致，SVG y-down）：顶点 k 角 = (rotate ?? 0) + k·(180/points) − 90，
- *   point = [cx + r·cosθ, cy + r·sinθ]，偶 k 取 outerRadius（尖角 tip）、奇 k 取 innerRadius（凹角 notch），
- *   0°=+x(east)，90°=+y(屏幕下方)。−90 基准使默认（rotate:0）第一尖角朝上（−y / 屏幕上方）。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive } from '../../src/contract';

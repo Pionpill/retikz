@@ -1,14 +1,3 @@
-/**
- * scope 下相对定位（Polar / At / Offset）语义集成测试
- * @description referent 全局 / relative 部分在当前 scope 局部度量 / 末端 apply scope chain 投回全局
- *   覆盖：
- *   - 同 scope referent vs 跨 scope referent
- *   - polar / at / offset 三种 schema
- *   - scope translate / rotate / scale 三种 transform 与 relative 的交互
- *   - 嵌套 polar / 嵌套 offset 在 scope 下递归
- *   - 错误路径（前向引用 / unresolved id）
- *   - 交互场景（多层 scope + node rotate / nodeDistance / scale=0 退化）
- */
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IR, IRPosition, ScenePrimitive } from '../../src';
