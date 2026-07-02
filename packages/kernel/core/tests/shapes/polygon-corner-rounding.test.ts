@@ -65,7 +65,7 @@ describe('polygon cornerRadius — emit', () => {
 });
 
 describe('polygon cornerRadius — boundary aware', () => {
-  // sides=4 rotate=0：顶点角 0/90/180/270；首顶点在 +x 方向（east）。朝首顶点方向 [1,0] 射线，
+  // sides=4 rotate=0：顶点角 0/90/180/270；首顶点在 +x 方向（right）。朝首顶点方向 [1,0] 射线，
   //   r=0 命中尖顶点（外接半径处）；r>0 命中被磨圆的 fillet 弧（离中心更近）。
   it('polygon_boundary_aware：朝顶点方向 r>0 落 fillet 弧（≠ 尖顶点），r=0 = 尖顶点', () => {
     const rect = squareRect();

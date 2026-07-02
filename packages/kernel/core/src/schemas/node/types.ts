@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import type { WebSideInput } from '../../shared';
+import type { SideInput } from '../../shared';
 import type { ValueOf } from '../../shared';
 import type { AtDirectionInput } from '../position';
 import type {
@@ -15,7 +15,7 @@ import type { NodeLabelBoundaryPositionSchema, NodeLabelSchema, NodeSchema } fro
 export type IRNodeLabelBoundaryPosition = z.infer<typeof NodeLabelBoundaryPositionSchema>;
 
 export type IRNodeLabelBoundaryPositionInput = Omit<IRNodeLabelBoundaryPosition, 'boundary'> & {
-  boundary: WebSideInput;
+  boundary: SideInput;
 };
 
 /** Node label IR 类型 */

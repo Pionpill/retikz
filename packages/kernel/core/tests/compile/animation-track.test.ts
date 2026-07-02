@@ -150,7 +150,7 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
 });
 
 describe('非均匀缩放 scaleX / scaleY + origin 支点', () => {
-  it('scaleY + origin:"south" track → 图元原样透传（含 origin）', () => {
+  it('scaleY + origin:"bottom" track → 图元原样透传（含 origin）', () => {
     const prims = compileToScene(
       scene([{ type: 'node', id: 'bar', position: [0, 0], animations: [GROW_UP] }]),
       silent,

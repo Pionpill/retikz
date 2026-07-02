@@ -1,4 +1,4 @@
-﻿import { minimalEnclosingCircle } from '@retikz/math';
+import { minimalEnclosingCircle } from '@retikz/math';
 
 import type { BoundaryDefinition } from '../contract';
 import type { Transform } from '../contract';
@@ -20,7 +20,7 @@ import type { ResolveBetweenGlobal } from './position';
 import { resolveBoundaryRegistry } from '../providers/boundary';
 import { providerDefinitionOf } from '../providers/registry';
 import { resolveShapeRegistry } from '../providers/shape';
-import { WebAnchor } from '../shared';
+import { Anchor } from '../shared';
 import { rect as rectOps } from '../shared/geometry';
 import { outerRectOf } from './node';
 import { resolvePosition } from './position';
@@ -239,10 +239,10 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Ar
   for (const layout of layouts) {
     const outerRect = outerRectOf(layout);
     points.push(
-      rectOps.anchor(outerRect, WebAnchor.TopLeft),
-      rectOps.anchor(outerRect, WebAnchor.TopRight),
-      rectOps.anchor(outerRect, WebAnchor.BottomLeft),
-      rectOps.anchor(outerRect, WebAnchor.BottomRight),
+      rectOps.anchor(outerRect, Anchor.TopLeft),
+      rectOps.anchor(outerRect, Anchor.TopRight),
+      rectOps.anchor(outerRect, Anchor.BottomLeft),
+      rectOps.anchor(outerRect, Anchor.BottomRight),
     );
   }
   return points;

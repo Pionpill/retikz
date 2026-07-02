@@ -233,7 +233,7 @@ describe('contour — 交互', () => {
     expect(end.to[1]).toBeCloseTo(0, 3);
   });
 
-  it('contour-anchor-fallback：compass 名（north）→ anchor 返回 undefined、compile 回退外接 AABB、不抛错', () => {
+  it('contour-anchor-fallback：canonical 名（top）→ anchor 返回 undefined、compile 回退外接 AABB、不抛错', () => {
     expect(() =>
       compileToScene(
         scene([
@@ -242,7 +242,7 @@ describe('contour — 交互', () => {
             type: 'path',
             children: [
               { type: 'step', kind: 'move', to: [200, 0] },
-              { type: 'step', kind: 'line', to: { id: 'c', anchor: 'north' } },
+              { type: 'step', kind: 'line', to: { id: 'c', anchor: 'top' } },
             ],
           },
         ] as IR['children']),

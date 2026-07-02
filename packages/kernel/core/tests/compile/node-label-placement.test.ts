@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IR, IRNode, IRNodeLabel } from '../../src/schemas';
@@ -50,25 +50,29 @@ describe('Node label placement', () => {
       });
     });
 
-    it('compass boundary 别名归一到 Web canonical', () => {
-      expect(NodeLabelSchema.parse({ text: 'L', position: { boundary: 'north' } })).toMatchObject({
+    it('boundary position 只接受 canonical side', () => {
+      expect(NodeLabelSchema.parse({ text: 'L', position: { boundary: 'top' } })).toMatchObject({
         position: { boundary: 'top' },
       });
-      expect(NodeLabelSchema.parse({ text: 'L', position: { boundary: 'below' } })).toMatchObject({
+      expect(NodeLabelSchema.parse({ text: 'L', position: { boundary: 'bottom' } })).toMatchObject({
         position: { boundary: 'bottom' },
       });
+      expect(() => NodeLabelSchema.parse({ text: 'L', position: { boundary: 'north' } })).toThrow();
+      expect(() => NodeLabelSchema.parse({ text: 'L', position: { boundary: 'above' } })).toThrow();
     });
 
-    it('方向 position 支持 Web canonical、compass alias 与旧 above/below alias，并归一到 Web', () => {
+    it('方向 position 只接受 canonical 方位', () => {
       expect(NodeLabelSchema.parse({ text: 'L', position: 'top-left' })).toMatchObject({ position: 'top-left' });
-      expect(NodeLabelSchema.parse({ text: 'L', position: 'south-east' })).toMatchObject({
+      expect(NodeLabelSchema.parse({ text: 'L', position: 'bottom-right' })).toMatchObject({
         position: 'bottom-right',
       });
-      expect(NodeLabelSchema.parse({ text: 'L', position: 'north-east' })).toMatchObject({
+      expect(NodeLabelSchema.parse({ text: 'L', position: 'top-right' })).toMatchObject({
         position: 'top-right',
       });
-      expect(NodeLabelSchema.parse({ text: 'L', position: 'above' })).toMatchObject({ position: 'top' });
-      expect(NodeLabelSchema.parse({ text: 'L', position: 'above-left' })).toMatchObject({ position: 'top-left' });
+      expect(NodeLabelSchema.parse({ text: 'L', position: 'top' })).toMatchObject({ position: 'top' });
+      expect(NodeLabelSchema.parse({ text: 'L', position: 'top-left' })).toMatchObject({ position: 'top-left' });
+      expect(() => NodeLabelSchema.parse({ text: 'L', position: 'north-west' })).toThrow();
+      expect(() => NodeLabelSchema.parse({ text: 'L', position: 'below' })).toThrow();
     });
 
     it('拒绝未知 placement、未知 boundary 与越界 fraction', () => {

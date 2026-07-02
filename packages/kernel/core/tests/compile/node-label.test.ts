@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IR } from '../../src/schemas';
@@ -67,7 +67,7 @@ describe('Node label', () => {
   });
 
   describe('位置算法（rectangle 节点上）', () => {
-    it("position='top'：在 north 边界外（y 减小）", () => {
+    it("position='top'：在 top 边界外（y 减小）", () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
@@ -83,11 +83,11 @@ describe('Node label', () => {
       };
       const scene = compileToScene(ir);
       const labelText = findLabel(scene.primitives, 'L')!;
-      // node center 是 [0, 0]；矩形 north 边界 y < 0；label 再 -10
+      // node center 是 [0, 0]；矩形 top 边界 y < 0；label 再 -10
       expect(labelText.y).toBeLessThan(-10);
     });
 
-    it("position='bottom'：在 south 边界外（y 增大）", () => {
+    it("position='bottom'：在 bottom 边界外（y 增大）", () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
@@ -106,7 +106,7 @@ describe('Node label', () => {
       expect(labelText.y).toBeGreaterThan(10);
     });
 
-    it("position='right'：在 east 边界外（x 增大）", () => {
+    it("position='right'：在 right 边界外（x 增大）", () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
@@ -125,7 +125,7 @@ describe('Node label', () => {
       expect(labelText.x).toBeGreaterThan(10);
     });
 
-    it('数字角度 0：相当于沿 +x 方向（east）', () => {
+    it('数字角度 0：相当于沿 +x 方向（right）', () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
@@ -142,7 +142,7 @@ describe('Node label', () => {
       const scene = compileToScene(ir);
       const labelText = findLabel(scene.primitives, 'L')!;
       expect(labelText.x).toBeGreaterThan(10);
-      // east 方向（角度 0）：label 垂直居中于节点中心线 → 视觉中心 y ≈ 0
+      // right 方向（角度 0）：label 垂直居中于节点中心线 → 视觉中心 y ≈ 0
       expect(visualMiddle(labelText)).toBeCloseTo(0);
     });
 

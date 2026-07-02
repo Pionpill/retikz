@@ -1,14 +1,14 @@
 import { z } from 'zod';
 
-import { normalizeAnchor, normalizeSide, WebSide } from '../../../shared';
+import { Side } from '../../../shared';
 import { BoundarySchema } from '../../boundary';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
 
 export const BoundaryAnchorRefSchema = z
   .object({
     side: z
-      .preprocess(value => (typeof value === 'string' ? normalizeSide(value) ?? value : value), z.enum(WebSide))
-      .describe('Which edge of the shape boundary. Compass and TikZ side names are accepted aliases.'),
+      .enum(Side)
+      .describe('Canonical edge of the shape boundary.'),
     fraction: NormalizedFractionSchema.describe(
       'Proportion along the edge; top/bottom run left to right, right/left run top to bottom.',
     ),
@@ -20,9 +20,8 @@ export const AnchorRefSchema = z
     z
       .string()
       .min(1)
-      .transform(name => normalizeAnchor(name) ?? name)
       .describe(
-        'Named anchor: web anchor, compass/TikZ alias, or shape-specific anchor. Known aliases are normalized to web names; unknown names fail at compile time.',
+        'Named anchor: canonical anchor or shape-specific anchor. Unknown names fail at compile time.',
       ),
     AngleDegreesSchema.describe('Angle anchor in degrees (boundary point in that direction)'),
     BoundaryAnchorRefSchema,

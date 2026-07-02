@@ -1,11 +1,11 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 
 import type { ScenePrimitive } from '../../contract';
 import type { Ellipse } from '../../shared/geometry';
 import type { Rect } from '../../shared/geometry';
 
 import { defineShape } from '../../contract';
-import { CenterAnchor, normalizeAnchor } from '../../shared';
+import { CenterAnchor, isDirectionalAnchor } from '../../shared';
 import { ellipse } from '../../shared/geometry';
 
 /** 外接框 Rect → Ellipse（rx/ry = 半宽/半高） */
@@ -40,8 +40,8 @@ export const ellipseShape = defineShape({
       : { halfWidth: hw * Math.SQRT2, halfHeight: hh * Math.SQRT2 },
   boundaryPoint: (r, toward) => ellipse.boundaryPoint(toEllipse(r), toward),
   anchor: (r, name) => {
-    const a = normalizeAnchor(name);
-    return a !== undefined && a !== CenterAnchor.Center ? ellipse.anchor(toEllipse(r), a) : undefined;
+    if (name === CenterAnchor.Center) return undefined;
+    return isDirectionalAnchor(name) ? ellipse.anchor(toEllipse(r), name) : undefined;
   },
   edgePoint: (r, side, t) => ellipse.edgePoint(toEllipse(r), side, t),
   *emit(r, style, round): Iterable<ScenePrimitive> {

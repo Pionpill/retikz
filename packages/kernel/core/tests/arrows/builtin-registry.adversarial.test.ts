@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { ArrowDefinition } from '../../src/contract';
 import type { PathCommand, PathPrim, ScenePrimitive } from '../../src/contract';
@@ -123,7 +123,7 @@ describe('ADV — def 几何 finite 守卫', () => {
     expect(() => compileArrow({ shape: 'z' }, { z: def })).toThrow(/non-finite outerInset/i);
   });
 
-  it('lineWidth_huge：hollow def + 极大 lineWidth（有限）→ 端点仍 finite（不抛，TikZ 同不 clamp）', () => {
+  it('lineWidth_huge：hollow def + 极大 lineWidth（有限）→ 端点仍 finite（不抛，parser sugar 同不 clamp）', () => {
     const def: ArrowDefinition = {
       name: 'def',
       hollow: true,
@@ -305,7 +305,7 @@ describe('ADV — 未注册 shape 错误质量', () => {
 // 攻击面 5：极端几何 + 既有功能交叉（可接受的稳定行为）
 // ───────────────────────────────────────────────────────────────────────────
 describe('ADV — 极端几何 / 功能交叉', () => {
-  it('path_shorter_than_shrink：path 极短（长 1）< shrink 量 → 端点穿过起点（finite，TikZ 同不 clamp）', () => {
+  it('path_shorter_than_shrink：path 极短（长 1）< shrink 量 → 端点穿过起点（finite，parser sugar 同不 clamp）', () => {
     const scene = compileToScene(horizontalPathIR('->', { shape: 'normal' }, [1, 0]));
     const path = firstPath(scene.primitives);
     const end = path && endpointTo(path);

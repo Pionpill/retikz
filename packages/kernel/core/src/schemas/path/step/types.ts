@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import type { CompassSideValue, TikzSideValue, WebSideValue } from '../../../shared';
+import type { SideValue } from '../../../shared';
 import type { ValueOf } from '../../../shared';
 import type { BendDirection, FoldStepVia, GeometryLabelPlacement, GeometryLabelPosition, PathCloseMode } from './constants';
 import type {
@@ -25,11 +25,9 @@ import type {
 /** Shared path-like geometry label IR type. */
 export type IRGeometryLabel = z.infer<typeof GeometryLabelSchema>;
 
-export type GeometryLabelSideValue = WebSideValue;
+export type GeometryLabelSideValue = SideValue;
 
-export type GeometryLabelSideAliasValue = CompassSideValue | TikzSideValue;
-
-export type GeometryLabelSideInput = GeometryLabelSideValue | GeometryLabelSideAliasValue;
+export type GeometryLabelSideInput = GeometryLabelSideValue;
 
 export type IRGeometryLabelInput = Omit<IRGeometryLabel, 'side'> & {
   side?: GeometryLabelSideInput;

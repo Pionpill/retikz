@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Diamond } from '../../src/shared/geometry/diamond';
 
-import { WebAnchor } from '../../src/shared';
+import { Anchor } from '../../src/shared';
 import { diamond } from '../../src/shared/geometry/diamond';
 
 const d: Diamond = { x: 0, y: 0, halfA: 10, halfB: 5 };
@@ -45,17 +45,17 @@ describe('diamond.contains', () => {
 
 describe('diamond.anchor', () => {
   it('N / S / E / W = 4 顶点', () => {
-    expect(diamond.anchor(d, WebAnchor.Right)).toEqual([10, 0]);
-    expect(diamond.anchor(d, WebAnchor.Left)).toEqual([-10, 0]);
-    expect(diamond.anchor(d, WebAnchor.Top)).toEqual([0, -5]);
-    expect(diamond.anchor(d, WebAnchor.Bottom)).toEqual([0, 5]);
+    expect(diamond.anchor(d, Anchor.Right)).toEqual([10, 0]);
+    expect(diamond.anchor(d, Anchor.Left)).toEqual([-10, 0]);
+    expect(diamond.anchor(d, Anchor.Top)).toEqual([0, -5]);
+    expect(diamond.anchor(d, Anchor.Bottom)).toEqual([0, 5]);
   });
 
   it('对角 anchor = 4 边的中点', () => {
-    expect(diamond.anchor(d, WebAnchor.TopRight)).toEqual([5, -2.5]);
-    expect(diamond.anchor(d, WebAnchor.BottomRight)).toEqual([5, 2.5]);
-    expect(diamond.anchor(d, WebAnchor.TopLeft)).toEqual([-5, -2.5]);
-    expect(diamond.anchor(d, WebAnchor.BottomLeft)).toEqual([-5, 2.5]);
+    expect(diamond.anchor(d, Anchor.TopRight)).toEqual([5, -2.5]);
+    expect(diamond.anchor(d, Anchor.BottomRight)).toEqual([5, 2.5]);
+    expect(diamond.anchor(d, Anchor.TopLeft)).toEqual([-5, -2.5]);
+    expect(diamond.anchor(d, Anchor.BottomLeft)).toEqual([-5, 2.5]);
   });
 });
 

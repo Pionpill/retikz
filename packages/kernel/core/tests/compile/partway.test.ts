@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IR, ScenePrimitive } from '../../src';
 import type { RectPrim } from '../../src/contract';
@@ -186,9 +186,9 @@ describe('嵌套 between 解析', () => {
 });
 
 describe('端点带 anchor 时用对应 anchor 点插值', () => {
-  it('between_endpoint_anchor：端点 { id:"A", anchor:"north" } → lerp 用 A 的 north 点', () => {
+  it('between_endpoint_anchor：端点 { id:"A", anchor:"top" } → lerp 用 A 的 top 点', () => {
     // 两个有尺寸的同款节点 A=[0,0] B=[0,200]（竖直排布）。
-    // 用 north anchor：两端点都取各自 north（y 比中心小），t=0.5 → 中点 y 比两中心几何中点 y 小。
+    // 用 top anchor：两端点都取各自 top（y 比中心小），t=0.5 → 中点 y 比两中心几何中点 y 小。
     const baseIr = scene([
       { type: 'node', id: 'A', position: [0, 0], text: 'AAA' },
       { type: 'node', id: 'B', position: [0, 200], text: 'BBB' },
@@ -197,8 +197,8 @@ describe('端点带 anchor 时用对应 anchor 点插值', () => {
         id: 'm',
         position: {
           between: [
-            { id: 'A', anchor: 'north' },
-            { id: 'B', anchor: 'north' },
+            { id: 'A', anchor: 'top' },
+            { id: 'B', anchor: 'top' },
           ],
           fraction: 0.5,
         },
@@ -223,9 +223,9 @@ describe('端点带 anchor 时用对应 anchor 点插值', () => {
     ]);
     const withNorth = rects(compileToScene(baseIr).primitives).map(rectCenter)[2];
     const withCenter = rects(compileToScene(centerIr).primitives).map(rectCenter)[2];
-    // north anchor 比 center 在屏幕坐标里 y 更小（更靠上），两端同向偏移 → 中点 y 也更小
+    // top anchor 比 center 在屏幕坐标里 y 更小（更靠上），两端同向偏移 → 中点 y 也更小
     expect(withNorth[1]).toBeLessThan(withCenter[1]);
-    // x 不变（竖直排布，north 不偏 x）
+    // x 不变（竖直排布，top 不偏 x）
     expect(withNorth[0]).toBeCloseTo(withCenter[0]);
   });
 });

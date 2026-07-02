@@ -39,16 +39,16 @@ const endOf = (target: IRTarget): [number, number] => {
 };
 
 describe('对象 NodeTarget 命名 / 角度 / auto 方向正确', () => {
-  it('命名 anchor：north 在 south 上方、east 在 west 右侧', () => {
-    const north = endOf({ id: 'A', anchor: 'north' });
-    const south = endOf({ id: 'A', anchor: 'south' });
-    const east = endOf({ id: 'A', anchor: 'east' });
-    const west = endOf({ id: 'A', anchor: 'west' });
-    expect(north[1]).toBeLessThan(south[1]); // y 向下：north 更小
-    expect(east[0]).toBeGreaterThan(west[0]);
+  it('命名 anchor：top 在 bottom 上方、right 在 left 右侧', () => {
+    const top = endOf({ id: 'A', anchor: 'top' });
+    const bottom = endOf({ id: 'A', anchor: 'bottom' });
+    const right = endOf({ id: 'A', anchor: 'right' });
+    const left = endOf({ id: 'A', anchor: 'left' });
+    expect(top[1]).toBeLessThan(bottom[1]); // y 向下：top 更小
+    expect(right[0]).toBeGreaterThan(left[0]);
   });
 
-  it('角度 anchor：0° 落 east 侧、90° 落 south 侧（边界点）', () => {
+  it('角度 anchor：0° 落 right 侧、90° 落 bottom 侧（边界点）', () => {
     const a0 = endOf({ id: 'A', anchor: 0 });
     const a90 = endOf({ id: 'A', anchor: 90 });
     const center = endOf({ id: 'A', anchor: 'center' });
@@ -76,9 +76,9 @@ describe('{ side, fraction } 边上比例点', () => {
 });
 
 describe('offset 世界系叠加', () => {
-  it('{ anchor:"north", offset:[5,-3] } == north 点 + [5,-3]', () => {
-    const [nx, ny] = endOf({ id: 'A', anchor: 'north' });
-    const [ox, oy] = endOf({ id: 'A', anchor: 'north', offset: [5, -3] });
+  it('{ anchor:"top", offset:[5,-3] } == top 点 + [5,-3]', () => {
+    const [nx, ny] = endOf({ id: 'A', anchor: 'top' });
+    const [ox, oy] = endOf({ id: 'A', anchor: 'top', offset: [5, -3] });
     expect(ox).toBeCloseTo(nx + 5, 6);
     expect(oy).toBeCloseTo(ny - 3, 6);
   });
@@ -135,8 +135,8 @@ describe('Coordinate（零尺寸）anchor 退化（ADR-01 决策细节 #10）', 
   };
 
   it('命名 anchor 退化为中心（零尺寸 → 9 anchor 都 = Coordinate 点）', () => {
-    expect(coordEnd({ id: 'c', anchor: 'north' })).toEqual([50, 50]);
-    expect(coordEnd({ id: 'c', anchor: 'south-west' })).toEqual([50, 50]);
+    expect(coordEnd({ id: 'c', anchor: 'top' })).toEqual([50, 50]);
+    expect(coordEnd({ id: 'c', anchor: 'bottom-left' })).toEqual([50, 50]);
   });
 
   it('角度 anchor 退化为中心', () => {

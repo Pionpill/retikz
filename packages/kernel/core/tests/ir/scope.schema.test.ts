@@ -236,17 +236,19 @@ describe('TransformSchema 各变体合法形态', () => {
     expect(parsed.success).toBe(true);
   });
 
-  it('at-translate direction 别名归一到 Web canonical', () => {
-    expect(TransformSchema.parse({ kind: 'at-translate', direction: 'north-west', of: 'A' })).toEqual({
+  it('at-translate direction 只接受 canonical 方位', () => {
+    expect(TransformSchema.parse({ kind: 'at-translate', direction: 'top-left', of: 'A' })).toEqual({
       kind: 'at-translate',
       direction: 'top-left',
       of: 'A',
     });
-    expect(TransformSchema.parse({ kind: 'at-translate', direction: 'below', of: 'A' })).toEqual({
+    expect(TransformSchema.parse({ kind: 'at-translate', direction: 'bottom', of: 'A' })).toEqual({
       kind: 'at-translate',
       direction: 'bottom',
       of: 'A',
     });
+    expect(() => TransformSchema.parse({ kind: 'at-translate', direction: 'north-west', of: 'A' })).toThrow();
+    expect(() => TransformSchema.parse({ kind: 'at-translate', direction: 'below', of: 'A' })).toThrow();
   });
 
   it('offset-translate of=string 含 offset', () => {

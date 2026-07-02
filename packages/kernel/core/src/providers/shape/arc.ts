@@ -1,7 +1,7 @@
-﻿import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
+import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
 import { z } from 'zod';
 
-import type { PathCommand, ScenePrimitive } from '../../contract';
+import type { PathCommand, ScenePrimitive, ShapeAnchorName } from '../../contract';
 import type { Position } from '../../shared/geometry';
 import type { Rect } from '../../shared/geometry';
 
@@ -122,7 +122,7 @@ export const arc = defineShape({
     const angle = theta <= end ? theta : theta - end <= start + 360 - theta ? end : start;
     return arcLocalToWorld(rect, geo.centerOffset, arcEndPoint([0, 0], radius, angle));
   },
-  anchor: (rect: Rect, name: string, params: ArcParams): Position | undefined => {
+  anchor: (rect: Rect, name: ShapeAnchorName, params: ArcParams): Position | undefined => {
     const geo = arcGeometry(params);
     const { radius } = params;
     const { start, end, mid } = geo.range;

@@ -1,8 +1,7 @@
-import type { WebAnchorValue } from '../anchor';
-import type { Side } from './edge';
+import type { AnchorValue, SideValue } from '../anchor';
 import type { Position } from './point';
 
-import { WebAnchor } from '../anchor';
+import { Anchor } from '../anchor';
 import { EDGE_ENDS, lerpPoint } from './edge';
 import { localToWorld, worldToLocal } from './transform';
 
@@ -30,38 +29,38 @@ export const rect = {
     const halfH = r.height / 2;
     return lx >= -halfW && lx <= halfW && ly >= -halfH && ly <= halfH;
   },
-  /** 8 个 Web 方位 anchor 之一的世界坐标（含旋转）；center 请用 `rect.center()` */
-  anchor: (r: Rect, name: WebAnchorValue): Position => {
+  /** 8 个标准方位 anchor 之一的世界坐标（含旋转）；center 请用 `rect.center()` */
+  anchor: (r: Rect, name: AnchorValue): Position => {
     const halfW = r.width / 2;
     const halfH = r.height / 2;
     let lx = 0;
     let ly = 0;
     switch (name) {
-      case WebAnchor.Top:
+      case Anchor.Top:
         ly = -halfH;
         break;
-      case WebAnchor.Bottom:
+      case Anchor.Bottom:
         ly = halfH;
         break;
-      case WebAnchor.Right:
+      case Anchor.Right:
         lx = halfW;
         break;
-      case WebAnchor.Left:
+      case Anchor.Left:
         lx = -halfW;
         break;
-      case WebAnchor.TopRight:
+      case Anchor.TopRight:
         lx = halfW;
         ly = -halfH;
         break;
-      case WebAnchor.TopLeft:
+      case Anchor.TopLeft:
         lx = -halfW;
         ly = -halfH;
         break;
-      case WebAnchor.BottomRight:
+      case Anchor.BottomRight:
         lx = halfW;
         ly = halfH;
         break;
-      case WebAnchor.BottomLeft:
+      case Anchor.BottomLeft:
         lx = -halfW;
         ly = halfH;
         break;
@@ -80,7 +79,7 @@ export const rect = {
     return localToWorld(r, [localX * t, localY * t]);
   },
   /** 边上比例点：side 直边 t∈[0,1] 处（两角 anchor 线性插值，含旋转）；方向见 EDGE_ENDS */
-  edgePoint: (r: Rect, side: Side, t: number): Position => {
+  edgePoint: (r: Rect, side: SideValue, t: number): Position => {
     const [a, b] = EDGE_ENDS[side];
     return lerpPoint(rect.anchor(r, a), rect.anchor(r, b), t);
   },

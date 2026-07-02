@@ -102,7 +102,7 @@ describe('arcSegmentSample', () => {
   });
 
   it('endAngle < startAngle 时切线扫描方向反向', () => {
-    // 0° → -90°（视觉逆时针：从 east 扫到 north）
+    // 0° → -90°（视觉逆时针：从 right 扫到 top）
     const t = arcSegmentSample([0, 0], 10, 0, -90, 0).tangent;
     // angle=0：(-sin(0), cos(0)) = (0, 1)；sweep 反向后变 (0, -1)
     expect(t[0]).toBeCloseTo(0, 9);
@@ -111,7 +111,7 @@ describe('arcSegmentSample', () => {
 });
 
 describe('circleSegmentSample', () => {
-  it('t=0 / 0.25 / 0.5 / 0.75 落在 east / south / west / north', () => {
+  it('t=0 / 0.25 / 0.5 / 0.75 落在 right / bottom / left / top', () => {
     const c: [number, number] = [0, 0];
     expect(circleSegmentSample(c, 10, 0).point[0]).toBeCloseTo(10, 9);
     expect(circleSegmentSample(c, 10, 0).point[1]).toBeCloseTo(0, 9);

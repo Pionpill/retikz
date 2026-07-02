@@ -1,4 +1,4 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 
 import type { ScenePrimitive } from '../../contract';
 import type { Position } from '../../shared/geometry';
@@ -6,7 +6,7 @@ import type { Rect } from '../../shared/geometry';
 import type { ContourSegment } from '../../shared/geometry';
 
 import { defineShape } from '../../contract';
-import { CenterAnchor, normalizeAnchor } from '../../shared';
+import { CenterAnchor, isDirectionalAnchor } from '../../shared';
 import { rect } from '../../shared/geometry';
 import { localToWorld } from '../../shared/geometry';
 import { boundaryFromContour } from '../../shared/geometry';
@@ -66,8 +66,8 @@ export const rectangle = defineShape({
     return hit ?? center;
   },
   anchor: (r, name) => {
-    const a = normalizeAnchor(name);
-    return a !== undefined && a !== CenterAnchor.Center ? rect.anchor(r, a) : undefined;
+    if (name === CenterAnchor.Center) return undefined;
+    return isDirectionalAnchor(name) ? rect.anchor(r, name) : undefined;
   },
   edgePoint: (r, side, t) => rect.edgePoint(r, side, t),
   *emit(r, style, round, params: RectangleParams): Iterable<ScenePrimitive> {

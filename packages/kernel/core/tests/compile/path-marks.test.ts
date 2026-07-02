@@ -77,7 +77,7 @@ describe('marks → 中段 marker primitive', () => {
   });
 });
 
-describe('marks → 中段 marker 随 strokeWidth 缩放（与端点箭头一致，TikZ 语义）', () => {
+describe('marks → 中段 marker 随 strokeWidth 缩放（与端点箭头一致，parser sugar 语义）', () => {
   const markPathIR = (strokeWidth?: number): IR => ({
     version: 1,
     type: 'scene',

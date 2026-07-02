@@ -1,9 +1,9 @@
 import type { IRBoundary, IRPosition } from '../schemas';
-import type { WebSideValue } from '../shared';
+import type { SideValue } from '../shared';
 import type { Position } from '../shared/geometry';
 import type { NodeLayout } from './node';
 
-import { normalizeAnchor } from '../shared';
+import { isAnchor } from '../shared';
 import { boundaryKey } from './boundary';
 import { anchorOf, angleBoundaryOf, outerRectOf } from './node';
 
@@ -34,7 +34,7 @@ const computeAnchor = (layout: NodeLayout, anchorName: string, boundary: IRBound
     const angle = Number(anchorName);
     return positionToIR(angleBoundaryOf(withOuterRect(layout), angle, boundary));
   }
-  if (normalizeAnchor(anchorName) !== undefined) {
+  if (isAnchor(anchorName)) {
     return positionToIR(anchorOf(withOuterRect(layout), anchorName, boundary));
   }
   // 形状专属命名 anchor：anchorOf 走 layout.shapeDef.anchor(rect, name)，shape 不认识的名字返回 undefined → 抛 Unknown anchor。
@@ -47,7 +47,7 @@ const positionToIR = (p: Position): IRPosition => [p[0], p[1]];
 
 /**
  * 取节点 anchor 的全局坐标，带 per-layout 缓存
- * @description name 接受方位 anchor 关键字（如 `'top'` / `'bottom-left'`，或 `'north'` 等别名）或数字角度字符串（如 `'30'` / `'-45'`）；
+ * @description name 接受标准方位 anchor 关键字（如 `'top'` / `'bottom-left'`）或数字角度字符串（如 `'30'` / `'-45'`）；
  *   boundary 指定连接面（默认 `'shape'`，即节点自身视觉轮廓）；不同 boundary 产生独立缓存条目，互不串扰；
  *   同一 (layout, name, boundary) 组合第二次起返回首调用结果的**同一引用**——上游可用 `===` 判定 cache 命中
  * @param layout 已 Pass 1 完成的 NodeLayout（rect 已是全局坐标）
@@ -81,7 +81,7 @@ export const resolveAnchor = (
  * @param layout 已 Pass 1 完成的 NodeLayout（rect 已是全局坐标）
  * @returns 全局坐标系下的 IRPosition `[x, y]`
  */
-export const resolveEdgePoint = (layout: NodeLayout, side: WebSideValue, t: number): IRPosition => {
+export const resolveEdgePoint = (layout: NodeLayout, side: SideValue, t: number): IRPosition => {
   const { edgePoint } = layout.shapeDef;
   if (!edgePoint) {
     throw new Error(`shape '${layout.shapeName}' does not support side anchors ({ side, fraction })`);

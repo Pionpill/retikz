@@ -4,7 +4,7 @@ import type { Rect } from '../../shared/geometry';
 import type { NodeLayout } from './types';
 
 import { resolveBoundaryRegistry } from '../../providers/boundary';
-import { CenterAnchor, normalizeAnchor } from '../../shared';
+import { CenterAnchor, isAnchor } from '../../shared';
 import { fallbackBoundaryAnchor, resolveBoundary } from '../boundary';
 
 /** 无参 / 合成 layout 的 shape params 兜底（避免每次调用重建空对象） */
@@ -45,7 +45,7 @@ export const boundaryPointOf = (
 };
 
 /**
- * 取节点 shape 命名 anchor（center / top / right / top-right，或 north 等别名）
+ * 取节点 shape 命名 anchor（center / top / right / top-right）
  * @description 纯几何：在传入的 `layout.rect` 上求点，本体**不施加 outerSep（margin）**。outerSep 的
  *   「border 外推」由调用方决定——`anchor-cache.ts` 的标准方位解析先把 rect 外扩 margin（`outerRectOf`）
  *   再调本函数；`labelBorderPoint` 喂视觉 rect（label 附着点不含 margin）。这样 outer sep 只作用于
@@ -55,9 +55,8 @@ export const boundaryPointOf = (
  *   boundary 缺省 = 'shape'。
  */
 export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary | undefined = 'shape'): Position => {
-  const webAnchor = normalizeAnchor(name);
-  if (webAnchor !== undefined) {
-    if (webAnchor === CenterAnchor.Center) {
+  if (isAnchor(name)) {
+    if (name === CenterAnchor.Center) {
       const own = layout.shapeDef.anchor(
         layout.rect,
         CenterAnchor.Center,
@@ -70,7 +69,7 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
     // rectangle/polygon 落 AABB（与 TikZ 一致）；shape 未实现标准方位（star/sector/arc 返回 undefined）
     // 回退外接 AABB 矩形。显式 boundary 指定时按该连接面解析。
     if (boundary === 'shape') {
-      const own = layout.shapeDef.anchor(layout.rect, webAnchor, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
+      const own = layout.shapeDef.anchor(layout.rect, name, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
       if (own !== undefined) return own;
       const fallback = resolveBoundary(
         'rectangle',
@@ -80,7 +79,7 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
         layout.shapes,
         layout.boundaries ?? resolveBoundaryRegistry(),
       );
-      const p = fallback.def.anchor?.(fallback.rect, webAnchor, fallback.params);
+      const p = fallback.def.anchor?.(fallback.rect, name, fallback.params);
       if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
       return p;
     }
@@ -92,7 +91,7 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
       layout.shapes,
       layout.boundaries ?? resolveBoundaryRegistry(),
     );
-    const p = def.anchor?.(rect, webAnchor, params) ?? fallbackBoundaryAnchor(rect, webAnchor, params);
+    const p = def.anchor?.(rect, name, params) ?? fallbackBoundaryAnchor(rect, name, params);
     if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
     return p;
   }

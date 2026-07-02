@@ -382,7 +382,7 @@ describe('scope GroupPrim emit 形态', () => {
 
   it('scope scale 下 path 端点 boundary clip 按缩放后的矩形对齐', () => {
     // scope scale 1.5 + 内 path 串联两节点；boundary clip 应按 1.5x 的视觉尺寸算
-    // s1.east 视觉位置 = s1.center.x + halfWidth * 1.5；line 起点应接近此点
+    // s1.right 视觉位置 = s1.center.x + halfWidth * 1.5；line 起点应接近此点
     const ir = scene([
       {
         type: 'scope',

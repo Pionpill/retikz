@@ -1,6 +1,6 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 
-import type { ScenePrimitive } from '../../contract';
+import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
 import type { Position } from '../../shared/geometry';
 import type { Rect } from '../../shared/geometry';
 import type { ContourSegment } from '../../shared/geometry';
@@ -114,7 +114,7 @@ export const contour = defineShape({
     return hit ?? center;
   },
   // 标准方位名交回退（compile 回退到外接 AABB rect）；曲边块上没有有意义的真·命名方位。
-  anchor: (rect: Rect, name: string, params: ContourParams): Position | undefined => {
+  anchor: (rect: Rect, name: ShapeAnchorName, params: ContourParams): Position | undefined => {
     void rect;
     void name;
     void params;

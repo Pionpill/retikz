@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IR, ScenePrimitive } from '../../src';
 import type { RectPrim } from '../../src/contract';
@@ -660,9 +660,9 @@ describe('between 端点为 relative（手搓绕过 schema）应被拒绝，不�
 // ---------------------------------------------------------------------------
 describe('端点带 anchor / offset 的 lerp', () => {
   it('端点 { id, anchor:{ side, fraction } } 边上比例点 lerp 正确', () => {
-    // A 是有尺寸节点 [0,0]，端点 A.east 的 {side:east,fraction:0.5} = east 中点（east anchor）。
-    // B=[200,0] 是 0×0 coordinate。between(A.east, B) t=0.5。
-    // 期望：x = (A.east.x + 200)/2，y = 0（east anchor y 与中心同）。A.east.x > 0。
+    // A 是有尺寸节点 [0,0]，端点 A.right 的 {side:right,fraction:0.5} = right 中点（right anchor）。
+    // B=[200,0] 是 0×0 coordinate。between(A.right, B) t=0.5。
+    // 期望：x = (A.right.x + 200)/2，y = 0（right anchor y 与中心同）。A.right.x > 0。
     const ir = scene([
       { type: 'node', id: 'A', position: [0, 0], text: 'AAAA' },
       { type: 'coordinate', id: 'B', position: [200, 0] },
@@ -706,7 +706,7 @@ describe('端点带 anchor / offset 的 lerp', () => {
     const endCenter = firstLineTo(topPath(compileToScene(irCenter).primitives));
     expect(endEast).toBeDefined();
     expect(endCenter).toBeDefined();
-    // east anchor 在 A 中心右侧 → A 端点 x 更大 → 中点 x 比 center 版更大
+    // right anchor 在 A 中心右侧 → A 端点 x 更大 → 中点 x 比 center 版更大
     expect(endEast![0]).toBeGreaterThan(endCenter![0]);
     expect(endEast![1]).toBeCloseTo(0);
   });

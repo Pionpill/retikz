@@ -38,8 +38,8 @@ describe('两端点之间按比例取点的端点形态', () => {
   it('端点为带 anchor 的节点引用接受', () => {
     const valid: IRBetweenPosition = {
       between: [
-        { id: 'A', anchor: 'north' },
-        { id: 'B', anchor: 'south', offset: [5, 0] },
+        { id: 'A', anchor: 'top' },
+        { id: 'B', anchor: 'bottom', offset: [5, 0] },
       ],
       fraction: 0.25,
     };

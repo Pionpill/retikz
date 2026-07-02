@@ -1,6 +1,6 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 
-import type { ScenePrimitive } from '../../contract';
+import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
 import type { Position } from '../../shared/geometry';
 import type { Rect } from '../../shared/geometry';
 import type { ContourSegment, FilletSolution } from '../../shared/geometry';
@@ -154,7 +154,7 @@ export const sector = defineShape({
     const hit = boundaryFromContour(segments, params.cornerRadius, originWorld, toward, fillets);
     return hit ?? originWorld;
   },
-  anchor: (rect: Rect, name: string, params: SectorParams): Position | undefined => {
+  anchor: (rect: Rect, name: ShapeAnchorName, params: SectorParams): Position | undefined => {
     const geo = getSectorGeometry(params);
     const { innerRadius, outerRadius } = params;
     const { start, end, mid } = geo.range;

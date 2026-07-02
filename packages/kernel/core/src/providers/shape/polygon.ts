@@ -1,12 +1,12 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 
-import type { ScenePrimitive } from '../../contract';
+import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
 import type { Position } from '../../shared/geometry';
 import type { Rect } from '../../shared/geometry';
 import type { ContourSegment } from '../../shared/geometry';
 
 import { defineShape } from '../../contract';
-import { CenterAnchor, normalizeAnchor } from '../../shared';
+import { CenterAnchor, isDirectionalAnchor } from '../../shared';
 import { rect } from '../../shared/geometry';
 import { localToWorld } from '../../shared/geometry';
 import { boundaryFromContour, contourCommands } from '../../shared/geometry';
@@ -144,10 +144,10 @@ export const polygon = defineShape({
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
     return hit ?? center;
   },
-  anchor: (bounds: Rect, name: string, params: PolygonParams): Position | undefined => {
+  anchor: (bounds: Rect, name: ShapeAnchorName, params: PolygonParams): Position | undefined => {
     void params;
-    const a = normalizeAnchor(name);
-    return a !== undefined && a !== CenterAnchor.Center ? rect.anchor(bounds, a) : undefined;
+    if (name === CenterAnchor.Center) return undefined;
+    return isDirectionalAnchor(name) ? rect.anchor(bounds, name) : undefined;
   },
   *emit(bounds: Rect, style, round, params: PolygonParams): Iterable<ScenePrimitive> {
     const radius = circumradiusFromRect(bounds, params);

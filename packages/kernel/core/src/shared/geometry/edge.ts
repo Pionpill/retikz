@@ -1,14 +1,11 @@
 import { lerp } from '@retikz/math';
 
-import type { WebAnchorValue, WebSideValue } from '../anchor';
+import type { AnchorValue, SideValue } from '../anchor';
 import type { Position } from './point';
 
-import { WebAnchor, WebSide } from '../anchor';
+import { Anchor, Side } from '../anchor';
 
 export { lerp as lerpPoint } from '@retikz/math';
-
-/** 边上比例点 `{ side, fraction }` 的四个 Web side（top/right/bottom/left） */
-export type Side = WebSideValue;
 
 /**
  * rect 四直边 t=0 / t=1 端点对应的角 anchor
@@ -16,26 +13,26 @@ export type Side = WebSideValue;
  *   仅 rect 直边用两角端点；circle/ellipse 用 `edgeAngleDeg` 角度表、diamond 用过顶点折线。
  */
 export const EDGE_ENDS = {
-  [WebSide.Top]: [WebAnchor.TopLeft, WebAnchor.TopRight],
-  [WebSide.Bottom]: [WebAnchor.BottomLeft, WebAnchor.BottomRight],
-  [WebSide.Right]: [WebAnchor.TopRight, WebAnchor.BottomRight],
-  [WebSide.Left]: [WebAnchor.TopLeft, WebAnchor.BottomLeft],
-} as const satisfies Record<Side, readonly [WebAnchorValue, WebAnchorValue]>;
+  [Side.Top]: [Anchor.TopLeft, Anchor.TopRight],
+  [Side.Bottom]: [Anchor.BottomLeft, Anchor.BottomRight],
+  [Side.Right]: [Anchor.TopRight, Anchor.BottomRight],
+  [Side.Left]: [Anchor.TopLeft, Anchor.BottomLeft],
+} as const satisfies Record<SideValue, readonly [AnchorValue, AnchorValue]>;
 
 /**
  * circle / ellipse 周长弧段：side 的局部参数角 θ(t)，单位度
  * @description 约定同 geometry 既有 `(cosθ, sinθ)` + y 轴向下 ⇒ right=0° / bottom=90° / left=180° / top=270°，
  *   顺时针为正。每条 side 是一段 90° 弧（等角插值）；三点（t=0/0.5/1）与 9-anchor 重合。
  */
-export const edgeAngleDeg = (side: Side, t: number): number => {
+export const edgeAngleDeg = (side: SideValue, t: number): number => {
   switch (side) {
-    case WebSide.Top:
+    case Side.Top:
       return 225 + 90 * t;
-    case WebSide.Bottom:
+    case Side.Bottom:
       return 135 - 90 * t;
-    case WebSide.Right:
+    case Side.Right:
       return -45 + 90 * t;
-    case WebSide.Left:
+    case Side.Left:
       return 225 - 90 * t;
   }
 };

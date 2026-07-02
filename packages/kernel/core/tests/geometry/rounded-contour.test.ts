@@ -7,7 +7,7 @@ import { boundaryFromContour, contourCommands, filletContour } from '../../src/s
 
 /*
  * 角度约定（与 @retikz/math arc、ir/path arc 一致，SVG y-down）：
- *   0=+x(east)、90=+y(视觉下/south)、180=-x(west)、270=-y(视觉上/north)；角度递增=屏幕顺时针(CW)。
+ *   0=+x(right)、90=+y(视觉下/bottom)、180=-x(left)、270=-y(视觉上/top)；角度递增=屏幕顺时针(CW)。
  *
  * 测试轮廓统一按 CW 绕向构造（与 polygon emit 顶点角递增一致）。
  */

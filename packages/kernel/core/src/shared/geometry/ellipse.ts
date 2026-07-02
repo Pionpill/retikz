@@ -1,8 +1,7 @@
-import type { WebAnchorValue } from '../anchor';
-import type { Side } from './edge';
+import type { AnchorValue, SideValue } from '../anchor';
 import type { Position } from './point';
 
-import { WebAnchor } from '../anchor';
+import { Anchor } from '../anchor';
 import { edgeAngleDeg } from './edge';
 import { localToWorld, worldToLocal } from './transform';
 
@@ -36,38 +35,38 @@ export const ellipse = {
     return (lx * lx) / (e.rx * e.rx) + (ly * ly) / (e.ry * e.ry) <= 1;
   },
   /**
-   * 8 个 Web 方位 anchor 的世界坐标；center 请用 `ellipse.center()`
+   * 8 个标准方位 anchor 的世界坐标；center 请用 `ellipse.center()`
    * @description 对角（NE/NW/SE/SW）取参数曲线 t=π/4 处 (rx/√2, ry/√2)，与 TikZ 椭圆 anchor 参数等分约定一致
    */
-  anchor: (e: Ellipse, name: WebAnchorValue): Position => {
+  anchor: (e: Ellipse, name: AnchorValue): Position => {
     let lx = 0;
     let ly = 0;
     switch (name) {
-      case WebAnchor.Top:
+      case Anchor.Top:
         ly = -e.ry;
         break;
-      case WebAnchor.Bottom:
+      case Anchor.Bottom:
         ly = e.ry;
         break;
-      case WebAnchor.Right:
+      case Anchor.Right:
         lx = e.rx;
         break;
-      case WebAnchor.Left:
+      case Anchor.Left:
         lx = -e.rx;
         break;
-      case WebAnchor.TopRight:
+      case Anchor.TopRight:
         lx = e.rx * SQRT_HALF;
         ly = -e.ry * SQRT_HALF;
         break;
-      case WebAnchor.TopLeft:
+      case Anchor.TopLeft:
         lx = -e.rx * SQRT_HALF;
         ly = -e.ry * SQRT_HALF;
         break;
-      case WebAnchor.BottomRight:
+      case Anchor.BottomRight:
         lx = e.rx * SQRT_HALF;
         ly = e.ry * SQRT_HALF;
         break;
-      case WebAnchor.BottomLeft:
+      case Anchor.BottomLeft:
         lx = -e.rx * SQRT_HALF;
         ly = e.ry * SQRT_HALF;
         break;
@@ -88,7 +87,7 @@ export const ellipse = {
     return localToWorld(e, [lx * t, ly * t]);
   },
   /** 边上比例点：side 的 90° 周长弧段 t∈[0,1] 处（等角，落真实椭圆周；含旋转） */
-  edgePoint: (e: Ellipse, side: Side, t: number): Position => {
+  edgePoint: (e: Ellipse, side: SideValue, t: number): Position => {
     const rad = edgeAngleDeg(side, t) * DEG_TO_RAD;
     return localToWorld(e, [e.rx * Math.cos(rad), e.ry * Math.sin(rad)]);
   },

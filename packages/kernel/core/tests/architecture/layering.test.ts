@@ -236,4 +236,23 @@ describe('core layer import boundaries', () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it('canonical anchor consumers do not reintroduce alias vocabularies or normalize helpers', () => {
+    const scannedRoots = ['shared', 'schemas', 'contract', 'providers', 'compile'].map(root => join(SRC_ROOT, root));
+    const forbiddenPatterns = [
+      /\b(?:Compass|Tikz|Web)(?:Anchor|Side|Corner)\w*\b/u,
+      /\bnormalize(?:Anchor|Side|AtDirection)\b/u,
+    ];
+
+    const offenders = scannedRoots.flatMap(root =>
+      tsFiles(root).flatMap(file => {
+        const source = readFileSync(file, 'utf8');
+        return forbiddenPatterns
+          .filter(pattern => pattern.test(source))
+          .map(pattern => `${relative(SRC_ROOT, file)}: ${pattern.source}`);
+      }),
+    );
+
+    expect(offenders).toEqual([]);
+  });
 });

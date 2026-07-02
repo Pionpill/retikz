@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { EllipsePrim, PathPrim, RectPrim, TextPrim } from '../../src/contract';
 import type { IR } from '../../src/schemas';
@@ -302,7 +302,7 @@ describe('Node 缩放 (alpha.2)', () => {
 
   it('scale 影响 path 端点位置（boundary 跟随放大）', () => {
     // A=(0,0) rectangle，scale=2 → bbox 32x32；
-    // path A → (100,0) 端点贴在 east = 16 处（之前是 8）
+    // path A → (100,0) 端点贴在 right = 16 处（之前是 8）
     const ir: IR = {
       version: 1,
       type: 'scene',

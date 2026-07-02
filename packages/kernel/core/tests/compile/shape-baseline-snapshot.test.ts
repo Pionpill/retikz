@@ -52,12 +52,12 @@ const richIR: IR = {
         { type: 'step', kind: 'line', to: { id: 'c' } },
       ],
     },
-    // 命名 anchor：d.north → e.south
+    // 命名 anchor：d.top → e.bottom
     {
       type: 'path',
       children: [
-        { type: 'step', kind: 'move', to: { id: 'd', anchor: 'north' } },
-        { type: 'step', kind: 'line', to: { id: 'e', anchor: 'south' } },
+        { type: 'step', kind: 'move', to: { id: 'd', anchor: 'top' } },
+        { type: 'step', kind: 'line', to: { id: 'e', anchor: 'bottom' } },
       ],
     },
     // 数字角度：c.30

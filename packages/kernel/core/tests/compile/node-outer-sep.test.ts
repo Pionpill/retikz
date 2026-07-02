@@ -30,20 +30,20 @@ const hypot = (p: readonly [number, number]): number => Math.hypot(p[0], p[1]);
 // ── Happy path ──────────────────────────────────────────────────────────────
 
 describe('outerSep：border 类 anchor 外扩（happy）', () => {
-  it('compass-margin：A.north / A.east 落在视觉 shape 外 margin 处', () => {
-    // 视觉半轴 (20,15)。north = [0,-15]，east = [20,0]；margin=10 → 外边界半轴 (30,25)
-    expect(resolveAnchor(mkLayout(0), 'north')).toEqual([0, -15]);
-    expect(resolveAnchor(mkLayout(10), 'north')).toEqual([0, -25]);
-    expect(resolveAnchor(mkLayout(0), 'east')).toEqual([20, 0]);
-    expect(resolveAnchor(mkLayout(10), 'east')).toEqual([30, 0]);
+  it('canonical-margin：A.top / A.right 落在视觉 shape 外 margin 处', () => {
+    // 视觉半轴 (20,15)。top = [0,-15]，right = [20,0]；margin=10 → 外边界半轴 (30,25)
+    expect(resolveAnchor(mkLayout(0), 'top')).toEqual([0, -15]);
+    expect(resolveAnchor(mkLayout(10), 'top')).toEqual([0, -25]);
+    expect(resolveAnchor(mkLayout(0), 'right')).toEqual([20, 0]);
+    expect(resolveAnchor(mkLayout(10), 'right')).toEqual([30, 0]);
   });
 
   it('angle-margin：A.30 沿 30° 射线打到外扩后的矩形边', () => {
     const tan30 = Math.tan((30 * Math.PI) / 180);
-    const a0 = resolveAnchor(mkLayout(0), '30'); // 命中 east 边 x=20
+    const a0 = resolveAnchor(mkLayout(0), '30'); // 命中 right 边 x=20
     expect(a0[0]).toBeCloseTo(20, 6);
     expect(a0[1]).toBeCloseTo(20 * tan30, 6);
-    const a10 = resolveAnchor(mkLayout(10), '30'); // 命中外边界 east 边 x=30
+    const a10 = resolveAnchor(mkLayout(10), '30'); // 命中外边界 right 边 x=30
     expect(a10[0]).toBeCloseTo(30, 6);
     expect(a10[1]).toBeCloseTo(30 * tan30, 6);
   });
@@ -88,9 +88,9 @@ describe('outerSep：border 类 anchor 外扩（happy）', () => {
 describe('outerSep：边界', () => {
   it('margin-zero-identity：margin=0 时所有 anchor = 视觉 shape（同改前）', () => {
     const tan30 = Math.tan((30 * Math.PI) / 180);
-    expect(resolveAnchor(mkLayout(0), 'north')).toEqual([0, -15]);
-    expect(resolveAnchor(mkLayout(0), 'south')).toEqual([0, 15]);
-    expect(resolveAnchor(mkLayout(0), 'east')).toEqual([20, 0]);
+    expect(resolveAnchor(mkLayout(0), 'top')).toEqual([0, -15]);
+    expect(resolveAnchor(mkLayout(0), 'bottom')).toEqual([0, 15]);
+    expect(resolveAnchor(mkLayout(0), 'right')).toEqual([20, 0]);
     const a0 = resolveAnchor(mkLayout(0), '30');
     expect(a0[0]).toBeCloseTo(20, 6);
     expect(a0[1]).toBeCloseTo(20 * tan30, 6);
@@ -182,11 +182,11 @@ describe('outerSep：不外扩护栏 + 校验', () => {
 
 describe('outerSep：交互', () => {
   it('margin-x-rotate：旋转后外扩量随旋转一致（距中心 = 外边界半轴）', () => {
-    // north 半轴：margin=0 → 15，margin=10 → 25；旋转保距离
-    expect(hypot(resolveAnchor(mkLayout(0, Math.PI / 2), 'north'))).toBeCloseTo(15, 6);
-    expect(hypot(resolveAnchor(mkLayout(10, Math.PI / 2), 'north'))).toBeCloseTo(25, 6);
-    // 90° 旋转把 north 转到 east 侧（x≈25），确认确有旋转
-    expect(resolveAnchor(mkLayout(10, Math.PI / 2), 'north')[0]).toBeCloseTo(25, 6);
+    // top 半轴：margin=0 → 15，margin=10 → 25；旋转保距离
+    expect(hypot(resolveAnchor(mkLayout(0, Math.PI / 2), 'top'))).toBeCloseTo(15, 6);
+    expect(hypot(resolveAnchor(mkLayout(10, Math.PI / 2), 'top'))).toBeCloseTo(25, 6);
+    // 90° 旋转把 top 转到 right 侧（x≈25），确认确有旋转
+    expect(resolveAnchor(mkLayout(10, Math.PI / 2), 'top')[0]).toBeCloseTo(25, 6);
   });
 
   it('margin-x-borrowed-boundary：footprint = 视觉 AABB + margin，不受 boundary 影响', () => {

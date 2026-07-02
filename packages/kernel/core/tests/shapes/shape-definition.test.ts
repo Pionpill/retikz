@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { PathCommand, ScenePrimitive } from '../../src/contract';
@@ -40,7 +40,7 @@ describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
   });
 });
 
-describe('BUILTIN_SHAPES.anchor returns web canonical anchors, undefined otherwise', () => {
+describe('BUILTIN_SHAPES.anchor returns canonical anchors, undefined otherwise', () => {
   const rect: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
   it('rectangle named anchors', () => {
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'center', NO_PARAMS)).toBeUndefined();
@@ -48,9 +48,9 @@ describe('BUILTIN_SHAPES.anchor returns web canonical anchors, undefined otherwi
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'right', NO_PARAMS)).toEqual([10, 0]);
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'bottom-left', NO_PARAMS)).toEqual([-10, 5]);
   });
-  it('compass anchor aliases remain accepted by built-in providers', () => {
-    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'north', NO_PARAMS)).toEqual([0, -5]);
-    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'south-west', NO_PARAMS)).toEqual([-10, 5]);
+  it('canonical directional anchors remain accepted by built-in providers', () => {
+    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'top', NO_PARAMS)).toEqual([0, -5]);
+    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'bottom-left', NO_PARAMS)).toEqual([-10, 5]);
   });
   it('unknown anchor name → undefined (caller throws clear error)', () => {
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'foobar', NO_PARAMS)).toBeUndefined();

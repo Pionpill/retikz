@@ -1,8 +1,7 @@
-import type { WebAnchorValue } from '../anchor';
-import type { Side } from './edge';
+import type { AnchorValue, SideValue } from '../anchor';
 import type { Position } from './point';
 
-import { WebAnchor } from '../anchor';
+import { Anchor } from '../anchor';
 import { edgeAngleDeg } from './edge';
 import { localToWorld, worldToLocal } from './transform';
 
@@ -32,37 +31,37 @@ export const circle = {
     const [lx, ly] = worldToLocal(c, p);
     return lx * lx + ly * ly <= c.radius * c.radius;
   },
-  /** 8 个 Web 方位 anchor 之一的世界坐标；center 请用 `circle.center()` */
-  anchor: (c: Circle, name: WebAnchorValue): Position => {
+  /** 8 个标准方位 anchor 之一的世界坐标；center 请用 `circle.center()` */
+  anchor: (c: Circle, name: AnchorValue): Position => {
     const r = c.radius;
     let lx = 0;
     let ly = 0;
     switch (name) {
-      case WebAnchor.Top:
+      case Anchor.Top:
         ly = -r;
         break;
-      case WebAnchor.Bottom:
+      case Anchor.Bottom:
         ly = r;
         break;
-      case WebAnchor.Right:
+      case Anchor.Right:
         lx = r;
         break;
-      case WebAnchor.Left:
+      case Anchor.Left:
         lx = -r;
         break;
-      case WebAnchor.TopRight:
+      case Anchor.TopRight:
         lx = r * SQRT_HALF;
         ly = -r * SQRT_HALF;
         break;
-      case WebAnchor.TopLeft:
+      case Anchor.TopLeft:
         lx = -r * SQRT_HALF;
         ly = -r * SQRT_HALF;
         break;
-      case WebAnchor.BottomRight:
+      case Anchor.BottomRight:
         lx = r * SQRT_HALF;
         ly = r * SQRT_HALF;
         break;
-      case WebAnchor.BottomLeft:
+      case Anchor.BottomLeft:
         lx = -r * SQRT_HALF;
         ly = r * SQRT_HALF;
         break;
@@ -78,7 +77,7 @@ export const circle = {
     return localToWorld(c, [lx * t, ly * t]);
   },
   /** 边上比例点：side 的 90° 周长弧段 t∈[0,1] 处（等角，落真实圆周；含旋转） */
-  edgePoint: (c: Circle, side: Side, t: number): Position => {
+  edgePoint: (c: Circle, side: SideValue, t: number): Position => {
     const rad = edgeAngleDeg(side, t) * DEG_TO_RAD;
     return localToWorld(c, [c.radius * Math.cos(rad), c.radius * Math.sin(rad)]);
   },

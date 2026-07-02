@@ -79,7 +79,7 @@ describe('registerScopeCircleLayout 单元测试', () => {
 });
 
 describe('scope boundingShape="circle" 集成测试', () => {
-  it('circle_envelope_east_anchor：scope.east 应落在 MEC 边界上（距 MEC 中心 ≈ radius）', () => {
+  it('circle_envelope_right_anchor：scope.right 应落在 MEC 边界上（距 MEC 中心 ≈ radius）', () => {
     // 3 个节点，文字为 '' 使节点近似 0 尺寸（不传 measureText），仅依赖位置
     const ir = scene([
       {
@@ -96,7 +96,7 @@ describe('scope boundingShape="circle" 集成测试', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [300, 30] },
-          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'right' } },
         ],
       },
     ]);
@@ -105,11 +105,11 @@ describe('scope boundingShape="circle" 集成测试', () => {
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    // 从 east 方向入射，x 应 > 0（MEC 中心偏右侧）
+    // 从 right 方向入射，x 应 > 0（MEC 中心偏右侧）
     expect(end![0]).toBeGreaterThan(0);
   });
 
-  it('circle_envelope_mec_distance：scope.east 距 MEC 中心的距离约等于 MEC radius', () => {
+  it('circle_envelope_mec_distance：scope.right 距 MEC 中心的距离约等于 MEC radius', () => {
     // 用 0×0 的 node（无 measureText 默认 0 尺寸），3 个角点即为 node 中心点
     const nodePositions: Array<[number, number]> = [
       [0, 0],
@@ -135,14 +135,14 @@ describe('scope boundingShape="circle" 集成测试', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [500, mec!.center[1]] },
-          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'right' } },
         ],
       },
     ]);
     const compiled = compileToScene(ir);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    // east anchor of ellipse with circumscribe:equal at (cx, cy) with diameter d → (cx + d/2, cy)
+    // right anchor of ellipse with circumscribe:equal at (cx, cy) with diameter d → (cx + d/2, cy)
     // distance from center to end should be ≈ radius
     const dist = Math.sqrt((end![0] - mec!.center[0]) ** 2 + (end![1] - mec!.center[1]) ** 2);
     // Allow generous tolerance since boundary clipping may offset slightly
@@ -177,7 +177,7 @@ describe('scope boundingShape="circle" 集成测试', () => {
 });
 
 describe('scope boundingShape 缺省（矩形 AABB）向后兼容', () => {
-  it('default_rectangle_unchanged：无 boundingShape → east anchor 等于 AABB 东边界（与改前一致）', () => {
+  it('default_rectangle_unchanged：无 boundingShape → right anchor 等于 AABB 东边界（与改前一致）', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -191,14 +191,14 @@ describe('scope boundingShape 缺省（矩形 AABB）向后兼容', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [300, 0] },
-          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'right' } },
         ],
       },
     ]);
     const compiled = compileToScene(ir);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    // 矩形 AABB east x 应接近 B 的位置（60），y 接近 0
+    // 矩形 AABB right x 应接近 B 的位置（60），y 接近 0
     expect(end![0]).toBeGreaterThan(30);
     expect(Math.abs(end![1])).toBeLessThan(20);
   });
@@ -217,7 +217,7 @@ describe('scope boundingShape 缺省（矩形 AABB）向后兼容', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [300, 0] },
-          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'right' } },
         ],
       },
     ]);
@@ -235,7 +235,7 @@ describe('scope boundingShape 缺省（矩形 AABB）向后兼容', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [300, 0] },
-          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'right' } },
         ],
       },
     ]);
@@ -243,7 +243,7 @@ describe('scope boundingShape 缺省（矩形 AABB）向后兼容', () => {
     const endExplicit = lineTo(topPath(compileToScene(irExplicit).primitives));
     expect(endDefault).toBeDefined();
     expect(endExplicit).toBeDefined();
-    // x 坐标应非常接近（同一矩形 AABB east）
+    // x 坐标应非常接近（同一矩形 AABB right）
     expect(Math.abs(endDefault![0] - endExplicit![0])).toBeLessThan(1);
   });
 });

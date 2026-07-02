@@ -110,14 +110,14 @@ describe('[adversarial] 几何极端：角度环绕死循环 / DoS', () => {
     expect(normalizeAngularRange(0, 1e8).end).toBe(360); // 巨角钳到 360
   });
 
-  it('[G3] ellipse 节点 compass diagonal 落真实周长（与 TikZ 一致，非 AABB 角）', () => {
+  it('[G3] ellipse 节点 canonical diagonal 落真实周长（与 parser sugar 一致，非 AABB 角）', () => {
     const compiled = compileToScene(
       scene([
         { type: 'node', id: 'e', position: [0, 0], shape: { type: 'ellipse' }, minimumSize: 40 },
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: { id: 'e', anchor: 'north-east' } },
+            { type: 'step', kind: 'move', to: { id: 'e', anchor: 'top-right' } },
             { type: 'step', kind: 'line', to: [200, -200] },
           ],
         },
@@ -125,7 +125,7 @@ describe('[adversarial] 几何极端：角度环绕死循环 / DoS', () => {
     );
     const path = findByType(compiled.primitives, 'path');
     const move = path!.commands[0];
-    // minimumSize=40 floor 外接框 → rx=ry=20；north-east 真实周长点 =(20/√2, −20/√2)≈(14.14, −14.14)；
+    // minimumSize=40 floor 外接框 → rx=ry=20；top-right 真实周长点 =(20/√2, −20/√2)≈(14.14, −14.14)；
     // 旧实现（AABB 角）会是 (20, −20)
     expect(move.kind).toBe('move');
     if (move.kind === 'move') {
@@ -486,7 +486,7 @@ describe('[adversarial] boundaryPoint / AABB 数值稳定', () => {
 // ════════════════ 攻击面 10：收敛别名 × 交叉 ════════════════
 
 describe('[adversarial] 别名 × anchor / scale 交叉', () => {
-  it('[adversarial] diamond（→polygon 4/0）的 anchor "north" 应与 rect anchor 一致、不抛', () => {
+  it('[adversarial] diamond（→polygon 4/0）的 anchor "top" 应与 rect anchor 一致、不抛', () => {
     expect(() =>
       compileToScene(
         scene([
@@ -495,7 +495,7 @@ describe('[adversarial] 别名 × anchor / scale 交叉', () => {
             type: 'path',
             children: [
               { type: 'step', kind: 'move', to: [100, 0] },
-              { type: 'step', kind: 'line', to: { id: 'd', anchor: 'north' } },
+              { type: 'step', kind: 'line', to: { id: 'd', anchor: 'top' } },
             ],
           },
         ] as IR['children']),

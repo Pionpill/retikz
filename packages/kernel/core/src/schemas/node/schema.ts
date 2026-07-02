@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { normalizeAtDirection, normalizeSide, WebSide } from '../../shared';
+import { Side } from '../../shared';
 import { AnimationTrackSchema } from '../animation';
 import { BoundarySchema } from '../boundary';
 import { FontSchema } from '../font';
@@ -21,8 +21,8 @@ import { NodeLabelPlacement, NodeLabelPosition, NodeLabelRotateMode, NodeTextAli
 export const NodeLabelBoundaryPositionSchema = z
   .object({
     boundary: z
-      .preprocess(value => (typeof value === 'string' ? normalizeSide(value) ?? value : value), z.enum(WebSide))
-      .describe('Box-like node boundary side used as the label attachment line. Web sides are canonical; compass and TikZ side names are accepted aliases.'),
+      .enum(Side)
+      .describe('Canonical box-like node boundary side used as the label attachment line.'),
     fraction: NormalizedFractionSchema
       .optional()
       .describe('Normalized position along the selected boundary. Defaults to 0.5.'),
@@ -47,13 +47,10 @@ export const NodeLabelSchema = z
     }),
     text: LabelTextContentSchema,
     position: z
-      .preprocess(
-        value => (typeof value === 'string' ? normalizeAtDirection(value) ?? value : value),
-        z.union([z.enum(NodeLabelPosition), AngleDegreesSchema, NodeLabelBoundaryPositionSchema]),
-      )
+      .union([z.enum(NodeLabelPosition), AngleDegreesSchema, NodeLabelBoundaryPositionSchema])
       .optional()
       .describe(
-        'Label attachment point: direction, alias, center, angle, or `{ boundary, fraction }`. Omitted fields use top.',
+        'Label attachment point: canonical direction, center, angle, or `{ boundary, fraction }`. Omitted fields use top.',
       ),
     placement: z
       .enum(NodeLabelPlacement)

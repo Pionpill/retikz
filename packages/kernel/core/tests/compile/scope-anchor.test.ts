@@ -23,7 +23,7 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
 };
 
 describe('跨 scope anchor keyword', () => {
-  it('scope_anchor_web_alias：对象形态 top-left 与 north-west 等价', () => {
+  it('scope_anchor_canonical_corner：对象形态 top-left 与 top-left 等价', () => {
     const endFor = (anchor: string): [number, number] | undefined => {
       const ir = scene([
         { type: 'node', id: 'A', position: [0, 0], text: 'A' },
@@ -38,10 +38,10 @@ describe('跨 scope anchor keyword', () => {
       return lineTo(topPath(compileToScene(ir).primitives));
     };
 
-    expect(endFor('top-left')).toEqual(endFor('north-west'));
+    expect(endFor('top-left')).toEqual(endFor('top-left'));
   });
 
-  it('scope_anchor_north_cross：scope translate(100,0) + path A.north 投影到全局 (100, A.north.y)', () => {
+  it('scope_anchor_top_cross：scope translate(100,0) + path A.top 投影到全局 (100, A.top.y)', () => {
     const ir = scene([
       { type: 'node', id: 'ext', position: [0, 0], text: 'E' },
       {
@@ -53,19 +53,19 @@ describe('跨 scope anchor keyword', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: { id: 'ext' } },
-          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'north' } },
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'top' } },
         ],
       },
     ]);
     const compiled = compileToScene(ir);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    // A.north 全局 x ≈ 100；y 应小于 0（north = -y 方向）
+    // A.top 全局 x ≈ 100；y 应小于 0（top = -y 方向）
     expect(Math.abs(end![0] - 100)).toBeLessThan(20);
     expect(end![1]).toBeLessThan(0);
   });
 
-  it('scope_anchor_corner_cross_scale：scope scale(2) + path A.east → east 点按 scale 拉伸', () => {
+  it('scope_anchor_corner_cross_scale：scope scale(2) + path A.right → right 点按 scale 拉伸', () => {
     // 无 scale 对照
     const irBase = scene([
       { type: 'node', id: 'ext', position: [0, 60], text: 'E' },
@@ -77,7 +77,7 @@ describe('跨 scope anchor keyword', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: { id: 'ext' } },
-          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'east' } },
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'right' } },
         ],
       },
     ]);
@@ -92,7 +92,7 @@ describe('跨 scope anchor keyword', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: { id: 'ext' } },
-          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'east' } },
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'right' } },
         ],
       },
     ]);
@@ -100,7 +100,7 @@ describe('跨 scope anchor keyword', () => {
     const eScale = lineTo(topPath(compileToScene(irScale).primitives));
     expect(eBase).toBeDefined();
     expect(eScale).toBeDefined();
-    // scale=2 时 east 在 x 方向应大于无 scale 版本
+    // scale=2 时 right 在 x 方向应大于无 scale 版本
     expect(eScale![0]).toBeGreaterThan(eBase![0]);
   });
 });
@@ -285,7 +285,7 @@ describe('跨 scope anchor 边界', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 60] },
-          { type: 'step', kind: 'line', to: { id: 'cz', anchor: 'north' } },
+          { type: 'step', kind: 'line', to: { id: 'cz', anchor: 'top' } },
         ],
       },
     ]);
@@ -294,7 +294,7 @@ describe('跨 scope anchor 边界', () => {
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    // 0×0 → north == 中心 == (80, 0)
+    // 0×0 → top == 中心 == (80, 0)
     expect(Math.abs(end![0] - 80)).toBeLessThan(5);
     expect(Math.abs(end![1] - 0)).toBeLessThan(5);
   });
@@ -306,7 +306,7 @@ describe('跨 scope anchor 边界', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [-50, 0] },
-          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'north' } },
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'top' } },
         ],
       },
     ]);
@@ -320,7 +320,7 @@ describe('跨 scope anchor 边界', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [-50, 0] },
-          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'north' } },
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'top' } },
         ],
       },
     ]);
@@ -332,7 +332,7 @@ describe('跨 scope anchor 边界', () => {
     expect(Math.abs(eFlat![1] - eScope![1])).toBeLessThan(0.01);
   });
 
-  it('scope_deep_nested_anchor：5 层嵌套 scope 累积 translate(20,0) ×5 → A.north 全局 x ≈ 100', () => {
+  it('scope_deep_nested_anchor：5 层嵌套 scope 累积 translate(20,0) ×5 → A.top 全局 x ≈ 100', () => {
     // 构造 5 层嵌套，每层 translate(20, 0)；最内层有 node id='A'
     const inner: IR['children'][number] = { type: 'node', id: 'A', position: [0, 0], text: 'A' };
     let acc: IR['children'][number] = inner;
@@ -349,7 +349,7 @@ describe('跨 scope anchor 边界', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 60] },
-          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'north' } },
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'top' } },
         ],
       },
     ]);
@@ -358,7 +358,7 @@ describe('跨 scope anchor 边界', () => {
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    // 全局 x ≈ 100（5 × 20）；y < 0 (north 方向)
+    // 全局 x ≈ 100（5 × 20）；y < 0 (top 方向)
     expect(Math.abs(end![0] - 100)).toBeLessThan(20);
     expect(end![1]).toBeLessThan(0);
   });
@@ -376,7 +376,7 @@ describe('跨 scope anchor 错误路径', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 60] },
-          { type: 'step', kind: 'line', to: { id: 'ghost', anchor: 'north' } },
+          { type: 'step', kind: 'line', to: { id: 'ghost', anchor: 'top' } },
         ],
       },
     ]);
@@ -444,7 +444,7 @@ describe('跨 scope anchor 交互场景', () => {
     expect(dx + dy).toBeGreaterThan(2);
   });
 
-  it('scope_with_at_position_and_anchor_chain：node B AtPosition `{ of: A, direction: right }` 在 scope 内 + path 引用 `B.south` → 全链路解析', () => {
+  it('scope_with_at_position_and_anchor_chain：node B AtPosition `{ of: A, direction: right }` 在 scope 内 + path 引用 `B.bottom` → 全链路解析', () => {
     // A 在 scope 外，B 在 scope 内引用 A——relative 部分在 scope 局部度量后投回全局
     const ir = scene([
       { type: 'node', id: 'A', position: [0, 0], text: 'A' },
@@ -464,7 +464,7 @@ describe('跨 scope anchor 交互场景', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: { id: 'B', anchor: 'south' } },
+          { type: 'step', kind: 'line', to: { id: 'B', anchor: 'bottom' } },
         ],
       },
     ]);
@@ -473,7 +473,7 @@ describe('跨 scope anchor 交互场景', () => {
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    // A 全局 (0, 0)；scope translate 不改 right 方向 / 距离；B 视觉 = A 全局右 60 = (60, 0)；south 在 y > 0 方向
+    // A 全局 (0, 0)；scope translate 不改 right 方向 / 距离；B 视觉 = A 全局右 60 = (60, 0)；bottom 在 y > 0 方向
     expect(Math.abs(end![0] - 60)).toBeLessThan(20);
     expect(end![1]).toBeGreaterThan(0);
   });

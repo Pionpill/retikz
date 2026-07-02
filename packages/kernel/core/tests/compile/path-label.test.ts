@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { TextMeasurer } from '../../src';
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/contract';
@@ -265,7 +265,7 @@ describe('step.label：覆盖各 step kind', () => {
     expect(t.y).toBeLessThan(Math.sin(Math.PI / 4) * 10); // top 偏移
   });
 
-  it('circlePath 段 label 默认在 t=0.5 (west)', () => {
+  it('circlePath 段 label 默认在 t=0.5 (left)', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -1024,7 +1024,7 @@ describe('label.position adversarial：构造让实现挂的输入', () => {
     const result = StepLabelSchema.safeParse({ text: 'x', position: 'atStart' });
     expect(result.success).toBe(false);
   });
-  it('adv_keyword_space_rejected：position="at start" 含空格拒绝（TikZ 用空格 retikz 用连字符）', async () => {
+  it('adv_keyword_space_rejected：position="at start" 含空格拒绝（parser sugar 用空格 retikz 用连字符）', async () => {
     const { StepLabelSchema } = await import('../../src/schemas/path/step');
     const result = StepLabelSchema.safeParse({ text: 'x', position: 'at start' });
     expect(result.success).toBe(false);

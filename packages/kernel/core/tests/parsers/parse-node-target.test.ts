@@ -14,7 +14,7 @@ describe('parseNodeTarget node 模式（无 .）', () => {
 });
 
 describe('parseNodeTarget 命名 anchor 模式（id.<name>）', () => {
-  it('9 个 Web canonical 方位 anchor 全识别 → { id, anchor }', () => {
+  it('9 个 canonical 方位 anchor 全识别 → { id, anchor }', () => {
     for (const name of ['center', 'top', 'right', 'bottom', 'left', 'top-right', 'top-left', 'bottom-right', 'bottom-left']) {
       expect(parseNodeTarget(`A.${name}`)).toEqual({ id: 'A', anchor: name });
     }
@@ -24,7 +24,7 @@ describe('parseNodeTarget 命名 anchor 模式（id.<name>）', () => {
     expect(parseNodeTarget('my-node.right')).toEqual({ id: 'my-node', anchor: 'right' });
   });
 
-  it('compass 风格 anchor alias 归一到 Web canonical anchor', () => {
+  it('compass / TikZ 风格 anchor alias 归一到 canonical anchor', () => {
     expect(parseNodeTarget('A.north')).toEqual({ id: 'A', anchor: 'top' });
     expect(parseNodeTarget('A.north-west')).toEqual({ id: 'A', anchor: 'top-left' });
     expect(parseNodeTarget('A.south-east')).toEqual({ id: 'A', anchor: 'bottom-right' });

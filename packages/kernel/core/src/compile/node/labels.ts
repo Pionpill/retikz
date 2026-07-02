@@ -4,7 +4,6 @@ import type { IRNodeLabel, IRNodeLabelBoundaryPosition } from '../../schemas';
 import type { Position } from '../../shared/geometry';
 import type { NodeLabelLayout, NodeLayout } from './types';
 
-import { normalizeAtDirection, normalizeSide } from '../../shared';
 import { DirectionVectorByAtDirection, LabelAnchorByAtDirection } from '../direction';
 import { anchorOf, angleBoundaryOf } from './anchors';
 
@@ -16,7 +15,7 @@ const isLabelBoundaryPosition = (position: NodeLabelLayout['position']): positio
 
 const normalizeLabelBoundaryPosition = (position: IRNodeLabelBoundaryPosition): IRNodeLabelBoundaryPosition => ({
   ...position,
-  boundary: normalizeSide(position.boundary) ?? position.boundary,
+  boundary: position.boundary,
 });
 
 export const normalizeLabelPosition = (
@@ -27,7 +26,7 @@ export const normalizeLabelPosition = (
     return typeof position === 'object' ? normalizeLabelBoundaryPosition(position) : position;
   }
   if (position === 'center') return position;
-  return normalizeAtDirection(position) ?? position;
+  return position;
 };
 
 const ensureBoxLikeLabelBoundary = (layout: NodeLayout): void => {

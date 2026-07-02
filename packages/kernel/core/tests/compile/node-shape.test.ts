@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive } from '../../src/contract';
 import type { IR, IRNode } from '../../src/schemas';
@@ -84,8 +84,8 @@ describe('Node shape multimorphism', () => {
 });
 
 describe('Target 字符串锚点扩展', () => {
-  it("`'A.east'` → 端点固定在 east anchor，不受 toward 影响", () => {
-    // 矩形 A=(0,0)，无文本，padding=8 → 16x16；east = (8, 0)
+  it("`'A.right'` → 端点固定在 right anchor，不受 toward 影响", () => {
+    // 矩形 A=(0,0)，无文本，padding=8 → 16x16；right = (8, 0)
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -94,7 +94,7 @@ describe('Target 字符串锚点扩展', () => {
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: { id: 'A', anchor: 'east' } },
+            { type: 'step', kind: 'move', to: { id: 'A', anchor: 'right' } },
             { type: 'step', kind: 'line', to: [100, 50] },
           ],
         },
@@ -102,7 +102,7 @@ describe('Target 字符串锚点扩展', () => {
     };
     const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
-      // move(8, 0)：固定 east
+      // move(8, 0)：固定 right
       expect(linePath.commands[0]).toEqual(move([8, 0]));
     }
   });
@@ -131,8 +131,8 @@ describe('Target 字符串锚点扩展', () => {
     }
   });
 
-  it("不同 shape 的 'A.north' anchor 都在最高点", () => {
-    // rectangle / circle / ellipse / diamond 4 shape，A.north 都应在节点 north
+  it("不同 shape 的 'A.top' anchor 都在最高点", () => {
+    // rectangle / circle / ellipse / diamond 4 shape，A.top 都应在节点 top
     for (const shape of ['rectangle', 'circle', 'ellipse', 'diamond'] as const) {
       const ir: IR = {
         version: 1,
@@ -142,7 +142,7 @@ describe('Target 字符串锚点扩展', () => {
           {
             type: 'path',
             children: [
-              { type: 'step', kind: 'move', to: { id: 'A', anchor: 'north' } },
+              { type: 'step', kind: 'move', to: { id: 'A', anchor: 'top' } },
               { type: 'step', kind: 'line', to: [0, -100] },
             ],
           },
@@ -153,7 +153,7 @@ describe('Target 字符串锚点扩展', () => {
           p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
       );
       if (linePath?.type === 'path') {
-        // north 的 x = 0（中心 x），y < 0（节点上方）
+        // top 的 x = 0（中心 x），y < 0（节点上方）
         const first = linePath.commands[0];
         expect(first.kind).toBe('move');
         if (first.kind === 'move') {
@@ -297,14 +297,14 @@ describe('circle 收为 ellipse equal preset 别名', () => {
     // circle 与显式 ellipse-equal 在所有命名 anchor 落点一致（回归：收敛不改 anchor 几何）
     for (const anchor of [
       'center',
-      'north',
-      'south',
-      'east',
-      'west',
-      'north-east',
-      'north-west',
-      'south-east',
-      'south-west',
+      'top',
+      'bottom',
+      'right',
+      'left',
+      'top-right',
+      'top-left',
+      'bottom-right',
+      'bottom-left',
     ] as const) {
       const mk = (shape: IRNode['shape']): IR => ({
         version: 1,
@@ -375,14 +375,14 @@ describe('diamond 收为 polygon preset 别名（ADR-04）', () => {
     // 用 path 连接 'A.<anchor>' 比对两种 shape 写法的首端点（move 落点）。
     for (const anchor of [
       'center',
-      'north',
-      'south',
-      'east',
-      'west',
-      'north-east',
-      'north-west',
-      'south-east',
-      'south-west',
+      'top',
+      'bottom',
+      'right',
+      'left',
+      'top-right',
+      'top-left',
+      'bottom-right',
+      'bottom-left',
     ] as const) {
       const mk = (shape: IRNode['shape']): IR => ({
         version: 1,

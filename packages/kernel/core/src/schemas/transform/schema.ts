@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-import { normalizeAtDirection } from '../../shared';
 import { AbsoluteTargetSchema, AtDirection, PolarPositionSchema, PositionSchema } from '../position';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
 
@@ -34,8 +33,8 @@ const AtTranslateSchema = z
   .object({
     kind: z.literal('at-translate').describe('Discriminator for direction-relative translate.'),
     direction: z
-      .preprocess(value => (typeof value === 'string' ? normalizeAtDirection(value) ?? value : value), z.enum(AtDirection))
-      .describe('Direction enum (8 values, shared with AtPosition.direction). Web names are canonical; compass and above/below names are accepted aliases.'),
+      .enum(AtDirection)
+      .describe('Canonical direction enum (8 values, shared with AtPosition.direction).'),
     of: z
       .string()
       .min(1)

@@ -1,18 +1,17 @@
-import type { WebAnchorValue } from '../anchor';
-import type { Side } from './edge';
+import type { AnchorValue, SideValue } from '../anchor';
 import type { Position } from './point';
 
-import { WebAnchor, WebSide } from '../anchor';
+import { Anchor, Side } from '../anchor';
 import { polylineViaVertex } from './edge';
 import { localToWorld, worldToLocal } from './transform';
 
 /** 每条 side 的过顶点折线三 anchor：[邻边中点, cardinal 顶点, 邻边中点]（方向 top/bottom=西→东、right/left=北→南） */
 const DIAMOND_EDGE = {
-  [WebSide.Top]: [WebAnchor.TopLeft, WebAnchor.Top, WebAnchor.TopRight],
-  [WebSide.Bottom]: [WebAnchor.BottomLeft, WebAnchor.Bottom, WebAnchor.BottomRight],
-  [WebSide.Right]: [WebAnchor.TopRight, WebAnchor.Right, WebAnchor.BottomRight],
-  [WebSide.Left]: [WebAnchor.TopLeft, WebAnchor.Left, WebAnchor.BottomLeft],
-} as const satisfies Record<Side, readonly [WebAnchorValue, WebAnchorValue, WebAnchorValue]>;
+  [Side.Top]: [Anchor.TopLeft, Anchor.Top, Anchor.TopRight],
+  [Side.Bottom]: [Anchor.BottomLeft, Anchor.Bottom, Anchor.BottomRight],
+  [Side.Right]: [Anchor.TopRight, Anchor.Right, Anchor.BottomRight],
+  [Side.Left]: [Anchor.TopLeft, Anchor.Left, Anchor.BottomLeft],
+} as const satisfies Record<SideValue, readonly [AnchorValue, AnchorValue, AnchorValue]>;
 
 /** 菱形：中心 + halfA/halfB 半轴长 + 可选旋转；顶点在 (±halfA,0) 与 (0,±halfB) */
 export type Diamond = {
@@ -32,7 +31,7 @@ export type Diamond = {
 /**
  * 菱形相关基础工具（独立几何原语）
  * @description 注意：这是一套独立的菱形几何工具，**与 Node 的 diamond shape 不是同一条路径**——
- *   后者已被 compile 规范化为 `polygon` preset（`{ sides: 4 }`），其 compass anchor 走外接 AABB 角。
+ *   后者已被 compile 规范化为 `polygon` preset（`{ sides: 4 }`），其标准方位 anchor 走外接 AABB 角。
  *   本工具的 NE/NW/SE/SW anchor 取斜边中点（落在真实菱形边上），语义与 polygon 路径不同；
  *   作为通用几何 API 保留，勿假设它与 Node diamond shape 行为一致。
  */
@@ -45,36 +44,36 @@ export const diamond = {
     const [lx, ly] = worldToLocal(d, p);
     return Math.abs(lx) / d.halfA + Math.abs(ly) / d.halfB <= 1 + 1e-9;
   },
-  /** 8 个 Web 方位 anchor：top/bottom/right/left=顶点，四个 corner=边中点；center 请用 `diamond.center()` */
-  anchor: (d: Diamond, name: WebAnchorValue): Position => {
+  /** 8 个标准方位 anchor：top/bottom/right/left=顶点，四个 corner=边中点；center 请用 `diamond.center()` */
+  anchor: (d: Diamond, name: AnchorValue): Position => {
     let lx = 0;
     let ly = 0;
     switch (name) {
-      case WebAnchor.Top:
+      case Anchor.Top:
         ly = -d.halfB;
         break;
-      case WebAnchor.Bottom:
+      case Anchor.Bottom:
         ly = d.halfB;
         break;
-      case WebAnchor.Right:
+      case Anchor.Right:
         lx = d.halfA;
         break;
-      case WebAnchor.Left:
+      case Anchor.Left:
         lx = -d.halfA;
         break;
-      case WebAnchor.TopRight:
+      case Anchor.TopRight:
         lx = d.halfA / 2;
         ly = -d.halfB / 2;
         break;
-      case WebAnchor.TopLeft:
+      case Anchor.TopLeft:
         lx = -d.halfA / 2;
         ly = -d.halfB / 2;
         break;
-      case WebAnchor.BottomRight:
+      case Anchor.BottomRight:
         lx = d.halfA / 2;
         ly = d.halfB / 2;
         break;
-      case WebAnchor.BottomLeft:
+      case Anchor.BottomLeft:
         lx = -d.halfA / 2;
         ly = d.halfB / 2;
         break;
@@ -94,7 +93,7 @@ export const diamond = {
     return localToWorld(d, [lx * t, ly * t]);
   },
   /** 边上比例点：side 过 cardinal 顶点的两段折线 t∈[0,1] 处（落真实斜边；含旋转） */
-  edgePoint: (d: Diamond, side: Side, t: number): Position => {
+  edgePoint: (d: Diamond, side: SideValue, t: number): Position => {
     const [mid0, vertex, mid1] = DIAMOND_EDGE[side];
     return polylineViaVertex(diamond.anchor(d, mid0), diamond.anchor(d, vertex), diamond.anchor(d, mid1), t);
   },

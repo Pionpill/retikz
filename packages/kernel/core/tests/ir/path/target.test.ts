@@ -3,17 +3,21 @@ import { describe, expect, it } from 'vitest';
 import { AnchorRefSchema, NodeTargetSchema, TargetSchema } from '../../../src/schemas';
 
 describe('AnchorRefSchema：命名 / 角度 / 边上比例点', () => {
-  it('接受 9 个 Web canonical 命名 anchor', () => {
+  it('接受 9 个 canonical 命名 anchor', () => {
     for (const name of ['center', 'top', 'right', 'bottom', 'left', 'top-right', 'top-left', 'bottom-right', 'bottom-left']) {
       expect(() => AnchorRefSchema.parse(name)).not.toThrow();
     }
   });
 
-  it('compass 命名 anchor 作为输入别名归一到 Web canonical', () => {
-    expect(AnchorRefSchema.parse('north')).toBe('top');
-    expect(AnchorRefSchema.parse('south-west')).toBe('bottom-left');
-    expect(AnchorRefSchema.parse('above-left')).toBe('top-left');
-    expect(AnchorRefSchema.parse('below-right')).toBe('bottom-right');
+  it('canonical 命名 anchor 保持原值', () => {
+    expect(AnchorRefSchema.parse('top')).toBe('top');
+    expect(AnchorRefSchema.parse('bottom-left')).toBe('bottom-left');
+    expect(AnchorRefSchema.parse('top-left')).toBe('top-left');
+    expect(AnchorRefSchema.parse('bottom-right')).toBe('bottom-right');
+  });
+
+  it('shape-specific anchor 保持原值，不在 schema 层归一', () => {
+    expect(AnchorRefSchema.parse('tip-0')).toBe('tip-0');
   });
 
   it('接受角度 anchor（含负 / 小数）', () => {
@@ -22,13 +26,11 @@ describe('AnchorRefSchema：命名 / 角度 / 边上比例点', () => {
     expect(AnchorRefSchema.parse(180.5)).toBe(180.5);
   });
 
-  it('接受 { side, fraction } 边上比例点并输出 Web canonical side', () => {
+  it('接受 { side, fraction } 边上比例点并输出 canonical side', () => {
     expect(AnchorRefSchema.parse({ side: 'top', fraction: 0.25 })).toEqual({ side: 'top', fraction: 0.25 });
     expect(AnchorRefSchema.parse({ side: 'left', fraction: 0 })).toEqual({ side: 'left', fraction: 0 });
     expect(AnchorRefSchema.parse({ side: 'right', fraction: 1 })).toEqual({ side: 'right', fraction: 1 });
-    expect(AnchorRefSchema.parse({ side: 'north', fraction: 0.25 })).toEqual({ side: 'top', fraction: 0.25 });
-    expect(AnchorRefSchema.parse({ side: 'above', fraction: 0.25 })).toEqual({ side: 'top', fraction: 0.25 });
-    expect(AnchorRefSchema.parse({ side: 'below', fraction: 0.25 })).toEqual({ side: 'bottom', fraction: 0.25 });
+    expect(AnchorRefSchema.parse({ side: 'bottom', fraction: 0.25 })).toEqual({ side: 'bottom', fraction: 0.25 });
   });
 
   it('角度 NaN / Infinity 被拒（.finite）', () => {
@@ -43,6 +45,8 @@ describe('AnchorRefSchema：命名 / 角度 / 边上比例点', () => {
 
   it('未知 side 报错', () => {
     expect(() => AnchorRefSchema.parse({ side: 'up', fraction: 0.5 })).toThrow();
+    expect(() => AnchorRefSchema.parse({ side: 'north', fraction: 0.5 })).toThrow();
+    expect(() => AnchorRefSchema.parse({ side: 'above', fraction: 0.5 })).toThrow();
   });
 });
 
@@ -52,20 +56,20 @@ describe('NodeTargetSchema：{ id, anchor?, offset? }', () => {
   });
 
   it('id + 命名 / 角度 / 边上比例点 anchor', () => {
-    expect(NodeTargetSchema.parse({ id: 'A', anchor: 'north' })).toEqual({ id: 'A', anchor: 'top' });
-    expect(NodeTargetSchema.parse({ id: 'A', anchor: 'below-right' })).toEqual({
+    expect(NodeTargetSchema.parse({ id: 'A', anchor: 'top' })).toEqual({ id: 'A', anchor: 'top' });
+    expect(NodeTargetSchema.parse({ id: 'A', anchor: 'bottom-right' })).toEqual({
       id: 'A',
       anchor: 'bottom-right',
     });
     expect(NodeTargetSchema.parse({ id: 'A', anchor: 30 })).toEqual({ id: 'A', anchor: 30 });
-    expect(NodeTargetSchema.parse({ id: 'A', anchor: { side: 'north', fraction: 0.25 } })).toEqual({
+    expect(NodeTargetSchema.parse({ id: 'A', anchor: { side: 'top', fraction: 0.25 } })).toEqual({
       id: 'A',
       anchor: { side: 'top', fraction: 0.25 },
     });
   });
 
   it('id + anchor + 世界系 offset', () => {
-    expect(NodeTargetSchema.parse({ id: 'A', anchor: 'west', offset: [-4, 0] })).toEqual({
+    expect(NodeTargetSchema.parse({ id: 'A', anchor: 'left', offset: [-4, 0] })).toEqual({
       id: 'A',
       anchor: 'left',
       offset: [-4, 0],
@@ -73,7 +77,7 @@ describe('NodeTargetSchema：{ id, anchor?, offset? }', () => {
   });
 
   it('缺 id 报错', () => {
-    expect(() => NodeTargetSchema.parse({ anchor: 'north' })).toThrow();
+    expect(() => NodeTargetSchema.parse({ anchor: 'top' })).toThrow();
     expect(() => NodeTargetSchema.parse({ id: '' })).toThrow();
   });
 

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { normalizeSide, WebSide } from '../../../shared';
+import { Side } from '../../../shared';
 import { JsonObjectSchema } from '../../json';
 import { PositionSchema } from '../../position';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
@@ -26,13 +26,10 @@ export const GeometryLabelSchema = z
         'Position along the step: keyword or normalized number. Parameter meaning follows the step kind.',
       ),
     side: z
-      .preprocess(
-        value => (typeof value === 'string' ? normalizeSide(value) ?? value : value),
-        z.enum(WebSide),
-      )
+      .enum(Side)
       .optional()
       .describe(
-        'Side relative to the label anchor. Web sides top/bottom/left/right are canonical; compass and TikZ side names are accepted aliases. Default `top`.',
+        'Canonical side relative to the label anchor. Default `top`.',
       ),
     sloped: z
       .boolean()

@@ -1,4 +1,4 @@
-﻿import type { GroupPrim, ScenePrimitive, TextPrim } from '../../contract';
+import type { GroupPrim, ScenePrimitive, TextPrim } from '../../contract';
 import type { GeometryLabelSideValue, IRPosition, IRStepLabel } from '../../schemas';
 import type { SegmentSample } from '../../shared/geometry';
 import type { CompileWarningCodeValue } from '../constant';
@@ -6,7 +6,6 @@ import type { LowerTex } from '../lower-tex';
 import type { LineLayoutContext } from '../text-layout';
 import type { FontSpec, TextMeasurer } from '../text-metrics';
 
-import { normalizeSide } from '../../shared';
 import { CompileWarningCode } from '../constant';
 import { toAlphabeticBaselineY } from '../text-baseline';
 import { layoutInlineLine, resolveLineRuns } from '../text-layout';
@@ -89,7 +88,7 @@ export const emitLabelPrimitive = (
       ? label.sloped === true || label.placement === 'inside'
         ? 'center'
         : 'top'
-      : ((normalizeSide(label.side) ?? label.side));
+      : label.side;
   const sloped = label.sloped === true;
   const sideDistance = label.distance ?? LABEL_SIDE_OFFSET;
   const boundaryOffset = placementCtx?.boundaryOffset ?? 0;
