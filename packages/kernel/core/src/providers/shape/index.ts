@@ -1,6 +1,6 @@
 export * from './arc';
 export * from './contour';
-export * from './ellipse';
+export { ellipse as ellipseShape } from './ellipse';
 export * from './polygon';
 export * from './rectangle';
 export { BUILTIN_SHAPES, resolveShapeRegistry } from './registry';

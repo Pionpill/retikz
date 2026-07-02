@@ -4,7 +4,7 @@ import type { BoundaryDefinition } from '../../contract/boundary';
 
 import { defineBoundary } from '../../contract/boundary';
 import { defineBuiltinProviderArray, resolveProviderRegistry } from '../registry';
-import { ellipse, rectangle } from '../shape';
+import { ellipseShape, rectangle } from '../shape';
 
 const NO_PARAMS = z.strictObject({});
 
@@ -19,8 +19,8 @@ export const BUILTIN_BOUNDARIES = defineBuiltinProviderArray<BoundaryDefinition,
   defineBoundary({
     name: 'circle',
     paramsSchema: NO_PARAMS,
-    boundaryPoint: (rect, toward, params) => ellipse.boundaryPoint(squareToMax(rect), toward, params),
-    anchor: (rect, name, params) => ellipse.anchor(squareToMax(rect), name, params),
+    boundaryPoint: (rect, toward, params) => ellipseShape.boundaryPoint(squareToMax(rect), toward, params),
+    anchor: (rect, name, params) => ellipseShape.anchor(squareToMax(rect), name, params),
   }),
   defineBoundary({
     name: 'rectangle',
@@ -31,8 +31,8 @@ export const BUILTIN_BOUNDARIES = defineBuiltinProviderArray<BoundaryDefinition,
   defineBoundary({
     name: 'ellipse',
     paramsSchema: NO_PARAMS,
-    boundaryPoint: ellipse.boundaryPoint,
-    anchor: ellipse.anchor,
+    boundaryPoint: ellipseShape.boundaryPoint,
+    anchor: ellipseShape.anchor,
   }),
 ]);
 

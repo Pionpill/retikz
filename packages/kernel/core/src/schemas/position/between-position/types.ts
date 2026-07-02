@@ -1,5 +1,5 @@
-import type { PolarPosition } from '../../../shared';
 import type { IRNodeTarget } from '../../path/target';
+import type { PolarPosition } from '../polar-position';
 
 import { type IROffsetPosition } from '../offset-position';
 import { type IRPosition } from '../position';
