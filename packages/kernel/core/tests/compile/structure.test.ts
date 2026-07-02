@@ -3,7 +3,10 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
+import type { NodeLabelLayout, NodeLayout, TexLoweringContext } from '../../src/compile/node';
+
 import * as compile from '../../src/compile';
+import * as nodeCompile from '../../src/compile/node';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
@@ -31,5 +34,31 @@ describe('compile source structure', () => {
     expect(text).not.toContain('const buildMarkMarkerGroup =');
     expect(text).not.toContain('const buildPathTransforms =');
     expect(text).not.toContain('const assertValidGeneratedCommand =');
+  });
+
+  it('node compile implementation is directory based', () => {
+    expect(() => source('src/compile/node.ts')).toThrow();
+    expect(source('src/compile/node/index.ts')).toContain("export { layoutNode } from './layout';");
+    expect(source('src/compile/node/index.ts')).toContain("export { emitNodePrimitives } from './emit';");
+  });
+
+  it('node compile barrel keeps the internal compatibility surface', () => {
+    expect(Object.keys(nodeCompile).sort()).toEqual([
+      'anchorOf',
+      'angleBoundaryOf',
+      'boundaryPointOf',
+      'emitNodePrimitives',
+      'labelExtentPoints',
+      'layoutNode',
+      'outerRectOf',
+    ]);
+
+    const layout: Partial<NodeLayout> = {};
+    const label: Partial<NodeLabelLayout> = {};
+    const tex: TexLoweringContext = { warn: () => {} };
+
+    expect(layout).toEqual({});
+    expect(label).toEqual({});
+    expect(tex.lowerTex).toBeUndefined();
   });
 });
