@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
@@ -206,8 +206,8 @@ export type LayoutProps = ScopeStyleProps & {
   /**
    * 运行时注入的第三方 / 自定义 arrow（透传给 `compileToScene` 的 `CompileOptions.arrows`）
    * @description IR 里 `<Path arrowDetail={{ shape: '...' }}>` 仍只写字符串名；定义在此注入。emit-in-compile：
-   *   compile 调 `def.emit` 产 marker 几何进 `ArrowEndSpec`，react adapter 只物化、不需 arrows 表。同名覆盖
-   *   compile ? `def.emit` ? marker ??? `ArrowEndSpec`?????????????????? throw
+   *   compile 调 `def.emit` 产 marker 几何进 `ResolvedArrowEndSpec`，react adapter 只物化、不需 arrows 表。同名覆盖
+   *   规则沿用 compile 侧 provider 合并策略，未注册 shape 在 compile 阶段报错。
    */
   arrows?: ReadonlyArray<ArrowDefinition>;
   /**

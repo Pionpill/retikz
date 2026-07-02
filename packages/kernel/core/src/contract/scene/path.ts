@@ -5,7 +5,7 @@ import type { ArrowShapeValue } from '../../schemas';
 import type {
   IRGraphicStyle,
   IRPathBase,
-  IRPathCommand,
+  IRPosition,
   PathFillRuleValue,
   PathLineCapValue,
   PathLineJoinValue,
@@ -13,32 +13,107 @@ import type {
 import type { MarkerPrimitive } from './marker';
 import type { PaintValue } from './paint';
 
-/** Move command：移动游标到目标点，不绘制 */
-export type MovePathCommand = Extract<IRPathCommand, { kind: 'move' }>;
+/** 移动命令：移动游标到目标点，不绘制。 */
+export type MovePathCommand = {
+  /** 命令判别符。 */
+  kind: 'move';
+  /** 移动目标点。 */
+  to: IRPosition;
+};
 
-/** Line command：从游标到目标点画直线 */
-export type LinePathCommand = Extract<IRPathCommand, { kind: 'line' }>;
+/** 直线命令：从游标到目标点画直线。 */
+export type LinePathCommand = {
+  /** 命令判别符。 */
+  kind: 'line';
+  /** 直线目标点。 */
+  to: IRPosition;
+};
 
-/** Quad command：二次贝塞尔，一个控制点 */
-export type QuadPathCommand = Extract<IRPathCommand, { kind: 'quad' }>;
+/** 二次贝塞尔命令：使用一个控制点连接到目标点。 */
+export type QuadPathCommand = {
+  /** 命令判别符。 */
+  kind: 'quad';
+  /** 二次贝塞尔控制点。 */
+  control: IRPosition;
+  /** 曲线目标点。 */
+  to: IRPosition;
+};
 
-/** Cubic command：三次贝塞尔，两个控制点 */
-export type CubicPathCommand = Extract<IRPathCommand, { kind: 'cubic' }>;
+/** 三次贝塞尔命令：使用两个控制点连接到目标点。 */
+export type CubicPathCommand = {
+  /** 命令判别符。 */
+  kind: 'cubic';
+  /** 第一个三次贝塞尔控制点。 */
+  control1: IRPosition;
+  /** 第二个三次贝塞尔控制点。 */
+  control2: IRPosition;
+  /** 曲线目标点。 */
+  to: IRPosition;
+};
 
-/** Arc command：以 center 为圆心、给定半径与起末角度的圆弧（center-parameterization） */
-export type ArcPathCommand = Extract<IRPathCommand, { kind: 'arc' }>;
+/** 圆弧命令：以 center 为圆心、给定半径与起末角度的圆弧。 */
+export type ArcPathCommand = {
+  /** 命令判别符。 */
+  kind: 'arc';
+  /** 圆弧圆心。 */
+  center: IRPosition;
+  /** 圆弧半径。 */
+  radius: number;
+  /** 起始角度，单位为度。 */
+  startAngle: number;
+  /** 结束角度，单位为度。 */
+  endAngle: number;
+  /**
+   * 是否逆时针绘制。
+   * @default false
+   */
+  counterClockwise?: boolean;
+};
 
-/** EllipseArc command：以 center 为圆心、给定 x/y 半径与起末角度的椭圆弧；可选 rotation */
-export type EllipseArcPathCommand = Extract<IRPathCommand, { kind: 'ellipseArc' }>;
+/** 椭圆弧命令：以 center 为圆心、给定 x/y 半径与起末角度的椭圆弧。 */
+export type EllipseArcPathCommand = {
+  /** 命令判别符。 */
+  kind: 'ellipseArc';
+  /** 椭圆弧圆心。 */
+  center: IRPosition;
+  /** x 轴半径。 */
+  radiusX: number;
+  /** y 轴半径。 */
+  radiusY: number;
+  /**
+   * 椭圆旋转角度，单位为度。
+   * @default 0
+   */
+  rotation?: number;
+  /** 起始角度，单位为度。 */
+  startAngle: number;
+  /** 结束角度，单位为度。 */
+  endAngle: number;
+  /**
+   * 是否逆时针绘制。
+   * @default false
+   */
+  counterClockwise?: boolean;
+};
 
-/** Close command：闭合当前子路径回最近一次 move 起点 */
-export type ClosePathCommand = Extract<IRPathCommand, { kind: 'close' }>;
+/** 闭合命令：闭合当前子路径回最近一次 move 起点。 */
+export type ClosePathCommand = {
+  /** 命令判别符。 */
+  kind: 'close';
+};
 
 /**
  * Path 命令：结构化路径绘制操作（7 分支 discriminated union）
  * @description discriminated union 按 kind 分发；坐标 / 角度均使用 user units（角度=度，0=+x、90=+y/视觉下、CW=正）。各 adapter 自行翻译为原生 API：SVG 拼 `d` 字符串、Canvas 调 ctx.moveTo/lineTo/arc 等。每个 kind 有对应 named type export，便于 wrapper / `Pick<>` 派生。
  */
-export type PathCommand = IRPathCommand;
+export type PathCommand =
+  | MovePathCommand
+  | LinePathCommand
+  | QuadPathCommand
+  | CubicPathCommand
+  | ArcPathCommand
+  | EllipseArcPathCommand
+  | ClosePathCommand;
 
 /**
  * 端点级已解析的箭头 marker 描述（Scene primitive 层，renderer-agnostic）

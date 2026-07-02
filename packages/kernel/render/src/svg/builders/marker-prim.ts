@@ -1,4 +1,4 @@
-import type { MarkerFill, MarkerPathCommand, MarkerPrimitive } from '@retikz/core';
+import type { MarkerFill, MarkerPrimitive, PathCommand } from '@retikz/core';
 
 import type { SvgNode } from '../types';
 
@@ -29,7 +29,7 @@ const markerStrokeToSvg = (stroke: MarkerFill | undefined): string | undefined =
 };
 
 /** marker-local path 命令序列 → SVG `d` 字符串（复用主 path 的 `buildPathD`） */
-const markerCommandsToD = (commands: ReadonlyArray<MarkerPathCommand>): string => buildPathD(commands);
+const markerCommandsToD = (commands: ReadonlyArray<PathCommand>): string => buildPathD(commands);
 
 /**
  * 单个 `MarkerPrimitive` → `SvgNode`（arrow marker / pattern motif 共用物化）

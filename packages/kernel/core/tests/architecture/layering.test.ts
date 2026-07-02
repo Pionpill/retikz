@@ -119,6 +119,24 @@ describe('core layer import boundaries', () => {
     expect(offenders).toEqual([]);
   });
 
+  it('scene contracts do not rename whole IR branches as Scene-owned types', () => {
+    const sceneRoot = join(SRC_ROOT, 'contract', 'scene');
+    const forbiddenPatterns = [
+      { label: 'direct IR branch alias', pattern: /export type \w+ = IR\w+/u },
+      { label: 'extracted IR branch alias', pattern: /export type \w+ = Extract<IR\w+/u },
+      { label: 'omitted IR branch alias', pattern: /export type \w+ = Omit<IR\w+/u },
+    ];
+
+    const offenders = tsFiles(sceneRoot).flatMap(file => {
+      const source = readFileSync(file, 'utf8');
+      return forbiddenPatterns
+        .filter(({ pattern }) => pattern.test(source))
+        .map(({ label }) => `${relative(SRC_ROOT, file)}: ${label}`);
+    });
+
+    expect(offenders).toEqual([]);
+  });
+
   it('implementation code imports scene types from contract/scene instead of legacy primitive paths', () => {
     const offenders = tsFiles(SRC_ROOT).flatMap(file =>
       importDeclarations(file)

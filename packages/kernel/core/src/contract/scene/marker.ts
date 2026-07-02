@@ -1,12 +1,12 @@
 import type {
   IRGraphicStyle,
   IRPathBase,
-  IRPathCommand,
   PathFillRuleValue,
   PathLineCapValue,
   PathLineJoinValue,
 } from '../../schemas';
 import type { Transform } from './group';
+import type { PathCommand } from './path';
 
 /**
  * marker-local 填充取值
@@ -25,7 +25,7 @@ export type MarkerPathPrim = {
   /** 类型判别符 */
   type: 'path';
   /** 结构化路径命令序列（复用 Scene PathCommand 词汇） */
-  commands: Array<MarkerPathCommand>;
+  commands: Array<PathCommand>;
   /** 填充：纯色 / contextStroke；不填表示不填充 */
   fill?: MarkerFill;
   /**
@@ -60,13 +60,6 @@ export type MarkerPathPrim = {
    */
   strokeLinejoin?: PathLineJoinValue;
 };
-
-/**
- * marker-local path 命令
- * @description 与 Scene 的 `PathCommand` 同词汇（move/line/quad/cubic/arc/ellipseArc/close）；
- *   独立别名命名，让 marker 子集与 Scene 词汇解耦演化。坐标在 marker 局部 baseSize 系。
- */
-export type MarkerPathCommand = IRPathCommand;
 
 /**
  * marker-local ellipse 原语：`EllipsePrim` fill 收窄到 `MarkerFill`

@@ -290,7 +290,6 @@ export type {
   MarkerEllipsePrim,
   MarkerFill,
   MarkerGroupPrim,
-  MarkerPathCommand,
   MarkerPathPrim,
   /** marker 窄子集（ArrowDefinition.emit 产物，renderer-agnostic） */
   MarkerPrimitive,
