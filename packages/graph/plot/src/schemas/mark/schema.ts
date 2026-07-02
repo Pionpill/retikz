@@ -39,12 +39,12 @@ export const RelationTransformSchema = MarkTransformSchema;
 /** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema，reference 用专属） */
 const markBase = {
   id: z.string().min(1).optional().describe('Optional mark handle used by generated scope and anchor targets'),
-  coordinateScope: z
+  coordinateView: z
     .string()
     .min(1)
     .optional()
     .describe(
-      'Coordinate scope id this mark is projected through; omit to use the plot composition default scope',
+      'Coordinate view id this mark is projected through; omit to use the plot composition default view',
     ),
   transform: MarkTransformSchema.optional().describe(
     'Optional mark-local transform pipeline applied after the plot root transform',
@@ -1133,12 +1133,12 @@ export const CustomMarkSchema = z
     transform: MarkTransformSchema.optional().describe(
       'Optional mark-local transform pipeline applied after the plot root transform',
     ),
-    coordinateScope: z
+    coordinateView: z
       .string()
       .min(1)
       .optional()
       .describe(
-        'Coordinate scope id this custom mark is projected through; omit to use the plot composition default scope',
+        'Coordinate view id this custom mark is projected through; omit to use the plot composition default view',
       ),
     encoding: EncodingSchema.optional().describe(
       'Position / non-position channels; reuses the shared encoding so a custom mark contributes to scale inference like built-in marks',

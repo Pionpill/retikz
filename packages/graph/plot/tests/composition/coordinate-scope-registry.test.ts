@@ -1,11 +1,11 @@
-import type { IRScope } from '@retikz/core';
+﻿import type { IRScope } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
 import type { PlotSpec } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../src/schemas';
+import { migrateCompositionSpec, parseCompositionSpec } from './migrate-composition-spec';
 
 const rows = [
   { month: 0, value: 10 },
@@ -59,7 +59,7 @@ const compositionSpec = {
   ],
 };
 
-const parsedCompositionSpec = (): PlotSpec => PlotSpecSchema.parse(compositionSpec);
+const parsedCompositionSpec = (): PlotSpec => parseCompositionSpec(compositionSpec);
 
 const expandOf = (spec: PlotSpec): IRScope => {
   const [definition] = lowerPlots({ sales: rows }, { width: 480, height: 300 });
@@ -68,22 +68,22 @@ const expandOf = (spec: PlotSpec): IRScope => {
 
 describe('coordinate composition registry schema', () => {
   it('compat_coordinate_shorthand_parses', () => {
-    expect(PlotSpecSchema.parse(coordinateShorthandSpec)).toEqual(coordinateShorthandSpec);
+    expect(parseCompositionSpec(coordinateShorthandSpec)).toEqual(migrateCompositionSpec(coordinateShorthandSpec));
   });
 
   it('composition_scope_registry_parses_without_top_level_coordinate', () => {
-    expect(PlotSpecSchema.parse(compositionSpec)).toEqual(compositionSpec);
+    expect(parseCompositionSpec(compositionSpec)).toEqual(migrateCompositionSpec(compositionSpec));
   });
 
   it('composition_scope_registry_round_trips_through_json', () => {
     const json = JSON.parse(JSON.stringify(compositionSpec));
-    expect(PlotSpecSchema.parse(json)).toEqual(compositionSpec);
+    expect(parseCompositionSpec(json)).toEqual(migrateCompositionSpec(compositionSpec));
   });
 
   it('mark_and_axis_coordinate_scope_fields_are_preserved', () => {
     const parsed = parsedCompositionSpec();
-    expect(parsed.marks[1]).toMatchObject({ coordinateScope: 'xy' });
-    expect(parsed.guides?.[1]).toMatchObject({ coordinateScope: 'xy' });
+    expect(parsed.marks[1]).toMatchObject({ coordinateView: 'xy' });
+    expect(parsed.guides?.[1]).toMatchObject({ coordinateView: 'xy' });
   });
 
   it('single_explicit_root_scope_matches_schema_contract', () => {
@@ -96,7 +96,7 @@ describe('coordinate composition registry schema', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'value' } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
     };
-    expect(PlotSpecSchema.parse(spec)).toEqual(spec);
+    expect(parseCompositionSpec(spec)).toEqual(migrateCompositionSpec(spec));
   });
 
   it('custom_coordinate_scope_schema_passes_and_round_trips', () => {
@@ -109,12 +109,12 @@ describe('coordinate composition registry schema', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'month' } } }],
       guides: [],
     };
-    expect(PlotSpecSchema.parse(JSON.parse(JSON.stringify(spec)))).toEqual(spec);
+    expect(parseCompositionSpec(JSON.parse(JSON.stringify(spec)))).toEqual(migrateCompositionSpec(spec));
   });
 
   it('empty_composition_scopes_rejected', () => {
     const spec = { ...compositionSpec, composition: { defaultScope: 'main', scopes: [] } };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow();
+    expect(() => parseCompositionSpec(spec)).toThrow();
   });
 
   it('duplicate_scope_id_rejected', () => {
@@ -128,7 +128,7 @@ describe('coordinate composition registry schema', () => {
         ],
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/duplicate coordinate scope/i);
+    expect(() => parseCompositionSpec(spec)).toThrow(/duplicate coordinate view/i);
   });
 
   it('missing_default_scope_rejected', () => {
@@ -139,7 +139,7 @@ describe('coordinate composition registry schema', () => {
         scopes: [{ id: 'main', coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yValue' } }],
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/defaultScope/);
+    expect(() => parseCompositionSpec(spec)).toThrow(/defaultView/);
   });
 
   it('missing_mark_coordinate_scope_rejected', () => {
@@ -147,7 +147,7 @@ describe('coordinate composition registry schema', () => {
       ...compositionSpec,
       marks: [{ type: 'point', coordinateScope: 'missing', encoding: { x: { field: 'month' } } }],
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/coordinateScope/);
+    expect(() => parseCompositionSpec(spec)).toThrow(/coordinateView/);
   });
 
   it('missing_axis_coordinate_scope_rejected', () => {
@@ -155,7 +155,7 @@ describe('coordinate composition registry schema', () => {
       ...compositionSpec,
       guides: [{ type: 'axis', dimension: 'x', coordinateScope: 'missing' }],
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/coordinateScope/);
+    expect(() => parseCompositionSpec(spec)).toThrow(/coordinateView/);
   });
 
   it('compat_mark_coordinate_scope_must_reference_implicit_default_scope', () => {
@@ -165,7 +165,7 @@ describe('coordinate composition registry schema', () => {
         { type: 'point', coordinateScope: 'missing', encoding: { x: { field: 'month' }, y: { field: 'value' } } },
       ],
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/coordinateScope/);
+    expect(() => parseCompositionSpec(spec)).toThrow(/coordinateView/);
   });
 
   it('compat_axis_coordinate_scope_must_reference_implicit_default_scope', () => {
@@ -173,12 +173,12 @@ describe('coordinate composition registry schema', () => {
       ...coordinateShorthandSpec,
       guides: [{ type: 'axis', dimension: 'x', coordinateScope: 'missing' }],
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/coordinateScope/);
+    expect(() => parseCompositionSpec(spec)).toThrow(/coordinateView/);
   });
 
   it('coordinate_and_composition_coexistence_rejected', () => {
     const spec = { ...compositionSpec, coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yValue' } };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/composition/);
+    expect(() => parseCompositionSpec(spec)).toThrow(/composition/);
   });
 
   it('overlay_target_must_reference_registered_scope', () => {
@@ -198,7 +198,7 @@ describe('coordinate composition registry schema', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'value' } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/target/);
+    expect(() => parseCompositionSpec(spec)).toThrow(/target/);
   });
 
   it('overlay_target_cannot_reference_itself', () => {
@@ -215,7 +215,7 @@ describe('coordinate composition registry schema', () => {
         ],
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/target/);
+    expect(() => parseCompositionSpec(spec)).toThrow(/target/);
   });
 
   it('track_placement_requires_scaffold_and_track_keys', () => {
@@ -232,7 +232,7 @@ describe('coordinate composition registry schema', () => {
         ],
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow();
+    expect(() => parseCompositionSpec(spec)).toThrow();
   });
 });
 
@@ -262,6 +262,6 @@ describe('coordinate composition registry lowering', () => {
       ],
       guides: [{ type: 'axis', dimension: 'y', coordinateScope: 'plane' }],
     };
-    expect(() => expandOf(PlotSpecSchema.parse(spec))).not.toThrow();
+    expect(() => expandOf(parseCompositionSpec(spec))).not.toThrow();
   });
 });

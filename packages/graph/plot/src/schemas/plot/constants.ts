@@ -1,25 +1,22 @@
 import type { ValueOf } from '@retikz/core';
 
-/** plot 域 namespace（单一固定值，作 Tier 2 路由键的单一真源） */
+/** plot 基础 namespace。 */
 export const PLOT_NAMESPACE = 'plot';
 
-/**
- * plot namespace 内的 composite 类型关键字（暴露给用户；成员值即 IR 判别串，裸 `'plot'` 同样可用）
- * @description discriminated union 判别字段，成员里写 z.literal(PlotComposite.x)（不用 z.enum）。
- */
+/** plot namespace 内的 composite 类型关键字。 */
 export const PlotComposite = {
-  /** 顶层 grammar-of-graphics spec 节点 */
+  /** 顶层 grammar-of-graphics spec 节点。 */
   Plot: 'plot',
 } as const;
 
-/** plot composite 类型 */
+/** plot composite 类型。 */
 export type PlotCompositeValue = ValueOf<typeof PlotComposite>;
 
 /** 分面空面板生成策略。 */
 export const FacetEmptyPolicy = {
   /** 只生成至少包含一行数据的面板。 */
   Drop: 'drop',
-  /** 生成所有 row × column 面板组合。 */
+  /** 生成所有 row x column 面板组合。 */
   Show: 'show',
 } as const;
 
@@ -37,60 +34,52 @@ export const FacetScaleSharing = {
 /** 分面 scale domain 共享模式取值。 */
 export type FacetScaleSharingValue = ValueOf<typeof FacetScaleSharing>;
 
-/**
- * scaffold frame 共享模式。
- * @description shared 表示 track scope 共享 scaffold 的 frame / bbox；independent 表示只复用 scaffold registry。
- */
-export const ScaffoldFrameMode = {
-  /** 共享 scaffold frame / bbox。 */
+/** 坐标组合中的比例尺解析模式。 */
+export const CompositionScaleResolve = {
+  /** 匹配的坐标视图复用同一个比例尺身份和定义域。 */
   Shared: 'shared',
-  /** 各 track scope 独立解析自己的 frame。 */
+  /** 每个坐标视图使用自己的局部数据定义域。 */
+  Independent: 'independent',
+  /** 保留独立比例尺身份，但使用同步后的联合定义域训练。 */
+  Synchronized: 'synchronized',
+} as const;
+
+/** 坐标组合中的比例尺解析模式取值。 */
+export type CompositionScaleResolveValue = ValueOf<typeof CompositionScaleResolve>;
+
+/** 坐标组合中的坐标轴输出模式。 */
+export const CompositionAxisResolve = {
+  /** 在坐标轴绑定的坐标视图上绘制。 */
+  Local: 'local',
+  /** 在可收敛的组合结构中只绘制外侧轴。 */
+  Outer: 'outer',
+  /** 不输出该角色的坐标轴。 */
+  None: 'none',
+} as const;
+
+/** 坐标组合中的坐标轴输出模式取值。 */
+export type CompositionAxisResolveValue = ValueOf<typeof CompositionAxisResolve>;
+
+/** 坐标组合中的网格投放模式。 */
+export const CompositionGridResolve = {
+  /** 只把网格线投放到坐标轴绑定的坐标视图。 */
+  Local: 'local',
+  /** 把网格线投放到组合结构选中的所有坐标视图。 */
+  All: 'all',
+  /** 不为该角色做默认网格投放。 */
+  None: 'none',
+} as const;
+
+/** 坐标组合中的网格投放模式取值。 */
+export type CompositionGridResolveValue = ValueOf<typeof CompositionGridResolve>;
+
+/** 轨道组合结构的 frame 共享模式。 */
+export const ScaffoldFrameMode = {
+  /** 共享基础组合结构 frame 和 bounding box。 */
+  Shared: 'shared',
+  /** 复用轨道组合结构注册表，但每个轨道独立解析 frame。 */
   Independent: 'independent',
 } as const;
 
-/** scaffold frame 共享模式取值。 */
+/** 轨道组合结构的 frame 共享模式取值。 */
 export type ScaffoldFrameModeValue = ValueOf<typeof ScaffoldFrameMode>;
-
-/** 多 scope composition 下的 axis 输出策略。 */
-export const CompositionAxisPolicy = {
-  /** 每个 coordinate scope 独立输出自己的 axis。 */
-  PerScope: 'perScope',
-  /** 对共享 scale 的 facet / track 只输出外侧共享 axis。 */
-  OuterShared: 'outerShared',
-} as const;
-
-/** 多 scope composition 下的 axis 输出策略取值。 */
-export type CompositionAxisPolicyValue = ValueOf<typeof CompositionAxisPolicy>;
-
-/** 多 scope composition 下 axis grid 的默认投放策略。 */
-export const CompositionGridPlacement = {
-  /** 投放到 axis 自己绑定的 coordinate scope。 */
-  Self: 'self',
-  /** 投放到与 axis 共享 coordinate role / scale identity 的 scope。 */
-  SharedRole: 'sharedRole',
-} as const;
-
-/** 多 scope composition 下 axis grid 默认投放策略取值。 */
-export type CompositionGridPlacementValue = ValueOf<typeof CompositionGridPlacement>;
-
-/** facet panel label 输出策略。 */
-export const CompositionFacetLabelPolicy = {
-  /** 不输出 facet label。 */
-  None: 'none',
-  /** 输出 row / column facet value label。 */
-  RowColumn: 'rowColumn',
-} as const;
-
-/** facet panel label 输出策略取值。 */
-export type CompositionFacetLabelPolicyValue = ValueOf<typeof CompositionFacetLabelPolicy>;
-
-/** shared scaffold track label 输出策略。 */
-export const CompositionTrackLabelPolicy = {
-  /** 不输出 track label。 */
-  None: 'none',
-  /** 在 track 内输出 inline label。 */
-  Inline: 'inline',
-} as const;
-
-/** shared scaffold track label 输出策略取值。 */
-export type CompositionTrackLabelPolicyValue = ValueOf<typeof CompositionTrackLabelPolicy>;

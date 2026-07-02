@@ -10,8 +10,8 @@ import { Scale } from '../../../src/components/scales';
 
 describe('buildPlotSpec alpha.14 ADR-06 composition adapter surface', () => {
   const composition: NonNullable<PlotSpec['composition']> = {
-    defaultScope: 'temp',
-    scopes: [
+    defaultView: 'temp',
+    views: [
       { id: 'temp', coordinate: { type: 'cartesian2D', x: '__x', y: '__y' } },
       {
         id: 'rain',
@@ -21,23 +21,23 @@ describe('buildPlotSpec alpha.14 ADR-06 composition adapter surface', () => {
     ],
   };
 
-  it('passes composition coordinateScope and axis placement through schema', () => {
+  it('passes composition coordinateView and axis placement through schema', () => {
     const spec = buildPlotSpec(
       <>
-        <PointMark coordinateScope="temp" x="day" y="temperature" />
-        <IntervalMark coordinateScope="rain" x="day" y="rainfall" />
-        <Axis coordinateScope="rain" dimension="y" placement={{ kind: 'side', side: 'right' }} title="Rainfall" />
+        <PointMark coordinateView="temp" x="day" y="temperature" />
+        <IntervalMark coordinateView="rain" x="day" y="rainfall" />
+        <Axis coordinateView="rain" dimension="y" placement={{ kind: 'side', side: 'right' }} title="Rainfall" />
       </>,
       'weather',
       { composition },
     );
     expect(spec.coordinate).toBeUndefined();
     expect(spec.composition).toEqual(composition);
-    expect(spec.marks[0]).toMatchObject({ type: 'point', coordinateScope: 'temp' });
-    expect(spec.marks[1]).toMatchObject({ type: 'interval', coordinateScope: 'rain' });
+    expect(spec.marks[0]).toMatchObject({ type: 'point', coordinateView: 'temp' });
+    expect(spec.marks[1]).toMatchObject({ type: 'interval', coordinateView: 'rain' });
     expect(spec.guides?.[0]).toMatchObject({
       type: 'axis',
-      coordinateScope: 'rain',
+      coordinateView: 'rain',
       placement: { kind: 'side', side: 'right' },
       title: 'Rainfall',
     });
@@ -47,13 +47,13 @@ describe('buildPlotSpec alpha.14 ADR-06 composition adapter surface', () => {
   it('passes axis grid target selectors through schema', () => {
     const spec = buildPlotSpec(
       <>
-        <PointMark coordinateScope="temp" x="day" y="temperature" />
+        <PointMark coordinateView="temp" x="day" y="temperature" />
         <Axis
-          coordinateScope="temp"
+          coordinateView="temp"
           dimension="y"
           grid={{
             applyTo: AxisGridApplyTo.Selected,
-            select: { scopes: ['temp'] },
+            select: { view: ['temp'] },
           }}
         />
       </>,
@@ -66,13 +66,13 @@ describe('buildPlotSpec alpha.14 ADR-06 composition adapter surface', () => {
       dimension: 'y',
       grid: {
         applyTo: 'selected',
-        select: { scopes: ['temp'] },
+        select: { view: ['temp'] },
       },
     });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
-  it('fills composition scope coordinate scale bindings from declared scales', () => {
+  it('fills composition view coordinate scale bindings from declared scales', () => {
     const spec = buildPlotSpec(
       <>
         <Scale dimension="x" type="linear" />
@@ -82,8 +82,8 @@ describe('buildPlotSpec alpha.14 ADR-06 composition adapter surface', () => {
       'weather',
       {
         composition: {
-          defaultScope: 'temp',
-          scopes: [
+          defaultView: 'temp',
+          views: [
             { id: 'temp', coordinate: { type: 'cartesian2D' } },
             {
               id: 'rain',
@@ -95,7 +95,7 @@ describe('buildPlotSpec alpha.14 ADR-06 composition adapter surface', () => {
       },
     );
 
-    expect(spec.composition?.scopes.map(scope => scope.coordinate)).toEqual([
+    expect(spec.composition?.views?.map(scope => scope.coordinate)).toEqual([
       { type: 'cartesian2D', x: '__x', y: '__y' },
       { type: 'cartesian2D', x: '__x', y: '__y' },
     ]);
@@ -107,26 +107,29 @@ describe('buildPlotSpec alpha.14 ADR-06 composition adapter surface', () => {
       <>
         <Scale dimension="x" type="linear" />
         <Scale dimension="y" type="linear" />
-        <PointMark coordinateScope="events" x="week" y="count" />
+        <PointMark coordinateView="events" x="week" y="count" />
       </>,
       'ops',
       {
         composition: {
-          defaultScope: 'events',
-          scaffolds: [
+          defaultView: 'events',
+          arrangements: [
             {
+              kind: 'tracks',
               id: 'ops',
               coordinate: { type: 'cartesian2D' },
               sharedRoles: ['x'],
-              tracks: [{ id: 'events', band: { role: 'y', start: 0, end: 1 } }],
+              tracks: [{ id: 'events', view: 'events', band: { role: 'y', start: 0, end: 1 } }],
             },
           ],
-          scopes: [{ id: 'events', placement: { kind: 'track', scaffold: 'ops', track: 'events' } }],
         },
       },
     );
 
-    expect(spec.composition?.scaffolds?.[0]?.coordinate).toEqual({ type: 'cartesian2D', x: '__x', y: '__y' });
+    expect(spec.composition?.arrangements?.[0]).toMatchObject({
+      kind: 'tracks',
+      coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
+    });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
@@ -135,7 +138,7 @@ describe('buildPlotSpec alpha.14 ADR-06 composition adapter surface', () => {
       buildPlotSpec(<PointMark x="day" y="temperature" />, 'weather', {
         composition: {
           ...composition,
-          layout: { panelGap: (() => 12) as unknown as number },
+          spacing: { panelGap: (() => 12) as unknown as number },
         },
       }),
     ).toThrow();

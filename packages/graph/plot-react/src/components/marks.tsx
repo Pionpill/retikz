@@ -65,7 +65,7 @@ export type MarkTransformProps = {
 };
 
 export type CoordinateScopeProps = {
-  coordinateScope?: string;
+  coordinateView?: string;
   facetId?: string;
   trackId?: string;
 };
@@ -112,7 +112,7 @@ export type CorePathChannelProps = {
  *   labelPosition / labelDistance / labelPin 摊进 core NodeLabelSchema；resolveLabel 是运行时逃生舱（不进 IR、按 mark id 经 options 注入，需配 id）。
  */
 export type DatumLabelProps = {
-  /** Extension channel bindings forwarded to `encoding.channels`; string values are field names. */
+  /** 扩展通道绑定，会转发到 `encoding.channels`；字符串值按字段名处理。 */
   channels?: Record<string, ExtensionChannelProp>;
   /** datum 标签内容字段名（→ IR label.content.field；优先级低于 resolveLabel、高于无）；缺省不挂标签 */
   label?: FieldName;
@@ -146,9 +146,9 @@ export type PathMarkProps = MarkTransformProps &
     x: FieldName;
     /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
     y: FieldName;
-    /** Adapter-only sugar: bind this mark to a named x axis; expanded to coordinateScope before PlotSpec output. */
+    /** 适配器专用糖：把图元绑定到命名 x 轴；输出 PlotSpec 前会展开为 `coordinateView`。 */
     xAxisId?: string;
-    /** Adapter-only sugar: bind this mark to a named y axis; expanded to coordinateScope before PlotSpec output. */
+    /** 适配器专用糖：把图元绑定到命名 y 轴；输出 PlotSpec 前会展开为 `coordinateView`。 */
     yAxisId?: string;
     /** 驱动连接顺序的字段；缺省按数据数组顺序 */
     order?: FieldName;
@@ -174,7 +174,7 @@ export type PathMarkProps = MarkTransformProps &
     /** 可选 mark 句柄（预留 scope/anchor） */
     id?: string;
     anchorId?: AnchorIdSpec;
-    /** Extension channel bindings forwarded to `encoding.channels`; string values are field names. */
+    /** 扩展通道绑定，会转发到 `encoding.channels`；字符串值按字段名处理。 */
     channels?: Record<string, ExtensionChannelProp>;
   };
 
@@ -190,9 +190,9 @@ export type PointMarkProps = MarkTransformProps &
     x?: FieldName;
     /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值；cartesian2D / polar2D 必填，1D 省略） */
     y?: FieldName;
-    /** Adapter-only sugar: bind this mark to a named x axis; expanded to coordinateScope before PlotSpec output. */
+    /** 适配器专用糖：把图元绑定到命名 x 轴；输出 PlotSpec 前会展开为 `coordinateView`。 */
     xAxisId?: string;
-    /** Adapter-only sugar: bind this mark to a named y axis; expanded to coordinateScope before PlotSpec output. */
+    /** 适配器专用糖：把图元绑定到命名 y 轴；输出 PlotSpec 前会展开为 `coordinateView`。 */
     yAxisId?: string;
     /** 三元坐标第三分量字段；ternary2D 下与 x / y 一起使用 */
     z?: FieldName;
@@ -253,9 +253,9 @@ export type IntervalMarkProps = MarkTransformProps &
     x?: FieldName;
     /** 绑 y 位置通道的字段路径（数值；polar 下作径向值；直方下作箱高度 binCount 或自定义 metric 字段） */
     y?: FieldName;
-    /** Adapter-only sugar: bind this mark to a named x axis; expanded to coordinateScope before PlotSpec output. */
+    /** 适配器专用糖：把图元绑定到命名 x 轴；输出 PlotSpec 前会展开为 `coordinateView`。 */
     xAxisId?: string;
-    /** Adapter-only sugar: bind this mark to a named y axis; expanded to coordinateScope before PlotSpec output. */
+    /** 适配器专用糖：把图元绑定到命名 y 轴；输出 PlotSpec 前会展开为 `coordinateView`。 */
     yAxisId?: string;
     /** polar 饼图 / 环图的份额值字段；设置后自动累积成角界（extent×full bounds），下沉为扇区 */
     angle?: FieldName;
@@ -263,9 +263,9 @@ export type IntervalMarkProps = MarkTransformProps &
     x0?: FieldName;
     /** 直方连续 x 区间上界字段（如 bin 的 binEnd）；与 x0 配对 */
     x1?: FieldName;
-    /** Proportional interval width field; derives a running interval from row order. */
+    /** 比例区间宽度字段；按行顺序推导连续区间。 */
     width?: FieldName;
-    /** Bar orientation; horizontal treats x as value and y as category. */
+    /** 柱方向；horizontal 会把 x 当作数值、y 当作类别。 */
     direction?: 'vertical' | 'horizontal';
     /** 颜色字段（→ color 通道 + 自动色 scale）；缺省取 series */
     color?: FieldName;

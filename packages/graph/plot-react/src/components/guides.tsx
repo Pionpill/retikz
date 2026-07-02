@@ -18,7 +18,7 @@ export type AxisProps = {
   tickLabels?: boolean;
   /** 是否画对齐本轴刻度的网格线，以及在组合坐标中投放到哪些目标；缺省 = false */
   grid?: AxisGuide['grid'];
-  coordinateScope?: string;
+  coordinateView?: string;
   facetId?: string;
   scaffoldId?: string;
   trackId?: string;

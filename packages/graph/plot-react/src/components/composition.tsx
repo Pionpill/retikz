@@ -2,26 +2,27 @@ import type { PlotSpec } from '@retikz/plot';
 import type { FC, ReactNode } from 'react';
 
 type CompositionSpec = NonNullable<PlotSpec['composition']>;
-type FacetGridSpec = NonNullable<CompositionSpec['facets']>[number];
-type SharedScaffoldSpec = NonNullable<CompositionSpec['scaffolds']>[number];
+type ArrangementSpec = NonNullable<CompositionSpec['arrangements']>[number];
+type FacetGridSpec = Extract<ArrangementSpec, { kind: 'facet' }>;
+type SharedScaffoldSpec = Extract<ArrangementSpec, { kind: 'tracks' }>;
 type ScaffoldTrackSpec = SharedScaffoldSpec['tracks'][number];
 
 export type FacetDimensionInput = string | NonNullable<FacetGridSpec['row']>;
 
-export type FacetProps = Omit<FacetGridSpec, 'row' | 'column'> & {
+export type FacetProps = Omit<FacetGridSpec, 'kind' | 'view' | 'row' | 'column'> & {
   row?: FacetDimensionInput;
   column?: FacetDimensionInput;
-  scopeId?: string;
-  layout?: CompositionSpec['layout'];
-  guidePolicy?: CompositionSpec['guidePolicy'];
+  view?: string;
+  spacing?: CompositionSpec['spacing'];
+  resolve?: CompositionSpec['resolve'];
   children?: ReactNode;
 };
 
-export type ScaffoldProps = Omit<SharedScaffoldSpec, 'coordinate' | 'tracks'> & {
+export type ScaffoldProps = Omit<SharedScaffoldSpec, 'kind' | 'coordinate' | 'tracks'> & {
   coordinate?: SharedScaffoldSpec['coordinate'];
   tracks?: Array<ScaffoldTrackSpec>;
-  layout?: CompositionSpec['layout'];
-  guidePolicy?: CompositionSpec['guidePolicy'];
+  spacing?: CompositionSpec['spacing'];
+  resolve?: CompositionSpec['resolve'];
   children?: ReactNode;
 };
 

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import type { PlotSpec } from '../../src/schemas';
 
 import { createPlotLocator, lowerPlots } from '../../src';
-import { PlotSpecSchema } from '../../src/schemas';
+import { parseCompositionSpec } from './migrate-composition-spec';
 
 const weatherRows = [
   { region: 'north', day: 0, temperature: 10, rainfall: 100 },
@@ -122,45 +122,49 @@ const gridLayersOf = (scope: IRScope): Array<IRScope> =>
   allScopes(scope).filter(child => child.meta?.source === 'plot' && child.meta.layer === 'grid');
 
 describe('scope provenance surface lowering', () => {
-  it('mark_layer_meta_carries_coordinate_scope', () => {
-    const outer = expandOf(PlotSpecSchema.parse(overlaySpec));
-    expect(markLayersOf(outer).map(layer => layer.meta?.coordinateScope)).toEqual(['temp', 'rain']);
+  it('mark_layer_meta_carries_coordinate_view', () => {
+    const outer = expandOf(parseCompositionSpec(overlaySpec));
+    expect(markLayersOf(outer).map(layer => layer.meta?.coordinateView)).toEqual(['temp', 'rain']);
+    expect(markLayersOf(outer).every(layer => layer.meta?.coordinateScope === undefined)).toBe(true);
   });
 
   it('facet_datum_meta_carries_facet_context', () => {
-    const outer = expandOf(PlotSpecSchema.parse(facetSpec));
+    const outer = expandOf(parseCompositionSpec(facetSpec));
     const datum = allNodes(outer).find(node => node.meta?.transformedIndex === 0);
     expect(datum?.meta).toMatchObject({
-      coordinateScope: 'facet.region.column.north',
+      coordinateView: 'region.panel._.north',
       facet: { id: 'region', column: 'north' },
     });
+    expect(datum?.meta?.coordinateScope).toBeUndefined();
   });
 
-  it('track_datum_meta_carries_scaffold_and_track_context', () => {
-    const outer = expandOf(PlotSpecSchema.parse(trackSpec));
+  it('track_datum_meta_carries_arrangement_and_track_context', () => {
+    const outer = expandOf(parseCompositionSpec(trackSpec));
     const datum = allNodes(outer).find(node => node.meta?.markIndex === 1 && node.meta.transformedIndex === 0);
-    expect(datum?.meta).toMatchObject({ coordinateScope: 'rain', scaffold: 'lanes', track: 'rain' });
+    expect(datum?.meta).toMatchObject({ coordinateView: 'rain', arrangement: 'lanes', track: 'rain' });
+    expect(datum?.meta?.scaffold).toBeUndefined();
   });
 
-  it('track_guide_meta_carries_scaffold_and_track_context', () => {
-    const outer = expandOf(PlotSpecSchema.parse(trackSpec));
-    const rainGridLayer = gridLayersOf(outer).find(layer => layer.meta?.coordinateScope === 'rain');
-    expect(rainGridLayer?.meta).toMatchObject({ coordinateScope: 'rain', scaffold: 'lanes', track: 'rain' });
+  it('track_guide_meta_carries_arrangement_and_track_context', () => {
+    const outer = expandOf(parseCompositionSpec(trackSpec));
+    const rainGridLayer = gridLayersOf(outer).find(layer => layer.meta?.coordinateView === 'rain');
+    expect(rainGridLayer?.meta).toMatchObject({ coordinateView: 'rain', arrangement: 'lanes', track: 'rain' });
+    expect(rainGridLayer?.meta?.scaffold).toBeUndefined();
   });
 });
 
 describe('scope provenance surface locator', () => {
-  it('locator_by_coordinate_scope_disambiguates_same_index', () => {
-    const locator = createPlotLocator(PlotSpecSchema.parse(overlaySpec), { weather: weatherRows }, { width: 480, height: 300 });
-    const temp = locator.datum(0, { coordinateScope: 'temp' });
-    const rain = locator.datum(0, { coordinateScope: 'rain' });
-    expect(temp?.meta.coordinateScope).toBe('temp');
-    expect(rain?.meta.coordinateScope).toBe('rain');
+  it('locator_by_coordinate_view_disambiguates_same_index', () => {
+    const locator = createPlotLocator(parseCompositionSpec(overlaySpec), { weather: weatherRows }, { width: 480, height: 300 });
+    const temp = locator.datum(0, { coordinateView: 'temp' });
+    const rain = locator.datum(0, { coordinateView: 'rain' });
+    expect(temp?.meta.coordinateView).toBe('temp');
+    expect(rain?.meta.coordinateView).toBe('rain');
     expect(rain?.position).not.toEqual(temp?.position);
   });
 
   it('locator_by_facet_key_disambiguates_panel', () => {
-    const locator = createPlotLocator(PlotSpecSchema.parse(facetSpec), { weather: weatherRows }, { width: 480, height: 300 });
+    const locator = createPlotLocator(parseCompositionSpec(facetSpec), { weather: weatherRows }, { width: 480, height: 300 });
     const north = locator.datum(0, { facet: { id: 'region', column: 'north' } });
     const south = locator.datum(0, { facet: { id: 'region', column: 'south' } });
     expect(north?.meta.facet).toEqual({ id: 'region', column: 'north' });
@@ -169,20 +173,21 @@ describe('scope provenance surface locator', () => {
   });
 
   it('locator_by_track_returns_track_context', () => {
-    const locator = createPlotLocator(PlotSpecSchema.parse(trackSpec), { weather: weatherRows }, { width: 480, height: 300 });
+    const locator = createPlotLocator(parseCompositionSpec(trackSpec), { weather: weatherRows }, { width: 480, height: 300 });
     const rain = locator.datum(0, { track: 'rain' });
-    expect(rain?.meta).toMatchObject({ coordinateScope: 'rain', scaffold: 'lanes', track: 'rain' });
+    expect(rain?.meta).toMatchObject({ coordinateView: 'rain', arrangement: 'lanes', track: 'rain' });
   });
 
-  it('legacy_and_extended_addresses_resolve', () => {
-    const locator = createPlotLocator(PlotSpecSchema.parse(overlaySpec), { weather: weatherRows }, { width: 480, height: 300 });
+  it('root_and_view_addresses_resolve', () => {
+    const locator = createPlotLocator(parseCompositionSpec(overlaySpec), { weather: weatherRows }, { width: 480, height: 300 });
     expect(locator.resolve('weather.datum.0')?.meta.transformedIndex).toBe(0);
-    expect(locator.resolve('weather.scope.rain.datum.0')?.meta.coordinateScope).toBe('rain');
+    expect(locator.resolve('weather.view.rain.datum.0')?.meta.coordinateView).toBe('rain');
+    expect(locator.resolve('weather.scope.rain.datum.0')).toBeNull();
   });
 
-  it('unknown_scope_or_invalid_facet_returns_null', () => {
-    const locator = createPlotLocator(PlotSpecSchema.parse(facetSpec), { weather: weatherRows }, { width: 480, height: 300 });
-    expect(locator.datum(0, { coordinateScope: 'missing' })).toBeNull();
+  it('unknown_view_or_invalid_facet_returns_null', () => {
+    const locator = createPlotLocator(parseCompositionSpec(facetSpec), { weather: weatherRows }, { width: 480, height: 300 });
+    expect(locator.datum(0, { coordinateView: 'missing' })).toBeNull();
     expect(locator.datum(0, { facet: { id: 'region', column: 'west' } })).toBeNull();
   });
 });

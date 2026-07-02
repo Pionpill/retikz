@@ -1,11 +1,12 @@
-import type { IRChild, IRNode, IRScope } from '@retikz/core';
+﻿import type { IRChild, IRNode, IRScope } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
 import type { PlotSpec } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
-import { CompositionFacetLabelPolicy, PlotSpecSchema } from '../../src/schemas';
+import { PlotSpecSchema } from '../../src/schemas';
+import { migrateCompositionSpec, parseCompositionSpec } from './migrate-composition-spec';
 
 const salesRows = [
   { region: 'north', channel: 'online', month: 0, revenue: 0 },
@@ -82,12 +83,12 @@ const translateOf = (scope: IRScope): { x: number; y: number } => {
 
 describe('facet grid data routing schema', () => {
   it('facet_column_schema_parses', () => {
-    expect(PlotSpecSchema.parse(baseFacetSpec)).toEqual(baseFacetSpec);
+    expect(parseCompositionSpec(baseFacetSpec)).toEqual(migrateCompositionSpec(baseFacetSpec));
   });
 
   it('facet_grid_round_trips_through_json', () => {
-    const parsed = PlotSpecSchema.parse(JSON.parse(JSON.stringify(baseFacetSpec)));
-    expect(parsed).toEqual(baseFacetSpec);
+    const parsed = parseCompositionSpec(JSON.parse(JSON.stringify(baseFacetSpec)));
+    expect(parsed).toEqual(migrateCompositionSpec(baseFacetSpec));
   });
 
   it('facet_row_column_show_empty_schema_parses', () => {
@@ -106,7 +107,7 @@ describe('facet grid data routing schema', () => {
         ],
       },
     };
-    expect(PlotSpecSchema.parse(spec)).toEqual(spec);
+    expect(parseCompositionSpec(spec)).toEqual(migrateCompositionSpec(spec));
   });
 
   it('facet_multi_level_dimension_schema_parses', () => {
@@ -126,7 +127,7 @@ describe('facet grid data routing schema', () => {
         ],
       },
     };
-    expect(PlotSpecSchema.parse(spec)).toEqual(spec);
+    expect(parseCompositionSpec(spec)).toEqual(migrateCompositionSpec(spec));
   });
 
   it('facet_without_row_or_column_rejected', () => {
@@ -137,7 +138,7 @@ describe('facet grid data routing schema', () => {
         facets: [{ id: 'bad' }],
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/row or column/);
+    expect(() => parseCompositionSpec(spec)).toThrow(/row or column/);
   });
 
   it('duplicate_facet_id_rejected', () => {
@@ -151,7 +152,7 @@ describe('facet grid data routing schema', () => {
         ],
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/duplicate facet/i);
+    expect(() => parseCompositionSpec(spec)).toThrow(/duplicate arrangement/i);
   });
 
   it('facet_id_conflicting_with_scope_id_rejected', () => {
@@ -162,7 +163,7 @@ describe('facet grid data routing schema', () => {
         facets: [{ id: 'root', column: { field: 'region' } }],
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/scope/i);
+    expect(() => parseCompositionSpec(spec)).toThrow(/view/i);
   });
 
   it('facet_scale_sharing_mode_rejected_when_unknown', () => {
@@ -173,13 +174,13 @@ describe('facet grid data routing schema', () => {
         facets: [{ id: 'region', column: { field: 'region' }, scales: { roles: { y: 'free' } } }],
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow();
+    expect(() => parseCompositionSpec(spec)).toThrow();
   });
 });
 
 describe('facet grid data routing lowering', () => {
   it('column_facet_generates_panel_scopes_in_order', () => {
-    const outer = expandOf(PlotSpecSchema.parse(baseFacetSpec));
+    const outer = expandOf(parseCompositionSpec(baseFacetSpec));
     const panels = facetPanelsOf(outer);
     expect(panels.map(panelKeyOf)).toEqual(['south', 'north']);
     expect(panels.map(panel => allNodes(panel).length)).toEqual([2, 3]);
@@ -200,7 +201,7 @@ describe('facet grid data routing lowering', () => {
         ],
       },
     };
-    const outer = expandOf(PlotSpecSchema.parse(spec));
+    const outer = expandOf(parseCompositionSpec(spec));
     const panels = facetPanelsOf(outer);
     expect(panels).toHaveLength(4);
     expect(panels.map(panel => `${String(panel.meta?.row)}:${String(panel.meta?.column)}`)).toEqual([
@@ -228,7 +229,7 @@ describe('facet grid data routing lowering', () => {
         ],
       },
     };
-    const outer = expandOf(PlotSpecSchema.parse(spec));
+    const outer = expandOf(parseCompositionSpec(spec));
     const panels = facetPanelsOf(outer);
     expect(panels.map(panel => panel.meta?.row)).toEqual([
       ['north', 'online'],
@@ -236,9 +237,9 @@ describe('facet grid data routing lowering', () => {
       ['south', 'online'],
     ]);
     expect(panels.map(panel => panel.id)).toEqual([
-      'facet.region-channel.row.north.online',
-      'facet.region-channel.row.north.store',
-      'facet.region-channel.row.south.online',
+      'region-channel.panel.north.online._',
+      'region-channel.panel.north.store._',
+      'region-channel.panel.south.online._',
     ]);
     expect(panels.map(panel => allNodes(panel).length)).toEqual([2, 1, 2]);
   });
@@ -248,7 +249,7 @@ describe('facet grid data routing lowering', () => {
       ...baseFacetSpec,
       composition: {
         ...baseFacetSpec.composition,
-        guidePolicy: { facetLabels: CompositionFacetLabelPolicy.RowColumn },
+        guidePolicy: { facetLabels: 'rowColumn' },
         facets: [
           {
             id: 'region-channel',
@@ -266,7 +267,7 @@ describe('facet grid data routing lowering', () => {
       },
     };
 
-    const outer = expandOf(PlotSpecSchema.parse(spec));
+    const outer = expandOf(parseCompositionSpec(spec));
     const labelSummary = facetLabelsOf(outer).map(label => ({
       dimension: label.meta?.dimension,
       level: label.meta?.level,
@@ -312,7 +313,7 @@ describe('facet grid data routing lowering', () => {
       ...baseFacetSpec,
       composition: {
         ...baseFacetSpec.composition,
-        guidePolicy: { facetLabels: CompositionFacetLabelPolicy.RowColumn },
+        guidePolicy: { facetLabels: 'rowColumn' },
         layout: { labelGap: 12 },
         facets: [
           {
@@ -331,7 +332,7 @@ describe('facet grid data routing lowering', () => {
       },
     };
 
-    const outer = expandOf(PlotSpecSchema.parse(spec), { width: 660, height: 480 });
+    const outer = expandOf(parseCompositionSpec(spec), { width: 660, height: 480 });
     const panels = facetPanelsOf(outer);
     const firstPanel = panels.find(panel => {
       const meta = facetPanelMetaOf(panel);
@@ -350,7 +351,7 @@ describe('facet grid data routing lowering', () => {
       ...baseFacetSpec,
       composition: {
         ...baseFacetSpec.composition,
-        guidePolicy: { facetLabels: CompositionFacetLabelPolicy.RowColumn },
+        guidePolicy: { facetLabels: 'rowColumn' },
         facets: [
           {
             id: 'region-channel',
@@ -368,7 +369,7 @@ describe('facet grid data routing lowering', () => {
       },
     };
 
-    const outer = expandOf(PlotSpecSchema.parse(spec), { width: 660, height: 480 });
+    const outer = expandOf(parseCompositionSpec(spec), { width: 660, height: 480 });
     const firstPanel = facetPanelsOf(outer).find(panel => {
       const meta = facetPanelMetaOf(panel);
       return tupleMetaMatches(meta.row, ['north']) && tupleMetaMatches(meta.column, ['north']);
@@ -402,7 +403,7 @@ describe('facet grid data routing lowering', () => {
       },
     };
 
-    const outer = expandOf(PlotSpecSchema.parse(spec), { width: 660, height: 480 }, { sales: rows });
+    const outer = expandOf(parseCompositionSpec(spec), { width: 660, height: 480 }, { sales: rows });
     const panels = facetPanelsOf(outer);
     const southOnline = panels.find(panel => {
       const meta = facetPanelMetaOf(panel);
@@ -420,7 +421,7 @@ describe('facet grid data routing lowering', () => {
   });
 
   it('independent_y_scale_uses_panel_local_domain', () => {
-    const outer = expandOf(PlotSpecSchema.parse(baseFacetSpec));
+    const outer = expandOf(parseCompositionSpec(baseFacetSpec));
     const [south, north] = facetPanelsOf(outer);
     const southNodes = allNodes(south);
     const northNodes = allNodes(north);
@@ -436,6 +437,39 @@ describe('facet grid data routing lowering', () => {
         ...baseFacetSpec.composition,
         facets: [{ id: 'region', column: { field: 'region', order: ['south'] }, scales: { roles: { y: 'shared' } } }],
       },
+    };
+    const outer = expandOf(parseCompositionSpec(spec));
+    const [south, north] = facetPanelsOf(outer);
+    const southNodes = allNodes(south);
+    const northNodes = allNodes(north);
+    const southTopY = Math.min(...southNodes.map(node => (node.position as [number, number])[1]));
+    const northTopY = Math.min(...northNodes.map(node => (node.position as [number, number])[1]));
+    expect(northTopY).toBeGreaterThan(southTopY);
+  });
+
+  it('synchronized_y_scale_uses_all_panel_rows_for_domain', () => {
+    const spec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'xMonth' },
+        { type: 'linear', name: 'yRevenue' },
+      ],
+      composition: {
+        defaultView: 'root',
+        views: [{ id: 'root', coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' } }],
+        arrangements: [
+          {
+            kind: 'facet',
+            id: 'region',
+            view: 'root',
+            column: { field: 'region', order: ['south'] },
+            resolve: { scale: { y: 'synchronized' } },
+          },
+        ],
+      },
+      marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     };
     const outer = expandOf(PlotSpecSchema.parse(spec));
     const [south, north] = facetPanelsOf(outer);
@@ -454,6 +488,6 @@ describe('facet grid data routing lowering', () => {
         facets: [{ id: 'missing', column: { field: 'missingField' } }],
       },
     };
-    expect(() => expandOf(PlotSpecSchema.parse(spec))).toThrow(/missingField/);
+    expect(() => expandOf(parseCompositionSpec(spec))).toThrow(/missingField/);
   });
 });

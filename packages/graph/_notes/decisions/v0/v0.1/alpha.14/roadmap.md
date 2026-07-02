@@ -25,8 +25,9 @@ alpha.14 不是跨域组合容器，也不是 chart preset 层。它只处理 `@
 | ADR-06 | **locator, provenance, and adapters surface** | 让 locator / provenance 带上 coordinate scope / facet key / track key；收敛 React / Vanilla 表面与 docs 示例，证明 facet、dual-axis、shared scaffold 都映射到同一 PlotSpec | [Proposed](./06-scope-provenance-surface.md) |
 | ADR-07 | **axis-level grid targeting** | 把 grid 是否生成收回 AxisGuide，composition 只提供默认投放策略；支持 scope / facet / track selector，解决只给特定分面或 track 画 grid 的需求 | [Proposed](./07-axis-grid-targeting.md) |
 | ADR-08 | **React axis binding sugar for overlay scopes** | 借鉴 Recharts 的 axis id 绑定心智，让常见双 y 轴用 `yAxisId` 自动展开成 overlay composition；底层 PlotSpec 仍复用 ADR-01/03 的 scope 机制 | [Proposed](./08-react-axis-binding-sugar.md) |
+| ADR-09 | **composition data structure and authoring API redesign** | 不考虑兼容性重塑 composition：拆成 views / arrangements / resolve / spacing，并同步收敛 React / Vanilla 的 Facet、TrackGroup、Axis/Mark 绑定心智 | [Proposed](./09-composition-api-structure.md) |
 
-> 建议文件名：`01-coordinate-composition-registry.md`、`02-facet-grid-data-routing.md`、`03-same-panel-multi-axis.md`、`04-shared-scaffold-tracks.md`、`05-composition-guides-layout.md`、`06-scope-provenance-surface.md`、`07-axis-grid-targeting.md`、`08-react-axis-binding-sugar.md`。
+> 建议文件名：`01-coordinate-composition-registry.md`、`02-facet-grid-data-routing.md`、`03-same-panel-multi-axis.md`、`04-shared-scaffold-tracks.md`、`05-composition-guides-layout.md`、`06-scope-provenance-surface.md`、`07-axis-grid-targeting.md`、`08-react-axis-binding-sugar.md`、`09-composition-api-structure.md`。
 
 ## 依赖与顺序
 
@@ -38,6 +39,7 @@ alpha.14 不是跨域组合容器，也不是 chart preset 层。它只处理 `@
 6. **ADR-06 收口三包与 locator**：避免 render 输出与 hit-test / provenance 在多 scope 下漂移。
 7. **ADR-07 修正 grid 职责边界**：依赖 ADR-01 / ADR-02 / ADR-04 的 scope、facet、track 地址能力，并细化 ADR-05 的 grid policy；后续实现以 AxisGuide 为 grid 是否生成的唯一声明。
 8. **ADR-08 收敛双轴 authoring 表面**：依赖 ADR-01 / ADR-03 / ADR-06，把常见 overlay 多轴写法从显式 `composition` 降到 axis id binding sugar；不改变底层 IR。
+9. **ADR-09 修正 composition 长期数据结构**：在 alpha.14 现有能力验证后，破坏性收敛底层 schema 与 authoring API 命名；后续实现以 ADR-09 的字段名为准，不再继续扩展旧 `scopes/facets/scaffolds/layout/guidePolicy` 结构。ADR-01～08 是概念依赖，编码阶段不得先落旧字段再迁移，必须直接实现 ADR-09 的 schema / API。
 
 ## 关键设计约束
 

@@ -56,7 +56,7 @@ type PlotFacetLocatorValue = Exclude<PlotFacetLocatorOptions['row'], undefined>;
 
 export type PlotLocatorOptions = {
   markIndex?: number;
-  coordinateScope?: string;
+  coordinateView?: string;
   facet?: PlotFacetLocatorOptions;
   track?: string;
 };
@@ -141,7 +141,7 @@ const collectRenderDatumEntries = (
 };
 
 const hasContextOptions = (opts: PlotLocatorOptions | undefined): boolean =>
-  opts?.coordinateScope !== undefined || opts?.facet !== undefined || opts?.track !== undefined;
+  opts?.coordinateView !== undefined || opts?.facet !== undefined || opts?.track !== undefined;
 
 const facetMatches = (meta: IRJsonObject, facet: PlotFacetLocatorOptions | undefined): boolean => {
   if (facet === undefined) return true;
@@ -163,7 +163,7 @@ const facetMatches = (meta: IRJsonObject, facet: PlotFacetLocatorOptions | undef
 };
 
 const contextMatches = (meta: IRJsonObject, opts: PlotLocatorOptions | undefined): boolean => {
-  if (opts?.coordinateScope !== undefined && meta.coordinateScope !== opts.coordinateScope) return false;
+  if (opts?.coordinateView !== undefined && meta.coordinateView !== opts.coordinateView) return false;
   if (opts?.track !== undefined && meta.track !== opts.track) return false;
   return facetMatches(meta, opts?.facet);
 };
@@ -416,10 +416,10 @@ export const createPlotLocator = (
     } else {
       return null; // 有 plotId 但前缀不符
     }
-    if (rest[0] === 'scope' && rest.length === 4 && rest[2] === 'datum') {
+    if (rest[0] === 'view' && rest.length === 4 && rest[2] === 'datum') {
       const index = Number(rest[3]);
       if (!Number.isInteger(index)) return null;
-      return datum(index, { coordinateScope: rest[1] });
+      return datum(index, { coordinateView: rest[1] });
     }
     if (rest[0] === 'track' && rest.length === 4 && rest[2] === 'datum') {
       const index = Number(rest[3]);

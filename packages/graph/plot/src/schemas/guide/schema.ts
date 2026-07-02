@@ -43,55 +43,59 @@ const FacetTargetValueSchema = z
   .union([z.string(), z.number(), z.boolean(), z.null()])
   .describe('JSON-safe facet value matched by an axis grid target selector');
 
+const FacetTargetValueInputSchema = z
+  .union([FacetTargetValueSchema, z.array(FacetTargetValueSchema).min(1)])
+  .describe('Facet value or value tuple matched by an axis grid target selector');
+
 const FacetGridTargetSelectorSchema = z
   .object({
-    id: z.string().min(1).optional().describe('Facet grid id to match; omit to match any facet grid'),
-    row: z
-      .array(FacetTargetValueSchema)
-      .min(1)
-      .optional()
-      .describe('Facet row values to match; omit to match any row value'),
-    column: z
-      .array(FacetTargetValueSchema)
-      .min(1)
-      .optional()
-      .describe('Facet column values to match; omit to match any column value'),
+    arrangement: z.string().min(1).optional().describe('Facet arrangement id to match; omit to match any facet'),
+    row: FacetTargetValueInputSchema.optional().describe('Facet row value to match; omit to match any row value'),
+    column: FacetTargetValueInputSchema.optional().describe(
+      'Facet column value to match; omit to match any column value',
+    ),
   })
   .strict()
   .describe('Facet panel selector used by an axis grid target');
 
 const TrackGridTargetSelectorSchema = z
   .object({
-    scaffold: z.string().min(1).optional().describe('Shared scaffold id to match; omit to match any scaffold'),
-    id: z.array(z.string().min(1)).min(1).optional().describe('Track ids to match; omit to match any track'),
+    arrangement: z.string().min(1).optional().describe('Track arrangement id to match; omit to match any track group'),
+    id: z
+      .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
+      .optional()
+      .describe('Track id or ids to match; omit to match any track'),
   })
   .strict()
-  .describe('Shared scaffold track selector used by an axis grid target');
+  .describe('Track arrangement selector used by an axis grid target');
 
 export const GuideTargetSelectorSchema = z
   .object({
-    scopes: z.array(z.string().min(1)).min(1).optional().describe('Coordinate scope ids to match'),
+    view: z
+      .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
+      .optional()
+      .describe('Coordinate view id or ids to match'),
     facet: FacetGridTargetSelectorSchema.optional().describe('Facet panel target selector'),
-    track: TrackGridTargetSelectorSchema.optional().describe('Shared scaffold track target selector'),
+    track: TrackGridTargetSelectorSchema.optional().describe('Track arrangement target selector'),
   })
   .strict()
   .superRefine((selector, ctx) => {
-    if (selector.scopes === undefined && selector.facet === undefined && selector.track === undefined) {
+    if (selector.view === undefined && selector.facet === undefined && selector.track === undefined) {
       ctx.addIssue({
         code: 'custom',
         path: [],
-        message: 'grid target selector requires scopes, facet, or track',
+        message: 'grid target selector requires view, facet, or track',
       });
     }
   })
-  .describe('Axis grid target selector for coordinate scopes, facet panels, and shared scaffold tracks');
+  .describe('Axis grid target selector for coordinate views, facet panels, and shared tracks');
 
 export const AxisGridSchema = z
   .object({
     applyTo: z
       .enum(AxisGridApplyTo)
       .optional()
-      .describe('Where this axis grid is projected; omit to use composition.guidePolicy.gridPlacement or composition-type defaults'),
+      .describe('Where this axis grid is projected; omit to use composition.resolve.grid or arrangement defaults'),
     select: GuideTargetSelectorSchema.optional().describe(
       'Explicit target selector; required when applyTo is selected',
     ),
@@ -131,12 +135,12 @@ export const AxisGuideSchema = z
       .min(1)
       .optional()
       .describe('Optional guide handle used as the axis scope id and anchor target'),
-    coordinateScope: z
+    coordinateView: z
       .string()
       .min(1)
       .optional()
       .describe(
-        'Coordinate scope id this axis is bound to; omit to use the plot composition default scope',
+        'Coordinate view id this axis is bound to; omit to use the plot composition default view',
       ),
     placement: AxisPlacementSchema.optional().describe(
       'Axis placement mode; omit to infer an automatic placement from the active coordinate system and dimension',

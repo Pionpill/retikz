@@ -8,12 +8,10 @@ import { MarkOperationSchema } from '../mark';
 import { ScaleOperationSchema } from '../scale';
 import { TransformSchema } from '../transform';
 import {
-  CompositionAxisPolicy,
-  CompositionFacetLabelPolicy,
-  CompositionGridPlacement,
-  CompositionTrackLabelPolicy,
+  CompositionAxisResolve,
+  CompositionGridResolve,
+  CompositionScaleResolve,
   FacetEmptyPolicy,
-  FacetScaleSharing,
   PLOT_NAMESPACE,
   PlotComposite,
   ScaffoldFrameMode,
@@ -29,10 +27,10 @@ const BoxPaddingSchema = z
   .strict()
   .describe('Optional per-side padding around a coordinate composition');
 
-export const CompositionLayoutSchema = z
+export const CompositionSpacingSchema = z
   .object({
     panelGap: z.number().nonnegative().optional().describe('Gap between generated facet panels in user units'),
-    trackGap: z.number().nonnegative().optional().describe('Gap between scaffold tracks in user units'),
+    trackGap: z.number().nonnegative().optional().describe('Gap between tracks in a track arrangement in user units'),
     axisGap: z.number().nonnegative().optional().describe('Outward gap between axes that share the same side or edge'),
     labelGap: z
       .number()
@@ -44,86 +42,71 @@ export const CompositionLayoutSchema = z
   .strict()
   .describe('Plot composition spacing configuration');
 
-export const CompositionGuidePolicySchema = z
+export const CompositionResolveSchema = z
   .object({
-    axes: z
-      .enum(CompositionAxisPolicy)
+    scale: z
+      .record(z.string().min(1), z.enum(CompositionScaleResolve))
       .optional()
-      .describe('Axis rendering policy for multi-scope compositions; omit to use composition-type defaults'),
-    gridPlacement: z
-      .enum(CompositionGridPlacement)
+      .describe('Per-coordinate-role scale resolution mode'),
+    axis: z
+      .record(z.string().min(1), z.enum(CompositionAxisResolve))
       .optional()
-      .describe('Default target placement for axis grids in multi-scope compositions; omit to use composition-type defaults'),
-    facetLabels: z
-      .enum(CompositionFacetLabelPolicy)
+      .describe('Per-coordinate-role axis rendering mode'),
+    grid: z
+      .record(z.string().min(1), z.enum(CompositionGridResolve))
       .optional()
-      .describe('Facet label rendering policy for generated panels'),
-    trackLabels: z
-      .enum(CompositionTrackLabelPolicy)
-      .optional()
-      .describe('Track label rendering policy for shared scaffold tracks'),
+      .describe('Per-coordinate-role default grid projection mode'),
   })
   .strict()
-  .describe('Plot composition guide rendering policy');
+  .describe('Composition-level scale, axis, and grid resolution policy');
 
-const CoordinateScopeRootPlacementSchema = z
+const CoordinateViewRootPlacementSchema = z
   .object({
-    kind: z.literal('root').describe('Placement kind: this scope occupies the root plot area'),
+    kind: z.literal('root').describe('Placement kind: this view occupies the root plot area'),
   })
   .strict()
-  .describe('Root coordinate scope placement');
+  .describe('Root coordinate view placement');
 
-const CoordinateScopePanelPlacementSchema = z
+const CoordinateViewSlotPlacementSchema = z
   .object({
-    kind: z.literal('panel').describe('Placement kind: this scope occupies a named panel slot'),
-    slot: z.string().min(1).optional().describe('Panel slot key this scope occupies'),
+    kind: z.literal('slot').describe('Placement kind: this view occupies a named arrangement slot'),
+    arrangement: z.string().min(1).describe('Arrangement id that owns this slot'),
+    slot: z.string().min(1).describe('Slot key this view occupies inside the arrangement'),
   })
   .strict()
-  .describe('Panel coordinate scope placement');
+  .describe('Arrangement slot coordinate view placement');
 
-const CoordinateScopeOverlayPlacementSchema = z
+const CoordinateViewOverlayPlacementSchema = z
   .object({
-    kind: z.literal('overlay').describe('Placement kind: this scope overlays another coordinate scope'),
-    target: z.string().min(1).describe('Target coordinate scope id this scope overlays'),
+    kind: z.literal('overlay').describe('Placement kind: this view overlays another coordinate view'),
+    target: z.string().min(1).describe('Target coordinate view id this view overlays'),
     zIndex: z
       .number()
       .optional()
-      .describe('Relative mark-layer z-order hint inside the shared overlay panel; omit to use scope declaration order'),
+      .describe('Relative mark-layer z-order hint inside the shared overlay panel; omit to use view declaration order'),
   })
   .strict()
-  .describe('Overlay coordinate scope placement');
+  .describe('Overlay coordinate view placement');
 
-const CoordinateScopeTrackPlacementSchema = z
-  .object({
-    kind: z.literal('track').describe('Placement kind: this scope occupies a track on a shared scaffold'),
-    scaffold: z.string().min(1).describe('Shared scaffold id this track belongs to'),
-    track: z.string().min(1).describe('Track id within the shared scaffold'),
-  })
-  .strict()
-  .describe('Track coordinate scope placement');
-
-export const CoordinateScopePlacementSchema = z
+export const CoordinateViewPlacementSchema = z
   .discriminatedUnion('kind', [
-    CoordinateScopeRootPlacementSchema,
-    CoordinateScopePanelPlacementSchema,
-    CoordinateScopeOverlayPlacementSchema,
-    CoordinateScopeTrackPlacementSchema,
+    CoordinateViewRootPlacementSchema,
+    CoordinateViewSlotPlacementSchema,
+    CoordinateViewOverlayPlacementSchema,
   ])
-  .describe('Coordinate scope placement kind and payload');
+  .describe('Coordinate view placement kind and payload');
 
-export const CoordinateScopeSchema = z
+export const CoordinateViewSchema = z
   .object({
-    id: z.string().min(1).describe('Stable coordinate scope id referenced by marks and axis guides'),
-    coordinate: CoordinateOperationSchema.optional().describe(
-      'Coordinate operation owned by this scope; track scopes may omit it to inherit their scaffold coordinate',
+    id: z.string().min(1).describe('Stable coordinate view id referenced by marks and axis guides'),
+    coordinate: CoordinateOperationSchema.describe('Coordinate operation owned by this view'),
+    placement: CoordinateViewPlacementSchema.optional().describe(
+      'Optional placement of this coordinate view in the plot composition; omit means root placement during normalization',
     ),
-    placement: CoordinateScopePlacementSchema.optional().describe(
-      'Optional placement of this coordinate scope in the plot composition; omit means root placement during normalization',
-    ),
-    meta: JsonObjectSchema.optional().describe('Free-form JSON-serializable metadata for this coordinate scope'),
+    meta: JsonObjectSchema.optional().describe('Free-form JSON-serializable metadata for this coordinate view'),
   })
   .strict()
-  .describe('Coordinate scope registered inside a plot composition');
+  .describe('Coordinate view registered inside a plot composition');
 
 const FacetValueSchema = z
   .union([z.string(), z.number(), z.boolean(), z.null()])
@@ -144,19 +127,19 @@ const FacetDimensionInputSchema = z
   .union([FacetDimensionSchema, z.array(FacetDimensionSchema).min(1)])
   .describe('One or more facet dimensions bound to data fields');
 
-const FacetScaleSharingSchema = z
+const FacetHeaderSchema = z
   .object({
-    roles: z
-      .record(z.string().min(1), z.enum(FacetScaleSharing))
-      .optional()
-      .describe('Per-coordinate-role scale domain sharing mode; omitted roles default to shared'),
+    row: z.boolean().optional().describe('Whether generated row labels are visible'),
+    column: z.boolean().optional().describe('Whether generated column labels are visible'),
   })
   .strict()
-  .describe('Facet position-role scale sharing policy');
+  .describe('Facet header visibility');
 
-export const FacetGridSchema = z
+export const FacetArrangementSchema = z
   .object({
-    id: z.string().min(1).describe('Stable facet grid id used to derive panel scope ids and provenance'),
+    kind: z.literal('facet').describe('Arrangement discriminator: data-driven facet panels'),
+    id: z.string().min(1).describe('Stable facet arrangement id used to derive panel view ids and provenance'),
+    view: z.string().min(1).describe('Template coordinate view used by generated facet panels'),
     row: FacetDimensionInputSchema.optional().describe(
       'Facet row dimension or ordered row-dimension hierarchy; omit for a one-dimensional column facet',
     ),
@@ -167,17 +150,17 @@ export const FacetGridSchema = z
       .enum(FacetEmptyPolicy)
       .optional()
       .describe('Empty-panel policy; omit to drop row/column combinations that have no rows'),
-    scales: FacetScaleSharingSchema.optional().describe(
-      'Position-role scale sharing policy for generated facet panels',
-    ),
+    header: FacetHeaderSchema.optional().describe('Facet row and column label visibility'),
+    resolve: CompositionResolveSchema.optional().describe('Facet-local scale, axis, and grid resolution policy'),
+    spacing: CompositionSpacingSchema.optional().describe('Facet-local spacing override'),
     coordinate: CoordinateOperationSchema.optional().describe(
-      'Coordinate operation used by every generated panel; omit to inherit the composition default scope coordinate',
+      'Coordinate operation used by every generated panel; omit to inherit the template view coordinate',
     ),
-    scopeIdTemplate: z
+    viewIdTemplate: z
       .string()
       .min(1)
       .optional()
-      .describe('Panel scope id template supporting {facet}, {row}, and {column} placeholders'),
+      .describe('Panel view id template supporting {arrangement}, {row}, {column}, and {panel} placeholders'),
   })
   .strict()
   .superRefine((facet, ctx) => {
@@ -189,201 +172,129 @@ export const FacetGridSchema = z
       });
     }
   })
-  .describe('Facet grid generator that derives panel coordinate scopes from data rows');
+  .describe('Facet arrangement that derives panel coordinate views from data rows');
 
 const ScaffoldTrackBandSchema = z
   .object({
     role: z.string().min(1).describe('Coordinate role localized into this track band'),
-    start: z.number().min(0).max(1).describe('Track band start fraction in scaffold-local coordinates'),
-    end: z.number().min(0).max(1).describe('Track band end fraction in scaffold-local coordinates'),
+    start: z.number().min(0).max(1).describe('Track band start fraction in arrangement-local coordinates'),
+    end: z.number().min(0).max(1).describe('Track band end fraction in arrangement-local coordinates'),
   })
   .strict()
-  .describe('Fractional role band occupied by one scaffold track');
+  .describe('Fractional role band occupied by one track arrangement lane');
 
-export const ScaffoldTrackSchema = z
+export const TrackArrangementTrackSchema = z
   .object({
-    id: z.string().min(1).describe('Stable track id referenced by coordinate scope placement'),
+    id: z.string().min(1).describe('Stable track id within its track arrangement'),
+    view: z.string().min(1).optional().describe('Explicit coordinate view id for this track; omit to derive one'),
     band: ScaffoldTrackBandSchema.describe('Local role band assigned to this track'),
     order: z.number().optional().describe('Optional track ordering hint; omit to use declaration order'),
+    coordinate: CoordinateOperationSchema.optional().describe('Coordinate override for this track view'),
+    header: z.boolean().optional().describe('Whether this track label is visible'),
   })
   .strict()
-  .describe('Track registered under a shared coordinate scaffold');
+  .describe('Track registered under a shared track arrangement');
 
-export const SharedScaffoldSchema = z
+const TrackHeaderSchema = z
   .object({
-    id: z.string().min(1).describe('Stable scaffold id referenced by track scope placement'),
-    coordinate: CoordinateOperationSchema.describe('Base coordinate operation owned by this scaffold'),
+    track: z.boolean().optional().describe('Whether generated track labels are visible'),
+  })
+  .strict()
+  .describe('Track arrangement header visibility');
+
+export const TrackArrangementSchema = z
+  .object({
+    kind: z.literal('tracks').describe('Arrangement discriminator: shared coordinate tracks'),
+    id: z.string().min(1).describe('Stable track arrangement id used to derive track view ids and provenance'),
+    coordinate: CoordinateOperationSchema.describe('Base coordinate operation owned by this track arrangement'),
     sharedRoles: z
       .array(z.string().min(1))
-      .describe('Coordinate roles whose scale domain and range are managed by the scaffold'),
+      .describe('Coordinate roles whose scale domain and range are shared across tracks'),
     frame: z
       .enum(ScaffoldFrameMode)
       .optional()
-      .describe('Frame sharing mode for track scopes; omit to share the scaffold frame'),
-    tracks: z.array(ScaffoldTrackSchema).min(1).describe('Tracks mounted on this scaffold'),
+      .describe('Frame sharing mode for track views; omit to share the track arrangement frame'),
+    tracks: z.array(TrackArrangementTrackSchema).min(1).describe('Tracks mounted in this arrangement'),
+    header: TrackHeaderSchema.optional().describe('Track label visibility'),
+    resolve: CompositionResolveSchema.optional().describe('Track-local scale, axis, and grid resolution policy'),
+    spacing: CompositionSpacingSchema.optional().describe('Track-local spacing override'),
+    viewIdTemplate: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Track view id template supporting {arrangement} and {track} placeholders'),
   })
   .strict()
-  .describe('Shared coordinate scaffold registry entry');
+  .describe('Shared track arrangement that derives coordinate views for tracks');
+
+export const CoordinateArrangementSchema = z
+  .discriminatedUnion('kind', [FacetArrangementSchema, TrackArrangementSchema])
+  .describe('Coordinate arrangement generator for facets or shared tracks');
 
 export const CoordinateCompositionSchema = z
   .object({
-    defaultScope: z
+    defaultView: z
       .string()
       .min(1)
-      .describe('Coordinate scope id used when a mark or axis guide omits coordinateScope'),
-    scopes: z
-      .array(CoordinateScopeSchema)
-      .min(1)
-      .describe('Coordinate scopes registered by this PlotSpec; ids must be unique'),
-    facets: z
-      .array(FacetGridSchema)
+      .describe('Coordinate view id used when a mark or axis guide omits coordinateView'),
+    views: z
+      .array(CoordinateViewSchema)
       .optional()
-      .describe('Facet grid generators that derive panel coordinate scopes from data rows'),
-    scaffolds: z
-      .array(SharedScaffoldSchema)
+      .describe('Explicit coordinate views registered by this PlotSpec; ids must be unique'),
+    arrangements: z
+      .array(CoordinateArrangementSchema)
       .optional()
-      .describe('Shared coordinate scaffolds that provide track bands for coordinate scopes'),
-    layout: CompositionLayoutSchema.optional().describe('Composition-level spacing configuration'),
-    guidePolicy: CompositionGuidePolicySchema.optional().describe('Composition-level guide rendering policy'),
+      .describe('Facet and shared-track arrangements that derive additional coordinate views'),
+    spacing: CompositionSpacingSchema.optional().describe('Composition-level spacing configuration'),
+    resolve: CompositionResolveSchema.optional().describe('Composition-level scale, axis, and grid resolution policy'),
   })
   .strict()
   .superRefine((composition, ctx) => {
     const ids = new Set<string>();
-    for (let index = 0; index < composition.scopes.length; index += 1) {
-      const scope = composition.scopes[index];
-      if (ids.has(scope.id)) {
+    const views = composition.views ?? [];
+    for (let index = 0; index < views.length; index += 1) {
+      const view = views[index];
+      if (ids.has(view.id)) {
         ctx.addIssue({
           code: 'custom',
-          path: ['scopes', index, 'id'],
-          message: `duplicate coordinate scope id "${scope.id}"`,
+          path: ['views', index, 'id'],
+          message: `duplicate coordinate view id "${view.id}"`,
         });
       }
-      ids.add(scope.id);
+      ids.add(view.id);
     }
-    const scaffoldById = new Map<string, NonNullable<typeof composition.scaffolds>[number]>();
-    composition.scaffolds?.forEach((scaffold, scaffoldIndex) => {
-      if (scaffoldById.has(scaffold.id)) {
+    for (let index = 0; index < views.length; index += 1) {
+      const view = views[index];
+      if (view.placement?.kind === 'overlay' && !ids.has(view.placement.target)) {
         ctx.addIssue({
           code: 'custom',
-          path: ['scaffolds', scaffoldIndex, 'id'],
-          message: `duplicate scaffold id "${scaffold.id}"`,
+          path: ['views', index, 'placement', 'target'],
+          message: `overlay target "${view.placement.target}" does not reference a registered coordinate view`,
         });
       }
-      scaffoldById.set(scaffold.id, scaffold);
-      if (scaffold.sharedRoles.length === 0 && scaffold.frame === ScaffoldFrameMode.Independent) {
+      if (view.placement?.kind === 'overlay' && view.placement.target === view.id) {
         ctx.addIssue({
           code: 'custom',
-          path: ['scaffolds', scaffoldIndex, 'sharedRoles'],
-          message: `scaffold "${scaffold.id}" with independent frame must declare at least one shared role`,
+          path: ['views', index, 'placement', 'target'],
+          message: `overlay target "${view.placement.target}" cannot reference the same coordinate view`,
         });
-      }
-      const trackIds = new Set<string>();
-      const tracksByRole = new Map<string, Array<(typeof scaffold.tracks)[number]>>();
-      scaffold.tracks.forEach((track, trackIndex) => {
-        if (trackIds.has(track.id)) {
-          ctx.addIssue({
-            code: 'custom',
-            path: ['scaffolds', scaffoldIndex, 'tracks', trackIndex, 'id'],
-            message: `duplicate track id "${track.id}" in scaffold "${scaffold.id}"`,
-          });
-        }
-        trackIds.add(track.id);
-        if (track.band.start >= track.band.end) {
-          ctx.addIssue({
-            code: 'custom',
-            path: ['scaffolds', scaffoldIndex, 'tracks', trackIndex, 'band'],
-            message: `track "${track.id}" band start must be less than end`,
-          });
-        }
-        if (scaffold.sharedRoles.includes(track.band.role)) {
-          ctx.addIssue({
-            code: 'custom',
-            path: ['scaffolds', scaffoldIndex, 'tracks', trackIndex, 'band', 'role'],
-            message: `track "${track.id}" band role "${track.band.role}" must not appear in sharedRoles`,
-          });
-        }
-        const roleTracks = tracksByRole.get(track.band.role) ?? [];
-        roleTracks.push(track);
-        tracksByRole.set(track.band.role, roleTracks);
-      });
-      for (const [role, tracks] of tracksByRole) {
-        const sorted = [...tracks].sort((a, b) => a.band.start - b.band.start || a.band.end - b.band.end);
-        for (let trackIndex = 1; trackIndex < sorted.length; trackIndex += 1) {
-          const previous = sorted[trackIndex - 1];
-          const current = sorted[trackIndex];
-          if (current.band.start < previous.band.end) {
-            ctx.addIssue({
-              code: 'custom',
-              path: ['scaffolds', scaffoldIndex, 'tracks'],
-              message: `tracks "${previous.id}" and "${current.id}" overlap on band role "${role}"`,
-            });
-          }
-        }
-      }
-    });
-    if (!ids.has(composition.defaultScope)) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['defaultScope'],
-        message: `defaultScope "${composition.defaultScope}" does not reference a registered coordinate scope`,
-      });
-    }
-    for (let index = 0; index < composition.scopes.length; index += 1) {
-      const scope = composition.scopes[index];
-      if (scope.placement?.kind !== 'track' && scope.coordinate === undefined) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['scopes', index, 'coordinate'],
-          message: `coordinate scope "${scope.id}" must declare coordinate unless it is mounted on a scaffold track`,
-        });
-      }
-      if (scope.placement?.kind === 'overlay' && !ids.has(scope.placement.target)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['scopes', index, 'placement', 'target'],
-          message: `overlay target "${scope.placement.target}" does not reference a registered coordinate scope`,
-        });
-      }
-      if (scope.placement?.kind === 'overlay' && scope.placement.target === scope.id) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['scopes', index, 'placement', 'target'],
-          message: `overlay target "${scope.placement.target}" cannot reference the same coordinate scope`,
-        });
-      }
-      if (scope.placement?.kind === 'track') {
-        const placement = scope.placement;
-        const scaffold = scaffoldById.get(placement.scaffold);
-        if (scaffold === undefined) {
-          ctx.addIssue({
-            code: 'custom',
-            path: ['scopes', index, 'placement', 'scaffold'],
-            message: `track placement scaffold "${placement.scaffold}" does not reference a registered scaffold`,
-          });
-        } else if (!scaffold.tracks.some(track => track.id === placement.track)) {
-          ctx.addIssue({
-            code: 'custom',
-            path: ['scopes', index, 'placement', 'track'],
-            message: `track placement track "${placement.track}" does not reference a track on scaffold "${placement.scaffold}"`,
-          });
-        }
       }
     }
     const overlayTargetOf = new Map(
-      composition.scopes.flatMap(scope =>
-        scope.placement?.kind === 'overlay' ? [[scope.id, scope.placement.target] as const] : [],
+      views.flatMap(view =>
+        view.placement?.kind === 'overlay' ? [[view.id, view.placement.target] as const] : [],
       ),
     );
-    for (const scope of composition.scopes) {
+    for (const view of views) {
       const visiting = new Set<string>();
-      let current: string | undefined = scope.id;
+      let current: string | undefined = view.id;
       while (current !== undefined) {
         if (visiting.has(current)) {
-          const index = composition.scopes.findIndex(candidate => candidate.id === scope.id);
+          const index = views.findIndex(candidate => candidate.id === view.id);
           ctx.addIssue({
             code: 'custom',
-            path: ['scopes', index, 'placement'],
-            message: `overlay placement cycle detected at coordinate scope "${current}"`,
+            path: ['views', index, 'placement'],
+            message: `overlay placement cycle detected at coordinate view "${current}"`,
           });
           break;
         }
@@ -391,26 +302,121 @@ export const CoordinateCompositionSchema = z
         current = overlayTargetOf.get(current);
       }
     }
-    const facetIds = new Set<string>();
-    composition.facets?.forEach((facet, index) => {
-      if (facetIds.has(facet.id)) {
+    const arrangementIds = new Set<string>();
+    const registeredViewIds = new Set(ids);
+    const arrangementKinds = new Set((composition.arrangements ?? []).map(arrangement => arrangement.kind));
+    if (arrangementKinds.has('facet') && arrangementKinds.has('tracks')) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['arrangements'],
+        message: 'composition cannot mix facet and track arrangements in the same plot',
+      });
+    }
+    composition.arrangements?.forEach((arrangement, arrangementIndex) => {
+      if (arrangementIds.has(arrangement.id)) {
         ctx.addIssue({
           code: 'custom',
-          path: ['facets', index, 'id'],
-          message: `duplicate facet id "${facet.id}"`,
+          path: ['arrangements', arrangementIndex, 'id'],
+          message: `duplicate arrangement id "${arrangement.id}"`,
         });
       }
-      facetIds.add(facet.id);
-      if (ids.has(facet.id)) {
+      arrangementIds.add(arrangement.id);
+      if (ids.has(arrangement.id)) {
         ctx.addIssue({
           code: 'custom',
-          path: ['facets', index, 'id'],
-          message: `facet id "${facet.id}" conflicts with a registered coordinate scope id`,
+          path: ['arrangements', arrangementIndex, 'id'],
+          message: `arrangement id "${arrangement.id}" conflicts with a registered coordinate view id`,
         });
+      }
+      if (arrangement.kind === 'facet' && !ids.has(arrangement.view)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['arrangements', arrangementIndex, 'view'],
+          message: `facet view "${arrangement.view}" does not reference a registered coordinate view`,
+        });
+      }
+      if (arrangement.kind === 'tracks') {
+        if (arrangement.sharedRoles.length === 0 && arrangement.frame === ScaffoldFrameMode.Independent) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['arrangements', arrangementIndex, 'sharedRoles'],
+            message: `tracks arrangement "${arrangement.id}" with independent frame must declare at least one shared role`,
+          });
+        }
+        const trackIds = new Set<string>();
+        const tracksByRole = new Map<string, Array<(typeof arrangement.tracks)[number]>>();
+        arrangement.tracks.forEach((track, trackIndex) => {
+          const trackView =
+            track.view ??
+            (arrangement.viewIdTemplate ?? '{arrangement}.track.{track}')
+              .replaceAll('{arrangement}', arrangement.id)
+              .replaceAll('{track}', track.id);
+          if (registeredViewIds.has(trackView)) {
+            ctx.addIssue({
+              code: 'custom',
+              path: ['arrangements', arrangementIndex, 'tracks', trackIndex, 'view'],
+              message: `track view id "${trackView}" conflicts with another coordinate view id`,
+            });
+          }
+          registeredViewIds.add(trackView);
+          if (trackIds.has(track.id)) {
+            ctx.addIssue({
+              code: 'custom',
+              path: ['arrangements', arrangementIndex, 'tracks', trackIndex, 'id'],
+              message: `duplicate track id "${track.id}" in arrangement "${arrangement.id}"`,
+            });
+          }
+          trackIds.add(track.id);
+          if (track.band.start >= track.band.end) {
+            ctx.addIssue({
+              code: 'custom',
+              path: ['arrangements', arrangementIndex, 'tracks', trackIndex, 'band'],
+              message: `track "${track.id}" band start must be less than end`,
+            });
+          }
+          if (arrangement.sharedRoles.includes(track.band.role)) {
+            ctx.addIssue({
+              code: 'custom',
+              path: ['arrangements', arrangementIndex, 'tracks', trackIndex, 'band', 'role'],
+              message: `track "${track.id}" band role "${track.band.role}" must not appear in sharedRoles`,
+            });
+          }
+          const roleTracks = tracksByRole.get(track.band.role) ?? [];
+          roleTracks.push(track);
+          tracksByRole.set(track.band.role, roleTracks);
+        });
+        for (const [role, tracks] of tracksByRole) {
+          const sorted = [...tracks].sort((a, b) => a.band.start - b.band.start || a.band.end - b.band.end);
+          for (let trackIndex = 1; trackIndex < sorted.length; trackIndex += 1) {
+            const previous = sorted[trackIndex - 1];
+            const current = sorted[trackIndex];
+            if (current.band.start < previous.band.end) {
+              ctx.addIssue({
+                code: 'custom',
+                path: ['arrangements', arrangementIndex, 'tracks'],
+                message: `tracks "${previous.id}" and "${current.id}" overlap on band role "${role}"`,
+              });
+            }
+          }
+        }
       }
     });
+    if (registeredViewIds.size === 0) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['views'],
+        message: 'composition requires at least one explicit or arrangement-derived coordinate view',
+      });
+    }
+    if (!registeredViewIds.has(composition.defaultView)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['defaultView'],
+        message: `defaultView "${composition.defaultView}" does not reference a registered coordinate view`,
+      });
+    }
   })
-  .describe('Plot-level coordinate scope registry used by marks and axis guides');
+  .describe('Plot-level coordinate view registry used by marks and axis guides');
 
 export const PlotSpecSchema = CompositeBaseSchema.extend({
   namespace: z
@@ -465,7 +471,7 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
     'Single-coordinate shorthand; required when composition is omitted and forbidden when composition is present',
   ),
   composition: CoordinateCompositionSchema.optional().describe(
-    'Coordinate composition registry for Plot-internal coordinate scopes referenced by marks and axis guides',
+    'Coordinate composition registry for Plot-internal coordinate views referenced by marks and axis guides',
   ),
   marks: z
     .array(MarkOperationSchema)
@@ -496,26 +502,39 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
         message: 'PlotSpec cannot use coordinate shorthand and composition together',
       });
     }
-    const scopeIds =
+    const viewIds =
       spec.composition !== undefined
-        ? new Set(spec.composition.scopes.map(scope => scope.id))
+        ? new Set([
+            ...(spec.composition.views ?? []).map(view => view.id),
+            ...(spec.composition.arrangements ?? []).flatMap(arrangement =>
+              arrangement.kind === 'tracks'
+                ? arrangement.tracks.map(
+                    track =>
+                      track.view ??
+                      (arrangement.viewIdTemplate ?? '{arrangement}.track.{track}')
+                        .replaceAll('{arrangement}', arrangement.id)
+                        .replaceAll('{track}', track.id),
+                  )
+                : [],
+            ),
+          ])
         : new Set(['default']);
     spec.marks.forEach((mark, index) => {
-      if (mark.coordinateScope !== undefined && !scopeIds.has(mark.coordinateScope)) {
+      if (mark.coordinateView !== undefined && !viewIds.has(mark.coordinateView)) {
         ctx.addIssue({
           code: 'custom',
-          path: ['marks', index, 'coordinateScope'],
-          message: `coordinateScope "${mark.coordinateScope}" does not reference a registered coordinate scope`,
+          path: ['marks', index, 'coordinateView'],
+          message: `coordinateView "${mark.coordinateView}" does not reference a registered coordinate view`,
         });
       }
     });
     spec.guides?.forEach((guide, index) => {
       if (guide.type !== 'axis') return;
-      if (guide.coordinateScope !== undefined && !scopeIds.has(guide.coordinateScope)) {
+      if (guide.coordinateView !== undefined && !viewIds.has(guide.coordinateView)) {
         ctx.addIssue({
           code: 'custom',
-          path: ['guides', index, 'coordinateScope'],
-          message: `coordinateScope "${guide.coordinateScope}" does not reference a registered coordinate scope`,
+          path: ['guides', index, 'coordinateView'],
+          message: `coordinateView "${guide.coordinateView}" does not reference a registered coordinate view`,
         });
       }
     });

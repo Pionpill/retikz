@@ -12,17 +12,17 @@ describe('plotBuilder', () => {
         { type: 'linear', name: 'y' },
       ],
       composition: {
-        defaultScope: 'main',
-        scopes: [{ id: 'main', coordinate: { type: 'cartesian2D', x: 'x', y: 'y' } }],
+        defaultView: 'main',
+        views: [{ id: 'main', coordinate: { type: 'cartesian2D', x: 'x', y: 'y' } }],
       },
     })
-      .point({ type: 'point', coordinateScope: 'main', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } })
-      .axis({ type: 'axis', dimension: 'y', coordinateScope: 'main', title: 'Revenue' })
+      .point({ type: 'point', coordinateView: 'main', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } })
+      .axis({ type: 'axis', dimension: 'y', coordinateView: 'main', title: 'Revenue' })
       .build();
 
     expect(built.coordinate).toBeUndefined();
-    expect(built.marks[0]).toMatchObject({ type: 'point', coordinateScope: 'main' });
-    expect(built.guides?.[0]).toMatchObject({ type: 'axis', coordinateScope: 'main', title: 'Revenue' });
+    expect(built.marks[0]).toMatchObject({ type: 'point', coordinateView: 'main' });
+    expect(built.guides?.[0]).toMatchObject({ type: 'axis', coordinateView: 'main', title: 'Revenue' });
     expect(() => PlotSpecSchema.parse(built)).not.toThrow();
   });
 
@@ -34,23 +34,23 @@ describe('plotBuilder', () => {
         { type: 'linear', name: 'y' },
       ],
       composition: {
-        defaultScope: 'main',
-        scopes: [{ id: 'main', coordinate: { type: 'cartesian2D', x: 'x', y: 'y' } }],
+        defaultView: 'main',
+        views: [{ id: 'main', coordinate: { type: 'cartesian2D', x: 'x', y: 'y' } }],
       },
     })
-      .point({ type: 'point', coordinateScope: 'main', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } })
+      .point({ type: 'point', coordinateView: 'main', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } })
       .axis({
         type: 'axis',
         dimension: 'y',
-        coordinateScope: 'main',
-        grid: { applyTo: AxisGridApplyTo.Selected, select: { scopes: ['main'] } },
+        coordinateView: 'main',
+        grid: { applyTo: AxisGridApplyTo.Selected, select: { view: ['main'] } },
       })
       .build();
 
     expect(built.guides?.[0]).toMatchObject({
       type: 'axis',
       dimension: 'y',
-      grid: { applyTo: 'selected', select: { scopes: ['main'] } },
+      grid: { applyTo: 'selected', select: { view: ['main'] } },
     });
     expect(() => PlotSpecSchema.parse(built)).not.toThrow();
   });
@@ -74,8 +74,8 @@ describe('plotBuilder', () => {
 
     expect(built.coordinate).toBeUndefined();
     expect(built.composition).toEqual({
-      defaultScope: 'default',
-      scopes: [
+      defaultView: 'default',
+      views: [
         { id: 'default', coordinate: { type: 'cartesian2D', x: '__x', y: '__y.default' } },
         {
           id: 'temperature',
@@ -96,8 +96,8 @@ describe('plotBuilder', () => {
       { type: 'linear', name: '__y.rainfall' },
     ]);
     expect(built.marks).toMatchObject([
-      { type: 'path', coordinateScope: 'temperature' },
-      { type: 'path', coordinateScope: 'rainfall' },
+      { type: 'path', coordinateView: 'temperature' },
+      { type: 'path', coordinateView: 'rainfall' },
     ]);
     expect(JSON.stringify(built)).not.toContain('yAxisId');
     expect(() => PlotSpecSchema.parse(built)).not.toThrow();
@@ -122,8 +122,8 @@ describe('plotBuilder', () => {
 
     expect(built.coordinate).toBeUndefined();
     expect(built.composition).toEqual({
-      defaultScope: 'default',
-      scopes: [
+      defaultView: 'default',
+      views: [
         { id: 'default', coordinate: { type: 'cartesian2D', x: '__x.default', y: '__y' } },
         {
           id: 'elapsed',
@@ -144,8 +144,8 @@ describe('plotBuilder', () => {
       { type: 'linear', name: '__y' },
     ]);
     expect(built.marks).toMatchObject([
-      { type: 'path', coordinateScope: 'elapsed' },
-      { type: 'point', coordinateScope: 'date' },
+      { type: 'path', coordinateView: 'elapsed' },
+      { type: 'point', coordinateView: 'date' },
     ]);
     expect(JSON.stringify(built)).not.toContain('xAxisId');
     expect(() => PlotSpecSchema.parse(built)).not.toThrow();
@@ -168,16 +168,16 @@ describe('plotBuilder', () => {
       .build();
 
     expect(built.composition).toMatchObject({
-      defaultScope: 'default',
-      scopes: [
+      defaultView: 'default',
+      views: [
         { id: 'default', coordinate: { y: '__y.default' } },
         { id: 'rainfall', coordinate: { y: '__y.rainfall' }, placement: { kind: 'overlay', target: 'default' } },
       ],
     });
     expect(built.marks).toMatchObject([
-      { type: 'path', coordinateScope: 'default' },
-      { type: 'point', coordinateScope: 'default' },
-      { type: 'path', coordinateScope: 'rainfall' },
+      { type: 'path', coordinateView: 'default' },
+      { type: 'point', coordinateView: 'default' },
+      { type: 'path', coordinateView: 'rainfall' },
     ]);
     expect(() => PlotSpecSchema.parse(built)).not.toThrow();
   });
@@ -200,8 +200,8 @@ describe('plotBuilder', () => {
       .scaffold({
         id: 'ops',
         sharedRoles: ['x'],
-        layout: { trackGap: 24, axisGap: 8, labelGap: 6 },
-        guidePolicy: { gridPlacement: 'sharedRole', trackLabels: 'inline' },
+        spacing: { trackGap: 24, axisGap: 8, labelGap: 6 },
+        resolve: { grid: { x: 'all', y: 'all' } },
         tracks: [
           { id: 'incidents', band: { role: 'y', start: 0, end: 0.42 } },
           { id: 'load', band: { role: 'y', start: 0.58, end: 1 } },
@@ -214,32 +214,29 @@ describe('plotBuilder', () => {
       .build();
 
     expect(built.composition).toEqual({
-      defaultScope: 'incidents',
-      scaffolds: [
+      defaultView: 'incidents',
+      arrangements: [
         {
+          kind: 'tracks',
           id: 'ops',
           coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
           sharedRoles: ['x'],
+          spacing: { trackGap: 24, axisGap: 8, labelGap: 6 },
+          resolve: { grid: { x: 'all', y: 'all' } },
           tracks: [
-            { id: 'incidents', band: { role: 'y', start: 0, end: 0.42 } },
-            { id: 'load', band: { role: 'y', start: 0.58, end: 1 } },
+            { id: 'incidents', view: 'incidents', band: { role: 'y', start: 0, end: 0.42 } },
+            { id: 'load', view: 'load', band: { role: 'y', start: 0.58, end: 1 } },
           ],
         },
       ],
-      scopes: [
-        { id: 'incidents', placement: { kind: 'track', scaffold: 'ops', track: 'incidents' } },
-        { id: 'load', placement: { kind: 'track', scaffold: 'ops', track: 'load' } },
-      ],
-      layout: { trackGap: 24, axisGap: 8, labelGap: 6 },
-      guidePolicy: { gridPlacement: 'sharedRole', trackLabels: 'inline' },
     });
     expect(built.marks).toMatchObject([
-      { type: 'path', coordinateScope: 'incidents' },
-      { type: 'path', coordinateScope: 'load' },
+      { type: 'path', coordinateView: 'incidents' },
+      { type: 'path', coordinateView: 'load' },
     ]);
     expect(built.guides).toMatchObject([
-      { type: 'axis', coordinateScope: 'incidents' },
-      { type: 'axis', coordinateScope: 'load' },
+      { type: 'axis', coordinateView: 'incidents' },
+      { type: 'axis', coordinateView: 'load' },
     ]);
     expect(JSON.stringify(built)).not.toMatch(/trackId|scaffoldId/);
     expect(() => PlotSpecSchema.parse(built)).not.toThrow();
@@ -251,30 +248,32 @@ describe('plotBuilder', () => {
         id: 'sales',
         row: { field: 'channel', order: ['online', 'store'] },
         column: { field: 'region', order: ['north', 'south', 'west'] },
-        scales: { roles: { y: 'shared' } },
-        layout: { panelGap: 24, axisGap: 8, labelGap: 6 },
-        guidePolicy: { axes: 'outerShared', gridPlacement: 'self', facetLabels: 'rowColumn' },
+        resolve: { scale: { y: 'shared' }, axis: { x: 'outer', y: 'outer' }, grid: { x: 'local', y: 'local' } },
+        header: { row: true, column: true },
+        spacing: { panelGap: 24, axisGap: 8, labelGap: 6 },
       })
       .path({ type: 'path', facetId: 'sales', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } })
       .axis({ type: 'axis', facetId: 'sales', dimension: 'y', grid: true })
       .build();
 
     expect(built.composition).toEqual({
-      defaultScope: 'salesPanel',
-      scopes: [{ id: 'salesPanel', coordinate: { type: 'cartesian2D', x: '__x', y: '__y' } }],
-      facets: [
+      defaultView: 'salesPanel',
+      views: [{ id: 'salesPanel', coordinate: { type: 'cartesian2D', x: '__x', y: '__y' } }],
+      arrangements: [
         {
+          kind: 'facet',
           id: 'sales',
+          view: 'salesPanel',
           row: { field: 'channel', order: ['online', 'store'] },
           column: { field: 'region', order: ['north', 'south', 'west'] },
-          scales: { roles: { y: 'shared' } },
+          header: { row: true, column: true },
+          spacing: { panelGap: 24, axisGap: 8, labelGap: 6 },
+          resolve: { scale: { y: 'shared' }, axis: { x: 'outer', y: 'outer' }, grid: { x: 'local', y: 'local' } },
         },
       ],
-      layout: { panelGap: 24, axisGap: 8, labelGap: 6 },
-      guidePolicy: { axes: 'outerShared', gridPlacement: 'self', facetLabels: 'rowColumn' },
     });
-    expect(built.marks[0]).toMatchObject({ type: 'path', coordinateScope: 'salesPanel' });
-    expect(built.guides?.[0]).toMatchObject({ type: 'axis', coordinateScope: 'salesPanel', grid: true });
+    expect(built.marks[0]).toMatchObject({ type: 'path', coordinateView: 'salesPanel' });
+    expect(built.guides?.[0]).toMatchObject({ type: 'axis', coordinateView: 'salesPanel', grid: true });
     expect(JSON.stringify(built)).not.toContain('facetId');
     expect(() => PlotSpecSchema.parse(built)).not.toThrow();
   });

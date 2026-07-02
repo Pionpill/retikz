@@ -6,7 +6,7 @@ import { polarTrackRows } from './coordinate-composition-tracks-polar.data';
 
 const Demo: FC = () => (
   <Plot data={polarTrackRows} coordinate={{ type: 'polar2D' }} width={520} height={330}>
-    <Scaffold id="radar" sharedRoles={['x']} layout={{ trackGap: 8 }}>
+    <Scaffold id="radar" sharedRoles={['x']} spacing={{ trackGap: 8 }}>
       <Axis dimension="x" grid title="area" />
       <Track id="signal" band={{ role: 'y', start: 0.1, end: 0.4 }}>
         <Axis dimension="y" title="signal" />

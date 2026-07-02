@@ -3,7 +3,7 @@ import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { lowerPlots } from '../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../src/schemas';
+import { migrateCompositionSpec, parseCompositionSpec } from './migrate-composition-spec';
 
 const rows = [
   { eventX: 0, eventY: 0, volumeX: 10, volumeY: 100, angleA: 0, radiusA: 1, angleB: 300, radiusB: 10 },
@@ -82,7 +82,7 @@ const polarScaffoldSpec = {
 
 const expandOf = (spec: unknown, provenance = false): IRScope => {
   const [definition] = lowerPlots({ d: rows }, { width: 480, height: 300, provenance });
-  return definition.expand(PlotSpecSchema.parse(spec)) as IRScope;
+  return definition.expand(parseCompositionSpec(spec)) as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
@@ -113,17 +113,18 @@ const distancesFromCenter = (scope: IRScope, center: [number, number]): Array<nu
 
 describe('shared scaffold tracks schema', () => {
   it('shared scaffold spec preserves JSON round trip', () => {
-    const parsed = PlotSpecSchema.parse(JSON.parse(JSON.stringify(cartesianScaffoldSpec)));
-    expect(parsed).toEqual(cartesianScaffoldSpec);
+    const parsed = parseCompositionSpec(JSON.parse(JSON.stringify(cartesianScaffoldSpec)));
+    expect(parsed).toEqual(migrateCompositionSpec(cartesianScaffoldSpec));
   });
 
-  it('track scope can inherit scaffold coordinate', () => {
-    const parsed = PlotSpecSchema.parse(cartesianScaffoldSpec);
-    expect(parsed.composition?.scopes.every(scope => scope.coordinate === undefined)).toBe(true);
+  it('track view can inherit scaffold coordinate', () => {
+    const parsed = parseCompositionSpec(cartesianScaffoldSpec);
+    const tracks = parsed.composition?.arrangements?.find(arrangement => arrangement.kind === 'tracks')?.tracks ?? [];
+    expect(tracks.every(track => track.coordinate === undefined)).toBe(true);
   });
 
   it('band can touch scaffold edges', () => {
-    expect(() => PlotSpecSchema.parse(cartesianScaffoldSpec)).not.toThrow();
+    expect(() => parseCompositionSpec(cartesianScaffoldSpec)).not.toThrow();
   });
 
   it('bad band range is rejected', () => {
@@ -139,7 +140,7 @@ describe('shared scaffold tracks schema', () => {
         ],
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/band|start|end/i);
+    expect(() => parseCompositionSpec(spec)).toThrow(/band|start|end/i);
   });
 
   it('overlapping bands on the same role are rejected', () => {
@@ -158,7 +159,7 @@ describe('shared scaffold tracks schema', () => {
         ],
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/overlap|band/i);
+    expect(() => parseCompositionSpec(spec)).toThrow(/overlap|band/i);
   });
 
   it('track placement must reference an existing scaffold and track', () => {
@@ -169,7 +170,7 @@ describe('shared scaffold tracks schema', () => {
         scopes: [{ id: 'events', placement: { kind: 'track', scaffold: 'lanes', track: 'missing' } }],
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/track/i);
+    expect(() => parseCompositionSpec(spec)).toThrow(/view|track/i);
   });
 
   it('local band role must not be shared', () => {
@@ -185,7 +186,7 @@ describe('shared scaffold tracks schema', () => {
         ],
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/sharedRoles|band/i);
+    expect(() => parseCompositionSpec(spec)).toThrow(/sharedRoles|band/i);
   });
 });
 
@@ -244,17 +245,19 @@ describe('shared scaffold tracks lowering', () => {
     expect(markLayersOf(expandOf(spec, true))).toHaveLength(2);
   });
 
-  it('guide can bind to a track scope', () => {
+  it('guide can bind to a track view', () => {
     const outer = expandOf(cartesianScaffoldSpec, true);
     const axes = axisLayersOf(outer);
     expect(axes.map(axis => axis.meta?.dimension)).toEqual(['x', 'y']);
   });
 
-  it('provenance meta carries scaffold and track identity', () => {
+  it('provenance meta carries arrangement and track identity', () => {
     const outer = expandOf(cartesianScaffoldSpec, true);
     const [events, volume] = markLayersOf(outer);
-    expect(events.meta).toMatchObject({ scaffold: 'lanes', track: 'events' });
-    expect(volume.meta).toMatchObject({ scaffold: 'lanes', track: 'volume' });
+    expect(events.meta).toMatchObject({ arrangement: 'lanes', track: 'events' });
+    expect(volume.meta).toMatchObject({ arrangement: 'lanes', track: 'volume' });
+    expect(events.meta?.scaffold).toBeUndefined();
+    expect(volume.meta?.scaffold).toBeUndefined();
   });
 
   it('unknown shared role fails loud during lowering', () => {

@@ -16,8 +16,8 @@ const Demo: FC = () => (
         { field: 'region', order: ['north', 'south'] },
         { field: 'channel', order: ['online', 'store'] },
       ]}
-      guidePolicy={{ facetLabels: 'rowColumn' }}
-      layout={{ panelGap: 8 }}
+      header={{ row: true, column: true }}
+      spacing={{ panelGap: 8 }}
     >
       <Axis dimension="x" title="month" />
       <Axis dimension="y" grid title="value" />

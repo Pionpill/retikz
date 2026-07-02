@@ -9,7 +9,7 @@ When a chart has one projection, `coordinate` is enough. When the same Plot need
 
 ## Dual Axes
 
-Dual-axis charts are the most common multi-scope case: one side is shared, while the other side has two sets of ticks. The axis-id shortcut currently targets `cartesian2D`, the usual x / y Cartesian coordinate system.
+Dual-axis charts are the most common multi-view case: one side is shared, while the other side has two sets of ticks. The axis-id shortcut currently targets `cartesian2D`, the usual x / y Cartesian coordinate system.
 
 Each dimension starts with one default axis. An `<Axis dimension="x">` or `<Axis dimension="y">` without an `id` belongs to that dimension's default axis; when a mark omits `xAxisId` / `yAxisId`, it also uses the default axis for that dimension. Only extra axes need explicit ids, then marks select them with `xAxisId` or `yAxisId`.
 
@@ -59,7 +59,7 @@ By default, facets synchronize the domain for the same coordinate role across pa
 
 <ComponentPreview name="coordinate-composition-facet-shared-scale" sourceFiles={['coordinate-composition-facet-shared-scale.data.ts']} size="md" />
 
-This example does not set `scales`, because shared domains are the default. Set y to `independent` only when the `0-50` panel should fill its own height.
+This example does not set `resolve.scale`, because shared domains are the default. Set y to `independent` only when the `0-50` panel should fill its own height.
 
 ### Multi-Level Facets
 
@@ -67,7 +67,7 @@ This example does not set `scales`, because shared domains are the default. Set 
 
 <ComponentPreview name="coordinate-composition-facet-multilevel" sourceFiles={['coordinate-composition-facet-multilevel.data.ts']} size="lg" />
 
-The array order is the facet hierarchy order. When `guidePolicy.facetLabels` is enabled, inner labels stay next to the panels and outer labels merge consecutive panels with the same parent value.
+The array order is the facet hierarchy order. When `header={{ row: true, column: true }}` is enabled, inner labels stay next to the panels and outer labels merge consecutive panels with the same parent value.
 
 ### Row And Column Grid
 
@@ -83,7 +83,7 @@ Empty panels are dropped by default, and scale domains are shared across panels 
 
 <ComponentPreview name="coordinate-composition-facet-independent" sourceFiles={['coordinate-composition-facet-independent.data.ts']} size="lg" />
 
-`empty="show"` keeps panels listed by the order even when no rows match them. `scales={{ roles: { y: 'independent' } }}` computes a separate y domain per panel, while the x-axis stays shared for month alignment.
+`empty="show"` keeps panels listed by the order even when no rows match them. `resolve={{ scale: { y: 'independent' } }}` computes a separate y domain per panel, while the x-axis stays shared for month alignment.
 
 ### API
 
@@ -98,11 +98,13 @@ Empty panels are dropped by default, and scale domains are shared across panels 
 | `row.order`<br />`column.order` | `FacetValue[]` | First-seen order | Panel order; unlisted values append by first sight |
 | `facetId` | `string` | Omitted | Explicitly bind a mark or axis outside the container to facet panels |
 | `empty` | `'drop' \| 'show'` | `'drop'` | Drop or keep empty panels |
-| `scales.roles` | `Record<string, 'shared' \| 'independent'>` | Unlisted roles are `'shared'` | `shared` uses one domain across panels; `independent` computes one domain per panel |
-| `layout.panelGap` | `number` | `0` | Panel gap in user units |
-| `guidePolicy.axes` | `'perScope' \| 'outerShared'` | `'outerShared'` | Render axes per panel or collapse them to the outside |
-| `guidePolicy.gridPlacement` | `'self' \| 'sharedRole'` | `'self'` | Default target for `Axis grid`; every facet panel receives it |
-| `guidePolicy.facetLabels` | `'none' \| 'rowColumn'` | `'none'` | Whether to render row / column facet labels; multi-level facets group labels by hierarchy |
+| `resolve.scale` | `Record<string, 'shared' \| 'independent' \| 'synchronized'>` | Unlisted roles are `'shared'` | Controls how domains for the same role resolve across panels |
+| `resolve.axis` | `Record<string, 'local' \| 'outer' \| 'none'>` | `outer` | Keep axes inside each panel, collapse them outside, or hide axes for that role |
+| `resolve.grid` | `Record<string, 'local' \| 'all' \| 'none'>` | `all` | Default target for `Axis grid`; facets usually draw it in every panel |
+| `spacing.panelGap` | `number` | `0` | Panel gap in user units |
+| `spacing.axisGap` | `number` | `0` | Gap between panels and outside axes |
+| `spacing.labelGap` | `number` | `0` | Gap between facet labels and panels or axes |
+| `header.row`<br />`header.column` | `boolean` | `false` | Whether to render labels for that facet direction; multi-level facets group labels by hierarchy |
 
 ## Shared Tracks
 
@@ -128,18 +130,20 @@ The JSX shape is still `<Scaffold>` containing `<Track>`: the angular axis lives
 
 | Property | Type | Default | Description |
 | --- | --- | --- | --- |
-| `Scaffold.id` | `string` | Required | Scaffold identity referenced by explicit `scaffoldId` and generated track scopes |
-| `Scaffold.sharedRoles` | `Array<string>` | Required | Coordinate roles managed by the scaffold, such as shared `x` |
-| `Scaffold.coordinate` | `CoordinateOperation` | Inherits `<Plot coordinate>` | Coordinate system used by the scaffold |
-| `Scaffold.frame` | `'shared' \| 'independent'` | `'shared'` | Whether tracks share the scaffold frame |
+| `Scaffold.id` | `string` | Required | Scaffold container identity referenced by explicit `scaffoldId` and generated track views |
+| `Scaffold.sharedRoles` | `Array<string>` | Required | Coordinate roles managed by the Scaffold container, such as shared `x` |
+| `Scaffold.coordinate` | `CoordinateOperation` | Inherits `<Plot coordinate>` | Coordinate system used by the Scaffold container |
+| `Scaffold.frame` | `'shared' \| 'independent'` | `'shared'` | Whether tracks share the Scaffold frame |
 | `Track.id` | `string` | Required | Track identity referenced by `trackId` |
 | `Track.band` | `{ role: string; start: number; end: number }` | Required | Fractional interval occupied by the track on the non-shared role; `start` / `end` are between `0` and `1` |
 | `Track.order` | `number` | Declaration order | Optional ordering hint for tracks |
 | `trackId` | `string` | Omitted | Explicitly place a mark or axis outside the container in one track |
-| `scaffoldId` | `string` | Omitted | Explicitly bind an axis outside the container to the whole scaffold, usually for a shared axis |
-| `layout.trackGap` | `number` | `0` | Gap between tracks in user units |
-| `guidePolicy.axes` | `'perScope' \| 'outerShared'` | `'outerShared'` | Render axes per track or collapse them to the outside |
-| `guidePolicy.gridPlacement` | `'self' \| 'sharedRole'` | `'sharedRole'` | Default target for `Axis grid`; shared tracks project it to tracks with the same role |
+| `scaffoldId` | `string` | Omitted | Explicitly bind an axis outside the container to the whole Scaffold, usually for a shared axis |
+| `resolve.axis` | `Record<string, 'local' \| 'outer' \| 'none'>` | `outer` | Keep axes inside each track, collapse them outside, or hide axes for that role |
+| `resolve.grid` | `Record<string, 'local' \| 'all' \| 'none'>` | `all` | Default target for `Axis grid`; shared tracks usually project it to all tracks with the same role |
+| `spacing.trackGap` | `number` | `0` | Gap between tracks in user units |
+| `spacing.axisGap` | `number` | `0` | Gap between tracks and outside axes |
+| `spacing.labelGap` | `number` | `0` | Gap between track labels and the plot area |
 
 ## Choosing A Shape
 
