@@ -1,3 +1,11 @@
+import type {
+  IRGraphicStyle,
+  IRPathBase,
+  IRPathCommand,
+  PathFillRuleValue,
+  PathLineCapValue,
+  PathLineJoinValue,
+} from '../../schemas';
 import type { Transform } from './group';
 
 /**
@@ -24,33 +32,33 @@ export type MarkerPathPrim = {
    * 填充透明度 0~1
    * @default 1
    */
-  fillOpacity?: number;
+  fillOpacity?: IRGraphicStyle['fillOpacity'];
   /**
    * 填充规则：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景）
    * @default 'nonzero'
    */
-  fillRule?: 'nonzero' | 'evenodd';
+  fillRule?: PathFillRuleValue;
   /** 描边色：纯色 CSS 或 `{ kind: 'contextStroke' }`（继承所在元素描边）；与 fill 同词汇，core 不持 SVG 裸关键字 */
   stroke?: MarkerFill;
   /**
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: number;
+  strokeOpacity?: IRGraphicStyle['drawOpacity'];
   /** 描边宽度（marker 局部坐标） */
-  strokeWidth?: number;
+  strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */
-  dashPattern?: Array<number>;
+  dashPattern?: IRPathBase['dashPattern'];
   /**
    * 端点形状
    * @default 'butt'
    */
-  strokeLinecap?: 'butt' | 'round' | 'square';
+  strokeLinecap?: PathLineCapValue;
   /**
    * 拐点形状
    * @default 'miter'
    */
-  strokeLinejoin?: 'miter' | 'round' | 'bevel';
+  strokeLinejoin?: PathLineJoinValue;
 };
 
 /**
@@ -58,47 +66,7 @@ export type MarkerPathPrim = {
  * @description 与 Scene 的 `PathCommand` 同词汇（move/line/quad/cubic/arc/ellipseArc/close）；
  *   独立别名命名，让 marker 子集与 Scene 词汇解耦演化。坐标在 marker 局部 baseSize 系。
  */
-export type MarkerPathCommand =
-  | { kind: 'move'; to: [number, number] }
-  | { kind: 'line'; to: [number, number] }
-  | { kind: 'quad'; control: [number, number]; to: [number, number] }
-  | {
-      kind: 'cubic';
-      control1: [number, number];
-      control2: [number, number];
-      to: [number, number];
-    }
-  | {
-      kind: 'arc';
-      center: [number, number];
-      radius: number;
-      startAngle: number;
-      endAngle: number;
-      /**
-       * 是否逆时针扫描。
-       * @default false
-       */
-      counterClockwise?: boolean;
-    }
-  | {
-      kind: 'ellipseArc';
-      center: [number, number];
-      radiusX: number;
-      radiusY: number;
-      /**
-       * 椭圆整体旋转角度（度）。
-       * @default 0
-       */
-      rotation?: number;
-      startAngle: number;
-      endAngle: number;
-      /**
-       * 是否逆时针扫描。
-       * @default false
-       */
-      counterClockwise?: boolean;
-    }
-  | { kind: 'close' };
+export type MarkerPathCommand = IRPathCommand;
 
 /**
  * marker-local ellipse 原语：`EllipsePrim` fill 收窄到 `MarkerFill`
@@ -126,18 +94,18 @@ export type MarkerEllipsePrim = {
    * 填充透明度 0~1
    * @default 1
    */
-  fillOpacity?: number;
+  fillOpacity?: IRGraphicStyle['fillOpacity'];
   /** 描边色：纯色 CSS 或 `{ kind: 'contextStroke' }` */
   stroke?: MarkerFill;
   /**
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: number;
+  strokeOpacity?: IRGraphicStyle['drawOpacity'];
   /** 描边宽度 */
-  strokeWidth?: number;
+  strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */
-  dashPattern?: Array<number>;
+  dashPattern?: IRPathBase['dashPattern'];
 };
 
 /**
@@ -161,18 +129,18 @@ export type MarkerRectPrim = {
    * 填充透明度 0~1
    * @default 1
    */
-  fillOpacity?: number;
+  fillOpacity?: IRGraphicStyle['fillOpacity'];
   /** 描边色：纯色 CSS 或 `{ kind: 'contextStroke' }` */
   stroke?: MarkerFill;
   /**
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: number;
+  strokeOpacity?: IRGraphicStyle['drawOpacity'];
   /** 描边宽度 */
-  strokeWidth?: number;
+  strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */
-  dashPattern?: Array<number>;
+  dashPattern?: IRPathBase['dashPattern'];
   /**
    * 圆角半径（同时作用于 rx/ry）
    * @default 0

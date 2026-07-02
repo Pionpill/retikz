@@ -4,6 +4,7 @@
  */
 import type { IRAnimationTrack } from '../../schemas';
 import type { BlendModeValue, ResolvedDropShadow } from '../../schemas';
+import type { IRGraphicStyle, IRPathBase } from '../../schemas';
 import type { IRJsonObject } from '../../schemas';
 import type { PaintValue } from './paint';
 
@@ -31,21 +32,21 @@ export type EllipsePrim = {
    * 填充透明度 0~1
    * @default 1
    */
-  fillOpacity?: number;
+  fillOpacity?: IRGraphicStyle['fillOpacity'];
   /** 描边：纯色 / 资源表 paint server（gradient）/ contextStroke */
   stroke?: PaintValue;
   /**
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: number;
-  strokeWidth?: number;
-  dashPattern?: Array<number>;
+  strokeOpacity?: IRGraphicStyle['drawOpacity'];
+  strokeWidth?: IRGraphicStyle['strokeWidth'];
+  dashPattern?: IRPathBase['dashPattern'];
   /**
    * 整体透明度 0~1
    * @default 1
    */
-  opacity?: number;
+  opacity?: IRGraphicStyle['opacity'];
   /** 投影：解析后对象（preset 已展开 + 显式覆盖合并）；undefined = 无投影 */
   shadow?: ResolvedDropShadow;
   /**

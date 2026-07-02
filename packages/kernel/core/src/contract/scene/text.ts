@@ -1,5 +1,8 @@
 import type { IRAnimationTrack } from '../../schemas';
+import type { IRFont, IRGraphicStyle, IRTextRun } from '../../schemas';
 import type { IRJsonObject } from '../../schemas';
+
+type SceneFontWeight = NonNullable<IRFont['weight']> | (string & {});
 
 /** 行级字段（每行可独立指定），未填走块级 TextPrim 默认 */
 export type TextLine = {
@@ -9,32 +12,32 @@ export type TextLine = {
    * 行级字号覆盖（user units）；缺省走块级 TextPrim.fontSize
    * @default `TextPrim.fontSize`
    */
-  fontSize?: number;
+  fontSize?: IRFont['size'];
   /**
    * 行级字体族覆盖（CSS font-family）；缺省走块级
    * @default `TextPrim.fontFamily`
    */
-  fontFamily?: string;
+  fontFamily?: IRFont['family'];
   /**
    * 行级字重覆盖（CSS font-weight）；缺省走块级
    * @default `TextPrim.fontWeight`
    */
-  fontWeight?: string | number;
+  fontWeight?: SceneFontWeight;
   /**
    * 行级字形覆盖；缺省走块级
    * @default `TextPrim.fontStyle`
    */
-  fontStyle?: 'normal' | 'italic' | 'oblique';
+  fontStyle?: IRFont['style'];
   /**
    * 行级文字颜色覆盖；缺省走块级 TextPrim.fill
    * @default `TextPrim.fill`
    */
-  fill?: string;
+  fill?: IRTextRun['fill'];
   /**
    * 行级透明度 0..1 覆盖；缺省走块级
    * @default `TextPrim.opacity`
    */
-  opacity?: number;
+  opacity?: IRTextRun['opacity'];
 };
 
 /**
@@ -55,22 +58,22 @@ export type TextPrim = {
   y: number;
   /** 至少 1 行；单行节点也用 `[{ text: 'Hello' }]` */
   lines: Array<TextLine>;
-  fontSize: number;
+  fontSize: NonNullable<IRFont['size']>;
   /**
    * 块级字体族。
    * @default 'sans-serif'
    */
-  fontFamily?: string;
+  fontFamily?: IRFont['family'];
   /**
    * 块级字重。
    * @default 'normal'
    */
-  fontWeight?: string | number;
+  fontWeight?: SceneFontWeight;
   /**
    * 块级字形。
    * @default 'normal'
    */
-  fontStyle?: 'normal' | 'italic' | 'oblique';
+  fontStyle?: IRFont['style'];
   align: 'start' | 'middle' | 'end';
   baseline: 'top' | 'middle' | 'bottom' | 'alphabetic';
   /** 行高，多行下相邻行的垂直距离 */
@@ -83,10 +86,10 @@ export type TextPrim = {
    * 块级文字颜色。
    * @default 'currentColor'
    */
-  fill?: string;
+  fill?: IRTextRun['fill'];
   /**
    * 整体透明度 0~1
    * @default 1
    */
-  opacity?: number;
+  opacity?: IRGraphicStyle['opacity'];
 };

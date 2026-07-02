@@ -1,5 +1,6 @@
 import type { IRAnimationTrack } from '../../schemas';
 import type { BlendModeValue, ResolvedDropShadow } from '../../schemas';
+import type { IRGraphicStyle, IRNode, IRPathBase } from '../../schemas';
 import type { IRJsonObject } from '../../schemas';
 import type { PaintValue } from './paint';
 
@@ -27,28 +28,28 @@ export type RectPrim = {
    * 填充透明度 0~1
    * @default 1
    */
-  fillOpacity?: number;
+  fillOpacity?: IRGraphicStyle['fillOpacity'];
   /** 描边：纯色 / 资源表 paint server（gradient）/ contextStroke */
   stroke?: PaintValue;
   /**
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: number;
+  strokeOpacity?: IRGraphicStyle['drawOpacity'];
   /** 描边宽度 */
-  strokeWidth?: number;
+  strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern（如 [4, 2]） */
-  dashPattern?: Array<number>;
+  dashPattern?: IRPathBase['dashPattern'];
   /**
    * 圆角半径（同时作用于 rx/ry）
    * @default 0
    */
-  cornerRadius?: number;
+  cornerRadius?: IRNode['cornerRadius'];
   /**
    * 整体透明度 0~1
    * @default 1
    */
-  opacity?: number;
+  opacity?: IRGraphicStyle['opacity'];
   /** 投影：解析后对象（preset 已展开 + 显式覆盖合并）；undefined = 无投影 */
   shadow?: ResolvedDropShadow;
   /**

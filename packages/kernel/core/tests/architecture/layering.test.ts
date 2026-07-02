@@ -97,6 +97,28 @@ describe('core layer import boundaries', () => {
     expect(offenders).toEqual([]);
   });
 
+  it('scene contracts reuse schema field-level types for shared vocabulary', () => {
+    const sceneRoot = join(SRC_ROOT, 'contract', 'scene');
+    const forbiddenPatterns = [
+      { label: 'position tuple', pattern: /\[number,\s*number\]/u },
+      { label: 'clip fill rule union', pattern: /'nonzero'\s*\|\s*'evenodd'/u },
+      { label: 'path line cap union', pattern: /'butt'\s*\|\s*'round'\s*\|\s*'square'/u },
+      { label: 'path line join union', pattern: /'miter'\s*\|\s*'round'\s*\|\s*'bevel'/u },
+      { label: 'font style union', pattern: /'normal'\s*\|\s*'italic'\s*\|\s*'oblique'/u },
+      { label: 'font weight primitive union', pattern: /fontWeight\??:\s*string\s*\|\s*number/u },
+      { label: 'font family primitive', pattern: /fontFamily\??:\s*string/u },
+    ];
+
+    const offenders = tsFiles(sceneRoot).flatMap(file => {
+      const source = readFileSync(file, 'utf8');
+      return forbiddenPatterns
+        .filter(({ pattern }) => pattern.test(source))
+        .map(({ label }) => `${relative(SRC_ROOT, file)}: ${label}`);
+    });
+
+    expect(offenders).toEqual([]);
+  });
+
   it('implementation code imports scene types from contract/scene instead of legacy primitive paths', () => {
     const offenders = tsFiles(SRC_ROOT).flatMap(file =>
       importDeclarations(file)

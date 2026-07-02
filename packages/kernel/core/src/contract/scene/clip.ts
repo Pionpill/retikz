@@ -1,37 +1,44 @@
+import type {
+  IRCircleClipSpec,
+  IRClipFillRule,
+  IRCompoundClipSpec,
+  IREllipseClipSpec,
+  IRPathClipSpec,
+  IRPolygonClipSpec,
+  IRRectClipSpec,
+} from '../../schemas';
 import type { PathCommand } from './path';
 
 /** 用户坐标系中的矩形 Scene 裁剪形状。 */
-export type RectClipShape = { kind: 'rect'; x: number; y: number; width: number; height: number };
+export type RectClipShape = IRRectClipSpec;
 
 /** 用户坐标系中的圆形 Scene 裁剪形状。 */
-export type CircleClipShape = { kind: 'circle'; cx: number; cy: number; r: number };
+export type CircleClipShape = IRCircleClipSpec;
 
 /** 用户坐标系中的椭圆 Scene 裁剪形状。 */
-export type EllipseClipShape = { kind: 'ellipse'; cx: number; cy: number; rx: number; ry: number };
+export type EllipseClipShape = IREllipseClipSpec;
 
 /** 用户坐标系中的多边形 Scene 裁剪形状。 */
-export type PolygonClipShape = { kind: 'polygon'; points: Array<[number, number]> };
+export type PolygonClipShape = IRPolygonClipSpec;
 
 /** 使用结构化路径命令描述的 Scene 裁剪形状。 */
-export type PathClipShape = {
-  kind: 'path';
+export type PathClipShape = Omit<IRPathClipSpec, 'commands' | 'fillRule'> & {
   commands: Array<PathCommand>;
   /**
    * 裁剪路径填充规则。
    * @default 'nonzero'
    */
-  fillRule?: 'nonzero' | 'evenodd';
+  fillRule?: IRClipFillRule;
 };
 
 /** 由嵌套裁剪形状组合而成的复合 Scene 裁剪形状。 */
-export type CompoundClipShape = {
-  kind: 'compound';
+export type CompoundClipShape = Omit<IRCompoundClipSpec, 'children' | 'fillRule'> & {
   children: Array<ClipShape>;
   /**
    * 复合裁剪形状填充规则。
    * @default 'nonzero'
    */
-  fillRule?: 'nonzero' | 'evenodd';
+  fillRule?: IRClipFillRule;
 };
 
 /** renderer adapter 消费的 Scene 裁剪形状联合类型。 */

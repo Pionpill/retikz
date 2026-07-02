@@ -2,110 +2,43 @@ import type { IRAnimationTrack } from '../../schemas';
 import type { BlendModeValue, ResolvedDropShadow } from '../../schemas';
 import type { IRJsonObject } from '../../schemas';
 import type { ArrowShapeValue } from '../../schemas';
+import type {
+  IRGraphicStyle,
+  IRPathBase,
+  IRPathCommand,
+  PathFillRuleValue,
+  PathLineCapValue,
+  PathLineJoinValue,
+} from '../../schemas';
 import type { MarkerPrimitive } from './marker';
 import type { PaintValue } from './paint';
 
 /** Move command：移动游标到目标点，不绘制 */
-export type MovePathCommand = {
-  /** 鉴别字面量 */
-  kind: 'move';
-  /** 目标点 [x, y] */
-  to: [number, number];
-};
+export type MovePathCommand = Extract<IRPathCommand, { kind: 'move' }>;
 
 /** Line command：从游标到目标点画直线 */
-export type LinePathCommand = {
-  /** 鉴别字面量 */
-  kind: 'line';
-  /** 终点 [x, y] */
-  to: [number, number];
-};
+export type LinePathCommand = Extract<IRPathCommand, { kind: 'line' }>;
 
 /** Quad command：二次贝塞尔，一个控制点 */
-export type QuadPathCommand = {
-  /** 鉴别字面量 */
-  kind: 'quad';
-  /** 控制点 [x, y] */
-  control: [number, number];
-  /** 终点 [x, y] */
-  to: [number, number];
-};
+export type QuadPathCommand = Extract<IRPathCommand, { kind: 'quad' }>;
 
 /** Cubic command：三次贝塞尔，两个控制点 */
-export type CubicPathCommand = {
-  /** 鉴别字面量 */
-  kind: 'cubic';
-  /** 第一控制点 [x, y]（影响起点切线） */
-  control1: [number, number];
-  /** 第二控制点 [x, y]（影响终点切线） */
-  control2: [number, number];
-  /** 终点 [x, y] */
-  to: [number, number];
-};
+export type CubicPathCommand = Extract<IRPathCommand, { kind: 'cubic' }>;
 
 /** Arc command：以 center 为圆心、给定半径与起末角度的圆弧（center-parameterization） */
-export type ArcPathCommand = {
-  /** 鉴别字面量 */
-  kind: 'arc';
-  /** 圆心 [x, y] */
-  center: [number, number];
-  /** 半径（user units） */
-  radius: number;
-  /** 起始角度（度，0° = +x、90° = +y screen-down） */
-  startAngle: number;
-  /** 终止角度（度） */
-  endAngle: number;
-  /**
-   * 是否逆时针扫描；缺省 / `false` = CW（屏幕坐标系正向）
-   * @default false
-   */
-  counterClockwise?: boolean;
-};
+export type ArcPathCommand = Extract<IRPathCommand, { kind: 'arc' }>;
 
 /** EllipseArc command：以 center 为圆心、给定 x/y 半径与起末角度的椭圆弧；可选 rotation */
-export type EllipseArcPathCommand = {
-  /** 鉴别字面量 */
-  kind: 'ellipseArc';
-  /** 圆心 [x, y] */
-  center: [number, number];
-  /** x 轴半径 */
-  radiusX: number;
-  /** y 轴半径 */
-  radiusY: number;
-  /**
-   * 椭圆整体旋转角度（度），缺省 0
-   * @default 0
-   */
-  rotation?: number;
-  /** 起始角度（度） */
-  startAngle: number;
-  /** 终止角度（度） */
-  endAngle: number;
-  /**
-   * 是否逆时针扫描；缺省 / `false` = CW
-   * @default false
-   */
-  counterClockwise?: boolean;
-};
+export type EllipseArcPathCommand = Extract<IRPathCommand, { kind: 'ellipseArc' }>;
 
 /** Close command：闭合当前子路径回最近一次 move 起点 */
-export type ClosePathCommand = {
-  /** 鉴别字面量；无其他字段 */
-  kind: 'close';
-};
+export type ClosePathCommand = Extract<IRPathCommand, { kind: 'close' }>;
 
 /**
  * Path 命令：结构化路径绘制操作（7 分支 discriminated union）
  * @description discriminated union 按 kind 分发；坐标 / 角度均使用 user units（角度=度，0=+x、90=+y/视觉下、CW=正）。各 adapter 自行翻译为原生 API：SVG 拼 `d` 字符串、Canvas 调 ctx.moveTo/lineTo/arc 等。每个 kind 有对应 named type export，便于 wrapper / `Pick<>` 派生。
  */
-export type PathCommand =
-  | MovePathCommand
-  | LinePathCommand
-  | QuadPathCommand
-  | CubicPathCommand
-  | ArcPathCommand
-  | EllipseArcPathCommand
-  | ClosePathCommand;
+export type PathCommand = IRPathCommand;
 
 /**
  * 端点级已解析的箭头 marker 描述（Scene primitive 层，renderer-agnostic）
@@ -154,33 +87,33 @@ export type PathPrim = {
    * 填充透明度 0~1
    * @default 1
    */
-  fillOpacity?: number;
+  fillOpacity?: IRGraphicStyle['fillOpacity'];
   /**
    * 填充规则：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景）
    * @default 'nonzero'
    */
-  fillRule?: 'nonzero' | 'evenodd';
+  fillRule?: PathFillRuleValue;
   /** 描边：纯色 / 资源表 paint server（gradient）/ contextStroke */
   stroke?: PaintValue;
   /**
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: number;
+  strokeOpacity?: IRGraphicStyle['drawOpacity'];
   /** 描边宽度 */
-  strokeWidth?: number;
+  strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */
-  dashPattern?: Array<number>;
+  dashPattern?: IRPathBase['dashPattern'];
   /**
    * 端点形状
    * @default 'butt'
    */
-  strokeLinecap?: 'butt' | 'round' | 'square';
+  strokeLinecap?: PathLineCapValue;
   /**
    * 拐点形状
    * @default 'miter'
    */
-  strokeLinejoin?: 'miter' | 'round' | 'bevel';
+  strokeLinejoin?: PathLineJoinValue;
   /** 起点箭头视觉规格；undefined = 无箭头 */
   arrowStart?: ResolvedArrowEndSpec;
   /** 终点箭头视觉规格；undefined = 无箭头 */
@@ -189,7 +122,7 @@ export type PathPrim = {
    * 整体透明度 0~1
    * @default 1
    */
-  opacity?: number;
+  opacity?: IRGraphicStyle['opacity'];
   /** 投影：解析后对象（preset 已展开 + 显式覆盖合并）；undefined = 无投影 */
   shadow?: ResolvedDropShadow;
   /**
