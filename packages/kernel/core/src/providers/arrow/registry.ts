@@ -1,6 +1,6 @@
 import type { ArrowDefinition, ArrowEmitContext } from '../../contract/arrow';
 import type { MarkerPrimitive } from '../../contract/scene';
-import type { BuiltinArrowShapeValue } from '../../schemas/path/arrow';
+import type { BuiltinArrowShapeValue } from '../../schemas';
 
 import { defineBuiltinProviderArray, resolveProviderRegistry } from '../registry';
 

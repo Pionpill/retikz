@@ -9,7 +9,7 @@ import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { NodeSchema } from '../../src/schemas';
-import { SHADOW_PRESETS } from '../../src/schemas/effects';
+import { SHADOW_PRESETS } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 const silent = { onWarn: () => {} };

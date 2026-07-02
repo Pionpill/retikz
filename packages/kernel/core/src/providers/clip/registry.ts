@@ -8,7 +8,7 @@ import {
   PathClipSchema,
   PolygonClipSchema,
   RectClipSchema,
-} from '../../schemas/clip';
+} from '../../schemas';
 import { resolveProviderRegistry } from '../registry';
 
 export type BuiltinClipProviderName = 'rect' | 'circle' | 'ellipse' | 'polygon' | 'path' | 'compound';

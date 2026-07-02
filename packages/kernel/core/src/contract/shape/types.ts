@@ -1,8 +1,8 @@
 import type { z } from 'zod';
 
-import type { ResolvedDropShadow } from '../../schemas/effects';
-import type { IRJsonObject } from '../../schemas/json';
-import type { IRGraphicStyle } from '../../schemas/style';
+import type { ResolvedDropShadow } from '../../schemas';
+import type { IRJsonObject } from '../../schemas';
+import type { IRGraphicStyle } from '../../schemas';
 import type { Position, Rect, WebSideValue } from '../../shared';
 import type { PaintValue, ScenePrimitive } from '../scene';
 
@@ -106,7 +106,8 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
   circumscribeOffset?: (params: TParams) => Position;
   /**
    * 中心 → toward 射线 ∩ 边界。
-   * @description rect 带 rotate；需要局部系几何时从 `geometry/transform` 使用 `worldToLocal` / `localToWorld`。
+   * @description rect 带 rotate；第三方作者可从 `@retikz/core` 顶层使用 `worldToLocal` / `localToWorld`。
+   *   core 内部 owner 为 `shared/geometry`。
    */
   boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
   /**

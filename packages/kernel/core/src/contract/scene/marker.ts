@@ -1,4 +1,4 @@
-﻿import type { Transform } from './group';
+import type { Transform } from './group';
 
 /**
  * marker-local 填充取值

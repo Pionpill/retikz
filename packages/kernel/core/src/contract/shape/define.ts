@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '../../schemas/json';
+import type { IRJsonObject } from '../../schemas';
 import type { ShapeDefinition, ShapeDefinitionInput } from './types';
 
 /**

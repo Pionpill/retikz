@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import type { IRJsonObject } from '../../schemas/json';
+import type { IRJsonObject } from '../../schemas';
 import type { Position, Rect, WebAnchorValue } from '../../shared';
 
 /**

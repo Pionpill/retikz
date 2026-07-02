@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const SRC_ROOT = join(process.cwd(), 'src');
@@ -25,6 +25,27 @@ const importDeclarations = (file: string): Array<string> =>
     match => match[0],
   );
 
+const importSource = (declaration: string): string | undefined =>
+  declaration.match(/\sfrom\s+['"]([^'"]+)['"]/)?.[1];
+
+const importsFromOwner = (file: string, declaration: string, owner: 'geometry' | 'primitive'): boolean => {
+  const source = importSource(declaration);
+  if (!source?.startsWith('.')) return false;
+
+  const ownerRoot = join(SRC_ROOT, owner);
+  const target = join(dirname(file), source);
+  return target === ownerRoot || target.startsWith(`${ownerRoot}${sep}`);
+};
+
+const importsFromSchemaSubmodule = (file: string, declaration: string): boolean => {
+  const source = importSource(declaration);
+  if (!source?.startsWith('.')) return false;
+
+  const schemaRoot = join(SRC_ROOT, 'schemas');
+  const target = join(dirname(file), source);
+  return target.startsWith(`${schemaRoot}${sep}`);
+};
+
 const isCompatibilityWrapper = (file: string): boolean => {
   const rel = relative(SRC_ROOT, file).replace(/\\/g, '/');
   return rel.startsWith('primitive/') || rel.startsWith('geometry/');
@@ -36,7 +57,7 @@ describe('core layer import boundaries', () => {
       .filter(file => !relative(join(SRC_ROOT, 'contract'), file).replace(/\\/g, '/').startsWith('scene/'))
       .flatMap(file =>
         importDeclarations(file)
-          .filter(line => /from ['"]\.\.\/\.\.\/primitive/.test(line))
+          .filter(line => importsFromOwner(file, line, 'primitive'))
           .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
       );
 
@@ -46,7 +67,7 @@ describe('core layer import boundaries', () => {
   it('contract code does not import from legacy geometry owner paths', () => {
     const offenders = tsFiles(join(SRC_ROOT, 'contract')).flatMap(file =>
       importDeclarations(file)
-        .filter(line => /from ['"]\.\.\/\.\.\/geometry/.test(line))
+        .filter(line => importsFromOwner(file, line, 'geometry'))
         .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
     );
 
@@ -63,12 +84,24 @@ describe('core layer import boundaries', () => {
     expect(offenders).toEqual([]);
   });
 
+  it('source code outside schemas imports schemas through the owner barrel', () => {
+    const offenders = tsFiles(SRC_ROOT)
+      .filter(file => !relative(SRC_ROOT, file).replace(/\\/g, '/').startsWith('schemas/'))
+      .flatMap(file =>
+        importDeclarations(file)
+          .filter(line => importsFromSchemaSubmodule(file, line))
+          .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
+      );
+
+    expect(offenders).toEqual([]);
+  });
+
   it('implementation code imports scene types from contract/scene instead of legacy primitive paths', () => {
     const offenders = tsFiles(SRC_ROOT)
       .filter(file => !isCompatibilityWrapper(file))
       .flatMap(file =>
         importDeclarations(file)
-          .filter(line => /from ['"].*(\.\.\/)+primitive/.test(line))
+          .filter(line => importsFromOwner(file, line, 'primitive'))
           .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
       );
 
@@ -80,7 +113,7 @@ describe('core layer import boundaries', () => {
       .filter(file => !isCompatibilityWrapper(file))
       .flatMap(file =>
         importDeclarations(file)
-          .filter(line => /from ['"].*(\.\.\/)+geometry/.test(line))
+          .filter(line => importsFromOwner(file, line, 'geometry'))
           .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
       );
 

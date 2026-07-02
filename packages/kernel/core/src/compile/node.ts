@@ -5,6 +5,7 @@ import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../contract
 import type { ResolvedShapeStyle, ShapeDefinition } from '../contract/shape';
 import type { ProviderCollection } from '../providers/registry';
 import type {
+  BlendModeValue,
   IRAnimationTrack,
   IRBoundary,
   IRJsonObject,
@@ -18,8 +19,8 @@ import type {
   JsonValue,
   NodeLabelPlacementValue,
   NodeLabelPositionValue,
+  ResolvedDropShadow,
 } from '../schemas';
-import type { BlendModeValue, ResolvedDropShadow } from '../schemas/effects';
 import type { Position } from '../shared/geometry';
 import type { Rect } from '../shared/geometry';
 import type { CompileWarningCodeValue } from './constant';

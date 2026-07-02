@@ -1,7 +1,7 @@
-﻿import type { IRAnimationTrack } from '../../schemas/animation';
-import type { BlendModeValue, ResolvedDropShadow } from '../../schemas/effects';
-import type { IRJsonObject } from '../../schemas/json';
-import type { ArrowShapeValue } from '../../schemas/path/arrow';
+import type { IRAnimationTrack } from '../../schemas';
+import type { BlendModeValue, ResolvedDropShadow } from '../../schemas';
+import type { IRJsonObject } from '../../schemas';
+import type { ArrowShapeValue } from '../../schemas';
 import type { MarkerPrimitive } from './marker';
 import type { PaintValue } from './paint';
 

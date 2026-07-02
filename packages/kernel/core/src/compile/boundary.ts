@@ -2,7 +2,7 @@ import type { BoundaryAnchorName, BoundaryDefinition } from '../contract/boundar
 import type { ShapeDefinition } from '../contract/shape';
 import type { ProviderCollection } from '../providers/registry';
 import type { IRBoundary } from '../schemas';
-import type { IRJsonObject } from '../schemas/json';
+import type { IRJsonObject } from '../schemas';
 import type { Position } from '../shared/geometry';
 import type { Rect } from '../shared/geometry';
 

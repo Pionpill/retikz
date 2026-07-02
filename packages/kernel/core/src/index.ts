@@ -316,7 +316,7 @@ export type {
   Transform,
   /** 3 个 named Transform 分支 */
   TranslateTransform,
-} from './primitive';
+} from './contract/scene';
 
 // Compile (IR → Scene)
 export type {
@@ -384,25 +384,6 @@ export { DrawWay, parseNodeTarget, parseTargetSugar, parseWay } from './parsers'
 
 // Presets（具名动画 sugar：产 AnimationTrack 的纯工厂）
 export type {
-  Circle,
-  Diamond,
-  Ellipse,
-  PolarPosition,
-  Position,
-  Rect,
-  Vector2,
-} from './geometry';
-export {
-  circle,
-  diamond,
-  ellipse,
-  localToWorld,
-  point,
-  polar,
-  rect,
-  worldToLocal,
-} from './geometry';
-export type {
   AnimationPresetOptions,
   BlinkOptions,
   CameraToOptions,
@@ -433,6 +414,25 @@ export {
   stagger,
   wiggle,
 } from './presets';
+export type {
+  Circle,
+  Diamond,
+  Ellipse,
+  PolarPosition,
+  Position,
+  Rect,
+  Vector2,
+} from './shared/geometry';
+export {
+  circle,
+  diamond,
+  ellipse,
+  localToWorld,
+  point,
+  polar,
+  rect,
+  worldToLocal,
+} from './shared/geometry';
 
 // Shapes (Shape Registry 扩展面：第三方 shape 注入 + 内置注册项)
 export type { BoundaryAnchorName, BoundaryDefinition, BoundaryDefinitionInput } from './contract/boundary';

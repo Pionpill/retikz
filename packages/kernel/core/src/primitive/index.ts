@@ -1,5 +1,5 @@
-export type { BlendModeValue, IRDropShadow, ResolvedDropShadow, ShadowPresetValue } from '../schemas/effects';
-export { BlendMode, SHADOW_PRESETS, ShadowPreset } from '../schemas/effects';
+export type { BlendModeValue, IRDropShadow, ResolvedDropShadow, ShadowPresetValue } from '../schemas';
+export { BlendMode, SHADOW_PRESETS, ShadowPreset } from '../schemas';
 export * from './clip';
 export * from './ellipse';
 export * from './group';

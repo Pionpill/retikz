@@ -1,4 +1,4 @@
-﻿import type { IRAnimationTrack } from '../../schemas/animation';
+import type { IRAnimationTrack } from '../../schemas';
 import type { EllipsePrim } from './ellipse';
 import type { GroupPrim } from './group';
 import type { Layout } from './layout';

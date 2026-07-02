@@ -1,5 +1,5 @@
 import type { ShapeDefinition } from '../../contract/shape';
-import type { BuiltinShapeValue } from '../../schemas/node';
+import type { BuiltinShapeValue } from '../../schemas';
 
 import { defineBuiltinProviderArray, resolveProviderRegistry } from '../registry';
 import { arc } from './arc';

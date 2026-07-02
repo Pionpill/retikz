@@ -9,7 +9,7 @@ import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { PathSchema } from '../../src/schemas';
-import { BlendMode } from '../../src/schemas/effects';
+import { BlendMode } from '../../src/schemas';
 import { arrowMarks } from '../helpers/arrow-marks';
 import { flattenPrims } from '../helpers/flatten';
 

@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { BlendMode, DropShadowSchema, SHADOW_PRESETS, ShadowPreset } from '../../src/schemas/effects';
+import { BlendMode, DropShadowSchema, SHADOW_PRESETS, ShadowPreset } from '../../src/schemas';
 
 describe('[effects] DropShadowSchema accept/reject', () => {
   it('preset-only：{preset:"md"} → 过', () => {
