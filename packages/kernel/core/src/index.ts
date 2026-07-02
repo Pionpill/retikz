@@ -381,7 +381,7 @@ export {
 export type { WayCycle, WayDSL, WayItem, WayLabel, WayLabelOp, WayRelativeItem, WayVia } from './parsers';
 export { DrawWay, parseNodeTarget, parseTargetSugar, parseWay } from './parsers';
 
-// Presets（具名动画 sugar：产 AnimationTrack 的纯工厂）
+// Animation sugar（具名动画工厂：产 AnimationTrack 的纯函数）
 export type {
   AnimationPresetOptions,
   BlinkOptions,
@@ -395,7 +395,7 @@ export type {
   SlideInOptions,
   SpinOptions,
   WiggleOptions,
-} from './presets';
+} from './parsers';
 export {
   blink,
   cameraTo,
@@ -412,7 +412,7 @@ export {
   spin,
   stagger,
   wiggle,
-} from './presets';
+} from './parsers';
 export type {
   Circle,
   Diamond,

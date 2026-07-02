@@ -1,5 +1,5 @@
 /**
- * 具名动画 preset 工厂（Sugar）：把 roadmap §动画配方表实装成 `fadeIn()` / `spin()` / `growUp()` … 函数
+ * 具名动画 sugar 工厂：把常用动画配方实装成 `fadeIn()` / `spin()` / `growUp()` 等函数
  * @description 纯函数、产 `IRAnimationTrack`，用于 `animations={[fadeIn(), scaleIn()]}`。不引入新能力——
  *   产出逐字段等于手写 track（Sugar=Kernel 等价），播放 / 降级全走 renderer 既有通路。默认值 = 配方表，单一真源。
  */
