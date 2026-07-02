@@ -25,6 +25,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 - 改文件分层、依赖方向、shared / schemas / contract / providers / pipeline / compile，或 define-registry 能力前，先读 `.agents/skills/standard-structure/SKILL.md`，再按实际层级读取 `standard-shared` / `standard-schema` / `standard-contract` / `standard-providers` / `standard-pipeline-compile`。
 - 写 `apps/docs` 正文、demo、导航、i18n、schema registry 前，先读 `docs-doc-principle`；组件页 / 示例页 / 分组页 / 概念页 / blog 再读对应 docs skill。
 - 发包、alpha/beta/rc 流程、跨模型评审、文档外站转换等长流程按对应 skill 执行，不把步骤复制进 AGENTS。
+- 重构优先走 `.agents/skills/develop-refactor/SKILL.md`；纯审计仍走 `develop-review`。
 - 问答中若发现用户新偏好、流程调整或规则适合沉淀进 `AGENTS.md` / skill，完成当前任务后主动告知并征求同意；用户不同意时不得自行修改。
 - 向 `AGENTS.md` / skill 添加规则必须简洁干练，只写可执行约束，不扩写背景、不放长例子，优先节省 token。
 - 对用户问题保持中立客观，优先考虑功能拓展性和抽象程度；有更好方案或质疑时先对齐讨论，只有把握 ≥ 90% 才编辑内容。
@@ -82,6 +83,8 @@ pnpm --filter <pkg> exec vitest run [test-file]
 - AI 执行 `git commit` / `git push` / `git tag` / `npm publish` 前，必须在当前对话拿到用户明确授权；push / tag / publish 始终单独授权。
 - 计划、skill、自称会提交、lint/build 通过、auto mode、历史会话授权都不算授权。
 - 多块改动按 commit 粒度分块 staging；无授权时展示暂存文件和拟用 message，等待确认。
+- 派子 agent / 外部模型评审前必须征求用户确认。长任务执行前同时询问：plan 写完是否评审、代码写完是否评审。非明确功能类代码完工并提交或准备提交后，也询问是否需要子 agent review。
+- 用户批准批量执行并授权 LLM 自行 commit 时，每次 commit 前必须派子 agent review 单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。
 - 不要 `git add -A` 混入无关改动。不要 `git reset --hard` / `git checkout --` 回滚用户改动，除非用户明确要求。
 
 Commit message：
@@ -111,10 +114,11 @@ Control: <human-directed|llm-autonomous>
 
 - TypeScript ESM；组件 PascalCase、hook `useXxx`、其余 camelCase。
 - 组件 / 类文件可 PascalCase；其他文件和目录用 kebab-case；目录通常用只 re-export 的 `index.ts`。
-- barrel 默认 `export * from './xxx'`；需要裁剪公共面、避免冲突或显式重命名时才用 named re-export。公共入口可按包内 AGENTS 要求显式导出。
+- barrel 默认 `export * from './xxx'`，不要用 `export { ... } from './xxx'` 聚合；需要裁剪公共面、避免冲突或显式重命名时才用 named re-export。公共入口可按包内 AGENTS 要求显式导出。
 - 数组类型写 `Array<T>`，不用 `T[]`；函数优先箭头形式，确需 hoisting / class 方法时例外。
 - enum 用 const object enum：`as const` 对象 + `ValueOf` 派生类型；value object 用单数 PascalCase，成员 key 用大驼峰，派生类型加 `Value` 后缀。
 - JSDoc 默认必须写：导出类型、接口、函数、组件、重要内部 helper、public props 和复杂对象字段都要注释；纯推断 / 重命名别名（如 `ValueOf`、`z.infer`、re-export 收窄）可省略。
+- 注释和 JSDoc 默认用中文；Zod `.describe(...)` 仍用英文描述契约。
 - `@description` 写主语义、契约和跨字段行为；`@remarks` 只写设计理由、非主路径补充或未来扩展钩子；默认值写字段级 `@default`。能写到属性上的说明不要堆在整体类型说明里；注释 / JSDoc / 测试标题 / zod `.describe(...)` 不引用 ADR 或历史阶段。
 - React 组件用 `FC<Props>`，Props 类型独立声明并导出；props 在函数体内解构；`components/ui/*` 是 shadcn vendored，不直接手改。
 - Tailwind v4：入口 CSS 用 `@import 'tailwindcss';`，主题走 CSS-first（`@theme` / CSS variables / `@plugin`），不建 v3 风格 JS config；新 token 同步 `:root` 与 `.dark`。
