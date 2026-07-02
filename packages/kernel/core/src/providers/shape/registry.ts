@@ -1,10 +1,10 @@
-import type { ShapeDefinition } from '../../contract/shape';
+﻿import type { ShapeDefinition } from '../../contract';
 import type { BuiltinShapeValue } from '../../schemas';
 
 import { defineBuiltinProviderArray, resolveProviderRegistry } from '../registry';
 import { arc } from './arc';
 import { contour } from './contour';
-import { ellipse } from './ellipse';
+import { ellipseShape } from './ellipse';
 import { polygon } from './polygon';
 import { rectangle } from './rectangle';
 import { sector } from './sector';
@@ -15,7 +15,7 @@ export type BuiltinShapeProviderName = Exclude<BuiltinShapeValue, 'circle' | 'di
 /** 内置 shape 注册项（circle / diamond 已收为 preset，不占独立项）。 */
 export const BUILTIN_SHAPES = defineBuiltinProviderArray<ShapeDefinition, BuiltinShapeProviderName>([
   rectangle,
-  ellipse,
+  ellipseShape,
   sector,
   arc,
   polygon,

@@ -1,11 +1,11 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
-import type { ScenePrimitive } from '../../contract/scene';
+import type { ScenePrimitive } from '../../contract';
 import type { Position } from '../../shared/geometry';
 import type { Rect } from '../../shared/geometry';
 import type { ContourSegment } from '../../shared/geometry';
 
-import { defineShape } from '../../contract/shape';
+import { defineShape } from '../../contract';
 import { CenterAnchor, normalizeAnchor } from '../../shared';
 import { rect } from '../../shared/geometry';
 import { localToWorld } from '../../shared/geometry';
@@ -26,14 +26,14 @@ type RectangleParams = {
 };
 
 /** 轴对齐 / 旋转矩形的 4 个角（CW 绕向：左上 → 右上 → 右下 → 左下），局部系经 localToWorld 投世界 */
-const rectVertices = (rect: Rect): Array<Position> => {
-  const halfW = rect.width / 2;
-  const halfH = rect.height / 2;
+const rectVertices = (bounds: Rect): Array<Position> => {
+  const halfW = bounds.width / 2;
+  const halfH = bounds.height / 2;
   return [
-    localToWorld(rect, [-halfW, -halfH]),
-    localToWorld(rect, [halfW, -halfH]),
-    localToWorld(rect, [halfW, halfH]),
-    localToWorld(rect, [-halfW, halfH]),
+    localToWorld(bounds, [-halfW, -halfH]),
+    localToWorld(bounds, [halfW, -halfH]),
+    localToWorld(bounds, [halfW, halfH]),
+    localToWorld(bounds, [-halfW, halfH]),
   ];
 };
 
@@ -58,10 +58,10 @@ export const rectangle = defineShape({
       ),
   }),
   circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
-  boundaryPoint: (rect: Rect, toward: Position, params: RectangleParams): Position => {
-    const verts = rectVertices(rect);
+  boundaryPoint: (bounds: Rect, toward: Position, params: RectangleParams): Position => {
+    const verts = rectVertices(bounds);
     const segments: Array<ContourSegment> = verticesToSegments(verts);
-    const center: Position = [rect.x, rect.y];
+    const center: Position = [bounds.x, bounds.y];
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
     return hit ?? center;
   },

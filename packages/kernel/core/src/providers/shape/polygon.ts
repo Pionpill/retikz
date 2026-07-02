@@ -1,11 +1,11 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
-import type { ScenePrimitive } from '../../contract/scene';
+import type { ScenePrimitive } from '../../contract';
 import type { Position } from '../../shared/geometry';
 import type { Rect } from '../../shared/geometry';
 import type { ContourSegment } from '../../shared/geometry';
 
-import { defineShape } from '../../contract/shape';
+import { defineShape } from '../../contract';
 import { CenterAnchor, normalizeAnchor } from '../../shared';
 import { rect } from '../../shared/geometry';
 import { localToWorld } from '../../shared/geometry';
@@ -76,17 +76,17 @@ const circumradiusFor = (hw: number, hh: number, params: PolygonParams): number 
 };
 
 /** 由外接 AABB（emit / boundaryPoint 收到的 rect）反推外接圆半径：R = halfWidth / max|cosθ_k| */
-const circumradiusFromRect = (rect: Rect, params: PolygonParams): number => rect.width / 2 / maxAbsCos(params);
+const circumradiusFromRect = (bounds: Rect, params: PolygonParams): number => bounds.width / 2 / maxAbsCos(params);
 
 /**
  * 正多边形 `sides` 个顶点的世界坐标（外接圆半径 radius、起始角 rotate、绕 rect 中心）
  * @description 顶点均布外接圆：第 k 个顶点角 = rotate + k·(360/sides)；点在 rect 局部系算后经 localToWorld 投世界。
  *   emit / boundaryPoint / anchor 共用此真源。
  */
-const polygonVertices = (rect: Rect, radius: number, params: PolygonParams): Array<Position> =>
+const polygonVertices = (bounds: Rect, radius: number, params: PolygonParams): Array<Position> =>
   vertexAngles(params).map(deg => {
     const a = deg * DEG_TO_RAD;
-    return localToWorld(rect, [radius * Math.cos(a), radius * Math.sin(a)]);
+    return localToWorld(bounds, [radius * Math.cos(a), radius * Math.sin(a)]);
   });
 
 /**
@@ -135,12 +135,12 @@ export const polygon = defineShape({
     }
     return { halfWidth, halfHeight };
   },
-  boundaryPoint: (rect: Rect, toward: Position, params: PolygonParams): Position => {
-    const radius = circumradiusFromRect(rect, params);
+  boundaryPoint: (bounds: Rect, toward: Position, params: PolygonParams): Position => {
+    const radius = circumradiusFromRect(bounds, params);
     // 带 rotate 的 rect 下取世界系顶点环；rayOrigin = 几何中心（= rect 中心 = node position）
-    const verts = polygonVertices(rect, radius, params);
+    const verts = polygonVertices(bounds, radius, params);
     const segments: Array<ContourSegment> = verticesToSegments(verts);
-    const center: Position = [rect.x, rect.y];
+    const center: Position = [bounds.x, bounds.y];
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
     return hit ?? center;
   },
@@ -149,10 +149,10 @@ export const polygon = defineShape({
     const a = normalizeAnchor(name);
     return a !== undefined && a !== CenterAnchor.Center ? rect.anchor(bounds, a) : undefined;
   },
-  *emit(rect: Rect, style, round, params: PolygonParams): Iterable<ScenePrimitive> {
-    const radius = circumradiusFromRect(rect, params);
+  *emit(bounds: Rect, style, round, params: PolygonParams): Iterable<ScenePrimitive> {
+    const radius = circumradiusFromRect(bounds, params);
     // emit 收轴对齐 rect（rotate=0）；顶点世界坐标 → 折线段 → rounded-contour 命令 → path
-    const verts = polygonVertices(rect, radius, params);
+    const verts = polygonVertices(bounds, radius, params);
     const segments: Array<ContourSegment> = verticesToSegments(verts);
     const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius), round);
     yield contourToPathPrimitive(commands, style);
