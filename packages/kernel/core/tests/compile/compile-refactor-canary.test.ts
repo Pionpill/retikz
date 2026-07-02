@@ -36,7 +36,8 @@ const compileWithWarnings = (ir: IR): { scene: Scene; warnings: Array<CompileWar
         }),
         targetParams: ['bend'],
         generate: ({ from, to, resolvedTargets }) => {
-          const bend = resolvedTargets.bend ?? from;
+          void from;
+          const bend = resolvedTargets.bend;
           const end = to ?? bend;
           return [
             { kind: 'line', to: bend },

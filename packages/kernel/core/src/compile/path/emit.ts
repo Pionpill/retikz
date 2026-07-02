@@ -1,30 +1,21 @@
 import { arcBoundingPoints, arcEndPoint, curve, ellipseArcBoundingPoints, ellipseArcPoint } from '@retikz/math';
 
-import type { PathGeneratorDefinition } from '../../contract/path';
 import type {
   GroupPrim,
-  MarkerFill,
-  MarkerPrimitive,
-  PaintValue,
   PathCommand,
   ResolvedArrowEndSpec,
   ScenePrimitive,
-  Transform,
 } from '../../contract/scene';
-import type { IRPath, IRPathBase, IRPathScale, IRPosition, IRStep, IRTarget } from '../../schemas';
+import type { IRPath, IRPathBase, IRPosition, IRStep, IRTarget } from '../../schemas';
 import type { AssertEqual } from '../../shared';
 import type { SegmentSample } from '../../shared/geometry';
-import type { CompileWarning } from '../constant';
-import type { LowerTex } from '../lower-tex';
 import type { NameStack } from '../name-stack';
 import type { PaintResolver } from '../paint';
 import type { TextMeasurer } from '../text-metrics';
-import type { ResolvedArrowRegistry } from './shrink';
 import type { PathBaseProps } from './split';
+import type { EmitPathWarnHook } from './types';
 
 import { resolveArrowRegistry } from '../../providers/arrow';
-import { providerDefinitionOf } from '../../providers/registry';
-import { JsonObjectSchema } from '../../schemas';
 import { rectOutline } from '../../shared/geometry';
 import {
   arcSegmentSample,
@@ -41,16 +32,16 @@ import {
 } from '../../shared/geometry';
 import { CompileWarningCode } from '../constant';
 import { resolveShadow } from '../effects';
-import { applyTransformChain } from '../scope';
 import { fallbackMeasurer } from '../text-metrics';
 import { clipForTarget, cornerOf, isAutoBoundaryTarget, refPointOfTarget, samePoint } from './anchor';
+import { resolveGeneratorCommands } from './generator';
 import { emitLabelPrimitive, tForLabelPosition } from './label';
+import { assertArrowCanInheritStroke, buildMarkMarkerGroup, markerContextStroke } from './marks';
 import { normalizeRelativeTargets } from './relative';
 import { applyRoundedCorners, sampleRoundedCommands } from './rounded-corners';
 import { applyArrowShrinks, resolveEndpointArrowMark, resolveMarkArrowSpec } from './shrink';
 import { splitSubPathsForEndpointArrows } from './split';
-
-const EMPTY_PATH_GENERATORS: ReadonlyMap<string, PathGeneratorDefinition> = new Map();
+import { bboxCenter, buildPathTransforms, projectPathTransformPoints } from './transform';
 
 /**
  * referent（offset.of / polar.origin 的并集形态：节点 id 字符串 / `[x, y]` 字面量 / 嵌套 PolarPosition）里挖节点 id
@@ -75,60 +66,14 @@ const nodeRefId = (t: IRTarget): string | undefined => {
   return undefined;
 };
 
-/** 有限数 */
-const isFiniteNum = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);
-
 /** 有限坐标点 `[number, number]` */
 const isFinitePoint = (pt: unknown): boolean =>
-  Array.isArray(pt) && pt.length >= 2 && isFiniteNum(pt[0]) && isFiniteNum(pt[1]);
-
-/**
- * 校验 path generator 产出的单条命令合法（kind 已知 + 引用坐标 / 数值有限）
- * @description 第三方 / LLM 写的 generate 误产坏命令（NaN/Infinity 坐标、未知 kind、缺字段、字符串当命令）时
- *   抛含 generator 名的清晰错——守 Scene 100% finite / JSON 可序列化，不放任非 finite 静默入 Scene
- *   （JSON.stringify(NaN/Infinity)=null 会让 round-trip 失真）。
- */
-const assertValidGeneratedCommand = (name: string, cmd: unknown): void => {
-  const bad = (detail: string): never => {
-    throw new Error(`path generator '${name}' produced a ${detail}.`);
-  };
-  if (cmd === null || typeof cmd !== 'object') {
-    bad(`non-object command (expected an object with a 'kind')`);
-    return;
-  }
-  const c = cmd as Record<string, unknown>;
-  switch (c.kind) {
-    case 'move':
-    case 'line':
-      if (!isFinitePoint(c.to)) bad(`non-finite coordinate in a '${String(c.kind)}' command`);
-      break;
-    case 'quad':
-      if (!isFinitePoint(c.control) || !isFinitePoint(c.to)) bad(`non-finite coordinate in a 'quad' command`);
-      break;
-    case 'cubic':
-      if (!isFinitePoint(c.control1) || !isFinitePoint(c.control2) || !isFinitePoint(c.to))
-        bad(`non-finite coordinate in a 'cubic' command`);
-      break;
-    case 'arc':
-      if (!isFinitePoint(c.center) || !isFiniteNum(c.radius) || !isFiniteNum(c.startAngle) || !isFiniteNum(c.endAngle))
-        bad(`non-finite value in an 'arc' command`);
-      break;
-    case 'ellipseArc':
-      if (
-        !isFinitePoint(c.center) ||
-        !isFiniteNum(c.radiusX) ||
-        !isFiniteNum(c.radiusY) ||
-        !isFiniteNum(c.startAngle) ||
-        !isFiniteNum(c.endAngle)
-      )
-        bad(`non-finite value in an 'ellipseArc' command`);
-      break;
-    case 'close':
-      break;
-    default:
-      bad(`command with unknown kind '${String(c.kind)}'`);
-  }
-};
+  Array.isArray(pt) &&
+  pt.length >= 2 &&
+  typeof pt[0] === 'number' &&
+  Number.isFinite(pt[0]) &&
+  typeof pt[1] === 'number' &&
+  Number.isFinite(pt[1]);
 
 /**
  * 语义 stroke 档位 → 数值（user units）
@@ -149,176 +94,6 @@ const THICKNESS_TO_WIDTH = {
 type _ThicknessCheck = AssertEqual<keyof typeof THICKNESS_TO_WIDTH, NonNullable<IRPath['thickness']>>;
 const _assertThicknessCheck: _ThicknessCheck = true;
 void _assertThicknessCheck;
-
-/** emitPathPrimitive 可选 warn 钩子 */
-export type EmitPathWarnHook = {
-  /**
-   * 警告收集器（由 compileToScene 传入）
-   * @default undefined；不发出警告
-   */
-  onWarn?: (warning: CompileWarning) => void;
-  /**
-   * 当前 path 在 IR 中的 locator 前缀（如 `'children[3].path'`）
-   * @default 'path'
-   */
-  irPath?: string;
-  /**
-   * 该 path 所属 scope 的累积 Cartesian-only transform 链
-   * @description step.to 内的 polar/at/offset 字面量按"当前 scope 局部度量 + 末端 apply chain"
-   *   投影回全局；顶层 path / 无 scope chain 时为 `[]`（恒等，全局坐标）
-   * @default []
-   */
-  scopeChain?: ReadonlyArray<Transform>;
-  /**
-   * paint 解析器（PaintSpec → resourceRef + 登记资源）；缺省时纯色透传、PaintSpec 退化为无填充 / currentColor
-   * @default 透传字符串；无法解析的 spec 变为 undefined
-   */
-  resolvePaint?: PaintResolver;
-  /**
-   * 已解析 arrow registry（内置 8 + 注入）；缺省 = 仅内置 8
-   * @description compileToScene 合并 `{ ...BUILTIN_ARROWS, ...options.arrows }` 传入；
-   *   endpoint arrow marks 据此查表算 shrink / 调 def.emit；未注册名编译期 throw
-   * @default resolveArrowRegistry()
-   */
-  resolvedArrows?: ResolvedArrowRegistry;
-  /**
-   * 有效 path generator 表（注入即全部，core 无内置）；缺省 = 空表
-   * @description compileToScene 传 `options.pathGenerators ?? {}`；generator step 据此查表（未注册名
-   *   编译期 throw，错误列出可用名）→ 双 parse 护栏 → targetParams resolve → 调 generate splice 命令。
-   *   解析逻辑由后续实现落地（此处仅声明 hook 入口）。
-   * @default EMPTY_PATH_GENERATORS
-   */
-  effectivePathGenerators?: ReadonlyMap<string, PathGeneratorDefinition>;
-  /**
-   * 注入的 TeX 降解能力（来自 @retikz/tex）；供边标注里的 `$...$` 行内公式降解
-   * @description 缺省 = 无 tex 能力，边标注 `$...$` 字面（gating off）；注入后边标注可写行内公式
-   * @default undefined；禁用行内 TeX
-   */
-  lowerTex?: LowerTex;
-};
-
-/** 一组点的 axis-aligned 包围盒中心 */
-const bboxCenter = (pts: ReadonlyArray<IRPosition>): IRPosition => {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const [x, y] of pts) {
-    if (x < minX) minX = x;
-    if (y < minY) minY = y;
-    if (x > maxX) maxX = x;
-    if (y > maxY) maxY = y;
-  }
-  return [(minX + maxX) / 2, (minY + maxY) / 2];
-};
-
-/**
- * path 整体 rotate / scale → 绕包围盒中心的 GroupPrim transforms
- * @description rotate 写成 `{ kind:'rotate', degrees, cx, cy }`（cx/cy = bbox center），等价包一个绕同中心旋转的 Scope；
- *   scale number → `{ kind:'scale', x }`（等比，y 省略），`{x,y}` → `{ kind:'scale', x, y }`。
- *   缩放支点同为 bbox center：用 translate(center) ∘ scale ∘ translate(-center) 三段表达。两者都缺时返回空数组。
- *   数组顺序与 GroupPrim 渲染一致（array[0] 最外层、最后 apply）：先 rotate 段再 scale 段（rotate 在外）。
- */
-const buildPathTransforms = (
-  rotate: number | undefined,
-  scale: IRPathScale | undefined,
-  center: IRPosition,
-  round: (n: number) => number,
-): Array<Transform> => {
-  const out: Array<Transform> = [];
-  if (rotate !== undefined) {
-    out.push({ kind: 'rotate', degrees: rotate, cx: round(center[0]), cy: round(center[1]) });
-  }
-  if (scale !== undefined) {
-    const sx = typeof scale === 'number' ? scale : scale.x;
-    const sy = typeof scale === 'number' ? undefined : scale.y;
-    // 绕 bbox center 缩放：translate(center) ∘ scale ∘ translate(-center)
-    const scaleT: Transform = { kind: 'scale', x: sx };
-    if (sy !== undefined) scaleT.y = sy;
-    out.push({ kind: 'translate', x: round(center[0]), y: round(center[1]) }, scaleT, {
-      kind: 'translate',
-      x: round(-center[0]),
-      y: round(-center[1]),
-    });
-  }
-  return out;
-};
-
-/**
- * 把已物化的 arrow marker（局部 baseSize 坐标系，尖端 +x）按路径切线定向放到采样点
- * @description marker 局部系：viewBox `0 0 baseSize baseSize`，参考点 (refX, baseSize/2)，尖端朝 +x。
- *   GroupPrim transforms 数组语义 array[0] 最外层（最后 apply），故链 = translate(point) ∘ rotate(tangentDeg)
- *   ∘ scale(markerWidth·strokeWidth/baseSize, markerHeight·strokeWidth/baseSize) ∘ translate(-refX, -baseSize/2)：
- *   先把参考点移到原点、缩放到目标尺寸、绕切线角旋转、平移到采样点。缩放含 strokeWidth 因子，与端点箭头
- *   （SVG markerUnits=strokeWidth / Canvas 同口径 ×strokeWidth）一致——中段 mark 随线宽缩放（TikZ 语义）。
- *
- *   marker 几何拍平进 Scene 作 children：marker 窄子集结构上是 ScenePrimitive 子集，唯一差异是 fill/stroke 可为
- *   `{ kind: 'contextStroke' }`。端点箭头物化成真正的 `<marker>` 时 contextStroke 由 renderer 继承引用方描边；
- *   但中段 mark 是独立 Scene group，已无引用上下文可继承，故在此把 contextStroke 解析成 path 的实际描边色
- *   （contextStroke 字符串单位 = path 的已解析 stroke）。
- */
-const resolveMarkerContextFill = (value: MarkerFill, contextStroke: string): string =>
-  typeof value === 'string' ? value : contextStroke;
-
-const markerFillUsesContextStroke = (value: MarkerFill | undefined): boolean => typeof value === 'object';
-
-const markerPrimUsesContextStroke = (prim: MarkerPrimitive): boolean => {
-  if (prim.type === 'group') return prim.children.some(markerPrimUsesContextStroke);
-  return markerFillUsesContextStroke(prim.fill) || markerFillUsesContextStroke(prim.stroke);
-};
-
-const assertArrowCanInheritStroke = (
-  stroke: PaintValue | undefined,
-  arrows: { arrowStart?: ResolvedArrowEndSpec; arrowEnd?: ResolvedArrowEndSpec },
-): void => {
-  if (stroke === undefined || typeof stroke === 'string') return;
-  const usesContextStroke =
-    (arrows.arrowStart?.marker.some(markerPrimUsesContextStroke) ?? false) ||
-    (arrows.arrowEnd?.marker.some(markerPrimUsesContextStroke) ?? false);
-  if (!usesContextStroke) return;
-  throw new Error(
-    'Path arrow cannot inherit a PaintSpec stroke; set arrowDetail.color or endpoint color to an explicit CSS color.',
-  );
-};
-
-const markerContextStroke = (stroke: PaintValue | undefined): string => {
-  if (stroke === undefined) return 'currentColor';
-  if (typeof stroke === 'string') return stroke;
-  throw new Error('Path mark cannot inherit a PaintSpec stroke; set the mark or arrow color to an explicit CSS color.');
-};
-
-/** marker 图元 → Scene 图元：结构同构，仅把 fill/stroke 的 contextStroke 解析成具体描边色（递归 group） */
-const markerPrimToScene = (prim: MarkerPrimitive, contextStroke: string): ScenePrimitive => {
-  if (prim.type === 'group') {
-    return { ...prim, children: prim.children.map(c => markerPrimToScene(c, contextStroke)) };
-  }
-  // marker 窄子集 ⊂ Scene 图元（见上）；解析 contextStroke 后即合法 Scene 图元，cast 作用域仅此一处
-  return {
-    ...prim,
-    ...(prim.fill !== undefined && { fill: resolveMarkerContextFill(prim.fill, contextStroke) }),
-    ...(prim.stroke !== undefined && { stroke: resolveMarkerContextFill(prim.stroke, contextStroke) }),
-  };
-};
-
-const buildMarkMarkerGroup = (
-  spec: ResolvedArrowEndSpec,
-  sample: SegmentSample,
-  strokeWidth: number,
-  round: (n: number) => number,
-  contextStroke: string,
-): GroupPrim => {
-  const angleDeg = (Math.atan2(sample.tangent[1], sample.tangent[0]) * 180) / Math.PI;
-  const sx = (spec.markerWidth * strokeWidth) / spec.baseSize;
-  const sy = (spec.markerHeight * strokeWidth) / spec.baseSize;
-  const refY = spec.baseSize / 2;
-  const transforms: Array<Transform> = [
-    { kind: 'translate', x: round(sample.point[0]), y: round(sample.point[1]) },
-    { kind: 'rotate', degrees: round(angleDeg) },
-    { kind: 'scale', x: round(sx), y: round(sy) },
-    { kind: 'translate', x: round(-spec.refX), y: round(-refY) },
-  ];
-  return { type: 'group', transforms, children: spec.marker.map(p => markerPrimToScene(p, contextStroke)) };
-};
 
 /**
  * IR Path → PathPrim
@@ -611,37 +386,6 @@ export const emitPathPrimitive = (
     }
 
     if (step.kind === 'generator') {
-      const generators = warnHook.effectivePathGenerators ?? EMPTY_PATH_GENERATORS;
-      const def = providerDefinitionOf(generators, step.name, {
-        capability: 'path generator',
-        optionName: 'pathGenerators',
-      });
-
-      // 外部校验：generator 自带 paramsSchema 先 parse step.params
-      const parsed = def.paramsSchema.parse(step.params);
-      // 第二道护栏：即便 paramsSchema 宽松（z.any() 等），对 parse 结果再跑 JsonObjectSchema，
-      // 拦下非 JSON 输出（function / undefined 等），守 IR 可序列化
-      JsonObjectSchema.parse(parsed);
-      const paramsObj = parsed as Record<string, unknown>;
-
-      // targetParams（仅顶层 key）：取 params[key] 当 Target，resolve 成世界坐标喂 resolvedTargets；
-      // 含 '.' 的嵌套路径不解析（仅顶层约定），resolvedTargets 不含该 key
-      const resolvedTargets: Record<string, IRPosition> = {};
-      for (const key of def.targetParams ?? []) {
-        if (key.includes('.')) continue;
-        const raw = paramsObj[key];
-        if (raw === undefined) continue;
-        // 值须是 Target 形态（node id 串 / [x,y] / target 对象）；number / boolean / null 等非 Target →
-        // 清晰错（否则 refPointOfTarget 内的 `'id' in raw` 对原始值抛裸 TypeError，LLM 无从自修）
-        if (raw === null || (typeof raw !== 'string' && typeof raw !== 'object')) {
-          throw new Error(
-            `path generator '${step.name}' targetParams key '${key}' must be a target (node id, coordinate, or target object); got ${raw === null ? 'null' : typeof raw}.`,
-          );
-        }
-        const resolved = refPointOfTarget(raw as IRTarget, nameStack, scopeChain);
-        if (resolved) resolvedTargets[key] = resolved;
-      }
-
       // 起点：当前游标（前一绘制段终点 / arc 等留下的 penOverride）；首段时回退最近 hasTo step 的 anchor。
       // 经闭包 readCursor 读 lastEnd/penOverride（循环外声明的宽类型 let，不被分支位置 narrow 成 null）
       const prevGen = findPrev();
@@ -649,28 +393,14 @@ export const emitPathPrimitive = (
       // 终点：step.to resolve 后的世界坐标（无 to 则 undefined）
       const resolvedTo = step.to !== undefined ? refPointOfTarget(step.to, nameStack, scopeChain) : null;
       const toGen = resolvedTo ?? undefined;
-
-      let produced: unknown;
-      try {
-        produced = def.generate({
-          from: fromGen,
-          ...(toGen !== undefined ? { to: toGen } : {}),
-          params: paramsObj,
-          resolvedTargets,
-          round,
-        });
-      } catch (e) {
-        throw new Error(`path generator '${step.name}' threw: ${e instanceof Error ? e.message : String(e)}`, {
-          cause: e,
-        });
-      }
-      if (!Array.isArray(produced)) {
-        throw new Error(
-          `path generator '${step.name}' must return an array of path commands; got ${produced === null ? 'null' : typeof produced}.`,
-        );
-      }
-      for (const cmd of produced) assertValidGeneratedCommand(step.name, cmd);
-      const generated = produced as Array<PathCommand>;
+      const generated = resolveGeneratorCommands({
+        step,
+        generators: warnHook.effectivePathGenerators,
+        from: fromGen,
+        ...(toGen !== undefined ? { to: toGen } : {}),
+        round,
+        resolveTargetParam: value => refPointOfTarget(value as IRTarget, nameStack, scopeChain) ?? undefined,
+      });
 
       // 段起点：generator 首命令非 move 时补一个 move（与 lastEnd 相同则复用游标）
       startSegment(fromGen);
@@ -1190,11 +920,7 @@ export const emitPathPrimitive = (
       // animations 与 meta 同款落点：落最外层 GroupPrim
       if (path.animations !== undefined) group.animations = path.animations;
       // layout 据变换后 bbox：把当前 points 经同一变换链投影后回收（应用顺序与 GroupPrim 渲染一致）
-      const transformedPoints = points.map(p => applyTransformChain(p, transforms));
-      // scale × 坐标可能把 finite 输入放大溢出成 Infinity；非 finite 会污染 layout（round-trip 失真）
-      if (!transformedPoints.every(isFinitePoint)) {
-        throw new Error('Path rotate / scale produced a non-finite coordinate (scale too large); use a smaller scale.');
-      }
+      const transformedPoints = projectPathTransformPoints(points, transforms);
       return { primitives: [group], points: transformedPoints };
     }
   }

@@ -25,4 +25,11 @@ describe('compile source structure', () => {
     expect(text).not.toContain('export const emitPathPrimitive =');
     expect(text).not.toContain('const buildPathTransforms =');
   });
+
+  it('path emit module delegates focused helpers', () => {
+    const text = source('src/compile/path/emit.ts');
+    expect(text).not.toContain('const buildMarkMarkerGroup =');
+    expect(text).not.toContain('const buildPathTransforms =');
+    expect(text).not.toContain('const assertValidGeneratedCommand =');
+  });
 });
