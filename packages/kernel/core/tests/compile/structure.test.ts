@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import type { NodeLabelLayout, NodeLayout, TexLoweringContext } from '../../src/compile/node';
+import type { RibbonEmitOptions } from '../../src/compile/path/ribbon';
 
 import * as compile from '../../src/compile';
 import * as nodeCompile from '../../src/compile/node';
@@ -66,5 +67,14 @@ describe('compile source structure', () => {
     const text = source('src/compile/compile.ts');
     expect(text).not.toContain('const processChildren =');
     expect(text).not.toContain('const resolvePendingPaths =');
+  });
+
+  it('ribbon compile implementation is directory based', () => {
+    expect(() => source('src/compile/path/ribbon.ts')).toThrow();
+    expect(source('src/compile/path/ribbon/index.ts')).toContain("export { emitRibbonPrimitive } from './emit';");
+
+    const options: RibbonEmitOptions = {};
+
+    expect(options).toEqual({});
   });
 });
