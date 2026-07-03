@@ -7,7 +7,7 @@ import type { Rect } from '../../shared/geometry';
 
 import { defineShape } from '../../contract';
 import { localToWorld, worldToLocal } from '../../shared/geometry';
-import { normalizeAngularRange } from './angle';
+import { normalizeAngleRange } from './angle';
 
 const RAD_TO_DEG = 180 / Math.PI;
 
@@ -36,7 +36,7 @@ type ArcGeometry = {
 /** arc 的派生几何：圆心局部系 AABB + 圆心相对 AABB 中心偏移 */
 const computeArcGeometry = (params: ArcParams): ArcGeometry => {
   const { radius } = params;
-  const range = normalizeAngularRange(params.startAngle, params.endAngle);
+  const range = normalizeAngleRange(params.startAngle, params.endAngle);
   const center: Position = [0, 0];
   // close=true（弓形）含弦 / 区域，AABB 由弧 bbox 点决定；圆心本身不强制进框（开放弧 / 弓形都不含圆心）
   const points = arcBoundingPoints(center, radius, range.start, range.end);

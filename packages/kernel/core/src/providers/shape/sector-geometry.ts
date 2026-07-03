@@ -1,9 +1,9 @@
 import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
 
 import type { Position } from '../../shared/geometry';
-import type { AngularRange } from './angle';
+import type { AngleRange } from './angle';
 
-import { normalizeAngularRange } from './angle';
+import { normalizeAngleRange } from './angle';
 
 const DEG_TO_RAD = Math.PI / 180;
 
@@ -15,7 +15,7 @@ const DEG_TO_RAD = Math.PI / 180;
  */
 export type SectorGeometry = {
   /** 规范化起止角与中分角。 */
-  range: AngularRange;
+  range: AngleRange;
   /** 含圆心 + 内外弧的精确 AABB 半轴。 */
   aabbHalfAxes: { halfWidth: number; halfHeight: number };
   /** 圆心(apex)相对 AABB 中心的偏移。 */
@@ -41,7 +41,7 @@ type SectorGeometryInput = {
  */
 export const sectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
   const { innerRadius, outerRadius } = params;
-  const range = normalizeAngularRange(params.startAngle, params.endAngle);
+  const range = normalizeAngleRange(params.startAngle, params.endAngle);
   const apex: Position = [0, 0];
 
   const candidates: Array<Position> = innerRadius === 0 ? [apex] : [];
