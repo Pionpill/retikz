@@ -1,4 +1,6 @@
-import type { Position, SharedPolarPosition } from '../position';
+import type { Position } from '@retikz/math';
+
+import type { SharedPolarPosition } from '../position';
 
 import { DEG_TO_RAD, RAD_TO_DEG } from './angle';
 

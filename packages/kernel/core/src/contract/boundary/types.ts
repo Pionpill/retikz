@@ -1,7 +1,8 @@
+import type { Position } from '@retikz/math';
 import type { z } from 'zod';
 
 import type { IRJsonObject } from '../../schemas';
-import type { AnchorValue, Position, Rect } from '../../shared';
+import type { AnchorValue, Rect } from '../../shared';
 
 /**
  * 连接面命名 anchor 的名字。

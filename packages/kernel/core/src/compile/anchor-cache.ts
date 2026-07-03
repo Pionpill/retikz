@@ -1,6 +1,7 @@
+import type { Position } from '@retikz/math';
+
 import type { IRBoundary, IRPosition } from '../schemas';
 import type { SideValue } from '../shared';
-import type { Position } from '../shared/geometry';
 import type { NodeLayout } from './node';
 
 import { isAnchor } from '../shared';

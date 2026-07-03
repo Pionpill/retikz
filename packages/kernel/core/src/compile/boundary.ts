@@ -1,13 +1,14 @@
-﻿import type { BoundaryAnchorName, BoundaryDefinition } from '../contract';
+﻿import type { Position } from '@retikz/math';
+
+import type { BoundaryAnchorName, BoundaryDefinition } from '../contract';
 import type { ShapeDefinition } from '../contract';
 import type { ProviderCollection } from '../providers/registry';
 import type { IRBoundary } from '../schemas';
 import type { IRJsonObject } from '../schemas';
-import type { Position } from '../shared/geometry';
 import type { Rect } from '../shared/geometry';
 
 import { resolveBoundaryRegistry } from '../providers/boundary';
-import { rectangle } from '../providers/shape';
+import { isDirectionalAnchor, rect as rectOps } from '../shared';
 
 /** 保留字：连接面 = 节点自身视觉形状 */
 const SELF = 'shape';
@@ -66,8 +67,7 @@ export const resolveBoundary = (
 export const fallbackBoundaryAnchor = (
   rect: Rect,
   name: string,
-  params: IRJsonObject,
-): ReturnType<ShapeDefinition['anchor']> => rectangle.anchor(rect, name, params);
+): ReturnType<ShapeDefinition['anchor']> => (isDirectionalAnchor(name) ? rectOps.anchor(rect, name) : undefined);
 
 /** 连接面的稳定字符串判别（anchor cache key 用） */
 export const boundaryKey = (boundary: IRBoundary | undefined): string => {

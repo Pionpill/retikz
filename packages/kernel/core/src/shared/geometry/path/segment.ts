@@ -1,4 +1,4 @@
-import type { Position } from '../point';
+import type { Position } from '@retikz/math';
 
 import { DEG_TO_RAD } from '../angle';
 import { point as pointOps } from '../point';

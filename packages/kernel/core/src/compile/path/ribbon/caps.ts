@@ -1,5 +1,6 @@
+import type { Vector2 } from '@retikz/math';
+
 import type { IRPosition, IRRibbonArcCap, IRRibbonCap, RibbonAlignmentValue } from '../../../schemas';
-import type { Vector2 } from '../../../shared/geometry';
 import type { NameStack } from '../../name-stack';
 
 import { resolvePosition } from '../../position';

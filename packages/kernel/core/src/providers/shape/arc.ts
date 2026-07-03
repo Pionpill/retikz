@@ -1,8 +1,10 @@
+import type { Position } from '@retikz/math';
+
 import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
 import { z } from 'zod';
 
 import type { PathCommand, ScenePrimitive, ShapeAnchorName } from '../../contract';
-import type { Position, Rect } from '../../shared';
+import type { Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
 import { localToWorld, normalizeAngleRange, RAD_TO_DEG, worldToLocal } from '../../shared';

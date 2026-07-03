@@ -1,6 +1,8 @@
+import type { Position } from '@retikz/math';
+
 import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
 
-import type { AngleRange, Position } from '../../shared';
+import type { AngleRange } from '../../shared';
 
 import { DEG_TO_RAD, normalizeAngleRange } from '../../shared';
 

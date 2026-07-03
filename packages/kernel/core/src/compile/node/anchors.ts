@@ -1,5 +1,6 @@
+import type { Position } from '@retikz/math';
+
 import type { IRBoundary, IRJsonObject } from '../../schemas';
-import type { Position } from '../../shared/geometry';
 import type { Rect } from '../../shared/geometry';
 import type { NodeLayout } from './types';
 
@@ -92,7 +93,7 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
       layout.shapes,
       layout.boundaries ?? resolveBoundaryRegistry(),
     );
-    const p = def.anchor?.(rect, name, params) ?? fallbackBoundaryAnchor(rect, name, params);
+    const p = def.anchor?.(rect, name, params) ?? fallbackBoundaryAnchor(rect, name);
     if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
     return p;
   }

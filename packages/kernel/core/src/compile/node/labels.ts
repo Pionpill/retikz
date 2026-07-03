@@ -1,7 +1,8 @@
+import type { Position } from '@retikz/math';
+
 import { arcEndPoint } from '@retikz/math';
 
 import type { IRNodeLabel, IRNodeLabelBoundaryPosition } from '../../schemas';
-import type { Position } from '../../shared/geometry';
 import type { NodeLabelLayout, NodeLayout } from './types';
 
 import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from '../../shared/geometry';

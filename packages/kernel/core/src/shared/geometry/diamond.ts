@@ -1,5 +1,6 @@
+import type { Position } from '@retikz/math';
+
 import type { AnchorValue, SideValue } from '../anchor';
-import type { Position } from './point';
 
 import { Anchor, Side } from '../anchor';
 import { polylineViaVertex } from './edge';

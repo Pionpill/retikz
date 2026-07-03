@@ -1,7 +1,9 @@
+import type { Position } from '@retikz/math';
+
 import { z } from 'zod';
 
 import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
-import type { ContourSegment, FilletSolution, Position, Rect } from '../../shared';
+import type { ContourSegment, FilletSolution, Rect } from '../../shared';
 import type { SectorGeometry } from './sector-geometry';
 
 import { defineShape } from '../../contract';

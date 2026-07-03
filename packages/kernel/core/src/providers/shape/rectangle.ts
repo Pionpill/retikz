@@ -1,7 +1,9 @@
+import type { Position } from '@retikz/math';
+
 import { z } from 'zod';
 
 import type { ScenePrimitive } from '../../contract';
-import type { ContourSegment, Position, Rect } from '../../shared';
+import type { ContourSegment, Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
 import { BuiltinShape } from '../../schemas';

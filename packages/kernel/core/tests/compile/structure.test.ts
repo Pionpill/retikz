@@ -69,6 +69,11 @@ describe('compile source structure', () => {
     expect(text).not.toContain('const resolvePendingPaths =');
   });
 
+  it('boundary compile does not import concrete shape providers', () => {
+    const text = source('src/compile/boundary.ts');
+    expect(text).not.toContain("from '../providers/shape'");
+  });
+
   it('ribbon compile implementation is directory based', () => {
     expect(() => source('src/compile/path/ribbon.ts')).toThrow();
     expect(source('src/compile/path/ribbon/index.ts')).toContain("export { emitRibbonPrimitive } from './emit';");
