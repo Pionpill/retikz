@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { PlotSpecSchema } from '../../src/schemas';
 import { AxisGuideSchema, GuideSchema, LegendGuideSchema } from '../../src/schemas/guide';
 
 describe('GuideSchema (ADR-01 alpha.2)', () => {
@@ -79,6 +80,47 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
   it('axis_line_dash_offset_rejects_non_finite_values', () => {
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', line: { dashOffset: Number.NaN } })).toThrow();
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', line: { dashOffset: Number.POSITIVE_INFINITY } })).toThrow();
+  });
+
+  it('axis_line_accepts_advanced_geometry', () => {
+    const guide = {
+      type: 'axis',
+      dimension: 'x',
+      placement: { kind: 'origin', origin: 0, tickSide: 'bottom', offset: 2 },
+      line: {
+        lineCap: 'round',
+        extent: { from: -5, to: 5 },
+        arrow: {
+          negative: true,
+          positive: { shape: 'stealth', length: 8, width: 6 },
+        },
+      },
+    };
+    expect(AxisGuideSchema.parse(guide)).toEqual(guide);
+  });
+
+  it('axis_line_empty_arrow_object_rejected', () => {
+    expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', line: { arrow: {} } })).toThrow();
+    expect(() =>
+      AxisGuideSchema.parse({ type: 'axis', dimension: 'x', line: { arrow: { negative: false, positive: false } } }),
+    ).toThrow();
+  });
+
+  it('theme_axis_line_rejects_structural_geometry', () => {
+    const spec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { values: [{ x: 1, y: 2 }] },
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      theme: {
+        axis: {
+          line: {
+            arrow: { positive: true },
+          },
+        },
+      },
+    };
+    expect(() => PlotSpecSchema.parse(spec)).toThrow();
   });
 });
 

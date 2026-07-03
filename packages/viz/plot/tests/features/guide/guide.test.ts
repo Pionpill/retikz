@@ -173,9 +173,123 @@ describe('lowerGuide (ADR-04)', () => {
     expect(gridPath.dashOffset).toBe(3);
   });
 
+  it('axis_line_positive_arrow_and_line_cap_lower_to_path', () => {
+    const { axisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        line: {
+          lineCap: 'round',
+          arrow: { positive: { shape: 'stealth', length: 8 } },
+        },
+      },
+      ctx,
+    );
+    const axisPath = (axisLayer as IRScope).children[0] as IRPath;
+
+    expect(axisPath.lineCap).toBe('round');
+    expect(axisPath.marks).toEqual([{ pos: 1, mark: { kind: 'arrow', shape: 'stealth', length: 8 } }]);
+  });
+
+  it('axis_line_negative_arrow_and_extent_lower_to_path', () => {
+    const { axisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        line: {
+          extent: { from: 1, to: 2 },
+          arrow: { negative: true },
+        },
+      },
+      ctx,
+    );
+    const axisPath = (axisLayer as IRScope).children[0] as IRPath;
+
+    expect(axisPath.children[0]).toEqual({ type: 'step', kind: 'move', to: [80, 260] });
+    expect(axisPath.children[1]).toEqual({ type: 'step', kind: 'line', to: [120, 260] });
+    expect(axisPath.marks).toEqual([{ pos: 0, mark: { kind: 'arrow' } }]);
+  });
+
+  it('y_axis_line_positive_arrow_and_extent_follow_axis_direction', () => {
+    const { axisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'y',
+        line: {
+          extent: { from: 9, to: 11 },
+          arrow: { positive: { shape: 'stealth', length: 8 } },
+        },
+      },
+      ctx,
+    );
+    const axisPath = (axisLayer as IRScope).children[0] as IRPath;
+
+    expect(axisPath.children[0]).toEqual({ type: 'step', kind: 'move', to: [40, 35] });
+    expect(axisPath.children[1]).toEqual({ type: 'step', kind: 'line', to: [40, -15] });
+    expect(axisPath.marks).toEqual([{ pos: 1, mark: { kind: 'arrow', shape: 'stealth', length: 8 } }]);
+  });
+
+  it('non_cartesian_axis_rejects_structural_line_geometry', () => {
+    expect(() =>
+      lowerGuide({ type: 'axis', dimension: 'x', line: { arrow: { positive: true } } }, { ...ctx, ternaryVertices: [[0, 0], [1, 0], [0, 1]] }),
+    ).toThrow(/axis line/);
+  });
+
+  it('origin_placement_crosses_projected_value_and_respects_tick_side', () => {
+    const { axisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        placement: { kind: 'origin', origin: 9, tickSide: 'top', offset: 2 },
+      },
+      ctx,
+    );
+    const axisPath = (axisLayer as IRScope).children[0] as IRPath;
+    const tickPath = (axisLayer as IRScope).children[1] as IRPath;
+
+    expect(axisPath.children[0]).toEqual({ type: 'step', kind: 'move', to: [40, 33] });
+    expect(axisPath.children[1]).toEqual({ type: 'step', kind: 'line', to: [440, 33] });
+    expect(tickPath.children[1]).toEqual({ type: 'step', kind: 'line', to: [40, 27] });
+  });
+
   it('axis_id_to_scope_id', () => {
     const layer = lowerGuide({ type: 'axis', dimension: 'x', id: 'xAxis' }, ctx).axisLayer as IRScope;
     expect(layer.id).toBe('xAxis');
+  });
+
+  it('origin_placement_rejects_invalid_tick_side_for_dimension', () => {
+    expect(() =>
+      lowerGuide({ type: 'axis', dimension: 'x', placement: { kind: 'origin', tickSide: 'left' } }, ctx),
+    ).toThrow(/tickSide/);
+  });
+
+  it('origin_axis_gap_offsets_are_grouped_by_dimension_and_default_tick_side', () => {
+    const spec = guidedSpec([
+      { type: 'axis', dimension: 'x', placement: { kind: 'origin', origin: 0 } },
+      { type: 'axis', dimension: 'y', placement: { kind: 'origin', origin: 0 } },
+    ]);
+
+    expect(() =>
+      expandOf({
+        ...spec,
+        composition: {
+          defaultView: 'root',
+          views: [{ id: 'root', coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' } }],
+          spacing: { axisGap: 12 },
+        },
+      }),
+    ).not.toThrow();
+  });
+
+  it('origin_axis_duplicate_detection_normalizes_default_tick_side', () => {
+    expect(() =>
+      expandOf(
+        guidedSpec([
+          { type: 'axis', dimension: 'x', placement: { kind: 'origin', origin: 0 } },
+          { type: 'axis', dimension: 'x', placement: { kind: 'origin', origin: 0, tickSide: 'bottom' } },
+        ]),
+      ),
+    ).toThrow(/duplicate axis/);
   });
 });
 

@@ -18,9 +18,15 @@ The smallest structure is to list the x / y axes you want inside `<Plot>`. In th
 
 ### Style Slots
 
-`line` controls the axis line; `ticks` controls the tick source, length, and tick-line style; `tickLabels` controls whether tick text renders and how it is styled; `title` is the axis title and accepts a string or structured text; `grid` can be a boolean or a line-style object.
+`line` controls the axis line; `ticks` controls the tick source, length, and tick-line style; `tickLabels` controls whether tick text renders and how it is styled; `title` is the axis title and accepts a string or structured text; `grid` can be a boolean or a line-style object. `dashOffset` pairs with `dashPattern` when you need to shift the dash phase.
 
 <ComponentPreview name="axis-style-slots" sourceFiles={['axis-style-slots.data.ts']} />
+
+### Origin Axes
+
+Under cartesian coordinates, an axis can cross a data value from the other dimension. `placement.kind="origin"` only changes where the axis baseline sits; it does not expand the domain automatically. Configure `domain` or `domainPadding` when the origin needs to be visible. `line.arrow` uses `positive` / `negative` for axis-direction endpoints, and `line.extent` controls the data span covered by the baseline.
+
+<ComponentPreview name="axis-math-origin" sourceFiles={['axis-math-origin.data.ts']} />
 
 ### Polar axes
 
@@ -38,7 +44,8 @@ Under polar, use `dimension="x"` (angular tick labels) and `dimension="y"` (radi
 | ------------ | -------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dimension`  | `'x' \| 'y' \| 'z'`                                | —                  | Which dimension to decorate: cartesian x / y, polar x / y, ternary x / y / z (triangle edges); must match the coordinate's valid set or it errors |
 | `scale`      | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt' \| 'symlog' \| 'radial'` | auto-derived       | Positional scale shortcut; equivalent to `<Scale dimension="..." type="..." />` for the same dimension, and only applies to x / y / z |
-| `line`       | `false \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset? }` | default line | Axis-line style; `false` hides the line without hiding ticks, labels, or grid |
+| `placement`  | `{ kind:'auto' } \| { kind:'side', side, offset? } \| { kind:'edge', edge, offset? } \| { kind:'origin', origin?, tickSide?, offset? }` | inferred | Axis placement; `origin` only supports cartesian axes. For an x axis, `origin` is a y value; for a y axis, it is an x value |
+| `line`       | `false \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset?, lineCap?, extent?, arrow? }` | default line | Axis-line style and endpoint geometry; `extent` controls the data span, and `arrow.positive/negative` controls axis-direction arrows; `extent` / `arrow` currently only support cartesian axes |
 | `ticks`      | `{ count?, values?, length?, line? }`              | default ticks      | Target tick count or explicit tick values; `line` styles tick lines, and `line: false` hides them |
 | `tickLabels` | `false \| { format?, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | `true` | Tick-label config; `false` hides labels; `format` accepts d3-format / d3-time-format style strings |
 | `title`      | `string \| { text, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | — | Axis title; `text` reuses the core text-block shape, so multiline or run-based text is allowed |

@@ -25,6 +25,8 @@ export const AxisPlacementKind = {
   Side: 'side',
   /** 放在坐标系原生 edge 上，供 ternary / custom coordinate 使用。 */
   Edge: 'edge',
+  /** 穿过另一维指定数据值，仅 cartesian axis 支持。 */
+  Origin: 'origin',
 } as const;
 
 /** 坐标轴摆放方式。 */

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { AxisLineSchema, GuideLineStyleSchema, GuideTextStyleSchema, LegendGuideStyleSchema } from '../guide';
+import { AxisLineStyleSchema, GuideLineStyleSchema, GuideTextStyleSchema, LegendGuideStyleSchema } from '../guide';
 
 const ThemeAxisTicksSchema = z
   .object({
@@ -40,7 +40,7 @@ const ThemeAxisTitleSchema = z
 export const PlotAxisThemeSchema = z
   .object({
     line: z
-      .union([z.literal(false), AxisLineSchema])
+      .union([z.literal(false), AxisLineStyleSchema])
       .optional()
       .describe('Axis baseline default style; false hides baselines by default'),
     ticks: ThemeAxisTicksSchema.optional().describe('Axis tick mark default style'),

@@ -16,6 +16,7 @@ import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionVa
 import type { Rect } from '../../shared';
 import type { ProvenanceContext } from '../provenance';
 
+import { defaultOriginAxisTickSideOf } from '../../providers';
 import { resolveGuideTicks } from '../../providers/scale/shared';
 import { AxisCardinalSide, AxisPlacementKind } from '../../schemas';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, estimateLabelWidth } from '../../shared';
@@ -27,7 +28,7 @@ const DEG_TO_RAD = Math.PI / 180;
 /** 一段直线（首尾两点） */
 type Segment = [readonly [number, number], readonly [number, number]];
 
-type GuidePathStyle = Partial<Pick<IRPath, 'stroke' | 'strokeWidth' | 'drawOpacity' | 'dashPattern' | 'dashOffset'>>;
+type GuidePathStyle = Partial<Pick<IRPath, 'stroke' | 'strokeWidth' | 'drawOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>>;
 type GuideTextStyle = Partial<Pick<IRNode, 'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'>>;
 
 const lineStyleProps = (style: GuidePathStyle | undefined): GuidePathStyle => ({
@@ -36,6 +37,7 @@ const lineStyleProps = (style: GuidePathStyle | undefined): GuidePathStyle => ({
   ...(style?.drawOpacity !== undefined ? { drawOpacity: style.drawOpacity } : {}),
   ...(style?.dashPattern !== undefined ? { dashPattern: style.dashPattern } : {}),
   ...(style?.dashOffset !== undefined ? { dashOffset: style.dashOffset } : {}),
+  ...(style?.lineCap !== undefined ? { lineCap: style.lineCap } : {}),
 });
 
 const textStyleProps = (style: GuideTextStyle | undefined): GuideTextStyle => ({
@@ -50,6 +52,41 @@ const textStyleProps = (style: GuideTextStyle | undefined): GuideTextStyle => ({
 
 const axisLineStyleOf = (guide: AxisGuide): GuidePathStyle | false =>
   guide.line === false ? false : lineStyleProps(guide.line);
+
+type AxisLineToken = Exclude<NonNullable<AxisGuide['line']>, false>;
+
+const axisLineTokenOf = (guide: AxisGuide): AxisLineToken | undefined =>
+  guide.line !== undefined && guide.line !== false ? guide.line : undefined;
+
+const hasCartesianOnlyAxisLineGeometry = (guide: AxisGuide): boolean => {
+  const line = axisLineTokenOf(guide);
+  if (line === undefined) return false;
+  return line.arrow !== undefined || (line.extent !== undefined && line.extent !== 'plotArea');
+};
+
+const assertNoCartesianOnlyAxisLineGeometry = (guide: AxisGuide): void => {
+  if (hasCartesianOnlyAxisLineGeometry(guide)) {
+    throw new Error('lowerPlots: axis line arrow and data extent are only supported for cartesian axes');
+  }
+};
+
+const axisArrowMarkOf = (
+  arrow: NonNullable<AxisLineToken['arrow']>['negative'] | NonNullable<AxisLineToken['arrow']>['positive'],
+): NonNullable<IRPath['marks']>[number] | null => {
+  if (arrow === undefined || arrow === false) return null;
+  return { pos: 0, mark: arrow === true ? { kind: 'arrow' } : { kind: 'arrow', ...arrow } };
+};
+
+const axisLineMarksOf = (guide: AxisGuide): IRPath['marks'] | undefined => {
+  const arrow = axisLineTokenOf(guide)?.arrow;
+  if (arrow === undefined) return undefined;
+  const negative = axisArrowMarkOf(arrow.negative);
+  const positive = axisArrowMarkOf(arrow.positive);
+  const marks: NonNullable<IRPath['marks']> = [];
+  if (negative !== null) marks.push(negative);
+  if (positive !== null) marks.push({ ...positive, pos: 1 });
+  return marks.length > 0 ? marks : undefined;
+};
 
 const axisTickLengthOf = (guide: AxisGuide): number => guide.ticks?.length ?? AXIS_TICK_LENGTH;
 
@@ -130,13 +167,26 @@ const cartesianAxisSideOf = (guide: AxisGuide, isX: boolean): CartesianAxisSide 
   if (placement === undefined || placement.kind === AxisPlacementKind.Auto) {
     return isX ? AxisCardinalSide.Bottom : AxisCardinalSide.Left;
   }
-  const side = placement.kind === AxisPlacementKind.Edge ? cartesianAxisSideFromEdge(placement.edge) : placement.side;
+  const side =
+    placement.kind === AxisPlacementKind.Edge
+      ? cartesianAxisSideFromEdge(placement.edge)
+      : placement.kind === AxisPlacementKind.Origin
+        ? (placement.tickSide ?? defaultOriginAxisTickSideOf(isX ? 'x' : 'y'))
+        : placement.side;
+  if (placement.kind === AxisPlacementKind.Origin) {
+    if (isX && side !== AxisCardinalSide.Top && side !== AxisCardinalSide.Bottom) {
+      throw new Error(`lowerPlots: cartesian x origin axis tickSide must be top or bottom (got "${side}")`);
+    }
+    if (!isX && side !== AxisCardinalSide.Left && side !== AxisCardinalSide.Right) {
+      throw new Error(`lowerPlots: cartesian y origin axis tickSide must be left or right (got "${side}")`);
+    }
+  }
   assertCartesianAxisSideCompatible(side, isX);
   return side;
 };
 
 const axisPlacementOffsetOf = (guide: AxisGuide): number =>
-  guide.placement?.kind === AxisPlacementKind.Side || guide.placement?.kind === AxisPlacementKind.Edge
+  guide.placement?.kind === AxisPlacementKind.Side || guide.placement?.kind === AxisPlacementKind.Edge || guide.placement?.kind === AxisPlacementKind.Origin
     ? (guide.placement.offset ?? 0)
     : 0;
 
@@ -191,20 +241,49 @@ const lowerCartesianGuide = (
   const project = isX ? ctx.projectX : ctx.projectY;
   const side = cartesianAxisSideOf(guide, isX);
   const offset = axisPlacementOffsetOf(guide);
-  const axisY = side === AxisCardinalSide.Top ? top - offset : bottom + offset;
-  const axisX = side === AxisCardinalSide.Right ? right + offset : left - offset;
+  const originPlacement = guide.placement?.kind === AxisPlacementKind.Origin ? guide.placement : undefined;
+  const originValue = originPlacement?.origin ?? 0;
+  const axisY =
+    originPlacement !== undefined && isX
+      ? ctx.projectY.coordinate(originValue) + (side === AxisCardinalSide.Top ? -offset : offset)
+      : side === AxisCardinalSide.Top
+        ? top - offset
+        : bottom + offset;
+  const axisX =
+    originPlacement !== undefined && !isX
+      ? ctx.projectX.coordinate(originValue) + (side === AxisCardinalSide.Left ? -offset : offset)
+      : side === AxisCardinalSide.Right
+        ? right + offset
+        : left - offset;
   const tickDirection = side === AxisCardinalSide.Top || side === AxisCardinalSide.Left ? -1 : 1;
+  const axisLineToken = axisLineTokenOf(guide);
 
   // ---- 轴层 ----
-  const axisLine: Segment = isX
-    ? [
-        [left, axisY],
-        [right, axisY],
-      ]
-    : [
-        [axisX, top],
-        [axisX, bottom],
-      ];
+  const axisLine: Segment = (() => {
+    const extent = axisLineToken?.extent;
+    if (extent !== undefined && extent !== 'plotArea') {
+      const from = project.coordinate(extent.from);
+      const to = project.coordinate(extent.to);
+      return isX
+        ? [
+            [from, axisY],
+            [to, axisY],
+          ]
+        : [
+            [axisX, from],
+            [axisX, to],
+          ];
+    }
+    return isX
+      ? [
+          [left, axisY],
+          [right, axisY],
+        ]
+      : [
+          [axisX, bottom],
+          [axisX, top],
+        ];
+  })();
   const tickSegments: Array<Segment> = ticks.values.map(value => {
     const p = project.coordinate(value);
     return isX
@@ -219,7 +298,14 @@ const lowerCartesianGuide = (
   });
   const axisLineStyle = axisLineStyleOf(guide);
   const tickLineStyle = axisTickLineStyleOf(guide);
-  const axisLinePath = axisLineStyle === false ? null : segmentsToPath([axisLine], axisLineStyle);
+  const axisLinePath =
+    axisLineStyle === false
+      ? null
+      : (() => {
+          const path = segmentsToPath([axisLine], axisLineStyle);
+          const marks = axisLineMarksOf(guide);
+          return path !== null && marks !== undefined ? { ...path, marks } : path;
+        })();
   const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
   const labels: Array<IRNode> = showLabels
     ? ticks.values.map((value, index): IRNode => {
@@ -642,6 +728,10 @@ export const lowerCustomAxis = (
   fontSize: number,
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
+  assertNoCartesianOnlyAxisLineGeometry(guide);
+  if (guide.placement?.kind === AxisPlacementKind.Origin) {
+    throw new Error('lowerPlots: origin axis placement is only supported for cartesian axes');
+  }
   const scale = frame.roleScales?.[guide.dimension];
   if (!scale) return { gridLayer: null, axisLayer: null };
   const ticks = resolveGuideTicks(scale, guide.ticks, guide.tickLabels || undefined);
@@ -753,6 +843,12 @@ export const lowerCustomAxis = (
  *   下沉目标统一是 core Node（标签）+ Path（直段 / arc step）。id → 轴层 scope.id（anchor 预留）。
  */
 export const lowerGuide = (guide: AxisGuide, ctx: GuideContext, context?: ProvenanceContext): LoweredGuide => {
+  if (ctx.ternaryVertices || ctx.frame) {
+    assertNoCartesianOnlyAxisLineGeometry(guide);
+  }
+  if (guide.placement?.kind === AxisPlacementKind.Origin && (ctx.ternaryVertices || ctx.frame)) {
+    throw new Error('lowerPlots: origin axis placement is only supported for cartesian axes');
+  }
   if (ctx.ternaryVertices) {
     return lowerTernaryGuide(guide, ctx, ctx.ternaryVertices, context);
   }

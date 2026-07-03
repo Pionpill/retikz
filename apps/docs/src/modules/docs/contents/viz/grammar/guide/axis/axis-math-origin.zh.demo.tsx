@@ -1,0 +1,30 @@
+import type { FC } from 'react';
+
+import { Axis, PathMark, Plot, Scale } from '@retikz/plot-react';
+
+import { mathOriginRows } from './axis-math-origin.data';
+
+/** 原点坐标轴：x / y 轴穿过 0，并在正方向加箭头 */
+const Demo: FC = () => (
+  <Plot data={mathOriginRows} width={360} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Scale dimension="x" type="linear" domain={[-4, 4]} />
+    <Scale dimension="y" type="linear" domain={[-1, 8]} />
+    <PathMark x="x" y="y" order="x" stroke="#2563eb" />
+    <Axis
+      dimension="x"
+      placement={{ kind: 'origin', origin: 0, tickSide: 'bottom' }}
+      line={{ arrow: { positive: { shape: 'stealth', length: 7 } }, extent: { from: -4, to: 4 } }}
+      ticks={{ count: 5 }}
+      title="x"
+    />
+    <Axis
+      dimension="y"
+      placement={{ kind: 'origin', origin: 0, tickSide: 'left' }}
+      line={{ arrow: { positive: { shape: 'stealth', length: 7 } }, extent: { from: -1, to: 8 } }}
+      ticks={{ count: 5 }}
+      title="y"
+    />
+  </Plot>
+);
+
+export default Demo;

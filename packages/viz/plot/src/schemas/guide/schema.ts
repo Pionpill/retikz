@@ -1,4 +1,4 @@
-﻿import { FontSchema, NodeTextAlign, PaintValueSchema, TextBlockSchema } from '@retikz/core';
+﻿import { ArrowEndDetailSchema, FontSchema, NodeTextAlign, PaintValueSchema, PathLineCapSchema, TextBlockSchema } from '@retikz/core';
 import { z } from 'zod';
 
 import { AxisCardinalSide, AxisGridApplyTo, AxisPlacementKind, LegendOrient, LegendPosition, PlotGuide } from './constants';
@@ -36,9 +36,24 @@ const AxisEdgePlacementSchema = z
   .strict()
   .describe('Coordinate-native edge axis placement');
 
+export const AxisGuideValueSchema = z.union([z.string(), z.number()]).describe('JSON-safe axis guide value');
+
+const AxisOriginPlacementSchema = z
+  .object({
+    kind: z.literal(AxisPlacementKind.Origin).describe('Placement discriminator: place the axis at a cross-dimension data value'),
+    origin: AxisGuideValueSchema.optional().describe('Cross-dimension data value where this axis baseline is placed; omit = 0'),
+    tickSide: z.enum(AxisCardinalSide).optional().describe('Side where ticks, tick labels, and title are placed relative to the origin axis'),
+    offset: z
+      .number()
+      .optional()
+      .describe('Additional offset from the projected origin toward tickSide; omit = 0'),
+  })
+  .strict()
+  .describe('Cartesian origin axis placement');
+
 export const AxisPlacementSchema = z
-  .discriminatedUnion('kind', [AxisAutoPlacementSchema, AxisSidePlacementSchema, AxisEdgePlacementSchema])
-  .describe('Axis placement mode: automatic coordinate default, cardinal plot-area side, or coordinate-native edge');
+  .discriminatedUnion('kind', [AxisAutoPlacementSchema, AxisSidePlacementSchema, AxisEdgePlacementSchema, AxisOriginPlacementSchema])
+  .describe('Axis placement mode: automatic coordinate default, cardinal plot-area side, coordinate-native edge, or cartesian origin');
 
 const OpacitySchema = z.number().min(0).max(1).describe('Opacity fraction in [0, 1]');
 
@@ -87,6 +102,12 @@ export const GuideLineStyleSchema = z
   .strict()
   .describe('Shared guide line style fields mapped to core path vocabulary');
 
+export const AxisLineStyleSchema = GuideLineStyleSchema.extend({
+  lineCap: PathLineCapSchema.optional().describe('Axis baseline stroke endpoint cap'),
+})
+  .strict()
+  .describe('Axis baseline pure line style fields');
+
 export const GuideTextStyleSchema = z
   .object({
     font: FontSchema.optional().describe('Guide text font; missing fields inherit the plot text default'),
@@ -127,7 +148,45 @@ export const GuideTickLabelFormatSchema = z
   .strict()
   .describe('Shared guide tick label formatting options');
 
-export const AxisLineSchema = GuideLineStyleSchema.describe('Axis baseline line style');
+const AxisLineExtentSchema = z
+  .union([
+    z.literal('plotArea'),
+    z
+      .object({
+        from: AxisGuideValueSchema.describe('Axis baseline negative-direction endpoint value'),
+        to: AxisGuideValueSchema.describe('Axis baseline positive-direction endpoint value'),
+      })
+      .strict(),
+  ])
+  .describe('Axis baseline extent along the bound dimension');
+
+const AxisArrowEndSchema = z.union([z.boolean(), ArrowEndDetailSchema]).describe('Axis arrow endpoint switch or visual detail');
+
+const AxisLineArrowSchema = z
+  .object({
+    negative: AxisArrowEndSchema.optional().describe('Arrow at the negative axis direction endpoint'),
+    positive: AxisArrowEndSchema.optional().describe('Arrow at the positive axis direction endpoint'),
+  })
+  .strict()
+  .superRefine((arrow, ctx) => {
+    const hasNegative = arrow.negative !== undefined && arrow.negative !== false;
+    const hasPositive = arrow.positive !== undefined && arrow.positive !== false;
+    if (!hasNegative && !hasPositive) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [],
+        message: 'axis line arrow requires negative or positive arrow endpoint',
+      });
+    }
+  })
+  .describe('Axis endpoint arrows keyed by negative / positive axis direction');
+
+export const AxisLineSchema = AxisLineStyleSchema.extend({
+  extent: AxisLineExtentSchema.optional().describe('Axis baseline extent; omit or plotArea spans the visible plot area'),
+  arrow: AxisLineArrowSchema.optional().describe('Axis endpoint arrows by negative / positive direction'),
+})
+  .strict()
+  .describe('Axis baseline line style and structural endpoint geometry');
 
 export const AxisTicksSchema = z
   .object({

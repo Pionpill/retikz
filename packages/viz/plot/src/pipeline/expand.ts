@@ -56,6 +56,7 @@ import {
   collectFormatFields,
   createPositionChannelDefinitions,
   DEFAULT_TRANSFORM_CONTEXT,
+  defaultOriginAxisTickSideOf,
   deriveScale,
   lowerMark,
   makeColorSchemeResolver,
@@ -354,6 +355,9 @@ const axisGapKeyOf = (guide: AxisGuide): string | null => {
   const placement = guide.placement;
   if (placement === undefined || placement.kind === 'auto') return null;
   if (placement.kind === 'side') return `side:${placement.side}`;
+  if (placement.kind === 'origin') {
+    return `${guide.dimension}:origin:${String(placement.origin ?? 0)}:${placement.tickSide ?? defaultOriginAxisTickSideOf(guide.dimension)}`;
+  }
   return `edge:${placement.edge}`;
 };
 
@@ -366,8 +370,8 @@ const withAxisGapOffsets = (guides: ReadonlyArray<Guide>, axisGap: number | unde
     if (key === null) return guide;
     const index = counts.get(key) ?? 0;
     counts.set(key, index + 1);
-    if (index === 0 && (guide.placement?.kind === 'side' || guide.placement?.kind === 'edge')) return guide;
-    if (guide.placement?.kind === 'side' || guide.placement?.kind === 'edge') {
+    if (index === 0 && (guide.placement?.kind === 'side' || guide.placement?.kind === 'edge' || guide.placement?.kind === 'origin')) return guide;
+    if (guide.placement?.kind === 'side' || guide.placement?.kind === 'edge' || guide.placement?.kind === 'origin') {
       return {
         ...guide,
         placement: {
