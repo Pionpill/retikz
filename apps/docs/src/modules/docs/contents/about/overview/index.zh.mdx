@@ -9,7 +9,7 @@ retikz 的「关于」栏是除文档正文之外的元信息：版本怎么排�
 
 | 页                                                      | 内容                                                           |
 | ------------------------------------------------------- | -------------------------------------------------------------- |
-| [源码指南](/about/developer/source-code-guide)          | core / render / react / vanilla 源码结构、扩展面与推荐阅读顺序 |
+| [源码指南](/about/developer/source-code-guide)          | kernel 组六包源码结构、扩展面与推荐阅读顺序                    |
 | [AI 辅助开发](/about/developer/ai-assisted-development) | alpha / beta / rc 各阶段的人机分工                             |
 | [更新日志](/kernel/releases/changelog)                  | 历版发布记录（按 core / plot 模块各自维护）                    |
 | [版本策略](/about/releases/versioning)                  | SemVer + 预发布通道 + 各通道开发模式 + 弃用流程                |
@@ -17,15 +17,17 @@ retikz 的「关于」栏是除文档正文之外的元信息：版本怎么排�
 
 ## 当前仓库版本
 
-| 包                | 版本           | 说明                                                                 |
-| ----------------- | -------------- | -------------------------------------------------------------------- |
-| `@retikz/core`    | `0.3.0-beta.1` | IR schema、几何工具、parser 与 Scene 编译器；零 React、零 DOM        |
-| `@retikz/render`  | `0.3.0-beta.1` | SVG descriptor / string、Canvas 2D、水合 helper 与动画 runtime 工具  |
-| `@retikz/react`   | `0.3.0-beta.1` | React adapter，支持 SVG / Canvas renderer                            |
-| `@retikz/vanilla` | `0.3.0-beta.1` | 无框架 builder、SVG / Canvas mount、水合、动画控制与 SVG string 输出 |
+| 包                | 版本            | 说明                                                                 |
+| ----------------- | --------------- | -------------------------------------------------------------------- |
+| `@retikz/math`    | `0.4.0-alpha.8` | 零依赖纯计算几何底座，被 core 与 domain 包复用                       |
+| `@retikz/core`    | `0.4.0-alpha.8` | IR schema、几何工具、parser 与 Scene 编译器；零 React、零 DOM        |
+| `@retikz/render`  | `0.4.0-alpha.8` | SVG descriptor / string、Canvas 2D、水合 helper 与动画 runtime 工具  |
+| `@retikz/react`   | `0.4.0-alpha.8` | React adapter，支持 SVG / Canvas renderer                            |
+| `@retikz/vanilla` | `0.4.0-alpha.8` | 无框架 builder、SVG / Canvas mount、水合、动画控制与 SVG string 输出 |
+| `@retikz/tex`     | `0.4.0-alpha.8` | 可选 LaTeX 公式 lowering；通过 MathJax SVG 字形路径接入 core Scene   |
 
-`0.3.0-beta.1` 是 v0.3 进入 rc 前的体验加固窗口：renderer、hydration、Canvas、vanilla 与动画主能力已经落地，当前重点是 parity 修复、文档与包描述刷新、可选导出入口和工程清理。详见 [版本策略](/about/releases/versioning)。
+`0.4.0-alpha.8` 是 v0.4 alpha 收口版本：math、tex、path、ribbon、provider contract 等纵向底座能力已经对账，当前改动只同步版本、路线图、changelog 与完备评测边界，不新增运行时 API。详见 [版本策略](/about/releases/versioning)。
 
 ## 反馈与提问
 
-retikz 处于 v0.3 beta 阶段。反馈重点是 SVG / Canvas parity、水合与动画行为、文档准确性、安装问题、示例不可复现，以及 rc 冻结前真实项目集成中暴露的 bug。
+retikz 当前处于 v0.4 alpha 收口阶段。反馈重点是 v0.4 新底座能力的文档准确性、安装与包组合问题、示例不可复现，以及 v0.5 候选（headless interaction / Progressive IR）是否值得优先展开。

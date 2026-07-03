@@ -4,7 +4,7 @@ import { Layout, Node } from '@retikz/react';
 
 /**
  * 尺寸约束 + 圆角
- * @description cornerRadius 圆角（仅 rectangle）、minimumSize 对称最小宽高、minimumWidth/Height 分轴最小尺寸（button 风格）、scale 均匀放大整个 node 含字号。
+ * @description cornerRadius 圆角（仅 rectangle）、minimumSize 对称最小宽高、minimumSize 对象分轴最小尺寸（button 风格）、scale 均匀放大整个 node 含字号。
  */
 const Demo: FC = () => (
   <Layout width={560} height={140}>
@@ -17,8 +17,7 @@ const Demo: FC = () => (
     <Node
       id="btn"
       position={[80, 0]}
-      minimumWidth={120}
-      minimumHeight={28}
+      minimumSize={{ width: 120, height: 28 }}
       cornerRadius={6}
       fill="darkorange"
       textColor="white"

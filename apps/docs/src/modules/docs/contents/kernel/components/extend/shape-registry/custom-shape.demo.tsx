@@ -1,9 +1,11 @@
-import type { PathCommand, Position, ShapeDefinition } from '@retikz/core';
+import type { IRPosition, PathCommand, ShapeDefinition } from '@retikz/core';
 import type { FC } from 'react';
 
 import { defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
 import { z } from 'zod';
+
+type Position = IRPosition;
 
 /**
  * 自定义 hexagon shape 注入 demo
@@ -83,6 +85,7 @@ const createHexagon = (): ShapeDefinition =>
         strokeOpacity: style.strokeOpacity,
         strokeWidth: style.strokeWidth ?? 1,
         dashPattern: style.dashPattern,
+        dashOffset: style.dashOffset,
         opacity: style.opacity,
       };
     },

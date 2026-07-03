@@ -1,13 +1,12 @@
+import type { Position } from '@retikz/math';
+
 import { z } from 'zod';
 
 import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
-import type { Position } from '../../shared/geometry';
-import type { Rect } from '../../shared/geometry';
-import type { ContourSegment } from '../../shared/geometry';
+import type { ContourSegment, Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
-import { localToWorld } from '../../shared/geometry';
-import { boundaryFromContour, contourCommands } from '../../shared/geometry';
+import { boundaryFromContour, contourCommands, DEG_TO_RAD, localToWorld } from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
 /**
@@ -33,7 +32,6 @@ type StarParams = {
   cornerRadius?: number;
 };
 
-const DEG_TO_RAD = Math.PI / 180;
 const MAX_STAR_POINTS = 1024;
 
 /**
@@ -118,24 +116,20 @@ export const star = defineShape({
         ),
       innerRadius: z
         .number()
-
         .positive()
         .describe('Inner (notch) radius in user units.'),
       outerRadius: z
         .number()
-
         .positive()
         .describe('Outer (tip) radius in user units; must be > innerRadius.'),
       rotate: z
         .number()
-
         .optional()
         .describe(
           'Shape self-rotation in degrees; default 0 = first tip points up (screen -y / top); positive rotates clockwise (screen). Composes with Node.rotate.',
         ),
       cornerRadius: z
         .number()
-
         .nonnegative()
         .optional()
         .describe(

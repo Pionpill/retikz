@@ -56,7 +56,7 @@ import { Grid } from '@retikz/react';
 
 `<Grid>` 不会产生新的底层图元。它会按 x / y 方向计算所有需要出现的坐标，然后为每条线生成一条 `<Path>`。如果启用 `border`，外边框会额外生成一条闭合 `<Path>`。
 
-这意味着普通路径视觉属性可以直接用于网格线，例如 `stroke`、`strokeWidth`、`dashPattern`、`opacity` 和 `zIndex`。主线用 `major*` 覆盖普通线样式，外边框用 `border*` 覆盖普通线样式。
+这意味着普通路径视觉属性可以直接用于网格线，例如 `stroke`、`strokeWidth`、`dashPattern`、`dashOffset`、`opacity` 和 `zIndex`。主线用 `major*` 覆盖普通线样式，外边框用 `border*` 覆盖普通线样式。
 
 ### 对齐从 origin 开始
 
@@ -97,6 +97,7 @@ import { Grid } from '@retikz/react';
 | `majorStroke`      | `string`                                                                                       | —      | 主线描边               |
 | `majorStrokeWidth` | `number`                                                                                       | —      | 主线描边宽度           |
 | `majorDashPattern` | `Array<number>`                                                                                | —      | 主线虚线段和间隔       |
+| `majorDashOffset`  | `number`                                                                                       | —      | 主线虚线起点偏移       |
 | `majorLineCap`     | `'butt' \| 'round' \| 'square'`                                                                | —      | 主线端点形状           |
 | `majorLineJoin`    | `'miter' \| 'round' \| 'bevel'`                                                                | —      | 主线拐点形状           |
 | `majorThickness`   | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —      | 主线语义粗细           |
@@ -115,6 +116,7 @@ import { Grid } from '@retikz/react';
 | `borderStroke`      | `string`                                                                                       | —         | 外边框描边                     |
 | `borderStrokeWidth` | `number`                                                                                       | —         | 外边框描边宽度                 |
 | `borderDashPattern` | `Array<number>`                                                                                | —         | 外边框虚线段和间隔             |
+| `borderDashOffset`  | `number`                                                                                       | —         | 外边框虚线起点偏移             |
 | `borderLineCap`     | `'butt' \| 'round' \| 'square'`                                                                | —         | 外边框端点形状                 |
 | `borderLineJoin`    | `'miter' \| 'round' \| 'bevel'`                                                                | —         | 外边框拐点形状                 |
 | `borderThickness`   | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —         | 外边框语义粗细                 |

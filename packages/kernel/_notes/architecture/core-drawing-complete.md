@@ -1,6 +1,6 @@
 # Core 绘图完备设计
 
-> 本文定义 `@retikz/core` 的绘图完备目标和检测方法。总纲见 [`notes/architecture/capability-design.md`](../../../../notes/architecture/capability-design.md)。本文只讨论 core 模块，不覆盖 plot、chart、React / Vanilla adapter 或具体 renderer 的体验封装。
+> 本文定义 `@retikz/core` 的绘图完备目标和检测方法。总纲见 [`notes/architecture/capability-design.md`](../../../../notes/architecture/capability-design.md)。本文只讨论 core 模块，不覆盖 plot、chart、React / Vanilla adapter 或具体 renderer 的体验封装；interaction 只讨论它们可消费的 headless 契约。
 
 ---
 
@@ -10,7 +10,7 @@
 
 `@retikz/core` 的完备方向是 **Graphic Complete / Drawing Complete**：
 
-> 任意静态二维图形语义，都应能通过 core 的 JSON IR、扩展契约、编译管线和 renderer-agnostic Scene 表达。
+> 任意静态二维图形语义，以及绑定在这些图形上的 headless interaction intent，都应能通过 core 的 JSON IR、扩展契约、编译管线和 renderer-agnostic Scene / manifest 表达。
 
 这里的“任意图形”不是指 core 内置所有 shape、preset 或 diagram 类型，而是指 core 有足够稳定的底座，让新增图形能力可以通过同一套机制进入：
 
@@ -19,17 +19,17 @@ IR / schema
   -> contract / definition
   -> provider / registry
   -> compile / lowering
-  -> Scene
+  -> Scene / interaction manifest
   -> render package / adapter
 ```
 
-如果某种图形只能在 React、Vanilla、plot 或某个 renderer 里特判实现，而不能落回 core IR / Scene，它不属于 core 完备能力。
+如果某种图形只能在 React、Vanilla、plot 或某个 renderer 里特判实现，而不能落回 core IR / Scene，它不属于 core 完备能力。如果某种交互只能靠 adapter 从 Scene primitive 反推 id、bbox、hit area 或 provenance，也说明 core 缺少 headless interaction 底座；但 tooltip 浮层、选择状态、hover 样式和键盘策略仍不属于 core。
 
 ---
 
 ## 2. Core 需要检测的能力面
 
-Core 绘图完备至少覆盖七类能力面。每类能力都可以独立演进，但必须共享同一条 IR -> Scene 管线。
+Core 绘图完备至少覆盖八类能力面。每类能力都可以独立演进，但必须共享同一条 IR -> Scene / manifest 管线。
 
 | 能力面 | 目标 | 不属于 core 的情况 |
 | --- | --- | --- |
@@ -40,6 +40,7 @@ Core 绘图完备至少覆盖七类能力面。每类能力都可以独立演进
 | Constraint / Layout | 承载跨图形通用的定位和约束求解。 | flow / graph / table 等领域布局策略。 |
 | Style / Resource | 表达通用样式、paint、marker、pattern、clip 等资源。 | 某后端独有滤镜或无法诊断降级的视觉效果。 |
 | Composition | 用 scope、group、zIndex、meta 等组合复杂图形。 | 上层私有节点树或不可持久化的运行时组合结构。 |
+| Interaction | 表达 JSON-safe 的交互目标、命中区域、tooltip / selection intent、role 与 provenance 关联。 | tooltip 浮层 UI、选中状态机、hover 样式、DOM 事件 handler、键盘策略、框选 / 拖拽编辑器。 |
 
 这些能力面是检测维度，不是目录结构要求。具体实现仍按 `schemas / contract / providers / compile / shared` 分层。
 
@@ -56,9 +57,10 @@ Core 绘图完备至少覆盖七类能力面。每类能力都可以独立演进
 - 能增强 Graph System foundation，而不是只服务单个上层封装、短期图形或某个 renderer 的局部便利。
 - 多个上层模块都会消费。
 - 能用 JSON IR 描述。
-- 能编译成 renderer-agnostic Scene。
+- 能编译成 renderer-agnostic Scene，或与 Scene 同步的 renderer-agnostic manifest。
 - 不依赖 React、DOM、Canvas 实例、SVG DOM 或第三方重型 domain 依赖。
 - 不要求用户数据、scale、stat、chart type 等 plot 语义。
+- 交互能力只描述 JSON-safe intent / target / role / payload，不保存 runtime state、回调函数或具体 UI。
 
 不满足这些条件时，优先放到 plot、domain 包、render 包或 adapter 层。
 
@@ -73,6 +75,7 @@ Core 绘图完备至少覆盖七类能力面。每类能力都可以独立演进
 - 自定义能力无法通过现有 definition / registry 接入。
 - renderer 之间需要共享一套新的抽象语义。
 - 缺少该能力会迫使 plot / adapter / domain 包私造平行 IR 或 renderer 语义。
+- 缺少统一 target / handle / provenance 会迫使 adapter 从 Scene primitive 反推命中区域或交互语义。
 
 ### 3.3 是否形成闭环
 
@@ -84,6 +87,7 @@ contract 可扩展
 provider 可内置
 compile 可消费
 Scene 可承载
+interaction manifest 可查询
 renderer 可实现或可诊断降级
 tests 可锁定
 docs / notes 可解释
@@ -106,6 +110,8 @@ docs / notes 可解释
 - 是否需要新 contract / definition：
 - 是否需要新 provider / registry：
 - 是否需要改 compile / Scene：
+- 是否需要 interaction target / manifest：
+- runtime state 是否保持外部 headless：
 - renderer 是否可跨后端实现：
 - 上层模块如何消费：
 - 不支持边界与诊断：
@@ -115,7 +121,7 @@ docs / notes 可解释
 评审时优先看两类问题：
 
 1. **能力放错层**：plot / domain / renderer 能力被塞进 core，或 core 通用能力被上层私造。
-2. **闭环缺失**：只加 schema、只加内置实现、只在 renderer 里能画、或自定义能力不是同机制。
+2. **闭环缺失**：只加 schema、只加内置实现、只在 renderer 里能画、interaction 只能在 adapter 里反推、或自定义能力不是同机制。
 
 ---
 
@@ -128,4 +134,4 @@ docs / notes 可解释
 - `standard-structure` / `standard-schema` / `standard-contract` / `standard-providers` / `standard-pipeline-compile` 仍决定代码落层。
 - kernel ADR 仍记录具体版本的设计决策。
 
-本文只补一个判断框架：当 core 要接收新图形能力时，用绘图完备检测确认它放对层、能闭环、不会破坏 renderer-agnostic 与 JSON IR 的底座。
+本文只补一个判断框架：当 core 要接收新图形或 headless interaction 能力时，用绘图完备检测确认它放对层、能闭环、不会破坏 renderer-agnostic 与 JSON IR 的底座。

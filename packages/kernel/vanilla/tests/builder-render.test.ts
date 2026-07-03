@@ -35,8 +35,7 @@ describe('@retikz/vanilla builder ↔ render 管线', () => {
       node('a', {
         position: [0, 0],
         shape: 'rectangle',
-        minimumWidth: 40,
-        minimumHeight: 20,
+        minimumSize: { width: 40, height: 20 },
         fill: {
           kind: 'linearGradient',
           stops: [
@@ -99,7 +98,7 @@ describe('@retikz/vanilla builder ↔ render 管线', () => {
   it('custom-shape-passthrough：figure({shapes}) 把 shape 表透传进 compileToScene（未注册抛、注册后不抛）', () => {
     const mk = (shapes?: Array<typeof hexagon>): string =>
       figure({ width: 100, height: 100, ...(shapes ? { shapes } : {}) }, [
-        node('a', { position: [0, 0], shape: 'hexagon', minimumWidth: 40, minimumHeight: 40, fill: '#0a0' }),
+        node('a', { position: [0, 0], shape: 'hexagon', minimumSize: { width: 40, height: 40 }, fill: '#0a0' }),
       ]).toSvgString();
     expect(() => mk()).toThrow(/hexagon/i); // 未注册 → compileToScene 抛
     expect(() => mk([hexagon])).not.toThrow(); // figure({shapes}) 透传后 → 不抛

@@ -1,6 +1,8 @@
-﻿import type { PathCommand, PathPrim } from '../../../contract';
+﻿import type { Vector2 } from '@retikz/math';
+
+import type { PathCommand, PathPrim } from '../../../contract';
 import type { IRPosition, IRRibbonCap, RibbonAlignmentValue } from '../../../schemas';
-import type { SegmentSample, Vector2 } from '../../../shared/geometry';
+import type { SegmentSample } from '../../../shared/geometry';
 import type { NameStack } from '../../name-stack';
 import type { PaintResolver } from '../../paint';
 import type {

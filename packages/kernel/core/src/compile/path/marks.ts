@@ -9,6 +9,8 @@
 } from '../../contract';
 import type { SegmentSample } from '../../shared/geometry';
 
+import { RAD_TO_DEG } from '../../shared/geometry';
+
 const resolveMarkerContextFill = (value: MarkerFill, contextStroke: string): string =>
   typeof value === 'string' ? value : contextStroke;
 
@@ -63,7 +65,7 @@ export const buildMarkMarkerGroup = (
   round: (n: number) => number,
   contextStroke: string,
 ): GroupPrim => {
-  const angleDeg = (Math.atan2(sample.tangent[1], sample.tangent[0]) * 180) / Math.PI;
+  const angleDeg = Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG;
   const sx = (spec.markerWidth * strokeWidth) / spec.baseSize;
   const sy = (spec.markerHeight * strokeWidth) / spec.baseSize;
   const refY = spec.baseSize / 2;

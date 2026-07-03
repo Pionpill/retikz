@@ -38,6 +38,8 @@ export type EllipsePrim = {
   strokeOpacity?: IRGraphicStyle['drawOpacity'];
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   dashPattern?: IRPathBase['dashPattern'];
+  /** 描边 dash offset */
+  dashOffset?: IRPathBase['dashOffset'];
   /**
    * 整体透明度 0~1
    * @default 1

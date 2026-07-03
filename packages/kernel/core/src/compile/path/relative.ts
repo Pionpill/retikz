@@ -38,7 +38,7 @@ export const normalizeRelativeTargets = (
     if (step.kind === 'arc') {
       out.push(step);
       // 仅「正圆弧 + 圆心取游标」更新 prevEnd（原行为）；椭圆弧 / 显式 center 保守不变
-      if (prevEnd && step.radius !== undefined && step.center === undefined) {
+      if (prevEnd && typeof step.radius === 'number' && step.center === undefined) {
         prevEnd = arcEndPoint(prevEnd, step.radius, step.endAngle);
       }
       continue;

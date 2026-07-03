@@ -1,54 +1,56 @@
 ---
 title: 路线图
-description: retikz 的当前与近未来版本路线：v0.3 beta 加固、v0.3 rc 验收、v0.4 增量渲染候选、v1+ 领域包。
+description: retikz 的当前与近未来版本路线：kernel v0.4.0-alpha.8 收口、v0.5 机制候选、v0.4 beta / rc 与 v1+ 领域包。
 ---
 
 路线图是**目标**而非承诺——会随社区反馈与维护者带宽调整。具体发布按版本号在[更新日志](/kernel/releases/changelog)里出现。
 
 ## 当前
 
-**v0.3.0-beta.1** — rc 前 beta 加固中。
+**kernel v0.4.0-alpha.8** — v0.4 alpha 收口版本；不新增运行时 API，集中对齐版本、roadmap、changelog 与完备评测边界。
 
-| 项目                  | 状态           |
-| --------------------- | -------------- |
-| renderer/runtime 拆分 | ✅ 已完工      |
-| 公开 API              | ⏳ beta 复核中 |
-| parity / 文档 / 打包  | ⏳ beta 加固中 |
+| 项目                    | 状态                    |
+| ----------------------- | ----------------------- |
+| `@retikz/math` / `tex`  | ✅ 已进入 kernel lockstep |
+| path / ribbon / provider | ✅ alpha.7 已落地        |
+| docs / changelog         | ✅ alpha.8 收口说明已同步 |
+| interaction              | 🧭 进入完备评测；实现留到 v0.5 讨论 |
 
-## 短期：v0.3.0 rc
+## 短期：alpha.8 之后
 
-把 beta 线收口成发布候选。
+alpha.8 之后先拆清三类工作：v0.5 继续做纵向机制探索，v0.4 beta / rc 做稳定化，长期项等待更强需求牵引。
 
-| 目标     | 内容                                            |
-| -------- | ----------------------------------------------- |
-| API 冻结 | 进入 rc 后不再新增组件、prop、IR 字段或公开导出 |
-| 安装验收 | npm 包、类型导出、示例与文档链接都能正常工作    |
-| 发布说明 | changelog、版本说明与迁移提示保持一致           |
+| 层级 | 候选 | 内容 |
+| ---- | ---- | ---- |
+| v0.5 alpha | headless interaction | core 提供 target / intent / manifest 等无头契约；tooltip / select UI 与状态机由 adapter 或外部实现 |
+| v0.5 alpha | Progressive / JSON Patch | 增量渲染、AI step 更新、局部 SVG / Canvas 更新策略 |
+| v0.4 beta / rc | beta 加固 | 不新增能力，集中做 API 复核、安装验收与文档对账 |
+| 更长期 | P3D / scope 富化 / blur-mask-layer | 伪三维、`boundingShape` polygon / ellipse / padding、视觉层能力等继续等待设计牵引 |
 
-## 当前 v0.3 形态
+## 当前 v0.4 形态
 
-Scene 的输出与运行时已经拆成更清楚的 Tier 1 包。
+kernel v0.4 已经把一批底座能力落成可复用机制。
 
 | 目标              | 内容                                                                          |
 | ----------------- | ----------------------------------------------------------------------------- |
-| `@retikz/render`  | SVG 字符串渲染、Canvas 2D 绘制、水合 helper、动画 runtime、可选 Node 图片导出 |
-| `@retikz/vanilla` | 无框架挂载与 SSR 入口                                                         |
-| `@retikz/react`   | `renderer="svg"` / `renderer="canvas"` 的统一入口                             |
-| 水合              | 稳定 id + 事件绑定语义                                                        |
-| plot 支撑         | lowering、坐标化、layer、locator / anchor 接入面                              |
+| `@retikz/math`    | 零依赖纯几何：向量、仿射、弧、求交、凸包、最小外接圆等                       |
+| `@retikz/tex`     | MathJax SVG lowering，经 `lowerTex` 注入，文本里支持 `$...$` / `{ runs }`       |
+| Scene 视觉        | `shadow` / `blendMode` 与已有 `zIndex` 形成 renderer-agnostic 视觉底座         |
+| Path kind / ribbon | `Path.kind` provider 与 `kind="ribbon"` 关系路径                              |
+| Provider contract | shape / boundary / clip / path kind / composite 等扩展面统一 registry 模型     |
 
 ## 远期
 
 | 主题 | 落点                                              |
 | ---- | ------------------------------------------------- |
-| v0.4 | 增量渲染、Progressive IR、AI 逐步更新、视角层实验 |
+| v0.4 beta / rc | API 复核、安装验收、文档与 changelog 对账       |
 | v1+  | `plot` / `viz` / `flow` 等领域包与更广生态        |
 
 ## 不在路线图
 
 为避免范围蔓延，明确**不做**的事：
 
-- 内建 LaTeX 数学排版
+- core 直接依赖 MathJax 或把公式引擎塞进 IR
 - 可视化编辑器
 - 完整 TikZ library loading 语义
 - 完整 calc 表达式语言

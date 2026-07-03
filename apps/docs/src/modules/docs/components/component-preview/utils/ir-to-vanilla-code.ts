@@ -97,14 +97,14 @@ const stepsToWay = (steps: ReadonlyArray<IRStep>, ctx: Ctx, indent: number): Arr
         break;
       case 'arc':
         frags.push({
-          text: `{ arc: { startAngle: ${step.startAngle}, endAngle: ${step.endAngle}, radius: ${step.radius} } }`,
+          text: `{ arc: { startAngle: ${step.startAngle}, endAngle: ${step.endAngle}, radius: ${formatValue(step.radius, indent)} } }`,
         });
         break;
       case 'circlePath':
         frags.push({ text: `{ circle: { radius: ${step.radius} } }` });
         break;
       case 'ellipsePath':
-        frags.push({ text: `{ ellipse: { radiusX: ${step.radiusX}, radiusY: ${step.radiusY} } }` });
+        frags.push({ text: `{ ellipse: { radius: ${formatValue(step.radius, indent)} } }` });
         break;
       default:
         frags.push({ text: `/* not vanilla way sugar: ${step.kind} */`, comment: true });
@@ -140,8 +140,7 @@ const coordinateCode = (coord: IRCoordinate, indent: number, ctx: Ctx): string =
   return `coordinate(${formatString(coord.id)}, ${formatObject(config, indent)})`;
 };
 
-const isWayArcStep = (step: IRArcStep): boolean =>
-  step.radius !== undefined && step.radiusX === undefined && step.radiusY === undefined && step.center === undefined;
+const isWayArcStep = (step: IRArcStep): boolean => step.center === undefined;
 
 const isWayCirclePathStep = (step: IRCirclePathStep): boolean =>
   step.startAngle === undefined && step.endAngle === undefined && step.closed === undefined;

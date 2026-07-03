@@ -1,6 +1,7 @@
+import type { Vector2 } from '@retikz/math';
 import type { z } from 'zod';
 
-import type { ValueOf, Vector2 } from '../../../shared';
+import type { ValueOf } from '../../../shared';
 import type { PolarPosition } from '../../position';
 import type {
   RibbonAlignment,

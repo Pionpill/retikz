@@ -4,6 +4,7 @@ import type { EllipsePrim, PathPrim, RectPrim, TextPrim } from '../../src/contra
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
+import { NodeSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 import { line, move } from '../helpers/path-command-factory';
 
@@ -155,7 +156,7 @@ describe('Node 尺寸约束 (alpha.2)', () => {
     expect(findRect(ir)?.cornerRadius).toBe(8);
   });
 
-  it('minimumWidth 撑开 bbox 宽度', () => {
+  it('minimumSize.width 撑开 bbox 宽度', () => {
     const small: IR = {
       version: 1,
       type: 'scene',
@@ -164,7 +165,7 @@ describe('Node 尺寸约束 (alpha.2)', () => {
     const wide: IR = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], minimumWidth: 100 }],
+      children: [{ type: 'node', position: [0, 0], minimumSize: { width: 100 } }],
     };
     expect(findRect(small)?.width).toBe(16);
     expect(findRect(wide)?.width).toBe(100);
@@ -172,17 +173,17 @@ describe('Node 尺寸约束 (alpha.2)', () => {
     expect(findRect(wide)?.height).toBe(16);
   });
 
-  it('minimumHeight 撑开 bbox 高度', () => {
+  it('minimumSize.height 撑开 bbox 高度', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], minimumHeight: 60 }],
+      children: [{ type: 'node', position: [0, 0], minimumSize: { height: 60 } }],
     };
     expect(findRect(ir)?.height).toBe(60);
     expect(findRect(ir)?.width).toBe(16);
   });
 
-  it('minimumSize 等价于同时设 minimumWidth + minimumHeight', () => {
+  it('minimumSize number 等价于同时设 width + height', () => {
     const sym: IR = {
       version: 1,
       type: 'scene',
@@ -192,7 +193,7 @@ describe('Node 尺寸约束 (alpha.2)', () => {
     expect(findRect(sym)?.height).toBe(50);
   });
 
-  it('minimumWidth 优先于 minimumSize 别名', () => {
+  it('minimumSize.width 优先于 minimumSize.default', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -200,8 +201,7 @@ describe('Node 尺寸约束 (alpha.2)', () => {
         {
           type: 'node',
           position: [0, 0],
-          minimumSize: 30,
-          minimumWidth: 80,
+          minimumSize: { default: 30, width: 80 },
         },
       ],
     };
@@ -210,7 +210,7 @@ describe('Node 尺寸约束 (alpha.2)', () => {
   });
 
   it('text 比 minimum 大时取 text 自身尺寸（不缩水）', () => {
-    // long text 自然宽度 > minimumWidth=10 → 用 text 算出的宽
+    // long text 自然宽度 > minimumSize.width=10 → 用 text 算出的宽
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -219,7 +219,7 @@ describe('Node 尺寸约束 (alpha.2)', () => {
           type: 'node',
           position: [0, 0],
           text: 'long enough text',
-          minimumWidth: 10,
+          minimumSize: { width: 10 },
         },
       ],
     };
@@ -251,6 +251,23 @@ describe('Node 尺寸约束 (alpha.2)', () => {
     expect(e?.rx).toBeCloseTo(50, 6);
     expect(e?.ry).toBeCloseTo(50, 6);
   });
+
+  it('minimumWidth / minimumHeight 旧字段被 schema 拒绝', () => {
+    expect(
+      NodeSchema.safeParse({
+        type: 'node',
+        position: [0, 0],
+        minimumWidth: 100,
+      }).success,
+    ).toBe(false);
+    expect(
+      NodeSchema.safeParse({
+        type: 'node',
+        position: [0, 0],
+        minimumHeight: 100,
+      }).success,
+    ).toBe(false);
+  });
 });
 
 describe('Node 缩放 (alpha.2)', () => {
@@ -276,28 +293,45 @@ describe('Node 缩放 (alpha.2)', () => {
     expect(tB.fontSize).toBeCloseTo(tb.fontSize * 2, 1);
   });
 
-  it('xScale / yScale 各自方向独立放大 bbox', () => {
+  it('scale.x / scale.y 各自方向独立放大 bbox', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], xScale: 3, yScale: 1 }],
+      children: [{ type: 'node', position: [0, 0], scale: { x: 3, y: 1 } }],
     };
     const r = findRect(ir)!;
-    // 默认 16x16；xScale=3 → 宽 48，高 16
+    // 默认 16x16；scale.x=3 → 宽 48，高 16
     expect(r.width).toBeCloseTo(48, 1);
     expect(r.height).toBeCloseTo(16, 1);
   });
 
-  it('xScale 优先于 scale 别名（X 方向）', () => {
+  it('scale.x 优先于 scale.default（X 方向）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], scale: 2, xScale: 4 }],
+      children: [{ type: 'node', position: [0, 0], scale: { default: 2, x: 4 } }],
     };
     const r = findRect(ir)!;
-    // xScale=4 覆盖 scale=2 影响 X；Y 仍走 scale=2
+    // scale.x=4 覆盖 scale.default=2 影响 X；Y 仍走 scale.default=2
     expect(r.width).toBeCloseTo(64, 1);
     expect(r.height).toBeCloseTo(32, 1);
+  });
+
+  it('xScale / yScale 旧字段被 schema 拒绝', () => {
+    expect(
+      NodeSchema.safeParse({
+        type: 'node',
+        position: [0, 0],
+        xScale: 2,
+      }).success,
+    ).toBe(false);
+    expect(
+      NodeSchema.safeParse({
+        type: 'node',
+        position: [0, 0],
+        yScale: 2,
+      }).success,
+    ).toBe(false);
   });
 
   it('scale 影响 path 端点位置（boundary 跟随放大）', () => {

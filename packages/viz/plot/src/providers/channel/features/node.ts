@@ -1,6 +1,15 @@
-import type { IRBoundary, IRFont, IRShapeRef, JsonValue } from '@retikz/core';
+import type { IRAxisScale, IRBoundary, IRBoxSize, IRBoxSpacing, IRFont, IRShapeRef, JsonValue } from '@retikz/core';
 
-import { BoundarySchema, DropShadowSchema, FontSchema, JsonValueSchema, ShapeRefSchema } from '@retikz/core';
+import {
+  AxisScaleSchema,
+  BoundarySchema,
+  BoxSizeSchema,
+  BoxSpacingSchema,
+  DropShadowSchema,
+  FontSchema,
+  JsonValueSchema,
+  ShapeRefSchema,
+} from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
 
 import type {
@@ -62,6 +71,21 @@ const jsonValue = (value: unknown): JsonValue | undefined =>
 const positiveNumber = (value: unknown): number | undefined => (isFiniteNumber(value) && value > 0 ? value : undefined);
 const nonnegativeNumber = (value: unknown): number | undefined =>
   isFiniteNumber(value) && value >= 0 ? value : undefined;
+const boxSpacingValue = (value: unknown): number | IRBoxSpacing | undefined => {
+  if (isFiniteNumber(value) && value >= 0) return value;
+  const result = BoxSpacingSchema.safeParse(value);
+  return result.success ? result.data : undefined;
+};
+const axisScaleValue = (value: unknown): number | IRAxisScale | undefined => {
+  if (isFiniteNumber(value) && value > 0) return value;
+  const result = AxisScaleSchema.safeParse(value);
+  return result.success ? result.data : undefined;
+};
+const boxSizeValue = (value: unknown): number | IRBoxSize | undefined => {
+  if (isFiniteNumber(value) && value >= 0) return value;
+  const result = BoxSizeSchema.safeParse(value);
+  return result.success ? result.data : undefined;
+};
 const booleanValue = (value: unknown): boolean | undefined => {
   if (typeof value === 'boolean') return value;
   if (value === 'true') return true;
@@ -291,10 +315,6 @@ const numericNodeChannels: {
   fillOpacity: NodeChannelDefinition<number>;
   drawOpacity: NodeChannelDefinition<number>;
   rotate: NodeChannelDefinition<number>;
-  padding: NodeChannelDefinition<number>;
-  minimumSize: NodeChannelDefinition<number>;
-  minimumWidth: NodeChannelDefinition<number>;
-  minimumHeight: NodeChannelDefinition<number>;
   zIndex: NodeChannelDefinition<number>;
   strokeWidth: NodeChannelDefinition<number>;
 } = {
@@ -360,66 +380,6 @@ const numericNodeChannels: {
       ),
     deliver: (node, value) => {
       node.rotate = value;
-    },
-  }),
-  padding: defineNodeChannel<number>({
-    channel: 'padding',
-    output: { outputKind: 'number', range: [0, 0] },
-    resolve: ctx =>
-      makeNumericNodeResolver(
-        ctx.node,
-        ctx.rows,
-        ctx.fieldTypes,
-        mark => pickStyleChannel<number>(mark, 'padding'),
-        'padding',
-      ),
-    deliver: (node, value) => {
-      node.padding = value;
-    },
-  }),
-  minimumSize: defineNodeChannel<number>({
-    channel: 'minimumSize',
-    output: { outputKind: 'number', range: [0, 0] },
-    resolve: ctx =>
-      makeNumericNodeResolver(
-        ctx.node,
-        ctx.rows,
-        ctx.fieldTypes,
-        mark => pickStyleChannel<number>(mark, 'minimumSize'),
-        'minimumSize',
-      ),
-    deliver: (node, value) => {
-      node.minimumSize = value;
-    },
-  }),
-  minimumWidth: defineNodeChannel<number>({
-    channel: 'minimumWidth',
-    output: { outputKind: 'number', range: [0, 0] },
-    resolve: ctx =>
-      makeNumericNodeResolver(
-        ctx.node,
-        ctx.rows,
-        ctx.fieldTypes,
-        mark => pickStyleChannel<number>(mark, 'minimumWidth'),
-        'minimumWidth',
-      ),
-    deliver: (node, value) => {
-      node.minimumWidth = value;
-    },
-  }),
-  minimumHeight: defineNodeChannel<number>({
-    channel: 'minimumHeight',
-    output: { outputKind: 'number', range: [0, 0] },
-    resolve: ctx =>
-      makeNumericNodeResolver(
-        ctx.node,
-        ctx.rows,
-        ctx.fieldTypes,
-        mark => pickStyleChannel<number>(mark, 'minimumHeight'),
-        'minimumHeight',
-      ),
-    deliver: (node, value) => {
-      node.minimumHeight = value;
     },
   }),
   zIndex: defineNodeChannel<number>({
@@ -511,60 +471,36 @@ const directNodeChannels = {
       node.cornerRadius = value;
     },
   ),
-  scale: defineSimpleNodeChannel<number>(
+  scale: defineSimpleNodeChannel<JsonValue>(
     'scale',
-    { outputKind: 'number', range: [0, 0] },
-    positiveNumber,
+    { outputKind: 'json' },
+    value => axisScaleValue(value),
     (node, value) => {
-      node.scale = value;
+      node.scale = value as number | IRAxisScale;
     },
   ),
-  xScale: defineSimpleNodeChannel<number>(
-    'xScale',
-    { outputKind: 'number', range: [0, 0] },
-    positiveNumber,
+  minimumSize: defineSimpleNodeChannel<JsonValue>(
+    'minimumSize',
+    { outputKind: 'json' },
+    value => boxSizeValue(value),
     (node, value) => {
-      node.xScale = value;
+      node.minimumSize = value as number | IRBoxSize;
     },
   ),
-  yScale: defineSimpleNodeChannel<number>(
-    'yScale',
-    { outputKind: 'number', range: [0, 0] },
-    positiveNumber,
+  padding: defineSimpleNodeChannel<JsonValue>(
+    'padding',
+    { outputKind: 'json' },
+    value => boxSpacingValue(value),
     (node, value) => {
-      node.yScale = value;
+      node.padding = value as number | IRBoxSpacing;
     },
   ),
-  innerXSep: defineSimpleNodeChannel<number>(
-    'innerXSep',
-    { outputKind: 'number', range: [0, 0] },
-    nonnegativeNumber,
-    (node, value) => {
-      node.innerXSep = value;
-    },
-  ),
-  innerYSep: defineSimpleNodeChannel<number>(
-    'innerYSep',
-    { outputKind: 'number', range: [0, 0] },
-    nonnegativeNumber,
-    (node, value) => {
-      node.innerYSep = value;
-    },
-  ),
-  outerSep: defineSimpleNodeChannel<number>(
-    'outerSep',
-    { outputKind: 'number', range: [0, 0] },
-    nonnegativeNumber,
-    (node, value) => {
-      node.outerSep = value;
-    },
-  ),
-  margin: defineSimpleNodeChannel<number>(
+  margin: defineSimpleNodeChannel<JsonValue>(
     'margin',
-    { outputKind: 'number', range: [0, 0] },
-    nonnegativeNumber,
+    { outputKind: 'json' },
+    value => boxSpacingValue(value),
     (node, value) => {
-      node.margin = value;
+      node.margin = value as number | IRBoxSpacing;
     },
   ),
   dashed: defineSimpleNodeChannel<boolean>('dashed', { outputKind: 'boolean' }, booleanValue, (node, value) => {
@@ -659,10 +595,6 @@ export type BuiltinNodeChannels = {
   fillOpacity: NodeChannelDefinition<number>;
   drawOpacity: NodeChannelDefinition<number>;
   rotate: NodeChannelDefinition<number>;
-  padding: NodeChannelDefinition<number>;
-  minimumSize: NodeChannelDefinition<number>;
-  minimumWidth: NodeChannelDefinition<number>;
-  minimumHeight: NodeChannelDefinition<number>;
   zIndex: NodeChannelDefinition<number>;
   textColor: NodeChannelDefinition<string>;
   size: NodeChannelDefinition<number>;

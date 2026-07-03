@@ -3,10 +3,8 @@ import type { ZodType } from 'zod';
 import type { IRChild } from '../../schemas';
 
 /**
- * Tier 2 composite 注册项
- * @description domain 包注册一个 Tier 2 type 的全部契约。`schema` 是完整节点 schema（extend `CompositeBaseSchema`，
- *   含 namespace / type literal + 字段 + describe）；`expand` 收 `schema.parse` 后的强类型节点、产 Tier 1。
- *   definition 显式声明 namespace / type，`defineComposite` 会与 schema literal 对账并保留强类型 `expand`。
+ * Tier 2 composite 注册项。
+ * @description 描述一个 composite 节点的 schema 和展开逻辑；定义本身不进入 IR。
  */
 export type CompositeDefinition<T = unknown> = {
   /** composite IR 节点引用的 provider namespace。 */

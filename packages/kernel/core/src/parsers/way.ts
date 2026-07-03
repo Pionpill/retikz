@@ -11,8 +11,10 @@ import type {
   IRLineStep,
   IRMoveStep,
   IRStep,
+  IRStepAnisotropicRadius,
   IRStepLabel,
   IRStepLabelInput,
+  IRStepRadius,
   IRTarget,
 } from '../schemas';
 
@@ -77,14 +79,14 @@ export type WayBendOp = {
  * @description 按起末角度 + 半径画弧；与 curve/fold infix 不同——只消耗前一 target 作圆心，不与下一项合并
  */
 export type WayArcOp = {
-  arc: { startAngle: number; endAngle: number; radius: number };
+  arc: { startAngle: number; endAngle: number; radius: IRStepRadius };
 };
 
 /** 整圆算子（infix），以上一项为圆心、给定半径画整圆，pen 留圆心 */
 export type WayCircleOp = { circle: { radius: number } };
 
 /** 整椭圆算子（infix），以上一项为圆心、给定 x/y 半径画整椭圆，pen 留圆心 */
-export type WayEllipseOp = { ellipse: { radiusX: number; radiusY: number } };
+export type WayEllipseOp = { ellipse: { radius: IRStepAnisotropicRadius } };
 
 /** 边标注 sugar 形态：字符串=`{text:s}`，对象=IR `step.label` 字面一致 */
 export type WayLabel = IRStepLabelInput | string;
@@ -319,8 +321,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
         const ellipse: IREllipsePathStep = {
           type: 'step',
           kind: 'ellipsePath',
-          radiusX: item.ellipse.radiusX,
-          radiusY: item.ellipse.radiusY,
+          radius: item.ellipse.radius,
         };
         if (label) ellipse.label = label;
         out.push(ellipse);

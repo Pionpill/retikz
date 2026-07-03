@@ -1,14 +1,13 @@
+import type { Position } from '@retikz/math';
+
 import { z } from 'zod';
 
 import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
-import type { Position } from '../../shared/geometry';
-import type { Rect } from '../../shared/geometry';
-import type { ContourSegment, FilletSolution } from '../../shared/geometry';
+import type { ContourSegment, FilletSolution, Rect } from '../../shared';
 import type { SectorGeometry } from './sector-geometry';
 
 import { defineShape } from '../../contract';
-import { localToWorld } from '../../shared/geometry';
-import { boundaryFromContour, contourCommands, filletContour } from '../../shared/geometry';
+import { boundaryFromContour, contourCommands, filletContour, localToWorld, RAD_TO_DEG } from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive } from './outline';
 import { sectorGeometry, sectorPolarPoint } from './sector-geometry';
 
@@ -51,7 +50,7 @@ const sectorSegments = (rect: Rect, geo: SectorGeometry, params: SectorParams): 
   const apex = toWorld(rect, geo, [0, 0]);
   // arc 角度走「圆心局部极角」约定；rect 旋转（弧度）下世界系极角整体加 rotate（度），与端点 toWorld 自洽。
   //   emit 收 rect.rotate=0（外层 group 施旋转）→ 偏移 0、角度逐字同现状；boundaryPoint 收带 rotate 的 rect。
-  const rotateDeg = ((rect.rotate ?? 0) * 180) / Math.PI;
+  const rotateDeg = (rect.rotate ?? 0) * RAD_TO_DEG;
   const sa = start + rotateDeg;
   const ea = end + rotateDeg;
   const outerStart = toWorld(rect, geo, sectorPolarPoint(outerRadius, start));
@@ -113,25 +112,20 @@ export const sector = defineShape({
     .strictObject({
       innerRadius: z
         .number()
-
         .nonnegative()
         .describe('Inner radius (user units); 0 = solid pie slice.'),
       outerRadius: z
         .number()
-
         .positive()
         .describe('Outer radius (user units); must be > innerRadius.'),
       startAngle: z
         .number()
-
         .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
       endAngle: z
         .number()
-
         .describe('End angle in degrees; swept clockwise in screen space from startAngle.'),
       cornerRadius: z
         .number()
-
         .nonnegative()
         .optional()
         .describe(

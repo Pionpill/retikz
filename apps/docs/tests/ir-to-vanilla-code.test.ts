@@ -94,14 +94,14 @@ describe('irToVanillaCode', () => {
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10 },
             { type: 'step', kind: 'circlePath', radius: 8 },
-            { type: 'step', kind: 'ellipsePath', radiusX: 12, radiusY: 6 },
+            { type: 'step', kind: 'ellipsePath', radius: { x: 12, y: 6 } },
           ],
         },
       ]),
     );
     expect(code).toContain('{ arc: { startAngle: 0, endAngle: 90, radius: 10 } }');
     expect(code).toContain('{ circle: { radius: 8 } }');
-    expect(code).toContain('{ ellipse: { radiusX: 12, radiusY: 6 } }');
+    expect(code).toContain('{ ellipse: { radius: { x: 12, y: 6 } } }');
     expect(parseWay([[0, 0], { arc: { startAngle: 0, endAngle: 90, radius: 10 } }])).toEqual([
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10 },

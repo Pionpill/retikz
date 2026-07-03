@@ -144,8 +144,7 @@ const Demo: FC = () => (
       stroke="lightgray"
       dashed
       cornerRadius={6}
-      innerXSep={10}
-      innerYSep={4}
+      padding={{ x: 10, y: 4 }}
       align="left"
       text={[
         { text: 'angle α = 30°', fill: 'green' },

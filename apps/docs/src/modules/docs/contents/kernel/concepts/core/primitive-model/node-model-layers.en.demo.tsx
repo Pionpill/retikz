@@ -33,8 +33,7 @@ const Demo: FC = () => (
     />
     <Ellipse
       center={[0, 0]}
-      radiusX={BBOX_WIDTH / 2}
-      radiusY={BBOX_HEIGHT / 2}
+      radius={{ x: BBOX_WIDTH / 2, y: BBOX_HEIGHT / 2 }}
       fill="none"
       stroke="darkorange"
       strokeWidth={2}

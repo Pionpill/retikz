@@ -22,8 +22,7 @@ const Demo: FC = () => (
       id="bar1"
       position={[-150, 55]}
       shape="rectangle"
-      minimumWidth={24}
-      minimumHeight={36}
+      minimumSize={{ width: 24, height: 36 }}
       fill="#0ea5e9"
       animations={[growUp()]}
     />
@@ -31,8 +30,7 @@ const Demo: FC = () => (
       id="bar2"
       position={[-110, 45]}
       shape="rectangle"
-      minimumWidth={24}
-      minimumHeight={56}
+      minimumSize={{ width: 24, height: 56 }}
       fill="#0ea5e9"
       animations={[growUp()]}
     />

@@ -56,6 +56,8 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 
 优先把字段契约集中在 `XxxBaseSchema`，跨字段 / 跨 kind 语义放最终 `XxxSchema.superRefine(...)`。
 
+同一概念出现多个同前缀一级字段时，优先收敛成一个对象字段；对象子字段用命名 schema/type 承载，并通过 `shape` spread、`.extend()` 或对象 spread 复用，不重复声明同一份字段 shape。
+
 适用场景：
 
 - 大部分字段共享，只是不同 `kind` / 模式有组合约束。

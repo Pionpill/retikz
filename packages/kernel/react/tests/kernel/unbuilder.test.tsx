@@ -405,7 +405,7 @@ describe('convertIRToReactNode', () => {
     expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
   });
 
-  it('ellipsePath step round-trip：radiusX / radiusY 透传保留', () => {
+  it('ellipsePath step round-trip：radius object 透传保留', () => {
     const ir: IR = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
@@ -414,7 +414,7 @@ describe('convertIRToReactNode', () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'ellipsePath', radiusX: 8, radiusY: 4 },
+            { type: 'step', kind: 'ellipsePath', radius: { x: 8, y: 4 } },
           ],
         },
       ],
@@ -481,7 +481,7 @@ describe('convertIRToReactNode', () => {
                 label: { text: 'A' },
               },
               { type: 'step', kind: 'circlePath', radius: 4, label: { text: 'O' } },
-              { type: 'step', kind: 'ellipsePath', radiusX: 6, radiusY: 3, label: { text: 'E' } },
+              { type: 'step', kind: 'ellipsePath', radius: { x: 6, y: 3 }, label: { text: 'E' } },
             ],
           },
         ],

@@ -1,6 +1,8 @@
-﻿import type { RibbonWidthProfileDefinition } from '../../../contract';
+﻿import type { Vector2 } from '@retikz/math';
+
+import type { RibbonWidthProfileDefinition } from '../../../contract';
 import type { IRPathBase, IRPathRibbonOptions, IRPosition } from '../../../schemas';
-import type { SegmentSample, Vector2 } from '../../../shared/geometry';
+import type { SegmentSample } from '../../../shared/geometry';
 import type { EmitPathWarnHook } from '../types';
 
 /**

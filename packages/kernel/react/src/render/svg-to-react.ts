@@ -17,6 +17,7 @@ const ATTR_KEBAB_TO_CAMEL: Record<string, string> = {
   'stroke-opacity': 'strokeOpacity',
   'stroke-width': 'strokeWidth',
   'stroke-dasharray': 'strokeDasharray',
+  'stroke-dashoffset': 'strokeDashoffset',
   'stroke-linecap': 'strokeLinecap',
   'stroke-linejoin': 'strokeLinejoin',
   'font-size': 'fontSize',

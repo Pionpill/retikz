@@ -14,6 +14,7 @@ type GridPathVisualProps = Pick<
   | 'stroke'
   | 'strokeWidth'
   | 'dashPattern'
+  | 'dashOffset'
   | 'lineCap'
   | 'lineJoin'
   | 'thickness'
@@ -55,6 +56,8 @@ export type GridProps = PathVisualProps & {
   majorStrokeWidth?: GridPathVisualProps['strokeWidth'];
   /** 主网格虚线 */
   majorDashPattern?: GridPathVisualProps['dashPattern'];
+  /** 主网格虚线偏移。 */
+  majorDashOffset?: GridPathVisualProps['dashOffset'];
   /** 主网格端点 */
   majorLineCap?: GridPathVisualProps['lineCap'];
   /** 主网格拐点 */
@@ -81,6 +84,8 @@ export type GridProps = PathVisualProps & {
   borderStrokeWidth?: GridPathVisualProps['strokeWidth'];
   /** 外边框虚线 */
   borderDashPattern?: GridPathVisualProps['dashPattern'];
+  /** 外边框虚线偏移。 */
+  borderDashOffset?: GridPathVisualProps['dashOffset'];
   /** 外边框端点 */
   borderLineCap?: GridPathVisualProps['lineCap'];
   /** 外边框拐点 */
@@ -251,6 +256,7 @@ const getMajorVisual = (props: GridProps, base: PathVisualProps): PathVisualProp
   ...(props.majorStroke !== undefined ? { stroke: props.majorStroke } : {}),
   ...(props.majorStrokeWidth !== undefined ? { strokeWidth: props.majorStrokeWidth } : {}),
   ...(props.majorDashPattern !== undefined ? { dashPattern: props.majorDashPattern } : {}),
+  ...(props.majorDashOffset !== undefined ? { dashOffset: props.majorDashOffset } : {}),
   ...(props.majorLineCap !== undefined ? { lineCap: props.majorLineCap } : {}),
   ...(props.majorLineJoin !== undefined ? { lineJoin: props.majorLineJoin } : {}),
   ...(props.majorThickness !== undefined ? { thickness: props.majorThickness } : {}),
@@ -263,6 +269,7 @@ const getBorderVisual = (props: GridProps): PathVisualProps => ({
   ...(props.borderStroke !== undefined ? { stroke: props.borderStroke } : {}),
   ...(props.borderStrokeWidth !== undefined ? { strokeWidth: props.borderStrokeWidth } : {}),
   ...(props.borderDashPattern !== undefined ? { dashPattern: props.borderDashPattern } : {}),
+  ...(props.borderDashOffset !== undefined ? { dashOffset: props.borderDashOffset } : {}),
   ...(props.borderLineCap !== undefined ? { lineCap: props.borderLineCap } : {}),
   ...(props.borderLineJoin !== undefined ? { lineJoin: props.borderLineJoin } : {}),
   ...(props.borderThickness !== undefined ? { thickness: props.borderThickness } : {}),

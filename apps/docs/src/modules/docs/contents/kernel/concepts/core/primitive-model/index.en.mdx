@@ -5,7 +5,7 @@ description: 'Understand a retikz Node like a DOM box model: content, padding, s
 
 A primitive is the smallest drawable, referenceable unit in retikz. The **primitive model** describes how a primitive is built up geometrically — from content, inner frame, and shape, out to the bounding box, boundary, and anchors — so it can be measured, laid out, connected, and referenced. It is an abstraction, not tied to one specific component.
 
-Node is the most common concrete implementation of this model. Think of it as a box model that paths can recognize: `position` gives the semantic reference point; text measurement, `innerXSep` / `innerYSep`, and minimum size form the inner frame; shape wraps that frame into a visual bounding box; and boundary plus anchors decide where paths connect.
+Node is the most common concrete implementation of this model. Think of it as a box model that paths can recognize: `position` gives the semantic reference point; text measurement, `padding`, and minimum size form the inner frame; shape wraps that frame into a visual bounding box; and boundary plus anchors decide where paths connect.
 
 ## Anatomy of the Model
 
@@ -22,7 +22,7 @@ From the inside out, the layers are: the content box innermost, then the inner f
 | Layer        | Defined by                                                           | Affects                                                                              |
 | ------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | Content box  | `text` / children / font                                             | Base text measurement                                                                |
-| Inner frame  | Text measurement + `innerXSep` / `innerYSep` + minimum size          | Base half-axes passed to the shape                                                   |
+| Inner frame  | Text measurement + `padding` + minimum size                          | Base half-axes passed to the shape                                                   |
 | Shape        | `shape.circumscribe` and `shape.emit`                                | The visible outline                                                                  |
 | Bounding box | Shape enclosing the inner frame (visual envelope, excludes `margin`) | Base for rendering/clipping; plus `margin` it becomes the layout footprint / viewBox |
 | Boundary     | `boundary`, following shape by default                               | The surface border anchors attach to (automatic / named direction / angle)           |
@@ -32,28 +32,28 @@ Reading the figure follows the compile order:
 
 <ComponentPreview name="node-model-pipeline" size="xs" hideCode />
 
-The bounding box encloses only the rendered shape, not `margin`. `margin` (`outerSep`) is a uniform offset outside the connection boundary: it pushes **every border anchor** (automatic endpoints and explicit `.top` / `.30`) out by `margin`, and the node occupies that enlarged extent in viewBox / layout — the visible shape itself does not change (matching TikZ `outer sep`).
+The bounding box encloses only the rendered shape, not `margin`. `margin` is an offset outside the connection boundary: it pushes **every border anchor** (automatic endpoints and explicit `.top` / `.30`) outward, and the node occupies that enlarged extent in viewBox / layout. The visible shape itself does not change.
 
 ## Box Model
 
 Like the CSS box model, a Node is three nested frames from the inside out.
 
 - **Content box**: determined by `text` / children and `font` — the base size from text measurement.
-- **Inner frame**: the content box plus `innerXSep` / `innerYSep` (whose symmetric alias is `padding`), taken at least as large as `minimumWidth` / `minimumHeight` (or `minimumSize`). This is the base half-axes passed to the shape — for a rectangular node, it is the drawn shape.
-- **Outer frame**: the inner frame plus `outerSep` (whose symmetric alias is `margin`). It does not change the visible shape; it pushes the node's connection/reference boundary out by `margin` — every border anchor (automatic endpoints and explicit ones like `.top`) lands on this ring, and the node's layout footprint / viewBox is measured from it too (matching TikZ `outer sep`).
+- **Inner frame**: the content box plus `padding`, taken at least as large as `minimumSize`. This is the base half-axes passed to the shape — for a rectangular node, it is the drawn shape.
+- **Outer frame**: the inner frame plus `margin`. It does not change the visible shape; it pushes the node's connection/reference boundary outward — every border anchor (automatic endpoints and explicit ones like `.top`) lands on this ring, and the node's layout footprint / viewBox is measured from it too.
 
 <ComponentPreview name="node-frames" size="md" hideCode />
 
-The innermost gray block is the content box, the middle dashed ring is the inner frame (the rectangular node's shape), and the outermost dashed ring is the outer frame (the outer boundary where border anchors and path endpoints land). The two gaps are `innerSep` (i.e. `padding`, between the content box and the shape, enlarging the shape) and `outerSep` (i.e. `margin`, between the shape and the outer boundary — the shape stays, but anchors / path endpoints move out and the layout footprint includes it).
+The innermost gray block is the content box, the middle dashed ring is the inner frame (the rectangular node's shape), and the outermost dashed ring is the outer frame (the outer boundary where border anchors and path endpoints land). The two gaps are `padding` (between the content box and the shape, enlarging the shape) and `margin` (between the shape and the outer boundary — the shape stays, but anchors / path endpoints move out and the layout footprint includes it).
 
-The inner frame answers "how large must this node be at minimum" and is the starting point for all later geometry: the shape circumscribes it, and connections and anchors ultimately land on boundaries derived from it. Even an empty-text node has an inner frame — inner sep and minimum size keep it from collapsing to a point.
+The inner frame answers "how large must this node be at minimum" and is the starting point for all later geometry: the shape circumscribes it, and connections and anchors ultimately land on boundaries derived from it. Even an empty-text node has an inner frame — padding and minimum size keep it from collapsing to a point.
 
 | Prop                 | Changes                                                              | Result                                                                                                         |
 | -------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `padding` (innerSep) | Distance from content to shape                                       | Shape grows, bounding box grows                                                                                |
-| `margin` (outerSep)  | Uniform outer offset around the connection boundary (TikZ outer sep) | Shape stays the same; all border anchors and path endpoints move out, and the layout footprint includes margin |
+| `padding` | Distance from content to shape              | Shape grows, bounding box grows                                                                                |
+| `margin`  | Outer offset around the connection boundary | Shape stays the same; all border anchors and path endpoints move out, and the layout footprint includes margin |
 
-Padding grows the shape itself; margin leaves the shape untouched and instead pushes the node's outer boundary (anchors / connections / footprint) outward — matching TikZ `outer sep`. It defaults to 0, so unset means zero effect.
+Padding grows the shape itself; margin leaves the shape untouched and instead pushes the node's outer boundary (anchors / connections / footprint) outward. It defaults to 0, so unset means zero effect.
 
 ## Shape
 
@@ -94,11 +94,11 @@ When a Node borrows another boundary, retikz lays that boundary over the current
 
 So the bounding box is the visual envelope used for rendering (plus `margin` it becomes the layout footprint), while the boundary is closer to a connection hit surface — neither is the drawn shell.
 
-`outerSep` (`margin`) is orthogonal to boundary, and together they define the outer edge: **the boundary sets its shape** (hugging the shape, or borrowing circle / rectangle), while **`outerSep` sets how far the boundary sits from the node's interior**. In other words, `margin` is the knob for the gap between the boundary and the inner shape — turn it up and the boundary, together with every border anchor and automatic endpoint, moves uniformly away from the shape, wrapping the whole node in a ring of connection clearance; at the default 0 the boundary hugs the shape. That gap is exactly the `outerSep` ring in the [box model](#box-model) figure.
+`margin` is orthogonal to boundary, and together they define the outer edge: **the boundary sets its shape** (hugging the shape, or borrowing circle / rectangle), while **`margin` sets how far the boundary sits from the node's interior**. In other words, `margin` is the knob for the gap between the boundary and the inner shape — turn it up and the boundary, together with every border anchor and automatic endpoint, moves away from the shape, wrapping the whole node in a ring of connection clearance; at the default 0 the boundary hugs the shape. That gap is exactly the `margin` ring in the [box model](#box-model) figure.
 
 <ComponentPreview name="margin-boundary-gap" size="md" hideCode />
 
-Each column nests three layers: the innermost gray block is the text area (content box), the solid currentColor outline is the shape (inner frame — what a rectangular node actually draws), the dashed ring is the boundary, and the gray dots are named directional anchors on it. Left and middle use the default `boundary="shape"`: the larger the `margin`, the farther the boundary and its anchors sit from the shape, while the shape and text area stay put. Right uses `boundary="circle"`: `margin` likewise pushes the boundary out from the shape (circle radius = longer half-axis + `margin`), but its outer **shape** is set by `boundary`. Middle and right share the same `margin` but differ in boundary — exactly the "`outerSep` sets how far, boundary sets the shape" split.
+Each column nests three layers: the innermost gray block is the text area (content box), the solid currentColor outline is the shape (inner frame — what a rectangular node actually draws), the dashed ring is the boundary, and the gray dots are named directional anchors on it. Left and middle use the default `boundary="shape"`: the larger the `margin`, the farther the boundary and its anchors sit from the shape, while the shape and text area stay put. Right uses `boundary="circle"`: `margin` likewise pushes the boundary out from the shape (circle radius = longer half-axis + `margin`), but its outer **shape** is set by `boundary`. Middle and right share the same `margin` but differ in boundary — exactly the "`margin` sets how far, boundary sets the shape" split.
 
 ## Anchors
 
@@ -143,7 +143,7 @@ Custom shapes define their anchor behavior through `ShapeDefinition`. Supporting
 
 Edge-proportional `{ side, fraction }` takes the point at proportion `fraction ∈ [0, 1]` along an edge of the shape's **real boundary** — top/bottom run left→right, right/left run top→bottom: rectangle along the straight edge, circle / ellipse along that side's visible perimeter arc, diamond along the visible slanted edges. `{ side: 'left', fraction: 1/3 }` is the left edge's one-third point; `{ side: 'top', fraction: 0.5 }` is the top-edge midpoint (equals the named `'top'`).
 
-When resolving, named directional and numeric angle anchors are **border anchors**: they go through the selected boundary surface and are then pushed out by `outerSep` — with `boundary="shape"` they land on the bounding box (including `outerSep`) rectangle direction, and angle anchors intersect the expanded boundary along a ray. `center`, shape-specific anchors, and edge proportion points always use the visual shape, taking neither `boundary` nor `outerSep`.
+When resolving, named directional and numeric angle anchors are **border anchors**: they go through the selected boundary surface and are then pushed out by `margin` — with `boundary="shape"` they land on the bounding box (including `margin`) rectangle direction, and angle anchors intersect the expanded boundary along a ray. `center`, shape-specific anchors, and edge proportion points always use the visual shape, taking neither `boundary` nor `margin`.
 
 For how these points are referenced by another primitive, and how connection endpoints resolve between auto and locked modes, continue with [Primitive Relations](/kernel/concepts/kernel/primitive-relations).
 

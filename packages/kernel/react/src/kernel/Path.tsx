@@ -27,6 +27,8 @@ export type PathProps = HydrationEventProps & {
   strokeWidth?: IRPath['strokeWidth'];
   /** 描边 dash pattern（如 [4, 2]） */
   dashPattern?: IRPath['dashPattern'];
+  /** 描边 dash offset。 */
+  dashOffset?: IRPath['dashOffset'];
   /** 端点形状（TikZ `line cap`）：`'butt'`（默认 / 直角）/ `'round'`（半圆）/ `'square'`（方头外扩半 stroke） */
   lineCap?: IRPath['lineCap'];
   /** 拐点形状（TikZ `line join`）：`'miter'`（默认 / 尖角）/ `'round'`（圆角）/ `'bevel'`（切角） */

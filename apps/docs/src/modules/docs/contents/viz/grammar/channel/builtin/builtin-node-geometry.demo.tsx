@@ -36,8 +36,7 @@ const Demo: FC = () => (
       padding="pad"
       cornerRadius="radius"
       rotate="angle"
-      minimumWidth={54}
-      minimumHeight={28}
+      minimumSize={{ width: 54, height: 28 }}
     />
     <Axis dimension="x" />
     <Axis dimension="y" grid />

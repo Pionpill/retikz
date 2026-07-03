@@ -70,7 +70,7 @@ Current built-in codes (the machine-readable `CompileWarningCode` constant is pu
 | `DUPLICATE_NODE_ID`             | A duplicate id within the same namespace frame; the later definition overrides the earlier (last-wins)                        |
 | `COMPOSITE_NOT_REGISTERED`      | A composite node's `namespace.type` is not registered; the node is skipped                                                    |
 | `ANIMATION_INVALID_PROPERTY`    | An animation track has an invalid property (e.g. a non-viewBox property at scene root); the track is dropped                  |
-| `ARC_MISSING_RADIUS`            | An arc step lacks `radius` (circular) or both `radiusX` + `radiusY` (elliptical); the whole path is skipped                   |
+| `ARC_MISSING_RADIUS`            | An arc step lacks `radius`; the whole path is skipped. `radius` may be a number for circular arcs or `{ x, y }` for elliptical arcs                   |
 | `PARTIAL_ARC_NEEDS_BOTH_ANGLES` | `circlePath` / `ellipsePath` partial arcs need both `startAngle` and `endAngle`, otherwise treated as a full circle / ellipse |
 | `PARTIAL_ARC_CLOSED_INVALID`    | A partial circle / ellipse (with angles) cannot use `closed:'closed'`; falls back to `'chord'`                                |
 

@@ -20,6 +20,7 @@ const toShapeStyle = (layout: NodeLayout, resolvePaint: PaintResolver): Resolved
   strokeOpacity: layout.strokeOpacity,
   strokeWidth: layout.strokeWidth,
   dashPattern: layout.dashPattern,
+  dashOffset: layout.dashOffset,
   cornerRadius: layout.cornerRadius,
   opacity: layout.opacity,
   shadow: layout.shadow,
@@ -51,15 +52,15 @@ export const emitNodePrimitives = (
   const inner: Array<ScenePrimitive> = [...shapePrims];
   if (layout.inlineBlock) {
     // 混排块：逐行按 align 求行起点 originX、按 baselineOffset 求基线 y，委托 laid.emit 产 TextPrim / glyph group
-    const blockTop = layout.rect.y - layout.textHeight / 2;
+    const blockTop = layout.contentCenter[1] - layout.textHeight / 2;
     const halfBlockW = layout.textWidth / 2;
     for (const { laid, baselineOffset } of layout.inlineBlock.lines) {
       const originX =
         layout.align === 'start'
-          ? layout.rect.x - halfBlockW
+          ? layout.contentCenter[0] - halfBlockW
           : layout.align === 'end'
-            ? layout.rect.x + halfBlockW - laid.width
-            : layout.rect.x - laid.width / 2;
+            ? layout.contentCenter[0] + halfBlockW - laid.width
+            : layout.contentCenter[0] - laid.width / 2;
       inner.push(...laid.emit(originX, blockTop + baselineOffset, round));
     }
   } else if (layout.lines) {
@@ -69,8 +70,8 @@ export const emitNodePrimitives = (
     const lineHeight = round(layout.lineHeight);
     inner.push({
       type: 'text',
-      x: round(layout.rect.x + xOffset),
-      y: round(toAlphabeticBaselineY(layout.rect.y, 'middle', layout.lines.length, lineHeight, layout.fontSize)),
+      x: round(layout.contentCenter[0] + xOffset),
+      y: round(toAlphabeticBaselineY(layout.contentCenter[1], 'middle', layout.lines.length, lineHeight, layout.fontSize)),
       lines: layout.lines,
       fontSize: layout.fontSize,
       fontFamily: layout.fontFamily,
@@ -106,6 +107,7 @@ export const emitNodePrimitives = (
           stroke: style?.stroke ?? lab.textColor ?? 'currentColor',
           strokeWidth: style?.strokeWidth ?? 1,
           dashPattern: style?.dashPattern,
+          dashOffset: style?.dashOffset,
           opacity: lab.opacity ?? layout.opacity,
         });
       }

@@ -93,6 +93,39 @@ describe('drawScene 规格', () => {
     expect(strokeCalls.map(call => call.lineJoin)).toEqual(['bevel', 'miter']);
   });
 
+  it('dash-offset-state-leak：独立图元不继承前一个图元的 lineDashOffset', () => {
+    const context = createSpyCanvasContext();
+    const isolatedScene: Scene = {
+      layout: { x: 0, y: 0, width: 80, height: 40 },
+      primitives: [
+        {
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'line', to: [20, 0] },
+          ],
+          stroke: '#111',
+          dashPattern: [4, 2],
+          dashOffset: 6,
+        },
+        {
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [0, 10] },
+            { kind: 'line', to: [20, 10] },
+          ],
+          stroke: '#222',
+          dashPattern: [4, 2],
+        },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, isolatedScene);
+
+    const strokeCalls = context.calls.filter(call => call.name === 'stroke');
+    expect(strokeCalls.map(call => call.lineDashOffset)).toEqual([6, 0]);
+  });
+
   it('text-default-font-family: uses DrawOptions.defaultFontFamily when text has no fontFamily', () => {
     const context = createSpyCanvasContext();
     const textScene: Scene = {

@@ -56,7 +56,7 @@ Sometimes you only need horizontal dividers or vertical guides. Turn the other d
 
 `<Grid>` does not add a new low-level primitive. It computes all x / y coordinates that need lines, then creates one `<Path>` for each line. When `border` is enabled, the border is another closed `<Path>`.
 
-That means regular path visual props work on grid lines, including `stroke`, `strokeWidth`, `dashPattern`, `opacity`, and `zIndex`. Major lines override the base line style with `major*` props, while the outer border uses `border*` props.
+That means regular path visual props work on grid lines, including `stroke`, `strokeWidth`, `dashPattern`, `dashOffset`, `opacity`, and `zIndex`. Major lines override the base line style with `major*` props, while the outer border uses `border*` props.
 
 ### Alignment starts from origin
 
@@ -97,6 +97,7 @@ Boundary lines are still grid lines, so they use the normal or major-line style.
 | `majorStroke`      | `string`                                                                                       | —       | Major-line stroke                  |
 | `majorStrokeWidth` | `number`                                                                                       | —       | Major-line stroke width            |
 | `majorDashPattern` | `Array<number>`                                                                                | —       | Major-line dash and gap sequence   |
+| `majorDashOffset`  | `number`                                                                                       | —       | Major-line dash offset             |
 | `majorLineCap`     | `'butt' \| 'round' \| 'square'`                                                                | —       | Major-line endpoint shape          |
 | `majorLineJoin`    | `'miter' \| 'round' \| 'bevel'`                                                                | —       | Major-line corner shape            |
 | `majorThickness`   | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —       | Major-line semantic stroke preset  |
@@ -115,6 +116,7 @@ Boundary lines are still grid lines, so they use the normal or major-line style.
 | `borderStroke`      | `string`                                                                                       | —         | Border stroke                                              |
 | `borderStrokeWidth` | `number`                                                                                       | —         | Border stroke width                                        |
 | `borderDashPattern` | `Array<number>`                                                                                | —         | Border dash and gap sequence                               |
+| `borderDashOffset`  | `number`                                                                                       | —         | Border dash offset                                         |
 | `borderLineCap`     | `'butt' \| 'round' \| 'square'`                                                                | —         | Border endpoint shape                                      |
 | `borderLineJoin`    | `'miter' \| 'round' \| 'bevel'`                                                                | —         | Border corner shape                                        |
 | `borderThickness`   | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —         | Border semantic stroke preset                              |

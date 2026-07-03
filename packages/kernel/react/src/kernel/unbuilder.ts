@@ -76,9 +76,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       kind: 'arc',
       startAngle: step.startAngle,
       endAngle: step.endAngle,
-      ...(step.radius !== undefined && { radius: step.radius }),
-      ...(step.radiusX !== undefined && { radiusX: step.radiusX }),
-      ...(step.radiusY !== undefined && { radiusY: step.radiusY }),
+      radius: step.radius,
       ...(step.center !== undefined && { center: step.center }),
       ...(step.label !== undefined && { label: step.label }),
     });
@@ -98,8 +96,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
     return createElement(Step, {
       key,
       kind: 'ellipsePath',
-      radiusX: step.radiusX,
-      radiusY: step.radiusY,
+      radius: step.radius,
       ...(step.startAngle !== undefined && { startAngle: step.startAngle }),
       ...(step.endAngle !== undefined && { endAngle: step.endAngle }),
       ...(step.closed !== undefined && { closed: step.closed }),

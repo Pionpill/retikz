@@ -34,7 +34,7 @@ describe('@retikz/vanilla Figure.toCanvas', () => {
   it('to-canvas-renders：编译 ir → Scene 并喂给 canvas renderer（setTransform 被调）', () => {
     const canvas = makeFakeCanvas();
     const fig = figure({ width: 200, height: 150 }, [
-      node('a', { position: [0, 0], shape: 'rectangle', minimumWidth: 40, minimumHeight: 20, fill: '#0a0' }),
+      node('a', { position: [0, 0], shape: 'rectangle', minimumSize: { width: 40, height: 20 }, fill: '#0a0' }),
     ]);
     expect(() => fig.toCanvas(canvas)).not.toThrow();
     const calls = (canvas as unknown as { __calls: Array<string> }).__calls;

@@ -55,7 +55,7 @@ const idIr: IR = {
   version: 1,
   type: 'scene',
   children: [
-    { type: 'node', id: 'a', position: [0, 0], shape: 'rectangle', minimumWidth: 40, minimumHeight: 20, fill: '#0a0' },
+    { type: 'node', id: 'a', position: [0, 0], shape: 'rectangle', minimumSize: { width: 40, height: 20 }, fill: '#0a0' },
   ],
 };
 
@@ -110,7 +110,7 @@ describe('@retikz/vanilla mountCanvas', () => {
   it('figure-mountCanvas：Figure.mountCanvas 挂出交互式 CanvasView（hydrate / update / clientToScene）', () => {
     const container = document.createElement('div');
     const fig = figure({ width: 100, height: 100 }, [
-      node('a', { position: [0, 0], shape: 'rectangle', minimumWidth: 40, minimumHeight: 20, fill: '#0a0' }),
+      node('a', { position: [0, 0], shape: 'rectangle', minimumSize: { width: 40, height: 20 }, fill: '#0a0' }),
     ]);
     const view = fig.mountCanvas(container);
     expect(view.root).toBeInstanceOf(HTMLCanvasElement);
@@ -122,7 +122,7 @@ describe('@retikz/vanilla mountCanvas', () => {
   it('mount-canvas-figure-delegates：standalone mountCanvas 收 Figure → delegate figure.mountCanvas', () => {
     const container = document.createElement('div');
     const fig = figure({ width: 100, height: 100 }, [
-      node('a', { position: [0, 0], shape: 'rectangle', minimumWidth: 40, minimumHeight: 20 }),
+      node('a', { position: [0, 0], shape: 'rectangle', minimumSize: { width: 40, height: 20  }}),
     ]);
     const view = mountCanvas(container, fig);
     expect(view.root).toBeInstanceOf(HTMLCanvasElement);

@@ -22,8 +22,7 @@ const Demo: FC = () => (
       id="spin"
       position={[-150, 55]}
       shape="rectangle"
-      minimumWidth={56}
-      minimumHeight={16}
+      minimumSize={{ width: 56, height: 16 }}
       fill="#6366f1"
       animations={[spin()]}
     />
@@ -41,8 +40,7 @@ const Demo: FC = () => (
       id="color"
       position={[160, 55]}
       shape="rectangle"
-      minimumWidth={48}
-      minimumHeight={36}
+      minimumSize={{ width: 48, height: 36 }}
       fill="#3b82f6"
       animations={[colorShift({ from: '#ef4444', to: '#3b82f6' })]}
     />

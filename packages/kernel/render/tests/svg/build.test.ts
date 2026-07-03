@@ -18,10 +18,12 @@ describe('buildPrim —— primitive → SvgNode', () => {
       cornerRadius: 3,
       fill: '#f00',
       strokeWidth: 2,
+      dashOffset: 4,
     };
     const node = buildPrim(rect);
     expect(node.tag).toBe('rect');
     expect(node.attrs['stroke-width']).toBe(2);
+    expect(node.attrs['stroke-dashoffset']).toBe(4);
     expect(node.attrs.rx).toBe(3);
     expect(node.attrs.ry).toBe(3);
     expect(node.attrs.fill).toBe('#f00');
@@ -123,6 +125,7 @@ describe('buildMarkerPrim —— marker primitive → SvgNode', () => {
             { kind: 'move', to: [0, 0] },
             { kind: 'line', to: [1, 0] },
           ],
+          dashOffset: 2,
         },
       ],
     };
@@ -130,7 +133,8 @@ describe('buildMarkerPrim —— marker primitive → SvgNode', () => {
     expect(node.tag).toBe('g');
     expect(node.attrs.transform).toBe('translate(2 3) rotate(45)');
     expect(node.children).toHaveLength(1);
-    expect((node.children as Array<{ tag: string }>)[0].tag).toBe('path');
+    expect((node.children as Array<{ tag: string; attrs: Record<string, unknown> }>)[0].tag).toBe('path');
+    expect((node.children as Array<{ tag: string; attrs: Record<string, unknown> }>)[0].attrs['stroke-dashoffset']).toBe(2);
   });
 });
 

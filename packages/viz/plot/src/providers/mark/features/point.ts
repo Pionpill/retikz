@@ -34,8 +34,6 @@ const POINT_SIZE = 10;
 const pointStyle = (fill: MarkPaint, mark: PointMark): IRNodeDefault => {
   const padding = mark.padding?.kind === 'constant' ? mark.padding.value : undefined;
   const minimumSize = mark.minimumSize?.kind === 'constant' ? mark.minimumSize.value : undefined;
-  const minimumWidth = mark.minimumWidth?.kind === 'constant' ? mark.minimumWidth.value : undefined;
-  const minimumHeight = mark.minimumHeight?.kind === 'constant' ? mark.minimumHeight.value : undefined;
   const stroke = mark.stroke?.kind === 'constant' ? mark.stroke.value : undefined;
   const strokeWidth = mark.strokeWidth?.kind === 'constant' ? mark.strokeWidth.value : undefined;
   const fillOpacity = mark.fillOpacity?.kind === 'constant' ? mark.fillOpacity.value : undefined;
@@ -46,8 +44,6 @@ const pointStyle = (fill: MarkPaint, mark: PointMark): IRNodeDefault => {
     shape: 'circle',
     padding: padding ?? 0,
     minimumSize: minimumSize ?? POINT_SIZE / Math.SQRT2,
-    ...(minimumWidth !== undefined ? { minimumWidth } : {}),
-    ...(minimumHeight !== undefined ? { minimumHeight } : {}),
     ...(typeof fill === 'string' ? { color: fill } : {}),
     fill,
     ...(stroke !== undefined ? { stroke } : {}),

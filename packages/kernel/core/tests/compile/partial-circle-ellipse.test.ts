@@ -80,7 +80,7 @@ describe('部分 ellipsePath', () => {
   it('1/4 椭圆（rx=15 ry=10, 0→90, chord）', () => {
     const ir = path(
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'ellipsePath', radiusX: 15, radiusY: 10, startAngle: 0, endAngle: 90 },
+      { type: 'step', kind: 'ellipsePath', radius: { x: 15, y: 10 }, startAngle: 0, endAngle: 90 },
     );
     expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
       move([15, 0]),
@@ -92,7 +92,7 @@ describe('部分 ellipsePath', () => {
   it('sector 椭圆 → 弧终点连中心再 close', () => {
     const ir = path(
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'ellipsePath', radiusX: 15, radiusY: 10, startAngle: 0, endAngle: 90, closed: 'sector' },
+      { type: 'step', kind: 'ellipsePath', radius: { x: 15, y: 10 }, startAngle: 0, endAngle: 90, closed: 'sector' },
     );
     expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
       move([15, 0]),
@@ -105,7 +105,7 @@ describe('部分 ellipsePath', () => {
   it('整椭圆（无角度）不变', () => {
     const ir = path(
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'ellipsePath', radiusX: 15, radiusY: 10 },
+      { type: 'step', kind: 'ellipsePath', radius: { x: 15, y: 10 } },
     );
     expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
       move([15, 0]),

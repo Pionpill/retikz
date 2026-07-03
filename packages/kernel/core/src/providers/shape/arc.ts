@@ -1,15 +1,13 @@
+import type { Position } from '@retikz/math';
+
 import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
 import { z } from 'zod';
 
 import type { PathCommand, ScenePrimitive, ShapeAnchorName } from '../../contract';
-import type { Position } from '../../shared/geometry';
-import type { Rect } from '../../shared/geometry';
+import type { Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
-import { localToWorld, worldToLocal } from '../../shared/geometry';
-import { normalizeAngularRange } from './angle';
-
-const RAD_TO_DEG = 180 / Math.PI;
+import { localToWorld, normalizeAngleRange, RAD_TO_DEG, worldToLocal } from '../../shared';
 
 /**
  * arc shape 的 per-instance params 类型
@@ -36,7 +34,7 @@ type ArcGeometry = {
 /** arc 的派生几何：圆心局部系 AABB + 圆心相对 AABB 中心偏移 */
 const computeArcGeometry = (params: ArcParams): ArcGeometry => {
   const { radius } = params;
-  const range = normalizeAngularRange(params.startAngle, params.endAngle);
+  const range = normalizeAngleRange(params.startAngle, params.endAngle);
   const center: Position = [0, 0];
   // close=true（弓形）含弦 / 区域，AABB 由弧 bbox 点决定；圆心本身不强制进框（开放弧 / 弓形都不含圆心）
   const points = arcBoundingPoints(center, radius, range.start, range.end);
@@ -84,16 +82,13 @@ export const arc = defineShape({
   paramsSchema: z.strictObject({
     radius: z
       .number()
-
       .positive()
       .describe('Arc radius in user units.'),
     startAngle: z
       .number()
-
       .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
     endAngle: z
       .number()
-
       .describe('End angle in degrees; swept from startAngle in screen space.'),
     close: z
       .boolean()
@@ -161,6 +156,7 @@ export const arc = defineShape({
       strokeOpacity: style.strokeOpacity,
       strokeWidth: style.strokeWidth ?? 1,
       dashPattern: style.dashPattern,
+      dashOffset: style.dashOffset,
       opacity: style.opacity,
       shadow: style.shadow,
       blendMode: style.blendMode,

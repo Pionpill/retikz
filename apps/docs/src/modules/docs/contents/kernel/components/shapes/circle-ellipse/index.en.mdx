@@ -17,7 +17,7 @@ import { Circle, Ellipse } from '@retikz/react';
 
 ```tsx
 <Circle center={[0, 0]} radius={32} fill="none" />
-<Ellipse center={[0, 0]} radiusX={48} radiusY={28} fill="none" />
+<Ellipse center={[0, 0]} radius={{ x: 48, y: 28 }} fill="none" />
 ```
 
 ### Examples
@@ -37,11 +37,11 @@ The common form is `center + radius`. If you already have a rectangular area, yo
 
 <ComponentPreview name="circle-basic" size="sm" />
 
-Ellipse works like Circle, but the radius is split into `radiusX` and `radiusY`. It also supports `corner1 + corner2` and `box`.
+Ellipse works like Circle, but the radius is split into `radius: { x, y }``. It also supports `corner1 + corner2` and `box`.
 
 | Form                               | Best for                                                    |
 | ---------------------------------- | ----------------------------------------------------------- |
-| `{ center, radiusX, radiusY }`     | Known center and radii                                      |
+| `{ center, radius }`     | Known center and radii                                      |
 | `{ center, diameterX, diameterY }` | Known diameters                                             |
 | `{ corner1, corner2 }`             | Fit inside a box                                            |
 | `{ box }`                          | Describe the box with `x/y/origin + width + height`         |
@@ -62,7 +62,7 @@ Ellipse works like Circle, but the radius is split into `radiusX` and `radiusY`.
 |             | + `fit?`                                                                 | `contain` uses the shorter side, `cover` uses the longer side |
 |             | + `inset?` / `outset?`                                                   | Shrink or expand the box before fitting                       |
 |             | + angles (`startAngle` / `endAngle` / `sweepAngle`, any two) + `closed?` | Partial circle: `chord` / `sector` / `open`                   |
-| `<Ellipse>` | `center` + `radiusX` + `radiusY`                                         | Ellipse from center and two radii                             |
+| `<Ellipse>` | `center` + `radius`                                         | Ellipse from center and two radii                             |
 |             | `center` + `diameterX` + `diameterY`                                     | Ellipse from center and two diameters                         |
 |             | `corner1` + `corner2`                                                    | Ellipse inscribed in the box                                  |
 |             | `box`                                                                    | Ellipse from a box, with `inset` / `outset`                   |

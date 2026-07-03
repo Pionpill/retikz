@@ -21,7 +21,7 @@ describe('@retikz/vanilla draw()', () => {
         [0, 0],
         [50, 50],
       ],
-      { dashPattern: [4, 2] },
+      { dashPattern: [4, 2], dashOffset: 3 },
     );
     if (p.type !== 'path') throw new Error('unreachable');
     expect(p.children).toEqual(
@@ -31,6 +31,7 @@ describe('@retikz/vanilla draw()', () => {
       ]),
     );
     expect(p.dashPattern).toEqual([4, 2]);
+    expect(p.dashOffset).toBe(3);
   });
 
   it('way-full-set：Cycle / 折角 / 相对 / 曲线算子全集与 core parseWay 一致', () => {

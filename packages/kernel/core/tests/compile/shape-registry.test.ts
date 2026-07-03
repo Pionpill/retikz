@@ -365,12 +365,12 @@ describe('Shape registry — interaction', () => {
     expect(group?.children.some(c => c.type === 'path')).toBe(true);
   });
 
-  it('injected_shape_with_margin: outerSep inflates the rect passed to boundaryPoint', () => {
+  it('injected_shape_with_margin: margin inflates the rect passed to boundaryPoint', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'A', shape: 'hexagon', position: [0, 0], outerSep: 10 },
+        { type: 'node', id: 'A', shape: 'hexagon', position: [0, 0], margin: 10 },
         {
           type: 'path',
           children: [

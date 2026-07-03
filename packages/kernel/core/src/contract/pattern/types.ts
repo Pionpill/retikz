@@ -1,11 +1,8 @@
 import type { MarkerPrimitive } from '../scene';
 
 /**
- * emit 拿到的运行时上下文
- * @description compile 把已解析的 tile 周期 / 颜色 / 描边粗细传进来；def 据此在局部 tile 坐标系产 motif 几何。
- *   `color` 是 CSS 串（缺省 `currentColor`，主题反应天然——pattern motif 是 `<defs>` 内独立元素，继承 svg color）；
- *   `background` 是可选 tile 底色（缺省透明）；`lineWidth` 是用户显式给的描边粗细 / dots 半径，**用户未设时缺省**
- *   （字段不存在）——这样不同 motif 各自定缺省：lines / grid 缺省描边 1，dots 缺省半径 `size / 5`。
+ * pattern emit 的运行时上下文。
+ * @description 提供 tile 周期、颜色、可选描边粗细和取整函数，供定义生成 motif 几何。
  */
 export type PatternEmitContext = {
   /** 解析后 tile 周期（user units）；= 解析后 pattern.size */
@@ -19,8 +16,7 @@ export type PatternEmitContext = {
   background?: string;
   /**
    * 线 / 网格描边宽；dots motif 用作半径。
-   * @description 仅当用户在 `pattern.lineWidth` 显式给值时存在；缺省（字段不存在）让各 motif 自定默认
-   *   （lines / grid 用 1，dots 用 `size / 5`），保历史几何不退化。
+   * @description 仅当用户在 `pattern.lineWidth` 显式给值时存在；缺省时由 motif 自行决定默认值。
    * @default motif 自定义默认值
    */
   lineWidth?: number;
@@ -29,20 +25,17 @@ export type PatternEmitContext = {
 };
 
 /**
- * 一个 pattern 的可注册定义：默认 tile 周期 + emit
- * @description plain object（factory 友好），含函数、**不进 IR**，走 `CompileOptions.patterns` 运行时注入。
- *   内置 3 motif（lines / dots / grid）也是注册项（无内置特权，对齐 `ShapeDefinition` / `ArrowDefinition`）。
- *   `emit` 在局部 tile 坐标系产 `MarkerPrimitive` 几何（与 arrow marker 同窄子集契约——禁 text / 外部
- *   resourceRef / 递归引用），compile 把产物写进 `SceneResource.tile`、adapter 物化成 `<pattern>`。
+ * 可注册的 pattern 定义。
+ * @description 描述默认 tile 周期和 motif 几何生成能力；定义本身不进入 IR。
  */
 export type PatternDefinition = {
-  /** 注册表 key，由 IR pattern paint 的 `shape` 引用。 */
+  /** pattern 名称，由 IR pattern paint 的 `shape` 引用。 */
   name: string;
   /**
    * tile 周期默认（user units）；用户 `pattern.size` 覆盖；缺省 8
    * @default 8
    */
   defaultSize?: number;
-  /** 局部 tile 坐标 motif 几何（renderer-agnostic）；adapter 把产物物化进 `<pattern>` */
+  /** 局部 tile 坐标中的 motif 几何。 */
   emit: (ctx: PatternEmitContext) => Iterable<MarkerPrimitive>;
 };
