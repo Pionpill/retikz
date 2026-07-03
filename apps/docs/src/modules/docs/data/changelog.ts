@@ -118,8 +118,8 @@ export const changelog: Array<Release> = [
             version: 'alpha.8',
             date: '2026-07-03',
             summary: {
-              zh: 'v0.4 alpha 收口：六个 kernel 包 lockstep bump 到 `0.4.0-alpha.8`，同步 roadmap / changelog / 完备评测边界；本版本不新增运行时 API。',
-              en: 'v0.4 alpha wrap-up: the six kernel packages move in lockstep to `0.4.0-alpha.8`, aligning the roadmap, changelog, and completeness-evaluation boundaries. This release adds no runtime API.',
+              zh: 'v0.4 alpha 收口：六个 kernel 包 lockstep bump 到 `0.4.0-alpha.8`，同步 roadmap / changelog / 完备评测边界，并补齐与 `dashPattern` 配套的 `dashOffset` 通用描边能力。',
+              en: 'v0.4 alpha wrap-up: the six kernel packages move in lockstep to `0.4.0-alpha.8`, aligning the roadmap, changelog, and completeness-evaluation boundaries while adding the `dashOffset` stroke capability that pairs with `dashPattern`.',
             },
             items: [
               {
@@ -130,10 +130,10 @@ export const changelog: Array<Release> = [
                 },
               },
               {
-                label: { zh: '无新增运行时 API', en: 'No new runtime API' },
+                label: { zh: '新增 dashOffset 描边相位', en: 'New dashOffset stroke phase' },
                 content: {
-                  zh: '本次 bump 只更新版本、路线图与发布说明；core IR / Scene / renderer / React / Vanilla / Tex 行为不随 alpha.8 改变。',
-                  en: 'This bump only updates versions, roadmap notes, and release notes; core IR, Scene, renderer, React, Vanilla, and Tex runtime behavior do not change in alpha.8.',
+                  zh: '`IRPath`、`IRNode`、节点 `label.pin`、Scene path / rect / ellipse / marker primitive、React / Vanilla props 现在支持 `dashOffset?: number`；SVG 输出 `stroke-dashoffset`，Canvas stroke 前设置并隔离 `lineDashOffset`。',
+                  en: '`IRPath`, `IRNode`, node `label.pin`, Scene path / rect / ellipse / marker primitives, and React / Vanilla props now support `dashOffset?: number`; SVG emits `stroke-dashoffset`, and Canvas sets and isolates `lineDashOffset` before stroking.',
                 },
               },
             ],

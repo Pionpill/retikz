@@ -102,6 +102,20 @@ describe('buildIR', () => {
     expect(ir.children[0]).toMatchObject({ type: 'path', roundedCorners: 8 });
   });
 
+  it('dashOffset prop 透传到 Node / Path 的 IR', () => {
+    const ir = buildIR(
+      <Fragment>
+        <Node id="A" position={[0, 0]} dashPattern={[4, 2]} dashOffset={3} />
+        <Path dashPattern={[1, 1]} dashOffset={-2}>
+          <Step kind="move" to={[0, 0]} />
+          <Step kind="line" to={[10, 0]} />
+        </Path>
+      </Fragment>,
+    );
+    expect(ir.children[0]).toMatchObject({ type: 'node', dashOffset: 3 });
+    expect(ir.children[1]).toMatchObject({ type: 'path', dashOffset: -2 });
+  });
+
   it('stroke PaintSpec prop 透传进 Node / Path / Scope 的 IR', () => {
     const stroke = {
       kind: 'linearGradient' as const,

@@ -34,6 +34,7 @@ const diode: ShapeDefinition = defineShape({
       strokeOpacity: style.strokeOpacity,
       strokeWidth,
       dashPattern: style.dashPattern,
+      dashOffset: style.dashOffset,
       opacity: style.opacity,
     };
     const left: Position = [round(rect.x - halfWidth), round(rect.y)];

@@ -112,7 +112,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 #### Dash
 
-`dashPattern` 使用 `Array<number>` 表达 dash / gap 长度序列。`[4, 2]` 表示画 4、空 2，单位是 user units。
+`dashPattern` 使用 `Array<number>` 表达 dash / gap 长度序列。`[4, 2]` 表示画 4、空 2，单位是 user units。`dashOffset` 可以移动虚线节奏的起点，常用于让多条虚线对齐。
 
 <ComponentPreview name="draw-dashed" size="sm" />
 
@@ -130,7 +130,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 ### 形状 sugar
 
-除了 `way` 数组连线，Draw 家族还提供一组**形状 sugar**——一行画常见几何形，同样编译期展开为 `<Path>`、与 `<Draw>` / `<Path>` 共用同一套视觉 prop（`fill` / `stroke` / `strokeWidth` / `dashPattern` / `arrow` / `zIndex` 等）：
+除了 `way` 数组连线，Draw 家族还提供一组**形状 sugar**——一行画常见几何形，同样编译期展开为 `<Path>`、与 `<Draw>` / `<Path>` 共用同一套视觉 prop（`fill` / `stroke` / `strokeWidth` / `dashPattern` / `dashOffset` / `arrow` / `zIndex` 等）：
 
 | 组件               | 画什么                   |
 | ------------------ | ------------------------ |
@@ -155,6 +155,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 | `stroke`         | `string`                                                                                       | `currentColor` | 描边色                                                                                                                                         |
 | `strokeWidth`    | `number`                                                                                       | `1`            | 描边宽度                                                                                                                                       |
 | `dashPattern`    | `Array<number>`                                                                                | —              | dash / gap 长度序列，如 `[4, 2]`                                                                                                               |
+| `dashOffset`     | `number`                                                                                       | —              | 虚线起点偏移，单位同路径 user units                                                                                                             |
 | `lineCap`        | `'butt' \| 'round' \| 'square'`                                                                | `'butt'`       | 描边端点形状                                                                                                                                   |
 | `lineJoin`       | `'miter' \| 'round' \| 'bevel'`                                                                | `'miter'`      | 描边拐点形状（仅视觉，不改几何）                                                                                                               |
 | `roundedCorners` | `number`                                                                                       | —              | 折线 line-line 接缝**几何**圆角半径（TikZ `rounded corners=`）；改路径几何，区别于 `lineJoin`。详见 [Path §圆角](/kernel/components/draw/path) |

@@ -21,6 +21,8 @@ export type DrawProps = {
   strokeWidth?: IRPath['strokeWidth'];
   /** 描边 dash pattern（如 [4, 2]） */
   dashPattern?: IRPath['dashPattern'];
+  /** 描边 dash offset。 */
+  dashOffset?: IRPath['dashOffset'];
   /** 端点形状（TikZ `line cap`） */
   lineCap?: IRPath['lineCap'];
   /** 拐点形状（TikZ `line join`，仅描边视觉） */
@@ -67,6 +69,7 @@ export const Draw: FC<DrawProps> = props => {
     stroke,
     strokeWidth,
     dashPattern,
+    dashOffset,
     lineCap,
     lineJoin,
     roundedCorners,
@@ -89,6 +92,7 @@ export const Draw: FC<DrawProps> = props => {
       stroke={stroke}
       strokeWidth={strokeWidth}
       dashPattern={dashPattern}
+      dashOffset={dashOffset}
       lineCap={lineCap}
       lineJoin={lineJoin}
       roundedCorners={roundedCorners}

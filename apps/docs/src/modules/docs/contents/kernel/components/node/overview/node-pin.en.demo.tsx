@@ -5,7 +5,7 @@ import { Layout, Node } from '@retikz/react';
 /**
  * pin: a label with a leader line
  * @description Draws a leader from the node border to the label; solid pin on the right, dashed pin
- *   (pin.dashPattern) at the upper-left.
+ *   (pin.dashPattern / pin.dashOffset) at the upper-left.
  */
 const Demo: FC = () => (
   <Layout width={460} height={240}>
@@ -22,7 +22,7 @@ const Demo: FC = () => (
           text: 'initial',
           position: 'top-left',
           distance: 34,
-          pin: { stroke: 'gray', dashPattern: [3, 2] },
+          pin: { stroke: 'gray', dashPattern: [3, 2], dashOffset: 1 },
         },
       ]}
     >

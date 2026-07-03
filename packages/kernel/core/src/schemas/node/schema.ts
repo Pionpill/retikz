@@ -72,6 +72,11 @@ export const NodeLabelPinSchema = z
     stroke: CssColorSchema.optional().describe('Leader line color; defaults to the label color / currentColor'),
     strokeWidth: z.number().positive().optional().describe('Leader line width (user units); default 1'),
     dashPattern: z.array(z.number()).optional().describe('Leader dash pattern lengths in user units.'),
+    dashOffset: z
+      .number()
+      .finite()
+      .optional()
+      .describe('Leader dash offset in user units. Positive and negative finite values are allowed.'),
   })
   .describe('Leader line style overrides for an outside node label.');
 
@@ -192,6 +197,11 @@ export const NodeSchema = z
       .min(1)
       .optional()
       .describe('Explicit stroke dash pattern lengths in user units; overrides `dashed` and `dotted`.'),
+    dashOffset: z
+      .number()
+      .finite()
+      .optional()
+      .describe('Explicit stroke dash offset in user units. Positive and negative finite values are allowed.'),
     cornerRadius: z
       .number()
       .nonnegative()

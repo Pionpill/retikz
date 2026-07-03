@@ -824,6 +824,7 @@ export const emitPathPrimitive = (
     fill: resolvePaint(path.fill) ?? 'none',
     fillRule: path.fillRule,
     dashPattern: path.dashPattern,
+    dashOffset: path.dashOffset,
     strokeLinecap: path.lineCap,
     strokeLinejoin: path.lineJoin,
     // IR `drawOpacity` → primitive `strokeOpacity`（与 Node 命名一致）

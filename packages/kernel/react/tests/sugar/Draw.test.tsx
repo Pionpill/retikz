@@ -45,6 +45,7 @@ describe('Draw: 基础展开', () => {
         stroke="#abc"
         strokeWidth={3}
         dashPattern={[4, 2]}
+        dashOffset={5}
         lineCap="round"
         lineJoin="bevel"
         roundedCorners={6}
@@ -66,6 +67,7 @@ describe('Draw: 基础展开', () => {
       stroke: '#abc',
       strokeWidth: 3,
       dashPattern: [4, 2],
+      dashOffset: 5,
       lineCap: 'round',
       lineJoin: 'bevel',
       roundedCorners: 6,

@@ -56,6 +56,7 @@ export const ellipseShape = defineShape({
       strokeOpacity: style.strokeOpacity,
       strokeWidth: style.strokeWidth ?? 1,
       dashPattern: style.dashPattern,
+      dashOffset: style.dashOffset,
       opacity: style.opacity,
       shadow: style.shadow,
       blendMode: style.blendMode,

@@ -112,7 +112,7 @@ Folded segments divide t evenly across the folded legs. `midway` lands on the co
 
 #### Dash
 
-`dashPattern` uses `Array<number>` for dash / gap lengths. `[4, 2]` means draw 4, skip 2, in user units.
+`dashPattern` uses `Array<number>` for dash / gap lengths. `[4, 2]` means draw 4, skip 2, in user units. `dashOffset` shifts where the dash rhythm starts, useful when several dashed lines need to align.
 
 <ComponentPreview name="draw-dashed" size="sm" />
 
@@ -153,6 +153,7 @@ One-line forms for circles, rectangles, and sectors live under the [Shapes](/ker
 | `stroke`         | `string`                                                                                       | `currentColor` | Stroke color                                                                                                                                                                           |
 | `strokeWidth`    | `number`                                                                                       | `1`            | Stroke width                                                                                                                                                                           |
 | `dashPattern`    | `Array<number>`                                                                                | —              | Dash / gap length sequence, for example `[4, 2]`                                                                                                                                       |
+| `dashOffset`     | `number`                                                                                       | —              | Dash start offset in path user units                                                                                                                                                   |
 | `lineCap`        | `'butt' \| 'round' \| 'square'`                                                                | `'butt'`       | Stroke endpoint shape                                                                                                                                                                  |
 | `lineJoin`       | `'miter' \| 'round' \| 'bevel'`                                                                | `'miter'`      | Stroke corner shape (visual only, geometry unchanged)                                                                                                                                  |
 | `roundedCorners` | `number`                                                                                       | —              | **Geometric** corner radius for line-to-line joints (TikZ `rounded corners=`); changes the path geometry, unlike `lineJoin`. See [Path §Rounded corners](/kernel/components/draw/path) |

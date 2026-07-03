@@ -4,6 +4,7 @@ import type { z } from 'zod';
 import type { ResolvedDropShadow } from '../../schemas';
 import type { IRJsonObject } from '../../schemas';
 import type { IRGraphicStyle } from '../../schemas';
+import type { IRPathBase } from '../../schemas';
 import type { AnchorValue, Rect, SideValue } from '../../shared';
 import type { PaintValue, ScenePrimitive } from '../scene';
 
@@ -49,6 +50,11 @@ export type ResolvedShapeStyle = {
    * @default []
    */
   dashPattern?: Array<number>;
+  /**
+   * 描边虚线起始偏移；缺省为 0。
+   * @default 0
+   */
+  dashOffset?: IRPathBase['dashOffset'];
   /**
    * 圆角半径。
    * @default 0

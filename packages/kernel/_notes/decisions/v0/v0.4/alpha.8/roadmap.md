@@ -1,15 +1,17 @@
-# v0.4.0-alpha.8 Roadmap: v0.4 改动收口
+# v0.4.0-alpha.8 Roadmap: v0.4 改动收口与 dashOffset 补齐
 
 ## 目标
 
-alpha.8 是 v0.4 的 alpha 收口版本，不新增运行时能力。它的目标是把 alpha.1-alpha.7 已落地的纵向底座改动重新对账，确认公开 roadmap、changelog、架构完备评测文档与实际发布节奏一致，为后续 v0.4 beta / rc 与 v0.5 主题拆分留下清晰边界。
+alpha.8 是 v0.4 的 alpha 收口版本。原始目标是把 alpha.1-alpha.7 已落地的纵向底座改动重新对账，确认公开 roadmap、changelog、架构完备评测文档与实际发布节奏一致，为后续 v0.4 beta / rc 与 v0.5 主题拆分留下清晰边界。
+本轮在 alpha.8 内追加 plot 牵引的 `dashOffset` 描边相位补齐，作为 beta 前最后一项 core 通用描边能力收敛：它只补齐既有 `dashPattern` 的配套字段，不新建 plot-only 线条语义。
 
 本 milestone 的主题是 **0.4 改动收口**：
 
 - kernel 组包版本 lockstep bump 到 `0.4.0-alpha.8`。
 - 公开 roadmap 从“下一段 alpha 待讨论”更新为 alpha.8 收口。
-- changelog 明确 alpha.8 不引入新的 public runtime API，而是发布元数据与路线边界收束。
+- changelog 区分 alpha.8 收口项与 `dashOffset` 能力补齐项。
 - `core-drawing-complete.md` 已把 headless interaction 纳入完备评测，但 interaction 实现不进入 alpha.8。
+- `dashOffset` 以 core 通用描边字段落地，覆盖 IR / Scene / renderer / adapter / docs。
 - 后续 v0.5 / beta / long-term 候选保持分层：v0.5 可讨论 headless interaction / progressive update 等机制，beta 聚焦 API 与安装验收，长期项不塞进 v0.4。
 
 ## 决策列表
@@ -20,6 +22,7 @@ alpha.8 是 v0.4 的 alpha 收口版本，不新增运行时能力。它的目�
 | [ADR-02](./02-headless-interaction-boundary.md) | Accepted | Headless interaction manifest 边界登记 | 明确现有 hydration / hit-test 不是缺失；缺口是 core 缺 JSON-safe target / role / intent / hit-area manifest，进入 v0.5 候选。 |
 | [ADR-03](./03-group-scope-effect-boundary.md) | Accepted | Group / Scope 级视觉效果延期边界 | 保持 alpha.4 图元级 shadow / blend 语义，登记 group effect / blend isolation / offscreen composite 为独立后续设计。 |
 | [ADR-04](./04-scene-primitive-reference-closeout.md) | Accepted | ScenePrimitive reference 与发布文案收口 | alpha.8 已完成 docs-only reference / changelog 对账，不回写 alpha.4 历史 ADR。 |
+| [ADR-05](./05-stroke-dash-offset.md) | Accepted | Stroke dash offset | 补齐 `dashPattern` 配套的 `dashOffset` 通用描边字段，覆盖 IR / Scene / renderer / adapter / docs。 |
 
 ## 范围
 
@@ -30,10 +33,11 @@ alpha.8 是 v0.4 的 alpha 收口版本，不新增运行时能力。它的目�
 - docs changelog 与 public roadmap 的 alpha.8 描述。
 - release 前用于核对的轻量验证。
 - alpha.8 ADR 集合：结合 Drawing Complete 与 alpha.4 Scene 视觉效果做收口审计，登记 interaction / group effect / docs reference 的后续分流。
+- ADR-05：`dashOffset` 通用描边相位字段，作为 beta 前的 core 能力补齐。
 
 不在本 milestone 范围：
 
-- 新增或修改 core IR / Scene / renderer / adapter runtime 行为。
+- 除 ADR-05 `dashOffset` 外，新增或修改 core IR / Scene / renderer / adapter runtime 行为。
 - 实现 tooltip、select、hover、focus、drag、editing handles 等 interaction runtime。
 - 新增 headless interaction manifest / event target API。
 - 开始 v0.5 正式 ADR 或实现。
@@ -49,6 +53,8 @@ alpha.8 是 v0.4 的 alpha 收口版本，不新增运行时能力。它的目�
 - [x] `git diff --check` 通过。
 - [x] alpha.8 ADR 集合已完成 subagent review。
 - [x] 已按 ADR-04 补 reference docs / changelog wording。
+- [x] ADR-05 `dashOffset` Accepted 文档确认。
+- [x] ADR-05 实现、测试、docs 与 changelog 对账完成。
 
 ## 后续分流建议
 

@@ -35,7 +35,7 @@ Angles start from +x; `90` points downward on screen. Angles take any two of `st
 
 #### Visual props
 
-`<Arc>` forwards the full `<Path>` visual prop set: `stroke` / `strokeWidth` / `dashPattern` / `arrow` / `marks` / `opacity` / `rotate` / `scale`, and more. Common ones are arrowed arcs (`arrow="->"`), dashed arcs (`dashPattern`), and mid-path direction marks (`marks`, oriented along the tangent).
+`<Arc>` forwards the full `<Path>` visual prop set: `stroke` / `strokeWidth` / `dashPattern` / `dashOffset` / `arrow` / `marks` / `opacity` / `rotate` / `scale`, and more. Common ones are arrowed arcs (`arrow="->"`), dashed arcs (`dashPattern` / `dashOffset`), and mid-path direction marks (`marks`, oriented along the tangent).
 
 <ComponentPreview name="arc-visual" size="sm" />
 
@@ -103,7 +103,7 @@ Shared props (forwarded to the underlying `<Path>`):
 | `label`            | edge-label object                                                         | Arc / Sector        | Positioned along the arc, `position` defaults to `midway`                |
 | `rotate` / `scale` | `number` / `{ x, y }`                                                     | Arc / Sector        | Whole-shape transform around the bounding-box center                     |
 | `marks`            | `{ pos, mark }[]`                                                         | Arc / Sector        | Mid-path direction markers along the path                                |
-| visual             | `stroke` / `strokeWidth` / `dashPattern` / `arrow` / `fill` / `opacity` … | Arc / Sector        | Forwards the full `<Path>` visual prop set                               |
+| visual             | `stroke` / `strokeWidth` / `dashPattern` / `dashOffset` / `arrow` / `fill` / `opacity` … | Arc / Sector        | Forwards the full `<Path>` visual prop set                               |
 
 ## As a node shape
 

@@ -34,6 +34,7 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
     dashed: '边框样式：虚线预设；被 dashPattern 覆盖',
     dotted: '边框样式：点线预设；被 dashPattern / dashed 覆盖',
     dashPattern: 'dash/gap 长度序列，盖过 dashed / dotted',
+    dashOffset: '边框虚线起点偏移（用户单位），可为正数、0 或负数',
     cornerRadius: '迁移期顶层圆角半径（用户单位），仅对 rectangle 生效；推荐写在形状 params 内',
     minimumSize: '形状最小可视尺寸：数字表示宽高相同；对象按 width/height > default 解析',
     scale: '缩放：数字表示等比缩放；对象按 x/y > default 解析，作用到边框 / padding / text / fontSize',
@@ -103,7 +104,7 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
     rotate:
       '绕标签自身中心旋转文字：`none`（默认）水平 / `radial` 沿「节点中心→标签中心」方向 / `tangent`（radial + 90°）/ 数字角度（屏幕 y 向下：0=+x、90=+y）；只改文字朝向不改位置',
     keepUpright: '为 true 时若旋转后文字会倒着读（偏离正立超 90°）则翻转 180°；默认 false（严格几何角度）',
-    pin: '从节点边界到标签画一条引线（TikZ `pin`）：`true` = 默认细实线；对象 = 带样式覆盖的引线（`stroke` / `strokeWidth` / `dashPattern`）；省略 / `false` = 无引线。标签位置不受影响',
+    pin: '从节点边界到标签画一条引线（TikZ `pin`）：`true` = 默认细实线；对象 = 带样式覆盖的引线（`stroke` / `strokeWidth` / `dashPattern` / `dashOffset`）；省略 / `false` = 无引线。标签位置不受影响',
   }}
 />
 

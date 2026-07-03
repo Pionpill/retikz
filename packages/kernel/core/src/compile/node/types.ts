@@ -125,6 +125,8 @@ export type NodeLayout = {
   strokeWidth?: number;
   /** 描边 dash pattern，已把 dashed/dotted 预设解析为具体 pattern */
   dashPattern?: Array<number>;
+  /** 描边 dash offset。 */
+  dashOffset?: number;
   /**
    * rectangle 圆角半径（非 rect shape 无效）
    * @default 0
@@ -222,10 +224,10 @@ export type NodeLabelLayout = {
   /** label 文本测量宽度（pin leader 算 label 框近边用） */
   measuredWidth: number;
   /**
-   * pin：true = 默认引线；对象 = 带样式引线（stroke / strokeWidth / dashPattern）；缺省 / false = 无引线
+   * pin：true = 默认引线；对象 = 带样式引线（stroke / strokeWidth / dashPattern / dashOffset）；缺省 / false = 无引线
    * @default false
    */
-  pin?: boolean | { stroke?: string; strokeWidth?: number; dashPattern?: Array<number> };
+  pin?: boolean | { stroke?: string; strokeWidth?: number; dashPattern?: Array<number>; dashOffset?: number };
 };
 
 /**

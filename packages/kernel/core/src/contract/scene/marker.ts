@@ -46,6 +46,8 @@ export type MarkerPathPrim = {
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */
   dashPattern?: IRPathBase['dashPattern'];
+  /** 描边 dash offset */
+  dashOffset?: IRPathBase['dashOffset'];
   /**
    * 端点形状
    * @default 'butt'
@@ -96,6 +98,8 @@ export type MarkerEllipsePrim = {
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */
   dashPattern?: IRPathBase['dashPattern'];
+  /** 描边 dash offset */
+  dashOffset?: IRPathBase['dashOffset'];
 };
 
 /**
@@ -131,6 +135,8 @@ export type MarkerRectPrim = {
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */
   dashPattern?: IRPathBase['dashPattern'];
+  /** 描边 dash offset */
+  dashOffset?: IRPathBase['dashOffset'];
   /**
    * 圆角半径（同时作用于 rx/ry）
    * @default 0

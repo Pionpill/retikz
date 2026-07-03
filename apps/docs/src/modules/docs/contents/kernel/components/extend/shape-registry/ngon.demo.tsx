@@ -91,6 +91,7 @@ const ngon = defineShape({
       strokeOpacity: style.strokeOpacity,
       strokeWidth: style.strokeWidth ?? 1,
       dashPattern: style.dashPattern,
+      dashOffset: style.dashOffset,
       opacity: style.opacity,
     };
   },

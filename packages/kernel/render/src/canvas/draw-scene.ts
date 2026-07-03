@@ -51,8 +51,13 @@ const withOpacity = (ctx: CanvasRenderingContext2D, opacity: number | undefined,
   ctx.restore();
 };
 
-const applyDash = (ctx: CanvasRenderingContext2D, dashPattern: Array<number> | undefined): void => {
+const applyDash = (
+  ctx: CanvasRenderingContext2D,
+  dashPattern: Array<number> | undefined,
+  dashOffset: number | undefined,
+): void => {
   ctx.setLineDash(dashPattern ?? []);
+  ctx.lineDashOffset = dashOffset ?? 0;
 };
 
 const applyStrokeStyle = (
@@ -60,10 +65,11 @@ const applyStrokeStyle = (
   strokeWidth: number | undefined,
   strokeOpacity: number | undefined,
   dashPattern: Array<number> | undefined,
+  dashOffset: number | undefined,
 ): void => {
   if (strokeWidth !== undefined) ctx.lineWidth = strokeWidth;
   if (strokeOpacity !== undefined) ctx.globalAlpha *= strokeOpacity;
-  applyDash(ctx, dashPattern);
+  applyDash(ctx, dashPattern, dashOffset);
 };
 
 /** 被填充图元的包围盒（user units）；gradient/image 的 objectBoundingBox(0..1) 据此映射为绝对坐标 */
@@ -357,6 +363,7 @@ const strokeCurrentPath = (
   strokeOpacity: number | undefined,
   strokeWidth: number | undefined,
   dashPattern: Array<number> | undefined,
+  dashOffset: number | undefined,
   options: DrawOptions,
   resources: ResourceMap,
   bbox: BBox,
@@ -365,7 +372,7 @@ const strokeCurrentPath = (
   if (strokeStyle === undefined) return;
   if (strokeOpacity !== undefined) ctx.save();
   ctx.strokeStyle = strokeStyle;
-  applyStrokeStyle(ctx, strokeWidth, strokeOpacity, dashPattern);
+  applyStrokeStyle(ctx, strokeWidth, strokeOpacity, dashPattern, dashOffset);
   ctx.stroke();
   if (strokeOpacity !== undefined) ctx.restore();
 };
@@ -547,13 +554,14 @@ const strokeMarkerPath = (
   strokeOpacity: number | undefined,
   strokeWidth: number | undefined,
   dashPattern: Array<number> | undefined,
+  dashOffset: number | undefined,
 ): void => {
   if (stroke === undefined) return;
   if (strokeOpacity !== undefined) ctx.save();
   ctx.strokeStyle = stroke;
   if (strokeWidth !== undefined) ctx.lineWidth = strokeWidth;
   if (strokeOpacity !== undefined) ctx.globalAlpha *= strokeOpacity;
-  applyDash(ctx, dashPattern);
+  applyDash(ctx, dashPattern, dashOffset);
   ctx.stroke();
   if (strokeOpacity !== undefined) ctx.restore();
 };
@@ -578,6 +586,7 @@ const drawMarkerPrim = (
         prim.strokeOpacity,
         prim.strokeWidth,
         prim.dashPattern,
+        prim.dashOffset,
       );
       break;
     case 'ellipse':
@@ -595,6 +604,7 @@ const drawMarkerPrim = (
         prim.strokeOpacity,
         prim.strokeWidth,
         prim.dashPattern,
+        prim.dashOffset,
       );
       break;
     case 'rect':
@@ -606,6 +616,7 @@ const drawMarkerPrim = (
         prim.strokeOpacity,
         prim.strokeWidth,
         prim.dashPattern,
+        prim.dashOffset,
       );
       break;
     case 'group':
@@ -720,7 +731,7 @@ const drawPrim = (
               w: p.width,
               h: p.height,
             });
-            strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options, resources, {
+            strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, p.dashOffset, options, resources, {
               x: p.x,
               y: p.y,
               w: p.width,
@@ -749,7 +760,7 @@ const drawPrim = (
               w: 2 * p.rx,
               h: 2 * p.ry,
             });
-            strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options, resources, {
+            strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, p.dashOffset, options, resources, {
               x: p.cx - p.rx,
               y: p.cy - p.ry,
               w: 2 * p.rx,
@@ -769,7 +780,17 @@ const drawPrim = (
             if (p.strokeLinejoin !== undefined) ctx.lineJoin = p.strokeLinejoin;
             const bbox = pathBBox(p.commands);
             fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, p.fillRule, options, resources, bbox);
-            strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options, resources, bbox);
+            strokeCurrentPath(
+              ctx,
+              p.stroke,
+              p.strokeOpacity,
+              p.strokeWidth,
+              p.dashPattern,
+              p.dashOffset,
+              options,
+              resources,
+              bbox,
+            );
             if (p.arrowStart || p.arrowEnd) {
               const strokeWidth = p.strokeWidth ?? 1;
               const pathStroke = typeof p.stroke === 'string' ? resolveColor(p.stroke, options) : undefined;

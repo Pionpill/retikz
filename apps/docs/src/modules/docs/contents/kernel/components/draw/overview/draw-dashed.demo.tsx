@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * 描边样式变体并排
- * @description 每行一个 stroke / strokeWidth / dashPattern 组合，左端 Node 当 row 标签，右端纯坐标终点。
+ * @description 每行一个 stroke / strokeWidth / dashPattern / dashOffset 组合，左端 Node 当 row 标签，右端纯坐标终点。
  */
 const Demo: FC = () => (
   <Layout width={420} height={200} nodeDefault={{ stroke: 'gray', dashed: true }}>
@@ -31,7 +31,7 @@ const Demo: FC = () => (
     {/* 加粗 */}
     <Draw way={['r3', [320, 60]]} strokeWidth={4} />
     {/* 虚线 */}
-    <Draw way={['r4', [320, 90]]} stroke="green" strokeWidth={2} dashPattern={[6, 3]} />
+    <Draw way={['r4', [320, 90]]} stroke="green" strokeWidth={2} dashPattern={[6, 3]} dashOffset={3} />
     {/* 点线 */}
     <Draw way={['r5', [320, 120]]} stroke="darkorange" strokeWidth={2} dashPattern={[1, 4]} />
   </Layout>

@@ -90,13 +90,19 @@ Below, two edges target the same five-pointed star (no node `boundary` set) and 
 
 ### Styling
 
-`stroke` / `strokeWidth` / `dashPattern` match `<Draw>`:
+`stroke` / `strokeWidth` / `dashPattern` / `dashOffset` match `<Draw>`:
 
 <ComponentPreview name="path-dashed" size="xs" />
 
+#### Dash offset
+
+`dashOffset` shifts only where the dash rhythm starts; it does not change the `dashPattern`. The three lines below all use `[18, 10]` and only vary the offset:
+
+<ComponentPreview name="path-dash-offset" size="xs" />
+
 #### Gradient stroke
 
-Besides a plain color string, `stroke` accepts a `PaintSpec`. Linear / radial gradients, patterns, and images enter the same paint resource table; `dashPattern`, `lineCap`, `drawOpacity`, and other stroke styles still apply to the line itself.
+Besides a plain color string, `stroke` accepts a `PaintSpec`. Linear / radial gradients, patterns, and images enter the same paint resource table; `dashPattern`, `dashOffset`, `lineCap`, `drawOpacity`, and other stroke styles still apply to the line itself.
 
 <ComponentPreview name="path-stroke-paint" size="sm" />
 
@@ -244,6 +250,7 @@ Ribbon is a closed area, so styling focuses on `fill`, outline `stroke`, opacity
 | `stroke`         | `string \| PaintSpec`                                                                                         | `currentColor` | Stroke paint: CSS color or PaintSpec (gradient / pattern / image); arrows that inherit stroke need an explicit solid arrow color                                                                                                                                                                                                                                    |
 | `strokeWidth`    | `number`                                                                                                      | `1`            | Stroke width                                                                                                                                                                                                                                                                                                                                                        |
 | `dashPattern`    | `Array<number>`                                                                                               | —              | Dash/gap lengths in user units (e.g. `[4, 2]`)                                                                                                                                                                                                                                                                                                                      |
+| `dashOffset`     | `number`                                                                                                      | —              | Dash start offset in path user units                                                                                                                                                                                                                                                                                                                                |
 | `lineCap`        | `'butt' \| 'round' \| 'square'`                                                                               | `'butt'`       | Stroke endpoint shape                                                                                                                                                                                                                                                                                                                                               |
 | `lineJoin`       | `'miter' \| 'round' \| 'bevel'`                                                                               | `'miter'`      | Stroke corner shape (visual only, geometry unchanged)                                                                                                                                                                                                                                                                                                               |
 | `roundedCorners` | `number` (≥0)                                                                                                 | —              | Geometric corner radius: rounds every line↔line joint with a tangent arc, changing the path geometry (distinct from `lineJoin`); non-line joints stay sharp, clamped per joint to the segment lengths; omitted = sharp corners                                                                                                                                      |

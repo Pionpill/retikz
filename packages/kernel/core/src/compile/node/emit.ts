@@ -20,6 +20,7 @@ const toShapeStyle = (layout: NodeLayout, resolvePaint: PaintResolver): Resolved
   strokeOpacity: layout.strokeOpacity,
   strokeWidth: layout.strokeWidth,
   dashPattern: layout.dashPattern,
+  dashOffset: layout.dashOffset,
   cornerRadius: layout.cornerRadius,
   opacity: layout.opacity,
   shadow: layout.shadow,
@@ -106,6 +107,7 @@ export const emitNodePrimitives = (
           stroke: style?.stroke ?? lab.textColor ?? 'currentColor',
           strokeWidth: style?.strokeWidth ?? 1,
           dashPattern: style?.dashPattern,
+          dashOffset: style?.dashOffset,
           opacity: lab.opacity ?? layout.opacity,
         });
       }

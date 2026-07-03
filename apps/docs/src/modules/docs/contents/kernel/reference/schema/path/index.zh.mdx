@@ -18,6 +18,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
     stroke: '描边 paint：任意 CSS color 字符串，或 PaintSpec（线性 / 径向渐变、pattern、image）；默认 currentColor',
     strokeWidth: '描边宽度（用户单位），默认 1',
     dashPattern: 'dash/gap 长度序列（如 [4, 2]），省略 = 实线',
+    dashOffset: '虚线起点偏移（用户单位），可为正数、0 或负数；省略 = 0',
     fill: '闭合区域填充：任意 CSS color 字符串，或 PaintSpec（线性 / 径向渐变、pattern、image）；省略 = 无填充；与 `cycle` step 配合产生封闭形状',
     fillRule: '自交 / 嵌套子路径填充规则；`nonzero`（默认）方向缠绕，`evenodd` 交错',
     lineCap: '描边端点形状：`butt` 默认 / `round` / `square`',

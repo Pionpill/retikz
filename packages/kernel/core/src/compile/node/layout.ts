@@ -359,6 +359,7 @@ export const layoutNode = (
     strokeOpacity: node.drawOpacity,
     strokeWidth: node.strokeWidth,
     dashPattern: resolveDashPattern(node.dashPattern, node.dashed, node.dotted),
+    dashOffset: node.dashOffset,
     cornerRadius: node.cornerRadius,
     textColor: node.textColor,
     opacity: node.opacity,

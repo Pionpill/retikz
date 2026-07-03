@@ -30,7 +30,7 @@ Scene primitives are the output contract of `compileToScene`: after IR is laid o
 
 Every primitive carries the interaction-layer contract fields `id?` (stable anchor for `data-retikz-id` / hit-test), `meta?` (provenance metadata passed through from the IR element's `meta`; renderers ignore it, it never reaches the DOM), and `animations?` (timeline tracks; played when supported, otherwise the settled static state is rendered with a warning).
 
-Shape primitives share common visual fields such as `fill`, `fillOpacity`, `stroke`, `strokeOpacity`, `strokeWidth`, `dashPattern`, and `opacity`. The `fill` and `stroke` of `RectPrim` / `EllipsePrim` / `PathPrim` are `PaintValue`s (CSS color string / a paint server referencing the resource table / `contextStroke`), not just strings. Not every primitive supports every field; for example, `TextPrim.fill` (string only) is text color.
+Shape primitives share common visual fields such as `fill`, `fillOpacity`, `stroke`, `strokeOpacity`, `strokeWidth`, `dashPattern`, `dashOffset`, and `opacity`. The `fill` and `stroke` of `RectPrim` / `EllipsePrim` / `PathPrim` are `PaintValue`s (CSS color string / a paint server referencing the resource table / `contextStroke`), not just strings. Not every primitive supports every field; for example, `TextPrim.fill` (string only) is text color.
 
 Element-level visual effects only live on renderable main geometry primitives:
 

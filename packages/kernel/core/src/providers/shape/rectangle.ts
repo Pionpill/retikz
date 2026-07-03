@@ -84,6 +84,7 @@ export const rectangle = defineShape({
       strokeOpacity: style.strokeOpacity,
       strokeWidth: style.strokeWidth ?? 1,
       dashPattern: style.dashPattern,
+      dashOffset: style.dashOffset,
       cornerRadius: cornerRadius !== undefined ? round(cornerRadius) : undefined,
       opacity: style.opacity,
       shadow: style.shadow,
