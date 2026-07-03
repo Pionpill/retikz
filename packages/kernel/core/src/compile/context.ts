@@ -14,7 +14,7 @@ import { resolveArrowRegistry } from '../providers/arrow';
 import { resolveBoundaryRegistry } from '../providers/boundary';
 import { resolveClipRegistry } from '../providers/clip';
 import { resolveCompositeRegistry } from '../providers/composite';
-import { resolvePathGeneratorRegistry } from '../providers/path';
+import { resolvePathGeneratorRegistry } from '../providers/path-generator';
 import { resolvePathKindRegistry } from '../providers/path-kind';
 import { resolvePatternRegistry } from '../providers/pattern';
 import { resolveRibbonWidthProfileRegistry } from '../providers/ribbon';
