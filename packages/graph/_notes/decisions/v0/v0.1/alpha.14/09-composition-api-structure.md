@@ -1,8 +1,15 @@
 # ADR-09: Composition data structure and authoring API redesign
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-07-01
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.14 roadmap](./roadmap.md) · [ADR-01 coordinate composition registry](./01-coordinate-composition-registry.md) · [ADR-02 facet grid data routing](./02-facet-grid-data-routing.md) · [ADR-04 shared scaffold tracks](./04-shared-scaffold-tracks.md) · [ADR-05 composition guides, axes, grid, spacing](./05-composition-guides-layout.md) · [ADR-08 React axis binding sugar](./08-react-axis-binding-sugar.md)
+
+## 完工摘要
+
+- `PlotSpec.composition` 已收敛为 `defaultView` / `views` / `arrangements` / `spacing` / `resolve`，旧 `defaultScope` / `scopes` / `facets` / `scaffolds` / `layout` / `guidePolicy` 不再作为 schema 字段接受。
+- mark 与 axis 的底层绑定字段统一为 `coordinateView`；React / Vanilla DSL 继续提供 `xAxisId` / `yAxisId`、`facetId`、`trackId`、`scaffoldId` 等更贴近用户心智的糖，并在输出 PlotSpec 前展开。
+- facet、overlay 多轴、共享轨道、grid targeting、locator / provenance 与文档 demo 已按同一 composition 结构对齐；多层 facet label 与 synchronized scale 也纳入当前实现。
+- ADR-01～08 的概念决策已实现，但字段命名与公开结构以本 ADR 为准；后续不得继续扩展旧结构。
 
 ## 背景
 

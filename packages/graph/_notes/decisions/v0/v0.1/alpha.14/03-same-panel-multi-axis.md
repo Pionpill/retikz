@@ -1,6 +1,6 @@
 # ADR-03：same-panel multi-axis overlay
 
-- 状态：Proposed
+- 状态：Accepted（实现字段以 ADR-09 为准）
 - 决策日期：2026-06-28
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.14 roadmap](./roadmap.md) · [ADR-01 coordinate composition registry](./01-coordinate-composition-registry.md) · [ADR-02 facet grid data routing](./02-facet-grid-data-routing.md)
 

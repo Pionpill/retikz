@@ -1,6 +1,6 @@
 # ADR-01：coordinate composition registry + guide binding
 
-- 状态：Proposed
+- 状态：Accepted（实现字段以 ADR-09 为准）
 - 决策日期：2026-06-28
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.14 roadmap](./roadmap.md) · [plot-design.md §7](../../../../architecture/plot-design.md) · [alpha.2 ADR-01 guide IR](../alpha.2/01-guide-ir.md) · [alpha.10 ADR-02 plot composable foundation](../alpha.10/02-plot-composable.md)
 

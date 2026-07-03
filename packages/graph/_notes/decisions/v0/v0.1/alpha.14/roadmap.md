@@ -17,15 +17,15 @@ alpha.14 不是跨域组合容器，也不是 chart preset 层。它只处理 `@
 
 | ADR | 主题 | 目标 | 状态 |
 | --- | --- | --- | --- |
-| ADR-01 | **coordinate composition registry + guide binding** | 给 PlotSpec 内部 coordinate scope / composition 建立统一 identity、registry、layout slot 与 guide 绑定契约，为 facet、overlay、track 共用；不新增跨域容器 | [Proposed](./01-coordinate-composition-registry.md) |
-| ADR-02 | **facet grid data routing** | 按字段生成 facet panels，拆分 rows，确定 panel key / 排序 / 空 panel 策略；支持共享或独立 position scales；每个 panel lower 成 core `Scope` | [Proposed](./02-facet-grid-data-routing.md) |
-| ADR-03 | **same-panel multi-axis overlay** | 支持同一 panel 内多个位置 scale / coordinate 叠加，例如左右 y 轴；mark 可显式选择自己的 coordinate / y scale；guide 绑定对应 axis | [Proposed](./03-same-panel-multi-axis.md) |
-| ADR-04 | **shared scaffold tracks** | 定义坐标系无关的共享骨架 + 局部 track：polar rings（共享 center / angle，不同 radius band）、cartesian lanes（共享 x，不同 y band）、混合 coordinate scope 的共享 anchor / bbox | [Proposed](./04-shared-scaffold-tracks.md) |
-| ADR-05 | **composition guides, axes, grid, spacing** | 定义 facet panel、overlay axis、track guide 的轴 / 网格 / 间距 / 标题策略，先取可解释的最小形态；统一轴与 per-scope guide 的取舍在 ADR 内拍板 | [Proposed](./05-composition-guides-layout.md) |
-| ADR-06 | **locator, provenance, and adapters surface** | 让 locator / provenance 带上 coordinate scope / facet key / track key；收敛 React / Vanilla 表面与 docs 示例，证明 facet、dual-axis、shared scaffold 都映射到同一 PlotSpec | [Proposed](./06-scope-provenance-surface.md) |
-| ADR-07 | **axis-level grid targeting** | 把 grid 是否生成收回 AxisGuide，composition 只提供默认投放策略；支持 scope / facet / track selector，解决只给特定分面或 track 画 grid 的需求 | [Proposed](./07-axis-grid-targeting.md) |
-| ADR-08 | **React axis binding sugar for overlay scopes** | 借鉴 Recharts 的 axis id 绑定心智，让常见双 y 轴用 `yAxisId` 自动展开成 overlay composition；底层 PlotSpec 仍复用 ADR-01/03 的 scope 机制 | [Proposed](./08-react-axis-binding-sugar.md) |
-| ADR-09 | **composition data structure and authoring API redesign** | 不考虑兼容性重塑 composition：拆成 views / arrangements / resolve / spacing，并同步收敛 React / Vanilla 的 Facet、TrackGroup、Axis/Mark 绑定心智 | [Proposed](./09-composition-api-structure.md) |
+| ADR-01 | **coordinate composition registry + guide binding** | 给 PlotSpec 内部 coordinate view / composition 建立统一 identity、registry、layout slot 与 guide 绑定契约，为 facet、overlay、track 共用；不新增跨域容器 | [Accepted](./01-coordinate-composition-registry.md) |
+| ADR-02 | **facet grid data routing** | 按字段生成 facet panels，拆分 rows，确定 panel key / 排序 / 空 panel 策略；支持共享或独立 position scales；每个 panel lower 成 core `Scope` | [Accepted](./02-facet-grid-data-routing.md) |
+| ADR-03 | **same-panel multi-axis overlay** | 支持同一 panel 内多个位置 scale / coordinate 叠加，例如左右 y 轴；mark 可显式选择自己的 coordinate view / y scale；guide 绑定对应 axis | [Accepted](./03-same-panel-multi-axis.md) |
+| ADR-04 | **shared scaffold tracks** | 定义坐标系无关的共享骨架 + 局部 track：polar rings（共享 center / angle，不同 radius band）、cartesian lanes（共享 x，不同 y band）、混合 coordinate view 的共享 anchor / bbox | [Accepted](./04-shared-scaffold-tracks.md) |
+| ADR-05 | **composition guides, axes, grid, spacing** | 定义 facet panel、overlay axis、track guide 的轴 / 网格 / 间距 / 标题策略，先取可解释的最小形态；统一轴与 per-view guide 的取舍在 ADR 内拍板 | [Accepted](./05-composition-guides-layout.md) |
+| ADR-06 | **locator, provenance, and adapters surface** | 让 locator / provenance 带上 coordinate view / facet key / track key；收敛 React / Vanilla 表面与 docs 示例，证明 facet、dual-axis、shared scaffold 都映射到同一 PlotSpec | [Accepted](./06-scope-provenance-surface.md) |
+| ADR-07 | **axis-level grid targeting** | 把 grid 是否生成收回 AxisGuide，composition 只提供默认投放策略；支持 view / facet / track selector，解决只给特定分面或 track 画 grid 的需求 | [Accepted](./07-axis-grid-targeting.md) |
+| ADR-08 | **React axis binding sugar for overlay scopes** | 借鉴 Recharts 的 axis id 绑定心智，让常见双 y 轴用 `yAxisId` 自动展开成 overlay composition；底层 PlotSpec 仍复用 ADR-01/03 的 view 机制 | [Accepted](./08-react-axis-binding-sugar.md) |
+| ADR-09 | **composition data structure and authoring API redesign** | 不考虑兼容性重塑 composition：拆成 views / arrangements / resolve / spacing，并同步收敛 React / Vanilla 的 Facet、TrackGroup、Axis/Mark 绑定心智 | [Accepted](./09-composition-api-structure.md) |
 
 > 建议文件名：`01-coordinate-composition-registry.md`、`02-facet-grid-data-routing.md`、`03-same-panel-multi-axis.md`、`04-shared-scaffold-tracks.md`、`05-composition-guides-layout.md`、`06-scope-provenance-surface.md`、`07-axis-grid-targeting.md`、`08-react-axis-binding-sugar.md`、`09-composition-api-structure.md`。
 
@@ -40,6 +40,10 @@ alpha.14 不是跨域组合容器，也不是 chart preset 层。它只处理 `@
 7. **ADR-07 修正 grid 职责边界**：依赖 ADR-01 / ADR-02 / ADR-04 的 scope、facet、track 地址能力，并细化 ADR-05 的 grid policy；后续实现以 AxisGuide 为 grid 是否生成的唯一声明。
 8. **ADR-08 收敛双轴 authoring 表面**：依赖 ADR-01 / ADR-03 / ADR-06，把常见 overlay 多轴写法从显式 `composition` 降到 axis id binding sugar；不改变底层 IR。
 9. **ADR-09 修正 composition 长期数据结构**：在 alpha.14 现有能力验证后，破坏性收敛底层 schema 与 authoring API 命名；后续实现以 ADR-09 的字段名为准，不再继续扩展旧 `scopes/facets/scaffolds/layout/guidePolicy` 结构。ADR-01～08 是概念依赖，编码阶段不得先落旧字段再迁移，必须直接实现 ADR-09 的 schema / API。
+
+## 完工状态
+
+alpha.14 已按 ADR-09 的最终结构实现并文档化。底层 PlotSpec 使用 `composition.defaultView`、`views`、`arrangements`、`spacing`、`resolve`；React / Vanilla DSL 通过 axis id、`<Facet>`、`<Scaffold>` / `<Track>` 等糖写法展开到同一结构。旧 `scopes/facets/scaffolds/layout/guidePolicy` 结构仅保留在拒绝测试或历史 ADR 文本中，不再作为公开 schema。
 
 ## 关键设计约束
 
@@ -100,8 +104,8 @@ alpha.14 不是跨域组合容器，也不是 chart preset 层。它只处理 `@
 
 alpha.14 封口时应满足：
 
-- ADR-01～08 全部 Proposed 并经人工确认可进入实现；实现后再按 wrapup 翻 Accepted。
-- `@retikz/plot` / `@retikz/plot-react` / `@retikz/plot-vanilla` 三包版本面一致。
-- 至少三组端到端 demo：一个 facet grid，一个 same-panel dual-axis，一个 shared scaffold tracks（polar rings 或 cartesian lanes，优先选择能说明坐标系无关性的例子）。
-- 多 coordinate scope / scaffold / track 下 guide、mark lowering、locator / provenance 使用同一 scope identity。
+- ADR-01～08 概念决策已 Accepted；最终字段命名与公开结构以 ADR-09 为准。
+- `@retikz/plot` / `@retikz/plot-react` / `@retikz/plot-vanilla` 三包已围绕同一 PlotSpec composition 结构对齐。
+- docs 已覆盖 same-panel 多轴、多 x 轴、基础分面、共享 scale、独立 scale、多层分面、笛卡尔共享轨道和极坐标共享轨道。
+- 多 coordinate view / arrangement / track 下 guide、mark lowering、locator / provenance 使用同一 view identity。
 - docs 能让用户理解“分面”“双轴 / overlay”“shared scaffold tracks”不是同一概念，但都属于 plot 内坐标复合能力。
