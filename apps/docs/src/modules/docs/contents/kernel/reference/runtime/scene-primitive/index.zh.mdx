@@ -30,7 +30,16 @@ Scene primitive 是 `compileToScene` 的输出合同：IR 经过布局后不再�
 
 所有 primitive 都带交互层关键合同字段 `id?`（稳定挂点，供 renderer emit `data-retikz-id` / hit-test）、`meta?`（provenance 元数据，从 IR 元素 `meta` 透传，renderer 忽略、不进 DOM）、`animations?`（时间轴动画 tracks，能播则播、不能则渲染 settled 静态态并 warn）。
 
-形状 primitive 共享常见视觉字段：`fill`、`fillOpacity`、`stroke`、`strokeOpacity`、`strokeWidth`、`dashPattern`、`opacity`。`RectPrim` / `EllipsePrim` / `PathPrim` 的 `fill` 与 `stroke` 类型都是 `PaintValue`（纯色 CSS 串 / 指向资源表的 paint server / `contextStroke`），不止 string。并不是每个 primitive 都支持全部字段，例如 `TextPrim` 使用 `fill`（限 string）表示文字颜色。
+形状 primitive 共享常见视觉字段：`fill`、`fillOpacity`、`stroke`、`strokeOpacity`、`strokeWidth`、`dashPattern`、`dashOffset`、`opacity`。`RectPrim` / `EllipsePrim` / `PathPrim` 的 `fill` 与 `stroke` 类型都是 `PaintValue`（纯色 CSS 串 / 指向资源表的 paint server / `contextStroke`），不止 string。并不是每个 primitive 都支持全部字段，例如 `TextPrim` 使用 `fill`（限 string）表示文字颜色。
+
+图元级视觉效果只挂在可渲染主几何 primitive 上：
+
+| 字段        | 适用 primitive                        | 说明                                                                                 |
+| ----------- | ------------------------------------- | ------------------------------------------------------------------------------------ |
+| `shadow?`   | `RectPrim` / `EllipsePrim` / `PathPrim` | 已解析的 `ResolvedDropShadow`；renderer 需要物化为目标平台的投影能力                 |
+| `blendMode?` | `RectPrim` / `EllipsePrim` / `PathPrim` | `BlendModeValue`；renderer 需要映射为目标平台的混合模式                              |
+
+`TextPrim` 不支持图元级 `shadow` / `blendMode`。`GroupPrim` 目前只表达 `transforms`、`clipRef`、`children` 以及通用的 `id` / `meta` / `animations`，不支持 group-level effect。视觉效果不改变 primitive 的命中区域；需要交互时仍以 `id` / `meta` 和外部 hit-test / hydration 层为准。
 
 ## 文本
 

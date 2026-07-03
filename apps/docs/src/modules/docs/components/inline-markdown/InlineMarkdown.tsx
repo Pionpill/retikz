@@ -6,27 +6,21 @@ import { Link } from 'react-router';
 import { cn } from '@/lib/utils';
 import { CodeBlock } from '@/modules/docs/components/highlight-code';
 
-/** InlineMarkdown 组件的 props */
+/** InlineMarkdown 组件的 props。 */
 export type InlineMarkdownProps = {
-  /** Markdown 源字符串 */
+  /** Markdown 源字符串。 */
   source: string;
-  /** 透传给最外层 div 的 className，便于调字号 / 颜色 */
+  /** 透传给最外层 div 的 className。 */
   className?: string;
 };
 
-/**
- * 轻量 markdown 渲染（不引第三方 markdown 库）
- * @description 支持：段落 / 围栏代码块 / 行内 code / 链接（router or 新窗口）/ 粗体 / 无序列表 / 1-3 级标题；其它原文输出。专为「插在文档 / 聊天里的短段落 + bullet 列表 + 偶尔代码」准备；不支持表格 / 嵌套列表 / 引用块 / 斜体
- */
+/** 轻量 markdown 渲染。 */
 export const InlineMarkdown: FC<InlineMarkdownProps> = props => {
   const { source, className } = props;
   return <div className={className}>{renderMarkdown(source)}</div>;
 };
 
-/**
- * 单行 / inline-only markdown 渲染（不分块、不出 `<p>` / `<h>` / `<ul>`，包成 `<span>`）
- * @description 解析片段限于 `**bold**` / `` `code` `` / `[text](url)`，用在按钮 / 标题 / chip 等**单行**容器里。若嵌入 `<button>` 等交互父元素，避免源串里出现链接（链接渲染成 `<a>` 会与父交互嵌套，但仅 HTML lint 警告，不影响 onClick 行为）
- */
+/** 单行 markdown 渲染。 */
 export const MarkdownInline: FC<InlineMarkdownProps> = props => {
   const { source, className } = props;
   return <span className={className}>{renderInline(source)}</span>;

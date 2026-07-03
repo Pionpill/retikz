@@ -1,6 +1,6 @@
 ---
 name: flow-alpha
-description: Use when retikz alpha-stage work needs to execute an accepted ADR or alpha roadmap feature through design, implementation, adversarial testing, documentation, and wrapup.
+description: Use when retikz alpha-stage work needs to execute an ADR-backed feature or alpha roadmap feature through design, implementation, adversarial testing, documentation, and wrapup.
 ---
 
 # alpha 功能开发主流程
@@ -35,11 +35,11 @@ description: Use when retikz alpha-stage work needs to execute an accepted ADR o
 
 | # | 阶段 | 子 skill | 通过条件 |
 | --- | --- | --- | --- |
-| 1 | 设计 | `develop-design` | ADR 草案含实现契约段，人工 ack |
+| 1 | 设计 | `develop-design` | ADR 草案含实现契约段，人工 ack，不默认提交 |
 | 2 | 实现 | `develop-implement` | spec test / lint / tsc / 必要测试全过 |
 | 3 | 自测 | `develop-test` | Adversarial Bug Hunter 的 BLOCKING 清空 |
 | 4 | 文档 | `develop-document` | 用户可见能力有 zh/en 文档、demo、API 表 |
-| 5 | 收尾 | `develop-wrapup` | changelog 草稿、ADR Accepted、roadmap 勾选、人工授权 commit |
+| 5 | 收尾 | `develop-wrapup` | ADR 压缩为长期决策记录，changelog 草稿、ADR Accepted、roadmap 勾选、人工授权 commit |
 
 文档不是可选项。用户可见功能必须补 docs；完工汇报先给文档页和访问路由，再讲代码。
 
@@ -89,6 +89,7 @@ red 走 Spec-First TDD；yellow 按风险决定是否 Spec-First；green 直接�
 - 不 push、不 merge、不切回集成基线、不删 worktree、不删 `REVIEW.md`。
 - 不跑 `develop-wrapup`；批量 wrapup 等所有分支人工 review 并合并后统一跑。
 - 未获当前对话授权时，不 commit；获授权后也只按本 ADR 粒度 commit。
+- ADR 草案仍不作为默认 commit；worktree 结束前若要提交，只提交压缩后的 ADR / roadmap / changelog 与代码同一改动集。
 - 若批量执行中用户授权 LLM 自行 commit，每次 commit 前先派子 agent review 单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。用户明确认可的小任务单次 commit 不触发该要求；改动面大或核心功能不适用该豁免。
 
 `REVIEW.md` 放 worktree 根目录，不 stage / commit，至少包含：
@@ -109,7 +110,8 @@ red 走 Spec-First TDD；yellow 按风险决定是否 Spec-First；green 直接�
 
 单条完成前检查：
 
-- ADR 实现契约段完整。
+- 执行阶段曾有完整实现契约，最终 ADR 保留稳定契约摘要。
+- ADR 已删除临时文件索引、LLM 执行 checklist、review prompt 等只服务执行的材料；保留背景、关键决策、被否决选项、兼容性、最终摘要和验证结果。
 - Spec-First 需要时能从历史看出测试先于实现。
 - 实现未擅改 spec test 或 schema 字段名。
 - Adversarial 两关 BLOCKING 清空或经人工裁决。

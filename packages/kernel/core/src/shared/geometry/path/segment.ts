@@ -1,5 +1,6 @@
-import type { Position } from '../point';
+import type { Position } from '@retikz/math';
 
+import { DEG_TO_RAD } from '../angle';
 import { point as pointOps } from '../point';
 
 /*
@@ -14,8 +15,6 @@ import { point as pointOps } from '../point';
  * - arc：angle(t) = startAngle + t·(end-start)；切线沿扫描方向
  * - circle/ellipse：angle = t·360°，从 0°(east) 开始
  */
-
-const DEG_TO_RAD = Math.PI / 180;
 
 /**
  * 段几何采样结果：t 处坐标点 + 归一化切线向量

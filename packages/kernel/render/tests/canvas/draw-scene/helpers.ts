@@ -8,6 +8,7 @@ export type CanvasCall = {
   lineCap?: CanvasLineCap;
   lineJoin?: CanvasLineJoin;
   lineWidth?: number;
+  lineDashOffset?: number;
   strokeStyle?: string | CanvasGradient | CanvasPattern;
 };
 
@@ -46,6 +47,7 @@ export type SpyCanvasContext = Pick<
   font: string;
   globalAlpha: number;
   lineCap: CanvasLineCap;
+  lineDashOffset: number;
   lineJoin: CanvasLineJoin;
   lineWidth: number;
   strokeStyle: string | CanvasGradient | CanvasPattern;
@@ -55,13 +57,14 @@ export type SpyCanvasContext = Pick<
 
 export const createSpyCanvasContext = (): SpyCanvasContext => {
   const calls: Array<CanvasCall> = [];
-  const stack: Array<Pick<SpyCanvasContext, 'font' | 'lineCap' | 'lineJoin' | 'lineWidth'>> = [];
+  const stack: Array<Pick<SpyCanvasContext, 'font' | 'lineCap' | 'lineDashOffset' | 'lineJoin' | 'lineWidth'>> = [];
   const context = {
     calls,
     fillStyle: '#000',
     font: '',
     globalAlpha: 1,
     lineCap: 'butt',
+    lineDashOffset: 0,
     lineJoin: 'miter',
     lineWidth: 1,
     strokeStyle: '#000',
@@ -75,6 +78,7 @@ export const createSpyCanvasContext = (): SpyCanvasContext => {
         stack.push({
           font: context.font,
           lineCap: context.lineCap,
+          lineDashOffset: context.lineDashOffset,
           lineJoin: context.lineJoin,
           lineWidth: context.lineWidth,
         });
@@ -89,6 +93,7 @@ export const createSpyCanvasContext = (): SpyCanvasContext => {
         font: context.font,
         fillStyle: context.fillStyle,
         lineCap: context.lineCap,
+        lineDashOffset: context.lineDashOffset,
         lineJoin: context.lineJoin,
         lineWidth: context.lineWidth,
         strokeStyle: context.strokeStyle,

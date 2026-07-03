@@ -115,6 +115,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.8',
+            date: '2026-07-03',
+            summary: {
+              zh: 'v0.4 alpha 收口：六个 kernel 包 lockstep bump 到 `0.4.0-alpha.8`，同步 roadmap / changelog / 完备评测边界，并补齐与 `dashPattern` 配套的 `dashOffset` 通用描边能力。',
+              en: 'v0.4 alpha wrap-up: the six kernel packages move in lockstep to `0.4.0-alpha.8`, aligning the roadmap, changelog, and completeness-evaluation boundaries while adding the `dashOffset` stroke capability that pairs with `dashPattern`.',
+            },
+            items: [
+              {
+                label: { zh: '发布边界收束', en: 'Release boundary closure' },
+                content: {
+                  zh: '把 alpha.1-alpha.7 已落地的 math、tex、path、ribbon、provider contract 等能力重新对账；public roadmap 指向 alpha.8 收口，后续 headless interaction / Progressive IR 等机制留到 v0.5 设计讨论。',
+                  en: 'Audits the math, tex, path, ribbon, provider-contract, and related work already landed through alpha.1-alpha.7. The public roadmap now points to alpha.8 as the wrap-up, while mechanisms such as headless interaction and Progressive IR stay in the v0.5 design discussion.',
+                },
+              },
+              {
+                label: { zh: '新增 dashOffset 描边相位', en: 'New dashOffset stroke phase' },
+                content: {
+                  zh: '`IRPath`、`IRNode`、节点 `label.pin`、Scene path / rect / ellipse / marker primitive、React / Vanilla props 现在支持 `dashOffset?: number`；SVG 输出 `stroke-dashoffset`，Canvas stroke 前设置并隔离 `lineDashOffset`。',
+                  en: '`IRPath`, `IRNode`, node `label.pin`, Scene path / rect / ellipse / marker primitives, and React / Vanilla props now support `dashOffset?: number`; SVG emits `stroke-dashoffset`, and Canvas sets and isolates `lineDashOffset` before stroking.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.7',
             date: '2026-07-03',
             summary: {
@@ -332,8 +356,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'shadow 两端落地', en: 'shadow on both backends' },
                 content: {
-                  zh: 'SVG 去重注册 `<filter><feDropShadow>`，filter region 取 `userSpaceOnUse` + 整 viewBox（修复细线 / 大 blur 投影被默认 objectBoundingBox 区域裁切）；Canvas `withShadow` set `ctx.shadow*` 并按当前 transform 校准，`opacity` 烘焙进 color alpha。',
-                  en: 'SVG registers a deduped `<filter><feDropShadow>` with its region set to `userSpaceOnUse` + the full viewBox (fixing thin-line / large-blur shadows clipped by the default objectBoundingBox region); Canvas `withShadow` sets `ctx.shadow*` calibrated to the current transform, baking `opacity` into the color alpha.',
+                  zh: 'SVG 去重注册 `<filter><feDropShadow>`，filter region 取 `userSpaceOnUse` + 按 shadow offset / blur 外扩后的 scene viewBox（修复细线 / 大 blur 投影被默认 objectBoundingBox 区域裁切）；Canvas `withShadow` set `ctx.shadow*` 并按当前 transform 校准，`opacity` 烘焙进 color alpha。',
+                  en: 'SVG registers a deduped `<filter><feDropShadow>` with its region set to `userSpaceOnUse` + the scene viewBox expanded by shadow offset / blur (fixing thin-line / large-blur shadows clipped by the default objectBoundingBox region); Canvas `withShadow` sets `ctx.shadow*` calibrated to the current transform, baking `opacity` into the color alpha.',
                 },
               },
               {

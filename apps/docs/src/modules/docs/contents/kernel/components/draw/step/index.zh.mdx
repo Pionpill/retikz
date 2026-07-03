@@ -104,7 +104,7 @@ import { Path, Step } from '@retikz/react';
 
 ### 弧段（arc）
 
-`kind="arc"` 按起末角度 + 半径画一段圆弧——默认以**游标为圆心**，也可用 `center` 显式指定圆心（脱离游标独立定位）。半径二选一：`radius` 画圆弧，`radiusX` + `radiusY` 画椭圆弧。它描述的是“从哪个角度扫到哪个角度的弧”，不需要 `to`，常用于角度标注、圆周片段或几何辅助线。角度沿 retikz polar 约定：0° 朝 +x，90° 视觉朝下；画完画笔停在弧的终点：
+`kind="arc"` 按起末角度 + 半径画一段圆弧——默认以**游标为圆心**，也可用 `center` 显式指定圆心（脱离游标独立定位）。半径二选一：`radius` 画圆弧，`radius={{ x, y }}` 画椭圆弧。它描述的是“从哪个角度扫到哪个角度的弧”，不需要 `to`，常用于角度标注、圆周片段或几何辅助线。角度沿 retikz polar 约定：0° 朝 +x，90° 视觉朝下；画完画笔停在弧的终点：
 
 <ComponentPreview name="step-arc" size="sm" />
 
@@ -116,7 +116,7 @@ import { Path, Step } from '@retikz/react';
 
 ### 整椭圆（ellipsePath）
 
-`kind="ellipsePath"` 以**游标为圆心**，按 `radiusX` / `radiusY` 画椭圆。不给角度时画一个完整闭合的椭圆——画完画笔回到圆心，`radiusX === radiusY` 时退化为圆。同 circlePath，也可给 `startAngle` + `endAngle` 画**部分椭圆**，`closed` 选闭合方式（`'chord'` 默认 / `'sector'` / `'open'`）：
+`kind="ellipsePath"` 以**游标为圆心**，按 `radius={{ x, y }}` 画椭圆。不给角度时画一个完整闭合的椭圆——画完画笔回到圆心，`radius.x === radius.y` 时退化为圆。同 circlePath，也可给 `startAngle` + `endAngle` 画**部分椭圆**，`closed` 选闭合方式（`'chord'` 默认 / `'sector'` / `'open'`）：
 
 <ComponentPreview name="step-ellipse" size="sm" />
 
@@ -217,7 +217,7 @@ Fold 的 t 按经过点把整条折线分段；下例的 `A -| B` 展示 keyword
 
 ### 样式
 
-`<Step>` 自身没有 stroke 类视觉属性——样式都挂在父 `<Path>` 上，整条 Path 的所有 Step 共享同一套 `stroke` / `strokeWidth` / `dashPattern`：
+`<Step>` 自身没有 stroke 类视觉属性——样式都挂在父 `<Path>` 上，整条 Path 的所有 Step 共享同一套 `stroke` / `strokeWidth` / `dashPattern` / `dashOffset`：
 
 <ComponentPreview name="step-styling" size="sm" />
 
@@ -259,9 +259,7 @@ Fold 的 t 按经过点把整条折线分段；下例的 `A -| B` 展示 keyword
 | `looseness`     | `number`                                                                                                                                     | `≈1`     | 仅 `kind="bend"` 可选：控制点距离的松紧因子（TikZ `looseness=`），越大曲线越松；`from == to` 时同时缩放默认自环大小                                                                                                                                                                                                             |
 | `startAngle`    | `number`                                                                                                                                     | —        | `kind="arc"` 必填；`'circlePath'` / `'ellipsePath'` 可选（与 `endAngle` 配套画部分圆 / 椭圆）：起始角度（度，0° 朝 +x，90° 视觉朝下）                                                                                                                                                                                           |
 | `endAngle`      | `number`                                                                                                                                     | —        | `kind="arc"` 必填；`'circlePath'` / `'ellipsePath'` 可选：终止角度（度），扫向由起末角度推断                                                                                                                                                                                                                                    |
-| `radius`        | `number`                                                                                                                                     | —        | `kind="arc"`（圆弧）/ `'circlePath'` 时给：圆 / 弧半径。arc 上 `radius` 与 `radiusX`+`radiusY` **二选一**（互斥）；circlePath 必填                                                                                                                                                                                              |
-| `radiusX`       | `number`                                                                                                                                     | —        | `kind="arc"`（椭圆弧）/ `'ellipsePath'`：x 轴半径；须与 `radiusY` 配套（arc 上与 `radius` 互斥），ellipsePath 必填                                                                                                                                                                                                              |
-| `radiusY`       | `number`                                                                                                                                     | —        | `kind="arc"`（椭圆弧）/ `'ellipsePath'`：y 轴半径；须与 `radiusX` 配套，ellipsePath 必填                                                                                                                                                                                                                                        |
+| `radius`        | `number | { x: number; y: number }`                                                                                                                                     | —        | `kind="arc"`（圆弧）/ `'circlePath'` 时给：圆 / 弧半径。arc 上 `radius` 与 `radius: { x, y }`` **二选一**（互斥）；circlePath 必填                                                                                                                                                                                              |
 | `center`        | `IRTarget`                                                                                                                                   | 游标     | 仅 `kind="arc"` 可选：显式弧心，缺省取游标（前一 step 终点）；显式给定可让弧脱离游标独立定位（`<Sector>` 借此画正确扇形）                                                                                                                                                                                                       |
 | `closed`        | `'closed' \| 'chord' \| 'open' \| 'sector'`                                                                                                  | 见下     | 仅 `kind="circlePath"` / `'ellipsePath'` 可选：闭合方式。无角度时 `'closed'`（整圆 / 整椭圆，默认）；有角度时 `'chord'`（两弧端连弦，默认）/ `'sector'`（两弧端连到圆心再闭合）/ `'open'`（不闭合的纯弧）                                                                                                                       |
 | `cornerRadius`  | `number`                                                                                                                                     | —        | 仅 `kind="rectangle"` 可选：矩形圆角半径                                                                                                                                                                                                                                                                                        |

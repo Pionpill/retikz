@@ -7,8 +7,7 @@ const Demo: FC = () => (
     <Node
       id="card"
       position={[-90, 0]}
-      minimumWidth={130}
-      minimumHeight={78}
+      minimumSize={{ width: 130, height: 78 }}
       cornerRadius={12}
       fill="white"
       stroke={{

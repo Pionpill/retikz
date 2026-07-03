@@ -1,8 +1,8 @@
 ﻿import { useMemo } from 'react';
 
-import type { I18nKey, Page, Section, SubPage } from '@/modules/docs/data/interface';
+import type { I18nKey, Page, Section, SubPage } from '@/modules/docs/data';
 
-import { getSectionsByModule } from '@/modules/docs/data/sections';
+import { getSectionsByModule } from '@/modules/docs/data';
 
 import { docPathSegments, useDocLocation } from './doc-location';
 

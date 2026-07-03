@@ -1,14 +1,12 @@
+import type { Position } from '@retikz/math';
+
 import { z } from 'zod';
 
 import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
-import type { Position } from '../../shared/geometry';
-import type { Rect } from '../../shared/geometry';
-import type { ContourSegment } from '../../shared/geometry';
+import type { ContourSegment, Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
-import { point } from '../../shared/geometry';
-import { localToWorld } from '../../shared/geometry';
-import { boundaryFromContour, contourCommands } from '../../shared/geometry';
+import { boundaryFromContour, contourCommands, localToWorld, point } from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
 /**

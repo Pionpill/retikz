@@ -1,6 +1,6 @@
 ---
 name: package-publish
-description: "发布或准备发布 retikz npm 包时使用。覆盖版本号 bump、结构化 changelog、roadmap 状态、验证、dry-run、tag / npm publish / push 授权、发布后 ADR 压缩与预 bump。当前发布组：kernel 组 6 包，viz plot 组 3 包。"
+description: "发布或准备发布 retikz npm 包时使用。覆盖版本号 bump、结构化 changelog、roadmap 状态、验证、dry-run、tag / npm publish / push 授权、发版前 ADR 检查与预 bump。当前发布组：kernel 组 6 包，viz plot 组 3 包。"
 ---
 
 # 发布 retikz 包
@@ -64,7 +64,8 @@ npm view @retikz/plot dist-tags --registry=https://registry.npmjs.org/
 2. **changelog 数据**：更新 `apps/docs/src/data/changelog.ts`，结构以 `apps/docs/src/data/changelog.types.ts` 为准；不要改旧 changelog MDX。
 3. **模块徽章**：只有可见模块版本变化时才改 `apps/docs/src/data/module.ts`，例如 minor / major 切档或 alpha -> beta -> rc -> stable。
 4. **roadmap**：按发布组当前 roadmap 的既有格式更新。
-5. **lockfile**：package metadata 或依赖图变化导致 lockfile 漂移时，运行 `pnpm install`。
+5. **ADR 检查**：确认本次发版覆盖的已完成 ADR 已在 `develop-wrapup` 阶段压缩并置为 `Accepted`；发现未压缩 ADR 时停下，先走 wrapup 修正。
+6. **lockfile**：package metadata 或依赖图变化导致 lockfile 漂移时，运行 `pnpm install`。
 
 Changelog 规则：
 
@@ -145,11 +146,7 @@ pnpm --filter @retikz/<pkg> publish --access public --tag <tag> --no-git-checks 
 发布成功后：
 
 1. 汇报 npm 包 URL、git tag、push 状态和安装命令。
-2. 若该 milestone 使用 Proposed 实现契约 ADR，在预 bump 前压缩刚发布 milestone 下已 Accepted 的 ADR：
-   - 保留决策、被否决选项、兼容性说明；
-   - 删除已变成代码历史的临时实现契约 / 待决策段；
-   - 加溯源行，例如 `git show <sha>:<path>` 指向压缩前全文。
-3. 只有 roadmap 明确写出下一开发版本时，才把本发布组预 bump 到下一开发版本；不明确就问用户。这是独立工作区改动，需要单独提交授权。
+2. 只有 roadmap 明确写出下一开发版本时，才把本发布组预 bump 到下一开发版本；不明确就问用户。这是独立工作区改动，需要单独提交授权。
 
 ## 快速清单
 
@@ -159,6 +156,7 @@ pnpm --filter @retikz/<pkg> publish --access public --tag <tag> --no-git-checks 
 - [ ] 用户可见行为变化已更新 `changelog.ts`。
 - [ ] 只有需要改变可见徽章时才更新 `module.ts`。
 - [ ] roadmap 已按既有格式更新。
+- [ ] 发版范围内已完成 ADR 已压缩并为 `Accepted`。
 - [ ] lockfile 可能漂移时已跑 `pnpm install`。
 - [ ] `pnpm run check:full` 通过。
 - [ ] `pnpm run test:full` 通过。

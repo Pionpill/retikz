@@ -9,7 +9,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from '@/components/ui/navigation-menu';
-import { modules } from '@/modules/docs/data/module';
+import { modules } from '@/modules/docs/data';
 
 /**
  * 顶栏水平模块切换：core / flow / plot
@@ -20,7 +20,7 @@ export const ModuleNav: FC = () => {
   const { moduleId } = useParams<'moduleId'>();
 
   return (
-    <NavigationMenu className="hidden @4xl/header:flex">
+    <NavigationMenu className="hidden lg:flex">
       <NavigationMenuList>
         {modules.map(m => {
           const active = moduleId === m.id;

@@ -1,9 +1,11 @@
-import type { BoundaryDefinition, Position } from '@retikz/core';
+import type { BoundaryDefinition, IRPosition } from '@retikz/core';
 import type { FC } from 'react';
 
 import { defineBoundary } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
 import { z } from 'zod';
+
+type Position = IRPosition;
 
 const horizontalPorts: BoundaryDefinition = defineBoundary({
   name: 'horizontal-ports',
@@ -27,8 +29,7 @@ const Demo: FC = () => (
       id="controller"
       position={[0, 0]}
       text="IO"
-      minimumWidth={92}
-      minimumHeight={56}
+      minimumSize={{ width: 92, height: 56 }}
       boundary="horizontal-ports"
       fill="white"
       stroke="dodgerblue"

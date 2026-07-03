@@ -1,2 +1,1 @@
-export type { PackageManagerInstallProps } from './PackageManagerInstall';
-export { PackageManagerInstall } from './PackageManagerInstall';
+export * from './PackageManagerInstall';

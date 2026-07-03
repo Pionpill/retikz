@@ -109,9 +109,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
         opacity={0.8}
         rotate={45}
         padding={2}
-        minimumSize={14}
-        minimumWidth={16}
-        minimumHeight={12}
+        minimumSize={{ default: 14, width: 16, height: 12 }}
         zIndex={3}
       />,
       '__plot',
@@ -126,9 +124,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
       opacity: { kind: 'constant', value: 0.8 },
       rotate: { kind: 'constant', value: 45 },
       padding: { kind: 'constant', value: 2 },
-      minimumSize: { kind: 'constant', value: 14 },
-      minimumWidth: { kind: 'constant', value: 16 },
-      minimumHeight: { kind: 'constant', value: 12 },
+      minimumSize: { kind: 'constant', value: { default: 14, width: 16, height: 12 } },
       zIndex: { kind: 'constant', value: 3 },
       encoding: { x: { field: 'x' }, y: { field: 'y' } },
     });

@@ -129,6 +129,7 @@ export const applyPrimAnimations = (
         if (v >= 1) break;
         const len = approxLength(prim);
         overrides.dashPattern = [len];
+        overrides.dashOffset = len * (1 - v);
         ctx.lineDashOffset = len * (1 - v);
         break;
       }

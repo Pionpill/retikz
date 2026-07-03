@@ -1,54 +1,56 @@
 ---
 title: Roadmap
-description: "retikz's current and near-future roadmap: v0.3 beta hardening, v0.3 rc validation, v0.4 incremental-rendering candidates, and v1+ domain packages."
+description: "retikz's current and near-future roadmap: kernel v0.4.0-alpha.8 wrap-up, v0.5 mechanism candidates, v0.4 beta / rc, and v1+ domain packages."
 ---
 
 The roadmap is a **goal list, not a promise** — it adjusts with community feedback and maintainer bandwidth. Concrete releases land by version in the [Changelog](/kernel/releases/changelog).
 
 ## Now
 
-**v0.3.0-beta.1** — beta hardening before rc.
+**kernel v0.4.0-alpha.8** — the v0.4 alpha wrap-up release; it adds no runtime API and aligns versions, roadmap, changelog, and completeness-evaluation boundaries.
 
-| Item                      | Status               |
-| ------------------------- | -------------------- |
-| Renderer/runtime split    | ✅ Complete          |
-| Public API                | ⏳ Beta review       |
-| Parity / docs / packaging | ⏳ In beta hardening |
+| Item                      | Status                   |
+| ------------------------- | ------------------------ |
+| `@retikz/math` / `tex`    | ✅ In kernel lockstep     |
+| path / ribbon / provider  | ✅ Landed through alpha.7 |
+| docs / changelog          | ✅ alpha.8 wrap-up notes synced |
+| interaction               | 🧭 Covered by completeness evaluation; implementation stays for v0.5 discussion |
 
-## Short term: v0.3.0 rc
+## Short Term: After Alpha.8
 
-Turn the beta line into a release candidate.
+After alpha.8, the work should stay split into three tracks: v0.5 for vertical mechanism exploration, v0.4 beta / rc for stabilization, and longer-term items waiting for stronger design pull.
 
-| Goal                    | Content                                                                |
-| ----------------------- | ---------------------------------------------------------------------- |
-| API freeze              | No new components, props, IR fields, or public exports after rc starts |
-| Installation acceptance | npm package, type exports, examples, and docs links all work           |
-| Release notes           | Changelog, versioning notes, and migration hints stay aligned          |
+| Track | Candidate | Content |
+| ----- | --------- | ------- |
+| v0.5 alpha | headless interaction | Core provides target / intent / manifest contracts; tooltip / select UI and state machines stay in adapters or userland |
+| v0.5 alpha | Progressive / JSON Patch | Incremental rendering, AI step updates, local SVG / Canvas update strategies |
+| v0.4 beta / rc | beta hardening | Add no capability; focus API review, install validation, and docs audit |
+| Longer term | P3D / scope enrichment / blur-mask-layer | Pseudo-3D, `boundingShape` polygon / ellipse / padding, and visual-layer capabilities wait for stronger design pull |
 
-## Current v0.3 shape
+## Current v0.4 Shape
 
-Scene output and runtime responsibilities are split into clearer Tier 1 packages.
+Kernel v0.4 has landed several base mechanisms that other layers can reuse.
 
 | Goal              | Content                                                                                             |
 | ----------------- | --------------------------------------------------------------------------------------------------- |
-| `@retikz/render`  | SVG string render, Canvas 2D draw, hydration helpers, animation runtime, optional Node image export |
-| `@retikz/vanilla` | Framework-free mounting and SSR entry points                                                        |
-| `@retikz/react`   | Unified `renderer="svg"` / `renderer="canvas"` entry                                                |
-| Hydration         | Stable ids + event-binding semantics                                                                |
-| Plot support      | Lowering, coordinate scopes, layers, locator / anchor interfaces                                    |
+| `@retikz/math`    | Zero-dependency geometry: vectors, affine transforms, arcs, intersections, hulls, minimal enclosing circles |
+| `@retikz/tex`     | MathJax SVG lowering through `lowerTex`, with `$...$` / `{ runs }` inside text                      |
+| Scene visuals     | `shadow` / `blendMode` plus existing `zIndex` as renderer-agnostic visual foundations               |
+| Path kind / ribbon | `Path.kind` provider and `kind="ribbon"` relation paths                                             |
+| Provider contract | Unified registry model for shape / boundary / clip / path kind / composite extension surfaces       |
 
 ## Long term
 
 | Topic | Where                                                                          |
 | ----- | ------------------------------------------------------------------------------ |
-| v0.4  | Incremental rendering, Progressive IR, AI step updates, view-layer experiments |
+| v0.4 beta / rc | API review, install validation, docs and changelog audit                 |
 | v1+   | Domain packages such as `plot` / `viz` / `flow`, plus the broader ecosystem    |
 
 ## Not on the roadmap
 
 To keep scope honest, things we are **not** doing:
 
-- Built-in LaTeX math layout
+- Core directly depending on MathJax or putting a formula engine into IR
 - Visual editor
 - Full TikZ library-loading semantics
 - Complete calc expression language

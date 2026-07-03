@@ -2,7 +2,7 @@ export * from './arrow';
 export * from './boundary';
 export * from './clip';
 export * from './composite';
-export * from './path';
+export * from './path-generator';
 export * from './path-kind';
 export * from './pattern';
 export * from './ribbon';

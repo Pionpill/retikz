@@ -17,16 +17,14 @@ const Demo: FC = () => (
     <Node
       id="a"
       position={[0, 0]}
-      minimumWidth={90}
-      minimumHeight={80}
+      minimumSize={{ width: 90, height: 80 }}
       fill={{ kind: 'pattern', shape: 'dotsGrid', size: 6, color: 'green' }}
       stroke="green"
     />
     <Node
       id="b"
       position={[120, 0]}
-      minimumWidth={90}
-      minimumHeight={80}
+      minimumSize={{ width: 90, height: 80 }}
       fill={{ kind: 'pattern', shape: 'dotsGrid', size: 16, color: 'green' }}
       stroke="green"
     />

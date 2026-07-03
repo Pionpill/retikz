@@ -102,7 +102,7 @@ circumscribeOffset: (params) => {
 boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
 ```
 
-Called when a path attaches to a node boundary, and when numeric anchors such as `A.30` are resolved. It returns the point where the ray from the center toward `toward` hits the shape boundary, deciding where the line stops on the edge. Here `rect` **includes `rotate`**: use `worldToLocal` to enter local coordinates for the geometry, then `localToWorld` to return world coordinates. When the node sets `outerSep` (margin), the `rect` passed in is already expanded by the engine — just compute geometry on the given `rect`; you never handle outer sep yourself.
+Called when a path attaches to a node boundary, and when numeric anchors such as `A.30` are resolved. It returns the point where the ray from the center toward `toward` hits the shape boundary, deciding where the line stops on the edge. Here `rect` **includes `rotate`**: use `worldToLocal` to enter local coordinates for the geometry, then `localToWorld` to return world coordinates. When the node sets `margin`, the `rect` passed in is already expanded by the engine — just compute geometry on the given `rect`; you never handle margin yourself.
 
 ```ts
 // polygon: intersect the ray with the edges in local space, then map back to world
@@ -120,7 +120,7 @@ boundaryPoint: (rect, toward, params) => {
 anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
 ```
 
-Called when users write `A.top` or a shape-specific anchor name. Return a coordinate for names the shape owns, or `undefined` for unknown names, which the compiler reports with the standard Unknown anchor error. Standard direction names use Web/CSS canonical values (`top` / `right` / `bottom` / `left` plus corners); compass names such as `north` / `east` are accepted as aliases and normalized before provider hooks run. Ordinary `A.center` is handled by the compiler as the node center; only shapes whose semantic center differs from the AABB center, such as sector / arc, need to declare their own `center`. Standard direction names are resolved on the engine-expanded `rect` (including `outerSep`); shape-specific anchors always use the visual `rect`, without outer sep.
+Called when users write `A.top` or a shape-specific anchor name. Return a coordinate for names the shape owns, or `undefined` for unknown names, which the compiler reports with the standard Unknown anchor error. Standard direction names use Web/CSS canonical values (`top` / `right` / `bottom` / `left` plus corners); compass names such as `north` / `east` are accepted as aliases and normalized before provider hooks run. Ordinary `A.center` is handled by the compiler as the node center; only shapes whose semantic center differs from the AABB center, such as sector / arc, need to declare their own `center`. Standard direction names are resolved on the engine-expanded `rect` (including `margin`); shape-specific anchors always use the visual `rect`, without margin.
 
 ```ts
 // sector: exposes semantic anchors like apex / centroid / arc midpoints
@@ -190,7 +190,7 @@ Called when compiling the visible node body; returns one or more primitives to d
 scaleParams?: (params: TParams, sx: number, sy: number) => TParams;
 ```
 
-Called when a node sets `scale` / `xScale` / `yScale`, deciding how the scale applies to params. By default the compiler deep-scales **every** numeric leaf in params — correct for pure length params (radii), but wrong for angles and counts such as `sides` / `points`. **Shapes with angle or count params must implement it**, scaling only length quantities and leaving angles and counts untouched.
+Called when a node sets `scale`（数字或 `{ x, y }`）, deciding how the scale applies to params. By default the compiler deep-scales **every** numeric leaf in params — correct for pure length params (radii), but wrong for angles and counts such as `sides` / `points`. **Shapes with angle or count params must implement it**, scaling only length quantities and leaving angles and counts untouched.
 
 ```ts
 // sector: scale only the radii, leave the angles alone
@@ -247,6 +247,7 @@ const createPolygonShape = (name: string, sides: number): ShapeDefinition =>
         strokeOpacity: style.strokeOpacity,
         strokeWidth: style.strokeWidth ?? 1,
         dashPattern: style.dashPattern,
+        dashOffset: style.dashOffset,
         opacity: style.opacity,
       };
     },
@@ -300,7 +301,7 @@ When writing a third-party shape, check these points first:
 - `boundaryPoint` handles the case where `toward` is exactly the center; choosing a fixed default direction is common.
 - `boundaryPoint` and `anchor` use `worldToLocal` before local geometry when rotation is involved, then `localToWorld` when returning world coordinates.
 - `anchor` only handles names it owns; unknown names return `undefined` so the compiler can throw the standard error.
-- `emit` uses the provided `round` for coordinates and dimensions, and forwards relevant style fields where possible: `fillOpacity` / `strokeOpacity` / `dashPattern` / `opacity` / `cornerRadius`.
+- `emit` uses the provided `round` for coordinates and dimensions, and forwards relevant style fields where possible: `fillOpacity` / `strokeOpacity` / `dashPattern` / `dashOffset` / `opacity` / `cornerRadius`.
 - Implement `scaleParams` when params carry angles or counts (a sector's angles, a polygon's `sides`, a star's `points`); scale only length quantities, otherwise the default scaling corrupts angles and counts.
 - Implement `circumscribeOffset` for shapes whose geometric reference point differs from the bounding-box center (e.g. a sector positioned by its center), so the bbox tightly contains the shape while `position` stays on the semantic point.
 

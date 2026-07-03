@@ -92,6 +92,18 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
   return out;
 };
 
+const nodeWidth = (node: IRNode): number => {
+  const size = node.minimumSize;
+  if (typeof size === 'number') return size;
+  return size?.width ?? size?.default ?? 0;
+};
+
+const nodeHeight = (node: IRNode): number => {
+  const size = node.minimumSize;
+  if (typeof size === 'number') return size;
+  return size?.height ?? size?.default ?? 0;
+};
+
 const flattenPrimitives = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
   const out: Array<ScenePrimitive> = [];
   for (const primitive of primitives) {
@@ -210,8 +222,8 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
     const nodes = nodesOf(layer);
     expect(nodes).toHaveLength(1);
-    expect(nodes[0].minimumWidth).toBe(400);
-    expect(nodes[0].minimumHeight).toBe(80);
+    expect(nodeWidth(nodes[0])).toBe(400);
+    expect(nodeHeight(nodes[0])).toBe(80);
     expect(nodes[0].position).toEqual([200, 80]);
   });
 
@@ -219,8 +231,8 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
     // 竖直 band x∈[2,5]，跨满 y 域 → rect。x 像素 80..200 → 宽 120、中心 140；y 满铺 [400,0] → 高 400、中心 200
     const mark: ReferenceMark = { type: 'reference', encoding: { x: { value: 2 } }, xTo: 5 };
     const nodes = nodesOf(lowerMark(mark, [{}], cartFrame()) as IRScope);
-    expect(nodes[0].minimumWidth).toBe(120);
-    expect(nodes[0].minimumHeight).toBe(400);
+    expect(nodeWidth(nodes[0])).toBe(120);
+    expect(nodeHeight(nodes[0])).toBe(400);
     expect(nodes[0].position).toEqual([140, 200]);
   });
 
@@ -246,8 +258,8 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
     };
     const nodes = nodesOf(lowerMark(mark, [{}], cartFrame()) as IRScope);
     expect(nodes).toHaveLength(1);
-    expect(nodes[0].minimumWidth).toBe(120);
-    expect(nodes[0].minimumHeight).toBe(80);
+    expect(nodeWidth(nodes[0])).toBe(120);
+    expect(nodeHeight(nodes[0])).toBe(80);
     expect(nodes[0].position).toEqual([140, 80]);
   });
 
@@ -310,7 +322,7 @@ describe('rule 边界', () => {
       yTo: 90,
     };
     const nodes = nodesOf(lowerMark(mark, [{ a: 2, b: 8 }], cartFrame()) as IRScope);
-    expect(nodes[0].minimumWidth).toBe(240);
+    expect(nodeWidth(nodes[0])).toBe(240);
     expect(nodes[0].position).toEqual([200, 80]);
   });
 

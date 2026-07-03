@@ -90,13 +90,19 @@ import { Path, Step } from '@retikz/react';
 
 ### 样式
 
-`stroke` / `strokeWidth` / `dashPattern` 与 `<Draw>` 完全一致：
+`stroke` / `strokeWidth` / `dashPattern` / `dashOffset` 与 `<Draw>` 完全一致：
 
 <ComponentPreview name="path-dashed" size="xs" />
 
+#### 虚线起点
+
+`dashOffset` 只移动虚线节奏的起点，不改变 `dashPattern` 本身。下例三条线共用 `[18, 10]`，只改变 offset：
+
+<ComponentPreview name="path-dash-offset" size="xs" />
+
 #### 渐变描边
 
-`stroke` 除纯色字符串外还接 `PaintSpec`。线性 / 径向渐变、pattern、image 会进入同一份 paint 资源表；`dashPattern`、`lineCap`、`drawOpacity` 等描边样式照常作用在这条线本身。
+`stroke` 除纯色字符串外还接 `PaintSpec`。线性 / 径向渐变、pattern、image 会进入同一份 paint 资源表；`dashPattern`、`dashOffset`、`lineCap`、`drawOpacity` 等描边样式照常作用在这条线本身。
 
 <ComponentPreview name="path-stroke-paint" size="sm" />
 
@@ -244,6 +250,7 @@ Ribbon 是闭合面，样式重点是 `fill`、外轮廓 `stroke`、透明度、
 | `stroke`         | `string \| PaintSpec`                                                                                         | `currentColor` | 描边 paint：CSS 颜色或 PaintSpec（渐变 / pattern / image）；箭头继承时需给箭头显式纯色                                                                                                                            |
 | `strokeWidth`    | `number`                                                                                                      | `1`            | 描边宽度                                                                                                                                                                                                          |
 | `dashPattern`    | `Array<number>`                                                                                               | —              | dash/gap 长度序列（如 `[4, 2]`）                                                                                                                                                                                  |
+| `dashOffset`     | `number`                                                                                                      | —              | 虚线起点偏移，单位同路径 user units                                                                                                                                                                               |
 | `lineCap`        | `'butt' \| 'round' \| 'square'`                                                                               | `'butt'`       | 描边端点形状                                                                                                                                                                                                      |
 | `lineJoin`       | `'miter' \| 'round' \| 'bevel'`                                                                               | `'miter'`      | 描边拐点形状（仅视觉，不改几何）                                                                                                                                                                                  |
 | `roundedCorners` | `number`（≥0）                                                                                                | —              | 几何圆角半径：把每个 line↔line 内拐角倒成相切圆弧，改路径几何（区别于 `lineJoin`）；非 line 接缝保持尖，逐拐角按段长夹紧；省略 = 尖角                                                                             |

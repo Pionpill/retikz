@@ -488,8 +488,8 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'a', position: [0, 0], minimumWidth: 20, minimumHeight: 20 },
-        { type: 'node', id: 'b', position: [100, 0], minimumWidth: 20, minimumHeight: 20 },
+        { type: 'node', id: 'a', position: [0, 0], minimumSize: { width: 20, height: 20 } },
+        { type: 'node', id: 'b', position: [100, 0], minimumSize: { width: 20, height: 20 } },
         {
           type: 'path',
           marks: arrowMarks('->', { shape: 'open' }),
@@ -514,8 +514,8 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'a', position: [0, 0], minimumWidth: 20, minimumHeight: 20 },
-        { type: 'node', id: 'b', position: [100, 0], minimumWidth: 20, minimumHeight: 20 },
+        { type: 'node', id: 'a', position: [0, 0], minimumSize: { width: 20, height: 20 } },
+        { type: 'node', id: 'b', position: [100, 0], minimumSize: { width: 20, height: 20 } },
         {
           type: 'path',
           marks: arrowMarks('->', { shape: 'customOpen' }),

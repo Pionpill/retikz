@@ -3,6 +3,9 @@ import type { TextLine, Transform } from '../../contract';
 import type { ShapeDefinition } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
 import type {
+  IRAxisScale,
+  IRBoxSize,
+  IRBoxSpacing,
   IRJsonObject,
   IRLabelDefault,
   IRLineSpec,
@@ -20,6 +23,7 @@ import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { providerDefinitionOf } from '../../providers/registry';
 import { resolveShapeRegistry } from '../../providers/shape';
 import { JsonObjectSchema } from '../../schemas';
+import { DEG_TO_RAD } from '../../shared/geometry';
 import { CompileWarningCode } from '../constant';
 import { resolveShadow } from '../effects';
 import { resolvePosition } from '../position';
@@ -29,6 +33,42 @@ import { resolveNodeShapePreset } from './shape-presets';
 import { alignToTextAnchor, DEFAULT_FONT_SIZE, DEFAULT_LINE_HEIGHT_FACTOR, resolveDashPattern, wrapText } from './text';
 
 const DEFAULT_PADDING = 8;
+
+type NodeSpacingValue = number | IRBoxSpacing | undefined;
+type NodeAxisScaleValue = number | IRAxisScale | undefined;
+type NodeBoxSizeValue = number | IRBoxSize | undefined;
+
+const resolveBoxSpacing = (value: NodeSpacingValue, fallback: number): { left: number; right: number; top: number; bottom: number } => {
+  if (typeof value === 'number') {
+    return { left: value, right: value, top: value, bottom: value };
+  }
+  const base = value?.default ?? fallback;
+  return {
+    left: value?.left ?? value?.x ?? base,
+    right: value?.right ?? value?.x ?? base,
+    top: value?.top ?? value?.y ?? base,
+    bottom: value?.bottom ?? value?.y ?? base,
+  };
+};
+
+const resolveAxisScale = (value: NodeAxisScaleValue, fallback: number): { x: number; y: number } => {
+  if (typeof value === 'number') return { x: value, y: value };
+  const base = value?.default ?? fallback;
+  return {
+    x: value?.x ?? base,
+    y: value?.y ?? base,
+  };
+};
+
+const resolveBoxSize = (value: NodeBoxSizeValue, fallback: number): { width: number; height: number } => {
+  if (typeof value === 'number') return { width: value, height: value };
+  const base = value?.default ?? fallback;
+  return {
+    width: value?.width ?? base,
+    height: value?.height ?? base,
+  };
+};
+
 /**
  * 递归把 JSON 值里所有数值叶子乘以 factor（数组 / 对象深入，string / boolean / null 原样）
  * @description 用于 shape params 随 node scale 协同缩放；输入已是 JSON-safe（双护栏过），输出仍 JSON-safe。
@@ -43,8 +83,6 @@ const scaleJsonNumbers = <T extends JsonValue>(value: T, factor: number): T => {
   }
   return value;
 };
-const DEG_TO_RAD = Math.PI / 180;
-
 export const layoutNode = (
   node: IRNode,
   measureText: TextMeasurer,
@@ -77,10 +115,9 @@ export const layoutNode = (
       ? { ...parsedShapeParams, cornerRadius: node.cornerRadius }
       : parsedShapeParams;
 
-  // 缩放：xScale/yScale 优先于 scale 别名，默认 1；乘进所有尺寸让 path 贴缩放后边界。
+  // 缩放：axis-specific 字段优先于 default，默认 1；乘进所有尺寸让 path 贴缩放后边界。
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
-  const sx = node.xScale ?? node.scale ?? 1;
-  const sy = node.yScale ?? node.scale ?? 1;
+  const { x: sx, y: sy } = resolveAxisScale(node.scale, 1);
   const fontScale = Math.min(sx, sy);
   // shape params 是形状内在长度（半径 / 内外径 等），随 node scale 协同缩放。
   // shapeDef.scaleParams 给定时由形状自定缩放语义（如 sector / arc 只缩半径、不缩角度）；
@@ -98,10 +135,19 @@ export const layoutNode = (
   const fontFamily = node.font?.family;
   const fontWeight = node.font?.weight;
   const fontStyle = node.font?.style;
-  // 内/外边距优先级：axis-specific (innerXSep/innerYSep/outerSep) → symmetric alias (padding/margin) → 默认；sep 受 scale 影响
-  const xSep = (node.innerXSep ?? node.padding ?? DEFAULT_PADDING) * sx;
-  const ySep = (node.innerYSep ?? node.padding ?? DEFAULT_PADDING) * sy;
-  const outerSep = (node.outerSep ?? node.margin ?? 0) * Math.max(sx, sy);
+  // CSS-like 盒模型优先级：side-specific → axis-specific → default → system fallback；spacing 受 node scale 影响。
+  const padding = resolveBoxSpacing(node.padding, DEFAULT_PADDING);
+  const paddingLeft = padding.left * sx;
+  const paddingRight = padding.right * sx;
+  const paddingTop = padding.top * sy;
+  const paddingBottom = padding.bottom * sy;
+  const marginSpacing = resolveBoxSpacing(node.margin, 0);
+  const margin = {
+    top: marginSpacing.top * sy,
+    right: marginSpacing.right * sx,
+    bottom: marginSpacing.bottom * sy,
+    left: marginSpacing.left * sx,
+  };
   const lineHeight = (node.lineHeight ?? baseFontSize * DEFAULT_LINE_HEIGHT_FACTOR) * sy;
   const align = alignToTextAnchor(node.align ?? 'center');
 
@@ -195,19 +241,23 @@ export const layoutNode = (
     }
   }
 
-  // 内框半轴：text 半宽 + sep（保证至少 sep 大小，空文本节点也有最小尺寸）。minimum 不进内框——见下方对外接框 floor。
-  const innerHalfW = Math.max(textWidth / 2 + xSep, xSep);
-  const innerHalfH = Math.max(textHeight / 2 + ySep, ySep);
+  // 内框半轴：content box + padding。非对称 padding 会让视觉 shape 中心相对内容中心偏移；
+  // minimum 不进内框——见下方对外接框 floor。
+  const innerHalfW = (textWidth + paddingLeft + paddingRight) / 2;
+  const innerHalfH = (textHeight + paddingTop + paddingBottom) / 2;
+  const paddingOffsetX = (paddingRight - paddingLeft) / 2;
+  const paddingOffsetY = (paddingBottom - paddingTop) / 2;
 
   // 外接边界（bounding rect）半轴：内框半轴经 shape.circumscribe 派生
   const circumscribed = shapeDef.circumscribe(innerHalfW, innerHalfH, shapeParams);
 
-  // minimum 尺寸（TikZ 语义）：floor 外接框（bounding box）而非内框，且随 scale 缩（与 sep / text / fontSize 同口径，
-  // minimumWidth→sx、minimumHeight→sy）。minimumWidth/Height 覆盖 minimumSize（对称别名）。inner-driven shape
+  // minimum 尺寸：floor 外接框（bounding box）而非内框，且随 scale 缩（与 padding / text / fontSize 同口径）。
+  // minimumSize.width/height 覆盖 minimumSize.default。inner-driven shape
   // （rectangle/ellipse/polygon）emit 按 floor 后的 rect 重建、恰好填满；params-radius-driven shape（sector/star/arc）
   // glyph 由半径定、minimum 仅预留 bbox 空间不缩放 glyph。
-  const minHalfW = ((node.minimumWidth ?? node.minimumSize ?? 0) * sx) / 2;
-  const minHalfH = ((node.minimumHeight ?? node.minimumSize ?? 0) * sy) / 2;
+  const minimumSize = resolveBoxSize(node.minimumSize, 0);
+  const minHalfW = (minimumSize.width * sx) / 2;
+  const minHalfH = (minimumSize.height * sy) / 2;
   const boundsHalfW = Math.max(circumscribed.halfWidth, minHalfW);
   const boundsHalfH = Math.max(circumscribed.halfHeight, minHalfH);
 
@@ -221,8 +271,9 @@ export const layoutNode = (
   // shape 可声明 AABB 中心相对 position 的偏移（如 sector：position=圆心 apex，AABB 中心偏在一侧）；
   // rect 中心 = position + 偏移，使 bbox 罩住完整形状、anchor 以 AABB 中心 rect 计算时 apex 落回 position。
   const aabbOffset = shapeDef.circumscribeOffset?.(shapeParams);
-  const rectCenterX = center[0] + (aabbOffset?.[0] ?? 0);
-  const rectCenterY = center[1] + (aabbOffset?.[1] ?? 0);
+  const rectCenterX = center[0] + paddingOffsetX + (aabbOffset?.[0] ?? 0);
+  const rectCenterY = center[1] + paddingOffsetY + (aabbOffset?.[1] ?? 0);
+  const contentCenter: [number, number] = [rectCenterX - paddingOffsetX, rectCenterY - paddingOffsetY];
   // 标准化 label：单对象 → 单元素数组；继承 Node 的 font/textColor
   const rawLabels: Array<IRNodeLabel> | undefined =
     node.label === undefined ? undefined : Array.isArray(node.label) ? node.label : [node.label];
@@ -289,8 +340,9 @@ export const layoutNode = (
       // IR 用度数，geometry 用弧度
       rotate: rotateDeg * DEG_TO_RAD,
     },
+    contentCenter,
     rotateDeg,
-    margin: outerSep,
+    margin,
     lines,
     inlineBlock,
     textWidth,
@@ -307,6 +359,7 @@ export const layoutNode = (
     strokeOpacity: node.drawOpacity,
     strokeWidth: node.strokeWidth,
     dashPattern: resolveDashPattern(node.dashPattern, node.dashed, node.dotted),
+    dashOffset: node.dashOffset,
     cornerRadius: node.cornerRadius,
     textColor: node.textColor,
     opacity: node.opacity,

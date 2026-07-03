@@ -5,7 +5,10 @@ import type {
   Channel,
   ExternalRow,
   IntervalBounds,
+  IRAxisScale,
   IRBoundary,
+  IRBoxSize,
+  IRBoxSpacing,
   IRDropShadow,
   IRFont,
   IRPaintSpec,
@@ -15,8 +18,11 @@ import type {
   MarkGeometryLabelInput,
   MarkNodeLabelInput,
   MarkValueType,
+  NodeAxisScaleStyle,
   NodeBooleanStyle,
   NodeBoundaryStyle,
+  NodeBoxSizeStyle,
+  NodeBoxSpacingStyle,
   NodeDashPatternStyle,
   NodeFontStyle,
   NodePositiveNumberStyle,
@@ -75,13 +81,9 @@ export type CoreNodeChannelProps = {
   lineHeight?: MarkValueProp<number> | NodePositiveNumberStyle;
   maxTextWidth?: MarkValueProp<number> | NodePositiveNumberStyle;
   cornerRadius?: MarkValueProp<number> | PointNonnegativeNumberStyle;
-  scale?: MarkValueProp<number> | NodePositiveNumberStyle;
-  xScale?: MarkValueProp<number> | NodePositiveNumberStyle;
-  yScale?: MarkValueProp<number> | NodePositiveNumberStyle;
-  innerXSep?: MarkValueProp<number> | PointNonnegativeNumberStyle;
-  innerYSep?: MarkValueProp<number> | PointNonnegativeNumberStyle;
-  outerSep?: MarkValueProp<number> | PointNonnegativeNumberStyle;
-  margin?: MarkValueProp<number> | PointNonnegativeNumberStyle;
+  scale?: MarkValueProp<number | IRAxisScale> | NodeAxisScaleStyle;
+  padding?: MarkValueProp<number | IRBoxSpacing> | NodeBoxSpacingStyle;
+  margin?: MarkValueProp<number | IRBoxSpacing> | NodeBoxSpacingStyle;
   dashed?: MarkValueProp<boolean> | NodeBooleanStyle;
   dotted?: MarkValueProp<boolean> | NodeBooleanStyle;
   dashPattern?: MarkValueProp<Array<number>> | NodeDashPatternStyle;
@@ -211,14 +213,12 @@ export type PointMarkProps = MarkTransformProps &
     drawOpacity?: MarkValueProp<number> | PointOpacityStyle;
     /** 旋转角度：字符串按字段解析，数字为常量糖 */
     rotate?: MarkValueProp<number> | PointNumberStyle;
-    /** node padding：字符串按字段解析，数字为常量糖 */
-    padding?: MarkValueProp<number> | PointNonnegativeNumberStyle;
+    /** node padding：字符串按字段解析，数字或对象为常量糖 */
+    padding?: MarkValueProp<number | IRBoxSpacing> | NodeBoxSpacingStyle;
     /** 最小视觉尺寸；size 通道逐 datum 优先 */
-    minimumSize?: MarkValueProp<number> | PointNonnegativeNumberStyle;
+    minimumSize?: MarkValueProp<number | IRBoxSize> | NodeBoxSizeStyle;
     /** 最小视觉宽度 */
-    minimumWidth?: MarkValueProp<number> | PointNonnegativeNumberStyle;
     /** 最小视觉高度 */
-    minimumHeight?: MarkValueProp<number> | PointNonnegativeNumberStyle;
     /** 绘制顺序提示 */
     zIndex?: MarkValueProp<number> | PointZIndexStyle;
     /** 尺寸字段（数值）：→ size 通道，经 sqrt 半径 scale 映射成 glyph 半径（面积感知正确）；负值报错 */

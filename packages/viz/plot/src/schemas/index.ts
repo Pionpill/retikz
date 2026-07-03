@@ -10,7 +10,9 @@ export * from './transform';
 export type {
   BlendModeValue,
   IRArrowDetail,
+  IRAxisScale,
   IRBoundary,
+  IRBoxSize,
   IRDropShadow,
   IRFont,
   IRPaintSpec,

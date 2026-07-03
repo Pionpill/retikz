@@ -1,11 +1,9 @@
 import { Navigate, Route, Routes, useParams } from 'react-router';
 
-import type { Section } from '@/modules/docs/data/interface';
+import type { Section } from '@/modules/docs/data';
 
 import { AppLayout } from '@/layout/app-layout';
-import { kernelSection } from '@/modules/docs/data/kernel';
-import { modules } from '@/modules/docs/data/module';
-import { getSectionsByModule } from '@/modules/docs/data/sections';
+import { getSectionsByModule, kernelSection, modules } from '@/modules/docs/data';
 import { DocLayout, DocPage } from '@/modules/docs/layout';
 
 /** section + 它的首页 -> 完整 URL（无分组时跳过 sectionId 段） */

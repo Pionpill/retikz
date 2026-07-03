@@ -5,10 +5,9 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStickToBottom } from 'use-stick-to-bottom';
 
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
-
 import type { ChatErrorKind } from '../providers/types';
 
+import { useAiChatStore } from '../use-ai-chat-store';
 import { AiChatConversationEmpty } from './AiChatConversationEmpty';
 import { AiChatInput } from './AiChatInput';
 import { AiChatMessage } from './AiChatMessage';

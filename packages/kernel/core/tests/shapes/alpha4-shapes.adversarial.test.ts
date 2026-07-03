@@ -5,8 +5,8 @@ import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { arc, polygon, sector, star } from '../../src/providers/shape';
-import { normalizeAngularRange } from '../../src/providers/shape/angle';
 import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
+import { normalizeAngleRange } from '../../src/shared';
 import { flattenPrims } from '../helpers/flatten';
 
 const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
@@ -31,7 +31,7 @@ const numericLeaves = (v: unknown, out: Array<number> = []): Array<number> => {
 // ════════════════ 攻击面 5：几何极端 ════════════════
 
 describe('[adversarial] 几何极端：角度环绕死循环 / DoS', () => {
-  // normalizeAngularRange 现为 O(1) 闭式规范化（end += 360·ceil((start−end)/360)），arc 轴向点枚举
+  // normalizeAngleRange 现为 O(1) 闭式规范化（end += 360·ceil((start−end)/360)），arc 轴向点枚举
   // 也有 axisAngles 守卫——巨型 startAngle（含 1e308）不再退化 / 死循环，编译恒定时间返回。
   it('[adversarial] sector startAngle 较大 1e7 → O(1) 规范化即时返回（不随量级退化）', () => {
     const start = performance.now();
@@ -103,11 +103,11 @@ describe('[adversarial] 几何极端：角度环绕死循环 / DoS', () => {
     ).toThrow();
   });
 
-  it('[adversarial] normalizeAngularRange 把跨度钳到 ≤360（巨角不枚举海量轴向点）', () => {
-    expect(normalizeAngularRange(0, 90).end).toBe(90); // 正常跨度不变
-    expect(normalizeAngularRange(0, 720).end).toBe(360); // 720 折成整圆 360
-    expect(normalizeAngularRange(10, 410).end).toBe(370); // 400 跨度钳到 10+360
-    expect(normalizeAngularRange(0, 1e8).end).toBe(360); // 巨角钳到 360
+  it('[adversarial] normalizeAngleRange 把跨度钳到 ≤360（巨角不枚举海量轴向点）', () => {
+    expect(normalizeAngleRange(0, 90).end).toBe(90); // 正常跨度不变
+    expect(normalizeAngleRange(0, 720).end).toBe(360); // 720 折成整圆 360
+    expect(normalizeAngleRange(10, 410).end).toBe(370); // 400 跨度钳到 10+360
+    expect(normalizeAngleRange(0, 1e8).end).toBe(360); // 巨角钳到 360
   });
 
   it('[G3] ellipse 节点 canonical diagonal 落真实周长（与 parser sugar 一致，非 AABB 角）', () => {
@@ -346,10 +346,9 @@ describe('[adversarial] scaleParams：角度/计数不该被缩', () => {
     expect(moveLines.length).toBe(10); // 2×5 顶点
   });
 
-  it('[adversarial] sector × 非均匀 xScale:2,yScale:1 → scaleParams 用 sqrt(sx·sy) 半径均值，角度不缩', () => {
+  it('[adversarial] sector × 非均匀 scale.x=2,scale.y=1 → scaleParams 用 sqrt(sx·sy) 半径均值，角度不缩', () => {
     const compiled = compileNode({
-      xScale: 2,
-      yScale: 1,
+      scale: { x: 2, y: 1 },
       shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } },
     });
     const path = findByType(compiled.primitives, 'path');

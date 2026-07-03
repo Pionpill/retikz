@@ -4,6 +4,7 @@ import type { ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
+import { NodeSchema } from '../../src/schemas';
 import { line, move } from '../helpers/path-command-factory';
 
 const findRect = (prims: Array<ScenePrimitive>) => prims.find(p => p.type === 'rect');
@@ -13,8 +14,16 @@ const rectSize = (ir: IR) => {
   return r?.type === 'rect' ? { w: r.width, h: r.height } : undefined;
 };
 
-describe('Node inner / outer sep（padding / margin 分轴）', () => {
-  it('padding={p} 等价于 innerXSep={p} innerYSep={p}（对称别名）', () => {
+describe('Node spacing（CSS-like padding / margin）', () => {
+  it('拒绝已删除的 TikZ sep 字段', () => {
+    expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], innerXSep: 1 }).success).toBe(false);
+    expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], innerYSep: 1 }).success).toBe(false);
+    expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], outerSep: 1 }).success).toBe(false);
+    expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], paddingX: 1 }).success).toBe(false);
+    expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], marginRight: 1 }).success).toBe(false);
+  });
+
+  it('padding={p} 等价于 padding.default={p}', () => {
     const a: IR = {
       version: 1,
       type: 'scene',
@@ -28,15 +37,14 @@ describe('Node inner / outer sep（padding / margin 分轴）', () => {
           type: 'node',
           id: 'A',
           position: [0, 0],
-          innerXSep: 12,
-          innerYSep: 12,
+          padding: { default: 12 },
         },
       ],
-    };
+    } as unknown as IR;
     expect(rectSize(a)).toEqual(rectSize(b));
   });
 
-  it('innerXSep / innerYSep 分轴时 width / height 各自跟着 sep 变', () => {
+  it('padding.x / padding.y 分轴时 width / height 各自跟着 padding 变', () => {
     const wide: IR = {
       version: 1,
       type: 'scene',
@@ -45,11 +53,10 @@ describe('Node inner / outer sep（padding / margin 分轴）', () => {
           type: 'node',
           id: 'A',
           position: [0, 0],
-          innerXSep: 30,
-          innerYSep: 4,
+          padding: { x: 30, y: 4 },
         },
       ],
-    };
+    } as unknown as IR;
     const tall: IR = {
       version: 1,
       type: 'scene',
@@ -58,11 +65,10 @@ describe('Node inner / outer sep（padding / margin 分轴）', () => {
           type: 'node',
           id: 'A',
           position: [0, 0],
-          innerXSep: 4,
-          innerYSep: 30,
+          padding: { x: 4, y: 30 },
         },
       ],
-    };
+    } as unknown as IR;
     const w = rectSize(wide);
     const t = rectSize(tall);
     expect(w?.w).toBeGreaterThan(w!.h);
@@ -72,7 +78,7 @@ describe('Node inner / outer sep（padding / margin 分轴）', () => {
     expect(w?.h).toBe(t?.w);
   });
 
-  it('axis-specific 字段优先于 padding 别名（innerXSep 覆盖 X，padding 仍管 Y）', () => {
+  it('side-specific padding 优先于 axis-specific，再回退到 padding.default', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -81,11 +87,10 @@ describe('Node inner / outer sep（padding / margin 分轴）', () => {
           type: 'node',
           id: 'A',
           position: [0, 0],
-          padding: 8,
-          innerXSep: 20,
+          padding: { default: 8, x: 20, left: 30 },
         },
       ],
-    };
+    } as unknown as IR;
     const sym: IR = {
       version: 1,
       type: 'scene',
@@ -94,23 +99,31 @@ describe('Node inner / outer sep（padding / margin 分轴）', () => {
           type: 'node',
           id: 'A',
           position: [0, 0],
-          innerXSep: 20,
-          innerYSep: 8,
+          padding: { left: 30, right: 20, top: 8, bottom: 8 },
         },
       ],
-    };
+    } as unknown as IR;
     expect(rectSize(ir)).toEqual(rectSize(sym));
   });
 
-  it('outerSep 优先于 margin 别名', () => {
-    // 用 path 端点贴边距离来观察 outerSep 是否生效（rect 自身不包含 outerSep）。
-    // 默认无 text、innerXSep / innerYSep = 8，rect 16x16；A=(0,0)、B=(100,0)；
-    // outerSep=10 时端点应在 A 右边 8 + 10 = 18 处。
+  it('asymmetric padding keeps content at position and shifts the visual shape center', () => {
+    const ir = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', position: [0, 0], padding: { left: 30, right: 10 } }],
+    } as unknown as IR;
+    const rect = findRect(compileToScene(ir).primitives);
+    expect(
+      rect?.type === 'rect' ? { left: rect.x, center: rect.x + rect.width / 2, width: rect.width } : undefined,
+    ).toEqual({ left: -30, center: -10, width: 40 });
+  });
+
+  it('margin.x / margin.y 分轴外扩 border anchor', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'A', position: [0, 0], margin: 4, outerSep: 10 },
+        { type: 'node', id: 'A', position: [0, 0], margin: { x: 10, y: 4 } },
         {
           type: 'path',
           children: [
@@ -119,20 +132,20 @@ describe('Node inner / outer sep（padding / margin 分轴）', () => {
           ],
         },
       ],
-    };
+    } as unknown as IR;
     const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
-      // outerSep=10 取胜，端点 = 8 (innerXSep default) + 10 = 18
+      // margin.x=10 → 横向端点 = 默认 padding 8 + 10 = 18
       expect(linePath.commands).toEqual([move([18, 0]), line([100, 0])]);
     }
   });
 
-  it('outerSep 默认取 margin 别名（无显式 outerSep）', () => {
-    const ir: IR = {
+  it('side-specific margin 优先于 axis-specific，再回退到 margin.default', () => {
+    const ir = {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'A', position: [0, 0], margin: 5 },
+        { type: 'node', id: 'A', position: [0, 0], margin: { default: 4, x: 6, right: 10 } },
         {
           type: 'path',
           children: [
@@ -141,15 +154,15 @@ describe('Node inner / outer sep（padding / margin 分轴）', () => {
           ],
         },
       ],
-    };
+    } as IR;
     const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
-      // margin=5 → 端点 8 + 5 = 13
-      expect(linePath.commands).toEqual([move([13, 0]), line([100, 0])]);
+      // right 方向取 margin.right=10，端点 = 默认 padding 8 + 10 = 18
+      expect(linePath.commands).toEqual([move([18, 0]), line([100, 0])]);
     }
   });
 
-  it('未设任何 sep / padding / margin → 走默认 (padding 默认 8，outerSep 默认 0)', () => {
+  it('未设任何 padding / margin → 走默认 (padding 默认 8，margin 默认 0)', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',

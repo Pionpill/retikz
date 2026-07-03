@@ -9,10 +9,7 @@ export type SourceView = 'react' | 'ir' | 'vanilla';
 /** demo 渲染目标：SVG DOM 或 Canvas 2D。 */
 export type RendererMode = 'svg' | 'canvas';
 
-/**
- * 预览卡的动作 / 浮层共享上下文：工具从中按需取能力
- * @description 设计成「只增不破」——未来加字段（如 subscribeFrame / metrics 供性能监视器）不影响已有 action / overlay。
- */
+/** 预览卡动作 / 浮层共享上下文。 */
 export type PreviewActionContext = {
   /** 重挂渲染子树（重播：CSS @keyframes / Canvas rAF / WAAPI 全部从头） */
   replay: () => void;
@@ -30,7 +27,7 @@ export type PreviewActionContext = {
   setActionValue: (id: string, value: string) => void;
 };
 
-/** 渲染区左上角的工具按钮（重播 / 播放暂停 / 停止 / 未来性能监视器开关 …）。 */
+/** 渲染区左上角的工具按钮。 */
 export type PreviewButtonAction = {
   type?: 'button';
   /** 稳定 id（兼作 toolState key） */
@@ -80,19 +77,13 @@ export type PreviewOverlay = {
 /** 渲染区垂直对齐档位。 */
 export type AlignKey = 'center' | 'start' | 'end';
 
-/**
- * 预览区高度档位
- * @description mobile / sm 双断点；`md` 是默认值；叙述性插图用 xs / sm，带交互的大型 demo 用 lg / xl / xxl / xxxl。
- */
+/** 预览区高度档位。 */
 export type SizeKey = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl' | 'xxxl';
 
 /** unified diff 中单行的种类：未变 / 新增 / 删除。 */
 export type DiffLineKind = 'context' | 'added' | 'removed';
 
-/**
- * unified diff 结果
- * @description `code` 是展示用的拼接源码（baseline 删除行交织进 current 后逐行 join '\n'），`lineKinds` 与 `code.split('\n')` 长度严格对齐；调用方按下标染色 + 加 `+`/`-` 行首字符。
- */
+/** unified diff 结果。 */
 export type UnifiedDiff = {
   code: string;
   lineKinds: ReadonlyArray<DiffLineKind>;
@@ -109,18 +100,13 @@ export type ComponentSourceFile = {
   code: string;
   /** 语法高亮语言（react→tsx、vanilla→ts、ir→json） */
   lang: SourceLang;
-  /** 可选的教学 diff 数据（任意视图、任意文件都可带——不再限 React 主文件） */
+  /** 可选的教学 diff 数据。 */
   diff?: UnifiedDiff;
   /** 是否为 demo 主文件（`name` 对应文件）；用于文件选择器区分图标，sourceFiles 引入的其他文件为 false */
   isMain?: boolean;
 };
 
-/**
- * 单个源码视图的数据：一组源码文件 + 可选的「用对应 runtime 渲染」实现
- * @description react / ir / vanilla 三视图同构——每个都是一组文件（各自可带 diff），统一支持多文件 + 文件级 diff。
- *   `render` 缺省时该视图复用 React demo 的渲染（如 Tier 2 的 IR 视图无外部数据、无法独立渲染）；
- *   提供时切到该视图即用对应 runtime 真渲染（vanilla→renderPlot 出的 SVG 串、Tier 1 IR→`<Layout ir>`）。
- */
+/** 单个源码视图的数据。 */
 export type SourceViewData = {
   /** 该视图的源码文件（≥ 1）；> 1 时出文件分段 */
   files: Array<ComponentSourceFile>;
@@ -128,14 +114,8 @@ export type SourceViewData = {
   render?: (mode: RendererMode) => ReactNode;
 };
 
-/**
- * 演示卡的源码视图集合
- * @description 三视图全可选，每个视图是一组文件（统一模型）。任一视图有文件即该视图可用；全空 / 缺省则不渲染代码面板。
- */
+/** 演示卡的源码视图集合。 */
 export type ComponentRenderSource = Partial<Record<SourceView, SourceViewData>>;
 
-/**
- * Diff 展示模式
- * @description off = 不显示 diff（展示真实 current 源码）；full = 完整 unified（current + removed 交织）；added = 只显示新增 + context（≈ current 源码 + 新增行染色）；removed = 只显示删除 + context（≈ baseline 视角 + 删除行染色）。
- */
+/** Diff 展示模式。 */
 export type DiffMode = 'off' | 'full' | 'added' | 'removed';

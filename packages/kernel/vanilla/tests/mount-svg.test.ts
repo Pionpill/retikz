@@ -45,8 +45,7 @@ describe('@retikz/vanilla mountSvg', () => {
           id: 'a',
           position: [0, 0],
           shape: 'rectangle',
-          minimumWidth: 40,
-          minimumHeight: 20,
+          minimumSize: { width: 40, height: 20 },
           fill: {
             kind: 'linearGradient',
             stops: [

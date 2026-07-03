@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ArcStepSchema, CirclePathStepSchema, EllipsePathStepSchema, StepSchema } from '../../../src/schemas';
 
 describe('arc / circlePath / ellipsePath schema refinement', () => {
-  it('arc 接受正圆半径或成对椭圆半径', () => {
+  it('arc 接受正圆半径或对象式椭圆半径', () => {
     expect(
       ArcStepSchema.safeParse({
         type: 'step',
@@ -19,13 +19,12 @@ describe('arc / circlePath / ellipsePath schema refinement', () => {
         kind: 'arc',
         startAngle: 0,
         endAngle: 90,
-        radiusX: 12,
-        radiusY: 8,
+        radius: { x: 12, y: 8 },
       }).success,
     ).toBe(true);
   });
 
-  it('arc 拒绝缺半径、混用半径和非 finite 角度', () => {
+  it('arc 拒绝缺半径、旧椭圆半径字段和非 finite 角度', () => {
     expect(
       ArcStepSchema.safeParse({
         type: 'step',
@@ -41,6 +40,7 @@ describe('arc / circlePath / ellipsePath schema refinement', () => {
         startAngle: 0,
         endAngle: 90,
         radiusX: 12,
+        radiusY: 8,
       }).success,
     ).toBe(false);
     expect(
@@ -99,14 +99,13 @@ describe('arc / circlePath / ellipsePath schema refinement', () => {
 
   it('ellipsePath 要求角度同给或同省，并拒绝 partial closed', () => {
     expect(
-      EllipsePathStepSchema.safeParse({ type: 'step', kind: 'ellipsePath', radiusX: 12, radiusY: 8 }).success,
+      EllipsePathStepSchema.safeParse({ type: 'step', kind: 'ellipsePath', radius: { x: 12, y: 8 } }).success,
     ).toBe(true);
     expect(
       EllipsePathStepSchema.safeParse({
         type: 'step',
         kind: 'ellipsePath',
-        radiusX: 12,
-        radiusY: 8,
+        radius: { x: 12, y: 8 },
         startAngle: 0,
         endAngle: 180,
         closed: 'open',
@@ -116,8 +115,7 @@ describe('arc / circlePath / ellipsePath schema refinement', () => {
       EllipsePathStepSchema.safeParse({
         type: 'step',
         kind: 'ellipsePath',
-        radiusX: 12,
-        radiusY: 8,
+        radius: { x: 12, y: 8 },
         endAngle: 180,
       }).success,
     ).toBe(false);
@@ -125,12 +123,14 @@ describe('arc / circlePath / ellipsePath schema refinement', () => {
       EllipsePathStepSchema.safeParse({
         type: 'step',
         kind: 'ellipsePath',
-        radiusX: 12,
-        radiusY: 8,
+        radius: { x: 12, y: 8 },
         startAngle: 0,
         endAngle: 180,
         closed: 'closed',
       }).success,
+    ).toBe(false);
+    expect(
+      EllipsePathStepSchema.safeParse({ type: 'step', kind: 'ellipsePath', radiusX: 12, radiusY: 8 }).success,
     ).toBe(false);
   });
 

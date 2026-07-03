@@ -4,6 +4,7 @@ import type { DuplicateRegisterInfo } from '../../src/compile/name-stack';
 import type { NodeLayout } from '../../src/compile/node';
 
 import { NameStack } from '../../src/compile/name-stack';
+import { boxInsets } from '../../src/compile/node';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const makeLayout = (id: string, x = 0, y = 0): NodeLayout => ({
@@ -11,8 +12,9 @@ const makeLayout = (id: string, x = 0, y = 0): NodeLayout => ({
   shapeName: 'rectangle',
   shapeDef: BUILTIN_SHAPES.rectangle,
   rect: { x, y, width: 0, height: 0, rotate: 0 },
+  contentCenter: [x, y],
   rotateDeg: 0,
-  margin: 0,
+  margin: boxInsets(0),
   textWidth: 0,
   textHeight: 0,
   align: 'middle',

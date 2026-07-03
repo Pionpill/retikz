@@ -1,4 +1,4 @@
-import type { IRTarget } from '@retikz/core';
+import type { IRStepAnisotropicRadius, IRTarget } from '@retikz/core';
 import type { FC } from 'react';
 
 import type { AngleInput, BoxAdjustmentProps, PathVisualProps, ShapeBox } from './_shared';
@@ -25,7 +25,7 @@ export type EllipseProps = PathVisualProps &
     /** 给定角度时的局部闭合方式 */
     closed?: 'chord' | 'open' | 'sector';
   } & (
-    | { center: IRTarget; radiusX: number; radiusY: number }
+    | { center: IRTarget; radius: IRStepAnisotropicRadius }
     | { center: IRTarget; diameterX: number; diameterY: number }
     | { corner1: [number, number]; corner2: [number, number] }
     | { box: ShapeBox }
@@ -55,10 +55,10 @@ export const Ellipse: FC<EllipseProps> = props => {
   let radiusY: number;
   if (props.box !== undefined) {
     ({ center, radiusX, radiusY } = resolveEllipseByBox(props, 'Ellipse', props.box));
-  } else if ('radiusX' in props) {
+  } else if ('radius' in props) {
     center = requireXY(props.center, 'Ellipse', 'center');
-    radiusX = props.radiusX;
-    radiusY = props.radiusY;
+    radiusX = props.radius.x;
+    radiusY = props.radius.y;
   } else if ('diameterX' in props) {
     center = requireXY(props.center, 'Ellipse', 'center');
     radiusX = props.diameterX / 2;
@@ -69,7 +69,7 @@ export const Ellipse: FC<EllipseProps> = props => {
     [radiusX, radiusY] = boxSize(normalized).map(value => value / 2) as [number, number];
   } else {
     throw new Error(
-      '<Ellipse> needs one of { center, radiusX, radiusY }, { center, diameterX, diameterY }, { corner1, corner2 }, or { box }',
+      '<Ellipse> needs one of { center, radius }, { center, diameterX, diameterY }, { corner1, corner2 }, or { box }',
     );
   }
 
@@ -80,8 +80,7 @@ export const Ellipse: FC<EllipseProps> = props => {
       <Step kind="move" to={center} />
       <Step
         kind="ellipsePath"
-        radiusX={radiusX}
-        radiusY={radiusY}
+        radius={{ x: radiusX, y: radiusY }}
         startAngle={angles?.startAngle}
         endAngle={angles?.endAngle}
         closed={angles ? (props.closed ?? 'chord') : undefined}

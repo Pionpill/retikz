@@ -18,8 +18,8 @@ describe('parseWay 形状算子边界', () => {
   });
 
   it('正常路径：target → ellipse 算子', () => {
-    const steps = parseWay([[0, 0], { ellipse: { radiusX: 4, radiusY: 2 } }]);
-    expect(steps[1]).toMatchObject({ kind: 'ellipsePath', radiusX: 4, radiusY: 2 });
+    const steps = parseWay([[0, 0], { ellipse: { radius: { x: 4, y: 2 } } }]);
+    expect(steps[1]).toMatchObject({ kind: 'ellipsePath', radius: { x: 4, y: 2 } });
   });
 
   it('arc startAngle === endAngle → parseWay 不报错；schema 接受（0 长度弧由 renderer 处理）', () => {
@@ -59,8 +59,7 @@ describe('parseWay 形状算子边界', () => {
       EllipsePathStepSchema.safeParse({
         type: 'step',
         kind: 'ellipsePath',
-        radiusX: -4,
-        radiusY: 2,
+        radius: { x: -4, y: 2 },
       }).success,
     ).toBe(false);
   });

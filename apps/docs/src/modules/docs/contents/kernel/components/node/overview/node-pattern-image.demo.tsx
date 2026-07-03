@@ -16,8 +16,7 @@ const Demo: FC = () => (
       id="hatch"
       position={[-225, 0]}
       shape="rectangle"
-      minimumWidth={96}
-      minimumHeight={80}
+      minimumSize={{ width: 96, height: 80 }}
       stroke="gray"
       fill={{ kind: 'pattern', shape: 'lines', color: 'dodgerblue', rotation: 45 }}
     />
@@ -33,8 +32,7 @@ const Demo: FC = () => (
       id="grid"
       position={[75, 0]}
       shape="rectangle"
-      minimumWidth={96}
-      minimumHeight={80}
+      minimumSize={{ width: 96, height: 80 }}
       stroke="gray"
       fill={{ kind: 'pattern', shape: 'grid', color: 'dodgerblue', size: 10 }}
     />

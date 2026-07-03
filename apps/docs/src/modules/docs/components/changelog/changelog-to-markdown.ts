@@ -1,5 +1,5 @@
 ﻿import type { Lang } from '@/i18n';
-import type { ChangeItem, Release } from '@/modules/docs/data/changelog.types';
+import type { ChangeItem, Release } from '@/modules/docs/data';
 
 const DEV_LABEL: Record<Lang, string> = { zh: '开发中', en: 'in development' };
 /** label 与 content 之间的分隔:中文全角冒号,英文半角冒号 */

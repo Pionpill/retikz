@@ -36,8 +36,7 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
       textColor={hasBox ? LEAF_TEXT : TITLE_TEXT}
       font={{ ...SANS_FONT, size: isTitle ? 24 : isHeader ? 14 : 12, weight: isTitle || isHeader ? 'bold' : 'normal' }}
       padding={hasBox ? 5 : 4}
-      minimumWidth={width}
-      minimumHeight={height}
+      minimumSize={{ width, height }}
     >
       {children}
     </Node>

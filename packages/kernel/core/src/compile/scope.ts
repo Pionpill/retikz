@@ -21,7 +21,8 @@ import { resolveBoundaryRegistry } from '../providers/boundary';
 import { providerDefinitionOf } from '../providers/registry';
 import { resolveShapeRegistry } from '../providers/shape';
 import { Anchor } from '../shared';
-import { rect as rectOps } from '../shared/geometry';
+import { DEG_TO_RAD, RAD_TO_DEG, rect as rectOps } from '../shared/geometry';
+import { boxInsets } from './node';
 import { outerRectOf } from './node';
 import { resolvePosition } from './position';
 
@@ -125,7 +126,7 @@ export const applyTransformChain = (local: IRPosition, chain: ReadonlyArray<Tran
     } else if (t.kind === 'rotate') {
       const cx = t.cx ?? 0;
       const cy = t.cy ?? 0;
-      const rad = (t.degrees * Math.PI) / 180;
+      const rad = t.degrees * DEG_TO_RAD;
       const cos = Math.cos(rad);
       const sin = Math.sin(rad);
       const dx = x - cx;
@@ -160,7 +161,7 @@ export const inverseTransformChain = (global: IRPosition, chain: ReadonlyArray<T
     } else if (t.kind === 'rotate') {
       const cx = t.cx ?? 0;
       const cy = t.cy ?? 0;
-      const rad = (-t.degrees * Math.PI) / 180;
+      const rad = -t.degrees * DEG_TO_RAD;
       const cos = Math.cos(rad);
       const sin = Math.sin(rad);
       const dx = x - cx;
@@ -198,7 +199,7 @@ export const projectLayoutToGlobal = (layout: NodeLayout, chain: ReadonlyArray<T
   let scaleY = 1;
   for (const t of chain) {
     if (t.kind === 'rotate') {
-      rotateAccumRad += (t.degrees * Math.PI) / 180;
+      rotateAccumRad += t.degrees * DEG_TO_RAD;
     } else if (t.kind === 'scale') {
       scaleX *= t.x;
       scaleY *= t.y ?? t.x;
@@ -212,12 +213,16 @@ export const projectLayoutToGlobal = (layout: NodeLayout, chain: ReadonlyArray<T
     width: layout.rect.width * Math.abs(scaleX),
     height: layout.rect.height * Math.abs(scaleY),
   };
-  const marginScale = Math.max(Math.abs(scaleX), Math.abs(scaleY));
   return {
     ...layout,
     rect: globalRect,
-    rotateDeg: layout.rotateDeg + rotateAccumRad * (180 / Math.PI),
-    margin: layout.margin * marginScale,
+    rotateDeg: layout.rotateDeg + rotateAccumRad * RAD_TO_DEG,
+    margin: {
+      top: layout.margin.top * Math.abs(scaleY),
+      right: layout.margin.right * Math.abs(scaleX),
+      bottom: layout.margin.bottom * Math.abs(scaleY),
+      left: layout.margin.left * Math.abs(scaleX),
+    },
   };
 };
 
@@ -290,8 +295,9 @@ export const registerScopeAsLayout = (
     shapeName: 'rectangle',
     shapeDef: providerDefinitionOf(shapes, 'rectangle', { capability: 'shape', optionName: 'shapes' }),
     rect: { x: box.x, y: box.y, width: box.width, height: box.height, rotate: 0 },
+    contentCenter: [box.x, box.y],
     rotateDeg: 0,
-    margin: 0,
+    margin: boxInsets(0),
     textWidth: box.width,
     textHeight: box.height,
     align: 'middle',
@@ -323,8 +329,9 @@ export const registerScopeCircleLayout = (
     shapeDef: providerDefinitionOf(shapes, 'ellipse', { capability: 'shape', optionName: 'shapes' }),
     shapeParams: { circumscribe: 'equal' },
     rect: { x: center[0], y: center[1], width: diameter, height: diameter, rotate: 0 },
+    contentCenter: [center[0], center[1]],
     rotateDeg: 0,
-    margin: 0,
+    margin: boxInsets(0),
     textWidth: diameter,
     textHeight: diameter,
     align: 'middle',

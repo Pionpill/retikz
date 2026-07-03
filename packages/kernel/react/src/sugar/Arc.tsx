@@ -1,4 +1,4 @@
-import type { IRStepLabelInput } from '@retikz/core';
+import type { IRStepLabelInput, IRStepRadius } from '@retikz/core';
 import type { FC } from 'react';
 
 import type { DslTarget } from '../kernel/Step';
@@ -9,7 +9,7 @@ import { Step } from '../kernel/Step';
 import { pickPathVisual, resolveAngles } from './_shared';
 
 /**
- * `<Arc>` 形态：圆弧（radius）/ 椭圆弧（radiusX/radiusY）；必给角度（startAngle / endAngle / sweepAngle 三选二）。
+ * `<Arc>` 形态：圆弧（radius number）/ 椭圆弧（radius {x,y}）；必给角度（startAngle / endAngle / sweepAngle 三选二）。
  * @description 默认开放弧；给 `close="chord"`（弦闭合）或 `close="sector"`（连回圆心成扇形）可闭合成可填充区域。
  *   `label` 透传到底层弧 step，文字沿弧定位（`position` 缺省 midway，按 startAngle..endAngle 线性映射）。
  */
@@ -19,7 +19,7 @@ export type ArcProps = PathVisualProps &
     close?: 'open' | 'chord' | 'sector';
     /** 弧上边标注（透传到底层 step；`position` 缺省 midway，沿弧 startAngle..endAngle 线性映射） */
     label?: IRStepLabelInput;
-  } & ({ center: DslTarget; radius: number } | { center: DslTarget; radiusX: number; radiusY: number });
+  } & { center: DslTarget; radius: IRStepRadius };
 
 /**
  * Arc sugar——弧线（默认开放，可弦闭合 / 扇形闭合）
@@ -32,7 +32,8 @@ export const Arc: FC<ArcProps> = props => {
   if (!angles) throw new Error('<Arc> 需给角度');
   const { startAngle, endAngle } = angles;
   const center = props.center;
-  const circular = 'radius' in props;
+  const radius = props.radius;
+  const circular = typeof radius === 'number';
   const close = props.close ?? 'open';
   const visual = pickPathVisual(props);
 
@@ -47,7 +48,7 @@ export const Arc: FC<ArcProps> = props => {
             center={center}
             startAngle={startAngle}
             endAngle={endAngle}
-            radius={props.radius}
+            radius={radius}
             label={props.label}
           />
         ) : (
@@ -56,8 +57,7 @@ export const Arc: FC<ArcProps> = props => {
             center={center}
             startAngle={startAngle}
             endAngle={endAngle}
-            radiusX={props.radiusX}
-            radiusY={props.radiusY}
+            radius={radius}
             label={props.label}
           />
         )}
@@ -72,7 +72,7 @@ export const Arc: FC<ArcProps> = props => {
       {circular ? (
         <Step
           kind="circlePath"
-          radius={props.radius}
+          radius={radius}
           startAngle={startAngle}
           endAngle={endAngle}
           closed={close}
@@ -81,8 +81,7 @@ export const Arc: FC<ArcProps> = props => {
       ) : (
         <Step
           kind="ellipsePath"
-          radiusX={props.radiusX}
-          radiusY={props.radiusY}
+          radius={radius}
           startAngle={startAngle}
           endAngle={endAngle}
           closed={close}

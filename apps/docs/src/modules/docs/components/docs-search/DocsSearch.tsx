@@ -37,12 +37,11 @@ export const DocsSearch: FC<DocsSearchProps> = props => {
 
   return (
     <>
-      {/* 紧凑模式（< @4xl/header:）：ghost 图标按钮，与右侧 More / AI 触发器对齐 size-7 */}
       <Button
         variant="ghost"
         size="icon"
         className={cn(
-          'size-7 cursor-pointer rounded-sm text-muted-foreground hover:text-foreground @4xl/header:hidden',
+          'size-7 cursor-pointer rounded-sm text-muted-foreground hover:text-foreground lg:hidden',
           className,
         )}
         onClick={() => setOpen(true)}
@@ -51,13 +50,12 @@ export const DocsSearch: FC<DocsSearchProps> = props => {
       >
         <Search className="size-4" />
       </Button>
-      {/* ≥ @4xl/header:：输入框样式触发器（仅完整桌面 chrome 显示），@5xl/header: 起进一步放宽到 w-64 */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label={t('common.searchHint')}
         className={cn(
-          'hidden @4xl/header:inline-flex h-8 w-48 @5xl/header:w-64 items-center gap-2 rounded-md border border-input bg-transparent px-3 text-sm text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 cursor-pointer',
+          'hidden h-8 w-48 cursor-pointer items-center gap-2 rounded-md border border-input bg-transparent px-3 text-sm text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 lg:inline-flex xl:w-64',
           className,
         )}
       >

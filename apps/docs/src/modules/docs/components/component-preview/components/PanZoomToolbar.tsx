@@ -40,22 +40,12 @@ export type PanZoomToolbarProps = {
   rendererMode: RendererMode;
   /** 切换当前渲染目标 */
   toggleRendererMode: () => void;
-  /**
-   * 强制可见（覆盖 hover-only 默认）；移动端没有 hover，由父级通过 tap 切换 pinned 真值。
-   * 未指定时沿用原 group-hover/focus-within 显示规则
-   */
+  /** 强制显示工具栏。 */
   pinned?: boolean;
   /** 始终显示工具栏。 */
   alwaysVisible?: boolean;
 };
 
-/**
- * 渲染区操作面板
- * @description 桌面默认 hover/focus 出现；移动端没有 hover，靠父级 tap 切 `pinned` 强制显示。
- *   上半 3×3 d-pad（中央 ⟲ 复原）md 以下整段隐藏；xs / sm 预览区始终隐藏 d-pad，
- *   并把 Reset 放在下半行 Zoom out 之后，避免工具条高过预览区。
- *   mousedown + click 都 stopPropagation，避免父级 preview 区域的 drag handler 与 tap toggle 误触
- */
 /** 允许的 size 值集合（避免 radix ToggleGroup 取消选中时回 '' 误传） */
 const SIZE_VALUE_SET: ReadonlySet<string> = new Set<SizeKey>(SIZE_KEYS);
 
@@ -123,7 +113,6 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
         >
           <ZoomOut className="size-3.5" />
         </ToolbarIconButton>
-        {/* 小预览（xs/sm）无 d-pad，Reset 放底排；md+ 的 Reset 在上方 d-pad 中心 */}
         {isSmallPreview && (
           <ToolbarIconButton label="Reset" disabled={!isTransformed} onClick={resetTransform}>
             <RotateCcw className="size-3.5" />
@@ -136,7 +125,6 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
         >
           <Hand className="size-3.5" />
         </ToolbarIconButton>
-        {/* 非小预览但视口 < md（d-pad 隐藏）：底排补 Reset */}
         {!isSmallPreview && (
           <ToolbarIconButton label="Reset" disabled={!isTransformed} onClick={resetTransform} className="md:hidden">
             <RotateCcw className="size-3.5" />

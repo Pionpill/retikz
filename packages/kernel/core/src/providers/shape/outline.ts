@@ -1,7 +1,8 @@
-﻿import type { PathCommand, PathPrim } from '../../contract';
+﻿import type { Position } from '@retikz/math';
+
+import type { PathCommand, PathPrim } from '../../contract';
 import type { ResolvedShapeStyle } from '../../contract';
-import type { Position } from '../../shared/geometry';
-import type { ContourCommand, LineSegment } from '../../shared/geometry';
+import type { ContourCommand, LineSegment } from '../../shared';
 
 /**
  * 由顶点环构造闭合折线段序列（接缝顺序同顶点顺序）
@@ -71,6 +72,7 @@ export const contourToPathPrimitive = (commands: Array<PathCommand>, style: Reso
   strokeOpacity: style.strokeOpacity,
   strokeWidth: style.strokeWidth ?? 1,
   dashPattern: style.dashPattern,
+  dashOffset: style.dashOffset,
   opacity: style.opacity,
   shadow: style.shadow,
   blendMode: style.blendMode,

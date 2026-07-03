@@ -17,8 +17,7 @@ const Demo: FC = () => (
       id="ell"
       position={[-165, 16]}
       shape="ellipse"
-      minimumWidth={52}
-      minimumHeight={40}
+      minimumSize={{ width: 52, height: 40 }}
       margin={M}
       stroke="gray"
       dashPattern={[4, 3]}
@@ -41,8 +40,7 @@ const Demo: FC = () => (
       id="pent"
       position={[165, 16]}
       shape={{ type: 'polygon', params: { sides: 5, rotate: -90 } }}
-      minimumWidth={56}
-      minimumHeight={52}
+      minimumSize={{ width: 56, height: 52 }}
       margin={M}
       stroke="gray"
       dashPattern={[4, 3]}

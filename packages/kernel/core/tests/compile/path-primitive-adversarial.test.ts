@@ -132,7 +132,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'ellipsePath', radiusX: 15, radiusY: 10 },
+            { type: 'step', kind: 'ellipsePath', radius: { x: 15, y: 10 } },
           ],
         },
       ],

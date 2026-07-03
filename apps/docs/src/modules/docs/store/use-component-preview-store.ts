@@ -1,11 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-/**
- * ComponentPreview store：托管全局对所有 demo 卡片生效的开关
- * @description `hideCode` 隐藏底部代码面板（与单卡 prop 取或）；`isExpand` 强制展开代码面板（覆盖单卡 View Code 折叠态与高度上限）；
- *   `dragEnabled` 全局把卡内 pan/zoom 拖拽默认为开（单卡 Hand 按钮的本地覆盖优先），方便移动端在更多菜单里一次切换所有 demo
- */
+/** ComponentPreview 全局开关。 */
 export type ComponentPreviewState = {
   hideCode: boolean;
   isExpand: boolean;

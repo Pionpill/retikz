@@ -16,7 +16,7 @@ describe("compile path: 'ellipsePath'", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'ellipsePath', radiusX: 15, radiusY: 10 },
+            { type: 'step', kind: 'ellipsePath', radius: { x: 15, y: 10 } },
           ],
         },
       ],
@@ -36,7 +36,7 @@ describe("compile path: 'ellipsePath'", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'ellipsePath', radiusX: 7, radiusY: 7 },
+            { type: 'step', kind: 'ellipsePath', radius: { x: 7, y: 7 } },
           ],
         },
       ],

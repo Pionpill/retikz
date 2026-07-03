@@ -1,15 +1,20 @@
+import type { Position } from '@retikz/math';
+
 import { z } from 'zod';
 
 import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
-import type { Position } from '../../shared/geometry';
-import type { Rect } from '../../shared/geometry';
-import type { ContourSegment } from '../../shared/geometry';
+import type { ContourSegment, Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
-import { CenterAnchor, isDirectionalAnchor } from '../../shared';
-import { rect } from '../../shared/geometry';
-import { localToWorld } from '../../shared/geometry';
-import { boundaryFromContour, contourCommands } from '../../shared/geometry';
+import {
+  boundaryFromContour,
+  CenterAnchor,
+  contourCommands,
+  DEG_TO_RAD,
+  isDirectionalAnchor,
+  localToWorld,
+  rect,
+} from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
 /**
@@ -32,7 +37,6 @@ type PolygonParams = {
   cornerRadius?: number;
 };
 
-const DEG_TO_RAD = Math.PI / 180;
 const MAX_POLYGON_SIDES = 1024;
 
 /** 顶点角集合（度）：第 k 个顶点角 = rotate + k·(360/sides) */
@@ -111,12 +115,10 @@ export const polygon = defineShape({
       .describe(`Number of sides of the regular polygon (3..${MAX_POLYGON_SIDES}).`),
     rotate: z
       .number()
-
       .optional()
       .describe('Shape self-rotation in degrees (vertex start direction); default 0. Composes with Node.rotate.'),
     cornerRadius: z
       .number()
-
       .nonnegative()
       .optional()
       .describe(

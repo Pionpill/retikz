@@ -48,6 +48,18 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
   return out;
 };
 
+const nodeWidth = (node: IRNode): number => {
+  const size = node.minimumSize;
+  if (typeof size === 'number') return size;
+  return size?.width ?? size?.default ?? 0;
+};
+
+const nodeHeight = (node: IRNode): number => {
+  const size = node.minimumSize;
+  if (typeof size === 'number') return size;
+  return size?.height ?? size?.default ?? 0;
+};
+
 /** band PositionScale 桩：每类别一个等宽 band，coordinate = band 中心、bandwidth 固定 */
 const bandStub = (categories: Array<string>, range: [number, number]): PositionScale => {
   const [r0, r1] = range;
@@ -135,8 +147,8 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
     expect(nodes).toHaveLength(2);
     for (const node of nodes) {
       expect(node.shape).toBeUndefined(); // barStyle 在 nodeDefault 给 rectangle
-      expect(node.minimumWidth).toBe(100);
-      expect(node.minimumHeight).toBe(100);
+      expect(nodeWidth(node)).toBe(100);
+      expect(nodeHeight(node)).toBe(100);
     }
   });
 
@@ -144,8 +156,8 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
     const frame = createCartesianCoordinate(bandStub(['r0'], [0, 120]), bandStub(['c0'], [120, 0]));
     const nodes = nodesOf(lowerMark(rectMark(), [{ rk: 'r0', ck: 'c0' }], frame) as IRScope);
     expect(nodes).toHaveLength(1);
-    expect(nodes[0].minimumWidth).toBe(120);
-    expect(nodes[0].minimumHeight).toBe(120);
+    expect(nodeWidth(nodes[0])).toBe(120);
+    expect(nodeHeight(nodes[0])).toBe(120);
   });
 
   it('rect-missing-category-skipped', () => {
@@ -287,14 +299,14 @@ describe('rect fail-loud', () => {
     const frame = createCartesianCoordinate(bandStub(['r0', 'r1'], [0, 200]), linearStub([0, 10], [200, 0]));
     const nodes = nodesOf(lowerMark(rectMark(), [{ rk: 'r0', ck: 5 }], frame) as IRScope);
     expect(nodes).toHaveLength(1);
-    expect(nodes[0].minimumHeight).toBe(0);
+    expect(nodeHeight(nodes[0])).toBe(0);
   });
 
   it('rect-primary-not-band-degenerate-cell', () => {
     const frame = createCartesianCoordinate(linearStub([0, 10], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
     const nodes = nodesOf(lowerMark(rectMark(), [{ rk: 5, ck: 'c0' }], frame) as IRScope);
     expect(nodes).toHaveLength(1);
-    expect(nodes[0].minimumWidth).toBe(0);
+    expect(nodeWidth(nodes[0])).toBe(0);
   });
 
   it('rect-y-linear-via-spec-degenerate-cell', () => {
@@ -414,8 +426,8 @@ describe('rect + interval 共存', () => {
     expect(rectNodes).toHaveLength(2);
     expect(intervalNodes).toHaveLength(2);
     // rect 格高 = y band bandwidth（固定）；interval 柱高随 value 变（两柱不等高）
-    expect(rectNodes[0].minimumHeight as number).toBeCloseTo(rectNodes[1].minimumHeight as number, 6);
-    expect(intervalNodes[0].minimumHeight).not.toBe(intervalNodes[1].minimumHeight);
+    expect(nodeHeight(rectNodes[0])).toBeCloseTo(nodeHeight(rectNodes[1]), 6);
+    expect(nodeHeight(intervalNodes[0])).not.toBe(nodeHeight(intervalNodes[1]));
   });
 });
 

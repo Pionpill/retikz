@@ -92,12 +92,12 @@ describe('Circle equivalence', () => {
 });
 
 describe('Ellipse equivalence', () => {
-  it('center + radiusX/radiusY', () => {
-    expect(ir(<Ellipse center={[0, 0]} radiusX={15} radiusY={10} />).children).toEqual(
+  it('center + radius object', () => {
+    expect(ir(<Ellipse center={[0, 0]} radius={{ x: 15, y: 10 }} />).children).toEqual(
       ir(
         <Path>
           <Step kind="move" to={[0, 0]} />
-          <Step kind="ellipsePath" radiusX={15} radiusY={10} />
+          <Step kind="ellipsePath" radius={{ x: 15, y: 10 }} />
         </Path>,
       ).children,
     );
@@ -105,36 +105,36 @@ describe('Ellipse equivalence', () => {
 
   it('{ corner1, corner2 } bbox', () => {
     expect(ir(<Ellipse corner1={[0, 0]} corner2={[20, 10]} />).children).toEqual(
-      ir(<Ellipse center={[10, 5]} radiusX={10} radiusY={5} />).children,
+      ir(<Ellipse center={[10, 5]} radius={{ x: 10, y: 5 }} />).children,
     );
   });
 
   it('box fit（x/y 与 origin 两种 box 写法）', () => {
     expect(ir(<Ellipse box={{ x: 0, y: 0, width: 20, height: 10 }} />).children).toEqual(
-      ir(<Ellipse center={[10, 5]} radiusX={10} radiusY={5} />).children,
+      ir(<Ellipse center={[10, 5]} radius={{ x: 10, y: 5 }} />).children,
     );
     expect(ir(<Ellipse box={{ origin: [2, 4], width: 20, height: 10 }} />).children).toEqual(
-      ir(<Ellipse center={[12, 9]} radiusX={10} radiusY={5} />).children,
+      ir(<Ellipse center={[12, 9]} radius={{ x: 10, y: 5 }} />).children,
     );
   });
 
   it('inset / outset adjust the box before fitting', () => {
     expect(ir(<Ellipse corner1={[0, 0]} corner2={[20, 10]} inset={2} />).children).toEqual(
-      ir(<Ellipse center={[10, 5]} radiusX={8} radiusY={3} />).children,
+      ir(<Ellipse center={[10, 5]} radius={{ x: 8, y: 3 }} />).children,
     );
     expect(ir(<Ellipse box={{ x: 0, y: 0, width: 20, height: 10 }} outset={2} />).children).toEqual(
-      ir(<Ellipse center={[10, 5]} radiusX={12} radiusY={7} />).children,
+      ir(<Ellipse center={[10, 5]} radius={{ x: 12, y: 7 }} />).children,
     );
   });
 
   it('partial ellipse can close as sector', () => {
     expect(
-      ir(<Ellipse center={[0, 0]} radiusX={15} radiusY={10} startAngle={0} endAngle={90} closed="sector" />).children,
+      ir(<Ellipse center={[0, 0]} radius={{ x: 15, y: 10 }} startAngle={0} endAngle={90} closed="sector" />).children,
     ).toEqual(
       ir(
         <Path>
           <Step kind="move" to={[0, 0]} />
-          <Step kind="ellipsePath" radiusX={15} radiusY={10} startAngle={0} endAngle={90} closed="sector" />
+          <Step kind="ellipsePath" radius={{ x: 15, y: 10 }} startAngle={0} endAngle={90} closed="sector" />
         </Path>,
       ).children,
     );
@@ -154,11 +154,11 @@ describe('Arc equivalence', () => {
   });
 
   it('ellipse arc', () => {
-    expect(ir(<Arc center={[0, 0]} radiusX={15} radiusY={10} startAngle={0} endAngle={90} />).children).toEqual(
+    expect(ir(<Arc center={[0, 0]} radius={{ x: 15, y: 10 }} startAngle={0} endAngle={90} />).children).toEqual(
       ir(
         <Path>
           <Step kind="move" to={[0, 0]} />
-          <Step kind="arc" center={[0, 0]} startAngle={0} endAngle={90} radiusX={15} radiusY={10} />
+          <Step kind="arc" center={[0, 0]} startAngle={0} endAngle={90} radius={{ x: 15, y: 10 }} />
         </Path>,
       ).children,
     );
@@ -177,12 +177,12 @@ describe('Arc equivalence', () => {
 
   it('close="sector" on an ellipse delegates to ellipsePath sector', () => {
     expect(
-      ir(<Arc center={[0, 0]} radiusX={15} radiusY={10} startAngle={0} endAngle={90} close="sector" />).children,
+      ir(<Arc center={[0, 0]} radius={{ x: 15, y: 10 }} startAngle={0} endAngle={90} close="sector" />).children,
     ).toEqual(
       ir(
         <Path>
           <Step kind="move" to={[0, 0]} />
-          <Step kind="ellipsePath" radiusX={15} radiusY={10} startAngle={0} endAngle={90} closed="sector" />
+          <Step kind="ellipsePath" radius={{ x: 15, y: 10 }} startAngle={0} endAngle={90} closed="sector" />
         </Path>,
       ).children,
     );
@@ -202,11 +202,11 @@ describe('Sector equivalence', () => {
   });
 
   it('elliptical filled wedge uses ellipsePath sector close', () => {
-    expect(ir(<Sector center={[0, 0]} radiusX={15} radiusY={10} startAngle={0} endAngle={90} />).children).toEqual(
+    expect(ir(<Sector center={[0, 0]} radius={{ x: 15, y: 10 }} startAngle={0} endAngle={90} />).children).toEqual(
       ir(
         <Path>
           <Step kind="move" to={[0, 0]} />
-          <Step kind="ellipsePath" radiusX={15} radiusY={10} startAngle={0} endAngle={90} closed="sector" />
+          <Step kind="ellipsePath" radius={{ x: 15, y: 10 }} startAngle={0} endAngle={90} closed="sector" />
         </Path>,
       ).children,
     );

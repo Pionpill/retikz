@@ -5,6 +5,7 @@ import type { NodeLayout } from '../../src/compile/node';
 import type { TextMeasurer } from '../../src/compile/text-metrics';
 
 import { compileToScene } from '../../src/compile/compile';
+import { boxInsets } from '../../src/compile/node';
 import { computeScopeBoundingBox, registerScopeAsLayout } from '../../src/compile/scope';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
@@ -31,8 +32,9 @@ const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => (
   shapeName: 'rectangle',
   shapeDef: BUILTIN_SHAPES.rectangle,
   rect: { x: cx, y: cy, width: w, height: h, rotate: 0 },
+  contentCenter: [cx, cy],
   rotateDeg: 0,
-  margin: 0,
+  margin: boxInsets(0),
   textWidth: w,
   textHeight: h,
   align: 'middle',
@@ -75,7 +77,7 @@ describe('computeScopeBoundingBox / registerScopeAsLayout 单元测试', () => {
     expect(layout.rect.width).toBe(0);
     expect(layout.rect.height).toBe(0);
     expect(layout.rect.rotate).toBe(0);
-    expect(layout.margin).toBe(0);
+    expect(layout.margin).toEqual(boxInsets(0));
     expect(layout.fontSize).toBe(0);
   });
 

@@ -1,5 +1,6 @@
-﻿import { JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
+﻿import { BoxSpacingSchema, JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
 import { AnchorRefSchema, PathBaseSchema, PositionSchema, StepLabelSchema } from '@retikz/core';
+import { AxisScaleSchema, BoxSizeSchema } from '@retikz/core';
 import {
   BlendMode,
   BoundarySchema,
@@ -282,6 +283,9 @@ const StyleDashPatternSchema = z.array(StyleNonnegativeNumberSchema).min(1);
 const StyleShadowSchema = z.union([z.enum(ShadowPreset), DropShadowSchema]);
 const StyleShapeSchema = z.union([z.string().min(1), ShapeRefSchema]);
 const StyleBlendModeSchema = z.enum(BlendMode);
+const StyleBoxSpacingSchema = z.union([StyleNonnegativeNumberSchema, BoxSpacingSchema]);
+const StyleAxisScaleSchema = z.union([StylePositiveNumberSchema, AxisScaleSchema]);
+const StyleBoxSizeSchema = z.union([StyleNonnegativeNumberSchema, BoxSizeSchema]);
 
 export const PointFillStyleSchema = markValueSchema(
   StylePaintSchema,
@@ -372,6 +376,24 @@ export const NodeBoundaryStyleSchema = markValueSchema(
   'Data field path bound to node boundary',
   'Constant core Node boundary',
   'node boundary style value',
+);
+export const NodeBoxSpacingStyleSchema = markValueSchema(
+  StyleBoxSpacingSchema,
+  'Data field path bound to node box spacing',
+  'Constant core Node box spacing',
+  'node box spacing style value',
+);
+export const NodeAxisScaleStyleSchema = markValueSchema(
+  StyleAxisScaleSchema,
+  'Data field path bound to node scale',
+  'Constant core Node scale',
+  'node scale style value',
+);
+export const NodeBoxSizeStyleSchema = markValueSchema(
+  StyleBoxSizeSchema,
+  'Data field path bound to node box size',
+  'Constant core Node box size',
+  'node box size style value',
 );
 export const ShadowStyleSchema = markValueSchema(
   StyleShadowSchema,
@@ -514,26 +536,14 @@ const coreNodeStyle = {
   cornerRadius: PointNonnegativeNumberStyleSchema.optional().describe(
     'Core Node cornerRadius: field-bound datum channel or constant non-negative value',
   ),
-  scale: NodePositiveNumberStyleSchema.optional().describe(
-    'Core Node uniform scale: field-bound datum channel or constant positive value',
+  scale: NodeAxisScaleStyleSchema.optional().describe(
+    'Core Node scale: field-bound datum channel or constant number / {default,x,y}',
   ),
-  xScale: NodePositiveNumberStyleSchema.optional().describe(
-    'Core Node xScale: field-bound datum channel or constant positive value',
+  padding: NodeBoxSpacingStyleSchema.optional().describe(
+    'Core Node padding: field-bound datum channel or constant box spacing',
   ),
-  yScale: NodePositiveNumberStyleSchema.optional().describe(
-    'Core Node yScale: field-bound datum channel or constant positive value',
-  ),
-  innerXSep: PointNonnegativeNumberStyleSchema.optional().describe(
-    'Core Node innerXSep: field-bound datum channel or constant non-negative value',
-  ),
-  innerYSep: PointNonnegativeNumberStyleSchema.optional().describe(
-    'Core Node innerYSep: field-bound datum channel or constant non-negative value',
-  ),
-  outerSep: PointNonnegativeNumberStyleSchema.optional().describe(
-    'Core Node outerSep: field-bound datum channel or constant non-negative value',
-  ),
-  margin: PointNonnegativeNumberStyleSchema.optional().describe(
-    'Core Node margin: field-bound datum channel or constant non-negative value',
+  margin: NodeBoxSpacingStyleSchema.optional().describe(
+    'Core Node margin: field-bound datum channel or constant box spacing',
   ),
   dashed: NodeBooleanStyleSchema.optional().describe('Core Node dashed: field-bound datum channel or constant boolean'),
   dotted: NodeBooleanStyleSchema.optional().describe('Core Node dotted: field-bound datum channel or constant boolean'),
@@ -623,17 +633,8 @@ export const PointMarkSchema = z
     rotate: PointNumberStyleSchema.optional().describe(
       'Glyph rotation in degrees: field-bound datum channel or constant angle',
     ),
-    padding: PointNonnegativeNumberStyleSchema.optional().describe(
-      'Node padding in user units: field-bound datum channel or constant padding; default 0 for point glyphs',
-    ),
-    minimumSize: PointNonnegativeNumberStyleSchema.optional().describe(
-      'Minimum visual size: field-bound datum channel or constant size; overridden per datum by size',
-    ),
-    minimumWidth: PointNonnegativeNumberStyleSchema.optional().describe(
-      'Minimum visual width: field-bound datum channel or constant width',
-    ),
-    minimumHeight: PointNonnegativeNumberStyleSchema.optional().describe(
-      'Minimum visual height: field-bound datum channel or constant height',
+    minimumSize: NodeBoxSizeStyleSchema.optional().describe(
+      'Minimum visual size: field-bound datum channel or constant number / {default,width,height}; overridden per datum by size',
     ),
     zIndex: PointZIndexStyleSchema.optional().describe(
       'Drawing order hint: field-bound datum channel or constant zIndex',
@@ -660,6 +661,7 @@ export const PointMarkSchema = z
     ...nodeHostLabel,
     encoding: PointEncodingSchema,
   })
+  .strict()
   .describe(
     'Point mark: scatter glyph or borderless text label (encoding.text set → text Node); supports optional size / opacity / shape glyph channels',
   );

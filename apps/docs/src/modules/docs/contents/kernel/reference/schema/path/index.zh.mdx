@@ -18,6 +18,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
     stroke: '描边 paint：任意 CSS color 字符串，或 PaintSpec（线性 / 径向渐变、pattern、image）；默认 currentColor',
     strokeWidth: '描边宽度（用户单位），默认 1',
     dashPattern: 'dash/gap 长度序列（如 [4, 2]），省略 = 实线',
+    dashOffset: '虚线起点偏移（用户单位），可为正数、0 或负数；省略 = 0',
     fill: '闭合区域填充：任意 CSS color 字符串，或 PaintSpec（线性 / 径向渐变、pattern、image）；省略 = 无填充；与 `cycle` step 配合产生封闭形状',
     fillRule: '自交 / 嵌套子路径填充规则；`nonzero`（默认）方向缠绕，`evenodd` 交错',
     lineCap: '描边端点形状：`butt` 默认 / `round` / `square`',
@@ -230,12 +231,10 @@ description: 笔画外壳、step 动作序列与 step 目标点
   description="圆弧 / 椭圆弧动作：绕圆心按起止角扫弧；圆心缺省取光标，可显式指定。"
   descriptions={{
     type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`arc` —— 圆弧（radius）或椭圆弧（radiusX/radiusY），绕圆心扫角；笔停在弧端点而非圆心',
+    kind: '动作种类：`arc` —— 圆弧（radius 数字）或椭圆弧（radius: { x, y }），绕圆心扫角；笔停在弧端点而非圆心',
     startAngle: '弧起始角（°），0=+x、90=+y（屏幕向下）',
     endAngle: '弧终止角（°）；扫向由 startAngle 与 endAngle 大小关系隐式决定',
-    radius: '正圆弧半径（用户单位）；与 radiusX/radiusY 二选一',
-    radiusX: '椭圆弧 x 半轴；需与 radiusY 同给',
-    radiusY: '椭圆弧 y 半轴；需与 radiusX 同给',
+    radius: '弧半径：数字表示正圆弧；对象 `{ x, y }` 表示椭圆弧',
     center: '显式圆心；缺省取光标（上一 step anchor）',
     label: '边标注：附在本段上的文字标签',
   }}
@@ -269,8 +268,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
   descriptions={{
     type: '判别字段，标记本节点为 path step',
     kind: '动作种类：`ellipsePath` —— 无角度时整椭圆（笔回中心）；带 startAngle+endAngle 时部分椭圆',
-    radiusX: 'x 轴半径（半长轴或半短轴）',
-    radiusY: 'y 轴半径（半长轴或半短轴）',
+    radius: '椭圆半径对象 `{ x, y }`（半长轴 / 半短轴）',
     startAngle: '部分椭圆起始角（°）；与 endAngle 同给才生效',
     endAngle: '部分椭圆终止角（°）',
     closed: '闭合模式：整椭圆只允许 closed；部分椭圆允许 chord（默认）/ open / sector',

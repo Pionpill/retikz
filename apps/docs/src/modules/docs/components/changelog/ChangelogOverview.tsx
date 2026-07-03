@@ -5,10 +5,10 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import type { Lang } from '@/i18n';
-import type { PackageId, Release } from '@/modules/docs/data/changelog.types';
+import type { PackageId, Release } from '@/modules/docs/data';
 
 import { InlineMdx } from '@/modules/docs/components/mdx-content';
-import { changelogVersionSlug } from '@/modules/docs/data/changelog';
+import { changelogVersionSlug } from '@/modules/docs/data';
 
 export type ChangelogOverviewProps = {
   /** 当前模块的 changelog 切片（倒序） */

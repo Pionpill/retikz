@@ -15,7 +15,7 @@ description: Use when implementing a retikz alpha ADR or beta TODO after design 
 
 ## 输入
 
-- alpha：状态为 `Proposed`、实现契约完整的 ADR。
+- alpha：状态为 `Proposed`、实现契约完整且已人工 ack 的 ADR；ADR 可未提交。
 - beta：已登记的 roadmap TODO，scope 与预估 level 已明确。
 - 当前受影响文件、已有测试、相关 docs 页面。
 
@@ -49,6 +49,7 @@ description: Use when implementing a retikz alpha ADR or beta TODO after design 
 - 不改 spec 测试、schema 字段名、字段类型或 describe；认为 spec 错时 halt 报告。
 - 不用 `as any`、`@ts-ignore`、跳测、粗暴 lint disable 绕过问题。
 - 每个 ADR step 或 beta TODO 子任务保持可 review 的提交粒度。
+- 不因 ADR 未提交而扩大实现 scope；偏离 ADR 文件 scope 或实现契约必须先人工确认。
 - 受影响包按根 AGENTS 运行 `eslint --fix`、`tsc --noEmit`、必要 vitest。
 - 连续 3 轮修不动同一 step，halt 并报告失败 case、错误日志和判断。
 

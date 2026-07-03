@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { useComparisonStore } from '@/modules/docs/store/use-comparison-store';
+import { useComparisonStore } from '@/modules/docs/store';
 
 import type { ComparisonTargetValue } from './targets';
 
