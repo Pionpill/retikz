@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 
 import type { AlignKey, ComponentRenderSource, PreviewAction, PreviewOverlay, RendererMode } from '../types';
 
-import { HighlightedCode } from '../../highlight-code';
+import { HighlightCode } from '../../highlight-code';
 import { alignClass } from '../constants';
 import { PreviewActionStateContext } from '../context';
 import { usePanZoom, usePreviewActions, useSourceViews } from '../hooks';
@@ -56,7 +56,7 @@ const DOT_PATTERN_STYLE: React.CSSProperties = {
 
 /**
  * 把 transform / drag 状态封装在自己内部
- * @description 拖拽期间 setState 只让本组件重渲染，不带动右侧 HighlightedCode 重跑 syntax highlight（之前 transform 提到 Dialog 顶层 → 整树重渲染 → 卡）
+ * @description 拖拽期间 setState 只让本组件重渲染，不带动右侧 HighlightCode 重跑 syntax highlight（之前 transform 提到 Dialog 顶层 → 整树重渲染 → 卡）
  */
 type DialogDemoPaneProps = {
   align: AlignKey;
@@ -222,7 +222,7 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
                 </div>
                 {/* `[&_pre]:!text-xs` 用 ! 覆盖 react-syntax-highlighter 主题注入的 inline font-size */}
                 <div className="min-h-0 flex-1 overflow-auto [&_code]:!text-sm [&_pre]:!text-xs">
-                  <HighlightedCode
+                  <HighlightCode
                     lang={activeLang}
                     code={displayedCode}
                     showLineNumbers

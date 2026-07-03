@@ -1,1 +1,1 @@
-export { Shortcut } from './Shortcut';
+export * from './Shortcut';

@@ -1,2 +1,1 @@
-export type { ExamplePromptProps } from './ExamplePrompt';
-export { ExamplePrompt } from './ExamplePrompt';
+export * from './ExamplePrompt';

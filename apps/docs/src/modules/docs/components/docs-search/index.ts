@@ -1,3 +1,3 @@
-export { DocsSearch } from './DocsSearch';
-export { DocsSearchPanel } from './DocsSearchPanel';
-export type { SearchEntry } from './search-engine';
+export * from './DocsSearch';
+export * from './DocsSearchPanel';
+export * from './search-engine';

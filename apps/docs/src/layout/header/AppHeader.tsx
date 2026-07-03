@@ -23,7 +23,7 @@ import { ModuleNav } from './ModuleNav';
  *
  *   DropdownMenuContent 走 Radix Portal，内部用近似的 viewport media variant 处理紧凑显示。
  */
-const AppHeader: FC = () => {
+export const AppHeader: FC = () => {
   const layout = useLayoutStore(s => s.layout);
 
   return (

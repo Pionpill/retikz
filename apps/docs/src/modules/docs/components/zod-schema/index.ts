@@ -1,1 +1,1 @@
-export { ZodSchema } from './ZodSchema';
+export * from './ZodSchema';
